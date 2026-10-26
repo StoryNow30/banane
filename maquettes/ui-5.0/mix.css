@@ -1,0 +1,69 @@
+/* Mélange Raycast + Figma et Arc : verre dépoli et barre de commandes (Raycast), ruban de cuts, inspecteur, espaces (Figma et Arc). Maquettes statiques, chiffres inventés. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--tx:#eef0f1;--tx2:#9aa0a8;--tx3:#666c74;--vert:#3ecf8e;--ambre:#f0b040;--rouge:#f2655d;--bleu:#6c8cff;
+ --verre:rgba(26,27,31,.62);--verre2:rgba(40,42,48,.7);--fil:rgba(255,255,255,.1)}
+*{box-sizing:border-box}body{margin:0;background:#050506;color:var(--tx);font:13px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+.page{max-width:1220px;margin:0 auto;padding:18px 16px 60px}.page>h1{font-size:18px;margin:0 0 4px}.page>.leg{color:var(--tx2);max-width:80ch;margin:0 0 14px}.page a{color:inherit}
+.sc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.sc button{font:500 12px var(--sans);padding:5px 10px;border:1px solid #33363b;border-radius:6px;background:transparent;color:var(--tx2);cursor:pointer}.sc button[aria-pressed=true]{background:var(--tx);color:#000;border-color:var(--tx)}
+.note-b{margin:14px 0 0;padding:10px 14px;border-left:2px solid #33363b;color:var(--tx2);max-width:84ch}.note-b b{color:var(--tx)}
+kbd{font:500 11px var(--sans);min-width:20px;text-align:center;display:inline-block;background:linear-gradient(#34363b,#2a2c30);border:1px solid #3d4046;border-bottom-color:#17181b;border-radius:5px;padding:1px 5px;color:#cfd2d6}
+.mono{font-family:var(--mono)}
+/* scène : une fenêtre de 1 120 x 680 avec un fond coloré */
+.win{position:relative;height:680px;border-radius:14px;overflow:hidden;border:1px solid #2c2e32;
+ background:radial-gradient(55% 70% at 12% 8%,#3b1f52 0,transparent 60%),radial-gradient(50% 60% at 92% 18%,#0e3a55 0,transparent 60%),radial-gradient(60% 60% at 58% 104%,#4d1722 0,transparent 60%),#0a0a10}
+.verre{background:var(--verre);backdrop-filter:blur(36px) saturate(1.6);-webkit-backdrop-filter:blur(36px) saturate(1.6);border:1px solid var(--fil);box-shadow:0 0 0 .5px #000,0 24px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08)}
+.tuile{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:13px;color:#fff;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.25),0 1px 3px rgba(0,0,0,.4)}
+.t-v{background:linear-gradient(160deg,#5be29c,#1b8a52)}.t-a{background:linear-gradient(160deg,#ffcb6b,#e08a12)}.t-r{background:linear-gradient(160deg,#ff8a80,#d9352c)}.t-b{background:linear-gradient(160deg,#7fa2ff,#3a55d6)}.t-p{background:linear-gradient(160deg,#c59bff,#7a43d6)}.t-n{background:linear-gradient(160deg,#6b6f78,#3c3f46)}
+/* ruban */
+.rub{margin:0 0 14px}.rub .l{font:11px var(--mono);color:var(--tx3);margin:0 0 5px}
+.cells{display:grid;grid-template-columns:repeat(40,minmax(0,1fr));gap:3px}
+.cell{aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.1);position:relative}
+.cell.p{background:#27a96f}.cell.q{background:#7bd9ad}.cell.d{background:var(--ambre)}.cell.bad{background:var(--rouge)}.cell.now{background:#fff;box-shadow:0 0 0 3px #fff3,0 0 18px #fff6;animation:bat 1.4s ease-in-out infinite}
+.cell.sel{outline:2px solid var(--bleu);outline-offset:2px}.cell.vu::after{content:"";position:absolute;inset:30%;border-radius:50%;background:#04140c99}.cell.ctl{box-shadow:inset 0 0 0 2px #fff8}
+@keyframes bat{50%{box-shadow:0 0 0 5px #fff2,0 0 26px #fff4}}@media(prefers-reduced-motion:reduce){.cell.now{animation:none}}
+.zones{position:relative;height:18px;margin:0 0 4px}.zones span{position:absolute;top:0;font:600 10.5px var(--sans);letter-spacing:.08em;color:var(--tx2);border-top:2px solid var(--bleu);padding-top:3px}
+.legende{display:flex;gap:16px;color:var(--tx2);font-size:12px;margin:0 0 12px}.legende span{display:flex;gap:6px;align-items:center}.legende i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.mini{display:flex;gap:1px;height:20px;margin-top:8px}.mini i{flex:1;border-radius:1px}
+/* éléments communs */
+.etat{font:700 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);display:flex;align-items:center;gap:8px}.etat::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--tx3)}
+.etat.v{color:var(--vert)}.etat.v::before{background:var(--vert)}.etat.a{color:var(--ambre)}.etat.a::before{background:var(--ambre)}.etat.r{color:var(--rouge)}.etat.r::before{background:var(--rouge)}
+.gros{font:300 54px/1 var(--sans);letter-spacing:-.03em}.gros small{font:600 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);margin-left:8px}
+.bm{height:4px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden;margin:8px 0}.bm i{display:block;height:100%;background:linear-gradient(90deg,#1b8a52,#5be29c)}
+.kv{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--fil);font-size:12.5px}.kv span:first-child{color:var(--tx2)}
+.btn{font:500 12px var(--sans);display:inline-flex;gap:8px;align-items:center;padding:6px 11px;border-radius:8px;border:1px solid var(--fil);background:rgba(255,255,255,.08);color:var(--tx);cursor:pointer}.btn.p{background:var(--vert);border-color:var(--vert);color:#04140c;font-weight:600}.btn.p kbd{background:rgba(0,0,0,.18);border-color:transparent;color:#04140c}.btn.d{color:var(--rouge)}
+.o{display:flex;align-items:center;gap:12px;height:42px;padding:0 10px;border-radius:9px}.o.s{background:rgba(255,255,255,.1)}.o .nm{font-weight:500}.o .sb{color:var(--tx2)}.o .ty{margin-left:auto;color:var(--tx3);font-size:12px;display:flex;gap:4px;align-items:center}
+.g{padding:9px 10px 4px;font:500 12px var(--sans);color:var(--tx3)}
+.phr{color:var(--tx2)}.phr b{color:var(--tx)}
+.gcv{font-size:11.5px;color:var(--tx2)}.gcv b{font:600 13px var(--mono);color:var(--tx);white-space:nowrap}.gcv .p{color:var(--vert)}
+/* Arc : rail d'espaces */
+.rail{display:flex;flex-direction:column;gap:6px;padding:12px 10px}.rail .logo{font-weight:700;letter-spacing:.2em;font-size:11px;padding:2px 6px 8px;color:var(--tx2)}
+.esp{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:9px;color:var(--tx2)}.esp.a{background:rgba(255,255,255,.1);color:var(--tx)}.esp i{width:10px;height:10px;border-radius:3px;flex:none}.esp small{margin-left:auto;font:11px var(--mono);color:var(--tx3)}
+.rail h4{margin:10px 8px 2px;font:600 11px var(--sans);color:var(--tx3)}.rail .bas{margin-top:auto;padding:8px}
+/* I : la capsule */
+.A{display:grid;grid-template-columns:200px 1fr 290px;height:100%}
+.A .rail{border-right:1px solid var(--fil);background:rgba(10,10,16,.35)}
+.A .cv{padding:22px 26px;overflow:hidden;position:relative}
+.A .insp{margin:14px 14px 90px 0;border-radius:16px;padding:16px;overflow:hidden}.A .insp h3{margin:0;font-size:15px}.A .insp .sub{color:var(--tx2);margin:2px 0 12px}
+.A .caps{position:absolute;left:224px;bottom:22px;width:calc(100% - 224px - 314px);border-radius:22px;overflow:hidden;z-index:3}
+.A .caps .q{display:flex;align-items:center;gap:10px;height:50px;padding:0 10px 0 16px}.A .caps .q span.ph{color:var(--tx3);flex:1;font-size:15px}.A .caps .q .ch{font:500 12px var(--sans);color:#d7d9dc;background:rgba(255,255,255,.1);border-radius:7px;padding:4px 9px}
+.A .caps .lst{padding:6px;border-bottom:1px solid var(--fil)}
+/* II : le panneau unique */
+.B{display:flex;justify-content:center;align-items:center;height:100%}
+.B .ray{width:1000px;height:600px;border-radius:18px;display:flex;flex-direction:column;overflow:hidden}
+.B .srch{display:flex;align-items:center;gap:10px;height:56px;padding:0 16px;border-bottom:1px solid var(--fil)}.B .srch .ph{flex:1;color:var(--tx3);font-size:16px}
+.B .pa{display:flex;gap:6px}.B .pa span{display:flex;align-items:center;gap:6px;padding:4px 9px;border-radius:7px;background:rgba(255,255,255,.08);font-size:12px;color:var(--tx2)}.B .pa span.a{background:rgba(255,255,255,.18);color:var(--tx)}.B .pa i{width:8px;height:8px;border-radius:2px}
+.B .corps{flex:1;display:grid;grid-template-columns:330px 1fr;min-height:0}.B .l{padding:8px;overflow:hidden;border-right:1px solid var(--fil)}
+.B .droite{padding:16px 18px;overflow:hidden;display:flex;flex-direction:column}
+.B .pied{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-top:1px solid var(--fil);background:rgba(0,0,0,.2);color:var(--tx2);font-size:12.5px}.B .pied .lg{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#5be29c,#1f9a57)}.B .pied .sp{flex:1}
+/* III : le canevas et son menu */
+.C{display:flex;flex-direction:column;height:100%}
+.C .onglets{display:flex;align-items:center;gap:6px;padding:10px 14px;background:rgba(10,10,16,.45);border-bottom:1px solid var(--fil)}
+.C .on{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:9px;color:var(--tx2)}.C .on.a{background:rgba(255,255,255,.12);color:var(--tx)}.C .on i{width:9px;height:9px;border-radius:3px}.C .sp{flex:1}
+.C .toile{flex:1;position:relative;padding:22px 30px;overflow:hidden}
+.C .barre-bas{display:flex;align-items:center;gap:18px;padding:10px 16px;border-top:1px solid var(--fil);background:rgba(10,10,16,.45);font-size:12.5px;color:var(--tx2)}
+.C .menu{position:absolute;width:290px;border-radius:14px;padding:6px;z-index:3}.C .menu .tt{padding:8px 10px 4px;font:600 12px var(--sans);color:var(--tx2)}
+.C .cmd{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:560px;border-radius:16px;overflow:hidden;z-index:4}.C .cmd .q{display:flex;align-items:center;gap:10px;height:48px;padding:0 16px;border-bottom:1px solid var(--fil);color:var(--tx3);font-size:15px}.C .cmd .lst{padding:6px}
+.C .ban{margin:0 0 14px;padding:10px 14px;border-radius:12px;display:flex;gap:12px;align-items:center}.C .ban .tx{flex:1}
+.reg{padding:8px 22px 0;max-width:640px}.lr{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--fil)}.lr small{display:block;color:var(--tx3)}.lr select{background:rgba(255,255,255,.08);color:var(--tx);border:1px solid var(--fil);border-radius:8px;padding:6px 9px;font:12px var(--sans)}
+.sc2{display:none}.sc2.on{display:block;height:100%}

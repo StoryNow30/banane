@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panneau unique · version 2</title>
+<style>
+/* Panneau unique, version 2 : corrections de l'audit du 20/10 (états séparés, compteurs définis, ruban stable, liste des exceptions, palette stable).
+   Définitions : fiches/UI_ETATS_COMPTEURS.md. Maquette statique, chiffres inventés mais cohérents entre eux. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ --fond:#0b0c0e;--surf:#141518;--surf2:#1b1d21;--fil:#26292e;--fil2:#33373d;--tx:#eceef0;--tx2:#a3a9b1;--tx3:#737a83;
+ --vert:#3ecf8e;--vert2:#1f9a62;--clair:#8fe3bc;--ambre:#f0b040;--rouge:#f2655d;--bleu:#7c97ff}
+*{box-sizing:border-box}body{margin:0;background:#050506;color:var(--tx);font:14px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+.page{max-width:1120px;margin:0 auto;padding:18px 16px 60px}.page>h1{font-size:18px;margin:0 0 4px}.page>.leg{color:var(--tx2);max-width:84ch;margin:0 0 14px}.page a{color:inherit}
+.sc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.sc button{font:500 12px var(--sans);padding:5px 10px;border:1px solid var(--fil2);border-radius:6px;background:transparent;color:var(--tx2);cursor:pointer}.sc button[aria-pressed=true]{background:var(--tx);color:#000;border-color:var(--tx)}
+.note-b{margin:14px 0 0;padding:10px 14px;border-left:2px solid var(--fil2);color:var(--tx2);max-width:88ch}.note-b b{color:var(--tx)}
+kbd{font:500 11px var(--sans);min-width:20px;text-align:center;display:inline-block;background:var(--surf2);border:1px solid var(--fil2);border-bottom-width:2px;border-radius:5px;padding:0 5px;color:var(--tx2)}
+svg.i{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* la fenêtre */
+.fen{position:relative;width:980px;max-width:100%;height:660px;border-radius:14px;border:1px solid var(--fil2);background:linear-gradient(180deg,#121317,#0b0c0e);box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden}
+.tete{display:flex;align-items:center;gap:6px;height:48px;padding:0 12px;border-bottom:1px solid var(--fil)}
+.ong{display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:8px;color:var(--tx2);font-size:13px}.ong.a{background:var(--surf2);color:var(--tx)}.ong i{width:8px;height:8px;border-radius:2px}
+.tete .sp{flex:1}.bt{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--fil2);background:var(--surf);color:var(--tx);font:500 13px var(--sans);cursor:pointer}
+.bt.p{background:var(--vert);border-color:var(--vert);color:#03130b;font-weight:600}.bt.p kbd{background:rgba(0,0,0,.15);border-color:transparent;color:#03130b}
+.bt[disabled]{opacity:.42;cursor:not-allowed}.bt.d{color:var(--rouge)}.bt.l{border-color:transparent;background:transparent;color:var(--tx2)}
+.corps{flex:1;display:flex;flex-direction:column;min-height:0;padding:18px 22px 0}
+/* bloc d'état */
+.etats{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:0;border:1px solid var(--fil);border-radius:12px;background:var(--surf)}
+.etats>div{padding:12px 14px;border-right:1px solid var(--fil);min-width:0}.etats>div:last-child{border-right:0;display:flex;flex-direction:column;justify-content:center;gap:6px;align-items:flex-end}
+.lbl{font:600 10.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);margin:0 0 4px}
+.val{font-weight:600;display:flex;align-items:center;gap:7px}.val small{font-weight:400;color:var(--tx2)}
+.pt{width:8px;height:8px;border-radius:50%;flex:none;background:var(--tx3)}.pt.v{background:var(--vert)}.pt.a{background:var(--ambre)}.pt.r{background:var(--rouge)}
+.raison{font-size:12px;color:var(--tx3);max-width:190px;text-align:right}
+/* compteurs et barre */
+.compte{display:flex;align-items:baseline;gap:18px;margin:18px 0 8px;flex-wrap:wrap}.compte .gros{font:600 22px var(--sans)}.compte .gros small{font-weight:400;color:var(--tx2);font-size:14px}
+.compte .det{color:var(--tx2);font-size:13px}.compte .det b{color:var(--tx);font-weight:600}
+.seg{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--fil)}.seg i{display:block;height:100%}
+/* ruban */
+.rub{margin:14px 0 0}.rubh{display:flex;justify-content:space-between;align-items:center;margin:0 0 8px}.leg2{display:flex;gap:14px;color:var(--tx2);font-size:12px;flex-wrap:wrap}.leg2 span{display:flex;gap:6px;align-items:center}
+.cases{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.c{width:13px;height:13px;border-radius:3px;position:relative;flex:none}
+.c.p{background:var(--vert2)}.c.q{background:var(--clair)}.c.d{background:transparent;border:2px solid var(--ambre)}.c.d::after{content:"";position:absolute;left:2px;right:2px;top:4px;height:2px;background:var(--ambre)}
+.c.s{background:transparent;border:2px solid var(--tx3)}.c.s::after{content:"";position:absolute;inset:4px -1px;transform:rotate(45deg);background:var(--tx3);height:2px;top:3.5px}
+.c.n{background:#fff;box-shadow:0 0 0 2px #0b0c0e,0 0 0 3.5px #fff}.c.x{background:var(--rouge)}.c.x::after{content:"!";position:absolute;inset:0;font:700 10px/13px var(--sans);text-align:center;color:#fff}
+.c.sel{outline:2px solid var(--bleu);outline-offset:2px}
+.reste{height:13px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--fil2) 0 13px,transparent 13px 16px);display:flex;align-items:center;padding:0 0 0 6px;min-width:120px;flex:1;font:500 10.5px var(--sans);color:var(--tx2)}
+.reste span{background:#0b0c0e;padding:0 6px;border-radius:3px}
+/* onglets du bas + liste */
+.vues{display:flex;gap:4px;margin:18px 0 0;border-bottom:1px solid var(--fil)}.vues span{padding:8px 12px;color:var(--tx2);font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px}.vues span.a{color:var(--tx);border-color:var(--vert)}.vues b{font-weight:600;color:var(--tx);margin-left:4px}
+.liste{flex:1;overflow:auto;min-height:0}
+.row{display:grid;grid-template-columns:22px 70px 1fr 1.2fr auto;align-items:center;gap:10px;height:40px;padding:0 6px;border-bottom:1px solid var(--fil);font-size:13px}.row.s{background:var(--surf2)}
+.row .n{font:500 12.5px var(--mono);color:var(--tx2)}.row .m{color:var(--tx2)}
+.synth{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 0}.synth div{border:1px solid var(--fil);border-radius:10px;padding:12px;background:var(--surf)}.synth b{display:block;font:600 20px var(--sans)}.synth span{color:var(--tx2);font-size:12.5px}
+.pied{display:flex;align-items:center;gap:16px;height:38px;padding:0 22px;border-top:1px solid var(--fil);color:var(--tx3);font-size:12px;margin-top:8px}.pied .sp{flex:1}
+.encart{border:1px solid #5a2a27;background:#1c1212;border-radius:12px;padding:12px 14px;margin:14px 0 0}.encart ol{margin:6px 0 0 18px;padding:0;color:var(--tx2)}.encart ol li b{color:var(--tx)}
+.ok{border-color:#1f4a37;background:#0f1a15}
+.fin{display:grid;gap:8px;margin:16px 0 0}.fin div{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--fil);border-radius:10px;background:var(--surf)}.fin div b{font-weight:600}.fin div span{color:var(--tx2)}
+/* palette */
+.voile{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;justify-content:center;padding-top:80px;z-index:5}
+.pal{width:560px;height:fit-content;background:var(--surf);border:1px solid var(--fil2);border-radius:12px;box-shadow:0 24px 80px #000;overflow:hidden}
+.pal .q{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-bottom:1px solid var(--fil);font-size:15px}.pal .q .cur{width:1px;height:18px;background:var(--tx);animation:cl 1s steps(1) infinite}@keyframes cl{50%{opacity:0}}
+.pal .g{padding:8px 12px 2px;font:600 11px var(--sans);color:var(--tx3)}.pal .o{display:flex;align-items:center;gap:10px;height:40px;margin:0 6px;padding:0 10px;border-radius:8px;font-size:13.5px}.pal .o.s{background:var(--surf2)}.pal .o .sb{color:var(--tx3)}.pal .o .ty{margin-left:auto;color:var(--tx3);font-size:12px}
+.pal .ft{display:flex;justify-content:space-between;padding:8px 14px;border-top:1px solid var(--fil);color:var(--tx3);font-size:12px}
+.modele{max-width:600px;padding:6px 0}.modele h2{font-size:17px;margin:4px 0 10px}.modele p{color:var(--tx2)}.modele .grand{font:600 34px var(--sans);color:var(--tx)}
+.reg .lr{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--fil)}.reg .lr small{display:block;color:var(--tx3)}.reg select{background:var(--surf2);color:var(--tx);border:1px solid var(--fil2);border-radius:8px;padding:6px 9px;font:13px var(--sans);min-width:260px}
+</style></head><body><div class="page">
+<p><a href="index.html">← les directions</a></p>
+<h1>Panneau unique · version 2 (après l'audit)</h1>
+<p class="leg">Base retenue : le <b>panneau unique</b>. L'écran sépare <b>l'état du lot, la connexion, la dernière opération confirmée et l'opération en cours ou interrompue</b>, avec <b>une seule action</b>, active seulement quand elle est possible. Les compteurs suivent une seule définition (<code>fiches/UI_ETATS_COMPTEURS.md</code>). Le ruban, à cases fixes, résume ; la <b>liste</b> sert à reprendre les exceptions ; la <b>palette</b> (<kbd>Ctrl K</kbd>) accélère. Chiffres inventés, cohérents d'un écran à l'autre.</p>
+<div class="sc" id="sc"></div>
+<div class="fen" id="fen"></div>
+<p class="note-b" id="note"></p>
+</div>
+<script>
+const S={play:'<path d="M7 5l12 7-12 7z"/>',pause:'<path d="M8 5v14M16 5v14"/>',stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',redo:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',
+ alert:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',check:'<path d="M5 12l5 5 9-10"/>',list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',down:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',cmd:'<path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/>',
+ eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',link:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',folder:'<path d="M3 6h6l2 2h10v11H3z"/>'};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${S[n]}</svg>`;
+const K=(...k)=>k.map(x=>`<kbd>${x}</kbd>`).join(' ');
+/* données cohérentes : 120 ciblés ; en cours : 27 posés + 4 différés = 31 traités ; fin : 109 posés + 11 différés = 120 traités ; 9 verts à contrôler (hors lot). */
+function cases(n,{diff=[],voie=[],skip=[],cours=null,erreur=null,sel=null}){let h='';for(let i=0;i<n;i++){let c='p';if(voie.includes(i))c='q';if(diff.includes(i))c='d';if(skip.includes(i))c='s';if(i===cours)c='n';if(i===erreur)c='x';h+=`<i class="c ${c}${i===sel?' sel':''}" title="cut ${4790+i}"></i>`;}return h;}
+const D1=[4,9,17,25],V1=[6,14,22];
+const D2=[4,9,17,25,38,51,64,77,90,101,113],V2=[6,14,22,30,45,60,82,97];
+const tete=(mode='orbite')=>`<div class="tete"><span class="ong${mode==='orbite'?' a':''}"><i style="background:var(--vert)"></i>Partie 13 · Orbite</span><span class="ong${mode==='echo'?' a':''}"><i style="background:var(--bleu)"></i>Partie 14 · Écho</span><span class="sp"></span><button class="bt l">${ic('cmd')} Commandes ${K('Ctrl','K')}</button><button class="bt l" title="Réglages">${ic('gear')}</button></div>`;
+const etats=(e)=>`<div class="etats"><div><p class="lbl">Lot</p><p class="val"><span class="pt ${e.lt||''}"></span>${e.lot}</p></div><div><p class="lbl">Connexion</p><p class="val"><span class="pt ${e.ct||'v'}"></span>${e.conn||'ESV répond'}</p></div><div><p class="lbl">Dernière confirmée</p><p class="val">${e.conf||'—'}</p></div><div><p class="lbl">${e.encoursL||'En cours'}</p><p class="val">${e.encours||'—'}</p></div><div>${e.act}${e.raison?`<span class="raison">${e.raison}</span>`:''}</div></div>`;
+const compte=(t,c,po,di,extra='')=>`<div class="compte"><span class="gros">${t} <small>cuts traités sur ${c} ciblés</small></span><span class="det"><b>${po}</b> posés · <b>${di}</b> différés · <b>${c-t}</b> restants${extra}</span></div><div class="seg"><i style="width:${po/c*100}%;background:var(--vert2)"></i><i style="width:${di/c*100}%;background:var(--ambre)"></i></div>`;
+const ruban=(n,o,reste)=>`<div class="rub"><div class="rubh"><span class="lbl" style="margin:0">Cuts ciblés, dans l'ordre du lot</span><span class="leg2"><span><i class="c p"></i>posé</span><span><i class="c q"></i>posé par la voie</span><span><i class="c d"></i>différé</span><span><i class="c n"></i>en cours</span><span><i class="c x"></i>résultat incertain</span></span></div><div class="cases">${cases(n,o)}${reste?`<div class="reste"><span>${reste} restants</span></div>`:''}</div></div>`;
+const vues=(a,n1,n2)=>`<div class="vues"><span class="${a===0?'a':''}">Synthèse</span><span class="${a===1?'a':''}">À reprendre<b>${n1}</b></span><span class="${a===2?'a':''}">Verts à contrôler<b>${n2}</b></span><span class="${a===3?'a':''}">Relecture</span></div>`;
+const MOTIFS=['Écartement trop bas','Aucune hypothèse sûre','Rail droit absent du nuage','Voie décalée hors de la fenêtre'];
+const lignesDiff=(cuts,actif)=>cuts.map((c,i)=>`<div class="row${i===0?' s':''}"><span class="c d"></span><span class="n">${4790+c}</span><span>Différé</span><span class="m">${MOTIFS[i%4]}</span><button class="bt" ${actif?'disabled title="Disponible quand le lot ne tourne pas"':''}>${ic('link')} Ouvrir dans ESV</button></div>`).join('');
+const lignesVerts=()=>[[4861,'Écartement 21 mm sous la médiane','PN'],[4874,'Saut de hauteur d’un rail (12 mm)','ADV'],[4875,'Saut de hauteur d’un rail (11 mm)','ADV'],[4890,'Écartement 18 mm sous la médiane',''],[4902,'Écart aux poses voisines 9 mm','']].map((r,i)=>`<div class="row${i===0?' s':''}"><span class="pt a" style="margin-left:3px"></span><span class="n">${r[0]}</span><span>Vert suspect${r[2]?' · '+r[2]:''}</span><span class="m">${r[1]}</span><button class="bt">${ic('link')} Ouvrir dans ESV</button></div>`).join('');
+const synth=(a)=>`<div class="synth">${a.map(x=>`<div><b>${x[0]}</b><span>${x[1]}</span></div>`).join('')}</div>`;
+const pied=(t)=>`<div class="pied">${t||`<span>${K('↵')} action principale</span><span>${K('Ctrl','K')} commandes</span><span>${K('J')} ${K('K')} parcourir la liste</span>`}<span class="sp"></span><span>Fenêtre 980 × 660</span></div>`;
+const fen=(mode,corps,piedT)=>tete(mode)+`<div class="corps">${corps}</div>`+pied(piedT);
+const SC={
+ preparer:{t:'1 · Préparer',n:'Avant le lancement : la partie, les bornes et le nombre de cuts ciblés sont dits ; la relecture après le lot est écrite en clair. Rien n’est lancé tant que tu ne cliques pas.',
+  h:()=>fen('orbite',etats({lot:'Prêt',conf:'—',encoursL:'Cut affiché',encours:'4790',act:`<button class="bt p">${ic('play')} Démarrer le lot ${K('↵')}</button>`})+
+  `<div class="compte"><span class="gros">120 <small>cuts ciblés (invalides de la partie 13 au départ)</small></span></div><div class="fin"><div>${ic('list')}<b>Plage</b><span>du cut 4790 jusqu’à la fin de la partie</span><span style="margin-left:auto"><button class="bt l">Changer les bornes</button></span></div><div>${ic('eye')}<b>Après le lot</b><span>relecture automatique : Ariane relit les verts du PN, de l’ADV et des abords et corrige les sûrs</span><span style="margin-left:auto"><button class="bt l">Changer</button></span></div></div>`)},
+ cours:{t:'2 · Le lot tourne',n:'Le numéro du cut n’est plus le titre de l’écran : il est à sa place dans « En cours ». La barre compte les traités (posés + différés), pas seulement les posés.',
+  h:()=>fen('orbite',etats({lot:'En cours',lt:'v',conf:'Cut 4811 validé',encours:'Cut 4812 · pose',act:`<button class="bt">${ic('pause')} Pause</button>`})+compte(31,120,27,4)+ruban(31,{diff:D1,voie:V1,cours:31},89)+vues(0,4,'—')+synth([['27','posés et validés'],['4','différés, à reprendre'],['89','restants'],['8 s','par cut, médiane']]))},
+ demande:{t:'3 · Pause demandée',n:'« Pause demandée » et « En pause » sont deux états. Le lot finit le cut en cours avant de s’arrêter : le bouton le dit, et ne se clique pas deux fois.',
+  h:()=>fen('orbite',etats({lot:'Pause demandée',lt:'a',conf:'Cut 4811 validé',encours:'Cut 4812 · validation',act:`<button class="bt" disabled>${ic('pause')} Pause demandée…</button>`,raison:'Le lot finit le cut 4812, puis s’arrête.'})+compte(31,120,27,4)+ruban(31,{diff:D1,voie:V1,cours:31},89)+vues(0,4,'—')+synth([['27','posés et validés'],['4','différés'],['89','restants'],['—','']]))},
+ pause:{t:'4 · En pause',n:'En pause, le dernier cut est confirmé et rien n’est en cours.',
+  h:()=>fen('orbite',etats({lot:'En pause',lt:'a',conf:'Cut 4812 validé',encours:'Rien',act:`<button class="bt p">${ic('play')} Reprendre ${K('↵')}</button><button class="bt l d">${ic('stop')} Arrêter le lot</button>`})+compte(32,120,28,4)+ruban(32,{diff:D1,voie:V1},88)+vues(1,4,'—')+`<div class="liste">${lignesDiff(D1,false)}</div>`)},
+ coupure:{t:'5 · ESV ne répond plus',n:'Une opération commencée n’est jamais montrée comme terminée : « Cut 4812 : pose non confirmée » reste affiché. « Reprendre » est grisé tant qu’ESV ne répond pas, avec la marche à suivre.',
+  h:()=>fen('orbite',etats({lot:'En pause (automatique)',lt:'a',conn:'ESV ne répond plus',ct:'r',conf:'Cut 4811 validé',encoursL:'Interrompue',encours:'<span style="color:var(--rouge)">Cut 4812 · pose non confirmée</span>',act:`<button class="bt" disabled>${ic('play')} Reprendre</button>`,raison:'Disponible quand ESV répond.'})+
+  `<div class="encart"><b>Ce qu’il faut faire</b><ol><li>Recharge la page ESV (<b>F5</b>).</li><li>Attends que « Connexion » dise <b>ESV répond</b>.</li><li>Clique sur <b>Reprendre</b> : Ariane relit le cut 4812 depuis sa pose de départ. Rien n’a été validé sur ce cut.</li></ol></div>`+compte(31,120,27,4)+ruban(31,{diff:D1,voie:V1,erreur:31},89))},
+ reprise:{t:'6 · Reprise possible',n:'ESV répond à nouveau : la seule action devient active. L’opération interrompue reste écrite jusqu’à la reprise.',
+  h:()=>fen('orbite',etats({lot:'En pause (automatique)',lt:'a',conn:'ESV répond',ct:'v',conf:'Cut 4811 validé',encoursL:'Interrompue',encours:'Cut 4812 · à relire',act:`<button class="bt p">${ic('redo')} Reprendre au cut 4812 ${K('↵')}</button>`})+compte(31,120,27,4)+ruban(31,{diff:D1,voie:V1,erreur:31},89)+vues(0,4,'—')+synth([['27','posés et validés'],['4','différés'],['89','restants'],['1','à relire : 4812']]))},
+ differes:{t:'7 · Examiner les différés',n:'La liste répond à « que dois-je reprendre, et pourquoi ? » : le motif de chaque différé. Pendant un lot, « Ouvrir dans ESV » est grisé (il changerait le cut sous le lot) ; il s’active à la fin.',
+  h:()=>fen('orbite',etats({lot:'En cours',lt:'v',conf:'Cut 4811 validé',encours:'Cut 4812 · capture',act:`<button class="bt">${ic('pause')} Pause</button>`})+compte(31,120,27,4)+vues(1,4,'—')+`<div class="liste">${lignesDiff(D1,true)}</div>`)},
+ fin:{t:'8 · Fin : il reste du travail',n:'Plus de coche seule : trois lignes séparées. L’action principale est « Voir ce qui reste » ; l’export vient ensuite. Différés et verts à contrôler ne se recouvrent jamais (définition).',
+  h:()=>fen('orbite',etats({lot:'Terminé',conf:'Cut 4909 validé',encours:'Rien',act:`<button class="bt p">${ic('list')} Voir ce qui reste (20) ${K('↵')}</button><button class="bt l">${ic('down')} Tout télécharger</button>`})+
+  `<div class="fin"><div>${ic('check')}<b>Lot automatique terminé</b><span>120 cuts traités sur 120 ciblés · 109 posés · 11 différés</span></div><div>${ic('eye')}<b>Relecture après le lot finie</b><span>85 verts relus · 41 corrigés</span></div><div style="border-color:#5a4a1e">${ic('alert')}<b>Il te reste</b><span>11 différés à reprendre · 9 verts à contrôler</span></div><div>${ic('down')}<b>Export</b><span>pas encore fait</span></div></div>`+ruban(120,{diff:D2,voie:V2},0))},
+ export:{t:'9 · Export fait',n:'L’export dit ce qu’il a vraiment écrit : volumes confirmés par le navigateur.',
+  h:()=>fen('orbite',etats({lot:'Terminé',conf:'Cut 4909 validé',encours:'Rien',act:`<button class="bt p">${ic('list')} Voir ce qui reste (20)</button><button class="bt l">${ic('play')} Nouveau lot</button>`})+
+  `<div class="fin"><div class="ok">${ic('check')}<b>Export fait</b><span>3 volumes de 17 Mo au plus, confirmés complets par le navigateur</span><span style="margin-left:auto"><button class="bt l">${ic('folder')} Ouvrir le dossier</button></span></div></div>`+vues(1,11,9)+`<div class="liste">${lignesDiff(D2.slice(0,6),false)}</div>`)},
+ verts:{t:'10 · Verts à contrôler',n:'Les verts à contrôler ne sont pas dans le ruban (ce ne sont pas des cuts du lot) : ils ont leur liste, avec la raison du soupçon.',
+  h:()=>fen('orbite',etats({lot:'Terminé',conf:'Cut 4909 validé',encours:'Rien',act:`<button class="bt p">${ic('link')} Ouvrir le premier dans ESV ${K('↵')}</button>`})+vues(2,11,9)+`<div class="liste">${lignesVerts()}</div>`)},
+ echo:{t:'11 · Écho',n:'Une session est nommée par sa partie et son mode (« Partie 14 · Écho »). Ce que compte chaque nombre est écrit.',
+  h:()=>fen('echo',etats({lot:'Observation en cours',lt:'v',conf:'Cut 5121 validé par toi',encoursL:'Cut affiché',encours:'5122',act:`<button class="bt p">${ic('stop')} Terminer et télécharger</button><button class="bt l">${ic('pause')} Pause</button>`})+
+  `<div class="compte"><span class="gros">148 <small>cuts vus</small></span><span class="det"><b>61</b> corrigés par toi · <b>79</b> validés tels quels · <b>8</b> sans action</span></div>`+synth([['61','corrigés (de plus de 5 mm : 34)'],['79','validés tels quels'],['11 s','par cut, médiane'],['0','visites incomplètes']]))},
+ palette:{t:'12 · Palette : « rel »',n:'Les résultats correspondent à la saisie, sans doublon ; la première ligne est sélectionnée et ne bouge pas tant que tu tapes (les mises à jour du lot ne changent pas la sélection).',
+  h:()=>fen('orbite',etats({lot:'En cours',lt:'v',conf:'Cut 4811 validé',encours:'Cut 4812 · pose',act:`<button class="bt">${ic('pause')} Pause</button>`})+compte(31,120,27,4)+ruban(31,{diff:D1,voie:V1,cours:31},89))+
+  `<div class="voile"><div class="pal"><div class="q">${ic('cmd')}<span>rel</span><span class="cur"></span></div><div class="g">Réglage · relecture après le lot (actuel : relire et corriger)</div><div class="o s">${ic('eye')}Relecture après le lot : relire et corriger<span class="ty">actuel</span></div><div class="o">${ic('eye')}Relecture après le lot : relire sans rien modifier<span class="ty">réglage</span></div><div class="o">${ic('eye')}Relecture après le lot : coupée<span class="ty">réglage</span></div><div class="g">Vue</div><div class="o">${ic('list')}Relecture : dernier bilan<span class="sb"> · 85 relus, 41 corrigés</span><span class="ty">vue</span></div><div class="ft"><span>${K('↑')} ${K('↓')} choisir · ${K('↵')} appliquer</span><span>Pris au prochain lot</span></div></div></div>`},
+ modele:{t:'13 · Vue « Modèle » (GCV2)',n:'Le compteur quitte l’écran de travail : ici, avec sa définition et sa date. Il ne mesure aucune qualité.',
+  h:()=>fen('orbite',`<div class="modele"><h2>Exemples d’apprentissage</h2><div class="grand">2 684</div><p>cuts corrigés par toi dans les Échos archivés, tous projets, au <b>19 octobre 2026</b> (dernier archivage). Ce sont des exemples pour la GCV2, pas des cuts déjà appris par un modèle en service, et ce nombre ne dit rien de la qualité des poses.</p><p>Cette séance : <b>+ 61</b> corrections d’Écho, comptées en direct, ajoutées au prochain archivage.</p><p>La GCV2 n’est pas dans cette version : la pose reste celle de la GCV1.</p></div>`)},
+ reglages:{t:'14 · Réglages',n:'Libellés concrets : « Relecture après le lot » au lieu de « Après le lot ». Des listes, pas de cases ; rien en séance.',
+  h:()=>fen('orbite',`<div class="reg"><h2 style="font-size:17px;margin:4px 0 6px">Réglages</h2>${[['Relecture après le lot','Ce qu’Ariane fait des verts une fois le lot fini · pris au prochain lot',['Relire et corriger les verts sûrs','Relire sans rien modifier','Coupée']],['Clic de pose du mode rapide','Pris au prochain lot',['Comme avant','Rail gauche recentré','Tout recentré']],['Mise en attente près d’une série de différés','Pris au prochain lot',['Non','Oui']],['Raison de la correction en Écho','Lue au démarrage d’Écho',['Non','Oui, chiffres du haut','Oui, Alt + chiffre','Oui, pavé numérique']],['Bandeau d’état dans la page ESV','',['Allumé','Éteint']],['Interface','',['Panneau unique','Ancien panneau']]].map(r=>`<div class="lr"><div>${r[0]}${r[1]?`<small>${r[1]}</small>`:''}</div><select>${r[2].map(o=>`<option>${o}</option>`).join('')}</select></div>`).join('')}</div>`)}
+};
+const fenEl=document.getElementById('fen'),barre=document.getElementById('sc'),note=document.getElementById('note');
+function aller(k){fenEl.innerHTML=SC[k].h();note.innerHTML='<b>Ce qui a changé ici :</b> '+SC[k].n;[...barre.children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));history.replaceState(null,'','#'+k);}
+Object.entries(SC).forEach(([k,v])=>{const b=document.createElement('button');b.textContent=v.t;b.dataset.k=k;b.onclick=()=>aller(k);barre.append(b);});
+aller(SC[location.hash.slice(1)]?location.hash.slice(1):'cours');
+</script></body></html>

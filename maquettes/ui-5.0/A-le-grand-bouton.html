@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction A · Le grand bouton</title><link rel="stylesheet" href="commun.css"></head>
+<body><div class="maquette">
+<p class="lien-retour"><a href="index.html" style="color:inherit">← les trois directions</a></p>
+<h1>Direction A · « Le grand bouton »</h1>
+<p class="legende">Un seul écran. Une phrase qui dit où on en est, <b>un seul grand bouton</b> qui dit quoi faire maintenant, deux chiffres toujours visibles en bas. Rien d'autre à l'écran : ni case, ni carte, ni graphique. Chiffres inventés pour la mise en page.</p>
+<div class="barre-scenes" id="scenes"></div>
+
+<div class="fenetre" id="fenetre">
+ <div class="tete"><div><span class="nom">ARIANE</span><span class="ou" id="ou">Orbite · Partie 13</span></div><button class="roue" title="Réglages" data-va="reglages">⚙</button></div>
+
+ <!-- 1. Orbite au repos -->
+ <section class="scene" data-scene="repos" data-titre="1 · Orbite, au repos"><div class="corps">
+  <div class="segment" role="group" aria-label="Que veux-tu faire ?"><button aria-pressed="true">Ariane pose (Orbite)</button><button aria-pressed="false" data-va="echo-repos">J'ai la main (Écho)</button></div>
+  <p class="etat">Prêt</p>
+  <p class="phrase">ESV est sur le <b>cut 4790</b>, partie 13. Le lot ira jusqu'à la fin de la partie.</p>
+  <button class="bouton">Démarrer le lot<small>profil « Terrain » : relecture automatique après le lot</small></button>
+  <p class="note">Un autre cut de départ ? Place-toi dessus dans ESV : Ariane suit.</p>
+ </div></section>
+
+ <!-- 2. Lot en cours -->
+ <section class="scene" data-scene="lot" data-titre="2 · Le lot tourne"><div class="corps">
+  <p class="etat vert">Lot en cours · pose des rails</p>
+  <div class="cut">4812<small>cut</small></div>
+  <div><div class="barre"><i style="width:26%"></i></div><div class="barre-ligne"><span>31 / 120 invalides</span><span>26 %</span></div></div>
+  <div class="puces"><span class="puce"><b>27</b> posés</span><span class="puce ambre"><b>4</b> différés</span></div>
+  <p class="note">Rien à faire : tu peux travailler ailleurs. Le bandeau en bas d'ESV répète cette ligne.</p>
+  <button class="bouton calme">Pause</button>
+ </div></section>
+
+ <!-- 3. Incident -->
+ <section class="scene" data-scene="incident" data-titre="3 · Un incident : ESV ne répond plus"><div class="corps">
+  <p class="etat rouge">Lot en pause · à toi</p>
+  <p class="phrase">ESV ne répond plus au <b>cut 4812</b>. Rien n'a été posé sur ce cut.</p>
+  <p class="note">Recharge la page ESV (F5), puis reprends. Ariane repart du même cut.</p>
+  <button class="bouton alerte">Reprendre<small>après le F5</small></button>
+  <details class="autres"><summary>Autres options</summary><div class="rang"><button>Je le fais moi-même (reprise manuelle)</button><button>Passer ce cut en SKIP…</button><button class="danger">Arrêter le lot</button></div></details>
+ </div></section>
+
+ <!-- 4. Relecture -->
+ <section class="scene" data-scene="relecture" data-titre="4 · La relecture tourne seule"><div class="corps">
+  <p class="etat vert">Relecture après le lot</p>
+  <p class="phrase">Ariane relit les verts : <b>12 sur 85</b>, 3 corrigés. <b>Ne touche à rien dans ESV.</b></p>
+  <div><div class="barre"><i style="width:14%"></i></div><div class="barre-ligne"><span>cut 4903</span><span>14 %</span></div></div>
+  <button class="bouton calme">Arrêter la relecture</button>
+ </div></section>
+
+ <!-- 5. Fin : envoyer -->
+ <section class="scene" data-scene="fin" data-titre="5 · Fin du lot : envoyer"><div class="corps">
+  <p class="etat">Lot et relecture finis</p>
+  <p class="phrase"><b>27 posés</b>, 4 différés, 9 verts à contrôler. Relecture : 85 relus, 41 corrigés.</p>
+  <div class="puces"><span class="puce">Partie 13 : <b>120 / 120</b> invalides</span><span class="puce ambre"><b>9</b> à contrôler</span></div>
+  <button class="bouton">Envoyer<small>prépare les fichiers et le message à coller</small></button>
+  <details class="autres"><summary>Autres options</summary><div class="rang"><button>Démarrer un nouveau lot</button><button>Voir les 9 cuts à contrôler</button></div></details>
+ </div></section>
+
+ <!-- 6. Envoi prêt -->
+ <section class="scene" data-scene="envoi" data-titre="6 · L'envoi est prêt"><div class="corps">
+  <p class="etat vert">Envoi prêt</p>
+  <p class="phrase"><b>3 volumes</b> enregistrés, 41 Mo, confirmés complets par le navigateur.</p>
+  <div class="puces"><span class="puce"><b>ariane-lot-…-volume01-sur03.zip</b></span><span class="puce"><b>…volume02-sur03.zip</b></span><span class="puce"><b>…volume03-sur03.zip</b></span></div>
+  <p class="note">Le message est prêt : heures de début et de fin, nom et empreinte SHA-256 de chaque volume. Ariane n'envoie rien sur internet : <b>tu joins les fichiers et tu colles le message</b>.</p>
+  <button class="bouton">Copier le message<small>puis colle-le avec les trois fichiers</small></button>
+  <details class="autres"><summary>Autres options</summary><div class="rang"><button>Ouvrir le dossier des fichiers</button><button>Démarrer un nouveau lot</button></div></details>
+ </div></section>
+
+ <!-- 7. Écho au repos -->
+ <section class="scene" data-scene="echo-repos" data-titre="7 · Écho, au repos"><div class="corps">
+  <div class="segment"><button aria-pressed="false" data-va="repos">Ariane pose (Orbite)</button><button aria-pressed="true">J'ai la main (Écho)</button></div>
+  <p class="etat">Prêt</p>
+  <p class="phrase">Écho regarde ton travail dans ESV et ne touche à rien. Ouvre ton premier cut, puis démarre.</p>
+  <button class="bouton">Démarrer Écho<small>profil « Terrain » : sans raison de correction</small></button>
+ </div></section>
+
+ <!-- 8. Écho en cours -->
+ <section class="scene" data-scene="echo" data-titre="8 · Écho observe"><div class="corps">
+  <p class="etat vert">Écho · observation</p>
+  <div class="cut">148<small>cuts vus</small></div>
+  <div class="puces"><span class="puce"><b>61</b> corrigés</span><span class="puce"><b>1</b> en pause</span></div>
+  <p class="note">Travaille normalement dans ESV. Aucun clic ici entre les cuts.</p>
+  <button class="bouton">Terminer et envoyer<small>clôt la séance, écrit les volumes, copie le message</small></button>
+  <details class="autres"><summary>Autres options</summary><div class="rang"><button>Pause</button></div></details>
+ </div></section>
+
+ <!-- 9. Réglages -->
+ <section class="scene" data-scene="reglages" data-titre="9 · Réglages (écran séparé)"><div class="corps">
+  <p class="lbl">Profil de séance</p>
+  <div class="profil" role="radio" aria-checked="true"><span class="rond"></span><div><strong>Terrain <span class="reco">défaut</span></strong><span class="d">Relecture « corriger » après chaque lot, clic « comme avant », règle grappe coupée, raison de la correction coupée.</span></div></div>
+  <div class="profil" role="radio" aria-checked="false"><span class="rond"></span><div><strong>Terrain + raisons</strong><span class="d">Comme Terrain, avec la lecture des touches 1 à 6 en Écho.</span></div></div>
+  <div class="profil" role="radio" aria-checked="false"><span class="rond"></span><div><strong>Observation</strong><span class="d">Relecture en « ombre » : Ariane visite et note, ne modifie rien.</span></div></div>
+  <div class="profil" role="radio" aria-checked="false"><span class="rond"></span><div><strong>Comparer le clic</strong><span class="d">Comme Terrain, avec le clic « rail gauche recentré ». À n'utiliser que pour un essai.</span></div></div>
+  <div class="profil" role="radio" aria-checked="false"><span class="rond"></span><div><strong>Comme la test 8</strong><span class="d">Tout coupé : relecture coupée, aucune raison. Pour revenir en arrière.</span></div></div>
+  <details class="autres zone"><summary>Réglage fin (rarement utile)</summary>
+   <div class="ligne-reglage"><span>Relecture après le lot</span><select><option>Corriger</option><option>Ombre</option><option>Coupée</option></select></div>
+   <div class="ligne-reglage"><span>Clic du mode rapide</span><select><option>Comme avant</option><option>Rail gauche recentré</option><option>Tout recentré</option></select></div>
+   <div class="ligne-reglage"><span>Grappe de différés</span><select><option>Coupée</option><option>Mise en attente</option></select></div>
+   <div class="ligne-reglage"><span>Raison de la correction</span><select><option>Coupée</option><option>Chiffres du haut</option><option>Alt + chiffre</option><option>Pavé numérique</option></select></div>
+  </details>
+  <div class="zone"><p class="lbl">Affichage</p><div class="ligne-reglage"><span>Thème</span><select><option>Système</option><option>Clair</option><option>Sombre</option></select></div><div class="ligne-reglage"><span>Bandeau d'état dans ESV</span><select><option>Allumé</option><option>Éteint</option></select></div></div>
+  <div class="zone"><p class="lbl">Après confirmation de réception</p><button class="lien">Vider le cache des exports…</button></div>
+  <div class="zone"><p class="lbl">Pour l'analyse</p><p class="note">Détails techniques : santé de la collecte, qualité de capture, valeurs du moteur, départs des parties, résumé de la partie, journal du lot. <a href="#" style="color:var(--text)">Ouvrir les détails →</a></p></div>
+  <div class="zone"><button class="danger">Abandonner la séance en cours…</button></div>
+  <button class="bouton calme" data-va="repos">Retour</button>
+ </div></section>
+
+ <div class="pied">
+  <div><p class="lbl">Partie 13</p><p class="val" id="p-partie">31 / 120</p><p class="sous">invalides traités</p></div>
+  <div><p class="lbl">GCV2 · cuts appris</p><p class="val">2 684 <span style="color:var(--vert)">+ 61</span></p><p class="sous">total du dernier archivage + cette séance</p></div>
+ </div>
+</div>
+
+<p class="explique"><b>À lire.</b> Le mode (Orbite ou Écho) est le seul choix, et seulement au repos. Une fois la séance lancée il disparaît. Le bouton est toujours le seul geste utile ; ce qui est rare (SKIP, arrêt, reprise manuelle) est replié sous « Autres options ». Les choix du lot (relecture, clic, grappe, raison) ne sont plus à l'écran : ils sont dans le profil de l'écran Réglages, fixé une fois.</p>
+</div>
+<script src="scenes.js"></script>
+</body></html>

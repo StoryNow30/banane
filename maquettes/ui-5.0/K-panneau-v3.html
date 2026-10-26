@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panneau unique · version 3</title>
+<style>
+/* Panneau unique, version 3 : deuxième audit du 20/10 (« la V3 doit mieux organiser ton attention »).
+   Même définitions que la V2 (fiches/UI_ETATS_COMPTEURS.md) ; hiérarchie refaite par situation.
+   Maquette statique, chiffres inventés mais cohérents entre eux. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ /* surfaces sombres teintées, peu de bordures */
+ --nuit:#08080c;--s0:#111119;--s1:#171722;--s2:#1f1f2d;--s3:#2a2a3b;
+ --tx:#f1f0f7;--tx2:#b4b2c4;--tx3:#8a88a0;
+ /* accent propre à Ariane : le fil (lilas), distinct des couleurs d'état */
+ --fil:#b9a2ff;--fil-l:rgba(185,162,255,.16);
+ /* couleurs d'état seulement */
+ --ok:#3ecf8e;--ok-f:#1f9a62;--ok-l:#8fe3bc;--dif:#f0b040;--inc:#ff6b5e;--inc-l:rgba(255,107,94,.12)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--nuit);color:var(--tx);font:15px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--fil);outline-offset:2px;border-radius:8px}
+kbd{font:500 12px var(--sans);min-width:22px;text-align:center;display:inline-block;background:var(--s2);border-radius:5px;padding:1px 6px;color:var(--tx2)}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* présentation de la maquette (hors interface) */
+.page{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+.page>h1{font-size:19px;margin:0 0 4px}.page>.intro{color:var(--tx2);max-width:86ch;margin:0 0 16px;font-size:14px}.page a{color:inherit}
+.sc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 22px}
+.sc button{font:500 13px var(--sans);padding:6px 12px;border:0;border-radius:7px;background:var(--s1);color:var(--tx2);cursor:pointer}
+.sc button[aria-pressed=true]{background:var(--tx);color:#000}
+.scene{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.pourquoi{flex:1;min-width:260px;max-width:420px;color:var(--tx2);font-size:14px}
+.pourquoi h2{color:var(--tx);font-size:15px;margin:0 0 6px}.pourquoi ul{margin:0;padding-left:18px}.pourquoi li{margin:0 0 6px}.pourquoi b{color:var(--tx)}
+.fond{position:relative;padding:28px;border-radius:18px;background:radial-gradient(120% 90% at 0% 0%,#1a1830 0%,#0c0c14 60%);max-width:100%}
+
+/* la fenêtre */
+.win{position:relative;width:440px;max-width:100%;border-radius:16px;background:var(--s0);box-shadow:0 0 0 1px rgba(255,255,255,.05),0 30px 70px rgba(0,0,0,.55);overflow:hidden;transition:width .25s ease}
+.win.large{width:820px}
+.top{display:flex;align-items:center;gap:10px;height:50px;padding:0 10px 0 18px}
+.mode{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.mode .pt{width:8px;height:8px;border-radius:50%;background:var(--fil);box-shadow:0 0 0 4px var(--fil-l)}
+.top .sp{flex:1}
+.esv{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)}
+.esv i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.esv.ko{color:var(--inc);font-weight:600}.esv.ko i{background:var(--inc)}
+.ico{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:var(--tx2);cursor:pointer}
+.ico:hover{background:var(--s1);color:var(--tx)}
+
+.hero{padding:10px 22px 0;animation:entre .28s ease both}
+.hero h1{font-size:23px;line-height:1.25;font-weight:650;letter-spacing:-.01em;margin:0}
+.hero p{margin:6px 0 0;color:var(--tx2);font-size:15px}
+@keyframes entre{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* la progression : un fil, avec une tête lumineuse au cut en cours */
+.prog{padding:22px 22px 0}
+.chiffre{display:flex;align-items:baseline;gap:10px}
+.chiffre b{font-size:40px;line-height:1;font-weight:650;letter-spacing:-.02em}
+.chiffre span{color:var(--tx2);font-size:15px}
+.chiffre em{font-style:normal;margin-left:auto;color:var(--tx2);font-size:14px}
+.chiffre em b{font-size:14px;color:var(--tx);letter-spacing:0}
+.filp{position:relative;height:6px;margin:14px 0 0;border-radius:3px;background:var(--s2);display:flex;overflow:visible}
+.filp i{height:100%;transition:width .5s ease}.filp i:first-child{border-radius:3px 0 0 3px}
+.filp .tete{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--fil);box-shadow:0 0 0 5px var(--fil-l),0 0 18px var(--fil);animation:pouls 1.6s ease-in-out infinite}
+@keyframes pouls{50%{box-shadow:0 0 0 8px rgba(185,162,255,.08),0 0 22px var(--fil)}}
+.prog.terne{opacity:.45}
+
+/* ce qui se passe maintenant */
+.now{display:flex;align-items:center;gap:12px;margin:22px 22px 0;padding:14px 16px;border-radius:12px;background:var(--s1)}
+.now .cut{font:600 15px var(--mono)}
+.now p{margin:0;flex:1}.now small{display:block;color:var(--tx2);font-size:13px}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--fil-l);border-top-color:var(--fil);animation:tour 1s linear infinite;flex:none}
+@keyframes tour{to{transform:rotate(360deg)}}
+
+/* exceptions : une ligne qui ouvre la vue développée */
+.lien{display:flex;align-items:center;gap:12px;width:calc(100% - 28px);margin:6px 14px 0;padding:12px 10px;border:0;border-radius:10px;background:transparent;color:var(--tx);font:15px var(--sans);text-align:left;cursor:pointer}
+.lien:hover{background:var(--s1)}.lien .n{font-weight:650;min-width:26px}
+.lien .q{color:var(--tx2);margin-left:auto;display:flex;align-items:center;gap:4px;font-size:13px}
+
+/* détails repliables */
+details.det{margin:8px 22px 0;border-top:1px solid rgba(255,255,255,.06)}
+details.det summary{list-style:none;display:flex;align-items:center;gap:8px;padding:12px 0;color:var(--tx2);font-size:14px;cursor:pointer}
+details.det summary::-webkit-details-marker{display:none}
+details.det summary svg{transition:transform .2s}details.det[open] summary svg{transform:rotate(90deg)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;font-size:14px;margin:0 0 14px}.kv dt{color:var(--tx2)}.kv dd{margin:0}
+
+/* ruban (seulement dans les détails) */
+.rub{margin:4px 0 16px}
+.rub .t{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--tx2);margin:0 0 8px;flex-wrap:wrap}
+.cases{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.c{width:14px;height:14px;border-radius:3px;display:inline-grid;place-items:center;font:700 10px var(--sans);color:#160a00;flex:none}
+.c.p{background:var(--ok-f)}.c.v{background:transparent;box-shadow:inset 0 0 0 2px var(--ok-l)}
+.c.d{background:var(--dif)}.c.d::after{content:"";width:8px;height:2px;background:#3a2600}
+.c.n{background:var(--tx);box-shadow:0 0 0 2px var(--fil)}
+.c.x{background:var(--inc)}.c.x::after{content:"!";color:#2a0000}
+.reste{display:inline-flex;align-items:center;height:22px;margin-left:6px;padding:0 10px;border-radius:11px;border:1px dashed var(--s3);color:var(--tx2);font-size:12.5px}
+.leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--tx2);margin:10px 0 0}.leg span{display:inline-flex;align-items:center;gap:6px}
+
+/* incident */
+.alerte{margin:12px 14px 0;padding:18px 18px 16px;border-radius:14px;background:var(--inc-l);box-shadow:inset 0 0 0 1px rgba(255,107,94,.25);animation:entre .28s ease both}
+.alerte h1{display:flex;gap:10px;align-items:flex-start;font-size:20px;line-height:1.3;margin:0;font-weight:650}
+.alerte h1 svg{color:var(--inc);width:22px;height:22px;margin-top:2px}
+.alerte p{margin:8px 0 0 32px;color:var(--tx)}
+.etapes{margin:18px 22px 0;padding:0;list-style:none;counter-reset:e}
+.etapes li{counter-increment:e;display:grid;grid-template-columns:28px 1fr;gap:4px;margin:0 0 12px}
+.etapes li::before{content:counter(e);display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--s2);font:600 12.5px var(--sans);color:var(--tx2)}
+.etapes small{display:block;color:var(--tx2);font-size:13.5px}
+
+/* fin */
+.reste-grand{margin:18px 22px 0;padding:18px;border-radius:14px;background:var(--s1)}
+.reste-grand b.n{font-size:34px;line-height:1;font-weight:650;letter-spacing:-.02em}
+.reste-grand .l{font-size:17px;font-weight:600;margin-left:6px}
+.reste-grand .d{display:flex;gap:18px;margin:10px 0 0;color:var(--tx2);font-size:14px}
+.reste-grand .d span{display:inline-flex;align-items:center;gap:7px}
+.bilan{margin:16px 22px 0;padding:0;list-style:none;font-size:14.5px}
+.bilan li{display:flex;align-items:center;gap:10px;padding:7px 0}.bilan li svg{color:var(--ok)}.bilan li.att svg{color:var(--tx3)}
+.bilan small{color:var(--tx2);margin-left:auto;font-size:13px}
+
+/* action principale : toujours au même endroit */
+.act{display:flex;align-items:center;gap:8px;margin-top:18px;padding:14px 14px 14px 18px;background:var(--s1)}
+.act .sp{flex:1}.act .info{font-size:13px;color:var(--tx2)}
+.bt{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:0;border-radius:10px;background:var(--s2);color:var(--tx);font:600 14.5px var(--sans);cursor:pointer}
+.bt:hover{background:var(--s3)}
+.bt.p{background:var(--tx);color:#0b0b12}.bt.p:hover{background:#fff}.bt.p kbd{background:rgba(0,0,0,.08);color:#4a4a5a}
+.bt.ok{background:var(--ok);color:#03130b}.bt.ok kbd{background:rgba(0,0,0,.12);color:#03130b}
+.bt.l{background:transparent;color:var(--tx2);font-weight:500}.bt.l:hover{background:var(--s2);color:var(--tx)}
+
+/* vue développée : la liste à examiner */
+.retour{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;border:0;background:none;color:var(--tx);cursor:pointer;padding:6px 8px;border-radius:8px}
+.retour:hover{background:var(--s1)}
+.filtres{display:flex;gap:6px;padding:4px 18px 0}
+.filtres button{font:500 14px var(--sans);height:34px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:var(--tx2);cursor:pointer}
+.filtres button[aria-pressed=true]{background:var(--s2);color:var(--tx)}
+.filtres button b{margin-left:6px;color:var(--tx)}
+.liste{margin:10px 10px 0;max-height:360px;overflow:auto}
+.row{display:grid;grid-template-columns:20px 64px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer}
+.row:hover{background:var(--s1)}.row.sel{background:var(--s2);box-shadow:inset 3px 0 0 var(--fil)}
+.row .cut{font:600 14px var(--mono)}.row .m{font-size:14.5px}.row .m small{display:block;color:var(--tx2);font-size:13px}
+.row .o{opacity:0;font-size:13px;color:var(--tx2);display:flex;align-items:center;gap:6px}.row.sel .o,.row:hover .o{opacity:1}
+.grp{font-size:13px;color:var(--tx2);padding:12px 12px 4px;font-weight:600}
+
+/* palette */
+.voile{position:absolute;inset:0;background:rgba(6,6,10,.62);backdrop-filter:blur(2px);display:flex;justify-content:center;padding-top:62px;animation:fondu .15s ease both}
+@keyframes fondu{from{opacity:0}}
+.pal{width:404px;max-width:calc(100% - 24px);align-self:flex-start;border-radius:14px;background:var(--s1);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 60px rgba(0,0,0,.6);overflow:hidden;animation:entre .18s ease both}
+.pal .champ{display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;font-size:16px}
+.pal .champ .curseur{width:2px;height:20px;background:var(--fil);animation:clin 1s steps(1) infinite;margin-left:-8px}
+@keyframes clin{50%{opacity:0}}
+.pal .champ svg{color:var(--tx2)}
+.pal .gh{display:flex;justify-content:space-between;padding:10px 16px 4px;font-size:13px;color:var(--tx2);font-weight:600}
+.pal .gh span{font-weight:400}
+.pal .it{display:flex;align-items:center;gap:12px;margin:0 6px;padding:10px 10px;border-radius:9px;cursor:pointer;font-size:15px}
+.pal .it.sel{background:var(--s3)}
+.pal .it svg{color:var(--tx2)}.pal .it .r{margin-left:auto;font-size:13px;color:var(--tx2)}
+.pal .it .actuel{font-size:12.5px;color:var(--fil);background:var(--fil-l);padding:1px 8px;border-radius:10px}
+.pal .it.sel .r{color:var(--tx)}
+.pal .pied{display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 16px;background:var(--s0);font-size:13px;color:var(--tx2)}
+.pal .pied .sp{flex:1}.pal .pied b{color:var(--tx)}
+.pal .ef{margin:2px 16px 6px 46px;font-size:13px;color:var(--fil)}
+</style></head>
+<body>
+<div class="page">
+<h1>K · Panneau unique, version 3</h1>
+<p class="intro">Après le deuxième audit : une hiérarchie par situation, une phrase dominante, une seule action à un endroit fixe, chaque chiffre affiché une seule fois. Le détail technique (dernière validation, ruban) est replié et revient au premier plan en cas d’incident. Les définitions de la V2 sont gardées (<a href="../../fiches/UI_ETATS_COMPTEURS.md">fiche des états et compteurs</a>). Maquette statique, chiffres inventés mais cohérents. <a href="index.html">← toutes les maquettes</a></p>
+<nav class="sc" id="sc" aria-label="Situations"></nav>
+<div class="scene"><div class="fond"><div class="win" id="win"></div></div><aside class="pourquoi" id="pq"></aside></div>
+</div>
+<script>
+const S={pause:'<path d="M8 5v14M16 5v14"/>',alert:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',check:'<path d="M5 12l5 5 9-10"/>',
+ circle:'<circle cx="12" cy="12" r="8"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>',
+ search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',chev:'<path d="M9 6l6 6-6 6"/>',back:'<path d="M15 6l-6 6 6 6"/>',
+ link:'<path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"/>',down:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',archive:'<path d="M4 7h16v13H4zM3 4h18v3H3zM10 11h4"/>',
+ eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',off:'<circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/>',
+ pen:'<path d="M4 20l4-1 11-11-3-3L5 16z"/>',file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${S[n]}</svg>`;
+const K=(...k)=>k.map(x=>`<kbd>${x}</kbd>`).join(' ');
+/* Données : 120 ciblés. En cours : 27 posés + 4 différés = 31 traités, cut 4812 ouvert, 4811 dernier validé.
+   Fin : 109 posés + 11 différés = 120 traités ; 9 verts à contrôler (hors lot, jamais comptés deux fois). */
+const D1=[6,13,19,26],V1=[3,9,22];
+
+const entete=(esv=true)=>`<header class="top"><span class="mode"><i class="pt"></i>Orbite · partie 13</span><span class="sp"></span>
+ <span class="esv${esv?'':' ko'}"><i></i>${esv?'ESV répond':'ESV ne répond plus'}</span>
+ <button class="ico" aria-label="Rechercher une action (Ctrl K)" title="Rechercher une action · Ctrl K">${ic('search')}</button>
+ <button class="ico" aria-label="Réglages" title="Réglages">${ic('gear')}</button></header>`;
+const fil=(po,di,c,tete=true)=>`<div class="filp" role="img" aria-label="${po} posés et ${di} différés sur ${c} ciblés"><i style="width:${po/c*100}%;background:var(--ok-f)"></i><i style="width:${di/c*100}%;background:var(--dif)"></i>${tete?`<span class="tete" style="left:${(po+di)/c*100}%"></span>`:''}</div>`;
+const cases=(n,o={})=>Array.from({length:n},(_,i)=>{const k=i+1,cut=4781+k;
+  const t=o.cours===k?['n','en cours']:o.erreur===k?['x','résultat incertain']:(o.diff||[]).includes(k)?['d','différé']:(o.voie||[]).includes(k)?['v','posé par la voie']:['p','posé'];
+  return `<i class="c ${t[0]}" title="Cut ${cut} · ${t[1]}"></i>`;}).join('');
+const ruban=(n,o,reste)=>`<div class="rub"><div class="t"><span>Cuts ciblés, dans l’ordre du lot</span></div><div class="cases">${cases(n,o)}${reste?`<span class="reste">${reste} restants · numéros pas encore connus</span>`:''}</div>
+ <div class="leg"><span><i class="c p"></i>posé</span><span><i class="c v"></i>posé par la voie</span><span><i class="c d"></i>différé</span><span><i class="c n"></i>en cours</span><span><i class="c x"></i>résultat incertain</span></div></div>`;
+const act=(gauche,droite)=>`<footer class="act">${gauche}<span class="sp"></span>${droite}</footer>`;
+
+const enCours=(ouvert=false)=>entete()+
+ `<section class="hero"><h1>Orbite travaille sur la partie 13</h1><p>Lot jusqu’à la fin de la partie · relecture et correction après le lot</p></section>
+ <section class="prog"><div class="chiffre"><b>31</b><span>cuts traités sur 120</span><em><b>4</b> différés</em></div>${fil(27,4,120)}</section>
+ <div class="now"><span class="spin" aria-hidden="true"></span><p>Pose en cours sur le <span class="cut">cut 4812</span><small>Environ 8 s par cut</small></p></div>
+ <button class="lien" data-go="liste"><span class="n">4</span>différés à reprendre après le lot<span class="q">Voir ${ic('chev')}</span></button>
+ <details class="det"${ouvert?' open':''}><summary>${ic('chev')}Détails</summary>
+  <dl class="kv"><dt>Dernière validation</dt><dd>cut 4811</dd><dt>Posés</dt><dd>27, dont 3 par la voie</dd><dt>Restants</dt><dd>89</dd></dl>${ruban(31,{diff:D1,voie:V1,cours:31},89)}</details>`+
+ act(`<span class="info">${K('Ctrl','K')} actions</span>`,`<button class="bt">${ic('pause')} Pause</button>`);
+
+const incident=()=>entete(false)+
+ `<div class="alerte" role="alert"><h1>${ic('alert')}<span>Ariane est interrompue : ESV ne répond plus.</span></h1>
+  <p>La pose du <b>cut 4812</b> n’a pas pu être confirmée. Aucune validation n’a été envoyée sur ce cut, et Ariane n’y renverra aucune commande.</p></div>
+ <ol class="etapes">
+  <li><span>Regarde le cut 4812 dans ESV.<small>La pose a pu être écrite en partie : c’est à toi de juger.</small></span></li>
+  <li><span>Si ESV reste figée, recharge la page (F5).</span></li>
+  <li><span>Archive le résultat interrompu.<small>Le lot s’arrête ; le cut 4812 est mis de côté et ne sera pas repris par Ariane. Ensuite, tu peux lancer un nouveau lot.</small></span></li></ol>
+ <details class="det"><summary>${ic('chev')}Où en était le lot</summary>
+  <dl class="kv"><dt>Dernière validation</dt><dd>cut 4811</dd><dt>Traités</dt><dd>31 sur 120 (27 posés, 4 différés)</dd></dl>${ruban(31,{diff:D1,voie:V1,erreur:31},89)}</details>`+
+ act(`<button class="bt l">Arrêter le lot</button>`,`<button class="bt p">${ic('archive')} Archiver le résultat · cut 4812</button>`);
+
+const fin=()=>entete()+
+ `<section class="hero"><h1>Lot terminé</h1><p>120 cuts traités sur 120 · 109 posés, 11 différés</p></section>
+ <div class="reste-grand"><b class="n">20</b><span class="l">cuts restent à examiner</span>
+  <div class="d"><span><i class="c d"></i>11 différés</span><span><i class="c p" style="background:transparent;box-shadow:inset 0 0 0 2px var(--dif)"></i>9 verts à contrôler</span></div></div>
+ <ul class="bilan"><li>${ic('check')}Relecture automatique terminée<small>85 relus · 41 corrigés</small></li>
+  <li class="att">${ic('circle')}Contrôle manuel restant<small>les 20 cuts ci-dessus</small></li>
+  <li class="att">${ic('circle')}Export pas encore fait</li></ul>
+ <details class="det"><summary>${ic('chev')}Ruban du lot</summary>${ruban(120,{diff:[6,13,19,26,40,52,61,77,88,96,113],voie:[3,9,22,35,47,70,101]})}</details>`+
+ act(`<button class="bt l">${ic('down')} Exporter</button>`,`<button class="bt p" data-go="liste">Examiner les 20 cuts ${K('↵')}</button>`);
+
+const L=[['d',4787,'Rail non résolu',''],['d',4794,'Confiance basse',''],['d',4800,'Rail non résolu',''],['d',4807,'Écartement hors contrat','aucune commande envoyée'],['d',4821,'Confiance basse',''],['d',4833,'Rail non résolu',''],['d',4842,'Confiance basse',''],['d',4858,'Rail non résolu',''],['d',4869,'Confiance basse',''],['d',4877,'Écartement hors contrat',''],['d',4894,'Rail non résolu',''],
+ ['v',4655,'PN 4655–4657','passage à niveau'],['v',4656,'PN 4655–4657',''],['v',4657,'PN 4655–4657',''],['v',4788,'Autour du différé 4787',''],['v',4895,'Autour du différé 4894',''],['v',4712,'Écartement, cut 4712',''],['v',4740,'ADV 4740–4741','appareil de voie'],['v',4741,'ADV 4740–4741',''],['v',4903,'Hauteur, cut 4903','']];
+let filtre='tous',sel=0;
+const liste=()=>{const rows=L.filter(r=>filtre==='tous'||r[0]===filtre);if(sel>=rows.length)sel=0;
+ const grp=t=>`<div class="grp">${t}</div>`;let h='',dern='';
+ rows.forEach((r,i)=>{const g=r[0]==='d'?'Différés : à reprendre':'Verts à contrôler : ESV les a laissés valides, Ariane les trouve suspects';if(g!==dern){h+=grp(g);dern=g;}
+  h+=`<div class="row${i===sel?' sel':''}" data-i="${i}" tabindex="-1"><i class="c ${r[0]==='d'?'d':'p'}"${r[0]==='v'?' style="background:transparent;box-shadow:inset 0 0 0 2px var(--dif)"':''}></i><span class="cut">${r[1]}</span><span class="m">${r[2]}${r[3]?`<small>${r[3]}</small>`:''}</span><span class="o">${ic('link')} Ouvrir dans ESV</span></div>`;});
+ const s=rows[sel];
+ return `<header class="top"><button class="retour" data-go="fin">${ic('back')} Lot terminé</button><span class="sp"></span><span class="esv"><i></i>ESV répond</span><button class="ico" aria-label="Rechercher une action">${ic('search')}</button><button class="ico" aria-label="Réglages">${ic('gear')}</button></header>
+ <section class="hero" style="padding-top:4px"><h1>20 cuts à examiner</h1><p>Ouvre un cut dans ESV, corrige-le, puis passe au suivant avec ${K('J')} et ${K('K')}.</p></section>
+ <nav class="filtres">${[['tous','Tous',20],['d','Différés',11],['v','Verts à contrôler',9]].map(([k,t,n])=>`<button data-f="${k}" aria-pressed="${filtre===k}">${t}<b>${n}</b></button>`).join('')}</nav>
+ <div class="liste">${h}</div>`+
+ act(`<button class="bt l">${ic('down')} Exporter</button>`,`<button class="bt p">Ouvrir le cut ${s[1]} dans ESV ${K('↵')}</button>`);};
+
+const P=[{g:'Relecture après le lot',gs:'pris au prochain lot',items:[['pen','Relire et corriger','actuel'],['eye','Relire sans modifier',''],['off','Désactiver la relecture','']],verbe:'Choisir'},
+ {g:'Bilans',items:[['file','Ouvrir la dernière relecture','partie 13 · 85 relus']],verbe:'Ouvrir'}];
+let psel=1;
+const palette=()=>{let k=0,h='',cur=null;
+ for(const grp of P){h+=`<div class="gh">${grp.g}${grp.gs?`<span>${grp.gs}</span>`:''}</div>`;
+  for(const it of grp.items){const s=k===psel;if(s)cur={grp,it};
+   h+=`<div class="it${s?' sel':''}" data-k="${k}">${ic(it[0])}${it[1]}${it[2]==='actuel'?'<span class="r"><span class="actuel">actuel</span></span>':it[2]?`<span class="r">${it[2]}</span>`:''}</div>`;
+   if(s&&grp.gs&&it[2]!=='actuel')h+=`<div class="ef">S’appliquera au prochain lot ; le lot en cours garde « Relire et corriger ».</div>`;k++;}}
+ const verbe=cur.it[2]==='actuel'?'Déjà choisi':cur.grp.verbe;
+ return enCours()+`<div class="voile"><div class="pal" role="dialog" aria-label="Rechercher une action"><div class="champ">${ic('search')}rel<span class="curseur"></span></div>${h}
+  <div class="pied">${K('↑','↓')} parcourir<span class="sp"></span><b>${verbe}</b>${K('↵')}${K('Échap')}</div></div></div>`;};
+
+const SC={
+ cours:{t:'1 · Le lot tourne',h:()=>enCours(),w:'',p:`<h2>Surveiller sans lire</h2><ul><li>Une phrase dit qui travaille et sur quoi. Le <b>chiffre principal</b> est celui qui avance : traités sur ciblés.</li><li>Chaque nombre n’apparaît <b>qu’une fois</b>. Les restants et la dernière validation sont dans « Détails ».</li><li>Le fil lilas est la signature d’Ariane : sa tête lumineuse marque le cut en cours. Le vert reste réservé aux réussites.</li><li>« ESV répond » est un simple point en haut à droite. Il ne prend de la place qu’en cas de problème.</li><li>L’action principale est <b>toujours en bas à droite</b>, au même endroit.</li></ul>`},
+ details:{t:'1 bis · Détails ouverts',h:()=>enCours(true),w:'',p:`<h2>Le détail, à la demande</h2><ul><li>Le ruban est dans les détails : il sert à voir comment les résultats se répartissent, pas à suivre le lot.</li><li>Les cuts restants forment <b>une seule pastille en pointillé</b>, sans cases : leurs numéros ne sont pas encore connus.</li><li>Chaque case porte une forme en plus de sa couleur. La légende dit « résultat incertain », jamais « à contrôler ».</li></ul>`},
+ incident:{t:'2 · ESV ne répond plus',h:incident,w:'',p:`<h2>L’incident passe devant tout</h2><ul><li>Le regard tombe d’abord sur deux phrases : ce qui se passe, puis le cut concerné.</li><li><b>Vérifié dans le code :</b> quand une pose est interrompue, Ariane ne propose pas « Reprendre ». Elle bloque toute nouvelle écriture jusqu’à ce que tu archives le résultat. La V2 se trompait en montrant « Reprendre ».</li><li>« Aucune validation envoyée » est vrai ici, parce que la validation vient après la pose. Si c’est la validation qui est interrompue, la phrase devient « La validation du cut 4812 n’est pas confirmée : vérifie-la dans ESV ».</li><li>F5 n’est proposé que <b>si ESV reste figée</b>, comme le dit déjà le panneau actuel.</li></ul>`},
+ fin:{t:'3 · Lot terminé',h:fin,w:'',p:`<h2>La prochaine tâche, pas le compte rendu</h2><ul><li>En haut : le lot est fini. Au centre : <b>20 cuts restent à examiner</b>.</li><li>« Relecture automatique terminée » et « Contrôle manuel restant » sont deux lignes séparées : ce ne sont pas les mêmes cuts.</li><li>Connexion, dernière validation et « en cours » disparaissent : ils ne servent plus à rien ici.</li><li>L’action principale est <b>Examiner les 20 cuts</b>. L’export est en second, à gauche.</li></ul>`},
+ liste:{t:'3 bis · Examiner les 20 cuts',h:liste,w:'large',p:`<h2>La vue développée sert une tâche</h2><ul><li>La fenêtre s’élargit seulement pour cette liste.</li><li>Chaque cut porte son motif. Les verts à contrôler viennent de leur propre calcul et ne recoupent jamais un différé.</li><li>La sélection reste stable quand on filtre. L’action principale nomme le cut : « Ouvrir le cut 4787 dans ESV ».</li><li>Pendant un lot, « Ouvrir dans ESV » serait grisé, parce qu’il changerait le cut sous le lot.</li></ul>`},
+ palette:{t:'4 · Palette',h:palette,w:'',p:`<h2>Plus courte à lire</h2><ul><li>Le groupe dit « Relecture après le lot » une fois. Les options disent seulement ce qu’elles font.</li><li>« Pris au prochain lot » est collé au réglage choisi, avec ce que garde le lot en cours.</li><li>Le verbe suit le résultat : « Choisir » pour un réglage, « Ouvrir » pour un bilan, « Déjà choisi » pour l’option actuelle.</li><li>Les réglages restent accessibles sans la palette, par l’engrenage en haut à droite.</li><li>Essaie ${K('↑')} ${K('↓')} : la sélection ne bouge pas tant que tu tapes.</li></ul>`}};
+let cur='cours';
+const nav=document.getElementById('sc'),win=document.getElementById('win'),pq=document.getElementById('pq');
+nav.innerHTML=Object.entries(SC).map(([k,v])=>`<button data-s="${k}">${v.t}</button>`).join('');
+function aff(k){cur=k;const s=SC[k];win.className='win'+(s.w?' '+s.w:'');win.innerHTML=s.h();pq.innerHTML=s.p;
+ nav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.s===k));}
+nav.onclick=e=>{const b=e.target.closest('button');if(b)aff(b.dataset.s);};
+win.onclick=e=>{const g=e.target.closest('[data-go]');if(g){aff(g.dataset.go);return;}
+ const f=e.target.closest('[data-f]');if(f){filtre=f.dataset.f;sel=0;aff('liste');return;}
+ const r=e.target.closest('.row');if(r){sel=+r.dataset.i;aff('liste');return;}
+ const it=e.target.closest('.it');if(it){psel=+it.dataset.k;aff('palette');}};
+document.addEventListener('keydown',e=>{
+ if(cur==='palette'&&(e.key==='ArrowDown'||e.key==='ArrowUp')){e.preventDefault();psel=(psel+(e.key==='ArrowDown'?1:3))%4;aff('palette');}
+ if(cur==='liste'&&/^[jkJK]$|^Arrow(Up|Down)$/.test(e.key)){e.preventDefault();const n=L.filter(r=>filtre==='tous'||r[0]===filtre).length;sel=(sel+(/j|Down/i.test(e.key)?1:n-1))%n;aff('liste');}});
+aff('cours');
+</script>
+</body></html>

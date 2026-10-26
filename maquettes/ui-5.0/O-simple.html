@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ariane 5.0 · maquette simple</title>
+<style>
+/* Retour de Mic après quelques jours d'essai : pas assez clair, trop lent à utiliser, le style ne plaît pas.
+   Parti pris : UN écran, UN état en grand, UN bouton principal. Orbite et Écho se changent d'un clic en haut ; rien d'autre à chercher.
+   Maquette statique, chiffres inventés, aucune donnée réelle. Rien ici n'est livré dans une version. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ --fond:#f4f2ee;--carte:#fff;--tx:#17171a;--tx2:#5d5d66;--filet:#e3e0d9;--btn:#17171a;--btn-tx:#fff;
+ --pret:#5d6b82;--cours:#1c8a4f;--pause:#b7791f;--toi:#c8382d;--fini:#1c8a4f;--poses:#17171a;--dif:#e0a030}
+[data-th=sombre]{--fond:#101114;--carte:#181a1f;--tx:#f2f2f4;--tx2:#a0a3ad;--filet:#2a2d35;--btn:#f2f2f4;--btn-tx:#101114;
+ --pret:#8da0bf;--cours:#47d08a;--pause:#f0b445;--toi:#ff7468;--fini:#47d08a;--poses:#f2f2f4;--dif:#f0b445}
+*{box-sizing:border-box}body{margin:0;background:#8a8780;color:var(--tx);font:16px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+[data-th=sombre] body,body[data-th=sombre]{background:#050506}
+.page{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px;color:#fff}
+.bar button{font:600 13px var(--sans);padding:7px 13px;border:0;border-radius:8px;background:rgba(255,255,255,.18);color:#fff;cursor:pointer}
+.bar button[aria-pressed=true]{background:#fff;color:#111}.bar .sep{width:14px}.bar b{font-size:13px;opacity:.85;margin-right:2px}
+.cadre{width:100%;overflow:hidden}
+.app{width:1000px;height:640px;transform-origin:0 0;background:var(--fond);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 70px -30px rgba(0,0,0,.6)}
+/* haut */
+.haut{display:flex;align-items:center;gap:14px;height:64px;padding:0 28px;flex:none}
+.logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:18px;letter-spacing:-.02em}
+.logo svg{width:26px;height:26px}
+.seg{display:flex;padding:3px;border-radius:12px;background:var(--filet);margin-left:10px}
+.seg button{border:0;background:transparent;padding:7px 20px;border-radius:9px;font:700 15px var(--sans);color:var(--tx2);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--carte);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.seg button[disabled]{opacity:.45;cursor:not-allowed}
+.sp{flex:1}
+.esv{position:relative;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:10px;background:var(--carte);box-shadow:inset 0 0 0 1px var(--filet);font:600 14px var(--sans);color:var(--tx);cursor:pointer;border:0}
+.esv i{width:9px;height:9px;border-radius:50%;background:var(--cours)}.esv.non i{background:var(--toi)}
+.menu{position:absolute;top:44px;right:0;width:300px;padding:6px;border-radius:12px;background:var(--carte);box-shadow:0 0 0 1px var(--filet),0 20px 40px -10px rgba(0,0,0,.4);z-index:5;text-align:left}
+.menu button{display:flex;width:100%;align-items:center;gap:10px;padding:10px;border:0;background:transparent;border-radius:8px;font:600 14px var(--sans);color:var(--tx);cursor:pointer}.menu button:hover{background:var(--fond)}.menu small{color:var(--tx2);font-weight:500;margin-left:auto}
+.ico{width:38px;height:38px;border-radius:10px;border:0;background:transparent;color:var(--tx2);cursor:pointer;display:grid;place-items:center}.ico:hover{background:var(--filet);color:var(--tx)}
+.ico svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+/* centre */
+.corps{flex:1;min-height:0;display:grid;grid-template-columns:1.15fr 1fr;gap:20px;padding:6px 28px 8px}
+.etat{display:flex;flex-direction:column;justify-content:center;padding:0 8px 0 4px}
+.etat.pret{--c:var(--pret)}.etat.cours{--c:var(--cours)}.etat.pause{--c:var(--pause)}.etat.toi{--c:var(--toi)}.etat.fini{--c:var(--fini)}
+.mot{display:flex;align-items:center;gap:14px;font-size:54px;font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--c)}
+.mot .pastille{width:22px;height:22px;border-radius:50%;background:var(--c);flex:none;position:relative}
+.cours .pastille{animation:bat 1.4s ease-in-out infinite}@keyframes bat{50%{transform:scale(.7);opacity:.6}}
+.pause .pastille{border-radius:5px;background:transparent;border-left:7px solid var(--c);border-right:7px solid var(--c);width:22px;height:22px}
+.toi .pastille{border-radius:5px}
+.fini .pastille{background:transparent;border:0;width:30px}.fini .pastille::after{content:"";position:absolute;left:5px;top:1px;width:11px;height:20px;border-right:5px solid var(--c);border-bottom:5px solid var(--c);transform:rotate(40deg)}
+.ligne{margin:12px 0 0;font-size:18px;color:var(--tx2);min-height:27px}.ligne b{color:var(--tx);font-family:var(--mono);font-weight:600}
+.actions{display:flex;align-items:center;gap:18px;margin-top:26px}
+.go{height:58px;padding:0 30px;border:0;border-radius:29px;background:var(--btn);color:var(--btn-tx);font:700 18px var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:10px;transition:transform .12s}.go:active{transform:scale(.96)}.go:hover{transform:translateY(-1px)}
+.go svg{width:18px;height:18px}.go[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.lien{border:0;background:transparent;font:600 15px var(--sans);color:var(--tx2);cursor:pointer;padding:6px 2px;text-decoration:underline;text-underline-offset:4px}.lien:hover{color:var(--tx)}.lien.danger{color:var(--toi)}
+.bornes{margin-top:14px;font-size:14.5px;color:var(--tx2)}
+/* chiffres */
+.chiffres{background:var(--carte);border-radius:20px;padding:26px 28px;box-shadow:inset 0 0 0 1px var(--filet);display:flex;flex-direction:column;justify-content:center}
+.grand{font-size:76px;font-weight:800;letter-spacing:-.05em;line-height:1}.grand small{font-size:22px;font-weight:600;letter-spacing:0;color:var(--tx2);margin-left:6px}
+.sous{margin-top:6px;color:var(--tx2);font-size:15px}
+.barre{height:12px;border-radius:6px;background:var(--filet);margin:20px 0 14px;display:flex;overflow:hidden}.barre i{display:block;height:100%}
+.compte{display:flex;gap:22px;font-size:16px;font-weight:600}.compte span{display:inline-flex;align-items:center;gap:8px}.compte i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.vide{color:var(--tx2);font-size:16px}
+/* à regarder + cache */
+.bas{flex:none;display:grid;grid-template-columns:1.15fr 1fr;gap:20px;padding:8px 28px 22px;align-items:end}
+.regarder h4,.cache h4{margin:0 0 6px;font-size:13px;font-weight:700;color:var(--tx2);letter-spacing:.02em}
+.regarder .l{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--filet);font-size:15px}.regarder .l:first-of-type{border-top:0}
+.regarder .l b{font-family:var(--mono);font-weight:600}.regarder .l span{color:var(--tx2)}.regarder .l i{width:10px;height:10px;border-radius:3px;background:var(--dif)}
+.cache{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:var(--carte);box-shadow:inset 0 0 0 1px var(--filet)}
+.cache .tx{flex:1;font-size:14px}.cache .tx small{display:block;color:var(--tx2);font-size:13px}
+.vider{height:40px;padding:0 16px;border-radius:20px;border:1.5px solid var(--tx);background:transparent;color:var(--tx);font:700 14px var(--sans);cursor:pointer}.vider[disabled]{opacity:.4;cursor:not-allowed;border-color:var(--tx2)}
+.alerte{margin:0 28px 8px;padding:12px 16px;border-radius:12px;background:color-mix(in srgb,var(--toi) 12%,var(--carte));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--toi) 40%,transparent);font-size:15.5px;flex:none}
+.voile{position:absolute;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:9}
+.dlg{width:420px;padding:22px;border-radius:16px;background:var(--carte);box-shadow:0 30px 60px rgba(0,0,0,.5)}.dlg h4{margin:0 0 8px;font-size:18px}.dlg p{margin:0 0 16px;color:var(--tx2);font-size:15px}.dlg .b{display:flex;gap:10px;justify-content:flex-end}
+.note{color:#fff;margin:18px 0 0;font-size:14.5px;max-width:105ch;line-height:1.55}.note b{color:#fff}.note ul{margin:6px 0 0;padding-left:18px}
+.wrap{position:relative}
+</style></head>
+<body data-th="clair"><div class="page">
+<div class="bar" id="sc"><b>Scène</b></div>
+<div class="bar"><b>Style</b><button data-th="clair" aria-pressed="true">Clair</button><button data-th="sombre" aria-pressed="false">Sombre</button><span class="sep"></span><b>Astuce</b><span style="font-size:13px;opacity:.85">les boutons marchent : essaie « Démarrer », « Pause », « Reprendre », « Vider le cache »</span></div>
+<div class="cadre" id="cadre"><div class="app wrap" id="app"></div></div>
+<div class="note" id="note"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const SVG={play:'<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>',pause:'<svg viewBox="0 0 24 24"><path d="M7 4v16M17 4v16" stroke="currentColor" stroke-width="4.5" fill="none"/></svg>',
+ gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg>',
+ logo:'<svg viewBox="0 0 32 32"><path d="M8.5 26L14.6 6M23.5 26L17.4 6" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" fill="none"/><path d="M10 21h12M11.55 16h8.9M13.1 11h5.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none" opacity=".55"/></svg>'};
+const S={mode:'orbite',phase:'pret',menu:false,confirm:false,esv:true,echoOn:false};
+const SCENES=[['pret','Prêt'],['cours','Lot en cours'],['pause','En pause'],['toi','À toi (incident)'],['fini','Lot terminé'],['echo','Écho'],['hors','Sans ESV']];
+const N={pret:[0,0,0],cours:[31,27,4],pause:[32,28,4],toi:[58,51,6],fini:[120,109,11]};
+const MOT={pret:['Prêt','prêt'],cours:['En cours','cours'],pause:['En pause','pause'],toi:['À toi','toi'],fini:['Terminé','fini']};
+function haut(){return `<div class="haut"><span class="logo">${SVG.logo}Ariane</span>
+ <div class="seg"><button data-a="mode:orbite" aria-pressed="${S.mode==='orbite'}">Orbite</button><button data-a="mode:echo" aria-pressed="${S.mode==='echo'}" ${S.mode==='orbite'&&['cours','pause','toi'].includes(S.phase)?'disabled title="Écho est indisponible pendant un lot"':''}>Écho</button></div><span class="sp"></span>
+ <button class="esv${S.esv?'':' non'}" data-a="menu"><i></i>${S.esv?'ESV · partie 13':'Pas d’ESV'}<span style="color:var(--tx2)">▾</span>${S.menu?`<div class="menu" data-stop><button data-a="menu:ferme"><span>Onglet 1 · fenêtre 1</span><small>connecté</small></button><button data-a="menu:ferme"><span>Onglet 2 · fenêtre 1</span><small>Connecter</small></button><button data-a="menu:ferme"><span>Actualiser la liste</span></button></div>`:''}</button>
+ <button class="ico" data-a="rien" aria-label="Réglages" title="Réglages">${SVG.gear}</button></div>`;}
+function orbite(){const p=S.phase,[tr,po,di]=N[p]||N.pret,[mot,cl]=MOT[p];
+ const ligne={pret:'Prêt à partir du cut <b>4781</b> jusqu’à la fin de la partie.',cours:'Pose du cut <b>4812</b>.',pause:'Arrêté après le cut <b>4812</b>.',toi:'Le cut <b>4838</b> a un rail que je ne sais pas poser.',fini:'120 cuts traités, 20 à examiner.'}[p];
+ const act={pret:`<button class="go" data-a="phase:cours">${SVG.play}Démarrer le lot</button><button class="lien" data-a="rien">Changer les bornes</button>`,
+  cours:`<button class="go" data-a="phase:pause">${SVG.pause}Pause</button><button class="lien danger" data-a="phase:fini">Arrêter</button>`,
+  pause:`<button class="go" data-a="phase:cours">${SVG.play}Reprendre au cut 4813</button><button class="lien danger" data-a="phase:fini">Arrêter</button>`,
+  toi:`<button class="go" data-a="phase:cours">Réessayer</button><button class="lien" data-a="phase:cours">Reprendre à la main</button><button class="lien" data-a="phase:cours">Passer</button>`,
+  fini:`<button class="go" data-a="rien">Examiner les 20 cuts</button><button class="lien" data-a="rien">Exporter le dossier</button>`}[p];
+ const chiffres=p==='pret'?`<div class="vide">Les chiffres du lot apparaîtront ici.</div>`:`<div class="grand">${tr}<small>sur 120 cuts</small></div><div class="sous">traités</div><div class="barre"><i style="width:${po/1.2}%;background:var(--poses)"></i><i style="width:${di/1.2}%;background:var(--dif)"></i></div><div class="compte"><span><i style="background:var(--poses)"></i>${po} posés</span><span><i style="background:var(--dif)"></i>${di} différés</span></div>`;
+ const dif=p==='pret'?'':`<div class="regarder"><h4>À REGARDER · ${di} DIFFÉRÉS</h4>${[[4787,'rail droit introuvable'],[4794,'confiance basse'],[4800,'rail non résolu']].slice(0,Math.min(3,di)).map(r=>`<div class="l"><i></i><b>${r[0]}</b><span>${r[1]}</span></div>`).join('')}${di>3?'<button class="lien" data-a="rien" style="margin-top:4px">Tout voir ('+di+')</button>':''}</div>`;
+ const ouvert=['cours','pause','toi'].includes(p);
+ return haut()+(p==='toi'?`<div class="alerte">Choisis : réessayer, reprendre ce cut à la main, ou le passer.</div>`:'')+`<div class="corps"><div class="etat ${cl}"><div class="mot"><span class="pastille"></span>${mot}</div><p class="ligne">${ligne}</p><div class="actions">${act}</div></div><div class="chiffres">${chiffres}</div></div>
+ <div class="bas">${dif||'<div></div>'}<div class="cache"><div class="tx"><b>Cache des exports</b><small>${ouvert?'Disponible quand le lot est terminé ou arrêté.':'1 lot gardé, 190 Mo. Vide après réception.'}</small></div><button class="vider" ${ouvert?'disabled':'data-a="cache"'}>Vider le cache</button></div></div>`;}
+function echo(){const on=S.echoOn;return haut()+`<div class="corps"><div class="etat ${on?'cours':'pret'}"><div class="mot"><span class="pastille"></span>${on?'Observation':'Prêt'}</div><p class="ligne">${on?'Je garde tes corrections, <b>5</b> cuts vus.':'Je regarde ce que tu corriges dans ESV.'}</p><div class="actions">${on?`<button class="go" data-a="echo:fin">Terminer et télécharger</button><button class="lien" data-a="rien">Pause</button>`:`<button class="go" data-a="echo:debut">${SVG.play}Démarrer l’observation</button>`}</div></div>
+ <div class="chiffres">${on?`<div class="grand">3<small>corrections</small></div><div class="sous">dans cette séance</div><div class="compte" style="margin-top:20px"><span>5 cuts vus</span><span>raison : touches 1 à 5</span></div>`:`<div class="vide">Les corrections de la séance apparaîtront ici.</div>`}</div></div>
+ <div class="bas"><div></div><div class="cache"><div class="tx"><b>Cache des exports</b><small>${on?'Disponible quand la séance est terminée.':'2 séances gardées, 260 Mo. Vide après réception.'}</small></div><button class="vider" ${on?'disabled':'data-a="cache"'}>Vider le cache</button></div></div>`;}
+function hors(){return haut().replace('class="esv"','class="esv non"')+`<div class="corps" style="grid-template-columns:1fr"><div class="etat pret"><div class="mot"><span class="pastille"></span>Pas d’ESV</div><p class="ligne">Ouvre une partie dans ESV, puis connecte-la.</p><div class="actions"><button class="go" data-a="menu">Choisir un onglet</button></div></div></div>`;}
+function dlg(){return S.confirm?`<div class="voile"><div class="dlg"><h4>Vider le cache des exports ?</h4><p>Sera supprimé : 1 lot (120 visites, 842 événements), environ 190 Mo. Sera gardé : la capture ouverte du dernier cut. Ne vide qu’après avoir reçu tous les volumes exportés.</p><div class="b"><button class="vider" data-a="cache:non">Annuler</button><button class="go" style="height:40px;font-size:14px;padding:0 20px" data-a="cache:ok">Vider</button></div></div></div>`:'';}
+function poser(){S.esv=S.phase!=='hors'&&S.esv;const e=S.phase==='hors'?hors():S.mode==='echo'?echo():orbite();$('#app').innerHTML=e+dlg();
+ document.querySelectorAll('#sc button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sc===(S.phase==='hors'?'hors':S.mode==='echo'?'echo':S.phase)));
+ $('#note').innerHTML=NOTES;}
+const NOTES=`<b>Ce qui change par rapport à la 4.9.6.</b><ul><li><b>Pas assez clair → un seul état en grand.</b> Un mot (Prêt, En cours, En pause, À toi, Terminé), une phrase courte, un bouton. Rien d’autre ne crie. Le reste est plus petit.</li><li><b>Trop lent → un seul écran.</b> Plus d’accueil à cartes, plus d’onglets Revue / Réglages à traverser. Orbite ⇄ Écho : un clic en haut. Démarrer un lot : <b>1 clic</b> (bornes déjà remplies). Pause, reprise : <b>1 clic</b>. Vider le cache : <b>2 clics</b> (bouton, confirmation). Les différés sont déjà sous les yeux ; « Tout voir » ouvre la liste.</li><li><b>Style → posé, sans dégradés.</b> Papier clair ou sombre, un seul accent par état, chiffres très lisibles, aucun décor. Le style clair/sombre se change avec les boutons du haut ; dis-moi lequel tu préfères.</li><li><b>Onglet ESV :</b> une seule pastille en haut à droite ; un clic liste les onglets.</li></ul><p style="margin:10px 0 0">Rien n’est construit : c’est une maquette. Réglages et Revue ne sont plus des écrans à part dans cette idée : la roue ouvre une petite fenêtre de réglages, la Revue est la liste « À regarder ».</p>`;
+function agir(a){const [t,x]=a.split(':');
+ if(t==='mode'){S.mode=x;S.phase=x==='orbite'&&S.phase==='hors'?'pret':S.phase;}else if(t==='phase')S.phase=x;else if(t==='menu'){S.menu=x==='ferme'?false:!S.menu;}
+ else if(t==='cache'){if(x==='non')S.confirm=false;else if(x==='ok')S.confirm=false;else S.confirm=true;}else if(t==='echo'){S.echoOn=x==='debut';}
+ poser();}
+document.addEventListener('click',e=>{const sc=e.target.closest('#sc button');if(sc){const k=sc.dataset.sc;S.menu=false;S.confirm=false;if(k==='echo'){S.mode='echo';S.echoOn=false;S.phase='pret';}else{S.mode='orbite';S.phase=k;S.esv=true;if(k==='hors')S.esv=false;}poser();return;}
+ const th=e.target.closest('[data-th]');if(th&&th.tagName==='BUTTON'){document.body.dataset.th=th.dataset.th;document.documentElement.dataset.th=th.dataset.th;document.querySelectorAll('.bar [data-th]').forEach(b=>b.setAttribute('aria-pressed',b===th));return;}
+ if(!e.target.closest('.menu')&&!e.target.closest('.esv')&&S.menu){S.menu=false;poser();}
+ const a=e.target.closest('[data-a]');if(a&&a.dataset.a!=='rien'){if(e.target.closest('[data-stop]')&&a.dataset.a!=='menu:ferme')return;agir(a.dataset.a);}});
+SCENES.forEach(([k,t])=>{const b=document.createElement('button');b.dataset.sc=k;b.textContent=t;$('#sc').appendChild(b);});
+function echelle(){const c=$('#cadre'),k=Math.min(1,c.clientWidth/1000);$('#app').style.transform=`scale(${k})`;c.style.height=640*k+'px';}
+addEventListener('resize',echelle);poser();echelle();
+</script></body></html>

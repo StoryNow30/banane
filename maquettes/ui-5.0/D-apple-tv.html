@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction D · Ariane façon Apple TV</title><link rel="stylesheet" href="commun.css">
+<style>
+body{background:#000;color:#f5f5f7}
+.tv{max-width:1100px;margin:0 auto;padding:0 0 60px}
+.haut{display:flex;justify-content:space-between;align-items:center;padding:22px 40px}
+.haut .nom{font:700 15px var(--sans);letter-spacing:.3em}
+.haut nav{display:flex;gap:26px;font-size:15px;color:#9a9aa0}.haut nav b{color:#fff;font-weight:600}
+.hero{position:relative;margin:0 40px;border-radius:22px;padding:56px 48px;min-height:330px;overflow:hidden;
+ background:radial-gradient(120% 140% at 85% 0%,#1d6b45 0,#0d2a1c 45%,#06100b 100%);display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+.hero.pause{background:radial-gradient(120% 140% at 85% 0%,#7a5314 0,#2b1d08 50%,#0b0802 100%)}
+.hero.fini{background:radial-gradient(120% 140% at 85% 0%,#2a3f7a 0,#101a35 50%,#05070f 100%)}
+.hero .sur{font:600 12px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#bfe9d1}
+.hero h1{margin:0;font:700 52px/1.05 var(--sans);letter-spacing:-.02em}
+.hero p{margin:0;font-size:17px;color:#d6dedb;max-width:48ch}
+.hero .cut-g{position:absolute;right:44px;top:28px;font:200 120px/1 var(--sans);letter-spacing:-.04em;color:rgba(255,255,255,.9)}
+.hero .cut-g small{display:block;font:600 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;text-align:right;color:#bfe9d1}
+.hero .barre{max-width:420px;background:rgba(255,255,255,.18)}
+.act{display:flex;gap:12px;margin-top:10px}
+.btn{font:600 17px var(--sans);padding:14px 30px;border-radius:12px;border:0;background:rgba(255,255,255,.18);color:#fff;cursor:pointer;transition:transform .15s,background .15s}
+.btn.plein{background:#fff;color:#000}
+.btn:focus,.carte-tv:focus{outline:none}
+.btn:focus-visible,.btn.f{transform:scale(1.07);box-shadow:0 10px 30px rgba(0,0,0,.5);background:#fff;color:#000}
+.rangee{margin:34px 40px 0}
+.rangee h2{font:700 20px var(--sans);margin:0 0 14px}
+.etagere{display:flex;gap:18px;overflow-x:auto;padding:8px 4px 24px}
+.carte-tv{flex:none;width:250px;height:150px;border-radius:16px;padding:16px 18px;background:#1c1c1e;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:transform .18s,box-shadow .18s;border:0;color:inherit;text-align:left;font:inherit}
+.carte-tv:focus-visible,.carte-tv.f{transform:scale(1.08);box-shadow:0 14px 34px rgba(0,0,0,.6),0 0 0 3px rgba(255,255,255,.85)}
+.carte-tv .t{font:600 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#98989f}
+.carte-tv .g{font:300 38px/1 var(--sans);letter-spacing:-.02em}
+.carte-tv .s{font-size:13px;color:#b5b5ba}
+.carte-tv.v{background:linear-gradient(160deg,#17452e,#0c1f16)}.carte-tv.a{background:linear-gradient(160deg,#5a3f0e,#1f1606)}.carte-tv.b{background:linear-gradient(160deg,#1c2f63,#0c1330)}
+.carte-tv.suiv{border:2px dashed #3a3a3e;background:transparent}
+.anneau{width:54px;height:54px;border-radius:50%;background:conic-gradient(#34d27f var(--p),rgba(255,255,255,.14) 0);display:grid;place-items:center}
+.anneau::after{content:"";width:42px;height:42px;border-radius:50%;background:#0c1f16}
+.ligne-a{display:flex;justify-content:space-between;align-items:center}
+.aide{margin:26px 40px 0;font-size:13px;color:#8a8a90}
+.aide kbd{background:#2a2a2d;border-radius:5px;padding:1px 7px;font:12px var(--mono);color:#ddd}
+.reglages-tv{margin:0 40px;display:flex;flex-direction:column;gap:2px;max-width:640px}
+.rg{display:flex;justify-content:space-between;padding:16px 20px;background:#1c1c1e;font-size:17px}
+.rg:first-child{border-radius:14px 14px 0 0}.rg:last-child{border-radius:0 0 14px 14px}.rg span:last-child{color:#98989f}
+.barre-scenes button{color:#aaa;border-color:#444}.barre-scenes button[aria-pressed=true]{background:#fff;color:#000;border-color:#fff}
+.legende,.explique{color:#98989f}.explique b{color:#fff}
+</style></head><body><div class="maquette" style="max-width:1180px">
+<p class="lien-retour"><a href="index.html" style="color:inherit">← les directions</a></p>
+<h1>Direction D · « Façon Apple TV »</h1>
+<p class="legende">Inspirée de ce que Mic aime : un grand écran d'accueil avec <b>un seul bouton</b> (le héros), des <b>étagères de cartes</b> en dessous (à suivre, parties, derniers envois), la navigation aux <b>flèches</b> avec une carte « en focus » qui grossit, et les réglages dans un <b>écran à part</b>. Plus riche que A, sans aucune case. Chiffres inventés ; utilise les flèches et Entrée.</p>
+<div class="barre-scenes" id="scenes"></div>
+<div class="tv">
+ <div class="haut"><span class="nom">ARIANE</span><nav><b>Aujourd'hui</b><span>Parties</span><span>Envois</span><span>⚙ Réglages</span></nav></div>
+
+ <section class="scene" data-scene="repos" data-titre="1 · Accueil, prêt"><div style="display:contents">
+  <div class="hero"><span class="sur">Orbite · partie 13</span><h1>Prêt à poser le lot</h1><p>ESV est sur le cut 4790. Ariane ira jusqu'à la fin de la partie, puis relira les verts.</p>
+   <div class="act"><button class="btn plein f">▶ Démarrer le lot</button><button class="btn">Passer en Écho</button></div></div>
+  <div class="rangee"><h2>À suivre</h2><div class="etagere">
+   <button class="carte-tv v"><span class="t">1 · Le lot</span><span class="g">120</span><span class="s">cuts invalides à poser</span></button>
+   <button class="carte-tv suiv"><span class="t">2 · La relecture</span><span class="s">part toute seule après le lot</span></button>
+   <button class="carte-tv suiv"><span class="t">3 · L'envoi</span><span class="s">préparé automatiquement à la fin</span></button></div></div>
+ </div></section>
+
+ <section class="scene" data-scene="lot" data-titre="2 · Le lot tourne"><div style="display:contents">
+  <div class="hero"><span class="cut-g">4812<small>cut</small></span><span class="sur">Orbite · en cours · pose des rails</span><h1>Le lot avance</h1><p>31 invalides sur 120. Rien à faire.</p><div class="barre"><i style="width:26%"></i></div>
+   <div class="act"><button class="btn f">❚❚ Pause</button></div></div>
+  <div class="rangee"><h2>Cette séance</h2><div class="etagere">
+   <button class="carte-tv v"><span class="t">Posés</span><span class="g">27</span><span class="s">dont 5 par la voie</span></button>
+   <button class="carte-tv a"><span class="t">Différés</span><span class="g">4</span><span class="s">à reprendre ensuite</span></button>
+   <button class="carte-tv"><span class="t">À contrôler</span><span class="g">9</span><span class="s">verts à relire d'abord</span></button>
+   <button class="carte-tv b"><span class="t">GCV2 · cuts appris</span><span class="g">2 684</span><span class="s">+ 61 aujourd'hui</span></button></div></div>
+  <div class="rangee"><h2>Parties</h2><div class="etagere">
+   <button class="carte-tv v"><div class="ligne-a"><span class="t">Partie 13</span><span class="anneau" style="--p:26%"></span></div><span class="s">en cours · 31 / 120</span></button>
+   <button class="carte-tv"><span class="t">Partie 12</span><span class="s">terminée hier · envoyée</span></button>
+   <button class="carte-tv"><span class="t">Partie 11</span><span class="s">terminée · envoyée</span></button></div></div>
+ </div></section>
+
+ <section class="scene" data-scene="incident" data-titre="3 · Un incident"><div style="display:contents">
+  <div class="hero pause"><span class="cut-g">4812<small>cut</small></span><span class="sur" style="color:#ffd9a0">À toi · lot en pause</span><h1>ESV ne répond plus</h1><p>Rien n'a été posé sur ce cut. Recharge la page ESV (F5), puis reprends.</p>
+   <div class="act"><button class="btn plein f">Reprendre</button><button class="btn">Autres options…</button></div></div>
+  <div class="rangee"><h2>Autres options</h2><div class="etagere">
+   <button class="carte-tv"><span class="t">Je le fais moi-même</span><span class="s">reprise manuelle</span></button>
+   <button class="carte-tv"><span class="t">Passer en SKIP</span><span class="s">avec confirmation</span></button>
+   <button class="carte-tv a"><span class="t">Arrêter le lot</span><span class="s">ne se défait pas</span></button></div></div>
+ </div></section>
+
+ <section class="scene" data-scene="relecture" data-titre="4 · La relecture"><div style="display:contents">
+  <div class="hero"><span class="cut-g">4903<small>cut</small></span><span class="sur">Relecture après le lot</span><h1>Ariane relit les verts</h1><p>85 cuts à relire. Ne touche à rien dans ESV.</p><div class="barre"><i style="width:14%"></i></div>
+   <div class="act"><button class="btn f">Arrêter la relecture</button></div></div>
+  <div class="rangee"><h2>Cette séance</h2><div class="etagere">
+   <button class="carte-tv v"><span class="t">Relus</span><span class="g">12<small style="font-size:16px"> / 85</small></span><span class="s">en cours</span></button>
+   <button class="carte-tv b"><span class="t">Corrigés</span><span class="g">3</span><span class="s">verts sûrs seulement</span></button></div></div>
+ </div></section>
+
+ <section class="scene" data-scene="fin" data-titre="5 · Fini : l'envoi est prêt"><div style="display:contents">
+  <div class="hero fini"><span class="sur" style="color:#c3d2ff">Partie 13 · terminée</span><h1>Tout est prêt</h1><p>27 posés, 4 différés, 9 à contrôler. 3 volumes enregistrés et confirmés complets.</p>
+   <div class="act"><button class="btn plein f">Copier le message</button><button class="btn">Ouvrir le dossier</button><button class="btn">Nouveau lot</button></div></div>
+  <div class="rangee"><h2>Dernier envoi</h2><div class="etagere">
+   <button class="carte-tv b"><span class="t">Volume 1 sur 3</span><span class="s">ariane-lot-…-volume01.zip · SHA-256 calculé</span></button>
+   <button class="carte-tv b"><span class="t">Volume 2 sur 3</span><span class="s">SHA-256 calculé</span></button>
+   <button class="carte-tv b"><span class="t">Volume 3 sur 3</span><span class="s">SHA-256 calculé</span></button>
+   <button class="carte-tv v"><span class="t">À contrôler</span><span class="g">9</span><span class="s">voir la liste</span></button></div></div>
+ </div></section>
+
+ <section class="scene" data-scene="echo" data-titre="6 · Écho"><div style="display:contents">
+  <div class="hero"><span class="cut-g">148<small>cuts vus</small></span><span class="sur">Écho · observation</span><h1>Écho regarde ton travail</h1><p>Travaille normalement dans ESV. Aucun clic ici entre les cuts.</p>
+   <div class="act"><button class="btn plein f">Terminer</button><button class="btn">Pause</button></div></div>
+  <div class="rangee"><h2>Cette séance</h2><div class="etagere">
+   <button class="carte-tv v"><span class="t">Corrigés</span><span class="g">61</span><span class="s">= 61 cuts appris de plus</span></button>
+   <button class="carte-tv"><span class="t">Rythme</span><span class="g">11 s</span><span class="s">par cut, médiane</span></button>
+   <button class="carte-tv b"><span class="t">GCV2 · cuts appris</span><span class="g">2 684</span><span class="s">dernier archivage</span></button></div></div>
+ </div></section>
+
+ <section class="scene" data-scene="reglages" data-titre="7 · Réglages"><div style="display:contents">
+  <div class="rangee" style="margin-top:6px"><h2>Réglages</h2></div>
+  <div class="reglages-tv"><div class="rg"><span>Après le lot</span><span>Relire et corriger ›</span></div><div class="rg"><span>Raison de la correction (Écho)</span><span>Non ›</span></div><div class="rg"><span>Apparence</span><span>Système ›</span></div><div class="rg"><span>Bandeau dans ESV</span><span>Oui ›</span></div><div class="rg"><span>Pour l'analyse</span><span>Détails techniques ›</span></div><div class="rg"><span>Après confirmation de réception</span><span>Vider le cache ›</span></div></div>
+ </div></section>
+ <p class="aide"><kbd>←</kbd> <kbd>→</kbd> pour passer d'une carte à l'autre · <kbd>Entrée</kbd> pour choisir · <kbd>Échap</kbd> pour revenir</p>
+</div>
+<p class="explique"><b>À lire.</b> Ce qu'on garde d'Apple TV : un seul geste mis en avant, de la richesse en dessous sans contrôle, le focus à la place des cases, les réglages ailleurs. Ce qu'on ne copie pas : les images. <b>Les choix ne sont plus des profils :</b> « Après le lot » devient une ligne de Réglages avec sa valeur (comme « Sous-titres » sur Apple TV), pas une case. Ce qui reste à décider : l'envoi se prépare-t-il tout seul à la fin du lot (comme une sauvegarde), ou faut-il un geste ?</p>
+</div>
+<script src="scenes.js"></script>
+<script>/* Focus aux flèches, comme une télécommande. */
+(function(){const cur=()=>[...document.querySelectorAll('.scene.visible .btn,.scene.visible .carte-tv')];
+ document.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;const l=cur(),i=l.indexOf(document.activeElement);
+  const n=e.key==='ArrowLeft'||e.key==='ArrowUp'?Math.max(0,i-1):Math.min(l.length-1,i+1);if(l[n]){l[n].focus();e.preventDefault();}});})();</script>
+</body></html>

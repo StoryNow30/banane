@@ -45,3 +45,19 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
 - `tests/ui5-panneau.test.cjs` (le branchement dans la page) ;
 - `tests/ui5-navigateur-signal-normal.test.cjs`, `-compact`, `-actions` et `-ouvrir` (un vrai navigateur, en 600 × 760 et en 360 × 480, un fichier par partie pour tenir sous les 20 s de `tools/verify.cjs` : aucune erreur, rien qui déborde, un clic sur Signal envoie au service worker exactement ce qu'envoie le bouton d'origine, et les détails techniques s'ouvrent puis se referment).
 - Mettre la variable `SIGNAL_CAPTURES=<dossier>` pour obtenir les captures.
+
+## Mouvement (retour de la test 21)
+
+- **Ce qui n'allait pas** : le panneau redessinait tout l'écran à chaque rendu, soit une fois par seconde. Les transitions prévues (le curseur qui glisse sur le rail, la couleur du glyphe) ne se jouaient donc jamais. Les entrées de la palette ou de la feuille de réglages pouvaient se rejouer. Un clic pouvait tomber sur un élément en train d'être remplacé.
+- **Le correctif** : `src/ui5.js` met maintenant l'écran à jour en place. Les éléments qui restent ne bougent pas ; seuls leurs attributs et leurs textes changent. Un élément dont la clé `data-k` change est remplacé, et son entrée s'anime alors une fois.
+- **Les mouvements** (`panel-signal.css`, section « mouvement ») : chacun signale un changement, aucun n'est un ornement. Il n'y a qu'une boucle, le glyphe « en cours ».
+  - L'écran entre en cascade.
+  - Le glyphe entre quand l'état change ; la coche de « Terminé » se trace ; « À toi » s'éclaire deux fois.
+  - Le chiffre ou le compteur qui change le signale une fois.
+  - Sur le rail : le segment fait avance, le curseur glisse et un nouveau différé se dresse.
+  - L'action principale entre quand elle change.
+  - Le tiroir glisse, puis ses lignes arrivent en cascade. « Examiné » se raye et la coche s'anime.
+  - La palette et la feuille entrent une fois, avec leur contenu en cascade.
+  - La note de la barre descend.
+  - Avec le réglage système « réduire les animations », tout est à zéro.
+- **Essai** : `tests/ui5-navigateur-signal-mouvement.test.cjs`, qui vérifie que le curseur reste le même élément et que sa position change, que le chiffre le signale, et que la palette n'est pas recréée.

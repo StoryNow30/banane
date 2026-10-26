@@ -1,0 +1,21 @@
+/* Maquettes F, G, H : pages statiques, aucun appel réseau, chiffres inventés. Esprit « outil pro » : denses, nettes, clavier d'abord. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{--sans:"Hanken Grotesk",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+ --bg:#0e0f10;--side:#131415;--panel:#17181a;--hov:#1d1f21;--sel:#23262a;--line:#222427;--line2:#2c2e32;--tx:#e8e9ea;--tx2:#8b9097;--tx3:#5f646b;
+ --vert:#3ecf8e;--ambre:#f0b040;--rouge:#f2655d;--bleu:#6c8cff;--acc:#3ecf8e}
+*{box-sizing:border-box}body{margin:0;background:#050506;color:var(--tx);font:13px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+.page{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+.page>h1{font-size:18px;margin:0 0 4px}.page>.leg{color:var(--tx2);max-width:78ch;margin:0 0 14px}
+.page a{color:inherit}.sc{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.sc button{font:500 12px var(--sans);padding:5px 10px;border:1px solid var(--line2);border-radius:6px;background:transparent;color:var(--tx2);cursor:pointer}
+.sc button[aria-pressed=true]{background:var(--tx);color:#000;border-color:var(--tx)}
+.note-b{margin:14px 0 0;padding:10px 14px;border-left:2px solid var(--line2);color:var(--tx2);max-width:80ch}.note-b b{color:var(--tx)}
+kbd{font:500 11px var(--mono);background:#26282b;border:1px solid #33363a;border-bottom-width:2px;border-radius:4px;padding:0 5px;color:#c8cacd}
+.mono{font-family:var(--mono)}.sceneb{display:none}.sceneb.on{display:block}
+.pt{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+.ic{width:14px;height:14px;border-radius:50%;border:2px solid var(--tx3);flex:none;position:relative}
+.ic.vert{border-color:var(--vert);background:var(--vert)}.ic.ambre{border-color:var(--ambre)}.ic.ambre::after{content:"";position:absolute;inset:2px;border-radius:50%;background:conic-gradient(var(--ambre) 50%,transparent 0)}
+.ic.rouge{border-color:var(--rouge)}.ic.cours{border-color:var(--vert);border-style:dashed;animation:tourne 3s linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.ic.cours{animation:none}}
+.chip{font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line2);color:var(--tx2)}

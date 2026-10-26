@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction F · Style Linear</title><link rel="stylesheet" href="lin.css">
+<style>
+.app{display:grid;grid-template-columns:216px 1fr 330px;height:640px;background:var(--bg);border:1px solid var(--line2);border-radius:10px;overflow:hidden;position:relative}
+.app.sans-detail{grid-template-columns:216px 1fr}.app.sans-detail .det{display:none}
+.side{background:var(--side);border-right:1px solid var(--line);padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.side .ws{display:flex;align-items:center;gap:8px;padding:4px 8px 12px;font-weight:600}.side .ws i{width:20px;height:20px;border-radius:6px;background:var(--acc);display:inline-block}
+.side .it{display:flex;align-items:center;gap:9px;padding:5px 8px;border-radius:6px;color:var(--tx2);cursor:pointer}.side .it:hover{background:var(--hov)}.side .it.a{background:var(--sel);color:var(--tx)}.side .it .n{margin-left:auto;font:500 11px var(--mono);color:var(--tx3)}
+.side h4{margin:14px 8px 4px;font:600 11px var(--sans);color:var(--tx3)}
+.side .pied{margin-top:auto;border-top:1px solid var(--line);padding:10px 8px 2px;color:var(--tx2);font-size:12px}.side .pied b{color:var(--tx);font:600 14px var(--mono)}
+.main{display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;align-items:center;gap:10px;padding:0 14px;height:42px;border-bottom:1px solid var(--line)}.bar .fil{color:var(--tx2)}.bar .fil b{color:var(--tx);font-weight:600}
+.bar .sp{flex:1}.btn{font:500 12px var(--sans);display:inline-flex;gap:8px;align-items:center;padding:5px 10px;border-radius:6px;border:1px solid var(--line2);background:var(--panel);color:var(--tx);cursor:pointer}.btn.p{background:var(--acc);border-color:var(--acc);color:#04140c;font-weight:600}.btn.p kbd{background:rgba(0,0,0,.18);border-color:transparent;color:#04140c}
+.filtres{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--line)}.filtres .chip{cursor:pointer}.filtres .chip.a{background:var(--sel);color:var(--tx);border-color:var(--line2)}
+.liste{overflow:auto;flex:1}
+.grp{display:flex;align-items:center;gap:8px;padding:6px 14px;background:#101113;color:var(--tx2);font-weight:600;position:sticky;top:0;border-bottom:1px solid var(--line)}.grp .n{font:500 11px var(--mono);color:var(--tx3)}
+.row{display:flex;align-items:center;gap:10px;height:34px;padding:0 14px;border-bottom:1px solid #16171a;cursor:pointer}.row:hover{background:var(--hov)}.row.s{background:var(--sel);box-shadow:inset 2px 0 var(--acc)}
+.row .c{width:48px;font:500 12px var(--mono);color:var(--tx2)}.row .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.row .m{font:11.5px var(--mono);color:var(--tx3)}
+.det{border-left:1px solid var(--line);padding:16px;overflow:auto;background:var(--side)}.det h3{margin:0 0 2px;font-size:15px}.det .sub{color:var(--tx2);margin:0 0 14px}
+.det dl{display:grid;grid-template-columns:96px 1fr;gap:8px 8px;margin:0 0 16px}.det dt{color:var(--tx3)}.det dd{margin:0}
+.det .h{font:600 11px var(--sans);color:var(--tx3);margin:14px 0 6px}
+.tl{list-style:none;margin:0;padding:0}.tl li{display:flex;gap:10px;padding:5px 0;color:var(--tx2)}.tl li b{color:var(--tx);font-weight:500}
+.ban{margin:10px 14px 0;padding:10px 12px;border:1px solid #5a2a27;background:#231615;border-radius:8px;display:flex;gap:12px;align-items:center}.ban.ok{border-color:#1f4a37;background:#10201a}
+.ban .tx{flex:1}.ban .tx small{display:block;color:var(--tx2)}
+.pal{position:absolute;inset:0;background:rgba(0,0,0,.55);display:none;justify-content:center;padding-top:90px}.pal.on{display:flex}
+.pal .bx{width:560px;height:fit-content;background:#1a1b1d;border:1px solid var(--line2);border-radius:12px;box-shadow:0 24px 80px #000;overflow:hidden}
+.pal input{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);padding:14px 16px;font:15px var(--sans);color:var(--tx);outline:none}
+.pal .l{padding:6px}.pal .g{padding:6px 10px 2px;font:600 11px var(--sans);color:var(--tx3)}.pal .o{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px}.pal .o.s{background:var(--sel)}.pal .o span:last-child{margin-left:auto}
+.reg{display:grid;grid-template-columns:200px 1fr;height:100%}.reg .nav{border-right:1px solid var(--line);padding:14px 8px}.reg .corps{padding:22px 30px;overflow:auto}.reg h2{margin:0 0 14px;font-size:17px}
+.lr{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.lr small{display:block;color:var(--tx3)}.lr select{background:var(--panel);color:var(--tx);border:1px solid var(--line2);border-radius:6px;padding:5px 8px;font:12px var(--sans)}
+</style></head><body><div class="page">
+<p><a href="index.html">← les directions</a></p>
+<h1>Direction F · Style Linear</h1>
+<p class="leg">Ce qu'on prend de Linear : une <b>liste dense</b> où chaque cut est une ligne avec son statut (comme une tâche), des <b>groupes</b> (en cours, différés, posés, à poser), un <b>volet de détail</b> à droite, une <b>barre latérale</b> (modes, vues, parties), des <b>raccourcis partout</b> et une <b>palette de commandes</b> (<kbd>Ctrl</kbd> <kbd>K</kbd>). Les réglages sont une page séparée. Navigation : <kbd>J</kbd>/<kbd>K</kbd> ou flèches, <kbd>Ctrl K</kbd>, <kbd>Échap</kbd>. Chiffres inventés ; fenêtre dessinée à 1 100 × 640 (l'actuelle fait 560 × 820).</p>
+<div class="sc" id="sc"></div>
+<div class="app" id="app">
+ <aside class="side"><div class="ws"><i></i>Ariane</div>
+  <div class="it a" data-go="lot">◉ Séance <span class="n">G S</span></div><div class="it">▷ Orbite <span class="n">G O</span></div><div class="it" data-go="echo">◌ Écho <span class="n">G E</span></div>
+  <div class="it">◔ À contrôler <span class="n">9</span></div><div class="it" data-go="fin">⇪ Envois <span class="n">3</span></div>
+  <h4>Parties</h4><div class="it"><span class="ic cours"></span>Partie 13 <span class="n">31/120</span></div><div class="it"><span class="ic vert"></span>Partie 12</div><div class="it"><span class="ic vert"></span>Partie 11</div>
+  <div class="pied">GCV2 · cuts appris<br><b>2 684</b> <span style="color:var(--vert)">↑ 61</span><br><span class="it" data-go="reg" style="padding:6px 0">⚙ Réglages <span class="n">,</span></span></div></aside>
+ <section class="main" id="main"></section>
+ <aside class="det" id="det"></aside>
+ <div class="pal" id="pal"><div class="bx"><input value="" placeholder="Que veux-tu faire ?"><div class="l">
+  <div class="g">Suggéré</div><div class="o s">▶ Pause du lot <span><kbd>P</kbd></span></div><div class="o">⇪ Envoyer les fichiers de la partie 13 <span><kbd>⇧</kbd> <kbd>S</kbd></span></div>
+  <div class="g">Aller à</div><div class="o">◔ Les 9 cuts à contrôler <span><kbd>G</kbd> <kbd>C</kbd></span></div><div class="o">⌖ Aller au cut… <span><kbd>G</kbd> <kbd>N</kbd></span></div><div class="o">◌ Passer en Écho <span><kbd>G</kbd> <kbd>E</kbd></span></div>
+  <div class="g">Réglages</div><div class="o">⚙ Après le lot : relire et corriger <span style="color:var(--tx3)">actuel</span></div><div class="o">⚙ Thème <span style="color:var(--tx3)">système</span></div></div></div></div>
+</div>
+<p class="note-b"><b>Pourquoi Linear va bien à Ariane.</b> Ariane gère déjà une liste d'éléments qui changent de statut (rouge, posé, différé, à contrôler) : c'est exactement ce que Linear sait montrer. Le choix de mode, les cases et les profils disparaissent au profit de <b>vues</b> et de <b>commandes</b>. Ce que cela demande de nouveau côté code : une vraie liste des cuts du lot avec leur statut (aujourd'hui seuls les compteurs et la « voie » existent à l'écran) et une palette de commandes ; le service worker n'a rien à changer. <b>À trancher :</b> la fenêtre devrait être plus large que 560 px.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const ST={c:['cours','En cours'],d:['ambre','Différés'],p:['vert','Posés'],r:['rouge','À poser']};
+function lignes(){const L=[];L.push(['c',4812,'Pose des rails','capture → pose','il y a 2 s',['PN']]);
+ [[4809,'écart voie 2 mm'],[4803,'refus : écartement bas'],[4796,'aucune hypothèse sûre'],[4791,'rail droit absent']].forEach(x=>L.push(['d',x[0],x[1],'à reprendre','',[]]));
+ [4811,4810,4808,4807,4806,4805,4804,4802,4801].forEach((n,i)=>L.push(['p',n,['Posé par le moteur','Posé par la voie'][i%2],'écart '+(1+i%4)+' mm','',i==2?['ADV']:[]]));
+ for(let i=0;i<6;i++)L.push(['r',4813+i,'En attente','','',[]]);return L;}
+function liste(sel){const L=lignes();let h='',g='';L.forEach((x,i)=>{if(x[0]!==g){g=x[0];const n=L.filter(y=>y[0]===g).length;h+=`<div class="grp"><span class="ic ${ST[g][0]==='cours'?'cours':ST[g][0]}"></span>${ST[g][1]} <span class="n">${g==='p'?27:g==='r'?88:n}</span></div>`;}
+ h+=`<div class="row${i===sel?' s':''}" data-i="${i}"><span class="ic ${ST[x[0]][0]==='cours'?'cours':ST[x[0]][0]}"></span><span class="c">${x[1]}</span><span class="t">${x[2]}</span>${x[5].map(z=>`<span class="chip">${z}</span>`).join('')}<span class="m">${x[3]}</span></div>`;});return h;}
+function bar(titre,btn){return `<div class="bar"><span class="fil">Orbite / <b>${titre}</b></span><span class="sp"></span>${btn}<button class="btn" onclick="pal(1)">Commandes <kbd>Ctrl K</kbd></button></div>`;}
+const filtres='<div class="filtres"><span class="chip a">Tous</span><span class="chip">Rouges</span><span class="chip">Différés</span><span class="chip">À contrôler 9</span><span class="chip">PN</span><span class="chip">ADV</span></div>';
+function detail(){return `<h3>Cut 4812</h3><p class="sub">Partie 13 · en cours</p><dl><dt>Statut</dt><dd>● Pose des rails</dd><dt>Zone</dt><dd>PN</dd><dt>Écart à la voie</dt><dd class="mono">3 mm</dd><dt>Étape</dt><dd>capture → <b>pose</b> → validation</dd></dl>
+ <div class="h">ACTIVITÉ</div><ul class="tl"><li>◦ <span><b>Capture</b> du LiDAR · 2,1 s</span></li><li>◦ <span><b>Pose</b> des rails · en cours</span></li><li>◦ <span>Validation · à venir</span></li></ul>
+ <div class="h">ACTIONS</div><button class="btn" style="width:100%;justify-content:space-between;margin-bottom:6px">Pause du lot <kbd>P</kbd></button><button class="btn" style="width:100%;justify-content:space-between">Arrêter le lot <kbd>⇧</kbd><kbd>X</kbd></button>`;}
+const V={
+ lot:()=>({m:bar('Partie 13',`<button class="btn">❚❚ Pause <kbd>P</kbd></button>`)+filtres+'<div class="liste">'+liste(0)+'</div>',d:detail()}),
+ palette:()=>({m:bar('Partie 13','')+filtres+'<div class="liste">'+liste(0)+'</div>',d:detail(),pal:true}),
+ incident:()=>({m:bar('Partie 13',`<button class="btn p">Reprendre <kbd>R</kbd></button>`)+`<div class="ban"><span class="pt" style="background:var(--rouge)"></span><div class="tx">ESV ne répond plus au cut 4812<small>Rien n'a été posé sur ce cut. Recharge la page ESV (F5), puis reprends.</small></div><button class="btn p">Reprendre <kbd>R</kbd></button><button class="btn">Autres options <kbd>…</kbd></button></div>`+filtres+'<div class="liste">'+liste(0)+'</div>',d:`<h3>Cut 4812</h3><p class="sub">Partie 13 · en pause</p><dl><dt>Statut</dt><dd style="color:var(--rouge)">● ESV sans réponse</dd><dt>Posé</dt><dd>non</dd></dl><div class="h">AUTRES OPTIONS</div><button class="btn" style="width:100%;justify-content:space-between;margin-bottom:6px">Je le fais moi-même <kbd>M</kbd></button><button class="btn" style="width:100%;justify-content:space-between;margin-bottom:6px">SKIP… <kbd>⇧</kbd><kbd>K</kbd></button><button class="btn" style="width:100%;justify-content:space-between">Arrêter le lot <kbd>⇧</kbd><kbd>X</kbd></button>`}),
+ fin:()=>({m:bar('Envois',`<button class="btn p">Copier le message <kbd>⇧</kbd><kbd>C</kbd></button>`)+`<div class="ban ok"><span class="pt" style="background:var(--vert)"></span><div class="tx">Partie 13 terminée · 27 posés, 4 différés, 9 à contrôler<small>Relecture finie : 85 relus, 41 corrigés. 3 volumes enregistrés et confirmés complets.</small></div></div>`+
+  '<div class="liste" style="margin-top:10px"><div class="grp">Partie 13 · prêt à joindre <span class="n">3</span></div>'+[1,2,3].map(i=>`<div class="row"><span class="ic vert"></span><span class="t mono">ariane-lot-…-volume0${i}-sur03.zip</span><span class="m">SHA-256 calculé</span></div>`).join('')+'<div class="grp">Partie 12 · envoyé <span class="n">2</span></div>'+[1,2].map(i=>`<div class="row"><span class="ic vert"></span><span class="t mono">ariane-lot-…-volume0${i}-sur02.zip</span><span class="m">hier</span></div>`).join('')+'</div>',d:`<h3>Message à coller</h3><p class="sub">prêt, avec les empreintes</p><div class="mono" style="font-size:11.5px;color:var(--tx2);white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px">Partie 13 · lot 14:02→15:41\nRelecture 15:41→16:05\nvolume01  3f9a…c1\nvolume02  b27e…09\nvolume03  91d4…7a</div><div class="h" style="margin-top:14px">ACTIONS</div><button class="btn" style="width:100%;justify-content:space-between;margin-bottom:6px">Ouvrir le dossier <kbd>O</kbd></button><button class="btn" style="width:100%;justify-content:space-between">Nouveau lot <kbd>N</kbd></button>`}),
+ echo:()=>({m:bar('Écho · partie 14',`<button class="btn p">Terminer et envoyer <kbd>⇧</kbd><kbd>E</kbd></button>`)+'<div class="filtres"><span class="chip a">Corrigés 61</span><span class="chip">Tous 148</span><span class="chip">Sans action</span></div><div class="liste"><div class="grp"><span class="ic vert"></span>Visités <span class="n">148</span></div>'+Array.from({length:9},(_,i)=>`<div class="row${i==0?' s':''}"><span class="ic ${i%3?'vert':'ambre'}"></span><span class="c">${5120-i}</span><span class="t">${i%3?'Validé tel quel':'Corrigé · 2 rails'}</span><span class="m">${(9+i%4*3)} s</span></div>`).join('')+'</div>',d:`<h3>Cut 5120</h3><p class="sub">Écho · observé</p><dl><dt>Issue</dt><dd>Corrigé · 2 rails</dd><dt>Durée</dt><dd class="mono">9 s</dd></dl><div class="h">CETTE SÉANCE</div><p class="sub">61 corrigés = 61 cuts appris de plus</p>`}),
+ reg:()=>({full:true,m:`<div class="reg"><div class="nav"><div class="it a" style="display:flex;padding:5px 8px;border-radius:6px;background:var(--sel)">Général</div><div class="it" style="display:flex;padding:5px 8px;color:var(--tx2)">Après le lot</div><div class="it" style="display:flex;padding:5px 8px;color:var(--tx2)">Écho</div><div class="it" style="display:flex;padding:5px 8px;color:var(--tx2)">Pour l'analyse</div></div><div class="corps"><h2>Réglages</h2>
+ <div class="lr"><div>Après le lot<small>Ce qu'Ariane fait quand le lot est fini</small></div><select><option>Relire et corriger</option><option>Relire sans rien modifier</option><option>Rien</option></select></div>
+ <div class="lr"><div>Raison de la correction<small>Lire les chiffres 1 à 6 en Écho</small></div><select><option>Non</option><option>Oui</option></select></div>
+ <div class="lr"><div>Apparence</div><select><option>Système</option><option>Clair</option><option>Sombre</option></select></div>
+ <div class="lr"><div>Bandeau dans ESV</div><select><option>Oui</option><option>Non</option></select></div>
+ <div class="lr"><div>Vider le cache des exports<small>Seulement après confirmation de réception</small></div><button class="btn">Vider…</button></div>
+ <div class="lr"><div>Abandonner la séance en cours</div><button class="btn" style="color:var(--rouge)">Abandonner…</button></div></div></div>`})
+};
+const NOMS={lot:'1 · Le lot tourne',palette:'2 · Palette de commandes',incident:'3 · Incident',fin:'4 · Fin : les envois',echo:'5 · Écho',reg:'6 · Réglages'};
+let cur='lot',sel=0;
+function show(k){cur=k;const v=V[k]();$('main').innerHTML=v.m;$('det').innerHTML=v.d||'';$('app').classList.toggle('sans-detail',!!v.full);$('pal').classList.toggle('on',!!v.pal);
+ [...$('sc').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));history.replaceState(null,'','#'+k);
+ document.querySelectorAll('.row[data-i]').forEach(r=>r.onclick=()=>{document.querySelectorAll('.row.s').forEach(x=>x.classList.remove('s'));r.classList.add('s');});}
+function pal(o){$('pal').classList.toggle('on',!!o);}
+Object.keys(NOMS).forEach(k=>{const b=document.createElement('button');b.textContent=NOMS[k];b.dataset.k=k;b.onclick=()=>show(k);$('sc').append(b);});
+document.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>show(e.dataset.go));
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();pal(!$('pal').classList.contains('on'));}
+ else if(e.key==='Escape')pal(0);else if(e.key==='j'||e.key==='k'||e.key==='ArrowDown'||e.key==='ArrowUp'){const r=[...document.querySelectorAll('.row[data-i]')];if(!r.length)return;let i=r.findIndex(x=>x.classList.contains('s'));i=Math.max(0,Math.min(r.length-1,i+(e.key==='j'||e.key==='ArrowDown'?1:-1)));r.forEach(x=>x.classList.remove('s'));r[i].classList.add('s');r[i].scrollIntoView({block:'nearest'});e.preventDefault();}});
+show(NOMS[location.hash.slice(1)]?location.hash.slice(1):'lot');
+</script></body></html>

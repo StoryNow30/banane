@@ -1,0 +1,105 @@
+/* Maquettes UI 5.0 : pages statiques, aucun appel réseau, aucune donnée réelle (chiffres inventés pour la mise en page).
+   Palette et polices reprises du panneau actuel (panel.css) pour que la comparaison porte sur la conception, pas sur la couleur. */
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800}
+:root{color-scheme:dark;--sans:"Hanken Grotesk","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+ --bg:#0a100c;--bg2:#0e1c13;--text:#f4f7f5;--text2:#a9b3ad;--text3:#97a29b;--hair:rgba(255,255,255,.08);--hair2:rgba(255,255,255,.16);
+ --tile:rgba(255,255,255,.055);--vert:#34d27f;--vert-fond:#1f9a57;--ambre:#f2a93b;--rouge:#ff6e66;--sur-vert:#04140a;--page:#050806}
+@media (prefers-color-scheme:light){:root{color-scheme:light;--bg:#f4f6f4;--bg2:#eaf0eb;--text:#0e1310;--text2:#4c5650;--text3:#56605a;--hair:rgba(14,40,24,.09);--hair2:rgba(14,40,24,.2);
+ --tile:rgba(14,40,24,.05);--vert:#0b6e3c;--vert-fond:#23955a;--ambre:#8a5200;--rouge:#ad0c1a;--sur-vert:#fff;--page:#dfe5e0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font:400 14px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+.maquette{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+.maquette h1{font-size:20px;font-weight:600;margin:0 0 4px}
+.maquette .legende{color:var(--text2);margin:0 0 16px;max-width:70ch}
+.barre-scenes{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.barre-scenes button{font:500 12px var(--sans);padding:6px 10px;border:1px solid var(--hair2);border-radius:999px;background:transparent;color:var(--text2);cursor:pointer}
+.barre-scenes button[aria-pressed=true]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.lien-retour{font-size:12px;color:var(--text2)}
+.explique{margin:14px 0 0;padding:12px 14px;border-left:3px solid var(--hair2);color:var(--text2);max-width:70ch;font-size:13px}
+.explique b{color:var(--text)}
+/* La fenêtre d'Ariane (560 x 820 : la taille de la fenêtre actuelle) */
+.fenetre{width:min(560px,100%);min-height:820px;background:linear-gradient(180deg,var(--bg),var(--bg2));border:1px solid var(--hair2);border-radius:10px;display:flex;flex-direction:column;overflow:hidden}
+.fenetre.petite{width:min(380px,100%);min-height:0}
+.tete{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 0}
+.tete .nom{font:700 15px var(--sans);letter-spacing:.22em}
+.tete .ou{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-left:10px}
+.roue{width:34px;height:34px;border:1px solid var(--hair2);border-radius:6px;background:transparent;color:var(--text2);font-size:16px;cursor:pointer}
+.corps{flex:1;display:flex;flex-direction:column;padding:24px;gap:18px}
+.pied{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--hair);padding:14px 24px 18px;gap:12px}
+.pied .lbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+.pied .val{font:600 15px var(--mono)}
+.pied .sous{font-size:12px;color:var(--text2)}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+.etat{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:8px}
+.etat::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--text3)}
+.etat.vert{color:var(--vert)}.etat.vert::before{background:var(--vert)}
+.etat.ambre{color:var(--ambre)}.etat.ambre::before{background:var(--ambre)}
+.etat.rouge{color:var(--rouge)}.etat.rouge::before{background:var(--rouge)}
+.phrase{font-size:26px;font-weight:300;line-height:1.25;letter-spacing:-.01em;margin:0}
+.phrase b{font-weight:600}
+.cut{font:300 76px/1 var(--sans);letter-spacing:-.03em}
+.cut small{font:600 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-left:10px}
+.barre{height:8px;border-radius:4px;background:var(--tile);overflow:hidden}
+.barre i{display:block;height:100%;background:linear-gradient(90deg,var(--vert-fond),var(--vert))}
+.barre-ligne{display:flex;justify-content:space-between;font:500 12px var(--mono);color:var(--text2);margin-top:6px}
+.bouton{display:block;width:100%;padding:20px 16px;border:0;border-radius:10px;background:var(--vert);color:var(--sur-vert);font:700 18px var(--sans);letter-spacing:.01em;cursor:pointer;text-align:center}
+.bouton.calme{background:var(--tile);color:var(--text);border:1px solid var(--hair2)}
+.bouton.alerte{background:var(--ambre);color:#1a1000}
+.bouton small{display:block;font:400 12px var(--sans);opacity:.8;margin-top:2px}
+.autres{font-size:13px;color:var(--text2)}
+.autres summary{cursor:pointer;color:var(--text2)}
+.autres .rang{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.autres button,.lien{font:500 13px var(--sans);padding:8px 12px;border:1px solid var(--hair2);border-radius:8px;background:transparent;color:var(--text);cursor:pointer}
+.autres button.danger{color:var(--rouge);border-color:var(--rouge)}
+.puces{display:flex;flex-wrap:wrap;gap:8px}
+.puce{padding:6px 10px;border-radius:999px;background:var(--tile);font-size:12.5px;color:var(--text2)}
+.puce b{color:var(--text);font-family:var(--mono);font-weight:600}
+.puce.ambre b{color:var(--ambre)}
+.note{font-size:12.5px;color:var(--text2);margin:0}
+.segment{display:flex;border:1px solid var(--hair2);border-radius:8px;overflow:hidden;align-self:flex-start}
+.segment button{font:500 13px var(--sans);padding:8px 18px;background:transparent;color:var(--text2);border:0;cursor:pointer}
+.segment button[aria-pressed=true]{background:var(--text);color:var(--bg)}
+.scene{display:none}.scene.visible{display:contents}
+/* Réglages */
+.profil{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--hair2);border-radius:10px;cursor:pointer}
+.profil[aria-checked=true]{border-color:var(--vert);background:var(--tile)}
+.profil .rond{width:16px;height:16px;border:2px solid var(--hair2);border-radius:50%;margin-top:3px;flex:none}
+.profil[aria-checked=true] .rond{border-color:var(--vert);background:radial-gradient(var(--vert) 45%,transparent 50%)}
+.profil strong{display:block;font-size:15px}
+.profil span.d{font-size:12.5px;color:var(--text2)}
+.reco{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--vert);margin-left:8px}
+.zone{border-top:1px solid var(--hair);padding-top:14px}
+.zone .danger{color:var(--rouge);border-color:var(--rouge);font:500 13px var(--sans);padding:8px 12px;border:1px solid;border-radius:8px;background:transparent}
+.ligne-reglage{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--hair);font-size:13.5px}
+.ligne-reglage select{font:500 13px var(--sans);background:var(--tile);color:var(--text);border:1px solid var(--hair2);border-radius:6px;padding:6px 8px}
+/* Direction B : le fil de la séance */
+.fil{display:flex;flex-direction:column;gap:0;position:relative;margin:0;padding:0;list-style:none}
+.etape{display:grid;grid-template-columns:34px 1fr;gap:14px;padding-bottom:20px;position:relative}
+.etape::before{content:"";position:absolute;left:16px;top:34px;bottom:0;width:2px;background:var(--hair2)}
+.etape:last-child::before{display:none}
+.etape .rond{width:34px;height:34px;border-radius:50%;border:2px solid var(--hair2);display:grid;place-items:center;font:600 13px var(--mono);color:var(--text3)}
+.etape.fait .rond{background:var(--vert-fond);border-color:var(--vert-fond);color:var(--sur-vert)}
+.etape.courant .rond{border-color:var(--vert);color:var(--vert)}
+.etape.alerte .rond{border-color:var(--ambre);color:var(--ambre)}
+.etape h3{margin:5px 0 0;font-size:16px;font-weight:600}
+.etape.futur h3{color:var(--text3);font-weight:400}
+.etape .res{margin:2px 0 0;font-size:13px;color:var(--text2)}
+.etape .corps-etape{margin-top:12px;display:flex;flex-direction:column;gap:12px}
+/* Direction C : la télécommande */
+.grille-c{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.tele{width:360px;max-width:100%;background:var(--bg);border:1px solid var(--hair2);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.tele .ligne1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tele .phrase-c{font-size:15px;line-height:1.3;margin:0}
+.tele .phrase-c b{font-weight:600}
+.tele .bouton{padding:12px 14px;font-size:15px}
+.tele .mini{display:flex;justify-content:space-between;font:500 11.5px var(--mono);color:var(--text2)}
+.tele .barre{height:6px}
+.tele .titre-c{font-size:11px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin:0 0 6px}
+.detail-c{width:560px;max-width:100%;border:1px solid var(--hair2);border-radius:10px;padding:18px 22px;background:var(--bg)}
+.voie{display:flex;align-items:flex-end;gap:2px;height:60px;margin:10px 0}
+.voie i{flex:1;background:var(--vert-fond);min-width:3px;border-radius:1px}
+.voie i.d{background:var(--ambre)}
+.liste-c{margin:8px 0 0;padding:0;list-style:none;font-size:13px}
+.liste-c li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--hair)}
+.liste-c li span:first-child{color:var(--text2)}

@@ -87,7 +87,7 @@
       const al = m.anneau || {}, p = al.med && al.depuis !== null && al.depuis !== undefined ? Math.min(1, al.depuis / al.med) : 0;
       svg = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="1.75" stroke-linecap="butt"><circle class="sg-fond-anneau" cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3"/><circle class="sg-arc" cx="12" cy="12" r="9" stroke="currentColor" transform="rotate(-90 12 12)" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C * (1 - p)).toFixed(2)}"${al.debut ? ` data-debut="${esc(al.debut)}"` : ''}${al.med ? ` data-med="${esc(Math.round(al.med * 1000))}"` : ''}/></svg>`;
     } else svg = SVG(GLYPHE[m.glyphe] || GLYPHE.pret);
-    return `<span class="sg-glyphe${vivant ? ' sg-vivant' : ''}${cls ? ' ' + cls : ''}" data-ton="${esc(m.ton)}" aria-hidden="true">${svg}</span>`;
+    return `<span class="sg-glyphe${vivant ? ' sg-vivant' : ''}${cls ? ' ' + cls : ''}" data-k="${esc(m.glyphe)}" data-g="${esc(m.glyphe)}" data-ton="${esc(m.ton)}" aria-hidden="true">${svg}</span>`;
   }
 
   /* ------------------------------------------------------------------ modèle : l'état du lot ou d'Écho, d'après l'instantané */
@@ -239,25 +239,26 @@
       for (let k = 0; k <= total; k += pas) h += `<div class="sg-rail-grad${k % (pas * 5) === 0 ? ' sg-dix' : ''}" style="left:${pos(k)}"></div>`;
       h += `<div class="sg-rail-num sg-debut">0</div>${total >= 20 ? `<div class="sg-rail-num" style="left:50%">${esc(Math.round(total / 2))}</div>` : ''}<div class="sg-rail-num sg-fin" style="left:100%">${esc(total)}</div>`;
     }
+    /* Ordre stable pour la mise à jour en place : le segment fait et le curseur avant les repères, qui s'ajoutent au bout (un nouveau différé apparaît, le curseur glisse). */
     h += `<div class="sg-rail-fait" style="width:${pos(traites)}"></div>`;
-    statuts.forEach((x, i) => { if (x === 'differe') h += `<div class="sg-rail-dif" style="left:${pos(i + 0.5)}"></div>`; else if (x === 'incertain') h += `<div class="sg-rail-inc" style="left:${pos(i + 0.5)}"></div>`; });
-    if (etat !== 'vide' && etat !== 'fini') h += `<div class="sg-rail-cur" style="left:${pos(traites)}"></div>`;
+    if (etat !== 'vide' && etat !== 'fini') h += `<div class="sg-rail-cur" data-k="cur" style="left:${pos(traites)}"></div>`;
+    statuts.forEach((x, i) => { if (x === 'differe') h += `<div class="sg-rail-dif" data-k="d${i}" style="left:${pos(i + 0.5)}"></div>`; else if (x === 'incertain') h += `<div class="sg-rail-inc" data-k="i${i}" style="left:${pos(i + 0.5)}"></div>`; });
     return h + '</div>';
   }
   const avisHtml = m => (m.avis || []).map(t => `<p>${esc(t)}</p>`).join('');
   function objetHtml(snap, m) {
     const a = snap.ar || {}, g = snap.sig || {};
-    if (m.incident) return `<div class="sg-incident" role="alert"><p>${esc(m.incident.texte)}</p>${avisHtml(m)}</div>`;
-    if (m.objet === 'fin') return `<dl class="sg-fin">${m.fin.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
+    if (m.incident) return `<div class="sg-incident" data-k="incident" role="alert"><p>${esc(m.incident.texte)}</p>${avisHtml(m)}</div>`;
+    if (m.objet === 'fin') return `<dl class="sg-fin" data-k="fin">${m.fin.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
     if (m.objet === 'echo') {
       const c = m.compteEcho, M = (g.echo?.marques || []).slice(-60);
-      return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(c.valides)}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
+      return `<div class="sg-objet" data-k="echo"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(c.valides)}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
     }
     if (m.objet !== 'rail') return '';
-    if (m.railEtat === 'vide') return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
+    if (m.railEtat === 'vide') return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
     const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> différés</span>`;
     /* Ciblage T22 : M inconnu (src/ui5.js) : dit tel quel ; le rail n'a alors ni graduations ni total, et l'allure aucun temps restant. */
-    return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités · total inconnu'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
+    return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités · total inconnu'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
   }
   /* Revue T21 (D7) : les bornes du prochain lot, revues et modifiables avant « Démarrer le lot », au repos et après « Nouveau lot » (règle du panneau
    * d'avant : aucun lot ne part sans que tu aies revu ses bornes). Ce qu'on tape va dans `#start` / `#end` (src/ui5.js), que « Démarrer » lit ;
@@ -272,7 +273,7 @@
     if (!m.principal && !m.secondaires.length) return m.raison ? `<p class="sg-raison">${esc(m.raison)}</p>` : '';
     let h = '<div class="sg-actions">';
     const p = m.principal;
-    if (p) h += `<button type="button" class="sg-principal${p.danger ? ' sg-danger' : ''}"${p.act && !p.occupe ? ` data-act="${esc(p.act)}"` : ''}${p.occupe || p.inactif ? ' disabled' : ''}>${p.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : p.ic ? ic(p.ic) : ''}<span>${esc(p.texte)}</span></button>`;
+    if (p) h += `<button type="button" class="sg-principal${p.danger ? ' sg-danger' : ''}" data-k="${esc(p.occupe ? 'occupe' : p.act || '')}"${p.act && !p.occupe ? ` data-act="${esc(p.act)}"` : ''}${p.occupe || p.inactif ? ' disabled' : ''}>${p.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : p.ic ? ic(p.ic) : ''}<span>${esc(p.texte)}</span></button>`;
     for (const b of m.secondaires) h += `<button type="button" class="sg-secondaire${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>`;
     if (m.raison) h += `<span class="sg-raison">${esc(m.raison)}</span>`;
     return h + '</div>';
@@ -291,13 +292,13 @@
     const g = snap.sig || {}, sel = ui.sel;
     if (m.activite === 'echo') {
       const R = snap.echoRows || [];
-      const rows = R.map((r, i) => `<div class="sg-ligne" role="option" data-row="${i}" aria-selected="${sel === i}" tabindex="-1"><span class="sg-cut">${esc(r.cut)}</span><span class="sg-motif">${esc(r.texte)}</span><span class="sg-prec">${esc(r.duree)}</span></div>`).join('');
+      const rows = R.map((r, i) => `<div class="sg-ligne" data-k="${esc(r.cut)}" style="--i:${Math.min(i, 12)}" role="option" data-row="${i}" aria-selected="${sel === i}" tabindex="-1"><span class="sg-cut">${esc(r.cut)}</span><span class="sg-motif">${esc(r.texte)}</span><span class="sg-prec">${esc(r.duree)}</span></div>`).join('');
       return `<div class="sg-corps" role="listbox" aria-label="Visites"><div class="sg-section"><span>Visites</span><span class="sg-n">${esc(snap.echo?.visites ?? 0)}</span><span class="sg-d">les 40 dernières</span></div>${rows || '<div class="sg-vide">Aucune visite pour l’instant.</div>'}</div>`;
     }
     const a = snap.ar || {}, ex = new Set(g.examines || []), go = g.goto || {}, { D, V } = lignesRevue(a);
     const titreOuvrir = !go.present ? 'Disponible avec la prochaine mise à jour du moteur' : !go.actif ? go.raison || 'Indisponible pour l’instant' : 'Ouvrir ce cut dans ESV';
     const outils = r => `<span class="sg-outils"><button type="button"${r.cut !== null && go.present && go.actif ? ` data-act="sg:ouvrir:${esc(r.cut)}"` : ' disabled'} title="${esc(titreOuvrir)}">${ic('ouvrir')}<span>Ouvrir</span></button><button type="button" data-act="sg:examiner:${esc(r.cle)}" aria-pressed="${ex.has(r.cle)}" title="Marquer examiné">${ic('coche')}<span>${ex.has(r.cle) ? 'Examiné' : 'Examiner'}</span></button></span>`;
-    const ligne = (r, i) => `<div class="sg-ligne${ex.has(r.cle) ? ' sg-examine' : ''}" role="option" data-row="${i}" aria-selected="${sel === i}" tabindex="-1"><span class="sg-cut">${esc(r.cut ?? '—')}</span><span class="sg-motif">${esc(r.motif)}${r.prec ? ` <small>· ${esc(r.prec)}</small>` : ''}${r.meta ? ` <small>· ${esc(r.meta)}</small>` : ''}</span>${outils(r)}</div>`;
+    const ligne = (r, i) => `<div class="sg-ligne${ex.has(r.cle) ? ' sg-examine' : ''}" data-k="${esc(r.cle)}" style="--i:${Math.min(i, 12)}" role="option" data-row="${i}" aria-selected="${sel === i}" tabindex="-1"><span class="sg-cut">${esc(r.cut ?? '—')}</span><span class="sg-motif">${esc(r.motif)}${r.prec ? ` <small>· ${esc(r.prec)}</small>` : ''}${r.meta ? ` <small>· ${esc(r.meta)}</small>` : ''}</span>${outils(r)}</div>`;
     const reste = L => L.filter(r => !ex.has(r.cle)).length;
     const etatGo = go.etat === 'refuse' ? `<div class="sg-note-ligne sg-refus" role="status">${esc(go.texte || 'Ouverture refusée')}</div>` : go.etat === 'en-cours' ? '<div class="sg-note-ligne" role="status">Ouverture du cut dans ESV…</div>' : '';
     let h = etatGo;
@@ -338,7 +339,7 @@
     const court = String(texte).split(' · ')[0];
     return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
-<button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" role="status">${esc(ui.note)}</div>` : ''}`;
+<button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
 
   /* ------------------------------------------------------------------ couches */
@@ -368,7 +369,7 @@
   }
   function paletteHtml(snap, ui) {
     const L = paletteListe(snap, ui), i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
-    return `<div class="sg-voile" data-act="sg:fermer"></div><div class="sg-palette" role="dialog" aria-label="Commandes"><input id="ui5-q" type="text" value="${esc(ui.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="sg-cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="sg-cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ` data-act="${esc(c.act)}"`} data-fermer="1">${ic(c.ic)}<span>${esc(c.nom)}</span><span class="sg-et">${esc(c.off || (ui.confirme === c.act ? 'Entrée encore pour confirmer' : c.et))}</span></button>`).join('') : '<div class="sg-cmd"><span></span><span class="sg-et">Aucune commande</span></div>'}</div><div class="sg-pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="sg-espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
+    return `<div class="sg-voile" data-k="voile-palette" data-act="sg:fermer"></div><div class="sg-palette" data-k="palette" role="dialog" aria-label="Commandes"><input id="ui5-q" type="text" value="${esc(ui.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="sg-cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="sg-cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ` data-act="${esc(c.act)}"`} data-fermer="1">${ic(c.ic)}<span>${esc(c.nom)}</span><span class="sg-et">${esc(c.off || (ui.confirme === c.act ? 'Entrée encore pour confirmer' : c.et))}</span></button>`).join('') : '<div class="sg-cmd"><span></span><span class="sg-et">Aucune commande</span></div>'}</div><div class="sg-pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="sg-espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
   }
   function esvHtml(snap) {
     const g = snap.sig || {}, a = snap.ar || {}, L = snap.onglets || [], choisi = String(snap.ongletChoisi || ''), verrou = !!a.lotOuvert || !!a.connexionBloquee;
@@ -378,7 +379,7 @@
       : '<div class="sg-vide sg-petit">Aucun onglet ESV ouvert. Ouvre une partie dans ESV ; elle apparaîtra ici.</div>';
     const rc = g.connexion?.reconnect;
     const reco = rc?.visible ? `<div class="sg-ong"><span class="sg-lib"><b>Reconnecter</b><small>${esc(g.connexion.statut === 'reconnecting' ? 'en cours…' : 'ré-équiper l’onglet choisi')}</small></span><button type="button" data-act="legacy:reconnect"${rc.actif ? '' : ' disabled'}>Reconnecter</button></div>` : '';
-    return `<div class="sg-voile sg-transparent" data-act="sg:fermer"></div><div class="sg-popover" role="dialog" aria-label="Onglets ESV">${rows}${reco}<div class="sg-pied">${verrou ? ic('cadenas') + '<span>Une seule connexion, gardée jusqu’à la fin du lot.</span>' : `<span>${esc(snap.connexionNote || 'Une seule connexion, partagée entre Orbite et Écho.')}</span>`}</div></div>`;
+    return `<div class="sg-voile sg-transparent" data-k="voile-esv" data-act="sg:fermer"></div><div class="sg-popover" data-k="esv" role="dialog" aria-label="Onglets ESV">${rows}${reco}<div class="sg-pied">${verrou ? ic('cadenas') + '<span>Une seule connexion, gardée jusqu’à la fin du lot.</span>' : `<span>${esc(snap.connexionNote || 'Une seule connexion, partagée entre Orbite et Écho.')}</span>`}</div></div>`;
   }
   const PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); } catch { return null; } })();
   function historiqueHtml(H) {
@@ -395,7 +396,7 @@
     const seg = (nom, valeurs, courant, aide) => `<span class="sg-seg" role="group" aria-label="${esc(aide)}">${valeurs.map(([v, l]) => `<button type="button" aria-pressed="${v === courant}" data-act="sg:choix:${esc(nom)}:${esc(v)}">${esc(l)}</button>`).join('')}</span>`;
     const ligne = (t, aide, ctl) => `<div class="sg-reg"><span class="sg-lib"><span>${esc(t)}</span>${aide ? `<small>${esc(aide)}</small>` : ''}</span>${ctl}</div>`;
     const discard = (snap.boutonsEcho || []).find(b => b.id === 'native-discard');
-    return `<div class="sg-feuille" role="dialog" aria-label="Réglages"><div class="sg-tete"><span class="sg-t">Réglages</span><span class="sg-meta">jamais en séance</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:fermer" aria-label="Fermer">${ic('croix')}</button></div><div class="sg-liste">
+    return `<div class="sg-feuille" data-k="reglages" role="dialog" aria-label="Réglages"><div class="sg-tete"><span class="sg-t">Réglages</span><span class="sg-meta">jamais en séance</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:fermer" aria-label="Fermer">${ic('croix')}</button></div><div class="sg-liste">
  ${ligne('Après le lot', 'Relecture des verts sûrs · gardé pour le prochain lot', sel('relecture', [['coupee', 'Rien'], ['ombre', 'Relire sans rien modifier'], ['corriger', 'Relire et corriger']], r.relecture, 'Après le lot'))}
  ${ligne('Clic du mode rapide', 'gardé pour le prochain lot', sel('clic', [['tel-quel', 'Comme avant'], ['gauche-recentre', 'Rail gauche recentré'], ['tout-recentre', 'Tout recentré']], r.clic, 'Clic du mode rapide'))}
  ${ligne('Série de différés', 'Mettre en attente les cuts voisins', seg('grappe', [['non', 'Non'], ['oui', 'Oui']], r.grappe ? 'oui' : 'non', 'Série de différés'))}

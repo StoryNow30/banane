@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="fr" data-theme="clair" data-taille="normal" data-revue="v1" data-cadence="reelle">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R · Carnet technique</title>
+<meta name="description" content="Maquette Ariane 5.0, direction « Carnet technique » : l'instrument et le tiroir, avec une allure vivante. Chiffres inventés.">
+<style>
+/* ───────────────────────────── polices locales (OFL, ../../fonts/) */
+@font-face{font-family:"Bricolage Grotesque";src:url(../../fonts/BricolageGrotesque-latin-opsz-wght.woff2) format("woff2");font-weight:200 800;font-display:block}
+@font-face{font-family:"Hanken Grotesk";src:url(../../fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:"JetBrains Mono";src:url(../../fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800;font-display:block}
+@font-face{font-family:"Instrument Serif";src:url(../../fonts/InstrumentSerif-latin-400-italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:block}
+
+/* ───────────────────────────── jetons (§ 6 du document d'architecture, palette Carnet) */
+:root{
+  --sans:"Hanken Grotesk",system-ui,sans-serif; --titre:"Bricolage Grotesque","Hanken Grotesk",sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  --t-chiffre:44px; --l-chiffre:48px; --t-etat:28px; --l-etat:32px; --t-texte:15px; --l-texte:22px; --t-meta:13px; --l-meta:18px;
+  --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px; --e7:48px;
+  --r-ctl:3px; --r-boite:8px;
+  --d-appui:120ms; --d-local:200ms; --d-glisse:300ms; --d-scene:400ms; --sortie:cubic-bezier(.2,.7,.2,1); --entree-sortie:cubic-bezier(.45,0,.2,1);
+  --marge:var(--e7); --marge-v:var(--e6); --barre:48px; --poignee:40px; --cache:56px;
+  --cellule:10px; --inter:3px;
+}
+:root[data-theme="clair"]{ /* papier gris chaud */
+  --fond:#E9E6DF; --surface:#F0EEE8; --surface2:#F7F6F2; --encre:#16171A; --encre2:#57544E; --encre3:#827E76;
+  --filet:rgba(22,23,26,.14); --filet-fort:rgba(22,23,26,.28);
+  --vivant:#276D44; --attention:#815A0E; --alerte:#B2362A; --bleu:#1F4FD8; --bleu-tx:#1F4FD8;
+  --action:#1F4FD8; --action-tx:#F0EEE8; --action-survol:#1A44BE;
+  --ombre:0 1px 2px rgba(22,23,26,.08),0 0 0 1px var(--filet); --voile:rgba(22,23,26,.22); color-scheme:light;
+}
+:root[data-theme="sombre"]{ /* ardoise */
+  --fond:#202327; --surface:#282C31; --surface2:#31363C; --encre:#ECE9E2; --encre2:#B3AFA6; --encre3:#7A766E;
+  --filet:rgba(236,233,226,.14); --filet-fort:rgba(236,233,226,.28);
+  --vivant:#63BB85; --attention:#E2B45C; --alerte:#F28C7E; --bleu:#2F55D6; --bleu-tx:#9DB4FF;
+  --action:#2F55D6; --action-tx:#F4F2EC; --action-survol:#3A62E4;
+  --ombre:0 1px 2px rgba(0,0,0,.3),0 0 0 1px var(--filet); --voile:rgba(0,0,0,.4); color-scheme:dark;
+}
+:root[data-taille="compact"]{
+  --t-chiffre:32px; --l-chiffre:36px; --t-etat:22px; --l-etat:28px; --t-texte:14px; --l-texte:20px; --t-meta:12px; --l-meta:16px;
+  --marge:var(--e4); --marge-v:var(--e4); --barre:40px; --poignee:36px; --cache:40px; --cellule:8px; --inter:2px;
+}
+@media (prefers-reduced-motion:reduce){:root{--d-appui:0ms;--d-local:0ms;--d-glisse:0ms;--d-scene:0ms}}
+:root[data-reduit="1"]{--d-appui:0ms;--d-local:0ms;--d-glisse:0ms;--d-scene:0ms}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font:400 var(--t-texte)/var(--l-texte) var(--sans);font-feature-settings:"tnum" 1;background:#D8D4CB;color:#2A2924;-webkit-font-smoothing:antialiased}
+:root[data-theme="sombre"] body{background:#17191C;color:#CFCBC3}
+button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;cursor:pointer;border-radius:var(--r-ctl)}
+button:disabled,button[aria-disabled="true"]{cursor:default}
+:focus-visible{outline:2px solid var(--bleu-tx,#1F4FD8);outline-offset:2px}
+.fen :focus-visible{outline:2px solid var(--bleu-tx);outline-offset:2px}
+[hidden]{display:none !important}
+.mono{font-family:var(--mono);font-weight:500}
+.meta{font-size:var(--t-meta);line-height:var(--l-meta)}
+.encre2{color:var(--encre2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* petites capitales espacées : étiquettes de section */
+.pc{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+
+/* ───────────────────────────── banc d'essai (hors maquette) */
+.banc{display:flex;flex-wrap:wrap;gap:var(--e3) var(--e5);align-items:center;padding:var(--e3) var(--e5);font-size:13px;line-height:18px;border-bottom:1px solid rgba(90,86,78,.3)}
+.banc label{display:flex;align-items:center;gap:var(--e2)}
+.banc select{background:transparent;border:1px solid rgba(90,86,78,.45);border-radius:3px;padding:3px 6px;max-width:260px}
+.banc .seg{display:inline-flex;border:1px solid rgba(90,86,78,.45);border-radius:3px;overflow:hidden}
+.banc .seg button{padding:3px 10px;border-radius:0;font-size:13px}
+.banc .seg button[aria-pressed="true"]{background:rgba(90,86,78,.22)}
+.banc .seg button:focus-visible{outline-offset:-2px}
+.plateau{display:flex;gap:var(--e6);padding:var(--e6) var(--e5);align-items:flex-start;flex-wrap:wrap}
+.notes{max-width:360px;font-size:13px;line-height:19px;opacity:.9}
+.notes h2{font-size:13px;font-weight:600;margin-bottom:var(--e2);letter-spacing:0}
+.notes p{margin-bottom:var(--e2)}
+.notes .nouveau{display:inline-block;border:1px solid currentColor;border-radius:3px;padding:0 5px;font-size:11px;line-height:16px;vertical-align:1px}
+:root[data-nu="1"] .banc,:root[data-nu="1"] .notes{display:none}
+:root[data-nu="1"] .plateau{padding:0}
+:root[data-nu="1"] body{background:var(--fond)}
+
+/* ───────────────────────────── la fenêtre */
+.fen{position:relative;width:600px;height:760px;background:var(--fond);color:var(--encre);display:flex;flex-direction:column;overflow:hidden;flex:none;isolation:isolate}
+:root[data-taille="compact"] .fen{width:360px;height:480px}
+:root[data-nu="0"] .fen{outline:1px solid rgba(90,86,78,.4)}
+
+/* barre */
+.barre{height:var(--barre);flex:none;display:flex;align-items:center;gap:var(--e3);padding:0 var(--e4);border-bottom:1px solid var(--filet)}
+:root[data-taille="normal"] .barre{padding:0 var(--e4) 0 var(--e5)}
+.logo{display:flex;align-items:center;gap:var(--e2);font-family:var(--titre);font-weight:600;font-size:16px;letter-spacing:0}
+.logo svg{width:18px;height:18px;display:block}
+:root[data-taille="compact"] .logo span{display:none}
+.bascule{display:inline-flex;border-bottom:0;gap:var(--e4)}
+.bascule button{height:var(--barre);padding:0 2px;border-radius:0;font-size:var(--t-texte);color:var(--encre2);display:inline-flex;align-items:center;gap:6px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.bascule button[aria-selected="true"]{color:var(--encre);border-bottom-color:var(--encre)}
+.bascule button[aria-disabled="true"]{color:var(--encre3)}
+.bascule button svg{width:11px;height:11px}
+.bascule button:focus-visible{outline-offset:-3px}
+.espace{flex:1}
+.puce{height:28px;display:inline-flex;align-items:center;gap:var(--e2);padding:0 10px 0 8px;border-radius:999px;border:1px solid var(--filet-fort);font-size:var(--t-meta);line-height:1;color:var(--encre);max-width:220px;white-space:nowrap}
+.puce i{width:8px;height:8px;border-radius:50%;background:var(--vivant);flex:none}
+.puce[data-etat="libre"] i{background:var(--encre3);animation:pulse-une var(--d-glisse) ease-out 2}
+.puce[data-etat="ko"] i{background:var(--alerte)}
+.puce[data-etat="aucun"] i{background:transparent;border:1.5px solid var(--encre3)}
+.puce[data-etat="verrou"] svg{width:11px;height:11px;color:var(--encre2)}
+.puce .tx{overflow:hidden;text-overflow:ellipsis}
+.puce .fl{width:8px;height:8px;color:var(--encre2)}
+:root[data-taille="compact"] .puce{max-width:132px;padding:0 8px 0 7px}
+.puce .court{display:none}
+:root[data-taille="compact"] .puce .long{display:none} :root[data-taille="compact"] .puce .court{display:inline}
+:root[data-taille="compact"] .ico[data-act="palette"]{display:none}
+:root[data-taille="compact"] .bascule{gap:var(--e3)}
+.ico{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--encre2);border-radius:var(--r-ctl)}
+.ico:hover{color:var(--encre);background:var(--surface)}
+.ico svg{width:16px;height:16px}
+.ico[aria-pressed="true"]{color:var(--encre);background:var(--surface2)}
+.barre-note{position:absolute;top:var(--barre);left:0;right:0;padding:var(--e2) var(--marge);font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2);background:var(--surface);border-bottom:1px solid var(--filet);z-index:3}
+
+/* instrument */
+.instrument{flex:none;padding:var(--marge-v) var(--marge);display:flex;flex-direction:column;gap:var(--e5)}
+:root[data-taille="compact"] .instrument{gap:var(--e3)}
+.etat{display:flex;align-items:center;gap:var(--e3);min-height:var(--l-etat)}
+.etat .mot{font-family:var(--titre);font-size:var(--t-etat);line-height:var(--l-etat);font-weight:600;letter-spacing:-.005em;font-optical-sizing:auto;transition:color var(--d-local) var(--sortie)}
+:root[data-serif="1"] .etat .mot{font-family:"Instrument Serif",serif;font-style:italic;font-weight:400;font-size:calc(var(--t-etat) * 1.25);letter-spacing:0}
+.glyphe{width:24px;height:24px;flex:none;display:block;color:var(--encre2);transition:color var(--d-local) var(--sortie)}
+:root[data-taille="compact"] .glyphe{width:20px;height:20px}
+.glyphe[data-ton="vivant"]{color:var(--vivant)} .glyphe[data-ton="attention"]{color:var(--attention)} .glyphe[data-ton="alerte"]{color:var(--alerte)} .glyphe[data-ton="encre"]{color:var(--encre)}
+.glyphe .arc{transition:stroke-dashoffset 250ms linear}
+.glyphe .niveau{transition:height 250ms linear,y 250ms linear}
+.glyphe.vivant .fond-anneau{animation:vivant 2000ms ease-in-out infinite}
+@keyframes vivant{0%,100%{opacity:1}50%{opacity:.7}}
+@keyframes pulse-une{0%{transform:scale(1)}50%{transform:scale(1.6)}100%{transform:scale(1)}}
+:root[data-reduit="1"] .glyphe.vivant .fond-anneau,:root[data-reduit="1"] .puce i{animation:none}
+@media (prefers-reduced-motion:reduce){.glyphe.vivant .fond-anneau,.puce i{animation:none}}
+.groupe-etat{display:flex;flex-direction:column;gap:var(--e2)}
+.phrase{color:var(--encre2);font-size:var(--t-texte);line-height:var(--l-texte);min-height:var(--l-texte)}
+.phrase b{font-weight:600;color:var(--encre)}
+.phrase .mono{font-weight:500;color:var(--encre)}
+
+/* l'objet : la trame */
+.objet{display:flex;flex-direction:column;gap:var(--e3)}
+.compte{display:flex;align-items:baseline;gap:var(--e2);flex-wrap:wrap}
+.compte .chiffre{font-family:var(--titre);font-size:var(--t-chiffre);line-height:var(--l-chiffre);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;font-optical-sizing:auto}
+.compte .suite{color:var(--encre2)}
+.compte .droite{margin-left:auto;color:var(--encre2);white-space:nowrap}
+.compte .droite b{font-weight:600;color:var(--encre)}
+.compte .droite .dif{color:var(--attention);font-weight:600}
+:root[data-taille="compact"] .compte .droite{flex-basis:100%;margin-left:0;white-space:normal}
+.trame{display:flex;flex-direction:column;gap:var(--inter)}
+.trame .rang{display:flex;gap:var(--inter);height:var(--cellule)}
+.c{width:var(--cellule);height:var(--cellule);flex:none;position:relative;border-radius:1px;background:var(--vivant)}
+.c.voie{background:var(--surface2);box-shadow:inset 0 0 0 1.5px var(--vivant)}
+.c.differe{background:var(--attention)} .c.differe::after{content:"";position:absolute;left:2px;right:2px;top:calc(50% - 1px);height:2px;background:var(--fond)}
+.c.saute{background:transparent;box-shadow:inset 0 0 0 1px var(--alerte)} .c.saute::before,.c.saute::after{content:"";position:absolute;left:50%;top:1px;bottom:1px;width:1.5px;margin-left:-.75px;background:var(--alerte);transform:rotate(45deg)} .c.saute::after{transform:rotate(-45deg)}
+.c.main{background:transparent;box-shadow:inset 0 0 0 1.5px var(--vivant)} .c.main::after{content:"";position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:var(--vivant)}
+.c.cours{background:transparent;box-shadow:inset 0 0 0 2px var(--bleu);overflow:hidden} .c.cours::after{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--p,0) * 100%);background:var(--bleu);transition:height 250ms linear}
+.c.incident{background:var(--alerte)} .c.incident::after{content:"";position:absolute;left:calc(50% - 1px);top:2px;width:2px;height:4px;background:var(--fond);box-shadow:0 5px 0 var(--fond)}
+.c.relu{background:var(--encre3)} .c.corrige{background:var(--vivant)}
+.c.visite{background:transparent;box-shadow:inset 0 0 0 1px var(--encre3)} .c.visite.corrigee{background:var(--encre);box-shadow:none}
+.c.neuf{animation:apparait 150ms var(--sortie)}
+@keyframes apparait{from{filter:brightness(.6)}}
+:root[data-reduit="1"] .c.neuf{animation:none}
+@media (prefers-reduced-motion:reduce){.c.neuf{animation:none}}
+.reste{height:var(--cellule);flex:1;background:var(--filet);border-radius:1px;position:relative;min-width:var(--cellule)}
+.reste.debut{border-radius:1px 0 0 1px} .reste.milieu{border-radius:0} .reste.fin{border-radius:0 1px 1px 0}
+.trame-lib{display:flex;gap:var(--e4);color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta);flex-wrap:wrap}
+.trame-lib span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.trame-lib .c{width:8px;height:8px}
+.trame-lib .reste{flex:none;width:16px;height:8px}
+.trame[data-total="inconnu"] .reste{display:none}
+
+/* allure */
+.allure{color:var(--encre2);font-size:var(--t-texte);line-height:var(--l-texte)}
+.allure b{font-weight:600;color:var(--encre);font-variant-numeric:tabular-nums}
+.allure .sep{color:var(--encre3)}
+
+/* bloc incident */
+.incident{display:flex;flex-direction:column;gap:var(--e3);padding:var(--e3) var(--e4);border:1px solid var(--alerte);border-radius:var(--r-ctl)}
+.incident p{color:var(--encre)}
+.incident .op{color:var(--encre2)} .incident .op b{color:var(--encre);font-weight:600}
+
+/* trois lignes de fin : tableau imprimé */
+.fin{display:grid;grid-template-columns:auto 1fr;gap:0 var(--e4);color:var(--encre2)}
+.fin dt,.fin dd{padding:var(--e2) 0;border-bottom:1px solid var(--filet)}
+.fin dt{color:var(--encre3)} .fin dd b{color:var(--encre);font-weight:600}
+.fin dd .dif{color:var(--attention);font-weight:600}
+
+/* actions */
+.actions{display:flex;align-items:center;gap:var(--e4);flex-wrap:wrap}
+.principal{height:44px;min-width:200px;padding:0 var(--e5);background:var(--action);color:var(--action-tx);border-radius:var(--r-ctl);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:10px;transition:transform var(--d-appui) var(--sortie),background var(--d-local) var(--sortie)}
+.principal:hover{background:var(--action-survol)}
+.principal:active{transform:scale(.98)}
+.principal:disabled{background:var(--surface2);color:var(--encre3);box-shadow:inset 0 0 0 1px var(--filet)}
+.principal svg{width:14px;height:14px}
+.principal .tourne{width:14px;height:14px;border-radius:50%;border:1.75px solid currentColor;border-right-color:transparent;animation:tourne 900ms linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}
+:root[data-reduit="1"] .tourne{animation:none}
+@media (prefers-reduced-motion:reduce){.tourne{animation:none}}
+:root[data-taille="compact"] .principal{flex:1 1 200px;min-width:0;height:auto;min-height:44px;padding:8px var(--e4);white-space:normal;text-align:center;line-height:20px}
+:root[data-taille="compact"] .actions{gap:var(--e3);flex-wrap:wrap}
+:root[data-taille="compact"] .actions .secondaire{flex:none;padding:0 var(--e1)}
+:root[data-taille="compact"] .actions .raison{flex-basis:100%}
+.secondaire{height:32px;padding:0 var(--e2);color:var(--encre2);border-radius:var(--r-ctl);text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color var(--d-local)}
+.secondaire:hover{color:var(--encre)} .secondaire:active{text-decoration-color:currentColor}
+.secondaire.danger{color:var(--alerte)}
+.secondaire:disabled{color:var(--encre3)}
+.raison{width:100%;color:var(--encre2);font-size:var(--t-texte);line-height:var(--l-texte)}
+.verrou-ligne{display:flex;align-items:center;gap:var(--e2);color:var(--encre2)}
+.verrou-ligne svg{width:14px;height:14px}
+
+/* zone du tiroir */
+.zone{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+#tiroir-corps{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+:root[data-taille="compact"] .zone:has(.tiroir[data-ouvert="1"]){overflow:visible}
+:root[data-taille="compact"] .palette .pied{display:none}
+.tiroir{position:absolute;left:0;right:0;bottom:0;top:0;background:var(--surface);border-top:1px solid var(--filet-fort);box-shadow:0 -1px 2px rgba(22,23,26,.06);display:flex;flex-direction:column;transform:translateY(calc(100% - var(--poignee)));transition:transform var(--d-glisse) var(--entree-sortie)}
+.tiroir[data-ouvert="1"]{transform:none}
+.poignee{height:var(--poignee);flex:none;width:100%;display:flex;align-items:center;gap:var(--e3);padding:0 var(--marge);text-align:left;color:var(--encre);font-size:var(--t-texte);border-radius:0}
+.poignee:hover{background:var(--surface2)}
+.poignee:focus-visible{outline-offset:-3px}
+.poignee .fl{width:12px;height:12px;flex:none;color:var(--encre2);transition:transform var(--d-glisse) var(--sortie)}
+.tiroir[data-ouvert="1"] .poignee .fl{transform:rotate(90deg)}
+.poignee .n{font-family:var(--mono);font-weight:600}
+.poignee .n.dif{color:var(--attention)}
+.poignee .reste{margin-left:auto;color:var(--encre2);font-size:var(--t-meta);white-space:nowrap;background:none;height:auto;flex:none;border-radius:0;min-width:0}
+.poignee .etat-mini{display:none}
+.poignee .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.poignee .court{display:none}
+:root[data-taille="compact"] .poignee .long{display:none} :root[data-taille="compact"] .poignee .court{display:inline}
+:root[data-taille="compact"] .ligne .outils button span{display:none}
+:root[data-taille="compact"] .ligne .outils button{width:32px;justify-content:center;padding:0}
+:root[data-taille="compact"] .ligne .outils svg{width:14px;height:14px}
+.corps{flex:1;min-height:0;overflow:auto;padding:0 var(--e4) var(--e4);scrollbar-width:thin}
+:root[data-taille="normal"] .corps{padding:0 var(--marge) var(--e4)}
+.section{display:flex;align-items:baseline;gap:var(--e3);height:36px;color:var(--encre2);font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--encre);position:sticky;top:0;background:var(--surface);z-index:1;padding-top:var(--e2)}
+.section .n{font-family:var(--mono);color:var(--encre);text-transform:none;letter-spacing:0;font-size:var(--t-meta)}
+.section .d{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;font-size:var(--t-meta)}
+.ligne{display:grid;grid-template-columns:72px 1fr auto;gap:0 var(--e3);align-items:center;height:36px;border-bottom:1px solid var(--filet);font-size:var(--t-texte);line-height:var(--l-texte);padding:0 var(--e2);margin:0 calc(-1 * var(--e2));border-radius:var(--r-ctl)}
+:root[data-taille="compact"] .ligne{grid-template-columns:60px 1fr auto}
+.ligne .cut{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.ligne .motif{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ligne .motif small{color:var(--encre2);font-size:var(--t-meta)}
+.ligne .prec{color:var(--encre2);font-size:var(--t-meta);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ligne[aria-selected="true"]{background:var(--surface2);box-shadow:inset 2px 0 0 var(--bleu)}
+.ligne.examine .cut,.ligne.examine .motif{color:var(--encre3);text-decoration:line-through;text-decoration-color:var(--filet-fort)}
+.ligne .outils{display:flex;gap:var(--e1);align-items:center}
+.ligne .outils button{height:28px;padding:0 var(--e2);font-size:var(--t-meta);color:var(--bleu-tx);border-radius:var(--r-ctl);display:inline-flex;align-items:center;gap:6px}
+.ligne .outils button:hover{background:var(--fond)}
+.ligne .outils button[aria-pressed="true"]{color:var(--vivant)}
+.ligne .outils svg{width:12px;height:12px}
+.vide{padding:var(--e4) 0;color:var(--encre2)}
+.v2-note{display:flex;gap:var(--e2);align-items:baseline;padding:var(--e2) 0 0;color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta)}
+.v2-note .tag{border:1px solid var(--filet-fort);border-radius:3px;padding:0 5px;font-size:11px;line-height:16px;font-weight:600;color:var(--encre);flex:none}
+
+/* compact : le tiroir ouvert couvre l'instrument, l'état reste sur la poignée */
+:root[data-taille="compact"] .tiroir[data-ouvert="1"]{top:calc(-1 * var(--instrument-h,0px));box-shadow:0 -1px 2px rgba(22,23,26,.1)}
+:root[data-taille="compact"] .tiroir[data-ouvert="1"] .poignee .etat-mini{display:inline-flex;align-items:center;gap:6px;margin-left:auto;color:var(--encre2);font-size:var(--t-meta);white-space:nowrap}
+:root[data-taille="compact"] .tiroir[data-ouvert="1"] .poignee .etat-mini .glyphe{width:14px;height:14px}
+:root[data-taille="compact"] .tiroir[data-ouvert="1"] .poignee .reste{display:none}
+
+/* bande cache */
+.cache{height:var(--cache);flex:none;display:flex;align-items:center;gap:var(--e3);padding:0 var(--e4) 0 var(--marge);border-top:1px solid var(--filet);font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2)}
+.cache .q{color:var(--encre);white-space:nowrap} .cache .q .mono{font-size:var(--t-meta)}
+.cache .r{color:var(--encre3);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cache .ok{color:var(--vivant)}
+.cache .espace{flex:1}
+.cache button{height:32px;padding:0 var(--e3);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);color:var(--encre);font-size:var(--t-meta);white-space:nowrap;flex:none}
+.cache button:hover{background:var(--surface)}
+.cache button:disabled{color:var(--encre3);border-color:var(--filet)}
+:root[data-taille="compact"] .cache{gap:var(--e2)} :root[data-taille="compact"] .cache .r{display:none} :root[data-taille="compact"] .cache button{height:28px}
+:root[data-taille="compact"] .cache .lib{display:none}
+
+/* couches : feuille, palette, confirmations, popover */
+.voile{position:absolute;inset:0;background:var(--voile);z-index:5;animation:fondu var(--d-local) var(--sortie)}
+@keyframes fondu{from{opacity:0}}
+@keyframes glisse{from{transform:translateY(8px);opacity:0}}
+@keyframes glisse-bas{from{transform:translateY(100%)}}
+.feuille{position:absolute;left:0;right:0;bottom:0;top:var(--barre);background:var(--surface);border-top:1px solid var(--filet-fort);box-shadow:0 -1px 2px rgba(22,23,26,.08);z-index:6;display:flex;flex-direction:column;animation:glisse-bas var(--d-glisse) var(--entree-sortie)}
+.feuille .tete{height:var(--poignee);display:flex;align-items:center;padding:0 var(--e4) 0 var(--marge);gap:var(--e3);border-bottom:1px solid var(--encre);flex:none}
+.feuille .tete .t{font-family:var(--titre);font-weight:600;font-size:17px}
+.feuille .tete kbd{margin-left:auto}
+.feuille .liste{flex:1;overflow:auto;padding:0 var(--e4) var(--e4) var(--marge);scrollbar-width:thin}
+.reg{display:grid;grid-template-columns:1fr auto;gap:0 var(--e4);align-items:center;min-height:52px;border-bottom:1px solid var(--filet);padding:var(--e2) 0}
+.reg .lib{display:flex;flex-direction:column} .reg .lib small{color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta)}
+.reg select{height:32px;background:var(--surface2);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);padding:0 var(--e2);max-width:220px;color:var(--encre)}
+:root[data-taille="compact"] .reg{grid-template-columns:1fr;gap:var(--e1)} :root[data-taille="compact"] .reg select{max-width:none;width:100%}
+.reg .seg{display:inline-flex;border:1px solid var(--filet-fort);border-radius:var(--r-ctl);overflow:hidden}
+.reg .seg button{height:30px;padding:0 10px;border-radius:0;font-size:var(--t-meta);color:var(--encre2)} .reg .seg button[aria-pressed="true"]{background:var(--encre);color:var(--fond)}
+.reg .seg button:focus-visible{outline-offset:-2px}
+.feuille .bas{padding:var(--e4) 0 0;display:flex;flex-direction:column;gap:var(--e3)}
+.feuille .bas .lien{color:var(--bleu-tx);text-align:left;height:32px;padding:0;display:inline-flex;align-items:center;gap:var(--e2)} .feuille .bas .lien:hover{text-decoration:underline;text-underline-offset:3px}
+.feuille .bas .lien svg{width:14px;height:14px;flex:none}
+.fen svg{flex:none}
+.fen .palette input:focus-visible{outline:0}
+.feuille .bas .danger-zone{margin-top:var(--e2);padding-top:var(--e4);border-top:1px solid var(--filet);display:flex;align-items:center;gap:var(--e4);color:var(--encre2);font-size:var(--t-meta)}
+.feuille .bas .danger-zone button{height:32px;padding:0 var(--e3);border:1px solid var(--alerte);color:var(--alerte);border-radius:var(--r-ctl);font-size:var(--t-meta);margin-left:auto;white-space:nowrap}
+kbd{font-family:var(--mono);font-size:11px;line-height:16px;padding:0 5px;border:1px solid var(--filet-fort);border-radius:3px;color:var(--encre2)}
+
+.palette{position:absolute;left:var(--e4);right:var(--e4);top:calc(var(--barre) + var(--e3));background:var(--surface);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:6;animation:glisse var(--d-glisse) var(--sortie);overflow:hidden}
+:root[data-taille="normal"] .palette{left:var(--marge);right:var(--marge)}
+.palette input{width:100%;height:44px;padding:0 var(--e4);background:transparent;border:0;border-bottom:1px solid var(--encre);color:var(--encre);outline:none}
+.palette input::placeholder{color:var(--encre3)}
+.palette .cmds{padding:var(--e2)}
+.cmd{display:grid;grid-template-columns:20px 1fr auto;gap:var(--e3);align-items:center;height:36px;padding:0 var(--e2);border-radius:var(--r-ctl);width:100%;text-align:left;color:var(--encre)}
+.cmd[aria-selected="true"]{background:var(--surface2);box-shadow:inset 2px 0 0 var(--bleu)}
+.cmd svg{width:14px;height:14px;color:var(--encre2)}
+.cmd .et{color:var(--encre2);font-size:var(--t-meta);white-space:nowrap}
+.cmd[aria-disabled="true"]{color:var(--encre3)} .cmd[aria-disabled="true"] .et{color:var(--encre3)}
+.palette .pied{display:flex;gap:var(--e3);padding:var(--e2) var(--e4) var(--e3);color:var(--encre3);font-size:var(--t-meta);align-items:center}
+.palette .pied .espace{flex:1}
+
+.boite{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 2 * var(--e4)));background:var(--surface);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:7;padding:var(--e5);display:flex;flex-direction:column;gap:var(--e4);animation:glisse var(--d-glisse) var(--sortie)}
+:root[data-taille="compact"] .boite{padding:var(--e4);gap:var(--e3)}
+.boite .t{font-family:var(--titre);font-weight:600;font-size:17px}
+.boite dl{display:grid;grid-template-columns:auto 1fr;gap:0 var(--e4);font-size:var(--t-texte)}
+.boite dt,.boite dd{padding:var(--e2) 0;border-bottom:1px solid var(--filet)}
+.boite dt{color:var(--encre3)} .boite dd{color:var(--encre2)} .boite dd b{color:var(--encre);font-weight:600}
+:root[data-taille="compact"] .boite dl{grid-template-columns:1fr;gap:0} :root[data-taille="compact"] .boite dt{border-bottom:0;padding-bottom:0}
+.boite .avert{color:var(--attention)}
+.boite .bts{display:flex;gap:var(--e3);justify-content:flex-end;align-items:center}
+.boite .bts .annuler{height:36px;padding:0 var(--e3);color:var(--encre2)} .boite .bts .annuler:hover{color:var(--encre)}
+.boite .bts .danger{height:36px;padding:0 var(--e4);border:1px solid var(--alerte);color:var(--alerte);border-radius:var(--r-ctl);font-weight:600}
+.boite .bts .danger:hover{background:var(--surface2)}
+
+.popover{position:absolute;top:calc(var(--barre) + var(--e1));right:var(--e4);width:min(360px,calc(100% - 2 * var(--e4)));background:var(--surface);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:6;padding:var(--e2);animation:glisse var(--d-local) var(--sortie)}
+.ong{display:grid;grid-template-columns:1fr auto;gap:var(--e3);align-items:center;min-height:44px;padding:var(--e1) var(--e2);border-radius:var(--r-ctl)}
+.ong .lib{display:flex;flex-direction:column} .ong .lib small{color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta)}
+.ong .lib b{font-weight:600}
+.ong button{height:30px;padding:0 var(--e3);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);font-size:var(--t-meta);color:var(--bleu-tx)}
+.ong button:hover{background:var(--surface2)}
+.ong button:disabled{color:var(--encre3)}
+.ong .conn{color:var(--vivant);font-size:var(--t-meta);display:inline-flex;align-items:center;gap:6px} .ong .conn i{width:8px;height:8px;border-radius:50%;background:var(--vivant)}
+.popover .pied{padding:var(--e2) var(--e2) var(--e1);color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta);display:flex;gap:var(--e2);align-items:center}
+.popover .pied svg{width:12px;height:12px;flex:none}
+</style>
+</head>
+<body>
+
+<header class="banc" aria-label="Banc d'essai de la maquette">
+  <label>Scène <select id="sc-scene"></select></label>
+  <span class="seg" role="group" aria-label="Taille"><button data-taille="normal" aria-pressed="true">600 × 760</button><button data-taille="compact" aria-pressed="false">compact 360 × 480</button></span>
+  <span class="seg" role="group" aria-label="Thème"><button data-theme="clair" aria-pressed="true">clair</button><button data-theme="sombre" aria-pressed="false">sombre</button></span>
+  <span class="seg" role="group" aria-label="Revue"><button data-revue="v1" aria-pressed="true">Revue V1 · lire</button><button data-revue="v2" aria-pressed="false">Revue V2 · travailler</button></span>
+  <span class="seg" role="group" aria-label="Cadence de la simulation"><button data-cadence="reelle" aria-pressed="true">simulation 8 s par cut</button><button data-cadence="rapide" aria-pressed="false">2 s par cut</button></span>
+  <label><input type="checkbox" id="sc-reduit"> mouvement réduit</label>
+  <label><input type="checkbox" id="sc-serif"> mot d’état en Instrument Serif (option)</label>
+</header>
+
+<div class="plateau">
+  <div class="fen" id="fen" role="application" aria-label="Ariane"></div>
+  <aside class="notes" id="notes"></aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const D = document, R = D.documentElement, FEN = D.getElementById('fen');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fr = n => String(n).replace('.', ',');
+const quantile = (t, f) => { if (!t.length) return null; const s = [...t].sort((a, b) => a - b), p = f * (s.length - 1), a = Math.floor(p), b = Math.ceil(p); return s[a] + (s[b] - s[a]) * (p - a); };
+const duree = s => { s = Math.max(0, Math.round(s)); if (s < 60) return `${s} s`; const m = Math.floor(s / 60), r = s % 60; return r && m < 10 ? `${m} min ${String(r).padStart(2, '0')}` : `${m} min`; };
+
+/* ─────────────────────────── pictogrammes (SVG inline, trait 1,75) */
+const T = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
+const SVG = (inner, vb = '0 0 24 24') => `<svg viewBox="${vb}" aria-hidden="true" ${T}>${inner}</svg>`;
+const IC = {
+  logo: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20L10.4 4M19 20L13.6 4"/><path d="M7.4 15h9.2" stroke-opacity=".7"/><path d="M9 10.4h6" stroke-opacity=".45"/></svg>`,
+  fleche: SVG('<path d="M9 6l6 6-6 6"/>'), bas: SVG('<path d="M6 9l6 6 6-6"/>'),
+  cadenas: SVG('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  palette: SVG('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12 14h5"/>'),
+  reglages: SVG('<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>'),
+  pause: SVG('<path d="M8 5v14M16 5v14" stroke-width="2.5"/>'), play: SVG('<path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>'),
+  stop: SVG('<rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor" stroke="none"/>'),
+  coche: SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>'), ouvrir: SVG('<path d="M14 4h6v6M20 4l-9 9M18 13v6H5V6h6"/>'),
+  export: SVG('<path d="M12 4v11M7 10l5 5 5-5M5 19h14"/>'), liste: SVG('<path d="M5 7h14M5 12h14M5 17h9"/>'),
+  retour: SVG('<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v5h5"/>'), main: SVG('<path d="M8 13V6a1.5 1.5 0 0 1 3 0v5V4.5a1.5 1.5 0 0 1 3 0V11V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.3-2.4L4 13.5a1.4 1.4 0 0 1 2.3-1.6L8 14"/>'),
+  skip: SVG('<path d="M5 6l8 6-8 6zM17 6v12"/>'), toi: SVG('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
+  echo: SVG('<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+};
+/* Glyphes d'état : la forme porte l'état, la couleur confirme. L'anneau « en cours » se remplit avec le temps passé sur le cut (0 → médiane). */
+const C = 2 * Math.PI * 9;
+const GLYPHE = {
+  pret: SVG('<circle cx="12" cy="12" r="9"/>'),
+  /* Carnet : le carré « en cours » de la trame, en grand ; il se remplit du temps passé sur le cut (0 → médiane). */
+  cours: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="1.75"><rect class="fond-anneau" x="4" y="4" width="16" height="16" rx="1" stroke="currentColor" stroke-opacity=".4"/><rect class="niveau" x="4" y="20" width="16" height="0" fill="currentColor"/></svg>`,
+  dem: SVG('<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><path d="M9.5 8.5v7M14.5 8.5v7" stroke-width="2.2"/>'),
+  pause: SVG('<path d="M8 5v14M16 5v14" stroke-width="2.5"/>'),
+  toi: SVG('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
+  interrompu: SVG('<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M8 12h8"/>'),
+  fini: SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  arrete: SVG('<rect x="5" y="5" width="14" height="14" rx="1.5"/>'),
+  relecture: SVG('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>'),
+  relpause: SVG('<circle cx="12" cy="12" r="9"/><path d="M9.8 8.5v7M14.2 8.5v7" stroke-width="2"/>'),
+  verrou: SVG('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  hors: SVG('<circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/>'),
+  echoVide: SVG('<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>'),
+  echo: SVG('<path d="M12 12h.01" stroke-width="3"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path class="fond-anneau" d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+};
+
+/* ─────────────────────────── simulation du lot (chiffres inventés) */
+let graine = 7; const al = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
+function lotDeBase() {
+  graine = 7; const cuts = []; let n = 4811;
+  for (let i = 0; i < 31; i++) { n += 1 + (al() < .35 ? 1 : 0) + (al() < .12 ? 1 : 0); const dif = [7, 12, 19, 26].includes(i); cuts.push({ cut: n, statut: dif ? 'differe' : (al() < .15 ? 'voie' : 'pose'), dur: dif ? 14 + al() * 10 : 5.5 + al() * 6 + (al() < .2 ? 4 : 0), rail: dif ? (al() < .5 ? 'rail droit' : 'rail gauche') : '' }); }
+  return { partie: 13, cibles: 120, cuts, encours: { cut: n + 1 + (al() < .4 ? 1 : 0), depuis: 0, attendu: 7.8 }, etat: 'cours', pauseDepuis: 0 };
+}
+const sim = { lot: lotDeBase(), echo: { visites: [], encours: null }, derniereH: performance.now(), tick: null };
+function echoDeBase() { graine = 21; const v = []; let n = 5102; for (let i = 0; i < 148; i++) { n += 1 + (al() < .5 ? 1 : 0); v.push({ cut: n, corrige: al() < .41, dur: 6 + al() * 12 }); } sim.echo = { visites: v, encours: { cut: n + 1, depuis: 4, attendu: 11 } }; }
+echoDeBase();
+const medianeLot = () => { const d = sim.lot.cuts.slice(-20).map(c => c.dur); return d.length >= 3 ? quantile(d, .5) : null; };
+const medianeEcho = () => { const d = sim.echo.visites.slice(-20).map(c => c.dur); return d.length >= 3 ? quantile(d, .5) : null; };
+function avancer(dt) {
+  const L = sim.lot, k = R.dataset.cadence === 'rapide' ? 4 : 1;
+  if (S.scene === 'cours' && (L.etat === 'cours' || L.etat === 'dem')) {
+    L.encours.depuis += dt * k;
+    if (L.encours.depuis >= L.encours.attendu) {
+      const dif = al() < .08, c = L.encours;
+      L.cuts.push({ cut: c.cut, statut: dif ? 'differe' : (al() < .15 ? 'voie' : 'pose'), dur: c.attendu, rail: dif ? 'rail droit' : '' });
+      S.neuf = true; setTimeout(() => { S.neuf = false; }, 200);
+      const prochain = c.cut + 1 + (al() < .4 ? 1 : 0);
+      if (L.etat === 'dem') { L.etat = 'pause'; L.pauseDepuis = 0; L.encours = { cut: prochain, depuis: 0, attendu: 0 }; S.scene = 'pause'; rendre(); return; }
+      if (L.cuts.length >= L.cibles) { S.scene = 'fin'; rendre(); return; }
+      L.encours = { cut: prochain, depuis: 0, attendu: 5.5 + al() * 6 + (al() < .2 ? 5 : 0) + (al() < .06 ? 12 : 0) };
+      rendre(); return;
+    }
+    majVivant();
+  } else if (S.scene === 'pause') { L.pauseDepuis += dt; majVivant(); }
+  else if (S.scene === 'echo' && sim.echo.encours) {
+    const e = sim.echo.encours; e.depuis += dt * k;
+    if (e.depuis >= e.attendu) { sim.echo.visites.push({ cut: e.cut, corrige: al() < .4, dur: e.attendu }); sim.echo.encours = { cut: e.cut + 1 + (al() < .5 ? 1 : 0), depuis: 0, attendu: 6 + al() * 12 }; rendre(); return; }
+    majVivant();
+  }
+}
+function boucle() { const t = performance.now(), dt = (t - sim.derniereH) / 1000; sim.derniereH = t; avancer(Math.min(dt, 1)); }
+
+/* ─────────────────────────── état de la maquette */
+const S = { scene: 'cours', tiroir: false, couche: null, sel: null, examines: new Set(), q: '', pi: 0, cacheVide: false, note: '', passer: false };
+const SCENES = [
+  ['pret', 'Prêt'], ['cours', 'Lot en cours · allure vivante'], ['pause', 'En pause'], ['incident', 'Incident · rail non résolu (À toi)'], ['interrompu', 'Incident · ESV muet pendant une pose (Interrompu)'], ['esv-muet', 'ESV ne répond plus (entre deux cuts)'], ['fin', 'Fin de lot'],
+  ['relecture', 'Relecture en pause'], ['relecture-f5', 'Relecture en pause après F5'], ['verrou', 'Deuxième passe (verrouillé)'], ['echo-vide', 'Écho · aucune séance'], ['echo', 'Écho · en observation'], ['sans-esv', 'Sans onglet ESV'],
+  ['palette', 'Palette Ctrl K'], ['reglages', 'Feuille de réglages'], ['cache', 'Confirmation de vidage du cache'], ['esv', 'Sélecteur de connexion ESV'],
+];
+const NOTES = {
+  pret: 'Au repos : la trame est une seule barre grise de 120 restants. Un seul bouton, qui dit l’effet. Les bornes du lot sont dans la phrase ; on les change au repos, dans la feuille de réglages.',
+  cours: 'La trame se remplit au rythme réel de la simulation : un carré par cut traité (plein : posé ; à bord : posé par la voie ; barré ocre : différé ; croix : SKIP ; point : repris), le carré « en cours » à contour épais se remplit du temps passé sur le cut jusqu’à la médiane, comme le glyphe d’état. Un carré nouveau apparaît par un bref assombrissement (150 ms). Les restants : une seule barre grise. Ligne d’allure : cuts par minute, médiane des 20 derniers cuts, temps restant estimé (seulement si le total est connu).',
+  pause: 'Même instrument. Le carré « en cours » reste à contour épais, vide ; l’allure dit depuis quand, et garde la médiane d’avant la pause. « Reprendre » nomme le cut.',
+  incident: 'Le bloc incident remplace le rail, pas l’état. Une phrase, trois sorties ; « Passer » n’est jamais principal et garde sa confirmation (2 clics).',
+  interrompu: 'ESV s’est tu pendant une pose : l’opération interrompue reste écrite jusqu’à sa clôture. Aucun « Reprendre » : la seule sortie est d’archiver le résultat.',
+  'esv-muet': 'ESV s’est tu entre deux cuts : rien n’était en l’air, « Reprendre » est permis dès qu’ESV répond ; F5 seulement si la page est figée. La puce passe en brique.',
+  fin: 'Trois lignes distinctes, jamais une coche seule. « Voir ce qui reste » ouvre le tiroir ; l’export vient en second ; le cache devient disponible.',
+  relecture: 'La relecture est un état d’Orbite : même trame, en mode relus / sélection (gris : relu ; vert : corrigé ; barre : reste à relire). Pause, Reprendre, Arrêter à la place de l’action principale.',
+  'relecture-f5': 'Après un F5 d’ESV pendant la relecture : « Reprendre » reste là, grisé, avec sa raison écrite dessous.',
+  verrou: 'Deuxième passe : cadenas, aucune action, cache grisé. Le nom et les états viendront de la session principale.',
+  'echo-vide': 'Écho sans séance : pas de rail. Le cache dit pourquoi il est indisponible.',
+  echo: 'Écho en observation : un compteur de visites et une trame des visites (pleine : corrigée ; vide : validée telle quelle ; contour épais : visite en cours, qui se remplit). L’allure est celle de Mic : médiane par cut.',
+  'sans-esv': 'Aucun onglet ESV : la puce est vide, l’action principale devient « Choisir un onglet ».',
+  palette: 'Ctrl K. Quatre commandes du moment, l’état en petit à droite ; le reste en tapant. Une commande grisée dit sa raison et ne s’exécute pas. Ctrl K ou Échap ferme.',
+  reglages: 'Sept lignes, jamais ouvertes en séance. Le compteur d’exemples (ancien « GCV2 ») vit ici avec sa définition et sa date. En bas : l’ancien panneau et la zone à part.',
+  cache: 'La confirmation d’origine : ce qui sera supprimé, ce qui sera gardé, l’avertissement. Le bouton de suppression n’est jamais le bouton principal.',
+  esv: 'Un clic sur la puce : la liste des onglets (rang, partie, fenêtre, premier plan). Choisir = connecter. Pendant un lot la liste est verrouillée avec la raison.',
+};
+
+/* ─────────────────────────── modèle de chaque scène */
+function modele() {
+  const L = sim.lot, sc = S.scene;
+  const traites = L.cuts.length, poses = L.cuts.filter(c => c.statut === 'pose' || c.statut === 'voie').length, differes = L.cuts.filter(c => c.statut === 'differe').length, sautes = L.cuts.filter(c => c.statut === 'saute').length;
+  const restants = L.cibles - traites, med = medianeLot();
+  const m = { activite: 'orbite', etat: 'pret', glyphe: 'pret', ton: 'encre2', mot: 'Prêt', phrase: '', objet: 'rail', railEtat: 'cours', allure: '', principal: null, secondaire: null, raison: '', incident: null, fin: null, verrou: false,
+    compte: { traites, poses, differes, sautes, cibles: L.cibles, restants }, puce: { etat: 'ok', texte: 'Onglet 2 · partie 13', verrou: false }, bascule: { verrou: false, raison: '' },
+    cache: { dispo: false, q: '1 lot, 190 Mo', raison: 'après le lot' }, poignee: null, tiroir: 'reste' };
+  const base = sc === 'palette' ? 'cours' : sc === 'reglages' || sc === 'esv' ? 'pret' : sc === 'cache' ? 'fin' : sc;
+  const differesListe = L.cuts.filter(c => c.statut === 'differe').map((c, i) => ({ cut: c.cut, motif: c.rail ? 'Rail non résolu' : 'Différé', prec: c.rail || '', heure: `${14 + Math.floor(i / 3)} h ${String((7 * i + 12) % 60).padStart(2, '0')}` })).reverse();
+  m.differes = differesListe;
+  m.verts = base === 'fin' || base === 'relecture' || base === 'relecture-f5' || base === 'cache' ? [[4861, 'Écartement 21 mm sous la médiane', 'PN'], [4874, 'Saut de hauteur, rail droit', '12 mm'], [4875, 'Saut de hauteur, rail droit', '11 mm'], [4890, 'Écartement 18 mm sous la médiane', ''], [4902, 'Écart aux poses voisines', '9 mm'], [4917, 'Écartement 19 mm sous la médiane', ''], [4931, 'Saut de hauteur, rail gauche', '10 mm'], [4944, 'Écart aux poses voisines', '8 mm'], [4958, 'Écartement 22 mm sous la médiane', 'PN']].map(v => ({ cut: v[0], motif: v[1], prec: v[2] })) : null;
+  const allureTexte = (prefixe) => {
+    if (!med) return '';
+    const parMin = 60 / med, reste = restants * med;
+    return `${prefixe || ''}<b>${fr((Math.round(parMin * 10) / 10).toFixed(1))}</b> cuts par minute <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut${L.cibles ? ` <span class="sep">·</span> environ <b>${duree(reste)}</b> restantes` : ''}`;
+  };
+  switch (base) {
+    case 'pret':
+      m.phrase = `Partie 13 · du cut <span class="mono">4811</span> jusqu’à la fin de la partie`; m.railEtat = 'vide'; m.compte = { traites: 0, poses: 0, differes: 0, sautes: 0, cibles: 120, restants: 120 };
+      m.principal = { texte: 'Démarrer jusqu’à la fin de la partie', ic: 'play', act: 'demarrer' }; m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.poignee = { n: 0, texte: 'Aucun différé pour l’instant' }; m.differes = []; break;
+    case 'cours': {
+      const dem = L.etat === 'dem';
+      m.etat = dem ? 'dem' : 'cours'; m.glyphe = dem ? 'dem' : 'cours'; m.ton = dem ? 'attention' : 'vivant'; m.mot = dem ? 'Pause demandée' : 'En cours';
+      m.phrase = dem ? `Finit le cut <span class="mono">${L.encours.cut}</span>, puis s’arrête` : `Pose du cut <span class="mono">${L.encours.cut}</span>`;
+      m.allure = allureTexte(); m.principal = dem ? { texte: 'Pause demandée…', occupe: true } : { texte: 'Pause', ic: 'pause', act: 'pause' }; m.secondaire = { texte: 'Arrêter', act: 'arreter', danger: true };
+      m.puce.verrou = true; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: differes === 1 ? 'différé · à reprendre après le lot' : 'différés · à reprendre après le lot' }; break; }
+    case 'pause':
+      m.etat = 'pause'; m.glyphe = 'pause'; m.ton = 'attention'; m.mot = 'En pause'; m.railEtat = 'pause';
+      m.phrase = `Après le cut <span class="mono">${L.cuts.at(-1)?.cut ?? '—'}</span> · il reste ${restants} cuts`;
+      m.allure = med ? `en pause depuis <b>${duree(L.pauseDepuis)}</b> <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut avant la pause` : '';
+      m.principal = { texte: `Reprendre au cut ${L.encours.cut}`, ic: 'play', act: 'reprendre' }; m.secondaire = { texte: 'Arrêter', act: 'arreter', danger: true };
+      m.puce.verrou = true; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'incident':
+      m.etat = 'toi'; m.glyphe = 'toi'; m.ton = 'alerte'; m.mot = 'À toi'; m.phrase = `Cut <span class="mono">${L.encours.cut}</span> · rail droit non résolu`;
+      m.incident = { texte: `Le cut <b class="mono">${L.encours.cut}</b> a un rail droit qu’Ariane ne sait pas poser. Réessayer, le reprendre à la main, ou le passer.`, op: '' };
+      m.principal = { texte: 'Réessayer la pose', ic: 'retour', act: 'reessayer' }; m.secondaire = { texte: 'Reprendre à la main', act: 'main' }; m.tertiaire = { texte: 'Passer ce cut', act: 'passer', danger: true };
+      m.puce.verrou = true; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'interrompu':
+      m.etat = 'interrompu'; m.glyphe = 'interrompu'; m.ton = 'alerte'; m.mot = 'Interrompu'; m.phrase = `ESV n’a pas répondu pendant la pose du cut <span class="mono">${L.encours.cut}</span>`;
+      m.incident = { texte: `Ariane n’enverra plus aucune commande à ce cut. Contrôle-le dans ESV, puis archive le résultat interrompu.`, op: `Opération interrompue : <b>cut ${L.encours.cut} · pose non confirmée</b>` };
+      m.principal = { texte: `Archiver le résultat interrompu · cut ${L.encours.cut}`, act: 'archiver' }; m.puce = { etat: 'ko', texte: 'ESV ne répond plus', verrou: true };
+      m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'esv-muet':
+      m.etat = 'muet'; m.glyphe = 'toi'; m.ton = 'alerte'; m.mot = 'ESV ne répond plus'; m.phrase = `Entre deux cuts · après le cut <span class="mono">${L.cuts.at(-1)?.cut}</span>, rien n’était en cours`;
+      m.incident = { texte: 'Attends qu’ESV réponde. Si la page reste figée, recharge-la (F5), puis reprends.', op: '' };
+      m.principal = { texte: `Reprendre au cut ${L.encours.cut}`, ic: 'play', act: 'reprendre', inactif: true }; m.raison = 'Reprise possible quand ESV répond.'; m.secondaire = { texte: 'Arrêter', act: 'arreter', danger: true };
+      m.puce = { etat: 'ko', texte: 'ESV ne répond plus', verrou: true }; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'fin': {
+      const d = 11, v = 9; m.etat = 'fini'; m.glyphe = 'fini'; m.ton = 'vivant'; m.mot = 'Terminé'; m.railEtat = 'fini'; m.objet = 'fin';
+      m.compte = { traites: 120, poses: 109, differes: d, sautes: 0, cibles: 120, restants: 0 };
+      m.fin = [['Lot', `<b>120</b> cuts traités sur <b>120</b> ciblés`], ['Il reste', `<b class="dif">${d}</b> différés, <b>${v}</b> verts à contrôler`], ['Export', S.exportFait ? `fait, <b>3</b> volumes confirmés` : 'prêt']];
+      m.phrase = 'Partie 13 · fin de la partie atteinte';
+      m.principal = S.exportFait ? { texte: 'Exporter à nouveau', ic: 'export', act: 'exporter' } : { texte: 'Voir ce qui reste', ic: 'liste', act: 'tiroir' }; m.secondaire = S.exportFait ? null : { texte: 'Exporter', act: 'exporter' };
+      m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.poignee = { n: d + v, texte: 'à examiner · 11 différés, 9 verts' }; m.differes = m.differes.concat([{ cut: 4866, motif: 'Rail non résolu', prec: 'rail droit', heure: '15 h 02' }, { cut: 4871, motif: 'Différé', prec: '', heure: '15 h 09' }, { cut: 4889, motif: 'Rail non résolu', prec: 'les deux rails', heure: '15 h 31' }, { cut: 4903, motif: 'Différé', prec: '', heure: '15 h 48' }, { cut: 4918, motif: 'Rail non résolu', prec: 'rail gauche', heure: '16 h 05' }, { cut: 4937, motif: 'Différé', prec: '', heure: '16 h 22' }, { cut: 4951, motif: 'Rail non résolu', prec: 'rail droit', heure: '16 h 40' }]).slice(0, 11); break; }
+    case 'relecture': case 'relecture-f5': {
+      const f5 = base === 'relecture-f5'; m.etat = 'relecture'; m.glyphe = 'relpause'; m.ton = 'attention'; m.mot = 'Relecture en pause'; m.railEtat = 'relecture'; m.objet = 'relecture';
+      m.compte = { relus: 58, selection: 96, corriges: 6 }; m.phrase = f5 ? `Relue jusqu’au cut <span class="mono">4879</span> · ESV a été rechargé` : `Relue jusqu’au cut <span class="mono">4879</span> · 6 corrigés`;
+      m.allure = f5 ? `en pause depuis <b>2 min 10</b> <span class="sep">·</span> médiane <b>6,4 s</b> par cut relu avant la pause` : `en pause depuis <b>40 s</b> <span class="sep">·</span> médiane <b>6,4 s</b> par cut relu <span class="sep">·</span> environ <b>4 min</b> restantes`;
+      m.principal = { texte: 'Reprendre la relecture', ic: 'play', act: 'rel-reprendre', inactif: f5 }; if (f5) m.raison = 'Reprise possible quand ESV répond.'; m.secondaire = { texte: 'Arrêter la relecture', act: 'rel-arreter', danger: true };
+      m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la relecture' }; m.bascule = { verrou: true, raison: 'Écho est disponible après la relecture' }; m.poignee = { n: 20, texte: 'à examiner · 11 différés, 9 verts' }; break; }
+    case 'verrou':
+      m.etat = 'verrou'; m.glyphe = 'verrou'; m.ton = 'encre2'; m.mot = 'Deuxième passe'; m.phrase = 'Ariane travaille dans ESV · ne touche à rien'; m.objet = 'aucun'; m.verrou = true;
+      m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la deuxième passe' }; m.bascule = { verrou: true, raison: 'Écho est disponible après la deuxième passe' }; m.puce.verrou = true; m.poignee = { n: 20, texte: 'à examiner · 11 différés, 9 verts' }; break;
+    case 'echo-vide':
+      m.activite = 'echo'; m.etat = 'echoVide'; m.glyphe = 'echoVide'; m.ton = 'encre2'; m.mot = 'Aucune séance'; m.phrase = 'Partie 13 · prête à observer'; m.objet = 'aucun';
+      m.principal = { texte: 'Démarrer l’observation', ic: 'play', act: 'echo-demarrer' }; m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la séance Écho' }; m.poignee = { n: 0, texte: 'Aucune visite pour l’instant' }; m.tiroir = 'visites'; break;
+    case 'echo': {
+      const E = sim.echo, medE = medianeEcho(), corr = E.visites.filter(v => v.corrige).length; m.activite = 'echo'; m.etat = 'echo'; m.glyphe = 'echo'; m.ton = 'vivant'; m.mot = 'En observation'; m.objet = 'echo';
+      m.phrase = `Visite du cut <span class="mono">${E.encours.cut}</span>`; m.compte = { vus: E.visites.length, corriges: corr };
+      m.allure = medE ? `<b>${fr((Math.round(60 / medE * 10) / 10).toFixed(1))}</b> cuts par minute <span class="sep">·</span> médiane <b>${fr(Math.round(medE * 10) / 10)} s</b> par cut <span class="sep">·</span> <b>${corr}</b> corrigés` : '';
+      m.principal = { texte: 'Terminer et télécharger', ic: 'export', act: 'echo-terminer' }; m.secondaire = { texte: 'Pause', act: 'echo-pause' };
+      m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la séance Écho' }; m.bascule = { verrou: true, raison: 'Orbite est disponible après la séance Écho' }; m.puce.verrou = true; m.poignee = { n: E.visites.length, texte: 'visites' }; m.tiroir = 'visites'; break; }
+    case 'sans-esv':
+      m.etat = 'hors'; m.glyphe = 'hors'; m.ton = 'encre2'; m.mot = 'Hors ligne'; m.phrase = 'Aucun onglet ESV ouvert'; m.objet = 'aucun'; m.puce = { etat: 'aucun', texte: 'Aucun onglet', verrou: false };
+      m.principal = { texte: 'Choisir un onglet', act: 'esv' }; m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.poignee = { n: 0, texte: 'Aucun différé pour l’instant' }; m.differes = []; break;
+  }
+  if (S.cacheVide) m.cache = { dispo: false, q: 'vidé', raison: '', vide: true };
+  return m;
+}
+
+/* ─────────────────────────── rendu */
+const glypheHtml = (m, cls = '') => `<span class="glyphe ${m.glyphe === 'cours' || m.glyphe === 'echo' ? 'vivant' : ''} ${cls}" data-ton="${m.ton}" aria-hidden="true">${GLYPHE[m.glyphe]}</span>`;
+/* La trame : un carré par cut traité, dans l'ordre du lot ; les restants forment une seule barre grise (fiche des compteurs, § 2).
+ * Le nombre de colonnes vient de la largeur réelle de l'instrument : la trame passe à la ligne, elle ne déborde jamais. */
+function colonnes() {
+  const compact = R.dataset.taille === 'compact', W = (compact ? 360 : 600) - 2 * (compact ? 16 : 48), cel = compact ? 8 : 10, gap = compact ? 2 : 3;
+  return Math.max(8, Math.floor((W + gap) / (cel + gap)));
+}
+function trame(cellules, restants, label, inconnu) {
+  const cols = colonnes(), rangs = [];
+  let i = 0, reste = Math.max(0, restants | 0);
+  while (i < cellules.length || reste > 0) {
+    let h = '<div class="rang">', n = 0;
+    while (i < cellules.length && n < cols) { h += cellules[i++]; n++; }
+    if (reste > 0 && n < cols) { const prend = Math.min(reste, cols - n); const premier = reste === restants, dernier = prend === reste; h += `<div class="reste ${premier && dernier ? '' : premier ? 'debut' : dernier ? 'fin' : 'milieu'}" style="flex:${prend} ${prend} 0"></div>`; if (prend < cols - n) h += `<span style="flex:${cols - n - prend} ${cols - n - prend} 0"></span>`; reste -= prend; n = cols; }
+    else if (n < cols) h += `<span style="flex:${cols - n} ${cols - n} 0"></span>`;
+    rangs.push(h + '</div>');
+    if (rangs.length > 40) break;
+  }
+  return `<div class="trame" data-total="${inconnu ? 'inconnu' : 'connu'}" role="img" aria-label="${esc(label)}">${rangs.join('')}</div>`;
+}
+function railHtml(m) {
+  const L = sim.lot, c = m.compte, inconnu = !c.cibles;
+  const cel = L.cuts.slice(0, c.traites).map((x, i) => `<div class="c ${x.statut}${i === c.traites - 1 && S.neuf ? ' neuf' : ''}" title="cut ${x.cut}"></div>`);
+  if (m.railEtat === 'cours' || m.railEtat === 'pause') cel.push(`<div class="c cours" title="cut ${L.encours.cut}, en cours"></div>`);
+  return trame(cel, inconnu ? 0 : c.cibles - c.traites - (cel.length > c.traites ? 1 : 0), `${c.traites} traités sur ${c.cibles || '?'} ciblés, ${c.differes} différés`, inconnu);
+}
+function railRelecture(m) {
+  const c = m.compte, corr = new Set([4, 11, 19, 27, 41, 52]);
+  const cel = Array.from({ length: c.relus }, (_, i) => `<div class="c ${corr.has(i) ? 'corrige' : 'relu'}"></div>`);
+  return trame(cel, c.selection - c.relus, `${c.relus} relus sur ${c.selection}, ${c.corriges} corrigés`, false);
+}
+function objetHtml(m) {
+  const c = m.compte;
+  if (m.incident) return `<div class="incident" role="alert"><p>${m.incident.texte}</p>${m.incident.op ? `<p class="op">${m.incident.op}</p>` : ''}</div>`;
+  if (m.objet === 'fin') return `<dl class="fin">${m.fin.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+  if (m.objet === 'relecture') return `<div class="objet"><div class="compte"><span class="chiffre">${c.relus}</span><span class="suite">relus sur ${c.selection} sélectionnés</span><span class="droite"><b>${c.corriges}</b> corrigés</span></div>${railRelecture(m)}</div>`;
+  if (m.objet === 'echo') { const E = sim.echo, max = colonnes() * 4 - 1, V = E.visites.slice(-max); return `<div class="objet"><div class="compte"><span class="chiffre">${c.vus}</span><span class="suite">cuts vus</span><span class="droite"><b>${c.corriges}</b> corrigés · <b>${c.vus - c.corriges}</b> validés tels quels</span></div>${trame(V.map(v => `<div class="c visite${v.corrige ? ' corrigee' : ''}" title="cut ${v.cut}"></div>`).concat([`<div class="c cours" title="visite en cours"></div>`]), 0, `${c.vus} visites, ${c.corriges} corrigées`, true)}</div>`; }
+  if (m.objet === 'aucun') return '';
+  if (m.railEtat === 'vide') return `<div class="objet"><div class="compte"><span class="chiffre">${c.cibles}</span><span class="suite">cuts ciblés · aucun traité</span></div>${railHtml(m)}</div>`;
+  const droite = `<span class="droite"><b>${c.poses}</b> posés · <span class="dif">${c.differes}</span> différés${c.sautes ? ` · <b>${c.sautes}</b> SKIP` : ''}${c.cibles && c.restants ? ` · <b>${c.restants}</b> restants` : ''}</span>`;
+  const suite = c.cibles ? `traités sur ${c.cibles} ciblés` : 'traités';
+  return `<div class="objet"><div class="compte"><span class="chiffre">${c.traites}</span><span class="suite">${suite}</span>${droite}</div>${railHtml(m)}</div>`;
+}
+function actionsHtml(m) {
+  if (m.verrou) return `<div class="verrou-ligne">${IC.cadenas}<span>Aucune action jusqu’à la fin de la deuxième passe</span></div>`;
+  let h = '<div class="actions">';
+  if (m.principal) h += `<button type="button" class="principal" data-act="${m.principal.act || ''}"${m.principal.occupe || m.principal.inactif ? ' disabled' : ''}>${m.principal.occupe ? '<span class="tourne" aria-hidden="true"></span>' : m.principal.ic ? IC[m.principal.ic] : ''}<span>${esc(m.principal.texte)}</span></button>`;
+  if (m.secondaire) h += `<button type="button" class="secondaire${m.secondaire.danger ? ' danger' : ''}" data-act="${m.secondaire.act}">${esc(m.secondaire.texte)}</button>`;
+  if (m.tertiaire) h += `<button type="button" class="secondaire${m.tertiaire.danger ? ' danger' : ''}" data-act="${m.tertiaire.act}">${esc(m.tertiaire.texte)}</button>`;
+  if (m.raison) h += `<span class="raison">${esc(m.raison)}</span>`;
+  return h + '</div>';
+}
+function tiroirHtml(m) {
+  const v2 = R.dataset.revue === 'v2', ex = S.examines;
+  const outils = (cut) => v2 ? `<span class="outils"><button type="button" data-ouvrir="${cut}" title="Ouvrir ce cut dans ESV">${IC.ouvrir}<span>Ouvrir</span></button><button type="button" data-examine="${cut}" aria-pressed="${ex.has(cut)}" title="Marquer examiné">${IC.coche}<span>${ex.has(cut) ? 'Examiné' : 'Examiner'}</span></button></span>` : '';
+  const ligne = (r, i, prec) => `<div class="ligne${ex.has(r.cut) && v2 ? ' examine' : ''}" role="option" data-row="${i}" aria-selected="${S.sel === i}" tabindex="-1"><span class="cut">${r.cut}</span><span class="motif">${esc(r.motif)}${r.prec ? ` <small>· ${esc(r.prec)}</small>` : ''}</span>${v2 ? outils(r.cut) : `<span class="prec">${esc(prec(r))}</span>`}</div>`;
+  let h = '';
+  if (m.tiroir === 'visites') {
+    const V = [...sim.echo.visites].reverse().slice(0, 40);
+    h += `<div class="section"><span>Visites</span><span class="n">${sim.echo.visites.length}</span><span class="d">les 40 dernières</span></div>`;
+    h += V.length ? V.map((v, i) => `<div class="ligne" role="option" data-row="${i}" aria-selected="${S.sel === i}" tabindex="-1"><span class="cut">${v.cut}</span><span class="motif">${v.corrige ? 'Corrigé · 1 rail' : 'Validé tel quel'}</span><span class="prec">${fr(Math.round(v.dur))} s</span></div>`).join('') : '<div class="vide">Aucune visite pour l’instant.</div>';
+    return `<div class="corps" role="listbox" aria-label="Visites">${h}</div>`;
+  }
+  const dif = m.differes || [], verts = m.verts;
+  const resteD = dif.filter(d => !ex.has(d.cut)).length, resteV = verts ? verts.filter(d => !ex.has(d.cut)).length : 0;
+  if (v2) h += `<div class="v2-note"><span class="tag">V2 · à construire</span><span>Ouvrir un cut dans ESV et le marquer « examiné » n’existent pas encore dans l’extension.</span></div>`;
+  h += `<div class="section"><span>Différés</span><span class="n">${dif.length}</span>${v2 && dif.length ? `<span class="d">reste à examiner <span class="n">${resteD}</span></span>` : '<span class="d">à reprendre après le lot</span>'}</div>`;
+  h += dif.length ? dif.map((d, i) => ligne(d, i, r => r.heure)).join('') : `<div class="vide">Aucun différé pour l’instant.</div>`;
+  h += `<div class="section"><span>Verts à contrôler</span>${verts ? `<span class="n">${verts.length}</span>` : ''}${verts ? (v2 ? `<span class="d">reste à examiner <span class="n">${resteV}</span></span>` : '<span class="d">hors des cuts du lot</span>') : ''}</div>`;
+  h += verts ? verts.map((d, i) => ligne(d, dif.length + i, r => r.prec)).join('') : `<div class="vide">Calculés à la fin du lot.</div>`;
+  return `<div class="corps" role="listbox" aria-label="Ce qui reste">${h}</div>`;
+}
+function poigneeHtml(m) {
+  const p = m.poignee || { n: 0, texte: '' }, v2 = R.dataset.revue === 'v2', total = (m.differes?.length || 0) + (m.verts?.length || 0), reste = total - [...S.examines].filter(c => (m.differes || []).some(d => d.cut === c) || (m.verts || []).some(d => d.cut === c)).length;
+  const n = p.n ? `<span class="n${m.tiroir !== 'visites' && (m.differes?.length) ? ' dif' : ''}">${p.n}</span> ` : '';
+  const court = p.court || (m.tiroir === 'visites' ? 'visites' : p.n ? 'à examiner' : 'rien à examiner');
+  return `<button type="button" class="poignee" data-act="tiroir" aria-expanded="${S.tiroir}" aria-controls="tiroir-corps">${IC.fleche.replace('<svg', '<svg class="fl"')}<span class="txt">${n}<span class="long">${esc(p.texte)}</span><span class="court">${esc(court)}</span></span>${v2 && total && m.tiroir !== 'visites' ? `<span class="reste">reste à examiner ${reste} sur ${total}</span>` : ''}<span class="etat-mini">${glypheHtml(m)}<span>${esc(m.mot)}${m.compte?.traites != null && m.compte.cibles ? ` · ${m.compte.traites} sur ${m.compte.cibles}` : ''}</span></span></button>`;
+}
+function cacheHtml(m) {
+  const c = m.cache;
+  if (c.vide) return `<footer class="cache"><span class="ok">Cache vidé · rien à garder</span><span class="espace"></span><button type="button" disabled>Vider le cache</button></footer>`;
+  return `<footer class="cache"><span class="q"><span class="lib">Cache des exports · </span><span class="mono">${esc(c.q)}</span></span>${c.raison ? `<span class="r">· ${esc(c.raison)}</span>` : ''}<span class="espace"></span><button type="button" data-act="cache"${c.dispo ? '' : ' disabled'}>Vider le cache</button></footer>`;
+}
+function barreHtml(m) {
+  const b = m.bascule, puce = m.puce;
+  const seg = (k, t) => `<button type="button" role="tab" aria-selected="${m.activite === k}"${b.verrou && m.activite !== k ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : ''} data-act="activite:${k}">${b.verrou && m.activite !== k ? IC.cadenas : ''}${t}</button>`;
+  const puceIc = puce.verrou && puce.etat === 'ok' ? IC.cadenas : IC.bas;
+  return `<header class="barre"><span class="logo">${IC.logo}<span>Ariane</span></span><div class="bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}</div><span class="espace"></span>
+  <button type="button" class="puce" data-etat="${puce.verrou && puce.etat === 'ok' ? 'verrou' : puce.etat}" data-act="esv" aria-haspopup="listbox" aria-expanded="${S.couche === 'esv'}" title="${puce.verrou ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="tx"><span class="long">${esc(puce.texte)}</span><span class="court">${esc(puce.texte.split(' · ')[0])}</span></span>${puceIc.replace('<svg', '<svg class="fl"')}</button>
+  <button type="button" class="ico" data-act="palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${S.couche === 'palette'}">${IC.palette}</button><button type="button" class="ico" data-act="reglages" aria-label="Réglages" title="Réglages" aria-pressed="${S.couche === 'reglages'}">${IC.reglages}</button></header>${S.note ? `<div class="barre-note" role="status">${esc(S.note)}</div>` : ''}`;
+}
+/* Couches */
+function commandes(m) {
+  const c = [], etat = `${m.activite === 'echo' ? 'Écho' : 'Orbite'} · ${m.mot}${m.compte?.traites != null && m.compte.cibles && m.activite === 'orbite' && m.objet === 'rail' ? ` · ${m.compte.traites} sur ${m.compte.cibles}` : ''}`;
+  if (m.principal && !m.principal.occupe) c.push({ ic: m.principal.ic || 'play', nom: m.principal.texte, act: m.principal.act, et: etat, off: m.principal.inactif ? m.raison : '' });
+  if (m.secondaire) c.push({ ic: m.secondaire.danger ? 'stop' : 'pause', nom: m.secondaire.texte, act: m.secondaire.act, et: '' });
+  c.push({ ic: 'liste', nom: S.tiroir ? 'Fermer le tiroir' : 'Voir ce qui reste', act: 'tiroir', et: m.poignee?.n ? `${m.poignee.n}` : '' });
+  c.push({ ic: 'export', nom: 'Exporter le dossier', act: 'exporter', et: '', off: m.activite === 'orbite' && ['cours', 'dem', 'pause', 'toi', 'interrompu', 'muet'].includes(m.etat) ? 'après le lot' : '' });
+  c.push({ ic: m.activite === 'echo' ? 'play' : 'echo', nom: m.activite === 'echo' ? 'Passer en Orbite' : 'Passer en Écho', act: `activite:${m.activite === 'echo' ? 'orbite' : 'echo'}`, et: '', off: m.bascule.verrou ? m.bascule.raison : '' });
+  c.push({ ic: 'reglages', nom: 'Réglages', act: 'reglages', et: '' });
+  c.push({ ic: 'liste', nom: 'Ancien panneau (détails techniques)', act: 'ancien', et: '' });
+  c.push({ ic: 'export', nom: 'Vider le cache des exports', act: 'cache', et: m.cache.q, off: m.cache.dispo ? '' : m.cache.raison });
+  return c;
+}
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function paletteHtml(m) {
+  const all = commandes(m), q = norm(S.q).trim(), L = q ? all.filter(c => norm(c.nom).includes(q)) : all.slice(0, 4);
+  const i = Math.max(0, Math.min(L.length - 1, S.pi));
+  return `<div class="voile" data-act="fermer"></div><div class="palette" role="dialog" aria-label="Commandes"><input id="pal-q" type="text" value="${esc(S.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ''} data-cmd="${k}" data-act="${c.off ? '' : c.act}" data-fermer="1">${IC[c.ic] || ''}<span>${esc(c.nom)}</span><span class="et">${esc(c.off || c.et)}</span></button>`).join('') : '<div class="cmd"><span></span><span class="et">Aucune commande</span></div>'}</div><div class="pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
+}
+function feuilleHtml() {
+  const sel = (nom, opts, cur) => `<select data-reg="${nom}" aria-label="${esc(nom)}">${opts.map(o => `<option${o === cur ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+  const seg = (nom, opts, cur) => `<span class="seg" role="group" aria-label="${esc(nom)}">${opts.map(o => `<button type="button" aria-pressed="${o === cur}" data-seg="${esc(nom)}" data-val="${esc(o)}">${esc(o)}</button>`).join('')}</span>`;
+  const ligne = (t, aide, ctl, modif) => { const s = [aide, modif ? 'gardé pour le prochain lot' : ''].filter(Boolean).join(' · '); return `<div class="reg"><span class="lib"><span>${esc(t)}</span>${s ? `<small>${esc(s)}</small>` : ''}</span>${ctl}</div>`; };
+  const th = R.dataset.theme === 'clair' ? 'Clair' : 'Sombre';
+  return `<div class="feuille" role="dialog" aria-label="Réglages"><div class="tete"><span class="t">Réglages</span><span class="meta encre2">jamais en séance</span><kbd>Échap</kbd><button type="button" class="ico" data-act="fermer" aria-label="Fermer">${IC.coche.replace('M5 12.5l4.5 4.5L19 7.5', 'M6 6l12 12M18 6L6 18')}</button></div><div class="liste">
+  ${ligne('Après le lot', 'Relecture des verts sûrs', sel('Après le lot', ['Rien', 'Relire sans rien modifier', 'Relire et corriger'], 'Relire et corriger'), true)}
+  ${ligne('Clic du mode rapide', '', sel('Clic du mode rapide', ['Comme avant', 'Rail gauche recentré', 'Tout recentré'], 'Comme avant'), true)}
+  ${ligne('Série de différés', 'Mettre en attente les cuts voisins', seg('Série de différés', ['Non', 'Oui'], 'Non'))}
+  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho', sel('Raison', ['Non', 'Oui · chiffres du haut', 'Oui · Alt + chiffre', 'Oui · pavé numérique'], 'Non'))}
+  ${ligne('Si ESV est rechargé pendant la relecture', '', sel('Si ESV est rechargé', ['Attendre, puis reprendre', 'Arrêter la relecture'], 'Attendre, puis reprendre'))}
+  ${ligne('Thème', '', seg('Thème', ['Sombre', 'Clair', 'Système'], th))}
+  ${ligne('Interface', 'Au démarrage', seg('Interface', ['Instrument', 'Palette'], 'Instrument'))}
+  <div class="reg"><span class="lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au 20/10/2026 · ne mesure aucune qualité</small></span><span class="mono">2 731</span></div>
+  <div class="bas"><button type="button" class="lien" data-act="ancien">${IC.liste}<span>Ancien panneau (détails techniques)</span></button><div class="danger-zone"><span>Séance Écho en cours : supprime ses données, avec confirmation.</span><button type="button" data-act="fermer">Abandonner la séance Écho…</button></div></div></div></div>`;
+}
+const confirmCache = () => `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cc-t"><span class="t" id="cc-t">Vider le cache des exports ?</span><dl><dt>Supprimé</dt><dd><b>1 lot</b>, <b>120 coupes</b> · 120 visites, 2 140 événements, 118 nuages · environ <b>190 Mo</b> (estimation)</dd><dt>Gardé</dt><dd>l’état du lot, les réglages, la reprise</dd></dl><p class="avert">Irréversible. Si tu veux garder ces données, annule et lance d’abord l’export.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Annuler</button><button type="button" class="danger" data-act="cache-vider">Vider le cache</button></div></div>`;
+const confirmPasser = () => `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cp-t"><span class="t" id="cp-t">Passer le cut ${sim.lot.encours.cut} ?</span><p class="encre2">Il sera compté SKIP et restera dans « ce qui reste ». Le lot reprend au cut suivant.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Annuler</button><button type="button" class="danger" data-act="passer-ok">Passer ce cut</button></div></div>`;
+function popoverEsv(m) {
+  const verrou = m.puce.verrou, aucun = m.puce.etat === 'aucun';
+  const ong = aucun ? '<div class="vide" style="padding:8px">Aucun onglet ESV ouvert. Ouvre une partie dans ESV ; elle apparaîtra ici.</div>'
+    : [['Onglet 1', 'partie 13 · fenêtre 1', false], ['Onglet 2', 'partie 13 · fenêtre 1, au premier plan', true], ['Onglet 3', 'partie 7 · fenêtre 2', false]].map(([n, d, mien]) => `<div class="ong"><span class="lib"><b>${n}</b><small>${d}</small></span>${mien ? '<span class="conn"><i></i>connecté</span>' : `<button type="button" data-act="esv-connecter"${verrou ? ' disabled' : ''}>Connecter</button>`}</div>`).join('');
+  return `<div class="voile" data-act="fermer" style="background:transparent"></div><div class="popover" role="dialog" aria-label="Onglets ESV">${ong}<div class="pied">${verrou ? IC.cadenas + '<span>Une seule connexion, gardée jusqu’à la fin du lot.</span>' : '<span>Une seule connexion, partagée entre Orbite et Écho.</span>'}</div></div>`;
+}
+
+function rendre() {
+  const m = modele();
+  const instrument = m.activite === 'echo' || m.objet !== 'rail' || true ? `<section class="instrument" aria-live="polite"><div class="groupe-etat"><div class="etat">${glypheHtml(m)}<span class="mot">${esc(m.mot)}</span></div><p class="phrase">${m.phrase}</p></div>${objetHtml(m)}${m.allure ? `<p class="allure" id="allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>` : '';
+  const couche = S.couche === 'palette' ? paletteHtml(m) : S.couche === 'reglages' ? feuilleHtml() : S.couche === 'cache' ? confirmCache() : S.couche === 'esv' ? popoverEsv(m) : S.couche === 'passer' ? confirmPasser() : '';
+  FEN.innerHTML = `${barreHtml(m)}${instrument}<div class="zone"><div class="tiroir" data-ouvert="${S.tiroir ? 1 : 0}" id="tiroir">${poigneeHtml(m)}<div id="tiroir-corps"${S.tiroir ? '' : ' inert'}>${tiroirHtml(m)}</div></div></div>${cacheHtml(m)}${couche}`;
+  const inst = FEN.querySelector('.instrument'); if (inst) FEN.style.setProperty('--instrument-h', inst.offsetHeight + 'px');
+  if (S.couche === 'palette') { const q = D.getElementById('pal-q'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+  majVivant();
+  const n = D.getElementById('notes'); if (n) n.innerHTML = `<h2>${esc(SCENES.find(s => s[0] === S.scene)?.[1] || '')}</h2><p>${esc(NOTES[S.scene] || '')}</p>${S.scene === 'cours' || S.scene === 'pause' ? '<p><b>Allure, honnêtement.</b> Déjà dans l’extension : la durée de chaque cut posé (durationMs), l’heure d’ouverture du cut en cours (cutStartedAt), l’heure de départ du lot. Donc : médiane récente, anneau proportionnel, cuts par minute et temps restant sont calculables sans rien demander de nouveau à ESV. À ajouter dans le code : le calcul lui-même (il existe pour Écho, pas pour le lot) et, pour une vitesse « vraie » qui compte les navigations entre cuts, une heure de fin par cut.</p>' : ''}${R.dataset.revue === 'v2' && m.tiroir !== 'visites' ? '<p><span class="nouveau">V2</span> « Ouvrir dans ESV » et « Examiné » sont des fonctions nouvelles à construire ; V1 (lecture seule) correspond à ce que le panneau sait faire aujourd’hui.</p>' : ''}`;
+}
+/* Mise à jour légère, sans redessiner : l'anneau, le curseur, la ligne d'allure. */
+function majVivant() {
+  const L = sim.lot, arc = FEN.querySelector('.glyphe .arc');
+  if (arc && S.scene === 'cours') { const med = medianeLot() || L.encours.attendu, p = Math.min(1, L.encours.depuis / med); arc.style.strokeDashoffset = (C * (1 - p)).toFixed(2); }
+  const niv = FEN.querySelector('.glyphe .niveau'), cel = FEN.querySelector('.c.cours');
+  if (S.scene === 'cours') { const med = medianeLot() || L.encours.attendu, p = Math.min(1, L.encours.depuis / med); if (niv) { niv.setAttribute('y', (20 - 16 * p).toFixed(2)); niv.setAttribute('height', (16 * p).toFixed(2)); } if (cel) cel.style.setProperty('--p', p.toFixed(3)); }
+  if (S.scene === 'echo' && sim.echo.encours) { const medE = medianeEcho() || sim.echo.encours.attendu, p = Math.min(1, sim.echo.encours.depuis / medE); if (cel) cel.style.setProperty('--p', p.toFixed(3)); }
+  if (S.scene === 'echo' && sim.echo.encours) { /* la marque claire pulse ; rien d'autre */ }
+  const al = D.getElementById('allure');
+  if (al && S.scene === 'pause') { const med = medianeLot(); al.innerHTML = `en pause depuis <b>${duree(L.pauseDepuis)}</b> <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut avant la pause`; }
+}
+
+/* ─────────────────────────── actions */
+function note(t) { S.note = t; rendre(); clearTimeout(note.h); note.h = setTimeout(() => { S.note = ''; rendre(); }, 2600); }
+function agir(act) {
+  const L = sim.lot;
+  switch (act) {
+    case 'fermer': S.couche = null; S.q = ''; S.pi = 0; break;
+    case 'tiroir': S.tiroir = !S.tiroir; S.sel = null; break;
+    case 'palette': S.couche = S.couche === 'palette' ? null : 'palette'; S.q = ''; S.pi = 0; break;
+    case 'reglages': S.couche = S.couche === 'reglages' ? null : 'reglages'; break;
+    case 'esv': S.couche = S.couche === 'esv' ? null : 'esv'; break;
+    case 'esv-connecter': S.couche = null; if (S.scene === 'sans-esv') S.scene = 'pret'; note('Connecté à l’onglet 1 · partie 13'); return;
+    case 'cache': S.couche = 'cache'; break;
+    case 'cache-vider': S.couche = null; S.cacheVide = true; setTimeout(() => { S.cacheVide = false; rendre(); }, 3000); break;
+    case 'demarrer': sim.lot = lotDeBase(); sim.lot.cuts = []; sim.lot.encours = { cut: 4811, depuis: 0, attendu: 7 }; S.scene = 'cours'; break;
+    case 'pause': if (L.etat === 'cours') L.etat = 'dem'; break;
+    case 'reprendre': L.etat = 'cours'; L.encours.depuis = 0; L.encours.attendu = 5.5 + al() * 6; S.scene = 'cours'; break;
+    case 'arreter': S.scene = 'fin'; break;
+    case 'reessayer': case 'main': case 'archiver': case 'passer-ok': S.couche = null; S.scene = 'cours'; L.etat = 'cours'; L.encours.depuis = 0; if (act === 'passer-ok') { L.cuts.push({ cut: L.encours.cut, statut: 'saute', dur: 0 }); L.encours = { cut: L.encours.cut + 1, depuis: 0, attendu: 7 }; } break;
+    case 'passer': S.couche = 'passer'; break;
+    case 'exporter': S.exportFait = true; note('Export lancé · 3 volumes'); return;
+    case 'rel-reprendre': note('Relecture reprise au cut 4880'); return;
+    case 'rel-arreter': S.scene = 'fin'; break;
+    case 'echo-demarrer': S.scene = 'echo'; break;
+    case 'echo-terminer': S.scene = 'echo-vide'; note('Volumes prêts · téléchargement lancé'); return;
+    case 'echo-pause': note('Écho en pause'); return;
+    case 'ancien': note('Ancien panneau : ouvert dans la même fenêtre (hors maquette)'); return;
+    case 'activite:orbite': case 'activite:echo': { const m = modele(); if (m.bascule.verrou && !act.endsWith(m.activite)) { note(m.bascule.raison); return; } S.scene = act.endsWith('echo') ? 'echo-vide' : 'pret'; S.tiroir = false; break; }
+    default: return;
+  }
+  rendre();
+}
+FEN.addEventListener('click', e => {
+  const ex = e.target.closest('[data-examine]'); if (ex) { const c = Number(ex.dataset.examine); if (S.examines.has(c)) S.examines.delete(c); else S.examines.add(c); rendre(); return; }
+  const ou = e.target.closest('[data-ouvrir]'); if (ou) { note(`Cut ${ou.dataset.ouvrir} ouvert dans ESV (V2, à construire)`); return; }
+  const row = e.target.closest('[data-row]'); if (row && !e.target.closest('[data-act]')) { S.sel = Number(row.dataset.row); rendre(); return; }
+  const seg = e.target.closest('[data-seg]'); if (seg) { if (seg.dataset.seg === 'Thème' && seg.dataset.val !== 'Système') regler('theme', seg.dataset.val.toLowerCase()); else { seg.parentElement.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b === seg)); } return; }
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  if (a.matches('[aria-disabled="true"]') && a.dataset.raison) { note(a.dataset.raison); return; }
+  if (a.matches('[aria-disabled="true"]')) return;
+  if (a.dataset.fermer) { S.couche = null; S.q = ''; S.pi = 0; }
+  agir(a.dataset.act);
+});
+FEN.addEventListener('input', e => { if (e.target.id === 'pal-q') { S.q = e.target.value; S.pi = 0; rendre(); } });
+D.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); agir('palette'); return; }
+  if (e.key === 'Escape') { if (S.couche) agir('fermer'); else if (S.tiroir) agir('tiroir'); return; }
+  if (S.couche === 'palette') {
+    const L = FEN.querySelectorAll('.cmd[data-cmd]');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { S.pi = Math.max(0, Math.min(L.length - 1, S.pi + (e.key === 'ArrowDown' ? 1 : -1))); rendre(); e.preventDefault(); }
+    else if (e.key === 'Enter') { const c = L[Math.max(0, Math.min(L.length - 1, S.pi))]; if (c && c.getAttribute('aria-disabled') !== 'true' && c.dataset.act) { S.couche = null; S.q = ''; S.pi = 0; agir(c.dataset.act); } e.preventDefault(); }
+    return;
+  }
+  if (S.tiroir && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && !e.target.closest('input,select')) {
+    const n = FEN.querySelectorAll('#tiroir-corps [data-row]').length; if (!n) return;
+    S.sel = Math.max(0, Math.min(n - 1, (S.sel ?? -1) + (e.key === 'ArrowDown' ? 1 : -1))); rendre(); FEN.querySelector(`[data-row="${S.sel}"]`)?.scrollIntoView({ block: 'nearest' }); e.preventDefault();
+  }
+  if (S.tiroir && R.dataset.revue === 'v2' && S.sel !== null && (e.key === 'e' || e.key === 'E') && !e.target.closest('input,select')) { const b = FEN.querySelector(`[data-row="${S.sel}"] [data-examine]`); if (b) b.click(); }
+});
+
+/* ─────────────────────────── banc d'essai */
+function regler(k, v) {
+  if (k === 'taille') R.dataset.taille = v; if (k === 'theme') R.dataset.theme = v; if (k === 'revue') R.dataset.revue = v; if (k === 'cadence') R.dataset.cadence = v;
+  D.querySelectorAll(`.banc [data-${k}]`).forEach(b => b.setAttribute('aria-pressed', b.dataset[k] === v));
+  rendre();
+}
+function scene(id) {
+  S.scene = id; S.couche = id === 'palette' ? 'palette' : id === 'reglages' ? 'reglages' : id === 'cache' ? 'cache' : id === 'esv' ? 'esv' : null; S.tiroir = false; S.sel = null; S.note = ''; S.exportFait = false;
+  if (id === 'cours' || id === 'palette') { sim.lot = lotDeBase(); sim.lot.etat = 'cours'; } else if (id === 'pause') { sim.lot = lotDeBase(); sim.lot.etat = 'pause'; sim.lot.pauseDepuis = 80; } else if (id === 'incident' || id === 'interrompu' || id === 'esv-muet') { sim.lot = lotDeBase(); sim.lot.etat = 'incident'; }
+  if (id === 'echo') echoDeBase();
+  D.getElementById('sc-scene').value = id; rendre();
+}
+const sel = D.getElementById('sc-scene'); sel.innerHTML = SCENES.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join(''); sel.addEventListener('change', () => scene(sel.value));
+D.querySelectorAll('.banc .seg button').forEach(b => b.addEventListener('click', () => { const k = Object.keys(b.dataset)[0]; regler(k, b.dataset[k]); }));
+D.getElementById('sc-reduit').addEventListener('change', e => { if (e.target.checked) R.dataset.reduit = '1'; else delete R.dataset.reduit; });
+D.getElementById('sc-serif').addEventListener('change', e => { if (e.target.checked) R.dataset.serif = '1'; else delete R.dataset.serif; });
+if (new URLSearchParams(location.search).get('serif') === '1') { R.dataset.serif = '1'; D.getElementById('sc-serif').checked = true; }
+const P = new URLSearchParams(location.search);
+R.dataset.nu = P.get('nu') === '1' ? '1' : '0';
+if (P.get('taille')) regler('taille', P.get('taille')); if (P.get('theme')) regler('theme', P.get('theme')); if (P.get('revue')) regler('revue', P.get('revue')); if (P.get('cadence')) regler('cadence', P.get('cadence'));
+if (P.get('reduit') === '1') { R.dataset.reduit = '1'; D.getElementById('sc-reduit').checked = true; }
+scene(SCENES.some(s => s[0] === P.get('scene')) ? P.get('scene') : 'cours');
+if (P.get('tiroir') === '1') { S.tiroir = true; rendre(); }
+if (P.get('fige') === '1') { /* captures : on fige l'avancement au premier dessin */ } else sim.tick = setInterval(boucle, 250);
+window.ArianeMaquette = { S, sim, scene, rendre };
+})();
+</script>
+</body>
+</html>

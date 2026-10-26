@@ -21,7 +21,7 @@ async function ouvrir(nav,state,vue,hash='#automatic'){
   const stockage={};window.__appels=[];window.__ecrits=[];
   window.fetch=async()=>({json:async()=>({totaux:{tous:{corriges:2731}},creeLe:'2026-10-20T08:00:00Z'})});
   window.chrome={runtime:{id:'essai',getURL:p=>'file://'+racine+'/'+p,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
-   sendMessage:async m=>{window.__appels.push(m.action||m.kind);return {result:m.action in reponses?reponses[m.action]:{}};}},
+   sendMessage:async m=>{window.__appels.push(m.action||m.kind);if(m.action==='view'&&window.__etat)return {result:window.__etat};return {result:m.action in reponses?reponses[m.action]:{}};}},
    storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);window.__ecrits.push(o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
  },{state,racine:path.resolve(__dirname,'../..')});
  await page.goto('file://'+path.resolve(__dirname,'../..','panel.html')+hash);
