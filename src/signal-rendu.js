@@ -223,7 +223,7 @@
    * la case clique `#lot-reprise`, dont le gestionnaire remplit les bornes. */
   function bornesHtml(snap, m) {
     const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
-    if (!B || m.activite !== 'orbite' || !['pret', 'fini', 'arrete'].includes(a.etat) || m.glyphe === 'hors') return '';
+    if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors') return '';
     return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des différés : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
   }
   function actionsHtml(m) {

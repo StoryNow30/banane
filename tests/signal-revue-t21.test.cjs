@@ -48,6 +48,7 @@ test('D7 · bornes du prochain lot : au repos et après « Nouveau lot », deux 
  assert.doesNotMatch(attend,/data-borne/,'avant « Nouveau lot » : pas de bornes (le panneau les cache)');
  for(const e of ['cours','pause','dem','alerte','p2','rel'])assert.doesNotMatch(S.rendre(snap({ar:ar(e,{bornesProchain:bp})}),ui()),/data-borne/,e+' : jamais pendant un lot');
  assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false,bornesProchain:bp}),sig:sig({activite:'echo'})}),ui()),/data-borne/,'Écho : pas de bornes');
+ assert.match(S.rendre(snap({ar:ar('alerte',{lotOuvert:false,etatTexte:'Erreur du lot',bornesProchain:bp}),boutonsOrbite:[b('start-batch','Démarrer le lot','primary')]}),ui()),/data-borne="end"/,'lot en erreur, « Nouveau lot » choisi : les bornes aussi');
 });
 test('D7 · « Reprise des différés » : la case d’origine, cochée ou non, et sa note',()=>{
  const r=x=>S.rendre(snap({ar:ar('fini',{lotOuvert:false,bornesProchain:{debut:'4796',fin:'4900',note:''},reprise:x}),boutonsOrbite:[b('start-batch','Démarrer le lot','primary')]}),ui());
