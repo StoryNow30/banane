@@ -85,16 +85,46 @@ test('Revue V2 : différés puis verts (par plage), « Ouvrir » seulement par l
  const ferme=S.rendre(snap({ar:a}),ui());assert.match(ferme,/<div id="sg-tiroir-corps" inert>/);
 });
 
-test('Écho : marques, allure de la séance ; la bascule est verrouillée pendant un lot ou une séance, avec sa raison',()=>{
+test('Écho : marques, allure de la séance ; la bascule reste libre pendant un lot ou une séance',()=>{
  const e=S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours',cours:null}),sig:sig({activite:'echo',echo:{mediane:10.2,marques:[true,false,true]}}),echo:{visites:'148',corriges:65},
   boutonsEcho:[b('native-end','Terminer et télécharger','primary'),b('native-pause','Pause')],echoRows:[{cut:'5317',texte:'Corrigé · 1 rail',corrige:true,duree:'9 s'}]}),ui({tiroir:true}));
  assert.match(e,/class="sg-mot">En observation</);assert.match(e,/<i class="sg-c"><\/i><i class=""><\/i><i class="sg-c"><\/i><i class="sg-en"><\/i>/);
  assert.match(e,/<b>5,9<\/b> cuts par minute/);assert.match(e,/<b>65<\/b> corrigés · <b>83<\/b> validés tels quels/);
- assert.match(e,/data-act="legacy:native-end"/);assert.match(e,/aria-disabled="true" data-raison="Orbite est disponible après la séance Écho"/);
+ assert.match(e,/data-act="legacy:native-end"/);assert.match(e,/data-act="mode:automatic"/,'séance ouverte : Orbite reste cliquable');assert.doesNotMatch(e,/data-raison/);
  assert.match(e,/<span class="sg-cut">5317<\/span><span class="sg-motif">Corrigé · 1 rail/);
- const lot=S.rendre(snap(),ui());assert.match(lot,/aria-disabled="true" data-raison="Écho est disponible après le lot"/);
+ const lot=S.rendre(snap(),ui());assert.match(lot,/data-act="mode:native"/,'lot ouvert : Écho reste cliquable (seul le départ est refusé)');assert.doesNotMatch(lot,/data-raison/);
  const vide=S.rendre(snap({ar:ar('pret',{lotOuvert:false}),sig:sig({activite:'echo'}),boutonsEcho:[b('native-start','Démarrer l’observation','primary')]}),ui());
  assert.match(vide,/class="sg-mot">Aucune séance</);assert.match(vide,/aucune visite/);assert.match(vide,/data-act="mode:automatic"/);
+});
+
+test('Bascule T21 : une navigation, jamais verrouillée (quatre cas du terrain) ; « Séance terminée » est une séance finie',()=>{
+ const dessin=(activite,etat,x={})=>S.rendre(snap({ar:ar(etat,{echoEtat:'Aucune séance en cours',...x}),sig:sig({activite}),boutonsEcho:[b('native-end','Terminer et télécharger','primary'),b('native-pause','Pause')]}),ui());
+ const libre=(h,vers,msg)=>{assert.match(h,new RegExp('data-act="mode:'+vers+'"'),msg+' : le segment est cliquable');assert.doesNotMatch(h,/data-raison|aria-disabled="true"/,msg+' : aucun cadenas');};
+ /* 1. séance Écho en cours, panneau rouvert en Orbite : on peut aller la mettre en pause ou la terminer */
+ for(const e of ['Collecte en cours','Collecte en pause','Démarrage de la collecte','ESV ne répond plus'])libre(dessin('orbite','pret',{lotOuvert:false,echoEtat:e}),'native','Orbite + '+e);
+ /* 2. lot en cours, panneau sur la vue Écho (fragment #native) : on peut aller suivre, mettre en pause ou arrêter le lot */
+ libre(dessin('echo','cours',{lotOuvert:true}),'automatic','Écho + lot ouvert');
+ /* 3. séance finie (exportée) : rien ne verrouille, dans aucune vue */
+ for(const v of ['orbite','echo'])libre(dessin(v,'fini',{lotOuvert:false,echoEtat:'Séance terminée'}),v==='orbite'?'native':'automatic','séance terminée, vue '+v);
+ /* 4. lot ouvert, vue Orbite : Écho reste cliquable ; seul son départ est refusé (écran Écho « Disponible après le lot Orbite ») */
+ libre(dessin('orbite','cours'),'native','Orbite + lot ouvert');
+ assert.match(dessin('echo','cours',{lotOuvert:true}),/Disponible après le lot Orbite/);
+ /* la palette suit : « Passer en Écho / Orbite » n'est jamais grisée */
+ for(const [v,etat,x] of [['orbite','cours',{}],['echo','cours',{lotOuvert:true}],['orbite','pret',{echoEtat:'Collecte en cours',lotOuvert:false}]]){
+  const c=S.paletteListe(snap({ar:ar(etat,{echoEtat:'Aucune séance en cours',...x}),sig:sig({activite:v})}),ui({q:'passer en'}));
+  assert.equal(c.length,1);assert.equal(c[0].off,'',v+' : commande de bascule disponible');}
+ /* libellés : séance terminée ≠ séance ouverte */
+ const t=S.modele(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Séance terminée'}),sig:sig({activite:'echo'}),echo:{visites:'12',corriges:3}}),ui());
+ assert.equal(t.mot,'Séance terminée');assert.equal(t.glyphe,'fini');assert.deepEqual(t.bascule,{verrou:false});
+ /* la raison du cache ne parle de séance Écho que si elle est ouverte */
+ assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Séance terminée'}),sig:sig({activite:'echo'})}),ui()),/après la séance Écho/);
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'})}),ui()),/après la séance Écho/);
+});
+
+test('Historique T21 : heure de Paris, pas celle de la machine',()=>{
+ /* 25/10/2026 : fin de l'heure d'été à 3 h ; 13 h 05 UTC = 14 h 05 à Paris ; 20/07 : 10 h 30 UTC = 12 h 30 */
+ const h=S.rendre(snap({sig:sig({historique:[{part:3,fin:'complete',poses:1,startedAt:'2026-10-25T13:05:00Z'},{part:2,fin:'complete',poses:1,startedAt:'2026-07-20T10:30:00Z'},{part:1,fin:'complete',poses:1,startedAt:'2026-10-26T23:09:00Z'}]})}),ui({couche:'reglages'}));
+ assert.match(h,/<small>25\/10 14 h 05<\/small>/);assert.match(h,/<small>20\/07 12 h 30<\/small>/);assert.match(h,/<small>27\/10 0 h 09<\/small>/,'minuit passé à Paris : le lendemain');
 });
 
 test('connexion : hors ligne → « Choisir un onglet » ; ESV perdu → incident et puce brique ; « Reconnecter » seulement si le panneau a le bouton',()=>{
@@ -115,10 +145,12 @@ test('palette : quatre commandes à l’ouverture, le reste en tapant ; une comm
 });
 
 test('réglages : les choix du panneau, thème sombre par défaut, détails techniques dans Signal, historique des parties ; aucun « ancien panneau »',()=>{
- const h=S.rendre(snap({gcv2:{total:2731,date:'20/10/2026'},sig:sig({historique:[{part:13,fin:'complete',cibles:120,poses:109,differes:11,depart:{ignores:2},startedAt:'2026-10-25T13:05:00Z'},{part:12,fin:'en-cours',cibles:null,poses:null,differes:null,depart:{ignores:0}}]})}),ui({couche:'reglages'}));
+ const h=S.rendre(snap({gcv2:{total:2731,date:'20/10/2026'},sig:sig({historique:[{part:13,fin:'complete',cibles:120,poses:109,differes:11,sautes:1,depart:{ignores:2},startedAt:'2026-10-25T13:05:00Z'},{part:12,fin:'en-cours',cibles:null,poses:null,differes:null,sautes:0,depart:{ignores:0}},{part:11,fin:'complete',cibles:null,poses:9,differes:0,depart:{ignores:3}},{part:10,fin:'arretee',cibles:null,poses:5,differes:0,sautes:null,depart:null},{part:9,fin:'complete',poses:7,sautes:2}]})}),ui({couche:'reglages'}));
  assert.match(h,/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
  assert.match(h,/data-act="sg:tech"/);assert.match(h,/<span class="sg-mono">2731<\/span>/);
- assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 2 ignorés<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours<\/span>/);
+ assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 1 skippé · 2 ignorés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 skippé<\/span>/,'0 est une valeur connue : affichée, au singulier');
+ assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 différés · 3 ignorés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');
+ assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 différés<\/span>/,'sautes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 skippés<\/span>/,'pluriel');
  assert.match(h,/<option value="signal" selected>/);assert.doesNotMatch(h,/ancienne|Ancien panneau|ancien panneau/);
  assert.doesNotMatch(S.rendre(snap(),ui({couche:'reglages'})),/Parties traitées/,'sans historique du moteur : rien');
  const f5=S.rendre(snap({sig:sig({f5:'arret'})}),ui({couche:'reglages'}));assert.match(f5,/<select data-sel="f5"[^>]*>.*<option value="arret" selected>/);

@@ -10,18 +10,18 @@ const EC=require('../src/export-cache.js');
 const H=require('../src/historique-parties.js');
 const VERSION=require('../manifest.json').version;
 const tick=()=>new Promise(r=>setTimeout(r,5));
-const CHAMPS=['part','batchId','startedAt','endedAt','version','depart','cibles','poses','differes','ecritsPasse','main','fin'];
+const CHAMPS=['part','batchId','startedAt','endedAt','version','depart','cibles','poses','differes','ecritsPasse','main','sautes','fin'];
 
 test('module : fin du lot selon son état ; fiche de fin (posés, différés, repris à la main, durée, motif) ; jamais pour un lot ouvert',()=>{
  const lot=(state,extra={})=>({id:'L',state,startedAt:'2026-10-25T08:00:00.000Z',scope:{part:7,start:0,end:999999},processed:[{cut:1},{cut:2},{cut:2}],deferred:[{identity:{cut:3}}],
-  manuallyCompleted:[{cut:4}],skipped:[],...extra});
+  manuallyCompleted:[{cut:4}],skipped:[{cut:8},{cut:8},{identity:{cut:9}}],...extra});
  assert.equal(H.finDe(lot('COMPLETED')),'complete');assert.equal(H.finDe(lot('FINISHED_WITH_UNCONFIRMED_ACTIONS')),'complete');
  assert.equal(H.finDe(lot('STOPPED',{stoppedAtEnd:{cut:9,reason:'last-cut',at:'2026-10-25T08:10:00.000Z'}})),'complete');
  assert.equal(H.finDe(lot('STOPPED')),'arretee');assert.equal(H.finDe(lot('ERROR')),'interrompue');
  for(const s of ['RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER'])assert.equal(H.finDe(lot(s)),'en-cours',s);
  assert.equal(H.ficheFin(lot('RUNNING'),{version:'v'}),null,'lot ouvert : aucune fiche de fin');
  const f=H.ficheFin(lot('STOPPED'),{version:'4.9.5.21',motif:'arret-manuel',at:'2026-10-25T08:30:00.000Z'});
- deq(f,{batchId:'L',part:7,version:'4.9.5.21',startedAt:'2026-10-25T08:00:00.000Z',endedAt:'2026-10-25T08:30:00.000Z',dureeMs:1800000,poses:2,differes:1,main:1,ecritsPasse:null,
+ deq(f,{batchId:'L',part:7,version:'4.9.5.21',startedAt:'2026-10-25T08:00:00.000Z',endedAt:'2026-10-25T08:30:00.000Z',dureeMs:1800000,poses:2,differes:1,main:1,sautes:2,ecritsPasse:null,
   fin:'arretee',motif:'arret-manuel',etat:'STOPPED',finPartie:true});
  const g=H.ficheFin(lot('STOPPED',{stoppedAtEnd:{cut:9,reason:'partie-sans-rouge',at:'2026-10-25T08:10:00.000Z'}}),{version:'v'});
  assert.equal(g.endedAt,'2026-10-25T08:10:00.000Z','fin au dernier cut : son heure');assert.equal(g.motif,'partie-sans-rouge');assert.equal(g.fin,'complete');
@@ -42,17 +42,20 @@ test('module : historique = fiches de départ + fiches de fin + lot en cours, pl
   {at:'2026-10-25T08:00:00.000Z',batchId:'B',partie:6,version:'4.9.5.21',valides:1,invalides:2,ignores:null,total:3},
   {at:'2026-10-25T06:00:00.000Z',batchId:'echo:s1',partie:4,version:'4.9.5.19',valides:1,invalides:1,ignores:0,total:2},
   {at:'2026-10-25T09:00:00.000Z',batchId:'C',partie:8,version:'4.9.5.21',valides:3,invalides:4,ignores:0,total:7}];
- const fins=[{batchId:'A',part:5,version:'4.9.5.19',startedAt:'2026-10-25T07:00:01.000Z',endedAt:'2026-10-25T07:40:00.000Z',dureeMs:2399000,poses:8,differes:2,main:0,ecritsPasse:1,fin:'complete',motif:'last-cut',finPartie:true}];
- const courant={id:'C',state:'PAUSED',startedAt:'2026-10-25T09:00:02.000Z',scope:{part:8,start:100,end:200},processed:[{cut:101}],deferred:[],manuallyCompleted:[]};
+ const fins=[{batchId:'A',part:5,version:'4.9.5.19',startedAt:'2026-10-25T07:00:01.000Z',endedAt:'2026-10-25T07:40:00.000Z',dureeMs:2399000,poses:8,differes:2,main:0,ecritsPasse:1,sautes:3,fin:'complete',motif:'last-cut',finPartie:true}];
+ const courant={id:'C',state:'PAUSED',startedAt:'2026-10-25T09:00:02.000Z',scope:{part:8,start:100,end:200},processed:[{cut:101}],deferred:[],manuallyCompleted:[],skipped:[{cut:102},{identity:{cut:103}}]};
  const h=H.historique({departs,fins,courant,version:'4.9.5.21'});
  deq(h.map(x=>[x.batchId,x.fin]),[['C','en-cours'],['B','interrompue'],['A','complete']],'Écho (echo:…) n’est pas un lot ; plus récent d’abord');
  for(const x of h)deq(Object.keys(x).sort(),CHAMPS.slice().sort());
  deq(h[2],{part:5,batchId:'A',startedAt:'2026-10-25T07:00:01.000Z',endedAt:'2026-10-25T07:40:00.000Z',version:'4.9.5.19',depart:{valides:90,invalides:10,ignores:0,total:100},
-  cibles:10,poses:8,differes:2,ecritsPasse:1,main:0,fin:'complete'},'départ = première fiche du lot ; cibles = invalides au départ d’un lot jusqu’à la fin de partie');
- deq(h[1],{part:6,batchId:'B',startedAt:'2026-10-25T08:00:00.000Z',endedAt:null,version:'4.9.5.21',depart:{valides:1,invalides:2,ignores:null,total:3},cibles:null,poses:null,differes:null,ecritsPasse:null,main:null,fin:'interrompue'});
- deq(h[0],{part:8,batchId:'C',startedAt:'2026-10-25T09:00:02.000Z',endedAt:null,version:'4.9.5.21',depart:{valides:3,invalides:4,ignores:0,total:7},cibles:null,poses:1,differes:0,ecritsPasse:null,main:0,fin:'en-cours'},
+  cibles:10,poses:8,differes:2,ecritsPasse:1,main:0,sautes:3,fin:'complete'},'départ = première fiche du lot ; cibles = invalides au départ d’un lot jusqu’à la fin de partie');
+ deq(h[1],{part:6,batchId:'B',startedAt:'2026-10-25T08:00:00.000Z',endedAt:null,version:'4.9.5.21',depart:{valides:1,invalides:2,ignores:null,total:3},cibles:null,poses:null,differes:null,ecritsPasse:null,main:null,sautes:null,fin:'interrompue'});
+ deq(h[0],{part:8,batchId:'C',startedAt:'2026-10-25T09:00:02.000Z',endedAt:null,version:'4.9.5.21',depart:{valides:3,invalides:4,ignores:0,total:7},cibles:null,poses:1,differes:0,ecritsPasse:null,main:0,sautes:2,fin:'en-cours'},
   'lot borné : cibles inconnues');
  deq(H.historique({departs:'abîmé',fins:null,courant:null}),[]);
+ /* Fiche écrite avant le champ (ancienne version) : « sautes » inconnu vaut null, jamais 0 ; une valeur 0 écrite reste 0. */
+ assert.equal(H.historique({fins:[{batchId:'Z',part:1,fin:'complete',poses:4}]})[0].sautes,null);assert.equal(H.historique({fins:[{batchId:'Z',part:1,fin:'complete',sautes:0}]})[0].sautes,0);
+ assert.equal(H.historique({fins:[{batchId:'Z',part:1,fin:'complete',sautes:'x'}]})[0].sautes,null,'valeur abîmée : null');
  /* Une fiche écrite sur une erreur ne cache pas un lot qui a repris : le lot vivant passe devant. */
  const repris=H.historique({departs,fins:[...fins,{batchId:'C',fin:'interrompue',poses:0,endedAt:'2026-10-25T09:10:00.000Z',finPartie:false}],courant,version:'4.9.5.21'});
  deq([repris[0].fin,repris[0].endedAt,repris[0].poses],['en-cours',null,1]);
@@ -65,7 +68,7 @@ const send=(b,entries,observer='obs-1')=>b.raw({kind:'esv-observation',observer,
 async function lotOuvert(id='lot-H',partie=13){const local=memoire(),b=production({local});await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  const e=b.get('engine'),r=b.get('timing');
  e.s.batch={id,state:'RUNNING',step:'capture',startedAt:new Date(Date.now()-60000).toISOString(),scope:{part:partie,start:0,end:999999},
-  processed:[{cut:3,key:'k3'},{cut:4,key:'k4'}],skipped:[],paused:[],interrupted:[],sequence:[],deferred:[{identity:{part:partie,cut:5}}],manuallyCompleted:[]};
+  processed:[{cut:3,key:'k3'},{cut:4,key:'k4'}],skipped:[{cut:6,key:'k6'}],paused:[],interrupted:[],sequence:[],deferred:[{identity:{part:partie,cut:5}}],manuallyCompleted:[]};
  r.syncBatch(true);r.ensureVisit(b.adapter.identity);return {b,e,r,local};}
 
 test('service worker : lot en cours puis arrêté ; fiche de fin persistante ; exports (`finsLot`) ; historique complet après le vidage du cache',async()=>{
@@ -73,12 +76,12 @@ test('service worker : lot en cours puis arrêté ; fiche de fin persistante ; e
  send(b,[resume()]);await tick();
  let h=(await b.api('view')).partsHistory;assert.equal(h.length,1);
  deq({...h[0],startedAt:typeof h[0].startedAt},{part:13,batchId:'lot-H',startedAt:'string',endedAt:null,version:VERSION,depart:{valides:7602,invalides:137,ignores:0,total:7739},cibles:137,
-  poses:2,differes:1,ecritsPasse:null,main:0,fin:'en-cours'});
+  poses:2,differes:1,ecritsPasse:null,main:0,sautes:1,fin:'en-cours'});
  assert.equal(local.m.banane55FinsLot,undefined,'lot ouvert : pas encore de fiche de fin');
  await b.api('stop');await Promise.allSettled([...r.pending]);await tick();
  const fins=plat(local.m.banane55FinsLot);assert.equal(fins.length,1);
  deq({...fins[0],startedAt:typeof fins[0].startedAt,endedAt:typeof fins[0].endedAt,dureeMs:Number.isFinite(fins[0].dureeMs)&&fins[0].dureeMs>=59000},
-  {batchId:'lot-H',part:13,version:VERSION,startedAt:'string',endedAt:'string',dureeMs:true,poses:2,differes:1,main:0,ecritsPasse:null,fin:'arretee',motif:'arret-manuel',etat:'STOPPED',finPartie:true});
+  {batchId:'lot-H',part:13,version:VERSION,startedAt:'string',endedAt:'string',dureeMs:true,poses:2,differes:1,main:0,sautes:1,ecritsPasse:null,fin:'arretee',motif:'arret-manuel',etat:'STOPPED',finPartie:true});
  h=(await b.api('view')).partsHistory;assert.equal(h[0].fin,'arretee');assert.equal(h[0].endedAt,fins[0].endedAt);
  for(const a of ['journal-meta','dataset-meta'])deq((await b.api(a)).finsLot,fins,a+' recopie la fiche de fin');
  /* Vidage du cache (manuel, lot arrêté) : tout le journal part ; l'historique reste entier. */

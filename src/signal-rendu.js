@@ -87,15 +87,18 @@
   const TEXTE = { 'export-tout': 'Exporter le dossier' };
   const versAction = b => b ? { texte: TEXTE[b.id] || b.texte, act: b.id === 'pause' ? 'pause' : 'legacy:' + b.id, ic: icBouton(b.id), inactif: !b.actif, danger: b.role === 'danger' || /^(stop|explicit-skip|relecture-arreter)$/.test(b.id) } : null;
 
-  const ECHO_ACTIF = /Collecte en cours|Collecte en pause|Démarrage|Séance à terminer|ESV ne répond plus/;
+  /* Une séance Écho est OUVERTE quand le service worker la dit en cours, en pause, au démarrage ou sans réponse d'ESV (les quatre statuts ouverts du panneau
+   * d'origine). « Séance terminée » (FINISHED, gardée après l'export) ne l'est pas. */
+  const echoOuvert = e => /Collecte en cours|Collecte en pause|Démarrage|ESV ne répond plus/.test(e || '');
   function modele(snap, ui) {
     const s = snap || {}, a = s.ar || { etat: 'pret', traites: 0, poses: 0, differes: 0, differesListe: [], verts: [] }, g = s.sig || {};
     const activite = g.activite === 'echo' ? 'echo' : 'orbite';
     const partie = a.partie != null ? `Partie ${esc(a.partie)}` : '';
     const m = { activite, etat: a.etat, glyphe: 'pret', ton: 'encre2', mot: 'Prêt', phrase: '', objet: null, allure: '', principal: null, secondaires: [], raison: '', incident: null, verrou: false, anneau: null };
-    const echoActif = ECHO_ACTIF.test(a.echoEtat || '') && !/Aucune/.test(a.echoEtat || '');
-    m.bascule = activite === 'orbite' ? (echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : { verrou: false })
-      : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : { verrou: false };
+    /* Bascule (T21) : une NAVIGATION, jamais verrouillée, comme les vues du panneau d'origine. Seuls les départs sont refusés, par les boutons d'origine
+     * (grisés : « Démarrer l'observation » pendant un lot, « Démarrer le lot » pendant une séance ouverte) et par l'écran Écho pendant un lot. Sans cela, une
+     * séance Écho rouverte en Orbite, un lot affiché dans Écho ou une séance finie rendaient la pause, l'arrêt et la fin inaccessibles. */
+    m.bascule = { verrou: false };
     if (activite === 'echo') return modeleEcho(s, a, g, m, partie);
     const { primaire, autres } = boutonsPanneau(s.boutonsOrbite, 'automatic');
     /* L'export reste dans la palette pendant le lot et au repos : l'instrument ne garde que les commandes du moment (maquette). */
@@ -184,6 +187,7 @@
     else if (/Collecte en pause/.test(e)) Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Écho en pause', phrase: partie, objet: 'echo' });
     else if (/ESV ne répond plus/.test(e)) Object.assign(m, { glyphe: 'toi', ton: 'alerte', mot: 'ESV ne répond plus', phrase: partie, incident: { texte: 'Si la page ESV reste figée, recharge-la (F5), puis reprends la collecte.' } });
     else if (/Séance à terminer/.test(e)) Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Séance à terminer', phrase: partie, objet: vus ? 'echo' : null });
+    else if (/Séance terminée/.test(e)) Object.assign(m, { glyphe: 'fini', ton: 'encre2', mot: 'Séance terminée', phrase: partie, objet: vus ? 'echo' : null });
     else Object.assign(m, { glyphe: 'echoVide', mot: 'Aucune séance', phrase: [partie, 'prête à observer'].filter(Boolean).join(' · ') });
     if (m.objet === 'echo' && E.mediane) m.allure = `<b>${un(60 / E.mediane)}</b> cuts par minute <span class="sg-sep">·</span> médiane <b>${un(E.mediane)} s</b> par cut <span class="sg-sep">·</span> <b>${esc(corr)}</b> corrigés`;
     actions();
@@ -278,7 +282,7 @@
   function cacheHtml(snap, m) {
     const a = snap.ar || {}, rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);
     const ok = a.cache?.actif === true && !rel;
-    const raison = ok ? '' : a.etat === 'p2' ? 'après la deuxième passe' : rel ? 'après la relecture' : m.activite === 'echo' && !/Aucune/.test(a.echoEtat || '') ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
+    const raison = ok ? '' : a.etat === 'p2' ? 'après la deuxième passe' : rel ? 'après la relecture' : m.activite === 'echo' && echoOuvert(a.echoEtat) ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
     return `<footer class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span></span>${raison ? `<span class="sg-r">· ${esc(raison)}</span>` : ''}<span class="sg-espace"></span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></footer>`;
   }
   function barreHtml(snap, m, ui) {
@@ -331,11 +335,13 @@
     const reco = rc?.visible ? `<div class="sg-ong"><span class="sg-lib"><b>Reconnecter</b><small>${esc(g.connexion.statut === 'reconnecting' ? 'en cours…' : 'ré-équiper l’onglet choisi')}</small></span><button type="button" data-act="legacy:reconnect"${rc.actif ? '' : ' disabled'}>Reconnecter</button></div>` : '';
     return `<div class="sg-voile sg-transparent" data-act="sg:fermer"></div><div class="sg-popover" role="dialog" aria-label="Onglets ESV">${rows}${reco}<div class="sg-pied">${verrou ? ic('cadenas') + '<span>Une seule connexion, gardée jusqu’à la fin du lot.</span>' : `<span>${esc(snap.connexionNote || 'Une seule connexion, partagée entre Orbite et Écho.')}</span>`}</div></div>`;
   }
+  const PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); } catch { return null; } })();
   function historiqueHtml(H) {
     if (!Array.isArray(H)) return '';
     const FIN = { complete: 'terminée', arretee: 'arrêtée', 'en-cours': 'en cours', interrompue: 'interrompue' };
-    const jour = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}` : ''; };
-    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
+    /* Heure de Paris (règle du panneau d'origine, `paris()` de panel.js), pas celle de la machine. */
+    const jour = iso => { const d = iso ? new Date(iso) : null; if (!d || isNaN(d) || !PARIS) return ''; const q = {}; for (const x of PARIS.formatToParts(d)) q[x.type] = x.value; return `${q.day}/${q.month} ${Number(q.hour === '24' ? 0 : q.hour)} h ${q.minute}`; };
+    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${Number.isInteger(p.sautes) ? ` · ${esc(p.sautes)} ${pl(p.sautes, 'skippé')}` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés au départ` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
     return `<div class="sg-reg sg-reg-bloc"><span class="sg-lib"><span>Parties traitées</span><small>Gardées même après un vidage du cache</small></span></div>${L || '<div class="sg-vide sg-petit">Aucune partie enregistrée pour l’instant.</div>'}`;
   }
   function feuilleHtml(snap) {
