@@ -35,6 +35,8 @@ Manifeste `4.9.5.22`, « 4.9.5 test 22 (L1-e6) » ; base : le tronc `claude/50-t
 
 ### Essais et relevé
 - Connexion : `tests/connexion-t21.test.cjs`, `tests/connexion-t21-navigateur.test.cjs`, maquette `tests/esv-maquette/connexion-t21.test.cjs`. Bascule et historique : `tests/signal-rendu.test.cjs`, `tests/ui5-panneau.test.cjs`, `tests/t20a-historique.test.cjs`. Revue : `tests/signal-revue-t21.test.cjs`, `tests/ui5-navigateur-signal-revue-t21.test.cjs` (leur connexion « prête » nomme l'onglet ciblé ; un essai vérifie que les bornes ne lèvent pas la garde de « Démarrer le lot »).
+- Relevé (machine au repos) : `tools/verify.cjs` 2 659 essais, 2 657 réussis, 0 échec, 0 annulé, 2 ignorés (corpus Natif absent) ; `tests/esv-maquette/essais.cjs` 30 réussis sur 32, 2 ignorés (export réel absent, hors dépôt), dont les 5 de la connexion ; `parite-relecture-sw` contre 5a68f22 : 45 relevés sur 45 identiques. Décisions de pose : aucun écart de `src/engine.js`, `src/adapter-page.js`, `src/geometry*.js`, `src/gcv2*.js` depuis 5a68f22.
+- Non vérifié : jamais joué dans Edge ni dans le vrai ESV.
 
 ## 4.9.5.21 — 4.9.5 test 21 (L1-e6) (26/10) — interface Signal
 
