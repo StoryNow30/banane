@@ -101,6 +101,13 @@
     /* L'export reste dans la palette pendant le lot et au repos : l'instrument ne garde que les commandes du moment (maquette). */
     const horsExport = !['fini', 'arrete'].includes(a.etat);
     const actions = () => { m.principal = versAction(primaire); m.secondaires = autres.filter(b => b.actif && !(horsExport && b.id === 'export-tout')).map(versAction); };
+    /* Connexion T21 : le lot part sur l'onglet que le service worker cible (`connection.tabId`). « Démarrer le lot » n'est permis que si cet onglet est
+     * listé, nommé dans la puce, et prêt ; sinon grisé, avec la raison. */
+    const cibleOk = g.connexion?.statut === 'ready' && g.connexion?.nomme === true;
+    const RAISON_ONGLET = 'Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite.';
+    const gardeDemarrer = () => { if (cibleOk) return; let vu = false;
+      for (const b of [m.principal, ...m.secondaires]) if (b && b.act === 'legacy:start-batch') { b.inactif = true; vu = true; }
+      if (vu && !m.raison) m.raison = RAISON_ONGLET; };
     const AL = g.allure || {};
     const reste = a.restants != null && AL.mediane ? a.restants * AL.mediane : null;
     const ligneAllure = () => AL.mediane ? `<b>${un(AL.parMinute)}</b> cuts par minute <span class="sg-sep">·</span> médiane <b>${un(AL.mediane)} s</b> par cut${reste !== null ? ` <span class="sg-sep">·</span> environ <b>${duree(reste)}</b> restantes` : ''}` : '';
@@ -147,15 +154,22 @@
         break;
       }
       default:
-        if (a.horsLigne || g.connexion?.statut === 'no-tab') {
-          const choisi = !!g.onglet && g.connexion?.statut !== 'no-tab';
-          Object.assign(m, { glyphe: 'hors', mot: 'Hors ligne', phrase: choisi ? 'Aucune partie affichée dans l’onglet ESV choisi' : 'Aucun onglet ESV ouvert' });
-          m.principal = { texte: choisi ? 'Onglets ESV' : 'Choisir un onglet', act: 'sg:esv' };
+        if (a.horsLigne || !cibleOk) {
+          const st = g.connexion?.statut, choisi = !!g.onglet && st !== 'no-tab', listes = (s.onglets || []).length, enLigne = !a.horsLigne && st === 'ready';
+          /* Connexion T21 : des onglets listés ne sont pas « aucun onglet ouvert » ; ESV lisible mais onglet ciblé absent de la liste : à choisir, pas « Prêt » ;
+           * un refus de la connexion (ligne d'avis du panneau, en erreur) est dit ici. */
+          Object.assign(m, { glyphe: 'hors', mot: enLigne ? 'Onglet à choisir' : 'Hors ligne',
+            phrase: enLigne ? 'Choisis l’onglet ESV à utiliser' : choisi ? 'Aucune partie affichée dans l’onglet ESV choisi' : listes ? 'Choisis l’onglet ESV à utiliser' : 'Aucun onglet ESV ouvert' });
+          actions(); gardeDemarrer();
+          const lot = [m.principal, ...m.secondaires].find(b => b && b.act === 'legacy:start-batch');
+          m.principal = { texte: choisi && !enLigne ? 'Onglets ESV' : 'Choisir un onglet', act: 'sg:esv' }; m.secondaires = lot ? [lot] : [];
+          if (s.notice?.erreur && s.notice.texte) m.raison = s.notice.texte;
         } else {
           Object.assign(m, { glyphe: 'pret', mot: 'Prêt', phrase: [partie, bornes].filter(Boolean).join(' · '), objet: a.cibles ? 'rail' : null, railEtat: 'vide' });
           actions();
         }
     }
+    gardeDemarrer();
     if (g.connexion?.statut === 'unavailable' && !m.incident && a.etat !== 'p2') m.incident = { texte: 'ESV n’est pas connecté. Si la page ESV est figée, recharge-la (F5), puis reconnecte-la.' };
     if (g.connexion?.statut === 'reconnecting' && !m.incident) m.raison = m.raison || 'Reconnexion à ESV en cours…';
     return m;
@@ -271,7 +285,8 @@
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
     const seg = (k, t) => { const off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${m.activite === k}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : m.activite === k ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
-    const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? 'Aucun onglet' : g.onglet;
+    /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
+    const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
     const court = String(texte).split(' · ')[0];
     return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
@@ -308,8 +323,9 @@
   }
   function esvHtml(snap) {
     const g = snap.sig || {}, a = snap.ar || {}, L = snap.onglets || [], choisi = String(snap.ongletChoisi || ''), verrou = !!a.lotOuvert || !!a.connexionBloquee;
+    /* Connexion T21 : « connecté » seulement pour l'onglet choisi ET prêt ; un onglet choisi d'avance par le panneau (onglet unique, seul prêt) garde son bouton. */
     const rows = L.length ? L.map(o => { const mien = String(o.valeur) === choisi, pasPret = /pas prêt/i.test(o.texte);
-      return `<div class="sg-ong"><span class="sg-lib"><b>${esc(o.texte)}</b>${pasPret ? '<small>pas prêt</small>' : ''}</span>${mien && g.connexion?.statut !== 'unavailable' ? '<span class="sg-conn"><i></i>connecté</span>' : `<button type="button" data-act="conn:${esc(o.valeur)}"${verrou && !mien || pasPret ? ' disabled' : ''}>${mien ? 'Reconnecter' : 'Connecter'}</button>`}</div>`; }).join('')
+      return `<div class="sg-ong"><span class="sg-lib"><b>${esc(o.texte)}</b>${pasPret ? '<small>pas prêt</small>' : ''}</span>${mien && g.connexion?.statut === 'ready' ? '<span class="sg-conn"><i></i>connecté</span>' : `<button type="button" data-act="conn:${esc(o.valeur)}"${verrou && !mien || pasPret ? ' disabled' : ''}>${mien ? 'Reconnecter' : 'Connecter'}</button>`}</div>`; }).join('')
       : '<div class="sg-vide sg-petit">Aucun onglet ESV ouvert. Ouvre une partie dans ESV ; elle apparaîtra ici.</div>';
     const rc = g.connexion?.reconnect;
     const reco = rc?.visible ? `<div class="sg-ong"><span class="sg-lib"><b>Reconnecter</b><small>${esc(g.connexion.statut === 'reconnecting' ? 'en cours…' : 'ré-équiper l’onglet choisi')}</small></span><button type="button" data-act="legacy:reconnect"${rc.actif ? '' : ' disabled'}>Reconnecter</button></div>` : '';
