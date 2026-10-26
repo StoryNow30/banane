@@ -73,6 +73,15 @@ test('D7 · dans la page : les bornes viennent des champs d’origine (pas du lo
  assert.deepEqual(js(p.envoyes),[]);
 });
 
-/* ------------------------------------------------------------------ D4, R5, D6 */
-/* ------------------------------------------------------------------ R4 */
+/* ------------------------------------------------------------------ D5 */
+test('D5 · « Ouvrir dans ESV » vise la partie du lot, même quand ESV affiche une autre partie ; sans lot, la partie affichée',async()=>{
+ const p=await monter({etat:{...etat(LOT_FINI),current:{identity:{part:14,cut:20}}}});
+ p.ui.agir('sg:ouvrir:4812');assert.equal(p.els['goto-cut-cible'].value,'13:4812','le différé 4812 est celui de la partie 13 (le moteur refusera WRONG_PART, et le dira)');
+ assert.equal(p.els['goto-cut'].clics,1);
+ p.ctx.etatPanneau={...etat(null),current:{identity:{part:14,cut:20}}};p.ui.agir('sg:ouvrir:30');assert.equal(p.els['goto-cut-cible'].value,'14:30');
+ assert.deepEqual(js(p.envoyes),[]);
+});
+
+/* ------------------------------------------------------------------ R6 */
+/* ------------------------------------------------------------------ R1 */
 /* ------------------------------------------------------------------ G1 */

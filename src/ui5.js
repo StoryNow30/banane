@@ -252,7 +252,8 @@
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
     else if (quoi === 'examiner') { if (examines.cles.has(v)) examines.cles.delete(v); else examines.cles.add(v); void garderExamines(); }
     else if (quoi === 'ouvrir') {
-      const part = root.ArianePanel.state()?.current?.identity?.part ?? root.ArianePanel.state()?.batch?.scope?.part, cible = $('goto-cut-cible'), go = $('goto-cut');
+      /* Revue T21 (D5) : un différé ou un vert appartient au LOT ; ESV peut afficher une autre partie (le moteur refuse alors, WRONG_PART, et le dit). */
+      const part = root.ArianePanel.state()?.batch?.scope?.part ?? root.ArianePanel.state()?.current?.identity?.part, cible = $('goto-cut-cible'), go = $('goto-cut');
       if (!go || !cible || !Number.isInteger(Number(part)) || go.disabled) { noter(go?.getAttribute?.('title') || 'Ouverture dans ESV indisponible pour l’instant.'); return; }
       cible.value = `${Number(part)}:${Number(v)}`; cliquer('goto-cut'); noter(`Ouverture du cut ${v} dans ESV…`); return;
     }
