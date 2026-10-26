@@ -129,11 +129,13 @@
     let vis = []; try { vis = A.visitesNatif(s?.native) || []; } catch { /* aucune */ }
     const faites = vis.filter(x => !x.encours), d = faites.map(x => x.d).filter(x => Number.isFinite(x) && x > 0).slice(-20);
     const go = $('goto-cut'), rc = $('reconnect'), ge = $('goto-cut-etat'), th = D.documentElement?.dataset?.theme, f5 = $('relecture-f5');
-    const onglet = (onglets.find(o => String(o.valeur) === String(choisi))?.texte || '').trim();
+    /* Connexion T21 : la puce nomme l'onglet que le service worker cible réellement (`connection.tabId`, celui du lot) quand il en garde un ; sinon le choix du panneau. */
+    const tabId = Number.isInteger(s?.connection?.tabId) ? String(s.connection.tabId) : null;
+    const onglet = (onglets.find(o => String(o.valeur) === (tabId ?? String(choisi)))?.texte || '').trim();
     return {
       activite: mode === 'native' ? 'echo' : 'orbite', statuts, allure: S5.allureLot(b, Date.now()),
       echo: { mediane: d.length >= 3 ? S5.quantile(d, 0.5) : null, marques: faites.slice(-60).map(x => /^VALIDATE_CORRECTED/.test(String(x.label || ''))) },
-      connexion: { statut: s?.connection?.status ?? null, reconnect: rc ? { visible: !rc.hidden, actif: !rc.disabled } : null },
+      connexion: { statut: s?.connection?.status ?? null, tabId, nomme: !!tabId && onglets.some(o => String(o.valeur) === tabId), reconnect: rc ? { visible: !rc.hidden, actif: !rc.disabled } : null },
       onglet, historique: Array.isArray(s?.partsHistory) ? s.partsHistory : null,
       goto: { present: !!go, actif: !!go && !go.disabled, raison: go?.getAttribute?.('title') || '', etat: ge?.dataset?.etat || '', texte: ge ? String(ge.textContent || '').trim() : '' },
       examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre',
@@ -177,6 +179,7 @@
   function maj(force) {
     if (!hote || secours) return;
     const s = root.ArianePanel.state(); if (!s) return;
+    entrer(s);   /* avant le premier dessin : Signal ne dessine jamais les boutons d'une vue que le panneau n'a pas rendue */
     let html;
     try {
       const snap = instantane(s);
@@ -190,6 +193,18 @@
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
     if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
+  }
+  /* Connexion T21 (fiches/CONNEXION_T21.md) : le panneau s'ouvre sur l'accueil du panneau d'avant (`#home`, background.js `openPanel`), où panel.js
+   * (`discover`) ne cherche pas les onglets ESV ; c'est le clic sur « Orbite » ou « Écho » de cet accueil qui les cherchait et connectait l'onglet unique.
+   * Signal n'a pas d'accueil : une fois, il entre dans la vue de l'activité qu'il affiche (Écho si une séance est en cours ou à terminer, sinon Orbite),
+   * par un clic sur l'onglet d'origine. Rien d'autre : la règle de connexion est celle de `discover` (onglet unique, rien d'actif). */
+  let entre = false;
+  function entrer(s) {
+    if (entre || variante !== 'signal' || secours) return;
+    entre = true;
+    if ((D.body?.dataset?.window || 'home') !== 'home') return;
+    const n = s?.native, echo = !!n && (['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status) || !!n.visits?.length);
+    cliquer(echo ? 'tab-native' : 'tab-automatic');
   }
   /* Secours : si l'habillage ne sait pas se dessiner, le panneau d'avant revient tel quel, avec la raison dans sa ligne d'avis. Rien d'autre ne change. */
   function secourir(e) {

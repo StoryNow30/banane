@@ -133,7 +133,9 @@
    addEventListener('resize',placerIndicateur);
  appliquerVue();entree();
    if(state)render(state);
-   void discover().catch(()=>{});
+   /* Connexion T21 : comme à l'ouverture, la liste des onglets et la connexion de l'onglet unique se voient tout de suite (sans attendre la relecture
+    * de chaque seconde), et un refus (page ESV d'une autre version, « Une autre Ariane »…) est dit. */
+   void discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);});
    if(which==='native'){renderReglages();void renderHealth();}
  }
  addEventListener('hashchange',()=>naviguer(routeDemandee(),false));
