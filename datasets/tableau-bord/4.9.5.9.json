@@ -1,0 +1,222 @@
+{
+ "format": "ariane-tableau-bord-v1",
+ "version": "4.9.5.9",
+ "commit": null,
+ "commitOutil": "0201319",
+ "date": "2026-10-26",
+ "populations": {
+  "reglage": {
+   "exports": [
+    {
+     "sha256": "ff6b32b4d92b34dce7a2ecf5c99c50998b4caed66b329ec8b037106fec5012c4",
+     "partie": 17,
+     "lotId": "bfb15534",
+     "cuts": 139
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 41,
+     "N": 139,
+     "p": 29.5,
+     "wilson95": [
+      22.5,
+      37.5
+     ]
+    },
+    "differes": {
+     "n": 41,
+     "N": 139,
+     "p": 29.5,
+     "wilson95": [
+      22.5,
+      37.5
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 3921,
+     "p90Ms": 6356,
+     "captureMedMs": 1160,
+     "analyseMedMs": 908,
+     "poste": "poste-719464",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": {
+     "lots": 1,
+     "cutsRelus": 241,
+     "dureeMs": 721814,
+     "msParCut": 2995,
+     "corriges": 27,
+     "modes": [
+      "corriger"
+     ]
+    },
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  },
+  "terrain": {
+   "exports": [
+    {
+     "sha256": "ff6b32b4d92b34dce7a2ecf5c99c50998b4caed66b329ec8b037106fec5012c4",
+     "partie": 17,
+     "lotId": "990020c6",
+     "cuts": 8
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 8,
+     "N": 8,
+     "p": 100,
+     "wilson95": [
+      67.6,
+      100
+     ]
+    },
+    "differes": {
+     "n": 8,
+     "N": 8,
+     "p": 100,
+     "wilson95": [
+      67.6,
+      100
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 2524,
+     "p90Ms": 4004,
+     "captureMedMs": 1428,
+     "analyseMedMs": 836,
+     "poste": "poste-719464",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": null,
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  }
+ },
+ "lots": [
+  {
+   "lot": "990020c6",
+   "partie": 17,
+   "version": "4.9.5.9",
+   "debut": "2026-10-19T12:57:45.558Z",
+   "population": "terrain",
+   "poste": "poste-719464",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-17-lot-15h51",
+    "nom": "ariane-journal-v4-1792417863622.json",
+    "sha256": "ff6b32b4d92b34dce7a2ecf5c99c50998b4caed66b329ec8b037106fec5012c4"
+   },
+   "cuts": 8,
+   "invalidesAuDepart": 139,
+   "posesLot": 0,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 8,
+   "sansPose": {
+    "n": 8,
+    "N": 8,
+    "p": 100,
+    "wilson95": [
+     67.6,
+     100
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 2524,
+    "p90Ms": 4004,
+    "cycles": 8,
+    "cycleV1MedMs": 2436,
+    "cycleV1P90Ms": 3977,
+    "captureMedMs": 1428,
+    "analyseMedMs": 836,
+    "decisionMedMs": 15,
+    "dureeMin": 1.5,
+    "silencesMin": 0,
+    "phases": null
+   },
+   "relecture": null
+  },
+  {
+   "lot": "bfb15534",
+   "partie": 17,
+   "version": "4.9.5.9",
+   "debut": "2026-10-19T12:59:19.691Z",
+   "population": "reglage",
+   "poste": "poste-719464",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-17-lot-15h51",
+    "nom": "ariane-journal-v4-1792417863622.json",
+    "sha256": "ff6b32b4d92b34dce7a2ecf5c99c50998b4caed66b329ec8b037106fec5012c4"
+   },
+   "cuts": 139,
+   "invalidesAuDepart": null,
+   "posesLot": 98,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 41,
+   "sansPose": {
+    "n": 41,
+    "N": 139,
+    "p": 29.5,
+    "wilson95": [
+     22.5,
+     37.5
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 3921,
+    "p90Ms": 6356,
+    "cycles": 136,
+    "cycleV1MedMs": 3605,
+    "cycleV1P90Ms": 6039,
+    "captureMedMs": 1160,
+    "analyseMedMs": 908,
+    "decisionMedMs": 63,
+    "dureeMin": 32.8,
+    "silencesMin": 22.2,
+    "phases": {
+     "n": 96,
+     "navigationCaptureMedMs": 1421,
+     "analyseMedMs": 889,
+     "decisionMedMs": 155,
+     "poseMedMs": 905,
+     "captureApresPoseMedMs": 150,
+     "validationMedMs": 199,
+     "cutSuivantMedMs": 150
+    }
+   },
+   "relecture": {
+    "mode": "corriger",
+    "issue": "fin",
+    "cutsRelus": 241,
+    "corriges": 27,
+    "dureeMs": 721814,
+    "msParCut": 2995
+   }
+  }
+ ]
+}

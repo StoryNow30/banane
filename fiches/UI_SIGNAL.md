@@ -27,17 +27,21 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
   - « En pause depuis » ne s'affiche que si le moteur fournit `batch.pausedAt`, promis dans T20a s'il est simple à ajouter.
   - Il n'y a pas d'allure de relecture : le module de relecture ne garde pas la durée par cut.
 
-## Ce qui dépend de T20a (pas encore sur le tronc)
+## T20a, fusionné
 
-- **État de la connexion** (`connection.status`), bouton `#reconnect`, historique `partsHistory`, déclencheur caché `#goto-cut`. Tant qu'ils manquent, Signal fait ceci :
-  - « Ouvrir » est grisé, avec la raison « Disponible avec la prochaine mise à jour du moteur » ;
-  - les réglages n'affichent pas l'historique des parties ;
-  - le bouton Reconnecter n'apparaît pas.
-- Dès que T20a est fusionné, ces éléments s'affichent sans autre changement. Il restera à vérifier les noms et à relancer les essais.
+- L'étape T20a du moteur est fusionnée : tronc e17078e, avec T20a puis T21a.
+- Signal utilise maintenant :
+  - l'état de la connexion (`connection.status`) ;
+  - le bouton `#reconnect`, dans la liste des onglets ESV et dans la palette ;
+  - l'historique `partsHistory`, dans les réglages ;
+  - l'heure de mise en pause `batch.pausedAt`, pour « en pause depuis » ;
+  - le déclencheur caché `#goto-cut` pour « Ouvrir dans ESV ».
+- « Ouvrir » envoie l'action « aller au cut », qui existait déjà. Elle est refusée pendant un lot en cours ou en pause, une relecture, une deuxième passe, une séance Écho, ou quand ESV n'est pas prêt. La raison s'affiche sur le bouton grisé.
+- Le relevé du sélecteur de parties (`partsSelector`) n'est pas encore affiché par Signal.
 
 ## Essais
 
 - `tests/signal-rendu.test.cjs` (le dessin) ;
 - `tests/ui5-panneau.test.cjs` (le branchement dans la page) ;
-- `tests/ui5-navigateur-signal-normal.test.cjs`, `-compact` et `-actions` (un vrai navigateur, en 600 × 760 et en 360 × 480, un fichier par partie pour tenir sous les 20 s de `tools/verify.cjs` : aucune erreur, rien qui déborde, un clic sur Signal envoie au service worker exactement ce qu'envoie le bouton d'origine, et les détails techniques s'ouvrent puis se referment).
+- `tests/ui5-navigateur-signal-normal.test.cjs`, `-compact`, `-actions` et `-ouvrir` (un vrai navigateur, en 600 × 760 et en 360 × 480, un fichier par partie pour tenir sous les 20 s de `tools/verify.cjs` : aucune erreur, rien qui déborde, un clic sur Signal envoie au service worker exactement ce qu'envoie le bouton d'origine, et les détails techniques s'ouvrent puis se referment).
 - Mettre la variable `SIGNAL_CAPTURES=<dossier>` pour obtenir les captures.

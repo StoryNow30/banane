@@ -1,0 +1,129 @@
+{
+ "format": "ariane-tableau-bord-v1",
+ "version": "4.9.5.15",
+ "commit": null,
+ "commitOutil": "0201319",
+ "date": "2026-10-26",
+ "populations": {
+  "reglage": {
+   "exports": [
+    {
+     "sha256": "9733b11b7e0938c94b4196a8876d040cd3bc1f766ae472a066f1b3cfaaa93d95",
+     "partie": 0,
+     "lotId": "41a5791f",
+     "cuts": 337
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 29,
+     "N": 337,
+     "p": 8.6,
+     "wilson95": [
+      6.1,
+      12.1
+     ]
+    },
+    "differes": {
+     "n": 29,
+     "N": 337,
+     "p": 8.6,
+     "wilson95": [
+      6.1,
+      12.1
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 4559,
+     "p90Ms": 7656,
+     "captureMedMs": 2607,
+     "analyseMedMs": 555,
+     "poste": "poste-719464",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": {
+     "lots": 1,
+     "cutsRelus": 439,
+     "dureeMs": 2026570,
+     "msParCut": 4616,
+     "corriges": 20,
+     "modes": [
+      "corriger"
+     ]
+    },
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  }
+ },
+ "lots": [
+  {
+   "lot": "41a5791f",
+   "partie": 0,
+   "version": "4.9.5.15",
+   "debut": "2026-10-20T17:07:37.689Z",
+   "population": "reglage",
+   "poste": "poste-719464",
+   "export": {
+    "collection": "2026-10-20_v4.9.5.15_partie-0",
+    "nom": "ariane-journal-v4-1792523191328.json",
+    "sha256": "9733b11b7e0938c94b4196a8876d040cd3bc1f766ae472a066f1b3cfaaa93d95"
+   },
+   "cuts": 337,
+   "invalidesAuDepart": 336,
+   "posesLot": 308,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 29,
+   "sansPose": {
+    "n": 29,
+    "N": 337,
+    "p": 8.6,
+    "wilson95": [
+     6.1,
+     12.1
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 4559,
+    "p90Ms": 7656,
+    "cycles": 334,
+    "cycleV1MedMs": 4251,
+    "cycleV1P90Ms": 7185,
+    "captureMedMs": 2607,
+    "analyseMedMs": 555,
+    "decisionMedMs": 12,
+    "dureeMin": 32.4,
+    "silencesMin": 4.4,
+    "phases": {
+     "n": 306,
+     "navigationCaptureMedMs": 2808,
+     "analyseMedMs": 554,
+     "decisionMedMs": 96,
+     "poseMedMs": 204,
+     "captureApresPoseMedMs": 144,
+     "validationMedMs": 180,
+     "cutSuivantMedMs": 146
+    }
+   },
+   "relecture": {
+    "mode": "corriger",
+    "issue": "fin",
+    "cutsRelus": 439,
+    "corriges": 20,
+    "dureeMs": 2026570,
+    "msParCut": 4616
+   }
+  }
+ ]
+}

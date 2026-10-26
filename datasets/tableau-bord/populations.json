@@ -1,0 +1,8 @@
+{
+  "format": "ariane-tableau-bord-populations-v1",
+  "note": "Population de chaque lot pour tools/tableau-bord.cjs (préfixes d'identifiant de lot, 8 caractères). Un lot non nommé est « terrain ». Réglage : les 9 lots de réglage et la 3:0 (cahier v2 § 2.1, base de la garde). Examen : la 3:1 (D-237, D-250 : lue pour mesure seulement, jamais pour régler).",
+  "populations": {
+    "reglage": ["c8d56eab", "9f97a998", "00e47936", "c224afa5", "79b34f68", "bfb15534", "eb1d9bc2", "fd7067f7", "f228f6f9", "41a5791f"],
+    "examen": ["94365229"]
+  }
+}

@@ -12,9 +12,9 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.19',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 19 (L1-e6)';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.20',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 20 (L1-e6)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -101,7 +101,9 @@ function rangerErreursDeLot(m){const ev=m.event.bind(m);
   return ev(type,{...detail,batchId:detail.batchId??m.s?.batch?.id??null,demandeA:d?.demandeA??null,commande:d?.commande??null});};}
 async function callSur(tabId,action,...args){const demande=demandeCommande(action);
  try{return await envoyerCommande(tabId,demande,action,...args);}
- catch(e){echecsCommande.set(String(e?.message),demande);while(echecsCommande.size>8)echecsCommande.delete(echecsCommande.keys().next().value);throw e;}}
+ catch(e){echecsCommande.set(String(e?.message),demande);while(echecsCommande.size>8)echecsCommande.delete(echecsCommande.keys().next().value);
+  /* T20a : page perdue pendant une commande ou une lecture : le statut le dit tout de suite. */
+  if(e?.code==='ESV_PAGE_ABSENTE'&&tabId===selectedTab&&tabId!==null&&engine?.s?.connection?.status!=='reconnecting')connexionStatut('unavailable',e.message,tabId);throw e;}}
 async function envoyerCommande(tabId,demande,action,...args){if(tabId===null)throw Error('Sélectionne un onglet ESV.');
  const tab=await chrome.tabs.get(tabId).catch(e=>{throw pageEsvAbsente(e);});
  /* D3 (4.8.5) : onglet sorti d'ESV pendant une lecture (ESV a quitté la page, ou
@@ -226,7 +228,7 @@ function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
  * avec l'état réel du lot ; jamais pendant une tâche (la boucle la clôt elle-même), jamais deux fois. */
 function cloreMesureHorsBoucle(){bilanClicsHorsVue(engine?.s?.batch);try{const b=engine?.s?.batch,t=timing?.batch;
  if(b?.id&&!engine.task&&OBS_CLOS.includes(b.state)&&t?.id===b.id&&!t.closed)timing.closeBatch(b.state);}catch{/* mesure seule : jamais bloquant */}}
-function marquerFinLot(b,cause){bilanClicsHorsVue(b);if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);}
+function marquerFinLot(b,cause){bilanClicsHorsVue(b);if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);finLotNoter(b);}
 /* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
 function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;bilanClicsHorsVue(b);
  if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));
@@ -478,7 +480,7 @@ function rangerObservations(m){try{
    fiche=EC?.ficheDepart?.(e,{batchId:e.batchId??lotE?.id??(echoId?'echo:'+echoId:null),
     /* 4.9.0.18 : en Écho, la partie est celle du cut affiché (aucun lot). */
     partie:echoId?engine?.s?.current?.identity?.part??null:(e.batchId??lotE?.id)===lotE?.id?lotE?.scope?.part:null,version:VERSION});
-  if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).catch(()=>{});
+  if(fiche)void Promise.resolve(EC.noterDepart(chrome.storage.local,fiche)).then(()=>historiqueRelire()).catch(()=>{});
   listeApresChargement(e,fiche,courant.ctx);}catch{/* la fiche n'est pas critique */}}
  for(const e of events){try{void Promise.resolve(store.putEvent(e)).catch(()=>{obsState.lost++;});}catch{obsState.lost++;}}
  /* OBS-5 : réponse en grâce marquée ; le pont n'en tire aucun début de séance (ni marque, ni résumés d'avant séance). */
@@ -766,7 +768,22 @@ async function sondeEtTampon(tabId){
    if(typeof t?.id==='string'&&t.id!==id)return {version:String(t.version??''),versionName:typeof t.versionName==='string'?t.versionName:null,proprietaire:t.id};
    window.__ARIANE_PROPRIETAIRE={id,version,versionName};return null;}});
  return r?.[0]?.result??null;}
-async function equiperOnglet(tabId){
+/* T20a (D-243, D-250) — STATUT DE CONNEXION TENU À JOUR. `engine.s.connection` = { status, observedAt, message, tabId } :
+ *   'ready'        à chaque équipement réussi de l'onglet (« Connecter », « Reconnecter », reconnexion après F5, reprise d'Écho, reprise du lot) et
+ *                  à chaque lecture réussie de la vue (`pollCurrent`) ;
+ *   'reconnecting' pendant une reconnexion (après F5, « Reconnecter », reprise d'Écho) ;
+ *   'unavailable'  à chaque perte de la page (rechargement, onglet sorti d'ESV, page absente pendant une commande, équipement impossible) ;
+ *   'no-tab'       sans onglet ESV choisi, ou onglet choisi fermé.
+ * Le message « ESV n'est pas connecté » du panneau se fonde sur ce statut seul. Aucune commande ESV. */
+function connexionStatut(status,message=null,tabId=selectedTab){if(!engine?.s)return;
+ engine.s.connection={status,observedAt:new Date().toISOString(),message:typeof message==='string'&&message?message.slice(0,400):null,tabId:Number.isInteger(tabId)?tabId:null};}
+/* ÉQUIPEMENTS SÉRIALISÉS PAR ONGLET : un équipement en cours sur un onglet est partagé par toute nouvelle demande sur le même onglet (reprise d'Écho
+ * et reconnexion après F5 sur le même `complete`, clic « Reconnecter » pendant une reprise) : une seule injection. */
+const equipements=new Map();
+function equiperOnglet(tabId){const enCours=equipements.get(tabId);if(enCours)return enCours;
+ const p=equiperOngletUneFois(tabId).then(r=>{connexionStatut('ready',null,tabId);return r;});
+ equipements.set(tabId,p);const fin=()=>{if(equipements.get(tabId)===p)equipements.delete(tabId);};p.then(fin,fin);return p;}
+async function equiperOngletUneFois(tabId){
  const deja=await sondeEtTampon(tabId);
  if(deja&&deja.proprietaire!==chrome.runtime.id)throw autreAriane(deja.versionName||deja.version,deja.proprietaire===null);
  if(deja&&deja.version!==VERSION)throw aRecharger();
@@ -779,8 +796,27 @@ async function equiperOnglet(tabId){
  if(ping?.version!==VERSION)throw aRecharger();
  if(ping?.intrusion)throw definitif(`Ariane ${VERSION_NAME} en sécurité : une autre Ariane a tenté de commander cet onglet (« ${ping.intrusion.action} »). Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.`);
  /* 4.9.5.3 (S6) : empreinte du contrat ESV, demandée par un second ping (lecture seule) ; une panne n'empêche jamais la connexion. */
- if(releveOn('empreinte'))void callSur(tabId,'ping',{contrat:true}).then(r=>contratNoter(r?.contrat,tabId),()=>{});}
-async function reconnecterESV(delaiMs,garde=()=>{}){const fin=Date.now()+delaiMs;let derniere=null;
+ /* T20a : la même lecture rend le relevé du sélecteur de parties de la page (`selecteurParties`, src/adapter-page.js, réglage `releves.selecteurParties`),
+  * en lecture seule ; empreinte coupée : ni l'une ni l'autre (aucun ping de plus). */
+ if(releveOn('empreinte'))void callSur(tabId,'ping',{contrat:true}).then(r=>{selecteurNoter(r?.selecteurParties);return contratNoter(r?.contrat,tabId);},()=>{});}
+/* T20a (architecture § P, D-250) — RELEVÉ DU SÉLECTEUR DE PARTIES de la page ESV (lecture seule, pour la file de parties de T27) : SUPPOSÉ, une liste
+ * de liens `…&p=N` (tests/esv-maquette/README.md). `partsSelector` = { at, status: 'ok' | 'absent' | 'illisible', current, parts: [{part, label, current}] } ;
+ * null tant qu'aucun relevé n'a été rendu (adaptateur d'avant, réglage coupé). Relu champ par champ (source non fiable), journalisé quand il change. */
+let partsSelector=null,partsSelectorSig=null;
+function selecteurNoter(r){try{if(!r||typeof r!=='object')return;
+ const parts=[];const vus=new Set();
+ if(Array.isArray(r.parts))for(const x of r.parts.slice(0,500)){if(!Number.isInteger(x?.part)||x.part<0||x.part>1e6||vus.has(x.part))continue;vus.add(x.part);
+  const label=typeof x.label==='string'?x.label.replace(/\s+/g,' ').trim().slice(0,40)||null:null;parts.push({part:x.part,label,current:x.current===true});}
+ const status=['ok','absent','illisible'].includes(r.status)?r.status:'illisible';
+ const current=status==='ok'&&Number.isInteger(r.current)&&vus.has(r.current)?r.current:null;
+ partsSelector={at:new Date().toISOString(),status,current,parts:status==='ok'?parts:[]};
+ const sig=JSON.stringify([status,current,partsSelector.parts]);
+ if(sig!==partsSelectorSig){partsSelectorSig=sig;journalerSimple('releve-selecteur-parties',{status,current,n:partsSelector.parts.length,parts:partsSelector.parts});}}catch{/* relevé seulement */}}
+/* T20a : statut « reconnecting » pendant la reconnexion de la reprise du lot, « ready » à l'équipement, « unavailable » si elle échoue. */
+async function reconnecterESV(delaiMs,garde=()=>{}){connexionStatut('reconnecting','Reprise du lot : Ariane se reconnecte à la page ESV rechargée.');
+ try{return await reconnecterESVBoucle(delaiMs,garde);}
+ catch(e){if(engine?.s?.connection?.status==='reconnecting')connexionStatut('unavailable',e?.message);throw e;}}
+async function reconnecterESVBoucle(delaiMs,garde){const fin=Date.now()+delaiMs;let derniere=null;
  while(Date.now()<fin){garde();try{const tab=await chrome.tabs.get(selectedTab);
    if(tab?.status&&tab.status!=='complete'){await attendre(500);continue;}
    await equiperOnglet(selectedTab);return;}
@@ -1296,7 +1332,33 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
   commandLot=function(...args){return timing.trackTask('command-lot',()=>commander.apply(this,args));};
  }
  await engine.init();
- manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();})();
+ /* T20a : chaque écriture de l'état suit le lot (heure de la pause, fiche de fin de lot persistante) ; aucune décision ne lit ce suivi. */
+ const sauverEtat=engine.save.bind(engine);engine.save=async(...a)=>{try{lotSuivre();}catch{/* suivi seulement */}return sauverEtat(...a);};
+ manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();
+ await historiqueRelire();if(selectedTab===null)connexionStatut('no-tab','Aucun onglet ESV choisi.',null);})();
+/* T20a (D-243, D-246, D-250) — HISTORIQUE DES PARTIES (src/historique-parties.js). Fiches de départ (`banane3FichesDepart`) et fiches de fin de lot
+ * (`banane55FinsLot`) relues en mémoire pour la vue du panneau (`partsHistory`) ; la fiche de fin d'un lot est écrite quand le lot est clos (ou en
+ * erreur), complétée par son motif d'arrêt et par les cuts écrits par la deuxième passe. `batch.pausedAt` : heure d'entrée en pause, retirée à la reprise. */
+const finsLot={departs:[],fins:[],sig:new Map(),fin:new Map()};
+async function historiqueRelire(){const H=globalThis.BananeHistoriqueParties,EC=cacheExport();
+ try{finsLot.departs=EC?await EC.lireDeparts(chrome.storage.local):[];}catch{finsLot.departs=[];}
+ try{finsLot.fins=H?await H.lireFins(chrome.storage.local):[];}catch{finsLot.fins=[];}}
+function partsHistory(){const H=globalThis.BananeHistoriqueParties;if(!H)return [];
+ try{return H.historique({departs:finsLot.departs,fins:finsLot.fins,courant:engine?.s?.batch||null,version:VERSION});}catch{return [];}}
+function lotSuivre(){const b=engine?.s?.batch;if(!b?.id)return;
+ if(/^PAUSED/.test(b.state||'')){if(!b.pausedAt)b.pausedAt=new Date().toISOString();}else if(b.pausedAt)delete b.pausedAt;
+ finLotNoter(b);}
+function finLotNoter(b){const H=globalThis.BananeHistoriqueParties;if(!H||!b?.id)return;
+ /* La fiche déjà écrite (avant un redémarrage du service worker) garde son heure de fin et son motif : rien n'est réécrit plus tard « à maintenant ». */
+ try{const at=finDuLot(b),deja=finsLot.fins.find(x=>x?.batchId===b.id);
+  const endedAt=Number.isFinite(at)?new Date(at).toISOString():deja?.endedAt||finsLot.fin.get(b.id)||new Date().toISOString();
+  const f=H.ficheFin(b,{version:VERSION,motif:b.stoppedAtEnd?.reason??obsFins.get(b.id)?.cause??deja?.motif??null,at:endedAt});if(!f)return;
+  finsLot.fin.set(b.id,f.endedAt);while(finsLot.fin.size>16)finsLot.fin.delete(finsLot.fin.keys().next().value);
+  const sig=JSON.stringify(f);if(finsLot.sig.get(b.id)===sig)return;finsLot.sig.set(b.id,sig);while(finsLot.sig.size>16)finsLot.sig.delete(finsLot.sig.keys().next().value);
+  void Promise.resolve(H.noterFin(chrome.storage.local,f)).then(l=>{if(Array.isArray(l))finsLot.fins=l;}).catch(()=>{});}catch{/* fiche seulement */}}
+/* Fin de la deuxième passe d'un lot : ses cuts écrits complètent la fiche de fin du lot (comptés à part des différés, D-238). */
+function finLotPasse(vue){const H=globalThis.BananeHistoriqueParties;if(!H||typeof vue?.lotId!=='string'||!Number.isInteger(vue.ecrites))return;
+ void Promise.resolve(H.noterFin(chrome.storage.local,{batchId:vue.lotId,ecritsPasse:vue.ecrites})).then(l=>{if(Array.isArray(l))finsLot.fins=l;}).catch(()=>{});}
 /* 4.7.10 — la décision commande. La proposition du moteur n'est pas modifiée
  * (l'événement « proposed » la garde telle quelle) : une NOUVELLE proposition,
  * même identifiant, porte les rails de la décision et devient celle du lot.
@@ -1702,7 +1764,7 @@ function passeDiffPlanifier(){const b=engine?.s?.batch,rg=passeDiffReglage();
    passeDiff.reprise={b,rg,vue};return passeDiffEcrire(b,poses,rg,vue);});}));}
 function passeDiffSuivre(vue,travail){
  passeDiff.cours=travail.catch(e=>{vue.etat='erreur';vue.message=String(e?.message||e).slice(0,160);journalerSimple('passe-differes-erreur',{lotId:vue.lotId,mode:vue.mode,message:vue.message});})
-  .finally(()=>{if(vue.etat==='calcul'||vue.etat==='ecriture')vue.etat='finie';passeDiff.cours=null;});}
+  .finally(()=>{if(vue.etat==='calcul'||vue.etat==='ecriture')vue.etat='finie';passeDiff.cours=null;finLotPasse(vue);});}
 async function l1PoserSansValider(p){const clic=clicHumainDuLot(),opt={...(clic?{clicHumain:clic}:{}),...(p.plan?{deplacerVue:p.plan}:{})};
  const ev={identity:{part:p.identity.part??null,cut:p.identity.cut??null},batchId:engine?.s?.batch?.id??null,...p.resume,vueDeplacee:!!p.plan};
  try{const r=Object.keys(opt).length?await applyInESV(p.before,p.rails,opt):await applyInESV(p.before,p.rails);
@@ -2072,7 +2134,7 @@ chrome.runtime.onConnect.addListener(port=>{
 });
 chrome.windows.onRemoved?.addListener(id=>{panelWindows.delete(id);for(const [port,info] of panelPorts)if(info.windowId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
 chrome.tabs.onRemoved?.addListener(id=>{for(const [port,info] of panelPorts)if(info.tabId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});void contratOublier(id);
- if(id===selectedTab)void ready.then(()=>echoPagePerdue('tab-closed')).catch(()=>{});});
+ if(id===selectedTab)void ready.then(()=>{connexionStatut('no-tab','Onglet ESV fermé : rouvre ESV, puis choisis l’onglet dans « Connexion à ESV ».',id);return echoPagePerdue('tab-closed');}).catch(()=>{});});
 /* 4.9.0.18 (AM-05, audit Écho) — PAGE ESV RECHARGÉE PENDANT ÉCHO. La barrière d'entrée et l'observateur vivent dans le document :
  * après un F5 ils n'existent plus et rien ne le disait (Écho n'envoie aucune commande qui aurait échoué). La session est
  * mise en pause « page perdue », l'alerte s'affiche dans ESV, puis l'observation REPREND TOUTE SEULE quand la page est
@@ -2093,9 +2155,14 @@ function chargementEsvPret(label,R,now=Date.now()){
  if(!Number.isInteger(label?.part)||!Number.isInteger(label?.cut)||label.part<1)return false;/* « partie 0 » : libellé de chargement d'ESV */
  if(chargementEsv.listePages>0)return now-chargementEsv.derniereListeMs>=R.silenceListeMs;
  return label.cut>=1&&label.part>=1&&now-chargementEsv.debutMs>=R.attenteSansListeMs;}
-async function echoReprise(tabId){const n=engine?.s?.native;if(!n||n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||!n.pageLost||n.pageLost.reason==='tab-closed')return;
+/* T20a : une reprise d'Écho qui s'arrête sans avoir ré-équipé la page ne laisse pas le statut à « reconnecting ». */
+async function echoReprise(tabId){const n=engine?.s?.native,tente=!!n&&n.status==='PAUSED_ADAPTER_UNRESPONSIVE'&&!!n.pageLost&&n.pageLost.reason!=='tab-closed'&&!n.pageLost.repriseEnCours
+  &&globalThis.BananeSettings?.echo?.repriseAutomatique!==false;
+ try{await echoRepriseCorps(tabId);}
+ finally{if(tente&&engine?.s?.connection?.status==='reconnecting'&&!equipements.size)connexionStatut('unavailable','Page ESV rechargée : Écho ne s’y est pas reconnecté. Clique sur Connecter puis Reprendre.',tabId);}}
+async function echoRepriseCorps(tabId){const n=engine?.s?.native;if(!n||n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||!n.pageLost||n.pageLost.reason==='tab-closed')return;
  if(globalThis.BananeSettings?.echo?.repriseAutomatique===false||n.pageLost.repriseEnCours)return;
- const perdue=n.pageLost,R=repriseEchoDelais();perdue.repriseEnCours=true;await syncLauncher().catch(()=>{});
+ const perdue=n.pageLost,R=repriseEchoDelais();perdue.repriseEnCours=true;connexionStatut('reconnecting','Page ESV rechargée : Écho s’y reconnecte.',tabId);await syncLauncher().catch(()=>{});
  let derniere=null,fin=Date.now()+R.delaiMaxMs,genFin=chargementEsv.gen,genEquipe=-1,echecs=0,attente=null;
  try{while(Date.now()<fin){
    if(n.status!=='PAUSED_ADAPTER_UNRESPONSIVE'||n.pageLost!==perdue)return;/* reprise manuelle, session finie : rien à faire */
@@ -2112,11 +2179,51 @@ async function echoReprise(tabId){const n=engine?.s?.native;if(!n||n.status!=='P
  catch(e){derniere=e;}
  if(n.pageLost===perdue){perdue.repriseEnCours=false;
   n.message='Écho : reprise automatique impossible après le rechargement ('+(derniere?.message||'ESV n’a pas fini de charger : '+(attente||'page sans réponse'))+'). Clique sur Connecter puis Reprendre.';
+  if(engine.s.connection?.status!=='ready')connexionStatut('unavailable',n.message,tabId);
   await engine.save();await syncLauncher().catch(()=>{});}}
 chrome.tabs.onUpdated?.addListener((tabId,info,tab)=>{if(tabId!==selectedTab)return;
  if(info.status==='loading')chargementEsvReset();
- void ready.then(async()=>{if(info.status==='loading'&&native?.running())await echoPagePerdue('page-reloaded');
-  else if(info.status==='complete'&&esvURL(tab?.url))await echoReprise(tabId);}).catch(()=>{});});
+ void ready.then(async()=>{
+  /* T20a : perte de la page, dite tout de suite (statut). */
+  if(info.status==='loading'){connexionStatut('unavailable','Page ESV en cours de rechargement.',tabId);if(native?.running())await echoPagePerdue('page-reloaded');}
+  else if(info.status==='complete'&&esvURL(tab?.url)){await Promise.all([echoReprise(tabId),reconnexionAuto(tabId)]);}
+  else if(info.status==='complete'&&tab?.url&&!esvURL(tab.url))connexionStatut('unavailable','L’onglet choisi n’affiche plus ESV : rouvre ESV dans cet onglet.',tabId);}).catch(()=>{});});
+/* T20a (D-243, D-248, architecture module U) — RECONNEXION AUTOMATIQUE APRÈS F5. À la fin du chargement de l'onglet choisi (`complete`), l'onglet est
+ * ré-équipé (`equiperOnglet` : sonde, adaptateur, pont, `ping` ; aucune commande ESV), sauf pendant ce qui gère déjà la page ou ne doit pas être
+ * dérangé : Écho (il a sa propre reprise, `echoReprise`), Correction, un lot ouvert (en cours ou en pause : « Reprendre » le rattache lui-même, le lot
+ * n'est jamais relancé seul), une action du moteur, la deuxième passe, la relecture, une reprise du lot, un retour au cut. Le contrôle « Une autre
+ * Ariane » est celui de `equiperOnglet` : refus définitif, rien d'injecté, aucun nouvel essai. Un nouveau rechargement arrête l'essai en cours.
+ * Réglage `connexion` (BananeSettings, facultatif) : `reconnexionAuto` (false : comme avant), `pollMs`, `delaiMaxMs`. Journal : `reconnexion-auto`. */
+const reconnexionDelais=()=>({reconnexionAuto:true,pollMs:500,delaiMaxMs:60000,...(globalThis.BananeSettings?.connexion||{})});
+function refusReconnexionAuto(){const b=engine?.s?.batch;
+ if(selectedTab===null)return 'aucun onglet ESV choisi';
+ if(native?.active())return 'Écho actif';
+ if(manual?.active())return 'Correction active';
+ if(b&&!OBS_CLOS.includes(b.state))return b.state==='RUNNING'?'lot en cours : il se reconnecte seul ou s’arrête en pause':'lot ouvert : clique sur « Reprendre », il se reconnecte seul';
+ if(engine?.busy||engine?.task)return 'action d’Ariane en cours';
+ if(passeDiff.cours||passeDiff.ecriture)return 'deuxième passe en cours';
+ if(passeActive())return 'relecture en cours ou en pause';
+ if(repriseEnCours)return 'reprise du lot en cours';
+ if(retourCutEnCours)return 'retour à un cut en cours';
+ return null;}
+async function reconnexionAuto(tabId){
+ const R=reconnexionDelais();if(R.reconnexionAuto===false||tabId!==selectedTab)return;
+ const refus=refusReconnexionAuto();
+ if(refus){if(!native?.active())connexionStatut('unavailable',`Page ESV rechargée ; pas de reconnexion automatique (${refus}).`,tabId);return;}
+ const gen=chargementEsv.gen,t0=Date.now();let derniere=null,essais=0;
+ connexionStatut('reconnecting','Page ESV rechargée : Ariane s’y reconnecte.',tabId);
+ const fin=(resultat,motif)=>{journalerSimple('reconnexion-auto',{resultat,motif:motif?String(motif).slice(0,200):null,essais,ms:Date.now()-t0});};
+ while(Date.now()-t0<R.delaiMaxMs){
+  if(gen!==chargementEsv.gen||tabId!==selectedTab)return fin('abandon','page rechargée de nouveau ou onglet changé');
+  const r=refusReconnexionAuto();if(r){connexionStatut('unavailable',`Page ESV rechargée ; reconnexion interrompue (${r}).`,tabId);return fin('abandon',r);}
+  try{const tab=await chrome.tabs.get(tabId);
+   if(!esvURL(tab?.url)){connexionStatut('unavailable','L’onglet choisi n’affiche plus ESV : rouvre ESV dans cet onglet.',tabId);return fin('abandon','onglet hors ESV');}
+   if(tab.status&&tab.status!=='complete'){await attendre(R.pollMs);continue;}
+   essais++;await equiperOnglet(tabId);return fin('equipe',null);}
+  catch(e){derniere=e;if(e?.definitif){connexionStatut('unavailable',e.message,tabId);return fin('refus',e.message);}}
+  await attendre(R.pollMs);}
+ const m='Reconnexion automatique impossible après le rechargement'+(derniere?.message?` (${derniere.message})`:'')+' : clique sur « Reconnecter ».';
+ if(gen===chargementEsv.gen)connexionStatut('unavailable',m,tabId);fin('echec',derniere?.message||'délai dépassé');}
 /* 4.7.19 (KI-059) — LA VUE ET LES EXPORTS TIENNENT DANS UN MESSAGE.
  * Un message chrome.runtime est limité à 64 Mio. `records` et `incomplete`
  * grandissent d'un enregistrement par cut (~9 Ko) et sont déjà dans le
@@ -2135,7 +2242,9 @@ const vocabulaire=t=>typeof t==='string'?VOCABULAIRE.reduce((x,[a,b])=>x.replace
 function panelView(v){if(!v||typeof v!=='object'||!Array.isArray(v.records)||!Object.hasOwn(v,'collection')||!Object.hasOwn(v,'batch'))return v;
  const {records,incomplete,...rest}=v;
  /* D3 : « fin de partie probable » : une seule règle, celle de la reprise. */
- rest.finDePartieProbable=departOuvert(engine.s.batch);if(avisContrat.lignes.length)rest.avisContrat=avisContrat.lignes.slice();if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
+ rest.finDePartieProbable=departOuvert(engine.s.batch);
+ /* T20a : historique des parties (fiches persistantes) et relevé du sélecteur de parties (null tant qu'aucun relevé). */
+ rest.partsHistory=partsHistory();rest.partsSelector=partsSelector?{...partsSelector,parts:partsSelector.parts.map(x=>({...x}))}:null;if(avisContrat.lignes.length)rest.avisContrat=avisContrat.lignes.slice();if(typeof rest.notice==='string')rest.notice=vocabulaire(rest.notice);
  if(typeof rest.native?.message==='string')rest.native={...rest.native,message:vocabulaire(rest.native.message)};
  if(typeof rest.batch?.error?.message==='string')rest.batch={...rest.batch,error:{...rest.batch.error,message:vocabulaire(rest.batch.error.message)}};
  /* `lotPosed` (4.7.19, un cut posé = une entrée) : son nombre suffit au panneau. */
@@ -2158,9 +2267,11 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
   ...(passeDiff.vue?{passeDifferes:{...passeDiff.vue}}:{})};}
 function pollCurrent(){
  /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
- if(pollPromise||engine.busy||engine.task||repriseEnCours||retourCutEnCours||manual?.active()||native?.active()||selectedTab===null)return;
- pollPromise=engine.observe().then(()=>{engine.s.connection={status:'ready',observedAt:new Date().toISOString()};})
-  .catch(e=>{engine.s.connection={status:'unavailable',message:e.message};})
+ /* T20a : ni pendant un équipement de l'onglet (le statut est alors « reconnecting », puis « ready »). */
+ if(pollPromise||engine.busy||engine.task||repriseEnCours||retourCutEnCours||manual?.active()||native?.active()||selectedTab===null||equipements.size)return;
+ const tab=selectedTab,gen=chargementEsv.gen;   /* une lecture partie avant un rechargement ne dit rien de la page rechargée */
+ pollPromise=engine.observe().then(()=>{if(gen===chargementEsv.gen&&tab===selectedTab)connexionStatut('ready',null,tab);})
+  .catch(e=>{if(!equipements.size&&gen===chargementEsv.gen&&tab===selectedTab)connexionStatut('unavailable',e.message,tab);})
   .finally(()=>{pollPromise=null;});
 }
 /* V1 (test 2) — la mesure ne bloque ni ne fait échouer un export. `timing.flush()`
@@ -2191,7 +2302,9 @@ async function periodeExport(v1){
  const masques=new Set((mq?.lotsVides||[]).filter(e=>lotVideMasque(e,timing)).map(e=>typeof e==='string'?e:e.id));let t=v1;
  if(t&&masques.size&&Array.isArray(t.lots))t={...t,lots:t.lots.filter(l=>!masques.has(l.batchId)),lotsVidesDuCache:t.lots.filter(l=>masques.has(l.batchId)).map(l=>l.batchId)};
  let fichesDepart=[];try{fichesDepart=EC?await EC.lireDeparts(chrome.storage.local):[];}catch{/* illisible : aucune fiche */}
- return {v1TimingExport:t,fichesDepart,exportPeriod:{startedAt:mq?.at??null,previousDataCleared:mq?{at:mq.at,afterExportAt:mq.afterExportAt??null,manual:mq.manuel===true,text:EC.texte(mq),counts:mq.counts??null}:null}};
+ /* T20a : fiches de fin de lot (clé à part, jamais vidée), recopiées comme les fiches de départ. */
+ let finsLotExport=[];try{finsLotExport=globalThis.BananeHistoriqueParties?await globalThis.BananeHistoriqueParties.lireFins(chrome.storage.local):[];}catch{/* illisible : aucune fiche */}
+ return {v1TimingExport:t,fichesDepart,finsLot:finsLotExport,exportPeriod:{startedAt:mq?.at??null,previousDataCleared:mq?{at:mq.at,afterExportAt:mq.afterExportAt??null,manual:mq.manuel===true,text:EC.texte(mq),counts:mq.counts??null}:null}};
 }
 /* Après un vidage, `closureSummary` ne liste plus les coupes sans état final / sans confirmation
  * des enregistrements vidés (l'état du moteur, lui, garde tout : engine.js n'est pas touché). */
@@ -2274,7 +2387,7 @@ async function viderCacheExport(args){
  * le lot à son cut ; la garde s'efface. */
 const PAUSES_LOT=new Set(['PAUSED','STOPPED','PAUSED_ADAPTER_UNRESPONSIVE']);
 /* Pendant un retour en vol, ces actions attendent son résultat (elles agiraient sur un cut en mouvement). */
-const PENDANT_RETOUR=new Set(['connect','native-start','native-resume','start','resume','retry','manual-takeover','manual-completion','explicit-skip',
+const PENDANT_RETOUR=new Set(['connect','reconnect','native-start','native-resume','start','resume','retry','manual-takeover','manual-completion','explicit-skip',
  'before','after','lidar','analyze','accept','restore','reconcile','close-uncertain','cancel-before']);
 let retourCutEnCours=null;
 const partCut=x=>Number.isInteger(x?.part)&&Number.isInteger(x?.cut)?{part:x.part,cut:x.cut}:null;
@@ -3034,8 +3147,18 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   const tab=await chrome.tabs.get(Number(args.tabId));if(!esvURL(tab.url))throw Error('Onglet ESV invalide.');
   // Only extension-origin UI requests can inject the fixed, bundled adapter.
   await equiperOnglet(tab.id);selectedTab=tab.id;await chrome.storage.local.set({banane3Tab:selectedTab});
-  await engine.observe();engine.s.connection={status:'ready',observedAt:new Date().toISOString()};await engine.save();return engine.view();}
- if(action==='view'){pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
+  await engine.observe();connexionStatut('ready',null,tab.id);await engine.save();return engine.view();}
+ /* T20a (D-243) : « Reconnecter » ré-équipe l'onglet choisi (comme après un F5) ; aucune commande ESV. Mêmes refus que « Connecter ». */
+ if(action==='reconnect'){
+  if(selectedTab===null){connexionStatut('no-tab','Aucun onglet ESV choisi.',null);throw Error('Aucun onglet ESV choisi : choisis-le dans « Connexion à ESV ».');}
+  if(engine.busy||engine.task||manual.running()||native.running())throw Error('Termine l’activité en cours avant de reconnecter ESV.');
+  if(repriseEnCours)throw Error('Reprise du lot en cours : attends qu’elle se termine.');
+  const tab=selectedTab;connexionStatut('reconnecting','Reconnexion à la page ESV demandée.',tab);
+  try{await equiperOnglet(tab);}catch(e){connexionStatut('unavailable',e?.message,tab);throw e;}
+  try{await engine.observe();}catch{/* page équipée ; la lecture de la vue reprendra */}
+  await engine.save();return engine.view();}
+ if(action==='view'){if(selectedTab===null&&engine.s.connection?.status!=='no-tab')connexionStatut('no-tab','Aucun onglet ESV choisi.',null);
+  pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');
   /* 4.9.0.18 (AM-23, AM-06) : libellé du cut illisible = aucune identité pour toute la séance : refus ; plusieurs onglets ESV : dit. */
@@ -3131,7 +3254,7 @@ async function dispatch(m){await ready;const {action,args={}}=m;
   * à l'état, rangé ailleurs dans le même fichier. */
  const exporte=['journal-meta','dataset-meta','journal','dataset'].includes(action),periode=exporte?await periodeExport(await flushMesure()):null;
  const v1TimingExport=periode?.v1TimingExport??null;
- const timingMeta={...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{})};
+ const timingMeta={...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{}),...(periode?.finsLot?.length?{finsLot:periode.finsLot}:{})};
  /* 4.9.0.16 (test 15, 5c) : les 64 dernières transitions du lot (B3), dans le journal exporté. */
  const transitionsLot=coordinateurLot.journal.map(t=>({nom:t.nom,lot:t.lot,etat:t.etat,at:t.at??null}));
  if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),transitionsLot};

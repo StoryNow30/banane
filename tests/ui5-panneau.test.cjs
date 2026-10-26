@@ -208,15 +208,16 @@ test('l’habillage : chargé après panel.js, dans la page du panneau seulement
 });
 
 /* D-250 : Signal dans la page. */
-const {element}=require('./helpers/ui5-page.cjs');
 const LOT_FINI={...LOT,state:'COMPLETED',deferred:[{cut:4809,deferredAt:'2026-10-25T13:33:00Z',unresolvedRails:['right']},{cut:4803}],processed:[{durationMs:6000},{durationMs:8000},{durationMs:7000}]};
 test('Signal · Revue V2 : « Examiner » est gardé par lot sans message ; « Ouvrir » recopie la cible et clique le bouton caché du panneau, jamais autre chose',async()=>{
  const p=await monter({etat:etat(LOT_FINI)});
  p.ui.agir('sg:examiner:d:4809');await p.attendre(10);
  assert.deepEqual(js(p.ecrits.at(-1)),{banane51Examines:{lot:'L1',cles:['d:4809']}});assert.match(p.hote.innerHTML,/data-act="sg:examiner:d:4809" aria-pressed="true"/);
  p.ui.agir('sg:examiner:d:4809');await p.attendre(10);assert.deepEqual(js(p.ecrits.at(-1)),{banane51Examines:{lot:'L1',cles:[]}});
+ for(const id of ['goto-cut','goto-cut-cible','goto-cut-etat'])assert.ok(p.els[id],id+' : dans panel.html (T20a)');
+ const go=p.els['goto-cut'];delete p.els['goto-cut'];
  p.ui.agir('sg:ouvrir:4809');assert.match(p.hote.innerHTML,/indisponible pour l’instant/,'sans le bouton du moteur : une note, rien d’autre');
- for(const id of ['goto-cut','goto-cut-cible','goto-cut-etat'])p.els[id]=element(id);
+ p.els['goto-cut']=go;
  p.ui.agir('sg:ouvrir:4809');assert.equal(p.els['goto-cut-cible'].value,'13:4809');assert.equal(p.els['goto-cut'].clics,1);
  p.els['goto-cut'].disabled=true;p.ui.agir('sg:ouvrir:4803');assert.equal(p.els['goto-cut'].clics,1,'grisé par le panneau : pas de clic');
  assert.deepEqual(js(p.envoyes),[],'aucun message au service worker');

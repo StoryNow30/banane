@@ -6,7 +6,8 @@
  *
  *   node tools/banc-differes.cjs rejouer  --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --sortie R.jsonl
  *                                         [--profils base,L1,L1-v,L1-s,L1-se] [--parametres datasets/gcv2-parametres-h6.json] [--liste LISTE.json]
- *                                         [--juger-partie-reservee]
+ *                                         [--juger-partie-reservee] [--chrono]
+ *                                         (`--chrono`, T21a : temps de calcul par cut `ms` = analyse, décision, passe ; garde de non-régression, critère 6-i)
  *   node tools/banc-differes.cjs predire  (mêmes arguments que rejouer ; imprime le SHA-256 du fichier, exige --juger-partie-reservee pour une
  *                                         partie réservée ; aucune entrée humaine, aucun Écho)
  *   node tools/banc-differes.cjs agreger  --rejeu R.jsonl [--rejeu …] [--juges CUTS.jsonl …] [--inventaire INV.json] [--json S.json] [--md S.md]
@@ -114,7 +115,10 @@ function plagesDe(mem, e) {
 }
 const dans = (plages, c) => plages.some(([a, b]) => c >= a && c <= b);
 
-function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null }) {
+/* T21a (garde de non-régression, critère 6-i) : `chrono` ajoute à chaque ligne `ms` = { analyse, decision[, passe] } (temps de calcul du banc, ms, par cut) et à
+ * l'en-tête `chrono: { passeMs }`. Mesure seulement : sans `chrono`, la sortie est inchangée (parités et essais). */
+function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false }) {
+  const horloge = () => Number(process.hrtime.bigint()) / 1e6;
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
   /* L1-se : référence d'écartement de chaque cut, lue dans l'instantané de la liste d'ESV du départ de partie (décompacté) ; sans liste : aucune. */
   const referenceDe = cut => liste ? EL.referenceEcartement(liste, cut) : null;
@@ -149,7 +153,10 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     }
     const capture = { identity, rails: cap.rails, pointsSceneRelative: cap.pointsSceneRelative, visibleByClipBoxes: cap.visibleByClipBoxes };
     let science = null, erreur = null;
+    const tA = chrono ? horloge() : 0;
     try { science = Sh.scientificProposeBothAvecReservoir(capture); } catch (e) { erreur = String(e && e.message || e).slice(0, 120); }
+    if (chrono) ligne.ms = { analyse: arrondi(horloge() - tA, 1), decision: null };
+    const tD = chrono ? horloge() : 0;
     let surface = null; try { surface = M.surface(cap); } catch { surface = null; }
     /* Zone à l'instant de la décision : mémoire des zones évaluée avant le cut (ne dépend que des captures). */
     const r0 = M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: c.stage, reason: null }, action: null, valide: false, surface });
@@ -255,12 +262,14 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: valideChaine, surface }), { differe: !valideChaine });
     }
     M.noter(zoneMem, r0, { differe: !c.pose });
+    if (chrono) ligne.ms.decision = arrondi(horloge() - tD, 1);
     lignes.push(ligne);
   }
   /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre maximal de passes, arrêt dès qu'une passe ne pose plus rien) : chaque différé de L1-se est redécidé par la GCV2 avec tout
    * ce que le lot a posé, avant ET après lui (chaîne : voisins et appuis ; poses L1 : transport). Leviers propres à la passe : `passe2Leviers`. */
+  let passeMs = null;
   if (profils.includes('L1-se') && leviers.deuxiemePasse) {
-    const E = etats['L1-se'], avant = leviers;
+    const E = etats['L1-se'], avant = leviers, tP = horloge();
     if (leviers.passe2Leviers) L1.reglerLeviers({ ...leviers, ...leviers.passe2Leviers });
     try {
       for (let passe = 1; passe <= leviers.deuxiemePasse; passe++) {
@@ -268,6 +277,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         /* Levier `passesAlternees` : sens alterné d'une passe à l'autre (une pose se propage vers l'avant, puis vers l'arrière) ; sinon toujours vers l'avant. */
         for (const r of passe % 2 || !leviers.passesAlternees ? restes : restes.slice().reverse()) {
           if (r.ligne.profils['L1-se'].etat !== 'differe') continue;
+          const tC = chrono ? horloge() : 0;
           try {
             const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,
               zone: r.zone, plagesADV: r.plagesADV, modele, regle: L1.REGLE_E, reference: referenceDe(r.cut), voieListe: liste ? L1.voieDeListe(liste, r.cut, r.capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
@@ -278,17 +288,18 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
             poses++;
           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
+          finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
         }
         journalTexte(`deuxième passe ${passe} : ${poses} pose(s)`);
         if (!poses) break;
       }
-    } finally { L1.reglerLeviers(avant); }
+    } finally { L1.reglerLeviers(avant); passeMs = arrondi(horloge() - tP, 1); }
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
     regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null } } : {}),
     parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
     note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
-    traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000) };
+    traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000), ...(chrono ? { chrono: { passeMs } } : {}) };
   return [entete, ...lignes];
 }
 
@@ -484,7 +495,7 @@ function args(argv) {
     else if (k === '--profils') o.profils = val().split(',').filter(Boolean); else if (k === '--parametres') o.parametres = val(); else if (k === '--liste') o.liste = val();
     else if (k === '--rejeu') o.rejeu.push(val()); else if (k === '--juges') o.juges.push(val()); else if (k === '--inventaire') o.inventaire = val();
     else if (k === '--json') o.json = val(); else if (k === '--md') o.md = val(); else if (k === '--prediction') o.prediction = val(); else if (k === '--echo') o.echo.push(val());
-    else if (k === '--juger-partie-reservee') o.jugerReservee = true;
+    else if (k === '--juger-partie-reservee') o.jugerReservee = true; else if (k === '--chrono') o.chrono = true;
     else throw Error('argument inconnu : ' + k);
   }
   if (o.profils.some(p => !PROFILS.includes(p))) throw Error(`profils : ${PROFILS.join(', ')}`);
@@ -500,7 +511,7 @@ function main(argv) {
     const j = JSON.parse(fs.readFileSync(a.journal, 'utf8')), R = lotReel(j, a.partie, a.lot), ids = R.lot.cuts.map(c => c.captureId).filter(Boolean);
     const t0 = Date.now(), captures = chargerCaptures(a.corpus, ids);
     journalTexte(`captures retrouvées : ${captures.size}/${ids.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
-    const lignes = rejouerLot({ journal: j, captures, projet: a.projet, partie: a.partie, lotId: a.lot, parametres, profils: a.profils, journalTexte, liste: a.liste ? require('../src/liste-memoire.js').decompacter(JSON.parse(fs.readFileSync(a.liste, 'utf8'))) : null });
+    const lignes = rejouerLot({ journal: j, captures, projet: a.projet, partie: a.partie, lotId: a.lot, parametres, profils: a.profils, journalTexte, liste: a.liste ? require('../src/liste-memoire.js').decompacter(JSON.parse(fs.readFileSync(a.liste, 'utf8'))) : null, chrono: !!a.chrono });
     lignes[0].parametres.sha256 = sha256(bufP);
     const texte = lignes.map(l => JSON.stringify(l)).join('\n') + '\n';
     ecrire(a.sortie, texte);

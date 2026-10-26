@@ -1,0 +1,182 @@
+{
+ "format": "ariane-tableau-bord-v1",
+ "version": "4.9.5.11",
+ "commit": null,
+ "commitOutil": "0201319",
+ "date": "2026-10-26",
+ "populations": {
+  "terrain": {
+   "exports": [
+    {
+     "sha256": "caa5c3775228680497d3f3b0e088e00e39ccc42b3ce141e7ba121e73df57eaf5",
+     "partie": 19,
+     "lotId": "09d28ada",
+     "cuts": 3
+    },
+    {
+     "sha256": "caa5c3775228680497d3f3b0e088e00e39ccc42b3ce141e7ba121e73df57eaf5",
+     "partie": 19,
+     "lotId": "7f46bbc5",
+     "cuts": 348
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 248,
+     "N": 351,
+     "p": 70.7,
+     "wilson95": [
+      65.7,
+      75.2
+     ]
+    },
+    "differes": {
+     "n": 248,
+     "N": 351,
+     "p": 70.7,
+     "wilson95": [
+      65.7,
+      75.2
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 1728.5,
+     "p90Ms": 3140.5,
+     "captureMedMs": 645,
+     "analyseMedMs": 264,
+     "poste": "poste-12eb57",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": {
+     "lots": 1,
+     "cutsRelus": 156,
+     "dureeMs": 448924,
+     "msParCut": 2878,
+     "corriges": 7,
+     "modes": [
+      "corriger"
+     ]
+    },
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  }
+ },
+ "lots": [
+  {
+   "lot": "09d28ada",
+   "partie": 19,
+   "version": "4.9.5.11",
+   "debut": "2026-10-19T18:02:35.671Z",
+   "population": "terrain",
+   "poste": "poste-12eb57",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-19",
+    "nom": "ariane-journal-v4-1792436184174.json",
+    "sha256": "caa5c3775228680497d3f3b0e088e00e39ccc42b3ce141e7ba121e73df57eaf5"
+   },
+   "cuts": 3,
+   "invalidesAuDepart": 351,
+   "posesLot": 0,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 3,
+   "sansPose": {
+    "n": 3,
+    "N": 3,
+    "p": 100,
+    "wilson95": [
+     43.8,
+     100
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 1152,
+    "p90Ms": 1152,
+    "cycles": 2,
+    "cycleV1MedMs": 1078,
+    "cycleV1P90Ms": 1078,
+    "captureMedMs": 716,
+    "analyseMedMs": 270,
+    "decisionMedMs": 5,
+    "dureeMin": 0.5,
+    "silencesMin": 0,
+    "phases": null
+   },
+   "relecture": null
+  },
+  {
+   "lot": "7f46bbc5",
+   "partie": 19,
+   "version": "4.9.5.11",
+   "debut": "2026-10-19T18:03:07.791Z",
+   "population": "terrain",
+   "poste": "poste-12eb57",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-19",
+    "nom": "ariane-journal-v4-1792436184174.json",
+    "sha256": "caa5c3775228680497d3f3b0e088e00e39ccc42b3ce141e7ba121e73df57eaf5"
+   },
+   "cuts": 348,
+   "invalidesAuDepart": 351,
+   "posesLot": 103,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 245,
+   "sansPose": {
+    "n": 245,
+    "N": 348,
+    "p": 70.4,
+    "wilson95": [
+     65.4,
+     75
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 2305,
+    "p90Ms": 5129,
+    "cycles": 346,
+    "cycleV1MedMs": 1711,
+    "cycleV1P90Ms": 4994,
+    "captureMedMs": 574,
+    "analyseMedMs": 258,
+    "decisionMedMs": 4,
+    "dureeMin": 15.8,
+    "silencesMin": 0,
+    "phases": {
+     "n": 102,
+     "navigationCaptureMedMs": 854,
+     "analyseMedMs": 274,
+     "decisionMedMs": 81,
+     "poseMedMs": 807,
+     "captureApresPoseMedMs": 98,
+     "validationMedMs": 118,
+     "cutSuivantMedMs": 98
+    }
+   },
+   "relecture": {
+    "mode": "corriger",
+    "issue": "erreur",
+    "cutsRelus": 156,
+    "corriges": 7,
+    "dureeMs": 448924,
+    "msParCut": 2878
+   }
+  }
+ ]
+}

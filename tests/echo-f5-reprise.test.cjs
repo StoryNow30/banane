@@ -76,7 +76,9 @@ test('F5 en Écho : ESV ne finit jamais de charger → délai borné, aucune pé
 
 test('démarrage raté (page sans adaptateur) : aucune session ni période fantôme, puis le démarrage équipe la page tout seul',async()=>{
  let equipee=false;
- const b=background({globals:{BananeCore3:K,BananeSettings:REGLAGES,BananeExportCache:EC,setTimeout,clearTimeout},
+ /* T20a : la reconnexion automatique après F5 (hors séance) ré-équiperait la page avant le démarrage ; coupée ici, pour garder le cas
+  * d'une page restée sans adaptateur (reconnexion impossible, ou réglage coupé) : c'est alors le démarrage d'Écho qui l'équipe. */
+ const b=background({globals:{BananeCore3:K,BananeSettings:{...REGLAGES,connexion:{reconnexionAuto:false}},BananeExportCache:EC,setTimeout,clearTimeout},
   executeScript:async o=>{if(o.files)equipee=true;return [{frameId:0,result:o.func?null:undefined}];}});
  await b.api('connect',{tabId:1});
  /* Rechargement hors séance : la page n'a plus d'adaptateur jusqu'à la réinjection. */
@@ -87,6 +89,16 @@ test('démarrage raté (page sans adaptateur) : aucune session ni période fant�
  assert.ok(!b.fonction('engine.s.native'),'hors séance, le rechargement ne crée rien');assert.equal(equipee,false,'hors séance, la page n’est pas touchée');assert.equal(b.injected.length,dep);
  await b.api('native-start');
  const n=b.fonction('engine.s.native');assert.equal(n.status,'RUNNING',n.message);assert.equal(n.observationPeriods.length,1);assert.equal(equipee,true);
+});
+test('T20a : F5 hors séance, reconnexion automatique allumée (défaut) : la page est ré-équipée seule, sans séance ni commande ESV',async()=>{
+ let equipee=false;
+ const b=background({globals:{BananeCore3:K,BananeSettings:REGLAGES,BananeExportCache:EC,setTimeout,clearTimeout},
+  executeScript:async o=>{if(o.files?.includes('src/adapter-page.js'))equipee=true;return [{frameId:0,result:o.func?null:undefined}];}});
+ await b.api('connect',{tabId:1});equipee=false;const appels=b.adapter.calls.length;
+ await b.tabUpdated(1,{status:'loading'});await b.tabUpdated(1,{status:'complete'});await sleep(30);
+ assert.ok(!b.fonction('engine.s.native'),'hors séance, le rechargement ne crée rien');assert.equal(equipee,true,'la page est ré-équipée (adaptateur, pont) ;');
+ assert.deepEqual(b.adapter.calls.slice(appels),[],'aucune commande ESV');assert.equal(b.fonction('engine.s.connection').status,'ready');
+ await b.api('native-start');assert.equal(b.fonction('engine.s.native').status,'RUNNING');
 });
 test('démarrage raté (adaptateur muet) : trois clics = au plus une période, marquée ; elle disparaît au démarrage réussi',async()=>{
  const b=background({globals:{BananeCore3:K,BananeSettings:REGLAGES,BananeExportCache:EC,setTimeout,clearTimeout}});await b.api('connect',{tabId:1});

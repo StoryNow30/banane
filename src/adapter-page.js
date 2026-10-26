@@ -1327,10 +1327,26 @@
    try{const v=window.Potree?.version;d.potree=v&&typeof v==='object'?[v.major,v.minor].filter(x=>Number.isFinite(x)).join('.')+(typeof v.suffix==='string'?String(v.suffix).slice(0,12):''):typeof v==='string'?v.slice(0,16):null;}catch{d.potree=null;}
    const texte=JSON.stringify(d);let h=2166136261>>>0;for(let i=0;i<texte.length;i++){h^=texte.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
    return {hash:h.toString(16).padStart(8,'0'),detail:d,etat,forme:FORME_CONTRAT};}
+ /* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES (lecture seule, au ping de contrat de l'équipement ; réglage `releves.selecteurParties`). SUPPOSÉ : la page
+  * d'ESV offre un sélecteur dont chaque entrée est un lien `…&p=N` (architecture 5.0, § P ; jamais vu dans ESV par Ariane). Lus : les liens dont
+  * l'adresse porte le paramètre `p`, leur texte (40 caractères) et l'entrée courante (classe `active`, `aria-current`, ou `p` de l'adresse de la
+  * page). Rien n'est cliqué ni modifié. « absent » : aucun lien `p=` ; « illisible » : des liens `p=` sans numéro entier. */
+ function selecteurParties(){const vus=new Map();let candidats=0;
+   for(const a of [...document.querySelectorAll('a[href]')].slice(0,5000)){let v=null;
+     try{const u=new URL(a.getAttribute('href'),location.href);if(!u.searchParams.has('p'))continue;candidats++;v=u.searchParams.get('p');}catch{continue;}
+     if(!/^\d{1,6}$/.test(v||''))continue;const n=Number(v),li=a.closest('li');
+     const actif=a.classList.contains('active')||['page','true'].includes(a.getAttribute('aria-current'))||!!li?.classList.contains('active');
+     if(vus.has(n)){if(actif)vus.get(n).current=true;continue;}if(vus.size>=500)continue;
+     vus.set(n,{part:n,label:String(a.textContent||'').replace(/\s+/g,' ').trim().slice(0,40)||null,current:actif});}
+   if(!candidats)return {status:'absent',current:null,parts:[]};if(!vus.size)return {status:'illisible',current:null,parts:[]};
+   const parts=[...vus.values()];
+   if(parts.filter(x=>x.current).length!==1){const p=new URL(location.href).searchParams.get('p');for(const x of parts)x.current=/^\d{1,6}$/.test(p||'')&&x.part===Number(p);}
+   const c=parts.filter(x=>x.current);return {status:'ok',current:c.length===1?c[0].part:null,parts};}
  let intrusion=null;
  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
-   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
+   const selecteur=options&&typeof options==='object'&&options.contrat===true&&relOn('selecteurParties')?(()=>{try{return selecteurParties();}catch{return {status:'illisible',current:null,parts:[]};}})():null;
+   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
    amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},

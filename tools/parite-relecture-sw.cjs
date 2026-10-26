@@ -15,8 +15,12 @@
  * varier d'un jeu à l'autre, même entre deux copies du même dépôt : un écart sur les messages ou les états se rejoue avant d'être pris pour un écart de comportement. */
 const path = require('node:path'), fs = require('node:fs'), os = require('node:os'), crypto = require('node:crypto'), { spawnSync } = require('node:child_process');
 
-const BRUIT = /(^|[a-z])(ms|Ms|MS)$|duration|elapsed|^t0$|startedEpoch|endedEpoch|receivedMs|timeOrigin|engineMs|^at$|Ago$|^debut$|^fin$|^timestamp$|^t$|operationId/;
+/* T20a : `extensionVersion` (numéro de version recopié dans le scope du lot et dans les commandes) est neutralisé comme les identifiants : deux versions
+ * différentes ne diffèrent pas par lui. Clés du stockage propres à une fonction nouvelle, écartées comme celles de la pause : `banane55FinsLot`
+ * (fiche de fin de lot de T20a, écrite à la fin du lot ; aucune décision ne la lit). */
+const BRUIT = /(^|[a-z])(ms|Ms|MS)$|duration|elapsed|^t0$|startedEpoch|endedEpoch|receivedMs|timeOrigin|engineMs|^at$|Ago$|^debut$|^fin$|^timestamp$|^t$|operationId|^extensionVersion$/;
 const PAUSE = ['pauseDemandee', 'pauseRaison', 'reprise', 'expire'];
+const CLES_NOUVELLES = ['banane55FinsLot'];
 
 async function jouer(racine, sortie) {
   const H = require(path.join(racine, 'tests/helpers/relecture-lot.cjs')), { PERMISSIF } = require(path.join(racine, 'tests/helpers/relecture-essais.cjs'));
@@ -40,7 +44,7 @@ async function jouer(racine, sortie) {
     releves[nom] = { commandes: nettoyer(x.b.commands), allees: nettoyer(x.adapter.allees), majEspace: nettoyer(x.adapter.majEspace), applyArgs: nettoyer(x.adapter.applyArgs),
       evenements: nettoyer(x.b.store.events.filter(e => !['esv-observation', 'phase-timing'].includes(e.type))),
       passe: nettoyer({ etat: passe.etat, faits: passe.faits, corriges: passe.corriges, message: passe.message, vus: passe.vus }),
-      etat: nettoyer(etat), vueRelecture: nettoyer(vue.relecture ?? null), stockage: Object.keys(local.m).sort() };
+      etat: nettoyer(etat), vueRelecture: nettoyer(vue.relecture ?? null), stockage: Object.keys(local.m).filter(k => !CLES_NOUVELLES.includes(k)).sort() };
   }
   fs.writeFileSync(sortie, JSON.stringify(releves));
 }

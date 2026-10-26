@@ -3,14 +3,15 @@
  *  - chaque état du lot et d'Écho a son glyphe, son mot, sa phrase, son objet et une seule action principale, celle que le panneau a désignée ;
  *  - l'allure vient de `batch.processed[].durationMs` (médiane des 20 derniers, au moins 3), rien n'est inventé quand elle manque ;
  *  - Revue V2 : « Ouvrir » n'est actif que si le bouton caché `#goto-cut` du panneau existe et l'est ; « Examiner » se lit dans l'instantané ;
- *  - chaque `legacy:<id>` désigne un élément de panel.html (ou un élément annoncé par le moteur, liste A_VENIR) ; aucun « ancien panneau » ;
+ *  - chaque `legacy:<id>` désigne un élément de panel.html ; aucun « ancien panneau » ;
  *  - tout texte venu du panneau est échappé.
  * Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const S=require('../src/signal-rendu.js');
 const html=fs.readFileSync(path.join(__dirname,'..','panel.html'),'utf8'),IDS=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
-/* Éléments du panneau annoncés par l'étape T20a du moteur (contrat du 25/10) : Signal les lit s'ils existent, les grise sinon. */
-const A_VENIR=new Set(['reconnect','goto-cut','goto-cut-cible','goto-cut-etat']);
+/* T20a : les éléments du panneau que Signal lit pour la connexion et « Ouvrir dans ESV » existent dans panel.html. */
+const A_VENIR=new Set();
+test('T20a : #reconnect, #goto-cut, #goto-cut-cible et #goto-cut-etat sont dans panel.html',()=>{for(const id of ['reconnect','goto-cut','goto-cut-cible','goto-cut-etat'])assert.ok(IDS.has(id),id);});
 const b=(id,texte,role='link',actif=true)=>({id,texte,role,actif});
 const ar=(etat,x={})=>({etat,etatTexte:'',horsLigne:false,partie:13,cutEsv:4812,cibles:120,poses:27,differes:4,traites:31,restants:89,cours:4812,dernier:4811,
  bornes:{debut:4790,fin:null},differesListe:[{cut:4809,motif:'Rail non résolu',precision:'rail droit',heure:'15 h 33'},{cut:4803,motif:'Différé',precision:'',heure:'15 h 10'}],

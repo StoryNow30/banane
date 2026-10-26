@@ -1,0 +1,278 @@
+{
+ "format": "ariane-tableau-bord-v1",
+ "version": "4.9.0.9",
+ "commit": null,
+ "commitOutil": "0201319",
+ "date": "2026-10-26",
+ "populations": {
+  "terrain": {
+   "exports": [
+    {
+     "sha256": "c8883bbdc44b54dd3fd6dfa255fdd2157688f1e74c42d22c0f5638bb7fc0ac8a",
+     "partie": 13,
+     "lotId": "2536b3ae",
+     "cuts": 138
+    },
+    {
+     "sha256": "c8883bbdc44b54dd3fd6dfa255fdd2157688f1e74c42d22c0f5638bb7fc0ac8a",
+     "partie": 13,
+     "lotId": "fd27a74c",
+     "cuts": 19
+    },
+    {
+     "sha256": "1eed54682120399dac3c3a70a010023edebf85586398d02c84c654cdc8c67338",
+     "partie": 14,
+     "lotId": "5f051f89",
+     "cuts": 1
+    },
+    {
+     "sha256": "1eed54682120399dac3c3a70a010023edebf85586398d02c84c654cdc8c67338",
+     "partie": 15,
+     "lotId": "733d2df4",
+     "cuts": 138
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 46,
+     "N": 296,
+     "p": 15.5,
+     "wilson95": [
+      11.9,
+      20.1
+     ]
+    },
+    "differes": {
+     "n": 46,
+     "N": 296,
+     "p": 15.5,
+     "wilson95": [
+      11.9,
+      20.1
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 3969,
+     "p90Ms": 6633,
+     "captureMedMs": 1397,
+     "analyseMedMs": 842,
+     "poste": null,
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": null,
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  }
+ },
+ "lots": [
+  {
+   "lot": "2536b3ae",
+   "partie": 13,
+   "version": "4.9.0.9",
+   "debut": "2026-10-13T11:51:52.315Z",
+   "population": "terrain",
+   "poste": null,
+   "export": {
+    "collection": "2026-10-13_v4.9.0.9_parties-1-13-15",
+    "nom": "ariane-journal-v4-1791894890784.json",
+    "sha256": "c8883bbdc44b54dd3fd6dfa255fdd2157688f1e74c42d22c0f5638bb7fc0ac8a"
+   },
+   "cuts": 138,
+   "invalidesAuDepart": null,
+   "posesLot": 119,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 19,
+   "sansPose": {
+    "n": 19,
+    "N": 138,
+    "p": 13.8,
+    "wilson95": [
+     9,
+     20.5
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 3253,
+    "p90Ms": 6675,
+    "cycles": 137,
+    "cycleV1MedMs": 3043,
+    "cycleV1P90Ms": 6545,
+    "captureMedMs": 1112,
+    "analyseMedMs": 842,
+    "decisionMedMs": 9,
+    "dureeMin": 11.1,
+    "silencesMin": 2.1,
+    "phases": {
+     "n": 118,
+     "navigationCaptureMedMs": 1223,
+     "analyseMedMs": 856,
+     "decisionMedMs": 88,
+     "poseMedMs": 196,
+     "captureApresPoseMedMs": 137,
+     "validationMedMs": 171,
+     "cutSuivantMedMs": 140
+    }
+   },
+   "relecture": null
+  },
+  {
+   "lot": "fd27a74c",
+   "partie": 13,
+   "version": "4.9.0.9",
+   "debut": "2026-10-13T12:03:01.196Z",
+   "population": "terrain",
+   "poste": null,
+   "export": {
+    "collection": "2026-10-13_v4.9.0.9_parties-1-13-15",
+    "nom": "ariane-journal-v4-1791894890784.json",
+    "sha256": "c8883bbdc44b54dd3fd6dfa255fdd2157688f1e74c42d22c0f5638bb7fc0ac8a"
+   },
+   "cuts": 19,
+   "invalidesAuDepart": null,
+   "posesLot": 6,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 13,
+   "sansPose": {
+    "n": 13,
+    "N": 19,
+    "p": 68.4,
+    "wilson95": [
+     46,
+     84.6
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 4772,
+    "p90Ms": 6423,
+    "cycles": 17,
+    "cycleV1MedMs": 4427,
+    "cycleV1P90Ms": 6102,
+    "captureMedMs": 2440,
+    "analyseMedMs": 782,
+    "decisionMedMs": 131,
+    "dureeMin": 31.8,
+    "silencesMin": 30.2,
+    "phases": {
+     "n": 5,
+     "navigationCaptureMedMs": 2549,
+     "analyseMedMs": 1194,
+     "decisionMedMs": 1505,
+     "poseMedMs": 145,
+     "captureApresPoseMedMs": 104,
+     "validationMedMs": 132,
+     "cutSuivantMedMs": 101
+    }
+   },
+   "relecture": null
+  },
+  {
+   "lot": "5f051f89",
+   "partie": 14,
+   "version": "4.9.0.9",
+   "debut": "2026-10-13T13:30:16.500Z",
+   "population": "terrain",
+   "poste": null,
+   "export": {
+    "collection": "2026-10-13_v4.9.0.9_parties-1-13-15",
+    "nom": "ariane-journal-v4-1791901195854.json",
+    "sha256": "1eed54682120399dac3c3a70a010023edebf85586398d02c84c654cdc8c67338"
+   },
+   "cuts": 1,
+   "invalidesAuDepart": null,
+   "posesLot": 0,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": null,
+    "issue": null
+   },
+   "differesLot": 1,
+   "sansPose": {
+    "n": 1,
+    "N": 1,
+    "p": 100,
+    "wilson95": [
+     20.7,
+     100
+    ]
+   },
+   "vitesseLot": null,
+   "relecture": null
+  },
+  {
+   "lot": "733d2df4",
+   "partie": 15,
+   "version": "4.9.0.9",
+   "debut": "2026-10-13T14:04:34.359Z",
+   "population": "terrain",
+   "poste": null,
+   "export": {
+    "collection": "2026-10-13_v4.9.0.9_parties-1-13-15",
+    "nom": "ariane-journal-v4-1791901195854.json",
+    "sha256": "1eed54682120399dac3c3a70a010023edebf85586398d02c84c654cdc8c67338"
+   },
+   "cuts": 138,
+   "invalidesAuDepart": null,
+   "posesLot": 125,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 13,
+   "sansPose": {
+    "n": 13,
+    "N": 138,
+    "p": 9.4,
+    "wilson95": [
+     5.6,
+     15.5
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 3969,
+    "p90Ms": 6633,
+    "cycles": 136,
+    "cycleV1MedMs": 3719,
+    "cycleV1P90Ms": 6428,
+    "captureMedMs": 1397,
+    "analyseMedMs": 900,
+    "decisionMedMs": 8,
+    "dureeMin": 15.4,
+    "silencesMin": 5,
+    "phases": {
+     "n": 124,
+     "navigationCaptureMedMs": 1544,
+     "analyseMedMs": 892,
+     "decisionMedMs": 74,
+     "poseMedMs": 182,
+     "captureApresPoseMedMs": 124,
+     "validationMedMs": 165,
+     "cutSuivantMedMs": 124
+    }
+   },
+   "relecture": null
+  }
+ ]
+}
