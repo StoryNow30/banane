@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 19 (L1-e6)',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 20 (L1-e6)',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -864,13 +864,48 @@
    }
    /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
-   button('connect',{disabled:busy||recording(s)});button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)||s.passeDifferes?.etat==='ecriture'});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   button('connect',{disabled:busy||recording(s)});majReconnexion(s);majAllerAuCut(s);button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)||s.passeDifferes?.etat==='ecriture'});button('journal',{disabled:working});if(uiError)note(uiError,true);
    rendreFocus();
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
  globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,
    apres:f=>{if(typeof f!=='function')return;hooksRendu.push(f);if(state)try{f(state);}catch{/* idem */}}});
+ /* T20a (D-243, D-250) — « RECONNECTER » : ré-équipe l'onglet ESV choisi (action `reconnect` du service worker, aucune commande ESV). Caché sans onglet
+  * (statut `no-tab`, ou jamais connecté), grisé pendant la reconnexion (`reconnecting`). */
+ function majReconnexion(s){const e=$('reconnect');if(!e)return;const c=s?.connection;
+   e.hidden=!c||c.status==='no-tab'||!Number.isInteger(c.tabId);e.disabled=c?.status==='reconnecting'||working;}
+ /* T20a — DÉCLENCHEUR CACHÉ D'« ALLER AU CUT » pour l'interface Signal (« Ouvrir dans ESV », D-250). `#goto-cut-cible` porte « partie:cut » ; `#goto-cut`
+  * envoie l'action EXISTANTE `goto-cut` (src/adapter-page.js `goToCut`, navigation seule ; aucune commande ESV nouvelle) ; `#goto-cut-etat` dit
+  * `data-etat` = « en-cours », « ok » ou « refuse » et la raison en texte. Grisé, la raison dans `title`, pendant un lot (en cours ou en pause), une
+  * relecture, la deuxième passe, Écho, ou hors `ready`. Rien n'est écrit dans `#notice`. Les trois éléments restent cachés : l'ancien panneau
+  * est le moteur caché de Signal. */
+ let allerCutEnCours=false;
+ const LOT_CLOS_SIGNAL=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','ERROR'];
+ function raisonAllerAuCut(s){const b=s?.batch,st=b?.state,c=s?.connection;
+   if(allerCutEnCours)return 'Retour à un cut déjà en cours : attends son résultat.';
+   if(st==='RUNNING')return 'Lot en cours : aller à un cut est impossible pendant un lot.';
+   if(b&&!LOT_CLOS_SIGNAL.includes(st))return 'Lot en pause : arrête ou termine le lot avant d’aller à un autre cut.';
+   if(['preparation','en-cours','en-pause'].includes(s?.relecture?.etat))return 'Relecture en cours : attends sa fin ou arrête-la.';
+   if(['calcul','ecriture'].includes(s?.passeDifferes?.etat))return 'Deuxième passe en cours : attends sa fin ou arrête-la.';
+   if(s&&nativeActive(s))return 'Écho actif : termine la séance avant d’aller à un autre cut.';
+   if(c?.status!=='ready')return `ESV n’est pas prêt (${c?.status||'non connecté'}) : reconnecte la page ESV.`;
+   return null;}
+ function majAllerAuCut(s){const g=$('goto-cut');if(!g)return;const r=raisonAllerAuCut(s);g.disabled=!!r;g.title=r||'';g.hidden=true;
+   if($('goto-cut-cible'))$('goto-cut-cible').hidden=true;if($('goto-cut-etat'))$('goto-cut-etat').hidden=true;}
+ function etatAllerCut(etat,texte){const e=$('goto-cut-etat');if(!e)return;e.setAttribute('data-etat',etat);if(e.dataset)e.dataset.etat=etat;e.textContent=texte||'';}
+ async function allerAuCutSignal(){
+   const r=raisonAllerAuCut(state);if(r){etatAllerCut('refuse',r);return;}
+   const m=/^(\d{1,6}):(\d{1,7})$/.exec(String($('goto-cut-cible')?.value??'').trim());
+   if(!m){etatAllerCut('refuse','cible invalide');return;}
+   const part=Number(m[1]),cut=Number(m[2]);
+   allerCutEnCours=true;etatAllerCut('en-cours',`Aller au cut ${cut} de la partie ${part}…`);if(state)majAllerAuCut(state);
+   try{const x=await api('goto-cut',{part,cut});
+     if(x?.ok)etatAllerCut('ok',`ESV affiche le cut ${x.identiteApres?.cut??cut} de la partie ${x.identiteApres?.part??part}.`);
+     else etatAllerCut('refuse',String(x?.message||x?.code||'refusé'));}
+   catch(e){etatAllerCut('refuse',String(e?.message||e));}
+   finally{allerCutEnCours=false;if(state)majAllerAuCut(state);}}
+ if($('goto-cut'))$('goto-cut').onclick=()=>allerAuCutSignal();
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
  /* 4.9.0.16 (test 15, capture de Mic) : deux onglets au même titre ne se distinguaient pas. Chaque
   * libellé dit maintenant, si besoin, la fenêtre, le rang de l'onglet, s'il est au premier plan et
@@ -1246,7 +1281,7 @@
  function on(id,fn){if($(id))$(id).onclick=()=>action(id,fn);}
  /* Navigation interne : plus aucune fenetre n'est ouverte depuis l'interface. */
  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>naviguer(b.dataset.view));
- on('connect',connect);on('native-start',()=>api('native-start'));on('native-pause',()=>api('native-pause'));on('native-resume',()=>api('native-resume'));
+ on('connect',connect);on('reconnect',()=>api('reconnect'));on('native-start',()=>api('native-start'));on('native-pause',()=>api('native-pause'));on('native-resume',()=>api('native-resume'));
  /* Fin de session et re-téléchargement passent aussi par le manifeste léger :
   * l'ancien chemin renvoyait toute la session en un message et échouait
   * au-delà de 64 MiB. */

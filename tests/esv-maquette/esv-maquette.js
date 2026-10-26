@@ -39,6 +39,7 @@
  const q=new URLSearchParams(location.search),num=(k,d)=>{const v=Number(q.get(k));return q.has(k)&&Number.isFinite(v)?v:d;};
  const options={cuts:num('cuts',12),debut:num('debut',100),part:num('part',23),cut:num('cut',NaN),latence:num('latence',40),lots:num('lots',4),
    latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10,source:q.get('source')||'synthetique',valides:num('valides',0)};
+ options.selecteur=num('selecteur',1);   /* T20a : sélecteur de parties SUPPOSÉ (0 : absent) */
  /* ESV parle à son serveur en XMLHttpRequest (c'est ce que l'observateur d'Ariane enveloppe) : la maquette aussi. */
  const xhr=(methode,url,corps)=>new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open(methode,url,true);if(corps!==undefined)x.setRequestHeader('content-type','application/json');
    x.onload=()=>res({status:x.status,texte:x.responseText});x.onerror=()=>rej(Error('réseau'));x.send(corps===undefined?null:JSON.stringify(corps));});
@@ -200,10 +201,19 @@
   for(const p of s.parties){const lignes=[];let url=`/rails/${p.table}`;for(;;){const r=JSON.parse((await xhr('GET',url)).texte);lignes.push(...r.value);if(!r.suite)break;url=`/rails/${p.table}?npk=${encodeURIComponent(r.suite.npk)}&nrk=${r.suite.nrk}`;}
    etat.listes.set(p.part,lignes);for(const c of p.cuts){const l=lignes[c.cut];if(l&&l.ExtractionStatus)c.status=l.ExtractionStatus;}}
   try{etat.pannes=JSON.parse((await xhr('GET','/maquette/pannes')).texte)||{};}catch{etat.pannes={};}
-  etat.partie=s.parties[0];
+  etat.partie=s.parties[0];selecteurParties(s);
   let index=Number.isFinite(options.cut)?etat.partie.cuts.findIndex(c=>c.cut===options.cut):-1;
   if(index<0){index=etat.partie.cuts.findIndex(c=>c.status==='invalid');if(index<0)index=0;}
   projection();chargerCut(index,'demarrage');return true;}
+ /* T20a — SÉLECTEUR DE PARTIES : SUPPOSÉ (architecture 5.0, § P : « un sélecteur de parties dont chaque entrée est un lien (…&p=N) », lu dans une page
+  * enregistrée, jamais relevé par Ariane dans ESV). Une liste de liens `?…&p=N` (parties du scénario et leurs voisines), l'entrée courante marquée
+  * `active` ; le texte « Part N » et la classe sont des hypothèses. `selecteur=0` : pas de sélecteur. Un clic recharge la page (paramètre `p`, sans
+  * effet sur la partie servie : la maquette ne sert que les parties de son scénario). Lu par le relevé en lecture seule de l'adaptateur. */
+ function selecteurParties(s){const ul=$('maquette-parties');if(!ul)return;ul.textContent='';if(!options.selecteur)return;
+  const courante=etat.partie?.part,nums=new Set();for(const p of s.parties)for(const n of [p.part-1,p.part,p.part+1])if(n>=0)nums.add(n);
+  for(const n of [...nums].sort((a,b)=>a-b)){const li=document.createElement('li'),a=document.createElement('a'),u=new URLSearchParams(location.search);u.set('p',String(n));
+   li.className='list-group-item'+(n===courante?' active':'');a.href='?'+u.toString();a.textContent='Part '+n;if(n===courante)a.className='active';li.appendChild(a);ul.appendChild(li);}
+  log('selecteur-parties',{parties:[...nums],courante,suppose:true});}
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
    compteur:$('maquette-compteur').textContent.replace(/\s+/g,' ').trim(),traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
    statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),

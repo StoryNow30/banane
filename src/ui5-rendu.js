@@ -39,7 +39,9 @@
   function modele(snap) {
     const s = snap || {};
     const { primaire, autres } = choisirBoutons(s.boutons, s.mode);
-    return { primaire, autres, etat: s.lot?.etat || 'Aucun lot', phrase: phrase(s), avis: s.avisContrat || '', connexionOuverte: !!s.connexionOuverte };
+    /* T20a (D-243) : `connexionPerdue` ne dépend que du statut de connexion (unavailable, no-tab), plus de l'état ouvert du volet « Connexion à ESV ». */
+    return { primaire, autres, etat: s.lot?.etat || 'Aucun lot', phrase: phrase(s), avis: s.avisContrat || '', connexionOuverte: !!s.connexionOuverte,
+      connexionPerdue: ['unavailable', 'no-tab'].includes(s.connexionStatut) };
   }
 
   /* Réglages : des listes, jamais en séance. Les valeurs et les actions sont celles du panneau (clic sur la case ou le bouton d'origine). */
@@ -105,7 +107,9 @@
       const titre = mien ? 'Connecté' : off ? (pasPret ? 'Cet onglet n’est pas prêt' : 'Garde son onglet jusqu’à la fin du lot') : 'Connecter Ariane à cet onglet';
       return `<button type="button" class="te${mien ? ' ' + cl : ''}${off ? ' lock' : ''}${!choisi && !off ? ' attend' : ''}"${mien || off ? ' aria-disabled="true"' : ` data-act="conn:${esc(o.valeur)}"`} title="${titre}"><span class="pt"></span><b>${esc(o.texte)}</b><span class="qui">${qui}</span></button>`;
     }).join('');
-    return `<div class="esvbar"><span class="lab">${ic('globe', 15)}Onglets ESV</span><div class="tabs">${puces || '<span class="aucun">Aucun onglet ESV ouvert.</span>'}</div></div>`;
+    /* T20a (D-243) : « Reconnecter », à côté des onglets ESV : clique le bouton d'origine du panneau (`#reconnect`), visible et grisé comme lui. */
+    const rec = snap.reconnecter ? `<button type="button" class="pill sombre petit" data-act="legacy:reconnect" title="Reconnecter Ariane à l’onglet ESV choisi"${snap.reconnecter.actif ? '' : ' disabled'}>Reconnecter</button>` : '';
+    return `<div class="esvbar"><span class="lab">${ic('globe', 15)}Onglets ESV</span><div class="tabs">${puces || '<span class="aucun">Aucun onglet ESV ouvert.</span>'}</div>${rec}</div>`;
   }
   /* Vidage du cache des exports, en vue dans Orbite et Écho. Même bouton, même confirmation que le panneau d'origine ; grisé avec sa raison tant qu'il est impossible. */
   const relecture = snap => !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);   /* le service worker refuse le vidage du cache tant que la relecture vit ou attend */
@@ -134,7 +138,7 @@
   }
   const autresAr = m => m.autres.some(b => b.actif) ? `<div class="autres">${m.autres.filter(b => b.actif).map(b => `<button type="button" class="pill sombre petit${b.role === 'danger' ? ' danger' : ''}" data-act="legacy:${esc(b.id)}">${esc(b.texte)}</button>`).join('')}</div>` : '';
   function alerteAr(snap, m) {
-    const t = [m.avis, m.connexionOuverte ? 'ESV n’est pas connecté. Recharge la page ESV (F5) si elle est figée, puis reconnecte-la dans Réglages.' : '', snap.notice?.erreur ? snap.notice.texte : '', snap.relecture?.interrompue || ''].filter(Boolean);
+    const t = [m.avis, m.connexionPerdue ? 'ESV n’est pas connecté. Recharge la page ESV (F5) si elle est figée, puis reconnecte-la dans Réglages.' : '', snap.notice?.erreur ? snap.notice.texte : '', snap.relecture?.interrompue || ''].filter(Boolean);
     return t.length ? `<div class="alerte" role="alert">${ic('alerte', 20)}<div>${t.map(x => `<p>${esc(x)}</p>`).join('')}</div></div>` : '';
   }
   /* Test 17 (D-232) : relecture en pause ou pause possible — une ligne et les boutons du module `src/relecture-pause.js`, rien d'autre. */

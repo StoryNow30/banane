@@ -1,5 +1,19 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.20 — 4.9.5 test 20 (L1-e6) (25/10) — T20a
+
+Manifeste `4.9.5.20`, « 4.9.5 test 20 (L1-e6) » ; base : le tronc `claude/50-test17` après l'étape R et D-250 (52b9d9c). Contrat promis à l'interface Signal (D-250), fiche `fiches/T20A.md`. **Pas de paquet terrain ni de consigne** (l'orchestrateur prévient l'opérateur d'abord). La pose, la décision des cuts, la deuxième passe et la relecture ne changent pas.
+- **Statut de connexion tenu à jour** (`connection.status` : `ready`, `reconnecting`, `unavailable`, `no-tab`, avec `observedAt`, `message`, `tabId`) : `ready` à chaque équipement réussi de l'onglet (« Connecter », « Reconnecter », reconnexion après F5, reprise d'Écho, reprise du lot) ; `unavailable` à chaque perte de la page (rechargement, onglet sorti d'ESV, page absente pendant une commande, équipement impossible) ; `no-tab` sans onglet choisi ou onglet fermé ; plus seulement par la lecture de la vue et « Connecter ».
+- **Message « ESV n'est pas connecté »** (nouveau panneau) seulement si le statut vaut `unavailable` ou `no-tab` (D-243 : il dépendait de l'état ouvert du volet « Connexion à ESV »).
+- **Reconnexion automatique après F5** : à la fin du chargement de l'onglet choisi, il est ré-équipé (sonde, adaptateur, pont, `ping` ; aucune commande ESV), sauf pendant Écho (sa propre reprise), un lot ouvert (en cours ou en pause : « Reprendre » le rattache, il n'est jamais relancé seul), une action du moteur, la deuxième passe, la relecture, une reprise ou un retour au cut. Équipements sérialisés par onglet (une seule injection pour deux demandes simultanées). Contrôle « Une autre Ariane » inchangé (refus définitif, rien d'injecté, aucun nouvel essai). Journal : `reconnexion-auto`.
+- **Bouton « Reconnecter »** (`#reconnect`, action `reconnect`) à côté de « Reconnecter ESV » (choix de l'onglet) ; dans le nouveau panneau, à côté des onglets ESV.
+- **Historique des parties** (`partsHistory` de la vue) : fiches de départ (`banane3FichesDepart`) et **fiche de fin de lot** persistante dans une clé à part (`banane55FinsLot` : posés, différés, repris à la main, écrits par la passe, durée, motif d'arrêt), jamais les événements du cache : complet après un vidage du cache ; recopiée par les exports (`finsLot`), comme les fiches de départ.
+- **Relevé en lecture seule du sélecteur de parties** (`partsSelector`, au `ping` de contrat de l'équipement, réglage `releves.selecteurParties`) ; journal `releve-selecteur-parties`. Sélecteur SUPPOSÉ (liens `…&p=N`), ajouté à la maquette ESV comme supposé.
+- **`batch.pausedAt`** : heure d'entrée en pause du lot, retirée à la reprise.
+- **Déclencheur caché d'« aller au cut »** (`#goto-cut-cible`, `#goto-cut`, `#goto-cut-etat`) pour « Ouvrir dans ESV » de Signal : action existante `goto-cut`, grisé avec sa raison pendant un lot (en cours ou en pause), une relecture, la deuxième passe, Écho ou hors `ready` ; rien dans `#notice`.
+- Aucun identifiant existant du panneau renommé.
+- Non vérifié : jamais joué dans Edge ni dans le vrai ESV ; « prêt » (borné à 60 s) et « 3 F5 de suite » restent à mesurer au terrain ; le sélecteur de parties d'ESV n'est pas connu (relevé à fournir avant T27).
+
 ## 4.9.5.19 — 4.9.5 test 19 (L1-e6) (22/10)
 
 Manifeste `4.9.5.19`, « 4.9.5 test 19 (L1-e6) », base : la 4.9.5 test 18 (`claude/50-test17`, 86ea20c) plus **un seul correctif**.
