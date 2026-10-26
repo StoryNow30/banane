@@ -62,6 +62,26 @@ Banc `tools/banc-differes.cjs rejouer --chrono`, code `acf24f9` figé hors dép�
 
 Le critère « 0 pose à plus de 50 mm en colonne avec passe » n'est donc tenu que **pour les poses de la passe** : sur la partie 0, la colonne garde les 5 poses fausses de la GCV2 dans le lot, que la garde A ne touche pas (garde C de l'examen, chantier de la priorité 1 de D-250). La garde de non-régression rend 1 parce qu'elle bloque toute bonne pose perdue cut par cut ; faire passer ces deux pertes demande une décision : accepter le critère « ≤ 2 bonnes perdues sur 27 » en resellant la base (avec la garde) ou affiner la garde. Rien n'est resellé ici.
 
+## 4 bis. Variantes de seuil (hors ligne, sans rejeu) et garde de non-régression
+
+**Méthode** : calcul sur les 38 poses de la passe des rejeux de la base de T21a (`parT21a/base`, sans garde), pour chacune D (pire rail, 3D) et la distance à la plus proche pose de la chaîne normale (`scratchpad/parGardeA/scripts/appuis.py`, sortie `appuis-base.txt`) ; vérités de `datasets/garde-gcv2/verites`. 38 poses = 5 fausses (> 50 mm), 27 bonnes (≤ 10 mm), 2 entre 10 et 50 mm (467 : 10,5 mm, 797 : 10,3 mm, jamais bloquées), 4 sans vérité (2-18 : 14, 36, 37, 38, jamais bloquées). Calcul **statique** : il ne refait pas l'effet d'un refus sur le transport des poses suivantes (au rejeu, le refus de 1328 fait disparaître 1329 et 1332 ; voir § 4). Aucun code ni base modifié.
+
+| Variante (D < 100 mm et appui normal ≤ k cuts) | Fausses arrêtées (sur 5) | Bonnes perdues (sur 27) | 9521 (D 93,5, appui 8) | 9522 (D 57,5, appui 7) |
+|---|---|---|---|---|
+| k = 4 (livrée) | **5** | 2 | perdue | perdue |
+| k = 5 | 4 (1135 passe, appui à 5) | 2 | perdue | perdue |
+| k = 6 | 4 | 2 | perdue | perdue |
+| k = 7 | 4 | 1 | perdue | gardée |
+| k = 8 (pour mémoire) | 4 | 0 | gardée | gardée |
+
+[ÉTABLI, calcul statique] **Aucune variante n'arrête les 5 fausses sans perdre 9521 et 9522.** Ce n'est pas une affaire de réglage fin : arrêter 1135 (appui à 5 cuts, D 48,0 mm) exige k ≤ 4 ; garder 9522 (appui à 7, D 57,5 mm) exige k ≥ 7 ou un seuil de déplacement ≤ 57,5 mm, qui laisserait passer 1331 (71,8 mm) et 1332 (92,1 mm) ; garder 9521 (appui à 8, D 93,5 mm) exige k ≥ 8 ou un seuil ≤ 93,5 mm. Sur ces deux grandeurs (D, distance à la chaîne normale), les cinq fausses et les deux bonnes ne se séparent par aucun couple de seuils. Les séparer demanderait une autre information (la nature des voisins qui portent la voie, garde C ; ou la liste d'ESV, garde B de l'examen).
+
+**`garde-gcv2` rend 1 uniquement à cause de ces deux pertes** [ÉTABLI, `scratchpad/parGardeA/garde/garde.md`] : le seul recul bloquant est « reglage-9, avec passe : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 516 sur 518 » (règle `c.a10Maintenus < c.a10Base` de `comparer`, `tools/garde-gcv2.cjs`), et les deux cuts manquants sont 2-17 9521 et 9522 (« perdus : 2-17 9521, 2-17 9522 »). Les cinq poses retirées de la partie 0 étaient à plus de 50 mm en base : elles ne comptent pas dans cette règle. Le reste n'est que signalé (sans pose en hausse dans la colonne « avec passe », budget D-223 dépassé en base). Colonnes « sans passe » et « GCV2 dans le lot » : identiques cut par cut.
+
+**Ce qu'il faudrait changer pour un retour 0 sans cacher la perte** (rien n'est fait, décision de l'opérateur) :
+1. *Préféré, changer le critère* : une liste de pertes acceptées, nommées, dans le manifeste (`datasets/garde-gcv2/manifeste.json`, par exemple `pertesAcceptees: [{ colonne: "avecPasse", lot: "2-17", cut: 9521, decision: "D-…" }, { … 9522 … }]`), lue par `comparer` pour la seule colonne « avec passe ». Une perte de la liste n'est plus un recul, mais elle est **écrite en tête du rapport à chaque passage** (« perte acceptée : 2-17 9521, D-… »). Une perte hors liste reste bloquante, et une entrée de la liste qui n'est plus perdue (ou un cut de la liste mal jugé) est aussi signalée, pour que la liste ne vieillisse pas en silence. Les colonnes « sans passe » et « GCV2 dans le lot » restent strictes. Avec un essai rouge dans `tests/garde-gcv2.test.cjs` (perte hors liste : 1 ; perte listée : 0 et signalée).
+2. *Ou resceller la base* avec la garde (`garde-gcv2 sceller`, code `acf24f9`, ces rejeux) : retour 0 ensuite, mais les deux pertes entrent dans la base et ne sont plus jamais montrées par la garde ; elles ne restent visibles que dans cette fiche et la décision. Moins sûr ; à éviter sans décision explicite.
+
 ## 5. Parité et verify
 
 - **Parité banc / service worker de la passe** (`tools/parite-l1se-sw.cjs --passe`, garde livrée des deux côtés, rejeu de référence = celui du § 4) sur **la partie 0, lot 2** (le lot des quatre poses fausses et de trois refus) : 91 cuts rejoués, **0 ligne différente** ; passe : 66 différés, 8 poses, réparties 5 + 3 par passe dans le service worker comme au banc ; 37 min, le 26/10 à 10 h 09. [ÉTABLI] La parité sur 2-17 (les deux bonnes perdues) a été lancée puis arrêtée pour libérer la machine (demande de l'orchestrateur) : non faite.
