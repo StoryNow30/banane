@@ -22,8 +22,8 @@ const L1={'src/gcv1-shadow.js':'le réservoir du moteur sur demande (`scientific
  'src/adapter-page.js':'4.9.5.13 : `apply` rend en plus `vueFin` (position de chaque rail dans la vue à la fin de la pose, lecture seule, après la pose ; tests/apply-vue-fin-page.test.cjs)'};
 /* 4.9.5.14 (test 14) : la décision L1-e des différés (fiches/L1_APPRENTISSAGE.md), lue par src/gcv2-l1.js sous le profil « L1-se ». */
 const NOUVEAUX=['gcv2-l1.js','gcv2-l1e.js','gcv2-parametres-l1.js','raison-correction.js'];
-/* Test 17 : fichiers de l'habillage du panneau (`src/ui5*.js`) : aucun ne lit ni ne commande la pose. */
-const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js'];
+/* Test 17 : fichiers de l'habillage du panneau (`src/ui5*.js`, et `src/signal-rendu.js` pour Signal, D-250) : aucun ne lit ni ne commande la pose. */
+const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js','signal-rendu.js'];
 /* Test 17 et 18 : la carte « Relecture » du panneau ne propose plus « Lancer la relecture » pendant une pause (elle repartirait de zéro) et dit si la correction interrompue est
  * celle de la deuxième passe ; module du panneau, il ne parle qu'au service worker. Ces deux changements retirés, il est celui de la test 8 (contrôlé plus bas). */
 const PANNEAU={'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
