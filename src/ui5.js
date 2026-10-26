@@ -211,8 +211,9 @@
   const ANNEAU = 2 * Math.PI * 9;
   function vivant() {
     if (!hote || variante !== 'signal' || hote.hidden || !hote.querySelector) return;
-    const t = Date.now(), arc = hote.querySelector('.sg-arc[data-debut][data-med]');
-    if (arc) { const debut = Number(arc.dataset.debut), med = Number(arc.dataset.med); if (debut && med) arc.style.strokeDashoffset = (ANNEAU * (1 - Math.min(1, Math.max(0, t - debut) / med))).toFixed(2); }
+    /* Revue T21 (R6) : l'écran n'est plus réécrit chaque seconde : tous les anneaux (instrument et poignée du tiroir) avancent ici. */
+    const t = Date.now();
+    for (const arc of hote.querySelectorAll?.('.sg-arc[data-debut][data-med]') || []) { const debut = Number(arc.dataset.debut), med = Number(arc.dataset.med); if (debut && med) arc.style.strokeDashoffset = (ANNEAU * (1 - Math.min(1, Math.max(0, t - debut) / med))).toFixed(2); }
     const p = hote.querySelector('.sg-pause-depuis[data-debut]');
     if (p) { const debut = Number(p.dataset.debut); if (debut) p.textContent = S5.duree((t - debut) / 1000); }
   }

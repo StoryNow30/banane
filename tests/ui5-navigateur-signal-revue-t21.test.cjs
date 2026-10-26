@@ -44,6 +44,8 @@ test('R6 · lot en cours : le panneau se redessine chaque seconde, l’écran de
   assert.equal(await page.evaluate(()=>window.__fen.isConnected),true,'même écran après plusieurs rendus du panneau');
   const v1=await page.evaluate(()=>document.querySelector('#ui5 .sg-arc')?.style.strokeDashoffset);
   assert.ok(v1&&v1!==v0,'l’anneau avance quand même (vivant)');
+  const mini=await page.evaluate(()=>{const a=document.querySelector('#ui5 .sg-poignee .sg-arc');return a?{attr:a.getAttribute('stroke-dashoffset'),style:a.style.strokeDashoffset}:null;});
+  assert.ok(mini&&mini.style&&mini.style!==mini.attr,'l’anneau de la poignée avance aussi : '+JSON.stringify(mini));
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });
