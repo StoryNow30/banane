@@ -257,3 +257,18 @@ test('Signal · réglages : un choix clique l’élément d’origine (thème, b
  p.hote.ecoutes.change[0]({target:{closest:()=>({dataset:{sel:'f5'},value:'arret'})}});assert.equal(change,1,'déjà choisi : rien');
  assert.deepEqual(js(p.envoyes),[]);
 });
+
+test('Signal · T20a : statut de connexion, « Reconnecter » (bouton d’origine), historique des parties et heure de pause lus dans l’état ; rien d’inventé quand ils manquent',async()=>{
+ const pausedAt=new Date(Date.now()-90000).toISOString();
+ const H=[{part:13,batchId:'L1',startedAt:'2026-10-25T13:00:00Z',endedAt:null,version:'4.9.5.21',depart:{valides:10,invalides:120,ignores:0,total:130},cibles:120,poses:null,differes:null,ecritsPasse:null,main:null,fin:'en-cours'}];
+ const p=await monter({etat:etat({...LOT,state:'PAUSED',pauseReason:'user',pausedAt},{connection:{status:'reconnecting'},partsHistory:H})});
+ Object.assign(p.els.reconnect,{hidden:false,disabled:true});
+ const sig=p.ui.instantane(etat({...LOT,state:'PAUSED',pauseReason:'user',pausedAt},{connection:{status:'reconnecting'},partsHistory:H})).sig;
+ assert.equal(sig.connexion.statut,'reconnecting');assert.deepEqual(js(sig.connexion.reconnect),{visible:true,actif:false});
+ assert.equal(sig.historique[0].part,13);assert.ok(sig.allure.pauseS>=89&&sig.allure.pauseS<120,'en pause depuis environ 90 s');
+ p.rendu(etat({...LOT,state:'PAUSED',pauseReason:'user',pausedAt},{connection:{status:'reconnecting'},partsHistory:H}));
+ assert.match(p.hote.innerHTML,/class="sg-pause-depuis" data-debut="\d+">1 min 3\d<\/b>|class="sg-pause-depuis" data-debut="\d+">1 min 30<\/b>/);assert.match(p.hote.innerHTML,/data-etat="libre"/,'la puce dit la reconnexion');
+ p.els.reconnect.disabled=false;p.ui.agir('legacy:reconnect');assert.equal(p.els.reconnect.clics,1);
+ const vide=p.ui.instantane(etat(LOT)).sig;assert.equal(vide.historique,null);assert.equal(vide.allure.pauseS,null);
+ assert.deepEqual(js(p.envoyes),[]);
+});

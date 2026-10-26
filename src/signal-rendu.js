@@ -19,7 +19,7 @@
   const un = x => fr((Math.round(x * 10) / 10).toFixed(1));
   const duree = s => { s = Math.max(0, Math.round(s)); if (s < 60) return `${s} s`; const m = Math.floor(s / 60), r = s % 60; if (m >= 60) { const h = Math.floor(m / 60), mm = m % 60; return mm ? `${h} h ${String(mm).padStart(2, '0')}` : `${h} h`; } return r && m < 10 ? `${m} min ${String(r).padStart(2, '0')}` : `${m} min`; };
   const mono = v => `<span class="sg-mono">${esc(v)}</span>`;
-  const pl = (n, mot) => Number(n) === 1 ? mot : mot + 's';
+  const pl = (n, mot) => Number(n) <= 1 ? mot : mot + 's';
   /* Différés de la revue : la liste du lot (celle du tiroir) ; à défaut, le compte du lot. */
   const nDif = a => (a.differesListe || []).length || a.differes || 0;
 
