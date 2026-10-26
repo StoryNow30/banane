@@ -7,7 +7,7 @@ const fs = require('node:fs'), os = require('node:os'), path = require('node:pat
 const TB = require('../tools/tableau-bord.cjs'), CP = require('../tools/controle-passe.cjs'), X = require('../tools/exports-lots.cjs'), Z = require('../src/zip-writer.js');
 
 const T0 = Date.UTC(2031, 2, 3, 8, 0, 0), iso = s => new Date(T0 + s * 1000).toISOString();
-const LOT = 'aaaabbbb-0000-4000-8000-000000000001';
+const LOT = 'aaaabbbb-lot-synthetique';
 function journal({ version = '4.9.5.19', passe = true, preuve = true, serverConfirmedSeul = false, faussesPreuves = false } = {}) {
   const ev = [{ type: 'batch-started', timestamp: iso(0), batch: { id: LOT, scope: { part: 91, extensionVersion: version } } }];
   for (let c = 1; c <= 6; c++) {

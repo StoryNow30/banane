@@ -1,0 +1,284 @@
+{
+ "format": "ariane-tableau-bord-v1",
+ "version": "4.9.5.8",
+ "commit": null,
+ "commitOutil": "0201319",
+ "date": "2026-10-26",
+ "populations": {
+  "reglage": {
+   "exports": [
+    {
+     "sha256": "8629fcfa612575ae3a848cd5755645b632e8f75c6b3c663c4ec60b9c3cdf39de",
+     "partie": 13,
+     "lotId": "c8d56eab",
+     "cuts": 22
+    },
+    {
+     "sha256": "f91a5ee9afbe81370ff88290be971d03d9576505e04c8be3f46ecf626e644ff2",
+     "partie": 18,
+     "lotId": "eb1d9bc2",
+     "cuts": 214
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 40,
+     "N": 236,
+     "p": 16.9,
+     "wilson95": [
+      12.7,
+      22.3
+     ]
+    },
+    "differes": {
+     "n": 40,
+     "N": 236,
+     "p": 16.9,
+     "wilson95": [
+      12.7,
+      22.3
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 5388,
+     "p90Ms": 7957.5,
+     "captureMedMs": 1296,
+     "analyseMedMs": 1521.5,
+     "poste": "poste-719464",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": {
+     "lots": 1,
+     "cutsRelus": 321,
+     "dureeMs": 1802621,
+     "msParCut": 5616,
+     "corriges": 33,
+     "modes": [
+      "corriger"
+     ]
+    },
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  },
+  "terrain": {
+   "exports": [
+    {
+     "sha256": "f91a5ee9afbe81370ff88290be971d03d9576505e04c8be3f46ecf626e644ff2",
+     "partie": 21,
+     "lotId": "7e0bfdf8",
+     "cuts": 1
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 1,
+     "N": 1,
+     "p": 100,
+     "wilson95": [
+      20.7,
+      100
+     ]
+    },
+    "differes": {
+     "n": 1,
+     "N": 1,
+     "p": 100,
+     "wilson95": [
+      20.7,
+      100
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "sans-objet"
+    },
+    "vitesseLot": {
+     "cycleMedMs": null,
+     "p90Ms": null,
+     "captureMedMs": 684,
+     "analyseMedMs": 292,
+     "poste": "poste-719464",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": null,
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  }
+ },
+ "lots": [
+  {
+   "lot": "c8d56eab",
+   "partie": 13,
+   "version": "4.9.5.8",
+   "debut": "2026-10-19T10:40:03.646Z",
+   "population": "reglage",
+   "poste": "poste-719464",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-13",
+    "nom": "ariane-journal-v4-1792406709537.json",
+    "sha256": "8629fcfa612575ae3a848cd5755645b632e8f75c6b3c663c4ec60b9c3cdf39de"
+   },
+   "cuts": 22,
+   "invalidesAuDepart": 21,
+   "posesLot": 19,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 3,
+   "sansPose": {
+    "n": 3,
+    "N": 22,
+    "p": 13.6,
+    "wilson95": [
+     4.7,
+     33.3
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 4924,
+    "p90Ms": 6905,
+    "cycles": 20,
+    "cycleV1MedMs": 4791,
+    "cycleV1P90Ms": 6759,
+    "captureMedMs": 1079,
+    "analyseMedMs": 1508,
+    "decisionMedMs": 1309,
+    "dureeMin": 1.9,
+    "silencesMin": 0,
+    "phases": {
+     "n": 18,
+     "navigationCaptureMedMs": 1171,
+     "analyseMedMs": 1519,
+     "decisionMedMs": 1508,
+     "poseMedMs": 465,
+     "captureApresPoseMedMs": 75,
+     "validationMedMs": 109,
+     "cutSuivantMedMs": 77
+    }
+   },
+   "relecture": null
+  },
+  {
+   "lot": "7e0bfdf8",
+   "partie": 21,
+   "version": "4.9.5.8",
+   "debut": "2026-10-19T11:48:48.768Z",
+   "population": "terrain",
+   "poste": "poste-719464",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-18",
+    "nom": "ariane-journal-v4-1792414318712.json",
+    "sha256": "f91a5ee9afbe81370ff88290be971d03d9576505e04c8be3f46ecf626e644ff2"
+   },
+   "cuts": 1,
+   "invalidesAuDepart": 32,
+   "posesLot": 0,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 1,
+   "sansPose": {
+    "n": 1,
+    "N": 1,
+    "p": 100,
+    "wilson95": [
+     20.7,
+     100
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": null,
+    "p90Ms": null,
+    "cycles": 0,
+    "cycleV1MedMs": null,
+    "cycleV1P90Ms": null,
+    "captureMedMs": 684,
+    "analyseMedMs": 292,
+    "decisionMedMs": 14,
+    "dureeMin": 2.3,
+    "silencesMin": 1.1,
+    "phases": null
+   },
+   "relecture": null
+  },
+  {
+   "lot": "eb1d9bc2",
+   "partie": 18,
+   "version": "4.9.5.8",
+   "debut": "2026-10-19T11:52:23.099Z",
+   "population": "reglage",
+   "poste": "poste-719464",
+   "export": {
+    "collection": "2026-10-19_v4.9.5.8_partie-18",
+    "nom": "ariane-journal-v4-1792414318712.json",
+    "sha256": "f91a5ee9afbe81370ff88290be971d03d9576505e04c8be3f46ecf626e644ff2"
+   },
+   "cuts": 214,
+   "invalidesAuDepart": 214,
+   "posesLot": 177,
+   "passeEcrits": {
+    "n": 0,
+    "source": "sans-objet",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 37,
+   "sansPose": {
+    "n": 37,
+    "N": 214,
+    "p": 17.3,
+    "wilson95": [
+     12.8,
+     22.9
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 5852,
+    "p90Ms": 9010,
+    "cycles": 211,
+    "cycleV1MedMs": 5268,
+    "cycleV1P90Ms": 8584,
+    "captureMedMs": 1513,
+    "analyseMedMs": 1535,
+    "decisionMedMs": 62,
+    "dureeMin": 25.4,
+    "silencesMin": 2.1,
+    "phases": {
+     "n": 174,
+     "navigationCaptureMedMs": 2165,
+     "analyseMedMs": 1535,
+     "decisionMedMs": 176,
+     "poseMedMs": 697,
+     "captureApresPoseMedMs": 242,
+     "validationMedMs": 292,
+     "cutSuivantMedMs": 250
+    }
+   },
+   "relecture": {
+    "mode": "corriger",
+    "issue": "fin",
+    "cutsRelus": 321,
+    "corriges": 33,
+    "dureeMs": 1802621,
+    "msParCut": 5616
+   }
+  }
+ ]
+}

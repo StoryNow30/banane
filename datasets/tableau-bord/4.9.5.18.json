@@ -1,0 +1,113 @@
+{
+ "format": "ariane-tableau-bord-v1",
+ "version": "4.9.5.18",
+ "commit": null,
+ "commitOutil": "0201319",
+ "date": "2026-10-26",
+ "populations": {
+  "terrain": {
+   "exports": [
+    {
+     "sha256": "ae710197093df77e286bbeaf2aea9196beeed71f17d4e4fe5924478a147be0fb",
+     "partie": 2,
+     "lotId": "75a49ee0",
+     "cuts": 70
+    }
+   ],
+   "sansEcho": {
+    "sansPose": {
+     "n": 2,
+     "N": 70,
+     "p": 2.9,
+     "wilson95": [
+      0.8,
+      9.8
+     ]
+    },
+    "differes": {
+     "n": 2,
+     "N": 70,
+     "p": 2.9,
+     "wilson95": [
+      0.8,
+      9.8
+     ],
+     "note": "différés de l'état du lot : les cuts écrits par la passe y restent (D-238)"
+    },
+    "passeEcrits": {
+     "n": 0,
+     "source": "evenements"
+    },
+    "vitesseLot": {
+     "cycleMedMs": 1595,
+     "p90Ms": 5339,
+     "captureMedMs": 739,
+     "analyseMedMs": 202,
+     "poste": "poste-12eb57",
+     "note": "médiane des valeurs par lot (lots de tailles différentes : indicatif)"
+    },
+    "relecture": null,
+    "skipOmbre": null
+   },
+   "avecEcho": null
+  }
+ },
+ "lots": [
+  {
+   "lot": "75a49ee0",
+   "partie": 2,
+   "version": "4.9.5.18",
+   "debut": "2026-10-21T16:14:41.211Z",
+   "population": "terrain",
+   "poste": "poste-12eb57",
+   "export": {
+    "collection": "2026-10-21_v4.9.5.18_partie-2",
+    "nom": "ariane-journal-v4-1792599532571.json",
+    "sha256": "ae710197093df77e286bbeaf2aea9196beeed71f17d4e4fe5924478a147be0fb"
+   },
+   "cuts": 70,
+   "invalidesAuDepart": 69,
+   "posesLot": 68,
+   "passeEcrits": {
+    "n": 0,
+    "source": "evenements",
+    "cuts": [],
+    "decideesEnOmbre": 0,
+    "issue": null
+   },
+   "differesLot": 2,
+   "sansPose": {
+    "n": 2,
+    "N": 70,
+    "p": 2.9,
+    "wilson95": [
+     0.8,
+     9.8
+    ]
+   },
+   "vitesseLot": {
+    "cycleMedMs": 1595,
+    "p90Ms": 5339,
+    "cycles": 68,
+    "cycleV1MedMs": 1502,
+    "cycleV1P90Ms": 5274,
+    "captureMedMs": 739,
+    "analyseMedMs": 202,
+    "decisionMedMs": 4,
+    "dureeMin": 2.7,
+    "silencesMin": 0,
+    "phases": {
+     "n": 67,
+     "navigationCaptureMedMs": 787,
+     "analyseMedMs": 202,
+     "decisionMedMs": 31,
+     "poseMedMs": 70,
+     "captureApresPoseMedMs": 44,
+     "validationMedMs": 65,
+     "cutSuivantMedMs": 43
+    }
+   },
+   "relecture": null
+  }
+ ]
+}
