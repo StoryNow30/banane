@@ -135,8 +135,9 @@
   });
 
   /* --- Décision sur le lot dans le Pilote (4.7.8 en observation, 4.7.10 commande selon le lot) --- */
-  /* Test 17 : valeurs livrées de la deuxième passe des différés (voir `lot.passeDifferes`). */
-  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: true, ecritureMax: null, passes: 2, leviers: Object.freeze({ sansVoieRien: true }) });
+  /* Test 17 : valeurs livrées de la deuxième passe des différés (voir `lot.passeDifferes`). Test 21, décision de l'opérateur du 26/10 (D-251) : livrée EN OMBRE (`ecriture: false`),
+   * jusqu'à ce qu'une garde des appuis faux soit écrite et vérifiée ; `ecriture: true` la rallume en écriture. */
+  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: Object.freeze({ sansVoieRien: true }) });
   const lot = Object.freeze({
     observe: true,
     /* Ancres gardées en mémoire du lot : largement plus que les 3 numéros de
@@ -188,12 +189,14 @@
     recaptureVide: Object.freeze({ actif: false, minPoints: 100, attenteMs: 1500, essais: 2 }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
-     * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE dès l'installation, en écriture, sans plafond de poses. Lecture des clés (src/settings.js `passeDifferesDefaut` sert
+     * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE
+     * (`ecriture: false`) : elle calcule et journalise ce qu'elle poserait, et n'écrit plus rien dans ESV, jusqu'à ce qu'une garde des appuis faux soit écrite et vérifiée ;
+     * `ecriture: true` la rallume en écriture, avec toutes ses gardes. Lecture des clés (src/settings.js `passeDifferesDefaut` sert
      * de défaut) : une clé ABSENTE vaut la valeur livrée ; `false` COUPE ; toute autre valeur que `true`/`false` (ou un nombre illisible) COUPE.
      *   `ombre` : la passe calcule et journalise (`passe-differes-ombre`) ce qu'elle poserait. `ombre:false` : plus de passe du tout, la test 16 à l'identique.
      *   `ecriture` (avec `ombre`) : elle pose réellement, un cut après l'autre, validé sur place (Ctrl+Entrée). `ecriture:false` : ombre seule, rien n'est écrit.
      *   `ecritureMax` : cuts écrits au plus par lot ; `null` : sans plafond (livré) ; un entier ≥ 1 ; toute autre valeur coupe l'écriture.
-     * Garde de livraison : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
+     * Garde de livraison (valable une fois l'écriture rallumée) : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
      * validation prouvée, arrêt au premier refus). */
     passeDifferes: passeDifferesDefaut,
   });

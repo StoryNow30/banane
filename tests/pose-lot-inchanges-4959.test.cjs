@@ -37,7 +37,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?lire(f).split('4.9.5.20').join('4.9.5.8').split('4.9.5 test 20 (L1-e6)').join('4.9.5 test 8'):lire(f);
+  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?lire(f).split('4.9.5.21').join('4.9.5.8').split('4.9.5 test 21 (L1-e6)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
@@ -72,8 +72,8 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['passeDifferes','profil','recaptureVide']);
  assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
- /* Test 17 : la deuxième passe des différés, ALLUMÉE par la décision de l'opérateur (ombre et écriture, sans plafond) ; le reste est l'empreinte d'avant. */
- assert.deepEqual([passeDifferes.ombre,passeDifferes.ecriture,passeDifferes.ecritureMax],[true,true,null],'deuxième passe des différés : écriture sans plafond');
+ /* Test 17 : la deuxième passe des différés, ALLUMÉE par la décision de l'opérateur ; test 21 (D-251, 26/10) : livrée EN OMBRE (ombre sans écriture, sans plafond) ; le reste est l'empreinte d'avant. */
+ assert.deepEqual([passeDifferes.ombre,passeDifferes.ecriture,passeDifferes.ecritureMax],[true,false,null],'deuxième passe des différés : ombre, rien d\'écrit');
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');

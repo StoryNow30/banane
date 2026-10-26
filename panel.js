@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 20 (L1-e6)',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 21 (L1-e6)',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -527,7 +527,7 @@
    ecrire('grappe-note',ouvert&&grappeDuScope(sc)!==(choixLot.regleGrappeDifferes===true)?'Le lot en cours garde la sienne jusqu’à sa fin ; la case servira au prochain lot.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.');}
  async function changerChoixLot(args){try{choixLot=await api('choix-lot',args);
      const ouvert=OUVERT.includes(state?.batch?.state);
-     note('passeDifferes' in args?(args.passeDifferes?'Deuxième passe allumée : elle partira à la fin du lot et écrira dans ESV.':'Deuxième passe coupée : elle n’écrira plus rien dans ESV.')
+     note('passeDifferes' in args?(args.passeDifferes?'Deuxième passe allumée, en ombre : à la fin du lot, elle notera ce qu’elle poserait, sans rien écrire dans ESV.':'Deuxième passe coupée : plus aucun calcul en fin de lot.')
        :ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
    catch(e){note(e.message,true);}
    majChoixLot(state);}
