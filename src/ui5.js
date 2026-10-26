@@ -209,13 +209,15 @@
   /* Connexion T21 (fiches/CONNEXION_T21.md) : le panneau s'ouvre sur l'accueil du panneau d'avant (`#home`, background.js `openPanel`), où panel.js
    * (`discover`) ne cherche pas les onglets ESV ; c'est le clic sur « Orbite » ou « Écho » de cet accueil qui les cherchait et connectait l'onglet unique.
    * Signal n'a pas d'accueil : une fois, il entre dans la vue de l'activité qu'il affiche (Écho si une séance est en cours ou à terminer, sinon Orbite),
-   * par un clic sur l'onglet d'origine. Rien d'autre : la règle de connexion est celle de `discover` (onglet unique, rien d'actif). */
+   * par un clic sur l'onglet d'origine. Rien d'autre : la règle de connexion est celle de `discover` (onglet unique, rien d'actif).
+   * Test 22 (avec la bascule T21) : « à terminer » est ce que `echoEtat` appelle ainsi ; une séance FINIE (`FINISHED`, « Séance terminée », gardée par le
+   * service worker après l'export) n'est ni ouverte ni à terminer : le panneau s'ouvre sur Orbite. */
   let entre = false;
   function entrer(s) {
     if (entre || variante !== 'signal' || secours) return;
     entre = true;
     if ((D.body?.dataset?.window || 'home') !== 'home') return;
-    const n = s?.native, echo = !!n && (['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status) || !!n.visits?.length);
+    const n = s?.native, echo = !!n && (['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status) || (n.status !== 'FINISHED' && !!n.visits?.length));
     cliquer(echo ? 'tab-native' : 'tab-automatic');
   }
   /* Secours : si l'habillage ne sait pas se dessiner, le panneau d'avant revient tel quel, avec la raison dans sa ligne d'avis. Rien d'autre ne change. */

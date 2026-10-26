@@ -27,6 +27,9 @@ test('séance Écho en cours ou à terminer : il entre dans Écho ; déjà dans 
   const p=await monter({etat:repos({native})});p.rendu(repos({native}));await p.attendre(10);
   assert.equal(p.els['tab-native'].clics,1,JSON.stringify(native));assert.equal(p.els['tab-automatic'].clics,0,JSON.stringify(native));
  }
+ /* Test 22 (bascule T21) : une séance finie (« Séance terminée », gardée après l'export) n'est pas « à terminer » : le panneau s'ouvre sur Orbite. */
+ {const native={status:'FINISHED',visits:[{c:1},{c:2}]},p=await monter({etat:repos({native})});p.rendu(repos({native}));await p.attendre(10);
+  assert.equal(p.els['tab-automatic'].clics,1,'séance finie : Orbite');assert.equal(p.els['tab-native'].clics,0,'séance finie : pas Écho');}
  const vue=await monter({etat:null});vue.body.dataset.window='automatic';vue.rendu(repos());await vue.attendre(10);
  assert.equal(vue.els['tab-automatic'].clics+vue.els['tab-native'].clics,0,'déjà dans Orbite');
  const essai=await monter({stockage:{banane51Interface:'ariane2'},etat:repos()});essai.rendu(repos());await essai.attendre(10);
