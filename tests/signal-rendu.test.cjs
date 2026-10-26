@@ -31,7 +31,7 @@ test('lot en cours : anneau proportionnel, allure honnête, Pause principale, Ar
  assert.match(h,/class="sg-mot">En cours</);assert.match(h,/Pose du cut <span class="sg-mono">4812</);
  assert.match(h,/class="sg-arc"[^>]*data-debut="1000" data-med="8400"/,'l’anneau sait se remettre à jour entre deux rendus');
  assert.match(h,/<b>7,1<\/b> cuts par minute/);assert.match(h,/médiane <b>8,4 s<\/b> par cut/);assert.match(h,/environ <b>12 min<\/b> restantes/,'89 restants × 8,4 s');
- assert.match(h,/class="sg-principal" data-act="pause"/);assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:stop"/);
+ assert.match(h,/class="sg-principal" data-k="[^"]*" data-act="pause"/);assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:stop"/);
  assert.match(h,/class="sg-rail-dif"/);assert.match(h,/class="sg-rail-cur"/);assert.match(h,/>120<\/div>/);
  const sans=S.rendre(snap({sig:sig({allure:{mediane:null,parMinute:null,debutCut:null,depuisS:null,pauseS:null}})}),ui());
  assert.doesNotMatch(sans,/cuts par minute|restantes/,'sans médiane, pas d’allure');
@@ -55,9 +55,9 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
   assert.match(h,new RegExp('class="sg-mot">'+mot.source),etat);assert.equal(S.modele(snap({ar:ar(etat,x)}),ui()).glyphe,glyphe,etat);
   assert.ok((h.match(/class="sg-principal/g)||[]).length<=1,etat+' : une seule action principale');
  }
- const d=S.rendre(snap({ar:ar('dem')}),ui());assert.match(d,/class="sg-principal" disabled><span class="sg-tourne"/);assert.doesNotMatch(d,/data-act="pause"/);
+ const d=S.rendre(snap({ar:ar('dem')}),ui());assert.match(d,/class="sg-principal" data-k="occupe" disabled><span class="sg-tourne"/);assert.doesNotMatch(d,/data-act="pause"/);
  const t=S.rendre(snap({ar:ar('alerte',{etatTexte:'À toi',alerte:'Le cut 4812 a un rail qu’Ariane ne sait pas poser.'}),boutonsOrbite:[b('retry','Réessayer la pose','primary'),b('manual-takeover','Reprendre à la main'),b('explicit-skip','Passer ce cut','danger')]}),ui());
- assert.match(t,/class="sg-incident" role="alert"><p>Le cut 4812 a un rail/);assert.match(t,/data-act="legacy:retry"/);assert.match(t,/sg-danger" data-act="legacy:explicit-skip"/);
+ assert.match(t,/class="sg-incident" data-k="incident" role="alert"><p>Le cut 4812 a un rail/);assert.match(t,/data-act="legacy:retry"/);assert.match(t,/sg-danger" data-act="legacy:explicit-skip"/);
  const p2=S.rendre(snap({ar:ar('p2',{passe2:{cut:4787,ecrites:1,demandees:3}})}),ui());
  assert.match(p2,/sg-verrou-ligne/);assert.doesNotMatch(p2,/class="sg-principal/);assert.match(p2,/cut <span class="sg-mono">4787<\/span> · 1 posé sur 3/);
 });
@@ -65,9 +65,9 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
 test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’export vient en second ; rien à examiner : le bouton du panneau',()=>{
  const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:9,aExaminer:13}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary'),b('new-batch','Nouveau lot')],exportTexte:''}),ui());
  assert.match(f,/<dt>Lot<\/dt><dd><b>31<\/b> cuts traités sur <b>120<\/b> ciblés/);assert.match(f,/<b class="sg-dif">2<\/b> différés, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
- assert.match(f,/class="sg-principal" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
+ assert.match(f,/class="sg-principal" data-k="[^"]*" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
  const r=S.rendre(snap({ar:ar('fini',{lotOuvert:false,differes:0,differesListe:[],aExaminer:0}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary')]}),ui());
- assert.match(r,/class="sg-principal" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
+ assert.match(r,/class="sg-principal" data-k="[^"]*" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
 });
 
 test('Revue V2 : différés puis verts (par plage), « Ouvrir » seulement par le bouton caché du panneau, « Examiner » barré et décompté',()=>{

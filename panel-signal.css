@@ -266,3 +266,64 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 .sg-tech-tete span{flex:1;opacity:.75;font-size:12px}
 .sg-tech-tete button{padding:6px 12px;border-radius:6px;border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit;cursor:pointer}
 .sg-tech-corps{padding:12px 16px;display:flex;flex-direction:column;gap:16px}
+
+/* ───────────────────────────── mouvement (retour de la test 21 : « animations pauvres »)
+ * Règle de l'architecture : une animation signale un changement, jamais un ornement ; une seule boucle (le glyphe « en cours »).
+ * Elles se jouent parce que src/ui5.js met l'écran à jour EN PLACE : un élément qui reste ne rejoue rien, un élément qui change de clé (`data-k`)
+ * entre une fois. Courbe de sortie douce, sans rebond ; tout à zéro en mouvement réduit. */
+#ui5.u-signal{--d-entree:360ms;--d-glisse:320ms}
+@keyframes sg-monte{from{opacity:0;transform:translateY(8px)}}
+@keyframes sg-apparait{from{opacity:0;transform:scale(.97)}}
+@keyframes sg-glyphe-entre{from{opacity:0;transform:scale(.55) rotate(-25deg)}}
+@keyframes sg-trace{from{stroke-dashoffset:24}}
+@keyframes sg-tic{from{opacity:.25;transform:translateY(-.3em)}}
+@keyframes sg-repere{from{opacity:0;transform:translateX(-50%) scaleY(0)}}
+@keyframes sg-ligne{from{opacity:0;transform:translateY(6px)}}
+@keyframes sg-descend{from{opacity:0;transform:translateY(-100%)}}
+@keyframes sg-coche{0%{transform:scale(.4)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes sg-eclat{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--alerte) 45%,transparent)}100%{box-shadow:0 0 0 10px transparent}}
+
+/* entrée de l'écran (une fois) : l'état, puis l'objet, puis l'action, en cascade courte */
+#ui5.u-signal .sg-instrument>*{animation:sg-monte var(--d-entree) var(--sortie) backwards}
+#ui5.u-signal .sg-instrument>*:nth-child(2){animation-delay:50ms}
+#ui5.u-signal .sg-instrument>*:nth-child(3){animation-delay:100ms}
+#ui5.u-signal .sg-instrument>*:nth-child(4){animation-delay:150ms}
+#ui5.u-signal .sg-instrument>*:nth-child(5){animation-delay:200ms}
+/* changement d'état : le glyphe entre (la coche se trace), le mot et les chiffres signalent leur nouvelle valeur */
+#ui5.u-signal .sg-glyphe{animation:sg-glyphe-entre 380ms var(--sortie) backwards;transition:color 240ms var(--sortie)}
+#ui5.u-signal .sg-glyphe[data-g="fini"] path{stroke-dasharray:24;animation:sg-trace 520ms var(--sortie) 120ms backwards}
+#ui5.u-signal .sg-glyphe[data-g="toi"],#ui5.u-signal .sg-glyphe[data-g="interrompu"]{border-radius:50%;animation:sg-glyphe-entre 380ms var(--sortie) backwards,sg-eclat 900ms ease-out 200ms 2}
+#ui5.u-signal .sg-tic{display:inline-block;animation:sg-tic 320ms var(--sortie)}
+#ui5.u-signal .sg-incident{animation:sg-monte 320ms var(--sortie) backwards}
+#ui5.u-signal .sg-fin{animation:sg-monte 360ms var(--sortie) backwards}
+#ui5.u-signal .sg-fin dd{animation:sg-monte 320ms var(--sortie) backwards}
+#ui5.u-signal .sg-fin dd:nth-of-type(2){animation-delay:80ms}#ui5.u-signal .sg-fin dd:nth-of-type(3){animation-delay:160ms}
+/* l'action principale change : elle entre, les secondaires suivent */
+#ui5.u-signal .sg-principal{animation:sg-apparait 260ms var(--sortie) backwards}
+#ui5.u-signal .sg-secondaire{transition:color var(--d-local) var(--sortie),opacity var(--d-local) var(--sortie)}
+/* le rail : le segment fait avance, le curseur glisse, un nouveau différé se dresse, la couleur suit l'état */
+#ui5.u-signal .sg-rail-fait{transition:width 420ms var(--sortie),background var(--d-local) var(--sortie)}
+#ui5.u-signal .sg-rail-cur{z-index:2;transition:left 420ms var(--sortie),background 240ms var(--sortie)}
+#ui5.u-signal .sg-rail-dif,#ui5.u-signal .sg-rail-inc{transform-origin:50% 100%;animation:sg-repere 320ms var(--sortie) backwards;transition:left 420ms var(--sortie)}
+#ui5.u-signal .sg-arc{transition:stroke-dashoffset 500ms linear}
+#ui5.u-signal .sg-marques i{transition:height 240ms var(--sortie),background 240ms var(--sortie)}
+/* le tiroir : glisse, puis ses lignes arrivent en cascade (12 au plus) ; « examiné » se raye */
+#ui5.u-signal .sg-tiroir{transition:transform var(--d-glisse) var(--sortie),box-shadow var(--d-glisse) var(--sortie)}
+#ui5.u-signal .sg-tiroir[data-ouvert="1"] .sg-section,#ui5.u-signal .sg-tiroir[data-ouvert="1"] .sg-ligne{animation:sg-ligne 280ms var(--sortie) backwards;animation-delay:calc(var(--i,0) * 22ms + 80ms)}
+#ui5.u-signal .sg-ligne .sg-cut,#ui5.u-signal .sg-ligne .sg-motif{background:linear-gradient(var(--encre3),var(--encre3)) no-repeat 0 58%/0% 1px;transition:background-size 280ms var(--sortie),color 240ms var(--sortie)}
+#ui5.u-signal .sg-ligne.sg-examine .sg-cut,#ui5.u-signal .sg-ligne.sg-examine .sg-motif{text-decoration:none;background-size:100% 1px}
+#ui5.u-signal .sg-ligne{transition:background var(--d-local) var(--sortie)}
+#ui5.u-signal .sg-outils button{transition:color var(--d-local) var(--sortie),background var(--d-local) var(--sortie)}
+#ui5.u-signal .sg-outils button[aria-pressed="true"] svg{animation:sg-coche 340ms var(--sortie)}
+/* barre : la puce change de couleur en douceur, la bascule glisse, la note descend */
+#ui5.u-signal .sg-puce i{transition:background 300ms var(--sortie),border-color 300ms var(--sortie)}
+#ui5.u-signal .sg-bascule button,#ui5.u-signal .sg-ico,#ui5.u-signal .sg-seg button{transition:background var(--d-local) var(--sortie),color var(--d-local) var(--sortie)}
+#ui5.u-signal .sg-barre-note{animation:sg-descend 260ms var(--sortie)}
+#ui5.u-signal .sg-cache button{transition:color 300ms var(--sortie),border-color 300ms var(--sortie),background var(--d-local) var(--sortie)}
+/* couches : la palette et la feuille entrent une fois, leur contenu en cascade */
+#ui5.u-signal .sg-palette .sg-cmd{animation:sg-ligne 240ms var(--sortie) backwards;transition:background 120ms var(--sortie)}
+#ui5.u-signal .sg-palette .sg-cmd:nth-child(2){animation-delay:30ms}#ui5.u-signal .sg-palette .sg-cmd:nth-child(3){animation-delay:60ms}#ui5.u-signal .sg-palette .sg-cmd:nth-child(4){animation-delay:90ms}
+#ui5.u-signal .sg-feuille .sg-reg{animation:sg-ligne 260ms var(--sortie) backwards}
+#ui5.u-signal .sg-feuille .sg-reg:nth-child(n+2){animation-delay:40ms}#ui5.u-signal .sg-feuille .sg-reg:nth-child(n+4){animation-delay:80ms}#ui5.u-signal .sg-feuille .sg-reg:nth-child(n+6){animation-delay:120ms}
+#ui5.u-signal .sg-popover .sg-ong{animation:sg-ligne 220ms var(--sortie) backwards}
+@media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}}

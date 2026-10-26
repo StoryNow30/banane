@@ -185,11 +185,43 @@
     } catch (e) { secourir(e); return; }
     if (!force && html === ui.last) return;
     const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
-    ui.last = html; hote.innerHTML = html;
-    [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; });
+    ui.last = html;
+    if (variante === 'signal' && morpher(hote, html)) apresMorph();
+    else { hote.innerHTML = html; [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; }); }
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
     if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
+  }
+  /* Signal : mise à jour EN PLACE (les éléments qui restent restent), pour que les transitions se jouent : le rail avance, le curseur glisse,
+   * l'anneau se remplit, une couche ouverte ne rejoue pas son entrée à chaque rendu du panneau. Un élément porteur de `data-k` est remplacé
+   * quand sa clé change (son entrée s'anime alors une fois). Sans <template> (page minimale des essais), on retombe sur innerHTML. */
+  const memeNoeud = (a, b) => a.nodeType === b.nodeType && a.nodeName === b.nodeName && (a.nodeType !== 1 || a.getAttribute('data-k') === b.getAttribute('data-k'));
+  function patchNoeud(a, b) {
+    if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) { a.nodeValue = b.nodeValue; changes.textes.push(a.parentNode); } return; }
+    for (const { name } of [...a.attributes]) if (!b.hasAttribute(name) && name !== 'style') a.removeAttribute(name);
+    for (const { name, value } of [...b.attributes]) if (a.getAttribute(name) !== value) a.setAttribute(name, value);
+    if (a.tagName === 'INPUT' && a.value !== (b.getAttribute('value') || '') && D.activeElement !== a) a.value = b.getAttribute('value') || '';
+    patchEnfants(a, b);
+  }
+  function patchEnfants(a, b) {
+    const ac = [...a.childNodes], bc = [...b.childNodes];
+    bc.forEach((y, i) => { const x = ac[i]; if (!x) a.appendChild(y); else if (memeNoeud(x, y)) patchNoeud(x, y); else a.replaceChild(y, x); });
+    for (let i = bc.length; i < ac.length; i++) ac[i].remove();
+  }
+  const changes = { textes: [] };
+  function morpher(cible, html) {
+    const t = D.createElement('template'); if (!t?.content || !cible.firstChild) { return false; }
+    t.innerHTML = html; changes.textes = [];
+    if (cible.childNodes.length !== 1 || !memeNoeud(cible.firstChild, t.content.firstChild)) return false;
+    patchNoeud(cible.firstChild, t.content.firstChild);
+    return true;
+  }
+  /* Ce qui a changé de valeur se signale une fois, brièvement (chiffres, compteurs, mot d'état) ; rien en boucle. */
+  function apresMorph() {
+    for (const n of new Set(changes.textes)) {
+      const e = n?.closest?.('.sg-chiffre,.sg-n,.sg-droite,.sg-allure b,.sg-fin dd b'); if (!e) continue;
+      e.classList.remove('sg-tic'); void e.offsetWidth; e.classList.add('sg-tic');
+    }
   }
   /* Secours : si l'habillage ne sait pas se dessiner, le panneau d'avant revient tel quel, avec la raison dans sa ligne d'avis. Rien d'autre ne change. */
   function secourir(e) {
