@@ -32,5 +32,10 @@
     { "nom": "0-2310-lot2", "partie": "?:0", "bancPartie": "9:0", "lot": "e177081f", "groupe": "terrain-partie-0-23-10", "verite": "verite-0-2310-lot2.json", "collection": "2026-10-23_v4.9.5.19_partie-0-lot-2",
       "fichiers": { "journal": "ariane-journal-v4-1792759693947.json", "liste": "ariane-liste-partie0-20261023-124133Z.json", "corpus": ["ariane-gcv1-corpus-2026-10-23T12-48-19-seg01.json"] },
       "veriteNote": "lot « Tout recentré » de 14 h 41 ; vérité tirée de la seule session Écho postérieure au lot (14 h 54 à 16 h 04), validations seulement" }
+  ],
+  "notePertes": "D-252 : pertes acceptées pour la SEULE colonne « avec passe » (tools/garde-gcv2.cjs, lirePertesAcceptees) ; montrées en tête du rapport à chaque passage ; une perte hors liste reste bloquante ; fiches/GARDE_PASSE_A.md.",
+  "pertesAcceptees": [
+    { "colonne": "avecPasse", "lot": "2-17", "cut": 9521, "decisionGarde": "garde-appuis", "motif": "D-252, accord de l'opérateur du 26/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui", "commit": "acf24f99596c563b8dac333e4855918546d3f264", "note": "pose de la passe à 93,5 mm du départ, chaîne normale à 8 cuts : refusée par la garde A (src/garde-passe-appuis.js) ; bonne en base (≤ 10 mm)" },
+    { "colonne": "avecPasse", "lot": "2-17", "cut": 9522, "decisionGarde": "garde-appuis", "motif": "D-252, accord de l'opérateur du 26/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui", "commit": "acf24f99596c563b8dac333e4855918546d3f264", "note": "pose de la passe à 57,5 mm du départ, chaîne normale à 7 cuts : refusée par la garde A (src/garde-passe-appuis.js) ; bonne en base (≤ 10 mm)" }
   ]
 }
