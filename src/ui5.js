@@ -187,9 +187,12 @@
       if (variante === 'signal') { html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; }
       else html = R.rendre(snap, ecran, ui);
     } catch (e) { secourir(e); return; }
-    if (!force && html === ui.last) return;
+    /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
+     * réécriture de l'écran (qui refermerait une liste ouverte et recréerait la feuille de réglages, le tiroir, le choix d'onglet). */
+    const cle = html.replace(/ stroke-dashoffset="[^"]*"/g, '').replace(/(class="sg-pause-depuis"[^>]*>)[^<]*/g, '$1');
+    if (!force && cle === ui.cle) return;
     const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
-    ui.last = html; hote.innerHTML = html;
+    ui.last = html; ui.cle = cle; hote.innerHTML = html;
     [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; });
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');

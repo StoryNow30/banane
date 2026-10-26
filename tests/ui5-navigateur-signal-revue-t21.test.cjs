@@ -32,3 +32,18 @@ test('D7 + D4 · « Nouveau lot » : les bornes sont dans Signal ; le dernier cu
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });
+
+test('R6 · lot en cours : le panneau se redessine chaque seconde, l’écran de Signal n’est pas réécrit',{skip:absent,timeout:20000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const lot={...SC.lot,connection:{status:'ready'}};lot.batch={...lot.batch,cutStartedAt:new Date(Date.now()-2000).toISOString(),processed:lot.batch.processed.map((x,i)=>({...x,durationMs:20000+i*100}))};
+  const {page,erreurs}=await ouvrir(nav,lot,{width:600,height:760});
+  await page.evaluate(()=>{window.__fen=document.querySelector('#ui5 .sg-fen');});
+  const v0=await page.evaluate(()=>document.querySelector('#ui5 .sg-arc')?.style.strokeDashoffset||document.querySelector('#ui5 .sg-arc')?.getAttribute('stroke-dashoffset'));
+  await page.waitForTimeout(2600);
+  assert.equal(await page.evaluate(()=>window.__fen.isConnected),true,'même écran après plusieurs rendus du panneau');
+  const v1=await page.evaluate(()=>document.querySelector('#ui5 .sg-arc')?.style.strokeDashoffset);
+  assert.ok(v1&&v1!==v0,'l’anneau avance quand même (vivant)');
+  assert.deepEqual(erreurs,[]);
+ }finally{await nav.close();}
+});

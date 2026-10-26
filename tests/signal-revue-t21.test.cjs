@@ -108,5 +108,19 @@ test('R5 · l’avis de contrat ESV est dit ; D6 · la correction interrompue es
  assert.match(sans,/class="sg-principal"[^>]*data-act="legacy:relecture-pause"/,'sans correction interrompue : rien ne change');
 });
 
-/* ------------------------------------------------------------------ R4 */
+/* ------------------------------------------------------------------ R6 */
+test('R6 · le temps qui passe (anneau du cut, « en pause depuis ») ne réécrit pas l’écran ; un vrai changement, si',async()=>{
+ const p=await monter({etat:etat(LOT)});
+ vm.runInContext('globalThis.__t=Date.parse("2026-10-26T10:00:03Z");Date.now=()=>globalThis.__t;',p.ctx);
+ const cours={...LOT,cutStartedAt:'2026-10-26T10:00:00Z',processed:[{durationMs:6000},{durationMs:8000},{durationMs:7000}]};
+ p.rendu(etat(cours));const ecrit=p.hote.innerHTML;assert.match(ecrit,/class="sg-arc"/);
+ p.hote.innerHTML='<!--repère-->';p.ctx.__t+=1000;p.rendu(etat(cours));
+ assert.equal(p.hote.innerHTML,'<!--repère-->','une seconde plus tard, même état : rien n’est réécrit (une liste ouverte reste ouverte)');
+ p.rendu(etat({...cours,processed:[...cours.processed,{durationMs:5000}]}));assert.match(p.hote.innerHTML,/class="sg-fen"/,'un cut de plus : redessiné');
+ const pause={...LOT,state:'PAUSED',pauseReason:'user',pausedAt:'2026-10-26T10:00:00Z'};
+ p.rendu(etat(pause));assert.match(p.hote.innerHTML,/sg-pause-depuis/);p.hote.innerHTML='<!--pause-->';p.ctx.__t+=5000;p.rendu(etat(pause));
+ assert.equal(p.hote.innerHTML,'<!--pause-->','« en pause depuis » avance sans réécrire l’écran');
+});
+
+/* ------------------------------------------------------------------ R1 */
 /* ------------------------------------------------------------------ G1 */
