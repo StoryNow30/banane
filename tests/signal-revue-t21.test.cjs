@@ -158,3 +158,20 @@ test('R1 · deuxième passe en ombre : en fin de lot, ce qu’elle poserait ; en
 });
 
 /* ------------------------------------------------------------------ G1 */
+test('G1 · palette : Entrée sur une commande dangereuse demande une seconde Entrée ; une autre touche annule ; les autres commandes partent tout de suite',async()=>{
+ const p=await monter({etat:etat(LOT)});
+ const clavier=e=>{for(const f of p.body.ecoutes.keydown)f(e);return e;};
+ for(const id of ['start-batch','resume','retry','manual-takeover','manual-completion','close-uncertain','export-tout','new-batch','relecture-acquitter','relecture-arreter','relecture-lancer','passe-differes-lancer','explicit-skip'])p.els[id].hidden=true;
+ Object.assign(p.els.pause,{hidden:false,className:'primary',textContent:'Pause'});Object.assign(p.els.stop,{hidden:false,className:'danger',textContent:'Arrêter le lot'});p.rendu(etat(LOT));
+ clavier(touche('k',{ctrlKey:true}));p.champ.value='arr';p.hote.ecoutes.input[0]({target:p.champ});
+ assert.equal(S.paletteListe(p.ui.instantane(etat(LOT)),{q:'arr',pi:0})[0].act,'legacy:stop');
+ clavier(touche('Enter',{target:p.champ}));assert.equal(p.els.stop.clics,0,'première Entrée : rien ne part');
+ assert.match(p.hote.innerHTML,/class="sg-palette"/,'la palette reste ouverte');assert.match(p.hote.innerHTML,/Entrée encore pour confirmer/);
+ clavier(touche('Enter',{target:p.champ}));assert.equal(p.els.stop.clics,1,'seconde Entrée : le bouton d’origine');
+ clavier(touche('k',{ctrlKey:true}));p.champ.value='arr';p.hote.ecoutes.input[0]({target:p.champ});
+ clavier(touche('Enter',{target:p.champ}));clavier(touche('ArrowDown',{target:p.champ}));clavier(touche('ArrowUp',{target:p.champ}));clavier(touche('Enter',{target:p.champ}));
+ assert.equal(p.els.stop.clics,1,'une flèche entre deux Entrée annule la confirmation');
+ clavier(touche('Escape'));clavier(touche('k',{ctrlKey:true}));p.champ.value='pau';p.hote.ecoutes.input[0]({target:p.champ});clavier(touche('Enter',{target:p.champ}));
+ assert.equal(p.els.pause.clics,1,'Pause : une Entrée suffit');
+ assert.deepEqual(js(p.envoyes),[]);
+});

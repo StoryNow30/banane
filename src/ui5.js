@@ -386,13 +386,17 @@
    * tiroir ouvert, ↑ ↓ parcourent les lignes et E marque « examiné ». Une commande grisée n'est jamais lancée. */
   function clavierSignal(e) {
     const dansChamp = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '') && e.target?.id !== 'ui5-q';
+    if (e.key !== 'Enter') ui.confirme = null;   /* Revue T21 (G1) : toute autre touche annule la confirmation en attente */
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); agirSignal('sg:palette'); return; }
     if (e.ctrlKey || e.metaKey) return;
     if (e.key === 'Escape') { if (ui.couche) agirSignal('sg:fermer'); else if (tech) fermerTech(); else if (ui.tiroir) agirSignal('sg:tiroir'); return; }
     if (ui.couche === 'palette') {
       const cmds = S5.paletteListe(instantane(root.ArianePanel.state() || {}), ui);
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { ui.pi = Math.max(0, Math.min(cmds.length - 1, ui.pi + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); }
-      else if (e.key === 'Enter') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; e.preventDefault(); if (c && !c.off) { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; agir(c.act); } }
+      else if (e.key === 'Enter') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; e.preventDefault();
+        /* Revue T21 (G1) : une commande dangereuse ne part qu'à la seconde Entrée (« ar » + Entrée n'arrête plus le lot d'un geste). */
+        if (c && !c.off && c.danger && ui.confirme !== c.act) { ui.confirme = c.act; maj(true); }
+        else if (c && !c.off) { ui.confirme = null; ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; agir(c.act); } }
       else if (e.target?.id !== 'ui5-q' && e.key.length === 1 && /[\p{L}]/u.test(e.key)) $('ui5-q')?.focus();
       return;
     }

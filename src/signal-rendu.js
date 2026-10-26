@@ -303,10 +303,11 @@
   const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   function commandes(snap, m, ui) {
     const a = snap.ar || {}, g = snap.sig || {}, c = [], vus = new Set();
-    const add = (icn, nom, act, et, off) => { if (!act || vus.has(act)) return; vus.add(act); c.push({ ic: icn, nom, act, et: et || '', off: off || '' }); };
+    /* Revue T21 (G1) : `danger` (arrêter le lot ou la relecture, SKIP, terminer la séance Écho) : la palette demande une seconde Entrée (src/ui5.js). */
+    const add = (icn, nom, act, et, off, danger) => { if (!act || vus.has(act)) return; vus.add(act); c.push({ ic: icn, nom, act, et: et || '', off: off || '', danger: !!danger || act === 'legacy:native-end' }); };
     const etat = `${m.activite === 'echo' ? 'Écho' : 'Orbite'} · ${m.mot}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${a.traites} sur ${a.cibles}` : ''}`;
-    if (m.principal && !m.principal.occupe) add(m.principal.ic || 'play', m.principal.texte, m.principal.act, etat, m.principal.inactif ? m.raison || 'indisponible' : '');
-    for (const b of m.secondaires) add(b.danger ? 'stop' : b.ic || 'coche', b.texte, b.act, '', b.inactif ? 'indisponible' : '');
+    if (m.principal && !m.principal.occupe) add(m.principal.ic || 'play', m.principal.texte, m.principal.act, etat, m.principal.inactif ? m.raison || 'indisponible' : '', m.principal.danger);
+    for (const b of m.secondaires) add(b.danger ? 'stop' : b.ic || 'coche', b.texte, b.act, '', b.inactif ? 'indisponible' : '', b.danger);
     add('liste', ui.tiroir ? 'Fermer le tiroir' : 'Voir ce qui reste', 'sg:tiroir', '');
     const ex = (snap.boutonsOrbite || []).find(b => b.id === 'export-tout');
     add('export', 'Exporter le dossier', 'legacy:export-tout', '', ex && ex.actif ? '' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant');
@@ -325,7 +326,7 @@
   }
   function paletteHtml(snap, ui) {
     const L = paletteListe(snap, ui), i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
-    return `<div class="sg-voile" data-act="sg:fermer"></div><div class="sg-palette" role="dialog" aria-label="Commandes"><input id="ui5-q" type="text" value="${esc(ui.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="sg-cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="sg-cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ` data-act="${esc(c.act)}"`} data-fermer="1">${ic(c.ic)}<span>${esc(c.nom)}</span><span class="sg-et">${esc(c.off || c.et)}</span></button>`).join('') : '<div class="sg-cmd"><span></span><span class="sg-et">Aucune commande</span></div>'}</div><div class="sg-pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="sg-espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
+    return `<div class="sg-voile" data-act="sg:fermer"></div><div class="sg-palette" role="dialog" aria-label="Commandes"><input id="ui5-q" type="text" value="${esc(ui.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="sg-cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="sg-cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ` data-act="${esc(c.act)}"`} data-fermer="1">${ic(c.ic)}<span>${esc(c.nom)}</span><span class="sg-et">${esc(c.off || (ui.confirme === c.act ? 'Entrée encore pour confirmer' : c.et))}</span></button>`).join('') : '<div class="sg-cmd"><span></span><span class="sg-et">Aucune commande</span></div>'}</div><div class="sg-pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="sg-espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
   }
   function esvHtml(snap) {
     const g = snap.sig || {}, a = snap.ar || {}, L = snap.onglets || [], choisi = String(snap.ongletChoisi || ''), verrou = !!a.lotOuvert || !!a.connexionBloquee;
