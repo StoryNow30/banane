@@ -35,6 +35,23 @@
     const debut = t(b.cutStartedAt), pause = t(b.pausedAt);
     return { mediane: med, parMinute: med ? 60 / med : null, debutCut: debut, debutPause: pause, depuisS: debut !== null ? Math.max(0, (maintenant - debut) / 1000) : null, pauseS: pause !== null ? Math.max(0, (maintenant - pause) / 1000) : null };
   }
+  /* Ciblage T22 (fiches/CIBLAGE_T22.md) : M, les cuts invalides compris dans les bornes du lot (`sc`), d'après la fiche de départ de CE lot (`f`, D-092 :
+   * invalides et lignes de la liste d'ESV au démarrage) et, si les bornes ne couvrent pas toute la partie, l'instantané décompacté de la liste (`L`,
+   * src/liste-memoire.js : `st[cut]`, 1 = invalide) pris dans le MÊME état que la fiche (même partie, mêmes lignes, même nombre d'invalides). Toute la
+   * partie : départ au cut 0 ou 1 (règle de `travailDuLot`, panel.js) et fin de partie, ou dernier cut au moins égal à la dernière ligne. Sinon null :
+   * jamais un total deviné. Aucun invalide dans les bornes : null (pas de « sur 0 »). */
+  const FIN_PARTIE = 999999, PREMIER_CUT_MAX = 1;
+  function ciblesBornes(sc, f, L) {
+    if (!sc || !f || !Number.isInteger(f.invalides) || f.invalides <= 0 || !Number.isInteger(f.total) || f.total < 2) return null;
+    if (Number.isInteger(f.partie) && f.partie !== sc.part) return null;
+    const a = Number(sc.start), z = sc.endMode === 'partie' || Number(sc.end) >= FIN_PARTIE ? f.total - 1 : Number(sc.end);
+    if (!Number.isInteger(a) || a < 0 || !Number.isInteger(z) || z < a) return null;
+    if (a <= PREMIER_CUT_MAX && z >= f.total - 1) return f.invalides;
+    if (!L || L.partie !== sc.part || L.n !== f.total || !Array.isArray(L.st) || L.st.length !== L.n) return null;
+    let tout = 0, dedans = 0;
+    for (let i = 0; i < L.n; i++) if (L.st[i] === 1) { tout++; if (i >= a && i <= z) dedans++; }
+    return tout === f.invalides && dedans > 0 ? dedans : null;
+  }
 
   /* ------------------------------------------------------------------ pictogrammes (SVG inline, trait 1,75) */
   const T = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
@@ -119,6 +136,8 @@
     const reste = a.restants != null && AL.mediane ? a.restants * AL.mediane : null;
     const ligneAllure = () => AL.mediane ? `<b>${un(AL.parMinute)}</b> cuts par minute <span class="sg-sep">·</span> médiane <b>${un(AL.mediane)} s</b> par cut${reste !== null ? ` <span class="sg-sep">·</span> environ <b>${duree(reste)}</b> restantes` : ''}` : '';
     const bornes = a.bornes ? `du cut ${mono(a.bornes.debut ?? '…')} ${a.bornes.fin ? 'au cut ' + mono(a.bornes.fin) : 'jusqu’à la fin de la partie'}` : '';
+    /* Ciblage T22 : les bornes du lot restent dites pendant le lot (où il s'arrêtera) ; au repos, ce sont celles du prochain lot (`bornesHtml`). */
+    if (a.bornes && ['cours', 'dem', 'pause', 'alerte'].includes(a.etat)) m.bornesLot = `Lot ${bornes}`;
     switch (a.etat) {
       case 'cours':
         Object.assign(m, { glyphe: 'cours', ton: 'vivant', mot: 'En cours', phrase: `Pose du cut ${mono(a.cours ?? '…')}`, objet: 'rail', allure: ligneAllure(), anneau: { debut: AL.debutCut, med: AL.mediane, depuis: AL.depuisS } });
@@ -159,6 +178,10 @@
           /* Revue T21 (R4) : `vertsNombre` nul = liste des verts pas encore calculée (src/ui5.js) : jamais « 0 vert » ni « rien à examiner ». */
           ['Il reste', a.vertsNombre === null ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')} · verts pas encore calculés` : nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
           ['Export', esc(s.exportTexte || 'prêt')]];
+        /* Ciblage T22 : où le lot s'est arrêté. ESV passé au-delà de son dernier cut (même partie) : les cuts suivants ne sont pas de ce lot, et c'est dit. */
+        if (bornes) m.fin.splice(1, 0, ['Bornes', bornes]);
+        const H = a.horsLot;
+        if (H) m.fin.splice(1, 0, ['Fin du lot', `après le cut ${mono(H.cut ?? '…')}, ESV est passé au cut ${mono(H.vers)}, hors du lot : rien après le cut ${mono(H.fin)} n’est traité par ce lot`]);
         /* Revue T21 (R1) : le résultat de la deuxième passe (en ombre : ce qu'elle poserait, rien n'est écrit), comme le panneau d'avant le disait. */
         const P = a.passeFin;
         if (P) m.fin.push(['Deuxième passe', P.etat === 'calcul' ? 'calcul des cuts restés sans pose…' : P.etat === 'erreur' ? `en erreur${P.message ? ' · ' + esc(P.message) : ''}`
@@ -210,7 +233,7 @@
     const total = a.cibles || null, n = statuts.length, traites = a.traites || 0;
     const echelle = total || Math.max(10, Math.ceil(Math.max(n, traites) * 1.25 / 10) * 10);
     const pos = i => `${Math.max(0, Math.min(100, i / echelle * 100)).toFixed(3)}%`;
-    let h = `<div class="sg-rail" data-etat="${esc(etat || 'cours')}" data-total="${total ? 'connu' : 'inconnu'}" role="img" aria-label="${esc(`${traites} traités${total ? ` sur ${total} ciblés` : ''}, ${a.differes || 0} différés`)}"><div class="sg-rail-base"></div>`;
+    let h = `<div class="sg-rail" data-etat="${esc(etat || 'cours')}" data-total="${total ? 'connu' : 'inconnu'}" role="img" aria-label="${esc(`${traites} traités${total ? ` sur ${total} ciblés` : ', total inconnu'}, ${a.differes || 0} différés`)}"><div class="sg-rail-base"></div>`;
     if (total) {
       const pas = total > 400 ? 50 : 10;
       for (let k = 0; k <= total; k += pas) h += `<div class="sg-rail-grad${k % (pas * 5) === 0 ? ' sg-dix' : ''}" style="left:${pos(k)}"></div>`;
@@ -233,7 +256,8 @@
     if (m.objet !== 'rail') return '';
     if (m.railEtat === 'vide') return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
     const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> différés</span>`;
-    return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
+    /* Ciblage T22 : M inconnu (src/ui5.js) : dit tel quel ; le rail n'a alors ni graduations ni total, et l'allure aucun temps restant. */
+    return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités · total inconnu'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
   }
   /* Revue T21 (D7) : les bornes du prochain lot, revues et modifiables avant « Démarrer le lot », au repos et après « Nouveau lot » (règle du panneau
    * d'avant : aucun lot ne part sans que tu aies revu ses bornes). Ce qu'on tape va dans `#start` / `#end` (src/ui5.js), que « Démarrer » lit ;
@@ -389,10 +413,10 @@
   /* ------------------------------------------------------------------ écran */
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
-    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
+    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${m.bornesLot ? `<p class="sg-lot-bornes">${m.bornesLot}</p>` : ''}</div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
     const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
   }
 
-  return { esc, quantile, allureLot, modele, commandes, paletteListe, lignesRevue, rendre, duree };
+  return { esc, quantile, allureLot, ciblesBornes, modele, commandes, paletteListe, lignesRevue, rendre, duree };
 });
