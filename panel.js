@@ -620,7 +620,8 @@
       * garde la fin de l'ancien lot dans la même partie si elle est plus loin. */
      const bornesNeuves=!running||b?.state==='STOPPED'&&nouveauLot,range=bornesNeuves?null:b.scope;
      bornesDe(id?.part);
-     const memo=bornesPartie.part===id?.part&&bornesPartie.last>=Number(id?.cut)?bornesPartie.last:undefined;
+     /* Ciblage T22 : une fin retenue est un entier (`null >= 0` valait vrai : ESV au cut 0 et aucune fin retenue, la note disait « Dernier cut retenu »). */
+     const memo=bornesPartie.part===id?.part&&Number.isInteger(bornesPartie.last)&&bornesPartie.last>=Number(id?.cut)?bornesPartie.last:undefined;
      const finPrecedente=b?.scope&&b.scope.part===id?.part&&!finDePartie(b.scope)&&Number(b.scope.end)>Number(id?.cut)?b.scope.end:undefined;
      const finProposee=range?(finDePartie(range)?'':range.end):memo??finPrecedente??'';
      for(const [f,v] of [['start',range?.start??id?.cut],['end',finProposee]])if(v!==undefined&&!edited.has(f)&&document.activeElement!==$(f))$(f).value=v;

@@ -89,6 +89,7 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 @media (prefers-reduced-motion:reduce){#ui5.u-signal .sg-glyphe.sg-vivant .sg-fond-anneau,#ui5.u-signal .sg-puce i,#ui5.u-signal .sg-marques i.sg-en,#ui5.u-signal .sg-tourne{animation:none}}
 #ui5.u-signal .sg-phrase{color:var(--encre2);min-height:var(--l-texte)}
 #ui5.u-signal .sg-phrase b,#ui5.u-signal .sg-phrase .sg-mono{font-weight:500;color:var(--encre)}
+#ui5.u-signal .sg-lot-bornes{margin:0;color:var(--encre3);font-size:var(--t-meta);line-height:var(--l-meta)}#ui5.u-signal .sg-lot-bornes .sg-mono{color:var(--encre2)}
 
 /* l'objet : le rail */
 #ui5.u-signal .sg-objet{display:flex;flex-direction:column;gap:var(--e3)}

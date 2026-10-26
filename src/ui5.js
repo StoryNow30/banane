@@ -68,10 +68,34 @@
   const PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); } catch { return null; } })();
   const heure = iso => { const d = iso ? new Date(iso) : null; if (!d || isNaN(d) || !PARIS) return ''; const q = {}; for (const x of PARIS.formatToParts(d)) q[x.type] = x.value; return `${Number(q.hour === '24' ? 0 : q.hour)} h ${q.minute}`; };
   const RAILS = { left: 'rail gauche', right: 'rail droit' };
+  /* Ciblage T22 (fiches/CIBLAGE_T22.md) : M quand `travailDuLot` (panel.js) ne le donne pas, c'est-à-dire quand le lot ne va pas du cut 0 ou 1 jusqu'à la FIN
+   * DE PARTIE (depuis la test 22, Orbite propose la fin retenue pour la partie : le lot part avec un dernier cut numéroté). Lu dans chrome.storage.local
+   * (lecture seule, aucun message) : la fiche de départ de CE lot (`banane3FichesDepart`, la première du même batchId) et l'instantané de la liste de sa
+   * partie (`banane5ListeInstantane:<partie>`) ; calcul : `ArianeSignalRendu.ciblesBornes`. Trouvé, M est gardé pour tout le lot (un instantané pris plus tard
+   * n'a plus les mêmes invalides : il ne le remplacerait pas) ; pas trouvé, nouvel essai au plus toutes les 5 s (la fiche), l'instantané (plus lourd)
+   * seulement si la fiche ne suffit pas, six fois au plus par lot ; « total inconnu » d'ici là. */
+  const CIBLES = { lot: null, m: null, essai: 0, cours: false, listes: 0 };
+  function ciblesDuLot(b) {
+    if (!b?.id || !b.scope) return null;
+    if (CIBLES.lot !== b.id) Object.assign(CIBLES, { lot: b.id, m: null, essai: 0, listes: 0 });
+    if (CIBLES.m !== null || CIBLES.cours || Date.now() - CIBLES.essai < 5000) return CIBLES.m;
+    CIBLES.essai = Date.now(); CIBLES.cours = true;
+    const id = b.id, sc = b.scope, LM = root.BananeListeMemoire, cle = (LM?.PRE_INST || 'banane5ListeInstantane:') + sc.part, L = root.chrome?.storage?.local;
+    void (async () => {
+      try {
+        const f = (await L?.get?.('banane3FichesDepart'))?.banane3FichesDepart?.find?.(x => x && x.batchId === id);
+        let m = f ? S5.ciblesBornes(sc, f, null) : null;
+        if (f && m === null && CIBLES.listes < 6 && LM?.decompacter) { CIBLES.listes++; m = S5.ciblesBornes(sc, f, LM.decompacter((await L.get(cle))?.[cle])); }
+        if (Number.isInteger(m) && CIBLES.lot === id) { CIBLES.m = m; maj(false); }
+      } catch { /* inconnu : dit tel quel */ } finally { CIBLES.cours = false; }
+    })();
+    return null;
+  }
   function calculAr(s, statuts) {
     const b = s?.batch || null, A = root.ArianePanel, compte = k => statuts.filter(x => k.includes(x)).length;
     const poses = compte(['pose', 'voie']), differes = compte(['differe']), traites = poses + differes + compte(['saute', 'main']);
     let cibles = null; try { const f = b && A.travailDuLot(b); if (f && Number.isInteger(f.invalides)) cibles = f.invalides; } catch { /* inconnu */ }
+    if (cibles === null && b) cibles = ciblesDuLot(b);
     const st = b?.state || null, incertain = !!s?.reconcileRequired;
     /* La deuxième passe des différés écrit dans ESV (état `passeDifferes` du service worker) : tant qu'elle écrit, rien d'autre n'y part. Elle passe devant
      * « Relecture en cours » : la relecture l'attend, et elle ne part pas pendant une relecture. */
@@ -109,10 +133,13 @@
     const plages = [...($('verts-plages')?.querySelectorAll?.('li') || [])].map(li => ({ libelle: String(li.querySelector('b')?.textContent || '').trim(), detail: String(li.querySelector('span')?.textContent || '').trim() }));
     const vertsNombre = plages.reduce((n, p) => n + (Number((p.detail.match(/·\s*(\d+)/) || [])[1]) || 0), 0);
     const dernierP = (b?.processed || []).at?.(-1);
+    /* Ciblage T22 : lot clos parce qu'ESV est passé au-delà de son dernier cut, dans la même partie (background.js `lotExitOf`, `clore`). */
+    const E = b?.stoppedAtEnd, horsLot = E?.reason === 'navigation-beyond-end' && E.target?.part === b.scope?.part && Number.isInteger(E.target?.cut)
+      ? { cut: cutDe(E), vers: E.target.cut, fin: Number.isInteger(b.scope?.end) ? b.scope.end : null } : null;
     return {
       etat, etatTexte, horsLigne, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
       cibles, poses, differes, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
-      cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
+      cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe, horsLot,
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : null, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
       /* Revue T21 (D7) : les bornes du PROCHAIN lot, celles que « Démarrer » lit (`#start`, `#end`), tant que le panneau les montre avec « Démarrer le lot » ;
