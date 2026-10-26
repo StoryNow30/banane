@@ -39,5 +39,5 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
 
 - `tests/signal-rendu.test.cjs` (le dessin) ;
 - `tests/ui5-panneau.test.cjs` (le branchement dans la page) ;
-- `tests/ui5-navigateur-signal.test.cjs` (un vrai navigateur, en 600 × 760 et en 360 × 480 : aucune erreur, rien qui déborde, un clic sur Signal envoie au service worker exactement ce qu'envoie le bouton d'origine, et les détails techniques s'ouvrent puis se referment).
+- `tests/ui5-navigateur-signal-normal.test.cjs`, `-compact` et `-actions` (un vrai navigateur, en 600 × 760 et en 360 × 480, un fichier par partie pour tenir sous les 20 s de `tools/verify.cjs` : aucune erreur, rien qui déborde, un clic sur Signal envoie au service worker exactement ce qu'envoie le bouton d'origine, et les détails techniques s'ouvrent puis se referment).
 - Mettre la variable `SIGNAL_CAPTURES=<dossier>` pour obtenir les captures.
