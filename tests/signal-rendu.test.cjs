@@ -136,10 +136,12 @@ test('palette : quatre commandes à l’ouverture, le reste en tapant ; une comm
 });
 
 test('réglages : les choix du panneau, thème sombre par défaut, détails techniques dans Signal, historique des parties ; aucun « ancien panneau »',()=>{
- const h=S.rendre(snap({gcv2:{total:2731,date:'20/10/2026'},sig:sig({historique:[{part:13,fin:'complete',cibles:120,poses:109,differes:11,depart:{ignores:2},startedAt:'2026-10-25T13:05:00Z'},{part:12,fin:'en-cours',cibles:null,poses:null,differes:null,depart:{ignores:0}}]})}),ui({couche:'reglages'}));
+ const h=S.rendre(snap({gcv2:{total:2731,date:'20/10/2026'},sig:sig({historique:[{part:13,fin:'complete',cibles:120,poses:109,differes:11,skippes:1,depart:{ignores:2},startedAt:'2026-10-25T13:05:00Z'},{part:12,fin:'en-cours',cibles:null,poses:null,differes:null,skippes:0,depart:{ignores:0}},{part:11,fin:'complete',cibles:null,poses:9,differes:0,depart:{ignores:3}},{part:10,fin:'arretee',cibles:null,poses:5,differes:0,skippes:null,depart:null},{part:9,fin:'complete',poses:7,skippes:2}]})}),ui({couche:'reglages'}));
  assert.match(h,/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
  assert.match(h,/data-act="sg:tech"/);assert.match(h,/<span class="sg-mono">2731<\/span>/);
- assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 2 ignorés<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours<\/span>/);
+ assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 1 skippé · 2 ignorés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 skippé<\/span>/,'0 est une valeur connue : affichée, au singulier');
+ assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 différés · 3 ignorés au départ<\/span>/,'fiche ancienne (skippes absent) : rien sur les skippés');
+ assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 différés<\/span>/,'skippes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 skippés<\/span>/,'pluriel');
  assert.match(h,/<option value="signal" selected>/);assert.doesNotMatch(h,/ancienne|Ancien panneau|ancien panneau/);
  assert.doesNotMatch(S.rendre(snap(),ui({couche:'reglages'})),/Parties traitées/,'sans historique du moteur : rien');
  const f5=S.rendre(snap({sig:sig({f5:'arret'})}),ui({couche:'reglages'}));assert.match(f5,/<select data-sel="f5"[^>]*>.*<option value="arret" selected>/);

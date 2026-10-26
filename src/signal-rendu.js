@@ -324,7 +324,7 @@
     if (!Array.isArray(H)) return '';
     const FIN = { complete: 'terminée', arretee: 'arrêtée', 'en-cours': 'en cours', interrompue: 'interrompue' };
     const jour = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}` : ''; };
-    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
+    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${Number.isInteger(p.skippes) ? ` · ${esc(p.skippes)} ${pl(p.skippes, 'skippé')}` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés au départ` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
     return `<div class="sg-reg sg-reg-bloc"><span class="sg-lib"><span>Parties traitées</span><small>Gardées même après un vidage du cache</small></span></div>${L || '<div class="sg-vide sg-petit">Aucune partie enregistrée pour l’instant.</div>'}`;
   }
   function feuilleHtml(snap) {
