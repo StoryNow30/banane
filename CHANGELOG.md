@@ -1,5 +1,33 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.23 — 4.9.5 test 23 (L1-e7) (26/10) — test 23
+
+Manifeste `4.9.5.23`, « 4.9.5 test 23 (L1-e7) » ; base : le tronc `claude/50-test17` à bcc4630 (4.9.5.22, test 22 + D-252), puis, par fusions (commits de fusion, aucune réécriture d'historique), dans l'ordre : `cib22` (ciblage du lot), `gardeA` (garde A de la deuxième passe) et `claude/50-ui-5.0` à d7c5ff2 (animations de Signal, Signal seule présentation). **La deuxième passe reste EN OMBRE** (`passeDifferesDefaut.ecriture: false`, D-251) : elle calcule, journalise ce qu'elle poserait, et n'écrit rien dans ESV. Décisions de pose, moteur, adaptateur de page, géométrie et GCV2 : `git diff bcc4630..HEAD -- src/engine.js src/adapter-page.js src/geometry*.js src/gcv2*.js` est vide.
+
+### Ciblage du lot (fiches/CIBLAGE_T22.md)
+- **« N traités sur M ciblés », graduations et temps restant** dès que M est calculable, y compris quand le lot part avec une fin retenue pour la partie (la test 22 disait « 13 traités », sans total ni graduations ni temps restant). M = invalides compris dans les bornes du lot : fiche de départ de CE lot, ou instantané de la liste d'ESV pris dans le même état que la fiche ; sinon « N traités · total inconnu », jamais un total deviné.
+- **Bornes du lot dites pendant le lot** (« Lot du cut X au cut Y » ou « jusqu'à la fin de la partie ») et, à la fin, une ligne « Bornes » et l'avis « Fin du lot : ESV est passé au cut Y, hors du lot » quand le lot s'arrête parce qu'ESV est sorti des bornes. Les bornes envoyées par `start-batch` ne changent pas.
+- `panel.js` : une fin retenue doit être un entier (la note « Dernier cut retenu » ne s'affiche plus à tort).
+
+### Garde A de la deuxième passe (fiches/GARDE_PASSE_A.md, D-252)
+- **Une pose de la passe est refusée** (« rien », le cut reste différé, motif `garde-appuis`) quand le déplacement du pire rail est inférieur à 100 mm ET qu'aucune pose de la chaîne normale du lot n'existe à 4 cuts ou moins (`src/garde-passe-appuis.js`, réglage `lot.passeDifferes.gardeAppuis`, illisible = passe coupée). **La passe reste en ombre** : la garde est jugée et journalisée, rien n'est écrit dans ESV.
+- **Pertes acceptées par l'opérateur (D-252)** : 9521 et 9522 du lot 2-17, bonnes poses perdues en contrepartie de l'arrêt des cinq poses fausses de la partie 0 (`pertesAcceptees` du manifeste de `datasets/garde-gcv2/`, écrites en tête du rapport de `tools/garde-gcv2.cjs`).
+- **Fusion avec la passe persistante (T21d)** : le refus de la garde note la passe (index et compte) comme toute autre sortie « rien », donc une reprise après redémarrage du service worker repart après ce cut.
+
+### Animations de Signal et Signal seule présentation (fiches/UI_SIGNAL.md)
+- **Mise à jour en place** : l'écran de Signal n'est plus remplacé à chaque rendu ; un nœud qui reste reste (le curseur du rail glisse, l'anneau se remplit, une couche ouverte ne rejoue pas son entrée), un nœud dont la clé `data-k` change entre une fois ; le chiffre qui change le signale une fois. Mouvement réduit : tout à zéro. La règle R6 (pas de réécriture chaque seconde) est gardée.
+- **Signal est la seule présentation** : le lien « Essayer le nouveau panneau », les présentations d'essai « ariane2 » et « palette », `src/ui5-rendu.js` et `panel-ui5.css` (partie propre à ces présentations) sont retirés ; un choix gardé autre que Signal vaut Signal. Le panneau d'avant reste le moteur caché (`#tabs`, `#start`, `#end`, `discover()` inchangés). En Écho aussi, « ESV n'est pas connecté » est dit.
+- Maquettes de la direction visuelle, fiches et polices de la branche de Signal versées dans le dépôt (`maquettes/ui-5.0/`, `fonts/`, `fiches/`) ; le prénom de l'opérateur y est remplacé par « l'opérateur ».
+
+### Croisements vérifiés
+- Mise à jour en place et ciblage : quand le total devient connu en cours de lot, le rail, la ligne des bornes et l'instrument restent les mêmes éléments, les graduations n'héritent d'aucun style d'un autre nœud, et rien n'est réécrit chaque seconde (`tests/ciblage-mouvement-t23.test.cjs`). Le curseur est recréé une seule fois, à l'arrivée des graduations qui le précèdent dans le rail, puis glisse sur place.
+- Le refus de la connexion n'est dit qu'à un seul endroit (`m.avis`) ; ESV perdu en Écho passe par l'incident et coupe cet avis (pas de doublon).
+
+### Essais et relevé
+- Relevé (machine au repos) : `tools/verify.cjs` 2 673 essais, 2 671 réussis, 0 échec, 0 annulé, 2 ignorés (corpus Natif absent) ; `tests/esv-maquette/essais.cjs` trois passes : 29 réussis et 1 échec, 28 et 2, puis 30 réussis et 0 échec (2 ignorés à chaque passe) ; les échecs sont « extension non chargée » (service worker absent) et « précision des nœuds », jamais deux fois les mêmes ; `extension.test.cjs` seul : 5 passes sur 5 ; `parite-relecture-sw` contre bcc4630 : 45 relevés sur 45 identiques.
+- Non refait : le rejeu des 12 lots de `tools/garde-gcv2.cjs --rejouer` (lots archivés hors dépôt absents de cette machine) ; la garde est comparée aux rejeux de la base (code 0, pertes acceptées signalées sans objet) et ses 15 essais passent.
+- Non vérifié : jamais joué dans Edge ni dans le vrai ESV.
+
 ## 4.9.5.22 — 4.9.5 test 22 (L1-e6) (26/10) — test 22
 
 Manifeste `4.9.5.22`, « 4.9.5 test 22 (L1-e6) » ; base : le tronc `claude/50-test17` à 5a68f22 (4.9.5.21, test 21 : Signal par défaut, deuxième passe livrée en ombre, D-251), puis, par fusions (aucune réécriture d'historique) : T21d (preuve serveur, passe persistante ; fiche `fiches/T21D.md`), la connexion de Signal (`fiches/CONNEXION_T21.md`), la bascule Orbite / Écho et les cuts skippés (`fiches/BASCULE_T21.md`), la revue du code de Signal (D4 à D7, R1, R4 à R6, G1). **Pas de paquet terrain ni de consigne.** La décision des cuts, celle de la deuxième passe et leurs gardes ne changent pas : `src/engine.js`, `src/adapter-page.js`, la géométrie et `src/gcv2*.js` sont identiques à la 4.9.5.21.
