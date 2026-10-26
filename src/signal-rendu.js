@@ -146,7 +146,8 @@
         Object.assign(m, { glyphe: a.etat === 'fini' ? 'fini' : 'arrete', ton: a.etat === 'fini' ? 'vivant' : 'encre2', mot: a.etat === 'fini' ? 'Terminé' : 'Arrêté', objet: 'fin',
           phrase: [partie, esc(s.lot?.finPartie || '')].filter(Boolean).join(' · ') });
         m.fin = [['Lot', `<b>${esc(a.traites)}</b> cuts traités${a.cibles ? ` sur <b>${esc(a.cibles)}</b> ciblés` : ''}`],
-          ['Il reste', nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
+          /* Revue T21 (R4) : `vertsNombre` nul = liste des verts pas encore calculée (src/ui5.js) : jamais « 0 vert » ni « rien à examiner ». */
+          ['Il reste', a.vertsNombre === null ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')} · verts pas encore calculés` : nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
           ['Export', esc(s.exportTexte || 'prêt')]];
         actions();
         if (nDif(a) + (a.vertsNombre || 0) > 0) { const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'); m.secondaires = [ex ? versAction(ex) : null, ...m.secondaires.filter(b => b.act !== 'legacy:export-tout'), ...(m.principal && m.principal.act !== 'legacy:export-tout' ? [m.principal] : [])].filter(Boolean); m.principal = { texte: 'Voir ce qui reste', act: 'sg:tiroir', ic: 'liste' }; }
@@ -170,7 +171,7 @@
     const { primaire, autres } = boutonsPanneau(s.boutonsEcho, 'native'), E = g.echo || {};
     const actions = () => { m.principal = versAction(primaire); m.secondaires = autres.filter(b => b.actif).map(versAction); };
     const e = a.echoEtat || 'Aucune séance en cours', vus = Number(s.echo?.visites) || 0, corr = Number(s.echo?.corriges) || 0;
-    m.compteEcho = { vus, corriges: corr };
+    m.compteEcho = { vus, corriges: corr, valides: Number.isFinite(Number(s.echo?.valides)) ? Number(s.echo.valides) : Math.max(0, vus - corr) };
     if (a.lotOuvert) { Object.assign(m, { glyphe: 'verrou', mot: 'Écho', phrase: 'Disponible après le lot Orbite', verrou: true, verrouTexte: 'Écho est disponible après le lot' }); return m; }
     if (/Collecte en cours|Démarrage/.test(e)) Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: /Démarrage/.test(e) ? 'Démarrage' : 'En observation', phrase: g.cutEsv != null || a.cutEsv != null ? `Visite du cut ${mono(a.cutEsv ?? g.cutEsv)}` : partie, objet: 'echo' });
     else if (/Collecte en pause/.test(e)) Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Écho en pause', phrase: partie, objet: 'echo' });
@@ -205,7 +206,7 @@
     if (m.objet === 'fin') return `<dl class="sg-fin">${m.fin.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
     if (m.objet === 'echo') {
       const c = m.compteEcho, M = (g.echo?.marques || []).slice(-60);
-      return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(Math.max(0, c.vus - c.corriges))}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
+      return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(c.valides)}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
     }
     if (m.objet !== 'rail') return '';
     if (m.railEtat === 'vide') return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
@@ -266,10 +267,10 @@
     if (m.activite === 'echo') { n = Number(snap.echo?.visites) || 0; long = n ? 'visites' : 'Aucune visite pour l’instant'; court = n ? 'visites' : 'aucune visite'; }
     else {
       const { D, V } = lignesRevue(a), total = D.length + V.length, reste = [...D, ...V].filter(r => !ex.has(r.cle)).length;
-      const d = nDif(a), v = a.vertsNombre || 0;
+      const d = nDif(a), v = a.vertsNombre || 0, vInc = a.vertsNombre === null && !a.lotOuvert;
       n = a.lotOuvert ? d : d + v;
-      long = a.lotOuvert ? (d ? `${pl(d, 'différé')} · à reprendre après le lot` : 'Aucun différé pour l’instant') : n ? `à examiner · ${d} ${pl(d, 'différé')}, ${v} ${pl(v, 'vert')}` : 'Rien à examiner';
-      court = n ? 'à examiner' : 'rien à examiner';
+      long = a.lotOuvert ? (d ? `${pl(d, 'différé')} · à reprendre après le lot` : 'Aucun différé pour l’instant') : n ? `à examiner · ${d} ${pl(d, 'différé')}, ${vInc ? 'verts pas encore calculés' : `${v} ${pl(v, 'vert')}`}` : vInc ? 'Verts pas encore calculés' : 'Rien à examiner';
+      court = n ? 'à examiner' : vInc ? 'verts pas calculés' : 'rien à examiner';
       if (total && !a.lotOuvert) resteTx = `reste à examiner ${reste} sur ${total}`;
     }
     const mini = `<span class="sg-etat-mini">${glyphe(m)}<span>${esc(m.mot)}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${esc(a.traites)} sur ${esc(a.cibles)}` : ''}</span></span>`;

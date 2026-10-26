@@ -57,7 +57,8 @@
     const corr = x => /^VALIDATE_CORRECTED/.test(String(x.label || ''));
     const dur = x => x.d === null || x.d === undefined ? '' : x.encours ? 'en cours' : `${Math.round(x.d)} s`;
     const texte = x => x.encours ? 'Visite en cours' : /^VALIDATE_CORRECTED_BOTH/.test(x.label) ? 'Corrigé · 2 rails' : corr(x) ? 'Corrigé · 1 rail' : x.label === 'VALIDATE_NO_MOVEMENT' ? 'Validé tel quel' : x.label === 'SKIP' ? 'SKIP' : 'Visité';
-    return { echoRows: vis.slice(-40).reverse().map(x => ({ cut: entier(x.c), texte: texte(x), corrige: corr(x), duree: dur(x) })), corriges: vis.filter(corr).length };
+    /* Revue T21 (R4) : « validés tels quels » = les validations sans correction, pas « vus − corrigés » (qui compte aussi les SKIP et les visites sans issue). */
+    return { echoRows: vis.slice(-40).reverse().map(x => ({ cut: entier(x.c), texte: texte(x), corrige: corr(x), duree: dur(x) })), corriges: vis.filter(corr).length, valides: vis.filter(x => x.label === 'VALIDATE_NO_MOVEMENT').length };
   }
   /* Présentation « Ariane » : les chiffres et l'état du lot, d'après fiches/UI_ETATS_COMPTEURS.md. Lecture seule de l'état.
    * « Pause demandée » n'existe pas dans le moteur : c'est le clic sur Pause (gardé ici, pour ce lot) tant que le lot tourne encore. */
@@ -110,7 +111,7 @@
       etat, etatTexte, horsLigne, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
       cibles, poses, differes, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
       cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
-      verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
+      verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : null, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
       /* Revue T21 (D7) : les bornes du PROCHAIN lot, celles que « Démarrer » lit (`#start`, `#end`), tant que le panneau les montre avec « Démarrer le lot » ;
        * « Reprise des différés » (`#lot-reprise`) avec elles. Après « Nouveau lot », ce sont les champs, pas les bornes du lot fini. */
@@ -166,7 +167,7 @@
       lot: { etat: txt('lot-etat'), finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
       relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
-      echo: { visites: txt('native-count') || '0', corriges: echo.corriges },
+      echo: { visites: txt('native-count') || '0', corriges: echo.corriges, valides: echo.valides },
       echoRows: echo.echoRows,
       reglages: rg, exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),

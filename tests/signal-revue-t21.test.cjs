@@ -122,5 +122,26 @@ test('R6 · le temps qui passe (anneau du cut, « en pause depuis ») ne réécr
  assert.equal(p.hote.innerHTML,'<!--pause-->','« en pause depuis » avance sans réécrire l’écran');
 });
 
-/* ------------------------------------------------------------------ R1 */
+/* ------------------------------------------------------------------ R4 */
+test('R4a · verts pas encore calculés : jamais « 0 vert » ni « rien à examiner »',()=>{
+ const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:null}),boutonsOrbite:[b('export-tout','Tout télécharger','primary')]}),ui());
+ assert.doesNotMatch(f,/0<\/b> vert|rien à examiner|Rien à examiner/i);assert.match(f,/verts pas encore calculés/);
+ const z=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:null,differes:0,differesListe:[]}),boutonsOrbite:[b('export-tout','Tout télécharger','primary')]}),ui());
+ assert.doesNotMatch(z,/rien à examiner/i);assert.match(z,/verts pas encore calculés/);
+ assert.match(S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:0,differes:0,differesListe:[]}),boutonsOrbite:[b('export-tout','Tout télécharger','primary')]}),ui()),/rien à examiner/,'calculés et nuls : « rien à examiner »');
+});
+test('R4a · dans la page : liste des verts cachée (pas encore calculée) → inconnu, pas zéro',async()=>{
+ const p=await monter({etat:etat(LOT_FINI)});
+ p.els['verts-controle'].hidden=true;assert.equal(p.ui.instantane(etat(LOT_FINI)).ar.vertsNombre,null);
+ p.els['verts-controle'].hidden=false;assert.equal(p.ui.instantane(etat(LOT_FINI)).ar.vertsNombre,0);
+});
+test('R4b · Écho : « validés tels quels » compte les validations sans correction, pas les SKIP ni les visites sans issue',async()=>{
+ const p=await monter({etat:etat(null)});
+ p.ctx.ArianePanel.visitesNatif=()=>[{c:1,d:5,label:'VALIDATE_NO_MOVEMENT'},{c:2,d:6,label:'VALIDATE_CORRECTED_LEFT_ONLY'},{c:3,d:4,label:'SKIP'},{c:4,d:3,label:''},{c:5,d:2,label:'VALIDATE_NO_MOVEMENT'}];
+ const s=p.ui.instantane(etat(null));assert.equal(s.echo.valides,2);assert.equal(s.echo.corriges,1);
+ const h=S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'}),echo:{visites:'5',corriges:1,valides:2}}),ui());
+ assert.match(h,/<b>1<\/b> corrigés · <b>2<\/b> validés tels quels/);
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'}),echo:{visites:'5',corriges:1,valides:0}}),ui()),/<b>0<\/b> validés tels quels/,'5 vus, 1 corrigé, aucun validé tel quel : 0, pas 4');
+});
+
 /* ------------------------------------------------------------------ G1 */
