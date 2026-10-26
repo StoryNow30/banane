@@ -149,6 +149,11 @@
           /* Revue T21 (R4) : `vertsNombre` nul = liste des verts pas encore calculée (src/ui5.js) : jamais « 0 vert » ni « rien à examiner ». */
           ['Il reste', a.vertsNombre === null ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')} · verts pas encore calculés` : nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
           ['Export', esc(s.exportTexte || 'prêt')]];
+        /* Revue T21 (R1) : le résultat de la deuxième passe (en ombre : ce qu'elle poserait, rien n'est écrit), comme le panneau d'avant le disait. */
+        const P = a.passeFin;
+        if (P) m.fin.push(['Deuxième passe', P.etat === 'calcul' ? 'calcul des cuts restés sans pose…' : P.etat === 'erreur' ? `en erreur${P.message ? ' · ' + esc(P.message) : ''}`
+          : P.mode === 'ombre' ? `en ombre : <b>${esc(P.posees)}</b> sur <b>${esc(P.differes)}</b> qu’elle poserait · rien n’est écrit dans ESV`
+          : `${P.etat === 'arretee' ? 'arrêtée · ' : ''}<b>${esc(P.ecrites)}</b> posés et validés sur <b>${esc(P.posees)}</b> décidés${P.message ? ' · ' + esc(P.message) : ''}`]);
         actions();
         if (nDif(a) + (a.vertsNombre || 0) > 0) { const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'); m.secondaires = [ex ? versAction(ex) : null, ...m.secondaires.filter(b => b.act !== 'legacy:export-tout'), ...(m.principal && m.principal.act !== 'legacy:export-tout' ? [m.principal] : [])].filter(Boolean); m.principal = { texte: 'Voir ce qui reste', act: 'sg:tiroir', ic: 'liste' }; }
         break;

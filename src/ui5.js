@@ -117,6 +117,8 @@
        * « Reprise des différés » (`#lot-reprise`) avec elles. Après « Nouveau lot », ce sont les champs, pas les bornes du lot fini. */
       bornesProchain: visible('lot-bornes') && visible('start-batch') ? { debut: $('start')?.value || '', fin: finVisible($('end')?.value), note: txt('bornes-note') } : null,
       reprise: visible('lot-bornes') && visible('start-batch') && visible('lot-reprise-row') ? { coche: !!$('lot-reprise')?.checked, note: txt('lot-reprise-note') } : null,
+      /* Revue T21 (R1) : la deuxième passe de CE lot quand elle n'écrit pas (en ombre, en calcul, finie) : son résultat, que panel.js dit dans `#passe-differes-ligne`. */
+      passeFin: (P => P && b && P.lotId === b.id && P.etat !== 'ecriture' ? { mode: P.mode, etat: P.etat, posees: P.posees, differes: P.differes, ecrites: P.ecrites, message: P.message ?? null } : null)(s?.passeDifferes),
       lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2 || etat === 'rel'), passe2: p2,
       cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
