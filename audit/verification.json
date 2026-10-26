@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-10-26T07:02:27.383Z",
-  "finishedAt": "2026-10-26T07:10:58.101Z",
+  "startedAt": "2026-10-26T07:14:30.340Z",
+  "finishedAt": "2026-10-26T07:22:59.299Z",
   "node": "v22.22.0",
   "platform": "linux",
   "counts": {
@@ -516,10 +516,10 @@
   "runtimeFilesSyntaxChecked": 64,
   "hashes": {
     "manifest.json": "9c9ea1450783ce8415dfae921d0503efe40291dfd27aaea53c4c170e7bfcd5ca",
-    "panel.html": "59d62d7e95f3ac8b5535f215276483a60d2c56ff161a7b013622f56fc26fb896",
+    "panel.html": "cedbd4e474efe02d28b762cc738f0bb3f066ac4fd13367b61633bc3e8fcb59a1",
     "panel.css": "012c2bf7ea8084cd14ce8fa76ba0bb606ee2eed120df54e62c17c8fcc0538598",
     "background.js": "8cc3e4b377f37910f4d5149b87467a4685fab31b5a93c7bd14316881a896789b",
-    "panel.js": "3da63f180e9f86d22870fa89c2073661fcfd64a7f44872d93461ebf3a7fb0124",
+    "panel.js": "937da5d73fdc5a8a06075dd7ef1bb09e36f06aa1c71413754ca193c13b414367",
     "tools/offline-evaluate.cjs": "d8ea7e742dc32bfa0ea31cb0b85e24d5b55248ee37d02b60a8eb4bbfded2d538",
     "tools/native-offline-evaluate.cjs": "f90a34ce32157171e029e5171316a467d9f3de42334ab7cb680fda1c16c095fa",
     "tools/audit-native-geometry.cjs": "6d7a00a4ad2a6bb881f76334e040811cd94616758decbcd010712c625839b3d8",
@@ -572,9 +572,9 @@
     "src/relecture-ombre.js": "499479323e52ea68e828e84a5575c7f05e7cbd72a45f04ddf5f513f9cf687559",
     "src/relecture-pause.js": "153b76ec9b4fe99fb816bef8d1797c5d76040beb13b519c4c02d6672035724f1",
     "src/settings.js": "c449e52efb140d7ade668b190a64223d609880879cefcbe9541d22076e700874",
-    "src/signal-rendu.js": "25c9115f614f5a0e17ee528fd52570dee2f93d3b4691345dce7ef1a9bfbed0eb",
+    "src/signal-rendu.js": "11f7ca325892fefb95213d1616c93419338b317c4dbc4af21a5f399627b868c3",
     "src/storage.js": "4543383dce6b9de6f8bf47afd842a27bae4f5283440cfc267a10e42d214a9ae0",
-    "src/ui5-rendu.js": "a1f3a7db066fdabe27f304f07394c13cefdc93199881659dd5fd1e4ed313dfab",
+    "src/ui5-rendu.js": "d1335cbd8fcd0b4a6d4d22fb0f4f3deb36589b101d14ebc12ca17ea3d1535bdf",
     "src/ui5-variante.js": "7a5c1917b0fb1bc967293dcbd86561696913a93d382de39e0a76b6dd3af793a5",
     "src/ui5.js": "c67e0f911c6a9544e02051565edd996bff7f6ef2942d2037cf58658196b37016",
     "src/verts-a-controler.js": "fa6dec1b009ff4b159fc202d56046b8c24121fca54f7067ddca5a2e8247f6d40",
