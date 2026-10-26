@@ -15,14 +15,14 @@ tu dis comment le vérifier.
 CONTEXTE
 Ariane : extension Chrome qui pose les rails dans ESV LiDAR. Orbite pose un
 lot de cuts (il ne lit que les cuts invalides) ; Écho enregistre la
-relecture manuelle de l'opérateur expert (Mic), dont la pose finale sert de
+relecture manuelle de l'opérateur expert (l'opérateur), dont la pose finale sert de
 référence. La GCV2 se place au-dessus du moteur figé (GCV1), en trois
 étages :
 1. HYPOTHÈSES (rien d'appris) : par rail, au plus douze poses candidates :
    H0 pose de départ, H1 moteur, H2 cellules concurrentes du réservoir, H3
    chaîne et voie prédite, H4 voisins sûrs, H5 rail manquant complété par
    l'écartement médian ; chacune avec et sans hauteur apprise.
-2. SCORE (appris) : régression logistique calibrée, p(à 10 mm de Mic) et
+2. SCORE (appris) : régression logistique calibrée, p(à 10 mm de l'opérateur) et
    p(à 5 mm), sur une liste blanche de traits.
 3. DÉCISION : garde-fous non appris (écartement, 45 mm latéral, dévers),
    puis le couple qui maximise p_g × p_d ; action si p ≥ τ et écart à H0 ≥
@@ -31,7 +31,7 @@ Parties d'apprentissage (11) : projet 1 : 12, 13, 14, 15, 16, 17, 24, 29 ;
 projet 2 : 1, 10, 11. Témoins fixes jamais appris : 1:11 et 1:25.
 Réservées pour le jugement à l'aveugle : 2:6 et 2:7 (Échos du 19/10).
 Règle de rotation : une partie qui a servi à régler ne juge jamais.
-Volume : 2 290 cuts corrigés par Mic depuis le début de la 5.0, dont 2 138
+Volume : 2 290 cuts corrigés par l'opérateur depuis le début de la 5.0, dont 2 138
 déjà appris.
 
 À LIRE (github.com/StoryNow30/banane)
@@ -51,7 +51,7 @@ recalculer les chiffres de terrain. Tu peux lire le code et faire tourner
 les essais sur les fixtures synthétiques (node --test tests/…).
 
 RÉSULTATS À AUDITER (validation croisée par partie, 11 plis, 2 411 cuts)
-- G1-a, rappel atteignable (au moins une hypothèse à 10 mm de Mic sur ses
+- G1-a, rappel atteignable (au moins une hypothèse à 10 mm de l'opérateur sur ses
   corrections de plus de 10 mm) : 83,7 % sur les cuts avec nuage ; 71,9 %
   sans les voisins humains ; 45,9 % en brut (334 grosses corrections sans
   nuage, perdues). Le manque est concentré en 2:1 (57 cuts, voie entière
@@ -68,7 +68,7 @@ RÉSULTATS À AUDITER (validation croisée par partie, 11 plis, 2 411 cuts)
   (sans les abords) : 118 justes, 5 abîmés. V1 est la seule candidate pour
   G1-c ; si elle échoue à l'aveugle, aucune autre variante n'est essayée
   sur ces parties.
-- En cours (D-207, à la demande de Mic : « la GCV2 doit se nourrir de
+- En cours (D-207, à la demande de l'opérateur : « la GCV2 doit se nourrir de
   toutes les situations, notamment les plus complexes ») : H6 « voie
   décalée » (paire translatée du décalage d'un voisin sûr validé avant la
   première visite du cut) et un garde-fou de voie pour les différés,
@@ -77,10 +77,10 @@ RÉSULTATS À AUDITER (validation croisée par partie, 11 plis, 2 411 cuts)
 
 QUESTIONS (réponds à chacune)
 1. FUITE : un trait, une hypothèse ou une étape peut-il lire, même
-   indirectement, la pose finale de Mic sur le cut jugé ? Regarde en
-   particulier H4 et H6 (voisins validés par Mic avant la première
+   indirectement, la pose finale de l'opérateur sur le cut jugé ? Regarde en
+   particulier H4 et H6 (voisins validés par l'opérateur avant la première
    visite), la médiane d'écartement de la partie, la présence du nuage
-   (qui dépend de la durée de visite de Mic), la zone et le rôle du cut, la
+   (qui dépend de la durée de visite de l'opérateur), la zone et le rôle du cut, la
    liste blanche des traits, et l'observateur ajouté à
    tools/relecture-autonome.cjs.
 2. VALIDATION CROISÉE : la séparation par partie est-elle étanche

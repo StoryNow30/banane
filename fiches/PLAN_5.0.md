@@ -2,7 +2,7 @@
 
 > **19 octobre 2026** : la suite (règles métier RM-1 à RM-11, GCV2 G0 à G2, cycle quotidien, niveaux) est dans `fiches/PLAN_SUITE_5.0.md` ; la conception de la GCV2 dans `fiches/G0_GCV2_CONCEPTION.md`. Ce tableau reste l'état des chantiers du 15 octobre.
 
-Version 1 du 15 octobre 2026. Cahier signé par Mic le 15 octobre (D-119). Règles : `BANANE_5.0_CAHIER.md` et `fiches/ORGANISATION_DEV_5.0.md`. Ce plan est le tableau de bord : l'orchestrateur y tient l'état de chaque chantier (à faire / lancé / livré / au terrain / accepté) et le coût constaté. Même importance pour tous ; l'ordre est celui des dépendances et des réponses attendues.
+Version 1 du 15 octobre 2026. Cahier signé par l'opérateur le 15 octobre (D-119). Règles : `BANANE_5.0_CAHIER.md` et `fiches/ORGANISATION_DEV_5.0.md`. Ce plan est le tableau de bord : l'orchestrateur y tient l'état de chaque chantier (à faire / lancé / livré / au terrain / accepté) et le coût constaté. Même importance pour tous ; l'ordre est celui des dépendances et des réponses attendues.
 
 Conventions : base de code = `claude/495-test-2` (4.9.5.2) tant que la 4.9.5 n'est pas fusionnée ; branche d'un chantier = `claude/50-<code>` ; outils hors ligne dans `tools/`, essais dans `tests/`, fiches dans `fiches/`. Jetons : estimation au niveau rapide, relecture forte comprise quand elle est due. « Q n » = question n du cahier § 7.
 
@@ -20,7 +20,7 @@ Conventions : base de code = `claude/495-test-2` (4.9.5.2) tant que la 4.9.5 n'e
 | V7 | G0, G1 ombre, G2 (→ 5.0 test 10 à 12) | méga cerveau | ≥ 500 corrections (E1), E5 |
 | V8 | F3 si Q6 oui ; stable 5.0 | fin | tout |
 
-**Règle ajoutée par Mic (D-123)** : chaque vague est aussi testée sur un **second projet ESV** (autre chantier, autre nuage) avant d'être tenue pour acquise ; la V0 (jointure Écho ↔ Orbite) le sera dès qu'un lot Orbite et un Écho d'un autre projet sont reçus.
+**Règle ajoutée par l'opérateur (D-123)** : chaque vague est aussi testée sur un **second projet ESV** (autre chantier, autre nuage) avant d'être tenue pour acquise ; la V0 (jointure Écho ↔ Orbite) le sera dès qu'un lot Orbite et un Écho d'un autre projet sont reçus.
 
 Une vague ne démarre que si la précédente a livré ses portes **ou** si ses chantiers n'en dépendent pas. Deux chantiers au plus en parallèle par fenêtre de 5 h (un lourd, un léger).
 
@@ -31,7 +31,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | S1+S2 | 4.9.5 test 2 | `claude/495-test-2` | rapide / moyen | .20 + 4.9.5.1 | paquet, consigne | verify 0 échec ; séance terrain | 112 k + correction de consigne (constaté) | **livré** (5c775b7), au terrain |
 | S3 | Jointure Écho ↔ Orbite par cut | `claude/50-s3-jointure` | rapide / moyen | Écho 17 (7 segments), 20 ; journaux Orbite des mêmes parties ; `echo17/cmp.cjs` (prototype) ; `tools/native-offline-evaluate.cjs` | `tools/jointure-echo-orbite.cjs` : table par cut (classe Ariane posée/différée, pose Ariane, pose humaine finale, écart par rail en repère profil, B1 ombre, zone si connue) ; `fiches/JOINTURE_ECHO_ORBITE.md` ; essai sur fixture | sur Écho 17 : chaque cut joint à son journal, écart humain retrouvé à < 1 mm par rapport au prototype ; sortie sans identifiant | 196 k (constaté) | **livré 15/10** (`claude/50-s3-jointure`, 5aa2ccb) : 266/268 cuts joints, écarts à 0,1 mm du prototype ; **à rejouer sur un second projet** (D-123) |
 | S4 | Maquette ESV dans verify + campagne de pannes | `claude/50-s4-banc` | rapide / haut ; relecteur fort sur `tools/verify.cjs` | `claude/esv-locale-audit` (maquette, banc), § 8-9 de l'audit | rejeu court (~40 cuts) dans verify ; rejeu complet avant paquet ; campagne de 8 pannes scriptée | verify passe avec le rejeu ; campagne verte sur 4.9.5.2 | 600 k + 150 k | à faire (V2) |
-| S5 | Banc B sauvé | hors dépôt (`banane-banc`) | Mic + orchestrateur | copie privée chez Mic | dépôt privé, README | clonable, rejeu lancé une fois | 50 k | à faire avec Mic |
+| S5 | Banc B sauvé | hors dépôt (`banane-banc`) | l'opérateur + orchestrateur | copie privée chez l'opérateur | dépôt privé, README | clonable, rejeu lancé une fois | 50 k | à faire avec l'opérateur |
 | S6 | Relevés en lecture seule (→ 4.9.5 test 3) | `claude/495-test-3` | rapide / moyen | liste au § 4 du cahier | 12 relevés consignés dans le journal/diag ; réglages à défaut ; essais | aucun changement de pose ; verify 0 ; export relu | 400 k | livré (4.9.5 test 3, D-127) ; export à relire |
 | S7 | Repli `phase-timing`, filtrage Écho | avec S6 | éclair / bas | KI-068, D-110 8c | export −40 % | lecteurs (perf-v3, perf-phases) inchangés | 80 k | livré : −36 % (gzip −46 %), D-127 |
 | S8 | Documents à corriger | `claude/50-s8-docs` | éclair / bas | AUDIT_SUPER_CERVEAU § 1, FICHE_B1 c. 3, D-110, fiche intensité, noms de modèle hérités | 4 corrections + nettoyage | relecture orchestrateur | 105 k (constaté) | **livré 15/10** (`claude/50-s8-docs`, 86dd817 + 80299de) |
@@ -52,13 +52,13 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 | Code | Branche | Niveau / effort | Entrées | Livrables | Porte | Jetons | Attend |
 |---|---|---|---|---|---|---|---|
 | P0 mesures (a)(b)(c) | `claude/50-p0-mesures` | rapide / moyen, note relue par fort | S3, Échos 17/18/20, `convention-fit.cjs`, rejeu `Candidate.propose` | trois notes chiffrées ; décision écrite par mesure | décisions prises | 450 k | livré (D-129) : (b) plafond 8 mm recommandé ; garde, (a), (c) inchangés |
-| P1 convention / garde de paire | `claude/50-p1-convention` | rapide / haut ; relecteur fort | P0(b), Q2 | plafond ou domaine 12 mm ; garde portée par le rail repêché | rejeu 4 lots sans régression ; 0 mauvaise pose ; ≥ 50/89 récupérés | 200 k + 150 k | codé, coupé par défaut (D-130) ; activation : décision de Mic |
+| P1 convention / garde de paire | `claude/50-p1-convention` | rapide / haut ; relecteur fort | P0(b), Q2 | plafond ou domaine 12 mm ; garde portée par le rail repêché | rejeu 4 lots sans régression ; 0 mauvaise pose ; ≥ 50/89 récupérés | 200 k + 150 k | codé, coupé par défaut (D-130) ; activation : décision de l'opérateur |
 | P2 porte de pente | `claude/50-p2-pente` | rapide / haut ; relecteur fort ; ré-épinglage avec Q2 | P0(c) | borne relâchée pour le flanc ou pente sur bande 14-30 mm | idem ; ≥ 40/68 | 350 k + 150 k | V5 |
 | P3 dessus seul | `claude/50-p3-dessus-seul` | rapide / haut ; relecteur fort | P4, 66 rails Écho 17, 4 lots | module après `gcv1-shadow`, statut distinct, 3 preuves | ≤ 10 mm ; ombre un lot ; 0 mauvaise pose | 700 k + 200 k | V5 |
-| P4 famine de flanc | `claude/50-p4-lod` | rapide / moyen ; banc B chez Mic | S6 (profondeur, budget), banc B | essai budget ×2/×4 pendant la capture ; note | réponse chiffrée | 300 k | V5, banc B |
+| P4 famine de flanc | `claude/50-p4-lod` | rapide / moyen ; banc B chez l'opérateur | S6 (profondeur, budget), banc B | essai budget ×2/×4 pendant la capture ; note | réponse chiffrée | 300 k | V5, banc B |
 | P5 estimateur par classe | avec P0/P2 | rapide / moyen | P0(a) | publication par classe ou trait M6 | décision écrite | 150 k | V5 |
 | P6 B2 caméra, V4 | `claude/50-p6-b2`, `claude/50-p6-v4` | rapide / haut ; banc B | D-049, D-095, P4 | vue décentrée mesurée ; comparaison V4.6 à la demande | B2 mesuré au banc B avant terrain | 500 k + 150 k | V5 |
-| P7 C4 retravaillé | `claude/50-p7-c4` | fort / haut (conception) | E1 (faux verts réels) | règle de qualité fondée sur mesures | note relue par Mic | 150 k | après E1 |
+| P7 C4 retravaillé | `claude/50-p7-c4` | fort / haut (conception) | E1 (faux verts réels) | règle de qualité fondée sur mesures | note relue par l'opérateur | 150 k | après E1 |
 
 ## 4. Lot E — Écho et données
 
@@ -75,7 +75,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 
 | Code | Branche | Niveau / effort | Entrées | Livrables | Porte | Jetons | Attend |
 |---|---|---|---|---|---|---|---|
-| G0 spécification | `claude/50-g0-spec` | fort / haut ; relue par Mic | P0, E1, E2, E5, AUDIT_SUPER_CERVEAU § 7 | fiche de conception GCV2 | relue et acceptée | 300 k | V7 |
+| G0 spécification | `claude/50-g0-spec` | fort / haut ; relue par l'opérateur | P0, E1, E2, E5, AUDIT_SUPER_CERVEAU § 7 | fiche de conception GCV2 | relue et acceptée | 300 k | V7 |
 | G1 hors ligne puis ombre | `claude/50-g1-gcv2` | rapide / haut ; relecteur fort ; séance distante dédiée | E4, E5, ≥ 500 corrections | GCV2 entraîné sur DEV, jugé sur RÉSERVÉ ; ombre 2 lots | erreur ≤ GCV1 partout ; différés ≤ ; 0 mauvaise pose | 2 M + 300 k | V7 |
 | G2 activation réversible | avec G1 | rapide / moyen | G1 | réglage, retour GCV1 | essai | 100 k | V7 |
 
@@ -93,7 +93,7 @@ Une vague ne démarre que si la précédente a livré ses portes **ou** si ses c
 
 Somme des estimations : ≈ 17 M de jetons au niveau rapide (dont 2,3 M pour G1) et ≈ 2,5 M de relectures fortes, hors orchestration. À raison d'au plus 60 % d'une fenêtre de 5 h par jour de travail, cela se lisse sur six à huit semaines de terrain, le terrain fixant le rythme. Chaque chantier livré met à jour ce tableau (coût constaté, état) et `DECISIONS.md`.
 
-## 8. État des réponses de Mic
+## 8. État des réponses de l'opérateur
 
 | Q | Sujet | Réponse | Chantiers débloqués |
 |---|---|---|---|
@@ -104,5 +104,5 @@ Somme des estimations : ≈ 17 M de jetons au niveau rapide (dont 2,3 M pour G1)
 | 5 | Écho sur une partie 24 à 27 | **oui** : l'Écho de la partie 24 (tests 19/20) existe, à rapatrier (D-122) | juge B1 ombre |
 | 6 | reprise automatique bornée | **oui** (D-122) | F3 |
 | 7 | protocole de relecture | **tous les cuts posés** sont relus (D-122) | E1 (sens de « inchangé ») |
-| 8 | Orbite et Écho en même temps | Mic demande pourquoi ; réponse : possible dès aujourd'hui avec deux profils Chrome, pas dans un même onglet (D-122) | périmètre |
+| 8 | Orbite et Écho en même temps | l'opérateur demande pourquoi ; réponse : possible dès aujourd'hui avec deux profils Chrome, pas dans un même onglet (D-122) | périmètre |
 | 9 | marges ADV (cuts avant pointe, après fin) | **20 cuts** (D-122) | M3 |

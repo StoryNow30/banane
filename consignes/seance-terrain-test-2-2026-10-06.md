@@ -1,4 +1,4 @@
-# Séance terrain « test 2 » : consigne pour Mic (6 octobre 2026)
+# Séance terrain « test 2 » : consigne pour l'opérateur (6 octobre 2026)
 
 Autorisée par D-078 (V1 adopté pour test + observateur passif, journalisation seulement). **Rien ne change dans la façon
 dont Ariane pose ou valide** : le paquet mesure et observe, il ne décide rien de plus que la 4.8.6.
@@ -40,7 +40,7 @@ dont Ariane pose ou valide** : le paquet mesure et observe, il ne décide rien d
 ## À noter dans ton retour
 
 Le poste (pro ou perso), le navigateur (Chrome ou Edge) et sa version, et si une autre fenêtre ESV était ouverte pendant le lot. La vitesse
-dépend de ces conditions (observations de Mic du 6 octobre : sur le poste pro, Edge avec une 2e fenêtre ESV manuelle ralentit tout,
+dépend de ces conditions (observations de l'opérateur du 6 octobre : sur le poste pro, Edge avec une 2e fenêtre ESV manuelle ralentit tout,
 Chrome non ; le poste perso, plus puissant, est très rapide).
 
 ## Si quelque chose d'anormal arrive

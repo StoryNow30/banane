@@ -29,9 +29,9 @@ fois les parties d'examen ouvertes ; toute modification passe par une décision 
 | 2:7 | examen D-209 (règle prudente, zones) lu par l'orchestrateur ; aucun réglage changé ; GCV2 jamais lue dessus | **exposée à la lecture** : non confirmatoire |
 | 2:13 | examen en cours (RM-5), règle prudente et zones seront lus ; GCV2 jamais lue | **exposée à la lecture** : non confirmatoire |
 
-- **Parties confirmatoires : les cinq prochaines parties nouvelles** reçues avec un Écho de Mic après la date de ce
+- **Parties confirmatoires : les cinq prochaines parties nouvelles** reçues avec un Écho de l'opérateur après la date de ce
   protocole, prises **dans l'ordre d'arrivée**, sans choix selon leurs résultats, en couvrant si possible les deux
-  projets. Pour chacune, l'examen de terrain (RM-5) ne publie que **Orbite contre Mic** et **les zones contre les
+  projets. Pour chacune, l'examen de terrain (RM-5) ne publie que **Orbite contre l'opérateur** et **les zones contre les
   notes** ; la partie « règle prudente et GCV2 » est calculée, écrite dans un fichier **scellé** (non lu, empreinte
   consignée) et ouverte seulement au jugement.
 - **Expositions minimales** avant ouverture : au moins 150 cuts mesurables en PN et 150 en ADV cumulés, et au moins
@@ -46,7 +46,7 @@ Sur les cuts mesurables des parties confirmatoires, V1 contre la règle prudente
 1. **0 mauvaise voie** observée (erreur finale > 50 mm, ou rail déplacé de plus de 45 mm en travers depuis la pose de
    départ) ;
 2. **borne haute de Wilson à 95 % de l'erreur parmi les actions ≤ 9 %** (pas seulement le taux observé) ;
-3. **0 mauvaise pose ajoutée** : aucun cut que la règle prudente laisse ou pose à 10 mm de Mic et que V1 pose à plus de
+3. **0 mauvaise pose ajoutée** : aucun cut que la règle prudente laisse ou pose à 10 mm de l'opérateur et que V1 pose à plus de
    10 mm (comparaison appariée, pas le total des abîmés) ;
 4. **corrections justes ≥ règle prudente** et **erreur médiane par zone ≤ règle prudente** sur chaque zone active ;
 5. résultats aussi **par partie** : aucune partie avec une mauvaise voie ; une partie peut rater 4 sans faire échouer la

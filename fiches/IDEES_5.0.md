@@ -1,8 +1,8 @@
 # Idées et angles morts pour la 5.0 — seconde récolte (15 octobre 2026)
 
-Statut : **notes pour le cahier 5.0**, pas une spécification. Six angles de recherche menés à terme (surface d'ESV ; cerveau et géométrie ; données et apprentissage ; métier et opérateur ; fiabilité, plateforme et banc ; regard extérieur) : 56 idées et 51 angles morts, notés par trois juges indépendants (fondé et nouveau ; valeur pour Mic ; faisable et sûr), regroupés en 12 idées ci-dessous. Remplace la première récolte (D-113, deux angles), dont le tableau des différés est repris en annexe. Mic a validé les idées de la première récolte (D-114) ; celles-ci lui sont soumises. Aucune donnée de partie ni identifiant de projet ici.
+Statut : **notes pour le cahier 5.0**, pas une spécification. Six angles de recherche menés à terme (surface d'ESV ; cerveau et géométrie ; données et apprentissage ; métier et opérateur ; fiabilité, plateforme et banc ; regard extérieur) : 56 idées et 51 angles morts, notés par trois juges indépendants (fondé et nouveau ; valeur pour l'opérateur ; faisable et sûr), regroupés en 12 idées ci-dessous. Remplace la première récolte (D-113, deux angles), dont le tableau des différés est repris en annexe. L'opérateur a validé les idées de la première récolte (D-114) ; celles-ci lui sont soumises. Aucune donnée de partie ni identifiant de projet ici.
 
-Note pour Mic. Base : code 4.9.5.1 (T951), DECISIONS D-085 à D-111, fiches, cahier 4.9, audits ESV locale et Écho, et les quatre exports de terrain des tests 15, 16 (deux parties) et 17 (environ 2 300 cuts proposés, 3 500 écritures observées). Chaque idée dit ce qui est **mesuré** (chiffre tiré d'un export ou ligne de code relue) et ce qui est **supposé**. Les lettres renvoient à tes trois attentes : **A** poser juste plus souvent, **B** traiter seule les zones difficiles, **D** apprendre de ses corrections.
+Note pour l'opérateur. Base : code 4.9.5.1 (T951), DECISIONS D-085 à D-111, fiches, cahier 4.9, audits ESV locale et Écho, et les quatre exports de terrain des tests 15, 16 (deux parties) et 17 (environ 2 300 cuts proposés, 3 500 écritures observées). Chaque idée dit ce qui est **mesuré** (chiffre tiré d'un export ou ligne de code relue) et ce qui est **supposé**. Les lettres renvoient à tes trois attentes : **A** poser juste plus souvent, **B** traiter seule les zones difficiles, **D** apprendre de ses corrections.
 
 Trois constats transversaux, qui portent la plupart des idées :
 
@@ -304,13 +304,13 @@ Faits observés sur le contrat ESV (DOM, écritures, liste, Potree), exploitable
 - **fiabilite-4 et fiabilite-5** : déjà prévus (D-098, D3) ; ce qui manque est en § 2.5 et § 2.15 et § 5.
 - **fiabilite-6, alléger le journal** : `phase-timing` = 42 à 50 % des octets (20 674 événements sur 36 994 sur un lot) ; vrai, utile pour que tu envoies tes exports, sans effet sur les poses : en § 5.
 - **esv-9, esv-10, donnees-5** : petits et justes, repris en § 2.2, § 2.12, § 2.6 et § 5.
-- **donnees-6, caméra de Mic en Écho** : repris en § 2.18 ; valeur indirecte avant B2.
+- **donnees-6, caméra de l'opérateur en Écho** : repris en § 2.18 ; valeur indirecte avant B2.
 - **metier-5, contrôle en ombre des verts voisins d'un rouge** : c'est ta méthode en lecture seule, mais navigation vers des cuts verts jamais essayée sur ESV, ~50 min par partie sans ciblage, chaque visite écrit `SeenByOperator` : attend l'idée 12 et ta réponse (question 6).
 - **fiabilite-1, fiabilite-8, donnees-8** : ce ne sont pas des idées 5.0 mais le socle : § 5.
 
 ---
 
-## 4. Questions à Mic
+## 4. Questions à l'opérateur
 
 Seulement celles qui changent une décision.
 

@@ -38,10 +38,10 @@ Oui pour tout ce qui est dessiné : polices OFL en fichiers locaux (sous `fonts/
 
 ## Ce qui reste à décider
 
-1. La direction : Signal ou Carnet, après les avoir vues à taille réelle à côté d'ESV, sur l'écran de Mic.
+1. La direction : Signal ou Carnet, après les avoir vues à taille réelle à côté d'ESV, sur l'écran de l'opérateur.
 2. Clair ou sombre par défaut (les deux existent dans chaque direction).
 3. Rail ou trame : lequel se lit le mieux après une heure.
 4. Revue V1 (tout de suite) ou V2 (à construire).
 5. Bricolage Grotesque, ou le mot d'état en Instrument Serif italique (option R), ou un repli plus neutre.
-6. La taille réelle de la fenêtre chez Mic, et si le mode compact suffit.
+6. La taille réelle de la fenêtre chez l'opérateur, et si le mode compact suffit.
 7. Le nom et les états de la deuxième passe (session principale).

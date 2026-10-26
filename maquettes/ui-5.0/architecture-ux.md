@@ -1,6 +1,6 @@
 # Ariane 5.0 : architecture UI/UX, reprise à zéro (24 octobre 2026)
 
-Document de conception, pas de pixels finaux, pas de code. Écrit pour Mic. Tout ce qui est affirmé sur le panneau vient de la lecture de `src/ui5.js`, `src/ui5-rendu.js`, `fiches/UI_ETATS_COMPTEURS.md`, `fiches/UI_INVENTAIRE.md` et des décisions D-218, D-230 à D-236. Les chiffres (cuts, compteurs, Mo) sont inventés. Rien n'est construit, rien n'est modifié dans le dépôt en dehors de ce fichier.
+Document de conception, pas de pixels finaux, pas de code. Écrit pour l'opérateur. Tout ce qui est affirmé sur le panneau vient de la lecture de `src/ui5.js`, `src/ui5-rendu.js`, `fiches/UI_ETATS_COMPTEURS.md`, `fiches/UI_INVENTAIRE.md` et des décisions D-218, D-230 à D-236. Les chiffres (cuts, compteurs, Mo) sont inventés. Rien n'est construit, rien n'est modifié dans le dépôt en dehors de ce fichier.
 
 ---
 
@@ -12,16 +12,16 @@ Document de conception, pas de pixels finaux, pas de code. Écrit pour Mic. Tout
 4. **Matière.** Verre flou + lueur radiale + grain + pastilles + rayons de 20 px : c'est le gabarit « tableau de bord sombre » qu'on trouve partout. P ajoute l'ombre portée du texte, le reflet qui balaye le bouton, le point qui orbite : exactement ce qui se lit « vibe codé », parce que ça décore sans rien dire.
 5. **Mouvement.** Les animations sont ornementales (orbite, ondes, compteurs qui montent, brillance). Tout bouge en même temps, en boucle. Rien ne signale un changement précis.
 6. **Identité.** Rien n'appartient à Ariane : le logo en dégradé corail → violet, les couleurs par activité, les pictogrammes de bibliothèque. On ne reconnaîtrait pas le panneau sur une vignette. Le métier (rail, voie, mesure) n'est nulle part.
-7. **Méthode.** Chaque maquette répond au dernier retour de Mic au lieu de partir d'un système stable. Résultat : un gabarit différent à chaque fois, jamais un produit.
+7. **Méthode.** Chaque maquette répond au dernier retour de l'opérateur au lieu de partir d'un système stable. Résultat : un gabarit différent à chaque fois, jamais un produit.
 8. **O est ennuyeuse pour une raison précise** : elle est honnête mais sans objet. Il n'y a rien à regarder. Le « haut de gamme » ne vient pas d'en rajouter (P) mais d'un seul objet dessiné avec soin, de proportions exactes et de détails typographiques tenus partout.
 9. **Ce qui est bon et à garder** : la table état → phrase → action, les compteurs définis, l'incident corrigé d'après le code, la relecture avec pause, la palette sobre à quatre commandes, le cache avec sa raison écrite.
-10. **Ce que je ne peux pas juger d'ici** : le rendu à côté d'ESV, à la taille réelle, sur l'écran de Mic. Tout ce document le suppose et le dit au § 8.
+10. **Ce que je ne peux pas juger d'ici** : le rendu à côté d'ESV, à la taille réelle, sur l'écran de l'opérateur. Tout ce document le suppose et le dit au § 8.
 
 ---
 
 ## 2. Ce que l'opérateur a à faire, moment par moment
 
-Lecteur : Mic, seul, ESV ouvert à côté, en séance de 1 à 3 heures. La question qu'il pose au panneau est toujours la même : **« dois-je faire quelque chose ? »** La réponse est presque toujours « non ».
+Lecteur : l'opérateur, seul, ESV ouvert à côté, en séance de 1 à 3 heures. La question qu'il pose au panneau est toujours la même : **« dois-je faire quelque chose ? »** La réponse est presque toujours « non ».
 
 | Moment | Ce qu'il regarde | Ce qu'il décide | Geste le plus court (cible) |
 |---|---|---|---|
@@ -62,7 +62,7 @@ Forces : la plus discrète pendant le travail. Faiblesses : gestion de deux fen�
 | Chantier | petit | moyen | gros |
 | Rupture avec la 4.9.6 | forte | forte | très forte |
 
-**Recommandation : B.** Elle garde ce que Mic a aimé dans O (« on comprend tout »), donne un objet à regarder sans décor, loge les listes sans écran de plus, et supprime l'accueil à vignettes qui coûte un clic à chaque fois (« trop lent »).
+**Recommandation : B.** Elle garde ce que l'opérateur a aimé dans O (« on comprend tout »), donne un objet à regarder sans décor, loge les listes sans écran de plus, et supprime l'accueil à vignettes qui coûte un clic à chaque fois (« trop lent »).
 
 ### 3.2 La carte
 
@@ -144,7 +144,7 @@ Règles tenues dans toutes les transitions :
 | **Bandeau dans ESV** | réglage | **allumé par défaut**, répète la phrase d'état ; aucun bouton |
 | **Détails techniques** | ancien panneau | inchangé, atteint depuis la feuille réglages et la palette |
 
-**Fenêtre.** La fenêtre d'origine est créée en 560 × 820 ; la 4.9.6 la pousse à 1180 × 840, ce qui prend la moitié d'un écran. B est dessinée pour **600 × 760** et doit rester lisible à 560 de large : instrument d'environ 320 px de haut, tiroir d'environ 300 px, bande cache 56 px. Hypothèse à vérifier avec Mic (§ 8) : où il pose la fenêtre, et sur combien d'écrans.
+**Fenêtre.** La fenêtre d'origine est créée en 560 × 820 ; la 4.9.6 la pousse à 1180 × 840, ce qui prend la moitié d'un écran. B est dessinée pour **600 × 760** et doit rester lisible à 560 de large : instrument d'environ 320 px de haut, tiroir d'environ 300 px, bande cache 56 px. Hypothèse à vérifier avec l'opérateur (§ 8) : où il pose la fenêtre, et sur combien d'écrans.
 
 ---
 
@@ -179,7 +179,7 @@ Les deux partent de la même architecture B. Elles diffèrent par la matière, l
 **L'objet.** Le **rail** : une ligne horizontale fine avec une graduation tous les 10 cuts, un segment plein pour les traités, des repères ambre verticaux aux rangs des différés, un curseur (trait court) au cut en cours, le reste en pointillé gris « 89 restants ». Total inconnu : pas de graduation, la ligne court jusqu'au bord et s'efface. Relecture : la même ligne, repères des corrigés. Écho : pas de rail, un compteur et une ligne de marques par visite.
 **Mouvement.** 160 à 240 ms, sortie douce, jamais de rebond. Le curseur du rail glisse d'un cut à l'autre (240 ms). Le changement d'état fond la couleur du glyphe (200 ms). Le tiroir glisse de bas en haut (280 ms). Pulsation lente du glyphe « en cours » (2 s, opacité 100 → 70 %), rien d'autre en boucle.
 **Son.** Optionnel et éteint par défaut : un seul son court (un déclic mat) sur l'arrivée d'un incident. Techniquement possible depuis la page de l'extension avec un fichier audio local ; Chrome peut le bloquer tant qu'aucun clic n'a eu lieu dans la fenêtre. À proposer, pas à promettre.
-**Risques.** Peut paraître froid ou « outil de développeur » ; proche du « noir, traits fins, un grand chiffre » que Mic aimait dans l'ancien haut d'Orbite, donc risque qu'il y voie l'ancien panneau ; un thème sombre seul ne convient pas à tous les éclairages (prévoir le thème clair en « papier technique », § 5.3).
+**Risques.** Peut paraître froid ou « outil de développeur » ; proche du « noir, traits fins, un grand chiffre » que l'opérateur aimait dans l'ancien haut d'Orbite, donc risque qu'il y voie l'ancien panneau ; un thème sombre seul ne convient pas à tous les éclairages (prévoir le thème clair en « papier technique », § 5.3).
 
 ### Direction 2 · « Carnet technique »
 
@@ -192,7 +192,7 @@ Les deux partent de la même architecture B. Elles diffèrent par la matière, l
 **L'objet.** La **trame** : une grille de petits carrés, un par cut traité, dans l'ordre du lot (posé : plein ; différé : barré ; SKIP : croix ; repris : point ; en cours : contour épais), suivie d'une seule barre grise pour les restants, comme la fiche des compteurs le prescrit. Lisible sans couleur. Passe à la ligne, ne déborde jamais. Relecture : la trame des cuts relus. Écho : une trame des visites (corrigées pleines, validées vides).
 **Mouvement.** 200 à 300 ms, entrée-sortie douce, comme une feuille qu'on glisse. Un carré de la trame apparaît par un bref assombrissement (150 ms), pas par un rebond. Le tiroir glisse. Aucune boucle sauf le glyphe « en cours ».
 **Son.** Aucun.
-**Risques.** Le « papier chaud » est devenu une mode récente dans les outils d'écriture : il faut la typographie et la trame pour que ce soit nôtre, sinon ça redevient générique. Un panneau clair à côté d'un ESV sombre peut fatiguer : le gris du papier doit être mesuré sur l'écran de Mic, pas deviné. Bricolage Grotesque a une personnalité forte : si Mic ne l'aime pas, toute la direction tombe (repli : *Schibsted Grotesk*, OFL, plus neutre).
+**Risques.** Le « papier chaud » est devenu une mode récente dans les outils d'écriture : il faut la typographie et la trame pour que ce soit nôtre, sinon ça redevient générique. Un panneau clair à côté d'un ESV sombre peut fatiguer : le gris du papier doit être mesuré sur l'écran de l'opérateur, pas deviné. Bricolage Grotesque a une personnalité forte : si l'opérateur ne l'aime pas, toute la direction tombe (repli : *Schibsted Grotesk*, OFL, plus neutre).
 
 ### 5.3 Ce qui est commun et non négociable
 
@@ -285,7 +285,7 @@ Courbe de sortie douce : départ rapide, arrivée lente, sans dépassement. Mouv
 
 ## 7. Plan de test d'utilisabilité : cinq tâches chronométrées
 
-Conditions : une fenêtre Ariane en 600 × 760 à côté d'ESV (une partie d'essai ou une page simulée), écran et siège habituels de Mic, enregistrement d'écran, Mic pense à voix haute. Un observateur ne dit rien tant que Mic n'est pas bloqué 30 s. À refaire une semaine plus tard avec les mêmes tâches pour mesurer l'apprentissage.
+Conditions : une fenêtre Ariane en 600 × 760 à côté d'ESV (une partie d'essai ou une page simulée), écran et siège habituels de l'opérateur, enregistrement d'écran, l'opérateur pense à voix haute. Un observateur ne dit rien tant que l'opérateur n'est pas bloqué 30 s. À refaire une semaine plus tard avec les mêmes tâches pour mesurer l'apprentissage.
 
 | # | Tâche | Point de départ | Réussite | Échec |
 |---|---|---|---|---|
@@ -302,11 +302,11 @@ Conditions : une fenêtre Ariane en 600 × 760 à côté d'ESV (une partie d'ess
 ## 8. Ce qu'il me faudrait, et ce que je ne peux pas juger
 
 **Pour passer au niveau supérieur (liste courte, justifiée) :**
-1. **Une capture d'ESV à taille réelle et la disposition des fenêtres de Mic** (résolution, un ou deux écrans, où est Ariane) : sans ça, la taille 600 × 760, le choix sombre / clair et l'objet d'avancement sont des paris.
-2. **Vingt minutes d'enregistrement d'une vraie séance** (écran + voix) : pour savoir où Mic regarde pendant le lot (le panneau, le bandeau, ESV) et ce qu'il lit vraiment.
-3. **Trois références « premium » de Mic, avec une phrase sur ce qu'il y regarde** (matière, mouvement, lettres, chiffres), plutôt que des noms de produits : c'est ce qui manque pour trancher entre Signal et Carnet.
+1. **Une capture d'ESV à taille réelle et la disposition des fenêtres de l'opérateur** (résolution, un ou deux écrans, où est Ariane) : sans ça, la taille 600 × 760, le choix sombre / clair et l'objet d'avancement sont des paris.
+2. **Vingt minutes d'enregistrement d'une vraie séance** (écran + voix) : pour savoir où l'opérateur regarde pendant le lot (le panneau, le bandeau, ESV) et ce qu'il lit vraiment.
+3. **Trois références « premium » de l'opérateur, avec une phrase sur ce qu'il y regarde** (matière, mouvement, lettres, chiffres), plutôt que des noms de produits : c'est ce qui manque pour trancher entre Signal et Carnet.
 4. **Le droit d'embarquer deux polices libres de plus** (IBM Plex ou Bricolage Grotesque, licence OFL, fichiers locaux) et un outil de sous-ensemble pour les alléger : les polices actuelles suffisent pour un essai, pas pour la direction finale.
-5. **Une heure de Mic** pour le plan de test du § 7, sur les maquettes à taille réelle dans la vraie fenêtre, pas dans une page de démonstration.
+5. **Une heure de l'opérateur** pour le plan de test du § 7, sur les maquettes à taille réelle dans la vraie fenêtre, pas dans une page de démonstration.
 6. **Une décision de la session principale** sur le nom et les états de la deuxième passe, et sur l'existence future de « ouvrir le cut » et « examiné » dans la Revue : le tiroir n'est pas le même selon qu'il est une liste à lire ou une surface de travail.
 
-**Ce que je ne peux pas juger sans les yeux de Mic :** le gris du papier et la luminosité du graphite sur son écran ; si Bricolage Grotesque lui plaît ou l'agace ; si un panneau clair à côté d'ESV sombre le fatigue ; si le rail (ligne) ou la trame (carrés) est plus parlant pour lui après une heure ; si le son d'incident est acceptable dans son environnement ; si « Voir ce qui reste » est le bon mot ; et surtout si, une fois la décoration retirée, il trouve l'objet assez beau pour avoir envie de l'ouvrir. Aucune maquette ne répond à cette dernière question : seule une version à taille réelle, essayée pendant quelques jours, le peut.
+**Ce que je ne peux pas juger sans les yeux de l'opérateur :** le gris du papier et la luminosité du graphite sur son écran ; si Bricolage Grotesque lui plaît ou l'agace ; si un panneau clair à côté d'ESV sombre le fatigue ; si le rail (ligne) ou la trame (carrés) est plus parlant pour lui après une heure ; si le son d'incident est acceptable dans son environnement ; si « Voir ce qui reste » est le bon mot ; et surtout si, une fois la décoration retirée, il trouve l'objet assez beau pour avoir envie de l'ouvrir. Aucune maquette ne répond à cette dernière question : seule une version à taille réelle, essayée pendant quelques jours, le peut.

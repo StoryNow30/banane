@@ -4,15 +4,15 @@
 
 ## 1. Résultat en bref
 
-| Réglage | Grosses corrections de Mic (> 10 mm) hors zone + marge | Cuts à relire | Rapport aux marges livrées | Cuts des zones de Mic couverts (ADV + PN) |
+| Réglage | Grosses corrections de l'opérateur (> 10 mm) hors zone + marge | Cuts à relire | Rapport aux marges livrées | Cuts des zones de l'opérateur couverts (ADV + PN) |
 |---|--:|--:|--:|--:|
 | Marges livrées (référence) | **5 sur 35** | 464 | × 1,00 | 301 sur 360 (83,6 %) |
 | Prix 200 (`datasets/marges-zones-proposees.json`) | **5 sur 35** | 548 | × 1,18 | 333 sur 360 (92,5 %) |
 | Prix 100 (`marges-prix100.json`) | **5 sur 35** | 532 | × 1,15 | 323 sur 360 (89,7 %) |
 
 - Les trois réglages laissent les **mêmes 5 grosses corrections** hors zone (§ 3). Les marges proposées n'en rattrapent aucune sur 2:6 : elles coûtent 68 à 84 cuts de plus.
-- Couverture des zones de Mic, ADV seules (6 zones notées sauf l'aiguille isolée, 337 cuts) : livré 280 (83,1 %), prix 200 310 (92,0 %), prix 100 301 (89,3 %).
-- Toutes les aiguilles de Mic (3505, 3723, 4756, et l'aiguille isolée 4650) sont dans la sélection, y compris avec les marges livrées.
+- Couverture des zones de l'opérateur, ADV seules (6 zones notées sauf l'aiguille isolée, 337 cuts) : livré 280 (83,1 %), prix 200 310 (92,0 %), prix 100 301 (89,3 %).
+- Toutes les aiguilles de l'opérateur (3505, 3723, 4756, et l'aiguille isolée 4650) sont dans la sélection, y compris avec les marges livrées.
 
 ## 2. Entrées et chiffres de contrôle
 
@@ -25,7 +25,7 @@
 
 ## 3. Les 5 grosses corrections encore hors zone (identiques pour les trois réglages)
 
-| Cut | Correction de Mic | Plage la plus proche (livré / prix 200 et 100) | Zone notée par Mic la plus proche | Cut du lot le plus proche |
+| Cut | Correction de l'opérateur | Plage la plus proche (livré / prix 200 et 100) | Zone notée par l'opérateur la plus proche | Cut du lot le plus proche |
 |--:|--:|---|---|---|
 | 3931 | 37,5 mm | ADV 3643–3755 / 3633–3755, 176 cuts après sa fin | ADV 3670–3752, 179 cuts après | 3727 (posé), 204 cuts avant |
 | 3932 | 41,2 mm | idem, 177 cuts après | idem, 180 cuts après | 3727, 205 cuts |
@@ -36,16 +36,16 @@
 Faits sur ces cinq cuts (rien n'en est tiré pour les marges) :
 
 - Ce sont **cinq cuts de suite**, de 34 à 41 mm : la plus grosse zone de corrections hors sélection de 2:6.
-- Ils ne sont dans **aucune zone notée par Mic**. Sa zone notée la plus proche finit en 3752, la suivante commence en 4423.
+- Ils ne sont dans **aucune zone notée par l'opérateur**. Sa zone notée la plus proche finit en 3752, la suivante commence en 4423.
 - Le lot Orbite n'est pas passé par là : son dernier cut avant 4450 est le 3727. Aucune plage d'ADV ni de PN n'est donc relevée (les zones se relèvent sur les cuts du lot).
 - Dans le nuage de l'Écho, quatre de ces cinq cuts ont un **cœur de chaussée** (3931, 3932, 3933, 3935 : chaussée affleurante 100 %, quarts 99 à 100), aucune alerte d'ADV. Le cut 3934 est sans nuage. Un tel signal ouvrirait une zone de PN s'il était vu sur des cuts du lot ; ici il ne l'est pas.
 - Une hypothèse seulement, à ne pas régler sur 2:6 : un PN que le lot n'a pas visité.
 
-## 4. Les zones de Mic, réglage par réglage
+## 4. Les zones de l'opérateur, réglage par réglage
 
 Fichier de notes de travail : `scratchpad/p2-6/notes-2-6.json` (hors dépôt). L'aiguille isolée 4650 y est un point (un seul cut).
 
-| Zone de Mic | Cuts à l'Écho | Couverts, livré | Couverts, prix 200 | Couverts, prix 100 |
+| Zone de l'opérateur | Cuts à l'Écho | Couverts, livré | Couverts, prix 200 | Couverts, prix 100 |
 |---|--:|--:|--:|--:|
 | ADV 3359–3442 | 84 | 72 | 84 | 84 |
 | ADV 3478–3535 (aiguille 3505) | 58 | 13 | 31 | 22 |
@@ -65,7 +65,7 @@ Ce qui change et ce qui ne change pas :
 
 ### Débords
 
-Débord d'une plage = cuts de la plage en dehors de la zone notée par Mic (avant / après).
+Débord d'une plage = cuts de la plage en dehors de la zone notée par l'opérateur (avant / après).
 
 | Plage | Livré | Prix 200 et prix 100 |
 |---|---|---|
@@ -73,17 +73,17 @@ Débord d'une plage = cuts de la plage en dehors de la zone notée par Mic (avan
 | ADV 3670–3752 | 3643–3755 : 27 / 3 | 3633–3755 : 37 / 3 |
 | ADV 4423–4477 | 4422–4483 : 1 / 6 | 4412–4483 : 11 / 6 |
 | ADV 4723–4779 | 4619–4788 : 104 / 9 (le début couvre l'aiguille isolée 4650) | 4609–4788 : 114 / 9 |
-| PN seul 3435–3445 | absent | présent (cœur de chaussée seul, au bord de l'ADV 3359–3442, sans zone notée par Mic) |
+| PN seul 3435–3445 | absent | présent (cœur de chaussée seul, au bord de l'ADV 3359–3442, sans zone notée par l'opérateur) |
 | PN 7935–7957 | 7936–7956 : 0 / 0 | idem |
 
-- Cuts à relire en dehors des zones de Mic (aiguille 4650 non comptée comme zone) : **171** en livré, **223** au prix 200, **217** au prix 100. Cuts à relire dans les zones de Mic : 293, 325, 315.
+- Cuts à relire en dehors des zones de l'opérateur (aiguille 4650 non comptée comme zone) : **171** en livré, **223** au prix 200, **217** au prix 100. Cuts à relire dans les zones de l'opérateur : 293, 325, 315.
 - Le gain de couverture (+32 cuts au prix 200, +22 au prix 100) coûte +52 et +46 cuts de débord. Le plus gros débord est celui de l'ADV 4723–4779 (104 cuts avant en livré), dont une partie sert l'aiguille isolée 4650.
 
 ## 5. Lectures et limites
 
-- Sur 2:6, les trois réglages sont à égalité pour le critère de la mission (5 hors zone) ; ils diffèrent seulement par le coût (464, 548, 532) et par la couverture des zones de Mic (83,6 %, 92,5 %, 89,7 %).
-- Les 5 grosses corrections de 2:6 sont toutes dans un passage que ni le lot ni Mic (dans ses notes) ne désignent comme zone. Elles ne ressemblent pas aux cas de la fiche § 7, qui sont près d'un rouge du lot ou d'une alerte.
-- La couverture des zones de Mic est calculée sur les cuts présents dans la table de 2:6 (431 cuts à l'Écho), pas sur tous les numéros de la zone.
+- Sur 2:6, les trois réglages sont à égalité pour le critère de la mission (5 hors zone) ; ils diffèrent seulement par le coût (464, 548, 532) et par la couverture des zones de l'opérateur (83,6 %, 92,5 %, 89,7 %).
+- Les 5 grosses corrections de 2:6 sont toutes dans un passage que ni le lot ni l'opérateur (dans ses notes) ne désignent comme zone. Elles ne ressemblent pas aux cas de la fiche § 7, qui sont près d'un rouge du lot ou d'une alerte.
+- La couverture des zones de l'opérateur est calculée sur les cuts présents dans la table de 2:6 (431 cuts à l'Écho), pas sur tous les numéros de la zone.
 - 35 grosses corrections ici ; le compteur du premier examen en donnait 32 (il laisse de côté les cuts à étiquette « ambigu »).
 - Aucun réglage n'a été modifié d'après ce résultat. 2:6 reste jugée une fois.
 

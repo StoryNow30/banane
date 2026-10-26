@@ -1,7 +1,7 @@
 # Ariane 4.9 — avenant D-072 : développement parallèle
 
 **2 octobre 2026, 08 h 09 (Europe/Paris), décision de la direction.**
-Mic autorise l'orchestrateur à avancer d'autres chantiers en développement :
+L'opérateur autorise l'orchestrateur à avancer d'autres chantiers en développement :
 « Si on peut mettre d'autres chantiers en cours de route en développement,
 n'hésite pas. Nous avons plusieurs développeurs à disposition avec une grande
 force de calcul. »
@@ -52,7 +52,7 @@ V1 : `complement-v1-parallele-2026-10-02.md`.
 - Aucune intégration silencieuse d'U1 ou d'U2 dans le commit de référence V1.
   Cette référence reste identifiée et fixe pour les comparaisons de vitesse.
   Une branche terminée peut attendre son intégration et ses essais.
-- Les essais de Mic restent organisés successivement, avec une seule Ariane
+- Les essais de l'opérateur restent organisés successivement, avec une seule Ariane
   active. Les parties réservées et les conditions de comparaison sont conservées.
 - Chaque développeur livre son propre rapport et s'arrête. L'orchestrateur
   relit chaque diff ; la relecture indépendante demeure distincte de son auteur

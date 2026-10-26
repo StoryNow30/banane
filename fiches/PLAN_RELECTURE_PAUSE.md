@@ -1,6 +1,6 @@
 # Plan : mettre la relecture en pause et la reprendre, même après un F5 (21 octobre 2026)
 
-Demande de Mic : pouvoir **mettre en pause** la relecture d'après le lot et la **relancer, même après un F5**. Ce plan dit ce qu'il faut changer, ce qu'on ne touche pas, ce que ça coûte et ce qui reste à décider. **Rien n'est construit.** Maquette : `maquettes/ui-5.0/N-ariane-v2.html` (scènes « Relecture », parcours « pause et F5 »).
+Demande de l'opérateur : pouvoir **mettre en pause** la relecture d'après le lot et la **relancer, même après un F5**. Ce plan dit ce qu'il faut changer, ce qu'on ne touche pas, ce que ça coûte et ce qui reste à décider. **Rien n'est construit.** Maquette : `maquettes/ui-5.0/N-ariane-v2.html` (scènes « Relecture », parcours « pause et F5 »).
 
 ## 1. Ce qui existe (lu dans `background.js` et `src/carte-relecture.js`)
 
@@ -54,12 +54,12 @@ Pause à chaque étape (navigation, capture, calcul, juste après une correction
 
 - **A. Service worker + essais** : le plus gros, environ deux séances de travail.
 - **B. Panneau et nouvelle interface** : une séance.
-- **C. Essai terrain** : une séance de Mic, avec un vrai F5 pendant une relecture.
+- **C. Essai terrain** : une séance de l'opérateur, avec un vrai F5 pendant une relecture.
 - **Risque principal, non vérifiable hors d'ESV** : après un F5, la liste de cuts d'ESV (mémoire de la page) et l'observateur passif se réinstallent avec un délai. Si la reprise démarre trop tôt, le statut « vert » d'un cut peut manquer et la correction serait écartée (sans danger, mais la relecture ne ferait rien). À mesurer sur ESV réel.
 
-## 8. Décisions de Mic (21 octobre)
+## 8. Décisions de l'opérateur (21 octobre)
 
 1. **Durée de garde** : oui, jusqu'au prochain lot ou à « Arrêter », au plus une journée.
-2. **F5 pendant la relecture** : « les deux » : un **réglage** (Réglages, « Si ESV est rechargé pendant la relecture ») entre **Mettre en pause** (par défaut, la reprise reste possible) et **Arrêter** (comme aujourd'hui). Interprétation à confirmer : si Mic voulait autre chose (par exemple pause d'abord, puis arrêt au bout d'un délai), le dire.
+2. **F5 pendant la relecture** : « les deux » : un **réglage** (Réglages, « Si ESV est rechargé pendant la relecture ») entre **Mettre en pause** (par défaut, la reprise reste possible) et **Arrêter** (comme aujourd'hui). Interprétation à confirmer : si l'opérateur voulait autre chose (par exemple pause d'abord, puis arrêt au bout d'un délai), le dire.
 3. **Version et branche** : la session principale s'en charge (numéro, coordination avec la branche L1 pour `background.js`).
 4. **Maquette** : la palette a été refaite (trop fouillie : voir D-233) ; le reste de la maquette n'a pas reçu d'objection. Validation d'ensemble à reconfirmer avant de construire.

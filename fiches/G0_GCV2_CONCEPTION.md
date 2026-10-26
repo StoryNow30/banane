@@ -1,8 +1,8 @@
-# G0 — Conception du méga cerveau GCV2 (19 octobre 2026, à relire par Mic)
+# G0 — Conception du méga cerveau GCV2 (19 octobre 2026, à relire par l'opérateur)
 
 Chantier G0 du cahier (`BANANE_5.0_CAHIER.md`, lot G). Écrite au niveau le plus fort à partir des mesures faites depuis le 15 octobre (audit du super cerveau, G0 v1, faux verts, hauteur apprise, voie prédite, mémoire des différés, relecture autonome, D-185 à D-191). Rien n'est codé ici ; la suite est dans `fiches/PLAN_SUITE_5.0.md` § 4 (missions G1-a à G2). Le moteur de géométrie `src/engine.js` n'est pas touché par la GCV2.
 
-**En une phrase.** La GCV2 ne remplace pas le moteur qui lit le nuage ; c'est la couche qui **choisit, corrige et doute** au-dessus de lui : elle fabrique des hypothèses de pose à partir de tout ce qu'Ariane sait déjà, apprend sur les corrections de Mic à reconnaître celle qui est juste, et ne pose que lorsqu'elle est sûre, sous des garde-fous qui ne s'apprennent pas.
+**En une phrase.** La GCV2 ne remplace pas le moteur qui lit le nuage ; c'est la couche qui **choisit, corrige et doute** au-dessus de lui : elle fabrique des hypothèses de pose à partir de tout ce qu'Ariane sait déjà, apprend sur les corrections de l'opérateur à reconnaître celle qui est juste, et ne pose que lorsqu'elle est sûre, sous des garde-fous qui ne s'apprennent pas.
 
 ## 1. Ce que les mesures imposent
 
@@ -13,7 +13,7 @@ Chantier G0 du cahier (`BANANE_5.0_CAHIER.md`, lot G). Écrite au niveau le plus
 | 70 des 85 faux verts viennent de la hauteur ; la hauteur apprise fait 85 → 61 sans en créer, en validation croisée ; aucun signal unique ne trie les faux verts d'une partie à l'autre (AUC 0,52 à 0,78) | FAUX_VERTS, HAUTEUR_APPRISE, D-140, D-160, D-161 | la hauteur apprise est une **transformation d'hypothèse** (chaque hypothèse existe avec et sans) ; le tri des faux verts demande une **combinaison** de traits, pas une règle à un seuil |
 | Second projet : 127 différés, voie décalée de 149 mm, 61 % hors de la fenêtre de recherche ; 3 poses sur la mauvaise voie (163 à 280 mm) | D-141, VOIE_PREDITE | il faut un **a priori de voie** (voie prédite, appuis) parmi les hypothèses, et la mauvaise voie est la faute que les **garde-fous** interdisent avant tout apprentissage |
 | Règle prudente (8 mm, chaîne + hauteur) : PN 36 sur 36 ; parties 14 à 16 : 29 des 35 grosses corrections reproduites, 2 abîmés, 0 mauvaise voie ; mais 39 des 118 grosses corrections sont des **abstentions** et 7 des 42 tombent **hors zone** | RELECTURE_AUTONOME, D-189, D-190 | la GCV2 doit d'abord **réduire les abstentions** (hypothèses) et ensuite seulement élargir les zones ; la règle prudente actuelle est la **référence** à battre, pas à jeter |
-| 1 631 cuts corrigés, 442 validés tels quels, 1 177 visités sans action, sur 10 Échos ; Mic en ajoute chaque jour | D-188, COMPTEUR_GCV2 | assez d'exemples pour un modèle à quelques dizaines de traits ; **pas** pour un réseau sur le nuage ; les cuts justes sont les exemples négatifs indispensables |
+| 1 631 cuts corrigés, 442 validés tels quels, 1 177 visités sans action, sur 10 Échos ; l'opérateur en ajoute chaque jour | D-188, COMPTEUR_GCV2 | assez d'exemples pour un modèle à quelques dizaines de traits ; **pas** pour un réseau sur le nuage ; les cuts justes sont les exemples négatifs indispensables |
 | Les corrections de moins de 5 mm sont dans le bruit de la référence | BRUIT_REFERENCE | les étiquettes sont des classes (≤ 5, ≤ 10, > 10, > 50 mm), pas une régression fine |
 
 ## 2. Forme retenue : trois étages au-dessus du moteur
@@ -33,11 +33,11 @@ Pour chaque rail, une liste bornée (douze au plus) de poses candidates, chacune
 - **H4** l'interpolation des voisins sûrs (poses humaines ou validées par le lot, jamais ses propres poses non vérifiées : règle M2) ;
 - chaque hypothèse existe **avec et sans hauteur apprise**.
 
-Première mesure de G1-a, avant tout apprentissage : le **rappel atteignable**, part des grosses corrections de Mic pour lesquelles une hypothèse au moins est à 10 mm de sa pose finale. S'il est sous 60 %, c'est l'étage 1 qu'il faut enrichir, pas le modèle.
+Première mesure de G1-a, avant tout apprentissage : le **rappel atteignable**, part des grosses corrections de l'opérateur pour lesquelles une hypothèse au moins est à 10 mm de sa pose finale. S'il est sous 60 %, c'est l'étage 1 qu'il faut enrichir, pas le modèle.
 
 ### Étage 2 — Score de justesse (appris, piste A1 de l'audit)
 
-Pour chaque hypothèse d'un rail, deux probabilités calibrées : p(à 10 mm de la pose finale de Mic) et p(à 5 mm). Traits (une trentaine, tous disponibles à l'instant de la décision) :
+Pour chaque hypothèse d'un rail, deux probabilités calibrées : p(à 10 mm de la pose finale de l'opérateur) et p(à 5 mm). Traits (une trentaine, tous disponibles à l'instant de la décision) :
 
 - **géométrie de l'hypothèse** : perte, ratio de perte à la meilleure, lignes au sommet, faces, STRONG, repêchée par S1, concurrents forts, épaisseur et points du dessus, points du rail ;
 - **rapport à la pose de départ** : décalage latéral et vertical, décalage de la convention (`dz`) ;
@@ -59,16 +59,16 @@ La pose (ou l'abstention), la **confiance calibrée** (une probabilité, pas un 
 
 ## 3. Ce qu'elle apprend des corrections
 
-- **Un exemple** = (partie, cut, rail, hypothèse) ; **étiquette** = écart 3D de l'hypothèse à la pose finale de Mic, en repère profil, en classes ≤ 5, ≤ 10, > 10, > 50 mm. Un cut validé tel quel ou visité 0,6 s sans action donne l'étiquette « H0 juste » : ce sont les exemples négatifs, aussi nombreux que les corrections.
+- **Un exemple** = (partie, cut, rail, hypothèse) ; **étiquette** = écart 3D de l'hypothèse à la pose finale de l'opérateur, en repère profil, en classes ≤ 5, ≤ 10, > 10, > 50 mm. Un cut validé tel quel ou visité 0,6 s sans action donne l'étiquette « H0 juste » : ce sont les exemples négatifs, aussi nombreux que les corrections.
 - **Pondération** : chaque partie pèse autant qu'une autre (comme la hauteur apprise), pour qu'une grosse partie n'écrase pas les autres ; les projets sont équilibrés de la même façon quand il y en a plus de deux.
-- **Référence** : la dernière validation de Mic, corrigée par l'écriture serveur (D-143) ; les cuts sans référence et les SKIP n'entrent pas.
+- **Référence** : la dernière validation de l'opérateur, corrigée par l'écriture serveur (D-143) ; les cuts sans référence et les SKIP n'entrent pas.
 - **Anti-fuite** : les traits ne lisent jamais la référence ; un essai le prouve (même méthode que la hauteur apprise et E2). Le jeu porte des bords de rails : il reste **hors dépôt**, seuls les comptes et les paramètres entrent.
 
 ## 4. Apprentissage et jugement
 
 - **Validation croisée par partie** sur les parties d'apprentissage (apprendre sur toutes sauf une, juger celle-là) ; τ et δ choisis sur l'apprentissage seulement.
 - **Jugement** sur les parties réservées et les deux témoins fixes (1:25 et 1:11, jamais appris), par zone, avec la borne de Wilson à 95 %.
-- **Mesures**, les mêmes que la relecture autonome : corrections justes (Mic > 10 mm, GCV2 à 10 mm), reproduites à 5 mm, cuts abîmés, mauvaise voie, erreur parmi les actions, abstentions, laissés faux, par zone (PN, ADV, abords, hors) et par rôle (vert, rouge, différé).
+- **Mesures**, les mêmes que la relecture autonome : corrections justes (l'opérateur > 10 mm, GCV2 à 10 mm), reproduites à 5 mm, cuts abîmés, mauvaise voie, erreur parmi les actions, abstentions, laissés faux, par zone (PN, ADV, abords, hors) et par rôle (vert, rouge, différé).
 - **Référence à battre** : GCV1 + règle prudente, chiffres de D-190 sur les mêmes parties (29 justes sur 35, 2 abîmés, 87 abstentions, 6 laissés faux).
 - **Porte G1** (cahier) : erreur médiane ≤ GCV1 dans toutes les zones, différés ≤ GCV1, 0 mauvaise pose ajoutée sur les réservées, erreur ≤ 9 % parmi les actions.
 
@@ -76,7 +76,7 @@ La pose (ou l'abstention), la **confiance calibrée** (une probabilité, pas un 
 
 1. **Hors ligne** (outils `gcv2-jeu`, `gcv2-apprendre`, `gcv2-juger`) : c'est là que tout se mesure.
 2. **En ombre** (`gcv2-ombre`) dans la relecture et dans le lot : le même module pur calcule et consigne sa décision et son écart à GCV1, sans rien changer à la pose (preuve « sans effet » ; concordance rejeu = ombre).
-3. **Activée, réversible**, par réglage (`gcv2.actif`), par zone et par rôle : **la relecture d'abord**, parce que c'est là que l'Écho de Mic mesure chaque action ; le lot ensuite. Retour à GCV1 en un clic. Seul Mic active.
+3. **Activée, réversible**, par réglage (`gcv2.actif`), par zone et par rôle : **la relecture d'abord**, parce que c'est là que l'Écho de l'opérateur mesure chaque action ; le lot ensuite. Retour à GCV1 en un clic. Seul l'opérateur active.
 
 ## 6. Ce qu'elle n'est pas, et ce qui peut rater
 
@@ -86,11 +86,11 @@ La pose (ou l'abstention), la **confiance calibrée** (une probabilité, pas un 
 - Les corrections de moins de 5 mm sont du bruit : elles entrent dans le jeu, mais elles ne définissent ni la porte ni les seuils.
 - Le gain principal attendu est sur les **abstentions** et les **faux verts de hauteur** ; sur les PN, la règle prudente fait déjà 36 sur 36 : la GCV2 doit au moins ne pas faire moins.
 
-## 7. Rythme avec les corrections quotidiennes de Mic
+## 7. Rythme avec les corrections quotidiennes de l'opérateur
 
-Chaque nouvelle partie est d'abord un examen (jugée par la GCV2 figée), puis entre en apprentissage (D-192). Réentraînement quand trois parties nouvelles sont entrées, ou une fois par semaine ; chaque jeu de paramètres est daté et versionné ; les parties qu'il a vues passent en « appris » dans le compteur (`compteur-gcv2-sources.json`, `etat: appris`) : c'est le moment précis où le compteur « appris » de Mic devient vrai (D-191).
+Chaque nouvelle partie est d'abord un examen (jugée par la GCV2 figée), puis entre en apprentissage (D-192). Réentraînement quand trois parties nouvelles sont entrées, ou une fois par semaine ; chaque jeu de paramètres est daté et versionné ; les parties qu'il a vues passent en « appris » dans le compteur (`compteur-gcv2-sources.json`, `etat: appris`) : c'est le moment précis où le compteur « appris » de l'opérateur devient vrai (D-191).
 
-## 8. Ce que Mic doit relire et décider
+## 8. Ce que l'opérateur doit relire et décider
 
 1. La forme : une couche de choix au-dessus du moteur, pas un nouveau moteur ; la piste A2 reportée.
 2. L'ordre d'activation : relecture d'abord, lot ensuite.

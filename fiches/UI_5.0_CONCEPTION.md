@@ -1,20 +1,20 @@
 # Conception de l'interface 5.0 d'Ariane (19 octobre 2026)
 
-Demande de Mic : « une toute nouvelle conception pour la 5.0, radicalement opposée à tout ce qu'on a fait […] le fonctionnement aussi simple que prévu, pas dix mille cases à cocher, et cocher toujours les mêmes alors qu'il est mieux de les laisser par défaut. » (D-218.)
+Demande de l'opérateur : « une toute nouvelle conception pour la 5.0, radicalement opposée à tout ce qu'on a fait […] le fonctionnement aussi simple que prévu, pas dix mille cases à cocher, et cocher toujours les mêmes alors qu'il est mieux de les laisser par défaut. » (D-218.)
 
 Cette fiche suit `fiches/UI_INVENTAIRE.md` (l'état des lieux, élément par élément). Les maquettes sont dans `maquettes/ui-5.0/` : ouvrir `index.html` dans un navigateur.
 
-**Statut (19 octobre, soir) : brouillon rejeté par Mic.** Les directions A à E de cette fiche (et la recommandation A, les profils, « Envoyer ») sont rejetées (D-230 ; numéro d’abord pris par erreur sous « D-219 », déjà utilisé par la L1). Les maquettes retenues pour l'essai sont F, G et H (`maquettes/ui-5.0/`), construites dans les versions 4.9.5 test 10, 11 et 12 (`CHANGELOG.md`). Le modèle commun du § 3 n'est pas repris ; l'inventaire (`fiches/UI_INVENTAIRE.md`) reste valable.
+**Statut (19 octobre, soir) : brouillon rejeté par l'opérateur.** Les directions A à E de cette fiche (et la recommandation A, les profils, « Envoyer ») sont rejetées (D-230 ; numéro d’abord pris par erreur sous « D-219 », déjà utilisé par la L1). Les maquettes retenues pour l'essai sont F, G et H (`maquettes/ui-5.0/`), construites dans les versions 4.9.5 test 10, 11 et 12 (`CHANGELOG.md`). Le modèle commun du § 3 n'est pas repris ; l'inventaire (`fiches/UI_INVENTAIRE.md`) reste valable.
 
 
-**Retour de Mic sur la 4.9.6 test 1 (21 octobre).** À changer : (1) pas de gros titres ni de phrases qui prennent par la main (« Prêt à poser », « Aucune partie ouverte », « Tu corriges… ») ; (2) un logo en accord avec la direction ; (3) des onglets ESV clairement démarqués dans Orbite et dans Écho, avec un geste évident pour se connecter ; (4) un bouton « Vider le cache » en évidence dans Orbite et dans Écho ; (5) pas de ligne « parcours du lot » ; (6) une interface alternative de type palette (Raycast), discrète, au choix dans Réglages et depuis l'accueil. Consigne : **maquettes et vidéos seulement, pas de nouvelle version**. Maquette : `maquettes/ui-5.0/N-ariane-v2.html`. Défaut relevé sur la 4.9.6.1, à corriger dans la prochaine version : la borne de fin s'affiche « du cut 6845 au cut 999999 » (la valeur interne « fin de partie » doit s'écrire « fin de partie »).
-**Point du 20 octobre.** Le panneau unique V2 (J) et V3 (K), puis les trois directions sur un seul écran (L : Atelier, Instrument, Bande), sont des **essais écartés** comme base visuelle. On en garde les acquis fonctionnels : des états fiables, des compteurs définis (`fiches/UI_ETATS_COMPTEURS.md`), la séparation entre la fin du lot et le travail restant, la liste des cuts à examiner et l'incident corrigé d'après le code. Méthode changée : on fixe d'abord des références visuelles précises (surfaces, navigation, proportions, typographie, transitions), puis on dessine l'**écran principal d'Ariane** (entrer, retrouver sa partie, choisir Orbite ou Écho, examiner son travail). « Lot en cours » et la bande compacte n'en seront que des déclinaisons. **Références fixées par Mic (20 octobre)** : accueil à grandes vignettes, inspiré d'Apple TV pour la qualité visuelle, la navigation et les transitions, mais ni cartes géantes ni illustrations décoratives. Couleurs riches et profondes sur une base sombre, une couleur par activité ; le verre accompagne, il ne fait pas tout le design. Grands titres et de l'air sur l'accueil, présentation dense et précise pour les corrections et les bilans. Transitions fluides et visibles (une vignette s'agrandit pour devenir son activité), mais les commandes de travail restent immédiates. On accède directement à l'activité en cours, sans repasser par l'accueil. Maquette : `maquettes/ui-5.0/M-accueil.html` (une direction à explorer, pas une maquette validée). Les règles « chaque chiffre une seule fois », « une seule action » et « tout compact » ne sont plus des règles absolues : chaque choix se justifie.
+**Retour de l'opérateur sur la 4.9.6 test 1 (21 octobre).** À changer : (1) pas de gros titres ni de phrases qui prennent par la main (« Prêt à poser », « Aucune partie ouverte », « Tu corriges… ») ; (2) un logo en accord avec la direction ; (3) des onglets ESV clairement démarqués dans Orbite et dans Écho, avec un geste évident pour se connecter ; (4) un bouton « Vider le cache » en évidence dans Orbite et dans Écho ; (5) pas de ligne « parcours du lot » ; (6) une interface alternative de type palette (Raycast), discrète, au choix dans Réglages et depuis l'accueil. Consigne : **maquettes et vidéos seulement, pas de nouvelle version**. Maquette : `maquettes/ui-5.0/N-ariane-v2.html`. Défaut relevé sur la 4.9.6.1, à corriger dans la prochaine version : la borne de fin s'affiche « du cut 6845 au cut 999999 » (la valeur interne « fin de partie » doit s'écrire « fin de partie »).
+**Point du 20 octobre.** Le panneau unique V2 (J) et V3 (K), puis les trois directions sur un seul écran (L : Atelier, Instrument, Bande), sont des **essais écartés** comme base visuelle. On en garde les acquis fonctionnels : des états fiables, des compteurs définis (`fiches/UI_ETATS_COMPTEURS.md`), la séparation entre la fin du lot et le travail restant, la liste des cuts à examiner et l'incident corrigé d'après le code. Méthode changée : on fixe d'abord des références visuelles précises (surfaces, navigation, proportions, typographie, transitions), puis on dessine l'**écran principal d'Ariane** (entrer, retrouver sa partie, choisir Orbite ou Écho, examiner son travail). « Lot en cours » et la bande compacte n'en seront que des déclinaisons. **Références fixées par l'opérateur (20 octobre)** : accueil à grandes vignettes, inspiré d'Apple TV pour la qualité visuelle, la navigation et les transitions, mais ni cartes géantes ni illustrations décoratives. Couleurs riches et profondes sur une base sombre, une couleur par activité ; le verre accompagne, il ne fait pas tout le design. Grands titres et de l'air sur l'accueil, présentation dense et précise pour les corrections et les bilans. Transitions fluides et visibles (une vignette s'agrandit pour devenir son activité), mais les commandes de travail restent immédiates. On accède directement à l'activité en cours, sans repasser par l'accueil. Maquette : `maquettes/ui-5.0/M-accueil.html` (une direction à explorer, pas une maquette validée). Les règles « chaque chiffre une seule fois », « une seule action » et « tout compact » ne sont plus des règles absolues : chaque choix se justifie.
 
-## 1. Ce que la séance de Mic nous apprend
+## 1. Ce que la séance de l'opérateur nous apprend
 
 Penser depuis la séance, pas depuis les fonctions. Une séance type (consignes 5 à 9) :
 
-1. Mic ouvre ESV sur un cut rouge, ouvre Ariane.
+1. L'opérateur ouvre ESV sur un cut rouge, ouvre Ariane.
 2. **Orbite** : il lance un lot jusqu'à la fin de la partie. Il attend, il regarde de temps en temps. Si tout va bien il n'a rien à faire. Après le lot, la relecture part seule et il ne doit rien toucher dans ESV.
 3. Il **exporte** (« Tout télécharger »), attend, calcule les empreintes SHA-256 des volumes avec PowerShell, note les heures, écrit son message, envoie.
 4. **Écho** : il travaille dans ESV ; Ariane regarde. Il n'ouvre presque jamais le panneau. À la fin : « Terminer et télécharger », empreintes, message.
@@ -43,7 +43,7 @@ Ce qui ne change pas d'une direction à l'autre, et qui est le vrai travail.
 
 ### 3.1 Trois écrans seulement
 
-- **Séance** : ce que Mic voit en travaillant (la forme change selon la direction).
+- **Séance** : ce que l'opérateur voit en travaillant (la forme change selon la direction).
 - **Réglages** : le profil de séance, l'affichage (thème, bandeau dans ESV), « après confirmation de réception » (vider le cache des exports), « abandonner la séance ». Rarement ouvert. La liste des 37 valeurs techniques y reste lisible.
 - **Détails** : la page de lecture pour l'analyse, jamais nécessaire en séance (santé de la collecte, qualité de capture, voie du lot, départs des parties, résumé de la partie, journal du lot, dernière commande, politique effective, liste « À contrôler »).
 
@@ -78,11 +78,11 @@ Une fonction pure, testable sans navigateur, qui remplace les branches de `rende
 
 ### 3.3 Les profils (le remplaçant des cases)
 
-Un profil est une liste de choix déjà connus du service worker. Il n'ajoute **aucune** action nouvelle : au moment de « Démarrer », le panneau envoie les mêmes appels que l'ancien panneau envoie quand Mic coche les mêmes cases (`relecture-choix`, `choix-lot`, `raison-choix`). Le lot fige alors ces valeurs dans son scope, comme aujourd'hui.
+Un profil est une liste de choix déjà connus du service worker. Il n'ajoute **aucune** action nouvelle : au moment de « Démarrer », le panneau envoie les mêmes appels que l'ancien panneau envoie quand l'opérateur coche les mêmes cases (`relecture-choix`, `choix-lot`, `raison-choix`). Le lot fige alors ces valeurs dans son scope, comme aujourd'hui.
 
 | Profil | Relecture après le lot | Clic du mode rapide | Règle « grappe » | Raison de la correction (Écho) | Pour qui |
 |---|---|---|---|---|---|
-| **Terrain** (défaut proposé) | corriger | comme avant | coupée | coupée | la séance ordinaire de Mic |
+| **Terrain** (défaut proposé) | corriger | comme avant | coupée | coupée | la séance ordinaire de l'opérateur |
 | Terrain + raisons | corriger | comme avant | coupée | chiffres du haut | quand l'étape 0 de la test 9 est faite |
 | Observation | ombre | comme avant | coupée | coupée | regarder sans rien modifier |
 | Comparer le clic | corriger | rail gauche recentré | coupée | coupée | un essai de comparaison, une fois |
@@ -92,9 +92,9 @@ Chaque profil se lit en une phrase sous le bouton « Démarrer » (« profil Ter
 
 ### 3.4 « Envoyer » : ce qu'il fait, et ce qu'il ne peut pas faire
 
-Ariane n'envoie rien sur internet : l'extension n'a aucune permission pour cela (`manifest.json` ne donne que le stockage, les téléchargements et la page ESV). **« Envoyer » prépare tout ; Mic joint les fichiers.** Concrètement :
+Ariane n'envoie rien sur internet : l'extension n'a aucune permission pour cela (`manifest.json` ne donne que le stockage, les téléchargements et la page ESV). **« Envoyer » prépare tout ; l'opérateur joint les fichiers.** Concrètement :
 
-1. **Attend** que le lot soit clos et que la relecture soit finie ou arrêtée (aujourd'hui Mic le surveille à l'œil et attend « cinq secondes »).
+1. **Attend** que le lot soit clos et que la relecture soit finie ou arrêtée (aujourd'hui l'opérateur le surveille à l'œil et attend « cinq secondes »).
 2. **Lance l'export existant** sans y toucher : « Tout télécharger » (`exportToutZip`) en Orbite, « Terminer et télécharger » (`exportComplet`) en Écho. Les volumes sont donc les mêmes, octet pour octet.
 3. **Calcule le SHA-256 de chaque volume** à partir des octets enregistrés (à la place de PowerShell).
 4. **Compose un message à coller** : version, partie, heures de début et de fin du lot et de la relecture, nom et empreinte de chaque volume, chiffres du lot. Ce n'est **pas** un fichier de l'export : les exports ne changent pas. Il s'affiche dans le panneau, avec « Copier le message ».
@@ -109,7 +109,7 @@ Le vidage du cache des exports reste réservé à Réglages, « après confirmat
 
 ### 3.6 Le bandeau dans ESV
 
-Il existe déjà (une ligne noire, en bas de la page ESV, qui ne capte aucun clic). Il devient **allumé par défaut** et répète la phrase d'état du panneau. C'est l'endroit que Mic regarde quand il travaille dans ESV. Pas de bouton dedans : un bouton dans la page gênerait les clics du lot (`src/bridge.js`).
+Il existe déjà (une ligne noire, en bas de la page ESV, qui ne capte aucun clic). Il devient **allumé par défaut** et répète la phrase d'état du panneau. C'est l'endroit que l'opérateur regarde quand il travaille dans ESV. Pas de bouton dedans : un bouton dans la page gênerait les clics du lot (`src/bridge.js`).
 
 ### 3.7 Ce qui n'est pas retiré
 
@@ -117,7 +117,7 @@ Tout le journal, tous les exports, les départs des parties, le résumé de la p
 
 ## 4. Les trois directions
 
-Toutes trois utilisent le modèle du § 3. Elles ne diffèrent que par ce que Mic voit en séance.
+Toutes trois utilisent le modèle du § 3. Elles ne diffèrent que par ce que l'opérateur voit en séance.
 
 ### A · « Le grand bouton » (`maquettes/ui-5.0/A-le-grand-bouton.html`, 9 écrans)
 
@@ -125,7 +125,7 @@ Un seul écran. Une phrase, un grand bouton plein, deux chiffres en bas. Au repo
 
 ### B · « Le fil de la séance » (`B-le-fil-de-la-seance.html`)
 
-Les étapes de la séance en colonne (départ → lot → relecture → envoi). Les étapes faites tiennent en une ligne avec leur résultat, l'étape en cours est ouverte avec son geste, les suivantes sont grisées. Mic voit où il en est et ce qui reste. Elle montre plus de texte que A, et l'Écho (une seule étape) y paraît presque vide.
+Les étapes de la séance en colonne (départ → lot → relecture → envoi). Les étapes faites tiennent en une ligne avec leur résultat, l'étape en cours est ouverte avec son geste, les suivantes sont grisées. L'opérateur voit où il en est et ce qui reste. Elle montre plus de texte que A, et l'Écho (une seule étape) y paraît presque vide.
 
 ### C · « La télécommande » (`C-la-telecommande.html`)
 
@@ -152,14 +152,14 @@ Remarque honnête : si le navigateur refuse la copie automatique du message, il 
 
 **Je recommande A, « Le grand bouton ».** Raisons :
 
-1. C'est la plus opposée à l'actuel (aucune carte, aucune case, aucun graphique), ce qu'a demandé Mic.
+1. C'est la plus opposée à l'actuel (aucune carte, aucune case, aucun graphique), ce qu'a demandé l'opérateur.
 2. Elle atteint les 6 gestes et les 0 choix de B et C avec le moins d'écran et le moins de code : une table d'états et un seul écran.
 3. Elle ne dépend d'aucun changement de la fenêtre (C) ni d'un fil à tenir à jour (B).
-4. Elle garde ce que Mic apprécie du panneau actuel : le grand numéro du cut et la barre qui se remplit (retours de Mic sur les tests 13 et 16).
+4. Elle garde ce que l'opérateur apprécie du panneau actuel : le grand numéro du cut et la barre qui se remplit (retours de l'opérateur sur les tests 13 et 16).
 
 Ce que A emprunte aux autres : de B, **la phrase finale du lot** (« 27 posés, 4 différés, 9 à contrôler. Relecture : 85 relus, 41 corrigés ») qui joue le rôle du fil ; de C, **la lecture seule de « Détails »**, ouverte à la demande.
 
-Ce que A ne fait pas : elle ne montre plus la voie du lot (le graphique cut par cut) sur l'écran de séance. Elle est dans « Détails ». Si Mic y tient en séance, c'est la première chose à remettre (une ligne, sous la barre).
+Ce que A ne fait pas : elle ne montre plus la voie du lot (le graphique cut par cut) sur l'écran de séance. Elle est dans « Détails ». Si l'opérateur y tient en séance, c'est la première chose à remettre (une ligne, sous la barre).
 
 ## 7. Appui sur le skill de patrons de conception
 
@@ -184,7 +184,7 @@ J'ai lu `claude/skills/design-patterns/` (SKILL.md, catalog.md, ariane-map.md) e
 
 **Le skill « better-ui »** (déjà dans `claude/skills/`) servira seulement à la finition du développement (zones de clic, appui, mouvements réduits), pas à la conception.
 
-## 8. Plan de développement (après la réponse de Mic)
+## 8. Plan de développement (après la réponse de l'opérateur)
 
 **Architecture : un habillage, pas une réécriture.** `panel.js` reste le moteur de la page : il garde la connexion à ESV, la lecture de `view` toutes les deux secondes et, point essentiel, **le vidage automatique d'Écho** (`autoExportIfAdvised`, `panel.js:1702`, qui ne tourne que si la page du panneau est chargée). Une seconde page oublierait ce vidage. Le nouveau panneau est donc un module de plus dans la même page :
 
@@ -196,7 +196,7 @@ J'ai lu `claude/skills/design-patterns/` (SKILL.md, catalog.md, ariane-map.md) e
 - `panel.html`, `panel.css` : un conteneur `#v5` et ses règles ; l'ancien panneau est masqué, pas supprimé.
 - `background.js`, `src/engine.js`, `src/geometry*.js`, `src/lot-decision.js` : **aucune modification.**
 
-**Bascule.** Clé `banane50Interface` (`ancienne` ou `nouvelle`) dans `chrome.storage.local`. Défaut : `ancienne` tant que Mic n'a pas validé. Un lien discret « Essayer le nouveau panneau » dans l'ancien, « Revenir à l'ancien panneau » dans les Réglages du nouveau. Aucun redémarrage.
+**Bascule.** Clé `banane50Interface` (`ancienne` ou `nouvelle`) dans `chrome.storage.local`. Défaut : `ancienne` tant que l'opérateur n'a pas validé. Un lien discret « Essayer le nouveau panneau » dans l'ancien, « Revenir à l'ancien panneau » dans les Réglages du nouveau. Aucun redémarrage.
 
 **Essais** (`tests/panel5-*.test.cjs`, repris du modèle de `tests/choix-lot-panel.test.cjs` et `tests/t16-export-volumes.test.cjs`) :
 
@@ -210,12 +210,12 @@ J'ai lu `claude/skills/design-patterns/` (SKILL.md, catalog.md, ariane-map.md) e
 
 **Version.** `4.9.5.10`, intitulée « 4.9.5 test 10-ui ». Raison : le numéro suit la base (test 9, 4.9.5.9) ; le suffixe « -ui » dit que c'est le panneau seul, séparé de la « test 10 » du cap différés (D-217), qui n'est pas encore construite. Si l'orchestrateur construit sa test 10 avant, on prend `4.9.5.11` (le manifeste ne tolère pas un cinquième nombre). Paquet par `tools/package.py`, SHA-256 donné, consigne d'une page dans `consignes/`.
 
-## 9. Ce que Mic décide
+## 9. Ce que l'opérateur décide
 
 1. **La direction** : A recommandée. (Ou B si voir tout le fil compte plus que la sobriété ; C seulement si une petite fenêtre à côté d'ESV est une vraie envie.)
-2. **Le profil par défaut** : « Terrain » avec relecture « Corriger » d'office (c'est ce que Mic coche à chaque lot), ou « Comme la test 8 » (relecture coupée) tant qu'il n'a pas relu le bilan de la test 8. Je recommande « Terrain » : le premier bilan de terrain est bon (D-211) et la case est déjà son geste habituel. C'est une décision de pose (la relecture écrit dans ESV), donc elle est à lui.
+2. **Le profil par défaut** : « Terrain » avec relecture « Corriger » d'office (c'est ce que l'opérateur coche à chaque lot), ou « Comme la test 8 » (relecture coupée) tant qu'il n'a pas relu le bilan de la test 8. Je recommande « Terrain » : le premier bilan de terrain est bon (D-211) et la case est déjà son geste habituel. C'est une décision de pose (la relecture écrit dans ESV), donc elle est à lui.
 3. **La raison de la correction** : coupée tant que l'étape 0 de la test 9 (ESV ne réagit pas aux chiffres) n'est pas faite, puis un profil « Terrain + raisons » par défaut s'il la garde.
-4. **Le nom du bouton** : « Envoyer » (ce que Mic a demandé) alors qu'Ariane ne peut rien envoyer toute seule : le bouton prépare les fichiers et le message. Le nom « Préparer l'envoi » serait exact mais plus lourd. Je recommande « Envoyer » avec la phrase d'explication sous le bouton.
+4. **Le nom du bouton** : « Envoyer » (ce que l'opérateur a demandé) alors qu'Ariane ne peut rien envoyer toute seule : le bouton prépare les fichiers et le message. Le nom « Préparer l'envoi » serait exact mais plus lourd. Je recommande « Envoyer » avec la phrase d'explication sous le bouton.
 5. **Le bandeau dans ESV allumé par défaut.**
 
 ## 10. Ce qui n'est pas vérifié

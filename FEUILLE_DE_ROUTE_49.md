@@ -1,6 +1,6 @@
 # Feuille de route Ariane 4.9 — proposition de l'orchestrateur (6 octobre 2026)
 
-Statut : **proposition**, rien n'est décidé tant que Mic ne l'a pas dit. Elle s'appuie sur les études C, D, E (contre-vérifiées),
+Statut : **proposition**, rien n'est décidé tant que l'opérateur ne l'a pas dit. Elle s'appuie sur les études C, D, E (contre-vérifiées),
 la lecture directe d'ESV, le banc ESV local (B) et les relectures indépendantes de V1, U1 et U2. Aucun gain n'est mesuré sur le
 terrain : les chiffres « espérés » viennent de calculs sur les médianes de la partie 23 et **ne s'additionnent pas forcément**.
 Le détail privé est dans `missions/*/RAPPORT.md` (hors dépôt). Voir aussi `PILOTAGE_REPRISE.md` (statuts) et `DECISIONS.md`.
@@ -24,10 +24,10 @@ Cycle de référence : partie 23, 6,6 s médian dont 4,5 s de capture. **Aucun g
 
 | Idée | Espéré | Mesuré | Condition ou risque |
 |---|---|---|---|
-| I1 lecture sans attendre une image d'ESV | −1,3 à −1,4 s (environ −20 %) | Labo seulement : 903 → 286 ms par lecture ; points identiques sur 24 lectures (Chromium 141) | **Sortie du gel du lecteur** (décision de Mic). Chrome/Edge 129 à 140 non vérifiés |
+| I1 lecture sans attendre une image d'ESV | −1,3 à −1,4 s (environ −20 %) | Labo seulement : 903 → 286 ms par lecture ; points identiques sur 24 lectures (Chromium 141) | **Sortie du gel du lecteur** (décision de l'opérateur). Chrome/Edge 129 à 140 non vérifiés |
 | I2 sélection de vue au rythme des images | −0,8 à −1,0 s | Non mesuré | Trois des quatre sélections changent la vue |
 | I3 signal de fin de chargement | environ −1,0 s (critère « −15 à −22 % » non démontré) | Non mesuré | Hypothèse non essayée ; l'observateur passif la testera d'abord |
-| V5 stockage incrémental | environ −0,7 s par cycle vers la 85e visite | Dérive 5,5 → 7,4 s **confirmée** ; cause non démontrée | Seuil à fixer par Mic ; sinon seulement I4 (diagnostics) |
+| V5 stockage incrémental | environ −0,7 s par cycle vers la 85e visite | Dérive 5,5 → 7,4 s **confirmée** ; cause non démontrée | Seuil à fixer par l'opérateur ; sinon seulement I4 (diagnostics) |
 
 Lecture honnête de la porte « cycle médian −25 % » : d'après ces espoirs seuls, il faudrait **au moins deux** des trois
 idées I1, I2, I3 pour l'atteindre. C'est un calcul d'espoir, pas une promesse.
@@ -42,7 +42,7 @@ idées I1, I2, I3 pour l'atteindre. C'est un calcul d'espoir, pas une promesse.
 | Apprentissage (D-066) | 902 rails exacts recomptés (partie 20 : 54 %) : sommet de la zone 150 à 1 000 ; fiche de faisabilité non établie ; **aucune activation** | – |
 | D I-5 : gabarit orienté par le dévers | Version future | – |
 
-## 4. Expériences hors production (aucune sur le poste de Mic sans accord)
+## 4. Expériences hors production (aucune sur le poste de l'opérateur sans accord)
 
 1. A/A du poste (bruit de la mesure) avant tout test de vitesse.
 2. Banc ESV local : clé `world` du manifeste (version minimale d'Edge), coexistence de deux Ariane, script injecté par l'hôte.
@@ -53,4 +53,4 @@ idées I1, I2, I3 pour l'atteindre. C'est un calcul d'espoir, pas une promesse.
 ## 5. Ce que cette feuille de route n'est pas
 
 Pas de date, pas de pourcentage d'avancement (règle du cahier). L'avenant D-067 estimait 11 à 16 cycles de 2 à 3 jours ; ce
-calcul n'a pas été refait. Aucun changement de seuil, de porte, de critère ou de gel n'est proposé sans décision de Mic.
+calcul n'a pas été refait. Aucun changement de seuil, de porte, de critère ou de gel n'est proposé sans décision de l'opérateur.
