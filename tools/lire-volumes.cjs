@@ -17,9 +17,11 @@
 const fs = require('node:fs'), path = require('node:path'), zlib = require('node:zlib');
 
 const EOCD = 0x06054b50, CENTRAL = 0x02014b50, LOCAL = 0x04034b50;
-/* Entrées d'une archive zip : { nom, methode, tailleCompressee, taille, offset } ; lecture à la demande. */
+/* Entrées d'une archive zip : { nom, methode, tailleCompressee, taille, offset } ; lecture à la demande. `fichier` : chemin, ou (T21a) le contenu
+ * déjà en mémoire (Buffer : archive découpée en .zip.001, .zip.002… recollée par l'appelant). */
 function entreesZip(fichier) {
-  const buf = fs.readFileSync(fichier);
+  const buf = Buffer.isBuffer(fichier) ? fichier : fs.readFileSync(fichier);
+  if (Buffer.isBuffer(fichier)) fichier = '(archive en mémoire)';
   let eocd = -1;
   for (let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 65536); i--) if (buf.readUInt32LE(i) === EOCD) { eocd = i; break; }
   if (eocd < 0) throw Error('Archive zip illisible (fin de répertoire central absente) : ' + fichier);

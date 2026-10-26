@@ -98,3 +98,13 @@ test('ligne de commande : la partie 0 d\'un projet est acceptée (3:0), pas le p
   assert.equal(B.args(['rejouer', '--partie', '2:19']).partie, 19);
   for (const mauvais of ['0:3', '3:-1', '3:00', '3:', '3']) assert.throws(() => B.args(['rejouer', '--partie', mauvais]), /--partie/, mauvais);
 });
+
+test('--chrono (T21a, garde critère 6-i) : temps de calcul par cut ajoutés, décisions identiques ; sans l’option, aucun champ de temps', () => {
+  const sans = rejouer(), avec = B.rejouerLot({ journal: journal(), captures: CAPTURES, projet: 9, partie: 91, lotId: 'lot-a', parametres: PARAMS, chrono: true });
+  assert.ok(sans.every(l => !('ms' in l)) && !('chrono' in sans[0]));
+  assert.ok('chrono' in avec[0]);
+  const cuts = avec.slice(1).filter(l => l.nuage);
+  assert.ok(cuts.length > 0 && cuts.every(l => Number.isFinite(l.ms.analyse) && Number.isFinite(l.ms.decision)));
+  const nettoie = L => L.slice(1).map(l => { const x = { ...l }; delete x.ms; return JSON.stringify(x); });
+  assert.deepEqual(nettoie(avec), nettoie(sans));
+});
