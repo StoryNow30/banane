@@ -2,7 +2,7 @@
  *
  * `panel.js` reste le moteur de la page : connexion à ESV, lecture de l'état, rendu de ses propres éléments, exports, vidage automatique
  * d'Écho. Ce fichier ne remplace rien : après chaque rendu du panneau (`ArianePanel.apres`), il lit l'état et les libellés que le panneau
- * vient d'écrire (un INSTANTANÉ), dessine la présentation « Ariane » (src/ui5-rendu.js) et, quand on clique dessus, CLIQUE le bouton
+ * vient d'écrire (un INSTANTANÉ), dessine Signal (src/signal-rendu.js) et, quand on clique dessus, CLIQUE le bouton
  * d'origine du panneau (`data-act="legacy:<id>"`). Conséquences voulues :
  *   - aucune commande ni aucun export de plus ou de moins : c'est le même gestionnaire qui répond ;
  *   - AUCUN message au service worker depuis ce fichier (un essai le vérifie sur le source) ; il écrit seulement son propre choix
@@ -16,13 +16,14 @@
  * Les choix « après le lot », « clic », « grappe », « deuxième passe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
 (function (root) {
   'use strict';
-  const D = root.document, R = root.ArianeUi5Rendu, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines';
-  if (!D || !R || !S5 || !root.ArianePanel) return;
-  const VARIANTES = ['signal', 'ariane2', 'palette'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'signal';
-  const TAILLE = { signal: [600, 760], ariane2: [1180, 840], palette: [720, 560] };
+  const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines';
+  if (!D || !S5 || !root.ArianePanel) return;
+  /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
+  const VARIANTES = ['signal'], defaut = 'signal';
+  const TAILLE = { signal: [600, 760] };
   const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '' };
   const examines = { lot: null, cles: new Set() };
-  let variante = defaut, ecran = 'accueil', hote = null, gcv2Base = null, secours = false;
+  let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
   const txt = id => { const e = $(id); return e ? String(e.textContent || '').trim() : ''; };
   const visible = id => { const e = $(id); return !!e && !e.hidden; };
@@ -192,8 +193,7 @@
     let html;
     try {
       const snap = instantane(s);
-      if (variante === 'signal') { html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; }
-      else html = R.rendre(snap, ecran, ui);
+      html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille;
     } catch (e) { secourir(e); return; }
     /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
      * réécriture de l'écran (qui refermerait une liste ouverte et recréerait la feuille de réglages, le tiroir, le choix d'onglet). */
@@ -201,7 +201,7 @@
     if (!force && cle === ui.cle) return;
     const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
     ui.last = html; ui.cle = cle;
-    if (variante === 'signal' && morpher(hote, html)) apresMorph();
+    if (morpher(hote, html)) apresMorph();
     else { hote.innerHTML = html; [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; }); }
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
@@ -256,7 +256,7 @@
   function secourir(e) {
     secours = true;
     try { hote.hidden = true; D.body.classList.toggle('ui5', false); } catch { /* page minimale */ }
-    const n = $('notice'); if (n) n.textContent = `Le nouveau panneau n’a pas pu s’afficher (${String(e?.message || e).slice(0, 120)}) : le panneau d’avant le remplace.`;
+    const n = $('notice'); if (n) n.textContent = `Le nouveau panneau n’a pas pu s’afficher (${String(e?.message || e).slice(0, 120)}) : le panneau d’avant le remplace jusqu’à la prochaine ouverture du panneau.`;
   }
   /* Entre deux rendus du panneau : l'anneau « en cours » (temps passé sur le cut ÷ médiane) et « en pause depuis ». Le DOM seulement. */
   const ANNEAU = 2 * Math.PI * 9;
@@ -349,61 +349,23 @@
     if (act === 'pause') { const b = root.ArianePanel.state()?.batch; if (b?.state === 'RUNNING' && $('pause') && !$('pause').disabled) { ui.pauseLot = b.id; cliquer('pause'); } }
     else if (type === 'sg') { agirSignal(act); return; }
     else if (type === 'tech') { ouvrirTech(); return; }
-    else if (type === 'aller') { aller(v, depuis); return; }
     else if (type === 'legacy') cliquer(v);
     else if (type === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
     else if (type === 'mode') cliquer(v === 'native' ? 'tab-native' : 'tab-automatic');
-    else if (type === 'interface') { void setVariante('ariane2').then(() => { ecran = v; maj(true); }); return; }
     else if (type === 'variante') void setVariante(v);
     maj(true);
-  }
-
-  /* ---------------------------------------------------------------- présentation « Ariane » : navigation animée
-   * La vignette choisie garde ses repères : son icône et son nom volent jusqu'à l'en-tête de l'activité (et reviennent au retour),
-   * pendant que l'écran d'arrivée apparaît. La barre du haut ne bouge pas. Orbite et Écho sont aussi les vues du panneau d'origine :
-   * on clique son onglet, comme avant. */
-  const reduit = () => { try { return root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; } };
-  function voler(src, dst, ms) {
-    const r0 = src.getBoundingClientRect(), r1 = dst.getBoundingClientRect(), c = src.cloneNode(true);
-    Object.assign(c.style, { position: 'fixed', left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px', height: r0.height + 'px', margin: 0, zIndex: 50, pointerEvents: 'none', transformOrigin: '0 0', whiteSpace: 'nowrap', fontSize: getComputedStyle(src).fontSize, fontWeight: getComputedStyle(src).fontWeight, color: '#fff' });
-    D.body.appendChild(c); src.style.opacity = '0'; dst.style.opacity = '0';
-    const k = src.classList.contains('picto') ? r1.width / r0.width : parseFloat(getComputedStyle(dst).fontSize) / parseFloat(getComputedStyle(src).fontSize);
-    c.animate([{ transform: 'none' }, { transform: `translate(${r1.left - r0.left}px,${r1.top - r0.top}px) scale(${k})` }], { duration: ms, easing: 'cubic-bezier(.22,.8,.18,1)', fill: 'forwards' });
-    setTimeout(() => { dst.style.opacity = ''; c.remove(); }, ms + 20);
-  }
-  function aller(v, depuis) {
-    const avant = ecran, cible = v;
-    if (v === 'orbite' && D.body?.dataset?.window !== 'automatic') cliquer('tab-automatic');
-    if (v === 'echo' && D.body?.dataset?.window !== 'native') cliquer('tab-native');
-    const carte = depuis?.closest?.('.vig') || (cible === 'accueil' ? null : hote.querySelector(`.vig[data-k="${cible}"]`));
-    const sP = cible === 'accueil' ? hote.querySelector('.ar-nom .picto, .tete .picto') : carte?.querySelector('.picto');
-    const sT = cible === 'accueil' ? hote.querySelector('.ar-nom b, .tete h2') : carte?.querySelector('b');
-    const ancien = hote.querySelector('.ecr')?.cloneNode(true);
-    ecran = cible; maj(true);
-    if (reduit() || avant === cible) return;
-    const ecr = hote.querySelector('.ecr'); if (!ecr) return;
-    if (ancien) { ancien.querySelector('.haut')?.style.setProperty('visibility', 'hidden'); Object.assign(ancien.style, { position: 'absolute', inset: '0', pointerEvents: 'none', zIndex: 40 }); ancien.classList.add('ar-ancien'); hote.querySelector('.app')?.appendChild(ancien); ancien.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out', fill: 'forwards' }).onfinish = () => ancien.remove(); }
-    const corps = [...ecr.children].filter(e => !e.matches('.haut'));
-    corps.forEach((e, i) => e.animate([{ opacity: 0, transform: `translateY(${cible === 'accueil' ? -8 : 12}px)` }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 100 + i * 40, easing: 'cubic-bezier(.22,.8,.18,1)', fill: 'backwards' }));
-    let dP, dT;
-    if (cible === 'accueil') { const c = hote.querySelector(`.vig[data-k="${avant}"]`); dP = c?.querySelector('.picto'); dT = c?.querySelector('b'); }
-    else { dP = hote.querySelector('.ar-nom .picto, .tete .picto'); dT = hote.querySelector('.ar-nom b, .tete h2'); }
-    const fP = ancien && cible === 'accueil' ? ancien.querySelector('.ar-nom .picto, .tete .picto') : null, fT = ancien && cible === 'accueil' ? ancien.querySelector('.ar-nom b, .tete h2') : null;
-    const oP = cible === 'accueil' ? fP : sP, oT = cible === 'accueil' ? fT : sT;
-    if (oP && dP) voler(oP, dP, 480);
-    if (oT && dT) voler(oT, dT, 480);
   }
 
   /* ---------------------------------------------------------------- événements */
   function brancher() {
     hote.addEventListener('click', e => {
       const a = e.target.closest?.('[data-act]');
-      if (variante === 'signal') {
+      {
         const raison = e.target.closest?.('[aria-disabled="true"][data-raison]'); if (raison) { noter(raison.dataset.raison); return; }
         const row = e.target.closest?.('[data-row]'); if (row && !a) { ui.sel = Number(row.dataset.row); maj(true); return; }
         if (a && (a.dataset.fermer || (!a.dataset.act.startsWith('sg:') && a.closest?.('.sg-palette,.sg-popover,.sg-feuille')))) { if (!a.closest?.('.sg-feuille')) { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; } }
       }
-      if (!a) return; if (variante === 'palette') { ui.q = ''; ui.pi = 0; } agir(a.dataset.act, a);
+      if (!a) return; agir(a.dataset.act, a);
     });
     hote.addEventListener('change', e => { const s = e.target.closest?.('[data-sel]'); if (s) choisir(s.dataset.sel, s.value); });
     /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */
@@ -415,23 +377,9 @@
     hote.addEventListener('focusout', e => { if (e.target.id === 'ui5-q') ui.focusQ = false; });
     D.addEventListener('keydown', e => {
       if (secours || hote.hidden || e.altKey) return;
-      if (variante === 'signal') { clavierSignal(e); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); void setVariante(variante === 'palette' ? 'signal' : 'palette'); return; }
-      if (variante === 'palette') {
-        if (e.ctrlKey || e.metaKey) return;
-        const cmds = R.paletteListe(instantane(root.ArianePanel.state() || {}), ui.q), dansChamp = e.target?.id === 'ui5-q';
-        if (e.key === 'Escape') { if (ui.q) { ui.q = ''; ui.pi = 0; maj(true); } }
-        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { ui.pi = Math.max(0, Math.min(cmds.length - 1, ui.pi + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); }
-        else if (e.key === 'Enter' && dansChamp) { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; if (c && !c.off) { ui.q = ''; ui.pi = 0; agir(c.act); } e.preventDefault(); }
-        else if (!dansChamp && e.key.length === 1 && /[\p{L}]/u.test(e.key)) $('ui5-q')?.focus();
-        return;
-      }
-      const v = e.target?.closest?.('.vig');
-      if (v && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { const l = [...hote.querySelectorAll('.vig')], i = l.indexOf(v); l[(i + (e.key === 'ArrowRight' ? 1 : l.length - 1)) % l.length].focus(); e.preventDefault(); }
-      else if (e.key === 'Escape' && ecran !== 'accueil' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '')) aller('accueil');
+      clavierSignal(e);
     });
-    const essai = $('ui5-essai'); if (essai) essai.onclick = () => { secours = false; void setVariante('signal'); };
-    root.addEventListener?.('resize', () => { if (variante === 'signal') maj(true); });
+    root.addEventListener?.('resize', () => maj(true));
     if (typeof root.setInterval === 'function') root.setInterval(vivant, 500);
   }
   /* Clavier de Signal : Ctrl K ouvre ou ferme la palette, Échap ferme ce qui est ouvert (couche, détails, tiroir) ; dans la palette, ↑ ↓ et Entrée ;
@@ -472,18 +420,17 @@
   function appliquer(v, redimensionner) {
     variante = v;
     D.body.classList.toggle('ui5', !secours);
-    hote.className = v === 'palette' ? 'u-palette' : v === 'signal' ? 'u-signal' : 'u-ariane';
+    hote.className = 'u-signal';
     hote.hidden = secours;
-    ui.focusQ = v === 'palette' || (v === 'signal' && ui.couche === 'palette');
-    if (v !== 'signal') { ui.couche = null; ui.tiroir = false; }
+    ui.focusQ = ui.couche === 'palette';
     ui.last = '';
     maj(true);
-    if (redimensionner || v !== 'signal') void taille();
+    if (redimensionner) void taille();
   }
   async function setVariante(v) {
     if (!VARIANTES.includes(v)) return;
     try { await root.chrome?.storage?.local?.set?.({ [CLE]: v }); } catch { /* le choix vaut pour cette fenêtre */ }
-    ecran = 'accueil'; ui.q = ''; ui.pi = 0;
+    ui.q = ''; ui.pi = 0;
     appliquer(v, true);
   }
 

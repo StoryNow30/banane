@@ -33,7 +33,7 @@ test('séance Écho en cours ou à terminer : il entre dans Écho ; déjà dans 
  const vue=await monter({etat:null});vue.body.dataset.window='automatic';vue.rendu(repos());await vue.attendre(10);
  assert.equal(vue.els['tab-automatic'].clics+vue.els['tab-native'].clics,0,'déjà dans Orbite');
  const essai=await monter({stockage:{banane51Interface:'ariane2'},etat:repos()});essai.rendu(repos());await essai.attendre(10);
- assert.equal(essai.els['tab-automatic'].clics+essai.els['tab-native'].clics,0,'la présentation d’essai garde son accueil');
+ assert.equal(essai.els['tab-automatic'].clics,1,'test 23 : un ancien choix « ariane2 » vaut Signal, qui entre dans Orbite');
 });
 
 /* Instantanés comme src/ui5.js les fait : hors ligne, au repos. */

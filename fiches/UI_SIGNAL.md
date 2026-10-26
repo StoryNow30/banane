@@ -61,3 +61,15 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
   - La note de la barre descend.
   - Avec le réglage système « réduire les animations », tout est à zéro.
 - **Essai** : `tests/ui5-navigateur-signal-mouvement.test.cjs`, qui vérifie que le curseur reste le même élément et que sa position change, que le chiffre le signale, et que la palette n'est pas recréée.
+
+## Test 23 : présentations d'essai retirées, mouvement repris sur la test 22
+
+- **Retiré** : les présentations d'essai « ariane2 » et « palette seule » (`src/ui5-rendu.js` et son essai), le choix « Interface » des réglages, et le lien « Essayer le nouveau panneau » de `panel.html`. Il n'y a plus que Signal.
+- Un ancien choix enregistré (« ancienne », « ariane2 », « palette ») ouvre Signal.
+- `panel-ui5.css` ne garde que la base : cacher le panneau d'avant et placer `#ui5`.
+- **Secours** : si Signal ne s'affiche pas, l'ancien panneau revient, avec la raison, jusqu'à la prochaine ouverture du panneau.
+- **Mouvement** : il est repris par-dessus la revue de la test 22. Le temps ne déclenche toujours pas de réécriture (R6) ; quand il y en a une, elle est faite en place.
+- **Corrigé au passage** : en Écho aussi, ESV perdu s'affiche (« ESV n'est pas connecté »).
+- **Essais adaptés** :
+  - `tests/t20a-connexion-sw.test.cjs` et `tests/t20a-panneau.test.cjs` vérifient maintenant le message de connexion et Reconnecter dans Signal ;
+  - `tests/connexion-t21.test.cjs` vérifie qu'un ancien choix « ariane2 » ouvre Signal.

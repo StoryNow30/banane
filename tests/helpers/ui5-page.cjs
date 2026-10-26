@@ -31,7 +31,7 @@ async function monter({ stockage = {}, etat = null, fenetre = { width: 560, heig
       apres: f => { hooks.push(f); } },
     etatPanneau: etat };
   ctx.globalThis = ctx; vm.createContext(ctx);
-  for (const f of ['src/ui5-variante.js', 'src/ui5-rendu.js', 'src/signal-rendu.js', 'src/ui5.js']) vm.runInContext(lire(f), ctx, { filename: f });
+  for (const f of ['src/ui5-variante.js', 'src/signal-rendu.js', 'src/ui5.js']) vm.runInContext(lire(f), ctx, { filename: f });
   await new Promise(r => setTimeout(r, 30));   /* l'initialisation lit le stockage et le compteur */
   const rendu = s => { ctx.etatPanneau = s; for (const h of hooks) h(s); };
   return { ctx, els, hote, champ, document, body, ecrits, envoyes, fenetres, hooks, rendu, stockage, ui: ctx.ArianeUi5, attendre: ms => new Promise(r => setTimeout(r, ms)) };

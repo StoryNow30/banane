@@ -6,7 +6,7 @@
  * « Ce qui reste » (Revue V2 : différés et verts à contrôler, avec « Ouvrir » et « Examiner »), la bande du cache, et des couches
  * (palette Ctrl K, feuille de réglages, onglets ESV).
  *
- * Même principe que src/ui5-rendu.js : tout vient d'un INSTANTANÉ (src/ui5.js) de ce que le panneau d'origine vient d'écrire ; un clic
+ * Même principe que les présentations d'essai d'avant (retirées en test 23) : tout vient d'un INSTANTANÉ (src/ui5.js) de ce que le panneau d'origine vient d'écrire ; un clic
  * est un clic sur le bouton d'origine (`data-act="legacy:<id>"`). Rien d'autre n'est commandé. Tout texte passe par `esc`. */
 (function (root, factory) {
   const api = factory();
@@ -202,6 +202,8 @@
     else Object.assign(m, { glyphe: 'echoVide', mot: 'Aucune séance', phrase: [partie, 'prête à observer'].filter(Boolean).join(' · ') });
     if (m.objet === 'echo' && E.mediane) m.allure = `<b>${un(60 / E.mediane)}</b> cuts par minute <span class="sg-sep">·</span> médiane <b>${un(E.mediane)} s</b> par cut <span class="sg-sep">·</span> <b>${esc(corr)}</b> corrigés`;
     actions();
+    /* Test 23 : en Écho aussi, ESV perdu se dit (comme en Orbite), sauf si l'état le dit déjà. */
+    if (g.connexion?.statut === 'unavailable' && !m.incident) m.incident = { texte: 'ESV n’est pas connecté. Si la page ESV est figée, recharge-la (F5), puis reconnecte-la.' };
     return m;
   }
 
@@ -299,7 +301,7 @@
     const mini = `<span class="sg-etat-mini">${glyphe(m)}<span>${esc(m.mot)}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${esc(a.traites)} sur ${esc(a.cibles)}` : ''}</span></span>`;
     return `<button type="button" class="sg-poignee" data-act="sg:tiroir" aria-expanded="${!!ui.tiroir}" aria-controls="sg-tiroir-corps">${ic('fleche', 'sg-fl')}<span class="sg-txt">${n ? `<span class="sg-n${m.activite === 'orbite' && nDif(a) ? ' sg-dif' : ''}">${esc(n)}</span> ` : ''}<span class="sg-long">${esc(long)}</span><span class="sg-court">${esc(court)}</span></span>${resteTx ? `<span class="sg-reste">${esc(resteTx)}</span>` : ''}${mini}</button>`;
   }
-  /* Bande du cache : le bouton d'origine, et sa raison tant qu'il est impossible (même règle que src/ui5-rendu.js). */
+  /* Bande du cache : le bouton d'origine, et sa raison tant qu'il est impossible (même règle que le panneau d'origine). */
   function cacheHtml(snap, m) {
     const a = snap.ar || {}, rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);
     const ok = a.cache?.actif === true && !rel;
@@ -381,7 +383,6 @@
  ${g.f5 ? ligne('Si ESV est rechargé pendant la relecture', '', sel('f5', [['pause', 'Attendre, puis reprendre'], ['arret', 'Arrêter la relecture']], g.f5, 'Si ESV est rechargé')) : ''}
  ${ligne('Bandeau dans ESV', 'Une ligne d’état au bas de la page ESV', seg('bandeau', [['non', 'Éteint'], ['oui', 'Allumé']], r.bandeau ? 'oui' : 'non', 'Bandeau dans ESV'))}
  ${ligne('Thème', '', seg('theme', [['sombre', 'Sombre'], ['clair', 'Clair']], g.theme === 'clair' ? 'clair' : 'sombre', 'Thème'))}
- ${ligne('Interface', 'Signal, ou la palette seule', sel('variante', [['signal', 'Signal (instrument)'], ['palette', 'Palette seule'], ['ariane2', 'Ariane v2 (essai)']], snap.variante, 'Interface'))}
  ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}
  <div class="sg-bas"><button type="button" class="sg-lien" data-act="sg:tech">${ic('liste')}<span>Détails techniques : santé de la collecte, exports de diagnostic, journal, résumé de la partie</span></button>${snap.exportTexte ? `<p class="sg-meta">${esc(snap.exportTexte)}</p>` : ''}${discard ? `<div class="sg-danger-zone"><span>Séance Écho : supprime ses données, avec confirmation.</span><button type="button" data-act="legacy:native-discard"${discard.actif ? '' : ' disabled'}>Abandonner la séance Écho…</button></div>` : ''}</div></div></div>`;

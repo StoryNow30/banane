@@ -8,10 +8,9 @@
  *  - équipements sérialisés par onglet : un `complete` d'Écho et un second équipement simultanés ne font qu'une injection ;
  *  - le contrôle « Une autre Ariane » est respecté : rien n'est injecté ni tamponné ;
  *  - action `reconnect` (bouton « Reconnecter ») ; relevé en lecture seule du sélecteur de parties (`partsSelector`) ; `batch.pausedAt`.
- * Le message « ESV n'est pas connecté » du nouveau panneau ne dépend que du statut (src/ui5-rendu.js). Données fabriquées. */
+ * Le message « ESV n'est pas connecté » du nouveau panneau ne dépend que du statut (src/signal-rendu.js, depuis la test 23). Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const {background}=require('./helpers/background-harness.cjs'),K=require('../src/core.js'),Settings=require('../src/settings.js'),EC=require('../src/export-cache.js');
-const R=require('../src/ui5-rendu.js');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const plat=x=>JSON.parse(JSON.stringify(x===undefined?null:x));
 /* Commandes ESV de l'adaptateur simulé (`calls`) : la lecture `ping` et l'injection n'en sont pas. */
@@ -100,7 +99,7 @@ test('F5 pendant Écho, puis reprise : le message « ESV n’est pas connecté �
  const x=await monte();const page={label:{part:23,cut:0}};
  x.b.adapter.ping=async()=>({version:K.VERSION,pageId:x.b.adapter.identity.pageId,proprietaire:'test',label:page.label});
  page.label={part:23,cut:100};await x.b.api('native-start');page.label={part:23,cut:0};
- const message=async()=>{const v=await x.b.api('view');return /ESV n’est pas connecté/.test(R.rendre(snap(v.connection?.status),'echo'));};
+ const message=async()=>{const v=await x.b.api('view'),o=snapS(v.connection?.status);return /ESV n’est pas connecté/.test(S.rendre({...o,sig:{...o.sig,activite:'echo'}},{}));};
  assert.equal(await message(),false,'connecté : aucun message');
  await x.b.tabUpdated(1,{status:'loading'});
  assert.equal((await x.b.api('view')).connection.status,'unavailable');assert.equal(await message(),true,'page perdue : le message');
@@ -177,12 +176,12 @@ test('batch.pausedAt : posé à l’entrée en pause, retiré à la reprise',asy
  e.s.batch.state='RUNNING';await e.save();assert.equal(e.s.batch.pausedAt,undefined);
 });
 
-/* Instantané minimal du nouveau panneau (src/ui5-rendu.js) : seul le statut de connexion change. */
-function snap(statut){return {variante:'ariane2',notice:{texte:'',erreur:false},avisContrat:'',connexionOuverte:true,connexionStatut:statut,lot:{etat:'Aucun lot',finPartie:''},
- relecture:{ligne:'',actif:false,interrompue:''},echo:{visites:'0',corriges:0},echoRows:[],reglages:{},exportTexte:'',onglets:[{valeur:'1',texte:'ESV'}],ongletChoisi:'1',connexionNote:'',gcv2:null,
- boutonsOrbite:[],boutonsEcho:[],mode:'native',boutons:[],
- ar:{etat:'pret',traites:0,poses:0,differes:0,cibles:null,restants:null,cours:null,dernier:null,partie:23,differesListe:[],verts:[],vertsNombre:0,aExaminer:0,lotOuvert:false,esv:'ok',pause:null,cache:{actif:false},bornes:{debut:null,fin:null},echoEtat:'Collecte en cours'}};}
-test('nouveau panneau : « ESV n’est pas connecté » seulement si le statut est unavailable ou no-tab, quel que soit l’état du volet « Connexion à ESV »',()=>{
- for(const [s,vu] of [['unavailable',true],['no-tab',true],['ready',false],['reconnecting',false],[null,false],[undefined,false]])
-  for(const e of ['orbite','echo'])assert.equal(/ESV n’est pas connecté/.test(R.rendre(snap(s),e)),vu,`${s} / ${e}`);
+/* Test 23 : le nouveau panneau est Signal (src/signal-rendu.js) ; la présentation d'essai d'avant est retirée. Seul le statut de connexion change. */
+const S=require('../src/signal-rendu.js');
+const snapS=statut=>({variante:'signal',mode:'automatic',notice:{texte:'',erreur:false},boutonsOrbite:[],boutonsEcho:[],onglets:[{valeur:'1',texte:'ESV'}],ongletChoisi:'1',reglages:{},echo:{visites:'0',corriges:0},echoRows:[],
+ ar:{etat:'pret',traites:0,poses:0,differes:0,cibles:null,restants:null,partie:23,differesListe:[],verts:[],vertsNombre:0,aExaminer:0,lotOuvert:false,esv:'ok',cache:{actif:false},bornes:{debut:null,fin:null},echoEtat:'Aucune séance en cours'},
+ sig:{activite:'orbite',statuts:[],allure:null,echo:{},connexion:{statut,reconnect:null},onglet:'ESV',historique:null,goto:{},examines:[],theme:'sombre',taille:'normal'}});
+test('nouveau panneau (Signal) : « ESV n’est pas connecté » seulement si le statut est unavailable, jamais sur ready ou reconnecting',()=>{
+ for(const [s,vu] of [['unavailable',true],['ready',false],['reconnecting',false],[null,false],[undefined,false]])
+  for(const act of ['orbite','echo'])assert.equal(/ESV n’est pas connecté/.test(S.rendre({...snapS(s),sig:{...snapS(s).sig,activite:act}},{})),vu,`${s} / ${act}`);
 });
