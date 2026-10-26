@@ -97,6 +97,27 @@ test('Écho : marques, allure de la séance ; la bascule est verrouillée pendan
  assert.match(vide,/class="sg-mot">Aucune séance</);assert.match(vide,/aucune visite/);assert.match(vide,/data-act="mode:automatic"/);
 });
 
+test('Bascule T21 : le verrou porte sur ce qui est impossible ; une séance Écho FINIE (« Séance à terminer ») ne verrouille rien ; texte du verrou = activité visée',()=>{
+ const bas=(activite,etat,x={})=>S.modele(snap({ar:ar(etat,{echoEtat:'Aucune séance en cours',...x}),sig:sig({activite})}),ui()).bascule;
+ const dessin=(activite,etat,x={})=>S.rendre(snap({ar:ar(etat,{echoEtat:'Aucune séance en cours',...x}),sig:sig({activite})}),ui());
+ /* le terrain : Orbite affiché, « Terminé », séance Écho finie et exportée (état « Séance à terminer »), aucun lot ouvert */
+ for(const e of ['Séance à terminer','Collecte en cours','Collecte en pause','Démarrage de la collecte','ESV ne répond plus']){
+  assert.deepEqual(bas('orbite','fini',{lotOuvert:false,echoEtat:e}),{verrou:false},'Orbite affiché, aucun lot, '+e+' : Écho reste accessible (pour terminer la séance)');
+  assert.doesNotMatch(dessin('orbite','fini',{lotOuvert:false,echoEtat:e}),/aria-disabled="true" data-raison/,e+' : aucun segment verrouillé');
+  assert.match(dessin('orbite','fini',{lotOuvert:false,echoEtat:e}),/data-act="mode:native"/,e+' : le segment Écho est cliquable');
+ }
+ /* lot ouvert : Écho verrouillé, avec le texte d'Écho */
+ assert.deepEqual(bas('orbite','cours'),{verrou:true,raison:'Écho est disponible après le lot'});
+ assert.match(dessin('orbite','cours'),/<button[^>]*aria-disabled="true" data-raison="Écho est disponible après le lot"[^>]*>[^<]*<svg[^>]*>.*?<\/svg>Écho<\/button>/s,'le cadenas est sur Écho');
+ /* Écho affiché : séance ouverte, Orbite verrouillé avec le texte d'Orbite ; séance finie ou absente, Orbite libre */
+ for(const e of ['Collecte en cours','Collecte en pause','Démarrage de la collecte','ESV ne répond plus'])
+  assert.deepEqual(bas('echo','pret',{lotOuvert:false,echoEtat:e}),{verrou:true,raison:'Orbite est disponible après la séance Écho'},e);
+ assert.match(dessin('echo','pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),/<button[^>]*aria-disabled="true" data-raison="Orbite est disponible après la séance Écho"[^>]*>[^<]*<svg[^>]*>.*?<\/svg>Orbite<\/button>/s,'le cadenas est sur Orbite');
+ for(const e of ['Séance à terminer','Aucune séance en cours'])assert.deepEqual(bas('echo','pret',{lotOuvert:false,echoEtat:e}),{verrou:false},'Écho affiché, '+e+' : Orbite libre');
+ /* Écho affiché avec un lot ouvert (l'écran dit « Disponible après le lot Orbite ») : il faut pouvoir aller au lot, Orbite n'est pas verrouillé */
+ assert.deepEqual(bas('echo','cours',{lotOuvert:true}),{verrou:false},'on ne verrouille pas le lot depuis Écho');
+});
+
 test('connexion : hors ligne → « Choisir un onglet » ; ESV perdu → incident et puce brique ; « Reconnecter » seulement si le panneau a le bouton',()=>{
  const h=S.rendre(snap({ar:ar('pret',{horsLigne:true,lotOuvert:false}),sig:sig({onglet:'',connexion:{statut:'no-tab',reconnect:null}}),onglets:[],ongletChoisi:''}),ui());
  assert.match(h,/class="sg-mot">Hors ligne</);assert.match(h,/data-act="sg:esv"><span>Choisir un onglet/);assert.match(h,/class="sg-puce" data-etat="aucun"/);

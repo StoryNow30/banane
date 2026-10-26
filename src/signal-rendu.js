@@ -94,8 +94,13 @@
     const partie = a.partie != null ? `Partie ${esc(a.partie)}` : '';
     const m = { activite, etat: a.etat, glyphe: 'pret', ton: 'encre2', mot: 'Prêt', phrase: '', objet: null, allure: '', principal: null, secondaires: [], raison: '', incident: null, verrou: false, anneau: null };
     const echoActif = ECHO_ACTIF.test(a.echoEtat || '') && !/Aucune/.test(a.echoEtat || '');
-    m.bascule = activite === 'orbite' ? (echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : { verrou: false })
-      : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : { verrou: false };
+    /* Bascule (T21) : le verrou porte sur ce qui est impossible, jamais sur le chemin pour y remédier. Même règle que le panneau d'origine,
+     * dont les vues restent libres et dont seuls les départs sont refusés : un lot ouvert ferme Écho ; une séance Écho OUVERTE (collecte, pause,
+     * démarrage, ESV muet) ferme Orbite. Depuis Orbite, Écho reste donc accessible pendant une séance (c'est là qu'on la termine) ; depuis Écho,
+     * Orbite reste accessible pendant un lot. « Séance à terminer » est une séance FINIE gardée par le service worker (rien ne la bloque) : aucun verrou. */
+    const echoOuvert = echoActif && !/Séance à terminer/.test(a.echoEtat || '');
+    m.bascule = activite === 'orbite' ? (a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : { verrou: false })
+      : echoOuvert && !a.lotOuvert ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : { verrou: false };
     if (activite === 'echo') return modeleEcho(s, a, g, m, partie);
     const { primaire, autres } = boutonsPanneau(s.boutonsOrbite, 'automatic');
     /* L'export reste dans la palette pendant le lot et au repos : l'instrument ne garde que les commandes du moment (maquette). */
