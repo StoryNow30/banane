@@ -205,6 +205,14 @@
     const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> différés</span>`;
     return `<div class="sg-objet"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
   }
+  /* Revue T21 (D7) : les bornes du prochain lot, revues et modifiables avant « Démarrer le lot », au repos et après « Nouveau lot » (règle du panneau
+   * d'avant : aucun lot ne part sans que tu aies revu ses bornes). Ce qu'on tape va dans `#start` / `#end` (src/ui5.js), que « Démarrer » lit ;
+   * la case clique `#lot-reprise`, dont le gestionnaire remplit les bornes. */
+  function bornesHtml(snap, m) {
+    const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
+    if (!B || m.activite !== 'orbite' || !['pret', 'fini', 'arrete'].includes(a.etat) || m.glyphe === 'hors') return '';
+    return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des différés : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
+  }
   function actionsHtml(m) {
     if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin de la deuxième passe')}</span></div>`;
     if (!m.principal && !m.secondaires.length) return m.raison ? `<p class="sg-raison">${esc(m.raison)}</p>` : '';
@@ -346,7 +354,7 @@
   /* ------------------------------------------------------------------ écran */
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
-    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${objetHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
+    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
     const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
   }

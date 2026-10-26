@@ -112,6 +112,10 @@
       cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
+      /* Revue T21 (D7) : les bornes du PROCHAIN lot, celles que « Démarrer » lit (`#start`, `#end`), tant que le panneau les montre avec « Démarrer le lot » ;
+       * « Reprise des différés » (`#lot-reprise`) avec elles. Après « Nouveau lot », ce sont les champs, pas les bornes du lot fini. */
+      bornesProchain: visible('lot-bornes') && visible('start-batch') ? { debut: $('start')?.value || '', fin: finVisible($('end')?.value), note: txt('bornes-note') } : null,
+      reprise: visible('lot-bornes') && visible('start-batch') && visible('lot-reprise-row') ? { coche: !!$('lot-reprise')?.checked, note: txt('lot-reprise-note') } : null,
       lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2 || etat === 'rel'), passe2: p2,
       cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
