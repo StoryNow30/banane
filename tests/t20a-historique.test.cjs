@@ -20,8 +20,8 @@ test('module : fin du lot selon son état ; fiche de fin (posés, différés, re
  assert.equal(H.finDe(lot('STOPPED')),'arretee');assert.equal(H.finDe(lot('ERROR')),'interrompue');
  for(const s of ['RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE','MANUAL_TAKEOVER'])assert.equal(H.finDe(lot(s)),'en-cours',s);
  assert.equal(H.ficheFin(lot('RUNNING'),{version:'v'}),null,'lot ouvert : aucune fiche de fin');
- const f=H.ficheFin(lot('STOPPED'),{version:'4.9.5.20',motif:'arret-manuel',at:'2026-10-25T08:30:00.000Z'});
- deq(f,{batchId:'L',part:7,version:'4.9.5.20',startedAt:'2026-10-25T08:00:00.000Z',endedAt:'2026-10-25T08:30:00.000Z',dureeMs:1800000,poses:2,differes:1,main:1,ecritsPasse:null,
+ const f=H.ficheFin(lot('STOPPED'),{version:'4.9.5.21',motif:'arret-manuel',at:'2026-10-25T08:30:00.000Z'});
+ deq(f,{batchId:'L',part:7,version:'4.9.5.21',startedAt:'2026-10-25T08:00:00.000Z',endedAt:'2026-10-25T08:30:00.000Z',dureeMs:1800000,poses:2,differes:1,main:1,ecritsPasse:null,
   fin:'arretee',motif:'arret-manuel',etat:'STOPPED',finPartie:true});
  const g=H.ficheFin(lot('STOPPED',{stoppedAtEnd:{cut:9,reason:'partie-sans-rouge',at:'2026-10-25T08:10:00.000Z'}}),{version:'v'});
  assert.equal(g.endedAt,'2026-10-25T08:10:00.000Z','fin au dernier cut : son heure');assert.equal(g.motif,'partie-sans-rouge');assert.equal(g.fin,'complete');
@@ -39,22 +39,22 @@ test('module : ajout sans doublon (un lot = une fiche, mise à jour par champs c
 test('module : historique = fiches de départ + fiches de fin + lot en cours, plus récent d’abord, champs du contrat, null quand inconnu',()=>{
  const departs=[{at:'2026-10-25T07:00:00.000Z',batchId:'A',partie:5,version:'4.9.5.19',valides:90,invalides:10,ignores:0,total:100},
   {at:'2026-10-25T07:05:00.000Z',batchId:'A',partie:5,version:'4.9.5.19',valides:95,invalides:5,ignores:0,total:100},
-  {at:'2026-10-25T08:00:00.000Z',batchId:'B',partie:6,version:'4.9.5.20',valides:1,invalides:2,ignores:null,total:3},
+  {at:'2026-10-25T08:00:00.000Z',batchId:'B',partie:6,version:'4.9.5.21',valides:1,invalides:2,ignores:null,total:3},
   {at:'2026-10-25T06:00:00.000Z',batchId:'echo:s1',partie:4,version:'4.9.5.19',valides:1,invalides:1,ignores:0,total:2},
-  {at:'2026-10-25T09:00:00.000Z',batchId:'C',partie:8,version:'4.9.5.20',valides:3,invalides:4,ignores:0,total:7}];
+  {at:'2026-10-25T09:00:00.000Z',batchId:'C',partie:8,version:'4.9.5.21',valides:3,invalides:4,ignores:0,total:7}];
  const fins=[{batchId:'A',part:5,version:'4.9.5.19',startedAt:'2026-10-25T07:00:01.000Z',endedAt:'2026-10-25T07:40:00.000Z',dureeMs:2399000,poses:8,differes:2,main:0,ecritsPasse:1,fin:'complete',motif:'last-cut',finPartie:true}];
  const courant={id:'C',state:'PAUSED',startedAt:'2026-10-25T09:00:02.000Z',scope:{part:8,start:100,end:200},processed:[{cut:101}],deferred:[],manuallyCompleted:[]};
- const h=H.historique({departs,fins,courant,version:'4.9.5.20'});
+ const h=H.historique({departs,fins,courant,version:'4.9.5.21'});
  deq(h.map(x=>[x.batchId,x.fin]),[['C','en-cours'],['B','interrompue'],['A','complete']],'Écho (echo:…) n’est pas un lot ; plus récent d’abord');
  for(const x of h)deq(Object.keys(x).sort(),CHAMPS.slice().sort());
  deq(h[2],{part:5,batchId:'A',startedAt:'2026-10-25T07:00:01.000Z',endedAt:'2026-10-25T07:40:00.000Z',version:'4.9.5.19',depart:{valides:90,invalides:10,ignores:0,total:100},
   cibles:10,poses:8,differes:2,ecritsPasse:1,main:0,fin:'complete'},'départ = première fiche du lot ; cibles = invalides au départ d’un lot jusqu’à la fin de partie');
- deq(h[1],{part:6,batchId:'B',startedAt:'2026-10-25T08:00:00.000Z',endedAt:null,version:'4.9.5.20',depart:{valides:1,invalides:2,ignores:null,total:3},cibles:null,poses:null,differes:null,ecritsPasse:null,main:null,fin:'interrompue'});
- deq(h[0],{part:8,batchId:'C',startedAt:'2026-10-25T09:00:02.000Z',endedAt:null,version:'4.9.5.20',depart:{valides:3,invalides:4,ignores:0,total:7},cibles:null,poses:1,differes:0,ecritsPasse:null,main:0,fin:'en-cours'},
+ deq(h[1],{part:6,batchId:'B',startedAt:'2026-10-25T08:00:00.000Z',endedAt:null,version:'4.9.5.21',depart:{valides:1,invalides:2,ignores:null,total:3},cibles:null,poses:null,differes:null,ecritsPasse:null,main:null,fin:'interrompue'});
+ deq(h[0],{part:8,batchId:'C',startedAt:'2026-10-25T09:00:02.000Z',endedAt:null,version:'4.9.5.21',depart:{valides:3,invalides:4,ignores:0,total:7},cibles:null,poses:1,differes:0,ecritsPasse:null,main:0,fin:'en-cours'},
   'lot borné : cibles inconnues');
  deq(H.historique({departs:'abîmé',fins:null,courant:null}),[]);
  /* Une fiche écrite sur une erreur ne cache pas un lot qui a repris : le lot vivant passe devant. */
- const repris=H.historique({departs,fins:[...fins,{batchId:'C',fin:'interrompue',poses:0,endedAt:'2026-10-25T09:10:00.000Z',finPartie:false}],courant,version:'4.9.5.20'});
+ const repris=H.historique({departs,fins:[...fins,{batchId:'C',fin:'interrompue',poses:0,endedAt:'2026-10-25T09:10:00.000Z',finPartie:false}],courant,version:'4.9.5.21'});
  deq([repris[0].fin,repris[0].endedAt,repris[0].poses],['en-cours',null,1]);
 });
 
