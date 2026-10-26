@@ -7,11 +7,11 @@
  * Jamais les événements du journal (vidables). L'historique (`partsHistory` de la vue du panneau) les réunit, lot par lot, plus récent d'abord ; un
  * champ inconnu vaut null. Les séances d'Écho (`echo:…`) ne sont pas des lots : elles n'y figurent pas.
  * Forme d'une entrée (contrat promis à l'interface Signal, D-250) :
- *   {part, batchId, startedAt, endedAt, version, depart:{valides, invalides, ignores, total}, cibles, poses, differes, ecritsPasse, main, skippes,
+ *   {part, batchId, startedAt, endedAt, version, depart:{valides, invalides, ignores, total}, cibles, poses, differes, ecritsPasse, main, sautes,
  *    fin: 'complete' | 'arretee' | 'en-cours' | 'interrompue'}
  * `cibles` : les invalides au départ, seulement pour un lot qui part du début de la partie et va jusqu'à sa fin (même règle que le panneau,
  * `travailDuLot`) ; sinon null. `poses` : cuts traités et validés par le lot (`processed`) ; `differes` : cuts différés par le lot (la deuxième passe
- * en écrit une partie, comptés à part dans `ecritsPasse`, D-238) ; `main` : cuts déclarés repris à la main ; `skippes` : cuts distincts SKIPpés pendant
+ * en écrit une partie, comptés à part dans `ecritsPasse`, D-238) ; `main` : cuts déclarés repris à la main ; `sautes` : cuts distincts SKIPpés pendant
  * le lot (`batch.skipped`, SKIP de l'opérateur vus par le moteur ; Ariane n'en envoie jamais), 0 si le lot n'en a vu aucun. Champ ajouté après coup : une fiche
  * de fin écrite avant lui, ou un lot sans fiche, donne null (inconnu, jamais 0). `depart.ignores` est autre chose : les cuts ignorés AU DÉPART du lot. */
 (function (root, factory) {
@@ -36,7 +36,7 @@
     return 'en-cours';
   }
   const finPartieDe = sc => (sc?.endMode === 'partie' || Number(sc?.end) >= FIN_PARTIE) && Number.isInteger(sc?.start) && sc.start >= 0 && sc.start <= 1;
-  const comptes = b => ({ poses: distincts(b?.processed), differes: distincts(b?.deferred), main: distincts(b?.manuallyCompleted), skippes: distincts(b?.skipped) });
+  const comptes = b => ({ poses: distincts(b?.processed), differes: distincts(b?.deferred), main: distincts(b?.manuallyCompleted), sautes: distincts(b?.skipped) });
 
   /* Fiche de fin d'un lot CLOS (ou en erreur) ; null pour un lot ouvert. `o` : { version, motif, at (ISO : heure de fin si le lot ne la donne pas),
    * ecritsPasse }. */
@@ -100,7 +100,7 @@
         differes: n ? n.differes : f ? entier(f.differes) : null,
         ecritsPasse: f ? entier(f.ecritsPasse) : null,
         main: n ? n.main : f ? entier(f.main) : null,
-        skippes: n ? n.skippes : f ? entier(f.skippes) : null,
+        sautes: n ? n.sautes : f ? entier(f.sautes) : null,
         fin,
       };
     });

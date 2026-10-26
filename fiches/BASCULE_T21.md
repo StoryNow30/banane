@@ -13,25 +13,20 @@ Signal ouvert en Orbite, état « Terminé », aucun lot ouvert : la bascule mon
 
 Les vues Orbite et Écho (`panel.js`, `naviguer`) ne se verrouillent jamais. Seuls les départs sont refusés : `native-start` grisé quand un lot est actif, `start-batch` grisé quand une séance Écho est ouverte (`openStatus`, quatre statuts ouverts). Une séance `FINISHED` ne bloque rien, ni côté panneau ni côté moteur (`active()` de `src/native-session.js` n'a que les statuts ouverts).
 
-## Correctif (texte et logique de `m.bascule` seulement)
+## Correctif (texte et logique de `m.bascule` seulement, d'après la revue D3 et R2)
 
-| Activité affichée | Condition | Segment verrouillé | Raison |
-|---|---|---|---|
-| Orbite | lot ouvert | Écho | Écho est disponible après le lot |
-| Orbite | pas de lot (séance Écho ouverte, finie ou absente) | aucun | |
-| Écho | séance ouverte, pas de lot | Orbite | Orbite est disponible après la séance Écho |
-| Écho | séance finie (« Séance à terminer »), absente, ou lot ouvert | aucun | |
+La bascule Orbite / Écho est une **navigation** : elle n'est jamais verrouillée, comme les vues du panneau d'origine. Les départs restent refusés là où ils l'étaient : boutons d'origine grisés (`native-start` pendant un lot, `start-batch` pendant une séance ouverte) et écran Écho « Disponible après le lot Orbite ». La palette (« Passer en Écho / Orbite ») lit la même valeur.
 
-Depuis Écho avec un lot ouvert, l'écran Écho dit déjà « Disponible après le lot Orbite » : Orbite doit rester accessible pour suivre le lot. La palette (« Passer en Écho / Orbite ») lit la même valeur.
+Quatre cas couverts par un essai (segment cliquable, aucun cadenas) : séance Écho en cours rouverte en Orbite ; lot en cours avec `#native` (vue Écho) ; séance terminée ; lot ouvert en Orbite.
 
-Limite (SUPPOSÉ, hors périmètre) : l'étiquette « Séance à terminer » reste trompeuse pour une séance finie ; Signal ne propose pas de la clore autrement que par le démarrage d'une nouvelle séance ou l'abandon (feuille de réglages). Non touché ici.
+Libellé (`src/ui5.js`) : `FINISHED` donne « Séance terminée » (plus « Séance à terminer », qui ne subsiste que pour un statut inconnu avec des visites). Seuls les quatre statuts ouverts comptent comme séance ouverte (raison du cache « après la séance Écho »).
 
-## Cuts skippés dans « Parties traitées » (Historique T21)
+## Cuts skippés dans « Parties traitées » (Historique T21, d'après R3)
 
-- `src/historique-parties.js` : `skippes` = cuts distincts de `batch.skipped` (les SKIP de l'opérateur vus par le moteur ; Ariane n'en envoie jamais), dans la fiche de fin (`banane55FinsLot`) et dans l'entrée de `partsHistory`. Une fiche écrite avant le champ, un lot sans fiche ou une valeur abîmée donnent null, jamais 0.
-- `src/signal-rendu.js` : la ligne montre « · N skippé(s) » dès que la valeur est connue, y compris 0 ; l'ancien « N ignorés » devient « N ignorés au départ » (cuts ignorés au départ du lot, autre chose).
+- `src/historique-parties.js` : `sautes` = cuts distincts de `batch.skipped` (les SKIP de l'opérateur vus par le moteur ; Ariane n'en envoie jamais), dans la fiche de fin (`banane55FinsLot`) et dans l'entrée de `partsHistory`. Une fiche écrite avant le champ, un lot sans fiche ou une valeur abîmée donnent null, jamais 0.
+- `src/signal-rendu.js` : la ligne montre « · N skippé(s) » dès que la valeur est connue, y compris 0 ; l'ancien « N ignorés » devient « N ignorés au départ » (cuts ignorés au départ du lot, autre chose). L'heure de la ligne est celle de Paris (règle du panneau d'origine), de même que l'heure des différés (`src/ui5.js`).
 - La vue du panneau transporte déjà `partsHistory` jusqu'au rendu (`background.js`, `src/ui5.js`) ; un essai du service worker réel le vérifie.
 
 ## Essais
 
-`tests/signal-rendu.test.cjs` (bascule : tous les cas du tableau, cadenas sur le bon segment, texte de l'activité visée ; ligne de l'historique) et `tests/t20a-historique.test.cjs` (module et service worker réel).
+`tests/signal-rendu.test.cjs` (bascule : quatre cas, palette, libellés ; ligne de l'historique, heure de Paris), `tests/ui5-panneau.test.cjs` (libellé de la séance selon le statut) et `tests/t20a-historique.test.cjs` (module et service worker réel).

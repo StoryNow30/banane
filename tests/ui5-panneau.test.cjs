@@ -113,6 +113,15 @@ test('état du lot : une pause qui attend un choix est « à toi », une pause s
  assert.equal(p.ui.instantane(etat(null)).ar.horsLigne,false,'un cut est affiché dans ESV : l’onglet existe');
 });
 
+test('Bascule T21 : l’état de la séance Écho vient du statut réel ; une séance FINIE est « Séance terminée », jamais « à terminer »',async()=>{
+ const p=await monter({etat:etat(null)});
+ const e=n=>p.ui.instantane(etat(null,{native:n})).ar.echoEtat,v=[{cut:1}];
+ assert.equal(e({status:'RUNNING',visits:v}),'Collecte en cours');assert.equal(e({status:'PAUSED',visits:v}),'Collecte en pause');
+ assert.equal(e({status:'STARTING',visits:[]}),'Démarrage de la collecte');assert.equal(e({status:'PAUSED_ADAPTER_UNRESPONSIVE',visits:v}),'ESV ne répond plus');
+ assert.equal(e({status:'FINISHED',visits:v}),'Séance terminée');assert.equal(e({status:'FINISHED',visits:[]}),'Séance terminée');
+ assert.equal(e({status:'IDLE',visits:[]}),'Aucune séance en cours');
+});
+
 test('relecture après le lot : « Relecture en cours » passe devant « Lot terminé » ; un résultat incertain passe devant la relecture',async()=>{
  const p=await monter({etat:etat(LOT)});
  const fini={...LOT,state:'COMPLETED'},ar=x=>p.ui.instantane(etat(fini,x)).ar;
