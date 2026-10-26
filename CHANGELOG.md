@@ -1,15 +1,66 @@
 # Banane V4 TEST — journal des versions
 
-## 4.9.6.1 — 4.9.6 test 1 (UI-L1) (20/10) : le nouveau panneau « Ariane » sur la L1
+## 4.9.5.19 — 4.9.5 test 19 (L1-e6) (22/10)
 
-Manifeste `4.9.6.1`, « 4.9.6 test 1 (UI-L1) », paquet `ariane-4.9.6-test.1.zip` ; base : la 4.9.5 test 13 (L1), fusionnée telle quelle (service worker, moteur, pose, profil du lot, exports). **Seul le panneau change** : la présentation « Ariane » (`src/ui5-rendu.js`, `src/ui5.js`, `panel-ui5.css`), d'après la maquette retenue (`maquettes/ui-5.0/M-accueil.html`, D-231).
-- **Quatre écrans** : Accueil (la partie, puis les activités), Orbite (grand titre, carte de suivi avec la commande, parcours du lot, différés), Écho, Revue (différés du lot, verts à contrôler). Réglages et bilans derrière l'engrenage.
-- **Chiffres** d'après `fiches/UI_ETATS_COMPTEURS.md` : traités = posés + différés + SKIP + repris, sur les ciblés quand ils sont connus. **Pastille d'état** par la forme (en cours, pause demandée, en pause, terminé, à toi). « Pause demandée » : le clic sur Pause tant que le lot tourne encore (rien de nouveau demandé au service worker).
-- **Incident** : la phrase vient de l'état (opération interrompue à archiver, ESV qui ne répond plus, rail non résolu), plus du message de l'ancien panneau.
-- **Commandes** : les boutons d'origine du panneau, cliqués par l'habillage (essai : mêmes messages au service worker pour Pause et l'export). Aucun message nouveau.
-- **Pas encore** : ouvrir un cut dans ESV depuis la Revue, case « examiné », palette de commandes.
-- Choix de présentation gardé sous une clé neuve (`banane51Interface`) : la test 1 s'ouvre sur « Ariane » ; « Ancien panneau » dans Réglages.
-Consigne : `consignes/seance-terrain-4.9.6-test-1-ui-2026-10-20.md` ; retour arrière : la 4.9.5 test 13 (désactiver, redécompresser, réactiver, Recharger, F5).
+Manifeste `4.9.5.19`, « 4.9.5 test 19 (L1-e6) », base : la 4.9.5 test 18 (`claude/50-test17`, 86ea20c) plus **un seul correctif**.
+- **Écho : « La session Écho précédente (N visite(s)) n'a pas été téléchargée en entier » ne bloque plus le lancement d'un nouvel Écho après un export complet.** Le panneau acquitte l'export final confirmé avec `final:true` ; la commande `native-export-ack` du service worker ne transmettait pas ce champ à `Sessions.ackExported`, donc `finalExportAt` n'était jamais noté (garde AM-19 de la 4.9.0.18, jamais atteinte de bout en bout) et « Télécharger à nouveau la session » ne débloquait rien. Une ligne dans `background.js` ; essai `tests/echo-ack-final-sw.test.cjs` (rouge avant, vert après ; sans `final`, le blocage reste).
+- Rien d'autre ne change : la pose, la décision des cuts, la deuxième passe, la relecture et l'interface sont ceux de la test 18.
+Consigne : `consignes/seance-terrain-4.9.5-test-19-2026-10-22.md` ; retour arrière : la 4.9.5 test 18.
+- Non vérifié : le correctif n'a pas été joué dans le vrai ESV ; il est couvert par l'essai du service worker (maquette de page).
+
+## 4.9.5.18 — 4.9.5 test 18 (L1-e6) (21/10)
+
+Manifeste `4.9.5.18`, « 4.9.5 test 18 (L1-e6) », paquet `ariane-4.9.5-test.18.zip` ; base : `claude/50-apprentissage-3-0` (la test 16 plus D-224) avec les branches `claude/50-t17-uiport`, `claude/50-t17-passe2`, `claude/50-t17-sanspose`, `claude/50-t17-fautes` fusionnées (`fiches/PASSATION_T17_INTEGRATION.md`). La 4.9.5.17 est le paquet « interface seule » livré à part.
+- **Deuxième passe des différés en fin de lot, EN ÉCRITURE, allumée, sans plafond** (D-237 ; `lot.passeDifferes`, `fiches/PASSATION_T17_PASSE2.md`) : profil L1-se, fin naturelle du lot ; deux passes au plus, leviers de passe `sansVoieRien` ; gardes : cut rouge dans la liste d'ESV, pose d'ESV inchangée depuis la visite, pose relue à 1 mm, validation prouvée (compteur, cut affiché, écriture « valid »), arrêt au premier refus, aucun départ quand le lot s'arrête sur une pose non validée ni pendant une relecture en cours ou en pause. Après les relectures adversariales : le cut n'est posé qu'atteint par un pas (saut au cut d'avant puis un pas), jamais sur une cible bloquée par un résultat incertain ; passe et relecture n'écrivent jamais ensemble ; une relance refait les décisions ; un cut posé sans validation (sous τ) n'est pas un reste, comme au banc.
+- **Interrupteur** « Deuxième passe des différés en fin de lot (écrit dans ESV) » (Orbite, « Règles et choix du prochain lot » ; nouveau panneau : Réglages) : clé `banane51PasseDifferes` gardée par `choix-lot`, absente = allumée, toute autre valeur que `true` = coupée, lue à la fin du lot, à la relance et avant chaque cut écrit.
+- **Panneau** : « La deuxième passe travaille, ne touche à rien dans ESV » pendant l'écriture (panneau d'avant, nouveau panneau, palette), « Arrêter la deuxième passe », « Relancer la deuxième passe », cache grisé pendant l'écriture, interrupteur « inconnu » tant que le service worker ne l'a pas dit ; aucune action nouvelle au service worker. Un cut posé par la passe reste compté dans la tuile « Différés » et dans l'état du lot exporté (le résumé de la partie et le journal le comptent posé).
+- **Leviers v6** (`LEVIERS_V6`, `src/gcv2-l1.js`) : `rechHauteurMaxMm` 25 (20 ; `fiches/PASSATION_T17_SANSPOSE.md`) ; garde de voie absolue `vetoVoieAbsMm` 100 et `voieIncoherenteMm` 40 (`fiches/PASSATION_T17_FAUTES.md`). Coupés : `rechListeResMm` (voie de la liste d'ESV en abords) et la contre-expertise des verts de la chaîne (`contreChaine*`, question à l'opérateur).
+- **Interface** (`fiches/PASSATION_T17_UIPORT.md`) : nouveau panneau en essai (lien « Essayer le nouveau panneau » → maquette v2 ; palette sobre), le panneau d'avant reste le défaut ; pause et reprise de la relecture, éteintes (`banane51RelecturePauseReglage`).
+Consigne : `consignes/seance-terrain-4.9.5-test-18-2026-10-21.md` ; retour arrière : la 4.9.5 test 16.
+
+- **Mesures** (banc, chaîne livrée AVEC la deuxième passe, `juger.cjs` contre l'opérateur ; lots ayant servi au réglage, 3:0 compris). Cuts laissés sans pose, test 15 → test 16 → test 18 : neuf anciens lots 57 → 25 → 12 ; 3:0 18 → 15 → 8. Neuf lots : 534 poses jugées, 518 à 10 mm ou moins, 0 à plus de 20 mm, 0 mauvaise voie, 0 vert changé. 3:0 : 29 jugées, 23 à 10 mm ou moins, 0 à plus de 20 mm (test 16 : 4 à plus de 50 mm, mauvaise voie) ; 865 et 869 laissés rouges par la garde. Contre la chaîne sans les leviers v6 : 0 cut changé sur les neuf lots. Le gain de la passe au banc est un majorant (une cible hors de la vue arrête la passe dans ESV). Parités extension/banc, passe en ombre : 2:17 139/139, 2:19 248/248, 0 écart.
+- Non vérifié : l'écriture de la deuxième passe n'a jamais été jouée dans ESV ; pas de mesure hors échantillon (3:0 en apprentissage, 3:1 et 3:5 réservées) ; nouveau panneau vu seulement dans Chromium avec un état fabriqué ; Edge.
+
+## 4.9.5.16 — 4.9.5 test 16 (L1-e5) (21/10)
+
+Manifeste `4.9.5.16`, « 4.9.5 test 16 (L1-e5) », paquet `ariane-4.9.5-test.16.zip` ; base : la 4.9.5 test 15 (`claude/50-test15`) avec les branches du cap 5 fusionnées (`claude/50-l1-cap5` a2486b1, `claude/50-l1-cap5b` 1a13119) ; fiches `fiches/PASSATION_CAP5_A.md`, `fiches/PASSATION_CAP5_A3.md`, `fiches/PASSATION_CAP5_B.md`, `fiches/L1_APPRENTISSAGE.md`.
+**Le lot change, sur ses différés seulement** (profil `'L1-se'` par défaut, inchangé ; la chaîne du lot et ses verts inchangés). Décision L1-e avec les **leviers v5 livrés** (`LEVIERS_LIVRES` = `LEVIERS_V4` + `LEVIERS_V5`, `src/gcv2-l1.js`), c'est-à-dire la chaîne mesurée au banc « a3-bd3 sans deuxième passe » (a3-bd3s) :
+- recherche recentrée en ADV et en abords : le moteur est relancé sur des graines (paire de la test 13, paire retenue, voisin validé le plus proche, voie ajustée, départ), paires de cellules fortes à 15 mm de l'écartement de référence, à 40 mm par cut en travers du voisin validé le plus proche, à 20 mm en hauteur, uniques, avec au moins 60 points de dessus ;
+- pose contredite par une cellule forte à 22–45 mm : remplacée par la paire recentrée, sinon rien ; pose validée remplacée si la paire recentrée s'en écarte de plus de 12 mm ; encadrement par deux voisins validés à 1 cut ;
+- correction d'écartement d'une paire validée par la test 13 en ADV seulement ; anomalie d'écartement non corrigée gardée si p ≥ 0,8 et la voie à 35 mm du voisin validé le plus proche ;
+- voisins cohérents pour la voie absolue ; branche rail par rail en dernier recours (60 mm en hauteur, extrapolation sur 2 cuts) ;
+- coût : arrêt à la première paire sûre et unique, recherche sautée pour une pose à 2,5 mm du voisin en ADV.
+
+**Pas de deuxième passe** : `deuxiemePasse` 0. La passe en ombre du service worker (1a13119) est dans le code, coupée et inatteignable (aucun réglage ne l'allume) ; l'écriture d'une deuxième passe dans ESV n'existe pas. Diagnostics `diag` et `rechercheDiag` coupés (journal seulement). Réglage `lot.recaptureVide` (cap 5) présent, coupé.
+Consigne : `consignes/seance-terrain-4.9.5-test-16-2026-10-21.md` ; retour arrière : la 4.9.5 test 15 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Mesures** (rejeu du banc, chaîne a3-bd3s sur a2486b1, `juger.cjs` contre l'opérateur ; parties ayant servi au réglage, pas hors échantillon). Cuts laissés sans pose avec un nuage exploitable, test 15 (v4b) → test 16 : 2:19 3 → 2 ; 2:20 second lot 2 → 1 ; 2:20 premier lot 8 → 1 (plus 29 captures vides) ; 2:11 3 → 2 ; 2:6 3 → 2 ; 2:7 2 → 2 ; 2:13 0 → 0 ; 2:17 18 → 4 ; 2:18 18 → 11 ; total 57 → 25. Poses jugées : 494 → 525 ; à 5 mm au plus 75,3 % → 77,5 % ; à 10 mm au plus 95,3 % → 97,1 % ; à plus de 20 mm 5 → 0 ; mauvaise voie 0 ; à plus de 50 mm 0 ; verts de la chaîne changés 0.
+- Essais : `tests/gcv2-l1-cap5.test.cjs` verrouille V4, V5 et la liste des 22 leviers changés ; `tests/gcv2-l1-cap5b.test.cjs` essaie chaque levier depuis la base v4 ; `tests/lot-profil-passe-differes-sw.test.cjs` (passe en ombre : coupée par défaut, rien vers ESV) ; `tests/pose-lot-inchanges-4959.test.cjs` : seul `lot.recaptureVide` (coupé) s'ajoute aux réglages.
+- Non vérifié : jamais posé dans ESV ; pas de mesure hors échantillon ; règles peu validées (écartement de la paire recentrée à 15 mm et branche en dernier recours : deux ou trois parties ; anomalie non corrigée à p 0,8 : quatre cuts) ; coût de la recherche en ADV sur le terrain ; Edge.
+
+## 4.9.5.15 — 4.9.5 test 15 (L1-e4) (20/10)
+
+Manifeste `4.9.5.15`, « 4.9.5 test 15 (L1-e4) », paquet `ariane-4.9.5-test.15.zip` ; base : la 4.9.5 test 14 avec les leviers v4 du cap 5 (`claude/50-l1-cap5`, `fiches/L1_APPRENTISSAGE.md`).
+**Le lot change, sur ses différés seulement** : profil du lot `'L1-se'` par défaut (inchangé), décision L1-e avec les leviers livrés v4 (`LEVIERS_LIVRES`, `src/gcv2-l1.js`) : écartement exact, autre rail si le premier n'est pas soutenu, anomalie de 10 à 45 mm, sous τ validé si l'écartement est cohérent (8 mm) et soutenu, voie des voisins avec raffinement obligatoire (8 mm), transport des poses L1 du lot vers la voie de référence (service worker), anomalie non corrigée → rien, veto de voie à 45 mm, consensus à trois preuves (deux rails soutenus, écartement de référence ± 10 mm, voie des voisins ± 15 mm en travers). Sélection par écartement de référence (v5) coupée.
+Consigne : `consignes/seance-terrain-4.9.5-test-15-2026-10-20.md` ; retour arrière : la 4.9.5 test 14 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Mesures** (rejeu du code au banc, contre l'opérateur ; parties ayant servi au réglage, pas hors échantillon) : 2:19 différés 207 → 4 (1 sans nuage), 234 jugés à 10 mm au plus sur 235 ; 2:20 second lot 123 → 2, 173 sur 175 ; 2:6 11 → 3 ; 2:13 2 → 0 ; 2:11 12 → 3 ; 2:17 41 → 18 ; 2:18 37 → 18 ; 0 mauvaise voie, 0 à plus de 50 mm.
+- Non vérifié : jamais posé dans ESV ; pas de mesure hors échantillon ; Edge.
+
+## 4.9.5.14 — 4.9.5 test 14 (L1-e) (20/10)
+
+Manifeste `4.9.5.14`, « 4.9.5 test 14 (L1-e) », paquet `ariane-4.9.5-test.14.zip` ; base : la 4.9.5 test 13 (`claude/50-l1-differes`, d7ff266). Apprentissage sur les Échos de 2:17, 2:18 et 2:19 (`fiches/L1_APPRENTISSAGE.md`).
+**Le lot change, sur ses différés seulement** : nouveau profil du lot **`'L1-se'` par défaut** : celui de L1-s (chaîne de la 4.9.5.9 intacte, verts identiques, vue déplacée, jamais appui ni voisin, D-221), avec la **décision L1-e** des différés (`src/gcv2-l1e.js`).
+Consigne : `consignes/seance-terrain-4.9.5-test-14-2026-10-20.md` ; retour arrière : la 4.9.5 test 13 (désactiver, redécompresser, réactiver, Recharger, F5).
+
+- **Correction d'écartement** : la paire de la GCV2 (mêmes hypothèses, mêmes probabilités, même choix que la test 13) est comparée à l'écartement des lignes valides **non touchées** de la liste d'ESV (instantané de la partie, 20 lignes les plus proches). Écart de 15 à 40 mm : le rail le moins probable va en travers jusqu'à cet écartement, **si le nuage le soutient à sa nouvelle place** (5 points de dessus, 3 de flanc).
+- **Décision** : « valider » de la test 13 → validé (corrigé s'il y a lieu) ; « plus de 150 mm » sous τ → validé **seulement** avec une correction soutenue ; **plus aucune pose sans validation** (les approchés restent rouges à la pose d'ESV : 52 % des approchés jugés restaient à plus de 50 mm de l'opérateur). Sans instantané de liste : la test 13 sans approché.
+- **Mesures** (rejeu du code, contre l'opérateur) : 2:19, partie dont l'erreur est apprise : différés du lot 202 → 22, différés jugés validés 5 → 184 dont 182 à 10 mm au plus, 0 à plus de 50 mm. Hors apprentissage (2:11, 2:17, 2:18) : différés 60 → 55, validés jugés 23 → 28 (justes 19 → 25), mauvaise voie 1 → 1 (le même cut), approchés 24 → 0. Cuts posés par la chaîne : 0 changé.
+- **Journal** : la décision L1 consigne `variante: 'L1-e'`, la correction (`ref`, écart, rail, soutien, appliquée) et la décision d'origine (`test13`).
+- **Banc** : `tools/banc-differes.cjs` (profil `L1-se`, `--liste`) ; `tools/l1-diag-hypotheses.cjs` (toutes les hypothèses de chaque différé contre l'opérateur) ; essai écarté (sélection apprise par régression logistique, ne se transporte pas d'une partie à l'autre) : `tools/l1-apprendre-ecartement.cjs`.
+- Essais : `tests/gcv2-l1e.test.cjs`, `tests/lot-profil-l1se-sw.test.cjs` ; profils L1-s et L1-se dans les essais de chaîne, de vue et de validation ; `tests/version-49514.test.cjs`.
+- verify (cœurs 0 et 1) : 2 430 essais, 2 428 réussis, 0 échec, 2 ignorés (corpus natif absent) ; `src/engine.js` identique à la base V4.6.0, géométrie inchangée.
+- Non vérifié : la correction n'a jamais posé dans ESV ; elle n'est mesurée que sur les 4 parties dont l'export porte la liste d'ESV ; ADV de 2:1 (écartement de l'opérateur 1 448 à 1 461 mm) non mesurée ; Edge.
 
 ## 4.9.5.13 — 4.9.5 test 13 (L1) (19/10)
 
@@ -30,20 +81,6 @@ Consigne : `consignes/seance-terrain-4.9.5-test-13-2026-10-19.md` ; retour arri�
 - Essais : `tests/lot-profil-*.test.cjs` (un essai lourd par fichier ; profil « actuel » = 4.9.5.9 ; profil « L1 » : vue amenée, pose sans validation, validation, panne ; paramètres figés) ; montages d'empreinte joués sous le profil « actuel » ; `tests/pose-lot-inchanges-4959.test.cjs` mis à jour (fichiers changés déclarés).
 - verify (cœurs 2 et 3) : 2 422 essais, 2 420 réussis, 0 échec, 2 ignorés (corpus natif absent) ; `src/engine.js` identique à la base V4.6.0, géométrie inchangée.
 - Non vérifié : la GCV2 n'a jamais posé dans ESV ; le déplacement de vue n'a jamais servi en séance ; le dernier cut d'un lot n'est pas approché ; pas de choix du profil au panneau (retour arrière = test 9) ; Edge.
-
-## 4.9.5.10, 4.9.5.11 et 4.9.5.12 — 4.9.5 test 10, 11 et 12 (19/10) : le panneau habillé en trois présentations
-
-Manifestes `4.9.5.10`, `4.9.5.11`, `4.9.5.12`, « 4.9.5 test 10 », « 4.9.5 test 11 », « 4.9.5 test 12 », paquets `ariane-4.9.5-test.10-linear.zip`, `ariane-4.9.5-test.11-raycast.zip`, `ariane-4.9.5-test.12-figma.zip` (`node tools/ui5-paquets.cjs paquets <dossier>`) ; base : la test 9 (`claude/50-rm11-test9`, 4.9.5.9) fusionnée avec les décisions jusqu'à D-218.
-**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js`, la géométrie, le lot, la relecture et Écho ne sont pas touchés (essai `tests/pose-lot-inchanges-49510.test.cjs`, empreintes de la test 8). Les trois versions ont le même code ; seules changent les chaînes de version et la présentation proposée au départ.
-Consigne : `consignes/seance-terrain-4.9.5-test-10-ui-2026-10-19.md` ; retour arrière : la 4.9.5 test 9 (désactiver, redécompresser, réactiver, Recharger, F5).
-
-- **Habillage du panneau** (D-218, retour de Mic sur les maquettes `maquettes/ui-5.0/`, présentations F, G et H) : `src/ui5.js` (navigateur), `src/ui5-rendu.js` (pur, testé), `src/ui5-variante.js`, `panel-ui5.css`. `panel.js` reste le moteur de la page (connexion, état, exports, vidage automatique d'Écho) ; après chaque rendu il appelle l'habillage (`ArianePanel.apres`, une quinzaine de lignes ajoutées). L'habillage lit l'état et les libellés que le panneau vient d'écrire, dessine **Linear** (liste des cuts par statut, volet de détail, palette `Ctrl K`), **Raycast** (une barre, suggestions, métadonnées) ou **Figma et Arc** (ruban de cuts, inspecteur, espaces), et **clique le bouton d'origine** à chaque geste.
-- **Aucun message de plus au service worker** : `src/ui5*.js` n'appellent ni `sendMessage`, ni export, ni `downloads` (essai sur le source) ; seuls `chrome.storage.local` (le choix `banane50Interface`), `chrome.windows` (taille de la fenêtre) et `chrome.runtime.getURL` sont utilisés. Essai de navigateur : le même clic envoie les mêmes messages par l'habillage et par le bouton d'origine (« Pause », export complet d'un lot fini).
-- **Réglages** : « Après le lot », « Clic du mode rapide », « Série de différés », « Raison de la correction » deviennent des listes (clic sur la case ou le bouton radio d'origine, mêmes clés, mêmes valeurs), plus bandeau, thème, connexion, vider le cache, abandon, **Interface** (Linear, Raycast, Figma et Arc, Ancien panneau). L'ancien panneau reste entier (« Ancien panneau », « Essayer le nouveau panneau »).
-- **Compteur GCV2** : `datasets/compteur-gcv2.json` (2 684 cuts corrigés au 19/10/2026, à mettre à jour à chaque archivage) + la part de la séance d'Écho, en direct.
-- **Documents et outils** : `fiches/UI_INVENTAIRE.md`, `fiches/UI_5.0_CONCEPTION.md` (brouillon des directions A à E, rejetées), `maquettes/ui-5.0/`, `claude/skills/design-patterns/` (carte corrigée), `tools/ui5-navigateur.cjs` (essai dans Chromium), `tools/ui5-paquets.cjs`. Les noms de modèles d'IA qui restaient dans `DECISIONS.md` et `fiches/REPRISE_AUTONOME.md` sont remplacés par des niveaux (l'essai `tests/noms-modeles.test.cjs` échouait au départ).
-- Essais : `tests/ui5-rendu.test.cjs`, `tests/ui5-navigateur-{linear,raycast,figma}.test.cjs`, `tests/version-49510.test.cjs` (remplace `version-4959`), `tests/pose-lot-inchanges-49510.test.cjs` (remplace `-4959`), `tests/consigne-49510.test.cjs`.
-- Non vérifié : Chrome réel avec ESV et un vrai lot ; le redimensionnement de la fenêtre par Chrome ; le flou de Raycast (fenêtre opaque). Pas dans ces versions : « Envoyer » avec message et empreintes, profils de séance, envoi automatique (non retenus par Mic).
 
 ## 4.9.5.9 — 4.9.5 test 9 (19/10)
 

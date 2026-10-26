@@ -17,6 +17,8 @@ const path = require('node:path');
 const FORMAT = 'ariane-manifeste-parties-v1';
 const CHEMIN = path.join(__dirname, '..', 'datasets', 'manifeste-parties.json');
 const entierPositif = v => Number.isInteger(v) && v > 0;
+/* La partie 0 existe (troisième projet) : un numéro de partie est un entier naturel, un numéro de projet reste strictement positif. */
+const entierNaturel = v => Number.isInteger(v) && v >= 0;
 
 function lire(chemin = CHEMIN) {
   let m;
@@ -29,7 +31,7 @@ function lire(chemin = CHEMIN) {
   for (const bloc of m.apprentissage) {
     if (!bloc || !entierPositif(bloc.projet) || !Array.isArray(bloc.parties)) throw Error('manifeste des parties : chaque bloc donne un projet (1, 2…) et ses parties');
     for (const n of bloc.parties) {
-      if (!entierPositif(n)) throw Error(`manifeste des parties : numéro de partie invalide (${JSON.stringify(n)})`);
+      if (!entierNaturel(n)) throw Error(`manifeste des parties : numéro de partie invalide (${JSON.stringify(n)})`);
       const cle = `${bloc.projet}:${n}`;
       if (vus.has(cle)) throw Error(`manifeste des parties : la partie ${n} du projet ${bloc.projet} est déclarée deux fois`);
       vus.add(cle);
@@ -39,7 +41,7 @@ function lire(chemin = CHEMIN) {
   if (m.temoins !== undefined) {
     if (!Array.isArray(m.temoins)) throw Error('manifeste des parties : « temoins » doit être une liste');
     for (const bloc of m.temoins) {
-      if (!bloc || !entierPositif(bloc.projet) || !Array.isArray(bloc.parties) || !bloc.parties.every(entierPositif)) throw Error('manifeste des parties : chaque témoin donne un projet et ses parties');
+      if (!bloc || !entierPositif(bloc.projet) || !Array.isArray(bloc.parties) || !bloc.parties.every(entierNaturel)) throw Error('manifeste des parties : chaque témoin donne un projet et ses parties');
       for (const n of bloc.parties) if (vus.has(`${bloc.projet}:${n}`)) throw Error(`manifeste des parties : la partie ${n} du projet ${bloc.projet} est un témoin, elle ne peut pas être en apprentissage`);
     }
   }
@@ -56,7 +58,7 @@ function statut(m, projet, partie) {
 
 /* « 1:17,2:1 » -> [{ projet: 1, partie: 17 }, { projet: 2, partie: 1 }] */
 function lireDesignations(texte) {
-  const bonnes = String(texte).split(',').map(s => /^([1-9]\d*):([1-9]\d*)$/.exec(s.trim()));
+  const bonnes = String(texte).split(',').map(s => /^([1-9]\d*):(0|[1-9]\d*)$/.exec(s.trim()));
   if (!bonnes.length || bonnes.some(x => !x)) throw Error(`--partie attend projet:partie (par exemple 1:17, ou 1:17,1:24) ; reçu « ${texte} »`);
   return bonnes.map(x => ({ projet: Number(x[1]), partie: Number(x[2]) }));
 }

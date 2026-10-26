@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — PAUSE ET CORRECTIONS, suite (un fichier à part : chaque fichier d'essai tient en moins de 20 s) :
+/* Test 17 (D-232 à D-234) — PAUSE ET CORRECTIONS, suite (un fichier à part : chaque fichier d'essai tient en moins de 20 s) :
  *  1. une pause demandée PENDANT la pose d'une correction n'interrompt rien : la correction va jusqu'à sa validation (jamais entre la pose et la validation), puis la passe s'arrête ;
  *     à la reprise, le cut corrigé n'est pas corrigé une seconde fois ;
  *  2. un F5 PENDANT la validation d'une correction reste une erreur (jamais une pause) : la correction interrompue est notée et bloque tout, la reprise n'existe pas. */
@@ -15,6 +15,6 @@ test('F5 pendant la validation de la correction du cut 109 : erreur (pas une pau
  assert.equal(H.evenements(b,'relecture-pause').length,0,'jamais une pause : la validation est incertaine');
  const etat=await b.api('relecture-etat');assert.equal(etat.correctionInterrompue.cut,109,'la correction interrompue bloque tout jusqu’à « J’ai contrôlé le cut 109 »');
  assert.equal('banane51RelectureReprise' in b.local.m,false,'aucun point gardé');
- await assert.rejects(b.api('relecture-reprendre'),/Aucune relecture en pause/);
+ await assert.rejects(b.api('relecture-reprendre'),/J’ai contrôlé le cut 109/);   /* la garde d'intention répond avant « Aucune relecture en pause » */
  await assert.rejects(b.api('relecture-lancer'),/J’ai contrôlé le cut 109/);
 });

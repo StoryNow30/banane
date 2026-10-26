@@ -23,13 +23,13 @@ test('hors d\'un lot en cours, rien n\'est envoyé ; actions du panneau : lectur
  assert.notEqual(engine.s.batch.state,'RUNNING');
  assert.equal(b.get('clicHumainDuLot')(),null,'lot clos : aucune option');
  engine.s.batch.state='RUNNING';assert.equal(b.get('clicHumainDuLot')(),'tout-recentre');engine.s.batch.state='STOPPED';
- assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:false});
- assert.deepEqual(j(await b.api('choix-lot',{regleGrappeDifferes:true})),{clicHumain:'tout-recentre',regleGrappeDifferes:true});
+ assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:false,passeDifferes:true});
+ assert.deepEqual(j(await b.api('choix-lot',{regleGrappeDifferes:true})),{clicHumain:'tout-recentre',regleGrappeDifferes:true,passeDifferes:true});
  await assert.rejects(b.api('choix-lot',{clicHumain:'vite'}),/Clic du mode rapide inconnu/);
  await assert.rejects(b.api('choix-lot',{regleGrappeDifferes:'oui'}),/oui ou non/);
- assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:true},'un refus ne change rien');
+ assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:true,passeDifferes:true},'un refus ne change rien');
  /* Valeur inconnue déjà gardée, ou stockage illisible : le défaut. */
- b.local.m[CLE_CLIC]='vite';assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:true});
+ b.local.m[CLE_CLIC]='vite';assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:true,passeDifferes:true});
  b.ctx.chrome.storage.local.get=async()=>{throw Error('stockage illisible');};
- assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:false});
+ assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:false,passeDifferes:false},'stockage illisible : deuxième passe coupée');
 });

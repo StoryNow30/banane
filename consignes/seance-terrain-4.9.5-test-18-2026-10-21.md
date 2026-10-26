@@ -1,0 +1,129 @@
+# Séance terrain « 4.9.5 test 18 (L1-e6) » : la deuxième passe pose en fin de lot, et la partie 0 corrige la recherche
+
+**Ce qui change par rapport à la test 16 :**
+
+1. **La deuxième passe des différés, en fin de lot, ÉCRIT DANS ESV.** Elle est **allumée** dès l'installation, sans limite de poses (ta décision du 21/10). **Son écriture n'a jamais été jouée dans ESV** : voir § 3.
+2. **Une correction tirée de la partie 0 du troisième projet** : la recherche recentrée accepte une paire jusqu'à **25 mm** en hauteur du voisin (20 en test 16). Sur la partie 0, deux poses fausses de la test 16 (846 et 847, mauvaise voie) deviennent justes, et trois cuts de plus sont posés justes.
+3. **Le nouveau panneau, à l'essai.** Le panneau d'avant reste celui du départ. Le lien « Essayer le nouveau panneau », en bas du panneau, ouvre la maquette v2. « Ancien panneau », dans ses Réglages, revient. La palette (Ctrl K) est dans le nouveau panneau.
+4. **Pause et reprise de la relecture** : construites, **éteintes**. Tu les allumes dans la carte « Relecture » (« Pause et reprise de la relecture (même après un F5) ») ; « Si ESV est rechargé pendant la relecture » : mettre en pause (défaut) ou arrêter.
+
+La 4.9.5 test 17 (UI) est le paquet « interface seule » sur le moteur de la test 16 ; cette test 18 contient la même interface **plus** la deuxième passe et la correction de la recherche.
+
+Tout ce que la chaîne du lot posait avant, elle le pose comme avant. La décision des différés pendant le lot est celle de la test 16, au seul réglage de hauteur près.
+
+**Vocabulaire.** Un **cut laissé sans pose** est un cut que la chaîne n'a pas posé et que la GCV2 n'a pas posé non plus, alors que le nuage est là. Les cuts à nuage vide ne comptent pas. **Moins il y en a, mieux c'est.**
+
+## Ce que dit le banc
+
+Rejeux de tes lots contre tes Échos, pas des mesures terrain. **Les neuf anciens lots et la partie 0 ont tous servi à régler** : les chiffres ne disent pas ce que la test 18 fera sur une partie nouvelle. La test 18 est mesurée telle que tu l'auras : **avec** la deuxième passe.
+
+**Cuts laissés sans pose**, dans l'ordre test 15 (v4) → test 16 → test 18. La test 18 est jugée contre ta vérité.
+
+| Partie | Cuts laissés sans pose : test 15 → test 16 → test 18 | Poses jugées | À 5 mm ou moins | À 10 mm ou moins | À plus de 20 mm | À plus de 50 mm | Mauvaise voie |
+|---|---|---|---|---|---|---|---|
+| 19 | 3 → 2 → 2 | 236 | 196 | 235 | 0 | 0 | 0 |
+| 20, second lot | 2 → 1 → 1 | 175 | 134 | 172 | 0 | 0 | 0 |
+| 20, premier lot | 8 → 1 → 0 | 16 | 12 | 14 | 0 | 0 | 0 |
+| 11 | 3 → 2 → 1 | 10 | 3 | 8 | 0 | 0 | 0 |
+| 6 | 3 → 2 → 2 | 9 | 5 | 7 | 0 | 0 | 0 |
+| 7 | 2 → 2 → 2 | 19 | 13 | 18 | 0 | 0 | 0 |
+| 13 | 0 → 0 → 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 17 | 18 → 4 → 1 | 40 | 28 | 38 | 0 | 0 | 0 |
+| 18 | 18 → 11 → 3 | 29 | 21 | 26 | 0 | 0 | 0 |
+| **Neuf lots** | **57 → 25 → 12** | **534** | **412** | **518** | **0** | **0** | **0** |
+| **Partie 0, troisième projet** | **18 → 15 → 8** | **29** | **14** | **23** | **0** | **0** | **0** |
+
+Lecture :
+
+- **Neuf anciens lots : 57 → 25 → 12 cuts laissés sans pose.** Le gain de la test 18 vient de la deuxième passe. Le réglage de hauteur et la garde de voie n'y changent aucun cut. Il reste en plus 30 cuts rouges à nuage vide (29 dans le premier lot de la partie 20, 1 dans la partie 19).
+- **Sur 534 poses jugées : 518 à 10 mm ou moins (97,0 %), 0 à plus de 20 mm, 0 mauvaise voie, 0 vert changé.**
+- **Partie 0 du troisième projet** (ta vérité = tes validations d'Écho) : la test 16 y avait **4 poses fausses à plus de 50 mm** (794, 846, 847 et 869, toutes en mauvaise voie). La deuxième passe seule y en aurait ajouté une cinquième (865). En test 18 : **0 pose à plus de 20 mm**. 846 et 847 sont posés justes (5 et 8 mm), 794 aussi (3 mm). **865 et 869 restent rouges** : la garde de voie les refuse.
+- La partie 0 a servi à régler ces deux corrections : ce chiffre n'est pas une mesure hors échantillon.
+- Ce que la garde coûte : 797 passe de 8 à 10 mm.
+- **Le gain de la deuxième passe au banc est un MAJORANT.** Le banc compte posé un cut dont la cible est hors de la vue ; dans ESV, la passe ne déplace pas la vue : elle refuse ce cut et **s'arrête**, car les poses suivantes comptaient sur lui. Il en va de même au premier refus, quel qu'il soit (cut devenu vert, pose changée, cut atteint par un saut, validation non prouvée).
+
+## 1. Installer et vérifier
+
+1. Exporte d'abord ce que ta version actuelle garde.
+2. **Contrôle l'empreinte du zip** (PowerShell, dans le dossier du zip) : `Get-FileHash .\ariane-4.9.5-test.18.zip -Algorithm SHA256`. Les 64 caractères doivent être ceux de mon message, sinon n'installe pas.
+3. **Pose la test 18 par-dessus** : décompresse le zip dans le même dossier, en remplaçant les fichiers. **Ne désinstalle rien.** Dans `chrome://extensions`, clique sur **Recharger** sur la carte Ariane.
+4. **F5 sur l'onglet ESV**, puis choisis-le dans Ariane.
+5. **Vérifie la version** : la carte, le panneau et le bouton blanc d'ESV disent « 4.9.5 test 18 (L1-e6) ».
+6. **Vérifie l'interrupteur** : Orbite, « Règles et choix du prochain lot », case **« Deuxième passe des différés en fin de lot (écrit dans ESV) »** : elle est **cochée**.
+
+## 2. Ce que fait la deuxième passe
+
+À la fin naturelle d'un lot (dernier cut atteint), sous le profil livré, Ariane reprend les cuts que le lot a laissés rouges. Elle les redécide avec **les poses d'avant ET d'après** (deux passes au plus), puis elle **les pose et les valide sur place**, un par un, dans l'ordre de sa décision.
+
+Pour chaque cut, dans l'ordre :
+
+1. elle va au cut et vérifie qu'ESV l'affiche ;
+2. elle vérifie que la pose d'ESV est celle de la visite du lot, à 1 mm près ;
+3. elle vérifie dans la liste d'ESV que le cut est **rouge** et pas traité par un opérateur : **jamais d'écrasement d'un vert** ;
+4. elle pose (clic « tout recentré »), puis relit la pose à 1 mm ; sinon elle remet la pose d'avant ;
+5. elle valide sur place (Ctrl+Entrée) et le prouve : le compteur « N on M treated » avance, le même cut est affiché, et l'écriture « valid » de la ligne est vue.
+
+**Au premier refus ou à la première anomalie, elle s'arrête** : les poses suivantes comptaient sur celle-ci. Si la validation est partie sans preuve, la pose reste, et Ariane te demande de contrôler ce cut (« J'ai contrôlé le cut N ») avant tout nouveau lot.
+
+**Pendant qu'elle écrit** : le panneau d'avant affiche en ambre **« La deuxième passe travaille, ne touche à rien dans ESV »**, avec le cut et l'avancement ; le nouveau panneau affiche « Deuxième passe en cours » et la commande verrouillée « Ne touche à rien dans ESV ». **Ne touche à rien dans ESV tant qu'elle n'a pas fini.** Le bouton **« Arrêter la deuxième passe »** l'arrête avant le cut suivant.
+
+**Ce qu'elle ne fait pas seule** : si le lot s'est arrêté sur une pose d'Ariane **non validée** (le dernier cut d'un lot borné, souvent), elle ne part pas. Valide (ou corrige) ce cut dans ESV, puis clique sur **« Relancer la deuxième passe »**. Elle ne part pas non plus pendant une relecture en cours ou en pause. La relecture après le lot attend la fin de la deuxième passe.
+
+**Pour la couper** : décoche la case de l'étape 6 du § 1 (ou, dans le nouveau panneau, Réglages, « Deuxième passe (écrit dans ESV) » : Coupée). C'est pris en compte tout de suite : une passe en train d'écrire s'arrête avant le cut suivant, et la suivante ne part plus.
+
+## 3. Le premier lot : sois présent
+
+**L'écriture de la deuxième passe n'a jamais été jouée dans ESV.** Elle a été essayée contre un ESV simulé, et sa décision a été rejouée au banc, mais Ctrl+Entrée sur un cut rouge atteint hors de l'ordre du lot n'a jamais été vu sur le vrai ESV.
+
+1. Pour le **premier lot**, choisis une plage **courte** et reste devant l'écran jusqu'à la fin de la deuxième passe.
+2. Regarde chaque cut qu'elle pose : il doit passer au vert, et la pose doit être la bonne voie.
+3. **Au premier refus, au premier message d'anomalie, ou à la première pose qui te paraît fausse : clique sur « Arrêter la deuxième passe », décoche la case, note le cut et l'heure, exporte.**
+4. Si tout se passe bien, garde-la allumée pour les lots suivants.
+
+## 4. Pendant et après le lot
+
+**Chaque pose est définitive dans ESV.** Un vert faux est pire qu'un rouge.
+
+**Comptage.** Un cut posé par la deuxième passe reste compté « différé » dans la tuile « Différés » du lot et dans l'état du lot exporté (`deferred`). La ligne de la deuxième passe du panneau, le résumé de la partie et le journal (`passe-differes-ecriture`, `validation-accepted`) le comptent posé.
+
+Note les verts **faux** (mauvaise voie, mauvais rail, plus de 1 cm de ta pose), en séparant ceux de la deuxième passe : le journal de l’export les marque (`passe-differes-ecriture`).
+
+Zones à surveiller : les ADV ; les cuts posés par la deuxième passe entre deux cuts eux-mêmes posés par Ariane ; les longues suites de cuts posés par la GCV2.
+
+## 5. À la fin : les exports
+
+**Orbite** : l'export du lot, comme d'habitude ; il contient le journal de la deuxième passe.
+
+**Écho**, deux exports séparés comme en test 16 (premier Écho : les cuts restés rouges ; second Écho : toute la partie) : « Terminer et télécharger », tous les volumes et segments, leurs SHA-256, tes notes. Dis-moi lequel est le premier et lequel est le second.
+
+Vide le cache seulement après ma confirmation de réception.
+
+## 6. Si quelque chose ne va pas
+
+1. « Arrêter la deuxième passe » (ou « Arrêter le lot »), puis décoche la case de la deuxième passe.
+2. Note l'heure et le message.
+3. Exporte et envoie les zips.
+
+**Ne désinstalle pas Ariane.**
+
+Retour arrière vers la test 16 :
+
+1. Exporte.
+2. **Désactive** la test 18 dans `chrome://extensions`, sans la supprimer.
+3. Décompresse le zip de la **4.9.5 test 16** (`ariane-4.9.5-test.16.zip`) dans le même dossier.
+4. **Réactive** la carte, puis clique sur **Recharger**.
+5. F5 sur ESV.
+
+Les poses déjà validées dans ESV restent, y compris celles de la deuxième passe : le retour arrière ne les défait pas.
+
+## 7. Limites et ce qui n'est pas vérifié
+
+- **L'écriture de la deuxième passe n'a jamais été jouée dans ESV** (§ 3). Elle a été essayée contre un ESV simulé : cut vert jamais écrasé, validation non prouvée, « Arrêter », relance, interrupteur coupé pendant l'écriture, relecture en pause.
+- **Toutes les mesures viennent de lots qui ont servi à régler**, la partie 0 comprise : aucune mesure hors échantillon. Les parties 1 et 5 du troisième projet sont gardées pour l'examen.
+- **La partie 0 est la seule** à avoir motivé le réglage de hauteur (25 mm) et la garde de voie. Sur les neuf anciens lots, ils ne changent aucune décision : ils ne dégradent rien, mais rien n'y prouve leur gain.
+- **Le vrai code de l'extension, rejoué cut par cut** contre le banc, la deuxième passe jouée en ombre : partie 17, 139 sur 139 décisions identiques, et ses 3 poses de passe ; partie 19, 248 sur 248. Les parties 18 et 0 n'ont pas été rejouées ainsi. Le chemin d'écriture, lui, n'est essayé que contre un ESV simulé.
+- **Une seule connexion ESV**, partagée par Orbite et Écho, dans le nouveau panneau comme dans l'ancien.
+- **Le nouveau panneau** n'a été vu que dans Chromium, avec des états fabriqués ; il n'a pas les réglages de la pause de la relecture (ils sont dans le panneau d'avant).
+- **Trous connus de la garde de voie** : elle se tait sans voisin validé lisible à 6 cuts ou moins, et ne mesure pas l'accord des voisins quand il y en a moins de 3. Elle ne s'applique ni aux cuts posés sans validation (sous τ), ni aux verts de la chaîne, ni aux corrections de la relecture « Corriger ».
+- Les verts faux de la chaîne en ADV (une pose de la chaîne contredite par la GCV2) ne sont **ni corrigés ni signalés** dans cette version.
+- Edge n'a pas été vu.

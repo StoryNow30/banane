@@ -52,7 +52,7 @@ L'action principale est alors **« Voir ce qui reste »** s'il reste quelque cho
 
 ## 4. Compteur GCV2
 
-Le nombre « 2 684 » est le nombre de **cuts corrigés par Mic dans les Échos archivés**, tous projets, au 19 octobre (`fiches/COMPTEUR_GCV2.md`). Ce sont des **exemples d'apprentissage**, pas des cuts « appris » par un modèle en service, et **il ne mesure aucune qualité**. La GCV2 n'est pas dans cette version. Il quitte l'écran de travail pour une vue « Modèle », avec sa définition et sa date.
+Le nombre « 2 684 » est le nombre de **cuts corrigés par l’opérateur dans les Échos archivés**, tous projets, au 19 octobre (`fiches/COMPTEUR_GCV2.md`). Ce sont des **exemples d'apprentissage**, pas des cuts « appris » par un modèle en service, et **il ne mesure aucune qualité**. La GCV2 n'est pas dans cette version. Il quitte l'écran de travail pour une vue « Modèle », avec sa définition et sa date.
 
 ## 5. Ce qui reste hypothèse
 

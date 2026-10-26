@@ -1,6 +1,6 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — STOCKAGE DÉFAILLANT ET DOUBLE CLIC : si le point de reprise ne peut pas être écrit (stockage plein ou illisible), la pause fonctionne en mémoire
- * (le journal dit « stocke: false ») mais ne survit pas à un redémarrage du service worker (la passe est alors close « interrompue », comme avant le 4.9.6) ;
+/* Test 17 (D-232 à D-234) — STOCKAGE DÉFAILLANT ET DOUBLE CLIC : si le point de reprise ne peut pas être écrit (stockage plein ou illisible), la pause fonctionne en mémoire
+ * (le journal dit « stocke: false ») mais ne survit pas à un redémarrage du service worker (la passe est alors close « interrompue », comme avant la pause) ;
  * deux clics rapides sur « Pause » ne font qu'une pause. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {production}=require('./helpers/perf-production.cjs');

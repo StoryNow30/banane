@@ -1,8 +1,8 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — F5 PENDANT LA RELECTURE, réglage « arrêter » (un fichier à part : chaque fichier d'essai tient en moins de 20 s) :
+/* Test 17 (D-232 à D-234) — F5 PENDANT LA RELECTURE, réglage « arrêter » (un fichier à part : chaque fichier d'essai tient en moins de 20 s) :
  *  - « pause » (par défaut) : ESV muet pendant un cut → la passe se met EN PAUSE au cut non fait, garde son point ; « Reprendre » est refusé tant qu'ESV ne répond pas,
  *    puis repart de ce cut sans repasser sur les cuts relus ;
- *  - « arret » : comme avant le 4.9.6, la passe s'arrête en erreur et rien n'est gardé. */
+ *  - « arret » : comme avant la pause, la passe s'arrête en erreur et rien n'est gardé. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,lotPause,attendreEtat,cutsAllees}=require('./helpers/relecture-pause.cjs');
 test('réglage « si ESV est rechargé : arrêter » : le F5 arrête la passe en erreur, comme avant ; rien n’est gardé ; pas de reprise',async()=>{

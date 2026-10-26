@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — « ARRÊTER » PENDANT LA PAUSE : définitif. Il efface le point, ferme la passe (relecture-fin « arret » une fois), rend la main
+/* Test 17 (D-232 à D-234) — « ARRÊTER » PENDANT LA PAUSE : définitif. Il efface le point, ferme la passe (relecture-fin « arret » une fois), rend la main
  * (un lot peut de nouveau partir), et rien ne peut plus être repris ; « Arrêter » du lot (action `stop`) vaut « Arrêter la relecture ». */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,lotPause,attendreEtat}=require('./helpers/relecture-pause.cjs');

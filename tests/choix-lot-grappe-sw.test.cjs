@@ -41,5 +41,5 @@ test('changé pendant le lot : le lot reste coupé jusqu\'à sa fin ; le choix e
  assert.deepEqual(change.adapter.calls,livre.adapter.calls,'le lot garde son réglage');
  assert.equal(JSON.stringify(neutre(decisions(change.b))),JSON.stringify(neutre(decisions(livre.b))));
  assert.equal('regleGrappeDifferes' in scope(change.b),false);assert.equal(change.b.local.m.banane50GrappeDifferes,true);
- assert.deepEqual(JSON.parse(JSON.stringify(await change.b.api('choix-lot-etat'))),{clicHumain:'tel-quel',regleGrappeDifferes:true});
+ assert.deepEqual(JSON.parse(JSON.stringify(await change.b.api('choix-lot-etat'))),{clicHumain:'tel-quel',regleGrappeDifferes:true,passeDifferes:true});
 });

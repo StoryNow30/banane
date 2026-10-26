@@ -26,5 +26,4 @@ Une seule version sert à tout l'A/A. Acquis : mesure V1 par phase (`tools/perf-
 
 **À ne pas relire.** Les rapports de missions A à G, les relectures des tests 3 et 4, `verification.txt`.
 
-**Modèle et effort.** Analyse des lots : niveau rapide, bas. Conception de l'expérience V3 : niveau fort, élevé. Code V3 : niveau fort, élevé, tests rouges d'abord. Relecture : un seul agent de niveau fort
-ou maximal, seulement si le code touche l'ordre des lectures ou l'enregistrement.
+**Modèle et effort.** Analyse des lots : niveau rapide, bas. Conception de l'expérience V3 : niveau fort, élevé. Code V3 : niveau fort, élevé, tests rouges d'abord. Relecture : un seul agent de niveau fort, seulement si le code touche l'ordre des lectures ou l'enregistrement.

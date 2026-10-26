@@ -1,8 +1,8 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — F5 PENDANT LA RELECTURE, service worker réel, réglage allumé :
+/* Test 17 (D-232 à D-234) — F5 PENDANT LA RELECTURE, service worker réel, réglage allumé :
  *  - « pause » (par défaut) : ESV muet pendant un cut → la passe se met EN PAUSE au cut non fait, garde son point ; « Reprendre » est refusé tant qu'ESV ne répond pas,
  *    puis repart de ce cut sans repasser sur les cuts relus ;
- *  - « arret » : comme avant le 4.9.6, la passe s'arrête en erreur et rien n'est gardé. */
+ *  - « arret » : comme avant la pause, la passe s'arrête en erreur et rien n'est gardé. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,lotPause,attendreEtat,cutsAllees}=require('./helpers/relecture-pause.cjs');
 function muet(a){const ping=a.ping.bind(a);a.ping=async()=>{if(a.muet)throw Error('Adaptateur ESV sans réponse (simulé).');return ping();};}

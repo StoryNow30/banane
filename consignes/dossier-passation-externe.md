@@ -802,7 +802,7 @@ les résultats (quelques centaines de Ko) sont envoyés.
 
 À lancer **après** la 4.8.5 stable (fusionnée, étiquette créée par la direction), dans une **session neuve** :
 un contexte court coûte bien moins de quota qu'une longue conversation. Plugins : **Superpowers** (obra) et
-**Modern Web Guidance** (Google Chrome) ; playwright en option. Modèle : niveau **rapide** par défaut ; niveau **fort**
+**Modern Web Guidance** (Google Chrome) ; playwright en option. Modèle : **niveau rapide** par défaut ; **niveau fort**
 seulement pour la conception de V3 et la relecture avant étiquette. Copie le bloc tel quel.
 
 ## Décision de la direction (30/09/2026) : option B, par le chemin normal

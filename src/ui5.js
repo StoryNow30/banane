@@ -1,66 +1,50 @@
-/* 4.9.5 test 10-ui : HABILLAGE DU PANNEAU, partie navigateur.
+/* Test 17 : HABILLAGE DU PANNEAU, partie navigateur.
  *
  * `panel.js` reste le moteur de la page : connexion à ESV, lecture de l'état, rendu de ses propres éléments, exports, vidage automatique
  * d'Écho. Ce fichier ne remplace rien : après chaque rendu du panneau (`ArianePanel.apres`), il lit l'état et les libellés que le panneau
- * vient d'écrire (un INSTANTANÉ), dessine l'une des trois présentations (src/ui5-rendu.js) et, quand on clique dessus, CLIQUE le bouton
+ * vient d'écrire (un INSTANTANÉ), dessine la présentation « Ariane » (src/ui5-rendu.js) et, quand on clique dessus, CLIQUE le bouton
  * d'origine du panneau (`data-act="legacy:<id>"`). Conséquences voulues :
  *   - aucune commande ni aucun export de plus ou de moins : c'est le même gestionnaire qui répond ;
  *   - AUCUN message au service worker depuis ce fichier (un essai le vérifie sur le source) ; il écrit seulement son propre choix
- *     d'interface (`banane51Interface` depuis la 4.9.6 test 1) dans chrome.storage.local, et demande la taille de sa fenêtre à chrome.windows ;
- *   - l'ancien panneau reste entier, une case de Réglages (ou « Ancien panneau ») le rend.
- * Les choix « après le lot », « clic », « grappe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
+ *     d'interface (`banane51Interface`) dans chrome.storage.local, et demande la taille de sa fenêtre à chrome.windows ;
+ *   - le panneau d'avant reste celui du départ (src/ui5-variante.js) : « Essayer le nouveau panneau » (pied du panneau) l'habille, « Ancien panneau »
+ *     (Réglages) le rend ; le choix est gardé.
+ * Les choix « après le lot », « clic », « grappe », « deuxième passe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
 (function (root) {
   'use strict';
   const D = root.document, R = root.ArianeUi5Rendu, CLE = 'banane51Interface';
   if (!D || !R || !root.ArianePanel) return;
-  const defaut = R.VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ariane';
-  const estAr = v => v === 'ariane' || v === 'ariane2';
-  const TAILLE = { ariane: [1180, 800], ariane2: [1180, 840], linear: [1120, 760], raycast: [720, 560], figma: [1120, 760], ancienne: [560, 820] };
-  const ui = { sel: null, palette: false, q: '', pi: 0, last: '', focusQ: false, pauseLot: null };
-  let variante = defaut, ecran = estAr(defaut) ? 'accueil' : 'seance', hote = null, gcv2Base = null, nbRows = 0;
+  const VARIANTES = ['ariane2', 'palette', 'ancienne'], defaut = VARIANTES.includes(root.ARIANE_UI5?.defaut) ? root.ARIANE_UI5.defaut : 'ancienne';
+  const TAILLE = { ariane2: [1180, 840], palette: [720, 560], ancienne: [560, 820] };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false };
+  let variante = defaut, ecran = 'accueil', hote = null, gcv2Base = null;
   const $ = id => D.getElementById(id);
   const txt = id => { const e = $(id); return e ? String(e.textContent || '').trim() : ''; };
   const visible = id => { const e = $(id); return !!e && !e.hidden; };
 
   /* ---------------------------------------------------------------- instantané */
-  const ORDRE_ORBITE = ['start-batch', 'resume', 'retry', 'manual-takeover', 'manual-completion', 'close-uncertain', 'pause', 'export-tout', 'new-batch', 'relecture-acquitter', 'relecture-arreter', 'relecture-lancer', 'explicit-skip', 'stop'];
+  const ORDRE_ORBITE = ['start-batch', 'resume', 'retry', 'manual-takeover', 'manual-completion', 'close-uncertain', 'pause', 'export-tout', 'new-batch', 'relecture-acquitter', 'relecture-arreter', 'relecture-lancer', 'passe-differes-lancer', 'explicit-skip', 'stop'];
   const ORDRE_ECHO = ['native-resume', 'native-end', 'native-download', 'native-start', 'native-pause', 'native-discard'];
-  const tonClasse = id => { const c = String($(id)?.className || ''); return /\bred\b/.test(c) ? 'red' : /\bamber\b/.test(c) ? 'amber' : /\blive\b/.test(c) ? 'live' : 'ink'; };
   const coche = (ids) => { for (const [v, id] of ids) if ($(id)?.checked) return v; return null; };
-  /* 4.9.6.1 : « 999999 » est la borne interne « jusqu'à la fin de la partie » (panel.js) ; on ne l'affiche jamais. */
+  /* « 999999 » est la borne interne « jusqu'à la fin de la partie » (panel.js) ; on ne l'affiche jamais. */
   const FIN_PARTIE = 999999;
   const finVisible = v => { const n = Number(v); return v === '' || v == null || !Number.isFinite(n) || n >= FIN_PARTIE ? null : String(v); };
   const entier = v => Number.isFinite(Number(v)) ? String(Math.trunc(Number(v))) : '—';
 
   function boutons(mode) {
-    const ordre = mode === 'native' ? ORDRE_ECHO : mode === 'automatic' ? ORDRE_ORBITE : [];
     const out = [];
-    for (const id of ordre) {
+    for (const id of mode === 'native' ? ORDRE_ECHO : ORDRE_ORBITE) {
       const e = $(id); if (!e || e.hidden) continue;
       const c = String(e.className || '');
       out.push({ id, texte: String(e.textContent || '').trim(), role: /\bprimary\b/.test(c) ? 'primary' : /\bdanger\b/.test(c) ? 'danger' : 'link', actif: !e.disabled });
     }
     return out;
   }
-  function lignesLot(s) {
-    const A = root.ArianePanel, b = s?.batch;
-    if (!b) return { rows: [], aPoser: 0 };
-    let v; try { v = A.voieDuLot(s); } catch { return { rows: [], aPoser: 0 }; }
-    const rows = [];
-    v.cuts.forEach((c, i) => {
-      const k = v.classe(c);
-      const statut = k === 'actuel' ? 'cours' : k === 'incertain' ? 'incertain' : k === 'moteur' ? 'pose' : k === 'voie-l' ? 'voie' : k === 'differe' ? 'differe' : k === 'skip' ? 'saute' : k === 'main' ? 'main' : null;
-      if (!statut) return;
-      const e = v.ecart(c);
-      const texte = { cours: 'Pose des rails', incertain: 'Résultat à contrôler', pose: 'Posé par le moteur', voie: 'Posé par la voie', differe: 'Différé', saute: 'SKIP', main: 'Repris à la main' }[statut];
-      rows.push({ cut: entier(c), statut, texte, ecart: e === null ? '' : `${Math.round(e * 10) / 10} mm`, ordre: i });
-    });
-    /* La plus récente d'abord dans chaque groupe (lecture d'une liste de tâches). */
-    rows.sort((x, y) => y.ordre - x.ordre);
-    rows.forEach((r, i) => { r.rang = i; });
-    let aPoser = 0;
-    try { const f = A.travailDuLot(b); if (f && Number.isFinite(f.invalides)) aPoser = Math.max(0, f.invalides - (b.processed?.length || 0)); } catch { /* inconnu */ }
-    return { rows, aPoser };
+  /* Statut de chaque cut du lot, dans l'ordre où le lot les a ouverts. */
+  const STATUT = { actuel: 'cours', incertain: 'incertain', moteur: 'pose', 'voie-l': 'voie', differe: 'differe', skip: 'saute', main: 'main' };
+  function statutsLot(s) {
+    if (!s?.batch) return [];
+    try { const v = root.ArianePanel.voieDuLot(s); return v.cuts.map(c => STATUT[v.classe(c)]).filter(Boolean); } catch { return []; }
   }
   function lignesEcho(s) {
     const A = root.ArianePanel; let vis = [];
@@ -70,30 +54,35 @@
     const texte = x => x.encours ? 'Visite en cours' : /^VALIDATE_CORRECTED_BOTH/.test(x.label) ? 'Corrigé · 2 rails' : corr(x) ? 'Corrigé · 1 rail' : x.label === 'VALIDATE_NO_MOVEMENT' ? 'Validé tel quel' : x.label === 'SKIP' ? 'SKIP' : 'Visité';
     return { echoRows: vis.slice(-40).reverse().map(x => ({ cut: entier(x.c), texte: texte(x), corrige: corr(x), duree: dur(x) })), corriges: vis.filter(corr).length };
   }
-  /* 4.9.6 test 1 — présentation « Ariane » : les chiffres et l'état du lot, d'après fiches/UI_ETATS_COMPTEURS.md. Lecture seule de l'état.
+  /* Présentation « Ariane » : les chiffres et l'état du lot, d'après fiches/UI_ETATS_COMPTEURS.md. Lecture seule de l'état.
    * « Pause demandée » n'existe pas dans le moteur : c'est le clic sur Pause (gardé ici, pour ce lot) tant que le lot tourne encore. */
   const OUVERT = ['RUNNING', 'PAUSED', 'PAUSED_UNRESOLVED_RAIL', 'PAUSED_DEFER_NAVIGATION_UNCERTAIN', 'PAUSED_AFTER_STATE_MISSING', 'PAUSED_ADAPTER_UNRESPONSIVE', 'MANUAL_TAKEOVER'];
   const cutDe = x => { const n = Number(x?.cut ?? x?.identity?.cut); return Number.isFinite(n) ? Math.trunc(n) : null; };
   const heure = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? `${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}` : ''; };
   const RAILS = { left: 'rail gauche', right: 'rail droit' };
-  function calculAr(s, rows) {
-    const b = s?.batch || null, A = root.ArianePanel, compte = k => rows.filter(r => k.includes(r.statut)).length;
-    const poses = compte(['pose', 'voie']), differes = compte(['differe']), sautes = compte(['saute']), main = compte(['main']);
-    const traites = poses + differes + sautes + main;
+  function calculAr(s, statuts) {
+    const b = s?.batch || null, A = root.ArianePanel, compte = k => statuts.filter(x => k.includes(x)).length;
+    const poses = compte(['pose', 'voie']), differes = compte(['differe']), traites = poses + differes + compte(['saute', 'main']);
     let cibles = null; try { const f = b && A.travailDuLot(b); if (f && Number.isInteger(f.invalides)) cibles = f.invalides; } catch { /* inconnu */ }
     const st = b?.state || null, incertain = !!s?.reconcileRequired;
-    if (st !== 'RUNNING' || !b || ui.pauseLot !== b.id) ui.pauseLot = st === 'RUNNING' && b && ui.pauseLot === b.id ? b.id : null;
+    /* La deuxième passe des différés écrit dans ESV (état `passeDifferes` du service worker) : tant qu'elle écrit, rien d'autre n'y part. Elle passe devant
+     * « Relecture en cours » : la relecture l'attend, et elle ne part pas pendant une relecture. */
+    const p2 = s?.passeDifferes?.etat === 'ecriture' ? { cut: cutDe(s.passeDifferes), ecrites: s.passeDifferes.ecrites, demandees: s.passeDifferes.demandees } : null;
+    if (st !== 'RUNNING' || ui.pauseLot !== b?.id) ui.pauseLot = null;
     let etat = 'pret', etatTexte = '';
     const horsLigne = !b && !s?.current?.identity;
     if (b) {
       if (incertain) { etat = 'alerte'; etatTexte = 'Résultat incertain'; }
+      else if (p2) etat = 'p2';
       else if (st === 'RUNNING') etat = ui.pauseLot === b.id ? 'dem' : 'cours';
-      else if (st === 'PAUSED') etat = 'pause';
+      else if (st === 'PAUSED' && b.pauseReason !== 'low-confidence') etat = 'pause';
       else if (st === 'COMPLETED' || st === 'FINISHED_WITH_UNCONFIRMED_ACTIONS') etat = 'fini';
       else if (st === 'STOPPED') etat = b.stoppedAtEnd ? 'fini' : 'arrete';
       else if (st === 'ERROR') { etat = 'alerte'; etatTexte = 'Erreur du lot'; }
       else { etat = 'alerte'; etatTexte = st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ESV ne répond plus' : st === 'MANUAL_TAKEOVER' ? 'Repris à la main' : 'À toi'; }
     }
+    /* La relecture qui suit le lot écrit dans ESV (corriger) : tant qu'elle travaille, le lot n'est pas « terminé » ; le bouton « Arrêter la relecture » du panneau d'avant est visible. */
+    if (etat === 'fini' && visible('relecture-arreter')) etat = 'rel';
     /* Phrase de l'incident, d'après l'état (vérifié dans le code : src/engine.js `apply`, `closeUncertain` ; panel.js, « debloquable ») :
      * une opération interrompue bloque toute écriture jusqu'à son archivage ; sans opération en cours, « Reprendre » suffit. */
     const cutI = cutDe(s?.intent?.identity) ?? cutDe(b?.activeIdentity);
@@ -111,15 +100,14 @@
     }).filter(d => d.cut !== null).reverse();
     const plages = [...($('verts-plages')?.querySelectorAll?.('li') || [])].map(li => ({ libelle: String(li.querySelector('b')?.textContent || '').trim(), detail: String(li.querySelector('span')?.textContent || '').trim() }));
     const vertsNombre = plages.reduce((n, p) => n + (Number((p.detail.match(/·\s*(\d+)/) || [])[1]) || 0), 0);
-    const parcours = [...rows].sort((x, y) => x.ordre - y.ordre).map(r => r.statut).filter(x => x !== 'cours');
     const dernierP = (b?.processed || []).at?.(-1);
     return {
       etat, etatTexte, horsLigne, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
-      cibles, poses, differes, sautes, main, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
-      cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe, parcours,
+      cibles, poses, differes, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
+      cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
       verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
-      lotOuvert: !!b && (OUVERT.includes(st) || incertain),
+      lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2 || etat === 'rel'), passe2: p2,
       cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
       alerte, esv: s?.connection?.status === 'unavailable' || st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ko' : s?.current?.identity ? 'ok' : 'non',
@@ -128,45 +116,38 @@
     };
   }
   function instantane(s) {
-    const A = root.ArianePanel, mode = D.body?.dataset?.window || 'home', id = s?.current?.identity;
-    const compteurs = [];
-    if (visible('lot-compteurs')) for (const t of ($('lot-compteurs').querySelectorAll?.('.tuile') || []))
-      compteurs.push({ label: String(t.querySelector('.lbl')?.textContent || ''), valeur: String(t.querySelector('b')?.textContent || ''), sous: String(t.querySelector('small')?.textContent || '') });
-    const fill = $('lot-progres-fill')?.style?.width, pct = visible('lot-progres') && fill ? parseFloat(fill) : null;
-    const lot = lignesLot(s), echo = lignesEcho(s), n = $('tabs');
+    const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';
     const rg = {
       relecture: coche([['coupee', 'relecture-coupee'], ['ombre', 'relecture-ombre'], ['corriger', 'relecture-corriger']]),
       clic: coche([['tel-quel', 'clic-tel-quel'], ['gauche-recentre', 'clic-gauche-recentre'], ['tout-recentre', 'clic-tout-recentre']]),
-      grappe: !!$('grappe-differes')?.checked, raison: !!$('raison-actif')?.checked,
+      grappe: !!$('grappe-differes')?.checked, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, raison: !!$('raison-actif')?.checked,
       touches: coche([['chiffres', 'raison-touches-chiffres'], ['alt-chiffres', 'raison-touches-alt-chiffres'], ['pave', 'raison-touches-pave']]),
       bandeau: $('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true',
     };
     return {
-      variante, mode, contexte: txt('context'), partie: id?.part ?? null, cutEsv: id?.cut ?? null,
+      variante,
       notice: { texte: txt('notice'), erreur: !!$('notice')?.classList?.contains('error') },
       avisContrat: visible('avis-contrat') ? txt('avis-contrat') : '',
       connexionOuverte: !!$('connection')?.open,
-      boutons: boutons(mode), boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
-      lot: { etat: txt('lot-etat'), ton: tonClasse('lot-etat'), cut: txt('lot-cut') || '—', pct, traites: txt('lot-traites') === '—' ? '' : txt('lot-traites'), traitesUnite: txt('lot-traites-u'), compteurs, finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
-      relPause: (() => { try { const R2 = root.ArianeRelecturePause; return R2 ? R2.vue(R2.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
+      mode, boutons: boutons(mode), boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
+      lot: { etat: txt('lot-etat'), finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
+      relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
-      echo: { etat: visible('native-etat') ? txt('native-etat') : '', ton: tonClasse('native-etat'), visites: txt('native-count') || '0', corriges: echo.corriges },
-      rows: lot.rows, aPoser: lot.aPoser, echoRows: echo.echoRows,
+      echo: { visites: txt('native-count') || '0', corriges: echo.corriges },
+      echoRows: echo.echoRows,
       reglages: rg, exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
-      gcv2: gcv2Base ? { total: gcv2Base.total, date: gcv2Base.date, session: echo.corriges || 0 } : null,
-      ar: estAr(variante) || variante === 'raycast' ? calculAr(s, lot.rows) : null,
+      gcv2: gcv2Base,
+      ar: calculAr(s, statuts),
     };
   }
 
   /* ---------------------------------------------------------------- dessin */
-  const zones = '.liste,.l,.reg,.toile,.insp,.det,.vide,.defile';
+  const zones = '.ecr,.reg,.defile,.l2';
   function maj(force) {
     if (!hote || variante === 'ancienne') return;
     const s = root.ArianePanel.state(); if (!s) return;
-    const snap = instantane(s);
-    nbRows = snap.mode === 'native' ? snap.echoRows.length : snap.rows.length + (snap.aPoser || 0);
-    const html = R.rendre(variante, snap, ui, ecran);
+    const html = R.rendre(instantane(s), ecran, ui);
     if (!force && html === ui.last) return;
     const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
     ui.last = html; hote.innerHTML = html;
@@ -182,6 +163,12 @@
     if (nom === 'relecture') cliquer('relecture-' + v);
     else if (nom === 'clic') cliquer('clic-' + v);
     else if (nom === 'grappe') { if ((v === 'oui') !== !!$('grappe-differes')?.checked) cliquer('grappe-differes'); }
+    else if (nom === 'passe2') {
+      /* État inconnu (case indéterminée) : la case prend l'inverse du choix, le clic la met au choix. */
+      const c = $('passe-differes'); if (!v || !c) return;
+      if (c.indeterminate) { c.indeterminate = false; c.checked = v !== 'oui'; }
+      if ((v === 'oui') !== !!c.checked) cliquer('passe-differes');
+    }
     else if (nom === 'raison') {
       if (v === 'non') { if ($('raison-actif')?.checked) cliquer('raison-actif'); }
       else { if (!$('raison-actif')?.checked) cliquer('raison-actif'); cliquer('raison-touches-' + v); }
@@ -190,20 +177,15 @@
     setTimeout(() => maj(true), 250);
   }
   function agir(act, depuis) {
-    if (!act) return;
-    const [t, v] = [act.split(':')[0], act.slice(act.indexOf(':') + 1)];
+    const [type, v] = [act.split(':')[0], act.slice(act.indexOf(':') + 1)];
     if (act === 'pause') { const b = root.ArianePanel.state()?.batch; if (b?.state === 'RUNNING' && $('pause') && !$('pause').disabled) { ui.pauseLot = b.id; cliquer('pause'); } }
-    else if (t === 'aller') { aller(v, depuis); return; }
-    else if (t === 'legacy') cliquer(v);
-    else if (t === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
-    else if (t === 'mode') { cliquer(v === 'native' ? 'tab-native' : 'tab-automatic'); ecran = 'seance'; ui.sel = null; }
-    else if (t === 'ecran') { ecran = v; ui.sel = null; ui.q = ''; ui.palette = false; }
-    else if (t === 'variante') void setVariante(v);
-    else if (t === 'interface') { void setVariante('ariane2').then(() => { ecran = v; maj(true); }); return; }
-    else if (act === 'palette') { ui.palette = !ui.palette; ui.q = ''; ui.pi = 0; }
-    else if (act === 'palette:fermer') ui.palette = false;
+    else if (type === 'aller') { aller(v, depuis); return; }
+    else if (type === 'legacy') cliquer(v);
+    else if (type === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
+    else if (type === 'mode') cliquer(v === 'native' ? 'tab-native' : 'tab-automatic');
+    else if (type === 'interface') { void setVariante('ariane2').then(() => { ecran = v; maj(true); }); return; }
+    else if (type === 'variante') void setVariante(v);
     maj(true);
-    if (ui.palette) { const q = $('ui5-q'); if (q) { ui.focusQ = true; q.focus(); } }
   }
 
   /* ---------------------------------------------------------------- présentation « Ariane » : navigation animée
@@ -214,20 +196,20 @@
   function voler(src, dst, ms) {
     const r0 = src.getBoundingClientRect(), r1 = dst.getBoundingClientRect(), c = src.cloneNode(true);
     Object.assign(c.style, { position: 'fixed', left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px', height: r0.height + 'px', margin: 0, zIndex: 50, pointerEvents: 'none', transformOrigin: '0 0', whiteSpace: 'nowrap', fontSize: getComputedStyle(src).fontSize, fontWeight: getComputedStyle(src).fontWeight, color: '#fff' });
-    c.classList.add('ar-vole'); D.body.appendChild(c); src.style.opacity = '0'; dst.style.opacity = '0';
+    D.body.appendChild(c); src.style.opacity = '0'; dst.style.opacity = '0';
     const k = src.classList.contains('picto') ? r1.width / r0.width : parseFloat(getComputedStyle(dst).fontSize) / parseFloat(getComputedStyle(src).fontSize);
     c.animate([{ transform: 'none' }, { transform: `translate(${r1.left - r0.left}px,${r1.top - r0.top}px) scale(${k})` }], { duration: ms, easing: 'cubic-bezier(.22,.8,.18,1)', fill: 'forwards' });
     setTimeout(() => { dst.style.opacity = ''; c.remove(); }, ms + 20);
   }
   function aller(v, depuis) {
-    const avant = ecran, cible = v === 'accueil' ? 'accueil' : v;
+    const avant = ecran, cible = v;
     if (v === 'orbite' && D.body?.dataset?.window !== 'automatic') cliquer('tab-automatic');
     if (v === 'echo' && D.body?.dataset?.window !== 'native') cliquer('tab-native');
     const carte = depuis?.closest?.('.vig') || (cible === 'accueil' ? null : hote.querySelector(`.vig[data-k="${cible}"]`));
     const sP = cible === 'accueil' ? hote.querySelector('.ar-nom .picto, .tete .picto') : carte?.querySelector('.picto');
     const sT = cible === 'accueil' ? hote.querySelector('.ar-nom b, .tete h2') : carte?.querySelector('b');
     const ancien = hote.querySelector('.ecr')?.cloneNode(true);
-    ecran = cible; ui.sel = null; maj(true);
+    ecran = cible; maj(true);
     if (reduit() || avant === cible) return;
     const ecr = hote.querySelector('.ecr'); if (!ecr) return;
     if (ancien) { ancien.querySelector('.haut')?.style.setProperty('visibility', 'hidden'); Object.assign(ancien.style, { position: 'absolute', inset: '0', pointerEvents: 'none', zIndex: 40 }); ancien.classList.add('ar-ancien'); hote.querySelector('.app')?.appendChild(ancien); ancien.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out', fill: 'forwards' }).onfinish = () => ancien.remove(); }
@@ -236,7 +218,6 @@
     let dP, dT;
     if (cible === 'accueil') { const c = hote.querySelector(`.vig[data-k="${avant}"]`); dP = c?.querySelector('.picto'); dT = c?.querySelector('b'); }
     else { dP = hote.querySelector('.ar-nom .picto, .tete .picto'); dT = hote.querySelector('.ar-nom b, .tete h2'); }
-    if (sP && dP && sP.isConnected === false) { /* l'ancien écran a été remplacé : on vole depuis son double */ }
     const fP = ancien && cible === 'accueil' ? ancien.querySelector('.ar-nom .picto, .tete .picto') : null, fT = ancien && cible === 'accueil' ? ancien.querySelector('.ar-nom b, .tete h2') : null;
     const oP = cible === 'accueil' ? fP : sP, oT = cible === 'accueil' ? fT : sT;
     if (oP && dP) voler(oP, dP, 480);
@@ -245,48 +226,32 @@
 
   /* ---------------------------------------------------------------- événements */
   function brancher() {
-    hote.addEventListener('click', e => {
-      const ligne = e.target.closest?.('[data-row]');
-      if (ligne) { ui.sel = Number(ligne.dataset.row) || 0; maj(true); return; }
-      const a = e.target.closest?.('[data-act]'); if (!a) return;
-      if (a.dataset.act === 'palette:fermer' && e.target.closest('[data-stop]')) return;
-      if (variante === 'raycast') { ui.q = ''; ui.pi = 0; }
-      const fermer = a.dataset.fermer === '1';
-      if (fermer) ui.palette = false;
-      agir(a.dataset.act, a);
-    });
+    hote.addEventListener('click', e => { const a = e.target.closest?.('[data-act]'); if (!a) return; if (variante === 'palette') { ui.q = ''; ui.pi = 0; } agir(a.dataset.act, a); });
     hote.addEventListener('change', e => { const s = e.target.closest?.('[data-sel]'); if (s) choisir(s.dataset.sel, s.value); });
+    /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */
     hote.addEventListener('input', e => {
       if (e.target.id === 'ui5-q') { ui.q = e.target.value; ui.pi = 0; maj(true); return; }
-      /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */
       const bo = e.target.dataset?.borne; if (bo && $(bo)) { $(bo).value = e.target.value; $(bo).dispatchEvent(new Event('input', { bubbles: true })); $(bo).dispatchEvent(new Event('change', { bubbles: true })); }
     });
     hote.addEventListener('focusin', e => { if (e.target.id === 'ui5-q') ui.focusQ = true; });
     hote.addEventListener('focusout', e => { if (e.target.id === 'ui5-q') ui.focusQ = false; });
     D.addEventListener('keydown', e => {
-      if (variante === 'ancienne' || !hote || hote.hidden || e.altKey) return;
-      if (estAr(variante)) {
-        if (variante === 'ariane2' && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); void setVariante('raycast'); return; }
-        const v = e.target?.closest?.('.vig');
-        if (v && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { const l = [...hote.querySelectorAll('.vig')], i = l.indexOf(v); l[(i + (e.key === 'ArrowRight' ? 1 : l.length - 1)) % l.length].focus(); e.preventDefault(); }
-        else if (e.key === 'Escape' && ecran !== 'accueil' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '')) aller('accueil');
+      if (variante === 'ancienne' || hote.hidden || e.altKey) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); void setVariante(variante === 'palette' ? 'ariane2' : 'palette'); return; }
+      if (variante === 'palette') {
+        if (e.ctrlKey || e.metaKey) return;
+        const cmds = R.paletteListe(instantane(root.ArianePanel.state() || {}), ui.q), dansChamp = e.target?.id === 'ui5-q';
+        if (e.key === 'Escape') { if (ui.q) { ui.q = ''; ui.pi = 0; maj(true); } }
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { ui.pi = Math.max(0, Math.min(cmds.length - 1, ui.pi + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); }
+        else if (e.key === 'Enter' && dansChamp) { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; if (c && !c.off) { ui.q = ''; ui.pi = 0; agir(c.act); } e.preventDefault(); }
+        else if (!dansChamp && e.key.length === 1 && /[\p{L}]/u.test(e.key)) $('ui5-q')?.focus();
         return;
       }
-      const dansChamp = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '');
-      const snap = instantane(root.ArianePanel.state() || {}), m = R.modele(snap);
-      const cmds = variante === 'raycast' ? R.paletteListe(snap, ui.q) : R.filtrer(R.commandes(snap, m), ui.q), recherche = variante === 'raycast' || ui.palette;
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); if (variante === 'raycast') void setVariante('ariane2'); else agir('palette'); return; }
-      if (e.ctrlKey || e.metaKey) return;
-      if (e.key === 'Escape') { if (ui.palette) agir('palette:fermer'); else if (ui.q) { ui.q = ''; ui.pi = 0; maj(true); } else if (ecran !== 'seance' && variante !== 'raycast') agir('ecran:seance'); return; }
-      if (recherche && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { ui.pi = Math.max(0, Math.min(cmds.length - 1, (ui.pi || 0) + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); return; }
-      if (recherche && e.key === 'Enter' && (dansChamp || ui.palette) && ecran === 'seance') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi || 0))]; if (c && !c.off) { ui.palette = false; ui.q = ''; ui.pi = 0; agir(c.act); } e.preventDefault(); return; }
-      if (dansChamp) return;
-      if (variante === 'raycast' && e.key.length === 1 && /[\p{L}]/u.test(e.key)) { const q = $('ui5-q'); if (q) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } } return; }
-      const pas = variante === 'figma' ? { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 40, ArrowUp: -40 }[e.key] : { j: 1, k: -1, ArrowDown: 1, ArrowUp: -1 }[e.key];
-      if (pas !== undefined && nbRows) { ui.sel = Math.max(0, Math.min(nbRows - 1, (ui.sel ?? 0) + pas)); maj(true); e.preventDefault(); return; }
-      if (e.key === 'Enter' && !/^(BUTTON|A)$/.test(e.target?.tagName || '') && m.primaire && m.primaire.actif && ecran === 'seance') { cliquer(m.primaire.id); e.preventDefault(); }
+      const v = e.target?.closest?.('.vig');
+      if (v && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { const l = [...hote.querySelectorAll('.vig')], i = l.indexOf(v); l[(i + (e.key === 'ArrowRight' ? 1 : l.length - 1)) % l.length].focus(); e.preventDefault(); }
+      else if (e.key === 'Escape' && ecran !== 'accueil' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '')) aller('accueil');
     });
-    const essai = $('ui5-essai'); if (essai) essai.onclick = () => void setVariante(defaut);
+    const essai = $('ui5-essai'); if (essai) essai.onclick = () => void setVariante('ariane2');
   }
 
   /* ---------------------------------------------------------------- variante et fenêtre */
@@ -295,35 +260,34 @@
     if (!t || !W?.getCurrent) return;
     try { const w = await W.getCurrent(); if (w?.type === 'popup' && (Math.abs((w.width || 0) - t[0]) > 40 || Math.abs((w.height || 0) - t[1]) > 40)) await W.update(w.id, { width: t[0], height: t[1] }); } catch { /* fenêtre non redimensionnable : sans effet */ }
   }
-  function appliquer(v) {
+  /* `redimensionner` : à l'ouverture, seule une présentation habillée demande sa taille (le panneau d'avant garde celle que l'opérateur a donnée à la fenêtre) ; un changement de présentation la demande toujours. */
+  function appliquer(v, redimensionner) {
     variante = v;
     D.body.classList.toggle('ui5', v !== 'ancienne');
-    if (v === 'raycast') ui.focusQ = true;
-    if (v !== 'ancienne') hote.className = v === 'ariane2' ? 'u-ariane u-ariane2' : 'u-' + v;
+    hote.className = v === 'palette' ? 'u-palette' : 'u-ariane';
     hote.hidden = v === 'ancienne';
-    if (v !== 'ancienne') maj(true);
-    void taille();
+    ui.focusQ = v === 'palette';
+    maj(true);
+    if (redimensionner || v !== 'ancienne') void taille();
   }
   async function setVariante(v) {
-    if (v !== 'ancienne' && !R.VARIANTES.includes(v)) return;
+    if (!VARIANTES.includes(v)) return;
     try { await root.chrome?.storage?.local?.set?.({ [CLE]: v }); } catch { /* le choix vaut pour cette fenêtre */ }
-    ecran = estAr(v) ? 'accueil' : 'seance'; ui.sel = null; ui.q = ''; ui.palette = false;
-    appliquer(v);
+    ecran = 'accueil'; ui.q = ''; ui.pi = 0;
+    appliquer(v, true);
   }
 
   async function init() {
     hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
-    try { const r = await root.chrome?.storage?.local?.get?.(CLE); const v = r?.[CLE]; if (v === 'ancienne' || R.VARIANTES.includes(v)) variante = v; } catch { /* défaut de la version */ }
-    ecran = estAr(variante) ? 'accueil' : 'seance';
-    try { const f = await fetch(root.chrome.runtime.getURL('datasets/compteur-gcv2.json')); const j = await f.json();
-      /* Deux formats : { total, date } (test 10-ui) ou celui du compteur (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : totaux.tous[compteurDeMic]. */
-      const total = Number.isFinite(j?.total) ? j.total : j?.totaux?.tous?.[j?.regle?.compteurDeMic || 'corriges'];
-      const d = j?.creeLe ? new Date(j.creeLe) : null, date = j?.date || (d && !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}` : '');
-      if (Number.isFinite(total)) gcv2Base = { total, date: String(date) }; } catch { /* sans compteur */ }
+    try { const v = (await root.chrome?.storage?.local?.get?.(CLE))?.[CLE]; if (VARIANTES.includes(v)) variante = v; } catch { /* défaut de la version */ }
+    /* Compteur des exemples d'apprentissage (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : les cuts corrigés, tous projets. */
+    try { const j = await (await fetch(root.chrome.runtime.getURL('datasets/compteur-gcv2.json'))).json();
+      const total = j?.totaux?.tous?.corriges, d = j?.creeLe ? new Date(j.creeLe) : null;
+      if (Number.isFinite(total) && d && !isNaN(d)) gcv2Base = { total, date: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}` }; } catch { /* sans compteur */ }
     brancher();
     root.ArianePanel.apres(() => maj(false));
     appliquer(variante);
   }
   void init();
-  root.ArianeUi5 = { instantane, agir, setVariante, ui, maj };
+  root.ArianeUi5 = { instantane, agir, setVariante, maj };
 })(typeof globalThis !== 'undefined' ? globalThis : this);

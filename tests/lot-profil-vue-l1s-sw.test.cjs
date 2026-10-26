@@ -5,9 +5,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {lot,neutre,decisions,metier,SCOPE,EsvVue,production,memoire,base,K,S,GOLDEN,h,versionGolden,ev,scopeDe,attendre,EsvTrou,lotDiffere,d112}=require('./helpers/lot-profil.cjs');
 
-for(const profil of ['L1-s'])test(`profil « ${profil} » : cible de la chaîne hors de la vue → la vue est amenée (pré-vol), puis la pose est faite avec le plan`, async()=>{
- const x=await lot({profil:profil==='L1-s'?null:profil});
- assert.equal(scopeDe(x.b).lotProfil,profil,'profil figé dans le scope (L1-s : le défaut)');
+for(const profil of ['L1-s','L1-se'])test(`profil « ${profil} » : cible de la chaîne hors de la vue → la vue est amenée (pré-vol), puis la pose est faite avec le plan`, async()=>{
+ const x=await lot({profil:profil==='L1-se'?null:profil});
+ assert.equal(scopeDe(x.b).lotProfil,profil,'profil figé dans le scope (L1-se : le défaut, test 14)');
  /* 111 : posé et validé comme avant ; 112 (cible de la voie hors de la vue gauche) : pré-vol des deux rails, puis pose avec le plan. */
  assert.deepEqual(x.adapter.calls,['capture','apply','validate','next','capture','amenerDansLaVue','amenerDansLaVue','apply']);
  assert.deepEqual(x.adapter.applyArgs,[0,1],'111 : apply sans option ; 112 : apply avec le plan de vue');
@@ -17,6 +17,6 @@ for(const profil of ['L1-s'])test(`profil « ${profil} » : cible de la chaîne 
  assert.deepEqual(x.adapter.amenerArgs.map(a=>[a.cote,a.options.essai]),[['left',true],['right',true]],'pré-vol : essai, sans pose');
  assert.equal(ev(x.b,'deplacer-vue').filter(e=>e.phase==='decision'&&e.refus===null).length,1);
  /* D-221 : sous L1-s, cette pose (un différé de la chaîne de la 4.9.5.9) n'est pas un appui. */
- if(profil==='L1-s'){assert.equal(d112.command.l1s,'vue');assert.equal(d112.anchorHeld,false);assert.equal(x.b.get('engine').s.batch.lotCommands[112].l1,true);}
+ if(profil==='L1-s'||profil==='L1-se'){assert.equal(d112.command.l1s,'vue');assert.equal(d112.anchorHeld,false);assert.equal(x.b.get('engine').s.batch.lotCommands[112].l1,true);}
  else assert.equal(d112.command.l1s,undefined);
 });

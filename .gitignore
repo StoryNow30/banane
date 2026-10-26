@@ -16,4 +16,3 @@ node_modules/
 *.pyc
 __pycache__/
 tools/navigateur/reducteur-exports.html
-.claude/settings.local.json

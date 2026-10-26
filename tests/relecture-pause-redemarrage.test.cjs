@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — REDÉMARRAGE DU SERVICE WORKER pendant une relecture en pause (le panneau peut se rouvrir, le service worker se rendormir) :
+/* Test 17 (D-232 à D-234) — REDÉMARRAGE DU SERVICE WORKER pendant une relecture en pause (le panneau peut se rouvrir, le service worker se rendormir) :
  *  - avec un point de reprise valable (réglage allumé, même lot, moins de 24 h), la passe revient EN PAUSE, jamais relancée seule ; « Arrêter » l'efface ;
  *  - point trop vieux (plus de 24 h) ou d'un autre lot : jeté, la relecture n'est pas ressuscitée. */
 const {test}=require('node:test'),assert=require('node:assert/strict');

@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — PAUSE ET CORRECTIONS, mode « corriger », service worker réel :
+/* Test 17 (D-232 à D-234) — PAUSE ET CORRECTIONS, mode « corriger », service worker réel :
  *  1. une pause demandée PENDANT la pose d'une correction n'interrompt rien : la correction va jusqu'à sa validation (jamais entre la pose et la validation), puis la passe s'arrête ;
  *     à la reprise, le cut corrigé n'est pas corrigé une seconde fois ;
  *  2. un F5 PENDANT la validation d'une correction reste une erreur (jamais une pause) : la correction interrompue est notée et bloque tout, la reprise n'existe pas. */

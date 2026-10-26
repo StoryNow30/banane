@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — UNE REPRISE DONNE LES MÊMES RÉSULTATS QU'UNE PASSE SANS PAUSE : même action, même verdict, même pose calculée, mêmes écritures, même chaîne d'appuis
+/* Test 17 (D-232 à D-234) — UNE REPRISE DONNE LES MÊMES RÉSULTATS QU'UNE PASSE SANS PAUSE : même action, même verdict, même pose calculée, mêmes écritures, même chaîne d'appuis
  * (le nombre d'appuis que chaque décision reçoit). La référence est une passe sans pause du même montage (tests/fixtures/relecture-pause-reference.json), relevée une fois.
  * La pause tombe entre le cut 110 et le cut 113 ; la chaîne (108, 109, 110) doit traverser la pause. */
 const {test}=require('node:test'),assert=require('node:assert/strict');

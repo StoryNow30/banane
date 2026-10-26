@@ -56,6 +56,12 @@ test('rejeu conjoint : lignes, profils, sort réel, déterminisme et causalité'
   const S = B.agreger(B.lireRejeux([a.map(x => JSON.stringify(x)).join('\n')]));
   assert.equal(S.effets['L1-s'].differentsDeLaBase, 0); assert.ok(S.effets['L1-s'].posesDeLaBase > 0);
   assert.equal(L.find(l => l.cut === 4).profils['L1-s'].source, 'gcv2', 'la GCV2 sur le différé de la chaîne');
+  /* 4.9.5.14 : L1-se sans liste d'ESV = L1-s, sans pose approchée (même chaîne, mêmes poses validées, un approché redevient un différé). */
+  for (const l of L) {
+    const s = l.profils['L1-s'], e = l.profils['L1-se'];
+    if (s.etat === 'pose-non-validee') { assert.equal(e.etat, 'differe', `${l.cut}`); continue; }
+    assert.equal(e.etat, s.etat, `${l.cut}`); if (s.etat === 'pose') assert.deepEqual(e.decal, s.decal, `${l.cut}`);
+  }
 });
 
 test('agrégation : taux, approchés, gain contre Mic, rappel', () => {
@@ -84,4 +90,11 @@ test('prédiction et comparaison : résumé sans vérité, jugés, départ diff�
   const C = B.comparer(e, L, mic);
   assert.equal(C.juges, 1); assert.equal(C.nonJuges.departDifferent, 1);
   assert.equal(C.parProfil.L1.n, 1); assert.equal(C.detail[0].cut, 4);
+});
+
+test('ligne de commande : la partie 0 d\'un projet est acceptée (3:0), pas le projet 0 ni une partie négative', () => {
+  const a = B.args(['rejouer', '--partie', '3:0']);
+  assert.equal(a.projet, 3); assert.equal(a.partie, 0); assert.ok(Number.isInteger(a.partie));
+  assert.equal(B.args(['rejouer', '--partie', '2:19']).partie, 19);
+  for (const mauvais of ['0:3', '3:-1', '3:00', '3:', '3']) assert.throws(() => B.args(['rejouer', '--partie', mauvais]), /--partie/, mauvais);
 });

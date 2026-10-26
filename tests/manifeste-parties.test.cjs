@@ -61,7 +61,8 @@ test('lecture : un manifeste mal formé est refusé', () => {
 test('désignation « projet:partie » : liste, doublons et formes refusées', () => {
   assert.deepEqual(M.lireDesignations('1:17,1:24'), [{ projet: 1, partie: 17 }, { projet: 1, partie: 24 }]);
   assert.deepEqual(M.lireDesignations('2:1'), [{ projet: 2, partie: 1 }]);
-  for (const mauvais of ['17', '1:', ':17', '1:x', '0:3', '1:0', '1:17,', '']) assert.throws(() => M.lireDesignations(mauvais), /projet:partie|--partie/, mauvais);
+  assert.deepEqual(M.lireDesignations('3:0'), [{ projet: 3, partie: 0 }], 'la partie 0 du projet 3 existe');
+  for (const mauvais of ['17', '1:', ':17', '1:x', '0:3', '1:-1', '1:00', '1:17,', '']) assert.throws(() => M.lireDesignations(mauvais), /projet:partie|--partie/, mauvais);
 });
 
 test('contrôle : une partie réservée est refusée, sauf avec l\'option explicite, qui la signale', () => {
@@ -108,4 +109,26 @@ test('apprentissage-g0 : une partie réservée est refusée, l\'option explicite
   assert.equal(libre.status, 2); assert.match(libre.stderr, /ENOENT/); assert.ok(!/est réservée/.test(libre.stderr));
   const aide = lancer('apprentissage-g0.cjs', ['--aide']);
   assert.match(aide.stdout, /--partie/); assert.match(aide.stdout, /--juger-partie-reservee/);
+});
+
+test('partie 0 du projet 3 (D-224) : examen à réglages figés, puis apprentissage', () => {
+  const m = M.lire();
+  assert.equal(M.statut(m, 3, 0), 'apprentissage');
+  assert.equal(M.statut(m, 3, 1), 'reservee', 'les autres parties du projet 3 restent réservées');
+  assert.equal(M.statut(m, 3, 17), 'reservee');
+  assert.equal(M.statut(m, 2, 0), 'reservee');
+  const bloc = m.apprentissage.find(b => b.projet === 3);
+  assert.deepEqual(bloc.parties, [0]);
+  assert.equal(bloc.decision, 'D-224');
+  assert.equal(bloc.date, '2026-10-21');
+  assert.ok(!M.estTemoin(m, 3, 0));
+  assert.deepEqual(M.controler(m, M.lireDesignations('3:0'), { outil: 'essai' }), { reservees: [], avis: '' });
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'manif-'));
+  try {
+    const f = path.join(tmp, 'm.json');
+    fs.writeFileSync(f, JSON.stringify({ ...m, apprentissage: [{ projet: 3, parties: [0, 0] }] }));
+    assert.throws(() => M.lire(f), /deux fois/);
+    fs.writeFileSync(f, JSON.stringify({ ...m, apprentissage: [{ projet: 3, parties: [-1] }] }));
+    assert.throws(() => M.lire(f), /partie/);
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });

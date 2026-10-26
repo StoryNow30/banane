@@ -135,6 +135,8 @@
   });
 
   /* --- Décision sur le lot dans le Pilote (4.7.8 en observation, 4.7.10 commande selon le lot) --- */
+  /* Test 17 : valeurs livrées de la deuxième passe des différés (voir `lot.passeDifferes`). */
+  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: true, ecritureMax: null, passes: 2, leviers: Object.freeze({ sansVoieRien: true }) });
   const lot = Object.freeze({
     observe: true,
     /* Ancres gardées en mémoire du lot : largement plus que les 3 numéros de
@@ -176,8 +178,24 @@
      * cut que la chaîne ne pose pas, la GCV2 (src/gcv2-l1.js, paramètres figés) pose et valide au-dessus de τ, pose SANS valider sous τ
      * (sauf à plus de 150 mm de la pose de départ), la vue est déplacée pour une cible hors de la vue, la garde de paire est éteinte et
      * les appuis de reprise vont à 10 cuts. 'actuel' : le lot de la 4.9.5.9, à l'identique (le scope ne porte alors aucun profil). */
-    /* D-221 : défaut « L1-s » (la chaîne de la 4.9.5.9 intacte ; L1 seulement sur ses différés, jamais appui ni voisin). */
-    profil: 'L1-s',
+    /* D-221 : « L1-s » (la chaîne de la 4.9.5.9 intacte ; L1 seulement sur ses différés, jamais appui ni voisin).
+     * 4.9.5.14 (test 14, fiches/L1_APPRENTISSAGE.md) : défaut « L1-se », L1-s avec la décision L1-e des différés (correction d'écartement apprise
+     * sur les Échos, src/gcv2-l1e.js ; plus de pose sans validation). */
+    profil: 'L1-se',
+    /* Cap 5, piste 1 (fiches/L1_CAP5.md) — CAPTURE VIDE DANS UN LOT, COUPÉ par défaut : une capture de moins de `minPoints` points est refaite
+     * après `attenteMs` (le nuage du cut finit de charger), jusqu'à `essais` fois ; la plus fournie est gardée, sinon le cut suit son sort
+     * d'avant. Événement `recapture-vide` (points avant et après). Non mesurable au banc : le corpus ne garde que la capture faite. */
+    recaptureVide: Object.freeze({ actif: false, minPoints: 100, attenteMs: 1500, essais: 2 }),
+    /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
+     * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
+     * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE dès l'installation, en écriture, sans plafond de poses. Lecture des clés (src/settings.js `passeDifferesDefaut` sert
+     * de défaut) : une clé ABSENTE vaut la valeur livrée ; `false` COUPE ; toute autre valeur que `true`/`false` (ou un nombre illisible) COUPE.
+     *   `ombre` : la passe calcule et journalise (`passe-differes-ombre`) ce qu'elle poserait. `ombre:false` : plus de passe du tout, la test 16 à l'identique.
+     *   `ecriture` (avec `ombre`) : elle pose réellement, un cut après l'autre, validé sur place (Ctrl+Entrée). `ecriture:false` : ombre seule, rien n'est écrit.
+     *   `ecritureMax` : cuts écrits au plus par lot ; `null` : sans plafond (livré) ; un entier ≥ 1 ; toute autre valeur coupe l'écriture.
+     * Garde de livraison : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
+     * validation prouvée, arrêt au premier refus). */
+    passeDifferes: passeDifferesDefaut,
   });
 
   const exportSettings = Object.freeze({
@@ -483,6 +501,7 @@
       { groupe: 'Continuité', nom: 'Hauteur apprise en ombre (Orbite)', valeur: hauteurApprise.actif ? (hauteurApprise.appliquer ? 'ACTIVE : pose la hauteur corrigée' : 'consignée seulement (hauteur corrigée selon l’épaisseur du dessus, ' + String(hauteurApprise.plafondMm).replace('.', ',') + ' mm au plus)') : 'coupée', pourquoi: 'Note, pour chaque cut posé par le lot, la hauteur que l’opérateur aurait probablement donnée au rail (apprise sur ses corrections), à côté de la pose réelle. Jamais appliquée tant que l’opérateur ne l’active pas : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Faux vert en ombre (Orbite)', valeur: fauxVertOmbre.actif ? (fauxVertOmbre.differer ? 'actif : diffère les cuts à hauteur ambiguë' : 'consigné seulement (hauteur ambiguë : calage ≥ ' + fauxVertOmbre.dzMinMm + ' mm et dessus épais ≥ ' + fauxVertOmbre.epaisseurMinMm + ' mm)') : 'coupé', pourquoi: 'Note, pour chaque cut posé par le lot, s’il ressemble à un faux vert (hauteur du rail ambiguë). Jamais appliqué : la pose et la validation sont les mêmes avec ou sans.' },
       { groupe: 'Continuité', nom: 'Verts à contrôler (fin de lot)', valeur: vertsAControler.actif ? 'actif (liste à consulter, aucune action dans ESV)' : 'coupé', pourquoi: 'Après un lot, liste les verts qu’Ariane n’a pas visités et qui méritent ta relecture (écartement, hauteur d’un rail, grappe de rouges, voisin d’un différé), par plages, avec le temps estimé. Rien n’est cliqué ni changé dans ESV.' },
+      { groupe: 'Continuité', nom: 'Deuxième passe des différés (fin de lot)', valeur: lot.passeDifferes.ombre !== true ? 'coupée' : lot.passeDifferes.ecriture !== true ? 'en ombre (calculée et consignée, rien n’est écrit dans ESV)' : 'ALLUMÉE, en écriture : pose et valide sur place' + (lot.passeDifferes.ecritureMax === null ? ', sans plafond de poses' : ', ' + lot.passeDifferes.ecritureMax + ' cut au plus'), pourquoi: 'En fin de lot, redécide les cuts restés sans pose avec les poses d’avant et d’après, puis les pose et les valide sur place (cut rouge vérifié, relecture à 1 mm, validation prouvée, arrêt au premier refus). Pour la couper : case « Deuxième passe des différés en fin de lot (écrit dans ESV) » de « Règles et choix du prochain lot » (Orbite) ; elle arrête aussi une passe qui écrit, avant le cut suivant.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
@@ -504,5 +523,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler });
 });

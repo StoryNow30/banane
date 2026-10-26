@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233 ; fiches/PLAN_RELECTURE_PAUSE.md) — outils communs des essais de la PAUSE ET DE LA REPRISE de la relecture : le montage de la relecture après le lot
+/* Test 17 (D-232 à D-234) — outils communs des essais de la PAUSE ET DE LA REPRISE de la relecture : le montage de la relecture après le lot
  * (tests/helpers/relecture-lot.cjs) avec le réglage « pause et reprise » allumé (il est éteint par défaut) et le choix « si ESV est rechargé ». */
 const {memoire}=require('./perf-production.cjs');
 const H=require('./relecture-lot.cjs');

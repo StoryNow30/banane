@@ -1,7 +1,5 @@
 'use strict';
-/* 4.9.5 test 10-ui (les trois présentations du panneau) — même contrat que la test 9 : seuls changent des fichiers qui ne posent ni ne valident (l'habillage
- * `src/ui5*.js`, le panneau, ses feuilles de style) et les chaînes de version ; la pose et le lot sont identiques octet pour octet à la test 8.
- * RM-11 (test 9) — LA POSE NE CHANGE PAS ET LE LOT NE CHANGE PAS. La raison de la correction est une étiquette posée par Mic dans Écho : elle ne touche ni
+/* RM-11 (test 9) — LA POSE NE CHANGE PAS ET LE LOT NE CHANGE PAS. La raison de la correction est une étiquette posée par Mic dans Écho : elle ne touche ni
  * à l'endroit où Orbite pose les rails, ni à la façon dont un lot se déroule.
  *  1. Tout ce que la pose et le lot lisent (`src/*.js`, réglages de la relecture, empreintes gelées de la géométrie) est identique octet pour octet à la
  *     test 8 (tests/pose-inchangee-4958.json, empreintes prises sur d58a6f1 avant la fonction). Seuls changent les fichiers de la liste ci-dessous, qui
@@ -18,22 +16,25 @@ const sha=t=>crypto.createHash('sha256').update(t).digest('hex');
 const ECHO={'src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
 const VERSION_SEULE=['src/core.js','src/bridge.js'];   // le numéro de version, rien d'autre
-const manifeste=require('../manifest.json'),VERSION_COURANTE=manifeste.version,NOM_COURANT=manifeste.version_name;
 /* 4.9.5.13 (test 13, profil du lot « L1 ») : le moteur rend son réservoir SUR DEMANDE (sortie par défaut inchangée, tests/gcv2-l1.test.cjs) ; deux
  * modules nouveaux, lus par le service worker seulement quand le lot porte le profil « L1 ». Le profil « actuel » joue le lot de la 4.9.5.9. */
 const L1={'src/gcv1-shadow.js':'le réservoir du moteur sur demande (`scientificProposeBothAvecReservoir`), la sortie par défaut est inchangée',
  'src/adapter-page.js':'4.9.5.13 : `apply` rend en plus `vueFin` (position de chaque rail dans la vue à la fin de la pose, lecture seule, après la pose ; tests/apply-vue-fin-page.test.cjs)'};
-const NOUVEAUX=['gcv2-l1.js','gcv2-parametres-l1.js','raison-correction.js'];
-/* Fichiers de l'habillage du panneau (UI 5.0) : aucun ne lit ni ne commande la pose. */
+/* 4.9.5.14 (test 14) : la décision L1-e des différés (fiches/L1_APPRENTISSAGE.md), lue par src/gcv2-l1.js sous le profil « L1-se ». */
+const NOUVEAUX=['gcv2-l1.js','gcv2-l1e.js','gcv2-parametres-l1.js','raison-correction.js'];
+/* Test 17 : fichiers de l'habillage du panneau (`src/ui5*.js`) : aucun ne lit ni ne commande la pose. */
 const HABILLAGE=['ui5-rendu.js','ui5.js','ui5-variante.js'];
-/* 4.9.6 (D-232) : module du panneau pour la pause de la relecture — il ne parle qu'au service worker (relecture-*), jamais à ESV, ni à la pose. */
+/* Test 17 et 18 : la carte « Relecture » du panneau ne propose plus « Lancer la relecture » pendant une pause (elle repartirait de zéro) et dit si la correction interrompue est
+ * celle de la deuxième passe ; module du panneau, il ne parle qu'au service worker. Ces deux changements retirés, il est celui de la test 8 (contrôlé plus bas). */
+const PANNEAU={'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
+/* Test 17 : module du panneau pour la pause de la relecture : il ne parle qu'au service worker (relecture-*), jamais à ESV ni à la pose. */
 const RELECTURE_PAUSE=['relecture-pause.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=VERSION_SEULE.includes(f)?lire(f).split(VERSION_COURANTE).join('4.9.5.8').split(NOM_COURANT).join('4.9.5 test 8'):lire(f);
+  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?lire(f).split('4.9.5.19').join('4.9.5.8').split('4.9.5 test 19 (L1-e6)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
@@ -58,10 +59,16 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
  const diff=lire('src/native-session.js');assert.ok(!/batch\.scope|startBatch|lotCommands|applyInESV/.test(diff.slice(diff.indexOf('RM-11 (fiches/RM11'),diff.indexOf('summariseGesture(record,observed){'))));
 });
-test('les réglages sont ceux de la test 8, hors la ligne echo.raison',()=>{
+test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,...reste0}=S,{raison,...echoSans}=echo,{profil,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
- assert.equal(profil,'L1-s','test 13 : profil du lot « L1-s » par défaut (D-221)');
+ const {echo,passeDifferesDefaut,...reste0}=S,{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
+ /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['passeDifferes','profil','recaptureVide']);
+ assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
+ /* Test 17 : la deuxième passe des différés, ALLUMÉE par la décision de l'opérateur (ombre et écriture, sans plafond) ; le reste est l'empreinte d'avant. */
+ assert.deepEqual([passeDifferes.ombre,passeDifferes.ecriture,passeDifferes.ecritureMax],[true,true,null],'deuxième passe des différés : écriture sans plafond');
+ assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
@@ -81,7 +88,7 @@ test('lot : avec la raison allumée au panneau, les commandes envoyées à ESV s
  const scope=scopeDe(avec.b);assert.ok(!JSON.stringify(scope).includes('raison'),'aucune raison dans le scope du lot');
  assert.equal('clicHumain' in scope,false,'le scope du lot est celui d\'avant');assert.equal('lotProfil' in scope,false,'profil « actuel » : le scope n\'en porte rien');assert.equal('regleGrappeDifferes' in scope,false);
  const etatLot=neutre(avec.b.get('engine').s.batch);assert.ok(!JSON.stringify(etatLot).includes('raison'),'aucune raison dans l\'état du lot');
- /* Le choix du lot garde sa forme : deux clés, rien de la raison. */
- assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['clicHumain','regleGrappeDifferes']);
+ /* Le choix du lot garde sa forme, rien de la raison ; test 18 : plus l'interrupteur de la deuxième passe, gardé au même endroit mais jamais figé dans le scope. */
+ assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['clicHumain','passeDifferes','regleGrappeDifferes']);assert.equal('passeDifferes' in scope,false);
  assert.equal((await avec.b.api('raison-choix-etat')).actif,true,'le choix de la raison est à part');
 });

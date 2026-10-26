@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.6 (D-232, D-233) — LE RÉGLAGE « PAUSE ET REPRISE », suite (un fichier à part : chaque fichier d'essai tient en moins de 20 s) : éteint par défaut (nouveauté non prouvée = livrée coupée). Éteint : la relecture est exactement celle d'avant
+/* Test 17 (D-232 à D-234) — LE RÉGLAGE « PAUSE ET REPRISE », suite (un fichier à part : chaque fichier d'essai tient en moins de 20 s) : éteint par défaut (nouveauté non prouvée = livrée coupée). Éteint : la relecture est exactement celle d'avant
  * (« Pause » refusée, aucun point gardé, un F5 l'arrête en erreur) ; le réglage se lit et se change par le service worker, jamais pendant une passe. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,lotPause}=require('./helpers/relecture-pause.cjs');
@@ -13,6 +13,6 @@ test('réglage éteint puis F5 : erreur comme avant ; réglage lu, changé et re
  assert.equal(p.etat,'erreur');assert.equal(H.evenements(b,'relecture-pause').length,0);assert.equal('banane51RelectureReprise' in b.local.m,false);
  /* Passe finie : le réglage se change. */
  assert.deepEqual(js(await b.api('relecture-pause-reglage',{actif:true,f5:'arret'})),{actif:true,f5:'arret'});
- assert.deepEqual(js(await b.api('relecture-pause-reglage-etat')),{actif:true,f5:'arret'});
+ assert.deepEqual(js((await b.api('relecture-etat')).repriseReglage),{actif:true,f5:'arret'});
  assert.deepEqual(js(await b.api('relecture-pause-reglage',{actif:'oui',f5:'n’importe quoi'})),{actif:false,f5:'pause'},'valeurs inconnues : éteint, pause');
 });

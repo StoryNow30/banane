@@ -5,13 +5,13 @@
  *   B. lot 100–103 où la page disparaît pendant une capture (erreur de lot), puis « Reprendre » après F5 ;
  *   C. observations de liste pendant un lot (audit serveur : lectures complète et partielle).
  * Chaque message envoyé à la page (`page-command` : action, arguments) est relevé dans l'ordre. Les identifiants aléatoires, les heures et la version de l'extension sont
- * neutralisés (ils changent à chaque exécution ; 4.9.6 test 1 : le numéro 4.9.6 aussi) ; tout le reste est comparé à l'empreinte relevée sur la base (`claude/50-base`, 97dfca7),
+ * neutralisés (ils changent à chaque exécution) ; tout le reste est comparé à l'empreinte relevée sur la base (`claude/50-base`, 97dfca7),
  * avant les corrections. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const COUPE='Could not establish connection. Receiving end does not exist.';
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-const neutre=x=>JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>').replace(/4\.9\.[5-9]\.\d+|4\.9\.[5-9] test \d+/g,'<version>'));
+const neutre=x=>JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>').replace(/4\.9\.5\.\d+|4\.9\.5 test \d+/g,'<version>'));
 const empreinte=messages=>crypto.createHash('sha256').update(JSON.stringify(neutre(messages))).digest('hex');
 /* Relevé de chaque message à la page, posé avant « Connecter ». */
 const releve=messages=>(esv,b)=>{const envoi=b.ctx.chrome.tabs.sendMessage;
