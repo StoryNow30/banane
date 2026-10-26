@@ -31,7 +31,7 @@ test('lot en cours : anneau proportionnel, allure honnête, Pause principale, Ar
  assert.match(h,/class="sg-mot">En cours</);assert.match(h,/Pose du cut <span class="sg-mono">4812</);
  assert.match(h,/class="sg-arc"[^>]*data-debut="1000" data-med="8400"/,'l’anneau sait se remettre à jour entre deux rendus');
  assert.match(h,/<b>7,1<\/b> cuts par minute/);assert.match(h,/médiane <b>8,4 s<\/b> par cut/);assert.match(h,/environ <b>12 min<\/b> restantes/,'89 restants × 8,4 s');
- assert.match(h,/class="sg-principal" data-k="[^"]*" data-act="pause"/);assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:stop"/);
+ assert.match(h,/class="sg-principal" data-act="pause"/);assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:stop"/);
  assert.match(h,/class="sg-rail-dif"/);assert.match(h,/class="sg-rail-cur"/);assert.match(h,/>120<\/div>/);
  const sans=S.rendre(snap({sig:sig({allure:{mediane:null,parMinute:null,debutCut:null,depuisS:null,pauseS:null}})}),ui());
  assert.doesNotMatch(sans,/cuts par minute|restantes/,'sans médiane, pas d’allure');
@@ -55,7 +55,7 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
   assert.match(h,new RegExp('class="sg-mot">'+mot.source),etat);assert.equal(S.modele(snap({ar:ar(etat,x)}),ui()).glyphe,glyphe,etat);
   assert.ok((h.match(/class="sg-principal/g)||[]).length<=1,etat+' : une seule action principale');
  }
- const d=S.rendre(snap({ar:ar('dem')}),ui());assert.match(d,/class="sg-principal" data-k="occupe" disabled><span class="sg-tourne"/);assert.doesNotMatch(d,/data-act="pause"/);
+ const d=S.rendre(snap({ar:ar('dem')}),ui());assert.match(d,/class="sg-principal" disabled><span class="sg-tourne"/);assert.doesNotMatch(d,/data-act="pause"/);
  const t=S.rendre(snap({ar:ar('alerte',{etatTexte:'À toi',alerte:'Le cut 4812 a un rail qu’Ariane ne sait pas poser.'}),boutonsOrbite:[b('retry','Réessayer la pose','primary'),b('manual-takeover','Reprendre à la main'),b('explicit-skip','Passer ce cut','danger')]}),ui());
  assert.match(t,/class="sg-incident" data-k="incident" role="alert"><p>Le cut 4812 a un rail/);assert.match(t,/data-act="legacy:retry"/);assert.match(t,/sg-danger" data-act="legacy:explicit-skip"/);
  const p2=S.rendre(snap({ar:ar('p2',{passe2:{cut:4787,ecrites:1,demandees:3}})}),ui());
@@ -65,9 +65,9 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
 test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’export vient en second ; rien à examiner : le bouton du panneau',()=>{
  const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:9,aExaminer:13}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary'),b('new-batch','Nouveau lot')],exportTexte:''}),ui());
  assert.match(f,/<dt>Lot<\/dt><dd><b>31<\/b> cuts traités sur <b>120<\/b> ciblés/);assert.match(f,/<b class="sg-dif">2<\/b> différés, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
- assert.match(f,/class="sg-principal" data-k="[^"]*" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
+ assert.match(f,/class="sg-principal" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
  const r=S.rendre(snap({ar:ar('fini',{lotOuvert:false,differes:0,differesListe:[],aExaminer:0}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary')]}),ui());
- assert.match(r,/class="sg-principal" data-k="[^"]*" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
+ assert.match(r,/class="sg-principal" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
 });
 
 test('Revue V2 : différés puis verts (par plage), « Ouvrir » seulement par le bouton caché du panneau, « Examiner » barré et décompté',()=>{
@@ -151,7 +151,7 @@ test('réglages : les choix du panneau, thème sombre par défaut, détails tech
  assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 1 skippé · 2 ignorés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 skippé<\/span>/,'0 est une valeur connue : affichée, au singulier');
  assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 différés · 3 ignorés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');
  assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 différés<\/span>/,'sautes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 skippés<\/span>/,'pluriel');
- assert.match(h,/<option value="signal" selected>/);assert.doesNotMatch(h,/ancienne|Ancien panneau|ancien panneau/);
+ assert.doesNotMatch(h,/data-sel="variante"|ariane2/,"test 23 : plus de choix d’interface");assert.doesNotMatch(h,/ancienne|Ancien panneau|ancien panneau/);
  assert.doesNotMatch(S.rendre(snap(),ui({couche:'reglages'})),/Parties traitées/,'sans historique du moteur : rien');
  const f5=S.rendre(snap({sig:sig({f5:'arret'})}),ui({couche:'reglages'}));assert.match(f5,/<select data-sel="f5"[^>]*>.*<option value="arret" selected>/);
 });

@@ -70,16 +70,16 @@ test('aller au cut : cible invalide → « refuse », « cible invalide », rien
  assert.equal(q.$('goto-cut-etat').attrs['data-etat'],'refuse');assert.equal(q.notes.length,n,'même une erreur ne va pas dans #notice');
 });
 
-test('nouveau panneau : le statut de connexion vient de l’état (plus du volet ouvert) ; « Reconnecter » dans la rangée des onglets ESV clique le bouton d’origine',async()=>{
- const p=await monter({stockage:{banane51Interface:'ariane2'},etat:vue()});
+test('nouveau panneau (Signal, test 23) : le statut de connexion vient de l’état (plus du volet ouvert) ; « Reconnecter » des onglets ESV clique le bouton d’origine',async()=>{
+ const p=await monter({etat:vue()});
  p.els.connection.open=true;
  assert.equal(p.ui.instantane(vue()).connexionStatut,'ready');
  assert.equal(p.ui.instantane(vue({connection:{status:'unavailable',message:'x',tabId:1}})).connexionStatut,'unavailable');
- p.els.reconnect.hidden=false;p.els.reconnect.disabled=false;p.rendu(vue());
+ p.els.reconnect.hidden=false;p.els.reconnect.disabled=false;p.ui.agir('sg:esv');p.rendu(vue());
  assert.doesNotMatch(p.hote.innerHTML,/ESV n’est pas connecté/,'volet ouvert mais statut prêt : aucun message');
  assert.match(p.hote.innerHTML,/data-act="legacy:reconnect"/);
  p.ui.agir('legacy:reconnect');assert.equal(p.els.reconnect.clics,1);
- p.els.reconnect.disabled=true;p.rendu(vue({connection:{...pret,status:'reconnecting'}}));assert.match(p.hote.innerHTML,/data-act="legacy:reconnect"[^>]*disabled/);
+ p.els.reconnect.disabled=true;p.rendu(vue({connection:{...pret,status:'reconnecting'}}));assert.match(p.hote.innerHTML,/data-act="legacy:reconnect" disabled/);
  p.els.reconnect.hidden=true;p.rendu(vue({connection:{status:'no-tab',tabId:null}}));assert.doesNotMatch(p.hote.innerHTML,/legacy:reconnect/);
- p.ui.agir('aller:orbite');p.rendu(vue({connection:{status:'no-tab',tabId:null}}));assert.match(p.hote.innerHTML,/ESV n’est pas connecté/,'sans onglet : le message');
+ p.rendu(vue({connection:{status:'unavailable',tabId:1}}));assert.match(p.hote.innerHTML,/ESV n’est pas connecté/,'ESV perdu : le message');
 });

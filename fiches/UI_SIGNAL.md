@@ -13,10 +13,10 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
   - « Examiner » barre la ligne et fait baisser « reste à examiner ». Cette marque est gardée par lot, dans `chrome.storage.local` (clé `banane51Examines`). Au clavier : ↑ ↓ choisissent une ligne, E marque.
   - « Ouvrir » recopie la cible dans `#goto-cut-cible`, puis clique le bouton caché `#goto-cut` du panneau.
   - Les verts à contrôler arrivent du panneau groupés en plages : « Ouvrir » va au premier cut de la plage.
-- **Réglages** : les choix du panneau (après le lot, clic, série de différés, deuxième passe, raison, F5 pendant la relecture, bandeau), plus le thème, l'interface, les exemples d'apprentissage et l'historique des parties.
+- **Réglages** : les choix du panneau (après le lot, clic, série de différés, deuxième passe, raison, F5 pendant la relecture, bandeau), plus le thème, les exemples d'apprentissage et l'historique des parties.
 - **Détails techniques** : santé de la collecte, qualité de capture, départs, résumé de la partie, exports et journal. Ce sont les vrais éléments de l'ancien panneau, déplacés le temps de la lecture, puis remis à leur place. Rien n'est perdu.
 - **Palette** (Ctrl K) : les quatre commandes du moment, le reste en tapant. Une commande grisée dit pourquoi et ne se lance pas.
-- Les présentations d'essai « ariane2 » et « palette » restent choisissables. Elles pourront être retirées quand Signal sera validé.
+- Les présentations d'essai « ariane2 » et « palette » ont été retirées à la test 23 (voir plus bas).
 
 ## L'allure, honnêtement
 
@@ -61,3 +61,15 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
   - La note de la barre descend.
   - Avec le réglage système « réduire les animations », tout est à zéro.
 - **Essai** : `tests/ui5-navigateur-signal-mouvement.test.cjs`, qui vérifie que le curseur reste le même élément et que sa position change, que le chiffre le signale, et que la palette n'est pas recréée.
+
+## Test 23 : présentations d'essai retirées, mouvement repris sur la test 22
+
+- **Retiré** : les présentations d'essai « ariane2 » et « palette seule » (`src/ui5-rendu.js` et son essai), le choix « Interface » des réglages, et le lien « Essayer le nouveau panneau » de `panel.html`. Il n'y a plus que Signal.
+- Un ancien choix enregistré (« ancienne », « ariane2 », « palette ») ouvre Signal.
+- `panel-ui5.css` ne garde que la base : cacher le panneau d'avant et placer `#ui5`.
+- **Secours** : si Signal ne s'affiche pas, l'ancien panneau revient, avec la raison, jusqu'à la prochaine ouverture du panneau.
+- **Mouvement** : il est repris par-dessus la revue de la test 22. Le temps ne déclenche toujours pas de réécriture (R6) ; quand il y en a une, elle est faite en place.
+- **Corrigé au passage** : en Écho aussi, ESV perdu s'affiche (« ESV n'est pas connecté »).
+- **Essais adaptés** :
+  - `tests/t20a-connexion-sw.test.cjs` et `tests/t20a-panneau.test.cjs` vérifient maintenant le message de connexion et Reconnecter dans Signal ;
+  - `tests/connexion-t21.test.cjs` vérifie qu'un ancien choix « ariane2 » ouvre Signal.
