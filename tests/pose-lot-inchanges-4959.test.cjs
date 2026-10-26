@@ -32,6 +32,9 @@ const RELECTURE_PAUSE=['relecture-pause.js'];
 /* T20a : l'historique des parties (fiches de départ + fiches de fin de lot, `partsHistory`), module pur lu par le service worker pour la vue du panneau ;
  * il ne lit ni ne commande la pose. */
 const HISTORIQUE=['historique-parties.js'];
+/* Garde A de la deuxième passe (fiches/GARDE_PASSE_A.md) : module pur lu par le service worker pour la seule passe des différés (fin de lot, profil « L1-se ») ;
+ * il ne lit ni ne commande la pose du lot. */
+const GARDE_PASSE=['garde-passe-appuis.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
@@ -42,7 +45,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

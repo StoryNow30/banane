@@ -32,7 +32,8 @@ class EsvEcriture extends EsvTrou {
 }
 /* Test 21 (D-251) : la passe est livrée en ombre ; ces essais d'écriture allument `ecriture` (réglage enregistré `ecriture: true`) sauf `ecritureAllumee: false` (le livré tel quel).
  * `passe` : les réglages de `lot.passeDifferes` de l'essai ; `relecture` : le choix du panneau pour la relecture après le lot ('ombre') ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien) ; `stockage` : clés de chrome.storage.local au départ (interrupteur du panneau) ; `sansPoints` et `fin` : cuts sans point et dernier cut du lot, autres que ceux de `deux`. */
-async function lotPasse({ ecritureAllumee = true, passe, deux = false, sansPoints = null, fin = null, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300, stockage = {} }) {
+/* `surPasse(b, cut)` (garde A, fiches/GARDE_PASSE_A.md) : appelé quand la passe décide un cut forcé, avant la décision (pour marquer des voisins comme poses de L1, par exemple). */
+async function lotPasse({ ecritureAllumee = true, passe, deux = false, sansPoints = null, fin = null, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300, stockage = {}, surPasse = null }) {
   const adapter = new EsvEcriture(opts, sansPoints || (deux ? [112, 114] : [112])), dernier = fin || (deux ? 115 : 113), local = memoire(), b = production({ adapter, local });
   if (relecture) local.m.banane50Relecture = relecture;
   Object.assign(local.m, stockage);
@@ -49,6 +50,7 @@ async function lotPasse({ ecritureAllumee = true, passe, deux = false, sansPoint
   b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => {
     const cut = a.capture.identity.cut; appels.push({ cut, sansVoieRien: G.leviersActifs().sansVoieRien });
     if (adapter.sansPoints.includes(cut) && appels.filter(x => x.cut === cut).length < 2) throw Error('panne simulée de la GCV2');
+    if (surPasse && adapter.sansPoints.includes(cut)) surPasse(b, cut);
     const r = G.deciderDiffere(a);
     if (!adapter.sansPoints.includes(cut)) return r;
     const p0 = b.store.events.find(e => e.type === 'gcv1-shadow-observed' && e.identity?.cut === 111)?.lotObservation?.positions;

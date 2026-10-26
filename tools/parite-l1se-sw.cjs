@@ -68,6 +68,9 @@ async function main(argv) {
   if (a.passe) {
     const R = S.lot.passeDifferes, L = banc[0].l1e && banc[0].l1e.leviers || {};
     if (L.deuxiemePasse !== R.passes || JSON.stringify(L.passe2Leviers) !== JSON.stringify(R.leviers)) throw Error(`le rejeu de référence n'a pas la recette de la passe livrée (deuxiemePasse ${R.passes}, passe2Leviers ${JSON.stringify(R.leviers)}) : ${JSON.stringify([L.deuxiemePasse, L.passe2Leviers])}`);
+    /* Garde A (src/garde-passe-appuis.js) : le rejeu de référence doit avoir celle du service worker (en-tête `l1e.gardeAppuis` du banc). */
+    const GA = require(path.join(R0, 'src/garde-passe-appuis.js')), g = GA.reglage(R.gardeAppuis, S.passeDifferesDefaut.gardeAppuis), gs = JSON.stringify({ actif: g.actif, deplacementMaxMm: g.deplacementMaxMm, appuiNormalMaxCuts: g.appuiNormalMaxCuts });
+    if (JSON.stringify(banc[0].l1e && banc[0].l1e.gardeAppuis) !== gs) throw Error(`le rejeu de référence n'a pas la garde des appuis de la passe livrée (${gs}) : ${JSON.stringify(banc[0].l1e && banc[0].l1e.gardeAppuis)} ; refais-le avec le banc courant`);
   }
   const local = memoire(); local.m[LM.PRE_INST + a.partie] = JSON.parse(fs.readFileSync(a.liste, 'utf8'));
   const adapter = new EsvRejoue(), b = production({ adapter, local });

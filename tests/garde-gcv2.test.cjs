@@ -156,3 +156,69 @@ test('vérité depuis l’Écho : rouge à départ concordant gardé, départ di
   assert.equal(sans.stat.exclus['depart-different'], 1);
   assert.deepEqual(Object.keys(avec.verite), ['1', '3', '4']); assert.equal(avec.verite['4'].src, 'echo-pose-reelle-visite-bon');
 });
+
+/* D-252 (accord de l'opérateur du 26/10, fiches/GARDE_PASSE_A.md) : PERTES ACCEPTÉES, nommées dans le manifeste, pour la SEULE colonne « avec passe ».
+ * Une perte listée (cut à ≤ 10 mm en base, sans pose aujourd'hui) n'est plus un recul mais est écrite en tête du rapport à chaque passage ; une perte hors liste
+ * reste bloquante ; une entrée qui n'est plus perdue est signalée ; les colonnes « sans passe » et « GCV2 dans le lot » restent strictes. */
+const perte = (cut, extra = {}) => ({ colonne: 'avecPasse', lot: 'synth', cut, decisionGarde: 'garde-appuis', motif: 'D-252, essai', commit: 'abcdef1', ...extra });
+function manifesteAvec(A, pertes) { const f = path.join(A.dir, 'manifeste-pertes.json'); fs.writeFileSync(f, JSON.stringify({ lots: [], pertesAcceptees: pertes })); return f; }
+const sansPasse8 = () => lignes({ modif: { 8: { etat: 'differe', decal: undefined, passe2: undefined } } });
+
+test('D-252 : une perte listée de la colonne « avec passe » rend 0 et est écrite en tête du rapport ; sans la liste, 1', () => {
+  const A = atelier();
+  try {
+    const rej = A.courant(sansPasse8());
+    const r0 = A.garde(rej);
+    assert.equal(r0.code, 1, r0.sortie); assert.match(r0.sortie, /avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 2 sur 3/);
+    const sortie = path.join(A.dir, 'sortie-pertes');
+    const r1 = A.garde(rej, '--manifeste', manifesteAvec(A, [perte(8)]), '--sortie', sortie);
+    assert.equal(r1.code, 0, r1.sortie);
+    assert.match(r1.sortie, /perte acceptée : synthetique, avec passe : synth 8 \(4 mm en base\) ; D-252, essai/);
+    const md = fs.readFileSync(path.join(sortie, 'garde.md'), 'utf8');
+    assert.ok(md.indexOf('Pertes acceptées') > 0 && md.indexOf('Pertes acceptées') < md.indexOf('## synthetique'), 'en tête du rapport');
+    assert.match(md, /synth 8 \(4 mm en base\) ; D-252, essai ; garde-appuis ; commit abcdef1/);
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(sortie, 'garde.json'), 'utf8')).pertesAcceptees.map(p => p.cut), [8]);
+  } finally { A.fin(); }
+});
+
+test('D-252 : une perte hors liste reste bloquante (retour 1) ; l’entrée qui n’est pas perdue est signalée sans objet', () => {
+  const A = atelier();
+  try {
+    const r = A.garde(A.courant(sansPasse8()), '--manifeste', manifesteAvec(A, [perte(5)]));
+    assert.equal(r.code, 1, r.sortie);
+    assert.match(r.sortie, /recul : synthetique, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 2 sur 3 ; hors de la liste des pertes acceptées : synth 8/);
+    assert.match(r.sortie, /signalé : perte acceptée sans objet : synth 5 \(colonne avec passe\)/);
+  } finally { A.fin(); }
+});
+
+test('D-252 : une entrée de la liste devenue sans objet (le cut est de nouveau posé à ≤ 10 mm) est signalée, retour 0', () => {
+  const A = atelier();
+  try {
+    const r = A.garde(A.courant(lignes()), '--manifeste', manifesteAvec(A, [perte(8)]));
+    assert.equal(r.code, 0, r.sortie);
+    assert.match(r.sortie, /signalé : perte acceptée sans objet : synth 8 \(colonne avec passe\)/);
+    assert.doesNotMatch(r.sortie, /perte acceptée : synthetique/);
+  } finally { A.fin(); }
+});
+
+test('D-252 : la colonne « sans passe » reste stricte : un cut perdu, même listé (avec passe ou sans passe), rend 1', () => {
+  const A = atelier();
+  try {
+    const rej = A.courant(lignes({ modif: { 6: { etat: 'differe', decal: undefined } } }));
+    const r = A.garde(rej, '--manifeste', manifesteAvec(A, [perte(6), perte(6, { colonne: 'sansPasse' })]));
+    assert.equal(r.code, 1, r.sortie);
+    assert.match(r.sortie, /recul : synthetique, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 1 sur 2/);
+    assert.doesNotMatch(r.sortie, /recul : synthetique, avecPasse : cuts à ≤ 10 mm/, 'la perte listée ne bloque plus la colonne « avec passe »');
+    assert.match(r.sortie, /signalé : perte acceptée ignorée : synth 6 \(colonne sansPasse\) : seule la colonne « avec passe » accepte des pertes/);
+  } finally { A.fin(); }
+});
+
+test('D-252 : entrée mal formée : garde non rendue ; le manifeste versé liste 9521 et 9522 (lot 2-17), colonne « avec passe », motif D-252', () => {
+  const A = atelier();
+  try {
+    assert.throws(() => A.garde(A.courant(lignes()), '--manifeste', manifesteAvec(A, [{ lot: 'synth', cut: '8' }])), e => e instanceof G.GardeNonRendue && /pertesAcceptees/.test(e.message));
+  } finally { A.fin(); }
+  const M = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'datasets', 'garde-gcv2', 'manifeste.json'), 'utf8'));
+  assert.deepEqual(M.pertesAcceptees.map(p => [p.colonne, p.lot, p.cut, p.decisionGarde]), [['avecPasse', '2-17', 9521, 'garde-appuis'], ['avecPasse', '2-17', 9522, 'garde-appuis']]);
+  for (const p of M.pertesAcceptees) { assert.match(p.motif, /^D-252, accord de l'opérateur du 26\/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui$/); assert.match(p.commit, /^[0-9a-f]{40}$/); }
+});

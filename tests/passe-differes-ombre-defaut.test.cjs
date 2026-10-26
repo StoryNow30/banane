@@ -9,7 +9,7 @@ const { lotPasse, relancer, ev } = require('./helpers/passe-differes.cjs');
 const j = x => JSON.parse(JSON.stringify(x));
 
 test('livré : en ombre (ombre vrai, écriture faux), sans plafond, recette du banc ; le descriptif des Réglages le dit', () => {
-  assert.deepEqual(j(S.passeDifferesDefaut), { ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: { sansVoieRien: true } });
+  assert.deepEqual(j(S.passeDifferesDefaut), { ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: { sansVoieRien: true }, gardeAppuis: { actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 } });
   assert.equal(S.lot.passeDifferes, S.passeDifferesDefaut);
   assert.match(S.describe().find(l => l.nom === 'Deuxième passe des différés (fin de lot)').valeur, /^en ombre \(calculée et consignée, rien n’est écrit dans ESV\)$/);
 });

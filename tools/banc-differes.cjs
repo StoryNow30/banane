@@ -37,6 +37,8 @@ const VR = require('../src/voie-recentree.js');
 const L1 = require('../src/gcv2-l1.js');
 const EL = require('../src/gcv2-l1e.js');
 const D = require('./diag-differes.cjs');
+const GA = require('../src/garde-passe-appuis.js');
+const SETTINGS = require('../src/settings.js');
 
 const FORMAT = 'ariane-banc-differes-rejeu-v1', FORMAT_SYNTHESE = 'ariane-banc-differes-synthese-v1', FORMAT_COMPARAISON = 'ariane-banc-differes-comparaison-v1';
 const VERSION = 'banc-differes-1';
@@ -117,7 +119,15 @@ const dans = (plages, c) => plages.some(([a, b]) => c >= a && c <= b);
 
 /* T21a (garde de non-régression, critère 6-i) : `chrono` ajoute à chaque ligne `ms` = { analyse, decision[, passe] } (temps de calcul du banc, ms, par cut) et à
  * l'en-tête `chrono: { passeMs }`. Mesure seulement : sans `chrono`, la sortie est inchangée (parités et essais). */
-function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false }) {
+/* Garde A de la deuxième passe (src/garde-passe-appuis.js, fiches/GARDE_PASSE_A.md) : celle du service worker (`lot.passeDifferes.gardeAppuis` de src/settings.js) ; mesure
+ * seulement : `gardeAppuis` (argument) ou la variable d'environnement BANC_GARDE_APPUIS (JSON, `false` la coupe), consignée dans l'en-tête. Réglage illisible : erreur. */
+function gardeDuBanc(valeur) {
+  const v = valeur !== undefined ? valeur : process.env.BANC_GARDE_APPUIS ? JSON.parse(process.env.BANC_GARDE_APPUIS) : SETTINGS.lot.passeDifferes.gardeAppuis;
+  const R = GA.reglage(v, SETTINGS.passeDifferesDefaut.gardeAppuis);
+  if (!R.ok) throw Error('garde des appuis de la passe : ' + R.raison);
+  return { actif: R.actif, deplacementMaxMm: R.deplacementMaxMm, appuiNormalMaxCuts: R.appuiNormalMaxCuts };
+}
+function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined }) {
   const horloge = () => Number(process.hrtime.bigint()) / 1e6;
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
   /* L1-se : référence d'écartement de chaque cut, lue dans l'instantané de la liste d'ESV du départ de partie (décompacté) ; sans liste : aucune. */
@@ -269,7 +279,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
    * ce que le lot a posé, avant ET après lui (chaîne : voisins et appuis ; poses L1 : transport). Leviers propres à la passe : `passe2Leviers`. */
   let passeMs = null;
   if (profils.includes('L1-se') && leviers.deuxiemePasse) {
-    const E = etats['L1-se'], avant = leviers, tP = horloge();
+    const E = etats['L1-se'], avant = leviers, tP = horloge(), garde = gardeDuBanc(gardeAppuis);
     if (leviers.passe2Leviers) L1.reglerLeviers({ ...leviers, ...leviers.passe2Leviers });
     try {
       for (let passe = 1; passe <= leviers.deuxiemePasse; passe++) {
@@ -284,8 +294,11 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             if (g.decision.etat !== 'valider') { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: g.decision.motif ?? null, ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
             const cg = L1.commander({ positions: g.positions, runtimeRails: r.runtimeRails, before: r.before, expectedPoses: K.expectedPoses, cameras: r.cameras, camerasLarges: r.camerasLarges, valider: true });
             if (cg.action !== 'lot') continue;
+            /* Garde A : comme le service worker (`passeDiffGarde`), décalage arrondi au centième de mm, chaîne normale = les voisins de la décision du lot (`E.valides`). */
+            const ga = GA.juger({ cut: r.cut, decal: Object.fromEntries(SIDES.map(s => [s, L1.decalage(r.before[s], g.positions[s]).map(v => Math.round(v * 100) / 100)])), cutsNormaux: E.valides.map(v => v.identity.cut) }, { ok: true, ...garde });
+            if (ga.bloque) { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: 'garde-appuis', garde: ga, ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
-            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
             poses++;
           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
@@ -296,7 +309,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     } finally { L1.reglerLeviers(avant); passeMs = arrondi(horloge() - tP, 1); }
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
-    regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null } } : {}),
+    regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null, ...(leviers.deuxiemePasse ? { gardeAppuis: gardeDuBanc(gardeAppuis) } : {}) } } : {}),
     parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
     note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
     traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000), ...(chrono ? { chrono: { passeMs } } : {}) };

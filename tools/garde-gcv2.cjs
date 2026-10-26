@@ -22,7 +22,8 @@
  *    (3) aucun cut nouvellement à plus de 20 mm, à plus de 50 mm, en mauvaise voie ; verts changés et poses sans preuve du nuage : pas plus qu'en
  *    base (zéro en base = zéro) ; (4) aucun cut à ≤ 10 mm en base ne passe à plus de 20 mm ; (5) aucun cut dégradé de plus de 2 mm.
  *  colonne « avec passe » : mêmes critères de qualité (2) à (5), bloquants (la passe écrit en production) ; le compte de cuts laissés sans pose
- *    (le majorant du banc) est seulement signalé.
+ *    (le majorant du banc) est seulement signalé. D-252 : pour cette colonne SEULE, les pertes nommées dans `pertesAcceptees` du manifeste (`--manifeste`, défaut :
+ *    manifeste.json à côté de la base) ne comptent pas dans (2) ; elles sont écrites en tête du rapport à chaque passage (voir `lirePertesAcceptees`).
  *  étape « GCV2 dans le lot » (D-250, priorité 1 ; cut d'abord différé par la chaîne, repris par la GCV2 dans le lot ; colonne « avec passe »),
  *    jugée À PART et bloquante sur elle : aucun cut nouvellement à plus de 20 mm, à plus de 50 mm ou en mauvaise voie dans l'étape, aucun cut de
  *    l'étape dégradé de plus de 2 mm ; budget D-223 (pose à plus de 50 mm ≤ 3 %, mauvaise voie ≤ 1 %) : s'il était tenu en base, le dépasser bloque ;
@@ -145,7 +146,7 @@ function indexCuts(lots, col) { const m = new Map(); for (const l of lots) for (
 function comparerColonne(nomsLots, B, A, col, { filtreEtape = null } = {}) {
   const IB = indexCuts(B.filter(l => nomsLots.includes(l.nom)), col), IA = indexCuts(A.filter(l => nomsLots.includes(l.nom)), col);
   const dansEtape = (x) => !filtreEtape || (x && x.etat === 'pose' && x.etape === filtreEtape);
-  const listes = { perdus: [], degrades: [], gagnes: [], nouveaux: [], nouveauxPlus20: [], nouveauxPlus50: [], nouvellesMauvaiseVoie: [], a10VersPlus20: [], nouveauxVertsChanges: [], nouvellesSansPreuve: [] };
+  const listes = { perdus: [], a10Perdus: [], degrades: [], gagnes: [], nouveaux: [], nouveauxPlus20: [], nouveauxPlus50: [], nouvellesMauvaiseVoie: [], a10VersPlus20: [], nouveauxVertsChanges: [], nouvellesSansPreuve: [] };
   let a10Base = 0, a10Maintenus = 0;
   for (const [k, b] of IB) {
     const a = IA.get(k) || { etat: 'absent' };
@@ -157,7 +158,7 @@ function comparerColonne(nomsLots, B, A, col, { filtreEtape = null } = {}) {
       if (a.mm > b.mm + DEGRADE_MM) listes.degrades.push({ ...id, mmBase: b.mm, mm: a.mm });
       else if (a.mm < b.mm - DEGRADE_MM) listes.gagnes.push({ ...id, mmBase: b.mm, mm: a.mm });
     }
-    if (fini(b.mm) && b.mm <= 10) { a10Base++; if (fini(a.mm) && a.mm <= 10 && a.etat === 'pose') a10Maintenus++; if (fini(a.mm) && a.mm > 20) listes.a10VersPlus20.push({ ...id, mmBase: b.mm, mm: a.mm }); }
+    if (fini(b.mm) && b.mm <= 10) { a10Base++; if (fini(a.mm) && a.mm <= 10 && a.etat === 'pose') a10Maintenus++; else listes.a10Perdus.push({ ...id, mmBase: b.mm, mm: a.mm ?? null, etat: a.etat }); if (fini(a.mm) && a.mm > 20) listes.a10VersPlus20.push({ ...id, mmBase: b.mm, mm: a.mm }); }
     const plus = (v, s) => fini(v) && v > s;
     if (plus(a.mm, 20) && !plus(b.mm, 20)) listes.nouveauxPlus20.push({ ...id, mmBase: b.mm ?? null, mm: a.mm });
     if (plus(a.mm, 50) && !plus(b.mm, 50)) listes.nouveauxPlus50.push({ ...id, mmBase: b.mm ?? null, mm: a.mm });
@@ -173,16 +174,35 @@ function budget(r) {
   return { juges: r.juges, p50: { n: r.p50, taux: r.tauxP50, wilson95: r.wilsonP50, tenu: r.tauxP50 <= BUDGET_D223.p50 },
     mauvaiseVoie: { n: r.mauvaiseVoie, taux: r.tauxMV, wilson95: r.wilsonMV, tenu: r.tauxMV <= BUDGET_D223.mauvaiseVoie } };
 }
-function comparer(base, actuels, { vitesseBase = null, methodeVitesse = null } = {}) {
+/* D-252 (accord de l'opérateur du 26/10, fiches/GARDE_PASSE_A.md) : PERTES ACCEPTÉES, nommées dans le manifeste (`pertesAcceptees` : colonne, lot, cut, décision de la
+ * garde, motif, commit), pour la SEULE colonne « avec passe ». Une perte listée (cut à ≤ 10 mm en base, SANS POSE aujourd'hui) ne compte plus dans le critère (2) ; elle est
+ * écrite en tête du rapport à chaque passage (`pertesAcceptees`). Un cut listé mais posé ailleurs (> 10 mm) n'est pas une perte : il reste jugé. Une perte hors liste reste
+ * bloquante ; une entrée qui n'est plus perdue est signalée « sans objet » ; une entrée d'une autre colonne est ignorée et signalée : « sans passe » et « GCV2 dans le
+ * lot » restent strictes. */
+function lirePertesAcceptees(M) {
+  const L = M && M.pertesAcceptees;
+  if (L === undefined) return [];
+  if (!Array.isArray(L)) throw new GardeNonRendue('pertesAcceptees : liste attendue');
+  for (const p of L) if (!p || typeof p !== 'object' || typeof p.colonne !== 'string' || typeof p.lot !== 'string' || !Number.isInteger(p.cut) || typeof p.motif !== 'string' || !p.motif)
+    throw new GardeNonRendue(`pertesAcceptees : entrée mal formée (colonne, lot, cut entier, motif) : ${JSON.stringify(p)}`);
+  return L;
+}
+function comparer(base, actuels, { vitesseBase = null, methodeVitesse = null, pertesAcceptees = [] } = {}) {
   const B = base.lots.map(l => ({ nom: l.nom, cuts: base.cuts[l.nom] || [] })), A = actuels;
-  const GB = base.groupes, GA = groupesDe(base.lots, A), groupes = {}, reculs = [], signalements = [];
+  const GB = base.groupes, GA = groupesDe(base.lots, A), groupes = {}, reculs = [], signalements = [], acceptees = [], nomsCompares = new Set(base.lots.map(l => l.nom));
+  const listees = pertesAcceptees.filter(p => p.colonne === 'avecPasse' && nomsCompares.has(p.lot)), servies = new Set();
+  for (const p of pertesAcceptees) if (p.colonne !== 'avecPasse') signalements.push(`perte acceptée ignorée : ${p.lot} ${p.cut} (colonne ${p.colonne}) : seule la colonne « avec passe » accepte des pertes`);
   for (const [g, gb] of Object.entries(GB)) {
     const ga = GA[g], noms = gb.lots, out = { lots: noms, base: { sansPasse: gb.sansPasse, avecPasse: gb.avecPasse, gcv2Lot: gb.etapes['gcv2-lot'], passe: gb.etapes.passe },
       actuel: { sansPasse: ga.sansPasse, avecPasse: ga.avecPasse, gcv2Lot: ga.etapes['gcv2-lot'], passe: ga.etapes.passe }, colonnes: {} };
     for (const col of ['sansPasse', 'avecPasse']) {
       const c = comparerColonne(noms, B, A, col === 'sansPasse' ? 'sans' : 'avec'), R = [];
       if (ga[col].sansPose > gb[col].sansPose) (col === 'sansPasse' ? R : signalements).push(`${g}, ${col} : cuts laissés sans pose ${gb[col].sansPose} → ${ga[col].sansPose}`);
-      if (c.a10Maintenus < c.a10Base) R.push(`${g}, ${col} : cuts à ≤ 10 mm en base encore à ≤ 10 mm : ${c.a10Maintenus} sur ${c.a10Base}`);
+      if (col === 'avecPasse' && listees.length) {
+        const acc = c.listes.a10Perdus.map(x => [x, x.etat !== 'pose' && listees.find(p => p.lot === x.lot && p.cut === x.cut)]), hors = acc.filter(([, p]) => !p).map(([x]) => x);
+        for (const [x, p] of acc) if (p) { servies.add(p); acceptees.push({ groupe: g, colonne: col, lot: x.lot, cut: x.cut, mmBase: x.mmBase, motif: p.motif, decisionGarde: p.decisionGarde ?? null, commit: p.commit ?? null }); }
+        if (hors.length) R.push(`${g}, ${col} : cuts à ≤ 10 mm en base encore à ≤ 10 mm : ${c.a10Maintenus} sur ${c.a10Base} ; hors de la liste des pertes acceptées : ${hors.map(x => `${x.lot} ${x.cut}`).join(', ')}`);
+      } else if (c.a10Maintenus < c.a10Base) R.push(`${g}, ${col} : cuts à ≤ 10 mm en base encore à ≤ 10 mm : ${c.a10Maintenus} sur ${c.a10Base}`);
       for (const [cleL, lib] of [['nouveauxPlus20', 'cut(s) nouvellement à plus de 20 mm'], ['nouveauxPlus50', 'cut(s) nouvellement à plus de 50 mm'], ['nouvellesMauvaiseVoie', 'cut(s) nouvellement en mauvaise voie'],
         ['a10VersPlus20', 'cut(s) de ≤ 10 mm passé(s) à plus de 20 mm'], ['degrades', `cut(s) dégradé(s) de plus de ${DEGRADE_MM} mm`], ['nouveauxVertsChanges', 'vert(s) changé(s)'], ['nouvellesSansPreuve', 'pose(s) sans preuve du nuage']])
         if (c.listes[cleL].length) R.push(`${g}, ${col} : ${c.listes[cleL].length} ${lib} (${c.listes[cleL].slice(0, 8).map(x => `${x.lot} ${x.cut}${x.mm != null ? ` ${x.mm} mm` : ''}`).join(', ')})`);
@@ -220,18 +240,21 @@ function comparer(base, actuels, { vitesseBase = null, methodeVitesse = null } =
     vitesse = { controlee: true, methode: methodeVitesse || 'une seule mesure par lot', seuil: `${100 * SEUIL_VITESSE} %`, machine: { base: vitesseBase.machine || null, ici: { cpus: os.cpus().length, node: process.version }, memeMachine: !!memeMachine }, lots, reculs: reculsVitesse };
     if (!memeMachine) signalements.push('vitesse : machine différente de celle de la base (nombre de processeurs) ; comparaison indicative');
   }
+  for (const p of listees) if (!servies.has(p)) signalements.push(`perte acceptée sans objet : ${p.lot} ${p.cut} (colonne avec passe) : le cut n'est pas perdu (posé à ≤ 10 mm, ou pas à ≤ 10 mm en base)`);
   const retour = reculs.length ? RETOUR.QUALITE : reculsVitesse.length ? RETOUR.VITESSE : RETOUR.VERT;
-  return { format: FORMAT_RAPPORT, retour, base: { commit: base.commit, version: base.version }, groupes, vitesse, reculs, reculsVitesse, signalements };
+  return { format: FORMAT_RAPPORT, retour, base: { commit: base.commit, version: base.version }, groupes, vitesse, reculs, reculsVitesse, signalements, pertesAcceptees: acceptees };
 }
 
 /* ------------------------------------------------------------------ rapport */
 const f1 = v => v == null ? '—' : String(v).replace('.', ',');
+const perteTexte = p => `${p.lot} ${p.cut} (${f1(p.mmBase)} mm en base) ; ${p.motif}${p.decisionGarde ? ` ; ${p.decisionGarde}` : ''}${p.commit ? ` ; commit ${p.commit}` : ''}`;
 function ligneColonne(nom, r) {
   return `| ${nom} | ${r.sansPose} | ${r.juges} | ${r.a5} | ${r.a10} | ${r.a20} | ${r.p20} | ${r.p50} | ${r.mauvaiseVoie} | ${r.vertsChanges ?? '—'} | ${r.sansPreuve ?? '—'} | ${f1(r.mediane)} |`;
 }
 function rapportMarkdown(rap, { titre = 'Garde de non-régression GCV2' } = {}) {
   const L = [`# ${titre}`, '', `Base : commit \`${rap.base.commit}\`, version ${rap.base.version}. Code jugé : ${rap.code ? `commit \`${rap.code.commit}\`` : 'non précisé'}.`, '',
     `**Retour ${rap.retour}** (${['vert', 'recul de qualité', 'recul de vitesse banc seul', 'garde non rendue', 'erreur d\'outil'][rap.retour]}).`, ''];
+  if (rap.pertesAcceptees && rap.pertesAcceptees.length) { L.push('Pertes acceptées (colonne « avec passe » seulement, liste du manifeste, D-252) : ces cuts étaient à ≤ 10 mm en base et sont sans pose ; ils ne bloquent pas, ils sont montrés à chaque passage.', ''); for (const p of rap.pertesAcceptees) L.push(`- ${p.groupe} : ${perteTexte(p)}`); L.push(''); }
   if (rap.signalements.length) { L.push('Signalé, non bloquant :', ''); for (const s of rap.signalements) L.push(`- ${s}`); L.push(''); }
   if (rap.reculs.length) { L.push('Reculs de qualité (bloquants) :', ''); for (const s of rap.reculs) L.push(`- ${s}`); L.push(''); }
   for (const [g, x] of Object.entries(rap.groupes)) {
@@ -397,19 +420,22 @@ function main(argv, { ecrire = s => process.stdout.write(s) } = {}) {
   const baseRestreinte = lots.length === base.lots.length ? base : { ...base, lots, groupes: Object.fromEntries(Object.entries(groupesDe(lots, lots.map(l => ({ nom: l.nom, cuts: base.cuts[l.nom] }))))) };
   let vitesseBase = null;
   if (a.vitesse) { if (!fs.existsSync(a.vitesse)) throw new GardeNonRendue(`base de vitesse absente : ${a.vitesse}`); vitesseBase = JSON.parse(fs.readFileSync(a.vitesse, 'utf8')); if (!vitesseBase.commit) throw new GardeNonRendue('base de vitesse sans commit'); vitesseBase = { ...vitesseBase, lots: vitesseBase.lots.filter(l => lots.some(x => x.nom === l.nom)) }; }
-  const rap = comparer(baseRestreinte, actuels, { vitesseBase, methodeVitesse: a.rejouer && a.repetitions > 1 ? `plus petite médiane de ${a.repetitions} répétitions par lot` : 'une seule mesure par lot' });
+  /* D-252 : pertes acceptées, lues dans `--manifeste` ou, par défaut, dans le manifeste à côté de la base. */
+  const fm = a.manifeste || path.join(dossier, 'manifeste.json'), pertesAcceptees = fs.existsSync(fm) ? lirePertesAcceptees(JSON.parse(fs.readFileSync(fm, 'utf8'))) : [];
+  const rap = comparer(baseRestreinte, actuels, { pertesAcceptees, vitesseBase, methodeVitesse: a.rejouer && a.repetitions > 1 ? `plus petite médiane de ${a.repetitions} répétitions par lot` : 'une seule mesure par lot' });
   rap.code = { commit: a.code || codeCourant(path.resolve(__dirname, '..')) };
   rap.lots = actuels.map(x => ({ nom: x.nom, cuts: x.cuts.length, temps: x.temps }));
   const md = rapportMarkdown(rap);
   if (a.sortie) { fs.mkdirSync(a.sortie, { recursive: true }); fs.writeFileSync(path.join(a.sortie, 'garde.md'), md); fs.writeFileSync(path.join(a.sortie, 'garde.json'), JSON.stringify(rap, null, 1) + '\n'); }
   ecrire(`garde-gcv2 : retour ${rap.retour}${rap.reculs.length ? ` ; ${rap.reculs.length} recul(s) de qualité` : ''}${rap.reculsVitesse.length ? ` ; ${rap.reculsVitesse.length} recul(s) de vitesse` : ''}${rap.signalements.length ? ` ; ${rap.signalements.length} signalement(s)` : ''}\n`);
+  for (const p of rap.pertesAcceptees) ecrire(`  perte acceptée : ${p.groupe}, avec passe : ${perteTexte(p)}\n`);
   for (const s of [...rap.reculs, ...rap.reculsVitesse]) ecrire(`  recul : ${s}\n`);
   for (const s of rap.signalements) ecrire(`  signalé : ${s}\n`);
   return rap.retour;
 }
 
 module.exports = { FORMAT_BASE, FORMAT_VITESSE, FORMAT_RAPPORT, RETOUR, BUDGET_D223, GardeNonRendue, lireSommes, ecrireSommes, lireBaseScellee, tempsLot, jugerLot, agregerGroupe, groupesDe,
-  comparerColonne, comparer, rapportMarkdown, veriteDepuisEcho, sceller, rejouer, args, main };
+  comparerColonne, comparer, lirePertesAcceptees, rapportMarkdown, veriteDepuisEcho, sceller, rejouer, args, main };
 if (require.main === module) {
   try { process.exitCode = main(process.argv.slice(2)); }
   catch (e) { if (e instanceof GardeNonRendue) { process.stderr.write(`garde-gcv2 : garde non rendue : ${e.message}\n`); process.exitCode = RETOUR.NON_RENDUE; } else { process.stderr.write(`garde-gcv2 : erreur d'outil : ${e && e.stack || e}\n`); process.exitCode = RETOUR.OUTIL; } }
