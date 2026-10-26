@@ -96,6 +96,10 @@
     const echoActif = ECHO_ACTIF.test(a.echoEtat || '') && !/Aucune/.test(a.echoEtat || '');
     m.bascule = activite === 'orbite' ? (echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : { verrou: false })
       : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : { verrou: false };
+    /* Revue T21 (D4, R5, D6) : ce que le panneau d'avant disait en rouge — l'avis de contrat ESV, le refus d'une action (sa ligne d'avis en erreur ;
+     * pas quand ESV est déconnecté, ni muet pendant Écho : l'incident le dit déjà), la correction interrompue (tout est refusé jusqu'à « J'ai contrôlé le cut »). */
+    const muet = g.connexion?.statut === 'unavailable' || (activite === 'echo' && /ESV ne répond plus/.test(a.echoEtat || ''));
+    m.avis = [...new Set([s.avisContrat, s.notice?.erreur && !muet ? s.notice.texte : '', s.relecture?.interrompue].filter(Boolean))];
     if (activite === 'echo') return modeleEcho(s, a, g, m, partie);
     const { primaire, autres } = boutonsPanneau(s.boutonsOrbite, 'automatic');
     /* L'export reste dans la palette pendant le lot et au repos : l'instrument ne garde que les commandes du moment (maquette). */
@@ -133,6 +137,8 @@
         if (r.reprendre) b.push({ texte: r.reprendre.texte, act: 'legacy:relecture-reprendre', ic: 'play', inactif: !r.reprendre.actif });
         if (r.pause) b.push({ texte: r.pause.texte, act: 'legacy:relecture-pause', ic: 'pause', inactif: !r.pause.actif });
         if (r.arreter) b.push({ texte: 'Arrêter la relecture', act: 'legacy:relecture-arreter-pause', danger: true });
+        /* Revue T21 (D6) : une correction interrompue bloque tout jusqu'à son acquittement : « J'ai contrôlé le cut N » passe devant. */
+        const acq = (s.boutonsOrbite || []).find(x => x.id === 'relecture-acquitter'); if (acq && b.length) b.unshift(versAction(acq));
         if (b.length) { m.principal = b[0]; m.secondaires = b.slice(1); m.raison = r.reprendre && !r.reprendre.actif ? r.reprendre.raison || '' : ''; } else actions();
         break;
       }
@@ -192,9 +198,10 @@
     if (etat !== 'vide' && etat !== 'fini') h += `<div class="sg-rail-cur" style="left:${pos(traites)}"></div>`;
     return h + '</div>';
   }
+  const avisHtml = m => (m.avis || []).map(t => `<p>${esc(t)}</p>`).join('');
   function objetHtml(snap, m) {
     const a = snap.ar || {}, g = snap.sig || {};
-    if (m.incident) return `<div class="sg-incident" role="alert"><p>${esc(m.incident.texte)}</p></div>`;
+    if (m.incident) return `<div class="sg-incident" role="alert"><p>${esc(m.incident.texte)}</p>${avisHtml(m)}</div>`;
     if (m.objet === 'fin') return `<dl class="sg-fin">${m.fin.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
     if (m.objet === 'echo') {
       const c = m.compteEcho, M = (g.echo?.marques || []).slice(-60);
@@ -354,7 +361,7 @@
   /* ------------------------------------------------------------------ écran */
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
-    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
+    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
     const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
   }

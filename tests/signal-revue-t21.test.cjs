@@ -82,6 +82,31 @@ test('D5 · « Ouvrir dans ESV » vise la partie du lot, même quand ESV affiche
  assert.deepEqual(js(p.envoyes),[]);
 });
 
-/* ------------------------------------------------------------------ R6 */
-/* ------------------------------------------------------------------ R1 */
+/* ------------------------------------------------------------------ D4, R5, D6 */
+test('D4 · un refus du panneau (ligne d’avis en erreur) est dit, dans Orbite comme dans Écho ; une ligne d’avis ordinaire ne l’est pas',()=>{
+ const t='Ouvre le premier cut du lot dans ESV.';
+ const h=S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:t,erreur:true},boutonsOrbite:[b('start-batch','Démarrer le lot','primary')]}),ui());
+ assert.match(h,/class="sg-incident" role="alert">.*Ouvre le premier cut du lot dans ESV\./s);assert.match(h,/data-act="legacy:start-batch"/,'l’action reste offerte');
+ assert.match(S.rendre(snap({notice:{texte:t,erreur:true}}),ui()),/class="sg-rail-base"/,'pendant un lot : le rail reste, l’avis s’ajoute');
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:'Refusé pendant Écho.',erreur:true},sig:sig({activite:'echo'})}),ui()),/Refusé pendant Écho\./);
+ assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:'Choisis les bornes du lot.',erreur:false}}),ui()),/Choisis les bornes du lot/);
+ const ko=S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:'ESV ne répond plus (message du service worker).',erreur:true},sig:sig({connexion:{statut:'unavailable',reconnect:null}})}),ui());
+ assert.match(ko,/ESV n’est pas connecté/);assert.doesNotMatch(ko,/message du service worker/,'ESV déconnecté : un seul message');
+ assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'ESV ne répond plus'}),notice:{texte:'Adaptateur muet.',erreur:true},sig:sig({activite:'echo'})}),ui()),/Adaptateur muet/,'Écho, ESV muet : l’incident le dit déjà');
+});
+test('R5 · l’avis de contrat ESV est dit ; D6 · la correction interrompue est dite, et « J’ai contrôlé le cut » reste offert pendant la relecture',()=>{
+ const av='Empreinte des réponses d’ESV changée depuis la dernière version connue.';
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),avisContrat:av}),ui()),/class="sg-incident" role="alert">.*Empreinte des réponses d’ESV changée/s);
+ const ci='Une correction de la relecture a été interrompue au cut 4812 (partie 13) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut 4812 ».';
+ const fini=S.rendre(snap({ar:ar('fini',{lotOuvert:false}),relecture:{ligne:'',actif:false,interrompue:ci},boutonsOrbite:[b('relecture-acquitter','J’ai contrôlé le cut 4812'),b('export-tout','Tout télécharger','primary')]}),ui());
+ assert.match(fini,/Une correction de la relecture a été interrompue au cut 4812/);assert.match(fini,/data-act="legacy:relecture-acquitter"/);
+ const rel=S.rendre(snap({ar:ar('rel'),relecture:{ligne:'Relecture 3 sur 40',actif:true,interrompue:ci},relPause:{pause:{texte:'Pause',actif:true},reprendre:null,arreter:false,ligne:''},
+  boutonsOrbite:[b('relecture-acquitter','J’ai contrôlé le cut 4812'),b('relecture-arreter','Arrêter la relecture','danger')]}),ui());
+ assert.match(rel,/class="sg-principal"[^>]*data-act="legacy:relecture-acquitter"/,'relecture : l’acquittement passe devant (tout est refusé tant qu’il manque)');
+ assert.match(rel,/data-act="legacy:relecture-pause"/);assert.match(rel,/interrompue au cut 4812/);
+ const sans=S.rendre(snap({ar:ar('rel'),relPause:{pause:{texte:'Pause',actif:true},reprendre:null,arreter:false,ligne:''},boutonsOrbite:[b('relecture-arreter','Arrêter la relecture','danger')]}),ui());
+ assert.match(sans,/class="sg-principal"[^>]*data-act="legacy:relecture-pause"/,'sans correction interrompue : rien ne change');
+});
+
+/* ------------------------------------------------------------------ R4 */
 /* ------------------------------------------------------------------ G1 */
