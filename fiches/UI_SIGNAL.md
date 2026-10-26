@@ -13,10 +13,10 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
   - « Examiner » barre la ligne et fait baisser « reste à examiner ». Cette marque est gardée par lot, dans `chrome.storage.local` (clé `banane51Examines`). Au clavier : ↑ ↓ choisissent une ligne, E marque.
   - « Ouvrir » recopie la cible dans `#goto-cut-cible`, puis clique le bouton caché `#goto-cut` du panneau.
   - Les verts à contrôler arrivent du panneau groupés en plages : « Ouvrir » va au premier cut de la plage.
-- **Réglages** : les choix du panneau (après le lot, clic, série de différés, deuxième passe, raison, F5 pendant la relecture, bandeau), plus le thème, l'interface, les exemples d'apprentissage et l'historique des parties.
+- **Réglages** : les choix du panneau (après le lot, clic, série de différés, deuxième passe, raison, F5 pendant la relecture, bandeau), plus le thème, les exemples d'apprentissage et l'historique des parties.
 - **Détails techniques** : santé de la collecte, qualité de capture, départs, résumé de la partie, exports et journal. Ce sont les vrais éléments de l'ancien panneau, déplacés le temps de la lecture, puis remis à leur place. Rien n'est perdu.
 - **Palette** (Ctrl K) : les quatre commandes du moment, le reste en tapant. Une commande grisée dit pourquoi et ne se lance pas.
-- Les présentations d'essai « ariane2 » et « palette » restent choisissables. Elles pourront être retirées quand Signal sera validé.
+- Les présentations d'essai « ariane2 » et « palette » ont été retirées à la test 23 (voir plus bas).
 
 ## L'allure, honnêtement
 
