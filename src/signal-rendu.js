@@ -87,20 +87,34 @@
   const TEXTE = { 'export-tout': 'Exporter le dossier' };
   const versAction = b => b ? { texte: TEXTE[b.id] || b.texte, act: b.id === 'pause' ? 'pause' : 'legacy:' + b.id, ic: icBouton(b.id), inactif: !b.actif, danger: b.role === 'danger' || /^(stop|explicit-skip|relecture-arreter)$/.test(b.id) } : null;
 
-  const ECHO_ACTIF = /Collecte en cours|Collecte en pause|Démarrage|Séance à terminer|ESV ne répond plus/;
+  /* Une séance Écho est OUVERTE quand le service worker la dit en cours, en pause, au démarrage ou sans réponse d'ESV (les quatre statuts ouverts du panneau
+   * d'origine). « Séance terminée » (FINISHED, gardée après l'export) ne l'est pas. */
+  const echoOuvert = e => /Collecte en cours|Collecte en pause|Démarrage|ESV ne répond plus/.test(e || '');
   function modele(snap, ui) {
     const s = snap || {}, a = s.ar || { etat: 'pret', traites: 0, poses: 0, differes: 0, differesListe: [], verts: [] }, g = s.sig || {};
     const activite = g.activite === 'echo' ? 'echo' : 'orbite';
     const partie = a.partie != null ? `Partie ${esc(a.partie)}` : '';
     const m = { activite, etat: a.etat, glyphe: 'pret', ton: 'encre2', mot: 'Prêt', phrase: '', objet: null, allure: '', principal: null, secondaires: [], raison: '', incident: null, verrou: false, anneau: null };
-    const echoActif = ECHO_ACTIF.test(a.echoEtat || '') && !/Aucune/.test(a.echoEtat || '');
-    m.bascule = activite === 'orbite' ? (echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : { verrou: false })
-      : a.lotOuvert ? { verrou: true, raison: 'Écho est disponible après le lot' } : echoActif ? { verrou: true, raison: 'Orbite est disponible après la séance Écho' } : { verrou: false };
+    /* Bascule (T21) : une NAVIGATION, jamais verrouillée, comme les vues du panneau d'origine. Seuls les départs sont refusés, par les boutons d'origine
+     * (grisés : « Démarrer l'observation » pendant un lot, « Démarrer le lot » pendant une séance ouverte) et par l'écran Écho pendant un lot. Sans cela, une
+     * séance Écho rouverte en Orbite, un lot affiché dans Écho ou une séance finie rendaient la pause, l'arrêt et la fin inaccessibles. */
+    m.bascule = { verrou: false };
+    /* Revue T21 (D4, R5, D6) : ce que le panneau d'avant disait en rouge — l'avis de contrat ESV, le refus d'une action (sa ligne d'avis en erreur ;
+     * pas quand ESV est déconnecté, ni muet pendant Écho : l'incident le dit déjà), la correction interrompue (tout est refusé jusqu'à « J'ai contrôlé le cut »). */
+    const muet = g.connexion?.statut === 'unavailable' || (activite === 'echo' && /ESV ne répond plus/.test(a.echoEtat || ''));
+    m.avis = [...new Set([s.avisContrat, s.notice?.erreur && !muet ? s.notice.texte : '', s.relecture?.interrompue].filter(Boolean))];
     if (activite === 'echo') return modeleEcho(s, a, g, m, partie);
     const { primaire, autres } = boutonsPanneau(s.boutonsOrbite, 'automatic');
     /* L'export reste dans la palette pendant le lot et au repos : l'instrument ne garde que les commandes du moment (maquette). */
     const horsExport = !['fini', 'arrete'].includes(a.etat);
     const actions = () => { m.principal = versAction(primaire); m.secondaires = autres.filter(b => b.actif && !(horsExport && b.id === 'export-tout')).map(versAction); };
+    /* Connexion T21 : le lot part sur l'onglet que le service worker cible (`connection.tabId`). « Démarrer le lot » n'est permis que si cet onglet est
+     * listé, nommé dans la puce, et prêt ; sinon grisé, avec la raison. */
+    const cibleOk = g.connexion?.statut === 'ready' && g.connexion?.nomme === true;
+    const RAISON_ONGLET = 'Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite.';
+    const gardeDemarrer = () => { if (cibleOk) return; let vu = false;
+      for (const b of [m.principal, ...m.secondaires]) if (b && b.act === 'legacy:start-batch') { b.inactif = true; vu = true; }
+      if (vu && !m.raison) m.raison = RAISON_ONGLET; };
     const AL = g.allure || {};
     const reste = a.restants != null && AL.mediane ? a.restants * AL.mediane : null;
     const ligneAllure = () => AL.mediane ? `<b>${un(AL.parMinute)}</b> cuts par minute <span class="sg-sep">·</span> médiane <b>${un(AL.mediane)} s</b> par cut${reste !== null ? ` <span class="sg-sep">·</span> environ <b>${duree(reste)}</b> restantes` : ''}` : '';
@@ -133,6 +147,8 @@
         if (r.reprendre) b.push({ texte: r.reprendre.texte, act: 'legacy:relecture-reprendre', ic: 'play', inactif: !r.reprendre.actif });
         if (r.pause) b.push({ texte: r.pause.texte, act: 'legacy:relecture-pause', ic: 'pause', inactif: !r.pause.actif });
         if (r.arreter) b.push({ texte: 'Arrêter la relecture', act: 'legacy:relecture-arreter-pause', danger: true });
+        /* Revue T21 (D6) : une correction interrompue bloque tout jusqu'à son acquittement : « J'ai contrôlé le cut N » passe devant. */
+        const acq = (s.boutonsOrbite || []).find(x => x.id === 'relecture-acquitter'); if (acq && b.length) b.unshift(versAction(acq));
         if (b.length) { m.principal = b[0]; m.secondaires = b.slice(1); m.raison = r.reprendre && !r.reprendre.actif ? r.reprendre.raison || '' : ''; } else actions();
         break;
       }
@@ -140,22 +156,34 @@
         Object.assign(m, { glyphe: a.etat === 'fini' ? 'fini' : 'arrete', ton: a.etat === 'fini' ? 'vivant' : 'encre2', mot: a.etat === 'fini' ? 'Terminé' : 'Arrêté', objet: 'fin',
           phrase: [partie, esc(s.lot?.finPartie || '')].filter(Boolean).join(' · ') });
         m.fin = [['Lot', `<b>${esc(a.traites)}</b> cuts traités${a.cibles ? ` sur <b>${esc(a.cibles)}</b> ciblés` : ''}`],
-          ['Il reste', nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
+          /* Revue T21 (R4) : `vertsNombre` nul = liste des verts pas encore calculée (src/ui5.js) : jamais « 0 vert » ni « rien à examiner ». */
+          ['Il reste', a.vertsNombre === null ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')} · verts pas encore calculés` : nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
           ['Export', esc(s.exportTexte || 'prêt')]];
+        /* Revue T21 (R1) : le résultat de la deuxième passe (en ombre : ce qu'elle poserait, rien n'est écrit), comme le panneau d'avant le disait. */
+        const P = a.passeFin;
+        if (P) m.fin.push(['Deuxième passe', P.etat === 'calcul' ? 'calcul des cuts restés sans pose…' : P.etat === 'erreur' ? `en erreur${P.message ? ' · ' + esc(P.message) : ''}`
+          : P.mode === 'ombre' ? `en ombre : <b>${esc(P.posees)}</b> sur <b>${esc(P.differes)}</b> qu’elle poserait · rien n’est écrit dans ESV`
+          : `${P.etat === 'arretee' ? 'arrêtée · ' : ''}<b>${esc(P.ecrites)}</b> posés et validés sur <b>${esc(P.posees)}</b> décidés${P.message ? ' · ' + esc(P.message) : ''}`]);
         actions();
         if (nDif(a) + (a.vertsNombre || 0) > 0) { const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'); m.secondaires = [ex ? versAction(ex) : null, ...m.secondaires.filter(b => b.act !== 'legacy:export-tout'), ...(m.principal && m.principal.act !== 'legacy:export-tout' ? [m.principal] : [])].filter(Boolean); m.principal = { texte: 'Voir ce qui reste', act: 'sg:tiroir', ic: 'liste' }; }
         break;
       }
       default:
-        if (a.horsLigne || g.connexion?.statut === 'no-tab') {
-          const choisi = !!g.onglet && g.connexion?.statut !== 'no-tab';
-          Object.assign(m, { glyphe: 'hors', mot: 'Hors ligne', phrase: choisi ? 'Aucune partie affichée dans l’onglet ESV choisi' : 'Aucun onglet ESV ouvert' });
-          m.principal = { texte: choisi ? 'Onglets ESV' : 'Choisir un onglet', act: 'sg:esv' };
+        if (a.horsLigne || !cibleOk) {
+          const st = g.connexion?.statut, choisi = !!g.onglet && st !== 'no-tab', listes = (s.onglets || []).length, enLigne = !a.horsLigne && st === 'ready';
+          /* Connexion T21 : des onglets listés ne sont pas « aucun onglet ouvert » ; ESV lisible mais onglet ciblé absent de la liste : à choisir, pas « Prêt ».
+           * Test 22 : un refus de la connexion (ligne d'avis du panneau, en erreur) est dit par `m.avis` (Revue T21, D4), seul endroit des refus. */
+          Object.assign(m, { glyphe: 'hors', mot: enLigne ? 'Onglet à choisir' : 'Hors ligne',
+            phrase: enLigne ? 'Choisis l’onglet ESV à utiliser' : choisi ? 'Aucune partie affichée dans l’onglet ESV choisi' : listes ? 'Choisis l’onglet ESV à utiliser' : 'Aucun onglet ESV ouvert' });
+          actions(); gardeDemarrer();
+          const lot = [m.principal, ...m.secondaires].find(b => b && b.act === 'legacy:start-batch');
+          m.principal = { texte: choisi && !enLigne ? 'Onglets ESV' : 'Choisir un onglet', act: 'sg:esv' }; m.secondaires = lot ? [lot] : [];
         } else {
           Object.assign(m, { glyphe: 'pret', mot: 'Prêt', phrase: [partie, bornes].filter(Boolean).join(' · '), objet: a.cibles ? 'rail' : null, railEtat: 'vide' });
           actions();
         }
     }
+    gardeDemarrer();
     if (g.connexion?.statut === 'unavailable' && !m.incident && a.etat !== 'p2') m.incident = { texte: 'ESV n’est pas connecté. Si la page ESV est figée, recharge-la (F5), puis reconnecte-la.' };
     if (g.connexion?.statut === 'reconnecting' && !m.incident) m.raison = m.raison || 'Reconnexion à ESV en cours…';
     return m;
@@ -164,12 +192,13 @@
     const { primaire, autres } = boutonsPanneau(s.boutonsEcho, 'native'), E = g.echo || {};
     const actions = () => { m.principal = versAction(primaire); m.secondaires = autres.filter(b => b.actif).map(versAction); };
     const e = a.echoEtat || 'Aucune séance en cours', vus = Number(s.echo?.visites) || 0, corr = Number(s.echo?.corriges) || 0;
-    m.compteEcho = { vus, corriges: corr };
+    m.compteEcho = { vus, corriges: corr, valides: Number.isFinite(Number(s.echo?.valides)) ? Number(s.echo.valides) : Math.max(0, vus - corr) };
     if (a.lotOuvert) { Object.assign(m, { glyphe: 'verrou', mot: 'Écho', phrase: 'Disponible après le lot Orbite', verrou: true, verrouTexte: 'Écho est disponible après le lot' }); return m; }
     if (/Collecte en cours|Démarrage/.test(e)) Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: /Démarrage/.test(e) ? 'Démarrage' : 'En observation', phrase: g.cutEsv != null || a.cutEsv != null ? `Visite du cut ${mono(a.cutEsv ?? g.cutEsv)}` : partie, objet: 'echo' });
     else if (/Collecte en pause/.test(e)) Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Écho en pause', phrase: partie, objet: 'echo' });
     else if (/ESV ne répond plus/.test(e)) Object.assign(m, { glyphe: 'toi', ton: 'alerte', mot: 'ESV ne répond plus', phrase: partie, incident: { texte: 'Si la page ESV reste figée, recharge-la (F5), puis reprends la collecte.' } });
     else if (/Séance à terminer/.test(e)) Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Séance à terminer', phrase: partie, objet: vus ? 'echo' : null });
+    else if (/Séance terminée/.test(e)) Object.assign(m, { glyphe: 'fini', ton: 'encre2', mot: 'Séance terminée', phrase: partie, objet: vus ? 'echo' : null });
     else Object.assign(m, { glyphe: 'echoVide', mot: 'Aucune séance', phrase: [partie, 'prête à observer'].filter(Boolean).join(' · ') });
     if (m.objet === 'echo' && E.mediane) m.allure = `<b>${un(60 / E.mediane)}</b> cuts par minute <span class="sg-sep">·</span> médiane <b>${un(E.mediane)} s</b> par cut <span class="sg-sep">·</span> <b>${esc(corr)}</b> corrigés`;
     actions();
@@ -193,25 +222,34 @@
     statuts.forEach((x, i) => { if (x === 'differe') h += `<div class="sg-rail-dif" data-k="d${i}" style="left:${pos(i + 0.5)}"></div>`; else if (x === 'incertain') h += `<div class="sg-rail-inc" data-k="i${i}" style="left:${pos(i + 0.5)}"></div>`; });
     return h + '</div>';
   }
+  const avisHtml = m => (m.avis || []).map(t => `<p>${esc(t)}</p>`).join('');
   function objetHtml(snap, m) {
     const a = snap.ar || {}, g = snap.sig || {};
-    if (m.incident) return `<div class="sg-incident" data-k="incident" role="alert"><p>${esc(m.incident.texte)}</p></div>`;
+    if (m.incident) return `<div class="sg-incident" data-k="incident" role="alert"><p>${esc(m.incident.texte)}</p>${avisHtml(m)}</div>`;
     if (m.objet === 'fin') return `<dl class="sg-fin" data-k="fin">${m.fin.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
     if (m.objet === 'echo') {
       const c = m.compteEcho, M = (g.echo?.marques || []).slice(-60);
-      return `<div class="sg-objet" data-k="echo"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(Math.max(0, c.vus - c.corriges))}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
+      return `<div class="sg-objet" data-k="echo"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(c.valides)}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
     }
     if (m.objet !== 'rail') return '';
     if (m.railEtat === 'vide') return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
     const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> différés</span>`;
     return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
   }
+  /* Revue T21 (D7) : les bornes du prochain lot, revues et modifiables avant « Démarrer le lot », au repos et après « Nouveau lot » (règle du panneau
+   * d'avant : aucun lot ne part sans que tu aies revu ses bornes). Ce qu'on tape va dans `#start` / `#end` (src/ui5.js), que « Démarrer » lit ;
+   * la case clique `#lot-reprise`, dont le gestionnaire remplit les bornes. */
+  function bornesHtml(snap, m) {
+    const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
+    if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors') return '';
+    return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des différés : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
+  }
   function actionsHtml(m) {
     if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin de la deuxième passe')}</span></div>`;
     if (!m.principal && !m.secondaires.length) return m.raison ? `<p class="sg-raison">${esc(m.raison)}</p>` : '';
     let h = '<div class="sg-actions">';
     const p = m.principal;
-    if (p) h += `<button type="button" class="sg-principal${p.danger ? ' sg-danger' : ''}" data-k="${esc(p.occupe ? 'occupe' : p.act || '')}"${p.act && !p.occupe ? ` data-act="${esc(p.act)}"` : ''}${p.occupe || p.inactif ? ' disabled' : ''}>${p.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : p.ic ? ic(p.ic) : ''}<span>${esc(p.texte)}</span></button>`;
+    if (p) h += `<button type="button" data-k="${esc(p.occupe ? 'occupe' : p.act || '')}" class="sg-principal${p.danger ? ' sg-danger' : ''}"${p.act && !p.occupe ? ` data-act="${esc(p.act)}"` : ''}${p.occupe || p.inactif ? ' disabled' : ''}>${p.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : p.ic ? ic(p.ic) : ''}<span>${esc(p.texte)}</span></button>`;
     for (const b of m.secondaires) h += `<button type="button" class="sg-secondaire${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>`;
     if (m.raison) h += `<span class="sg-raison">${esc(m.raison)}</span>`;
     return h + '</div>';
@@ -252,10 +290,10 @@
     if (m.activite === 'echo') { n = Number(snap.echo?.visites) || 0; long = n ? 'visites' : 'Aucune visite pour l’instant'; court = n ? 'visites' : 'aucune visite'; }
     else {
       const { D, V } = lignesRevue(a), total = D.length + V.length, reste = [...D, ...V].filter(r => !ex.has(r.cle)).length;
-      const d = nDif(a), v = a.vertsNombre || 0;
+      const d = nDif(a), v = a.vertsNombre || 0, vInc = a.vertsNombre === null && !a.lotOuvert;
       n = a.lotOuvert ? d : d + v;
-      long = a.lotOuvert ? (d ? `${pl(d, 'différé')} · à reprendre après le lot` : 'Aucun différé pour l’instant') : n ? `à examiner · ${d} ${pl(d, 'différé')}, ${v} ${pl(v, 'vert')}` : 'Rien à examiner';
-      court = n ? 'à examiner' : 'rien à examiner';
+      long = a.lotOuvert ? (d ? `${pl(d, 'différé')} · à reprendre après le lot` : 'Aucun différé pour l’instant') : n ? `à examiner · ${d} ${pl(d, 'différé')}, ${vInc ? 'verts pas encore calculés' : `${v} ${pl(v, 'vert')}`}` : vInc ? 'Verts pas encore calculés' : 'Rien à examiner';
+      court = n ? 'à examiner' : vInc ? 'verts pas calculés' : 'rien à examiner';
       if (total && !a.lotOuvert) resteTx = `reste à examiner ${reste} sur ${total}`;
     }
     const mini = `<span class="sg-etat-mini">${glyphe(m)}<span>${esc(m.mot)}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${esc(a.traites)} sur ${esc(a.cibles)}` : ''}</span></span>`;
@@ -265,14 +303,15 @@
   function cacheHtml(snap, m) {
     const a = snap.ar || {}, rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);
     const ok = a.cache?.actif === true && !rel;
-    const raison = ok ? '' : a.etat === 'p2' ? 'après la deuxième passe' : rel ? 'après la relecture' : m.activite === 'echo' && !/Aucune/.test(a.echoEtat || '') ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
+    const raison = ok ? '' : a.etat === 'p2' ? 'après la deuxième passe' : rel ? 'après la relecture' : m.activite === 'echo' && echoOuvert(a.echoEtat) ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
     return `<footer class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span></span>${raison ? `<span class="sg-r">· ${esc(raison)}</span>` : ''}<span class="sg-espace"></span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></footer>`;
   }
   function barreHtml(snap, m, ui) {
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
     const seg = (k, t) => { const off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${m.activite === k}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : m.activite === k ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
-    const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? 'Aucun onglet' : g.onglet;
+    /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
+    const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
     const court = String(texte).split(' · ')[0];
     return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
@@ -283,10 +322,11 @@
   const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   function commandes(snap, m, ui) {
     const a = snap.ar || {}, g = snap.sig || {}, c = [], vus = new Set();
-    const add = (icn, nom, act, et, off) => { if (!act || vus.has(act)) return; vus.add(act); c.push({ ic: icn, nom, act, et: et || '', off: off || '' }); };
+    /* Revue T21 (G1) : `danger` (arrêter le lot ou la relecture, SKIP, terminer la séance Écho) : la palette demande une seconde Entrée (src/ui5.js). */
+    const add = (icn, nom, act, et, off, danger) => { if (!act || vus.has(act)) return; vus.add(act); c.push({ ic: icn, nom, act, et: et || '', off: off || '', danger: !!danger || act === 'legacy:native-end' }); };
     const etat = `${m.activite === 'echo' ? 'Écho' : 'Orbite'} · ${m.mot}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${a.traites} sur ${a.cibles}` : ''}`;
-    if (m.principal && !m.principal.occupe) add(m.principal.ic || 'play', m.principal.texte, m.principal.act, etat, m.principal.inactif ? m.raison || 'indisponible' : '');
-    for (const b of m.secondaires) add(b.danger ? 'stop' : b.ic || 'coche', b.texte, b.act, '', b.inactif ? 'indisponible' : '');
+    if (m.principal && !m.principal.occupe) add(m.principal.ic || 'play', m.principal.texte, m.principal.act, etat, m.principal.inactif ? m.raison || 'indisponible' : '', m.principal.danger);
+    for (const b of m.secondaires) add(b.danger ? 'stop' : b.ic || 'coche', b.texte, b.act, '', b.inactif ? 'indisponible' : '', b.danger);
     add('liste', ui.tiroir ? 'Fermer le tiroir' : 'Voir ce qui reste', 'sg:tiroir', '');
     const ex = (snap.boutonsOrbite || []).find(b => b.id === 'export-tout');
     add('export', 'Exporter le dossier', 'legacy:export-tout', '', ex && ex.actif ? '' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant');
@@ -305,22 +345,25 @@
   }
   function paletteHtml(snap, ui) {
     const L = paletteListe(snap, ui), i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
-    return `<div class="sg-voile" data-k="voile-palette" data-act="sg:fermer"></div><div class="sg-palette" data-k="palette" role="dialog" aria-label="Commandes"><input id="ui5-q" type="text" value="${esc(ui.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="sg-cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="sg-cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ` data-act="${esc(c.act)}"`} data-fermer="1">${ic(c.ic)}<span>${esc(c.nom)}</span><span class="sg-et">${esc(c.off || c.et)}</span></button>`).join('') : '<div class="sg-cmd"><span></span><span class="sg-et">Aucune commande</span></div>'}</div><div class="sg-pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="sg-espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
+    return `<div class="sg-voile" data-k="voile-palette" data-act="sg:fermer"></div><div class="sg-palette" data-k="palette" role="dialog" aria-label="Commandes"><input id="ui5-q" type="text" value="${esc(ui.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="sg-cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="sg-cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ` data-act="${esc(c.act)}"`} data-fermer="1">${ic(c.ic)}<span>${esc(c.nom)}</span><span class="sg-et">${esc(c.off || (ui.confirme === c.act ? 'Entrée encore pour confirmer' : c.et))}</span></button>`).join('') : '<div class="sg-cmd"><span></span><span class="sg-et">Aucune commande</span></div>'}</div><div class="sg-pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="sg-espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
   }
   function esvHtml(snap) {
     const g = snap.sig || {}, a = snap.ar || {}, L = snap.onglets || [], choisi = String(snap.ongletChoisi || ''), verrou = !!a.lotOuvert || !!a.connexionBloquee;
+    /* Connexion T21 : « connecté » seulement pour l'onglet choisi ET prêt ; un onglet choisi d'avance par le panneau (onglet unique, seul prêt) garde son bouton. */
     const rows = L.length ? L.map(o => { const mien = String(o.valeur) === choisi, pasPret = /pas prêt/i.test(o.texte);
-      return `<div class="sg-ong"><span class="sg-lib"><b>${esc(o.texte)}</b>${pasPret ? '<small>pas prêt</small>' : ''}</span>${mien && g.connexion?.statut !== 'unavailable' ? '<span class="sg-conn"><i></i>connecté</span>' : `<button type="button" data-act="conn:${esc(o.valeur)}"${verrou && !mien || pasPret ? ' disabled' : ''}>${mien ? 'Reconnecter' : 'Connecter'}</button>`}</div>`; }).join('')
+      return `<div class="sg-ong"><span class="sg-lib"><b>${esc(o.texte)}</b>${pasPret ? '<small>pas prêt</small>' : ''}</span>${mien && g.connexion?.statut === 'ready' ? '<span class="sg-conn"><i></i>connecté</span>' : `<button type="button" data-act="conn:${esc(o.valeur)}"${verrou && !mien || pasPret ? ' disabled' : ''}>${mien ? 'Reconnecter' : 'Connecter'}</button>`}</div>`; }).join('')
       : '<div class="sg-vide sg-petit">Aucun onglet ESV ouvert. Ouvre une partie dans ESV ; elle apparaîtra ici.</div>';
     const rc = g.connexion?.reconnect;
     const reco = rc?.visible ? `<div class="sg-ong"><span class="sg-lib"><b>Reconnecter</b><small>${esc(g.connexion.statut === 'reconnecting' ? 'en cours…' : 'ré-équiper l’onglet choisi')}</small></span><button type="button" data-act="legacy:reconnect"${rc.actif ? '' : ' disabled'}>Reconnecter</button></div>` : '';
     return `<div class="sg-voile sg-transparent" data-k="voile-esv" data-act="sg:fermer"></div><div class="sg-popover" data-k="esv" role="dialog" aria-label="Onglets ESV">${rows}${reco}<div class="sg-pied">${verrou ? ic('cadenas') + '<span>Une seule connexion, gardée jusqu’à la fin du lot.</span>' : `<span>${esc(snap.connexionNote || 'Une seule connexion, partagée entre Orbite et Écho.')}</span>`}</div></div>`;
   }
+  const PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); } catch { return null; } })();
   function historiqueHtml(H) {
     if (!Array.isArray(H)) return '';
     const FIN = { complete: 'terminée', arretee: 'arrêtée', 'en-cours': 'en cours', interrompue: 'interrompue' };
-    const jour = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}` : ''; };
-    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
+    /* Heure de Paris (règle du panneau d'origine, `paris()` de panel.js), pas celle de la machine. */
+    const jour = iso => { const d = iso ? new Date(iso) : null; if (!d || isNaN(d) || !PARIS) return ''; const q = {}; for (const x of PARIS.formatToParts(d)) q[x.type] = x.value; return `${q.day}/${q.month} ${Number(q.hour === '24' ? 0 : q.hour)} h ${q.minute}`; };
+    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${Number.isInteger(p.sautes) ? ` · ${esc(p.sautes)} ${pl(p.sautes, 'skippé')}` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés au départ` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
     return `<div class="sg-reg sg-reg-bloc"><span class="sg-lib"><span>Parties traitées</span><small>Gardées même après un vidage du cache</small></span></div>${L || '<div class="sg-vide sg-petit">Aucune partie enregistrée pour l’instant.</div>'}`;
   }
   function feuilleHtml(snap) {
@@ -347,7 +390,7 @@
   /* ------------------------------------------------------------------ écran */
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
-    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${objetHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
+    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
     const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
   }

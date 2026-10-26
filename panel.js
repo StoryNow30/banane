@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 21 (L1-e6)',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 22 (L1-e6)',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -133,7 +133,9 @@
    addEventListener('resize',placerIndicateur);
  appliquerVue();entree();
    if(state)render(state);
-   void discover().catch(()=>{});
+   /* Connexion T21 : comme à l'ouverture, la liste des onglets et la connexion de l'onglet unique se voient tout de suite (sans attendre la relecture
+    * de chaque seconde), et un refus (page ESV d'une autre version, « Une autre Ariane »…) est dit. */
+   void discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);});
    if(which==='native'){renderReglages();void renderHealth();}
  }
  addEventListener('hashchange',()=>naviguer(routeDemandee(),false));

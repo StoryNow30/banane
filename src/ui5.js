@@ -57,13 +57,16 @@
     const corr = x => /^VALIDATE_CORRECTED/.test(String(x.label || ''));
     const dur = x => x.d === null || x.d === undefined ? '' : x.encours ? 'en cours' : `${Math.round(x.d)} s`;
     const texte = x => x.encours ? 'Visite en cours' : /^VALIDATE_CORRECTED_BOTH/.test(x.label) ? 'Corrigé · 2 rails' : corr(x) ? 'Corrigé · 1 rail' : x.label === 'VALIDATE_NO_MOVEMENT' ? 'Validé tel quel' : x.label === 'SKIP' ? 'SKIP' : 'Visité';
-    return { echoRows: vis.slice(-40).reverse().map(x => ({ cut: entier(x.c), texte: texte(x), corrige: corr(x), duree: dur(x) })), corriges: vis.filter(corr).length };
+    /* Revue T21 (R4) : « validés tels quels » = les validations sans correction, pas « vus − corrigés » (qui compte aussi les SKIP et les visites sans issue). */
+    return { echoRows: vis.slice(-40).reverse().map(x => ({ cut: entier(x.c), texte: texte(x), corrige: corr(x), duree: dur(x) })), corriges: vis.filter(corr).length, valides: vis.filter(x => x.label === 'VALIDATE_NO_MOVEMENT').length };
   }
   /* Présentation « Ariane » : les chiffres et l'état du lot, d'après fiches/UI_ETATS_COMPTEURS.md. Lecture seule de l'état.
    * « Pause demandée » n'existe pas dans le moteur : c'est le clic sur Pause (gardé ici, pour ce lot) tant que le lot tourne encore. */
   const OUVERT = ['RUNNING', 'PAUSED', 'PAUSED_UNRESOLVED_RAIL', 'PAUSED_DEFER_NAVIGATION_UNCERTAIN', 'PAUSED_AFTER_STATE_MISSING', 'PAUSED_ADAPTER_UNRESPONSIVE', 'MANUAL_TAKEOVER'];
   const cutDe = x => { const n = Number(x?.cut ?? x?.identity?.cut); return Number.isFinite(n) ? Math.trunc(n) : null; };
-  const heure = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? `${d.getHours()} h ${String(d.getMinutes()).padStart(2, '0')}` : ''; };
+  /* Heure de Paris (règle du panneau d'origine), pas celle de la machine. */
+  const PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }); } catch { return null; } })();
+  const heure = iso => { const d = iso ? new Date(iso) : null; if (!d || isNaN(d) || !PARIS) return ''; const q = {}; for (const x of PARIS.formatToParts(d)) q[x.type] = x.value; return `${Number(q.hour === '24' ? 0 : q.hour)} h ${q.minute}`; };
   const RAILS = { left: 'rail gauche', right: 'rail droit' };
   function calculAr(s, statuts) {
     const b = s?.batch || null, A = root.ArianePanel, compte = k => statuts.filter(x => k.includes(x)).length;
@@ -110,11 +113,17 @@
       etat, etatTexte, horsLigne, partie: s?.current?.identity?.part ?? b?.scope?.part ?? null, cutEsv: s?.current?.identity?.cut ?? null,
       cibles, poses, differes, traites, restants: cibles !== null ? Math.max(0, cibles - traites) : null,
       cours: st === 'RUNNING' ? cutDe(b?.activeIdentity) : null, dernier: cutDe(dernierP), bornes, differesListe,
-      verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : 0, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
+      verts: visible('verts-controle') ? plages : [], vertsNombre: visible('verts-controle') ? vertsNombre : null, vertsLigne: visible('verts-controle') ? txt('verts-ligne') : '',
       aExaminer: differes + (visible('verts-controle') ? vertsNombre : 0),
+      /* Revue T21 (D7) : les bornes du PROCHAIN lot, celles que « Démarrer » lit (`#start`, `#end`), tant que le panneau les montre avec « Démarrer le lot » ;
+       * « Reprise des différés » (`#lot-reprise`) avec elles. Après « Nouveau lot », ce sont les champs, pas les bornes du lot fini. */
+      bornesProchain: visible('lot-bornes') && visible('start-batch') ? { debut: $('start')?.value || '', fin: finVisible($('end')?.value), note: txt('bornes-note') } : null,
+      reprise: visible('lot-bornes') && visible('start-batch') && visible('lot-reprise-row') ? { coche: !!$('lot-reprise')?.checked, note: txt('lot-reprise-note') } : null,
+      /* Revue T21 (R1) : la deuxième passe de CE lot quand elle n'écrit pas (en ombre, en calcul, finie) : son résultat, que panel.js dit dans `#passe-differes-ligne`. */
+      passeFin: (P => P && b && P.lotId === b.id && P.etat !== 'ecriture' ? { mode: P.mode, etat: P.etat, posees: P.posees, differes: P.differes, ecrites: P.ecrites, message: P.message ?? null } : null)(s?.passeDifferes),
       lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2 || etat === 'rel'), passe2: p2,
       cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
-      echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
+      echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus', FINISHED: 'Séance terminée' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
       alerte, esv: s?.connection?.status === 'unavailable' || st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ko' : s?.connection?.status === 'no-tab' ? 'non' : s?.current?.identity ? 'ok' : 'non',
       pause: (() => { const e = $('pause'); return e && !e.hidden ? { actif: !e.disabled } : null; })(),
       reprendre: (() => { const e = $('resume'); return e && !e.hidden ? { actif: !e.disabled, texte: String(e.textContent || '').trim() } : null; })(),
@@ -129,11 +138,13 @@
     let vis = []; try { vis = A.visitesNatif(s?.native) || []; } catch { /* aucune */ }
     const faites = vis.filter(x => !x.encours), d = faites.map(x => x.d).filter(x => Number.isFinite(x) && x > 0).slice(-20);
     const go = $('goto-cut'), rc = $('reconnect'), ge = $('goto-cut-etat'), th = D.documentElement?.dataset?.theme, f5 = $('relecture-f5');
-    const onglet = (onglets.find(o => String(o.valeur) === String(choisi))?.texte || '').trim();
+    /* Connexion T21 : la puce nomme l'onglet que le service worker cible réellement (`connection.tabId`, celui du lot) quand il en garde un ; sinon le choix du panneau. */
+    const tabId = Number.isInteger(s?.connection?.tabId) ? String(s.connection.tabId) : null;
+    const onglet = (onglets.find(o => String(o.valeur) === (tabId ?? String(choisi)))?.texte || '').trim();
     return {
       activite: mode === 'native' ? 'echo' : 'orbite', statuts, allure: S5.allureLot(b, Date.now()),
       echo: { mediane: d.length >= 3 ? S5.quantile(d, 0.5) : null, marques: faites.slice(-60).map(x => /^VALIDATE_CORRECTED/.test(String(x.label || ''))) },
-      connexion: { statut: s?.connection?.status ?? null, reconnect: rc ? { visible: !rc.hidden, actif: !rc.disabled } : null },
+      connexion: { statut: s?.connection?.status ?? null, tabId, nomme: !!tabId && onglets.some(o => String(o.valeur) === tabId), reconnect: rc ? { visible: !rc.hidden, actif: !rc.disabled } : null },
       onglet, historique: Array.isArray(s?.partsHistory) ? s.partsHistory : null,
       goto: { present: !!go, actif: !!go && !go.disabled, raison: go?.getAttribute?.('title') || '', etat: ge?.dataset?.etat || '', texte: ge ? String(ge.textContent || '').trim() : '' },
       examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre',
@@ -162,7 +173,7 @@
       lot: { etat: txt('lot-etat'), finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
       relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
-      echo: { visites: txt('native-count') || '0', corriges: echo.corriges },
+      echo: { visites: txt('native-count') || '0', corriges: echo.corriges, valides: echo.valides },
       echoRows: echo.echoRows,
       reglages: rg, exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
@@ -177,15 +188,19 @@
   function maj(force) {
     if (!hote || secours) return;
     const s = root.ArianePanel.state(); if (!s) return;
+    entrer(s);   /* avant le premier dessin : Signal ne dessine jamais les boutons d'une vue que le panneau n'a pas rendue */
     let html;
     try {
       const snap = instantane(s);
       if (variante === 'signal') { html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; }
       else html = R.rendre(snap, ecran, ui);
     } catch (e) { secourir(e); return; }
-    if (!force && html === ui.last) return;
+    /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
+     * réécriture de l'écran (qui refermerait une liste ouverte et recréerait la feuille de réglages, le tiroir, le choix d'onglet). */
+    const cle = html.replace(/ stroke-dashoffset="[^"]*"/g, '').replace(/(class="sg-pause-depuis"[^>]*>)[^<]*/g, '$1');
+    if (!force && cle === ui.cle) return;
     const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
-    ui.last = html;
+    ui.last = html; ui.cle = cle;
     if (variante === 'signal' && morpher(hote, html)) apresMorph();
     else { hote.innerHTML = html; [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; }); }
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
@@ -223,6 +238,20 @@
       e.classList.remove('sg-tic'); void e.offsetWidth; e.classList.add('sg-tic');
     }
   }
+  /* Connexion T21 (fiches/CONNEXION_T21.md) : le panneau s'ouvre sur l'accueil du panneau d'avant (`#home`, background.js `openPanel`), où panel.js
+   * (`discover`) ne cherche pas les onglets ESV ; c'est le clic sur « Orbite » ou « Écho » de cet accueil qui les cherchait et connectait l'onglet unique.
+   * Signal n'a pas d'accueil : une fois, il entre dans la vue de l'activité qu'il affiche (Écho si une séance est en cours ou à terminer, sinon Orbite),
+   * par un clic sur l'onglet d'origine. Rien d'autre : la règle de connexion est celle de `discover` (onglet unique, rien d'actif).
+   * Test 22 (avec la bascule T21) : « à terminer » est ce que `echoEtat` appelle ainsi ; une séance FINIE (`FINISHED`, « Séance terminée », gardée par le
+   * service worker après l'export) n'est ni ouverte ni à terminer : le panneau s'ouvre sur Orbite. */
+  let entre = false;
+  function entrer(s) {
+    if (entre || variante !== 'signal' || secours) return;
+    entre = true;
+    if ((D.body?.dataset?.window || 'home') !== 'home') return;
+    const n = s?.native, echo = !!n && (['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(n.status) || (n.status !== 'FINISHED' && !!n.visits?.length));
+    cliquer(echo ? 'tab-native' : 'tab-automatic');
+  }
   /* Secours : si l'habillage ne sait pas se dessiner, le panneau d'avant revient tel quel, avec la raison dans sa ligne d'avis. Rien d'autre ne change. */
   function secourir(e) {
     secours = true;
@@ -233,8 +262,9 @@
   const ANNEAU = 2 * Math.PI * 9;
   function vivant() {
     if (!hote || variante !== 'signal' || hote.hidden || !hote.querySelector) return;
-    const t = Date.now(), arc = hote.querySelector('.sg-arc[data-debut][data-med]');
-    if (arc) { const debut = Number(arc.dataset.debut), med = Number(arc.dataset.med); if (debut && med) arc.style.strokeDashoffset = (ANNEAU * (1 - Math.min(1, Math.max(0, t - debut) / med))).toFixed(2); }
+    /* Revue T21 (R6) : l'écran n'est plus réécrit chaque seconde : tous les anneaux (instrument et poignée du tiroir) avancent ici. */
+    const t = Date.now();
+    for (const arc of hote.querySelectorAll?.('.sg-arc[data-debut][data-med]') || []) { const debut = Number(arc.dataset.debut), med = Number(arc.dataset.med); if (debut && med) arc.style.strokeDashoffset = (ANNEAU * (1 - Math.min(1, Math.max(0, t - debut) / med))).toFixed(2); }
     const p = hote.querySelector('.sg-pause-depuis[data-debut]');
     if (p) { const debut = Number(p.dataset.debut); if (debut) p.textContent = S5.duree((t - debut) / 1000); }
   }
@@ -280,7 +310,8 @@
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
     else if (quoi === 'examiner') { if (examines.cles.has(v)) examines.cles.delete(v); else examines.cles.add(v); void garderExamines(); }
     else if (quoi === 'ouvrir') {
-      const part = root.ArianePanel.state()?.current?.identity?.part ?? root.ArianePanel.state()?.batch?.scope?.part, cible = $('goto-cut-cible'), go = $('goto-cut');
+      /* Revue T21 (D5) : un différé ou un vert appartient au LOT ; ESV peut afficher une autre partie (le moteur refuse alors, WRONG_PART, et le dit). */
+      const part = root.ArianePanel.state()?.batch?.scope?.part ?? root.ArianePanel.state()?.current?.identity?.part, cible = $('goto-cut-cible'), go = $('goto-cut');
       if (!go || !cible || !Number.isInteger(Number(part)) || go.disabled) { noter(go?.getAttribute?.('title') || 'Ouverture dans ESV indisponible pour l’instant.'); return; }
       cible.value = `${Number(part)}:${Number(v)}`; cliquer('goto-cut'); noter(`Ouverture du cut ${v} dans ESV…`); return;
     }
@@ -407,13 +438,17 @@
    * tiroir ouvert, ↑ ↓ parcourent les lignes et E marque « examiné ». Une commande grisée n'est jamais lancée. */
   function clavierSignal(e) {
     const dansChamp = /^(INPUT|SELECT|TEXTAREA)$/.test(e.target?.tagName || '') && e.target?.id !== 'ui5-q';
+    if (e.key !== 'Enter') ui.confirme = null;   /* Revue T21 (G1) : toute autre touche annule la confirmation en attente */
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); agirSignal('sg:palette'); return; }
     if (e.ctrlKey || e.metaKey) return;
     if (e.key === 'Escape') { if (ui.couche) agirSignal('sg:fermer'); else if (tech) fermerTech(); else if (ui.tiroir) agirSignal('sg:tiroir'); return; }
     if (ui.couche === 'palette') {
       const cmds = S5.paletteListe(instantane(root.ArianePanel.state() || {}), ui);
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { ui.pi = Math.max(0, Math.min(cmds.length - 1, ui.pi + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); }
-      else if (e.key === 'Enter') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; e.preventDefault(); if (c && !c.off) { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; agir(c.act); } }
+      else if (e.key === 'Enter') { const c = cmds[Math.max(0, Math.min(cmds.length - 1, ui.pi))]; e.preventDefault();
+        /* Revue T21 (G1) : une commande dangereuse ne part qu'à la seconde Entrée (« ar » + Entrée n'arrête plus le lot d'un geste). */
+        if (c && !c.off && c.danger && ui.confirme !== c.act) { ui.confirme = c.act; maj(true); }
+        else if (c && !c.off) { ui.confirme = null; ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; agir(c.act); } }
       else if (e.target?.id !== 'ui5-q' && e.key.length === 1 && /[\p{L}]/u.test(e.key)) $('ui5-q')?.focus();
       return;
     }

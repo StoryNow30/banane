@@ -1,5 +1,43 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.22 — 4.9.5 test 22 (L1-e6) (26/10) — test 22
+
+Manifeste `4.9.5.22`, « 4.9.5 test 22 (L1-e6) » ; base : le tronc `claude/50-test17` à 5a68f22 (4.9.5.21, test 21 : Signal par défaut, deuxième passe livrée en ombre, D-251), puis, par fusions (aucune réécriture d'historique) : T21d (preuve serveur, passe persistante ; fiche `fiches/T21D.md`), la connexion de Signal (`fiches/CONNEXION_T21.md`), la bascule Orbite / Écho et les cuts skippés (`fiches/BASCULE_T21.md`), la revue du code de Signal (D4 à D7, R1, R4 à R6, G1). **Pas de paquet terrain ni de consigne.** La décision des cuts, celle de la deuxième passe et leurs gardes ne changent pas : `src/engine.js`, `src/adapter-page.js`, la géométrie et `src/gcv2*.js` sont identiques à la 4.9.5.21.
+- **La deuxième passe reste EN OMBRE** (`passeDifferesDefaut.ecriture: false`, D-251) : elle calcule et journalise ce qu'elle poserait, n'écrit rien dans ESV. Pas de garde de la passe dans cette version (test 23) ; pas d'animations de Signal (test 23).
+
+### Connexion de Signal (fiches/CONNEXION_T21.md)
+- **Signal entre dans la vue de son activité** au premier dessin (clic sur l'onglet d'origine « Orbite », ou « Écho » si une séance est ouverte ou à terminer) : le panneau, qui s'ouvre sur l'accueil d'avant, cherche alors les onglets ESV et connecte l'onglet unique comme avant (« Hors ligne » au démarrage, premier choix sans effet : corrigé). Une séance Écho finie (« Séance terminée ») ouvre Orbite.
+- **La puce nomme l'onglet que le service worker cible** (`connection.tabId`), sinon « Onglet à choisir » quand il en garde un prêt, jamais « Aucun onglet » dans ce cas ; « connecté » seulement pour l'onglet choisi ET prêt.
+- **« Démarrer le lot » n'est actif que sur un onglet listé, nommé et prêt** (instrument et palette), sinon grisé avec sa raison, et l'état n'est pas « Prêt ».
+- `panel.js` (`naviguer`) : la liste des onglets est relue aussitôt après la recherche, et un refus de connexion est noté comme à l'ouverture ; Signal le dit (avis de l'instrument, voir D4).
+
+### Bascule Orbite / Écho et historique (fiches/BASCULE_T21.md)
+- **La bascule n'est jamais verrouillée** (une navigation, comme les vues du panneau d'origine) ; seuls les départs restent refusés par les boutons d'origine (« Démarrer l'observation » pendant un lot, « Démarrer le lot » pendant une séance ouverte) et par l'écran Écho pendant un lot.
+- **« Séance terminée »** pour une séance Écho `FINISHED` (plus « Séance à terminer ») ; seuls les quatre statuts ouverts comptent comme séance ouverte.
+- **Cuts skippés dans « Parties traitées »** (`sautes` : cuts distincts de `batch.skipped`, SKIP de l'opérateur vus par le moteur ; Ariane n'en envoie jamais ; inconnu = null, jamais 0) ; « ignorés » devient « ignorés au départ ». Heures de l'historique et des différés à l'heure de Paris.
+
+### Revue du code de Signal (D4 à D7, R1, R4 à R6, G1)
+- **D4 / R5 / D6** : la ligne d'avis du panneau en erreur (refus d'une action, refus de connexion), l'avis de contrat ESV et la correction de relecture interrompue sont dits dans Signal, à un seul endroit (alerte de l'instrument) ; pas quand ESV est déconnecté ou muet (l'incident le dit déjà). « J'ai contrôlé le cut N » passe devant pendant la relecture.
+- **D5** : « Ouvrir dans ESV » vise la partie du lot (le moteur refuse `WRONG_PART` et le dit si ESV affiche une autre partie).
+- **D7** : les bornes du prochain lot (« Premier cut », « Dernier cut », note du panneau) et « Reprise des différés » dans Signal, au repos, après « Nouveau lot » et après un lot en erreur ; ce qu'on tape va dans les champs d'origine que « Démarrer » lit. Les bornes ne lèvent pas la garde de la connexion.
+- **R1** : le résultat de la deuxième passe de ce lot en fin de lot (en ombre : « N sur M qu'elle poserait · rien n'est écrit dans ESV »).
+- **R4** : verts pas encore calculés jamais dits « 0 vert » ni « rien à examiner » ; « validés tels quels » d'Écho = validations sans correction.
+- **R6** : le temps qui passe (anneaux, « en pause depuis ») ne réécrit plus l'écran (une liste ouverte reste ouverte) ; les anneaux avancent sans réécriture.
+- **G1** : dans la palette, une commande dangereuse (arrêter le lot ou la relecture, SKIP, terminer la séance Écho) ne part qu'à la seconde Entrée.
+
+### Preuve serveur et passe persistante (T21d, fiches/T21D.md)
+- **Preuve serveur rattachée après coup** (`fiches/H_PREUVE_SERVEUR.md`) : l'écriture de validation 2xx vue par l'observateur passif (corps `ExtractionStatus: valid` + `TreatedByOperator: true`, ligne = cut validé par le lot, dans les 5 s après le retour de la validation) est jointe à la visite du cut avec les noms d'Écho (`serverConfirmed`, `serverConfirmationStatus` `observed-validation-write-<statut>`, `serverConfirmedAt`) et un champ dédié `serverConfirmation` {statut, at, par, délais} ; événement `validation-ecriture-observee`. `withoutServerConfirmation` du bilan en tient compte. Écriture refusée ou absente : rien de rattaché (le refus garde son chemin). `validationProof`, l'évidence du lot et son état de clôture inchangés ; aucune commande, aucune attente.
+- **`applied-verified.serverConfirmed` et `validation-intent.serverConfirmed` valent `null`** (inconnu avant la requête) au lieu de `false` ; corrigé dans le service worker, le moteur épinglé n'est pas touché.
+- **Écho** : `serverConfirmationAvailable` et `serverConfirmationStatus` du résumé de séance calculés à partir des visites (plus `serverConfirmedVisits`).
+- **La deuxième passe survit au redémarrage du service worker** (D-250, priorité 2 ; livrée en ombre depuis la test 21, D-251 : la reprise vaut pour l'ombre et, une fois l'écriture rallumée, pour l'écriture) : état persistant (`banane56PasseDiff`, écrit à chaque décision, changement de tour et de phase, avant et après chaque cut écrit, à chaque preuve ; `banane56PasseDiffEntree`, écrite au départ : transport du lot en rails réduits, appuis). Au réveil : **reprise au point exact** (`passe-differes-reprise`) ; sinon **fin notée** (`issue:'interrompue'`, `motif:'sw-redemarre'`). Cut en vol : prouvé → compté écrit ; intention sans preuve → écriture incertaine, la passe s'arrête et l'intention reste (D-248) ; ni l'un ni l'autre → refait avec ses gardes. Jamais de double écriture. La relecture qui attendait la passe repart après elle ; « Relancer la deuxième passe » reste possible après un redémarrage.
+- **Chaque décision de la passe rend la main à la boucle d'événements** : le second tour, dont les nuages sont en mémoire, s'enchaînait en une seule tâche (journal et messages bloqués) ; cause PROBABLE de l'arrêt du service worker de la partie 0 du 23/10.
+- Essais : `t21d-preuve-serveur-sw`, `t21d-preuve-serveur-gardes-sw`, `t21d-passe-*-sw` (neuf), montage `tests/helpers/passe-redemarrage.cjs` ; maquette : `tests/esv-maquette/passe-redemarrage.test.cjs` (export réel hors dépôt).
+
+### Essais et relevé
+- Connexion : `tests/connexion-t21.test.cjs`, `tests/connexion-t21-navigateur.test.cjs`, maquette `tests/esv-maquette/connexion-t21.test.cjs`. Bascule et historique : `tests/signal-rendu.test.cjs`, `tests/ui5-panneau.test.cjs`, `tests/t20a-historique.test.cjs`. Revue : `tests/signal-revue-t21.test.cjs`, `tests/ui5-navigateur-signal-revue-t21.test.cjs` (leur connexion « prête » nomme l'onglet ciblé ; un essai vérifie que les bornes ne lèvent pas la garde de « Démarrer le lot »).
+- Relevé (machine au repos) : `tools/verify.cjs` 2 659 essais, 2 657 réussis, 0 échec, 0 annulé, 2 ignorés (corpus Natif absent) ; `tests/esv-maquette/essais.cjs` 30 réussis sur 32, 2 ignorés (export réel absent, hors dépôt), dont les 5 de la connexion ; `parite-relecture-sw` contre 5a68f22 : 45 relevés sur 45 identiques. Décisions de pose : aucun écart de `src/engine.js`, `src/adapter-page.js`, `src/geometry*.js`, `src/gcv2*.js` depuis 5a68f22.
+- Non vérifié : jamais joué dans Edge ni dans le vrai ESV.
+
 ## 4.9.5.21 — 4.9.5 test 21 (L1-e6) (26/10) — interface Signal
 
 Manifeste `4.9.5.21`, « 4.9.5 test 21 (L1-e6) » ; base : le tronc `claude/50-test17` à e17078e (4.9.5.20, T20a et T21a) plus les seuls fichiers de l'interface Signal, repris de `claude/50-ui-5.0` (c77b351). Fiche `fiches/UI_SIGNAL.md`. **Pas de paquet terrain ni de consigne.** Le moteur et la pose ne changent pas : `background.js`, `panel.js`, `src/engine.js`, `src/adapter-page.js` et la géométrie sont identiques à la 4.9.5.20, hors la chaîne de version ; `src/settings.js` ne change que par le défaut de la deuxième passe (voir plus bas).

@@ -122,6 +122,13 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-incident p{color:var(--encre)}
 #ui5.u-signal .sg-fin{display:grid;grid-template-columns:auto 1fr;gap:var(--e2) var(--e4);color:var(--encre2)}
 #ui5.u-signal .sg-fin dt{color:var(--encre3)}#ui5.u-signal .sg-fin dd b{color:var(--encre);font-weight:500}
+/* Revue T21 (D7) : bornes du prochain lot */
+#ui5.u-signal .sg-bornes{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--e2) var(--e4)}
+#ui5.u-signal .sg-bornes label{display:flex;flex-direction:column;gap:var(--e1);color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta)}
+#ui5.u-signal .sg-bornes input[type="number"]{width:140px;height:32px;padding:0 var(--e2);background:var(--surface2);border:1px solid var(--filet);border-radius:var(--r-ctl);color:var(--encre);font-family:var(--mono)}
+#ui5.u-signal .sg-bornes input::placeholder{color:var(--encre3);font-family:var(--sans)}
+#ui5.u-signal .sg-bornes small{flex-basis:100%;color:var(--encre3);font-size:var(--t-meta);line-height:var(--l-meta)}
+#ui5.u-signal .sg-bornes .sg-reprise{flex-basis:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:var(--e2);color:var(--encre)}
 
 /* actions */
 #ui5.u-signal .sg-actions{display:flex;align-items:center;gap:var(--e4);flex-wrap:wrap}

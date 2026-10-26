@@ -961,7 +961,11 @@
      firstQualifiedStoredSnapshotByRail:Object.fromEntries(SIDES.map(side=>[side,firstStored[side].length])),
      firstQualifiedAcquisitionLatencyByRail:latency,durationMinutes,
      comparableCandidateRailsPerMinute:durationMinutes?records.reduce((sum,record)=>sum+SIDES.filter(side=>record.geometryEligibility?.[side]?.status==='comparable-candidate').length,0)/durationMinutes:null,
-     droppedEvents:n.metrics.dropped,degradationLevels:n.metrics.degradationLevels,serverConfirmationAvailable:false,serverConfirmationStatus:'not-observed',
+     /* T21d (H) : calculés à partir des visites (écriture de validation 2xx jointe, `noteServerWriteNow`) ; avant, `false` et 'not-observed' en dur. */
+     droppedEvents:n.metrics.dropped,degradationLevels:n.metrics.degradationLevels,serverConfirmationAvailable:records.some(record=>record.serverConfirmed===true),
+     serverConfirmationStatus:records.some(record=>record.serverConfirmed===true)?'observed-validation-writes':'not-observed',
+     /* Compte ajouté seulement s'il y a des visites confirmées : sans écriture jointe, le résumé reste celui d'avant, octet pour octet. */
+     ...(records.some(record=>record.serverConfirmed===true)?{serverConfirmedVisits:records.filter(record=>record.serverConfirmed===true).length}:{}),
      serverConfirmationNotAnError:true,passiveContract:{commandsByBanane:0,cameraChangesByBanane:0,railSelectionsByBanane:0,navigationByBanane:0}};
    const events=(await this.store.all('events')).filter(event=>event.nativeSessionId===n.id).sort((a,b)=>(a.eventSeq||a.event_seq||0)-(b.eventSeq||b.event_seq||0));
    /* RM-11 : les séries collantes, une fois dans l'en-tête (seulement s'il y en a : sans raison tapée, l'export est celui d'avant). */

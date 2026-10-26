@@ -10,6 +10,8 @@ const SC={repos:N.SCENARIOS.repos.state,lot:N.lot('RUNNING',{cutStartedAt:new Da
  pause:N.lot('PAUSED'),incident:N.SCENARIOS.incident.state,fin:FIN,echo:N.SCENARIOS.echo.state,accueil:N.SCENARIOS.accueil.state};
 
 async function ouvrir(nav,state,vue,hash='#automatic'){
+ /* Connexion T21 : le service worker rend toujours `connection` ; ici, l'onglet 1 de `list-tabs`, prêt, sauf si l'essai en donne une. */
+ state={connection:{status:'ready',observedAt:'t',message:null,tabId:1},...state};
  const page=await nav.newPage({viewport:vue}),erreurs=[];
  page.on('pageerror',e=>erreurs.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|net::ERR_FILE_NOT_FOUND/.test(m.text()))erreurs.push('console: '+m.text());});
