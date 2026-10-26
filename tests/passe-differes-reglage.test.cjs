@@ -8,7 +8,8 @@ const { production } = require('./helpers/perf-production.cjs');
 const j = x => JSON.parse(JSON.stringify(x));
 
 test('livré : en ombre (écriture coupée), sans plafond, recette du banc (2 passes, sansVoieRien)', () => {
-  assert.deepEqual(j(S.lot.passeDifferes), { ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: { sansVoieRien: true } });
+  /* Garde A (fiches/GARDE_PASSE_A.md) : la garde des appuis faux, livrée active (tests/garde-passe-appuis.test.cjs). */
+  assert.deepEqual(j(S.lot.passeDifferes), { ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: { sansVoieRien: true }, gardeAppuis: { actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 } });
   assert.equal(S.lot.passeDifferes, S.passeDifferesDefaut);
   assert.ok(Object.isFrozen(S.lot.passeDifferes) && Object.isFrozen(S.lot.passeDifferes.leviers));
   assert.match(S.describe().find(l => l.nom === 'Deuxième passe des différés (fin de lot)').valeur, /^en ombre \(calculée et consignée, rien n’est écrit dans ESV\)$/);

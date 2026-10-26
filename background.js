@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.21',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 21 (L1-e6)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -1636,9 +1636,13 @@ function l1ResteOter(identity){l1Restes.m.delete(`${identity.part}|${identity.fr
  * validation) : sans lui, la passe reste en ombre. `max` : cuts écrits au plus (Infinity : sans plafond ; un plafond illisible coupe l'écriture). */
 function passeDiffReglage(){const B=globalThis.BananeSettings,R={...B?.passeDifferesDefaut,...B?.lot?.passeDifferes},passes=Number.isInteger(R.passes)&&R.passes>0?R.passes:0;
  const leviers=R.leviers&&typeof R.leviers==='object'&&!Array.isArray(R.leviers)?R.leviers:null,max=R.ecritureMax===null?Infinity:Number.isInteger(R.ecritureMax)&&R.ecritureMax>0?R.ecritureMax:0;
+ /* Garde A (`gardeAppuis`, src/garde-passe-appuis.js) : illisible, ou module absent, la passe est coupée (jamais de passe sans sa garde par erreur de réglage). */
+ const garde=globalThis.BananeGardePasseAppuis?.reglage(R.gardeAppuis,B?.passeDifferesDefaut?.gardeAppuis)??{ok:false};
  let mode='off';
- if(R.ombre===true&&passes>0&&leviers)mode=R.ecriture===true&&max>0&&B?.observateurPassif?.actif!==false?'ecriture':'ombre';
- return {mode,ecritureDemandee:R.ecriture===true,passes,leviers:leviers??{},max};}
+ if(R.ombre===true&&passes>0&&leviers&&garde.ok)mode=R.ecriture===true&&max>0&&B?.observateurPassif?.actif!==false?'ecriture':'ombre';
+ return {mode,ecritureDemandee:R.ecriture===true,passes,leviers:leviers??{},max,garde};}
+/* Garde A (fiches/GARDE_PASSE_A.md) : chaîne normale = les voisins de la décision du lot (`l1Voisins` : cuts validés par CE lot hors poses de L1), donc ni la GCV2 dans le lot, ni la passe. */
+function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
 async function l1Commande(args){
  const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
  let z=null;if(suivre)try{z=l1Zone(identity);}catch{z=null;}
@@ -1674,11 +1678,12 @@ async function passeDiffOmbre(b,rg,vue){
     if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
     const cg=G.commander({positions:g.positions,runtimeRails:r.runtimeRails,before:r.capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),valider:true});
     if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
+    const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)])),garde=passeDiffGarde(rg,b,r.identity,decal);
+    if(garde.bloque){r.motif='garde-appuis';journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,l1:G.resumer(g)});continue;}
     transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
     r.etat='pose-ombre';n++;
-    const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)]));
     poses.push({cut:r.identity.cut,passe,decal,r,positions:g.positions});
-    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,l1:G.resumer(g)});
+    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,garde,l1:G.resumer(g)});
    }catch(e){journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'erreur',message:String(e?.message||e).slice(0,160)});}}
   if(!n)break;}
  vue.posees=vue.ecrites+poses.length;

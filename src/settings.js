@@ -136,8 +136,12 @@
 
   /* --- Décision sur le lot dans le Pilote (4.7.8 en observation, 4.7.10 commande selon le lot) --- */
   /* Test 17 : valeurs livrées de la deuxième passe des différés (voir `lot.passeDifferes`). Test 21, décision de l'opérateur du 26/10 (D-251) : livrée EN OMBRE (`ecriture: false`),
-   * jusqu'à ce qu'une garde des appuis faux soit écrite et vérifiée ; `ecriture: true` la rallume en écriture. */
-  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: Object.freeze({ sansVoieRien: true }) });
+   * jusqu'à ce qu'une garde des appuis faux soit écrite et vérifiée ; `ecriture: true` la rallume en écriture.
+   * Garde A (`gardeAppuis`, src/garde-passe-appuis.js, fiches/GARDE_PASSE_A.md) : une pose de la passe à moins de `deplacementMaxMm` du départ d'ESV (pire rail, 3D) sans aucune
+   * pose de la chaîne normale du lot (première passe, fenêtre, choix ; ni la GCV2 dans le lot, ni la passe) à `appuiNormalMaxCuts` cuts ou moins est refusée : « rien », le cut reste
+   * différé (motif `garde-appuis`), en ombre comme en écriture. Seuils fixés sur la seule partie 0 du 23/10 (SUPPOSÉ généralisable). */
+  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: Object.freeze({ sansVoieRien: true }),
+    gardeAppuis: Object.freeze({ actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 }) });
   const lot = Object.freeze({
     observe: true,
     /* Ancres gardées en mémoire du lot : largement plus que les 3 numéros de
@@ -196,6 +200,7 @@
      *   `ombre` : la passe calcule et journalise (`passe-differes-ombre`) ce qu'elle poserait. `ombre:false` : plus de passe du tout, la test 16 à l'identique.
      *   `ecriture` (avec `ombre`) : elle pose réellement, un cut après l'autre, validé sur place (Ctrl+Entrée). `ecriture:false` : ombre seule, rien n'est écrit.
      *   `ecritureMax` : cuts écrits au plus par lot ; `null` : sans plafond (livré) ; un entier ≥ 1 ; toute autre valeur coupe l'écriture.
+     *   `gardeAppuis` : garde A des appuis faux (`actif`, `deplacementMaxMm`, `appuiNormalMaxCuts`), clé par clé ; `false` ou `actif:false` la coupe ; une valeur illisible coupe la passe.
      * Garde de livraison (valable une fois l'écriture rallumée) : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
      * validation prouvée, arrêt au premier refus). */
     passeDifferes: passeDifferesDefaut,
