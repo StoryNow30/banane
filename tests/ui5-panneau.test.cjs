@@ -1,7 +1,7 @@
 'use strict';
 /* Test 17 — L'HABILLAGE DU PANNEAU DANS LA PAGE (src/ui5.js, chargé comme panel.html le charge), contre une page minimale (tests/helpers/ui5-page.cjs) :
- *  - au départ, c'est le panneau d'avant : rien n'est dessiné, rien n'est écrit, aucune fenêtre n'est redimensionnée ; « Essayer le nouveau panneau » l'habille et garde le choix ;
- *    « Ancien panneau » le rend ; un choix gardé inconnu laisse le départ ;
+ *  - D-250 : au départ, c'est Signal ; rien n'est écrit, aucune fenêtre n'est redimensionnée ; le panneau d'avant n'est plus proposé (un ancien choix « ancienne »
+ *    gardé vaut le départ) ; les présentations d'essai se choisissent et se gardent ; un choix gardé inconnu laisse le départ ;
  *  - l'état du lot dit ce que le lot attend (un lot en pause pour une pose peu sûre n'est pas « en pause » tout court) ; « 999999 » n'est jamais une borne affichée ;
  *  - un clic sur l'habillage est un clic sur l'élément d'origine, jamais un message nouveau ; un nouveau dessin garde la position de défilement.
  * Données fabriquées. */
@@ -12,44 +12,46 @@ const js=x=>JSON.parse(JSON.stringify(x));   /* les objets de la vm viennent d'u
 const LOT={id:'L1',scope:{start:4800,end:999999},state:'RUNNING',processed:[],deferred:[],activeIdentity:{part:13,cut:4812}};
 const etat=(batch,extra={})=>({batch,current:{identity:{part:13,cut:4812}},connection:{status:'ok'},native:{status:'IDLE',visits:[]},...extra});
 
-test('au départ : le panneau d’avant ; rien n’est dessiné, écrit, envoyé, ni redimensionné',async()=>{
+test('au départ (D-250) : Signal, sans rien écrire, envoyer ni redimensionner ; le panneau d’avant reste caché derrière',async()=>{
  const p=await monter({etat:etat(LOT)});
- assert.equal(p.hote.hidden,true);assert.equal(p.body.classList.contains('ui5'),false);
- p.rendu(etat(LOT));assert.equal(p.hote.innerHTML,'','rien n’est dessiné');
+ assert.equal(p.hote.hidden,false);assert.equal(p.body.classList.contains('ui5'),true);assert.equal(p.hote.className,'u-signal');
+ assert.match(p.hote.innerHTML,/class="sg-fen"/);assert.equal(p.hote.dataset.theme,'sombre','sombre par défaut');
  assert.deepEqual(js(p.ecrits),[]);assert.deepEqual(js(p.envoyes),[]);assert.deepEqual(js(p.fenetres),[],'la fenêtre garde la taille que le service worker lui a donnée');
- assert.equal(typeof p.els['ui5-essai'].onclick,'function','le lien « Essayer le nouveau panneau » est branché');
+ assert.equal(typeof p.els['ui5-essai'].onclick,'function','le lien du panneau d’avant ramène à Signal (secours)');
 });
 
-test('« Essayer le nouveau panneau » habille le panneau, garde le choix et ouvre la fenêtre ; « Ancien panneau » revient',async()=>{
+test('le panneau d’avant n’est plus proposé : « variante:ancienne » ne fait rien ; les essais ariane2 et palette se choisissent et se gardent',async()=>{
  const p=await monter({etat:etat(LOT)});
- p.els['ui5-essai'].click();await p.attendre(20);
- assert.deepEqual(js(p.ecrits),[{banane51Interface:'ariane2'}]);assert.equal(p.body.classList.contains('ui5'),true);assert.equal(p.hote.hidden,false);
- assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.deepEqual(js(p.fenetres),[{width:1180,height:840}]);
+ await p.ui.setVariante('ariane2');await p.attendre(20);
+ assert.deepEqual(js(p.ecrits),[{banane51Interface:'ariane2'}]);assert.equal(p.hote.className,'u-ariane');assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.deepEqual(js(p.fenetres),[{width:1180,height:840}]);
+ assert.doesNotMatch(p.hote.innerHTML,/variante:ancienne|Ancien panneau/);
  p.ui.agir('variante:ancienne');await p.attendre(20);
- assert.deepEqual(js(p.ecrits.at(-1)),{banane51Interface:'ancienne'});assert.equal(p.body.classList.contains('ui5'),false);assert.equal(p.hote.hidden,true);
+ assert.equal(p.ecrits.length,1,'rien d’écrit');assert.equal(p.hote.hidden,false);assert.equal(p.hote.className,'u-ariane');
+ p.ui.agir('variante:signal');await p.attendre(20);
+ assert.deepEqual(js(p.ecrits.at(-1)),{banane51Interface:'signal'});assert.equal(p.hote.className,'u-signal');assert.deepEqual(js(p.fenetres.at(-1)),{width:600,height:760});
 });
 
-test('le choix gardé passe devant le départ ; un choix inconnu (présentations écartées comprises, dont l’ancienne « ariane ») laisse le départ',async()=>{
+test('le choix gardé passe devant le départ ; un choix inconnu (l’ancien « ancienne » et les présentations écartées compris) laisse Signal',async()=>{
  const garde=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
- assert.equal(garde.body.classList.contains('ui5'),true);assert.equal(garde.hote.hidden,false);assert.match(garde.hote.innerHTML,/data-vue="accueil"/);
- for(const v of ['ariane','linear','raycast','figma','n’importe quoi',null]){
+ assert.equal(garde.hote.className,'u-ariane');assert.match(garde.hote.innerHTML,/data-vue="accueil"/);
+ for(const v of ['ancienne','ariane','linear','raycast','figma','n’importe quoi',null]){
   const p=await monter({stockage:{banane51Interface:v},etat:etat(LOT)});
-  assert.equal(p.hote.hidden,true,String(v));assert.equal(p.body.classList.contains('ui5'),false,String(v));
+  assert.equal(p.hote.hidden,false,String(v));assert.equal(p.hote.className,'u-signal',String(v));assert.equal(p.body.classList.contains('ui5'),true,String(v));
  }
 });
 
-test('une fenêtre agrandie par l’opérateur n’est redimensionnée qu’au changement de présentation, jamais à l’ouverture du panneau d’avant',async()=>{
+test('une fenêtre agrandie par l’opérateur n’est redimensionnée qu’au changement de présentation, jamais à l’ouverture',async()=>{
  const p=await monter({etat:etat(LOT),fenetre:{width:1180,height:840}});
- assert.deepEqual(js(p.fenetres),[],'panneau d’avant à l’ouverture : la taille de l’opérateur est gardée');
- await p.ui.setVariante('ariane2');assert.deepEqual(js(p.fenetres),[],'déjà à la taille du nouveau panneau');
- await p.ui.setVariante('palette');await p.attendre(20);p.fenetres.length=0;await p.ui.setVariante('ancienne');await p.attendre(20);
- assert.deepEqual(js(p.fenetres),[{width:560,height:820}],'revenir au panneau d’avant le remet à sa taille');
+ assert.deepEqual(js(p.fenetres),[],'Signal à l’ouverture : la taille de l’opérateur est gardée');
+ await p.ui.setVariante('ariane2');assert.deepEqual(js(p.fenetres),[],'déjà à la taille de la présentation d’essai');
+ await p.ui.setVariante('palette');await p.attendre(20);p.fenetres.length=0;await p.ui.setVariante('signal');await p.attendre(20);
+ assert.deepEqual(js(p.fenetres),[{width:600,height:760}],'revenir à Signal le remet à sa taille');
 });
 
-test('nouvelle présentation (essai) : choisie dans Réglages, gardée ; un clic sur un onglet le choisit puis clique « Reconnecter ESV » ; le cache et le verrou de connexion suivent les boutons d’origine',async()=>{
+test('présentation d’essai : choisie dans Réglages, gardée ; un clic sur un onglet le choisit puis clique « Reconnecter ESV » ; le cache et le verrou de connexion suivent les boutons d’origine',async()=>{
  const p=await monter({stockage:{banane51Interface:'ariane2'},etat:etat(LOT)});
  assert.equal(p.body.classList.contains('ui5'),true);assert.match(p.hote.innerHTML,/data-vue="accueil"/);assert.equal(p.hote.className,'u-ariane');
- assert.deepEqual(js(p.fenetres),[{width:1180,height:840}]);
+ assert.deepEqual(js(p.fenetres),[{width:1180,height:840}],'une présentation d’essai demande sa taille à l’ouverture');
  p.els.tabs.value='';p.ui.agir('conn:12');assert.equal(p.els.tabs.value,'12');assert.equal(p.els.connect.clics,1);
  p.els['export-cache-clear'].disabled=true;p.els.connect.disabled=true;
  const ar=p.ui.instantane(etat(null)).ar;assert.equal(ar.cache.actif,false);assert.equal(ar.connexionBloquee,true);
@@ -83,9 +85,9 @@ test('palette : champ actif à l’ouverture, frappe gardée à chaque dessin, f
  /* « regl » + Entrée : les Réglages d’Ariane. */
  p.champ.value='regl';p.hote.ecoutes.input[0]({target:p.champ});clavier(touche('Enter'));await p.attendre(30);
  assert.equal(p.hote.className,'u-ariane');assert.match(p.hote.innerHTML,/data-vue="reglages"/);assert.deepEqual(js(p.ecrits.at(-1)),{banane51Interface:'ariane2'});
- /* Ctrl K : cartes → palette → cartes. */
+ /* Ctrl K : cartes → palette → Signal. */
  const k=()=>clavier(touche('k',{ctrlKey:true,target:{tagName:'DIV'}}));
- k();await p.attendre(20);assert.equal(p.hote.className,'u-palette');k();await p.attendre(20);assert.equal(p.hote.className,'u-ariane');assert.match(p.hote.innerHTML,/data-vue="accueil"/);
+ k();await p.attendre(20);assert.equal(p.hote.className,'u-palette');k();await p.attendre(20);assert.equal(p.hote.className,'u-signal','Ctrl K ramène à Signal');assert.match(p.hote.innerHTML,/class="sg-fen"/);
  /* Un clic sur un résultat lance sa commande et vide la recherche ; une lettre tapée hors du champ y revient. */
  await p.ui.setVariante('palette');p.champ.value='pau';p.hote.ecoutes.input[0]({target:p.champ});p.document.activeElement=null;const f0=p.champ.focuses;
  clavier(touche('p',{target:{tagName:'BODY'}}));assert.equal(p.champ.focuses,f0+1);
@@ -191,16 +193,82 @@ test('un clic sur l’habillage est un clic sur l’élément d’origine (jamai
 
 test('l’habillage : chargé après panel.js, dans la page du panneau seulement, aucun message au service worker, aucune API Chrome hors son choix, la taille de la fenêtre et une ressource',()=>{
  const html=lire('panel.html'),manifeste=require('../manifest.json');
- assert.ok(html.includes('<script src="panel.js"></script><script src="src/ui5-variante.js"></script><script src="src/ui5-rendu.js"></script><script src="src/ui5.js"></script></body>'));
- assert.ok(html.includes('<link rel="stylesheet" href="panel.css"><link rel="stylesheet" href="panel-ui5.css">'));
- for(const f of ['src/ui5.js','src/ui5-rendu.js','src/ui5-variante.js','src/relecture-pause.js'])assert.ok(!manifeste.content_scripts.some(c=>c.js.includes(f)),f+' : jamais injecté dans ESV');
+ assert.ok(html.includes('<script src="panel.js"></script><script src="src/ui5-variante.js"></script><script src="src/ui5-rendu.js"></script><script src="src/signal-rendu.js"></script><script src="src/ui5.js"></script></body>'));
+ assert.ok(html.includes('<link rel="stylesheet" href="panel.css"><link rel="stylesheet" href="panel-ui5.css"><link rel="stylesheet" href="panel-signal.css">'));
+ for(const f of ['src/ui5.js','src/ui5-rendu.js','src/signal-rendu.js','src/ui5-variante.js','src/relecture-pause.js'])assert.ok(!manifeste.content_scripts.some(c=>c.js.includes(f)),f+' : jamais injecté dans ESV');
  assert.ok(!/ui5/.test(lire('background.js').replace(/\/\*[\s\S]*?\*\//g,'')),'le service worker ne connaît pas l’habillage');
- assert.equal(lire('src/ui5-variante.js').match(/defaut: '([a-z]+)'/)[1],'ancienne','le panneau d’avant au départ');
- for(const f of ['src/ui5.js','src/ui5-rendu.js','src/ui5-variante.js']){
+ assert.equal(lire('src/ui5-variante.js').match(/defaut: '([a-z0-9]+)'/)[1],'signal','Signal au départ (D-250)');
+ for(const f of ['src/ui5.js','src/ui5-rendu.js','src/signal-rendu.js','src/ui5-variante.js']){
   const s=lire(f).replace(/\/\*[\s\S]*?\*\//g,'');
   assert.ok(!/sendMessage|runtime\.connect|exportToutZip|exportComplet|saveBlob|downloads|BananeZip|api\(/.test(s),f);
   const apis=[...s.matchAll(/chrome\??\.[a-zA-Z]+(?:\??\.[a-zA-Z]+)*/g)].map(m=>m[0].replace(/\?/g,''));
   for(const a of apis)assert.ok(/^chrome(\.(storage(\.local(\.(get|set))?)?|windows(\.(getCurrent|update))?|runtime(\.getURL)?))?$/.test(a),f+' : '+a);
   assert.ok(!/chrome\??\.(tabs|downloads|scripting|webNavigation)/.test(s),f);
  }
+});
+
+/* D-250 : Signal dans la page. */
+const LOT_FINI={...LOT,state:'COMPLETED',deferred:[{cut:4809,deferredAt:'2026-10-25T13:33:00Z',unresolvedRails:['right']},{cut:4803}],processed:[{durationMs:6000},{durationMs:8000},{durationMs:7000}]};
+test('Signal · Revue V2 : « Examiner » est gardé par lot sans message ; « Ouvrir » recopie la cible et clique le bouton caché du panneau, jamais autre chose',async()=>{
+ const p=await monter({etat:etat(LOT_FINI)});
+ p.ui.agir('sg:examiner:d:4809');await p.attendre(10);
+ assert.deepEqual(js(p.ecrits.at(-1)),{banane51Examines:{lot:'L1',cles:['d:4809']}});assert.match(p.hote.innerHTML,/data-act="sg:examiner:d:4809" aria-pressed="true"/);
+ p.ui.agir('sg:examiner:d:4809');await p.attendre(10);assert.deepEqual(js(p.ecrits.at(-1)),{banane51Examines:{lot:'L1',cles:[]}});
+ for(const id of ['goto-cut','goto-cut-cible','goto-cut-etat'])assert.ok(p.els[id],id+' : dans panel.html (T20a)');
+ const go=p.els['goto-cut'];delete p.els['goto-cut'];
+ p.ui.agir('sg:ouvrir:4809');assert.match(p.hote.innerHTML,/indisponible pour l’instant/,'sans le bouton du moteur : une note, rien d’autre');
+ p.els['goto-cut']=go;
+ p.ui.agir('sg:ouvrir:4809');assert.equal(p.els['goto-cut-cible'].value,'13:4809');assert.equal(p.els['goto-cut'].clics,1);
+ p.els['goto-cut'].disabled=true;p.ui.agir('sg:ouvrir:4803');assert.equal(p.els['goto-cut'].clics,1,'grisé par le panneau : pas de clic');
+ assert.deepEqual(js(p.envoyes),[],'aucun message au service worker');
+ const autre=await monter({stockage:{banane51Examines:{lot:'L1',cles:['d:4803']}},etat:etat(LOT_FINI)});
+ assert.deepEqual(js(autre.ui.instantane(etat(LOT_FINI)).sig.examines),['d:4803'],'gardé d’une ouverture à l’autre');
+ assert.deepEqual(js(autre.ui.instantane(etat({...LOT_FINI,id:'L2'})).sig.examines),[],'un autre lot repart de zéro');
+});
+
+test('Signal · clavier : Ctrl K ouvre et ferme la palette, Échap ferme, tiroir ouvert ↓ puis E marque la ligne ; Entrée ne lance jamais une commande grisée',async()=>{
+ const p=await monter({etat:etat(LOT_FINI)});
+ const clavier=e=>{for(const f of p.body.ecoutes.keydown)f(e);return e;};
+ clavier(touche('k',{ctrlKey:true,target:{tagName:'DIV'}}));assert.match(p.hote.innerHTML,/class="sg-palette"/);
+ clavier(touche('Escape',{target:{tagName:'DIV'}}));assert.doesNotMatch(p.hote.innerHTML,/class="sg-palette"/);
+ p.ui.agir('sg:tiroir');clavier(touche('ArrowDown',{target:{tagName:'DIV'}}));clavier(touche('e',{target:{tagName:'DIV'}}));await p.attendre(10);
+ assert.deepEqual(js(p.ecrits.at(-1)),{banane51Examines:{lot:'L1',cles:['d:4803']}},'la première ligne : le différé le plus récent');
+ clavier(touche('Escape',{target:{tagName:'DIV'}}));assert.match(p.hote.innerHTML,/data-ouvert="0"/);
+ p.els['export-tout'].disabled=true;clavier(touche('k',{ctrlKey:true,target:{tagName:'DIV'}}));p.champ.value='export';p.hote.ecoutes.input[0]({target:p.champ});
+ clavier(touche('Enter',{target:p.champ}));assert.equal(p.els['export-tout'].clics,0);
+ assert.deepEqual(js(p.envoyes),[]);
+});
+
+test('Signal · secours : si le dessin échoue, le panneau d’avant revient avec la raison ; rien n’est envoyé',async()=>{
+ const p=await monter({etat:etat(LOT)});
+ const rendre=p.ctx.ArianeSignalRendu.rendre;p.ctx.ArianeSignalRendu.rendre=()=>{throw Error('essai');};
+ p.ui.maj(true);
+ assert.equal(p.hote.hidden,true);assert.equal(p.body.classList.contains('ui5'),false);assert.match(p.els.notice.textContent,/n’a pas pu s’afficher \(essai\)/);
+ p.ctx.ArianeSignalRendu.rendre=rendre;p.els['ui5-essai'].onclick();await p.attendre(20);
+ assert.equal(p.hote.hidden,false,'« Essayer le nouveau panneau » le rend');assert.equal(p.hote.className,'u-signal');
+ assert.deepEqual(js(p.envoyes),[]);
+});
+
+test('Signal · réglages : un choix clique l’élément d’origine (thème, bandeau, F5 de la relecture)',async()=>{
+ const p=await monter({etat:etat(null)});
+ p.ui.agir('sg:choix:bandeau:oui');assert.equal(p.els['bandeau-toggle'].clics,1);
+ p.els['relecture-f5'].value='pause';let change=0;p.els['relecture-f5'].onchange=()=>change++;
+ p.hote.ecoutes.change[0]({target:{closest:()=>({dataset:{sel:'f5'},value:'arret'})}});assert.equal(p.els['relecture-f5'].value,'arret');assert.equal(change,1);
+ p.hote.ecoutes.change[0]({target:{closest:()=>({dataset:{sel:'f5'},value:'arret'})}});assert.equal(change,1,'déjà choisi : rien');
+ assert.deepEqual(js(p.envoyes),[]);
+});
+
+test('Signal · T20a : statut de connexion, « Reconnecter » (bouton d’origine), historique des parties et heure de pause lus dans l’état ; rien d’inventé quand ils manquent',async()=>{
+ const pausedAt=new Date(Date.now()-90000).toISOString();
+ const H=[{part:13,batchId:'L1',startedAt:'2026-10-25T13:00:00Z',endedAt:null,version:'4.9.5.21',depart:{valides:10,invalides:120,ignores:0,total:130},cibles:120,poses:null,differes:null,ecritsPasse:null,main:null,fin:'en-cours'}];
+ const p=await monter({etat:etat({...LOT,state:'PAUSED',pauseReason:'user',pausedAt},{connection:{status:'reconnecting'},partsHistory:H})});
+ Object.assign(p.els.reconnect,{hidden:false,disabled:true});
+ const sig=p.ui.instantane(etat({...LOT,state:'PAUSED',pauseReason:'user',pausedAt},{connection:{status:'reconnecting'},partsHistory:H})).sig;
+ assert.equal(sig.connexion.statut,'reconnecting');assert.deepEqual(js(sig.connexion.reconnect),{visible:true,actif:false});
+ assert.equal(sig.historique[0].part,13);assert.ok(sig.allure.pauseS>=89&&sig.allure.pauseS<120,'en pause depuis environ 90 s');
+ p.rendu(etat({...LOT,state:'PAUSED',pauseReason:'user',pausedAt},{connection:{status:'reconnecting'},partsHistory:H}));
+ assert.match(p.hote.innerHTML,/class="sg-pause-depuis" data-debut="\d+">1 min 3\d<\/b>|class="sg-pause-depuis" data-debut="\d+">1 min 30<\/b>/);assert.match(p.hote.innerHTML,/data-etat="libre"/,'la puce dit la reconnexion');
+ p.els.reconnect.disabled=false;p.ui.agir('legacy:reconnect');assert.equal(p.els.reconnect.clics,1);
+ const vide=p.ui.instantane(etat(LOT)).sig;assert.equal(vide.historique,null);assert.equal(vide.allure.pauseS,null);
+ assert.deepEqual(js(p.envoyes),[]);
 });

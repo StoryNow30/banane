@@ -53,15 +53,15 @@
  ${ligne('Après le lot', 'Choix gardé pour le prochain lot ; le lot en cours garde le sien.', sel('relecture', [['coupee', 'Rien'], ['ombre', 'Relire sans rien modifier'], ['corriger', 'Relire et corriger']], r.relecture))}
  ${ligne('Clic du mode rapide', 'Gardé pour le prochain lot.', sel('clic', [['tel-quel', 'Comme avant'], ['gauche-recentre', 'Rail gauche recentré'], ['tout-recentre', 'Tout recentré']], r.clic))}
  ${ligne('Série de différés', 'Mettre en attente les cuts voisins d’une série de différés.', sel('grappe', [['non', 'Non'], ['oui', 'Oui']], r.grappe ? 'oui' : 'non'))}
- ${ligne('Deuxième passe (écrit dans ESV)', 'En fin de lot, pose et valide les cuts restés sans pose qu’elle sait poser. Coupée, celle qui écrit s’arrête avant le cut suivant.', sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non'))}
+ ${ligne('Deuxième passe (en ombre)', 'En fin de lot, note ce qu’elle poserait pour les cuts restés sans pose, sans rien écrire dans ESV', sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non'))}
  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho.', sel('raison', [['non', 'Non'], ['chiffres', 'Oui · chiffres du haut'], ['alt-chiffres', 'Oui · Alt + chiffre'], ['pave', 'Oui · pavé numérique']], r.raison ? (r.touches || 'chiffres') : 'non'))}
  ${ligne('Bandeau dans ESV', 'Une ligne d’état au bas de la page ESV.', `<button type="button" class="btn" data-act="legacy:bandeau-toggle">${r.bandeau ? 'Allumé' : 'Éteint'}</button>`)}
  ${ligne('Thème', '', `<button type="button" class="btn" data-act="legacy:theme-toggle">Clair / sombre</button>`)}
  ${ligne('Connexion à ESV', snap.connexionNote || '', `<span class="conn">${(snap.onglets || []).length ? sel('onglet', [['', 'Choisir un onglet…'], ...snap.onglets.map(o => [o.valeur, o.texte])], snap.ongletChoisi || '') : ''}<button type="button" class="btn" data-act="legacy:connect">Reconnecter ESV</button></span>`)}
  ${ligne('Vider le cache des exports', 'Seulement après confirmation de réception.', `<button type="button" class="btn" data-act="legacy:export-cache-clear">Vider…</button>`)}
  ${ligne('Abandonner la séance Écho', 'Supprime les données de la séance, avec confirmation.', `<button type="button" class="btn danger" data-act="legacy:native-discard">Abandonner…</button>`)}
- ${ligne('Interface', 'La présentation du panneau.', sel('variante', [['ariane2', 'Nouveau panneau Ariane'], ['palette', 'Palette (clavier)'], ['ancienne', 'Ancien panneau']], snap.variante))}
- ${ligne('Détails techniques', 'Santé de la collecte, qualité de capture, départs des parties, résumé de la partie, journal du lot.', `<button type="button" class="btn" data-act="variante:ancienne">Ouvrir l’ancien panneau</button>`)}`;
+ ${ligne('Interface', 'La présentation du panneau.', sel('variante', [['signal', 'Signal (par défaut)'], ['ariane2', 'Ariane v2 (essai)'], ['palette', 'Palette (clavier)']], snap.variante))}
+ ${ligne('Détails techniques', 'Santé de la collecte, qualité de capture, départs des parties, résumé de la partie, journal du lot.', `<button type="button" class="btn" data-act="tech">Afficher les détails</button>`)}`;
   }
 
   /* ------------------------------------------------------------------ écrans
@@ -258,7 +258,8 @@
     if (a.cache) add('trash', 'Vider le cache des exports', a.cache.actif ? '' : raisonCache(snap, a, snap.mode === 'native' ? 'echo' : 'orbite'), 'legacy:export-cache-clear', !a.cache.actif, false);
     add('reglages', 'Réglages', '', 'interface:reglages', false, false);
     add('palette', 'Interface Ariane (cartes)', 'Ctrl K', 'variante:ariane2', false, false);
-    add('detail', 'Détails techniques (ancien panneau)', '', 'variante:ancienne', false, false);
+    add('orbite', 'Interface Signal', 'par défaut', 'variante:signal', false, false);
+    add('detail', 'Détails techniques', '', 'tech', false, false);
     return c;
   }
   /* La liste que voit (et que parcourt au clavier) l'utilisateur : une seule source pour le dessin et pour src/ui5.js. */
@@ -278,7 +279,7 @@
     const a = snap.ar || { etat: 'pret' }, m = modele(snap), L = paletteListe(snap, ui.q);
     const i = Math.max(0, Math.min(L.length - 1, ui.pi || 0));
     const rows = L.map((x, k) => `<div class="i2${k === i ? ' s' : ''}${x.off ? ' off' : ''}"${x.off ? ' aria-disabled="true"' : ` data-act="${esc(x.act)}"`}><svg viewBox="0 0 24 24" aria-hidden="true">${PIC[x.ib]}</svg><span class="nm">${esc(x.nom)}</span>${x.sous ? `<span class="sb">${esc(x.sous)}</span>` : ''}${k === i && !x.off ? '<kbd>↵</kbd>' : ''}</div>`).join('');
-    return `<div class="fond-p"><div class="pal2" role="dialog" aria-label="Palette Ariane"><div class="ch2"><i class="pt2" style="background:${snap.mode === 'native' ? 'var(--echo)' : 'var(--orbite)'}"></i><input id="ui5-q" value="${esc(ui.q)}" placeholder="Que veux-tu faire ?" autocomplete="off"><span class="et2">${esc(etatPal(snap, a))}</span></div>${alerteAr(snap, m)}<div class="l2">${rows || '<div class="i2 off"><span class="nm">Aucun résultat</span></div>'}</div><div class="p2"><span>Écris pour chercher : activités, onglets, cache, réglages</span><span class="sp"></span><span>Interface Ariane <kbd>Ctrl</kbd> <kbd>K</kbd></span></div></div></div>`;
+    return `<div class="fond-p"><div class="pal2" role="dialog" aria-label="Palette Ariane"><div class="ch2"><i class="pt2" style="background:${snap.mode === 'native' ? 'var(--echo)' : 'var(--orbite)'}"></i><input id="ui5-q" value="${esc(ui.q)}" placeholder="Que veux-tu faire ?" autocomplete="off"><span class="et2">${esc(etatPal(snap, a))}</span></div>${alerteAr(snap, m)}<div class="l2">${rows || '<div class="i2 off"><span class="nm">Aucun résultat</span></div>'}</div><div class="p2"><span>Écris pour chercher : activités, onglets, cache, réglages</span><span class="sp"></span><span>Interface Signal <kbd>Ctrl</kbd> <kbd>K</kbd></span></div></div></div>`;
   }
 
   function rendre(snap, ecran, ui) { return snap.variante === 'palette' ? rendrePalette(snap, ui || { q: '', pi: 0 }) : ecranAr(snap, ecran); }

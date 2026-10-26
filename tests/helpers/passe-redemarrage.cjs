@@ -7,7 +7,8 @@
  * Deux « vies » du service worker partagent l'ESV simulé, chrome.storage.local et le magasin (IndexedDB) : l'arrêt du service worker est simulé en
  * GELANT la première vie (`geler`) : à partir de cet instant, chacun de ses accès au stockage, au magasin et à ESV reste sans réponse, comme un
  * service worker tué ; rien de ce qu'elle n'a pas encore écrit ne l'est jamais. La seconde vie démarre sur ce qui a été écrit. `tuer(pred, avant)` :
- * gèle la vie 1 à la première écriture de stockage qui satisfait `pred` (avant de l'écrire si `avant`, après sinon). */
+ * gèle la vie 1 à la première écriture de stockage qui satisfait `pred` (avant de l'écrire si `avant`, après sinon).
+ * Test 21 (D-251) : la passe est livrée en ombre ; ce montage allume l'écriture (`ecriture: true`), comme tests/helpers/passe-differes.cjs. */
 const { memoire, base, K, S, SCOPE, ev, attendre } = require('./lot-profil.cjs');
 const { EsvEcriture } = require('./passe-differes.cjs');
 const { production } = require('./perf-production.cjs');
@@ -43,7 +44,7 @@ function montage({ sansPoints = [112, 114, 116], fin = 116, decider = () => 'val
     const b = production({ adapter, local: loc, store: magasin });
     v.b = b; v.geler = geler; vies.push(v); M.vieCourante = v;
     b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, observateurPassif: { ...S.observateurPassif, actif: true },
-      relecture: { attenteEcritureMs, attenteVuMs: 100 }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, passes: 2, ...passe } } };
+      relecture: { attenteEcritureMs, attenteVuMs: 100 }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ecriture: true, passes: 2, ...passe } } };
     const envoyer = b.ctx.chrome.tabs.sendMessage;
     b.ctx.chrome.tabs.sendMessage = async (id, m) => { if (v.gelee) return jamais();
       return m?.kind === 'b1-voisins' && adapter.calls.includes('goToCut') ? JSON.parse(JSON.stringify(adapter.voisins(m))) : envoyer(id, m); };

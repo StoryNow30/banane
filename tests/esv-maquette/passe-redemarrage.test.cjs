@@ -7,7 +7,8 @@
  * de la passe atteint le point voulu (guetteur `chrome.storage.onChanged` dans le panneau : aucun message au service worker), puis réveillé par
  * l'appel suivant du panneau, comme Chrome le fait. (1) arrêt au 2e reste décidé du premier tour ; (2) passe relancée après le lot (le lot s'arrête
  * sur une pose d'Ariane en attente), arrêt dès la première validation prouvée. Contrôles : reprise journalisée, passe close, chaque reste tracé
- * (événement ou trace de la reprise), au plus une écriture « valid » reçue par le serveur et une validation par cut écrit. */
+ * (événement ou trace de la reprise), au plus une écriture « valid » reçue par le serveur et une validation par cut écrit. Test 21 (D-251) : passe livrée en
+ * ombre ; l'essai (2) se saute alors (rien à écrire). */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const N=require('./navigateur.cjs');
 const EXPORT=process.env.BANANE_MAQUETTE_PASSE_EXPORT,[DEBUT,FIN]=(process.env.BANANE_MAQUETTE_PASSE_LOT||'775-800').split('-').map(Number),PARTIE=Number(process.env.BANANE_MAQUETTE_PASSE_PARTIE||0);
@@ -36,7 +37,7 @@ async function scenario({arret,relance=false}){
     const passeFinie=async()=>{let v;for(let i=0;i<600;i++){await dormir(500);v=await api('view');if(!['calcul','ecriture'].includes(v.passeDifferes?.etat))break;}return v;};
     await api('start',{part:PARTIE,start:DEBUT,end:FIN,testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',unresolvedPolicy:'defer',lotDecision:'apply',geometryEngine:'geometry-candidate-v1'});
     let v;for(let i=0;i<1200;i++){await dormir(500);v=await api('view');if(v?.batch?.state!=='RUNNING')break;}
-    if(relance){await passeFinie();await aller(FIN+1);await dormir(800);await api('passe-differes-ecrire');}
+    if(relance){const f=await passeFinie();if(f.passeDifferes?.mode!=='ecriture')return {sansEcriture:true};await aller(FIN+1);await dormir(800);await api('passe-differes-ecrire');}
     const vu=await Promise.race([pan.evaluate(()=>window.__arret),dormir(180000).then(()=>null)]);
     if(vu){const cdp=await ctx.newCDPSession(pan);await cdp.send('ServiceWorker.enable').catch(()=>{});await cdp.send('ServiceWorker.stopAllWorkers');}
     await dormir(1000);v=await passeFinie();
@@ -61,8 +62,10 @@ test('arrêt du service worker au 2e reste décidé : reprise au point gardé, p
   assert.equal(de(r,'passe-differes-ombre-fin').filter(e=>e.reprise==='sw-redemarre').length,1);
   console.log('# arrêt',JSON.stringify(r.vu),'| reprise',JSON.stringify({phase:rep.phase,passe:rep.passe,index:rep.index,decidees:rep.decidees,posees:rep.posees}),'| fin',JSON.stringify(de(r,'passe-differes-ecriture-fin').map(e=>e.issue)));
 });
-test('passe relancée, arrêt après la première validation prouvée : compté écrit ou refait, jamais réécrit ; passe close',opts,async()=>{
-  const r=await scenario({arret:{prouves:1},relance:true});const rep=controler(r);assert.equal(rep.phase,'ecriture');
+test('passe relancée, arrêt après la première validation prouvée : compté écrit ou refait, jamais réécrit ; passe close (écriture allumée seulement)',opts,async t=>{
+  const r=await scenario({arret:{prouves:1},relance:true});
+  if(r.sansEcriture){t.skip('deuxième passe livrée en ombre (test 21, D-251) : rien à écrire, rien à relancer');return;}
+  const rep=controler(r);assert.equal(rep.phase,'ecriture');
   const fin=de(r,'passe-differes-ecriture-fin').at(-1);assert.equal(fin.reprise,'sw-redemarre');
   console.log('# arrêt',JSON.stringify(r.vu),'| reprise',JSON.stringify({phase:rep.phase,ecrites:rep.ecrites,cutEnVol:rep.cutEnVol,enVol:rep.enVol}),'| fin',JSON.stringify({issue:fin.issue,ecrites:fin.ecrites,raison:fin.raison}),
     '| écritures serveur de la passe',JSON.stringify(r.serveur.filter(e=>de(r,'passe-differes-ecriture').some(x=>e.ligne.endsWith('-'+x.identity.cut)))));

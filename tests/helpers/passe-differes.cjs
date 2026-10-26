@@ -30,14 +30,15 @@ class EsvEcriture extends EsvTrou {
       compteurApres: { traites: this.opts.sansEffet ? avant.traites : this.traites, total: this.total }, command: 'ctrl-entrée' };
   }
 }
-/* `passe` : les réglages de `lot.passeDifferes` de l'essai ; `relecture` : le choix du panneau pour la relecture après le lot ('ombre') ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien) ; `stockage` : clés de chrome.storage.local au départ (interrupteur du panneau) ; `sansPoints` et `fin` : cuts sans point et dernier cut du lot, autres que ceux de `deux`. */
-async function lotPasse({ passe, deux = false, sansPoints = null, fin = null, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300, stockage = {} }) {
+/* Test 21 (D-251) : la passe est livrée en ombre ; ces essais d'écriture allument `ecriture` (réglage enregistré `ecriture: true`) sauf `ecritureAllumee: false` (le livré tel quel).
+ * `passe` : les réglages de `lot.passeDifferes` de l'essai ; `relecture` : le choix du panneau pour la relecture après le lot ('ombre') ; `opts` : défauts de l'ESV simulé (`refusAvantEnvoi`, `sansEffet`, `arreterApres` : « Arrêter » du panneau après la validation de ce cut) ; `observateur` : l'observateur passif ; `ecritureVue` : l'écriture « valid » que la page relaierait (null : rien) ; `stockage` : clés de chrome.storage.local au départ (interrupteur du panneau) ; `sansPoints` et `fin` : cuts sans point et dernier cut du lot, autres que ceux de `deux`. */
+async function lotPasse({ ecritureAllumee = true, passe, deux = false, sansPoints = null, fin = null, relecture = null, opts = {}, observateur = true, ecritureVue = true, statuts = {}, attenteEcritureMs = 300, stockage = {} }) {
   const adapter = new EsvEcriture(opts, sansPoints || (deux ? [112, 114] : [112])), dernier = fin || (deux ? 115 : 113), local = memoire(), b = production({ adapter, local });
   if (relecture) local.m.banane50Relecture = relecture;
   Object.assign(local.m, stockage);
   adapter.statuts = statuts;
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, observateurPassif: { ...S.observateurPassif, actif: observateur },
-    relecture: { attenteEcritureMs }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ...passe } } };
+    relecture: { attenteEcritureMs }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ...(ecritureAllumee ? { ecriture: true } : {}), ...passe } } };
   const envoyer = b.ctx.chrome.tabs.sendMessage;
   b.ctx.chrome.tabs.sendMessage = async (id, m) => m?.kind === 'b1-voisins' && adapter.calls.includes('goToCut') ? JSON.parse(JSON.stringify(adapter.voisins(m))) : envoyer(id, m);
   let seq = 0;

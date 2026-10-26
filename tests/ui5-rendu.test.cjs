@@ -36,9 +36,9 @@ test('écrans de séance : aucune case, aucun bouton radio, aucun champ de saisi
  }
  const s=R.rendre(base,'reglages');assert.ok((s.match(/<select/g)||[]).length>=5);
  for(const nom of ['relecture','clic','grappe','passe2','raison','variante','onglet'])assert.ok(s.includes(`data-sel="${nom}"`),nom);
- assert.match(s,/Deuxième passe \(écrit dans ESV\)[\s\S]*?<option value="oui" selected>Allumée<\/option>/);
+ assert.match(s,/Deuxième passe \(en ombre\)[\s\S]*?sans rien écrire dans ESV[\s\S]*?<option value="oui" selected>Allumée<\/option>/);
  assert.match(R.rendre({...base,reglages:{...base.reglages,passe2:null}},'reglages'),/data-sel="passe2"><option value="" selected>État inconnu<\/option>/,'état inconnu : jamais « Coupée » par défaut');
- assert.match(s,/<option value="ancienne">Ancien panneau<\/option>/);assert.doesNotMatch(s,/value="(linear|raycast|figma|ariane)"/);
+ assert.match(s,/<option value="signal">Signal/);assert.doesNotMatch(s,/value="ancienne"|Ancien panneau|ancien panneau/,'le panneau d’avant n’est plus proposé (D-250)');assert.doesNotMatch(s,/value="(linear|raycast|figma|ariane)"/);
 });
 
 test('tout texte du panneau est échappé avant d’entrer dans le HTML',()=>{
@@ -58,7 +58,7 @@ test('chaque action de l’habillage désigne un élément qui existe dans panel
   assert.ok(ids.has(id),id);
  const relPause={pause:{texte:'Pause',actif:true},reprendre:{texte:'Reprendre',actif:true,raison:''},arreter:true,ligne:''};
  for(const e of ECRANS)for(const m of R.rendre(avec({relPause}),e).matchAll(/data-act="legacy:([a-z-]+)"/g))assert.ok(ids.has(m[1]),e+' : '+m[1]);
- for(const e of ECRANS)for(const m of R.rendre(base,e).matchAll(/data-act="([a-z]+)(?::[a-z-]+)?"/g))assert.ok(['legacy','aller','pause','variante','conn'].includes(m[1]),e+' : '+m[1]);
+ for(const e of ECRANS)for(const m of R.rendre(base,e).matchAll(/data-act="([a-z]+)(?::[a-z-]+)?"/g))assert.ok(['legacy','aller','pause','variante','conn','tech'].includes(m[1]),e+' : '+m[1]);
 });
 
 /* Présentation « Ariane » : dessinée à partir de `snap.ar` (src/ui5.js) et des boutons du panneau. */
@@ -157,7 +157,7 @@ test('« Vider le cache » est en vue dans Orbite et Écho, grisé avec sa raiso
 test('nouveau logo ; accès discret à la palette (icône, lien d’accueil) ; choisissable dans Réglages > Interface',()=>{
  assert.match(v2('pret','accueil'),/id="ar-lg"/);
  const g=R.rendre(base,'reglages');
- assert.match(g,/<option value="ariane2" selected>/);assert.match(g,/<option value="ancienne">/);const a=v2('pret','accueil');assert.match(a,/data-act="variante:palette"[^>]*aria-label="Interface palette"/);assert.match(a,/class="astuce"/);assert.match(g,/<option value="palette">Palette/);
+ assert.match(g,/<option value="ariane2" selected>/);assert.doesNotMatch(g,/<option value="ancienne">/);assert.match(g,/<option value="signal">/);const a=v2('pret','accueil');assert.match(a,/data-act="variante:palette"[^>]*aria-label="Interface palette"/);assert.match(a,/class="astuce"/);assert.match(g,/<option value="palette">Palette/);
 });
 
 /* Palette sobre (D-233, D-236) : une ligne de recherche, l'état en petit à droite, quatre commandes au plus à l'ouverture, le reste en tapant. */
@@ -179,7 +179,7 @@ test('palette : en tapant on trouve activités, onglets, cache (grisé avec sa r
  const ok=pal({},{lotOuvert:false,cache:{actif:true}},'vider');assert.match(ok,/data-act="legacy:export-cache-clear"/);assert.doesNotMatch(ok,/class="i2(?: s)? off"/);
  assert.match(pal({},{},'onglet 2'),/data-act="conn:12"/);assert.doesNotMatch(pal({},{},'onglet 3'),/data-act="conn:13"/,'un onglet pas prêt ne se connecte pas');
  assert.match(pal({},{},'écho'),/class="i2(?: s)? off" aria-disabled="true"[^>]*>.*indisponible pendant un lot/);
- assert.match(pal({},{},'regl'),/data-act="interface:reglages"/);assert.match(pal({},{},'ariane'),/data-act="variante:ariane2"/);assert.match(pal({},{},'detail'),/data-act="variante:ancienne"/);
+ assert.match(pal({},{},'regl'),/data-act="interface:reglages"/);assert.match(pal({},{},'ariane'),/data-act="variante:ariane2"/);assert.match(pal({},{},'detail'),/data-act="tech"/);assert.doesNotMatch(pal({},{},'ancien'),/variante:ancienne/);assert.match(pal({},{},'signal'),/data-act="variante:signal"/);
  assert.match(pal({},{},'zzzz'),/Aucun résultat/);
  assert.match(pal({mode:'native',echo:{corriges:5}},{echoEtat:'Collecte en cours',lotOuvert:false},''),/class="et2">Collecte en cours · 5</);
  assert.match(pal({ongletChoisi:''},{},''),/data-act="conn:11"/,'sans onglet choisi, la connexion est proposée en premier');
