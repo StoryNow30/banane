@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.20',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 20 (L1-e6)';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.22',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 22 (L1-e6)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -634,8 +634,11 @@ async function validerSurPlace(identity,d,scope){const S=globalThis.BananeSettin
 const ecrituresLot={validations:[],lignes:new Map(),echecs:new Map(),refusees:[]};
 const reglageEcriture=()=>{const S=globalThis.BananeSettings?.lot||{};return {mode:S.ecritureRefusee==='off'?'off':'pause',
  relanceMs:Number.isFinite(S.ecritureRefuseeRelanceMs)&&S.ecritureRefuseeRelanceMs>=0?S.ecritureRefuseeRelanceMs:2000};};
-function ecritureNoterValidation(identity){if(reglageEcriture().mode==='off'||!Number.isInteger(identity?.cut))return null;
- const v={cut:identity.cut,part:identity.part??null,lot:engine?.s?.batch?.id??null,envoiMs:Date.now(),retourMs:null};
+function ecritureNoterValidation(identity,origine='lot'){if(reglageEcriture().mode==='off'||!Number.isInteger(identity?.cut))return null;
+ const v={cut:identity.cut,part:identity.part??null,lot:engine?.s?.batch?.id??null,envoiMs:Date.now(),retourMs:null,origine};
+ /* T21d (H) : la visite que le moteur complétera pour cette validation (même recherche que `validateAndNext` du moteur), pour y rattacher la preuve serveur. */
+ if(origine==='lot')try{const K=globalThis.BananeCore3,id=K.cutId(identity),r=(engine?.s?.records||[]).slice().reverse().find(x=>x?.identity&&K.cutId(x.identity)===id);
+  v.cutId=id;v.recordId=r?.recordId??r?.id??null;}catch{v.recordId=null;}
  ecrituresLot.validations.push(v);if(ecrituresLot.validations.length>16)ecrituresLot.validations.shift();return v;}
 const ecritureOk=s=>Number.isInteger(s)&&s>=200&&s<300;
 function ecritureLigne(f,t){
@@ -649,6 +652,7 @@ function ecritureObservee(f){const R=reglageEcriture();if(R.mode==='off'||!f||f.
  /* Corps lu sans `ExtractionStatus` : pas une écriture de validation. */
  if(f.body&&typeof f.body==='object'&&!Object.hasOwn(f.body,'ExtractionStatus'))return;
  const l=ecritureLigne(f,t);
+ if(ok)try{preuveServeurNoter(f,t,l);}catch{/* instrumentation seulement */}
  if(ok){for(const [cle,e] of ecrituresLot.echecs)if(t>=e.debutMs-1&&(f.railPairId&&f.railPairId===e.railPairId||l&&l.cut===e.cut))ecrituresLot.echecs.delete(cle);return;}
  if(f.status===null||f.status===undefined||!l||!ecrituresLot.validations.some(v=>v.cut===l.cut))return;
  const e={cut:l.cut,par:l.par,statut:f.status,railPairId:f.railPairId??null,debutMs:t,lot:engine?.s?.batch?.id??null};
@@ -663,6 +667,36 @@ async function ecritureConfirmer(cut,e){if(ecrituresLot.echecs.get(cut)!==e)retu
   * par exemple, écrit le sien). */
  const poser=async()=>{if(engine?.s?.batch?.id!==e.lot)return;engine.s.notice=avis;await engine.save();};
  await poser();if(tourne&&engine.task)void engine.task.then(poser,poser).catch(()=>{});}
+/* T21d (fiches/H_PREUVE_SERVEUR.md, correctif 1) — PREUVE SERVEUR RATTACHÉE APRÈS COUP. L'écriture de validation d'ESV part 0,2 à 0,5 s APRÈS la
+ * navigation sur laquelle le lot avance (mesuré sur le lot de la 4:2) : aucune lecture faite pendant la validation ne peut la voir. Quand
+ * l'observateur passif la voit (2xx, corps `ExtractionStatus: valid` + `TreatedByOperator: true`, ligne = cut validé par le lot, dans
+ * `preuveServeurJointeMs` après le retour de la validation), elle est jointe à la visite du cut avec les noms de champs d'Écho
+ * (`serverConfirmed`, `serverConfirmationStatus`, `serverConfirmedAt`) et un champ dédié `serverConfirmation` {statut, at, par, délais} ; un
+ * événement `validation-ecriture-observee` le dit au journal. Si la visite n'est pas encore complétée par le moteur (écriture vue avant la
+ * fin de la validation), la preuve attend l'événement `validation-observation` du cut. Instrumentation seulement : aucune décision, aucune
+ * commande, aucune attente ; `validationProof`, l'évidence du lot (`processed[].evidence`) et son état de clôture ne changent pas. Une écriture
+ * refusée ou absente ne pose rien (le refus garde son chemin, `ecriture-refusee`). Les validations de la deuxième passe ont leur propre preuve
+ * (`ecritureAttendue`) et ne sont pas concernées. */
+const preuveJointeMs=()=>{const v=globalThis.BananeSettings?.lot?.preuveServeurJointeMs;return Number.isFinite(v)&&v>=0?v:5000;};
+function preuveServeurNoter(f,t,l){const corps=f.body&&typeof f.body==='object'?f.body:null;
+ if(!l||!corps||corps.ExtractionStatus!=='valid'||corps.TreatedByOperator!==true)return;
+ const v=ecrituresLot.validations.findLast(x=>x.origine==='lot'&&x.cut===l.cut&&!x.preuve&&t>=x.envoiMs-500&&t<=(x.retourMs??Infinity)+preuveJointeMs());if(!v)return;
+ v.preuve={statut:f.status,at:new Date(t).toISOString(),par:l.par,apresEnvoiMs:Math.round(t-v.envoiMs),apresRetourMs:Number.isFinite(v.retourMs)?Math.round(t-v.retourMs):null};
+ const rattache=preuveServeurRattacher(v);
+ journalerSimple('validation-ecriture-observee',{identity:{part:v.part,cut:v.cut},lotId:v.lot,statut:v.preuve.statut,at:v.preuve.at,par:v.preuve.par,
+  apresEnvoiMs:v.preuve.apresEnvoiMs,apresRetourMs:v.preuve.apresRetourMs,recordId:v.recordId??null,visite:rattache?'rattachee':'en-attente'});}
+function preuveServeurRattacher(v){if(!v?.preuve||v.rattachee||!v.recordId)return false;
+ const rec=(engine?.s?.records||[]).find(r=>(r?.recordId??r?.id)===v.recordId);if(!rec||rec.commandSent!==true)return false;
+ const p=v.preuve;v.rattachee=true;
+ Object.assign(rec,{serverConfirmed:true,serverConfirmationStatus:'observed-validation-write-'+p.statut,serverConfirmedAt:p.at,
+  serverConfirmation:{statut:p.statut,at:p.at,par:p.par,apresEnvoiMs:p.apresEnvoiMs,apresRetourMs:p.apresRetourMs}});
+ void Promise.resolve(store.putRecord(rec)).catch(()=>{});
+ /* Le dernier cut d'un lot : le moteur ne sauvera plus son état ; sauvé ici, seulement s'il est au repos. */
+ if(!engine.task&&!engine.busy)void Promise.resolve(engine.save()).catch(()=>{});
+ return true;}
+/* Preuve vue avant que le moteur ait complété la visite : rattachée à l'observation de la validation de ce cut. */
+function preuveServeurEnAttente(identity){try{const K=globalThis.BananeCore3,id=identity?K.cutId(identity):null;if(!id)return;
+ for(const v of ecrituresLot.validations)if(v.origine==='lot'&&v.preuve&&!v.rattachee&&v.cutId===id)preuveServeurRattacher(v);}catch{/* instrumentation seulement */}}
 adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',async()=>{
  const envoi=ecritureNoterValidation(args[0]);
  try{
@@ -1244,6 +1278,12 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
  engine.event=async(type,...rest)=>{if(type==='batch-state')finVueParLaBoucle(rest[0]?.state);
    /* OBS-3 : arrêt au dernier cut : l'instant reste `stoppedAtEnd.at` ; on garde aussi le contexte de mesure (redémarrage). */
    if(type==='batch-stopped-at-end'){const b=engine.s.batch,at=Date.parse(b?.stoppedAtEnd?.at);if(b?.id&&b.state==='STOPPED'&&Number.isFinite(at)&&engine.s.mode==='automatic-test')poserFin(b,at,'dernier-cut');}
+   /* T21d (H, correctif 1) : avant la requête de validation, la confirmation du serveur n'est pas évaluable : `null` (inconnu à cet instant), plus
+    * `false` (faux par construction sur 68 poses sur 68 au lot de la 4:2). Le moteur (épinglé) n'est pas touché : la valeur est corrigée ici, dans
+    * l'événement et dans `applied`, avant leur écriture ; rien ne la lit pour décider. */
+   if((type==='applied-verified'||type==='validation-intent')&&rest[0]&&rest[0].serverConfirmed===false){rest[0]={...rest[0],serverConfirmed:null};
+    if(type==='applied-verified'&&engine.s.applied&&engine.s.applied.serverConfirmed===false)engine.s.applied.serverConfirmed=null;}
+   if(type==='validation-observation')preuveServeurEnAttente(rest[0]?.identity);
    const r=await evenement(type,...rest);
    /* 5.0 (D-171) : fin naturelle d'un lot créé avec la relecture : la passe est planifiée (rien si elle est coupée). */
    if(type==='batch-state'||type==='batch-stopped-at-end'){relecturePlanifier();passeDiffPlanifier();}
@@ -1649,63 +1689,126 @@ async function l1Commande(args){
   else l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:args?.command?.reason==='regles-metier'||args?.lotObservation?.l1?.motif==='regle-metier'});}
  return r;}
 /* `cours` : la passe de CE lot (promesse jamais rejetée) ; `ecriture` : l'écriture en cours (arrêt demandé, attente de l'écriture de validation) ; `vue` : ce que le panneau lit ;
- * `reprise` : le lot, le réglage et la vue de la passe, gardés pour la relancer (le dernier cut du lot validé à la main, par exemple). */
-const passeDiff={planifie:new Set(),cours:null,ecriture:null,vue:null,reprise:null};
-async function passeDiffOmbre(b,rg,vue){
- const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow,SIDES=['left','right'],debut=Date.now();
+ * `reprise` : le lot, le réglage et la vue de la passe, gardés pour la relancer (le dernier cut du lot validé à la main, par exemple) ; `etat` : l'état persistant de la passe (T21d). */
+const passeDiff={planifie:new Set(),cours:null,ecriture:null,vue:null,reprise:null,etat:null};
+/* T21d (D-250, priorité 2) — LA DEUXIÈME PASSE SURVIT AU REDÉMARRAGE DU SERVICE WORKER. Constat (partie 0 du 23/10, lot 1) : 90 décisions en 90 s,
+ * puis 32 s sans rien, puis le service worker redémarré (point `restored`) ; la passe, qui vivait en mémoire, a disparu sans fin ni relecture.
+ * État persistant, dans chrome.storage.local :
+ *  - `banane56PasseDiffEntree`, écrite une fois au départ : le transport des poses du lot (rails réduits aux deux champs que la GCV2 en lit,
+ *    `positionSceneRelative` et `sceneRelativeToProfileLocal` : les rails complets portent les contours, environ 80 ko par cut) et les appuis du lot ;
+ *  - `banane56PasseDiff`, écrite à chaque décision, à chaque changement de tour et de phase, avant et après chaque cut écrit, et dès que la
+ *    validation d'un cut est prouvée : les restes de la passe et leur état, le tour et le prochain reste, les poses décidées (positions, décalages,
+ *    rails réduits), l'écriture (cuts à écrire, nombre écrit, cut en vol, cuts prouvés), les comptes du panneau. Phases : `ombre`, `ombre-finie`,
+ *    `ecriture`, `finie`. Effacée à la fin de la passe.
+ * Au réveil (`passeDiffApresRedemarrage`) : REPRISE au point exact si le lot est le même et clos de lui-même, le profil L1-se, la passe allumée
+ * (réglage et interrupteur), l'état lisible et de moins de 24 h ; sinon FIN NOTÉE (`passe-differes-ombre-fin` ou `passe-differes-ecriture-fin`,
+ * `issue:'interrompue'`, `motif:'sw-redemarre'`, avec la raison). Un cut décidé n'est jamais redécidé (les décisions gardées et le transport sont
+ * relus tels quels), un cut écrit jamais réécrit. Cut EN VOL au redémarrage : validation prouvée et gardée → compté écrit (événements rattrapés,
+ * `recupere`) ; intention de pose présente sans preuve → écriture INCERTAINE : la passe s'arrête, l'intention reste (« J'ai contrôlé le cut N »,
+ * D-248 : rien ne repart) ; ni intention ni preuve → rien n'a été posé, ou la pose a été remise : le cut est refait avec toutes ses gardes (cut
+ * rouge dans la liste d'ESV, pose inchangée depuis la visite du lot, intention notée avant toute pose). La relecture qui attendait la passe est
+ * replanifiée après elle. Chaque décision rend aussi la main à la boucle d'événements (écriture de l'état, puis `setTimeout` 0) : sans cela, le
+ * second tour, dont les nuages sont déjà en mémoire, s'enchaînait en une seule tâche (microtâches seulement), sans laisser passer ni le journal
+ * (IndexedDB), ni les messages. Rien ne change à la décision de la passe ni à ses gardes. */
+const CLE_PASSE_DIFF_ETAT='banane56PasseDiff',CLE_PASSE_DIFF_ENTREE='banane56PasseDiffEntree',PASSE_REPRISE_MS=24*3600*1000;
+const railsReduits=rails=>Object.fromEntries(['left','right'].map(s=>[s,{positionSceneRelative:rails?.[s]?.positionSceneRelative??null,sceneRelativeToProfileLocal:rails?.[s]?.sceneRelativeToProfileLocal??null}]));
+const cederLaMain=()=>new Promise(r=>setTimeout(r,0));
+async function passeDiffSauver(E){if(!E||passeDiff.etat!==E)return;E.savedAt=new Date().toISOString();try{await chrome.storage.local.set({[CLE_PASSE_DIFF_ETAT]:E});}catch{/* mémoire seule */}}
+async function passeDiffOublier(E){try{const r=(await chrome.storage.local.get(CLE_PASSE_DIFF_ETAT))?.[CLE_PASSE_DIFF_ETAT];
+ if(!r||r.id===E?.id)await chrome.storage.local.remove?.([CLE_PASSE_DIFF_ETAT,CLE_PASSE_DIFF_ENTREE]);}catch{/* rien */}}
+const vueComptes=vue=>({differes:vue.differes,posees:vue.posees,demandees:vue.demandees,ecrites:vue.ecrites});
+/* Départ d'une passe (fin de lot ou relance) : entrée figée, puis état. */
+async function passeDiffDebut(b,rg,vue,restes,transport,anchors,cleT){const K=globalThis.BananeCore3;
+ const E={v:1,id:K.uid(),lotId:b.id,part:b.scope.part,mode:rg.mode,debut:new Date().toISOString(),relectureApres:rg.mode==='ecriture'&&!!relectureDuLot(b),phase:'ombre',
+  restes:restes.map(r=>({identity:r.identity,zone:r.zone,adv:r.adv,lidarCaptureId:r.lidarCaptureId,etat:'differe',motif:null})),passe:1,index:0,n:0,poses:[],ecriture:null,
+  vue:vueComptes(vue),cleT,savedAt:null};
+ passeDiff.etat=E;
+ try{await chrome.storage.local.set({[CLE_PASSE_DIFF_ENTREE]:{v:1,id:E.id,lotId:b.id,anchors,
+  transport:transport.map(t=>({identity:t.identity,positions:t.positions,rails:railsReduits(t.rails)}))}});}catch{/* mémoire seule */}
+ await passeDiffSauver(E);return E;}
+/* Une décision de plus : état du reste, prochain reste, pose ; écrit, puis la main est rendue. `transportSeul` : un cut entré au transport sans pose (panne entre les deux). */
+async function passeDiffNoter(E,i,r,n,pose){if(E){const x=E.restes[i];if(x){x.etat=r.etat;x.motif=r.motif??null;}E.index=i+1;E.n=n;if(pose)E.poses.push(pose);await passeDiffSauver(E);}
+ await cederLaMain();}
+/* Nuage du reste relu du magasin, moteur avec réservoir et rails du moteur (le calcul du premier tour, inchangé) ; faux sans nuage lisible. */
+async function passeDiffCharger(r){const K=globalThis.BananeCore3,Sh=globalThis.BananeGCV1Shadow;
+ const c=await store.getCloud(r.lidarCaptureId);if(!c?.rails?.left||!c?.rails?.right||!Array.isArray(c.pointsSceneRelative))return false;
+ const identity=K.completeIdentity(c.identity||r.identity);r.cloud=c;r.capture={identity,rails:c.rails,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes};
+ r.science=Sh.scientificProposeBothAvecReservoir(r.capture);r.runtimeRails=Sh.toRuntimeRails(r.science);return true;}
+/* `rep` (T21d, reprise après redémarrage) : {E, restes, transport, anchors, poses} relus de l'état ; la passe repart au tour et au reste gardés. */
+async function passeDiffOmbre(b,rg,vue,rep=null){
+ const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,SIDES=['left','right'],debut=Date.now();
  if(!profilL1se()||engine?.s?.batch?.id!==b.id)return null;
- const restes=[];
- for(const d of b.deferred||[]){const id=d.identity;if(!id||!d.lidarCaptureId)continue;
-  const r=l1Restes.cle===l1ResteCle(b)?l1Restes.m.get(`${id.part}|${id.frameId??null}|${id.cut}`):null;if(!r||r.regle)continue;
-  restes.push({...r,lidarCaptureId:d.lidarCaptureId,etat:'differe',capture:null,science:null,runtimeRails:null});}
- vue.differes=vue.ecrites+restes.length;   /* cumulés sur les relances : un cut écrit n'est plus un reste */
- const cleT=(b.id||'')+'|'+b.scope.part+'|'+(restes[0]?.identity.frameId??null),transport=(l1eTransport.cle===cleT?l1eTransport.poses:[]).slice(),anchors=(b.lotObservation?.anchors||[]).slice(),poses=[];
+ let restes,transport,anchors,poses,E,passe0=1,i0=0,n0=0;
+ if(rep){({restes,transport,anchors,poses,E}=rep);passe0=E.passe;i0=E.index;n0=E.n;}
+ else{restes=[];
+  for(const d of b.deferred||[]){const id=d.identity;if(!id||!d.lidarCaptureId)continue;
+   const r=l1Restes.cle===l1ResteCle(b)?l1Restes.m.get(`${id.part}|${id.frameId??null}|${id.cut}`):null;if(!r||r.regle)continue;
+   restes.push({...r,lidarCaptureId:d.lidarCaptureId,etat:'differe',capture:null,science:null,runtimeRails:null});}
+  vue.differes=vue.ecrites+restes.length;   /* cumulés sur les relances : un cut écrit n'est plus un reste */
+  const cleT=(b.id||'')+'|'+b.scope.part+'|'+(restes[0]?.identity.frameId??null);transport=(l1eTransport.cle===cleT?l1eTransport.poses:[]).slice();anchors=(b.lotObservation?.anchors||[]).slice();poses=[];
+  E=await passeDiffDebut(b,rg,vue,restes,transport,anchors,cleT);}
  /* Les leviers de la passe ne valent que le temps d'un appel (synchrone) : un lot qui démarre pendant les attentes garde les siens. */
  const avant=G.leviersActifs(),decider=a=>{G.reglerLeviers({...avant,...rg.leviers});try{return G.deciderDiffere(a);}finally{G.reglerLeviers(avant);}};
- for(let passe=1;passe<=rg.passes;passe++){let n=0;
-  for(const r of restes){if(r.etat!=='differe')continue;
+ for(let passe=passe0;passe<=rg.passes;passe++){let n=passe===passe0?n0:0;
+  if(E.passe!==passe){E.passe=passe;E.index=0;E.n=0;await passeDiffSauver(E);}
+  for(let i=passe===passe0?i0:0;i<restes.length;i++){const r=restes[i];if(r.etat!=='differe')continue;
    try{
-    if(!r.capture){const c=await store.getCloud(r.lidarCaptureId);if(!c?.rails?.left||!c?.rails?.right||!Array.isArray(c.pointsSceneRelative)){r.etat='sans-nuage';continue;}
-     const identity=K.completeIdentity(c.identity||r.identity);r.cloud=c;r.capture={identity,rails:c.rails,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes};
-     r.science=Sh.scientificProposeBothAvecReservoir(r.capture);r.runtimeRails=Sh.toRuntimeRails(r.science);}
+    if(!r.capture&&!await passeDiffCharger(r)){r.etat='sans-nuage';await passeDiffNoter(E,i,r,n,null);continue;}
     const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(r.identity.part),r.identity.cut);
     const g=decider({capture:r.capture,science:r.science,appuis:anchors.slice(),options:{...G.REGLE.lotOptions},voisins:l1Voisins(b,r.identity),voisinsTransport:transport.slice(),
      zone:r.zone,plagesADV:r.adv,modele:l1Modele(),regle:G.REGLE_E,reference:ref,voieListe:await l1eVoieListe(r.capture,r.identity)});
-    if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
+    if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
     const cg=G.commander({positions:g.positions,runtimeRails:r.runtimeRails,before:r.capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),valider:true});
-    if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
+    if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
     transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
     r.etat='pose-ombre';n++;
     const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)]));
     poses.push({cut:r.identity.cut,passe,decal,r,positions:g.positions});
+    await passeDiffNoter(E,i,r,n,{cut:r.identity.cut,passe,decal,positions:g.positions,i,identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},rails:railsReduits(r.capture.rails)});
     journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,l1:G.resumer(g)});
-   }catch(e){journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'erreur',message:String(e?.message||e).slice(0,160)});}}
+   }catch(e){
+    /* Panne après l'entrée au transport et avant la pose (comme avant : le cut reste au transport, sans pose). */
+    const seul=r.etat==='pose-ombre'&&!poses.some(p=>p.r===r)&&transport.at(-1)?.identity?.cut===r.identity.cut;
+    await passeDiffNoter(E,i,r,n,seul?{transportSeul:true,cut:r.identity.cut,passe,i,identity:transport.at(-1).identity,positions:transport.at(-1).positions,rails:railsReduits(transport.at(-1).rails)}:null);
+    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'erreur',message:String(e?.message||e).slice(0,160)});}}
   if(!n)break;}
  vue.posees=vue.ecrites+poses.length;
- journalerSimple('passe-differes-ombre-fin',{lotId:b.id,mode:rg.mode,ecritureDemandee:rg.ecritureDemandee,differes:restes.length,posees:poses.length,cuts:poses.map(p=>p.cut),ms:Date.now()-debut});
+ E.phase='ombre-finie';E.vue=vueComptes(vue);await passeDiffSauver(E);
+ journalerSimple('passe-differes-ombre-fin',{lotId:b.id,mode:rg.mode,ecritureDemandee:rg.ecritureDemandee,differes:restes.length,posees:poses.length,cuts:poses.map(p=>p.cut),ms:Date.now()-debut,...(rep?{reprise:'sw-redemarre'}:{})});
  return poses;}
 /* Niveau « ecriture » (livré allumé ; fiches/PASSATION_T17_PASSE2.md) : les poses décidées en ombre sont écrites dans l'ordre où elles ont été décidées (chacune repose sur les
  * précédentes : voisins, transport), au plus `max` ; à la première pose non écrite la passe s'arrête. Pour chaque cut (`passeDiffPoser`) : aller au cut ; ESV l'affiche rouge dans sa
  * liste (jamais d'écrasement d'un vert) ; capture ; commande du lot ; pose relue à 1 mm (remise sinon) ; Ctrl+Entrée, prouvé par le compteur « N on M treated », le même cut affiché et
- * l'écriture « valid » vue par l'observateur passif. Tant qu'elle écrit, le panneau ne lance rien d'autre ; « Arrêter », ou l'interrupteur coupé, l'arrête avant le cut suivant. */
-async function passeDiffEcrire(b,poses,rg,vue){
- const aEcrire=poses.slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
- vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
+ * l'écriture « valid » vue par l'observateur passif. Tant qu'elle écrit, le panneau ne lance rien d'autre ; « Arrêter », ou l'interrupteur coupé, l'arrête avant le cut suivant.
+ * T21d : `aReprendre` (reprise après redémarrage) : les poses qui restent à écrire, dans l'ordre gardé ; les mêmes contrôles de départ sont refaits. */
+async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
+ const E=passeDiff.etat&&passeDiff.etat.lotId===b.id?passeDiff.etat:null;
+ let aEcrire;
+ if(aReprendre){aEcrire=aReprendre;if(!aEcrire.length&&!E?.ecriture)return;}
+ else{aEcrire=poses.slice(0,Math.max(0,rg.max-vue.ecrites));if(!aEcrire.length)return;
+  vue.etat='ecriture';vue.message=null;vue.demandees=vue.ecrites+aEcrire.length;
+  if(E){E.phase='ecriture';E.ecriture={liste:aEcrire.map(p=>p.cut),faits:0,enVol:null,prouves:[]};E.vue=vueComptes(vue);await passeDiffSauver(E);}}
+ const demandees=E?.ecriture?.liste?.length??aEcrire.length;
  for(let i=0;i<200&&engine.task;i++)await engine.task.catch(()=>{});
- const raison0=['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
- if(!raison0){const E=passeDiff.ecriture={arret:false,attente:null};
+ /* T21d : reprise où tout était déjà écrit (redémarrage juste avant la fin) : rien à contrôler, la fin est seulement notée. */
+ const raison0=!aEcrire.length?null:['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
+ if(!raison0){const EC=passeDiff.ecriture={arret:false,attente:null,etat:E};
   try{
    for(const p of aEcrire){
-    if(E.arret||!await passeDiffAllumee()){issue='arret';break;}
+    if(EC.arret||!await passeDiffAllumee()){issue='arret';break;}
     if(engine?.s?.batch?.id!==b.id){issue='lot-change';break;}
     vue.cut=p.cut;let r;
-    try{r=await passeDiffPoser(b,p,E);}catch(e){r={resultat:'incertain',raison:String(e?.message||e).slice(0,300)};}
+    if(E){E.ecriture.enVol={cut:p.cut,depuis:new Date().toISOString()};await passeDiffSauver(E);}
+    try{r=await passeDiffPoser(b,p,EC);}catch(e){r={resultat:'incertain',raison:String(e?.message||e).slice(0,300)};}
+    /* Un cut incertain reste « en vol » : au réveil, son intention le dit incertain, jamais réécrit. */
+    if(E){if(r.resultat==='ecrit'){E.ecriture.faits++;E.vue.ecrites=vue.ecrites+1;}if(r.resultat!=='incertain')E.ecriture.enVol=null;await passeDiffSauver(E);}
     journalerSimple('passe-differes-ecriture',{identity:{part:b.scope.part,cut:p.cut},passe:p.passe,decal:p.decal,...r});
     if(r.resultat!=='ecrit'){issue=r.resultat;raison=r.raison;break;}
     l1ResteOter(p.r.identity);vue.ecrites++;}
   }finally{passeDiff.ecriture=null;vue.cut=null;}}
  vue.etat=issue==='fin'?'finie':'arretee';vue.message=raison;
- journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees:aEcrire.length,decidees:poses.length});}
+ if(E){E.phase='finie';E.vue=vueComptes(vue);await passeDiffSauver(E);}
+ journalerSimple('passe-differes-ecriture-fin',{lotId:b.id,issue,raison,ecrites:vue.ecrites,demandees,decidees:poses.length,...(aReprendre?{reprise:'sw-redemarre'}:{})});}
 /* Action du panneau : relance la passe, avec les mêmes refus qu'au départ automatique. Les décisions sont REFAITES (ombre) : depuis la première, une relecture ou un Écho
  * a pu changer les voisins ; les cuts déjà écrits par la passe ne sont plus des différés pour elle. */
 async function passeDiffEcrireDemande(){
@@ -1720,6 +1823,8 @@ async function passeDiffPoser(b,p,E){
  let now,cg;
  /* Lectures seulement : rien n'est encore écrit. */
  try{
+  /* T21d : après un redémarrage, le nuage du cut est relu du magasin (calcul du premier tour) pour la garde « pose inchangée » et la commande. */
+  if(!r.capture&&!await passeDiffCharger(r))return refuse('nuage du cut absent du magasin au réveil : la pose décidée ne peut pas être commandée');
   /* Test 18 : comme une correction de la relecture, le cut n'est posé qu'atteint par les boutons d'ESV : saut au cut d'avant (d'après, pour le cut 0), puis un pas. */
   const avant=cut>0?cut-1:cut+1,aller=(c,chemin)=>call('goToCut',{part,cut:c},{chemin,borneConnue:null},K.uid()),nonConfirme=(c,nav)=>refuse(`passage au cut ${c} non confirmé (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,160)})`);
   let nav=await aller(avant,'auto');if(nav?.resultat!=='confirme')return nonConfirme(avant,nav);
@@ -1739,7 +1844,7 @@ async function passeDiffPoser(b,p,E){
  if(cg.vue==='deplacer')return refuse('cible hors de la vue : cette passe ne déplace pas la vue');
  const pose=await poserPuisVerifier(b,now,cg.rails,K.expectedPoses(now,cg.rails),'passe');if(pose)return refuse(pose);
  /* Ctrl+Entrée : si la preuve manque APRÈS l'envoi, la pose reste, l'intention aussi : le cut est à contrôler dans ESV. */
- const a=E.attente={cut,depuisMs:Date.now(),ok:false,refus:null},envoi=ecritureNoterValidation(now.identity),incertain=m=>Error(`cut ${cut} : validation incertaine (${m}). Contrôle ce cut dans ESV.`);
+ const a=E.attente={cut,depuisMs:Date.now(),ok:false,refus:null},envoi=ecritureNoterValidation(now.identity,'passe'),incertain=m=>Error(`cut ${cut} : validation incertaine (${m}). Contrôle ce cut dans ESV.`);
  let ev;
  try{ev=await validateInPlaceInESV(now.identity,{part,pageId:b.scope.pageId??null},{commande:S.validationDernierCut==='bouton'?'bouton':'ctrl-entree',boutonId:S.boutonValiderSansSuivant??null});}
  catch(e){E.attente=null;if(/rien n.a été envoyé/.test(e?.message||''))return refuse(await remettrePose(b,now,`validation refusée avant l’envoi : ${String(e.message).slice(0,160)}`));throw incertain(String(e?.message||e).slice(0,200));}
@@ -1748,6 +1853,8 @@ async function passeDiffPoser(b,p,E){
  const fin=Date.now()+reglageRelecture().attenteEcritureMs;while(!a.ok&&a.refus==null&&Date.now()<fin)await attendreMs(100);
  E.attente=null;
  if(!a.ok)throw incertain(a.refus!=null?`ESV a refusé d’enregistrer la validation, statut ${a.refus}`:`aucune écriture de validation vue en ${Math.round(reglageRelecture().attenteEcritureMs/1000)} s`);
+ /* T21d : la preuve est gardée AVANT d'effacer l'intention : au réveil, un cut prouvé est compté écrit, jamais réécrit ni dit incertain. */
+ if(E.etat?.ecriture){E.etat.ecriture.prouves.push(cut);await passeDiffSauver(E.etat);}
  await relectureEffacerIntention(cut,b.id);
  /* Le seul marqueur d'une validation d'Ariane : le résumé de la partie compte le cut posé, l'audit du serveur compte la validation. */
  journalerSimple('validation-accepted',{identity:now.identity,action:'VALIDATE',passeDifferes:true});
@@ -1764,7 +1871,76 @@ function passeDiffPlanifier(){const b=engine?.s?.batch,rg=passeDiffReglage();
    passeDiff.reprise={b,rg,vue};return passeDiffEcrire(b,poses,rg,vue);});}));}
 function passeDiffSuivre(vue,travail){
  passeDiff.cours=travail.catch(e=>{vue.etat='erreur';vue.message=String(e?.message||e).slice(0,160);journalerSimple('passe-differes-erreur',{lotId:vue.lotId,mode:vue.mode,message:vue.message});})
-  .finally(()=>{if(vue.etat==='calcul'||vue.etat==='ecriture')vue.etat='finie';passeDiff.cours=null;finLotPasse(vue);});}
+  .finally(()=>{if(vue.etat==='calcul'||vue.etat==='ecriture')vue.etat='finie';passeDiff.cours=null;finLotPasse(vue);
+   /* T21d : la passe est finie (ou en erreur) : son état persistant est effacé. */
+   const E=passeDiff.etat;if(E&&E.lotId===vue.lotId){passeDiff.etat=null;void passeDiffOublier(E);}});}
+/* T21d — AU RÉVEIL DU SERVICE WORKER : une passe gardée est reprise au point exact, ou close avec son motif (voir plus haut). La partie rapide
+ * (lecture de l'état, contrôles, mise en place de la vue et de la promesse) est attendue par `dispatch` : aucune action du panneau ne passe avant ;
+ * le travail (décisions, écritures) part ensuite, en arrière-plan, comme une passe ordinaire. */
+async function passeDiffApresRedemarrage(){let st;try{st=await chrome.storage.local.get([CLE_PASSE_DIFF_ETAT,CLE_PASSE_DIFF_ENTREE,CLE_RELECTURE_PASSE,CLE_RELECTURE_REPRISE]);}catch{return;}
+ const E=st?.[CLE_PASSE_DIFF_ETAT];if(!E||typeof E!=='object')return;
+ const entree=st?.[CLE_PASSE_DIFF_ENTREE],b=engine?.s?.batch,memeLot=!!b?.id&&b.id===E.lotId;
+ if(E.lotId)passeDiff.planifie.add(E.lotId);   /* jamais une seconde passe neuve pour ce lot */
+ const rg=passeDiffReglage(),vue={lotId:E.lotId??null,mode:rg.mode,etat:'calcul',...{differes:0,posees:0,demandees:0,ecrites:0},...(E.vue||{}),cut:null,message:null,reprise:'sw-redemarre'};
+ const decidees=Array.isArray(E.restes)?E.restes.filter(x=>x&&x.etat!=='differe'||x?.motif).length:0,posees=Array.isArray(E.poses)?E.poses.filter(p=>!p?.transportSeul):[];
+ const enEcriture=['ombre-finie','ecriture','finie'].includes(E.phase);
+ /* La relecture qui attendait la passe n'est replanifiée que si elle n'avait pas démarré (sinon elle a sa propre reprise : jamais relancée seule). */
+ const relectureDejaPartie=[st?.[CLE_RELECTURE_PASSE],st?.[CLE_RELECTURE_REPRISE]].some(x=>x&&x.lotId===E.lotId),relancerRelecture=()=>{if(memeLot&&E.relectureApres&&!relectureDejaPartie)relecturePlanifier();};
+ const noter=(issue,raison)=>{if(E.phase==='ombre-finie'&&E.mode!=='ecriture')return;if(!enEcriture)journalerSimple('passe-differes-ombre-fin',{lotId:E.lotId??null,mode:E.mode??null,issue,motif:'sw-redemarre',raison,differes:Array.isArray(E.restes)?E.restes.length:null,decidees,posees:posees.length,cuts:posees.map(p=>p.cut)});
+  else journalerSimple('passe-differes-ecriture-fin',{lotId:E.lotId??null,issue,motif:'sw-redemarre',raison,ecrites:vue.ecrites,demandees:E.ecriture?.liste?.length??0,decidees:posees.length});};
+ /* Mémoire du lot rendue (restes non écrits, transport du lot) : « Relancer la deuxième passe » refait ses décisions comme avant le redémarrage. */
+ const rendreMemoire=()=>{if(!memeLot||!Array.isArray(E.restes)||!entree||entree.id!==E.id||!Array.isArray(entree.transport))return;
+  const ecrits=new Set(E.ecriture?(E.ecriture.liste||[]).slice(0,E.ecriture.faits):[]);
+  if(l1Restes.cle!==l1ResteCle(b)){l1Restes={cle:l1ResteCle(b),m:new Map()};for(const x of E.restes)if(x?.identity&&!ecrits.has(x.identity.cut))l1Restes.m.set(`${x.identity.part}|${x.identity.frameId??null}|${x.identity.cut}`,{identity:x.identity,zone:x.zone,adv:x.adv,regle:false});}
+  if(l1eTransport.cle!==E.cleT)l1eTransport={cle:E.cleT,poses:entree.transport.slice()};
+  passeDiff.reprise={b,rg,vue};};
+ const finir=async(issue,raison)=>{noter(issue,raison);await passeDiffOublier(E);
+  if(memeLot){rendreMemoire();vue.etat='arretee';vue.message=`Deuxième passe interrompue par un redémarrage du service worker : ${raison}.`;passeDiff.vue=vue;
+   relancerRelecture();}};
+ try{
+  if(E.phase==='finie'){await passeDiffOublier(E);rendreMemoire();relancerRelecture();return;}
+  /* Cut en vol au redémarrage : prouvé → écrit ; intention sans preuve → incertain ; rien → refait (avec ses gardes). */
+  const vol=E.phase==='ecriture'?E.ecriture?.enVol:null;let enVolRefait=false;
+  if(vol&&Number.isInteger(vol.cut)){const intention=(await relectureIntentions()).find(x=>x.cut===vol.cut&&(x.lotId==null||x.lotId===E.lotId));
+   const prouve=(E.ecriture.prouves||[]).includes(vol.cut);
+   if(prouve){if(intention)await relectureEffacerIntention(vol.cut,E.lotId);
+    const p=posees.find(x=>x.cut===vol.cut);let deja=false;try{deja=(await store.all('events')||[]).some(e=>e?.type==='validation-accepted'&&e.passeDifferes===true&&e.identity?.cut===vol.cut&&e.batchId===E.lotId&&String(e.timestamp)>=String(E.debut));}catch{deja=false;}
+    if(!deja)journalerSimple('validation-accepted',{identity:{part:E.part??null,cut:vol.cut,frameId:p?.identity?.frameId??null},action:'VALIDATE',passeDifferes:true,recupere:'sw-redemarre'});
+    journalerSimple('passe-differes-ecriture',{identity:{part:E.part??null,cut:vol.cut},passe:p?.passe??null,decal:p?.decal??null,resultat:'ecrit',recupere:'sw-redemarre'});
+    E.ecriture.faits++;E.ecriture.enVol=null;vue.ecrites++;E.vue={...E.vue,ecrites:vue.ecrites};}
+   else if(intention){
+    const raison=`service worker redémarré pendant l’écriture du cut ${vol.cut} : pose peut-être appliquée, validation non prouvée ; contrôle ce cut dans ESV, puis « J’ai contrôlé le cut ${vol.cut} »`;
+    journalerSimple('passe-differes-ecriture',{identity:{part:E.part??null,cut:vol.cut},resultat:'incertain',raison,reprise:'sw-redemarre'});
+    return finir('incertain',raison);}
+   else enVolRefait=true;}
+  const allumee=memeLot?await passeDiffAllumee():false;
+  const refus=!memeLot?'le lot a changé':!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd)?'le lot ne s’est pas fini de lui-même'
+   :E.v!==1||!Array.isArray(E.restes)||!Array.isArray(E.poses)||!Number.isInteger(E.passe)||!Number.isInteger(E.index)?'état de la passe illisible'
+   :!entree||entree.id!==E.id||!Array.isArray(entree.transport)?'entrée de la passe illisible'
+   :!(Date.now()-Date.parse(E.savedAt||0)<PASSE_REPRISE_MS)?'état gardé depuis plus de 24 h'
+   :!profilL1se()?'profil du lot autre que L1-se':rg.mode==='off'?'deuxième passe coupée dans les réglages':!allumee?'deuxième passe coupée dans Réglages (interrupteur)'
+   :E.mode==='ecriture'&&enEcriture&&rg.mode!=='ecriture'?'écriture de la deuxième passe coupée dans les réglages':null;
+  if(refus)return finir('interrompue',refus);
+  rendreMemoire();
+  const restes=E.restes.map(x=>({identity:x.identity,zone:x.zone,adv:x.adv,regle:false,lidarCaptureId:x.lidarCaptureId,etat:x.etat,motif:x.motif??null,capture:null,science:null,runtimeRails:null}));
+  const transport=entree.transport.concat(E.poses.map(p=>({identity:p.identity,positions:p.positions,rails:p.rails})));
+  const poses=posees.map(p=>({cut:p.cut,passe:p.passe,decal:p.decal,positions:p.positions,r:restes[p.i]}));
+  passeDiff.etat=E;passeDiff.vue=vue;
+  vue.etat=enEcriture?'ecriture':'calcul';
+  journalerSimple('passe-differes-reprise',{lotId:E.lotId,motif:'sw-redemarre',phase:E.phase,passe:E.passe,index:E.index,differes:E.restes.length,decidees,posees:poses.length,
+   ecrites:vue.ecrites,cutEnVol:vol?.cut??null,enVol:vol?(enVolRefait?'refait':'ecrit'):null,depuis:E.savedAt??null,
+   /* Trace des décisions déjà prises (leur événement a pu se perdre avec le service worker : le journal est écrit sans attente). */
+   restes:E.restes.map(x=>({cut:x.identity?.cut??null,etat:x.etat,motif:x.motif??null})),poses:poses.map(p=>({cut:p.cut,passe:p.passe}))});
+  let travail;
+  if(!enEcriture)travail=passeDiffOmbre(b,rg,vue,{E,restes,transport,anchors:Array.isArray(entree.anchors)?entree.anchors:[],poses})
+   .then(ps=>ps&&rg.mode==='ecriture'?passeDiffEcrire(b,ps,rg,vue):null);
+  else if(E.phase==='ombre-finie')travail=rg.mode==='ecriture'?passeDiffEcrire(b,poses,rg,vue):Promise.resolve(null);
+  else{const faits=E.ecriture.faits,aReprendre=(E.ecriture.liste||[]).slice(faits).map(c=>poses.find(p=>p.cut===c)).filter(Boolean);
+   travail=passeDiffEcrire(b,poses,rg,vue,aReprendre);}
+  passeDiffSuivre(vue,travail);
+  relancerRelecture();
+ }catch(e){try{await finir('interrompue',`reprise impossible (${String(e?.message||e).slice(0,160)})`);}catch{/* rien */}}}
+const passeDiffReveil=ready.then(passeDiffApresRedemarrage).catch(()=>{});
 async function l1PoserSansValider(p){const clic=clicHumainDuLot(),opt={...(clic?{clicHumain:clic}:{}),...(p.plan?{deplacerVue:p.plan}:{})};
  const ev={identity:{part:p.identity.part??null,cut:p.identity.cut??null},batchId:engine?.s?.batch?.id??null,...p.resume,vueDeplacee:!!p.plan};
  try{const r=Object.keys(opt).length?await applyInESV(p.before,p.rails,opt):await applyInESV(p.before,p.rails);
@@ -3090,7 +3266,8 @@ async function demarrerLot(args){
   const autorise=BananeGeometryBrain.reglages().autoriserSelectionSansPause===true;
   BananeGeometryBrain.configure({selectionActive:!tente||autorise});
   retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
-async function dispatch(m){await ready;const {action,args={}}=m;
+async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une passe gardée est reprise (ou close) avant toute action du panneau */
+ const {action,args={}}=m;
  /* 5.0 (D-171, revue de la relecture) : relecture après le lot. Pendant sa préparation et pendant la passe, rien qui agisse dans ESV ou
   * sur le lot ne part du panneau ; « Arrêter » (du lot) arrête la relecture (W11). */
  if(action==='stop'&&passeActive()){relectureArreter();return engine.view();}

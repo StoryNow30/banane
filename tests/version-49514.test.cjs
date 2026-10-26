@@ -1,5 +1,7 @@
 'use strict';
-/* Version de test 4.9.5.20, nom « 4.9.5 test 20 (L1-e6) » : la test 19 (4.9.5.19) plus T20a (connexion tenue à jour, reconnexion après F5, bouton « Reconnecter », historique des parties,
+/* Version de test 4.9.5.22, nom « 4.9.5 test 22 (L1-e6) » : la test 20 (4.9.5.20) plus T21d (la 4.9.5.21 est la nouvelle interface Signal, intégrée à part) (preuve serveur rattachée après coup à la visite du cut, `applied-verified` et
+ * `validation-intent` à `null` avant la requête ; deuxième passe des différés qui survit au redémarrage du service worker, état persistant, reprise ou fin notée ;
+ * fiches/T21D.md) ; la pose et la décision ne changent pas. Rappel de la test 20 : la test 19 (4.9.5.19) plus T20a (connexion tenue à jour, reconnexion après F5, bouton « Reconnecter », historique des parties,
  * relevé du sélecteur de parties, déclencheur caché d'« aller au cut » ; fiches/T20A.md) ; la pose et la décision ne changent pas. Rappel de la test 19 : la test 18 (4.9.5.18) plus UN correctif, le service worker transmet `final` à l'acquittement de l'export Écho (tests/echo-ack-final-sw.test.cjs) ; rien d'autre ne change. Rappel de la test 18 : la test 16 avec la deuxième passe des différés en fin de lot ALLUMÉE en écriture (décision de
  * l'opérateur, interrupteur dans Réglages), les leviers de la partie 3:0, la pause et la reprise de la relecture (éteintes) et le nouveau panneau (lien, le panneau
  * d'avant reste le défaut) ; la 4.9.5.17 est le paquet « UI seule » sur le moteur de la test 16, livré à part. Rappel de la test 16 : version 4.9.5.16, la test 15 avec les leviers v5 de la décision L1-e livrés par défaut (fiches/L1_APPRENTISSAGE.md,
@@ -21,8 +23,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.5.20',NOM='4.9.5 test 20 (L1-e6)';
-test('manifeste et core : 4.9.5.20 / « 4.9.5 test 20 (L1-e6) »',()=>{
+const VERSION='4.9.5.22',NOM='4.9.5 test 22 (L1-e6)';
+test('manifeste et core : 4.9.5.22 / « 4.9.5 test 22 (L1-e6) »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
  assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
 });
@@ -38,9 +40,9 @@ test('aucune trace d’une autre version de test dans les chaînes de version li
  assert.ok(!/VERSION\|\|'4\.9\.(0[.']|5\.[1-9]')/.test(read('background.js')),'background.js');
  assert.ok(!/home:'4\.9\.(0|5 test [1-9]')/.test(read('panel.js')),'panel.js');
 });
-test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19 et 4.9.5.20 portent l’observateur',()=>{
+test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21 et 4.9.5.22 portent l’observateur',()=>{
  const {measure}=require('../tools/perf-phases.cjs');
- const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13','4.9.5.14','4.9.5.15','4.9.5.16','4.9.5.17','4.9.5.18','4.9.5.19',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
+ const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13','4.9.5.14','4.9.5.15','4.9.5.16','4.9.5.17','4.9.5.18','4.9.5.19','4.9.5.20','4.9.5.21',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
  for(const v of versions)assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);
  assert.equal(measure({version:'4.9.0.1',events:[]}).observations.observerExpected,undefined,'4.9.0.1 : avant l’observateur');
 });

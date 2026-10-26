@@ -70,4 +70,4 @@ async function relancer(x) {
   const i = x.adapter.calls.indexOf('goToCut'); x.pasPasse = i < 0 ? [] : x.adapter.calls.slice(i);
   return x;
 }
-module.exports = { lotPasse, relancer, ev, K, base };
+module.exports = { lotPasse, relancer, ev, K, base, EsvEcriture };
