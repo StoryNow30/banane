@@ -44,11 +44,16 @@ export function lireTelegram(texte, texteRepondu = '', chantiersOuverts = []) {
   let reste = pre ? t.slice(pre[0].length) : t;
   if (!chantier && chantiersOuverts.length === 1) chantier = chantiersOuverts[0];
   if (!chantier) return { erreur: chantiersOuverts.length ? `Quel chantier ? Réponds à un message du hub, ou commence par ${chantiersOuverts.join(' / ')}.` : 'Aucun chantier ouvert.' };
+  /* Destinataire : @cursor, @glm, @integrateur, @agent ou @tous ; sinon l'auteur du message auquel on répond (sauf actions et operateur) ; sinon l'intégrateur. */
+  const md = reste.match(/^@(integrateur|cursor|glm|agent|tous)\b[\s:,-]*/i);
+  const auteur = (texteRepondu || '').match(/\[(integrateur|cursor|glm|agent)\s*→/);
+  const a = md ? md[1].toLowerCase() : auteur ? auteur[1] : 'integrateur';
+  if (md) reste = reste.slice(md[0].length);
   const mt = reste.match(/^(ticket|question|reponse|rapport|alerte|info)\b[\s:,-]*/i);
   const type = mt ? mt[1].toLowerCase() : (rep ? 'reponse' : 'info');
   if (mt) reste = reste.slice(mt[0].length);
   if (!reste.trim()) return { erreur: 'message vide après le chantier' };
-  return { chantier, type, texte: reste.trim() };
+  return { chantier, type, a, texte: reste.trim() };
 }
 
 export function formaterCommentaire({ de = 'operateur', a = 'tous', type, chantier, texte, date }) {
@@ -108,14 +113,14 @@ async function depuisTelegram(env, update) {
     const ouverts = await chantiersOuverts(env);
     return repondre(ouverts.length ? `Chantiers ouverts : ${ouverts.join(', ')}` : 'Aucun chantier ouvert.');
   }
-  if (/^\/(start|aide|help)\b/i.test(texte)) return repondre('Hub Ariane. Réponds à un message du hub, ou écris « CH-001 ton texte ». Mots optionnels après le chantier : question, reponse, rapport, alerte, info. /etat liste les chantiers ouverts.');
+  if (/^\/(start|aide|help)\b/i.test(texte)) return repondre('Hub Ariane. Réponds à un message du hub (le destinataire est son auteur), ou écris « CH-001 @glm ton texte ». Destinataires : @integrateur (par défaut), @cursor, @glm, @agent, @tous. Mots optionnels ensuite : question, reponse, rapport, alerte, info, ticket. /etat liste les chantiers ouverts.');
   const l = lireTelegram(texte, msg.reply_to_message?.text || '', await chantiersOuverts(env));
   if (l.erreur) return repondre(l.erreur);
   const motifs = scan(l.texte, env);
   if (motifs.length) return repondre(`Refusé, motifs interdits : ${motifs.join(', ')}. Reformule sans eux.`);
   const pr = await prDuChantier(env, l.chantier);
   if (!pr) return repondre(`Aucune PR pour ${l.chantier}.`);
-  const r = await api(env, `/issues/${pr.number}/comments`, { method: 'POST', body: JSON.stringify({ body: formaterCommentaire({ ...l, de: 'operateur', a: 'integrateur' }) }) });
+  const r = await api(env, `/issues/${pr.number}/comments`, { method: 'POST', body: JSON.stringify({ body: formaterCommentaire({ ...l, de: 'operateur' }) }) });
   return repondre(r.ok ? `Envoyé sur ${l.chantier} (PR #${pr.number}), type ${l.type}.` : `Échec GitHub (${r.status}).`);
 }
 

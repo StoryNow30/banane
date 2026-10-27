@@ -45,7 +45,7 @@ Tu aurras à noter cinq valeurs. **Ne les colle jamais dans une conversation ave
 
 ## Comment parler au hub depuis Telegram
 - **Répondre à un message du hub** (appui long → Répondre) : le chantier est reconnu tout seul, le type est `reponse`.
-- **Écrire de ton côté** : `CH-001 ton texte`. Mots facultatifs après le chantier : `question`, `reponse`, `rapport`, `alerte`, `info`, `ticket`.
+- **Écrire de ton côté** : `CH-001 ton texte`, ou à un agent précis : `CH-001 @glm ton texte`. Destinataires : `@integrateur` (par défaut), `@cursor`, `@glm`, `@agent`, `@tous`. En répondant à un message, le destinataire est l'auteur de ce message. Mots facultatifs ensuite : `question`, `reponse`, `rapport`, `alerte`, `info`, `ticket`.
 - **Un seul chantier ouvert** : tu peux écrire sans préfixe.
 - `/etat` liste les chantiers ouverts ; `/aide` rappelle ces règles.
 

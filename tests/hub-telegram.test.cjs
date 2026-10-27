@@ -4,10 +4,10 @@ let W; test.before(async () => { W = await import('../hub/telegram/worker.js'); 
 
 test('telegram : le chantier vient de la réponse à un message du hub, du préfixe, ou du seul chantier ouvert', () => {
   const rep = '[integrateur → operateur] question · CH-002 · 27/10/2026 10:00\n\nQuelle durée ?';
-  assert.deepEqual(W.lireTelegram('150 ms', rep, ['CH-002']), { chantier: 'CH-002', type: 'reponse', texte: '150 ms' });
-  assert.deepEqual(W.lireTelegram('CH-001 on fusionne', '', ['CH-001', 'CH-002']), { chantier: 'CH-001', type: 'info', texte: 'on fusionne' });
-  assert.deepEqual(W.lireTelegram('ok go', '', ['CH-007']), { chantier: 'CH-007', type: 'info', texte: 'ok go' });
-  assert.deepEqual(W.lireTelegram('CH-003 question tu peux préciser ?', '', []), { chantier: 'CH-003', type: 'question', texte: 'tu peux préciser ?' });
+  assert.deepEqual(W.lireTelegram('150 ms', rep, ['CH-002']), { chantier: 'CH-002', type: 'reponse', a: 'integrateur', texte: '150 ms' });
+  assert.deepEqual(W.lireTelegram('CH-001 on fusionne', '', ['CH-001', 'CH-002']), { chantier: 'CH-001', type: 'info', a: 'integrateur', texte: 'on fusionne' });
+  assert.deepEqual(W.lireTelegram('ok go', '', ['CH-007']), { chantier: 'CH-007', type: 'info', a: 'integrateur', texte: 'ok go' });
+  assert.deepEqual(W.lireTelegram('CH-003 question tu peux préciser ?', '', []), { chantier: 'CH-003', type: 'question', a: 'integrateur', texte: 'tu peux préciser ?' });
 });
 test('telegram : sans chantier déterminable, le relais demande lequel', () => {
   assert.match(W.lireTelegram('salut', '', ['CH-001', 'CH-002']).erreur, /Quel chantier/);
@@ -46,4 +46,12 @@ test('telegram : le relais refuse une requête sans jeton et un autre interlocut
   assert.equal(r2.status, 401);
   const r3 = await W.default.fetch(new Request('https://x/telegram', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 'j' }, body: JSON.stringify({ message: { chat: { id: 99 }, text: 'CH-001 salut' } }) }), env);
   assert.equal(r3.status, 200);   // ignoré sans appel réseau : le chat n'est pas celui de l'opérateur
+});
+test('telegram : le destinataire vient de @mention, sinon de l’auteur du message auquel on répond', () => {
+  assert.deepEqual(W.lireTelegram('CH-001 @glm ticket reprends le test rouge', '', []), { chantier: 'CH-001', type: 'ticket', a: 'glm', texte: 'reprends le test rouge' });
+  const rep = '[cursor → integrateur] question · CH-001 · 27/10/2026 10:00\n\nOù est le gabarit ?';
+  assert.equal(W.lireTelegram('dans chantiers/MODELE.md', rep, ['CH-001']).a, 'cursor');
+  const verdict = '[actions → tous] verdict · CH-001 · 27/10/2026 10:00\n\nVERT';
+  assert.equal(W.lireTelegram('merci', verdict, ['CH-001']).a, 'integrateur');
+  assert.equal(W.lireTelegram('CH-001 @tous pause générale', '', []).a, 'tous');
 });
