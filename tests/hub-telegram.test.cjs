@@ -6,12 +6,12 @@ test('telegram : le chantier vient de la réponse à un message du hub, du préf
   const rep = '[integrateur → operateur] question · CH-002 · 27/10/2026 10:00\n\nQuelle durée ?';
   assert.deepEqual(W.lireTelegram('150 ms', rep, ['CH-002']), { chantier: 'CH-002', type: 'reponse', a: 'integrateur', texte: '150 ms' });
   assert.deepEqual(W.lireTelegram('CH-001 on fusionne', '', ['CH-001', 'CH-002']), { chantier: 'CH-001', type: 'info', a: 'integrateur', texte: 'on fusionne' });
-  assert.deepEqual(W.lireTelegram('ok go', '', ['CH-007']), { chantier: 'CH-007', type: 'info', a: 'integrateur', texte: 'ok go' });
+  assert.deepEqual(W.lireTelegram('ok go', '', ['CH-007']), { chantier: 'hub', type: 'info', a: 'integrateur', texte: 'ok go' });
   assert.deepEqual(W.lireTelegram('CH-003 question tu peux préciser ?', '', []), { chantier: 'CH-003', type: 'question', a: 'integrateur', texte: 'tu peux préciser ?' });
 });
-test('telegram : sans chantier déterminable, le relais demande lequel', () => {
-  assert.match(W.lireTelegram('salut', '', ['CH-001', 'CH-002']).erreur, /Quel chantier/);
-  assert.match(W.lireTelegram('salut', '', []).erreur, /Aucun chantier/);
+test('telegram : sans chantier ni réponse, le message va au canal général ; un message vide est refusé', () => {
+  assert.equal(W.lireTelegram('salut', '', ['CH-001', 'CH-002']).chantier, 'hub');
+  assert.equal(W.lireTelegram('salut', '', []).chantier, 'hub');
   assert.match(W.lireTelegram('   ', '', ['CH-001']).erreur, /vide/);
 });
 test('telegram : le scan refuse courriel, UUID, code projet, adresse web et motif confidentiel', () => {

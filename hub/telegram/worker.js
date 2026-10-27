@@ -42,8 +42,7 @@ export function lireTelegram(texte, texteRepondu = '', chantiersOuverts = []) {
   const pre = t.match(/^(CH-\d{3}|T\d{2}|hub)\b[\s:,-]*/i);
   let chantier = rep ? rep[1] : pre ? pre[1].toUpperCase().replace(/^HUB$/, 'hub') : null;
   let reste = pre ? t.slice(pre[0].length) : t;
-  if (!chantier && chantiersOuverts.length === 1) chantier = chantiersOuverts[0];
-  if (!chantier) return { erreur: chantiersOuverts.length ? `Quel chantier ? Réponds à un message du hub, ou commence par ${chantiersOuverts.join(' / ')}.` : 'Aucun chantier ouvert.' };
+  if (!chantier) chantier = 'hub';                                                      // sans chantier précisé : le canal général (PR « hub/journal »)
   /* Destinataire : @cursor, @glm, @integrateur, @agent ou @tous ; sinon l'auteur du message auquel on répond (sauf actions et operateur) ; sinon l'intégrateur. */
   const md = reste.match(/^@(integrateur|cursor|glm|agent|tous)\b[\s:,-]*/i);
   const auteur = (texteRepondu || '').match(/\[(integrateur|cursor|glm|agent)\s*→/);
@@ -113,7 +112,7 @@ async function depuisTelegram(env, update) {
     const ouverts = await chantiersOuverts(env);
     return repondre(ouverts.length ? `Chantiers ouverts : ${ouverts.join(', ')}` : 'Aucun chantier ouvert.');
   }
-  if (/^\/(start|aide|help)\b/i.test(texte)) return repondre('Hub Ariane. Réponds à un message du hub (le destinataire est son auteur), ou écris « CH-001 @glm ton texte ». Destinataires : @integrateur (par défaut), @cursor, @glm, @agent, @tous. Mots optionnels ensuite : question, reponse, rapport, alerte, info, ticket. /etat liste les chantiers ouverts.');
+  if (/^\/(start|aide|help)\b/i.test(texte)) return repondre('Hub Ariane. Écris simplement ton message : il va au canal général (hub). Pour un chantier : « CH-001 ton texte », ou réponds à un message du hub (le chantier et le destinataire en sont déduits). Pour un agent : « CH-001 @glm ton texte ». Destinataires : @integrateur (par défaut), @cursor, @glm, @agent, @tous. Mots optionnels ensuite : question, reponse, rapport, alerte, info, ticket. /etat liste les chantiers ouverts.');
   const l = lireTelegram(texte, msg.reply_to_message?.text || '', await chantiersOuverts(env));
   if (l.erreur) return repondre(l.erreur);
   const motifs = scan(l.texte, env);
