@@ -14,7 +14,7 @@ permissions:
   issues: write
 
 concurrency:
-  group: chantier-${{ github.head_ref || github.ref }}
+  group: chantier-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -40,24 +40,39 @@ jobs:
       - name: verify complet
         id: verify
         continue-on-error: true
-        run: node tools/verify.cjs
+        # Les relevés commités sont retirés d'abord : le relevé ci-dessous ne doit lire que ce que CE verify a écrit.
+        run: |
+          rm -f audit/verification.txt audit/verification.json
+          node tools/verify.cjs
 
-      - name: Relevé
+      - name: Relevé (lu dans la sortie TAP de ce verify, jamais dans un fichier commité)
         id: releve
         if: always()
         run: |
           node -e '
-            const fs=require("fs");let c={};
-            try{c=JSON.parse(fs.readFileSync("audit/verification.json","utf8")).counts||{};}catch{}
-            const l=["tests","pass","fail","cancelled","skipped"].map(k=>`${k} ${c[k]??"?"}`).join(" · ");
-            fs.appendFileSync(process.env.GITHUB_OUTPUT,`compte=${l}\n`);
+            const fs=require("fs");let t="";try{t=fs.readFileSync("audit/verification.txt","utf8");}catch{}
+            const n=k=>(t.match(new RegExp("^# "+k+" (\\d+)","m"))||[])[1]??"?";
+            const compte=["tests","pass","fail","cancelled","skipped"].map(k=>`${k} ${n(k)}`).join(" · ");
+            const echecs=[...t.matchAll(/^not ok \d+ - (.+)$/gm)].map(m=>m[1]).slice(0,20);
+            const fin=(t.match(/^(Error|Failed|.*Error:.*)$/gm)||[]).slice(-2);
+            const o=`compte=${compte}\n`+`echecs<<EOF\n${echecs.map(e=>"- "+e).join("\n")}${fin.length?"\n"+fin.map(e=>"- "+e).join("\n"):""}\nEOF\n`;
+            fs.appendFileSync(process.env.GITHUB_OUTPUT,o);console.log(compte);console.log(echecs.join("\n"));
           '
+
+      - name: Relevé complet en pièce jointe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-${{ github.run_id }}
+          path: audit/verification.txt
+          if-no-files-found: ignore
 
       - name: Message du hub sur la PR
         if: always()
         uses: actions/github-script@v7
         env:
           COMPTE: ${{ steps.releve.outputs.compte }}
+          ECHECS: ${{ steps.releve.outputs.echecs }}
           VERIFY: ${{ steps.verify.outcome }}
           SCAN: ${{ steps.scan.outcome }}
           BRANCHE: ${{ github.head_ref || github.ref_name }}
@@ -73,6 +88,8 @@ jobs:
             const body=`**[actions → tous] verdict · ${ch} · ${date} Paris**\n\n`+
               `${ok?'VERT':'ROUGE'} sur \`${context.sha.slice(0,7)}\` : verify ${process.env.VERIFY}, scan ${process.env.SCAN}.\n`+
               `Relevé : ${process.env.COMPTE}.\n`+
+              (process.env.ECHECS.trim()?`Essais en échec ou annulés :\n${process.env.ECHECS.trim()}\n`:'')+
+              `Relevé complet : pièce jointe « verification » de l'exécution.\n`+
               `Journal : ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}\n\n---\n_hub Ariane · émetteur : actions_`;
             await github.rest.issues.createComment({owner,repo,issue_number:n,body});
             if(!ok)core.setFailed('verify ou scan rouge');
