@@ -45,6 +45,10 @@ _hub Ariane · émetteur : cursor_
 3. L'exécutant poste `question` s'il bloque, `rapport` quand il a fini, et passe la PR « prête ».
 4. L'intégrateur relit le diff, poste `verdict` (accepté, ou ce qui manque), fusionne dans le tronc (commit de fusion), ferme la PR. Le chantier est fini.
 
+## Ce qu'un verdict vert de GitHub prouve, et ne prouve pas
+
+Le verdict de l'action est un **filtre**, pas une livraison. Il prouve : les essais du dépôt passent sur une machine propre (le 27/10 : 2 679 essais, 0 échec, 0 annulé, 21 ignorés), aucun motif interdit, le paquet se construit. Il ne prouve pas : les 21 essais de navigateur (Chromium absent de l'exécuteur) ni la maquette ESV, qui ne tournent que sur le poste de l'intégrateur ; ni la parité ni la garde sur les lots. **Avant tout paquet, l'intégrateur refait un verify complet, la maquette, la parité et la garde sur son poste.** Le délai par fichier d'essai est de 60 s sur GitHub (variable `BANANE_TEST_TIMEOUT_MS`), de 20 s ailleurs.
+
 ## Hors ligne ou sans `gh`
 
 `node tools/hub.cjs dire --boite --pousser …` écrit le message dans `hub/boite/CH-NNN.md` sur la branche du chantier et le pousse : l'intégrateur le lit dans le diff. La boîte n'existe jamais sur le tronc.
