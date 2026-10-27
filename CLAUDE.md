@@ -2,6 +2,9 @@
 
 Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier est lu par toute session (Claude Code, Cursor, autre harnais). Il résume ce qu'il faut savoir avant d'écrire une ligne. Le détail de l'organisation est dans `fiches/RESEAU_IA.md` ; l'état du projet dans `LIRE_EN_PREMIER.md` et `BANANE_5.0_CAHIER_V2.md` ; les décisions de l'opérateur dans `DECISIONS.md` (D-xxx, jamais réécrites).
 
+## Démarrer une session
+- Lis `fiches/PASSATION_SESSION.md` en premier : ordre de lecture, abonnement au hub, état du projet, ce qui est en attente.
+
 ## Langue et ton
 - Tout en français : code commenté, commits, fiches, rapports. L'opérateur se désigne « l'opérateur ».
 - Ne rapporter que du mesuré, qualifié ÉTABLI / PROBABLE / SUPPOSÉ. Jamais un chiffre non mesuré.

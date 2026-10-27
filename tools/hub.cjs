@@ -16,7 +16,7 @@
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
 
 const TYPES=['ticket','question','reponse','rapport','verdict','alerte','info'];
-const EMETTEURS=['integrateur','cursor','glm','actions','operateur','agent'];
+const EMETTEURS=['integrateur','chercheur','relecteur','cursor','glm','actions','operateur','agent'];
 const LISTE_BLANCHE_WEB=[/^https?:\/\/(www\.)?w3\.org\//,/^https?:\/\/json-schema\.org\//,/^https?:\/\/scripts\.sil\.org\//,
  /^https?:\/\/github\.com\/(ateliertriay|Instrument)\//,/^https?:\/\/developer\.chrome\.com\//,/^https?:\/\/code\.claude\.com\//,
  /^https?:\/\/(www\.)?github\.com\/StoryNow30\//,/^https?:\/\/claude\.ai\//];

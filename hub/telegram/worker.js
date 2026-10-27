@@ -44,8 +44,8 @@ export function lireTelegram(texte, texteRepondu = '', chantiersOuverts = []) {
   let reste = pre ? t.slice(pre[0].length) : t;
   if (!chantier) chantier = 'hub';                                                      // sans chantier précisé : le canal général (PR « hub/journal »)
   /* Destinataire : @cursor, @glm, @integrateur, @agent ou @tous ; sinon l'auteur du message auquel on répond (sauf actions et operateur) ; sinon l'intégrateur. */
-  const md = reste.match(/^@(integrateur|cursor|glm|agent|tous)\b[\s:,-]*/i);
-  const auteur = (texteRepondu || '').match(/\[(integrateur|cursor|glm|agent)\s*→/);
+  const md = reste.match(/^@(integrateur|chercheur|relecteur|cursor|glm|agent|tous)\b[\s:,-]*/i);
+  const auteur = (texteRepondu || '').match(/\[(integrateur|chercheur|relecteur|cursor|glm|agent)\s*→/);
   const a = md ? md[1].toLowerCase() : auteur ? auteur[1] : 'integrateur';
   if (md) reste = reste.slice(md[0].length);
   const mt = reste.match(/^(ticket|question|reponse|rapport|alerte|info)\b[\s:,-]*/i);
