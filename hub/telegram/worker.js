@@ -42,8 +42,7 @@ export function lireTelegram(texte, texteRepondu = '', chantiersOuverts = []) {
   const pre = t.match(/^(CH-\d{3}|T\d{2}|hub)\b[\s:,-]*/i);
   let chantier = rep ? rep[1] : pre ? pre[1].toUpperCase().replace(/^HUB$/, 'hub') : null;
   let reste = pre ? t.slice(pre[0].length) : t;
-  if (!chantier && chantiersOuverts.length === 1) chantier = chantiersOuverts[0];
-  if (!chantier) return { erreur: chantiersOuverts.length ? `Quel chantier ? Réponds à un message du hub, ou commence par ${chantiersOuverts.join(' / ')}.` : 'Aucun chantier ouvert.' };
+  if (!chantier) chantier = 'hub';                                                      // sans chantier précisé : le canal général (PR « hub/journal »)
   /* Destinataire : @cursor, @glm, @integrateur, @agent ou @tous ; sinon l'auteur du message auquel on répond (sauf actions et operateur) ; sinon l'intégrateur. */
   const md = reste.match(/^@(integrateur|cursor|glm|agent|tous)\b[\s:,-]*/i);
   const auteur = (texteRepondu || '').match(/\[(integrateur|cursor|glm|agent)\s*→/);
@@ -58,7 +57,8 @@ export function lireTelegram(texte, texteRepondu = '', chantiersOuverts = []) {
 
 export function formaterCommentaire({ de = 'operateur', a = 'tous', type, chantier, texte, date }) {
   if (!TYPES.includes(type)) throw new Error(`type inconnu ${type}`);
-  return `**[${de} → ${a}] ${type} · ${chantier} · ${heureParis(date)} Paris**\n\n${texte.trim()}\n\n---\n_hub Ariane · émetteur : ${de}_`;
+  const mention = a === 'cursor' && de !== 'cursor' ? '@cursor ' : '';              // lance l'agent infonuagique de Cursor sur la PR
+  return `${mention}**[${de} → ${a}] ${type} · ${chantier} · ${heureParis(date)} Paris**\n\n${texte.trim()}\n\n---\n_hub Ariane · émetteur : ${de}_`;
 }
 
 /* Commentaire du hub -> texte Telegram (sans Markdown, borné). */
@@ -113,7 +113,7 @@ async function depuisTelegram(env, update) {
     const ouverts = await chantiersOuverts(env);
     return repondre(ouverts.length ? `Chantiers ouverts : ${ouverts.join(', ')}` : 'Aucun chantier ouvert.');
   }
-  if (/^\/(start|aide|help)\b/i.test(texte)) return repondre('Hub Ariane. Réponds à un message du hub (le destinataire est son auteur), ou écris « CH-001 @glm ton texte ». Destinataires : @integrateur (par défaut), @cursor, @glm, @agent, @tous. Mots optionnels ensuite : question, reponse, rapport, alerte, info, ticket. /etat liste les chantiers ouverts.');
+  if (/^\/(start|aide|help)\b/i.test(texte)) return repondre('Hub Ariane. Écris simplement ton message : il va au canal général (hub). Pour un chantier : « CH-001 ton texte », ou réponds à un message du hub (le chantier et le destinataire en sont déduits). Pour un agent : « CH-001 @glm ton texte ». Destinataires : @integrateur (par défaut), @cursor, @glm, @agent, @tous. Mots optionnels ensuite : question, reponse, rapport, alerte, info, ticket. /etat liste les chantiers ouverts.');
   const l = lireTelegram(texte, msg.reply_to_message?.text || '', await chantiersOuverts(env));
   if (l.erreur) return repondre(l.erreur);
   const motifs = scan(l.texte, env);
@@ -121,7 +121,8 @@ async function depuisTelegram(env, update) {
   const pr = await prDuChantier(env, l.chantier);
   if (!pr) return repondre(`Aucune PR pour ${l.chantier}.`);
   const r = await api(env, `/issues/${pr.number}/comments`, { method: 'POST', body: JSON.stringify({ body: formaterCommentaire({ ...l, de: 'operateur' }) }) });
-  if (r.ok) return repondre(`Envoyé sur ${l.chantier} (PR #${pr.number}), type ${l.type}.`);
+  /* Succès : une réaction 👍 sur le message de l'opérateur, sans texte ni notification. Le relais ne parle que pour une erreur ou un refus. */
+  if (r.ok) return tg(env, 'setMessageReaction', { chat_id: env.TG_CHAT_ID, message_id: msg.message_id, reaction: [{ type: 'emoji', emoji: '👍' }] });
   let raison = ''; try { raison = String((await r.json()).message || '').slice(0, 160); } catch { /* corps non JSON */ }
   return repondre(`Échec GitHub (${r.status})${raison ? ' : ' + raison : ''}.`);
 }
@@ -129,6 +130,12 @@ async function depuisTelegram(env, update) {
 async function depuisGitHub(env, evenement, charge) {
   if (evenement !== 'issue_comment' || charge.action !== 'created' || !charge.issue?.pull_request) return;
   const body = charge.comment?.body || '';
+  const deCursor = /cursor/i.test(charge.comment?.user?.login || '');                 // les réponses de l'agent de Cursor arrivent telles quelles
+  if (deCursor && body.trim()) {
+    const corps = body.replace(/\*\*/g, '').trim(), txt = corps.length > 3400 ? corps.slice(0, 3400) + '\n[…]' : corps;
+    await tg(env, 'sendMessage', { chat_id: env.TG_CHAT_ID, text: `[cursor] ${txt}\n\n${charge.issue.html_url}`, disable_web_page_preview: true });
+    return;
+  }
   if (!estMessageHub(body) || estEcho(body)) return;                                     // pas de bavardage, pas d'écho
   await tg(env, 'sendMessage', { chat_id: env.TG_CHAT_ID, text: pourTelegram(body, charge.issue.html_url), disable_web_page_preview: true });
 }
