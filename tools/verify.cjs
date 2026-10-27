@@ -33,7 +33,9 @@ const files=['tests','tests/v242'].flatMap(d=>fs.readdirSync(path.join(root,d)).
  * blocage, ce n'est pas un critère de qualité : sur un conteneur plus lent, le
  * code de 307b9a5 (vert au commit) dépassait 10 s sur cinq fichiers sans lien
  * avec le changement (engine-v46 : 10,06 s seul). */
-const output=run(['--test','--test-reporter=tap','--test-timeout=20000',...files]);
+/* Délai par fichier réglable (BANANE_TEST_TIMEOUT_MS) : 20 s par défaut ; les exécuteurs GitHub, plus lents, le relèvent (hub, chantier.yml). */
+const delaiEssai=Number(process.env.BANANE_TEST_TIMEOUT_MS)>0?Number(process.env.BANANE_TEST_TIMEOUT_MS):20000;
+const output=run(['--test','--test-reporter=tap',`--test-timeout=${delaiEssai}`,...files]);
 const counts={};for(const name of ['tests','suites','pass','fail','cancelled','skipped','todo'])counts[name]=Number(output.match(new RegExp(`# ${name} (\\d+)`))?.[1]??-1);
 // En mode complet, un test ignoré est un échec : rien ne doit manquer au relevé.
 if(full&&counts.skipped>0){fs.writeFileSync(path.join(audit,'verification.txt'),log.join(''));throw Error(`Mode complet : ${counts.skipped} test(s) ignoré(s). Le banc complet n'en tolère aucun.`);}
