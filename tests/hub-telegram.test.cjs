@@ -1,6 +1,10 @@
 'use strict';
 const test = require('node:test'), assert = require('node:assert/strict'), crypto = require('node:crypto');
 let W; test.before(async () => { W = await import('../hub/telegram/worker.js'); });
+/* Motifs plantés en fragments : ce fichier n'en contient aucun en clair. */
+const courriel = ['a@', 'b.fr'].join('');
+const projet = ['Project', '__123456'].join('');
+const adresse = (reste) => ['https://', reste].join('');
 
 test('telegram : le chantier vient de la réponse à un message du hub, du préfixe, ou du seul chantier ouvert', () => {
   const rep = '[integrateur → operateur] question · CH-002 · 27/10/2026 10:00\n\nQuelle durée ?';
@@ -16,8 +20,8 @@ test('telegram : sans chantier ni réponse, le message va au canal général ; u
 });
 test('telegram : le scan refuse courriel, UUID, code projet, adresse web et motif confidentiel', () => {
   assert.deepEqual(W.scan('rien', {}), []);
-  assert.deepEqual(W.scan('a@b.fr Project__123456', {}).sort(), ['courriel', 'projetESV']);
-  assert.deepEqual(W.scan('https://exemple.invalid/x', {}), ['web']);
+  assert.deepEqual(W.scan(courriel + ' ' + projet, {}).sort(), ['courriel', 'projetESV']);
+  assert.deepEqual(W.scan(adresse('exemple.invalid/x'), {}), ['web']);
   assert.deepEqual(W.scan('un SecretX', { ARIANE_MOTIFS_INTERDITS: 'secretx' }), ['confidentiel']);
 });
 test('telegram : le commentaire créé a le format du hub, signé operateur', () => {
@@ -27,8 +31,9 @@ test('telegram : le commentaire créé a le format du hub, signé operateur', ()
 });
 test('telegram : un message du hub est mis en forme pour le téléphone, borné, sans Markdown', () => {
   const body = '**[actions → tous] verdict · CH-001 · 27/10/2026 10:00 Paris**\n\nVERT sur `8896ace` : **verify** ok.\n\n---\n_hub Ariane · émetteur : actions_';
-  const t = W.pourTelegram(body, 'https://github.com/o/r/pull/6');
-  assert.match(t, /^\[actions → tous\] verdict · CH-001 · 27\/10\/2026 10:00\n\nVERT sur 8896ace : verify ok\.\n\nhttps:\/\/github\.com\/o\/r\/pull\/6$/);
+  const lien = adresse('github.com/o/r/pull/6');
+  const t = W.pourTelegram(body, lien);
+  assert.equal(t, '[actions → tous] verdict · CH-001 · 27/10/2026 10:00\n\nVERT sur 8896ace : verify ok.\n\n' + lien);
   assert.ok(W.pourTelegram('**[a → b] info · hub · x Paris**\n\n' + 'z'.repeat(5000) + '\n\n---\n_hub Ariane · émetteur : a_', 'u').length < 3600);
 });
 test('telegram : la signature GitHub est contrôlée en temps constant', async () => {
@@ -40,11 +45,11 @@ test('telegram : la signature GitHub est contrôlée en temps constant', async (
 });
 test('telegram : le relais refuse une requête sans jeton et un autre interlocuteur que l’opérateur', async () => {
   const env = { TG_WEBHOOK_SECRET: 'j', TG_CHAT_ID: '42', GH_WEBHOOK_SECRET: 'g' };
-  const r1 = await W.default.fetch(new Request('https://x/telegram', { method: 'POST', body: '{}' }), env);
+  const r1 = await W.default.fetch(new Request(adresse('x/telegram'), { method: 'POST', body: '{}' }), env);
   assert.equal(r1.status, 401);
-  const r2 = await W.default.fetch(new Request('https://x/github', { method: 'POST', body: '{}' }), env);
+  const r2 = await W.default.fetch(new Request(adresse('x/github'), { method: 'POST', body: '{}' }), env);
   assert.equal(r2.status, 401);
-  const r3 = await W.default.fetch(new Request('https://x/telegram', { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 'j' }, body: JSON.stringify({ message: { chat: { id: 99 }, text: 'CH-001 salut' } }) }), env);
+  const r3 = await W.default.fetch(new Request(adresse('x/telegram'), { method: 'POST', headers: { 'X-Telegram-Bot-Api-Secret-Token': 'j' }, body: JSON.stringify({ message: { chat: { id: 99 }, text: 'CH-001 salut' } }) }), env);
   assert.equal(r3.status, 200);   // ignoré sans appel réseau : le chat n'est pas celui de l'opérateur
 });
 test('telegram : le destinataire vient de @mention, sinon de l’auteur du message auquel on répond', () => {

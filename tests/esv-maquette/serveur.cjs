@@ -85,7 +85,7 @@ function demarrer(options={}){
     }catch(e){json(res,500,{error:e.message});}});
   });
   return new Promise((resolve,reject)=>{serveur.on('error',reject);serveur.listen(options.port??0,'127.0.0.1',()=>{const port=serveur.address().port;
-    resolve({port,url:`http://127.0.0.1:${port}`,journal,fermer:()=>new Promise(r=>serveur.close(r)),scenario:q=>scenario(q).scenario,exportation,pannes:p=>{pannes=normaliser(p);journal.refus.length=0;lecturesListe=0;return pannes;}});});});
+    resolve({port,url:'http://127.0.0.1:'+port,journal,fermer:()=>new Promise(r=>serveur.close(r)),scenario:q=>scenario(q).scenario,exportation,pannes:p=>{pannes=normaliser(p);journal.refus.length=0;lecturesListe=0;return pannes;}});});});
 }
 module.exports={demarrer};
 if(require.main===module){const a=process.argv.slice(2),i=a.indexOf('--export');demarrer({port:Number(a.find(x=>/^\d+$/.test(x))||8124),exportation:i>=0?a[i+1]:null}).then(s=>console.log(`Maquette ESV : ${s.url}/tests/esv-maquette/esv.html${s.exportation?'?source=export':''}`),e=>{console.error(e.message);process.exit(1);});}

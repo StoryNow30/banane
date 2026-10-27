@@ -1,18 +1,24 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const H=require('../tools/hub.cjs');
+/* Motifs plantés en fragments : ce fichier n'en contient aucun en clair. */
+const courriel=['a@','b.fr'].join('');
+const uuid=['12345678-1234-1234-1234-','1234567890ab'].join('');
+const projet=['Project','__123456'].join('');
+const page=['https://','exemple.invalid/page'].join('');
+const svg=['https://','www.w3.org/2000/svg'].join('');
 
 test('hub : un message propre passe le scan',()=>{
  assert.deepEqual(H.verifierMessage('CH-001 : outil écrit, 3 essais verts, rapport dans chantiers/CH-001.rapport.md',{}),[]);
 });
 test('hub : courriel, UUID et code projet ESV sont refusés, nommés sans leur valeur',()=>{
- const t=H.verifierMessage('contact a@b.fr lot 12345678-1234-1234-1234-1234567890ab Project__123456',{});
+ const t=H.verifierMessage('contact '+courriel+' lot '+uuid+' '+projet,{});
  assert.deepEqual(t.map(x=>x.motif).sort(),['courriel','projetESV','uuid']);
- assert.ok(!JSON.stringify(t).includes('a@b.fr'));
+ assert.ok(!JSON.stringify(t).includes(courriel));
 });
 test('hub : une adresse web est refusée sauf la liste blanche',()=>{
- assert.equal(H.verifierMessage('voir https://exemple.invalid/page',{}).length,1);
- assert.equal(H.verifierMessage('voir https://www.w3.org/2000/svg',{}).length,0);
+ assert.equal(H.verifierMessage('voir '+page,{}).length,1);
+ assert.equal(H.verifierMessage('voir '+svg,{}).length,0);
 });
 test('hub : les motifs confidentiels viennent de la variable, jamais du code',()=>{
  const env={ARIANE_MOTIFS_INTERDITS:'secretA|secretB'};

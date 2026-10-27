@@ -23,7 +23,7 @@ Tu aurras à noter cinq valeurs. **Ne les colle jamais dans une conversation ave
     - en **texte** : `GH_OWNER` = `StoryNow30`, `GH_REPO` = `banane` ;
     - en **secret** : `TG_BOT_TOKEN`, `TG_CHAT_ID`, `TG_WEBHOOK_SECRET`, `GH_TOKEN`, `GH_WEBHOOK_SECRET`, et si tu veux le scan de ton nom et de l'hôte ESV : `ARIANE_MOTIFS_INTERDITS` (la même valeur que ta variable sur le PC, ex. `Prenom|Nom|esv\.exemple\.fr`).
     **Deploy** de nouveau.
-12. Note l'adresse du Worker, du type `https://ariane-hub-relais.<ton-nom>.workers.dev` (page du Worker, rubrique « Domains & Routes »).
+12. Note l'adresse du Worker (page du Worker, rubrique « Domains & Routes ») : elle se termine par workers.dev.
 
 ## D. Brancher Telegram (2 min)
 13. Dans ton navigateur, ouvre (une seule ligne, en remplaçant les trois valeurs) :

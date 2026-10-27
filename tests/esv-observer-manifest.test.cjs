@@ -27,13 +27,13 @@ test('réglage observateurPassif : gelé, actif par défaut dans cette version d
 });
 test('monde isolé (navigateur trop ancien pour world:MAIN) : l’observateur s’abstient, aucune enveloppe',()=>{
  const {install}=require('../src/esv-observer.js');const proto={open(){return 1;},send(){return 2;}};
- const win={XMLHttpRequest:{prototype:proto},chrome:{runtime:{id:'extension'}},location:{origin:'https://x',href:'https://x/'},performance:{now:()=>1,timeOrigin:1},postMessage(){},addEventListener(){}};
+ const win={XMLHttpRequest:{prototype:proto},chrome:{runtime:{id:'extension'}},location:{origin:'https://exemple.invalid',href:'https://exemple.invalid/'},performance:{now:()=>1,timeOrigin:1},postMessage(){},addEventListener(){}};
  const open=proto.open,send=proto.send;assert.equal(install(win),null);assert.equal(proto.open,open);assert.equal(proto.send,send);
- const page={XMLHttpRequest:{prototype:{open(){},send(){}}},chrome:undefined,location:{origin:'https://x',href:'https://x/'},performance:{now:()=>1,timeOrigin:1},postMessage(){},addEventListener(){}};
+ const page={XMLHttpRequest:{prototype:{open(){},send(){}}},chrome:undefined,location:{origin:'https://exemple.invalid',href:'https://exemple.invalid/'},performance:{now:()=>1,timeOrigin:1},postMessage(){},addEventListener(){}};
  assert.notEqual(install(page),null,'monde principal : installé');
 });
 test('fichier de l’observateur : se charge sans chrome, sans DOM ni jQuery au chargement (document_start)',()=>{
- const win={XMLHttpRequest:{prototype:{open(){},send(){}}},location:{origin:'https://x',href:'https://x/'},performance:{now:()=>1,timeOrigin:1},postMessage(){},addEventListener(){}};
+ const win={XMLHttpRequest:{prototype:{open(){},send(){}}},location:{origin:'https://exemple.invalid',href:'https://exemple.invalid/'},performance:{now:()=>1,timeOrigin:1},postMessage(){},addEventListener(){}};
  win.self=win;const ctx=vm.createContext({...win,globalThis:undefined});ctx.globalThis=ctx;ctx.window=ctx;
  assert.doesNotThrow(()=>vm.runInContext(fs.readFileSync(path.join(root,'src/esv-observer.js'),'utf8'),ctx,{filename:'esv-observer.js'}));
  assert.equal(ctx.__banane5ObserverInstalled,true);

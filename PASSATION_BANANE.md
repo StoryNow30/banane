@@ -22,7 +22,7 @@ hypothèses sont annoncés comme tels.
 Mic est spécialiste du traitement de données 3D chez Trealis (ex-Eurailscout
 France). Son travail porte sur le contrôle qualité de nuages de points LiDAR
 pour l'infrastructure ferroviaire de SNCF Réseau. Il travaille dans **ESV**, une
-application web (`esv.lidar.altametris.xyz/rails_validation/`) où il valide,
+application web (« l'hôte ESV ») où il valide,
 cut par cut, la position de profils de rail sur le nuage de points.
 
 Un **cut** est une coupe transversale de la voie. Chaque cut porte **deux

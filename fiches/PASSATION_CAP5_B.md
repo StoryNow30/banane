@@ -117,7 +117,7 @@ Sonde : `$S/b/probe.cjs PARTIE CUT [graines]`. Elle rend la capture, l'écarteme
 
 ## 8. Rejeu depuis un commit poussé (cœurs 2 et 3 seulement)
 
-`S=/tmp/claude-0/-home-user/cc0e4631-960e-5f55-b126-e7123e84b5ca/scratchpad`
+`S=/tmp/claude-0/-home-user/identifiant/scratchpad`
 
 Scripts de rejeu :
 - `bash $S/b/run9.sh NOM 'LEVIERS'` : git archive du HEAD de `wt/C5b`, refusé si l'arbre est modifié ; écrit `c5/r-NOM/commit.txt` et `leviers.json`, puis rejoue les 9 lots sur les cœurs 2 et 3.
