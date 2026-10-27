@@ -1,0 +1,10 @@
+name = "ariane-hub-relais"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+GH_OWNER = "StoryNow30"
+GH_REPO = "banane"
+
+# Secrets, à poser avec « npx wrangler secret put NOM » (jamais ici) :
+#   TG_BOT_TOKEN, TG_CHAT_ID, TG_WEBHOOK_SECRET, GH_TOKEN, GH_WEBHOOK_SECRET, ARIANE_MOTIFS_INTERDITS (facultatif)

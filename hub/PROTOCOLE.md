@@ -9,6 +9,7 @@ Décision de l'opérateur du 26/10/2026 : les agents du projet communiquent par 
 | `CH-NNN` | PR de la branche `chantier/CH-NNN` vers `claude/50-test17` | tout ce qui concerne ce chantier : ticket, questions, rapport, verdict des essais, revue |
 | `TNN` | PR d'intégration d'une version de test (quand elle existe) | fusion, verify de version, paquet |
 | `hub` | PR permanente « hub » (branche `hub/journal`) | messages généraux : budget, décisions à prendre, alertes hors chantier |
+| Telegram | relais `hub/telegram/` (Cloudflare Worker, installation : `hub/telegram/INSTALLATION.md`) | miroir du hub sur le téléphone de l'opérateur, dans les deux sens : chaque message du hub lui est envoyé, sa réponse devient un commentaire signé `operateur` sur la PR du chantier |
 | direct | `send_message` entre sessions Claude Code | seulement entre sessions Claude (chercheur GCV2 ↔ intégrateur) ; rien d'important n'y reste : le résultat est reporté sur la PR |
 
 ## Le message
@@ -44,6 +45,10 @@ _hub Ariane · émetteur : cursor_
 2. L'exécutant travaille, pousse ; à chaque poussée l'action GitHub poste son `verdict` (verify complet, scan).
 3. L'exécutant poste `question` s'il bloque, `rapport` quand il a fini, et passe la PR « prête ».
 4. L'intégrateur relit le diff, poste `verdict` (accepté, ou ce qui manque), fusionne dans le tronc (commit de fusion), ferme la PR. Le chantier est fini.
+
+## Ce qu'un verdict vert de GitHub prouve, et ne prouve pas
+
+Le verdict de l'action est un **filtre**, pas une livraison. Il prouve : les essais du dépôt passent sur une machine propre (le 27/10 : 2 679 essais, 0 échec, 0 annulé, 21 ignorés), aucun motif interdit, le paquet se construit. Il ne prouve pas : les 21 essais de navigateur (Chromium absent de l'exécuteur) ni la maquette ESV, qui ne tournent que sur le poste de l'intégrateur ; ni la parité ni la garde sur les lots. **Avant tout paquet, l'intégrateur refait un verify complet, la maquette, la parité et la garde sur son poste.** Le délai par fichier d'essai est de 60 s sur GitHub (variable `BANANE_TEST_TIMEOUT_MS`), de 20 s ailleurs.
 
 ## Hors ligne ou sans `gh`
 
