@@ -9,6 +9,7 @@ Décision de l'opérateur du 26/10/2026 : les agents du projet communiquent par 
 | `CH-NNN` | PR de la branche `chantier/CH-NNN` vers `claude/50-test17` | tout ce qui concerne ce chantier : ticket, questions, rapport, verdict des essais, revue |
 | `TNN` | PR d'intégration d'une version de test (quand elle existe) | fusion, verify de version, paquet |
 | `hub` | PR permanente « hub » (branche `hub/journal`) | messages généraux : budget, décisions à prendre, alertes hors chantier |
+| Telegram | relais `hub/telegram/` (Cloudflare Worker, installation : `hub/telegram/INSTALLATION.md`) | miroir du hub sur le téléphone de l'opérateur, dans les deux sens : chaque message du hub lui est envoyé, sa réponse devient un commentaire signé `operateur` sur la PR du chantier |
 | direct | `send_message` entre sessions Claude Code | seulement entre sessions Claude (chercheur GCV2 ↔ intégrateur) ; rien d'important n'y reste : le résultat est reporté sur la PR |
 
 ## Le message
