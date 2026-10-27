@@ -121,7 +121,9 @@ async function depuisTelegram(env, update) {
   const pr = await prDuChantier(env, l.chantier);
   if (!pr) return repondre(`Aucune PR pour ${l.chantier}.`);
   const r = await api(env, `/issues/${pr.number}/comments`, { method: 'POST', body: JSON.stringify({ body: formaterCommentaire({ ...l, de: 'operateur' }) }) });
-  return repondre(r.ok ? `Envoyé sur ${l.chantier} (PR #${pr.number}), type ${l.type}.` : `Échec GitHub (${r.status}).`);
+  if (r.ok) return repondre(`Envoyé sur ${l.chantier} (PR #${pr.number}), type ${l.type}.`);
+  let raison = ''; try { raison = String((await r.json()).message || '').slice(0, 160); } catch { /* corps non JSON */ }
+  return repondre(`Échec GitHub (${r.status})${raison ? ' : ' + raison : ''}.`);
 }
 
 async function depuisGitHub(env, evenement, charge) {
