@@ -5,8 +5,6 @@ name: Chantier
 on:
   push:
     branches: ['chantier/**']
-  pull_request:
-    branches: ['claude/50-test17']
 
 permissions:
   contents: read
@@ -72,7 +70,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Message du hub sur la PR
-        if: always()
+        if: ${{ always() && !cancelled() }}
         uses: actions/github-script@v7
         env:
           COMPTE: ${{ steps.releve.outputs.compte }}
