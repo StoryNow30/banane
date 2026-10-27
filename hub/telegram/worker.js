@@ -120,7 +120,8 @@ async function depuisTelegram(env, update) {
   const pr = await prDuChantier(env, l.chantier);
   if (!pr) return repondre(`Aucune PR pour ${l.chantier}.`);
   const r = await api(env, `/issues/${pr.number}/comments`, { method: 'POST', body: JSON.stringify({ body: formaterCommentaire({ ...l, de: 'operateur' }) }) });
-  if (r.ok) return repondre(`Envoyé sur ${l.chantier} (PR #${pr.number}), type ${l.type}.`);
+  /* Succès : une réaction 👍 sur le message de l'opérateur, sans texte ni notification. Le relais ne parle que pour une erreur ou un refus. */
+  if (r.ok) return tg(env, 'setMessageReaction', { chat_id: env.TG_CHAT_ID, message_id: msg.message_id, reaction: [{ type: 'emoji', emoji: '👍' }] });
   let raison = ''; try { raison = String((await r.json()).message || '').slice(0, 160); } catch { /* corps non JSON */ }
   return repondre(`Échec GitHub (${r.status})${raison ? ' : ' + raison : ''}.`);
 }
