@@ -19,6 +19,9 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 - Un chantier = une branche `chantier/<ticket>` partie du tronc, un ticket `chantiers/<ticket>.md` lu en entier avant de commencer.
 - Documents de pilotage et données : dépôt `banane-data` (branche `claude/execute-prompt-00-18ra5a`).
 
+## Hub (messagerie des agents)
+- Le canal d'un chantier est sa pull request. On y parle **uniquement** par `node tools/hub.cjs dire --chantier CH-NNN --de <émetteur> --type <type> "texte"` (ou `--fichier`), jamais à la main. Protocole : `hub/PROTOCOLE.md`. Une `question` bloque : on attend la `reponse`, on ne devine pas. Fin de travail = un `rapport` ; les `verdict` viennent des machines ou de l'intégrateur.
+
 ## Preuves avant de livrer
 - Essai rouge d'abord, puis le code, puis l'essai vert (`tests/*.test.cjs`, vm ou navigateur).
 - Essais ciblés en cours de travail : `node --test tests/<fichier>.test.cjs`. Le `verify` complet (`node tools/verify.cjs`, ~2 700 essais, 20 s par fichier, machine au repos) est lancé **une fois par version** par l'intégrateur, pas par chantier.

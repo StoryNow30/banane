@@ -24,6 +24,10 @@ Pourquoi le même harnais pour l'intégrateur et l'exécutant : Claude Code lit 
 5. **Terrain.** L'opérateur exporte avant d'installer, installe par-dessus, essaie, exporte après chaque partie, envoie les zips.
 6. **Archivage et jugement.** Scripts : copie, SHA-256, CRC, scan d'identité, `NOTES.md`, puis le tableau standard du lot (jugés, > 20 mm, > 50 mm, mauvaise voie, différés, « poserait », garde). Un agent n'intervient que si le tableau montre une anomalie.
 
+## 2 bis. Le hub : comment les agents se parlent
+
+Décision de l'opérateur (26/10) : un hub de messagerie relie tous les agents. Il est décrit dans `hub/PROTOCOLE.md` et outillé par `tools/hub.cjs`. En résumé : **la PR d'un chantier est son canal** ; chaque message (`ticket`, `question`, `reponse`, `rapport`, `verdict`, `alerte`, `info`) est un commentaire formaté et passé au scan des motifs interdits ; l'action GitHub `.github/workflows/chantier.yml` poste le `verdict` du verify complet à chaque poussée ; la session Claude Code de l'intégrateur est abonnée à la PR et se réveille à chaque message ; l'opérateur suit tout depuis les notifications GitHub de son téléphone. Entre deux sessions Claude Code, `send_message` reste permis, mais le résultat est toujours reporté sur la PR : rien d'important ne vit hors du hub.
+
 ## 3. Les branches et les dépôts
 
 - `banane`, tronc `claude/50-test17` : le code. Seul l'intégrateur y pousse, en avance simple. `chantier/<ticket>` pour les exécutants.

@@ -1,0 +1,78 @@
+# Hub Ariane, juge mécanique : à chaque poussée d'une branche de chantier, le verify complet tourne sur GitHub
+# et le verdict est posté comme message du hub sur la PR du chantier (hub/PROTOCOLE.md). Aucun modèle d'IA ici.
+name: Chantier
+
+on:
+  push:
+    branches: ['chantier/**']
+  pull_request:
+    branches: ['claude/50-test17']
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: chantier-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Scan des motifs interdits (motifs publics ; le motif confidentiel vient du secret ARIANE_MOTIFS_INTERDITS s'il existe)
+        id: scan
+        env:
+          ARIANE_MOTIFS_INTERDITS: ${{ secrets.ARIANE_MOTIFS_INTERDITS }}
+        run: |
+          if [ -f tools/scan-identite.cjs ]; then node tools/scan-identite.cjs | tee scan.txt; else echo "pas encore d'outil de scan (ticket CH-001)" | tee scan.txt; fi
+
+      - name: verify complet
+        id: verify
+        continue-on-error: true
+        run: node tools/verify.cjs
+
+      - name: Relevé
+        id: releve
+        if: always()
+        run: |
+          node -e '
+            const fs=require("fs");let c={};
+            try{c=JSON.parse(fs.readFileSync("audit/verification.json","utf8")).counts||{};}catch{}
+            const l=["tests","pass","fail","cancelled","skipped"].map(k=>`${k} ${c[k]??"?"}`).join(" · ");
+            fs.appendFileSync(process.env.GITHUB_OUTPUT,`compte=${l}\n`);
+          '
+
+      - name: Message du hub sur la PR
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          COMPTE: ${{ steps.releve.outputs.compte }}
+          VERIFY: ${{ steps.verify.outcome }}
+          SCAN: ${{ steps.scan.outcome }}
+          BRANCHE: ${{ github.head_ref || github.ref_name }}
+        with:
+          script: |
+            const {owner,repo}=context.repo;const br=process.env.BRANCHE;
+            const ch=(br.match(/^chantier\/(CH-\d{3})$/)||[])[1]||br;
+            let n=context.payload.pull_request?.number;
+            if(!n){const {data}=await github.rest.pulls.list({owner,repo,state:'open',head:`${owner}:${br}`});n=data[0]?.number;}
+            if(!n){core.info(`aucune PR ouverte pour ${br} : verdict non posté`);return;}
+            const ok=process.env.VERIFY==='success'&&process.env.SCAN==='success';
+            const date=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date()).replace(',','');
+            const body=`**[actions → tous] verdict · ${ch} · ${date} Paris**\n\n`+
+              `${ok?'VERT':'ROUGE'} sur \`${context.sha.slice(0,7)}\` : verify ${process.env.VERIFY}, scan ${process.env.SCAN}.\n`+
+              `Relevé : ${process.env.COMPTE}.\n`+
+              `Journal : ${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}\n\n---\n_hub Ariane · émetteur : actions_`;
+            await github.rest.issues.createComment({owner,repo,issue_number:n,body});
+            if(!ok)core.setFailed('verify ou scan rouge');

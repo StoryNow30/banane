@@ -1,0 +1,50 @@
+# Hub Ariane : la messagerie des agents
+
+Décision de l'opérateur du 26/10/2026 : les agents du projet communiquent par un hub. Le hub n'est pas un serveur de plus : **c'est GitHub, qui est déjà là.** Chaque chantier a sa pull request ; ses messages sont les commentaires de cette PR. Tout le monde les lit (l'opérateur sur son téléphone, les agents par `tools/hub.cjs`), tout est horodaté et conservé, et la session Claude Code abonnée se réveille à chaque message au lieu de scruter.
+
+## Les canaux
+
+| Canal | Support | Pour quoi |
+|---|---|---|
+| `CH-NNN` | PR de la branche `chantier/CH-NNN` vers `claude/50-test17` | tout ce qui concerne ce chantier : ticket, questions, rapport, verdict des essais, revue |
+| `TNN` | PR d'intégration d'une version de test (quand elle existe) | fusion, verify de version, paquet |
+| `hub` | PR permanente « hub » (branche `hub/journal`) | messages généraux : budget, décisions à prendre, alertes hors chantier |
+| direct | `send_message` entre sessions Claude Code | seulement entre sessions Claude (chercheur GCV2 ↔ intégrateur) ; rien d'important n'y reste : le résultat est reporté sur la PR |
+
+## Le message
+
+Toujours produit par `node tools/hub.cjs dire` (ou par l'action GitHub), jamais tapé à la main dans la PR par un agent, pour que le scan tourne et que le format soit stable :
+
+```
+**[émetteur → destinataire] type · CH-001 · 27/10/2026 09:05 Paris**
+
+le texte, une demi-page au plus
+
+---
+_hub Ariane · émetteur : cursor_
+```
+
+- **Émetteurs** : `integrateur` (Claude Code cloud), `cursor`, `glm` (Claude Code sur le poste de l'opérateur avec le modèle externe), `actions` (GitHub), `operateur`, `agent` (sous-agent).
+- **Types** : `ticket` (la commande, posté par l'intégrateur à l'ouverture), `question` (bloqué : on attend une réponse, on ne devine pas), `reponse`, `rapport` (fin de travail : fait, pas fait, mesures), `verdict` (essais et scan, posté par `actions` ou l'intégrateur), `alerte` (règle touchée, données sensibles, budget), `info`.
+- **Destinataire** : `tous` par défaut ; `operateur` quand seule une personne peut trancher ; un émetteur quand on lui répond.
+- **Longueur** : une demi-page. Le détail va dans un fichier de la branche (`chantiers/CH-NNN.rapport.md`), le message dit où.
+
+## Les règles
+
+1. **Scan avant envoi.** `hub.cjs` refuse tout message qui contient un courriel, une adresse web hors liste blanche, un code de projet ESV, un UUID ou un motif confidentiel (variable `ARIANE_MOTIFS_INTERDITS`, fournie par l'opérateur sur son poste et comme secret du dépôt pour l'action ; jamais écrite dans un fichier).
+2. **Un message, un fait.** On n'écrit pas « ça marche » : on écrit le compte (« 6 essais verts sur 6, verify 2 679/0/0 »), ou le lien du journal d'action.
+3. **Une question bloque.** Un agent qui pose une `question` s'arrête et attend ; il ne continue pas sur une hypothèse. L'intégrateur ou l'opérateur répond par `reponse`.
+4. **Le verdict vient des machines.** Seuls `actions` et l'intégrateur postent un `verdict`, et toujours à partir d'un verify, d'une garde ou d'une parité qui a tourné. Un exécutant poste un `rapport`, jamais un verdict.
+5. **Pas de bavardage entre agents.** Deux agents ne dialoguent pas dans la PR : l'exécutant parle à l'intégrateur, l'intégrateur parle à l'opérateur. Le quota part dans les boucles de politesse.
+6. **Le hub n'est pas la vérité.** La vérité est dans la branche (le code, les essais) et dans `DECISIONS.md`. Un message qui contredit la branche a tort.
+
+## Le cycle d'un chantier dans le hub
+
+1. L'intégrateur crée la branche `chantier/CH-NNN` (avec le squelette du rapport), ouvre la PR **en brouillon** vers le tronc, poste le `ticket`, et s'abonne à la PR.
+2. L'exécutant travaille, pousse ; à chaque poussée l'action GitHub poste son `verdict` (verify complet, scan).
+3. L'exécutant poste `question` s'il bloque, `rapport` quand il a fini, et passe la PR « prête ».
+4. L'intégrateur relit le diff, poste `verdict` (accepté, ou ce qui manque), fusionne dans le tronc (commit de fusion), ferme la PR. Le chantier est fini.
+
+## Hors ligne ou sans `gh`
+
+`node tools/hub.cjs dire --boite --pousser …` écrit le message dans `hub/boite/CH-NNN.md` sur la branche du chantier et le pousse : l'intégrateur le lit dans le diff. La boîte n'existe jamais sur le tronc.
