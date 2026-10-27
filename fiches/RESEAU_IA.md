@@ -9,7 +9,7 @@
 | **Décideur, testeur terrain** | L'opérateur | Fixe les objectifs, tranche (D-xxx), essaie dans ESV et Edge, exporte après chaque partie | |
 | **Intégrateur** | Claude Code en session cloud, modèle économique | Écrit les tickets, relit les diffs des chantiers, fusionne dans le tronc, lance le verify et la garde une fois par version, fabrique le paquet et la consigne, tient `DECISIONS.md` et le cahier, archive les exports dans `banane-data` | Coder les gros morceaux ; lire un journal à la main ; lancer plusieurs verify |
 | **Exécutant** | Même harnais Claude Code mais sur un modèle à bas coût (plan de code GLM via Z.ai, ou Kimi Code) sur le poste de l'opérateur, ou Cursor pour l'interface | Un ticket borné : essais rouges, code, essais verts, commits sur `chantier/<ticket>`, rapport d'une demi-page | Les modules de décision et d'écriture (liste dans `CLAUDE.md`), la version, le paquet, le tronc, les exports |
-| **Chercheur GCV2** | Claude Code, agents sur le modèle économique, Opus seulement pour concevoir | Le chantier des différés : banc, ESV local (maquette), garde, mesure, itère jusqu'au gain | Livrer sans la garde verte et la parité |
+| **Chercheur GCV2** | Claude Code, agents sur le modèle économique, le niveau maximal seulement pour concevoir | Le chantier des différés : banc, ESV local (maquette), garde, mesure, itère jusqu'au gain | Livrer sans la garde verte et la parité |
 | **Relecteur froid** | Le modèle le plus fort, une fois par version | Revue adversaire du diff qui touche la sécurité, la pose ou l'écriture | Tout le reste |
 | **Juges mécaniques** | Scripts, sans IA | `tools/verify.cjs`, `tools/garde-gcv2.cjs`, parités, maquette ESV, `banane-data/outils/analyse-lots/` (jugement des lots contre l'Écho), archivage | |
 

@@ -40,9 +40,13 @@ jobs:
       - name: verify complet
         id: verify
         continue-on-error: true
-        # Les relevés commités sont retirés d'abord : le relevé ci-dessous ne doit lire que ce que CE verify a écrit.
+        # Les relevés commités sont vidés d'abord (l'essai du paquet exige qu'ils existent) : le relevé ci-dessous ne lit que ce que CE verify a écrit.
+        # Délai par fichier relevé à 60 s : l'exécuteur GitHub est plus lent que le poste (deux fichiers frôlent 20 s sur le poste).
+        env:
+          BANANE_TEST_TIMEOUT_MS: '60000'
         run: |
-          rm -f audit/verification.txt audit/verification.json
+          echo '{}' > audit/verification.json
+          : > audit/verification.txt
           node tools/verify.cjs
 
       - name: Relevé (lu dans la sortie TAP de ce verify, jamais dans un fichier commité)
