@@ -68,7 +68,7 @@ function gh(args,input){
 }
 function numeroPR(chantier){
  const {owner,repo}=depot();
- const out=gh(['api',`repos/${owner}/${repo}/pulls?state=all&per_page=50&head=${owner}:chantier/${chantier}`]);
+ const out=gh(['api',`repos/${owner}/${repo}/pulls?state=all&per_page=50&head=${owner}:${chantier==='hub'?'hub/journal':'chantier/'+chantier}`]);
  const prs=JSON.parse(out);if(!prs.length)return null;
  return prs.find(p=>p.state==='open')?.number??prs[0].number;
 }
@@ -80,7 +80,7 @@ function dire(o){
  const corps=formater({de:o.de,a:o.a,type:o.type,chantier:o.chantier,texte});
  if(o.boite)return boite(o.chantier,corps,o.pousser);
  const {owner,repo}=depot();const n=numeroPR(o.chantier);
- if(!n){console.error(`aucune PR pour chantier/${o.chantier} : ouvre-la (gh pr create --base claude/50-test17 --draft) ou utilise --boite`);process.exit(3);}
+ if(!n){console.error(`aucune PR pour ${o.chantier==='hub'?'hub/journal':'chantier/'+o.chantier} : ouvre-la (gh pr create --base claude/50-test17 --draft) ou utilise --boite`);process.exit(3);}
  const r=JSON.parse(gh(['api','-X','POST',`repos/${owner}/${repo}/issues/${n}/comments`,'-f',`body=${corps}`]));
  console.log(`envoyé : PR #${n}, commentaire ${r.id}`);
 }
