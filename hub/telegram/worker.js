@@ -57,7 +57,8 @@ export function lireTelegram(texte, texteRepondu = '', chantiersOuverts = []) {
 
 export function formaterCommentaire({ de = 'operateur', a = 'tous', type, chantier, texte, date }) {
   if (!TYPES.includes(type)) throw new Error(`type inconnu ${type}`);
-  return `**[${de} → ${a}] ${type} · ${chantier} · ${heureParis(date)} Paris**\n\n${texte.trim()}\n\n---\n_hub Ariane · émetteur : ${de}_`;
+  const mention = a === 'cursor' && de !== 'cursor' ? '@cursor ' : '';              // lance l'agent infonuagique de Cursor sur la PR
+  return `${mention}**[${de} → ${a}] ${type} · ${chantier} · ${heureParis(date)} Paris**\n\n${texte.trim()}\n\n---\n_hub Ariane · émetteur : ${de}_`;
 }
 
 /* Commentaire du hub -> texte Telegram (sans Markdown, borné). */
@@ -129,6 +130,12 @@ async function depuisTelegram(env, update) {
 async function depuisGitHub(env, evenement, charge) {
   if (evenement !== 'issue_comment' || charge.action !== 'created' || !charge.issue?.pull_request) return;
   const body = charge.comment?.body || '';
+  const deCursor = /cursor/i.test(charge.comment?.user?.login || '');                 // les réponses de l'agent de Cursor arrivent telles quelles
+  if (deCursor && body.trim()) {
+    const corps = body.replace(/\*\*/g, '').trim(), txt = corps.length > 3400 ? corps.slice(0, 3400) + '\n[…]' : corps;
+    await tg(env, 'sendMessage', { chat_id: env.TG_CHAT_ID, text: `[cursor] ${txt}\n\n${charge.issue.html_url}`, disable_web_page_preview: true });
+    return;
+  }
   if (!estMessageHub(body) || estEcho(body)) return;                                     // pas de bavardage, pas d'écho
   await tg(env, 'sendMessage', { chat_id: env.TG_CHAT_ID, text: pourTelegram(body, charge.issue.html_url), disable_web_page_preview: true });
 }

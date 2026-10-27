@@ -29,3 +29,9 @@ test('hub : type, émetteur et chantier sont contrôlés',()=>{
  assert.throws(()=>H.formater({de:'inconnu',type:'info',chantier:'CH-001',texte:'x'}),/émetteur inconnu/);
  assert.throws(()=>H.formater({de:'cursor',type:'info',chantier:'truc',texte:'x'}),/chantier/);
 });
+test('hub : un message adressé à cursor commence par la mention qui lance son agent, pas ses propres messages', () => {
+ const m=H.formater({de:'integrateur',a:'cursor',type:'ticket',chantier:'CH-001',texte:'go',date:new Date('2026-10-27T08:05:00Z')});
+ assert.match(m,/^@cursor \*\*\[integrateur → cursor\] ticket · CH-001/);
+ assert.doesNotMatch(H.formater({de:'cursor',a:'cursor',type:'info',chantier:'CH-001',texte:'x'}),/^@cursor/);
+ assert.doesNotMatch(H.formater({de:'integrateur',a:'glm',type:'ticket',chantier:'CH-001',texte:'x'}),/@cursor/);
+});

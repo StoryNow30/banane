@@ -55,3 +55,7 @@ test('telegram : le destinataire vient de @mention, sinon de l’auteur du messa
   assert.equal(W.lireTelegram('merci', verdict, ['CH-001']).a, 'integrateur');
   assert.equal(W.lireTelegram('CH-001 @tous pause générale', '', []).a, 'tous');
 });
+test('telegram : un message de l’opérateur adressé à @cursor lance l’agent de Cursor', () => {
+  const c = W.formaterCommentaire({ type: 'ticket', chantier: 'CH-001', a: 'cursor', texte: 'go', date: new Date('2026-10-27T08:05:00Z') });
+  assert.match(c, /^@cursor \*\*\[operateur → cursor\] ticket · CH-001/);
+});

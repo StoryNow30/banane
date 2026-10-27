@@ -46,6 +46,10 @@ _hub Ariane · émetteur : cursor_
 3. L'exécutant poste `question` s'il bloque, `rapport` quand il a fini, et passe la PR « prête ».
 4. L'intégrateur relit le diff, poste `verdict` (accepté, ou ce qui manque), fusionne dans le tronc (commit de fusion), ferme la PR. Le chantier est fini.
 
+## Cursor dans le hub
+
+Cursor n'est pas un outil installé chez l'opérateur : c'est un agent infonuagique lancé par GitHub. Un commentaire qui commence par `@cursor` sur une PR lance (ou relance) son agent sur cette PR, avec les droits de l'application GitHub de Cursor (dépôt `banane` seulement, jamais `banane-data`). `tools/hub.cjs dire --a cursor …` (et le relais Telegram, `CH-001 @cursor …`) ajoutent cette mention. Les commentaires que l'agent poste lui-même sont transmis tels quels à Telegram. Le ticket (`chantiers/CH-NNN.md`) et `CLAUDE.md` sont lus par l'agent comme pour tout exécutant ; ses interdits sont les mêmes. L'opérateur règle le crédit de dépense de Cursor dans son compte.
+
 ## Ce qu'un verdict vert de GitHub prouve, et ne prouve pas
 
 Le verdict de l'action est un **filtre**, pas une livraison. Il prouve : les essais du dépôt passent sur une machine propre (le 27/10 : 2 679 essais, 0 échec, 0 annulé, 21 ignorés), aucun motif interdit, le paquet se construit. Il ne prouve pas : les 21 essais de navigateur (Chromium absent de l'exécuteur) ni la maquette ESV, qui ne tournent que sur le poste de l'intégrateur ; ni la parité ni la garde sur les lots. **Avant tout paquet, l'intégrateur refait un verify complet, la maquette, la parité et la garde sur son poste.** Le délai par fichier d'essai est de 60 s sur GitHub (variable `BANANE_TEST_TIMEOUT_MS`), de 20 s ailleurs.
