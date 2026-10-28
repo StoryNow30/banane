@@ -2,18 +2,18 @@
 'use strict';
 /*
  * compteur-gcv2.cjs — compteur des cuts que la GCV2 peut apprendre depuis le début de la 5.0 (D-188).
- * Cap de Mic : « un cut corrigé = un cut appris et entraîné à la GCV2 ». Outil hors ligne, lecture seule : il lit les
+ * Cap de l'opérateur : « un cut corrigé = un cut appris et entraîné à la GCV2 ». Outil hors ligne, lecture seule : il lit les
  * Échos archivés dans banane-data (via tools/jointure-echo-orbite.cjs, en Écho seul) et compte, partie par partie,
- *  - `corriges` : cuts validés après un déplacement de rail (étiquette Écho VALIDATE_CORRECTED_*) — le compteur de Mic ;
+ *  - `corriges` : cuts validés après un déplacement de rail (étiquette Écho VALIDATE_CORRECTED_*) — le compteur de l'opérateur ;
  *      `dont5mm` et `dont10mm` : ceux dont le plus grand déplacement dépasse 5 mm, 10 mm (3D, repère profil) ;
  *  - `valideSansMouvement` : cuts validés tels quels (VALIDATE_NO_MOVEMENT) ;
  *  - `visiteSansAction` : cuts visités au moins 0,6 s sans validation et sans rail déplacé de 0,5 mm ou plus
- *      (« les cuts visités et non modifiés peuvent être appris », Mic) ;
- *  - `skips` : cuts passés en SKIP, NON comptés (Mic : ne pas en tenir compte pour l'instant) ;
+ *      (« les cuts visités et non modifiés peuvent être appris », l'opérateur) ;
+ *  - `skips` : cuts passés en SKIP, NON comptés (l'opérateur : ne pas en tenir compte pour l'instant) ;
  *  - `sansReference` : cuts vus sans pose humaine exploitable (visite trop courte…), non comptés.
- * `appris` = corriges + valideSansMouvement + visiteSansAction ; le compteur de Mic est `corriges`.
+ * `appris` = corriges + valideSansMouvement + visiteSansAction ; le compteur de l'opérateur est `corriges`.
  * File d'attente : chaque source porte un `etat`, « en-file » (archivée, pas encore entraînée) ou « appris »
- * (GCV2 entraînée dessus). Le dépôt ne sait pas quand la GCV2 est entraînée : tout part « en-file » tant que Mic n'a
+ * (GCV2 entraînée dessus). Le dépôt ne sait pas quand la GCV2 est entraînée : tout part « en-file » tant que l'opérateur n'a
  * pas dit le contraire, en changeant `etat` dans le fichier des sources.
  *
  *   node tools/compteur-gcv2.cjs --donnees <dossier banane-data> [--sources datasets/compteur-gcv2-sources.json]
@@ -114,7 +114,7 @@ function enMarkdown(r) {
   const T = r.totaux.tous;
   const L = [
     '# Compteur des cuts appris par la GCV2 (depuis le début de la 5.0)', '',
-    'Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (Mic). Les SKIP ne sont pas comptés. Aucune limite : on ne s\'arrête pas à 1 000 ou 1 500 cuts (Mic).', '',
+    'Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (l\'opérateur). Les SKIP ne sont pas comptés. Aucune limite : on ne s\'arrête pas à 1 000 ou 1 500 cuts (l\'opérateur).', '',
     `**Cuts corrigés : ${n(T.corriges)}** (dont ${n(T.dont5mm)} de plus de 5 mm, ${n(T.dont10mm)} de plus de 10 mm). Avec les cuts validés tels quels (${n(T.valideSansMouvement)}) et les cuts visités sans action d'au moins ${String(r.regle.seuilVisiteS).replace('.', ',')} s (${n(T.visiteSansAction)}) : **${n(T.appris)} cuts apprenables**.`, '',
     '| File | Corrigés | Validés tels quels | Visités sans action | Apprenables |', '|---|---:|---:|---:|---:|',
     ...['en-file', 'appris'].map(k => `| ${k === 'en-file' ? 'En apprentissage (en file)' : 'Appris (GCV2 entraînée)'} | ${n(r.totaux[k].corriges)} | ${n(r.totaux[k].valideSansMouvement)} | ${n(r.totaux[k].visiteSansAction)} | ${n(r.totaux[k].appris)} |`), '',

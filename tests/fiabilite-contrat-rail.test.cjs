@@ -52,7 +52,7 @@ test('les 4 états de sélection des boutons de rail donnent la même empreinte 
  assert.ok(lus.every(c=>c.forme===2),'empreinte de forme 2');
 });
 
-test('sélectionner l\'autre rail par son bouton, comme Mic, ne change pas l\'empreinte',async()=>{
+test('sélectionner l\'autre rail par son bouton, comme l\'opérateur, ne change pas l\'empreinte',async()=>{
  const f=monter(),avant=await lire(f);
  f.nodes.get('O2N3DCutRRClick').click();assert.deepEqual(f.nodes.get('O2N3DCutRRClick').classList.at(-1),'rightRailSClass','le rail droit est sélectionné');
  const apres=await lire(f);

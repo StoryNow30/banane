@@ -3,7 +3,7 @@
  * tests/helpers/gcv2-jeu-fixture.cjs) : aucune donnée de terrain.
  *  - Rejeu conjoint : trois profils, sort réel joint, une pose validée par un profil devient voisin des cuts suivants de CE profil seulement.
  *  - Causal : rien d'après le début de la relecture n'entre (validations, poses humaines, relecture) ; même entrée, mêmes octets.
- *  - Agrégation : taux de différés, posés non validés comptés comme différés « approchés », gain contre Mic, rappel.
+ *  - Agrégation : taux de différés, posés non validés comptés comme différés « approchés », gain contre l'opérateur, rappel.
  *  - Comparaison (à l'arrivée de l'Écho) : jugés, départ différent, gain. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path');
@@ -64,7 +64,7 @@ test('rejeu conjoint : lignes, profils, sort réel, déterminisme et causalité'
   }
 });
 
-test('agrégation : taux, approchés, gain contre Mic, rappel', () => {
+test('agrégation : taux, approchés, gain contre l\'opérateur, rappel', () => {
   const ligne = (cut, reel, L1, Lv, decal = null) => ({ type: 'cut', partie: '9:91', projet: 9, lot: 'lot-a', cut, nuage: true, zone: 'abords', reel: { pose: reel, motif: reel ? null : 'sans-appui' },
     profils: { base: { etat: reel ? 'pose' : 'differe' }, L1: { etat: L1, source: 'gcv2', decal, l1: { motif: L1 === 'differe' ? 'sous-delta' : null, hypothese: 'H1' } }, 'L1-v': { etat: Lv, source: 'gcv2', decal } } });
   const d = { left: [0, 30, 0], right: [0, 30, 0] };

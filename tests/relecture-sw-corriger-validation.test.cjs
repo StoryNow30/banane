@@ -1,6 +1,6 @@
 'use strict';
 /* 5.0 (D-170 à D-176) — RELECTURE APRÈS LE LOT, service worker réel (tests/helpers/relecture-lot.cjs) : corriger : Maj+Espace sans
- * écriture de validation vue : arrêt sur ce cut, dit, intention notée PAR CUT ; tant que Mic n'a pas dit « J'ai contrôlé le cut 109 »,
+ * écriture de validation vue : arrêt sur ce cut, dit, intention notée PAR CUT ; tant que l'opérateur n'a pas dit « J'ai contrôlé le cut 109 »,
  * ni relecture, ni lot, ni retour à un cut (revue, W5 et R4). Données synthétiques. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,PERMISSIF,apresLot}=require('./helpers/relecture-essais.cjs');

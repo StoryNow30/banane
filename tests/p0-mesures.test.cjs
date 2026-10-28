@@ -12,7 +12,7 @@ const pilote = require('./corpus/pilot-part18-cut6704-partial-flank.json');
 
 const proche = (a, b, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`);
 
-/* Un rail synthétique. y et z : delta brut du moteur (mm) ; conv : { dz, du, appliquee } ; h : pose de Mic [y, z]. */
+/* Un rail synthétique. y et z : delta brut du moteur (mm) ; conv : { dz, du, appliquee } ; h : pose de l'opérateur [y, z]. */
 function rail({ cut, cote, y = 0, z = 0, dz = 0, du = 0, appliquee = true, repeche = false, h = [0, 0], etage = 'first-pass', raison = null, predit = 1440, classe = 'posee' }) {
   const refuse = Math.abs(dz) > 8 || Math.abs(du) > 8;
   return {
@@ -27,14 +27,14 @@ function rail({ cut, cote, y = 0, z = 0, dz = 0, du = 0, appliquee = true, repec
 const droit = (cut, o = {}) => rail({ cut, cote: 'right', z: -3, dz: 3, h: [0, 0], ...o });
 
 /* Jeu synthétique, calculé à la main :
- *  cut 1 (premier passage) : gauche brute z −6, calage prédit dz 10 (refusé), Mic à z −0,5 ; droite z −3, dz 3 (calé), Mic à z 0.
+ *  cut 1 (premier passage) : gauche brute z −6, calage prédit dz 10 (refusé), l'opérateur à z −0,5 ; droite z −3, dz 3 (calé), l'opérateur à z 0.
  *    S0 : gauche non calée → erreur 5,5 ; droite −3 + 3 = 0 → 0.     cut = 5,5.
  *    plafond 8 : −6 + 8 = 2 → 2,5 ; domaine 12 : −6 + 10 = 4 → 4,5 ; calage plein : 4,5.
- *  cut 2 (premier passage) : gauche z −8, dz 12,5 (refusé, au delà de 12 aussi), Mic à z −2 ; droite comme le cut 1.
+ *  cut 2 (premier passage) : gauche z −8, dz 12,5 (refusé, au delà de 12 aussi), l'opérateur à z −2 ; droite comme le cut 1.
  *    S0 : 6 ; plafond 8 : 0 → 2 ; domaine 12 : non appliqué (12,5 > 12) → 6 ; plein : 4,5 → 6,5.
- *  cut 3 ('pair-guard') : gauche repêchée, dz 10 refusé, z −6, Mic à z −1 ; droite calée non repêchée, z −3 + 3, Mic 0.
+ *  cut 3 ('pair-guard') : gauche repêchée, dz 10 refusé, z −6, l'opérateur à z −1 ; droite calée non repêchée, z −3 + 3, l'opérateur 0.
  *    plafond 8 : 2 → 3 ; la garde actuelle signale (repêché et hors domaine). Même rail : signalé. Marge dz > 10 : 10 n'est pas > 10.
- *  cut 4 ('pair-guard') : gauche z −20 dz 9 refusé non repêchée, Mic à z 0 ; droite repêchée, dz 4 calée.
+ *  cut 4 ('pair-guard') : gauche z −20 dz 9 refusé non repêchée, l'opérateur à z 0 ; droite repêchée, dz 4 calée.
  *    Garde actuelle : signalé (rail repêché ET autre rail hors domaine) ; même rail : non signalé → récupéré, mais plafond 8 : −20 + 8 = −12 → 12 mm : mauvaise pose.
  *  cut 5 ('pair-guard') : gauche repêchée, dz 11 refusé, du +8 (calage latéral au plafond), écartement publié 1469 :
  *    avec le plafond (du +8 appliqué au lieu de 0) l'écartement passe à 1477 : hors contrat, donc pas récupérable. */
@@ -85,7 +85,7 @@ test('rails refusés contre rails calés, et poses des variantes (comptes faits 
   assert.equal(sc.S1.cuts.plus5, 0); assert.equal(sc.S1.gagnes5, 2); assert.equal(sc.S1.perdus5, 0);
   assert.equal(sc.S2.cuts.plus5, 1, 'le cut 2 reste hors du domaine élargi : calage non appliqué'); assert.equal(sc.S2.gagnes5, 1);
   assert.equal(sc.S3.cuts.plus5, 0);
-  /* Déplacement réel de Mic contre dz prédit : cut 1 gauche dz 10 → Mic déplace de 5,5 (z −6 → −0,5), droite dz 3 → 3. */
+  /* Déplacement réel de l'opérateur contre dz prédit : cut 1 gauche dz 10 → l'opérateur déplace de 5,5 (z −6 → −0,5), droite dz 3 → 3. */
   assert.equal(r.verite.regressionDeplacementSurDz.n, 4);
   const t10 = r.verite.dzPredictContreMic.find(t => t.tranche === '10–12');
   assert.equal(t10.n, 1); proche(t10.deplacementDeMicMedianMm, 5.5); proche(t10.dzPredictMedianMm, 10);
@@ -97,18 +97,18 @@ test('rails refusés contre rails calés, et poses des variantes (comptes faits 
   proche(sw['0'].vertAbsMedianeMm, 5.75); proche(sw['8'].vertAbsMedianeMm, 2.25);
 });
 
-test('garde de paire : amplitude de la correction de Mic et cuts récupérés par variante', () => {
+test('garde de paire : amplitude de la correction de l\'opérateur et cuts récupérés par variante', () => {
   const r = B.analyserJeu(jeu()), g = r.gardeDePaire;
   assert.equal(g.cuts, 3);
   assert.equal(g.railsDeCesCuts.memeRailRepecheEtHorsDomaine, 2, 'cuts 3 et 5 ; au cut 4 le rail repêché n\'est pas le rail hors domaine');
   assert.equal(g.railsDeCesCuts.margeDzSup10, 1, 'seul le cut 5 a un rail repêché à dz > 10 mm');
-  /* Pose brute contre Mic : cut 3 → 5, cut 4 → 20, cut 5 → 5. */
+  /* Pose brute contre l'opérateur : cut 3 → 5, cut 4 → 20, cut 5 → 5. */
   assert.equal(g.correctionDeMic.poseBrute.maxMm, 20); assert.equal(g.correctionDeMic.poseBrute.plus10, 1); assert.equal(g.correctionDeMic.poseBrute.medianeMm, 5);
   const rec = Object.fromEntries(g.recuperes.map(x => [x.id, x]));
   assert.equal(rec.S0.recuperesParLaGarde, 0); assert.equal(rec.S1.recuperesParLaGarde, 0, 'le plafond seul ne récupère rien');
   assert.equal(rec.S2.recuperesParLaGarde, 3);
   assert.equal(rec.S2.ecartementHorsContrat, 1, 'cut 5 : le décalage latéral appliqué porte l\'écartement à 1477 mm');
-  assert.equal(rec.S2.recuperesAdmissibles, 2); assert.equal(rec.S2.mauvaisesPoses, 1, 'cut 4 : −20 + 9 = −11, soit 11 mm de Mic');
+  assert.equal(rec.S2.recuperesAdmissibles, 2); assert.equal(rec.S2.mauvaisesPoses, 1, 'cut 4 : −20 + 9 = −11, soit 11 mm de l\'opérateur');
   assert.equal(rec.S3.recuperesParLaGarde, 1); assert.equal(rec.S3.mauvaisesPoses, 1, 'cut 4 plafonné à 8 : 12 mm');
   assert.equal(rec.S5.recuperesParLaGarde, 2); assert.equal(rec.S6.recuperesParLaGarde, 3);
   /* Les variantes ne signalent qu'un sous-ensemble de la garde actuelle : aucun cut posé ne devient différé. */
@@ -143,7 +143,7 @@ function railEstim({ cut, graine, inter, h, pointsFlanc = 10, etage = 'first-pas
     propose: { statut: 'candidate', metriques: true, graineMm: graine, interMm: inter, pointsFlanc, pointsDessus: 40, penteFlanc: 0.1 },
     humainMm: [0, h[0], h[1]] };
 }
-test('P0(a) : la graine gagne si l\'intersection s\'éloigne de Mic ; classes de flanc ; trait de doute', () => {
+test('P0(a) : la graine gagne si l\'intersection s\'éloigne de l\'opérateur ; classes de flanc ; trait de doute', () => {
   const lignes = [];
   for (let i = 0; i < 12; i++) lignes.push(railEstim({ cut: i, graine: [1, 1], inter: [4, 3 + i % 3], h: [0, 0], pointsFlanc: 8 }));
   for (let i = 0; i < 6; i++) lignes.push(railEstim({ cut: 100 + i, graine: [2, 0], inter: [2, 0], h: [0, 0], pointsFlanc: 1 }));
@@ -194,10 +194,10 @@ test('P0(c) : tranches de pente brute du flanc, rails appliqués et graine des r
 });
 
 /* ---------------------------------------------------------------- socle commun */
-test('socle : référence de Mic tirée de la table de jointure, repère de départ', () => {
+test('socle : référence de l\'opérateur tirée de la table de jointure, repère de départ', () => {
   const eh = (l, v, lo = 0) => ({ repere: 'profil', longitudinalMm: lo, lateralMm: l, verticalMm: v, dist3dMm: 0 });
   const posee = { classe: 'posee', referenceHumaine: 'observee', base: 'ariane', ecartHumain: { gauche: eh(1, -2) }, arianeDeplacement: { gauche: eh(10, 5) } };
-  assert.deepEqual(P.referenceDepuisTable(posee, 'left'), [0, 11, 3], 'déplacement d\'Ariane + écart de Mic');
+  assert.deepEqual(P.referenceDepuisTable(posee, 'left'), [0, 11, 3], 'déplacement d\'Ariane + écart de l\'opérateur');
   const differee = { classe: 'differee', referenceHumaine: 'observee', base: 'premiere-visite', ecartHumain: { droite: eh(-4, 1) } };
   assert.deepEqual(P.referenceDepuisTable(differee, 'right'), [0, -4, 1], 'cut différé : l\'écart mesuré à la première visite est la pose de départ');
   assert.equal(P.referenceDepuisTable({ ...posee, base: 'premiere-visite' }, 'left'), null, 'posé mais base incohérente : pas de référence');
@@ -237,7 +237,7 @@ test('rejeu d\'une capture réelle du dépôt : graine, intersection et pentes b
   proche(meme.pente, r.droite.propose.penteFlanc, 0.0001);
 });
 
-test('journal d\'Orbite : lignes par rail, décision du lot, classe et pose de Mic de la table', () => {
+test('journal d\'Orbite : lignes par rail, décision du lot, classe et pose de l\'opérateur de la table', () => {
   const Shadow = require('../src/gcv1-shadow.js');
   const science = Shadow.scientificProposeBoth(pilote);
   const journal = { events: [

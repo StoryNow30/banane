@@ -5,7 +5,7 @@
  * et l'état était réécrit en entier à chaque événement (une trentaine par cut). Il gardait toutes les
  * visites depuis le début de la session, MÊME après « Vider le cache des exports » : 235 visites font
  * déjà 1,6 Mo, soit environ 120 ms par sauvegarde ; après quelques lots, plusieurs secondes par cut.
- * Constat terrain de Mic : « au bout de quelques lots, Ariane devenait affreusement long à poser ».
+ * Constat terrain de l'opérateur : « au bout de quelques lots, Ariane devenait affreusement long à poser ».
  *
  * Désormais les visites (records) et captures abandonnées (incomplete), déjà écrites une à une dans
  * IndexedDB, ne sont plus recopiées dans l'état sauvegardé : seuls leurs identifiants le sont, dans

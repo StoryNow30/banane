@@ -1,4 +1,4 @@
-/* 4.9.0.14 — la tuile du lot (retour de Mic sur la test 13 : « le vert ne se remplit pas »).
+/* 4.9.0.14 — la tuile du lot (retour de l'opérateur sur la test 13 : « le vert ne se remplit pas »).
  * Le vert dit la part de la plage parcourue ; il ne reste jamais vide et muet :
  * - plage fixe : (cut courant − premier) / (dernier − premier) ;
  * - « jusqu'à la fin de partie » : le dernier cut est M−1, M lu au compteur d'ESV « cut N sur M »

@@ -141,7 +141,7 @@ test('verts dans un PN confirmé : chaque vert de la plage à contrôler est sig
  assert.deepEqual(r.verts.map(v=>v.i),[96,97,99,101,103,107,108]);for(const v of r.verts)assert.deepEqual(v.raisons,['pn']);
 });
 
-test('verts d\'une grappe (intérieur et 3 cuts de marge) et voisins d\'un isolé (règles 1 et 2 de Mic)',()=>{
+test('verts d\'une grappe (intérieur et 3 cuts de marge) et voisins d\'un isolé (règles 1 et 2 de l\'opérateur)',()=>{
  /* Rouges du lot : 500, 502, 505 (trous de 5 cuts au plus : une grappe de trois) et 520 (isolé). */
  const mem=R.creerMemoire('lot-j');jouer(mem,[res(500),res(502),res(505),res(520)]);
  const L=(i,s='valid')=>({i,statut:s,operateur:false,vu:false,fraiche:false,ecartementMm:1437});

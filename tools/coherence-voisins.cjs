@@ -29,7 +29,7 @@
  * Les cuts de score ≥ --seuil-score (1,2 par défaut ; --sans-score pour couper) entrent aussi dans la liste
  * (ensemble « parScore »), plafonnés aux --part-max (5 %) meilleurs scores de la partie.
  *
- * --jointure : table de tools/jointure-echo-orbite.cjs (même partie) ; mesure combien des cuts posés que Mic a
+ * --jointure : table de tools/jointure-echo-orbite.cjs (même partie) ; mesure combien des cuts posés que l'opérateur a
  * corrigés de plus de --corrige-mm (10) sont dans la liste, et donne la courbe seuil de score → rappel / part.
  */
 const fs = require('node:fs');

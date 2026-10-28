@@ -24,7 +24,7 @@
  * Sortie JSON lignes HORS DÉPÔT : des millimètres dans le repère profil de la pose de départ, des numéros de cut, des comptes.
  *
  * AGRÉGER. Taux de différés (différés / cuts traités) par lot, partie, projet, total ; posés validés, posés non validés (approchés), différés restants ;
- * contre Mic (différés RÉELS jugés par le diagnostic, `--juges` : fichiers cuts-*.jsonl de tools/diag-differes.cjs) : écart de la pose L1 contre écart
+ * contre l'opérateur (différés RÉELS jugés par le diagnostic, `--juges` : fichiers cuts-*.jsonl de tools/diag-differes.cjs) : écart de la pose L1 contre écart
  * de la pose de départ, gain par cut (médiane, quartiles), parts à 10 et 20 mm, poses à plus de 50 mm, rappel ; motifs de ce qui reste.
  */
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
@@ -323,9 +323,9 @@ function lireRejeux(textes) {
   for (const x of textes) for (const o of lireJsonl(x)) { if (o.type === 'entete') { if (o.format !== FORMAT) throw Error(`format ${FORMAT} attendu`); entetes.push(o); } else if (o.type === 'cut') lignes.push(o); }
   return { entetes, lignes };
 }
-/* Différés réels jugés contre Mic (fichiers du diagnostic) : Map « partie|lot|cut » → { depart (mm), mic: { left, right }, memeSeance }.
+/* Différés réels jugés contre l'opérateur (fichiers du diagnostic) : Map « partie|lot|cut » → { depart (mm), mic: { left, right }, memeSeance }.
  * `D.juge` : pose de départ vérifiée à 2 mm, nuage, cut que nul autre lot n'a posé ensuite. `memeSeance` : Écho de la même séance (règle de la
- * fiche, § 2.16). D-220 (Mic : chaque changement de pose est définitif dans ESV) : un différé est jugeable quel que soit le délai tant qu'aucune
+ * fiche, § 2.16). D-220 (l'opérateur : chaque changement de pose est définitif dans ESV) : un différé est jugeable quel que soit le délai tant qu'aucune
  * autre écriture n'a touché le cut ; les jugés d'une autre séance sont donc gardés, marqués, et comptés à part. */
 /* Parties à prédiction scellée (2:17, 2:18) : aucune vérité n'y est jointe, même si un fichier de jugés est donné (aucun Écho de ces parties n'est lu). */
 const SANS_VERITE = Object.freeze(['2:17', '2:18']);
@@ -352,7 +352,7 @@ function stats(liste) {
     pire: liste.filter(x => x.e > x.depart + 0.5).length, ameliore: liste.filter(x => x.e < x.depart - 0.5).length,
     rappel: (() => { const gros = liste.filter(x => x.depart > 10); return { n: gros.length, k: gros.filter(x => x.e <= 10).length, part: part(gros.filter(x => x.e <= 10).length, gros.length) }; })() };
 }
-/* Écart à Mic de ce que le profil laisse sur le cut (pose, approchée ou non, sinon la pose de départ). `juge` : { depart, mic }. */
+/* Écart à l'opérateur de ce que le profil laisse sur le cut (pose, approchée ou non, sinon la pose de départ). `juge` : { depart, mic }. */
 function erreurProfil(l, profil, j) {
   const o = profil === 'reel' ? null : l.profils[profil];
   if (!o || !o.decal || !(o.etat === 'pose' || o.etat === 'pose-non-validee')) return { e: j.depart, depart: j.depart, pose: false };
@@ -367,7 +367,7 @@ function agreger({ entetes, lignes }, juges = new Map(), inventaire = null) {
   const tableau = liste => Object.fromEntries(['reel', ...profils].map(p => [p, compter(liste, p)]));
   const moyenneLots = (liste, p) => { const lots = [...new Set(liste.map(l => `${l.partie} ${l.lot}`))].map(k => compter(parLot.get(k), p)); return { lots: lots.length, tauxMoyen: lots.length ? arrondi(lots.reduce((s, x) => s + x.taux, 0) / lots.length, 1) : null, differesParLot: lots.length ? arrondi(lots.reduce((s, x) => s + x.differes, 0) / lots.length, 1) : null }; };
   const groupesOut = Object.fromEntries(Object.entries(groupes).map(([k, v]) => [k, { comptes: tableau(v), parLot: Object.fromEntries(['reel', ...profils].map(p => [p, moyenneLots(v, p)])) }]));
-  /* Contre Mic : différés réels jugés (même séance : règle de la fiche ; toutes séances : D-220). */
+  /* Contre l'opérateur : différés réels jugés (même séance : règle de la fiche ; toutes séances : D-220). */
   const jugesT = lignes.map(l => ({ l, j: juges.get(`${l.partie}|${l.lot}|${l.cut}`) })).filter(x => x.j && !x.l.reel.pose);
   const jugesL = jugesT.filter(x => x.j.memeSeance !== false);
   const contreMic = J => Object.fromEntries(profils.map(p => [p, (() => {
@@ -378,7 +378,7 @@ function agreger({ entetes, lignes }, juges = new Map(), inventaire = null) {
     return parGroupe;
   })()]));
   const mic = contreMic(jugesL), micToutesSeances = contreMic(jugesT);
-  /* Poses à plus de 50 mm de Mic (comptées et publiées) : partie, lot, cut, état, écart (mm), pour chaque profil L1. */
+  /* Poses à plus de 50 mm de l'opérateur (comptées et publiées) : partie, lot, cut, état, écart (mm), pour chaque profil L1. */
   const plus50 = Object.fromEntries(profils.filter(p => p !== 'base').map(p => [p, jugesT.map(x => ({ x, r: erreurProfil(x.l, p, x.j) })).filter(({ r }) => r.pose && r.e > 50)
     .map(({ x, r }) => ({ partie: x.l.partie, lot: x.l.lot, cut: x.l.cut, etat: r.etat, memeSeance: x.j.memeSeance !== false, departMm: arrondi(r.depart, 1), erreurMm: arrondi(r.e, 1),
       hypothese: x.l.profils[p].l1 ? x.l.profils[p].l1.hypothese : null, source: x.l.profils[p].source }))]));
@@ -428,10 +428,10 @@ function syntheseMd(S) {
     Object.entries(S.groupes).flatMap(([g, x]) => P.map(p => { const c = x.comptes[p], r = x.comptes.reel; return [g, nom(p), x.parLot[p].lots, c.traites, c.poses, c.posesNonValidees, c.differes, pc(c.taux), pc(x.parLot[p].tauxMoyen), x.parLot[p].differesParLot, p === 'reel' ? '—' : pc(part(r.differes - c.differes, r.differes))]; }))));
   const tMic = M => table(['Groupe', 'Profil', 'Jugés', 'Posés (dont validés)', 'Départ médian (mm)', 'Erreur médiane (mm)', 'Gain médian (mm)', 'Gain Q1–Q3 (mm)', '≤ 10 mm', '≤ 20 mm', 'Écart final > 50 mm (posé ou laissé)', 'Pire que le départ', 'Rappel (> 10 mm au départ)'],
     S.profils.flatMap(p => Object.entries(M[p]).filter(([, x]) => x.n).map(([g, x]) => [g, nom(p), x.n, `${x.poses} (${x.posesValidees})`, x.departMedianMm, x.erreurMedianeMm, x.gainMedianMm, `${fmt(x.gainQ1Mm)} – ${fmt(x.gainQ3Mm)}`, `${x.a10} (${pc(part(x.a10, x.n))})`, `${x.a20} (${pc(part(x.a20, x.n))})`, x.plus50, x.pire, `${x.rappel.k}/${x.rappel.n} (${pc(x.rappel.part)})`])));
-  out.push('', `### Contre Mic, Écho de la même séance (règle de la fiche ; différés réels jugés : ${S.jugesN})`, '', tMic(S.mic));
-  if (S.micToutesSeances) out.push('', `### Contre Mic, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : ${S.jugesToutesSeancesN})`, '', tMic(S.micToutesSeances));
-  if (S.plus50) for (const [p, liste] of Object.entries(S.plus50)) out.push('', `### Poses ${nom(p)} à plus de 50 mm de Mic (${liste.length})`, '',
-    liste.length ? table(['Partie', 'Lot', 'Cut', 'État', 'Même séance', 'Départ (mm)', 'Pose L1 → Mic (mm)', 'Hypothèse'], liste.map(x => [x.partie, x.lot, x.cut, x.etat, x.memeSeance ? 'oui' : 'non', x.departMm, x.erreurMm, x.hypothese])) : 'Aucune.');
+  out.push('', `### Contre l'opérateur, Écho de la même séance (règle de la fiche ; différés réels jugés : ${S.jugesN})`, '', tMic(S.mic));
+  if (S.micToutesSeances) out.push('', `### Contre l'opérateur, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : ${S.jugesToutesSeancesN})`, '', tMic(S.micToutesSeances));
+  if (S.plus50) for (const [p, liste] of Object.entries(S.plus50)) out.push('', `### Poses ${nom(p)} à plus de 50 mm de l'opérateur (${liste.length})`, '',
+    liste.length ? table(['Partie', 'Lot', 'Cut', 'État', 'Même séance', 'Départ (mm)', 'Pose L1 → l\'opérateur (mm)', 'Hypothèse'], liste.map(x => [x.partie, x.lot, x.cut, x.etat, x.memeSeance ? 'oui' : 'non', x.departMm, x.erreurMm, x.hypothese])) : 'Aucune.');
   for (const [p, r] of Object.entries(S.reste)) {
     out.push('', `### Ce qui reste différé sous ${nom(p)} (${r.restants})`, '', table(['Raison', 'Cuts'], Object.entries(r.parRaison)), '', table(['Motif réel du différé', 'Différés réels', 'Restent différés', 'dont approchés'], Object.entries(r.parMotifReel).map(([k, v]) => [k, v.reels, v.restants, v.approches])));
   }
@@ -479,8 +479,8 @@ function comparatifSansVerite(lignes, profils) {
   }
   return out;
 }
-/* Comparaison pure : lignes scellées contre poses de Mic (Map cut → { rails: {left,right} décalages mm depuis la pose de départ de l'Écho, ecartDepartMm }).
- * Jugé : différé réel, pose de Mic connue, pose de départ de l'Écho à 2 mm de celle du lot (écartement). */
+/* Comparaison pure : lignes scellées contre poses de l'opérateur (Map cut → { rails: {left,right} décalages mm depuis la pose de départ de l'Écho, ecartDepartMm }).
+ * Jugé : différé réel, pose de l'opérateur connue, pose de départ de l'Écho à 2 mm de celle du lot (écartement). */
 function comparer(entete, lignes, micParCut) {
   const profils = entete.profils.filter(p => p !== 'base'), J = [];
   const nonJuges = { sansMic: 0, departDifferent: 0, sansNuage: 0 };

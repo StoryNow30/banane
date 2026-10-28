@@ -11,10 +11,10 @@
  * rail : la GRAINE (`metrics.seed`, meilleur minimum de perte du gabarit complet, c'est ce que le moteur publie) et
  * l'INTERSECTION des deux nappes ajustées (`metrics.surfaceIntersection`, plan de roulement × flanc, gardée en
  * diagnostic). Une troisième estimation, la MOYENNE des deux, est ajoutée. Personne n'avait mesuré laquelle est la
- * plus proche de la pose finale de Mic.
+ * plus proche de la pose finale de l'opérateur.
  *
- * Mesure : pour chaque rail rejoué par `Candidate.propose` (même configuration que l'ombre) et référencé par Mic,
- * l'erreur latérale et verticale de chaque estimateur à la pose finale de Mic (mm, repère profil de la pose de
+ * Mesure : pour chaque rail rejoué par `Candidate.propose` (même configuration que l'ombre) et référencé par l'opérateur,
+ * l'erreur latérale et verticale de chaque estimateur à la pose finale de l'opérateur (mm, repère profil de la pose de
  * départ), puis l'erreur 2D. Trois lectures :
  *  - brute : le biais de convention (+ 1 mm dessus, − 2,6 mm flanc, appliqué APRÈS l'estimateur) n'y est pas ôté ;
  *  - centrée : on retranche à chaque estimateur sa propre médiane signée de la classe, ce qui isole la dispersion
@@ -24,7 +24,7 @@
  * du rail dans le lot (publié au premier passage, différé). La classe « passage à niveau » n'est pas faisable : les
  * numéros de cuts de passages à niveau ne sont pas encore connus (question 3 du cahier).
  * Enfin |graine − intersection| est jugé comme TRAIT de doute (aire sous la courbe ROC contre « la pose publiée est
- * corrigée de plus de 10 mm par Mic »), pour la décision P5 s'il n'y a pas de gagnant.
+ * corrigée de plus de 10 mm par l'opérateur »), pour la décision P5 s'il n'y a pas de gagnant.
  */
 const fs = require('node:fs');
 const P = require('./p0-commun.cjs');
@@ -124,7 +124,7 @@ function ligneClasse(nom, s) {
 function texte(r) {
   const L = [];
   for (const [k, j] of Object.entries(r.jeux)) {
-    L.push(`=== ${k} : ${j.rails} rails, ${j.railsAvecMesuresEtReference} avec mesures et pose de Mic ===`);
+    L.push(`=== ${k} : ${j.rails} rails, ${j.railsAvecMesuresEtReference} avec mesures et pose de l'opérateur ===`);
     L.push(...ligneClasse('tous les rails', j.tous));
     L.push(...ligneClasse('rails publiés par le moteur', j.railsPubliesParLeMoteur));
     L.push('Par classe de flanc :');

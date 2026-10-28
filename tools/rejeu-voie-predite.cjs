@@ -34,9 +34,9 @@
  * nouvelles (B1, prolongement, fenêtre) ne jouent que pour un cut que le lot diffère. Les cuts déjà
  * posés ne peuvent donc pas être défaits par le recentrage, sauf par la chaîne d'appuis (mesurée).
  *
- * Aucune pose de Mic n'entre dans la décision d'un cut : elle ne sert qu'à juger.
+ * Aucune pose de l'opérateur n'entre dans la décision d'un cut : elle ne sert qu'à juger.
  * Seule exception, la variante « plafond » (`plafond`), dont les appuis sont les
- * poses de Mic des cuts voisins ; elle mesure ce que des appuis parfaits
+ * poses de l'opérateur des cuts voisins ; elle mesure ce que des appuis parfaits
  * permettraient et n'est jamais une règle.
  *
  * Usage :
@@ -50,7 +50,7 @@
  *   node tools/rejeu-voie-predite.cjs --essai      (fixture synthétique, sans donnée)
  *
  * Entrées : le corpus GCV1 du lot (nuages et poses de départ), le journal Orbite (ordre du lot, ombre B1),
- * la jointure Écho-Orbite (pose finale de Mic, classe de chaque cut), la liste d'ESV (B1 seulement : pose de
+ * la jointure Écho-Orbite (pose finale de l'opérateur, classe de chaque cut), la liste d'ESV (B1 seulement : pose de
  * départ de chaque cut en coordonnées monde, une ligne JSON par cut), le jeu d'apprentissage (zones d'ADV).
  *
  * `--ombre` : l'ombre d'Orbite (`voie-predite-ombre`, module src/voie-recentree.js) rejouée sur le lot, un événement par cut
@@ -109,7 +109,7 @@ function lireJournal(chemin){
     b1[e.identity.cut]={reel:e.reel?.stage??null,hypothese:e.hypothese?.stage??null,gardes:(e.gardes||[]).length};
   return {ordre,b1};
 }
-/* Référence : pose de Mic depuis la pose de départ (repère profil, mm), par cut. */
+/* Référence : pose de l'opérateur depuis la pose de départ (repère profil, mm), par cut. */
 function lireReference(chemin){
   const J=lireJson(chemin),ref=new Map();
   for(const r of J.table||[]){
@@ -139,7 +139,7 @@ function lireZones(chemin){
 const positionMic=(rail,deltaMm)=>L.positionOf(rail,deltaMm.map(v=>v/1000));
 /* Écart (mm) d'une position scène à la pose de départ, dans le repère profil du rail : [long, lat, vert] (module commun). */
 const localMm=V.localMm;
-/* Écart au repère de Mic, par rail et le pire des deux. */
+/* Écart au repère de l'opérateur, par rail et le pire des deux. */
 function ecartAMic(cap,positions,mic){
   const out={};
   for(const s of SIDES){
@@ -193,7 +193,7 @@ function fenetreListe(lignesParCut,cut,fenetre=B.DEFAULTS.fenetre){
  *   source  : 'lot'        appuis du lot seuls (gap 3, 2 appuis) — le témoin ;
  *             'prolonge'   les derniers cuts posés sur `gap` cuts au plus, `appuis` appuis ;
  *             'b1'         + voisins validés de la liste d'ESV, en dernier recours ;
- *             'plafond'    + poses de Mic des cuts voisins du lot (appuis parfaits, jamais une règle).
+ *             'plafond'    + poses de l'opérateur des cuts voisins du lot (appuis parfaits, jamais une règle).
  *   memoire : 'reelle'     les appuis sont ceux du lot réel (aucun chaînage de nos propres poses) ;
  *             'propre'     « en série » : chaque pose acceptée devient l'ancre du cut suivant.
  *   fenetre : demi-largeur (mm) de la fenêtre d'acceptation autour de la prédiction (`guardMm`) ;
@@ -394,7 +394,7 @@ function statsVue(rows){
     panMmMed:r1(med(hors.map(r=>r.vue.panMm))),panMmMax:r1(Math.max(0,...hors.map(r=>r.vue.panMm))),
     dezoomJusqua:Object.fromEntries([1.1,1.25,1.5,2].map(k=>[k,hors.filter(r=>r.vue.dezoom<=k).length]))};
 }
-/* Dérive en chaîne : l'écart à Mic des différés posés, par profondeur de chaîne. */
+/* Dérive en chaîne : l'écart à l'opérateur des différés posés, par profondeur de chaîne. */
 const TRANCHES=[[1,1],[2,2],[3,5],[6,10],[11,20],[21,Infinity]];
 function statsProfondeur(rows){
   return TRANCHES.map(([a,b])=>{
@@ -546,7 +546,7 @@ function ombreLot(ctx,temoin,{seuils=V.REGLE_PRUDENTE,jugement=V.JUGEMENT}={}){
  * de dessus et de flanc, des points de ballast, une caméra orthographique de ±200 mm par rail (comme ESV). Les `premiers` cuts ont
  * leur pose de départ à `erreurDepartMm` de la vérité (le moteur les trouve seul, ils deviennent des appuis) ; les suivants ont toute
  * la voie décalée de `decalageMm` (plus loin que la fenêtre d'analyse de ±180 mm et que la vue de ±200 mm) : le moteur s'abstient,
- * la voie prédite par les appuis le retrouve, et le clic tombe hors de la vue. La pose de Mic est la vérité. Aucune donnée réelle. */
+ * la voie prédite par les appuis le retrouve, et le clic tombe hors de la vue. La pose de l'opérateur est la vérité. Aucune donnée réelle. */
 function aleatoire(graine){let a=graine>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
 function fixtureSynthetique({coupes=7,premiers=3,decalageMm=230,erreurDepartMm=6,bruitMm=.5,graine=7,origine=[300,400,-5]}={}){
   const rnd=aleatoire(graine),gauss=()=>{let u=0;for(let i=0;i<6;i++)u+=rnd();return(u-3)*Math.SQRT2;};
@@ -585,7 +585,7 @@ function fixtureSynthetique({coupes=7,premiers=3,decalageMm=230,erreurDepartMm=6
 }
 
 
-/* Une ligne par cut : étage, source, jugement, écart à Mic, décalage depuis la pose de départ et besoin de vue (séparateur « ; »). */
+/* Une ligne par cut : étage, source, jugement, écart à l'opérateur, décalage depuis la pose de départ et besoin de vue (séparateur « ; »). */
 function csvVariante(rows){
   const e=['cut','classe_lot','etage','source','posee','jugement','ecart_Mic_mm','profondeur','ecart_voie_mm','dans_la_vue','dezoom','glissement_px','glissement_mm','refuse_vue','refuse_regle'];
   const f=v=>v==null?'':typeof v==='number'?String(v).replace('.',','):String(v);

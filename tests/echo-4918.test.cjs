@@ -66,7 +66,7 @@ test('intentions de natures différentes (VALIDATE puis SKIP) : toujours ambigu�
 test('AM-03 : la pose de départ est le dernier état AVANT le premier geste ; un ajustement d’ESV sans geste n’est pas une correction ; l’ancienne règle reste consignée',async()=>{
  const f=await session();await f.sessions.start();const a=await f.open('v1');
  const esv=f.moved(a,{left:{delta:[0,.05,0]},right:{delta:[0,.05,0]}});await f.observe('v1',esv);          // ESV recale ses rails de 5 cm au chargement
- await f.gesture('v1',esv,{key:'d'});                                                                     // premier geste de Mic
+ await f.gesture('v1',esv,{key:'d'});                                                                     // premier geste de l'opérateur
  const fin=f.moved(esv,{left:{delta:[0,.004,0]},right:{delta:[0,0,0]}});await f.observe('v1',fin);          // il bouge la gauche de 4 mm
  await f.gesture('v1',fin,{intent:'VALIDATE',decisionKey:'Shift+Space'});await f.close('v1',fin);
  const r=f.record('v1');assert.equal(r.startPose.source,'last-state-before-first-gesture');assert.equal(r.startPose.differsFromBeforeEstablished,true);

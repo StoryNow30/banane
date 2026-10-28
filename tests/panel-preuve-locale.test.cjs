@@ -1,4 +1,4 @@
-/* Libellé de la preuve « serveur » de la dernière commande (relecture indépendante E, décision de Mic).
+/* Libellé de la preuve « serveur » de la dernière commande (relecture indépendante E, décision de l'opérateur).
  * Le moteur pose validationProof:'server-confirmed' dès que le compteur d'ESV a avancé : c'est une acceptation
  * LOCALE, pas une confirmation du serveur. Seul le texte affiché change ; ni le moteur ni la valeur de la preuve.
  * Même banc que panel-ligne-suite.test.cjs : panel.js réel dans une VM, DOM et API Chrome simulés. */

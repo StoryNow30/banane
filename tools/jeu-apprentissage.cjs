@@ -8,7 +8,7 @@
  * joint (vu à la fois au journal Orbite et à l'Écho) :
  *   - les TRAITS d'Ariane, tels que le journal les a consignés (proposition du moteur,
  *     ombre B1, motif de différé, déplacement posé, voisinage) ;
- *   - l'ÉTIQUETTE humaine : correction de Mic en repère profil, classe (posé / différé),
+ *   - l'ÉTIQUETTE humaine : correction de l'opérateur en repère profil, classe (posé / différé),
  *     seuils à 5 et 10 mm, faux vert.
  *
  *   node tools/jeu-apprentissage.cjs --jointure TABLE.json [--sortie JEU.jsonl]
@@ -17,7 +17,7 @@
  * --sans-poses (par défaut) : aucune coordonnée absolue dans la sortie. --avec-poses
  * recopie les poses de la table (scène de l'Écho / du journal) : DONNÉES PRIVÉES, à
  * garder dans le scratchpad, jamais dans le dépôt.
- * --avec-hors-journal : ajoute les cuts que Mic a visités sans que le journal les
+ * --avec-hors-journal : ajoute les cuts que l'opérateur a visités sans que le journal les
  * connaisse (étiquette seule, traits vides) ; sans cette option, seuls les cuts joints.
  *
  * Format : docs dans fiches/E5_METRIQUES.md. Rien n'est inventé : un champ absent de la

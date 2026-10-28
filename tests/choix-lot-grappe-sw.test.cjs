@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.5 test 6 (D-164, demande de Mic) — L'INTERRUPTEUR « GRAPPE DE DIFFÉRÉS » DU PANNEAU : COUPÉ, ET CHANGÉ EN COURS DE LOT.
+/* 4.9.5 test 6 (D-164, demande de l'opérateur) — L'INTERRUPTEUR « GRAPPE DE DIFFÉRÉS » DU PANNEAU : COUPÉ, ET CHANGÉ EN COURS DE LOT.
  * (L'interrupteur activé : tests/choix-lot-grappe-actif-sw.test.cjs.) Service worker réel en VM
  * (tests/helpers/regles-metier-lot.cjs : cuts 112 et 113 sans point, différés ; 114 et 115 posés juste après la grappe),
  * chrome.storage.local en mémoire.

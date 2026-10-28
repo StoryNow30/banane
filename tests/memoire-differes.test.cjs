@@ -3,8 +3,8 @@
  * générateur pseudo-aléatoire de graine fixe). Aucune donnée de terrain, aucune coordonnée absolue.
  *
  *  - construction : une capture fabriquée (champignon rectangulaire, repère profil = repère de scène, rails séparés de
- *    1,44 m) rejoue le vrai moteur ; Mic pose le rail à un décalage connu ; le cas doit retrouver ce décalage dans son
- *    pool et ne jamais recopier la réponse de Mic dans le contexte ;
+ *    1,44 m) rejoue le vrai moteur ; l'opérateur pose le rail à un décalage connu ; le cas doit retrouver ce décalage dans son
+ *    pool et ne jamais recopier la réponse de l'opérateur dans le contexte ;
  *  - jugement : cinq parties de cas fabriqués. (a) le bon candidat est « fort » et de faible perte ; (b) les séries ont un
  *    décalage constant par rapport au départ ; (c) le contexte annonce le rang du bon candidat ;
  *  - garde-fous : jamais la même partie des deux côtés, la pose d'un cut ne dépend pas de sa propre réponse, seuils
@@ -43,7 +43,7 @@ function captureFabriquee(cut, frameId, mic, rnd) {
 }
 const railJ = (lat, vert, lon = 0) => ({ repere: 'profil', longitudinalMm: lon, lateralMm: lat, verticalMm: vert, dist3dMm: r2(Math.hypot(lon, lat, vert)) });
 
-test('construction : le cas retrouve la pose de Mic dans le pool du moteur, et le contexte ne contient pas la réponse', () => {
+test('construction : le cas retrouve la pose de l\'opérateur dans le pool du moteur, et le contexte ne contient pas la réponse', () => {
   const rnd = alea(7), frameId = 'cadre-synthetique';
   const cuts = [101, 102, 103, 104];
   const mics = { 101: { gauche: [0, 12, -3], droite: [0, -14, 2] }, 102: { gauche: [0, 13, -3], droite: [0, -13, 2] }, 103: { gauche: [0, 15, -4], droite: [0, -12, 3] },
@@ -61,15 +61,15 @@ test('construction : le cas retrouve la pose de Mic dans le pool du moteur, et l
   for (const c of cas.slice(0, 3)) {
     for (const cote of ['gauche', 'droite']) {
       const rep = c.reponse.pool[cote];
-      assert.ok(rep.moteur && rep.moteur.distMm <= 5, `cut ${c.cut} ${cote} : le pool du moteur contient la pose de Mic à ${rep.moteur && rep.moteur.distMm} mm`);
+      assert.ok(rep.moteur && rep.moteur.distMm <= 5, `cut ${c.cut} ${cote} : le pool du moteur contient la pose de l'opérateur à ${rep.moteur && rep.moteur.distMm} mm`);
       assert.ok(c.rails[cote].pool.length > 3 && c.rails[cote].pool.every(p => Math.abs(p.fla) < 500 && Math.abs(p.fve) < 500), 'décalages relatifs seulement');
       assert.ok(c.rails[cote].pool.some(p => p.moteur === 1), 'pool du moteur marqué');
     }
-    assert.ok(Math.abs(c.reponse.ecartementMicMm - (1440 + c.reponse.mic.droite[1] - c.reponse.mic.gauche[1])) < 0.2, `écartement de Mic cohérent : ${c.reponse.ecartementMicMm}`);
+    assert.ok(Math.abs(c.reponse.ecartementMicMm - (1440 + c.reponse.mic.droite[1] - c.reponse.mic.gauche[1])) < 0.2, `écartement de l'opérateur cohérent : ${c.reponse.ecartementMicMm}`);
     const texteCas = JSON.stringify({ contexte: c.contexte, rails: c.rails, geometrie: c.geometrie });
-    assert.ok(!texteCas.includes('SECRET-DE-MIC'), 'la réponse de Mic ne passe pas dans le contexte');
+    assert.ok(!texteCas.includes('SECRET-DE-MIC'), 'la réponse de l\'opérateur ne passe pas dans le contexte');
   }
-  // cut 104 : la pose de Mic est hors de la fenêtre du moteur, le pool élargi (fenêtre décalée) la retrouve
+  // cut 104 : la pose de l'opérateur est hors de la fenêtre du moteur, le pool élargi (fenêtre décalée) la retrouve
   const lointain = cas[3];
   for (const cote of ['gauche', 'droite']) {
     const rep = lointain.reponse.pool[cote];
@@ -77,9 +77,9 @@ test('construction : le cas retrouve la pose de Mic dans le pool du moteur, et l
     assert.ok(rep.elargi && rep.elargi.distMm <= 5, `le pool élargi la retrouve à ${rep.elargi && rep.elargi.distMm} mm`);
     assert.ok(lointain.rails[cote].pool.some(p => p.moteur === 0), 'candidats hors du pool du moteur');
   }
-  assert.equal(cas[1].voisinsMic.length, 3, 'les poses de Mic des autres cuts sont consignées en décalages relatifs');
+  assert.equal(cas[1].voisinsMic.length, 3, 'les poses de l\'opérateur des autres cuts sont consignées en décalages relatifs');
   assert.ok(cas[1].voisinsMic.filter(v => v.cut !== 104).every(v => Math.abs(v.mic.gauche[0]) < 25000 && Math.abs(v.mic.gauche[1]) < 100), 'relatives au cut');
-  // la pose de Mic (cut voisin) vue depuis ce cut : même latéral à quelques mm près
+  // la pose de l'opérateur (cut voisin) vue depuis ce cut : même latéral à quelques mm près
   const v = cas[1].voisinsMic.find(w => w.cut === 101);
   assert.ok(Math.abs(v.mic.gauche[1] - 12) < 0.1 && Math.abs(v.mic.gauche[0] - (-10000)) < 0.5, `voisin vu depuis le cut ${JSON.stringify(v.mic.gauche)}`);
 });
@@ -124,13 +124,13 @@ test('(b) mémoire de voie : décalage constant par rapport au départ, appris s
   assert.ok(r.slice(2).every(x => x.pose === null), 'dispersion trop forte : aucune pose');
 });
 
-test('(b) avec propagation, un cut posé entre dans la mémoire tel qu\'Ariane l\'a posé (faux compris) ; sans propagation, tel que Mic l\'a corrigé', () => {
+test('(b) avec propagation, un cut posé entre dans la mémoire tel qu\'Ariane l\'a posé (faux compris) ; sans propagation, tel que l\'opérateur l\'a corrigé', () => {
   const cas = partieFabriquee(91, 5, { series: [4], decalage: 40 });
-  cas[1].reponse.mic.gauche[1] += 8; cas[1].reponse.mic.droite[1] -= 8;      // Mic corrige le cut 2 de 8 mm de plus que le cut 1
+  cas[1].reponse.mic.gauche[1] += 8; cas[1].reponse.mic.droite[1] -= 8;      // L'opérateur corrige le cut 2 de 8 mm de plus que le cut 1
   const p = { base: 'D', K: 1, porteDisp: 50, mode: 'brut', tol: 0, minMemoire: 1, nBack: 0 };
   const ideal = G.simulerB(p, cas), prop = G.simulerB(p, cas, null, true);
-  assert.deepEqual(prop[1].pose, ideal[1].pose, 'le deuxième cut est posé pareil : sa mémoire est le premier cut, corrigé par Mic dans les deux cas');
-  assert.ok(Math.abs(ideal[2].pose.gauche[0] - cas[1].reponse.mic.gauche[1]) < 1e-9, 'idéal : le troisième cut reprend la pose de Mic du deuxième');
+  assert.deepEqual(prop[1].pose, ideal[1].pose, 'le deuxième cut est posé pareil : sa mémoire est le premier cut, corrigé par l\'opérateur dans les deux cas');
+  assert.ok(Math.abs(ideal[2].pose.gauche[0] - cas[1].reponse.mic.gauche[1]) < 1e-9, 'idéal : le troisième cut reprend la pose de l\'opérateur du deuxième');
   assert.ok(Math.abs(prop[2].pose.gauche[0] - prop[1].pose.gauche[0]) < 1e-9, 'propagation : le troisième cut reprend la pose qu\'Ariane a posée au deuxième');
   assert.ok(Math.abs(prop[2].pose.gauche[0] - ideal[2].pose.gauche[0]) > 7, 'et l\'erreur de 8 mm se propage');
 });
@@ -157,7 +157,7 @@ test('(a) choix dans le pool : le modèle appris sur d\'autres parties retrouve 
   assert.ok(m.faux / Math.max(1, m.poses) < 0.05, 'moins de 5 % de fausses');
 });
 
-test('(a) la pose d\'un cas ne dépend pas de la réponse de Mic sur la partie jugée', () => {
+test('(a) la pose d\'un cas ne dépend pas de la réponse de l\'opérateur sur la partie jugée', () => {
   const p = parties(), app = new Map([...p].filter(([k]) => k !== 95)), opt = { elargi: false };
   const a = G.apprendreA(app, opt, 'a');
   const avant = p.get(95).map(c => JSON.stringify(G.poserA(a.modele, a.seuils, c, opt).pose));
@@ -167,7 +167,7 @@ test('(a) la pose d\'un cas ne dépend pas de la réponse de Mic sur la partie j
   assert.deepEqual(apres, avant);
 });
 
-test('(c) voisin le plus proche : le descripteur ne contient aucune grandeur issue de Mic', () => {
+test('(c) voisin le plus proche : le descripteur ne contient aucune grandeur issue de l\'opérateur', () => {
   const cas = partieFabriquee(91, 3).slice(0, 3);
   const d0 = cas.map(c => G.descripteur(c));
   const copie = JSON.parse(JSON.stringify(cas));

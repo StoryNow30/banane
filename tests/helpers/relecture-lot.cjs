@@ -9,7 +9,7 @@
  * écrite avec un autre statut que « valid », ou null : rien).
  * Revue de la relecture (D-175) : l'ESV simulé tient aussi la LISTE de la partie (statut, drapeau opérateur, « vu ») que la page lit en
  * mémoire (`b1-voisins`), imite le « vu » qu'ESV écrit au premier affichage d'un cut (PUT {SeenByOperator:true}), et valide par
- * Maj+Espace (`validerMajEspace`) : comme le vrai ESV (D-179, Mic), sur un vert valide SUR PLACE : écriture « valid » de la ligne, ESV reste
+ * Maj+Espace (`validerMajEspace`) : comme le vrai ESV (D-179, l'opérateur), sur un vert valide SUR PLACE : écriture « valid » de la ligne, ESV reste
  * sur le même cut (`majEspaceVers(cut)` : l'ancienne supposition « cut + 1 », ou un autre cut, là où un essai en a besoin). */
 const {production,memoire}=require('./perf-production.cjs'),{SimulatedESV,base,K}=require('../fixtures.cjs');
 const S=require('../../src/settings.js'),O=require('../../src/continuity-observer.js');
@@ -82,7 +82,7 @@ class EsvRelecture extends SimulatedESV{
  /* Validation sur place (Ctrl+Entrée) : jamais employée par la passe ; consignée si elle l'était. */
  async validateInPlace(identity,scope,options){this.calls.push('validateInPlace');this.enPlace.push({cut:identity.cut,options:K.clone(options)});
   throw Error('validateInPlace n’est pas le geste de la relecture (simulé).');}
- /* Maj+Espace : ESV écrit « valid » sur la ligne (vue par l'observateur si `ecriture`) et RESTE SUR LE MÊME CUT (D-179 : Mic, deux fois).
+ /* Maj+Espace : ESV écrit « valid » sur la ligne (vue par l'observateur si `ecriture`) et RESTE SUR LE MÊME CUT (D-179 : l'opérateur, deux fois).
   * `majEspaceVers(cut)` rend le cut que l'ESV simulé affiche ensuite (cut + 1 : l'ancienne supposition ; un autre cut : ESV ailleurs).
   * Le simulateur échoue sur toute option inattendue. */
  async validerMajEspace(identity,scope,options){this.calls.push('validerMajEspace');

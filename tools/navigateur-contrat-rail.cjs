@@ -6,7 +6,7 @@
  * claude/esv-locale-audit, aucun code ni contenu d'ESV ; DOSSIER = racine d'une copie de cette branche, voir fiches/AUDIT_ESV_LOCALE.md),
  * puis, par les messages du panneau :
  *   1. « Connecter » dans l'état de départ de la maquette (aucun rail sélectionné) ;
- *   2. clic sur le bouton du rail gauche dans la maquette (comme Mic), puis « Connecter » ;
+ *   2. clic sur le bouton du rail gauche dans la maquette (comme l'opérateur), puis « Connecter » ;
  *   3. clic sur le bouton du rail droit, puis « Connecter ».
  * Rend les événements `contrat-esv` (empreinte, précédente, changement, sélection consignée) et `avis-contrat-esv` du journal, et l'avis du
  * panneau. Attendu depuis la correction : une seule empreinte, 0 avis. Aucune commande de pose, de validation ni de navigation n'est envoyée ;

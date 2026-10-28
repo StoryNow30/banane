@@ -157,7 +157,7 @@ function zonesCausales(cuts, decisions, captures) {
   return { parDecision: out, finDeLot: fin };
 }
 const dans = (plages, c) => plages.some(([a, b]) => c >= a && c <= b);
-/* Zone d'un différé (sélection « méthode de Mic », relecture-autonome.cjs) : PN avec marges, puis ADV avec marges, sinon abords (un différé et ses
+/* Zone d'un différé (sélection « méthode de l'opérateur », relecture-autonome.cjs) : PN avec marges, puis ADV avec marges, sinon abords (un différé et ses
  * deux voisins de part et d'autre sont des abords). La liste « À contrôler » et « hors » ne peuvent pas contenir un différé. */
 const zoneDe = (z, c) => dans(z.plagesPN, c) ? 'pn' : dans(z.plagesADV, c) ? 'adv' : 'abords';
 

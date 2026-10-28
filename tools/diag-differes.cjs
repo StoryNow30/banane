@@ -749,7 +749,7 @@ function main(argv) {
     ecrire(a.sortie, JSON.stringify({ format: 'ariane-diag-differes-mic-v1', partie: `${a.projet}:${a.partie}`, poses: [...m].map(([cut, mic]) => ({ cut, mic })) }) + '\n');
     process.stdout.write(`partie ${a.projet}:${a.partie} : ${m.size} différés lus dans l'Écho, ${[...m.values()].filter(x => x.rails).length} avec une pose de l'opérateur\n`);
   } else if (a.mode === 'joindre-mic') {
-    /* Ajoute après coup la pose de l'opérateur (fichier de `mic`) aux lignes d'un fichier d'EXTRAIRE : la pose de Mic n'entre dans aucun calcul. */
+    /* Ajoute après coup la pose de l'opérateur (fichier de `mic`) aux lignes d'un fichier d'EXTRAIRE : la pose de l'opérateur n'entre dans aucun calcul. */
     if (a.cuts.length !== 1 || !a.mic || !a.sortie) throw Error('joindre-mic --cuts CUTS.jsonl --mic MIC.json [--echo-autre-seance] --sortie CUTS2.jsonl');
     const m = new Map(JSON.parse(fs.readFileSync(a.mic, 'utf8')).poses.map(x => [x.cut, x.mic]));
     const lignes = fs.readFileSync(a.cuts[0], 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l)).map(o => o.type === 'entete' ? { ...o, avecEcho: true, echoMemeSeance: !a.echoAutre }
@@ -770,7 +770,7 @@ function main(argv) {
     const lignes = extrairePartie({ journal: j, captures, parametres, projet: a.projet, partie: a.partie, mic, lot: a.lot, temoin: a.temoin, echoMeme: !a.echoAutre, journalTexte });
     ecrire(a.sortie, lignes.map(l => JSON.stringify(l)).join('\n') + '\n');
     const L1 = lignes.slice(1);
-    process.stdout.write(`partie ${a.projet}:${a.partie} : ${L1.length} différés, calculés ${L1.filter(l => l.etat === 'calcule').length}, sans nuage ${L1.filter(l => l.etat === 'sans-nuage').length}, erreurs ${L1.filter(l => l.etat === 'erreur').length}, rejeu identique ${L1.filter(l => l.rejeu && l.rejeu.identiqueAuLot).length}, avec Mic ${L1.filter(l => l.mic && l.mic.rails).length} ; ${Math.round((Date.now() - t0) / 1000)} s\n`);
+    process.stdout.write(`partie ${a.projet}:${a.partie} : ${L1.length} différés, calculés ${L1.filter(l => l.etat === 'calcule').length}, sans nuage ${L1.filter(l => l.etat === 'sans-nuage').length}, erreurs ${L1.filter(l => l.etat === 'erreur').length}, rejeu identique ${L1.filter(l => l.rejeu && l.rejeu.identiqueAuLot).length}, avec l'opérateur ${L1.filter(l => l.mic && l.mic.rails).length} ; ${Math.round((Date.now() - t0) / 1000)} s\n`);
   } else if (['motifs', 'gains', 'gardes', 'pistes'].includes(a.mode)) {
     if (!a.cuts.length) throw Error(`${a.mode} --cuts CUTS.jsonl [--cuts …] [--inventaire INV.json] [--json R.json] [--md R.md]`);
     const { lignes } = lireCuts(a.cuts.map(f => fs.readFileSync(f, 'utf8')));

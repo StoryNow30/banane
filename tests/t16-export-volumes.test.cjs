@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.0.16 (test 15, Mic : envoyer l'export sans script, limite d'environ 18 Mo par fichier) —
+/* 4.9.0.16 (test 15, l'opérateur : envoyer l'export sans script, limite d'environ 18 Mo par fichier) —
  * « Tout télécharger » découpe tout seul : chaque volume est un zip autonome dont la taille RÉELLE
  * (compressée, CONTENU.txt compris) reste sous `zipMaxBytes` ; un fichier JSON n'est jamais coupé
  * (seul, il fait un volume à lui et le statut le dit) ; CONTENU.txt dit « Volume n sur N » et porte
@@ -110,7 +110,7 @@ test('vidage automatique : seulement si TOUS les volumes sont confirmés ; un se
   assert.ok(ko.blobs.length>=3);assert.equal(ko.vidages.length,0,'aucun vidage');assert.match(ko.statut,/volume02-sur\d+\.zip non enregistré/);assert.match(ko.statut,/NON vidé/);
 });
 
-/* 4.9.0.17 (Mic : « l'heure de Paris partout ») : CONTENU.txt, que Mic lit, écrit l'heure de l'export
+/* 4.9.0.17 (l'opérateur : « l'heure de Paris partout ») : CONTENU.txt, que l'opérateur lit, écrit l'heure de l'export
  * et les départs en heure de Paris, et le dit ; les JSON gardent leurs horodatages ISO en UTC. */
 test('CONTENU.txt en heure de Paris (« heure de Paris », plus « UTC ») ; les JSON gardent l’ISO UTC',{skip:!PYTHON&&'python3 absent'},async()=>{
   const r=await exporter({});const [v]=await ouvrirVolumes(r);

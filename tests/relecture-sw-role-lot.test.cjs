@@ -1,15 +1,15 @@
 'use strict';
-/* 5.0, revue de la relecture (D-175, correction 1) — LE RÔLE « VERT » N'EST JAMAIS PRÉSUMÉ. Un cut SKIPpé par Mic, repris à la main,
+/* 5.0, revue de la relecture (D-175, correction 1) — LE RÔLE « VERT » N'EST JAMAIS PRÉSUMÉ. Un cut SKIPpé par l'opérateur, repris à la main,
  * une cible bloquée (résultat incertain archivé) sont des cuts du lot : traversés, jamais corrigés, même si la liste d'ESV les montrait
  * verts. Et une cible bloquée APRÈS le départ de la passe est refusée par la garde (`engine.writable`). Un vert d'ESV prouvé, dans la
  * même passe, est corrigé (contrôle). Données synthétiques, réglages d'essai complets (abords ouverts à 12 mm). */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,j,PERMISSIF,apresLot}=require('./helpers/relecture-essais.cjs');
 
-test('SKIP de Mic, reprise à la main, cible bloquée : cuts du lot, traversés, jamais posés ni validés ; cible bloquée en cours de passe : garde ; vert prouvé : corrigé',async()=>{
+test('SKIP de l\'opérateur, reprise à la main, cible bloquée : cuts du lot, traversés, jamais posés ni validés ; cible bloquée en cours de passe : garde ; vert prouvé : corrigé',async()=>{
  const {b,adapter,lot}=await H.lotRelecture({mode:'corriger',decisions:{109:14,110:14,114:14,115:20,117:14},reglagesProposes:PERMISSIF,relecture:{departMs:150},
   esv:(a,bb)=>{a.surAller=async t=>{if(t.cut===117){const e=bb.get('engine');e.s.blockedTargets=[...(e.s.blockedTargets||[]),H.K.key(H.K.completeIdentity({...a.identity,cut:117}))];}};}});
- /* Pendant le lot (journal du lot) : Mic a SKIPpé le cut 109, repris le cut 110 à la main ; le cut 115 a un résultat incertain archivé. */
+ /* Pendant le lot (journal du lot) : l'opérateur a SKIPpé le cut 109, repris le cut 110 à la main ; le cut 115 a un résultat incertain archivé. */
  const e=b.get('engine'),bt=e.s.batch,id=c=>H.K.completeIdentity({...adapter.identity,cut:c});
  bt.skipped=[{key:H.K.key(id(109)),identity:id(109),cut:109,decisionRule:'operator-explicit-from-paused-cut'}];
  bt.manuallyCompleted=[{key:H.K.key(id(110)),identity:id(110),cut:110,bananeValidated:false}];bt.interrupted=[...(bt.interrupted||[]),{identity:id(110),status:'MANUAL_COMPLETION'}];

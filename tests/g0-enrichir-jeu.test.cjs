@@ -69,7 +69,7 @@ test('frontière anti-fuite et pas de coordonnée : l\'enrichissement ne lit rie
   const sortie = E.enrichir(lignes, { partie: 99, journal, m6, echo });
   const brut = JSON.stringify(sortie.filter(l => l.type === 'cut'));
   assert.ok(!/"(poses|position[A-Za-z]*|poseAriane|poseHumaine[A-Za-z]*)"\s*:/i.test(brut));
-  // Les étiquettes (référence de Mic) sont inchangées.
+  // Les étiquettes (référence de l'opérateur) sont inchangées.
   assert.deepEqual(sortie.filter(l => l.type === 'cut').map(l => l.etiquette), lignes.filter(l => l.type === 'cut').map(l => l.etiquette));
   // Les traits enrichis ne dépendent pas de l'étiquette : on casse toutes les références et on compare.
   const casse = lignes.map(l => l.type === 'cut' ? { ...l, etiquette: { ...l.etiquette, correctionMm: null, referenceHumaine: 'sans-reference' } } : l);

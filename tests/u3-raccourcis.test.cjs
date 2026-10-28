@@ -1,5 +1,5 @@
 'use strict';
-/* D-092 (4.9.0.10) — U3, RACCOURCIS `D` ET `Maj + Espace` (cahier § 6, U3). Actions fixées par la direction (Mic, 13 octobre 2026) :
+/* D-092 (4.9.0.10) — U3, RACCOURCIS `D` ET `Maj + Espace` (cahier § 6, U3). Actions fixées par la direction (l'opérateur, 13 octobre 2026) :
  *   D            = passer au cut de droite (action d'ESV) ;
  *   Maj + Espace = valider le cut (action d'ESV).
  * Porte MINIMUM : aucune action d'ESV doublée ou détournée. Ariane n'ajoute aucun raccourci : elle laisse passer `D`, et ne retient
@@ -49,7 +49,7 @@ test('Orbite n’émet jamais `D` ni `Maj + Espace` : elle ne rejoue que Maj + R
  assert.deepEqual([...new Set(inits)].sort(),['Backspace','Enter'],'seuls ces deux raccourcis d’ESV sont rejoués par le lot');
  assert.equal((src.match(/const init=\{key:/g)||[]).length,2,'deux seuls gabarits de touches émises par le lot');
  assert.ok(!/key:'d'|code:'KeyD'|'KeyD'/i.test(src),'D n’est jamais émis');
- /* 5.0 (D-175, revue de la relecture, correction 4) : Maj + Espace, le geste de validation de Mic, n'est émis QUE par l'action
+ /* 5.0 (D-175, revue de la relecture, correction 4) : Maj + Espace, le geste de validation de l'opérateur, n'est émis QUE par l'action
   * `validerMajEspace` (passe de relecture en mode « corriger ») : un seul gabarit, dans cette seule fonction ; le lot ne l'appelle pas. */
  const espaces=[...src.matchAll(/'Space'/g)].map(m=>m.index),gabarit=src.indexOf('const TOUCHES_MAJ_ESPACE='),fin=src.indexOf('\n',gabarit);
  assert.ok(gabarit>0&&espaces.length>0&&espaces.every(i=>i>gabarit&&i<fin),'Espace n’apparaît que dans le gabarit de validerMajEspace');

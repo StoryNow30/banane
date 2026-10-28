@@ -1,7 +1,7 @@
 'use strict';
-/* 5.0, revue de la relecture (D-175, corrections 4 et 6) et D-179 — l'action de page `validerMajEspace` : le geste de Mic pour valider
- * (Maj+Espace, 1 377 validations sur 1 377 dans les Échos). Sur un vert valide, ESV valide SUR PLACE et reste sur le même cut (Mic, deux
- * fois, D-179) ; sur un cut rouge, il passe à un autre cut. L'action relaie la touche comme Mic la frappe (Maj enfoncée, Espace enfoncée
+/* 5.0, revue de la relecture (D-175, corrections 4 et 6) et D-179 — l'action de page `validerMajEspace` : le geste de l'opérateur pour valider
+ * (Maj+Espace, 1 377 validations sur 1 377 dans les Échos). Sur un vert valide, ESV valide SUR PLACE et reste sur le même cut (l'opérateur, deux
+ * fois, D-179) ; sur un cut rouge, il passe à un autre cut. L'action relaie la touche comme l'opérateur la frappe (Maj enfoncée, Espace enfoncée
  * puis relâchée, Maj relâchée) sur le canevas d'ESV, une seule fois, attend un court instant un changement de cut (jamais les 15 s d'une
  * navigation : en place, il n'y en a pas) et rend ce qu'elle a vu. Elle ne prouve pas la validation : c'est l'écriture vue par
  * l'observateur passif, côté service worker. Tout refus AVANT l'envoi dit « rien n'a été envoyé à ESV » ; après l'envoi, jamais.
@@ -18,7 +18,7 @@ function esv({effet=true,vers=null}={}){const f=page(),cles=[];let clics=0;
  return {f,cles,clics:()=>clics};}
 const forme=k=>({type:k.type,key:k.key,code:k.code,keyCode:k.keyCode,which:k.which,shift:k.shiftKey,ctrl:k.ctrlKey,alt:k.altKey,meta:k.metaKey,b:k.bubbles,c:k.cancelable,co:k.composed});
 
-test('Maj+Espace relayé une fois, sur le canevas, comme Mic le frappe ; bouton « valider » jamais cliqué ; validation sur place : cut inchangé, rendu vite',async()=>{
+test('Maj+Espace relayé une fois, sur le canevas, comme l\'opérateur le frappe ; bouton « valider » jamais cliqué ; validation sur place : cut inchangé, rendu vite',async()=>{
  const {f,cles,clics}=esv(),s=await f.call('state'),t0=f.ctx.Date.now();
  const e=await f.call('validerMajEspace',s.identity,{part:23,pageId:s.identity.pageId});
  const attendu=f.ctx.Date.now()-t0;assert.ok(attendu<5000,`en place, pas d’attente de navigation de 15 s (horloge de la page : ${attendu} ms)`);
