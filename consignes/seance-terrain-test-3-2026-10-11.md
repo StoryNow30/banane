@@ -1,4 +1,4 @@
-# Séance terrain « test 3 » : consigne pour Mic (11 octobre 2026, mise à jour le 12 octobre)
+# Séance terrain « test 3 » : consigne pour l'opérateur (11 octobre 2026, mise à jour le 12 octobre)
 
 **Rien ne change dans la façon dont Ariane pose ou valide** : même moteur, mêmes réglages qu'au test 2. Ce paquet change
 les exports (un seul fichier zip, cache qu'on peut vider) et la façon de noter la dernière validation d'un lot.

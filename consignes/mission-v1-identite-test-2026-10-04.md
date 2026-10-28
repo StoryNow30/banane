@@ -1,6 +1,6 @@
 # Développeur 1 — débloquer l'identification de la version de test V1
 
-4 octobre 2026. Même développeur 1, même chantier et même préparation autorisée par Mic. Lire cette consigne, le traitement de l'orchestrateur, puis ton rapport de préparation intact joint. D-073 demeure inchangé et figure dans les pièces.
+4 octobre 2026. Même développeur 1, même chantier et même préparation autorisée par l'opérateur. Lire cette consigne, le traitement de l'orchestrateur, puis ton rapport de préparation intact joint. D-073 demeure inchangé et figure dans les pièces.
 
 ## But
 
@@ -59,7 +59,7 @@ Après les contrôles, faire le commit local de préparation descendant du vrai 
 
 Générer depuis git archive <commit_de_preparation>, extraction neuve puis tools/package.py inchangé. Donner commit, arbre, version, commande exacte et SHA-256. Vérifier CRC, manifeste unique à la racine, tous les scripts requis, identité cohérente et absence de données privées. Les documents que le générateur exclut restent joints dans le ZIP de livraison, pas ajoutés manuellement dans l'extension après sa génération.
 
-Aucun push, fusion, étiquette, publication ou dépôt dans banane-data. Aucun navigateur, essai ESV ou test sur le PC de Mic. Aucun développement U1/U2/V4/V3, apprentissage ou nouveau chantier.
+Aucun push, fusion, étiquette, publication ou dépôt dans banane-data. Aucun navigateur, essai ESV ou test sur le PC de l'opérateur. Aucun développement U1/U2/V4/V3, apprentissage ou nouveau chantier.
 
 ## Fiche de mesures
 
