@@ -3222,3 +3222,17 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Cadre de l'intégrateur (à confirmer par l'opérateur)** : « apprendre » = calibrer des paramètres de la GCV2 déterministe à partir des poses de référence, pas un modèle opaque ; séparation réglage / examen écrite avant toute analyse (cahier § 4) ; cible exprimée en taux de partie sur les mêmes cuts, même référence (le bruit de référence est de 0,75 à 2,3 mm par axe, `fiches/BRUIT_REFERENCE.md`) ; aucune modification des fichiers de décision sans la garde et la parité. Ticket : `chantiers/CH-012.md`.
 - **Autres réponses du 28/10** : références de design : l'opérateur les enverra (design en pause, D-257). File de parties (D-244, D-245) : l'opérateur la veut ; le nombre de parties est choisi par lui.
 - Le numéro suivant est D-259.
+
+## D-259 — La deuxième passe est allumée en écriture par défaut dès la prochaine version de test (opérateur, 28/10/2026)
+
+- **Décision écrite de l'opérateur** : « On l'allumera par défaut pour la prochaine version de test. » Elle remplace D-251 sur un point : la passe n'est plus livrée en ombre ; `passeDifferesDefaut.ecriture` devient `true` dans la version suivante (4.9.5.24).
+- **Garde-fous conservés (proposés par l'intégrateur le même jour, annoncés par D-252)** : `ecritureMax` à 10 cuts écrits au plus par lot ; garde A des appuis faux active (`deplacementMaxMm` 100, `appuiNormalMaxCuts` 4) ; les gardes d'écriture existantes (cut rouge, relecture à 1 mm, etc.) ; l'interrupteur des Réglages coupe la passe entière. Le plafond se lève par une décision écrite ultérieure de l'opérateur.
+- **À faire au terrain** : un lot de reprise avec l'ADV observé (Écho) pour le premier essai, l'opérateur présent ; export après chaque partie ; jugement des poses de la passe par `tools/juger-lot.cjs`.
+- **Non vérifié à la date de la décision** : la garde A est établie sur la seule partie 0 (SUPPOSÉ généralisable) ; les 28 « poserait » (25 à 20 mm ou moins, aucun à plus de 50 mm, rapports du 26/10) ne sont pas rejugés contre l'Écho ; la passe n'a jamais écrit dans Edge ni dans le vrai ESV depuis la garde A ; le seuil de 125 « poserait » jugés fixé le 26/10 n'est pas atteint (27 à cette date) : l'opérateur le lève en connaissance de cause.
+
+## D-260 — Chantiers lancés le 28/10 : ESV local pour le bruit de pose, file de parties dans la maquette (opérateur, 28/10/2026)
+
+- **Repointage de 60 cuts** : impossible dans ESV (pas de duplication de partie). L'opérateur demande à la place un **ESV local** (la maquette ESV du dépôt, qui rejoue de vrais exports) où l'intégrateur lance des expériences en plaçant le champignon du rail pour **mesurer le bruit de la pose de l'opérateur**. Confié à la session CH-012 (chercheur v7) comme premier lot de travail ; limite à dire : la maquette mesure ce que le nuage permet de situer, pas la perception de l'opérateur.
+- **File de parties (D-244, D-245)** : l'opérateur veut qu'une session ajoute un bouton ou un onglet dans la maquette actuelle (lecture de l'intégrateur : `maquettes/ui-5.0/Q-signal.html`, Signal). Ticket `chantiers/CH-013.md`. Aucun code d'extension avant la validation de la maquette par l'opérateur.
+- **Glisser / clic droit** : les deux gestes sont à départager par un relevé Écho de l'opérateur sur 3 cuts hors vue (molette puis clic droit) avant la version qui porte le patch.
+- Le numéro suivant est D-261.
