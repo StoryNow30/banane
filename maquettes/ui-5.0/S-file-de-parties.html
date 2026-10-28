@@ -365,7 +365,6 @@ kbd{font-family:var(--mono);font-size:11px;line-height:16px;padding:0 5px;border
   <span class="seg" role="group" aria-label="Thème"><button data-theme="sombre" aria-pressed="true">sombre</button><button data-theme="clair" aria-pressed="false">clair</button></span>
   <span class="seg" role="group" aria-label="Revue"><button data-revue="v1" aria-pressed="true">Revue V1 · lire</button><button data-revue="v2" aria-pressed="false">Revue V2 · travailler</button></span>
   <span class="seg" role="group" aria-label="Cadence de la simulation"><button data-cadence="reelle" aria-pressed="true">simulation 8 s par cut</button><button data-cadence="rapide" aria-pressed="false">2 s par cut</button></span>
-  <span class="seg" role="group" aria-label="Placement de la file"><button data-placement="a" aria-pressed="true">Placement A · bouton dans Orbite</button><button data-placement="b" aria-pressed="false">Placement B · onglet « Parties »</button></span>
   <label><input type="checkbox" id="sc-reduit"> mouvement réduit</label>
 </header>
 
@@ -455,14 +454,14 @@ function avancer(dt) {
 function boucle() { const t = performance.now(), dt = (t - sim.derniereH) / 1000; sim.derniereH = t; avancer(Math.min(dt, 1)); }
 
 /* ─────────────────────────── état de la maquette */
-const FILE0 = () => ({ allumee: false, n: 2, relecture: true, correction: false, prete: false, en: false, partie: 1, bilans: [], cause: 'page', arret: null });
+const FILE0 = () => ({ allumee: false, n: 2, relecture: true, correction: true, prete: false, en: false, partie: 1, bilans: [], cause: 'page', arret: null });
 const CAUSES = {
   page: { nom: 'La page ne change pas de partie', court: 'la partie suivante n’a pas pu s’ouvrir', texte: 'Ariane a fini la partie et demandé la suivante, mais la page d’ESV est restée sur la même partie. Elle ne peut pas continuer sans changer de partie.', milieu: false, puce: 'ok' },
   onglet: { nom: 'Onglet fermé', court: 'l’onglet ESV a été fermé', texte: 'L’onglet connecté n’existe plus. Rouvre la partie dans ESV, reconnecte-la, puis prépare la reprise.', milieu: true, puce: 'aucun' },
   muet: { nom: 'ESV muet', court: 'ESV ne répond plus', texte: 'ESV ne répond plus. Attends qu’il réponde, ou recharge la page (F5), puis prépare la reprise.', milieu: true, puce: 'ko' },
   refus: { nom: 'Lot arrêté sur un refus', court: 'le lot s’est arrêté sur un refus', texte: 'ESV a refusé une écriture : le lot s’arrête sur ce refus. Ariane n’insiste pas et ne valide rien de plus.', milieu: true, puce: 'ok' },
 };
-const bilanInvente = (p, F) => ({ p, poses: 109 - p % 2, dif: 11 + p % 2, dur: 44 + 3 * p, relu: F.relecture ? (F.correction ? `relue, ${4 + 2 * p} corrigés` : 'relue, rien modifié') : 'non relue' });
+const bilanInvente = (p, F) => ({ p, poses: 109 - p % 2, dif: 11 + p % 2, dur: 44 + 3 * p, relu: `relue et corrigée · ${4 + 2 * p} corrections` });
 const S = { file: FILE0(), placement: 'a', scene: 'cours', tiroir: false, couche: null, sel: null, examines: new Set(), q: '', pi: 0, cacheVide: false, note: '', passer: false };
 const SCENES = [
   ['file-eteinte', 'File · éteinte (défaut)'], ['file-reglage', 'File · réglage'], ['file-cours', 'File · en cours (partie 2 sur 3)'], ['file-alerte', 'File · alerte d’arrêt et bilan'], ['file-fin', 'File · fin de file'],
@@ -471,9 +470,9 @@ const SCENES = [
   ['palette', 'Palette Ctrl K'], ['reglages', 'Feuille de réglages'], ['cache', 'Confirmation de vidage du cache'], ['esv', 'Sélecteur de connexion ESV'],
 ];
 const NOTES = {
-  'file-eteinte': 'Placement A (bouton). L’écran Prêt est celui de Signal ; une seule ligne s’y ajoute, « File de parties · éteinte », en bouton secondaire. Éteinte par défaut : « Démarrer jusqu’à la fin de la partie » reste l’action principale et ne change pas. Le même écran en placement B ne change pas du tout : l’onglet « Parties » est dans la barre.',
-  'file-reglage': 'Réglage : file allumée ou éteinte, nombre de parties, relecture et correction. Placement A : une boîte ouverte depuis le bouton. Placement B : l’onglet « Parties » de la barre. Dans les deux, « Préparer la file » ne lance rien ; « Lancer la file » apparaît ensuite (lot neuf, partie 1).',
-  'file-cours': 'Partie 2 sur 3. Le lot et son rail sont ceux de Signal. Une ligne « Après chaque partie : relecture / correction » s’active ou se désactive à tout moment (la correction suppose la relecture). Le tiroir garde le bilan des parties faites. Aucun export automatique ; seul « Arrêter la file » l’arrête. Pause garde son sens habituel.',
+  'file-eteinte': 'L’écran Prêt est celui de Signal ; une seule ligne s’y ajoute, « File de parties · éteinte », en bouton secondaire. Éteinte par défaut : « Démarrer jusqu’à la fin de la partie » reste l’action principale et ne change pas.',
+  'file-reglage': 'Réglage, dans une boîte ouverte depuis le bouton : file allumée ou éteinte, nombre de parties. La relecture et la correction ne sont plus un réglage (décision de l’opérateur) : elles suivent chaque partie. « Préparer la file » ne lance rien ; « Lancer la file » apparaît ensuite (lot neuf, partie 1).',
+  'file-cours': 'Partie 2 sur 3. Le lot et son rail sont ceux de Signal. La relecture et la correction suivent chaque partie, toujours ; le tiroir garde le bilan des parties faites. Aucun export automatique ; seul « Arrêter la file » l’arrête. Pause garde son sens habituel.',
   'file-alerte': 'Continuer est impossible : alerte et bilan, rien n’est exporté ni validé de plus. La cause se choisit à droite. Le principal est « Préparer la reprise », qui ne lance rien ; l’export reste manuel.',
   'file-fin': 'La file s’éteint d’elle-même à la dernière partie. Trois lignes : parties faites, ce qui reste (toutes parties), export prêt mais jamais automatique. Le tiroir montre le bilan par partie ; la liste des différés ne montre que la dernière partie dans la maquette.',
   pret: 'Au repos. Un seul bouton, qui dit l’effet (« Démarrer jusqu’à la fin de la partie »). Les bornes du lot sont dans la phrase, pas dans un formulaire : on les change dans la feuille de réglages, au repos.',
@@ -596,13 +595,11 @@ function fileReglagesHtml() {
   const l = (t, aide, ctl, sourd) => `<div class="reg${sourd ? ' sourd' : ''}"><span class="lib"><span>${esc(t)}</span>${aide ? `<small>${esc(aide)}</small>` : ''}</span>${ctl}</div>`;
   return l('File de parties', 'Éteinte par défaut · enchaîne les parties programmées', seg('allumee', [[0, 'Éteinte'], [1, 'Allumée']], F.allumee ? 1 : 0))
     + l('Nombre de parties', 'Premier essai : 2, l’opérateur présent', seg('n', [[1, '1'], [2, '2'], [3, '3'], [4, '4'], [5, '5'], [8, '8']], F.n), !F.allumee)
-    + l('Relecture après chaque partie', 'S’active ou se désactive à tout moment', seg('relecture', [[1, 'Oui'], [0, 'Non']], F.relecture ? 1 : 0), !F.allumee)
-    + l('Correction pendant la relecture', F.relecture ? 'S’active ou se désactive à tout moment' : 'Demande la relecture', seg('correction', [[1, 'Oui'], [0, 'Non']], F.correction ? 1 : 0), !F.allumee || !F.relecture);
+    ;
 }
-const notesFile = '<p class="allure">Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan.</p>';
+const notesFile = '<p class="allure">La relecture et la correction suivent chaque partie, toujours. Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan.</p>';
 function bandeauFile() {
-  const F = S.file, seg = (cle, cur, off) => `<span class="seg" role="group" aria-label="${cle}">${[[1, 'Oui'], [0, 'Non']].map(([v, t]) => `<button type="button" aria-pressed="${v === (cur ? 1 : 0)}"${off ? ' aria-disabled="true"' : ''} data-file="${cle}" data-val="${v}">${t}</button>`).join('')}</span>`;
-  return `<div class="file-opts"><span>Après chaque partie</span><span>relecture</span>${seg('relecture', F.relecture)}<span>correction</span>${seg('correction', F.correction, !F.relecture)}</div><p class="allure">Aucun export automatique · seul « Arrêter la file » l’arrête</p>`;
+  return `<p class="allure">Après chaque partie : <b>relecture et correction</b>, toujours <span class="sep">·</span> aucun export automatique <span class="sep">·</span> seul « Arrêter la file » l’arrête</p>`;
 }
 function adapterFile(m, base) {
   const F = S.file, B = S.placement === 'b', etatTxt = F.prete ? 'préparée' : F.allumee ? 'allumée' : 'éteinte';
@@ -613,7 +610,7 @@ function adapterFile(m, base) {
       m.principal = F.prete ? { texte: `Lancer la file · ${nParties(F.n)}`, ic: 'play', act: 'file-lancer' } : { texte: 'Préparer la file', act: 'file-preparer', inactif: !F.allumee };
       m.secondaire = null; m.raison = !F.allumee ? 'File éteinte : allume-la d’abord. Préparer ne lance rien.' : F.prete ? '' : 'Préparer ne lance rien.';
     } else if (!B) {
-      if (F.prete) { m.principal = { texte: `Lancer la file · ${nParties(F.n)}`, ic: 'play', act: 'file-lancer' }; m.raison = `File préparée · relecture ${F.relecture ? (F.correction ? 'et correction' : 'sans correction') : 'non'}. Rien n’est lancé.`; }
+      if (F.prete) { m.principal = { texte: `Lancer la file · ${nParties(F.n)}`, ic: 'play', act: 'file-lancer' }; m.raison = 'File préparée · relecture et correction après chaque partie. Rien n’est lancé.'; }
       m.secondaire = { texte: `File de parties · ${etatTxt}`, act: 'file-ouvrir' };
     }
   }
@@ -633,7 +630,7 @@ function adapterFile(m, base) {
     const bil = F.bilans.length, d = F.bilans.reduce((a, b) => a + b.dif, 0), v = 9 * bil, op = F.arret === 'operateur';
     m.mot = op ? 'File arrêtée' : 'File terminée'; m.glyphe = op ? 'arrete' : 'fini'; m.ton = op ? 'attention' : 'vivant';
     m.phrase = op ? `Arrêtée par l’opérateur · ${bil} ${bil > 1 ? 'parties faites' : 'partie faite'} sur ${F.n}` : `${nParties(bil)} faites · la file s’est éteinte`;
-    m.fin = [['Parties', `<b>${bil}</b> faites sur <b>${F.n}</b>`], ['Il reste', `<b class="dif">${d}</b> différés, <b>${v}</b> verts à contrôler · toutes parties`], ['Export', S.exportFait ? 'fait, <b>3</b> volumes confirmés' : 'prêt · jamais automatique']];
+    m.fin = [['Parties', `<b>${bil}</b> faites sur <b>${F.n}</b>, relues et corrigées`], ['Il reste', `<b class="dif">${d}</b> différés, <b>${v}</b> verts à contrôler · toutes parties`], ['Export', S.exportFait ? 'fait, <b>3</b> volumes confirmés' : 'prêt · jamais automatique']];
     m.poignee = { n: d + v, texte: `à examiner · ${d} différés, ${v} verts` };
   }
 }
@@ -644,7 +641,7 @@ function finirPartie() {
 }
 function appliquerCause() { sim.lot = lotDeBase(); if (!CAUSES[S.file.cause].milieu) sim.lot.cuts = []; }
 function boiteFile() {
-  return `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cf-t"><span class="t" id="cf-t">File de parties</span><div>${fileReglagesHtml()}</div><p class="meta-bas">Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Fermer</button>${S.file.prete ? `<button type="button" class="principal" data-act="file-lancer">${IC.play}<span>Lancer la file · ${nParties(S.file.n)}</span></button>` : `<button type="button" class="principal" data-act="file-preparer"${S.file.allumee ? '' : ' disabled'}><span>Préparer la file</span></button>`}</div></div>`;
+  return `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cf-t"><span class="t" id="cf-t">File de parties</span><div>${fileReglagesHtml()}</div><p class="meta-bas">La relecture et la correction suivent chaque partie, toujours. Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Fermer</button>${S.file.prete ? `<button type="button" class="principal" data-act="file-lancer">${IC.play}<span>Lancer la file · ${nParties(S.file.n)}</span></button>` : `<button type="button" class="principal" data-act="file-preparer"${S.file.allumee ? '' : ' disabled'}><span>Préparer la file</span></button>`}</div></div>`;
 }
 
 /* ─────────────────────────── rendu */
@@ -833,7 +830,7 @@ function agir(act) {
   rendre();
 }
 FEN.addEventListener('click', e => {
-  const fi = e.target.closest('[data-file]'); if (fi) { const F = S.file, k = fi.dataset.file, v = Number(fi.dataset.val); if (fi.matches('[aria-disabled="true"]')) return; if (k === 'n') F.n = v; else F[k] = !!v; if (!F.relecture) F.correction = false; if (!F.allumee) F.prete = false; rendre(); return; }
+  const fi = e.target.closest('[data-file]'); if (fi) { const F = S.file, k = fi.dataset.file, v = Number(fi.dataset.val); if (fi.matches('[aria-disabled="true"]')) return; if (k === 'n') F.n = v; else F[k] = !!v; if (!F.allumee) F.prete = false; rendre(); return; }
   const ex = e.target.closest('[data-examine]'); if (ex) { const c = Number(ex.dataset.examine); if (S.examines.has(c)) S.examines.delete(c); else S.examines.add(c); rendre(); return; }
   const ou = e.target.closest('[data-ouvrir]'); if (ou) { note(`Cut ${ou.dataset.ouvrir} ouvert dans ESV (V2, à construire)`); return; }
   const row = e.target.closest('[data-row]'); if (row && !e.target.closest('[data-act]')) { S.sel = Number(row.dataset.row); rendre(); return; }
@@ -891,7 +888,7 @@ D.querySelectorAll('.banc .seg button').forEach(b => b.addEventListener('click',
 D.getElementById('sc-reduit').addEventListener('change', e => { if (e.target.checked) R.dataset.reduit = '1'; else delete R.dataset.reduit; });
 const P = new URLSearchParams(location.search);
 R.dataset.nu = P.get('nu') === '1' ? '1' : '0';
-if (P.get('placement')) regler('placement', P.get('placement')); if (P.get('taille')) regler('taille', P.get('taille')); if (P.get('theme')) regler('theme', P.get('theme')); if (P.get('revue')) regler('revue', P.get('revue')); if (P.get('cadence')) regler('cadence', P.get('cadence'));
+if (P.get('taille')) regler('taille', P.get('taille')); if (P.get('theme')) regler('theme', P.get('theme')); if (P.get('revue')) regler('revue', P.get('revue')); if (P.get('cadence')) regler('cadence', P.get('cadence'));
 if (P.get('reduit') === '1') { R.dataset.reduit = '1'; D.getElementById('sc-reduit').checked = true; }
 scene(SCENES.some(s => s[0] === P.get('scene')) ? P.get('scene') : 'cours');
 if (P.get('tiroir') === '1') { S.tiroir = true; rendre(); }
