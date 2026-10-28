@@ -28,10 +28,11 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Scan des motifs interdits (motifs publics ; le motif confidentiel vient du secret ARIANE_MOTIFS_INTERDITS s'il existe)
+      - name: Scan des motifs interdits (motifs publics ; les motifs confidentiels viennent des secrets s'ils existent)
         id: scan
         env:
           ARIANE_MOTIFS_INTERDITS: ${{ secrets.ARIANE_MOTIFS_INTERDITS }}
+          ARIANE_MOTIFS_INTERDITS_CASSE: ${{ secrets.ARIANE_MOTIFS_INTERDITS_CASSE }}
         run: |
           if [ -f tools/scan-identite.cjs ]; then node tools/scan-identite.cjs | tee scan.txt; else echo "pas encore d'outil de scan (ticket CH-001)" | tee scan.txt; fi
 
