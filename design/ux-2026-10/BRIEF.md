@@ -1,11 +1,11 @@
 # Chantier UX — variantes du panneau (13 octobre 2026)
 
-Commande de Mic (direction, opérateur de terrain). Session dédiée à l'interface.
+Commande de l'opérateur (direction, opérateur de terrain). Session dédiée à l'interface.
 Branche de travail : `claude/ux-variantes` (partie de `claude/49-test-10`).
 
 ## Le problème
 
-Mic dit que la **moitié basse de la vue Orbite** est « illisible, sans aucune
+L'opérateur dit que la **moitié basse de la vue Orbite** est « illisible, sans aucune
 conformité avec ma philosophie de design, juste horrible ».
 Image : `design/references/ux-2026-10/panneau-orbite-bas-actuel.jpg`
 (rendu réel du panneau 4.9.0 test 10, données fictives ; ouvrir l'image).
@@ -36,7 +36,7 @@ ni marque) :
 - un seul objet héros par écran (la voiture, la jauge de recharge) ;
 - très peu de texte, aucun paragraphe d'explication.
 
-## La philosophie de design de Mic (déjà actée dans le dépôt)
+## La philosophie de design de l'opérateur (déjà actée dans le dépôt)
 
 À relire : `design/ui-next/REFERENCE.md`, `design/ui-next-claude/README.md`
 (« La ligne »), `design/pistes-retenues/README.md`, et D-045 dans `DECISIONS.md`.
@@ -44,7 +44,7 @@ En bref : opérateur, compact, discret dans ESV ; hiérarchie par la typographie
 un seul accent ; couleur d'alerte douce et rare ; une donnée absente se dit
 « non rapportée » (jamais confondue avec zéro) ; la forme porte l'état, la
 couleur ne fait que renforcer ; pas de décoration. Français simple et court.
-Mic aime le design « sans le skill » (noir, traits fins, un grand chiffre) pour
+L'opérateur aime le design « sans le skill » (noir, traits fins, un grand chiffre) pour
 le haut de la vue Orbite : **le haut ne change pas**, on retravaille le bas.
 
 ## Ce qu'il faut produire
@@ -59,8 +59,8 @@ le haut de la vue Orbite : **le haut ne change pas**, on retravaille le bas.
    `design/ux-2026-10/variantes/` avec un `README.md` d'une page : l'idée de
    chaque variante, ses points forts et faibles, et ta recommandation.
 2. Une **planche comparative** (un PNG côte à côte) avec l'état actuel pour que
-   Mic compare d'un coup d'œil.
-3. Pousser sur `claude/ux-variantes` et envoyer les PNG à Mic. **Mic choisit.**
+   l'opérateur compare d'un coup d'œil.
+3. Pousser sur `claude/ux-variantes` et envoyer les PNG à l'opérateur. **L'opérateur choisit.**
    Ne pas intégrer au panneau avant son choix.
 4. Après son choix : intégrer la variante retenue dans `panel.html`, `panel.css`,
    `panel.js` en **gardant tous les identifiants** (`id=`) que `panel.js` et les
@@ -74,12 +74,12 @@ le haut de la vue Orbite : **le haut ne change pas**, on retravaille le bas.
   « Différés : N » est fidèle ; une incertitude se voit avec son cut ; aucun
   bouton ne se présente comme réussi sur un simple accusé de réception.
 - Ne jamais toucher : `src/engine.js`, `src/geometry.js`, `vendor/*`, ni
-  `background.js` (sauf nécessité absolue et dite à Mic).
+  `background.js` (sauf nécessité absolue et dite à l'opérateur).
 - Jamais d'identifiant de projet ESV (forme `\d{6}_\d{6}_[A-Z]_`) dans le dépôt,
   les captures ou les messages ; données fictives seulement.
 - Aucune fusion dans `main`, aucun tag, aucune publication, aucune pull request
-  sans demande explicite de Mic.
+  sans demande explicite de l'opérateur.
 - Pas de nouvelle version livrée : la version suivante (4.9.0.11) est préparée
   par la session de pilotage ; ce chantier fournit les fichiers du panneau.
-- Mic parle un français simple et veut des réponses courtes.
+- L'opérateur parle un français simple et veut des réponses courtes.
 - Économie : travaille seul, des agents seulement si c'est vraiment utile.

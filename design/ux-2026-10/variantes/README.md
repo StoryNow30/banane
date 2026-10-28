@@ -1,6 +1,6 @@
 # Orbite : quatre variantes de l’UX Porsche (13 octobre 2026)
 
-Commande : `../BRIEF.md`, précisée par Mic le même jour : **toute la vue
+Commande : `../BRIEF.md`, précisée par l'opérateur le même jour : **toute la vue
 Orbite** (pas seulement le bas), et **quatre variantes de l’UX de
 l’application Porsche** (captures dans `design/references/ux-2026-10/`). Aucun
 logo ni marque repris.
