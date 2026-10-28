@@ -52,7 +52,7 @@ Le seuil inférieur est fixé à 1 410 mm : en dessous, SKIP ; de 1 410 à moins
 ## D-010 - Différer le correctif de couverture du pilote automatique
 
 Date : 10 septembre 2026.  
-Mic rapporte que le pilote 4.1 s'interrompt beaucoup plus souvent que le 4.0 lorsqu'un des deux rails ne reçoit aucune proposition. Aucun seuil géométrique ni comportement du pilote n'est modifié avant l'analyse des corrections récentes par Terra. Ce retour est conservé comme régression d'usage à mesurer, pas comme preuve suffisante pour desserrer immédiatement les garde-fous.
+L'opérateur rapporte que le pilote 4.1 s'interrompt beaucoup plus souvent que le 4.0 lorsqu'un des deux rails ne reçoit aucune proposition. Aucun seuil géométrique ni comportement du pilote n'est modifié avant l'analyse des corrections récentes par Terra. Ce retour est conservé comme régression d'usage à mesurer, pas comme preuve suffisante pour desserrer immédiatement les garde-fous.
 
 ## D-011 - Quatre preuves indépendantes après commande
 
@@ -149,7 +149,7 @@ Date : 13 septembre 2026. Chaque instantané de rail issu des seuls points visib
 
 ## D-4.4.3 - Fenêtres réellement vivantes plutôt que filtre URL
 
-Date : 13 septembre 2026. Le retour ESV contredit la validation simulée V4.4.2. La présence de Banane est désormais définie par les fenêtres créées et les connexions vivantes de ses cinq pages, sans se fier au filtrage d'onglets par URL d'extension. Ces connexions se rétablissent après arrêt/reprise du service worker. Pour écarter également une règle CSS ESV et les réponses asynchrones obsolètes, le bouton flottant est retiré physiquement du DOM puis réinséré, et les mises à jour plus anciennes sont ignorées. La notification provenant de Banane n'observe ni ne modifie les commandes de Mic dans ESV.
+Date : 13 septembre 2026. Le retour ESV contredit la validation simulée V4.4.2. La présence de Banane est désormais définie par les fenêtres créées et les connexions vivantes de ses cinq pages, sans se fier au filtrage d'onglets par URL d'extension. Ces connexions se rétablissent après arrêt/reprise du service worker. Pour écarter également une règle CSS ESV et les réponses asynchrones obsolètes, le bouton flottant est retiré physiquement du DOM puis réinséré, et les mises à jour plus anciennes sont ignorées. La notification provenant de Banane n'observe ni ne modifie les commandes de l'opérateur dans ESV.
 
 ## D-4.7 - Différer un unresolved GCV1 par navigation sans décision
 
@@ -1130,7 +1130,7 @@ de la partie à l'orchestrateur.
 
 ## D-070 - Méthode P2 avec validation intermédiaire ; réception de 31 paires
 
-**1er octobre 2026, opérateur et direction.** Mic demande une validation
+**1er octobre 2026, opérateur et direction.** L'opérateur demande une validation
 avec Maj+Espace de la position déplacée, une navigation puis sa propre revisite,
 repose et validation. Il indique aussi avoir navigué après sa validation finale.
 Le pilote 3717 a été contrôlé séparément avant la séance complète.
@@ -1138,12 +1138,12 @@ Le pilote 3717 a été contrôlé séparément avant la séance complète.
 - Pour cette séance, cette instruction remplace l'interdiction de valider
   la position déplacée écrite dans D-069. L'historique de D-069 est conservé.
   Écho doit conserver l'origine du premier passage avant tout déplacement.
-  Le calcul compare cette origine à la pose finale de Mic, et non à la
+  Le calcul compare cette origine à la pose finale de l'opérateur, et non à la
   position déplacée qui a été validée entre les deux.
-- Projet confirmé par Mic : `RAIL-<code du projet>`, partie 24. L'export
+- Projet confirmé par l'opérateur : `RAIL-<code du projet>`, partie 24. L'export
   déclare 4.8.6 ; son `projectId` est absent. Cette absence ne constitue pas
   une preuve de changement de projet.
-- Mic confirme les poses d'origine manuelles, l'absence de vue des anciennes
+- L'opérateur confirme les poses d'origine manuelles, l'absence de vue des anciennes
   positions et une liste fixée avant séance : déclarations humaines conservées
   comme telles, sans les attribuer aux journaux. Le mode de constitution de
   la liste n'est pas documenté ; aucun tirage aléatoire n'est revendiqué.
@@ -1185,7 +1185,7 @@ P2 reste en attente d'acceptation par la direction ; aucun démarrage de V1.
 ## D-071 - P2 accepté ; démarrage de V1 autorisé
 
 **2 octobre 2026, 07 h 40 (Europe/Paris), opérateur et direction.**
-Accord explicite de Mic : **« P2 accepté, go V1 »**, en réponse à la
+Accord explicite de l'opérateur : **« P2 accepté, go V1 »**, en réponse à la
 proposition d'acceptation et au bloc V1 préparés au commit `2f2cc45`.
 
 - **P2 accepté comme mesure d'information** : 31 coupes complètes, 62 rails.
@@ -1221,7 +1221,7 @@ proposition d'acceptation et au bloc V1 préparés au commit `2f2cc45`.
 
 ## D-072 - Développement parallèle de chantiers indépendants
 
-**Décision de Mic du 2 octobre 2026, 08 h 09 (Europe/Paris).**
+**Décision de l'opérateur du 2 octobre 2026, 08 h 09 (Europe/Paris).**
 Le développement indépendant de V1, U1 et de la préparation U2 est autorisé,
 avec copies isolées et fichiers réservés. Les portes de qualité, relectures,
 acceptations et conditions terrain restent obligatoires. Aucun accord de
@@ -1238,7 +1238,7 @@ ne sont pas prétendus retrouvés.
 
 ## D-073 - Présentation des mesures et préparation du test V1
 
-**Décision de Mic du 4 octobre 2026, 08 h 01 (Europe/Paris)** : « C'est OK ». Texte adopté, intact :
+**Décision de l'opérateur du 4 octobre 2026, 08 h 01 (Europe/Paris)** : « C'est OK ». Texte adopté, intact :
 `consignes/avenant-D073-presentation-mesures-v1-2026-10-04.md`. Projet absent du fichier : déclaration séparée,
 sans inventer `projectId` ; étapes qui se chevauchent : chronologie réelle conservée, aucun double compte ni zéro
 fabriqué. Autorise la préparation locale du paquet de test V1 (candidat relu `baa548d`) ; ne relâche pas
@@ -1247,11 +1247,11 @@ Consignée ici par l'orchestrateur Claude Code le 4 octobre au soir (numéro vé
 
 ## D-074 - Reprise complète par Claude Code ; ESV reconstruit indépendamment ; réécriture du code GPT
 
-**Instruction de Mic du 4 octobre 2026** (`00_DEMARRAGE_CLAUDE_CODE.md` de la passation révisée, consignée par
+**Instruction de l'opérateur du 4 octobre 2026** (`00_DEMARRAGE_CLAUDE_CODE.md` de la passation révisée, consignée par
 l'orchestrateur Claude Code le 4 octobre au soir ; cette entrée consigne une instruction reçue, pas une décision
 nouvelle de l'orchestrateur).
 
-- Claude Code reprend le pilotage après l'intérim GPT. Mic a demandé l'arrêt des relances aux développeurs GPT ;
+- Claude Code reprend le pilotage après l'intérim GPT. L'opérateur a demandé l'arrêt des relances aux développeurs GPT ;
   aucun nouveau retour n'est envoyé au précédent développeur ESV.
 - Les missions indépendantes sont lancées en parallèle (D-072 et instruction actuelle), sans nouveau go de principe.
 - ESV est reconstruit localement à partir des seuls originaux récupérés le 4 octobre, avec une conception
@@ -1261,23 +1261,23 @@ nouvelle de l'orchestrateur).
   indépendamment, non acceptés d'office.
 - Étude approfondie d'ESV et d'Ariane (fonctions, efficacité opérateur, captures, géométrie, moteur, super cerveau,
   apprentissage, exports, fiabilité) et feuille de route argumentée (4.9 / expériences / gains mesurés ou espérés).
-- Restent réservés à Mic : périmètre, critères d'acceptation, fichiers gelés, activation d'un nouveau comportement,
+- Restent réservés à l'opérateur : périmètre, critères d'acceptation, fichiers gelés, activation d'un nouveau comportement,
   nouvelle séance terrain, publication. Les correctifs V1 proposés ne sont pas adoptés. Aucune fusion, étiquette,
   publication, envoi de branche ou écriture dans banane-data sans accord explicite.
 - Pilotage : `PILOTAGE_REPRISE.md` (état, propriétaires de fichiers, statuts, preuves).
 
 ## D-075 - Envoi des branches de travail sur GitHub autorisé
 
-**Réponse de Mic du 4 octobre 2026 au soir : « Oui »**, à la question de l'orchestrateur Claude Code : envoyer sur
+**Réponse de l'opérateur du 4 octobre 2026 au soir : « Oui »**, à la question de l'orchestrateur Claude Code : envoyer sur
 GitHub les branches de travail `claude/…` (pilotage puis équipes, au fur et à mesure), jamais `main`, sans fusion.
 But : un point de sauvegarde durable hors du conteneur temporaire (recommandation des trois audits).
 Portée : envoi de branches de travail seulement. Ni fusion, ni étiquette, ni publication, ni paquet terrain, ni
 écriture dans banane-data ; une branche envoyée n'est pas une branche acceptée. Verify à zéro échec avant chaque
 commit envoyé.
 
-## D-076 - Plan de la suite validé par Mic ; lecture directe du code ESV demandée
+## D-076 - Plan de la suite validé par l'opérateur ; lecture directe du code ESV demandée
 
-**Réponse de Mic du 5 octobre 2026** : « Très bien je valide ton plan », à la recommandation de l'orchestrateur Claude
+**Réponse de l'opérateur du 5 octobre 2026** : « Très bien je valide ton plan », à la recommandation de l'orchestrateur Claude
 Code : (1) terminer V1 proprement, car la mesure fiable conditionne tout ; (2) tenter en premier l'idée « lecture des
 points » de l'étude de performance (une seule modification par version de test) ; (3) observer le signal de fin de
 chargement avant de s'en servir. Rejetés : V4 comme levier de vitesse, raccourcissement aveugle des attentes.
@@ -1285,13 +1285,13 @@ chargement avant de s'en servir. Rejetés : V4 comme levier de vitesse, raccourc
 Portée exacte : ordre de travail uniquement. L'idée de lecture touche l'option de pause du lecteur gelé : **la sortie
 du gel reste une décision écrite distincte, non prise**. Aucun gain n'est acquis avant un essai terrain.
 
-Mic demande aussi que l'orchestrateur lise lui-même le code source d'ESV pour trouver ce qui améliorerait Ariane ou
+L'opérateur demande aussi que l'orchestrateur lise lui-même le code source d'ESV pour trouver ce qui améliorerait Ariane ou
 simplifierait son usage interne, et joint un complément de collecte (navigation et validation réelles, 4 octobre).
 Les résultats sont des propositions à décider, pas des changements. Rapport privé hors dépôt (code ESV).
 
 ## D-077 - Observateur passif autorisé en version de test ; ordre ; retour à une coupe ; « le reste » validé
 
-**Réponse de Mic du 5 octobre 2026** : « 1) oui j'autorise ; 2) ça marche 3) ça marche. Je valide le reste », aux trois
+**Réponse de l'opérateur du 5 octobre 2026** : « 1) oui j'autorise ; 2) ça marche 3) ça marche. Je valide le reste », aux trois
 décisions posées par l'orchestrateur après sa lecture du code d'ESV (`missions/ANGLES_ESV_RAPPORT.md`, privé).
 
 1. **Observateur passif autorisé**, en version de test, **sans aucune commande ajoutée** : écoute de l'écriture de
@@ -1300,7 +1300,7 @@ décisions posées par l'orchestrateur après sa lecture du code d'ESV (`mission
    dans le périmètre de V1 ; il ne change aucune règle de pose.
 2. **Ordre** : preuve d'écriture et liste des coupes avant V2.
 3. **Retour à une coupe** : saut direct par l'événement interne d'ESV si l'essai du banc le confirme, sinon pas à pas.
-4. **« Le reste » : interprété par l'orchestrateur comme l'acceptation de ses recommandations présentées à Mic**, soit :
+4. **« Le reste » : interprété par l'orchestrateur comme l'acceptation de ses recommandations présentées à l'opérateur**, soit :
    correction du débordement du tiroir « Réglages de la collecte » à 200 % et du focus après Pause/Reprendre (patchs
    proposés par la mission F, à appliquer par G, propriétaire du panneau, après sa relecture) ; deux choix d'affichage
    proposés par G (pas de rapprochement de deux pages ESV par le seul numéro de partie après rechargement sans reprise
@@ -1309,25 +1309,25 @@ décisions posées par l'orchestrateur après sa lecture du code d'ESV (`mission
 **Non couvert par cette réponse, donc non autorisé** : sortie du gel du lecteur de points (option de pause), activation
 en production d'un nouveau comportement, séance terrain, fusion, étiquette, publication, activation de
 l'apprentissage, changement de seuil ou de porte, collecte ciblée supplémentaire. Chacun demande sa décision écrite.
-Si Mic entendait « le reste » plus largement, il le dira. Consignée par l'orchestrateur Claude Code.
+Si l'opérateur entendait « le reste » plus largement, il le dira. Consignée par l'orchestrateur Claude Code.
 
 ## D-078 - Décisions du 6 octobre validées : V1 adopté pour test, U1 et U2 acceptés, lecteur hors gel (test), séance terrain, V4
 
-**Réponse de Mic du 6 octobre 2026** : « Je valide les décisions proposées, tu peux continuer le pilotage », aux cinq
+**Réponse de l'opérateur du 6 octobre 2026** : « Je valide les décisions proposées, tu peux continuer le pilotage », aux cinq
 décisions du message de synthèse (voir `FEUILLE_DE_ROUTE_49.md`), avec les recommandations de l'orchestrateur Claude Code :
 
 1. **V1 : réécriture (`37dd5df`) et correction (3) segments et ERROR (`6b9ed26`) adoptées pour la prochaine version de test.**
    Critère « lot rouvert ou en ERROR » **signé** : seuls les intervalles fermés sont publiés, la vie complète d'un lot reste
    « non mesurée » tant que sa dernière fin n'est pas connue, une substitution de lot ne vaut jamais clôture. Patch d'export du
    panneau : **la mission G l'intègre** après sa propre relecture. **Correction (2) chronologie concurrente : non adoptée** ; le critère D-073
-   « chronologie complète et expliquée » reste **à signer** par Mic. V1 reste **non accepté** : il le sera après plusieurs lots
+   « chronologie complète et expliquée » reste **à signer** par l'opérateur. V1 reste **non accepté** : il le sera après plusieurs lots
    terrain (couverture 100 %, décisions identiques au banc, attestation du projet).
 2. **U1 et U2 acceptés** : panneau `3f8a79d` (G) et banc `4da97cd` (F), relus par des équipes indépendantes.
 3. **Lecteur de points gelé** : l'appel de `vendor/lidar.js` avec son option de pause existante, fichier inchangé, est
    **hors du gel**, en version de test, avec A/A préalable, un seul changement par version, mêmes points qu'au banc. L'idée I1
    (lecture sans attendre une image d'ESV) est donc autorisée à l'essai, **pas** en production.
 4. **Séance terrain de test autorisée** pour V1 adopté plus observateur passif (D-077), en journalisation seulement, aucune décision
-   d'Ariane changée, sur une partie à réserver. Le paquet de test est préparé par l'orchestrateur ; Mic lance la séance.
+   d'Ariane changée, sur une partie à réserver. Le paquet de test est préparé par l'orchestrateur ; l'opérateur lance la séance.
 5. **V4** : abandonné comme levier de vitesse (0,3 % du cycle) ; gardé seulement pour la clarté « seul GCV1 commande », après V3.
    V5 : attend la mesure de V3 ; en 4.9 seulement les diagnostics sans réécriture d'état (I4).
 
@@ -1338,7 +1338,7 @@ seulement). Consignée par l'orchestrateur Claude Code.
 
 ## D-079 - Séance terrain test 2 (partie 7) : résultats ; D-073 signé ; exports allégés ; données de la partie 7 pour l'ESV local
 
-**Réponse de Mic du 7 octobre 2026** : « je valide tout », aux propositions de l'orchestrateur Claude Code.
+**Réponse de l'opérateur du 7 octobre 2026** : « je valide tout », aux propositions de l'orchestrateur Claude Code.
 
 1. **Critère D-073 « chronologie complète et expliquée » : signé.** Pour chaque coupe, chronologie réelle avec les chevauchements,
    aucun temps compté deux fois, durée non calculable = « non mesuré » (jamais zéro), aucune commande ESV ajoutée pour séquentialiser,
@@ -1348,8 +1348,8 @@ seulement). Consignée par l'orchestrateur Claude Code.
 2. **Exports allégés (V2) : lancement autorisé.** Étape A (une seule copie des nuages, événements et diagnostic une fois, sans perte)
    et « Sauvegarder tout » en un clic (un zip). Mode complet : intensité et classe conservées ; mode léger : retirées. Le mode léger
    avec arrondi des points reste conditionné à un rejeu comparé complet/léger. Étude : mesures privées hors dépôt.
-3. **Données de la partie 7 pour l'ESV local : mises de côté (décision de Mic du 7 octobre).** L'extension Claude ne convient pas (elle ne doit
-   pas lire le jeton de connexion, et naviguer dans ESV n'est pas une lecture pure). Méthode retenue pour plus tard : HAR enregistré par Mic
+3. **Données de la partie 7 pour l'ESV local : mises de côté (décision de l'opérateur du 7 octobre).** L'extension Claude ne convient pas (elle ne doit
+   pas lire le jeton de connexion, et naviguer dans ESV n'est pas une lecture pure). Méthode retenue pour plus tard : HAR enregistré par l'opérateur
    dans Chrome sur les coupes laissées de côté, nettoyé des échanges `login.microsoftonline.com` avant envoi (le HAR « nettoyé » de Chrome garde
    les jetons dans le corps de ces réponses ; l'original reçu a été supprimé, copie propre privée sans jeton). Reprise seulement sur besoin précis.
 4. **Séance terrain test 2, partie 7 d’un projet neuf (identifiant de projet ESV tenu hors dépôt), poste perso, Chrome 154, 4.9.0.2** : 156 coupes invalides visées,
@@ -1362,7 +1362,7 @@ seulement). Consignée par l'orchestrateur Claude Code.
 
 ## D-080 - Paquet de test 4.9.0.3 prêt pour la séance terrain (12 octobre 2026) : enregistrement de l'orchestrateur
 
-Enregistrement, pas une décision nouvelle de Mic. Rien d'autorisé au-delà de D-078 et D-079 : aucun merge, tag, publication, activation de production
+Enregistrement, pas une décision nouvelle de l'opérateur. Rien d'autorisé au-delà de D-078 et D-079 : aucun merge, tag, publication, activation de production
 ou d'apprentissage, aucun changement de seuil, de porte ou de critère.
 
 1. **Contenu** (branche `claude/49-test-3`, tête `3cbf304`, poussée) : V2 (exports allégés, zip unique, bouton « Vider le cache des exports »,
@@ -1377,14 +1377,14 @@ ou d'apprentissage, aucun changement de seuil, de porte ou de critère.
 4. **Mesure V1 rejouée** sur le lot réel de la partie 10 : identique à la milliseconde (258 cycles, 61,0 s non expliquées sur 1 997,4 s, soit 3,05 %).
    Nouveau : le temps entre deux cycles est publié à part (262 transitions, 199,0 s, dont 112,4 s sans étape) ; l'enregistreur n'est pas modifié.
 5. **Non vérifié** : vrai ESV et vrai serveur, Edge, lot Orbite complet jusqu'à sa fin, mémoire sur un export de 400 Mo et plus.
-6. **Question ouverte pour Mic** : activer le vidage automatique par défaut ? Recommandation : non, pour le premier test terrain.
-   Test A/A (même version sur deux parties neuves) : quand Mic le souhaite.
+6. **Question ouverte pour l'opérateur** : activer le vidage automatique par défaut ? Recommandation : non, pour le premier test terrain.
+   Test A/A (même version sur deux parties neuves) : quand l'opérateur le souhaite.
 
 ## D-081 - Relecture proportionnée au risque (12 octobre 2026)
 
-**Réponse de Mic du 12 octobre 2026** : « Oui go », à la proposition de l'orchestrateur Claude Code (même jour), après la question « Il y a réellement besoin autant de relecture à chaque fois ? ».
+**Réponse de l'opérateur du 12 octobre 2026** : « Oui go », à la proposition de l'orchestrateur Claude Code (même jour), après la question « Il y a réellement besoin autant de relecture à chaque fois ? ».
 
-Constat : pour le test 3 (4.9.0.3) cinq relectures indépendantes ont trouvé cinq points à corriger, mais n'ont pas vu le blocage du vidage du cache rencontré par Mic sur le terrain (lot fini sur un dernier cut différé) ; pour le test 4 (4.9.0.4), trois relectures ont trouvé une perte de données possible (course) et des valeurs de séance dans des essais. Elles ont aussi coûté plusieurs heures et deux arrêts sur limite d'utilisation.
+Constat : pour le test 3 (4.9.0.3) cinq relectures indépendantes ont trouvé cinq points à corriger, mais n'ont pas vu le blocage du vidage du cache rencontré par l'opérateur sur le terrain (lot fini sur un dernier cut différé) ; pour le test 4 (4.9.0.4), trois relectures ont trouvé une perte de données possible (course) et des valeurs de séance dans des essais. Elles ont aussi coûté plusieurs heures et deux arrêts sur limite d'utilisation.
 
 Règle à partir de maintenant :
 
@@ -1393,13 +1393,13 @@ Règle à partir de maintenant :
 | Ce qui efface ou peut perdre des données (vidage, export, enregistrement) | une relecture indépendante ciblée, parfois deux |
 | Mesure, observateur | une relecture ciblée |
 | Texte, consigne, affichage | essais et relecture de l'orchestrateur, sans équipe |
-| Tout | essais complets à zéro échec, puis séance terrain de Mic |
+| Tout | essais complets à zéro échec, puis séance terrain de l'opérateur |
 
 Rien ne change à la règle « zéro donnée perdue », ni aux portes, seuils et critères du cahier. L'audit d'Astra du diff avant toute version stable (cahier § 7) reste exigé : cette règle ne concerne que les relectures de développement.
 
 ## D-082 - Séance terrain test 3 (12 octobre) : résultats ; défaut du vidage ; paquet 4.9.0.4 : enregistrement de l'orchestrateur
 
-Enregistrement, pas une décision nouvelle de Mic. Rien d'autorisé au-delà de D-078, D-079 et D-081 : aucun merge, tag, publication,
+Enregistrement, pas une décision nouvelle de l'opérateur. Rien d'autorisé au-delà de D-078, D-079 et D-081 : aucun merge, tag, publication,
 activation de production ou d'apprentissage, aucun changement de seuil, de porte ou de critère. L'identifiant du projet et les valeurs
 de la séance restent hors dépôt.
 
@@ -1410,7 +1410,7 @@ de la séance restent hors dépôt.
    relevées, dont la dernière, arrivée pendant la grâce de 5 s (c'était le défaut du test 2). Un seul zip par export, chaque nuage une seule fois
    (192 puis 210), aucun nuage manquant, zips intacts. Mesure V1 : 3,0 % de temps non expliqué sur le lot 1 (3,05 % sur le lot de la partie 10).
    Cycle médian 8,3 s (lot 1) : indicatif, pas comparable sans A/A. Qualité des poses (C1 à C4) : non analysée.
-3. **Défaut trouvé par Mic : « Vidage impossible : une capture est en cours (STALE) »** après un lot terminé sur son dernier cut différé (la
+3. **Défaut trouvé par l'opérateur : « Vidage impossible : une capture est en cours (STALE) »** après un lot terminé sur son dernier cut différé (la
    capture « avant » de ce cut reste ouverte). Cause : `src/export-cache.js`, règle de refus trop large. Aucune perte (refus côté sûr), mais le vidage
    manuel était inutilisable après ce type de fin de lot, qui est courant. Les cinq relectures du test 3 ne l'avaient pas vu.
 4. **Correction : paquet 4.9.0.4** (« 4.9.0 test 4 », branche `claude/49-test-4`, tête `0fcc4f6`, poussée). Après un lot fini pour de bon, une capture
@@ -1421,13 +1421,13 @@ de la séance restent hors dépôt.
    « Recharger » du navigateur, lot Orbite complet dans le vrai ESV.
 5. **Points ouverts.** (a) Données héritées d'ESV dans l'ancien dépôt (`tests/corpus/` depuis le 15 septembre, `datasets/automatic/` et `audit/native-offline-*`
    dans les paquets) : nature réelle ou fabriquée non vérifiée, en tension avec la règle « aucune donnée d'ESV dans les dépôts » ; à trancher par
-   Mic. (b) L'historique de la branche `claude/49-test-4` contient, dans un commit intermédiaire d'essais, des valeurs de la séance (numéro de coupe,
+   L'opérateur. (b) L'historique de la branche `claude/49-test-4` contient, dans un commit intermédiaire d'essais, des valeurs de la séance (numéro de coupe,
    total, heure de fin de lot), retirées à la tête ; pas d'identifiant de projet. (c) Vidage automatique par défaut : toujours désactivé, décision à
    prendre. (d) Test A/A et V3 : pas commencés.
 
 ## D-083 - Consommation de tokens : mode économe (12 octobre 2026)
 
-**Instruction de Mic du 12 octobre 2026** : « Je veux que mes tokens soient utilisés intelligemment, de sorte à ne pas niquer ma consommation
+**Instruction de l'opérateur du 12 octobre 2026** : « Je veux que mes tokens soient utilisés intelligemment, de sorte à ne pas niquer ma consommation
 avec tes multi et revérification avec 30 agents à la fois. » Cette entrée consigne cette instruction ; les règles d'application sont celles de
 l'orchestrateur Claude Code, qui les applique dès maintenant.
 
@@ -1441,16 +1441,16 @@ Règles :
 2. **Chantier de code : un agent d'implémentation. Une relecture indépendante ciblée seulement si le code efface ou peut perdre des données (D-081).**
 3. **Au plus 4 agents par chantier, environ 25 appels d'outil par agent (écrit dans le prompt), jamais de relecture en cascade, un seul contrôle complet
    (`verify`) par version.**
-4. **Avant tout chantier de plus de 2 agents : estimation du coût donnée à Mic, et accord de Mic.**
+4. **Avant tout chantier de plus de 2 agents : estimation du coût donnée à l'opérateur, et accord de l'opérateur.**
 5. Lecture par extraits (`grep`, `sed`) plutôt que de fichiers entiers ; rapports courts.
-6. Choix du modèle par tâche (proposé à Mic, pas encore décidé) : le plus fort pour la relecture et la correction qui touchent aux données, un modèle
+6. Choix du modèle par tâche (proposé à l'opérateur, pas encore décidé) : le plus fort pour la relecture et la correction qui touchent aux données, un modèle
    plus léger pour le mécanique (texte, rapport, relevé, paquet).
 
 ## D-084 - Limites d'écartement 1420 à 1470 mm ; C4 à faire évoluer (12 octobre 2026)
 
-**Instruction de Mic du 12 octobre 2026**, consignée par l'orchestrateur Claude Code :
+**Instruction de l'opérateur du 12 octobre 2026**, consignée par l'orchestrateur Claude Code :
 1. « Mise à jour des limites d'écartement : **1420 à 1470** » (elles étaient [1405, 1470]).
-2. **C4 doit évoluer** : « on ne pourra pas toujours attendre la correction humaine » ; Mic estime que les coupes posées par Ariane sont exactes à environ 97 %.
+2. **C4 doit évoluer** : « on ne pourra pas toujours attendre la correction humaine » ; l'opérateur estime que les coupes posées par Ariane sont exactes à environ 97 %.
 
 État au moment de l'enregistrement (lu dans le dépôt, **rien n'est modifié dans le code**) :
 - La borne basse 1405 est dans `src/gauge.js` (`lowMm`), dans l'outil de rapport d'acceptation (classe `LOW_INVALID`) et dans les textes signés (cahier, passations,
@@ -1459,17 +1459,17 @@ Règles :
   (633 cuts, 8 jeux) avant adoption, et les critères « décisions identiques » des chantiers V1, V2, V4, U1 à U3 se lisent désormais contre la nouvelle borne.
 - C4 actuel (cahier § 5.1) : au moins 100 posés jugés par une relecture humaine, au moins 80 % des posés jugés, au plus 2 faux pour 100 jugés. Références du cahier : 4.8.0 =
   1 faux sur 353 (0,28 %), partie 25 = 2 faux sur 62 (3,2 %, soit 96,8 % exactes). Un taux de 3 % dépasserait le seuil actuel de 2 pour 100.
-- Options pour faire évoluer C4 (à choisir par Mic, rien n'est décidé) : (a) relecture humaine d'un échantillon tiré au hasard (30 à 40 coupes par partie) au lieu de 100 et plus,
+- Options pour faire évoluer C4 (à choisir par l'opérateur, rien n'est décidé) : (a) relecture humaine d'un échantillon tiré au hasard (30 à 40 coupes par partie) au lieu de 100 et plus,
   avec cumul sur plusieurs parties (D-061) ; (b) pour les chantiers qui changent la capture (V3), comparaison appariée de deux versions sur les mêmes coupes, « zéro écart non
   expliqué », sans relecture humaine (cahier § 5.2, niveau 3) ; (c) étude d'un indicateur sans humain : reprise ultérieure d'une pose par l'opérateur, vue par l'observateur passif ;
   (d) score de justesse hors ligne, sans activation (feuille de route, idée D I-3).
-- Aucun changement de seuil, de porte ou de critère n'est appliqué tant que Mic n'a pas choisi.
+- Aucun changement de seuil, de porte ou de critère n'est appliqué tant que l'opérateur n'a pas choisi.
 
 ## D-085 - Borne 1420 mm mesurée puis adoptée ; C4 retiré des portes de la 4.9 ; C4 à retravailler pour la 5.0 (12 octobre 2026)
 
-**Réponses de Mic du 12 octobre 2026** à l'orchestrateur Claude Code (suite de D-084) : sur les paires entre 1405 et 1420 mm, « il y en a quasiment pas » ;
+**Réponses de l'opérateur du 12 octobre 2026** à l'orchestrateur Claude Code (suite de D-084) : sur les paires entre 1405 et 1420 mm, « il y en a quasiment pas » ;
 (1) « Oui » : mesurer l'effet de la borne 1420, puis l'adopter ; (2) tout ce que prévoit le cahier de la 4.9 « n'aura pas de grandes influences sur le placement
-du champignon par le super cerveau d'Ariane » : **C4 est retiré des portes de la 4.9**, exclusivement pour la 4.9 ; (3) **C4 sera retravaillé entièrement** : Mic a des orientations
+du champignon par le super cerveau d'Ariane » : **C4 est retiré des portes de la 4.9**, exclusivement pour la 4.9 ; (3) **C4 sera retravaillé entièrement** : l'opérateur a des orientations
 différentes de ce qui était prévu pour la 5.0.
 
 Effet : la porte « C1 et C4 non dégradés » du cahier (§ 7) devient « **C1 non dégradé** ». Les autres portes, C3 = 0 et zéro capture perdue compris, sont inchangées. C4 reste
@@ -1488,18 +1488,18 @@ version de test. Les textes signés ne sont pas réécrits.
 
 ## D-086 - Sessions courtes par chantier, routage des modèles, compaction ; coupes difficiles et apprentissage maintenus en 4.9 (12 octobre 2026)
 
-**Réponses de Mic du 12 octobre 2026** au point d'étape de l'orchestrateur Claude Code :
+**Réponses de l'opérateur du 12 octobre 2026** au point d'étape de l'orchestrateur Claude Code :
 1. **Non** : les coupes difficiles (retour à une coupe, 398/402, B1, B2, B3), l'apprentissage et V5 **ne sont pas déplacés hors de la 4.9** (D-066, D-068 maintenus).
 2. **Oui, très d'accord** pour une session courte par chantier avec fiche de reprise ; et « pour chaque tâche tu saches évaluer quel modèle Claude utiliser avec le niveau d'effort adéquat,
    auto-compact lorsque nécessaire ou opportun ». Règles écrites dans `PILOTAGE_SESSIONS.md` ; première fiche : `fiches/FICHE_AA_V3.md`.
-3. **On enchaîne** : version installée par Mic, puis test A/A (la même version sur deux lots comparables), puis V3.
+3. **On enchaîne** : version installée par l'opérateur, puis test A/A (la même version sur deux lots comparables), puis V3.
 
-Limites dites à Mic : l'orchestrateur règle le modèle et l'effort de ses agents ; le modèle et l'effort de la conversation, `/compact` et `/clear` restent des commandes de Mic, l'orchestrateur
+Limites dites à l'opérateur : l'orchestrateur règle le modèle et l'effort de ses agents ; le modèle et l'effort de la conversation, `/compact` et `/clear` restent des commandes de l'opérateur, l'orchestrateur
 signale les points de compaction recommandés. Le routage est une recommandation, à corriger avec les coûts mesurés par chantier. Rien d'autre ne change : portes, seuils et critères (D-085 compris).
 
 ## D-087 - A/A calculé sur les exports reçus ; V3 : expérience I1 tirée cut par cut (4.9.0.6) ; dérive mesurée, V5 déclenchable (13 octobre 2026)
 
-**Instructions de Mic du 12 et 13 octobre 2026** : « Tu peux lancer la suite des chantiers notamment sur celui du gain de temps » ; « Tu as eu assez d'exports pour le faire » ;
+**Instructions de l'opérateur du 12 et 13 octobre 2026** : « Tu peux lancer la suite des chantiers notamment sur celui du gain de temps » ; « Tu as eu assez d'exports pour le faire » ;
 « Ok après la 4906 continue les chantiers ». Consignées par l'orchestrateur Claude Code, sans agent.
 
 1. **A/A (cahier § 4.2, M3) calculé sur les exports reçus**, au lieu de deux lots neufs : cinq lots d'au moins 40 cuts en 4.9.0.2, 4.9.0.3 et 4.9.0.4 (capture, analyse et décision
@@ -1509,7 +1509,7 @@ signale les points de compaction recommandés. Le routage est une recommandation
    - **Tirage fixe cut par cut** (règle de la 4.9.0.6) : écarts réalisés de 0,4 à 1,6 % ; P95 sur 500 autres tirages de 4 à 7 % (lots d'au moins 150 cuts). **T3 proposé : 7 %** sur le
      cycle médian. **C1** (part posée) entre deux moitiés tirées : P95 de 8 à 13 points ; tolérance proposée **8 points** sur un lot d'au moins 300 cuts.
    - **Dérive dans un lot** : du 1er au 3e tiers, +30 % et +38 % sur le cycle des deux plus longs lots, toute dans le service worker (analyse, décision, pose, validation). Voir 4.
-2. **Méthode de comparaison proposée** (change la décision M1 du 30/09, cahier § 2.4, **à valider par Mic**) : les deux modes sont comparés **dans un même lot**, chaque cut tiré une fois
+2. **Méthode de comparaison proposée** (change la décision M1 du 30/09, cahier § 2.4, **à valider par l'opérateur**) : les deux modes sont comparés **dans un même lot**, chaque cut tiré une fois
    pour toutes d'après son numéro. Bruit deux à trois fois plus faible que les blocs alternés, aucun changement d'extension entre blocs, ni partie, ni heure, ni dérive dans l'écart.
    « Une seule modification par version » est tenu : la moitié « référence » lit exactement comme la 4.9.0.5.
 3. **V3, expérience I1** (D-078 : option de pause existante de `vendor/lidar.js`, fichier inchangé, version de test seulement) : version **4.9.0.6** « 4.9.0 test 6 » = 4.9.0.5 + I1 tirée cut par cut
@@ -1518,16 +1518,16 @@ signale les points de compaction recommandés. Le routage est une recommandation
    Décomposition de la capture (8 lots) : par rail, sélection 0,30 s, stabilité 0,83 s (à 67 % exactement le délai de 800 ms), lecture 0,95 s ; I1 vise la lecture (labo 0,90 → 0,29 s).
 4. **V5** : cause probable lue dans le code, `save()` réécrit tout l'état à chaque événement (environ 30 par cut) et l'état garde tous les enregistrements depuis le dernier vidage
    (2 Mo et 30 ms de copie par sauvegarde avec 432 enregistrements, contre 0,4 Mo et 7 ms au départ). Fiche : `fiches/FICHE_V5.md`. **Seuil de dérive proposé : +10 % du 1er au 3e tiers
-   d'un lot d'au moins 150 cuts** (cahier § 11 n° 15) ; mesuré +30 et +38 % : V5 serait déclenché. Décision de Mic.
+   d'un lot d'au moins 150 cuts** (cahier § 11 n° 15) ; mesuré +30 et +38 % : V5 serait déclenché. Décision de l'opérateur.
 
 Réalisé : branche `claude/49-test-6` (base `claude/49-test-5`, tête `81e6e6f`, poussée, non fusionnée), `verify` 1372 essais, 1370 réussis, 0 échec, 2 sautés (corpus natif privé absent) ;
 paquet `ariane-4.9.0-test.6.zip` (SHA-256 `91b4240627bf3b1456cf54b5aded5a6d9943e04b16be39c54c443a4b238ca7b2`, 1 269 166 octets, sans `tests/`) ; non essayé dans Chromium ni sur le vrai ESV ; consigne
 `consignes/seance-terrain-test-6-2026-10-13.md` (un lot d'au moins 300 cuts, partie neuve). **Non autorisé** : fusion, étiquette, publication, production ; I1 hors version de test ; tout seuil
-ou porte du cahier (T3, tolérance C1, méthode et seuil V5 restent des propositions jusqu'à la réponse de Mic).
+ou porte du cahier (T3, tolérance C1, méthode et seuil V5 restent des propositions jusqu'à la réponse de l'opérateur).
 
 ## D-088 - V3 « mode rapide » : trois attentes de prudence retirées sur un cut sur deux (4.9.0.7), prouvé au banc ESV local (13 octobre 2026)
 
-**Instruction de Mic du 13 octobre 2026** : « J'ai l'impression qu'on rame vraiment sur cette mission du gain de temps […] tu dois innover, réfléchir à des solutions que
+**Instruction de l'opérateur du 13 octobre 2026** : « J'ai l'impression qu'on rame vraiment sur cette mission du gain de temps […] tu dois innover, réfléchir à des solutions que
 personne n'aurait pensé, exploiter le code au mieux, trouver des failles (pour ça qu'on a fait un ESV local), cherche […] sans relâche, cette mission ne doit pas être un échec. »
 Consignée par l'orchestrateur Claude Code ; travail fait sans autre agent qu'une relecture indépendante du diff (D-081 : le code touche la pose).
 
@@ -1545,7 +1545,7 @@ Consignée par l'orchestrateur Claude Code ; travail fait sans autre agent qu'un
    (I1 compris), un cut « référence » fait tout comme la 4.9.0.5. Chaque pièce se coupe seule (`pilote.rapide`). Gardes : côté d'ESV relu sur la classe de son bouton avant le clic,
    l'autre rail ne doit pas bouger (sinon arrêt, état à réconcilier), pose à 1 mm sinon recentrage comme avant ; lecture au signal contrôlée (rien ne change pendant la lecture,
    sinon relecture à la règle des 800 ms). **Le mode rapide groupe trois changements dans un bras** : écart à la règle « une modification par version » du cahier, proposé parce que
-   le tirage cut par cut mesure le tout dans un seul lot et que chaque pièce reste isolable par réglage. **À valider par Mic.**
+   le tirage cut par cut mesure le tout dans un seul lot et que chaque pièce reste isolable par réglage. **À valider par l'opérateur.**
 4. **Preuve de bout en bout au banc** (essai `x_ariane` : le vrai code de page d'Ariane injecté dans le vrai ESV, cache de Potree vidé avant chaque coupe, latence simulée 40 et
    120 ms par bloc, une session par mode, mêmes coupes) : **points lus identiques 12 visites sur 12** ; capture médiane 2,96 s contre 5,45 s (120 ms) et 2,25 s contre 4,66 s (40 ms) ;
    pose 7 ms contre 655 ms ; écart des poses rapides au plus 0,64 mm. Gain au banc : environ 3 s par cut. **Non mesuré sur le vrai ESV** (carte graphique, réseau, Edge).
@@ -1559,18 +1559,18 @@ Réalisé : branche `claude/49-test-7` (base `claude/49-test-6`, tête `adfcd8d`
 paquet `ariane-4.9.0-test.7.zip` (SHA-256 `f2d01aef4d4eb65d0a9f0d7a2931d975ec2d2fef7a7a65bcb6397b1cab26876a`, 1 276 335 octets, sans `tests/`) ; consigne
 `consignes/seance-terrain-test-7-2026-10-13.md` (un lot d'au moins 300 cuts, partie neuve ; la test 7 contient la test 6, qui n'a pas été essayée sur le terrain). Essais du banc privés
 (`missions/B_ESV/banc/essais/x_turbo.cjs`, `x_ariane.cjs`, hors dépôt). **Non autorisé** : fusion, étiquette, publication, production ; mode rapide hors version de test ; tout seuil ou porte du
-cahier (le regroupement de trois changements dans un bras reste une proposition jusqu'à la réponse de Mic).
+cahier (le regroupement de trois changements dans un bras reste une proposition jusqu'à la réponse de l'opérateur).
 
 ## D-089 - V5 : sauvegarde de l'état à taille constante (4.9.0.8) ; inventaire du poids des exports (13 octobre 2026)
 
-**Instruction de Mic du 13 octobre 2026** : « Constat confirmé sur terrain, quand on ne pouvait pas vider le cache et qu'Ariane conservait l'historique des précédents lots, au bout
+**Instruction de l'opérateur du 13 octobre 2026** : « Constat confirmé sur terrain, quand on ne pouvait pas vider le cache et qu'Ariane conservait l'historique des précédents lots, au bout
 de quelques lots, Ariane devenait affreusement long à poser. […] quel que soit le poids des données, elles ne devraient pas ralentir la pose. Deuxièmement, […] poursuivre le
 développement des json contenus dans le ZIP, trouver des pistes d'allègement sans pour autant perdre en qualité et précision des données capturées. » Consignée par l'orchestrateur.
 
 1. **Cause mesurée dans un vrai Chromium** (extension de mesure, privée) : `chrome.storage.local.set` coûte environ **50 ms par Mo** (0,14 Mo : 4,5 ms ; 1,1 Mo : 57 ms ; 2,1 Mo : 133 ms ;
    4 Mo : 220 ms ; 7,9 Mo : 470 ms ; 2 Ko : 0,6 ms). Le moteur réécrivait **tout** son état à chaque événement (une vingtaine par cut), **visites de tous les lots comprises** :
    `s.records` n'était jamais réduit, **même après « Vider le cache des exports »** (le vidage ne touche que IndexedDB ; `background.js` le disait : « l'état du moteur, lui, garde tout »).
-   Export du 12 octobre : 235 visites = 1,6 Mo (environ 7 Ko chacune) ; quelques lots = plusieurs Mo, donc plusieurs secondes de sauvegarde par cut. Le constat de Mic est expliqué.
+   Export du 12 octobre : 235 visites = 1,6 Mo (environ 7 Ko chacune) ; quelques lots = plusieurs Mo, donc plusieurs secondes de sauvegarde par cut. Le constat de l'opérateur est expliqué.
 2. **Version de test 4.9.0.8** « 4.9.0 test 8 » = 4.9.0.7 + V5 :
    - une visite ou capture abandonnée dont l'écriture IndexedDB est **confirmée** n'est sauvegardée que par son identifiant, à sa place ; toute autre entrée reste recopiée (rien ne repose
      sur une écriture non sûre) ;
@@ -1578,7 +1578,7 @@ développement des json contenus dans le ZIP, trouver des pistes d'allègement s
      sont **archivées une fois** hors de l'état (`banane3VisitesHorsCache`), rien n'est effacé ; sans archive possible, elles restent comme avant ;
    - les événements d'information (étapes de la page, diagnostics du pont), déjà dans IndexedDB, ne réécrivent plus l'état.
    - `records` et `incomplete` restent écrits vides : une version antérieure (retour arrière) relit l'état sans planter ; ses ajouts sont repris à la remise à jour.
-   **Moteur ré-épinglé** (`audit/v4.6.0-engine-baseline.json`, périmètre déclaré) : `src/engine.js` change ; géométrie, GCV1 et lecteur LiDAR inchangés. **À valider par Mic.**
+   **Moteur ré-épinglé** (`audit/v4.6.0-engine-baseline.json`, périmètre déclaré) : `src/engine.js` change ; géométrie, GCV1 et lecteur LiDAR inchangés. **À valider par l'opérateur.**
    **Relecture indépendante** (un agent, lecture seule) : rien de bloquant en marche normale ; deux pertes possibles sur panne d'IndexedDB (identifiants effacés si la base est
    illisible au démarrage ; modification perdue si une réécriture échoue), **corrigées avec essais**. **Vrai Chromium, vraie extension** : chrome.storage rend les objets clés triées
    (défaut trouvé et corrigé) ; ancien état de 600 visites (4,3 Mo, 104 ms par sauvegarde) migré en 4,6 Ko et **0,97 ms par sauvegarde** ; 200 visites vidées archivées, 400 relues.
@@ -1586,17 +1586,17 @@ développement des json contenus dans le ZIP, trouver des pistes d'allègement s
    de diagnostic** (« for diagnostics only ») surtout sur des nœuds sans point retenu (6 nœuds sur 30 ont des points) ; les points 27 %, écrits avec 17 chiffres alors que la source
    (Float32 de Potree) n'a qu'une précision de 61 µm ou plus à ces distances. Chiffré sur un vrai segment (11,3 Mo compressés) : sondes des nœuds sans point retirées → 7,0 Mo ;
    + textes répétés et doublons exacts factorisés, visibilité en 0/1 → 7,0 Mo ; + points arrondis au micromètre (écart max 0,5 µm, sous le pas Float32 : rien de mesuré n'est perdu)
-   → **5,7 Mo (−49 %)** ; toutes les sondes retirées → 4,5 Mo (−60 %). **Propositions, non appliquées : décision de Mic** (les sondes sont des diagnostics du lecteur ; le lecteur
+   → **5,7 Mo (−49 %)** ; toutes les sondes retirées → 4,5 Mo (−60 %). **Propositions, non appliquées : décision de l'opérateur** (les sondes sont des diagnostics du lecteur ; le lecteur
    `vendor/lidar.js` reste gelé : l'allègement se ferait à l'export, ou à la réception dans le service worker).
 
 Réalisé : branche `claude/49-test-8` (base `claude/49-test-7`, tête `e95dbae`, poussée, non fusionnée), `verify` 1407 essais, 1405 réussis, 0 échec, 2 sautés ; paquet
 `ariane-4.9.0-test.8.zip` (SHA-256 `c58af02781c0a5a7caf81cd11e772e8e63a571d37323c0f60696d0f9bfcb53a4`, 1 283 050 octets, sans `tests/`) ; consigne `consignes/seance-terrain-test-8-2026-10-13.md`
 (un lot d'au moins 300 cuts, puis si possible un second lot sans vider le cache entre les deux ; la test 8 contient les tests 5 à 7, non essayées sur le terrain). Mesures privées
-(`scratchpad/v5/`, hors dépôt). **Non autorisé** : fusion, étiquette, publication, production ; allègement des exports (propositions du point 3) avant la décision de Mic.
+(`scratchpad/v5/`, hors dépôt). **Non autorisé** : fusion, étiquette, publication, production ; allègement des exports (propositions du point 3) avant la décision de l'opérateur.
 
 ## D-090 - Premier lot terrain en 4.9.0.8 : mode rapide −64 % sur le temps par cut, qualité identique (13 octobre 2026)
 
-**Lot de Mic** du 13 octobre (export privé, hors dépôt) : 4.9.0.8, une partie, 112 cuts (95 posés, 17 différés) en 8 min 24 s, fin de partie traitée (dernier cut validé
+**Lot de l'opérateur** du 13 octobre (export privé, hors dépôt) : 4.9.0.8, une partie, 112 cuts (95 posés, 17 différés) en 8 min 24 s, fin de partie traitée (dernier cut validé
 en place, compteur passé de N à N+1). Tirage cut par cut : 46 référence (comme la 4.9.0.5), 66 rapides. Calculs de l'orchestrateur (`tools/perf-v3.cjs`, scripts privés) ;
 le workflow d'analyse à 4 agents s'est arrêté sur la limite de session sans rendre de résultat (environ 426 000 jetons dépensés) : vérifications refaites sans agent.
 
@@ -1610,17 +1610,17 @@ le workflow d'analyse à 4 agents s'est arrêté sur la limite de session sans r
    historique) ; tiers du cycle rapide 2,79 / 2,56 / 2,29 s : pas de dérive sur ce lot court. À confirmer sur un lot d'au moins 300 cuts.
 4. **Artefact de mesure** : en rapide, la lecture par rail apparaît à 0,00 s (l'étape « capture-read » est horodatée par le pont après la lecture, la suite de `scheduler.yield`
    passant avant la tâche de message) ; la durée totale de capture est juste. Correctif proposé : horodater les étapes dans la page.
-5. **Proposé à Mic** : (a) généraliser le mode rapide (`modeRapide: 'toujours'`) en gardant un échantillon de référence d'un cut sur dix pour la surveillance ; (b) allègement A
+5. **Proposé à l'opérateur** : (a) généraliser le mode rapide (`modeRapide: 'toujours'`) en gardant un échantillon de référence d'un cut sur dix pour la surveillance ; (b) allègement A
    des exports (−48 % du corpus sur ce lot) ; (c) horodatage des étapes dans la page ; puis préchargement du cut suivant et réduction du transfert de la capture.
 
-## D-091 - Décisions de Mic sur le lot 4.9.0.8 : mode rapide sur neuf cuts sur dix, allègement A des exports, moteur V5 validé ; version de test 4.9.0.9 (13 octobre 2026)
+## D-091 - Décisions de l'opérateur sur le lot 4.9.0.8 : mode rapide sur neuf cuts sur dix, allègement A des exports, moteur V5 validé ; version de test 4.9.0.9 (13 octobre 2026)
 
-**Réponse de Mic du 13 octobre 2026** aux trois décisions de D-090 : « 1. Je valide et avec le temps et la confiance nous pourrions l'étendre voire supprimer cela.
+**Réponse de l'opérateur du 13 octobre 2026** aux trois décisions de D-090 : « 1. Je valide et avec le temps et la confiance nous pourrions l'étendre voire supprimer cela.
 2. Oui. 3. Je valide. » Consignée par l'orchestrateur.
 
 1. **Mode rapide généralisé** (réglage `modeRapide: 'echantillon'`) : un cut sur dix, tiré d'après son numéro (même hachage que le tirage, premier dixième), reste en
    référence pour surveiller la qualité ; répartition régulière (un cut de référence tous les 5, 8 ou 13 cuts, 28 à 32 sur 300). L'échantillon pourra être réduit ou
-   supprimé avec le temps et la confiance (Mic). La règle est consignée à la fin de chaque capture (`regleLecture`).
+   supprimé avec le temps et la confiance (l'opérateur). La règle est consignée à la fin de chaque capture (`regleLecture`).
 2. **Allègement A des exports** (réglage `export.mode: 'allege'`) : sondes de diagnostic retirées des seuls nœuds sans point retenu dont aucune sonde ne touche la zone ;
    `nearestToRailOrigin`, points, intensité, classe, pointSources, visibilité inchangés au bit près ; chaque nuage allégé porte `exportLightening`. Rejoué sur l'export du lot
    4.9.0.8 : corpus 21,7 → 14,6 Mo compressés (−33 %), 2 711 nœuds allégés, touches de zone des sondes inchangées (357), aucun autre champ modifié, nuage source intact, rejeu
@@ -1639,7 +1639,7 @@ le workflow d'analyse à 4 agents s'est arrêté sur la limite de session sans r
 
 ## D-092 - Fin des essais de volume : la direction juge suffisants les lots reçus ; passage à la suite du cycle (13 octobre 2026)
 
-**Décision de Mic du 13 octobre 2026** : « On va s'arrêter là. Nous n'avons pas besoin d'aller jusqu'à 300 cuts, la direction estime ce nombre suffisant. Nous pouvons passer à la
+**Décision de l'opérateur du 13 octobre 2026** : « On va s'arrêter là. Nous n'avons pas besoin d'aller jusqu'à 300 cuts, la direction estime ce nombre suffisant. Nous pouvons passer à la
 suite du cycle de développement du projet. » Consignée par l'orchestrateur. Le critère « un lot d'au moins 300 cuts sans vidage » (D-087, D-089) est **levé** par la direction ; il n'a
 pas été atteint en un seul lot, et le texte ne prétend pas le contraire.
 
@@ -1648,28 +1648,28 @@ Preuves terrain disponibles (aucune n'est un lot unique de 300 cuts) :
   (cycle stable par tiers de lot), un incident en mode référence (recentrage refusé par ESV, hors rapide).
 - 4.9.0.9 (un cut sur dix en référence, `echantillon`) : partie 13 (138 cuts) et partie 15 (139 cuts), 277 cuts dont 252 en rapide : −53 à −64 %, part posée 80,7 % et 89,8 % en rapide,
   C3 observé à 0 (écartements posés de 1 424 à 1 465 mm), 0 capture en erreur, lecture par rail mesurée (0,26 s), exports allégés produits sur le poste (environ −25 % par cut ;
-  les nuages denses pèsent plus). Les trois derniers cuts de la partie 13 à 0 point sont une fin de ligne normale (confirmé par Mic) ; une partie des reports de la partie 13 vient d'une
+  les nuages denses pèsent plus). Les trois derniers cuts de la partie 13 à 0 point sont une fin de ligne normale (confirmé par l'opérateur) ; une partie des reports de la partie 13 vient d'une
   coupure de connexion de l'opérateur (Ariane a reporté sans poser).
 - Non vérifié : lot unique de 300 cuts ou plus, Edge, Chrome/Edge avant la version 129, réseau lent, audit indépendant du moteur.
 
-Suite du cycle (propositions, rien d'autre n'est décidé) : (1) U3, bloqué par l'action de `D` à fixer par Mic ; (2) 4.9.0.10 : préchargement du cut suivant et fiche de départ des parties
+Suite du cycle (propositions, rien d'autre n'est décidé) : (1) U3, bloqué par l'action de `D` à fixer par l'opérateur ; (2) 4.9.0.10 : préchargement du cut suivant et fiche de départ des parties
 (validés, invalides, total, conservée hors du cache et exportée) ; (3) audit d'Astra du diff avant toute version stable ; (4) signature des portes du cahier § 7.
 
-## D-093 - Réponses de Mic sur U3 et lancement de la 4.9.0.10 : fiche de départ des parties, raccourcis écrits ; préchargement non inclus (13 octobre 2026)
+## D-093 - Réponses de l'opérateur sur U3 et lancement de la 4.9.0.10 : fiche de départ des parties, raccourcis écrits ; préchargement non inclus (13 octobre 2026)
 
-**Réponse de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « D c'est pour passer au cut de droite. Maj + espace c'est pour valider un cut. […] Tu peux lancer la 0.10. »
+**Réponse de l'opérateur du 13 octobre 2026** (consignée par l'orchestrateur) : « D c'est pour passer au cut de droite. Maj + espace c'est pour valider un cut. […] Tu peux lancer la 0.10. »
 Sur l'identifiant de projet de `DECISIONS.md` (ligne 487, session ancienne) : « m'en fou » : **laissé tel quel**, aucune modification.
 
 1. **U3** : actions écrites : `D` = passer au cut de droite, `Maj + Espace` = valider un cut (actions d'ESV ; elles corrigent la lecture « rail droit » de l'étude E). Aucun
    raccourci ajouté ; essais que ni l'un ni l'autre n'est doublé ou détourné (`tests/u3-raccourcis.test.cjs`). Fiche : `fiches/FICHE_U3_RACCOURCIS.md`. Porte MINIMUM de U3 atteinte
    en essais hors ligne ; le comportement réel d'ESV sur ces touches repose sur la parole de l'opérateur.
-2. **Fiche de départ des parties** (demande de Mic : retrouver les validés et invalides de chaque partie, oubliés avant une séance) : le résumé de liste d'ESV d'avant séance
+2. **Fiche de départ des parties** (demande de l'opérateur : retrouver les validés et invalides de chaque partie, oubliés avant une séance) : le résumé de liste d'ESV d'avant séance
    (`list-summary`, déjà observé) alimente une fiche (heure, partie, validés, invalides, total), gardée dans une clé à part de `chrome.storage.local` (`banane3FichesDepart`, 200
    fiches au plus), que le vidage du cache ne touche pas ; affichée dans le panneau (bloc « Départs des parties »), recopiée dans chaque export (`fichesDepart` du bilan,
    `CONTENU.txt`). Cette fiche ne peut pas remonter les parties passées : elle ne couvre que les séances faites avec la 4.9.0.10.
 3. **Préchargement du cut suivant : non inclus.** Rien ne démontre qu'il soit faisable sans toucher à ce qu'ESV charge : la vue d'un cut ne se charge qu'une fois la navigation
    faite, et la pose du cut courant exige que ce cut reste affiché pendant l'analyse (0,6 à 0,9 s). Le transfert de la capture ne pèse que ~0,1 s. Piste à étudier à part : relever,
-   par cut, quels nœuds de points ESV charge (sans stocker d'adresse) pour voir si un chargement anticipé par le cache HTTP est possible. Décision de Mic nécessaire avant tout essai.
+   par cut, quels nœuds de points ESV charge (sans stocker d'adresse) pour voir si un chargement anticipé par le cache HTTP est possible. Décision de l'opérateur nécessaire avant tout essai.
 4. **Version de test 4.9.0.10** « 4.9.0 test 10 » = 4.9.0.9 + points 1 et 2 : `ariane-4.9.0-test.10.zip`, SHA-256 `09c32aaf…03949`, 1 296 165 octets, tête `2698492`
    (`claude/49-test-10`, poussée) ; verify 1442/1440/0/2 (moteur et géométrie inchangés) ; **aucune relecture par agent** (D-081, D-083 : lecture de données sans suppression, essais
    sur le service worker réel, relecture du diff par l'orchestrateur ; un défaut trouvé par le banc : une minuterie du panneau décalait le rang que des essais lui attribuent, corrigé).
@@ -1677,25 +1677,25 @@ Sur l'identifiant de projet de `DECISIONS.md` (ligne 487, session ancienne) : «
 
 ## D-094 - Départ d'Astra : plus d'audit d'Astra ; 4.9 bientôt délivrée, 4.9.5 à suivre (13 octobre 2026)
 
-**Déclaration de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « Astra nous quitte, nous n'aurons plus besoin de ses audits. […] Je considère que nous avons bientôt délivré la 4.9 :
+**Déclaration de l'opérateur du 13 octobre 2026** (consignée par l'orchestrateur) : « Astra nous quitte, nous n'aurons plus besoin de ses audits. […] Je considère que nous avons bientôt délivré la 4.9 :
 il reste seulement à aboutir et peaufiner ce qui reste à faire pour la livraison d'une version stable. Nous allons pouvoir aussi bientôt effectuer les chantiers de la 4.9.5. »
 
 1. **Audit d'Astra du diff avant toute version stable (D-061, cahier § 7) : retiré** des portes de la 4.9.0, par décision de la direction. Le texte signé du cahier n'est pas réécrit ; cette décision le remplace.
 2. **L'audit indépendant du changement de moteur (V5, `src/engine.js`, D-089, D-091 point 3)** est lié à ce départ : il n'était pas nommé « Astra » mais restait dû avant toute version stable. Le seul
-   changement de code gelé de la 4.9 est le diff de V5. **Proposition de l'orchestrateur, non décidée** : une seule relecture indépendante ciblée de ce diff (un agent, D-081, accord de Mic requis par D-083), ou l'abandon de cette
-   relecture sur décision de Mic.
-3. **Reste pour la version stable (4.9.0)** : test 10 sur une partie (fiche de départ, confirmation de la vitesse sur partie neuve, § 4) ; signature par Mic du critère D-073 (V1) ; publication des trois mesures ensemble (durée
-   totale, arrêts pour 100 cuts) ; sortie de V4 de la 4.9.0 (recommandé, en attente de Mic) ; signature des portes ; fusion, étiquette et publication : décisions de Mic, jamais faites sans lui.
-4. **4.9.5** : chantiers B1, B2, 398/402, apprentissage, retour à une coupe, un à la fois après la stable ; ordre à décider avec Mic.
+   changement de code gelé de la 4.9 est le diff de V5. **Proposition de l'orchestrateur, non décidée** : une seule relecture indépendante ciblée de ce diff (un agent, D-081, accord de l'opérateur requis par D-083), ou l'abandon de cette
+   relecture sur décision de l'opérateur.
+3. **Reste pour la version stable (4.9.0)** : test 10 sur une partie (fiche de départ, confirmation de la vitesse sur partie neuve, § 4) ; signature par l'opérateur du critère D-073 (V1) ; publication des trois mesures ensemble (durée
+   totale, arrêts pour 100 cuts) ; sortie de V4 de la 4.9.0 (recommandé, en attente de l'opérateur) ; signature des portes ; fusion, étiquette et publication : décisions de l'opérateur, jamais faites sans lui.
+4. **4.9.5** : chantiers B1, B2, 398/402, apprentissage, retour à une coupe, un à la fois après la stable ; ordre à décider avec l'opérateur.
 
 ## D-095 - Périmètre de la 4.9.5 rapide ; V4 sorti de la 4.9.0 ; trois mesures publiées ; relecture ciblée du moteur V5 lancée (13 octobre 2026)
 
-**Réponse de Mic du 13 octobre 2026** (consignée par l'orchestrateur) : « Je valide tout le reste sinon », à la suite de mes recommandations : la 4.9.5 doit être rapide et efficace pour bouger sur la 5.0 (« que je vais
-redéfinir avec toi »). **Lecture retenue** par l'orchestrateur (à corriger par Mic si elle est fausse) : Mic valide l'ensemble de ce qui a été proposé sans réserve nommée.
+**Réponse de l'opérateur du 13 octobre 2026** (consignée par l'orchestrateur) : « Je valide tout le reste sinon », à la suite de mes recommandations : la 4.9.5 doit être rapide et efficace pour bouger sur la 5.0 (« que je vais
+redéfinir avec toi »). **Lecture retenue** par l'orchestrateur (à corriger par l'opérateur si elle est fausse) : l'opérateur valide l'ensemble de ce qui a été proposé sans réserve nommée.
 
 1. **V4 sorti de la 4.9.0** (levier de 0,3 % du cycle, D-076) : reporté à la 5.0 avec l'état actuel de sa préparation.
 2. **4.9.5 rapide** : (a) **B1 + 398/402**, un seul chantier (même levier : lire les voisines validées dans la liste des coupes d'ESV, en dernier recours et comme garde de continuité au premier passage) ;
-   (b) **retour à une coupe**. **Renvoyés à la 5.0** (définie avec Mic) : **B2, B3 et l'apprentissage**. Cela modifie D-086 point 1 (« non déplacés hors de la 4.9 »), sur l'accord de Mic.
+   (b) **retour à une coupe**. **Renvoyés à la 5.0** (définie avec l'opérateur) : **B2, B3 et l'apprentissage**. Cela modifie D-086 point 1 (« non déplacés hors de la 4.9 »), sur l'accord de l'opérateur.
 3. **Trois mesures du cahier (§ 4.3)** : publiées avec la comparaison de `tools/perf-v3.cjs` (cycle médian hors silences avec P90, max et silences ; durée totale du lot ; arrêts pour 100 cuts avec causes séparées).
    Les interventions manuelles restent « non mesurées » (leur liste d'événements n'est pas établie). Essai ajouté ; tête `claude/49-test-10` ; le paquet test 10 n'est pas modifié (outil seulement).
 4. **Relecture indépendante ciblée du diff de moteur V5** (`src/engine.js`, 87 lignes depuis la 4.8.6) lancée : un agent, lecture seule, (D-081, D-083). Résultat (un agent, 92 000 jetons, 16 appels) : **aucune perte de donnée dans le chemin normal** (arrêt entre l'écriture IndexedDB et la sauvegarde d'état, échec d'écriture, ordre, doublons, clé
@@ -1703,19 +1703,19 @@ redéfinir avec toi »). **Lecture retenue** par l'orchestrateur (à corriger pa
    visites échoue au démarrage, un `save()` ultérieur réécrirait `recordIds` et `incompleteIds` vides (les visites restent dans IndexedDB, leur lien à l'état se perdrait) ; risque faible, le service worker n'accepte aucun
    message avant la fin de l'initialisation, et l'essai existant qui devait couvrir ce cas ne prouve rien (il vérifie un état jamais modifié) ; (ii) après un vidage puis un redémarrage, la validation du cut courant ne
    retrouve plus sa visite supprimée et n'en met pas à jour les champs (gênant, aucune donnée perdue, la visite avait été vidée après export) ; (iii) en migration depuis la 4.9.0.7, une visite jamais écrite dans IndexedDB
-   est archivée dans `banane3VisitesHorsCache`, clé que rien ne relit ni n'exporte. **Correctif proposé, non appliqué** (3 lignes dans `src/engine.js` + essai réel + ré-épinglage du moteur, donc accord de Mic) : (i) ; (ii)
+   est archivée dans `banane3VisitesHorsCache`, clé que rien ne relit ni n'exporte. **Correctif proposé, non appliqué** (3 lignes dans `src/engine.js` + essai réel + ré-épinglage du moteur, donc accord de l'opérateur) : (i) ; (ii)
    et (iii) sont notés dans `KNOWN_ISSUES.md`.
 5. **Accord requis avant B1** : la lecture de la liste des coupes d'ESV (bords X/Y/Z, statut) n'a aucun chemin trouvé hors d'un objet interne d'ESV ; la piste passive est de lire les réponses de la liste que l'observateur
-   hooke déjà (`list-page`), en lecture seule, sans stocker d'adresse. C'est une lecture d'ESV hors du périmètre actuel de l'observateur (comptes seulement) : **décision de Mic demandée**.
+   hooke déjà (`list-page`), en lecture seule, sans stocker d'adresse. C'est une lecture d'ESV hors du périmètre actuel de l'observateur (comptes seulement) : **décision de l'opérateur demandée**.
 
 ## D-096 - Pleins pouvoirs de décision à l'orchestrateur jusqu'à la livraison de la 4.9 ; B1 accepté en lecture de la liste des coupes ; B1 lancé en mode ombre (13 octobre 2026)
 
-**Réponses de Mic du 13 octobre 2026** (consignées par l'orchestrateur) : 398/402, B1, retour à une coupe, B2, B3 et apprentissage : « ok » ; report de B2, B3 et de l'apprentissage dans la définition de la 5.0 : « ok » ;
+**Réponses de l'opérateur du 13 octobre 2026** (consignées par l'orchestrateur) : 398/402, B1, retour à une coupe, B2, B3 et apprentissage : « ok » ; report de B2, B3 et de l'apprentissage dans la définition de la 5.0 : « ok » ;
 lecture des bords et du statut des cuts voisins dans la liste des coupes d'ESV, en lecture seule, sans rien stocker d'autre, aucune commande ni échange ajouté : « complètement ok ». Et : « Tout le reste est ok, je t'accorde
 la liberté de valider, pousser et entreprendre sans l'attente de mon accord ce que tu veux jusqu'à la livraison finale de la 4.9. Les décisions t'appartiennent. » Il laisse aussi le choix du modèle, tâche par tâche.
 
-1. **Portée de l'autonomie** : validation, poussée sur les branches de travail, lancement de chantiers et d'agents (en gardant l'économie de jetons de Mic : agents rares, relectures proportionnées, D-081, D-083), choix du
-   modèle et de l'effort. **Non couvert, à demander** : fusion dans `main`, étiquette, publication, mise en production de la version stable (règle antérieure maintenue, aucune parole de Mic ne la lève nommément) ; pas de PR sans demande.
+1. **Portée de l'autonomie** : validation, poussée sur les branches de travail, lancement de chantiers et d'agents (en gardant l'économie de jetons de l'opérateur : agents rares, relectures proportionnées, D-081, D-083), choix du
+   modèle et de l'effort. **Non couvert, à demander** : fusion dans `main`, étiquette, publication, mise en production de la version stable (règle antérieure maintenue, aucune parole de l'opérateur ne la lève nommément) ; pas de PR sans demande.
 2. **KI-070 corrigé** (`claude/49-test-11`, `8806f05`) : `src/engine.js` (4 lignes), vrai essai (il échoue sans le correctif), baseline moteur ré-épinglée. Le correctif est dans la future 4.9.0.11, pas dans la test 10.
 3. **B1 + 398/402** : constats mesurés sur un lot réel de 125 cuts (monde − scène = translation constante) ; fiche `fiches/FICHE_B1.md` ; implémentation confiée à un agent (modèle fort, mandat borné, branche `claude/49-test-11`)
    en **mode ombre** (réglage `appuisListe` à `ombre` : rien ne change dans les poses ; la décision hypothétique est seulement consignée) ; l'activation exigera le rejeu 398/402 et un lot terrain en ombre.
@@ -1724,15 +1724,15 @@ la liberté de valider, pousser et entreprendre sans l'attente de mon accord ce 
 ## D-097 - Test 11 (4.9.0.11) livrée ; chantier UX lancé en session séparée (13 octobre 2026, nuit)
 
 **Décision de l'orchestrateur (pleins pouvoirs D-096).** La test 11 = test 10 + B1 en mode ombre (calculé à côté, consigné `b1-ombre`, jamais appliqué) + correctif de sauvegarde KI-070. Branche `claude/49-test-11` (286d924 + version), verify 1465 réussis / 0 échec / 2 sautés. Le travail de l'agent B1 (coupé par un redémarrage du conteneur) était déjà commité : relu par l'orchestrateur, poussé, vérifié. Paquet `ariane-4.9.0-test.11.zip`, SHA-256 `a9675f286a14fcdba2e1acf8521241ccc5dc8a734d29a1d88bd2f7f1b36c1a1c`. Activation de B1 : seulement après lecture des notes `b1-ombre` d'un lot de terrain (justes perdus, faux ajoutés).
-**Chantier UX (demande de Mic)** : la moitié basse de la vue Orbite est jugée illisible. Session dédiée (niveau fort), branche `claude/ux-variantes`, brief `design/ux-2026-10/BRIEF.md`, références Porsche et capture actuelle dans `design/references/ux-2026-10/` : quatre variantes, Mic choisit, puis intégration sans toucher aux identifiants du panneau. L'intégration au panneau sera rapatriée dans la ligne de test après le choix (merge des fichiers `panel.*` seulement).
+**Chantier UX (demande de l'opérateur)** : la moitié basse de la vue Orbite est jugée illisible. Session dédiée (niveau fort), branche `claude/ux-variantes`, brief `design/ux-2026-10/BRIEF.md`, références Porsche et capture actuelle dans `design/references/ux-2026-10/` : quatre variantes, l'opérateur choisit, puis intégration sans toucher aux identifiants du panneau. L'intégration au panneau sera rapatriée dans la ligne de test après le choix (merge des fichiers `panel.*` seulement).
 
 ## D-097 - Parties 17 et 18 corrigées en Écho : référence d'entraînement (14 octobre 2026)
 
-Mic corrigera à la main, en mode Écho, les parties 17 et 18 (test 12, 4.9.0.12). Ces corrections servent de **vérité terrain** : (1) juger B1 en ombre (28 poses ajoutées à juger, 1 pose retirée sur le cut 5290, partie 18 ; critère d'activation : 0 mauvaise pose ajoutée, 0 bonne pose perdue) ; (2) entraîner le « cerveau » (GCV2) ; (3) analyser le comportement métier pour la 5.0 (déplacement autonome, correction des voisins). Les prochaines sessions Écho sont traitées en priorité d'analyse, avant toute autre mesure. Les exports d'origine (états de pose d'Ariane avant correction) doivent être conservés par Mic : sans eux, la comparaison avant/après est impossible. Aucune donnée de partie dans les dépôts publics.
+L'opérateur corrigera à la main, en mode Écho, les parties 17 et 18 (test 12, 4.9.0.12). Ces corrections servent de **vérité terrain** : (1) juger B1 en ombre (28 poses ajoutées à juger, 1 pose retirée sur le cut 5290, partie 18 ; critère d'activation : 0 mauvaise pose ajoutée, 0 bonne pose perdue) ; (2) entraîner le « cerveau » (GCV2) ; (3) analyser le comportement métier pour la 5.0 (déplacement autonome, correction des voisins). Les prochaines sessions Écho sont traitées en priorité d'analyse, avant toute autre mesure. Les exports d'origine (états de pose d'Ariane avant correction) doivent être conservés par l'opérateur : sans eux, la comparaison avant/après est impossible. Aucune donnée de partie dans les dépôts publics.
 
 ## D-098 - Retour à une coupe livré en lecture seule (branche `claude/49-retour-coupe`, 977108e) ; D-045 maintenue pour l'UX (14 octobre 2026)
 
-**Décision de l'orchestrateur (pleins pouvoirs D-096).** (1) Retour à une coupe : action d'adaptateur `goToCut` (événement interne d'ESV si un écouteur est visible, sinon pas à pas par les boutons précédent/suivant, sinon refus avec raison), action de service worker `goto-cut` / `goto-cut-cancel`, événement de journal `goto-cut`, réglage `retourCut`. Lecture seule : zéro validation, zéro SKIP, zéro rail. Refusé pendant un lot sans pause effective, une pose, une validation ; garde D-067 : après un retour en pause, Reprendre/Réessayer/SKIP/Reprise manuelle refusés tant qu'ESV n'affiche pas de nouveau le cut du lot. Aucun bouton de panneau (la session UX réécrit le panneau). Rien n'est appelé par la décision de pose : ni moteur, ni vitesse changés. verify 1483 réussis / 0 échec / 2 sautés ; essai Chromium 7/7 sur page synthétique. **Non vérifié sur le vrai ESV** (hypothèses du banc local : index = N, partie en texte, boutons précédent/suivant sans décision). Aucun appel automatique tant que Mic n'a pas validé l'usage sur le terrain. (2) UX : le bloc « Ce lot applique » quitte la vue principale à la demande de Mic ; la politique effective reste affichée dans « Détails du lot » (+ pastille discrète si politique non par défaut) : l'invariant D-045 est maintenu.
+**Décision de l'orchestrateur (pleins pouvoirs D-096).** (1) Retour à une coupe : action d'adaptateur `goToCut` (événement interne d'ESV si un écouteur est visible, sinon pas à pas par les boutons précédent/suivant, sinon refus avec raison), action de service worker `goto-cut` / `goto-cut-cancel`, événement de journal `goto-cut`, réglage `retourCut`. Lecture seule : zéro validation, zéro SKIP, zéro rail. Refusé pendant un lot sans pause effective, une pose, une validation ; garde D-067 : après un retour en pause, Reprendre/Réessayer/SKIP/Reprise manuelle refusés tant qu'ESV n'affiche pas de nouveau le cut du lot. Aucun bouton de panneau (la session UX réécrit le panneau). Rien n'est appelé par la décision de pose : ni moteur, ni vitesse changés. verify 1483 réussis / 0 échec / 2 sautés ; essai Chromium 7/7 sur page synthétique. **Non vérifié sur le vrai ESV** (hypothèses du banc local : index = N, partie en texte, boutons précédent/suivant sans décision). Aucun appel automatique tant que l'opérateur n'a pas validé l'usage sur le terrain. (2) UX : le bloc « Ce lot applique » quitte la vue principale à la demande de l'opérateur ; la politique effective reste affichée dans « Détails du lot » (+ pastille discrète si politique non par défaut) : l'invariant D-045 est maintenu.
 
 ## D-098 - Premier apprentissage hors ligne sur l'Écho de la partie 17 (14 octobre 2026)
 
@@ -1740,7 +1740,7 @@ Hors ligne uniquement, aucune activation. Sur 600 cuts avec pose finale humaine,
 
 ## D-099 - Test 12 (4.9.0.12) livrée : test 11 + retour à une coupe + panneau Orbite variante A (14 octobre 2026)
 
-**Décision de l'orchestrateur (pleins pouvoirs D-096).** Branche `claude/49-test-12` (c9db895) = `claude/49-retour-coupe` (977108e) fusionnée avec `claude/ux-variantes` (e3820af, variante A « Accueil » retenue par Mic). verify 1490 réussis / 0 échec / 2 sautés. Paquet `ariane-4.9.0-test.12.zip`, SHA-256 `949afdb108bf2911a0b2d8fab2935e92719488efbbda4f7549ff69d4e9c38e1e`. Retour arrière : test 11 (SHA-256 a9675f28…1a1c). Le retour à une coupe n'est appelé nulle part et n'a pas de bouton. D-045 maintenue (politique dans « Détails du lot », pastille si hors défaut). Mic n'avait pas encore testé les tests 10 et 11 : la 12 contient tout, une seule installation suffit.
+**Décision de l'orchestrateur (pleins pouvoirs D-096).** Branche `claude/49-test-12` (c9db895) = `claude/49-retour-coupe` (977108e) fusionnée avec `claude/ux-variantes` (e3820af, variante A « Accueil » retenue par l'opérateur). verify 1490 réussis / 0 échec / 2 sautés. Paquet `ariane-4.9.0-test.12.zip`, SHA-256 `949afdb108bf2911a0b2d8fab2935e92719488efbbda4f7549ff69d4e9c38e1e`. Retour arrière : test 11 (SHA-256 a9675f28…1a1c). Le retour à une coupe n'est appelé nulle part et n'a pas de bouton. D-045 maintenue (politique dans « Détails du lot », pastille si hors défaut). L'opérateur n'avait pas encore testé les tests 10 et 11 : la 12 contient tout, une seule installation suffit.
 
 ## D-099 - Rejeu de l'interpolation avec voisins posés par Ariane (14 octobre 2026)
 
@@ -1752,29 +1752,29 @@ Lot indépendant (partie 20, version 4.7.6, 238 cuts à pose finale humaine, cut
 
 ## D-101 - Règles métier de validation sauvegardées pour la 5.0 (14 octobre 2026)
 
-Mic a partagé la conversation de formation d'un opérateur (ADV, rouges isolés, passages à niveau, « un vert n'est pas forcément bon »). Sauvegardée dans `fiches/METHODES_METIER_5.0.md`, avec la limite qu'elle impose à D-098 à D-100 : les zones à risque (ADV, PN, voisinage d'un invalide) n'ont pas été séparées dans les mesures, et un voisin posé y peut être faux. Pas de gros travaux avant la 5.0 (décision de Mic). Priorité : terminer la 4.9.
+L'opérateur a partagé la conversation de formation d'un opérateur (ADV, rouges isolés, passages à niveau, « un vert n'est pas forcément bon »). Sauvegardée dans `fiches/METHODES_METIER_5.0.md`, avec la limite qu'elle impose à D-098 à D-100 : les zones à risque (ADV, PN, voisinage d'un invalide) n'ont pas été séparées dans les mesures, et un voisin posé y peut être faux. Pas de gros travaux avant la 5.0 (décision de l'opérateur). Priorité : terminer la 4.9.
 
-## D-102 - Réponses de Mic du 14 octobre 2026 : B3 dans la 4.9, UX renforcée, accord sur le reste
+## D-102 - Réponses de l'opérateur du 14 octobre 2026 : B3 dans la 4.9, UX renforcée, accord sur le reste
 
-Décisions de Mic :
+Décisions de l'opérateur :
 1. **B3 (transitions du lot) entre dans la 4.9 finale** (modifie D-095 : B3 n'est plus renvoyé à la 5.0). B2 et l'apprentissage restent en 5.0. Porte du cahier § 10 : décisions inchangées au banc ; reprise, pause, arrêt, F5 inchangés. Chantier confié à une session dédiée (`claude/49-b3-transitions`, base test 12), sans changement de comportement, version distincte de l'UX.
 2. **UX** : (a) la tuile du lot du maquette retenu (« Lot », progression en %, nombre de cuts, plage premier → dernier cut, pagination) manque dans le panneau réel ; (b) « Départs des parties » doit avoir plus d'importance et de cohérence (une carte par partie, même langage visuel) ; (c) soin général : clarté, lisibilité, couleurs, thèmes clair et sombre. Confié à la session UX (`claude/ux-variantes`, cible 4.9.0.13), aucune fonction nouvelle.
-3. **Accord de Mic sur le reste** de la proposition du même jour : B1 reste en ombre dans la 4.9.0 (une bonne pose retirée, partie 18 cut 5290 ; la pose proposée n'est pas consignée) ; B1 doit consigner la pose qu'il proposerait ; relecture ciblée du moteur V5 ; recalcul de C1 et C3 sur les parties 17 et 18 ; rejeu de l'export allégé sur la partie 17.
-4. Rappel : fusion dans `main`, étiquette et publication de la 4.9.0 stable restent à demander à Mic en une ligne, avec l'état complet.
+3. **Accord de l'opérateur sur le reste** de la proposition du même jour : B1 reste en ombre dans la 4.9.0 (une bonne pose retirée, partie 18 cut 5290 ; la pose proposée n'est pas consignée) ; B1 doit consigner la pose qu'il proposerait ; relecture ciblée du moteur V5 ; recalcul de C1 et C3 sur les parties 17 et 18 ; rejeu de l'export allégé sur la partie 17.
+4. Rappel : fusion dans `main`, étiquette et publication de la 4.9.0 stable restent à demander à l'opérateur en une ligne, avec l'état complet.
 
-## D-103 - Test 13 (4.9.0.13) livrée : panneau UX validé par Mic (14 octobre 2026)
+## D-103 - Test 13 (4.9.0.13) livrée : panneau UX validé par l'opérateur (14 octobre 2026)
 
-Branche `claude/ux-variantes`, tête `ff27df0` (version 4.9.0.13 ; `background.js` : seule la chaîne de version de secours). Contenu : grande tuile du lot, cartes « Départs des parties », contrastes WCAG AA, aucun changement de comportement ; Mic a validé les captures. verify 1494 réussis, 0 échec, 2 ignorés. Paquet reconstruit par l'orchestrateur : `ariane-4.9.0-test.13.zip`, SHA-256 `a55f60bb6eb5e23424c45aa31ef4189b42b349c8e68895aee1549f5c0bfbf201` (1 336 170 octets ; celui de la session UX, `f7915e60…`, diffère car les dates des fichiers entrent dans le zip : seul `a55f60bb…` est celui livré). Retour arrière : test 12, `949afdb1…e38e1e`. Écarts avec la maquette : pas de pourcentage tant que la fin de partie est inconnue ; trois points = étapes du cut, pas de pagination. À fusionner avec B3 (`claude/49-b3-transitions`) avant la stable.
+Branche `claude/ux-variantes`, tête `ff27df0` (version 4.9.0.13 ; `background.js` : seule la chaîne de version de secours). Contenu : grande tuile du lot, cartes « Départs des parties », contrastes WCAG AA, aucun changement de comportement ; l'opérateur a validé les captures. verify 1494 réussis, 0 échec, 2 ignorés. Paquet reconstruit par l'orchestrateur : `ariane-4.9.0-test.13.zip`, SHA-256 `a55f60bb6eb5e23424c45aa31ef4189b42b349c8e68895aee1549f5c0bfbf201` (1 336 170 octets ; celui de la session UX, `f7915e60…`, diffère car les dates des fichiers entrent dans le zip : seul `a55f60bb…` est celui livré). Retour arrière : test 12, `949afdb1…e38e1e`. Écarts avec la maquette : pas de pourcentage tant que la fin de partie est inconnue ; trois points = étapes du cut, pas de pagination. À fusionner avec B3 (`claude/49-b3-transitions`) avant la stable.
 
 ## D-104 - B3 livré (14 octobre 2026)
 
-Branche `claude/49-b3-transitions` (base test 12, tête `a41a56e`, 4 commits, version inchangée, panneau et `src/engine.js` non touchés). Neuf transitions nommées (démarrage, pause, reprise, arrêt, rechargement, cut suivant, différé, fin de lot, erreur) dans un coordinateur de `background.js` qui appelle chaque action tout de suite et rend son résultat tel quel ; journal des noms en mémoire seulement, jamais exporté. 9 essais ajoutés (d'abord rouges en caractérisation, attendus jamais modifiés) ; verify : 1 501 essais, 0 échec, 2 sautés (corpus privé absent). Relecture de l'orchestrateur du diff de `background.js` (hors déplacement de « Démarrer », sans modification) : enveloppes fidèles, aucune attente ni effet ajoutés, aucun constat. **Non prouvé** : le banc complet avec corpus (poste de Mic) n'a pas été lancé ; la preuve restante est une séance terrain. Fusion prévue : test 15 = test 14 (UX) + B3, paquet séparé pour pouvoir revenir à la test 14 sans perdre l'UX. Conflit attendu sur `audit/verification.*` : à régénérer après fusion.
+Branche `claude/49-b3-transitions` (base test 12, tête `a41a56e`, 4 commits, version inchangée, panneau et `src/engine.js` non touchés). Neuf transitions nommées (démarrage, pause, reprise, arrêt, rechargement, cut suivant, différé, fin de lot, erreur) dans un coordinateur de `background.js` qui appelle chaque action tout de suite et rend son résultat tel quel ; journal des noms en mémoire seulement, jamais exporté. 9 essais ajoutés (d'abord rouges en caractérisation, attendus jamais modifiés) ; verify : 1 501 essais, 0 échec, 2 sautés (corpus privé absent). Relecture de l'orchestrateur du diff de `background.js` (hors déplacement de « Démarrer », sans modification) : enveloppes fidèles, aucune attente ni effet ajoutés, aucun constat. **Non prouvé** : le banc complet avec corpus (poste de l'opérateur) n'a pas été lancé ; la preuve restante est une séance terrain. Fusion prévue : test 15 = test 14 (UX) + B3, paquet séparé pour pouvoir revenir à la test 14 sans perdre l'UX. Conflit attendu sur `audit/verification.*` : à régénérer après fusion.
 
 ## D-105 - Tests 14 et 15 livrées (14 octobre 2026)
 
-Test 14 (4.9.0.14, `claude/ux-variantes` e996262) : correction de la tuile du lot (vert vide en « fin de partie »). Règle : fin connue de la partie, sinon M−1 lu au compteur d'ESV (même partie, source compteur) ; sinon bande animée « fin de partie inconnue », jamais de pourcentage ; le vert garde le plus loin atteint dans le lot. Paquet reconstruit par l'orchestrateur : SHA-256 `8e36e2326cefe5c8c9bc40d617b05aaf8a9ca27feca8bd7fb4a0af3ed98abf72` (retour arrière : test 13, `a55f60bb…bf201`). Cas réel de Mic (partie 23, lot du cut 1, fin factice 999999, compteur relevé une seule fois à 7591 sur 9260) repris en essai, commit 5ad0e83.
+Test 14 (4.9.0.14, `claude/ux-variantes` e996262) : correction de la tuile du lot (vert vide en « fin de partie »). Règle : fin connue de la partie, sinon M−1 lu au compteur d'ESV (même partie, source compteur) ; sinon bande animée « fin de partie inconnue », jamais de pourcentage ; le vert garde le plus loin atteint dans le lot. Paquet reconstruit par l'orchestrateur : SHA-256 `8e36e2326cefe5c8c9bc40d617b05aaf8a9ca27feca8bd7fb4a0af3ed98abf72` (retour arrière : test 13, `a55f60bb…bf201`). Cas réel de l'opérateur (partie 23, lot du cut 1, fin factice 999999, compteur relevé une seule fois à 7591 sur 9260) repris en essai, commit 5ad0e83.
 Test 15 (4.9.0.15, tête `b9652df`) : test 14 + B3 (fusion `e1b8f6d`, code de B3 inchangé), verify 1 514 réussis, 0 échec, 2 ignorés. Paquet reconstruit : SHA-256 `cdbb6fe9f7d9aa41963499fdfc49485da5a61d74dad5ae000f043f89bcc896ce` (retour arrière : test 14).
-Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle médian 3,07 s (rapide) contre 7,33 s (référence), −58 % ; part posée 75,8 % contre 74,5 % (C1 non dégradé sur trois parties) ; départ 8 599 + 661 = 9 260 ; B1 en ombre : 50 poses ajoutées à juger, 1 pose retirée (cut 2029, garde 16,9 mm) ; B1 reste en ombre.
+Partie 23 de l'opérateur (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle médian 3,07 s (rapide) contre 7,33 s (référence), −58 % ; part posée 75,8 % contre 74,5 % (C1 non dégradé sur trois parties) ; départ 8 599 + 661 = 9 260 ; B1 en ombre : 50 poses ajoutées à juger, 1 pose retirée (cut 2029, garde 16,9 mm) ; B1 reste en ombre.
 
 ## D-106 — Test 15 évalué, test 16 livrée (2026-10-15)
 
@@ -1792,11 +1792,11 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 
 - Même code (4.9.0.16), partie 25 : cycle rapide 3,12 s contre 6,00 s en référence (−48 %), C1 81,0 % contre 83,0 % ; stabilité par rail revenue à 0,80 s (353 vues au signal, 461 au repli 800 ms). Confirme D-107 : le 1,69 s de la partie 26 tenait à ESV. Fourchette durable du mode rapide : −48 % à −58 %, jusqu'à −71 % quand ESV signale proprement la fin du chargement.
 - 454 cuts sur 485 invalides traités une fois ; pause de sécurité au cut 9228 (« Lecture LiDAR instable, vue non recentrée ») : comportement voulu. Export en 10 volumes (max 15,96 Mo), complet.
-- Retour de Mic : « carré, rien à signaler ». Reste à voir sur le terrain avec la 4.9.0.17 : % des invalides, heure de Paris, essais B3 avec interventions.
+- Retour de l'opérateur : « carré, rien à signaler ». Reste à voir sur le terrain avec la 4.9.0.17 : % des invalides, heure de Paris, essais B3 avec interventions.
 
 ## D-109 — Test 17 (partie 27) et piste majeure : le signal de fin de chargement s'éteint ~10 min après le chargement de la page ESV (2026-10-15)
 
-- Test 17, partie 27 : lot 1 (cut 0 → 5430, 288 posés, 68 différés), pause de sécurité « LiDAR instable » au cut 5430, reprise, F5 en pleine validation du cut 5440 (adaptateur sans réponse, comme prévu). Mic a ensuite démarré un nouveau lot depuis le cut 535 (premier invalide restant affiché par ESV après F5) : il a revisité les 68 différés du lot 1 (66 re-différés, 2 posés) puis fini la partie ; dernier invalide (9240) validé en place. Cut 5440 posé deux fois (la validation du premier passage avait été coupée par le F5) : sans effet nuisible. CONTENU.txt en heure de Paris : conforme.
+- Test 17, partie 27 : lot 1 (cut 0 → 5430, 288 posés, 68 différés), pause de sécurité « LiDAR instable » au cut 5430, reprise, F5 en pleine validation du cut 5440 (adaptateur sans réponse, comme prévu). L'opérateur a ensuite démarré un nouveau lot depuis le cut 535 (premier invalide restant affiché par ESV après F5) : il a revisité les 68 différés du lot 1 (66 re-différés, 2 posés) puis fini la partie ; dernier invalide (9240) validé en place. Cut 5440 posé deux fois (la validation du premier passage avait été coupée par le F5) : sans effet nuisible. CONTENU.txt en heure de Paris : conforme.
 - Vitesse : sur toute la séance, rapide 2,51 s contre 5,80 s (−57 %). Lot 2, page ESV fraîche après F5 : 1,72 s (−71 %), 420 vues au signal, 0 au repli 800 ms.
 - Piste (signal-age, 5 pages ESV, tests 15 à 17) : pendant les ~10 premières minutes d'une page ESV, la plupart des vues sont lues au signal ; ensuite le signal disparaît (0 lecture au signal) et tout passe au repli 800 ms, sauf une page (1868, partie 26) qui l'a gardé. Un F5 rétablit le signal. Hypothèse : `Potree.numNodesLoading` ne revient plus à 0 au bout d'un moment. Si elle se confirme, garder le signal (ou rafraîchir la page à bon escient) vaut −70 % durable au lieu de −50 %. Chantier candidat pour la 4.9.5, à instruire hors ligne d'abord (consigner `numNodesLoading` et les conditions du signal à chaque repli).
 
@@ -1807,68 +1807,68 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - **D2, corrigé dans la 4.9.0** : fiche de départ fausse possible. Le résumé de la question « y a-t-il des invalides ? » d'ESV (`listKey` 'undefined', une ligne) devenait une fiche 0 / 1 / 1, écrite en parallèle et sans verrou : elle pouvait écraser la vraie (7 602 / 137 / 7 739). Correctif (`src/export-cache.js`) : ces résumés sont ignorés (`listKey` 'undefined' ou absent, liste de moins de 2 lignes) et les écritures des fiches sont mises en file. Essai : `tests/rc490-d2-fiche-depart.test.cjs`.
 - **Outil hors ligne** (`tools/perf-phases.cjs`) : une version stable à trois nombres (4.9.0, 4.9.5) est rangée après ses versions de test 4.9.0.N : l'état de l'observateur est dit pour les journaux de la 4.9.0 stable.
 - **D3, renvoyé à la 4.9.5** : une écriture refusée par ESV (HTTP 500) est quand même comptée comme acceptée. Identique en 4.8.6 ; jamais vu sur 924 écritures observées. Correctif proposé : dans l'enveloppe `adapter.validateAndNext` de `background.js`, attendre l'observation `write` qui suit `validateInESV` (500 ms au plus, dernier essai par `railPairId`) ; réponse non 2xx → erreur → pause « résultat incertain » ; pas d'observation → comportement actuel.
-- **B3, quatre derniers essais validés sur le terrain par Mic le 15 octobre avec la 4.9.0.17, sans export** : Arrêter puis Reprendre refusé si les rails ont bougé ; Reprendre après la fin → « Lot déjà terminé » ; lot à plage fixe jusqu'à sa fin ; erreur dans l'avis. Mic confirme aussi la reprise automatique au bon endroit après une mise en veille du PC suivie d'un F5.
-- **Exports non tenus (porte, lignes 8b et 8c) : décision de Mic du 15 octobre** : il accepte la 4.9.0 sans « Préparer pour analyse » à zéro différence ni le −40 % de taille ; les deux critères sont renvoyés à la 4.9.5.
-- Fusion dans `main`, étiquette et publication : toujours à la décision de Mic.
+- **B3, quatre derniers essais validés sur le terrain par l'opérateur le 15 octobre avec la 4.9.0.17, sans export** : Arrêter puis Reprendre refusé si les rails ont bougé ; Reprendre après la fin → « Lot déjà terminé » ; lot à plage fixe jusqu'à sa fin ; erreur dans l'avis. L'opérateur confirme aussi la reprise automatique au bon endroit après une mise en veille du PC suivie d'un F5.
+- **Exports non tenus (porte, lignes 8b et 8c) : décision de l'opérateur du 15 octobre** : il accepte la 4.9.0 sans « Préparer pour analyse » à zéro différence ni le −40 % de taille ; les deux critères sont renvoyés à la 4.9.5.
+- Fusion dans `main`, étiquette et publication : toujours à la décision de l'opérateur.
 - Correction (D-113) : 2 écritures refusées (HTTP 502) sur ~3 530, relancées par ESV et acceptées en 204 ; voir D-113.
 
 ## D-111 — 4.9.0 fusionnée dans main ; 4.9.5 test 1 livrée (2026-10-15)
 
-- Feu vert de Mic (15 octobre) : `claude/49-rc` fusionnée dans main (PR #5, 5444245) après fusion des documents de cadrage du 30/09 présents sur main (code inchangé, verify 1 560 / 0 échec). Paquet final `ariane-v4.9.0.zip`, SHA-256 341a0d0bf4957face8fa072d772ee5e2b72c3af2648c71c6e20fd7a5db75b3ac. L'étiquette `v4.9.0` n'a pas pu être poussée depuis le conteneur (403) : Mic crée l'étiquette et la publication depuis GitHub.
+- Feu vert de l'opérateur (15 octobre) : `claude/49-rc` fusionnée dans main (PR #5, 5444245) après fusion des documents de cadrage du 30/09 présents sur main (code inchangé, verify 1 560 / 0 échec). Paquet final `ariane-v4.9.0.zip`, SHA-256 341a0d0bf4957face8fa072d772ee5e2b72c3af2648c71c6e20fd7a5db75b3ac. L'étiquette `v4.9.0` n'a pas pu être poussée depuis le conteneur (403) : l'opérateur crée l'étiquette et la publication depuis GitHub.
 - 4.9.5 test 1 (branche `claude/495-test-1`, 543279d ; SHA-256 2c78f3d1bc12008b7db0c46a571d87443ec1e9a4e6de42296f6a462b67650269) : (A) relevé `diag` à chaque lecture de vue (condition manquante au repli, `numNodesLoading`, âge de la page, compteurs Potree, mémoire), décision de lecture inchangée, ≈ 0,4 % de journal en plus, outil `tools/signal-age.cjs` ; (B) D3 sans attente : écriture de validation non 2xx observée sans 2xx dans les 2 s → événement `ecriture-refusee` et pause au prochain point sûr avec message ; sans observation, comportement 4.9.0. verify 1 580 / 0 échec. Séance demandée : 30 min d'Orbite sans F5, puis un F5 et 10 min.
 
-## D-112 — Réponses de Mic à l'audit Écho ; cadrage 5.0 (15 octobre 2026)
+## D-112 — Réponses de l'opérateur à l'audit Écho ; cadrage 5.0 (15 octobre 2026)
 
-**Cadrage 5.0** : priorités de Mic = (A) poser juste plus souvent, (B) traiter seul les zones difficiles (ADV, PN, voisinage des rouges), (D) apprendre des corrections Écho sans réglage manuel. « Plusieurs sessions, onglets et parties » est **retiré** du cahier. Écho parfait (audit `fiches/AUDIT_ECHO_5.0.md`, branche `claude/echo-audit`) et l'ESV locale comme banc de preuve (`fiches/AUDIT_ESV_LOCALE.md`, branche `claude/esv-locale-audit`) sont **nécessaires en 4.9.5** pour développer la 5.0.
+**Cadrage 5.0** : priorités de l'opérateur = (A) poser juste plus souvent, (B) traiter seul les zones difficiles (ADV, PN, voisinage des rouges), (D) apprendre des corrections Écho sans réglage manuel. « Plusieurs sessions, onglets et parties » est **retiré** du cahier. Écho parfait (audit `fiches/AUDIT_ECHO_5.0.md`, branche `claude/echo-audit`) et l'ESV locale comme banc de preuve (`fiches/AUDIT_ESV_LOCALE.md`, branche `claude/esv-locale-audit`) sont **nécessaires en 4.9.5** pour développer la 5.0.
 
-**Réponses de Mic aux demandes de l'audit Écho (§ 4.4)** :
+**Réponses de l'opérateur aux demandes de l'audit Écho (§ 4.4)** :
 1. Validation en Écho : **Maj+Espace = valider** (sa commande habituelle) ; **Ctrl+Entrée = valider et passer au suivant** ; **Ctrl+flèche avant/arrière = passer au cut suivant/précédent sans valider**. À modéliser dans la maquette ESV locale (relevé à confirmer sur le vrai ESV : les gestionnaires clavier n'ont pas été relevés).
-2. Mic ne corrige **que quand Écho est actif** (jamais avant le démarrage, ni pendant une pause, ni après un F5 sans reprise).
+2. L'opérateur ne corrige **que quand Écho est actif** (jamais avant le démarrage, ni pendant une pause, ni après un F5 sans reprise).
 3. **Oui** à la reprise automatique d'Écho après un F5 (Écho n'envoie rien à ESV).
 4. **Oui** à un signalement de la raison de la correction, **sur l'interface d'Écho** (panneau Ariane), pas dans ESV.
 5. **Oui** à l'export Écho en volumes zip de 17 Mo avec CONTENU.txt, comme Orbite.
 6. **Oui** à la lecture passive de la liste des coupes à chaque visite (±10 lignes, rien d'écrit).
 7. ESV reste en anglais ; un seul onglet ESV pendant Écho.
 8. **Oui** à l'instantané du nuage après une grosse correction.
-9. Question de Mic : **faire tourner Orbite en même temps qu'une session Écho** (candidat 5.0 ; exige des états séparés par onglet ; en contradiction partielle avec 7 et avec le retrait des multi-onglets : à trancher dans le cahier 5.0).
-10. Demande de Mic : **améliorer Écho** (les quatre étapes 4.9.5 de l'audit, puis les chantiers 5.0 : contexte métier, poses comparées, raison, manifeste de corpus).
+9. Question de l'opérateur : **faire tourner Orbite en même temps qu'une session Écho** (candidat 5.0 ; exige des états séparés par onglet ; en contradiction partielle avec 7 et avec le retrait des multi-onglets : à trancher dans le cahier 5.0).
+10. Demande de l'opérateur : **améliorer Écho** (les quatre étapes 4.9.5 de l'audit, puis les chantiers 5.0 : contexte métier, poses comparées, raison, manifeste de corpus).
 
 ## D-113 — Première récolte d'idées pour la 5.0 ; correction de D-110 sur les écritures refusées (15 octobre 2026)
 
 - `fiches/IDEES_5.0.md` : 17 idées (causes mesurées des 399 différés des 4 lots 4.9 : flanc absent 29 %, pente 18 %, garde de paire 20 %, paire/ambiguïté 10 % ; angles morts d'ESV : événements jQuery non écoutés, colonnes de liste jetées, appariement cut ↔ ligne établi à 0 mm, SeenByOperator/TreatedByOperator). Deux angles de recherche sur six menés ; les quatre autres arrêtés pour le budget de jetons, relançables.
 - **Correction de D-110** : deux écritures de validation refusées (HTTP 502) ont bien eu lieu sur le terrain (partie 25, test 16, cuts 760 et 770) ; ESV a relancé seul et obtenu 204 ; Ariane a accepté les deux sans le voir. Compte juste : 2 refus sur 3 530 écritures observées. Le correctif D3 de la 4.9.5.1 (fenêtre 2 s) tolère cette relance.
-- Trois questions posées à Mic (relevé Success*/RailSpacing/RailType ; trace laissée dans ESV ; export d'un relevé de liste).
+- Trois questions posées à l'opérateur (relevé Success*/RailSpacing/RailType ; trace laissée dans ESV ; export d'un relevé de liste).
 
 ## D-114 — Idées 5.0 validées ; trace dans ESV ; premier export Écho 4.9.5 ; recherche relancée (15 octobre 2026)
 
-- Mic valide toutes les idées de `fiches/IDEES_5.0.md` (D-113). Les quatre angles de recherche arrêtés (données et apprentissage ; métier et opérateur ; fiabilité, plateforme et banc ; regard extérieur) sont relancés à sa demande ; la synthèse sera fusionnée dans la fiche.
-- **Trace dans ESV (exigence de Mic : « exactement la même trace qu'un traitement manuel par un humain »).** Ariane n'écrit rien elle-même sur le serveur : pour valider, elle envoie à la page le raccourci Ctrl+Entrée (`src/adapter-page.js:780`) et c'est ESV qui fait son PUT, comme pour un humain ; pour un cut différé, elle s'y rend puis repart, et c'est ESV qui pose `SeenByOperator`, comme pour un humain qui regarde et passe. Aucune marque distincte d'Ariane : conforme. Seules différences observables : le rythme (régulier, un cut toutes les 3 à 4 s) et le raccourci (Mic valide par Maj+Espace) ; à vérifier au relevé (point suivant) que le corps du PUT est le même pour les deux raccourcis.
-- Réponses de Mic : 1) oui au relevé de 2 min des colonnes Success*/RailSpacing/RailType ; 2) aucune marque distincte d'Ariane ; 3) « relevé de liste » à expliquer (lire la liste ESV après la correction manuelle d'une partie et exporter l'écart avec les poses d'Ariane : vérité terrain sans capture).
+- L'opérateur valide toutes les idées de `fiches/IDEES_5.0.md` (D-113). Les quatre angles de recherche arrêtés (données et apprentissage ; métier et opérateur ; fiabilité, plateforme et banc ; regard extérieur) sont relancés à sa demande ; la synthèse sera fusionnée dans la fiche.
+- **Trace dans ESV (exigence de l'opérateur : « exactement la même trace qu'un traitement manuel par un humain »).** Ariane n'écrit rien elle-même sur le serveur : pour valider, elle envoie à la page le raccourci Ctrl+Entrée (`src/adapter-page.js:780`) et c'est ESV qui fait son PUT, comme pour un humain ; pour un cut différé, elle s'y rend puis repart, et c'est ESV qui pose `SeenByOperator`, comme pour un humain qui regarde et passe. Aucune marque distincte d'Ariane : conforme. Seules différences observables : le rythme (régulier, un cut toutes les 3 à 4 s) et le raccourci (l'opérateur valide par Maj+Espace) ; à vérifier au relevé (point suivant) que le corps du PUT est le même pour les deux raccourcis.
+- Réponses de l'opérateur : 1) oui au relevé de 2 min des colonnes Success*/RailSpacing/RailType ; 2) aucune marque distincte d'Ariane ; 3) « relevé de liste » à expliquer (lire la liste ESV après la correction manuelle d'une partie et exporter l'écart avec les poses d'Ariane : vérité terrain sans capture).
 - **Premier export Écho 4.9.5.1** (5,5 min, 37 visites, 31 validations, 6 passages sans décision) : 26 paires utilisables sur 31 ; 12 rails perdus « référence validée non observée », 8 pour nuage insuffisant ; aucune touche Ctrl utilisée (validation par Maj+Espace uniquement, caméra par W/A/D), donc Ctrl+Entrée et Ctrl+flèche restent à observer ; 36 captures coupées par un changement de clip, 28 par la limite de ressources, 27 sautées après déplacement du rail ; 17 Mo pour 5,5 min.
 - Fiches de départ du jour (D-092), avant Orbite : partie 24 : 9 275 cuts, 514 invalides ; partie 26 : 9 184, 370 ; partie 25 : 9 261, 485 ; partie 27 : 9 260, 523.
 
 ## D-115 — Seconde récolte d'idées 5.0 : six angles, trois juges, 12 idées retenues (15 octobre 2026)
 
-- Recherche relancée à la demande de Mic et menée à terme (six chercheurs, trois juges, synthèse) ; `fiches/IDEES_5.0.md` remplacé par la note finale (12 idées regroupées sur 56, 19 angles morts d'ESV, 23 idées écartées, 9 questions, socle 4.9.5). Le tableau des différés de la première récolte est gardé en annexe.
+- Recherche relancée à la demande de l'opérateur et menée à terme (six chercheurs, trois juges, synthèse) ; `fiches/IDEES_5.0.md` remplacé par la note finale (12 idées regroupées sur 56, 19 angles morts d'ESV, 23 idées écartées, 9 questions, socle 4.9.5). Le tableau des différés de la première récolte est gardé en annexe.
 - Trois constats transversaux : (1) la liste des coupes d'ESV est une archive exacte des poses (PUT = pose d'Ariane + T, dispersion 0,00 mm ; ligne N = pose de départ du cut N à 0,0 mm sur 100 % des cuts) ; (2) le moteur refuse surtout pour des raisons de modèle (flanc 29 %, pente 17 %, garde de paire 19 %), aucune des trois portes jugée contre la pose humaine depuis D-035/D-044 ; (3) `AUDIT_SUPER_CERVEAU` § 1 décrit l'inverse du code : le delta publié est la graine du gabarit, l'intersection reste dans `metrics.surfaceIntersection`. À corriger.
-- Idées de tête : relire la liste après la relecture de Mic (vérité terrain à 100 % sans Écho) ; convention refusée (410 rails posés bruts, biais ~9 mm) et garde de paire (89 différés pour 2 cuts d'origine) ; graine contre intersection ; rail « dessus seul » ; porte de pente ; T calibrée sur la pose de départ et provenance des appuis (77 à 87 % des appuis B1 sont des verts d'extraction) ; ombre GCV1 à chaque visite Écho ; cohérence voisins ; seconde passe utile ; famine de flanc (LOD ou nuage) ; bus jQuery d'ESV ; carte de la partie. Coût total ≈ 35 jours dont ~10 de mesure hors ligne.
+- Idées de tête : relire la liste après la relecture de l'opérateur (vérité terrain à 100 % sans Écho) ; convention refusée (410 rails posés bruts, biais ~9 mm) et garde de paire (89 différés pour 2 cuts d'origine) ; graine contre intersection ; rail « dessus seul » ; porte de pente ; T calibrée sur la pose de départ et provenance des appuis (77 à 87 % des appuis B1 sont des verts d'extraction) ; ombre GCV1 à chaque visite Écho ; cohérence voisins ; seconde passe utile ; famine de flanc (LOD ou nuage) ; bus jQuery d'ESV ; carte de la partie. Coût total ≈ 35 jours dont ~10 de mesure hors ligne.
 - Premier outil à écrire : la jointure Écho ↔ Orbite par cut (AUDIT_ECHO C-03) ; une dizaine de mesures en dépendent.
 - Questions déjà répondues : trace dans ESV (aucune marque distincte, D-114) ; relevé console (oui). Sept questions restent ouvertes (bords monde au-delà de D-096 ; D-044 et ré-épinglage ; cuts ADV/PN connus ; visite de verts ; Écho sur une partie 24 à 27 ; reprise automatique bornée ; protocole de relecture).
 
-## D-116 — Cadrage de Mic sur la seconde récolte ; la 4.9.0.20 devient la base d'Écho (15 octobre 2026, soir)
+## D-116 — Cadrage de l'opérateur sur la seconde récolte ; la 4.9.0.20 devient la base d'Écho (15 octobre 2026, soir)
 
-- Mic valide tout, avec une règle : **chaque élément est traité avec le même niveau d'importance**, pas d'ordre de priorité entre les 12 idées.
+- L'opérateur valide tout, avec une règle : **chaque élément est traité avec le même niveau d'importance**, pas d'ordre de priorité entre les 12 idées.
 - **Méthodes métier** (`fiches/METHODES_METIER_5.0.md`) : importance n° 2, voire n° 1, du cahier 5.0.
-- **Écho** : la capture parfaite et l'export alignés sont dans la 4.9.5 (outil de collecte) ; l'apprentissage à partir de ces corrections est dans la 5.0. Objectif rappelé par Mic : « arriver avec une 5.0 grave boostée ».
+- **Écho** : la capture parfaite et l'export alignés sont dans la 4.9.5 (outil de collecte) ; l'apprentissage à partir de ces corrections est dans la 5.0. Objectif rappelé par l'opérateur : « arriver avec une 5.0 grave boostée ».
 - **Super cerveau et méga cerveau en parallèle** : combler les lacunes du cerveau actuel (portes trop sévères, idées 2 à 5) tout en concevant GCV2.
-- **Base Écho : la branche `claude/49-echo-corrections` (4.9.0.18 → 4.9.0.20)**, conçue par la session de l'audit Écho à partir de la 4.9.0.17 : toutes les validations reconnues (Maj+Espace, Ctrl+Entrée, Entrée, bouton), dernière référence, pose de départ avant le premier geste, reprise automatique après F5, écritures ESV jointes au cut par numéro de ligne, export Écho en volumes zip, export Orbite sans données Écho (KI-068) ; vérifiée sur un export de Mic (partie 24, 103 validations = 103 confirmées). On s'appuie dessus, on ne redéveloppe pas. Elle ne contient ni D1/D2 (RC 4.9.0) ni D3 et le diagnostic du signal (4.9.5.1) : essai de fusion local avec `claude/495-test-1` : seuls les libellés de version, le CHANGELOG, l'audit et les tests de version sont en conflit. Proposition : 4.9.5 test 2 = 4.9.0.20 + 4.9.5.1.
+- **Base Écho : la branche `claude/49-echo-corrections` (4.9.0.18 → 4.9.0.20)**, conçue par la session de l'audit Écho à partir de la 4.9.0.17 : toutes les validations reconnues (Maj+Espace, Ctrl+Entrée, Entrée, bouton), dernière référence, pose de départ avant le premier geste, reprise automatique après F5, écritures ESV jointes au cut par numéro de ligne, export Écho en volumes zip, export Orbite sans données Écho (KI-068) ; vérifiée sur un export de l'opérateur (partie 24, 103 validations = 103 confirmées). On s'appuie dessus, on ne redéveloppe pas. Elle ne contient ni D1/D2 (RC 4.9.0) ni D3 et le diagnostic du signal (4.9.5.1) : essai de fusion local avec `claude/495-test-1` : seuls les libellés de version, le CHANGELOG, l'audit et les tests de version sont en conflit. Proposition : 4.9.5 test 2 = 4.9.0.20 + 4.9.5.1.
 - Conséquence : l'export Écho 4.9.5.1 reçu aujourd'hui (D-114) a été fait sans ces corrections ; les 12 rails « référence validée non observée » et les touches non reconnues sont déjà traités par la .20. Les lots Écho à venir doivent être faits avec la .20 (ou la 4.9.5 test 2).
 
-## D-117 — Cahier des charges 5.0 (v1) et organisation du développement soumis à Mic ; 4.9.5 test 2 lancée (15 octobre 2026, soir)
+## D-117 — Cahier des charges 5.0 (v1) et organisation du développement soumis à l'opérateur ; 4.9.5 test 2 lancée (15 octobre 2026, soir)
 
-- « Go » de Mic pour la **4.9.5 test 2** = 4.9.0.20 (corrections Écho) + 4.9.5.1 (D3, diagnostic du signal) ; confiée à un agent de niveau rapide (worktree, branche `claude/495-test-2`, verify, paquet, consigne).
-- `BANANE_5.0_CAHIER.md` (v1, ~3 900 mots) : objectifs A/B/D mesurables ; règles non négociables de la 4.9 + trace identique à un humain, Écho passif, trois états (hors ligne → ombre → actif, 0 mauvaise pose ajoutée), manifeste DEV/RÉSERVÉ ; socle 4.9.5 (S1 à S8) avec porte ; cinq lots de chantiers de même importance (M méthodes métier, P poser juste, E Écho et données, G méga cerveau, F fiabilité), chacun avec porte de sortie et coût ; portes de version ; 9 questions ; plan en 9 phases (≈ 95 jours d'agent). Statut : projet, signé quand Mic écrit « signé ».
-- `fiches/ORGANISATION_DEV_5.0.md` : niveaux de modèle par coût (éclair 1, rapide 20, fort 40, le plus fort 100), effort par tâche, rôles (orchestrateur, développeur, relecteur, mesureur, juges), table niveau ↔ tâche du cahier, lecture de l'outil « advisor » de l'API (exécuteur rapide + conseiller fort aux trois moments : brief, blocage, fin ; pas disponible dans Claude Code, mais c'est notre façon de travailler rendue systématique), dix règles d'économie de jetons, sept règles pour la fenêtre de 5 h (lourd en début de fenêtre, un agent lourd à la fois, suivi écrit, reprise automatique à la réinitialisation, sessions distantes, 20 % réservés à l'analyse des exports), cycle type d'un chantier, ce que Mic décide (proposition : 60 % de fenêtre sans demander).
+- « Go » de l'opérateur pour la **4.9.5 test 2** = 4.9.0.20 (corrections Écho) + 4.9.5.1 (D3, diagnostic du signal) ; confiée à un agent de niveau rapide (worktree, branche `claude/495-test-2`, verify, paquet, consigne).
+- `BANANE_5.0_CAHIER.md` (v1, ~3 900 mots) : objectifs A/B/D mesurables ; règles non négociables de la 4.9 + trace identique à un humain, Écho passif, trois états (hors ligne → ombre → actif, 0 mauvaise pose ajoutée), manifeste DEV/RÉSERVÉ ; socle 4.9.5 (S1 à S8) avec porte ; cinq lots de chantiers de même importance (M méthodes métier, P poser juste, E Écho et données, G méga cerveau, F fiabilité), chacun avec porte de sortie et coût ; portes de version ; 9 questions ; plan en 9 phases (≈ 95 jours d'agent). Statut : projet, signé quand l'opérateur écrit « signé ».
+- `fiches/ORGANISATION_DEV_5.0.md` : niveaux de modèle par coût (éclair 1, rapide 20, fort 40, le plus fort 100), effort par tâche, rôles (orchestrateur, développeur, relecteur, mesureur, juges), table niveau ↔ tâche du cahier, lecture de l'outil « advisor » de l'API (exécuteur rapide + conseiller fort aux trois moments : brief, blocage, fin ; pas disponible dans Claude Code, mais c'est notre façon de travailler rendue systématique), dix règles d'économie de jetons, sept règles pour la fenêtre de 5 h (lourd en début de fenêtre, un agent lourd à la fois, suivi écrit, reprise automatique à la réinitialisation, sessions distantes, 20 % réservés à l'analyse des exports), cycle type d'un chantier, ce que l'opérateur décide (proposition : 60 % de fenêtre sans demander).
 
 ## D-118 — 4.9.5 test 2 livrée (15 octobre 2026, soir)
 
@@ -1876,11 +1876,11 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 - Paquet `ariane-4.9.5-test.2.zip`, 1 522 686 octets, SHA-256 `65288703cc9fe0d07a3568fb97a750449b24e8c67c4d54bd78e7a8a14904f38a`, un seul manifeste à la racine (4.9.5.2 / « 4.9.5 test 2 »), consigne `consignes/seance-terrain-4.9.5-test-2-2026-10-15.md` incluse. Fait par un agent de niveau rapide (≈ 112 000 jetons, 13 min) : premier chantier mené selon `fiches/ORGANISATION_DEV_5.0.md`.
 - Hygiène à traiter en S8 : des fichiers hérités des branches d'origine (`consignes/demarrage-session-49.md`, un passage du CHANGELOG) citent un nom de modèle ; à retirer.
 
-## D-119 — Cahier 5.0 signé par Mic ; plan détaillé ; développement autonome lancé (15 octobre 2026, soir)
+## D-119 — Cahier 5.0 signé par l'opérateur ; plan détaillé ; développement autonome lancé (15 octobre 2026, soir)
 
-- Mic : « Signé ». `BANANE_5.0_CAHIER.md` v1 est le cahier de référence de la 5.0 ; les décisions ultérieures le complètent dans ce fichier sans le réécrire. Les neuf questions du § 7 restent ouvertes ; l'orchestrateur les a reposées avec une réponse proposée pour chacune.
+- L'opérateur : « Signé ». `BANANE_5.0_CAHIER.md` v1 est le cahier de référence de la 5.0 ; les décisions ultérieures le complètent dans ce fichier sans le réécrire. Les neuf questions du § 7 restent ouvertes ; l'orchestrateur les a reposées avec une réponse proposée pour chacune.
 - `fiches/PLAN_5.0.md` : tableau de bord des chantiers (branche, niveau et effort, entrées, livrables, porte, jetons estimés, état) et ordre de lancement en huit vagues ; budget estimé ≈ 17 M de jetons au niveau rapide + 2,5 M de relectures fortes, lissé sur six à huit semaines de terrain.
-- Mic autorise le lancement autonome « selon les articles » : l'orchestrateur applique `fiches/ORGANISATION_DEV_5.0.md` (niveaux, un agent lourd à la fois, 60 % d'une fenêtre sans demander, reprise programmée après la limite). Vague V0 lancée ce soir : S3 (jointure Écho ↔ Orbite, niveau rapide) et S8 (documents, niveau éclair).
+- L'opérateur autorise le lancement autonome « selon les articles » : l'orchestrateur applique `fiches/ORGANISATION_DEV_5.0.md` (niveaux, un agent lourd à la fois, 60 % d'une fenêtre sans demander, reprise programmée après la limite). Vague V0 lancée ce soir : S3 (jointure Écho ↔ Orbite, niveau rapide) et S8 (documents, niveau éclair).
 
 ## D-120 — S8 livré ; paquet 4.9.5 test 2 reconstruit (consigne) (15 octobre 2026, nuit)
 
@@ -1891,32 +1891,32 @@ Partie 23 de Mic (test 13, 12:01 à 12:48 UTC, arrêtée par lui) : cycle média
 ## D-121 — S3 livré : jointure Écho ↔ Orbite ; première mesure des faux verts (15 octobre 2026, nuit)
 
 - `claude/50-s3-jointure` (5aa2ccb) : `tools/jointure-echo-orbite.cjs`, essai sur fixture synthétique, `fiches/JOINTURE_ECHO_ORBITE.md`. verify 1 613 réussis, 0 échec, 2 ignorés ; rien sous `src/`. Niveau rapide, ≈ 196 000 jetons, 21 min. Écart au prototype `cmp.cjs` : identique sur les différés, +1 à +4 cuts sur les posés et hors journal (l'outil garde la dernière validation quand une visite sans validation suit, le prototype les perdait).
-- **Partie 17 (Écho du 14 octobre joint au lot Orbite)** : 266 des 268 cuts du journal joints. Cuts posés par Ariane avec référence humaine : 192 ; écart 3D à la pose de Mic : médiane 5,0 mm, P90 11,1, max 20,0 ; **47 cuts corrigés de plus de 10 mm (24 %)**, 132 de plus de 5 mm ; la correction est surtout verticale (médiane 3,6 mm vertical, 1,1 latéral), ce qui rejoint l'idée 2 (convention refusée, biais vertical ~9 mm). Différés : 35, médiane 43 mm (pose de départ = gabarit). **Cuts visités par Mic hors journal d'Ariane** (verts d'extraction et autres) : 372 avec référence, médiane 5,3 mm, **126 corrigés de plus de 10 mm (34 %)** : première mesure du « un vert n'est pas forcément juste ».
+- **Partie 17 (Écho du 14 octobre joint au lot Orbite)** : 266 des 268 cuts du journal joints. Cuts posés par Ariane avec référence humaine : 192 ; écart 3D à la pose de l'opérateur : médiane 5,0 mm, P90 11,1, max 20,0 ; **47 cuts corrigés de plus de 10 mm (24 %)**, 132 de plus de 5 mm ; la correction est surtout verticale (médiane 3,6 mm vertical, 1,1 latéral), ce qui rejoint l'idée 2 (convention refusée, biais vertical ~9 mm). Différés : 35, médiane 43 mm (pose de départ = gabarit). **Cuts visités par l'opérateur hors journal d'Ariane** (verts d'extraction et autres) : 372 avec référence, médiane 5,3 mm, **126 corrigés de plus de 10 mm (34 %)** : première mesure du « un vert n'est pas forcément juste ».
 - Partie 24 (Écho de 5 min) : 10 cuts joints, effectifs trop faibles.
 - Constat utile : l'Écho et le journal n'ont pas la même origine de scène, translation constante estimée par l'outil ; résidu 0,0 mm sur les deux parties.
 - Manques pour P0 (à prévoir dans S6 ou dans le rejeu) : pas de grandeur « intersection » dans le journal (seulement `uSeed`, `uMedian`, `zMedian`), convention réduite à un booléen dans la table (le journal a `convention.dzMm`), `slopeLimited` booléen sans pente brute. P0 (a) et (c) passeront par le rejeu de `Candidate.propose` sur le corpus GCV1, pas par le journal. Échos 18 et 20 à joindre à leur tour.
 
-## D-122 — Réponses de Mic aux neuf questions du cahier 5.0 (15 octobre 2026, nuit)
+## D-122 — Réponses de l'opérateur aux neuf questions du cahier 5.0 (15 octobre 2026, nuit)
 
-1. **Oui** : Ariane garde localement, par partie, les bords qu'elle a écrits et exporte un instantané compact de la liste (dans les zips de Mic seulement). Lève la réserve de D-096 pour ce seul usage. Débloque E1 étape 2, M2, M4 (2).
+1. **Oui** : Ariane garde localement, par partie, les bords qu'elle a écrits et exporte un instantané compact de la liste (dans les zips de l'opérateur seulement). Lève la réserve de D-096 pour ce seul usage. Débloque E1 étape 2, M2, M4 (2).
 2. **Oui** (« top ») : D-044 et le ré-épinglage du moteur de géométrie peuvent être touchés si les mesures P0 le justifient, avec rejeu des quatre lots. Débloque P1, P2.
-3. **Oui** aux numéros de cuts d'un ADV et d'un PN connus : à recevoir de Mic (partie dont l'export est disponible).
+3. **Oui** aux numéros de cuts d'un ADV et d'un PN connus : à recevoir de l'opérateur (partie dont l'export est disponible).
 4. **Oui** : Ariane peut visiter des cuts verts en lecture seule, autour d'un rouge, jamais en Écho (M5).
-5. **Oui** à un Écho sur une partie 24 à 27 : Mic rappelle qu'il existe déjà (Écho de la partie 24 fait avec les tests 19/20, 124 visites, 103 validations, reçu par la session de l'audit Écho). À rapatrier dans cette session (Mic renvoie les volumes) pour juger les 241 décisions hypothétiques de B1 (S3 joint déjà la partie 24 : 10 cuts seulement avec l'Écho de 5 min).
+5. **Oui** à un Écho sur une partie 24 à 27 : l'opérateur rappelle qu'il existe déjà (Écho de la partie 24 fait avec les tests 19/20, 124 visites, 103 validations, reçu par la session de l'audit Écho). À rapatrier dans cette session (l'opérateur renvoie les volumes) pour juger les 241 décisions hypothétiques de B1 (S3 joint déjà la partie 24 : 10 cuts seulement avec l'Écho de 5 min).
 6. **Oui** à la reprise automatique bornée (F3) : liste blanche, trois par lot, visible dans le panneau. Modifie D-058.
-7. **Oui** : Mic relit tous les cuts posés par Ariane ; « inchangé » vaut donc « confirmé » dans E1.
-8. Orbite et Écho en même temps : Mic demande pourquoi « non en 5.0 ». Réponse de l'orchestrateur : dans un même profil Chrome, Ariane a un seul état et un seul observateur ; Orbite envoie des commandes qu'Écho prendrait pour des gestes humains, et D-112 point 7 impose un seul onglet pendant Écho ; les séparer exige des états par onglet, c'est le multi-onglets retiré. **Mais c'est possible dès aujourd'hui sans développement** avec deux profils Chrome (ou Chrome et Edge) : chaque profil a sa propre Ariane, son état, ses exports ; Orbite dans l'un, Écho dans l'autre, sur deux parties différentes. À vérifier une fois au banc (aucune interférence côté serveur attendue : parties distinctes). Reste hors 5.0 dans un même profil.
+7. **Oui** : l'opérateur relit tous les cuts posés par Ariane ; « inchangé » vaut donc « confirmé » dans E1.
+8. Orbite et Écho en même temps : l'opérateur demande pourquoi « non en 5.0 ». Réponse de l'orchestrateur : dans un même profil Chrome, Ariane a un seul état et un seul observateur ; Orbite envoie des commandes qu'Écho prendrait pour des gestes humains, et D-112 point 7 impose un seul onglet pendant Écho ; les séparer exige des états par onglet, c'est le multi-onglets retiré. **Mais c'est possible dès aujourd'hui sans développement** avec deux profils Chrome (ou Chrome et Edge) : chaque profil a sa propre Ariane, son état, ses exports ; Orbite dans l'un, Écho dans l'autre, sur deux parties différentes. À vérifier une fois au banc (aucune interférence côté serveur attendue : parties distinctes). Reste hors 5.0 dans un même profil.
 9. **Marges ADV : 20 cuts** avant la pointe d'aiguille et après la fin de l'appareil (M3).
 - Conséquence sur le plan : les vagues V4 et V5 n'attendent plus que les mesures ; seuls les numéros de cuts ADV/PN (Q3) et les volumes de l'Écho partie 24 (Q5) restent à recevoir.
 
 ## D-123 — Chaque vague testée sur un second projet ESV (15 octobre 2026, nuit)
 
-Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également. » Règle ajoutée au plan : toute vague (outils, relevés, poses) est rejouée sur un **second projet ESV** avant d'être tenue pour acquise. Tous les exports disponibles à ce jour (parties 7 à 27, Échos 17, 20, 24) viennent d'un même projet ; les résultats de la jointure (D-121) valent donc pour ce projet seul. Il faut de Mic : un lot Orbite (4.9.5 test 2) et un Écho sur une partie d'un autre projet, avec le relevé des cuts ADV/PN s'il y en a.
+Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet également. » Règle ajoutée au plan : toute vague (outils, relevés, poses) est rejouée sur un **second projet ESV** avant d'être tenue pour acquise. Tous les exports disponibles à ce jour (parties 7 à 27, Échos 17, 20, 24) viennent d'un même projet ; les résultats de la jointure (D-121) valent donc pour ce projet seul. Il faut de l'opérateur : un lot Orbite (4.9.5 test 2) et un Écho sur une partie d'un autre projet, avec le relevé des cuts ADV/PN s'il y en a.
 
-## D-124 — Mode autonome pendant l'absence de Mic ; base 5.0 ; vague V1 lancée (15 octobre 2026, nuit)
+## D-124 — Mode autonome pendant l'absence de l'opérateur ; base 5.0 ; vague V1 lancée (15 octobre 2026, nuit)
 
-- Mic : « avance sur tous les projets que tu peux avancer et relance automatiquement une session chaque fois après la limite de 5 h ; programme la prochaine dans 1 h 35 et ainsi de suite ». Protocole écrit dans `fiches/REPRISE_AUTONOME.md` (réveil suivant programmé en premier, recueil, relance, lancement, 60 % de fenêtre, compte rendu, conditions d'arrêt). Premier réveil : 23 h 14 UTC.
-- Session orchestratrice passée au niveau fort (modèle changé par Mic) ; règles de `fiches/ORGANISATION_DEV_5.0.md` inchangées.
+- L'opérateur : « avance sur tous les projets que tu peux avancer et relance automatiquement une session chaque fois après la limite de 5 h ; programme la prochaine dans 1 h 35 et ainsi de suite ». Protocole écrit dans `fiches/REPRISE_AUTONOME.md` (réveil suivant programmé en premier, recueil, relance, lancement, 60 % de fenêtre, compte rendu, conditions d'arrêt). Premier réveil : 23 h 14 UTC.
+- Session orchestratrice passée au niveau fort (modèle changé par l'opérateur) ; règles de `fiches/ORGANISATION_DEV_5.0.md` inchangées.
 - Branche `claude/50-base` = 4.9.5 test 2 + S3 + S8 (essais ciblés verts, moteur inchangé) : base de tous les chantiers 5.0.
 - Vague V1 lancée : S6+S7 (relevés en lecture seule et repli `phase-timing`, → 4.9.5 test 3) et E1 (instantané de liste, `diff-liste`, puis mémoire locale des bords, Q1 = oui).
 
@@ -1924,71 +1924,71 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 - `claude/50-e1-liste` (6323954), intégré à `claude/50-base` (17d7579) : instantané compact de la liste à chaque chargement complet (326 Ko brut, 106 Ko zippé pour 9 000 lignes) exporté dans les volumes Orbite et Écho ; `tools/diff-liste.cjs` (deux instantanés, ou instantané contre les écritures d'un journal) ; `src/liste-memoire.js` : mémoire par partie des bords écrits par Ariane (≈ 100 octets par cut), événement `ecart-liste` et compteur « corrections constatées » au démarrage d'une séance sur une partie connue (Q1 = oui). verify 1 623 réussis, 0 échec. Niveau rapide, ≈ 170 000 jetons, 10 min.
 - Rejeu sur un journal réel (test 17) : 418 validations exploitables lues ; décalages injectés retrouvés exactement. Pas encore d'instantané réel : il en faudra un au terrain.
-- Protocole pour Mic (dans `fiches/E1_LISTE.md`) : relire la partie, F5, démarrer une séance Ariane sur la partie, exporter. Limites : la mémoire ne voit que les écritures d'un lot en cours (pas la pause ni Écho) ; un autre opérateur ou une ré-extraction change aussi des lignes.
+- Protocole pour l'opérateur (dans `fiches/E1_LISTE.md`) : relire la partie, F5, démarrer une séance Ariane sur la partie, exporter. Limites : la mémoire ne voit que les écritures d'un lot en cours (pas la pause ni Écho) ; un autre opérateur ou une ré-extraction change aussi des lignes.
 - Chantier léger suivant lancé : M6 outil (`coherence-voisins.cjs`, liste « à relire »).
 
 ## D-126 — M6 outil livré : la liste « à relire » n'atteint pas la cible ; le calage de convention refusé est le meilleur indice (15 octobre 2026, nuit)
 
 - `claude/50-m6-relire` (9ed71cf), intégré à `claude/50-base` : `tools/coherence-voisins.cjs`, essai, `fiches/M6_A_RELIRE.md`. verify 1 631 réussis, 0 échec. Retrouve la mesure de l'idée 8 sur le test 15 (latéral 1,8/4,4/12,2 mm ; vertical 3,0/9,5/34,2 ; zone de 12 cuts). Ajout utile : les voisins d'un autre cadre (après F5) sont écartés, sinon 934 mm d'écart fictif.
-- **Jugé sur la vérité terrain (partie 17, 47 poses corrigées de plus de 10 mm par Mic)** : à 5 % des cuts posés, le score n'en retient que 10,6 % ; il faut 30 % des cuts pour en retenir 60 % (AUC 0,71). **Porte du cahier (≥ 60 % dans ≤ 5 %) non atteinte.** Causes : corrections de Mic petites (médiane 5 mm) et surtout verticales ; les voisins d'Ariane portent le même biais vertical ; la moitié des cuts posés n'a pas de voisins posés à ±3.
-- **Résultat le plus utile** : quand le calage de convention est refusé, **38 %** des cuts posés sont corrigés de plus de 10 mm par Mic, contre **12 %** quand il est appliqué (meilleur terme du score, AUC 0,70). Cela confirme l'idée 2 : le chantier P0(b)/P1 (convention refusée, biais ~9 mm) est le premier levier de justesse.
+- **Jugé sur la vérité terrain (partie 17, 47 poses corrigées de plus de 10 mm par l'opérateur)** : à 5 % des cuts posés, le score n'en retient que 10,6 % ; il faut 30 % des cuts pour en retenir 60 % (AUC 0,71). **Porte du cahier (≥ 60 % dans ≤ 5 %) non atteinte.** Causes : corrections de l'opérateur petites (médiane 5 mm) et surtout verticales ; les voisins d'Ariane portent le même biais vertical ; la moitié des cuts posés n'a pas de voisins posés à ±3.
+- **Résultat le plus utile** : quand le calage de convention est refusé, **38 %** des cuts posés sont corrigés de plus de 10 mm par l'opérateur, contre **12 %** quand il est appliqué (meilleur terme du score, AUC 0,70). Cela confirme l'idée 2 : le chantier P0(b)/P1 (convention refusée, biais ~9 mm) est le premier levier de justesse.
 - Décision : le panneau « à relire » (M6 étape 2) est suspendu jusqu'à ce que P1 et E2 aient changé la donne ; P0(b) avance en tête de la vague V2.
 
 ## D-127 — 4.9.5 test 3 livrée (S6 relevés, S7 export allégé, logo) et intégrée à la base 5.0 (15 octobre 2026, nuit)
 
-- `claude/495-test-3` (730ac7b), version 4.9.5.3. **S6** : 12 relevés en lecture seule, chacun derrière un réglage actif par défaut (ressources Potree, `flushPct` à chaque cut, profondeur et budget de capture, noms des champs de la liste, compteur bloqué, avis `fetch-rails`, empreinte du contrat ESV à « Connecter », écouteurs jQuery en ombre, T de départ, revisite d'un différé, audit serveur, en-tête machine). **S7** : jalons `phase-timing` repliés par visite à l'export du panneau ; journal réel −35,7 % (gzip −46 %), cible −40 % presque atteinte ; perf-v3 et perf-phases donnent les mêmes chiffres sur l'ancien et le replié. **Logo** « La voie » (choix de Mic, commit a426771 d'une autre session) déclaré dans le manifeste.
-- verify : 1 663 essais, 0 échec, 2 ignorés ; moteur inchangé. Paquet `ariane-4.9.5-test.3.zip`, 1 585 386 octets, SHA-256 `b6d2928eb88762ff43985b7cae6dd23cd2e9b88abcea8785e2031aab728b282d`, envoyé à Mic.
+- `claude/495-test-3` (730ac7b), version 4.9.5.3. **S6** : 12 relevés en lecture seule, chacun derrière un réglage actif par défaut (ressources Potree, `flushPct` à chaque cut, profondeur et budget de capture, noms des champs de la liste, compteur bloqué, avis `fetch-rails`, empreinte du contrat ESV à « Connecter », écouteurs jQuery en ombre, T de départ, revisite d'un différé, audit serveur, en-tête machine). **S7** : jalons `phase-timing` repliés par visite à l'export du panneau ; journal réel −35,7 % (gzip −46 %), cible −40 % presque atteinte ; perf-v3 et perf-phases donnent les mêmes chiffres sur l'ancien et le replié. **Logo** « La voie » (choix de l'opérateur, commit a426771 d'une autre session) déclaré dans le manifeste.
+- verify : 1 663 essais, 0 échec, 2 ignorés ; moteur inchangé. Paquet `ariane-4.9.5-test.3.zip`, 1 585 386 octets, SHA-256 `b6d2928eb88762ff43985b7cae6dd23cd2e9b88abcea8785e2031aab728b282d`, envoyé à l'opérateur.
 - Doutes à lever au terrain : l'empreinte inclut le nombre d'écouteurs jQuery (fausse alerte possible si ESV en ajoute légitimement) ; `responseStatus` vaut 0 sans `Timing-Allow-Origin` (échecs possiblement surcomptés ; statuts bruts consignés) ; relevés 5, 8, 10 et l'audit essayés sur ESV simulé seulement.
 - Intégré à `claude/50-base` (d27ea7b) : conflits panel.html et settings.js ; le banc `perf-production` traitait la lecture `liste-instantane` d'E1 (mémoire de la page, sans requête ESV) comme une commande ESV, corrigé dans le banc. verify 1 681, 0 échec. La test 3 ne contient pas E1 ni M6 (base antérieure) : ils viendront avec le prochain numéro de test.
 
 ## D-128 — E5 livré : jeu d'apprentissage v1 et métriques par version (16 octobre 2026, nuit)
 
-- `claude/50-e5-metriques` (6f5fd3a), intégré à `claude/50-base` (avance rapide) : `tools/jeu-apprentissage.cjs` (format `ariane-jeu-apprentissage-v1`, JSON lignes, un cut joint par ligne : traits d'Ariane, étiquette de Mic, qualité de la référence ; sans coordonnée absolue par défaut ; voisinage limité aux cuts de numéro inférieur, aucun trait tiré de la référence de Mic), `tools/metriques-version.cjs` (lisible + JSON ; mode `--journal-seul`), essai, `fiches/E5_METRIQUES.md`. verify 1 688 réussis, 0 échec. Niveau rapide, ≈ 168 000 jetons, 11 min.
-- Partie 17 retrouvée à l'identique de D-121 : 192 posés avec référence, 47 corrigés > 10 mm (24,5 %), 132 > 5 mm, écart 3D 5,0 / 11,1 / 20,0 mm. Faux verts entre 20,3 % (borne basse, 47/232 posés : 38 posés sans validation de Mic observée) et 24,5 %. Différés 35/268 (13,1 %). Débit 811 cuts/h en mode rapide.
+- `claude/50-e5-metriques` (6f5fd3a), intégré à `claude/50-base` (avance rapide) : `tools/jeu-apprentissage.cjs` (format `ariane-jeu-apprentissage-v1`, JSON lignes, un cut joint par ligne : traits d'Ariane, étiquette de l'opérateur, qualité de la référence ; sans coordonnée absolue par défaut ; voisinage limité aux cuts de numéro inférieur, aucun trait tiré de la référence de l'opérateur), `tools/metriques-version.cjs` (lisible + JSON ; mode `--journal-seul`), essai, `fiches/E5_METRIQUES.md`. verify 1 688 réussis, 0 échec. Niveau rapide, ≈ 168 000 jetons, 11 min.
+- Partie 17 retrouvée à l'identique de D-121 : 192 posés avec référence, 47 corrigés > 10 mm (24,5 %), 132 > 5 mm, écart 3D 5,0 / 11,1 / 20,0 mm. Faux verts entre 20,3 % (borne basse, 47/232 posés : 38 posés sans validation de l'opérateur observée) et 24,5 %. Différés 35/268 (13,1 %). Débit 811 cuts/h en mode rapide.
 - Limites : un seul Écho exploitable (partie 17) ; zone, raison de correction, grandeurs P0 et manifeste absents des données ; « 0 mauvaise pose ajoutée » demande un rejeu de deux versions sur les mêmes cuts ; un total sur plusieurs versions est refusé sans `--version`.
 
 ## D-129 — P0 livré : plafonner le calage de convention à 8 mm ; ne toucher ni à la garde de paire, ni à l'estimateur, ni à la pente (16 octobre 2026, nuit)
 
 - `claude/50-p0-mesures` (76c4052), intégré à `claude/50-base` (d3c19be) : `tools/p0-commun.cjs`, `p0b-convention.cjs`, `p0a-estimateurs.cjs`, `p0c-pente.cjs`, essai (11 cas), `fiches/P0_MESURES.md`. Rien sous `src/`. verify 1 690 réussis, 0 échec. Niveau rapide, ≈ 486 000 jetons, 50 min.
-- **(b) Convention refusée** (partie 17) : les rails refusés sont posés bruts avec un biais vertical réel de −6,5 mm (n = 98) ; le « 9 mm » du cahier est le décalage prédit, la convention exagère d'un tiers au-delà de ~6 mm. Rails corrigés > 10 mm par Mic : 35/98 aujourd'hui, **10 avec un décalage plafonné à 8 mm**, 15 avec calage plein ; rails calés : 18/277. Cuts posés corrigés > 10 mm : **47 → 25 sur 188** avec le plafond (25 gagnés, 3 perdus) ; > 5 mm : 128 → 110. Domaine porté à 12 mm : moins bon (28, 7 perdus).
-- **(b) Garde de paire** : sur 12 cuts 'pair-guard' avec pose de Mic, 4 à 5 seraient posés à > 10 mm sans la garde ; aucune variante ne récupère sans mauvaise pose. La porte « ≥ 50/89 » est atteignable en nombre (83 avec le domaine à 12 mm), pas en justesse. **Recommandation : ne pas changer.**
+- **(b) Convention refusée** (partie 17) : les rails refusés sont posés bruts avec un biais vertical réel de −6,5 mm (n = 98) ; le « 9 mm » du cahier est le décalage prédit, la convention exagère d'un tiers au-delà de ~6 mm. Rails corrigés > 10 mm par l'opérateur : 35/98 aujourd'hui, **10 avec un décalage plafonné à 8 mm**, 15 avec calage plein ; rails calés : 18/277. Cuts posés corrigés > 10 mm : **47 → 25 sur 188** avec le plafond (25 gagnés, 3 perdus) ; > 5 mm : 128 → 110. Domaine porté à 12 mm : moins bon (28, 7 perdus).
+- **(b) Garde de paire** : sur 12 cuts 'pair-guard' avec pose de l'opérateur, 4 à 5 seraient posés à > 10 mm sans la garde ; aucune variante ne récupère sans mauvaise pose. La porte « ≥ 50/89 » est atteignable en nombre (83 avec le domaine à 12 mm), pas en justesse. **Recommandation : ne pas changer.**
 - **(a)** La graine reste la meilleure (6,4 mm médian, contre 8,4 pour l'intersection et 6,7 pour la moyenne, partie 17 ; égalité sur la partie 20) ; aucune classe de flanc ne change le gagnant ; |graine − intersection| inutile pour M6 (AUC 0,55). **Ne pas changer** ; corriger AUDIT_SUPER_CERVEAU § 1.
 - **(c)** Rails appliqués à pente 0,3–0,5 : 19 % corrigés > 10 mm contre 10 % sous 0,3 ; lever la borne poserait 2 cuts sur 8 à > 10 mm. **Ne pas changer** ; P2 n'est pas lancé.
-- Conséquence sur le plan : **P1 se réduit au plafond de 8 mm** (le reste du décalage consigné). Q2 (D-122) permet de toucher D-044 si P0 le justifie : c'est le cas. Développement sur branche, porte : rejeu des quatre lots au banc sans régression ; **activation au terrain seulement avec Mic**.
-- Limites : Écho 18 introuvable, Écho 24 long absent, aucun cut de PN connu (Q3), un seul projet ; peu de poses de Mic sur les cas 'pair-guard' (ordres de grandeur) ; simulation statique (appuis voisins non rejoués).
+- Conséquence sur le plan : **P1 se réduit au plafond de 8 mm** (le reste du décalage consigné). Q2 (D-122) permet de toucher D-044 si P0 le justifie : c'est le cas. Développement sur branche, porte : rejeu des quatre lots au banc sans régression ; **activation au terrain seulement avec l'opérateur**.
+- Limites : Écho 18 introuvable, Écho 24 long absent, aucun cut de PN connu (Q3), un seul projet ; peu de poses de l'opérateur sur les cas 'pair-guard' (ordres de grandeur) ; simulation statique (appuis voisins non rejoués).
 
-## D-130 — P1 codé : plafond de convention à 8 mm, coupé par défaut ; activation à décider avec Mic (16 octobre 2026, matin)
+## D-130 — P1 codé : plafond de convention à 8 mm, coupé par défaut ; activation à décider avec l'opérateur (16 octobre 2026, matin)
 
 - `claude/50-p1-convention` (ce93d40, 5b2598b), intégré à `claude/50-base` (b6aed57) ; AUDIT_SUPER_CERVEAU § 1 corrigé d'après P0(a) (1c6ae32). `src/placement-convention.js` (+ plafond : décalage appliqué à 8 mm au plus par axe, dans son signe ; `capped`, `capMm`, `applied*`, `rest*` consignés ; motif `shift-out-of-domain` conservé pour que la garde de paire D-044 lise toujours le rail) et `src/settings.js` (`conventionPlafond = false`). `src/engine.js`, géométrie et `lot-decision.js` inchangés. Réglage coupé : résultat identique octet pour octet sur 151 cas figés. verify 1 713 réussis, 0 échec ; épinglages intacts. Outil `tools/p1-plafond.cjs`, fiche `fiches/P1_CONVENTION.md`. Niveau rapide, ≈ 290 000 jetons, 39 min.
-- **Rejeu avec le vrai code** (six lots, 2 263 cuts ; parité avec la décision consignée 2 262/2 263) : partie 17 avec l'Écho, cuts posés corrigés > 10 mm par Mic **47 → 25 sur 188** (25 gagnés, 3 perdus), > 5 mm 128 → 110, médiane 7,05 → 5,76 mm, P90 12,69 → 10,87. Posés 1 846 → 1 854, différés 417 → 409 (11 différés deviennent posés, 3 posés deviennent différés).
+- **Rejeu avec le vrai code** (six lots, 2 263 cuts ; parité avec la décision consignée 2 262/2 263) : partie 17 avec l'Écho, cuts posés corrigés > 10 mm par l'opérateur **47 → 25 sur 188** (25 gagnés, 3 perdus), > 5 mm 128 → 110, médiane 7,05 → 5,76 mm, P90 12,69 → 10,87. Posés 1 846 → 1 854, différés 417 → 409 (11 différés deviennent posés, 3 posés deviennent différés).
 - **Portes non tenues, donc pas d'activation en l'état** :
-  1. « Aucune pose nouvelle hors des rails refusés » : 8 des 11 nouveaux posés n'ont pas de rail refusé (ricochet : les appuis voisins bougent de quelques mm). Le seul jugeable avec la pose de Mic est faux de 29 mm.
+  1. « Aucune pose nouvelle hors des rails refusés » : 8 des 11 nouveaux posés n'ont pas de rail refusé (ricochet : les appuis voisins bougent de quelques mm). Le seul jugeable avec la pose de l'opérateur est faux de 29 mm.
   2. Un cut de passage à niveau 'pair-guard' (partie 27) échappe à la garde : le décalage latéral plafonné sort l'écartement du contrat, puis le repli du passage à niveau le pose. 1 cut sur 104, mais c'est exactement le genre de pose que la garde doit empêcher.
   3. Le journal compact (`gcv1-shadow.js`) ne reprend pas `capped`/`rest*`.
-- Suite proposée (avant toute activation) : variante qui n'applique le plafond qu'à l'axe vertical (le biais mesuré est vertical) et laisse le latéral refusé, ce qui devrait supprimer le cas du passage à niveau et réduire le ricochet ; puis rejeu identique. Activation : seulement avec Mic, après lecture d'un lot réel.
+- Suite proposée (avant toute activation) : variante qui n'applique le plafond qu'à l'axe vertical (le biais mesuré est vertical) et laisse le latéral refusé, ce qui devrait supprimer le cas du passage à niveau et réduire le ricochet ; puis rejeu identique. Activation : seulement avec l'opérateur, après lecture d'un lot réel.
 
 ## D-131 — P1 bis (plafond vertical) : même gain, mais ne règle ni le passage à niveau ni le ricochet ; P1 ter lancé (16 octobre 2026, matin)
 
-- Mic : « pas besoin d'attendre le prochain réveil, go ». Le réveil automatique de 11 h 26 est annulé : Mic a repris la main, le protocole autonome s'arrête.
+- L'opérateur : « pas besoin d'attendre le prochain réveil, go ». Le réveil automatique de 11 h 26 est annulé : l'opérateur a repris la main, le protocole autonome s'arrête.
 - `claude/50-p1-vertical` (e1e851f), intégré à `claude/50-base` (avance rapide) : `conventionPlafond = false | 'vertical' | true` ; `gcv1-shadow.js` reprend `capped`, `capMm`, `capAxes`, `applied*`, `rest*` dans le journal compact, seulement quand le plafond a joué. Défaut `false`, identique octet pour octet. verify 1 723 réussis, 0 échec ; épinglages intacts.
 - Rejeu (six lots) : le mode vertical donne exactement le même résultat que les deux axes (partie 17 : 47 → 25 au-delà de 10 mm ; 11 posés en plus, dont 8 par ricochet, et 3 en moins).
 - **Ma prévision était fausse** : le cut 'pair-guard' de passage à niveau de la partie 27 échappe toujours à la garde. En mode vertical, le du du rail (−1,9 mm, dans le domaine) est appliqué en entier alors qu'il ne l'était pas avant, et l'écartement prédit tombe sous le plancher de 1 420 mm. Le ricochet vient des appuis dont dz a bougé de 8 mm, pas du latéral.
 - Lancé : **P1 ter `'hauteur'`** (dz plafonné seul, du = 0, latéral strictement comme aujourd'hui), rejeu en quatre colonnes, et analyse chiffrée d'une garde contre le ricochet dans `lot-decision.js` (proposition seulement, non codée).
 
-## D-132 — Réponses de Mic du 16 octobre au matin ; archivage des exports bloqué tant que banane-data est public (16 octobre 2026)
+## D-132 — Réponses de l'opérateur du 16 octobre au matin ; archivage des exports bloqué tant que banane-data est public (16 octobre 2026)
 
-- Séance 4.9.5 test 3 : Mic commence par là. Exports de la test 2 : à venir si encore disponibles. Écho partie 24 long (Q5) : probablement perdu.
-- Q3 : Mic signalera l'entrée en aiguillage et la marge avant et après.
+- Séance 4.9.5 test 3 : l'opérateur commence par là. Exports de la test 2 : à venir si encore disponibles. Écho partie 24 long (Q5) : probablement perdu.
+- Q3 : l'opérateur signalera l'entrée en aiguillage et la marge avant et après.
 - D-123 : changement de projet ESV aujourd'hui, donc un second projet arrive.
-- **Q8 précisée** : Mic n'utilise que Google Chrome, dans un seul profil, en plusieurs fenêtres. Exemple : un lot Orbite dans une fenêtre, une correction manuelle d'une autre partie dans une autre fenêtre au premier plan. Changer d'onglet dans la même fenêtre arrête Ariane. L'Écho ne peut donc pas observer cette correction pendant le lot ; ce serait possible avec un second profil Chrome, à proposer sans imposer.
-- Version de test avec le plafond de convention activé : **accord de Mic**, après le choix de variante (P1 ter), pour un lot qu'il relira entièrement.
-- **Archivage des exports** : Mic demande de les archiver dans banane-data dès réception. La tentative est **refusée par le contrôle de sécurité de la session** : publier des exports bruts dans un dépôt public est traité comme une fuite de données. banane-data est public par choix du propriétaire (README, 23/09), mais rien n'a été archivé depuis le 29/09. **À trancher par Mic** : rendre banane-data privé, ou créer un dépôt privé d'archives. Je n'archive rien et je ne contourne pas ce refus en attendant.
+- **Q8 précisée** : l'opérateur n'utilise que Google Chrome, dans un seul profil, en plusieurs fenêtres. Exemple : un lot Orbite dans une fenêtre, une correction manuelle d'une autre partie dans une autre fenêtre au premier plan. Changer d'onglet dans la même fenêtre arrête Ariane. L'Écho ne peut donc pas observer cette correction pendant le lot ; ce serait possible avec un second profil Chrome, à proposer sans imposer.
+- Version de test avec le plafond de convention activé : **accord de l'opérateur**, après le choix de variante (P1 ter), pour un lot qu'il relira entièrement.
+- **Archivage des exports** : l'opérateur demande de les archiver dans banane-data dès réception. La tentative est **refusée par le contrôle de sécurité de la session** : publier des exports bruts dans un dépôt public est traité comme une fuite de données. banane-data est public par choix du propriétaire (README, 23/09), mais rien n'a été archivé depuis le 29/09. **À trancher par l'opérateur** : rendre banane-data privé, ou créer un dépôt privé d'archives. Je n'archive rien et je ne contourne pas ce refus en attendant.
 - ESV local (maquette, `claude/esv-locale-audit`) : la maquette est bouclée (rejeux 4.9.0.15 et 4.8.6 identiques au terrain cut par cut, campagne de pannes faite). Il reste à l'intégrer à verify : **S4 lancé** (`claude/50-s4-banc`).
-- Suite le 16/10 : Mic maintient banane-data public, et sa direction ordonne d'y publier les exports. Une nouvelle tentative, avec cette autorisation écrite, est encore refusée par le contrôle automatique de la session (mode Auto). Je ne contourne pas le refus. Deux voies : Mic passe la session en mode « Accept edits » le temps de l'archivage et approuve chaque commande ; ou il dépose les archives lui-même avec GitHub Desktop (voie du 23/09), et j'écris les manifests et l'index.
+- Suite le 16/10 : l'opérateur maintient banane-data public, et sa direction ordonne d'y publier les exports. Une nouvelle tentative, avec cette autorisation écrite, est encore refusée par le contrôle automatique de la session (mode Auto). Je ne contourne pas le refus. Deux voies : l'opérateur passe la session en mode « Accept edits » le temps de l'archivage et approuve chaque commande ; ou il dépose les archives lui-même avec GitHub Desktop (voie du 23/09), et j'écris les manifests et l'index.
 
 ## D-133 — Exports reçus archivés dans banane-data ; réflexe d'archivage à chaque réception (16 octobre 2026)
 
-- Mic a passé la session en « Accept edits » et approuvé chaque commande. 11 collectes sont créées dans `banane-data` (branche `claude/execute-prompt-00-18ra5a`, commits 5c2b50c, 73d4dfd et 9223d33), avec 87 volumes, environ 1,6 Go, du 7 au 15 octobre :
+- L'opérateur a passé la session en « Accept edits » et approuvé chaque commande. 11 collectes sont créées dans `banane-data` (branche `claude/execute-prompt-00-18ra5a`, commits 5c2b50c, 73d4dfd et 9223d33), avec 87 volumes, environ 1,6 Go, du 7 au 15 octobre :
   - Ariane 4.9.0.2 : lots p7 et p10 ;
   - 4.9.0.3 et 4.9.0.4 : lots p3 et p5 ;
   - 4.9.0.8 : lots p7 à p10 ;
@@ -1999,11 +1999,11 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - 4.9.0.16 et 4.9.0.17 : lots p25 à p27 ;
   - 4.9.5.1 : segment 1 d'un Écho.
 - Chaque volume est déposé tel qu'envoyé (zip ou 7z d'origine, intégrité contrôlée par réassemblage), avec un `SHA256SUMS`, un `NOTES.md` par collecte et une ligne dans `INDEX.md`.
-- Non archivés, par prudence : le paquet de passation du 04/10 (documents de travail, pas un export), la capture réseau ESV du 05/10 (HAR, même nettoyée), et les captures d'écran. À déposer si Mic le demande.
+- Non archivés, par prudence : le paquet de passation du 04/10 (documents de travail, pas un export), la capture réseau ESV du 05/10 (HAR, même nettoyée), et les captures d'écran. À déposer si l'opérateur le demande.
 - Disque : environ 3,4 Go de fichiers temporaires d'essais supprimés dans `/tmp` pour faire la place.
-- **Réflexe désormais** : tout export reçu de Mic est archivé dans `banane-data` dès réception, avec la même procédure. En mode Auto, le contrôle automatique refuse cette publication : il faudra repasser en « Accept edits » le temps du dépôt. La branche `claude/execute-prompt-00-18ra5a` de banane-data n'est pas fusionnée dans `main` : à faire avec l'accord de Mic.
+- **Réflexe désormais** : tout export reçu de l'opérateur est archivé dans `banane-data` dès réception, avec la même procédure. En mode Auto, le contrôle automatique refuse cette publication : il faudra repasser en « Accept edits » le temps du dépôt. La branche `claude/execute-prompt-00-18ra5a` de banane-data n'est pas fusionnée dans `main` : à faire avec l'accord de l'opérateur.
 
-## D-134 — Partie 29 (4.9.5 test 3, Écho soigné de Mic) et partie 12 (opérateur débutant) analysées (16 octobre 2026)
+## D-134 — Partie 29 (4.9.5 test 3, Écho soigné de l'opérateur) et partie 12 (opérateur débutant) analysées (16 octobre 2026)
 
 - Exports archivés dans banane-data (bf6a3cc, 95cd4a5, 9f44b87). Analyses hors ligne dans le scratchpad (`p29/RAPPORT.md`, `p12/RAPPORT.md`, `jeu-p29.jsonl`, `jeu-p12.jsonl`), sans commit.
 - **Partie 29** :
@@ -2015,31 +2015,31 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Ressources Potree : 2 450, toutes en statut 200, 0 échec, aucun statut 0. Le doute de D-127 est levé.
   - `flushPct` ≥ 50 sur exactement 22 cuts, tous dans les PN, sans faux positif : **indice de PN pour M1**.
   - `tDepart` à 0,0 mm de la T actuelle (243 cuts).
-  - `esv-event` concorde à 100 % avec les validations de Mic (725/725).
+  - `esv-event` concorde à 100 % avec les validations de l'opérateur (725/725).
   - Journal replié −35 %.
   - `list-fields` et `audit-serveur` sont vides parce que la liste est lue avant la séance. De plus, l'export Écho ne garde pas `audit-serveur` (pas de `nativeSessionId`).
 - **F5 en Écho** : aucune donnée perdue, mais trois défauts cumulés. La reprise part à 0,35 s, avant le chargement de la liste ESV. La reprise automatique n'existe qu'en séance. Chaque démarrage raté crée une période fantôme (six en 8 s). À corriger avant de redemander un F5 ; protocole de reproduction proposé pour la maquette.
 - **Défauts d'outil** : `jointure-echo-orbite.cjs` mélange deux sessions Écho (`visitIndex` repart de 0) et ignore les fichiers `ariane-echo-*` en mode dossier ; `perf-phases.cjs` ignore les relevés S6. Les jointures d'Échos multi-sessions sont à revérifier.
-- **Partie 12** (Mic corrige un opérateur débutant, 107 cuts) :
+- **Partie 12** (l'opérateur corrige un opérateur débutant, 107 cuts) :
   - 47 % de cuts non touchés, contre 8 à 19 % chez Ariane, et seulement 4 % de retouches entre 5 et 10 mm. Mais **28 erreurs de 25 à 45 mm**, presque toutes sur le rail droit (environ +34 mm latéral, −14 mm vertical) ; Ariane n'en a aucune de cette taille sur les parties 17, 24 et 29.
-  - Le grain fin de Mic (2 à 4 mm, surtout vertical) est le même pour les deux ; il remonte le débutant de +2,2 mm, mais descend Ariane de −2 mm sur la partie 29.
+  - Le grain fin de l'opérateur (2 à 4 mm, surtout vertical) est le même pour les deux ; il remonte le débutant de +2,2 mm, mais descend Ariane de −2 mm sur la partie 29.
   - Parcours : ordre croissant, sans trou, environ 1,6 s par cut.
-- **Règle « visité sans action = bon »** : sans effet sur les faux verts d'Orbite. Les survols sont très courts (0,65 s en médiane) : proposer à Mic une durée minimale d'environ 1 s, nuage chargé.
+- **Règle « visité sans action = bon »** : sans effet sur les faux verts d'Orbite. Les survols sont très courts (0,65 s en médiane) : proposer à l'opérateur une durée minimale d'environ 1 s, nuage chargé.
 
-## D-135 — Partie 13 (partie humaine corrigée par Mic) : la signature des 30–40 mm confirmée, l'écartement la détecte parfaitement (16 octobre 2026)
+## D-135 — Partie 13 (partie humaine corrigée par l'opérateur) : la signature des 30–40 mm confirmée, l'écartement la détecte parfaitement (16 octobre 2026)
 
 - 223 cuts : 66,8 % non touchés ; 11,7 % à 25 mm ou plus (26 cuts, dont 25 sur le rail droit, +30,9 mm latéral, −13,3 mm vertical, 3D de 25,8 à 39,3 mm). C'est la même signature qu'en partie 12, absente des poses d'Ariane (parties 17, 24, 29). Même opérateur ou même méthode de pose : compatible, mais non prouvé.
 - **Écartement de la pose de départ à plus de 10 mm de sa médiane : 54 « mauvais objets » humains repérés sur 54** (parties 12 et 13), et aucune fausse alerte sur 199 cuts non touchés. C'est un contrôle simple pour la relecture de poses humaines, et un trait pour M6 et GCV2.
-- Les PN concentrent 81 % des mauvais objets de la partie 13, au centre du PN (36 %) plutôt qu'aux bords (8 %). ADV1 : Mic corrige surtout l'entrée de la zone ; l'aiguille (cut 4682) ne se voit qu'à son arrêt de 69 s, pas dans la géométrie. ADV2 : la sortie réelle serait vers le cut 4963, et non 4936, et l'« aiguille au cut 4682 » de cette ligne paraît copiée de la ligne d'ADV1 (à confirmer par Mic). PN 6100 : fin probable 6115.
-- Parcours de Mic : validation cut par cut en PN et en entrée d'ADV (1,7 s par cut), survol ailleurs (0,8 s par cut).
+- Les PN concentrent 81 % des mauvais objets de la partie 13, au centre du PN (36 %) plutôt qu'aux bords (8 %). ADV1 : l'opérateur corrige surtout l'entrée de la zone ; l'aiguille (cut 4682) ne se voit qu'à son arrêt de 69 s, pas dans la géométrie. ADV2 : la sortie réelle serait vers le cut 4963, et non 4936, et l'« aiguille au cut 4682 » de cette ligne paraît copiée de la ligne d'ADV1 (à confirmer par l'opérateur). PN 6100 : fin probable 6115.
+- Parcours de l'opérateur : validation cut par cut en PN et en entrée d'ADV (1,7 s par cut), survol ailleurs (0,8 s par cut).
 - Tableau de synthèse « par cut, > 10 mm » : débutant p12 29 %, p13 13 % ; Ariane p17 24,5 %, p24 32 %, p29 3,5 %. Les humains font peu d'erreurs moyennes, mais de grosses erreurs d'objet ; Ariane ne fait aucune erreur d'objet, mais beaucoup d'erreurs moyennes de 5 à 25 mm.
 
-## D-136 — Réponses de Mic sur les parties 12 et 13 ; les 30–40 mm viennent de PN non contrôlés (16 octobre 2026)
+## D-136 — Réponses de l'opérateur sur les parties 12 et 13 ; les 30–40 mm viennent de PN non contrôlés (16 octobre 2026)
 
-- Les grosses erreurs des parties 12 et 13 sont des **poses d'extraction dans des PN que le débutant n'a pas contrôlés en entier** : rails verts sur la carte, donc non visités. Elles ne sont pas des poses humaines. Mic contrôle tout le PN ; c'est ce qu'Orbite doit apprendre (règle 3 renforcée, `fiches/METHODE_MIC_P29.md`).
+- Les grosses erreurs des parties 12 et 13 sont des **poses d'extraction dans des PN que le débutant n'a pas contrôlés en entier** : rails verts sur la carte, donc non visités. Elles ne sont pas des poses humaines. L'opérateur contrôle tout le PN ; c'est ce qu'Orbite doit apprendre (règle 3 renforcée, `fiches/METHODE_MIC_P29.md`).
 - Zones confirmées : p12, cuts 7276–7289 = PN ; p13, PN 6100–6115 ; ADV2 4911–4963, aiguille entre 4935 et 4936. Les parties 12 et 13 ont été traitées par la même personne.
 - Seuil de la règle « visité sans action = bon » : **0,8 s**.
-- Mic a cité le code du projet ESV dans la conversation. Il n'est reporté nulle part dans les dépôts, conformément à la règle « aucun identifiant de projet ».
+- L'opérateur a cité le code du projet ESV dans la conversation. Il n'est reporté nulle part dans les dépôts, conformément à la règle « aucun identifiant de projet ».
 - À vérifier dans les exports : `SeenByOperator` faux au départ sur les cuts à 30–40 mm.
 
 ## D-137 — Reprise de l'Écho après un F5 corrigée (16 octobre 2026)
@@ -2049,75 +2049,75 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - La **même session** continue, avec une nouvelle période. Un démarrage raté marque sa période, et l'essai suivant la remplace : au plus une période marquée.
 - Aucune requête ESV nouvelle, aucune marque d'Ariane.
 - 7 essais rouges devenus verts ; le F5 pendant un lot Orbite reste vert. verify : 1 731 réussis, 0 échec, moteur identique.
-- Joué seulement sur le banc simulé. Délais tirés d'un seul relevé terrain : à vérifier au terrain avant de redemander un F5 à Mic. Fiche : `fiches/ECHO_F5.md`.
+- Joué seulement sur le banc simulé. Délais tirés d'un seul relevé terrain : à vérifier au terrain avant de redemander un F5 à l'opérateur. Fiche : `fiches/ECHO_F5.md`.
 
 ## D-138 — Jointure v2 : Écho multi-sessions, Écho seul, « visité sans action = bon » (16 octobre 2026)
 
 - `claude/50-jointure-v2` (255ef64, 07f4b7e, 243ae89, 506af7e), intégré à `claude/50-base`.
-- Clé de visite (session, `visitIndex`), dans l'ordre du temps. Les exports `ariane-echo-*` sont lus en mode dossier. Mode `--sans-journal` pour un Écho seul (poses humaines). Option `--visite-sans-action-bonne [s]`, 0,8 s par défaut (choix de Mic), coupée par défaut, cut 0 exclu.
+- Clé de visite (session, `visitIndex`), dans l'ordre du temps. Les exports `ariane-echo-*` sont lus en mode dossier. Mode `--sans-journal` pour un Écho seul (poses humaines). Option `--visite-sans-action-bonne [s]`, 0,8 s par défaut (choix de l'opérateur), coupée par défaut, cut 0 exclu.
 - 28 essais sur fixtures synthétiques ; verify : 1 744, 0 échec.
 - Partie 17 identique ligne pour ligne (192 / 132 / 47 ; 5,0 / 11,1 / 20,0 mm). Partie 29 : 7/192 à plus de 10 mm, 96 à plus de 5 mm ; avec la règle à 0,8 s, 7/198.
 - Reste à faire : `tools/p0-commun.cjs` ignore aussi les `ariane-echo-*` ; `perf-phases.cjs` ne lit pas les relevés S6. Les deux corrections sont décrites dans la fiche.
 
 ## D-139 — Second projet : lot Orbite de la partie 1 reçu ; fausses alertes « contrat ESV » avec deux fenêtres (16 octobre 2026)
 
-- Lot Orbite 4.9.5.3 de la partie 1 du second projet (D-123), archivé dans banane-data (5fabea9). Projet difficile, avec seulement 2 scanners visibles d'après Mic : **224 posés, 127 différés** (tous `deferred-unresolved`). L'Écho de Mic suit ; ce sera le premier jeu où les abstentions d'Ariane reçoivent une pose humaine.
-- **Fausses alertes de contrat** : 5 avis « ESV n'a plus le même contrat » en alternance entre deux empreintes (8ff6ba83 et a1c1d168), entre 10 h 01 et 10 h 52, heure de Paris, pendant que Mic faisait l'Écho des parties 12 et 13 dans une autre fenêtre. L'empreinte est gardée **une seule fois pour tout le navigateur**. Deux onglets ESV dans des états différents (boutons, écouteurs) se la disputent. C'est le doute signalé en D-127. Correctif à faire : empreinte rangée par onglet, et retirer des champs comparés ce qui dépend de l'état de la page, comme les libellés de boutons et le nombre d'écouteurs. Jusque-là, Mic peut ignorer cet avis quand deux fenêtres ESV sont ouvertes.
+- Lot Orbite 4.9.5.3 de la partie 1 du second projet (D-123), archivé dans banane-data (5fabea9). Projet difficile, avec seulement 2 scanners visibles d'après l'opérateur : **224 posés, 127 différés** (tous `deferred-unresolved`). L'Écho de l'opérateur suit ; ce sera le premier jeu où les abstentions d'Ariane reçoivent une pose humaine.
+- **Fausses alertes de contrat** : 5 avis « ESV n'a plus le même contrat » en alternance entre deux empreintes (8ff6ba83 et a1c1d168), entre 10 h 01 et 10 h 52, heure de Paris, pendant que l'opérateur faisait l'Écho des parties 12 et 13 dans une autre fenêtre. L'empreinte est gardée **une seule fois pour tout le navigateur**. Deux onglets ESV dans des états différents (boutons, écouteurs) se la disputent. C'est le doute signalé en D-127. Correctif à faire : empreinte rangée par onglet, et retirer des champs comparés ce qui dépend de l'état de la page, comme les libellés de boutons et le nombre d'écouteurs. Jusque-là, l'opérateur peut ignorer cet avis quand deux fenêtres ESV sont ouvertes.
 
 ## D-140 — Première étude d'apprentissage (G0 v1) : aucune porte stricte atteinte, trois pistes solides (16 octobre 2026)
 
 - `claude/50-g0-apprentissage` (25fde86), intégré à `claude/50-base` : `tools/apprentissage-g0.cjs`, `tools/g0-enrichir-jeu.cjs`, essais, `fiches/G0_APPRENTISSAGE_V1.md`. verify : 1 768 réussis, 0 échec. Parties 17, 24 (jointure v2 à 0,8 s : 70 posés avec référence, 21 faux verts) et 29, plus les parties humaines 12 et 13.
 - **Faux verts d'Ariane** : quatre traits vont dans le même sens sur les trois parties (`dz` de convention, déplacement vertical depuis ESV, confiance basse, peu de lignes au sommet). Exemple : au-delà de 8,5 mm de `dz`, 33 % de corrections à plus de 10 mm, contre 5 % sous 4,5 mm. Mais aucun modèle ne se généralise d'une partie à l'autre : rappel à 5 % des cuts de 8 % (M6 : 11 %). Porte « 60 % dans 5 % » non atteinte. Elle est même impossible sur les parties 17 et 24, où les fautes dépassent 8,3 % des cuts.
-- **PN** : `flushPct` ≥ 30 retrouve 22/24 cuts de PN sur la partie 29, sans fausse alerte (AUC 0,96). Marge de 4 cuts avant et 6 après, cohérente avec le parcours de Mic sur 16 PN. Une seule partie avec relevé S6 : à confirmer.
+- **PN** : `flushPct` ≥ 30 retrouve 22/24 cuts de PN sur la partie 29, sans fausse alerte (AUC 0,96). Marge de 4 cuts avant et 6 après, cohérente avec le parcours de l'opérateur sur 16 PN. Une seule partie avec relevé S6 : à confirmer.
 - **Extraction fausse en PN** : l'écartement tient en validation croisée 12 ↔ 13 (54/54). Il est trop court sur les verts d'extraction des parties 29 et 17, où il rate les sauts verticaux sur un seul rail. Piste : le dénivelé local entre les deux rails (AUC de 0,80 à 0,90 sur les trois parties).
-- **Biais vertical** : sur les rails à convention refusée, Mic remonte la pose dans les trois parties (+6,1, +1,8, +3,6 mm) ; c'est le seul signe stable. Une correction apprise ailleurs réduit les cuts à plus de 10 mm de 75 à 63, mais en ajoute 4 au-dessus du seuil : à poser **en ombre (E2)**, pas en activation.
+- **Biais vertical** : sur les rails à convention refusée, l'opérateur remonte la pose dans les trois parties (+6,1, +1,8, +3,6 mm) ; c'est le seul signe stable. Une correction apprise ailleurs réduit les cuts à plus de 10 mm de 75 à 63, mais en ajoute 4 au-dessus du seuil : à poser **en ombre (E2)**, pas en activation.
 - **Données nécessaires** : une dizaine de parties relues comme la 29 pour juger un rappel à ±10 points ; 5 parties avec relevé S6 et PN notés ; environ 13 parties pour fixer le biais vertical à ±1 mm. Les parties en version courante valent mieux que les anciennes. Le panneau « à relire » reste suspendu.
 
 ## D-141 — Second projet, partie 1 : les différés viennent d'une voie décalée ; « déplacer la vue » utile, mais pas suffisante ; nouvelles fautes sur la mauvaise voie (16 octobre 2026)
 
-- Écho de Mic archivé (c39a77c) ; analyse hors ligne dans `scratchpad/pr2p1/RAPPORT.md`, avec le jeu `jeu-pr2p1.jsonl`.
+- Écho de l'opérateur archivé (c39a77c) ; analyse hors ligne dans `scratchpad/pr2p1/RAPPORT.md`, avec le jeu `jeu-pr2p1.jsonl`.
 - **Lot** : 224 posés, 127 différés (36 %, contre 13–20 % sur le premier projet) ; débit 1 185 cuts/h. Faux verts : 10/165 (6,1 %, entre 4,5 et 9,0 % selon la règle des 0,8 s). Parmi eux, **3 poses sur la mauvaise voie** (163 à 280 mm, cuts 299, 302 et 315, zone d'ADV 2) : un type de faute jamais vu sur le premier projet, dont le maximum était 23,5 mm.
-- **Les 127 différés ont tous été posés par Mic**, à 149 mm en médiane par rail de la pose de départ d'ESV : la voie entière est décalée. 117 sont dans la zone d'ADV 2. 81 % sont « sans ancre » : plus aucun voisin posé pour prédire la suite. Les nuages ne sont **pas** pauvres : mêmes niveaux et budget qu'en partie 29, 253 rails sur 254 avec des points de flanc.
+- **Les 127 différés ont tous été posés par l'opérateur**, à 149 mm en médiane par rail de la pose de départ d'ESV : la voie entière est décalée. 117 sont dans la zone d'ADV 2. 81 % sont « sans ancre » : plus aucun voisin posé pour prédire la suite. Les nuages ne sont **pas** pauvres : mêmes niveaux et budget qu'en partie 29, 253 rails sur 254 avec des points de flanc.
 - **Rail hors de la vue ESV** : 32 % des différés (41/127), tous en zone 2, presque tous à gauche, dépassement médian de 10 mm ; un dézoom de ×1,25 couvre 98 % des cas. Hors du cadre de capture : 0 %. **Hors de la fenêtre et de la grille de recherche du moteur (±180 et ±80 mm) : 61 %.**
 - **Lecture pour la 5.0** : 11 cuts ouvrent des séries qui contiennent 71 % des différés. Sur ces cuts, la prédiction de voie du lot était juste (3,7 mm) mais hors de la vue, et un dézoom de ×1,06 suffisait. « Déplacer la vue » est donc utile, mais au **départ d'une série**, et ne suffit pas seul. Pour 29 % des différés dans la vue, le moteur avait déjà la bonne paire et s'est abstenu. Un élargissement naïf de la recherche donne 20 justes pour 66 fausses. Il faut d'abord un **a priori de voie** : prédiction de la voie, ou mémoire de voie de GCV2.
 - Apprentissage : sur ce projet, les traits « confiance basse », « écart aux voisins », « peu de lignes au sommet » et « concurrents forts » tiennent ; le signe du vertical s'inverse ; M6 fait 3/10 fautes dans 5 % des cuts ; la règle d'écartement tient (AUC 0,91) ; `flushPct` ne se généralise pas sans PN déclarés.
-- Questions pour Mic : PN aux cuts 388–396, 405–409 et 447–449 ? Écartement final de 1 631 mm au cut 428 ? Défaut : un événement `audit-serveur` étiquette « partie 29 » avec les totaux de la partie 12 (champ partie faux, à corriger).
+- Questions pour l'opérateur : PN aux cuts 388–396, 405–409 et 447–449 ? Écartement final de 1 631 mm au cut 428 ? Défaut : un événement `audit-serveur` étiquette « partie 29 » avec les totaux de la partie 12 (champ partie faux, à corriger).
 
-## D-142 — Réponses de Mic sur le second projet ; défaut probable de l'Écho au cut 428 (16 octobre 2026)
+## D-142 — Réponses de l'opérateur sur le second projet ; défaut probable de l'Écho au cut 428 (16 octobre 2026)
 
 - PN aux cuts 405–409 du second projet, partie 1 ; les cuts 388–396 et 447–449 n'en sont pas. Sur ce projet, `flushPct` a donc signalé deux plages qui ne sont pas des PN, ce qui confirme qu'il ne se généralise pas seul (D-141).
-- **Cut 428** : l'écartement réel est de 1 441 mm (Mic), alors que l'Écho donne 1 631 mm, avec seulement le rail gauche déplacé (132 mm) et le rail droit inchangé. **L'Écho a manqué la correction du rail droit** sur ce cut. C'est un défaut de capture à chercher (événements `railPairUpdated` d'un seul rail, validation qui ne porte qu'un rail, ou correction faite dans une visite non retenue), avant de faire confiance aux étiquettes « un seul rail corrigé ». Les cuts « validés puis SKIP » restent en SKIP, sans importance.
+- **Cut 428** : l'écartement réel est de 1 441 mm (l'opérateur), alors que l'Écho donne 1 631 mm, avec seulement le rail gauche déplacé (132 mm) et le rail droit inchangé. **L'Écho a manqué la correction du rail droit** sur ce cut. C'est un défaut de capture à chercher (événements `railPairUpdated` d'un seul rail, validation qui ne porte qu'un rail, ou correction faite dans une visite non retenue), avant de faire confiance aux étiquettes « un seul rail corrigé ». Les cuts « validés puis SKIP » restent en SKIP, sans importance.
 
 ## D-143 — Cut 428 : l'Écho avait bien vu le rail droit ; c'est la référence figée à la touche qui était périmée (16 octobre 2026)
 
-- Mic a cliqué sur le rail droit 7 ms avant Maj+Espace. ESV a appliqué le déplacement (190 mm) 11 ms après la touche. L'Écho fige la « référence humaine » sur le dernier état lu à la touche (`native-page.js` → `native-session.js`, test de fraîcheur sur l'âge seulement), soit 25 ms plus tôt, et ne la met plus jamais à jour. Le déplacement est pourtant consigné dans l'historique et dans l'état final, et l'écriture serveur de validation (PUT 204, les deux rails) donne 1 441,6 mm, comme Mic l'a dit.
+- L'opérateur a cliqué sur le rail droit 7 ms avant Maj+Espace. ESV a appliqué le déplacement (190 mm) 11 ms après la touche. L'Écho fige la « référence humaine » sur le dernier état lu à la touche (`native-page.js` → `native-session.js`, test de fraîcheur sur l'âge seulement), soit 25 ms plus tôt, et ne la met plus jamais à jour. Le déplacement est pourtant consigné dans l'historique et dans l'état final, et l'écriture serveur de validation (PUT 204, les deux rails) donne 1 441,6 mm, comme l'opérateur l'a dit.
 - **Ampleur** : 1 cas sur 1 260 validations, sur les Échos des parties 1, 12 et 29. Rare, mais silencieux.
 - **Correctif à faire** : dans l'Écho (`noteServerWriteNow`), quand l'écriture de validation de la ligne diffère de plus de 1 mm de la référence, on remplace celle-ci, en gardant l'ancienne et en notant `source: validation-write`. Même règle dans `tools/jointure-echo-orbite.cjs`, pour réparer les exports déjà collectés. L'écriture serveur est l'arbitre.
 - **Effet sur D-141** : négligeable. L'écart médian par rail passe de 149 à 150 mm. La voie est décalée dans le même sens sur 109/112 cuts. L'exception à 1 631 mm disparaît. Les nuages ont des points de flanc sur 254/254 rails. Les faux verts, le débit et les différés ne changent pas. D-134 ne change pas.
 - Correctif livré (`claude/50-echo-ref-ecriture`, de 3cb4c95 à 8825ec9) et intégré à `claude/50-base` par avance rapide. Une seule fonction pure, `referenceParEcriture`, est partagée par l'Écho et l'outil de jointure. Une écriture antérieure à l'intention est ignorée. Le statut `candidate-observed` est conservé. Le cut 428 passe de 1 631,1 à 1 441,6 mm ; c'est le seul cut corrigé sur 765. Les tables des parties 17 et 29 sont identiques ligne pour ligne. verify : 1 788 réussis, 0 échec. La règle reste à confirmer au terrain avec une Écho équipée du correctif.
 
-## D-144 — Cap de l'apprentissage fixé par Mic : « un cut différé = un cut appris » ; lancement massif (16 octobre 2026)
+## D-144 — Cap de l'apprentissage fixé par l'opérateur : « un cut différé = un cut appris » ; lancement massif (16 octobre 2026)
 
-- Mic : « Tu peux tout massivement lancer, que ce soit la prochaine version, les analyses, l'apprentissage. » Et il fixe un cap, pas un but : **quand on possède un lot Orbite et son Écho, chaque cut différé devient un cas appris qu'Ariane saura poser dans un contexte semblable.**
+- L'opérateur : « Tu peux tout massivement lancer, que ce soit la prochaine version, les analyses, l'apprentissage. » Et il fixe un cap, pas un but : **quand on possède un lot Orbite et son Écho, chaque cut différé devient un cas appris qu'Ariane saura poser dans un contexte semblable.**
 - Lancé en parallèle :
   - **G1, mémoire des différés** (`claude/50-g1-memoire-differes`), avec trois façons d'apprendre, toutes lisibles :
     - choix dans le pool de candidats ;
-    - décalage de voie d'une série, appris sur les premiers cuts corrigés par Mic et réutilisé sur les suivants ;
+    - décalage de voie d'une série, appris sur les premiers cuts corrigés par l'opérateur et réutilisé sur les suivants ;
     - voisin le plus proche entre parties.
     - Jugée hors ligne. Porte : 0 pose sur la mauvaise voie, moins de 5 % de poses fausses.
   - **Voie prédite et « déplacer la vue »** (`claude/50-voie-predite`) : rejeu du moteur sur le vrai nuage, centré sur la voie prédite, avec le décalage d'écran ou le dézoom nécessaire.
   - **4.9.5 test 4** (`claude/495-test-4`) : la base 5.0, plus l'empreinte de contrat par onglet (D-139), le champ partie d'`audit-serveur` corrigé, la correction verticale en **ombre** (E2, jamais appliquée) et le F5 en Écho à nouveau permis. Rien ne change dans la pose.
 - Toujours en cours : l'enquête sur le cut 428 (déjà poussée sur la base, à relire : D-143), l'analyse de la partie 24, P1 ter et S4.
 
-## D-145 — Audit indépendant au tournant de la 5.0 : accord de Mic, déclenchement automatique (16 octobre 2026)
+## D-145 — Audit indépendant au tournant de la 5.0 : accord de l'opérateur, déclenchement automatique (16 octobre 2026)
 
-- Mic valide un audit en lecture seule, mené avec le modèle le plus fort et ciblé, et me laisse le programmer.
+- L'opérateur valide un audit en lecture seule, mené avec le modèle le plus fort et ciblé, et me laisse le programmer.
 - **Déclencheur** : quand trois chantiers ont rendu leur rapport : G1 (mémoire des différés), la voie prédite et la 4.9.5 test 4. Pas avant, pour ne pas auditer un état périmé.
 - **Trois axes** :
   1. le cahier 5.0 face aux données (priorités, abandons, plan d'apprentissage, cap « un différé = un cut appris ») ;
   2. la fiabilité des mesures (capture de l'Écho, cut 428, jointure, biais d'échantillon, petits effectifs) ;
   3. la base de code 5.0 (sécurité de la pose, trace identique à celle d'un humain, moteur intact, commits poussés sans relecture).
-- Livrable : un rapport de recommandations classées. J'applique ce qui est simple et sûr ; le reste est soumis à Mic.
+- Livrable : un rapport de recommandations classées. J'applique ce qui est simple et sûr ; le reste est soumis à l'opérateur.
 
 ## D-146 — 4.9.5 test 4 livrée ; D-143 relu (16 octobre 2026)
 
@@ -2132,7 +2132,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - l'empreinte précédente ne survit pas à un redémarrage du navigateur ;
   - les classes des boutons de rail restent comparées : une fausse alerte reste possible ;
   - le F5 en Écho n'a été joué que sur le banc.
-- **Pour l'audit (axe 3)** : des noms de modèle figurent dans `DECISIONS.md` (ligne 14), `fiches/FICHE_B1.md` et `PILOTAGE_SESSIONS.md`. Ils sont déjà sur `main` et dans les paquets précédents. À retirer, avec Mic pour `main`.
+- **Pour l'audit (axe 3)** : des noms de modèle figurent dans `DECISIONS.md` (ligne 14), `fiches/FICHE_B1.md` et `PILOTAGE_SESSIONS.md`. Ils sont déjà sur `main` et dans les paquets précédents. À retirer, avec l'opérateur pour `main`.
 
 ## D-147 — Voie prédite et « déplacer la vue » : rejeu hors ligne, règle prudente, rien d'activé (16 octobre 2026)
 
@@ -2143,25 +2143,25 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - vue déplacée, série complète : 42 poses, 2 fausses, 0 sur la mauvaise voie ;
   - **règle prudente** : seulement pour les différés, l'étage moteur, une confiance ≥ 55, une chaîne ≤ 10 et un écartement à 10 mm des appuis. Elle pose 27 cuts (21 %), 0 faux, 0 mauvaise voie. 15 de ces poses demandent un geste sur la vue. Aucun des 224 cuts déjà posés ne change.
 - Partie 29 : la règle ne change rien.
-- Les seuils sont lus sur ces deux parties : la règle passera un lot neuf **en ombre** avant toute activation, qui se fera avec Mic.
+- Les seuils sont lus sur ces deux parties : la règle passera un lot neuf **en ombre** avant toute activation, qui se fera avec l'opérateur.
 - **Pièce à construire** : `amenerDansLaVue`, avec dézoom ou glisser, au plus 3 gestes par rail. La vue est remise en place avant le cut suivant. Il faut d'abord relever sur la maquette si ESV accepte ces gestes.
 - **Écho** : y consigner longueur, durée et caméra des glissers.
-- **Confirmé par Mic le 16 octobre** : il déplace la vue en glissant au **clic gauche**, ou en dézoomant. La mention « clic droit » de D-043 est fausse.
+- **Confirmé par l'opérateur le 16 octobre** : il déplace la vue en glissant au **clic gauche**, ou en dézoomant. La mention « clic droit » de D-043 est fausse.
 
 ## D-148 — G1, mémoire des différés : une seule façon tient, et rien n'est activé (16 octobre 2026)
 
 - Livré sur `claude/50-g1-memoire-differes` (15de62c) et intégré à `claude/50-base` (8f3b369). Seuls l'outil, l'essai et la fiche `fiches/G1_MEMOIRE_DIFFERES.md` changent. Rien sous `src/`, verify vert.
-- 236 cas, un par différé posé par Mic : partie 1 du second projet 127, partie 17 35, partie 24 40, partie 29 34. Chaque partie est jugée par un modèle appris sur les trois autres.
+- 236 cas, un par différé posé par l'opérateur : partie 1 du second projet 127, partie 17 35, partie 24 40, partie 29 34. Chaque partie est jugée par un modèle appris sur les trois autres.
 - **(a) Choix dans le pool** : 11 posés, 6 sur la mauvaise voie. Le classement ne se transfère pas d'une partie à l'autre. Abandon.
 - **(c) Voisin le plus proche** : 6 posés, 5 faux. Abandon.
 - **(b) Mémoire de voie de la série** : 56 posés, 53 justes à 10 mm près, 3 faux (5,4 %), 0 sur la mauvaise voie. La porte des 5 % n'est pas démontrée : la borne haute est à 14,6 %. Il faudrait environ 73 poses sans faute sur des parties neuves.
 - Le décalage constant par rapport à la pose de départ ESV est faux sur le second projet.
 - **Limites** :
   - le gain vient des longues séries ;
-  - la tête de série reste à Mic ;
-  - le jugement suppose qu'Ariane voit les corrections de Mic pendant le lot, ce qu'elle ne fait pas aujourd'hui ;
+  - la tête de série reste à l'opérateur ;
+  - le jugement suppose qu'Ariane voit les corrections de l'opérateur pendant le lot, ce qu'elle ne fait pas aujourd'hui ;
   - le réglage de (b) est sensible au protocole de simulation.
-- **Suite** : (b) en ombre, dans le lot et l'Écho, avec un événement par différé. Il faut définir avec Mic comment Ariane voit ses corrections. (b) recoupe la règle prudente de D-147 et sera rapprochée d'elle dans l'audit.
+- **Suite** : (b) en ombre, dans le lot et l'Écho, avec un événement par différé. Il faut définir avec l'opérateur comment Ariane voit ses corrections. (b) recoupe la règle prudente de D-147 et sera rapprochée d'elle dans l'audit.
 - Les trois chantiers du déclencheur de D-145 sont rentrés. L'audit est lancé.
 
 ## D-149 — Audit indépendant de la 5.0 : résultats et suites (16 octobre 2026)
@@ -2176,7 +2176,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Reste à mesurer sur la trace** : la nature des écritures par cut, Orbite contre Écho, et l'éventuelle télémétrie cliente d'ESV, à vérifier sur la maquette.
 - **Bloquant avant toute activation d'une pose nouvelle** :
   - B1 : un manifeste des parties. Les parties 17, 24, 29 et la partie 1 du second projet ont servi à régler. Toute partie neuve est réservée.
-  - B2 : la porte doit avoir un effectif, avec une borne de Wilson < 5 % : 73 poses sans faute, ou 110 avec une seule. Seuil de métier, à soumettre à Mic.
+  - B2 : la porte doit avoir un effectif, avec une borne de Wilson < 5 % : 73 poses sans faute, ou 110 avec une seule. Seuil de métier, à soumettre à l'opérateur.
 - **Appliqué tout de suite** :
   - I1 : noms de modèles d'IA retirés de la branche pilote, remplacés par des niveaux ;
   - I5 : la branche pilote est déclarée « documents seulement » dans `LIRE_EN_PREMIER.md`.
@@ -2185,7 +2185,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - jointure par cadre de scène et rejeu de la partie 24 (I2). Le même chantier refuse la règle « visité = bon » après une perte de page ou sur une capture vide (I3 a), et avertit quand deux sessions se chevauchent (U5) ;
   - les ombres : la règle prudente de voie prédite dans Orbite d'abord, puis la mémoire de série dans l'Écho, avec un module commun (I8). Le même chantier ajoute la dernière empreinte connue dans `storage.local` (U1) ;
   - la mesure de la trace (I6).
-- **À soumettre à Mic** :
+- **À soumettre à l'opérateur** :
   - B2 ;
   - le seuil de 0,8 s (I3 c) ;
   - les amendements du cahier (I7) ;
@@ -2221,7 +2221,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   2. **Faible à moyen** : presque aucune pause, 1 % des intervalles au-delà de 5 s contre 7 à 9 % chez l'opérateur. Le cycle est concentré entre 2 et 3 s. Le débit de pointe est le même que celui de l'opérateur.
   3. **Faible** : en partie 29, le lot avance par sauts vers l'avant.
 - **Ce que les exports ne montrent pas** : la télémétrie cliente d'ESV, les événements d'interface synthétiques. Il faut le vérifier sur la maquette : capture réseau d'un passage manuel contre un passage en lot, sur les mêmes cuts.
-- **Aucune action nouvelle proposée.** Réduire un écart (pauses, lectures) changerait le comportement dans ESV : c'est à Mic de décider.
+- **Aucune action nouvelle proposée.** Réduire un écart (pauses, lectures) changerait le comportement dans ESV : c'est à l'opérateur de décider.
 - **Remarque** : l'essai `memoire-differes` frôle sa limite de 20 s sous charge (15 s seul). À alléger.
 
 ## D-152 — Jointure par cadre de scène : la partie 24 était juste, seule une étiquette était fausse (16 octobre 2026)
@@ -2254,14 +2254,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - La test 5 relèvera `ms` sur chaque événement d'ombre : il est déjà dans l'événement.
 - Limites : une seule partie, banc sous Node et non Chromium, rapport de vitesse estimé sur le moteur seul.
 
-## D-155 — Réponses de Mic à l'audit, cap sur l'autonomie, nuit à gros moyens (16 octobre 2026)
+## D-155 — Réponses de l'opérateur à l'audit, cap sur l'autonomie, nuit à gros moyens (16 octobre 2026)
 
-- **Porte d'activation** : Mic trouve les 5 % trop sévères. Proposition, à confirmer dans le cahier v1.1 : jamais de pose sur la mauvaise voie, et pas plus de faux qu'Orbite aujourd'hui (4 à 9 % de faux verts selon les parties), mesurés en ombre sur des parties neuves. Il faut environ 30 à 40 poses, soit une ou deux parties à voie décalée.
-- **Mémoire de série (G1 b)** : Mic ne veut pas d'un mode où Ariane dépend de ses corrections pendant le lot. Le but est l'autonomie, avec les règles métier. G1 (b) reste un outil de mesure dans l'Écho, pas un mode de travail. Priorité à la voie prédite, au déplacement de la vue et aux règles métier.
-- **Bruit de la référence (U6)** : une seconde relecture à l'aveugle est impossible dans ESV, car Mic y verrait sa propre correction. Le bruit sera mesuré sur les données existantes, sans travail pour Mic.
-- **Noms de modèles d'IA sur `main`** : Mic donne son accord. Retirés de `main` (4c9fee0), documents seulement, rien sous `src/`.
-- **Nuit du 16 au 17** : Mic demande de grands chantiers aux niveaux forts, avec relance après chaque réinitialisation. Le plan et les règles assouplies sont dans `fiches/REPRISE_AUTONOME.md`.
-- Rien n'est activé au terrain sans Mic.
+- **Porte d'activation** : l'opérateur trouve les 5 % trop sévères. Proposition, à confirmer dans le cahier v1.1 : jamais de pose sur la mauvaise voie, et pas plus de faux qu'Orbite aujourd'hui (4 à 9 % de faux verts selon les parties), mesurés en ombre sur des parties neuves. Il faut environ 30 à 40 poses, soit une ou deux parties à voie décalée.
+- **Mémoire de série (G1 b)** : l'opérateur ne veut pas d'un mode où Ariane dépend de ses corrections pendant le lot. Le but est l'autonomie, avec les règles métier. G1 (b) reste un outil de mesure dans l'Écho, pas un mode de travail. Priorité à la voie prédite, au déplacement de la vue et aux règles métier.
+- **Bruit de la référence (U6)** : une seconde relecture à l'aveugle est impossible dans ESV, car l'opérateur y verrait sa propre correction. Le bruit sera mesuré sur les données existantes, sans travail pour l'opérateur.
+- **Noms de modèles d'IA sur `main`** : l'opérateur donne son accord. Retirés de `main` (4c9fee0), documents seulement, rien sous `src/`.
+- **Nuit du 16 au 17** : l'opérateur demande de grands chantiers aux niveaux forts, avec relance après chaque réinitialisation. Le plan et les règles assouplies sont dans `fiches/REPRISE_AUTONOME.md`.
+- Rien n'est activé au terrain sans l'opérateur.
 
 ## D-156 — Déplacer la vue : la pièce est écrite et coupée ; la maquette ne réagit pas aux gestes (16-17 octobre 2026)
 
@@ -2270,8 +2270,8 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Conditions : seulement pour un cut différé parce que la cible est hors de la vue, à l'étage « window », et qui passe la règle prudente D-147.
   - Réglage `deplacerVue.actif=false`. Coupé, les commandes à ESV sont identiques octet pour octet.
 - **Gestes vérifiés dans Chromium** : la suite d'événements est la même que celle d'une vraie souris. Le `click` final d'un glisser est volontairement omis, car il poserait le rail. La molette envoie `wheel` avec `wheelDeltaY` (sinon le zoom part dans le mauvais sens). Un faux cran n'atteint jamais un écouteur `mousewheel` : si ESV n'écoute que lui, le dézoom d'Ariane sera sans effet.
-- **La maquette ne réagit à aucun geste**. La réaction du vrai ESV n'est donc pas mesurée : gain en mm par pixel, persistance du zoom, lectures de nuage par geste. Les vérifications à faire sur le vrai ESV avant activation sont au § 6 de `fiches/DEPLACER_VUE.md`. Le relevé Écho des gestes de Mic y répondra en partie.
-- **Écho** : le relevé des glissers et des crans de molette de Mic est **actif par défaut** (`echo.gestesVue`), en observation pure avec des écouteurs passifs. Il ajoute environ 1 Ko par geste.
+- **La maquette ne réagit à aucun geste**. La réaction du vrai ESV n'est donc pas mesurée : gain en mm par pixel, persistance du zoom, lectures de nuage par geste. Les vérifications à faire sur le vrai ESV avant activation sont au § 6 de `fiches/DEPLACER_VUE.md`. Le relevé Écho des gestes de l'opérateur y répondra en partie.
+- **Écho** : le relevé des glissers et des crans de molette de l'opérateur est **actif par défaut** (`echo.gestesVue`), en observation pure avec des écouteurs passifs. Il ajoute environ 1 Ko par geste.
 - **Remarque à garder pour la trace (D-151)** : la pose directe du mode rapide peut déjà cliquer à des coordonnées hors de la partie visible de la vue, ce qu'un humain ne peut pas faire. À examiner.
 
 ## D-157 — Mode rapide : le clic du rail gauche tombe hors de la fenêtre, une marque côté page (17 octobre 2026)
@@ -2281,33 +2281,33 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - Reconstitution sur les lots réels : 185 clics sur 185 en partie 29 et 205 sur 205 en partie 1 du second projet. Les poses sont justes (relues à 1 mm), et le serveur ne voit rien de différent : les écritures sont identiques (D-151).
 - **Pourquoi c'est une marque** : un vrai clic humain à ces coordonnées n'atteindrait jamais le canevas. Elle n'est visible que si la page d'ESV relève les coordonnées des clics, ce qui n'est pas vérifié.
 - **Correction proposée, non appliquée** : poser avec recentrage, le chemin des cuts de référence, qui refuse une cible hors de la vue. Sans code : `rapide.pose=false`. Coût : 0 cut différé en plus, mais environ +0,67 s par cut rapide, soit +13 à +19 % de durée de lot. Variante : rail droit en direct et rail gauche recentré, pour environ moitié moins de temps.
-- **Décision à Mic** : c'est un arbitrage entre le débit et la trace humaine (sa règle « aucune marque distincte »).
+- **Décision à l'opérateur** : c'est un arbitrage entre le débit et la trace humaine (sa règle « aucune marque distincte »).
 - À noter aussi : Chromium arrondit les coordonnées à l'entier, donc les décalages d'un demi-pixel de `DECALAGES_CLIC` donnent 0 ou −1 px.
 
-## D-158 — Bruit de la référence de Mic : environ 1 mm par axe ; le seuil de 10 mm tient, celui de 5 mm comme taux seulement (17 octobre 2026)
+## D-158 — Bruit de la référence de l'opérateur : environ 1 mm par axe ; le seuil de 10 mm tient, celui de 5 mm comme taux seulement (17 octobre 2026)
 
 - Livré sur `claude/50-bruit-reference` (5d246a6, 2b73df1), intégré à `claude/50-base` (bf47d1c). Seuls l'outil, l'essai et la fiche `fiches/BRUIT_REFERENCE.md` changent, rien sous `src/`.
 - Mesuré sur 8 sessions Écho, soit 3 013 cuts dont 2 209 validés :
-  - les relectures espacées de Mic retrouvent la même pose à 0,5 mm près dans 79 % des cas, avec un écart maximal de 4,6 mm ;
+  - les relectures espacées de l'opérateur retrouvent la même pose à 0,5 mm près dans 79 % des cas, avec un écart maximal de 4,6 mm ;
   - le grain du clic est de 0,386 mm par pixel ;
   - entre voisins, l'écart est de 1,5 mm en latéral et 2,3 mm en vertical (borne haute) ;
   - le dernier pas d'un réglage est de 0,75 mm.
   Fourchette retenue : 0,75 à 1,5 mm par axe en latéral, jusqu'à 2,3 mm en vertical.
 - **Le seuil de 10 mm a un sens.** **Celui de 5 mm** a un sens comme taux sur une partie, pas comme verdict sur un cut : la zone grise va de 3,6 à 6,4 mm. Un écart de moins de 3 points entre deux taux ne se lit pas.
-- Débutant contre Mic (228 cuts communs) : 41,7 % des références sont la pose de départ elle-même, et 23,7 % sont déplacées de 25 mm ou plus.
-- Le biais propre à Mic ne se mesure pas avec un seul opérateur. Les relectures ne sont pas à l'aveugle.
+- Débutant contre l'opérateur (228 cuts communs) : 41,7 % des références sont la pose de départ elle-même, et 23,7 % sont déplacées de 25 mm ou plus.
+- Le biais propre à l'opérateur ne se mesure pas avec un seul opérateur. Les relectures ne sont pas à l'aveugle.
 - verify de l'agent : 0 échec, mais 8 fichiers annulés par délai sous charge (load 11). Ils passent seuls. Un verify complet sera relancé sur une machine calme avant la test 5.
 
-## D-159 — Règles métier de Mic, en ombre : PN retrouvés 17 sur 17 ; gain net modeste en différés, fort en relecture (17 octobre 2026)
+## D-159 — Règles métier de l'opérateur, en ombre : PN retrouvés 17 sur 17 ; gain net modeste en différés, fort en relecture (17 octobre 2026)
 
 - Livré sur `claude/50-regles-metier` (d987016 à 6bc01a9), intégré à `claude/50-base`. Les conflits avec « déplacer la vue » ont été résolus en gardant les deux. Les règles métier s'appliquent **après** « déplacer la vue », et ne peuvent que différer.
 - **Module** `src/regles-metier.js` et événement `regles-metier-ombre` (ombre active). L'activation est coupée, règle par règle (`zone-validation-en-place`, `pn-chaque-cut`, `grappe-differes`). Une règle activée ne peut que transformer une validation en différé.
-- **Détection des PN sans la liste de Mic** : chaussée au ras des rails sur les quatre côtés, sur deux cuts proches. **17 PN de Mic sur 17, et 0 fausse zone**, sur les parties 29, 12, 13 et la partie 1 du second projet. Les plages tombent à 0 à 3 cuts près. Les ADV n'ont pas de signal géométrique fiable : on passe par la grappe de différés.
+- **Détection des PN sans la liste de l'opérateur** : chaussée au ras des rails sur les quatre côtés, sur deux cuts proches. **17 PN de l'opérateur sur 17, et 0 fausse zone**, sur les parties 29, 12, 13 et la partie 1 du second projet. Les plages tombent à 0 à 3 cuts près. Les ADV n'ont pas de signal géométrique fiable : on passe par la grappe de différés.
 - **Écartement** : écart à la médiane de la partie supérieur à 15 mm. 54 cas sur 54 chez le débutant, 14 sur 15 en partie 29, 19 sur 19 au second projet, 5 sur 9 en partie 17.
-- **Si tout était activé** : 18 faux verts évités sur 85, au prix de 96 cuts différés en plus, soit environ 2 à 5 minutes de Mic sur 4 lots. Les gains viennent de `grappe-differes`, dont les 3 poses sur la mauvaise voie du second projet. `pn-chaque-cut` n'évite aucune faute de plus de 10 mm.
-- **Le fort potentiel est la liste des verts à contrôler.** En partie 29, 256 verts signalés contiennent 67 des 83 erreurs de plus de 10 mm. Cela représente environ 8,5 minutes de relecture, alors que Mic a relu 585 verts en 36 minutes. À présenter à Mic.
+- **Si tout était activé** : 18 faux verts évités sur 85, au prix de 96 cuts différés en plus, soit environ 2 à 5 minutes de l'opérateur sur 4 lots. Les gains viennent de `grappe-differes`, dont les 3 poses sur la mauvaise voie du second projet. `pn-chaque-cut` n'évite aucune faute de plus de 10 mm.
+- **Le fort potentiel est la liste des verts à contrôler.** En partie 29, 256 verts signalés contiennent 67 des 83 erreurs de plus de 10 mm. Cela représente environ 8,5 minutes de relecture, alors que l'opérateur a relu 585 verts en 36 minutes. À présenter à l'opérateur.
 - Toutes les parties ont servi à régler, réglages figés. Les parties 12 et 13 sont passées en apprentissage dans le manifeste (elles servent depuis D-140).
-- Zones à faire confirmer par Mic : partie 24, cuts 6569–6585 et 8518–8535, et un PN possible en partie 12, cuts 4495–4499.
+- Zones à faire confirmer par l'opérateur : partie 24, cuts 6569–6585 et 8518–8535, et un PN possible en partie 12, cuts 4495–4499.
 
 ## D-160 — Faux verts : presque tous viennent de la hauteur ; aucune règle de différé fiable (17 octobre 2026)
 
@@ -2316,9 +2316,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - 70 viennent de la **convention verticale**, c'est-à-dire la hauteur ;
   - 4 de la voie décalée, 2 du flanc partiel, 1 du nuage pauvre ;
   - 0 d'un mauvais minimum, 0 d'une validation en place.
-  - Dans 81 cas sur 85, Mic garde le même minimum de la grille qu'Ariane et ne fait que corriger la hauteur.
+  - Dans 81 cas sur 85, l'opérateur garde le même minimum de la grille qu'Ariane et ne fait que corriger la hauteur.
 - **Aucun signal ne trie les faux verts** d'une partie à l'autre (AUC de 0,52 à 0,78), comme dans G0. La règle « hauteur ambiguë » (`faux-vert-ombre`, calage ≥ 11 mm et dessus ≥ 14 mm) est consignée seulement. En validation croisée, son bilan net est nul.
-- **Le vrai levier est la pose verticale**. Une correction apprise, de la forme a + b × épaisseur du dessus, ferait passer les faux verts de 85 à 66, mais elle en crée 7 nouveaux. Ce serait une pose différente : non livrée. Elle passera d'abord en ombre, et la décision reviendra à Mic. À rapprocher de l'ombre verticale à 3,6 mm (P8) et de l'abandon du plafond P1.
+- **Le vrai levier est la pose verticale**. Une correction apprise, de la forme a + b × épaisseur du dessus, ferait passer les faux verts de 85 à 66, mais elle en crée 7 nouveaux. Ce serait une pose différente : non livrée. Elle passera d'abord en ombre, et la décision reviendra à l'opérateur. À rapprocher de l'ombre verticale à 3,6 mm (P8) et de l'abandon du plafond P1.
 
 ## D-161 — Hauteur apprise, en ombre : 85 → 61 faux verts sans en créer, en validation croisée (17 octobre 2026)
 
@@ -2344,7 +2344,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Le classement** combine l'écart d'écartement à la médiane de la partie, le saut de hauteur par rapport aux voisins, les rouges proches et les différés voisins.
 - **Rejeu** :
 
-  | Partie | À contrôler | Verts relus par Mic | Erreurs de plus de 10 mm trouvées | Temps |
+  | Partie | À contrôler | Verts relus par l'opérateur | Erreurs de plus de 10 mm trouvées | Temps |
   |---|---|---|---|---|
   | 29 | 121 | 584 | 63 sur 83 (76 %), dont 38 des 39 gros écarts | 7,5 min au lieu de 36 |
   | Partie 1 du second projet | 77 | 275 | 27 sur 35 | 4,8 min au lieu de 23 |
@@ -2356,9 +2356,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - la liste réelle sera plus longue (estimation pessimiste en partie 29 : 154 verts, soit 9,5 minutes) ;
   - il faut que la liste ESV ait été chargée en entier ;
   - les ADV restent invisibles.
-- **Test 5 lancée** depuis `claude/50-base` (0f96f17), sur `claude/495-test-5`. Elle sera relue au niveau maximal avant d'être envoyée à Mic. Le mode rapide reste tel quel tant que Mic n'a pas tranché D-157.
+- **Test 5 lancée** depuis `claude/50-base` (0f96f17), sur `claude/495-test-5`. Elle sera relue au niveau maximal avant d'être envoyée à l'opérateur. Le mode rapide reste tel quel tant que l'opérateur n'a pas tranché D-157.
 
-## D-163 — 4.9.5 test 5 : relue au niveau maximal, envoyée à Mic (17 octobre 2026)
+## D-163 — 4.9.5 test 5 : relue au niveau maximal, envoyée à l'opérateur (17 octobre 2026)
 
 - Construite sur `claude/495-test-5` (fb7dad9, d7b89ba, f89e00b, c2dc0e0), à partir de la base 5.0 (0f96f17), puis réintégrée dans `claude/50-base` par avance rapide. Version 4.9.5.5.
 - **Relecture indépendante au niveau maximal, en lecture seule. Verdict : envoyer.**
@@ -2368,7 +2368,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - La liste des verts n'envoie rien à ESV.
   - Déplacer la vue, coupé, est inerte.
 - **Deux points importants de la relecture, corrigés avant l'envoi** :
-  - I-1 : l'ombre « mémoire des différés » de l'Écho relance deux fois le moteur par différé, et ce coût n'a pas été mesuré au banc. Elle est **coupée au terrain** (`memoireDifferesOmbre.actif=false`), car les données de l'Écho passent avant et Mic ne veut pas de ce mode (D-155). Les essais la jouent toujours active.
+  - I-1 : l'ombre « mémoire des différés » de l'Écho relance deux fois le moteur par différé, et ce coût n'a pas été mesuré au banc. Elle est **coupée au terrain** (`memoireDifferesOmbre.actif=false`), car les données de l'Écho passent avant et l'opérateur ne veut pas de ce mode (D-155). Les essais la jouent toujours active.
   - I-2 : la consigne est complétée (faux vert douteux, message « Liste d'ESV non lue »).
 - verify : 2 046 réussis, 0 échec, 2 ignorés. Moteur identique à `main`.
 - **Paquet** `ariane-4.9.5-test.5.zip` : 2 075 808 octets, SHA-256 `594a026b13d1fe7e1d159ea246b60f43627dccb977652b7d60f94b72ff7a6fea`. Le premier paquet, construit avant la relecture, n'est pas envoyé.
@@ -2376,7 +2376,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - en ombre : voie prédite, règles métier, faux vert « hauteur ambiguë », hauteur apprise, P8 ;
   - en observation : le relevé des gestes en Écho, la liste des verts à contrôler et la dernière empreinte de contrat ;
   - coupé : déplacer la vue.
-  La pose est inchangée. Le mode rapide est inchangé, D-157 attend Mic.
+  La pose est inchangée. Le mode rapide est inchangé, D-157 attend l'opérateur.
 - Points utiles de la relecture, gardés pour la test 6 : le retour arrière sans « Recharger », l'ordre de lecture du journal dans `vertsAControler`, `BananeSettings` non gelé, la liste absente d'un export sans zip.
 
 ## D-164 — Vague 4 intégrée : clic humain du mode rapide (3 réglages), détection des ADV, points utiles (17 octobre 2026)
@@ -2389,9 +2389,9 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Avec les deux modes corrigés : 0 clic hors vue, mêmes poses, 0 différé de plus, mesuré au banc sur deux lots réels.
   - Garde-fou consigné `clic-hors-vue` dans tous les modes.
   - Arrondi des demi-pixels : biais d'environ 0,19 mm par axe, et la reprise à −0,5 px ne sert jamais. Rien n'est changé.
-  - **Mic (17 octobre) : « essayer les 2 méthodes »** → test 6 avec un choix dans le panneau.
+  - **L'opérateur (17 octobre) : « essayer les 2 méthodes »** → test 6 avec un choix dans le panneau.
 - **Détection des ADV** (`claude/50-detection-adv`, `fiches/DETECTION_ADV.md`) : signal du « rail de plus » dans le profil en travers (aiguille, contre-rail, cœur).
-  - **8 zones de Mic sur 8**, 12 aiguilles sur 12, aucune plage sans ADV, aucun PN pris pour un ADV.
+  - **8 zones de l'opérateur sur 8**, 12 aiguilles sur 12, aucune plage sans ADV, aucun PN pris pour un ADV.
   - Zone `adv` en ombre dans les règles métier. Branchée sur la liste des verts : au second projet, 33 erreurs sur 35 au lieu de 27, et 20 gros écarts sur 20, pour 7 verts de plus.
   - Toutes les parties étiquetées ont servi à régler.
 - **Points utiles de la relecture de la test 5** (`claude/50-utiles-t6`) :
@@ -2404,7 +2404,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 ## D-165 — 4.9.5 test 6 : choix du clic et règle « grappe » dans le panneau ; relue au niveau maximal, envoyée (17 octobre 2026)
 
-- Demandes de Mic : « essayer les 2 méthodes » pour le clic du mode rapide, puis « go » pour un interrupteur de la règle grappe.
+- Demandes de l'opérateur : « essayer les 2 méthodes » pour le clic du mode rapide, puis « go » pour un interrupteur de la règle grappe.
 - Construite sur `claude/495-test-6` (b56172f à 2d60d04), depuis la base a362a29, puis réintégrée dans `claude/50-base` par avance rapide. Version 4.9.5.6.
 - **Panneau** :
   - choix du clic : « Comme avant » (défaut), « Variante : rail gauche recentré », « Tout recentré, comme un humain » ;
@@ -2417,7 +2417,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Le coût de l'ADV est de 7 ms par cut.
   - verify : 2 093 réussis, 0 échec.
 - **Points de la relecture** :
-  - I-1 : en mode corrigé, un clic hors de la fenêtre arrête le lot en erreur, là où « Comme avant » cliquait quand même. Cela n'arrive que si le canevas d'ESV dépasse la fenêtre. Consigne passée à Mic par message : fenêtre grande ; en cas de « Position proposée hors de la vue », exporter et repasser en « Comme avant ».
+  - I-1 : en mode corrigé, un clic hors de la fenêtre arrête le lot en erreur, là où « Comme avant » cliquait quand même. Cela n'arrive que si le canevas d'ESV dépasse la fenêtre. Consigne passée à l'opérateur par message : fenêtre grande ; en cas de « Position proposée hors de la vue », exporter et repasser en « Comme avant ».
   - I-2 : mesurer dans l'export l'effet indirect de la règle sur les appuis.
   - Utiles : `CONTENU.txt` ne décrit que le dernier lot, et le `DECISIONS.md` du paquet est en retard.
 - **Paquet** `ariane-4.9.5-test.6.zip` : 2 120 050 octets, SHA-256 `63cb96d3dfe30ef23a487f160d9ba45b0f3fa2ba3c777a140bdc4d09ef2d0b6e`.
@@ -2428,31 +2428,31 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - 31 invalides : 29 posés (dont 14 par la voie) et 2 différés. Cycle médian 1,78 s, P90 5,9 s : la médiane est la même qu'en partie 29 avec la test 3 (1,76 s).
 - **Clic hors vue : aucun événement `clic-hors-vue`.** La Variante a supprimé les clics hors fenêtre (à confirmer sur un lot plus long).
 - **Règle grappe** : active, mais aucune grappe dans ce lot (0 différé autour). Aucun cut n'a été mis en attente par la règle.
-- **Ombres** : `regles-metier-ombre` voit un PN (« cœur ») sur 7 cuts et des zones d'ADV. La carte « À contrôler » a été vue chez Mic : 17 cuts, ADV 846–911, autour du différé 899, ADV 5467–5555 et PN 5936–5954, environ 1 minute.
-- **Défaut d'affichage** : après la fin du lot, la case cochée affiche « Activée pour le prochain lot », alors qu'elle était déjà active pour ce lot. Mic a cru qu'elle n'avait pas servi. Le libellé est à corriger à la prochaine version : dire ce qu'a utilisé le dernier lot et ce qu'utilisera le prochain.
+- **Ombres** : `regles-metier-ombre` voit un PN (« cœur ») sur 7 cuts et des zones d'ADV. La carte « À contrôler » a été vue chez l'opérateur : 17 cuts, ADV 846–911, autour du différé 899, ADV 5467–5555 et PN 5936–5954, environ 1 minute.
+- **Défaut d'affichage** : après la fin du lot, la case cochée affiche « Activée pour le prochain lot », alors qu'elle était déjà active pour ce lot. L'opérateur a cru qu'elle n'avait pas servi. Le libellé est à corriger à la prochaine version : dire ce qu'a utilisé le dernier lot et ce qu'utilisera le prochain.
 
-## D-167 — Test 6, partie 9 en « Tout recentré » : la règle grappe agit ; Mic attend que les règles métier s'appliquent aux PN et aux ADV (17 octobre 2026)
+## D-167 — Test 6, partie 9 en « Tout recentré » : la règle grappe agit ; l'opérateur attend que les règles métier s'appliquent aux PN et aux ADV (17 octobre 2026)
 
 - **Partie 9**, second projet. Lot parti à 10 h 04, exporté à 10 h 06, archivé (`2026-10-17_v4.9.5.6_projet2-parties-8-9`), choix `tout-recentre` et règle grappe activée.
   - 29 posés et 13 différés. **La règle grappe a mis 4 cuts en attente** (7002, 7353, 8623, 8624).
   - 0 clic hors vue.
   - Cycle médian 2,41 s, contre 1,78 s en Variante sur la partie 8. Ce sont deux parties différentes, on ne peut pas encore conclure.
   - Ombre : PN reconnu sur 4049–4056.
-- **Second lot sur la partie 8 (10 h 01)** : la partie était déjà finie, donc le lot a seulement revalidé le cut 5948 puis il est sorti. Mic a cru à un défaut ; il faut un message clair quand il ne reste rien à faire.
-- **Malentendu** : Mic s'attendait à ce que la case « règle métier » applique ses règles aux aiguilles et aux PN. Le libellé « grappe (aiguille, série de rouges) » est trompeur. Sur la partie 8, Ariane a posé 6 cuts dans l'ADV 846–911, 15 dans l'ADV 5467–5555 et 8 dans le PN 5936–5954. Seule l'ombre PN aurait gardé 7 de ces cuts.
-- **Proposé à Mic** : trois cases claires (PN, ADV, série de différés), et le choix entre « Ariane me laisse ces zones » et « elle pose et me les signale ».
+- **Second lot sur la partie 8 (10 h 01)** : la partie était déjà finie, donc le lot a seulement revalidé le cut 5948 puis il est sorti. L'opérateur a cru à un défaut ; il faut un message clair quand il ne reste rien à faire.
+- **Malentendu** : l'opérateur s'attendait à ce que la case « règle métier » applique ses règles aux aiguilles et aux PN. Le libellé « grappe (aiguille, série de rouges) » est trompeur. Sur la partie 8, Ariane a posé 6 cuts dans l'ADV 846–911, 15 dans l'ADV 5467–5555 et 8 dans le PN 5936–5954. Seule l'ombre PN aurait gardé 7 de ces cuts.
+- **Proposé à l'opérateur** : trois cases claires (PN, ADV, série de différés), et le choix entre « Ariane me laisse ces zones » et « elle pose et me les signale ».
 
-## D-168 — Mic : « Ariane doit savoir poser par elle-même, c'est le but » ; les zones PN et ADV ne lui sont pas laissées (17 octobre 2026)
+## D-168 — l'opérateur : « Ariane doit savoir poser par elle-même, c'est le but » ; les zones PN et ADV ne lui sont pas laissées (17 octobre 2026)
 
-- Réponse à D-167 : Mic écarte « Ariane me laisse les zones ». Les cases « me laisser chaque cut d'un PN / d'un ADV » ne seront **pas** construites. Pour l'instant, Ariane pose dans les zones et les signale dans « À contrôler » (choix B).
-- **Cap** : qu'Ariane applique elle-même la méthode de Mic dans les zones, y compris le contrôle des **verts**, dont elle ne visite aucun aujourd'hui. Les grosses erreurs d'extraction se trouvent dans ces verts.
+- Réponse à D-167 : l'opérateur écarte « Ariane me laisse les zones ». Les cases « me laisser chaque cut d'un PN / d'un ADV » ne seront **pas** construites. Pour l'instant, Ariane pose dans les zones et les signale dans « À contrôler » (choix B).
+- **Cap** : qu'Ariane applique elle-même la méthode de l'opérateur dans les zones, y compris le contrôle des **verts**, dont elle ne visite aucun aujourd'hui. Les grosses erreurs d'extraction se trouvent dans ces verts.
 - **Chantier lancé** : `claude/50-zones-autonomes`, au niveau fort.
   - Qualité des poses d'Ariane dans les zones.
   - Correction prudente des verts de zone, mesurée sur les Échos.
   - Coût en temps.
   - Trace laissée en visitant un vert.
   - Ombre `zones-ombre` si une règle tient.
-- La visite des verts est une action nouvelle dans ESV : elle sera décidée avec Mic, chiffres en main.
+- La visite des verts est une action nouvelle dans ESV : elle sera décidée avec l'opérateur, chiffres en main.
 - La case grappe reste, avec un libellé à corriger : « série de différés », et non « aiguille ».
 
 ## D-169 — Lot des parties 2, 3, 4, 6, 7 du second projet (test 3) : bilan et premières prédictions scellées avant Écho (17 octobre 2026)
@@ -2470,52 +2470,52 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - Débit de 1 000 à 1 225 cuts par heure, cycle médian de 2,4 à 2,6 s. Aucun incident.
   - Pas de voie décalée d'ensemble comme en partie 1 : 53 des 68 différés sont en zone d'ADV.
   - Un avis de contrat probablement faux (classes des boutons de rail).
-  - Ariane pose le cut 1 de chaque partie et le cut 0 de la partie 2, alors que Mic les ignore en partie 1 (SKIP).
+  - Ariane pose le cut 1 de chaque partie et le cut 0 de la partie 2, alors que l'opérateur les ignore en partie 1 (SKIP).
 - **Prédictions figées** avec les réglages de `datasets/reglages-figes.json` (empreinte bff4c5ba…) et la base 2d60d04. Fichier `PREDICTIONS.json`, SHA-256 `9deaa9a17cc273e20a5a42d72a17cb629d49cb66c57df9f702a90878387d7196`, déposé dans banane-data (`travail/2026-10-17_predictions-projet2-p2-p7`) **avant toute Écho**. Il prédit :
   - voie prédite : 0 différé posable ;
   - règles métier : 18 PN et 15 ADV, avec 123 cuts qui seraient mis en attente si toutes les règles étaient actives ;
   - hauteur apprise : 41 cuts changés, dont 5 au plafond de +5 mm ;
   - verts à contrôler : entre 103 et 214 verts, soit 6 à 13 minutes.
-- Demande à Mic, quand il fera les Échos : noter les PN et les ADV, faire toute la partie 2, les zones d'ADV des parties 6 et 7, les 5 cuts à +5 mm, et relire tous les verts d'une partie courte en chronométrant.
+- Demande à l'opérateur, quand il fera les Échos : noter les PN et les ADV, faire toute la partie 2, les zones d'ADV des parties 6 et 7, les 5 cuts à +5 mm, et relire tous les verts d'une partie courte en chronométrant.
 
-## D-170 — Recadrage de Mic : la 5.0 doit faire elle-même la relecture qu'il fait en Écho (17 octobre 2026)
+## D-170 — Recadrage de l'opérateur : la 5.0 doit faire elle-même la relecture qu'il fait en Écho (17 octobre 2026)
 
-- **Mic** : « le but n'est pas de me laisser plus de travail avec des contrôles à effectuer ; l'application des règles métier vise à réduire ce travail de contrôle ; Ariane doit savoir le faire ; j'ai distribué de nombreux lots Orbite → Écho montrant la méthode, et c'est ce que j'attends d'Ariane sur la 5.0 ».
-- **Ce que je corrige** : la liste « À contrôler » et les mises en attente (règle grappe) ne sont que des étapes. Elles laissent encore le travail à Mic. Le cap de la 5.0 est une **relecture autonome** : après les rouges, Ariane visite ce que Mic aurait visité (autour des rouges, PN, ADV avec leurs marges, cuts isolés, verts compris), corrige comme lui (moteur et hauteur apprise), puis valide.
-- **Mesure de réussite** : la part des corrections de Mic, dans ses couples Orbite et Écho, qu'Ariane reproduit seule à 5 et à 10 mm près, face aux cuts justes qu'elle abîme. On la mesure en validation croisée par partie, puis sur des parties réservées.
+- **L'opérateur** : « le but n'est pas de me laisser plus de travail avec des contrôles à effectuer ; l'application des règles métier vise à réduire ce travail de contrôle ; Ariane doit savoir le faire ; j'ai distribué de nombreux lots Orbite → Écho montrant la méthode, et c'est ce que j'attends d'Ariane sur la 5.0 ».
+- **Ce que je corrige** : la liste « À contrôler » et les mises en attente (règle grappe) ne sont que des étapes. Elles laissent encore le travail à l'opérateur. Le cap de la 5.0 est une **relecture autonome** : après les rouges, Ariane visite ce que l'opérateur aurait visité (autour des rouges, PN, ADV avec leurs marges, cuts isolés, verts compris), corrige comme lui (moteur et hauteur apprise), puis valide.
+- **Mesure de réussite** : la part des corrections de l'opérateur, dans ses couples Orbite et Écho, qu'Ariane reproduit seule à 5 et à 10 mm près, face aux cuts justes qu'elle abîme. On la mesure en validation croisée par partie, puis sur des parties réservées.
 - Le chantier `claude/50-zones-autonomes` est élargi à toute la relecture : fiche `RELECTURE_AUTONOME.md`.
-- **Question posée à Mic** : Ariane peut-elle visiter des cuts verts dans ESV, d'abord sans rien modifier (visite, calcul, note), puis en corrigeant une fois les chiffres validés ?
+- **Question posée à l'opérateur** : Ariane peut-elle visiter des cuts verts dans ESV, d'abord sans rien modifier (visite, calcul, note), puis en corrigeant une fois les chiffres validés ?
 
-## D-171 — Accord de Mic : Ariane peut visiter des cuts verts dans ESV, d'abord sans rien modifier (17 octobre 2026)
+## D-171 — Accord de l'opérateur : Ariane peut visiter des cuts verts dans ESV, d'abord sans rien modifier (17 octobre 2026)
 
-- Mic : « je suis d'accord ». La relecture autonome (D-170) commence par une **ombre de terrain**. Après le lot, Ariane visite les cuts que Mic aurait relus, verts compris : zones PN et ADV avec leurs marges, abords des rouges et des différés, cuts isolés, liste « À contrôler ». Pour chacun, elle capture, calcule la pose qu'elle donnerait (moteur et hauteur apprise) et note l'écart avec la pose actuelle. **Elle ne modifie rien et ne valide rien.**
-- La correction réelle viendra plus tard, avec Mic, une fois les chiffres validés sur des parties réservées avec Écho.
+- L'opérateur : « je suis d'accord ». La relecture autonome (D-170) commence par une **ombre de terrain**. Après le lot, Ariane visite les cuts que l'opérateur aurait relus, verts compris : zones PN et ADV avec leurs marges, abords des rouges et des différés, cuts isolés, liste « À contrôler ». Pour chacun, elle capture, calcule la pose qu'elle donnerait (moteur et hauteur apprise) et note l'écart avec la pose actuelle. **Elle ne modifie rien et ne valide rien.**
+- La correction réelle viendra plus tard, avec l'opérateur, une fois les chiffres validés sur des parties réservées avec Écho.
 - Chantier lancé : `claude/50-relecture-ombre`, au niveau fort. Réglage coupé par défaut, case dans le panneau. La trace est celle d'une visite humaine.
 
-## D-172 — Règle SKIP de Mic pour les premiers cuts (et tous les autres) (17 octobre 2026)
+## D-172 — Règle SKIP de l'opérateur pour les premiers cuts (et tous les autres) (17 octobre 2026)
 
-- Mic : « si aucun point ne s'affiche oui, si un seul scanner s'affiche oui c'est à skip aussi, sinon il ne faut jamais les ignorer, il faut les visiter et corriger si besoin ».
+- L'opérateur : « si aucun point ne s'affiche oui, si un seul scanner s'affiche oui c'est à skip aussi, sinon il ne faut jamais les ignorer, il faut les visiter et corriger si besoin ».
 - **Règle** : un cut se met en SKIP seulement si **aucun point** ne s'affiche, ou si **un seul scanner** s'affiche. Dans tous les autres cas, cuts 0 à 3 compris, Ariane le visite et le corrige si besoin, comme les autres.
 - Le cut 1 de chaque partie posé par Ariane au lot des parties 2 à 7 (D-169) n'est donc pas une faute en soi : il faut vérifier s'il avait des points des deux scanners.
-- Aujourd'hui Ariane refuse tout SKIP. Pour suivre la règle : d'abord une **détection en ombre** (« ce cut serait à SKIP : aucun point / un seul scanner »), notée au journal et comparée aux SKIP de Mic dans les Échos ; l'envoi réel du SKIP, par le même geste qu'un humain, reste coupé et ne s'active qu'avec Mic.
+- Aujourd'hui Ariane refuse tout SKIP. Pour suivre la règle : d'abord une **détection en ombre** (« ce cut serait à SKIP : aucun point / un seul scanner »), notée au journal et comparée aux SKIP de l'opérateur dans les Échos ; l'envoi réel du SKIP, par le même geste qu'un humain, reste coupé et ne s'active qu'avec l'opérateur.
 
-## D-173 — Condition de Mic pour la test 7 : règles métier fonctionnelles et UX réorganisée (17 octobre 2026)
+## D-173 — Condition de l'opérateur pour la test 7 : règles métier fonctionnelles et UX réorganisée (17 octobre 2026)
 
-- Mic : la test 7 ne se fabrique **que lorsque l'avancée sur les points du matin est réelle** (D-170 à D-172 : relecture autonome, pose seule en zones PN et ADV, règle SKIP). Elle doit être **fonctionnelle sur les règles métier** : elles agissent, pas seulement en ombre.
-- Ce que j'en tire : chaque règle qui agit dans la test 7 doit avoir ses chiffres au banc, mesurés en validation croisée sur parties d'apprentissage puis jugés sur parties réservées, avec 0 mauvaise voie. Ce qui ne tient pas reste en ombre et c'est dit à Mic.
-- Mic veut aussi une **réorganisation propre du panneau**, désorganisé par les derniers ajouts. Le chantier `claude/50-panneau-t7` est élargi : inventaire, nouvelle structure (lot, règles du prochain lot, résultats, relecture, détails repliés), sans perte d'information ni changement vers ESV.
-- Temps et calcul : gros calculs et essais autorisés jusqu'au retour de Mic.
+- L'opérateur : la test 7 ne se fabrique **que lorsque l'avancée sur les points du matin est réelle** (D-170 à D-172 : relecture autonome, pose seule en zones PN et ADV, règle SKIP). Elle doit être **fonctionnelle sur les règles métier** : elles agissent, pas seulement en ombre.
+- Ce que j'en tire : chaque règle qui agit dans la test 7 doit avoir ses chiffres au banc, mesurés en validation croisée sur parties d'apprentissage puis jugés sur parties réservées, avec 0 mauvaise voie. Ce qui ne tient pas reste en ombre et c'est dit à l'opérateur.
+- L'opérateur veut aussi une **réorganisation propre du panneau**, désorganisé par les derniers ajouts. Le chantier `claude/50-panneau-t7` est élargi : inventaire, nouvelle structure (lot, règles du prochain lot, résultats, relecture, détails repliés), sans perte d'information ni changement vers ESV.
+- Temps et calcul : gros calculs et essais autorisés jusqu'au retour de l'opérateur.
 
 ## D-174 — Relecture autonome : la correction des verts de PN peut agir, le reste reste en ombre (17 octobre 2026)
 
-- **Fait (étude `claude/50-zones-autonomes`, fusionnée dans 50-base)** : la sélection « méthode de Mic » contient 94 % de ses corrections de plus de 10 mm.
+- **Fait (étude `claude/50-zones-autonomes`, fusionnée dans 50-base)** : la sélection « méthode de l'opérateur » contient 94 % de ses corrections de plus de 10 mm.
 - **Règle figée** (`datasets/relecture-reglages-proposes.json`) : 8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus de la médiane, sur les verts seulement, jamais un cut posé ou différé par le lot.
   - En validation croisée : 79 justes, 0 mauvaise voie, 6 abîmés sur 1 445. **PN 36/36.** ADV 18 % d'erreurs, abords 14 %.
   - Sur les parties réservées 1:25 et 1:11 : 0 mauvaise voie, PN 3/3.
 - **Décision** :
   - dans la test 7, seule la correction des verts de PN est proposée en mode « corriger » ;
   - ADV, abords, verts hors zone, cuts du lot et SKIP restent en ombre ;
-  - le réglage reste coupé par défaut ; Mic choisit le mode dans le panneau.
+  - le réglage reste coupé par défaut ; l'opérateur choisit le mode dans le panneau.
 - **Non démontré** : la porte des 9 % demande 39 actions sans erreur, et il n'y en a que 9 de jugées. Les Échos des parties 2 à 9 du projet 2 suffiraient.
 - **Suite** : atelier P-7 pour la pose en ADV, aux abords et dans les grappes. La SKIP « un seul scanner » ne se mesure pas : ESV fond les scanners en un seul nuage.
 
@@ -2528,80 +2528,80 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - le code rend la décision de l'étude sur 1 323 cuts sur 1 323 ;
   - PN : 36 justes, 0 erreur, 0 mauvaise voie.
 - **Ce qui bloque (F)** :
-  - le rôle « vert » est présumé : un SKIP de Mic, un cut repris à la main ou le dernier cut d'un lot borné peuvent être corrigés, jusqu'à écraser une correction de Mic ;
+  - le rôle « vert » est présumé : un SKIP de l'opérateur, un cut repris à la main ou le dernier cut d'un lot borné peuvent être corrigés, jusqu'à écraser une correction de l'opérateur ;
   - deux passes peuvent tourner en même temps.
 - **Constats importants (F)** :
-  - **le geste de validation** : Mic valide toujours par **Maj+Espace** (1 377 fois sur 1 377 dans les Échos), jamais par Ctrl+Entrée ;
+  - **le geste de validation** : l'opérateur valide toujours par **Maj+Espace** (1 377 fois sur 1 377 dans les Échos), jamais par Ctrl+Entrée ;
   - **les réglages** : s'ils sont absents ou faux, la règle retombe sur un défaut plus permissif ;
   - **le plafond de 120 cuts** coupe les PN ;
   - **la chaîne d'appuis** part des poses du lot, contrairement à l'étude ;
   - **le rythme** : il n'y a pas de pause, et la passe démarre 1,5 s après le lot.
-- **Constat (F)** : en ombre, ESV écrit lui-même « vu » sur chaque cut neuf affiché. Une visite de Mic fait la même chose. Mais le panneau et la fiche disaient « ne modifie rien » : il faut les corriger et le dire à Mic.
+- **Constat (F)** : en ombre, ESV écrit lui-même « vu » sur chaque cut neuf affiché. Une visite de l'opérateur fait la même chose. Mais le panneau et la fiche disaient « ne modifie rien » : il faut les corriger et le dire à l'opérateur.
 - **Nuance de chiffre (F)** : 29 des 36 corrections PN justes viennent des parties 12 et 13, qui n'ont pas de lot. Sur des parties traitées par lot, on n'a que 7 PN sur 7.
 - **Décision** :
   - la branche n'est pas fusionnée ;
   - un chantier de correction appliquera les 11 points ;
-  - le mode « corriger » passera par le geste de Mic (Maj+Espace), ou restera verrouillé tant que ce geste n'est pas prouvé.
+  - le mode « corriger » passera par le geste de l'opérateur (Maj+Espace), ou restera verrouillé tant que ce geste n'est pas prouvé.
 
-## D-176 — Avis de Mic sur la relecture de fin de lot ; rythme et départ (17 octobre 2026)
+## D-176 — Avis de l'opérateur sur la relecture de fin de lot ; rythme et départ (17 octobre 2026)
 
-- **Mic** : « d'accord, on teste, je veux voir ce que ça donne. Je suis un peu dubitatif : je pensais qu'elle le ferait au fur et à mesure, comme un véritable opérateur. »
+- **L'opérateur** : « d'accord, on teste, je veux voir ce que ça donne. Je suis un peu dubitatif : je pensais qu'elle le ferait au fur et à mesure, comme un véritable opérateur. »
 - **Ce que j'en retiens** : la façon naturelle, c'est d'appliquer la règle **au fil du lot**. Quand le lot passe dans un PN ou une ADV, ou sur un rouge isolé, il visite et corrige aussi les cuts voisins (verts compris), puis il reprend vers le rouge suivant.
   - La logique est la même que celle de la passe de fin de lot : sélection, calcul, règle prudente. Seul change le moment où elle s'applique.
   - La test 7 garde la passe de fin de lot, parce qu'elle est prête et revue. Le mode « au fil du lot » devient le chantier suivant ; il sera comparé à la passe sur les mêmes parties.
 - **Rythme** :
-  - pas de pauses artificielles, car le lot Orbite n'en fait pas non plus et Mic n'en voit pas l'utilité ;
-  - **départ automatique juste après le lot, sans compte à rebours.** Mic : « pas besoin de toute cette fantaisie ; quand Ariane travaille, je ne corrige pas un cut ». Le bouton d'arrêt de la passe reste ;
+  - pas de pauses artificielles, car le lot Orbite n'en fait pas non plus et l'opérateur n'en voit pas l'utilité ;
+  - **départ automatique juste après le lot, sans compte à rebours.** l'opérateur : « pas besoin de toute cette fantaisie ; quand Ariane travaille, je ne corrige pas un cut ». Le bouton d'arrêt de la passe reste ;
   - cela remplace le point 10 de D-175, qui demandait des pauses et un départ au clic.
 
-## D-177 — Mic livrera 1 000 à 1 500 corrections, avec une documentation, pour le méga cerveau (17 octobre 2026)
+## D-177 — l'opérateur livrera 1 000 à 1 500 corrections, avec une documentation, pour le méga cerveau (17 octobre 2026)
 
-- **Mic** : il livrera « le double ou le triple » des 500 corrections prévues pour la GCV2 (lot G du plan), de quoi mesurer un vrai écart avec l'ancienne version. Il fera aussi joindre une documentation.
+- **L'opérateur** : il livrera « le double ou le triple » des 500 corrections prévues pour la GCV2 (lot G du plan), de quoi mesurer un vrai écart avec l'ancienne version. Il fera aussi joindre une documentation.
 - **Protocole retenu** :
   - lot Orbite avec la version courante, puis Écho sur la même partie, exports d'origine gardés ;
   - de préférence des parties neuves, et pas seulement du projet 2 ;
   - les PN et les ADV notés (début, fin, aiguilles).
 - **Partage des parties** : dans le manifeste, apprentissage ou réservée, **avant** toute lecture des résultats. Une partie sur trois environ est gardée pour le jugement.
-- **Écart avec l'ancienne version** : mesuré hors ligne, en rejouant les mêmes captures avec l'ancien moteur et avec le nouveau. Mic n'a pas à faire tourner deux versions.
+- **Écart avec l'ancienne version** : mesuré hors ligne, en rejouant les mêmes captures avec l'ancien moteur et avec le nouveau. L'opérateur n'a pas à faire tourner deux versions.
 - **Documentation** : avant de la verser dans un dépôt, vérifier qu'elle n'est ni propriétaire ni sensible. Les deux dépôts sont publics. Sinon, la garder hors dépôt et n'en reporter que les règles, reformulées.
-- **Précision de Mic, sur les corrections des débutants** : « elles sont utiles, car j'y applique le bon comportement de la règle métier. La lacune des débutants est bien plus dans la règle métier que dans leur placement sur le nuage. » Conséquence : les Échos sur des parties de débutants servent à apprendre **la sélection** (quoi relire, où, avec quelles marges, quand corriger). Les couples Orbite → Écho servent à apprendre **la précision de pose d'Ariane**. Les deux jeux restent séparés dans le manifeste.
+- **Précision de l'opérateur, sur les corrections des débutants** : « elles sont utiles, car j'y applique le bon comportement de la règle métier. La lacune des débutants est bien plus dans la règle métier que dans leur placement sur le nuage. » Conséquence : les Échos sur des parties de débutants servent à apprendre **la sélection** (quoi relire, où, avec quelles marges, quand corriger). Les couples Orbite → Écho servent à apprendre **la précision de pose d'Ariane**. Les deux jeux restent séparés dans le manifeste.
 
 ## D-178 — Pas de le niveau le plus fort avant la dernière session qui précède la réinitialisation hebdomadaire (17 octobre 2026)
 
-- **Mic** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **le niveau le plus fort est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
+- **L'opérateur** : il reste 85 % de l'utilisation hebdomadaire. La réinitialisation a lieu demain, dimanche 18 octobre, à 22 h. D'ici là, **le niveau le plus fort est interdit, sauf pendant la dernière session de 5 h qui précède cette réinitialisation**.
 - **Conséquences** :
   - les chantiers et les revues tournent avec le modèle de session par défaut ;
-  - la relecture de la test 7 se fait **sans le niveau le plus fort dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. Mic : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **le niveau rapide** comme modèle de session pour cette relecture (D-181) ;
+  - la relecture de la test 7 se fait **sans le niveau le plus fort dans tous les cas**, avec le modèle de session au niveau d'effort le plus haut. L'opérateur : « il suffira pour la test 7 » ; puis, le quota étant presque épuisé, il garde **le niveau rapide** comme modèle de session pour cette relecture (D-181) ;
   - aucun agent ni workflow ne porte un agent du niveau le plus fort avant elle.
 
 ## D-179 — Maj+Espace sur un vert valide sur place, sans changer de cut (17 octobre 2026)
 
-- **Mic** : « Maj+Espace sur un vert ne fait pas avancer au prochain cut non validé, juste ça valide. » ESV **reste sur le même cut**.
+- **L'opérateur** : « Maj+Espace sur un vert ne fait pas avancer au prochain cut non validé, juste ça valide. » ESV **reste sur le même cut**.
 - **Conséquence pour la relecture corrigée (5c67a64)** : la passe attendait l'arrivée au cut + 1 comme preuve de sa validation. La maquette avait été réglée ainsi, hors dépôt. Sur le vrai ESV, elle se serait arrêtée après la première correction : rien de faux, mais une passe inutile.
 - **Correction décidée** :
   - preuve de la validation : la ligne écrite « valid » **et** le même cut toujours affiché ;
-  - la passe avance ensuite d'un pas, avec le geste de Mic ;
+  - la passe avance ensuite d'un pas, avec le geste de l'opérateur ;
   - la maquette des essais valide sur place, comme le vrai ESV.
 - La correction est faite avec les défauts que la contre-revue retiendra, avant la fusion.
 
-## D-180 — Mic accepte les chiffres de l'ADV et des abords : ils pourront agir en mode corriger (17 octobre 2026)
+## D-180 — l'opérateur accepte les chiffres de l'ADV et des abords : ils pourront agir en mode corriger (17 octobre 2026)
 
-- **Mic** : « Je trouve les chiffres acceptables, on les améliorera en cours de développement. » Les chiffres en question sont ceux de l'étude (parties d'apprentissage) :
+- **L'opérateur** : « Je trouve les chiffres acceptables, on les améliorera en cours de développement. » Les chiffres en question sont ceux de l'étude (parties d'apprentissage) :
   - PN : 36 justes sur 36 actions, 0 erreur ;
   - ADV : 11 justes sur 17, 18 % d'erreurs, 1 cut abîmé ;
   - abords (voisins verts d'un rouge isolé, d'une grappe ou d'un différé) : 30 justes sur 37, 14 % d'erreurs, surtout des écarts de hauteur ; 0 mauvaise voie dans toutes les zones.
-- **Ce que j'en retiens** : c'est un choix de Mic, pas une porte franchie. Le seuil de 9 % n'est **pas démontré** pour l'ADV et les abords (il faut 39 actions sans erreur, et il n'y en a que quelques dizaines de jugées). Mic accepte ce risque pour avancer et mesurer sur le terrain.
+- **Ce que j'en retiens** : c'est un choix de l'opérateur, pas une porte franchie. Le seuil de 9 % n'est **pas démontré** pour l'ADV et les abords (il faut 39 actions sans erreur, et il n'y en a que quelques dizaines de jugées). L'opérateur accepte ce risque pour avancer et mesurer sur le terrain.
 - **Décision** (modifie D-174, qui reste valable pour le reste) :
   - dans la test 7, le mode « corriger » peut agir sur les verts de **PN, d'ADV et d'abords**, avec la même règle prudente (8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus, verts seulement) ;
   - restent en ombre : les verts hors zone (2 actions seulement), tout cut posé ou différé par le lot, le SKIP ;
-  - le défaut reste **coupé** : c'est Mic qui choisit « corriger » dans le panneau, donc l'activation sur le terrain reste son geste ;
+  - le défaut reste **coupé** : c'est l'opérateur qui choisit « corriger » dans le panneau, donc l'activation sur le terrain reste son geste ;
   - les réglages gardent un interrupteur par zone, pour repasser une zone en ombre sans toucher au code.
-- **Mesure sur le terrain** : l'ombre continue de calculer et de noter toutes les zones ; les Échos de Mic qui suivent un lot en mode corriger montrent s'il a dû reprendre des cuts corrigés par Ariane. C'est la mesure qui dira si la zone peut rester ouverte.
+- **Mesure sur le terrain** : l'ombre continue de calculer et de noter toutes les zones ; les Échos de l'opérateur qui suivent un lot en mode corriger montrent s'il a dû reprendre des cuts corrigés par Ariane. C'est la mesure qui dira si la zone peut rester ouverte.
 - **Suite** : le changement part sur la branche de la relecture, avec les corrections de la contre-revue en cours et celle de D-179, avant la fusion dans 50-base.
 
 ## D-181 — Quota presque épuisé : le niveau rapide pour la relecture de la test 7, travail resserré (17 octobre 2026)
 
-- **Mic** : il reste très peu de quota ; il refuse de repasser sur niveau fort. La relecture de la test 7 se fait avec **le niveau rapide**, au plus haut effort, sans le niveau le plus fort.
+- **L'opérateur** : il reste très peu de quota ; il refuse de repasser sur niveau fort. La relecture de la test 7 se fait avec **le niveau rapide**, au plus haut effort, sans le niveau le plus fort.
 - **Conséquences** :
   - la contre-revue lancée à cinq angles et au plus haut effort est **arrêtée** : elle relisait du code que D-179 et D-180 font changer ;
   - un seul agent applique D-179 (Maj+Espace sur place) et D-180 (ADV et abords), avec un seul verify complet à la fin ;
@@ -2619,119 +2619,119 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 ## D-183 — Relecture finale de la test 7 : le code est bon, deux défauts de texte corrigés avant l'envoi (18 octobre 2026)
 
-- **Fait (relecture finale, plus haut effort, 248 appels d'outils, sur le paquet tel que Mic l'installe)** : aucune écriture sans le choix de Mic, aucune marque d'Ariane ; mise à jour par-dessus la test 6 : relecture coupée, aucune clé de stockage ne peut l'activer ; mode coupé : commandes identiques à la test 6 ; ombre : 0 écriture d'Ariane ; corriger : 20 corrections = 20 poses = 20 Maj+Espace = 20 écritures « valid » sur la maquette ; arrêt et déblocage tiennent ; retour arrière vers la test 6 sans erreur ; version « 4.9.5 test 7 » partout, 0 erreur de console. Ce qui n'a pas pu être vu : le vrai ESV, Edge, un gros cache.
-- **Défauts bloquants, corrigés (5ca5e49)** : (1) la consigne annonçait « Comme avant » coché et la case de la règle vide, faux après une mise à jour (« Tout recentré » et la règle sont gardés) ; (2) un code de projet ESV restait dans `DECISIONS.md` (forme courte que l'essai ne reconnaissait pas) : retiré de banane et du pilote, l'essai reconnaît la forme courte (rouge sur l'ancien fichier, vert après). L'historique git garde la trace du code ; l'effacer demande de réécrire l'historique, donc l'accord de Mic.
-- **Défauts importants et mineurs, corrigés** : la passe ne part seule que pour un lot jusqu'à la fin de la partie (sinon la carte dit pourquoi) ; avis « partie complète » : « Aucune pose ni validation n'a été envoyée à ESV » (une capture de lecture part) ; durées « 3 à 9 minutes en Ombre, 12 au plus en Corriger » et « ×4,5 à ×9 » ; texte du panneau sans « Mic » ni « propose » brut ; poids du journal mesuré à 12 Ko par cut ; export après « Relecture finie » ; remettre « Coupée » après la séance.
-- **Laissé tel quel, à décider avec Mic** : (a) le choix de la relecture est à environ 1 750 px sur 2 636, sous « Résultats du dernier lot », alors qu'il se règle avant le lot (la consigne dit où il est) ; (b) pendant la passe, le haut du panneau dit « Arrêté » ; (c) hygiène héritée, déjà dans la test 6 : noms d'autres IA dans des fiches, `claude/…` dans 55 fichiers, un lien d'artefact, des chemins locaux, le pseudo « Mic » dans 76 fichiers, des exports bruts dans l'historique de banane (tests/corpus, fixtures, incidents, 14 Mo). Rien de neuf apporté par la test 7.
+- **Fait (relecture finale, plus haut effort, 248 appels d'outils, sur le paquet tel que l'opérateur l'installe)** : aucune écriture sans le choix de l'opérateur, aucune marque d'Ariane ; mise à jour par-dessus la test 6 : relecture coupée, aucune clé de stockage ne peut l'activer ; mode coupé : commandes identiques à la test 6 ; ombre : 0 écriture d'Ariane ; corriger : 20 corrections = 20 poses = 20 Maj+Espace = 20 écritures « valid » sur la maquette ; arrêt et déblocage tiennent ; retour arrière vers la test 6 sans erreur ; version « 4.9.5 test 7 » partout, 0 erreur de console. Ce qui n'a pas pu être vu : le vrai ESV, Edge, un gros cache.
+- **Défauts bloquants, corrigés (5ca5e49)** : (1) la consigne annonçait « Comme avant » coché et la case de la règle vide, faux après une mise à jour (« Tout recentré » et la règle sont gardés) ; (2) un code de projet ESV restait dans `DECISIONS.md` (forme courte que l'essai ne reconnaissait pas) : retiré de banane et du pilote, l'essai reconnaît la forme courte (rouge sur l'ancien fichier, vert après). L'historique git garde la trace du code ; l'effacer demande de réécrire l'historique, donc l'accord de l'opérateur.
+- **Défauts importants et mineurs, corrigés** : la passe ne part seule que pour un lot jusqu'à la fin de la partie (sinon la carte dit pourquoi) ; avis « partie complète » : « Aucune pose ni validation n'a été envoyée à ESV » (une capture de lecture part) ; durées « 3 à 9 minutes en Ombre, 12 au plus en Corriger » et « ×4,5 à ×9 » ; texte du panneau sans « L'opérateur » ni « propose » brut ; poids du journal mesuré à 12 Ko par cut ; export après « Relecture finie » ; remettre « Coupée » après la séance.
+- **Laissé tel quel, à décider avec l'opérateur** : (a) le choix de la relecture est à environ 1 750 px sur 2 636, sous « Résultats du dernier lot », alors qu'il se règle avant le lot (la consigne dit où il est) ; (b) pendant la passe, le haut du panneau dit « Arrêté » ; (c) hygiène héritée, déjà dans la test 6 : noms d'autres IA dans des fiches, `claude/…` dans 55 fichiers, un lien d'artefact, des chemins locaux, le pseudo « L'opérateur » dans 76 fichiers, des exports bruts dans l'historique de banane (tests/corpus, fixtures, incidents, 14 Mo). Rien de neuf apporté par la test 7.
 - **Chiffres à ne pas sur-lire** : PN 36/36, dont 29 viennent de parties sans lot ; borne haute 9,6 % : la porte des 9 % (39 actions) n'est pas franchie non plus pour le PN.
 
 ## D-184 — Test 7 au terrain : premiers lots en mode corriger, parties 10 et 11 (18 octobre 2026)
 
-- **Reçu et archivé** dans banane-data (fe7299d, baad843) : deux exports du 18/10, 9 h 37 à 9 h 50, avec « Tout recentré », règle « grappe » coupée et relecture « corriger ». Pas d'Écho : rien n'est encore jugé contre la pose de Mic.
+- **Reçu et archivé** dans banane-data (fe7299d, baad843) : deux exports du 18/10, 9 h 37 à 9 h 50, avec « Tout recentré », règle « grappe » coupée et relecture « corriger ». Pas d'Écho : rien n'est encore jugé contre la pose de l'opérateur.
 - **Partie 10** : lot de 9 cuts, 9 posés. Relecture seule, 22 s : 12 relus, 1 corrigé (cut 4130, 31 mm, écartement 1 474,8 → 1 439,2 mm pour une médiane de 1 433,5), 12 « vu ».
 - **Partie 11** : 131 cuts, 119 posés, 12 différés, 6,4 min. Relecture seule, 4 min 20 s (affiché : 8 min 42 s) : 144 relus (PN 67, ADV 40, abords 32, écartement 4, hors zone 1), **17 corrigés** (11 PN, 6 ADV ; 9 à 44 mm, aucun de 50 mm ou plus), 139 « vu ». 14 des 17 cuts corrigés étaient dans la liste « À contrôler » (63 cuts sur 409 candidats).
 - **Sain** : 437 écritures PUT, toutes en 204 ; aucune pause ; contrat ESV inchangé ; relecture démarrée seule après un lot jusqu'à la fin de la partie, comme prévu.
-- **Non jugé** : si les 18 corrections sont justes. Il faut l'œil de Mic ou un Écho sur ces cuts. Rien ne dit non plus que le seuil de 9 % tient pour l'ADV et les abords.
-- **Proposition retirée** : remplacer Ctrl+Entrée par Maj+Espace pour le dernier cut du lot. Ctrl+Entrée vient de la décision de Mic (D-065, KI-069) ; Maj+Espace sur un cut rouge passe à un autre cut et risque de faire quitter la partie. Mic avait accordé le changement ; il n'est pas fait. Un essai sur le vrai ESV (Maj+Espace sur le dernier cut rouge d'une partie) trancherait.
+- **Non jugé** : si les 18 corrections sont justes. Il faut l'œil de l'opérateur ou un Écho sur ces cuts. Rien ne dit non plus que le seuil de 9 % tient pour l'ADV et les abords.
+- **Proposition retirée** : remplacer Ctrl+Entrée par Maj+Espace pour le dernier cut du lot. Ctrl+Entrée vient de la décision de l'opérateur (D-065, KI-069) ; Maj+Espace sur un cut rouge passe à un autre cut et risque de faire quitter la partie. L'opérateur avait accordé le changement ; il n'est pas fait. Un essai sur le vrai ESV (Maj+Espace sur le dernier cut rouge d'une partie) trancherait.
 - **Défaut d'export à instruire** : le volume 1 de l'export de 9 h 50 contient une copie du volume 2 (27,8 Mo au lieu d'environ 17). Les données sont complètes ; seul le poids est faux. Cause non cherchée.
-- **Suite** : lot en « Ombre » sur une partie neuve ; Écho de Mic sur les cuts corrigés (4130 de la partie 10, les 17 de la partie 11) pour les juger.
+- **Suite** : lot en « Ombre » sur une partie neuve ; Écho de l'opérateur sur les cuts corrigés (4130 de la partie 10, les 17 de la partie 11) pour les juger.
 
-## D-185 — Écho de Mic sur la partie 11 : les 17 corrections d'Ariane tiennent, mais la relecture a laissé 15 erreurs (18 octobre 2026)
+## D-185 — Écho de l'opérateur sur la partie 11 : les 17 corrections d'Ariane tiennent, mais la relecture a laissé 15 erreurs (18 octobre 2026)
 
-- **Reçu et archivé** (banane-data, 5e35fe1) : Écho de 731 visites (12 h 32 à 12 h 54), 11 zips, avec les notes de Mic sur les zones. Jointure faite avec `tools/jointure-echo-orbite.cjs` (règle « visité = bon » à 0,8 s) sur le journal du lot.
-- **Les 17 corrections d'Ariane** : Mic n'en a déplacé aucune (0 mm d'écart avec sa pose finale). 8 ont une référence solide (visite d'au moins 0,8 s) ; 9 (cuts 8375 à 8379, 9569 à 9582) n'ont été vues que 0,3 à 0,7 s, sans aucun geste. Mic : « le reste c'est très bien ». Aucune correction d'Ariane n'a été défaite.
-- **Ce que la relecture a laissé** : Mic a corrigé de plus de 10 mm **15 verts** que la relecture n'avait pas corrigés (5546, 6391, 6415 à 6419, 7177, 7299, 7300, 7389, 7409, 7410, 7411, 7414) et **1 cut posé par le lot** (7420, 31,6 mm). Sur les 122 verts relus et laissés, 5 étaient faux (4 %). Les 12 différés du lot ont tous été corrigés par Mic.
+- **Reçu et archivé** (banane-data, 5e35fe1) : Écho de 731 visites (12 h 32 à 12 h 54), 11 zips, avec les notes de l'opérateur sur les zones. Jointure faite avec `tools/jointure-echo-orbite.cjs` (règle « visité = bon » à 0,8 s) sur le journal du lot.
+- **Les 17 corrections d'Ariane** : l'opérateur n'en a déplacé aucune (0 mm d'écart avec sa pose finale). 8 ont une référence solide (visite d'au moins 0,8 s) ; 9 (cuts 8375 à 8379, 9569 à 9582) n'ont été vues que 0,3 à 0,7 s, sans aucun geste. L'opérateur : « le reste c'est très bien ». Aucune correction d'Ariane n'a été défaite.
+- **Ce que la relecture a laissé** : l'opérateur a corrigé de plus de 10 mm **15 verts** que la relecture n'avait pas corrigés (5546, 6391, 6415 à 6419, 7177, 7299, 7300, 7389, 7409, 7410, 7411, 7414) et **1 cut posé par le lot** (7420, 31,6 mm). Sur les 122 verts relus et laissés, 5 étaient faux (4 %). Les 12 différés du lot ont tous été corrigés par l'opérateur.
 - **Trois causes, lues dans le journal** :
   1. **Plafond de 40 cuts en ADV** (`plafondParZone`) : sur environ 278 cuts de zones d'ADV détectées (6425–6488, 7288–7350, 7388–7470, 8223–8290), seuls 40 ont été relus (6425 à 6466). Manqués : 7299, 7300, 7389, 7409 à 7414, dont 6 étaient dans la liste « À contrôler » (la liste n'est donc pas entièrement visitée).
-  2. **Première zone d'ADV non détectée** : Mic l'a contrôlée de 6362 à 6424 (cut 6391 dans un cœur d'ADV, pose mauvaise). Ses cuts sont entrés comme « écartement », en ombre seulement (D-180) : Ariane disait « je corrigerais » pour 6391 (18,4 mm), 6416 (17,4 mm) et 7177 (14,7 mm), proches des 18,6, 14,5 et 17,6 mm de Mic, sans avoir le droit de corriger. 6417 à 6419 n'ont pas été relus.
+  2. **Première zone d'ADV non détectée** : l'opérateur l'a contrôlée de 6362 à 6424 (cut 6391 dans un cœur d'ADV, pose mauvaise). Ses cuts sont entrés comme « écartement », en ombre seulement (D-180) : Ariane disait « je corrigerais » pour 6391 (18,4 mm), 6416 (17,4 mm) et 7177 (14,7 mm), proches des 18,6, 14,5 et 17,6 mm de l'opérateur, sans avoir le droit de corriger. 6417 à 6419 n'ont pas été relus.
   3. **Cut isolé 7177** : Ariane n'a pas contrôlé le cut d'avant ni celui d'après.
-- **Marge de fin d'ADV** : Mic contrôle jusqu'à 8309 (aiguille 8257), la zone d'Ariane s'arrête à 8290. Au-delà de 8290, aucune erreur de plus de 10 mm (8291 : 8,0 mm) : pas de preuve que la marge d'Ariane était trop courte.
-- **Notes de Mic à garder** : ADV 6362 → 6480 (aiguille 6456) ; ADV commencé à 7299 sans aiguille (même voie), contrôle jusqu'à 7385, aiguille 7390, fin de marge 7456 ; ADV avec marge commencé à 8229, fin d'aiguille 8257, fin de marge 8309 ; PN 4558 (écrit 4458, confirmé 4558 par Mic) et 5528 très bien (seul 5546 à revoir).
-- **Cap de Mic** : un cut corrigé = un cut appris pour GCV2. Cet Écho compte **77 cuts corrigés** par Mic (11 différés, 57 verts hors lot, 9 posés par le lot), dont 27 de plus de 10 mm.
-- **Propositions, à décider avec Mic** (rien n'est changé dans 50-base) : lever le plafond de 40 en ADV ; élargir la détection d'ADV pour couvrir la marge d'entrée et chaîner les zones proches ; laisser corriger les cuts « écartement » dans les mêmes limites ; contrôler le cut d'avant et d'après un cut isolé ; visiter toute la liste « À contrôler » ; revoir la marge de fin (8290 contre 8309), sans erreur démontrée.
-- **Limites** : une seule partie, un seul Écho ; 9 des 17 corrections reposent sur une visite rapide et sur la note de Mic ; le plafond de 40 explique 7 des 15 oublis, la zone non détectée 6 (6391, 6415 à 6419), l'isolé 1 (7177) ; 5546 reste à expliquer ; plusieurs cuts relus ont une référence trop courte ou absente (8296, 9571, 9195…), donc non jugés.
+- **Marge de fin d'ADV** : l'opérateur contrôle jusqu'à 8309 (aiguille 8257), la zone d'Ariane s'arrête à 8290. Au-delà de 8290, aucune erreur de plus de 10 mm (8291 : 8,0 mm) : pas de preuve que la marge d'Ariane était trop courte.
+- **Notes de l'opérateur à garder** : ADV 6362 → 6480 (aiguille 6456) ; ADV commencé à 7299 sans aiguille (même voie), contrôle jusqu'à 7385, aiguille 7390, fin de marge 7456 ; ADV avec marge commencé à 8229, fin d'aiguille 8257, fin de marge 8309 ; PN 4558 (écrit 4458, confirmé 4558 par l'opérateur) et 5528 très bien (seul 5546 à revoir).
+- **Cap de l'opérateur** : un cut corrigé = un cut appris pour GCV2. Cet Écho compte **77 cuts corrigés** par l'opérateur (11 différés, 57 verts hors lot, 9 posés par le lot), dont 27 de plus de 10 mm.
+- **Propositions, à décider avec l'opérateur** (rien n'est changé dans 50-base) : lever le plafond de 40 en ADV ; élargir la détection d'ADV pour couvrir la marge d'entrée et chaîner les zones proches ; laisser corriger les cuts « écartement » dans les mêmes limites ; contrôler le cut d'avant et d'après un cut isolé ; visiter toute la liste « À contrôler » ; revoir la marge de fin (8290 contre 8309), sans erreur démontrée.
+- **Limites** : une seule partie, un seul Écho ; 9 des 17 corrections reposent sur une visite rapide et sur la note de l'opérateur ; le plafond de 40 explique 7 des 15 oublis, la zone non détectée 6 (6391, 6415 à 6419), l'isolé 1 (7177) ; 5546 reste à expliquer ; plusieurs cuts relus ont une référence trop courte ou absente (8296, 9571, 9195…), donc non jugés.
 
 ## D-186 — Corrections de la couverture de la relecture, préparées sur une branche, rien d'activé (18 octobre 2026)
 
-- **Mic** (réponse à D-185) : oui, préparer les corrections ; le PN du début est bien 4558. Il demande aussi si « chaque différé corrigé = un cut appris » : le principe est noté (D-144, D-177) et les 12 différés de la partie 11 ont tous une pose de Mic, mais aucun n'est encore dans le jeu d'apprentissage : toute partie reçue après le 16/10 est réservée (`datasets/manifeste-parties.json`) jusqu'à une décision écrite. Proposition faite à Mic : passer la partie 11 en apprentissage (elle a servi à juger puis à régler ces corrections). Réponse attendue.
-- **Branche `claude/50-relecture-couverture`** (de `claude/50-base` da9debf, deux commits : eed6390 et 2bf876d). Essais d'abord rouges, puis verts ; la relecture reste coupée par défaut, c'est Mic qui choisit « corriger ».
+- **L'opérateur** (réponse à D-185) : oui, préparer les corrections ; le PN du début est bien 4558. Il demande aussi si « chaque différé corrigé = un cut appris » : le principe est noté (D-144, D-177) et les 12 différés de la partie 11 ont tous une pose de l'opérateur, mais aucun n'est encore dans le jeu d'apprentissage : toute partie reçue après le 16/10 est réservée (`datasets/manifeste-parties.json`) jusqu'à une décision écrite. Proposition faite à l'opérateur : passer la partie 11 en apprentissage (elle a servi à juger puis à régler ces corrections). Réponse attendue.
+- **Branche `claude/50-relecture-couverture`** (de `claude/50-base` da9debf, deux commits : eed6390 et 2bf876d). Essais d'abord rouges, puis verts ; la relecture reste coupée par défaut, c'est l'opérateur qui choisit « corriger ».
   1. **Plus de plafond en ADV** (il était de 40 cuts) ; les budgets des abords (70), des verts hors zone (20) et de l'écartement (20) restent.
-  2. **Zones d'ADV enchaînées** quand le trou entre elles est de 40 cuts au plus (Mic contrôle d'un trait 7288 à 7470 ; trou de 37 cuts).
+  2. **Zones d'ADV enchaînées** quand le trou entre elles est de 40 cuts au plus (l'opérateur contrôle d'un trait 7288 à 7470 ; trou de 37 cuts).
   3. **Cuts de la liste « À contrôler » et cuts « écartement » jamais écartés par un budget de zone** ; le plafond global facultatif reste un choix explicite.
   4. **Cut « écartement » relu avec son cut d'avant et son cut d'après** (marge de 1).
-  5. **Zone « écartement » corrigeable si les réglages l'ouvrent** (H5 de l'audit rouvert, accord de Mic) : fermée par défaut et par tout fichier qui ne l'ouvre pas, ouverte dans le fichier proposé, mêmes limites que les abords (8 mm au moins, 45 mm en travers au plus, écartement à 15 mm de la médiane, verts seulement, jamais un cut du lot).
-- **Rejeu de la sélection sur les entrées de la partie 11** : 391 cuts relus au lieu de 144 ; 13 des 15 oublis seraient relus (restent 6418 et 6419, dans la zone d'ADV non détectée) ; durée estimée par le panneau : 21 min (à 3 s le cut), mesurée vers 12 min à 1,8 s le cut, contre 4 min 20 s. **Non établi** : que ces cuts seraient bien corrigés (il faut les captures) ; seuls 3 cuts « écartement » ont leur proposition comparée à celle de Mic (6391, 6416, 7177 : à 3 mm près), un quatrième (8296) n'a pas de référence.
+  5. **Zone « écartement » corrigeable si les réglages l'ouvrent** (H5 de l'audit rouvert, accord de l'opérateur) : fermée par défaut et par tout fichier qui ne l'ouvre pas, ouverte dans le fichier proposé, mêmes limites que les abords (8 mm au moins, 45 mm en travers au plus, écartement à 15 mm de la médiane, verts seulement, jamais un cut du lot).
+- **Rejeu de la sélection sur les entrées de la partie 11** : 391 cuts relus au lieu de 144 ; 13 des 15 oublis seraient relus (restent 6418 et 6419, dans la zone d'ADV non détectée) ; durée estimée par le panneau : 21 min (à 3 s le cut), mesurée vers 12 min à 1,8 s le cut, contre 4 min 20 s. **Non établi** : que ces cuts seraient bien corrigés (il faut les captures) ; seuls 3 cuts « écartement » ont leur proposition comparée à celle de l'opérateur (6391, 6416, 7177 : à 3 mm près), un quatrième (8296) n'a pas de référence.
 - **Pas fait** : détecter la première zone d'ADV (6362–6424, recherche à faire sur les nuages de la partie 11), la marge de fin à 8309, la version de test 8 et sa consigne (la consigne annonce encore 3 à 9 minutes en Ombre et 12 au plus en Corriger : à changer avant tout envoi).
 - **verify complet** : en cours au moment de l'écriture ; résultat dans `fiches/REPRISE_AUTONOME.md`.
 
 ## D-187 — Test 8 (4.9.5.8) construite ; la partie 11 passe en apprentissage (18 octobre 2026)
 
-- **Mic** : « oui vas y » à la construction d'une version de test 8 avec les corrections de couverture de la relecture (D-186) ; « absolument » au passage de la partie 11 du second projet dans l'ensemble d'apprentissage (accord écrit ici, D-177 : un cut corrigé par Mic = un cut appris pour GCV2). Il fournira d'autres corrections dans l'après-midi du 18 octobre.
+- **L'opérateur** : « oui vas y » à la construction d'une version de test 8 avec les corrections de couverture de la relecture (D-186) ; « absolument » au passage de la partie 11 du second projet dans l'ensemble d'apprentissage (accord écrit ici, D-177 : un cut corrigé par l'opérateur = un cut appris pour GCV2). Il fournira d'autres corrections dans l'après-midi du 18 octobre.
 - **Apprentissage** : `datasets/manifeste-parties.json` reçoit la partie 11 (second projet) comme « apprentissage », motif : elle a servi à juger puis à régler la couverture de la relecture. Les parties reçues après le 16/10 restent réservées tant qu'aucune décision écrite ne les passe en apprentissage.
 - **Test 8** : branche `claude/50-relecture-couverture` (de `claude/50-base` da9debf, commit d58a6f1), manifeste `4.9.5.8`, paquet `ariane-4.9.5-test.8.zip`, 2 271 656 octets, SHA-256 `20bb3847ad6071bb7aba76d509ae6bb32821f2bc99e3955076c9627d843d1e06`. Pose inchangée, `src/engine.js` inchangé (identique à la base V4.6.0). La relecture reste coupée par défaut. Consigne : `consignes/seance-terrain-4.9.5-test-8-2026-10-18.md` (la relecture d'une partie comme la 11 passe d'environ 4 minutes à environ 12 : estimé, non mesuré).
 - **verify complet** : 2 226 essais, 2 224 réussis, 0 échec, 2 ignorés (corpus natif absent) ; géométrie inchangée.
-- **Rien activé, rien fusionné** : la branche n'est ni dans `claude/50-base`, ni dans `main`. Le zip a été remis à Mic ; c'est lui qui choisit « Corriger » ou « Ombre » sur une partie neuve.
+- **Rien activé, rien fusionné** : la branche n'est ni dans `claude/50-base`, ni dans `main`. Le zip a été remis à l'opérateur ; c'est lui qui choisit « Corriger » ou « Ombre » sur une partie neuve.
 - **Non établi** : que les 13 cuts maintenant couverts seraient bien corrigés (il faut un lot et un Écho sur une partie neuve) ; la détection de la première zone d'ADV de la partie 11 (6362–6424) ; Maj+Espace sur le dernier cut rouge d'une partie.
-- **Suite** : lot en « Corriger » et en « Ombre » sur des parties neuves, puis Écho ; exports de Mic de l'après-midi (les archiver puis les lire comme D-184 et D-185) ; Échos des parties 10, 2, 7, 6, 4, 8, 9 du second projet.
+- **Suite** : lot en « Corriger » et en « Ombre » sur des parties neuves, puis Écho ; exports de l'opérateur de l'après-midi (les archiver puis les lire comme D-184 et D-185) ; Échos des parties 10, 2, 7, 6, 4, 8, 9 du second projet.
 
 ## D-188 — Échos des parties 10, 14, 15 et 16 archivés ; compteur des cuts appris par la GCV2 ; nuit en autonomie (19 octobre 2026, vers 0 h 30)
 
-- **Mic** (avant de dormir) : « analyse tout ce que tu peux, je t'accorde toutes les autorisations durant ma nuit de sommeil et reprogramme comme d'habitude après chaque réinitialisation ». Je lis cette autorisation comme couvrant le travail, les outils, les branches et les archives ; **elle ne couvre pas** ce que Mic s'est toujours réservé : fusion dans `main`, étiquette, publication, activation d'une pose sur le terrain, pas de PR sans demande. Réveil programmé : `send_later` +305 min.
-- **Fichiers reçus** : Échos des parties 14 (4 zips), 15 (21 zips), 16 (12 zips) et 10 (1 zip), avec deux fichiers de notes de Mic ; tout est archivé dans banane-data (4 collections `2026-10-18_v4.9.5.7_echo-partie-10/14/15/16`, commits 2df4abb à bcb9ebf). Aucune identité d'opérateur, adresse ni code de projet dans les zips (analyse de tout leur contenu). Les notes de Mic contenaient le code de projet ESV en première ligne : il est retiré de l'archive (jamais dans un dépôt). Mic dit que ces Échos sont ceux de l'opérateur débutant : il corrige des parties déjà validées, sans lot Orbite (comme les parties 12 et 13 du 16 octobre).
-- **Manque** : l'export final de la partie 15 n'a pas été envoyé ; les segments 11 à 18 et 32 de ses sauvegardes manquent (l'Écho se lit jusqu'au cut 7601). Demande à faire à Mic : le final de la partie 15 et les sauvegardes de 18 h 44 à 18 h 48.
-- **Avis de Mic sur l'apprentissage** (notes jointes) : ne pas tenir compte des SKIP dans les calculs pour l'instant ; **un cut corrigé = un cut appris et entraîné à la GCV2** ; tenir un compteur des cuts appris depuis le début de la 5.0, avec une file entre « en apprentissage » et « appris », à jour entre chaque séance ; les cuts visités et non modifiés (0,6 s) peuvent aussi être appris ; on ne s'arrêtera pas à 1 000 ou 1 500 cuts, il en faudra bien plus.
+- **L'opérateur** (avant de dormir) : « analyse tout ce que tu peux, je t'accorde toutes les autorisations durant ma nuit de sommeil et reprogramme comme d'habitude après chaque réinitialisation ». Je lis cette autorisation comme couvrant le travail, les outils, les branches et les archives ; **elle ne couvre pas** ce que l'opérateur s'est toujours réservé : fusion dans `main`, étiquette, publication, activation d'une pose sur le terrain, pas de PR sans demande. Réveil programmé : `send_later` +305 min.
+- **Fichiers reçus** : Échos des parties 14 (4 zips), 15 (21 zips), 16 (12 zips) et 10 (1 zip), avec deux fichiers de notes de l'opérateur ; tout est archivé dans banane-data (4 collections `2026-10-18_v4.9.5.7_echo-partie-10/14/15/16`, commits 2df4abb à bcb9ebf). Aucune identité d'opérateur, adresse ni code de projet dans les zips (analyse de tout leur contenu). Les notes de l'opérateur contenaient le code de projet ESV en première ligne : il est retiré de l'archive (jamais dans un dépôt). L'opérateur dit que ces Échos sont ceux de l'opérateur débutant : il corrige des parties déjà validées, sans lot Orbite (comme les parties 12 et 13 du 16 octobre).
+- **Manque** : l'export final de la partie 15 n'a pas été envoyé ; les segments 11 à 18 et 32 de ses sauvegardes manquent (l'Écho se lit jusqu'au cut 7601). Demande à faire à l'opérateur : le final de la partie 15 et les sauvegardes de 18 h 44 à 18 h 48.
+- **Avis de l'opérateur sur l'apprentissage** (notes jointes) : ne pas tenir compte des SKIP dans les calculs pour l'instant ; **un cut corrigé = un cut appris et entraîné à la GCV2** ; tenir un compteur des cuts appris depuis le début de la 5.0, avec une file entre « en apprentissage » et « appris », à jour entre chaque séance ; les cuts visités et non modifiés (0,6 s) peuvent aussi être appris ; on ne s'arrêtera pas à 1 000 ou 1 500 cuts, il en faudra bien plus.
 - **Compteur** (`tools/compteur-gcv2.cjs`, branche `claude/50-compteur-gcv2` ; `fiches/COMPTEUR_GCV2.md`) : sur les 10 Échos archivés (projet 1 : parties 12, 13, 14, 15, 16, 24, 29 ; projet 2 : parties 1, 10, 11), **1 631 cuts corrigés** (1 023 de plus de 5 mm, 527 de plus de 10 mm), 442 validés tels quels, 1 177 visités sans action d'au moins 0,6 s, soit 3 250 cuts apprenables ; SKIP non comptés (13). Le chiffre de la partie 11 (77) est celui de D-185. Tout est « en file » : le dépôt ne sait pas quand la GCV2 est entraînée.
 - **Les 1 000 à 1 500 corrections de D-177 sont déjà dépassées** (1 631) ; reste à décider quelles parties on garde en réserve pour juger la GCV2 sans qu'elle les ait apprises.
-- **Partie 10, lot Orbite contre pose finale de Mic** : sur les 9 cuts posés par le lot (1 et 4122 à 4129), 7 sont gardés tels quels, un bouge de 4,4 mm (4122), un de 10,6 mm (4126, rail gauche). Le cut 4130 corrigé par la relecture (31 mm) : Mic le retouche de 4,0 mm. Les 10 autres cuts relus par Ariane sont retouchés de 5,4 mm au plus (médiane 3,3 mm). Mic écrit « RAS la pose et la relecture était parfaite » : les retouches de quelques mm sont des corrections au sens de l'Écho. La mémoire des cuts du lot (« aucun cut mémorisé d'Ariane ») n'était plus là au départ de cet Écho : à expliquer.
-- **Parties 15 et 16 contre les notes de Mic** : les zones qu'il cite portent bien des corrections (PN 144–160, ADV 5889–6081, petit PN 6169, ADV 7036–7232, PN 7598–7601 ; partie 16 : PN 1698–1702, aiguille 1775–1778, ADV 8735–8785). Partie 14 : 48 corrections par plages (3312–3322, 3790–3791, 5082–5094, 6591–6601, 8636–8649, 9436–9453) : « que des PN » d'après Mic. Sur ces trois parties : 288 cuts corrigés, dont 117 de plus de 5 mm et 47 de plus de 10 mm.
-- **Questions pour Mic, une à la fois** : (1) quand un cut est-il « appris » : une fois archivé, ou une fois la GCV2 réentraînée ? (2) compter aussi les retouches de 5 mm ou moins (608 des 1 631) ? (3) garder quelques parties en réserve pour juger la GCV2 ? (4) les parties 14, 15, 16 sont-elles du projet 1 ? (5) le final de la partie 15.
-- **À faire cette nuit** : verify de la branche du compteur, puis comparer les zones de Mic (PN, ADV, aiguilles) à la détection d'Ariane sur les nuages des Échos 15 et 16 (première zone d'ADV non détectée, marges).
+- **Partie 10, lot Orbite contre pose finale de l'opérateur** : sur les 9 cuts posés par le lot (1 et 4122 à 4129), 7 sont gardés tels quels, un bouge de 4,4 mm (4122), un de 10,6 mm (4126, rail gauche). Le cut 4130 corrigé par la relecture (31 mm) : l'opérateur le retouche de 4,0 mm. Les 10 autres cuts relus par Ariane sont retouchés de 5,4 mm au plus (médiane 3,3 mm). L'opérateur écrit « RAS la pose et la relecture était parfaite » : les retouches de quelques mm sont des corrections au sens de l'Écho. La mémoire des cuts du lot (« aucun cut mémorisé d'Ariane ») n'était plus là au départ de cet Écho : à expliquer.
+- **Parties 15 et 16 contre les notes de l'opérateur** : les zones qu'il cite portent bien des corrections (PN 144–160, ADV 5889–6081, petit PN 6169, ADV 7036–7232, PN 7598–7601 ; partie 16 : PN 1698–1702, aiguille 1775–1778, ADV 8735–8785). Partie 14 : 48 corrections par plages (3312–3322, 3790–3791, 5082–5094, 6591–6601, 8636–8649, 9436–9453) : « que des PN » d'après l'opérateur. Sur ces trois parties : 288 cuts corrigés, dont 117 de plus de 5 mm et 47 de plus de 10 mm.
+- **Questions pour l'opérateur, une à la fois** : (1) quand un cut est-il « appris » : une fois archivé, ou une fois la GCV2 réentraînée ? (2) compter aussi les retouches de 5 mm ou moins (608 des 1 631) ? (3) garder quelques parties en réserve pour juger la GCV2 ? (4) les parties 14, 15, 16 sont-elles du projet 1 ? (5) le final de la partie 15.
+- **À faire cette nuit** : verify de la branche du compteur, puis comparer les zones de l'opérateur (PN, ADV, aiguilles) à la détection d'Ariane sur les nuages des Échos 15 et 16 (première zone d'ADV non détectée, marges).
 
-## D-189 — Le moteur contre la pose finale de Mic sur les parties 14, 15 et 16 : mesure, aucun réglage (19 octobre 2026, nuit)
+## D-189 — Le moteur contre la pose finale de l'opérateur sur les parties 14, 15 et 16 : mesure, aucun réglage (19 octobre 2026, nuit)
 
-- **Méthode** : `node tools/relecture-autonome.cjs extraire` (hors ligne, branche `claude/50-compteur-gcv2`), sur les Échos archivés (D-188). Pour chaque cut visité par Mic : le moteur livré (4.9.5.7), en première passe, sur les points capturés AVANT son premier geste, comparé à sa pose finale. Écart d'un cut = le plus grand des deux rails (mm, 3D, repère profil). Compte seulement les cuts où le moteur propose une pose pour les deux rails. Ces parties sont réservées (manifeste) : **lues pour mesurer, rien n'a été réglé**, aucun réglage n'a changé.
-- **Départ de l'opérateur débutant contre Mic** : sa pose de départ est à 5 mm ou moins de la pose finale de Mic pour 79 % des cuts jugés (partie 14), 91 % (partie 15), 87 % (partie 16).
-- **Moteur seul contre Mic** (même cuts) : à 5 mm ou moins pour 90 % (partie 14, 77 cuts), 90,5 % (partie 15, 210 cuts, compte partiel), 72 % (partie 16, 227 cuts) ; à 10 mm ou moins pour 100 %, 98,6 %, 95 %. Il fait mieux que le départ sur la partie 14 (90 % contre 79 %), autant sur la 15, moins bien sur la 16 (72 % contre 87 %) : il rapproche les cuts que Mic corrige, mais éloigne de Mic des cuts déjà justes (partie 16 : plus loin de Mic que la pose de départ, de plus de 1 mm, sur 160 des 227 cuts).
-- **Sur les cuts que Mic a corrigés de plus de 5 mm** (118 avec référence : 23, 36, 59) : le moteur propose une pose pour 63, se rapproche de Mic pour 55 et s'en éloigne pour 3 ; à 5 mm ou moins de Mic pour 47 sur 63 (75 %), à 10 mm ou moins pour 60 sur 63 (95 %). Pour 39 cuts, il **s'abstient** (« différé, pas d'appui » : 5 de la partie 16 à écartement hors contrat, plusieurs avec un rail absent ou ambigu) ; 16 cuts n'ont pas de nuage (dont 9 de la partie 15, dont des segments manquent).
-- **Lecture** : ce moteur n'est utile à la relecture que sous une règle prudente (agir seulement quand sa pose s'écarte de la pose de départ d'au moins 8 mm, seuil de la règle prudente) ; sinon il éloigne de Mic des cuts qui étaient déjà justes. Et il ne couvre qu'un peu plus de la moitié des cuts que Mic corrige de plus de 5 mm.
-- **Limites** : trois parties, un seul opérateur débutant ; la partie 15 est tronquée (export final absent) ; l'écart est celui du cut entier, pas de la seule zone ; la règle prudente n'est PAS jugée ici (il manque la table des zones PN et ADV de ces parties, sans lot Orbite) ; les cuts de la zone ADV notée par Mic ne sont pas séparés des autres dans cette mesure. Je n'ai pas non plus mesuré la détection des zones d'ADV et de PN : l'indicateur par cut de la surface du moteur n'est pas la détection de zone, il ne la prouve ni ne l'infirme.
-- **Suite** : (1) juger la règle prudente figée sur ces trois parties, avec une table de zones construite à partir des notes de Mic ; (2) revoir les abstentions du moteur dans les zones qu'il corrige (appuis) ; (3) quand Mic enverra le final de la partie 15, relancer.
+- **Méthode** : `node tools/relecture-autonome.cjs extraire` (hors ligne, branche `claude/50-compteur-gcv2`), sur les Échos archivés (D-188). Pour chaque cut visité par l'opérateur : le moteur livré (4.9.5.7), en première passe, sur les points capturés AVANT son premier geste, comparé à sa pose finale. Écart d'un cut = le plus grand des deux rails (mm, 3D, repère profil). Compte seulement les cuts où le moteur propose une pose pour les deux rails. Ces parties sont réservées (manifeste) : **lues pour mesurer, rien n'a été réglé**, aucun réglage n'a changé.
+- **Départ de l'opérateur débutant contre l'opérateur** : sa pose de départ est à 5 mm ou moins de la pose finale de l'opérateur pour 79 % des cuts jugés (partie 14), 91 % (partie 15), 87 % (partie 16).
+- **Moteur seul contre l'opérateur** (même cuts) : à 5 mm ou moins pour 90 % (partie 14, 77 cuts), 90,5 % (partie 15, 210 cuts, compte partiel), 72 % (partie 16, 227 cuts) ; à 10 mm ou moins pour 100 %, 98,6 %, 95 %. Il fait mieux que le départ sur la partie 14 (90 % contre 79 %), autant sur la 15, moins bien sur la 16 (72 % contre 87 %) : il rapproche les cuts que l'opérateur corrige, mais éloigne de l'opérateur des cuts déjà justes (partie 16 : plus loin de l'opérateur que la pose de départ, de plus de 1 mm, sur 160 des 227 cuts).
+- **Sur les cuts que l'opérateur a corrigés de plus de 5 mm** (118 avec référence : 23, 36, 59) : le moteur propose une pose pour 63, se rapproche de l'opérateur pour 55 et s'en éloigne pour 3 ; à 5 mm ou moins de l'opérateur pour 47 sur 63 (75 %), à 10 mm ou moins pour 60 sur 63 (95 %). Pour 39 cuts, il **s'abstient** (« différé, pas d'appui » : 5 de la partie 16 à écartement hors contrat, plusieurs avec un rail absent ou ambigu) ; 16 cuts n'ont pas de nuage (dont 9 de la partie 15, dont des segments manquent).
+- **Lecture** : ce moteur n'est utile à la relecture que sous une règle prudente (agir seulement quand sa pose s'écarte de la pose de départ d'au moins 8 mm, seuil de la règle prudente) ; sinon il éloigne de l'opérateur des cuts qui étaient déjà justes. Et il ne couvre qu'un peu plus de la moitié des cuts que l'opérateur corrige de plus de 5 mm.
+- **Limites** : trois parties, un seul opérateur débutant ; la partie 15 est tronquée (export final absent) ; l'écart est celui du cut entier, pas de la seule zone ; la règle prudente n'est PAS jugée ici (il manque la table des zones PN et ADV de ces parties, sans lot Orbite) ; les cuts de la zone ADV notée par l'opérateur ne sont pas séparés des autres dans cette mesure. Je n'ai pas non plus mesuré la détection des zones d'ADV et de PN : l'indicateur par cut de la surface du moteur n'est pas la détection de zone, il ne la prouve ni ne l'infirme.
+- **Suite** : (1) juger la règle prudente figée sur ces trois parties, avec une table de zones construite à partir des notes de l'opérateur ; (2) revoir les abstentions du moteur dans les zones qu'il corrige (appuis) ; (3) quand l'opérateur enverra le final de la partie 15, relancer.
 
-## D-190 — La règle prudente figée, jugée sur les parties 14, 15 et 16 ; zones d'ADV et de PN contre les notes de Mic (19 octobre 2026, 4 h)
+## D-190 — La règle prudente figée, jugée sur les parties 14, 15 et 16 ; zones d'ADV et de PN contre les notes de l'opérateur (19 octobre 2026, 4 h)
 
-- **Ce qui est jugé** : la règle de service figée de D-180 (variante `chaîne+h`, agir seulement si la pose du moteur s'écarte d'au moins 8 mm de la pose de départ, rail déplacé de 45 mm au plus en travers, écartement à 15 mm de la médiane ; zones PN, ADV et abords ; jamais sur les verts hors zone). **Rien n'est réglé** : les parties 14, 15 et 16 sont réservées (manifeste), lues avec `--juger-partie-reservee`, aucun réglage ne change d'après ce résultat. Outil : `relecture-autonome.cjs table --sans-lot` (nouveau, branche `claude/50-compteur-gcv2`) : sans lot Orbite, les zones se reconnaissent par le moteur sur tous les cuts visités, sans aucune étiquette de Mic.
-- **Résultat sur 528 cuts mesurables** (90, 206, 232) : Mic corrige de plus de 10 mm **35 cuts** ; la règle agit sur 40 cuts, **ramène 29 de ces 35 à 10 mm ou moins de la pose de Mic (83 %)**, en reproduit 26 à 5 mm ou moins, **0 mauvaise voie**, **2 cuts abîmés** (un en partie 15, un en partie 16 : une pose qui était juste, déplacée de plus de 10 mm de celle de Mic), 3 petits déplacements dans le gris (5 à 10 mm). Elle **laisse faux 6 cuts**, tous en partie 16 ; elle s'abstient sur 87 cuts. Erreur parmi les actions : 5 % (2 sur 40), borne de Wilson à 95 % ≤ 16,5 % ; part de cuts abîmés : 0,4 % de tous les cuts visités. Par partie : 14 → 15 corrections justes sur 17 actions, 0 abîmé ; 15 → 6 sur 12, 1 abîmé ; 16 → 8 sur 11, 1 abîmé, 6 laissés faux.
-- **Lecture** : la porte figée (0 mauvaise voie, erreur parmi les actions ≤ 9 %) est franchie en total (0 ; 5 %). Elle ne l'est pas partie par partie à la lettre en partie 16 (1 sur 11 = 9,1 %), et la borne de Wilson (≤ 16,5 %) est loin au-dessus de 9 % : trois parties ne prouvent pas la porte, elles ne l'infirment pas non plus. La règle se comporte sur ces trois parties comme sur les six d'apprentissage (1:12 : 21 justes sur 21 actions ; 1:13 : 12 sur 17). **Aucune activation n'est décidée ni proposée par moi** : c'est le choix « corriger » du panneau, et il reste à Mic.
-- **Zones reconnues par le moteur contre les notes de Mic** :
-  - **Partie 14** (« que des PN ») : 6 PN reconnus (cœurs 3314–3320, 3783–3791, 5086–5096, 6593–6601, 8637–8648, 9441–9448) ; chacun tombe sur une plage où Mic a corrigé (3312–3322, 3790–3791, 5082–5094, 6591–6601, 8636–8649, 9436–9453), et toutes ses plages de corrections sont couvertes. Aucune zone d'ADV, aucune fausse zone.
-  - **Partie 15** : PN 144–160 reconnu en entier (cœur 148–156, marges 144–162) ; PN 7598–7614 à 71 % (7598–7609 ; 10 cuts de la plage ne figurent pas dans l'Écho reçu) ; ADV 5889–6081 reconnue de 5890 à 6033 (75 %) et ADV 7036–7232 de 7008 à 7163 (65 %), avec un PN en 7220–7227 qui tombe dans la zone de Mic. **Le manque vient surtout des données absentes** : les cuts 6034–6081 et 6169–6173 sont tous « sans nuage » (segments 11 à 18 de l'export non reçus), 8137–8151 n'est pas dans l'export. Pour 7164–7232, 27 cuts sur 69 n'ont pas de nuage ; il reste ~42 cuts avec nuage où la fin de zone n'est pas reconnue.
-  - **Partie 16** : ADV 8735–8785 reconnue en entier (8718–8804 avec marges) ; les huit PN que Mic n'a pas voulu noter (« il y a quasi que ça ») sont reconnus à 5886, 6172, 6424, 6985, 7197, 7416, 8364 et 8973, chacun sur une plage où il a corrigé ; **le PN 1678–1702 n'est pas reconnu comme PN mais comme ADV** (1693–1814, avec l'aiguille de Mic au cut 1778 : c'est bien une zone d'ADV à cet endroit, Mic l'a notée comme PN en début de plage) ; une 3e ADV reconnue, 4006–4071, sur une plage où Mic a corrigé (4030–4040) : à lui de dire si c'est une ADV.
-- **Où tombent les corrections de Mic de plus de 10 mm** (42 cuts mesurables sur les trois parties) : **27 dans les PN**, 8 dans les ADV, **7 hors de toute zone reconnue** (6 en partie 16, 1 en partie 15). Les PN, qui sont un tiers des cuts visités (217 sur 686), portent près des deux tiers des grosses corrections. La règle ne touche pas les cuts hors zone (ils restent en ombre, décision D-180) : ces 7 cuts, 17 % des grosses corrections, lui échappent par construction.
-- **Limites** : trois parties, un seul opérateur débutant ; les zones n'existent que sur les cuts que Mic a visités (pas de lot) ; la partie 15 est tronquée ; la borne de confiance reste large (≤ 16,5 %).
-- **Suite** : quand Mic enverra le final de la partie 15, relancer (extraire, table, juger). Question pour Mic : la zone 4006–4071 de la partie 16 est-elle une ADV ?
+- **Ce qui est jugé** : la règle de service figée de D-180 (variante `chaîne+h`, agir seulement si la pose du moteur s'écarte d'au moins 8 mm de la pose de départ, rail déplacé de 45 mm au plus en travers, écartement à 15 mm de la médiane ; zones PN, ADV et abords ; jamais sur les verts hors zone). **Rien n'est réglé** : les parties 14, 15 et 16 sont réservées (manifeste), lues avec `--juger-partie-reservee`, aucun réglage ne change d'après ce résultat. Outil : `relecture-autonome.cjs table --sans-lot` (nouveau, branche `claude/50-compteur-gcv2`) : sans lot Orbite, les zones se reconnaissent par le moteur sur tous les cuts visités, sans aucune étiquette de l'opérateur.
+- **Résultat sur 528 cuts mesurables** (90, 206, 232) : l'opérateur corrige de plus de 10 mm **35 cuts** ; la règle agit sur 40 cuts, **ramène 29 de ces 35 à 10 mm ou moins de la pose de l'opérateur (83 %)**, en reproduit 26 à 5 mm ou moins, **0 mauvaise voie**, **2 cuts abîmés** (un en partie 15, un en partie 16 : une pose qui était juste, déplacée de plus de 10 mm de celle de l'opérateur), 3 petits déplacements dans le gris (5 à 10 mm). Elle **laisse faux 6 cuts**, tous en partie 16 ; elle s'abstient sur 87 cuts. Erreur parmi les actions : 5 % (2 sur 40), borne de Wilson à 95 % ≤ 16,5 % ; part de cuts abîmés : 0,4 % de tous les cuts visités. Par partie : 14 → 15 corrections justes sur 17 actions, 0 abîmé ; 15 → 6 sur 12, 1 abîmé ; 16 → 8 sur 11, 1 abîmé, 6 laissés faux.
+- **Lecture** : la porte figée (0 mauvaise voie, erreur parmi les actions ≤ 9 %) est franchie en total (0 ; 5 %). Elle ne l'est pas partie par partie à la lettre en partie 16 (1 sur 11 = 9,1 %), et la borne de Wilson (≤ 16,5 %) est loin au-dessus de 9 % : trois parties ne prouvent pas la porte, elles ne l'infirment pas non plus. La règle se comporte sur ces trois parties comme sur les six d'apprentissage (1:12 : 21 justes sur 21 actions ; 1:13 : 12 sur 17). **Aucune activation n'est décidée ni proposée par moi** : c'est le choix « corriger » du panneau, et il reste à l'opérateur.
+- **Zones reconnues par le moteur contre les notes de l'opérateur** :
+  - **Partie 14** (« que des PN ») : 6 PN reconnus (cœurs 3314–3320, 3783–3791, 5086–5096, 6593–6601, 8637–8648, 9441–9448) ; chacun tombe sur une plage où l'opérateur a corrigé (3312–3322, 3790–3791, 5082–5094, 6591–6601, 8636–8649, 9436–9453), et toutes ses plages de corrections sont couvertes. Aucune zone d'ADV, aucune fausse zone.
+  - **Partie 15** : PN 144–160 reconnu en entier (cœur 148–156, marges 144–162) ; PN 7598–7614 à 71 % (7598–7609 ; 10 cuts de la plage ne figurent pas dans l'Écho reçu) ; ADV 5889–6081 reconnue de 5890 à 6033 (75 %) et ADV 7036–7232 de 7008 à 7163 (65 %), avec un PN en 7220–7227 qui tombe dans la zone de l'opérateur. **Le manque vient surtout des données absentes** : les cuts 6034–6081 et 6169–6173 sont tous « sans nuage » (segments 11 à 18 de l'export non reçus), 8137–8151 n'est pas dans l'export. Pour 7164–7232, 27 cuts sur 69 n'ont pas de nuage ; il reste ~42 cuts avec nuage où la fin de zone n'est pas reconnue.
+  - **Partie 16** : ADV 8735–8785 reconnue en entier (8718–8804 avec marges) ; les huit PN que l'opérateur n'a pas voulu noter (« il y a quasi que ça ») sont reconnus à 5886, 6172, 6424, 6985, 7197, 7416, 8364 et 8973, chacun sur une plage où il a corrigé ; **le PN 1678–1702 n'est pas reconnu comme PN mais comme ADV** (1693–1814, avec l'aiguille de l'opérateur au cut 1778 : c'est bien une zone d'ADV à cet endroit, l'opérateur l'a notée comme PN en début de plage) ; une 3e ADV reconnue, 4006–4071, sur une plage où l'opérateur a corrigé (4030–4040) : à lui de dire si c'est une ADV.
+- **Où tombent les corrections de l'opérateur de plus de 10 mm** (42 cuts mesurables sur les trois parties) : **27 dans les PN**, 8 dans les ADV, **7 hors de toute zone reconnue** (6 en partie 16, 1 en partie 15). Les PN, qui sont un tiers des cuts visités (217 sur 686), portent près des deux tiers des grosses corrections. La règle ne touche pas les cuts hors zone (ils restent en ombre, décision D-180) : ces 7 cuts, 17 % des grosses corrections, lui échappent par construction.
+- **Limites** : trois parties, un seul opérateur débutant ; les zones n'existent que sur les cuts que l'opérateur a visités (pas de lot) ; la partie 15 est tronquée ; la borne de confiance reste large (≤ 16,5 %).
+- **Suite** : quand l'opérateur enverra le final de la partie 15, relancer (extraire, table, juger). Question pour l'opérateur : la zone 4006–4071 de la partie 16 est-elle une ADV ?
 
-## D-191 — Réponses de Mic sur le compteur de la GCV2 (19 octobre 2026, matin)
+## D-191 — Réponses de l'opérateur sur le compteur de la GCV2 (19 octobre 2026, matin)
 
 - **« Appris » = la GCV2 est entraînée dessus** (pas seulement archivé). Aucune GCV2 n'est encore entraînée : le compteur « appris » reste à 0 ; les 1 631 cuts corrigés sont tous « en file ».
-- **Retouches de 5 mm ou moins** : Mic ne tranche pas (« chaque cut doit être entraîné pour améliorer précision et fiabilité, à toi de voir »). Choix : le compteur de Mic compte **tous** les cuts corrigés, quelle que soit l'ampleur ; le chiffre « de plus de 5 mm » reste affiché à part, pour ne pas confondre le nombre d'exemples et le nombre d'exemples qui apprennent quelque chose. À rediscuter si l'entraînement montre que les petites retouches ne servent à rien.
+- **Retouches de 5 mm ou moins** : l'opérateur ne tranche pas (« chaque cut doit être entraîné pour améliorer précision et fiabilité, à toi de voir »). Choix : le compteur de l'opérateur compte **tous** les cuts corrigés, quelle que soit l'ampleur ; le chiffre « de plus de 5 mm » reste affiché à part, pour ne pas confondre le nombre d'exemples et le nombre d'exemples qui apprennent quelque chose. À rediscuter si l'entraînement montre que les petites retouches ne servent à rien.
 - **Parties 14, 15 et 16** : « le projet de l'opérateur débutant », comme les parties 12 et 13 (projet 1). Les sources du compteur ne sont plus « à confirmer ».
-- **Partie 15, export final** : Mic va chercher, il ne l'a peut-être plus.
-- **Zone 4006–4071 de la partie 16** : Mic répondra dans la journée.
-- **Parties en réserve pour juger la GCV2** : Mic demande ce que cela veut dire ; explication donnée (un examen que la GCV2 n'a jamais vu) ; décision en attente.
+- **Partie 15, export final** : l'opérateur va chercher, il ne l'a peut-être plus.
+- **Zone 4006–4071 de la partie 16** : l'opérateur répondra dans la journée.
+- **Parties en réserve pour juger la GCV2** : l'opérateur demande ce que cela veut dire ; explication donnée (un examen que la GCV2 n'a jamais vu) ; décision en attente.
 
-## D-192 — Mic valide le plan ; rotation examen → apprentissage ; suite du plan des règles métier et conception G0 écrites au niveau le plus fort (19 octobre 2026, matin)
+## D-192 — l'opérateur valide le plan ; rotation examen → apprentissage ; suite du plan des règles métier et conception G0 écrites au niveau le plus fort (19 octobre 2026, matin)
 
-- **Mic** : « Ne t'en fais pas, j'aurai toujours de nouvelles parties inédites pour nous tester. À toi de me dire si c'est réellement utile ou pas ; je vais avoir de nouvelles corrections à te fournir chaque jour, chacune dans le but de réaliser le méga cerveau GCV2. Je valide tout ton plan de développement. » Il lance le niveau le plus fort une dernière fois pour prendre connaissance du contexte, **élaborer la suite du plan des règles métier**, puis **attribuer chaque mission à un niveau de modèle**, avant de lancer lui-même le développement de la GCV2 avec le niveau recommandé.
-- **Parties réservées** : avec des parties neuves chaque jour, la réserve permanente n'est plus nécessaire ; la règle devient une **rotation** : toute partie nouvelle est d'abord un examen (réservée, jugée avec les réglages et paramètres figés), puis passe en apprentissage après décision écrite. **Deux témoins fixes**, jamais appris : 1:25 et 1:11, pour comparer entre elles les versions successives de la GCV2. Réponse à Mic : utile, et sans perte d'aucune correction.
-- **Écrit** (branche pilote) : `fiches/PLAN_SUITE_5.0.md` (état des lieux, rotation, cycle quotidien, 11 missions règles métier RM-1 à RM-11, 7 missions GCV2 G0 à G2, attribution des niveaux, modèle de la session GCV2, décisions de Mic, calendrier) et `fiches/G0_GCV2_CONCEPTION.md` (la GCV2 comme couche qui choisit, corrige et doute au-dessus du moteur : hypothèses rejouables depuis le réservoir de cellules, la voie prédite et les voisins ; score de justesse appris et calibré ; garde-fous non appris ; seuils τ et δ ; protocole d'apprentissage et de jugement ; ordre relecture puis lot ; rappel atteignable comme première porte).
-- **Niveau recommandé pour la session GCV2** : **fort, effort haut** pour l'orchestrateur et le relecteur ; **rapide** pour les développeurs en sous-agents ou sessions distantes (effort haut pour G1-b et G1-d) ; **éclair** pour la mécanique. Le plus fort ne développe pas : il revient sur un seul point de passage, après G1-b, si Mic le demande.
-- **Premières missions à lancer** : G1-a (jeu d'hypothèses et rappel atteignable), RM-1 (première ADV de la partie 11), RM-4 (abstentions), RM-10 (manifeste : rotation et passage de 1:14, 1:15, 1:16, 2:10 en apprentissage, sur confirmation de Mic) ; RM-5 à chaque export de la test 8.
-- **Réveil nocturne** : le déclencheur programmé pendant le sommeil de Mic (`trig_018ksb7jSBYZVyEzpkmWsC1q`, 08 h 32 UTC) est **supprimé** : Mic est réveillé et lance une session dédiée ; le cycle quotidien du plan le remplace.
-- **Ce qui reste à Mic** : relecture de G0, confirmation de RM-10, zone 4006–4071 de la partie 16, final de la partie 15, fusions, activation. Fusion dans `main`, étiquette et publication restent les siennes.
+- **L'opérateur** : « Ne t'en fais pas, j'aurai toujours de nouvelles parties inédites pour nous tester. À toi de me dire si c'est réellement utile ou pas ; je vais avoir de nouvelles corrections à te fournir chaque jour, chacune dans le but de réaliser le méga cerveau GCV2. Je valide tout ton plan de développement. » Il lance le niveau le plus fort une dernière fois pour prendre connaissance du contexte, **élaborer la suite du plan des règles métier**, puis **attribuer chaque mission à un niveau de modèle**, avant de lancer lui-même le développement de la GCV2 avec le niveau recommandé.
+- **Parties réservées** : avec des parties neuves chaque jour, la réserve permanente n'est plus nécessaire ; la règle devient une **rotation** : toute partie nouvelle est d'abord un examen (réservée, jugée avec les réglages et paramètres figés), puis passe en apprentissage après décision écrite. **Deux témoins fixes**, jamais appris : 1:25 et 1:11, pour comparer entre elles les versions successives de la GCV2. Réponse à l'opérateur : utile, et sans perte d'aucune correction.
+- **Écrit** (branche pilote) : `fiches/PLAN_SUITE_5.0.md` (état des lieux, rotation, cycle quotidien, 11 missions règles métier RM-1 à RM-11, 7 missions GCV2 G0 à G2, attribution des niveaux, modèle de la session GCV2, décisions de l'opérateur, calendrier) et `fiches/G0_GCV2_CONCEPTION.md` (la GCV2 comme couche qui choisit, corrige et doute au-dessus du moteur : hypothèses rejouables depuis le réservoir de cellules, la voie prédite et les voisins ; score de justesse appris et calibré ; garde-fous non appris ; seuils τ et δ ; protocole d'apprentissage et de jugement ; ordre relecture puis lot ; rappel atteignable comme première porte).
+- **Niveau recommandé pour la session GCV2** : **fort, effort haut** pour l'orchestrateur et le relecteur ; **rapide** pour les développeurs en sous-agents ou sessions distantes (effort haut pour G1-b et G1-d) ; **éclair** pour la mécanique. Le plus fort ne développe pas : il revient sur un seul point de passage, après G1-b, si l'opérateur le demande.
+- **Premières missions à lancer** : G1-a (jeu d'hypothèses et rappel atteignable), RM-1 (première ADV de la partie 11), RM-4 (abstentions), RM-10 (manifeste : rotation et passage de 1:14, 1:15, 1:16, 2:10 en apprentissage, sur confirmation de l'opérateur) ; RM-5 à chaque export de la test 8.
+- **Réveil nocturne** : le déclencheur programmé pendant le sommeil de l'opérateur (`trig_018ksb7jSBYZVyEzpkmWsC1q`, 08 h 32 UTC) est **supprimé** : l'opérateur est réveillé et lance une session dédiée ; le cycle quotidien du plan le remplace.
+- **Ce qui reste à l'opérateur** : relecture de G0, confirmation de RM-10, zone 4006–4071 de la partie 16, final de la partie 15, fusions, activation. Fusion dans `main`, étiquette et publication restent les siennes.
 
-## D-193 — Mic : « je te laisse tout lancer de façon autonome » ; RM-10 fait, G1-a et RM-4 lancés (19 octobre 2026, matin)
+## D-193 — l'opérateur : « je te laisse tout lancer de façon autonome » ; RM-10 fait, G1-a et RM-4 lancés (19 octobre 2026, matin)
 
-- **Mic** : « Je te laisse tout lancer de façon autonome. N'oublie pas de me tenir à jour du compteur de cuts appris et de sa file d'attente. » Je lis cette autorisation comme la confirmation de RM-10 (passage en apprentissage des parties jugées) et le départ des missions du plan (`fiches/PLAN_SUITE_5.0.md`). Elle ne couvre pas ce qui reste à Mic : fusions dans `claude/50-base` et `main`, activation d'une règle ou de la GCV2 sur le terrain, étiquette, publication.
+- **L'opérateur** : « Je te laisse tout lancer de façon autonome. N'oublie pas de me tenir à jour du compteur de cuts appris et de sa file d'attente. » Je lis cette autorisation comme la confirmation de RM-10 (passage en apprentissage des parties jugées) et le départ des missions du plan (`fiches/PLAN_SUITE_5.0.md`). Elle ne couvre pas ce qui reste à l'opérateur : fusions dans `claude/50-base` et `main`, activation d'une règle ou de la GCV2 sur le terrain, étiquette, publication.
 - **RM-10 fait** (`claude/50-compteur-gcv2`, 83b4ee1 puis 772de10) : `datasets/manifeste-parties.json` daté du 19/10 ; règle de rotation écrite ; apprentissage : 1:14, 1:15, 1:16 (D-189, D-190), 2:10 (D-188), et 2:11 recopié à l'identique de la test 8 (D-187) ; **témoins fixes 1:11 et 1:25** (champ `temoins`, refusés en apprentissage par `tools/manifeste-parties.cjs`, essai). L'essai de la consigne de la test 7 nommait les parties d'apprentissage d'après le manifeste vivant : il nomme maintenant celles du jour de la livraison (document livré, inchangé). verify : 2 229 essais, 2 227 réussis, 0 échec, 2 ignorés. Un premier commit (83b4ee1) a été poussé avant la fin de verify, qui avait trouvé cet échec : corrigé dans le commit suivant.
 - **Lancés en arrière-plan** (niveau rapide) : **G1-a** (`claude/50-g1a-hypotheses` : `tools/gcv2-jeu.cjs`, essai anti-fuite, jeu d'hypothèses sur les 11 parties d'apprentissage, jeu de jugement séparé pour les témoins, rappel atteignable par zone et par origine) ; **RM-4** (classement des abstentions par cause et par zone, hors dépôt, cas réutilisables par G1-a).
 - **Compteur** : inchangé (1 631 cuts corrigés, tous en file, 0 appris). Les parties passent « appris » quand la première GCV2 sera entraînée dessus (G1-b), pas avant (D-191).
@@ -2739,76 +2739,76 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 ## D-194 — Niveau des petites tâches qui touchent le code ; retour d'Astra pour les premiers résultats d'apprentissage (19 octobre 2026)
 
-- **Mic** : quand une tâche mécanique touche aussi le code (comme RM-10 : un fichier de données, quelques lignes d'outil, deux essais), **le niveau rapide suffit** ; l'orchestrateur ne la fait pas lui-même. Règle ajoutée : éclair pour le purement mécanique (archives, compteur, bilans, paquets) ; rapide dès qu'un fichier de code ou d'essai change ; fort seulement pour décider et relire ce qui touche la pose.
-- **Mic** : « je te laisse gérer le reste, je valide tout ». Même périmètre que D-193 : fusions dans `main`, activation sur le terrain, étiquette et publication restent à Mic.
-- **Astra revient** (relecteur externe, parti le 13/10, D-094) : Mic l'a « redébloqué » pour **les premiers résultats d'apprentissage**. Suite : quand G1-b aura ses chiffres de validation croisée (et avant G1-c), l'orchestrateur écrit un prompt d'audit court, sur le modèle de `consignes/chantier-9-auditeur.md` (lectures bornées : `fiches/G0_GCV2_CONCEPTION.md`, la fiche de résultats de G1-b, `fiches/G1A_HYPOTHESES.md`, l'essai anti-fuite), que Mic transmet à Astra ; la réponse est recopiée dans `audit/chantiers/` avec les suites données. Points à lui soumettre : fuite d'information entre traits et référence, validation croisée par partie, choix de τ et δ, porte « 0 mauvaise voie ».
+- **L'opérateur** : quand une tâche mécanique touche aussi le code (comme RM-10 : un fichier de données, quelques lignes d'outil, deux essais), **le niveau rapide suffit** ; l'orchestrateur ne la fait pas lui-même. Règle ajoutée : éclair pour le purement mécanique (archives, compteur, bilans, paquets) ; rapide dès qu'un fichier de code ou d'essai change ; fort seulement pour décider et relire ce qui touche la pose.
+- **L'opérateur** : « je te laisse gérer le reste, je valide tout ». Même périmètre que D-193 : fusions dans `main`, activation sur le terrain, étiquette et publication restent à l'opérateur.
+- **Astra revient** (relecteur externe, parti le 13/10, D-094) : l'opérateur l'a « redébloqué » pour **les premiers résultats d'apprentissage**. Suite : quand G1-b aura ses chiffres de validation croisée (et avant G1-c), l'orchestrateur écrit un prompt d'audit court, sur le modèle de `consignes/chantier-9-auditeur.md` (lectures bornées : `fiches/G0_GCV2_CONCEPTION.md`, la fiche de résultats de G1-b, `fiches/G1A_HYPOTHESES.md`, l'essai anti-fuite), que l'opérateur transmet à Astra ; la réponse est recopiée dans `audit/chantiers/` avec les suites données. Points à lui soumettre : fuite d'information entre traits et référence, validation croisée par partie, choix de τ et δ, porte « 0 mauvaise voie ».
 
 ## D-195 — RM-4 rendu ; les témoins ne règlent rien, même pour RM-1 et RM-2 ; RM-1 et RM-2 lancés (19 octobre 2026)
 
-- **RM-4 rendu** (niveau rapide, `fiches/RM4_ABSTENTIONS.md`) : 11 parties, 4 567 cuts visités, 2 648 calculés, 1 919 sans nuage, 0 erreur ; comptes principaux recoupés par un second script. En chaîne, **836 abstentions (31,6 %)** ; sur les **741 grosses corrections** de Mic (plus de 10 mm), **217 perdues par abstention** et **334 faute de nuage** (dont 243 en 1:17 et 1:24, dont l'Écho n'a plus ses nuages). L'abstention coûte le plus en ADV (48 %), puis aux abords (29 %), puis en PN (19 %). Trois pistes chiffrées : compléter le rail manquant (plafond 9,3 % des grosses corrections), poses du lot comme appuis (3,1 %), trancher l'ambiguïté (3,5 %). L'écartement hors contrat n'est pas un levier (133 cas sur 134 dans le contrat chez Mic).
-- **Conséquence pour la GCV2** : les hypothèses de G1-a doivent couvrir le rail manquant (piste 1) ; la mesure de 1:17 et 1:24 est limitée tant que leurs nuages manquent (question à Mic : a-t-il un Écho complet de ces parties ?).
-- **Correction du plan** : RM-1 visait la première ADV de **1:11**, et RM-2 les notes de la partie 11 ; or **1:11 est un témoin fixe** (D-192, RM-10), qui ne doit jamais rien régler. Règle : une variante du détecteur ou une marge se choisit **sur les parties d'apprentissage seulement** (ADV et PN notés par Mic en 1:13, 1:14, 1:15, 1:16, 1:29, 2:1, 2:10, 2:11) ; 1:11 (et 1:25) n'est lu **qu'une fois, à la fin**, réglages figés, et rapporté tel quel. Aucun chiffre lu sur un témoin ne fait revenir sur un réglage.
+- **RM-4 rendu** (niveau rapide, `fiches/RM4_ABSTENTIONS.md`) : 11 parties, 4 567 cuts visités, 2 648 calculés, 1 919 sans nuage, 0 erreur ; comptes principaux recoupés par un second script. En chaîne, **836 abstentions (31,6 %)** ; sur les **741 grosses corrections** de l'opérateur (plus de 10 mm), **217 perdues par abstention** et **334 faute de nuage** (dont 243 en 1:17 et 1:24, dont l'Écho n'a plus ses nuages). L'abstention coûte le plus en ADV (48 %), puis aux abords (29 %), puis en PN (19 %). Trois pistes chiffrées : compléter le rail manquant (plafond 9,3 % des grosses corrections), poses du lot comme appuis (3,1 %), trancher l'ambiguïté (3,5 %). L'écartement hors contrat n'est pas un levier (133 cas sur 134 dans le contrat chez l'opérateur).
+- **Conséquence pour la GCV2** : les hypothèses de G1-a doivent couvrir le rail manquant (piste 1) ; la mesure de 1:17 et 1:24 est limitée tant que leurs nuages manquent (question à l'opérateur : a-t-il un Écho complet de ces parties ?).
+- **Correction du plan** : RM-1 visait la première ADV de **1:11**, et RM-2 les notes de la partie 11 ; or **1:11 est un témoin fixe** (D-192, RM-10), qui ne doit jamais rien régler. Règle : une variante du détecteur ou une marge se choisit **sur les parties d'apprentissage seulement** (ADV et PN notés par l'opérateur en 1:13, 1:14, 1:15, 1:16, 1:29, 2:1, 2:10, 2:11) ; 1:11 (et 1:25) n'est lu **qu'une fois, à la fin**, réglages figés, et rapporté tel quel. Aucun chiffre lu sur un témoin ne fait revenir sur un réglage.
 - **Lancés** (niveau rapide) : RM-1 (`claude/50-rm1-adv`) et RM-2 (`claude/50-rm2-marges`), depuis `claude/50-compteur-gcv2`. RM-1 sera relu au niveau fort (il touche la sélection) avant toute fusion.
 
-## D-196 — banane-data est la seule copie des exports de Mic (19 octobre 2026)
+## D-196 — banane-data est la seule copie des exports de l'opérateur (19 octobre 2026)
 
-- **Mic** : « Je ne les ai plus, je supprime tout ce que j'ai dès que je te les envoie. » Les nuages manquants de 1:17 et 1:24 sont perdus pour de bon ; RM-4, G1-a et la suite mesurent ces parties sur les cuts qui ont un nuage, et les comptent à part.
-- **Conséquence** : banane-data est la **seule** copie de chaque export. À chaque archivage : exports déposés tels qu'envoyés, `SHA256SUMS` du dossier, commit **poussé et vérifié sur le distant** (empreinte relue après le push) avant de dire à Mic que c'est archivé. Rien n'est jamais supprimé ni réécrit dans `collections/`.
+- **L'opérateur** : « Je ne les ai plus, je supprime tout ce que j'ai dès que je te les envoie. » Les nuages manquants de 1:17 et 1:24 sont perdus pour de bon ; RM-4, G1-a et la suite mesurent ces parties sur les cuts qui ont un nuage, et les comptent à part.
+- **Conséquence** : banane-data est la **seule** copie de chaque export. À chaque archivage : exports déposés tels qu'envoyés, `SHA256SUMS` du dossier, commit **poussé et vérifié sur le distant** (empreinte relue après le push) avant de dire à l'opérateur que c'est archivé. Rien n'est jamais supprimé ni réécrit dans `collections/`.
 
 ## D-197 — Erratum de D-195 : la première ADV « de la partie 11 » est en 2:11, pas dans le témoin 1:11 (19 octobre 2026)
 
-- Les notes de Mic « parties 10 et 11 » portent sur le **projet 2** (Écho du 18/10, 731 visites) : l'ADV 6362–6424 est dans **2:11**, partie d'apprentissage (D-187). Le témoin fixe est **1:11** (Écho du 28/09). D-195 avait confondu les deux.
+- Les notes de l'opérateur « parties 10 et 11 » portent sur le **projet 2** (Écho du 18/10, 731 visites) : l'ADV 6362–6424 est dans **2:11**, partie d'apprentissage (D-187). Le témoin fixe est **1:11** (Écho du 28/09). D-195 avait confondu les deux.
 - RM-1 peut donc étudier 2:11 comme prévu au plan. La règle de D-195 reste juste pour les vrais témoins : **1:11 et 1:25** ne règlent rien et ne sont lus qu'à la fin, réglages figés.
-- Les missions G1-a, RM-1 et RM-2 ont été interrompues par une interruption de session (19/10, 6 h 38 UTC), pas par décision ; elles reprennent sur accord de Mic, avec ce brief corrigé.
+- Les missions G1-a, RM-1 et RM-2 ont été interrompues par une interruption de session (19/10, 6 h 38 UTC), pas par décision ; elles reprennent sur accord de l'opérateur, avec ce brief corrigé.
 
 ## D-198 — Examen de la partie 6 du projet 2 (Écho du 19/10, test 8) ; compteur à 1 783 cuts corrigés (19 octobre 2026)
 
-- **Archivage** : `banane-data` `collections/2026-10-19_v4.9.5.8_echo-partie-6` (10 zips, 112 Mo, notes de Mic), commit `faea9c8`, distant vérifié, contrôle d'identité vide. Projet 2 : même total (9 884) que la partie 6 du lot du 16/10.
-- **Orbite contre Mic** (lot du 16/10, 83 invalides) : 72 posés, 11 différés. Mic retouche 10 posés sur 69 vus, aucun de plus de 10 mm ; les 11 différés sont tous des grosses corrections (médiane 48 mm). Verts non touchés : 133 corrigés par Mic, dont 24 de plus de 10 mm (14 en ADV).
-- **Règle prudente figée** (274 cuts mesurables, 27 grosses corrections) : 14 actions, toutes à 10 mm ou moins de Mic (13 à 5 mm), **0 mauvaise voie, 0 abîmé** ; 38 abstentions, 17 grosses corrections laissées. Porte tenue en valeur, pas démontrée (Wilson 21,5 % sur 14 actions).
-- **Zones** : détecteur d'ADV figé 5/5 zones et 3/3 aiguilles de Mic, aucune fausse plage ; l'aiguille isolée du cut 4650 vue ; le PN 7935–7957 vu comme un PN (pas comme une ADV). La sélection bâtie sur le lot seul manque 3478–3535 (deux cuts du lot). Un amas 3931–3935 (34 à 41 mm) ressemble à un PN non noté : **question à Mic**.
+- **Archivage** : `banane-data` `collections/2026-10-19_v4.9.5.8_echo-partie-6` (10 zips, 112 Mo, notes de l'opérateur), commit `faea9c8`, distant vérifié, contrôle d'identité vide. Projet 2 : même total (9 884) que la partie 6 du lot du 16/10.
+- **Orbite contre l'opérateur** (lot du 16/10, 83 invalides) : 72 posés, 11 différés. L'opérateur retouche 10 posés sur 69 vus, aucun de plus de 10 mm ; les 11 différés sont tous des grosses corrections (médiane 48 mm). Verts non touchés : 133 corrigés par l'opérateur, dont 24 de plus de 10 mm (14 en ADV).
+- **Règle prudente figée** (274 cuts mesurables, 27 grosses corrections) : 14 actions, toutes à 10 mm ou moins de l'opérateur (13 à 5 mm), **0 mauvaise voie, 0 abîmé** ; 38 abstentions, 17 grosses corrections laissées. Porte tenue en valeur, pas démontrée (Wilson 21,5 % sur 14 actions).
+- **Zones** : détecteur d'ADV figé 5/5 zones et 3/3 aiguilles de l'opérateur, aucune fausse plage ; l'aiguille isolée du cut 4650 vue ; le PN 7935–7957 vu comme un PN (pas comme une ADV). La sélection bâtie sur le lot seul manque 3478–3535 (deux cuts du lot). Un amas 3931–3935 (34 à 41 mm) ressemble à un PN non noté : **question à l'opérateur**.
 - **Décision** : 2:6 reste **réservée** encore quelques heures : c'est la seule partie neuve que RM-1 (variante ADV) et RM-2 (marges) n'ont jamais vue ; elles y seront jugées à l'aveugle, réglages figés. Elle passe ensuite en apprentissage (rotation D-192), par une ligne du manifeste.
 - **Compteur** (`claude/50-compteur-gcv2`, `36458ba`) : **1 783 corrigés** (1 091 de plus de 5 mm, 559 de plus de 10 mm), 472 validés tels quels, 1 373 visités sans action : **3 628 apprenables**, tous en file, 0 appris. Fiche d'examen : `fiches/EXAMEN_2-6.md`.
 
 ## D-199 — RM-2 rendu : marges proposées, non figées ; jugement à l'aveugle sur 2:6 avant tout choix (19 octobre 2026)
 
-- **RM-2** (`claude/50-rm2-marges`, `2d34a53`, verify 2 243 essais, 0 échec ; `fiches/RM2_MARGES.md`) : grosses corrections de Mic (plus de 10 mm) hors zone + marge sur les 11 parties d'apprentissage : **54 sur 741 avant, 11 après** ; en validation par partie laissée de côté : **20**. Cuts à relire : 4 969 → 5 930 (× 1,19 ; pire partie 1:17 à × 1,50) ; aucune ne double.
-- **Marges proposées** : ADV 40 avant la première alerte (30 livré) et 30 après ; chaînage d'ADV à 40 cuts et prolongation par une alerte à 30 cuts (d'après les notes de Mic) ; PN inchangés mais un cœur seul ouvre une zone ; **7 cuts autour de chaque vert de la liste « À contrôler »** (0 livré). Ce dernier levier fait 36 des 43 corrections rattrapées : c'est le plus fort et le moins sûr.
+- **RM-2** (`claude/50-rm2-marges`, `2d34a53`, verify 2 243 essais, 0 échec ; `fiches/RM2_MARGES.md`) : grosses corrections de l'opérateur (plus de 10 mm) hors zone + marge sur les 11 parties d'apprentissage : **54 sur 741 avant, 11 après** ; en validation par partie laissée de côté : **20**. Cuts à relire : 4 969 → 5 930 (× 1,19 ; pire partie 1:17 à × 1,50) ; aucune ne double.
+- **Marges proposées** : ADV 40 avant la première alerte (30 livré) et 30 après ; chaînage d'ADV à 40 cuts et prolongation par une alerte à 30 cuts (d'après les notes de l'opérateur) ; PN inchangés mais un cœur seul ouvre une zone ; **7 cuts autour de chaque vert de la liste « À contrôler »** (0 livré). Ce dernier levier fait 36 des 43 corrections rattrapées : c'est le plus fort et le moins sûr.
 - **1:16** : pas un PN lu comme ADV (alertes à 20 cuts et plus du PN) ; rien à changer.
 - **Témoins** (lus marges figées) : 1:11 passe de 64 à 60 grosses corrections hors zone sur 103 : la proposition ne règle pas 1:11 (lot ancien, 4.7.20/4.8.0). 1:25 : 0 sur 21. Le développeur a lu les témoins une première fois avant d'avoir figé le chaînage (mêmes comptes) ; écrit dans la fiche. Écart de méthode relevé, sans effet sur les chiffres ; rappel fait pour les suivants.
-- **Choix du prix** (200 cuts par grosse correction, ou 100 : 3 hors zone de plus, 398 cuts de moins) : **pas tranché sur l'apprentissage** ; les deux réglages seront jugés à l'aveugle sur **2:6** (réservée, D-198) avec la variante de RM-1, puis le moins cher qui tient est retenu. Rien n'est figé ni activé avant ce jugement ; l'activation reste à Mic.
+- **Choix du prix** (200 cuts par grosse correction, ou 100 : 3 hors zone de plus, 398 cuts de moins) : **pas tranché sur l'apprentissage** ; les deux réglages seront jugés à l'aveugle sur **2:6** (réservée, D-198) avec la variante de RM-1, puis le moins cher qui tient est retenu. Rien n'est figé ni activé avant ce jugement ; l'activation reste à l'opérateur.
 
 ## D-200 — RM-1 rendu : la première ADV de 2:11 n'est pas un défaut du détecteur, c'est un trou de lecture du lot (19 octobre 2026)
 
 - **RM-1** (`claude/50-rm1-adv`, `5b7eeb9`, verify 2 229 essais, 0 échec ; `fiches/RM1_ADV.md`) : à l'Écho, la zone 6362–6424 de 2:11 est vue (alerte au 6391, plage 6360–6488 qui couvre 63 cuts sur 63). Au lot, **aucun de ces 63 cuts n'est lu** : le lot n'a décidé que 131 cuts (les invalides), rien entre 5545 et 6435. Le détecteur n'a rien à regarder ; ni la seconde alerte, ni la forme du cœur, ni l'écartement n'y sont pour quelque chose.
-- **Détecteur figé** sur les parties d'apprentissage : Écho 16/16 zones et 26/26 points clés ; lot 10/11 et 17/18 ; 0 alerte sur 663 cuts de PN ; une plage non notée en 1:16 (4006–4071, la zone déjà soumise à Mic). Neuf variantes mesurées ; aucune ne reprend la zone sans plage ou alerte de plus. **Aucun code ni réglage changé.** Deux variantes (« bord de fenêtre relâché », « mi-hauts fusionnés à 70 % ») gagnent du noyau à l'Écho sans coût : notées « proposé, non figé ».
-- **Conséquence** : une ADV posée entièrement en vert par ESV est invisible au lot. Piste, hors du périmètre de RM-1 et à soumettre à Mic : pendant le lot, **lire un cut vert sur trois** (lecture seule, sans pose) pour nourrir le détecteur de zones. C'est un changement du lot (temps, réseau), il demande une mesure de coût et l'accord de Mic.
+- **Détecteur figé** sur les parties d'apprentissage : Écho 16/16 zones et 26/26 points clés ; lot 10/11 et 17/18 ; 0 alerte sur 663 cuts de PN ; une plage non notée en 1:16 (4006–4071, la zone déjà soumise à l'opérateur). Neuf variantes mesurées ; aucune ne reprend la zone sans plage ou alerte de plus. **Aucun code ni réglage changé.** Deux variantes (« bord de fenêtre relâché », « mi-hauts fusionnés à 70 % ») gagnent du noyau à l'Écho sans coût : notées « proposé, non figé ».
+- **Conséquence** : une ADV posée entièrement en vert par ESV est invisible au lot. Piste, hors du périmètre de RM-1 et à soumettre à l'opérateur : pendant le lot, **lire un cut vert sur trois** (lecture seule, sans pose) pour nourrir le détecteur de zones. C'est un changement du lot (temps, réseau), il demande une mesure de coût et l'accord de l'opérateur.
 - **Relecture au niveau fort** : sans objet (aucun diff de code ni de sélection). Les témoins n'ont pas été lus (aucune ADV notée, aucune variante figée).
 - **Suite** : jugement à l'aveugle des marges de RM-2 (prix 200 et 100) sur 2:6, en cours.
 
 ## D-201 — G1-a rendu et relu : porte du rappel atteignable franchie sur les cuts avec nuage ; G1-b lancé avec trois conditions (19 octobre 2026)
 
 - **G1-a** (`claude/50-g1a-hypotheses`, `7c83590` et `091e5fb`, verify 2 242 essais, 0 échec ; `fiches/G1A_HYPOTHESES.md`) : jeu d'hypothèses H0 à H5 sur les 11 parties d'apprentissage (4 567 cuts, 62 302 hypothèses, 0 erreur, copie du moteur identique au moteur livré) ; jeux de jugement séparés pour 1:11 et 1:25.
-- **Rappel atteignable** (au moins une hypothèse à 10 mm de la pose finale de Mic, grosses corrections de plus de 10 mm) : **83,7 % (340/406) sur les cuts avec nuage** (PN 95 %, ADV 89 %, abords 76 %, hors 88 %) ; 65 % à 5 mm ; **71,9 % sans les voisins humains (H4)**. Brut : 45,9 % (334 grosses corrections sans nuage, perdues pour de bon, surtout 1:17 et 1:24). **Porte de 60 % : franchie** sur les cuts avec nuage, qui sont les seuls où une GCV2 peut agir. Témoins (lus une fois) : 79,3 % avec nuage. Le manque est concentré en 2:1 (57 cuts : déplacements latéraux de plus de 50 mm aux abords).
+- **Rappel atteignable** (au moins une hypothèse à 10 mm de la pose finale de l'opérateur, grosses corrections de plus de 10 mm) : **83,7 % (340/406) sur les cuts avec nuage** (PN 95 %, ADV 89 %, abords 76 %, hors 88 %) ; 65 % à 5 mm ; **71,9 % sans les voisins humains (H4)**. Brut : 45,9 % (334 grosses corrections sans nuage, perdues pour de bon, surtout 1:17 et 1:24). **Porte de 60 % : franchie** sur les cuts avec nuage, qui sont les seuls où une GCV2 peut agir. Témoins (lus une fois) : 79,3 % avec nuage. Le manque est concentré en 2:1 (57 cuts : déplacements latéraux de plus de 50 mm aux abords).
 - **Relecture au niveau fort de l'anti-fuite** : la fonction des hypothèses ne reçoit pas la référence ; l'essai de bout en bout change la pose finale du cut et retrouve les mêmes lignes à l'étiquette près ; les voisins humains ne comptent que s'ils sont validés avant la première visite du cut. **Accepté**, avec trois conditions pour G1-b :
-  1. **Liste blanche des traits** : seuls `traits` (par hypothèse), les traits de rail et `contexte` entrent dans le modèle. Les champs de la ligne de cut `visites`, `reference` et `etat` décrivent le comportement de Mic (nombre de visites, type de validation, nuage présent ou non selon la durée de visite) : ils sont **interdits** comme traits ; un essai le vérifie.
-  2. **Deux usages, deux chiffres** : « relecture » (voisins humains permis) et « lot » (sans voisins humains : au lot, aucune pose de Mic n'existe). Le lot est jugé sans H4 humain.
+  1. **Liste blanche des traits** : seuls `traits` (par hypothèse), les traits de rail et `contexte` entrent dans le modèle. Les champs de la ligne de cut `visites`, `reference` et `etat` décrivent le comportement de l'opérateur (nombre de visites, type de validation, nuage présent ou non selon la durée de visite) : ils sont **interdits** comme traits ; un essai le vérifie.
+  2. **Deux usages, deux chiffres** : « relecture » (voisins humains permis) et « lot » (sans voisins humains : au lot, aucune pose de l'opérateur n'existe). Le lot est jugé sans H4 humain.
   3. **Le hasard comme référence** : la liste est dense (7,7 poses par rail ; 19 à 29 % des grosses corrections seraient « atteintes » avec les hypothèses d'un autre cut). G1-b doit battre une référence tirée au hasard dans la liste et la règle prudente figée (D-190), pas seulement le moteur.
 - **Lancé** : G1-b (`claude/50-g1b-apprendre`, niveau rapide, effort haut). Les parties passent « appris » dans le compteur quand les paramètres de G1-b sont figés et poussés. Astra relira la méthode et les chiffres de validation croisée avant G1-c (D-194).
 
 ## D-202 — Marges de RM-2 jugées à l'aveugle sur 2:6 : aucun gain sur les grosses corrections ; pas d'activation ; le vrai levier est la lecture des verts au lot (19 octobre 2026)
 
-- **Jugement figé sur 2:6** (35 grosses corrections de Mic, `fiches/JUGEMENT_MARGES_2-6.md`) : hors zone + marge **5 dans les trois réglages** (livré, prix 200, prix 100) ; cuts à relire 464 → 548 (prix 200) ou 532 (prix 100) ; couverture des zones notées par Mic 83,6 % → 92,5 % ou 89,7 %.
+- **Jugement figé sur 2:6** (35 grosses corrections de l'opérateur, `fiches/JUGEMENT_MARGES_2-6.md`) : hors zone + marge **5 dans les trois réglages** (livré, prix 200, prix 100) ; cuts à relire 464 → 548 (prix 200) ou 532 (prix 100) ; couverture des zones notées par l'opérateur 83,6 % → 92,5 % ou 89,7 %.
 - **Les 5 cas restants** sont les cuts 3931–3935 (34 à 41 mm), à 180 cuts de toute ADV, avec un cœur de chaussée sur quatre d'entre eux : un **PN que le lot n'a pas vu**, parce que le lot n'y est pas passé (aucun cut lu entre 3727 et 4450). C'est la même cause que l'ADV de 2:11 (D-200) : **le lot ne lit pas les verts**, donc aucune marge ne peut rattraper une zone que personne n'a vue.
-- **Décision** : les marges de RM-2 restent **proposées, non figées, non activées**. Si on les active un jour, ce sera au **prix 100** (même résultat que le prix 200 sur 2:6, 400 cuts de moins sur l'apprentissage). Le levier prioritaire devient **RM-12 : lecture des verts au lot** (un cut vert sur trois, lecture seule, pour nourrir les détecteurs de PN et d'ADV) : mesurer d'abord le coût (temps par cut lu, réseau) et le gain sur les parties qui ont un Écho, puis soumettre à Mic. Niveau rapide ; relecture forte (touche le lot).
+- **Décision** : les marges de RM-2 restent **proposées, non figées, non activées**. Si on les active un jour, ce sera au **prix 100** (même résultat que le prix 200 sur 2:6, 400 cuts de moins sur l'apprentissage). Le levier prioritaire devient **RM-12 : lecture des verts au lot** (un cut vert sur trois, lecture seule, pour nourrir les détecteurs de PN et d'ADV) : mesurer d'abord le coût (temps par cut lu, réseau) et le gain sur les parties qui ont un Écho, puis soumettre à l'opérateur. Niveau rapide ; relecture forte (touche le lot).
 - **2:6 reste réservée** : c'est la seule partie réservée avec un Écho hors des deux témoins ; elle sert au jugement de la GCV2 (G1-c). Elle passera en apprentissage après G1-c.
 
 ## D-203 — RM-12 rendu : lire les verts au lot coûte trop pour ce qu'il rapporte ; non retenu (19 octobre 2026)
 
-- **RM-12** (`claude/50-rm12-verts`, `5d3de14`, verify 2 252 essais, 0 échec ; `fiches/RM12_LECTURE_VERTS.md`, `tools/lecture-verts.cjs`) : le lot lit déjà au moins 3 cuts dans **23 des 24 zones** de Mic (seule l'ADV 6362–6424 de 2:11 lui échappe). Lire un vert sur N fait passer les grosses corrections hors zone de 47 à 41 (N = 5) ou 40 (N = 2 ou 3), plafond 39, sur 633 ; avec les marges de RM-2, 8 → 7 seulement.
+- **RM-12** (`claude/50-rm12-verts`, `5d3de14`, verify 2 252 essais, 0 échec ; `fiches/RM12_LECTURE_VERTS.md`, `tools/lecture-verts.cjs`) : le lot lit déjà au moins 3 cuts dans **23 des 24 zones** de l'opérateur (seule l'ADV 6362–6424 de 2:11 lui échappe). Lire un vert sur N fait passer les grosses corrections hors zone de 47 à 41 (N = 5) ou 40 (N = 2 ou 3), plafond 39, sur 633 ; avec les marges de RM-2, 8 → 7 seulement.
 - **Coût** (six journaux de lot) : une lecture sans pose coûte 0,9 à 2,2 s ; temps ajouté par partie **+36 min (N = 10), +66 min (N = 5), +134 min (N = 2)**, pour un lot actuel de 14 min. Environ 1 000 minutes de lot par grosse correction rattrapée.
 - **2:6** (lue une fois, N = 5 figé) : le PN 3931–3935 n'est pas vu (5 cuts de large, une lecture sur 5) ; les 5 grosses corrections restent hors zone.
-- **Décision** : **non retenu**. Le trou de lecture est rare et la lecture des verts multiplie la durée du lot par 3,6 à 10. La question posée à Mic sur le temps acceptable est close. Pistes moins chères gardées en note : lire seulement les verts d'une fenêtre autour d'une alerte isolée, ou exploiter un signal de la liste d'ESV sans nuage ; aucune n'est lancée.
+- **Décision** : **non retenu**. Le trou de lecture est rare et la lecture des verts multiplie la durée du lot par 3,6 à 10. La question posée à l'opérateur sur le temps acceptable est close. Pistes moins chères gardées en note : lire seulement les verts d'une fenêtre autour d'une alerte isolée, ou exploiter un signal de la liste d'ESV sans nuage ; aucune n'est lancée.
 - **Écart de méthode** relevé : le développeur avait lu les fiches de travail de RM-2 sur 2:6 avant de figer N ; écrit dans la fiche, sans effet sur le choix. 2:6 n'a plus que G1-c comme usage avant son passage en apprentissage.
 
 ## D-204 — G1-b rendu : la GCV2 corrige plus que la règle prudente mais ne tient pas la porte ; variantes par zone pré-déclarées ; Astra avant G1-c (19 octobre 2026)
@@ -2822,7 +2822,7 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - **V3** : GCV2 sur tous les verts sauf les abords ; abords : rien.
   Mêmes plis, mêmes τ et δ par zone (appris dans le pli), mêmes mesures. Aucune n'est retenue sur la validation croisée seule : la retenue se fera au jugement à l'aveugle (G1-c) sur 2:6 et les témoins 1:11 et 1:25, après l'audit d'Astra.
 - **Compteur** : 10 sources « appris » (**1 631 cuts corrigés appris**), 152 en file (2:6, réservée). La partie 1:17 a servi à l'apprentissage mais n'est pas dans le compteur (son Écho est en 7z) ; à ajouter.
-- **Astra** (D-194) : prompt d'audit écrit dans `consignes/chantier-gcv2-g1b-auditeur.md` ; Mic le relaie ; réponse attendue dans `audit/chantiers/audit-gcv2-g1b-astra.md`. G1-c attend cette réponse.
+- **Astra** (D-194) : prompt d'audit écrit dans `consignes/chantier-gcv2-g1b-auditeur.md` ; l'opérateur le relaie ; réponse attendue dans `audit/chantiers/audit-gcv2-g1b-astra.md`. G1-c attend cette réponse.
 
 ## D-205 — Variantes par zone : V1 tient la porte en validation croisée ; candidate unique pour G1-c ; compteur à 2 138 cuts appris (19 octobre 2026)
 
@@ -2834,40 +2834,40 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Compteur** : la partie 1:17 est ajoutée (option `--racine-supplementaire`, 7z extrait puis effacé, banane-data intact) : **2 290 cuts corrigés depuis le début de la 5.0, dont 2 138 appris (11 parties) et 152 en file (2:6)** ; 4 402 apprenables (4 024 appris, 378 en file). Fiche `fiches/COMPTEUR_GCV2.md` mise à jour.
 - Le prompt d'Astra est complété avec V1. G1-c attend toujours sa réponse.
 
-## D-206 — Réponses de Mic (19 octobre 2026, midi) et suites
+## D-206 — Réponses de l'opérateur (19 octobre 2026, midi) et suites
 
 - **2:6, cuts 3931–3935** : c'est bien un **PN**, et ESV ne l'avait même pas marqué d'un rouge invalide : « tu n'y pouvais rien, RAS ». Vérité ajoutée aux notes de 2:6.
-- **1:16, cuts 4006–4071** : c'est bien une **ADV**, que Mic n'a pas corrigée. La plage du détecteur n'est donc **pas une fausse zone** (RM-1, D-200 : 0 fausse plage à l'Écho) ; vérité ajoutée aux notes de 1:16.
+- **1:16, cuts 4006–4071** : c'est bien une **ADV**, que l'opérateur n'a pas corrigée. La plage du détecteur n'est donc **pas une fausse zone** (RM-1, D-200 : 0 fausse plage à l'Écho) ; vérité ajoutée aux notes de 1:16.
 - **2:1, ce que la GCV2 rate** (57 cuts sans hypothèse juste, G1-a) : vérifié sur le jeu. 53 sont dans la **zone 2 (cuts 293 à 459)**, presque tous **différés** par le lot, avec **toute la voie décalée de 130 à 250 mm** en latéral (les deux rails ensemble) ; 4 autres en ADV (625, 3011, 5521, 5550). C'est la zone de D-141 et D-147 : « déplacer la vue » a été développé pour elle, mais la vue n'explique que 32 % des différés ; **61 % sont hors de la fenêtre de recherche du moteur** (±180 mm en travers). Piste GCV2 : une hypothèse **H6 « voie décalée »**, qui applique à la paire le décalage du dernier voisin sûr (série), à mesurer après l'audit d'Astra.
 - **Temps de lot (RM-12)** : « peu importe pour le moment, sauf si c'est complètement aberrant pour un gain minime ; on s'occupera du gain de temps plus tard ». La lecture d'un vert sur cinq partout (+66 min pour 6 grosses corrections sur 633) **reste jugée aberrante**. Une variante **ciblée** est mesurée : lire les verts **seulement dans les longs trous du lot** (les deux zones manquées sont dans des trous de 720 et 890 cuts sans lecture).
-- **Test 8** : Mic l'utilise cet après-midi. Les parties 0 à 5 du projet 2 ne seront pas fournies.
-- **Format des notes** de zones : validé par Mic.
-- **RM-11, raison de la correction** : « si c'est bien fait, pourquoi pas ». D'abord une conception (maquette du panneau, gestes, temps ajouté), soumise à Mic avant tout code ; rien ne change dans la test 8.
+- **Test 8** : l'opérateur l'utilise cet après-midi. Les parties 0 à 5 du projet 2 ne seront pas fournies.
+- **Format des notes** de zones : validé par l'opérateur.
+- **RM-11, raison de la correction** : « si c'est bien fait, pourquoi pas ». D'abord une conception (maquette du panneau, gestes, temps ajouté), soumise à l'opérateur avant tout code ; rien ne change dans la test 8.
 
-## D-207 — Mic : « la GCV2 doit se nourrir de toutes les situations, notamment les plus complexes » ; chantier H6 « voie décalée » lancé au niveau fort (19 octobre 2026)
+## D-207 — l'opérateur : « la GCV2 doit se nourrir de toutes les situations, notamment les plus complexes » ; chantier H6 « voie décalée » lancé au niveau fort (19 octobre 2026)
 
-- **Mic**, sur la zone 2 de 2:1 (voie entière décalée de 13 à 25 cm) : « D'accord, mets-les en apprentissage ; n'hésite pas à utiliser le modèle le plus fort, voire le plus fort de tous si ça bloque vraiment. La GCV2 doit se nourrir de toutes les situations et notamment les plus complexes. »
+- **L'opérateur**, sur la zone 2 de 2:1 (voie entière décalée de 13 à 25 cm) : « D'accord, mets-les en apprentissage ; n'hésite pas à utiliser le modèle le plus fort, voire le plus fort de tous si ça bloque vraiment. La GCV2 doit se nourrir de toutes les situations et notamment les plus complexes. »
 - **Lecture** : 2:1 est déjà une partie d'apprentissage, mais la GCV2 ne peut rien apprendre de ces 53 cuts, parce qu'aucune de ses hypothèses ne les atteint (G1-a) et que V1 exclut les cuts différés (D-205). Il faut donc **une hypothèse qui les atteigne** et **une décision qui puisse agir sur les différés sans mauvaise voie**.
-- **Chantier H6** (`claude/50-g1-h6`, depuis `claude/50-g1b-apprendre`), **niveau fort** (D-207, accord de Mic ; il touche l'anti-fuite et le garde-fou de mauvaise voie) :
+- **Chantier H6** (`claude/50-g1-h6`, depuis `claude/50-g1b-apprendre`), **niveau fort** (D-207, accord de l'opérateur ; il touche l'anti-fuite et le garde-fou de mauvaise voie) :
   1. hypothèse **H6 « voie décalée »** : la paire de départ translatée du décalage latéral et vertical d'un voisin sûr récent (même règle de temps que H4 : validé avant la première visite du cut, ou validé par le lot), et la translation lissée sur la série ;
   2. **garde-fou de voie** relatif à la voie de référence de la série (et non plus à la seule pose de départ) pour les différés ; 0 mauvaise voie reste la porte ;
   3. jeux reconstruits, rappel atteignable (zone 2 de 2:1 en particulier), essai anti-fuite étendu ;
   4. validation croisée G1-b relancée avec H6 et une variante **V1+** (V1 plus les différés sous le nouveau garde-fou).
 - 2:6 et 2:7 restent réservées pour le jugement à l'aveugle (G1-c) ; elles passeront en apprentissage juste après.
 
-## D-208 — Mic : feu vert pour la raison de la correction (RM-11) ; développement de la test 9 (19 octobre 2026)
+## D-208 — l'opérateur : feu vert pour la raison de la correction (RM-11) ; développement de la test 9 (19 octobre 2026)
 
-- **Mic** : « feu vert » sur la conception (`fiches/RM11_RAISON_CORRECTION.md`, maquette montrée) : touches 1 à 6 et 0, rien par défaut, jamais bloquant, double appui collant, champ `raisonCorrection` côté étiquette, jamais dans les traits.
+- **L'opérateur** : « feu vert » sur la conception (`fiches/RM11_RAISON_CORRECTION.md`, maquette montrée) : touches 1 à 6 et 0, rien par défaut, jamais bloquant, double appui collant, champ `raisonCorrection` côté étiquette, jamais dans les traits.
 - **Développement** (niveau rapide) sur `claude/50-rm11-test9`, depuis le code de la test 8 (`claude/50-relecture-couverture`, d58a6f1), pour une **test 9 (4.9.5.9)** = test 8 + raison de la correction. Pose et lot inchangés (preuve par essai), Écho identique sans touche tapée. Étape 0 de la consigne : vérifier dans ESV que les chiffres n'y font rien, sinon régler la rangée de repli.
 - **Relecture forte** du diff de `src/native-session.js` avant remise du paquet. La test 8 reste en service cet après-midi ; la test 9 sera remise après.
 
 ## D-209 — Examen de la partie 7 du projet 2 ; lot test 8 de 2:13 archivé ; compteur à 2 684 cuts corrigés (19 octobre 2026)
 
-- **Archives** (banane-data) : Écho de 2:7 (33 zips, 372 Mo, deux volumes recollés et vérifiés, `a1c587a`), compléments de Mic aux notes (PN 1957–1972, ADV 3131–3228, début de la zone de l'aiguille 5897 inconnu, `5b0b67e`) ; premier lot Orbite de la test 8 sur **2:13** (partie neuve du projet 2, 9 772 cuts, relecture « corriger » encore en cours à l'export, `a199f92`). Contrôles d'identité vides, distants vérifiés.
-- **Examen de 2:7** (`fiches/EXAMEN_2-7.md`) : lot du 16/10, 151 invalides : 130 posés, 21 différés (tous corrigés de plus de 10 mm, médiane 60 mm) ; Mic corrige 7 posés de plus de 10 mm, dont 4 sur des aiguilles. Verts non touchés : 57 grosses corrections (21 en ADV).
-- **Règle prudente figée** (444 cuts mesurables, 46 grosses corrections) : 16 actions, 15 à 10 mm de Mic, **0 mauvaise voie, 0 abîmé** ; 34 grosses corrections laissées. Porte tenue en valeur, pas démontrée (Wilson ≤ 19,4 %).
+- **Archives** (banane-data) : Écho de 2:7 (33 zips, 372 Mo, deux volumes recollés et vérifiés, `a1c587a`), compléments de l'opérateur aux notes (PN 1957–1972, ADV 3131–3228, début de la zone de l'aiguille 5897 inconnu, `5b0b67e`) ; premier lot Orbite de la test 8 sur **2:13** (partie neuve du projet 2, 9 772 cuts, relecture « corriger » encore en cours à l'export, `a199f92`). Contrôles d'identité vides, distants vérifiés.
+- **Examen de 2:7** (`fiches/EXAMEN_2-7.md`) : lot du 16/10, 151 invalides : 130 posés, 21 différés (tous corrigés de plus de 10 mm, médiane 60 mm) ; l'opérateur corrige 7 posés de plus de 10 mm, dont 4 sur des aiguilles. Verts non touchés : 57 grosses corrections (21 en ADV).
+- **Règle prudente figée** (444 cuts mesurables, 46 grosses corrections) : 16 actions, 15 à 10 mm de l'opérateur, **0 mauvaise voie, 0 abîmé** ; 34 grosses corrections laissées. Porte tenue en valeur, pas démontrée (Wilson ≤ 19,4 %).
 - **Zones** : détecteur figé sur l'Écho : **8/8 zones d'ADV, 15/15 aiguilles, 2/2 PN, 0 fausse plage**, aucun PN pris pour une ADV. Avec la sélection bâtie sur le lot seul : 5/8 zones (le lot n'a rien lu en 3131–3228, 3514–3579, 5867–5928) ; même cause que D-200 et D-202.
-- **Questions à Mic** : la grappe 3260–3304 (7 alertes d'ADV : une ADV non notée ?), un cœur de PN isolé en 5361 (cut 5364 corrigé de 14 mm), les cuts 4927–4929.
+- **Questions à l'opérateur** : la grappe 3260–3304 (7 alertes d'ADV : une ADV non notée ?), un cœur de PN isolé en 5361 (cut 5364 corrigé de 14 mm), les cuts 4927–4929.
 - **Compteur** (`claude/50-g1b-apprendre`, `6f950a9`) : **2 684 cuts corrigés** depuis le début de la 5.0 (1 705 de plus de 5 mm, 835 de plus de 10 mm) : **2 138 appris**, **546 en file** (2:6 et 2:7) ; 5 258 apprenables.
 
 ## D-210 — Audit d'Astra reçu : « G1-c peut partir après P1 » ; ce qui est accepté, ce qui est contesté, ce qui est lancé (19 octobre 2026, après-midi)
@@ -2879,19 +2879,19 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
   - **V3** : λ choisi dans chaque pli extérieur (validation imbriquée). **V4** : unité déclarée : la partie ; résultats publiés par partie, moyenne des parties et cumul, projets séparés. **V2** : choix fait : la validation croisée est qualifiée de **développement conditionnel** (moteur et hauteur apprise figés, appris sur 1:17, 1:24, 1:29, 2:1) ; la chaîne entière est jugée sur des parties neuves (protocole § 1). Pas de reconstruction de la hauteur apprise par pli (effort L, gain de preuve faible devant un examen neuf).
   - **E1/E2** : 1:11 et 1:25 sont des témoins de régression ; 2:6 est exposée ; 2:7 et 2:13 sont exposées à la lecture (règle prudente lue, GCV2 jamais lue). **Protocole pré-déclaré** écrit : `fiches/PROTOCOLE_G1C.md` : une candidate (V1), les **cinq prochaines parties nouvelles dans l'ordre d'arrivée**, jugement **scellé** à l'examen de terrain, expositions minimales, porte unique, règle d'arrêt (pas d'arrêt pour succès, arrêt pour sécurité), trois issues.
   - **H1/H2/H3** : transmis au chantier H6 : jeu lot généré sans humain, appuis datés avec identité de série, pas d'auto-validation, arrêt aux ruptures, essais adverses, mesures séparées (amplitude depuis H0, corridor de série, erreur finale). H6 et V1+ auront leur **propre** examen neuf, hors G1-c.
-  - **M5** : le compteur de Mic garde sa règle (« un cut corrigé = un cut appris », D-188) mais gagne une colonne **« utilisés comme exemples »** (cuts corrigés avec nuage effectivement retenus par l'apprentissage), tirée des identifiants consommés. Exemple : 1:17 compte 507 corrigés appris mais ~197 cuts jugés (nuages perdus).
+  - **M5** : le compteur de l'opérateur garde sa règle (« un cut corrigé = un cut appris », D-188) mais gagne une colonne **« utilisés comme exemples »** (cuts corrigés avec nuage effectivement retenus par l'apprentissage), tirée des identifiants consommés. Exemple : 1:17 compte 507 corrigés appris mais ~197 cuts jugés (nuages perdus).
 - **Contesté ou nuancé** : rien d'essentiel. Deux précisions : (a) le rappel atteignable de 83,7 % a toujours été publié **avec** son conditionnement « cuts avec nuage » et le brut (45,9 %) à côté (D-201) ; la correction demandée est d'en faire un parcours complet (visités → nuage → référence → retenus), accepté. (b) Les lectures de 2:6 par RM-2 et RM-12 n'ont réglé aucun paramètre de la GCV2 ; elles l'exposent tout de même au sens de l'audit, et c'est ainsi qu'elle est classée.
 - **Lancé** : chantier **G1-c-prep** (`claude/50-g1c-prep`, niveau rapide effort haut, relecture forte) : référence exacte et porte unique (M1, M2, M3), λ imbriqué (V3), unité et tables (V4), registre de population et colonne du compteur (F6, M5), empreintes de la chaîne. Le **jeu causal** (F1 à F5, touche `tools/gcv2-jeu.cjs` et l'extraction) part au niveau **fort** dès que H6 rend, sur sa branche, pour éviter deux chantiers sur le même générateur.
 - **Astra** : réponse rangée ; prochaine sollicitation à l'ouverture de G1-c (relecture du protocole figé et des empreintes **avant** l'ouverture).
 
 ## D-211 — Premier bilan de terrain de la test 8 (RM-5) : partie 13 du projet 2 ; la relecture « corriger » a bien lu ; un petit défaut de mémorisation ; un cas de pose de départ déjà corrigée (19 octobre 2026)
 
-- **« Ariane n'a rien lu »** : Mic s'était trompé de fenêtre (sa réponse). Le journal confirme : la relecture « corriger » a lu 79 cuts et validé 10 corrections (Maj+Espace) de 12 h 42 à 12 h 45, sans erreur ; l'export de 12 h 45 est tombé en pleine passe (78 sur 118 affichés, 79 et 10 au journal). Les 6 corrections de la passe mesurables dans l'Écho sont toutes à 10 mm ou moins de Mic (5 à 5 mm). **Pas de défaut sur ce point.**
-- **Les 3 PN « oubliés »** (6623–6635, 7739–7752, 9245–9258) étaient dans la sélection avec leurs marges, et vus par le détecteur ; la passe n'y était pas encore arrivée à l'export (cut 3606). Les verts à grosse erreur du PN 7739–7752 étaient déjà corrigés quand Mic les a revisités, et Ariane les avait tous listés « à contrôler ». **Question à Mic** : ce qu'affichait la carte « Relecture finie : N relus, X corrigés » quand il a lancé l'Écho vers 12 h 47. X = 10 : ce sont ses corrections ; X > 10 : la passe a fini et corrigé des PN après l'export.
+- **« Ariane n'a rien lu »** : l'opérateur s'était trompé de fenêtre (sa réponse). Le journal confirme : la relecture « corriger » a lu 79 cuts et validé 10 corrections (Maj+Espace) de 12 h 42 à 12 h 45, sans erreur ; l'export de 12 h 45 est tombé en pleine passe (78 sur 118 affichés, 79 et 10 au journal). Les 6 corrections de la passe mesurables dans l'Écho sont toutes à 10 mm ou moins de l'opérateur (5 à 5 mm). **Pas de défaut sur ce point.**
+- **Les 3 PN « oubliés »** (6623–6635, 7739–7752, 9245–9258) étaient dans la sélection avec leurs marges, et vus par le détecteur ; la passe n'y était pas encore arrivée à l'export (cut 3606). Les verts à grosse erreur du PN 7739–7752 étaient déjà corrigés quand l'opérateur les a revisités, et Ariane les avait tous listés « à contrôler ». **Question à l'opérateur** : ce qu'affichait la carte « Relecture finie : N relus, X corrigés » quand il a lancé l'Écho vers 12 h 47. X = 10 : ce sont ses corrections ; X > 10 : la passe a fini et corrigé des PN après l'export.
 - **Petit défaut trouvé** (`background.js`, `listeNoterEcriture`) : un cut validé juste après la fin du lot (9254, 0,4 s) et les 10 corrections de la passe ne sont pas notés dans « cuts d'Ariane mémorisés » (18 au lieu de 29). Sans effet sur la pose. Correctif et essai proposés dans `fiches/EXAMEN_2-13.md`, **à porter dans la test 9** (niveau rapide). Second petit défaut d'outil : la table classe le cut 0 comme différé.
-- **Marge d'ADV** : Ariane 3501 (30 cuts avant la première alerte 3531), Mic 3488, RM-2 aurait donné 3491. La zone 3598–3705 de Mic n'est ouverte ni par le livré ni par RM-2 (une seule alerte, au 3611) : **à noter pour RM-1** (seconde alerte).
-- **Rouges isolés** : deux différés à 36,5 et 45,3 mm chez Mic ; la relecture n'a pas le droit d'y toucher et ne l'a pas fait.
-- **Étiquette** : au moins 55 cuts avaient une pose de départ déjà déplacée (corrigée dans l'autre fenêtre) quand Mic les a revisités ; l'Écho n'y voit que 16 corrections. **Règle pour le compteur et les jeux** : pour 2:13, les cuts revisités avec une pose de départ déjà corrigée ne valent pas « correction nulle » ; ils sont marqués « référence incertaine » et exclus des exemples. Le chantier G1-c-prep applique cette règle dans le registre de population.
+- **Marge d'ADV** : Ariane 3501 (30 cuts avant la première alerte 3531), l'opérateur 3488, RM-2 aurait donné 3491. La zone 3598–3705 de l'opérateur n'est ouverte ni par le livré ni par RM-2 (une seule alerte, au 3611) : **à noter pour RM-1** (seconde alerte).
+- **Rouges isolés** : deux différés à 36,5 et 45,3 mm chez l'opérateur ; la relecture n'a pas le droit d'y toucher et ne l'a pas fait.
+- **Étiquette** : au moins 55 cuts avaient une pose de départ déjà déplacée (corrigée dans l'autre fenêtre) quand l'opérateur les a revisités ; l'Écho n'y voit que 16 corrections. **Règle pour le compteur et les jeux** : pour 2:13, les cuts revisités avec une pose de départ déjà corrigée ne valent pas « correction nulle » ; ils sont marqués « référence incertaine » et exclus des exemples. Le chantier G1-c-prep applique cette règle dans le registre de population.
 - **Aucune grosse correction hors zone** : les 16 cuts à plus de 10 mm sont tous dans la sélection de 118 cuts. Première mesure réelle de la couverture de la test 8 : **tenue**.
 
 ## D-212 — G1-c-prep rendu : V1 ne tient pas la porte unique sur ses propres parties ; G1-c ne s'ouvre pas encore (19/10/2026)
@@ -2899,54 +2899,54 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Fait** (branche `claude/50-g1c-prep`, a3f58c3, `fiches/G1C_PREPARATION.md`) : règle prudente exacte retrouvée (D-190 : 40 actions, 29 justes, 2 abîmés, 0 mauvaise voie sur 1:14 à 1:16). Validation croisée de V1 avec λ imbriqué : relecture 260 actions, 131 justes, 2 abîmés, 0 mauvaise voie, erreur 3,5 % (Wilson ≤ 6,4 %) ; lot 258 actions, 123 justes, 0 mauvaise voie, 4,3 % (≤ 7,5 %). Le λ imbriqué n'a pas gonflé G1-b (il ajoute 3 justes).
 - **Mais la porte unique (protocole § 3) est NON tenue** en développement : 3 mauvaises poses ajoutées en relecture (1:15 cut 5919 ADV ; 1:16 cuts 7419 et 7423 PN) et 3 au lot ; médiane d'erreur PN 2,005 contre 1,808 mm. Définitions écrites avant les résultats, non changées.
 - **Décision** : (1) le protocole G1-c reste **tel quel** (aucune modification de seuil ni de définition). (2) **G1-c ne s'ouvre pas** tant qu'une candidate n'a pas tenu la porte unique en développement sur le jeu causal reconstruit : ouvrir cinq parties neuves avec une candidate qui échoue déjà sur ses parties d'apprentissage gaspillerait des parties confirmatoires. (3) La suite passe par le chantier « jeu causal » (F1–F5 d'Astra) : jeu sans appui humain, zones/médiane/voisins calculés à l'instant de la décision, seuil de visite 0,6 s (aujourd'hui 0,8 s dans le jeu), 27 cuts sans pose de chaîne (`crossing`), médiane causale identique pour V1 et la règle. Puis nouvelle lecture de la porte en développement. (4) Une candidate affinée (V1', ou V1+ avec H6) peut être déclarée **avant** l'ouverture, sur le développement seulement, par une décision écrite ; les parties confirmatoires restent celles du protocole (les cinq prochaines parties neuves, dans l'ordre d'arrivée).
-- **Parties qui arrivent entre-temps** : archivées, examen de terrain Orbite contre Mic et zones contre notes comme d'habitude ; **la GCV2 n'est PAS calculée dessus** (ni lue), afin qu'elles restent confirmatoires. 2:6, 2:7, 2:13 restent exposées et ne passent en apprentissage qu'après l'ouverture (D-192, protocole § 2).
+- **Parties qui arrivent entre-temps** : archivées, examen de terrain Orbite contre l'opérateur et zones contre notes comme d'habitude ; **la GCV2 n'est PAS calculée dessus** (ni lue), afin qu'elles restent confirmatoires. 2:6, 2:7, 2:13 restent exposées et ne passent en apprentissage qu'après l'ouverture (D-192, protocole § 2).
 - **Registre** : 2:13 est une partie « exposée » ; ses cuts revisités avec pose de départ déjà corrigée sont « référence incertaine » (D-211). Seuil de visite 0,8 s → 0,6 s : à aligner dans le jeu causal (252 références implicites de plus, jamais jugées).
 
-## D-213 — 2:6, 2:7 et 2:13 passent en apprentissage (accord de Mic : « je valide tout »), disque libéré (19/10/2026)
+## D-213 — 2:6, 2:7 et 2:13 passent en apprentissage (accord de l'opérateur : « je valide tout »), disque libéré (19/10/2026)
 
 - **Pourquoi maintenant** : le protocole G1-c (§ 2) classe déjà 2:6, 2:7 et 2:13 comme **exposées** (lues par la règle prudente, les zones, RM-2/RM-12) : elles ne sont pas confirmatoires. Les garder en réserve ne protégeait donc plus rien de G1-c, et les laisser hors apprentissage privait la GCV2 de plus de 500 cuts corrigés, dont des situations complexes (D-207). D-192 (rotation) est respectée : elles ont servi à l'examen de terrain, puis elles apprennent.
 - **Reste réservé** : 2:18 (lot et Écho partiel archivés, aucun jugement) et toute partie neuve à venir : ce sont elles qui servent à G1-c (les cinq prochaines parties neuves dans l'ordre d'arrivée, GCV2 non calculée dessus d'ici l'ouverture). Les témoins 1:11 et 1:25 n'apprennent jamais.
 - **Application** : au chantier « jeu causal » (reconstruction des jeux), 14 parties d'apprentissage au lieu de 11 : 2:6, 2:7, 2:13 en plus. 2:13 : cuts revisités avec pose de départ déjà corrigée = « référence incertaine », exclus des exemples (D-211). Le compteur passera ces trois parties de « en file » à « appris » **quand l'apprentissage les aura réellement entraînées**, pas avant (« appris » = GCV2 entraînée dessus).
 - **Dév. ≠ jugement** : la porte unique de V1 sera relue en développement sur les 14 parties ; cela ne remplace pas G1-c.
-- **Moyens** : 3,7 Go d'envois de Mic libérés dans le conteneur après contrôle que chacun existe, avec le même SHA-256, dans `banane-data` ; 18 pièces non archivées conservées (parties de zips, notes, images). Disque libre passé de 3,2 à 6,7 Go.
+- **Moyens** : 3,7 Go d'envois de l'opérateur libérés dans le conteneur après contrôle que chacun existe, avec le même SHA-256, dans `banane-data` ; 18 pièces non archivées conservées (parties de zips, notes, images). Disque libre passé de 3,2 à 6,7 Go.
 
-## D-214 — Banc « différés » : tester la GCV2 hors ligne sur les différés de toutes les parties et des deux projets (demande de Mic, 19/10/2026)
+## D-214 — Banc « différés » : tester la GCV2 hors ligne sur les différés de toutes les parties et des deux projets (demande de l'opérateur, 19/10/2026)
 
 - **Demande** : « il faut tester la GCV2 sur d'autres différés d'autres parties et projets » (compris comme un test local hors ligne, rejeu sur les exports ; aucune action dans ESV).
-- **Contenu** : tous les cuts différés par le lot dont Mic a posé la référence (Écho), parties d'apprentissage et réservées de projet 1 et de projet 2 ; poses de GCV2 seule, GCV2 + H6 et garde-fou de voie relatif à la série (D-207), comparées à Mic et à la règle prudente (qui n'agit jamais sur un différé). Mesures par partie et par projet : nombre de différés, rappel atteignable, actions, justes, abîmés, **mauvaises voies**, erreur médiane. Test **croisé entre projets** (apprendre sur projet 1, juger les différés du projet 2, et l'inverse) en plus de la validation croisée par partie.
+- **Contenu** : tous les cuts différés par le lot dont l'opérateur a posé la référence (Écho), parties d'apprentissage et réservées de projet 1 et de projet 2 ; poses de GCV2 seule, GCV2 + H6 et garde-fou de voie relatif à la série (D-207), comparées à l'opérateur et à la règle prudente (qui n'agit jamais sur un différé). Mesures par partie et par projet : nombre de différés, rappel atteignable, actions, justes, abîmés, **mauvaises voies**, erreur médiane. Test **croisé entre projets** (apprendre sur projet 1, juger les différés du projet 2, et l'inverse) en plus de la validation croisée par partie.
 - **Cadre** : lecture seule, développement ; sans effet sur la voie V1 (V1 n'agit toujours jamais sur les différés). La variante V1+ (V1 + différés) n'est candidate à un jugement qu'avec sa propre décision écrite avant calcul, sur des parties neuves, avec **0 mauvaise voie** exigé. Les parties réservées (2:18, nouvelles) ne sont pas lues par la GCV2 avant l'ouverture.
 - **Livraison** : intégré au chantier « jeu causal » (après H6), avec le jeu sans appui humain exigé par Astra.
 
-## D-215 — 2:17 : prédiction scellée des différés, poses montrées à Mic avant sa correction (demande de Mic, 19/10/2026)
+## D-215 — 2:17 : prédiction scellée des différés, poses montrées à l'opérateur avant sa correction (demande de l'opérateur, 19/10/2026)
 
-- **Ordre de Mic** : tester la GCV2 sur les différés de la partie 17 (second projet d'après le total de 9 844 cuts, à confirmer par Mic ; la 1:17 en compte 7 598), lot Orbite 15h51 archivé (`2026-10-19_v4.9.5.8_partie-17-lot-15h51`), et lui montrer les résultats **avant** qu'il corrige. Mic : « je ne serai pas influencé ».
+- **Ordre de l'opérateur** : tester la GCV2 sur les différés de la partie 17 (second projet d'après le total de 9 844 cuts, à confirmer par l'opérateur ; la 1:17 en compte 7 598), lot Orbite 15h51 archivé (`2026-10-19_v4.9.5.8_partie-17-lot-15h51`), et lui montrer les résultats **avant** qu'il corrige. L'opérateur : « je ne serai pas influencé ».
 - **Application** : prédiction **scellée** (SHA-256 consigné avant tout contact avec sa correction), calcul sans appui humain, causal, GCV2 figée (aucun réglage). Le fichier scellé reste valable comme test de développement de V1+ : il a été calculé avant la correction.
 - **Conséquence consignée** : 2:17 est « vue par l'opérateur avant correction ». Elle **ne peut plus être partie confirmatoire de G1-c** (influence possible sur la pose de référence) ; elle sert au développement (banc différés D-214) et, après son Écho, à l'apprentissage. Les cinq parties confirmatoires restent les cinq prochaines parties neuves sans lecture préalable de la GCV2 (la 2:18 en fait partie tant qu'elle n'est pas lue).
-- **Risque accepté** : ancrage possible de Mic sur les poses proposées. À mesurer a posteriori : part de ses poses finales qui coïncident (à ≤ 2 mm) avec la proposition, comparée à ce qui se passe sur les cuts où la GCV2 s'abstient.
+- **Risque accepté** : ancrage possible de l'opérateur sur les poses proposées. À mesurer a posteriori : part de ses poses finales qui coïncident (à ≤ 2 mm) avec la proposition, comparée à ce qui se passe sur les cuts où la GCV2 s'abstient.
 
 ## D-216 — H6 rendu (claude/50-g1-h6, 44bc627) : V1 tient la porte sur le jeu sans appui humain ; l'évaluateur exact reste à rejouer (19/10/2026)
 
 - **H6 livré** (`fiches/H6_VOIE_DECALEE.md`, `datasets/gcv2-parametres-h6.json`) ; exigences d'Astra F3, H1, H2 appliquées avant calcul : jeu « lot » généré sans appui humain (un essai prouve que les appuis humains n'y changent aucune ligne), référence de série à preuves multiples sinon abstention, mesures de voie séparées. verify : 2 281 essais, 0 échec.
 - **Chiffres** (validation croisée par partie, 11 parties) : rappel à 10 mm 83,0 → 87,2 % en relecture (76,4 → 78,8 % au lot) ; sur 2:1, 57,5 → 68,7 % ; sur les 53 cuts de la zone 2 (voie décalée), 40,2 → 55,2 % en relecture mais 28,7 → 31,0 % au lot, **et V1+ n'agit sur aucun cut de cette zone** (la preuve de support local des deux rails les bloque presque tous : 2 références sûres, deux abstentions).
   - **V1** : relecture 130 justes, 1 abîmé, 0 mauvaise voie, erreur 2,8 % (Wilson ≤ 5,6 %) ; lot 123 justes, 1 abîmé, 0 mauvaise voie, 2,9 % (≤ 5,8 %). La règle prudente : 107 justes, 4 abîmés.
-  - **V1+ (différés)** : relecture 136 justes, 1 abîmé, 0 erreur > 50 mm, 0 hors corridor ; lot 131 justes. **Mais** avec la définition du protocole G1-c (§ 3 : erreur > 50 mm **ou** rail déplacé de plus de 45 mm en travers depuis la pose de départ), V1+ compte 3 mauvaises voies en relecture et 5 au lot (toutes à ≤ 15 mm de Mic). Avec la définition du protocole, V1+ **ne tient donc pas la porte** ; V1 la tient.
+  - **V1+ (différés)** : relecture 136 justes, 1 abîmé, 0 erreur > 50 mm, 0 hors corridor ; lot 131 justes. **Mais** avec la définition du protocole G1-c (§ 3 : erreur > 50 mm **ou** rail déplacé de plus de 45 mm en travers depuis la pose de départ), V1+ compte 3 mauvaises voies en relecture et 5 au lot (toutes à ≤ 15 mm de l'opérateur). Avec la définition du protocole, V1+ **ne tient donc pas la porte** ; V1 la tient.
 - **Prudence sur ce constat** : le même V1 échouait à la porte stricte exacte dans G1-c-prep (D-212, 3 mauvaises poses ajoutées sur les anciens jeux). Les jeux ont été reconstruits depuis (repère du lot corrigé, jeu sans appui humain) : la porte « bascule » d'un jeu à l'autre. H6 n'a pas utilisé l'évaluateur exact de G1-c-prep. **La conclusion est donc suspendue** jusqu'au rejeu de l'évaluateur exact sur les nouveaux jeux : c'est la première tâche du chantier « jeu causal » (14 parties : 2:6, 2:7, 2:13 en plus ; seuil de visite 0,6 s ; médiane causale ; poses de chaîne manquantes ; empreintes).
 - **Doutes de l'agent, retenus** : zone 2 = un seul épisode d'un seul opérateur ; assouplir la preuve de support serait un nouveau choix, à déclarer avant toute mesure ; H6 coûte 3 grosses corrections au rappel de base ; D-206 compte 53 cuts en zone 2 (52 retrouvés plus le 159).
 - **Décision** : G1-c reste fermé (D-212). V1+ ne devient pas candidate telle quelle. Pas de nouvelle règle sur les différés sans la définition de mauvaise voie du protocole.
 
-## D-217 — Cap « différés −90 % » : changement d'objectif et d'architecture de développement (ordre de Mic, 19/10/2026)
+## D-217 — Cap « différés −90 % » : changement d'objectif et d'architecture de développement (ordre de l'opérateur, 19/10/2026)
 
 - **Ordre** : la direction attend de la GCV2 des résultats spectaculaires : **réduire de 90 % la quantité moyenne de différés** par lot et **améliorer la qualité et la précision de la pose**. Les portions travaillées sont des portions de test, sans impact réel : le niveau de sécurité qui encadre la pose peut être revu. Méthode demandée : celle de la 4.9 (vitesse : −20 % espéré, −70 % obtenu) : un cap unique, un banc sur rejeu réel, toutes les pistes explorées et mesurées, et l'on garde ce qui mesure bien.
-- **Ce qui change** : (1) l'objectif premier n'est plus « 0 mauvaise voie en autonomie » mais **« presque plus de différés, avec une pose plus proche de Mic que la pose de départ »** ; un différé coûte à Mic une pose complète depuis la pose de départ d'ESV (souvent 1 500 mm) : une pose approchée **non cachée** (laissée invalide, ou validée mais inscrite aux verts à contrôler) lui coûte moins. (2) La séparation **poser / valider** devient le levier central : le lot peut poser la meilleure hypothèse sans la valider, ou la valider en la marquant à contrôler. (3) Le **gel** du moteur et de la décision du lot (`src/engine.js`, `src/lot-decision.js`) est **levé pour le chemin du lot sur les portions de test**, sous banc de rejeu ; la géométrie reste figée tant qu'une mesure n'exige pas le contraire. (4) Les garde-fous (preuve de voie de série, 45 mm latéral, τ, δ, support des deux rails, garde d'écartement bas) sont **chacun mis à l'épreuve** sur le banc : on mesure ce que chacun coûte en différés et ce qu'il évite en poses éloignées de Mic ; on ne garde que ce qui paie.
+- **Ce qui change** : (1) l'objectif premier n'est plus « 0 mauvaise voie en autonomie » mais **« presque plus de différés, avec une pose plus proche de l'opérateur que la pose de départ »** ; un différé coûte à l'opérateur une pose complète depuis la pose de départ d'ESV (souvent 1 500 mm) : une pose approchée **non cachée** (laissée invalide, ou validée mais inscrite aux verts à contrôler) lui coûte moins. (2) La séparation **poser / valider** devient le levier central : le lot peut poser la meilleure hypothèse sans la valider, ou la valider en la marquant à contrôler. (3) Le **gel** du moteur et de la décision du lot (`src/engine.js`, `src/lot-decision.js`) est **levé pour le chemin du lot sur les portions de test**, sous banc de rejeu ; la géométrie reste figée tant qu'une mesure n'exige pas le contraire. (4) Les garde-fous (preuve de voie de série, 45 mm latéral, τ, δ, support des deux rails, garde d'écartement bas) sont **chacun mis à l'épreuve** sur le banc : on mesure ce que chacun coûte en différés et ce qu'il évite en poses éloignées de l'opérateur ; on ne garde que ce qui paie.
 - **Ce qui ne change pas** : la mesure reste honnête (rejeu causal, sans appui humain, prédictions scellées avant lecture de l'Écho) ; les parties réservées restent réservées pour juger ; le protocole G1-c garde son sens pour la revendication « autonomie sûre », qui devient secondaire. Aucun code de projet, aucune identité dans les dépôts.
-- **Mesures du cap** (par lot, par partie, par projet) : taux de différés = différés / cuts traités par le lot (base : tous les lots archivés) ; écart à Mic des cuts posés par la GCV2 contre écart de la pose de départ (gain par cut, là où un Écho existe) ; erreur médiane et part à 10 mm / 5 mm des poses ; poses à plus de 50 mm de Mic (comptées, publiées, plus éliminatoires sur les portions de test).
+- **Mesures du cap** (par lot, par partie, par projet) : taux de différés = différés / cuts traités par le lot (base : tous les lots archivés) ; écart à l'opérateur des cuts posés par la GCV2 contre écart de la pose de départ (gain par cut, là où un Écho existe) ; erreur médiane et part à 10 mm / 5 mm des poses ; poses à plus de 50 mm de l'opérateur (comptées, publiées, plus éliminatoires sur les portions de test).
 - **Architecture** : un banc unique de rejeu des lots archivés (`banc-differes`), des chantiers parallèles par levier (un worktree chacun), chaque levier mesuré contre la base sur le même banc, puis combinés ; une version de terrain « test 10 » quand le banc montre le gain, en ombre d'abord si la pose touche ESV.
-- **Première étape (lancée)** : diagnostic exhaustif des différés sur tous les lots archivés des deux projets : motif de refus du moteur, zone, nuage, pose de départ, hypothèse la plus proche de Mic quand un Écho existe, et ce que chaque garde-fou coûte.
+- **Première étape (lancée)** : diagnostic exhaustif des différés sur tous les lots archivés des deux projets : motif de refus du moteur, zone, nuage, pose de départ, hypothèse la plus proche de l'opérateur quand un Écho existe, et ce que chaque garde-fou coûte.
 
-## D-218 — Nouvelle conception UI/UX pour la 5.0, dans une session de R&D à part (ordre de Mic, 19/10/2026)
+## D-218 — Nouvelle conception UI/UX pour la 5.0, dans une session de R&D à part (ordre de l'opérateur, 19/10/2026)
 
-- **Ordre** : l'interface est devenue « bordélique » ; les phases de test ont ajouté trop de boutons et de cases ; Mic veut une conception **radicalement différente** pour la 5.0, et un fonctionnement **aussi simple que prévu** : pas de cases à cocher toujours de la même façon, ce qui est coché à chaque séance devient un défaut.
-- **Application** : une session de recherche et développement distincte est ouverte (branche `claude/50-ui-5.0`) avec, dans l'ordre : inventaire honnête de chaque bouton/case/réglage (qui s'en sert, quelle décision l'a introduit, ce que les consignes de séance font cocher à chaque fois), conception nouvelle pensée depuis la séance de Mic (zéro réglage en séance, une action principale à la fois, état en une phrase, un seul geste « envoyer », profils nommés à la place des grilles de cases, rien de retiré des journaux ni des exports), deux ou trois directions contrastées en maquettes HTML, recommandation, puis développement derrière une bascule (ancien panneau conservé tant que Mic n'a pas validé), exports identiques octet pour octet, essais, paquet.
+- **Ordre** : l'interface est devenue « bordélique » ; les phases de test ont ajouté trop de boutons et de cases ; l'opérateur veut une conception **radicalement différente** pour la 5.0, et un fonctionnement **aussi simple que prévu** : pas de cases à cocher toujours de la même façon, ce qui est coché à chaque séance devient un défaut.
+- **Application** : une session de recherche et développement distincte est ouverte (branche `claude/50-ui-5.0`) avec, dans l'ordre : inventaire honnête de chaque bouton/case/réglage (qui s'en sert, quelle décision l'a introduit, ce que les consignes de séance font cocher à chaque fois), conception nouvelle pensée depuis la séance de l'opérateur (zéro réglage en séance, une action principale à la fois, état en une phrase, un seul geste « envoyer », profils nommés à la place des grilles de cases, rien de retiré des journaux ni des exports), deux ou trois directions contrastées en maquettes HTML, recommandation, puis développement derrière une bascule (ancien panneau conservé tant que l'opérateur n'a pas validé), exports identiques octet pour octet, essais, paquet.
 - **Appui** : le skill de patrons de conception tiré de refactoring.guru (branche `claude/design-patterns-ariane-69osmz`, `claude/skills/design-patterns/`) sert là où un symptôme réel du code du panneau le justifie, jamais par principe.
 - **Hors périmètre de cette session** : moteur, lot, relecture, Écho et GCV2 (le cap D-217 continue en parallèle). Le moteur et la géométrie restent intacts.
 
@@ -2954,53 +2954,53 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 - **Base** (40 lots Orbite archivés, deux projets) : 6 878 cuts traités, 1 367 différés (19,9 % pondéré, 34 par lot). Cap −90 % = 137 différés au plus sur cette base, 3 à 4 par lot.
 - **Où naissent les différés** : dans le **moteur**, à la pose de départ d'ESV (1 500 mm) : 79 % des différés partent de là. Motifs : « sans appui » 64 % (un seul rail résolu 648, paire hors contrat 159, aucun cut posé à ≤ 3 cuts pour reprendre), reprise sans minimum qualifié 16 %, garde de paire 16 % (212 sur 214 en projet 1), cible hors de la vue 21 (projet 2). Zones : abords 72 %, ADV 26 %, PN 3 %.
-- **Ce qui était à portée** (282 différés jugeables contre Mic) : une hypothèse à 10 mm pour 62 % (86 % hors 2:1), à 50 mm pour 79 % ; **94 % ont une hypothèse plus proche de Mic que la pose de départ** ; 21 % perdus d'avance (57 sur 60 en 2:1). Un différé coûte à Mic 86 mm en médiane (51 mm en projet 1, 191 mm en 2:1).
+- **Ce qui était à portée** (282 différés jugeables contre l'opérateur) : une hypothèse à 10 mm pour 62 % (86 % hors 2:1), à 50 mm pour 79 % ; **94 % ont une hypothèse plus proche de l'opérateur que la pose de départ** ; 21 % perdus d'avance (57 sur 60 en 2:1). Un différé coûte à l'opérateur 86 mm en médiane (51 mm en projet 1, 191 mm en 2:1).
 - **Garde-fous les plus coûteux** : le couloir de 45 mm depuis la pose de départ appliqué aux différés (665 poses empêchées ; sur 80 jugées, 52 à 10 mm, 4 à plus de 50 mm) ; la règle « jamais les différés » (238 ; 43 à 10 mm sur 54, 1 à plus de 50 mm) ; la garde de paire du lot (211 ; 19 à 10 mm sur 36, 0 à plus de 50 mm). **À garder** : le contrat d'écartement du moteur (éteint : 13 poses sur 14 à plus de 50 mm), τ, l'écartement de la paire.
 - **Pistes chiffrées** (unions de contrefactuels rejoués un par un, sur les données qui les ont choisies) : P1 GCV2 sur les différés sans le couloir de 45 mm, τ/δ/écartement gardés : −71,6 %, 3,3 % de poses à plus de 50 mm (0 sur 29 hors échantillon) ; P2 = P1 + vue déplacée + garde de paire éteinte + appuis de reprise à 10 cuts : −74,1 %, 3 % ; P3 = P2 + sous τ, valider la meilleure paire et l'inscrire aux verts à contrôler : −89,9 %, mais 20 % à plus de 50 mm (49 sur 51 en 2:1 ; 1,3 % hors 2:1) ; P5 poser sans valider sous τ : la pose de départ est améliorée dans 87 % des cas.
-- **Candidate L1 pour la test 10, déclarée ici avant toute mesure neuve** : P2 en entier ; et, sous τ, **poser sans valider** (le cut reste invalide, Mic repart d'une pose approchée) **sauf** si la meilleure paire est à plus de 150 mm de la pose de départ (cas « voie décalée » type 2:1 : alors on ne pose pas). Variante L1-v (« valider et inscrire aux verts à contrôler » sous τ, hors cas > 150 mm) chiffrée en parallèle, non activée sans décision écrite. Contrat d'écartement du moteur, τ, écartement de la paire : inchangés.
-- **Méthode** : (1) banc de **rejeu conjoint** (pas une union) de L1 sur les 40 lots ; (2) **prédiction scellée** de L1 sur les différés de 2:17 et 2:18 avant les Échos de Mic (parties neuves : c'est là que les pistes, choisies sur l'échantillon, se jugent) ; (3) test 10 (4.9.5.10) : L1 sur le chemin du lot, en profil, mesurée sur le terrain ; ancien comportement conservé en profil. Poses à plus de 50 mm comptées et publiées, non éliminatoires sur les portions de test (D-217).
+- **Candidate L1 pour la test 10, déclarée ici avant toute mesure neuve** : P2 en entier ; et, sous τ, **poser sans valider** (le cut reste invalide, l'opérateur repart d'une pose approchée) **sauf** si la meilleure paire est à plus de 150 mm de la pose de départ (cas « voie décalée » type 2:1 : alors on ne pose pas). Variante L1-v (« valider et inscrire aux verts à contrôler » sous τ, hors cas > 150 mm) chiffrée en parallèle, non activée sans décision écrite. Contrat d'écartement du moteur, τ, écartement de la paire : inchangés.
+- **Méthode** : (1) banc de **rejeu conjoint** (pas une union) de L1 sur les 40 lots ; (2) **prédiction scellée** de L1 sur les différés de 2:17 et 2:18 avant les Échos de l'opérateur (parties neuves : c'est là que les pistes, choisies sur l'échantillon, se jugent) ; (3) test 10 (4.9.5.10) : L1 sur le chemin du lot, en profil, mesurée sur le terrain ; ancien comportement conservé en profil. Poses à plus de 50 mm comptées et publiées, non éliminatoires sur les portions de test (D-217).
 - **Limites retenues** : 32 différés jugés seulement hors échantillon ; 2:1 pèse 45 % des jugés ; les témoins ne jugent pas les différés (pas de lot 4.9 pour 1:11, autre état d'ESV pour 1:25) ; B1 (voisins de la liste d'ESV) non jugeable car il ne consigne pas sa pose.
 
-## D-220 — Fait de terrain : dans ESV, chaque changement de pose est définitif (Mic, 19/10/2026)
+## D-220 — Fait de terrain : dans ESV, chaque changement de pose est définitif (l'opérateur, 19/10/2026)
 
 - Toute pose écrite dans ESV, validée ou non, est enregistrée tout de suite et survit au rechargement et à la fermeture de l'onglet.
-- **Jugement d'un différé** : il est jugeable quand la pose de départ vue par l'Écho de Mic est celle laissée par le dernier lot, **quel que soit le délai** (rechargement, lendemain, plusieurs jours), tant qu'aucune autre écriture n'a touché le cut entre les deux (autre fenêtre sans Écho, autre lot, relecture, autre opérateur). « Même séance » n'est pas exigé.
-- **Test 10 (L1)** : une pose « posée sans valider » reste dans ESV ; pas d'étape de vérification de survie au rechargement. Inversement, chaque pose L1 change l'état d'ESV pour de bon : le journal du lot consigne, pour chaque cut touché, la pose d'ESV avant la commande et la pose envoyée, pour que le banc et la jointure jugent le gain (écart de la pose d'avant à Mic contre écart de la pose L1 à Mic).
-- **Séances « différés seulement »** (Mic) : permises à tout moment après le lot ; les cuts non visités sont « sans référence », jamais « justes » ; ces séances nourrissent l'apprentissage et le banc des différés, pas le jugement de V1 sur les verts.
+- **Jugement d'un différé** : il est jugeable quand la pose de départ vue par l'Écho de l'opérateur est celle laissée par le dernier lot, **quel que soit le délai** (rechargement, lendemain, plusieurs jours), tant qu'aucune autre écriture n'a touché le cut entre les deux (autre fenêtre sans Écho, autre lot, relecture, autre opérateur). « Même séance » n'est pas exigé.
+- **Test 10 (L1)** : une pose « posée sans valider » reste dans ESV ; pas d'étape de vérification de survie au rechargement. Inversement, chaque pose L1 change l'état d'ESV pour de bon : le journal du lot consigne, pour chaque cut touché, la pose d'ESV avant la commande et la pose envoyée, pour que le banc et la jointure jugent le gain (écart de la pose d'avant à l'opérateur contre écart de la pose L1 à l'opérateur).
+- **Séances « différés seulement »** (l'opérateur) : permises à tout moment après le lot ; les cuts non visités sont « sans référence », jamais « justes » ; ces séances nourrissent l'apprentissage et le banc des différés, pas le jugement de V1 sur les verts.
 
 ## D-221 — Banc conjoint L1 (40 lots) rendu ; règle « les poses L1 ne servent pas d'appui » (19/10/2026)
 
 - **Banc** (branche claude/50-l1-differes, `fiches/L1_BANC_SYNTHESE.md`) : rejeu fidèle (1 366 différés rejoués pour 1 367 réels). Taux de différés, poses approchées comptées comme différés : total 19,9 % → **L1 5,0 % (−74,9 %)**, L1-v 2,1 % (−89,3 %) ; projet 1 : −84,1 % (L1), −94,5 % (L1-v) ; projet 2 : −43,5 % (L1), −71,6 % (L1-v). Le reste : 2:1 (127 → 83), 2:17 (41 → 33), 2:18 (37 → 32), surtout des ADV.
-- **Contre Mic** (282 différés jugés ; 2:17 et 2:18 exclus) : erreur médiane des poses L1 9,7 mm contre 85,8 mm pour la pose de départ ; gain médian 36,4 mm ; 51 % à 10 mm, 63 % à 20 mm ; projet 1 7,8 mm (88 % à 20 mm), hors 2:1 6,7 mm (86,5 % à 20 mm), 2:1 gain médian 1 mm. Poses à plus de 50 mm de Mic : 35 (30 non validées), dont 33 en 2:1.
+- **Contre l'opérateur** (282 différés jugés ; 2:17 et 2:18 exclus) : erreur médiane des poses L1 9,7 mm contre 85,8 mm pour la pose de départ ; gain médian 36,4 mm ; 51 % à 10 mm, 63 % à 20 mm ; projet 1 7,8 mm (88 % à 20 mm), hors 2:1 6,7 mm (86,5 % à 20 mm), 2:1 gain médian 1 mm. Poses à plus de 50 mm de l'opérateur : 35 (30 non validées), dont 33 en 2:1.
 - **Défaut trouvé** : en rejeu conjoint, L1 **modifie la chaîne des cuts que le lot posait déjà** (59 poses réelles plus validées, 430 posées à plus de 1 mm de la pose réelle, médiane 3,4 mm), parce que ses poses deviennent des appuis et que la garde de paire est éteinte. Ce n'était pas voulu : le cap porte sur les différés.
 - **Décision (sûreté, pas réglage de performance)** : dans la test 13, **une pose L1 sur un différé ne sert jamais d'appui** à la chaîne du lot, et la garde de paire reste éteinte seulement pour les cuts que la chaîne actuelle différerait ; tout cut que la chaîne actuelle pose est posé exactement comme en 4.9.5.9 (essai : mêmes commandes sur ces cuts). Le banc conjoint est rejoué avec cette règle (« L1-s »), qui devient la candidate de terrain ; L1 et L1-v restent publiés à côté.
-- **Frontière** : les différés restants sur les parties neuves du projet 2 sont des **ADV**. Un chantier ADV dédié suit (hypothèses dans les aiguillages, voie posée de l'autre côté de l'ADV, apprentissage sur les corrections d'ADV de Mic).
+- **Frontière** : les différés restants sur les parties neuves du projet 2 sont des **ADV**. Un chantier ADV dédié suit (hypothèses dans les aiguillages, voie posée de l'autre côté de l'ADV, apprentissage sur les corrections d'ADV de l'opérateur).
 
-## D-222 — Méthode d'apprentissage permanente : rejouer et itérer jusqu'à la cible (Mic, 20/10/2026)
+## D-222 — Méthode d'apprentissage permanente : rejouer et itérer jusqu'à la cible (l'opérateur, 20/10/2026)
 
-- **Constat de Mic** sur l'apprentissage L1-e (test 14) : arrêté au premier gain, alors que la cible n'était pas atteinte (22 différés restants sur 2:19 rejouée, 55 contre 60 hors apprentissage). Jugé insuffisant (« n'oublie pas notre cap »).
+- **Constat de l'opérateur** sur l'apprentissage L1-e (test 14) : arrêté au premier gain, alors que la cible n'était pas atteinte (22 différés restants sur 2:19 rejouée, 55 contre 60 hors apprentissage). Jugé insuffisant (« n'oublie pas notre cap »).
 - **Règle, pour tout apprentissage futur** (tout lot, tout Écho, toute partie partagée) :
   1. **Une cible chiffrée** fixée avant de commencer. Celle d'aujourd'hui : moins de 5 différés par partie rejouée, avec une pose de qualité.
-  2. **Rejouer la partie dans le banc local** (le vrai code sur le lot réel archivé) et **itérer** : reprendre un par un les cuts qui restent, trouver pourquoi la pose de Mic n'était pas atteinte ou pas choisie, changer l'étage responsable, rejouer. **Explorer tous les leviers** (méthode de la 4.9 : une cible, un banc réel, tous les angles). **Ne pas s'arrêter au premier gain** : on s'arrête quand la cible est atteinte, ou quand chaque différé restant est expliqué et prouvé hors de portée.
+  2. **Rejouer la partie dans le banc local** (le vrai code sur le lot réel archivé) et **itérer** : reprendre un par un les cuts qui restent, trouver pourquoi la pose de l'opérateur n'était pas atteinte ou pas choisie, changer l'étage responsable, rejouer. **Explorer tous les leviers** (méthode de la 4.9 : une cible, un banc réel, tous les angles). **Ne pas s'arrêter au premier gain** : on s'arrête quand la cible est atteinte, ou quand chaque différé restant est expliqué et prouvé hors de portée.
   3. **Puis les autres parties** qui ont un Écho, chacune avec la même cible.
 - **Garde-fous inchangés** (D-220 : toute pose est définitive dans ESV) :
-  - Qualité d'abord : poses validées à 10 mm de Mic (les quelques cas à 20 mm listés), 0 mauvaise voie, 0 pose à plus de 50 mm, 0 cut vert changé, aucune pose sans preuve du nuage.
+  - Qualité d'abord : poses validées à 10 mm de l'opérateur (les quelques cas à 20 mm listés), 0 mauvaise voie, 0 pose à plus de 50 mm, 0 cut vert changé, aucune pose sans preuve du nuage.
   - Le chiffre hors apprentissage (leave-one-partie-out) est toujours publié à côté du chiffre sur la partie rejouée, et une règle qui ne vaut que pour une partie est dite comme telle.
   - Pas de paquet avant la cible atteinte avec cette qualité, `verify` vert, prédictions scellées intactes.
 - **Premier usage** : chantier « cap 5 » (branche claude/50-l1-cap5, depuis claude/50-l1-apprentissage 045f338), sur 2:19 puis 2:17, 2:18, 2:11 et les parties jugées du banc.
 
-## D-223 — Garde-fous : budgets d'erreurs au lieu du zéro absolu (Mic, 20/10/2026 ; amende D-222)
+## D-223 — Garde-fous : budgets d'erreurs au lieu du zéro absolu (l'opérateur, 20/10/2026 ; amende D-222)
 
 - **Constat** : les garde-fous à zéro ont freiné le développement. Couloir de 45 mm (665 poses empêchées ; sur 80 jugées, 52 à 10 mm, 4 à plus de 50 mm), garde de paire (211, 0 à plus de 50 mm parmi les jugées), porte G1-c fermée pour 2 poses ajoutées (zéro erreur impossible à prouver sur de petits échantillons), « plus de 150 mm » qui cachait sur 2:19 un biais d'écartement corrigeable.
-- **Principe** : le coût d'une erreur dépend de ce que Mic en voit. Un différé ou une pose rouge fausse est repris de toute façon ; une **pose verte fausse** est la seule dangereuse (risque de ne pas être revue, définitive dans ESV, D-220).
+- **Principe** : le coût d'une erreur dépend de ce que l'opérateur en voit. Un différé ou une pose rouge fausse est repris de toute façon ; une **pose verte fausse** est la seule dangereuse (risque de ne pas être revue, définitive dans ESV, D-220).
 - **Budgets acceptés** (sur les poses validées jugées, intervalle sur un effectif suffisant, publiés à chaque mesure) :
   - mauvaise voie validée : **1 % au plus** ;
-  - pose validée à plus de 50 mm de Mic : **3 % au plus** ;
+  - pose validée à plus de 50 mm de l'opérateur : **3 % au plus** ;
   - pose entre 10 et 20 mm : **acceptée** (mesure de qualité, plus un garde-fou) ;
   - cut vert changé : **accepté si le gain net est mesuré** (plus de poses rendues justes que de poses dégradées) ;
   - pose sans preuve du nuage : **toujours zéro** (pas de pose inventée).
 - **Seuils d'arrêt** (couloir 45 mm, 150 mm, garde de paire, τ, δ) : plus des règles de principe, des **réglages du banc**, choisis par le gain mesuré.
-- **Règle de passage** : une version passe si elle fait gagner du temps net à Mic (différés évités moins coût des erreurs) en restant sous ces budgets. Pendant les portions de test (sans impact réel), les budgets peuvent être plus larges ; ils se resserrent avant une livraison.
+- **Règle de passage** : une version passe si elle fait gagner du temps net à l'opérateur (différés évités moins coût des erreurs) en restant sous ces budgets. Pendant les portions de test (sans impact réel), les budgets peuvent être plus larges ; ils se resserrent avant une livraison.
 - Remplace les « 0 » de D-222 (mauvaise voie, poses à plus de 50 mm, cuts verts changés) ; le reste de D-222 tient.
 
 <!-- Numérotation : D-224 à D-238 existent sur d'autres branches (claude/50-apprentissage-3-0, claude/50-test17) ; cette entrée garde le numéro suivant de la lignée globale. -->
@@ -3017,14 +3017,14 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 
 ## D-230 — Interface 5.0 : les directions A à E sont rejetées ; trois présentations (Linear, Raycast, Figma et Arc) à essayer sur Chrome (19 octobre 2026)
 
-- **Mic** : il rejette les trois premières directions, puis la piste « Apple TV » et la piste « produits Apple » (trop proches de l'actuel, trop pauvres, mauvais point de départ, ni profils ni « Envoyer »). Il cite Linear en tête, puis Raycast, Arc et Figma. Les maquettes F (Linear), G (Raycast, refaite plus fidèle) et H (Figma et Arc) lui plaisent toutes (« très réussies, je ne sais pas quoi choisir ») : il veut **les essayer sur Chrome**.
+- **L'opérateur** : il rejette les trois premières directions, puis la piste « Apple TV » et la piste « produits Apple » (trop proches de l'actuel, trop pauvres, mauvais point de départ, ni profils ni « Envoyer »). Il cite Linear en tête, puis Raycast, Arc et Figma. Les maquettes F (Linear), G (Raycast, refaite plus fidèle) et H (Figma et Arc) lui plaisent toutes (« très réussies, je ne sais pas quoi choisir ») : il veut **les essayer sur Chrome**.
 - **Décision** : trois versions installables, une par présentation (4.9.5.10 Linear, 4.9.5.11 Raycast, 4.9.5.12 Figma et Arc), construites sur la test 9 par un **habillage** de `panel.js` (qui reste le moteur de la page) qui clique les boutons d'origine : pose, lot, relecture, Écho et exports inchangés, aucun message de plus au service worker. Ancien panneau conservé. Pas de « Envoyer », pas de profils, pas d'envoi automatique.
 - **Numéros** : `4.9.5.10` à `4.9.5.12`, nom « 4.9.5 test N » exigé par les essais de version. Si la « test 10 » du cap différés (D-217) est construite à part, elle prend le numéro suivant.
-- **À décider avec Mic après l'essai** : la présentation retenue (ou une combinaison), et ce qui manque (verts à contrôler, départs des parties, résumé de la partie restent dans l'ancien panneau).
+- **À décider avec l'opérateur après l'essai** : la présentation retenue (ou une combinaison), et ce qui manque (verts à contrôler, départs des parties, résumé de la partie restent dans l'ancien panneau).
 
 ## D-231 — Interface 5.0 : la direction « accueil à vignettes » est retenue ; première version intégrée sur la L1 (20/10/2026)
 
-- **Mic** : après les maquettes J, K et L (écartées) et quatre audits, il fixe ses références (accueil à grandes vignettes façon Apple TV, couleurs riches par activité, grands titres et listes denses, transitions fluides) et retient la maquette M (`maquettes/ui-5.0/M-accueil.html`), Orbite dans sa composition « grand titre à gauche, carte de suivi à droite ».
+- **L'opérateur** : après les maquettes J, K et L (écartées) et quatre audits, il fixe ses références (accueil à grandes vignettes façon Apple TV, couleurs riches par activité, grands titres et listes denses, transitions fluides) et retient la maquette M (`maquettes/ui-5.0/M-accueil.html`), Orbite dans sa composition « grand titre à gauche, carte de suivi à droite ».
 - **Décision** : version de test 4.9.6.1 « 4.9.6 test 1 (UI-L1) » posée sur la 4.9.5 test 13 (L1) ; seul le panneau change (habillage de `panel.js`, qui reste le moteur de la page). Les règles « chaque chiffre une seule fois », « une seule action », « tout compact » ne sont plus des règles absolues.
 - **Vérifié dans le code** : une pose interrompue bloque toute écriture jusqu'à l'archivage du résultat (« Reprendre » n'est pas proposé) ; la maquette J se trompait.
 - **Restent hypothèses** : « pause demandée » déduite du clic ; la Revue ne coche pas encore « examiné » ; l'usage à côté d'ESV, à taille réelle, est à juger sur le terrain.
@@ -3084,81 +3084,81 @@ Demande de Mic : « Il faudra tester la vague V0 sur un autre projet également.
 - **Relectures adversariales** (deux, avant le paquet) : écriture seulement après un pas, jamais sur une cible bloquée ; passe et relecture jamais ensemble ; relance = décisions refaites ; cuts sous τ exclus comme au banc ; chaque garde d'écriture a son essai. Laissé et documenté : gain du banc = majorant (cible hors de la vue : arrêt) ; un cut posé par la passe reste « différé » dans l'état du lot.
 - **Limite** : 3:0 est la seule partie qui exerce ces leviers ; aucune mesure hors échantillon (3:1 et 3:5 réservées). L'écriture de la deuxième passe n'a jamais été jouée dans ESV : au premier lot, l'opérateur est présent et elle s'arrête au premier refus.
 
-## D-239 — 5.0 centrée sur les résultats de la GCV2 et l'autonomie ; garde de non-régression GCV2 (Mic, 22/10/2026)
+## D-239 — 5.0 centrée sur les résultats de la GCV2 et l'autonomie ; garde de non-régression GCV2 (l'opérateur, 22/10/2026)
 
-- **Décision** : pour Mic, le cœur de la 5.0 est les résultats de la GCV2 et l'autonomie d'Ariane. La direction a changé en cours de route (D-217, D-223) vers plus d'autonomie ; le cahier du 15/10 n'est plus la référence sur l'ordre des chantiers ni sur « ombre avant actif ». `BANANE_5.0_CAHIER_V2.md` le remplace sur ces points.
+- **Décision** : pour l'opérateur, le cœur de la 5.0 est les résultats de la GCV2 et l'autonomie d'Ariane. La direction a changé en cours de route (D-217, D-223) vers plus d'autonomie ; le cahier du 15/10 n'est plus la référence sur l'ordre des chantiers ni sur « ombre avant actif ». `BANANE_5.0_CAHIER_V2.md` le remplace sur ces points.
 - **Validation** : « je valide tout, à condition qu'on ne perde rien de nos perf sur GCV2 ». Valide le cahier version 2 : tableau de bord (cuts sans pose, précision, budgets D-223, autonomie), cibles du § 5, chantiers retenus et mis de côté du § 6.
-- **Condition** : garde de non-régression GCV2 (cahier v2 § 2). Toute modification de la décision d'un cut est rejouée contre la base gelée de la test 18 (9 lots de réglage et 3:0) avant paquet ; critères stricts ; tout recul est une décision écrite de Mic avec le compromis chiffré. Le juge et la base sont à verser au dépôt (le juge est aujourd'hui hors dépôt).
+- **Condition** : garde de non-régression GCV2 (cahier v2 § 2). Toute modification de la décision d'un cut est rejouée contre la base gelée de la test 18 (9 lots de réglage et 3:0) avant paquet ; critères stricts ; tout recul est une décision écrite de l'opérateur avec le compromis chiffré. Le juge et la base sont à verser au dépôt (le juge est aujourd'hui hors dépôt).
 - **Reste ouvert** : seuil d'autonomie (après mesure de base sur 3:1 et 3:5), contre-expertise des verts de chaîne, ré-épinglage de `engine.js` pour la deuxième passe, projet de la partie 2.
 - **Rapport d'Astra du 21/10** (`audit/chantiers/audit-decodage-voie-precision-astra.md`) : priorité au choix de voie après vérification que la bonne paire existe parmi les candidats ; hauteur apprise comme référence du chantier précision.
 
-## D-240 — Retour de terrain sur les tests 18 et 19 ; deux chantiers ajoutés à la 5.0 (Mic, 23/10/2026)
+## D-240 — Retour de terrain sur les tests 18 et 19 ; deux chantiers ajoutés à la 5.0 (l'opérateur, 23/10/2026)
 
-- **Retour de Mic** : les tests 18 et 19 ont tourné sur une trentaine de parties ; « extrêmement satisfaisant », la plupart du temps très peu de différés. Aucun export partagé : l'observation est qualitative, à chiffrer par le tableau de bord (cahier v2 § 4).
-- **Observation** : un certain nombre des différés qui restent sont des cuts à SKIP (pas tous). Chantier ajouté : détection en ombre selon la règle D-172 (aucun point, ou un seul scanner), mesure de la part concernée, envoi réel du SKIP seulement sur accord écrit de Mic.
+- **Retour de l'opérateur** : les tests 18 et 19 ont tourné sur une trentaine de parties ; « extrêmement satisfaisant », la plupart du temps très peu de différés. Aucun export partagé : l'observation est qualitative, à chiffrer par le tableau de bord (cahier v2 § 4).
+- **Observation** : un certain nombre des différés qui restent sont des cuts à SKIP (pas tous). Chantier ajouté : détection en ombre selon la règle D-172 (aucun point, ou un seul scanner), mesure de la part concernée, envoi réel du SKIP seulement sur accord écrit de l'opérateur.
 - **Demande** : ajouter, à la fin et avant la 5.0 officielle, un chantier pour retrouver la rapidité d'exécution poussée en 4.9, notamment pour la relecture, avec les chiffres obtenus alors comme références à réatteindre (cahier v2 § 6 bis, chantier 9). La mesure de base démarre tôt ; le temps par cut entre dans la garde de non-régression (critère 6).
-- **Aussi** : Mic a abandonné la 3:5 (retirée de la file d'analyse le 22/10) ; l'Écho transmis le 22/10 est la partie 4:2 et non la 3:2 (notes d'archive corrigées). De petits détails d'interface sont à recueillir auprès de Mic.
+- **Aussi** : l'opérateur a abandonné la 3:5 (retirée de la file d'analyse le 22/10) ; l'Écho transmis le 22/10 est la partie 4:2 et non la 3:2 (notes d'archive corrigées). De petits détails d'interface sont à recueillir auprès de l'opérateur.
 - **Effet sur le cahier** : `BANANE_5.0_CAHIER_V2.md` complété (§ 1, § 2, § 6, § 6 bis, § 7) ; `fiches/ARCHITECTURE_5.0.md` ajoute les modules SK et V.
 
-## D-241 — Ariane ne SKIP jamais un différé (Mic, 23/10/2026 ; précise D-240 et D-172)
+## D-241 — Ariane ne SKIP jamais un différé (l'opérateur, 23/10/2026 ; précise D-240 et D-172)
 
-- **Décision** : « les différés ne sont pas à skip ». Ariane n'envoie jamais de SKIP, ni sur un différé ni sur un autre cut. Remplace l'étape « envoi réel du SKIP sur accord de Mic » de D-240 et la mention d'un envoi futur de D-172.
-- **Ce qui reste** : la détection en ombre (« ce cut ressemblerait à un cut à SKIP : aucun point, ou un seul scanner »), notée au journal, comparée aux SKIP de Mic dans les exports, sans aucune commande ESV, pour chiffrer la part concernée. Chantier renommé « cuts à SKIP parmi les rouges restants : détection en ombre seule ».
+- **Décision** : « les différés ne sont pas à skip ». Ariane n'envoie jamais de SKIP, ni sur un différé ni sur un autre cut. Remplace l'étape « envoi réel du SKIP sur accord de l'opérateur » de D-240 et la mention d'un envoi futur de D-172.
+- **Ce qui reste** : la détection en ombre (« ce cut ressemblerait à un cut à SKIP : aucun point, ou un seul scanner »), notée au journal, comparée aux SKIP de l'opérateur dans les exports, sans aucune commande ESV, pour chiffrer la part concernée. Chantier renommé « cuts à SKIP parmi les rouges restants : détection en ombre seule ».
 - **Règle générale confirmée** : aucune validation ni SKIP automatique d'un cut non résolu.
 
-## D-242 — Performance et vitesse, surtout en relecture, avec constance pour toute amélioration du moteur (Mic, 23/10/2026)
+## D-242 — Performance et vitesse, surtout en relecture, avec constance pour toute amélioration du moteur (l'opérateur, 23/10/2026)
 
 - **Demande** : ajouter au cahier l'amélioration de la performance et de la vitesse, surtout en relecture, et garder cette constance pour l'amélioration du moteur.
 - **Chiffres retrouvés** (cahier v2 § 6 bis) : référence 4.9.0.8 en mode rapide, cycle médian 2,44 s par cut (6,73 s en référence) ; relecture de la test 7 sur la partie 11, 144 cuts en 4 min 20 s (1,8 s par cut) ; relecture de la 3:0 en test 15, 439 cuts en 33 min 47 s (4,6 s par cut), après un premier arrêt (navigation refusée pendant une capture) ; lot de la 4:2 en test 18, cycle médian 1,6 s.
-- **Règle** : le temps par cut en lot et en relecture entre dans la garde de non-régression GCV2 (critère 6) de façon permanente ; chaque amélioration du moteur annonce son coût en temps ; un recul demande une décision écrite de Mic.
-- **Cibles** : relecture 1,8 s par cut ou mieux sur une grande partie ; lot 2,44 s ou mieux sur une partie difficile. Mesure de base dès le tableau de bord, sur l'export du cache de Mic s'il le fournit.
+- **Règle** : le temps par cut en lot et en relecture entre dans la garde de non-régression GCV2 (critère 6) de façon permanente ; chaque amélioration du moteur annonce son coût en temps ; un recul demande une décision écrite de l'opérateur.
+- **Cibles** : relecture 1,8 s par cut ou mieux sur une grande partie ; lot 2,44 s ou mieux sur une partie difficile. Mesure de base dès le tableau de bord, sur l'export du cache de l'opérateur s'il le fournit.
 
-## D-243 — Interface : reconnexion à ESV après rechargement et historique des parties (Mic, 23/10/2026)
+## D-243 — Interface : reconnexion à ESV après rechargement et historique des parties (l'opérateur, 23/10/2026)
 
 - **Demande** : (1) l'extension se reconnecte seule à la page ESV à chaque rechargement ; (2) à défaut, un bouton de reconnexion dans la barre du haut, à côté de « Onglets ESV » ; (3) l'historique des parties traitées sur la page d'accueil. D'autres détails d'interface suivront.
-- **Cause : SUPPOSÉE, non constatée** (précision de Mic le 23/10 : l'adaptateur ne disparaît pas ; c'est le bouton de reconnexion du menu qui ne fonctionne pas comme il l'attend, il sert à choisir l'onglet et non à se reconnecter). Lecture du code (test 18) : `chrome.tabs.onUpdated` ne rétablit la connexion que pour Écho (`echoReprise`), pas pour Orbite. À reproduire avec le message exact affiché par le panneau avant de corriger.
+- **Cause : SUPPOSÉE, non constatée** (précision de l'opérateur le 23/10 : l'adaptateur ne disparaît pas ; c'est le bouton de reconnexion du menu qui ne fonctionne pas comme il l'attend, il sert à choisir l'onglet et non à se reconnecter). Lecture du code (test 18) : `chrome.tabs.onUpdated` ne rétablit la connexion que pour Écho (`echoReprise`), pas pour Orbite. À reproduire avec le message exact affiché par le panneau avant de corriger.
 - **Chantier** : cahier v2, chantier 10 ; architecture, module U. Livré avec les autres détails d'interface, sous la garde.
-- **Ajout du 23/10 (capture de Mic)** : le message « ESV n'est pas connecté. Recharge la page ESV (F5)… » reste affiché alors que la connexion est bonne. Lecture du code : `src/ui5.js` passe `connexionOuverte` = état ouvert du volet « Connexion à ESV » et `src/ui5-rendu.js` en tire le message ; `panel.js` ouvre ce volet dans plusieurs cas (statut `unavailable`, aucun ou plusieurs onglets, échec de découverte) et ne le referme que dans l'action de connexion. À corriger en basant le message sur `connection.status` ; à reproduire d'abord.
+- **Ajout du 23/10 (capture de l'opérateur)** : le message « ESV n'est pas connecté. Recharge la page ESV (F5)… » reste affiché alors que la connexion est bonne. Lecture du code : `src/ui5.js` passe `connexionOuverte` = état ouvert du volet « Connexion à ESV » et `src/ui5-rendu.js` en tire le message ; `panel.js` ouvre ce volet dans plusieurs cas (statut `unavailable`, aucun ou plusieurs onglets, échec de découverte) et ne le referme que dans l'action de connexion. À corriger en basant le message sur `connection.status` ; à reproduire d'abord.
 
-## D-244 — Architecture de développement validée ; Orbite en file de parties (Mic, 23/10/2026)
+## D-244 — Architecture de développement validée ; Orbite en file de parties (l'opérateur, 23/10/2026)
 
-- **Validation** : Mic valide l'architecture de développement révisée (`fiches/ARCHITECTURE_5.0.md`, auto-audit du cahier v2) : ordre, versions de test T20 à T26, règles de fabrication ; T20 (interface) d'abord.
+- **Validation** : l'opérateur valide l'architecture de développement révisée (`fiches/ARCHITECTURE_5.0.md`, auto-audit du cahier v2) : ordre, versions de test T20 à T26, règles de fabrication ; T20 (interface) d'abord.
 - **Nouveau chantier** : un bouton dans Orbite, qui, activé, permet de passer à la partie suivante programmée, de noter ses données de départ (validés, invalides, ignorés), de commencer à poser, et ainsi de suite sur toutes les parties programmées. Cahier v2, chantier 11 ; architecture, module P, version T27.
-- **Conditions** : action de changement de partie relevée d'abord sur la maquette ESV ; reconnexion automatique après rechargement ; garde verte ; arrêt à la première anomalie ; bouton éteint par défaut ; Mic présent au premier essai.
+- **Conditions** : action de changement de partie relevée d'abord sur la maquette ESV ; reconnexion automatique après rechargement ; garde verte ; arrêt à la première anomalie ; bouton éteint par défaut ; l'opérateur présent au premier essai.
 
-## D-245 — File de parties : réponses de Mic ; interface repensée (Mic, 23/10/2026 ; précise D-244)
+## D-245 — File de parties : réponses de l'opérateur ; interface repensée (l'opérateur, 23/10/2026 ; précise D-244)
 
-- **Réponses** : (1) Mic renseigne le **nombre de parties** à traiter ; (2) après chaque partie : **relecture et correction**, activables ou désactivables par un bouton, **pas d'export automatique** ; (3) **rien n'arrête la file à part un bouton d'arrêt**. Remplace les règles d'arrêt proposées par l'orchestrateur (arrêt à la première anomalie, budget D-223) : aucun arrêt de prudence. Les cas où continuer est impossible (page qui ne change pas de partie, onglet fermé, ESV muet, lot qui s'arrête sur un refus) arrêtent la file avec une alerte et un bilan.
-- **Risque accepté** : une erreur répétée sur plusieurs parties sans personne. Paramètres retenus : premier essai à deux parties avec Mic présent, bilan par partie, bouton d'arrêt.
-- **Interface** : à repenser autour de ces ajouts, avec clarté, simplicité et efficacité, sans perdre de donnée. Maquette cliquable de l'accueil validée par Mic avant le code ; T20 puis T27.
+- **Réponses** : (1) l'opérateur renseigne le **nombre de parties** à traiter ; (2) après chaque partie : **relecture et correction**, activables ou désactivables par un bouton, **pas d'export automatique** ; (3) **rien n'arrête la file à part un bouton d'arrêt**. Remplace les règles d'arrêt proposées par l'orchestrateur (arrêt à la première anomalie, budget D-223) : aucun arrêt de prudence. Les cas où continuer est impossible (page qui ne change pas de partie, onglet fermé, ESV muet, lot qui s'arrête sur un refus) arrêtent la file avec une alerte et un bilan.
+- **Risque accepté** : une erreur répétée sur plusieurs parties sans personne. Paramètres retenus : premier essai à deux parties avec l'opérateur présent, bilan par partie, bouton d'arrêt.
+- **Interface** : à repenser autour de ces ajouts, avec clarté, simplicité et efficacité, sans perdre de donnée. Maquette cliquable de l'accueil validée par l'opérateur avant le code ; T20 puis T27.
 
-## D-246 — Relecture indépendante du plan : corrections appliquées et questions à Mic (23/10/2026)
+## D-246 — Relecture indépendante du plan : corrections appliquées et questions à l'opérateur (23/10/2026)
 
-- **Objet** : une relecture indépendante du cahier V2 et de l'architecture (31 constats, F-01 à F-31) a été appliquée à `BANANE_5.0_CAHIER_V2.md` et à `fiches/ARCHITECTURE_5.0.md`. **Aucune décision de Mic (D-239 à D-245) n'est modifiée.** Précision sur D-244 : sa règle d'arrêt (« arrêt à la première anomalie ») est remplacée par D-245 ; D-244 n'est pas réécrite.
-- **Corrections** : la deuxième passe est allumée par défaut depuis la test 18 (D-237, D-238), donc « aucune écriture réelle » est retiré et le protocole de première écriture devient un contrôle a posteriori ; base gelée à deux colonnes (sans passe / avec passe), garde bloquante sur « sans passe », tout écart de recalcul présenté à Mic comme un recul ; diagnostic de la relecture refait par la mesure par phase d'abord (T22 après V-a), plafond `ADAPTER_BUSY` « identique, cause non revérifiée » avec borne haute et arrêt avec motif ; exigence de puissance des cibles, statut « terrain hors réglage » des ~30 parties, parcours de vitesse fixe et méthode de tolérance ; formule exacte de D-241 reprise partout (jamais de SKIP ; jamais de validation d'un cut non résolu ; les validations de la passe et de la relecture suivent leurs gardes) ; historique lu dans `banane3FichesDepart` plus une fiche de fin de lot persistante, deux états (équipé, prêt), T20a / T20b avec critères mesurables ; file de parties : arrêt de prudence supprimé de l'architecture, tableau des motifs de fin, changement de partie en hypothèse (deux variantes sur la maquette, borne 60 s), diagramme d'états, registre persistant des écritures, alerte visible non bloquante, critère T27 par catégorie de commande, garde retirée des prérequis de la file ; partie à 95 différés ; réponse sur la passation externe ; table chantier / module / version ; T21, T24, T27 scindés ; test 19 et maquette ESV à rapatrier dans R ; budget avec T27 et 30 % de marge ; hypothèses étiquetées SUPPOSÉES ; ordre révisé du 23/10 (proposition) à côté de l'ordre initial.
-- **Questions à Mic** (cahier § 8, architecture § g) : la deuxième passe était-elle allumée pendant les ~30 parties ? quel panneau utilises-tu, l'ancien ou le nouveau ? si une partie s'arrête sur sa propre garde, on passe à la suivante en notant l'échec ou on arrête tout (validation du tableau des motifs de fin) ? la passe reste-t-elle allumée dans la file ? statut de la partie 4:2 et des ~30 parties de terrain ; parcours de vitesse fixe ou retrait du mot « permanent » ; fiches de départ puis « Exporter tout », et export de la partie à 95 différés ; relevé du sélecteur de parties et accord sur les actions ESV nouvelles (changement de partie, « déplacer la vue ») ; validation de l'ordre révisé ; accord sur la passation externe.
+- **Objet** : une relecture indépendante du cahier V2 et de l'architecture (31 constats, F-01 à F-31) a été appliquée à `BANANE_5.0_CAHIER_V2.md` et à `fiches/ARCHITECTURE_5.0.md`. **Aucune décision de l'opérateur (D-239 à D-245) n'est modifiée.** Précision sur D-244 : sa règle d'arrêt (« arrêt à la première anomalie ») est remplacée par D-245 ; D-244 n'est pas réécrite.
+- **Corrections** : la deuxième passe est allumée par défaut depuis la test 18 (D-237, D-238), donc « aucune écriture réelle » est retiré et le protocole de première écriture devient un contrôle a posteriori ; base gelée à deux colonnes (sans passe / avec passe), garde bloquante sur « sans passe », tout écart de recalcul présenté à l'opérateur comme un recul ; diagnostic de la relecture refait par la mesure par phase d'abord (T22 après V-a), plafond `ADAPTER_BUSY` « identique, cause non revérifiée » avec borne haute et arrêt avec motif ; exigence de puissance des cibles, statut « terrain hors réglage » des ~30 parties, parcours de vitesse fixe et méthode de tolérance ; formule exacte de D-241 reprise partout (jamais de SKIP ; jamais de validation d'un cut non résolu ; les validations de la passe et de la relecture suivent leurs gardes) ; historique lu dans `banane3FichesDepart` plus une fiche de fin de lot persistante, deux états (équipé, prêt), T20a / T20b avec critères mesurables ; file de parties : arrêt de prudence supprimé de l'architecture, tableau des motifs de fin, changement de partie en hypothèse (deux variantes sur la maquette, borne 60 s), diagramme d'états, registre persistant des écritures, alerte visible non bloquante, critère T27 par catégorie de commande, garde retirée des prérequis de la file ; partie à 95 différés ; réponse sur la passation externe ; table chantier / module / version ; T21, T24, T27 scindés ; test 19 et maquette ESV à rapatrier dans R ; budget avec T27 et 30 % de marge ; hypothèses étiquetées SUPPOSÉES ; ordre révisé du 23/10 (proposition) à côté de l'ordre initial.
+- **Questions à l'opérateur** (cahier § 8, architecture § g) : la deuxième passe était-elle allumée pendant les ~30 parties ? quel panneau utilises-tu, l'ancien ou le nouveau ? si une partie s'arrête sur sa propre garde, on passe à la suivante en notant l'échec ou on arrête tout (validation du tableau des motifs de fin) ? la passe reste-t-elle allumée dans la file ? statut de la partie 4:2 et des ~30 parties de terrain ; parcours de vitesse fixe ou retrait du mot « permanent » ; fiches de départ puis « Exporter tout », et export de la partie à 95 différés ; relevé du sélecteur de parties et accord sur les actions ESV nouvelles (changement de partie, « déplacer la vue ») ; validation de l'ordre révisé ; accord sur la passation externe.
 
-## D-247 — Réponses de Mic aux questions de la relecture du plan (23/10/2026 ; suite de D-246)
+## D-247 — Réponses de l'opérateur aux questions de la relecture du plan (23/10/2026 ; suite de D-246)
 
-- **Réponses de Mic** : la deuxième passe était **allumée pendant les ~30 parties** des tests 18 et 19 ; il utilise le **nouveau panneau** (l'alternative), la palette étant trop pauvre en informations ; une partie qui s'arrête sur sa propre garde **n'est jamais arrivée** ; la passe **reste allumée dans la file** ; export : fiches de départ puis « Exporter tout », plus la partie à 95 différés ; **accord** pour le relevé du sélecteur de parties et pour les actions ESV nouvelles (changement de partie, « déplacer la vue ») ; **accord** sur l'ordre révisé et la passation externe (réponse de l'architecte) ; une troisième relecture indépendante est demandée.
-- **« Je ne sais pas » de Mic** (statut des parties de terrain et de la 4:2 ; parcours de vitesse fixe) : défauts de l'orchestrateur écrits au cahier v2 § 8, à revoir si Mic le demande. Défaut sur une partie arrêtée par sa propre garde : la file continue en notant le motif, sauf impossibilité technique.
+- **Réponses de l'opérateur** : la deuxième passe était **allumée pendant les ~30 parties** des tests 18 et 19 ; il utilise le **nouveau panneau** (l'alternative), la palette étant trop pauvre en informations ; une partie qui s'arrête sur sa propre garde **n'est jamais arrivée** ; la passe **reste allumée dans la file** ; export : fiches de départ puis « Exporter tout », plus la partie à 95 différés ; **accord** pour le relevé du sélecteur de parties et pour les actions ESV nouvelles (changement de partie, « déplacer la vue ») ; **accord** sur l'ordre révisé et la passation externe (réponse de l'architecte) ; une troisième relecture indépendante est demandée.
+- **« Je ne sais pas » de l'opérateur** (statut des parties de terrain et de la 4:2 ; parcours de vitesse fixe) : défauts de l'orchestrateur écrits au cahier v2 § 8, à revoir si l'opérateur le demande. Défaut sur une partie arrêtée par sa propre garde : la file continue en notant le motif, sauf impossibilité technique.
 - **Effets** : le protocole de première écriture de la passe devient un contrôle a posteriori ; l'interface 5.0 cherche la simplicité avec densité d'information (retour sur la palette).
 
 ## D-248 — Correction du défaut de D-247 et suites de la 3e relecture (23/10/2026 ; suite de D-247)
 
-- **Objet** : la troisième relecture indépendante demandée par Mic (D-247, point 10) a été appliquée à `BANANE_5.0_CAHIER_V2.md` et à `fiches/ARCHITECTURE_5.0.md`. Elle constate que le report de D-247 n'avait été fait que dans le § 8 du cahier : douze corrections de D-246 étaient incomplètes. **Aucune décision de Mic (D-239 à D-247) n'est modifiée ; D-247 n'est pas réécrite.**
-- **Correction du défaut de D-247** : le défaut « la file continue en notant le motif, sauf impossibilité technique » ne s'applique **pas** à un lot (ni à une passe, ni à une relecture) arrêté sur une pose écrite mais non validée (pose commandée sans validation prouvée, `reconcileRequired`, écriture incertaine). D-237 (aucun départ automatique après une pose d'Ariane non validée) et D-245 (cas où continuer est impossible) s'y appliquent : la passe ne démarre pas, la file s'arrête avec alerte. Le défaut reste pour `partie-sans-rouge`, `depart-sur-vert`, passe ou relecture arrêtées sans écriture en suspens ; un refus ou une anomalie propre au lot arrête la file (D-245). Le tableau des motifs de fin (architecture, module P) est écrit en conséquence ; il reste à faire confirmer par Mic.
-- **Report de D-247 partout** : passe allumée pendant les ~30 parties et dans la file (contrôle a posteriori), nouveau panneau, accords (relevé du sélecteur, actions ESV nouvelles de principe, ordre révisé, passation), 4:2 en une seule formulation (« terrain hors réglage, avec Écho, utilisable pour les deux familles, jamais pour régler ; pas une partie d'examen », défaut de l'orchestrateur à revoir si Mic le demande).
-- **Contrôle a posteriori de la passe avant T27a** (et avant T25 et T27b) : liste des cuts écrits par la passe tirée des exports, échantillon d'au moins 60 cuts revu par Mic dans un Écho ciblé, seuil 0 mauvaise voie et 0 pose à plus de 20 mm, jamais « contrôle fait » sans effectif ; valeurs proposées par la relecture, à faire accepter par Mic. G (scénario de changement de partie) et H (diagnostic) sont aussi avant T27a. La garde bloque aussi sur la qualité « avec passe ». Les cuts écrits par la passe sont comptés à part des différés. T27b est bloquée sans mesure d'erreur ou règle pour les corrections de la relecture.
+- **Objet** : la troisième relecture indépendante demandée par l'opérateur (D-247, point 10) a été appliquée à `BANANE_5.0_CAHIER_V2.md` et à `fiches/ARCHITECTURE_5.0.md`. Elle constate que le report de D-247 n'avait été fait que dans le § 8 du cahier : douze corrections de D-246 étaient incomplètes. **Aucune décision de l'opérateur (D-239 à D-247) n'est modifiée ; D-247 n'est pas réécrite.**
+- **Correction du défaut de D-247** : le défaut « la file continue en notant le motif, sauf impossibilité technique » ne s'applique **pas** à un lot (ni à une passe, ni à une relecture) arrêté sur une pose écrite mais non validée (pose commandée sans validation prouvée, `reconcileRequired`, écriture incertaine). D-237 (aucun départ automatique après une pose d'Ariane non validée) et D-245 (cas où continuer est impossible) s'y appliquent : la passe ne démarre pas, la file s'arrête avec alerte. Le défaut reste pour `partie-sans-rouge`, `depart-sur-vert`, passe ou relecture arrêtées sans écriture en suspens ; un refus ou une anomalie propre au lot arrête la file (D-245). Le tableau des motifs de fin (architecture, module P) est écrit en conséquence ; il reste à faire confirmer par l'opérateur.
+- **Report de D-247 partout** : passe allumée pendant les ~30 parties et dans la file (contrôle a posteriori), nouveau panneau, accords (relevé du sélecteur, actions ESV nouvelles de principe, ordre révisé, passation), 4:2 en une seule formulation (« terrain hors réglage, avec Écho, utilisable pour les deux familles, jamais pour régler ; pas une partie d'examen », défaut de l'orchestrateur à revoir si l'opérateur le demande).
+- **Contrôle a posteriori de la passe avant T27a** (et avant T25 et T27b) : liste des cuts écrits par la passe tirée des exports, échantillon d'au moins 60 cuts revu par l'opérateur dans un Écho ciblé, seuil 0 mauvaise voie et 0 pose à plus de 20 mm, jamais « contrôle fait » sans effectif ; valeurs proposées par la relecture, à faire accepter par l'opérateur. G (scénario de changement de partie) et H (diagnostic) sont aussi avant T27a. La garde bloque aussi sur la qualité « avec passe ». Les cuts écrits par la passe sont comptés à part des différés. T27b est bloquée sans mesure d'erreur ou règle pour les corrections de la relecture.
 - **Exports d'abord** : la demande d'export (fiches de départ, puis « Exporter tout ») passe avant l'installation de T20a, qui s'installe par-dessus dans le même dossier (le manifeste n'a pas de champ `key`). **Connexion** : le correctif du message exige un statut mis à jour à chaque ré-équipement de l'onglet ; `onUpdated` ne rétablit que l'Écho, le lot n'est repris qu'au clic « Reprendre ». **Tableau de bord** : B-min dans T21a, B complet ensuite. **Vitesse** : « permanent » au banc seulement ; comparaison appariée sur la maquette (hypothèse cachée : une partie validée n'offre peut-être pas de lot rejouable, SUPPOSÉ).
-- **Ordre révisé du 23/10, version 2** (à confirmer par Mic) : exports ; R seul ; T20a puis T21a (avec contrôle de la passe, B-min, H en diagnostic) ; G ; T27a avec T22 en parallèle ; T27b ; puis T20b et le reste.
-- **Laissé à Mic** (cahier § 8, architecture § g) : tableau des motifs et exception « écriture incertaine » ; formule des N parties (seulement celles qui ont des rouges) ; statut de la 4:2 ; Écho ciblé d'environ 60 cuts et contrôle des corrections de la relecture ; envoi des exports avant T20a ; relevé du sélecteur ; panneau par défaut à la livraison ; seuils de l'alerte non bloquante ; durées de la 3:1 lues alors que D-237 la disait réservée.
+- **Ordre révisé du 23/10, version 2** (à confirmer par l'opérateur) : exports ; R seul ; T20a puis T21a (avec contrôle de la passe, B-min, H en diagnostic) ; G ; T27a avec T22 en parallèle ; T27b ; puis T20b et le reste.
+- **Laissé à l'opérateur** (cahier § 8, architecture § g) : tableau des motifs et exception « écriture incertaine » ; formule des N parties (seulement celles qui ont des rouges) ; statut de la 4:2 ; Écho ciblé d'environ 60 cuts et contrôle des corrections de la relecture ; envoi des exports avant T20a ; relevé du sélecteur ; panneau par défaut à la livraison ; seuils de l'alerte non bloquante ; durées de la 3:1 lues alors que D-237 la disait réservée.
 
-## D-249 — Déplacement de la vue : défaut du terrain à traiter en priorité (Mic, 23/10/2026)
+## D-249 — Déplacement de la vue : défaut du terrain à traiter en priorité (l'opérateur, 23/10/2026)
 
 - **Constat** (export du cache du 23/10, `fiches/ANALYSE_CACHE_2026-10-23.md`) : partie 0, 91 différés sur 535 ; 30 tentatives de déplacement de la vue (un cran de molette), 30 échecs « caméra immobile » ; la deuxième passe de la partie 33 a écrit 1 pose sur 10 décidées (« cible hors de la vue »). Anomalies : passe de la partie 0 arrêtée sans fin ni écriture, partie 29 sans cut traité, 70 cuts « sans appui » non repris.
-- **Décision de Mic** : oui, traiter le déplacement de la vue comme un défaut prioritaire. Mic n'a pas interrompu la partie 0 à la main et n'a vu aucun message.
-- **Chantier** : cahier v2, chantier 12 (module VUE) ; diagnostic en lecture seule d'abord, correctif relevé sur la maquette et accepté par Mic, mesuré sous la garde ; avant la file de parties (T27a).
+- **Décision de l'opérateur** : oui, traiter le déplacement de la vue comme un défaut prioritaire. L'opérateur n'a pas interrompu la partie 0 à la main et n'a vu aucun message.
+- **Chantier** : cahier v2, chantier 12 (module VUE) ; diagnostic en lecture seule d'abord, correctif relevé sur la maquette et accepté par l'opérateur, mesuré sous la garde ; avant la file de parties (T27a).
 
 ## D-250 — L'opérateur valide tout : partie 0 jugée, priorités nouvelles, réponses de D-248, Signal panneau par défaut, règle des modèles (opérateur, 25/10/2026)
 
