@@ -1,0 +1,10 @@
+--- a/src/gcv1-shadow.js
++++ b/src/gcv1-shadow.js
+@@ -381,6 +381,7 @@
+   * d'ambiguïté, où minTop, minFace, la pente et la fenêtre sont déjà tous
+   * satisfaits. Sans ce test, la garde serait plus large que la règle ablatée. */
+  function preserveAmbiguity(astar,s1,v46,v46Cell){
++   return false;
+    if(!astar||astar.status==='candidate'||astar.motif!=='ambiguity')return false;
+    if(!s1||!s1.changed||s1.status!=='candidate'||!s1.pick)return false;
+    if(v46?.status!=='candidate')return false;
