@@ -6,21 +6,21 @@ Le mur est `relecture-fin.dureeMs / cuts relus`, pauses explicites et trous de p
 
 ## Ensemble, mode corriger
 
-5 343 cuts à durées, 22 passes (une sans `relecture-fin` : partie 13 du 19/10, export en cours de passe, mur non calculé, 79 cuts).
+5 344 cuts à durées, 22 passes (une sans `relecture-fin` : partie 13 du 19/10, export en cours de passe, mur non calculé, 79 cuts).
 
 | Phase | n | médiane | p90 | moyenne | part |
 |---|---:|---:|---:|---:|---:|
-| Attente de la page | 5 343 | 18 ms | 37 ms | 22 ms | 0,8 % |
-| Lecture du nuage | 5 343 | 1,8 s | 4,4 s | 2,2 s | 81,5 % |
-| Recapture | 5 343 | 0 ms | 0 ms | 26 ms | 0 % |
-| Décision | 5 343 | 380 ms | 1,3 s | 541 ms | 17,6 % |
-| Écriture | 5 343 | 0 ms | 0 ms | 58 ms | 0 % |
-| Validation | 5 343 | 0 ms | 0 ms | 129 ms | 0 % |
-| Attente de l’état de l’adaptateur | 5 343 | 0 ms | 0 ms | 0 ms | 0 % |
-| Résidu (total du cut − phases) | 5 343 | 47 ms | 130 ms | 129 ms | |
-| Total du cut | 5 343 | 2,8 s | 5,6 s | 3,1 s | |
+| Attente de la page | 5 344 | 18 ms | 37 ms | 22 ms | 0,8 % |
+| Lecture du nuage | 5 344 | 1,8 s | 4,4 s | 2,2 s | 81,5 % |
+| Recapture | 5 344 | 0 ms | 0 ms | 26 ms | 0 % |
+| Décision | 5 344 | 380 ms | 1,3 s | 541 ms | 17,6 % |
+| Écriture | 5 344 | 0 ms | 0 ms | 58 ms | 0 % |
+| Validation | 5 344 | 0 ms | 0 ms | 129 ms | 0 % |
+| Attente de l’état de l’adaptateur | 5 344 | 0 ms | 0 ms | 0 ms | 0 % |
+| Résidu (total du cut − phases) | 5 344 | 47 ms | 130 ms | 129 ms | |
+| Total du cut | 5 344 | 2,8 s | 5,6 s | 3,1 s | |
 
-**ÉTABLI.** La lecture du nuage est la phase. L’attente de page, l’écriture, la validation et la recapture sont des moyennes faibles parce que la plupart des cuts ne corrigent pas (médiane 0). Le résidu est le temps du cut qui n’est pas une commande journalisée (lectures d’état, liste).
+**ÉTABLI.** La lecture du nuage est la phase. L’attente de page, l’écriture, la validation et la recapture sont des moyennes faibles parce que la plupart des cuts ne corrigent pas (médiane 0). Le résidu est le temps du cut qui n’est pas une commande journalisée (lectures d’état, liste). Le détail par cut est dans `depot-banane-data/CH-003/` (dépôt de transit : l’intégrateur le copie dans `banane-data` et le retire de cette branche avant la fusion).
 
 ## Passes
 

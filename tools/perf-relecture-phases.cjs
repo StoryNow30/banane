@@ -5,6 +5,10 @@
  * Lecture seule. Le chemin des données vient d'un argument (fichier, zip ou dossier).
  *
  *   node tools/perf-relecture-phases.cjs CHEMIN [--json SORTIE.json] [--md SORTIE.md]
+ *        [--cuts CUTS.jsonl] [--attentes ATTENTES.jsonl] [--passes PASSES.json]
+ *
+ * `--cuts`, `--attentes` et `--passes` n'écrivent que des comptes, des durées, des millimètres
+ * et des références partie/cut. Pas d'horodatage, pas d'identifiant, pas de coordonnée.
  *
  * Une passe va de `relecture-debut` au `relecture-fin` du même lot. Pour chaque cut relu
  * (`relecture-ombre` qui porte `durees`), sept phases :
@@ -75,7 +79,20 @@ function phaseDuCut(ombre,commandes,attentes){
   const complet=fini(d.totalMs)&&PHASES.every(([id])=>fini(phases[id]));
   const points=fini(captures[0]?.lastDetail?.points)?captures[0].lastDetail.points:null;
   return {phases,sources,residuMs:complet?d.totalMs-somme(PHASES.map(([id])=>phases[id])):null,
-    captureNonDecoupeeMs:lectureNuage==null&&fini(d.captureMs)?d.captureMs:null,totalMs:fini(d.totalMs)?d.totalMs:null,points};
+    captureNonDecoupeeMs:lectureNuage==null&&fini(d.captureMs)?d.captureMs:null,totalMs:fini(d.totalMs)?d.totalMs:null,points,
+    ...millimetres(ombre)};
+}
+/* Écarts en millimètres seulement. Les poses (coordonnées) ne sont pas recopiées. */
+const mm=v=>fini(v)?v:null;
+function millimetres(e){
+  const g=e?.ecartMm?.left,d=e?.ecartMm?.right,h=e?.hauteurMm;
+  return {role:typeof e?.role==='string'?e.role:null,pireMm:mm(e?.pireMm),ecartementMm:mm(e?.ecartementMm),
+    longGaucheMm:mm(g?.long),latGaucheMm:mm(g?.lat),vertGaucheMm:mm(g?.vert),
+    longDroitMm:mm(d?.long),latDroitMm:mm(d?.lat),vertDroitMm:mm(d?.vert),
+    hauteurGaucheMm:mm(h?.left),hauteurDroitMm:mm(h?.right),
+    chaineCuts:Number.isInteger(e?.chaineCuts)?e.chaineCuts:null,
+    captures:Number.isInteger(e?.skipOmbre?.captures)?e.skipOmbre.captures:null,
+    capturesVides:Number.isInteger(e?.skipOmbre?.capturesVides)?e.skipOmbre.capturesVides:null};
 }
 
 function tempsMur(passe,cuts){
@@ -114,9 +131,12 @@ function passeDe(bloc,version,source){
     cuts.push({t:ici,tPrev:prev,partie:Number.isInteger(e.identity?.part)?e.identity.part:null,cut:Number.isInteger(e.identity?.cut)?e.identity.cut:null,
       zone:typeof e.zone==='string'?e.zone:null,action:e.action||null,mode:e.mode||debut.modeEffectif||debut.mode||null,...ph});
   });
-  let attenteHorsN=0,attenteHorsMs=0;
+  const attentesDetail=[];let attenteHorsN=0,attenteHorsMs=0;
   for(const a of ev){if(a.type!=='relecture-navigation-attente')continue;const t=ts(a);
-    if(cuts.some(c=>fini(c.tPrev)&&fini(c.t)&&t>c.tPrev&&t<=c.t))continue;
+    const dansCut=cuts.some(c=>fini(c.tPrev)&&fini(c.t)&&t>c.tPrev&&t<=c.t);
+    attentesDetail.push({partie:Number.isInteger(a.identity?.part)?a.identity.part:null,cut:Number.isInteger(a.identity?.cut)?a.identity.cut:null,
+      essai:Number.isInteger(a.essai)?a.essai:null,attenteMs:fini(a.attenteMs)?a.attenteMs:null,dansCut});
+    if(dansCut)continue;
     attenteHorsN++;if(fini(a.attenteMs))attenteHorsMs+=a.attenteMs;}
   const mur=tempsMur({debut,fin,events:ev},cuts);
   const parties=cuts.map(c=>c.partie).filter(Number.isInteger);
@@ -125,11 +145,13 @@ function passeDe(bloc,version,source){
   const mode=fin?.modeEffectif||debut.modeEffectif||fin?.mode||debut.mode||null;
   return {collection:collectionDe(source),version:version??null,partie,mode,issue:fin?.issue??null,
     debut:debut.timestamp,corriges:Number.isInteger(fin?.corriges)?fin.corriges:cuts.filter(c=>c.action==='corrige').length,
-    sansDurees:sans[0],attenteHorsCutN:attenteHorsN,attenteHorsCutMs:attenteHorsMs,points:stats(cuts.map(c=>c.points)),cuts,...mur};
+    sansDurees:sans[0],attenteHorsCutN:attenteHorsN,attenteHorsCutMs:attenteHorsMs,attentesDetail,points:stats(cuts.map(c=>c.points)),cuts,...mur};
 }
 
+/* À la même milliseconde, le cut relu reste dans la passe : la fin vient après. */
+const RANG_TYPE={'relecture-debut':0,'relecture-ombre':1,'relecture-navigation-attente':2,'adapter-result':2,'relecture-pause':3,'relecture-reprise':3,'relecture-fin':4};
 function blocs(events){
-  const ev=(events||[]).filter(e=>e&&fini(ts(e))).sort((a,b)=>ts(a)-ts(b));
+  const ev=(events||[]).filter(e=>e&&fini(ts(e))).sort((a,b)=>ts(a)-ts(b)||(RANG_TYPE[a.type]??2)-(RANG_TYPE[b.type]??2));
   const out=[];let cur=null;
   for(const e of ev){
     if(e.type==='relecture-debut'){if(cur)out.push(cur);cur={debut:e,fin:null,events:[e],lotId:e.lotId??e.batchId??null};continue;}
@@ -219,19 +241,50 @@ function lireJournaux(chemin){
   return out;
 }
 function fusionner(mesures){const passes=dedupe(mesures.flatMap(m=>m.passes));return {cibleMs:CIBLE_MS,silenceSeuilMs:SILENCE_MS,passes,parMode:agreger(passes)};}
+/* Détail déposable : comptes, durées, millimètres, partie et cut. Rien d'autre. */
+function detailCuts(m){
+  const rang=new Map(),lignes=[];
+  for(const p of m.passes){const k=`${p.collection||''}|${p.partie??''}`,n=(rang.get(k)||0)+1;rang.set(k,n);
+    for(const c of p.cuts)lignes.push({collection:p.collection,version:p.version,partie:c.partie,cut:c.cut,lancement:n,
+      mode:c.mode||p.mode,issue:p.issue,zone:c.zone,role:c.role,action:c.action,
+      attentePageMs:c.phases.attentePage,lectureNuageMs:c.phases.lectureNuage,recaptureMs:c.phases.recapture,decisionMs:c.phases.decision,
+      ecritureMs:c.phases.ecriture,validationMs:c.phases.validation,attenteAdaptateurMs:c.phases.attenteAdaptateur,
+      sourceAttentePage:c.sources.attentePage,sourceLecture:c.sources.lectureNuage,
+      residuMs:c.residuMs,totalMs:c.totalMs,points:c.points,pireMm:c.pireMm,ecartementMm:c.ecartementMm,
+      longGaucheMm:c.longGaucheMm,latGaucheMm:c.latGaucheMm,vertGaucheMm:c.vertGaucheMm,
+      longDroitMm:c.longDroitMm,latDroitMm:c.latDroitMm,vertDroitMm:c.vertDroitMm,
+      hauteurGaucheMm:c.hauteurGaucheMm,hauteurDroitMm:c.hauteurDroitMm,chaineCuts:c.chaineCuts,captures:c.captures,capturesVides:c.capturesVides});}
+  return lignes;
+}
+function detailAttentes(m){
+  const rang=new Map(),lignes=[];
+  for(const p of m.passes){const k=`${p.collection||''}|${p.partie??''}`,n=(rang.get(k)||0)+1;rang.set(k,n);
+    for(const a of p.attentesDetail||[])lignes.push({collection:p.collection,version:p.version,partie:a.partie,cut:a.cut,lancement:n,essai:a.essai,attenteMs:a.attenteMs,dansCut:a.dansCut});}
+  return lignes;
+}
+function detailPasses(m){
+  return m.passes.map(p=>{const {cuts,debut,attentesDetail,...pub}=p;return pub;});
+}
 
-function args(argv){const o={json:null,md:null,chemin:null};const pos=[];
-  for(let i=0;i<argv.length;i++){const a=argv[i];if(a==='--json')o.json=argv[++i];else if(a==='--md')o.md=argv[++i];else if(a.startsWith('--'))throw Error('argument inconnu : '+a);else pos.push(a);}
-  if(pos.length!==1)throw Error('usage : node tools/perf-relecture-phases.cjs CHEMIN [--json F] [--md F]');
+function args(argv){const o={json:null,md:null,cuts:null,attentes:null,passes:null,chemin:null};const pos=[];
+  for(let i=0;i<argv.length;i++){const a=argv[i];
+    if(a==='--json')o.json=argv[++i];else if(a==='--md')o.md=argv[++i];else if(a==='--cuts')o.cuts=argv[++i];
+    else if(a==='--attentes')o.attentes=argv[++i];else if(a==='--passes')o.passes=argv[++i];
+    else if(a.startsWith('--'))throw Error('argument inconnu : '+a);else pos.push(a);}
+  if(pos.length!==1)throw Error('usage : node tools/perf-relecture-phases.cjs CHEMIN [--json F] [--md F] [--cuts F] [--attentes F] [--passes F]');
   o.chemin=pos[0];return o;}
+function ecrireJsonl(fichier,lignes){fs.mkdirSync(path.dirname(fichier),{recursive:true});fs.writeFileSync(fichier,lignes.map(l=>JSON.stringify(l)).join('\n')+(lignes.length?'\n':''));}
 function main(argv){
   const o=args(argv),journaux=lireJournaux(o.chemin);
   if(!journaux.length)throw Error('Aucun journal (events) dans '+o.chemin);
   const m=fusionner(journaux.map(j=>measure(j.data,{source:j.source})));
   if(o.json)fs.writeFileSync(o.json,JSON.stringify(m));
   if(o.md)fs.writeFileSync(o.md,toMarkdown(m));
+  if(o.cuts)ecrireJsonl(o.cuts,detailCuts(m));
+  if(o.attentes)ecrireJsonl(o.attentes,detailAttentes(m));
+  if(o.passes){fs.mkdirSync(path.dirname(o.passes),{recursive:true});fs.writeFileSync(o.passes,JSON.stringify(detailPasses(m)));}
   process.stdout.write(toMarkdown(m));
   return m;
 }
-module.exports={measure,toMarkdown,PHASES,CIBLE_MS};
+module.exports={measure,toMarkdown,detailCuts,detailAttentes,detailPasses,PHASES,CIBLE_MS};
 if(require.main===module){try{main(process.argv.slice(2));}catch(e){console.error(e.message||e);process.exit(1);}}

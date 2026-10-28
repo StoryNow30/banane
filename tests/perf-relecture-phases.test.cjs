@@ -4,7 +4,7 @@
  * elles se rangent par la fenêtre de temps, jamais par ce numéro. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process');
-const {measure,toMarkdown}=require('../tools/perf-relecture-phases.cjs');
+const {measure,toMarkdown,detailCuts,detailAttentes}=require('../tools/perf-relecture-phases.cjs');
 
 const T0=Date.parse('2026-10-20T17:00:00.000Z');
 const iso=ms=>new Date(T0+ms).toISOString();
@@ -19,7 +19,8 @@ function journalCorriger(){
     cmd(-5000,'capture',9999,1),
     cmd(500,'goToCut',400),cmd(2600,'capture',2000),
     {type:'relecture-ombre',timestamp:iso(3000),lotId:UUID,mode:'corriger',action:'visite',zone:'pn',role:'vert',
-      identity:{part:3,cut:10},durees:{navigationMs:500,captureMs:2200,calculMs:300,totalMs:3000}},
+      identity:{part:3,cut:10},pireMm:14,ecartMm:{left:{long:0,lat:14,vert:0},right:{long:0,lat:1,vert:-2}},
+      durees:{navigationMs:500,captureMs:2200,calculMs:300,totalMs:3000}},
     {type:'relecture-pause',timestamp:iso(4000),lotId:UUID,raison:'mic'},
     {type:'relecture-reprise',timestamp:iso(10000),lotId:UUID},
     {type:'relecture-navigation-attente',timestamp:iso(10300),identity:{part:3,cut:11},code:'ADAPTER_BUSY',essai:1,attenteMs:250},
@@ -60,6 +61,10 @@ test('fenêtre de temps : identité périmée ignorée, pause explicite retranch
   assert.match(md,/Attente de la page/);assert.match(md,/2,0 s/);
   assert.equal(md.includes(UUID),false,'aucun identifiant dans le rapport');
   assert.equal(md.includes('999'),false);
+  const lignes=detailCuts(m),att=detailAttentes(m);
+  assert.equal(lignes.length,2);assert.equal(lignes[0].cut,10);assert.equal(lignes[0].attentePageMs,400);assert.equal(lignes[0].pireMm,14);assert.equal(lignes[0].latGaucheMm,14);
+  assert.equal(att.length,1);assert.equal(att[0].dansCut,true);assert.equal(att[0].attenteMs,250);
+  assert.equal(JSON.stringify(lignes).includes(UUID),false);assert.equal(JSON.stringify(att).includes(UUID),false);
 });
 
 test('repli sur les durées du cut, recapture non séparable, silence inféré, mode ombre à part',()=>{
@@ -84,9 +89,20 @@ test('repli sur les durées du cut, recapture non séparable, silence inféré, 
   /* trou entre les deux cuts : 70 000 − 5 200 de travail = 64 800, au-dessus de 60 s */
   assert.equal(p.silenceMs,64800);assert.equal(p.pauseMs,0);
   assert.equal(p.attenteHorsCutN,1);assert.equal(p.attenteHorsCutMs,250,'le refus final, après le dernier cut journalisé');
+  const att=detailAttentes(m);assert.equal(att.length,1);assert.equal(att[0].dansCut,false);assert.equal(att[0].cut,6);
   assert.equal(p.actifMs,73000-64800);assert.equal(m.parMode.ombre.n,2);assert.equal(m.parMode.corriger,undefined);
 });
 
+test('un cut horodaté à la même milliseconde que la fin reste dans la passe',()=>{
+  const ev=[
+    {type:'relecture-debut',timestamp:iso(0),lotId:'L',mode:'ombre',modeEffectif:'ombre'},
+    {type:'relecture-fin',timestamp:iso(1000),lotId:'L',mode:'ombre',modeEffectif:'ombre',issue:'fin',faits:1,dureeMs:1000},
+    {type:'relecture-ombre',timestamp:iso(1000),lotId:'L',mode:'ombre',action:'visite',zone:'pn',identity:{part:1,cut:7},
+      durees:{navigationMs:10,captureMs:800,calculMs:90,totalMs:900}},
+  ];
+  const m=measure({version:'4.9.5.16',events:ev},{source:'collections/essai'});
+  assert.equal(m.passes[0].cuts.length,1);assert.equal(m.passes[0].cuts[0].cut,7);
+});
 test('la même passe dans deux journaux ne compte qu\'une fois',()=>{
   const j=journalCorriger();
   const m=measure([j,JSON.parse(JSON.stringify(j))],{source:'collections/double'});
