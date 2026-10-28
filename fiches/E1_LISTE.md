@@ -1,6 +1,6 @@
 # E1 — Mémoire de la liste d'ESV et diff-liste (plan 5.0, idée 1)
 
-Statut : livré sur la branche `claude/50-e1-liste`, version non montée. Accord de Mic : D-122, question 1 (garder localement, par partie, les bords qu'Ariane a écrits ; exporter un instantané compact de la liste).
+Statut : livré sur la branche `claude/50-e1-liste`, version non montée. Accord de l'opérateur : D-122, question 1 (garder localement, par partie, les bords qu'Ariane a écrits ; exporter un instantané compact de la liste).
 
 ## Principe
 
@@ -14,7 +14,7 @@ ESV réécrit la ligne de sa liste des coupes à chaque validation (statut, drap
 
 Les coordonnées ne sortent que dans le fichier d'instantané exporté, `ariane-liste-partieN-<heure>.json`, rangé dans les volumes zip d'Orbite (« Tout télécharger ») et d'Écho. Les corps d'écriture sont déjà dans le journal.
 
-## Protocole pour Mic
+## Protocole pour l'opérateur
 
 1. Lot Orbite sur la partie ; export comme d'habitude (le vidage automatique après export ne touche pas la mémoire de la liste).
 2. Relis la partie dans ESV (tous les cuts posés), corrige ce qui doit l'être.

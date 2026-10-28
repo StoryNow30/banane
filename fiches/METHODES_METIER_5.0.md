@@ -1,6 +1,6 @@
 # Méthodes métier à apprendre à Ariane en Orbite (5.0) : notes de départ
 
-Statut : **notes de cadrage**, pas une spécification. Source : règles données par Mic à un opérateur en formation (conversation « Formation opérateur ADV et validations », 12 et 13 octobre 2026, branche de sortie `claude/gracious-gauss-x3zc8s`) et mesures hors ligne des parties 17 (Écho du 14 octobre) et 20 (Écho du 23 septembre). Les captures d'écran de la conversation n'ont pas été relues. Aucune donnée de partie dans ce dépôt.
+Statut : **notes de cadrage**, pas une spécification. Source : règles données par l'opérateur à un opérateur en formation (conversation « Formation opérateur ADV et validations », 12 et 13 octobre 2026, branche de sortie `claude/gracious-gauss-x3zc8s`) et mesures hors ligne des parties 17 (Écho du 14 octobre) et 20 (Écho du 23 septembre). Les captures d'écran de la conversation n'ont pas été relues. Aucune donnée de partie dans ce dépôt.
 
 ## 1. Règles métier (opérateur humain)
 
@@ -13,7 +13,7 @@ Principe : **un cut vert n'est pas forcément juste.** Il faut juger la coupe (p
 | Série de rouges | idem | toute la série, puis 2 à 3 verts de chaque côté |
 | Passage à niveau (PN) | rail noyé dans le revêtement, le profil décroche | tous les cuts du PN sans trou, plus 2 à 3 cuts avant l'entrée et après la sortie |
 
-Ces marges (±1 à 3 cuts, parfois plus) sont ce que Mic décrit pour Ariane : « ± 5 cuts, parfois 20 » dans les zones cibles.
+Ces marges (±1 à 3 cuts, parfois plus) sont ce que l'opérateur décrit pour Ariane : « ± 5 cuts, parfois 20 » dans les zones cibles.
 
 ## 2. Mesures hors ligne (D-098, D-099, D-100)
 
@@ -29,5 +29,5 @@ Hors zone à risque : interpoler un cut différé entre deux voisins posés à �
 
 1. Détecter les zones (écartement hors norme, nuage diffus, listes d'invalides, signature de l'ADV et du PN dans l'export) ; refaire les mesures du § 2 par zone.
 2. Faire consigner à B1 en ombre la pose qu'il proposerait (aujourd'hui seulement ses appuis), pour juger sa précision.
-3. Préciser avec Mic : nombre de cuts de marge pour un ADV, sens des couleurs de l'outil, comment il reconnaît qu'une correction de voisins est bonne.
+3. Préciser avec l'opérateur : nombre de cuts de marge pour un ADV, sens des couleurs de l'outil, comment il reconnaît qu'une correction de voisins est bonne.
 4. Rejeu avec les voisins posés par Ariane sur d'autres lots 4.9 ; ensuite seulement un essai en ombre sur le terrain.

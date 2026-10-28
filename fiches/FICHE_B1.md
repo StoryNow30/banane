@@ -2,7 +2,7 @@
 
 > **Note du 16 octobre 2026 (audit de la 5.0, U7).** Les constats 1 à 3 de cette fiche (source de la liste, repère, appariement cut ↔ ligne) sont **datés du 13 octobre et dépassés** (D-115) : l'appariement est établi, la ligne N de la liste porte la pose de départ du cut N. Ils restent écrits ici pour l'historique ; ne pas s'y fier pour l'état actuel.
 
-Statut : **accord de Mic reçu le 13 octobre 2026** pour lire, en lecture seule, les bords et le statut des cuts voisins dans la liste des coupes qu'ESV charge au démarrage
+Statut : **accord de l'opérateur reçu le 13 octobre 2026** pour lire, en lecture seule, les bords et le statut des cuts voisins dans la liste des coupes qu'ESV charge au démarrage
 (« complètement ok »), avec les pleins pouvoirs de décision de l'orchestrateur jusqu'à la livraison de la 4.9. Branche de travail : `claude/49-test-11` (depuis `claude/49-test-10`).
 
 ## But
@@ -25,7 +25,7 @@ Aujourd'hui `background.js` (~ligne 816) appelle `L.decideCut({capture:…})` SA
 4. **Fraîcheur** : la copie de la liste lue au chargement ne voit pas les validations faites pendant la séance (celles d'Ariane sont déjà connues du moteur comme appuis posés ;
    `promoteAnchors`).
 
-## Étapes (mode OMBRE d'abord : aucune pose ne change dans la version livrée à Mic)
+## Étapes (mode OMBRE d'abord : aucune pose ne change dans la version livrée à l'opérateur)
 1. **Observateur** (`src/esv-observer.js`) : à la lecture d'une page de liste, garder EN MÉMOIRE de la page (jamais postée en bloc, jamais stockée, jamais d'URL) une table compacte
    par partie : clé de ligne, ordre, statut, drapeaux opérateur, bords gauche/droit (monde). Les messages du pont et l'export n'en reçoivent que des résumés. Mémoire bornée.
    Aucune requête émise, aucun en-tête lu, aucun original modifié (contrat du fichier inchangé).

@@ -1,13 +1,13 @@
 # Clic humain du mode rapide (D-157) : trois réglages, un garde-fou, mesures
 
-Branche `claude/50-rapide-humain` (base `claude/50-base`, c2dc0e0), 17 octobre 2026. `src/engine.js` n'est pas touché, `DECISIONS.md` non plus. **Tout est coupé par défaut** : `pilote.rapide.clicHumain = 'tel-quel'` garde le comportement d'avant à l'octet près. Mic n'a qu'un réglage à choisir.
+Branche `claude/50-rapide-humain` (base `claude/50-base`, c2dc0e0), 17 octobre 2026. `src/engine.js` n'est pas touché, `DECISIONS.md` non plus. **Tout est coupé par défaut** : `pilote.rapide.clicHumain = 'tel-quel'` garde le comportement d'avant à l'octet près. L'opérateur n'a qu'un réglage à choisir.
 
 ## Réponse courte
 
 - **Les deux modes corrigés suppriment tous les clics hors vue** : 0 sur 185 cuts rapides en partie 29, 0 sur 205 en partie 1 du second projet. En `'tel-quel'`, le banc en retrouve **185 et 205**, autant que l'enquête : un par cut rapide, toujours le rail gauche.
 - **Mêmes poses, mêmes décisions, aucun cut différé en plus** dans les deux lots. Les poses sont à 1 mm de la cible et à 0,45 mm au plus de celles de `'tel-quel'`.
 - **Le coût est du temps de pose** : +0,32 s par cut rapide pour `'gauche-recentre'`, +0,65 s pour `'tout-recentre'`. Sur la durée réelle des lots, cela fait +9 % et +18 % en partie 29, et +6 % et +12 % en partie 1.
-- **Recommandation : `'tout-recentre'`**, parce que Mic exige une trace humaine. `'gauche-recentre'` coûte moitié moins, mais garde un clic machinal sur le rail droit : il part moins d'une milliseconde après le bouton (§ 7).
+- **Recommandation : `'tout-recentre'`**, parce que l'opérateur exige une trace humaine. `'gauche-recentre'` coûte moitié moins, mais garde un clic machinal sur le rail droit : il part moins d'une milliseconde après le bouton (§ 7).
 - **Arrondi des demi-pixels** : Chromium prend l'entier inférieur. Sur les lots réels, l'écart de pose est toujours entre −1 et 0 pixel en horizontal et entre 0 et +1 en vertical (372 cuts sur 372). Ça donne un biais d'un demi-pixel, environ 0,19 mm par axe. La reprise à +0,5 vise le pixel le plus proche. Celle à −0,5 ne sert jamais, et une fois sur deux, une des deux reprises refait exactement le premier clic. Rien n'est modifié (§ 5).
 
 ## 1. Le problème
@@ -127,11 +127,11 @@ C'est l'observation de la 4.8.0 (« −1 à 0 pixel en horizontal, 0 à +1 en ve
 
 ## 7. Recommandation
 
-**`'tout-recentre'`**, si la règle de Mic (« la trace doit être exactement celle d'un humain ») passe avant le débit. C'est le chemin des cuts de référence, déjà employé en lot réel (un cut sur dix) : pour chaque rail, le bouton, une attente que la vue suive (environ 0,3 s), puis un clic au milieu de la vue. Il coûte +0,65 s par cut rapide, soit +12 à +18 % de durée de lot, avec 0 clic hors vue, les mêmes poses, les mêmes décisions et 0 différé en plus.
+**`'tout-recentre'`**, si la règle de l'opérateur (« la trace doit être exactement celle d'un humain ») passe avant le débit. C'est le chemin des cuts de référence, déjà employé en lot réel (un cut sur dix) : pour chaque rail, le bouton, une attente que la vue suive (environ 0,3 s), puis un clic au milieu de la vue. Il coûte +0,65 s par cut rapide, soit +12 à +18 % de durée de lot, avec 0 clic hors vue, les mêmes poses, les mêmes décisions et 0 différé en plus.
 
-**`'gauche-recentre'`** coûte moitié moins : +6 à +9 % de durée de lot. Il supprime aussi tous les clics hors de la fenêtre. Mais le rail droit reste posé à la machine : bouton pressé puis clic **dans la même milliseconde**, alors qu'un humain met au moins quelques centaines de millisecondes. Il change aussi l'ordre des gestes (droit avant gauche). On ne sait pas dans quel ordre l'opérateur pose ses rails. C'est un bon compromis si Mic juge que seule la position du clic compte.
+**`'gauche-recentre'`** coûte moitié moins : +6 à +9 % de durée de lot. Il supprime aussi tous les clics hors de la fenêtre. Mais le rail droit reste posé à la machine : bouton pressé puis clic **dans la même milliseconde**, alors qu'un humain met au moins quelques centaines de millisecondes. Il change aussi l'ordre des gestes (droit avant gauche). On ne sait pas dans quel ordre l'opérateur pose ses rails. C'est un bon compromis si l'opérateur juge que seule la position du clic compte.
 
-**`'tel-quel'`** reste le défaut tant que Mic n'a pas tranché (D-157).
+**`'tel-quel'`** reste le défaut tant que l'opérateur n'a pas tranché (D-157).
 
 Dans tous les cas, le garde-fou `clic-hors-vue` dira au terrain combien il en reste : environ un par cut rapide en `'tel-quel'`, zéro dans les modes corrigés. Pour activer un mode, il suffit de changer `clicHumain` dans `src/settings.js` (une version, une consigne). Rien d'autre ne bouge.
 

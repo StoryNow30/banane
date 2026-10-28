@@ -18,13 +18,13 @@ Chantier G1-b (`G0_GCV2_CONCEPTION.md` § 2 « Étage 2 » et « Étage 3 », §
 | **Export** | `datasets/gcv2-parametres.json` (44 ko), appris sur les 11 parties, reproductible octet pour octet. |
 | **Variantes par zone** (§ 11, choisies après coup en D-204) | **V1** (GCV2 sur les verts de PN et d'ADV, règle prudente sur les verts des abords) tient la porte en relecture et au lot : 128 justes contre 107, 2 abîmés contre 4, 0 mauvaise voie, erreur 3,5 %. V2 et V3 ne la tiennent pas (5 abîmés contre 4). Le juge sera G1-c. |
 
-**Lecture honnête.** La GCV2 corrige nettement plus que la règle prudente (+35 %), avec une erreur globale du même ordre (6,4 à 6,6 % contre 7,4 %), mais elle ne tient pas la règle « 0 mauvaise voie » à cause d'une seule partie (2:1, 5 cuts) et de la zone des abords. Elle n'est **pas prête à agir sans garde supplémentaire**. Aucune activation n'est proposée ici : elle reste à Mic. Les sensibilités du § 7 (hors porte, après coup) montrent que le résultat ne change pas de nature quand on durcit l'erreur visée ou qu'on retire les traits d'accord.
+**Lecture honnête.** La GCV2 corrige nettement plus que la règle prudente (+35 %), avec une erreur globale du même ordre (6,4 à 6,6 % contre 7,4 %), mais elle ne tient pas la règle « 0 mauvaise voie » à cause d'une seule partie (2:1, 5 cuts) et de la zone des abords. Elle n'est **pas prête à agir sans garde supplémentaire**. Aucune activation n'est proposée ici : elle reste à l'opérateur. Les sensibilités du § 7 (hors porte, après coup) montrent que le résultat ne change pas de nature quand on durcit l'erreur visée ou qu'on retire les traits d'accord.
 
 ## 2. Méthode
 
 ### 2.1 Exemples et étiquettes
 
-Un exemple = (partie, cut, rail, hypothèse) d'un jeu de `gcv2-jeu.cjs` (G1-a). Étiquettes binaires : l'hypothèse est à **10 mm** (à **5 mm**) de la pose finale de Mic (3D, repère profil). Seuls entrent les cuts **calculés** (le moteur a tourné : un nuage) avec une référence pour les deux rails : **2 411 cuts, 56 936 hypothèses** (53 354 au lot). Les 1 342 cuts sans nuage n'entrent pas : aucune GCV2 ne peut agir dessus.
+Un exemple = (partie, cut, rail, hypothèse) d'un jeu de `gcv2-jeu.cjs` (G1-a). Étiquettes binaires : l'hypothèse est à **10 mm** (à **5 mm**) de la pose finale de l'opérateur (3D, repère profil). Seuls entrent les cuts **calculés** (le moteur a tourné : un nuage) avec une référence pour les deux rails : **2 411 cuts, 56 936 hypothèses** (53 354 au lot). Les 1 342 cuts sans nuage n'entrent pas : aucune GCV2 ne peut agir dessus.
 
 L'outil **refuse** de lire un jeu de jugement, un témoin fixe (1:11, 1:25) ou une partie qui n'est pas d'apprentissage au manifeste (la partie réservée 2:6 en est une) : l'essai le vérifie.
 
@@ -63,7 +63,7 @@ L'ajout « accord » n'est pas dans la liste de la consigne ; il ne lit que les 
 ### 2.5 Deux usages
 
 - **Relecture** : tout le jeu, H4 avec voisins humains.
-- **Lot** : au lot, aucune pose de Mic n'existe. L'outil retire les hypothèses H4 dont la seule source est humaine (3 582 : 56 936 hypothèses deviennent 53 354), retire H4 des hypothèses où il s'était confondu avec une autre origine, annule `ecartVoisinsMm` et les comptes de voisins des cuts dont les voisins étaient humains, et **recalcule** l'écart de la paire à la médiane sans les hypothèses retirées (formule du § 2.6). **Limite** : le jeu ne porte pas les poses des voisins ; pour un cut à voisins **mixtes** (humains et lot), l'interpolation « voisins du lot seuls » ne peut pas être recalculée, elle est perdue. Seule une interpolation pure du lot est gardée. Pour la corriger il faudrait ajouter au jeu, par cut, une seconde interpolation `H4-lot` calculée sans les poses humaines (champ `sous: voisins-lot` même quand des humains existent). Dans G1-a, les voisins du lot seuls n'atteignaient que 3,9 % des grosses corrections : la perte est petite.
+- **Lot** : au lot, aucune pose de l'opérateur n'existe. L'outil retire les hypothèses H4 dont la seule source est humaine (3 582 : 56 936 hypothèses deviennent 53 354), retire H4 des hypothèses où il s'était confondu avec une autre origine, annule `ecartVoisinsMm` et les comptes de voisins des cuts dont les voisins étaient humains, et **recalcule** l'écart de la paire à la médiane sans les hypothèses retirées (formule du § 2.6). **Limite** : le jeu ne porte pas les poses des voisins ; pour un cut à voisins **mixtes** (humains et lot), l'interpolation « voisins du lot seuls » ne peut pas être recalculée, elle est perdue. Seule une interpolation pure du lot est gardée. Pour la corriger il faudrait ajouter au jeu, par cut, une seconde interpolation `H4-lot` calculée sans les poses humaines (champ `sous: voisins-lot` même quand des humains existent). Dans G1-a, les voisins du lot seuls n'atteignaient que 3,9 % des grosses corrections : la perte est petite.
 
 ### 2.6 Écartement de la paire à partir du jeu
 
@@ -77,7 +77,7 @@ Le jeu ne porte pas les positions. L'écartement de la paire (gauche i, droite j
 
 ### 2.8 Mesures
 
-Définitions (identiques pour toutes les méthodes) : **correction juste** = Mic a corrigé de plus de 10 mm et la pose est à 10 mm ou moins de la sienne (« dont à 5 mm » : à 5 mm ou moins) ; **abîmé** = on agit sur un cut que Mic laisse à 5 mm ou moins et la pose est à plus de 10 mm ; **mauvaise voie** = on agit et la pose est à plus de 50 mm de celle de Mic (mauvais rail), ou un rail est déplacé de plus de 45 mm en latéral ; **erreur** = on agit et la pose reste à plus de 10 mm de Mic ; **abstention** = pose candidate trop incertaine (pour la règle prudente : le moteur diffère) ; **grosse laissée fausse** = Mic a corrigé de plus de 10 mm et on n'agit pas. Borne de Wilson à 95 % sur l'erreur. Calibrage : Brier et courbe de fiabilité en 10 classes, sur les scores hors-échantillon.
+Définitions (identiques pour toutes les méthodes) : **correction juste** = l'opérateur a corrigé de plus de 10 mm et la pose est à 10 mm ou moins de la sienne (« dont à 5 mm » : à 5 mm ou moins) ; **abîmé** = on agit sur un cut que l'opérateur laisse à 5 mm ou moins et la pose est à plus de 10 mm ; **mauvaise voie** = on agit et la pose est à plus de 50 mm de celle de l'opérateur (mauvais rail), ou un rail est déplacé de plus de 45 mm en latéral ; **erreur** = on agit et la pose reste à plus de 10 mm de l'opérateur ; **abstention** = pose candidate trop incertaine (pour la règle prudente : le moteur diffère) ; **grosse laissée fausse** = l'opérateur a corrigé de plus de 10 mm et on n'agit pas. Borne de Wilson à 95 % sur l'erreur. Calibrage : Brier et courbe de fiabilité en 10 classes, sur les scores hors-échantillon.
 
 ## 3. Validation croisée par partie : usage « relecture »
 
@@ -87,7 +87,7 @@ Onze plis : apprendre sur dix parties (y compris calibrage et τ, δ), juger la 
 
 #### Total, par méthode (mêmes cuts)
 
-méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
+méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
 ---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|---
 GCV2 | 2411 | 406 | 392 | 144 | 100 | 6 | 5 | 26 (6,6 %) | 38 | 246 | ≤ 9,5 %
 règle prudente | 2411 | 406 | 136 | 107 | 84 | 4 | 0 | 10 (7,4 %) | 755 | 293 | ≤ 13 %
@@ -96,7 +96,7 @@ H0 (ne rien faire) | 2411 | 406 | 0 | 0 | 0 | 0 | 0 | 0 (—) | 0 | 406 | —
 
 #### Dans le périmètre de la règle prudente (verts de PN, ADV et abords)
 
-méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
+méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
 ---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|---
 GCV2 | 1423 | 186 | 244 | 105 | 77 | 3 | 0 | 13 (5,3 %) | 16 | 73 | ≤ 8,9 %
 règle prudente | 1423 | 186 | 136 | 107 | 84 | 4 | 0 | 10 (7,4 %) | 324 | 73 | ≤ 13 %
@@ -105,7 +105,7 @@ H0 (ne rien faire) | 1423 | 186 | 0 | 0 | 0 | 0 | 0 | 0 (—) | 0 | 186 | —
 
 #### Par partie jugée (GCV2 | règle prudente)
 
-partie | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | règle prudente : agit | justes | abîmés | mauvaise voie
+partie | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | règle prudente : agit | justes | abîmés | mauvaise voie
 ---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
 1:12 | 79 | 24 | 37 | 23 | 18 | 0 | 0 | 0 (0 %) | 1 | 1 | 19 | 19 | 0 | 0
 1:13 | 143 | 21 | 35 | 18 | 16 | 0 | 0 | 2 (5,7 %) | 1 | 1 | 15 | 10 | 1 | 0
@@ -121,7 +121,7 @@ partie | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | ab�
 
 #### Par zone (GCV2 | règle prudente | hasard)
 
-zone | méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
+zone | méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
 ---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
 pn | GCV2 | 458 | 86 | 168 | 69 | 54 | 2 | 0 | 3 (1,8 %) | 4 | 16
 pn | règle prudente | 458 | 86 | 60 | 56 | 50 | 2 | 0 | 2 (3,3 %) | 77 | 30
@@ -141,7 +141,7 @@ hors | hasard | 423 | 34 | 100 | 3,7 | 1,2 | 34,8 | 0 | 51,4 (51,4 %) | 0 | 23
 
 #### Par rôle du cut
 
-rôle | méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
+rôle | méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
 ---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
 vert | GCV2 | 1863 | 227 | 344 | 128 | 90 | 6 | 0 | 17 (4,9 %) | 20 | 91
 vert | règle prudente | 1863 | 227 | 136 | 107 | 84 | 4 | 0 | 10 (7,4 %) | 475 | 114
@@ -224,7 +224,7 @@ fortsReservoir | -0.402 | 100 %
 
 #### Total, par méthode (mêmes cuts)
 
-méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
+méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
 ---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|---
 GCV2 | 2411 | 406 | 466 | 125 | 92 | 9 | 5 | 30 (6,4 %) | 38 | 261 | ≤ 9 %
 règle prudente | 2411 | 406 | 136 | 107 | 84 | 4 | 0 | 10 (7,4 %) | 755 | 293 | ≤ 13 %
@@ -233,7 +233,7 @@ H0 (ne rien faire) | 2411 | 406 | 0 | 0 | 0 | 0 | 0 | 0 (—) | 0 | 406 | —
 
 #### Dans le périmètre de la règle prudente (verts de PN, ADV et abords)
 
-méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
+méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | Wilson haut
 ---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|---
 GCV2 | 1423 | 186 | 236 | 94 | 74 | 3 | 1 | 13 (5,5 %) | 17 | 83 | ≤ 9,2 %
 règle prudente | 1423 | 186 | 136 | 107 | 84 | 4 | 0 | 10 (7,4 %) | 324 | 73 | ≤ 13 %
@@ -242,7 +242,7 @@ H0 (ne rien faire) | 1423 | 186 | 0 | 0 | 0 | 0 | 0 | 0 (—) | 0 | 186 | —
 
 #### Par partie jugée (GCV2 | règle prudente)
 
-partie | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | règle prudente : agit | justes | abîmés | mauvaise voie
+partie | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses | règle prudente : agit | justes | abîmés | mauvaise voie
 ---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:
 1:12 | 79 | 24 | 43 | 23 | 19 | 0 | 0 | 0 (0 %) | 0 | 1 | 19 | 19 | 0 | 0
 1:13 | 143 | 21 | 34 | 14 | 13 | 0 | 0 | 2 (5,9 %) | 3 | 5 | 15 | 10 | 1 | 0
@@ -258,7 +258,7 @@ partie | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | ab�
 
 #### Par zone (GCV2 | règle prudente | hasard)
 
-zone | méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
+zone | méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
 ---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
 pn | GCV2 | 458 | 86 | 162 | 66 | 54 | 1 | 0 | 3 (1,9 %) | 4 | 18
 pn | règle prudente | 458 | 86 | 60 | 56 | 50 | 2 | 0 | 2 (3,3 %) | 77 | 30
@@ -278,7 +278,7 @@ hors | hasard | 423 | 34 | 188,2 | 5,8 | 2 | 67,7 | 0 | 92,5 (49,1 %) | 0 | 17,9
 
 #### Par rôle du cut
 
-rôle | méthode | visités | Mic > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
+rôle | méthode | visités | L'opérateur > 10 mm | agit | corrections justes | dont à 5 mm | abîmés | mauvaise voie | erreurs (part des actions) | abstentions | grosses laissées fausses
 ---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
 vert | GCV2 | 1863 | 227 | 425 | 114 | 86 | 7 | 1 | 20 (4,7 %) | 21 | 101
 vert | règle prudente | 1863 | 227 | 136 | 107 | 84 | 4 | 0 | 10 (7,4 %) | 475 | 114
@@ -387,7 +387,7 @@ Verts : 128 justes, 17 erreurs sur 344 actions (4,9 %), **0 mauvaise voie**, 6 a
 
 ### 5.4 Ce que les garde-fous coûtent
 
-Sur les 406 grosses corrections, une paire permise est à 10 mm de Mic pour **232 (57,1 %)** en relecture, **219 (53,9 %)** au lot (G1-a, sans garde-fous : 83,7 %). Par zone : PN 77/86, hors 30/34, ADV 45/65, **abords 75/214 (35 %)**. Les garde-fous retirent les poses de Mic qui sont à plus de 45 mm en latéral. Ce n'est pas un défaut de l'apprentissage : c'est un plafond qui vient de la consigne.
+Sur les 406 grosses corrections, une paire permise est à 10 mm de l'opérateur pour **232 (57,1 %)** en relecture, **219 (53,9 %)** au lot (G1-a, sans garde-fous : 83,7 %). Par zone : PN 77/86, hors 30/34, ADV 45/65, **abords 75/214 (35 %)**. Les garde-fous retirent les poses de l'opérateur qui sont à plus de 45 mm en latéral. Ce n'est pas un défaut de l'apprentissage : c'est un plafond qui vient de la consigne.
 
 ### 5.5 Calibrage
 
@@ -435,10 +435,10 @@ Coefficients de la régression à 10 mm, moyenne sur les 11 plis (traits numéri
 2. **Les abords** (35 % de rappel sous garde-fous, 27,6 % d'erreurs) ne sont pas servis par un classeur par hypothèse ; la piste de G1-a (hypothèses de déplacement latéral large) reste ouverte, mais elle viendrait contre le garde-fou de 45 mm.
 3. **Cinq cuts de mauvaise voie, onze plis, un opérateur** : la borne de Wilson (≤ 9,5 % relecture, ≤ 9,04 % lot) est au-dessus de 9 % ; ni la règle prudente (≤ 13 %) ni la GCV2 ne *prouvent* la porte.
 4. **τ et δ par zone, sur peu de cuts.** Les seuils varient d'un pli à l'autre (abords : τ de 0,36 à 0,82 ; zone **inactive** dans le pli sans 1:29). La zone « liste » (17 cuts) n'est jamais active.
-5. **Petits déplacements.** La GCV2 agit sur 16 % des cuts (la règle prudente sur 5,6 %), avec δ de 3 mm en PN : chaque action est une écriture dans ESV. Les actions « dans le gris » (5 à 10 mm de Mic) ne sont pas comptées comme erreurs.
+5. **Petits déplacements.** La GCV2 agit sur 16 % des cuts (la règle prudente sur 5,6 %), avec δ de 3 mm en PN : chaque action est une écriture dans ESV. Les actions « dans le gris » (5 à 10 mm de l'opérateur) ne sont pas comptées comme erreurs.
 6. **λ choisi sur les 11 parties** (mesure au niveau des hypothèses, avant la paire) : optimisme léger, impossible à éviter sans un second niveau d'imbrication.
-7. **Les exemples n'existent que si le nuage existe.** Un cut visité trop vite pour avoir un nuage n'entre pas ; le nombre de visites, lui, n'est pas un trait. Mais la sélection par la présence de référence et de nuage peut écarter des cuts que Mic juge « évidents ». Le rappel brut (45,9 % en G1-a) reste la limite des données.
-8. **L'usage « lot » est approché** (§ 2.5) : le vrai lot n'a ni les mêmes voisins ni les mêmes rôles que l'Écho de Mic.
+7. **Les exemples n'existent que si le nuage existe.** Un cut visité trop vite pour avoir un nuage n'entre pas ; le nombre de visites, lui, n'est pas un trait. Mais la sélection par la présence de référence et de nuage peut écarter des cuts que l'opérateur juge « évidents ». Le rappel brut (45,9 % en G1-a) reste la limite des données.
+8. **L'usage « lot » est approché** (§ 2.5) : le vrai lot n'a ni les mêmes voisins ni les mêmes rôles que l'Écho de l'opérateur.
 9. **La règle prudente relue sur le jeu** n'est pas la règle exacte de D-190 (38 actions contre 40, 27 justes contre 29) ; la différence est la chaîne sans appui, lue comme l'A* du moteur.
 10. **Ablation et variantes** (§ 7) : après coup, non réglées.
 11. **p1-17** n'était pas dans le compteur (`datasets/compteur-gcv2-sources.json`) : son Écho est en 7z. Elle y est maintenant, à l'état « appris » : l'Écho est extrait le temps du comptage (dossier temporaire, effacé ensuite) et lu par `node tools/compteur-gcv2.cjs … --racine-supplementaire <dossier>`. Elle compte 507 cuts corrigés, et le compteur passe de 1 631 à 2 138 cuts corrigés appris.
@@ -474,7 +474,7 @@ Chaque `valider` prend 12 minutes sur une machine peu chargée (121 modèles par
 
 ### 11.2 Résultats, relecture et lot
 
-Lecture des colonnes : « agit » = cuts où l'on écrit une pose ; « corrections justes » = Mic corrigeait de plus de 10 mm et la pose est à 10 mm ou moins de la sienne ; « abîmés » = on agit sur un cut que Mic laisse à 5 mm ou moins et la pose est à plus de 10 mm ; « mauvaise voie » = pose à plus de 50 mm de celle de Mic ou rail déplacé de plus de 45 mm en latéral.
+Lecture des colonnes : « agit » = cuts où l'on écrit une pose ; « corrections justes » = l'opérateur corrigeait de plus de 10 mm et la pose est à 10 mm ou moins de la sienne ; « abîmés » = on agit sur un cut que l'opérateur laisse à 5 mm ou moins et la pose est à plus de 10 mm ; « mauvaise voie » = pose à plus de 50 mm de celle de l'opérateur ou rail déplacé de plus de 45 mm en latéral.
 
 ##### Usage « relecture » — total (2411 cuts jugés, mêmes cuts pour toutes les lignes)
 
@@ -519,7 +519,7 @@ lot | V3, périmètre prudent | oui (0) | oui (3,2 %) | oui (≤ 6,5 %) | NON (9
 
 ##### Par zone — usage « relecture » (agit / justes / abîmés / mauvaise voie / erreurs)
 
-zone | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+zone | L'opérateur > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
 ---|--:|---|---|---|---|---
 pn | 86 | 60 / 56 / 2 / 0 / 2 | 163 / 68 / 2 / 0 / 3 | 163 / 68 / 2 / 0 / 3 | 163 / 68 / 2 / 0 / 3 | 168 / 69 / 2 / 0 / 3
 adv | 65 | 34 / 18 / 2 / 0 / 4 | 52 / 27 / 0 / 0 / 2 | 52 / 27 / 0 / 0 / 2 | 52 / 27 / 0 / 0 / 2 | 66 / 38 / 0 / 0 / 3
@@ -529,7 +529,7 @@ hors | 34 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 100 / 23 / 3 / 0 / 4 | 100 /
 
 ##### Par zone — usage « lot » (agit / justes / abîmés / mauvaise voie / erreurs)
 
-zone | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+zone | L'opérateur > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
 ---|--:|---|---|---|---|---
 pn | 86 | 60 / 56 / 2 / 0 / 2 | 159 / 65 / 1 / 0 / 3 | 159 / 65 / 1 / 0 / 3 | 159 / 65 / 1 / 0 / 3 | 162 / 66 / 1 / 0 / 3
 adv | 65 | 34 / 18 / 2 / 0 / 4 | 57 / 25 / 1 / 0 / 4 | 57 / 25 / 1 / 0 / 4 | 57 / 25 / 1 / 0 / 4 | 68 / 32 / 1 / 0 / 7
@@ -539,7 +539,7 @@ hors | 34 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 / 0 | 189 / 20 / 4 / 0 / 7 | 189 /
 
 ##### Par partie — usage « relecture » (agit / justes / abîmés / mauvaise voie)
 
-partie | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+partie | L'opérateur > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
 ---|--:|---|---|---|---|---
 1:12 | 24 | 19 / 19 / 0 / 0 | 36 / 22 / 0 / 0 | 37 / 23 / 0 / 0 | 37 / 23 / 0 / 0 | 37 / 23 / 0 / 0
 1:13 | 21 | 15 / 10 / 1 / 0 | 35 / 18 / 0 / 0 | 35 / 18 / 0 / 0 | 35 / 18 / 0 / 0 | 35 / 18 / 0 / 0
@@ -555,7 +555,7 @@ partie | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
 
 ##### Par partie — usage « lot » (agit / justes / abîmés / mauvaise voie)
 
-partie | Mic > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
+partie | L'opérateur > 10 mm | règle prudente | V1 | V2 | V3 | GCV2 seule
 ---|--:|---|---|---|---|---
 1:12 | 24 | 19 / 19 / 0 / 0 | 37 / 22 / 0 / 0 | 43 / 23 / 0 / 0 | 43 / 23 / 0 / 0 | 43 / 23 / 0 / 0
 1:13 | 21 | 15 / 10 / 1 / 0 | 33 / 14 / 0 / 0 | 34 / 14 / 0 / 0 | 34 / 14 / 0 / 0 | 34 / 14 / 0 / 0
@@ -596,7 +596,7 @@ Pour V2, la lecture « périmètre prudent » est tenue (elle est égale à V1, 
 2. **Les abords restent le point faible.** Ils portent 214 des 406 grosses corrections, et la règle prudente n'en corrige justes que 33 (15 %). V1 et V2 ne changent pas ce point ; V3 l'aggrave.
 3. **Une zone de plus à surveiller : le hors zone.** Il apporte des corrections justes (23) mais aussi les abîmés qui font échouer V2 et V3. Les seuils de la zone sont bas (τ de 0,3 à 0,6, § 3).
 4. **Les abîmés de V2 et de V3 viennent surtout de deux parties** : 1:16 (3 en relecture, 4 au lot) et 1:29 (2 en relecture, 1 au lot). Ils sont peu nombreux, donc fragiles à lire.
-5. **Rien n'est activé.** La décision d'activer une variante reste à Mic, après G1-c.
+5. **Rien n'est activé.** La décision d'activer une variante reste à l'opérateur, après G1-c.
 
 ### 11.6 Reproduire
 

@@ -1,6 +1,6 @@
 # Panneau Orbite : remise en ordre pour la test 7
 
-Demande de Mic : depuis les tests 4 à 6, le panneau est désorganisé (choix du clic, case grappe, carte « À contrôler »,
+Demande de l'opérateur : depuis les tests 4 à 6, le panneau est désorganisé (choix du clic, case grappe, carte « À contrôler »,
 lignes techniques…). Ce chantier **déplace, regroupe et replie**. Il ne retire aucune information et ne change rien à ce qui
 est envoyé à ESV. Fichiers : `panel.html`, `panel.css`, `panel.js`, plus une phrase d'avis dans `background.js` (point 3).
 
@@ -71,7 +71,7 @@ principale en fin de lot (audit 4.8.0, U03).
 Largeur : vérifié à 400 px et à 340 px de large (panneau étroit). Sous 340 px, les lignes « Dernier lot / Prochain lot »
 passent sur une colonne.
 
-## 3. Les trois corrections demandées par Mic
+## 3. Les trois corrections demandées par l'opérateur
 
 ### Libellé de la case grappe
 
@@ -126,7 +126,7 @@ répond « Lot déjà terminé : partie sans cut rouge » sans rien rejouer. La 
 complète. Le compteur disait 9 909 sur 9 911 : il restait les 2 cuts différés du premier lot. Le premier lot s'était clos
 sur le dernier cut à valider (5948, validé sur place). Le second lot est parti de 5948, `valid` dans la liste (relevé B1),
 l'a reposé et revalidé, puis ESV est allée au cut 9910 et la page n'a plus répondu. La règle ci-dessus ne couvre pas ce
-cas. Une règle plus large (« premier cut vert : ne rien envoyer ») bloquerait les lots habituels de Mic : les deux lots de
+cas. Une règle plus large (« premier cut vert : ne rien envoyer ») bloquerait les lots habituels de l'opérateur : les deux lots de
 la partie 9 partent du cut 0 ou 1, eux aussi `valid` dans la liste, puis ESV passe au premier rouge. Décision à prendre :
 par exemple, retenir aussi le cas où les cuts restants (M − N) sont tous des différés connus des lots précédents de la
 partie.

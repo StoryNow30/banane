@@ -1,6 +1,6 @@
 # Compteur des cuts appris par la GCV2 (depuis le début de la 5.0)
 
-Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (Mic). Les SKIP ne sont pas comptés. Aucune limite : on ne s'arrête pas à 1 000 ou 1 500 cuts (Mic).
+Généré par `node tools/compteur-gcv2.cjs` (D-188). **Un cut corrigé = un cut appris** (l'opérateur). Les SKIP ne sont pas comptés. Aucune limite : on ne s'arrête pas à 1 000 ou 1 500 cuts (l'opérateur).
 
 **Cuts corrigés : 2 684** (dont 1 705 de plus de 5 mm, 835 de plus de 10 mm). Avec les cuts validés tels quels (694) et les cuts visités sans action d'au moins 0,6 s (1 880) : **5 258 cuts apprenables**.
 

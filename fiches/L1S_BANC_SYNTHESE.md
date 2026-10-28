@@ -16,7 +16,7 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux base et L1-s ; jugés d
 | projet 2 | base rejouée | 14 | 1369 | 1060 | 0 | 309 | 22,6 % | 18,8 % | 22,1 | 0,3 % |
 | projet 2 | L1-s | 14 | 1369 | 1176 | 84 | 193 | 14,1 % | 9,4 % | 13,8 | 37,7 % |
 
-### Contre Mic, Écho de la même séance (règle de la fiche ; différés réels jugés : 282)
+### Contre l'opérateur, Écho de la même séance (règle de la fiche ; différés réels jugés : 282)
 
 | Groupe | Profil | Jugés | Posés (dont validés) | Départ médian (mm) | Erreur médiane (mm) | Gain médian (mm) | Gain Q1–Q3 (mm) | ≤ 10 mm | ≤ 20 mm | Écart final > 50 mm (posé ou laissé) | Pire que le départ | Rappel (> 10 mm au départ) |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -33,7 +33,7 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux base et L1-s ; jugés d
 | hors 2:1 | L1-s | 155 | 148 (128) | 51,4 | 6,9 | 41 | 25,4 – 69,5 | 106 (68,4 %) | 131 (84,5 %) | 7 | 6 | 97/145 (66,9 %) |
 | hors échantillon (2:6, 2:7) | L1-s | 32 | 32 (29) | 52 | 4,1 | 44,3 | 34,7 – 69,4 | 26 (81,3 %) | 28 (87,5 %) | 0 | 0 | 26/32 (81,3 %) |
 
-### Contre Mic, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : 282)
+### Contre l'opérateur, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : 282)
 
 | Groupe | Profil | Jugés | Posés (dont validés) | Départ médian (mm) | Erreur médiane (mm) | Gain médian (mm) | Gain Q1–Q3 (mm) | ≤ 10 mm | ≤ 20 mm | Écart final > 50 mm (posé ou laissé) | Pire que le départ | Rappel (> 10 mm au départ) |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -50,9 +50,9 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux base et L1-s ; jugés d
 | hors 2:1 | L1-s | 155 | 148 (128) | 51,4 | 6,9 | 41 | 25,4 – 69,5 | 106 (68,4 %) | 131 (84,5 %) | 7 | 6 | 97/145 (66,9 %) |
 | hors échantillon (2:6, 2:7) | L1-s | 32 | 32 (29) | 52 | 4,1 | 44,3 | 34,7 – 69,4 | 26 (81,3 %) | 28 (87,5 %) | 0 | 0 | 26/32 (81,3 %) |
 
-### Poses L1-s à plus de 50 mm de Mic (43)
+### Poses L1-s à plus de 50 mm de l'opérateur (43)
 
-| Partie | Lot | Cut | État | Même séance | Départ (mm) | Pose L1 → Mic (mm) | Hypothèse |
+| Partie | Lot | Cut | État | Même séance | Départ (mm) | Pose L1 → l'opérateur (mm) | Hypothèse |
 |---|--:|--:|--:|--:|--:|--:|--:|
 | 1:17 | 0067c40a | 2874 | pose-non-validee | oui | 122,6 | 56,5 | H0+H3+H4 |
 | 1:29 | 44eec69a | 8556 | pose | oui | 0 | 58,3 | H3+H4 |

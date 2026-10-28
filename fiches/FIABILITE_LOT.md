@@ -2,7 +2,7 @@
 
 17 octobre 2026. Branche `claude/50-fiabilite-lot`, partie de `claude/50-base` (`97dfca7`).
 
-L'audit P-5 des lots de terrain de la test 6 a relevé trois défauts de fiabilité. Ils faussaient l'analyse des lots et les avis montrés à Mic (synthèse P-5, § 2 C3 à C5 et § 3.3 H14 à H16).
+L'audit P-5 des lots de terrain de la test 6 a relevé trois défauts de fiabilité. Ils faussaient l'analyse des lots et les avis montrés à l'opérateur (synthèse P-5, § 2 C3 à C5 et § 3.3 H14 à H16).
 
 Pour chaque défaut, dans l'ordre : un essai rouge sur la base, le correctif minimal, puis la preuve.
 

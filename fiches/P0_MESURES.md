@@ -1,12 +1,12 @@
 # P0 — mesures hors ligne (plan 5.0, lot P)
 
-Trois mesures chiffrées, faites sans toucher au moteur (rien sous `src/`, `src/engine.js` intact) : (b) convention refusée et garde de paire, (a) graine contre intersection, (c) pente brute du flanc. Chacune a son outil sous `tools/` et son essai sous `tests/`. Chaque mesure se termine par une **recommandation** ; la décision reste à Mic. Elle touche D-044 (question 2 du cahier ; D-122 : « oui, si les mesures le justifient »).
+Trois mesures chiffrées, faites sans toucher au moteur (rien sous `src/`, `src/engine.js` intact) : (b) convention refusée et garde de paire, (a) graine contre intersection, (c) pente brute du flanc. Chacune a son outil sous `tools/` et son essai sous `tests/`. Chaque mesure se termine par une **recommandation** ; la décision reste à l'opérateur. Elle touche D-044 (question 2 du cahier ; D-122 : « oui, si les mesures le justifient »).
 
 | Mesure | Recommandation | Variante | Pourquoi, en un chiffre |
 |---|---|---|---|
-| **(b) Convention refusée** | **Changer** (P1, première moitié) | **Décalage plafonné à 8 mm** ; ne pas porter le domaine à 12 mm | Rails posés bruts : 36 % corrigés de plus de 10 mm par Mic (35 sur 98), 10 % avec le plafond (10 sur 98). Cuts posés corrigés de plus de 10 mm : 47 → 25 sur 188 |
+| **(b) Convention refusée** | **Changer** (P1, première moitié) | **Décalage plafonné à 8 mm** ; ne pas porter le domaine à 12 mm | Rails posés bruts : 36 % corrigés de plus de 10 mm par l'opérateur (35 sur 98), 10 % avec le plafond (10 sur 98). Cuts posés corrigés de plus de 10 mm : 47 → 25 sur 188 |
 | **(b) Garde de paire (D-044)** | **Ne pas changer** | — | Sans la garde, 4 à 5 cuts sur 12 seraient posés avec plus de 10 mm d'erreur ; aucune variante ne récupère des cuts sans mauvaise pose. La porte de P1 (≥ 50 sur 89, 0 mauvaise pose) est hors d'atteinte |
-| **(a) Graine / intersection / moyenne** | **Ne pas changer** | La graine reste l'estimateur publié | L'intersection est plus éloignée de Mic de 1,9 mm en médiane (partie 17) et la moyenne de 0,6 mm ; à égalité sur la partie 20. Aucune classe de rail où un autre estimateur gagne. P5 : pas de trait M6 (AUC 0,55) ; corriger quand même AUDIT_SUPER_CERVEAU § 1 (S8) |
+| **(a) Graine / intersection / moyenne** | **Ne pas changer** | La graine reste l'estimateur publié | L'intersection est plus éloignée de l'opérateur de 1,9 mm en médiane (partie 17) et la moyenne de 0,6 mm ; à égalité sur la partie 20. Aucune classe de rail où un autre estimateur gagne. P5 : pas de trait M6 (AUC 0,55) ; corriger quand même AUDIT_SUPER_CERVEAU § 1 (S8) |
 | **(c) Pente du flanc** | **Ne pas changer** (P2 : ne pas relâcher la borne, ne pas passer à la bande 14–30 mm) | — | Rails appliqués à pente 0,3–0,5 : 19 % corrigés de plus de 10 mm contre 10 % sous 0,3 ; graine des rails au-delà de 0,5 : 33 % à plus de 10 mm |
 
 **Conséquence sur le plan** : P1 se réduit au seul plafond du décalage de convention (1 jour, rejeu des quatre lots) ; la garde de paire reste telle quelle. P2 n'a pas de raison d'être lancé sur ces mesures. P5 : le rapport se résume à « la graine » ; il reste à corriger la fiche d'audit.
@@ -17,7 +17,7 @@ Trois mesures chiffrées, faites sans toucher au moteur (rien sous `src/`, `src/
 
 Tout vient d'un même projet ESV (D-123 : rien de ceci ne vaut pour un second projet tant qu'il n'est pas rejoué).
 
-**Pose finale de Mic (la vérité terrain)**
+**Pose finale de l'opérateur (la vérité terrain)**
 
 - **Partie 17**, Écho du 14 octobre : 14 fichiers `ariane-native-v4-2026-10-14T08-31-15-auto-seg01.json` … `ariane-native-v4-2026-10-14T09-16-44-seg01.json` (1,3 Go). Jointure déjà faite avec le journal : `p17.json` (table de l'outil de jointure, 266 cuts joints sur 268). `jointure17.json` est la même table sans les poses et `coh17.json` le score de la fiche M6 : ni l'un ni l'autre n'a servi.
 - **Partie 20**, session native du 23 septembre (4.7.6), 35 fichiers `banane-native-v4-2026-09-23T07-05-03-auto-seg01.json` … `banane-native-v4-2026-09-23T07-23-34-seg03.json`. C'est la seule « Écho 20 » trouvée. Elle précède le calage de convention, et la partie 20 a servi à ajuster ses deux constantes (audit du 22/09, autre session) : on s'en sert comme second jeu, pas comme jeu strictement indépendant pour la convention.
@@ -41,13 +41,13 @@ Les « quatre lots 4.9 » du cahier se retrouvent : parties 24, 26 (lot b), 25�
 
 ## 2. Méthode
 
-**Une ligne par rail** (`tools/p0-commun.cjs`) : ce que le moteur d'ombre a publié, la convention (appliquée ou refusée, avec ses décalages `duMm` et `dzMm` que le journal consigne même refusés), l'étage et le motif de la décision du lot, les mesures de `Candidate.propose` (graine, intersection, pentes brutes), et la pose finale de Mic. Trois sources de lignes, de même forme :
+**Une ligne par rail** (`tools/p0-commun.cjs`) : ce que le moteur d'ombre a publié, la convention (appliquée ou refusée, avec ses décalages `duMm` et `dzMm` que le journal consigne même refusés), l'étage et le motif de la décision du lot, les mesures de `Candidate.propose` (graine, intersection, pentes brutes), et la pose finale de l'opérateur. Trois sources de lignes, de même forme :
 
-1. **Journal d'Orbite + table de jointure** (partie 17) : ce qu'Ariane a réellement fait. La pose de Mic, dans le repère profil de la pose de départ d'ESV, est le déplacement d'Ariane plus l'écart humain (cut posé), ou l'écart mesuré à la première visite (cut différé). 456 rails sur 536 ont une référence.
+1. **Journal d'Orbite + table de jointure** (partie 17) : ce qu'Ariane a réellement fait. La pose de l'opérateur, dans le repère profil de la pose de départ d'ESV, est le déplacement d'Ariane plus l'écart humain (cut posé), ou l'écart mesuré à la première visite (cut différé). 456 rails sur 536 ont une référence.
 2. **Rejeu de `Candidate.propose` sur les nuages du corpus GCV1** (même configuration que l'ombre : graine médiane, fenêtre recentrée, flanc partiel gardé). Contrôle : la graine rejouée retombe exactement sur le delta de l'étage A\* du journal sur 489 rails sur 489 ; l'écart de pose entre le delta publié du journal et la pose d'Ariane est de 0,3 mm en médiane (0,7 au plus) sur les cuts du premier passage.
-3. **Rejeu d'un Écho** (parties 17 hors journal, 20) : l'Écho fournit le nuage et la pose de Mic ; seules 136 visites sur 814 (partie 17) ont un nuage complet (export compact), d'où 143 rails de référence hors journal. Les cuts « posés » de ces jeux sont **hypothétiques** (ceux que la garde actuelle ne signale pas).
+3. **Rejeu d'un Écho** (parties 17 hors journal, 20) : l'Écho fournit le nuage et la pose de l'opérateur ; seules 136 visites sur 814 (partie 17) ont un nuage complet (export compact), d'où 143 rails de référence hors journal. Les cuts « posés » de ces jeux sont **hypothétiques** (ceux que la garde actuelle ne signale pas).
 
-**Erreur** = pose publiée (ou variante) moins pose de Mic, en millimètres, dans le repère profil du rail : verticale, latérale, 3D. « Mauvaise pose » = plus de 10 mm en 3D (le `WRONG_MM` de `convention-fit.cjs`). Pour un cut, l'erreur du pire rail. Les intervalles sont à 95 % par rééchantillonnage (graine fixe) ; le test des signes est exact, bilatéral.
+**Erreur** = pose publiée (ou variante) moins pose de l'opérateur, en millimètres, dans le repère profil du rail : verticale, latérale, 3D. « Mauvaise pose » = plus de 10 mm en 3D (le `WRONG_MM` de `convention-fit.cjs`). Pour un cut, l'erreur du pire rail. Les intervalles sont à 95 % par rééchantillonnage (graine fixe) ; le test des signes est exact, bilatéral.
 
 **Variantes de la mesure (b)**, simulées à partir de la pose brute et des décalages consignés :
 
@@ -71,11 +71,11 @@ Outil : `tools/p0b-convention.cjs` ; essai : `tests/p0-mesures.test.cjs`.
 
 Dans les huit journaux, 1 222 rails sur 6 689 rails candidats (18 %) portent `shift-out-of-domain` ; leur dz médian est de 9,4 mm (P10 8,3, P90 11,1, maximum 12,7). Presque tous sont verticaux (de 0 à 6 refus pour le latéral par lot).
 
-**Le « 9 mm » est le décalage que la convention prédit, pas l'erreur réelle.** Sur les 98 rails refusés de la partie 17 que Mic a validés (posés bruts au premier passage), le rail brut est trop bas de **6,5 mm** en médiane (vertical signé −6,49), pas de 9 ; la valeur absolue médiane est de 7,1 mm.
+**Le « 9 mm » est le décalage que la convention prédit, pas l'erreur réelle.** Sur les 98 rails refusés de la partie 17 que l'opérateur a validés (posés bruts au premier passage), le rail brut est trop bas de **6,5 mm** en médiane (vertical signé −6,49), pas de 9 ; la valeur absolue médiane est de 7,1 mm.
 
-Le déplacement vertical réel de Mic, rapporté au dz prédit (partie 17, 376 rails posés avec décalage) :
+Le déplacement vertical réel de l'opérateur, rapporté au dz prédit (partie 17, 376 rails posés avec décalage) :
 
-| dz prédit | rails | dz médian | Mic déplace de | rapport |
+| dz prédit | rails | dz médian | L'opérateur déplace de | rapport |
 |---|---:|---:|---:|---:|
 | < 2 mm | 69 | 0,8 | 1,0 | 1,2 |
 | 2–4 | 73 | 3,1 | 3,5 | 1,1 |
@@ -86,7 +86,7 @@ Le déplacement vertical réel de Mic, rapporté au dz prédit (partie 17, 376 r
 
 La convention est juste jusqu'à 6 mm environ ; au-delà, dz exagère d'un tiers (pente de la régression 0,46 sur la partie 17, 0,58 sur l'ensemble des jeux). Un décalage de 9 à 11 mm appliqué en entier dépasserait donc la cible de 2 à 3 mm.
 
-### 3.2 Rails refusés contre rails calés (partie 17, rails posés au premier passage, pose de Mic connue)
+### 3.2 Rails refusés contre rails calés (partie 17, rails posés au premier passage, pose de l'opérateur connue)
 
 | Groupe | rails | vertical signé (méd.) | \|vertical\| méd. | 3D méd. | 3D P90 | > 5 mm | > 10 mm |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -95,13 +95,13 @@ La convention est juste jusqu'à 6 mm environ ; au-delà, dz exagère d'un tiers
 | refusés, décalage plafonné à 8 mm | 98 | +1,5 | 4,5 | 4,9 | 9,9 | 48 | 10 (10 %) |
 | refusés, domaine 12 mm / calage plein | 98 | +3,2 | 4,5 | 5,3 | 11,1 | 50 | 15 (15 %) |
 
-L'intervalle à 95 % de l'erreur verticale absolue médiane est de 5,9 à 8,1 mm pour les refusés et de 1,1 à 3,7 mm pour les calés. Sur les mêmes rails, le plafond rapproche de Mic 62 rails et en éloigne 34 (Δ médian de l'erreur 3D −4,7 mm, intervalle −6,4 à −1,8, test des signes p = 0,006).
+L'intervalle à 95 % de l'erreur verticale absolue médiane est de 5,9 à 8,1 mm pour les refusés et de 1,1 à 3,7 mm pour les calés. Sur les mêmes rails, le plafond rapproche de l'opérateur 62 rails et en éloigne 34 (Δ médian de l'erreur 3D −4,7 mm, intervalle −6,4 à −1,8, test des signes p = 0,006).
 
 Balayage du plafond (rails refusés, partie 17) : sans calage, 35 rails à plus de 10 mm ; plafond 4 mm : 15 ; **6 mm : 9** ; **8 mm : 10** ; 10 mm : 15 ; sans plafond : 15. Le plateau va de 6 à 8 mm : on garde 8 mm, la borne actuelle du domaine.
 
 Même sens ailleurs (petits effectifs) : 7 rails refusés hors journal (Écho 17) : −5,9 mm brut, 1 rail à plus de 10 mm avec le plafond contre 3 sans ; 3 rails refusés à la partie 20 : −8,0 mm brut, 0 mm de biais avec le plafond.
 
-### 3.3 Les variantes de poses (partie 17, 188 cuts posés au premier passage avec Mic aux deux rails)
+### 3.3 Les variantes de poses (partie 17, 188 cuts posés au premier passage avec l'opérateur aux deux rails)
 
 | Variante | cuts > 5 mm | cuts > 10 mm | face à S0 : > 5 mm gagnés / perdus | > 10 mm gagnés / perdus |
 |---|---:|---:|---:|---:|
@@ -113,9 +113,9 @@ Sur les trois jeux réunis (354 cuts) : S0 172 et 61 ; S1 152 et 37 (gagnés 32 
 
 Ampleur : environ 390 rails des quatre lots (14 % des rails posés au premier passage) seraient relevés, de 8 mm au plus (aujourd'hui : posés bruts, sans aucun décalage).
 
-### 3.4 La garde de paire : amplitude de la correction de Mic
+### 3.4 La garde de paire : amplitude de la correction de l'opérateur
 
-Douze cuts 'pair-guard' de la partie 17 ont tous la pose de Mic ; ajoutés les 3 hors journal et le 1 de la partie 20 : 15 cuts sur les 89 du cahier au total ont une référence. Ce qu'Ariane aurait posé sans la garde, mesuré à Mic (cuts, pire rail, partie 17) :
+Douze cuts 'pair-guard' de la partie 17 ont tous la pose de l'opérateur ; ajoutés les 3 hors journal et le 1 de la partie 20 : 15 cuts sur les 89 du cahier au total ont une référence. Ce qu'Ariane aurait posé sans la garde, mesuré à l'opérateur (cuts, pire rail, partie 17) :
 
 | Pose sans la garde | médiane | P90 | maximum | cuts > 5 mm | **cuts > 10 mm** |
 |---|---:|---:|---:|---:|---:|
@@ -125,11 +125,11 @@ Douze cuts 'pair-guard' de la partie 17 ont tous la pose de Mic ; ajoutés les 3
 
 Trois jeux réunis (15 cuts) : 6 / 15 à plus de 10 mm en brut, 7 / 15 avec la pose actuelle, 5 / 15 plafonné ; maximum 50 mm.
 
-**Lecture** : la correction de Mic dépasse 10 mm pour un tiers à deux cinquièmes de ces cuts, et 5 mm pour presque tous. À titre de comparaison, la part de cuts posés à plus de 10 mm est de 25 % aujourd'hui et de 13 % avec le plafond. La garde attrape donc une population nettement plus mauvaise que la moyenne, sans être infaillible : sur les 12, 7 à 8 cuts auraient été posés avec moins de 10 mm. L'ordre de grandeur de ce que S1 déplace sur le rail repêché est faible (médiane 2,1 mm).
+**Lecture** : la correction de l'opérateur dépasse 10 mm pour un tiers à deux cinquièmes de ces cuts, et 5 mm pour presque tous. À titre de comparaison, la part de cuts posés à plus de 10 mm est de 25 % aujourd'hui et de 13 % avec le plafond. La garde attrape donc une population nettement plus mauvaise que la moyenne, sans être infaillible : sur les 12, 7 à 8 cuts auraient été posés avec moins de 10 mm. L'ordre de grandeur de ce que S1 déplace sur le rail repêché est faible (médiane 2,1 mm).
 
 ### 3.5 Cuts 'pair-guard' récupérés par variante
 
-Partie 17, 12 cuts, tous avec la pose de Mic (écartement dans le contrat dans tous les cas) :
+Partie 17, 12 cuts, tous avec la pose de l'opérateur (écartement dans le contrat dans tous les cas) :
 
 | Variante | cuts récupérés | dont mauvaise pose (> 10 mm) | > 5 mm |
 |---|---:|---:|---:|
@@ -140,20 +140,20 @@ Partie 17, 12 cuts, tous avec la pose de Mic (écartement dans le contrat dans t
 | S5 plafond + marge continue (dz > 10) | 8 | **4** | 7 |
 | S6 plafond, sans garde | 12 | **4** | 10 |
 
-Comptage mécanique sur les quatre lots du cahier (84 cuts signalés par la formule, sans pose de Mic) : S2 et S4 récupèrent 83 (82 dans le contrat d'écartement), S3 28, S5 66, S6 84. Les variantes S2, S4, S5 et S6 passent donc le chiffre de la porte (≥ 50 sur 89), mais **aucune ne passe la seconde moitié (0 mauvaise pose)** : là où on peut vérifier, un cut récupéré sur trois (S6) à trois sur cinq (S3) est faux de plus de 10 mm. Aucun signal simple ne trie les bons des mauvais : l'écart de la pose du moteur à la prédiction des voisins, que la décision du lot consigne, ne distingue pas les cuts posés faux (AUC 0,53 sur 126 cuts posés qui en portent un, 34 corrigés de plus de 10 mm) ; deux des quatre cuts 'pair-guard' faux avaient un écart aux voisins de 3 à 6 mm.
+Comptage mécanique sur les quatre lots du cahier (84 cuts signalés par la formule, sans pose de l'opérateur) : S2 et S4 récupèrent 83 (82 dans le contrat d'écartement), S3 28, S5 66, S6 84. Les variantes S2, S4, S5 et S6 passent donc le chiffre de la porte (≥ 50 sur 89), mais **aucune ne passe la seconde moitié (0 mauvaise pose)** : là où on peut vérifier, un cut récupéré sur trois (S6) à trois sur cinq (S3) est faux de plus de 10 mm. Aucun signal simple ne trie les bons des mauvais : l'écart de la pose du moteur à la prédiction des voisins, que la décision du lot consigne, ne distingue pas les cuts posés faux (AUC 0,53 sur 126 cuts posés qui en portent un, 34 corrigés de plus de 10 mm) ; deux des quatre cuts 'pair-guard' faux avaient un écart aux voisins de 3 à 6 mm.
 
 ### 3.6 Recommandation (b)
 
 1. **Changer le décalage de convention : plafonner à 8 mm** (variante S1). Le reste du décalage est consigné (`conventionCalibration` garde déjà `duMm` et `dzMm`). Gain mesuré : cuts à plus de 10 mm 47 → 25 sur 188 (25 gagnés, 3 perdus), rails refusés à plus de 10 mm 35 → 10 sur 98. À éviter : élargir le domaine à 12 mm (moins bon, 28 cuts) ou appliquer le décalage en entier (15 rails sur 98 à plus de 10 mm).
 2. **Ne pas toucher à la garde de paire (D-044).** Elle écarte des cuts dont un tiers à deux cinquièmes seraient posés à plus de 10 mm, contre 13 % des cuts posés avec le plafond ; même la variante la plus favorable (S6, plus de garde) poserait 4 cuts faux sur 12. Si l'on veut récupérer ces cuts, ce n'est pas la règle de la garde qu'il faut changer mais lui fournir une autre preuve (P3 « dessus seul », ou une pose voisine cohérente).
 3. Porte de P1 : « ≥ 50 des 89 récupérés sans mauvaise pose » **non atteinte** sur les données qu'on a. Elle est atteinte en nombre (S2/S4/S5/S6) mais pas en justesse.
-4. Activation : plafond seul → rejeu des quatre lots au banc sans régression, ce que la mesure ne remplace pas (les cuts dont la pose change modifient les appuis des suivants, voir les limites). Accord de Mic requis : le plafond change une règle de D-044 (le domaine de la garde reste à 8 mm, la garde elle-même est inchangée).
+4. Activation : plafond seul → rejeu des quatre lots au banc sans régression, ce que la mesure ne remplace pas (les cuts dont la pose change modifient les appuis des suivants, voir les limites). Accord de l'opérateur requis : le plafond change une règle de D-044 (le domaine de la garde reste à 8 mm, la garde elle-même est inchangée).
 
 ## 4. Mesure (a) — graine contre intersection contre moyenne
 
-Outil : `tools/p0a-estimateurs.cjs`. Le moteur publie la **graine** du gabarit (`metrics.seed`) ; l'**intersection** des deux nappes ajustées (`metrics.surfaceIntersection`) est calculée et jetée ; la **moyenne** est le milieu des deux. Erreur 2D (latéral, vertical) à la pose de Mic, avant calage de convention.
+Outil : `tools/p0a-estimateurs.cjs`. Le moteur publie la **graine** du gabarit (`metrics.seed`) ; l'**intersection** des deux nappes ajustées (`metrics.surfaceIntersection`) est calculée et jetée ; la **moyenne** est le milieu des deux. Erreur 2D (latéral, vertical) à la pose de l'opérateur, avant calage de convention.
 
-Partie 17 (451 rails avec mesures et pose de Mic) :
+Partie 17 (451 rails avec mesures et pose de l'opérateur) :
 
 | Estimateur | 2D médiane | P90 | rails > 10 mm | contre la graine, rail par rail |
 |---|---:|---:|---:|---|
@@ -173,7 +173,7 @@ Par classe de rail (jeux réunis, 959 rails) :
 
 Aucune classe ne donne un gagnant autre que la graine. La classe « passage à niveau » n'est pas mesurable : les numéros de cuts de passages à niveau ne sont pas connus (question 3 du cahier, réponse attendue). Après centrage du biais (retrancher à chaque estimateur sa médiane signée), les écarts se réduisent (moyenne −0,1 mm, intersection +0,6 mm) : la moyenne ne devient pas meilleure, elle devient égale.
 
-**Trait de doute** (P5, si pas de gagnant) : |graine − intersection| prédit mal la correction de Mic : AUC 0,55 pour « pose publiée corrigée de plus de 10 mm » (376 rails, 53 corrigés), écart médian 4,6 mm si corrigé, 4,4 mm sinon. Les points de flanc (AUC 0,44) et la pente du flanc (0,58) ne font pas mieux. **Ce n'est pas un trait utile pour M6.**
+**Trait de doute** (P5, si pas de gagnant) : |graine − intersection| prédit mal la correction de l'opérateur : AUC 0,55 pour « pose publiée corrigée de plus de 10 mm » (376 rails, 53 corrigés), écart médian 4,6 mm si corrigé, 4,4 mm sinon. Les points de flanc (AUC 0,44) et la pente du flanc (0,58) ne font pas mieux. **Ce n'est pas un trait utile pour M6.**
 
 ### Recommandation (a)
 
@@ -200,7 +200,7 @@ Comparaisons (jeux réunis) : pose publiée des rails à pente 0,3–0,5 contre 
 
 Variante « pente sur la seule bande 14–30 mm » : la pente de la bande est plus bruyante (69 rails au-dessus de 0,5 contre 32), et les tranches ne séparent pas mieux l'erreur. Elle ne fait pas mieux que la pente de 9 à 34 mm.
 
-Cuts différés pour la pente (quatre lots, journal) : 83 portent le motif ; **70 sont bloqués par la seule pente du flanc** (le chiffre « 68 » du cahier) ; 41 d'entre eux auraient une pente de la bande 14–30 mm sous 0,5. Avec la pose de Mic (partie 17, 8 cuts bloqués par la seule pente) : si la borne était levée, la graine du pire rail serait à 7,7 mm en médiane, **2 cuts sur 8 à plus de 10 mm** ; sur les rails refusés par la seule pente, 8 sur 22 à plus de 10 mm (jeux réunis).
+Cuts différés pour la pente (quatre lots, journal) : 83 portent le motif ; **70 sont bloqués par la seule pente du flanc** (le chiffre « 68 » du cahier) ; 41 d'entre eux auraient une pente de la bande 14–30 mm sous 0,5. Avec la pose de l'opérateur (partie 17, 8 cuts bloqués par la seule pente) : si la borne était levée, la graine du pire rail serait à 7,7 mm en médiane, **2 cuts sur 8 à plus de 10 mm** ; sur les rails refusés par la seule pente, 8 sur 22 à plus de 10 mm (jeux réunis).
 
 ### Recommandation (c)
 
@@ -208,13 +208,13 @@ Cuts différés pour la pente (quatre lots, journal) : 83 portent le motif ; **7
 
 ## 6. Limites
 
-- **Un seul projet, une seule vraie partie d'Ariane avec Écho.** La pose de Mic existe pour la partie 17 (Orbite et Écho du même lot), un peu pour la 20 (session native de septembre, 4.7.6, partie qui a déjà servi à ajuster la convention) et la 24 (4 cuts). Les 98 rails refusés viennent presque tous de la partie 17 ; la partie 20 en a 3, la 24 en a 1. Des lots de rails plus usés ou moins usés donneront d'autres proportions (la partie 20 a 7 rails refusés sur 399).
-- **Douze cuts 'pair-guard' avec référence** (quinze avec les autres jeux), sur 89 : les conclusions sur la garde sont des ordres de grandeur, pas une preuve. L'Écho de la partie 24 que Mic a fait avec les tests 19/20 (124 visites, 103 validations, D-122) n'est pas ici : il permettrait de juger trente-cinq autres cuts 'pair-guard'.
+- **Un seul projet, une seule vraie partie d'Ariane avec Écho.** La pose de l'opérateur existe pour la partie 17 (Orbite et Écho du même lot), un peu pour la 20 (session native de septembre, 4.7.6, partie qui a déjà servi à ajuster la convention) et la 24 (4 cuts). Les 98 rails refusés viennent presque tous de la partie 17 ; la partie 20 en a 3, la 24 en a 1. Des lots de rails plus usés ou moins usés donneront d'autres proportions (la partie 20 a 7 rails refusés sur 399).
+- **Douze cuts 'pair-guard' avec référence** (quinze avec les autres jeux), sur 89 : les conclusions sur la garde sont des ordres de grandeur, pas une preuve. L'Écho de la partie 24 que l'opérateur a fait avec les tests 19/20 (124 visites, 103 validations, D-122) n'est pas ici : il permettrait de juger trente-cinq autres cuts 'pair-guard'.
 - **Simulation statique.** Une variante change la pose d'un cut, donc les appuis des cuts suivants (D-044 le notait : retirer un appui change les décisions suivantes) ; la chaîne n'est pas rejouée. La garde d'écartement voisin (± 20 mm) n'est pas rejouée ; seule l'admissibilité de l'écartement (1420–1470 mm) l'est, par une approximation de 0,3 mm. Le rejeu des quatre lots au banc reste obligatoire avant toute activation.
-- **Mic n'a pas relu tous les cuts posés** : 38 des 230 cuts posés de la partie 17 sont « passés sans décision ». Sans référence, ils sortent des chiffres ; si Mic passe plus volontiers les cuts qui lui semblent justes, les erreurs sont légèrement surestimées. Depuis D-122, « inchangé » vaut « confirmé » pour les prochains Échos.
-- **Référence de Mic = pose de la dernière validation**, pas une vérité de terrain indépendante (un écart de 2 à 3 mm est du bruit de pose manuelle). Seuil « mauvaise pose » = 10 mm en 3D, celui de `convention-fit.cjs`.
+- **L'opérateur n'a pas relu tous les cuts posés** : 38 des 230 cuts posés de la partie 17 sont « passés sans décision ». Sans référence, ils sortent des chiffres ; si l'opérateur passe plus volontiers les cuts qui lui semblent justes, les erreurs sont légèrement surestimées. Depuis D-122, « inchangé » vaut « confirmé » pour les prochains Échos.
+- **Référence de l'opérateur = pose de la dernière validation**, pas une vérité de terrain indépendante (un écart de 2 à 3 mm est du bruit de pose manuelle). Seuil « mauvaise pose » = 10 mm en 3D, celui de `convention-fit.cjs`.
 - **Rejeu d'Écho** : la partie 17 hors journal n'a que 136 visites sur 814 avec nuage complet ; les cuts « posés » de ces rejeux sont hypothétiques.
-- **Classe passage à niveau absente** de (a) et (c) : numéros de cuts de PN inconnus. Au-delà de 0,5 on ne dispose que de 27 rails avec la pose de Mic.
+- **Classe passage à niveau absente** de (a) et (c) : numéros de cuts de PN inconnus. Au-delà de 0,5 on ne dispose que de 27 rails avec la pose de l'opérateur.
 - Les chiffres du cahier (410 rails, 89 'pair-guard', 68 'pente') sont retrouvés à quelques unités près ; les définitions exactes du cahier (quel étage, quel événement) ne sont pas écrites, d'où 390 / 420 pour 410, 82 cuts / 89 événements, 70 pour 68.
 
 ## 7. Ce qui manque
@@ -222,7 +222,7 @@ Cuts différés pour la pente (quatre lots, journal) : 83 portent le motif ; **7
 - **Écho 18** : aucun export trouvé. **Écho 24 long** (124 visites) : à rapatrier (D-122 point 5).
 - Numéros de cuts de PN et d'ADV (question 3) pour la classe « passage à niveau » de (a) et (c).
 - Un second projet ESV (D-123) pour savoir si le plafond de 8 mm tient hors de ce projet.
-- Une relecture complète de la liste d'ESV après passage de Mic (idée 1) donnerait la pose de Mic pour les 89 cuts 'pair-guard' et les ~420 rails refusés, au lieu de 15 et ~110.
+- Une relecture complète de la liste d'ESV après passage de l'opérateur (idée 1) donnerait la pose de l'opérateur pour les 89 cuts 'pair-guard' et les ~420 rails refusés, au lieu de 15 et ~110.
 
 ## 8. Reproduire
 
