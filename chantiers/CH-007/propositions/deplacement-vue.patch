@@ -1,0 +1,34 @@
+--- a/src/adapter-page.js	2026-10-28 10:56:24.422470718 +0000
++++ b/src/adapter-page.js	2026-10-28 11:08:31.296191955 +0000
+@@ -636,7 +636,8 @@
+    return {...VUE_DEFAUTS,...S,...o,molette:{facteurSuppose:1.1,...E.molette,...(S.molette||{}),...(o.molette||{})},glisser:{viseNdc:.8,...E.glisser,...(S.glisser||{}),...(o.glisser||{})}};}
+  /* État partagé par les deux rails d'une pose : échelle de la vue habituelle, crans nets de dézoom, glisser fait, facteur d'un
+   * cran et gain du glisser mesurés. */
+- const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,facteurCran:o.molette.facteurSuppose,gain:1});
++ /* `moletteSourde` : un cran synthétique a laissé la caméra immobile. Le glisser prend le relais (CH-007). */
++ const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,moletteSourde:false,facteurCran:o.molette.facteurSuppose,gain:1});
+  const echelleVue=cam=>Math.abs(cam?.projection?.[0]??NaN);
+  const r3v=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
+  const ndcVue=v=>v?[r3v(v.ndc[0]),r3v(v.ndc[1])]:null;
+@@ -663,7 +664,7 @@
+      const b=GV.besoin(v.ndc,cam.viewport,o.marge),zoomActuel=etat.echelle0/echelleVue(cam),{r,x,y}=centreVue(c),geste={};
+      const dezoomPossible=zoomActuel*b.dezoom<=o.dezoomMax*(1+1e-9)&&etat.pixel0*zoomActuel*b.dezoom<=o.pixelMaxMm;
+      let seq=null;
+-     if(dezoomPossible){const f=Math.max(1.0001,etat.facteurCran);
++     if(dezoomPossible&&!etat.moletteSourde){const f=Math.max(1.0001,etat.facteurCran);
+        let crans=Math.min(o.molette.cransMax,Math.max(1,Math.ceil(Math.log(b.dezoom)/Math.log(f)-1e-9)));
+        while(crans>1&&(zoomActuel*Math.pow(f,crans)>o.dezoomMax*(1+1e-9)||etat.pixel0*zoomActuel*Math.pow(f,crans)>o.pixelMaxMm))crans--;
+        Object.assign(geste,{type:'molette',crans,sens:o.molette.sensDezoom});
+@@ -686,7 +687,11 @@
+      for(const s of ['left','right'])if(C.distance(apres[s].positionSceneRelative,poses0[s].positionSceneRelative)>1e-9){
+        rapport.gestes.push(geste);progress('vue-geste',{side,...geste,rail:s});
+        throw Error('Le geste de vue a déplacé le rail '+(s==='left'?'gauche':'droit')+' ('+geste.type+'). État à réconcilier.');}
+-     if(!cam2||procheCam(cam2,cam)){geste.camera='immobile';rapport.gestes.push(geste);progress('vue-geste',{side,...geste});rapport.raison='camera-immobile';break;}
++     if(!cam2||procheCam(cam2,cam)){geste.camera='immobile';rapport.gestes.push(geste);progress('vue-geste',{side,...geste});
++       /* CH-007 : la molette synthétique laisse souvent la caméra immobile (écouteur `mousewheel`, ou `isTrusted` faux).
++        * Le dépassement tient d'ordinaire dans un glisser : on le tente avant d'abandonner le cut. */
++       if(geste.type==='molette'&&!etat.moletteSourde&&b.panPx<=o.glissementPxMax){etat.moletteSourde=true;continue;}
++       rapport.raison='camera-immobile';break;}
+      if(geste.type==='molette'){const f=Math.pow(echelleVue(cam)/echelleVue(cam2),1/geste.crans);geste.facteurCran=r3v(f);
+        if(f<1){etat.crans-=geste.crans;geste.sensInverse=true;}else{etat.crans+=geste.crans;etat.facteurCran=f;}}
+      else{etat.glisse=true;const v2=projectToView(cam2,target),d=Math.hypot((v2.ndc[0]-v.ndc[0])*r.width/2,(v2.ndc[1]-v.ndc[1])*r.height/2),m=Math.hypot(geste.px,geste.py);
