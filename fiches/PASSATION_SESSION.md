@@ -59,6 +59,6 @@ Les sessions filles ne peuvent pas être plus permissives que leur parent : une 
 - **Dépôts** : `banane` (branche de travail `claude/50-test17`) et `banane-data` (branche `claude/execute-prompt-00-18ra5a`), accès en écriture sur les deux.
 - **Connecteurs** : GitHub (les deux dépôts), **Figma** (équipe de l'opérateur), et les outils de sessions (abonnement aux PR, rappels, création de sessions filles).
 - **Skills** : conception avant code, essai rouge puis vert, diagnostic, preuve avant d'affirmer, relecture de diff, les skills Figma (`figma-use`, `figma-generate-design`, `figma-generate-library`), `artifact-design` pour les pages privées.
-- **Premier message à coller** : « Lis `fiches/PASSATION_SESSION.md` en entier, puis prends le rôle d'intégrateur : annonce-toi sur le canal général du hub, abonne-toi aux PR ouvertes (7, 8, 16), relance la session UX/UI de CH-010 en fille (mode « auto ») avec le ticket `chantiers/CH-010.md`, puis continue la liste de la section 4. L'opérateur ne veut plus de demande d'autorisation. »
+- **Premier message à coller** : le contenu de `fiches/DEMARRAGE_SESSION_PRINCIPALE.md` (sous la ligne de séparation), tel quel.
 - L'ancienne session principale se désabonne des PR et ne pousse plus rien dès que la nouvelle a annoncé qu'elle prend le rôle.
 
