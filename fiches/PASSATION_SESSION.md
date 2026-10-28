@@ -31,3 +31,24 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 - Jamais de nom d'opérateur, de code projet ESV, d'UUID ni de capture dans le dépôt de code ; les exports restent dans `banane-data` et ne sortent jamais vers un service externe.
 - Pas de réécriture d'historique, pas de SKIP, pas de passe en écriture sans décision écrite de l'opérateur.
 - Les dossiers de travail d'une session précédente (`scratchpad`, `wt/`) n'existent pas : tout ce qui compte est dans le dépôt.
+
+## 6. Lancer une nouvelle session principale : quand, comment, avec quoi
+L'opérateur a demandé que l'intégrateur en place déclenche lui-même cette bascule au bon moment. Une seule session tient le rôle `integrateur` à la fois.
+
+**Le bon moment** (le premier critère atteint suffit) :
+- les chantiers ouverts sont fusionnés ou mis en attente, le tronc est vert et stable, aucune décision de l'opérateur n'est en suspens ;
+- juste avant une phase longue qui chargera beaucoup de contexte (chantier des différés : recherche GCV2, rejeu des lots, garde) ;
+- la session en place est lourde (résumés répétés) : mieux vaut une session neuve qui lit cette fiche que de continuer sur un résumé.
+Jamais au milieu d'une fusion, d'un paquet en fabrication ou d'une question posée à l'opérateur et sans réponse.
+
+**Comment** :
+1. L'intégrateur sortant met cette fiche à jour (§ 3 état, § 4 attente), pousse sur le tronc en avance simple, puis crée la session neuve (outil `create_session` : dépôt `banane`, branche du tronc, invite = « lis `fiches/PASSATION_SESSION.md` puis reprends le rôle d'intégrateur »). Le dépôt `banane-data` s'y ajoute avec `add_repo` (accès en écriture, branche de documents).
+2. Il annonce la bascule sur le canal général (`node tools/hub.cjs dire --chantier hub --de integrateur --type info "…"`) : qui est la session entrante, ce qui est en cours, ce qui attend.
+3. La session entrante répond sur le même canal qu'elle prend le rôle, s'abonne aux PR ouvertes (§ 2), relit le dernier état de chaque chantier. La session sortante se désabonne (`unsubscribe_pr_activity`) et ne pousse plus rien : pas deux intégrateurs.
+4. L'opérateur n'a rien à faire, sauf si l'outil de création de session lui demande une confirmation.
+
+**Ce qu'on lui transmet** :
+- *Dans le dépôt* (déjà fait) : `CLAUDE.md`, `AGENTS.md`, cette fiche, `fiches/RESEAU_IA.md`, `hub/PROTOCOLE.md`, les tickets `chantiers/`.
+- *Connecteurs* : l'accès GitHub des deux dépôts (`banane`, `banane-data`) ; le serveur de sessions (abonnement aux PR, `send_later`, `create_session`) ; `gh` pour `tools/hub.cjs` ; le relais Telegram et Cursor n'ont rien à transmettre (ils vivent côté Cloudflare et côté GitHub). Le secret `ARIANE_MOTIFS_INTERDITS` n'est jamais écrit dans un fichier : s'il manque dans l'environnement de la session, `hub.cjs` n'applique que les motifs publics, et il faut le dire à l'opérateur.
+- *Skills utiles* : conception avant code (`brainstorming`), essai rouge puis vert (`test-driven-development`), diagnostic (`systematic-debugging`), preuve avant d'affirmer (`verification-before-completion`), relecture d'un diff (`code-review`), pages privées pour l'opérateur (`artifact-design`, outil Artifact : maquettes). Les autres extensions installées (finance, boutique, etc.) ne servent pas ici : ne pas les charger.
+- *Règles de dépense* : agents Sonnet et Haiku, le niveau maximal seulement pour une tâche difficile, en disant pourquoi ; budget de 30 % du quota hebdomadaire pour tout le projet.
