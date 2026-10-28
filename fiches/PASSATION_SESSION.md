@@ -67,3 +67,6 @@ Les sessions filles ne peuvent pas être plus permissives que leur parent : une 
 - **Premier message à coller** : le contenu de `fiches/DEMARRAGE_SESSION_PRINCIPALE.md` (sous la ligne de séparation), tel quel.
 - L'ancienne session principale se désabonne des PR et ne pousse plus rien dès que la nouvelle a annoncé qu'elle prend le rôle.
 
+
+## 8. Message de démarrage type d'une session fille (D-255)
+Créer la fille en mode `auto` (la mère l'est), `create_session`, dépôt `banane`, branche `chantier/<ticket>`. Premier message : lire `CLAUDE.md`, `AGENTS.md`, `chantiers/<ticket>.md` ; **parler à la mère par `send_message` à `@parent` (priorité `next`), pas par le texte de fin de tour ni par le hub seul** ; un `send_message` à chaque jalon et à chaque question ; rapport final sur le hub ET par `send_message`. Côté mère : message à la fille en priorité `next` (jamais `now` sauf pour l'arrêter), puis `ScheduleWakeup` de 10 minutes pour lire son dernier texte de fin de tour (`list_events`, kinds `assistant`) si elle se tait. Mesuré le 28/10 : accusés de test reçus en moins de 2 minutes par ce circuit, aucun par le hub.
