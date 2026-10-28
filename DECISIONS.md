@@ -3209,3 +3209,9 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Effet** : la règle « la simplicité et le code couleur de Signal sont acquis et ne bougent pas » (`fiches/RESEAU_IA.md` § 6, objectif 2) est suspendue pour le code couleur et les symboles. La simplicité et la clarté des boutons (Lancer = lot neuf, Continuer = même lot, Préparer = ne lance rien) restent. Les maquettes de CH-002 phase 1c (Fil d'Ariane, mouvement, comparaison) reprennent l'ancien code : leur validation attend ce détail. CH-010 propose au moins une direction à code couleur et symboles différents.
 - Le numéro suivant est D-257.
 - **Précision de l'opérateur (même jour)** : (1) couleurs : « les couleurs elles-mêmes » ne plaisent pas, et « le sens ne va pas » (une couleur ne dit pas ce qu'il attend) ; (2) symboles : « trop génériques, trop vibe codé ». Pas de reproche sur le nombre de couleurs. À traiter : une palette et un langage de symboles propres au métier d'Ariane (rails, cuts, lots, ESV), pas un habillage d'interface standard.
+
+## D-257 — Maquettes de Signal rejetées, design en pause (opérateur, 28/10/2026)
+
+- **Constat de l'opérateur** : « Je trouve les maquettes horribles » ; interrogé, il désigne l'**esthétique générale** (pas un point précis) et demande de **tout arrêter pour l'instant**.
+- **Effet** : les trois directions de CH-010 (A Cadran, B Nuage, C Chantier), les pages de CH-002 phase 1c et la page de choix sont rejetées en l'état. Plus aucune maquette ni aucun code de Signal tant que l'opérateur n'a pas donné de direction. L'interface de Signal en place (tronc, 4.9.5.23) n'est pas modifiée. Les pages Figma et les fiches restent, rien n'est supprimé.
+- Le numéro suivant est D-258.
