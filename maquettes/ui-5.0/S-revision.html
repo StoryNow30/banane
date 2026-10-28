@@ -146,6 +146,39 @@ button{background:none;border:0;cursor:pointer}
 .avis{position:absolute;left:24px;right:24px;bottom:64px;background:var(--surface2);border:1px solid var(--filet);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--encre2);animation:entre var(--d-phrase) var(--sortie)}
 
 .arc{transition:stroke-dashoffset var(--d-anneau) var(--sortie)}
+
+/* Vivant et Signature : seulement transform et opacity. Sobre garde ses transitions. */
+.fen[data-caractere="vivant"] .rail .fait,
+.fen[data-caractere="signature"] .rail .fait{width:100%;height:4px;transform-origin:left center;transition:none}
+.fen[data-caractere="vivant"] .rail .cur,
+.fen[data-caractere="signature"] .rail .cur{left:0;top:0;width:2px;height:28px;margin-top:6px;transition:none}
+.fen[data-caractere="vivant"] .rail .repere,
+.fen[data-caractere="signature"] .rail .repere,
+.fen[data-caractere="vivant"] .chiffre.tic,
+.fen[data-caractere="signature"] .chiffre.tic,
+.fen[data-caractere="vivant"] .tiroir.ouvert .ligne,
+.fen[data-caractere="signature"] .tiroir.ouvert .ligne{animation:none}
+.fen[data-caractere="vivant"] .tiroir,
+.fen[data-caractere="signature"] .tiroir,
+.fen[data-caractere="vivant"] .principal,
+.fen[data-caractere="signature"] .principal{transition:none}
+.fen[data-caractere="vivant"] .principal:active,
+.fen[data-caractere="signature"] .principal:active{transform:none}
+.halo,.choc{position:absolute;left:0;top:14px;width:22px;height:22px;margin:-10px 0 0 -10px;border-radius:50%;background:var(--vivant);opacity:0;pointer-events:none}
+.fen[data-vie="1"] .halo{animation:halo 2.8s ease-in-out infinite}
+@keyframes halo{0%,100%{opacity:0;transform:scale(.45)}50%{opacity:.4;transform:scale(1)}}
+.etat{position:relative}
+.sceau{position:absolute;left:-8px;top:-4px;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--vivant);opacity:0;pointer-events:none}
+.instrument{position:relative}
+.incident{position:absolute;left:48px;right:48px;bottom:108px;z-index:4;margin:0;padding:8px 12px;background:var(--surface);border-left:2px solid var(--alerte);color:var(--encre);opacity:0}
+.fen.ralenti{
+  --d-mot:1120ms;--d-phrase:960ms;--d-bouton:880ms;--d-appui:800ms;--d-rail:1280ms;--d-repere:1120ms;--d-chiffre:960ms;--d-anneau:1600ms;--d-couche:1280ms;--d-ligne:960ms
+}
+.fen[data-riche="1"] .instrument{margin:8px 12px 0;padding:24px 28px 40px;background:var(--surface);border:1px solid var(--filet);border-top-color:var(--filet-fort);border-radius:12px;box-shadow:var(--ombre)}
+.fen[data-riche="1"] .objet{background:var(--fond)}
+.fen[data-riche="1"] .glyphe{width:32px;height:32px}
+.fen[data-riche="1"] .principal svg,.fen[data-riche="1"] .secondaire svg{width:18px;height:18px}
+
 .fen.reduit *,.fen.reduit *::before,.fen.reduit *::after{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){
   .fen *,.fen *::before,.fen *::after{animation:none!important;transition:none!important}
@@ -154,12 +187,24 @@ button{background:none;border:0;cursor:pointer}
 </head>
 <body>
 <div class="hors">
-  <p>Maquette S · libellés proposés, chiffres inventés. Repos = l’état Prêt. Le panneau n’est pas modifié.</p>
+  <p>Maquette S · libellés proposés, chiffres inventés. Trois caractères de mouvement, à comparer. Dérouler un lot dure environ 20 s. Le panneau n’est pas modifié.</p>
+  <div class="row" role="group" aria-label="Caractère du mouvement">
+    <button type="button" data-caractere="sobre" aria-pressed="true">Sobre</button>
+    <button type="button" data-caractere="vivant" aria-pressed="false">Vivant</button>
+    <button type="button" data-caractere="signature" aria-pressed="false">Signature</button>
+  </div>
   <div class="row" role="group" aria-label="Scène">
     <button type="button" data-scene="repos" aria-pressed="true">Repos</button>
     <button type="button" data-scene="cours" aria-pressed="false">En cours</button>
     <button type="button" data-scene="pause" aria-pressed="false">Pause</button>
     <button type="button" data-scene="fin" aria-pressed="false">Fin de lot</button>
+  </div>
+  <div class="row">
+    <button type="button" id="derouler" aria-pressed="false">Dérouler un lot</button>
+    <button type="button" id="rejouer">Rejouer</button>
+    <button type="button" id="incident-btn">Incident</button>
+    <label class="puce"><input type="checkbox" id="ralenti"> Ralenti ×0,25</label>
+    <label class="puce"><input type="checkbox" id="riche"> Finition riche</label>
   </div>
   <div class="row">
     <button type="button" id="bascule-fin" hidden data-fin="clos" aria-pressed="true">Lot clos</button>
@@ -171,7 +216,7 @@ button{background:none;border:0;cursor:pointer}
   </div>
 </div>
 <div class="cadre">
-<div class="fen" id="fen" data-theme="sombre" data-scene="repos" data-arret="0">
+<div class="fen" id="fen" data-theme="sombre" data-scene="repos" data-arret="0" data-caractere="sobre" data-vie="0" data-riche="0">
   <header class="barre">
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20L10.4 4M19 20L13.6 4"/><path d="M7.4 15h9.2" stroke-opacity=".7"/></svg><span>Ariane</span></span>
     <div class="bascule" role="tablist" aria-label="Activité"><button type="button" role="tab" aria-selected="true">Orbite</button><button type="button" role="tab" aria-selected="false" disabled title="Démonstration : Orbite seulement">Écho</button></div>
@@ -181,15 +226,16 @@ button{background:none;border:0;cursor:pointer}
     <button type="button" class="ico" aria-label="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg></button>
   </header>
   <section class="instrument" aria-live="polite">
-    <div class="etat"><span class="glyphe" id="glyphe" data-ton="encre2"></span><h1 class="mot" id="mot">Prêt</h1></div>
+    <div class="etat"><span class="sceau" id="sceau" aria-hidden="true"></span><span class="glyphe" id="glyphe" data-ton="encre2"></span><h1 class="mot" id="mot">Prêt</h1></div>
     <p class="phrase" id="phrase"></p>
+    <p class="incident" id="incident" hidden>ESV n’est pas connecté. Si la page est figée, recharge-la, puis reconnecte-la.</p>
     <p class="lotbornes" id="bornes-ligne" hidden></p>
     <div class="objet" id="bloc-rail">
       <div class="compte"><span class="chiffre" id="chiffre">0</span><span class="suite" id="suite"></span><span class="droite" id="droite"></span></div>
       <div class="rail" id="rail" role="img" aria-label="Rail du lot">
         <div class="base"></div>
         <div class="fait" id="fait"></div>
-        <div class="cur" id="cur" hidden></div>
+        <div class="cur" id="cur" hidden><i class="halo"></i><i class="choc" id="choc"></i></div>
         <div id="reperes"></div>
         <div class="grad" style="left:0"></div><div class="grad" style="left:50%"></div><div class="grad" style="left:100%"></div>
         <div class="num debut">0</div><div class="num" style="left:50%">43</div><div class="num fin">86</div>
@@ -251,8 +297,12 @@ button{background:none;border:0;cursor:pointer}
   const etat = {
     scene: 'repos', fin: 'clos', prepare: false, traites: 0, poses: 0,
     differes: [], tiroir: false, dem: false, auto: true, reduit: false,
-    debutCut: 0, examine: new Set()
+    debutCut: 0, examine: new Set(), caractere: 'sobre', ralenti: false,
+    scenario: false, animerRail: false, incident: false
   };
+  /* Dépassement court : la valeur passe 1, puis se pose. Compositeur seulement. */
+  const RESSORT = 'linear(0, 0.18 14%, 0.55 32%, 0.92 50%, 1.14 68%, 0.97 84%, 1)';
+  let railMem = 0, timers = [];
 
   const LIGNES = [
     { cle: 'd41', cut: 41, motif: 'Différé', prec: 'rail gauche' },
@@ -264,6 +314,144 @@ button{background:none;border:0;cursor:pointer}
 
   function reduit() {
     return etat.reduit || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+  function vif() { return etat.caractere !== 'sobre'; }
+  function ms(n) { return reduit() ? 0 : (etat.ralenti ? n * 4 : n); }
+  function jouer(el, images, duree, courbe) {
+    if (!el) return;
+    if (reduit()) { el.getAnimations().forEach(a => a.cancel()); return; }
+    el.animate(images, { duration: ms(duree), easing: courbe || RESSORT, fill: 'forwards' });
+  }
+  function largeurRail() { return $('rail').clientWidth || 1; }
+  function majVie() {
+    const vie = vif() && !reduit() && etat.scene === 'cours' && !etat.dem;
+    fen.dataset.vie = vie ? '1' : '0';
+  }
+  function poserRail(animer) {
+    const t = (etat.scene === 'repos') ? 0 : etat.traites;
+    const p = Math.max(0, Math.min(1, t / TOTAL));
+    const fait = $('fait'), cur = $('cur');
+    if (!vif()) {
+      fait.getAnimations().forEach(a => a.cancel());
+      cur.getAnimations().forEach(a => a.cancel());
+      fait.style.transform = '';
+      fait.style.width = (p * 100) + '%';
+      cur.style.left = (p * 100) + '%';
+      cur.style.transform = 'translateX(-50%)';
+      railMem = p;
+      return;
+    }
+    const w = largeurRail(), x0 = railMem * w, x1 = p * w;
+    fait.style.width = '';
+    cur.style.left = '';
+    if (!animer || reduit()) {
+      fait.getAnimations().forEach(a => a.cancel());
+      cur.getAnimations().forEach(a => a.cancel());
+      fait.style.width = '';
+      cur.style.left = '';
+      fait.style.transform = 'scaleX(' + p + ')';
+      cur.style.transform = 'translate3d(' + x1 + 'px,0,0)';
+      railMem = p;
+      return;
+    }
+    jouer(fait, [
+      { transform: 'scaleX(' + railMem + ')' },
+      { transform: 'scaleX(' + p + ')' }
+    ], 420);
+    jouer(cur, [
+      { transform: 'translate3d(' + x0 + 'px,0,0) scaleY(1)' },
+      { transform: 'translate3d(' + x1 + 'px,0,0) scaleY(1.7)', offset: 0.55 },
+      { transform: 'translate3d(' + x1 + 'px,0,0) scaleY(1)' }
+    ], 420, 'linear(0, 0.35 30%, 0.85 55%, 1.08 75%, 1)');
+    const choc = $('choc');
+    if (choc) jouer(choc, [
+      { opacity: 0.75, transform: 'scale(0.2)' },
+      { opacity: 0, transform: 'scale(1)' }
+    ], 420);
+    railMem = p;
+  }
+  function gesteRepere(noeud) {
+    if (!noeud || !vif() || reduit()) return;
+    noeud.style.transformOrigin = '50% 100%';
+    jouer(noeud, [
+      { opacity: 0, transform: 'translateX(-50%) scaleY(0)' },
+      { opacity: 1, transform: 'translateX(-50%) scaleY(1)' }
+    ], 380);
+  }
+  function momentFin() {
+    if (etat.caractere !== 'signature' || reduit()) return;
+    const g = $('glyphe');
+    g.getAnimations().forEach(a => a.cancel());
+    const sceau = $('sceau');
+    sceau.hidden = false;
+    jouer($('glyphe'), [
+      { opacity: 0, transform: 'scale(.45)' },
+      { opacity: 1, transform: 'scale(1)' }
+    ], 1200);
+    jouer(sceau, [
+      { opacity: 0.7, transform: 'scale(.35)' },
+      { opacity: 0, transform: 'scale(1.6)' }
+    ], 1200, 'cubic-bezier(.2,.7,.2,1)');
+    [...$('fin').querySelectorAll('dd')].forEach((dd, i) => {
+      dd.animate([
+        { opacity: 0, transform: 'translateY(8px)' },
+        { opacity: 1, transform: 'none' }
+      ], { duration: ms(360), delay: ms(90 * i), easing: RESSORT, fill: 'backwards' });
+    });
+  }
+  function arriverIncident() {
+    const el = $('incident');
+    el.hidden = false;
+    if (reduit() || !vif()) { el.style.opacity = '1'; el.style.transform = 'none'; return; }
+    const fort = etat.caractere === 'signature';
+    jouer(el, [
+      { opacity: 0, transform: fort ? 'translateX(-18px)' : 'translateY(-8px)' },
+      { opacity: 1, transform: 'none' }
+    ], fort ? 480 : 280);
+  }
+  function cacherIncident() {
+    etat.incident = false;
+    const el = $('incident');
+    el.hidden = true; el.style.opacity = '0';
+  }
+  function temoin(el, ecrire, attendu) {
+    if (!el) { ecrire(); return; }
+    if (reduit() || etat.caractere !== 'signature') { ecrire(); if (!reduit() && vif()) jouer(el, [{ opacity: 0 }, { opacity: 1 }], 200, 'cubic-bezier(.2,.7,.2,1)'); return; }
+    const sortie = el.animate([
+      { opacity: 1, transform: 'none' },
+      { opacity: 0, transform: 'translateY(-8px) scale(.96)' }
+    ], { duration: ms(160), easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+    sortie.onfinish = () => {
+      if (el.dataset.attendu !== attendu) return;
+      ecrire();
+      jouer(el, [
+        { opacity: 0, transform: 'translateY(10px) scale(.92)' },
+        { opacity: 1, transform: 'none' }
+      ], 320);
+    };
+  }
+  function stopScenario() {
+    timers.forEach(clearTimeout); timers = [];
+    etat.scenario = false;
+    const b = $('derouler'); if (b) b.setAttribute('aria-pressed', 'false');
+  }
+  function apres(n, fn) { timers.push(setTimeout(fn, ms(n))); }
+  function poserTiroir(animer) {
+    const el = $('tiroir'), ferme = 'translateY(calc(100% - 40px))';
+    el.classList.toggle('ouvert', etat.tiroir);
+    if (!vif()) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; return; }
+    const vers = etat.tiroir ? 'translateY(0)' : ferme;
+    const de = etat.tiroir ? ferme : 'translateY(0)';
+    if (!animer || reduit()) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = vers; return; }
+    jouer(el, [{ transform: de }, { transform: vers }], 480);
+    if (etat.tiroir) {
+      [...el.querySelectorAll('.ligne')].forEach((ligne, i) => {
+        ligne.animate([
+          { opacity: 0, transform: 'translateY(8px)' },
+          { opacity: 1, transform: 'none' }
+        ], { duration: ms(320), delay: ms(50 * i), easing: RESSORT, fill: 'backwards' });
+      });
+    }
   }
   function entrer(el) {
     if (!el || reduit()) return;
@@ -339,15 +527,23 @@ button{background:none;border:0;cursor:pointer}
 
   let glypheNom = '';
   function peindreGlyphe(m) {
-    const nom = m.g + (m.g === 'cours' ? '' : '');
+    const nom = m.g;
     const el = $('glyphe');
-    if (nom !== glypheNom) {
-      glypheNom = nom;
-      el.innerHTML = m.g === 'cours' ? anneau(0) : GLYPHE[m.g] || GLYPHE.pret;
-      el.dataset.g = m.g;
-      entrer(el);
-    }
     el.dataset.ton = m.ton;
+    el.dataset.attendu = nom;
+    if (nom === glypheNom) return;
+    const ecrire = () => {
+      glypheNom = nom;
+      el.innerHTML = m.g === 'cours' ? anneau(0) : (GLYPHE[m.g] || GLYPHE.pret);
+      el.dataset.g = m.g;
+    };
+    if (etat.caractere === 'signature' && glypheNom && nom !== 'fini') temoin(el, ecrire, nom);
+    else {
+      ecrire();
+      if (nom === 'fini' && etat.caractere === 'signature') return;
+      if (!vif()) entrer(el);
+      else if (!reduit()) jouer(el, [{ opacity: 0 }, { opacity: 1 }], 180, 'cubic-bezier(.2,.7,.2,1)');
+    }
   }
   function peindreActions(m) {
     const h = m.actions.map(a => {
@@ -360,46 +556,60 @@ button{background:none;border:0;cursor:pointer}
   }
   function peindreReperes() {
     const host = $('reperes');
-    const voulu = etat.differes.map(i => `<div class="repere" data-i="${i}" style="left:${pos(i)}%"></div>`).join('');
-    if (host.dataset.cle !== voulu) {
-      const connus = new Set([...host.querySelectorAll('.repere')].map(e => e.dataset.i));
-      host.dataset.cle = voulu;
-      host.innerHTML = etat.differes.map(i => `<div class="repere${connus.has(String(i)) || reduit() ? '' : ''}" data-i="${i}" style="left:${pos(i)}%"></div>`).join('');
-    }
+    const voulu = etat.differes.join(',');
+    if (host.dataset.cle === voulu) return;
+    const connus = new Set([...host.querySelectorAll('.repere')].map(e => e.dataset.i));
+    host.dataset.cle = voulu;
+    host.innerHTML = etat.differes.map(i => `<div class="repere" data-i="${i}" style="left:${pos(i)}%"></div>`).join('');
+    host.querySelectorAll('.repere').forEach(e => { if (!connus.has(e.dataset.i)) gesteRepere(e); });
   }
   function peindreRail() {
     const t = etat.traites;
     $('chiffre').textContent = String(t);
-    $('suite').textContent = etat.scene === 'repos' ? 'aucun cut traité' : `traités sur ${TOTAL} ciblés`;
+    $('suite').textContent = `traités sur ${TOTAL} ciblés`;
     const d = etat.differes.length, poses = Math.max(0, t - d);
-    $('droite').innerHTML = etat.scene === 'repos' ? '' : `<b>${poses}</b> posés · <span class="dif">${d}</span> différés`;
-    $('fait').style.width = (etat.scene === 'repos' ? 0 : pos(t)) + '%';
-    const cur = $('cur');
-    cur.hidden = etat.scene === 'repos';
-    cur.style.left = pos(t) + '%';
+    $('droite').innerHTML = `<b>${poses}</b> posés · <span class="dif">${d}</span> différés`;
+    $('cur').hidden = false;
+    const animer = etat.animerRail;
+    etat.animerRail = false;
+    poserRail(animer);
     peindreReperes();
   }
+  const FIN_HTML = '<dt>Lot</dt><dd><b>86</b> cuts traités sur <b>86</b> ciblés</dd><dt>Bornes</dt><dd>du cut <b class="mono">120</b> jusqu’à la fin de la partie</dd><dt>Il reste</dt><dd><b class="dif">4</b> différés, <b>6</b> verts à contrôler</dd><dt>Deuxième passe</dt><dd>en ombre : <b>3</b> sur <b>4</b> qu’elle poserait · rien n’est écrit</dd><dt>Export</dt><dd>prêt</dd>';
   function peindreFin() {
-    $('fin').innerHTML = '<dt>Lot</dt><dd><b>86</b> cuts traités sur <b>86</b> ciblés</dd><dt>Bornes</dt><dd>du cut <b class="mono">120</b> jusqu’à la fin de la partie</dd><dt>Il reste</dt><dd><b class="dif">4</b> différés, <b>6</b> verts à contrôler</dd><dt>Deuxième passe</dt><dd>en ombre : <b>3</b> sur <b>4</b> qu’elle poserait · rien n’est écrit</dd><dt>Export</dt><dd>prêt</dd>';
+    const el = $('fin');
+    if (el.dataset.cle !== FIN_HTML) { el.dataset.cle = FIN_HTML; el.innerHTML = FIN_HTML; }
   }
+  let tiroirOuvert = false, corpsCle = '';
   function peindreTiroir() {
     const montre = etat.scene === 'fin' && etat.fin === 'clos' && !etat.prepare;
     const reste = LIGNES.filter(l => !etat.examine.has(l.cle)).length;
     $('poignee-tx').textContent = montre ? `${LIGNES.length} à examiner` : 'Rien à examiner';
     $('poignee').setAttribute('aria-expanded', etat.tiroir ? 'true' : 'false');
-    $('tiroir').classList.toggle('ouvert', etat.tiroir);
-    if (!montre) { $('corps').innerHTML = '<div class="vide">Aucun différé.</div>'; return; }
-    $('corps').innerHTML = `<div class="section"><span>Ce qui reste</span><span class="n">${reste}</span><span>sur ${LIGNES.length}</span></div>` + LIGNES.map(l => {
+    const cle = montre ? 'fin:' + reste + ':' + [...etat.examine].sort().join(',') : 'vide';
+    if (corpsCle !== cle) {
+      corpsCle = cle;
+      if (!montre) $('corps').innerHTML = '<div class="vide">Aucun différé.</div>';
+      else $('corps').innerHTML = `<div class="section"><span>Ce qui reste</span><span class="n">${reste}</span><span>sur ${LIGNES.length}</span></div>` + LIGNES.map(l => {
       const on = etat.examine.has(l.cle);
       return `<div class="ligne${on ? ' examine' : ''}"><span class="cut">${l.cut}</span><span class="motif">${l.motif}${l.prec ? ' · ' + l.prec : ''}</span><span class="outils"><button type="button" data-ouvrir="${l.cut}">Ouvrir</button><button type="button" data-examiner="${l.cle}" aria-pressed="${on}">${on ? 'Examiné' : 'Examiner'}</button></span></div>`;
     }).join('');
+    }
+    const animer = tiroirOuvert !== etat.tiroir;
+    tiroirOuvert = etat.tiroir;
+    poserTiroir(animer);
   }
   function peindre() {
     const m = modele();
     fen.dataset.scene = etat.scene === 'fin' || etat.prepare ? 'fin' : etat.scene;
     fen.dataset.arret = etat.scene === 'fin' && etat.fin === 'arret' && !etat.prepare ? '1' : '0';
-    if ($('mot').textContent !== m.mot) { $('mot').textContent = m.mot; entrer($('mot')); }
-    if ($('phrase').innerHTML !== m.phrase) { $('phrase').innerHTML = m.phrase; entrer($('phrase')); }
+    if ($('mot').textContent !== m.mot) {
+      const mot = $('mot'), texte = m.mot;
+      mot.dataset.attendu = texte;
+      if (etat.caractere === 'signature' && mot.textContent) temoin(mot, () => { mot.textContent = texte; }, texte);
+      else { mot.textContent = texte; if (!vif()) entrer(mot); else if (!reduit()) jouer(mot, [{ opacity: 0 }, { opacity: 1 }], 180, 'cubic-bezier(.2,.7,.2,1)'); }
+    }
+    if ($('phrase').innerHTML !== m.phrase) $('phrase').innerHTML = m.phrase;
     $('bornes-ligne').hidden = !m.bornes;
     if (m.bornes) $('bornes-ligne').innerHTML = m.bornes;
     peindreGlyphe(m);
@@ -411,9 +621,9 @@ button{background:none;border:0;cursor:pointer}
       $('chiffre').textContent = String(TOTAL);
       $('suite').textContent = 'cuts ciblés · aucun traité';
       $('droite').innerHTML = '';
-      $('fait').style.width = '0%';
       $('cur').hidden = true;
       $('reperes').innerHTML = ''; $('reperes').dataset.cle = '';
+      etat.animerRail = false; railMem = 0; poserRail(false);
     } else if (m.objet === 'rail') peindreRail();
     $('allure').hidden = !m.allure;
     if (m.allure === true) $('allure').innerHTML = `<b>7,1</b> cuts par minute <span class="sep">·</span> médiane <b>${String(MED).replace('.', ',')}</b> s par cut <span class="sep">·</span> environ <b>${resteTexte()}</b> restantes`;
@@ -435,24 +645,39 @@ button{background:none;border:0;cursor:pointer}
     $('bascule-fin').setAttribute('aria-pressed', etat.fin === 'clos' ? 'true' : 'false');
     $('bascule-arret').setAttribute('aria-pressed', etat.fin === 'arret' ? 'true' : 'false');
     $('cut').disabled = etat.scene !== 'cours' || etat.dem;
+    majVie();
   }
 
   function ticChiffre() {
     const el = $('chiffre');
     if (reduit()) return;
-    el.classList.remove('tic'); void el.offsetWidth; el.classList.add('tic');
+    if (!vif()) { el.classList.remove('tic'); void el.offsetWidth; el.classList.add('tic'); return; }
+    jouer(el, [
+      { opacity: 0.3, transform: 'translateY(-.2em)' },
+      { opacity: 1, transform: 'none' }
+    ], 200);
+    const droite = $('droite');
+    if (droite && droite.textContent) droite.animate([
+      { opacity: 0, transform: 'translateY(4px)' },
+      { opacity: 1, transform: 'none' }
+    ], { duration: ms(220), delay: ms(60), easing: RESSORT, fill: 'backwards' });
   }
-  function avancer() {
+  function couper(opts) {
+    opts = opts || {};
     if (etat.traites >= TOTAL) return;
     etat.traites += 1;
-    if (etat.traites % 7 === 0) etat.differes.push(etat.traites);
+    if (opts.differe || (!opts.explicite && etat.traites % 7 === 0)) etat.differes.push(etat.traites);
     etat.debutCut = performance.now();
+    etat.animerRail = true;
     const arc = $('arc');
-    if (arc && !reduit()) { arc.style.transition = 'stroke-dashoffset var(--d-anneau) var(--sortie)'; arc.style.strokeDashoffset = String(C); }
+    if (arc) { arc.style.transition = (vif() || reduit()) ? 'none' : ''; arc.style.strokeDashoffset = String(C); }
     peindre(); ticChiffre();
   }
+  function avancer() { couper(); }
   function aller(scene, opts) {
     opts = opts || {};
+    if (!opts.interne) stopScenario();
+    cacherIncident();
     const avant = etat.scene;
     etat.dem = false; etat.prepare = false; etat.tiroir = false;
     etat.scene = scene;
@@ -466,6 +691,38 @@ button{background:none;border:0;cursor:pointer}
     glypheNom = '';
     $('actions').dataset.cle = '';
     peindre();
+    if (scene === 'fin' && etat.fin === 'clos' && !etat.prepare) momentFin();
+  }
+  function derouler() {
+    stopScenario();
+    etat.scenario = true;
+    $('derouler').setAttribute('aria-pressed', 'true');
+    etat.auto = false; $('auto').checked = false;
+    aller('repos', { interne: true });
+    const pas = 1400;
+    apres(1200, () => { if (etat.scenario) aller('cours', { neuf: true, interne: true }); });
+    [0, 1, 2, 3, 4, 5].forEach(i => apres(2400 + i * pas, () => { if (etat.scenario) couper({ explicite: true, differe: i === 3 }); }));
+    apres(11200, () => { if (etat.scenario) { etat.dem = true; $('actions').dataset.cle = ''; peindre(); } });
+    apres(12600, () => { if (etat.scenario) aller('pause', { interne: true }); });
+    apres(15400, () => { if (etat.scenario) aller('cours', { interne: true }); });
+    apres(16800, () => { if (etat.scenario) couper({ explicite: true }); });
+    apres(18200, () => { if (etat.scenario) { etat.traites = TOTAL; etat.animerRail = true; peindre(); } });
+    apres(19800, () => {
+      if (!etat.scenario) return;
+      etat.fin = 'clos'; etat.scene = 'fin'; etat.prepare = false; etat.dem = false; etat.tiroir = false;
+      glypheNom = ''; $('actions').dataset.cle = '';
+      peindre(); momentFin();
+      etat.scenario = false; $('derouler').setAttribute('aria-pressed', 'false');
+    });
+  }
+  function rejouer() {
+    stopScenario();
+    if (etat.scene === 'fin' && etat.fin === 'clos' && !etat.prepare) { momentFin(); return; }
+    if (etat.scene === 'repos') { glypheNom = ''; $('mot').textContent = ''; peindre(); return; }
+    railMem = Math.max(0, etat.traites / TOTAL - 3 / TOTAL);
+    etat.animerRail = true;
+    if (etat.caractere === 'signature') { const mot = $('mot'); const t = mot.textContent; mot.dataset.attendu = t; mot.textContent = ''; temoin(mot, () => { mot.textContent = t; }, t); }
+    peindre(); ticChiffre();
   }
   function dire(t) {
     const a = $('avis'); a.hidden = false; a.textContent = t;
@@ -474,12 +731,40 @@ button{background:none;border:0;cursor:pointer}
 
   document.querySelector('.hors').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.caractere) {
+      etat.caractere = b.dataset.caractere;
+      fen.dataset.caractere = etat.caractere;
+      document.querySelectorAll('[data-caractere]').forEach(x => x.setAttribute('aria-pressed', x.dataset.caractere === etat.caractere ? 'true' : 'false'));
+      if (etat.scene === 'cours') { railMem = Math.max(0, etat.traites / TOTAL - 2 / TOTAL); etat.animerRail = true; }
+      peindre(); ticChiffre();
+      if (etat.caractere === 'signature' && etat.scene === 'fin' && etat.fin === 'clos' && !etat.prepare) momentFin();
+      return;
+    }
+    if (b.id === 'derouler') { derouler(); return; }
+    if (b.id === 'rejouer') { rejouer(); return; }
+    if (b.id === 'incident-btn') { etat.incident = true; arriverIncident(); return; }
     if (b.dataset.scene) aller(b.dataset.scene);
     if (b.dataset.fin) { etat.fin = b.dataset.fin; etat.prepare = false; aller('fin'); }
     if (b.id === 'cut') avancer();
   });
   $('theme').onchange = () => { fen.dataset.theme = $('theme').checked ? 'clair' : 'sombre'; };
-  $('reduit').onchange = () => { etat.reduit = $('reduit').checked; fen.classList.toggle('reduit', etat.reduit || window.matchMedia('(prefers-reduced-motion: reduce)').matches); };
+  $('reduit').onchange = () => {
+    etat.reduit = $('reduit').checked;
+    fen.classList.toggle('reduit', etat.reduit || window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    fen.getAnimations().forEach(a => a.cancel());
+    majVie(); poserRail(false);
+  };
+  $('ralenti').onchange = () => { etat.ralenti = $('ralenti').checked; fen.classList.toggle('ralenti', etat.ralenti); };
+  $('riche').onchange = () => { fen.dataset.riche = $('riche').checked ? '1' : '0'; };
+  fen.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.principal');
+    if (!b || b.disabled || !vif() || reduit()) return;
+    jouer(b, [
+      { transform: 'scale(1)' },
+      { transform: 'scale(.94)', offset: 0.4 },
+      { transform: 'scale(1)' }
+    ], 200, 'linear(0, 0.45 28%, 1.06 70%, 1)');
+  });
   $('auto').onchange = () => { etat.auto = $('auto').checked; };
   $('case').onchange = () => { if (etat.prepare) { $('actions').dataset.cle = ''; peindre(); } };
   fen.addEventListener('click', e => {
@@ -493,7 +778,7 @@ button{background:none;border:0;cursor:pointer}
     const a = acte.dataset.acte;
     if (a === 'pause') {
       etat.dem = true; $('actions').dataset.cle = ''; peindre();
-      const attente = reduit() ? 0 : 700;
+      const attente = ms(700);
       setTimeout(() => { if (etat.dem) aller('pause'); }, attente);
     } else if (a === 'continuer') aller('cours');
     else if (a === 'preparer') { etat.scene = 'fin'; etat.prepare = true; $('actions').dataset.cle = ''; peindre(); }
@@ -519,7 +804,7 @@ button{background:none;border:0;cursor:pointer}
         arc.style.transition = 'none';
         arc.style.strokeDashoffset = (C * (1 - p)).toFixed(2);
       }
-      if (etat.auto && t - etat.debutCut > 3200 && etat.traites < 40) avancer();
+      if (etat.auto && !etat.scenario && !reduit() && t - etat.debutCut > (etat.ralenti ? 12800 : 3200) && etat.traites < 40) avancer();
     }
     requestAnimationFrame(horloge);
   }

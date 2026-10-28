@@ -230,7 +230,7 @@ Ouvert, pas tranché ici : après un arrêt au milieu, le bouton plein proposé 
 
 ## 3. Mouvement
 
-Ce qui est écrit aujourd'hui (`panel-signal.css`, dernière règle quand deux durées se recouvrent) :
+Ce qui est écrit aujourd'hui dans le panneau (`panel-signal.css`, dernière règle quand deux durées se recouvrent) :
 
 | Quoi | Durée écrite | Hors de 200–450 ms |
 |---|---|---|
@@ -273,13 +273,64 @@ Proposition. Courbe unique, déjà là : `cubic-bezier(.2, .7, .2, 1)`. Pas de r
 | Pastille de connexion | 300 ms, la couleur seule | au changement de statut | prêt, en reconnexion, perdu. Plus de pulsation |
 | Perte de connexion | 320 ms, l'incident se pose **au-dessus** du rail | au statut `unavailable` | la page est perdue, le lot reste lisible. Aujourd'hui l'incident remplace le rail |
 
-Aucune boucle. « Pause demandée… » est le libellé désactivé (220 ms). Le tourniquet sort : le mot suffit, et il s'arrête quand l'état « En pause » arrive.
+La phase 1 tenait tout dans cette table : 200 à 450 ms, sans boucle, sans rebond. La maquette restait trop proche du panneau. Phase 1b lève ces limites. Trois caractères, commutables dans la barre de `maquettes/ui-5.0/S-revision.html`. Le code couleur ne change pas. Rien de ce qui suit n'est dans `src/` ni dans `panel*.css`.
 
-Mouvement réduit = tout fixe. La règle déjà écrite reste. On y ajoute : l'anneau ne suit plus le temps (figé à la dernière valeur), « en pause depuis » ne s'incrémente plus (la durée reste celle du dernier affichage). Les changements d'état sont instantanés. Rien ne pulse.
+Règle commune. Micro-geste 120 à 220 ms. Geste courant 250 à 500 ms. Moment signature 1,2 s, une seule fois. Une seule boucle à la fois, 2,8 s, jamais pendant une pause ni en mouvement réduit. « Ralenti ×0,25 » multiplie ces durées par 4, pour juger le geste. Vivant et Signature n'animent que `transform` et `opacity` : le compositeur, pas la mise en page. Le texte qu'on lit (la phrase, les bornes) ne bouge pas. Le ressort s'écrit `linear(0, 0.18 14%, 0.55 32%, 0.92 50%, 1.14 68%, 0.97 84%, 1)`.
+
+### Sobre
+
+La proposition de la phase 1, telle quelle. Pas de ressort, pas de boucle, pas de dépassement. Courbe `cubic-bezier(.2, .7, .2, 1)`.
+
+| Geste | Durée | Propriété | Coût |
+|---|---|---|---|
+| Chiffre traité | 240 ms | `opacity`, `transform` | compositeur |
+| Segment du rail | 320 ms | `width` | mise en page |
+| Curseur | 320 ms, après 40 ms | `left` | mise en page |
+| Repère différé | 280 ms | `transform`, `opacity` | compositeur |
+| Mot, glyphe, phrase | 240 à 280 ms | `opacity` | compositeur |
+| Appui | 200 ms | `transform` (1 px) | compositeur |
+| Tiroir et ses lignes | 320 ms, puis 240 ms | `transform`, `opacity` | compositeur |
+| Anneau au changement de cut | 400 ms | `stroke-dashoffset` | peinture |
+
+`width` et `left` restent ici pour que Sobre soit la proposition déjà écrite, pas un troisième ressort. Ils coûtent une mise en page à chaque cut : c'est le prix de cette référence, et la raison pour laquelle Vivant ne les reprend pas.
+
+### Vivant
+
+Les mêmes faits, avec un dépassement court là où le fait compte, et une seule vie ambiante.
+
+| Geste | Durée | Propriété | Coût | Fait porté |
+|---|---|---|---|---|
+| Cut validé : le segment | 420 ms, ressort | `transform` (`scaleX`) | compositeur | les traités ont avancé |
+| Cut validé : le curseur s'étire puis se pose | 420 ms, ressort | `transform` | compositeur | le cut vient d'être validé |
+| Éclat du cut (une fois, pas une boucle) | 420 ms | `transform`, `opacity` | compositeur | le choc du cut |
+| Chiffre, puis la ligne « posés · différés » | 200 ms, puis 220 ms | `transform`, `opacity` | compositeur | le compte, puis le détail |
+| Différé posé | 380 ms, ressort | `transform`, `opacity` | compositeur | un différé, à cet endroit |
+| Appui du bouton plein | 200 ms, ressort | `transform` (`scale`) | compositeur | le clic est pris |
+| Ouverture du tiroir | 480 ms, ressort | `transform` | compositeur | une couche couvre l'instrument |
+| Lignes du tiroir | 320 ms, 50 ms par rang | `transform`, `opacity` | compositeur | les lignes arrivent |
+| Halo du cut en cours | 2,8 s, boucle | `transform`, `opacity` | compositeur, une seule boucle | le lot vit. S'arrête à la pause, au mouvement réduit, et en Sobre |
+
+### Signature
+
+Vivant, plus trois moments.
+
+| Geste | Durée | Propriété | Coût | Fait porté |
+|---|---|---|---|---|
+| Passage de témoin : le mot et le glyphe sortent, les suivants entrent | 160 ms puis 320 ms | `transform`, `opacity` | compositeur | l'état a changé, il ne se fait pas remplacer d'un bloc |
+| Fin de lot | 1,2 s, une seule fois | `transform`, `opacity` sur le glyphe, le sceau et les lignes du bilan | compositeur | le lot est clos. Le sceau s'ouvre et s'éteint. Les lignes du bilan arrivent en cascade |
+| Arrivée de l'incident | 480 ms, ressort | `transform`, `opacity` | compositeur | l'alerte se pose au-dessus du rail, sans le masquer et sans déplacer la phrase |
+
+Le bouton « Incident » de la barre montre l'arrivée. En Vivant elle dure 280 ms, sans dépassement. En Sobre elle est instantanée : l'information reste, le geste non.
+
+### Séquence
+
+« Dérouler un lot », environ 20 s à vitesse normale : repos, départ, six cuts dont un différé, pause demandée, pause (le halo s'arrête), reprise, deux cuts, le rail va au bout, fin de lot (le moment signature si le caractère est Signature). « Rejouer » rejoue le geste de la scène affichée, sans relancer la séquence. « Ralenti ×0,25 » étire durées et séquence par 4.
+
+Mouvement réduit = tout fixe, dans les trois caractères. Les positions, les chiffres, les libellés et l'incident sont posés tout de suite. Le halo ne part pas. Le sceau de fin ne joue pas : le mot « Terminé » et la coche restent. Rien de ce qui informe n'est dans le geste.
 
 ## 4. Finition, sans rompre la simplicité
 
-Six gestes. Aucune couleur neuve. Lisibles pendant le travail : rien ne bouge dans la zone du rail sauf un fait de la section 3. La maquette en montre les quatre premiers.
+Six gestes. Aucune couleur neuve. Lisibles pendant le travail : rien ne bouge dans la zone du rail sauf un fait de la section 3. La case « Finition riche » de la maquette pose l'instrument sur `surface` avec le filet et l'ombre déjà jetés, le rail dans un puits `fond`, le glyphe un peu plus grand, et chaque icône de verbe un peu plus grande. Mêmes jetons.
 
 1. **Matière.** L'objet (rail, bilan, bornes) repose sur `surface`, filet `filet`, filet haut `filet-fort`. Le fond reste `fond`. Le rail n'est plus posé dans le vide. Aucun grain, aucune image.
 
