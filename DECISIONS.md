@@ -3202,3 +3202,9 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 
 - **Constat (28/10)** : deux sessions filles ont posé leur question sur le hub et sont restées arrêtées ; les réponses de la mère, postées sur le hub, ne les ont pas réveillées ; la réponse d'une fille ne l'a pas réveillée non plus. Cause PROBABLE : mère et filles postent avec le même compte GitHub, l'événement passe pour un écho. L'ancienne session principale confirme le même diagnostic et le mode de permission hérité comme second accroc (réglé : filles en mode auto).
 - **Décision** : « corrige ceci jusqu'à trouver une solution ». Entre sessions Claude, `send_message` (priorité `now` si on attend) ; une fille s'adresse à sa mère par `@parent`. Le hub reste le journal public et le canal de Cursor, GLM, l'action GitHub et Telegram. `CLAUDE.md` et `hub/PROTOCOLE.md` modifiés en ce sens. Le décompte D-254 / cible de précision chiffrée devient D-256.
+
+## D-256 — L'opérateur n'aime pas le code couleur et les symboles de Signal (opérateur, 28/10/2026)
+
+- **Constat de l'opérateur** : « il n'aime pas le code couleur et symboles créés pour Signal ». Le détail (quelles couleurs, quels symboles) n'est pas encore donné : à recueillir.
+- **Effet** : la règle « la simplicité et le code couleur de Signal sont acquis et ne bougent pas » (`fiches/RESEAU_IA.md` § 6, objectif 2) est suspendue pour le code couleur et les symboles. La simplicité et la clarté des boutons (Lancer = lot neuf, Continuer = même lot, Préparer = ne lance rien) restent. Les maquettes de CH-002 phase 1c (Fil d'Ariane, mouvement, comparaison) reprennent l'ancien code : leur validation attend ce détail. CH-010 propose au moins une direction à code couleur et symboles différents.
+- Le numéro suivant est D-257.
