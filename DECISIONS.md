@@ -3197,3 +3197,8 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 
 - **Décision** : « On oublie mon prénom : RAS ». Le chantier de retrait du prénom de `src/`, du panneau, de `background.js`, `design/` et `icons/` est clos sans suite ; il n'est plus un préalable à une nouvelle version.
 - **Ce qui reste** : les interdits de `CLAUDE.md` ne changent pas (aucun nom d'opérateur, code projet ESV, adresse, UUID ni capture dans les fichiers nouveaux ou les commits ; le scan et le hub les contrôlent). Le numéro D-254 est donc pris ; la cible de précision chiffrée, si l'opérateur la fixe, sera D-255.
+
+## D-255 — Entre sessions Claude, `send_message` est le canal ; le hub est le journal public (opérateur, 28/10/2026)
+
+- **Constat (28/10)** : deux sessions filles ont posé leur question sur le hub et sont restées arrêtées ; les réponses de la mère, postées sur le hub, ne les ont pas réveillées ; la réponse d'une fille ne l'a pas réveillée non plus. Cause PROBABLE : mère et filles postent avec le même compte GitHub, l'événement passe pour un écho. L'ancienne session principale confirme le même diagnostic et le mode de permission hérité comme second accroc (réglé : filles en mode auto).
+- **Décision** : « corrige ceci jusqu'à trouver une solution ». Entre sessions Claude, `send_message` (priorité `now` si on attend) ; une fille s'adresse à sa mère par `@parent`. Le hub reste le journal public et le canal de Cursor, GLM, l'action GitHub et Telegram. `CLAUDE.md` et `hub/PROTOCOLE.md` modifiés en ce sens. Le décompte D-254 / cible de précision chiffrée devient D-256.

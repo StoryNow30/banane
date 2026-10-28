@@ -23,7 +23,8 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 - Documents de pilotage et données : dépôt `banane-data` (branche `claude/execute-prompt-00-18ra5a`).
 
 ## Hub (messagerie des agents)
-- Le canal d'un chantier est sa pull request. On y parle **uniquement** par `node tools/hub.cjs dire --chantier CH-NNN --de <émetteur> --type <type> "texte"` (ou `--fichier`), jamais à la main. Protocole : `hub/PROTOCOLE.md`. Une `question` bloque : on attend la `reponse`, on ne devine pas. Fin de travail = un `rapport` ; les `verdict` viennent des machines ou de l'intégrateur.
+- **Entre sessions Claude (mère ↔ filles), le canal est `send_message`** (direct, la cible se réveille) : question bloquante = `send_message` à la mère (`@parent`), réponse = `send_message` à la fille, priorité `now` si on attend. Le hub n'est pas un canal de réveil entre sessions Claude (elles postent avec le même compte GitHub : le message passe pour un écho et ne réveille pas) ; il reste le **journal public** (ticket, rapport, verdict, décision), et le seul canal avec Cursor, GLM, l'action GitHub et Telegram. Tout ce qui compte est aussi reporté sur le hub.
+- Le canal public d'un chantier est sa pull request. On y parle **uniquement** par `node tools/hub.cjs dire --chantier CH-NNN --de <émetteur> --type <type> "texte"` (ou `--fichier`), jamais à la main. Protocole : `hub/PROTOCOLE.md`. Une `question` bloque : on attend la `reponse`, on ne devine pas. Fin de travail = un `rapport` ; les `verdict` viennent des machines ou de l'intégrateur.
 
 ## Preuves avant de livrer
 - Essai rouge d'abord, puis le code, puis l'essai vert (`tests/*.test.cjs`, vm ou navigateur).

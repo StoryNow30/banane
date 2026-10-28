@@ -10,7 +10,7 @@ Décision de l'opérateur du 26/10/2026 : les agents du projet communiquent par 
 | `TNN` | PR d'intégration d'une version de test (quand elle existe) | fusion, verify de version, paquet |
 | `hub` | PR permanente « hub » (branche `hub/journal`) | messages généraux : budget, décisions à prendre, alertes hors chantier |
 | Telegram | relais `hub/telegram/` (Cloudflare Worker, installation : `hub/telegram/INSTALLATION.md`) | miroir du hub sur le téléphone de l'opérateur, dans les deux sens : chaque message du hub lui est envoyé, sa réponse devient un commentaire signé `operateur` sur la PR du chantier |
-| direct | `send_message` entre sessions Claude Code | seulement entre sessions Claude (chercheur GCV2 ↔ intégrateur) ; rien d'important n'y reste : le résultat est reporté sur la PR |
+| direct | `send_message` entre sessions Claude Code | **canal par défaut entre une mère et ses filles, et entre sessions Claude** : questions bloquantes (`@parent`, priorité `now`), réponses, ordres. Raison (D-255 : mesuré le 28/10) : une session Claude qui poste sur le hub le fait avec le même compte GitHub que son interlocutrice ; l'événement passe pour un écho et ne la réveille pas, les deux attendent dans le vide. Le résultat est ensuite reporté sur la PR (journal public) |
 
 ## Le message
 
