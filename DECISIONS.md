@@ -3215,3 +3215,10 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Constat de l'opérateur** : « Je trouve les maquettes horribles » ; interrogé, il désigne l'**esthétique générale** (pas un point précis) et demande de **tout arrêter pour l'instant**.
 - **Effet** : les trois directions de CH-010 (A Cadran, B Nuage, C Chantier), les pages de CH-002 phase 1c et la page de choix sont rejetées en l'état. Plus aucune maquette ni aucun code de Signal tant que l'opérateur n'a pas donné de direction. L'interface de Signal en place (tronc, 4.9.5.23) n'est pas modifiée. Les pages Figma et les fiches restent, rien n'est supprimé.
 - Le numéro suivant est D-258.
+
+## D-258 — Chantier v7 : apprendre des poses de qualité stricte de l'opérateur (opérateur, 28/10/2026)
+
+- **Décision** : l'opérateur vise une v7 de la GCV2 **sous 5 mm avec une qualité stricte**. Il enverra, le 29/10, dans une session fille lancée par l'intégrateur, plusieurs exports de parties où il s'est particulièrement appliqué à poser ; la GCV2 doit apprendre de chacune de ces poses.
+- **Cadre de l'intégrateur (à confirmer par l'opérateur)** : « apprendre » = calibrer des paramètres de la GCV2 déterministe à partir des poses de référence, pas un modèle opaque ; séparation réglage / examen écrite avant toute analyse (cahier § 4) ; cible exprimée en taux de partie sur les mêmes cuts, même référence (le bruit de référence est de 0,75 à 2,3 mm par axe, `fiches/BRUIT_REFERENCE.md`) ; aucune modification des fichiers de décision sans la garde et la parité. Ticket : `chantiers/CH-012.md`.
+- **Autres réponses du 28/10** : références de design : l'opérateur les enverra (design en pause, D-257). File de parties (D-244, D-245) : l'opérateur la veut ; le nombre de parties est choisi par lui.
+- Le numéro suivant est D-259.
