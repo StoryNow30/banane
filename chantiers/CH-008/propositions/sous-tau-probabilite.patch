@@ -1,0 +1,13 @@
+--- a/src/gcv2-l1e.js
++++ b/src/gcv2-l1e.js
+@@ -77,7 +77,9 @@
+    const corrigee=!!(c&&c.anomalie&&c.soutenue);
+    if(d0.etat==='valider')return {etat:'valider',motif:null,decal:corrigee?c.decal:{left:d0.paire.left.decal,right:d0.paire.right.decal},corrigee};
+    if(d0.etat==='rien'&&d0.motif==='plus-de-150-mm'&&corrigee)return {etat:'valider',motif:'ecartement-corrige',decal:c.decal,corrigee};
+-   if(d0.etat==='poser-sans-valider')return {etat:'rien',motif:'sans-approche',decal:null,corrigee:false};
++   if(d0.etat==='poser-sans-valider'){
++    if(fini(d0.p)&&d0.p>=0.1027)return {etat:'valider',motif:'sous-tau-seuil',decal:d0.paire?{left:d0.paire.left.decal.slice(),right:d0.paire.right.decal.slice()}:null,corrigee:false};
++    return {etat:'rien',motif:'sans-approche',decal:null,corrigee:false};}
+    return {etat:'rien',motif:d0.motif??null,decal:null,corrigee:false};
+  }
+  return {VERSION,REGLAGE,referenceEcartement,signe,corriger,decider};
