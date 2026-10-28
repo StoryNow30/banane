@@ -15,7 +15,7 @@ test('ombre : chaque cut choisi est visité, capturé, calculé et noté ; aucun
  assert.equal(b.store.events.find(e=>e.type==='batch-started').batch.scope.relecture,'ombre','choix consigné dans batch-started');
  assert.equal(p.etat,'finie');assert.equal(p.faits,7);assert.equal(p.corriges,0);
  assert.match(p.message,/^Relecture finie : 7 cuts relus, rien de modifié ; ESV a marqué 6 cuts « vu »\.$/);
- /* Ordre de Mic, par plage : 108, 109, 110, le différé 113, 114, 115, 116 ; 111 et 112 (posés par le lot) traversés. */
+ /* Ordre de l'opérateur, par plage : 108, 109, 110, le différé 113, 114, 115, 116 ; 111 et 112 (posés par le lot) traversés. */
  assert.deepEqual(adapter.allees.map(a=>a.cut),[108,109,110,113,114,115,116]);
  assert.deepEqual(adapter.allees.map(a=>a.chemin),['auto','pas','pas','pas','pas','pas','pas'],'boutons « cut suivant » dans la plage');
  const apres=apresLot(b,lot);

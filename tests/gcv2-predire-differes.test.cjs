@@ -171,13 +171,13 @@ function predictions() {
     hyps: { left: [{ decal: [0, 0, 0] }, { decal: [0, 150, 0] }], right: [{ decal: [0, 0, 0] }, { decal: [0, 150, 0] }] }, ...extra });
   const pose = lat => ({ left: { decal: [0, lat, 0] }, right: { decal: [0, lat, 0] } });
   return { entete: { type: 'entete', format: P.FORMAT, partie: '9:91' }, differes: [
-    d(10, 'adv', 'agit', pose(150)),      // Mic à 152 : juste (et > 45 mm du départ : compté à part)
-    d(11, 'adv', 'agit', pose(150)),      // Mic laisse à 0 : abîmé et mauvaise voie (erreur 150 mm)
-    d(12, 'abords', 'laisse', null),      // Mic à 30 : grosse laissée fausse, hors d'atteinte
+    d(10, 'adv', 'agit', pose(150)),      // L'opérateur à 152 : juste (et > 45 mm du départ : compté à part)
+    d(11, 'adv', 'agit', pose(150)),      // L'opérateur laisse à 0 : abîmé et mauvaise voie (erreur 150 mm)
+    d(12, 'abords', 'laisse', null),      // L'opérateur à 30 : grosse laissée fausse, hors d'atteinte
     d(13, 'abords', 'laisse', null),      // départ différent dans l'Écho : non jugé
-    d(14, 'pn', 'laisse', null),          // pas de référence de Mic
+    d(14, 'pn', 'laisse', null),          // pas de référence de l'opérateur
     { type: 'differe', partie: '9:91', cut: 15, zone: 'adv', etat: 'sans-nuage', decision: { etat: 'sans-nuage' } },
-    d(16, 'adv', 'abstient', pose(60)),   // abstention ; Mic à 150 : atteignable
+    d(16, 'adv', 'abstient', pose(60)),   // abstention ; l'opérateur à 150 : atteignable
   ] };
 }
 const mic = lat => ({ ref: 'validation', rails: { left: [0, lat, 0], right: [0, lat, 0] }, ecartDepartMm: 1450.5 });

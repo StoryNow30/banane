@@ -1,4 +1,4 @@
-/* Chantier UX 4.9 (variante A retenue par Mic, 13–14/10). La politique
+/* Chantier UX 4.9 (variante A retenue par l'opérateur, 13–14/10). La politique
  * effective quitte la vue principale pour « Détails du lot » : elle y reste
  * écrite (D-045) ; si elle n'est pas celle par défaut, une pastille le dit sur
  * la vue. `panel.js` réel dans un contexte `vm`, comme panel-ligne.test.cjs. */
@@ -54,7 +54,7 @@ test('panel.html : la politique effective est dans « Détails du lot », fermé
   for(const id of ['lot-commande','lot-decision-effective','unresolved-policy-effective','policy-effective'])assert.match(details,new RegExp(`id="${id}"`),id);
 });
 
-/* Départs des parties (D-092). 4.9.0.16 (test 15, Mic : voir aussi les parties précédentes) : la
+/* Départs des parties (D-092). 4.9.0.16 (test 15, l'opérateur : voir aussi les parties précédentes) : la
  * partie en cours en grand (sa fiche la plus récente), puis l'historique des autres parties, de la
  * plus récente à la plus ancienne, chacune dépliable sur ses départs. Texte seulement. */
 test('départs : partie en cours en grand, puis historique des parties précédentes (plus récente d’abord) ; texte seulement',async()=>{

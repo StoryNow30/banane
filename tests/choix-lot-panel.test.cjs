@@ -73,7 +73,7 @@ test('pendant un lot : « Lot en cours » (son scope) et « Prochain lot » (le 
  assert.equal(p.$('notice').textContent,'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.');
 });
 
-test('après un lot (retour de Mic) : « Dernier lot » dit ce que le lot a UTILISÉ, jamais « activée pour le prochain lot »',async()=>{
+test('après un lot (retour de l\'opérateur) : « Dernier lot » dit ce que le lot a UTILISÉ, jamais « activée pour le prochain lot »',async()=>{
  for(const etat of ['COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS','STOPPED']){
   const p=await ouvrir(etat,{scope:{clicHumain:'tout-recentre',regleGrappeDifferes:true},choix:{clicHumain:'tout-recentre',regleGrappeDifferes:true}});
   assert.equal(p.$('clic-dernier-l').textContent,'Dernier lot',etat);assert.equal(p.$('clic-dernier').textContent,'« Tout recentré, comme un humain »');

@@ -1,6 +1,6 @@
 'use strict';
 /* 5.0 (D-170, D-171, D-172) — RELECTURE APRÈS LE LOT, EN OMBRE : le module pur (src/relecture-ombre.js).
- *  - La sélection des cuts à relire, selon la méthode de Mic (fiches/METHODE_MIC_P29.md) : cut isolé (le cut d'avant et le cut
+ *  - La sélection des cuts à relire, selon la méthode de l'opérateur (fiches/METHODE_MIC_P29.md) : cut isolé (le cut d'avant et le cut
  *    d'après), grappe (toute la plage, sans trou, marges comprises), différé (ses abords), PN et ADV (zones déjà marginées par les
  *    règles métier), liste « À contrôler ». Ordonnée par plages, dans l'ordre des cuts ; plafond de cuts, plages entières.
  *  - D-172 : les premiers cuts d'une partie ne sont jamais exclus.
@@ -227,7 +227,7 @@ test('plafond par zone : valeurs par défaut — le PN et l’ADV n’ont aucun 
  assert.equal(s.cuts.filter(c=>c.zone==='pn').length,14);assert.equal(s.cuts.filter(c=>c.zone==='adv').length,420,'434 cuts d’ADV moins les 14 du PN : toute l’ADV');assert.equal(s.cuts.filter(c=>c.zone==='abords').length,8);
 });
 
-/* Écho de Mic sur la partie 11 (18/10, D-185) : la relecture avait laissé 15 verts faux de plus de 10 mm. Couverture de la sélection :
+/* Écho de l'opérateur sur la partie 11 (18/10, D-185) : la relecture avait laissé 15 verts faux de plus de 10 mm. Couverture de la sélection :
  * plus de plafond en ADV, zones d'ADV proches enchaînées, cuts de la liste « À contrôler » et cuts « écartement » jamais écartés par un
  * budget, et le cut d'avant et le cut d'après d'un cut isolé (« écartement »). */
 test('D-185 : l’ADV n’a plus de plafond par défaut ; les zones d’ADV de la partie 11 sont relues entières',()=>{
@@ -237,7 +237,7 @@ test('D-185 : l’ADV n’a plus de plafond par défaut ; les zones d’ADV de l
  assert.equal(s.horsPlafond.length,0);
 });
 
-test('D-185 : deux zones d’ADV séparées de 40 cuts au plus sont enchaînées, comme Mic les contrôle d’un trait ; au-delà, elles restent séparées',()=>{
+test('D-185 : deux zones d’ADV séparées de 40 cuts au plus sont enchaînées, comme l\'opérateur les contrôle d’un trait ; au-delà, elles restent séparées',()=>{
  const s=R.selection({partie:11,total:9792,zonesADV:[[7288,7350],[7388,7470]]});
  assert.deepEqual(plagesDe(s),[[7288,7470]]);
  const t=R.selection({partie:11,total:9792,zonesADV:[[1000,1050],[1100,1150]]});

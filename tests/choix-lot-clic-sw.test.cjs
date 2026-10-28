@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — LE CLIC DU MODE RAPIDE CHOISI DANS LE PANNEAU, SANS CHOIX.
+/* 4.9.5 test 6 (D-157, D-164 ; l'opérateur : « essayer les 2 méthodes ») — LE CLIC DU MODE RAPIDE CHOISI DANS LE PANNEAU, SANS CHOIX.
  * Service worker réel en VM (tests/helpers/choix-lot.cjs), chrome.storage.local en mémoire. Sans choix gardé, ou « Comme avant »
  * gardé (règle « grappe de différés » coupée), les commandes envoyées à la page sont celles de la base, octet pour octet
  * (tests/fixtures/choix-lot-50-base.json, prise sur claude/50-base a362a29) ; `apply` part sans option ; le scope du lot est celui

@@ -1,5 +1,5 @@
 'use strict';
-/* 5.0, D-180 — LE MODE « CORRIGER » AGIT AUSSI SUR LES VERTS D'ADV ET D'ABORDS (Mic accepte les chiffres de l'étude : ADV 11 justes sur
+/* 5.0, D-180 — LE MODE « CORRIGER » AGIT AUSSI SUR LES VERTS D'ADV ET D'ABORDS (l'opérateur accepte les chiffres de l'étude : ADV 11 justes sur
  * 17, abords 30 sur 37, 0 mauvaise voie). Fichier de réglages proposé RÉEL. Un vert d'ADV et un vert d'abords sont corrigés quand la
  * règle l'accepte, avec les MÊMES gardes que le PN : vert prouvé (statut lu dans ESV, pas de drapeau opérateur), jamais un cut du lot,
  * jamais de pose juste après un saut par la carte. Les verts hors zone restent en ombre. En mode « ombre », le même fichier n'écrit

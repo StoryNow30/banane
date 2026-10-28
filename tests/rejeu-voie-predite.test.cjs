@@ -107,7 +107,7 @@ test('CSV : une ligne par cut, séparateur « ; », virgule décimale, aucune co
   assert.match(l4[10],/^1,1\d$/,'dézoom avec virgule');
 });
 
-test('lecture du journal, de la jointure et du corpus : ordre du lot, pose de Mic depuis le départ, captures allégées',()=>{
+test('lecture du journal, de la jointure et du corpus : ordre du lot, pose de l\'opérateur depuis le départ, captures allégées',()=>{
   const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'voie-'));
   try{
@@ -126,7 +126,7 @@ test('lecture du journal, de la jointure et du corpus : ordre du lot, pose de Mi
     fs.writeFileSync(path.join(dir,'t.json'),JSON.stringify(jointure));
     const ref=T.lireReference(path.join(dir,'t.json'));
     assert.deepEqual(ref.get(10).mic,{left:[0,-100,5],right:[0,-40,6]});assert.equal(ref.get(10).ariane,null);
-    assert.deepEqual(ref.get(11).mic,{left:[0,-18,1],right:[0,29,5]},'pose de Mic = déplacement d\'Ariane + correction');
+    assert.deepEqual(ref.get(11).mic,{left:[0,-18,1],right:[0,29,5]},'pose de l\'opérateur = déplacement d\'Ariane + correction');
     assert.deepEqual(ref.get(11).ariane,{left:[0,-20,1],right:[0,30,2]});
     assert.equal(ref.get(12).mic,null);
     /* corpus : seules les captures aux deux rails sont gardées, allégées */

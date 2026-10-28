@@ -1,7 +1,7 @@
 'use strict';
 /* 5.0 — ORBITE : VERTS À CONTRÔLER, LUS SUR LA FENÊTRE DE LA LISTE D'ESV QUE B1 DEMANDE DÉJÀ (service worker réel en VM, observateur
  * réel de la page, montage tests/helpers/b1-montage.cjs, données synthétiques). Le lot traite le cut 110, rouge isolé : ses deux
- * voisins verts, jamais traités par un opérateur, sont signalés (règle 1 de Mic, « contrôler le cut d'avant et le cut d'après »),
+ * voisins verts, jamais traités par un opérateur, sont signalés (règle 1 de l'opérateur, « contrôler le cut d'avant et le cut d'après »),
  * une fois, sans aucune coordonnée ; aucune demande de plus à la page que celles de B1. */
 const {test,before}=require('node:test'),assert=require('node:assert/strict');
 const {montage,lot,voieAriane,prerégler}=require('./helpers/b1-montage.cjs');

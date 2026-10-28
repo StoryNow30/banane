@@ -1,6 +1,6 @@
 'use strict';
 /* 5.0, revue de la relecture (D-175, correction 4) et D-179 — MAJ+ESPACE, LE GESTE DE MIC, ET LA COHÉRENCE DE LA PASSE. Sur un vert
- * valide, Maj+Espace valide SUR PLACE : ESV reste sur le même cut (Mic, deux fois). Preuve de la passe : la ligne du cut est écrite
+ * valide, Maj+Espace valide SUR PLACE : ESV reste sur le même cut (l'opérateur, deux fois). Preuve de la passe : la ligne du cut est écrite
  * « valid » ET ce même cut est toujours affiché. Si ESV va ailleurs, la passe s'arrête après la validation prouvée (rien d'autre n'est
  * fait) ; le dernier cut de la partie n'est jamais validé par Maj+Espace (ESV chargerait la partie suivante) ; un cut que la passe vient
  * de corriger est validé par un opérateur dans la liste d'ESV : une seconde passe ne le réécrit pas. Données synthétiques : la partie a
@@ -18,7 +18,7 @@ test('Maj+Espace : ESV affiche un autre cut après la validation → arrêt apr�
  assert.match(p.message,/arrêtée après la correction du cut 109 \(validation vue\) : après Maj\+Espace, ESV affiche le cut 100 de la partie 23, pas le cut 109/);
  assert.equal('banane50RelectureIntention' in local.m,false,'validation prouvée par l’écriture : aucune intention');
  assert.deepEqual(adapter.majEspace.map(x=>x.cut),[109]);assert.equal(H.evenements(b,'relecture-ombre').at(-1).identity.cut,109,'rien d’autre après');
- /* Mic relance : 109 est maintenant validé par un opérateur dans la liste d'ESV ; 115 est le dernier cut de la partie (116 cuts). */
+ /* L'opérateur relance : 109 est maintenant validé par un opérateur dans la liste d'ESV ; 115 est le dernier cut de la partie (116 cuts). */
  adapter.majEspaceVers=null;await b.api('relecture-lancer');const q=await H.finPasse(b);
  assert.equal(q.etat,'finie',q.message);assert.equal(q.corriges,0);
  const ev=H.evenements(b,'relecture-ombre'),dernier=c=>ev.filter(e=>e.identity.cut===c).at(-1);

@@ -11,7 +11,7 @@
  *   lectureSession(chemins)      → session fusionnée (segments d'Écho en dossier, fichiers ou volumes zip)
  *   rejeuCapture(capture, ref)   → { gauche, droite, paire } pour une capture déjà assemblée (testable)
  *   rejeuSession(session, opts)  → lignes de tous les rails de toutes les visites d'un Écho
- *   lignesDepuisJournal(journal) → lignes de ce qu'Ariane a réellement fait (journal d'Orbite), avec la pose de Mic de la table de jointure
+ *   lignesDepuisJournal(journal) → lignes de ce qu'Ariane a réellement fait (journal d'Orbite), avec la pose de l'opérateur de la table de jointure
  *
  * Les mesures (p0a, p0b, p0c) lisent des lignes, soit rejouées à la volée (--echo), soit déjà extraites
  * (--lignes FICHIER.json, produit par `node tools/p0-commun.cjs --echo DOSSIER --sortie lignes.json`), soit lues au journal d'Orbite (--journal).
@@ -226,7 +226,7 @@ function rejeuSession(session, { etiquette = 'session', journal = () => {}, limi
 /* ------------------------------------------------------------------ route « journal » : ce qu'Ariane a réellement fait */
 /* Référence humaine d'un cut de la table de jointure (`jointure-echo-orbite.cjs`), en mm, dans le repère
  * profil de la POSE DE DÉPART du cut (celle qu'ESV présente avant Ariane) :
- *  - cut posé : déplacement d'Ariane (départ → pose) + écart humain (pose d'Ariane → pose finale de Mic) ;
+ *  - cut posé : déplacement d'Ariane (départ → pose) + écart humain (pose d'Ariane → pose finale de l'opérateur) ;
  *  - cut différé ou autre : écart humain mesuré à la première visite, qui est la pose de départ.
  * Rend null si la référence manque, si le repère profil manque ou si la base n'est pas celle qu'il faut. */
 function referenceDepuisTable(t, cote) {

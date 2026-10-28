@@ -20,8 +20,8 @@
  * Les cuts sont comparés un à un sur leur DERNIÈRE observation : posé ou différé, motif, pose. Les cuts dont la décision
  * ou la pose change sont rangés selon qu'ils portent eux-mêmes un rail refusé ou non (ricochet par les appuis).
  *
- * Avec `--jointure` (table de `tools/jointure-echo-orbite.cjs`, qui porte la pose finale de Mic lue à l'Écho), les cuts
- * posés au premier passage et vus par Mic aux deux rails sont jugés : erreur 3D du pire rail à la pose de Mic, avant
+ * Avec `--jointure` (table de `tools/jointure-echo-orbite.cjs`, qui porte la pose finale de l'opérateur lue à l'Écho), les cuts
+ * posés au premier passage et vus par l'opérateur aux deux rails sont jugés : erreur 3D du pire rail à la pose de l'opérateur, avant
  * et après (corrections de plus de 5 et de plus de 10 mm). Cette référence n'entre dans aucun calcul du moteur.
  *
  * Aucune donnée brute n'est écrite : la sortie ne contient que des comptes, des millimètres et des numéros de partie
@@ -156,7 +156,7 @@ function rejouerLot(lot, { jointure = null, journal = () => {}, bras = Object.ke
   };
 }
 
-/* Un bras contre le désactivé : transitions, changements, jugement à la pose de Mic. */
+/* Un bras contre le désactivé : transitions, changements, jugement à la pose de l'opérateur. */
 function comparerBras(b, { cutsBase, decisions, science, railsBras, corpus, table, comptesOff, gardeOff, ecartOff }) {
   const cuts = cutsBase.map(c => ({ ...c, off: decisions.off.get(c.o.observationEventId) || null, on: decisions[b].get(c.o.observationEventId) || null }));
   const transitions = {}, chg = { poses: [], perdus: [], deplaces: [], stades: [], motifs: [] };
@@ -195,7 +195,7 @@ function comparerBras(b, { cutsBase, decisions, science, railsBras, corpus, tabl
       deplacementMedianMm: arrondi(quantile(railsBras.map(r => r.deplacementMm), .5)), deplacementMaxMm: railsBras.length ? arrondi(Math.max(...railsBras.map(r => r.deplacementMm))) : null },
   };
 
-  /* Jugement à la pose de Mic. Pose d'un cut = positions de sa décision, ramenées au repère profil de la pose de départ
+  /* Jugement à la pose de l'opérateur. Pose d'un cut = positions de sa décision, ramenées au repère profil de la pose de départ
    * (celui de la table de jointure) ; erreur du cut = erreur 3D du pire rail. */
   if (table) {
     const reference = c => { const t = table.get(c.cle); const r = t && SIDES.map(s => P.referenceDepuisTable(t, s)); return r && r.every(Boolean) ? r : null; };
@@ -275,7 +275,7 @@ function texteBras(nom, b, off, extra = {}) {
   else if (b.gardeQuittee) L.push(`   cuts pair-guard qui cessent de l'être : ${b.gardeQuittee}`);
   if (b.mic) {
     const m = b.mic;
-    L.push(`   pose de Mic, posés au premier passage vus aux deux rails : ${m.cuts} ; > 5 mm ${m.avant.plus5} -> ${m.apres.plus5} ; > 10 mm ${m.avant.plus10} -> ${m.apres.plus10} (gagnés ${m.gagnes10}, perdus ${m.perdus10}) ; médiane ${m.avant.medianeMm} -> ${m.apres.medianeMm} mm ; P90 ${m.avant.p90Mm} -> ${m.apres.p90Mm} mm`);
+    L.push(`   pose de l'opérateur, posés au premier passage vus aux deux rails : ${m.cuts} ; > 5 mm ${m.avant.plus5} -> ${m.apres.plus5} ; > 10 mm ${m.avant.plus10} -> ${m.apres.plus10} (gagnés ${m.gagnes10}, perdus ${m.perdus10}) ; médiane ${m.avant.medianeMm} -> ${m.apres.medianeMm} mm ; P90 ${m.avant.p90Mm} -> ${m.apres.p90Mm} mm`);
     L.push(`   tous étages (posés des deux côtés) : ${m.tousEtages.cuts} ; > 5 mm ${m.tousEtages.avant.plus5} -> ${m.tousEtages.apres.plus5} ; > 10 mm ${m.tousEtages.avant.plus10} -> ${m.tousEtages.apres.plus10} (gagnés ${m.tousEtages.gagnes10}, perdus ${m.tousEtages.perdus10})`);
     L.push(`   posés en plus jugeables : ${m.nouveauxPoses.jugeables}/${m.nouveauxPoses.n}, à plus de 10 mm : ${m.nouveauxPoses.plus10} ; posés en moins jugeables : ${m.posesPerdus.jugeables}/${m.posesPerdus.n}`);
   }

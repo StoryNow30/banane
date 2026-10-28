@@ -14,13 +14,13 @@
  * moins juste qu'un rail à pente plus faible ? et que vaudrait la graine d'un rail refusé (> 0,5) ?
  *
  * Mesure, par tranche de |pente brute du flanc| (`Candidate.propose.face.rawSlope`) :
- *  - rails APPLIQUÉS (publiés au premier passage) : erreur à la pose finale de Mic de la pose publiée (graine + S1 +
+ *  - rails APPLIQUÉS (publiés au premier passage) : erreur à la pose finale de l'opérateur de la pose publiée (graine + S1 +
  *    convention) et de la graine seule ;
  *  - tous les rails rejoués (publiés ou refusés) : erreur de la graine (ce que le moteur publierait si la pente ne
  *    refusait pas), la seule lecture possible pour les rails refusés ;
  *  - comparaison des tranches (aire sous la courbe : probabilité qu'un rail de la tranche haute ait une plus grande erreur) ;
  *  - variante de l'idée 5 : pente recalculée sur la seule bande 14 à 30 mm (mêmes tranches).
- * Comptes mécaniques (sans pose de Mic) : cuts différés pour « pente » et ceux dont seule la pente du flanc
+ * Comptes mécaniques (sans pose de l'opérateur) : cuts différés pour « pente » et ceux dont seule la pente du flanc
  * empêche de publier un rail, pour la porte du cahier (≥ 40 des 68).
  */
 const fs = require('node:fs');
@@ -79,7 +79,7 @@ function analyserJeu(lignes) {
   res.tranchesPenteBrute = tableTranches(rails, l => l.propose.penteFlanc);
   res.tranchesPenteBande14_30 = tableTranches(rails.filter(l => fini(l.propose.penteFlancBande14_30)), l => l.propose.penteFlancBande14_30);
 
-  /* Comparaisons de l'erreur de la graine entre tranches (tous rails avec pose de Mic). */
+  /* Comparaisons de l'erreur de la graine entre tranches (tous rails avec pose de l'opérateur). */
   const vrai = rails.filter(l => l.humainMm);
   const g = (f) => vrai.filter(f).map(l => erreurGraine(l).d2);
   const p = l => Math.abs(l.propose.penteFlanc);
@@ -121,7 +121,7 @@ function analyserJeu(lignes) {
     dontPenteDeLaBandeSousLaLimite: dp.filter(bandeOk).length,
     avecReferenceAuxDeuxRails: dp.filter(flancSeul).filter(c => c.rails.every(l => l.humainMm)).length,
   };
-  /* Si la borne du flanc était levée, la graine de ces cuts serait posée : erreur à Mic quand elle est connue. */
+  /* Si la borne du flanc était levée, la graine de ces cuts serait posée : erreur à l'opérateur quand elle est connue. */
   const leves = dp.filter(flancSeul).filter(c => c.rails.every(l => l.humainMm && l.propose && l.propose.metriques));
   res.cutsDifferes.graineSiBorneLevee = {
     cuts: leves.length,
@@ -155,9 +155,9 @@ function texte(r) {
     L.push('Comparaisons « groupe bas puis groupe haut » (erreur en mm ; AUC = probabilité qu\'un rail du groupe haut soit plus erroné qu\'un rail du groupe bas, 0,5 = aucune différence) :');
     for (const [n, c] of Object.entries(j.comparaisons)) L.push(c ? `  ${n} : bas n=${c.nBas} méd ${f1(c.medianeBasMm)} [${(c.icBas || []).map(f1).join(' ; ')}] > 10 mm ${c.plus10Bas} ; haut n=${c.nHaut} méd ${f1(c.medianeHautMm)} [${(c.icHaut || []).map(f1).join(' ; ')}] > 10 mm ${c.plus10Haut} ; AUC ${f1(c.auc)}` : `  ${n} : effectif insuffisant`);
     const s = j.railsRefusesParLaSeulePenteDuFlanc;
-    L.push(`Rails refusés par la seule pente du flanc : ${s.n} (avec Mic : ${s.avecReference}) ; erreur de leur graine 2D méd ${f1(s.graine.medianeMm)} P90 ${f1(s.graine.p90Mm)} >5: ${s.graine.plus5} >10: ${s.graine.plus10}. Sous la limite sur la bande 14–30 : ${s.avecBande14_30.sousLaLimite} (graine méd ${f1(s.avecBande14_30.graineDeCeuxLa.medianeMm)}, >10: ${s.avecBande14_30.graineDeCeuxLa.plus10} sur ${s.avecBande14_30.graineDeCeuxLa.n}).`);
+    L.push(`Rails refusés par la seule pente du flanc : ${s.n} (avec l'opérateur : ${s.avecReference}) ; erreur de leur graine 2D méd ${f1(s.graine.medianeMm)} P90 ${f1(s.graine.p90Mm)} >5: ${s.graine.plus5} >10: ${s.graine.plus10}. Sous la limite sur la bande 14–30 : ${s.avecBande14_30.sousLaLimite} (graine méd ${f1(s.avecBande14_30.graineDeCeuxLa.medianeMm)}, >10: ${s.avecBande14_30.graineDeCeuxLa.plus10} sur ${s.avecBande14_30.graineDeCeuxLa.n}).`);
     const c = j.cutsDifferes;
-    L.push(`Cuts différés : ${c.total} ; motif pente : ${c.motifPente} ; dont la seule pente du flanc bloque : ${c.dontLaSeulePenteDuFlancBloque} ; dont pente de la bande 14–30 sous la limite : ${c.dontPenteDeLaBandeSousLaLimite} ; avec Mic aux deux rails : ${c.avecReferenceAuxDeuxRails}. Si la borne était levée : ${c.graineSiBorneLevee.cuts} cuts avec Mic, pire rail 3D/2D méd ${f1(c.graineSiBorneLevee.erreurDuPireRail.medianeMm)} >10 mm: ${c.graineSiBorneLevee.erreurDuPireRail.plus10}.`);
+    L.push(`Cuts différés : ${c.total} ; motif pente : ${c.motifPente} ; dont la seule pente du flanc bloque : ${c.dontLaSeulePenteDuFlancBloque} ; dont pente de la bande 14–30 sous la limite : ${c.dontPenteDeLaBandeSousLaLimite} ; avec l'opérateur aux deux rails : ${c.avecReferenceAuxDeuxRails}. Si la borne était levée : ${c.graineSiBorneLevee.cuts} cuts avec l'opérateur, pire rail 3D/2D méd ${f1(c.graineSiBorneLevee.erreurDuPireRail.medianeMm)} >10 mm: ${c.graineSiBorneLevee.erreurDuPireRail.plus10}.`);
     L.push('');
   }
   return L.join('\n');

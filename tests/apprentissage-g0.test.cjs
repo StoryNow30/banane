@@ -3,7 +3,7 @@
  * générateur pseudo-aléatoire de graine fixe). Aucune donnée de terrain, aucune coordonnée.
  *
  *  - parties Ariane 91, 92, 93 : 120 posés avec référence chacune ; un faux vert (> 10 mm) vient surtout d'un calage de
- *    convention refusé à grand décalage (dzMm), la confiance du moteur étant un bruit ; la correction verticale de Mic
+ *    convention refusé à grand décalage (dzMm), la confiance du moteur étant un bruit ; la correction verticale de l'opérateur
  *    sur les rails refusés vaut environ 0,6 × dz (signe positif, stable d'une partie à l'autre) ;
  *  - partie 96 : un PN (plage contrôlée 96–112, passage 100–107), flushPct fort dans le passage sauf au cut 107 ;
  *  - parties humaines 94 et 95 : écartement de départ ~1437 mm, 10 « mauvais objets » décalés de 30 mm. */

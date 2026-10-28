@@ -1,7 +1,7 @@
 'use strict';
 /* 5.0 (D-170 à D-176) — RELECTURE APRÈS LE LOT, service worker réel (tests/helpers/relecture-lot.cjs) : corriger : seuls les verts
  * PROUVÉS (statut lu dans ESV) qui passent la règle prudente sont posés, par la commande `apply` du lot (clic « tout-recentre »), puis
- * validés par Maj+Espace, le geste de Mic (revue, correction 4), qui valide SUR PLACE (D-179) : preuve = l'écriture « valid » de la
+ * validés par Maj+Espace, le geste de l'opérateur (revue, correction 4), qui valide SUR PLACE (D-179) : preuve = l'écriture « valid » de la
  * ligne ET le même cut toujours affiché ; la passe avance ensuite d'UN PAS vers le cut suivant. Jamais de pose juste après un saut par
  * la carte : le premier cut d'une plage est atteint par un pas (correction 3).
  * Données synthétiques. */

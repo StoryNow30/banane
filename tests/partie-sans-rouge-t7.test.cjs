@@ -1,5 +1,5 @@
 'use strict';
-/* Test 7 (retour de Mic) — PARTIE SANS ROUGE. « Quand je relance un lot sur une partie où il ne reste aucun rouge, Ariane passe à
+/* Test 7 (retour de l'opérateur) — PARTIE SANS ROUGE. « Quand je relance un lot sur une partie où il ne reste aucun rouge, Ariane passe à
  * la suite sans rien dire. » Comportement constaté au banc (service worker réel, ESV simulé) : le lot pose et valide le cut
  * affiché, ESV charge la partie suivante, le lot se clôt sur « ESV est passé dans la partie P+1 ». La navigation d'ESV et ce qui
  * lui est envoyé NE CHANGENT PAS ; seul l'avis le dit d'abord, et le panneau l'écrit dans « Résultats du dernier lot ».

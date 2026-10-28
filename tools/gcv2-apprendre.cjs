@@ -262,7 +262,7 @@ function ecartementPaire(k, hl, hr) { return fini(k.G0) && fini(hl.g) && fini(hr
  * voie sûre (la voie entière peut être décalée de 130 à 250 mm) : chaque rail est gardé à 45 mm au plus, en latéral, de la VOIE DE RÉFÉRENCE de la
  * série (médiane rail par rail des décalages des voisins sûrs, `voieH6` du jeu), et le dévers à 15 mm de celui de la référence ; l'écartement de la
  * paire comme ailleurs. Sans référence sûre (moins de 2 voisins sûrs à 10 cuts, ou une étendue latérale de plus de 50 mm entre eux), AUCUNE
- * paire n'est permise : on n'agit pas. Mauvaise voie, pour ces cuts : pose à plus de 50 mm de celle de Mic, ou à plus de 45 mm de la référence. */
+ * paire n'est permise : on n'agit pas. Mauvaise voie, pour ces cuts : pose à plus de 50 mm de celle de l'opérateur, ou à plus de 45 mm de la référence. */
 const latRef = (k, s, h) => k.garde === 'voie' ? h.decal[1] - k.voieRef[s][0] : h.decal[1];
 function paireValide(k, hl, hr, gardes = GARDES) {
   if (k.garde === 'voie') {
@@ -685,11 +685,11 @@ const COMPTEURS = ['visites', 'micSup5', 'micSup10', 'agit', 'justes', 'justes5'
   'erreur50', 'amplitude45', 'horsCorridor'];
 function bilanVide() { return Object.fromEntries(COMPTEURS.map(c => [c, 0])); }
 /* Ajoute un résultat (poids p, 1 par défaut) à un bilan. Définitions (fiche § 3) :
- *  justes      Mic > 10 mm et la pose est à 10 mm ou moins de lui ; justes5 : à 5 mm ou moins ;
- *  abimes      on agit sur un cut que Mic laisse à 5 mm ou moins (ou presque) et la pose est à plus de 10 mm ; aggraves : Mic > 5 mm et on l'aggrave de plus de 5 mm ;
- *  mauvaiseVoie  on agit et la pose est à plus de 50 mm de celle de Mic (mauvais rail) ou déplace un rail de plus de 45 mm en latéral ;
- *  erreurs     on agit et la pose reste à plus de 10 mm de celle de Mic (porte : 9 % au plus des actions) ;
- *  abstentions la décision avait une pose candidate mais pas assez sûre ; laisseFaux : Mic > 10 mm et on n'agit pas. */
+ *  justes      l'opérateur > 10 mm et la pose est à 10 mm ou moins de lui ; justes5 : à 5 mm ou moins ;
+ *  abimes      on agit sur un cut que l'opérateur laisse à 5 mm ou moins (ou presque) et la pose est à plus de 10 mm ; aggraves : l'opérateur > 5 mm et on l'aggrave de plus de 5 mm ;
+ *  mauvaiseVoie  on agit et la pose est à plus de 50 mm de celle de l'opérateur (mauvais rail) ou déplace un rail de plus de 45 mm en latéral ;
+ *  erreurs     on agit et la pose reste à plus de 10 mm de celle de l'opérateur (porte : 9 % au plus des actions) ;
+ *  abstentions la décision avait une pose candidate mais pas assez sûre ; laisseFaux : l'opérateur > 10 mm et on n'agit pas. */
 function compterVisite(b, mic, p = 1) { b.visites += p; if (mic > 5) b.micSup5 += p; if (mic > 10) b.micSup10 += p; return b; }
 /* Ce que vaut une action (poids p) : r = { mic, e, lat }. */
 function compterAction(b, r, p = 1) {
@@ -865,7 +865,7 @@ function wilsonTexte(b) { const w = wilson(b.erreurs, b.agit); return w.haut == 
 function porte(V) {
   const lire = (g, r) => {
     const w = wilson(g.erreurs, g.agit), erreur = g.agit ? g.erreurs / g.agit : null;
-    /* Audit H2 : la porte garde l'ERREUR FINALE (0 pose à plus de 50 mm de Mic) et le corridor du garde-fou ; l'amplitude depuis H0 est publiée à
+    /* Audit H2 : la porte garde l'ERREUR FINALE (0 pose à plus de 50 mm de l'opérateur) et le corridor du garde-fou ; l'amplitude depuis H0 est publiée à
      * part. Sans le garde-fou de voie (lat ≤ 45 mm imposé depuis H0), c'est exactement la porte « 0 mauvaise voie » de G1-b. */
     return { mauvaiseVoie: (g.erreur50 ?? g.mauvaiseVoie) === 0 && (g.horsCorridor ?? 0) === 0, erreur: g.agit ? erreur <= 0.09 : false, erreurTaux: erreur, wilsonHaut: w.haut, justes: g.justes >= r.justes, abimes: g.abimes <= r.abimes,
       borneHaute: w.haut != null && w.haut <= 0.09, valeurs: { gcv2: { agit: g.agit, justes: g.justes, abimes: g.abimes, mauvaiseVoie: g.mauvaiseVoie, erreurs: g.erreurs, erreur50: g.erreur50, amplitude45: g.amplitude45, horsCorridor: g.horsCorridor },

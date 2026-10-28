@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * relecture-autonome.cjs — si Ariane refaisait elle-même la relecture de Mic (D-170) : quels cuts visiterait-elle (méthode de Mic), que
+ * relecture-autonome.cjs — si Ariane refaisait elle-même la relecture de l'opérateur (D-170) : quels cuts visiterait-elle (méthode de l'opérateur), que
  * proposerait-elle (moteur, décision du lot, hauteur apprise), et quelles corrections peut-elle faire seule sans risque, avec quels seuils ?
  * Étude HORS LIGNE (5.0, fiches/RELECTURE_AUTONOME.md). Rien n'est changé à l'extension ; aucune action dans ESV.
  *
@@ -13,23 +13,23 @@
  *   node tools/relecture-autonome.cjs juger    --reglages R.json --partie P:N --cas … --table … [--skip …] --juger-partie-reservee [--json S.json]
  *   node tools/relecture-autonome.cjs essai
  *
- * EXTRAIRE. Pour chaque cut que Mic a visité dans l'Écho (partie P:N) :
+ * EXTRAIRE. Pour chaque cut que l'opérateur a visité dans l'Écho (partie P:N) :
  *  - l'ENTRÉE SANS FUITE de sa première visite (`entreeSansFuite` de src/native-session.js, la frontière de l'ombre « mémoire des
  *    différés ») : la pose de départ (celle qu'ESV montrait, qu'elle vienne de l'extraction, d'un opérateur ou du lot Orbite) et les
- *    points capturés autour d'elle AVANT le premier geste de Mic. Jamais la référence humaine ;
+ *    points capturés autour d'elle AVANT le premier geste de l'opérateur. Jamais la référence humaine ;
  *  - le MOTEUR tel qu'il est livré (`Shadow.scientificProposeBoth`, gcv1-shadow.js) et la DÉCISION du lot (`LotDecision.decideCut`) :
  *    seul (premier passage, gardes de paire et d'écartement comprises) et en chaîne (appuis : ses propres poses des cuts précédents de la
- *    relecture, jamais une pose de Mic), puis la HAUTEUR APPRISE (`src/hauteur-apprise.js`, `evaluer`) et la surface des règles métier
+ *    relecture, jamais une pose de l'opérateur), puis la HAUTEUR APPRISE (`src/hauteur-apprise.js`, `evaluer`) et la surface des règles métier
  *    (`src/regles-metier.js` : `flushPct`, quarts, rails de plus) ;
- *  - la correction de Mic : pose de départ → dernière validation (corrigée par l'écriture serveur, D-143), ou correction nulle par la
+ *  - la correction de l'opérateur : pose de départ → dernière validation (corrigée par l'écriture serveur, D-143), ou correction nulle par la
  *    règle « visité sans action = bon » (0,8 s). Repère profil du rail de départ, mm [longitudinal, latéral, vertical].
  * La sortie ne porte que des numéros de cut, des millimètres, des comptes et des drapeaux : aucune coordonnée, aucun identifiant.
  *
- * SKIP. Relevé de la règle de Mic (D-172) : SKIP écrits par Mic, points et nuages sources vus par rail. TABLE. Table de partie (hors dépôt)
+ * SKIP. Relevé de la règle de l'opérateur (D-172) : SKIP écrits par l'opérateur, points et nuages sources vus par rail. TABLE. Table de partie (hors dépôt)
  * pour une partie qui n'a pas de table des verts : lot (journaux), verts (Écho), zones PN et ADV reconnues sur les cuts du lot.
  *
- * ETUDIER (parties d'apprentissage seulement : le manifeste refuse les autres). Sélection « méthode de Mic » (PN et ADV avec leurs marges,
- * abords des rouges et des différés, isolés, liste « À contrôler », verts compris) ; couverture des corrections de Mic ; reproduction cut
+ * ETUDIER (parties d'apprentissage seulement : le manifeste refuse les autres). Sélection « méthode de l'opérateur » (PN et ADV avec leurs marges,
+ * abords des rouges et des différés, isolés, liste « À contrôler », verts compris) ; couverture des corrections de l'opérateur ; reproduction cut
  * par cut (à 5 et 10 mm, cuts abîmés, mauvaise voie, abstentions) ; règle de CORRECTION PRUDENTE (agir seulement si…, sinon laisser)
  * choisie en validation croisée par partie, puis figée sur toutes les parties ; variante par type de zone ; courbe ; coût en temps.
  * JUGER : applique un réglage figé, sans rien régler, et donne les chiffres bruts avec une borne de Wilson à 95 %.
@@ -139,7 +139,7 @@ function variante(capture, science, anchors) {
 /* `entree` : entrée sans fuite ; rend ce qu'Ariane aurait donné, en décalages depuis la pose de départ :
  *  - sans appui (`seul`, champs à la racine) : le cut visité seul, premier passage du lot ;
  *  - `chaine` : avec pour appuis les poses qu'elle vient de donner aux cuts précédents de la même relecture (ordre des cuts),
- *    comme le lot le fait de ses propres poses. Jamais une pose de Mic. */
+ *    comme le lot le fait de ses propres poses. Jamais une pose de l'opérateur. */
 function poseAriane(entree, { tous = null, appuis = null, rappel = null } = {}) {
   const capture = { identity: entree.identity, rails: entree.rails, pointsSceneRelative: entree.points, visibleByClipBoxes: entree.visible };
   const science = Shadow.scientificProposeBoth(capture);
@@ -190,7 +190,7 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
   if (jeu) for (const l of fs.readFileSync(jeu, 'utf8').split('\n')) {
     if (!l.trim()) continue; const o = JSON.parse(l); if (o.type === 'cut') labels.set(o.cut, o);
   }
-  /* Les nuages de TOUTES les visites du cut : une visite plus tardive dont la pose de rail est encore celle du départ (Mic n'a rien
+  /* Les nuages de TOUTES les visites du cut : une visite plus tardive dont la pose de rail est encore celle du départ (l'opérateur n'a rien
    * bougé entre-temps) complète la capture de la première, souvent partielle à l'Écho (un seul rail lu). `gatherInput` ne garde que
    * les chunks pris autour de la pose de départ (même matrice) et, si la première visite a déplacé un rail, acquis avant ce geste. */
   const visites = new Set(parCut.flatMap(c => c.visites.map(v => v.visitId)));
@@ -211,7 +211,7 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
       vuEcrit: vuEcrit(v0), classeLot: lab ? lab.classe : null, sourceJeu: lab ? (lab.source || null) : null,
       jeuMax3dMm: lab && lab.etiquette && lab.etiquette.correctionMm ? r1(lab.etiquette.correctionMm.maxDist3dMm) : null,
       mic: null, ariane: null };
-    /* Correction de Mic depuis la pose de départ de la première visite. */
+    /* Correction de l'opérateur depuis la pose de départ de la première visite. */
     const ref = referenceHumaine(c.visites);
     if (before && SIDES.every(s => before[s])) {
       if (ref) {
@@ -226,7 +226,7 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
     const propres = (chunks.get(v0.visitId) || []).length;
     const ks = c.visites.flatMap(v => chunks.get(v.visitId) || []).map(chunkComplet).map(k => ({ ...k, visitId: v0.visitId }));
     o.chunksPremiere = propres; o.chunksAutres = ks.length - propres;
-    /* SKIP (D-172) : statut écrit par Mic, et ce que la première visite a vu (points par rail, statuts de lecture). */
+    /* SKIP (D-172) : statut écrit par l'opérateur, et ce que la première visite a vu (points par rail, statuts de lecture). */
     o.skipMic = c.visites.some(v => (v.serverWrites || []).some(w => w && w.body && w.body.ExtractionStatus === 'skipped'));
     o.lecture = [...new Set(e.capturesParVisite[v0.visitId] || [])];
     o.pointsParRail = Object.fromEntries(SIDES.map(s => [s, ks.filter(k => k.side === s).reduce((n, k) => n + k.pointsSceneRelative.length, 0)]));
@@ -255,8 +255,8 @@ function extraire({ partie, projet, echo, jeu, observateur = null }) {
 }
 
 /* ------------------------------------------------------------------ relevé SKIP (D-172) */
-/* Règle de Mic : un cut ne se met en SKIP que si AUCUN point ne s'affiche, ou si UN SEUL scanner s'affiche. Le relevé lit, pour chaque cut
- * visité, le SKIP écrit par Mic (écriture serveur `ExtractionStatus: skipped`) et ce que ses visites ont montré : points retenus par rail
+/* Règle de l'opérateur : un cut ne se met en SKIP que si AUCUN point ne s'affiche, ou si UN SEUL scanner s'affiche. Le relevé lit, pour chaque cut
+ * visité, le SKIP écrit par l'opérateur (écriture serveur `ExtractionStatus: skipped`) et ce que ses visites ont montré : points retenus par rail
  * et nuages sources (préfixe `cloud-N` des nœuds) ayant fourni des points. Sortie : numéros de cut et comptes seulement. */
 const scannerDe = id => { const m = /^(cloud-\d+)-node-/.exec(String(id || '')); return m ? m[1] : null; };
 function releverSkip(dossiers, partie) {
@@ -311,7 +311,7 @@ function bilanSkip(releve) {
 /* Plages qui se recouvrent ou se touchent : une seule. */
 function fusionner(pl) { const out = []; for (const p of pl.slice().sort((a, b) => a[0] - b[0])) { const d = out.at(-1); if (d && p[0] <= d[1] + 1) d[1] = Math.max(d[1], p[1]); else out.push(p.slice()); } return out; }
 /* Zones PN et ADV reconnues par le module des règles métier (src/regles-metier.js) sur les surfaces des cas, dans l'ordre des cuts, comme
- * l'ombre du lot. `cuts` : les cuts lus (ceux du lot pour une partie traitée par Orbite). Aucune étiquette de Mic n'entre. */
+ * l'ombre du lot. `cuts` : les cuts lus (ceux du lot pour une partie traitée par Orbite). Aucune étiquette de l'opérateur n'entre. */
 function zonesDepuisCas(cas, { cuts = null } = {}) {
   const mem = M.creerMemoire('relecture');
   for (const c of cas.filter(c => c.ariane && c.ariane.surface && (!cuts || cuts.has(c.cut))).sort((a, b) => a.cut - b.cut)) {
@@ -325,7 +325,7 @@ function zonesDepuisCas(cas, { cuts = null } = {}) {
 }
 /* Table de partie (même format que les tables de tools/verts-a-controler.cjs ; HORS DÉPÔT : elle porte les bords des rails) pour une partie
  * qui n'en a pas : lot lu dans les journaux Orbite, verts lus dans l'Écho (pose de départ de la première visite), zones reconnues sur les
- * cuts du lot, correction de Mic tirée des cas (pour les seuls jugements). */
+ * cuts du lot, correction de l'opérateur tirée des cas (pour les seuls jugements). */
 function construireTable({ projet, partie, echo, journaux, cas, sansLot = false }) {
   const RM = require('./regles-metier.cjs'), lot = new Map();
   if (sansLot && journaux.length) throw Error('--sans-lot et --journal s\'excluent');
@@ -343,13 +343,13 @@ function construireTable({ projet, partie, echo, journaux, cas, sansLot = false 
       dureeS: r2(duree), visites: c.visites.length, bords: A && B ? { left: A, right: B } : null });
   }
   cuts.sort((a, b) => a.i - b.i);
-  /* Sans lot (partie d'un opérateur humain relue en Écho), les zones se reconnaissent sur tous les cuts que Mic a visités. */
+  /* Sans lot (partie d'un opérateur humain relue en Écho), les zones se reconnaissent sur tous les cuts que l'opérateur a visités. */
   const z = zonesDepuisCas(cas, { cuts: sansLot ? null : new Set(lot.keys()) });
   return { format: 'ariane-verts-table-v1', projet, partie, lot: [...lot].sort((a, b) => a[0] - b[0]).map(([cut, differe]) => ({ cut, differe })),
     zonesPN: z.zonesPN, zonesADV: z.zonesADV, cuts, note: 'table de travail HORS DÉPÔT : elle porte les bords des rails' };
 }
 
-/* ------------------------------------------------------------------ sélection « méthode de Mic » */
+/* ------------------------------------------------------------------ sélection « méthode de l'opérateur » */
 /* PN avec leurs marges (règles métier : 4 cuts avant, 6 après), zones d'ADV avec leurs marges (30 cuts de part et d'autre), abords du lot
  * (grappe de 3 rouges au moins, trous de 5 cuts au plus : toute la plage et 3 cuts de marge ; rouge isolé : le cut d'avant et celui d'après ;
  * différé : 2 cuts de part et d'autre ; les rouges eux-mêmes compris), liste « À contrôler » des verts (module livré). Verts compris. */
@@ -397,7 +397,7 @@ function proposition(cas, variante) {
   for (const s of SIDES) { const r = src.rails[s], p = r && r.pose; if (!p) return null; out[s] = h && fini(r.hauteurMm) ? [p[0], p[1], p[2] + r.hauteurMm] : p.slice(); }
   return { rails: out, stage: src.stage, ecartementPoseMm: src.ecartementPoseMm ?? a.ecartementPoseMm ?? null };
 }
-/* Lignes de jugement d'une partie : un cut visité par Mic, sa zone, son genre (pose, différé, vert), sa référence et les propositions. */
+/* Lignes de jugement d'une partie : un cut visité par l'opérateur, sa zone, son genre (pose, différé, vert), sa référence et les propositions. */
 function lignes({ cas, table, designation }) {
   const L = table ? listeAControler(table) : { cuts: [] };
   const S = table ? selection(table, { liste: L.cuts }) : selection({ cuts: [], lot: [] });
@@ -456,7 +456,7 @@ function agit(l, R) {
   if (R.G != null && !(v.dg != null && v.dg <= R.G)) return false;
   return true;
 }
-/* Bilan sur les cuts jugeables (référence de Mic et nuage) : R une règle, une fonction ligne → règle (variante par type), ou { tout, variante }. */
+/* Bilan sur les cuts jugeables (référence de l'opérateur et nuage) : R une règle, une fonction ligne → règle (variante par type), ou { tout, variante }. */
 function bilan(ls, R) {
   const b = { visites: 0, micSup5: 0, micSup10: 0, agit: 0, reproduit5: 0, reproduit10: 0, corrigesJustes: 0, confirme: 0, gris: 0, abime: 0, aggrave: 0,
     fauxReste: 0, mauvaiseVoie: 0, laisseFaux: 0, abstention: 0, degats: 0, erreurs10: 0 };
@@ -493,7 +493,7 @@ function regles(g = GRILLE) {
   return out;
 }
 const plusGrand = (a, b) => { for (let i = 0; i < a.length; i++) { if (a[i] > b[i]) return true; if (a[i] < b[i]) return false; } return false; };
-/* La règle qui fait le plus de corrections justes (Mic > 10 mm, Ariane à 10 mm près), nettes des dégâts (cuts abîmés, aggravés, mauvaise voie),
+/* La règle qui fait le plus de corrections justes (l'opérateur > 10 mm, Ariane à 10 mm près), nettes des dégâts (cuts abîmés, aggravés, mauvaise voie),
  * avec 0 mauvaise voie et des dégâts ≤ 1 % des cuts visités, sur l'ensemble ET sur chaque partie d'apprentissage ; à égalité : moins de dégâts,
  * puis la plus prudente. Le gain net plutôt que les justes seules : sinon la règle garde des actions qui abîment autant qu'elles corrigent. */
 function choisir(ls, { grille = GRILLE, contrainte = CONTRAINTE, parPartie = null, degatsParPartie = true, objectif = 'net' } = {}) {
@@ -618,7 +618,7 @@ function juger(parties, reglage) {
 
 /* ------------------------------------------------------------------ réglages proposés */
 /* Un type de zone AGIT dans la prochaine version si, en validation croisée de la règle de service (variante sobre), sur ses verts : 0 mauvaise voie, dégâts ≤ 1 % des visités, erreur
- * (pose finale à plus de 10 mm de Mic) ≤ 9 % des actions (porte du cahier), au moins 10 corrections justes, et au moins une correction juste
+ * (pose finale à plus de 10 mm de l'opérateur) ≤ 9 % des actions (porte du cahier), au moins 10 corrections justes, et au moins une correction juste
  * pour 2 minutes de visites d'Ariane (cycle haut, 2,4 s). Sinon il reste en OMBRE (visite, calcul, note ; rien n'est modifié). */
 const CRITERES_TYPE = Object.freeze({ mauvaiseVoieMax: 0, degatsPartMax: 0.01, erreurMax: 0.09, justesMin: 10, justesParMinuteMin: 0.5 });
 function decisionType(etude, k) {
@@ -646,7 +646,7 @@ function reglagesProposes(etude, { date }) {
   const R = etude.figeSobre ? etude.figeSobre.regle : etude.fige.regle, decisions = Object.fromEntries(TYPES.map(k => [k, decisionType(etude, k)]));
   return {
     format: FORMAT_REGLAGES, statut: 'propose', date,
-    note: 'Seuils de la règle de correction prudente de la relecture autonome, mesurés sur les six parties d\'apprentissage (fiches/RELECTURE_AUTONOME.md). Proposés : rien n\'agit sans décision de Mic. Une zone à corriger:false reste en ombre (visite, calcul, note).',
+    note: 'Seuils de la règle de correction prudente de la relecture autonome, mesurés sur les six parties d\'apprentissage (fiches/RELECTURE_AUTONOME.md). Proposés : rien n\'agit sans décision de l\'opérateur. Une zone à corriger:false reste en ombre (visite, calcul, note).',
     etagesPermis: R.stages || ETAPES_TOUTES.slice(),
     roles: ['vert'],
     voie: { lateralMaxMm: R.D },
@@ -656,7 +656,7 @@ function reglagesProposes(etude, { date }) {
     jamais: ['cut différé par le lot', 'cut posé par le lot'],
     origine: { outil: 'tools/relecture-autonome.cjs etudier', fiche: 'fiches/RELECTURE_AUTONOME.md', parties: etude.parties,
       procedure: 'validation croisée par partie (une partie laissée de côté, réglage sur les autres, mesure sur elle), puis règle figée sur les six parties d\'apprentissage ; aucune partie réservée lue pour régler',
-      objectif: 'le plus de corrections justes (correction de Mic > 10 mm, pose d\'Ariane à 10 mm près de celle de Mic), nettes des cuts abîmés',
+      objectif: 'le plus de corrections justes (correction de l\'opérateur > 10 mm, pose d\'Ariane à 10 mm près de celle de l\'opérateur), nettes des cuts abîmés',
       contrainte: { mauvaiseVoie: 0, degatsPartMax: CONTRAINTE.degatsPartMax, mauvaiseVoieMm: SEUILS.mauvaiseVoie }, mesure: 'écart = le plus grand |latéral| ou |vertical| des deux rails, comme src/relecture-critere.js' },
     selection: { ...SELECTION, pn: { margeAvant: M.DEFAULTS.pn.margeAvant, margeApres: M.DEFAULTS.pn.margeApres }, adv: { margeAvant: M.DEFAULTS.adv.margeAvant, margeApres: M.DEFAULTS.adv.margeApres }, liste: 'src/verts-a-controler.js, réglages livrés' },
     criteresZone: { ...CRITERES_TYPE, sens: 'une zone corrige si, en validation croisée sur ses verts : 0 mauvaise voie, dégâts ≤ 1 % des visités, erreur ≤ 9 % des actions, au moins 10 corrections justes, au moins une correction juste pour 2 minutes de visites' },
@@ -682,11 +682,11 @@ function regleDuReglage(g) {
 const pc = (a, b) => b ? `${Math.round(1000 * a / b) / 10} %` : '—';
 const decrire = R => !R ? 'aucune' : `${R.variante}, écart ≥ ${R.X} mm${R.D != null ? `, rail déplacé de ${R.D} mm au plus en travers` : ''}${R.Y > 0 ? `, confiance ≥ ${R.Y}` : ', confiance présente'}${R.C != null && R.C < 100 ? `, rails cohérents à ${R.C} mm` : ''}${R.G != null && R.G < 100 ? `, écartement à ${R.G} mm de la médiane` : ''}${R.stages ? `, étapes ${R.stages.join('/')}` : ''}${R.differes === false ? ', jamais sur un différé' : ''}${R.poses === false ? ', jamais sur un cut posé par le lot' : ''}`;
 const ligneBilan = b => `${b.visites} | ${b.micSup10} | ${b.agit} | ${b.reproduit5} | ${b.reproduit10} | ${b.corrigesJustes} | ${b.abime + b.aggrave} | ${b.mauvaiseVoie} | ${b.abstention} | ${b.laisseFaux}`;
-const ENTETE_BILAN = 'visités mesurables | Mic > 10 mm | agit | reproduit ≤ 5 | reproduit ≤ 10 | corrections justes | abîmés | mauvaise voie | abstentions | laissés faux';
+const ENTETE_BILAN = 'visités mesurables | L\'opérateur > 10 mm | agit | reproduit ≤ 5 | reproduit ≤ 10 | corrections justes | abîmés | mauvaise voie | abstentions | laissés faux';
 function texte(o) {
   const L = [];
   if (o.format === FORMAT_ETUDE) {
-    L.push('## Couverture', '', 'Partie | visités avec réf. | Mic > 10 mm | dans la sélection | PN | ADV | abords | liste | hors sélection (genre · axe · taille)', '---|--:|--:|--:|--:|--:|--:|--:|---');
+    L.push('## Couverture', '', 'Partie | visités avec réf. | L\'opérateur > 10 mm | dans la sélection | PN | ADV | abords | liste | hors sélection (genre · axe · taille)', '---|--:|--:|--:|--:|--:|--:|--:|---');
     for (const c of o.couverture) L.push(`${c.partie} | ${c.visitesAvecReference} | ${c.micSup10} | ${c.micSup10DansSelection} (${pc(c.micSup10DansSelection, c.micSup10)}) | ${c.parType.pn} | ${c.parType.adv} | ${c.parType.abords} | ${c.parType.liste} | ${Object.entries(c.typesHors).map(([k, n]) => `${n} ${k}`).join(' ; ') || '—'}`);
     L.push('', '## Chiffre central (agir partout où Ariane pose, sans règle)', '', `Partie | variante | ${ENTETE_BILAN} | non mesurables`, '---|---' + '|--:'.repeat(11));
     for (const c of o.central) { L.push(`${c.partie} | seul+h | ${ligneBilan(c.seul)} | ${c.nonMesurables}`); L.push(`${c.partie} | chaîne+h | ${ligneBilan(c.chaine)} | ${c.nonMesurables}`); }
@@ -700,9 +700,9 @@ function texte(o) {
     L.push('', '## Variante par type (validation croisée)'); for (const c of o.croiseeType) L.push(`- ${c.partie} : ${ligneBilan(c.bilan)}`); L.push(`- total : ${ligneBilan(o.totalCroiseeType)}`);
     L.push('', '## Courbe (règle figée, X variable, en échantillon)', '', 'X | agit | corrections justes | reproduit ≤ 10 | dégâts | mauvaise voie | erreurs > 10 mm', '--:|--:|--:|--:|--:|--:|--:');
     for (const c of o.courbe) L.push(`${c.X} | ${c.agit} | ${c.corrigesJustes} | ${c.reproduit10} | ${c.degats} | ${c.mauvaiseVoie} | ${c.erreurs10}`);
-    L.push('', '## Coût', '', 'Partie | verts en plus | revisites de poses | min Mic (3,6 s) | min Ariane (1,8–2,4 s)', '---|--:|--:|--:|---');
+    L.push('', '## Coût', '', 'Partie | verts en plus | revisites de poses | min l\'opérateur (3,6 s) | min Ariane (1,8–2,4 s)', '---|--:|--:|--:|---');
     for (const c of o.cout) L.push(`${c.partie} | ${c.vertsTotal} | ${c.revisitesPoses} | ${c.minutesMic} | ${c.minutesAriane.join('–')}`);
-    if (o.skip.length) { L.push('', '## SKIP'); for (const s of o.skip) L.push(`- ${s.partie} : ${s.skipMic} SKIP de Mic (${s.skipMicDebut} aux cuts 0–3), retrouvés ${s.retrouves}, fausses alertes ${s.fausseAlerte}, scanners lisibles : ${s.scannersLisibles ? 'oui' : 'non'}`); }
+    if (o.skip.length) { L.push('', '## SKIP'); for (const s of o.skip) L.push(`- ${s.partie} : ${s.skipMic} SKIP de l'opérateur (${s.skipMicDebut} aux cuts 0–3), retrouvés ${s.retrouves}, fausses alertes ${s.fausseAlerte}, scanners lisibles : ${s.scannersLisibles ? 'oui' : 'non'}`); }
   } else if (o.format === FORMAT_JUGEMENT) {
     L.push(`Règle de service figée : ${decrire(o.regle)}`, '', `Partie | ${ENTETE_BILAN} | erreur parmi les actions (Wilson 95 %)`, '---' + '|--:'.repeat(11));
     for (const p of o.parties) L.push(`${p.partie} | ${ligneBilan(p.bilan)} | ${p.erreur == null ? '—' : pc(p.bilan.erreurs10, p.bilan.agit)} (${p.wilsonErreur.haut == null ? '—' : `≤ ${Math.round(1000 * p.wilsonErreur.haut) / 10} %`})`);
@@ -716,7 +716,7 @@ function texte(o) {
 }
 
 /* ------------------------------------------------------------------ essai synthétique */
-/* Une partie inventée : un PN (cuts 50–56), un lot de rouges, des verts. Les cas portent directement la correction de Mic et la proposition
+/* Une partie inventée : un PN (cuts 50–56), un lot de rouges, des verts. Les cas portent directement la correction de l'opérateur et la proposition
  * d'Ariane ; rien n'est lu sur le disque. */
 function casSynthetique({ cut, mic, pose, conf = 80, stage = 'first-pass', surface = null }) {
   const rails = {}; for (const s of SIDES) rails[s] = { statut: 'candidate', confiance: conf, pose: pose ? pose[s] : null, hauteurMm: 0 };

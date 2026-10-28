@@ -226,7 +226,7 @@ test('références : la règle prudente est celle des réglages figés ; le hasa
   const R = A.reglesPrudentesDuDepot(), F0 = A.REGLES_PRUDENTES;
   assert.equal(R.variante, F0.variante); assert.equal(R.seuilMm, F0.seuilMm); assert.equal(R.lateralMaxMm, F0.lateralMaxMm);
   assert.equal(R.ecartementMedianeMm, F0.ecartementMedianeMm); assert.equal(R.confianceMin, F0.confianceMin);
-  /* La zone « écartement » (test 8, D-185, accord de Mic) n'est pas une zone de la GCV2 : elle est hors de cette comparaison. */
+  /* La zone « écartement » (test 8, D-185, accord de l'opérateur) n'est pas une zone de la GCV2 : elle est hors de cette comparaison. */
   assert.deepEqual(R.zones.filter(z => z !== 'hors' && z !== 'ecartement'), [...F0.zones].sort()); assert.deepEqual(R.roles, F0.roles);
   /* Règle prudente sur un cut synthétique : agit quand la pose A* (H1) s'écarte de 8 mm ou plus. */
   const cas = A.construireCas(jeu({ partie: '9:1', graine: 11, cuts: 60 }), 'relecture');
@@ -528,7 +528,7 @@ test('jeu « lot » généré sans appui humain (audit F3) : lu tel quel, et seu
 test('mesures de voie séparées (audit H2) : erreur finale > 50 mm, amplitude depuis H0, corridor ; la porte garde l\'erreur finale', () => {
   const b = A.bilanDe([
     { mic: 150, etat: 'agit', e: 4, lat: 150, latGarde: 6 },      // correction H6 juste : amplitude 150 mm depuis H0, dans le corridor de série
-    { mic: 150, etat: 'agit', e: 80, lat: 150, latGarde: 20 },    // dans le corridor, mais à 80 mm de Mic : erreur finale
+    { mic: 150, etat: 'agit', e: 80, lat: 150, latGarde: 20 },    // dans le corridor, mais à 80 mm de l'opérateur : erreur finale
     { mic: 3, etat: 'agit', e: 4, lat: 30 },                      // vert ordinaire
   ]);
   assert.deepEqual([b.agit, b.erreur50, b.amplitude45, b.horsCorridor, b.mauvaiseVoie], [3, 1, 2, 0, 2], 'mauvaise voie garde sa définition de G1-b');

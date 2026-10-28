@@ -112,7 +112,7 @@ test('zone « ecartement » (H5, D-185) : fermée par défaut et par tout fichie
  const sans=Q.reglages({format:'ariane-relecture-reglages-1',zones:{pn:{corriger:true,seuilMm:8,confianceMin:0},adv:{corriger:true,seuilMm:8,confianceMin:0},abords:{corriger:true,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:true,seuilMm:8,confianceMin:0}}});
  assert.equal(sans.zones.ecartement.corriger,false,'zone absente du fichier : fermée');assert.ok(!sans.invalides.includes('zones.ecartement'),'absente : pas une erreur, simplement fermée');
  const r=Q.juger(bon({zone:'ecartement'}),sans);assert.equal(r.corriger,false);assert.equal(r.regle,'zone');assert.match(r.raison,/ombre seulement/);
- /* Ouverte : Mic l'a accepté après son Écho de la partie 11 (cuts 6391, 6416, 7177). */
+ /* Ouverte : l'opérateur l'a accepté après son Écho de la partie 11 (cuts 6391, 6416, 7177). */
  const ouvert=Q.reglages({format:'ariane-relecture-reglages-1',zones:{pn:{corriger:true,seuilMm:8,confianceMin:0},adv:{corriger:true,seuilMm:8,confianceMin:0},abords:{corriger:true,seuilMm:8,confianceMin:0},'vert-hors-zone':{corriger:false,seuilMm:8,confianceMin:0},ecartement:{corriger:true,seuilMm:8,confianceMin:0}}});
  assert.deepEqual(JSON.parse(JSON.stringify(ouvert.zones.ecartement)),{corriger:true,seuilMm:8,confianceMin:0});
  const forte=bon({zone:'ecartement',jugement:{...bon().jugement,ecartMm:ec([-14,1],[-13,0])}});

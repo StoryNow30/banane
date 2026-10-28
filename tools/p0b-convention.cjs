@@ -7,19 +7,19 @@
  *   node tools/p0b-convention.cjs --journal J.json [--jointure table.json] [--corpus DOSSIER] [--etiquette NOM] …
  *
  * Entrée : des « lignes » de `tools/p0-commun.cjs` (un rail d'un cut : ce que le moteur a publié, la convention
- * avec ses décalages même refusés, le motif de la décision du lot, et la pose finale de Mic si la jointure
+ * avec ses décalages même refusés, le motif de la décision du lot, et la pose finale de l'opérateur si la jointure
  * Écho ↔ Orbite l'apporte). Chaque jeu de lignes (étiquette) est mesuré à part.
  *
  * Ce que la mesure répond (cahier 5.0, P0(b) et P1) :
  *  1. Rails à convention REFUSÉE (décalage hors du domaine de 8 mm, posés bruts) contre rails CALÉS : erreur à la
- *     pose finale de Mic, verticale d'abord. Le « biais ~9 mm » du cahier est le décalage que la convention
- *     PRÉDIT (dz médian) ; ce qui compte est l'écart réel du rail brut à Mic.
+ *     pose finale de l'opérateur, verticale d'abord. Le « biais ~9 mm » du cahier est le décalage que la convention
+ *     PRÉDIT (dz médian) ; ce qui compte est l'écart réel du rail brut à l'opérateur.
  *  2. Variantes du cahier P1, simulées sur les mêmes rails (la pose d'une variante = pose brute + décalage retenu) :
  *       décalage plafonné (8 mm appliqués, le reste consigné), domaine porté à 12 mm ;
  *       garde de paire portée par le seul rail repêché par S1, ou marge continue (S1 et dz > 10 mm) ;
- *     combien de poses gagnent ou perdent face à Mic (corrections de plus de 5 et de plus de 10 mm).
- *  3. Cuts différés pour 'pair-guard' : amplitude de la correction de Mic (si la pose brute du moteur dépasse
- *     10 mm de Mic, la garde est bonne), et combien seraient récupérés par chaque variante sans mauvaise pose
+ *     combien de poses gagnent ou perdent face à l'opérateur (corrections de plus de 5 et de plus de 10 mm).
+ *  3. Cuts différés pour 'pair-guard' : amplitude de la correction de l'opérateur (si la pose brute du moteur dépasse
+ *     10 mm de l'opérateur, la garde est bonne), et combien seraient récupérés par chaque variante sans mauvaise pose
  *     (porte du cahier : au moins 50 sur 89, aucune mauvaise pose ajoutée).
  *
  * Simulation : le décalage d'une variante vient de `conventionCalibration` (duMm, dzMm) que le journal consigne
@@ -170,7 +170,7 @@ function analyserJeu(lignes) {
     pairGuardConcordants: concordance,
   };
 
-  /* --- vérité : tout ce qui suit demande la pose finale de Mic --- */
+  /* --- vérité : tout ce qui suit demande la pose finale de l'opérateur --- */
   const verite = {};
   const avecH = l => candidat(l) && l.humainMm;
   const railsPosesVrai = [];
@@ -189,7 +189,7 @@ function analyserJeu(lignes) {
   verite.railsParGroupe.calesSansCalage = statsRails(railsPosesVrai.filter(l => l.convention && l.convention.appliquee).map(l => erreur(l, POLITIQUES.aucune)));
 
   /* Intervalles à 95 % de la médiane de l'erreur verticale absolue, et comparaison appariée sur les mêmes rails
-   * refusés : (erreur 3D avec la variante) − (erreur 3D posée brute) ; négatif = la variante rapproche de Mic. */
+   * refusés : (erreur 3D avec la variante) − (erreur 3D posée brute) ; négatif = la variante rapproche de l'opérateur. */
   const refusesVrai0 = railsPosesVrai.filter(l => horsDomaine(l, DOMAINE_MM));
   const calesVrai0 = railsPosesVrai.filter(l => l.convention && l.convention.appliquee);
   verite.railsParGroupe.refuses.ic95VertAbs = P.icMediane(refusesVrai0.map(l => Math.abs(erreur(l, POLITIQUES.actuelle).vert)));
@@ -206,7 +206,7 @@ function analyserJeu(lignes) {
     return { tranche: b === Infinity ? `> ${a}` : `${a}–${b}`, brut: statsRails(sel.map(l => erreur(l, POLITIQUES.aucune))),
       plafond8: statsRails(sel.map(l => erreur(l, POLITIQUES.plafond8))), pleine: statsRails(sel.map(l => erreur(l, POLITIQUES.pleine))) };
   });
-  /* Le décalage vertical que la convention PRÉDIT (dz) contre celui que Mic applique réellement (pose de Mic − pose
+  /* Le décalage vertical que la convention PRÉDIT (dz) contre celui que l'opérateur applique réellement (pose de l'opérateur − pose
    * brute du moteur), par tranche de dz, sur tous les rails posés avec décalage (calés et refusés). Un rapport
    * proche de 1 valide le calage ; un rapport qui s'effondre au-delà d'un seuil dit que dz y est en partie du bruit. */
   const avecDz = railsPosesVrai.filter(aDecalage);
@@ -238,7 +238,7 @@ function analyserJeu(lignes) {
   verite.cutsPosesPremierPassageAvecReference = cutsPosesVrai.length;
   /* Une variante qui change le décalage latéral change l'écartement prédit : les cuts posés dont l'écartement sortirait
    * du contrat (1420–1470 mm) seraient différés par la garde d'écartement au lieu d'être posés. Compté sur TOUS les cuts
-   * posés du jeu, avec ou sans pose de Mic. */
+   * posés du jeu, avec ou sans pose de l'opérateur. */
   const horsContratNouveau = (sc) => poses.filter(x => admissible(ecartementVariante(x.rails, POLITIQUES[SCENARIOS[0].politique])) !== false
     && admissible(ecartementVariante(x.rails, POLITIQUES[sc.politique])) === false).length;
   /* L'écart de la pose du moteur à la prédiction des voisins (celui que la décision du lot consigne, plafonné à 30 mm)
@@ -320,7 +320,7 @@ function texte(r) {
     L.push(`Décalage prédit des refusés : médiane ${f1(c.dzRefusesMm.mediane)} mm (P10 ${f1(c.dzRefusesMm.p10)}, P90 ${f1(c.dzRefusesMm.p90)}, max ${f1(c.dzRefusesMm.max)}) ; ${c.refusesLateraux} refusés pour le latéral.`);
     L.push(`Cuts : ${c.cuts.total}, posés au premier passage (journal) ${c.cuts.posesPremierPassage}, posés pour l'analyse (journal ou, au rejeu d'un Écho, hypothétiques) ${c.cutsPosesAnalyses}, différés ${c.cuts.differes}, 'pair-guard' au journal ${c.cuts.pairGuardAuJournal}, par la formule ${c.cuts.pairGuardParLaFormule} (concordants ${c.cuts.pairGuardConcordants}).`);
     if (!v.railsPosesPremierPassageAvecReference) { L.push('Pas de référence humaine dans ce jeu : comptes seulement.', ''); continue; }
-    L.push(`Rails des cuts posés (voir ci-dessus) avec la pose de Mic : ${v.railsPosesPremierPassageAvecReference}.`);
+    L.push(`Rails des cuts posés (voir ci-dessus) avec la pose de l'opérateur : ${v.railsPosesPremierPassageAvecReference}.`);
     const lg = (nom, s) => L.push(`  ${nom.padEnd(26)} n=${String(s.n).padStart(3)}  vertical signé ${f1(s.vertSigneMedianMm)} mm  |vert| méd ${f1(s.vertAbsMedianeMm)} P90 ${f1(s.vertAbsP90Mm)}  3D méd ${f1(s.d3MedianeMm)} P90 ${f1(s.d3P90Mm)}  >5 mm ${s.plus5}  >10 mm ${s.plus10}`);
     lg('calés', v.railsParGroupe.cales); lg('refusés (posés bruts)', v.railsParGroupe.refuses);
     lg('refusés si plafonnés à 8', v.railsParGroupe.refusesSiPlafond8); lg('refusés si calage plein', v.railsParGroupe.refusesSiPleine);
@@ -328,16 +328,16 @@ function texte(r) {
     for (const [n, c] of Object.entries(v.refusesVariantesContreBrut)) L.push(`  rails refusés, ${n.padEnd(9)} contre posé brut (erreur 3D) : Δ médiane ${f1(c.diffMedianeMm)} mm ${c.ic95 ? '[' + c.ic95.map(f1).join(' ; ') + ']' : ''}, rapproche ${c.signes.gagne} / éloigne ${c.signes.perd}, p=${f1(c.signes.p)}`);
     L.push('Rails refusés par tranche de décalage prédit (brut / plafond 8 / plein, |vert| médiane et >10 mm) :');
     for (const t of v.refusesParTranche) L.push(`  ${t.tranche.padEnd(7)} n=${String(t.brut.n).padStart(3)}  brut ${f1(t.brut.vertAbsMedianeMm)} (${t.brut.plus10})  plafond ${f1(t.plafond8.vertAbsMedianeMm)} (${t.plafond8.plus10})  plein ${f1(t.pleine.vertAbsMedianeMm)} (${t.pleine.plus10})`);
-    L.push('Décalage vertical prédit (dz) contre déplacement réel de Mic (pose de Mic − pose brute), rails posés avec décalage :');
-    for (const t of v.dzPredictContreMic) L.push(`  dz ${t.tranche.padEnd(7)} n=${String(t.n).padStart(3)}  dz médian ${f1(t.dzPredictMedianMm)}  Mic ${f1(t.deplacementDeMicMedianMm)}  rapport ${f1(t.rapport)}`);
-    if (v.regressionDeplacementSurDz) L.push(`  régression du déplacement de Mic sur dz : pente ${f1(v.regressionDeplacementSurDz.pente)}, ordonnée ${f1(v.regressionDeplacementSurDz.ordonneeMm)} mm (n=${v.regressionDeplacementSurDz.n})`);
+    L.push('Décalage vertical prédit (dz) contre déplacement réel de l\'opérateur (pose de l\'opérateur − pose brute), rails posés avec décalage :');
+    for (const t of v.dzPredictContreMic) L.push(`  dz ${t.tranche.padEnd(7)} n=${String(t.n).padStart(3)}  dz médian ${f1(t.dzPredictMedianMm)}  l'opérateur ${f1(t.deplacementDeMicMedianMm)}  rapport ${f1(t.rapport)}`);
+    if (v.regressionDeplacementSurDz) L.push(`  régression du déplacement de l'opérateur sur dz : pente ${f1(v.regressionDeplacementSurDz.pente)}, ordonnée ${f1(v.regressionDeplacementSurDz.ordonneeMm)} mm (n=${v.regressionDeplacementSurDz.n})`);
     L.push('Balayage du plafond sur les rails refusés :');
     for (const b of v.balayagePlafond) L.push(`  plafond ${String(b.plafondMm).padEnd(5)} n=${b.n}  |vert| méd ${f1(b.vertAbsMedianeMm)}  3D méd ${f1(b.d3MedianeMm)} P90 ${f1(b.d3P90Mm)}  >5 ${b.plus5}  >10 ${b.plus10}`);
     if (v.ecartAuxVoisinsContreErreur.cuts) L.push(`Écart de la pose aux voisins (décision du lot) contre « corrigé de plus de 10 mm » : ${v.ecartAuxVoisinsContreErreur.cuts} cuts, ${v.ecartAuxVoisinsContreErreur.corrigesPlus10} corrigés, AUC ${f1(v.ecartAuxVoisinsContreErreur.auc)}.`);
     L.push(`Cuts posés avec les deux références : ${v.cutsPosesPremierPassageAvecReference}. Scénarios (erreur du pire rail du cut) :`);
     for (const s of v.scenariosPoses) L.push(`  ${s.id}  écartement hors contrat en plus : ${s.nouveauxHorsContratEcartement}/${s.cutsPosesParLeJeu} cuts  >5 mm ${s.cuts.plus5}  >10 mm ${s.cuts.plus10}  médiane ${f1(s.cuts.medianeMm)} P90 ${f1(s.cuts.p90Mm)}  | face à S0 : >5 mm gagnés ${s.gagnes5} perdus ${s.perdus5} ; >10 mm gagnés ${s.gagnes10} perdus ${s.perdus10}   ${s.nom}`);
-    L.push(`Garde de paire : ${g.cuts} cuts signalés (${g.avecDeuxReferences} avec la pose de Mic aux deux rails). Rails repêchés ${g.railsDeCesCuts.repechesParS1}, hors domaine ${g.railsDeCesCuts.horsDomaine} ; même rail repêché et hors domaine : ${g.railsDeCesCuts.memeRailRepecheEtHorsDomaine} cuts ; marge dz > 10 mm : ${g.railsDeCesCuts.margeDzSup10} cuts. Déplacement de S1 sur le rail repêché : médiane ${f1(g.deplacementS1Mm.mediane)} mm (P90 ${f1(g.deplacementS1Mm.p90)}).`);
-    for (const [n, s] of Object.entries(g.correctionDeMic)) L.push(`  correction de Mic, ${n.padEnd(22)} n=${s.n}  méd ${f1(s.medianeMm)} P90 ${f1(s.p90Mm)} max ${f1(s.maxMm)}  >5 mm ${s.plus5}  >10 mm ${s.plus10}`);
+    L.push(`Garde de paire : ${g.cuts} cuts signalés (${g.avecDeuxReferences} avec la pose de l'opérateur aux deux rails). Rails repêchés ${g.railsDeCesCuts.repechesParS1}, hors domaine ${g.railsDeCesCuts.horsDomaine} ; même rail repêché et hors domaine : ${g.railsDeCesCuts.memeRailRepecheEtHorsDomaine} cuts ; marge dz > 10 mm : ${g.railsDeCesCuts.margeDzSup10} cuts. Déplacement de S1 sur le rail repêché : médiane ${f1(g.deplacementS1Mm.mediane)} mm (P90 ${f1(g.deplacementS1Mm.p90)}).`);
+    for (const [n, s] of Object.entries(g.correctionDeMic)) L.push(`  correction de l'opérateur, ${n.padEnd(22)} n=${s.n}  méd ${f1(s.medianeMm)} P90 ${f1(s.p90Mm)} max ${f1(s.maxMm)}  >5 mm ${s.plus5}  >10 mm ${s.plus10}`);
     L.push('  Récupérés par scénario (admissible = écartement dans le contrat) :');
     for (const s of g.recuperes) L.push(`  ${s.id}  récupérés ${s.recuperesParLaGarde}  hors contrat d'écartement ${s.ecartementHorsContrat}  admissibles ${s.recuperesAdmissibles}  avec référence ${s.avecReference}  mauvaises poses (>10 mm) ${s.mauvaisesPoses}  (>5 mm ${s.mauvaisesPlus5}, max ${f1(s.erreurMaxMm)})`);
     L.push('');

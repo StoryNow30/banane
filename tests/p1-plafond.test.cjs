@@ -1,7 +1,7 @@
 'use strict';
 /* P1 du plan 5.0 : outil de rejeu `tools/p1-plafond.cjs` (réglage `conventionPlafond` activé contre désactivé).
  * Lot SYNTHÉTIQUE d'un seul cut, construit sur la capture versionnée de tests/corpus (rails, points) : aucune
- * donnée de terrain, aucun identifiant de projet. La pose de Mic du cas de jugement est fabriquée ici. */
+ * donnée de terrain, aucun identifiant de projet. La pose de l'opérateur du cas de jugement est fabriquée ici. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const T = require('../tools/p1-plafond.cjs');
 const Shadow = require('../src/gcv1-shadow.js');
@@ -44,10 +44,10 @@ test('un seul bras peut être demandé', () => {
   assert.deepEqual(Object.keys(T.rejouerLot(lot, { bras: ['vertical'] }).bras), ['vertical']);
 });
 
-test('jugement à la pose de Mic : l’erreur du pire rail avant et après, pour chaque bras', () => {
+test('jugement à la pose de l\'opérateur : l’erreur du pire rail avant et après, pour chaque bras', () => {
   const { lot, science } = lotSynthetique();
   const avec = T.avecReglage(true, () => Shadow.scientificProposeBoth(lot.corpus.clouds[0]));
-  /* Mic a posé exactement la pose plafonnée : l’erreur après est nulle, celle d’avant est la distance au brut. */
+  /* L'opérateur a posé exactement la pose plafonnée : l’erreur après est nulle, celle d’avant est la distance au brut. */
   const ecart = Object.fromEntries(SIDES.map(s => { const d = mm3(avec.rails[s].next.delta); return [s === 'left' ? 'gauche' : 'droite', { repere: 'profil', longitudinalMm: d[0], lateralMm: d[1], verticalMm: d[2] }]; }));
   const zero = { repere: 'profil', longitudinalMm: 0, lateralMm: 0, verticalMm: 0 };
   const table = [{ partie: 99, cut: 105, classe: 'posee', base: 'ariane', referenceHumaine: 'observee', ecartHumain: ecart, arianeDeplacement: { gauche: zero, droite: zero } }];

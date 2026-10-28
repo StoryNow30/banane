@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.0.17 (retours de Mic sur la test 16).
+/* 4.9.0.17 (retours de l'opérateur sur la test 16).
  * 1. Tuile « Lot » : sur un lot qui couvre TOUTE la partie (premier cut 0 ou 1, jusqu'à la fin de
  *    partie) et dont la fiche de départ est connue (D-092, même batchId, la première du lot), le %
  *    est celui du TRAVAIL : cuts traités (posés + différés) ÷ invalides au départ, avec « N / M

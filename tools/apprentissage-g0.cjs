@@ -10,7 +10,7 @@
  *       Mesure de chaque trait seul (AUC, taux par tranche), petit modèle lisible (régression logistique et arbre de
  *       profondeur 2), validation croisée PAR PARTIE (jamais apprendre et juger sur la même), rappel à 5 % et à 10 %
  *       des cuts signalés avec intervalle d'amorçage. Porte du cahier : au moins 60 % des fautes dans 5 % des cuts.
- *   Q2  Détecteur de passage à niveau (PN) : flushPct et traits de la liste contre les PN donnés par Mic ; marge
+ *   Q2  Détecteur de passage à niveau (PN) : flushPct et traits de la liste contre les PN donnés par l'opérateur ; marge
  *       recommandée avant et après.
  *   Q3  Détecteur d'erreur d'extraction dans un PN : « écartement de la pose de départ à plus de T mm de la médiane
  *       de la partie » ; seuil appris sur une partie, jugé sur l'autre ; effet sur les verts d'extraction.
@@ -30,7 +30,7 @@
  * partie « humaine » (poses de départ d'un opérateur, source `humain*`) n'en porte pas. Les traits absents sont
  * simplement ignorés : un trait n'entre dans un modèle que s'il est renseigné (≥ 60 % des cuts évalués) dans TOUTES les
  * parties concernées (apprentissage et jugement). Frontière anti-fuite : aucun trait ne vient de la référence humaine ;
- * tout ce qui vient de Mic est sous `etiquette` (ou, pour les parties humaines, `contexte.ecartementInitialMm`, qui est
+ * tout ce qui vient de l'opérateur est sous `etiquette` (ou, pour les parties humaines, `contexte.ecartementInitialMm`, qui est
  * la pose de départ avant correction). Aucune coordonnée absolue n'est lue ni écrite.
  */
 const fs = require('node:fs');
@@ -192,9 +192,9 @@ const TRAITS = [
   { nom: 'concurrentsForts', lib: 'candidats forts concurrents (plus grand des rails)', imp: 'mediane', log: true, f: r => r.traits && r.traits.g0 ? maxOuNul(rails(r).map(x => x.g0 ? x.g0.nStrongCompetitive : null)) : null },
   { nom: 'lignesHautes', lib: 'lignes du sommet vues (plus faible des rails)', imp: 'mediane', log: true, f: r => r.traits && r.traits.g0 ? minOuNul(rails(r).map(x => x.g0 ? x.g0.topRows : null)) : null },
   { nom: 'facesVues', lib: 'faces vues (plus faible des rails)', imp: 'mediane', log: true, f: r => r.traits && r.traits.g0 ? minOuNul(rails(r).map(x => x.g0 ? x.g0.faceCount : null)) : null },
-  // Traits connus d'une seule partie (relevés S6 et fiche de Mic) : mesurés, jamais appris entre parties.
+  // Traits connus d'une seule partie (relevés S6 et fiche de l'opérateur) : mesurés, jamais appris entre parties.
   { nom: 'flushPct', lib: 'part de points au ras du sol (relevé S6, %)', imp: 'mediane', seul: true, f: r => r.traits && r.traits.s6 && fini(r.traits.s6.flushPct) ? r.traits.s6.flushPct : null },
-  { nom: 'zonePN', lib: 'dans un PN, marges comprises (fiche de Mic)', imp: 0, bin: true, seul: true, f: r => r.zone && r.traits ? (r.zone.pn ? 1 : 0) : null },
+  { nom: 'zonePN', lib: 'dans un PN, marges comprises (fiche de l\'opérateur)', imp: 0, bin: true, seul: true, f: r => r.zone && r.traits ? (r.zone.pn ? 1 : 0) : null },
   { nom: 'zonePNPassage', lib: 'dans le passage même du PN', imp: 0, bin: true, seul: true, f: r => r.zone && r.traits ? (r.zone.pn && r.zone.pn.role === 'passage' ? 1 : 0) : null },
   { nom: 'zoneADV', lib: "dans une zone d'ADV, marge élargie comprise", imp: 0, bin: true, seul: true, f: r => r.zone && r.traits ? (r.zone.adv ? 1 : 0) : null },
 ];
@@ -606,7 +606,7 @@ function questionPN(parties, opts) {
       const npos = yy.filter(Boolean).length, top = rappelAuTop(sc, yy, npos / jug.length);
       sansFlushRes = { traits: retenus.map(c => c.t.nom), jugés: jug.length, auc: arrondi(auc(sc, yy), 3), signalesParMeilleursScores: top.signales, passagesRetrouves: arrondi(top.captures, 1), passages: npos, precision: arrondi(top.captures / top.signales, 3) };
     }
-    // Marge recommandée : cœur détecté (flushPct ≥ 50) contre la plage contrôlée par Mic.
+    // Marge recommandée : cœur détecté (flushPct ≥ 50) contre la plage contrôlée par l'opérateur.
     const marges = [];
     for (const b of blocs) {
       const coeur = L.filter(r => r.t.flushPct >= 50 && r.cut >= b.controle[0] && r.cut <= b.controle[1]).map(r => r.cut);
@@ -645,14 +645,14 @@ function questionPN(parties, opts) {
   for (const h of hum) for (const q of h.plages) if (q.coeurSignale) lignes.push({ partie: h.partie, source: `écartement > ${h.seuilMm} mm`, pn: q.pn, avant: q.margeAvant, apres: q.margeApres });
   res.marges = lignes;
   if (lignes.length) {
-    // Couverture : part des PN dont toute la plage contrôlée par Mic tient dans [cœur − avant, cœur + après].
+    // Couverture : part des PN dont toute la plage contrôlée par l'opérateur tient dans [cœur − avant, cœur + après].
     const sources = [...new Set(lignes.map(l => l.source))];
     res.couvertureMarges = [[2, 2], [3, 3], [4, 4], [4, 6], [5, 6], [6, 6], [6, 8], [8, 8], [10, 10]].map(([a, b]) => ({ avant: a, apres: b,
       ...Object.fromEntries(sources.map(src => { const q = lignes.filter(l => l.source === src); return [src, `${q.filter(l => l.avant <= a && l.apres <= b).length}/${q.length}`]; })) }));
     const av = lignes.map(l => l.avant), ap = lignes.map(l => l.apres);
     res.margeRecommandee = { sources: lignes.length, avant: { mediane: mediane(av), p90: arrondi(quantile(av, 0.9), 1), max: Math.max(...av) }, apres: { mediane: mediane(ap), p90: arrondi(quantile(ap, 0.9), 1), max: Math.max(...ap) } };
   }
-  // Parcours observé de Mic : la suite de cuts VALIDÉS (étiquette d'Écho VALIDATE_*) autour de chaque plage donnée s'arrête-t-elle aux bords de la plage ?
+  // Parcours observé de l'opérateur : la suite de cuts VALIDÉS (étiquette d'Écho VALIDATE_*) autour de chaque plage donnée s'arrête-t-elle aux bords de la plage ?
   res.parcours = [];
   for (const p of parties) {
     if (!p.info.pnPlages || !p.info.pnPlages.length) continue;
@@ -665,7 +665,7 @@ function questionPN(parties, opts) {
         parcoursValideContinu: [l, z], identiqueALaPlage: l === b.controle[0] && z === b.controle[1] });
     }
   }
-  // Marges de la fiche de Mic (passage → plage contrôlée) pour mémoire, quand la partie les porte.
+  // Marges de la fiche de l'opérateur (passage → plage contrôlée) pour mémoire, quand la partie les porte.
   const fiche = [];
   for (const p of parties) for (const b of (p.info.pnPlages || [])) if (b.passage) fiche.push({ partie: p.info.partie, pn: b.id, avant: b.passage[0] - b.controle[0], apres: b.controle[1] - b.passage[1] });
   if (fiche.length) res.margesFicheMic = { lignes: fiche, avant: { mediane: mediane(fiche.map(x => x.avant)), max: Math.max(...fiche.map(x => x.avant)) }, apres: { mediane: mediane(fiche.map(x => x.apres)), max: Math.max(...fiche.map(x => x.apres)) } };
@@ -744,8 +744,8 @@ function questionEcartement(parties, opts) {
 }
 
 /* ------------------------------------------------------------------ Q4 : biais vertical */
-/* Convention de signe : correction = pose de Mic − pose d'Ariane (repère profil du rail), donc « + » = Mic remonte la
- * pose d'Ariane. L'« erreur » de P0_MESURES (pose publiée − pose de Mic) est l'opposée. */
+/* Convention de signe : correction = pose de l'opérateur − pose d'Ariane (repère profil du rail), donc « + » = l'opérateur remonte la
+ * pose d'Ariane. L'« erreur » de P0_MESURES (pose publiée − pose de l'opérateur) est l'opposée. */
 function railsDe(p) {
   const out = [];
   for (const r of p.recs) {
@@ -828,7 +828,7 @@ function effetCorrecteur(p, correcteur) {
 }
 function questionBiais(parties) {
   const ariane = parties.filter(p => p.info.source === 'ariane' && p.recs.some(r => r.posee && r.ref));
-  const res = { convention: 'correction = pose de Mic − pose d\'Ariane (mm) ; + = Mic remonte la pose ; l\'erreur de P0_MESURES est l\'opposée', groupes: [], validationCroisee: [], synthese: [] };
+  const res = { convention: 'correction = pose de l\'opérateur − pose d\'Ariane (mm) ; + = l\'opérateur remonte la pose ; l\'erreur de P0_MESURES est l\'opposée', groupes: [], validationCroisee: [], synthese: [] };
   const GROUPES = [
     ['tous les rails', x => true], ['convention refusée', x => x.convention === 'refusee'], ['convention appliquée', x => x.convention === 'appliquee'],
     ['rail gauche', x => x.cote === 'gauche'], ['rail droit', x => x.cote === 'droite'],
@@ -841,7 +841,7 @@ function questionBiais(parties) {
     for (const p of ariane) { const v = cache.get(p).filter(f).map(x => x.vert); if (v.length) ligne.parPartie[p.info.partie] = statGroupe(v); }
     const sts = Object.values(ligne.parPartie).filter(q => q.n >= 10);
     ligne.parties = sts.length;
-    ligne.signeStable = sts.length >= 2 ? (sts.every(q => q.moyenne >= 0.5 && q.mediane >= 0) ? 'positif (Mic remonte)' : sts.every(q => q.moyenne <= -0.5 && q.mediane <= 0) ? 'négatif (Mic descend)' : 'instable') : 'non jugeable (une seule partie)';
+    ligne.signeStable = sts.length >= 2 ? (sts.every(q => q.moyenne >= 0.5 && q.mediane >= 0) ? 'positif (l\'opérateur remonte)' : sts.every(q => q.moyenne <= -0.5 && q.mediane <= 0) ? 'négatif (l\'opérateur descend)' : 'instable') : 'non jugeable (une seule partie)';
     if (Object.keys(ligne.parPartie).length) res.groupes.push(ligne);
   }
   // Pente de la correction sur dz, rails refusés, par partie : le décalage prédit par la convention suit-il l'erreur ?
@@ -947,13 +947,13 @@ function texte(r) {
       L.push('flushPct ≥ seuil :'); for (const b of f.balayage) L.push(`  ≥ ${b.seuil} : ${b.signales} signalés, ${b.vraisPositifs} dans un passage, ${b.horsPN} hors PN ; précision ${pct(b.precision, 0)}, rappel ${pct(b.rappel, 0)}`);
       L.push(`Un PN laissé de côté à la fois : ${f.validationParPN.rappel === null ? '—' : pct(f.validationParPN.rappel, 0)} des passages retrouvés ; ${f.validationParPN.fauxPositifs} faux positifs sur ${f.validationParPN.sur} rouges hors PN.`);
       if (f.sansFlushPct) L.push(`Sans flushPct (logistique sur ${f.sansFlushPct.traits.join(', ')}, un PN laissé de côté à la fois) : AUC ${fr(f.sansFlushPct.auc, 2)} ; les ${f.sansFlushPct.signalesParMeilleursScores} meilleurs scores contiennent ${fr(f.sansFlushPct.passagesRetrouves, 0)}/${f.sansFlushPct.passages} passages (précision ${pct(f.sansFlushPct.precision, 0)}).`);
-      for (const m of f.marges) L.push(`  ${m.pn} : plage de Mic ${m.controle.join('–')}, cœur détecté ${m.coeurDetecte ? m.coeurDetecte.join('–') : 'aucun'}${m.coeurDetecte ? ` ; marge avant ${m.margeAvant}, après ${m.margeApres}` : ''}`);
+      for (const m of f.marges) L.push(`  ${m.pn} : plage de l'opérateur ${m.controle.join('–')}, cœur détecté ${m.coeurDetecte ? m.coeurDetecte.join('–') : 'aucun'}${m.coeurDetecte ? ` ; marge avant ${m.margeAvant}, après ${m.margeApres}` : ''}`);
     }
     for (const h of r.q2.humain || []) L.push(`Partie ${h.partie} (humaine) : écartement > ${h.seuilMm} mm de la médiane (${fr(h.mediane)} mm) : ${h.signales} cuts signalés, ${h.dansUnPN} dans un PN (précision ${pct(h.precision, 0)}), ${h.pnDetectes}/${h.pnTotal} PN touchés ; rappel des cuts de PN ${pct(h.rappelCuts, 0)}.`);
-    if (r.q2.parcours && r.q2.parcours.length) L.push(`Parcours observé : aucun cut validé juste avant ni juste après la plage donnée par Mic pour ${r.q2.parcours.filter(x => x.identiqueALaPlage).length}/${r.q2.parcours.length} PN ; cuts validés dans les plages : ${somme(r.q2.parcours.map(x => x.validesDansLaPlage))}/${somme(r.q2.parcours.map(x => x.cutsDansLaPlage))}.`);
+    if (r.q2.parcours && r.q2.parcours.length) L.push(`Parcours observé : aucun cut validé juste avant ni juste après la plage donnée par l'opérateur pour ${r.q2.parcours.filter(x => x.identiqueALaPlage).length}/${r.q2.parcours.length} PN ; cuts validés dans les plages : ${somme(r.q2.parcours.map(x => x.validesDansLaPlage))}/${somme(r.q2.parcours.map(x => x.cutsDansLaPlage))}.`);
     if (r.q2.couvertureMarges) for (const c of r.q2.couvertureMarges) L.push(`  marges ${c.avant} avant / ${c.apres} après le cœur : ` + Object.entries(c).filter(([k]) => k !== 'avant' && k !== 'apres').map(([k, v]) => `${k} ${v} PN couverts`).join(' ; '));
-    if (r.q2.margeRecommandee) { const m = r.q2.margeRecommandee; L.push(`Marges (plage de Mic moins cœur détecté), ${m.sources} PN : avant médiane ${m.avant.mediane}, P90 ${m.avant.p90}, max ${m.avant.max} ; après médiane ${m.apres.mediane}, P90 ${m.apres.p90}, max ${m.apres.max}.`); }
-    if (r.q2.margesFicheMic) { const m = r.q2.margesFicheMic; L.push(`Marges de la fiche de Mic (passage → plage contrôlée) : avant médiane ${m.avant.mediane}, max ${m.avant.max} ; après médiane ${m.apres.mediane}, max ${m.apres.max}.`); }
+    if (r.q2.margeRecommandee) { const m = r.q2.margeRecommandee; L.push(`Marges (plage de l'opérateur moins cœur détecté), ${m.sources} PN : avant médiane ${m.avant.mediane}, P90 ${m.avant.p90}, max ${m.avant.max} ; après médiane ${m.apres.mediane}, P90 ${m.apres.p90}, max ${m.apres.max}.`); }
+    if (r.q2.margesFicheMic) { const m = r.q2.margesFicheMic; L.push(`Marges de la fiche de l'opérateur (passage → plage contrôlée) : avant médiane ${m.avant.mediane}, max ${m.avant.max} ; après médiane ${m.apres.mediane}, max ${m.apres.max}.`); }
   }
   if (r.q3) {
     L.push('', '== Q3. Détecteur d\'erreur d\'extraction (écartement) ==');

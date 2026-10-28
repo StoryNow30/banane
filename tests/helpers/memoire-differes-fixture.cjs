@@ -43,7 +43,7 @@ function partieFabriquee(partie, graine, { series = [4, 4, 3, 1, 1, 2], decalage
       cas.push(c);
     }
   });
-  // voisinsMic : poses de Mic des autres cas de la série, dans le repère de ce cut (décalage longitudinal de 10 mm par cut)
+  // voisinsMic : poses de l'opérateur des autres cas de la série, dans le repère de ce cut (décalage longitudinal de 10 mm par cut)
   for (const c of cas) for (const o of cas) {
     if (o === c || o.serie.id !== c.serie.id) continue;
     c.voisinsMic.push({ cut: o.cut, ecart: o.cut - c.cut, mic: { gauche: [10 * (o.cut - c.cut), o.reponse.mic.gauche[1], o.reponse.mic.gauche[2]], droite: [10 * (o.cut - c.cut), o.reponse.mic.droite[1], o.reponse.mic.droite[2]] } });

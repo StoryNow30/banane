@@ -1,5 +1,5 @@
 'use strict';
-/* 4.9.0.16 (retours de Mic au test 15) — panneau réel (`panel.js` en vm) :
+/* 4.9.0.16 (retours de l'opérateur au test 15) — panneau réel (`panel.js` en vm) :
  *  - sélecteur « Onglet ESV » : deux onglets au même titre se distinguent ; l'invite n'est pas
  *    choisissable ; l'onglet qu'Ariane utilise, ou le seul onglet prêt, est choisi d'avance ; rien
  *    ne se connecte sans « Reconnecter ESV » (sauf un onglet unique, comme avant) ;

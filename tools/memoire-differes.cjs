@@ -3,7 +3,7 @@
 /*
  * memoire-differes.cjs — PREMIÈRE « MÉMOIRE DES DIFFÉRÉS » (lot G1 du cahier 5.0), construite et jugée HORS LIGNE.
  *
- * Cap de Mic : « quand tu possèdes un lot Orbite et son Écho, un cut différé = un cut appris, qu'Ariane saura poser dans
+ * Cap de l'opérateur : « quand tu possèdes un lot Orbite et son Écho, un cut différé = un cut appris, qu'Ariane saura poser dans
  * un contexte similaire ». Rien n'est activé dans l'extension : outil hors ligne, lecture seule, sans dépendance, rien
  * sous src/ (les modules du moteur sont seulement LUS : `geometry-candidate-v1.js` pour rejouer le moteur, `gauge.js`
  * pour le contrat d'écartement, `placement-convention.js` pour le calage, `continuity-observer.js` pour déplacer la
@@ -11,28 +11,28 @@
  *
  * Deux temps.
  *
- *   1. `construire` : un CAS par cut différé que Mic a posé (lot Orbite + Écho de Mic joints, voir
+ *   1. `construire` : un CAS par cut différé que l'opérateur a posé (lot Orbite + Écho de l'opérateur joints, voir
  *      tools/jointure-echo-orbite.cjs et tools/jeu-apprentissage.cjs). Un cas porte
  *        - le CONTEXTE d'Ariane, sans coordonnée absolue : motif d'abstention, voisins posés et leur écart, prédiction de
  *          voie (lot, B1, état de T), écartement (départ, voisins), zone (ADV, PN), relevés S6, points de flanc ;
  *        - le POOL de candidats du moteur rejoué sur le vrai nuage (`Candidate.propose`, grille grossière du moteur),
  *          avec ses traits ; plus un pool ÉLARGI (la même recherche rejouée sur des fenêtres décalées) pour savoir où
  *          le moteur ne regardait pas ;
- *        - la RÉPONSE de Mic, dans le repère du cut (décalage latéral / vertical par rapport à la pose de départ
+ *        - la RÉPONSE de l'opérateur, dans le repère du cut (décalage latéral / vertical par rapport à la pose de départ
  *          d'ESV), et le candidat du pool qu'elle désigne.
  *      Toute position est un décalage dans le repère profil du cut, par rapport à la pose de départ d'ESV.
  *
  *   2. `juger` : trois façons d'apprendre, toutes lisibles, jugées sans tricher.
- *        (a) CHOIX DANS LE POOL : quel candidat Mic prend quand Ariane s'abstient (régression logistique à
+ *        (a) CHOIX DANS LE POOL : quel candidat l'opérateur prend quand Ariane s'abstient (régression logistique à
  *            quelques traits, lisible) ;
- *        (b) DÉCALAGE DE VOIE : pour une série de différés, la pose de Mic suit-elle un décalage constant par rapport
+ *        (b) DÉCALAGE DE VOIE : pour une série de différés, la pose de l'opérateur suit-elle un décalage constant par rapport
  *            à une prédiction de voie ? Mémoire de voie de la série, réutilisée sur les cuts suivants, avec le moteur
  *            rejoué autour de la voie apprise ;
  *        (c) VOISIN LE PLUS PROCHE : retrouver, parmi les cas d'AUTRES parties, ceux au contexte semblable.
  *      Jugement : on apprend sur certaines parties et on juge sur une autre (jamais la même des deux côtés) ; pour (b),
  *      aussi à l'intérieur d'une série (on apprend sur les premiers différés corrigés, on juge sur les suivants). Les
  *      seuils sont choisis sur les parties d'apprentissage seulement (validation croisée interne par partie).
- *      Mesure : différés que la méthode aurait posés à moins de 5 et de 10 mm de Mic, poses fausses (plus de 10 mm),
+ *      Mesure : différés que la méthode aurait posés à moins de 5 et de 10 mm de l'opérateur, poses fausses (plus de 10 mm),
  *      poses sur la MAUVAISE VOIE (plus de 50 mm), abstentions restantes. Porte : 0 pose sur la mauvaise voie et
  *      moins de 5 % de poses fausses parmi celles proposées.
  *
@@ -391,7 +391,7 @@ function construireCas({ partie, projet = null, jeu, jointure, corpus, diagnosti
     })();
     ctx.ecartement.departGeomMm = arrondi(norme(geometrie.ecartement0), 1);
     const mm = {}; for (const c of COTES) mm[c] = enRepere(C, g.rails[c], versScene(C, g.rails[c], mic.get(r.cut)[c]));
-    // Pose de Mic dans la scène, pour la consigner chez les voisins.
+    // Pose de l'opérateur dans la scène, pour la consigner chez les voisins.
     const voisinsMic = [], departsVoisins = [], posesVoisines = [];
     for (const [cutV, gv] of geo) {
       if (cutV === r.cut || gv.frameId !== g.frameId || Math.abs(cutV - r.cut) > PORTEE_VOISINS || !gv.rails.gauche || !gv.rails.droite) continue;
@@ -404,7 +404,7 @@ function construireCas({ partie, projet = null, jeu, jointure, corpus, diagnosti
         const ari = Object.fromEntries(COTES.map(c => { const a = rv.arianeDeplacement[c]; return [c, [a.longitudinalMm, a.lateralMm, a.verticalMm]]; }));
         let micF = null;
         if (rv.referenceHumaine === 'observee' && rv.base === 'ariane' && rv.ecartHumain) micF = Object.fromEntries(COTES.map(c => { const e = rv.ecartHumain[c]; return [c, [ari[c][0] + e.longitudinalMm, ari[c][1] + e.lateralMm, ari[c][2] + e.verticalMm]]; }));
-        // `pose` : la pose d'Ariane (connue au moment de décider) ; `poseMic` : la pose finale de Mic, quand la relecture l'a corrigée (réponse, jamais contexte)
+        // `pose` : la pose d'Ariane (connue au moment de décider) ; `poseMic` : la pose finale de l'opérateur, quand la relecture l'a corrigée (réponse, jamais contexte)
         posesVoisines.push({ ...d, pose: enCut(ari), poseMic: micF ? enCut(micF) : null });
       }
     }
@@ -417,7 +417,7 @@ function construireCas({ partie, projet = null, jeu, jointure, corpus, diagnosti
       reponsePool[c] = { moteur: proche(cd => cd.moteur === 1), elargi: proche(() => true) };
     }
     const gaugeMic = arrondi(ecartementGeom(geometrie, mic.get(r.cut).gauche, mic.get(r.cut).droite), 1);
-    // écartement des voisins posés (médiane des trois plus proches) et décalage de Mic par rapport à la voie prédite
+    // écartement des voisins posés (médiane des trois plus proches) et décalage de l'opérateur par rapport à la voie prédite
     const gv = posesVoisines.slice().sort((a, b) => Math.abs(a.ecart) - Math.abs(b.ecart)).slice(0, 3).map(v => ecartementGeom(geometrie, v.pose.gauche, v.pose.droite));
     ctx.ecartement.voisinsMm = gv.length ? arrondi(mediane(gv), 1) : null;
     const decalageVoie = { depart: Object.fromEntries(COTES.map(c => [c, [mic.get(r.cut)[c][1], mic.get(r.cut)[c][2]]])),
@@ -451,7 +451,7 @@ function lireFichiers(fichiers, entetes = null) {
 
 /* ================================================================== 3. ERREURS ET MESURES */
 
-/* Erreur 3D (mm) d'une pose proposée { gauche: [la, ve], droite: [la, ve] } contre la pose de Mic : le plus grand des deux rails. */
+/* Erreur 3D (mm) d'une pose proposée { gauche: [la, ve], droite: [la, ve] } contre la pose de l'opérateur : le plus grand des deux rails. */
 function erreurPose(cas, pose) {
   const e = {};
   for (const c of COTES) { const m = cas.reponse.mic[c]; e[c] = Math.hypot(m[0], m[1] - pose[c][0], m[2] - pose[c][1]); }
@@ -509,7 +509,7 @@ function ajusterLogistique(X, y, { lambda = 0.5, iterations = 400, pas = 0.5 } =
   return { mu, sd, w, b };
 }
 const scoreLogistique = (m, x) => sigmoide(m.b + x.reduce((a, v, j) => a + (v - m.mu[j]) / m.sd[j] * m.w[j], 0));
-/* Jeu d'apprentissage de (a) : un exemple par candidat ; étiquette = la pose finale du candidat est à moins de 5 mm de Mic. */
+/* Jeu d'apprentissage de (a) : un exemple par candidat ; étiquette = la pose finale du candidat est à moins de 5 mm de l'opérateur. */
 function exemplesA(cas, optionsVoie) {
   const X = [], y = [];
   for (const c of cas) for (const cote of COTES) {
@@ -578,7 +578,7 @@ function choisirSeuils(evaluer, grille, parties, minPoses = 3, politique = 'sur'
   return meilleur;
 }
 /* Modèle de (a) : régression logistique sur les candidats + a priori d'écartement (médiane et dispersion robuste de
- * l'écartement de la pose de Mic sur les cas d'apprentissage : Mic pose la paire autour de l'écartement nominal). */
+ * l'écartement de la pose de l'opérateur sur les cas d'apprentissage : l'opérateur pose la paire autour de l'écartement nominal). */
 function ajusterModeleA(cas, optionsVoie) {
   const ex = exemplesA(cas, optionsVoie), m = ajusterLogistique(ex.X, ex.y), g = cas.map(c => c.reponse.ecartementMicMm).filter(fini);
   const mu = mediane(g), mad = g.length ? mediane(g.map(v => Math.abs(v - mu))) : null;
@@ -612,10 +612,10 @@ function poserNaif(cas, elargi) {
 }
 
 /* ================================================================== 5. (b) DÉCALAGE DE VOIE, MÉMOIRE DE LA SÉRIE */
-/* Mémoire de la série : cas de la même série déjà corrigés par Mic (numéros plus petits), du plus récent au plus ancien.
+/* Mémoire de la série : cas de la même série déjà corrigés par l'opérateur (numéros plus petits), du plus récent au plus ancien.
  * Deux « voies de référence » sur lesquelles un décalage constant est cherché :
- *   D  « départ »  : la pose de départ d'ESV (la voie d'extraction) ; décalage = pose de Mic - départ, par rail ;
- *   M  « Mic »     : la voie prolongée depuis les dernières poses de Mic (droite des appuis, comme `predict` du moteur) ;
+ *   D  « départ »  : la pose de départ d'ESV (la voie d'extraction) ; décalage = pose de l'opérateur - départ, par rail ;
+ *   M  « l'opérateur »     : la voie prolongée depuis les dernières poses de l'opérateur (droite des appuis, comme `predict` du moteur) ;
  *                    le décalage constant appris vient en plus (moyenne des erreurs passées de la prolongation).
  * Chaque base donne une prédiction [la, ve] par rail dans le repère du cut, et une dispersion (mm) : si elle dépasse la
  * porte apprise, la mémoire ne sert pas. */
@@ -632,7 +632,7 @@ function predire(cas, avant, base, K) {
     }
     return { pred, plage, n: mem.length };
   }
-  // base M : appuis = poses de Mic des cas de la mémoire, exprimées dans le repère de CE cut
+  // base M : appuis = poses de l'opérateur des cas de la mémoire, exprimées dans le repère de CE cut
   const ancres = mem.map(m => cas.voisinsMic.find(v => v.cut === m.cut)).filter(Boolean);
   if (!ancres.length) return null;
   const pred = {};
@@ -643,7 +643,7 @@ function predire(cas, avant, base, K) {
   return { pred, plage: ecartMaxCuts(cas, ancres), n: ancres.length };
 }
 /* Mémoire de la série + sa dispersion : plage des décalages mémorisés (base D) ou éloignement en cuts (base M) ; avec
- * `nBack` = 1, aussi l'erreur de la MÊME méthode sur le cut précédent, que Mic vient de corriger (la mémoire a-t-elle bien
+ * `nBack` = 1, aussi l'erreur de la MÊME méthode sur le cut précédent, que l'opérateur vient de corriger (la mémoire a-t-elle bien
  * prédit le cut d'avant ?). Tout est connu avant le cut jugé. */
 function memoireSerie(cas, avant, base, K, nBack = 0) {
   const p = predire(cas, avant, base, K);
@@ -684,7 +684,7 @@ function poserB(params, cas, avant) {
   return r.pose ? { pose: r.pose, disp: m.disp } : { pose: null, raison: r.raison, disp: m.disp };
 }
 /* Simulation en ligne d'une partie : pour chaque série, les cas dans l'ordre ; la mémoire d'un cas = les cas plus anciens
- * de la série (Mic les a corrigés). `figeK` : la mémoire est figée aux K premiers cas de la série, qui ne sont pas jugés. */
+ * de la série (l'opérateur les a corrigés). `figeK` : la mémoire est figée aux K premiers cas de la série, qui ne sont pas jugés. */
 function groupesParSerie(cas) {
   const g = new Map();
   for (const c of cas) { const k = c.serie ? c.serie.id : c.cut; if (!g.has(k)) g.set(k, []); g.get(k).push(c); }
@@ -692,10 +692,10 @@ function groupesParSerie(cas) {
   return [...g.values()];
 }
 /* `propagation` : Ariane s'appuie sur SES poses. Un cut qu'elle a posé entre dans la mémoire tel qu'elle l'a posé (faux compris :
- * Mic ne le corrigera qu'après) ; seuls les cuts qu'elle a différés y entrent avec la pose de Mic. Sans propagation, Mic a tout
- * corrigé avant le cut suivant (cas idéal). La mémoire figée aux K premiers cuts reste celle de Mic. */
+ * l'opérateur ne le corrigera qu'après) ; seuls les cuts qu'elle a différés y entrent avec la pose de l'opérateur. Sans propagation, l'opérateur a tout
+ * corrigé avant le cut suivant (cas idéal). La mémoire figée aux K premiers cuts reste celle de l'opérateur. */
 function croire(cas, avant, erreurs) {
-  // cas déjà corrigés, vus avec la pose qu'Ariane en croit : pose de Mic + erreur de sa propre pose (en latéral et en vertical)
+  // cas déjà corrigés, vus avec la pose qu'Ariane en croit : pose de l'opérateur + erreur de sa propre pose (en latéral et en vertical)
   const decale = (mic, err) => err ? Object.fromEntries(COTES.map(c => [c, [mic[c][0], mic[c][1] + err[c][0], mic[c][2] + err[c][1]]])) : mic;
   const voisinsMic = cas.voisinsMic.map(v => erreurs.has(v.cut) ? { ...v, mic: decale(v.mic, erreurs.get(v.cut)) } : v);
   return { cas: { ...cas, voisinsMic }, avant: avant.map(m => erreurs.has(m.cut) ? { ...m, reponse: { ...m.reponse, mic: decale(m.reponse.mic, erreurs.get(m.cut)) } } : m) };
@@ -726,7 +726,7 @@ const GRILLE_B = (() => {
   }
   return g;
 })();
-const decrireB = p => `base ${p.base === 'D' ? 'départ' : 'poses de Mic'}, ${p.K} dernier(s) cut(s), dispersion ≤ ${p.porteDisp} mm${p.nBack ? ' (cut précédent compris)' : ''}, ${p.mode === 'brut' ? 'pose à la voie apprise' : 'moteur recentré (±' + p.tol + ' mm)'}, mémoire ≥ ${p.minMemoire}`;
+const decrireB = p => `base ${p.base === 'D' ? 'départ' : 'poses de l\'opérateur'}, ${p.K} dernier(s) cut(s), dispersion ≤ ${p.porteDisp} mm${p.nBack ? ' (cut précédent compris)' : ''}, ${p.mode === 'brut' ? 'pose à la voie apprise' : 'moteur recentré (±' + p.tol + ' mm)'}, mémoire ≥ ${p.minMemoire}`;
 function apprendreB(partiesApp, politique = 'sur', propagation = false) {
   const evaluer = (p, partie) => mesurer(simulerB(p, partiesApp.get(partie), null, propagation));
   const choix = choisirSeuils(evaluer, GRILLE_B, [...partiesApp.keys()], 3, politique);
@@ -736,7 +736,7 @@ function apprendreB(partiesApp, politique = 'sur', propagation = false) {
 /* ================================================================== 6. (c) VOISIN LE PLUS PROCHE */
 const ETAGES = ['no-anchor', 'hors-vue', 'no-qualified', 'pair-guard', 'several', 'first-pass', 'window', 'choice', 'crossing'];
 function motifCode(m) { return m == null ? 0 : { candidate: 1, ambiguity: 2, 'gauge-out-of-contract': 3, flank: 4, rsf: 5, minTop: 6, slope: 7, window: 8 }[m] || 9; }
-/* Descripteur numérique du contexte d'un cas (sans coordonnée, sans réponse de Mic). */
+/* Descripteur numérique du contexte d'un cas (sans coordonnée, sans réponse de l'opérateur). */
 function descripteur(cas) {
   const x = cas.contexte, r = x.rails || {}, v = x.voisins || {}, s = x.s6, z = x.zone;
   const fortsM = c => cas.rails[c].pool.filter(cd => cd.moteur === 1 && cd.fort === 1).length;
@@ -757,7 +757,7 @@ function descripteur(cas) {
   ];
 }
 const distance = (a, b) => Math.sqrt(a.reduce((t, v, i) => t + (v - b[i]) ** 2, 0));
-/* Rang, parmi les cellules fortes du pool du moteur triées par perte, du candidat que Mic a pris (null : hors pool). */
+/* Rang, parmi les cellules fortes du pool du moteur triées par perte, du candidat que l'opérateur a pris (null : hors pool). */
 function rangDeMic(cas, cote) {
   const rep = cas.reponse.pool[cote].moteur;
   if (!rep || rep.distMm > SEUIL_JUSTE_MM) return null;
@@ -770,7 +770,7 @@ function voisinsAutresParties(cas, base, k) {
   return base.filter(o => o.cas.partie !== cas.partie).map(o => ({ o, dist: distance(d, o.d) })).sort((a, b) => a.dist - b.dist).slice(0, k);
 }
 /* (c, rang) : le rang choisi par les k voisins (vote) est appliqué au pool du moteur du cas à poser.
- * (c, vecteur) : décalage moyen de Mic des voisins, recalé sur l'unique candidat fort du pool élargi à moins de `tol`. */
+ * (c, vecteur) : décalage moyen de l'opérateur des voisins, recalé sur l'unique candidat fort du pool élargi à moins de `tol`. */
 function poserC(params, cas, base) {
   const vois = voisinsAutresParties(cas, base, params.k).filter(v => v.dist <= params.distMax);
   if (vois.length < params.k) return { pose: null, raison: 'pas assez de voisins proches' };
@@ -861,7 +861,7 @@ function juger(parties, opts = {}) {
   for (const m of Object.values(methodes)) m.total = sommer(Object.values(m.parPartie));
   const parSerie = jugerBParSerie(parties, 8, 'sur', propagation, reservees), parSerieGain = jugerBParSerie(parties, 8, 'gain', propagation, reservees);
   const figee = {}; for (const k of [1, 2, 3]) figee[k] = { parPartie: serieFigee[k], total: sommer(Object.values(serieFigee[k])) };
-  // Potentiel : où Mic se trouve-t-il par rapport au pool ?
+  // Potentiel : où l'opérateur se trouve-t-il par rapport au pool ?
   const potentiel = {};
   for (const p of noms) potentiel[p] = potentielPool(parties.get(p));
   return { format: FORMAT_RAPPORT, propagation, reservees: [...reservees].sort((a, b) => a - b), bParSerie: parSerie, bParSerieGain: parSerieGain, parties: Object.fromEntries(noms.map(p => [p, { cas: parties.get(p).length, series: groupesParSerie(parties.get(p)).length }])), methodes, serieFigee: figee, potentiel,
@@ -906,7 +906,7 @@ function resumeA(a) {
   return { seuils: a.seuils, exemples: a.exemples, positifs: a.positifs, apprentissage: a.apprentissage, ecartement: a.modele.ecartement ? { mu: arrondi(a.modele.ecartement.mu, 1), sigma: arrondi(a.modele.ecartement.sigma, 1) } : null,
     poids: a.modele.w.map((w, i) => ({ trait: noms[i], poids: arrondi(w, 2) })).sort((x, y) => Math.abs(y.poids) - Math.abs(x.poids)).slice(0, 6) };
 }
-/* Part des cas dont les deux rails ont un candidat à moins de 5 / 10 mm de Mic, dans le pool du moteur et dans le pool élargi. */
+/* Part des cas dont les deux rails ont un candidat à moins de 5 / 10 mm de l'opérateur, dans le pool du moteur et dans le pool élargi. */
 function potentielPool(cas) {
   const r = { cas: cas.length };
   for (const [nom, cle] of [['moteur', 'moteur'], ['elargi', 'elargi']]) for (const s of [5, 10]) {
@@ -993,10 +993,10 @@ function texte(r) {
   o.push(`MÉMOIRE DES DIFFÉRÉS — jugement hors ligne (${r.format})`);
   o.push(`Parties : ${Object.entries(r.parties).map(([p, v]) => `${p} (${v.cas} cas, ${v.series} séries)`).join(' · ')}`);
   if (r.reservees && r.reservees.length) o.push(`Parties réservées, jugées sans réglage (elles n'apprennent rien) : ${r.reservees.join(', ')}`);
-  o.push(`Mémoire de la série : ${r.propagation ? 'AVEC propagation (Ariane s\'appuie sur ses propres poses ; Mic ne corrige que les cuts différés)' : 'idéale (Mic a corrigé tous les cuts précédents de la série)'}.`);
+  o.push(`Mémoire de la série : ${r.propagation ? 'AVEC propagation (Ariane s\'appuie sur ses propres poses ; l\'opérateur ne corrige que les cuts différés)' : 'idéale (l\'opérateur a corrigé tous les cuts précédents de la série)'}.`);
   o.push(`Seuils : juste ≤ ${r.seuils.justeMm} mm, faux > ${r.seuils.fauxMm} mm, mauvaise voie > ${r.seuils.mauvaiseVoieMm} mm. Porte : 0 mauvaise voie et moins de ${pct(r.seuils.porteFaux, 0)} de fausses parmi les posées.`);
   o.push('');
-  o.push('Où est Mic par rapport au pool (cas dont les deux rails ont un candidat à ≤ 5 / ≤ 10 mm de sa pose)');
+  o.push('Où est l\'opérateur par rapport au pool (cas dont les deux rails ont un candidat à ≤ 5 / ≤ 10 mm de sa pose)');
   for (const [p, v] of Object.entries(r.potentiel)) o.push(`  partie ${p} : pool du moteur ${v.moteur5}/${v.moteur10} · cellule forte ≤10 mm ${v.moteurFort10} · pool élargi ${v.elargi5}/${v.elargi10} sur ${v.cas} · voie du lot connue pour ${v.voieLot.cas} (≤5 mm : ${v.voieLot.juste5}, ≤10 mm : ${v.voieLot.juste10}, >50 mm : ${v.voieLot.plus50})`);
   o.push('');
   for (const m of Object.values(r.methodes)) {
@@ -1009,7 +1009,7 @@ function texte(r) {
     }
     o.push('');
   }
-  o.push('(b) à l\'intérieur d\'une série, réglage appris sur les AUTRES parties : mémoire figée aux K premiers différés corrigés par Mic (non jugés), jugement sur les suivants');
+  o.push('(b) à l\'intérieur d\'une série, réglage appris sur les AUTRES parties : mémoire figée aux K premiers différés corrigés par l\'opérateur (non jugés), jugement sur les suivants');
   for (const [k, v] of Object.entries(r.serieFigee)) o.push(`  K = ${k} : ${ligneMesure(v.total)}`);
   o.push('');
   const bs = r.bParSerie;

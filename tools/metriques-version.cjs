@@ -171,11 +171,11 @@ function metriquesTable(table, journal, o) {
     differes: blocDifferes(lignes),
     differesEcartHumain: { avecReference: diffRef.length, ...blocEcarts(diffRef) },
     fauxVerts: {
-      definition: 'cut posé par Ariane, corrigé de plus de 10 mm par Mic, sur les cuts posés avec référence humaine',
+      definition: 'cut posé par Ariane, corrigé de plus de 10 mm par l\'opérateur, sur les cuts posés avec référence humaine',
       parRapportAuxPosesAvecReference: fv,
       borneBasseSurTousLesPoses: taux(fv.n, posees.length),
     },
-    horsJournal: { avecReference: horsJournal.length, note: 'verts d\'extraction et autres cuts visités par Mic hors du journal ; pas des poses d\'Ariane', ...blocEcarts(horsJournal) },
+    horsJournal: { avecReference: horsJournal.length, note: 'verts d\'extraction et autres cuts visités par l\'opérateur hors du journal ; pas des poses d\'Ariane', ...blocEcarts(horsJournal) },
     debit: journal ? debitJournal(journal, parties.length === 1 ? parties[0] : null, o.pause) : { disponible: false, raison: 'journal non fourni' },
   };
 }

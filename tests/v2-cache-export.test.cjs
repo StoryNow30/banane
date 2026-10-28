@@ -1,5 +1,5 @@
 'use strict';
-/* V2 (D-079, ajout de Mic) — vidage du cache des exports. Service worker RÉEL
+/* V2 (D-079, ajout de l'opérateur) — vidage du cache des exports. Service worker RÉEL
  * (background.js, mesure V1 réelle, ESV simulé) et panneau RÉEL (panel.js) avec
  * un faux stockage. Frontière : IndexedDB clouds/events/records = cache d'export ;
  * l'état du moteur et du lot n'est jamais touché (src/export-cache.js). */

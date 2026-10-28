@@ -1,6 +1,6 @@
 'use strict';
 /* 5.0 — RELECTURE AUTONOME (tools/relecture-autonome.cjs, fiches/RELECTURE_AUTONOME.md), sur données SYNTHÉTIQUES : sélection « méthode de
- * Mic », jugement d'une action, règle prudente apprise sans la partie jugée, cuts différés jamais touchés, borne de Wilson, relevé SKIP,
+ * l'opérateur », jugement d'une action, règle prudente apprise sans la partie jugée, cuts différés jamais touchés, borne de Wilson, relevé SKIP,
  * réglages proposés relus par `juger`, manifeste des parties. Aucune donnée de terrain, aucune coordonnée en sortie. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const path = require('node:path'), { spawnSync } = require('node:child_process');
@@ -8,7 +8,7 @@ const T = require('../tools/relecture-autonome.cjs');
 
 const v = (lat, z) => ({ left: [0, lat, z], right: [0, lat, z] });
 const ligne = (o) => ({ partie: '9:1', cut: 1, zone: 'pn', genre: 'vert', ref: true, etat: 'calcule', conf: 80, ...o });
-/* Une proposition : écart `d` (plus grand |latéral| ou |vertical|), erreur `e` contre Mic, écart d'écartement `dg`. */
+/* Une proposition : écart `d` (plus grand |latéral| ou |vertical|), erreur `e` contre l'opérateur, écart d'écartement `dg`. */
 const prop = (o) => ({ stage: 'first-pass', pire: o.d, latMax: o.d, coh: 0, dg: 1, ...o });
 
 test('sélection : PN puis ADV puis abords (grappe, isolé, différé) puis liste, verts et revisites comptés', () => {
