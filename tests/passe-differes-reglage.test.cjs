@@ -7,12 +7,12 @@ const S = require('../src/settings.js');
 const { production } = require('./helpers/perf-production.cjs');
 const j = x => JSON.parse(JSON.stringify(x));
 
-test('livré : en ombre (écriture coupée), sans plafond, recette du banc (2 passes, sansVoieRien)', () => {
+test('livré (D-259) : ALLUMÉE en écriture, plafond de 10 cuts par lot, recette du banc (2 passes, sansVoieRien)', () => {
   /* Garde A (fiches/GARDE_PASSE_A.md) : la garde des appuis faux, livrée active (tests/garde-passe-appuis.test.cjs). */
-  assert.deepEqual(j(S.lot.passeDifferes), { ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: { sansVoieRien: true }, gardeAppuis: { actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 } });
+  assert.deepEqual(j(S.lot.passeDifferes), { ombre: true, ecriture: true, ecritureMax: 10, passes: 2, leviers: { sansVoieRien: true }, gardeAppuis: { actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 } });
   assert.equal(S.lot.passeDifferes, S.passeDifferesDefaut);
   assert.ok(Object.isFrozen(S.lot.passeDifferes) && Object.isFrozen(S.lot.passeDifferes.leviers));
-  assert.match(S.describe().find(l => l.nom === 'Deuxième passe des différés (fin de lot)').valeur, /^en ombre \(calculée et consignée, rien n’est écrit dans ESV\)$/);
+  assert.match(S.describe().find(l => l.nom === 'Deuxième passe des différés (fin de lot)').valeur, /^ALLUMÉE, en écriture : pose et valide sur place, 10 cut au plus$/);
 });
 
 test('niveau : clé absente = livré ; false coupe ; toute valeur illisible coupe ; l’écriture exige l’observateur passif', () => {
@@ -20,8 +20,8 @@ test('niveau : clé absente = livré ; false coupe ; toute valeur illisible coup
     b.ctx.BananeSettings = { ...S, lot: { ...S.lot, passeDifferes: passe }, observateurPassif: { ...S.observateurPassif, actif: observateur } };
     return b.get('passeDiffReglage')(); };
   const mode = (passe, observateur) => niveau(passe, observateur).mode;
-  assert.equal(mode({}), 'ombre', 'toutes les clés absentes : le livré (ombre)'); assert.equal(mode({ ecriture: true }), 'ecriture', 'écriture rallumée');
-  assert.equal(niveau({}).max, Infinity); assert.equal(niveau({}).passes, 2); assert.deepEqual(j(niveau({}).leviers), { sansVoieRien: true });
+  assert.equal(mode({}), 'ecriture', 'toutes les clés absentes : le livré (écriture, D-259)'); assert.equal(mode({ ecriture: true }), 'ecriture', 'écriture allumée');
+  assert.equal(niveau({}).max, 10, 'plafond livré : 10 cuts par lot'); assert.equal(mode({}, false), 'ombre', 'observateur coupé : pas d’écriture, la preuve manquerait'); assert.equal(niveau({}).passes, 2); assert.deepEqual(j(niveau({}).leviers), { sansVoieRien: true });
   assert.equal(mode({ ecriture: false }), 'ombre'); assert.equal(mode({ ombre: false }), 'off'); assert.equal(mode({ ombre: false, ecriture: true }), 'off', 'l’écriture seule ne s’allume pas');
   for (const v of ['true', 'false', 1, 0, 'oui', null, {}, [true]]) {
     assert.equal(mode({ ombre: v }), 'off', 'ombre ' + JSON.stringify(v)); assert.equal(mode({ ecriture: v }), 'ombre', 'ecriture ' + JSON.stringify(v));

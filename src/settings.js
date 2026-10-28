@@ -135,12 +135,14 @@
   });
 
   /* --- Décision sur le lot dans le Pilote (4.7.8 en observation, 4.7.10 commande selon le lot) --- */
-  /* Test 17 : valeurs livrées de la deuxième passe des différés (voir `lot.passeDifferes`). Test 21, décision de l'opérateur du 26/10 (D-251) : livrée EN OMBRE (`ecriture: false`),
+  /* Test 24, DÉCISION DE L'OPÉRATEUR DU 28/10 (D-259) : la passe est de nouveau livrée ALLUMÉE EN ÉCRITURE, plafonnée à 10 cuts écrits par lot (`ecritureMax: 10`), garde A active ;
+   * l'interrupteur des Réglages la coupe entièrement. Ce qui suit décrit l'ombre de la test 21 à 23 (D-251), reste vrai pour `ecriture: false`.
+   * Test 17 : valeurs livrées de la deuxième passe des différés (voir `lot.passeDifferes`). Test 21, décision de l'opérateur du 26/10 (D-251) : livrée EN OMBRE (`ecriture: false`),
    * jusqu'à ce qu'une garde des appuis faux soit écrite et vérifiée ; `ecriture: true` la rallume en écriture.
    * Garde A (`gardeAppuis`, src/garde-passe-appuis.js, fiches/GARDE_PASSE_A.md) : une pose de la passe à moins de `deplacementMaxMm` du départ d'ESV (pire rail, 3D) sans aucune
    * pose de la chaîne normale du lot (première passe, fenêtre, choix ; ni la GCV2 dans le lot, ni la passe) à `appuiNormalMaxCuts` cuts ou moins est refusée : « rien », le cut reste
    * différé (motif `garde-appuis`), en ombre comme en écriture. Seuils fixés sur la seule partie 0 du 23/10 (SUPPOSÉ généralisable). */
-  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: Object.freeze({ sansVoieRien: true }),
+  const passeDifferesDefaut = Object.freeze({ ombre: true, ecriture: true, ecritureMax: 10, passes: 2, leviers: Object.freeze({ sansVoieRien: true }),
     gardeAppuis: Object.freeze({ actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 }) });
   const lot = Object.freeze({
     observe: true,

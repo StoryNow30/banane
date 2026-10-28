@@ -1,30 +1,31 @@
 'use strict';
-/* Test 21, décision de l'opérateur du 26/10 (D-251) — LA DEUXIÈME PASSE DES DIFFÉRÉS EST LIVRÉE EN OMBRE : elle calcule et journalise (`passe-differes-ombre`) ce qu'elle poserait,
- * mais n'écrit plus rien dans ESV (ni navigation, ni pose, ni validation sur place) tant qu'une garde des appuis faux n'est pas écrite et vérifiée. Un réglage `ecriture: true`
- * rallume l'écriture, avec toutes ses gardes. Service worker réel, ESV simulé (tests/helpers/passe-differes.cjs). */
+/* Test 24, décision de l'opérateur du 28/10 (D-259) — LA DEUXIÈME PASSE DES DIFFÉRÉS EST LIVRÉE ALLUMÉE EN ÉCRITURE, plafonnée à 10 cuts par lot, garde A active (D-251 l'avait
+ * livrée en ombre pour les tests 21 à 23). L'ombre reste un réglage : `ecriture: false` calcule et journalise (`passe-differes-ombre`) sans rien écrire dans ESV (ni navigation, ni pose,
+ * ni validation sur place) ; `ombre: false` coupe la passe. Service worker réel, ESV simulé (tests/helpers/passe-differes.cjs). */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const S = require('../src/settings.js');
 const { production } = require('./helpers/perf-production.cjs');
 const { lotPasse, relancer, ev } = require('./helpers/passe-differes.cjs');
 const j = x => JSON.parse(JSON.stringify(x));
 
-test('livré : en ombre (ombre vrai, écriture faux), sans plafond, recette du banc ; le descriptif des Réglages le dit', () => {
-  assert.deepEqual(j(S.passeDifferesDefaut), { ombre: true, ecriture: false, ecritureMax: null, passes: 2, leviers: { sansVoieRien: true }, gardeAppuis: { actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 } });
+test('livré : ALLUMÉE en écriture (D-259), plafond de 10 cuts par lot, recette du banc ; le descriptif des Réglages le dit', () => {
+  assert.deepEqual(j(S.passeDifferesDefaut), { ombre: true, ecriture: true, ecritureMax: 10, passes: 2, leviers: { sansVoieRien: true }, gardeAppuis: { actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 } });
   assert.equal(S.lot.passeDifferes, S.passeDifferesDefaut);
-  assert.match(S.describe().find(l => l.nom === 'Deuxième passe des différés (fin de lot)').valeur, /^en ombre \(calculée et consignée, rien n’est écrit dans ESV\)$/);
+  assert.match(S.describe().find(l => l.nom === 'Deuxième passe des différés (fin de lot)').valeur, /^ALLUMÉE, en écriture : pose et valide sur place, 10 cut au plus$/);
 });
 
-test('niveau : sans réglage enregistré, ombre ; ecriture:true rallume l’écriture (observateur passif présent) ; ombre:false coupe', () => {
+test('niveau : sans réglage enregistré, écriture (observateur passif présent) ; ecriture:false ramène l’ombre ; ombre:false coupe', () => {
   const b = production({}), niveau = (passe, observateur = true) => {
     b.ctx.BananeSettings = { ...S, lot: { ...S.lot, passeDifferes: passe }, observateurPassif: { ...S.observateurPassif, actif: observateur } };
     return b.get('passeDiffReglage')(); };
-  assert.equal(niveau({}).mode, 'ombre'); assert.equal(niveau({}).ecritureDemandee, false);
+  assert.equal(niveau({}).mode, 'ecriture'); assert.equal(niveau({}).ecritureDemandee, true); assert.equal(niveau({}).max, 10, 'le plafond livré est de 10 cuts écrits par lot');
+  assert.equal(niveau({ ecriture: false }).mode, 'ombre'); assert.equal(niveau({ ecriture: false }).ecritureDemandee, false);
   assert.equal(niveau({ ecriture: true }).mode, 'ecriture'); assert.equal(niveau({ ecriture: true }, false).mode, 'ombre', 'sans l’observateur passif, la preuve manquerait');
   assert.equal(niveau({ ombre: false }).mode, 'off'); assert.equal(niveau({ ombre: false, ecriture: true }).mode, 'off');
 });
 
-test('lot sans réglage enregistré : la passe journalise ses `passe-differes-ombre` et ne fait ni commande d’écriture, ni navigation, ni validation vers ESV, et « Relancer » est refusé', async () => {
-  const x = await lotPasse({ ecritureAllumee: false, passe: {}, deux: true });
+test('réglage ecriture:false (ombre) : la passe journalise ses `passe-differes-ombre` et ne fait ni commande d’écriture, ni navigation, ni validation vers ESV, et « Relancer » est refusé', async () => {
+  const x = await lotPasse({ ecritureAllumee: false, passe: { ecriture: false }, deux: true });
   const fin = ev(x.b, 'passe-differes-ombre-fin'); assert.equal(fin.length, 1); assert.equal(fin[0].mode, 'ombre'); assert.deepEqual(fin[0].cuts, [112, 114]);
   const dec = ev(x.b, 'passe-differes-ombre'); assert.deepEqual(dec.map(d => [d.identity.cut, d.decision]), [[112, 'poserait'], [114, 'poserait']]);
   assert.equal(x.b.get('vuePanneau')().passeDifferes.mode, 'ombre');
@@ -42,5 +43,13 @@ test('réglage enregistré ecriture:true : l’écriture est rallumée, avec ses
   await relancer(x);
   assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112]);
   assert.equal(ev(x.b, 'passe-differes-ecriture').length, 1);
+  assert.equal(x.b.get('vuePanneau')().passeDifferes.mode, 'ecriture');
+});
+
+test('lot sans réglage enregistré (livré D-259) : la passe écrit, plafonnée à 10 cuts, chaque cut est posé et validé sur place', async () => {
+  const x = await lotPasse({ passe: {}, deux: true });
+  await relancer(x);
+  assert.deepEqual(x.adapter.enPlace.map(e => e.cut), [112, 114]);
+  assert.equal(ev(x.b, 'passe-differes-ecriture').length, 2);
   assert.equal(x.b.get('vuePanneau')().passeDifferes.mode, 'ecriture');
 });
