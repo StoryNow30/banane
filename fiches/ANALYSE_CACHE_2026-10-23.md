@@ -1,6 +1,6 @@
 # Analyse de l'export du cache du 23/10/2026 (tests 18 et 19, cinq parties)
 
-Source : `banane-data/collections/2026-10-23_cache-tests-18-19_export-18-volumes` (journal et fiches de départ ; bilan non exploité ; corpus non lu). Aucun Écho : rien n'est jugé contre une vérité. Les chiffres sont lus dans les événements du journal (`defer-finalized`, `validation-accepted`, `passe-differes-*`, `relecture-*`, `deplacer-vue`), non recoupés avec le panneau. Période : depuis le 23/10 09 h 05 (heure de Paris) ; les données d'avant ont été vidées à la main par Mic.
+Source : `banane-data/collections/2026-10-23_cache-tests-18-19_export-18-volumes` (journal et fiches de départ ; bilan non exploité ; corpus non lu). Aucun Écho : rien n'est jugé contre une vérité. Les chiffres sont lus dans les événements du journal (`defer-finalized`, `validation-accepted`, `passe-differes-*`, `relecture-*`, `deplacer-vue`), non recoupés avec le panneau. Période : depuis le 23/10 09 h 05 (heure de Paris) ; les données d'avant ont été vidées à la main par l'opérateur.
 
 ## 1. Lots (version 4.9.5.19)
 
@@ -39,7 +39,7 @@ Références : 1,8 s par cut (test 7, partie 11), 4,6 s (3:0, test 15). Aucun re
 ## 5. Questions ouvertes
 
 - Pourquoi aucun cut traité sur la partie 29 (85 invalides au départ) et pourquoi la passe de la partie 0 s'est-elle arrêtée sans fin ?
-- Pourquoi la molette n'a-t-elle jamais déplacé la caméra (30 sur 30) ? Réglage d'ESV, geste non pris en compte, ou autre : à relever avec Mic.
+- Pourquoi la molette n'a-t-elle jamais déplacé la caméra (30 sur 30) ? Réglage d'ESV, geste non pris en compte, ou autre : à relever avec l'opérateur.
 - Les 70 cuts « sans appui » de la partie 0 ne sont pas repris par la GCV2 du lot (en 4:2, les cuts de même motif l'étaient) : à expliquer.
 - Autonomie (cuts sans retouche) : non calculable sans Écho.
 

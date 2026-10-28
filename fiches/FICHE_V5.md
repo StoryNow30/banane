@@ -1,7 +1,7 @@
 # Fiche de reprise : V5, stockage incrémental (13 octobre 2026)
 
 **But.** Supprimer la dérive de vitesse au fil d'un lot. Cahier § 6 V5 : chantier conditionnel, lancé seulement si V1 montre une dérive sur un long lot ; seuil et longueur
-du « long lot » à fixer par Mic. Minimum de sortie : pas de perte de données (classe KI-064), lecture des anciens formats, décisions identiques.
+du « long lot » à fixer par l'opérateur. Minimum de sortie : pas de perte de données (classe KI-064), lecture des anciens formats, décisions identiques.
 
 **La mesure (D-087, exports reçus, sans agent).** Lots d'au moins 150 cuts, médianes par tiers du lot (1er / 2e / 3e) :
 
@@ -27,7 +27,7 @@ quadratique ; il continue d'un lot à l'autre tant que le cache n'est pas vidé.
    de l'état constante. Tous les lecteurs de `s.records` (exports, bilan, panneau, reprise) lisent IndexedDB.
 3. Les deux, dans cet ordre, en deux versions.
 
-**Décisions de Mic.** (1) Seuil de dérive : proposé **+10 % du 1er au 3e tiers sur un lot d'au moins 150 cuts** ; mesuré +30 % et +38 % : V5 est déclenché. (2) Lancer la
+**Décisions de l'opérateur.** (1) Seuil de dérive : proposé **+10 % du 1er au 3e tiers sur un lot d'au moins 150 cuts** ; mesuré +30 % et +38 % : V5 est déclenché. (2) Lancer la
 conception de V5 maintenant (pendant la séance test 6), pour une version 4.9.0.7 après la mesure de la 4.9.0.6.
 
 **À ne pas relire.** Les rapports de missions A à G, `verification.txt`, les exports déjà analysés (chiffres ci-dessus).

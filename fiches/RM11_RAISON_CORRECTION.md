@@ -1,8 +1,8 @@
-# RM-11 — Raison de la correction : conception (19 octobre 2026, à valider par Mic)
+# RM-11 — Raison de la correction : conception (19 octobre 2026, à valider par l'opérateur)
 
-Mission RM-11 du plan de suite 5.0, chantier E3 du cahier 5.0, réponse 4 de Mic à l'audit Écho (D-112). **Conception seulement : aucun code de l'extension ne change.** Cette fiche et une maquette sont soumises à Mic. Rien ne se développe avant son accord.
+Mission RM-11 du plan de suite 5.0, chantier E3 du cahier 5.0, réponse 4 de l'opérateur à l'audit Écho (D-112). **Conception seulement : aucun code de l'extension ne change.** Cette fiche et une maquette sont soumises à l'opérateur. Rien ne se développe avant son accord.
 
-Mic a dit : « Si c'est bien fait, pourquoi pas. » La fonction est donc **facultative, coupée par défaut, et ne doit jamais le ralentir**.
+L'opérateur a dit : « Si c'est bien fait, pourquoi pas. » La fonction est donc **facultative, coupée par défaut, et ne doit jamais le ralentir**.
 
 Maquette (hors dépôt, à ouvrir dans un navigateur) : `scratchpad/rm11/maquette-raison.html`. Les touches 1 à 6 et 0 y marchent, pour essayer.
 
@@ -20,21 +20,21 @@ Maquette (hors dépôt, à ouvrir dans un navigateur) : `scratchpad/rm11/maquett
 | Porte | au moins 80 % des corrections de plus de 10 mm étiquetées, sans ralentir |
 | Point à lever avant tout | relever dans ESV si les chiffres 1 à 6 et 0 y font déjà quelque chose |
 
-## 2. Ce que Mic fait aujourd'hui, et les contraintes
+## 2. Ce que l'opérateur fait aujourd'hui, et les contraintes
 
 Sources : `fiches/FICHE_U3_RACCOURCIS.md`, `src/early-input.js`, `src/native-page.js`, `src/adapter-page.js`, D-112 et D-114 du fichier des décisions.
 
-- **Touches d'ESV ou d'Ariane déjà en jeu** : `Maj+Espace` (valider), `D` (cut de droite), `Z` et `S` (suivant, précédent), `Maj+Z`, `Q`, `A`, `G` et les flèches (déplacements, liste `editingKeys`), `Entrée`, `Ctrl+Entrée`, `Ctrl+flèches` (passer sans valider), `Maj+Retour arrière` (SKIP), `F5`. Le clavier de Mic est français : le relevé du 23 septembre note `Z` sous le code `KeyW`.
+- **Touches d'ESV ou d'Ariane déjà en jeu** : `Maj+Espace` (valider), `D` (cut de droite), `Z` et `S` (suivant, précédent), `Maj+Z`, `Q`, `A`, `G` et les flèches (déplacements, liste `editingKeys`), `Entrée`, `Ctrl+Entrée`, `Ctrl+flèches` (passer sans valider), `Maj+Retour arrière` (SKIP), `F5`. Le clavier de l'opérateur est français : le relevé du 23 septembre note `Z` sous le code `KeyW`.
 - **Écho est passif** : la garde native relève chaque frappe (`code`, modificateurs, cible) et ne retient rien. Ariane n'envoie rien à ESV en Écho. La trace dans ESV reste celle d'un humain (D-114). La fonction ne doit pas changer cela.
-- **Où est l'interface** : D-112 point 4 dit « sur l'interface d'Écho (panneau Ariane), pas dans ESV ». L'affichage et les boutons sont donc dans le panneau. Le clavier est lu là où est le focus, c'est-à-dire dans ESV, parce que Mic n'en sort pas. ESV ne reçoit rien de plus et n'affiche rien de plus.
-- **Rythme** : Mic fait 3 à 6 cuts par minute (donnée de Mic). Un vert passé sans correction dure en médiane 0,6 à 2,4 s selon la mesure (RELECTURE_OMBRE, VERTS_A_CONTROLER).
+- **Où est l'interface** : D-112 point 4 dit « sur l'interface d'Écho (panneau Ariane), pas dans ESV ». L'affichage et les boutons sont donc dans le panneau. Le clavier est lu là où est le focus, c'est-à-dire dans ESV, parce que l'opérateur n'en sort pas. ESV ne reçoit rien de plus et n'affiche rien de plus.
+- **Rythme** : l'opérateur fait 3 à 6 cuts par minute (donnée de l'opérateur). Un vert passé sans correction dure en médiane 0,6 à 2,4 s selon la mesure (RELECTURE_OMBRE, VERTS_A_CONTROLER).
 - **La touche est déjà vue** : une frappe de chiffre est déjà consignée aujourd'hui comme événement `operator-event` (code `Digit1`, sans le caractère), mais comme événement **non essentiel**, qui cède sous charge. Il faudra la rendre essentielle (§ 7).
 
 ## 3. Les étiquettes
 
-Principe : **la mesure donne déjà combien** Mic a corrigé (écart à sa pose finale). L'étiquette ne sert que pour ce que la mesure ne dit pas : **pourquoi**. Chaque étiquette est donc justifiée par la décision de la GCV2 qu'elle éclaire.
+Principe : **la mesure donne déjà combien** l'opérateur a corrigé (écart à sa pose finale). L'étiquette ne sert que pour ce que la mesure ne dit pas : **pourquoi**. Chaque étiquette est donc justifiée par la décision de la GCV2 qu'elle éclaire.
 
-| Touche | Code | Sens pour Mic | Ce que la GCV2 en apprend | Ce que la mesure seule ne dit pas |
+| Touche | Code | Sens pour l'opérateur | Ce que la GCV2 en apprend | Ce que la mesure seule ne dit pas |
 |---|---|---|---|---|
 | `1` | `rail-voisin` | la pose de départ était sur le rail voisin ou la mauvaise voie | **garde-fou** : confirme que « plus de 45 mm en travers » est bien une mauvaise voie, règle la voie prédite (hypothèse H3), compte les vraies mauvaises voies (porte : 0) | un grand déplacement latéral peut être une mauvaise voie ou une simple grosse erreur sur la bonne voie |
 | `2` | `adv` | dans un aiguillage | **zone** : vérité terrain pour juger le détecteur d'ADV (RM-1 : première ADV manquée de la partie 11 ; RM-2 : marges de 20 cuts) ; une série collante donne le début et la fin | la zone d'ADV détectée par Ariane est justement ce qu'on veut juger |
@@ -43,19 +43,19 @@ Principe : **la mesure donne déjà combien** Mic a corrigé (écart à sa pose 
 | `5` | `hauteur` | seule la hauteur était à reprendre | **transformation** : cibles propres pour la hauteur apprise ; part des corrections expliquées par la seule hauteur (70 des 85 faux verts, biais vertical d'environ 9 mm) | un déplacement vertical peut venir de la convention ou d'un nuage mal lu |
 | `6` | `autre` | une raison qui n'est pas dans la liste | **couverture de la liste** : si « autre » dépasse 20 % des raisons posées, la liste est à revoir. N'apprend rien d'autre | — |
 
-**Choix à signaler à Mic.** Le cahier et la ligne RM-11 citent aussi « bon tel quel ». Je ne le propose pas comme touche, pour deux raisons : c'est déjà le **défaut** (pas de geste, pas de déplacement, visite d'au moins 0,8 s : le compteur en a 553 + 1 559), et une touche de plus ralentit. S'il le veut quand même, il prend la place de `5` (« hauteur seulement »), la plus déductible de la mesure. Les deux sont possibles ; je recommande la liste ci-dessus.
+**Choix à signaler à l'opérateur.** Le cahier et la ligne RM-11 citent aussi « bon tel quel ». Je ne le propose pas comme touche, pour deux raisons : c'est déjà le **défaut** (pas de geste, pas de déplacement, visite d'au moins 0,8 s : le compteur en a 553 + 1 559), et une touche de plus ralentit. S'il le veut quand même, il prend la place de `5` (« hauteur seulement »), la plus déductible de la mesure. Les deux sont possibles ; je recommande la liste ci-dessus.
 
-**Un seul code par cut.** Un cut d'ADV avec nuage pauvre porte un seul code. Mic choisit la cause qu'il juge principale ; la zone vient mieux de la collante (§ 4).
+**Un seul code par cut.** Un cut d'ADV avec nuage pauvre porte un seul code. L'opérateur choisit la cause qu'il juge principale ; la zone vient mieux de la collante (§ 4).
 
 **Honnêteté sur les effectifs.** Le compteur donne 757 corrections de plus de 10 mm sur 12 parties (4 998 cuts à l'Écho). À 80 % étiquetées, cela fait environ 600 raisons, répartition inconnue. Les raisons rares (mauvaise voie) seront quelques dizaines. **La GCV2 n'apprend pas un classeur de raisons.** Elle s'en sert pour diagnostiquer, juger les détecteurs de zone et régler des garde-fous. Si, après trois séances, aucune mesure n'utilise les étiquettes, la fonction est retirée.
 
 ## 4. Le geste
 
-**Où se tape la raison.** Au clavier, dans ESV, sans lâcher ce qu'on fait. Les chiffres de la rangée du haut sont lus par leur code physique (`Digit1` à `Digit6`, `Digit0`), donc sans `Maj` sur un clavier français ; le pavé numérique (`Numpad1` à `Numpad6`, `Numpad0`) marche aussi. `Maj` est toléré, parce que Mic le tient déjà pour `Maj+Espace`. `Ctrl`, `Alt` et `Meta` annulent la lecture. Une touche tenue (`repeat`) ne compte qu'une fois. Dans un champ de texte, rien n'est lu. Un clic sur une pastille du panneau fait la même chose, en secours.
+**Où se tape la raison.** Au clavier, dans ESV, sans lâcher ce qu'on fait. Les chiffres de la rangée du haut sont lus par leur code physique (`Digit1` à `Digit6`, `Digit0`), donc sans `Maj` sur un clavier français ; le pavé numérique (`Numpad1` à `Numpad6`, `Numpad0`) marche aussi. `Maj` est toléré, parce que l'opérateur le tient déjà pour `Maj+Espace`. `Ctrl`, `Alt` et `Meta` annulent la lecture. Une touche tenue (`repeat`) ne compte qu'une fois. Dans un champ de texte, rien n'est lu. Un clic sur une pastille du panneau fait la même chose, en secours.
 
 **Pourquoi les chiffres.** Aucune touche d'ESV ou d'Ariane connue n'est un chiffre. La main gauche, déjà sur `ZQSD` et `Maj+Espace`, les atteint en montant d'une rangée. Les lettres autour (`E`, `R`, `F`, `X`…) sont inconnues du côté d'ESV et plus dangereuses.
 
-**À relever avant tout développement (2 minutes, par Mic).** Personne n'a le code des gestionnaires clavier d'ESV (D-112 : « relevé à confirmer »). Mic appuie une fois sur `1`, `2`, `3`, `4`, `5`, `6`, `0`, avec et sans `Maj`, sur un cut qu'il ne valide pas, et dit si quelque chose bouge (caméra, rail, liste). Écho consigne déjà les frappes et les changements de rails : la séance se rejoue ensuite à l'export. Si ESV réagit à un chiffre, on bascule la table des touches (réglage `echo.raison.touches`) vers, dans l'ordre : `Alt+chiffre`, puis le pavé numérique seul. Ariane **ne retient jamais** une touche en Écho : elle ne peut donc pas masquer une touche d'ESV.
+**À relever avant tout développement (2 minutes, par l'opérateur).** Personne n'a le code des gestionnaires clavier d'ESV (D-112 : « relevé à confirmer »). L'opérateur appuie une fois sur `1`, `2`, `3`, `4`, `5`, `6`, `0`, avec et sans `Maj`, sur un cut qu'il ne valide pas, et dit si quelque chose bouge (caméra, rail, liste). Écho consigne déjà les frappes et les changements de rails : la séance se rejoue ensuite à l'export. Si ESV réagit à un chiffre, on bascule la table des touches (réglage `echo.raison.touches`) vers, dans l'ordre : `Alt+chiffre`, puis le pavé numérique seul. Ariane **ne retient jamais** une touche en Écho : elle ne peut donc pas masquer une touche d'ESV.
 
 **Les cinq règles du geste.**
 
@@ -106,13 +106,13 @@ L'état de la collante en cours vit dans l'état Écho du service worker (`nativ
 
 ### 5.3 Règle anti-fuite : la raison est une étiquette, jamais un trait
 
-Une raison est une **information humaine**, posée parce que Mic a vu et corrigé. Elle appartient à l'**étiquette** (la sortie qu'on veut deviner), pas aux **traits** (l'entrée dont la GCV2 dispose quand elle décide). Cette règle s'applique même à une collante posée au cut N et reportée au cut N+1 : Ariane, au moment de décider, n'a pas la raison de Mic.
+Une raison est une **information humaine**, posée parce que l'opérateur a vu et corrigé. Elle appartient à l'**étiquette** (la sortie qu'on veut deviner), pas aux **traits** (l'entrée dont la GCV2 dispose quand elle décide). Cette règle s'applique même à une collante posée au cut N et reportée au cut N+1 : Ariane, au moment de décider, n'a pas la raison de l'opérateur.
 
 1. `hypothesesDuCut` et toute fonction qui fabrique des traits ne reçoivent ni la raison, ni la collante, ni son numéro de série.
 2. Le champ est lu seulement dans `etiquette`. Il n'entre jamais dans `traits`, `contexte`, `zone`, `role`, `moteur`.
 3. **La zone d'entrée reste celle du détecteur.** Une raison `adv` ou `pn` ne remplace jamais la zone du jeu, même en collante. Elle sert à **juger** le détecteur, pas à l'alimenter.
-4. La raison ne définit pas « juste » ou « faux » : cela reste la distance à la pose finale de Mic (classes ≤ 5, ≤ 10, > 10, > 50 mm).
-5. Absent n'est pas une classe. Les cuts sans raison ne sont ni négatifs ni « bon ». Ils sont exclus de toute mesure qui porte sur les raisons. Mic en pose moins quand il est pressé : le manque n'est pas aléatoire.
+4. La raison ne définit pas « juste » ou « faux » : cela reste la distance à la pose finale de l'opérateur (classes ≤ 5, ≤ 10, > 10, > 50 mm).
+5. Absent n'est pas une classe. Les cuts sans raison ne sont ni négatifs ni « bon ». Ils sont exclus de toute mesure qui porte sur les raisons. L'opérateur en pose moins quand il est pressé : le manque n'est pas aléatoire.
 6. Usages permis : trier les mesures par raison ; juger les détecteurs de zone ; mesurer les causes d'hypothèse manquante ; régler des garde-fous ; former un modèle auxiliaire hors ligne, jamais un trait du score de justesse.
 7. La raison n'est copiée ni dans `startPose`, ni dans `beforeEstablished`, ni dans les captures LiDAR, ni dans ce que `src/` envoie à ESV ou à Orbite.
 8. **Essais qui le prouvent** : (a) changer la raison d'une visite ne change aucun trait, aucune ligne `hyp` ni `rail` du jeu ; (b) la liste blanche des traits de `gcv2-apprendre` refuse tout nom contenant « raison » ; (c) un essai de recherche de texte échoue si `raisonCorrection` apparaît dans un fichier de `src/` hors de la liste prévue (§ 7). C'est la même méthode que pour la référence humaine (`tests/gcv2-jeu.test.cjs`).
@@ -126,14 +126,14 @@ Une raison est une **information humaine**, posée parce que Mic a vu et corrig�
 | Cuts à l'Écho, 12 parties | 4 998 ; corrigés de plus de 5 mm : 1 519 (30 %) ; de plus de 10 mm : 757 (15 %) | `fiches/COMPTEUR_GCV2.md` |
 | Visite d'un vert relu | 3,6 à 3,7 s en moyenne (3,4 à 5,5 s selon la partie), médiane 1,3 à 2,8 s | `fiches/VERTS_A_CONTROLER.md` § 5 |
 | Intervalle entre deux arrivées sur un cut | médiane 1,86 s, moyenne 3,6 s ; pause de plus de 10 s toutes les 21,5 visites | `fiches/RELECTURE_OMBRE.md` |
-| Rythme d'un cut corrigé | 3 à 6 par minute, soit 10 à 20 s | Mic, supposé valable pour un cut corrigé |
+| Rythme d'un cut corrigé | 3 à 6 par minute, soit 10 à 20 s | L'opérateur, supposé valable pour un cut corrigé |
 | Variation d'une partie à l'autre | environ ± 25 % | `fiches/VERTS_A_CONTROLER.md` § 5 |
 
 La durée d'une visite **corrigée** n'est pas dans les fiches. Elle se calcule sur les exports déjà reçus (§ 7, étape 0), avant tout développement.
 
 ### 6.2 Estimation
 
-Une frappe de plus, la main déjà au clavier : **0,4 à 0,9 s, milieu 0,6 s**. C'est une hypothèse, à mesurer. Défaut : 0 s. Collante reportée : 0 s. Pas de chiffre mesuré sur Mic ici.
+Une frappe de plus, la main déjà au clavier : **0,4 à 0,9 s, milieu 0,6 s**. C'est une hypothèse, à mesurer. Défaut : 0 s. Collante reportée : 0 s. Pas de chiffre mesuré sur l'opérateur ici.
 
 | Cas | Raisons posées à la touche | Temps ajouté par cut visité (0,6 s) | Part de la visite moyenne de 3,6 s |
 |---|---|---|---|
@@ -150,11 +150,11 @@ Sur un **cut corrigé** de 10 à 20 s, une raison à 0,6 s ajoute **3 à 6 %** �
 - **Étiquetée** : la visite qui porte la référence (ou la dernière avec raison) a un `raisonCorrection`. On publie trois chiffres : par touche, collante, sans.
 - **Objectif** : au moins 80 % des corrections de plus de 10 mm sont étiquetées, par touche ou collante.
 - **Sans ralentir**, par deux contrôles. (1) *Dans la séance* : sur les cuts corrigés de taille voisine, le temps entre le dernier geste de rail et la validation ne dépasse pas, avec raison, celui des cuts sans raison de plus de 0,6 s en médiane. (2) *Avant/après* : cuts par minute, pour des parties du même type, dans la marge de variation entre parties (± 25 %). Seuil de coupure : plus de +5 % sur le cycle d'un cut corrigé, ou plus de +2 % sur le temps total ; au-delà, on limite à `1` à `5` sur les corrections de plus de 10 mm, ou on coupe.
-- **Mic reste juge** : s'il le sent plus lent, la fonction se coupe, quels que soient les chiffres.
+- **L'opérateur reste juge** : s'il le sent plus lent, la fonction se coupe, quels que soient les chiffres.
 
 ## 7. Plan de développement (version de test, à part de la test 8)
 
-**Branche et paquet** : une branche de développement dédiée (`claude/50-rm11-dev`), partie de la base de la test 8 quand elle sera figée, et un paquet d'essai **à part**. La test 8 en cours n'est pas touchée. Numéro de version attribué par l'orchestrateur. Rien ne démarre sans le « oui » de Mic à cette fiche et le relevé des touches (§ 4).
+**Branche et paquet** : une branche de développement dédiée (`claude/50-rm11-dev`), partie de la base de la test 8 quand elle sera figée, et un paquet d'essai **à part**. La test 8 en cours n'est pas touchée. Numéro de version attribué par l'orchestrateur. Rien ne démarre sans le « oui » de l'opérateur à cette fiche et le relevé des touches (§ 4).
 
 **Niveau** : rapide, effort moyen (ligne RM-11 du plan, environ 250 k jetons). **Relecture forte limitée à `src/native-session.js`** : c'est le chemin d'enregistrement des visites d'Écho, et une erreur ici abîmerait des données.
 
@@ -189,7 +189,7 @@ Sur un **cut corrigé** de 10 à 20 s, une raison à 0,6 s ajoute **3 à 6 %** �
 ### Étapes
 
 0. **Mesure de base** (0,5 j) : ajouter à la jointure la durée de visite et le temps geste-validation, les calculer sur les Échos reçus. Donne la référence « sans raison » de la § 6.
-1. Relevé des touches par Mic (2 minutes, § 4).
+1. Relevé des touches par l'opérateur (2 minutes, § 4).
 2. Module pur et essais 1 et 4.
 3. `native-session`, réglage, essais 2, 3, 7.
 4. Panneau et essai 6.
@@ -199,21 +199,21 @@ Sur un **cut corrigé** de 10 à 20 s, une raison à 0,6 s ajoute **3 à 6 %** �
 ### Portes
 
 - **MINIMUM** : fonction coupée = comportement et visites identiques ; aucune touche d'ESV doublée ou détournée (essai 3) ; aucune écriture ni commande vers ESV ; aucune raison dans les traits (essai 4) ; jamais bloquant (essai 7).
-- **OBJECTIF** : séance d'Écho d'au moins 150 cuts, avec une zone d'ADV, par Mic : au moins 80 % des corrections de plus de 10 mm étiquetées, sans dépasser les seuils de coupure du § 6.3, et au moins une série collante pour juger le geste.
+- **OBJECTIF** : séance d'Écho d'au moins 150 cuts, avec une zone d'ADV, par l'opérateur : au moins 80 % des corrections de plus de 10 mm étiquetées, sans dépasser les seuils de coupure du § 6.3, et au moins une série collante pour juger le geste.
 
 ## 8. Risques
 
 | Risque | Parade |
 |---|---|
 | ESV réagit déjà à un chiffre | relevé avant tout ; table des touches réglable ; `Alt+chiffre` en repli |
-| Mic oublie une collante | ligne et pastille bleue dans le panneau, mot dans le bandeau, fins automatiques, rappel à 40 cuts |
+| L'opérateur oublie une collante | ligne et pastille bleue dans le panneau, mot dans le bandeau, fins automatiques, rappel à 40 cuts |
 | Touche attribuée au mauvais cut après la validation | délai de 500 ms seulement, marque `apresValidationMs`, mesure du vrai délai au premier essai ; ces cas sont écartés des mesures si le doute persiste |
-| Raisons posées surtout quand Mic a le temps | absent = inconnu, jamais une classe ; couverture publiée à chaque export |
+| Raisons posées surtout quand l'opérateur a le temps | absent = inconnu, jamais une classe ; couverture publiée à chaque export |
 | Lassitude : de moins en moins de raisons dans la séance | couverture par tranche de 50 cuts dans la jointure ; arrêt de la fonction si elle tombe sous 40 % |
-| Le panneau n'est pas sous les yeux de Mic | bandeau d'ESV ; question posée à Mic |
+| Le panneau n'est pas sous les yeux de l'opérateur | bandeau d'ESV ; question posée à l'opérateur |
 | Peu d'exemples de raisons rares | dit en § 3 ; usage diagnostique, pas un classeur |
 
-## 9. Ce que Mic doit relire et décider
+## 9. Ce que l'opérateur doit relire et décider
 
 1. Veut-il la fonction (facultative, coupée par défaut) ?
 2. Les six étiquettes. Veut-il « bon tel quel » à la place de « hauteur seulement » ?
@@ -223,11 +223,11 @@ Sur un **cut corrigé** de 10 à 20 s, une raison à 0,6 s ajoute **3 à 6 %** �
 6. Où est le panneau pendant qu'il travaille ? Active-t-il le bandeau d'ESV ?
 7. Le seuil de coupure : plus de +5 % sur un cut corrigé, ou plus de +2 % au total.
 
-À reporter dans le fichier des décisions par l'orchestrateur quand Mic aura répondu.
+À reporter dans le fichier des décisions par l'orchestrateur quand l'opérateur aura répondu.
 
 ## 10. Livré en test 9 (4.9.5.9) : ce qui a été fait, et les choix à relire
 
-Accord de Mic à la conception (D-208). Le détail de la livraison est dans `CHANGELOG.md` (4.9.5.9). Ce qui suit dit comment la fiche a été lue là où elle laissait un choix.
+Accord de l'opérateur à la conception (D-208). Le détail de la livraison est dans `CHANGELOG.md` (4.9.5.9). Ce qui suit dit comment la fiche a été lue là où elle laissait un choix.
 
 - **Collante et « autre touche »** (§ 4 règle 4, § 5.1 `finPar`) : un appui seul d'une autre touche vaut pour ce cut et **ne finit pas** la collante, qui reprend ensuite. `autre-raison` ne vient que d'un **double appui** d'une autre touche, qui ouvre une nouvelle série et ferme l'ancienne. Fins : `touche-0`, `autre-raison`, `changement-partie`, `saut` (plus de 30 cuts du cut précédent), `pause`, `fin-seance`. Le F5 ne finit rien.
 - **Effacer** (`0`) : si la visite avait une raison, `raisonCorrection` reste avec `code: null` (inconnu) et l'ancienne raison passe dans `historique` ; si elle n'en avait pas, aucun champ n'est créé.

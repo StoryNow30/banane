@@ -4,7 +4,7 @@ Dernière mise à jour : 13 septembre 2026.
 
 ## Ajouts V4.4.2
 
-Retour V4.4.2 : le bouton est demeuré visible après ouverture ; l'exigence 4 n'était **pas** vérifiée en ESV. La V4.4.3 doit le retirer du DOM dès l'ouverture d'une fenêtre Banane, détecter aussi les fenêtres déjà ouvertes après reprise du service worker et le restaurer seulement après fermeture de toutes les fenêtres. Une ancienne réponse de statut ne doit pas contredire une notification plus récente. Le libellé de version affiché doit permettre à Mic de vérifier quelle édition est réellement chargée.
+Retour V4.4.2 : le bouton est demeuré visible après ouverture ; l'exigence 4 n'était **pas** vérifiée en ESV. La V4.4.3 doit le retirer du DOM dès l'ouverture d'une fenêtre Banane, détecter aussi les fenêtres déjà ouvertes après reprise du service worker et le restaurer seulement après fermeture de toutes les fenêtres. Une ancienne réponse de statut ne doit pas contredire une notification plus récente. Le libellé de version affiché doit permettre à l'opérateur de vérifier quelle édition est réellement chargée.
 
 1. En Natif, une portion de points qualifiée doit être associée à son rail, à la pose initiale, à l'identité du cut, au repère, à la source, au clipping et à son heure **d'acquisition**, puis stockée avant l'intention humaine de référence ; l'heure de réception d'un message n'est pas l'heure d'acquisition.
 2. Une fin de lecture perturbée après un instantané déjà stocké ne l'invalide pas rétroactivement ; une vraie contradiction de pose ou de repère laisse une trace de révocation. Gauche et droite restent éligibles indépendamment.

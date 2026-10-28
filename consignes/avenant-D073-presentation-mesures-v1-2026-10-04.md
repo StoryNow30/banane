@@ -1,6 +1,6 @@
 # D-073 — présentation des mesures et préparation du test V1
 
-**Décision de Mic, 4 octobre 2026, 08 h 01 (Europe/Paris).**
+**Décision de l'opérateur, 4 octobre 2026, 08 h 01 (Europe/Paris).**
 
 La direction répond « C’est OK » à l’explication des deux règles et de leur portée. Cet accord autorise la préparation de la version de test V1. L'acceptation terrain de V1 et la sortie de la 4.9 restent à établir.
 
@@ -15,7 +15,7 @@ Mesurer où Ariane perd du temps, en identifiant les lots et en respectant les �
 
 ## Portée exacte
 
-Ces règles organisent la présentation et la préparation des essais. Elles ne relâchent pas coverage.complete, ne valident pas des mesures manquantes, ne remplacent pas les contrôles de santé/export et n'autorisent pas à accepter V1. L'utilisation de ces catégories pour la porte finale nécessite des critères précis proposés et une décision distincte de Mic.
+Ces règles organisent la présentation et la préparation des essais. Elles ne relâchent pas coverage.complete, ne valident pas des mesures manquantes, ne remplacent pas les contrôles de santé/export et n'autorisent pas à accepter V1. L'utilisation de ces catégories pour la porte finale nécessite des critères précis proposés et une décision distincte de l'opérateur.
 
 Le candidat corrigé relu est baa548d81a0bf7059ae1711163527a918cf2257d. Le rapport indépendant ciblé clôt les deux réserves techniques sur les cas contrôlés. Autorisation : documents, métadonnées de version, contrôles et génération locale du paquet de test. Aucun changement des règles de pose, aucune accélération, aucun correctif V4, aucun entraînement.
 

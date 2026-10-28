@@ -29,7 +29,7 @@ Le garde d'écartement a été déclenché en Edge réel sur le lot du 21 septem
 
 ## Régression réelle du bouton et correction V4.4.3
 
-Mic a ouvert Banane avec la V4.4.2 et fourni une capture d'écran montrant que « Banane V4 · ouvrir » reste affiché au bas d'ESV. **L'acceptation terrain V4.4.2 échoue pour le bouton.** Le test antérieur supposait que la recherche des onglets d'extension par URL retrouvait les fenêtres et ne contrôlait pas l'absence physique du bouton dans le DOM. La cause exacte sur sa session Edge n'est pas observable depuis la capture seule.
+L'opérateur a ouvert Banane avec la V4.4.2 et fourni une capture d'écran montrant que « Banane V4 · ouvrir » reste affiché au bas d'ESV. **L'acceptation terrain V4.4.2 échoue pour le bouton.** Le test antérieur supposait que la recherche des onglets d'extension par URL retrouvait les fenêtres et ne contrôlait pas l'absence physique du bouton dans le DOM. La cause exacte sur sa session Edge n'est pas observable depuis la capture seule.
 
 La V4.4.3 suit explicitement fenêtres créées et pages connectées, renouvelle la connexion après redémarrage du service worker, recherche les onglets ESV parmi les onglets dont l'URL est effectivement accessible, et retire physiquement le bouton pendant la présence de Banane. La notification récente prime une ancienne réponse asynchrone. Le nom de version dans le panneau et sur le bouton a été rendu vérifiable. `tests/background.test.cjs`, `tests/bridge.test.cjs` et `tests/panel-presence.test.cjs` simulent l'ouverture, plusieurs fenêtres, fermeture, recherche d'URL vide, réponse tardive et reconnexion. Résultat à compléter après vérification ESV réelle, sans déclarer le défaut définitivement résolu sur Edge.
 
@@ -39,7 +39,7 @@ La V4.4.3 suit explicitement fenêtres créées et pages connectées, renouvelle
 
 Un filtrage exploratoire « visible + pose initiale » trouve 23 rails-visites et 4 paires, mais **toutes ces captures finissent interrompues** et la V4.4.1 n'acquittait pas le stockage de l'instantané avant le geste : **0 rail comparable prouvé**. Le rejeu hors ligne ancien (`audit/native-offline-v4.4.1-baseline.json`) confirme 0/0 rail et 0 paire, sans score ni preuve visuelle. La V4.4.2 sauve désormais le checkpoint par rail, acquitte le stockage avant l'événement, vérifie date d'acquisition/pose/source/clipping, et conserve la révocation explicite en cas de contradiction ; elle n'attribue pas ce bénéfice aux anciens exports.
 
-Le bouton flottant V4.4.2 **semblait** masqué en simulation, mais ce résultat est infirmé par la capture réelle de Mic. La V4.4.3 fait l'objet d'un test séparé ci-dessus. Les événements opérateur restent passifs ; moteur et pilote sont inchangés. Une vraie page ESV V4.4.3 et son JSON restent nécessaires avant de conclure.
+Le bouton flottant V4.4.2 **semblait** masqué en simulation, mais ce résultat est infirmé par la capture réelle de l'opérateur. La V4.4.3 fait l'objet d'un test séparé ci-dessus. Les événements opérateur restent passifs ; moteur et pilote sont inchangés. Une vraie page ESV V4.4.3 et son JSON restent nécessaires avant de conclure.
 
 ## Traçabilité complémentaire V4.4.2
 
@@ -82,7 +82,7 @@ Dans les deux cas : zéro geste bloqué, zéro événement réémis et zéro com
 | Couverture, repère et référence | Éligibilité par rail/pair, motifs d'exclusion | Session et banc hors ligne | Conforme en simulation |
 | Chronologie et interruption | `event_seq`, intentions multiples, clôture récupérée | Tests de session | Conforme en simulation |
 | Absence de fuite du final humain | Entrée moteur figée avant lecture du final | Test de mutation de référence | Conforme en simulation |
-| Fluidité et preuve visuelle ESV | `NATIVE_GEOMETRY_ACCEPTANCE.md` | Session réelle indisponible | **À vérifier avec Mic** |
+| Fluidité et preuve visuelle ESV | `NATIVE_GEOMETRY_ACCEPTANCE.md` | Session réelle indisponible | **À vérifier avec l'opérateur** |
 
 `tools/native-offline-evaluate.cjs` rejoue le moteur inchangé sur des captures synthétiques qualifiées, en formant son entrée avant la lecture du final humain. Sur les **trois anciens exports**, 0 rail gauche, 0 droit et 0 paire qualifiés ; aucune comparaison ni preuve visuelle réelle n'est possible (`audit/native-offline-evaluation-v4.4.0.md`). Aucun gain de précision n'est revendiqué. Les 110 corrections humaines et leur banc V4.3 restent inchangés.
 

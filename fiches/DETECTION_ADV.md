@@ -1,6 +1,6 @@
 # Détection des ADV (5.0, nuit du 16 au 17 octobre 2026)
 
-Chantier « détection des ADV », parti de la base 5.0. Point de départ : la règle de Mic « ADV avec ses marges », les zones d'ADV et les aiguilles qu'il a notées (fiche de méthode de la partie 29, sur la branche de pilotage), et le constat des deux fiches précédentes :
+Chantier « détection des ADV », parti de la base 5.0. Point de départ : la règle de l'opérateur « ADV avec ses marges », les zones d'ADV et les aiguilles qu'il a notées (fiche de méthode de la partie 29, sur la branche de pilotage), et le constat des deux fiches précédentes :
 - `fiches/REGLES_METIER.md` (§ 3.3) : « aucun trait géométrique ne sépare une zone d'ADV » (écartement, cap, `flushPct`) ; seule la grappe de différés en donne une trace ;
 - `fiches/VERTS_A_CONTROLER.md` (§ 8) : au second projet, les erreurs que la liste manque sont dans les zones d'ADV, hors de la fenêtre du lot.
 
@@ -13,32 +13,32 @@ Chantier « détection des ADV », parti de la base 5.0. Point de départ : la r
 | | Résultat |
 |---|---|
 | **Signal retenu** | Un **rail de plus** dans le profil en travers de chaque rail posé (pas de 1 cm, ±40 cm) : un champignon de 3 à 16 cm de large, au niveau du dessus du rail, continu le long de la voie, avec un creux de part et d'autre. Le contre-rail d'une courbe, la chaussée d'un PN, un quai ou une rampe sont écartés. |
-| **Zone** | Deux alertes à 3 cuts au plus ouvrent la zone ; elle grandit tant que les alertes se suivent à 10 cuts au plus. Plage à contrôler : **30 cuts avant la première alerte, 30 après la dernière** (Mic : « environ 20 à 40 cuts autour »). |
-| **Zones de Mic retrouvées** | **8 sur 8** : partie 29 (2/2), partie 13 (2/2), partie 1 du second projet (4/4). **12 aiguilles sur 12** au second projet. |
+| **Zone** | Deux alertes à 3 cuts au plus ouvrent la zone ; elle grandit tant que les alertes se suivent à 10 cuts au plus. Plage à contrôler : **30 cuts avant la première alerte, 30 après la dernière** (l'opérateur : « environ 20 à 40 cuts autour »). |
+| **Zones de l'opérateur retrouvées** | **8 sur 8** : partie 29 (2/2), partie 13 (2/2), partie 1 du second projet (4/4). **12 aiguilles sur 12** au second projet. |
 | **Fausses alertes** | **Aucune plage sans ADV** sur les quatre parties étiquetées (lot et Écho). Une seule alerte isolée hors zone en partie 29 (cut 8087, 21 cuts après la fin de l'ADV2, jamais confirmée). Partie 12 (pas d'ADV, 6 PN) : 0 alerte sur 82 cuts. Aucun PN pris pour un ADV (0 alerte sur 218 cuts de PN). |
 | **Au cut** (lot) | Noyau de l'aiguille (±10 cuts) : **22/22** en partie 29, **72/94** au second projet. Marges : 11/11 et 172/254. |
 | **Gain sur la liste des verts** | Second projet : **33 erreurs sur 35** au lieu de 27, **20 gros écarts sur 20** au lieu de 15, pour **7 verts de plus** (84 au lieu de 77, 5,2 min au lieu de 4,8). Partie 29, parties 12, 13, 17 et 24 : liste inchangée, ou un vert de plus. |
 | **Pose** | Inchangée. Prouvé par essai sur le service worker réel : commandes, rails, enregistrements, événements métier et décisions du lot identiques, octet pour octet, ombre active ou coupée. `src/engine.js` n'est pas touché. |
 | **Réglages** | Figés le 17/10 (`datasets/reglages-figes.json`, `reglesMetier.valeurs.adv`, et `vertsAControler.valeurs.poids.adv` = 0). **Toutes les parties étiquetées ont servi à régler** : aucune n'a jugé ces seuils à l'aveugle. |
 
-## 2. Les zones de Mic
+## 2. Les zones de l'opérateur
 
-| Partie | Zone (marges de Mic comprises) | Aiguilles | Source |
+| Partie | Zone (marges de l'opérateur comprises) | Aiguilles | Source |
 |---|---|---|---|
-| 29 | ADV1 : 6558–6678 (passage de Mic d'un seul tenant ; fiche : aiguille au 6638, changement de voie 6658–6678) | 6638 | fiche de méthode, rapport p29 § 5 |
+| 29 | ADV1 : 6558–6678 (passage de l'opérateur d'un seul tenant ; fiche : aiguille au 6638, changement de voie 6658–6678) | 6638 | fiche de méthode, rapport p29 § 5 |
 | 29 | ADV2 : 7954–8066 | 8003 | fiche de méthode |
 | 13 | ADV1 : 4644–4713 | 4682 | fiche de méthode |
-| 13 | ADV2 : 4911–4963 (fin confirmée par Mic) | entre 4935 et 4936 | réponses de Mic du 16/10 |
+| 13 | ADV2 : 4911–4963 (fin confirmée par l'opérateur) | entre 4935 et 4936 | réponses de l'opérateur du 16/10 |
 | 1, 2ᵉ projet | Z1 : 116–165 | 136 | fiche de méthode |
-| 1, 2ᵉ projet | Z2 : 271–670 (fin non déclarée : prise au dernier cut que Mic a traité) | 287, 320, 552, 616, 626 | fiche de méthode, jeu du second projet |
+| 1, 2ᵉ projet | Z2 : 271–670 (fin non déclarée : prise au dernier cut que l'opérateur a traité) | 287, 320, 552, 616, 626 | fiche de méthode, jeu du second projet |
 | 1, 2ᵉ projet | Z3 : 2911–3036 | 2932, 3012 | fiche de méthode |
 | 1, 2ᵉ projet | Z4 : 5496–6185 (fin non précisée : même règle) | 5520, 5591, 6159, 6160 | fiche de méthode, jeu du second projet |
 | 12 | aucune zone d'ADV notée | — | — |
 
 Rôle d'un cut, pour les mesures :
 - **noyau** : à 10 cuts au plus d'une aiguille ;
-- **marge** : le reste de la zone de Mic ;
-- **PN** : dans un PN de Mic ;
+- **marge** : le reste de la zone de l'opérateur ;
+- **PN** : dans un PN de l'opérateur ;
 - **hors zone** : tout le reste.
 
 ## 3. Les pistes essayées
@@ -51,7 +51,7 @@ Chaque piste n'utilise que ce qu'Ariane a au moment du cut :
 
 Deux sources :
 - **lot** : les captures du lot, celles que le lot lit au moment du cut (parties 29 et 1 du second projet) ;
-- **Écho** : la capture de la première visite de Mic. Elle couvre aussi des verts, mais elle est plus pauvre : lecture passive, souvent partielle, un seul rail parfois.
+- **Écho** : la capture de la première visite de l'opérateur. Elle couvre aussi des verts, mais elle est plus pauvre : lecture passive, souvent partielle, un seul rail parfois.
 
 Taux d'alerte par rôle (alertes / cuts), et AUC du noyau contre PN et hors zone (0,5 : aucun pouvoir) :
 
@@ -77,7 +77,7 @@ Taux d'alerte par rôle (alertes / cuts), et AUC du noyau contre PN et hors zone
 | 13 | jeu | variation de l'écartement de départ | — | — | — | — | 0,32 |
 
 Lecture :
-- **Rail de plus** : seul signal fort et stable. Il est vu là où Mic place l'ADV, et presque jamais ailleurs.
+- **Rail de plus** : seul signal fort et stable. Il est vu là où l'opérateur place l'ADV, et presque jamais ailleurs.
 - **Écartement** : il ne se transporte pas. En partie 29, l'écartement prédit est faussé au noyau (AUC 0,82) ; au second projet, c'est l'inverse (0,29). En partie 13, l'écartement de départ est normal dans l'ADV (déjà noté). Sa variation d'un cut à l'autre plafonne à 0,68–0,73.
 - **Minima concurrents** dans le pool du moteur : sans pouvoir. Deux grappes de minima sont rares partout ; trois minima forts ou plus sont aussi fréquents hors zone.
 - **Grappe de différés** : elle voit un tiers du noyau, et rien des marges. C'est la trace d'un ADV dans un lot, pas sa reconnaissance.
@@ -130,7 +130,7 @@ Concordance : le module de l'extension et la règle de l'étude (`scratchpad/adv
 
 Rejeu avec le module de l'extension (`tools/regles-metier.cjs`, option `--adv`). Lot : dans l'ordre du lot. Écho : dans l'ordre des cuts, comme si un lot les avait tous vus.
 
-| Partie | Source | Zones de Mic retrouvées | Aiguilles couvertes | Plages sans ADV | Cuts des zones de Mic dans une plage | Cuts des plages hors zones de Mic | Alertes : noyau / marge / PN / hors zone |
+| Partie | Source | Zones de l'opérateur retrouvées | Aiguilles couvertes | Plages sans ADV | Cuts des zones de l'opérateur dans une plage | Cuts des plages hors zones de l'opérateur | Alertes : noyau / marge / PN / hors zone |
 |---|---|--:|--:|--:|--:|--:|---|
 | 29 | lot | **2/2** | **2/2** | **0** | 187/234 | 28 | 22/22 · 11/11 · 0/26 · 1/186 |
 | 29 | Écho | **2/2** | **2/2** | **0** | 222/234 | 62 | 21/30 · 42/110 · 0/52 · 0/398 |
@@ -140,19 +140,19 @@ Rejeu avec le module de l'extension (`tools/regles-metier.cjs`, option `--adv`).
 | 12 | Écho | pas d'ADV | — | **0** | — | 0 | — · — · 0/74 · 0/8 |
 
 Plages reconnues :
-- **partie 29**, lot : 6530–6601 et 6603–6674 (ADV1, passage de Mic 6558–6678), 7972–8042 (ADV2, 7954–8066) ;
+- **partie 29**, lot : 6530–6601 et 6603–6674 (ADV1, passage de l'opérateur 6558–6678), 7972–8042 (ADV2, 7954–8066) ;
 - **second projet**, lot : 105–167 (Z1), 256–689 (Z2), 2899–3042 (Z3), 5488–5625 et 6128–6214 (Z4). Le milieu de Z4 (5626–6127) n'a ni cut du lot ni aiguille notée ;
 - **partie 13**, Écho : 4617–4716 (ADV1) et 4904–4991 (ADV2).
 
 Lecture :
 - **Au niveau de la zone**, rappel de 100 % sur les trois parties qui ont des ADV, et zéro plage sans ADV. Le critère « 80 % de rappel et peu de fausses alertes sur deux parties au moins » est tenu.
-- **Au niveau du cut**, le noyau est vu à 100 % en partie 29 et à 77 % au second projet (lot). À l'Écho, il descend à 30–70 %, parce que la capture de Mic est partielle.
+- **Au niveau du cut**, le noyau est vu à 100 % en partie 29 et à 77 % au second projet (lot). À l'Écho, il descend à 30–70 %, parce que la capture de l'opérateur est partielle.
 - **Les marges** ne sont pas toutes vues : la voie qui diverge sort de la fenêtre de ±40 cm. En partie 13, l'ADV1 n'a aucune alerte de 4664 à 4676, entre l'entrée de la zone et l'aiguille. Ce sont les marges de 30 cuts qui couvrent ce trou.
-- **Les cuts des plages hors zones de Mic** (28 à 107) sont surtout des marges qui débordent la zone notée par Mic (6530–6557 avant le passage de 6558 ; 4617–4643 avant l'ADV1 de la partie 13). Mic dit lui-même que ses marges vont de 20 à 40 cuts.
-- **Zone 2 du second projet** : la plage 256–689 colle à la zone « bordélique » de Mic (271–670).
+- **Les cuts des plages hors zones de l'opérateur** (28 à 107) sont surtout des marges qui débordent la zone notée par l'opérateur (6530–6557 avant le passage de 6558 ; 4617–4643 avant l'ADV1 de la partie 13). L'opérateur dit lui-même que ses marges vont de 20 à 40 cuts.
+- **Zone 2 du second projet** : la plage 256–689 colle à la zone « bordélique » de l'opérateur (271–670).
 - **PN** : aucun cut de PN ne donne d'alerte (0 sur 218), à l'Écho comme au lot. La condition « côté plat » les écarte.
 
-Parties sans liste d'ADV (zones **à faire confirmer par Mic**) :
+Parties sans liste d'ADV (zones **à faire confirmer par l'opérateur**) :
 
 | Partie | Source | Alertes | Plages reconnues |
 |---|---|--:|---|
@@ -199,7 +199,7 @@ Poids essayés pour le terme `adv` (« contrôler toute la zone ») :
 | 0,5 | 156, 35/35 (9,6 min) | 138, 63/83 | 33, 29/29 | 218, 69/126 |
 | 1 | 396, 35/35 (24 min) | 260, 64/83 | 146, 29/29 | 277, 70/126 |
 
-Un poids non nul revient à relire toute la zone, comme Mic le fait. Le poids 0,5 trouve toutes les erreurs au second projet et en partie 13, mais il double la liste du second projet et n'apporte rien en partie 29. **Livré à 0, à décider avec Mic.** Marges de 20 au lieu de 30 cuts : 31/35 au lieu de 33/35 au second projet, le reste inchangé.
+Un poids non nul revient à relire toute la zone, comme l'opérateur le fait. Le poids 0,5 trouve toutes les erreurs au second projet et en partie 13, mais il double la liste du second projet et n'apporte rien en partie 29. **Livré à 0, à décider avec l'opérateur.** Marges de 20 au lieu de 30 cuts : 31/35 au lieu de 33/35 au second projet, le reste inchangé.
 
 Effet sur les verts signalés par l'ombre (fenêtre de B1, raison `adv`) : 37 de plus au second projet, 7 en partie 29, 10 en partie 17, pour une seule erreur de plus. Ces signalements restent dans le journal. La liste de fin de lot ne les reprend pas : elle trie par le score.
 
@@ -230,13 +230,13 @@ Choisis **après avoir vu** les parties 29, 13 et 1 du second projet :
 
 Pris de la règle des PN sans réglage : deux alertes à 3 cuts au plus pour confirmer.
 
-Toutes les parties étiquetées ont servi. Les parties 17 et 24 n'ont pas de liste d'ADV. **Aucun chiffre de cette fiche n'est un jugement à l'aveugle.** Le jugement viendra des parties suivantes, en ombre, contre ce que Mic notera.
+Toutes les parties étiquetées ont servi. Les parties 17 et 24 n'ont pas de liste d'ADV. **Aucun chiffre de cette fiche n'est un jugement à l'aveugle.** Le jugement viendra des parties suivantes, en ombre, contre ce que l'opérateur notera.
 
 ## 10. Limites et doutes
 
-- **Petits effectifs.** 8 zones de Mic dans trois parties, et un seul projet en plus du premier. Peu de cuts hors zone au second projet (3 au lot, 19 à l'Écho) : sa mesure de fausses alertes repose sur la partie 29 et la partie 12.
-- **Fin des zones 2 et 4** du second projet : non déclarée, prise au dernier cut que Mic a traité. Le compte de « cuts couverts » en dépend.
-- **ADV1 de la partie 29** : la fiche dit 6638–6678, mais Mic l'a parcourue de 6558 à 6678 d'un seul tenant, et le lot y voit des rails de plus dès 6560. La zone de cette fiche est donc 6558–6678. **À confirmer par Mic** : y a-t-il un second appareil vers 6560 ?
+- **Petits effectifs.** 8 zones de l'opérateur dans trois parties, et un seul projet en plus du premier. Peu de cuts hors zone au second projet (3 au lot, 19 à l'Écho) : sa mesure de fausses alertes repose sur la partie 29 et la partie 12.
+- **Fin des zones 2 et 4** du second projet : non déclarée, prise au dernier cut que l'opérateur a traité. Le compte de « cuts couverts » en dépend.
+- **ADV1 de la partie 29** : la fiche dit 6638–6678, mais l'opérateur l'a parcourue de 6558 à 6678 d'un seul tenant, et le lot y voit des rails de plus dès 6560. La zone de cette fiche est donc 6558–6678. **À confirmer par l'opérateur** : y a-t-il un second appareil vers 6560 ?
 - **Ce que la zone ne voit pas** :
   - un ADV où l'extraction a réussi (aucun rouge) : Orbite n'y passe pas, comme pour les PN ;
   - la voie qui diverge au-delà de ±40 cm : la capture ne la contient plus ;
@@ -245,7 +245,7 @@ Toutes les parties étiquetées ont servi. Les parties 17 et 24 n'ont pas de lis
 - **Captures de l'Écho** : lecture passive, souvent partielle. Elles servent à juger le signal sur des cuts que le lot n'a pas vus, pas à le régler.
 - **Temps** : 7 ms par cut dans la décision du lot (29 ms au plus). Négligeable devant le moteur, mais c'est du temps pris au moment du cut.
 
-## 11. Ce que Mic doit décider
+## 11. Ce que l'opérateur doit décider
 
 1. **Les zones reconnues hors liste** (§ 6) : parties 17, 24, 18, 23, 25, 26, 27. Sont-ce des ADV ?
 2. **Les marges** : 30 cuts de part et d'autre te conviennent-elles ?

@@ -2,7 +2,7 @@
 
 Étude **hors ligne, en lecture seule**. Aucun réglage n'est changé, aucun comportement de terrain non plus. L'outil est `tools/diag-differes.cjs` (sous-commandes `inventaire`, `motifs`, `gains`, `gardes`, `pistes`, et les étapes `lots`, `extraire`, `mic`, `joindre-mic`), avec ses essais dans `tests/diag-differes.test.cjs`. Le plan des lots est dans `datasets/diag-differes-plan.json`. Le rejeu causal réutilise `tools/gcv2-predire-differes.cjs`, repris de `claude/50-differes-2-17`.
 
-Ce document ne contient que des numéros de parties, de lots et de cuts, des millimètres et des comptes. On écrit « 2:1 » pour la partie 1 du projet 2. Les écarts à Mic n'ont été lus que pour les parties prévues. **2:17 et 2:18 : aucun Écho lu.** 2:18 est une partie réservée ; seul son journal a été inventorié (motifs). Aucune hypothèse ni aucune GCV2 n'a été calculée dessus.
+Ce document ne contient que des numéros de parties, de lots et de cuts, des millimètres et des comptes. On écrit « 2:1 » pour la partie 1 du projet 2. Les écarts à l'opérateur n'ont été lus que pour les parties prévues. **2:17 et 2:18 : aucun Écho lu.** 2:18 est une partie réservée ; seul son journal a été inventorié (motifs). Aucune hypothèse ni aucune GCV2 n'a été calculée dessus.
 
 ## 0. En bref
 
@@ -14,8 +14,8 @@ Ce document ne contient que des numéros de parties, de lots et de cuts, des mil
 | Cible −90 % | Environ 2,2 % de différés par lot, soit **137 différés au plus sur la base** (3 à 4 par lot). |
 | **Où naissent les différés** | **64 % « sans appui »** : le moteur ne résout pas les deux rails (648 n'en ont qu'un, 159 ont une paire hors contrat, 72 n'en ont aucun) et le lot n'a pas de cut posé à 3 cuts au plus pour reprendre depuis la voie. Ensuite : reprise sans minimum qualifié 16 %, garde de paire 16 %, cible hors de la vue 1,5 %. Les autres gardes du lot (écartement bas, écartement voisin, continuité) ne créent presque aucun différé. |
 | Zone | 72 % aux abords, 26 % en ADV, 3 % au PN (zone à l'instant de la décision). |
-| **Pose de départ** | **79 % des différés partent de l'écartement par défaut d'ESV (1 500 mm).** À l'Écho, le différé coûte à Mic **86 mm** en médiane : 51 mm en projet 1, 191 mm en 2:1. |
-| **Rappel atteignable** (282 différés jugés) | Une hypothèse à **10 mm : 62 %** ; 20 mm : 71 % ; 50 mm : 79 %. **94 %** des différés ont une hypothèse plus proche de Mic que la pose de départ. **Perdus d'avance** (toutes les hypothèses à plus de 50 mm) : **21 %**, presque tous en 2:1 (57 sur 60). Hors 2:1 : rappel à 10 mm de **86 %**, 2 % perdus d'avance. |
+| **Pose de départ** | **79 % des différés partent de l'écartement par défaut d'ESV (1 500 mm).** À l'Écho, le différé coûte à l'opérateur **86 mm** en médiane : 51 mm en projet 1, 191 mm en 2:1. |
+| **Rappel atteignable** (282 différés jugés) | Une hypothèse à **10 mm : 62 %** ; 20 mm : 71 % ; 50 mm : 79 %. **94 %** des différés ont une hypothèse plus proche de l'opérateur que la pose de départ. **Perdus d'avance** (toutes les hypothèses à plus de 50 mm) : **21 %**, presque tous en 2:1 (57 sur 60). Hors 2:1 : rappel à 10 mm de **86 %**, 2 % perdus d'avance. |
 | **La GCV2 seule** (meilleure paire, sans garde-fou ni seuil) | Plus proche que le départ dans 76 % des cas ; à 10 mm dans 44 % ; à plus de 50 mm dans 34 % (64 % en 2:1, 7 % en projet 1). Hors échantillon (2:6, 2:7) : **78 % à 10 mm, 6 % à plus de 50 mm**. |
 | **Garde-fous les plus coûteux** | (1) Le **couloir de 45 mm depuis la pose de départ** appliqué aux différés : 665 poses empêchées ; sur 80 jugées, 52 justes et 4 mauvaises. (2) La **règle « jamais les différés »** (V1) : 238 poses empêchées ; sur 54 jugées, 43 justes et 1 mauvaise. (3) La **garde de paire du lot (D-044)** : 211 différés créés ; sur 36 jugés, 19 justes et **0 mauvaise**. |
 | **Les gardes qui protègent** | Le contrat d'écartement du moteur : éteint, il donne 13 poses à plus de 50 mm sur 14. Le seuil τ : il retire 66 poses à plus de 50 mm contre 15 justes. L'écartement de la paire de la GCV2. |
@@ -47,25 +47,25 @@ Ce document ne contient que des numéros de parties, de lots et de cuts, des mil
   - les hypothèses H0 à H6 de `tools/gcv2-jeu.cjs` (famille « lot », aucun appui humain) ;
   - la voie de référence de la série et ses preuves.
 
-  Aucune pose de Mic n'entre dans le calcul.
+  Aucune pose de l'opérateur n'entre dans le calcul.
 - **GCV2** : paramètres figés de `datasets/gcv2-parametres-h6.json` (usage « lot », appris avec H6), rien n'est réentraîné. Ces paramètres ont été appris sur 11 parties (1:12 à 1:17, 1:24, 1:29, 2:1, 2:10, 2:11). Sur ces parties, le choix de la GCV2 est donc **dans l'échantillon**. 2:6, 2:7 et 2:13 sont hors échantillon.
 - **Contrefactuels du lot** : la décision du lot est rejouée sur la même capture, avec la même science et les mêmes appuis (`L.decideCut` et ses options), **une garde éteinte à la fois**, puis toutes ensemble.
-- **Mic** : sa pose finale dans l'Écho, lue comme dans `gcv2-predire-differes comparer` (dernière validation, ou « visité sans action »). Le différé est **jugé** seulement si trois conditions sont réunies :
+- **L'opérateur** : sa pose finale dans l'Écho, lue comme dans `gcv2-predire-differes comparer` (dernière validation, ou « visité sans action »). Le différé est **jugé** seulement si trois conditions sont réunies :
   - la pose de départ de l'Écho est celle du lot (écartement à 2 mm près) ;
   - le cut a un nuage ;
   - aucun lot ne l'a posé ensuite (reprise).
 
   Écart entre deux poses : le pire des deux rails, en 3D.
-- **Ce que le différé coûte** : l'écart de la pose de départ à la pose de Mic. **Rappel atteignable à X mm** : chaque rail a une hypothèse à X mm au plus de Mic (choix par un oracle). **Meilleure hypothèse de la GCV2** : la paire la plus probable selon la GCV2, sans garde-fou ni seuil (ce que poserait « poser la meilleure hypothèse »). **Perdu d'avance** : même l'oracle est à plus de 50 mm.
+- **Ce que le différé coûte** : l'écart de la pose de départ à la pose de l'opérateur. **Rappel atteignable à X mm** : chaque rail a une hypothèse à X mm au plus de l'opérateur (choix par un oracle). **Meilleure hypothèse de la GCV2** : la paire la plus probable selon la GCV2, sans garde-fou ni seuil (ce que poserait « poser la meilleure hypothèse »). **Perdu d'avance** : même l'oracle est à plus de 50 mm.
 
 **Parties jugées.** Seuls les Échos de la **même séance** que le lot servent au jugement : 1:17, 1:24, 1:29, 2:1, 2:6, 2:7, 2:11 et 2:13. 2:10 n'a aucun différé.
 - **Non utilisables** (aucun différé jugé, départ jamais vérifié) :
-  - 1:13 et 1:15 : leur Écho est une autre séance (partie d'un opérateur débutant corrigée par Mic). Leurs cuts n'ont pas la même pose de départ que le lot (0 et 1 pose retrouvées).
+  - 1:13 et 1:15 : leur Écho est une autre séance (partie d'un opérateur débutant corrigée par l'opérateur). Leurs cuts n'ont pas la même pose de départ que le lot (0 et 1 pose retrouvées).
   - 1:12, 1:14, 1:16 : pas de lot Orbite.
   - **Témoin 1:25** : son Écho du 29/09 porte sur un autre état d'ESV (81 cuts) ; il ne contient qu'un des différés du lot du 15/10, sans pose. Il est lu et marqué, mais il ne juge rien.
   - **Témoin 1:11** : aucun lot Orbite 4.9.
-  - 1:24 : Mic n'a revisité que 40 des 106 différés.
-- **Au total : 282 différés jugés** (1:17 36, 1:24 40, 1:29 35, 2:1 127, 2:6 11, 2:7 21, 2:11 12). 2:13 n'en apporte aucun : 1 seul différé y a une pose de Mic, et sa pose de départ n'est pas celle du lot.
+  - 1:24 : l'opérateur n'a revisité que 40 des 106 différés.
+- **Au total : 282 différés jugés** (1:17 36, 1:24 40, 1:29 35, 2:1 127, 2:6 11, 2:7 21, 2:11 12). 2:13 n'en apporte aucun : 1 seul différé y a une pose de l'opérateur, et sa pose de départ n'est pas celle du lot.
 - **Hors échantillon.** Les paramètres de la GCV2 ont été appris sur 1:17, 1:24, 1:29, 2:1 et 2:11. Les chiffres du **choix** de la GCV2 y sont donc dans l'échantillon. Seuls **2:6 et 2:7** (32 différés jugés) sont hors échantillon. Le rappel atteignable, lui, ne dépend d'aucun apprentissage.
 
 **Fidélité du rejeu.** 1 300 des 1 322 différés calculés retrouvent le même étage que le lot (98,3 %). Les 22 autres sont signalés : le rejeu ne connaît pas les voisins de la liste d'ESV (B1) ni l'ordre exact des appuis. 8 différés n'ont pas de nuage. Aucune erreur de calcul.
@@ -284,8 +284,8 @@ V1+ telle que déclarée agit sur 38 des 282 différés jugés (28 à 10 mm, 0 �
 - **Hors 2:1, le gisement est presque entièrement atteignable** :
   - projet 1 : rappel à 10 mm de 83 %, à 50 mm de 97 % ;
   - 2:6, 2:7, 2:11 : de 73 à 100 % à 10 mm ;
-  - 95 % des différés ont une hypothèse plus proche de Mic que le départ.
-- **2:1 est un cas à part** : la voie entière est décalée de 130 à 250 mm (D-206), et le départ médian est à 191 mm de Mic. 45 % de ses différés sont perdus d'avance : aucune hypothèse n'est à 50 mm.
+  - 95 % des différés ont une hypothèse plus proche de l'opérateur que le départ.
+- **2:1 est un cas à part** : la voie entière est décalée de 130 à 250 mm (D-206), et le départ médian est à 191 mm de l'opérateur. 45 % de ses différés sont perdus d'avance : aucune hypothèse n'est à 50 mm.
 - **D'où vient l'hypothèse la plus proche** : H2 (cellules du réservoir) et H1 (A*), puis H6 (68 rails), H3, H5, H4.
 - **V1+ telle que déclarée** n'agit que sur 38 des 282 jugés (28 à 10 mm, 0 à plus de 50 mm). C'est sûr, mais cela ne réduit presque rien.
 
@@ -459,7 +459,7 @@ Les gardes « sûres » de (c\*) ont été choisies d'après ce diagnostic (0 ou
    - **élargir les appuis de la reprise** de 3 à 10 cuts : 72 différés, 11 justes sur 13, 0 mauvais.
 
    Ensemble avec le point 1 : **−74,1 %**, 74 % à 10 mm, 3 % à plus de 50 mm.
-3. **Pour le reste (sous τ), séparer poser et valider.** Poser la meilleure paire de la GCV2 (écartement gardé) **sans la valider** : le différé reste, mais Mic part d'une pose approchée. Sur les jugés, elle améliore la pose de départ dans 87 % des cas (piste a/b').
+3. **Pour le reste (sous τ), séparer poser et valider.** Poser la meilleure paire de la GCV2 (écartement gardé) **sans la valider** : le différé reste, mais l'opérateur part d'une pose approchée. Sur les jugés, elle améliore la pose de départ dans 87 % des cas (piste a/b').
    - **La valider en l'inscrivant aux verts à contrôler** porte l'effet à **−89,9 %** (piste g+).
    - Mais ces 16 points de plus sont les cas difficiles : environ la moitié des jugés y sont à plus de 50 mm, presque tous en 2:1.
    - Un seuil de score choisit lesquels valider (courbe : 80 % de couverture pour 6 % de poses à plus de 50 mm).
@@ -468,10 +468,10 @@ Les gardes « sûres » de (c\*) ont été choisies d'après ce diagnostic (0 ou
 6. **Attaquer la cause racine** : la pose de départ à 1 500 mm se trouve sous 79 % des différés. Une hypothèse « paire recentrée à l'écartement de la partie » dès le moteur (H5 étendue aux deux rails) toucherait la plupart des « sans appui ». C'est à mesurer sur le banc, ce n'est pas chiffré ici.
 
 **Ce qui est hors de portée.**
-- **2:1** et les voies décalées de plus de 150 mm : 21 % des jugés sont perdus d'avance, aucune hypothèse n'atteint Mic. Il faudrait une fenêtre de recherche plus large du moteur (± 180 mm aujourd'hui) ou une H6 sans preuve. Toute pose y est risquée.
+- **2:1** et les voies décalées de plus de 150 mm : 21 % des jugés sont perdus d'avance, aucune hypothèse n'atteint l'opérateur. Il faudrait une fenêtre de recherche plus large du moteur (± 180 mm aujourd'hui) ou une H6 sans preuve. Toute pose y est risquée.
 - **Les cuts sans nuage** : 8, rien à calculer.
 - **2:18** (37 différés) : réservée, non calculée ; la base la compte.
-- **La précision** : même avec la meilleure piste, la pose n'est à 10 mm de Mic que dans 51 % des jugés (67 % en projet 1). −90 % de différés ne veut pas dire −90 % de travail : les verts à contrôler resteront à relire.
+- **La précision** : même avec la meilleure piste, la pose n'est à 10 mm de l'opérateur que dans 51 % des jugés (67 % en projet 1). −90 % de différés ne veut pas dire −90 % de travail : les verts à contrôler resteront à relire.
 
 ## 8. Ce qui a surpris
 
@@ -488,13 +488,13 @@ Les gardes « sûres » de (c\*) ont été choisies d'après ce diagnostic (0 ou
 - **Les pistes ont été regardées sur les mêmes données que celles qui les jugent** : avant toute activation, il faut un jugement sur des parties neuves (protocole de D-217).
 - **Le rejeu ne connaît pas B1** : 22 différés n'arrivent pas au même étage que le lot.
 - **Écartement ≤ 2 mm** : c'est le seul contrôle de la pose de départ, il est faible.
-- 1:24 n'a que 40 différés sur 106 revisités par Mic.
+- 1:24 n'a que 40 différés sur 106 revisités par l'opérateur.
 
 ## 10. Données (hors dépôt)
 
 Dans le dossier de travail de la session (`…/scratchpad/diag/`) :
 - `cuts/cuts-P-N-LOT.jsonl` : une ligne par différé (37 fichiers, 1 330 différés) ;
-- `mic/mic-*.json` : poses de Mic de 2:1, 2:7 et du témoin 1:25 ;
+- `mic/mic-*.json` : poses de l'opérateur de 2:1, 2:7 et du témoin 1:25 ;
 - `lots/*.lots.json` : lots de chaque journal ;
 - `inventaire.json`, `motifs.json`, `gains.json`, `gardes.json`, `pistes.json`, et les tables `*.md`.
 

@@ -28,7 +28,7 @@ Le placement lui-même n'est pas retouché : `src/geometry.js` et `src/geometry-
 
 Le panneau doit afficher **V4.7.8 · TEST**. Après fermeture de toutes les fenêtres Banane, le bouton au bas d'ESV doit afficher **Banane 4.7.8 · ouvrir**. Si tu vois encore un numéro plus ancien, recharge l'extension puis la page ESV et vérifie qu'une ancienne copie de Banane n'est pas chargée en parallèle. Pour une première installation, charge dans Edge le dossier contenant `manifest.json` avec **Charger l’extension non empaquetée**.
 
-## Mode Natif : Banane observe, Mic travaille dans ESV
+## Mode Natif : Banane observe, l'opérateur travaille dans ESV
 
 1. Ouvre le premier cut dans ESV, puis **Mode Natif** dans Banane.
 2. Clique sur **Démarrer l’observation**.

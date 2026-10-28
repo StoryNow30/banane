@@ -15,7 +15,7 @@ L'audit externe de G1-b (`audit/chantiers/audit-gcv2-g1b-astra.md`) est arrivé 
 | **Zone 2 de 2:1** (cuts 293–459, 87 grosses corrections) | Relecture 40,2 % → **55,2 %** ; lot 28,7 % → 31,0 %. |
 | **Les 57 cuts de D-206** | Relecture 0 → **15** ; lot 0 → **3**. |
 | **V1 avec H6** (sans garde-fou de voie) | Relecture : 130 justes, 1 abîmé, 0 erreur > 50 mm, erreur 2,8 % (Wilson ≤ 5,6 %). Lot : 123 justes, 1 abîmé, 0, 2,9 % (≤ 5,8 %). Règle prudente : 107 justes, 4 abîmés. **Porte tenue** dans les deux usages. |
-| **V1+** (V1 et les différés, garde-fou de voie) | Relecture : 136 justes, 1 abîmé, 0 erreur > 50 mm, 0 hors corridor, erreur 2,7 % (≤ 5,4 %). Lot : 131 justes, 1 abîmé, 0, 0, 3,2 % (≤ 6,1 %). **Porte tenue** (erreur finale, dégâts). Mais 3 actions (5 au lot) déplacent un rail de plus de 45 mm depuis H0 : selon la définition de G1-b, ce sont 3 (5) « mauvaises voies », alors que toutes sont à 15 mm au plus de Mic. |
+| **V1+** (V1 et les différés, garde-fou de voie) | Relecture : 136 justes, 1 abîmé, 0 erreur > 50 mm, 0 hors corridor, erreur 2,7 % (≤ 5,4 %). Lot : 131 justes, 1 abîmé, 0, 0, 3,2 % (≤ 6,1 %). **Porte tenue** (erreur finale, dégâts). Mais 3 actions (5 au lot) déplacent un rail de plus de 45 mm depuis H0 : selon la définition de G1-b, ce sont 3 (5) « mauvaises voies », alors que toutes sont à 15 mm au plus de l'opérateur. |
 | **Ce que V1+ ajoute** | Peu : +6 justes en relecture (7 différés agis), +8 au lot (10). **Aucune action dans la zone 2 de 2:1.** Le garde-fou de série ne trouve une référence sûre que pour 9 différés sur 161 (17 au lot). |
 | **Franchement** | H6 nourrit l'apprentissage (rappel + 17 cuts en relecture, + 10 au lot). V1+ tient la porte, mais parce que le garde-fou interdit presque tout : il ne résout pas la zone 2. |
 
@@ -26,7 +26,7 @@ L'audit externe de G1-b (`audit/chantiers/audit-gcv2-g1b-astra.md`) est arrivé 
 - **Le décalage d'un voisin** : sa pose sûre moins sa pose d'ESV **d'origine**, en (latéral, vertical) mm, dans le repère profil de son rail de départ.
   - Voisin que le lot n'a pas posé : la pose d'origine est sa pose de départ dans l'Écho.
   - Voisin posé par le lot : la pose de départ de l'Écho est celle du lot. La pose d'ESV d'origine est la pose de départ **moins le déplacement du lot** (pose corrigée − pose initiale, lus dans le journal du lot). Le journal et l'Écho n'ont pas la même origine de scène : seule la différence se transporte (une première version soustrayait les positions brutes et donnait des écarts de plusieurs kilomètres ; corrigé, essai ajouté, jeux reconstruits).
-- **Voisin sûr** : même règle de temps que H4 (`voisinsSursA`). Une pose de Mic validée **avant la première visite** du cut, ou une pose que le lot a posée et validée. Jamais la pose du cut lui-même, jamais une pose d'Ariane non vérifiée (chaîne), jamais une pose de la GCV2.
+- **Voisin sûr** : même règle de temps que H4 (`voisinsSursA`). Une pose de l'opérateur validée **avant la première visite** du cut, ou une pose que le lot a posée et validée. Jamais la pose du cut lui-même, jamais une pose d'Ariane non vérifiée (chaîne), jamais une pose de la GCV2.
 - **La pose H6** : la pose d'ESV d'origine du cut, translatée du décalage. Pour un cut que le lot a posé, la pose d'origine se lit de la même façon (journal du lot) ; inconnue, pas de H6.
 - **Variantes** (fenêtre de 10 cuts) : le voisin **le plus proche** (à égalité, l'amont) ; la **médiane** des 5 plus proches (2 au moins). Chacune **rail par rail** et **« paire »** (la moyenne des deux rails du voisin, appliquée aux deux rails). Chacune avec et sans hauteur apprise.
 - **Source marquée** : `h6-lot-…` (voisins validés par le lot seuls) et `h6-humain-…` (au moins un voisin humain). Exemple : `h6-lot-mediane-rail`.
@@ -56,7 +56,7 @@ Le défaut ne change pas. Sans l'option, un rail est écarté s'il bouge de plus
 - **Garde** : chaque rail à 45 mm au plus, en latéral, de la référence ; changement de dévers à 15 mm au plus de celui de la référence ; écartement de la paire comme ailleurs.
 - **Sans référence sûre : aucune paire n'est permise, on n'agit pas.**
 - **Ce que le garde-fou promet, et ce qu'il ne promet pas** (audit M4) : quand la référence est sûre, une pose hors de la voie de référence est impossible par construction. La référence elle-même peut être fausse, par exemple si deux appuis du lot concordent sur une mauvaise branche. Les preuves 4 et 5 la contrôlent, sans la garantir.
-- **« Mauvaise voie » pour ces cuts** : pose à plus de 50 mm de celle de Mic, ou hors de la voie de référence (plus de 45 mm). Conformément à l'audit H2, la définition de G1-b n'est **pas** changée pour faire passer V1+. Quatre mesures sont publiées séparément :
+- **« Mauvaise voie » pour ces cuts** : pose à plus de 50 mm de celle de l'opérateur, ou hors de la voie de référence (plus de 45 mm). Conformément à l'audit H2, la définition de G1-b n'est **pas** changée pour faire passer V1+. Quatre mesures sont publiées séparément :
   - erreur finale > 50 mm ;
   - amplitude > 45 mm depuis H0 ;
   - sortie du corridor du garde-fou ;
@@ -86,21 +86,21 @@ Les preuves de l'audit (§ 2.3) ont été ajoutées après cette déclaration, m
 
 ### 3.2 Relecture hostile de la frontière
 
-- **Ce qui entre dans H6** : les poses sûres d'**autres** cuts, sous la règle de temps de H4 (fin de la visite qui a validé, strictement avant le début de la première visite du cut), les poses de départ et le **journal du lot**. Le journal est le produit du lot, antérieur à l'Écho, et non un geste de Mic.
+- **Ce qui entre dans H6** : les poses sûres d'**autres** cuts, sous la règle de temps de H4 (fin de la visite qui a validé, strictement avant le début de la première visite du cut), les poses de départ et le **journal du lot**. Le journal est le produit du lot, antérieur à l'Écho, et non un geste de l'opérateur.
 - **Ce qu'on a vérifié qui n'entre pas** :
   - la pose du cut ;
-  - une validation de Mic postérieure, y compris une revalidation : `referenceHumaine` prend la dernière validation, et son instant l'exclut si elle est postérieure ;
+  - une validation de l'opérateur postérieure, y compris une revalidation : `referenceHumaine` prend la dernière validation, et son instant l'exclut si elle est postérieure ;
   - la chaîne d'Ariane ;
   - les champs `visites`, `reference` et `etat`, qui ne sont toujours pas des traits.
 - **Reste discutable** :
-  1. une validation « sans action » de Mic (visite de 0,8 s) compte comme pose humaine sûre, comme pour H4 ;
+  1. une validation « sans action » de l'opérateur (visite de 0,8 s) compte comme pose humaine sûre, comme pour H4 ;
   2. les voisins du lot sont datés « avant tout » : au lot réel, un différé est repris après le premier passage, donc ces poses existent bien, mais seulement à la reprise ;
   3. la rupture de série lit la carte des zones, que l'audit (F4) soupçonne de lire des nuages postérieurs ;
   4. la voie de référence et le garde-fou ne sont pas des traits du modèle, mais ils décident quelles paires sont permises.
 
 ## 4. Rappel atteignable, avant et après H6
 
-Corrections de Mic de plus de 10 mm sur les cuts avec nuage (406). « Atteint » : les deux rails ont une hypothèse à 10 mm de la pose finale (avec ou sans hauteur apprise). Colonnes :
+Corrections de l'opérateur de plus de 10 mm sur les cuts avec nuage (406). « Atteint » : les deux rails ont une hypothèse à 10 mm de la pose finale (avec ou sans hauteur apprise). Colonnes :
 - « G1-a » : les jeux de G1-a ;
 - « avant » et « après » : les nouveaux jeux, sans puis avec H6.
 
@@ -131,7 +131,7 @@ Corrections de Mic de plus de 10 mm sur les cuts avec nuage (406). « Atteint »
   - rail par rail : 30,5 % ; « paire » : 6,4 % ;
   - famille du lot : 16,3 %.
 
-  **Le décalage rail par rail du voisin le plus proche est la variante utile**. Le même décalage aux deux rails n'atteint presque rien, car en zone 2 les deux rails de Mic ne bougent pas autant (par exemple 149 et 80 mm au cut 306).
+  **Le décalage rail par rail du voisin le plus proche est la variante utile**. Le même décalage aux deux rails n'atteint presque rien, car en zone 2 les deux rails de l'opérateur ne bougent pas autant (par exemple 149 et 80 mm au cut 306).
 - **Le coût du plafond** : H6 passe avant H2 et pousse des cellules hors des 12 poses (3 grosses corrections perdues en relecture : 1:24 et 1:29). Les cellules écartées n'en auraient rattrapé que 3.
 - **Le hasard monte** : avec les hypothèses d'un autre cut à 3 rangs, 54 % des grosses corrections seraient « atteintes » (G1-a : 29 %). H6 copie le décalage des cuts voisins, qui ressemble à celui du cut. Le rappel est un plafond, pas une justesse.
 - **Les 57 cuts de D-206** (§ 6) : D-206 en compte « 53 dans la zone 2 ». Recalculés depuis le jeu de G1-a, ce sont **52** cuts de 293 à 459, plus le cut 159 (vert, hors zone) et les 4 cuts d'ADV.
@@ -175,7 +175,7 @@ Porte : 0 erreur finale > 50 mm, 0 sortie de corridor, erreur ≤ 9 %, justes �
 
 **V1+ et la « mauvaise voie » de G1-b.**
 - Lue avec la définition de G1-b (erreur > 50 mm **ou** rail déplacé de plus de 45 mm depuis H0), V1+ a 3 « mauvaises voies » en relecture et 5 au lot. Elle ne tiendrait donc pas l'ancienne porte.
-- Ces actions sont toutes des corrections justes ou presque : cuts 7534 de 1:17 (Mic 120 mm, pose à 6 mm), 5716 et 5722 de 1:24 (106 et 111 mm, à 8 et 15 mm), 6565 de 1:29 (50 mm, à 5 mm), 2949 de 2:1 (51 mm, à 5 mm).
+- Ces actions sont toutes des corrections justes ou presque : cuts 7534 de 1:17 (l'opérateur 120 mm, pose à 6 mm), 5716 et 5722 de 1:24 (106 et 111 mm, à 8 et 15 mm), 6565 de 1:29 (50 mm, à 5 mm), 2949 de 2:1 (51 mm, à 5 mm).
 - Ce changement de comparabilité est voulu et déclaré (audit H2) : on ne rebaptise rien, la colonne reste publiée.
 
 ### 5.3 Ce que V1+ fait sur les différés
@@ -200,7 +200,7 @@ Un cut peut avoir plusieurs motifs.
 
 ### 5.4 Par zone (agit / justes / abîmés / « mauvaise voie » G1-b / erreurs)
 
-| zone | Mic > 10 mm | règle prudente | V1, relecture | V1+, relecture | V1, lot | V1+, lot |
+| zone | L'opérateur > 10 mm | règle prudente | V1, relecture | V1+, relecture | V1, lot | V1+, lot |
 |---|--:|---|---|---|---|---|
 | pn | 86 | 60 / 56 / 2 / 0 / 2 | 146 / 69 / 1 / 0 / 2 | 146 / 69 / 1 / 0 / 2 | 164 / 65 / 1 / 0 / 2 | 165 / 66 / 1 / 0 / 2 |
 | adv | 65 | 34 / 18 / 2 / 0 / 4 | 66 / 28 / 0 / 0 / 1 | 68 / 30 / 0 / 1 / 1 | 36 / 25 / 0 / 0 / 1 | 39 / 28 / 0 / 2 / 1 |
@@ -226,12 +226,12 @@ Au lot, l'ADV de V1 agit moins (36 contre 57 en G1-b) : les jeux lot ne sont plu
 
 Les 57 grosses corrections de 2:1 qu'aucune hypothèse de G1-a n'atteignait. Lecture des colonnes :
 - latéral en mm depuis la pose de départ, rail gauche / rail droit ;
-- « meilleure H6 » : la H6 la plus proche de Mic sur chaque rail, avec son écart 3D entre crochets ;
+- « meilleure H6 » : la H6 la plus proche de l'opérateur sur chaque rail, avec son écart 3D entre crochets ;
 - « relecture » et « lot » : la paire est atteinte à 10 mm par une hypothèse du jeu (toutes origines, H6 comprise) ;
 - « pourquoi » : le meilleur écart d'une H6, quand la paire n'est pas atteinte ;
 - les cuts 293 à 459 forment la zone 2.
 
-| cut | rôle | zone | Mic latéral g / d (mm) | meilleure H6 g / d : latéral [écart] | origine de la meilleure H6 (g / d) | relecture | lot | pourquoi (relecture) |
+| cut | rôle | zone | L'opérateur latéral g / d (mm) | meilleure H6 g / d : latéral [écart] | origine de la meilleure H6 (g / d) | relecture | lot | pourquoi (relecture) |
 |--:|---|---|---|---|---|---|---|---|
 | 159 | vert | hors | -23 / 0 | -18 [5] / -1 [2] | hum.proche paire, 2 cuts / hum.méd. rail, 6 cuts | **oui** | non | atteint par H6 |
 | 293 | differe | abords | 25 / 66 | 7 [19] / 38 [28] | lot méd. paire, 9 cuts / lot méd. rail, 5 cuts | non | non | décalage des voisins à 25–50 mm du sien |
@@ -294,7 +294,7 @@ Les 57 grosses corrections de 2:1 qu'aucune hypothèse de G1-a n'atteignait. Lec
 **Bilan des 57 cas.**
 - Relecture : **15 atteints** (13 dans la zone 2, plus le 159, hors zone, et le 5521, en ADV).
 - Lot : **3 atteints** (374 et 375 dans la zone 2, et le 5521).
-- Dans la zone 2 (52 cuts), pour ceux qui restent hors d'atteinte en relecture, la meilleure H6 est à plus de 10 mm. Le décalage de Mic change d'un cut à l'autre plus vite que le voisin ne le suit : de 20 à 60 mm en trois cuts (303 à 306, 377 à 380, 391 à 395), et les deux rails ne bougent pas ensemble (par exemple 195 et 119 mm au cut 377).
+- Dans la zone 2 (52 cuts), pour ceux qui restent hors d'atteinte en relecture, la meilleure H6 est à plus de 10 mm. Le décalage de l'opérateur change d'un cut à l'autre plus vite que le voisin ne le suit : de 20 à 60 mm en trois cuts (303 à 306, 377 à 380, 391 à 395), et les deux rails ne bougent pas ensemble (par exemple 195 et 119 mm au cut 377).
 - Au lot, 17 des 57 n'ont **aucun voisin du lot** à 10 cuts : la zone 2 est un long trou du lot.
 
 ## 7. Ce qui reste douteux

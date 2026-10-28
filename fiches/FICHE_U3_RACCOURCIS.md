@@ -3,7 +3,7 @@
 Statut : **livré dans la 4.9.0.10 (branche `claude/49-test-10`), en essai terrain.** Porte du cahier (§ 6, U3) : MINIMUM, « aucune action d'ESV doublée ou
 détournée (essai) ; l'action de chaque raccourci est écrite ». OBJECTIF : aucun.
 
-## Actions (dites par Mic, opérateur, le 13 octobre 2026)
+## Actions (dites par l'opérateur, opérateur, le 13 octobre 2026)
 
 | Raccourci | Action |
 |---|---|
@@ -25,4 +25,4 @@ Cela corrige l'étude E, qui lisait `D` comme « rail droit » : l'opérateur fa
 ## Preuve
 
 `tests/u3-raccourcis.test.cjs` (5 essais, vrai `src/early-input.js` en VM) et `tests/early-input.test.cjs`. Non vérifié : le comportement réel d'ESV sur ces touches (aucun accès
-au code d'ESV ici) ; il repose sur ce que Mic a dit.
+au code d'ESV ici) ; il repose sur ce que l'opérateur a dit.

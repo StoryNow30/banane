@@ -11,7 +11,7 @@ Deux hypothèses de l'audit (H6, H7) sont mesurées ici, sur les seules parties 
 
 | Question | Réponse |
 |---|---|
-| **Référence** (deux cœurs à 3 cuts au plus) | Captures du lot seul : 17 PN de Mic sur 17 retrouvés (1:12, 1:13 et 1:29 : 16 ; 2:1 : 1), 0 fausse zone. Union lot + Écho : 17 sur 17, mais **1 fausse zone, 443–456** (2:1). |
+| **Référence** (deux cœurs à 3 cuts au plus) | Captures du lot seul : 17 PN de l'opérateur sur 17 retrouvés (1:12, 1:13 et 1:29 : 16 ; 2:1 : 1), 0 fausse zone. Union lot + Écho : 17 sur 17, mais **1 fausse zone, 443–456** (2:1). |
 | **H6** (deux cœurs consécutifs parmi les cuts vus) | **Tient partout** : 17 sur 17, **0 fausse zone**, dans toutes les conditions (lot seul, union dans les trois ordres, Écho seule). Sur les captures du lot, les zones sont identiques à la référence, et pas une évaluation ne change (1 379 cuts sur quatre lots). |
 | **H7** (au moins une rainure par cœur) | Zones justes sur ces parties, mais **critère de l'audit non tenu** : 2 vrais cœurs perdus (1:12 cut 7286, 1:13 cut 6934 : aucune rainure), et 396 reste un cœur dans la capture de l'Écho (une rainure). Elle n'écarte le faux PN que parce que la seule capture de 450 n'a pas de rainure. |
 | **H6 + H7** | Mêmes zones que H6, avec les pertes de cœurs de H7 : rien de plus. |
@@ -25,7 +25,7 @@ Deux hypothèses de l'audit (H6, H7) sont mesurées ici, sur les seules parties 
 
 - **Apprentissage seulement** (`datasets/manifeste-parties.json`) : 1:12, 1:13, 1:17, 1:24, 1:29 et 2:1. Aucune partie réservée n'a été lue.
   - Les parties 2 à 9 du second projet ne sont pas listées au manifeste : elles sont réservées. Le chiffre de l'audit sur ces parties (« 21 zones sur 21 avec H6 ») n'a **pas** été refait ici, et rien n'y a été réglé.
-- **PN de Mic** : 16 en 1:12, 1:13 et 1:29 (6, 6 et 4), 1 en 2:1 (405–409). Ce sont les 17 PN de `REGLES_METIER.md`.
+- **PN de l'opérateur** : 16 en 1:12, 1:13 et 1:29 (6, 6 et 4), 1 en 2:1 (405–409). Ce sont les 17 PN de `REGLES_METIER.md`.
 - 1:17 et 1:24 n'ont pas de liste :
   - 1:17 : un cœur seul (1028), aucune zone ;
   - 1:24 : deux zones « à confirmer » (6569–6585 et 8518–8535). On y vérifie seulement qu'aucune variante ne les perd ni n'ajoute de zone.
@@ -34,7 +34,7 @@ Deux hypothèses de l'audit (H6, H7) sont mesurées ici, sur les seules parties 
 
 Pour chaque cut, la surface du module (`surface` : `flushPct`, quarts, cœur), et le nombre de rainures lues par `src/level-crossing.js` (`read`) sur les mêmes points.
 - **Lot** : le journal et le corpus de chaque lot, dans l'ordre du lot, comme `tools/regles-metier.cjs lot`.
-- **Écho** : la meilleure capture de la première visite de Mic, comme `tools/regles-metier.cjs echo`.
+- **Écho** : la meilleure capture de la première visite de l'opérateur, comme `tools/regles-metier.cjs echo`.
 
 | Partie | Captures du lot | Cuts visités à l'Écho | dont avec capture |
 |---|--:|--:|--:|
@@ -56,16 +56,16 @@ Pour chaque cut, la surface du module (`surface` : `flushPct`, quarts, cœur), e
 
 ### 2.4 Mesures
 
-- **PN retrouvés** : PN de Mic touchés par une plage à contrôler.
-- **Fausse zone** : plage qui ne touche aucun PN de Mic.
+- **PN retrouvés** : PN de l'opérateur touchés par une plage à contrôler.
+- **Fausse zone** : plage qui ne touche aucun PN de l'opérateur.
 - **Étendue** : nombre de cuts des plages à contrôler (4 cuts avant, 6 après).
-- **Corrections PN de Mic** : cuts que Mic a corrigés de plus de 10 mm (jeu d'apprentissage) dans un PN de sa liste avec ses marges, ou dans la plage d'une zone vraie de la référence. On compte celles que les plages de la variante couvrent.
+- **Corrections PN de l'opérateur** : cuts que l'opérateur a corrigés de plus de 10 mm (jeu d'apprentissage) dans un PN de sa liste avec ses marges, ou dans la plage d'une zone vraie de la référence. On compte celles que les plages de la variante couvrent.
 
 Le détecteur passe par le module lui-même (`evaluer` et `noter`, avec le réglage de la variante). Une copie indépendante de la logique, écrite avant le codage, donne les mêmes chiffres : 100 comparaisons sur 100.
 
 ## 3. Référence : le détecteur d'avant
 
-| Partie | Condition | Cuts lus | Zones | PN de Mic | Fausses zones | Étendue | Corrections PN de Mic couvertes | Plages |
+| Partie | Condition | Cuts lus | Zones | PN de l'opérateur | Fausses zones | Étendue | Corrections PN de l'opérateur couvertes | Plages |
 |---|---|--:|--:|--:|--:|--:|--:|---|
 | 1:12 | (b) Écho | 82 | 6 | 6/6 | 0 | 116 | 30/30 | 3944–3965, 6231–6248, 7275–7293, 7883–7901, 8379–8397, 9068–9086 |
 | 1:13 | (b) Écho | 154 | 6 | 6/6 | 0 | 112 | 21/21 | 123–141, 1284–1303, 6099–6117, 6926–6943, 8055–8072, 9454–9471 |
@@ -78,13 +78,13 @@ Le détecteur passe par le module lui-même (`evaluer` et `noter`, avec le régl
 | 2:1 | (a) lot | 351 | 1 | 1/1 | 0 | 14 | 13/14 | 401–414 |
 | 2:1 | (b) union | 564 | 2 | 1/1 | **1** | 28 | 13/14 | 401–414, **443–456** |
 
-- **Total en (a)** : 5 PN de Mic sur 5 pour les parties à lot avec liste (1:29 et 2:1), 0 fausse zone. Avec 1:12 et 1:13 (Écho seule) : **17 sur 17**. C'est le chiffre de `REGLES_METIER.md`, retrouvé à l'identique : mêmes plages, 58/58 cuts de PN de Mic couverts en 1:29, 98/98 en 1:12, 95/95 en 1:13.
+- **Total en (a)** : 5 PN de l'opérateur sur 5 pour les parties à lot avec liste (1:29 et 2:1), 0 fausse zone. Avec 1:12 et 1:13 (Écho seule) : **17 sur 17**. C'est le chiffre de `REGLES_METIER.md`, retrouvé à l'identique : mêmes plages, 58/58 cuts de PN de l'opérateur couverts en 1:29, 98/98 en 1:12, 95/95 en 1:13.
 - **En (b)** : 17 sur 17, mais **une fausse zone** : en 2:1, le cœur 447 (lot) et le cœur 450 (Écho) sont à 3 cuts, alors que 448 et 449 sont vus entre eux sans chaussée. C'est le constat de l'audit, reproduit.
 - **Contrôles** :
   - b-écho : la fausse zone disparaît (dans la capture de l'Écho, 447 n'est pas un cœur) ;
   - b-ordre : elle reste ;
   - Écho seule : 1:29 donne 4/4 (57/58 cuts), 2:1 donne 1/1 (401–412), comme dans la fiche.
-- **Correction 2:1 non couverte (415)** : elle est dans la marge de 6 cuts après le PN de Mic (405–409), juste après la plage 401–414. Elle n'est couverte par aucune règle, référence comprise. C'est la voie décalée de l'ADV 2 (207 mm), pas le PN.
+- **Correction 2:1 non couverte (415)** : elle est dans la marge de 6 cuts après le PN de l'opérateur (405–409), juste après la plage 401–414. Elle n'est couverte par aucune règle, référence comprise. C'est la voie décalée de l'ADV 2 (207 mm), pas le PN.
 
 ## 4. Variantes
 
@@ -105,13 +105,13 @@ Dans toutes les conditions, H6, H7 et H6 + H7 donnent **les mêmes zones que la 
 | **2:1** | **b-ordre** | 1/1, **1 fausse (443–456)**, 28 | **1/1, 0, 14** | **1/1, 0, 14** | **1/1, 0, 14** |
 | 1:29 | b-ordre | 4/4, 0 fausse (plus un doublon, voir § 9) | idem | idem | idem |
 
-- **Toutes les variantes, toutes les conditions** : 17 PN de Mic sur 17, 0 fausse zone, plages des PN de Mic identiques à celles de la référence. Les corrections PN de Mic couvertes sont les mêmes que pour la référence : 30/30, 21/21, 13/13 et 13/14.
+- **Toutes les variantes, toutes les conditions** : 17 PN de l'opérateur sur 17, 0 fausse zone, plages des PN de l'opérateur identiques à celles de la référence. Les corrections PN de l'opérateur couvertes sont les mêmes que pour la référence : 30/30, 21/21, 13/13 et 13/14.
 - **Écho seule** (1:29 et 2:1) : les trois variantes donnent les zones de la référence (4/4 et 1/1, aucune fausse zone).
-- **Critère de réussite** (17 sur 17, 0 fausse zone en (b), étendue qui couvre toujours les corrections PN de Mic) : tenu par H6, par H7 et par H6 + H7 **au niveau des zones**.
+- **Critère de réussite** (17 sur 17, 0 fausse zone en (b), étendue qui couvre toujours les corrections PN de l'opérateur) : tenu par H6, par H7 et par H6 + H7 **au niveau des zones**.
 
 ### 4.2 H7 au niveau du cœur
 
-Critère de l'audit pour H7 : « 0 vrai cœur perdu, 396 écarté ». Un vrai cœur est dans un PN de Mic, un faux cœur hors de tout PN de Mic (parties avec liste).
+Critère de l'audit pour H7 : « 0 vrai cœur perdu, 396 écarté ». Un vrai cœur est dans un PN de l'opérateur, un faux cœur hors de tout PN de l'opérateur (parties avec liste).
 
 | Partie | Source | Vrais cœurs | sans rainure (perdus par H7) | à une rainure | Faux cœurs (rainures) | écartés par H7 |
 |---|---|--:|---|---|---|---|
@@ -126,10 +126,10 @@ Critère de l'audit pour H7 : « 0 vrai cœur perdu, 396 écarté ». Un vrai c�
   - 447 (une rainure), qui fait la moitié du faux PN ;
   - 2913 (deux rainures) ;
   - 396 dans la capture de l'Écho (une rainure) ;
-  - 4497 en 1:12 (deux rainures ; Mic a parcouru 4495–4499 comme un PN sans le lister, question ouverte).
+  - 4497 en 1:12 (deux rainures ; l'opérateur a parcouru 4495–4499 comme un PN sans le lister, question ouverte).
 - Elle n'écarte le faux PN 443–456 que parce que **la seule capture de 450** n'a pas de rainure. Une autre capture de 450 suffirait à le rouvrir.
 - En 1:24, les 11 cœurs des deux zones à confirmer ont deux rainures ; en 1:17, 1028 aussi.
-- **Exiger deux rainures** (essai) rétrécit les plages des vrais PN : 1:12 tombe à 92/98 cuts de PN de Mic couverts, 1:13 à 94/95. Écarté.
+- **Exiger deux rainures** (essai) rétrécit les plages des vrais PN : 1:12 tombe à 92/98 cuts de PN de l'opérateur couverts, 1:13 à 94/95. Écarté.
 
 **Conclusion sur H7** : la rainure n'est pas une preuve indépendante. C'était déjà le constat de l'audit sur les cuts ordinaires : 140 sur 285 ont deux rainures. Elle n'apporte rien que H6 n'apporte déjà, et elle perd des vrais cœurs. **Non retenue, non codée.**
 
@@ -140,7 +140,7 @@ Critère de l'audit pour H7 : « 0 vrai cœur perdu, 396 écarté ». Un vrai c�
 - **b-écho** : même confirmation par 405–406, puis 408 (capture du lot) étend la zone à 401–414.
 - **Risque restant** : un PN dont les **deux seuls** cœurs seraient séparés par une capture illisible ne serait pas confirmé. Aucun cas dans les données.
   - Variante mesurée : « un cut illisible ne sépare pas » (seuls les cuts lus sur trois quarts au moins comptent). Elle donne les mêmes chiffres partout.
-  - Elle n'est pas retenue : elle est plus permissive, et aucun cas ne la demande. Une zone manquée coûte une relecture de Mic ; une fausse zone ferait agir Ariane.
+  - Elle n'est pas retenue : elle est plus permissive, et aucun cas ne la demande. Une zone manquée coûte une relecture de l'opérateur ; une fausse zone ferait agir Ariane.
 
 ## 5. Ce qui est codé
 
@@ -183,7 +183,7 @@ Essais, écrits **avant** le code et vus rouges, sauf deux. L'essai du cas 407 d
 - Les tables reconstruites sont identiques à celles de la fiche.
 - **L'étude est identique octet pour octet à celle de la fiche**, réglages proposés compris : `datasets/relecture-reglages-proposes.json` est inchangé.
 
-**Zone PN** (verts, règle de service, validation croisée) : **36 actions, 36 corrections justes, 0 erreur de plus de 10 mm, 0 cut abîmé, 0 mauvaise voie**. Cela porte sur 167 verts jugeables, dont 49 que Mic a corrigés de plus de 10 mm.
+**Zone PN** (verts, règle de service, validation croisée) : **36 actions, 36 corrections justes, 0 erreur de plus de 10 mm, 0 cut abîmé, 0 mauvaise voie**. Cela porte sur 167 verts jugeables, dont 49 que l'opérateur a corrigés de plus de 10 mm.
 
 | Partie | Actions | Corrections justes | Erreurs | Abîmés | Mauvaise voie |
 |---|--:|--:|--:|--:|--:|
@@ -198,8 +198,8 @@ Toutes zones confondues, rien ne change non plus : 97 actions, 79 corrections ju
 **Contre-épreuve : la règle d'avant sur l'union**, c'est-à-dire ce que verrait la test 7 sans H6.
 - La table 2:1 reçoit la fausse zone 443–456. Les autres parties ont les mêmes zones qu'au lot, donc leurs tables ne changent pas.
 - La zone PN de 2:1 passe de 14 à 26 cuts : 12 sont pris à l'ADV.
-- Le seul vert de ces 12 cuts est 450, que Mic a corrigé de 194 mm (voie décalée de l'ADV 2). Il devient un vert de PN, donc corrigeable. Ariane s'y abstient : sa décision n'a pas de pose sûre.
-- PN : toujours 36 sur 36, 0 mauvaise voie. La règle prudente a tenu, mais sur **un seul** vert, dans une zone d'ADV où Mic a corrigé de 194 à 259 mm chaque cut qu'il a relu.
+- Le seul vert de ces 12 cuts est 450, que l'opérateur a corrigé de 194 mm (voie décalée de l'ADV 2). Il devient un vert de PN, donc corrigeable. Ariane s'y abstient : sa décision n'a pas de pose sûre.
+- PN : toujours 36 sur 36, 0 mauvaise voie. La règle prudente a tenu, mais sur **un seul** vert, dans une zone d'ADV où l'opérateur a corrigé de 194 à 259 mm chaque cut qu'il a relu.
 - C'est ce risque que H6 retire, sans rien changer ailleurs.
 
 ## 8. Ombre au lot et commandes envoyées à ESV
@@ -217,8 +217,8 @@ Toutes zones confondues, rien ne change non plus : 97 actions, 79 corrections ju
 
 - **Un seul faux PN dans les données** (2:1, 447/450). H6 l'écarte par construction : c'est le motif « deux faux cœurs isolés à 2 ou 3 cuts ». Deux faux cœurs **voisins** (un platelage de deux cuts) passeraient encore. Aucun cas dans les données, mais rien ne l'exclut.
 - **Aucune partie réservée** : tous les chiffres sont des chiffres d'apprentissage. Le jugement viendra des prochaines Échos, en ombre.
-- **L'union est une simulation** : les captures de l'Écho sont celles des visites de Mic, pas celles qu'Ariane fera en relecture. Une autre capture d'un vert peut faire ou défaire un cœur. En 2:1, la fausse zone dépend déjà de la capture retenue pour 447 (lot ou Écho).
-- **Échos partielles** : 1:17 (186 captures sur 795 cuts visités) et 1:24 (40 sur 263) pèsent peu en (b). Les deux zones à confirmer de 1:24 n'ont aucune visite de Mic dans le jeu.
+- **L'union est une simulation** : les captures de l'Écho sont celles des visites de l'opérateur, pas celles qu'Ariane fera en relecture. Une autre capture d'un vert peut faire ou défaire un cœur. En 2:1, la fausse zone dépend déjà de la capture retenue pour 447 (lot ou Écho).
+- **Échos partielles** : 1:17 (186 captures sur 795 cuts visités) et 1:24 (40 sur 263) pèsent peu en (b). Les deux zones à confirmer de 1:24 n'ont aucune visite de l'opérateur dans le jeu.
 - **Ordre des captures** : on a mesuré l'ordre des cuts et l'ordre « lot puis relecture ». La relecture réelle suivra peut-être un autre ordre.
   - Le module n'étend que la **dernière** zone ouverte. En ordre « lot puis relecture », un cœur vu tard dans une zone plus ancienne ouvre une **seconde zone** qui recouvre la première (1:29 : 5977–5991 dans 5977–5992). Ce n'est pas une fausse zone, et c'est vrai avec et sans H6.
   - Non corrigé ici : hors du sujet, et cela changerait la sortie au lot.

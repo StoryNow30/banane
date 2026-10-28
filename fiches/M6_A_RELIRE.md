@@ -36,7 +36,7 @@ Sans la séparation par repère de scène, deux cuts voisins d'un rechargement d
 
 ## Résultats sur la partie 17 (vérité terrain Écho)
 
-Journal de 268 cuts : 232 posés (192 avec référence humaine à l'Écho). Cuts posés que Mic a corrigés de plus de 10 mm (distance 3D, plus grand des deux rails, même définition que la jointure) : **47**. Seuls 115 des 232 cuts posés ont des voisins à ±3 (117 sans) ; 16 des 47 corrigés n'ont pas de voisins.
+Journal de 268 cuts : 232 posés (192 avec référence humaine à l'Écho). Cuts posés que l'opérateur a corrigés de plus de 10 mm (distance 3D, plus grand des deux rails, même définition que la jointure) : **47**. Seuls 115 des 232 cuts posés ont des voisins à ±3 (117 sans) ; 16 des 47 corrigés n'ont pas de voisins.
 
 | Liste | cuts | part des posés | corrigés dedans | rappel |
 |---|---:|---:|---:|---:|
@@ -61,7 +61,7 @@ Courbe du score (rappel de plus de 10 mm ; hasard = part des cuts) :
 
 AUC du score 0,71 (voisins 0,60 ; convention 0,70 ; confiance 0,62 ; bande 0,52 ; S1 0,50, deux cuts seulement). Parmi les 192 cuts posés avec référence : 92 ont une convention refusée, dont 35 (38 %) corrigés de plus de 10 mm, contre 12 sur 100 (12 %) quand la convention est appliquée.
 
-**La cible du cahier (≥ 60 % des corrigés dans ≤ 5 % des cuts) n'est pas atteinte** : à 5 % des cuts le rappel est de 10,6 %, soit 2,2 fois le hasard ; 60 % de rappel demande environ 30 % des cuts (score ≥ 0,67). Les corrections de Mic restent petites (maximum 20 mm, médiane 5 mm en 3D) et surtout verticales ; les voisins posés par Ariane partagent le même biais, donc la cohérence aux voisins ne les voit pas (AUC 0,60). Les voisins n'existent d'ailleurs que pour la moitié des cuts.
+**La cible du cahier (≥ 60 % des corrigés dans ≤ 5 % des cuts) n'est pas atteinte** : à 5 % des cuts le rappel est de 10,6 %, soit 2,2 fois le hasard ; 60 % de rappel demande environ 30 % des cuts (score ≥ 0,67). Les corrections de l'opérateur restent petites (maximum 20 mm, médiane 5 mm en 3D) et surtout verticales ; les voisins posés par Ariane partagent le même biais, donc la cohérence aux voisins ne les voit pas (AUC 0,60). Les voisins n'existent d'ailleurs que pour la moitié des cuts.
 
 **Seuil proposé** : score ≥ 1,2, plafonné aux 5 % meilleurs scores, avec la règle du cahier (> 15 mm, zones) en plus. C'est le plus bas seuil qui tient dans 5 % sur la partie 17 (11 cuts à 1,17, 4,7 %). La liste est un outil de priorité (2 fois le hasard), pas un détecteur ; une liste à 30 % ne se relit plus.
 

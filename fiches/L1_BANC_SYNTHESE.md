@@ -19,7 +19,7 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux de la base du diagnosti
 | projet 2 | L1 | 14 | 1369 | 1194 | 76 | 175 | 12,8 % | 7,1 % | 12,5 | 43,5 % |
 | projet 2 | L1-v | 14 | 1369 | 1281 | 0 | 88 | 6,4 % | 3 % | 6,3 | 71,6 % |
 
-### Contre Mic, Écho de la même séance (règle de la fiche ; différés réels jugés : 282)
+### Contre l'opérateur, Écho de la même séance (règle de la fiche ; différés réels jugés : 282)
 
 | Groupe | Profil | Jugés | Posés (dont validés) | Départ médian (mm) | Erreur médiane (mm) | Gain médian (mm) | Gain Q1–Q3 (mm) | ≤ 10 mm | ≤ 20 mm | Écart final > 50 mm (posé ou laissé) | Pire que le départ | Rappel (> 10 mm au départ) |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -42,7 +42,7 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux de la base du diagnosti
 | hors 2:1 | L1-v | 155 | 152 (152) | 51,4 | 6,7 | 42,5 | 27,2 – 70,4 | 105 (67,7 %) | 134 (86,5 %) | 5 | 5 | 96/145 (66,2 %) |
 | hors échantillon (2:6, 2:7) | L1-v | 32 | 32 (32) | 52 | 4,1 | 44,1 | 33,4 – 69,4 | 25 (78,1 %) | 28 (87,5 %) | 0 | 0 | 25/32 (78,1 %) |
 
-### Contre Mic, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : 282)
+### Contre l'opérateur, toutes séances sans autre écriture sur le cut (D-220 ; différés réels jugés : 282)
 
 | Groupe | Profil | Jugés | Posés (dont validés) | Départ médian (mm) | Erreur médiane (mm) | Gain médian (mm) | Gain Q1–Q3 (mm) | ≤ 10 mm | ≤ 20 mm | Écart final > 50 mm (posé ou laissé) | Pire que le départ | Rappel (> 10 mm au départ) |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -65,9 +65,9 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux de la base du diagnosti
 | hors 2:1 | L1-v | 155 | 152 (152) | 51,4 | 6,7 | 42,5 | 27,2 – 70,4 | 105 (67,7 %) | 134 (86,5 %) | 5 | 5 | 96/145 (66,2 %) |
 | hors échantillon (2:6, 2:7) | L1-v | 32 | 32 (32) | 52 | 4,1 | 44,1 | 33,4 – 69,4 | 25 (78,1 %) | 28 (87,5 %) | 0 | 0 | 25/32 (78,1 %) |
 
-### Poses L1 à plus de 50 mm de Mic (35)
+### Poses L1 à plus de 50 mm de l'opérateur (35)
 
-| Partie | Lot | Cut | État | Même séance | Départ (mm) | Pose L1 → Mic (mm) | Hypothèse |
+| Partie | Lot | Cut | État | Même séance | Départ (mm) | Pose L1 → l'opérateur (mm) | Hypothèse |
 |---|--:|--:|--:|--:|--:|--:|--:|
 | 1:17 | 0067c40a | 2874 | pose-non-validee | oui | 122,6 | 56,5 | H0+H3+H4 |
 | 1:29 | 44eec69a | 8556 | pose | oui | 0 | 58,3 | H3+H4 |
@@ -105,9 +105,9 @@ Sortie de `node tools/banc-differes.cjs agreger` (rejeux de la base du diagnosti
 | 2:1 | c20f7ede | 463 | pose-non-validee | oui | 187,9 | 148,6 | H0+H2 |
 | 2:1 | c20f7ede | 466 | pose-non-validee | oui | 184,3 | 209,5 | H0+H2 |
 
-### Poses L1-v à plus de 50 mm de Mic (48)
+### Poses L1-v à plus de 50 mm de l'opérateur (48)
 
-| Partie | Lot | Cut | État | Même séance | Départ (mm) | Pose L1 → Mic (mm) | Hypothèse |
+| Partie | Lot | Cut | État | Même séance | Départ (mm) | Pose L1 → l'opérateur (mm) | Hypothèse |
 |---|--:|--:|--:|--:|--:|--:|--:|
 | 1:17 | 0067c40a | 2874 | pose | oui | 122,6 | 56,5 | H0+H3+H4 |
 | 1:17 | 0067c40a | 5979 | pose | oui | 117 | 56 | H3+H4 |

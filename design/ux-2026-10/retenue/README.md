@@ -1,6 +1,6 @@
 # Orbite : la variante A retenue, reprise (14 octobre 2026)
 
-Mic a retenu la variante A « Accueil » (`../variantes/A-accueil.html`) et
+L'opérateur a retenu la variante A « Accueil » (`../variantes/A-accueil.html`) et
 demandé : plus de sobriété, des couleurs, de la cohérence, et un motion design
 montré en vidéo. Il ne veut plus le bloc « Ce lot applique » dans l’interface.
 
@@ -93,9 +93,9 @@ vue (`#lot-politique-pastille`, seul identifiant ajouté).
 
 Intouchés : `background.js`, `src/`, `vendor/`.
 
-## Suite après la test 12 (14 octobre) — validée par Mic
+## Suite après la test 12 (14 octobre) — validée par l'opérateur
 
-Demandes de Mic après la test 12, et ce qui est fait :
+Demandes de l'opérateur après la test 12, et ce qui est fait :
 
 1. **La tuile du lot**, grande, comme la maquette. Elle affiche :
    - le vert qui se remplit avec « 20 % », puis « 42 cuts » (les cuts traités) ;
@@ -114,9 +114,9 @@ Demandes de Mic après la test 12, et ce qui est fait :
 - Essais : `tests/d092-fiche-depart.test.cjs` (la structure du bloc change) et `tests/panel-h.test.cjs` (`#lot-pct` porte le nombre, le « % » est à côté). `tests/ux-49-orbite.test.cjs` gagne un essai qui rend les cartes de départ.
 - `node tools/verify.cjs` : 1491 réussis, 0 échec, 2 ignorés (corpus privé absent).
 
-## 4.9.0.14 — le vert de la tuile du lot (retour de Mic sur la test 13)
+## 4.9.0.14 — le vert de la tuile du lot (retour de l'opérateur sur la test 13)
 
-« Le vert ne se remplit pas » : le lot de Mic allait « jusqu’à la fin de partie », et le panneau ne connaissait pas la fin, donc le vert restait vide et muet.
+« Le vert ne se remplit pas » : le lot de l'opérateur allait « jusqu’à la fin de partie », et le panneau ne connaissait pas la fin, donc le vert restait vide et muet.
 
 L’essai `tests/ux-49-tuile-lot.test.cjs` a d’abord échoué sur 3 cas sur 4. La règle est maintenant :
 

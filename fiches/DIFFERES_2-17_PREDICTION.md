@@ -1,19 +1,19 @@
 # Différés de la partie 17 (second projet, à confirmer) : prédiction scellée de la GCV2 (19 octobre 2026)
 
-Demande de Mic (19/10/2026) : « tu vas tester la GCV2 sur les différés de cette partie ». La partie est le lot Orbite de la test 8 archivé dans
-`banane-data/collections/2026-10-19_v4.9.5.8_partie-17-lot-15h51/` (9 844 cuts au départ : 9 703 validés, 139 invalides). **Mic n'a pas encore
+Demande de l'opérateur (19/10/2026) : « tu vas tester la GCV2 sur les différés de cette partie ». La partie est le lot Orbite de la test 8 archivé dans
+`banane-data/collections/2026-10-19_v4.9.5.8_partie-17-lot-15h51/` (9 844 cuts au départ : 9 703 validés, 139 invalides). **L'opérateur n'a pas encore
 corrigé cette partie : il n'y a pas de pose de référence.** Ce test est donc une **prédiction scellée** : on calcule maintenant ce que la GCV2
-proposerait pour chaque cut différé, on fige le fichier par son empreinte, et on ne le compare à Mic qu'à l'arrivée de son Écho.
+proposerait pour chaque cut différé, on fige le fichier par son empreinte, et on ne le compare à l'opérateur qu'à l'arrivée de son Écho.
 
 ## 1. Ce que c'est, ce que ce n'est pas
 
 - **C'est** un test de développement de la variante **V1+** (D-207, D-214) : V1, plus la GCV2 sur les cuts différés, sous le garde-fou de voie de la
   série. Seuls les différés sont calculés.
 - **Ce n'est pas** un jugement G1-c. V1, la seule candidate de G1-c, **n'agit jamais sur un différé** : rien ici ne touche un cut où V1 pourrait agir.
-- **Aucune vérité n'a été lue.** Aucun résultat ne peut être dit juste ou faux avant l'Écho de Mic. Les chiffres du § 4 décrivent seulement ce que
+- **Aucune vérité n'a été lue.** Aucun résultat ne peut être dit juste ou faux avant l'Écho de l'opérateur. Les chiffres du § 4 décrivent seulement ce que
   la GCV2 ferait.
-- **Projet à confirmer** : Mic n'a pas dit de quel projet est cette partie. La partie 17 du premier projet a 7 598 cuts, celle-ci 9 844 : elle est
-  notée « 2:17, projet non confirmé » dans le fichier. Si Mic dit « projet 1 », la prédiction reste la même (elle ne dépend que des cuts) ; seule
+- **Projet à confirmer** : l'opérateur n'a pas dit de quel projet est cette partie. La partie 17 du premier projet a 7 598 cuts, celle-ci 9 844 : elle est
+  notée « 2:17, projet non confirmé » dans le fichier. Si l'opérateur dit « projet 1 », la prédiction reste la même (elle ne dépend que des cuts) ; seule
   l'étiquette est fausse.
 
 ## 2. Ce que « différé » veut dire ici
@@ -37,10 +37,10 @@ fichier de sortie ne change pas d'un octet.
 
 Pour chaque différé, à l'**instant de la décision du lot** sur ce cut, et avec cela seulement :
 
-- **voisins sûrs** : les cuts que le lot a validés avant cet instant (leurs poses corrigées par le lot) ; jamais une pose de Mic ;
+- **voisins sûrs** : les cuts que le lot a validés avant cet instant (leurs poses corrigées par le lot) ; jamais une pose de l'opérateur ;
 - **chaîne d'appuis** : ceux de ces voisins que le lot tenait pour appuis (un choix n'est jamais appui, règle du lot) ;
 - **médiane d'écartement** : celle des poses validées par le lot avant cet instant (aucune pour les cuts 9521 à 9528, rien n'était encore validé) ;
-- **zone** : il n'y a pas de zones de Mic pour cette partie ; c'est le moteur de zones du dépôt (`src/regles-metier.js`), rejoué sur les captures
+- **zone** : il n'y a pas de zones de l'opérateur pour cette partie ; c'est le moteur de zones du dépôt (`src/regles-metier.js`), rejoué sur les captures
   du lot dans l'ordre du lot, avec ce qu'il savait à l'instant du cut (PN avec ses marges, puis ADV avec ses marges, sinon « abords ») ;
 - **hypothèses H0 à H6** de `tools/gcv2-jeu.cjs` (famille « lot » : aucun voisin humain), dont **H6 « voie décalée »** et la **voie de référence
   de la série** avec ses preuves (au moins 2 voisins à 10 cuts, accord entre eux à 50 mm, voisin le plus proche à 5 cuts au plus, support des
@@ -116,7 +116,7 @@ node --max-old-space-size=8000 tools/gcv2-predire-differes.cjs predire --partie 
   --sortie predictions-differes-2-17.jsonl
 ```
 
-## 7. Procédure exacte quand l'Écho de Mic arrivera
+## 7. Procédure exacte quand l'Écho de l'opérateur arrivera
 
 1. Archiver l'Écho dans banane-data comme d'habitude (notes, SHA256SUMS, contrôle d'identité).
 2. Vérifier le sceau **avant toute lecture** : `sha256sum predictions-differes-2-17.jsonl` doit donner `e91b15b2…a468e2` (sinon, refaire le
@@ -124,23 +124,23 @@ node --max-old-space-size=8000 tools/gcv2-predire-differes.cjs predire --partie 
 3. Extraire l'Écho dans un dossier de travail, puis :
    `node tools/gcv2-predire-differes.cjs comparer --predictions predictions-differes-2-17.jsonl --echo DOSSIER_ECHO [--echo …] --json comparaison.json`
    L'outil réimprime le SHA-256 du fichier lu : il doit être le même.
-4. Lire, par zone et au total : différés jugés (référence de Mic et même pose de départ, écartement à 2 mm), non jugés et pourquoi ; actions,
-   justes (≤ 10 mm de Mic), à 5 mm, abîmés, erreurs et borne de Wilson ; **mauvaises voies** au sens du protocole (erreur finale > 50 mm ou rail
+4. Lire, par zone et au total : différés jugés (référence de l'opérateur et même pose de départ, écartement à 2 mm), non jugés et pourquoi ; actions,
+   justes (≤ 10 mm de l'opérateur), à 5 mm, abîmés, erreurs et borne de Wilson ; **mauvaises voies** au sens du protocole (erreur finale > 50 mm ou rail
    déplacé de plus de 45 mm en travers depuis la pose de départ), et, à part (audit H2), erreur > 50 mm seule, déplacement > 45 mm depuis le départ
-   seul, sortie du corridor de la série ; abstentions ; grosses corrections laissées ; **rappel atteignable** (une hypothèse à 10 mm de Mic aux
-   deux rails) ; la **pose de départ du lot** en face (combien à 10 mm de Mic, médiane).
-5. Avec 0 action prédite, la comparaison mesurera surtout le **rappel atteignable** des hypothèses (dont H6) et ce que Mic a fait des différés.
+   seul, sortie du corridor de la série ; abstentions ; grosses corrections laissées ; **rappel atteignable** (une hypothèse à 10 mm de l'opérateur aux
+   deux rails) ; la **pose de départ du lot** en face (combien à 10 mm de l'opérateur, médiane).
+5. Avec 0 action prédite, la comparaison mesurera surtout le **rappel atteignable** des hypothèses (dont H6) et ce que l'opérateur a fait des différés.
    **0 mauvaise voie avec 0 action ne prouve rien.** Aucun réglage ne sera changé d'après ce résultat ; une suite (paramètres appris avec H6,
    garde de série revu) passera par une décision écrite.
 
 ## 8. Limites
 
-- Pas de vérité : aucun jugement n'est possible avant l'Écho. Projet à confirmer par Mic.
+- Pas de vérité : aucun jugement n'est possible avant l'Écho. Projet à confirmer par l'opérateur.
 - V1 n'agit jamais sur un différé : ce test ne dit rien de G1-c ; c'est un test de développement de V1+.
 - Paramètres de G1-b, sans traits H6 (§ 5).
 - La médiane d'écartement et les voisins ne viennent que du lot (choix de causalité) : les verts d'ESV voisins ne sont pas lus.
-- Zones sans notes de Mic : celles du moteur de zones, à l'instant de la décision.
+- Zones sans notes de l'opérateur : celles du moteur de zones, à l'instant de la décision.
 - Rejeu : 2 différés sur 41 n'arrivent pas au même étage de chaîne que le lot (hypothèse H3 un peu différente pour eux).
 - **Statut de la partie pour G1-c, à décider** : la décision D-212 dit que la GCV2 n'est pas calculée sur les parties neuves avant l'ouverture de
-  G1-c. Ici elle l'a été, à la demande de Mic, **sur les seuls différés** (où V1 n'agit pas), dans un fichier scellé que personne n'a comparé à Mic.
+  G1-c. Ici elle l'a été, à la demande de l'opérateur, **sur les seuls différés** (où V1 n'agit pas), dans un fichier scellé que personne n'a comparé à l'opérateur.
   À consigner dans le registre des expositions du protocole ; garder ou non la partie comme confirmatoire pour V1 est une décision à écrire.

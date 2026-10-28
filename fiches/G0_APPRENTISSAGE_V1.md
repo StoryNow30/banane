@@ -1,6 +1,6 @@
 # G0 — première étude d'apprentissage du « méga cerveau » (16 octobre 2026)
 
-Lot G0 du cahier 5.0 (§ G0 et E5). Question : sur les corrections de Mic, quelles poses d'Ariane sont fausses, et où ? Rien n'est changé à l'extension : tout est hors ligne, rien sous `src/`.
+Lot G0 du cahier 5.0 (§ G0 et E5). Question : sur les corrections de l'opérateur, quelles poses d'Ariane sont fausses, et où ? Rien n'est changé à l'extension : tout est hors ligne, rien sous `src/`.
 
 Outils : `tools/apprentissage-g0.cjs` (l'étude, essai `tests/apprentissage-g0.test.cjs`) et `tools/g0-enrichir-jeu.cjs` (ajoute au jeu E5 les traits que le jeu v1 ne porte pas, essai `tests/g0-enrichir-jeu.test.cjs`). Les deux essais tournent sur des fixtures **synthétiques** (parties 91 à 99, cuts inventés). Aucune donnée brute, aucune coordonnée absolue et aucun identifiant de projet dans le dépôt : les jeux utilisés restent hors dépôt.
 
@@ -11,7 +11,7 @@ Outils : `tools/apprentissage-g0.cjs` (l'étude, essai `tests/apprentissage-g0.t
 | **1. Faux verts d'Ariane** : quels traits ? | Des indices **modestes mais de même sens dans les trois parties** : décalage vertical de convention `abs(dz)`, déplacement vertical d'Ariane depuis la pose d'ESV, confiance du moteur (basse), peu de lignes du sommet, écart aux voisins. Aucun trait ni modèle (logistique ou arbre à 2 niveaux) ne sépare bien : AUC de 0,45 à 0,69 en validation croisée par partie. **Rappel à 5 % des cuts signalés : 8 % en cumulé (6 fautes sur 75), de 0 % à 11 % selon la partie ; à 10 % : 17 %.** Le score M6 fait pareil ou mieux (11 % et 20 %). | **Non atteinte** (60 % des fautes dans 5 % des cuts). Elle est même **impossible par construction** sur les parties 17 et 24 : 24,5 % et 30 % des posés sont fautifs, 5 % des cuts ne peuvent en contenir que 21 % et 19 %. |
 | **2. Détecteur de PN** | Sur la partie 29, `flushPct` ≥ 30 retrouve 22 des 24 cuts de passage du journal, **sans aucune fausse alerte** (précision 100 %, rappel 92 %, AUC 0,96). Sans `flushPct`, les traits de la liste ne suffisent pas (3 passages sur 24). Marge recommandée autour du cœur détecté : **4 cuts avant, 6 après**. | Atteinte **sur une seule partie** (4 PN). À confirmer. |
 | **3. Écartement dans un PN** | Règle « écartement à plus de 10 mm de la médiane » : **54 mauvais objets sur 54**, tenue en validation croisée 12 → 13 et 13 → 12 (0 manqué ; une seule correction à plus de 10 mm non signalée, en partie 12 ; aucune fausse alerte contre les corrections de plus de 10 mm). Sur les **verts d'extraction** des parties Ariane elle est **juste mais courte** : partie 29, 19 signalés dont 18 justes, mais seulement 22 % des cuts corrigés de plus de 10 mm ; partie 17, elle se trompe (21 justes sur 92). | Atteinte sur les parties humaines ; **non atteinte** comme détecteur général de verts d'extraction faux. |
-| **4. Correction verticale apprise** | Le biais est **prévisible par convention** et de signe stable : sur les rails à convention refusée, Mic **remonte** la pose (+6,1 mm en médiane partie 17, +1,8 partie 24, +3,6 partie 29). Il ne l'est ni par zone (partie 29 seule, n = 24 et 48) ni par `dz`. La magnitude change beaucoup d'une partie à l'autre. Corriger les rails refusés de la valeur apprise sur les autres parties : **cuts corrigés de plus de 10 mm 75 → 63 (−16 %)**, tout le gain est dans la partie 17 (47 → 33). | **Non atteinte** (« 0 mauvaise pose ajoutée ») : 4 cuts passent au-dessus de 10 mm. Avec +3 mm fixe : 1 seul, mais le chiffre est choisi après coup. |
+| **4. Correction verticale apprise** | Le biais est **prévisible par convention** et de signe stable : sur les rails à convention refusée, l'opérateur **remonte** la pose (+6,1 mm en médiane partie 17, +1,8 partie 24, +3,6 partie 29). Il ne l'est ni par zone (partie 29 seule, n = 24 et 48) ni par `dz`. La magnitude change beaucoup d'une partie à l'autre. Corriger les rails refusés de la valeur apprise sur les autres parties : **cuts corrigés de plus de 10 mm 75 → 63 (−16 %)**, tout le gain est dans la partie 17 (47 → 33). | **Non atteinte** (« 0 mauvaise pose ajoutée ») : 4 cuts passent au-dessus de 10 mm. Avec +3 mm fixe : 1 seul, mais le chiffre est choisi après coup. |
 
 Les effectifs sont **petits** : 7 faux verts en partie 29, 21 en partie 24, 47 en partie 17. Les intervalles donnés (amorçage à 90 %) sont larges, voire dégénérés quand il n'y a qu'une poignée de fautes.
 
@@ -21,15 +21,15 @@ Les effectifs sont **petits** : 7 faux verts en partie 29, 21 en partie 24, 47 e
 
 | Partie | Nature | Cuts | Posés avec référence | > 10 mm | > 5 mm |
 |---:|---|---:|---:|---:|---:|
-| 17 | lot Orbite 4.9.0.12 + Écho de Mic | 795 | 192 | 47 (24,5 %) | 132 (68,8 %) |
+| 17 | lot Orbite 4.9.0.12 + Écho de l'opérateur | 795 | 192 | 47 (24,5 %) | 132 (68,8 %) |
 | 24 | lot Orbite 4.9.0.15 + Écho de 1 h 36 (jointure v2) | 263 | 70 | 21 (30,0 %) | 46 (65,7 %) |
-| 29 | lot Orbite 4.9.5.3 + Écho soigné de Mic (2 sessions) | 821 | 198 | 7 (3,5 %) | 96 (48,5 %) |
-| 12 | poses d'extraction ESV d'un opérateur débutant, corrigées par Mic | 107 | — | — | — |
+| 29 | lot Orbite 4.9.5.3 + Écho soigné de l'opérateur (2 sessions) | 821 | 198 | 7 (3,5 %) | 96 (48,5 %) |
+| 12 | poses d'extraction ESV d'un opérateur débutant, corrigées par l'opérateur | 107 | — | — | — |
 | 13 | poses d'extraction ESV, même opérateur | 224 | — | — | — |
 
 - Format `ariane-jeu-apprentissage-v1` (E5). Après l'audit 5.0, la jointure de la partie 24 a été refaite par cadre de scène (I2) et rejouée avec D-143 : toutes les sorties de cette étude sont identiques, à un cut avec référence près (207 → 206, un différé ouvert juste après un rechargement de page) ; voir `fiches/JOINTURE_ECHO_ORBITE.md`. La partie 24 a été rejouée avec la jointure v2 et la règle « visité sans action = bon » à 0,8 s (65 validations observées + 5 visités sans action = 70 posés avec référence). La partie 29 porte la règle sous `regleVisiteBon` : l'outil l'applique avec le seuil de 0,8 s (6 cuts de plus que sans la règle, 198 posés avec référence au lieu de 192 ; 7 faux verts dans les deux cas).
-- Partie 12 : le PN 7276–7289, confirmé par Mic (D-136), manquait à l'en-tête du jeu ; il a été ajouté à la copie de travail (6 PN au lieu de 5).
-- **Faux vert** : cut posé par Ariane dont la correction de Mic dépasse **strictement** 10 mm en 3D (plus grand des deux rails), repère profil. Idem pour 5 mm. Les posés sans référence ne comptent pas (ils ne sont pas supposés bons, sauf la règle des 0,8 s).
+- Partie 12 : le PN 7276–7289, confirmé par l'opérateur (D-136), manquait à l'en-tête du jeu ; il a été ajouté à la copie de travail (6 PN au lieu de 5).
+- **Faux vert** : cut posé par Ariane dont la correction de l'opérateur dépasse **strictement** 10 mm en 3D (plus grand des deux rails), repère profil. Idem pour 5 mm. Les posés sans référence ne comptent pas (ils ne sont pas supposés bons, sauf la règle des 0,8 s).
 - **Rouge** : cut du journal Orbite (posé, différé ou autre). La distance au rouge le plus proche et la grappe (liaison simple, trou ≤ 5 cuts) se calculent sur le journal complet de la partie, pas seulement sur les cuts joints à l'Écho (partie 24 : 515 rouges, 133 joints).
 
 ### 2.2 Extension « g0-traits-v1 » du jeu
@@ -164,18 +164,18 @@ Chaque PN contient au moins un cut signalé (12 sur 12), mais la règle ne marqu
 
 ### 4.3 Marge recommandée avant et après
 
-Le **parcours de Mic** confirme les plages : sur les 16 PN (4 + 6 + 6), aucun cut n'est validé juste avant ni juste après la plage, et 234 cuts sur 251 des plages sont validés (les autres sont survolés). Ses plages sont donc bien l'étendue de son contrôle.
+Le **parcours de l'opérateur** confirme les plages : sur les 16 PN (4 + 6 + 6), aucun cut n'est validé juste avant ni juste après la plage, et 234 cuts sur 251 des plages sont validés (les autres sont survolés). Ses plages sont donc bien l'étendue de son contrôle.
 
-Marge entre le **cœur détecté par `flushPct` ≥ 50** et la plage contrôlée par Mic (partie 29) :
+Marge entre le **cœur détecté par `flushPct` ≥ 50** et la plage contrôlée par l'opérateur (partie 29) :
 
-| PN | Plage de Mic | Cœur détecté | Avant | Après |
+| PN | Plage de l'opérateur | Cœur détecté | Avant | Après |
 |---|---|---|--:|--:|
 | PN1 | 1652–1667 | 1656–1663 | 4 | 4 |
 | PN2 | 3342–3355 | 3346–3350 | 4 | 5 |
 | PN3 | 5978–5992 | 5981–5986 | 3 | 6 |
 | PN4 | 6466–6478 | 6470–6474 | 4 | 4 |
 
-Couverture : avec **4 avant et 6 après**, les 4 PN de la partie 29 sont couverts ; avec 4 et 4, 2 sur 4. Par rapport au **passage** de la fiche de Mic (cuts rouges consécutifs), ses marges sont 3 à 4 avant et 3 à 6 après. Sur les parties 12 et 13, le cœur marqué par l'écartement est plus petit que le vrai PN, donc les marges mesurées (2 à 10) sont gonflées ; elles ne servent qu'à vérifier que 10 cuts de chaque côté couvrent tout (12 PN sur 12).
+Couverture : avec **4 avant et 6 après**, les 4 PN de la partie 29 sont couverts ; avec 4 et 4, 2 sur 4. Par rapport au **passage** de la fiche de l'opérateur (cuts rouges consécutifs), ses marges sont 3 à 4 avant et 3 à 6 après. Sur les parties 12 et 13, le cœur marqué par l'écartement est plus petit que le vrai PN, donc les marges mesurées (2 à 10) sont gonflées ; elles ne servent qu'à vérifier que 10 cuts de chaque côté couvrent tout (12 PN sur 12).
 
 **Recommandation : cœur détecté (`flushPct` ≥ 50) étendu de 4 cuts avant et 6 après.** Elle est asymétrique, comme les relevés : D-134 comptait 5/17 cuts à plus de 10 mm après la sortie d'un PN contre 2/13 avant l'entrée. Quatre PN : à confirmer sur d'autres parties.
 
@@ -217,7 +217,7 @@ Signalés à d'autres seuils (justes parmi les corrigés > 10 mm) : partie 17, �
 
 ## 6. Q4 — Correction verticale apprise
 
-Convention de signe de la fiche : **correction = pose de Mic − pose d'Ariane**, repère profil. « + » : Mic remonte la pose. L'« erreur » de `P0_MESURES.md` (pose publiée − pose de Mic) est l'opposée : −6,5 mm d'erreur sur les rails refusés de la partie 17 = +6,5 mm de correction de Mic. Le −2 mm de D-134 pour la partie 29 est une correction (Mic descend Ariane) ; je trouve **−1,2 mm de moyenne par rail** sur les 198 posés avec référence (−1,8 sur les rails que Mic a réellement déplacés).
+Convention de signe de la fiche : **correction = pose de l'opérateur − pose d'Ariane**, repère profil. « + » : l'opérateur remonte la pose. L'« erreur » de `P0_MESURES.md` (pose publiée − pose de l'opérateur) est l'opposée : −6,5 mm d'erreur sur les rails refusés de la partie 17 = +6,5 mm de correction de l'opérateur. Le −2 mm de D-134 pour la partie 29 est une correction (l'opérateur descend Ariane) ; je trouve **−1,2 mm de moyenne par rail** sur les 198 posés avec référence (−1,8 sur les rails que l'opérateur a réellement déplacés).
 
 ### 6.1 Où est le biais ?
 
@@ -236,9 +236,9 @@ Moyenne / médiane de la correction verticale (mm), nombre de rails entre parent
 | hors zone | — | — | −1,3 / 0,0 (324) | une seule partie |
 
 - **Par partie** : le biais global change de signe (+0,6 ; −2,5 ; −1,2). Il n'est pas stable.
-- **Par convention** : quand le calage de convention est **refusé**, Mic remonte la pose dans les trois parties, de **+1,8 à +6,1 mm** en médiane. C'est le seul biais de signe stable. Sa **taille** ne l'est pas (écart de 1 à 3 entre les parties). Quand il est appliqué, la correction est légèrement négative en moyenne et nulle en médiane (la moitié des rails n'est pas touchée).
+- **Par convention** : quand le calage de convention est **refusé**, l'opérateur remonte la pose dans les trois parties, de **+1,8 à +6,1 mm** en médiane. C'est le seul biais de signe stable. Sa **taille** ne l'est pas (écart de 1 à 3 entre les parties). Quand il est appliqué, la correction est légèrement négative en moyenne et nulle en médiane (la moitié des rails n'est pas touchée).
 - **Par zone** : rien de net sur la partie 29 (PN −0,6, ADV −1,5, hors zone −1,3 en moyenne, tous 0,0 en médiane). Non jugeable entre parties : les zones n'existent que pour la partie 29.
-- **Par `dz`** : la correction ne suit pas le décalage prédit par la convention. Pente de la correction sur `dz`, rails refusés : −0,62 (partie 17), +0,95 (partie 24), −0,59 (partie 29) ; corrélations −0,08, +0,22, −0,20. Le grand décalage prédit n'annonce pas une correction plus grande de Mic.
+- **Par `dz`** : la correction ne suit pas le décalage prédit par la convention. Pente de la correction sur `dz`, rails refusés : −0,62 (partie 17), +0,95 (partie 24), −0,59 (partie 29) ; corrélations −0,08, +0,22, −0,20. Le grand décalage prédit n'annonce pas une correction plus grande de l'opérateur.
 
 ### 6.2 Gain d'une correction apprise sur une partie et appliquée à l'autre
 
@@ -305,9 +305,9 @@ Porte proposée : signe stable sur les trois parties et AUC moyenne d'au moins 0
 
 ## 8. Ce qu'il manque en données
 
-- **Faux verts (Q1)** : pour tenir un rappel de 60 % à ±10 points (90 %), il faut environ **65 fautes dans la partie jugée**. À 3,5 % de faux verts (régime de la partie 29), cela fait 1 900 posés relus, soit **une dizaine de parties** relues comme la 29 (Écho soigné de Mic, chacune ≈ 200 posés avec référence). À 25 % (régime 17/24), 260 posés suffisent (une partie et demie), mais la porte à 5 % y est impossible. Pour **entraîner** un modèle de 8 traits sans tâtonner, compter 10 à 20 fautes par trait, soit 80 à 160 faux verts : **2 à 4 parties** de type 17 (47 faux verts) ou **12 à 23** de type 29 (7 chacune). Si les 500 corrections que G1 demande sont 500 posés relus, à 3,5 % de faux verts cela ne ferait que 18 fautes à plus de 10 mm. **Le nombre de corrections ne suffit pas : ce qui compte, c'est le nombre de fautes d'Ariane qu'elles contiennent.**
+- **Faux verts (Q1)** : pour tenir un rappel de 60 % à ±10 points (90 %), il faut environ **65 fautes dans la partie jugée**. À 3,5 % de faux verts (régime de la partie 29), cela fait 1 900 posés relus, soit **une dizaine de parties** relues comme la 29 (Écho soigné de l'opérateur, chacune ≈ 200 posés avec référence). À 25 % (régime 17/24), 260 posés suffisent (une partie et demie), mais la porte à 5 % y est impossible. Pour **entraîner** un modèle de 8 traits sans tâtonner, compter 10 à 20 fautes par trait, soit 80 à 160 faux verts : **2 à 4 parties** de type 17 (47 faux verts) ou **12 à 23** de type 29 (7 chacune). Si les 500 corrections que G1 demande sont 500 posés relus, à 3,5 % de faux verts cela ne ferait que 18 fautes à plus de 10 mm. **Le nombre de corrections ne suffit pas : ce qui compte, c'est le nombre de fautes d'Ariane qu'elles contiennent.**
 - **Version** : les trois parties viennent de trois versions (4.9.0.12, 4.9.0.15, 4.9.5.3). Le taux de convention refusée passe de 23 % à 5 % ; les traits changent de loi d'une partie à l'autre. **Une partie par version courante** est plus utile qu'une quatrième ancienne.
-- **PN (Q2)** : 4 PN avec `flushPct` ; établir une précision d'au moins 95 % demande une quarantaine de cuts de passage sans fausse alerte (22 cuts sans erreur donnent seulement 90 % en borne basse à 90 %), soit **8 PN** ; pour estimer aussi le rappel, viser **20 PN**, soit **5 parties** avec relevé S6 et plages données par Mic. Les PN des parties 17 et 24 n'ont pas de plage donnée : demander à Mic de les relire ou recalculer `flushPct` sur les nuages archivés.
+- **PN (Q2)** : 4 PN avec `flushPct` ; établir une précision d'au moins 95 % demande une quarantaine de cuts de passage sans fausse alerte (22 cuts sans erreur donnent seulement 90 % en borne basse à 90 %), soit **8 PN** ; pour estimer aussi le rappel, viser **20 PN**, soit **5 parties** avec relevé S6 et plages données par l'opérateur. Les PN des parties 17 et 24 n'ont pas de plage donnée : demander à l'opérateur de les relire ou recalculer `flushPct` sur les nuages archivés.
 - **Écartement (Q3)** : 54 mauvais objets mais **un seul opérateur** et un seul projet (D-123). Il faut une partie d'un **autre opérateur** et le **second projet ESV** annoncé, ainsi qu'un seuil exprimé en fonction de la dispersion de la partie.
 - **Biais vertical (Q4)** : le signe est stable (3 parties sur 3), la **taille** (1,8 à 6,1 mm) non. Pour la fixer à ±1 mm (90 %), avec un écart entre parties de 2,2 mm, il faut **13 parties** environ, chacune avec une centaine de rails refusés. Il faudrait aussi connaître les causes (P1, nouvelle version du calage).
 - **Zones et raison de la correction** : M1 (zones) n'existe que pour la partie 29 ; la raison de la correction (E3) n'existe pas. Sans elles, ni la zone ni la cause ne s'apprennent.
@@ -316,7 +316,7 @@ Porte proposée : signe stable sur les trois parties et AUC moyenne d'au moins 0
 
 - **Un seul projet ESV, un seul opérateur humain** (parties 12 et 13), et **trois parties** pour Ariane. La validation croisée par partie est la bonne mesure, mais elle repose sur trois points.
 - **Effectifs** : partie 29, 7 faux verts ; partie 24, 70 posés. Tout rappel de la partie 29 est un multiple de 14 % (1/7). L'amorçage rééchantillonne les cuts jugés : avec une poignée de fautes l'intervalle est dégénéré (0 à 0 %).
-- **Les références de Mic** ne sont pas une vérité indépendante (voir `E5_METRIQUES.md`). Les parties 17 et 24 sont des relectures moins soignées que la 29, ce qui peut gonfler leur taux de faux verts : l'effet « soin » ne se sépare pas de l'effet « version » (D-134).
+- **Les références de l'opérateur** ne sont pas une vérité indépendante (voir `E5_METRIQUES.md`). Les parties 17 et 24 sont des relectures moins soignées que la 29, ce qui peut gonfler leur taux de faux verts : l'effet « soin » ne se sépare pas de l'effet « version » (D-134).
 - **Traits M6** : l'écart aux voisins utilise des voisins posés avant *et après* le cut : il vaut pour une liste établie à la fin du lot, pas pendant. Il est absent d'environ la moitié des posés (pas de voisin à ±3).
 - **Traits d'une seule partie** (zones, `flushPct`, distance à l'aiguille) : mesurés, jamais appris entre parties.
 - **Seuils choisis après coup** : la grille de décalages fixes (Q4) et les seuils d'écartement 15 à 20 mm sont des ordres de grandeur.

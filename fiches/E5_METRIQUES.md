@@ -2,7 +2,7 @@
 
 Deux outils hors ligne, sans dépendance, lecture seule, rien sous `src/` :
 
-- `tools/jeu-apprentissage.cjs` : table de jointure Écho ↔ Orbite → fichier JSON lignes, une ligne par cut joint (traits d'Ariane + étiquette de Mic).
+- `tools/jeu-apprentissage.cjs` : table de jointure Écho ↔ Orbite → fichier JSON lignes, une ligne par cut joint (traits d'Ariane + étiquette de l'opérateur).
 - `tools/metriques-version.cjs` : les chiffres qui jugent une version sur la vérité terrain.
 
 Essai : `tests/e5-metriques.test.cjs` (jointure synthétique de la partie 99, cuts inventés, seuils tombant pile sur 5,0 et 10,0 mm).
@@ -11,7 +11,7 @@ Essai : `tests/e5-metriques.test.cjs` (jointure synthétique de la partie 99, cu
 
 Les deux outils lisent la table produite par `tools/jointure-echo-orbite.cjs --sortie table.json` (S3, `JOINTURE_ECHO_ORBITE.md`). Rien n'est relu dans l'Écho ni dans les nuages.
 
-Un `tools/jeu-apprentissage.cjs` existait déjà sur la branche de la maquette ESV (`claude/esv-locale-audit`, commits 0faaf0a et b11c96d). Il n'a pas été repris tel quel : il lit un export complet de la maquette (`tests/esv-maquette/lecteur-export.cjs`, absent de la base 5.0), travaille en coordonnées du scénario de la maquette et sort un autre format (`banane-apprentissage-v1`). L'outil E5 reprend ses principes : écart en repère profil (le long de la voie, en travers, vertical), valeur nulle quand rien n'est connu, rien d'inventé, fenêtre de voisinage de ±3 cuts, en-tête de résumé. Le nom de format est différent à dessein (`ariane-jeu-apprentissage-v1`) pour ne pas mélanger les deux fichiers. L'interpolation entre voisins (D-098) n'est pas dans le jeu : elle s'appuierait sur les corrections de Mic aux voisins, grandeur inconnue d'Ariane au moment de proposer.
+Un `tools/jeu-apprentissage.cjs` existait déjà sur la branche de la maquette ESV (`claude/esv-locale-audit`, commits 0faaf0a et b11c96d). Il n'a pas été repris tel quel : il lit un export complet de la maquette (`tests/esv-maquette/lecteur-export.cjs`, absent de la base 5.0), travaille en coordonnées du scénario de la maquette et sort un autre format (`banane-apprentissage-v1`). L'outil E5 reprend ses principes : écart en repère profil (le long de la voie, en travers, vertical), valeur nulle quand rien n'est connu, rien d'inventé, fenêtre de voisinage de ±3 cuts, en-tête de résumé. Le nom de format est différent à dessein (`ariane-jeu-apprentissage-v1`) pour ne pas mélanger les deux fichiers. L'interpolation entre voisins (D-098) n'est pas dans le jeu : elle s'appuierait sur les corrections de l'opérateur aux voisins, grandeur inconnue d'Ariane au moment de proposer.
 
 ## Format du jeu : `ariane-jeu-apprentissage-v1`
 
@@ -37,7 +37,7 @@ node tools/jeu-apprentissage.cjs --jointure table.json --sortie jeu.jsonl
 | `traits.differe` | pour un différé : statut, transition, rails non résolus, motif et statut par rail |
 | `traits.deplacementAriane` | par rail, ce qu'Ariane a déplacé (pose de départ d'ESV → pose posée), en mm, repère profil |
 | `traits.voisinage` | cuts de numéro inférieur dans ±fenêtre : nombre de posés, de différés, d'autres, et le plus proche. Numéros inférieurs seulement : le lot avance par numéros croissants, les suivants ne sont pas encore décidés quand Ariane propose |
-| `etiquette.referenceHumaine` | `observee`, `sans-reference` (aucune validation de Mic observée), `absent-de-l-echo` |
+| `etiquette.referenceHumaine` | `observee`, `sans-reference` (aucune validation de l'opérateur observée), `absent-de-l-echo` |
 | `etiquette.correctionMm` | par rail : longitudinal, latéral, vertical, distance 3D (mm, repère profil) ; plus `maxDist3dMm` du cut. Nul sans référence |
 | `etiquette.pose`, `etiquette.differe` | classe d'Ariane en booléens |
 | `etiquette.corrige5mm`, `corrige10mm` | `maxDist3dMm` strictement supérieur à 5 ou 10 mm ; nul sans référence |
@@ -46,7 +46,7 @@ node tools/jeu-apprentissage.cjs --jointure table.json --sortie jeu.jsonl
 | `qualite` | visites à l'Écho, visite retenue, validations de la visite, statut de l'Écho |
 | `traits` nul | cut hors journal (aucun trait d'Ariane) |
 
-Frontière anti-fuite : les `traits` ne contiennent aucune grandeur issue de la référence humaine (essai : pas d'`ecartHumain` dans les traits). Tout ce qui vient de Mic est sous `etiquette`.
+Frontière anti-fuite : les `traits` ne contiennent aucune grandeur issue de la référence humaine (essai : pas d'`ecartHumain` dans les traits). Tout ce qui vient de l'opérateur est sous `etiquette`.
 
 **Pas dans la v1** (champs à ajouter quand la donnée existe) : zone (M1), raison de la correction (E3), points par rail (nuage non lu), grandeurs P0 (graine, intersection, convention brute, pente brute : voir la fiche de la jointure), appartenance DEV / RÉSERVÉ (E4). Tant que le manifeste E4 n'existe pas, un jeu v1 ne doit servir ni à régler ni à juger GCV2.
 
@@ -62,15 +62,15 @@ Sortie lisible sur la sortie standard, JSON `ariane-metriques-version-v1` avec `
 
 ### Définitions exactes
 
-Population « **posés mesurables** » : cuts que le journal dit posés par Ariane (`validation-accepted` ou `applied-verified`) **et** dont l'Écho a observé une validation de Mic (référence humaine = dernière validation observée). Les posés sans validation observée (`PASS_NO_DECISION`) et ceux que l'Écho n'a pas vus sont comptés à part et ne sont **pas** devinés « bons ».
+Population « **posés mesurables** » : cuts que le journal dit posés par Ariane (`validation-accepted` ou `applied-verified`) **et** dont l'Écho a observé une validation de l'opérateur (référence humaine = dernière validation observée). Les posés sans validation observée (`PASS_NO_DECISION`) et ceux que l'Écho n'a pas vus sont comptés à part et ne sont **pas** devinés « bons ».
 
-- **Écart 3D** : distance entre la pose finale de Mic et la pose d'Ariane, en mm. Donné **par rail** (gauche et droite mises ensemble ; c'est la mesure de D-121) et **par cut** (le plus grand des deux rails).
+- **Écart 3D** : distance entre la pose finale de l'opérateur et la pose d'Ariane, en mm. Donné **par rail** (gauche et droite mises ensemble ; c'est la mesure de D-121) et **par cut** (le plus grand des deux rails).
 - **Médiane, P90, maximum** : quantile par interpolation linéaire (comme `native-offline-evaluate.cjs`), maximum exact. Affichage à 0,1 mm. Idem pour l'écart **latéral** et **vertical** : valeur absolue par rail (repère profil du rail) ; en plus, **biais moyen signé** latéral et vertical par rail.
 - **Corrigé de plus de 5 / 10 mm** : cut dont l'écart 3D (le plus grand des deux rails) est **strictement** supérieur au seuil ; taux sur les posés mesurables. Le nombre de rails est donné en plus.
 - **Taux de différés** : cuts différés et jamais posés ÷ cuts vus au journal (posés + différés + autres). Avec les motifs par rail non résolu (un différé compte une fois par motif distinct).
 - **Taux de faux verts** : cuts posés par Ariane puis corrigés de plus de 10 mm ÷ posés mesurables. Une **borne basse** est donnée aussi : même numérateur ÷ tous les posés du journal (comme si tout posé non observé était juste).
-- **Différés, écart humain** : écart de la pose de départ d'ESV à la pose de Mic. Ce n'est pas une erreur d'Ariane (elle n'a rien posé) mais la distance qu'il restait à combler.
-- **Hors journal** : cuts que Mic a visités sans que le journal les connaisse (verts d'extraction, autres lots). Mêmes écarts ; sert de première mesure de « un vert n'est pas forcément juste ».
+- **Différés, écart humain** : écart de la pose de départ d'ESV à la pose de l'opérateur. Ce n'est pas une erreur d'Ariane (elle n'a rien posé) mais la distance qu'il restait à combler.
+- **Hors journal** : cuts que l'opérateur a visités sans que le journal les connaisse (verts d'extraction, autres lots). Mêmes écarts ; sert de première mesure de « un vert n'est pas forcément juste ».
 - **Cuts par heure** : un cut est décidé quand il porte `validation-accepted` ou `defer-finalized` (le plus tardif compte) ; cuts décidés − 1 ÷ durée. **Brut** : du premier au dernier cut décidé. **Actif** : on retire les intervalles de plus de `--pause` secondes (120 par défaut).
 
 ### Partie 17 (jointure `p17.json` + journal Orbite de la partie 17, version 4.9.0.12)
@@ -114,9 +114,9 @@ Sur la partie 24, seuls 4 posés ont une référence humaine : aucun taux de fau
 ## Limites
 
 - **Un seul projet ESV** (D-123) et **un seul Écho exploitable** (partie 17) : les chiffres valent pour ce lot.
-- **La référence est la dernière validation de Mic observée à l'Écho.** Ce n'est pas une vérité indépendante : Mic peut valider un cut un peu faux ou le corriger sans besoin ; le bruit de ses propres gestes n'est pas mesuré.
+- **La référence est la dernière validation de l'opérateur observée à l'Écho.** Ce n'est pas une vérité indépendante : l'opérateur peut valider un cut un peu faux ou le corriger sans besoin ; le bruit de ses propres gestes n'est pas mesuré.
 - **« Posé » = pose au moment de la validation au journal**, hypothèse de la jointure (0,000 mm d'écart sur les parties essayées, non prouvée pour d'autres lots).
-- **Faux vert** : seuls les posés revus par Mic comptent. L'étiquette `PASS_NO_DECISION` (38 posés sur la partie 17) peut valoir « vu, bon » comme « non regardé » ; l'Écho ne les départage pas (E6, E1 étape 2 et la relecture de toute la liste par Mic, D-122 point 7, doivent combler ce manque). Les deux bornes (24,5 % et 20,3 %) encadrent.
+- **Faux vert** : seuls les posés revus par l'opérateur comptent. L'étiquette `PASS_NO_DECISION` (38 posés sur la partie 17) peut valoir « vu, bon » comme « non regardé » ; l'Écho ne les départage pas (E6, E1 étape 2 et la relecture de toute la liste par l'opérateur, D-122 point 7, doivent combler ce manque). Les deux bornes (24,5 % et 20,3 %) encadrent.
 - **Les relectures E1 (`diff-liste`) ne sont pas branchées** : aucun instantané réel de la liste n'existe encore. Quand ils existeront, ils donneront une référence pour les cuts que l'Écho ne voit pas.
 - **Pas de métrique par zone ni par raison** : la zone (M1) et la raison de la correction (E3) n'existent pas encore dans les données. Les différés sont ventilés par motif du moteur seulement.
 - **« 0 mauvaise pose ajoutée »** (porte du cahier) ne se calcule pas ici : il faut le rejeu de deux versions sur les mêmes cuts. Les métriques d'une version se comparent à une autre sur le même ensemble de cuts, pas sur deux lots différents.

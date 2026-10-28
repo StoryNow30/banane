@@ -7,7 +7,7 @@ La candidate L1 est déclarée en D-219. Elle n'est pas changée d'après les r�
 ## 1. La candidate L1 (rappel de D-219)
 
 - **P2** : la GCV2 (hypothèses H0 à H6, paramètres figés) agit sur les différés du lot **sans le couloir de 45 mm** depuis la pose de départ ; τ, δ et l'écartement de la paire sont gardés. Une cible hors de la vue : on déplace la vue, puis on pose. La garde de paire du lot est éteinte. Les appuis de reprise sont élargis à 10 cuts.
-- **Sous τ** : on **pose sans valider**. Le cut reste invalide (rouge) ; Mic repart d'une pose approchée. Exception : si la meilleure paire est à plus de 150 mm de la pose de départ, on ne pose rien.
+- **Sous τ** : on **pose sans valider**. Le cut reste invalide (rouge) ; l'opérateur repart d'une pose approchée. Exception : si la meilleure paire est à plus de 150 mm de la pose de départ, on ne pose rien.
 - **Variante L1-v** (chiffrée, jamais activée sans décision écrite) : sous τ, on valide et on inscrit le cut aux verts à contrôler (hors cas à plus de 150 mm).
 - **Inchangés** : le contrat d'écartement du moteur, τ, l'écartement de la paire, la géométrie (`src/geometry*.js`).
 
@@ -28,7 +28,7 @@ La candidate L1 est déclarée en D-219. Elle n'est pas changée d'après les r�
 13. **Rejeu par lot** : chaque lot est rejoué seul, du premier au dernier cut, avec les appuis de départ qu'il avait (lots de reprise). Le dénominateur est celui du lot réel (ses cuts traités). Une reprise réelle est donc rejouée comme si le lot précédent avait été celui d'aujourd'hui, avec ses cuts réels : c'est la définition de la base du diagnostic.
 14. **Moteur** : la science de chaque cut est recalculée avec le moteur d'aujourd'hui, comme la test 10 le ferait. Un cut sans nuage garde son sort réel.
 15. **Différé après L1** : un cut que le lot ne valide pas. Un cut « posé sans valider » reste un différé ; il est compté à part (« approché »).
-16. **Jugement contre Mic** : les règles du diagnostic (Écho de la même séance, pose de départ vérifiée à 2 mm, nuage, cut non posé ensuite par un autre lot). Écart entre deux poses : le pire des deux rails, en 3D. Gain d'un cut = écart de la pose de départ à Mic − écart de la pose L1 à Mic (0 si L1 ne pose rien). **Rappel** : parmi les jugés dont la pose de départ est à plus de 10 mm de Mic, la part que L1 pose à 10 mm au plus.
+16. **Jugement contre l'opérateur** : les règles du diagnostic (Écho de la même séance, pose de départ vérifiée à 2 mm, nuage, cut non posé ensuite par un autre lot). Écart entre deux poses : le pire des deux rails, en 3D. Gain d'un cut = écart de la pose de départ à l'opérateur − écart de la pose L1 à l'opérateur (0 si L1 ne pose rien). **Rappel** : parmi les jugés dont la pose de départ est à plus de 10 mm de l'opérateur, la part que L1 pose à 10 mm au plus.
 17. **Base** : le sort réel de chaque cut dans le journal (inventaire du diagnostic). À côté, la **base rejouée** (le code d'aujourd'hui, sans L1) dit si le rejeu est fidèle.
 18. **B1** (voisins de la liste d'ESV) : ignoré ; il n'était qu'en ombre dans tous les lots.
 
@@ -46,7 +46,7 @@ Rejeu causal conjoint (`tools/banc-differes.cjs`) des 40 lots de la base du diag
 
 Sans compter les approchés comme différés, L1 laisse 164 cuts sans pose (−88,0 %). Le reste se concentre sur trois parties du projet 2 : 2:1 (127 → 83, dont 37 approchés), 2:17 (41 → 33, dont 13) et 2:18 (37 → 32, dont 9).
 
-### 3.2 Contre Mic (différés réels jugés, Écho de la même séance : 282 ; D-220, toutes séances sans autre écriture : les mêmes 282)
+### 3.2 Contre l'opérateur (différés réels jugés, Écho de la même séance : 282 ; D-220, toutes séances sans autre écriture : les mêmes 282)
 
 | Groupe | Profil | Jugés | Posés (validés) | Départ médian | Erreur médiane | Gain médian (Q1–Q3) | ≤ 10 mm | ≤ 20 mm | Pire que le départ | Rappel |
 |---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
@@ -58,9 +58,9 @@ Sans compter les approchés comme différés, L1 laisse 164 cuts sans pose (−8
 | total | L1-v | 282 | 240 (240) | 85,8 | 10,2 | 36,9 (1,3 – 70,8) | 49,6 % | 60,6 % | 20 | 131/272 |
 | hors 2:1 | L1-v | 155 | 152 (152) | 51,4 | 6,7 | 42,5 (27,2 – 70,4) | 67,7 % | 86,5 % | 5 | 96/145 |
 
-Millimètres, pire des deux rails en 3D. Rappel : parmi les jugés à plus de 10 mm de Mic au départ, ceux que le profil pose à 10 mm au plus. La règle de D-220 n'ajoute aucun cut ici : hors 2:17 (sans vérité), les fichiers du diagnostic n'ont qu'un différé d'une autre séance avec une pose de Mic (1:15), et il est écarté par la règle de la pose de départ (vérifiée à 2 mm). Élargir les jugés demande de rejoindre les Échos plus tardifs, ce que ce banc ne fait pas.
+Millimètres, pire des deux rails en 3D. Rappel : parmi les jugés à plus de 10 mm de l'opérateur au départ, ceux que le profil pose à 10 mm au plus. La règle de D-220 n'ajoute aucun cut ici : hors 2:17 (sans vérité), les fichiers du diagnostic n'ont qu'un différé d'une autre séance avec une pose de l'opérateur (1:15), et il est écarté par la règle de la pose de départ (vérifiée à 2 mm). Élargir les jugés demande de rejoindre les Échos plus tardifs, ce que ce banc ne fait pas.
 
-**Poses à plus de 50 mm de Mic** (publiées dans la synthèse complète) : L1 **35** (30 posées sans valider, 5 validées), dont 33 en 2:1, plus 1:17 cut 2874 (sans valider, 122,6 → 56,5 mm) et 1:29 cut 8556 (validée, 0 → 58,3 mm). L1-v **48** (toutes validées), dont 45 en 2:1.
+**Poses à plus de 50 mm de l'opérateur** (publiées dans la synthèse complète) : L1 **35** (30 posées sans valider, 5 validées), dont 33 en 2:1, plus 1:17 cut 2874 (sans valider, 122,6 → 56,5 mm) et 1:29 cut 8556 (validée, 0 → 58,3 mm). L1-v **48** (toutes validées), dont 45 en 2:1.
 
 ### 3.3 Où se perd le reste, motif par motif (L1)
 
@@ -77,7 +77,7 @@ Par motif réel du différé (réels → restants, dont approchés) : sans appui
 
 ### 3.4 Effets du rejeu conjoint sur ce que le lot posait déjà
 
-Sous L1, la chaîne change (garde de paire éteinte, appuis à 10 cuts, poses validées de la GCV2 devenues appuis) : **59** cuts posés par le lot réel ne sont plus validés (28 sous L1-v), et **430** sont posés à plus de 1 mm de la pose réelle (médiane 3,4 mm). Ces cuts ne sont pas jugés ici contre Mic (ils étaient verts). La base rejouée n'en perd que 2 et n'en déplace aucun. Vues déplacées : 26 (L1), 23 (L1-v).
+Sous L1, la chaîne change (garde de paire éteinte, appuis à 10 cuts, poses validées de la GCV2 devenues appuis) : **59** cuts posés par le lot réel ne sont plus validés (28 sous L1-v), et **430** sont posés à plus de 1 mm de la pose réelle (médiane 3,4 mm). Ces cuts ne sont pas jugés ici contre l'opérateur (ils étaient verts). La base rejouée n'en perd que 2 et n'en déplace aucun. Vues déplacées : 26 (L1), 23 (L1-v).
 
 ### 3.5 Lecture
 
@@ -117,7 +117,7 @@ Fichiers JSON lignes hors dépôt (une ligne par cut traité : sort réel du lot
 | (c) vue déplacée | 196 (174 différés, 22 posés) | 196 | 3 (cuts 5030 à 5032) |
 
 Les 10 plus grands écarts sous L1 sur les cuts posés par le lot (tous en ADV) : 5049 (34,3 mm), 5209 (34,0), 5110 (33,6), 5244 (32,1), 5231 (31,5), 5095 (30,7), 5271 (30,3), 5062 (30,3), 5088 (29,4), 5101 (29,1).
-Lecture : sous L1, presque tout vient de la chaîne changée (garde de paire éteinte, poses devenues appuis, vue déplacée), très peu de la GCV2 ; sous L1-s, sans ces appuis, la GCV2 trouve la plupart des paires à plus de 150 mm de la pose de départ et ne pose rien. L'Écho de Mic dira lequel a raison.
+Lecture : sous L1, presque tout vient de la chaîne changée (garde de paire éteinte, poses devenues appuis, vue déplacée), très peu de la GCV2 ; sous L1-s, sans ces appuis, la GCV2 trouve la plupart des paires à plus de 150 mm de la pose de départ et ne pose rien. L'Écho de l'opérateur dira lequel a raison.
 
 
 ## 5. Candidate de terrain « L1-s » (D-221) : détails tranchés avant la mesure
@@ -148,7 +148,7 @@ Mêmes 40 lots, mêmes jugés (282, aucun pour 2:17, 2:18). Synthèse complète 
 
 Sans compter les approchés, L1-s laisse 172 cuts sans pose (−87,4 %).
 
-| Contre Mic (282 jugés) | Posés (validés) | Départ médian | Erreur médiane | Gain médian (Q1–Q3) | ≤ 10 mm | ≤ 20 mm | Pire que le départ | Rappel |
+| Contre l'opérateur (282 jugés) | Posés (validés) | Départ médian | Erreur médiane | Gain médian (Q1–Q3) | ≤ 10 mm | ≤ 20 mm | Pire que le départ | Rappel |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|
 | total | 219 (156) | 85,8 | 12,7 | 30,9 (0 – 64,5) | 127 | 155 | 21 | 118/272 |
 | projet 1 | 106 (92) | 51,4 | 7,9 | 40,1 (24,4 – 69) | 73 | 95 | 6 | 65/102 |
@@ -156,7 +156,7 @@ Sans compter les approchés, L1-s laisse 172 cuts sans pose (−87,4 %).
 | 2:1 | 71 (28) | 191,1 | 164,4 | 0 (0 – 44,4) | 21 | 24 | 15 | 21/127 |
 | hors 2:1 | 148 (128) | 51,4 | 6,9 | 41 (25,4 – 69,5) | 106 | 131 | 6 | 97/145 |
 
-**Poses à plus de 50 mm de Mic : 43** (37 sans valider, 6 validées), dont 41 en 2:1 ; ailleurs 1:17 cut 2874 (sans valider, 122,6 → 56,5 mm) et 1:29 cut 8556 (validée, 0 → 58,3 mm).
+**Poses à plus de 50 mm de l'opérateur : 43** (37 sans valider, 6 validées), dont 41 en 2:1 ; ailleurs 1:17 cut 2874 (sans valider, 122,6 → 56,5 mm) et 1:29 cut 8556 (validée, 0 → 58,3 mm).
 
 Ce qui reste (361) : 189 approchés sous τ ; rien : départ le plus probable 98, paire à plus de 150 mm 46, sous δ 9 ; sans nuage 8 ; règle grappe 6 (+1 pose de la GCV2 bloquée) ; écartement refusé 4. Par motif réel : sans appui 879 → 301 (149 approchés) ; reprise sans minimum 221 → 47 (33) ; garde de paire 214 → 2 ; hors vue 21 → 0.
 
@@ -178,7 +178,7 @@ Lecture : bonne en abords, mauvaise en ADV, comme en 2:1. L1-v valide 13 poses f
 
 ## 8. Deuxième jugement : partie 2:18 (Écho du 20/10/2026, 8 h 39 à 8 h 47)
 
-Prédictions scellées inchangées (L1/L1-v 10e8f3…9367, L1-s 9661af…e14c). 37 différés prédits, **32 jugés** ; 5 non jugés faute d'Écho de Mic sur ces cuts (« sansMic »), la séance n'ayant pas encore tout couvert. Détail : `fiches/jugements/2-18-*.json`.
+Prédictions scellées inchangées (L1/L1-v 10e8f3…9367, L1-s 9661af…e14c). 37 différés prédits, **32 jugés** ; 5 non jugés faute d'Écho de l'opérateur sur ces cuts (« sansMic »), la séance n'ayant pas encore tout couvert. Détail : `fiches/jugements/2-18-*.json`.
 
 | Profil | Posés (validés) | Erreur médiane (départ 159,9) | Gain médian | ≤ 10 mm | Posés à plus de 50 mm | dont validés |
 |---|--:|--:|--:|--:|--:|--:|

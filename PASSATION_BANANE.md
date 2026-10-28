@@ -19,7 +19,7 @@ hypothèses sont annoncés comme tels.
 
 ### Le domaine
 
-Mic est spécialiste du traitement de données 3D chez Trealis (ex-Eurailscout
+L'opérateur est spécialiste du traitement de données 3D chez Trealis (ex-Eurailscout
 France). Son travail porte sur le contrôle qualité de nuages de points LiDAR
 pour l'infrastructure ferroviaire de SNCF Réseau. Il travaille dans **ESV**, une
 application web (« l'hôte ESV ») où il valide,
@@ -27,7 +27,7 @@ cut par cut, la position de profils de rail sur le nuage de points.
 
 Un **cut** est une coupe transversale de la voie. Chaque cut porte **deux
 rails** : gauche et droite. Sur chaque rail, ESV propose une position initiale
-du profil (forme U50 dans tout le corpus disponible), et Mic la corrige à la
+du profil (forme U50 dans tout le corpus disponible), et l'opérateur la corrige à la
 main puis valide.
 
 Le **champignon** est la tête du rail. Sa géométrie est ce que le placement
@@ -42,8 +42,8 @@ s'attache à ESV. Elle a trois modes :
 
 | mode | rôle |
 |---|---|
-| **Natif** | Observation strictement passive. Banane regarde Mic travailler et enregistre. Elle n'envoie aucune commande à ESV. C'est le mode de collecte de données. |
-| **Pilote automatique** | Banane propose une position et l'applique sur une plage de cuts. Mode expérimental, contrôlé ensuite par Mic. |
+| **Natif** | Observation strictement passive. Banane regarde l'opérateur travailler et enregistre. Elle n'envoie aucune commande à ESV. C'est le mode de collecte de données. |
+| **Pilote automatique** | Banane propose une position et l'applique sur une plage de cuts. Mode expérimental, contrôlé ensuite par l'opérateur. |
 | **Assisté** | Une proposition sur le cut affiché, à la demande. |
 
 Un quatrième mode, **Correction** (« Mes corrections »), a été **retiré en
@@ -71,7 +71,7 @@ vendor/lidar.js          — lecteur LiDAR partagé
 
 `tools/verify.cjs` vérifie leurs SHA-256 contre
 `audit/v4.4.0-frozen-engine-hashes.json` à chaque exécution du banc. **Ce
-fichier d'empreintes ne doit jamais être modifié.** Mic a posé la règle ainsi :
+fichier d'empreintes ne doit jamais être modifié.** L'opérateur a posé la règle ainsi :
 *« Ne modifie pas verify.cjs ni ses empreintes simplement pour obtenir un
 résultat vert. »* Il n'est pas modifié : il porte toujours les quatre
 empreintes d'origine, celle du moteur comprise.
@@ -101,7 +101,7 @@ porte `benchMode`, `allTestsExecuted` et `nativeCorpus`.
 refuse le moindre test ignoré. C'est le mode du poste de travail, et le seul qui
 autorise à annoncer un banc entièrement vert.
 
-### Autres règles posées par Mic, toujours en vigueur
+### Autres règles posées par l'opérateur, toujours en vigueur
 
 - Ne pas injecter la correction humaine finale au moment où une proposition est
   produite (pas de fuite de la cible dans les entrées).
@@ -243,7 +243,7 @@ Voir §7.
 
 ## 4. Le mode Correction, retiré en 4.5.4
 
-Mic ne l'utilisait plus. Retiré : page supprimée, `manual-page.js` plus injecté
+L'opérateur ne l'utilisait plus. Retiré : page supprimée, `manual-page.js` plus injecté
 dans ESV, `manual-start`/`pause`/`resume` refusées. `manual-end` et
 `manual-download` restent ouvertes pour récupérer une session déjà enregistrée.
 
@@ -395,22 +395,22 @@ le chemin `missing` — branche antérieure à toute question de confiance.
 | gauche | le cerveau, biais vertical seul | +4,55 vertical |
 | droite | **le cerveau**, sélection « graine » par dévers | −3,0 latéral, +1,55 vertical |
 
-Mic a jugé le résultat correct à l'œil dans ESV. **C'est la seule donnée qui
+L'opérateur a jugé le résultat correct à l'œil dans ESV. **C'est la seule donnée qui
 existe sur ce cut** : le lot s'est terminé en `AFTER_STATE_MISSING` avant que
 Banane puisse relire la position finale. Une sélection confirmée bonne.
 
-**Désaccord en cours.** Mic trouve le verrouillage 4.5.7 trop sévère et veut
+**Désaccord en cours.** L'opérateur trouve le verrouillage 4.5.7 trop sévère et veut
 continuer à tester les sélections en l'état. Il a raison sur deux points : le
 chiffre « 1 sur 7 » vient du corpus biaisé (§8), et couper les sélections
 empêche de les observer, donc de corriger ce chiffre. Un réglage d'essai
 explicite (`autoriserSelectionSansPause`, éteint par défaut) est **codé mais non
-livré** — Mic décide des développements.
+livré** — l'opérateur décide des développements.
 
 ---
 
 ## 8. LE POINT LE PLUS IMPORTANT — le corpus d'ajustement est biaisé
 
-Mesure faite sur la session Natif de la part 6 (101 cuts, geste réel de Mic)
+Mesure faite sur la session Natif de la part 6 (101 cuts, geste réel de l'opérateur)
 contre le corpus de corrections qui a servi à l'ajustement du cerveau :
 
 | | part 6, travail réel | parts 17/20, corrections |
@@ -464,7 +464,7 @@ identique, données représentatives.
 
 - **Clipping** : 49 % des points de la zone retirés, **57 % du flanc interne**.
   Non contourné : un point non visible peut appartenir à un autre cut. Question
-  ouverte que seul Mic peut trancher devant ESV — boîtes de découpe trop serrées
+  ouverte que seul l'opérateur peut trancher devant ESV — boîtes de découpe trop serrées
   (réparable) ou flanc non vu sous l'angle du scan (non réparable sans changer
   la prise de vue) ?
 - **Flanc interne** : médiane 0 à 1 point pour un seuil moteur de 6. Verrou du
@@ -476,7 +476,7 @@ identique, données représentatives.
   finit. La vérifier demanderait de croiser les intentions clavier avec les
   instants de capture.
 - **KI-005** : diagnostic fait, correctif différé.
-- **Répétabilité humaine jamais mesurée.** Si Mic replace deux fois le même cut
+- **Répétabilité humaine jamais mesurée.** Si l'opérateur replace deux fois le même cut
   à l'aveugle et obtient 4 d'écart, alors le cerveau à 2,77 est déjà sous le
   bruit de label et il n'y a plus rien à gagner. **C'est la mesure la plus
   importante qui manque** et elle coûte ~30 minutes.
@@ -499,7 +499,7 @@ identique, données représentatives.
    comptage exact d'une grandeur qui ne décidait de rien. Trouvé seulement en
    remontant du chiffre affiché jusqu'aux motifs individuels.
 5. **Un cerveau livré sans être branché**, avec des résultats annoncés comme
-   s'ils s'appliquaient. Mic a testé le moteur seul en croyant tester le cerveau.
+   s'ils s'appliquaient. L'opérateur a testé le moteur seul en croyant tester le cerveau.
 6. **Une garantie de sûreté qui ne tenait pas** (§7), testée contre des seuils
    au lieu de la condition réelle du moteur.
 7. **Deux builds indiscernables** : « 4.5.5b » s'annonçait comme 4.5.5.
@@ -534,7 +534,7 @@ de placement).
 
 ## 13. Priorités, par rapport valeur/coût
 
-1. **Mesurer la répétabilité de Mic** (~30 min de son temps). Détermine s'il
+1. **Mesurer la répétabilité de l'opérateur** (~30 min de son temps). Détermine s'il
    reste de la marge avant de poursuivre le cerveau.
 2. **Réajuster le cerveau sur la collecte Natif** (§9). Corrige le biais de
    corpus du §8, apporte 5 parts nouvelles.

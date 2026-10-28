@@ -1,4 +1,4 @@
-# Séance terrain « test 4 » : consigne pour Mic (12 octobre 2026)
+# Séance terrain « test 4 » : consigne pour l'opérateur (12 octobre 2026)
 
 **Rien ne change dans la façon dont Ariane pose ou valide** : même moteur, mêmes réglages qu'au test 3. Ce paquet corrige
 une seule chose : le bouton « Vider le cache des exports » marche maintenant aussi après un lot qui s'est terminé sur son

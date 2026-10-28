@@ -69,12 +69,12 @@ Si le cut est vert, Ariane **n'y écrit rien**, puis :
 
 **Pourquoi ne pas revenir aux rouges derrière** (cas de la partie 8) :
 
-- ils sont hors des bornes du lot, que Mic a validées (premier cut 5948) ;
+- ils sont hors des bornes du lot, que l'opérateur a validées (premier cut 5948) ;
 - le retour à un cut par l'événement interne d'ESV (`goToCut`, chemin « événement ») n'est pas vérifié sur le vrai ESV ;
 - le chemin pas à pas est borné à 40 cuts (il en faudrait 5 049 pour aller de 5948 à 899) ;
-- élargir les bornes de soi-même changerait le choix de Mic.
+- élargir les bornes de soi-même changerait le choix de l'opérateur.
 
-Ariane s'arrête donc, sans rien envoyer, et nomme les cuts. Mic les ouvre d'un clic.
+Ariane s'arrête donc, sans rien envoyer, et nomme les cuts. L'opérateur les ouvre d'un clic.
 
 ## 4. Ce que le serveur d'ESV voit
 
