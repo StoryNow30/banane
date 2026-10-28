@@ -71,14 +71,93 @@ test('chaque exclusion, chaque domaine et chaque hors-scan a une raison', () => 
 test('l\'arbre suivi n\'a plus d\'occurrence hors exclusions, et l\'absence du motif confidentiel est dite', () => {
   const env = { ...process.env };
   delete env.ARIANE_MOTIFS_INTERDITS;
+  delete env.ARIANE_MOTIFS_INTERDITS_CASSE;
   const r = spawnSync(process.execPath, [outil], { encoding: 'utf8', env });
   assert.equal(r.status, 0, r.stdout);
   assert.equal(r.stdout, '');
   assert.match(r.stderr, /ARIANE_MOTIFS_INTERDITS absente/);
+  assert.match(r.stderr, /ARIANE_MOTIFS_INTERDITS_CASSE absente/);
 });
 
 test('une expression confidentielle illisible arrête l\'outil', () => {
   const r = spawnSync(process.execPath, [outil], { encoding: 'utf8', env: { ...process.env, ARIANE_MOTIFS_INTERDITS: '(' } });
   assert.equal(r.status, 2);
+  assert.match(r.stderr, /invalide/);
+});
+
+/* Marque plantée par fragments : le fichier ne contient pas la chaîne en clair. */
+function marqueCasse() {
+  return ['Ab', 'c'].join('');
+}
+
+test('le canal sensible à la casse trouve la marque et pas sa minuscule, l\'ancien canal reste insensible', () => {
+  const marque = marqueCasse();
+  const p = politique();
+  p.confidentielCasse = S.compilerConfidentielCasse({ ARIANE_MOTIFS_INTERDITS_CASSE: marque });
+  assert.equal(p.confidentielCasse.flags.includes('i'), false);
+  const trouve = S.releverTexte(['vu ', marque].join(''), p);
+  assert.deepEqual(trouve.map(t => `f.txt:${t.ligne}:${t.motif}`), ['f.txt:1:confidentiel']);
+  assert.equal(S.releverTexte(['vu ', marque.toLowerCase()].join(''), p).length, 0);
+  assert.equal(S.releverTexte(['vu ', marque.toUpperCase()].join(''), p).length, 0);
+
+  p.confidentielCasse = null;
+  p.confidentiel = S.compilerConfidentiel({ ARIANE_MOTIFS_INTERDITS: marque });
+  assert.equal(p.confidentiel.flags.includes('i'), true);
+  const insensible = S.releverTexte(['vu ', marque.toLowerCase(), ' et ', marque.toUpperCase()].join(''), p);
+  assert.equal(insensible.filter(t => t.motif === 'confidentiel').length, 2);
+});
+
+test('les deux variables ensemble signalent chaque occurrence une fois', () => {
+  const marque = marqueCasse();
+  const libre = ['se', 'cretA'].join('');
+  const memeMotif = {
+    ...politique(),
+    exclusions: [],
+    confidentiel: S.compilerConfidentiel({ ARIANE_MOTIFS_INTERDITS: marque }),
+    confidentielCasse: S.compilerConfidentielCasse({ ARIANE_MOTIFS_INTERDITS_CASSE: marque }),
+  };
+  assert.deepEqual(S.lignesDeTexte('note.txt', marque, memeMotif), ['note.txt:1:confidentiel']);
+  assert.deepEqual(
+    S.lignesDeTexte('note.txt', [marque.toLowerCase(), ' ', marque].join(''), memeMotif),
+    ['note.txt:1:confidentiel', 'note.txt:1:confidentiel']
+  );
+  const melange = {
+    ...politique(),
+    exclusions: [],
+    confidentiel: S.compilerConfidentiel({ ARIANE_MOTIFS_INTERDITS: libre }),
+    confidentielCasse: S.compilerConfidentielCasse({ ARIANE_MOTIFS_INTERDITS_CASSE: marque }),
+  };
+  assert.deepEqual(
+    S.lignesDeTexte('note.txt', [marque.toLowerCase(), ' ', libre.toLowerCase()].join(''), melange),
+    ['note.txt:1:confidentiel']
+  );
+  assert.deepEqual(
+    S.lignesDeTexte('note.txt', [marque, '\n', libre].join(''), melange),
+    ['note.txt:1:confidentiel', 'note.txt:2:confidentiel']
+  );
+});
+
+test('l\'avertissement nomme chacune des variables absentes', () => {
+  const lesDeux = S.avertissement({});
+  assert.match(lesDeux, /ARIANE_MOTIFS_INTERDITS absente/);
+  assert.match(lesDeux, /ARIANE_MOTIFS_INTERDITS_CASSE absente/);
+  const sansCasse = S.avertissement({ ARIANE_MOTIFS_INTERDITS: 'secretA' });
+  assert.match(sansCasse, /ARIANE_MOTIFS_INTERDITS_CASSE absente/);
+  assert.doesNotMatch(sansCasse, /ARIANE_MOTIFS_INTERDITS absente/);
+  const sansLibre = S.avertissement({ ARIANE_MOTIFS_INTERDITS_CASSE: marqueCasse() });
+  assert.match(sansLibre, /ARIANE_MOTIFS_INTERDITS absente/);
+  assert.doesNotMatch(sansLibre, /ARIANE_MOTIFS_INTERDITS_CASSE absente/);
+  assert.equal(S.avertissement({ ARIANE_MOTIFS_INTERDITS: 'secretA', ARIANE_MOTIFS_INTERDITS_CASSE: 'secretB' }), '');
+});
+
+test('une expression sensible à la casse illisible arrête l\'outil', () => {
+  assert.throws(() => S.compilerConfidentielCasse({ ARIANE_MOTIFS_INTERDITS_CASSE: '(' }), /ARIANE_MOTIFS_INTERDITS_CASSE/);
+  assert.equal(S.compilerConfidentielCasse({}), null);
+  const env = { ...process.env };
+  delete env.ARIANE_MOTIFS_INTERDITS;
+  env.ARIANE_MOTIFS_INTERDITS_CASSE = '(';
+  const r = spawnSync(process.execPath, [outil], { encoding: 'utf8', env });
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /ARIANE_MOTIFS_INTERDITS_CASSE/);
   assert.match(r.stderr, /invalide/);
 });

@@ -6,10 +6,13 @@
  * Quatre motifs publics : courriel, adresse web, code de projet ESV, UUID.
  * La liste blanche des adresses et les exclusions (chacune avec sa raison) sont en tête de
  * tools/scan-identite-exclusions.json. L'hôte ESV n'y est pas recopié : il est lu dans manifest.json.
- * Motifs confidentiels : variable ARIANE_MOTIFS_INTERDITS (expressions séparées par |), jamais écrite ici.
- * Sans cette variable, l'outil le dit et ne contrôle que les quatre motifs publics.
+ * Motifs confidentiels, jamais écrits ici. Expressions séparées par | :
+ *   ARIANE_MOTIFS_INTERDITS       compilée sans tenir compte de la casse (drapeau i) ;
+ *   ARIANE_MOTIFS_INTERDITS_CASSE mêmes règles, compilée en tenant compte de la casse (sans le drapeau i).
+ * Les deux peuvent coexister : un motif trouvé par l'une ou l'autre est signalé. Si l'une manque,
+ * l'outil dit laquelle. Sans les deux, seuls les quatre motifs publics sont contrôlés.
  * Sortie : une ligne par occurrence encore signalée, « chemin:ligne:motif ».
- * Code 1 s'il en reste au moins une, 2 si la politique ou l'expression confidentielle est illisible.
+ * Code 1 s'il en reste au moins une, 2 si la politique ou une expression confidentielle est illisible.
  */
 'use strict';
 const fs = require('node:fs');
@@ -69,17 +72,31 @@ function hotesExtension(racine = RACINE) {
   return hotes;
 }
 
-function compilerConfidentiel(env) {
-  const conf = (env.ARIANE_MOTIFS_INTERDITS || '').trim();
+function compilerMotif(env, nom, drapeaux) {
+  const conf = (env[nom] || '').trim();
   if (!conf) return null;
-  try { return new RegExp(conf, 'gi'); }
-  catch { throw new Error('ARIANE_MOTIFS_INTERDITS : expression régulière invalide'); }
+  try { return new RegExp(conf, drapeaux); }
+  catch { throw new Error(`${nom} : expression régulière invalide`); }
+}
+
+function compilerConfidentiel(env) {
+  return compilerMotif(env, 'ARIANE_MOTIFS_INTERDITS', 'gi');
+}
+
+function compilerConfidentielCasse(env) {
+  return compilerMotif(env, 'ARIANE_MOTIFS_INTERDITS_CASSE', 'g');
 }
 
 function avertissement(env) {
-  return (env.ARIANE_MOTIFS_INTERDITS || '').trim()
-    ? ''
-    : 'ARIANE_MOTIFS_INTERDITS absente : les motifs confidentiels ne sont pas contrôlés (quatre motifs publics seulement).';
+  const manquantes = [];
+  if (!(env.ARIANE_MOTIFS_INTERDITS || '').trim()) manquantes.push('ARIANE_MOTIFS_INTERDITS');
+  if (!(env.ARIANE_MOTIFS_INTERDITS_CASSE || '').trim()) manquantes.push('ARIANE_MOTIFS_INTERDITS_CASSE');
+  if (!manquantes.length) return '';
+  const liste = manquantes.map(nom => `${nom} absente`).join(', ');
+  if (manquantes.length === 2) {
+    return `${liste} : les motifs confidentiels ne sont pas contrôlés (quatre motifs publics seulement).`;
+  }
+  return `${liste} : ce canal n'est pas contrôlé.`;
 }
 
 function decomposerUrl(brut) {
@@ -124,8 +141,9 @@ function estHoteEsv(brut, hotes) {
 /* Occurrences d'un texte, avant exclusion de chemin. Un motif confidentiel qui tombe dans une
  * adresse de l'hôte ESV est compté comme hôte ESV : l'exclusion de cet hôte couvre le secret
  * du dépôt sans avaler un autre motif confidentiel (un nom, par exemple). */
-function releverTexte(texte, { liste, hotes, confidentiel }) {
+function releverTexte(texte, { liste, hotes, confidentiel, confidentielCasse }) {
   const trouvailles = [];
+  const vus = new Set();
   const lignes = String(texte).split('\n');
   const plagesHote = [];
   lignes.forEach((ligne, index) => {
@@ -139,15 +157,26 @@ function releverTexte(texte, { liste, hotes, confidentiel }) {
     for (const nom of ['courriel', 'projetESV', 'uuid']) {
       for (const brut of ligne.matchAll(RE[nom]())) trouvailles.push({ ligne: ligneNo, motif: nom, debut: brut.index, fin: brut.index + brut[0].length });
     }
-    if (confidentiel) {
-      confidentiel.lastIndex = 0;
-      for (const brut of ligne.matchAll(confidentiel)) {
-        const dansHote = plagesHote.some(p => p.ligne === ligneNo && brut.index >= p.debut && brut.index < p.fin);
-        if (!dansHote) trouvailles.push({ ligne: ligneNo, motif: 'confidentiel', debut: brut.index, fin: brut.index + brut[0].length });
-      }
-    }
+    ajouterConfidentiel(trouvailles, ligne, ligneNo, confidentiel, plagesHote, vus);
+    ajouterConfidentiel(trouvailles, ligne, ligneNo, confidentielCasse, plagesHote, vus);
   });
   return trouvailles;
+}
+
+/* Une même plage trouvée par les deux canaux n'est signalée qu'une fois. */
+function ajouterConfidentiel(trouvailles, ligne, ligneNo, re, plagesHote, vus) {
+  if (!re) return;
+  re.lastIndex = 0;
+  for (const brut of ligne.matchAll(re)) {
+    const dansHote = plagesHote.some(p => p.ligne === ligneNo && brut.index >= p.debut && brut.index < p.fin);
+    if (dansHote) continue;
+    const debut = brut.index;
+    const fin = debut + brut[0].length;
+    const cle = `${ligneNo}:${debut}:${fin}`;
+    if (vus.has(cle)) continue;
+    vus.add(cle);
+    trouvailles.push({ ligne: ligneNo, motif: 'confidentiel', debut, fin });
+  }
 }
 
 function estExclu(chemin, motif, exclusions) {
@@ -172,10 +201,24 @@ function fichiersSuivis(racine = RACINE) {
   return r.stdout.toString('utf8').split('\0').filter(Boolean);
 }
 
+function lignesDeTexte(chemin, texte, ctx) {
+  const lignes = [];
+  for (const t of releverTexte(texte, ctx)) {
+    if (estExclu(chemin, t.motif, ctx.exclusions || [])) continue;
+    lignes.push(`${chemin}:${t.ligne}:${t.motif}`);
+  }
+  return lignes;
+}
+
 function scannerArbre(env = process.env, racine = RACINE) {
   const politique = chargerPolitique();
-  const confidentiel = compilerConfidentiel(env);
-  const hotes = hotesExtension(racine);
+  const ctx = {
+    liste: politique.liste,
+    hotes: hotesExtension(racine),
+    exclusions: politique.exclusions,
+    confidentiel: compilerConfidentiel(env),
+    confidentielCasse: compilerConfidentielCasse(env),
+  };
   const lignes = [];
   for (const chemin of fichiersSuivis(racine)) {
     if (horsChemin(chemin, politique.horsScan)) continue;
@@ -184,10 +227,7 @@ function scannerArbre(env = process.env, racine = RACINE) {
     try { buf = fs.readFileSync(abs); }
     catch { continue; }
     if (buf.includes(0)) continue;
-    for (const t of releverTexte(buf.toString('utf8'), { liste: politique.liste, hotes, confidentiel })) {
-      if (estExclu(chemin, t.motif, politique.exclusions)) continue;
-      lignes.push(`${chemin}:${t.ligne}:${t.motif}`);
-    }
+    lignes.push(...lignesDeTexte(chemin, buf.toString('utf8'), ctx));
   }
   return { lignes, avertissement: avertissement(env) };
 }
@@ -204,4 +244,7 @@ if (require.main === module) {
   }
 }
 
-module.exports = { chargerPolitique, hotesExtension, releverTexte, estExclu, scannerArbre, avertissement, compilerConfidentiel, MOTIFS };
+module.exports = {
+  chargerPolitique, hotesExtension, releverTexte, estExclu, scannerArbre, avertissement,
+  compilerConfidentiel, compilerConfidentielCasse, lignesDeTexte, MOTIFS,
+};

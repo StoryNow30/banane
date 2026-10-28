@@ -10,8 +10,9 @@
  *
  * Sans `gh` (ou hors ligne), `dire --boite` écrit le message dans hub/boite/CH-NNN.md ; `--pousser` le commet
  * et le pousse sur la branche courante. Tout message est passé au scan des motifs interdits AVANT d'être envoyé :
- * courriel, adresse web hors liste blanche, code de projet ESV, UUID, et les motifs confidentiels lus dans la
- * variable ARIANE_MOTIFS_INTERDITS (jamais écrits ici). Un message qui en contient est refusé (code 2). */
+ * courriel, adresse web hors liste blanche, code de projet ESV, UUID, et les motifs confidentiels lus dans
+ * ARIANE_MOTIFS_INTERDITS (sans tenir compte de la casse) et ARIANE_MOTIFS_INTERDITS_CASSE (en tenant compte
+ * de la casse). Jamais écrites ici. Un message qui en contient est refusé (code 2). */
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
 
@@ -27,18 +28,26 @@ const MOTIFS_PUBLICS={
  uuid:/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
 };
 
-/* Rend la liste des motifs trouvés (noms seulement, jamais les valeurs confidentielles). */
+function compilerMotif(env,nom,drapeaux){
+ const conf=(env[nom]||'').trim();
+ if(!conf)return null;
+ try{return new RegExp(conf,drapeaux);}catch{throw new Error(nom+' : expression régulière invalide');}
+}
+/* Rend la liste des motifs trouvés (noms seulement, jamais les valeurs confidentielles).
+ * Une même plage trouvée par les deux canaux confidentiels ne compte qu'une fois. */
 function verifierMessage(texte,env=process.env){
  const trouves=[];
  for(const [nom,re] of Object.entries(MOTIFS_PUBLICS)){
   const occ=[...texte.matchAll(re)].map(m=>m[0]).filter(v=>nom!=='web'||!LISTE_BLANCHE_WEB.some(w=>w.test(v)));
   if(occ.length)trouves.push({motif:nom,occurrences:occ.length});
  }
- const conf=(env.ARIANE_MOTIFS_INTERDITS||'').trim();
- if(conf){
-  let re;try{re=new RegExp(conf,'gi');}catch{throw new Error('ARIANE_MOTIFS_INTERDITS : expression régulière invalide');}
-  const n=[...texte.matchAll(re)].length;if(n)trouves.push({motif:'confidentiel',occurrences:n});
+ const vus=new Set();
+ for(const [nom,drapeaux] of [['ARIANE_MOTIFS_INTERDITS','gi'],['ARIANE_MOTIFS_INTERDITS_CASSE','g']]){
+  const re=compilerMotif(env,nom,drapeaux);
+  if(!re)continue;
+  for(const m of texte.matchAll(re))vus.add(m.index+':'+m[0].length);
  }
+ if(vus.size)trouves.push({motif:'confidentiel',occurrences:vus.size});
  return trouves;
 }
 

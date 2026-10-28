@@ -26,6 +26,25 @@ test('hub : les motifs confidentiels viennent de la variable, jamais du code',()
  assert.deepEqual(H.verifierMessage('un SecretB ici',env),[{motif:'confidentiel',occurrences:1}]);
  assert.throws(()=>H.verifierMessage('x',{ARIANE_MOTIFS_INTERDITS:'('}),/invalide/);
 });
+test('hub : le canal sensible à la casse trouve la marque et pas sa minuscule, l\'ancien reste insensible',()=>{
+ const marque=['Ab','c'].join('');
+ const envCasse={ARIANE_MOTIFS_INTERDITS_CASSE:marque};
+ assert.deepEqual(H.verifierMessage('vu '+marque,envCasse),[{motif:'confidentiel',occurrences:1}]);
+ assert.deepEqual(H.verifierMessage('vu '+marque.toLowerCase(),envCasse),[]);
+ assert.deepEqual(H.verifierMessage('vu '+marque.toLowerCase(),{ARIANE_MOTIFS_INTERDITS:marque}),[{motif:'confidentiel',occurrences:1}]);
+});
+test('hub : les deux variables ensemble comptent chaque occurrence une fois, une expression illisible est refusée',()=>{
+ const marque=['Ab','c'].join('');
+ const libre=['se','cretA'].join('');
+ const meme={ARIANE_MOTIFS_INTERDITS:marque,ARIANE_MOTIFS_INTERDITS_CASSE:marque};
+ assert.deepEqual(H.verifierMessage(marque,meme),[{motif:'confidentiel',occurrences:1}]);
+ assert.deepEqual(H.verifierMessage(marque.toLowerCase()+' '+marque,meme),[{motif:'confidentiel',occurrences:2}]);
+ const env={ARIANE_MOTIFS_INTERDITS:libre,ARIANE_MOTIFS_INTERDITS_CASSE:marque};
+ assert.deepEqual(H.verifierMessage(marque+' '+libre.toLowerCase(),env),[{motif:'confidentiel',occurrences:2}]);
+ assert.deepEqual(H.verifierMessage(marque.toLowerCase(),env),[]);
+ assert.throws(()=>H.verifierMessage('x',{ARIANE_MOTIFS_INTERDITS_CASSE:'('}),/ARIANE_MOTIFS_INTERDITS_CASSE/);
+ assert.throws(()=>H.verifierMessage('x',{ARIANE_MOTIFS_INTERDITS:'secretA',ARIANE_MOTIFS_INTERDITS_CASSE:'('}),/invalide/);
+});
 test('hub : le message est formaté avec émetteur, type, chantier, heure de Paris et signature',()=>{
  const m=H.formater({de:'cursor',type:'rapport',chantier:'CH-001',texte:'  fait.  ',date:new Date('2026-10-27T08:05:00Z')});
  assert.match(m,/^\*\*\[cursor → tous\] rapport · CH-001 · 27\/10\/2026 09:05 Paris\*\*\n\nfait\.\n\n---\n_hub Ariane · émetteur : cursor_$/);
