@@ -1,6 +1,6 @@
 # Validation terrain de la collecte géométrique Natif
 
-Version préparée : **4.4.3 TEST**. Le premier retour de Mic sur la V4.4.2 confirme que le bouton « Banane V4 · ouvrir » **restait visible** pendant l'ouverture d'une fenêtre : son masquage n'était pas validé. Le correctif V4.4.3 nécessite un essai ESV réel. Les tests locaux ne remplacent ni Edge, ni Potree, ni IndexedDB. L'audit du vrai export V4.4.1 est dans `audit/native-v4.4.1-real-audit.json` : 76 visites, 539 309 points exportés dont 297 185 visibles, mais zéro rail comparable prouvé. Il ne faut pas requalifier ces données anciennes.
+Version préparée : **4.4.3 TEST**. Le premier retour de l'opérateur sur la V4.4.2 confirme que le bouton « Banane V4 · ouvrir » **restait visible** pendant l'ouverture d'une fenêtre : son masquage n'était pas validé. Le correctif V4.4.3 nécessite un essai ESV réel. Les tests locaux ne remplacent ni Edge, ni Potree, ni IndexedDB. L'audit du vrai export V4.4.1 est dans `audit/native-v4.4.1-real-audit.json` : 76 visites, 539 309 points exportés dont 297 185 visibles, mais zéro rail comparable prouvé. Il ne faut pas requalifier ces données anciennes.
 
 ## Défaut reproduit sur les trois exports V4.4
 
@@ -40,7 +40,7 @@ La 4.4.2 stocke pendant l'acquisition, rail par rail, un instantané qualifié e
 
 Une capture non vide ne suffit pas. Chaque rail doit aussi satisfaire les contrôles de transformation, d'association avec l'état initial, de densité et de couverture longitudinale. La paire gauche/droite peut provenir de deux instants différents si l'identité et le repère sont compatibles.
 
-## Session ESV demandée à Mic
+## Session ESV demandée à l'opérateur
 
 1. Charger la 4.4.3 dans le dossier Edge déjà utilisé, recharger l'extension puis complètement la page ESV. Quand tout est fermé, le bouton doit dire « Banane 4.4.3 · ouvrir ». Ouvrir Banane : son panneau doit dire « V4.4.3 · TEST » et le bouton doit disparaître immédiatement. Ouvrir si possible un second panneau ; vérifier qu'il ne revient qu'après fermeture des deux. Si « Banane V4 · ouvrir » est encore visible, vérifier d'abord qu'une ancienne copie de l'extension n'est pas active.
 2. Pendant deux minutes avec Natif inactif, noter si rotation, sélection des rails, pointage et navigation sont fluides.
@@ -76,9 +76,9 @@ L'entrée du moteur est construite et empreintée avant la lecture de la positio
 | G/D, rail seul, navigation rapide, revisite, pause et interruption | Testés localement |
 | Rejeu moteur sans fuite de la référence | Testé localement |
 | Checkpoint V4.4.2 avant intention | Tests Node réussis ; contrôle Edge attendu |
-| Bouton flottant V4.4.2 | **Échec confirmé par Mic dans ESV** |
+| Bouton flottant V4.4.2 | **Échec confirmé par l'opérateur dans ESV** |
 | Bouton flottant V4.4.3 | Correctif testé localement ; **nouvel essai Edge attendu** |
-| Session Edge/ESV 4.4.3 et preuves visuelles réelles | **En attente du JSON de Mic** |
-| Fluidité WebGL/Potree réelle | **En attente du parcours comparatif de Mic** |
+| Session Edge/ESV 4.4.3 et preuves visuelles réelles | **En attente du JSON de l'opérateur** |
+| Fluidité WebGL/Potree réelle | **En attente du parcours comparatif de l'opérateur** |
 
 `serverConfirmationStatus: not-observed` est normal en Natif et n'est pas compté comme une erreur de collecte. Tous les exemples restent `usableForTraining: false` ; leur statut maximal est une candidature à l'analyse ou à une revue humaine.

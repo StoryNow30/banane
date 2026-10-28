@@ -1,4 +1,4 @@
-# Ariane 4.9.0 — notes de version pour Mic
+# Ariane 4.9.0 — notes de version pour l'opérateur
 
 Version candidate stable, préparée le 15 octobre 2026. **C'est le code de la test 17, celle que tu as essayée sur la
 partie 27**, plus deux corrections de la relecture finale (ci-dessous) ; le numéro de version et les documents changent.

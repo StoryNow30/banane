@@ -35,7 +35,7 @@ ajuste une droite au plan de roulement (`topRows`) et une au flanc interne
 
 Les deux droites ne servent qu'au contrôle de support (diagnostic).
 
-**MESURÉ (P0(a), 16 octobre 2026)** — `tools/p0a-estimateurs.cjs`, détail dans `fiches/P0_MESURES.md` § 4. Erreur 2D médiane à la pose de Mic, avant calage de convention. La **graine** (delta publié) reste le meilleur estimateur : 6,4 mm sur la partie 17 (451 rails), contre 8,4 mm pour l'intersection et 6,7 mm pour la moyenne. Sur la partie 20 (365 rails), égalité entre la graine (5,1 mm) et l'intersection (5,4 mm, écart nul) ; la moyenne y est 0,13 mm meilleure, écart absent de la partie 17. Aucune classe de flanc (fort, partiel, nul ; 959 rails réunis) ne change le gagnant. L'écart |graine − intersection| ne sert pas de trait pour M6 (AUC 0,55).
+**MESURÉ (P0(a), 16 octobre 2026)** — `tools/p0a-estimateurs.cjs`, détail dans `fiches/P0_MESURES.md` § 4. Erreur 2D médiane à la pose de l'opérateur, avant calage de convention. La **graine** (delta publié) reste le meilleur estimateur : 6,4 mm sur la partie 17 (451 rails), contre 8,4 mm pour l'intersection et 6,7 mm pour la moyenne. Sur la partie 20 (365 rails), égalité entre la graine (5,1 mm) et l'intersection (5,4 mm, écart nul) ; la moyenne y est 0,13 mm meilleure, écart absent de la partie 17. Aucune classe de flanc (fort, partiel, nul ; 959 rails réunis) ne change le gagnant. L'écart |graine − intersection| ne sert pas de trait pour M6 (AUC 0,55).
 
 **Portes d'admission** : `top.count ≥ 15` (`minTop`), `faceCount ≥ 6`
 (`minFace`), pentes non saturées, et `lossRatio ≥ 1,5` (competitive set).

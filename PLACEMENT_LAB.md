@@ -12,7 +12,7 @@ node tools/native-offline-evaluate.cjs --input CHEMIN/banane-native-v4-178932868
 node tools/placement-lab.cjs --input CHEMIN/banane-native-v4-1789328681673.json --out-dir audit/placement-run
 ```
 
-Le témoin de 85 Mo est fourni séparément par Mic et **n'est pas inclus** dans l'archive du code. Les deux bancs vérifient les géométries déjà présentes dans le JSON : pas de connexion ESV, aucune navigation, aucune commande et aucune modification de paramètres. Comparez l'empreinte SHA-256 du témoin avec le manifeste avant de rapprocher les chiffres.
+Le témoin de 85 Mo est fourni séparément par l'opérateur et **n'est pas inclus** dans l'archive du code. Les deux bancs vérifient les géométries déjà présentes dans le JSON : pas de connexion ESV, aucune navigation, aucune commande et aucune modification de paramètres. Comparez l'empreinte SHA-256 du témoin avec le manifeste avant de rapprocher les chiffres.
 
 ## Contrat d'entrée — par visite et par rail
 
@@ -34,4 +34,4 @@ La référence humaine ne devient visible qu'après exécution. Elle est **candi
 - `rails.json` : une ligne par visite avec résultats gauche/droite et paire, empreinte d'entrée, snapshot et provenance, position initiale, proposition, référence candidate, écarts si calculables et motif de refus ;
 - `overlays.json` et `overlays/*.svg` : coupes Y latéral / Z vertical, nuage visible, points hors découpe, profil initial, proposition, finale candidate, axes et statut des unités.
 
-Ces superpositions sont une vérification visuelle de la **cohérence interne des données exportées** ; sans ESV connecté, elles ne peuvent certifier à elles seules la fidélité au rendu réellement vu par Mic. Le témoin est connu et ne sera jamais revendiqué comme jeu de test indépendant. Le découpage entraînement/calibration/test futur doit être défini par blocs spatiaux indépendants, après accès à un chaînage ESV fiable et révision des labels.
+Ces superpositions sont une vérification visuelle de la **cohérence interne des données exportées** ; sans ESV connecté, elles ne peuvent certifier à elles seules la fidélité au rendu réellement vu par l'opérateur. Le témoin est connu et ne sera jamais revendiqué comme jeu de test indépendant. Le découpage entraînement/calibration/test futur doit être défini par blocs spatiaux indépendants, après accès à un chaînage ESV fiable et révision des labels.

@@ -10,11 +10,11 @@ de version qu'il cite sont ceux de l'époque, pas ceux de la version installée.
 
 La 4.4.2 reprend le lecteur passif de la 4.4.1 et enregistre un checkpoint immuable qualifié **par rail** dès que les points visibles, la pose initiale et la couverture sont suffisants. Elle conserve les dates d'acquisition et l'acquittement de stockage indépendamment de la réception des événements et du résumé final de lecture. Un chargement de nœud Potree sans mouvement de caméra n'interrompt plus automatiquement la capture ; une incompatibilité de pose, de source ou de clipping est motivée et une contradiction ultérieure révoque la preuve. Un checkpoint gauche ne dépend pas de la disponibilité du droit. Le rejeu hors ligne utilise seulement les points dans le clipping, sans donner la référence finale au moteur. L'ancien export V4.4.1 n'est pas promu rétroactivement : 0 rail comparable prouvé.
 
-Le masquage V4.4.2 a échoué sur la capture d'écran de Mic. La V4.4.3 retire le bouton flottant du DOM pendant la présence d'une fenêtre Banane et le remet seulement après fermeture de toutes ; présence indiquée par fenêtres ouvertes et pages connectées, non par filtre URL des onglets. Cette gestion d'interface n'affecte pas les gestes ni les commandes ESV et reste à vérifier dans Edge.
+Le masquage V4.4.2 a échoué sur la capture d'écran de l'opérateur. La V4.4.3 retire le bouton flottant du DOM pendant la présence d'une fenêtre Banane et le remet seulement après fermeture de toutes ; présence indiquée par fenêtres ouvertes et pages connectées, non par filtre URL des onglets. Cette gestion d'interface n'affecte pas les gestes ni les commandes ESV et reste à vérifier dans Edge.
 
 ## But et passivité
 
-Le Mode Natif observe le travail manuel de Mic dans ESV afin de constituer des exemples humains. Il ne change jamais la caméra, la sélection, les rails ou le cut et n'envoie ni `VALIDATE`, ni `SKIP`. Les gestes ESV ne sont ni bloqués, ni retardés volontairement, ni réémis.
+Le Mode Natif observe le travail manuel de l'opérateur dans ESV afin de constituer des exemples humains. Il ne change jamais la caméra, la sélection, les rails ou le cut et n'envoie ni `VALIDATE`, ni `SKIP`. Les gestes ESV ne sont ni bloqués, ni retardés volontairement, ni réémis.
 
 Le moteur de placement et le pilote automatique sont inchangés. Le lecteur corrigé est réservé au Mode Natif et ne demande aucun point supplémentaire à Potree : il lit seulement les buffers déjà chargés.
 

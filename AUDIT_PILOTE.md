@@ -23,7 +23,7 @@ Unités de scène ×10⁻³ pour les distances. Ce ne sont pas des millimètres.
 
 **La moitié du pilote était gelée.** Plusieurs défauts ci-dessous sont dans
 `src/engine.js` et ne pouvaient pas être corrigés sans lever le gel — décision
-de Mic, pas la mienne. Ils étaient marqués **[GELÉ]**.
+de l'opérateur, pas la mienne. Ils étaient marqués **[GELÉ]**.
 
 **V4.6.0 a levé ce gel pour les défauts 4 et 9**, sur décision explicite, et
 seulement pour eux. Le moteur n'est pas libre : il est ré-épinglé sur
@@ -80,7 +80,7 @@ lit les matrices monde à chaque appel, donc un rail déplacé est vu
 immédiatement — propriété verrouillée par test, car mémoïser les poses aurait
 cassé en silence le contrôle « les rails n'ont pas bougé ».
 
-*Réserve de Mic, juste :* si ESV remplaçait l'objet Three.js d'un rail par un
+*Réserve de l'opérateur, juste :* si ESV remplaçait l'objet Three.js d'un rail par un
 nouvel objet de même pose, une garde « même cut + même matrice racine »
 servirait une référence orpheline. La garde vérifie donc **aussi** que les
 objets mémorisés sont encore enfants de la racine. Deux tests ajoutés : le
@@ -95,7 +95,7 @@ détaché force un recalcul au lieu d'être servi depuis le cache.
 nœud (jusqu'à 512), triait ces chaînes, puis refaisait un `JSON.stringify` de
 l'ensemble.
 
-*Réserve de Mic, juste :* cette fonction décide QUAND lire. Une collision ne
+*Réserve de l'opérateur, juste :* cette fonction décide QUAND lire. Une collision ne
 donnerait pas une métrique fausse — elle ferait lire un nuage incomplet. Et il
 se méfiait à raison d'une simple somme commutative.
 
@@ -142,7 +142,7 @@ baisser lit un nuage moins chargé. Il est rendu visible pour pouvoir être
 
 **CORRIGÉ en V4.6.0**, après levée du gel — l'issue n°1 du tableau ci-dessous.
 
-*Révisé après revue de Mic, qui a vu plus loin que la première rédaction.*
+*Révisé après revue de l'opérateur, qui a vu plus loin que la première rédaction.*
 
 Ce n'est pas seulement « ESV navigue trop vite ». `src/engine.js` :
 
@@ -259,7 +259,7 @@ compte du raccourci. À investiguer devant ESV.
 
 ## Défaut 7 — l'écartement de voie n'est vérifié nulle part
 
-**CORRIGÉ EN 4.7 pour la partie « vérifié nulle part » — trouvé par Mic, à l'œil, sur le cut 6/9480.** La suite de cette section reste la rédaction d'origine ; ce qui a changé est consigné à la fin.
+**CORRIGÉ EN 4.7 pour la partie « vérifié nulle part » — trouvé par l'opérateur, à l'œil, sur le cut 6/9480.** La suite de cette section reste la rédaction d'origine ; ce qui a changé est consigné à la fin.
 
 Ni le moteur ni le cerveau ne contrôlent l'écartement résultant du placement.
 Chaque rail est placé indépendamment.
@@ -352,7 +352,7 @@ Si ESV exposait une écriture directe de la pose, ces attentes disparaîtraient.
 Aucun chemin ne ramène le lot en `RUNNING` sur le cut suivant : il faut relancer
 un lot. Sur un lot de 23 cuts dont un seul est ambigu, cela coupe les 22 autres.
 
-*Aggravé, relevé par Mic :* la même fonction écrit
+*Aggravé, relevé par l'opérateur :* la même fonction écrit
 `« Cut N préservé pour reprise manuelle. Ouvre Mes corrections. »` — or le mode
 Correction a été retiré en 4.5.4. Le moteur gelé contient donc un chemin vers un
 flux de travail qui n'existe plus. Le panneau traduit ce message à l'affichage,

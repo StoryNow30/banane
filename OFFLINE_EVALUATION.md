@@ -38,7 +38,7 @@ Le certificat détaillé, incluant les SHA-256 des quatre entrées, est `audit/i
 | Verticale | 4,02 / 7,86 / 13,00 mm | 4,00 / 7,35 / 12,00 mm |
 | Euclidienne | 4,63 / 8,77 / 100,96 mm | 4,64 / 7,79 / 67,12 mm |
 
-Avec un seuil descriptif de 1 mm, aucune des 13 références sans mouvement n'obtient deux propositions immobiles et les 43 rails laissés inchangés par Mic reçoivent tous un déplacement moteur. Ces chiffres ne déclenchent aucun changement automatique. La corrélation de Pearson confiance/erreur euclidienne vaut -0,053 sur 136 rails comparables : la confiance actuelle ne constitue pas une calibration de l'erreur.
+Avec un seuil descriptif de 1 mm, aucune des 13 références sans mouvement n'obtient deux propositions immobiles et les 43 rails laissés inchangés par l'opérateur reçoivent tous un déplacement moteur. Ces chiffres ne déclenchent aucun changement automatique. La corrélation de Pearson confiance/erreur euclidienne vaut -0,053 sur 136 rails comparables : la confiance actuelle ne constitue pas une calibration de l'erreur.
 
 Les trois pires divergences sont 9041 gauche (100,96 mm), 6576 gauche (82,11 mm) et 5123 droite (67,12 mm). Le résultat complet par cut, avec état initial, proposition, état final humain, deltas, confiance, label, statut et motif, est `datasets/automatic/offline-evaluation-v4.3.0.json`.
 

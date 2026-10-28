@@ -51,7 +51,7 @@ Exécution finale : 2026-09-13T18:34:08.559Z. Node v24.19.0, plateforme linux.
 
 ## Retour terrain et correctif d'interface
 
-Mic a fourni une capture montrant « Banane V4 · ouvrir » encore visible après ouverture d'une fenêtre. L'essai V4.4.2 invalide le masquage annoncé par nos tests précédents ; la cause technique exacte dans son navigateur reste à déterminer. Des tests V4.4.3 contrôlent la fenêtre suivie malgré un filtre URL d'extension vide, deux fenêtres ouvertes, une réponse tardive, l'absence physique du bouton dans le DOM et la reconnexion d'une page après interruption du service worker. Seul un nouvel essai dans Edge confirmera le résultat.
+L'opérateur a fourni une capture montrant « Banane V4 · ouvrir » encore visible après ouverture d'une fenêtre. L'essai V4.4.2 invalide le masquage annoncé par nos tests précédents ; la cause technique exacte dans son navigateur reste à déterminer. Des tests V4.4.3 contrôlent la fenêtre suivie malgré un filtre URL d'extension vide, deux fenêtres ouvertes, une réponse tardive, l'absence physique du bouton dans le DOM et la reconnexion d'une page après interruption du service worker. Seul un nouvel essai dans Edge confirmera le résultat.
 
 ## Audit reproductible du JSON réel V4.4.1
 

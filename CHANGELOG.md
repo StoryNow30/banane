@@ -173,14 +173,14 @@ Consigne : `consignes/seance-terrain-4.9.5-test-13-2026-10-19.md` ; retour arri�
 - **Export des lectures : `readStrategy.clicHumain`** (annoncé par `fiches/RAPIDE_HUMAIN.md`) était vide quand le clic corrigé venait du choix du panneau (depuis la test 6, le mode ne part vers la page qu'avec `apply`). Le service worker l'écrit dans la lecture de chaque capture d'un lot à clic corrigé (`clicHumainSource:'lot'`) ; rien de plus n'est envoyé à la page ; « tel-quel » : lecture d'avant (essai `tests/lecture-clic-humain-sw.test.cjs`).
 - **Numéro** : 4.9.5.10 à 4.9.5.12 ont été livrés par la session d'interface ; cette version est la **4.9.5.13**, « 4.9.5 test 13 (L1) » (une étiquette courte entre parenthèses est désormais permise après le numéro de test ; le paquet reste `ariane-4.9.5-test.13.zip`). Panneau : celui de la test 9.
 - **Moteur** : `src/gcv1-shadow.js` rend son réservoir **sur demande** (`scientificProposeBothAvecReservoir`) ; la sortie par défaut est inchangée.
-- **Banc conjoint** `tools/banc-differes.cjs` (rejeu causal des 40 lots de la base du diagnostic, profils base, L1, L1-v ; jugés contre Mic de la même séance et de toute séance sans autre écriture, D-220) ; résultats dans `fiches/L1_DIFFERES.md`.
+- **Banc conjoint** `tools/banc-differes.cjs` (rejeu causal des 40 lots de la base du diagnostic, profils base, L1, L1-v ; jugés contre l'opérateur de la même séance et de toute séance sans autre écriture, D-220) ; résultats dans `fiches/L1_DIFFERES.md`.
 - Essais : `tests/lot-profil-*.test.cjs` (un essai lourd par fichier ; profil « actuel » = 4.9.5.9 ; profil « L1 » : vue amenée, pose sans validation, validation, panne ; paramètres figés) ; montages d'empreinte joués sous le profil « actuel » ; `tests/pose-lot-inchanges-4959.test.cjs` mis à jour (fichiers changés déclarés).
 - verify (cœurs 2 et 3) : 2 422 essais, 2 420 réussis, 0 échec, 2 ignorés (corpus natif absent) ; `src/engine.js` identique à la base V4.6.0, géométrie inchangée.
 - Non vérifié : la GCV2 n'a jamais posé dans ESV ; le déplacement de vue n'a jamais servi en séance ; le dernier cut d'un lot n'est pas approché ; pas de choix du profil au panneau (retour arrière = test 9) ; Edge.
 
 ## 4.9.5.9 — 4.9.5 test 9 (19/10)
 
-Manifeste `4.9.5.9`, « 4.9.5 test 9 », paquet `ariane-4.9.5-test.9.zip` ; base : `claude/50-relecture-couverture` (d58a6f1, 4.9.5 test 8) + la fiche de conception RM-11 (70b3d18) ; accord de Mic à la conception (D-208).
+Manifeste `4.9.5.9`, « 4.9.5 test 9 », paquet `ariane-4.9.5-test.9.zip` ; base : `claude/50-relecture-couverture` (d58a6f1, 4.9.5 test 8) + la fiche de conception RM-11 (70b3d18) ; accord de l'opérateur à la conception (D-208).
 **Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé ; le lot envoie à ESV les mêmes commandes, octet pour octet (essai tests/pose-lot-inchanges-4959.test.cjs). La relecture après le lot est celle de la test 8.
 Consigne : `consignes/seance-terrain-4.9.5-test-9-2026-10-19.md` ; retour arrière : la 4.9.5 test 8 (désactiver, redécompresser, réactiver, Recharger, F5).
 
@@ -188,14 +188,14 @@ Consigne : `consignes/seance-terrain-4.9.5-test-9-2026-10-19.md` ; retour arriè
 - **Comportement** : un appui = la raison de ce cut seul ; deux appuis sur la même touche en 600 ms sur le même cut = raison **collante** pour les cuts suivants, jusqu'à un `0`, une autre collante, un changement de partie, un saut de plus de 30 cuts, une pause ou la fin de séance (elle survit à un F5) ; une raison tapée seule passe avant la collante pour ce cut ; une touche tapée jusqu'à 500 ms après une validation, avant tout autre geste sur le cut suivant, va au cut validé (marque `apresValidationMs`). Rappel doux du panneau après 40 cuts collants.
 - **Consignation** : champ facultatif `raisonCorrection` (`ariane-raison-v1` : `code`, `source` touche ou collante, `serie`, `poseeA`, `eventSeq`, `apresValidationMs`, `historique` de 6 changements au plus) dans la visite Écho ; état de séance `native.raison` (gardé avec l'état, lu au démarrage d'Écho, figé jusqu'à sa fin) ; résumé `raisonSeries` écrit **une fois** dans l'en-tête de l'export (`UNE_FOIS`), seulement s'il y en a. Format de la visite et de l'export inchangés : les lecteurs d'avant ignorent le champ.
 - **Anti-fuite** : la raison est une étiquette, jamais un trait. Elle n'entre ni dans l'entrée sans fuite, ni dans les ombres, ni dans la pose de départ, ni dans les captures ; `tools/jointure-echo-orbite.cjs` et `tools/jeu-apprentissage.cjs` la lisent côté étiquette seulement (essais tests/raison-fuite.test.cjs).
-- **Repli si ESV réagit aux chiffres** : réglage du panneau « Touches lues » : `Alt + chiffre` puis `Pavé numérique seul` (étape 0 de la consigne : Mic vérifie dans ESV).
+- **Repli si ESV réagit aux chiffres** : réglage du panneau « Touches lues » : `Alt + chiffre` puis `Pavé numérique seul` (étape 0 de la consigne : l'opérateur vérifie dans ESV).
 - **Panneau** : carte « Raison de la correction » (case, rangée de touches, pastilles 1 à 6 et 0 avec étiquettes parlées, ligne de la collante, bande des 24 derniers cuts, couverture, aide) ; les touches sont lues aussi quand le panneau a le focus ; le bandeau d'ESV dit « raison : ADV (collante) » ; ligne dans les réglages affichés (`echo.raison`). Le choix est gardé par le service worker (`raison-choix-etat`, `raison-choix`), à part du choix du lot.
 - **Correctif D-211 (mémoire de la liste d'ESV)** : `listeNoterEcriture` (`background.js`) ne notait une écriture que si le lot était `RUNNING` ; le dernier cut validé 0,4 s après le passage à `STOPPED` et les corrections de la relecture « corriger » n'étaient pas mémorisés (18 au lieu de 29, partie 13 du projet 2, `fiches/EXAMEN_2-13.md`). Elle accepte aussi la fenêtre de grâce qui suit la fin du lot (`dansGrace`) et la relecture en cours, avec la partie du lot. Relevé local seulement : aucune requête vers ESV, aucun effet sur la pose (essai `tests/liste-memoire-fin-lot.test.cjs`, et `tests/pose-lot-inchanges-4959.test.cjs`).
 - **Outils** : la jointure Écho ↔ Orbite gagne `raisonHumaine`, la durée de visite et le temps geste-validation (mesure de base), la couverture des corrections de plus de 10 et de plus de 5 mm, les séries, deux colonnes CSV à la fin ; le jeu d'apprentissage recopie la raison dans l'étiquette.
 - **Un seul fichier de `src/` touché côté séance** : `src/native-session.js` (51 lignes ajoutées, 5 changées ou retirées ; héritage de la collante à l'ouverture d'une visite, `raisonFrappe`, `raisonPoser`, `raisonPanneau`, fin de série à la pause et à la fin, résumé d'export), tout dans un `try`, jamais bloquant. Autres : `src/native-page.js` (le chiffre de raison est un événement essentiel quand la lecture est allumée, 2 lignes), `src/settings.js` (`echo.raison`), `src/native-export.js` (`raisonSeries` dans `UNE_FOIS`), nouveau `src/raison-correction.js` (module pur).
 - Essais : `tests/raison-correction.test.cjs` (module pur), `tests/echo-raison.test.cjs` (session, dont **l'Écho identique octet pour octet à la test 8** : référence figée avant la fonction, `tests/echo-raison-reference.json`, scénario `tests/helpers/echo-scenario.cjs`), `tests/echo-raison-grace.test.cjs` (délai de grâce, replis, secours du panneau, jamais bloquant), `tests/echo-raison-charge.test.cjs` (10 000 frappes) et `tests/echo-raison-marge.test.cjs` (coût d'une frappe), `tests/raison-touches.test.cjs` (rien retenu ni envoyé à ESV), `tests/raison-fuite.test.cjs`, `tests/raison-export.test.cjs`, `tests/jointure-echo-orbite-raison.test.cjs`, `tests/panel-raison.test.cjs`, `tests/raison-reglage.test.cjs`, **`tests/pose-lot-inchanges-4959.test.cjs`** (la pose et le lot ne changent pas : empreintes `tests/pose-inchangee-4958.json` des fichiers de `src/`, réglages, commandes du lot), essais de version `tests/version-4959.test.cjs` (remplace `version-4958`) et de consigne `tests/consigne-4959.test.cjs` (remplace `consigne-4958`).
 - verify (machine très chargée, lancé sur 2 cœurs pour que les essais lents tiennent leur délai) : 2 321 essais, 2 319 réussis, 0 échec, 2 ignorés (corpus natif absent) ; géométrie inchangée, moteur identique à la base V4.6.0.
-- Non vérifié : qu'ESV ne réagit pas aux chiffres (étape 0, par Mic) ; le vrai délai des frappes après une validation (500 ms choisis sans mesure) ; le coût d'une raison (0,6 s estimé) ; la porte de 80 % des corrections de plus de 10 mm étiquetées (il faut une séance de 150 cuts avec une zone d'ADV) ; Edge. Pas dans cette version : `tools/gcv2-jeu.cjs` (absent de cette branche).
+- Non vérifié : qu'ESV ne réagit pas aux chiffres (étape 0, par l'opérateur) ; le vrai délai des frappes après une validation (500 ms choisis sans mesure) ; le coût d'une raison (0,6 s estimé) ; la porte de 80 % des corrections de plus de 10 mm étiquetées (il faut une séance de 150 cuts avec une zone d'ADV) ; Edge. Pas dans cette version : `tools/gcv2-jeu.cjs` (absent de cette branche).
 
 ## 4.9.5.8 — 4.9.5 test 8 (18/10)
 
@@ -204,7 +204,7 @@ Manifeste `4.9.5.8`, « 4.9.5 test 8 », paquet `ariane-4.9.5-test.8.zip` ; base
 Consigne : `consignes/seance-terrain-4.9.5-test-8-2026-10-18.md` ; retour arrière : la 4.9.5 test 7 (désactiver, redécompresser, réactiver, Recharger, F5).
 
 - **Couverture de la relecture** (D-185, d'après l'Écho de la partie 11 : 17 corrections qui tiennent, 15 verts faux laissés) : plus de plafond en ADV, ADV séparées de 40 cuts au plus enchaînées en une seule plage, plafonds de 70 (abords), 20 (vert hors zone) et 20 (écartement) ; les cuts « À contrôler » et « écartement » ne sont jamais écartés par un budget de zone ; un cut à l'écartement hors norme est relu avec son cut d'avant et son cut d'après (marge de 1). Rejeu de la sélection sur la partie 11 : 391 cuts relus au lieu de 144, 13 des 15 oublis couverts (restent 6418 et 6419, première zone d'ADV non détectée).
-- **Zone « écartement » corrigeable** (accord de Mic) : fermée dans `datasets/relecture-reglages-defaut.json`, ouverte dans `datasets/relecture-reglages-proposes.json` (8 mm au moins, même règle prudente que le PN, l'ADV et les abords). Fermée, un vert hors plage reste en ombre.
+- **Zone « écartement » corrigeable** (accord de l'opérateur) : fermée dans `datasets/relecture-reglages-defaut.json`, ouverte dans `datasets/relecture-reglages-proposes.json` (8 mm au moins, même règle prudente que le PN, l'ADV et les abords). Fermée, un vert hors plage reste en ombre.
 - **Panneau** : « Corriger (verts sûrs du PN, de l’ADV, des abords et des écartements hors norme, validés par Maj+Espace) ».
 - **Apprentissage** (D-187) : la partie 11 du second projet passe dans l'ensemble d'apprentissage (`datasets/manifeste-parties.json`).
 - Essais : `tests/relecture-ombre.test.cjs` (5 essais ajoutés, 4 adaptés), `tests/relecture-critere.test.cjs`, essais de version `tests/version-4958.test.cjs` (remplace `version-4957`) et `tests/consigne-4958.test.cjs` (remplace `consigne-4957`). verify : 2 226 essais, 2 224 réussis, 0 échec, 2 ignorés (corpus natif absent) ; géométrie inchangée, moteur identique à la base V4.6.0.
@@ -213,10 +213,10 @@ Consigne : `consignes/seance-terrain-4.9.5-test-8-2026-10-18.md` ; retour arriè
 ## 4.9.5.7 — 4.9.5 test 7 (18/10)
 
 Manifeste `4.9.5.7`, « 4.9.5 test 7 », paquet `ariane-4.9.5-test.7.zip` ; base : `claude/50-base` (803fb76 : 4.9.5 test 6 + panneau réorganisé, départ de lot sur un cut vert, partie complète, fiabilité du lot, PN confirmé par deux cœurs consécutifs, relecture après le lot ; D-170 à D-182).
-**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). Seule écriture nouvelle : la relecture en mode « Corriger », que Mic choisit dans le panneau (coupée par défaut). Mode coupé : commandes vers ESV identiques à la test 6 sur les scénarios rejoués (5 cas synthétiques, un lot réel de 335 commandes).
+**Pose inchangée** : Orbite pose les rails au même endroit ; `src/engine.js` inchangé (identique à `origin/main`). Seule écriture nouvelle : la relecture en mode « Corriger », que l'opérateur choisit dans le panneau (coupée par défaut). Mode coupé : commandes vers ESV identiques à la test 6 sur les scénarios rejoués (5 cas synthétiques, un lot réel de 335 commandes).
 Consigne : `consignes/seance-terrain-4.9.5-test-7-2026-10-18.md` ; retour arrière : la 4.9.5 test 6 (désactiver, redécompresser, réactiver, Recharger, F5).
 
-- **Relecture après le lot** (D-170 à D-176, D-179, D-180 ; `fiches/RELECTURE_OMBRE.md`) : trois modes, « Coupée » (défaut), « Ombre » (visite, capture, calcule, journalise, n'écrit rien ; ESV marque « vu » chaque cut neuf affiché) et « Corriger » (verts prouvés du PN, de l'ADV et des abords qui passent la règle prudente : 8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus de la médiane ; pose par la commande `apply` du lot, validation par **Maj+Espace**, qui valide sur place). Jamais un cut posé ou différé par le lot, jamais un SKIP, jamais un vert hors zone. Départ juste après le lot, sans pause ; « Arrêter la relecture ». Gardes : une seule passe, statut du cut relu avant la pose, table de la liste refusée si incomplète, pas de pose juste après un saut, dernier cut de la partie jamais validé, réglages invalides = « Corriger » retombe en ombre. Plafonds par zone (ADV 40, abords 70, PN hors budget). Étude : PN 36 justes sur 36 actions, ADV 11 sur 17 (18 % d'erreurs), abords 30 sur 37 (14 %), 0 mauvaise voie ; 9 % non démontré en ADV et abords (accepté par Mic, D-180).
+- **Relecture après le lot** (D-170 à D-176, D-179, D-180 ; `fiches/RELECTURE_OMBRE.md`) : trois modes, « Coupée » (défaut), « Ombre » (visite, capture, calcule, journalise, n'écrit rien ; ESV marque « vu » chaque cut neuf affiché) et « Corriger » (verts prouvés du PN, de l'ADV et des abords qui passent la règle prudente : 8 mm au moins, 45 mm de latéral au plus, écartement à 15 mm au plus de la médiane ; pose par la commande `apply` du lot, validation par **Maj+Espace**, qui valide sur place). Jamais un cut posé ou différé par le lot, jamais un SKIP, jamais un vert hors zone. Départ juste après le lot, sans pause ; « Arrêter la relecture ». Gardes : une seule passe, statut du cut relu avant la pose, table de la liste refusée si incomplète, pas de pose juste après un saut, dernier cut de la partie jamais validé, réglages invalides = « Corriger » retombe en ombre. Plafonds par zone (ADV 40, abords 70, PN hors budget). Étude : PN 36 justes sur 36 actions, ADV 11 sur 17 (18 % d'erreurs), abords 30 sur 37 (14 %), 0 mauvaise voie ; 9 % non démontré en ADV et abords (accepté par l'opérateur, D-180).
 - **Panneau réorganisé** (D-173) : groupes « Lot », « Règles et choix du prochain lot », « Résultats du dernier lot », « Relecture », « Export, archive et réglages avancés » ; « Dernier lot » et « Prochain lot » sous chaque choix ; règle grappe renommée « Mettre en attente les cuts voisins d’une série de différés » ; fin de partie et partie sans rouge annoncées.
 - **Départ de lot sur un cut vert** (D-169) : ni pose ni validation sur le vert, passage au prochain cut non validé (Maj+Z, `nextWithoutDecision`) ; rouges seulement derrière : aucune commande, avis qui les nomme. **Partie complète et cut vert** : aucune pose ni validation (au plus une capture de lecture) ; les avis disent « Aucune pose ni validation n’a été envoyée à ESV ».
 - **Fiabilité du lot** (H14, H15, H16) : empreinte du contrat indépendante du rail sélectionné (plus de faux avis), audit serveur seulement sur une lecture complète de la partie du lot, chaque erreur rangée au lot de sa demande.
@@ -231,14 +231,14 @@ Manifeste `4.9.5.6`, « 4.9.5 test 6 », paquet `ariane-4.9.5-test.6.zip` ; base
 Consigne : `consignes/seance-terrain-4.9.5-test-6-2026-10-17.md` ; retour arrière : la 4.9.5 test 5 (désactiver, redécompresser, réactiver, Recharger, F5).
 
 - **Tout ce qu'avait la test 5** : ombres (voie prédite, règles métier, faux vert « hauteur ambiguë », hauteur apprise, P8), relevé des gestes en Écho, liste des verts à contrôler, dernière empreinte de contrat ; **mémoire des différés de l'Écho coupée au terrain** ; **déplacer la vue coupé**.
-- **Nouveau — choix du clic du mode rapide dans le panneau** (D-157, D-164 ; Mic : « essayer les 2 méthodes »). Carte « Clic du mode rapide » de la vue Orbite : « Comme avant » (`tel-quel`, défaut), « Variante : rail gauche recentré » (`gauche-recentre`, +6 à 9 % de durée de lot), « Tout recentré, comme un humain » (`tout-recentre`, +12 à 18 %).
+- **Nouveau — choix du clic du mode rapide dans le panneau** (D-157, D-164 ; l'opérateur : « essayer les 2 méthodes »). Carte « Clic du mode rapide » de la vue Orbite : « Comme avant » (`tel-quel`, défaut), « Variante : rail gauche recentré » (`gauche-recentre`, +6 à 9 % de durée de lot), « Tout recentré, comme un humain » (`tout-recentre`, +12 à 18 %).
   - Gardé dans `chrome.storage.local` (`banane50ClicHumain`, actions `choix-lot-etat` et `choix-lot` du service worker), lu au démarrage de chaque lot et figé dans son scope (`clicHumain`) : un changement pendant un lot n'agit qu'au lot suivant, et le panneau le dit (« Ce lot garde … ; … servira au prochain lot »). Les arguments de « Démarrer » ne comptent pas.
   - Transmis à la page avec chaque `apply` du lot en cours (`options.clicHumain`), seulement s'il est corrigé ; la page (`src/adapter-page.js`) le prend à la place de `pilote.rapide.clicHumain` pour cette commande. Hors d'un lot en cours (pose assistée, restauration) : le réglage de la page, `tel-quel`.
   - Consigné : scope du lot (événement `batch-started`, état exporté), ligne « Choix du lot … » de `CONTENU.txt`, mode du relevé `clic-hors-vue`. Au défaut, le scope ne porte rien (un champ absent vaut `tel-quel`) : commandes identiques à la base octet pour octet (empreinte `tests/fixtures/choix-lot-50-base.json`, prise sur 50-base a362a29).
-- **Nouveau — interrupteur de la règle métier « grappe de différés »** (demande de Mic) : case « Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges) », **coupée par défaut**, gardée (`banane50GrappeDifferes`), lue au démarrage du lot et figée (`regleGrappeDifferes`). Activée, elle ouvre le chemin d'activation existant (`reglesMetier.actif`, `regles['grappe-differes']`) **pour cette règle seulement** : elle ne peut que changer une validation en différé (motif `regles-metier`), sans aucune pose nouvelle ni type d'appel nouveau ; `pn-chaque-cut` et `zone-validation-en-place` restent coupées. Chaque cut mis en attente garde son événement `regles-metier-ombre` (`actif:{applique:true,regles:['grappe-differes']}`).
+- **Nouveau — interrupteur de la règle métier « grappe de différés »** (demande de l'opérateur) : case « Règle métier : mettre en attente les cuts d’une grappe (aiguille, série de rouges) », **coupée par défaut**, gardée (`banane50GrappeDifferes`), lue au démarrage du lot et figée (`regleGrappeDifferes`). Activée, elle ouvre le chemin d'activation existant (`reglesMetier.actif`, `regles['grappe-differes']`) **pour cette règle seulement** : elle ne peut que changer une validation en différé (motif `regles-metier`), sans aucune pose nouvelle ni type d'appel nouveau ; `pn-chaque-cut` et `zone-validation-en-place` restent coupées. Chaque cut mis en attente garde son événement `regles-metier-ombre` (`actif:{applique:true,regles:['grappe-differes']}`).
 - **Déjà dans la base, entre dans cette version**
   - **Relevé `clic-hors-vue`** (D-157, `fiches/RAPIDE_HUMAIN.md`) : chaque clic de pose calculé hors de la partie visible du canevas est relevé par la page après la réponse, sans rien changer ; compteur par lot, cinq exemples, bilan de fin de lot (`clic-hors-vue`, `clic-hors-vue-bilan`).
-  - **Détection des ADV** (`fiches/DETECTION_ADV.md`) : signal du « rail de plus » ; zone `adv` en ombre dans les règles métier ; **la liste « À contrôler » s'enrichit des zones d'ADV** (plages « ADV a–b »). 8 zones de Mic sur 8, sur des parties qui ont toutes servi à régler.
+  - **Détection des ADV** (`fiches/DETECTION_ADV.md`) : signal du « rail de plus » ; zone `adv` en ombre dans les règles métier ; **la liste « À contrôler » s'enrichit des zones d'ADV** (plages « ADV a–b »). 8 zones de l'opérateur sur 8, sur des parties qui ont toutes servi à régler.
   - **Points utiles de la relecture de la test 5** : verts à contrôler, **le dernier lot fait foi** quand un cut figure dans plusieurs lots ; **la liste est jointe aussi à l'export sans zip** ; `BananeSettings` gelé au premier niveau ; fiches corrigées ; essai `memoire-differes` coupé en deux ; phrase de retour arrière des consignes (`consignes/README.md`).
 - Essais : `tests/choix-lot-clic-sw`, `-clic-transmis-sw`, `-clic-pendant-sw`, `-clic-page`, `-grappe-sw`, `-grappe-actif-sw`, `-panel` ; essais de version `tests/version-4956.test.cjs` (remplace `version-4955`) et `tests/consigne-4956.test.cjs` (remplace `consigne-4955`). `tests/deplacer-vue-sw.test.cjs` passe sans changement (seul `extensionVersion` est ramené à la version de l'empreinte).
 - Essai de fumée dans Chromium (hors du banc) : l'extension se charge, le panneau s'ouvre, le choix du clic et l'interrupteur s'affichent, se gardent et se relisent après réouverture.
@@ -246,14 +246,14 @@ Consigne : `consignes/seance-terrain-4.9.5-test-6-2026-10-17.md` ; retour arriè
 ## 4.9.5.5 — 4.9.5 test 5 (17/10)
 
 Manifeste `4.9.5.5`, « 4.9.5 test 5 », paquet `ariane-4.9.5-test.5.zip` ; base : `claude/50-base` (0f96f17 : 4.9.5 test 4 + hygiène de l'audit, ombres de la voie, règles métier, faux verts, hauteur apprise, déplacer la vue coupé, verts à contrôler).
-**Aucun changement de pose, de validation ni de navigation** par rapport à la base ; `src/engine.js` inchangé (identique à `origin/main`). Le mode rapide n'est pas modifié (D-157 attend la décision de Mic). Aucune commande ESV nouvelle.
+**Aucun changement de pose, de validation ni de navigation** par rapport à la base ; `src/engine.js` inchangé (identique à `origin/main`). Le mode rapide n'est pas modifié (D-157 attend la décision de l'opérateur). Aucune commande ESV nouvelle.
 Consigne : `consignes/seance-terrain-4.9.5-test-5-2026-10-17.md` ; retour arrière : la 4.9.5 test 4.
 
 - **Tout ce qu'avait la test 4** (empreinte du contrat par onglet, `audit-serveur` corrigé, P8 en ombre, F5 en Écho permis, mémoire de la liste, plafond de convention coupé, logo).
 - **En ombre, consigné seulement (aucune pose changée ; décisions et commandes identiques avec et sans)**
   - **Voie prédite** (`voiePrediteOmbre`, `src/voie-recentree.js`) : événement `voie-predite-ombre` par cut différé, règle prudente D-147 ; calcul sur copies, après la décision et la commande (D-153, coût mesuré négligeable sur le banc : D-154).
   - **Mémoire de série en Écho** (`memoireDifferesOmbre`) : événement `memoire-differes-ombre`, calculé avant la lecture de la référence humaine (G1 b, D-148, D-153) ; outil de mesure, pas un mode de travail (D-155). **Coupée au terrain** dans ce paquet (relecture avant envoi, I-1) : deux relances du moteur par différé pendant l’Écho, non mesurées au banc.
-  - **Règles métier de Mic** (`reglesMetier.ombre`, `src/regles-metier.js`) : événement `regles-metier-ombre` (PN et marges, grappes de différés) ; activation coupée, règle par règle (D-159).
+  - **Règles métier de l'opérateur** (`reglesMetier.ombre`, `src/regles-metier.js`) : événement `regles-metier-ombre` (PN et marges, grappes de différés) ; activation coupée, règle par règle (D-159).
   - **Faux vert « hauteur ambiguë »** (`fauxVertOmbre`, `differer:false`) : consigné dans la décision du lot (D-160).
   - **Hauteur apprise** (`hauteurApprise`, `appliquer:false`) : correction verticale consignée dans la décision du lot (D-161).
   - **Ombre verticale P8** (`ombreVerticaleRefusee`, 3,6 mm), déjà dans la test 4 (D-140, renommée P8 : D-150).
@@ -290,7 +290,7 @@ Manifeste `4.9.5.3`, « 4.9.5 test 3 », paquet `ariane-4.9.5-test.3.zip` ; base
 Tout ce qui est nouveau est LECTURE SEULE ou consigné en ombre, chacun derrière un réglage (`src/settings.js` : `releves`, `esvEvents`, `export.phaseTimingReplie`), actif par défaut.
 Aucune commande ESV nouvelle. Seul ce qu'on voit à l'écran : l'avis de contrat ESV, s'il se produit, et le nouveau logo.
 
-- **Logo** : piste A « La voie », retenue par Mic (`icons/ariane.svg`, icônes 16, 32, 48 et 128 px), déclarée dans `icons` et `action.default_icon` du manifeste.
+- **Logo** : piste A « La voie », retenue par l'opérateur (`icons/ariane.svg`, icônes 16, 32, 48 et 128 px), déclarée dans `icons` et `action.default_icon` du manifeste.
 
 - **S6, relevés (plan 5.0, § 4)**
   1. *Ressources Potree* (`src/esv-observer.js`) : pour les nœuds `ept-data`, le statut HTTP (`responseStatus`, si le navigateur le donne), la durée (total, maximum), les échecs (statut 0 ou ≥ 400) et leur cumul, dans l'événement `resource`.
@@ -426,7 +426,7 @@ de pose sont inchangés ; seul l'export du journal et du bilan d'Orbite perd les
 relecture finale (D-110, ci-dessous) ; la version et les documents changent : manifeste `4.9.0` sans nom de test, titre « Ouvrir Ariane 4.9.0 », « ARIANE 4.9.0 » dans le panneau,
 « Ariane 4.9.0 · ouvrir » sur le bouton blanc d'ESV, paquet `ariane-v4.9.0.zip`. `src/engine.js` identique à la test 17.
 Notes pour l'opérateur : `NOTES_4.9.0.md` ; porte de version : `fiches/PORTE_4.9.0.md`. Fusion, étiquette et publication :
-décision de Mic. Retour arrière : la 4.8.6 (`v4.8.6`).
+décision de l'opérateur. Retour arrière : la 4.8.6 (`v4.8.6`).
 
 Corrections de la relecture finale (D-110) :
 
@@ -454,7 +454,7 @@ Ce que la 4.9 apporte depuis la 4.8.6, en bref :
   autonomes de 17 Mo au plus (D-106) ; vidage du cache seulement si tous les volumes sont confirmés.
 - **Départs des parties** : validés, invalides et total relevés au départ de chaque partie, gardés hors du cache, historique
   par partie, recopiés dans les exports (D-093, D-106).
-- **Panneau** (variante « Accueil » choisie par Mic) : grande tuile du lot (pourcentage des invalides traités sur un lot de toute
+- **Panneau** (variante « Accueil » choisie par l'opérateur) : grande tuile du lot (pourcentage des invalides traités sur un lot de toute
   la partie, position sinon), cartes des départs, thèmes clair et sombre, contrastes, sélecteur d'onglet lisible, résumé de la
   partie (U1), essais du vrai panneau (U2), raccourcis `D` et `Maj + Espace` d'ESV ni doublés ni détournés (U3) (D-078,
   D-093, D-103, D-105, D-107).
@@ -465,7 +465,7 @@ Ce que la 4.9 apporte depuis la 4.8.6, en bref :
 ## 4.9.0.17 — test 17 (15/10)
 
 Manifeste `4.9.0.17`, « 4.9.0 test 17 », paquet `ariane-4.9.0-test.17.zip` ; base : test 16 (`6c61bdb`) + bornes alignées (`0147f29`).
-Retours de Mic sur la test 16. `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
+Retours de l'opérateur sur la test 16. `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
 `consignes/seance-terrain-test-17-2026-10-15.md` ; retour arrière : test 16.
 
 - **Tuile « Lot » : le travail, pas la position** (`panel.js`). Lot sur toute la partie (premier cut 0 ou 1, jusqu'à la fin de
@@ -488,7 +488,7 @@ Retours de Mic sur la test 16. `src/engine.js` inchangé (baseline épinglée), 
 
 ## 4.9.0.16 — test 16 (15/10)
 
-Manifeste `4.9.0.16`, « 4.9.0 test 16 », paquet `ariane-4.9.0-test.16.zip` ; base : test 15 (`b9652df`). Retours de Mic sur la
+Manifeste `4.9.0.16`, « 4.9.0 test 16 », paquet `ariane-4.9.0-test.16.zip` ; base : test 15 (`b9652df`). Retours de l'opérateur sur la
 test 15 (partie 24). `src/engine.js` inchangé (baseline épinglée), décision de pose inchangée. Consigne :
 `consignes/seance-terrain-test-16-2026-10-15.md` ; retour arrière : test 15.
 
@@ -2241,7 +2241,7 @@ réglages de collecte consultables depuis l'interface.
 `src/settings.js`, avec leur unité, leur raison d'être et la mesure de terrain
 qui les a fixés. Les seuils géométriques restent dans le moteur gelé.
 
-- Régression confirmée par Mic : le bouton flottant de V4.4.2 ne disparaît pas dans ESV malgré l'ouverture de Banane ; succès simulé non assimilé à une validation terrain.
+- Régression confirmée par l'opérateur : le bouton flottant de V4.4.2 ne disparaît pas dans ESV malgré l'ouverture de Banane ; succès simulé non assimilé à une validation terrain.
 - Fenêtres enregistrées explicitement et pages connectées par un canal de présence vivant, renouvelé après reprise du service worker ; plus de déduction depuis la recherche d'onglets d'extension par URL.
 - Bouton retiré du DOM pendant l'ouverture de Banane et remis après fermeture de la dernière fenêtre ; réponses de statut tardives ignorées. Libellé de version 4.4.3 visible pour faciliter le contrôle d'installation.
 - Nouveaux tests couvrant le filtre URL vide, deux fenêtres, les réponses en retard et la reconnexion ; moteur de placement, pilote et collecte Natif géométrique inchangés.
@@ -2262,7 +2262,7 @@ qui les a fixés. Les seuils géométriques restent dans le moteur gelé.
 - Qualification par rail et par paire sur couverture, densité, transformation et association à la référence ; labels candidats, jamais automatiquement entraînables.
 - Chronologie `event_seq`, intentions multiples conservées, revisites et pauses distinctes, clôture récupérée sans inventer un état final.
 - Banc hors ligne et superpositions SVG prêts pour un nouvel export ESV ; sur les trois anciens exports, zéro exemple qualifié et aucune amélioration de précision démontrable.
-- 170 tests réussis ; moteur, pilote et lecteur LiDAR partagé inchangés. La fluidité ESV réelle et les preuves visuelles restent à vérifier avec Mic.
+- 170 tests réussis ; moteur, pilote et lecteur LiDAR partagé inchangés. La fluidité ESV réelle et les preuves visuelles restent à vérifier avec l'opérateur.
 
 # Banane V4 TEST 4.4.0 — 11 septembre 2026
 
@@ -2297,7 +2297,7 @@ qui les a fixés. Les seuils géométriques restent dans le moteur gelé.
 - Seuil inférieur métier définitivement fixé à 1 410 mm.
 - Moins de 1 410 mm : SKIP ; de 1 410 à moins de 1 430 mm : validation avec tolérance.
 - Ancienne hypothèse de seuil inférieur supprimée du cadrage, de la structure vérifiable et des tests.
-- Retour d'essai de Mic sur les interruptions fréquentes du pilote 4.1 enregistré comme problème connu.
+- Retour d'essai de l'opérateur sur les interruptions fréquentes du pilote 4.1 enregistré comme problème connu.
 - Aucun calcul géométrique, aucun assouplissement de garde-fou et aucun correctif du pilote automatique dans cette version.
 
 # Banane V4 TEST 4.2.0 — 10 septembre 2026
@@ -2339,7 +2339,7 @@ qui les a fixés. Les seuils géométriques restent dans le moteur gelé.
 
 # Correctif V3 TEST 3.0.1 — 9 septembre 2026
 
-Incident de référence : part 24 / cut 7460, journal réel fourni par Mic.
+Incident de référence : part 24 / cut 7460, journal réel fourni par l'opérateur.
 
 - Refus d’un lancement exigeant une preuve serveur indisponible **avant toute écriture**.
 - Conservation de la cause d’arrêt dans le lot ; une erreur d’actualisation apparaît
