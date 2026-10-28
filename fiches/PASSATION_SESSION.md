@@ -23,6 +23,8 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 
 ## 3 bis. Reprise du 28/10 (session principale n° 2)
 - Rôle d'intégrateur pris (annonce sur le canal général), abonnée aux PR 7, 8, 16. Sessions filles en mode auto : CH-010 (`session_01Td4bNpScYTtA2v5YNNUUje`) et CH-002 phase 1c (`session_01Td4bNkMBVxeJsb1y4DjCRh`).
+- CH-011 fusionné (6faca8a) : `tools/juger-lot.cjs` (tableau standard d'un lot contre l'Écho, `fiches/JUGER_LOT.md`). Mesuré : sur les parties 0 et 1, 539 et 319 posés sur 558 et 352 sont « sans Écho » (16 et 24 jugés) : la séance Écho des cuts posés lève ce goulet.
+- Design en pause (D-257) : maquettes CH-010 et CH-002 phase 1c rejetées, rien de fusionné, aucun code de Signal.
 - Consigne de séance Écho des cuts posés : `consignes/seance-terrain-echo-cuts-poses-2026-10-28.md`.
 - Retrait du prénom de l'opérateur : abandonné par l'opérateur (D-254), plus rien à faire.
 
