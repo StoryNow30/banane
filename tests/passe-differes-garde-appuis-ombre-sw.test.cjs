@@ -20,10 +20,11 @@ test('réglage : garde illisible ou module absent, la passe est coupée ; clé a
   assert.deepEqual(j(niveau({}).garde), { ok: true, actif: true, deplacementMaxMm: 100, appuiNormalMaxCuts: 4 });
   assert.equal(niveau({ gardeAppuis: { appuiNormalMaxCuts: 6 } }).garde.appuiNormalMaxCuts, 6);
   assert.equal(niveau({ gardeAppuis: { appuiNormalMaxCuts: 6 } }).garde.deplacementMaxMm, 100, 'clé par clé');
-  assert.equal(niveau({ gardeAppuis: false }).mode, 'ombre'); assert.equal(niveau({ gardeAppuis: false }).garde.actif, false);
+  assert.equal(niveau({ gardeAppuis: false }).mode, 'ecriture', 'D-259 : écriture livrée allumée ; la garde coupée explicitement ne la ramène pas à l’ombre'); assert.equal(niveau({ gardeAppuis: false }).garde.actif, false);
+  assert.equal(niveau({ ecriture: false, gardeAppuis: false }).mode, 'ombre');
   for (const v of ['x', null, true, 0, [], { actif: 'oui' }, { deplacementMaxMm: -1 }, { appuiNormalMaxCuts: 1.5 }]) assert.equal(niveau({ gardeAppuis: v }).mode, 'off', JSON.stringify(v));
   assert.equal(niveau({ ecriture: true, gardeAppuis: 'x' }).mode, 'off', 'jamais d’écriture sans sa garde');
   const G = b.ctx.BananeGardePasseAppuis; b.ctx.BananeGardePasseAppuis = undefined;
   try { assert.equal(niveau({}).mode, 'off', 'module de la garde absent'); } finally { b.ctx.BananeGardePasseAppuis = G; }
-  assert.equal(niveau({}).mode, 'ombre');
+  assert.equal(niveau({}).mode, 'ecriture', 'garde et module présents : le livré écrit (D-259)');
 });
