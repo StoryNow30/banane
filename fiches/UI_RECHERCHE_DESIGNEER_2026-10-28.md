@@ -1,81 +1,76 @@
 # CH-010 : recherche d'inspiration pour Signal (28/10/2026)
 
-Matière pour trois directions de maquettes (`Direction A`, `B`, `C` dans le fichier Figma). Rien ici n'est copié : ni visuel, ni code. Les ressources sont citées par leur nom.
+Matière pour trois directions de maquettes (pages `Direction A`, `B`, `C` du fichier Figma). Rien n'est copié : ni visuel, ni code. Les ressources sont citées par leur nom.
 
 ## Ce qui a pu être lu, et ce qui ne l'a pas été
 
-- **designeer.xyz est illisible depuis les machines cloud.** Chaque page, y compris `/api/catalog`, renvoie 403 avec un défi Cloudflare (Chromium, récupération directe, API). Le contournement est exclu. Seuls `robots.txt`, `llms.txt` et `sitemap.xml` répondent.
-- **Ce que le site a donc fourni : des noms.** Le plan du site (`chantiers/CH-010/designeer-plan-du-site.txt`, 758 adresses) donne le nom exact de chaque ressource et sa rubrique (Inspiration, Resources, Tools, Portfolios, Finds). **Aucune description du site n'a été lue.** Pas de capture, pas de texte de fiche.
-- **Qualification des lignes.**
-  - **ÉTABLI** : la page de la ressource (site de son auteur, pas designeer.xyz) a été lue le 28/10/2026 ; ce que la ligne dit vient de cette lecture.
-  - **PROBABLE** : le nom est dans le plan du site (ÉTABLI), mais ce que la ressource apporte vient de ma connaissance, page non relue. À vérifier avant de s'y engager.
-- Rien n'est mesuré à l'écran : les coûts d'implémentation sont des estimations de lecture, pas des temps.
+- **designeer.xyz est illisible depuis les machines cloud.** Toutes ses pages et son API de catalogue renvoient 403 avec un défi Cloudflare (Chromium, récupération directe, API). Le contournement est exclu. Seuls `robots.txt`, `llms.txt` et `sitemap.xml` répondent.
+- **Ce que le site a fourni : des noms.** Le plan du site (`chantiers/CH-010/designeer-plan-du-site.txt`) donne le nom exact et la rubrique de chaque ressource. **Aucune description du site n'a été lue.**
+- **Ce qui est cité plus bas comme référence a été lu** : la page de chaque ressource a été ouverte le 28/10/2026 sur le site de son auteur (pas sur designeer.xyz). Chaque ligne ne dit que ce que la page dit.
+- **Lu sans résultat utile** : la page des jetons de mouvement de Material 3 (le titre seulement) et le guide de dessin d'icônes de Lucide (404). Ils ne sont pas cités comme références.
+- **Ce que ces sources ne disent pas** : aucune ne parle du métier d'Ariane (rails posés dans un nuage LiDAR, cuts, lots, différés). Les **couleurs et les symboles des trois directions viennent du métier**, pas de ces références. Les références servent à l'accessibilité, au mouvement, à la palette de commandes et au vocabulaire.
+- Rien n'est mesuré à l'écran : les coûts d'implémentation sont des estimations de lecture.
 
-## Références retenues, par usage (18)
+## Références lues (12), par usage
 
-Colonne « Sans bibliothèque » : réalisable dans l'extension Chrome en CSS et JavaScript simples (Signal n'a aucune dépendance).
+« Sans bibliothèque » : réalisable dans l'extension en CSS et JavaScript simples (Signal n'a aucune dépendance).
 
 ### États et progression
 
-| # | Ressource (rubrique) | Statut | Ce qu'elle apporte | Pour Signal | Sans bibliothèque |
-|---|---|---|---|---|---|
-| 1 | **Radix** (Resources), composant Progress | ÉTABLI | Deux parties (racine, indicateur), l'état porté par `data-state` : `complete`, `indeterminate`, `loading` ; `data-value` et `data-max` ; rôle `progressbar`. La page ne décrit aucun mouvement. | Convient : le rail est une barre de progression. Retenir l'idée de l'état en attribut (le CSS lit l'état, le script ne dessine pas) et le rôle ARIA. | Oui : attributs `data-*` et `role="progressbar"`. |
-| 2 | **NumberFlow** (Resources) | ÉTABLI | Anime le changement d'un nombre ; décrit comme sans dépendance ; respecte la préférence de mouvement réduit par défaut. Composant React. | Convient pour l'idée : le compteur « traités » change une fois, avec le rail. La bibliothèque est React, donc non reprise. | Idée oui : fondu et décalage de 6 px du chiffre, 200 à 240 ms. |
-| 3 | **Rolling Number** (Resources) | PROBABLE | Chiffres qui défilent colonne par colonne. | Convient en Direction C pour le gros chiffre ; trop voyant ailleurs. | Oui en CSS (colonne de chiffres décalée), avec un coût de mise en page à mesurer. |
-| 4 | **Loader Buttons** (Inspiration) | PROBABLE | Boutons dont l'étiquette devient un état d'attente. | Convient pour « Pause demandée… » : le bouton garde sa place et sa taille. | Oui. |
-| 5 | **Tremor** (Resources) | PROBABLE | Blocs de tableau de bord (cartes de chiffres, barres de progression). | Convient comme référence de densité : un chiffre, un libellé, une barre. Ne convient pas pour les graphiques (Signal n'en a pas). | Idée seule (la bibliothèque est React). |
+| # | Ressource (rubrique du site) | Ce que la page dit | Ce que j'en tire | Sans bibliothèque |
+|---|---|---|---|---|
+| 1 | **Radix**, composant Progress (Resources) | Deux parties (racine, indicateur) ; l'état est porté par `data-state` : `complete`, `indeterminate`, `loading` ; `data-value` et `data-max` ; suit le rôle `progressbar`. Aucun mouvement décrit. | Le rail lit son état par attribut : le style suit l'attribut, le script ne redessine pas. Rôle `progressbar` pour le lecteur d'écran. | Oui : attributs `data-*` et `role`. |
+| 2 | **NumberFlow** (Resources) | Anime le changement d'un nombre ; décrit comme sans dépendance ; respecte la préférence de mouvement réduit par défaut ; composant React. | Le compteur « posés » change une fois, avec le rail. La bibliothèque est React : seule l'idée est reprise. | Idée oui : fondu et décalage court du chiffre (200 à 240 ms). |
+| 3 | **Tremor** (Resources) | Composants React (Tailwind, Radix, Recharts) pour tableaux de bord ; micro-visualisations de progression : Data Bars, Spark Charts, Progress Circles ; « fully open-source ». | Référence de densité (un chiffre, un libellé, une barre). **Les Progress Circles sont l'anneau générique que l'opérateur rejette** : aucune direction n'en reprend. | Idée seule. |
 
-### Boutons
+### Boutons, feuilles, notifications
 
-| # | Ressource (rubrique) | Statut | Ce qu'elle apporte | Pour Signal | Sans bibliothèque |
-|---|---|---|---|---|---|
-| 6 | **Base UI** (Resources), composant Button | ÉTABLI | Un bouton désactivé peut rester focusable (`focusableWhenDisabled`), avec `data-disabled` ; pour une étiquette qui change, `aria-labelledby` fixe le nom accessible. Les liens ne se déguisent pas en boutons. | Convient : un bouton grisé de Signal porte une raison (« Choisis un onglet ESV… ») que le clavier doit pouvoir lire. | Oui : `aria-disabled` au lieu de `disabled`. |
-| 7 | **Inclusive Components** (Inspiration) | ÉTABLI (liste des sujets seulement) | Une série d'articles sur des composants : notifications, sections repliables, onglets, boutons à bascule, sélecteur de thème. La lecture n'a livré que les titres, pas le contenu. | À lire avant de fixer le tiroir (« sections repliables ») et l'incident (« notifications »). Le contenu reste à vérifier. | Oui. |
-| 8 | **Evil Buttons** (Resources) | PROBABLE | Collection de boutons très travaillés (effets, relief). | À écarter pour le fond : un bouton qui se remarque pour lui-même gêne la lecture en plein travail. Retenir seulement que le relief du bouton plein peut être une direction (B). | Oui, mais non souhaitable. |
-
-### Tiroirs, feuilles, palette de commandes
-
-| # | Ressource (rubrique) | Statut | Ce qu'elle apporte | Pour Signal | Sans bibliothèque |
-|---|---|---|---|---|---|
-| 9 | **Radix** (Resources), composant Dialog | PROBABLE | Dialogue modal : piège du focus, retour du focus à la fermeture, fermeture à Échap. | Convient pour la feuille de réglages et la palette. | Oui : `inert` sur l'instrument, focus géré à la main. |
-| 10 | **shadcn/ui** (Resources) | PROBABLE | Modèle « le code est copié dans le projet » ; composants Sheet, Drawer, Command bâtis sur Radix. | Convient comme vocabulaire (feuille, tiroir, commande). Le code lui-même est React. | Idée seule. |
-| 11 | **Component Gallery** (Resources) | PROBABLE | Catalogue qui compare le nom donné au même composant par des systèmes de design différents. | Convient pour trancher le vocabulaire (tiroir, feuille, bascule). | Sans objet (lecture). |
-| 12 | **Linear** et **Raycast** (Tools) | PROBABLE | Deux outils dont la palette de commandes est la pièce centrale : commandes groupées, raccourci affiché à droite, commande grisée qui dit pourquoi. | Convient pour la palette de Ctrl K : mêmes mots que l'écran, groupes, raccourci visible. | Oui. |
+| # | Ressource (rubrique) | Ce que la page dit | Ce que j'en tire | Sans bibliothèque |
+|---|---|---|---|---|
+| 4 | **Base UI**, composant Button (Resources) | `focusableWhenDisabled` garde un bouton désactivé focusable ; `data-disabled` ; `aria-labelledby` pour une étiquette qui change ; les liens ne se déguisent pas en boutons. | Un bouton grisé de Signal porte une raison (« Choisis un onglet ESV… ») que le clavier doit pouvoir lire. Le lien « Préparer… » reste un lien. | Oui : `aria-disabled` au lieu de `disabled`. |
+| 5 | **Radix**, composant Dialog (Resources) | Focus piégé dans la boîte en mode modal ; Échap ferme ; le focus revient au déclencheur ; le calque rend le reste de la page inerte ; titre et description annoncés. | Règles de la feuille de réglages et de la palette. | Oui : `inert` sur l'instrument, focus géré à la main. |
+| 6 | **shadcn/ui**, composant Command, bâti sur cmdk (Resources) | Palette de commandes : groupes avec titre, séparateur, message « aucun résultat », raccourci affiché par commande. La page ne précise pas le raccourci d'ouverture de la palette. | Palette de Ctrl K : groupes titrés, raccourci visible, état vide dit. | Idée oui ; le composant est React. |
+| 7 | **Inclusive Components** (Inspiration), article « Notifications » | Ne pas déplacer le focus pour une simple notification ; région live (`role="status"` avec `aria-live="polite"`) créée avant le contenu ; **préfixer les messages (« Erreur : », « Info : ») plutôt que se fier à la couleur ou à l'icône seules** ; disparition automatique, rien de masqué. La page d'accueil du site liste aussi : cartes, tableaux de données, sections repliables, onglets, sélecteur de thème, boutons à bascule. | **Soutient le choix des directions : la couleur ne porte jamais seule le sens.** Chaque état a un mot, une forme (fanion, plan de coupe, heurtoir) et une couleur. L'incident se dit par un préfixe. | Oui. |
+| 8 | **The Component Gallery** (Resources) | Recense 60 composants, 95 systèmes de design et 2 671 exemples ; un même composant a plusieurs noms (l'accordéon : « Collapsible sections », « Disclosure », « Expandable »…). | Outil pour arrêter le vocabulaire du tiroir « Ce qui reste » : à consulter avant de renommer. Aucun nom n'est arrêté ici. | Sans objet (lecture). |
 
 ### Mouvement
 
-| # | Ressource (rubrique) | Statut | Ce qu'elle apporte | Pour Signal | Sans bibliothèque |
-|---|---|---|---|---|---|
-| 13 | **Motion** (Resources) | PROBABLE | Bibliothèque d'animation à ressorts (durée et rebond réglables). | Convient pour l'idée du ressort en Direction B. La bibliothèque est écartée. | Oui : `linear()` en CSS pour le ressort (déjà écrit dans `fiches/UI_SIGNAL_REVISION.md`). |
-| 14 | **Easing Wizard** (Resources) | PROBABLE | Outil qui génère une courbe `cubic-bezier` ou un ressort en CSS. | Convient pour fixer les courbes sans bibliothèque. | Oui (outil de dessin). |
-| 15 | **Animations.dev** (Inspiration) | PROBABLE | Cours sur le mouvement d'interface : durée, courbe, retenue. | Convient comme discipline : une animation par fait. | Sans objet. |
-| 16 | **Rive** et **Lottie** (Resources) | PROBABLE | Animations vectorielles jouées par un exécutant dédié. | À écarter pour Signal : poids, exécutant externe, rien qui porte un fait. Leur place serait le sceau de fin de la Direction C, et le même geste se fait en CSS. | Non. |
-| 17 | **Planes**, composant Shader Flood (hors annuaire, fourni par l'opérateur) | ÉTABLI | Composant React d'effet décoratif pour grilles de fonctionnalités de pages marketing, installé par la commande shadcn. Licence payante (Planes Pro). La page ne dit rien de la préférence de mouvement réduit. | **Écarté** : décor, pas un fait ; licence payante ; effet de page marketing. | Non. |
+| # | Ressource (rubrique) | Ce que la page dit | Ce que j'en tire | Sans bibliothèque |
+|---|---|---|---|---|
+| 9 | **Motion** (Resources), page des transitions | Types : tween, spring, inertia ; un ressort se règle par `stiffness`, `damping`, `mass` ou par `duration` et `bounce` ; `bounce` à 0 = sans rebond ; une durée de tween par défaut de 0,3 s. | Direction B : un ressort court, réglé par durée et rebond (380 à 480 ms). La bibliothèque est écartée. | Oui : `linear()` en CSS (déjà écrit dans `fiches/UI_SIGNAL_REVISION.md`). Compatibilité Chrome à vérifier dans l'extension (SUPPOSÉ). |
+| 10 | **Easing Wizard** (Resources) | Éditeur de courbes CSS : presets Bézier, Spring, Bounce, Wiggle, Overshoot ; sortie CSS ou Tailwind, par exemple `cubic-bezier(0.66, 0, 0.34, 1)`. La page ne mentionne ni `linear()` ni la compatibilité navigateur. | Pour dessiner la courbe unique des directions A et C. Je ne prétends pas qu'il produise du `linear()`. | Oui (outil de dessin). |
 
 ### Contraste
 
-| # | Ressource (rubrique) | Statut | Ce qu'elle apporte | Pour Signal | Sans bibliothèque |
-|---|---|---|---|---|---|
-| 18 | **APCA** (Resources) | ÉTABLI | Contraste perceptuel (valeur Lc) pour remplacer le rapport de WCAG 2 ; équivalences indicatives : Lc 90 ≈ 7:1, Lc 75 ≈ 4,5:1, Lc 60 ≈ 3:1 ; la page n'a pas de seuil direct pour 13 px et se dit en bêta publique. | Convient comme second avis. Les maquettes sont vérifiées au rapport WCAG 2 (4,5:1 pour tout texte, y compris les 13 px de `encre3`) ; APCA n'a pas été calculé. | Oui (calcul). |
+| # | Ressource (rubrique) | Ce que la page dit | Ce que j'en tire | Sans bibliothèque |
+|---|---|---|---|---|
+| 11 | **APCA** (Resources) | Contraste perceptuel (Lc) ; pour un texte courant de 14 px en graisse 400, Lc 90 préféré ; équivalences indicatives Lc 90 ≈ 7:1, Lc 75 ≈ 4,5:1, Lc 60 ≈ 3:1 ; pas de seuil direct pour 13 px ; « public beta ». | Second avis. **Les maquettes sont vérifiées au rapport WCAG 2 (4,5:1 pour tout texte et tout symbole, sur fond, surface et surface 2, dans les six thèmes).** APCA n'a pas été calculé. | Oui (calcul). |
 
-**Icônes.** Pas de ressource retenue : les icônes de Signal sont dessinées à la main (trait 1,75). **Lucide**, **Phosphor** et **Material Symbols** (Resources) servent de repère pour le trait et la grille (PROBABLE), pas de source de dessin.
+### Contre-exemple
 
-## Ce que j'en tire pour chaque direction
-
-| Direction | Identité en une ligne | Références mobilisées | Ce que je retiens |
+| # | Ressource | Ce que la page dit | Verdict |
 |---|---|---|---|
-| **A, Cadran** | Instrument sobre : filets, graduations, capitales à chasse fixe, angles quasi droits. | 1, 6, 9, 12, 14 | Le rail lit l'état par attribut (1). Le bouton grisé reste lisible au clavier (6). Palette groupée, raccourci visible (12). Courbe unique, aucun ressort (14). |
-| **B, Galet** | Relief doux : surfaces bombées, pilules, glyphe large, un halo qui respire. | 2, 4, 8, 13 | Le chiffre qui change (2) et le bouton qui garde sa place en attente (4) sont repris. Le relief de bouton (8) ne l'est que pour le bouton plein. Ressort court (13) là où le fait compte. |
-| **C, Affiche** | Éditorial : grand chiffre, mot d'état en empattement, sceau de fin. | 3, 5, 15, 16 | Un gros chiffre porte l'avancement (3, 5). Un seul grand geste, la fin de lot (15). Le sceau est dessiné en CSS (16 écarté). |
+| 12 | **planes**, composant Shader Flood (Resources) | Composant React d'effet décoratif pour grilles de fonctionnalités de pages marketing, installé par la commande shadcn ; licence payante (Planes Pro) ; ne dit rien de la préférence de mouvement réduit. | **Écarté** : un décor, pas un fait ; licence payante. |
 
-## Écartés, avec raison
+## Pistes non lues (noms vus dans le plan du site, rien de plus)
 
-- **Shader Flood** (17) et **Evil Buttons** (8) : décor ; Signal n'anime que ce qui signale un changement.
-- **Rive**, **Lottie** (16) : exécutant externe.
-- **GSAP**, **Framer** : bibliothèques d'animation ; l'extension n'en charge aucune.
+Rolling Number, Loader Buttons, Evil Buttons, Animations.dev, Rive, Lottie, Departure Mono, Linear, Raycast, Lucide. **Je ne dis rien de leur contenu** : à lire avant de s'y appuyer.
+
+## Ce que chaque direction tire de ces lectures
+
+| Direction | Identité | Références utilisées |
+|---|---|---|
+| **A, Cadran** | Instrument sobre : la voie vue de côté, filets de 1 px, capitales à chasse fixe. Une courbe, 200 à 320 ms, aucune boucle. | 1 (état par attribut), 4 (bouton grisé lisible), 6 (palette groupée), 10 (courbe) |
+| **B, Nuage** | La voie vue dans un nuage de points : fond nuit, cartes arrondies, pilules, ressort court de 380 à 480 ms, aucune boucle ambiante. | 2 (le chiffre qui change), 9 (ressort par durée et rebond), 7 (forme et mot en plus de la couleur) |
+| **C, Chantier** | Signalétique de chantier : très grand chiffre, capitales, jaune de signalisation. Passage de témoin entre états, un grand geste de 1,2 s à la fin du lot. | 2 (le chiffre), 7 (le sens ne tient pas à la couleur seule), 10 (courbe) |
+
+## Écartés
+
+- **Progress Circles** (Tremor) et **Shader Flood** (planes) : l'anneau et le décor sont exactement ce que l'opérateur trouve « trop générique ».
+- **Rive** et **Lottie** : pistes non lues, écartées par principe (un exécutant externe).
 
 ## Limites
 
-- Les lignes PROBABLE reposent sur le nom et sur ma connaissance de la ressource ; aucune n'a été relue sur designeer.xyz.
+- Les douze références sont lues, mais **aucune ne parle du métier** : la justification des couleurs et des symboles vient d'un raisonnement de conception, à valider auprès de l'opérateur (voir `chantiers/CH-010.rapport.md`).
 - Le contenu de designeer.xyz (descriptions, étiquettes, captures) n'a pas été lu. Si l'opérateur l'obtient, ce document est à compléter, pas à refaire.
-- Aucune ressource n'est vérifiée en licence, sauf Planes (page lue).
+- Les licences ne sont vérifiées que pour planes (page lue) et Tremor (« fully open-source », licence non nommée).
