@@ -28,7 +28,7 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 ## 5. Règles de session
 - Modèle économique par défaut ; le plus fort seulement pour concevoir ou relire, en le disant.
 - Pas d'agent pour lire un journal : un script. Un rapport fait une page.
-- Jamais de nom d'opérateur, de code projet ESV, d'UUID ni de capture dans le dépôt de code ; les exports restent dans `banane-data` et ne sortent jamais vers un service externe.
+- Jamais de nom d'opérateur, de code projet ESV, d'UUID ni de capture dans le dépôt de code ; les exports restent dans `banane-data` ; Cursor peut les lire et les analyser (D-253), aucun autre service externe.
 - Pas de réécriture d'historique, pas de SKIP, pas de passe en écriture sans décision écrite de l'opérateur.
 - Les dossiers de travail d'une session précédente (`scratchpad`, `wt/`) n'existent pas : tout ce qui compte est dans le dépôt.
 

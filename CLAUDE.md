@@ -10,7 +10,7 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 - Ne rapporter que du mesuré, qualifié ÉTABLI / PROBABLE / SUPPOSÉ. Jamais un chiffre non mesuré.
 
 ## Interdits absolus (aucune exception, aucun ticket ne les lève)
-- **Jamais de nom d'opérateur, de code projet ESV, d'adresse ESV, d'UUID ni de capture d'écran** dans un fichier du dépôt ou un commit. Les exports terrain (zips, journaux, nuages) ne sont jamais versés ici ni envoyés à un service externe : ils vivent dans le dépôt `banane-data`.
+- **Jamais de nom d'opérateur, de code projet ESV, d'adresse ESV, d'UUID ni de capture d'écran** dans un fichier du dépôt ou un commit. Les exports terrain (zips, journaux, nuages) ne sont jamais versés ici : ils vivent dans le dépôt `banane-data`. Cursor peut les lire et les analyser dans `banane-data` (D-253) ; aucun autre service externe.
 - **Ariane n'envoie jamais SKIP** et ne valide jamais un cut non résolu.
 - **La deuxième passe est en ombre** (`passeDifferesDefaut.ecriture:false`) : la rallumer demande une décision écrite de l'opérateur.
 - **Pas de réécriture d'historique** (rebase, amend d'un commit poussé, force-push) sans ordre explicite de l'opérateur. Pas de pull request sans demande.
