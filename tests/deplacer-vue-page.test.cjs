@@ -5,7 +5,7 @@
  * logique de la pièce (au plus 3 gestes par rail, caméra relue et cible reprojetée après chaque geste, refus et différé
  * sinon, vue remise en place), et que SANS OPTION la page reçoit exactement la même suite qu'avec la version de base.
  * Rien ici ne dit qu'ESV réagit ainsi : fiches/DEPLACER_VUE.md. */
-const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path');
+const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs'),os=require('node:os'),{spawnSync}=require('node:child_process');
 const {page,cible}=require('./helpers/vue-page.cjs'),S=require('../src/settings.js');
 const GOLDEN=require('./fixtures/apply-sans-vue-50-base.json');
 const types=f=>f.evenements.map(e=>e.type);
@@ -98,6 +98,24 @@ test('apply avec déplacement de vue, vue sourde : erreur AVANT tout clic, rien 
  const f=page(),before=await f.call('state');
  await assert.rejects(f.call('apply',before,{left:{delta:[0,.21,0]},right:{delta:[0,.21,0]}},{deplacerVue:{}}),/Vue ESV non amenée.*rail gauche.*rien n.a été posé/i);
  assert.ok(!types(f).includes('click'));assert.deepEqual(f.pos(f.left),before.rails.left.positionSceneRelative);
+});
+
+/* CH-007 : la molette sourde est déjà l'essai « mousewheel seulement » (refus camera-immobile). Ici, la proposition
+ * (chantiers/CH-007/propositions/deplacement-vue.patch, non appliquée à src/) : après cette molette, le glisser. */
+test('proposition : molette ignorée (mousewheel seul), puis glisser, la cible entre dans la vue',async()=>{
+ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch007-'));
+ fs.mkdirSync(path.join(tmp,'src'),{recursive:true});
+ fs.copyFileSync(path.join(__dirname,'..','src/adapter-page.js'),path.join(tmp,'src/adapter-page.js'));
+ const patch=path.join(__dirname,'..','chantiers/CH-007/propositions/deplacement-vue.patch');
+ const r=spawnSync('patch',['-p1','-d',tmp,'-i',patch],{encoding:'utf8'});
+ assert.equal(r.status,0,r.stderr||r.stdout);
+ const f=page({navigation:{molette:'mousewheel'},adaptateur:path.join(tmp,'src/adapter-page.js')}),etat=await f.call('state');
+ const out=await f.call('amenerDansLaVue','left',cible(f,'left',230),etat.identity,{});
+ assert.equal(out.ok,true,JSON.stringify(out));
+ assert.equal(out.gestes[0].type,'molette');assert.equal(out.gestes[0].camera,'immobile');
+ assert.equal(out.gestes[1].type,'glisser');
+ assert.ok(Math.abs(out.gestes[1].ndcApres[0])<=.99);
+ assert.equal(out.remise.ok,true);assert.equal(out.remise.recentre,true);assert.equal(out.remise.crans,0);
 });
 
 test('SANS OPTION, apply et restore envoient exactement la même suite qu\'en 50-base, même avec le réglage actif dans la page',async()=>{
