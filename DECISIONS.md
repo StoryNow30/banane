@@ -3253,3 +3253,9 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Cadrage de l'intégrateur** : un gain est dit significatif quand il est chiffré avec son intervalle sur un effectif suffisant et qu'aucun cut n'est dégradé ; sinon il est rapporté comme indice, pas comme gain.
 - Le numéro suivant est D-263.
 
+## D-263 — Partie 17 du 28/10 : sous-ensemble réglage en apprentissage pour la v7 (intégrateur, sur délégation D-262 et D-258, 29/10/2026)
+
+- **Décision** : le sous-ensemble RÉGLAGE du tirage de CH-012 (`outils/analyse-lots/chercheur-v7/tirage-2026-10-29.json` de `banane-data`, graine 20261029, 240 blocs de 20 cuts sur 480) passe en apprentissage dans `datasets/manifeste-parties.json` (projet 9 = étiquette de rejeu, partie 17, entrée du 29/10). Cause : l'opérateur veut que la GCV2 apprenne de ces poses (D-258) ; `tools/gcv2-jeu.cjs` refuse sinon toute partie absente de la liste.
+- **Limites écrites** : le manifeste ne représente que des parties entières. Les blocs d'examen et de garde restent fermés au réglage par le tirage, pas par le manifeste ; CH-012 les ouvre une seule fois, après figement et déclaration des paramètres. Le projet réel est inconnu : si c'est le projet 1, la partie 17 était déjà en apprentissage (réglage de la convention, 19/10) et l'examen n'est pas vierge pour la v6. Question posée à l'opérateur.
+- Le numéro suivant est D-264.
+
