@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fr" data-v="{{V}}" data-theme="sombre" data-taille="normal" data-revue="v1" data-cadence="reelle" data-chiffre="{{CHIFFRE}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITRE}}</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<style>
+/*POLICES*/
+/*CSS*/
+</style>
+</head>
+<body>
+
+<header class="banc" aria-label="Banc d'essai de la maquette">
+  <label>Scène <select id="sc-scene"></select></label>
+  <span class="seg" role="group" aria-label="Largeur"><button data-largeur="600" aria-pressed="true">600 × 760</button><button data-largeur="480" aria-pressed="false">480</button><button data-largeur="420" aria-pressed="false">420</button><button data-largeur="360" aria-pressed="false">compact 360 × 480</button></span>
+  <span class="seg" role="group" aria-label="Thème"><button data-theme="sombre" aria-pressed="true">sombre</button><button data-theme="clair" aria-pressed="false">clair</button></span>
+  <span class="seg" role="group" aria-label="Revue"><button data-revue="v1" aria-pressed="true">Revue V1 · lire</button><button data-revue="v2" aria-pressed="false">Revue V2 · travailler</button></span>
+  <span class="seg" role="group" aria-label="Cadence de la simulation"><button data-cadence="reelle" aria-pressed="true">simulation 8 s par cut</button><button data-cadence="rapide" aria-pressed="false">2 s par cut</button></span>
+  <span class="seg seulement-3" role="group" aria-label="Grand chiffre"><button data-chiffre="zodiak" aria-pressed="true">chiffre Zodiak</button><button data-chiffre="plex" aria-pressed="false">chiffre Plex Mono</button></span>
+  <label><input type="checkbox" id="sc-reduit"> mouvement réduit</label>
+</header>
+
+<div class="plateau">
+  <div class="fen" id="fen" role="application" aria-label="Ariane"></div>
+  <aside class="notes" id="notes"></aside>
+</div>
+
+<script>
+/*JS*/
+</script>
+</body>
+</html>
