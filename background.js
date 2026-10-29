@@ -1524,33 +1524,38 @@ function gardeApresDiffereCommande(command,lotObservation,proposal){
  try{const SIDES=['left','right'],b=engine.s.batch,identity=engine.s.before?.identity??null;
   const valide=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
   if(!b||!Number.isInteger(identity?.cut))return command;
-  const appuis=Array.isArray(lotObservation?.anchorsUsed)?lotObservation.anchorsUsed.length:null;
+  /* Appuis : `anchorsUsed` de la décision du lot ; à défaut, ceux de la chaîne consignés par la GCV2 (`l1.chaine.appuis`) ; sinon inconnus (comptés 0). */
+  const appuis=Array.isArray(lotObservation?.anchorsUsed)?lotObservation.anchorsUsed.length
+   :Number.isInteger(lotObservation?.l1?.chaine?.appuis)?lotObservation.l1.chaine.appuis:null;
   const suivant=gardeApresDiffereSuivant(b,identity,lotObservation,appuis,command);
-  if(!valide)return suivant(command,false);
+  if(!valide)return suivant.rendre(command,false);
   const differesLot=(b.deferred||[]).filter(d=>(d?.identity?.part??null)===(identity.part??null)).map(d=>d?.cut??d?.identity?.cut)
    .filter(c=>Number.isInteger(c)&&b.lotCommands?.[c]?.gardeApresDiffere!==true);
-  const j=GA.juger({cut:identity.cut,differesLot,appuis},R);
-  if(!j.differer)return suivant(command,false);
+  /* CH-015 (définition de R3) : les appuis comptent TELS QUE SANS LA GARDE : un cut qu'elle a différé dans la fenêtre d'appuis est rendu au compte
+   * (borne haute `appuisSansGardeMax`), sinon elle s'alimenterait elle-même de proche en proche. */
+  const j=GA.juger({cut:identity.cut,differesLot,appuis:suivant.appuisSansGardeMax},R);
+  if(!j.differer)return suivant.rendre(command,false);
   const d=globalThis.BananeLotDecision.deferRails(proposal.rails,lotObservation,'garde-apres-differe','décision sur le lot : cut validable après un différé, '+(j.appuis??'?')+' appui(s) : cut laissé à l\'opérateur');
   lotObservation.gardeApresDiffere={regle:j.regle,appuis:j.appuis,voisinsDifferes:j.voisinsDifferes,commande:{action:command.action,reason:command.reason??null}};
   journalerSimple('garde-apres-differe',{identity:{part:identity.part??null,cut:identity.cut},version:GA.VERSION,regle:j.regle,coupures:R.coupures,appuisMin:R.appuisMin,
-   appuis:j.appuis,voisinsDifferes:j.voisinsDifferes,etage:lotObservation?.stage??null,commandeEvitee:{action:command.action,reason:command.reason??null},...(j.reglageIllisible?{reglageIllisible:R.raison}:{})});
+   appuis:j.appuis,appuisMesures:appuis,voisinsDifferes:j.voisinsDifferes,etage:lotObservation?.stage??null,commandeEvitee:{action:command.action,reason:command.reason??null},...(j.reglageIllisible?{reglageIllisible:R.raison}:{})});
   if(profilL1se()){const t=l1eTransportDe(identity);for(let i=t.length-1;i>=0;i--)if(t[i]?.identity?.cut===identity.cut)t.splice(i,1);
    if(passeDiffReglage().mode!=='off'){const z=l1Zone(identity);l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:false});}}
-  return suivant(d,true);
+  return suivant.rendre(d,true);
  }catch(e){journalerSimple('garde-apres-differe',{identity:{part:engine?.s?.before?.identity?.part??null,cut:engine?.s?.before?.identity?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)});return command;}}
 /* Racines sans appui créées par la garde (demande de l'intégrateur, 29/10) : sur un cut qui a, dans la fenêtre d'appuis du lot (`gap` cuts avant
  * lui, src/lot-decision.js), au moins un cut DIFFÉRÉ PAR LA GARDE, l'événement `garde-apres-differe-suivant` donne ses appuis AVEC la garde (mesurés :
  * `anchorsUsed`) et SANS elle en borne haute (`appuisSansGardeMax` = min(`anchors`, appuis + cuts de la garde dans la fenêtre) : si chacun avait été
  * validé et pris pour appui), sa commande finale, et s'il est lui-même différé par la garde. Le journal dit ainsi si la garde a créé des racines sans
- * appui. Rend une fonction (commande, différé par la garde) → commande, qui écrit l'événement quand il y a lieu. */
+ * appui. Rend { appuisSansGardeMax, rendre(commande, différé par la garde) → commande } ; `rendre` écrit l'événement quand il y a lieu. */
 function gardeApresDiffereSuivant(b,identity,lotObservation,appuis,command){
  const L=globalThis.BananeLotDecision,gap=L?.DEFAULTS?.gap??3,max=L?.DEFAULTS?.anchors??2,cut=identity.cut;
  const gardes=[];for(let c=cut-gap;c<cut;c++)if(b.lotCommands?.[c]?.gardeApresDiffere===true)gardes.push(c);
- return (rendue,parLaGarde)=>{if(gardes.length)journalerSimple('garde-apres-differe-suivant',{identity:{part:identity.part??null,cut},cutsGarde:gardes,fenetre:gap,
-  appuis,anchorsUsed:Array.isArray(lotObservation?.anchorsUsed)?lotObservation.anchorsUsed.slice(0,12):null,appuisSansGardeMax:appuis===null?null:Math.min(max,appuis+gardes.length),
+ const appuisSansGardeMax=appuis===null?null:gardes.length?Math.min(max,appuis+gardes.length):appuis;
+ return {appuisSansGardeMax,rendre:(rendue,parLaGarde)=>{if(gardes.length)journalerSimple('garde-apres-differe-suivant',{identity:{part:identity.part??null,cut},cutsGarde:gardes,fenetre:gap,
+  appuis,anchorsUsed:Array.isArray(lotObservation?.anchorsUsed)?lotObservation.anchorsUsed.slice(0,12):null,appuisSansGardeMax,
   etage:lotObservation?.stage??null,commande:{action:rendue?.action??null,reason:rendue?.reason??null},commandeAvantGarde:{action:command.action,reason:command.reason??null},differeParLaGarde:parLaGarde});
-  return rendue;};}
+  return rendue;}};}
 /* Décision sur le lot : l'état du lot (ancres) vit dans le lot lui-même,
  * persisté avec lui, et disparaît avec lui. */
 let lotAnchorCandidate=null;

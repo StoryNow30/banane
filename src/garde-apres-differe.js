@@ -11,7 +11,9 @@
   *   1. un des `coupures` cuts qui le précèdent (livré : 2, soit cut−1 et cut−2) est un DIFFÉRÉ DU LOT (motif du moteur, de la chaîne ou
   *      de la GCV2) : c'est à l'appelant de ne passer que ceux-là (`differesLot`). Un cut différé par cette garde n'en est PAS un, sinon
   *      elle s'enchaînerait en cascade sur toute la partie ;
-  *   2. le cut a STRICTEMENT moins de `appuisMin` appuis (livré : 2) : les appuis de la décision du lot (`anchorsUsed`).
+  *   2. le cut a STRICTEMENT moins de `appuisMin` appuis (livré : 2) : les appuis de la décision du lot (`anchorsUsed`), comptés par
+  *      l'appelant TELS QUE SANS LA GARDE (un cut qu'elle a différé est rendu au compte : définition de CH-015, sans quoi elle se nourrit
+  *      d'elle-même).
   * Règle R1 : la condition 1 seule.
   * Pourquoi : sur la partie 20 du 28/10 (4.9.5.23, 172 jugés, échantillon biaisé), les poses fausses de 21 à plus de 50 mm, décalage commun
   * aux deux rails, suivent un différé qui casse la chaîne d'appuis. R3 y signale 38 posés sur 721 et attrape 13 faux sur 21 (rappel 62 %,
