@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal vivant</title>
+<style>
+/*POLICE:general-sans*/
+/* Proposition « Vivant ». Sources : heydamir (anthracite chaud, cadres doubles, bouton crème
+ * qui rayonne, mot « vivant » en dégradé pêche), ThinkingOrbs et libraries.dev (orbe en points
+ * dans une pastille, libellé qui scintille pendant le travail).
+ * Sens : la lumière chaude = Ariane agit. Elle n'apparaît que sur le lot qui tourne et sur
+ * la prochaine action. Le bleu froid + losange = vert à examiner. */
+:root{
+  --fond:#F3F0EA; --cadre:#E6E1D8; --carte:#FFFFFF; --bord:#DDD7CC; --texte:#1B1916; --texte-2:#5D5850;
+  --chaud-a:#A2440E; --chaud-b:#BF5A12; --halo:255,150,70; --froid:#1E58B8; --plein:#1B1916; --sur-plein:#F7F3EC;
+  --point:27,25,22; --scene:#D8D3C9; --sans:'General Sans',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#151413; --cadre:#1D1C1A; --carte:#222120; --bord:#2E2C29; --texte:#F2EEE8; --texte-2:#A8A299;
+  --chaud-a:#F7CFA6; --chaud-b:#EE9A5E; --halo:255,160,90; --froid:#A9C8FF; --plein:#F4EBDD; --sur-plein:#1A1816;
+  --point:242,238,232; --scene:#0B0A09;
+}}
+:root[data-theme="dark"]{
+  --fond:#151413; --cadre:#1D1C1A; --carte:#222120; --bord:#2E2C29; --texte:#F2EEE8; --texte-2:#A8A299;
+  --chaud-a:#F7CFA6; --chaud-b:#EE9A5E; --halo:255,160,90; --froid:#A9C8FF; --plein:#F4EBDD; --sur-plein:#1A1816;
+  --point:242,238,232; --scene:#0B0A09;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);border-radius:26px;padding:18px 16px 22px;font-size:15px;line-height:1.45;border:1px solid var(--bord)}
+.notes{max-width:380px;font-size:14px;line-height:1.55;background:var(--fond);padding:18px 20px;border-radius:20px;border:1px solid var(--bord)}
+.notes h2{font-size:18px;margin:0 0 8px;font-weight:600}.notes p{margin:0 0 10px}.notes b{font-weight:600}
+
+.tete{display:flex;align-items:center;gap:10px}
+.tete canvas{width:38px;height:38px;border-radius:50%;background:var(--carte);border:1px solid var(--bord)}
+.tete .nom{font-weight:600;font-size:15px;line-height:1.2}
+.tete .sous{font-size:13px;color:var(--texte-2);display:flex;align-items:center;gap:6px}
+.tete .sous.non{color:var(--froid);font-weight:600}
+.losange{display:inline-block;width:8px;height:8px;background:currentColor;transform:rotate(45deg);flex:none}
+.bascule{margin-left:auto;display:flex;padding:3px;border-radius:999px;border:1px solid var(--bord);background:var(--carte)}
+.bascule button{font:inherit;font-size:13px;font-weight:500;border:0;border-radius:999px;background:none;color:var(--texte-2);padding:6px 12px;cursor:pointer}
+.bascule button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein)}
+.bascule button[aria-disabled="true"]{cursor:not-allowed}
+
+.titre{font-size:clamp(26px,8cqi,34px);font-weight:600;line-height:1.08;letter-spacing:-.02em;margin:26px 0 12px}
+.vif{color:var(--chaud-a);background:linear-gradient(100deg,var(--chaud-a),var(--chaud-b));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sous-titre{color:var(--texte-2);margin:0 0 16px;max-width:30em}
+
+.orbe{display:inline-flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border-radius:999px;background:var(--carte);border:1px solid var(--bord);margin:0 0 14px;max-width:100%}
+.orbe canvas{width:34px;height:34px;flex:none}
+.orbe span{font-weight:500;color:var(--texte);overflow-wrap:anywhere}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .orbe.vit span{
+  background:linear-gradient(90deg,var(--texte) 0 40%,var(--texte-2) 50%,var(--texte) 60% 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:luit 2.2s linear infinite}}
+@keyframes luit{from{background-position:100% 0}to{background-position:-150% 0}}
+
+.appareil{background:var(--cadre);border-radius:24px;padding:6px;margin:12px 0;border:1px solid var(--bord)}
+.appareil>.dedans{background:var(--carte);border-radius:19px;padding:16px;border:1px solid var(--bord)}
+.grand{display:flex;align-items:baseline;gap:8px;margin:0}
+.grand .n{font-size:64px;font-weight:600;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.grand .s{color:var(--texte-2);font-size:17px}
+.points-av{display:flex;flex-wrap:wrap;gap:3px;margin:14px 0 4px}
+.points-av i{width:5px;height:5px;border-radius:50%;background:var(--bord)}
+.points-av i.f{background:var(--texte)}
+.points-av i.d{background:none;box-shadow:inset 0 0 0 1.5px var(--texte-2)}
+.points-av i.v{background:var(--froid);border-radius:0;transform:rotate(45deg)}
+.points-av i.q{background:none;box-shadow:inset 0 0 0 1px var(--bord)}
+.lignes{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin:14px 0 0}
+.lignes dt{font-size:12px;color:var(--texte-2)} .lignes dd{margin:0;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+.lignes .froid dt,.lignes .froid dd{color:var(--froid)}
+
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px;align-items:center}
+.b{font:inherit;font-size:15px;font-weight:600;border-radius:999px;padding:13px 20px;min-height:48px;cursor:pointer;display:inline-flex;align-items:center;gap:10px;text-align:left}
+.b .note{font-size:12px;font-weight:400;color:inherit}
+.b-principal{background:var(--plein);color:var(--sur-plein);border:1px solid var(--plein);box-shadow:0 0 0 4px rgba(var(--halo),.10),0 8px 30px -6px rgba(var(--halo),.55)}
+.b-principal::after{content:"→";font-weight:500}
+.b-second,.b-choix{background:var(--carte);color:var(--texte);border:1px solid var(--bord)}
+.b-arret{background:var(--carte);color:var(--texte);border:1px solid var(--texte-2)}
+.b-arret::before{content:"";width:9px;height:9px;background:currentColor;border-radius:2px}
+.b-arret.confirme{border:2px solid var(--texte)}
+.b[aria-disabled="true"]{background:var(--cadre);color:var(--texte-2);border:1px dashed var(--texte-2);box-shadow:none;cursor:not-allowed}
+.b[aria-disabled="true"]::after{content:none}
+.raison{font-size:13px;color:var(--texte-2);margin:0;flex-basis:100%}
+.lien{font:inherit;font-size:14px;font-weight:600;color:var(--texte);background:none;border:0;padding:6px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+:focus-visible{outline:2px solid var(--texte);outline-offset:3px}
+
+.alerte{border-color:var(--froid)}
+.alerte>.dedans{border-color:var(--froid)}
+.alerte h2{color:var(--froid)}
+.bloc h2{font-size:15px;font-weight:600;margin:0 0 6px;display:flex;align-items:center;gap:8px}
+.bloc p{margin:0 0 8px}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bornes label{font-size:12px;color:var(--texte-2);display:flex;flex-direction:column;gap:6px}
+.bornes input{font:inherit;font-size:28px;font-weight:600;letter-spacing:-.02em;background:var(--fond);border:1px solid var(--bord);border-radius:14px;padding:8px 12px;color:var(--texte);width:100%;font-variant-numeric:tabular-nums}
+.bornes input:disabled{color:var(--texte-2)}
+.inter{display:flex;align-items:center;gap:10px;font:inherit;background:none;border:0;color:var(--texte);padding:10px 0 0;cursor:pointer;text-align:left}
+.inter .r{width:40px;height:24px;border-radius:999px;background:var(--cadre);border:1px solid var(--bord);position:relative;flex:none}
+.inter .r::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;top:2px;left:2px;background:var(--texte-2)}
+.inter[aria-checked="true"] .r{background:var(--plein)}
+.inter[aria-checked="true"] .r::after{left:18px;background:var(--sur-plein)}
+.inter small{color:var(--texte-2)}
+.pas{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pas button{font:inherit;font-size:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--bord);background:var(--fond);color:var(--texte);cursor:pointer}
+.pas output{font-size:26px;font-weight:600;min-width:2ch;text-align:center}
+.chapitres{display:flex;gap:6px;margin:6px 0 2px;flex-wrap:wrap}
+.chap{flex:1 1 90px;border-radius:14px;padding:8px 10px;background:var(--fond);border:1px solid var(--bord);font-size:13px}
+.chap b{display:block;font-size:14px}
+.chap.faite{background:var(--cadre)}
+.chap.ici{border:2px solid var(--texte)}
+.chap span{color:var(--texte-2)}
+
+.reste{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:start}
+.reste canvas{width:52px;height:52px;border-radius:14px;background:var(--fond)}
+.reste .t{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.reste .g{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid var(--bord);color:var(--texte-2)}
+.reste .g.froid{color:var(--froid);border-color:var(--froid)}
+.reste .m{color:var(--texte-2);font-size:14px;margin:2px 0 8px}
+.reste .gestes{display:flex;gap:8px;flex-wrap:wrap}
+.petit{font:inherit;font-size:13px;font-weight:600;border-radius:999px;padding:7px 12px;background:var(--fond);color:var(--texte);border:1px solid var(--bord);cursor:pointer}
+.tranche{width:100%;height:240px;display:block;border-radius:14px;background:var(--fond);cursor:grab;touch-action:none}
+.pied{margin-top:20px;border-top:1px solid var(--bord);padding-top:12px;font-size:13px;color:var(--texte-2)}
+.message{font-size:14px;margin:10px 0;padding:10px 14px;border-radius:14px;background:var(--cadre)}
+.legende{font-size:13px;color:var(--texte-2);margin-top:10px}
+.legende summary{cursor:pointer;color:var(--texte);font-weight:600}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Vivant"></div></div>
+  <aside class="notes">
+    <h2>Vivant</h2>
+    <p><b>D'où ça vient.</b> heydamir : fond anthracite chaud, appareils à double cadre arrondi, bouton crème qui rayonne, le mot qui compte en dégradé pêche. ThinkingOrbs et libraries.dev : l'orbe en points dans une pastille, avec un libellé qui scintille tant que l'agent travaille.</p>
+    <p><b>Ce que ça veut dire ici.</b> La lumière chaude signifie « Ariane agit » : elle est sur le mot d'état quand le lot tourne, et sur le seul bouton qui fait avancer. Si rien ne brille, rien ne tourne. L'orbe change de forme selon ce que fait Ariane. Chaque point de la frise est un cut : plein, posé ; creux, différé ; losange bleu froid, vert à examiner.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc } = Demo.D;
+  function bouton(x) {
+    const cls = { principal: 'b b-principal', second: 'b b-second', arret: 'b b-arret' + (x.confirme ? ' confirme' : ''), choix: 'b b-choix', lien: 'lien' }[x.rang];
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}${x.note ? ` <span class="note">· ${esc(x.note)}</span>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+  const appareil = (h, cls) => `<div class="appareil ${cls || ''}"><div class="dedans">${h}</div></div>`;
+
+  function forme(m) {
+    if (m.vue === 'echo') return 'ecoute';
+    if (m.incident && m.incident.type !== 'reprise') return 'cherche';
+    if (m.file.relecture) return 'resout';
+    return { pret: 'repos', encours: 'travail', pause: 'souffle', arrete: 'repos', fin: 'plein' }[m.phase] || 'repos';
+  }
+  function libelleOrbe(m) {
+    if (m.vue === 'echo') return 'Regarde l’opérateur poser…';
+    if (m.incident && m.incident.type === 'absent') return 'Cherche un onglet ESV…';
+    if (m.incident && m.incident.type === 'choisir') return 'Attend le choix de l’onglet';
+    if (m.file.relecture) return 'Relit et corrige la partie ' + m.file.courante + '…';
+    return { pret: 'Prête, rien ne tourne', encours: 'Pose le cut ' + m.compte.cut + '…', pause: 'En pause au cut ' + m.compte.cut, arrete: 'Arrêtée au cut ' + m.compte.cut, fin: 'Lot posé, rien ne tourne' }[m.phase];
+  }
+  function titre(m) {
+    const vit = m.phase === 'encours' && m.vue !== 'echo';
+    if (m.vue === 'echo') return 'Ariane <span class="vif">observe</span>, sans rien poser.';
+    if (m.file.relecture) return 'Partie ' + m.file.courante + ' finie, <span class="vif">relecture</span> en cours.';
+    const mots = { pret: 'Prête pour un lot neuf.', pause: 'Le lot est en pause.', arrete: m.file.alerte ? 'La file s’est arrêtée.' : 'Le lot est arrêté.', fin: m.file.finie ? 'La file est terminée.' : 'Le lot est terminé.' };
+    return vit ? 'Le lot est <span class="vif">en cours</span>.' : esc(mots[m.phase] || m.titre);
+  }
+  function tete(m) {
+    const bl = m.activiteBloquee ? ' aria-disabled="true" title="Mettre le lot en pause ou l’arrêter avant de changer d’activité"' : '';
+    const ok = m.liaison.etat === 'relie';
+    return `<div class="tete"><canvas data-garder="avatar" id="avatar" aria-hidden="true"></canvas><div><div class="nom">Ariane</div><div class="sous${ok ? '' : ' non'}">${ok ? '' : '<span class="losange" aria-hidden="true"></span>'}${esc(m.liaison.texte)} · ${esc(m.liaison.detail)}</div></div>
+      <div class="bascule" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${m.activite === 'orbite'}"${m.activite === 'echo' ? '' : bl}>Orbite</button><button data-a="echo" aria-pressed="${m.activite === 'echo'}"${bl}>Écho</button></div></div>`;
+  }
+  function orbe(m) {
+    const vit = (m.phase === 'encours' || m.vue === 'echo' || (m.incident && m.incident.type === 'absent'));
+    return `<div class="orbe${vit ? ' vit' : ''}" role="status"><canvas data-garder="orbe" id="orbe" aria-hidden="true"></canvas><span>${esc(libelleOrbe(m))}</span></div>`;
+  }
+  function frise(S, m) {
+    const c = m.compte, tot = c.total == null ? Math.max(c.faits + 30, 120) : c.total;
+    const pas = tot > 160 ? 2 : 1, map = new Map(S.restants.map((r) => [r.cut - S.bornes.debut, r.type]));
+    let s = '';
+    for (let i = 0; i < tot; i += pas) {
+      let t = null; for (let k = i; k < i + pas; k++) if (map.has(k)) t = map.get(k) === 'vert' ? 'v' : (t || 'd');
+      const cls = i < c.faits ? (t || 'f') : (c.total == null ? 'q' : '');
+      s += `<i class="${cls}"></i>`;
+    }
+    return `<div class="points-av" role="img" aria-label="Frise du lot, un point pour ${pas === 2 ? 'deux cuts' : 'un cut'} : ${c.faits} traités sur ${esc(c.totalTexte)}">${s}</div>`;
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') return appareil(`<div class="bloc"><h2>File de parties</h2><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"></span><span>Enchaîner plusieurs parties <small>· ${f.active ? 'allumée' : 'éteinte'}</small></span></button>
+      ${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues et corrigées une à une</span></div>` : ''}</div>`);
+    if (!f.active) return '';
+    let ch = '';
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), ici = i === f.courante && !f.finie;
+      ch += `<div class="chap${p ? ' faite' : ''}${ici ? ' ici' : ''}"><b>Partie ${i}</b><span>${p ? `${p.poses} posés · ${p.differes} diff. · ${p.aControler} à ex.` : ici ? (f.relecture ? 'relecture' : m.phase === 'arrete' ? 'arrêtée' : 'en cours') : 'à venir'}</span></div>`;
+    }
+    return appareil(`<div class="bloc"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`}</h2><div class="chapitres">${ch}</div></div>`);
+  }
+  const alerteFile = (m) => m.file.alerte ? appareil(`<div class="bloc" role="alert"><h2><span class="losange" aria-hidden="true"></span>${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></div>`, 'alerte') : '';
+  function principal(m, S) {
+    let h = tete(m) + `<h1 class="titre">${titre(m)}</h1>` + orbe(m);
+    if (m.vue === 'echo') {
+      return h + `<p class="sous-titre">${esc(m.phrase)} Rien n’est écrit dans ESV.</p>` + appareil(`<p class="grand"><span class="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><dl class="lignes"><div><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div><dt>Mêmes choix qu'Ariane</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>`) + actions(m.actions);
+    }
+    const c = m.compte;
+    h += `<p class="sous-titre">${esc(m.phrase)}</p>` + alerteFile(m);
+    if (m.incident) h += appareil(`<div class="bloc"${m.incident.type !== 'reprise' ? ' role="alert"' : ''}><h2>${m.incident.type !== 'reprise' ? '<span class="losange" aria-hidden="true"></span>' : ''}${esc(m.incident.titre)}</h2><p>${esc(m.incident.texte)}</p>${m.incident.actions.length ? actions(m.incident.actions) : ''}</div>`, m.incident.type !== 'reprise' ? 'alerte' : '');
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      h += appareil(`<div class="bornes"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu'à la fin de la partie</button>`);
+      h += actions(m.actions) + file(m);
+    } else if (m.phase === 'fin') {
+      h += appareil(`<p class="grand"><span class="n">${c.poses}</span><span class="s">posés sur ${c.faits}</span></p>${frise(S, m)}<dl class="lignes"><div><dt>Différés</dt><dd>${c.differes}</dd></div><div class="${c.aExaminer ? 'froid' : ''}"><dt>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`) + actions(m.actions) + file(m);
+    } else {
+      h += appareil(`<p class="grand"><span class="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${frise(S, m)}<dl class="lignes"><div><dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd></div><div><dt>Cut en cours</dt><dd>${c.cut}</dd></div><div><dt>Différés</dt><dd>${c.differes}</dd></div><div class="${c.aExaminer ? 'froid' : ''}"><dt>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`);
+      h += actions(m.actions) + file(m);
+    }
+    if (m.message) h += `<p class="message" role="status">${esc(m.message)}</p>`;
+    h += `<details class="legende"><summary>Légende</summary><p>Lumière chaude : Ariane agit. Point plein : cut posé ; point creux : différé ; losange bleu : vert à examiner ; points pâles cerclés : total inconnu.</p></details>`;
+    return h + `<p class="pied">${m.phase === 'encours' ? 'Dernier cut posé il y a moins d’une seconde.' : 'Rien ne tourne en ce moment.'}</p>`;
+  }
+  function reste(m) {
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => appareil(`<div class="reste"><canvas class="vign" data-cut="${r.cut}" data-type="${r.type}" aria-hidden="true"></canvas><div><div class="t">Cut ${r.cut} <span class="g${r.type === 'vert' ? ' froid' : ''}">${r.type === 'vert' ? '◆ vert à examiner' : '○ différé'}</span></div><p class="m">${esc(r.motif)}</p><div class="gestes"><button class="petit" data-a="examiner" data-id="${r.id}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${r.id}">Ouvrir dans ESV ↗</button></div></div></div>`)).join('');
+    return tete(m) + `<h1 class="titre">Ce qui reste.</h1><p class="sous-titre">${m.restants.filter((r) => r.type === 'differe').length} différés et ${m.restants.filter((r) => r.type === 'vert').length} verts à examiner.</p>${actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }])}${l}${m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : ''}`;
+  }
+  function examen(m) {
+    const r = m.examen;
+    return tete(m) + `<h1 class="titre">Cut ${r.cut}, ${r.type === 'vert' ? '<span style="color:var(--froid)">à examiner</span>' : 'différé'}.</h1><p class="sous-titre">${esc(r.motif)}. ${r.type === 'vert' ? 'Les rails posés sont en bleu.' : 'Rien n’a été posé ; les deux places envisagées sont en pointillé.'}</p>`
+      + appareil(`<canvas class="tranche" id="tranche" data-garder="tr-${r.id}" role="img" aria-label="Tranche du relevé au cut ${r.cut}, glisser pour la tourner"></canvas><p class="raison" style="margin-top:8px">Glisser pour tourner la tranche.</p>`)
+      + actions([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'voirReste', libelle: 'Retour à la liste', rang: 'second' }]) + (m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : '');
+  }
+
+  /* ---------- orbes en points : une forme par activité ---------- */
+  const N = 360, sph = [];
+  for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), a = i * 2.399963; sph.push([Math.cos(a) * r, y, Math.sin(a) * r]); }
+  function nuageForme(f, t) {
+    if (f === 'travail') { const o = []; for (let k = 0; k < 3; k++) for (let j = 0; j < 40; j++) { const a = j / 40 * 6.283 + t * (0.9 + k * 0.3); const inc = 0.4 + k * 0.8; o.push([Math.cos(a), Math.sin(a) * Math.sin(inc), Math.sin(a) * Math.cos(inc)]); } return o; }
+    if (f === 'souffle') { const s = 0.75 + Math.sin(t * 1.4) * 0.12; const o = []; for (let j = 0; j < 70; j++) { const a = j / 70 * 6.283; o.push([Math.cos(a) * s, Math.sin(a) * s, 0]); } return o; }
+    if (f === 'ecoute') { const o = []; for (let k = 0; k < 4; k++) for (let j = 0; j < 44; j++) { const a = j / 44 * 6.283; const R = 0.35 + k * 0.2; o.push([Math.cos(a) * R, Math.sin(a * 3 - t * 3 + k) * 0.22, Math.sin(a) * R]); } return o; }
+    if (f === 'resout') { const o = []; for (let b = 0; b < 6; b++) { const y = -0.85 + b * 0.34; const d = Math.sin(t * 2 + b * 1.7) * 1.2 * Math.max(0, Math.sin(t * 0.7)); for (let j = 0; j < 30; j++) { const a = j / 30 * 6.283 + d; const r = Math.sqrt(Math.max(0, 1 - y * y)); o.push([Math.cos(a) * r, y, Math.sin(a) * r]); } } return o; }
+    if (f === 'cherche') return sph.filter((_, i) => i % 2 === 0);
+    if (f === 'plein') return sph;
+    return sph.filter((_, i) => i % 3 === 0);
+  }
+  function dessinerOrbe(cv, f, t, tourne) {
+    const w = cv.clientWidth, dpr = devicePixelRatio || 1;
+    if (!w) return;
+    if (cv.width !== Math.round(w * dpr)) cv.width = cv.height = Math.round(w * dpr);
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, w);
+    const pts = nuageForme(f, t), rot = tourne ? t * 0.6 : 0.7, tilt = 0.45;
+    const cr = Math.cos(rot), sr = Math.sin(rot), ct = Math.cos(tilt), st = Math.sin(tilt);
+    const pc = getComputedStyle(document.documentElement).getPropertyValue('--point').trim();
+    const R = w * 0.4;
+    const pr = pts.map(([x, y, z]) => { const x1 = x * cr + z * sr, z1 = -x * sr + z * cr; return [x1, y * ct - z1 * st, y * st + z1 * ct]; }).sort((a, b) => a[2] - b[2]);
+    for (const [x, y, z] of pr) { const p = (z + 1) / 2; ctx.fillStyle = `rgba(${pc},${0.2 + p * 0.8})`; const s = Math.max(0.8, w / 60) * (0.6 + p * 0.8); ctx.beginPath(); ctx.arc(w / 2 + x * R, w / 2 - y * R, s, 0, 6.3); ctx.fill(); }
+    if (f === 'cherche') {
+      const a = t * 1.6; ctx.strokeStyle = `rgba(${pc},.9)`; ctx.lineWidth = Math.max(1, w / 50);
+      ctx.beginPath(); ctx.ellipse(w / 2, w / 2, Math.abs(Math.cos(a)) * R, R, 0, 0, 6.3); ctx.stroke();
+    }
+  }
+  function dessinerTranche(cv, r, rot) {
+    const w = cv.clientWidth, H = cv.clientHeight, dpr = devicePixelRatio || 1;
+    if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr); }
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, H);
+    const pc = getComputedStyle(document.documentElement).getPropertyValue('--point').trim();
+    const froid = getComputedStyle(document.documentElement).getPropertyValue('--froid').trim();
+    const { pts, rails } = Demo.D.coupe(r.cut, 900);
+    const pr = pts.map(([x, z], k) => { const d = ((k * 61) % 100) / 100 - 0.5; return [x * Math.cos(rot) - d * Math.sin(rot), z, x * Math.sin(rot) + d * Math.cos(rot)]; }).sort((a, b) => a[2] - b[2]);
+    for (const [x, z, d] of pr) { const p = d + 0.5; ctx.fillStyle = `rgba(${pc},${0.18 + p * 0.75})`; ctx.beginPath(); ctx.arc(w / 2 + x * w * 0.44, H * 0.12 - z * H * 1.45, (0.7 + p * 1.1) * Math.min(1, w / 220), 0, 6.3); ctx.fill(); }
+    for (const rx of rails) { const x = w / 2 + rx * Math.cos(rot) * w * 0.44, y = H * 0.12 + 0.16 * H * 1.45; ctx.lineWidth = Math.max(1.2, 2.5 * Math.min(1, w / 220)); ctx.strokeStyle = froid; ctx.setLineDash(r.type === 'vert' ? [] : [3, 4]); ctx.beginPath(); ctx.moveTo(x, y - 30 * Math.min(1, w / 220)); ctx.lineTo(x, y + 4); ctx.stroke(); ctx.setLineDash([]); }
+  }
+  let rotT = 0.4, tire = null;
+  function boucle(t) {
+    const m = Demo.D.modele(), reduit = Demo.D.mouvementReduit();
+    const vit = !reduit && (m.phase === 'encours' || m.vue === 'echo' || (m.incident && m.incident.type === 'absent'));
+    const tt = vit ? t / 1000 : 0.8;
+    const o = document.getElementById('orbe'); if (o) dessinerOrbe(o, forme(m), tt, vit);
+    const a = document.getElementById('avatar'); if (a) dessinerOrbe(a, forme(m), tt, vit);
+    const tr = document.getElementById('tranche'); if (tr && Demo.etat().examen) dessinerTranche(tr, Demo.etat().examen, rotT);
+    requestAnimationFrame(boucle);
+  }
+  function apres() {
+    document.querySelectorAll('canvas.vign').forEach((cv) => dessinerTranche(cv, { cut: Number(cv.dataset.cut), type: cv.dataset.type }, 0.5));
+    const tr = document.getElementById('tranche');
+    if (tr && !tr.dataset.lie) {
+      tr.dataset.lie = '1';
+      tr.addEventListener('pointerdown', (e) => { tire = e.clientX; tr.setPointerCapture(e.pointerId); });
+      tr.addEventListener('pointermove', (e) => { if (tire == null) return; rotT += (e.clientX - tire) / 140; tire = e.clientX; });
+      tr.addEventListener('pointerup', () => { tire = null; });
+    }
+  }
+  Demo.monter({ rendre(S, D) { const m = D.modele(); if (m.vue === 'reste') return reste(m); if (m.vue === 'examen' && m.examen) return examen(m); return principal(m, S); }, apres });
+  requestAnimationFrame(boucle);
+})();
+</script>
+</body>
+</html>

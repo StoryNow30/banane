@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mosaïque</title>
+<style>
+/*POLICE:array*/
+/*POLICE:switzer*/
+/* Proposition « Mosaïque ». Sources : libraries.dev Image (une mosaïque de pixels qui se
+ * résout en image nette), inspora (images en pixels et en trame, filtres en pavés gris),
+ * backgrounds.supply (collection ASCII et trames), 60fps (le compteur qui s'anime).
+ * Sens : chaque cut est une tuile. Floue = pas encore fait ; nette = posé ; qui reste en gros
+ * pixels avec un cadre = différé ; coin corail + losange = vert à examiner. Le lot se lit comme
+ * une image qui apparaît. */
+:root{
+  --fond:#F1F1EE; --surface:#E4E4E0; --texte:#141414; --texte-2:#555552; --bord:#C9C9C4; --corail:#B23A22; --corail-t:#E0583C;
+  --gris:20,20,20; --plein:#141414; --sur-plein:#F1F1EE; --scene:#D3D3CE; --affiche:'Array',system-ui,sans-serif; --sans:'Switzer',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#0E0E10; --surface:#1A1A1D; --texte:#F0F0EC; --texte-2:#A2A29E; --bord:#2C2C30; --corail:#FF8B73; --corail-t:#FF7A63;
+  --gris:240,240,236; --plein:#F0F0EC; --sur-plein:#0E0E10; --scene:#000;
+}}
+:root[data-theme="dark"]{
+  --fond:#0E0E10; --surface:#1A1A1D; --texte:#F0F0EC; --texte-2:#A2A29E; --bord:#2C2C30; --corail:#FF8B73; --corail-t:#FF7A63;
+  --gris:240,240,236; --plein:#F0F0EC; --sur-plein:#0E0E10; --scene:#000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);padding:14px 16px 22px;font-size:15px;line-height:1.45;border-radius:6px}
+.notes{max-width:380px;font-size:14px;line-height:1.55;background:var(--fond);padding:18px 20px;border-radius:6px}
+.notes h2{font-family:var(--affiche);font-size:22px;margin:0 0 8px;font-weight:600}.notes p{margin:0 0 10px}
+
+.haut{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.marque{font-family:var(--affiche);font-weight:600;font-size:18px;letter-spacing:.02em}
+.liaison{font-size:12px;color:var(--texte-2);display:flex;align-items:center;gap:6px}
+.liaison.non{color:var(--corail);font-weight:700}
+.px{width:8px;height:8px;background:currentColor;flex:none}
+.non .px{background:none;outline:2px solid currentColor;outline-offset:-2px}
+.filtres{display:flex;gap:4px}
+.filtres button{font:inherit;font-size:13px;border:0;background:var(--surface);color:var(--texte-2);padding:7px 12px;border-radius:4px;cursor:pointer}
+.filtres button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein);font-weight:600}
+.filtres button[aria-disabled="true"]{cursor:not-allowed}
+
+.etat{font-family:var(--affiche);font-size:clamp(30px,10cqi,44px);font-weight:600;line-height:1;margin:18px 0 4px;letter-spacing:-.01em}
+.phrase{margin:0 0 12px;color:var(--texte)}
+.mosaique{position:relative;margin:10px 0 6px}
+.mosaique canvas{display:block;width:100%;image-rendering:pixelated;cursor:pointer;border-radius:4px}
+.mosaique .lecture{font-size:13px;color:var(--texte-2);min-height:20px;margin:6px 0 0}
+.compteur{display:flex;align-items:baseline;gap:10px;margin:8px 0}
+.compteur .n{font-family:var(--affiche);font-size:clamp(56px,18cqi,80px);font-weight:600;line-height:.9;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.compteur .s{color:var(--texte-2)}
+.pavés{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin:10px 0}
+.pavé{background:var(--surface);padding:10px 12px;border-radius:4px}
+.pavé dt{font-size:12px;color:var(--texte-2);display:flex;align-items:center;gap:6px}
+.pavé dd{margin:2px 0 0;font-family:var(--affiche);font-size:22px;}
+.pavé dd.mot{font-family:var(--sans);font-size:17px;}
+.pavé dd{font-weight:600;font-variant-numeric:tabular-nums}
+.pavé.corail dt,.pavé.corail dd{color:var(--corail)}
+.m-dif{width:10px;height:10px;outline:2px solid currentColor;outline-offset:-2px;display:inline-block}
+.m-ex{width:9px;height:9px;background:currentColor;transform:rotate(45deg);display:inline-block}
+
+.actions{display:flex;flex-direction:column;gap:6px;margin:12px 0}
+.b{font:inherit;font-size:15px;font-weight:600;border-radius:4px;padding:13px 14px;min-height:48px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.b .note{font-size:12px;font-weight:400}
+.b-principal{background:var(--plein);color:var(--sur-plein);border:0}
+.b-second,.b-choix{background:var(--surface);color:var(--texte);border:0}
+.b-arret{background:var(--fond);color:var(--texte);border:2px solid var(--texte)}
+.b-arret.confirme{background:var(--surface);border-width:4px}
+.b[aria-disabled="true"]{background:var(--fond);color:var(--texte-2);border:2px dotted var(--texte-2);cursor:not-allowed}
+.raison{font-size:13px;color:var(--texte-2);margin:0}
+.lien{font:inherit;font-size:14px;font-weight:600;color:var(--texte);background:none;border:0;padding:6px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.cadre{background:var(--surface);border-radius:4px;padding:12px 14px;margin:10px 0}
+.cadre h2{font-size:13px;font-weight:700;margin:0 0 6px;letter-spacing:.04em;text-transform:uppercase;color:var(--texte-2)}
+.cadre p{margin:0 0 8px}
+.cadre.alerte{background:var(--fond);border:2px solid var(--corail)}
+.cadre.alerte h2{color:var(--corail)}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bornes label{font-size:12px;color:var(--texte-2);display:flex;flex-direction:column;gap:4px}
+.bornes input{font-family:var(--affiche);font-size:28px;font-weight:600;background:var(--fond);border:0;border-radius:4px;padding:8px 10px;color:var(--texte);width:100%;font-variant-numeric:tabular-nums}
+.bornes input:disabled{color:var(--texte-2)}
+.inter{display:flex;align-items:center;gap:10px;font:inherit;background:none;border:0;color:var(--texte);padding:10px 0 0;cursor:pointer;text-align:left}
+.inter .r{display:grid;grid-template-columns:repeat(4,7px);gap:2px;padding:3px;background:var(--fond);border-radius:3px}
+.inter .r i{width:7px;height:7px;background:var(--bord)}
+.inter[aria-checked="true"] .r i{background:var(--texte)}
+.pas{display:flex;align-items:center;gap:8px;margin-top:8px}
+.pas button{font:inherit;font-size:18px;width:40px;height:40px;border-radius:4px;border:0;background:var(--fond);color:var(--texte);cursor:pointer}
+.pas output{font-family:var(--affiche);font-size:28px;font-weight:600;min-width:2ch;text-align:center}
+.parties{display:grid;gap:4px}
+.partie{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;font-size:14px}
+.partie .bar{display:grid;grid-template-columns:repeat(12,1fr);gap:2px}
+.partie .bar i{height:10px;background:var(--bord)}
+.partie .bar i.f{background:var(--texte)}
+.partie small{grid-column:2;color:var(--texte-2)}
+.partie.ici{font-weight:700}
+.reste{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--bord)}
+.reste canvas{width:48px;height:48px;image-rendering:pixelated;border-radius:3px}
+.reste .t{font-weight:700;display:flex;gap:8px;align-items:center}
+.reste .t.corail{color:var(--corail)}
+.reste .m{color:var(--texte-2);font-size:14px;margin:2px 0 6px}
+.reste .g{display:flex;gap:14px}
+.grand-tuile{display:block;width:100%;aspect-ratio:1/1;image-rendering:pixelated;border-radius:4px}
+.message{background:var(--surface);border-radius:4px;padding:10px 12px;font-size:14px;margin:10px 0}
+.legende{font-size:13px;color:var(--texte-2);margin-top:12px}
+.legende summary{cursor:pointer;color:var(--texte);font-weight:700}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Mosaïque"></div></div>
+  <aside class="notes">
+    <h2>Mosaïque</h2>
+    <p><b>D'où ça vient.</b> libraries.dev Image : un chargeur où une mosaïque de gros pixels se résout en image nette. inspora : les images en trame et les filtres en pavés gris. backgrounds.supply : les trames ASCII. 60fps : le compteur qui s'anime.</p>
+    <p><b>Ce que ça veut dire ici.</b> Le lot est une image : une tuile par cut, dans l'ordre. Une tuile floue n'est pas encore faite. Quand Ariane pose le cut, la tuile se résout et devient nette. Un différé reste en gros pixels, entouré d'un cadre. Un vert à examiner a un coin corail et un losange. On touche une tuile pour la lire, et on touche une tuile marquée pour l'examiner. De loin, on voit l'image se remplir.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc } = Demo.D;
+  function bouton(x) {
+    const cls = { principal: 'b b-principal', second: 'b b-second', arret: 'b b-arret' + (x.confirme ? ' confirme' : ''), choix: 'b b-choix', lien: 'lien' }[x.rang];
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+  function haut(m) {
+    const bl = m.activiteBloquee ? ' aria-disabled="true" title="Mettre le lot en pause ou l’arrêter avant de changer d’activité"' : '';
+    const ok = m.liaison.etat === 'relie';
+    return `<div class="haut"><span class="marque">Ariane</span><span class="liaison${ok ? '' : ' non'}"><span class="px" aria-hidden="true"></span>${esc(m.liaison.texte)}</span><div class="filtres" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${m.activite === 'orbite'}"${m.activite === 'echo' ? '' : bl}>Orbite</button><button data-a="echo" aria-pressed="${m.activite === 'echo'}"${bl}>Écho</button></div></div>`;
+  }
+  function mosaique(m) {
+    const c = m.compte;
+    return `<div class="mosaique"><canvas id="mos" data-garder="mos" role="img" aria-label="Mosaïque du lot, une tuile par cut : ${c.faits} nettes sur ${esc(c.totalTexte)}, ${c.differes} différés, ${c.aExaminer} à examiner"></canvas><p class="lecture" id="lecture" aria-live="polite">Toucher une tuile pour la lire.</p></div>`;
+  }
+  function pavés(m, fin) {
+    const c = m.compte;
+    const a = fin ? '' : `<div class="pavé"><dt>Temps restant</dt><dd class="mot">${esc(c.tempsTexte)}</dd></div><div class="pavé"><dt>Cut en cours</dt><dd>${c.cut}</dd></div>`;
+    return `<dl class="pavés">${a}<div class="pavé"><dt><span class="m-dif" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="pavé${c.aExaminer ? ' corail' : ''}"><dt><span class="m-ex" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`;
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') return `<div class="cadre"><h2>File de parties</h2><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Enchaîner plusieurs parties · ${f.active ? 'allumée' : 'éteinte'}</button>${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues et corrigées une à une</span></div>` : ''}</div>`;
+    if (!f.active) return '';
+    let l = '';
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), ici = i === f.courante && !f.finie;
+      const plein = p ? 12 : ici ? Math.floor((m.compte.part || 0) * 12) : 0;
+      l += `<div class="partie${ici ? ' ici' : ''}"><span>Partie ${i}</span><span class="bar" aria-hidden="true">${Array.from({ length: 12 }, (_, k) => `<i class="${k < plein ? 'f' : ''}"></i>`).join('')}</span><small>${p ? `${p.poses} posés · ${p.differes} différés · ${p.aControler} à examiner` : ici ? (f.relecture ? 'relecture' : m.phase === 'arrete' ? 'arrêtée' : 'en cours') : 'à venir'}</small></div>`;
+    }
+    return `<div class="cadre"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`}</h2><div class="parties">${l}</div></div>`;
+  }
+  function principal(m) {
+    let h = haut(m);
+    if (m.vue === 'echo') return h + `<p class="etat">Écho</p><p class="phrase">${esc(m.phrase)}</p><div class="compteur"><span class="n">${m.echo.vus}</span><span class="s">cuts vus</span></div><dl class="pavés"><div class="pavé"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="pavé"><dt>Mêmes choix</dt><dd>${m.echo.accord}/${m.echo.vus}</dd></div></dl>` + actions(m.actions);
+    const c = m.compte;
+    h += `<p class="etat">${esc(m.titre)}</p><p class="phrase">${esc(m.phrase)}</p>`;
+    if (m.file.alerte) h += `<div class="cadre alerte" role="alert"><h2>${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></div>`;
+    if (m.incident) h += `<div class="cadre${m.incident.type !== 'reprise' ? ' alerte' : ''}"${m.incident.type !== 'reprise' ? ' role="alert"' : ''}><h2>${esc(m.incident.titre)}</h2><p>${esc(m.incident.texte)}</p>${m.incident.actions.length ? actions(m.incident.actions) : ''}</div>`;
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      h += `<div class="cadre"><div class="bornes"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Jusqu'à la fin de la partie</button></div>`;
+      h += mosaique(m) + actions(m.actions) + file(m);
+    } else {
+      const fin = m.phase === 'fin';
+      h += `<div class="compteur"><span class="n">${fin ? c.poses : c.faits}</span><span class="s">${fin ? 'posés sur ' + c.faits : 'sur ' + esc(c.totalTexte)}</span></div>` + mosaique(m) + actions(m.actions) + pavés(m, fin) + file(m);
+    }
+    if (m.message) h += `<p class="message" role="status">${esc(m.message)}</p>`;
+    return h + `<details class="legende"><summary>Légende</summary><p>Une tuile = un cut. Floue : à faire. Nette : posé. Gros pixels encadrés : différé. Coin corail et losange : vert à examiner. Rangée tiretée en bas : total inconnu.</p></details>`;
+  }
+  function reste(m) {
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<div class="reste"><canvas class="vign" data-cut="${r.cut}" data-type="${r.type}" aria-hidden="true"></canvas><div><div class="t${r.type === 'vert' ? ' corail' : ''}">${r.type === 'vert' ? '<span class="m-ex" aria-hidden="true"></span>' : '<span class="m-dif" aria-hidden="true"></span>'}Cut ${r.cut} · ${r.type === 'vert' ? 'à examiner' : 'différé'}</div><p class="m">${esc(r.motif)}</p><div class="g"><button class="lien" data-a="examiner" data-id="${r.id}">Examiner</button><button class="lien" data-a="ouvrir" data-id="${r.id}">Ouvrir dans ESV</button></div></div></div>`).join('');
+    return haut(m) + `<p class="etat">Ce qui reste</p><p class="phrase">${m.restants.length} tuiles marquées.</p>${actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }])}${l}${m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : ''}`;
+  }
+  function examen(m) {
+    const r = m.examen;
+    return haut(m) + `<p class="etat">Cut ${r.cut}</p><p class="phrase">${r.type === 'vert' ? 'Vert à examiner' : 'Différé'} : ${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés en corail.' : 'Rien de posé : la tuile reste en gros pixels.'}</p><canvas class="grand-tuile" id="grande" data-garder="g-${r.id}" role="img" aria-label="Tuile du cut ${r.cut} agrandie, vue de dessus"></canvas>`
+      + actions([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'voirReste', libelle: 'Retour à la liste', rang: 'second' }]) + (m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : '');
+  }
+
+  /* ---------- tuiles : vue de dessus de chaque cut, 8 × 8 valeurs ---------- */
+  /* L'image du lot, continue sur toute la grille : un relief vu de dessus, traversé par une
+   * voie qui serpente. Chaque tuile en montre son morceau de 8 × 8 pixels. */
+  function image(gx, gy, W, H) {
+    let b = 0.42 + 0.14 * Math.sin(gx / 23 + gy / 31) + 0.09 * Math.sin(gx / 7.3) * Math.cos(gy / 9.1) + 0.05 * Math.sin(gx * 1.7 + gy * 2.3);
+    const cx = W * 0.5 + W * 0.3 * Math.sin(gy / H * 3.4 + 0.4), d = gx - cx;
+    if (Math.abs(d) < 7) b = 0.62 + 0.04 * Math.sin(gy * 3.1 + gx);
+    if (Math.abs(d) < 4.5 && Math.floor(gy) % 3 === 0) b = 0.78;
+    if (Math.abs(Math.abs(d) - 2.5) < 0.7) b = 1;
+    return Math.max(0, Math.min(1, b));
+  }
+  function tuile(i, cols, rows, fin) {
+    const v = [], W = cols * 8, H = rows * 8, ox = (i % cols) * 8, oy = Math.floor(i / cols) * 8, k = fin || 8;
+    for (let y = 0; y < k; y++) for (let x = 0; x < k; x++) v.push(image(ox + (x + 0.5) * 8 / k, oy + (y + 0.5) * 8 / k, W, H));
+    return v;
+  }
+  function flou(v, n) { const o = [], k = 8 / n; for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { const bx = Math.floor(x / k) * k, by = Math.floor(y / k) * k; let s = 0; for (let yy = by; yy < by + k; yy++) for (let xx = bx; xx < bx + k; xx++) s += v[yy * 8 + xx]; o.push(s / (k * k)); } return o; }
+  let resolution = new Map(), grille = null;
+  function dessinerMos(t) {
+    const cv = document.getElementById('mos');
+    if (cv) {
+      const S = Demo.etat(), m = Demo.D.modele(), w = cv.clientWidth;
+      const pret = m.phase === 'pret';
+      const total = pret ? (m.bornes.finDePartie ? 160 : m.bornes.fin - m.bornes.debut + 1) : (m.compte.total || null);
+      const n = total || Math.ceil((S.faits + 16) / 16) * 16;
+      const cols = 16, rows = Math.ceil(n / cols), T = Math.floor(w / cols);
+      const H = rows * T;
+      if (cv.width !== cols * 8 || cv.height !== rows * 8) { cv.width = cols * 8; cv.height = rows * 8; cv.style.height = H + 'px'; }
+      grille = { cols, rows, T, n };
+      const ctx = cv.getContext('2d'); const img = ctx.createImageData(cols * 8, rows * 8);
+      const gr = getComputedStyle(document.documentElement).getPropertyValue('--gris').trim().split(',').map(Number);
+      const fond = getComputedStyle(document.documentElement).getPropertyValue('--fond').trim();
+      const fr = parseInt(fond.slice(1, 3), 16), fg = parseInt(fond.slice(3, 5), 16), fb = parseInt(fond.slice(5, 7), 16);
+      const typ = new Map(S.restants.map((r) => [r.cut - S.bornes.debut, r.type]));
+      const reduit = Demo.D.mouvementReduit();
+      for (let i = 0; i < rows * cols; i++) {
+        const fait = !pret && i < S.faits, horsLot = i >= n;
+        let cible = horsLot ? 0 : fait ? (typ.get(i) === 'differe' ? 2 : 8) : 1;
+        let r0 = resolution.get(i) || cible;
+        if (!reduit && r0 < cible) r0 = Math.min(cible, r0 + 0.08); else r0 = cible;
+        resolution.set(i, r0);
+        const base = tuile(i, cols, rows), niv = r0 >= 8 ? 8 : r0 >= 4 ? 4 : r0 >= 2 ? 2 : 1, v = flou(base, niv);
+        const alpha = horsLot ? 0 : fait ? 0.95 : (i === S.faits && m.phase === 'encours' && !reduit ? 0.35 + 0.2 * Math.sin(t / 200) : 0.22);
+        const ox = (i % cols) * 8, oy = Math.floor(i / cols) * 8;
+        for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+          const a = v[y * 8 + x] * alpha, p = ((oy + y) * cols * 8 + ox + x) * 4;
+          const pad = (x === 7 || y === 7) ? 0 : 1;
+          img.data[p] = fr + (gr[0] - fr) * a * pad; img.data[p + 1] = fg + (gr[1] - fg) * a * pad; img.data[p + 2] = fb + (gr[2] - fb) * a * pad; img.data[p + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      /* marques : cadre pour différé, coin corail pour vert à examiner */
+      const corail = getComputedStyle(document.documentElement).getPropertyValue('--corail-t').trim();
+      for (const r of S.restants) {
+        const i = r.cut - S.bornes.debut; if (pret || i >= S.faits) continue;
+        const ox = (i % cols) * 8, oy = Math.floor(i / cols) * 8;
+        if (r.type === 'differe') { ctx.strokeStyle = `rgb(${gr.join(',')})`; ctx.lineWidth = 1; ctx.strokeRect(ox + 0.5, oy + 0.5, 6, 6); }
+        else { ctx.fillStyle = corail; ctx.beginPath(); ctx.moveTo(ox + 7, oy); ctx.lineTo(ox + 7, oy + 4); ctx.lineTo(ox + 3, oy); ctx.closePath(); ctx.fill(); ctx.fillRect(ox, oy + 6, 7, 1); }
+      }
+      if (!total && !pret) { ctx.fillStyle = `rgba(${gr.join(',')},.5)`; for (let x = 0; x < cols * 8; x += 4) ctx.fillRect(x, rows * 8 - 1, 2, 1); }
+    }
+    document.querySelectorAll('canvas.vign').forEach((c2) => { if (c2.dataset.fait) return; c2.dataset.fait = '1'; dessinerTuile(c2, Number(c2.dataset.cut), c2.dataset.type, c2.dataset.type === 'differe' ? 2 : 8); });
+    const g = document.getElementById('grande');
+    if (g) { const ex = Demo.etat().examen; if (ex) { const k = g.dataset.k ? Number(g.dataset.k) : 1; const nk = Demo.D.mouvementReduit() ? 8 : Math.min(8, k + 0.04); g.dataset.k = nk; dessinerTuile(g, ex.cut, ex.type, ex.type === 'differe' ? Math.min(4, nk) : nk); } }
+    requestAnimationFrame(dessinerMos);
+  }
+  function dessinerTuile(cv, cut, type, k) {
+    const S = Demo.etat(), i = cut - S.bornes.debut, cols = 16, rows = Math.max(1, Math.ceil((S.total || S.faits + 16) / 16));
+    const N = 48, bloc = Math.max(1, Math.round(N / (k >= 8 ? 48 : k * 1.5)));
+    cv.width = N; cv.height = N; const ctx = cv.getContext('2d'); const img = ctx.createImageData(N, N);
+    const st = getComputedStyle(document.documentElement);
+    const gr = st.getPropertyValue('--gris').trim().split(',').map(Number), fond = st.getPropertyValue('--fond').trim();
+    const f = [1, 3, 5].map((o) => parseInt(fond.slice(o, o + 2), 16));
+    const v = tuile(i, cols, rows, N);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const by = Math.floor(y / bloc) * bloc, bx = Math.floor(x / bloc) * bloc, val = v[Math.min(N - 1, by + (bloc >> 1)) * N + Math.min(N - 1, bx + (bloc >> 1))];
+      const p = (y * N + x) * 4; for (let c = 0; c < 3; c++) img.data[p + c] = f[c] + (gr[c] - f[c]) * val; img.data[p + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    if (type === 'vert') { ctx.strokeStyle = st.getPropertyValue('--corail-t').trim(); ctx.lineWidth = 2; ctx.strokeRect(1, 1, N - 2, N - 2); ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(N, 0); ctx.lineTo(N, 14); ctx.lineTo(N - 14, 0); ctx.fill(); }
+    if (type === 'differe') { ctx.strokeStyle = `rgb(${gr.join(',')})`; ctx.lineWidth = 2; ctx.strokeRect(1, 1, N - 2, N - 2); }
+  }
+  document.addEventListener('click', (e) => {
+    const cv = e.target.closest('#mos'); if (!cv || !grille) return;
+    const rc = cv.getBoundingClientRect(), col = Math.floor((e.clientX - rc.left) / rc.width * grille.cols), row = Math.floor((e.clientY - rc.top) / rc.height * grille.rows);
+    const i = row * grille.cols + col, S = Demo.etat(), cut = S.bornes.debut + i, r = S.restants.find((x) => x.cut === cut);
+    const out = document.getElementById('lecture');
+    if (r) { Demo.agir('examiner', r.id); return; }
+    if (out) out.textContent = i >= grille.n ? 'Hors du lot.' : `Cut ${cut} : ${i < S.faits ? 'posé' : i === S.faits && S.phase === 'encours' ? 'en cours' : 'à faire'}.`;
+  });
+  Demo.monter({ rendre(S, D) { const m = D.modele(); if (m.vue === 'reste') return reste(m); if (m.vue === 'examen' && m.examen) return examen(m); return principal(m); } });
+  requestAnimationFrame(dessinerMos);
+})();
+</script>
+</body>
+</html>
