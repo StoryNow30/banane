@@ -15,6 +15,9 @@ function adaptateur(avecPatch){
   const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch007-'));
   fs.mkdirSync(path.join(tmp,'src'),{recursive:true});
   fs.copyFileSync(path.join(N.racine,'src/adapter-page.js'),path.join(tmp,'src/adapter-page.js'));
+  /* Test 25 : l'adaptateur porte le patch de CH-018 ; la proposition de CH-007 a été écrite contre celui d'avant : on retire d'abord le patch de CH-018. */
+  const retour=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(N.racine,'chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
+  if(retour.status!==0)throw Error(retour.stderr||retour.stdout||'patch -R');
   const r=spawnSync('patch',['-p1','-d',tmp,'-i',patch],{encoding:'utf8'});
   if(r.status!==0)throw Error(r.stderr||r.stdout||'patch');
   return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');

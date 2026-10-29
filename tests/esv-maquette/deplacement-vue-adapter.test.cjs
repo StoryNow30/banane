@@ -6,13 +6,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const N=require('./navigateur.cjs');
 const raison=N.indisponible(),opts=raison?{skip:raison}:{};
-const patch=path.join(N.racine,'chantiers/CH-018/adapter-deplacement.patch');
-function adaptateurPropose(){
-  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch018-'));fs.mkdirSync(path.join(tmp,'src'),{recursive:true});
-  fs.copyFileSync(path.join(N.racine,'src/adapter-page.js'),path.join(tmp,'src/adapter-page.js'));
-  const r=spawnSync('patch',['-p1','-d',tmp,'-i',patch],{encoding:'utf8'});if(r.status!==0)throw Error(r.stderr||r.stdout||'patch');
-  return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');
-}
+/* Test 25 (D-268) : le patch de CH-018 est APPLIQUÉ à src/adapter-page.js ; l'essai joue donc l'adaptateur du dépôt tel quel. */
+function adaptateurPropose(){return fs.readFileSync(path.join(N.racine,'src/adapter-page.js'),'utf8');}
 async function preparer(modele){
   const env=await N.ouvrir({maquette:{cuts:4,latence:10,latenceRails:0}});const {page}=env;
   const version=JSON.parse(N.lire('manifest.json')).version;
@@ -28,14 +23,14 @@ async function cibleHorsVue(env){
   const s=(await env.appel('state',[])).result,L=s.rails.left.positionSceneRelative,R=s.rails.right.positionSceneRelative,d=R.map((v,i)=>v-L[i]),n=Math.hypot(...d)||1;
   return {s,cible:L.map((v,i)=>v+d[i]/n*0.21)};
 }
-test('proposition éteinte : comportement actuel (molette sourde, caméra immobile)',opts,async()=>{
+test('déplacement éteint par le réglage de l\'appel : comportement d\'avant (molette sourde, caméra immobile)',opts,async()=>{
   const env=await preparer({molette:'mousewheel',boutonGlisser:2,facteurCran:1.1,gainGlisser:1,amortiImages:0});
-  try{const {s,cible}=await cibleHorsVue(env);const r=await env.appel('amenerDansLaVue',['left',cible,s.identity,{}]);
+  try{const {s,cible}=await cibleHorsVue(env);const r=await env.appel('amenerDansLaVue',['left',cible,s.identity,{deplacement:{actif:false}}]);
     assert.equal(r.error,undefined,r.error);assert.equal(r.result.ok,false);assert.equal(r.result.raison,'camera-immobile');
     assert.equal(r.result.gestes[0].type,'molette');assert.equal(r.result.gestes[0].deplacement,undefined);assert.equal(r.result.journalGestes,undefined);
   }finally{await env.fermer();}
 });
-test('proposition allumée, clic-droit : la cible entre dans la vue, la vue est remise, le journal est dans le rapport',opts,async()=>{
+test('déplacement allumé, clic-droit : la cible entre dans la vue, la vue est remise, le journal est dans le rapport',opts,async()=>{
   const env=await preparer({molette:'mousewheel',boutonGlisser:2,facteurCran:1.1,gainGlisser:1,amortiImages:0});
   try{const {s,cible}=await cibleHorsVue(env);
     const r=await env.appel('amenerDansLaVue',['left',cible,s.identity,{deplacement:{actif:true,geste:'clic-droit',tentativesMax:2}}]);
