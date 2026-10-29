@@ -73,6 +73,17 @@
    if(g.clicFinal&&bouton===0)out.push({genre:'pointer',type:'click',init:{...POINTEUR,clientX:x1,clientY:y1,button:0,buttons:0,pressure:0,detail:1},apresMs:0});
    return out;
  }
+ /* Glisser au bouton droit (CH-018), tel que Chromium le produit sous Linux (relevé du 16/10, `glisserDroit`) : pointerdown et
+  * mousedown (button 2, buttons 2), `contextmenu` dès l'appui, déplacements (buttons 2), pointerup et mouseup, puis `auxclick`
+  * (omis par défaut, `auxclicFinal:false` : comme le `click` final du bouton gauche, on ne sait pas ce qu'ESV en ferait). La page
+  * ne peut pas reproduire `isTrusted`, ni empêcher le menu du navigateur : seul un écouteur de la page le peut. */
+ function sequenceClicDroit({x0,y0,x1,y1,reglages=EMISSION.glisser,alea=Math.random}){
+   const g={...EMISSION.glisser,...(reglages||{}),bouton:2},seq=sequenceGlisser({x0,y0,x1,y1,reglages:{...g,clicFinal:false},alea});
+   const i=seq.findIndex(d=>d.type==='mousedown');
+   seq.splice(i+1,0,{genre:'mouse',type:'contextmenu',init:{clientX:x0,clientY:y0,button:2,buttons:2},apresMs:0});
+   if(g.auxclicFinal)seq.push({genre:'pointer',type:'auxclick',init:{...POINTEUR,clientX:x1,clientY:y1,button:2,buttons:0,pressure:0,detail:1},apresMs:0});
+   return seq;
+ }
  /* Construit l'événement DOM d'un descripteur (constructeurs de la page). Les champs d'écran suivent le client. */
  function construire(d,w){
    const ecran={screenX:d.init.clientX+(Number(w.screenX)||0),screenY:d.init.clientY+(Number(w.screenY)||0)};
@@ -172,5 +183,5 @@
  /* Types écoutés par le relevé (fenêtre, phase de capture, passifs). */
  const TYPES_RELEVE=Object.freeze(['pointerdown','pointermove','pointerup','pointercancel','click','auxclick','contextmenu','wheel']);
 
- return {VERSION,EMISSION,RELEVE,TYPES_RELEVE,POINTEUR,approche,sequenceMolette,sequenceGlisser,construire,emettre,pixelMm,resumeCamera,ecartCamera,memeCamera,besoin,Releveur};
+ return {VERSION,EMISSION,RELEVE,TYPES_RELEVE,POINTEUR,approche,sequenceMolette,sequenceGlisser,sequenceClicDroit,construire,emettre,pixelMm,resumeCamera,ecartCamera,memeCamera,besoin,Releveur};
 });
