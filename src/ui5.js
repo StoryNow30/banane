@@ -180,6 +180,22 @@
       taille: (root.innerWidth || 600) < 480 || (root.innerHeight || 760) < 600 ? 'compact' : 'normal',
     };
   }
+  /* CH-025 : la FILE DE PARTIES (CH-017), carte `#file-parties` du panneau d'avant. Rien tant que la vue ne porte pas `fileParties` (panel.js cache alors
+   * la carte). L'état vient de la vue ; « préparée », le nombre choisi (gardés dans panel.js, `fileUI`), les phrases, l'alerte, le bilan et les libellés des
+   * boutons viennent de ce que `afficherFile` vient d'écrire. Lecture seule. */
+  const FILE_ACTIFS = ['lot', 'passe', 'relecture', 'changement'];
+  function fileDuPanneau(s) {
+    if (!Object.hasOwn(s || {}, 'fileParties') || !visible('file-parties')) return null;
+    const f = s.fileParties || null, bouton = id => { const e = $(id); return e && !e.hidden ? { texte: String(e.textContent || '').trim(), actif: !e.disabled } : null; };
+    const choix = visible('file-reglage') ? [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)) : [];
+    return {
+      etat: f ? String(f.etat || '') : 'repos', actif: !!f && FILE_ACTIFS.includes(f.etat), n: Number.isInteger(f?.n) ? f.n : null, vers: f?.changement?.vers ?? null,
+      etatTexte: txt('file-etat'), phrase: txt('file-phrase'), prete: !f && txt('file-etat') === 'préparée', choix,
+      alerte: visible('file-alerte') ? txt('file-alerte') : '',
+      bilan: visible('file-bilan') ? [...($('file-bilan')?.querySelectorAll?.('li') || [])].map(li => String(li.textContent || '').trim()).filter(Boolean) : [],
+      principal: bouton('file-principal'), secondaire: bouton('file-secondaire'),
+    };
+  }
   function instantane(s) {
     const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';
     const rg = {
@@ -206,6 +222,7 @@
       reglages: rg, exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
       gcv2: gcv2Base,
+      file: fileDuPanneau(s),
       ar: calculAr(s, statuts),
       sig: calculSig(s, statuts, mode, n?.value || '', n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : []),
     };
@@ -220,6 +237,8 @@
     let html;
     try {
       const snap = instantane(s);
+      /* CH-025 : la boîte de la file ne vaut qu'au repos ; la file lancée (ou arrêtée, finie), elle se ferme. */
+      if (ui.couche === 'file' && snap.file?.etat !== 'repos') ui.couche = null;
       html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille;
     } catch (e) { secourir(e); return; }
     /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
@@ -332,7 +351,9 @@
   function agirSignal(act) {
     const [, quoi, ...reste] = act.split(':'), v = reste.join(':');
     if (quoi === 'tiroir') { ui.tiroir = !ui.tiroir; ui.sel = null; }
-    else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
+    /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
+    else if (quoi === 'file-n') { const b = [...($('file-n')?.children || [])].find(x => x.dataset?.n === v); if (b && !b.disabled) b.click(); }
+    else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
     else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
     else if (quoi === 'examiner') { if (examines.cles.has(v)) examines.cles.delete(v); else examines.cles.add(v); void garderExamines(); }
