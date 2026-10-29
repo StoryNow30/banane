@@ -21,4 +21,9 @@ test('garde livrée : 113 et 114 différés après le 112, le 115 validé (un di
  assert.equal('gardeApresDiffere' in x.batch.lotCommands[115],false);
  assert.deepEqual(x.gardes.map(e=>({cut:e.identity.cut,part:e.identity.part,regle:e.regle,coupures:e.coupures,appuisMin:e.appuisMin,appuis:e.appuis,voisins:e.voisinsDifferes,etage:e.etage,evitee:e.commandeEvitee,version:e.version})),
   [113,114].map(cut=>({cut,part:23,regle:'R3',coupures:2,appuisMin:2,appuis:1,voisins:[112],etage:'first-pass',evitee:{action:'engine',reason:'first-pass'},version:'garde-apres-differe-1'})));
+ /* Racines sans appui (événement `garde-apres-differe-suivant`) : le 115 est validé avec 0 appui ; sans la garde il en avait 2 (borne haute 2,
+  * mesuré : tests/garde-apres-differe-coupee-sw.test.cjs joue le même lot, 115 appuyé sur 113 et 114). */
+ const suivants=JSON.parse(JSON.stringify(x.b.store.events.filter(e=>e.type==='garde-apres-differe-suivant'))).map(e=>({cut:e.identity.cut,gardes:e.cutsGarde,appuis:e.appuis,max:e.appuisSansGardeMax,action:e.commande.action,parLaGarde:e.differeParLaGarde}));
+ assert.deepEqual(suivants,[{cut:114,gardes:[113],appuis:1,max:2,action:'defer',parLaGarde:true},{cut:115,gardes:[113,114],appuis:0,max:2,action:'engine',parLaGarde:false},
+  {cut:116,gardes:[113,114],appuis:1,max:2,action:'engine',parLaGarde:false}]);
 });

@@ -14,4 +14,7 @@ test('garde coupée : commandes envoyées à ESV identiques à celles d\'avant C
  assert.equal(h(neutre(x.batch.lotCommands)),BASE.empreinteLotCommands,'trace des commandes du lot identique');
  assert.deepEqual(x.differes,BASE.differes);assert.deepEqual(x.valides,BASE.valides);
  assert.equal(x.gardes.length,0);
+ assert.equal(x.b.store.events.filter(e=>e.type==='garde-apres-differe-suivant').length,0);
+ /* Sans la garde, le 115 s'appuie sur 113 et 114 (la borne haute de l'événement du cut suivant, mesurée). */
+ assert.deepEqual(JSON.parse(JSON.stringify(x.b.store.events.find(e=>e.type==='gcv1-shadow-observed'&&e.identity?.cut===115).lotObservation.anchorsUsed)),[114,113]);
 });
