@@ -107,6 +107,9 @@ test('proposition : molette ignorée (mousewheel seul), puis glisser, la cible e
  fs.mkdirSync(path.join(tmp,'src'),{recursive:true});
  fs.copyFileSync(path.join(__dirname,'..','src/adapter-page.js'),path.join(tmp,'src/adapter-page.js'));
  const patch=path.join(__dirname,'..','chantiers/CH-007/propositions/deplacement-vue.patch');
+ /* Test 25 : l'adaptateur porte maintenant le patch de CH-018 (geste réglable) ; la proposition de CH-007 a été écrite contre l'adaptateur d'avant : on retire d'abord celui de CH-018. */
+ const retour=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(__dirname,'..','chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
+ assert.equal(retour.status,0,retour.stderr||retour.stdout);
  const r=spawnSync('patch',['-p1','-d',tmp,'-i',patch],{encoding:'utf8'});
  assert.equal(r.status,0,r.stderr||r.stdout);
  const f=page({navigation:{molette:'mousewheel'},adaptateur:path.join(tmp,'src/adapter-page.js')}),etat=await f.call('state');

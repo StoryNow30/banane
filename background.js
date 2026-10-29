@@ -22,7 +22,7 @@ const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.24',VERSION_NAME=globalThi
  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
 BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
-const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/adapter-page.js'];
+const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 /* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
  * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,

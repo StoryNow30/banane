@@ -26,7 +26,13 @@ const NOUVEAUX=['gcv2-l1.js','gcv2-l1e.js','gcv2-parametres-l1.js','raison-corre
 const HABILLAGE=['ui5.js','ui5-variante.js','signal-rendu.js'];
 /* Test 17 et 18 : la carte « Relecture » du panneau ne propose plus « Lancer la relecture » pendant une pause (elle repartirait de zéro) et dit si la correction interrompue est
  * celle de la deuxième passe ; module du panneau, il ne parle qu'au service worker. Ces deux changements retirés, il est celui de la test 8 (contrôlé plus bas). */
-const PANNEAU={'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
+/* Test 25 (CH-018) : le déplacement de la vue à geste réglable, éteint par défaut. `gestes-vue.js` gagne `sequenceClicDroit` (non appelée tant que le réglage est éteint) ; l'adaptateur gagne un patch (chantiers/CH-018/adapter-deplacement.patch), retiré ici à l'envers avant la comparaison à la test 8 ; les réglages gagnent `deplacerVue.deplacement` (actif:false). */
+const sansClicDroit=s=>s.replace(/ \/\* Glisser au bouton droit \(CH-018\)[\s\S]*?\n   return seq;\n \}\n/,'').replace('sequenceGlisser,sequenceClicDroit,construire','sequenceGlisser,construire');
+const sansPatchCH018=texte=>{const os=require('node:os'),{spawnSync}=require('node:child_process'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch018-'));
+ fs.mkdirSync(path.join(tmp,'src'),{recursive:true});fs.writeFileSync(path.join(tmp,'src/adapter-page.js'),texte);
+ const r=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
+ assert.equal(r.status,0,'le patch de CH-018 se retire de l\'adaptateur : '+(r.stderr||r.stdout));return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');};
+const PANNEAU={'src/gestes-vue.js':sansClicDroit,'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
 /* Test 17 : module du panneau pour la pause de la relecture : il ne parle qu'au service worker (relecture-*), jamais à ESV ni à la pose. */
 const RELECTURE_PAUSE=['relecture-pause.js'];
 /* T20a : l'historique des parties (fiches de départ + fiches de fin de lot, `partsHistory`), module pur lu par le service worker pour la vue du panneau ;
@@ -36,7 +42,7 @@ const HISTORIQUE=['historique-parties.js'];
  * il ne lit ni ne commande la pose du lot. */
 const GARDE_PASSE=['garde-passe-appuis.js'];
 /* Test 25 (CH-016) : détecteur de cuts à SKIP en ombre, module pur non importé par le service worker ni par la chaîne de décision (essai « isolation » de skip-ombre.test.cjs). */
-const SKIP_OMBRE=['skip-ombre.js'];
+const SKIP_OMBRE=['skip-ombre.js','deplacement-vue.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
@@ -58,7 +64,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=lire('src/adapter-page.js').replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansPatchCH018(lire('src/adapter-page.js')).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
@@ -72,7 +78,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,...reste0}=S,{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,...reste00}=S,{deplacement:_dep,...deplacerVueSans}=reste00.deplacerVue,reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['passeDifferes','profil','recaptureVide']);

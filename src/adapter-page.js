@@ -630,10 +630,12 @@
   * Ni écriture dans la caméra, ni appel d'une fonction d'ESV, ni requête : des événements de souris et de molette, non fiables
   * (`isTrusted` faux), comme le `click` de pose d'aujourd'hui. Rien de ceci ne s'exécute sans demande du service worker. */
  const VUE_VERSION='deplacer-vue-v1';
+ /* CH-018 : geste de déplacement réglable (`settings.deplacerVue.deplacement`, éteint par défaut : sans lui, rien ci-dessous ne change). */
+ const DV=window.BananeDeplacementVue||null,journalVue=DV?new DV.Journal():null;
  const VUE_DEFAUTS={gestesMax:3,dezoomMax:1.5,glissementPxMax:250,pixelMaxMm:.9,marge:.99,remiseTolerance:.02};
  function reglagesVue(options){const S=window.BananeSettings?.deplacerVue||{},o=options&&typeof options==='object'?options:{};
    const E=GV?.EMISSION||{molette:{},glisser:{}};
-   return {...VUE_DEFAUTS,...S,...o,molette:{facteurSuppose:1.1,...E.molette,...(S.molette||{}),...(o.molette||{})},glisser:{viseNdc:.8,...E.glisser,...(S.glisser||{}),...(o.glisser||{})}};}
+   return {...VUE_DEFAUTS,...S,...o,deplacement:{...(S.deplacement||{}),...(o.deplacement||{})},molette:{facteurSuppose:1.1,...E.molette,...(S.molette||{}),...(o.molette||{})},glisser:{viseNdc:.8,...E.glisser,...(S.glisser||{}),...(o.glisser||{})}};}
  /* État partagé par les deux rails d'une pose : échelle de la vue habituelle, crans nets de dézoom, glisser fait, facteur d'un
   * cran et gain du glisser mesurés. */
  const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,facteurCran:o.molette.facteurSuppose,gain:1});
@@ -662,13 +664,13 @@
    for(let n=0;n<o.gestesMax;n++){
      const b=GV.besoin(v.ndc,cam.viewport,o.marge),zoomActuel=etat.echelle0/echelleVue(cam),{r,x,y}=centreVue(c),geste={};
      const dezoomPossible=zoomActuel*b.dezoom<=o.dezoomMax*(1+1e-9)&&etat.pixel0*zoomActuel*b.dezoom<=o.pixelMaxMm;
-     let seq=null;
-     if(dezoomPossible){const f=Math.max(1.0001,etat.facteurCran);
+     let seq=null,plan=null;const dv=DV&&o.deplacement?.actif===true?DV.reglages(o.deplacement):null;
+     if(dezoomPossible&&(!dv||dv.geste==='molette')){const f=Math.max(1.0001,etat.facteurCran);
        let crans=Math.min(o.molette.cransMax,Math.max(1,Math.ceil(Math.log(b.dezoom)/Math.log(f)-1e-9)));
        while(crans>1&&(zoomActuel*Math.pow(f,crans)>o.dezoomMax*(1+1e-9)||etat.pixel0*zoomActuel*Math.pow(f,crans)>o.pixelMaxMm))crans--;
        Object.assign(geste,{type:'molette',crans,sens:o.molette.sensDezoom});
-       seq=GV.sequenceMolette({x,y,crans,sens:o.molette.sensDezoom,reglages:o.molette});}
-     else if(b.panPx<=o.glissementPxMax){
+       plan={x,y,crans,sens:o.molette.sensDezoom};seq=GV.sequenceMolette({x,y,crans,sens:o.molette.sensDezoom,reglages:o.molette});}
+     else if(b.panPx<=o.glissementPxMax&&(!dv||dv.geste!=='molette')){
        const vise=Math.min(o.marge,o.glisser.viseNdc),cl=u=>Math.max(-vise,Math.min(vise,u));
        let dx=(cl(v.ndc[0])-v.ndc[0])*r.width/2/etat.gain,dy=-(cl(v.ndc[1])-v.ndc[1])*r.height/2/etat.gain;
        const L2=Math.hypot(dx,dy);if(L2>o.glissementPxMax){dx*=o.glissementPxMax/L2;dy*=o.glissementPxMax/L2;}
@@ -677,9 +679,14 @@
        const borne=(u,a,l,d)=>Math.round(Math.max(a+20+Math.max(0,-d),Math.min(a+l-20-Math.max(0,d),u)));
        const x0=borne(x-Math.sign(dx||1)*.3*r.width,r.left,r.width,dx),y0=borne(y+(dy>0?-1:1)*.3*r.height,r.top,r.height,dy);
        Object.assign(geste,{type:'glisser',px:dx,py:dy});
-       seq=GV.sequenceGlisser({x0,y0,x1:x0+dx,y1:y0+dy,reglages:o.glisser});}
+       plan={x0,y0,x1:x0+dx,y1:y0+dy};seq=GV.sequenceGlisser({x0,y0,x1:x0+dx,y1:y0+dy,reglages:o.glisser});}
      else{rapport.raison=n?'gestes-epuises':'hors-limites';break;}
-     const t0=Date.now();await emettreGeste(c,seq,guard);const cam2=await cameraImmobile(guard);
+     const t0=Date.now();let cam2;
+     if(dv){/* CH-018 : le module émet, relit la caméra immobile et juge ; la preuve est le mouvement mesuré, pas l'envoi. */
+       const lire=()=>{const k=context();return L.cameraSnapshot(k.viewer,k.frame.origin);};
+       const rd=await DV.deplacer({geste:dv.geste,plan,lireCamera:lire,emettre:s=>emettreGeste(c,s,guard),immobile:()=>cameraImmobile(guard),journal:journalVue,reglages:dv,emission:{molette:o.molette,glisser:o.glisser}});
+       geste.deplacement={geste:rd.geste,ok:rd.ok,tentatives:rd.tentatives,raison:rd.raison};cam2=lire();}
+     else{await emettreGeste(c,seq,guard);cam2=await cameraImmobile(guard);}
      geste.dureeMs=Date.now()-t0;geste.ndcAvant=ndcVue(v);
      /* Le geste ne doit jamais avoir bougé un rail. */
      const apres=assertExpected(expected).rails;
@@ -723,6 +730,7 @@
    await select(cote,attendu);
    const r={version:VUE_VERSION,...await amenerVue(cote,cible,attendu,etat,o,progress)};
    r.remise=await remettreVue(etat,cote,attendu,o,progress);if(r.ok&&!r.remise.ok){r.ok=false;r.raison='vue-non-restituee';}
+   if(journalVue&&o.deplacement?.actif===true)r.journalGestes=journalVue.resume();
    return r;}
  /* `options` (troisième argument, facultatif) : `{deplacerVue}` envoyé par le service worker pour un cut que la vue seule
   * empêchait de poser (réglage `deplacerVue`, coupé par défaut). Sans lui, l'appel est celui d'avant, à l'identique. Avec lui :
@@ -745,7 +753,7 @@
    if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}
    const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
    if(!remise.ok)throw Error(`Vue ESV non restituée après le déplacement de vue (échelle à ${(remise.ecartEchelle*100).toFixed(1).replace('.',',')} % de la vue habituelle) : les deux rails sont posés, rien n’est validé. Remets la vue d’ESV, puis contrôle le cut. État à réconcilier.`);
-   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise};fin.vueFin=vueFin(fin);return fin;}
+   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise,...(journalVue&&reglages.deplacement?.actif===true?{journalGestes:journalVue.resume()}:{})};fin.vueFin=vueFin(fin);return fin;}
  /* 4.9.5.13 (analyse du lot 2:19 : le journal d'un `apply` ne gardait que « reçu » et une durée) : position de chaque rail posé dans la vue
   * ACTIVE d'ESV à la fin de la pose (NDC, dans la vue ou non, taille du pixel). Lecture seule ; une lecture impossible est dite, jamais levée.
   * Le moteur consigne le résultat d'`apply` en entier (`applied-verified`, `observed`). */

@@ -357,6 +357,8 @@
     gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: true,
     molette: Object.freeze({ deltaY: 100, deltaMode: 0, wheelDelta: 120, intervalleMs: Object.freeze([60, 140]), cransMax: 8, sensDezoom: 1, facteurSuppose: 1.1 }),
     glisser: Object.freeze({ dureeMs: Object.freeze([220, 420]), pasMs: 16, bouton: 0, clicFinal: false, viseNdc: 0.8 }),
+    /* Test 25 (CH-018) : geste réglable du déplacement de la vue (src/deplacement-vue.js). Éteint : rien ne change. `geste` : molette, clic-droit ou glisse-synthetique, à choisir d'après le relevé de l'opérateur en Écho ; la preuve est le mouvement mesuré de la caméra. */
+    deplacement: Object.freeze({ actif: false, geste: 'molette', tentativesMax: 2 }),
   });
   /* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, fiches/REGLES_METIER.md). PN avec ses marges (« contrôler chaque cut »),
    * grappe de différés (noyau d'aiguille, grappe d'invalides), validation en place dans une zone, verts à contrôler (écartement à
