@@ -39,6 +39,7 @@ const GLYPHE = {
   pause: GL(G.fait(3, 9) + G.rep('M11 7v10M15 7v10') + G.reste(17, 21)),
   rupture: GL(G.fait(3, 8) + G.rep('M10 7l-2 10M16 7l-2 10') + G.reste(16, 21)),
   heurtoir: GL(G.fait(3, 17) + '<path class="g-fait" d="M18 6v12M21 8v8"/>'),
+  hors: GL(G.reste(3, 9) + G.reste(15, 21)),
   arrete: GL(G.fait(3, 10) + '<path class="g-fait" d="M11 7v10"/>' + G.reste(13, 21)),
 };
 /* Marques du rail, en ligne dans le texte : ○ différé, ◆ vert à contrôler, • corrigé, × passé (SKIP). */
@@ -195,7 +196,7 @@ function modele() {
       m.principal = { texte: 'Terminer et télécharger', act: 'echo-terminer' }; m.secondaire = { texte: 'Pause', act: 'echo-pause' };
       m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la séance Écho' }; m.bascule = { verrou: true, raison: 'Orbite est disponible après la séance Écho' }; m.puce.verrou = true; m.tiroir = 'visites'; break; }
     case 'sans-esv':
-      m.etat = 'hors'; m.mot = 'Hors ligne'; m.phrase = 'Aucun onglet ESV ouvert'; m.objet = 'aucun'; m.puce = { etat: 'aucun', texte: 'Aucun onglet', verrou: false };
+      m.etat = 'hors'; m.glyphe = 'hors'; m.mot = 'Hors ligne'; m.phrase = 'Aucun onglet ESV ouvert'; m.objet = 'aucun'; m.puce = { etat: 'aucun', texte: 'Aucun onglet', verrou: false };
       m.principal = { texte: 'Choisir un onglet', act: 'esv' }; m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.differes = []; m.reste = { d: 0, v: 0 }; break;
     case 'file-alerte': {
       const cz = CAUSES[F.cause], fait = F.bilans.length, cut = L.encours.cut;

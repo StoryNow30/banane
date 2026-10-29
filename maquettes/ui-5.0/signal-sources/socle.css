@@ -358,7 +358,10 @@ kbd{font-family:var(--mono);font-size:var(--t-meta);line-height:var(--l-meta);pa
 :root[data-v="3"] .glyphe{display:none}
 :root[data-v="3"] .instrument{margin:var(--e2) var(--e4) 0;padding:var(--e5);border-radius:var(--r3);background:var(--surface);box-shadow:var(--ombre)}
 :root[data-v="3"][data-taille="compact"] .instrument{margin:0 var(--e2);padding:var(--e3) var(--e4)}
-:root[data-v="3"][data-taille="compact"] .principal{height:auto;min-height:44px;flex-basis:100%}
+/* compact : bouton et action secondaire sur une ligne, comme au niveau 2 : la pile ne tient pas en 480 de haut */
+:root[data-v="3"][data-taille="compact"] .principal{height:auto;min-height:44px;width:auto;flex:1 1 160px}
+:root[data-v="3"][data-taille="compact"] .actions{justify-content:flex-start}
+:root[data-v="3"][data-taille="compact"] .actions .raison{text-align:left}
 :root[data-v="3"][data-taille="compact"] .rail{height:56px}
 :root[data-v="3"][data-taille="compact"] .rail-num,:root[data-v="3"][data-taille="compact"] .rail-ici{top:36px}
 :root[data-v="3"][data-taille="compact"] .zone{margin-top:var(--e2)}
@@ -391,4 +394,5 @@ kbd{font-family:var(--mono);font-size:var(--t-meta);line-height:var(--l-meta);pa
 :root[data-v="3"] .poignee{border-radius:var(--r3) var(--r3) 0 0}
 :root[data-v="3"] .cache{border-top:1px solid var(--filet);background:var(--surface)}
 :root[data-v="3"] .feuille{border-top:0;border-radius:var(--r3) var(--r3) 0 0}
+:root[data-v="3"] .palette{top:calc(var(--barre) + var(--e2));left:var(--e2);right:var(--e2)}
 :root[data-v="3"] .marques i.c{background:var(--encre)}

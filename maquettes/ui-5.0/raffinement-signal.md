@@ -87,3 +87,15 @@ Chaque constat vérifié sur la capture (méthode `council`) :
 | 11 | Q3 clair : carte peu détachée du fond | **confirmé** | anneau de la carte un cran plus foncé |
 
 Après r3 : vérificateur 0 écart, 0 erreur (216 vues par page) ; `jouer-signal.cjs` : tous les gestes jouables. **Pas de second passage de l'auditeur** sur r3 (budget d'une ronde de délégation tenu volontairement court) : les notes r3 ne sont pas mesurées.
+
+## 8. Ronde 2 de l'auditeur (version r3) et tour r4
+| Ensemble | Note r2 | Note r3 | Passe |
+|---|---|---|---|
+| Q2 sombre 600 | 8 | 9 | oui |
+| Q2 clair 600 | 8 | 9 | oui |
+| Q2 compact | 7 | 8 | oui |
+| Q3 sombre 600 | 7 | 8 | oui |
+| Q3 clair 600 | 7 | 8 | oui |
+| Q3 compact | 6 | 7 | non |
+
+Constats de la ronde 2, vérifiés : (1) Q3 compact, « Arrêter » coupé par le bas de la carte : **confirmé**, corrigé en r4 (bouton et action secondaire sur une ligne en compact, comme au niveau 2) ; (2) icônes seules dans le tiroir compact : **partiel**, `title` et `aria-label` existaient déjà, la coupure du motif reste (choix : garder les deux actions sur la ligne) ; (3) titre de la carte visible au ras de la palette en Q3 : **confirmé**, palette collée sous la barre et à la largeur de la carte ; (4) glyphes « Prêt » et « Hors ligne » trop proches : **confirmé**, « Hors ligne » = rail en deux tronçons disjoints. Après r4 : vérificateur 0 écart, jeu complet passé. **Ronde 3 non faite** (budget de `council` : 3 rondes, deux tenues) : la note du compact de Q3 après r4 n'est pas mesurée.
