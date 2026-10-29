@@ -351,8 +351,6 @@
    * `deplacer-vue-geste` par geste. `molette` et `glisser` : forme des gestes (src/gestes-vue.js) ; leurs durées sont PROVISOIRES,
    * à fixer sur les gestes de l'opérateur relevés par l'Écho (`echo.gestesVue`). `clicFinal` reste faux : Chromium termine un vrai
    * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
-  /* Test 25 (CH-012) : clic au pixel entier le plus proche (Chromium tronque les fractions, la pose était décalée de −0,25 mm par axe). Lu par `src/adapter-page.js`. `arrondi:false` revient à l'envoi des coordonnées fractionnaires. */
-  const clicPixel = Object.freeze({ arrondi: true });
   const deplacerVue = Object.freeze({
     actif: false,
     etages: Object.freeze(['window']), regle: 'prudente',
@@ -537,5 +535,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, clicPixel, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler });
 });
