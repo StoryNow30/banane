@@ -206,10 +206,46 @@
           actions();
         }
     }
+    fileModele(s, a, m);
     gardeDemarrer();
     if (g.connexion?.statut === 'unavailable' && !m.incident && a.etat !== 'p2') m.incident = { texte: 'ESV n’est pas connecté. Si la page ESV est figée, recharge-la (F5), puis reconnecte-la.' };
     if (g.connexion?.statut === 'reconnecting' && !m.incident) m.raison = m.raison || 'Reconnexion à ESV en cours…';
     return m;
+  }
+  /* CH-025 : la FILE DE PARTIES (CH-017 ; maquette S-file-de-parties.html, variante A, D-261), d'après `snap.file` (src/ui5.js : la carte du panneau d'avant).
+   * Au repos, dans l'écran « Prêt » seulement : une entrée discrète « File de parties · prête » qui ouvre la boîte de réglage ; préparée, « Lancer la file »
+   * devient l'action principale et « Démarrer le lot » passe à côté. Pendant la file, quel que soit l'état du lot : un bandeau (partie k sur n, phase) avec
+   * « Arrêter la file » ; « Démarrer le lot » et « Nouveau lot » sont retirés (la file enchaîne seule) ; le changement de partie verrouille l'écran.
+   * File arrêtée ou finie, lot clos : l'écran de la file (alerte, bilan par partie, « Préparer la reprise » ou « Fermer le bilan », l'export en bouton) ;
+   * lot encore ouvert ou en alerte : le lot garde l'écran, la file passe dans le bandeau. Chaque bouton est celui de la carte (`#file-principal`,
+   * `#file-secondaire`, `#file-n`). */
+  const sansDepart = b => b && !/^legacy:(start-batch|new-batch)$/.test(b.act || '');
+  function fileModele(s, a, m) {
+    const F = s.file;
+    if (!F) return;
+    const P = F.principal, fp = P ? { texte: P.texte, act: 'legacy:file-principal', ic: /^Lancer/.test(P.texte) ? 'play' : '', inactif: !P.actif } : null;
+    if (F.etat === 'repos') {
+      if (m.etat !== 'pret' || m.glyphe !== 'pret') return;
+      if (F.prete && fp) { m.secondaires = [m.principal, ...m.secondaires].filter(Boolean); m.principal = fp; m.raison = m.raison || 'File préparée · relecture et correction après chaque partie. Rien n’est lancé.'; }
+      m.secondaires.push({ texte: `File de parties · ${F.prete ? 'préparée' : 'prête'}`, act: 'sg:file' });
+      return;
+    }
+    const Se = F.secondaire ? { texte: F.secondaire.texte, act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif } : null;
+    m.file = { etatTexte: F.etatTexte, phrase: F.phrase, secondaire: Se };
+    if (F.actif) {
+      if (!sansDepart(m.principal)) m.principal = null;
+      m.secondaires = m.secondaires.filter(sansDepart);
+      if (F.etat === 'changement' && !a.lotOuvert) Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Changement de partie', objet: null, fin: null, incident: null, verrou: true,
+        verrouTexte: 'Aucune action pendant le changement de partie', principal: null, secondaires: [], raison: '',
+        phrase: `Vers la partie ${mono(F.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` });
+      return;
+    }
+    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: F.bilan, principal: fp }); return; }
+    const arret = F.etat === 'arret', ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout');
+    m.file = null;
+    Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'File arrêtée' : 'File terminée',
+      phrase: esc(F.phrase), objet: null, fin: null, incident: F.alerte ? { texte: F.alerte } : null, verrou: false, raison: '', fileBilan: F.bilan,
+      principal: fp, secondaires: ex ? [versAction(ex)] : [] });
   }
   function modeleEcho(s, a, g, m, partie) {
     const { primaire, autres } = boutonsPanneau(s.boutonsEcho, 'native'), E = g.echo || {};
@@ -267,8 +303,27 @@
    * la case clique `#lot-reprise`, dont le gestionnaire remplit les bornes. */
   function bornesHtml(snap, m) {
     const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
-    if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors') return '';
+    if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors' || m.file || m.fileBilan) return '';
     return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des différés : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
+  }
+  /* CH-025 : le bandeau de la file (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de la file). */
+  const NOTE_FILE = 'Après chaque partie : <b>relecture et correction</b>, toujours <span class="sg-sep">·</span> aucun export automatique <span class="sg-sep">·</span> seul « Arrêter la file » l’arrête';
+  const bilanHtml = L => L?.length ? `<ol class="sg-file-bilan" aria-label="Bilan par partie">${L.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '';
+  function fileHtml(m) {
+    if (m.fileBilan) return bilanHtml(m.fileBilan);
+    const F = m.file; if (!F) return '';
+    const bt = (b, cls) => b ? `<button type="button" class="${cls}${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>` : '';
+    return `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>File de parties</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</p>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}${F.principal || F.secondaire ? `<div class="sg-file-bts">${bt(F.principal, 'sg-secondaire')}${bt(F.secondaire, 'sg-secondaire')}</div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`;
+  }
+  /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer la file » (ne lance rien), puis « Lancer la file » (qui referme la boîte). */
+  function boiteFileHtml(snap) {
+    const F = snap.file; if (!F || F.etat !== 'repos') return '';
+    const P = F.principal;
+    const seg = F.choix.length ? `<span class="sg-seg" role="group" aria-label="Nombre de parties">${F.choix.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span>` : '';
+    return `<div class="sg-voile" data-k="voile-file" data-act="sg:fermer"></div><div class="sg-boite" data-k="file" role="dialog" aria-labelledby="sg-file-t"><span class="sg-t" id="sg-file-t">File de parties</span>
+<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${seg}</div>${F.phrase ? `<p class="sg-meta">${esc(F.phrase)}</p>` : ''}
+<p class="sg-meta">La relecture et la correction suivent chaque partie, toujours. Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p>
+<div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}>${F.prete ? ic('play') : ''}<span>${esc(P.texte)}</span></button>` : ''}</div></div>`;
   }
   function actionsHtml(m) {
     if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin de la deuxième passe')}</span></div>`;
@@ -353,6 +408,9 @@
     const etat = `${m.activite === 'echo' ? 'Écho' : 'Orbite'} · ${m.mot}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${a.traites} sur ${a.cibles}` : ''}`;
     if (m.principal && !m.principal.occupe) add(m.principal.ic || 'play', m.principal.texte, m.principal.act, etat, m.principal.inactif ? m.raison || 'indisponible' : '', m.principal.danger);
     for (const b of m.secondaires) add(b.danger ? 'stop' : b.ic || 'coche', b.texte, b.act, '', b.inactif ? 'indisponible' : '', b.danger);
+    /* CH-025 : pendant la file, « Arrêter la file » (bandeau) ; arrêtée pendant que le lot garde l'écran, son bouton de reprise ou de bilan. */
+    if (m.file?.secondaire) add('stop', m.file.secondaire.texte, m.file.secondaire.act, 'File de parties', m.file.secondaire.inactif ? 'indisponible' : '', true);
+    if (m.file?.principal) add('liste', m.file.principal.texte, m.file.principal.act, 'File de parties', m.file.principal.inactif ? 'indisponible' : '');
     add('liste', ui.tiroir ? 'Fermer le tiroir' : 'Voir ce qui reste', 'sg:tiroir', '');
     const ex = (snap.boutonsOrbite || []).find(b => b.id === 'export-tout');
     add('export', 'Exporter le dossier', 'legacy:export-tout', '', ex && ex.actif ? '' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant');
@@ -415,8 +473,8 @@
   /* ------------------------------------------------------------------ écran */
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
-    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${m.bornesLot ? `<p class="sg-lot-bornes">${m.bornesLot}</p>` : ''}</div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
-    const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
+    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${m.bornesLot ? `<p class="sg-lot-bornes">${m.bornesLot}</p>` : ''}</div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${fileHtml(m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
+    const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'file' ? boiteFileHtml(s) : '';
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
   }
 
