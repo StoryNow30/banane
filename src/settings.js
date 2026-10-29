@@ -396,6 +396,11 @@
    * déjà (instantané E1 de la liste, ombre des règles métier, bords qu'elle a écrits) ; aucune action dans ESV, la décision et la pose
    * ne la lisent pas. Livrée active pour cela. `actif:false` : rien n'est calculé, affiché ni exporté. */
   const vertsAControler = Object.freeze({ actif: true });
+  /* CH-017 (T27a ; D-244, D-245, D-261) — FILE DE PARTIES (src/file-parties.js, background.js) : enchaîne N parties dans Orbite (lot, deuxième
+   * passe, relecture et correction, partie suivante). ÉTEINTE à la livraison : `actif:false`, aucune action de la file n'existe, le panneau et les
+   * exports sont ceux d'avant. L'intégrateur l'allume après le relevé, par l'opérateur, d'un vrai changement de partie dans ESV et l'application du
+   * diff proposé de l'adaptateur (chantiers/CH-017.rapport.md). `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
+  const file = Object.freeze({ actif: false, changementBorneMs: 60000 });
   /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
    * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
    * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.
@@ -533,5 +538,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file });
 });
