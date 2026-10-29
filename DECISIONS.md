@@ -3259,3 +3259,10 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Limites écrites** : le manifeste ne représente que des parties entières. Les blocs d'examen et de garde restent fermés au réglage par le tirage, pas par le manifeste ; CH-012 les ouvre une seule fois, après figement et déclaration des paramètres. Le projet réel est inconnu : si c'est le projet 1, la partie 17 était déjà en apprentissage (réglage de la convention, 19/10) et l'examen n'est pas vierge pour la v6. Question posée à l'opérateur.
 - Le numéro suivant est D-264.
 
+## D-264 — Sens de « ne valide jamais un cut non résolu » : lecture B, lot compris (opérateur, 29/10/2026)
+
+- **Réponse écrite de l'opérateur** : « Lecture B, "lot compris" : un cut n'est "non résolu" que si ni le moteur ni le lot n'ont de décision. Dans ce cas, la règle est respectée. C'est ce qui s'applique aujourd'hui sans que j'y aie rien changé. »
+- **Effet** : un cut dont le moteur n'a pas résolu un rail mais pour lequel le lot (décision sur le lot, choix du lot, GCV2 L1 « valider ») a une décision n'est pas un cut non résolu : le valider respecte la règle. La règle interdit de valider un cut pour lequel NI le moteur NI le lot n'ont de décision. Elle ne change aucun comportement : c'est celui de D-041 et de D-042, en vigueur depuis la 4.7.10. D-012 (« aucune validation partielle ») s'entend donc au sens du moteur seul, avant la décision du lot.
+- **Ce qui reste** : la qualité de ces poses est une question de gain, pas de règle (mesure du 29/10, partie 20 : sur les cuts à deux rails non résolus par le moteur et jugés, 5 faux à plus de 50 mm sur 29 ; effectifs petits). Une garde de qualité reste possible par décision d'intégration, après validation hors échantillon sur un autre lot.
+- Le numéro suivant est D-265.
+
