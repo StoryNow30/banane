@@ -862,7 +862,7 @@ html[data-mouvement="reduit"] #panneau *, html[data-mouvement="reduit"] #panneau
       pile = `<b>${U.n(c.poses)}</b>posés`;
     }
     const d = m.restants.filter((x) => x.type === 'differe').length, v = m.restants.length - d;
-    if (md !== 'echo' && m.phase !== 'pret') main = m.restants.length ? `en main : ${d} différé${d > 1 ? 's' : ''}, ${v} à examiner` : 'main vide';
+    if (md !== 'echo' && m.phase !== 'pret') main = m.restants.length ? `${d} différé${d > 1 ? 's' : ''} · ${v} à examiner` : 'main vide';
     t.querySelector('.etiq-pioche').innerHTML = pioche;
     t.querySelector('.etiq-pile').innerHTML = pile;
     t.querySelector('.etiq-main').textContent = main;
