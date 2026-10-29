@@ -53,7 +53,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .orbe canvas{width:34px;height:34px;flex:none}
 .orbe span{font-weight:500;color:var(--texte);overflow-wrap:anywhere}
 @media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .orbe.vit span{
-  background:linear-gradient(90deg,var(--texte) 0 40%,var(--texte-2) 50%,var(--texte) 60% 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:luit 2.2s linear infinite}}
+  background:linear-gradient(90deg,var(--texte) 0 40%,var(--texte-2) 50%,var(--texte) 60% 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:luit 2.2s linear infinite;animation-delay:var(--decal,0s)}}
 @keyframes luit{from{background-position:100% 0}to{background-position:-150% 0}}
 
 .appareil{background:var(--cadre);border-radius:24px;padding:6px;margin:12px 0;border:1px solid var(--bord)}
@@ -190,7 +190,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
   function orbe(m) {
     const vit = (m.phase === 'encours' || m.vue === 'echo' || (m.incident && m.incident.type === 'absent'));
-    return `<div class="orbe${vit ? ' vit' : ''}" role="status"><canvas data-garder="orbe" id="orbe" aria-hidden="true"></canvas><span>${esc(libelleOrbe(m))}</span></div>`;
+    const decal = `-${((performance.now() % 2200) / 1000).toFixed(3)}s`;
+    return `<div class="orbe${vit ? ' vit' : ''}" style="--decal:${decal}" role="status"><canvas data-garder="orbe" id="orbe" aria-hidden="true"></canvas><span>${esc(libelleOrbe(m))}</span></div>`;
   }
   function frise(S, m) {
     const c = m.compte, tot = c.total == null ? Math.max(c.faits + 30, 120) : c.total;

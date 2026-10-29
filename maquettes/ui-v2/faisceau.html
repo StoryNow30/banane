@@ -62,7 +62,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .lot.court::after{opacity:.75}.lot.fige::after{opacity:.35;--ang:200deg}
 .lot.court::before,.lot.fige::before{opacity:1}
 .lot.fige::before{--ang:200deg}
-@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .lot.court::before,:root:not([data-mouvement="reduit"]) .lot.court::after{animation:tourne 3.2s linear infinite}}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .lot.court::before,:root:not([data-mouvement="reduit"]) .lot.court::after{animation:tourne 3.2s linear infinite;animation-delay:var(--decal,0s)}}
 @keyframes tourne{to{--ang:360deg}}
 .lot .etat{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--texte-2);display:flex;align-items:center;gap:8px}
 .lot .grand{display:flex;align-items:baseline;gap:8px;margin:6px 0 0}
@@ -624,7 +624,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   function carteLot(m, contenu) {
     const fa = m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : '';
     const mot = m.vue === 'echo' ? 'Écho · observe' : m.titre;
-    return `<section class="lot verre ${fa}" aria-label="${esc(mot)}"><div class="etat">${esc(mot)}${fa === 'court' ? ' · le faisceau tourne' : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
+    /* Phase calée sur l'horloge : le rendu périodique ne relance pas le faisceau à zéro. */
+    const decal = `-${((performance.now() % 3200) / 1000).toFixed(3)}s`;
+    return `<section class="lot verre ${fa}" style="--decal:${decal}" aria-label="${esc(mot)}"><div class="etat">${esc(mot)}${fa === 'court' ? ' · le faisceau tourne' : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
   }
   function frise(S, m) {
     const marques = S.restants.slice().sort((a, b) => a.cut - b.cut);
