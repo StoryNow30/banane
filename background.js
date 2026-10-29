@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.24',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 24 (D-259)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -2445,7 +2445,9 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
   /* 5.0 : relecture après le lot, seulement si une passe a eu lieu. */
   ...(relecture.passe?{relecture:relectureVue()}:{}),
   /* Test 17 : deuxième passe des différés, seulement si elle a eu lieu. */
-  ...(passeDiff.vue?{passeDifferes:{...passeDiff.vue}}:{})};}
+  ...(passeDiff.vue?{passeDifferes:{...passeDiff.vue}}:{}),
+  /* CH-017 : file de parties, seulement allumée (src/settings.js `file.actif`). */
+  ...(fileReglage()?{fileParties:FPm().vue(fileP.etat)}:{})};}
 function pollCurrent(){
  /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
  /* T20a : ni pendant un équipement de l'onglet (le statut est alors « reconnecting », puis « ready »). */
@@ -2855,7 +2857,7 @@ async function relectureLancer({auto=false,passe=null}={}){
   let refus=await relectureRefus(engine.s.batch,auto);if(refus)return nonLancee(refus);
   if(engine.s.batch?.id!==p.lotId)return nonLancee('le lot a changé');
   const R=globalThis.BananeRelectureOmbre,Q=globalThis.BananeRelectureCritere,cfg=reglageRelecture(),reglages=await relectureReglages();
-  const choixCourant=await relectureChoix();
+  const choixCourant=engine.s.batch?.scope?.fileParties?p.mode:await relectureChoix();   /* CH-017 (D-261) : relecture toujours dans la file */
   s=suite();if(s==='remplacee')return relectureEtat();if(s)return nonLancee('arrêtée à ta demande avant le départ','arret');
   /* W10 : le plus prudent du mode figé dans le lot et du choix courant du panneau. */
   const prudent=RANG_MODE[choixCourant]<RANG_MODE[p.mode]?choixCourant:p.mode;
@@ -3205,6 +3207,153 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue,raison:p.message,faits:p.faits,total:p.total,corriges:p.corriges,refusees:p.refusees,
   vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin||new Date().toISOString())-Date.parse(p.debut)},p);
  await relectureOublierPasse(p);}
+/* CH-017 (T27a ; D-244, D-245, D-247, D-248, D-261) — FILE DE PARTIES : PILOTE DU SERVICE WORKER autour de la machine pure `src/file-parties.js`.
+ * ÉTEINTE PAR DÉFAUT (`BananeSettings.file.actif`, src/settings.js) : aucune action « file-* » n'est acceptée (« Commande inconnue », comme avant),
+ * aucun tic, aucune lecture du stockage de la file, la vue du panneau et les exports sont ceux d'avant, à l'octet près.
+ * Allumée : `file-demarrer` {n, lotArgs} fige les N parties (la partie affichée puis les suivantes du sélecteur d'ESV relevé en lecture seule) ; la
+ * machine rend des actions que le pilote exécute APRÈS avoir gardé l'état (`banane60FileParties`) : démarrer le lot de la partie (le chemin
+ * « Démarrer » du panneau, toutes ses gardes ; scope `fileParties` et relecture « corriger », D-261), changer de partie (commande
+ * `changerPartie` de l'adaptateur, puis la partie demandée lue dans ESV en 60 s au plus, l'onglet ré-équipé après un rechargement), revenir sur la
+ * partie du lot pour la relecture, arrêter ce qui travaille. Un TIC (1 s) lit le lot, la passe et la relecture et nourrit la machine : la passe et
+ * la relecture partent d'elles-mêmes à la fin du lot (comme sans file). Le registre des écritures (`banane60RegistreFile`) est noté à la fin de
+ * chaque partie. Au réveil du service worker : `fileReprendre` (registre d'abord). Commandes ESV de la file : celles du lot, de la passe, de la
+ * relecture, et `changerPartie` ; aucune autre, jamais de SKIP. Journal : `file-parties`, `file-parties-reprise`, `file-parties-erreur`. */
+const FILE_DEFAUT=Object.freeze({changementBorneMs:60000,ticMs:1000,passeGraceMs:5000,relectureAttenteMs:180000,pollMs:500});
+const FILE_ACTIONS=new Set(['file-etat','file-demarrer','file-arreter','file-oublier']);
+const FILE_LOT_ARGS=['testConfirmed','allowNavigationEvidence','lowConfidence','unresolvedPolicy','lotDecision','geometryEngine'];
+const fileP={etat:null,file:Promise.resolve(),tic:null,ticEnCours:false,demarrage:null,action:null};
+const FPm=()=>globalThis.BananeFileParties;
+function fileReglage(){const f=globalThis.BananeSettings?.file;return f&&f.actif===true&&FPm()?{...FILE_DEFAUT,...f}:null;}
+const fileActive=()=>!!fileP.etat&&!!FPm()?.actif(fileP.etat);
+async function fileSauver(e){fileP.etat=e;const C=FPm().CLE_ETAT;try{if(e)await chrome.storage.local.set({[C]:e});else await chrome.storage.local.remove?.(C);}catch{/* mémoire seule */}}
+/* Une transition à la fois : l'état gardé est toujours celui de la dernière transition rendue. */
+function fileEvenement(ev){const p=fileP.file.then(()=>fileAppliquer(FPm().transition(fileP.etat,{at:new Date().toISOString(),...ev}),ev));fileP.file=p.catch(()=>{});return p;}
+async function fileAppliquer(r,ev){if(r.refus)throw Error('File de parties non lancée : '+r.refus+'.');if(r.ignore)return r;
+ const avant=fileP.etat;await fileSauver(r.etat);const e=r.etat||avant;
+ journalerSimple('file-parties',{evenement:ev.type,de:avant?.etat??null,vers:r.etat?.etat??null,fileId:e?.id??null,rang:e?.k??null,part:r.etat?.partie?.part??r.etat?.changement?.vers??null,
+  motif:r.etat?.motifFin?.code??null,actions:r.actions.map(a=>a.type)});
+ fileTicPlanifier();for(const a of r.actions)void fileAction(a);return r;}
+async function fileAction(a){fileP.action=a.type;try{
+  if(a.type==='demarrer-lot')await fileDemarrerLot(a);
+  else if(a.type==='changer-partie')await fileChangerPartie(a.vers,false);
+  else if(a.type==='retour-partie')await fileChangerPartie(a.vers,true);
+  else if(a.type==='arreter-activite')await fileArreterActivite();
+  else if(a.type==='registre')await fileRegistreNoter(a.rang);}
+ catch(e){journalerSimple('file-parties-erreur',{action:a.type,message:String(e?.message||e).slice(0,200)});}
+ finally{if(fileP.action===a.type)fileP.action=null;}}
+/* REGISTRE consulté avant tout départ : une écriture d'Ariane non prouvée (pose commandée non validée, résultat à réconcilier, correction de la
+ * relecture ou de la passe interrompue, écriture de la passe en vol) ; null si rien n'est en suspens. */
+async function fileSuspens(){const s=engine?.s;
+ if(s?.intent||s?.reconcileRequired)return 'résultat incertain à réconcilier dans ESV';
+ if(s?.applied)return `pose d’Ariane au cut ${s.applied.identity?.cut??'?'} non validée`;
+ const l=await relectureIntentions();if(l.length)return `correction ${l[0].origine==='passe'?'de la deuxième passe':'de la relecture'} interrompue au cut ${l[0].cut}`;
+ if(passeDiff.ecriture?.attente||passeDiff.etat?.ecriture?.enVol)return 'écriture de la deuxième passe en vol';
+ return null;}
+function fileResume(b){return {traites:cutsTraites(b).size,poses:(b.processed||[]).length,differes:(b.deferred||[]).length,main:(b.manuallyCompleted||[]).length};}
+async function fileDemarrerLot({part,rang}){const e=fileP.etat;if(!e||e.etat!=='lot'||e.k!==rang||e.partie?.lotId)return;
+ const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
+ let now=null;try{now=await readState();}catch(x){return fileEvenement({type:'lot-refuse',detail:`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`});}
+ if(now?.identity?.part!==part||!Number.isInteger(now?.identity?.cut))return fileEvenement({type:'lot-refuse',detail:`ESV affiche la partie ${now?.identity?.part??'?'}, pas la partie ${part}`});
+ const args={...(e.lotArgs||{}),part,start:now.identity.cut,end:FIN_PARTIE,endMode:'partie'};
+ fileP.demarrage={id:e.id,rang,n:e.n};
+ try{await dispatch({action:'start',args});}catch(x){return fileEvenement({type:'lot-refuse',detail:String(x?.message||x).slice(0,300)});}
+ finally{fileP.demarrage=null;}
+ const b=engine.s.batch;return fileEvenement({type:'lot-demarre',lotId:b?.id,part});}
+/* CHANGER DE PARTIE (ou revenir sur celle du lot pour la relecture). La commande n'est envoyée que si l'adaptateur dit la connaître (`ping` :
+ * `capacites`) ; sa réponse n'est qu'un accusé de demande : la PREUVE est la partie demandée lue dans ESV (« Cut N of part P », rails présents),
+ * après un rechargement (onglet ré-équipé) ou sur place, dans la borne. */
+async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.etat;if(!R||!e0)return;
+ const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
+ const echec=(motif,detail)=>retour?fileRelectureApresRetour(false,detail):fileEvenement({type:'changement-echec',motif,detail});
+ const ok=r=>retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:r.identity.cut});
+ const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
+ if(!retour)await fileEvenement({type:'changement-envoye',vers});
+ const pret=r=>r?.identity?.part===vers&&!!r?.rails?.left&&!!r?.rails?.right;
+ let lu=null;try{lu=await readState();}catch{/* lu plus bas */}
+ if(pret(lu))return ok(lu);
+ let ping=null;try{ping=await call('ping');}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
+ if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
+ let rep=null;try{rep=await call('changerPartie',{part:vers});}catch(x){return echec('changement-impossible',`commande refusée (${String(x?.message||x).slice(0,160)})`);}
+ if(rep?.ok!==true)return echec('changement-impossible',rep?.raison?`la page refuse : ${String(rep.raison).slice(0,120)}`:'réponse illisible de la page');
+ journalerSimple('file-parties-changement',{vers,retour,mode:typeof rep.mode==='string'?rep.mode.slice(0,20):null,de:Number.isInteger(rep.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:null,deja:rep.deja===true});
+ const fin=Date.now()+R.changementBorneMs;let vu=false,derniere=null;
+ while(Date.now()<fin){if(!attendu())return;
+  let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+  if(!tab)return echec('onglet-ferme','onglet ESV fermé pendant le changement de partie');
+  if(tab.status&&tab.status!=='complete'){await attendre(R.pollMs);continue;}
+  try{const r=await readState();vu=true;if(pret(r))return ok(r);derniere=r?.identity?.part!==undefined?`ESV affiche la partie ${r.identity.part}`:null;}
+  catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return echec('changement-impossible',y.message);}}
+  await attendre(R.pollMs);}
+ return echec(vu?'changement-impossible':'esv-muet',`${vu?`la page d’ESV n’a pas affiché la partie ${vers}`:'ESV ne répond plus'} en ${Math.round(R.changementBorneMs/1000)} s${derniere?` (${derniere})`:''}`);}
+/* D-261 : après le retour sur la partie du lot, la relecture est relancée (le chemin « Lancer la relecture », toutes ses gardes). */
+async function fileRelectureApresRetour(revenu,detail=null){const e=fileP.etat,lotId=e?.partie?.lotId;if(!e||e.etat!=='relecture')return;
+ const nonLancee=d=>fileEvenement({type:'relecture-fin',lotId,issue:'non-lancee',horsPartie:false,detail:d});
+ if(!revenu)return nonLancee(`retour sur la partie ${e.partie.part} impossible${detail?` (${detail})`:''}`);
+ try{await dispatch({action:'relecture-lancer'});}catch(x){return nonLancee(String(x?.message||x).slice(0,300));}}
+async function fileArreterActivite(){if(passeDiff.ecriture)passeDiff.ecriture.arret=true;if(passeActive())relectureArreter();
+ const b=engine?.s?.batch;if(b&&!OBS_CLOS.includes(b.state))await coordinateurLot.transition('arret',async()=>{const fin=engine.stop();marquerFinLot(b,'arret-manuel');await fin;}).catch(()=>{});}
+async function fileRegistreLire(){try{const v=(await chrome.storage.local.get(FPm().CLE_REGISTRE))?.[FPm().CLE_REGISTRE];return Array.isArray(v)?v:[];}catch{return [];}}
+async function fileRegistreNoter(rang){const e=fileP.etat,p=e?.bilan?.find(x=>x.rang===rang);if(!p?.lotId)return;
+ let events=[];try{events=await store.all('events')||[];}catch{events=[];}
+ const du=events.filter(x=>x?.batchId===p.lotId||x?.lotId===p.lotId),b=engine?.s?.batch,cutDe=x=>x?.cut??x?.identity?.cut;
+ const poses=b?.id===p.lotId?(b.processed||[]).map(cutDe):[];
+ const passe=du.filter(x=>x.type==='passe-differes-ecriture'&&x.resultat==='ecrit'&&x.identity?.part===p.part).map(x=>x.identity.cut);
+ const corriges=du.filter(x=>x.type==='relecture-ombre'&&x.action==='corrige'&&x.identity?.part===p.part).map(x=>({cut:x.identity.cut,ecartMm:Number.isFinite(x.ecartMm)?x.ecartMm:null}));
+ const R=FPm().registreAjouter(await fileRegistreLire(),{fileId:e.id,part:p.part,rang,lotId:p.lotId,at:p.fin,poses,passe,corriges,valides:[...poses,...passe,...corriges.map(c=>c.cut)]});
+ try{await chrome.storage.local.set({[FPm().CLE_REGISTRE]:R});}catch{/* mémoire seule */}}
+function fileTicPlanifier(){const R=fileReglage();if(!R||!fileActive()||fileP.tic)return;
+ fileP.tic=setTimeout(()=>{fileP.tic=null;void fileTic().catch(()=>{}).finally(fileTicPlanifier);},R.ticMs);}
+async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.action||fileP.ticEnCours)return;fileP.ticEnCours=true;
+ try{const e=fileP.etat,lotId=e.partie?.lotId;
+  let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+  if(!tab)return void await fileEvenement({type:'onglet-ferme',detail:'onglet ESV fermé ou non choisi'});
+  if(e.etat==='lot'&&lotId){const b=engine?.s?.batch;
+   if(b?.id!==lotId)return void await fileEvenement({type:'lot-fin',lotId,motif:'refus-lot',detail:'le lot de la file a été remplacé'});
+   if(!FPm().classerLot({etat:b.state}))return;   /* lot ouvert (une pause comprise) : la file attend */
+   const s=await fileSuspens(),arret=coordinateurLot.journal.some(t=>t.nom==='arret'&&t.lot===b.id)||obsFins.get(b.id)?.cause==='arret-manuel';
+   const motif=FPm().classerLot({etat:b.state,stoppedAtEnd:b.stoppedAtEnd,arretOperateur:arret,ecritureEnSuspens:!!s});
+   return void await fileEvenement({type:'lot-fin',lotId,motif,issue:b.stoppedAtEnd?.issue??b.state,resume:fileResume(b),
+    detail:motif==='ecriture-incertaine'?s||'le lot a fini avec des actions non confirmées':b.stoppedAtEnd?.reason??engine.s.notice??null});}
+  if(e.etat==='passe'){if(passeDiff.cours||passeDiff.ecriture)return;
+   if(!passeDiff.planifie.has(lotId)&&Date.now()-Date.parse(e.depuis)<R.passeGraceMs)return;
+   const v=passeDiff.vue?.lotId===lotId?passeDiff.vue:null,s=await fileSuspens();
+   return void await fileEvenement({type:'passe-fin',lotId,issue:v?v.etat:'absente',ecrits:v?.ecrites??0,ecritureEnSuspens:!!s,detail:s||v?.message||null});}
+  if(e.etat==='relecture'){const p=relecture.passe;
+   if(p?.lotId===lotId&&['preparation','en-cours','en-pause'].includes(p.etat))return;
+   if(p?.lotId===lotId&&['finie','arretee','erreur','non-lancee'].includes(p.etat)){const s=await fileSuspens();let hors=false;
+    if(p.etat==='non-lancee')try{const r=await readState();hors=Number.isInteger(r?.identity?.part)&&r.identity.part!==e.partie.part;}catch{/* illisible : pas de retour */}
+    return void await fileEvenement({type:'relecture-fin',lotId,issue:p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode,horsPartie:hors,ecritureEnSuspens:!!s,detail:s||p.message||null});}
+   if(!passeActive()&&Date.now()-Date.parse(e.depuis)>R.relectureAttenteMs)return void await fileEvenement({type:'relecture-fin',lotId,issue:'absente',detail:'aucune relecture pour ce lot'});}}
+ finally{fileP.ticEnCours=false;}}
+/* AU RÉVEIL DU SERVICE WORKER (allumée seulement) : l'état gardé est relu ; le registre, l'onglet et ESV sont lus avant toute action (machine : `reprise`). */
+async function fileReprendre(){if(!fileReglage())return;let v=null;try{v=(await chrome.storage.local.get(FPm().CLE_ETAT))?.[FPm().CLE_ETAT];}catch{return;}
+ const e=FPm().relire(v);if(!e)return;fileP.etat=e;if(!FPm().actif(e))return;
+ await passeDiffReveil;
+ let ongletPresent=selectedTab!==null;if(ongletPresent)try{await chrome.tabs.get(selectedTab);}catch{ongletPresent=false;}
+ const s=await fileSuspens();let partieAffichee=null;try{partieAffichee=(await readState())?.identity?.part??null;}catch{/* ESV muet */}
+ const b=engine?.s?.batch,f=b?.scope?.fileParties,lotFile=f&&f.id===e.id?{id:b.id,rang:f.rang,part:b.scope.part}:null;
+ const r=FPm().reprise(e,{ongletPresent,ecritureEnSuspens:!!s,detailSuspens:s,lotFile,partieAffichee,at:new Date().toISOString()});
+ journalerSimple('file-parties-reprise',{fileId:e.id,etat:e.etat,rang:e.k,vers:r.etat?.etat??null,actions:r.actions.map(a=>a.type),suspens:s,partieAffichee});
+ const p=fileP.file.then(()=>fileAppliquer(r,{type:'reprise'}));fileP.file=p.catch(()=>{});await p;}
+const fileReveil=ready.then(()=>fileReprendre()).catch(()=>{});
+async function fileVue(){return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
+async function fileDispatch(action,args){await fileReveil;
+ if(action==='file-etat')return fileVue();
+ if(action==='file-arreter'){await fileEvenement({type:'arreter'});return fileVue();}
+ if(action==='file-oublier'){await fileEvenement({type:'oublier'});return fileVue();}
+ /* file-demarrer : mêmes refus qu'un lot, dits AVANT de créer la file (rien n'est gardé si elle ne peut pas partir). */
+ if(fileActive())throw Error('File de parties déjà en cours : arrête-la d’abord.');
+ if(selectedTab===null)throw Error('Connecte ESV avant de lancer la file.');
+ if(engine.s.mode!=='automatic-test')throw Error('File de parties : Orbite seulement (mode lot).');
+ engine.assertBatchContextFree('la file de parties');
+ if(passeActive()||passeDiff.cours||passeDiff.ecriture||native?.active()||manual?.active())throw Error('File de parties : termine l’activité en cours (relecture, deuxième passe, Écho) avant de la lancer.');
+ const s=await fileSuspens();if(s)throw Error(`File de parties non lancée : ${s}. Contrôle ce cut dans ESV d’abord.`);
+ let now=null;try{now=await readState();}catch(x){throw Error('File de parties non lancée : ESV ne répond pas ('+String(x?.message||x).slice(0,160)+').');}
+ try{const r=await callSur(selectedTab,'ping',{contrat:true});selecteurNoter(r?.selecteurParties);}catch{/* relevé ancien gardé */}
+ const lotArgs=Object.fromEntries(FILE_LOT_ARGS.filter(k=>args?.lotArgs&&Object.hasOwn(args.lotArgs,k)).map(k=>[k,args.lotArgs[k]]));
+ await fileEvenement({type:'demarrer',id:globalThis.BananeCore3.uid(),n:Number(args?.n),selecteur:partsSelector,courante:now?.identity?.part,lotArgs});
+ return fileVue();}
+async function fileExport(){if(!fileReglage())return {};const r=await fileRegistreLire();return r.length||fileP.etat?{fileParties:{etat:FPm().vue(fileP.etat),registre:r}}:{};}
 /* B3 — transition « demarrage » : le corps de « Démarrer », inchangé (déplacé de `dispatch`). */
 async function demarrerLot(args){
   // Avant tout archivage : un lot en reprise manuelle garde son contexte.
@@ -3256,6 +3405,9 @@ async function demarrerLot(args){
   {const c=await choixDuLot();if(c.clicHumain!=='tel-quel')startArgs.clicHumain=c.clicHumain;if(c.regleGrappeDifferes)startArgs.regleGrappeDifferes=true;}
   /* 5.0 (D-171, D-173) : relecture après le lot, lue ICI et figée dans le scope ; coupée (défaut) : le scope n'en porte rien. */
   delete startArgs.relecture;{const m=await relectureChoix();if(m!=='coupee')startArgs.relecture=m;}
+  /* CH-017 (D-261) : un lot démarré par la file de parties porte la file dans son scope, et la relecture avec correction (toujours) ; hors file,
+   * le scope n'en porte rien (celui d'avant, à l'octet près). */
+  delete startArgs.fileParties;if(fileP.demarrage){startArgs.fileParties={...fileP.demarrage};startArgs.relecture='corriger';}
   if(finPartie)startArgs.endMode='partie';else delete startArgs.endMode;
   /* 4.7.19 — REPRISE DES DIFFÉRÉS : les appuis de départ sont figés dans le scope. */
   delete startArgs.lotReprise;
@@ -3273,6 +3425,11 @@ async function demarrerLot(args){
   retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
 async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une passe gardée est reprise (ou close) avant toute action du panneau */
  const {action,args={}}=m;
+ /* CH-017 : file de parties (éteinte : ces actions restent inconnues, comme avant). Pendant la file, « Arrêter » arrête la file et ce qui
+  * travaille ; « Démarrer » à la main est refusé (le lot suivant appartient à la file). */
+ if(FILE_ACTIONS.has(action)&&fileReglage())return fileDispatch(action,args);
+ if(action==='stop'&&fileActive()){await fileEvenement({type:'arreter'});return engine.view();}
+ if(action==='start'&&fileActive()&&!fileP.demarrage)throw Error('File de parties en cours : le lot suivant part de lui-même. Clique sur « Arrêter la file » pour reprendre la main.');
  /* 5.0 (D-171, revue de la relecture) : relecture après le lot. Pendant sa préparation et pendant la passe, rien qui agisse dans ESV ou
   * sur le lot ne part du panneau ; « Arrêter » (du lot) arrête la relecture (W11). */
  if(action==='stop'&&passeActive()){relectureArreter();return engine.view();}
@@ -3436,7 +3593,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   * à l'état, rangé ailleurs dans le même fichier. */
  const exporte=['journal-meta','dataset-meta','journal','dataset'].includes(action),periode=exporte?await periodeExport(await flushMesure()):null;
  const v1TimingExport=periode?.v1TimingExport??null;
- const timingMeta={...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{}),...(periode?.finsLot?.length?{finsLot:periode.finsLot}:{})};
+ const timingMeta={...(exporte?await fileExport():{}),...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{}),...(periode?.finsLot?.length?{finsLot:periode.finsLot}:{})};
  /* 4.9.0.16 (test 15, 5c) : les 64 dernières transitions du lot (B3), dans le journal exporté. */
  const transitionsLot=coordinateurLot.journal.map(t=>({nom:t.nom,lot:t.lot,etat:t.etat,at:t.at??null}));
  if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),transitionsLot};
