@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feuille à crans</title>
+<style>
+/*POLICE:app-geist*/
+/*POLICE:app-geist-mono*/
+/* Proposition « Feuille à crans » (série app-).
+   Logique : le panneau est un écran de carte sans carte : derrière, un visage lisible de loin
+   (l'état et le compte en très grand) ; devant, une feuille du bas non modale à trois crans
+   (Résumé, Lot, Tout) qui porte le détail et les quelques actions.
+   Sources : mobbin (glossaire « Bottom Sheet » : crans, non modale), beUI (feuille à points d'arrêt,
+   guide de mouvement), 60fps (feuille compacte qui devient page), SwiftPieces (ScrollIsland, Agent Run,
+   rôles de mouvement). Sens des couleurs : bleu pétrole = l'action à faire ; ambre = à regarder ;
+   brique = arrêt ; vert = fini. Toujours avec un mot ou une forme. */
+:root{
+  --sol:#E7EAEE; --feuille:#FFFFFF; --creux:#F1F3F5; --encre:#13161A; --encre2:#4A525C; --trait:#CFD5DC;
+  --action:#0D5870; --action-encre:#FFFFFF; --action-doux:#E1EEF2;
+  --attention:#7A4A00; --attention-fond:#FBEFD9; --arret:#9E2E1E; --arret-fond:#F9E4E0; --fait:#1B6640; --fait-fond:#DDF1E5;
+  --ombre:0 -10px 30px rgba(20,25,32,.10); --scene:#C9CED4;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --sol:#0D1013; --feuille:#181C21; --creux:#20252B; --encre:#E8ECF0; --encre2:#A4AEB9; --trait:#2C333B;
+  --action:#86D0E3; --action-encre:#06242D; --action-doux:#16323A;
+  --attention:#F2BE62; --attention-fond:#33270F; --arret:#FF9580; --arret-fond:#3A1C17; --fait:#7DD8A6; --fait-fond:#143024;
+  --ombre:0 -10px 30px rgba(0,0,0,.5); --scene:#000000;
+}}
+:root[data-theme="dark"]{
+  --sol:#0D1013; --feuille:#181C21; --creux:#20252B; --encre:#E8ECF0; --encre2:#A4AEB9; --trait:#2C333B;
+  --action:#86D0E3; --action-encre:#06242D; --action-doux:#16323A;
+  --attention:#F2BE62; --attention-fond:#33270F; --arret:#FF9580; --arret-fond:#3A1C17; --fait:#7DD8A6; --fait-fond:#143024;
+  --ombre:0 -10px 30px rgba(0,0,0,.5); --scene:#000000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Geist',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--sol);font-family:'Geist',system-ui,sans-serif}
+.notes{max-width:400px;background:var(--feuille);color:var(--encre);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.notes p{margin:0 0 10px}
+
+/* ---- panneau ---- */
+.app{position:relative;height:760px;overflow:hidden;background:var(--sol);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums}
+.num{font-family:'Geist Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--action);outline-offset:2px}
+.ico{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+/* bande d'annonce (incidents persistants, navbar.gallery « Announcement ») */
+.annonce{background:var(--attention-fond);color:var(--encre);padding:10px 16px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--trait)}
+.annonce .ico{color:var(--attention);margin-top:2px}
+.annonce b{display:block;color:var(--encre)}
+.annonce p{margin:2px 0 0;color:var(--encre)}
+.annonce .choix{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.annonce.alerte{background:var(--arret-fond)}
+.annonce.alerte .ico{color:var(--arret)}
+
+/* tête : liaison et bascule d'activité */
+.tete{display:flex;align-items:center;gap:10px;padding:12px 16px 4px;flex-wrap:wrap}
+.liaison{display:flex;align-items:center;gap:6px;color:var(--encre2);font-size:13px;min-width:0}
+.liaison .ico{width:14px;height:14px}
+.liaison.relie .ico{color:var(--fait)}
+.liaison.absent .ico,.liaison.choisir .ico{color:var(--attention)}
+.bascule{margin-left:auto;display:flex;background:var(--creux);border-radius:999px;padding:3px;position:relative}
+.bascule button{border:0;background:transparent;border-radius:999px;padding:5px 12px;font-size:13px;color:var(--encre);position:relative;z-index:1}
+.bascule button[aria-pressed="true"]{background:var(--feuille);box-shadow:0 1px 2px rgba(0,0,0,.15);font-weight:600}
+.bascule button{display:inline-flex;align-items:center;gap:4px}
+.bascule button[aria-disabled="true"]{cursor:not-allowed}
+.bascule .ico{width:13px;height:13px}
+
+/* visage : lisible de loin */
+.visage{padding:8px 16px 0}
+.statut{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;min-height:24px}
+.statut .ico{width:18px;height:18px}
+.statut.encours .ico{color:var(--action)} .statut.pause .ico{color:var(--attention)} .statut.arrete .ico{color:var(--arret)} .statut.fin .ico{color:var(--fait)}
+.statut .mini{margin-left:auto;font-weight:500;color:var(--encre2);font-size:13px}
+.grand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:14px}
+.chiffre{font-size:clamp(64px,24cqi,128px);line-height:.9;font-weight:500;letter-spacing:-.03em;display:inline-block}
+.sur{font-size:clamp(20px,6.5cqi,32px);color:var(--encre2);font-weight:500}
+.phrase{margin:12px 0 0;font-size:clamp(15px,4.4cqi,18px);color:var(--encre)}
+.sous{margin-top:12px;font-size:clamp(15px,4.4cqi,19px);color:var(--encre);display:flex;flex-wrap:wrap;gap:4px 14px}
+.sous .doux{color:var(--encre2)}
+.barre{margin-top:16px;height:10px;border-radius:999px;background:var(--creux);overflow:hidden;position:relative;border:1px solid var(--trait)}
+.barre i{display:block;height:100%;background:var(--action);border-radius:999px}
+.barre.indet i{width:100%;border-radius:0;background:repeating-linear-gradient(115deg,var(--action) 0 6px,transparent 6px 14px)}
+.barre-leg{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--encre2);gap:8px}
+.visage[data-cran="mi"] .plus,.visage[data-cran="haut"] .plus{visibility:hidden}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
+.trio div{background:var(--feuille);border:1px solid var(--trait);border-radius:12px;padding:10px 12px;min-width:0}
+.trio div.att{background:var(--attention-fond);border-color:transparent}
+.trio b{display:block;font-size:clamp(22px,7cqi,30px);font-weight:500;line-height:1.1}
+.trio span{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--encre2);margin-top:2px}
+.trio .att span{color:var(--encre)}
+.trio .ico{width:13px;height:13px}
+.trio .att .ico{color:var(--attention)}
+.dernier{margin:14px 0 0;font-size:14px;color:var(--encre)}
+/* feuille du bas, non modale, à crans */
+.feuille{position:absolute;left:0;right:0;bottom:0;background:var(--feuille);border-radius:20px 20px 0 0;box-shadow:var(--ombre);display:flex;flex-direction:column;height:180px;border-top:1px solid var(--trait)}
+.poignee{border:0;background:transparent;padding:8px 0 4px;display:flex;justify-content:center;touch-action:none;cursor:grab;width:100%}
+.poignee span{width:40px;height:5px;border-radius:999px;background:var(--encre2)}
+.crans{display:flex;gap:4px;padding:0 16px 8px;align-items:center}
+.crans button{border:0;background:transparent;padding:4px 10px;border-radius:999px;font-size:13px;color:var(--encre2)}
+.crans button[aria-pressed="true"]{background:var(--creux);color:var(--encre);font-weight:600}
+.crans .ou{margin-left:auto;font-size:12px;color:var(--encre2)}
+.corps{flex:1;overflow:hidden;padding:0 16px 24px}
+.feuille[data-cran="bas"] .corps > :not(.actions){visibility:hidden}
+.feuille[data-cran="haut"] .corps{overflow-y:auto}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--trait);background:var(--feuille);color:var(--encre);border-radius:12px;padding:11px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;min-height:44px;position:relative;overflow:hidden}
+.btn small{font-weight:400;color:var(--encre2);font-size:12px}
+.btn > span{white-space:nowrap}
+.btn.principal{background:var(--action);color:var(--action-encre);border-color:var(--action);flex:1 1 180px;justify-content:center}
+.btn.principal small{color:var(--action-encre)}
+.btn.arret{color:var(--arret);border-color:currentColor;background:var(--feuille)}
+.btn.arret.confirme{background:var(--arret);color:var(--feuille);border-color:var(--arret)}
+.btn .compte-a-rebours{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--feuille);transform-origin:left}
+.btn[aria-disabled="true"]{background:var(--creux);color:var(--encre);border:1px dashed var(--encre2);cursor:not-allowed}
+.btn.lien{border:0;background:transparent;color:var(--action);padding-left:0;padding-right:0;text-decoration:underline;text-underline-offset:3px}
+.raison{flex-basis:100%;margin:0;color:var(--encre2);font-size:13px}
+.section{margin-top:20px}
+.section h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--encre2);margin:0 0 8px;font-weight:600}
+.lignes{margin:0;padding:0;list-style:none;border-top:1px solid var(--trait)}
+.lignes li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--trait);flex-wrap:wrap}
+.lignes .cle{color:var(--encre2);flex:1 1 auto}
+.lignes .val{font-weight:500;text-align:right;font-variant-numeric:tabular-nums}
+.champ{display:flex;align-items:center;gap:8px}
+.champ input{width:84px;font:inherit;font-family:'Geist Mono',monospace;font-size:15px;padding:8px 10px;border-radius:10px;border:1px solid var(--trait);background:var(--creux);color:var(--encre);text-align:right}
+.inter{border:1px solid var(--trait);background:var(--feuille);border-radius:999px;padding:6px 12px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.inter[aria-pressed="true"]{background:var(--encre);color:var(--feuille);border-color:var(--encre)}
+.pas{display:inline-flex;align-items:center;border:1px solid var(--trait);border-radius:999px;overflow:hidden}
+.pas button{border:0;background:var(--feuille);width:36px;height:34px;font-size:18px}
+.pas b{min-width:28px;text-align:center}
+/* file de parties : trace d'étapes (SwiftPieces StepTrail) */
+.etapes{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.etape{height:30px;min-width:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 9px;font-size:13px;border:1px solid var(--trait);background:var(--feuille);color:var(--encre2)}
+.etape.faite{color:var(--fait);border-color:var(--fait)}
+.etape.courante{background:var(--action);color:var(--action-encre);border-color:var(--action);font-weight:600;padding:0 12px}
+.etape .ico{width:14px;height:14px}
+.etapes-leg{margin-top:6px;font-size:13px;color:var(--encre2)}
+.restes li{align-items:flex-start}
+.reste-tete{flex:1 1 160px;min-width:0}
+.reste-tete b{display:block}
+.reste-tete span{color:var(--encre2);font-size:13px}
+.marque{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;border-radius:6px;padding:2px 6px}
+.marque.differe{background:var(--attention-fond);color:var(--attention)}
+.marque.vert{background:var(--fait-fond);color:var(--fait)}
+.reste-act{display:flex;gap:6px}
+.reste-act .btn{min-height:36px;padding:7px 10px;font-size:13px}
+.coupe{width:100%;height:auto;display:block;background:var(--creux);border-radius:12px;border:1px solid var(--trait)}
+.coupe-pts circle{fill:var(--encre2)}
+.coupe-rails line{stroke:var(--action);stroke-width:2;stroke-dasharray:4 3}
+.legende{font-size:13px;color:var(--encre2);margin-top:6px}
+.vide{color:var(--encre2);margin:6px 0 0}
+.toast{position:absolute;left:16px;right:16px;top:58px;background:var(--encre);color:var(--feuille);border-radius:12px;padding:10px 14px;font-size:14px;display:flex;gap:8px;align-items:center;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast .ico{color:var(--feuille)}
+.parties{margin-top:10px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Feuille à crans"></div></div>
+  <aside class="notes">
+    <h2>Feuille à crans</h2>
+    <p><b>Logique.</b> Un écran de carte sans carte : derrière, un visage lisible à trois mètres (l'état, le compte en très grand, le temps restant) ; devant, une feuille du bas non modale à trois crans qui porte le détail et les rares actions.</p>
+    <p><b>D'où ça vient.</b> Glossaire de mobbin, fiche « Bottom Sheet » : crans (« snap points »), feuille non modale qui laisse agir derrière, pas pour une tâche principale ; exemples de feuilles de livraison à crans. beUI : composant « Bottom Sheet » (points d'arrêt 0,5 et 0,92, seuil de renvoi 120 px) et son guide de mouvement (ouvrir 200–500 ms, l'ancien contenu part plus vite que le nouveau n'arrive). 60fps : « Recollect Pro bottom sheet to page » (la même surface grandit). SwiftPieces : ScrollIsland (« which part am I in, how much is left »), le block Agent Run (état, horloge, activité, Pause, Stop confirmé, bilan), StepTrail pour la file, rôle « value » (un chiffre ne dépasse jamais). navbar.gallery, type « Announcement » : les incidents en bande mince tout en haut.</p>
+    <p><b>Ce que ça veut dire ici.</b> Bleu pétrole : l'action à faire et le progrès d'Ariane. Ambre : ce qui attend un regard (différés, à examiner, ESV à relier). Brique : arrêt. Vert : fait. Chaque couleur a son mot et sa forme : rond plein = en cours, deux barres = pause, carré = arrêté, coche = fini, œil = Écho. Barre pleine = total connu ; barre hachurée qui glisse = total inconnu, jamais deviné. La feuille glisse à la main (poignée) ou par ses trois boutons ; l'état choisit le cran utile (en cours : Résumé, pour lire de loin). Le grand chiffre monte d'un cran à chaque cut, sans rebond. « Arrêter » s'élargit en « Confirmer l'arrêt » avec un trait qui se vide en 4 s.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+/* Socle de rendu à mouvement, commun aux maquettes app-* (copié tel quel dans chacune).
+ * Le moteur réécrit #panneau à chaque tic (≈ 0,9 s) : un nœud gardé (data-garder) est détaché puis
+ * rattaché, ce qui annule les transitions et relance les animations CSS (mesuré le 29/10 dans Chromium).
+ * Les animations Web (element.animate) survivent, elles. Donc :
+ *  1. le panneau n'a qu'une racine gardée, .app, mise à jour par différence (les nœuds persistent) ;
+ *  2. tout mouvement passe par element.animate, jamais par transition ou animation CSS sur un nœud gardé ;
+ *  3. attributs de mouvement déclarés dans le HTML produit par la vue :
+ *     data-k="clé"     identité d'un nœud dans une liste (sinon : position et balise) ;
+ *     data-e="nom"     entrée : joue ENTREES[nom] quand le nœud apparaît (pas au premier rendu) ;
+ *     data-v="nom"     valeur : joue VALEURS[nom] quand son texte change ;
+ *     data-flip        forme : sa boîte est mesurée avant et après, et on anime de l'une à l'autre ;
+ *     data-boucle="nom" boucle : BOUCLES[nom] lancée une fois, arrêtée en mouvement réduit ;
+ *     data-u="nom"     action locale (interface seulement), data-id facultatif.
+ *  4. mouvement réduit : aucune trajectoire ni boucle ; seules restent des fondus très courts. */
+const Socle = (function () {
+  'use strict';
+  let racineApp = null, opts = null, dernierS = null, premier = true, cleEtat = '';
+  const local = {};
+  const reduit = () => Demo.D.mouvementReduit();
+
+  function cle(n) { return n.nodeType === 1 ? n.getAttribute('data-k') : null; }
+  function meme(a, b) { return a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && a.getAttribute('data-e') === b.getAttribute('data-e'))); }
+
+  function enfants(a, b) {
+    const anciens = [...a.childNodes], parCle = new Map(), libres = [];
+    anciens.forEach((n) => { const k = cle(n); if (k != null) parCle.set(k, n); else libres.push(n); });
+    let li = 0; const res = [], neufs = [];
+    for (const nb of [...b.childNodes]) {
+      const k = cle(nb); let o = null;
+      if (k != null) { const c = parCle.get(k); if (c && meme(c, nb)) { o = c; parCle.delete(k); } }
+      else {
+        for (let j = li; j < Math.min(libres.length, li + 4); j++) if (meme(libres[j], nb)) { o = libres[j]; li = j + 1; break; }
+      }
+      if (o) { noeud(o, nb); res.push(o); } else { res.push(nb); neufs.push(nb); }
+    }
+    anciens.forEach((n) => { if (!res.includes(n)) n.remove(); });
+    res.forEach((n, i) => { if (a.childNodes[i] !== n) a.insertBefore(n, a.childNodes[i] || null); });
+    /* animer seulement une fois dans le document : un nœud encore dans le gabarit (document inerte)
+       garderait une animation figée sur sa première image (mesuré : opacité 0, plus d'animation). */
+    neufs.forEach(entrer);
+  }
+
+  function attributs(o, n) {
+    for (const at of [...n.attributes]) {
+      if (at.name === 'class') {
+        const transit = [...o.classList].filter((c) => c.startsWith('m-'));
+        const v = [at.value, ...transit].join(' ').trim();
+        if (o.getAttribute('class') !== v) o.setAttribute('class', v);
+      } else if (at.name === 'style' && o.hasAttribute('data-style-libre')) {
+        /* style tenu par le code (feuille glissée, hauteur animée) : on ne l'écrase pas */
+      } else if (o.getAttribute(at.name) !== at.value) o.setAttribute(at.name, at.value);
+    }
+    for (const at of [...o.attributes]) if (!n.hasAttribute(at.name) && at.name !== 'class' && !(at.name === 'style' && o.hasAttribute('data-style-libre'))) o.removeAttribute(at.name);
+    if (o.tagName === 'INPUT' && document.activeElement !== o) o.value = n.getAttribute('value') || '';
+  }
+
+  function noeud(o, n) {
+    if (o.nodeType !== 1) { if (o.nodeValue !== n.nodeValue) o.nodeValue = n.nodeValue; return; }
+    const v = o.getAttribute('data-v'), avant = v ? o.textContent : null;
+    attributs(o, n);
+    enfants(o, n);
+    if (v && !premier && avant !== o.textContent) jouer(o, (opts.valeurs || {})[v]);
+  }
+
+  function entrer(n) {
+    if (n.nodeType !== 1 || premier) return;
+    const liste = n.hasAttribute('data-e') ? [n, ...n.querySelectorAll('[data-e]')] : [...n.querySelectorAll('[data-e]')];
+    liste.forEach((e, i) => jouer(e, (opts.entrees || {})[e.getAttribute('data-e')], i));
+  }
+
+  /* Joue un mouvement [images, options] ou une fonction (el) => [images, options]. */
+  function jouer(el, def, rang) {
+    if (!def || reduit()) return null;
+    const d = typeof def === 'function' ? def(el) : def;
+    if (!d) return null;
+    const o = Object.assign({}, d[1]);
+    if (rang && o.cascade) o.delay = (o.delay || 0) + Math.min(rang, 7) * o.cascade;
+    delete o.cascade;
+    return el.animate(d[0], o);
+  }
+
+  function boucles() {
+    racineApp.querySelectorAll('[data-boucle]').forEach((el) => {
+      const nom = el.getAttribute('data-boucle');
+      if (reduit()) { if (el._boucle) { el._boucle.cancel(); el._boucle = null; } return; }
+      if (el._boucle && el._boucleNom === nom) return;
+      if (el._boucle) el._boucle.cancel();
+      const d = (opts.boucles || {})[nom]; if (!d) return;
+      el._boucle = el.animate(d[0], Object.assign({ iterations: Infinity }, d[1])); el._boucleNom = nom;
+    });
+  }
+
+  function mesurer() {
+    const m = new Map();
+    racineApp.querySelectorAll('[data-flip]').forEach((el) => m.set(el, el.getBoundingClientRect()));
+    return m;
+  }
+  function flip(avant) {
+    if (premier || reduit()) return;
+    avant.forEach((r0, el) => {
+      if (!el.isConnected) return;
+      const r1 = el.getBoundingClientRect(), mode = el.getAttribute('data-flip') || 'h';
+      if (mode === 'h' && Math.abs(r1.height - r0.height) > 1) {
+        el.animate([{ height: r0.height + 'px', overflow: 'hidden' }, { height: r1.height + 'px', overflow: 'hidden' }], { duration: (opts.dureeForme || 420), easing: opts.courbeForme || 'cubic-bezier(.2,.9,.25,1.04)' });
+      }
+      if (mode === 'xy' && (Math.abs(r1.top - r0.top) > 1 || Math.abs(r1.left - r0.left) > 1)) {
+        el.animate([{ transform: `translate(${r0.left - r1.left}px,${r0.top - r1.top}px)` }, { transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+      if (mode === 'wh' && (Math.abs(r1.width - r0.width) > 1 || Math.abs(r1.height - r0.height) > 1)) {
+        /* la forme d'abord (largeur et hauteur), le contenu entre ensuite par son propre data-e */
+        el.animate([{ width: r0.width + 'px', height: r0.height + 'px' }, { width: r1.width + 'px', height: r1.height + 'px' }], { duration: opts.dureeForme || 420, easing: opts.courbeForme || 'cubic-bezier(.2,.9,.25,1.04)' });
+      }
+      if (mode === 'w' && Math.abs(r1.width - r0.width) > 1) {
+        el.animate([{ width: r0.width + 'px' }, { width: r1.width + 'px' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    });
+  }
+
+  function peindre() {
+    if (!racineApp) return;
+    /* le moteur détache puis rattache la racine à chaque tic : un défilement interne retombe à 0
+       (mesuré). On remet chaque zone défilante où l'opérateur l'avait laissée. */
+    racineApp.querySelectorAll('*').forEach((el) => { if (el._defile != null && el.scrollTop !== el._defile) el.scrollTop = el._defile; });
+    const D = Demo.D, S = Demo.etat(), m = D.modele();
+    const k = m.phase + '|' + m.vue + '|' + m.activite + '|' + (m.file.relecture ? 'r' : '') + (m.file.alerte ? 'a' : '') + (m.incident ? m.incident.type : '');
+    if (k !== cleEtat && opts.etat) opts.etat(local, m, cleEtat);
+    cleEtat = k;
+    const avant = mesurer();
+    const t = document.createElement('template');
+    t.innerHTML = opts.vue(m, D, S, local);
+    enfants(racineApp, t.content);
+    flip(avant);
+    boucles();
+    if (opts.apres) opts.apres(racineApp, m, local);
+    premier = false;
+  }
+
+  function monter(o) {
+    opts = o; Object.assign(local, o.local || {});
+    Demo.monter({
+      rendre: () => '<div class="app" data-garder="app"></div>',
+      apres: (S, D, racine) => {
+        const r = racine.querySelector('[data-garder="app"]');
+        if (r !== racineApp) {
+          racineApp = r;
+          racine.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-u]');
+            if (!b || !racine.contains(b) || b.getAttribute('aria-disabled') === 'true') return;
+            if (o.agir) o.agir(b.getAttribute('data-u'), b.getAttribute('data-id'), local, b);
+            peindre();
+          });
+          racine.addEventListener('scroll', (e) => { const t = e.target; if (t !== racine && t.nodeType === 1 && racineApp && racineApp.contains(t)) t._defile = t.scrollTop; }, true);
+          racine.addEventListener('keydown', (e) => { if (o.clavier && o.clavier(e, local)) peindre(); });
+        }
+        if (S !== dernierS) { dernierS = S; Object.assign(local, o.local || {}); cleEtat = ''; if (o.reinit) o.reinit(local); }
+        peindre();
+      },
+    });
+  }
+
+  return { monter, peindre, jouer, local, reduit };
+})();
+
+/* Aides communes aux maquettes app-* (copiées dans chacune) : boutons d'action du modèle, coupe d'un cut. */
+const Aides = (function () {
+  'use strict';
+  const esc = (s) => Demo.D.esc(s == null ? '' : s);
+  const nf = (x) => Demo.D.n(x);
+  /* Attributs d'une action du modèle : data-a, data-id, et l'état désactivé (lisible, jamais estompé). */
+  function attrs(x) {
+    return `data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}`;
+  }
+  function trouver(m, a) { return (m.actions || []).find((x) => x.a === a); }
+  /* Coupe d'un cut : points (gris) et deux repères des rails proposés. Fonctionnel, petit, encadré. */
+  function coupe(cut, classe) {
+    const c = Demo.D.coupe(cut, 280), W = 320, H = 132;
+    const X = (x) => (10 + (x + 1) / 2 * (W - 20)).toFixed(1);
+    const Y = (z) => (H - 10 - (z + 0.56) / 0.5 * (H - 20)).toFixed(1);
+    const pts = c.pts.map(([x, z]) => `<circle cx="${X(x)}" cy="${Y(z)}" r="1.4"/>`).join('');
+    const rails = c.rails.map((x) => `<line x1="${X(x)}" x2="${X(x)}" y1="8" y2="${H - 8}"/>`).join('');
+    return `<svg class="${classe || 'coupe'}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut} : points relevés et position proposée des deux rails"><g class="coupe-pts">${pts}</g><g class="coupe-rails">${rails}</g></svg>`;
+  }
+  return { esc, nf, attrs, trouver, coupe };
+})();
+
+(function () {
+  'use strict';
+  const { esc, nf, attrs, trouver, coupe } = Aides;
+  const I = {
+    rond: '<circle cx="8" cy="8" r="5.5"/>',
+    plein: '<circle cx="8" cy="8" r="5" fill="currentColor"/>',
+    pause: '<path d="M5.5 3.5v9M10.5 3.5v9"/>',
+    carre: '<rect x="3.5" y="3.5" width="9" height="9" rx="1.5" fill="currentColor"/>',
+    coche: '<path d="M3 8.5l3.2 3L13 4.5"/>',
+    oeil: '<path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
+    tourne: '<path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.8v2.6h-2.6"/>',
+    alerte: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.5v3.2M8 11.6v.1"/>',
+    lien: '<circle cx="8" cy="8" r="4" fill="currentColor"/>',
+    rompu: '<circle cx="8" cy="8" r="4.5"/><path d="M4.8 11.2l6.4-6.4"/>',
+    info: '<circle cx="8" cy="8" r="6"/><path d="M8 7.2v4M8 4.8v.1"/>',
+    fleche: '<path d="M6 3.5L10.5 8 6 12.5"/>',
+    cadenas: '<rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7"/>',
+  };
+  const ico = (n, cls) => `<svg class="ico${cls ? ' ' + cls : ''}" viewBox="0 0 16 16" aria-hidden="true">${I[n]}</svg>`;
+
+  /* ---------- pièces ---------- */
+  function annonce(m) {
+    let h = '';
+    const inc = m.incident;
+    if (inc && inc.type === 'absent') h += `<div class="annonce" data-e="bande" data-k="inc-absent">${ico('rompu')}<div><b>${esc(inc.titre)}</b><p>${esc(inc.texte)}</p><div class="choix">${inc.actions.map((a) => `<button class="btn" ${attrs(a)}>${esc(a.libelle)}</button>`).join('')}</div></div></div>`;
+    if (inc && inc.type === 'choisir') h += `<div class="annonce" data-e="bande" data-k="inc-choisir">${ico('info')}<div><b>${esc(inc.titre)}</b><p>${esc(inc.texte)}</p><div class="choix">${inc.actions.map((a) => `<button class="btn" ${attrs(a)}>${esc(a.libelle)}</button>`).join('')}</div></div></div>`;
+    if (inc && inc.type === 'reprise') h += `<div class="annonce" data-e="bande" data-k="inc-reprise">${ico('info')}<div><b>${esc(inc.titre)}</b><p>${esc(inc.texte)}</p></div></div>`;
+    if (m.file.alerte && m.vue !== 'echo') h += `<div class="annonce alerte" data-e="bande" data-k="alerte" role="alert">${ico('alerte')}<div><b>${esc(m.file.alerte.titre)}</b><p>${esc(m.file.alerte.detail)}</p></div></div>`;
+    return h;
+  }
+  function tete(m) {
+    const l = m.liaison;
+    const i = l.etat === 'relie' ? 'lien' : l.etat === 'absent' ? 'rompu' : 'info';
+    const bloque = m.activiteBloquee;
+    const o = m.activite === 'orbite';
+    return `<div class="tete"><span class="liaison ${l.etat}">${ico(i)}<span>${esc(l.texte)} · ${esc(l.detail)}</span></span>
+      <div class="bascule" role="group" aria-label="Activité">
+        <button data-a="orbite" aria-pressed="${o}" data-k="b-orbite">Orbite</button>
+        <button data-a="echo" aria-pressed="${!o}" data-k="b-echo"${bloque ? ' aria-disabled="true" title="Mettre le lot en pause pour passer en Écho"' : ''}>${bloque ? ico('cadenas') : ''}Écho</button>
+      </div></div>`;
+  }
+  function statutDe(m) {
+    if (m.vue === 'echo') return ['echo', 'oeil'];
+    if (m.file.relecture) return ['encours', 'tourne'];
+    return { pret: ['pret', 'rond'], encours: ['encours', 'plein'], pause: ['pause', 'pause'], arrete: ['arrete', 'carre'], fin: ['fin', 'coche'] }[m.phase];
+  }
+  /* Le visage : un cœur toujours visible tant que la feuille n'est pas tout en haut (état, grand chiffre,
+     temps, barre), et un « plus » qui n'apparaît qu'au cran Résumé (trois comptes, le dernier différé). */
+  function visage(m, L) {
+    const c = m.compte, [cls, ic] = statutDe(m);
+    const mini = L.cran === 'haut' && ['encours', 'pause', 'arrete', 'fin'].includes(m.phase) && m.vue !== 'echo'
+      ? `<span class="mini num">${nf(c.faits)} / ${c.total == null ? '?' : nf(c.total)}</span>` : '';
+    const statut = `<div class="statut ${cls}" data-k="statut">${ico(ic)}<span data-v="mot">${esc(m.titre)}</span>${mini}</div>`;
+    let coeur = '', plus = '';
+    if (m.vue === 'echo') {
+      const e = m.echo;
+      coeur = `<div class="grand"><span class="chiffre num" data-v="chiffre">${nf(e.vus)}</span><span class="sur">poses vues</span></div>
+        <div class="sous"><span>${nf(e.accord)} d'accord avec Ariane</span><span class="doux">${e.dernier ? 'dernier cut vu : ' + e.dernier : 'aucun cut vu'}</span></div>`;
+      plus = `<p class="phrase">${esc(m.phrase)}</p>`;
+    } else if (m.phase === 'pret') {
+      const b = m.bornes;
+      coeur = `<div class="grand"><span class="chiffre num" data-v="chiffre">${b.finDePartie ? nf(b.debut) : nf(b.fin - b.debut + 1)}</span><span class="sur">${b.finDePartie ? 'premier cut, jusqu’à la fin de la partie' : 'cuts à poser'}</span></div>
+        <p class="phrase">${esc(m.phrase)}${m.file.active ? ` File de ${m.file.nb} parties allumée.` : ''}</p>`;
+    } else if (m.file.relecture) {
+      coeur = `<div class="grand"><span class="chiffre num" data-v="chiffre">${m.file.courante}</span><span class="sur">partie relue sur ${m.file.nb}</span></div>
+        <p class="phrase">${esc(m.phrase)}</p>
+        <div class="barre indet" aria-label="Relecture en cours, durée inconnue"><i data-boucle="indet"></i></div>`;
+    } else {
+      const total = c.total == null ? `<span class="sur">traités, total inconnu</span>` : `<span class="sur num">/ ${nf(c.total)}</span>`;
+      coeur = `<div class="grand"><span class="chiffre num" data-v="chiffre">${nf(c.faits)}</span>${total}</div>`;
+      let sous;
+      if (m.phase === 'fin') sous = `<p class="phrase">${esc(m.phrase)}</p>`;
+      else if (m.phase === 'encours') sous = `<div class="sous"><span>${esc(c.tempsTexte)}</span><span class="doux">cut <b class="num" data-v="cut">${c.cut}</b></span>${m.file.active ? `<span class="doux">partie ${m.file.courante} sur ${m.file.nb}</span>` : ''}</div>`;
+      else sous = `<p class="phrase">${m.phase === 'pause' ? esc(m.phrase) : m.file.alerte ? esc(m.phrase) : esc(m.phrase)}</p>`;
+      coeur += sous;
+      if (c.total != null) {
+        const p = Math.min(100, Math.round(c.part * 1000) / 10);
+        coeur += `<div class="barre" role="progressbar" aria-valuemin="0" aria-valuemax="${c.total}" aria-valuenow="${c.faits}" aria-label="Cuts traités"><i data-flip="w" style="width:${p}%"></i></div>`;
+        plus += `<div class="barre-leg"><span>cut ${c.debut}</span><span>cut ${c.fin}</span></div>`;
+      } else if (m.phase === 'encours') {
+        coeur += `<div class="barre indet" aria-label="Total inconnu : Ariane va jusqu’à la fin de la partie"><i data-boucle="indet"></i></div>`;
+        plus += `<div class="barre-leg"><span>cut ${c.debut}</span><span>fin de partie, total inconnu</span></div>`;
+      }
+      plus += `<div class="trio"><div data-k="t1"><b class="num" data-v="poses">${nf(c.poses)}</b><span>${ico('coche')}posés</span></div>
+        <div class="${c.differes ? 'att' : ''}" data-k="t2"><b class="num" data-v="differes">${nf(c.differes)}</b><span>${ico('pause')}différés</span></div>
+        <div class="${c.aExaminer ? 'att' : ''}" data-k="t3"><b class="num" data-v="exam">${nf(c.aExaminer)}</b><span>${ico('oeil')}à examiner</span></div></div>`;
+      const dern = m.restants.length ? m.restants[m.restants.length - 1] : null;
+      if (dern) plus += `<p class="dernier" data-k="dernier"><span class="marque ${dern.type}">${dern.type === 'differe' ? ico('pause') + 'différé' : ico('oeil') + 'à examiner'}</span> dernier : <b class="num" data-v="dern">cut ${dern.cut}</b> · ${esc(dern.motif)}</p>`;
+    }
+    return `<section class="visage" data-cran="${L.cran}" aria-live="polite">${statut}<div class="coeur">${coeur}</div><div class="plus">${plus}</div></section>`;
+  }
+  function bouton(x) {
+    const cls = { principal: 'principal', second: '', arret: 'arret', lien: 'lien', choix: '' }[x.rang] || '';
+    const dec = x.rang === 'arret' && x.confirme ? '<span class="compte-a-rebours" data-boucle-unique="rebours" aria-hidden="true"></span>' : '';
+    return `<button class="btn ${cls}${x.confirme ? ' confirme' : ''}" ${attrs(x)} data-k="act-${x.a}" data-flip="w">${x.rang === 'arret' ? ico('carre') : ''}<span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}${dec}</button>${x.raison ? `<p class="raison" data-k="r-${x.a}">${esc(x.raison)}</p>` : ''}`;
+  }
+  function actions(m) {
+    /* le lien « Voir ce qui reste » n'est pas répété : la liste courte est juste dessous */
+    return `<div class="actions" data-k="actions">${m.actions.filter((x) => x.a !== 'voirReste').map(bouton).join('')}</div>`;
+  }
+  function etapes(m) {
+    const f = m.file;
+    const items = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const faite = f.parties.some((p) => p.n === i);
+      const cour = !f.finie && i === f.courante && !faite;
+      items.push(`<span class="etape ${faite ? 'faite' : cour ? 'courante' : ''}" data-k="et-${i}">${faite ? ico('coche') : ''}${cour ? 'Partie ' + i : i}${faite ? '<span class="sr"> faite</span>' : ''}</span>`);
+    }
+    const leg = f.finie ? `${f.nb} parties faites` : `Partie ${f.courante} sur ${f.nb}${f.relecture ? ' · relecture' : ''}`;
+    let bil = '';
+    if (f.parties.length) bil = `<ul class="lignes parties">${f.parties.map((p) => `<li data-k="p${p.n}"><span class="cle">Partie ${p.n}</span><span class="val">${p.poses} posés · ${p.differes} différés · ${p.aControler} à examiner</span></li>`).join('')}${f.ligneCourante && m.phase !== 'pret' && !f.relecture ? `<li data-k="pc"><span class="cle">Partie ${f.courante} (en cours)</span><span class="val">${m.compte.poses} posés · ${m.compte.differes} différés</span></li>` : ''}</ul>`;
+    return `<div class="section" data-k="file"><h3>File de parties</h3><div class="etapes" aria-label="${esc(leg)}">${items.join('')}</div><div class="etapes-leg">${esc(leg)}</div>${bil}</div>`;
+  }
+  function reglageFile(m) {
+    const f = m.file;
+    return `<div class="section" data-k="reglage-file"><h3>File de parties</h3>
+      <ul class="lignes"><li><span class="cle">Enchaîner plusieurs parties, relues après chacune</span><button class="inter" data-a="fileBascule" aria-pressed="${f.active}">${f.active ? 'Allumée' : 'Éteinte'}</button></li>
+      ${f.active ? `<li data-e="ligne" data-k="nbp"><span class="cle">Nombre de parties</span><span class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><b class="num" data-v="nb">${f.nb}</b><button data-a="filePlus" aria-label="Une partie de plus">+</button></span></li>` : ''}</ul></div>`;
+  }
+  function bornes(m) {
+    const b = m.bornes;
+    return `<div class="section" data-k="bornes"><h3>Bornes du lot</h3><ul class="lignes">
+      <li><span class="cle">Premier cut</span><label class="champ"><span class="sr">Premier cut</span><input data-champ="debut" inputmode="numeric" value="${b.debut}"></label></li>
+      <li><span class="cle">Dernier cut</span>${b.finDePartie ? '<span class="val">fin de partie</span>' : `<label class="champ"><span class="sr">Dernier cut</span><input data-champ="fin" inputmode="numeric" value="${b.fin}"></label>`}</li>
+      <li><span class="cle">Aller jusqu'à la fin de la partie</span><button class="inter" data-a="finDePartie" aria-pressed="${b.finDePartie}">${b.finDePartie ? 'Oui' : 'Non'}</button></li></ul></div>`;
+  }
+  function detailLot(m) {
+    const c = m.compte;
+    return `<div class="section" data-k="detail"><h3>Lot</h3><ul class="lignes">
+      <li><span class="cle">Bornes</span><span class="val num">${c.debut} → ${c.fin == null ? 'fin de partie' : c.fin}</span></li>
+      <li><span class="cle">Cut en cours</span><span class="val num">${c.cut}</span></li>
+      <li><span class="cle">Temps restant</span><span class="val">${esc(c.tempsTexte)}</span></li>
+      <li><span class="cle">Différés</span><span class="val num">${c.differes}</span></li>
+      <li><span class="cle">À examiner</span><span class="val num">${c.aExaminer}</span></li></ul></div>`;
+  }
+  function restes(m, court) {
+    const r = m.restants;
+    if (!r.length) return `<div class="section" data-k="restes"><h3>Ce qui reste</h3><p class="vide">Rien à regarder : aucun différé, aucun vert à examiner.</p></div>`;
+    const liste = court ? r.slice(0, 3) : r;
+    return `<div class="section" data-k="restes"><h3>Ce qui reste · ${r.length}</h3><ul class="lignes restes">${liste.map((x) => `<li data-k="${x.id}"><div class="reste-tete"><b class="num">Cut ${x.cut}</b> <span class="marque ${x.type}">${x.type === 'differe' ? ico('pause') + 'différé' : ico('oeil') + 'vert à examiner'}</span><br><span>${esc(x.motif)}</span></div><div class="reste-act"><button class="btn" data-a="examiner" data-id="${x.id}">Examiner</button><button class="btn" data-a="ouvrir" data-id="${x.id}">Ouvrir dans ESV</button></div></li>`).join('')}</ul>${court && r.length > 3 ? `<button class="btn lien" data-a="voirReste">Voir les ${r.length} restes</button>` : ''}</div>`;
+  }
+  function examen(m) {
+    const x = m.examen;
+    return `<div class="section" data-k="examen"><h3>Examiner le cut ${x.cut}</h3>
+      <p><span class="marque ${x.type}">${x.type === 'differe' ? ico('pause') + 'différé' : ico('oeil') + 'vert à examiner'}</span> ${esc(x.motif)}</p>
+      ${coupe(x.cut)}<p class="legende">Points relevés en gris ; traits pointillés : position proposée des deux rails.</p>
+      <div class="actions"><button class="btn principal" data-a="ouvrir" data-id="${x.id}">Ouvrir dans ESV</button><button class="btn" data-a="traiter" data-id="${x.id}">Marquer comme vu</button><button class="btn" data-a="retour">Retour au lot</button></div></div>`;
+  }
+
+  /* ---------- feuille ---------- */
+  const CRANS = ['bas', 'mi', 'haut'];
+  const NOMS = { bas: 'Résumé', mi: 'Lot', haut: 'Tout' };
+  function corps(m) {
+    if (m.vue === 'echo') return actions(m) + `<div class="section"><h3>Écho</h3><p class="vide">Ariane regarde l'opérateur poser et ne pose rien. Elle compte les poses vues et dit si elle aurait posé pareil.</p></div>`;
+    if (m.vue === 'examen' && m.examen) return examen(m);
+    if (m.vue === 'reste') return `<div class="actions"><button class="btn" data-a="retour">Retour au lot</button></div>` + restes(m, false);
+    let h = actions(m);
+    if (m.phase === 'pret') return h + bornes(m) + reglageFile(m);
+    if (m.file.active) h += etapes(m);
+    if (m.phase !== 'fin' && !m.file.relecture) h += detailLot(m);
+    h += restes(m, true);
+    return h;
+  }
+  function feuille(m, L) {
+    return `<section class="feuille" data-k="feuille" data-style-libre data-cran="${L.cran}" aria-label="Détail du lot">
+      <button class="poignee" data-u="poignee" aria-label="Changer la hauteur de la feuille (cran actuel : ${NOMS[L.cran]})"><span></span></button>
+      <div class="crans" role="group" aria-label="Hauteur de la feuille">${CRANS.map((c) => `<button data-u="cran" data-id="${c}" aria-pressed="${L.cran === c}">${NOMS[c]}</button>`).join('')}</div>
+      <div class="corps" data-k="corps">${corps(m)}</div></section>`;
+  }
+
+  /* hauteur de chaque cran, en px, selon le contenu */
+  function hauteurs(app) {
+    const f = app.querySelector('.feuille');
+    if (!f) return { bas: 180, mi: 420, haut: 680 };
+    const top = app.getBoundingClientRect().top;
+    const ent = f.querySelector('.poignee').offsetHeight + f.querySelector('.crans').offsetHeight;
+    const act = f.querySelector('.corps > .actions');
+    const bas = Math.round(ent + (act ? act.offsetHeight : 48) + 28);
+    const coeur = app.querySelector('.visage .coeur'), statut = app.querySelector('.visage .statut');
+    const haut = Math.round(760 - (statut ? statut.getBoundingClientRect().bottom - top : 90) - 12);
+    let mi = Math.round(760 - (coeur ? coeur.getBoundingClientRect().bottom - top : 300) - 16);
+    mi = Math.max(bas + 90, Math.min(mi, haut - 60));
+    return { bas, mi, haut };
+  }
+  function poser(app, L, anime) {
+    const f = app.querySelector('.feuille'); if (!f) return;
+    const h = hauteurs(app)[L.cran];
+    const avant = f.getBoundingClientRect().height;
+    f.style.height = h + 'px';
+    if (anime && Math.abs(avant - h) > 2) {
+      Socle.jouer(f, [[{ height: avant + 'px' }, { height: h + 'px' }], { duration: h > avant ? 480 : 300, easing: h > avant ? 'cubic-bezier(.2,.9,.25,1.03)' : 'cubic-bezier(.3,0,.2,1)' }]);
+    }
+    L.hPosee = h;
+  }
+  /* cran conseillé par l'état : en cours, le résumé (on lit de loin) ; à faire, le lot ; reste, tout. */
+  function cranConseille(m) {
+    if (m.vue === 'reste' || (m.vue === 'examen' && m.examen)) return 'haut';
+    if (m.vue === 'echo') return 'bas';
+    if (m.phase === 'encours' && !m.file.relecture) return 'bas';
+    return 'mi';
+  }
+
+  /* glisser la feuille par sa poignée : elle suit le doigt, puis se pose au cran le plus proche de là où elle allait */
+  function glisser(app, L) {
+    const p = app.querySelector('.poignee'); if (!p || p._glisse) return; p._glisse = true;
+    p.addEventListener('pointerdown', (e) => {
+      const f = app.querySelector('.feuille'); const h0 = f.getBoundingClientRect().height, y0 = e.clientY;
+      let dernier = [{ y: e.clientY, t: performance.now() }], bouge = false;
+      p.setPointerCapture(e.pointerId);
+      const mv = (ev) => {
+        const d = y0 - ev.clientY; if (Math.abs(d) > 4) bouge = true;
+        const H = hauteurs(app); let h = h0 + d;
+        if (h > H.haut) h = H.haut + (h - H.haut) * 0.25; if (h < H.bas) h = H.bas - (H.bas - h) * 0.25;
+        f.style.height = h + 'px'; dernier.push({ y: ev.clientY, t: performance.now() }); if (dernier.length > 5) dernier.shift();
+      };
+      const fin = () => {
+        p.removeEventListener('pointermove', mv); p.removeEventListener('pointerup', fin); p.removeEventListener('pointercancel', fin);
+        if (!bouge) return; L.ignorerClic = true;
+        const a = dernier[0], b = dernier[dernier.length - 1]; const v = (a.y - b.y) / Math.max(1, b.t - a.t);
+        const H = hauteurs(app), vise = f.getBoundingClientRect().height + v * 180;
+        L.cran = CRANS.reduce((best, c) => Math.abs(H[c] - vise) < Math.abs(H[best] - vise) ? c : best, 'bas');
+        L.choisi = true; Socle.peindre();
+      };
+      p.addEventListener('pointermove', mv); p.addEventListener('pointerup', fin); p.addEventListener('pointercancel', fin);
+    });
+  }
+
+  function vue(m, D, S, L) {
+    const toast = m.message ? `<div class="toast" role="status" data-e="toast" data-k="toast">${ico('info')}<span>${esc(m.message)}</span></div>` : '';
+    return annonce(m) + tete(m) + visage(m, L) + toast + feuille(m, L);
+  }
+
+  Socle.monter({
+    local: { cran: 'mi', choisi: false, hPosee: 0, ignorerClic: false },
+    vue,
+    etat(L, m) { L.cran = cranConseille(m); L.choisi = false; },
+    agir(nom, id, L) {
+      if (nom === 'cran') { L.cran = id; L.choisi = true; }
+      if (nom === 'poignee') { if (L.ignorerClic) { L.ignorerClic = false; return; } L.cran = CRANS[(CRANS.indexOf(L.cran) + 1) % 3]; L.choisi = true; }
+    },
+    clavier(e, L) {
+      if (!e.target.closest || !e.target.closest('.poignee')) return false;
+      const i = CRANS.indexOf(L.cran);
+      if (e.key === 'ArrowUp' && i < 2) { L.cran = CRANS[i + 1]; e.preventDefault(); return true; }
+      if (e.key === 'ArrowDown' && i > 0) { L.cran = CRANS[i - 1]; e.preventDefault(); return true; }
+      return false;
+    },
+    apres(app, m, L) {
+      const f = app.querySelector('.feuille');
+      const h = hauteurs(app)[L.cran];
+      if (Math.abs(h - L.hPosee) > 1 || !f.style.height) poser(app, L, !!f.style.height);
+      glisser(app, L);
+      /* le trait du compte à rebours de l'arrêt : se vide en 4 s, une seule fois par confirmation */
+      app.querySelectorAll('.compte-a-rebours').forEach((b) => { if (!b._joue) { b._joue = true; Socle.jouer(b, [[{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 4000, easing: 'linear', fill: 'forwards' }]); } });
+    },
+    entrees: {
+      bande: [[{ transform: 'translateY(-100%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 280, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      toast: [[{ transform: 'translateY(-8px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      ligne: [[{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'ease-out' }],
+    },
+    valeurs: {
+      chiffre: [[{ transform: 'translateY(.18em)', opacity: .35 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      mot: [[{ transform: 'translateY(6px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      cut: [[{ opacity: .3 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' }],
+      differes: [[{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 360, easing: 'ease-out' }],
+      exam: [[{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 360, easing: 'ease-out' }],
+      nb: [[{ transform: 'translateY(-6px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 200, easing: 'ease-out' }],
+    },
+    boucles: {
+      indet: [[{ transform: 'translateX(-110%)' }, { transform: 'translateX(270%)' }], { duration: 1800, easing: 'cubic-bezier(.65,0,.35,1)' }],
+    },
+  });
+})();
+</script>
+</body>
+</html>

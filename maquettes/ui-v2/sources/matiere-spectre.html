@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane — Spectre</title>
+<style>
+/*POLICE:archivo*/
+/*POLICE:ibm-plex-mono*/
+/* Proposition « Spectre ». Le lot est une lumière qu'Ariane décompose : chaque cut traité élargit le
+ * spectre, chaque différé y laisse une raie sombre à sa place. Le banc optique reste dans le noir
+ * (la lumière n'existe que sur le noir) ; tout le texte est sur des fonds unis. */
+:root{
+  --fond:#F6F5F2; --surface:#FFFFFF; --texte:#17181B; --doux:#565961; --filet:#D8D6D0; --filet-fort:#9C9A94;
+  --plein:#17181B; --plein-texte:#F6F5F2; --scene:#E4E2DD; --alerte:#9B1C14; --alerte-fond:#FBEDEA; --confirme:#A3211A;
+  --banc:#08090B; --banc-texte:#E9E9EB; --banc-doux:#A6A8AF;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#0F1013; --surface:#16171B; --texte:#EDEDEF; --doux:#A4A7AF; --filet:#2A2C31; --filet-fort:#5D6068;
+  --plein:#EDEDEF; --plein-texte:#0F1013; --scene:#050506; --alerte:#FFB4A8; --alerte-fond:#2A1512; --confirme:#E0473D;
+}}
+:root[data-theme="dark"]{
+  --fond:#0F1013; --surface:#16171B; --texte:#EDEDEF; --doux:#A4A7AF; --filet:#2A2C31; --filet-fort:#5D6068;
+  --plein:#EDEDEF; --plein-texte:#0F1013; --scene:#050506; --alerte:#FFB4A8; --alerte-fond:#2A1512; --confirme:#E0473D;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Archivo',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);font-size:14px;line-height:1.45}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font-size:18px;margin:0 0 8px}
+.notes p{margin:0 0 10px}
+
+/* ---- échelle : 3 tailles de texte (12, 14, 26) + chiffres en Plex Mono tabulaire ---- */
+.mono,.mesure dd,.banc-curseur,.bb,.banc-leg,.reste-cut,.partie-n,.file-nb-v,.echo-m dd{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.p{padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.tete{display:flex;flex-direction:column;gap:8px}
+.ligne-l{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.marque{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--doux);margin:0}
+.titre{font-size:26px;line-height:1.1;font-weight:500;margin:0;letter-spacing:-.01em}
+.phrase{margin:4px 0 0;color:var(--texte)}
+.raison{margin:4px 0 0;font-size:12px;color:var(--doux)}
+
+/* bascule Orbite / Écho : deux boutons, celui qui est pressé est plein */
+.bascule{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--filet)}
+.bascule-o{font:inherit;border:0;background:var(--fond);color:var(--doux);padding:4px 0 8px;text-align:left;cursor:pointer;display:flex;flex-direction:column;border-bottom:3px solid transparent;margin-bottom:-1px}
+.bascule-o[aria-pressed="true"]{color:var(--texte);border-bottom-color:var(--texte)}
+.bascule-o[aria-pressed="true"] .bascule-nom::before{content:"";display:inline-block;width:7px;height:7px;background:var(--texte);margin-right:6px;vertical-align:1px}
+.bascule-o[aria-disabled="true"]{cursor:not-allowed;color:var(--doux)}
+.bascule-nom{font-weight:600}
+.bascule-sens{font-size:12px}
+
+/* liaison ESV : un mot et une forme (carré plein = relié, carré vide = absent, moitié = à choisir) */
+.liaison{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12px;color:var(--doux)}
+.liaison b{color:var(--texte);font-weight:600;font-size:14px}
+.liaison-forme{width:10px;height:10px;border:2px solid var(--texte);flex:none}
+.liaison-relie .liaison-forme{box-shadow:inset 0 0 0 4px var(--texte)}
+.liaison-choisir .liaison-forme{box-shadow:inset 3px 0 0 0 var(--texte)}
+.liaison-absent .liaison-forme{border-style:dashed}
+
+/* ---- banc optique : boîte noire, la lumière ne vit que là ---- */
+.banc{margin:0;position:relative;background:var(--banc);border-radius:8px;height:186px;overflow:hidden}
+.banc-c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.banc-leg{position:absolute;left:12px;top:10px;font-size:12px;color:var(--banc-texte);background:var(--banc);padding:1px 4px 1px 0;letter-spacing:.02em}
+.banc-leg i{font-style:normal;color:var(--banc-doux)}
+.banc-curseur{position:absolute;top:94px;font-size:12px;color:var(--banc-texte);background:var(--banc);padding:0 4px;transform:translateX(-50%);white-space:nowrap;transition:left .6s cubic-bezier(.2,.7,.2,1)}
+.banc-curseur[hidden]{display:none}
+.bb{position:absolute;bottom:10px;font-size:12px;color:var(--banc-doux);background:var(--banc);padding:0 2px}
+.bb-g{left:12px}.bb-d{right:12px}.bb-m{left:50%;transform:translateX(-50%);color:var(--banc-doux);white-space:nowrap}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;margin:-6px 0 0;padding:0;list-style:none;font-size:12px;color:var(--doux)}
+.legende li{display:flex;align-items:center;gap:6px}
+.sw{display:inline-block;flex:none}
+.sw-raie{width:0;height:12px;border:0 solid var(--texte);border-left-width:3px}
+.sw-encoche{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--texte)}
+
+/* ---- mesures ---- */
+.mesures{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0;border-top:1px solid var(--filet)}
+.mesure{padding:8px 0;border-bottom:1px solid var(--filet);display:flex;flex-direction:column;gap:2px}
+.mesure:nth-child(odd){padding-right:10px}
+.mesure:nth-child(even){padding-left:10px;border-left:1px solid var(--filet)}
+.mesure dt{font-size:12px;color:var(--doux)}
+.mesure dd{margin:0;font-size:14px;font-weight:500}
+.mesure dd.txt{font-family:'Archivo',system-ui,sans-serif}
+.mesure-grand{grid-column:1 / -1;padding-right:0!important;border-left:0!important;padding-left:0!important}
+.mesure-grand dd{font-size:26px;font-weight:500;letter-spacing:-.02em}
+.mesure-grand dd small{font-size:14px;color:var(--doux);font-weight:400;letter-spacing:0}
+@container (min-width:520px){
+  .mesures{grid-template-columns:1fr 1fr 1fr}
+  .mesure{padding:8px 10px!important;border-left:1px solid var(--filet)}
+  .mesure:nth-child(3n+2){border-left:0}
+  .mesure-grand{grid-column:1 / -1}
+}
+
+/* ---- boutons ---- */
+.actions{display:flex;flex-direction:column;gap:10px}
+.actions-pr,.actions-arret,.actions-lien{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.actions-pr>.raison{flex-basis:100%;margin-top:-4px}
+.b{font:inherit;cursor:pointer;border-radius:6px;padding:9px 14px;display:inline-flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:42px;justify-content:center}
+.b-lib{font-weight:600}
+.b-note{font-size:12px;font-weight:400}
+.b-principal{background:var(--plein);color:var(--plein-texte);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--surface);color:var(--texte);border:1px solid var(--filet-fort)}
+.b-second .b-note,.b-choix .b-note{color:var(--doux)}
+.b-arret{background:var(--fond);color:var(--texte);border:1px solid var(--filet-fort);flex-direction:row;align-items:center;gap:8px}
+.b-arret::before{content:"";width:9px;height:9px;background:var(--texte);flex:none}
+.b-arret.b-confirme{background:var(--confirme);color:#FFFFFF;border-color:var(--confirme)}
+.b-arret.b-confirme::before{background:#FFFFFF}
+.b-lien{background:var(--fond);color:var(--texte);border:0;padding:4px 0;min-height:32px;text-decoration:underline;text-underline-offset:3px}
+.b[aria-disabled="true"]{cursor:not-allowed;background:var(--fond);color:var(--doux);border:1px dashed var(--filet-fort)}
+.b:focus-visible,.bascule-o:focus-visible,.file-inter:focus-visible,input:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+/* ---- bornes ---- */
+.bornes{border:1px solid var(--filet);border-radius:8px;margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface)}
+.bornes legend{font-size:12px;color:var(--doux);padding:0 4px}
+.borne{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--doux)}
+.borne input{font:500 14px 'IBM Plex Mono',monospace;color:var(--texte);background:var(--fond);border:1px solid var(--filet-fort);border-radius:4px;padding:7px 8px;width:100%}
+.borne-off input{border-style:dashed}
+.borne-fdp{grid-column:1 / -1}
+.borne-fdp[aria-pressed="true"]{border-color:var(--texte);box-shadow:inset 3px 0 0 var(--texte)}
+
+/* ---- file de parties ---- */
+.file{display:flex;flex-direction:column;gap:8px}
+.file-inter{font:inherit;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:var(--surface);color:var(--texte);border:1px solid var(--filet);border-radius:8px;padding:10px 12px;cursor:pointer;text-align:left}
+.file-inter .b-note{color:var(--doux)}
+.file-inter-forme{width:30px;height:16px;border:2px solid var(--texte);border-radius:3px;position:relative}
+.file-inter-forme::after{content:"";position:absolute;top:2px;left:2px;width:8px;height:8px;background:var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme{box-shadow:inset 0 0 0 8px var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme::after{left:16px;background:var(--surface)}
+.file-nb{display:flex;align-items:center;gap:10px}
+.file-pm{min-width:42px;align-items:center;padding:6px}
+.file-expl{margin:0;font-size:12px;color:var(--doux)}
+.file-tete{font-size:14px;margin:0;font-weight:600}
+.parties{list-style:none;margin:0;padding:0;border-top:1px solid var(--filet)}
+.partie{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--filet);font-size:12px}
+.partie-n{font-weight:500;font-size:14px}
+.partie-etat{color:var(--doux);text-align:right}
+.partie-forme{width:14px;height:6px;border:1.5px solid var(--texte)}
+.partie-faite .partie-forme{box-shadow:inset 0 0 0 4px var(--texte)}
+.partie-courante .partie-forme,.partie-relue .partie-forme{box-shadow:inset 6px 0 0 0 var(--texte)}
+.partie-avenir .partie-forme{border-style:dashed}
+.partie-courante .partie-etat,.partie-relue .partie-etat{color:var(--texte)}
+
+/* ---- incident et alerte : un cadre plein, jamais une couleur seule ---- */
+.incident,.alerte{border:1px solid var(--alerte);background:var(--alerte-fond);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.incident-reprise{border-color:var(--filet-fort);background:var(--surface)}
+.incident-titre,.alerte-titre{margin:0;font-size:14px;font-weight:600;color:var(--texte);display:flex;gap:8px;align-items:center}
+.incident-titre::before,.alerte-titre::before{content:"";width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--texte);flex:none}
+.incident-reprise .incident-titre::before{border:0;width:10px;height:10px;background:var(--texte)}
+.incident-texte,.alerte-detail,.alerte-bilan{margin:0;color:var(--texte)}
+.alerte-bilan{font-size:12px}
+.incident-choix{display:flex;flex-wrap:wrap;gap:8px}
+.incident .b-second,.incident .b-choix{background:var(--surface)}
+
+/* ---- ce qui reste ---- */
+.reste-tete{display:flex;flex-direction:column;gap:4px}
+.reste-g{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--doux);margin:6px 0 0;font-weight:500}
+.reste{list-style:none;margin:0;padding:0;border-top:1px solid var(--filet)}
+.reste-l{padding:10px 0;border-bottom:1px solid var(--filet);display:flex;flex-direction:column;gap:6px}
+.reste-t{display:flex;align-items:center;gap:8px}
+.reste-type{font-size:12px;color:var(--doux)}
+.reste-motif{margin:0}
+.reste-a{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.reste-a .b-second{min-height:36px;padding:6px 12px}
+.reste-forme{flex:none}
+.reste-differe .reste-forme{width:0;height:14px;border:0 solid var(--texte);border-left-width:3px}
+.reste-vert .reste-forme{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid var(--texte)}
+.reste-vide{margin:0;color:var(--doux)}
+
+/* ---- examen : la coupe sur fond noir, comme le banc ---- */
+.coupe{margin:0;background:var(--banc);border-radius:8px;position:relative;height:200px}
+.coupe canvas{position:absolute;inset:0;width:100%;height:100%}
+.coupe-leg{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--banc-texte);background:var(--banc);padding:0 4px 0 0}
+
+/* ---- écho ---- */
+.echo-m{display:grid;grid-template-columns:1fr 1fr;margin:0;border-top:1px solid var(--filet)}
+.echo-m div{padding:8px 0;border-bottom:1px solid var(--filet)}
+.echo-m div:nth-child(even){padding-left:10px;border-left:1px solid var(--filet)}
+.echo-m dt{font-size:12px;color:var(--doux)}
+.echo-m dd{margin:0;font-size:26px;font-weight:500}
+
+.message{margin:0;min-height:20px;font-size:12px;color:var(--texte)}
+.message:not(:empty){border-left:3px solid var(--texte);padding-left:8px}
+
+/* ---- mouvement : les valeurs qui changent montent d'un cran ; le titre arrive après la lumière ---- */
+@keyframes monte{from{transform:translateY(5px);opacity:.25}to{transform:none;opacity:1}}
+.change{animation:monte .32s cubic-bezier(.2,.7,.2,1) both;display:inline-block}
+@keyframes arrive{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+#panneau[data-etat-change="1"] .titre{animation:arrive .36s cubic-bezier(.2,.7,.2,1) .14s both}
+#panneau[data-etat-change="1"] .phrase{animation:arrive .36s cubic-bezier(.2,.7,.2,1) .22s both}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+html[data-mouvement="reduit"] *,html[data-mouvement="reduit"] *::before,html[data-mouvement="reduit"] *::after{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Spectre"></div></div>
+  <aside class="notes">
+    <h2>Spectre</h2>
+    <p><b>Logique.</b> Le lot est une lumière qu’Ariane décompose : chaque cut traité élargit le spectre, chaque différé y laisse une raie sombre à sa place.</p>
+    <p><b>D’où ça vient.</b> heydamir.design, concept « One light, every color » : un rayon blanc entre dans un bloc de verre et en sort en spectre ; « Split the light » éteint et rallume la source ; au survol, une lecture de longueur d’onde ; légendes numérotées « 01 · Source », « 03 · Spectrum ». backgrounds.supply, Gradient Lab, mode Prism : trois réglages seulement (position, largeur, intensité) — ici la largeur est la part traitée. inspora.design (vu en grille) : des cartes dont la lumière intérieure est l’avancement, le pourcentage écrit à côté. La physique : les raies d’absorption (une lumière à laquelle il manque quelque chose).</p>
+    <p><b>Ce que ça veut dire ici.</b> Source allumée = Ariane pose ; source coupée (un volet sur la fente) = pause ou arrêt ; pas de fente = ESV non relié. Position dans le spectre = position du cut entre la première et la dernière borne (violet = début, rouge = fin, nombres écrits aux deux bouts). Raie sombre pleine hauteur = différé ; encoche en haut = vert à examiner. Spectre pâli = lot à l’arrêt, rien n’est perdu. Lumière qui entre par la droite = Écho : Ariane reçoit au lieu d’émettre. Trait qui revient de droite à gauche = relecture.</p>
+    <p><b>Mouvement.</b> Le front du spectre avance de 0,6 s à chaque cut ; la source frémit de 4 % tant qu’elle est allumée ; à la pause le volet tombe en 0,5 s et le spectre pâlit ; à la reprise la lumière se rallume en trois temps (fente, prisme, spectre). Rien ne bouge quand rien ne tourne. Mouvement réduit : états fixes, aucun frémissement.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---- Kit des maquettes « matière » : le HTML sémantique des blocs du cahier.
+   * Chaque maquette le met en forme à sa façon ; le sens et les libellés restent ceux du moteur. ---- */
+  const K = (function () {
+    const { esc, n } = Demo.D;
+    const avecNote = (x) => (x.note ? `<span class="b-note">${esc(x.note)}</span>` : '');
+    function bouton(x, plus) {
+      const cls = 'b b-' + x.rang + (x.confirme ? ' b-confirme' : '') + (plus ? ' ' + plus : '');
+      return `<button type="button" class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>`
+        + `<span class="b-lib">${esc(x.libelle)}</span>${avecNote(x)}</button>`
+        + (x.raison ? `<p class="raison">${esc(x.raison)}</p>` : '')
+        + (x.confirme ? '<p class="raison">Appuyer encore pour confirmer. Sans second appui, rien ne s’arrête.</p>' : '');
+    }
+    function actions(liste) {
+      if (!liste || !liste.length) return '';
+      const rang = (r) => liste.filter((x) => x.rang === r).map((x) => bouton(x)).join('');
+      return `<div class="actions"><div class="actions-pr">${rang('principal')}${rang('second')}</div>`
+        + (liste.some((x) => x.rang === 'arret') ? `<div class="actions-arret">${rang('arret')}</div>` : '')
+        + (liste.some((x) => x.rang === 'lien') ? `<div class="actions-lien">${rang('lien')}</div>` : '') + '</div>';
+    }
+    function bascule(m) {
+      const echo = m.activite === 'echo';
+      const bloque = m.activiteBloquee;
+      return `<div class="bascule" role="group" aria-label="Activité d’Ariane">`
+        + `<button type="button" class="bascule-o" data-a="orbite" aria-pressed="${!echo}"><span class="bascule-nom">Orbite</span><span class="bascule-sens">Ariane pose</span></button>`
+        + `<button type="button" class="bascule-o" data-a="echo" aria-pressed="${echo}"${bloque ? ' aria-disabled="true"' : ''}><span class="bascule-nom">Écho</span><span class="bascule-sens">Ariane observe</span></button>`
+        + `</div>` + (bloque ? '<p class="raison raison-bascule">Pour passer en Écho, mettre d’abord le lot en pause ou l’arrêter.</p>' : '');
+    }
+    function liaison(m) {
+      const l = m.liaison;
+      return `<p class="liaison liaison-${l.etat}"><span class="liaison-forme" data-forme="liaison ${l.etat}" aria-hidden="true"></span><b>${esc(l.texte)}</b><span class="liaison-detail">${esc(l.detail)}</span></p>`;
+    }
+    function incident(m) {
+      const i = m.incident;
+      if (!i) return '';
+      const choix = i.actions.filter((x) => x.rang === 'choix');
+      const autres = i.actions.filter((x) => x.rang !== 'choix');
+      return `<section class="incident incident-${i.type}" aria-label="${esc(i.titre)}"><h3 class="incident-titre">${esc(i.titre)}</h3><p class="incident-texte">${esc(i.texte)}</p>`
+        + (choix.length ? `<div class="incident-choix">${choix.map((x) => bouton(x)).join('')}</div>` : '')
+        + autres.map((x) => bouton(x)).join('') + '</section>';
+    }
+    function bornes(m) {
+      const b = m.bornes;
+      return `<fieldset class="bornes"><legend>Bornes du lot</legend>`
+        + `<label class="borne"><span>Premier cut</span><input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label>`
+        + `<label class="borne${b.finDePartie ? ' borne-off' : ''}"><span>Dernier cut</span><input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin de partie"${b.finDePartie ? ' disabled' : ''} aria-label="Dernier cut"></label>`
+        + `<button type="button" class="b b-choix borne-fdp" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="b-lib">Jusqu’à la fin de la partie</span><span class="b-note">${b.finDePartie ? 'oui : le dernier cut sera celui d’ESV' : 'non : s’arrêter au dernier cut'}</span></button>`
+        + `</fieldset>`;
+    }
+    function fileReglage(m) {
+      const f = m.file;
+      return `<section class="file file-reglage" aria-label="File de parties">`
+        + `<button type="button" class="file-inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="file-inter-forme" data-forme="interrupteur" aria-hidden="true"></span><span class="b-lib">File de parties</span><span class="b-note">${f.active ? 'allumée' : 'éteinte'}</span></button>`
+        + (f.active ? `<div class="file-nb"><button type="button" class="b b-choix file-pm" data-a="fileMoins" aria-label="Une partie de moins"${f.nb <= 2 ? ' aria-disabled="true"' : ''}>−</button><span class="file-nb-v" data-valeur="nbparties">${f.nb} parties</span><button type="button" class="b b-choix file-pm" data-a="filePlus" aria-label="Une partie de plus"${f.nb >= 9 ? ' aria-disabled="true"' : ''}>+</button></div>`
+          + `<p class="file-expl">Ariane fait ${f.nb} parties à la suite. Après chacune, elle relit et corrige, puis passe seule à la suivante.</p>`
+          : '<p class="file-expl">Éteinte : un seul lot, sur les bornes ci-dessus.</p>')
+        + `</section>`;
+    }
+    function bilanPartie(p) { return `${n(p.poses)} posés · ${p.differes} différés · ${p.aControler} à examiner`; }
+    function fileSuivi(m) {
+      const f = m.file;
+      if (!f.active || m.phase === 'pret') return '';
+      const lignes = [];
+      for (let i = 1; i <= f.nb; i++) {
+        const p = f.parties.find((x) => x.n === i);
+        let etat, cls;
+        if (p && f.relecture && i === f.courante) { etat = 'relecture et correction en cours'; cls = 'relue'; }
+        else if (p) { etat = bilanPartie(p); cls = 'faite'; }
+        else if (i === f.courante) { etat = m.phase === 'encours' ? 'en cours' : (f.alerte ? 'arrêtée' : m.phase === 'pause' ? 'en pause' : 'arrêtée'); cls = 'courante'; }
+        else { etat = 'à venir'; cls = 'avenir'; }
+        lignes.push(`<li class="partie partie-${cls}"><span class="partie-forme" data-forme="partie ${cls}" aria-hidden="true"></span><span class="partie-n">Partie ${i}</span><span class="partie-etat">${etat}</span></li>`);
+      }
+      const tete = f.finie ? `File terminée : ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`;
+      const alerte = f.alerte ? `<div class="alerte" role="alert"><h3 class="alerte-titre">${esc(f.alerte.titre)}</h3><p class="alerte-detail">${esc(f.alerte.detail)}</p><p class="alerte-bilan">Au moment de l’arrêt : ${m.compte.faits} cuts faits dans la partie ${f.courante}, ${m.compte.differes} différés, ${m.compte.aExaminer} à examiner.</p></div>` : '';
+      return `<section class="file file-suivi" aria-label="File de parties"><h3 class="file-tete" data-valeur="filetete">${tete}</h3>${alerte}<ol class="parties">${lignes.join('')}</ol></section>`;
+    }
+    function message(m) {
+      return `<p class="message" role="status" aria-live="polite">${m.message ? esc(m.message) : ''}</p>`;
+    }
+    function ligneReste(r) {
+      return `<li class="reste-l reste-${r.type}"><div class="reste-t"><span class="reste-forme" data-forme="${r.type}" aria-hidden="true"></span><b class="reste-cut">Cut ${r.cut}</b><span class="reste-type">${r.type === 'differe' ? 'différé' : 'vert à examiner'}</span></div>`
+        + `<p class="reste-motif">${esc(r.motif)}</p><div class="reste-a">${bouton({ a: 'examiner', id: r.id, libelle: 'Examiner', rang: 'second' })}${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'lien' })}</div></li>`;
+    }
+    function reste(m) {
+      const dif = m.restants.filter((r) => r.type === 'differe');
+      const ver = m.restants.filter((r) => r.type === 'vert');
+      const vide = !m.restants.length ? '<p class="reste-vide">Plus rien à revoir dans ce lot.</p>' : '';
+      return `<header class="reste-tete"><h2 class="titre">Ce qui reste</h2><p class="phrase">${dif.length} différés et ${ver.length} verts à examiner. Rien n’est validé sans vous.</p></header>${vide}`
+        + (dif.length ? `<h3 class="reste-g">Différés <span>${dif.length}</span></h3><ul class="reste">${dif.map(ligneReste).join('')}</ul>` : '')
+        + (ver.length ? `<h3 class="reste-g">Verts à examiner <span>${ver.length}</span></h3><ul class="reste">${ver.map(ligneReste).join('')}</ul>` : '')
+        + `<div class="actions"><div class="actions-pr">${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'second' })}</div></div>`;
+    }
+    function examenActions(r) {
+      return `<div class="actions"><div class="actions-pr">${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' })}${bouton({ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second', note: 'le retire de la liste, ne pose rien' })}</div>`
+        + `<div class="actions-lien">${bouton({ a: 'voirReste', libelle: 'Retour à la liste', rang: 'lien' })}${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'lien' })}</div></div>`;
+    }
+    function echo(m) {
+      const e = m.echo;
+      const ecart = e.vus - e.accord;
+      return `<dl class="echo-m"><div><dt>Poses vues</dt><dd data-valeur="echovus">${e.vus}</dd></div><div><dt>En accord avec Ariane</dt><dd data-valeur="echoacc">${e.accord}</dd></div><div><dt>En écart</dt><dd data-valeur="echoec">${ecart}</dd></div><div><dt>Dernière vue</dt><dd>${e.dernier ? 'cut ' + e.dernier : 'aucune'}</dd></div></dl>`;
+    }
+    return { bouton, actions, bascule, liaison, incident, bornes, fileReglage, fileSuivi, message, reste, examenActions, echo, bilanPartie, esc, n };
+  })();
+
+  /* Animation d'une valeur : on s'en rapproche à chaque image, jamais de saut (sauf mouvement réduit). */
+  function vers(actuel, cible, dt, duree) {
+    if (Demo.D.mouvementReduit() || actuel == null) return cible;
+    const k = 1 - Math.pow(0.001, dt / Math.max(1, duree));
+    const v = actuel + (cible - actuel) * k;
+    return Math.abs(cible - v) < 1e-4 ? cible : v;
+  }
+  /* Toile à la bonne taille (pixels réels) ; renvoie le contexte et les dimensions CSS. */
+  function toile(c) {
+    const r = c.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; }
+    const x = c.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { x, w, h };
+  }
+
+  const { esc, n } = K;
+
+  /* ---------- couleur d'une longueur d'onde (approximation classique, 400–680 nm) ---------- */
+  function onde(t, sat) {
+    const l = 400 + t * 280;
+    let r = 0, g = 0, b = 0;
+    if (l < 440) { r = -(l - 440) / 60; b = 1; } else if (l < 490) { g = (l - 440) / 50; b = 1; }
+    else if (l < 510) { g = 1; b = -(l - 510) / 20; } else if (l < 580) { r = (l - 510) / 70; g = 1; }
+    else if (l < 645) { r = 1; g = -(l - 645) / 65; } else { r = 1; }
+    const f = l < 420 ? 0.55 + 0.45 * (l - 400) / 20 : l > 660 ? 0.6 + 0.4 * (680 - l) / 20 : 1;
+    const gris = (r + g + b) / 3;
+    const m = (v) => Math.round(255 * Math.pow(Math.max(0, (gris + (v - gris) * sat) * f), 0.8));
+    return [m(r), m(g), m(b)];
+  }
+
+  /* ---------- état visuel lissé du banc ---------- */
+  const V = { part: null, source: null, sat: null, recul: 0, t0: performance.now(), dernier: performance.now(), anim: 0, raies: {}, relit: 0 };
+  let M = null; /* dernier modèle */
+
+  function cible(m) {
+    const c = m.compte;
+    const echelle = c.total || Math.max(240, c.faits + 24);
+    let part = c.faits / echelle;
+    if (m.phase === 'pret') part = 0;
+    if (m.phase === 'fin') part = c.faits / echelle;
+    const allume = m.vue !== 'echo' && m.phase === 'encours' && m.liaison.etat === 'relie' && !m.file.relecture;
+    const sat = m.phase === 'pause' || m.phase === 'arrete' ? 0.38 : 0.86;
+    return { part, echelle, allume, sat };
+  }
+
+  function dessiner(maintenant) {
+    V.anim = 0;
+    const racine = document.getElementById('panneau');
+    const c = racine && racine.querySelector('.banc-c');
+    if (!c || !M) return;
+    const dt = Math.min(100, maintenant - V.dernier); V.dernier = maintenant;
+    const { x, w, h } = toile(c);
+    const ci = cible(M);
+    V.part = vers(V.part, ci.part, dt, 600);
+    V.source = vers(V.source, ci.allume ? 1 : 0, dt, ci.allume ? 400 : 500);
+    V.sat = vers(V.sat, ci.sat, dt, 800);
+    const reduit = Demo.D.mouvementReduit();
+    const echo = M.vue === 'echo';
+    x.clearRect(0, 0, w, h);
+
+    const x0 = 14, x1 = w - 14, sy = 120, sh = 30;
+    const fx = x0 + (x1 - x0) * Math.min(1, V.part);
+    const px = Math.round(w * 0.3), py = 64, s = Math.min(92, w * 0.23);
+    const A = [px, py - s * 0.58], B = [px - s * 0.5, py + s * 0.29], C = [px + s * 0.5, py + s * 0.29];
+
+    /* frémissement de la source : ±4 % sur 4 s, seulement si elle est allumée */
+    const fr = reduit ? 1 : 1 + 0.04 * Math.sin((maintenant - V.t0) / 4000 * Math.PI * 2);
+    const I = V.source * fr;
+
+    /* fente (la source) : absente si ESV n'est pas relié */
+    const fente = [x0, Math.round((A[1] + B[1]) / 2)];
+    if (M.liaison.etat === 'relie' || echo) {
+      x.fillStyle = '#3A3C42'; x.fillRect(fente[0] - 3, fente[1] - 14, 6, 28);
+      x.fillStyle = `rgba(255,255,255,${0.25 + 0.75 * I})`; x.fillRect(fente[0] - 1, fente[1] - 9, 2, 18);
+      if (V.source < 0.98 && !echo) { /* volet qui couvre la fente */
+        x.fillStyle = '#5E6168'; x.fillRect(fente[0] - 5, fente[1] - 16, 10, 32 * (1 - V.source));
+      }
+    } else {
+      x.setLineDash([3, 3]); x.strokeStyle = '#6E7179'; x.lineWidth = 1; x.strokeRect(fente[0] - 3, fente[1] - 14, 6, 28); x.setLineDash([]);
+    }
+
+    /* prisme */
+    x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.lineTo(...C); x.closePath();
+    const gv = x.createLinearGradient(B[0], A[1], C[0], B[1]);
+    gv.addColorStop(0, 'rgba(255,255,255,0.05)'); gv.addColorStop(1, `rgba(255,255,255,${0.08 + 0.12 * I})`);
+    x.fillStyle = gv; x.fill(); x.strokeStyle = 'rgba(220,224,232,0.55)'; x.lineWidth = 1; x.stroke();
+
+    const entree = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2], sortie = [(A[0] + C[0]) / 2 + 2, (A[1] + C[1]) / 2 + 4];
+
+    if (!echo) {
+      /* rayon blanc */
+      if (I > 0.01) {
+        x.save(); x.shadowColor = 'rgba(255,255,255,0.9)'; x.shadowBlur = 10 * I;
+        x.strokeStyle = `rgba(255,255,255,${0.95 * I})`; x.lineWidth = 2;
+        x.beginPath(); x.moveTo(fente[0] + 2, fente[1]); x.lineTo(...entree); x.lineTo(sortie[0] - 4, sortie[1] - 2); x.stroke(); x.restore();
+      }
+      /* éventail : de la sortie du prisme jusqu'à la part éclairée du spectre */
+      if (fx > x0 + 1) {
+        const tranches = 48;
+        for (let i = 0; i < tranches; i++) {
+          const a = x0 + (fx - x0) * i / tranches, b = x0 + (fx - x0) * (i + 1) / tranches;
+          const [r, g, bl] = onde(((a + b) / 2 - x0) / (x1 - x0), V.sat);
+          x.globalCompositeOperation = 'lighter'; x.fillStyle = `rgba(${r},${g},${bl},${0.06 + 0.26 * I})`;
+          x.beginPath(); x.moveTo(sortie[0], sortie[1]); x.lineTo(a, sy); x.lineTo(b + 0.5, sy); x.closePath(); x.fill();
+        }
+        x.globalCompositeOperation = 'source-over';
+      }
+    } else {
+      /* Écho : la lumière arrive par la droite, Ariane la reçoit à la fente */
+      x.save(); x.shadowColor = 'rgba(255,255,255,0.8)'; x.shadowBlur = 8;
+      x.strokeStyle = 'rgba(255,255,255,0.85)'; x.lineWidth = 2;
+      x.beginPath(); x.moveTo(x1, py - 30); x.lineTo(C[0] - 4, C[1] - 18); x.lineTo(...entree); x.lineTo(fente[0] + 3, fente[1]); x.stroke(); x.restore();
+    }
+
+    /* écran : la bande du lot */
+    x.fillStyle = '#15161A'; x.fillRect(x0, sy, x1 - x0, sh);
+    /* graduation : un trait tous les 20 cuts */
+    const pas = 20 / ci.echelle * (x1 - x0);
+    x.fillStyle = '#2A2C32';
+    for (let gx = x0; gx <= x1 + 0.5 && pas > 3; gx += pas) x.fillRect(Math.round(gx), sy + sh - 5, 1, 5);
+    if (echo) {
+      /* Écho : accord (spectre) et écart (sombre), longueurs proportionnelles aux nombres vus */
+      const e = M.echo, tot = Math.max(1, e.vus), la = (x1 - x0) * Math.min(1, e.vus / 60);
+      const acc = la * e.accord / tot;
+      for (let i = 0; i < acc; i += 2) { const [r, g, b] = onde(i / (x1 - x0), 1); x.fillStyle = `rgb(${r},${g},${b})`; x.fillRect(x0 + i, sy, 2, sh); }
+      x.fillStyle = '#3A3C42'; x.fillRect(x0 + acc, sy, la - acc, sh);
+    } else if (M.phase === 'pret') {
+      x.setLineDash([4, 4]); x.strokeStyle = '#6E7179'; x.lineWidth = 1;
+      if (M.bornes.finDePartie) { x.beginPath(); x.moveTo(x1, sy + 0.5); x.lineTo(x0 + 0.5, sy + 0.5); x.lineTo(x0 + 0.5, sy + sh - 0.5); x.lineTo(x1, sy + sh - 0.5); x.stroke(); }
+      else x.strokeRect(x0 + 0.5, sy + 0.5, x1 - x0 - 1, sh - 1);
+      x.setLineDash([]);
+    } else {
+      for (let i = 0; i < fx - x0; i += 1) {
+        const [r, g, b] = onde(i / (x1 - x0), V.sat);
+        x.fillStyle = `rgb(${r},${g},${b})`; x.fillRect(x0 + i, sy, 1.2, sh);
+      }
+      if (I > 0.02 && fx > x0 + 2) { /* lueur : la bande éclairée rayonne tant que la source brille */
+        x.save(); x.globalCompositeOperation = 'lighter'; x.filter = 'blur(9px)'; x.globalAlpha = 0.55 * I;
+        x.drawImage(c, x0 * (c.width / w), sy * (c.height / h), (fx - x0) * (c.width / w), sh * (c.height / h), x0, sy - 6, fx - x0, sh + 12); x.restore();
+      }
+      /* raies : différés pleine hauteur ; encoche : verts à examiner */
+      const deb = M.compte.debut;
+      for (const r of M.restants) {
+        const rx = x0 + (r.cut - deb + 0.5) / ci.echelle * (x1 - x0);
+        if (rx > fx + 0.5) continue;
+        const k = r.id;
+        V.raies[k] = vers(V.raies[k] == null ? 0 : V.raies[k], 1, dt, 450);
+        const o = V.raies[k];
+        if (r.type === 'differe') { x.fillStyle = `rgba(6,6,8,${0.92 * o})`; x.fillRect(Math.round(rx) - 1, sy, 2.4, sh); }
+        else { x.fillStyle = `rgba(8,9,11,${o})`; x.beginPath(); x.moveTo(rx - 4, sy); x.lineTo(rx + 4, sy); x.lineTo(rx, sy + 7); x.closePath(); x.fill(); }
+      }
+      /* front : un trait blanc, plein si la source est allumée, pointillé sinon */
+      if (M.phase !== 'fin' && fx > x0) {
+        x.strokeStyle = `rgba(255,255,255,${0.5 + 0.5 * V.source})`; x.lineWidth = 1.5;
+        if (V.source < 0.5) x.setLineDash([3, 3]);
+        x.beginPath(); x.moveTo(fx, sy - 6); x.lineTo(fx, sy + sh + 4); x.stroke(); x.setLineDash([]);
+      }
+      /* relecture : un trait qui revient de droite à gauche */
+      if (M.file.relecture) {
+        const p = reduit ? 0.5 : 1 - ((maintenant - V.t0) % 2600) / 2600;
+        const rx = x0 + (x1 - x0) * p;
+        x.fillStyle = 'rgba(255,255,255,0.9)'; x.fillRect(rx, sy - 4, 2, sh + 8);
+        x.fillStyle = 'rgba(8,9,11,0.35)'; x.fillRect(x0, sy, rx - x0, sh);
+      }
+    }
+
+    /* faut-il encore une image ? oui si une valeur glisse, si la source frémit ou si la relecture lit */
+    const glisse = Math.abs(V.part - ci.part) > 1e-4 || Math.abs(V.source - (ci.allume ? 1 : 0)) > 1e-3 || Math.abs(V.sat - ci.sat) > 1e-3
+      || Object.values(V.raies).some((o) => o < 1);
+    if (!reduit && (glisse || V.source > 0.01 || M.file.relecture)) V.anim = requestAnimationFrame(dessiner);
+  }
+  function relancer() { if (!V.anim) V.anim = requestAnimationFrame(dessiner); }
+
+  /* ---------- légendes HTML du banc (texte sur fond uni) ---------- */
+  function majBanc(m) {
+    const f = document.querySelector('#panneau .banc');
+    if (!f) return;
+    const c = m.compte, ci = cible(m), w = f.clientWidth;
+    let src;
+    if (m.vue === 'echo') src = '01 · Lumière reçue <i>— Ariane observe</i>';
+    else if (m.liaison.etat !== 'relie') src = '01 · Pas de source <i>— ESV non relié</i>';
+    else if (m.file.relecture) src = `01 · Relecture <i>— partie ${m.file.courante}</i>`;
+    else if (m.phase === 'encours') src = '01 · Source allumée <i>— Ariane pose</i>';
+    else if (m.phase === 'pause') src = '01 · Source coupée <i>— en pause</i>';
+    else if (m.phase === 'arrete') src = '01 · Source coupée <i>— lot arrêté</i>';
+    else if (m.phase === 'fin') src = '01 · Source éteinte <i>— lot terminé</i>';
+    else src = '01 · Source éteinte <i>— prête</i>';
+    f.querySelector('.banc-leg').innerHTML = src;
+    const cur = f.querySelector('.banc-curseur');
+    const montre = m.vue !== 'echo' && (m.phase === 'encours' || m.phase === 'pause' || m.phase === 'arrete') && !m.file.relecture;
+    cur.hidden = !montre;
+    if (montre) {
+      const p = Math.min(1, c.faits / ci.echelle);
+      const xpx = 14 + (w - 28) * p;
+      cur.style.left = Math.max(40, Math.min(w - 40, xpx)) + 'px';
+      cur.textContent = (m.phase === 'encours' ? 'cut ' : 'arrêt au cut ') + c.cut;
+    }
+    const g = f.querySelector('.bb-g'), d = f.querySelector('.bb-d'), mi = f.querySelector('.bb-m');
+    if (m.vue === 'echo') { g.textContent = 'accord'; d.textContent = 'écart'; mi.textContent = '03 · ' + m.echo.vus + ' poses vues'; }
+    else {
+      g.textContent = 'cut ' + c.debut;
+      d.textContent = m.phase === 'pret' ? (m.bornes.finDePartie ? 'fin de partie' : 'cut ' + m.bornes.fin) : (c.total ? 'cut ' + c.fin : 'fin inconnue');
+      mi.textContent = m.phase === 'pret' ? '03 · à éclairer' : (!c.total || w < 400 ? '' : '03 · position dans le lot');
+    }
+    f.setAttribute('aria-label', 'Spectre du lot : ' + (m.vue === 'echo' ? m.echo.vus + ' poses vues' : c.faits + ' cuts traités' + (c.total ? ' sur ' + c.total : ', total inconnu') + ', ' + c.differes + ' différés'));
+  }
+
+  function banc() {
+    return `<figure class="banc" data-garder="banc" aria-label="Spectre du lot"><canvas class="banc-c" aria-hidden="true"></canvas>`
+      + `<span class="banc-leg">01 · Source</span><span class="banc-curseur" hidden>cut</span>`
+      + `<span class="bb bb-g">cut</span><span class="bb bb-m">03</span><span class="bb bb-d">cut</span></figure>`;
+  }
+
+  function legende(m) {
+    if (m.vue === 'echo') return `<ul class="legende"><li><span class="sw" style="width:14px;height:8px;background:linear-gradient(90deg,#6b3fd0,#2fb0d8,#e8c33a)" aria-hidden="true"></span>en accord avec Ariane</li><li><span class="sw" data-forme="ecart" style="width:14px;height:8px;border:4px solid var(--doux)" aria-hidden="true"></span>en écart</li></ul>`;
+    if (m.phase === 'pret') return '';
+    return `<ul class="legende"><li><span class="sw sw-raie" data-forme="raie" aria-hidden="true"></span>raie sombre : différé (${m.compte.differes})</li><li><span class="sw sw-encoche" aria-hidden="true"></span>encoche : vert à examiner (${m.compte.aExaminer})</li></ul>`;
+  }
+
+  function mesures(m) {
+    const c = m.compte;
+    const grand = `<div class="mesure mesure-grand"><dt>Traités</dt><dd><span data-valeur="faits">${c.faits}</span> <small>${c.total ? 'sur ' + c.total : '— total inconnu'}</small></dd></div>`;
+    const temps = `<div class="mesure"><dt>Temps restant</dt><dd class="txt" data-valeur="temps">${esc(c.tempsTexte)}</dd></div>`;
+    const cut = `<div class="mesure"><dt>${m.phase === 'encours' ? 'Cut en cours' : 'Arrêté au cut'}</dt><dd data-valeur="cut">${c.cut}</dd></div>`;
+    const dif = `<div class="mesure"><dt>Différés</dt><dd data-valeur="dif">${c.differes}</dd></div>`;
+    const ver = `<div class="mesure"><dt>Verts à examiner</dt><dd data-valeur="ver">${c.aExaminer}</dd></div>`;
+    if (m.phase === 'fin') return `<dl class="mesures"><div class="mesure mesure-grand"><dt>Posés</dt><dd>${n(c.poses)} <small>sur ${c.faits} traités</small></dd></div>${dif}${ver}</dl>`;
+    if (m.file.relecture) return `<dl class="mesures">${grand}${dif}${ver}</dl>`;
+    return `<dl class="mesures">${grand}${cut}${temps}${dif}${ver}</dl>`;
+  }
+
+  function examen(m) {
+    const r = m.examen;
+    return `<header class="tete"><p class="marque">Examiner</p><h2 class="titre">Cut ${r.cut}</h2><p class="phrase">${r.type === 'differe' ? 'Différé' : 'Vert à examiner'} : ${esc(r.motif)}.</p></header>`
+      + `<figure class="coupe" data-garder="coupe-${esc(r.id)}" aria-label="Coupe du cut ${r.cut} et position proposée des deux rails"><canvas aria-hidden="true"></canvas><span class="coupe-leg">Coupe du cut ${r.cut} · traits : position proposée</span></figure>`
+      + K.examenActions(r);
+  }
+  function dessinerCoupe(m) {
+    const f = document.querySelector('#panneau .coupe canvas');
+    if (!f || !m.examen) return;
+    const { x, w, h } = toile(f);
+    const cp = Demo.D.coupe(m.examen.cut, 320);
+    x.clearRect(0, 0, w, h);
+    const X = (v) => 14 + (v + 1) / 2 * (w - 28), Z = (v) => h - 40 - (v + 0.45) * (h - 60) / 0.45;
+    for (const [a, b] of cp.pts) { x.fillStyle = 'rgba(214,218,226,0.8)'; x.fillRect(X(a), Z(b), 1.6, 1.6); }
+    for (const rx of cp.rails) {
+      x.strokeStyle = m.examen.type === 'differe' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.9)';
+      x.setLineDash(m.examen.type === 'differe' ? [3, 3] : []); x.lineWidth = 1.5;
+      x.beginPath(); x.moveTo(X(rx), 18); x.lineTo(X(rx), h - 36); x.stroke(); x.setLineDash([]);
+    }
+  }
+
+  function rendre(S, D) {
+    const m = D.modele(); M = m;
+    if (m.vue === 'reste') return `<div class="p">${K.reste(m)}${K.message(m)}</div>`;
+    if (m.vue === 'examen' && m.examen) return `<div class="p">${examen(m)}${K.message(m)}</div>`;
+    const haut = `<div class="tete">${K.bascule(m)}<div class="ligne-l"><p class="marque">Ariane</p>${K.liaison(m)}</div></div>`;
+    if (m.vue === 'echo') {
+      return `<div class="p">${haut}<header><h2 class="titre">${esc(m.titre)}</h2><p class="phrase">${esc(m.phrase)}</p></header>${banc()}${legende(m)}${K.echo(m)}${K.actions(m.actions)}${K.message(m)}</div>`;
+    }
+    const corps = m.phase === 'pret'
+      ? K.incident(m) + K.bornes(m) + K.fileReglage(m)
+      : (m.file.alerte ? K.fileSuivi(m) + mesures(m) + K.incident(m) : mesures(m) + K.incident(m) + K.fileSuivi(m));
+    return `<div class="p">${haut}<header><h2 class="titre">${esc(m.titre)}</h2><p class="phrase">${esc(m.phrase)}</p></header>`
+      + banc() + legende(m) + corps + K.actions(m.actions) + K.message(m) + '</div>';
+  }
+
+  function apres(S, D) {
+    if (M && M.vue === 'examen') { dessinerCoupe(M); return; }
+    if (M) majBanc(M);
+    relancer();
+  }
+  window.addEventListener('resize', relancer);
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

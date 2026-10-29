@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane, proposition « La liste rayée »</title>
+<style>
+/*POLICE:edito-sentient*/
+/* Proposition « La liste rayée » (famille éditoriale).
+ * Logique : le lot s'écrit comme une liste en phrases ; chaque cut traité se raye d'un trait de crayon,
+ * ce qui reste se lit en clair, et le crayon bleu de l'éditeur annote en marge ce qui attend l'opérateur.
+ * Police unique : Sentient (fontshare), serif de lecture « robuste », un peu large, à grands contre-poinçons,
+ * qui « tient même dans de mauvaises conditions » ; son italique sert aux notes de marge (la voix de l'annotateur).
+ * Couleurs : graphite sur blanc pour tout ; bleu de correcteur pour ce que l'opérateur doit regarder
+ * (différés, verts à examiner, incidents), toujours avec un mot. Pas d'autre couleur. */
+:root{
+  --scene:#E4E3DF; --page:#FFFFFF; --graphite:#262626; --gris:#5F5F5F; --rayé:#6B6B6B; --trait:#262626;
+  --filet:#DCDAD5; --bleu:#1E4FC2; --sur-bouton:#FFFFFF; --voile:#F3F2EF;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --scene:#000000; --page:#18191B; --graphite:#E7E5E0; --gris:#A9A7A2; --rayé:#9C9A95; --trait:#E7E5E0;
+  --filet:#34363A; --bleu:#93B1FF; --sur-bouton:#18191B; --voile:#222326;
+}}
+:root[data-theme="dark"]{
+  --scene:#000000; --page:#18191B; --graphite:#E7E5E0; --gris:#A9A7A2; --rayé:#9C9A95; --trait:#E7E5E0;
+  --filet:#34363A; --bleu:#93B1FF; --sur-bouton:#18191B; --voile:#222326;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--graphite);font-family:'Sentient',Georgia,serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--page);color:var(--graphite)}
+.notes{max-width:380px;background:var(--page);color:var(--graphite);padding:18px 20px;font-size:15px;line-height:1.5}
+.notes h2{font-weight:700;font-size:24px;margin:0 0 8px}
+
+.feuille{padding:16px 20px 32px;font-size:17px;line-height:1.45}
+.entete{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;font-size:15px;color:var(--gris)}
+.entete .qui button{font:inherit;background:none;border:0;padding:2px 0;margin-right:10px;color:var(--gris);cursor:pointer}
+.entete .qui button[aria-pressed="true"]{color:var(--graphite);font-weight:700;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:2px}
+.entete .qui button[aria-disabled="true"]{cursor:not-allowed}
+.entete .esv.non{color:var(--bleu)}
+.etat{font-style:italic;font-size:18px;margin:22px 0 2px;color:var(--gris)}
+.phrase{text-wrap:balance;font-size:clamp(28px,8.6cqi,40px);line-height:1.12;font-weight:700;margin:0 0 6px;letter-spacing:-.01em}
+.phrase .mot{display:inline-block}
+.sous{font-size:clamp(19px,5.2cqi,23px);line-height:1.3;margin:0 0 4px}
+.sous b{font-weight:700}
+.c{display:inline-block;width:.66em;text-align:center}
+.marge{font-style:italic;color:var(--bleu)}
+.marge::before{content:"→ ";font-style:normal}
+
+/* la liste rayée */
+.liste{list-style:none;margin:18px 0 0;padding:0;border-top:1px solid var(--filet);overflow:hidden}
+.liste li{position:relative;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--filet);min-height:44px}
+.liste .t{position:relative;display:inline-block;max-width:100%}
+.liste .note{font-style:italic;font-size:15px;color:var(--gris);text-align:right;flex:none;max-width:55%}
+.liste .note.bleu{color:var(--bleu)}
+.liste li.fait .t{color:var(--rayé)}
+.liste li.ici .t{font-weight:700}
+.liste li.ici .t::after{content:"";display:inline-block;width:2px;height:1em;background:var(--graphite);margin-left:4px;vertical-align:-2px;animation:clin 1.1s steps(1) infinite}
+.liste li.loin .t{color:var(--gris)}
+.liste li.ancien{opacity:.55}
+.trait{position:absolute;left:-2px;right:-2px;top:.36em;height:.5em;width:calc(100% + 4px);overflow:visible;pointer-events:none}
+.trait path{fill:none;stroke:var(--trait);stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0}
+.titre-liste{display:flex;justify-content:space-between;align-items:baseline;margin:26px 0 0;font-size:15px;color:var(--gris)}
+.titre-liste b{color:var(--graphite);font-size:17px}
+.titre-liste .lien{font:inherit;font-style:italic;background:none;border:0;color:var(--graphite);text-decoration:underline;text-underline-offset:4px;cursor:pointer;padding:4px 0}
+
+/* phrases à trous du réglage */
+.reglage{font-size:clamp(21px,6cqi,26px);line-height:1.6;margin:14px 0 0}
+.reglage input{font:inherit;font-weight:700;width:3.6ch;text-align:center;background:var(--voile);color:var(--graphite);border:0;border-bottom:2px solid var(--graphite);padding:0 2px;border-radius:0}
+.reglage input:disabled{background:transparent;border-bottom-style:dotted;width:auto}
+.mot-bouton{font:inherit;font-weight:700;background:var(--voile);color:var(--graphite);border:0;border-bottom:2px solid var(--graphite);padding:0 6px;cursor:pointer;border-radius:0}
+.pas{font:inherit;font-size:20px;line-height:1;background:transparent;color:var(--graphite);border:1px solid var(--graphite);width:34px;height:34px;cursor:pointer;vertical-align:3px;border-radius:2px}
+.aide{font-size:15px;color:var(--gris);font-style:italic;margin:4px 0 0}
+
+/* encart d'incident : la marge bleue prend la parole */
+.encart{border-left:3px solid var(--bleu);padding:4px 0 4px 14px;margin:18px 0 6px}
+.encart .q{font-style:italic;color:var(--bleu);font-size:15px}
+.encart h3{font-size:21px;line-height:1.2;margin:2px 0 4px}
+.encart p{margin:0 0 8px}
+.encart.neutre{border-left-color:var(--graphite)}
+.encart.neutre .q{color:var(--gris)}
+
+/* actions */
+.actions{display:flex;flex-direction:column;gap:8px;margin:20px 0 0}
+.btn{font:inherit;font-size:18px;font-weight:700;text-align:left;padding:12px 16px;border:1.5px solid var(--graphite);background:transparent;color:var(--graphite);border-radius:2px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn:active{transform:scale(.97)}
+.btn small{font-weight:400;font-style:italic;font-size:15px}
+.btn.principal{background:var(--graphite);color:var(--sur-bouton)}
+.btn.lien{border:0;padding:6px 0;text-decoration:underline;text-underline-offset:4px;font-weight:400;font-style:italic}
+.btn.arret{font-weight:400}
+.btn.arret.confirme{background:var(--bleu);border-color:var(--bleu);color:var(--sur-bouton);font-weight:700}
+.btn[aria-disabled="true"]{cursor:not-allowed;color:var(--gris);border-style:dotted;background:transparent}
+.raison{font-size:15px;font-style:italic;color:var(--gris);margin:-2px 0 2px}
+.petit{font:inherit;font-size:16px;background:transparent;color:var(--graphite);border:1px solid var(--graphite);padding:6px 12px;border-radius:2px;cursor:pointer}
+.petit.plein{background:var(--graphite);color:var(--sur-bouton)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--bleu);outline-offset:2px}
+.boutons{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.message{font-style:italic;margin:12px 0 0;padding:8px 0;border-top:1px solid var(--filet);border-bottom:1px solid var(--filet)}
+figure{margin:14px 0}
+figure svg{display:block;width:100%;height:auto;background:var(--voile)}
+figcaption{font-size:15px;font-style:italic;color:var(--gris);margin-top:6px}
+.reste li{display:block}
+.reste li .ligne{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+
+/* ---------- partition de mouvement ---------- */
+@keyframes rayer{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes monter{from{transform:translateY(44px)}to{transform:none}}
+@keyframes ecrire{from{opacity:0;transform:translateY(.2em)}to{opacity:1;transform:none}}
+@keyframes clin{50%{opacity:0}}
+@keyframes chiffre{from{transform:translateY(.3em);opacity:.3}to{transform:none;opacity:1}}
+/* chaque cut traité : la liste monte d'une ligne (une seule transformation), puis le crayon raye la ligne qui vient de finir */
+.marque.change + .liste{animation:monter .26s cubic-bezier(.2,.8,.2,1)}
+.marque.change + .liste li.recent .trait path{animation:rayer .34s cubic-bezier(.3,.7,.2,1) .12s both}
+/* changement d'état : la phrase s'écrit mot à mot, en 0,6 s au total quelle que soit sa longueur */
+#panneau[data-etat-change="1"] .phrase .mot,.etat.change + .phrase .mot{animation:ecrire .22s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * var(--pas))}
+#panneau[data-etat-change="1"] .encart{animation:ecrire .24s cubic-bezier(.2,.8,.2,1) .3s both}
+.num.change .c{animation:chiffre .2s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+:root[data-mouvement="reduit"] *,:root[data-mouvement="reduit"] *::before,:root[data-mouvement="reduit"] *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition La liste rayée"></div></div>
+  <aside class="notes">
+    <h2>La liste rayée</h2>
+    <p><b>Logique.</b> Le lot s'écrit comme une liste en phrases : chaque cut traité se raye d'un trait de crayon, ce qui reste se lit en clair, et le crayon bleu du correcteur annote en marge ce qui vous attend.</p>
+    <p><b>D'où ça vient.</b> iter0, accueil, étape « Sharpen » : le trait de crayon qui raye une ligne réglée et la note manuscrite en italique qui en donne la raison ; le dialogue où les messages anciens s'estompent vers le haut. beui, « Agent Activity / Streaming Text » : le flux monte d'un seul mouvement au lieu de sauter. fontshare, fiche « Details » de Sentient. microcopy : des phrases complètes qui disent quoi faire.</p>
+    <p><b>Ce que ça veut dire ici.</b> Rayé au crayon graphite = traité (posé ou différé). En gras avec le curseur = ce qu'Ariane fait maintenant. Gris clair = pas encore fait. Note bleue en marge, précédée d'une flèche = à regarder par vous (différé, vert à examiner, incident). Le réglage est une phrase à trous : on lit ce qu'on lance.</p>
+    <p><b>Mouvement.</b> À chaque cut : la liste monte d'une ligne (260 ms) et le crayon raye la ligne qui vient de finir (340 ms). À chaque changement d'état, la grande phrase s'écrit mot à mot (0,6 s au total). Mouvement réduit : les lignes sont rayées d'emblée, sans tracé.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  /* Chiffres de Sentient proportionnels (mesuré) : cases fixes pour les compteurs. */
+  const ch = (x) => String(x).replace(/\d/g, (d) => `<span class="c">${d}</span>`);
+  /* Trait de crayon : chemin légèrement ondulé, deux passages comme une mine qui appuie. */
+  const TRAIT = '<svg class="trait" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M1 6 C 25 4.6, 60 4.2, 99 4.8" pathLength="1" stroke-width="1.5"/><path d="M2 6.8 C 30 5.4, 70 5.6, 98 5.2" pathLength="1" stroke-width=".8" opacity=".6"/></svg>';
+
+  function bouton(x) {
+    const cls = ['btn', x.rang || 'second', x.confirme ? 'confirme' : ''].join(' ');
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+
+  /* Grande phrase découpée en mots ; la cascade est calculée pour finir en 0,6 s quelle que soit la longueur. */
+  function phrase(texte, cle) {
+    const mots = texte.split(' ');
+    const pas = Math.min(60, Math.round(380 / Math.max(1, mots.length)));
+    return `<p class="phrase" style="--pas:${pas}ms">${mots.map((m, i) => `<span class="mot" style="--i:${i}">${/^\d+\.?$/.test(m) ? `<span class="num" data-valeur="num-${cle}">${ch(m)}</span>` : esc(m)}</span>`).join(' ')}</p>`;
+  }
+
+  function entete(m) {
+    const bloque = m.activiteBloquee;
+    const b = (a, l, actif) => `<button data-a="${a}" aria-pressed="${actif}"${bloque && !actif ? ' aria-disabled="true" title="Écho attend la pause ou l’arrêt du lot"' : ''}>${l}</button>`;
+    const li = m.liaison;
+    return `<div class="entete"><span class="qui" role="group" aria-label="Activité">${b('orbite', 'Orbite', m.activite === 'orbite')}${b('echo', 'Écho', m.activite === 'echo')}</span>
+      <span class="esv ${li.etat === 'relie' ? '' : 'non'}">${esc(li.texte)}, ${esc(li.detail)}</span></div>
+      ${m.message ? `<p class="message" role="status" data-valeur="message">${esc(m.message)}</p>` : ''}`;
+  }
+
+  function encart(q, titre, texte, acts, neutre) {
+    return `<section class="encart${neutre ? ' neutre' : ''}" role="${neutre ? 'status' : 'alert'}"><div class="q">${esc(q)}</div><h3>${esc(titre)}</h3>${texte ? `<p>${esc(texte)}</p>` : ''}${acts && acts.length ? `<div class="boutons">${acts.map((x) => `<button class="petit${x.rang === 'principal' ? ' plein' : ''}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}>${esc(x.libelle)}</button>`).join('')}</div>` : ''}</section>`;
+  }
+
+  /* Ligne de la liste : fait (rayé), ici (en cours), loin (à venir). */
+  function ligne(texte, etat, note, bleu, extra) {
+    return `<li class="${etat} ${extra || ''}"><span class="t">${texte}${etat === 'fait' ? TRAIT : ''}</span>${note ? `<span class="note${bleu ? ' bleu' : ''}">${bleu ? '→ ' : ''}${esc(note)}</span>` : ''}</li>`;
+  }
+
+  /* Les derniers cuts traités, tirés de l'état réel (le motif vient de la liste des restants). */
+  function historique(m, combien) {
+    const c = m.compte; const out = [];
+    for (let k = combien; k >= 1; k--) {
+      const cut = c.cut - k; if (cut < c.debut) continue;
+      const r = m.restants.find((x) => x.cut === cut);
+      const note = r ? (r.type === 'differe' ? 'différé, ' + r.motif.toLowerCase() : 'posé, à examiner') : 'posé';
+      out.push(ligne('Cut ' + cut, 'fait', note, !!r, (k === 1 ? 'recent' : '') + (k >= combien - 1 && combien > 3 ? ' ancien' : '')));
+    }
+    return out.join('');
+  }
+
+  function listeLot(m, enMarche) {
+    const c = m.compte;
+    let h = historique(m, 5);
+    h += ligne('Cut ' + c.cut, enMarche ? 'ici' : '', enMarche ? 'Ariane pose' : (m.phase === 'pause' ? 'en pause ici' : 'arrêté ici'));
+    const reste = c.total == null ? null : c.total - c.faits - 1;
+    if (reste == null) h += ligne('Les cuts suivants, jusqu’à la fin de la partie', 'loin', 'total inconnu');
+    else if (reste > 0) h += ligne(`Les ${n(reste)} cuts suivants, jusqu’au cut ${c.fin}`, 'loin', '');
+    return `<span class="marque" data-valeur="faits" hidden>${c.faits}</span><ol class="liste">${h}</ol>`;
+  }
+
+  function listeParties(m) {
+    const f = m.file, c = m.compte;
+    if (!f.active) return '';
+    let h = f.parties.map((p) => ligne(`Partie ${p.n} : ${n(p.poses)} posés`, 'fait', `${p.differes} différés, ${p.aControler} à examiner`, false)).join('');
+    if (m.file.relecture) h += ligne(`Relire et corriger la partie ${f.courante}`, 'ici', 'en cours');
+    else if (f.alerte) h += ligne(`Partie ${f.courante} : ${n(c.faits)} traités`, '', 'arrêtée, voir la cause', true);
+    else if (f.ligneCourante) h += ligne(`Partie ${f.courante} : ${n(c.faits)} traités`, m.phase === 'encours' ? 'ici' : '', 'en cours');
+    for (let k = f.courante + 1; k <= f.nb; k++) if (!f.finie) h += ligne(`Partie ${k}`, 'loin', 'à venir');
+    return `<div class="titre-liste"><b>La file de parties</b><span>${f.finie ? 'toutes faites' : 'partie ' + f.courante + ' sur ' + f.nb}</span></div><ol class="liste">${h}</ol>`;
+  }
+
+  function resteResume(m, avecLien) {
+    const r = m.restants; if (!r.length) return '';
+    const d = r.filter((x) => x.type === 'differe').length, v = r.length - d;
+    return `<div class="titre-liste"><b>Ce qui reste</b>${avecLien ? '<button class="lien" data-a="voirReste">voir la liste</button>' : ''}</div>
+      <ol class="liste">${ligne(`${d} différé${d > 1 ? 's' : ''}`, '', 'Ariane n’a pas tranché', true)}${ligne(`${v} vert${v > 1 ? 's' : ''} à examiner`, '', 'posés, à vérifier', true)}</ol>`;
+  }
+
+  function vuePret(m) {
+    const b = m.bornes, f = m.file;
+    let h = `<p class="etat" data-valeur="etat">${esc(m.titre)}</p>` + phrase(m.liaison.etat === 'relie' ? 'Que doit faire Ariane\u202f?' : 'ESV d’abord.');
+    if (m.incident) h += encart('à vous', m.incident.titre, m.incident.texte, m.incident.actions);
+    h += `<p class="reglage">Poser du cut <input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"> ${b.finDePartie
+      ? `<button class="mot-bouton" data-a="finDePartie" role="switch" aria-checked="true" title="Revenir à un dernier cut">jusqu’à la fin de la partie</button>`
+      : `au cut <input data-champ="fin" inputmode="numeric" value="${b.fin}" aria-label="Dernier cut">`},
+      ${f.active ? `en <button class="pas" data-a="fileMoins" aria-label="Une partie de moins">−</button> <b data-valeur="nb">${f.nb}</b> <button class="pas" data-a="filePlus" aria-label="Une partie de plus">+</button> parties à la file.` : 'en une seule partie.'}</p>
+      <p class="aide">${b.finDePartie ? '' : `Soit ${b.fin - b.debut + 1} cuts. `}<button class="btn lien" style="display:inline;padding:0;font-size:15px" data-a="finDePartie" role="switch" aria-checked="${b.finDePartie}">${b.finDePartie ? 'Donner un dernier cut' : 'Aller plutôt jusqu’à la fin de la partie'}</button></p>
+      <p class="aide"><button class="btn lien" style="display:inline;padding:0;font-size:15px" data-a="fileBascule" role="switch" aria-checked="${f.active}">${f.active ? 'Éteindre la file : une seule partie' : 'Allumer la file de parties'}</button>${f.active ? ' — chaque partie est relue et corrigée avant la suivante.' : ''}</p>`;
+    h += actions(m.actions);
+    return h;
+  }
+
+  function vueLot(m) {
+    const c = m.compte, f = m.file;
+    const enMarche = m.phase === 'encours' && !f.relecture;
+    let h = `<p class="etat" data-valeur="etat">${esc(m.titre)}${f.active && !f.finie ? ', partie ' + f.courante + ' sur ' + f.nb : ''}</p>`;
+    if (m.phase === 'fin') {
+      h += phrase(f.finie ? `${f.nb} parties rayées.` : `${n(c.faits)} cuts rayés.`, 'titre-fin');
+      h += `<p class="sous"><b>${ch(n(c.poses))}</b> posés, <b>${ch(n(c.differes))}</b> différés, <b>${ch(n(c.aExaminer))}</b> verts à examiner.</p>`;
+      h += `<p class="aide">${esc(m.phrase)}</p>`;
+      h += actions(m.actions) + listeParties(m) + resteResume(m, false);
+      return h;
+    }
+    if (f.relecture) {
+      h += phrase(`Ariane relit la partie ${f.courante}.`, 'titre-relecture');
+      h += `<p class="sous">Puis la partie ${f.courante + 1} démarre seule.</p>`;
+      h += actions(m.actions) + listeParties(m) + resteResume(m, true);
+      return h;
+    }
+    if (enMarche) h += phrase(`Ariane pose le cut ${c.cut}.`, 'titre-marche');
+    else if (f.alerte) h += phrase('La file s’est arrêtée.', 'titre-alerte');
+    else if (m.phase === 'pause') h += phrase(`En pause au cut ${c.cut}.`, 'titre-pause');
+    else h += phrase(`Arrêté au cut ${c.cut}.`, 'titre-arret');
+    h += `<p class="sous"><b class="num" data-valeur="faits-phrase">${ch(n(c.faits))}</b> rayés sur ${c.total == null ? 'un total inconnu' : ch(n(c.total))}. ${enMarche ? (c.minutes == null ? 'Fin à la fin de la partie.' : 'Encore ' + esc(c.tempsTexte) + '.') : ''}</p>`;
+    if (!enMarche) h += `<p class="aide">${esc(m.phrase)}</p>`;
+    if (f.alerte) h += encart('à vous : la cause', f.alerte.titre, f.alerte.detail + ' Rien n’a été forcé.', []);
+    if (m.incident && m.incident.type === 'reprise') h += encart('reprise', m.incident.titre, m.incident.texte, [], true);
+    h += actions(m.actions);
+    h += `<div class="titre-liste"><b>Le lot</b><span>${c.differes} différé${c.differes > 1 ? 's' : ''} jusqu’ici</span></div>` + listeLot(m, enMarche);
+    h += listeParties(m) + resteResume(m, true);
+    return h;
+  }
+
+  function coupeSVG(cut) {
+    const k = Demo.D.coupe(cut, 260);
+    const X = (x) => (x + 1) * 160, Z = (z) => 150 - (z + 0.6) * 200;
+    const pts = k.pts.map(([x, z]) => `<circle cx="${X(x).toFixed(1)}" cy="${Z(z).toFixed(1)}" r="1.1"/>`).join('');
+    const rails = k.rails.map((r, i) => `<line x1="${X(r)}" x2="${X(r)}" y1="16" y2="150" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${X(r) + 5}" y="${i ? 26 : 40}" font-style="italic">${i ? 'rail droit proposé' : 'rail gauche proposé'}</text>`).join('');
+    return `<svg viewBox="0 0 320 160" role="img" aria-label="Coupe du cut ${cut}"><g fill="currentColor" opacity=".8">${pts}</g><g stroke="currentColor" fill="currentColor" font-size="11" font-family="Sentient, serif">${rails}</g></svg>`;
+  }
+
+  function vueReste(m) {
+    const r = m.restants;
+    let h = `<p class="etat" data-valeur="etat">Ce qui reste</p>` + phrase(r.length ? `${r.length} cuts à regarder.` : 'Plus rien à regarder.', 'titre-reste');
+    h += `<p class="aide">Les différés d’abord : Ariane n’a pas tranché. Puis les verts : posés, mais à vérifier.</p>`;
+    h += `<ol class="liste reste">${r.map((x) => `<li><div class="ligne"><span class="t"><b>Cut ${x.cut}</b></span><span class="note bleu">→ ${x.type === 'differe' ? 'différé' : 'vert à examiner'}</span></div><div class="aide" style="margin:0">${esc(x.motif)}</div><div class="boutons"><button class="petit" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div></li>`).join('')}</ol>`;
+    return h + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]);
+  }
+
+  function vueExamen(m) {
+    const x = m.examen;
+    let h = `<p class="etat" data-valeur="etat">${x.type === 'differe' ? 'Différé' : 'Vert à examiner'}</p>` + phrase(`Cut ${x.cut}.`, 'titre-examen');
+    h += `<p class="sous"><span class="marge">${esc(x.motif)}</span></p>`;
+    h += `<figure>${coupeSVG(x.cut)}<figcaption>Coupe du cut ${x.cut} : les points relevés, et en tirets la place proposée pour les deux rails.</figcaption></figure>`;
+    return h + actions([{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Rayer : vu', rang: 'second' }, { a: 'retour', libelle: 'Retour au lot', rang: 'lien' }]);
+  }
+
+  function vueEcho(m) {
+    const e = m.echo;
+    let h = `<p class="etat" data-valeur="etat">Écho</p>` + phrase('Ariane regarde, et ne pose rien.', 'titre-echo');
+    h += `<p class="sous"><b class="num" data-valeur="vus">${ch(n(e.vus))}</b> poses vues, <b>${ch(n(e.accord))}</b> où elle aurait fait pareil.</p>`;
+    h += `<div class="titre-liste"><b>Ce qu’elle a vu</b></div><ol class="liste">${e.dernier == null ? ligne('Rien encore', 'loin', '') : ligne('Cut ' + e.dernier, 'fait', 'dernière pose vue') + ligne(`${e.vus - e.accord} poses où elle aurait fait autrement`, '', e.vus - e.accord ? 'à comparer' : '', e.vus - e.accord > 0)}</ol>`;
+    return h + actions(m.actions);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    let page;
+    if (m.vue === 'echo') page = vueEcho(m);
+    else if (m.vue === 'reste') page = vueReste(m);
+    else if (m.vue === 'examen' && m.examen) page = vueExamen(m);
+    else if (m.phase === 'pret') page = vuePret(m);
+    else page = vueLot(m);
+    return `<article class="feuille">${entete(m)}${page}</article>`;
+  }
+  Demo.monter({ rendre });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane, proposition « Le spécimen »</title>
+<style>
+/*POLICE:edito-tabular*/
+/*POLICE:edito-satoshi*/
+/* Proposition « Le spécimen » (famille éditoriale).
+ * Logique : le lot est une planche de spécimen de fonderie ; chaque mesure est une ligne, méta minuscule
+ * au-dessus, valeur composée en très grand ; filets d'un pixel, aucun rayon, aucune ombre.
+ * Polices : Tabular (fontshare, monospace « dont chaque glyphe a la même chasse », recommandée pour les
+ * rapports chiffrés) pour toutes les valeurs : un chiffre qui change ne déplace rien. Satoshi (fontshare,
+ * grotesque moderniste, chiffres tabulaires disponibles) pour les méta, consignes et boutons.
+ * Couleur : aucune. Encre et papier. Le bloc plein (encre inversée) marque ce qui est actif ou ce qui
+ * attend votre geste ; c'est toujours un mot dans le bloc, jamais la teinte seule. */
+:root{ --scene:#CFCFC9; --papier:#FAFAF7; --encre:#0F0F0F; --gris:#595955; --filet:#0F0F0F; --leger:#BDBDB6; --voile:#EFEFEA; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --scene:#000000; --papier:#101010; --encre:#F1F1EC; --gris:#A3A39D; --filet:#F1F1EC; --leger:#4A4A47; --voile:#1C1C1B; }}
+:root[data-theme="dark"]{ --scene:#000000; --papier:#101010; --encre:#F1F1EC; --gris:#A3A39D; --filet:#F1F1EC; --leger:#4A4A47; --voile:#1C1C1B; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Satoshi',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--papier);color:var(--encre)}
+.notes{max-width:380px;background:var(--papier);color:var(--encre);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font-family:'Tabular',monospace;font-size:24px;margin:0 0 8px}
+
+.planche{font-size:15px;line-height:1.35;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--filet)}
+.mono{font-family:'Tabular',ui-monospace,monospace}
+/* barre d'onglets : cases à filets, l'actif en bloc plein */
+.onglets{display:grid;grid-template-columns:1fr 1fr 1.6fr;border-bottom:1px solid var(--filet)}
+.onglets>*{min-height:58px;padding:10px 12px;border-left:1px solid var(--filet);display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.onglets>*:first-child{border-left:0}
+.onglets button{font:inherit;font-size:15px;font-weight:700;text-align:left;background:transparent;color:var(--encre);border-top:0;border-right:0;border-bottom:0;cursor:pointer;border-radius:0;position:relative;overflow:hidden}
+.onglets button small{font-weight:400;font-size:11px;color:var(--gris)}
+.onglets button[aria-pressed="true"]{background:var(--encre);color:var(--papier)}
+.onglets button[aria-pressed="true"] small{color:var(--papier)}
+.onglets button[aria-disabled="true"]{cursor:not-allowed;color:var(--gris)}
+.onglets .esv{font-size:13px}
+.onglets .esv b{font-size:15px}
+.onglets .esv.non{background:var(--encre);color:var(--papier)}
+.onglets .esv.non small{color:var(--papier)}
+
+/* ligne de spécimen : méta minuscule puis valeur très grande */
+.ligne{border-bottom:1px solid var(--filet);padding:10px 14px 12px}
+.meta{display:flex;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.02em;color:var(--gris);margin-bottom:4px}
+.meta b{color:var(--encre);font-weight:700}
+.valeur{font-family:'Tabular',ui-monospace,monospace;font-weight:700;line-height:1;letter-spacing:-.03em;overflow-wrap:anywhere}
+.v-etat{font-size:clamp(30px,10.5cqi,52px);text-transform:uppercase;letter-spacing:-.02em}
+.v-geant{font-size:clamp(64px,26cqi,132px);letter-spacing:-.06em}
+.v-geant small{font-size:.28em;letter-spacing:0;font-weight:500;color:var(--gris);margin-left:.2em}
+.v-moyen{font-size:clamp(26px,8cqi,36px)}
+.texte{font-size:16px;margin:6px 0 0;max-width:36em}
+.ligne.inverse{background:var(--encre);color:var(--papier)}
+.ligne.inverse .meta,.ligne.inverse .meta b,.ligne.inverse .texte{color:var(--papier)}
+.trois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid var(--filet)}
+.trois>div{padding:10px 14px 12px;border-left:1px solid var(--filet);min-width:0}
+.trois>div:first-child{border-left:0}
+.chiffre{display:inline-block;overflow:hidden;vertical-align:bottom;line-height:1}
+.chiffre span{display:inline-block}
+
+/* grille de glyphes : une case par tranche de 10 cuts */
+.grille{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:0;border-top:1px solid var(--filet);border-left:1px solid var(--filet);margin-top:8px}
+.grille i{font-style:normal;aspect-ratio:1;border-right:1px solid var(--filet);border-bottom:1px solid var(--filet);display:flex;align-items:center;justify-content:center;font-family:'Tabular',monospace;font-weight:700;font-size:13px;position:relative;overflow:hidden;color:var(--encre);background:var(--papier)}
+.grille i.f{background:var(--encre);color:var(--papier)}
+.grille i.ici{box-shadow:inset 0 0 0 3px var(--encre)}
+.grille i.loin{background:var(--voile)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--gris);margin-top:8px}
+.legende span{display:inline-flex;align-items:center;gap:5px}
+.legende i{width:12px;height:12px;border:1px solid var(--filet);display:inline-block}
+.legende i.f{background:var(--encre)}
+.legende i.loin{background:var(--voile)}
+
+/* actions : cases pleine largeur */
+.actions{display:flex;flex-direction:column}
+.btn{font:inherit;font-size:17px;font-weight:700;text-align:left;cursor:pointer;padding:16px 14px;border:0;border-bottom:1px solid var(--filet);background:transparent;color:var(--encre);border-radius:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn:active{transform:scale(.98)}
+.btn small{font-weight:400;font-size:12px;color:inherit}
+.btn.principal{background:var(--encre);color:var(--papier)}
+.btn.lien{font-weight:500;text-decoration:underline;text-underline-offset:4px}
+.btn.arret.confirme{background:var(--encre);color:var(--papier)}
+.btn.arret.confirme::before{content:"";}
+.btn[aria-disabled="true"]{cursor:not-allowed;color:var(--gris);background:repeating-linear-gradient(135deg,transparent 0 6px,var(--voile) 6px 12px)}
+.btn[aria-disabled="true"] span{background:var(--papier)}
+.raison{font-size:13px;color:var(--gris);margin:0;padding:6px 14px 10px;border-bottom:1px solid var(--filet)}
+.petit{font:inherit;font-size:14px;font-weight:700;background:transparent;color:var(--encre);border:1px solid var(--filet);padding:7px 12px;cursor:pointer;border-radius:0}
+.petit.plein{background:var(--encre);color:var(--papier)}
+.inverse .petit{color:var(--papier);border-color:var(--papier)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--encre);outline-offset:-3px;box-shadow:inset 0 0 0 5px var(--papier)}
+.boutons{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+/* réglages */
+.champ{display:block}
+.champ input{font-family:'Tabular',ui-monospace,monospace;font-weight:700;font-size:clamp(48px,17cqi,80px);letter-spacing:-.05em;width:100%;background:transparent;color:var(--encre);border:0;padding:0;border-radius:0}
+.champ input:disabled{color:var(--gris)}
+.segment{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--filet);margin-top:6px}
+.segment button{font:inherit;font-size:14px;font-weight:700;padding:10px;background:transparent;color:var(--encre);border:0;cursor:pointer;border-radius:0}
+.segment button+button{border-left:1px solid var(--filet)}
+.segment button[aria-pressed="true"]{background:var(--encre);color:var(--papier)}
+.pas{display:flex;align-items:center;gap:0;border:1px solid var(--filet);margin-top:8px;width:max-content}
+.pas button{font:inherit;font-size:20px;width:46px;height:46px;background:transparent;color:var(--encre);border:0;cursor:pointer}
+.pas output{font-family:'Tabular',monospace;font-weight:700;font-size:28px;min-width:56px;text-align:center;border-left:1px solid var(--filet);border-right:1px solid var(--filet);line-height:46px}
+.message{padding:8px 14px;border-bottom:1px solid var(--filet);font-size:14px}
+.message b{font-size:11px;margin-right:8px}
+
+/* tableau des parties */
+table{border-collapse:collapse;width:100%;font-family:'Tabular',monospace;font-size:15px}
+th{font-family:'Satoshi',sans-serif;font-size:11px;font-weight:400;color:var(--gris);text-align:right;padding:4px 0 4px 6px;border-bottom:1px solid var(--filet)}
+td{text-align:right;padding:6px 0 6px 6px;border-bottom:1px solid var(--leger)}
+th:first-child,td:first-child{text-align:left;padding-left:0}
+tr.ici td{font-weight:700}
+tr.loin td{color:var(--gris)}
+tr.total td{border-top:1px solid var(--filet);border-bottom:0;font-weight:700}
+
+/* liste de ce qui reste */
+.reste-ligne{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:baseline}
+.reste-ligne .valeur{font-size:34px}
+figure{margin:6px 0 0}
+figure svg{display:block;width:100%;height:auto;border:1px solid var(--filet)}
+
+/* ---------- partition de mouvement ---------- */
+@keyframes rouler{from{transform:translateY(70%)}to{transform:none}}
+@keyframes balayer{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes vider{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 100% 0)}}
+@keyframes bloc{from{transform:scaleY(0)}to{transform:none}}
+/* seul le chiffre qui change roule dans sa case (les autres ne bougent pas) */
+.chiffre.change span{animation:rouler .2s cubic-bezier(.2,.8,.2,1)}
+/* changement d'état : la valeur d'état se compose comme une ligne qu'on tape, de gauche à droite */
+#panneau[data-etat-change="1"] .v-etat,.v-etat.change{animation:balayer .26s steps(12,end)}
+/* une case de la grille qui vient de finir se remplit de bas en haut */
+.grille i.f.change::after{content:"";position:absolute;inset:0;background:var(--papier);animation:vider .3s cubic-bezier(.2,.8,.2,1) both}
+/* changement d'activité : le bloc plein descend dans l'onglet choisi */
+.marque.change + .onglets button[aria-pressed="true"]{animation:bloc .18s cubic-bezier(.2,.8,.2,1);transform-origin:top}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+:root[data-mouvement="reduit"] *,:root[data-mouvement="reduit"] *::before,:root[data-mouvement="reduit"] *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Le spécimen"></div></div>
+  <aside class="notes">
+    <h2>Le spécimen</h2>
+    <p><b>Logique.</b> Le lot est une planche de spécimen de fonderie : chaque mesure est une ligne, méta minuscule au-dessus, valeur composée en très grand, filets d'un pixel ; le bloc plein marque ce qui est actif ou ce qui attend votre geste.</p>
+    <p><b>D'où ça vient.</b> fontshare : la liste des familles (méta 10 px puis nom à 120 px, filets, aucun rayon), l'onglet actif en bloc noir avec son effectif (« Fonts 100 »), la grille « Glyphs » (une case par glyphe), le compteur qui change en tête quand on filtre (100 → 55 → 17) ; fiche « Details » de Tabular (même chasse pour tous les glyphes). Exemplar, vu sur landdding : le nom de la graisse en petit à gauche d'une ligne géante. beui, « Digit Swap » : chiffres dans des cases fixes.</p>
+    <p><b>Ce que ça veut dire ici.</b> Aucune couleur. Bloc plein = actif (l'activité en cours) ou à vous (ESV absent, cause d'arrêt, action principale). La grille : une case par tranche de 10 cuts ; pleine = faite, cadre épais = en cours, grisée = à venir ; un chiffre dans la case = nombre de cuts à regarder dans cette tranche. Hachures = action indisponible, avec sa raison écrite dessous.</p>
+    <p><b>Mouvement.</b> Seul le chiffre qui change roule dans sa case (200 ms). La valeur d'état se tape de gauche à droite au changement (260 ms, pas à pas). Une case qui se termine se remplit de bas en haut (300 ms). Mouvement réduit : valeurs posées sans transition.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+
+  /* Compteur à cases : chaque chiffre a sa clé (position depuis la droite), seul celui qui change roule. */
+  function compteur(cle, x) {
+    const s = String(x);
+    return [...s].map((d, i) => /\d/.test(d) ? `<span class="chiffre" data-valeur="${cle}-${s.length - i}"><span>${d}</span></span>` : esc(d)).join('');
+  }
+
+  function bouton(x) {
+    const cls = ['btn', x.rang || 'second', x.confirme ? 'confirme' : ''].join(' ');
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+
+  function onglets(m) {
+    const bl = m.activiteBloquee, li = m.liaison;
+    const b = (a, l, sous, actif) => `<button data-a="${a}" aria-pressed="${actif}"${bl && !actif ? ' aria-disabled="true" title="Écho attend la pause ou l’arrêt du lot"' : ''}><span>${l}</span><small>${sous}</small></button>`;
+    return `<span class="marque" data-valeur="activite" hidden>${m.activite}</span><nav class="onglets" aria-label="Activité et liaison">${b('orbite', 'Orbite', 'Ariane pose', m.activite === 'orbite')}${b('echo', 'Écho', bl ? 'après la pause' : 'Ariane observe', m.activite === 'echo')}
+      <div class="esv ${li.etat === 'relie' ? '' : 'non'}"><b>${esc(li.texte)}</b><small>${esc(li.detail)}</small></div></nav>
+      ${m.message ? `<p class="message" role="status"><b>NOTE</b>${esc(m.message)}</p>` : ''}`;
+  }
+
+  const ligne = (meta, droite, corps, cls) => `<section class="ligne ${cls || ''}"><div class="meta"><span>${meta}</span><span>${droite || ''}</span></div>${corps}</section>`;
+
+  function aVous(titre, texte, acts, q) {
+    return ligne(`<b>${q || 'À VOUS'}</b>`, '', `<div class="valeur v-moyen">${esc(titre)}</div>${texte ? `<p class="texte">${esc(texte)}</p>` : ''}${acts && acts.length ? `<div class="boutons">${acts.map((x) => `<button class="petit" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}>${esc(x.libelle)}</button>`).join('')}</div>` : ''}`, 'inverse');
+  }
+
+  /* Grille : une case par tranche de 10 cuts depuis le premier cut du lot. */
+  function grille(m) {
+    const c = m.compte;
+    const taille = 10;
+    const total = c.total == null ? Math.max(c.faits + taille, 120) : c.total;
+    const nb = Math.ceil(total / taille);
+    let h = '';
+    for (let k = 0; k < nb; k++) {
+      const debut = c.debut + k * taille, fin = debut + taille - 1;
+      const faitsIci = Math.max(0, Math.min(taille, c.faits - k * taille));
+      const etat = faitsIci >= taille || (c.total != null && c.faits >= c.total) ? 'f' : (faitsIci > 0 || (k * taille === c.faits && m.phase !== 'fin') ? 'ici' : 'loin');
+      const aRegarder = m.restants.filter((r) => r.cut >= debut && r.cut <= fin).length;
+      const mot = etat === 'f' ? 'faite' : etat === 'ici' ? 'en cours' : 'à venir';
+      h += `<i class="${etat}" data-valeur="case-${k}" title="Cuts ${debut} à ${fin} : ${mot}${aRegarder ? ', ' + aRegarder + ' à regarder' : ''}">${aRegarder ? aRegarder : ''}<span class="vh">${mot}</span></i>`;
+    }
+    const inconnu = c.total == null ? '<span>La grille s’allonge : total inconnu</span>' : '';
+    return `<div class="grille" role="img" aria-label="Avancement par tranches de 10 cuts">${h}</div>
+      <div class="legende"><span><i class="f"></i>faite</span><span><i></i>en cours</span><span><i class="loin"></i>à venir</span><span>chiffre : cuts à regarder</span>${inconnu}</div>`;
+  }
+
+  function tableParties(m) {
+    const f = m.file, c = m.compte;
+    if (!f.active) return '';
+    let l = f.parties.map((p) => `<tr><td>P${p.n}</td><td>${p.poses}</td><td>${p.differes}</td><td>${p.aControler}</td></tr>`).join('');
+    if (f.ligneCourante) l += `<tr class="ici"><td>P${f.courante} ${m.file.relecture ? 'posée' : 'en cours'}</td><td>${c.poses}</td><td>${c.differes}</td><td>${c.aExaminer}</td></tr>`;
+    if (m.file.relecture) l += `<tr class="ici"><td>P${f.courante} en relecture</td><td colspan="3">correction en cours</td></tr>`;
+    if (!f.finie) for (let k = f.courante + 1; k <= f.nb; k++) l += `<tr class="loin"><td>P${k} à venir</td><td>·</td><td>·</td><td>·</td></tr>`;
+    if (f.finie) { const t = f.parties.reduce((a, p) => [a[0] + p.poses, a[1] + p.differes, a[2] + p.aControler], [0, 0, 0]); l += `<tr class="total"><td>Total</td><td>${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td></tr>`; }
+    return ligne('<b>File de parties</b>', f.finie ? `${f.nb} sur ${f.nb}` : `partie ${f.courante} sur ${f.nb}`, `<table><thead><tr><th>Partie</th><th>Posés</th><th>Différés</th><th>À examiner</th></tr></thead><tbody>${l}</tbody></table><p class="texte" style="font-size:13px;color:var(--gris)">Chaque partie est relue et corrigée avant la suivante.</p>`);
+  }
+
+  function vuePret(m) {
+    const b = m.bornes, f = m.file;
+    let h = ligne('État', bornesTexte(m), `<div class="valeur v-etat" data-valeur="etat">${esc(m.titre)}</div><p class="texte">${esc(m.phrase)}</p>`);
+    if (m.incident) h += aVous(m.incident.titre, m.incident.texte, m.incident.actions);
+    h += actions(m.actions);
+    h += `<div class="trois" style="grid-template-columns:1fr 1fr">
+      <div><div class="meta"><span>Premier cut</span></div><label class="champ"><input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label></div>
+      <div><div class="meta"><span>Dernier cut</span></div><label class="champ"><input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? 'fin' : b.fin}" ${b.finDePartie ? 'disabled' : ''} aria-label="Dernier cut"></label></div></div>`;
+    h += ligne('Jusqu’où', b.finDePartie ? 'total inconnu au départ' : `${b.fin - b.debut + 1} cuts`, `<div class="segment" role="group" aria-label="Jusqu’où"><button data-a="finDePartie" aria-pressed="${!b.finDePartie}"${b.finDePartie ? '' : ' disabled'}>Jusqu’au dernier cut</button><button data-a="finDePartie" aria-pressed="${b.finDePartie}"${b.finDePartie ? ' disabled' : ''}>Jusqu’à la fin de partie</button></div>`);
+    h += ligne('File de parties', f.active ? 'relue et corrigée après chaque partie' : 'un seul lot', `<div class="segment" role="group" aria-label="File de parties"><button data-a="fileBascule" aria-pressed="${!f.active}"${f.active ? '' : ' disabled'}>Éteinte</button><button data-a="fileBascule" aria-pressed="${f.active}"${f.active ? ' disabled' : ''}>Allumée</button></div>
+      ${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output data-valeur="nb">${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button></div><p class="texte" style="font-size:13px;color:var(--gris)">parties à enchaîner</p>` : ''}`);
+    return h;
+  }
+
+  function bornesTexte(m) { const b = m.bornes; return b.finDePartie ? `${b.debut} → fin de partie` : `${b.debut} → ${b.fin}`; }
+
+  function vueLot(m) {
+    const c = m.compte, f = m.file;
+    const enMarche = m.phase === 'encours' && !f.relecture;
+    let h = ligne(f.active && !f.finie ? `État · partie ${f.courante} sur ${f.nb}` : 'État', bornesTexte(m), `<div class="valeur v-etat" data-valeur="etat">${esc(m.titre)}</div>${enMarche ? '' : `<p class="texte">${esc(m.phrase)}</p>`}`, f.alerte ? 'inverse' : '');
+    if (f.alerte) h += aVous(f.alerte.titre, f.alerte.detail + ' Rien n’a été forcé.', [], 'CAUSE DE L’ARRÊT');
+    if (m.incident && m.incident.type === 'reprise') h += ligne('<b>Reprise</b>', '', `<div class="valeur v-moyen">${esc(m.incident.titre)}</div><p class="texte">${esc(m.incident.texte)}</p>`);
+    if (m.phase === 'fin') {
+      h += `<div class="trois"><div><div class="meta"><span>Posés</span></div><div class="valeur v-moyen">${n(c.poses)}</div></div><div><div class="meta"><span>Différés</span></div><div class="valeur v-moyen">${n(c.differes)}</div></div><div><div class="meta"><span>À examiner</span></div><div class="valeur v-moyen">${n(c.aExaminer)}</div></div></div>`;
+      h += actions(m.actions) + tableParties(m);
+      return h;
+    }
+    if (f.relecture) return h + actions(m.actions) + tableParties(m);
+    h += ligne('Traités', c.total == null ? 'sur un total inconnu' : `sur ${c.total}`, `<div class="valeur v-geant">${compteur('faits', c.faits)}<small>/${c.total == null ? '?' : c.total}</small></div>`);
+    h += `<div class="trois"><div><div class="meta"><span>${enMarche ? 'Cut en cours' : 'Arrêt au cut'}</span></div><div class="valeur v-moyen">${compteur('cut', c.cut)}</div></div><div><div class="meta"><span>Temps restant</span></div><div class="valeur v-moyen">${c.minutes == null ? '?' : (c.minutes < 1 ? '<1' : '≈' + c.minutes)}<small style="font-size:.45em"> ${c.minutes == null ? 'inconnu' : 'min'}</small></div></div><div><div class="meta"><span>À regarder</span></div><div class="valeur v-moyen">${compteur('aregarder', c.differes + c.aExaminer)}</div></div></div>`;
+    h += actions(m.actions);
+    h += ligne('Avancement', `${c.differes} différés · ${c.aExaminer} verts à examiner`, grille(m));
+    if (m.restants.length) h += actions([{ a: 'voirReste', libelle: `Voir ce qui reste (${m.restants.length})`, rang: 'lien' }]);
+    h += tableParties(m);
+    return h;
+  }
+
+  function vueReste(m) {
+    const r = m.restants;
+    let h = ligne('Ce qui reste', 'différés d’abord, puis verts', `<div class="valeur v-geant">${compteur('reste', r.length)}<small>cuts</small></div>`);
+    h += r.map((x) => ligne(x.type === 'differe' ? '<b>DIFFÉRÉ</b> · Ariane n’a pas tranché' : '<b>VERT</b> · posé, à examiner', '', `<div class="reste-ligne"><div class="valeur">${x.cut}</div><div>${esc(x.motif)}</div></div><div class="boutons"><button class="petit plein" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div>`)).join('');
+    return h + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]);
+  }
+
+  function coupeSVG(cut) {
+    const k = Demo.D.coupe(cut, 260);
+    const X = (x) => (x + 1) * 160, Z = (z) => 150 - (z + 0.6) * 200;
+    const pts = k.pts.map(([x, z]) => `<rect x="${X(x).toFixed(1)}" y="${Z(z).toFixed(1)}" width="1.8" height="1.8"/>`).join('');
+    const rails = k.rails.map((r, i) => `<line x1="${X(r)}" x2="${X(r)}" y1="12" y2="152"/><text x="${X(r) + 4}" y="${i ? 22 : 36}">${i ? 'R2 proposé' : 'R1 proposé'}</text>`).join('');
+    return `<svg viewBox="0 0 320 160" role="img" aria-label="Coupe du cut ${cut}"><g fill="currentColor">${pts}</g><g stroke="currentColor" fill="currentColor" font-size="10" font-family="Tabular, monospace">${rails}</g></svg>`;
+  }
+
+  function vueExamen(m) {
+    const x = m.examen;
+    let h = ligne(x.type === 'differe' ? '<b>DIFFÉRÉ</b>' : '<b>VERT À EXAMINER</b>', 'examen', `<div class="valeur v-geant">${x.cut}</div><p class="texte">${esc(x.motif)}.</p>`);
+    h += ligne('Coupe', 'points relevés · R1 et R2 : rails proposés', `<figure>${coupeSVG(x.cut)}</figure>`);
+    return h + actions([{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'retour', libelle: 'Retour au lot', rang: 'lien' }]);
+  }
+
+  function vueEcho(m) {
+    const e = m.echo;
+    let h = ligne('État', 'Ariane ne pose rien', `<div class="valeur v-etat" data-valeur="etat">Écho</div><p class="texte">${esc(m.phrase)}</p>`);
+    h += ligne('Poses vues', 'faites par l’opérateur', `<div class="valeur v-geant">${compteur('vus', e.vus)}</div>`);
+    h += `<div class="trois"><div><div class="meta"><span>Dernier cut</span></div><div class="valeur v-moyen">${e.dernier == null ? '·' : e.dernier}</div></div><div><div class="meta"><span>Pareil</span></div><div class="valeur v-moyen">${e.accord}</div></div><div><div class="meta"><span>Autrement</span></div><div class="valeur v-moyen">${e.vus - e.accord}</div></div></div>`;
+    return h + actions(m.actions);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    let page;
+    if (m.vue === 'echo') page = vueEcho(m);
+    else if (m.vue === 'reste') page = vueReste(m);
+    else if (m.vue === 'examen' && m.examen) page = vueExamen(m);
+    else if (m.phase === 'pret') page = vuePret(m);
+    else page = vueLot(m);
+    return `<div class="planche">${onglets(m)}${page}</div>`;
+  }
+  Demo.monter({ rendre });
+})();
+</script>
+</body>
+</html>

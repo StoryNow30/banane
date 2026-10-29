@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruban</title>
+<style>
+/*POLICE:instr-ibm-plex-sans-condensed*/
+/*POLICE:instr-ibm-plex-mono*/
+/* Proposition « Ruban » (famille Instruments et matière).
+ * Sources : Scrubbers, faces Tape (échelle qui glisse sous une aiguille fixe, grands traits ≥ 54 px, bords en fondu,
+ * relâche qui coule puis se pose sur un cran) et Squiggle (onde qui roule tant que ça joue, couchée à plat en pause).
+ * Sens : à gauche de l'aiguille, ce qui est fait ; à droite, ce qui reste, jusqu'au crochet de fin ;
+ * l'onde qui roule sur la partie faite = Ariane pose ; onde couchée = rien ne bouge ;
+ * tête d'aiguille carrée = arrêt qui vous attend (toujours avec un mot). */
+:root{
+  --papier:#F3F3EF; --corps:#E6E6E0; --ruban:#FFFFFF; --encre:#151515; --encre-2:#585853; --trait:#C9C9C1; --fin:#BDBDB4;
+  --onde:#151515; --ambre:#A04B0A; --ambre-pale:#F7E6D6; --scene:#D6D6CF;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --papier:#111211; --corps:#1A1B1A; --ruban:#202221; --encre:#EDEDE8; --encre-2:#A3A39C; --trait:#3A3B39; --fin:#4A4B48;
+  --onde:#EDEDE8; --ambre:#E8954A; --ambre-pale:#33210F; --scene:#070707;
+}}
+:root[data-theme="dark"]{
+  --papier:#111211; --corps:#1A1B1A; --ruban:#202221; --encre:#EDEDE8; --encre-2:#A3A39C; --trait:#3A3B39; --fin:#4A4B48;
+  --onde:#EDEDE8; --ambre:#E8954A; --ambre-pale:#33210F; --scene:#070707;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'IBM Plex Sans Condensed',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--papier);border-radius:6px;font-size:15px;line-height:1.4}
+.notes{max-width:400px;background:var(--papier);color:var(--encre);padding:18px 20px;border-radius:6px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.mono,.notes code{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+.p{display:flex;flex-direction:column}
+.zone{padding:12px 16px}
+.tete{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--trait);padding:10px 16px 0}
+.marque{font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;margin-right:auto;padding-bottom:10px}
+/* onglets Orbite / Écho : un index qui glisse sous l'onglet choisi */
+.onglets{display:flex;position:relative}
+.onglets button{font:inherit;font-size:14px;font-weight:500;background:none;border:0;color:var(--encre-2);padding:4px 10px 10px;cursor:pointer}
+.onglets button[aria-pressed="true"]{color:var(--encre)}
+.onglets .index{position:absolute;bottom:-1px;height:3px;background:var(--encre);left:0;width:50%;transition:transform .32s cubic-bezier(.3,1.3,.5,1)}
+.onglets[data-pos="echo"] .index{transform:translateX(100%)}
+.onglets[aria-disabled="true"] button{cursor:not-allowed}
+.liaison{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--encre-2);padding:8px 16px 0}
+.liaison b{color:var(--encre);font-weight:600}
+
+/* lecture : un grand chiffre au-dessus de l'aiguille, comme un pèse-personne */
+.lecture{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:end;padding:14px 16px 6px}
+.etat{grid-column:1/-1;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.etat.attention{color:var(--ambre)}
+.grand{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;font-size:clamp(46px,17cqi,72px);line-height:.95;letter-spacing:-.03em;display:inline-block}
+.grand.change{animation:rouler .26s cubic-bezier(.2,.9,.3,1)}
+@keyframes rouler{from{transform:translateY(30%);opacity:.15}to{transform:none;opacity:1}}
+.cote{display:flex;flex-direction:column;gap:1px;padding-bottom:6px;font-size:14px;color:var(--encre-2)}
+.cote b{color:var(--encre);font-weight:600}
+.cote .mono.change{animation:rouler .26s cubic-bezier(.2,.9,.3,1)}
+
+/* le ruban */
+.boitier{margin:6px 0 0;background:var(--corps);border-top:1px solid var(--trait);border-bottom:1px solid var(--trait);padding:10px 0 8px}
+.ruban{position:relative;height:118px;background:var(--ruban);border-top:1px solid var(--trait);border-bottom:1px solid var(--trait);overflow:hidden;touch-action:none}
+.ruban svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ruban[data-reglable="1"]{cursor:ew-resize}
+.ruban:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+.ruban .t{stroke:var(--encre)}
+.ruban .lab{fill:var(--encre-2);font:500 11px 'IBM Plex Mono',monospace}
+.ruban .lab.fort{fill:var(--encre);font-weight:600;font-size:12px}
+.ruban .onde{fill:none;stroke:var(--onde);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ruban .aig{fill:none;stroke:var(--encre);stroke-width:3;stroke-linecap:round}
+.ruban .tete-aig{fill:var(--encre)}
+.ruban[data-regime="attention"] .aig{stroke:var(--ambre)}
+.ruban[data-regime="attention"] .tete-aig{fill:var(--ambre)}
+.ruban .borne{fill:none;stroke:var(--encre);stroke-width:2.5}
+.ruban .borne-lab{fill:var(--encre);font:600 11px 'IBM Plex Mono',monospace}
+.ruban .md{fill:var(--encre)}
+.ruban .mv{fill:none;stroke:var(--encre);stroke-width:1.6}
+.ruban .inconnu{fill:var(--encre-2);font:500 11px 'IBM Plex Sans Condensed',sans-serif}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--encre-2);padding:8px 16px 0}
+.legende span{display:inline-flex;align-items:center;gap:5px}
+
+.phrase{margin:0;font-size:16px;line-height:1.35}
+.compte{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;color:var(--encre-2)}
+.compte b{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--encre);font-size:16px;margin-right:3px}
+.compte span{display:inline-flex;align-items:center;gap:5px}
+
+/* touches : rectangles francs */
+.actions{display:flex;flex-direction:column;gap:8px}
+.rang2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.touche{font:inherit;font-weight:600;font-size:15px;letter-spacing:.01em;border-radius:6px;padding:11px 14px;border:1.5px solid var(--encre);background:transparent;color:var(--encre);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.touche.principal{background:var(--encre);color:var(--papier);padding:14px;font-size:16px}
+.touche.lien{border:0;justify-content:flex-start;padding:6px 0;text-decoration:underline;text-underline-offset:3px;width:auto}
+.touche.arret.confirme{background:var(--ambre);border-color:var(--ambre);color:var(--papier)}
+.touche[aria-disabled="true"]{background:var(--corps);border-color:var(--trait);color:var(--encre-2);cursor:not-allowed}
+.touche:active{transform:translateY(1px)}
+.touche:focus-visible,.onglets button:focus-visible,input:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+.note{font-size:12px;color:var(--encre-2);margin:2px 0 0}
+.raison{font-size:13px;color:var(--ambre);margin:0}
+.case{display:flex;align-items:center;gap:10px;font:inherit;font-size:14px;background:none;border:0;color:var(--encre);padding:4px 0;cursor:pointer;text-align:left}
+.carre{width:18px;height:18px;border:1.5px solid var(--encre);border-radius:3px;display:inline-grid;place-items:center;flex:none}
+[aria-pressed="true"] .carre::after{content:"";width:10px;height:10px;background:var(--encre);border-radius:1px}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.champ{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--encre-2);text-transform:uppercase;letter-spacing:.06em}
+.champ input{font:500 18px 'IBM Plex Mono',monospace;color:var(--encre);background:var(--ruban);border:1px solid var(--trait);border-radius:6px;padding:7px 9px;width:100%}
+.champ input:disabled{background:var(--corps);color:var(--encre-2)}
+.aide{font-size:12px;color:var(--encre-2);margin:0}
+
+.bloc{border-top:1px solid var(--trait);padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.bloc h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.bloc p{margin:0}
+.bloc.attention{background:var(--ambre-pale);border-top:3px solid var(--ambre)}
+.bloc.attention h2{color:var(--encre);display:flex;gap:8px;align-items:center}
+.bloc.attention h2::before{content:"";width:10px;height:10px;background:var(--ambre);flex:none}
+.choix{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.pas{display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--encre);border-radius:6px}
+.pas button{font:inherit;font-size:18px;width:34px;height:32px;border:0;background:none;color:var(--encre);cursor:pointer}
+.pas output{font-family:'IBM Plex Mono',monospace;min-width:30px;text-align:center}
+.ligne-file{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+/* parties de la file : des tronçons de ruban, pleins, entamés ou vierges */
+.troncons{display:flex;flex-direction:column;gap:7px;list-style:none;margin:0;padding:0}
+.troncons li{display:grid;grid-template-columns:70px 1fr;gap:2px 10px;align-items:center;font-size:13px}
+.troncons .barre{height:10px;border:1px solid var(--encre);border-radius:2px;position:relative;overflow:hidden;background:var(--ruban)}
+.troncons .barre i{position:absolute;inset:0 auto 0 0;background:repeating-linear-gradient(90deg,var(--encre) 0 1px,transparent 1px 4px);opacity:1}
+.troncons .det{grid-column:2;color:var(--encre-2)}
+.troncons .num{font-weight:600}
+.message{position:sticky;bottom:10px;margin:8px 16px;background:var(--encre);color:var(--papier);border-radius:6px;padding:10px 14px;font-size:14px}
+.message.neuf{animation:monte .3s cubic-bezier(.2,1.2,.4,1)}
+@keyframes monte{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+
+/* ce qui reste : un relevé, une ligne par cut */
+.retour{font:inherit;font-size:14px;font-weight:600;background:none;border:0;color:var(--encre);padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.titre{font-size:22px;font-weight:600;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.releve{list-style:none;margin:0;padding:0}
+.releve li{display:grid;grid-template-columns:52px 1fr;gap:2px 10px;padding:10px 16px;border-top:1px solid var(--trait)}
+#panneau[data-etat-change="1"] .releve li{animation:entre .28s both cubic-bezier(.2,.9,.3,1)}
+.releve .cut{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:16px;display:flex;gap:6px;align-items:center}
+.releve .motif{color:var(--encre-2);font-size:14px}
+.releve .gestes{grid-column:2;display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.releve .touche{width:auto;padding:5px 10px;font-size:13px;border-width:1px}
+@container (min-width:440px){.releve li{grid-template-columns:52px 1fr auto;align-items:center}.releve .gestes{grid-column:3;grid-row:1;margin:0}}
+@keyframes entre{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.coupe{display:block;width:100%;aspect-ratio:2/1;background:var(--ruban);border:1px solid var(--trait);border-radius:6px}
+.coupe .sol{fill:none;stroke:var(--encre-2);stroke-width:1.5}
+.coupe .pos{stroke:var(--encre);stroke-width:3;stroke-linecap:round}
+
+#panneau[data-etat-change="1"] .lecture{animation:entre .32s both cubic-bezier(.2,.9,.3,1)}
+#panneau[data-etat-change="1"] .actions{animation:entre .36s .05s both cubic-bezier(.2,.9,.3,1)}
+#panneau[data-etat-change="1"] .bloc{animation:entre .36s .08s both cubic-bezier(.2,.9,.3,1)}
+@media (prefers-reduced-motion: reduce){ #panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important} }
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Ruban"></div></div>
+  <aside class="notes">
+    <h2>Ruban</h2>
+    <p><b>Logique.</b> Le lot est un ruban gradué qui défile sous une aiguille fixe, comme l'échelle d'une balance : ce qui est passé à gauche est fait, ce qui arrive à droite reste, jusqu'au crochet de fin.</p>
+    <p><b>D'où ça vient.</b> Scrubbers (dépôt haplollc) : <code>TapeFace.swift</code> (on tire l'échelle, pas un bouton ; grands traits espacés d'au moins 54 px ; bords en fondu ; lecture en gros qui roule ; aiguille qui grandit quand on tient), la relâche « qui coule » de <code>Scrubber.swift</code> et <code>ScrubberMotion.swift</code> (vitesse × 0,32 s puis ressort sur le cran), et <code>SquiggleFace.swift</code> (onde qui roule tant que la lecture joue, couchée à plat à l'arrêt).</p>
+    <p><b>Ce que ça veut dire ici.</b></p>
+    <ul>
+      <li><b>Aiguille fixe</b> : le cut en cours. Le chiffre au-dessus : ce qui reste.</li>
+      <li><b>Onde sur la partie faite</b> : Ariane pose. <b>Onde couchée à plat</b> : en pause ou arrêté, rien ne bouge.</li>
+      <li><b>Crochets</b> : premier et dernier cut du lot. Sans dernier cut connu, le ruban s'efface en pointillés avec les mots « total inconnu ».</li>
+      <li><b>Triangle sous le ruban</b> : cut différé ; <b>rond creux</b> : posé, à examiner.</li>
+      <li><b>Tête d'aiguille carrée, ambre, avec le mot « Arrêté » ou « Alerte »</b> : Ariane attend votre geste.</li>
+      <li><b>Prêt</b> : on tire les crochets sur le ruban (crans de 10 cuts) ou on tape les bornes.</li>
+      <li><b>File</b> : chaque partie est un tronçon de ruban, plein, entamé ou vierge.</li>
+    </ul>
+    <p><b>Mouvement.</b> À chaque cut, le ruban avance d'un cran sur un ressort ; la mise en route le fait couler depuis le premier cut ; la pause couche l'onde en 0,6 s ; la fin pousse le ruban jusqu'au crochet. Mouvement réduit : le ruban se pose sans glisser, l'onde reste dessinée immobile.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const pl = (k, un, plus) => n(k) + ' ' + (k > 1 ? plus : un);
+  const G = {
+    differe: '<svg width="11" height="10" viewBox="0 0 11 10" aria-hidden="true"><path d="M5.5 1L10 9H1z" fill="currentColor"/></svg>',
+    vert: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+    onde: '<svg width="18" height="10" viewBox="0 0 18 10" aria-hidden="true"><path d="M1 5q2-4 4 0t4 0 4 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+    encours: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg>',
+    pause: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1h3v10H2zM7 1h3v10H7z" fill="currentColor"/></svg>',
+    arret: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" fill="currentColor"/></svg>',
+    pret: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10M6 1v10" stroke="currentColor" stroke-width="1.8"/></svg>',
+    fin: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1v10M10 1v10M2 6h8" stroke="currentColor" stroke-width="1.8"/></svg>',
+  };
+
+  function touche(x) {
+    const cls = 'touche ' + (x.rang || 'second') + (x.confirme ? ' confirme' : '');
+    return `<div><button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}${x.note ? `<p class="note">${esc(x.note)}</p>` : ''}</div>`;
+  }
+  function actions(l) {
+    const p = l.filter((x) => x.rang === 'principal'), a = l.filter((x) => x.rang === 'second' || x.rang === 'arret'), li = l.filter((x) => x.rang === 'lien');
+    return `<div class="actions">${p.map(touche).join('')}${a.length ? `<div class="rang2">${a.map(touche).join('')}</div>` : ''}${li.map(touche).join('')}</div>`;
+  }
+
+  function tete(m) {
+    const echo = m.activite === 'echo', b = m.activiteBloquee;
+    return `<div class="tete"><span class="marque">Ariane</span>
+      <div class="onglets" role="group" aria-label="Activité" data-pos="${echo ? 'echo' : 'orbite'}"${b ? ' aria-disabled="true"' : ''}>
+        <button data-a="orbite" aria-pressed="${!echo}"${b ? ' aria-disabled="true"' : ''}>Orbite · pose</button>
+        <button data-a="echo" aria-pressed="${echo}"${b ? ' aria-disabled="true"' : ''}>Écho · observe</button><span class="index" aria-hidden="true"></span></div></div>
+      <div class="liaison"><b>${esc(m.liaison.texte)}</b> · ${esc(m.liaison.detail)}${b ? ' · Écho se choisit lot arrêté ou en pause' : ''}</div>`;
+  }
+
+  function lecture(m) {
+    const c = m.compte;
+    if (m.vue === 'echo') return `<div class="lecture"><span class="etat">${G.onde}Écho · Ariane observe</span><span class="grand mono" data-valeur="e">${m.echo.vus}</span><span class="cote"><b>gestes vus</b><span>${m.echo.accord} en accord</span><span>dernier : cut <span class="mono">${m.echo.dernier ?? '—'}</span></span></span></div>`;
+    if (m.phase === 'pret') {
+      const fdp = m.bornes.finDePartie;
+      return `<div class="lecture"><span class="etat">${G.pret}Prêt · rien ne tourne</span><span class="grand mono" data-lecture>${fdp ? '—' : m.bornes.fin - m.bornes.debut + 1}</span><span class="cote"><b>${fdp ? 'jusqu’à la fin de partie' : 'cuts dans ce lot'}</b><span>du cut <span class="mono" data-lecture-debut>${m.bornes.debut}</span> ${fdp ? '' : `au cut <span class="mono" data-lecture-fin>${m.bornes.fin}</span>`}</span></span></div>`;
+    }
+    let mot = 'En cours · Ariane pose', g = G.encours, att = false;
+    if (m.file.relecture) return `<div class="lecture"><span class="etat">${G.encours}Relecture · Ariane relit et corrige</span><span class="grand mono">${m.file.courante}</span><span class="cote"><b>partie relue</b><span>sur ${m.file.nb} · la suivante démarre seule</span></span></div>`;
+    else if (m.phase === 'pause') { mot = 'En pause'; g = G.pause; }
+    else if (m.phase === 'arrete') { mot = m.file.alerte ? 'Alerte · file arrêtée' : 'Arrêté · à vous'; g = G.arret; att = true; }
+    else if (m.phase === 'fin') { mot = m.file.finie ? 'File terminée' : 'Lot terminé'; g = G.fin; }
+    const grand = m.phase === 'fin' ? c.faits : c.total == null ? c.faits : c.total - c.faits;
+    const unite = m.phase === 'fin' ? 'cuts traités' : c.total == null ? 'traités · total inconnu' : 'restent';
+    const cote2 = m.phase === 'fin' ? `du cut <span class="mono">${c.debut}</span> au cut <span class="mono">${c.debut + c.faits - 1}</span>` : c.total == null ? `cut <span class="mono" data-valeur="cut">${c.cut}</span>` : `${c.faits} faits sur ${n(c.total)}`;
+    const cote3 = m.phase === 'fin' ? '' : `<span>${esc(c.tempsTexte)}</span>`;
+    return `<div class="lecture"><span class="etat${att ? ' attention' : ''}">${g}${mot}</span><span class="grand mono" data-valeur="grand">${grand}</span><span class="cote"><b>${unite}</b><span>${cote2}</span>${cote3}</span></div>`;
+  }
+
+  function legende(m) {
+    if (m.vue === 'echo' || m.phase === 'pret') return '';
+    return `<div class="legende"><span>${G.onde}Ariane pose</span><span>${G.differe}différé</span><span>${G.vert}à examiner</span></div>`;
+  }
+
+  function incident(m) {
+    const i = m.incident; if (!i) return '';
+    const att = i.type !== 'reprise';
+    return `<section class="bloc${att ? ' attention' : ''}" role="${att ? 'alert' : 'status'}"><h2>${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((x) => touche({ ...x, rang: i.type === 'choisir' ? 'second' : x.rang })).join('')}</div>` : ''}</section>`;
+  }
+  function alerte(m) {
+    const a = m.file.alerte; if (!a) return '';
+    const c = m.compte;
+    return `<section class="bloc attention" role="alert"><h2>${esc(a.titre)}</h2><p>${esc(a.detail)}</p><p class="note">Partie ${m.file.courante} à l'arrêt : ${pl(c.poses, 'posé', 'posés')}, ${pl(c.differes, 'différé', 'différés')}, ${n(c.aExaminer)} à examiner.</p></section>`;
+  }
+
+  function bornes(m) {
+    const b = m.bornes;
+    return `<div class="zone" style="display:flex;flex-direction:column;gap:10px">
+      <div class="bornes"><label class="champ">Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label>
+      <label class="champ">Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin de partie"' : ''}></label></div>
+      <button class="case" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="carre" aria-hidden="true"></span>Aller jusqu'à la fin de la partie</button>
+      <p class="aide">On peut aussi tirer les crochets sur le ruban, par crans de 10 cuts.</p></div>`;
+  }
+
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') {
+      return `<section class="bloc"><div class="ligne-file"><button class="case" data-a="fileBascule" aria-pressed="${f.active}"><span class="carre" aria-hidden="true"></span><b>File de parties</b></button>
+        ${f.active ? `<div class="pas" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output class="mono">${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button></div>` : '<span class="note">éteinte</span>'}</div>
+        <p class="aide">${f.active ? `${f.nb} parties à la suite ; après chacune, relecture et correction, puis la suivante démarre seule.` : 'Allumer pour enchaîner plusieurs parties sans revenir au panneau.'}</p></section>`;
+    }
+    if (!f.active) return '';
+    const li = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const faite = f.parties.find((p) => p.n === i);
+      let part = 0, det = 'à venir';
+      if (faite) { part = 1; det = (f.relecture && i === f.courante ? 'relecture en cours · ' : '') + `${pl(faite.poses, 'posé', 'posés')}, ${pl(faite.differes, 'différé', 'différés')}, ${n(faite.aControler)} à examiner`; }
+      else if (i === f.courante) { part = m.compte.part || 0.4; det = m.phase === 'arrete' ? `arrêtée au cut ${m.compte.cut}` : `en cours, ${m.compte.faits} traités`; }
+      li.push(`<li><span class="num">Partie ${i}</span><span class="barre" aria-hidden="true"><i style="width:${Math.round(part * 100)}%"></i></span><span class="det">${det}</span></li>`);
+    }
+    return `<section class="bloc" aria-label="File de parties"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `File · partie ${f.courante} sur ${f.nb}`}</h2><ul class="troncons">${li.join('')}</ul></section>`;
+  }
+
+  function vueReste(m) {
+    const ligne = (r, i) => `<li style="animation-delay:${Math.min(i, 14) * 25}ms"><span class="cut">${r.type === 'differe' ? G.differe : G.vert}${r.cut}</span><span><b>${r.type === 'differe' ? 'Différé' : 'À examiner'}</b> <span class="motif">· ${esc(r.motif)}</span></span><span class="gestes"><button class="touche" data-a="examiner" data-id="${esc(r.id)}">Examiner</button><button class="touche" data-a="ouvrir" data-id="${esc(r.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = m.restants.filter((r) => r.type === 'differe').length, v = m.restants.length - d;
+    return `<div class="p"><div class="zone" style="display:flex;flex-direction:column;gap:8px"><button class="retour" data-a="retour"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Retour au lot</button>
+      <h1 class="titre">Ce qui reste</h1><p class="phrase" style="color:var(--encre-2)">${pl(d, 'différé', 'différés')}, ${pl(v, 'vert', 'verts')} à examiner, dans l'ordre du ruban.</p></div>
+      ${m.restants.length ? `<ul class="releve">${m.restants.map(ligne).join('')}</ul>` : '<p class="zone">Rien à reprendre.</p>'}</div>`;
+  }
+
+  function vueExamen(m, D) {
+    const r = m.examen, cp = D.coupe(r.cut, 180);
+    const tri = cp.pts.slice().sort((a, b) => a[0] - b[0]);
+    const X = (x) => 20 + (x + 1) * 180, Z = (z) => 150 - (z + 0.5) * 220;
+    let d = '';
+    for (let i = 0; i < tri.length; i += 6) { const g = tri.slice(i, i + 6); d += (i ? 'L' : 'M') + X(g.reduce((s, p) => s + p[0], 0) / g.length).toFixed(1) + ' ' + Z(Math.min(...g.map((p) => p[1]))).toFixed(1); }
+    return `<div class="p"><div class="zone" style="display:flex;flex-direction:column;gap:10px">
+      <button class="retour" data-a="voirReste"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Ce qui reste</button>
+      <h1 class="titre">Cut <span class="mono">${r.cut}</span></h1>
+      <p class="phrase">${r.type === 'differe' ? G.differe + ' Différé' : G.vert + ' Posé, à examiner'} · ${esc(r.motif)}</p>
+      <svg class="coupe" viewBox="0 0 400 200" role="img" aria-label="Coupe du cut ${r.cut}, profil et position proposée"><path class="sol" d="${d}"/>${cp.rails.map((x) => `<line class="pos" x1="${X(x)}" y1="${Z(-.24)}" x2="${X(x)}" y2="${Z(-.36)}"/>`).join('')}</svg>
+      <p class="note">Profil de la coupe ; les deux traits marquent la position proposée.</p>
+      ${actions([{ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'principal' }, { a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'second' }])}</div></div>`;
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    const msg = m.message ? `<div class="message" role="status">${esc(m.message)}</div>` : '';
+    if (m.vue === 'reste') return vueReste(m) + msg;
+    if (m.vue === 'examen' && m.examen) return vueExamen(m, D) + msg;
+    const c = m.compte;
+    const reglable = m.phase === 'pret' && m.vue !== 'echo';
+    const ruban = `<div class="boitier"><div class="ruban" data-garder="ruban" data-reglable="${reglable ? 1 : 0}"></div></div>`;
+    let bas;
+    if (m.vue === 'echo') bas = `<div class="zone" style="display:flex;flex-direction:column;gap:10px"><p class="phrase">${esc(m.phrase)}</p><p class="note">L'aiguille suit le dernier cut que vous avez posé ; Ariane compare son choix au vôtre.</p>${actions(m.actions)}</div>`;
+    else if (m.phase === 'pret') bas = `<div class="zone"><p class="phrase">${esc(m.phrase)}</p></div>${bornes(m)}${file(m)}<div class="zone">${actions(m.actions)}</div>`;
+    else {
+      const reste = m.restants.length && m.phase !== 'fin' ? actions([{ a: 'voirReste', libelle: `Voir ce qui reste (${m.restants.length})`, rang: 'lien' }]) : '';
+      bas = `<div class="zone" style="display:flex;flex-direction:column;gap:12px"><p class="phrase">${esc(m.phrase)}</p>
+        <div class="compte"><span><b data-valeur="p">${n(c.poses)}</b>posés</span><span>${G.differe}<b data-valeur="d">${n(c.differes)}</b>différés</span><span>${G.vert}<b data-valeur="v">${n(c.aExaminer)}</b>à examiner</span></div>
+        ${actions(m.actions)}${reste}</div>${file(m)}`;
+    }
+    return `<div class="p">${tete(m)}${incident(m)}${alerte(m)}${lecture(m)}${ruban}${legende(m)}${bas}</div>${msg}<h1 class="sr">${esc(m.titre)}</h1>`;
+  }
+
+  /* ---------- le ruban conservé ---------- */
+  const NS = 'http' + '://www.w3.org/2000/svg';
+  const R = { pos: null, v: 0, cible: 0, pas: 9, vp: 0, pasCible: 9, onde: 1, ondeCible: 1, phase: 0, raf: 0, t0: 0, m: null, regime: '', tire: null };
+  const reduit = () => Demo.D.mouvementReduit();
+
+  function cibles(m) {
+    const c = m.compte, b = m.bornes, w = R.largeur || 400;
+    if (m.vue === 'echo') return { pos: m.echo.dernier || 300, pas: 9, onde: 0, debut: null, fin: null };
+    if (m.phase === 'pret') {
+      const fin = b.finDePartie ? b.debut + 120 : b.fin;
+      const span = fin - b.debut + 1;
+      return { pos: b.debut + span / 2 - .5, pas: Math.max(0.6, Math.min(9, (w - 70) / span)), onde: 0, debut: b.debut, fin: b.finDePartie ? null : b.fin, ouvert: b.finDePartie };
+    }
+    const fin = c.total == null ? null : c.debut + c.total - 1;
+    if (m.file.relecture) return { pos: c.debut, pas: Math.max(0.6, Math.min(9, (w - 70) / c.total)), onde: 0, debut: c.debut, fin, relecture: true };
+    const pos = m.phase === 'fin' ? (fin ?? c.cut) + .5 : c.cut;
+    return { pos, pas: 9, onde: m.phase === 'encours' ? 1 : 0, debut: c.debut, fin, ouvert: c.total == null };
+  }
+
+  /* Pas des grands traits : le plus petit multiple de 1, 2, 5, 10… qui laisse au moins 54 px (face Tape). */
+  function majeur(pas) { for (const e of [1, 2, 5, 10, 20, 50, 100, 200, 500]) if (e * pas >= 54) return e; return 1000; }
+
+  function dessiner(el) {
+    const m = R.m; if (!m) return;
+    const w = el.clientWidth || 400, h = 118, cx = w / 2;
+    R.largeur = w;
+    const svg = el.querySelector('svg');
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const ci = R.ci, pas = R.pas, pos = R.pos;
+    const X = (cut) => cx + (cut - pos) * pas;
+    const M = majeur(pas), demi = M % 2 === 0 ? M / 2 : M % 5 === 0 ? M / 5 : 0;
+    const premier = Math.floor(pos - cx / pas) - 1, dernier = Math.ceil(pos + cx / pas) + 1;
+    const pasMineur = pas >= 4 ? 1 : pas >= 1.5 ? (M >= 10 ? M / 10 : 1) : M / 5;
+    let s = '';
+    const base = 70;
+    for (let k = Math.ceil(premier / pasMineur) * pasMineur; k <= dernier; k += pasMineur) {
+      const x = X(k);
+      const hors = (ci.debut != null && k < ci.debut) || (ci.fin != null && k > ci.fin);
+      const maj = k % M === 0, moy = demi && k % demi === 0;
+      const lh = maj ? 26 : moy ? 18 : 11;
+      const op = hors ? .25 : (ci.ouvert && ci.debut != null && k > (R.m.compte.cut + 12) ? Math.max(.12, .9 - (k - R.m.compte.cut - 12) * .06) : maj ? .85 : .45);
+      s += `<line class="t" x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${base}" y2="${base - lh}" stroke-width="${maj ? 1.5 : 1}" stroke-opacity="${op}"/>`;
+      if (maj && !hors) {
+        const courant = false;
+        s += `<text class="lab${courant ? ' fort' : ''}" x="${x.toFixed(1)}" y="${base + 16}" text-anchor="middle" opacity="${Math.min(1, op + .2)}">${k}</text>`;
+      }
+    }
+    /* crochets de bornes */
+    const crochet = (k, sens, lab) => { const x = X(k + (sens < 0 ? -.5 : .5)); return `<path class="borne" d="M${(x + 7 * -sens).toFixed(1)} 38H${x.toFixed(1)}V${base + 2}H${(x + 7 * -sens).toFixed(1)}"/><text class="borne-lab" x="${(x + (m.phase === 'pret' ? 10 : -10) * -sens).toFixed(1)}" y="30" text-anchor="${(sens < 0) === (m.phase === 'pret') ? 'start' : 'end'}">${lab}</text>`; };
+    if (ci.debut != null) s += crochet(ci.debut, -1, 'début ' + ci.debut);
+    if (ci.fin != null) s += crochet(ci.fin, 1, m.phase === 'fin' ? '' : 'fin ' + ci.fin);
+    if (ci.ouvert && m.phase !== 'pret') s += `<text class="inconnu" x="${w - 10}" y="20" text-anchor="end">total inconnu →</text>`;
+    if (ci.ouvert && m.phase === 'pret') s += `<text class="inconnu" x="${w - 10}" y="20" text-anchor="end">jusqu'à la fin de partie →</text>`;
+    /* marques des différés et des verts, sous le ruban */
+    if (m.phase !== 'pret' && m.vue !== 'echo') m.restants.forEach((r) => {
+      const x = X(r.cut); if (x < -10 || x > w + 10) return;
+      s += r.type === 'differe' ? `<path class="md" data-forme="différé" d="M${x.toFixed(1)} ${base + 23}l5 9h-10z"/>` : `<circle class="mv" cx="${x.toFixed(1)}" cy="${base + 28}" r="4"/>`;
+    });
+    /* l'onde sur la partie faite : elle roule vers l'aiguille, s'amenuise avant elle (face Squiggle) */
+    if (m.phase !== 'pret' && m.vue !== 'echo' && !ci.relecture) {
+      const debutX = Math.max(8, ci.debut != null ? X(ci.debut - .5) : 8), finX = cx - 8;
+      if (finX > debutX + 4) {
+        const amp = 5 * R.onde, lo = 30;
+        let d = '';
+        for (let x = debutX; x <= finX; x += 2) {
+          const taper = Math.min(1, (x - debutX) / 15, (finX - x) / lo);
+          const e = taper * taper * (3 - 2 * taper);
+          const y = 24 + amp * e * Math.sin((x - cx + pos * pas) / lo * 2 * Math.PI - R.phase);
+          d += (x === debutX ? 'M' : 'L') + x.toFixed(1) + ' ' + y.toFixed(2);
+        }
+        s += `<path class="onde" d="${d}" stroke-opacity=".9"/>`;
+      }
+    }
+    /* l'aiguille fixe : tête triangle quand ça tourne ou attend, carrée quand Ariane vous attend */
+    /* en PRÊT, pas d'aiguille : rien ne tourne ; seuls les crochets du lot sont là */
+    if (m.phase !== 'pret' || m.vue === 'echo') {
+      const att = R.regime === 'attention';
+      const cut = ci.relecture ? Math.round(pos) : m.vue === 'echo' ? (m.echo.dernier ?? '') : m.phase === 'fin' ? (ci.fin ?? m.compte.cut) : m.compte.cut;
+      s += `<line class="aig" data-forme="aiguille" x1="${cx}" x2="${cx}" y1="18" y2="${h - 4}"/>`;
+      s += att ? `<rect class="tete-aig" x="${cx - 6}" y="6" width="12" height="12"/>` : `<path class="tete-aig" d="M${cx - 7} 6h14l-7 11z"/>`;
+      s += `<text class="lab fort" x="${cx + 10}" y="16">${m.phase === 'fin' ? 'fin · ' : ''}cut ${cut}</text>`;
+    }
+    svg.innerHTML = s;
+  }
+
+  function boucle(t) {
+    const el = document.querySelector('[data-garder="ruban"]');
+    if (!el) { R.raf = 0; return; }
+    const dt = Math.min(1 / 30, R.t0 ? (t - R.t0) / 1000 : 1 / 60); R.t0 = t;
+    /* ressort du ruban : réponse 0,62 s, à peine rebondissant, comme le ruban relâché qui se pose */
+    const w = 2 * Math.PI / 0.62, z = .9;
+    R.v += (w * w * (R.cible - R.pos) - 2 * z * w * R.v) * dt; R.pos += R.v * dt;
+    const w2 = 2 * Math.PI / 0.5;
+    R.vp += (w2 * w2 * (R.pasCible - R.pas) - 2 * w2 * R.vp) * dt; R.pas += R.vp * dt;
+    /* l'onde se couche ou se relève en 0,6 s */
+    R.onde += (R.ondeCible - R.onde) * (1 - Math.exp(-dt / 0.2));
+    /* relecture : le ruban, vu en entier, repasse d'un bout à l'autre sous l'aiguille (6 s l'aller-retour) */
+    if (R.ci && R.ci.relecture) { const span = (R.ci.fin - R.ci.debut); R.cible = R.ci.debut + span * (0.5 - 0.5 * Math.cos(2 * Math.PI * t / 6000)); }
+    if (R.onde > 0.01) R.phase += dt * 0.7 * 2 * Math.PI;
+    dessiner(el);
+    const calme = Math.abs(R.cible - R.pos) < .002 && Math.abs(R.v) < .002 && Math.abs(R.pasCible - R.pas) < .002 && Math.abs(R.ondeCible - R.onde) < .005 && R.ondeCible === 0;
+    if (calme && !R.tire && !(R.ci && R.ci.relecture)) { R.pos = R.cible; R.pas = R.pasCible; R.onde = 0; dessiner(el); R.raf = 0; R.t0 = 0; return; }
+    R.raf = requestAnimationFrame(boucle);
+  }
+
+  /* tirer un crochet en PRÊT (correspondance absolue, crans de 10 au relâché) */
+  function tirer(e) {
+    const el = e.currentTarget; if (el.dataset.reglable !== '1' || !R.ci) return;
+    const r = el.getBoundingClientRect(), x = e.clientX - r.left, cx = r.width / 2;
+    const cut = R.pos + (x - cx) / R.pas;
+    const b = R.m.bornes;
+    const quelle = b.finDePartie || Math.abs(cut - b.debut) < Math.abs(cut - b.fin) ? 'debut' : 'fin';
+    R.tire = { quelle, debut: b.debut, fin: b.fin, r, cx };
+    el.setPointerCapture(e.pointerId);
+    const bouge = (ev) => {
+      const k = Math.round(R.pos + (ev.clientX - R.tire.r.left - R.tire.cx) / R.pas);
+      if (R.tire.quelle === 'debut') R.ci.debut = R.tire.debut = Math.max(1, Math.min(k, (b.finDePartie ? 1e9 : b.fin - 1)));
+      else R.ci.fin = R.tire.fin = Math.max(b.debut + 1, k);
+      const l = document.querySelector('[data-lecture]'); if (l && !b.finDePartie) l.textContent = R.tire.fin - R.tire.debut + 1;
+      const ld = document.querySelector('[data-lecture-debut]'), lf = document.querySelector('[data-lecture-fin]');
+      if (ld) ld.textContent = R.tire.debut; if (lf) lf.textContent = R.tire.fin;
+      if (!R.raf) R.raf = requestAnimationFrame(boucle); else dessiner(el);
+    };
+    const lache = () => {
+      el.removeEventListener('pointermove', bouge);
+      const t = R.tire; R.tire = null;
+      const cran = (v) => Math.round(v / 10) * 10;
+      if (t.quelle === 'debut') Demo.agir('regler', 'debut:' + Math.max(1, cran(t.debut)));
+      else Demo.agir('regler', 'fin:' + Math.max(t.debut + 1, cran(t.fin + 1) - 1));
+    };
+    el.addEventListener('pointermove', bouge);
+    el.addEventListener('pointerup', lache, { once: true });
+    el.addEventListener('pointercancel', lache, { once: true });
+  }
+  function clavier(e) {
+    const el = e.currentTarget; if (el.dataset.reglable !== '1') return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); Demo.agir('finPlus'); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); Demo.agir('finMoins'); }
+  }
+
+  let phasePrec = null;
+  let dernierMessage = null;
+  function marquerMessage(racine) {
+    const mg = racine.querySelector('.message'), t = mg ? mg.textContent : null;
+    if (mg && t !== dernierMessage) mg.classList.add('neuf');
+    dernierMessage = t;
+  }
+  function apres(S, D, racine) {
+    marquerMessage(racine);
+    const el = racine.querySelector('[data-garder="ruban"]');
+    if (!el) { phasePrec = null; return; }
+    const neuf = !el.querySelector('svg');
+    if (neuf) {
+      el.innerHTML = `<svg aria-hidden="true"></svg>`;
+      el.addEventListener('pointerdown', tirer); el.addEventListener('keydown', clavier);
+      R.largeur = el.clientWidth;
+    }
+    const m = D.modele(); R.m = m;
+    R.regime = m.vue !== 'echo' && (m.phase === 'arrete' || (m.incident && m.incident.type !== 'reprise')) ? 'attention' : '';
+    el.setAttribute('data-regime', R.regime);
+    el.dataset.reglable = m.phase === 'pret' && m.vue !== 'echo' ? '1' : '0'; /* l'élément conservé garde ses anciens attributs */
+    if (el.dataset.reglable === '1') { el.tabIndex = 0; el.setAttribute('role', 'slider'); el.setAttribute('aria-label', 'Dernier cut du lot, flèches pour régler'); el.setAttribute('aria-valuenow', m.bornes.fin); }
+    else { el.removeAttribute('tabindex'); el.removeAttribute('role'); el.removeAttribute('aria-label'); el.removeAttribute('aria-valuenow'); }
+    if (!R.tire) R.ci = cibles(m);
+    const ci = R.ci;
+    R.cible = ci.pos; R.pasCible = ci.pas; R.ondeCible = ci.onde;
+    const red = D.mouvementReduit();
+    if (neuf || R.pos == null || red) { R.pos = ci.pos; R.pas = ci.pas; R.v = R.vp = 0; R.onde = red ? (m.phase === 'encours' ? 1 : 0) : ci.onde; }
+    /* mise en route : le ruban part du premier cut et coule jusqu'au cut en cours */
+    if (!red && phasePrec === 'pret' && m.phase === 'encours') { R.pos = m.compte.debut - 6; R.v = 0; }
+    if (red) { R.ondeCible = R.onde; dessiner(el); }
+    else if (!R.raf) { R.t0 = 0; R.raf = requestAnimationFrame(boucle); }
+    phasePrec = m.vue === 'echo' ? 'echo' : m.phase;
+  }
+
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>
