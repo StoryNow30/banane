@@ -592,7 +592,7 @@ figcaption{font-size:15px;font-style:italic;color:var(--gris);margin-top:6px;tex
 
   /* Ligne de table : numéro, libellé, points de conduite, valeur. etat : fait | ici | loin | sous. */
   function entree(num, lib, val, etat, cle) {
-    return `<li class="${etat || ''}"${etat === 'ici' ? ' data-ici' : ''}><span class="num">${num || ''}</span><span class="lib">${lib}</span><span class="pts" aria-hidden="true"></span><span class="val"${cle ? ` data-valeur="${cle}"` : ''}>${val}</span></li>`;
+    return `<li class="${etat || ''}"${/\bici\b/.test(etat || '') ? ' data-ici' : ''}><span class="num">${num || ''}</span><span class="lib">${lib}</span><span class="pts" aria-hidden="true"></span><span class="val"${cle ? ` data-valeur="${cle}"` : ''}>${val}</span></li>`;
   }
   const toc = (titreToc, lignes, legende) => `<nav class="toc" aria-label="${esc(titreToc)}"><h2 class="sc">${esc(titreToc)}</h2><span class="signet" data-garder="signet" data-forme="signet" aria-hidden="true"></span><ol>${lignes}</ol>${legende ? '<p class="legende"><i></i>le signet : on en est ici</p>' : ''}</nav>`;
 
@@ -641,7 +641,7 @@ figcaption{font-size:15px;font-style:italic;color:var(--gris);margin-top:6px;tex
 
   function vuePret(m) {
     const b = m.bornes, f = m.file;
-    let h = titre(sur(m), m.titre, esc(m.phrase));
+    let h = titre(sur(m), m.titre, m.liaison.etat === 'relie' ? '' : esc(m.phrase));
     if (m.incident) h += avous('avant de lancer', m.incident.titre, m.incident.texte, m.incident.actions);
     h += `<p class="garde">Du cut <input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"> ${b.finDePartie ? '<button class="mot" data-a="finDePartie" role="switch" aria-checked="true">à la fin de la partie</button>' : `au cut <input data-champ="fin" inputmode="numeric" value="${b.fin}" aria-label="Dernier cut">`},<br>
       ${f.active ? `en <button class="pas" data-a="fileMoins" aria-label="Une partie de moins">−</button> <b>${f.nb}</b> <button class="pas" data-a="filePlus" aria-label="Une partie de plus">+</button> parties.` : 'en une seule partie.'}</p>`;
@@ -658,7 +658,7 @@ figcaption{font-size:15px;font-style:italic;color:var(--gris);margin-top:6px;tex
     let h = titre(sur(m), m.titre, chap);
     if (f.alerte) h += avous('cause de l’arrêt', f.alerte.titre, f.alerte.detail + ' Rien n’a été forcé.', []);
     if (m.incident && m.incident.type === 'reprise') h += avous('reprise', m.incident.titre, m.incident.texte, []);
-    if (m.phase === 'fin') h += `<p class="grand"><b>${n(c.poses)}</b> posés · <b>${n(c.differes)}</b> différés · <b>${n(c.aExaminer)}</b> à examiner</p>`;
+    if (m.phase === 'fin') h += `<p class="grand"><span style="white-space:nowrap"><b>${n(c.poses)}</b> posés</span> · <span style="white-space:nowrap"><b>${n(c.differes)}</b> différés</span> · <span style="white-space:nowrap"><b>${n(c.aExaminer)}</b> à examiner</span></p>`;
     h += actions(m.actions);
     h += toc(f.active ? 'Les parties' : 'Le lot', chapitres(m), true);
     if (m.restants.length && m.phase !== 'fin') h += actions([{ a: 'voirReste', libelle: 'Voir ce qui reste', rang: 'lien' }]);
