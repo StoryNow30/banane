@@ -34,6 +34,11 @@ test('2 parties : deux lots (scope de la file, relecture « corriger »), un cha
   const M = await deroule(2); controleCommun(M, 2);
   const R = M.local.m.banane60RegistreFile;
   assert.deepEqual(R.map(r => [r.part, r.rang, r.lotId]), [[23, 0, 'lot-1'], [24, 1, 'lot-2']]);
+  /* « Vider le cache » (la base des exports) ne touche jamais le registre (chrome.storage.local). */
+  const avant = JSON.stringify(R); let r = '';
+  for (let i = 0; i < 40 && r !== 'vidé'; i++) { r = await M.b.api('export-cache-clear', { manuel: true }).then(() => 'vidé', e => 'refusé : ' + e.message); if (r !== 'vidé') await new Promise(x => setTimeout(x, 250)); }
+  assert.equal(JSON.stringify(M.local.m.banane60RegistreFile), avant, 'registre intact après « vider le cache » (' + r + ')');
+  assert.match(r, /^vidé$/, 'le vidage a bien eu lieu : ' + r);
   assert.deepEqual(R[0].poses, [5, 6]);
   const vue = await M.b.api('view'); assert.equal(vue.fileParties.etat, 'fin'); assert.equal(vue.fileParties.bilan.length, 2);
   const meta = await M.b.api('journal-meta'); assert.equal(meta.fileParties.registre.length, 2, 'le registre part avec l’export');
@@ -95,7 +100,8 @@ test('« Démarrer » à la main pendant la file : refusé ; file éteinte, puis
 
 for (const [nom, regler, motif] of [
   ['commande absente (adaptateur d’aujourd’hui)', a => { a.capacite = false; }, 'commande-absente'],
-  ['la page refuse le changement', a => { a.refus = 'partie-absente'; }, 'changement-impossible'],
+  ['la page refuse le changement', a => { a.refus = 'occupe'; }, 'changement-impossible'],
+  ['le sélecteur n’offre plus la partie (illisible ou changé)', a => { a.refus = 'partie-absente'; }, 'selecteur-illisible'],
   ['la page ne change jamais de partie (borne)', a => { a.bloque = true; }, 'changement-impossible'],
   ['ESV muet au moment du changement', a => { a.muet = true; }, 'esv-muet'],
 ]) test(`changement de partie : ${nom} → arrêt « ${motif} », alerte et bilan`, async () => {
