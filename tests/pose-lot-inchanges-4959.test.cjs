@@ -46,6 +46,10 @@ const SKIP_OMBRE=['skip-ombre.js','deplacement-vue.js'];
 /* CH-017 : la file de parties (machine à états pure), lue par le service worker seulement quand `file.actif` est allumé (éteinte à la livraison) ;
  * elle ne lit ni ne commande la pose ; le lot qu'elle démarre est le lot ordinaire. */
 const FILE_PARTIES=['file-parties.js'];
+/* Test 25 (CH-019) : la garde « après un différé », module pur lu par le service worker au moment de la commande du lot ; elle ne fait que changer
+ * une validation en différé (réglage `lot.gardeApresDiffere`, livré allumé ; coupé, les commandes sont celles d'avant :
+ * tests/garde-apres-differe-coupee-sw.test.cjs). */
+const GARDE_APRES_DIFFERE=['garde-apres-differe.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
@@ -56,7 +60,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -81,10 +85,12 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,...reste00}=S,{deplacement:_dep,...deplacerVueSans}=reste00.deplacerVue,reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,...reste00}=S,{deplacement:_dep,...deplacerVueSans}=reste00.deplacerVue,reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['passeDifferes','profil','recaptureVide']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide']);
+ /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */
+ assert.deepEqual({...gardeApresDiffere},{actif:true,regle:'R3',coupures:2,appuisMin:2},'garde après un différé : R3, 2 cuts, moins de 2 appuis');
  assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
  /* Test 17 : la deuxième passe des différés, ALLUMÉE par la décision de l'opérateur ; test 21 (D-251, 26/10) : livrée EN OMBRE ; test 24 (D-259, 28/10) : livrée ALLUMÉE EN ÉCRITURE, plafonnée à 10 cuts par lot ; le reste est l'empreinte d'avant. */
  assert.deepEqual([passeDifferes.ombre,passeDifferes.ecriture,passeDifferes.ecritureMax],[true,true,10],'deuxième passe des différés : écriture, 10 cuts au plus par lot (D-259)');

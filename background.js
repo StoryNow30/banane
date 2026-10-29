@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.24',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 24 (D-259)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -1439,13 +1439,15 @@ async function commandLot(proposal,lotObservation){
   if(ctx&&id&&ctx.identity.cut===id.cut)l1eTransporter(ctx.lotArgs.capture,id,lotObservation.l1eChaine.positions);}
  /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
  if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
+ /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
+ command=gardeApresDiffereCommande(command,lotObservation,proposal);
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
  const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
  if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={...(b.lotCommands[cut]||{}),cut,action:command.action,stage:lotObservation.stage,
-  ...(command.l1s||command.reason==='gcv2-l1'||l1PoseEnAttente?{l1:true}:{})};}
+  ...(command.l1s||command.reason==='gcv2-l1'||l1PoseEnAttente?{l1:true}:{}),...(command.reason==='garde-apres-differe'?{gardeApresDiffere:true}:{})};}
  if(command.action==='engine')return proposal;
  engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
@@ -1510,6 +1512,31 @@ async function deplacerVuePlanifier({lotObservation,proposal,before,capture,comm
   await engine.event('deplacer-vue',{...ev,plan:dvPlan(plan),preVol,refus:null});
   return {command:{...large,deplacerVue:plan}};
  }catch(e){return fin('erreur:'+String(e?.message||e).slice(0,100));}}
+/* CH-019 — GARDE « APRÈS UN DIFFÉRÉ » (src/garde-apres-differe.js, réglage `lot.gardeApresDiffere`, livrée ALLUMÉE). Sur un cut que la commande
+ * allait VALIDER (pose du lot, de la GCV2, ou paire du moteur aux deux rails résolus), si un des cuts qui le précèdent est un différé du lot
+ * (`b.deferred` de la même partie, hors cuts différés par cette garde : pas de cascade) et, règle R3, qu'il a moins d'appuis que le seuil
+ * (`anchorsUsed` de la décision du lot), le cut est DIFFÉRÉ comme un cut non résolu (deux abstentions, motif `garde-apres-differe`) et
+ * l'événement `garde-apres-differe` le dit. Sous L1-se, il redevient un reste de la deuxième passe et sort du transport local. Coupée
+ * (`actif:false`) : la commande est rendue telle quelle (le même objet), rien n'est écrit. Une panne laisse la commande telle quelle. */
+function gardeApresDiffereCommande(command,lotObservation,proposal){
+ const GA=globalThis.BananeGardeApresDiffere,R=GA?.reglage(globalThis.BananeSettings?.lot?.gardeApresDiffere);
+ if(!R||R.ok&&!R.actif||!command)return command;
+ try{const SIDES=['left','right'],b=engine.s.batch,identity=engine.s.before?.identity??null;
+  const valide=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
+  if(!valide||!b||!Number.isInteger(identity?.cut))return command;
+  const differesLot=(b.deferred||[]).filter(d=>(d?.identity?.part??null)===(identity.part??null)).map(d=>d?.cut??d?.identity?.cut)
+   .filter(c=>Number.isInteger(c)&&b.lotCommands?.[c]?.gardeApresDiffere!==true);
+  const appuis=Array.isArray(lotObservation?.anchorsUsed)?lotObservation.anchorsUsed.length:null;
+  const j=GA.juger({cut:identity.cut,differesLot,appuis},R);
+  if(!j.differer)return command;
+  const d=globalThis.BananeLotDecision.deferRails(proposal.rails,lotObservation,'garde-apres-differe','décision sur le lot : cut validable après un différé, '+(j.appuis??'?')+' appui(s) : cut laissé à l\'opérateur');
+  lotObservation.gardeApresDiffere={regle:j.regle,appuis:j.appuis,voisinsDifferes:j.voisinsDifferes,commande:{action:command.action,reason:command.reason??null}};
+  journalerSimple('garde-apres-differe',{identity:{part:identity.part??null,cut:identity.cut},version:GA.VERSION,regle:j.regle,coupures:R.coupures,appuisMin:R.appuisMin,
+   appuis:j.appuis,voisinsDifferes:j.voisinsDifferes,etage:lotObservation?.stage??null,commandeEvitee:{action:command.action,reason:command.reason??null},...(j.reglageIllisible?{reglageIllisible:R.raison}:{})});
+  if(profilL1se()){const t=l1eTransportDe(identity);for(let i=t.length-1;i>=0;i--)if(t[i]?.identity?.cut===identity.cut)t.splice(i,1);
+   if(passeDiffReglage().mode!=='off'){const z=l1Zone(identity);l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:false});}}
+  return d;
+ }catch(e){journalerSimple('garde-apres-differe',{identity:{part:engine?.s?.before?.identity?.part??null,cut:engine?.s?.before?.identity?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)});return command;}}
 /* Décision sur le lot : l'état du lot (ancres) vit dans le lot lui-même,
  * persisté avec lui, et disparaît avec lui. */
 let lotAnchorCandidate=null;
