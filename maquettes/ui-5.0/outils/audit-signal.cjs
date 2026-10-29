@@ -10,7 +10,10 @@
  *   remplissage des SVG, ombres exclues) ; rayons ; espacements (marges, retraits, gouttières non nuls) ;
  *   bordures (largeur et style) ; ombres ; symboles = SVG visibles ; formes = dessins SVG distincts ;
  *   contraste = plus petit rapport WCAG d'un texte sur son fond, et nombre de textes sous 4,5:1.
- * Sortie : un tableau Markdown par page (scènes en lignes) et l'union des valeurs sur toute la page. */
+ * Sortie : un tableau Markdown par page (scènes en lignes) et l'union des valeurs sur toute la page.
+ * CH-024, option --symboles : pour chaque scène (sombre et clair), la forme et la couleur calculée de
+ * chaque symbole d'état (glyphe, curseur du rail, marques du rail, point de la puce, mot d'état, icônes
+ * des boutons), pour le tableau « actuelle / Q2 / retenu ». La forme est l'empreinte du dessin SVG. */
 'use strict';
 const path = require('node:path');
 const { chromium } = require('playwright');
@@ -18,6 +21,24 @@ const { chromium } = require('playwright');
 const ICI = path.resolve(__dirname, '..');
 const NOMS = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const DETAIL = process.argv.includes('--detail');
+const SYMBOLES = process.argv.includes('--symboles');
+
+function symboles() {
+  const fen = document.getElementById('fen');
+  const vis = (el) => { const r = el.getBoundingClientRect(); return r.width >= 1 && r.height >= 1 && el.checkVisibility({ opacityProperty: true, visibilityProperty: true }); };
+  const hex = (c) => { const m = String(c).match(/rgba?\(([^)]+)\)/); if (!m) return '—'; const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); if (p.length > 3 && p[3] === 0) return '—'; return '#' + p.slice(0, 3).map((v) => Math.round(v).toString(16).padStart(2, '0')).join('').toUpperCase() + (p.length > 3 && p[3] < 1 ? ` (${Math.round(p[3] * 100)} %)` : ''); };
+  const forme = (svg) => { if (!svg) return '—'; const d = [...svg.querySelectorAll('path,circle,rect')].map((e) => e.tagName === 'path' ? e.getAttribute('d') : e.tagName + (e.getAttribute('r') || e.getAttribute('width') || '')).join(' '); let h = 0; for (const ch of d) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return [...svg.querySelectorAll('path,circle,rect')].map((e) => e.tagName[0]).join('') + '-' + h.toString(36).slice(0, 4); };
+  const un = (sel, f) => { const e = [...fen.querySelectorAll(sel)].find(vis); return e ? f(e) : '—'; };
+  const g = fen.querySelector('.instrument .glyphe');
+  const glyphe = g && vis(g) ? `${forme(g.querySelector('svg'))} ${hex(getComputedStyle(g).color)}` : 'aucun';
+  const mot = un('.instrument .mot', (e) => hex(getComputedStyle(e).webkitTextFillColor && getComputedStyle(e).webkitTextFillColor !== getComputedStyle(e).color && !/0\)$/.test(getComputedStyle(e).webkitTextFillColor) ? getComputedStyle(e).webkitTextFillColor : getComputedStyle(e).color));
+  const cur = un('.rail-cur', (e) => { const s = getComputedStyle(e); return `${Math.round(e.getBoundingClientRect().width)}×${Math.round(e.getBoundingClientRect().height)} ${hex(s.backgroundColor) !== '—' ? hex(s.backgroundColor) : 'bords ' + hex(s.borderLeftColor)}`; });
+  const marques = [...new Set([...fen.querySelectorAll('.rail-mq .mq,.rail-dif,.rail-corr,.mq')].filter(vis).map((e) => { const s = getComputedStyle(e); const r = e.getBoundingClientRect(); return `${e.className.replace(/\s+/g, '.')} ${Math.round(r.width)}×${Math.round(r.height)} ${hex(s.backgroundColor) !== '—' ? hex(s.backgroundColor) : 'bord ' + hex(s.borderTopColor)}`; }))].join(' ; ') || '—';
+  const pt = un('.puce i', (e) => { const s = getComputedStyle(e); return `${s.borderRadius === '0px' ? 'carré' : 'rond'} ${hex(s.backgroundColor) !== '—' ? 'plein ' + hex(s.backgroundColor) : 'creux ' + hex(s.borderTopColor)}`; });
+  const icones = [...fen.querySelectorAll('.principal svg,.cmd svg,.bascule svg,.puce svg,.barre .ico svg,.verrou-ligne svg')].filter(vis).map((s) => forme(s)).join(' ') || '—';
+  const sec = [...fen.querySelectorAll('.actions .texte,.actions .secondaire')].filter(vis).map((e) => hex(getComputedStyle(e).color)).join(' ') || '—';
+  return { glyphe, mot, cur, marques, pt, icones, sec };
+}
 
 function relever() {
   const fen = document.getElementById('fen');
@@ -70,6 +91,19 @@ function relever() {
     await page.goto('file://' + fichier + '?nu=1&fige=1&reduit=1');
     const scenes = await page.$$eval('#sc-scene option', (o) => o.map((x) => [x.value, x.textContent]));
     const cibles = scenes.map(([s, t]) => [s, t, '']).concat([['fin', 'Ce qui reste (tiroir ouvert, V2)', '&tiroir=1&revue=v2']]);
+    if (SYMBOLES) {
+      for (const theme of ['sombre', 'clair']) {
+        console.log(`\n### ${nom} · symboles (${theme})\n\n| Scène | Glyphe (forme, couleur) | Mot d'état | Curseur | Marques | Point de la puce | Icônes (barre, boutons, palette) | Actions secondaires |\n|---|---|---|---|---|---|---|---|`);
+        for (const [s, t, extra] of cibles) {
+          await page.goto('file://' + fichier + `?nu=1&fige=1&reduit=1&theme=${theme}&taille=normal&scene=${s}${extra}`);
+          await page.waitForTimeout(60);
+          const r = await page.evaluate(symboles);
+          console.log(`| ${t} | ${r.glyphe} | ${r.mot} | ${r.cur} | ${r.marques} | ${r.pt} | ${r.icones} | ${r.sec} |`);
+        }
+      }
+      await ctx.close();
+      continue;
+    }
     const union = {}; const lignes = []; const tot = { elements: 0, surfaces: 0, symboles: 0, sous45: 0, min: 99 };
     for (const theme of ['sombre', 'clair']) {
       for (const [s, t, extra] of cibles) {

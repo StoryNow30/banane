@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* CH-022 : assemble Q-signal-2.html et Q-signal-3.html à partir de signal-sources/.
+ * CH-024 : et Q-signal-4.html, Q-signal-5.html (le mix : data-mix, socle.css puis mix.css).
  *   node maquettes/ui-5.0/outils/construire-signal.cjs
  * Un seul code (signal.js) et un seul socle (socle.css) pour les deux niveaux : mêmes scènes, mêmes
  * commandes. Le niveau (data-v) choisit les jetons et les gestes. Polices : IBM Plex (OFL) lues dans
@@ -21,12 +22,17 @@ const PAGES = [
     description: 'Maquette Ariane 5.0, Signal raffiné (CH-022), niveau mesuré : mêmes composants, un seul système de valeurs, couleurs à rôle unique, symboles tirés du rail. Chiffres inventés.' },
   { v: '3', fichier: 'Q-signal-3.html', titre: 'Q3 · Signal, Frise', chiffre: 'zodiak', polices: PLEX + '\n' + ZODIAK,
     description: 'Maquette Ariane 5.0, Signal raffiné (CH-022), niveau poussé : les gestes de la Frise de lumière sur l’architecture de Signal. Chiffres inventés.' },
+  { v: '4', mix: true, fichier: 'Q-signal-4.html', titre: 'Q4 · Signal, mix', chiffre: 'plex', polices: PLEX,
+    description: 'Maquette Ariane 5.0 (CH-024), mix strict : dessins et fond de Signal, couleurs à rôle unique et système de valeurs de Q2. Chiffres inventés.' },
+  { v: '5', mix: true, fichier: 'Q-signal-5.html', titre: 'Q5 · Signal, mix noir', chiffre: 'plex', polices: PLEX,
+    description: 'Maquette Ariane 5.0 (CH-024), le mix de Q4 sur un noir plus profond. Chiffres inventés.' },
 ];
 for (const p of PAGES) {
   let html = lire('page.html');
   html = html.replace('{{V}}', p.v).replace('{{CHIFFRE}}', p.chiffre).replace('{{TITRE}}', p.titre).replace('{{DESCRIPTION}}', p.description);
   html = html.replace('/*POLICES*/', () => '/* polices locales : IBM Plex (OFL, ../../fonts/)' + (p.v === '3' ? ' ; Zodiak (Fontshare, ITF FFL, en base64)' : '') + ' */\n' + p.polices);
-  html = html.replace('/*CSS*/', () => lire('socle.css'));
+  if (p.mix) html = html.replace(`data-v="${p.v}"`, `data-v="${p.v}" data-mix="1"`);
+  html = html.replace('/*CSS*/', () => lire('socle.css') + (p.mix ? lire('mix.css') : ''));
   html = html.replace('/*JS*/', () => lire('signal.js'));
   html = html.replace(/^(<!doctype html>)/i, '$1\n<!-- Fichier assemblé par outils/construire-signal.cjs : modifier signal-sources/, pas ce fichier. -->');
   fs.writeFileSync(path.join(ICI, p.fichier), html);

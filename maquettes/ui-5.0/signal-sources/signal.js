@@ -3,8 +3,11 @@
 /* CH-022 : code commun de Q-signal-2 (raffinement mesuré) et Q-signal-3 (raffinement poussé).
  * Repris de Q-signal.html et de S-file-de-parties.html (variante A, D-261) : mêmes scènes, mêmes
  * commandes, même simulation. Ce qui change : le système de valeurs (raffinement-signal.md § 3),
- * les symboles tirés du rail, les couleurs à rôle unique, la copie qui ne répète pas les boutons. */
+ * les symboles tirés du rail, les couleurs à rôle unique, la copie qui ne répète pas les boutons.
+ * CH-024 : niveaux 4 et 5 (data-mix) = ce même code et ce même système de valeurs, avec les dessins de
+ * Q-signal.html (logo, glyphes d'état, icônes, marques du rail, point de la puce) recolorés par rôle. */
 const D = document, R = D.documentElement, FEN = D.getElementById('fen');
+const MIX = R.dataset.mix === '1';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fr = n => String(n).replace('.', ',');
 const quantile = (t, f) => { if (!t.length) return null; const s = [...t].sort((a, b) => a - b), p = f * (s.length - 1), a = Math.floor(p), b = Math.ceil(p); return s[a] + (s[b] - s[a]) * (p - a); };
@@ -44,7 +47,50 @@ const GLYPHE = {
 };
 /* Marques du rail, en ligne dans le texte : ○ différé, ◆ vert à contrôler, • corrigé, × passé (SKIP). */
 const MQ = { dif: 'différé', ctl: 'vert à contrôler', corr: 'corrigé', skip: 'passé' };
-const mq = k => `<i class="mq mq-${k}" data-forme="${MQ[k]}" aria-hidden="true"></i>`;
+/* niveaux 4 et 5 : pas de marque en ligne (l'actuelle n'en avait pas) : le mot et le nombre suffisent */
+const mq = k => MIX ? '' : `<i class="mq mq-${k}" data-forme="${MQ[k]}" aria-hidden="true"></i>`;
+
+/* CH-024 : les dessins de Q-signal.html, tels quels (trait 1,75 dans 24, dessinés à 16, 18 ou 28 px). */
+if (MIX) {
+  const T4 = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
+  const S4 = (inner, cls = '') => `<svg viewBox="0 0 24 24" aria-hidden="true"${cls ? ` class="${cls}"` : ''} ${T4}>${inner}</svg>`;
+  Object.assign(IC, {
+    chevron: S4('<path d="M9 6l6 6-6 6"/>', 'fl'), bas: S4('<path d="M6 9l6 6 6-6"/>', 'fl'), fermer: S4('<path d="M6 6l12 12M18 6L6 18"/>'),
+    cadenas: S4('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+    palette: S4('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12 14h5"/>'),
+    reglages: S4('<circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/>'),
+    pause: S4('<path d="M8 5v14M16 5v14" stroke-width="2.5"/>'), play: S4('<path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>'),
+    stop: S4('<rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor" stroke="none"/>'),
+    coche: S4('<path d="M5 12.5l4.5 4.5L19 7.5"/>'), ouvrir: S4('<path d="M14 4h6v6M20 4l-9 9M18 13v6H5V6h6"/>'),
+    export: S4('<path d="M12 4v11M7 10l5 5 5-5M5 19h14"/>'), liste: S4('<path d="M5 7h14M5 12h14M5 17h9"/>'),
+    retour: S4('<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v5h5"/>'),
+    echo: S4('<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+  });
+}
+const C4 = 2 * Math.PI * 9;
+const GLYPHE4 = (() => {
+  const S4 = inner => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  return {
+    pret: S4('<circle cx="12" cy="12" r="9"/>'),
+    cours: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="1.75" stroke-linecap="butt"><circle class="fond-anneau" cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3"/><circle class="arc" cx="12" cy="12" r="9" stroke="currentColor" transform="rotate(-90 12 12)" stroke-dasharray="${C4.toFixed(2)}" stroke-dashoffset="${C4.toFixed(2)}"/></svg>`,
+    dem: S4('<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><path d="M9.5 8.5v7M14.5 8.5v7" stroke-width="2.2"/>'),
+    pause: S4('<path d="M8 5v14M16 5v14" stroke-width="2.5"/>'),
+    toi: S4('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
+    interrompu: S4('<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M8 12h8"/>'),
+    fini: S4('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+    arrete: S4('<rect x="5" y="5" width="14" height="14" rx="1.5"/>'),
+    relpause: S4('<circle cx="12" cy="12" r="9"/><path d="M9.8 8.5v7M14.2 8.5v7" stroke-width="2"/>'),
+    verrou: S4('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+    hors: S4('<circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/>'),
+    echoVide: S4('<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>'),
+    echo: S4('<path d="M12 12h.01" stroke-width="3"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+  };
+})();
+/* état du modèle (glyphe de Q2) → dessin de l'actuelle, scène par scène comme dans Q-signal.html */
+const glyphe4 = m => ({ repos: m.etat === 'echoVide' ? 'echoVide' : 'pret', marche: m.etat === 'echo' ? 'echo' : 'cours', dem: 'dem', pause: m.etat === 'relecture' ? 'relpause' : 'pause', rupture: m.etat === 'interrompu' ? 'interrompu' : 'toi', heurtoir: 'fini', hors: 'hors', verrou: 'verrou', arrete: 'arrete' })[m.glyphe];
+/* icônes des boutons pleins et de la palette, comme dans l'actuelle */
+const IC_ACT = { demarrer: 'play', 'echo-demarrer': 'play', reprendre: 'play', 'rel-reprendre': 'play', 'file-lancer': 'play', pause: 'pause', tiroir: 'liste', 'file-reprise': 'liste', exporter: 'export', 'echo-terminer': 'export', reessayer: 'retour' };
+const icAct = act => MIX && IC_ACT[act] ? IC[IC_ACT[act]] : '';
 
 /* ─────────────────────────── simulation du lot (chiffres inventés) */
 let graine = 7; const al = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
@@ -260,14 +306,15 @@ function boiteFile() {
 }
 
 /* ─────────────────────────── rendu */
-const glypheHtml = m => `<span class="glyphe" data-glyphe="${m.glyphe}" data-ton="${m.ton}" aria-hidden="true">${GLYPHE[m.glyphe]}</span>`;
+const glypheHtml = m => MIX ? `<span class="glyphe" data-glyphe="${glyphe4(m)}" data-ton="${m.ton}" aria-hidden="true">${GLYPHE4[glyphe4(m)]}</span>` : `<span class="glyphe" data-glyphe="${m.glyphe}" data-ton="${m.ton}" aria-hidden="true">${GLYPHE[m.glyphe]}</span>`;
 function railHtml(m) {
   const L = sim.lot, c = m.compte, total = c.cibles, inconnu = !total;
   const pos = i => `${(i / total * 100).toFixed(3)}%`;
   let h = `<div class="rail" data-etat="${m.railEtat}" data-total="${inconnu ? 'inconnu' : 'connu'}" role="img" aria-label="${esc(`${c.traites} traités sur ${total} ciblés, ${c.differes} différés`)}"><div class="rail-base" data-forme="reste du rail"></div>`;
   if (!inconnu) { for (let k = 0; k <= total; k += 10) h += `<div class="rail-grad${k % 60 === 0 ? ' fort' : ''}" style="left:${pos(k)}"></div>`; h += `<div class="rail-num debut">0</div><div class="rail-num" style="left:50%">${total / 2}</div><div class="rail-num fin" style="left:100%">${total}</div>`; }
   h += `<div class="rail-fait" style="width:${pos(c.traites)}"></div>`;
-  L.cuts.slice(0, c.traites).forEach((x, i) => { if (x.statut === 'differe') h += `<span class="rail-mq" style="left:${pos(i + .5)}" title="cut ${x.cut}, différé">${mq('dif')}</span>`; if (x.statut === 'saute') h += `<span class="rail-mq" style="left:${pos(i + .5)}" title="cut ${x.cut}, passé">${mq('skip')}</span>`; });
+  if (MIX) L.cuts.slice(0, c.traites).forEach((x, i) => { if (x.statut === 'differe') h += `<div class="rail-dif" data-forme="différé" style="left:${pos(i + .5)}" title="cut ${x.cut}, différé"></div>`; if (x.statut === 'saute') h += `<div class="rail-inc" data-forme="passé" style="left:${pos(i + .5)}" title="cut ${x.cut}, passé"></div>`; });
+  else L.cuts.slice(0, c.traites).forEach((x, i) => { if (x.statut === 'differe') h += `<span class="rail-mq" style="left:${pos(i + .5)}" title="cut ${x.cut}, différé">${mq('dif')}</span>`; if (x.statut === 'saute') h += `<span class="rail-mq" style="left:${pos(i + .5)}" title="cut ${x.cut}, passé">${mq('skip')}</span>`; });
   if (m.railEtat !== 'fini' && m.railEtat !== 'vide') h += `<div class="rail-cur" data-forme="curseur" style="left:${pos(c.traites)}"></div>${m.railEtat === 'cours' ? `<div class="rail-ici" style="left:${pos(c.traites)}"><span class="cut">${L.encours.cut}</span><i></i></div>` : ''}`;
   return h + '</div>';
 }
@@ -276,7 +323,7 @@ function railRelecture(m) {
   let h = `<div class="rail" data-etat="relecture" data-total="connu" role="img" aria-label="${esc(`${c.relus} relus sur ${c.selection}, ${c.corriges} corrigés`)}"><div class="rail-base" data-forme="reste du rail"></div>`;
   for (let k = 0; k <= c.selection; k += 10) h += `<div class="rail-grad" style="left:${pos(Math.min(k, c.selection))}"></div>`;
   h += `<div class="rail-num debut">0</div><div class="rail-num fin" style="left:100%">${c.selection}</div><div class="rail-fait" style="width:${pos(c.relus)}"></div>`;
-  [4, 11, 19, 27, 41, 52].forEach(i => { h += `<span class="rail-mq" style="left:${pos(i + .5)}">${mq('corr')}</span>`; });
+  [4, 11, 19, 27, 41, 52].forEach(i => { h += MIX ? `<div class="rail-corr" data-forme="corrigé" style="left:${pos(i + .5)}"></div>` : `<span class="rail-mq" style="left:${pos(i + .5)}">${mq('corr')}</span>`; });
   return h + `<div class="rail-cur" data-forme="curseur" style="left:${pos(c.relus)}"></div></div>`;
 }
 function objetHtml(m) {
@@ -291,9 +338,9 @@ function objetHtml(m) {
   return `<div class="objet"><div class="compte"><span class="chiffre">${c.traites}</span><span class="suite">${c.cibles ? `traités sur ${c.cibles} ciblés` : 'traités'}</span>${droite}</div>${railHtml(m)}</div>`;
 }
 function actionsHtml(m) {
-  if (m.verrou) return `<p class="verrou-ligne">Aucune action jusqu’à la fin de la deuxième passe.</p>`;
+  if (m.verrou) return `<p class="verrou-ligne">${MIX ? IC.cadenas : ''}<span>Aucune action jusqu’à la fin de la deuxième passe.</span></p>`;
   let h = '<div class="actions">';
-  if (m.principal) h += `<button type="button" class="principal" data-act="${m.principal.act || ''}"${m.principal.occupe || m.principal.inactif ? ' disabled' : ''}>${m.principal.occupe ? '<span class="tourne" aria-hidden="true"></span>' : ''}<span>${esc(m.principal.texte)}</span></button>`;
+  if (m.principal) h += `<button type="button" class="principal" data-act="${m.principal.act || ''}"${m.principal.occupe || m.principal.inactif ? ' disabled' : ''}>${m.principal.occupe ? '<span class="tourne" aria-hidden="true"></span>' : icAct(m.principal.act)}<span>${esc(m.principal.texte)}</span></button>`;
   if (m.raison) h += `<p class="raison">${esc(m.raison)}</p>`;
   for (const b of [m.secondaire, m.tertiaire]) if (b) h += `<button type="button" class="texte" data-act="${b.act}">${esc(b.texte)}</button>`;
   return h + '</div>';
@@ -339,11 +386,11 @@ function cacheHtml(m) {
 }
 function barreHtml(m) {
   const b = m.bascule, puce = m.puce;
-  const seg = (k, t) => `<button type="button" role="tab" aria-selected="${m.activite === k}"${b.verrou && m.activite !== k ? ` aria-disabled="true" data-raison="${esc(b.raison)}" title="${esc(b.raison)}"` : ''} data-act="activite:${k}">${t}</button>`;
+  const seg = (k, t) => `<button type="button" role="tab" aria-selected="${m.activite === k}"${b.verrou && m.activite !== k ? ` aria-disabled="true" data-raison="${esc(b.raison)}" title="${esc(b.raison)}"` : ''} data-act="activite:${k}">${MIX && b.verrou && m.activite !== k ? IC.cadenas : ''}${t}</button>`;
   const choisir = !puce.verrou;
   return `<header class="barre"><span class="logo">${IC.logo}<span>Ariane</span></span><div class="bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}</div><span class="espace"></span>
-  <button type="button" class="puce" data-etat="${puce.etat}" data-act="esv" aria-haspopup="listbox" aria-expanded="${S.couche === 'esv'}" title="${choisir ? 'Choisir l’onglet ESV' : 'Onglet gardé jusqu’à la fin du lot'}"><i class="pt" data-forme="connexion ESV"></i><span class="tx"><span class="long">${esc(puce.texte)}</span><span class="court">${esc(puce.texte.split(' · ')[0])}</span></span>${choisir ? IC.bas : ''}</button>
-  <button type="button" class="touche" data-act="palette" aria-label="Commandes (Ctrl K)" title="Commandes" aria-pressed="${S.couche === 'palette'}">Ctrl K</button><button type="button" class="ico" data-act="reglages" aria-label="Réglages" title="Réglages" aria-pressed="${S.couche === 'reglages'}">${IC.reglages}</button></header>${S.note ? `<div class="barre-note" role="status">${esc(S.note)}</div>` : ''}`;
+  <button type="button" class="puce" data-etat="${puce.etat}" data-act="esv" aria-haspopup="listbox" aria-expanded="${S.couche === 'esv'}" title="${choisir ? 'Choisir l’onglet ESV' : 'Onglet gardé jusqu’à la fin du lot'}"><i class="pt" data-forme="connexion ESV"></i><span class="tx"><span class="long">${esc(puce.texte)}</span><span class="court">${esc(puce.texte.split(' · ')[0])}</span></span>${choisir ? IC.bas : MIX && puce.etat === 'ok' ? IC.cadenas.replace('<svg', '<svg class="fl"') : ''}</button>
+  ${MIX ? `<button type="button" class="ico" data-act="palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${S.couche === 'palette'}">${IC.palette}</button>` : `<button type="button" class="touche" data-act="palette" aria-label="Commandes (Ctrl K)" title="Commandes" aria-pressed="${S.couche === 'palette'}">Ctrl K</button>`}<button type="button" class="ico" data-act="reglages" aria-label="Réglages" title="Réglages" aria-pressed="${S.couche === 'reglages'}">${IC.reglages}</button></header>${S.note ? `<div class="barre-note" role="status">${esc(S.note)}</div>` : ''}`;
 }
 /* Couches */
 function commandes(m) {
@@ -363,7 +410,7 @@ const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 function paletteHtml(m) {
   const all = commandes(m), q = norm(S.q).trim(), L = q ? all.filter(c => norm(c.nom).includes(q)) : all.slice(0, 4);
   const i = Math.max(0, Math.min(L.length - 1, S.pi));
-  return `<div class="voile" data-act="fermer"></div><div class="palette" role="dialog" aria-label="Commandes"><input id="pal-q" type="text" value="${esc(S.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ''} data-cmd="${k}" data-act="${c.off ? '' : c.act}" data-fermer="1"><span>${esc(c.nom)}</span><span class="et">${esc(c.off || c.et)}</span></button>`).join('') : '<p class="cmd vide-cmd">Aucune commande</p>'}</div><div class="pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
+  return `<div class="voile" data-act="fermer"></div><div class="palette" role="dialog" aria-label="Commandes"><input id="pal-q" type="text" value="${esc(S.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ''} data-cmd="${k}" data-act="${c.off ? '' : c.act}" data-fermer="1">${MIX ? IC[c.ic || IC_ACT[c.act] || (/arreter/.test(c.act) ? 'stop' : /^activite:echo/.test(c.act) ? 'echo' : /^activite/.test(c.act) ? 'play' : c.act === 'reglages' ? 'reglages' : c.act === 'cache' ? 'export' : c.act === 'echo-pause' ? 'pause' : 'liste')] : ''}<span>${esc(c.nom)}</span><span class="et">${esc(c.off || c.et)}</span></button>`).join('') : '<p class="cmd vide-cmd">Aucune commande</p>'}</div><div class="pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
 }
 function feuilleHtml() {
   const sel = (nom, opts, cur) => `<select data-reg="${nom}" aria-label="${esc(nom)}">${opts.map(o => `<option${o === cur ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
@@ -407,13 +454,29 @@ function majVivant() {
   const L = sim.lot;
   if (S.scene === 'cours') {
     const med = medianeLot() || L.encours.attendu, p = Math.min(1, L.encours.depuis / med);
-    const arc = FEN.querySelector('.glyphe .arc'); if (arc) arc.style.strokeDashoffset = (7 * (1 - p)).toFixed(2);
+    const arc = FEN.querySelector('.glyphe .arc'); if (arc) arc.style.strokeDashoffset = ((MIX ? C4 : 7) * (1 - p)).toFixed(2);
     const ici = FEN.querySelector('.rail-ici i'); if (ici) ici.style.transform = `scaleX(${p.toFixed(3)})`;
   }
   const al = D.getElementById('allure');
   if (al && S.scene === 'pause') { const med = medianeLot(); al.innerHTML = `en pause depuis <b>${duree(L.pauseDepuis)}</b> <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut avant la pause`; }
 }
-const NOTE_NIVEAU = R.dataset.v === '3'
+/* CH-024 : les notes qui décrivent un dessin de Q2 sont réécrites pour les dessins de l'actuelle. */
+if (MIX) Object.assign(NOTES, {
+  pret: 'Au repos. Un seul bouton plein, qui dit l’effet. Les bornes du lot sont dans la phrase ; on les change dans les réglages, au repos. Glyphe : l’anneau vide de Signal, en encre.',
+  cours: 'Le rail avance au rythme réel de la simulation : le curseur (seule marque en lumière, avec l’anneau) glisse à chaque cut terminé ; l’anneau se remplit du temps passé sur le cut en cours, jusqu’à la médiane. Un trait court sur le rail = un différé. Pause → « Pause demandée » (anneau en pointillé et ‖) → En pause.',
+  pause: 'Même instrument. Le glyphe ‖ et le curseur sont en encre : la pause n’est pas une alerte. L’allure dit depuis quand et garde la médiane d’avant la pause. « Reprendre » nomme le cut.',
+  incident: 'Le bloc incident remplace le rail, pas l’état. Le triangle et le mot « À toi » sont les seuls éléments en brique, avec le cadre. La phrase dit le problème, les trois boutons disent les sorties, sans redite ; « Passer » n’est jamais principal et garde sa confirmation.',
+  interrompu: 'ESV s’est tu pendant une pose : l’octogone barré, en brique. L’opération interrompue reste écrite jusqu’à sa clôture. Aucun « Reprendre » : la seule sortie est d’archiver le résultat.',
+  fin: 'Trois lignes distinctes. Le glyphe est la coche de Signal, en encre : terminé n’a pas besoin de couleur. « Voir ce qui reste » ouvre le tiroir ; l’export vient en second ; le cache devient disponible.',
+  relecture: 'La relecture est un état d’Orbite : même rail, en relus / sélection, un trait court à chaque cut corrigé. Glyphe : l’anneau et ‖, en encre. Pause, Reprendre, Arrêter.',
+  verrou: 'Deuxième passe : Ariane travaille dans ESV (le cadenas, en lumière), aucune action, cache indisponible. Le nom et les états viendront de la session principale.',
+  'sans-esv': 'Aucun onglet ESV : le glyphe est l’anneau barré, la puce un cercle vide ; l’action principale devient « Choisir un onglet ».',
+});
+const NOTE_NIVEAU = MIX
+  ? (R.dataset.v === '5'
+    ? '<p><b>Niveau 5, mix et noir profond.</b> Le mix du niveau 4 (dessins de Signal, couleurs et valeurs de Q2) sur un noir plus profond : fond et surfaces descendus d’un cran, séparés par leurs filets. Le clair est celui du niveau 4.</p>'
+    : '<p><b>Niveau 4, mix strict.</b> Les dessins de Signal (logo, anneau, triangle, octogone, coche, cadenas, icônes des boutons, traits du rail) et son fond ; les couleurs à rôle unique et le système de valeurs de Q2 (lumière = Ariane avance, brique = à toi ; tout le reste en encre, dit par la forme et le mot).</p>')
+  : R.dataset.v === '3'
   ? '<p><b>Niveau 3, poussé.</b> Les gestes de la Frise de lumière (CH-020, 4b et 4c) : fond chaud, l’instrument en carte posée, une lumière qui court sur son bord tant qu’Ariane avance, le mot d’état en lumière, le grand compte en Zodiak, un seul bouton plein. Le glyphe est retiré : le mot suffit, la lumière dit la marche.</p>'
   : '<p><b>Niveau 2, mesuré.</b> Mêmes composants et même structure que Signal ; un seul système de valeurs ; couleurs à rôle unique (lumière = Ariane avance, brique = à toi, eau = vert à contrôler) ; symboles tirés du rail.</p>';
 

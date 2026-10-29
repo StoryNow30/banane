@@ -1,0 +1,53 @@
+
+/* ═════════════════════════════ CH-024 : niveaux 4 et 5, le mix (data-mix)
+ * De Q-signal.html : le fond et les surfaces, et les dessins (logo, anneau, triangle, octogone, coche,
+ * carré, cadenas, anneau barré, ondes ; icônes des boutons pleins, de la palette et de la barre ; traits
+ * du rail ; point rond de la puce). De Q2 : tout le reste, dont la couleur à rôle unique (--marche :
+ * Ariane avance ; --toi : l'opérateur doit agir ; tout le reste en encre, dit par la forme et le mot)
+ * et le système de valeurs (espacements, rayons, tailles, graisses). Le vert de l'actuelle disparaît. */
+:root[data-mix][data-theme="sombre"]{
+  --scene:#0C0D0E; --scene-tx:#D6D8DA;
+  --fond:#121314; --surface:#1A1B1D; --surface2:#222427; --encre:#ECEDEE; --encre2:#A6A9AD; --encre3:#6F7378;
+  --filet:rgba(255,255,255,.12); --filet-fort:rgba(255,255,255,.22);
+  --marche:#F2B65A; --marche-tx:#F2B65A; --toi:#F2806F; --ctl:#7FD8C9;
+  --action:#ECEDEE; --action-tx:#121314; --action-survol:#FFFFFF;
+  --ombre:0 8px 24px rgba(0,0,0,.4); --voile:rgba(0,0,0,.6); color-scheme:dark;
+}
+:root[data-mix][data-theme="clair"]{ /* « papier technique » de l'actuelle */
+  --scene:#D9DBD8; --scene-tx:#2A2C2F;
+  --fond:#E8E9E7; --surface:#F1F2F0; --surface2:#FAFAF9; --encre:#141516; --encre2:#4E5257; --encre3:#7C8085;
+  --filet:rgba(0,0,0,.12); --filet-fort:rgba(0,0,0,.24);
+  --marche:#9A5200; --marche-tx:#8A4A00; --toi:#B2372B; --ctl:#0A6A5C;
+  --action:#141516; --action-tx:#E8E9E7; --action-survol:#000000;
+  --ombre:0 8px 24px rgba(0,0,0,.18); --voile:rgba(20,21,22,.4); color-scheme:light;
+}
+/* niveau 5 : même mix, noir plus profond (fond et surfaces un cran plus bas, filets inchangés) */
+:root[data-v="5"][data-theme="sombre"]{
+  --scene:#050505; --fond:#0A0A0B; --surface:#121314; --surface2:#1A1B1D; --encre3:#686C71;
+  --ombre:0 8px 24px rgba(0,0,0,.6); --voile:rgba(0,0,0,.66);
+}
+
+/* glyphes de l'actuelle : leur trait de 1,75 (dessinés à 28 px, environ 2 px à l'écran) */
+:root[data-mix] .glyphe .arc{transition:stroke-dashoffset 250ms linear}
+/* l'anneau « en cours » vide reste lisible en lumière : fond d'anneau à 45 % (30 % dans l'actuelle, sur du vert) */
+:root[data-mix] .glyphe .fond-anneau{stroke-opacity:.45}
+/* icônes de l'actuelle dans les boutons pleins, la palette, la bascule, la puce, la ligne verrouillée */
+:root[data-mix] .principal svg{width:16px;height:16px;flex:none}
+:root[data-mix] .bascule button{display:inline-flex;align-items:center;gap:var(--e1)}
+:root[data-mix] .bascule button svg{width:12px;height:12px}
+:root[data-mix] .cmd{grid-template-columns:16px 1fr auto}
+:root[data-mix] .cmd svg{width:16px;height:16px;color:var(--encre2)}
+:root[data-mix] .cmd[aria-selected="true"] svg{color:var(--encre)}
+:root[data-mix] .vide-cmd{grid-template-columns:1fr}
+:root[data-mix][data-taille="compact"] .ico[data-act="palette"]{display:none}
+:root[data-mix] .verrou-ligne{display:flex;align-items:flex-start;gap:var(--e2)}
+:root[data-mix] .verrou-ligne svg{width:16px;height:16px;flex:none;margin-top:var(--e1)}
+/* point de la puce : toujours rond, comme l'actuelle (plein = relié, creux = aucun, brique = sans réponse) */
+:root[data-mix] .puce[data-etat="ko"] .pt{background:var(--toi);border:0;border-radius:50%}
+/* traits du rail de l'actuelle, en encre : court = différé ou corrigé, long et épais = passé (SKIP) ;
+ * ils dépassent du trait « fait » de 6 px dessus et dessous (comme dans l'actuelle) */
+:root[data-mix] .rail-dif,:root[data-mix] .rail-corr{position:absolute;top:14px;width:2px;height:16px;margin-left:-1px;background:var(--encre)}
+:root[data-mix] .rail-inc{position:absolute;top:10px;width:4px;height:24px;margin-left:-2px;background:var(--encre)}
+/* pause et relecture : le curseur garde la forme de l'actuelle (trait à tête), en encre */
+:root[data-mix] .rail[data-etat="pause"] .rail-cur,:root[data-mix] .rail[data-etat="relecture"] .rail-cur{width:2px;margin-left:-1px;background:var(--encre);border:0}
+:root[data-mix] .rail[data-etat="pause"] .rail-cur::after,:root[data-mix] .rail[data-etat="relecture"] .rail-cur::after{display:block}
