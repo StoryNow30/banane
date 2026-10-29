@@ -3317,3 +3317,10 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 
 - Après comparaison des séries de raffinement (CH-022, CH-023, CH-024), l'opérateur choisit de **rester sur la version actuelle** (`maquettes/ui-5.0/Q-signal.html`). Aucune des pages Q2 à Q5, b2, b3 n'est intégrée au panneau. Les chantiers CH-022, CH-023 et CH-024 restent sur leurs branches comme références ; le chantier d'intégration de l'interface n'est pas lancé.
 - Le numéro suivant est D-272.
+
+## D-272 — Barre de fenêtre : piste reportée à Ariane 5.1 ou 6 (opérateur, 29/10/2026)
+
+- La barre de titre de la fenêtre d'Ariane est le cadre de la fenêtre `popup` de Chrome : la page ne la peint pas (PROBABLE, connaissance de la plateforme, non essayé ici). Pour la fondre avec l'interface, il faut sortir Ariane de la fenêtre popup (panneau latéral `sidePanel`, ou application installée avec contrôles de fenêtre superposés), ce qui change l'architecture et le manifeste.
+- L'opérateur : « c'est une piste que nous explorerons pour Ariane 6 ou 5.1 ». Rien n'est lancé dans la 5.0.
+- Même jour, sans numéro propre : l'icône de l'extension reprend le logo de Signal, tuile claire très arrondie, sans vert (ordre de l'opérateur).
+- Le numéro suivant est D-273.
