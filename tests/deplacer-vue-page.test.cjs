@@ -12,10 +12,10 @@ const types=f=>f.evenements.map(e=>e.type);
 const sansApproche=t=>t.filter(x=>!/move$/.test(x));
 const echelle=f=>f.camera.projectionMatrix.elements[0];
 
-test('le réglage existe et est COUPÉ par défaut ; le panneau le dit',()=>{
- const v=S.deplacerVue;assert.ok(v&&Object.isFrozen(v));assert.equal(v.actif,false);
+test('le réglage existe et est ALLUMÉ par défaut dans la test 25 (D-268, geste clic-droit) ; le panneau le dit',()=>{
+ const v=S.deplacerVue;assert.ok(v&&Object.isFrozen(v));assert.equal(v.actif,true);assert.deepEqual({...v.deplacement},{actif:true,geste:'clic-droit',tentativesMax:2});
  assert.equal(v.gestesMax,3);assert.equal(v.dezoomMax,1.5);assert.equal(v.glissementPxMax,250);assert.equal(v.pixelMaxMm,.9);
- const ligne=S.describe().find(l=>/Déplacer la vue/.test(l.nom));assert.ok(ligne);assert.match(ligne.valeur,/coup/i);
+ const ligne=S.describe().find(l=>/Déplacer la vue/.test(l.nom));assert.ok(ligne);assert.match(ligne.valeur,/actif/i);
 });
 
 test('vue sourde (comme la maquette) : un geste, caméra immobile, refus « camera-immobile » ; aucun clic, aucun rail bougé, rien à remettre',async()=>{
@@ -107,6 +107,9 @@ test('proposition : molette ignorée (mousewheel seul), puis glisser, la cible e
  fs.mkdirSync(path.join(tmp,'src'),{recursive:true});
  fs.copyFileSync(path.join(__dirname,'..','src/adapter-page.js'),path.join(tmp,'src/adapter-page.js'));
  const patch=path.join(__dirname,'..','chantiers/CH-007/propositions/deplacement-vue.patch');
+ /* Test 25 : l'adaptateur porte maintenant le patch de CH-018 (geste réglable) ; la proposition de CH-007 a été écrite contre l'adaptateur d'avant : on retire d'abord celui de CH-018. */
+ const retour=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(__dirname,'..','chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
+ assert.equal(retour.status,0,retour.stderr||retour.stdout);
  const r=spawnSync('patch',['-p1','-d',tmp,'-i',patch],{encoding:'utf8'});
  assert.equal(r.status,0,r.stderr||r.stdout);
  const f=page({navigation:{molette:'mousewheel'},adaptateur:path.join(tmp,'src/adapter-page.js')}),etat=await f.call('state');

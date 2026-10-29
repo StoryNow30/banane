@@ -76,7 +76,11 @@ async function main(argv) {
   const adapter = new EsvRejoue(), b = production({ adapter, local });
   if (a.leviers) b.ctx.BananeGcv2L1.reglerLeviers(a.leviers);
   /* `--passe` : la deuxième passe en ombre (aucune écriture vers ESV) ; ses poses « calculées » sont comparées à celles de la deuxième passe du banc. */
-  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, ...(a.passe ? { lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ombre: true, ecriture: false } } } : {}) };
+  /* CH-019 (décision de l'intégrateur du 29/10) : la garde « après un différé » est COUPÉE ici. La parité prouve que tout le RESTE du lot est identique
+   * au banc, qui n'a pas la garde ; la garde elle-même est couverte par ses essais dédiés (tests/garde-apres-differe-*-sw.test.cjs). « Parité 0 écart »
+   * ne veut donc PAS dire « la garde est vérifiée au banc ». */
+  const lotParite = { ...S.lot, gardeApresDiffere: { ...S.lot.gardeApresDiffere, actif: false }, ...(a.passe ? { passeDifferes: { ...S.lot.passeDifferes, ombre: true, ecriture: false } } : {}) };
+  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, lot: lotParite };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   const SCOPE = { testConfirmed: true, allowNavigationEvidence: true, lowConfidence: 'attempt', geometryEngine: 'geometry-candidate-v1', lotDecision: 'apply' };
   t0 = Date.now();

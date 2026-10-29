@@ -45,8 +45,8 @@ const REMPLACEMENTS = [
     "if(e.shiftKey&&!e.ctrlKey&&(which===32||e.key===' '||e.code==='Space'))return validerEtSuivant();",
     "if(e.shiftKey&&!e.ctrlKey&&(which===32||e.key===' '||e.code==='Space'))return options.majEspace==='surplace'?majEspaceSurPlace():options.majEspace==='plus1'?validerEtPlusUn():validerEtSuivant();"],
   ['esv-maquette.js',
-    "&part=${options.part}`);",
-    "&part=${options.part}${q.has('rouges')?'&rouges='+encodeURIComponent(q.get('rouges')):''}`);"],
+    "&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}`);",
+    "&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}${q.has('rouges')?'&rouges='+encodeURIComponent(q.get('rouges')):''}`);"],
   ['scenario.cjs',
     "  const statut=i=>i%5===4?'valid':i%7===6?'skipped':'invalid';",
     "  /* " + MARQUE + " : `rouges=A-B` : seuls les cuts A à B sont rouges ; les autres sont des verts d'ESV (validés par l'extraction, jamais\n" +
@@ -60,8 +60,8 @@ const REMPLACEMENTS = [
     "TreatedByOperator:c.status!=='invalid',SeenByOperator:c.status!=='invalid',",
     "TreatedByOperator:partie.vertsEsv?false:c.status!=='invalid',SeenByOperator:partie.vertsEsv?false:c.status!=='invalid',"],
   ['serveur.cjs',
-    "garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2]),",
-    "garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2,q.rouges]),"],
+    "garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2,...(q.parties!==undefined?[q.parties]:[])]),",
+    "garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2,q.rouges,...(q.parties!==undefined?[q.parties]:[])]),"],
 ];
 
 /* Une copie déjà réglée porte la marque de ces réglages (celle de l'auteur précédent comprise) : on n'y touche pas. */

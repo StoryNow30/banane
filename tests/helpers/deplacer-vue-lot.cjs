@@ -29,7 +29,10 @@ class EsvVue extends SimulatedESV{
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',local=null}={}){
  const adapter=new EsvVue([112],amener),b=production({adapter,local});
- const S={...b.ctx.BananeSettings};if(reglage!==undefined)S.deplacerVue=reglage;
+ const S={...b.ctx.BananeSettings};
+ /* Test 25 (D-268) : le déplacement de la vue et son geste réglable sont livrés ALLUMÉS ; ces montages essaient le MÉCANISME du lot (plan, pré-vol, scope), pas le geste : sans réglage donné, tout est coupé ; avec un réglage donné, le geste réglable reste coupé sauf demande (`reglage.deplacement`). */
+ if(reglage===undefined)S.deplacerVue={...S.deplacerVue,actif:false,deplacement:{...S.deplacerVue.deplacement,actif:false}};
+ else S.deplacerVue={...reglage,deplacement:reglage.deplacement||{...S.deplacerVue.deplacement,actif:false}};
  /* L'ombre de la voie prédite est coupée ici : elle ne commande rien et alourdit l'essai (essayée à part). */
  if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};if(seuilsVoie)S.voiePrediteOmbre={...S.voiePrediteOmbre,...seuilsVoie};
  /* 4.9.5.13 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */

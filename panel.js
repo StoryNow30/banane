@@ -109,7 +109,7 @@
    native:{titre:'Écho',intro:'Ariane observe. Tu gardes entièrement la main dans ESV.'},
    automatic:{titre:'Orbite',intro:'Choisis une plage, puis suis le lot.'},
  };
- const SOUS={home:'4.9.5 test 24 (D-259)',native:'Écho',automatic:'Orbite'};
+ const SOUS={home:'4.9.5 test 25 (F-V-G)',native:'Écho',automatic:'Orbite'};
  const routeDemandee=()=>{const v=(location.hash||'').replace(/^#/,'');return VUES.includes(v)?v:'home';};
  let which=routeDemandee();
  function appliquerVue(){
@@ -308,6 +308,29 @@
  const VERTS_PLAGES_MAX=12,verts={lot:null,en:false,liste:null};
  const vertsActif=()=>globalThis.BananeSettings?.vertsAControler?.actif!==false;
  const dureeTexte=x=>{if(!Number.isFinite(x)||x<0)return '';const m=Math.floor(x/60),r=Math.round(x-60*m);return m?`${m} min${r?` ${r} s`:''}`:`${r} s`;};
+ /* CH-017 — FILE DE PARTIES (variante A de la maquette validée, D-261). Rien n'apparaît tant que la vue ne porte pas `fileParties` (file éteinte
+  * dans src/settings.js : la vue est celle d'avant). « Préparer » ne lance rien ; « Lancer » démarre la file ; pendant la file, « Arrêter la file ». */
+ const fileUI={n:2,prete:false};
+ const nParties=n=>`${n} ${n>1?'parties':'partie'}`;
+ function afficherFile(s){const el=$('file-parties');if(!el)return;const present=Object.hasOwn(s||{},'fileParties');el.hidden=!present;if(!present)return;
+  const f=s.fileParties,actifF=!!f&&['lot','passe','relecture','changement'].includes(f.etat),PH={lot:'lot en cours',passe:'deuxième passe',relecture:'relecture et correction',changement:'changement de partie'};
+  $('file-etat').textContent=!f?(fileUI.prete?'préparée':'prête'):actifF?`partie ${f.rang+1} sur ${f.n}`:f.etat==='fin'?'terminée':'arrêtée';
+  $('file-phrase').textContent=!f?(fileUI.prete?`Préparée · ${nParties(fileUI.n)} à partir de la partie affichée · rien n’est lancé.`:'Enchaîne les parties programmées (premier essai : 2, l’opérateur présent).')
+   :actifF?`Partie ${f.enCours?.part??f.changement?.vers??'?'} · ${PH[f.etat]}${f.changement?` vers la partie ${f.changement.vers}`:''}.`
+   :f.etat==='fin'?`${nParties(f.bilan.length)} faites · la file s’est éteinte. Export : prêt, jamais automatique.`
+   :`${f.motifFin?.texte||'arrêtée'} · ${f.bilan.length} ${f.bilan.length>1?'parties faites':'partie faite'} sur ${f.n} · rien exporté.`;
+  const reg=$('file-reglage');reg.hidden=!!f;const seg=$('file-n');
+  if(!f&&seg&&seg.childElementCount===0)for(const v of [1,2,3,4,5,8]){const bt=document.createElement('button');bt.type='button';bt.textContent=String(v);bt.dataset.n=String(v);
+   bt.onclick=()=>{fileUI.n=v;fileUI.prete=false;afficherFile(state);};seg.appendChild(bt);}
+  if(seg)for(const bt of seg.children)bt.setAttribute('aria-pressed',String(Number(bt.dataset.n)===fileUI.n));
+  const al=$('file-alerte');al.hidden=!f?.alerte;al.textContent=f?.alerte?`${f.alerte.texte}${f.alerte.detail?` (${f.alerte.detail})`:''}.`:'';
+  const bil=$('file-bilan');bil.hidden=!f?.bilan?.length;bil.textContent='';
+  for(const p of f?.bilan||[]){const li=document.createElement('li'),r=p.resume||{};
+   li.textContent=`Partie ${p.part} · ${r.poses??'?'} posés, ${r.differes??'?'} différés${p.passe?.ecrits?`, ${p.passe.ecrits} écrits par la passe`:''} · relecture ${p.relecture?.issue??'—'}${Number.isInteger(p.relecture?.corriges)?`, ${p.relecture.corriges} corrigés`:''}${p.motifs.length?` · ${p.motifs.join(', ')}`:''}${p.alertes?.length?` · alerte : ${p.alertes.map(a=>a.texte).join(' ; ')}`:''}`;bil.appendChild(li);}
+  const pr=$('file-principal'),se=$('file-secondaire');
+  if(!f){pr.hidden=false;pr.textContent=fileUI.prete?`Lancer la file · ${nParties(fileUI.n)}`:'Préparer la file';se.hidden=true;}
+  else if(actifF){pr.hidden=true;se.hidden=false;se.textContent='Arrêter la file';se.className='danger';}
+  else{pr.hidden=false;const reste=f.n-f.bilan.length;pr.textContent=f.etat==='arret'&&reste>0?`Préparer la reprise · ${nParties(reste)} restante${reste>1?'s':''}`:'Fermer le bilan';se.hidden=true;}}
  function afficherVerts(s){const el=$('verts-controle'),L=verts.liste,b=s?.batch;if(!el)return;
   if(!vertsActif()||!L||L.actif===false||!Number.isInteger(L.partie)||(b&&OUVERT.includes(b.state))){el.hidden=true;return;}
   el.hidden=false;
@@ -567,6 +590,7 @@
  /* Une ligne de CONTENU.txt : les choix du dernier lot (ceux de son scope). */
  const texteChoixLot=b=>b?.scope?`Choix du lot ${b.id||'?'} : clic du mode rapide « ${NOMS_CLIC[clicDuScope(b.scope)]} » (${clicDuScope(b.scope)}) ; règle métier « grappe de différés » ${nomGrappe(grappeDuScope(b.scope))}${grappeDuScope(b.scope)?' (chaque cut mis en attente : événement regles-metier-ombre, actif.applique, dans le journal)':''}.\n`:'';
  function render(s){state=s;const id=s.current?.identity,b=s.batch,m=s.manual,n=s.native,busy=working||s.busy;
+   afficherFile(s);
    /* 4.9.5.3 (S6) : avis de contrat ESV (empreinte changée, écritures par fetch), une ligne par motif ; absent tant que rien n'a changé. */
    {const el=$('avis-contrat'),l=Array.isArray(s.avisContrat)?s.avisContrat.filter(x=>typeof x==='string'):[];
     if(el){el.hidden=!l.length;el.textContent=l.join(' ');el.classList.toggle('error',l.length>0);}}
@@ -1314,6 +1338,14 @@ on('native-discard',async()=>{
   const r=await api('native-discard');
   note(`Session abandonnée : ${r.clouds} objet(s) LiDAR, ${r.records} visite(s) et ${r.events} événement(s) supprimés.`);
 });
+    /* CH-017 : boutons de la file de parties (mêmes réglages du lot que « Démarrer le lot »). */
+    on('file-principal',async()=>{const f=state?.fileParties;
+     if(f&&['fin','arret'].includes(f.etat)){const reste=f.n-f.bilan.length;await api('file-oublier');if(f.etat==='arret'&&reste>0){fileUI.n=reste;fileUI.prete=true;}return;}
+     if(!fileUI.prete){fileUI.prete=true;if(state)afficherFile(state);return;}
+     if(!state?.current)throw Error('Connecte ESV avant de lancer la file.');
+     await api('settings',{mode:'automatic-test'});fileUI.prete=false;
+     return api('file-demarrer',{n:fileUI.n,lotArgs:{testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',unresolvedPolicy:'defer',lotDecision:'apply',geometryEngine:'geometry-candidate-v1'}});});
+    if($('file-secondaire'))$('file-secondaire').onclick=()=>{api('file-arreter').then(()=>refresh(),e=>note(e.message,true));};
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
    await api('settings',{mode:'automatic-test'});
    /* 4.7.21 : réglages fixes — rail non résolu différé, décision sur le lot

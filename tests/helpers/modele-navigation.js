@@ -43,5 +43,6 @@
    const dx=e.clientX-glisse.x,dy=e.clientY-glisse.y;glisse.x=e.clientX;glisse.y=e.clientY;if(!dx&&!dy)return;glisse.bouge=true;
    const k=pxScene()*o.gainGlisser;amorti(part=>deplacer(-dx*k*part,dy*k*part));};
  canvas.addEventListener('mousemove',bouger);
+ canvas.addEventListener('contextmenu',()=>compter('contextmenu'));
  (w.addEventListener?w:canvas).addEventListener('mouseup',e=>{compter('mouseup');if(glisse?.bouge)etat.glissers++;glisse=null;});
 })(typeof window!=='undefined'?window:globalThis);

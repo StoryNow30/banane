@@ -206,6 +206,12 @@
      * Garde de livraison (valable une fois l'écriture rallumée) : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
      * validation prouvée, arrêt au premier refus). */
     passeDifferes: passeDifferesDefaut,
+    /* Test 25 (CH-019, D-262 ; analyse CH-015, D-265) — GARDE « APRÈS UN DIFFÉRÉ » (src/garde-apres-differe.js), ALLUMÉE par défaut. Un cut que le lot
+     * allait valider est DIFFÉRÉ (motif `garde-apres-differe`, événement du même nom) quand un des `coupures` cuts qui le précèdent est un différé
+     * du lot (moteur, chaîne ou GCV2 ; jamais un différé de cette garde) et, règle 'R3', qu'il a moins de `appuisMin` appuis ('R1' : sans la
+     * condition d'appuis). Elle ne pose ni ne valide jamais rien de plus. `actif: false` (ou `false`) : le lot d'avant, à l'identique. Un
+     * réglage illisible applique les valeurs livrées. Règle tirée de la seule partie 20 du 28/10 (échantillon biaisé, SUPPOSÉ généralisable). */
+    gardeApresDiffere: Object.freeze({ actif: true, regle: 'R3', coupures: 2, appuisMin: 2 }),
   });
 
   const exportSettings = Object.freeze({
@@ -352,11 +358,14 @@
    * à fixer sur les gestes de l'opérateur relevés par l'Écho (`echo.gestesVue`). `clicFinal` reste faux : Chromium termine un vrai
    * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
   const deplacerVue = Object.freeze({
-    actif: false,
+    /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
+    actif: true,
     etages: Object.freeze(['window']), regle: 'prudente',
     gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: true,
     molette: Object.freeze({ deltaY: 100, deltaMode: 0, wheelDelta: 120, intervalleMs: Object.freeze([60, 140]), cransMax: 8, sensDezoom: 1, facteurSuppose: 1.1 }),
     glisser: Object.freeze({ dureeMs: Object.freeze([220, 420]), pasMs: 16, bouton: 0, clicFinal: false, viseNdc: 0.8 }),
+    /* Test 25 (CH-018) : geste réglable du déplacement de la vue (src/deplacement-vue.js). ALLUMÉ au clic droit (la molette n'a jamais déplacé la caméra : 45 coups sur 45 sans effet sur la partie 20, 28/10) ; `glisse-synthetique` et `molette` restent réglables. Le journal par geste (`journalGestes`) dira quel geste marche. */
+    deplacement: Object.freeze({ actif: true, geste: 'clic-droit', tentativesMax: 2 }),
   });
   /* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, fiches/REGLES_METIER.md). PN avec ses marges (« contrôler chaque cut »),
    * grappe de différés (noyau d'aiguille, grappe d'invalides), validation en place dans une zone, verts à contrôler (écartement à
@@ -396,6 +405,12 @@
    * déjà (instantané E1 de la liste, ombre des règles métier, bords qu'elle a écrits) ; aucune action dans ESV, la décision et la pose
    * ne la lisent pas. Livrée active pour cela. `actif:false` : rien n'est calculé, affiché ni exporté. */
   const vertsAControler = Object.freeze({ actif: true });
+  /* CH-017 (T27a ; D-244, D-245, D-261) — FILE DE PARTIES (src/file-parties.js, background.js) : enchaîne N parties dans Orbite (lot, deuxième
+   * passe, relecture et correction, partie suivante). ALLUMÉE dans la test 25 sur ordre de l'opérateur (29/10, D-268) : la carte « File de parties » est dans le panneau, la file ne part que quand
+   * l'opérateur règle le nombre de parties et la lance ; le patch de l'adaptateur (`changerPartie`) est appliqué. Le changement de partie n'a jamais
+   * été vu sur un vrai ESV : premier essai avec 2 parties, l'opérateur présent. `actif:false` : aucune action de la file n'existe, le panneau et les
+   * exports sont ceux d'avant. `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
+  const file = Object.freeze({ actif: true, changementBorneMs: 60000 });
   /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
    * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
    * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.
@@ -533,5 +548,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file });
 });

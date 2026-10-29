@@ -79,7 +79,8 @@ function construire(options={}){
   };
   return {format:'banane-esv-maquette-scenario-v1',monde:{origine:ORIGINE_MONDE,pas:PAS_M,direction},
     camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,.6]},
-    parties:[partie(part,debut,nb,0),partie(part+1,1,partie2,nb)]};
+    /* CH-017 : `parties` (défaut 2) : parties de plus, de `partie2` cuts chacune, numérotées à la suite (file de parties). */
+    parties:[partie(part,debut,nb,0),...Array.from({length:Math.max(1,Number(options.parties??2))-1},(_,i)=>partie(part+1+i,1,partie2,nb+i*partie2))]};
 }
 /* Lignes de la liste des coupes (forme de fiches/FICHE_B1.md, valeurs factices). La page d'ESV affiche
  * « Cut N » pour la ligne d'indice N (lecture du code d'ESV, mission B ; B1 s'y fie) : la liste porte donc une

@@ -44,7 +44,8 @@ function montage({ sansPoints = [112, 114, 116], fin = 116, decider = () => 'val
     const b = production({ adapter, local: loc, store: magasin });
     v.b = b; v.geler = geler; vies.push(v); M.vieCourante = v;
     b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, observateurPassif: { ...S.observateurPassif, actif: true },
-      relecture: { attenteEcritureMs, attenteVuMs: 100 }, lot: { ...S.lot, passeDifferes: { ...S.lot.passeDifferes, ecriture: true, passes: 2, ...passe } } };
+      relecture: { attenteEcritureMs, attenteVuMs: 100 }, /* Test 25 (CH-019) : la garde « après un différé » (livrée allumée) différerait des cuts de ce montage ; elle est coupée ici, ces essais prouvent la reprise de la passe après un redémarrage, pas la garde. */
+      lot: { ...S.lot, gardeApresDiffere: { ...S.lot.gardeApresDiffere, actif: false }, passeDifferes: { ...S.lot.passeDifferes, ecriture: true, passes: 2, ...passe } } };
     const envoyer = b.ctx.chrome.tabs.sendMessage;
     b.ctx.chrome.tabs.sendMessage = async (id, m) => { if (v.gelee) return jamais();
       return m?.kind === 'b1-voisins' && adapter.calls.includes('goToCut') ? JSON.parse(JSON.stringify(adapter.voisins(m))) : envoyer(id, m); };

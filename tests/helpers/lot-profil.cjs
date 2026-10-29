@@ -15,9 +15,12 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /* Montage du différé : cuts 111 à 113, le 112 capturé sans point (le moteur s'abstient, la chaîne le diffère). La GCV2 est forcée sur le 112 :
  * `etat` 'poser-sans-valider' ou 'valider', la paire étant la pose de la chaîne du 111 (même rails de départ). */
 class EsvTrou extends EsvVue{ajuster(){this.noPoints=this.identity.cut===112;}}
-async function lotDiffere({etat=null,panne=false,profil=null}={}){
+async function lotDiffere({etat=null,panne=false,profil=null,garde=false}={}){
  const adapter=new EsvTrou([]),b=production({adapter});
- const Sx={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false}};if(profil)Sx.lot={...S.lot,profil};b.ctx.BananeSettings=Sx;
+ /* Test 25 (D-268) : le déplacement de la vue est livré ALLUMÉ ; ces montages comparent les commandes à celles de la base, donc il est coupé ici (essayé dans tests/deplacer-vue-*.test.cjs). */
+ const Sx={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false}};if(profil)Sx.lot={...S.lot,profil};
+ /* CH-019 : la garde « après un différé » (livrée allumée) différerait le 113 (1 appui, après le 112) ; coupée ici (`garde:undefined` : le livré). */
+ if(garde!==undefined)Sx.lot={...(Sx.lot||S.lot),gardeApresDiffere:garde};b.ctx.BananeSettings=Sx;
  const G=b.ctx.BananeGcv2L1,forcees=[];
  b.ctx.BananeGcv2L1={...G,deciderDiffere:a=>{
   if(panne)throw Error('panne simulée de la GCV2');

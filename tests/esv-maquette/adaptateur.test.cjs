@@ -80,6 +80,9 @@ test('retour à une coupe : boutons « Previous cut » / « Next cut » d’ESV 
 test('précision des nœuds : positions Float32 locales au nœud, scène reconstituée au micron (comme Potree)',opts,async()=>{
   /* Régression du 15 octobre : des coordonnées scène de ~1 600 m stockées en Float32 perdaient 0,1 mm et déplaçaient
    * 34 rails de 2 à 30 mm au rejeu d'un export de terrain. */
+  /* CH-017 : les nœuds du cut affiché sont attendus (chargés, aucun en cours) avant la mesure : juste après « retour à une coupe », l'essai les lisait
+   * parfois avant leur arrivée (0 point, tronc compris : 6 échecs sur 6 quand il suit cet essai seul). Ce qui est mesuré ne change pas. */
+  await env.page.waitForFunction(()=>window.__maquette.etat().noeudsVisibles>0&&!(window.Potree?.numNodesLoading>0),null,{timeout:20000});
   const r=await env.page.evaluate(async()=>{const m=window.__maquette,e=m.etat(),c=m.scenario().parties.find(p=>p.part===e.part).cuts.find(x=>x.cut===e.cut);
     const j=await (await fetch(c.noeudsUrl)).json(),pc=window.viewer.scene.pointclouds[0];let maxLocal=0,maxErr=0,n=0,coinMax=-Infinity,coinMin=Infinity;
     for(const nd of pc.visibleNodes){const a=nd.sceneNode.geometry.attributes.position.array,M=nd.sceneNode.matrixWorld.elements;

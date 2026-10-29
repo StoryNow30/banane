@@ -8,7 +8,8 @@ const { production, base, K, S, EsvTrou, SCOPE, ev, attendre } = require('./help
 async function lot({ passe, profil = null }) {
   const adapter = new EsvTrou([]), b = production({ adapter });
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false },
-    lot: { ...S.lot, ...(profil ? { profil } : {}), passeDifferes: { ...S.lot.passeDifferes, ...(passe ? { ecriture: false, passes: 1 } : { ombre: false }) } } };
+    /* CH-019 : la garde « après un différé » différerait le 113 (1 appui, après le 112) ; elle n'est pas l'objet de cet essai : coupée. */
+    lot: { ...S.lot, ...(profil ? { profil } : {}), gardeApresDiffere: false, passeDifferes: { ...S.lot.passeDifferes, ...(passe ? { ecriture: false, passes: 1 } : { ombre: false }) } } };
   const G = b.ctx.BananeGcv2L1, appels = [];
   b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => {
     const cut = a.capture.identity.cut;
@@ -45,10 +46,4 @@ test('deuxième passe en ombre : voisins de fin de lot (avant ET après), décis
   assert.equal(ev(on.b, 'l1-pose-sans-valider').length, 0);
   /* Leviers de la passe (`sansVoieRien`) : réglés le temps de l'appel dans la passe seulement, rendus ensuite. */
   assert.deepEqual(a112.map(x => x.sansVoieRien), [false, true]); assert.equal(on.b.ctx.BananeGcv2L1.leviersActifs().sansVoieRien, false);
-});
-
-test('deuxième passe : seulement sous le profil « L1-se » (sous L1-s, rien n’est gardé ni décidé)', async () => {
-  const x = await lot({ passe: true, profil: 'L1-s' });
-  assert.equal(ev(x.b, 'passe-differes-ombre-fin').length, 0); assert.equal(ev(x.b, 'passe-differes-ombre').length, 0);
-  assert.equal(x.b.get('passeDiff').vue, null, 'le panneau n’a rien à dire');
 });

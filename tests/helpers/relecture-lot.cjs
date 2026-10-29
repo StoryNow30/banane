@@ -110,12 +110,15 @@ let scienceFixture=null;
 async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},calculReel=false,ecartementPartie=undefined,reglagesProposes=null,relecture={},esv=null,observateur=true,clic=null,regles=false,local:localDonne=null}={}){
  const adapter=new EsvRelecture({decalages,loin}),local=localDonne||memoire();if(mode)local.m[CLE]=mode;if(clic)local.m.banane50ClicHumain=clic;
  const b=production({adapter,local});b.local=local;
- b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},
+ /* Test 25 (D-268) : déplacement de la vue livré allumé ; coupé dans ce montage qui compare aux commandes de la base. */
+ b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false},
   observateurPassif:{...S.observateurPassif,actif:observateur},
   /* Les règles métier en ombre voient un ADV dans le nuage de la fixture (81–143) : coupées, sauf demande (`regles`). */
   ...(regles?{}:{reglesMetier:{...S.reglesMetier,ombre:false}}),relecture:{departMs:0,attenteEcritureMs:300,attenteVuMs:120,...relecture},
   /* 4.9.5.13 : profil du lot « actuel » (empreintes de la base ; le défaut livré, « L1-s », est essayé dans tests/lot-profil-*.test.cjs). */
-  lot:{...S.lot,profil:'actuel'}};
+  /* CH-019 : la garde « après un différé » est coupée : ce montage est joué par tools/parite-relecture-sw.cjs, qui compare la relecture à celle d'une
+   * autre version ; la garde est couverte par ses essais dédiés (tests/garde-apres-differe-*-sw.test.cjs). */
+  lot:{...S.lot,profil:'actuel',gardeApresDiffere:{...S.lot.gardeApresDiffere,actif:false}}};
  if(reglagesProposes)b.ctx.fetch=async url=>/relecture-reglages-proposes\.json$/.test(url)?{ok:true,json:async()=>structuredClone(reglagesProposes)}:{ok:false};
  /* L'écriture que l'observateur passif de la page relaierait après une validation. */
  let seq=0;adapter.surValidation=async(cut,e)=>{if(e===null)return;const t=Date.now();
