@@ -73,6 +73,14 @@
       ],
       "date": "2026-10-29",
       "motif": "Lot et Écho de l'opérateur du 28/10 (4.9.5.23), poses soignées envoyées pour la v7 (D-258). Étiquette 9 = étiquette de rejeu du chantier CH-012, le projet réel n'est pas établi (si c'est le projet 1, la partie 17 était déjà en apprentissage et l'examen n'est pas vierge pour la v6). Décision écrite : D-258 (l'opérateur veut que la GCV2 apprenne de ces poses) et D-263. Passe en apprentissage pour le SEUL sous-ensemble réglage du tirage outils/analyse-lots/chercheur-v7/tirage-2026-10-29.json de banane-data (blocs de réglage) ; le manifeste ne représente pas ce sous-ensemble : les blocs d'examen et de garde de ce tirage restent FERMÉS au réglage par ce tirage (graine 20261029), pas par ce manifeste, et ne s'ouvrent qu'une fois, après figement des paramètres."
+    },
+    {
+      "projet": 10,
+      "parties": [
+        20
+      ],
+      "date": "2026-10-29",
+      "motif": "Partie 20 du lot du 28/10 (4.9.5.23), 172 poses jugées contre l'Écho de l'opérateur. Étiquette 10 = étiquette de rejeu du chantier CH-012. Jugée d'abord en examen à paramètres figés (aucun) : ouverture unique le 29/10, résultat défavorable à l'arrondi du clic (D-266). Passe en apprentissage par décision écrite (rotation D-192, D-262, D-266) : elle peut servir à régler la v7 ; une nouvelle partie d'examen devra être nommée (candidate : la partie 0 du lot de la test 24, une fois son Écho fait)."
     }
   ],
   "temoins": [
