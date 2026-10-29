@@ -16,7 +16,8 @@ if (i < 0) throw Error('Préciser --sortie hors du dépôt');
 const sortie = path.resolve(argv[i + 1]);
 if (sortie.startsWith(path.resolve(__dirname, '../..') + path.sep)) throw Error('Sortie exigée hors dépôt');
 fs.mkdirSync(sortie, { recursive: true });
-const noms = ['Q-signal-b2', 'Q-signal-b3'];
+const noms = argv.filter((x, j) => !x.startsWith('--') && argv[j - 1] !== '--sortie');
+if (!noms.length) noms.push('Q-signal-b2', 'Q-signal-b3');
 const reussites = [], erreurs = [];
 let nav;
 
@@ -54,8 +55,20 @@ async function parcours(nom, largeur, theme) {
     await charger('pret', { fige: '0', cadence: 'rapide' });
     await acte('demarrer').click(); await etat('En cours');
     await p.evaluate(() => { window.ArianeMaquette.sim.lot.encours.attendu = .5; });
+    const registre = await p.locator('.registre-grille').count();
+    const ancrages = () => p.evaluate(() => ['.registre-cut','.principal','.progression-verticale'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return { haut: r.top, hauteur: r.height }; }));
+    const avantPause = registre ? await ancrages() : null;
     await acte('pause').click(); await etat('Pause demandée');
+    if (registre) assert.ok(await p.locator('.principal').evaluate(e => e === document.activeElement), 'Le focus reste sur la commande en attente');
     await p.waitForFunction(() => document.querySelector('.etat .mot')?.textContent === 'En pause');
+    if (registre) {
+      const apresPause = await ancrages();
+      for (let k = 0; k < avantPause.length; k++) {
+        assert.ok(Math.abs(avantPause[k].haut - apresPause[k].haut) <= 1, 'Les ancrages restent stables pendant la pause');
+        assert.ok(Math.abs(avantPause[k].hauteur - apresPause[k].hauteur) <= 1, 'Les dimensions restent stables pendant la pause');
+      }
+      assert.ok(await p.locator('.principal').evaluate(e => e === document.activeElement), 'Le focus reste sur Reprendre');
+    }
     assert.ok(await p.evaluate(() => window.ArianeMaquette.sim.lot.cuts.length >= 1));
     await acte('reprendre').click(); await etat('En cours');
     await acte('arreter').click(); await etat('En cours');
@@ -67,11 +80,11 @@ async function parcours(nom, largeur, theme) {
     bilan('lot : démarrer, attendre la fin du cut pour la pause, reprendre, annuler et confirmer l’arrêt');
 
     await charger('cours');
-    const bouton = await acte('pause').elementHandle(), rail = await p.locator('.rail-cur').elementHandle();
+    const bouton = await acte('pause').elementHandle(), rail = await p.locator(':is(.rail-cur,.piste-repere)').elementHandle();
     await acte('pause').focus();
     await p.evaluate(() => { const A = window.ArianeMaquette; A.sim.lot.cuts.push({ cut: 4880, statut: 'pose', dur: 8 }); A.rendre(); });
     assert.ok(await bouton.evaluate(e => e === document.querySelector('[data-act="pause"]') && e === document.activeElement));
-    assert.ok(await rail.evaluate(e => e === document.querySelector('.rail-cur')));
+    assert.ok(await rail.evaluate(e => e === document.querySelector(':is(.rail-cur,.piste-repere)')));
     await p.keyboard.press('Control+k');
     await p.locator('#pal-q').fill('exporter');
     assert.equal(await p.locator('#pal-q').inputValue(), 'exporter');
@@ -105,11 +118,11 @@ async function parcours(nom, largeur, theme) {
     await p.keyboard.press('Escape'); bilan('réglages : valeur gardée, thèmes clair/sombre/système, fermeture');
 
     await charger('cours', { reduit: '0' });
-    assert.ok(await p.locator('.rail-cur').evaluate(e => getComputedStyle(e).transitionDuration.split(',').every(x => parseFloat(x) === 0)));
+    assert.ok(await p.locator(':is(.rail-cur,.piste-repere)').evaluate(e => getComputedStyle(e).transitionDuration.split(',').every(x => parseFloat(x) === 0)));
     await p.emulateMedia({ reducedMotion: 'no-preference' });
-    assert.ok(await p.locator('.rail-cur').evaluate(e => getComputedStyle(e).transitionDuration.split(',').some(x => parseFloat(x) > 0)));
+    assert.ok(await p.locator(':is(.rail-cur,.piste-repere)').evaluate(e => getComputedStyle(e).transitionDuration.split(',').some(x => parseFloat(x) > 0)));
     await p.emulateMedia({ reducedMotion: 'reduce' });
-    assert.ok(await p.locator('.rail-cur').evaluate(e => getComputedStyle(e).transitionDuration.split(',').every(x => parseFloat(x) === 0)));
+    assert.ok(await p.locator(':is(.rail-cur,.piste-repere)').evaluate(e => getComputedStyle(e).transitionDuration.split(',').every(x => parseFloat(x) === 0)));
     bilan('mouvement réduit système vérifié sans la préférence manuelle, retour normal vérifié');
 
     await charger('pret'); await acte('cache').click();

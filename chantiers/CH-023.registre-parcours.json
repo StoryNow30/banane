@@ -1,0 +1,200 @@
+{
+  "navigateur": "153.0.8010.0",
+  "conservation": [
+    {
+      "nom": "T-registre",
+      "scenesReference": 22,
+      "scenesLivrees": 25,
+      "commandesReference": 31,
+      "commandesLivrees": 34,
+      "manquants": 0
+    }
+  ],
+  "reussites": [
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "lot : démarrer, attendre la fin du cut pour la pause, reprendre, annuler et confirmer l’arrêt"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "rendu et palette : identité du curseur et du bouton, focus conservé, commande grisée refusée"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "tiroir V2 : lire le motif complet, examiner, annuler au clavier, ouvrir, fermer"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "réglages : valeur gardée, thèmes clair/sombre/système, fermeture"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "mouvement réduit système vérifié sans la préférence manuelle, retour normal vérifié"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "cache : annuler garde le cache, confirmer affiche le résultat, données marquées fictives"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "incidents : trois sorties conservées, confirmation du passage, archivage sans relance"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "relecture : raison de reprise indisponible après F5, reprise/pause/arrêt jouables"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "Écho : pause effective, reprise de l’horloge, fin et abandon confirmé"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "file : éteinte par défaut, préparer sans lancer, trois parties, extinction finale sans export automatique"
+    },
+    {
+      "contexte": "T-registre 360 clair",
+      "test": "file : quatre causes d’alerte, reprise préparée sans démarrage, arrêt volontaire confirmé"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "lot : démarrer, attendre la fin du cut pour la pause, reprendre, annuler et confirmer l’arrêt"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "rendu et palette : identité du curseur et du bouton, focus conservé, commande grisée refusée"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "tiroir V2 : lire le motif complet, examiner, annuler au clavier, ouvrir, fermer"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "réglages : valeur gardée, thèmes clair/sombre/système, fermeture"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "mouvement réduit système vérifié sans la préférence manuelle, retour normal vérifié"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "cache : annuler garde le cache, confirmer affiche le résultat, données marquées fictives"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "incidents : trois sorties conservées, confirmation du passage, archivage sans relance"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "relecture : raison de reprise indisponible après F5, reprise/pause/arrêt jouables"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "Écho : pause effective, reprise de l’horloge, fin et abandon confirmé"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "file : éteinte par défaut, préparer sans lancer, trois parties, extinction finale sans export automatique"
+    },
+    {
+      "contexte": "T-registre 360 sombre",
+      "test": "file : quatre causes d’alerte, reprise préparée sans démarrage, arrêt volontaire confirmé"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "lot : démarrer, attendre la fin du cut pour la pause, reprendre, annuler et confirmer l’arrêt"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "rendu et palette : identité du curseur et du bouton, focus conservé, commande grisée refusée"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "tiroir V2 : lire le motif complet, examiner, annuler au clavier, ouvrir, fermer"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "réglages : valeur gardée, thèmes clair/sombre/système, fermeture"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "mouvement réduit système vérifié sans la préférence manuelle, retour normal vérifié"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "cache : annuler garde le cache, confirmer affiche le résultat, données marquées fictives"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "incidents : trois sorties conservées, confirmation du passage, archivage sans relance"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "relecture : raison de reprise indisponible après F5, reprise/pause/arrêt jouables"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "Écho : pause effective, reprise de l’horloge, fin et abandon confirmé"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "file : éteinte par défaut, préparer sans lancer, trois parties, extinction finale sans export automatique"
+    },
+    {
+      "contexte": "T-registre 600 clair",
+      "test": "file : quatre causes d’alerte, reprise préparée sans démarrage, arrêt volontaire confirmé"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "lot : démarrer, attendre la fin du cut pour la pause, reprendre, annuler et confirmer l’arrêt"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "rendu et palette : identité du curseur et du bouton, focus conservé, commande grisée refusée"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "tiroir V2 : lire le motif complet, examiner, annuler au clavier, ouvrir, fermer"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "réglages : valeur gardée, thèmes clair/sombre/système, fermeture"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "mouvement réduit système vérifié sans la préférence manuelle, retour normal vérifié"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "cache : annuler garde le cache, confirmer affiche le résultat, données marquées fictives"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "incidents : trois sorties conservées, confirmation du passage, archivage sans relance"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "relecture : raison de reprise indisponible après F5, reprise/pause/arrêt jouables"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "Écho : pause effective, reprise de l’horloge, fin et abandon confirmé"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "file : éteinte par défaut, préparer sans lancer, trois parties, extinction finale sans export automatique"
+    },
+    {
+      "contexte": "T-registre 600 sombre",
+      "test": "file : quatre causes d’alerte, reprise préparée sans démarrage, arrêt volontaire confirmé"
+    }
+  ],
+  "erreurs": [],
+  "balayages": [
+    {
+      "nom": "T-registre",
+      "largeurs": 241,
+      "controles": 15424,
+      "ecarts": []
+    }
+  ]
+}
