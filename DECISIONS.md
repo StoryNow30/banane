@@ -3312,3 +3312,8 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 5. **Assistance de relecture** : « Je ne suis pas vraiment convaincu. » Elle n'est pas lancée.
 - Le numéro suivant est D-271.
 
+
+## D-271 — Maquettes : on reste sur la version actuelle de Signal (opérateur, 29/10/2026)
+
+- Après comparaison des séries de raffinement (CH-022, CH-023, CH-024), l'opérateur choisit de **rester sur la version actuelle** (`maquettes/ui-5.0/Q-signal.html`). Aucune des pages Q2 à Q5, b2, b3 n'est intégrée au panneau. Les chantiers CH-022, CH-023 et CH-024 restent sur leurs branches comme références ; le chantier d'intégration de l'interface n'est pas lancé.
+- Le numéro suivant est D-272.
