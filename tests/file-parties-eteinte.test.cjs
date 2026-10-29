@@ -6,8 +6,8 @@ const { test } = require('node:test'), assert = require('node:assert/strict');
 const { montage, fermer, FICHE, LOT_ARGS, S } = require('./helpers/file-parties-sw.cjs');
 test.afterEach(fermer);
 
-test('livrée éteinte : src/settings.js `file.actif` vaut false', () => {
-  assert.equal(S.file.actif, false); assert.ok(Object.isFrozen(S.file));
+test('livrée allumée dans la test 25 (D-268) : src/settings.js `file.actif` vaut true ; la file ne part que si l\'opérateur la lance', () => {
+  assert.equal(S.file.actif, true); assert.ok(Object.isFrozen(S.file));
 });
 
 test('file éteinte : actions inconnues, vue, scope et export sans file, aucune clé de la file touchée, Démarrer et Arrêter inchangés', async () => {

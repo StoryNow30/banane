@@ -352,13 +352,14 @@
    * à fixer sur les gestes de l'opérateur relevés par l'Écho (`echo.gestesVue`). `clicFinal` reste faux : Chromium termine un vrai
    * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
   const deplacerVue = Object.freeze({
-    actif: false,
+    /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
+    actif: true,
     etages: Object.freeze(['window']), regle: 'prudente',
     gestesMax: 3, dezoomMax: 1.5, glissementPxMax: 250, pixelMaxMm: 0.9, marge: 0.99, remiseTolerance: 0.02, preVol: true,
     molette: Object.freeze({ deltaY: 100, deltaMode: 0, wheelDelta: 120, intervalleMs: Object.freeze([60, 140]), cransMax: 8, sensDezoom: 1, facteurSuppose: 1.1 }),
     glisser: Object.freeze({ dureeMs: Object.freeze([220, 420]), pasMs: 16, bouton: 0, clicFinal: false, viseNdc: 0.8 }),
-    /* Test 25 (CH-018) : geste réglable du déplacement de la vue (src/deplacement-vue.js). Éteint : rien ne change. `geste` : molette, clic-droit ou glisse-synthetique, à choisir d'après le relevé de l'opérateur en Écho ; la preuve est le mouvement mesuré de la caméra. */
-    deplacement: Object.freeze({ actif: false, geste: 'molette', tentativesMax: 2 }),
+    /* Test 25 (CH-018) : geste réglable du déplacement de la vue (src/deplacement-vue.js). ALLUMÉ au clic droit (la molette n'a jamais déplacé la caméra : 45 coups sur 45 sans effet sur la partie 20, 28/10) ; `glisse-synthetique` et `molette` restent réglables. Le journal par geste (`journalGestes`) dira quel geste marche. */
+    deplacement: Object.freeze({ actif: true, geste: 'clic-droit', tentativesMax: 2 }),
   });
   /* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, fiches/REGLES_METIER.md). PN avec ses marges (« contrôler chaque cut »),
    * grappe de différés (noyau d'aiguille, grappe d'invalides), validation en place dans une zone, verts à contrôler (écartement à
@@ -399,10 +400,11 @@
    * ne la lisent pas. Livrée active pour cela. `actif:false` : rien n'est calculé, affiché ni exporté. */
   const vertsAControler = Object.freeze({ actif: true });
   /* CH-017 (T27a ; D-244, D-245, D-261) — FILE DE PARTIES (src/file-parties.js, background.js) : enchaîne N parties dans Orbite (lot, deuxième
-   * passe, relecture et correction, partie suivante). ÉTEINTE à la livraison : `actif:false`, aucune action de la file n'existe, le panneau et les
-   * exports sont ceux d'avant. L'intégrateur l'allume après le relevé, par l'opérateur, d'un vrai changement de partie dans ESV et l'application du
-   * diff proposé de l'adaptateur (chantiers/CH-017.rapport.md). `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
-  const file = Object.freeze({ actif: false, changementBorneMs: 60000 });
+   * passe, relecture et correction, partie suivante). ALLUMÉE dans la test 25 sur ordre de l'opérateur (29/10, D-268) : la carte « File de parties » est dans le panneau, la file ne part que quand
+   * l'opérateur règle le nombre de parties et la lance ; le patch de l'adaptateur (`changerPartie`) est appliqué. Le changement de partie n'a jamais
+   * été vu sur un vrai ESV : premier essai avec 2 parties, l'opérateur présent. `actif:false` : aucune action de la file n'existe, le panneau et les
+   * exports sont ceux d'avant. `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
+  const file = Object.freeze({ actif: true, changementBorneMs: 60000 });
   /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
    * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
    * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.

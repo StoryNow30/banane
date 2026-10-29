@@ -12,10 +12,10 @@ const types=f=>f.evenements.map(e=>e.type);
 const sansApproche=t=>t.filter(x=>!/move$/.test(x));
 const echelle=f=>f.camera.projectionMatrix.elements[0];
 
-test('le réglage existe et est COUPÉ par défaut ; le panneau le dit',()=>{
- const v=S.deplacerVue;assert.ok(v&&Object.isFrozen(v));assert.equal(v.actif,false);
+test('le réglage existe et est ALLUMÉ par défaut dans la test 25 (D-268, geste clic-droit) ; le panneau le dit',()=>{
+ const v=S.deplacerVue;assert.ok(v&&Object.isFrozen(v));assert.equal(v.actif,true);assert.deepEqual({...v.deplacement},{actif:true,geste:'clic-droit',tentativesMax:2});
  assert.equal(v.gestesMax,3);assert.equal(v.dezoomMax,1.5);assert.equal(v.glissementPxMax,250);assert.equal(v.pixelMaxMm,.9);
- const ligne=S.describe().find(l=>/Déplacer la vue/.test(l.nom));assert.ok(ligne);assert.match(ligne.valeur,/coup/i);
+ const ligne=S.describe().find(l=>/Déplacer la vue/.test(l.nom));assert.ok(ligne);assert.match(ligne.valeur,/actif/i);
 });
 
 test('vue sourde (comme la maquette) : un geste, caméra immobile, refus « camera-immobile » ; aucun clic, aucun rail bougé, rien à remettre',async()=>{
