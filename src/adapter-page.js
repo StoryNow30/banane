@@ -509,7 +509,13 @@
   * d'arrondi d'ESV n'est pas supposée) ; dès que le rail s'est posé, l'écart
   * est lu, sans attendre les 5 s. Même tolérance qu'avant (1 mm), relue ensuite
   * par le moteur. */
- const DECALAGES_CLIC=[[0,0],[.5,.5],[-.5,-.5]];
+ /* Test 25 (CH-012, D-262) : Chromium TRONQUE les coordonnées fractionnaires d'un clic (10,7 donne 10) ; la pose du journal était donc
+  * décalée en moyenne de −0,25 mm par axe (résidu uniforme sur [−1 ; 0] pixel de la vue, KS 0,031 sur 1 608 valeurs, ÉTABLI). Le clic
+  * part désormais au pixel ENTIER le plus proche (`Math.round`), ce qui centre l'erreur sur zéro. Sans le réglage `clicPixel.arrondi`
+  * (page sans réglages, essais) : le comportement d'avant, à l'octet près. Avec l'arrondi, les reprises se décalent d'un pixel entier
+  * (un demi-pixel donnerait 0 ou 1 pixel selon la fraction). */
+ const ARRONDI_CLIC=window.BananeSettings?.clicPixel?.arrondi===true;
+ const DECALAGES_CLIC=ARRONDI_CLIC?[[0,0],[1,1],[-1,-1]]:[[0,0],[.5,.5],[-.5,-.5]];
  /* 5.0 (D-157) — CLIC HUMAIN DU MODE RAPIDE (fiches/RAPIDE_HUMAIN.md).
   * La pose directe (P1) presse le bouton du rail et clique dans la même tâche, avec la caméra encore active. Depuis la capture,
   * cette caméra est celle du rail DROIT (la capture lit le gauche puis le droit) : la cible gauche y projette à NDC x ≈ −7,
@@ -533,7 +539,7 @@
  const modeClic=o=>o&&typeof o==='object'&&MODES_CLIC.includes(o.clicHumain)?o.clicHumain:CLIC_HUMAIN;
  const CLIC_MARGE=.99,MOTIF_CLIC={'hors-canevas':'hors du canevas','marge':'hors de la marge de 0,99','hors-fenetre':'hors de la fenêtre','vue-illisible':'vue illisible'};
  /* Point du clic sur l'écran : la formule de la pose, à l'identique (même ordre d'opérations). */
- const pointClic=(r,ndc,dx=0,dy=0)=>[r.left+(ndc[0]+1)*r.width/2+dx,r.top+(1-ndc[1])*r.height/2+dy];
+ const pointClic=(r,ndc,dx=0,dy=0)=>{const x=r.left+(ndc[0]+1)*r.width/2+dx,y=r.top+(1-ndc[1])*r.height/2+dy;return ARRONDI_CLIC?[Math.round(x),Math.round(y)]:[x,y];};
  /* Ce point est-il dans la partie visible du canevas ? `null` si oui, sinon la raison. */
  function horsVueClic(r,x,y){
    if(!r||![x,y,r.left,r.top,r.width,r.height].every(Number.isFinite)||!(r.width>0)||!(r.height>0))return 'vue-illisible';
