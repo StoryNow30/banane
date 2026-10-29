@@ -31,7 +31,7 @@ const Voie = require('../src/voie-recentree.js');
 const Export = require('../src/native-export.js');
 const Lots = require('./exports-lots.cjs');
 
-const VERSIONS = new Set(['4.9.5.21', '4.9.5.22', '4.9.5.23', '4.9.5.24', '4.9.5.25']);
+const VERSIONS = new Set(['4.9.5.21', '4.9.5.22', '4.9.5.23', '4.9.5.24', '4.9.5.25', '4.9.5.26']);
 const SEUILS = [2, 5, 10, 20, 50];
 const ZONE_MM = 1.5;
 const REPLIQUES = 2000;

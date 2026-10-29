@@ -1,5 +1,18 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.26 — 4.9.5 test 26 (F-V-G-S) (29/10) — test 26
+
+Manifeste `4.9.5.26`, « 4.9.5 test 26 (F-V-G-S) » (S : file de parties visible dans Signal) ; base : la test 25. Moteur, géométrie, GCV2, décision du lot, adaptateur de page, service worker : inchangés (`git diff` de la test 25 à celle-ci sur ces fichiers : voir la fin de cette entrée).
+
+### Ce qui change
+- **La file de parties est visible et pilotable dans Signal (CH-025).** La test 25 la livrait allumée, mais seule la carte du panneau classique existait et Signal ne la dessinait pas : aucune porte d'entrée (constat de l'opérateur). Au repos, un bouton « File de parties · prête » ouvre une boîte (1, 2, 3, 4, 5 ou 8 parties, « Préparer » qui ne lance rien, « Lancer ») ; pendant la file, bandeau « partie k sur n », phase, « Arrêter la file » ; arrêtée ou finie : alerte, bilan par partie, « Préparer la reprise » ou « Fermer le bilan ». Chaque clic est celui du bouton d'origine, aucun nouveau message au service worker. Conception Figma dans le fichier Signal du projet.
+- La barre de Signal débordait de 11 px entre 480 et 520 px de large : corrigé (CH-025).
+- **Icône de l'extension** : le logo de Signal, rond, disque clair, sans vert.
+
+### Non vérifié
+- Le changement de partie n'a jamais été vu sur un vrai ESV ; premier essai avec 2 parties, l'opérateur présent.
+- Maquette ESV complète : l'essai « Connexion T21 · Démarrer le lot ne part que sur l'onglet nommé » a échoué 4 fois sur 6 sur la branche CH-025 contre 0 sur 3 sur le tronc ; isolé il passe ; marge de l'essai d'environ 0,3 s sur 3 s (PROBABLE, aucune cause établie dans le diff).
+
 ## 4.9.5.25 — 4.9.5 test 25 (F-V-G) (29/10) — test 25
 
 Manifeste `4.9.5.25`, « 4.9.5 test 25 (F-V-G) » (F : file de parties, V : vue, G : garde) ; base : la test 24. Décisions de l'opérateur du 29/10 : D-268 (ce qui suit), D-269 (cadrage de la qualité de pose retenu), D-270 (réponses de l'opérateur). Moteur, géométrie, GCV2 et décision du lot : `git diff 43d7b92..HEAD -- src/engine.js src/geometry*.js src/gcv2*.js src/lot-decision.js` est vide ; l'adaptateur de page ne change que par les deux ajouts ci-dessous.
