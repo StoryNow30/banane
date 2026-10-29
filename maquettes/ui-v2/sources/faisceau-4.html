@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faisceau 4 · Frise de lumière</title>
+<style>
+/*POLICE:general-sans*/
+/*POLICE:zodiak*/
+/* CH-020, piste 4 « Frise de lumière ». Part du Faisceau (CH-014) ; beUI Timeline (frise
+ * qu'on parcourt) et Status Bar (une marque par période, lisible de loin) ; backgrounds.supply
+ * (« deux ou trois teintes voisines, jamais plus » ; un réglage de lumière branché sur une
+ * donnée) ; Fontshare (General Sans, Zodiak, déjà embarquées par CH-014).
+ * Défaut corrigé : dans l'original, la frise est une rangée de pastilles sans échelle ni lien
+ * avec le faisceau, et l'ambre, le blanc et le vert d'eau se disputent la lumière.
+ * Ici la frise est le faisceau déroulé : une règle à l'échelle du lot, allumée du premier cut
+ * au cut en cours, avec la même tête de lumière que la carte ; les cuts remarquables y sont
+ * posés à leur place (○ différé, ◆ à examiner). Une seule lumière chaude sur un fond brun
+ * profond ; le vert d'eau ne sert plus qu'au ◆. Chiffres en Zodiak, texte en General Sans. */
+:root{
+  --base:#F3EDE3; --b1:#F2D7A6; --b2:#EBCDB4; --b3:#F8F3EA; --verre:rgba(255,252,246,.80); --verre-2:rgba(255,250,242,.66); --bord:rgba(60,40,16,.14);
+  --texte:#1D1711; --texte-2:#5C5043; --eau:#0A6A5C; --plein:#1D1711; --sur-plein:#FBF7F0; --scene:#D9D0C3;
+  --fa1:#AE5F00; --fa2:#5A2F00; --fa-halo:rgba(230,140,30,.5); --fa-trace:rgba(174,95,0,.85);
+  --sans:'General Sans',system-ui,sans-serif; --chiffre:'Zodiak',Georgia,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --base:#0D0A07; --b1:#3B2408; --b2:#2B170D; --b3:#17110B; --verre:rgba(22,17,12,.80); --verre-2:rgba(30,23,16,.66); --bord:rgba(255,236,206,.11);
+  --texte:#F4EEE5; --texte-2:#B5A895; --eau:#86E0D2; --plein:#F4EEE5; --sur-plein:#120E0A; --scene:#000;
+  --fa1:#FFC56B; --fa2:#FFF7E6; --fa-halo:rgba(255,180,80,.55); --fa-trace:rgba(255,197,107,.9);
+}}
+:root[data-theme="dark"]{
+  --base:#0D0A07; --b1:#3B2408; --b2:#2B170D; --b3:#17110B; --verre:rgba(22,17,12,.80); --verre-2:rgba(30,23,16,.66); --bord:rgba(255,236,206,.11);
+  --texte:#F4EEE5; --texte-2:#B5A895; --eau:#86E0D2; --plein:#F4EEE5; --sur-plein:#120E0A; --scene:#000;
+  --fa1:#FFC56B; --fa2:#FFF7E6; --fa-halo:rgba(255,180,80,.55); --fa-trace:rgba(255,197,107,.9);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:22px;overflow:hidden;background:var(--base)}
+#fond{position:absolute;inset:0;width:100%;height:100%;display:block}
+#panneau{container-type:inline-size;position:relative;height:760px;overflow-y:auto;background-color:transparent;padding:12px 12px 22px;font-size:15px;line-height:1.45}
+.notes{max-width:380px;font-size:14px;line-height:1.55;background:var(--verre);padding:18px 20px;border-radius:18px;border:1px solid var(--bord)}
+.notes{background-color:var(--base)}
+.notes h2{font-size:18px;margin:0 0 8px}.notes p{margin:0 0 10px}
+
+.verre{background:var(--verre);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);border:1px solid var(--bord);border-radius:18px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;position:sticky;top:0;z-index:2}
+.nav .nom{font-weight:700;letter-spacing:-.01em}
+.nav .liaison{font-size:12px;color:var(--texte-2);display:flex;align-items:center;gap:6px}
+.nav .liaison.non{color:var(--eau);font-weight:700}
+.nav .seg{margin-left:auto;display:flex;gap:2px;background:var(--verre-2);border-radius:999px;padding:3px;border:1px solid var(--bord)}
+.nav .seg button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:6px 12px;background:none;color:var(--texte-2);cursor:pointer}
+.nav .seg button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein)}
+.nav .seg button[aria-disabled="true"]{cursor:not-allowed}
+.trait{width:14px;height:2px;background:currentColor;display:inline-block}
+.non .trait{background:none;border-top:2px dashed currentColor}
+
+/* carte du lot, avec faisceau */
+.lot{position:relative;margin:14px 0 12px;padding:18px 16px;border-radius:22px}
+.fx{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.fx rect{fill:none}
+.fx-base,.fx-anneau,.fx-encoche{stroke:none}
+.fx-trait{stroke:var(--fa1);stroke-linecap:butt}
+.fx-halo{stroke:var(--fa-halo);stroke-width:12;stroke-linecap:round;filter:blur(7px)}
+.fx-tete{fill:var(--fa-halo);filter:blur(5px)}
+.fx-coeur{fill:var(--fa2)}
+.fx-onde{stroke:var(--fa1);stroke-width:3;stroke-linecap:round;filter:blur(1.5px)}
+
+.lot .etat{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--texte-2);display:flex;align-items:center;gap:8px}
+.lot .grand{display:flex;align-items:baseline;gap:8px;margin:6px 0 0}
+.lot .grand .n{font-family:var(--chiffre);font-size:clamp(60px,21cqi,84px);font-weight:400;letter-spacing:-.03em;line-height:.9;font-variant-numeric:tabular-nums lining-nums}
+.lot .grand .s{font-size:17px;color:var(--texte-2)}
+.lot .phrase{margin:10px 0 0}
+.avance{height:4px;border-radius:2px;background:var(--bord);margin:14px 0 0;position:relative;overflow:hidden}
+.avance i{position:absolute;inset:0 auto 0 0;background:var(--texte);border-radius:2px}
+.avance.inconnu{background:repeating-linear-gradient(90deg,var(--bord) 0 6px,transparent 6px 10px)}
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.case{padding:12px 14px;border-radius:16px}
+.case dt{font-size:12px;color:var(--texte-2)} .case dd{margin:2px 0 0;font-family:var(--chiffre);font-size:22px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums lining-nums}
+.case.eau dt,.case.eau dd{color:var(--eau)}
+.los{display:inline-block;width:8px;height:8px;background:currentColor;transform:rotate(45deg);margin-right:6px}
+.rond{display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;border-radius:50%;margin-right:6px}
+
+/* frise glissable */
+/* frise de lumière : la règle du lot ; la part faite est allumée, la tête est celle du faisceau */
+.frise{padding:14px 16px 12px;margin:12px 0}
+.frise h2{font-size:13px;font-weight:600;margin:0 0 4px;color:var(--texte-2);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.regle{position:relative;height:var(--h-regle,62px);margin:4px 2px 0}
+.regle .fil{position:absolute;left:0;right:0;bottom:22px;height:2px;border-radius:1px;background:var(--bord)}
+.regle .fil.ouvert{right:24px}
+.regle .suite{position:absolute;right:0;width:22px;bottom:22px;height:2px;background:repeating-linear-gradient(90deg,var(--texte-2) 0 3px,transparent 3px 6px)}
+.regle .fait{position:absolute;left:0;bottom:21px;height:4px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--fa-trace) 70%,var(--fa1));box-shadow:0 0 12px var(--fa-halo)}
+.regle .tete{position:absolute;bottom:23px;width:0;height:0}
+.regle .tete::before{content:"";position:absolute;width:22px;height:22px;left:-11px;top:-11px;border-radius:50%;background:radial-gradient(circle,var(--fa2) 0 2.5px,var(--fa-halo) 3.5px,transparent 70%)}
+.regle .borne{position:absolute;bottom:0;font-size:12px;color:var(--texte-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.regle .borne.d{left:0}.regle .borne.f{right:0}
+.regle .ici{position:absolute;bottom:0;font-size:12px;font-weight:600;color:var(--texte);transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums;background:var(--verre-2);padding:0 4px;border-radius:4px}
+.marque{position:absolute;width:24px;height:24px;margin-left:-12px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center;color:var(--texte)}
+.marque::after{content:"";width:9px;height:9px;border:1.6px solid currentColor;border-radius:50%;background:var(--base)}
+.marque.eau{color:var(--eau)}
+.marque.eau::after{border-radius:1px;transform:rotate(45deg);background:currentColor;width:8px;height:8px}
+.marque::before{content:"";position:absolute;left:11.5px;width:1px;top:18px;height:var(--tige,6px);background:currentColor;opacity:.55}
+.marque:hover::after,.marque:focus-visible::after{transform:scale(1.35)}
+.marque.eau:hover::after,.marque.eau:focus-visible::after{transform:rotate(45deg) scale(1.35)}
+.frise .clef{font-size:12px;color:var(--texte-2);margin:8px 0 0}
+.frise .clef b{font-weight:600;color:var(--texte)}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .regle .tete.change::before{animation:eclat .6s cubic-bezier(.2,.8,.2,1)}
+  .regle[data-fx="fige"] .tete::before{animation:souffle 2.4s ease-in-out infinite}
+}}
+.regle[data-fx="arret"] .tete::before{opacity:.6}
+.regle[data-fx="arret"] .fait,.regle[data-fx="fige"] .fait{box-shadow:none}
+@keyframes eclat{from{transform:scale(1.9)}to{transform:none}}
+@keyframes souffle{50%{opacity:.45}}
+
+.actions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.b{font:inherit;font-size:16px;font-weight:600;border-radius:16px;padding:14px 16px;min-height:50px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.b .note{font-size:12px;font-weight:500}
+.b-principal{background:var(--plein);color:var(--sur-plein);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--verre);color:var(--texte);border:1px solid var(--bord);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.b-arret{background:var(--verre);color:var(--texte);border:1.5px solid var(--texte-2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.b-arret.confirme{border:2.5px solid var(--texte)}
+.b[aria-disabled="true"]{background:var(--verre-2);color:var(--texte-2);border:1px dashed var(--texte-2);cursor:not-allowed}
+.raison{font-size:13px;color:var(--texte-2);margin:0 4px}
+.lien{font:inherit;font-size:14px;font-weight:700;color:var(--texte);background:none;border:0;padding:6px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.alerte{padding:14px 16px;margin:12px 0;border:1.5px solid var(--texte);border-left-width:5px}
+.alerte h2{font-size:15px;margin:0 0 4px;color:var(--texte);display:flex;align-items:center;gap:8px}
+.alerte .excl{flex:none;width:18px;height:18px;border:1.6px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;line-height:1}
+.alerte p{margin:0 0 6px}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .alerte.neuve{animation:deplie .45s cubic-bezier(.2,.9,.3,1.2)}}
+@keyframes deplie{from{transform:translateY(-8px) scale(.98);opacity:.4}to{transform:none;opacity:1}}
+.bloc{padding:14px 16px;margin:12px 0}
+.bloc h2{font-size:14px;margin:0 0 8px}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bornes label{font-size:12px;color:var(--texte-2);display:flex;flex-direction:column;gap:4px}
+.bornes input{font:inherit;font-size:26px;font-weight:700;letter-spacing:-.02em;background:var(--verre-2);border:1px solid var(--bord);border-radius:14px;padding:8px 12px;color:var(--texte);width:100%;font-variant-numeric:tabular-nums}
+.bornes input:disabled{color:var(--texte-2)}
+.inter{display:flex;align-items:center;gap:10px;font:inherit;background:none;border:0;color:var(--texte);padding:10px 0 0;cursor:pointer;text-align:left}
+.inter .r{width:40px;height:24px;border-radius:999px;background:var(--verre-2);border:1px solid var(--bord);position:relative;flex:none}
+.inter .r::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;top:2px;left:2px;background:var(--texte-2)}
+.inter[aria-checked="true"] .r{background:var(--plein)}
+.inter[aria-checked="true"] .r::after{left:18px;background:var(--sur-plein)}
+.pas{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pas button{font:inherit;font-size:18px;width:40px;height:40px;border-radius:12px;border:1px solid var(--bord);background:var(--verre-2);color:var(--texte);cursor:pointer}
+.pas output{font-size:24px;font-weight:700;min-width:2ch;text-align:center}
+.etapes{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.etapes li{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:12px;background:var(--verre-2);font-size:14px}
+.etapes li.ici{outline:1.5px solid var(--texte);font-weight:700}
+.etapes li span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+.reste{padding:14px 16px;margin:10px 0}
+.reste .t{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.reste .g{font-size:12px;font-weight:700;color:var(--texte-2)}
+.reste .g.eau{color:var(--eau)}
+.reste .m{color:var(--texte-2);margin:4px 0 10px;font-size:14px}
+.reste .gestes{display:flex;gap:8px}
+.petit{font:inherit;font-size:13px;font-weight:600;border-radius:12px;padding:8px 12px;background:var(--verre-2);color:var(--texte);border:1px solid var(--bord);cursor:pointer}
+.petit.p{background:var(--plein);color:var(--sur-plein);border-color:var(--plein)}
+.coupe{padding:10px;margin:12px 0}
+.coupe svg{display:block;width:100%;height:auto}
+.message{padding:10px 14px;margin:10px 0;font-size:14px}
+.legende{font-size:13px;color:var(--texte-2);padding:10px 14px;margin-top:10px}
+.legende summary{cursor:pointer;color:var(--texte);font-weight:700}
+
+/* Mouvement (partition dans la fiche) : une valeur qui change monte à sa place ; au changement
+ * d'état, les blocs arrivent l'un après l'autre. Rien de tout cela en mouvement réduit. */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .42s cubic-bezier(.2,.8,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .48s cubic-bezier(.2,.8,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.04s}
+  #panneau[data-etat-change="1"]>*:nth-child(3){animation-delay:.08s}
+  #panneau[data-etat-change="1"]>*:nth-child(4){animation-delay:.12s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+5){animation-delay:.16s}
+}}
+@keyframes roule{from{transform:translateY(.35em);opacity:.2}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><canvas id="fond" aria-hidden="true"></canvas><div id="panneau" aria-label="Panneau Ariane, piste Faisceau 4, frise de lumière"></div></div>
+  <aside class="notes">
+    <h2>Faisceau 4 · Frise de lumière</h2>
+    <p><b>Ce qu'elle corrige.</b> Dans l'original, la frise est une rangée de pastilles sans échelle ni lien avec le faisceau, et l'ambre, le blanc et le vert d'eau se disputent la lumière.</p>
+    <p><b>D'où ça vient.</b> Le Faisceau (CH-014) ; beUI Timeline et Status Bar (une marque à sa place sur une durée, lisible de loin) ; backgrounds.supply (deux ou trois teintes voisines, un réglage de lumière branché sur une donnée) ; Fontshare (General Sans et Zodiak).</p>
+    <p><b>Ce que ça veut dire ici.</b> La frise est le faisceau déroulé : une règle à l'échelle du lot, allumée du premier cut au cut en cours, avec la même tête de lumière que la carte, qui s'éclaire à chaque cut. Les cuts remarquables sont posés à leur place : ○ différé, ◆ à examiner ; on touche une marque pour l'examiner. Une seule lumière chaude sur un brun profond ; le vert d'eau ne sert plus qu'au ◆ (les alertes passent à l'encre, avec un « ! » cerclé). Les chiffres sont en Zodiak, le texte en General Sans.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+/*INCLURE:faisceau-moteur.js*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc } = Demo.D;
+  function bouton(x) {
+    const cls = { principal: 'b b-principal', second: 'b b-second', arret: 'b b-arret' + (x.confirme ? ' confirme' : ''), choix: 'b b-choix', lien: 'lien' }[x.rang];
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+  let alerteVue = '';
+  function nav(m) {
+    const bl = m.activiteBloquee ? ' aria-disabled="true" title="Mettre le lot en pause ou l’arrêter avant de changer d’activité"' : '';
+    const ok = m.liaison.etat === 'relie';
+    return `<div class="nav verre"><div><div class="nom">Ariane</div><div class="liaison${ok ? '' : ' non'}"><span class="trait" aria-hidden="true"></span>${esc(m.liaison.texte)}</div></div>
+      <div class="seg" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${m.activite === 'orbite'}"${m.activite === 'echo' ? '' : bl}>Orbite</button><button data-a="echo" aria-pressed="${m.activite === 'echo'}"${bl}>Écho</button></div></div>`;
+  }
+  function alerte(titre, texte, acts) {
+    const cle = titre + texte, neuve = cle !== alerteVue; alerteVue = cle;
+    return `<div class="alerte verre${neuve ? ' neuve' : ''}" role="alert"><h2><span class="excl" aria-hidden="true">!</span>${esc(titre)}</h2><p>${esc(texte)}</p>${acts && acts.length ? actions(acts) : ''}</div>`;
+  }
+  function carteLot(m, contenu) {
+    const fa = m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : 'absent';
+    const mot = m.vue === 'echo' ? 'Écho · observe' : m.titre;
+    const n = m.vue === 'echo' ? m.echo.vus : m.compte.faits;
+    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}" aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · le faisceau tourne' : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
+  }
+  /* Frise de lumière : position de chaque cut sur la règle du lot. Les marques trop proches
+   * montent d'un étage (trois au plus) pour rester touchables (cible de 24 px). */
+  function frise(S, m) {
+    const c = m.compte, d = c.debut;
+    const inconnu = c.total == null;
+    const etendue = inconnu ? Math.max(c.faits + 40, 120) : c.total;
+    const pos = (cut) => Math.max(0, Math.min(100, (cut - d) / Math.max(1, etendue - 1) * 100));
+    const fa = m.phase === 'encours' ? 'court' : m.phase === 'pause' ? 'fige' : m.phase === 'fin' ? 'fin' : 'arret';
+    const marques = S.restants.slice().sort((a, b) => a.cut - b.cut);
+    const etages = [-99, -99, -99]; let haut = 0;
+    const j = marques.map((r) => {
+      const x = pos(r.cut); let e = etages.findIndex((v) => x - v >= 7.5); if (e < 0) e = 2; etages[e] = x; haut = Math.max(haut, e);
+      const lib = `Cut ${r.cut}, ${r.type === 'vert' ? 'vert à examiner' : 'différé'} : examiner`;
+      return `<button class="marque${r.type === 'vert' ? ' eau' : ''}" data-forme="${r.type === 'vert' ? 'losange' : 'rond'}" style="left:${x.toFixed(2)}%;bottom:${30 + e * 20}px;--tige:${e * 20 + 2}px" data-a="examiner" data-id="${r.id}" aria-label="${esc(lib)}" title="${esc(lib)}"></button>`;
+    }).join('');
+    const faitPc = m.phase === 'fin' ? 100 : pos(c.cut);
+    const tete = m.phase === 'fin' ? '' : `<span class="tete" style="left:${faitPc.toFixed(2)}%" data-valeur="tete-frise" aria-hidden="true"><span hidden>${c.cut}</span></span>`;
+    const ici = m.phase === 'fin' || faitPc < 12 || (!inconnu && faitPc > 86) ? '' : `<span class="ici" style="left:${faitPc.toFixed(2)}%">${c.cut}</span>`;
+    const fin = inconnu ? '<span class="borne f">fin inconnue</span>' : `<span class="borne f">${d + c.total - 1}</span>`;
+    const nd = marques.filter((r) => r.type !== 'vert').length, nv = marques.length - nd;
+    const titre = m.phase === 'fin' ? 'Le lot, de bout en bout' : m.phase === 'encours' ? 'Le lot, jusqu’ici' : 'Le lot, arrêté ici';
+    return `<div class="frise verre"><h2><span>${titre}</span><span>${marques.length ? 'toucher une marque pour l’examiner' : ''}</span></h2>
+      <div class="regle" data-fx="${fa}" style="--h-regle:${62 + haut * 20}px" role="group" aria-label="Frise du lot, du cut ${d} ${inconnu ? 'à une fin inconnue' : 'au cut ' + (d + c.total - 1)}">
+        <span class="fil${inconnu ? ' ouvert' : ''}"></span>${inconnu ? '<span class="suite" aria-hidden="true"></span>' : ''}
+        <span class="fait" style="width:${faitPc.toFixed(2)}%"></span>${tete}${j}
+        <span class="borne d">${d}</span>${ici}${fin}
+      </div>
+      <p class="clef"><b>○ ${nd}</b> différé${nd > 1 ? 's' : ''} · <b>◆ ${nv}</b> à examiner${m.phase === 'encours' ? ' · la lumière s’arrête au cut en cours' : ''}</p></div>`;
+  }
+  function grille(m) {
+    const c = m.compte;
+    return `<dl class="grille"><div class="case verre"><dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd></div><div class="case verre"><dt>Cut en cours</dt><dd>${c.cut}</dd></div><div class="case verre"><dt><span class="rond" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="case verre${c.aExaminer ? ' eau' : ''}"><dt><span class="los" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`;
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') return `<div class="bloc verre"><h2>File de parties</h2><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"></span>Enchaîner plusieurs parties · ${f.active ? 'allumée' : 'éteinte'}</button>${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues et corrigées une à une</span></div>` : ''}</div>`;
+    if (!f.active) return '';
+    let l = '';
+    for (let i = 1; i <= f.nb; i++) { const p = f.parties.find((x) => x.n === i), ici = i === f.courante && !f.finie; l += `<li class="${ici ? 'ici' : ''}"><span>Partie ${i}</span><span>${p ? `${p.poses} posés · ${p.differes} ○ · ${p.aControler} ◆` : ici ? (f.relecture ? 'relecture' : m.phase === 'arrete' ? 'arrêtée' : 'en cours') : 'à venir'}</span></li>`; }
+    return `<div class="bloc verre"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`}</h2><ol class="etapes">${l}</ol></div>`;
+  }
+  function principal(m, S) {
+    let h = nav(m);
+    if (m.vue === 'echo') return h + carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="case verre"><dt>Mêmes choix</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>` + actions(m.actions);
+    const c = m.compte;
+    if (m.file.alerte) h += alerte(m.file.alerte.titre, m.file.alerte.detail);
+    if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, m.incident.texte, m.incident.actions);
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      h += carteLot(m, `<p class="phrase">${esc(m.phrase)}</p><div class="bornes" style="margin-top:12px"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu'à la fin de la partie</button>`);
+      h += actions(m.actions) + file(m);
+    } else if (m.phase === 'fin') {
+      h += carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${c.poses}</span><span class="s">posés</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt><span class="rond" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="case verre${c.aExaminer ? ' eau' : ''}"><dt><span class="los" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>` + frise(S, m) + actions(m.actions) + file(m);
+    } else {
+      const av = c.total == null ? '<div class="avance inconnu" role="img" aria-label="Total inconnu"></div>' : `<div class="avance" role="img" aria-label="${Math.round(c.part * 100)} pour cent"><i style="width:${(c.part * 100).toFixed(1)}%"></i></div>`;
+      h += carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${av}<p class="phrase">${esc(m.phrase)}</p>`);
+      if (m.incident && m.incident.type === 'reprise') h += `<div class="bloc verre"><h2>${esc(m.incident.titre)}</h2><p style="margin:0">${esc(m.incident.texte)}</p></div>`;
+      h += frise(S, m) + actions(m.actions) + grille(m) + file(m);
+    }
+    if (m.message) h += `<p class="message verre" role="status">${esc(m.message)}</p>`;
+    return h + `<details class="legende verre"><summary>Légende</summary><p>Faisceau qui tourne : le lot tourne. Figé : pause. Éteint : rien ne tourne. La frise allumée : la part faite du lot. ○ différé ; ◆ vert d'eau : vert à examiner. Trait tireté devant ESV : non relié.</p></details>`;
+  }
+  function reste(m) {
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<div class="reste verre"><div class="t">Cut ${r.cut} <span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ vert à examiner' : '○ différé'}</span></div><p class="m">${esc(r.motif)}</p><div class="gestes"><button class="petit p" data-a="examiner" data-id="${r.id}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${r.id}">Ouvrir dans ESV</button></div></div>`).join('');
+    return nav(m) + carteLot({ ...m, phase: 'fin', titre: 'Ce qui reste' }, `<p class="grand"><span class="n" data-valeur="n">${m.restants.length}</span><span class="s">cuts à reprendre</span></p>`) + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]) + l + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
+  }
+  function coupe(r) {
+    const { pts, rails } = Demo.D.coupe(r.cut, 320);
+    const W = 360, H = 190, X = (x) => 14 + (x + 1) / 2 * (W - 28), Z = (z) => 30 - (z + 0.1) * 340;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${r.cut}">`;
+    for (const [x, z] of pts) s += `<circle cx="${X(x).toFixed(1)}" cy="${Z(z).toFixed(1)}" r="1.3" fill="var(--texte)" opacity=".8"/>`;
+    for (const rx of rails) s += `<line x1="${X(rx)}" y1="${Z(-0.16) - 26}" x2="${X(rx)}" y2="${Z(-0.16) + 2}" stroke="var(--eau)" stroke-width="3"${r.type === 'vert' ? '' : ' stroke-dasharray="3 4"'}/>`;
+    return s + '</svg>';
+  }
+  function examen(m) {
+    const r = m.examen;
+    return nav(m) + carteLot({ ...m, phase: 'fin', titre: r.type === 'vert' ? 'Vert à examiner' : 'Différé' }, `<p class="grand"><span class="n" data-valeur="n">${r.cut}</span><span class="s">cut</span></p><p class="phrase">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés en vert d’eau.' : 'Rien de posé ; places envisagées en tireté.'}</p>`)
+      + `<div class="coupe verre">${coupe(r)}</div>` + actions([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'voirReste', libelle: 'Retour à la liste', rang: 'second' }]) + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
+  }
+
+  /* fond qui respire : trois nappes floues ; immobile en mouvement réduit */
+  function fond(t) {
+    const cv = document.getElementById('fond'), w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== w) { cv.width = w; cv.height = h; }
+    const ctx = cv.getContext('2d'), st = getComputedStyle(document.documentElement);
+    const tt = Demo.D.mouvementReduit() ? 0 : t / 9000;
+    ctx.fillStyle = st.getPropertyValue('--base'); ctx.fillRect(0, 0, w, h);
+    const nappes = [['--b1', 0.2 + Math.sin(tt) * 0.1, 0.18, 0.55], ['--b2', 0.85, 0.45 + Math.cos(tt * 1.3) * 0.1, 0.5], ['--b3', 0.3 + Math.cos(tt * 0.7) * 0.15, 0.85, 0.6]];
+    for (const [v, x, y, r] of nappes) {
+      const g = ctx.createRadialGradient(x * w, y * h, 0, x * w, y * h, r * Math.max(w, h));
+      g.addColorStop(0, st.getPropertyValue(v).trim()); g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    }
+    requestAnimationFrame(fond);
+  }
+  /* la frise garde sa position de défilement d'un rendu à l'autre, et se tire à la souris */
+  Demo.monter({
+    rendre(S, D) { const m = D.modele(); if (m.vue === 'reste') return reste(m); if (m.vue === 'examen' && m.examen) return examen(m); return principal(m, S); },
+  });
+  Faisceau.creer({ cadence: 'fixe', tour: 3.6, traine: 0.34, mini: 26 });
+  requestAnimationFrame(fond);
+})();
+</script>
+</body>
+</html>

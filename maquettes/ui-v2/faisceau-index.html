@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faisceau, quatre pistes</title>
+<!-- CH-020 : page de comparaison écrite à la main (pas assemblée). Les cinq panneaux sont les
+     pages autonomes faisceau.html et faisceau-1.html à faisceau-4.html, ouvertes sans régie ; les
+     réglages ci-dessous leur sont envoyés par postMessage, comme dans index.html. -->
+<style>
+/* Page volontairement neutre : elle ne doit pas peser sur les maquettes. */
+:root{--fond:#F2F2F0;--carte:#FFFFFF;--texte:#161616;--texte-2:#555;--bord:#D6D6D2;--plein:#161616;--sur-plein:#FFF}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--fond:#121212;--carte:#1B1B1B;--texte:#EDEDED;--texte-2:#A8A8A8;--bord:#2E2E2E;--plein:#EDEDED;--sur-plein:#121212}}
+:root[data-theme="dark"]{--fond:#121212;--carte:#1B1B1B;--texte:#EDEDED;--texte-2:#A8A8A8;--bord:#2E2E2E;--plein:#EDEDED;--sur-plein:#121212}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:15px/1.5 system-ui,sans-serif}
+header{position:sticky;top:0;z-index:3;background:var(--fond);border-bottom:1px solid var(--bord);padding:12px 16px}
+header h1{font-size:18px;margin:0 0 4px}
+header p{margin:0 0 8px;color:var(--texte-2);max-width:72em}
+.regles{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.regles label{display:flex;gap:6px;align-items:center;font-size:14px}
+select{font:inherit;color:var(--texte);background:var(--carte);border:1px solid var(--bord);border-radius:6px;padding:4px 6px}
+main{padding:16px 16px 40px}
+.rangee{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px;align-items:flex-start}
+.carte{flex:none;background:var(--carte);border:1px solid var(--bord);border-radius:10px;padding:10px;width:calc(var(--w, 420px) + 22px);max-width:calc(100vw - 32px)}
+.carte.origine{border-style:dashed}
+.carte h2{font-size:15px;margin:0 0 2px;display:flex;justify-content:space-between;gap:8px}
+.carte h2 a{color:var(--texte)}
+.carte h2 span{font-weight:400;color:var(--texte-2);font-size:13px}
+.carte .defaut{font-size:13px;color:var(--texte-2);margin:0 0 8px;min-height:5.2em}
+.carte iframe{display:block;width:100%;height:760px;border:0;border-radius:6px;background:var(--fond)}
+footer{padding:0 16px 32px;color:var(--texte-2);font-size:13px;max-width:72em}
+</style>
+</head>
+<body>
+<header>
+  <h1>Faisceau : quatre pistes d'approfondissement (CH-020)</h1>
+  <p>À gauche, le Faisceau de CH-014 tel qu'il est. Chaque piste corrige un défaut nommé, et un seul ; elles peuvent se combiner. Les réglages s'appliquent aux cinq panneaux ; chaque titre ouvre la page seule, avec sa régie et ses notes. Toutes les données sont fictives.</p>
+  <div class="regles">
+    <label>Scène <select id="scene"></select></label>
+    <label>Thème <select id="theme"><option value="auto">système</option><option value="light">clair</option><option value="dark">sombre</option></select></label>
+    <label>Largeur <select id="largeur"><option value="360">360 px</option><option value="420" selected>420 px</option><option value="600">600 px</option></select></label>
+    <label>Mouvement <select id="mouvement"><option value="systeme">système</option><option value="reduit">réduit</option></select></label>
+  </div>
+</header>
+<main><div class="rangee" id="rangee"></div></main>
+<footer>Pour voir chaque piste vivre : scène « En cours », puis « En pause » et « Fin de lot » ; la piste 3 se joue sur toutes les scènes (prêt, arrêt, alerte, relecture, Écho). En mouvement réduit, rien ne se déplace : chaque état garde une forme fixe et son mot.</footer>
+<script>
+(function () {
+  'use strict';
+  const PISTES = [
+    ['faisceau', 'Faisceau', 'origine CH-014', 'La maquette d’origine : un faisceau conique fait le tour de la carte du lot en 3,2 s ; figé en pause ; absent sinon.'],
+    ['faisceau-1', '1 · Verre épais', 'matière, profondeur', 'Corrige : tout est du même verre, le fond disparaît, la carte du lot n’a pas plus de relief que les cases, et le faisceau n’éclaire rien.'],
+    ['faisceau-2', '2 · Comète', 'physique, cadence', 'Corrige : le faisceau tourne à vitesse fixe, sans lien avec ce que fait Ariane, et sa lueur conique file inégalement le long du rectangle.'],
+    ['faisceau-3', '3 · Grammaire', 'tous les états', 'Corrige : hors « en cours », le faisceau disparaît ou se fige à 200° ; prêt, arrêt, incident et fin se ressemblent, la pause ressemble à un défaut.'],
+    ['faisceau-4', '4 · Frise de lumière', 'frise, couleur, typographie', 'Corrige : la frise est une rangée de pastilles sans échelle ni lien avec le faisceau, et trois couleurs se disputent la lumière.'],
+  ];
+  const SCENES = [['pret', 'Prêt'], ['encours', 'En cours'], ['encours-inconnu', 'En cours, total inconnu'], ['pause', 'En pause'], ['arrete', 'Arrêté au milieu'], ['fin', 'Fin de lot'], ['reste', 'Ce qui reste'], ['examen', 'Examiner un cut'], ['pret-absent', 'ESV non connecté'], ['pret-onglet', 'Onglet à choisir'], ['reprise', 'Reprise après rechargement'], ['pret-file', 'File : réglage'], ['file-encours', 'File : partie 2 sur 3'], ['file-relecture', 'File : relecture'], ['file-alerte-page', 'File : alerte page figée'], ['file-alerte-onglet', 'File : alerte onglet fermé'], ['file-alerte-muet', 'File : alerte ESV muet'], ['file-alerte-refus', 'File : alerte refus'], ['file-fin', 'File : fin'], ['echo', 'Écho']];
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sel = document.getElementById('scene');
+  sel.innerHTML = SCENES.map(([v, t]) => `<option value="${v}"${v === 'encours' ? ' selected' : ''}>${esc(t)}</option>`).join('');
+  const r = () => ({ scene: sel.value, theme: document.getElementById('theme').value, largeur: document.getElementById('largeur').value, mouvement: document.getElementById('mouvement').value });
+  const x0 = r();
+  document.getElementById('rangee').innerHTML = PISTES.map(([nom, titre, axe, defaut]) => `<article class="carte${nom === 'faisceau' ? ' origine' : ''}"><h2><a href="${nom}.html">${esc(titre)}</a><span>${esc(axe)}</span></h2><p class="defaut">${esc(defaut)}</p><iframe title="${esc(titre)}" src="${nom}.html?regie=0&seul=1&s=${x0.scene}&t=${x0.theme}&w=${x0.largeur}&m=${x0.mouvement}"></iframe></article>`).join('');
+  function appliquer() {
+    const x = r();
+    document.documentElement.style.setProperty('--w', x.largeur + 'px');
+    if (x.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', x.theme);
+    document.querySelectorAll('iframe').forEach((f) => { try { f.contentWindow.postMessage({ ui2: x }, '*'); } catch (e) { /* cadre pas encore chargé */ } });
+  }
+  ['scene', 'theme', 'largeur', 'mouvement'].forEach((id) => document.getElementById(id).addEventListener('change', appliquer));
+  document.addEventListener('load', (e) => { if (e.target.tagName === 'IFRAME') e.target.contentWindow.postMessage({ ui2: r() }, '*'); }, true);
+  appliquer();
+})();
+</script>
+</body>
+</html>

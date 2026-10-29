@@ -2,7 +2,8 @@
 /* CH-014 : assemble chaque maquette autonome de maquettes/ui-v2/ à partir de sources/.
  *   node maquettes/ui-v2/sources/construire.cjs
  * Dans sources/<nom>.html : « /*COMMUN*\/ » reçoit commun.js, « /*POLICE:<fichier>*\/ »
- * reçoit sources/polices/<fichier>.css (polices en base64, aucune requête réseau à l'ouverture). */
+ * reçoit sources/polices/<fichier>.css (polices en base64, aucune requête réseau à l'ouverture),
+ * « /*INCLURE:<fichier>*\/ » reçoit sources/<fichier> (code partagé par quelques maquettes, CH-020). */
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -19,6 +20,7 @@ for (const nom of MAQUETTES) {
   let html = fs.readFileSync(source, 'utf8');
   html = html.replace(/\/\*POLICE:([a-z0-9-]+)\*\//g, (_, f) => fs.readFileSync(path.join(ICI, 'polices', f + '.css'), 'utf8'));
   html = html.replace('/*COMMUN*/', () => commun);
+  html = html.replace(/\/\*INCLURE:([a-z0-9.-]+)\*\//g, (_, f) => fs.readFileSync(path.join(ICI, f), 'utf8'));
   html = html.replace(/^(<!doctype html>)/i, '$1\n<!-- Fichier assemblé par sources/construire.cjs : modifier sources/' + nom + '.html, pas ce fichier. -->');
   fs.writeFileSync(path.join(SORTIE, nom + '.html'), html);
   console.log(nom + '.html', Math.round(html.length / 1024) + ' Kio');
@@ -33,6 +35,7 @@ const FAMILLES = [
   ['edito-', 'Éditorial et typographie', 'La typographie, la mise en page et le récit portent l’état.'],
   ['matiere-', 'Lumière, atmosphère, 3D', 'La lumière, la matière et l’image du relevé lui-même.'],
   ['info-', 'Signalétique et information', 'Un système d’information compris d’un coup d’œil, sans couleur.'],
+  ['faisceau-', 'Faisceau approfondi (CH-020)', 'Quatre pistes tirées du Faisceau ; chacune corrige un défaut nommé de la maquette d’origine.'],
 ];
 const texte = (h) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 const toutes = fs.readdirSync(ICI).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5)).sort();
