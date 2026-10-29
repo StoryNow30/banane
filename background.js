@@ -3274,6 +3274,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  let ping=null;try{ping=await call('ping');}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
  let rep=null;try{rep=await call('changerPartie',{part:vers});}catch(x){return echec('changement-impossible',`commande refusée (${String(x?.message||x).slice(0,160)})`);}
+ if(rep?.ok!==true&&['partie-absente','libelle-illisible'].includes(rep?.raison))return echec('selecteur-illisible',`la page refuse : ${rep.raison}`);
  if(rep?.ok!==true)return echec('changement-impossible',rep?.raison?`la page refuse : ${String(rep.raison).slice(0,120)}`:'réponse illisible de la page');
  journalerSimple('file-parties-changement',{vers,retour,mode:typeof rep.mode==='string'?rep.mode.slice(0,20):null,de:Number.isInteger(rep.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:null,deja:rep.deja===true});
  const fin=Date.now()+R.changementBorneMs;let vu=false,derniere=null;

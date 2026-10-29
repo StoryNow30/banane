@@ -10,7 +10,7 @@
  *                                                            k+1 = N --> fin (« nombre-atteint »)
  *   lot / passe / relecture --écriture en suspens--> arret « ecriture-incertaine » (ni passe, ni relecture, ni partie suivante : D-237, D-248)
  *   lot --refus propre au lot, arrêt par l'opérateur--> arret
- *   changement --60 s sans la partie, onglet fermé, ESV muet, commande absente--> arret
+ *   changement --60 s sans la partie, onglet fermé, ESV muet, commande absente, sélecteur sans la partie--> arret
  *   relecture non lancée, ESV sur une autre partie --> retour sur la partie du lot puis relance de la relecture (une fois, D-261)
  *   tout état actif --arreter--> arret « operateur » ; --suspens (registre)--> arret « ecriture-incertaine »
  * La passe et la relecture ne sont jamais lancées par la file : le service worker les lance déjà à la fin de chaque lot (D-238 : la passe
@@ -48,6 +48,7 @@
     'changement-impossible': { file: 'arret', alerte: true, texte: 'la page d’ESV ne change pas de partie' },
     'commande-absente': { file: 'arret', alerte: true, texte: 'l’adaptateur ne sait pas changer de partie' },
     'onglet-ferme': { file: 'arret', alerte: true, texte: 'l’onglet ESV a été fermé' },
+    'selecteur-illisible': { file: 'arret', alerte: true, texte: 'le sélecteur de parties d’ESV n’offre plus la partie suivante : arrêt prudent' },
     'esv-muet': { file: 'arret', alerte: true, texte: 'ESV ne répond plus' },
   });
   /* Seuils de l'alerte : valeurs initiales proposées (architecture 5.0, module P), non décidées, révisables. */
@@ -164,7 +165,7 @@
           e.k++; e.etat = 'lot'; e.changement = null; e.partie = partieNeuve(e.plan[e.k], e.k, at); e.depuis = at;
           return { etat: e, actions: [{ type: 'demarrer-lot', part: e.plan[e.k], rang: e.k }] };
         }
-        if (type === 'changement-echec') { arreter(e, ['commande-absente', 'esv-muet', 'onglet-ferme'].includes(ev.motif) ? ev.motif : 'changement-impossible', at, ev.detail); return { etat: e, actions: [] }; }
+        if (type === 'changement-echec') { arreter(e, ['commande-absente', 'esv-muet', 'onglet-ferme', 'selecteur-illisible'].includes(ev.motif) ? ev.motif : 'changement-impossible', at, ev.detail); return { etat: e, actions: [] }; }
         return ignore(`événement ${type} hors de l’état changement`);
     }
     return ignore('état inconnu');

@@ -110,7 +110,7 @@ test('relecture non lancée parce qu’ESV affiche une autre partie : retour sur
 
 test('changement de partie : chaque motif d’échec arrête la file avec alerte et bilan ; une autre partie atteinte est ignorée', () => {
   const avant = partie(demarrer(3).etat, 0).etat;
-  for (const motif of ['changement-impossible', 'commande-absente', 'esv-muet', 'onglet-ferme']) {
+  for (const motif of ['changement-impossible', 'commande-absente', 'esv-muet', 'onglet-ferme', 'selecteur-illisible']) {
     const r = F.transition(avant, { type: 'changement-echec', motif, detail: 'essai', at });
     assert.equal(r.etat.etat, 'arret'); assert.equal(r.etat.motifFin.code, motif); assert.ok(r.etat.alerte); assert.equal(r.etat.bilan.length, 1);
   }
