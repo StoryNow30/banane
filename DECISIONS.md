@@ -3281,3 +3281,11 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Conséquence pour la v7** : un oracle de 50,7 % sous 3 mm sur la partie 20 (contre 95,7 % sur la partie 17, non représentative) dit que la pose de l'opérateur n'est, pour la moitié des rails, dans aucune hypothèse du jeu actuel : l'effort va aux hypothèses manquantes, pas au pixel. Aucune hypothèse identifiée ne démontre aujourd'hui moins de 5 mm ni moins de 3 mm.
 - Le numéro suivant est D-267.
 
+## D-267 — Chantier CH-012 clos : aucune hypothèse ne démontre la sous-5 mm ni la sous-3 mm (intégrateur, sur délégation D-262, 29/10/2026)
+
+- **Mesure** (CH-012, examen unique de la partie 20, critères écrits avant, 172 jugés, fidélité du rejeu 646 sur 646) : la v6 contre l'opérateur est à 53,5 % [46,0 ; 60,8] sous 3 mm, 63,4 % [56,0 ; 70,2] sous 5 mm, 81,4 % [74,9 ; 86,5] sous 10 mm ; sans les 21 poses décalées de plus de 100 mm (151 jugés) : 60,9 %, 72,2 %, 92,7 %.
+- **Réfuté ou non retenu** : arrondi du clic (D-266), H7 (correction verticale selon la densité de points, réplication non reproduite), H8 (tendance linéaire du décalage de voie : l'interpolation est pire que le plus proche voisin, de 10 à 20 points), H9 (choix de branche par la perte du gabarit : H6 « voisin humain proche » fait mieux).
+- **Établi** : Chromium tronque les coordonnées du clic (biais de −0,25 mm par axe, sans effet mesurable sur les seuils) ; le bruit de la pose de l'opérateur est de 1,01 mm en latéral et 1,26 mm en vertical par rail (borne haute) ; le manque de la meilleure hypothèse H0 à H6 est de 51,7 % des rails au-delà de 3 mm, 36,3 % au-delà de 5 mm, 21,8 % au-delà de 10 mm, concentré où l'opérateur déplace le rail de plus de 20 mm (étage différé, voie décalée) ; le décalage de voie est un choix parmi des valeurs de voisins, pas un champ lisse ; les voisins posés par le lot sont faux dans ces zones.
+- **Décision** : le chantier est clos. La suite de la qualité de pose se mesure d'abord sur un examen indépendant (partie 0 de la test 24, fermée, une fois l'Écho fait). La cible v7 « sous 5 mm » (D-258) n'est démontrée par aucune hypothèse connue ; elle reste l'objectif, sans engagement de date. Piste restante : le choix de la bonne branche de voie parmi celles des voisins humains, en assistance de relecture.
+- Le numéro suivant est D-268.
+
