@@ -3244,3 +3244,12 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Condition de départ de la file** : le changement de partie n'a jamais été observé sur un vrai ESV. L'opérateur le fait une fois à la main en Écho pendant la séance de la test 24 (relevé). Premier essai de la file : 2 parties, l'opérateur présent.
 - **Non vérifié** : la variante A est celle que l'intégrateur a comprise comme validée ; l'opérateur ne l'a pas redit par son nom.
 - Le numéro suivant est D-262.
+
+## D-262 — Délégation à l'intégrateur pour les gains significatifs (opérateur, 29/10/2026)
+
+- **Décision écrite de l'opérateur** : « Je te laisse tout décider tant qu'on obtient des gains significatifs. »
+- **Portée** : l'intégrateur décide sans demander le lancement de chantiers d'analyse et de recherche, l'ordre des tâches, les critères d'analyse et la procédure de mesure, à condition que chaque décision vise un gain mesurable sur la qualité de pose, les différés ou la sûreté, et qu'il la reporte à l'opérateur ensuite.
+- **Ce que la délégation ne lève pas** : les interdits absolus de `CLAUDE.md` (pas de SKIP, pas de validation d'un cut non résolu, pas de réécriture d'historique, pas de fusion dans `main` ni de publication, pas de secret hors dépôt, aucun nom d'opérateur, code projet ESV, adresse ESV, UUID ni capture dans le dépôt `banane`, aucun nom de modèle d'IA, les exécutants hors des modules de décision). Le design reste en pause (D-257) jusqu'à décision de l'opérateur ; le plafond de la deuxième passe (D-259, 10 cuts par lot) ne se lève que par décision écrite.
+- **Cadrage de l'intégrateur** : un gain est dit significatif quand il est chiffré avec son intervalle sur un effectif suffisant et qu'aucun cut n'est dégradé ; sinon il est rapporté comme indice, pas comme gain.
+- Le numéro suivant est D-263.
+
