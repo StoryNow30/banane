@@ -61,6 +61,8 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-puce[data-etat="ko"] i{background:var(--alerte)}
 #ui5.u-signal .sg-puce[data-etat="aucun"] i{background:transparent;border:1.5px solid var(--encre3)}
 #ui5.u-signal .sg-puce .sg-tx{overflow:hidden;text-overflow:ellipsis}
+/* CH-025 : entre 480 et environ 520 de large (mode normal), la barre débordait de 11 px (le bouton Réglages sortait) : la puce rétrécit, le texte se coupe. */
+#ui5.u-signal .sg-puce,#ui5.u-signal .sg-puce .sg-tx{min-width:0}#ui5.u-signal .sg-ico{flex:none}
 #ui5.u-signal .sg-puce .sg-fl{width:10px;height:10px;color:var(--encre2)}
 #ui5.u-signal .sg-court{display:none}
 #ui5.u-signal[data-taille="compact"] .sg-puce .sg-long{display:none}#ui5.u-signal[data-taille="compact"] .sg-puce .sg-court{display:inline}
@@ -150,6 +152,24 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-raison{flex-basis:100%;color:var(--encre2)}
 #ui5.u-signal .sg-verrou-ligne{display:flex;align-items:center;gap:var(--e2);color:var(--encre2)}
 #ui5.u-signal .sg-verrou-ligne svg{width:14px;height:14px}
+
+/* CH-025 : file de parties (maquette S-file-de-parties.html, variante A) : bandeau, bilan, boîte de réglage */
+#ui5.u-signal .sg-file{display:flex;flex-direction:column;gap:var(--e2);padding-left:var(--e4);border-left:2px solid var(--filet-fort);color:var(--encre2)}
+#ui5.u-signal .sg-file p{margin:0}
+#ui5.u-signal .sg-file-t{color:var(--encre)}#ui5.u-signal .sg-file-t b{font-weight:500}
+#ui5.u-signal .sg-file .sg-meta b{color:var(--encre2);font-weight:500}
+#ui5.u-signal .sg-file-alerte{color:var(--alerte)}
+#ui5.u-signal .sg-file-bilan{margin:0;padding-left:var(--e5);color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta);max-height:132px;overflow:auto;overflow-wrap:anywhere;scrollbar-width:thin}
+#ui5.u-signal .sg-file-bilan li{padding:2px 0}
+#ui5.u-signal .sg-file-bts{display:flex;flex-wrap:wrap;gap:var(--e3)}
+#ui5.u-signal .sg-boite{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 2 * var(--e4)));max-height:calc(100% - 2 * var(--e4));overflow:auto;background:var(--surface);border:1px solid var(--filet);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:6;padding:var(--e5);display:flex;flex-direction:column;gap:var(--e4);animation:sg-fondu var(--d-glisse) var(--sortie)}
+#ui5.u-signal[data-taille="compact"] .sg-boite{padding:var(--e4);gap:var(--e3)}
+#ui5.u-signal .sg-boite .sg-t{font-weight:500}
+#ui5.u-signal .sg-boite .sg-reg{border-bottom:0;min-height:0;padding:0}
+#ui5.u-signal .sg-boite .sg-meta{margin:0;color:var(--encre2);font-size:var(--t-meta);line-height:var(--l-meta)}
+#ui5.u-signal .sg-bts{display:flex;flex-wrap:wrap;gap:var(--e3);justify-content:flex-end;align-items:center}
+#ui5.u-signal .sg-bts .sg-annuler{height:36px;padding:0 var(--e3);color:var(--encre2)}#ui5.u-signal .sg-bts .sg-annuler:hover{color:var(--encre)}
+#ui5.u-signal .sg-bts .sg-principal{min-width:0;height:auto;min-height:36px;padding:6px var(--e4);white-space:normal}
 
 /* zone du tiroir */
 #ui5.u-signal .sg-zone{flex:1;min-height:0;position:relative;overflow:hidden}
