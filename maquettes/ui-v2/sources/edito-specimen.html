@@ -75,9 +75,9 @@ body{margin:0;background:var(--scene);color:var(--encre);font-family:'Satoshi',s
 
 /* actions : cases pleine largeur */
 .actions{display:flex;flex-direction:column}
-.btn{font:inherit;font-size:17px;font-weight:700;text-align:left;cursor:pointer;padding:16px 14px;border:0;border-bottom:1px solid var(--filet);background:transparent;color:var(--encre);border-radius:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn{font:inherit;font-size:17px;font-weight:700;text-align:left;cursor:pointer;padding:16px 14px;border:0;border-bottom:1px solid var(--filet);background:transparent;color:var(--encre);border-radius:0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
 .btn:active{transform:scale(.98)}
-.btn small{font-weight:400;font-size:12px;color:inherit}
+.btn small{margin-left:auto;font-weight:400;font-size:12px;color:inherit}
 .btn.principal{background:var(--encre);color:var(--papier)}
 .btn.lien{font-weight:500;text-decoration:underline;text-underline-offset:4px}
 .btn.arret.confirme{background:var(--encre);color:var(--papier)}

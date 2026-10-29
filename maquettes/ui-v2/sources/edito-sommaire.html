@@ -73,9 +73,9 @@ body{margin:0;background:var(--scene);color:var(--encre);font-family:'Newsreader
 
 /* actions */
 .actions{display:flex;flex-direction:column;gap:8px;margin:20px 0 0}
-.btn{font:inherit;font-size:18px;font-weight:600;text-align:left;padding:12px 16px;border:1px solid var(--encre);background:transparent;color:var(--encre);border-radius:1px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn{font:inherit;font-size:18px;font-weight:600;text-align:left;padding:12px 16px;border:1px solid var(--encre);background:transparent;color:var(--encre);border-radius:1px;cursor:pointer;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
 .btn:active{transform:scale(.97)}
-.btn small{font-weight:400;font-style:italic;font-size:15px}
+.btn small{margin-left:auto;font-weight:400;font-style:italic;font-size:15px}
 .btn.principal{background:var(--encre);color:var(--papier)}
 .btn.lien{border:0;padding:6px 0;font-weight:400;font-style:italic;text-decoration:underline;text-underline-offset:4px;justify-content:center}
 .btn.arret{font-weight:400}
@@ -180,7 +180,7 @@ figcaption{font-size:15px;font-style:italic;color:var(--gris);margin-top:6px;tex
       l += entree('III', 'Regarder ce qui reste<span class="appel">1</span>', r ? `${r} cuts` : 'rien', enCours ? 'loin' : 'ici', 'reste');
       l += entree('IV', 'Exporter le bilan', enCours ? 'à venir' : 'prêt', enCours ? 'loin' : '');
     } else {
-      f.parties.forEach((p) => { l += entree(ROMAIN[p.n - 1], `Partie ${p.n}`, `${n(p.poses)} posés`, 'fait'); l += entree('', 'relue et corrigée', 'faite', 'sous fait'); });
+      f.parties.forEach((p) => { l += entree(ROMAIN[p.n - 1], `Partie ${p.n}`, `${n(p.poses)} posés`, 'fait'); if (!(m.file.relecture && p.n === f.courante)) l += entree('', 'relue et corrigée', 'faite', 'sous fait'); });
       if (m.file.relecture) l += entree('', `relecture de la partie ${f.courante}`, 'en cours', 'sous ici');
       else if (f.ligneCourante) {
         l += entree(ROMAIN[f.courante - 1], `Partie ${f.courante}`, poseVal, f.alerte ? 'ici' : 'ici', 'pose');

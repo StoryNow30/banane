@@ -62,9 +62,9 @@ body{margin:0;background:var(--scene);color:var(--encre);font-family:'Switzer',s
 .texte{margin:0 0 10px;max-width:34em}
 
 .actions{display:flex;flex-direction:column;gap:10px;margin:20px 0 0}
-.btn{font:inherit;font-size:19px;font-weight:700;text-align:left;cursor:pointer;padding:16px 18px;border:3px solid var(--encre);background:transparent;color:var(--encre);border-radius:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn{font:inherit;font-size:19px;font-weight:700;text-align:left;cursor:pointer;padding:16px 18px;border:3px solid var(--encre);background:transparent;color:var(--encre);border-radius:0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
 .btn:active{transform:scale(.97)}
-.btn small{font-weight:500;font-size:14px}
+.btn small{margin-left:auto;font-weight:500;font-size:14px}
 .btn.principal{background:var(--encre);color:var(--papier)}
 #panneau[data-ton="avous"] .btn.principal{color:var(--orange)}
 #panneau[data-ton="nuit"] .btn.principal{color:var(--nuit)}
@@ -133,7 +133,7 @@ figcaption{font-size:14px;color:var(--encre-douce);margin-top:6px}
   <aside class="notes">
     <h2>L'affiche</h2>
     <p><b>Logique.</b> Une affiche lisible à trois mètres : un mot et un nombre occupent la largeur ; le fond dit s'il faut venir et le mot le redit ; le détail est sous la ligne de flottaison, en petit.</p>
-    <p><b>D'où ça vient.</b> fontshare, fiche « Details » de Technor (« pour l'affichage, plus c'est grand, mieux c'est ») ; la planche de chaque famille (le nom à 120 px). wedoflow, gabarit Boldest : le nombre géant avec son unité collée en petit. landdding, « Browse by color » et fiches de sites : une couleur est toujours nommée. Le rapport « State of Landing Pages 2026 » de landdding : « la typographie fait davantage le travail ». emilkowal.ski : courbes ease-out, transitions courtes.</p>
+    <p><b>D'où ça vient.</b> fontshare, fiche « Details » de Technor (« pour l'affichage, plus c'est grand, mieux c'est ») ; la planche de chaque famille (le nom à 120 px). wedoflow, gabarit Boldest : le nombre géant avec son unité collée en petit. landdding, « Browse by color » et fiches de sites : une couleur est toujours nommée. Le rapport « State of Landing Pages 2026 » de landdding : « la typographie fait davantage le travail ». le blog d'un ingénieur du design recensé par insposite, article « 7 Practical Animation Tips » : courbes ease-out, transitions courtes.</p>
     <p><b>Ce que ça veut dire ici.</b> Fond papier : tout va bien ou rien n'est lancé. Fond gris : arrêté ou en pause par vous, rien ne presse. Fond orange : « À vous », une décision vous attend. Fond nuit : fini, le bilan est prêt. Le nombre géant est ce qui reste à faire ; la bande pleine sous lui, ce qui est fait (pointillée si le total est inconnu).</p>
     <p><b>Mouvement.</b> Au changement d'état, le fond glisse vers sa teinte (400 ms) et le mot est collé de haut en bas comme une nouvelle affiche (300 ms). À chaque cut, le chiffre qui change descend dans sa case (200 ms). Mouvement réduit : tout est posé d'un coup.</p>
   </aside>

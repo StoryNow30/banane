@@ -65,7 +65,7 @@ body{margin:0;background:var(--scene);color:var(--encre);font-family:'Supreme',s
 .legende-filet{display:flex;justify-content:space-between;font-size:12px;color:var(--gris);margin:-6px 0 12px}
 .chapeau{font-size:18px;line-height:1.35;margin:0 0 14px;max-width:34em}
 .chiffre{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:4px 0 4px}
-.c{display:inline-block;width:.6em;text-align:center}
+.c{display:inline-block;width:.56em;text-align:center}
 .colonnes .c{width:.64em}
 .temps{font-family:'Erode',Georgia,serif;font-weight:500;font-size:22px;line-height:1.2;margin:2px 0 0}
 .chiffre .n{font-family:'Erode',Georgia,serif;font-weight:700;font-size:clamp(56px,19cqi,96px);line-height:.9;letter-spacing:-.02em;display:inline-block}
@@ -96,9 +96,9 @@ body{margin:0;background:var(--scene);color:var(--encre);font-family:'Supreme',s
 
 /* actions */
 .actions{display:flex;flex-direction:column;gap:8px;margin:18px 0 0}
-.btn{font:inherit;font-weight:700;font-size:17px;text-align:left;cursor:pointer;padding:13px 16px;border:2px solid var(--bouton);background:transparent;color:var(--encre);border-radius:0;display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;transition:transform .08s ease-out}
+.btn{font:inherit;font-weight:700;font-size:17px;text-align:left;cursor:pointer;padding:13px 16px;border:2px solid var(--bouton);background:transparent;color:var(--encre);border-radius:0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:12px;width:100%;transition:transform .08s ease-out}
 .btn:active{transform:scale(.97)}
-.btn small{font-weight:400;font-size:14px;color:inherit;opacity:1}
+.btn small{margin-left:auto;font-weight:400;font-size:14px;color:inherit;opacity:1}
 .btn.principal{background:var(--bouton);color:var(--sur-bouton)}
 .btn.lien{border:0;padding:6px 0;text-decoration:underline;text-underline-offset:4px;font-size:16px}
 .btn.arret{border-width:1px}
@@ -170,7 +170,7 @@ figcaption{font-size:14px;color:var(--gris);margin-top:6px}
   <aside class="notes">
     <h2>La Une</h2>
     <p><b>Logique.</b> Le panneau est la une du journal du lot : la manchette dit l'état en un ou deux mots, lisible à trois mètres ; le chapeau dit le chiffre ; les rubriques sous filet donnent le détail.</p>
-    <p><b>D'où ça vient.</b> landdding, la fiche du site Fieldwork : manchette serif pleine largeur et rubriques en capitales posées sur un filet épais. fontshare, fiche « Details » d'Erode (serif pensée pour titres et citations éditoriaux) et de Supreme (sans construite, sobre). iter0, le « Launch brief » (libellé gris au-dessus, valeur forte) pour le bilan. wedoflow, gabarit Boldest : le nombre géant suivi de son unité en petit. emilkowal.ski, « You Don't Need Animations » : transitions sous 300 ms, en ease-out.</p>
+    <p><b>D'où ça vient.</b> landdding, la fiche du site Fieldwork : manchette serif pleine largeur et rubriques en capitales posées sur un filet épais. fontshare, fiche « Details » d'Erode (serif pensée pour titres et citations éditoriaux) et de Supreme (sans construite, sobre). iter0, le « Launch brief » (libellé gris au-dessus, valeur forte) pour le bilan. wedoflow, gabarit Boldest : le nombre géant suivi de son unité en petit. le blog d'un ingénieur du design recensé par insposite, article « You Don't Need Animations » : transitions sous 300 ms, en ease-out.</p>
     <p><b>Ce que ça veut dire ici.</b> Encre sur papier pour tout ce qui va bien. Le trait épais sous la manchette est la progression : la part en encre est faite, le reste est en filet clair ; en pointillé quand le total est inconnu. Un seul rouge, l'« édition spéciale » : il paraît seulement quand une décision vous attend (ESV absent, onglet à choisir, file arrêtée, confirmation d'arrêt), toujours avec le mot « À vous ».</p>
     <p><b>Mouvement.</b> Changement d'état : la manchette se compose de bas en haut (280 ms), le chapeau suit (240 ms). Le compteur monte d'un cran à chaque cut posé (220 ms) : on voit de loin que le lot tourne. Le trait de progression avance en continu. Mouvement réduit : tout est posé sans animation.</p>
   </aside>

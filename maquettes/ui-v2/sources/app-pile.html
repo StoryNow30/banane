@@ -148,7 +148,7 @@ button:focus-visible,input:focus-visible{outline:2px solid currentColor;outline-
 .etape.faite{background:var(--k-encre);color:var(--k)}
 .etape.courante{border-width:3px}
 .etape.cassee{border-style:dashed}
-.toast{position:absolute;left:14px;right:14px;top:50px;background:var(--encre);color:var(--sol);border-radius:14px;padding:10px 14px;display:flex;gap:8px;align-items:center;z-index:9;font-weight:600}
+.toast{position:absolute;left:14px;right:14px;top:6px;background:var(--encre);color:var(--sol);border-radius:14px;padding:10px 14px;display:flex;gap:8px;align-items:center;z-index:9;font-weight:600}
 .toast .ico{color:var(--sol)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
@@ -184,6 +184,7 @@ button:focus-visible,input:focus-visible{outline:2px solid currentColor;outline-
 const Socle = (function () {
   'use strict';
   let racineApp = null, opts = null, dernierS = null, premier = true, cleEtat = '';
+  let focusGarde = null;
   const local = {};
   const reduit = () => Demo.D.mouvementReduit();
 
@@ -290,6 +291,8 @@ const Socle = (function () {
     /* le moteur détache puis rattache la racine à chaque tic : un défilement interne retombe à 0
        (mesuré). On remet chaque zone défilante où l'opérateur l'avait laissée. */
     racineApp.querySelectorAll('*').forEach((el) => { if (el._defile != null && el.scrollTop !== el._defile) el.scrollTop = el._defile; });
+    /* même chose pour le focus : un nœud détaché le perd ; on le rend s'il est toujours là */
+    if (focusGarde && focusGarde.isConnected && (document.activeElement === document.body || !document.activeElement) && focusGarde !== document.activeElement) focusGarde.focus({ preventScroll: true });
     const D = Demo.D, S = Demo.etat(), m = D.modele();
     const k = m.phase + '|' + m.vue + '|' + m.activite + '|' + (m.file.relecture ? 'r' : '') + (m.file.alerte ? 'a' : '') + (m.incident ? m.incident.type : '');
     if (k !== cleEtat && opts.etat) opts.etat(local, m, cleEtat);
@@ -319,7 +322,12 @@ const Socle = (function () {
             peindre();
           });
           racine.addEventListener('scroll', (e) => { const t = e.target; if (t !== racine && t.nodeType === 1 && racineApp && racineApp.contains(t)) t._defile = t.scrollTop; }, true);
-          racine.addEventListener('keydown', (e) => { if (o.clavier && o.clavier(e, local)) peindre(); });
+          racine.addEventListener('focusin', (e) => { focusGarde = e.target; });
+          /* clavier écouté sur le document : le focus peut être sur le corps de page après un tic */
+          document.addEventListener('keydown', (e) => {
+            const t = e.target; if (t !== document.body && !racine.contains(t)) return;
+            if (o.clavier && o.clavier(e, local)) peindre();
+          });
         }
         if (S !== dernierS) { dernierS = S; Object.assign(local, o.local || {}); cleEtat = ''; if (o.reinit) o.reinit(local); }
         peindre();

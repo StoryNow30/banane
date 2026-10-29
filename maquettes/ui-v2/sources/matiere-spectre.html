@@ -86,9 +86,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:'Archivo',s
 .mesure-grand dd{font-size:26px;font-weight:500;letter-spacing:-.02em}
 .mesure-grand dd small{font-size:14px;color:var(--doux);font-weight:400;letter-spacing:0}
 @container (min-width:520px){
-  .mesures{grid-template-columns:1fr 1fr 1fr}
+  .mesures{grid-template-columns:repeat(4,1fr)}
   .mesure{padding:8px 10px!important;border-left:1px solid var(--filet)}
-  .mesure:nth-child(3n+2){border-left:0}
+  .mesure:nth-child(4n+2){border-left:0}
   .mesure-grand{grid-column:1 / -1}
 }
 
@@ -577,7 +577,7 @@ html[data-mouvement="reduit"] *,html[data-mouvement="reduit"] *::before,html[dat
     }
     const corps = m.phase === 'pret'
       ? K.incident(m) + K.bornes(m) + K.fileReglage(m)
-      : (m.file.alerte ? K.fileSuivi(m) + mesures(m) + K.incident(m) : mesures(m) + K.incident(m) + K.fileSuivi(m));
+      : (m.file.alerte ? K.fileSuivi(m) + mesures(m) : K.incident(m) + mesures(m) + K.fileSuivi(m));
     return `<div class="p">${haut}<header><h2 class="titre">${esc(m.titre)}</h2><p class="phrase">${esc(m.phrase)}</p></header>`
       + banc() + legende(m) + corps + K.actions(m.actions) + K.message(m) + '</div>';
   }
