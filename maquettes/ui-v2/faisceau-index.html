@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Faisceau, quatre pistes</title>
+<title>Faisceau, trois niveaux</title>
 <!-- CH-020 : page de comparaison écrite à la main (pas assemblée). Les cinq panneaux sont les
      pages autonomes faisceau.html et faisceau-1.html à faisceau-4.html, ouvertes sans régie ; les
      réglages ci-dessous leur sont envoyés par postMessage, comme dans index.html. -->
@@ -29,13 +29,18 @@ main{padding:16px 16px 40px}
 .carte h2 span{font-weight:400;color:var(--texte-2);font-size:13px}
 .carte .defaut{font-size:13px;color:var(--texte-2);margin:0 0 8px;min-height:5.2em}
 .carte iframe{display:block;width:100%;height:760px;border:0;border-radius:6px;background:var(--fond)}
+main h2.section{font-size:16px;margin:8px 0 2px}
+main p.section{margin:0 0 10px;color:var(--texte-2);font-size:13px;max-width:72em}
+details.cote{margin-top:24px}
+details.cote summary{cursor:pointer;font-size:15px;font-weight:600}
+details.cote .rangee{opacity:.92;margin-top:10px}
 footer{padding:0 16px 32px;color:var(--texte-2);font-size:13px;max-width:72em}
 </style>
 </head>
 <body>
 <header>
-  <h1>Faisceau : quatre pistes d'approfondissement (CH-020)</h1>
-  <p>À gauche, le Faisceau de CH-014 tel qu'il est. Chaque piste corrige un défaut nommé, et un seul ; elles peuvent se combiner. Les réglages s'appliquent aux cinq panneaux ; chaque titre ouvre la page seule, avec sa régie et ses notes. Toutes les données sont fictives.</p>
+  <h1>Faisceau : la Frise de lumière en trois niveaux (CH-020)</h1>
+  <p>La piste 4 telle qu'elle était, puis la même piste simplifiée à trois niveaux, du plus dépouillé (4a) au plus riche (4c) : même contenu, plus ou moins de matière. Les réglages s'appliquent à tous les panneaux ; chaque titre ouvre la page seule, avec sa régie et ses notes. Toutes les données sont fictives.</p>
   <div class="regles">
     <label>Scène <select id="scene"></select></label>
     <label>Thème <select id="theme"><option value="auto">système</option><option value="light">clair</option><option value="dark">sombre</option></select></label>
@@ -45,17 +50,27 @@ footer{padding:0 16px 32px;color:var(--texte-2);font-size:13px;max-width:72em}
     <label>Avancement <select id="avancement"><option value="actuel">actuel (celui de chaque piste)</option><option value="continu">Continu · remplissage fluide</option><option value="paliers">Paliers · ne recule jamais</option><option value="graduation">Graduation qui se révèle</option><option value="matiere">Matière · un niveau qui monte</option></select></label>
   </div>
 </header>
-<main><div class="rangee" id="rangee"></div></main>
-<footer>Police et Avancement s'appliquent à chaud aux quatre pistes (l'original n'a pas ces réglages). Polices : toutes sous licence SIL Open Font License 1.1, embarquées dans chaque page. Avancement : « actuel » garde l'effet propre à chaque piste ; les quatre autres remplacent la tête qui tourne par une mesure de la part faite (sans quantité quand le total est inconnu). Pour voir chaque piste vivre : scène « En cours », puis « En pause » et « Fin de lot » ; la piste 3 se joue sur toutes les scènes (prêt, arrêt, alerte, relecture, Écho). En mouvement réduit, rien ne se déplace : chaque état garde une forme fixe et son mot.</footer>
+<main>
+  <h2 class="section">Frise de lumière</h2>
+  <p class="section">Chaque élément gardé répond à « où en est le lot ? », « dois-je agir ? » ou « que reste-t-il ? ». Éléments affichés sur les dix scènes de l'inventaire : piste 4, 352 ; 4a, 178 ; 4b, 184 ; 4c, 184 (sources/inventaire.cjs).</p>
+  <div class="rangee" id="rangee"></div>
+  <details class="cote"><summary>Pistes mises de côté : l'original, Verre épais, Comète, Grammaire</summary><div class="rangee" id="cote"></div></details>
+</main>
+<footer>Police et Avancement s'appliquent à chaud à toutes les pistes (l'original n'a pas ces réglages). Polices : toutes sous licence SIL Open Font License 1.1, embarquées dans chaque page. Avancement : « actuel » garde l'effet propre à chaque piste ; les quatre autres remplacent la tête qui tourne par une mesure de la part faite (sans quantité quand le total est inconnu). Pour voir chaque piste vivre : scène « En cours », puis « En pause » et « Fin de lot » ; la piste 3 se joue sur toutes les scènes (prêt, arrêt, alerte, relecture, Écho). En mouvement réduit, rien ne se déplace : chaque état garde une forme fixe et son mot.</footer>
 <script>
 (function () {
   'use strict';
+  const NIVEAUX = [
+    ['faisceau-4', '4 · Frise de lumière', 'avant simplification', 'La piste telle que l’opérateur l’a vue : en-tête, carte, frise titrée, grille de quatre cases, deux boutons pleins, légende.'],
+    ['faisceau-4a', '4a · Dépouillé', 'trait seul', 'Retiré : surfaces, ombres, fond, grille de cases, barre d’avancement, en-tête « Ariane », titre et légende de la frise, second bouton plein. Le cut en cours est dans la phrase.'],
+    ['faisceau-4b', '4b · Retenu', 'surface douce', 'Comme 4a, avec une carte en surface douce et ombre légère sur une lumière de fond fixe, le repère du cut en cours sur la frise, l’étendue traitée en fin de lot.'],
+    ['faisceau-4c', '4c · Riche', 'verre, fond lent', 'Comme 4b, avec la carte en verre, un fond qui bouge très lentement, l’éclat de la frise à chaque cut, l’activité en pastille, les étapes de la file.'],
+  ];
   const PISTES = [
     ['faisceau', 'Faisceau', 'origine CH-014', 'La maquette d’origine : un faisceau conique fait le tour de la carte du lot en 3,2 s ; figé en pause ; absent sinon.'],
     ['faisceau-1', '1 · Verre épais', 'matière, profondeur', 'Corrige : tout est du même verre, le fond disparaît, la carte du lot n’a pas plus de relief que les cases, et le faisceau n’éclaire rien.'],
     ['faisceau-2', '2 · Comète', 'physique, cadence', 'Corrige : le faisceau tourne à vitesse fixe, sans lien avec ce que fait Ariane, et sa lueur conique file inégalement le long du rectangle.'],
     ['faisceau-3', '3 · Grammaire', 'tous les états', 'Corrige : hors « en cours », le faisceau disparaît ou se fige à 200° ; prêt, arrêt, incident et fin se ressemblent, la pause ressemble à un défaut.'],
-    ['faisceau-4', '4 · Frise de lumière', 'frise, couleur, typographie', 'Corrige : la frise est une rangée de pastilles sans échelle ni lien avec le faisceau, et trois couleurs se disputent la lumière.'],
   ];
   const SCENES = [['pret', 'Prêt'], ['encours', 'En cours'], ['encours-inconnu', 'En cours, total inconnu'], ['pause', 'En pause'], ['arrete', 'Arrêté au milieu'], ['fin', 'Fin de lot'], ['reste', 'Ce qui reste'], ['examen', 'Examiner un cut'], ['pret-absent', 'ESV non connecté'], ['pret-onglet', 'Onglet à choisir'], ['reprise', 'Reprise après rechargement'], ['pret-file', 'File : réglage'], ['file-encours', 'File : partie 2 sur 3'], ['file-relecture', 'File : relecture'], ['file-alerte-page', 'File : alerte page figée'], ['file-alerte-onglet', 'File : alerte onglet fermé'], ['file-alerte-muet', 'File : alerte ESV muet'], ['file-alerte-refus', 'File : alerte refus'], ['file-fin', 'File : fin'], ['echo', 'Écho']];
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -64,7 +79,9 @@ footer{padding:0 16px 32px;color:var(--texte-2);font-size:13px;max-width:72em}
   const r = () => ({ scene: sel.value, theme: document.getElementById('theme').value, largeur: document.getElementById('largeur').value, mouvement: document.getElementById('mouvement').value });
   const f = () => ({ police: document.getElementById('police').value, avancement: document.getElementById('avancement').value });
   const x0 = r(), f0 = f();
-  document.getElementById('rangee').innerHTML = PISTES.map(([nom, titre, axe, defaut]) => `<article class="carte${nom === 'faisceau' ? ' origine' : ''}"><h2><a href="${nom}.html">${esc(titre)}</a><span>${esc(axe)}</span></h2><p class="defaut">${esc(defaut)}</p><iframe title="${esc(titre)}" src="${nom}.html?regie=0&seul=1&s=${x0.scene}&t=${x0.theme}&w=${x0.largeur}&m=${x0.mouvement}&police=${f0.police}&av=${f0.avancement}"></iframe></article>`).join('');
+  const cartes = (l, paresseux) => l.map(([nom, titre, axe, defaut]) => `<article class="carte${nom === 'faisceau' || nom === 'faisceau-4' ? ' origine' : ''}"><h2><a href="${nom}.html">${esc(titre)}</a><span>${esc(axe)}</span></h2><p class="defaut">${esc(defaut)}</p><iframe${paresseux ? ' loading="lazy"' : ''} title="${esc(titre)}" src="${nom}.html?regie=0&seul=1&s=${x0.scene}&t=${x0.theme}&w=${x0.largeur}&m=${x0.mouvement}&police=${f0.police}&av=${f0.avancement}"></iframe></article>`).join('');
+  document.getElementById('rangee').innerHTML = cartes(NIVEAUX, false);
+  document.getElementById('cote').innerHTML = cartes(PISTES, true);
   function appliquer() {
     const x = r();
     document.documentElement.style.setProperty('--w', x.largeur + 'px');

@@ -1,0 +1,169 @@
+/* CH-020 : socle des niveaux 4a, 4b, 4c de la « Frise de lumière » (inclus dans chaque page).
+ * Règles : grille de 4 px (espacements 4, 8, 12, 16, 24, 32) ; deux graisses (400, 500) ;
+ * trois tailles de texte (13, 15, grand nombre), une quatrième seulement pour les bornes du lot
+ * à choisir ; une seule lumière (--fa*) ; le vert d'eau ne sert qu'au ◆ ; une seule couleur de
+ * trait. Le niveau (data-niveau sur la racine) ajoute la matière : a = rien, b = surface et ombre
+ * douce, c = verre, fond qui bouge très lentement, reflets. */
+:root{
+  --base:#F4EFE7; --surface:#FBF8F3; --verre:rgba(251,248,243,.74); --trait:rgba(40,28,12,.13);
+  --texte:#1C1712; --texte-2:#5D5244; --eau:#0A6A5C; --plein:#1C1712; --sur-plein:#FBF8F3; --scene:#DCD4C8;
+  --fa1:#A85A00; --fa2:#5A2F00; --fa-halo:rgba(214,128,24,.38); --fa-trace:rgba(168,90,0,.85);
+  --ombre:rgba(60,40,10,.16); --n1:#F1DDBB; --n2:#EADFCF;
+  --sans:'General Sans',system-ui,sans-serif; --chiffre:'Zodiak',Georgia,serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --base:#0E0B08; --surface:#17130E; --verre:rgba(26,21,15,.72); --trait:rgba(255,236,206,.11);
+  --texte:#F2ECE3; --texte-2:#ADA192; --eau:#86E0D2; --plein:#F2ECE3; --sur-plein:#120E0A; --scene:#000;
+  --fa1:#F5BE68; --fa2:#FFF6E4; --fa-halo:rgba(245,170,80,.38); --fa-trace:rgba(245,190,104,.9);
+  --ombre:rgba(0,0,0,.55); --n1:#2E1D08; --n2:#1A120A;
+}}
+:root[data-theme="dark"]{
+  --base:#0E0B08; --surface:#17130E; --verre:rgba(26,21,15,.72); --trait:rgba(255,236,206,.11);
+  --texte:#F2ECE3; --texte-2:#ADA192; --eau:#86E0D2; --plein:#F2ECE3; --sur-plein:#120E0A; --scene:#000;
+  --fa1:#F5BE68; --fa2:#FFF6E4; --fa-halo:rgba(245,170,80,.38); --fa-trace:rgba(245,190,104,.9);
+  --ombre:rgba(0,0,0,.55); --n1:#2E1D08; --n2:#1A120A;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:24px;overflow:hidden;background:var(--base)}
+#fond{position:absolute;inset:0;width:100%;height:100%;display:block}
+#panneau{container-type:inline-size;position:relative;height:760px;overflow-y:auto;padding:20px 20px 32px;font-size:15px;line-height:1.5;font-weight:400}
+.notes{max-width:380px;font-size:14px;line-height:1.55;padding:18px 20px;border-radius:18px;border:1px solid var(--trait);background-color:var(--base)}
+.notes h2{font-size:18px;margin:0 0 8px;font-weight:500}.notes p{margin:0 0 10px}.notes b{font-weight:500}
+:focus-visible{outline:2px solid var(--texte);outline-offset:3px;border-radius:6px}
+
+/* ligne d'état : le mot de l'état à gauche, l'activité à droite ; rien d'autre */
+.tete-ligne{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 4px 16px;min-height:32px}
+.etat{margin:0;font-size:13px;font-weight:500;color:var(--texte);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.etat .sec{color:var(--texte-2);font-weight:400}
+.etat .non{color:var(--texte-2);display:inline-flex;align-items:center;gap:6px;font-weight:400}
+.etat .non i{width:12px;border-top:1.5px dashed currentColor}
+.activite{display:flex;gap:4px;flex:none}
+.activite button{font:inherit;font-size:13px;background:none;border:0;padding:6px 8px;color:var(--texte-2);cursor:pointer;border-radius:8px}
+.activite button[aria-pressed="true"]{color:var(--texte);font-weight:500;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:6px}
+.activite button[aria-disabled="true"]{cursor:not-allowed}
+
+/* la carte du lot : le nombre, une phrase courte, la frise ; le faisceau court sur son bord */
+.lot{position:relative;padding:24px;border-radius:20px;border:1px solid var(--trait)}
+.fx{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.fx rect{fill:none}.fx-base,.fx-anneau,.fx-encoche{stroke:none}
+.fx-trait{stroke:var(--fa1);stroke-linecap:butt}
+.fx-halo{stroke:var(--fa-halo);stroke-width:10;stroke-linecap:round;filter:blur(6px)}
+.fx-tete{fill:var(--fa-halo);filter:blur(5px)}
+.fx-coeur{fill:var(--fa2)}
+.grand{display:flex;align-items:baseline;gap:10px;margin:0}
+.grand .n{font-family:var(--chiffre);font-size:clamp(64px,22cqi,88px);font-weight:400;line-height:.88;letter-spacing:-.03em;font-variant-numeric:tabular-nums lining-nums}
+.grand .s{font-size:15px;color:var(--texte-2);font-variant-numeric:tabular-nums}
+.sous{margin:12px 0 0;font-size:13px;color:var(--texte-2);font-variant-numeric:tabular-nums}
+
+/* frise : la règle du lot, allumée jusqu'au cut en cours */
+.regle{position:relative;height:var(--h-regle,56px);margin:28px 0 0}
+.regle .fil{position:absolute;left:0;right:0;bottom:22px;height:1px;background:var(--trait)}
+.regle .fil.ouvert{right:24px}
+.regle .suite{position:absolute;right:0;width:20px;bottom:22px;height:1px;background:repeating-linear-gradient(90deg,var(--texte-2) 0 3px,transparent 3px 6px)}
+.regle .fait{position:absolute;left:0;bottom:21px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--fa-trace) 60%,var(--fa1))}
+.regle .tete{position:absolute;bottom:22.5px;width:0;height:0}
+.regle .tete::before{content:"";position:absolute;width:6px;height:6px;left:-3px;top:-3px;border-radius:50%;background:var(--fa1)}
+.regle .borne{position:absolute;bottom:0;font-size:13px;color:var(--texte-2);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1}
+.regle .borne.d{left:0}.regle .borne.f{right:0}
+.regle .ici{position:absolute;bottom:0;font-size:13px;font-weight:500;color:var(--texte);transform:translateX(-50%);white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1;padding:0 4px;background:var(--fond-ici,var(--base))}
+.regle[data-fx="arret"] .fait,.regle[data-fx="fige"] .fait{opacity:.6}
+.marque{position:absolute;width:24px;height:24px;margin-left:-12px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center;color:var(--texte)}
+.marque::after{content:"";width:8px;height:8px;border:1.5px solid currentColor;border-radius:50%;background:var(--fond-ici,var(--base))}
+.marque.eau{color:var(--eau)}
+.marque.eau::after{border-radius:1px;transform:rotate(45deg);background:currentColor;width:7px;height:7px}
+.marque:hover::after,.marque:focus-visible::after{transform:scale(1.4)}
+.marque.eau:hover::after,.marque.eau:focus-visible::after{transform:rotate(45deg) scale(1.4)}
+.clef{margin:16px 0 0;font-size:13px;color:var(--texte-2);display:flex;gap:16px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.clef b{font-weight:500;color:var(--texte)}
+.clef .eau b{color:var(--eau)}
+.regle[data-av="continu"] .fait{transition:width .9s linear}
+.regle[data-av="continu"] .tete{transition:left .9s linear}
+.regle[data-av="paliers"] .fait{background:repeating-linear-gradient(90deg,var(--fa-trace) 0 calc(100% - 3px),transparent calc(100% - 3px) 100%);background-size:calc(100% / var(--k)) 100%;border-radius:0}
+.regle[data-av="graduation"] .fait{bottom:17px;height:11px;background:repeating-linear-gradient(90deg,var(--fa1) 0 1px,transparent 1px 100%);background-size:calc(100% / var(--k)) 100%;border-radius:0}
+.regle[data-av="matiere"] .fait{bottom:19px;height:7px;background:var(--fa1);opacity:.25}
+:root[data-mouvement="reduit"] .regle .fait,:root[data-mouvement="reduit"] .regle .tete{transition:none!important}
+@media (prefers-reduced-motion:reduce){.regle .fait,.regle .tete{transition:none!important}}
+
+/* gestes : un seul bouton plein (le geste attendu) ; les autres en texte */
+.actions{margin:24px 0 0;display:flex;flex-direction:column;gap:4px}
+.b{font:inherit;font-size:15px;font-weight:500;border-radius:14px;min-height:52px;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--plein);color:var(--sur-plein);border:0;cursor:pointer;text-align:left}
+.b .note,.t .note{font-weight:400;font-size:13px}
+.b[aria-disabled="true"]{background:none;color:var(--texte-2);border:1px dashed var(--texte-2);cursor:not-allowed}
+.textes{display:flex;justify-content:center;gap:4px 24px;flex-wrap:wrap}
+.t{font:inherit;font-size:15px;background:none;border:0;color:var(--texte);padding:12px 4px;cursor:pointer;text-align:center}
+.t .note{color:var(--texte-2)}
+.t.confirme{font-weight:500;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.raison{font-size:13px;color:var(--texte-2);margin:4px 4px 0}
+
+/* incident : un cadre d'encre (plus épais que les traits), un titre, une phrase */
+.alerte{margin:0 0 16px;padding:16px 20px;border-radius:16px;border:1.5px solid var(--texte)}
+.alerte h2{font-size:15px;font-weight:500;margin:0;display:flex;align-items:center;gap:8px}
+.alerte p{margin:4px 0 0;color:var(--texte-2)}
+.alerte .actions{margin-top:12px}
+.info{margin:0 0 16px;padding:0 4px}
+.info h2{font-size:15px;font-weight:500;margin:0}
+.info p{margin:4px 0 0;color:var(--texte-2)}
+
+/* réglage d'un lot */
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bornes label{font-size:13px;color:var(--texte-2);display:flex;flex-direction:column;gap:4px}
+.bornes input{font-family:var(--chiffre);font-size:40px;line-height:1.1;font-weight:400;letter-spacing:-.02em;background:none;border:0;border-bottom:1px solid var(--trait);border-radius:0;padding:4px 0;color:var(--texte);width:100%;font-variant-numeric:tabular-nums lining-nums}
+.bornes input:focus-visible{outline:none;border-bottom:1.5px solid var(--texte)}
+.bornes input:disabled{color:var(--texte-2)}
+.inter{display:flex;align-items:center;gap:12px;font:inherit;background:none;border:0;color:var(--texte);padding:12px 0 0;cursor:pointer;text-align:left;width:100%}
+.inter .r{width:36px;height:22px;border-radius:999px;border:1px solid var(--texte-2);position:relative;flex:none}
+.inter .r::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;top:3px;left:3px;background:var(--texte-2)}
+.inter[aria-checked="true"] .r{background:var(--plein);border-color:var(--plein)}
+.inter[aria-checked="true"] .r::after{left:17px;background:var(--sur-plein)}
+.reglage{margin:24px 4px 0}
+.pas{display:flex;align-items:center;gap:12px;margin:8px 0 0 48px;font-size:13px;color:var(--texte-2)}
+.pas button{font:inherit;font-size:15px;width:32px;height:32px;border-radius:10px;border:1px solid var(--trait);background:none;color:var(--texte);cursor:pointer}
+.pas output{font-size:15px;font-weight:500;color:var(--texte);min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
+
+/* ce qui reste : une liste à filets, une ligne = un cut, toucher la ligne = l'examiner */
+.liste{list-style:none;margin:0;padding:0;border-top:1px solid var(--trait)}
+.ligne{display:grid;grid-template-columns:3.2em 1fr;gap:2px 12px;width:100%;padding:12px 4px;border:0;border-bottom:1px solid var(--trait);background:none;text-align:left;color:var(--texte);font:inherit;cursor:pointer}
+.ligne .c{font-family:var(--chiffre);font-variant-numeric:tabular-nums lining-nums;grid-row:span 2;font-size:15px;padding-top:1px}
+.ligne .g{font-size:13px;font-weight:500}
+.ligne .g.eau{color:var(--eau)}
+.ligne .m{font-size:13px;color:var(--texte-2)}
+.coupe{margin:16px 0 0}
+.coupe svg{display:block;width:100%;height:auto}
+.message{margin:16px 4px 0;font-size:13px;color:var(--texte-2)}
+
+/* mouvement : lent et mesuré ; rien en mouvement réduit */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .6s cubic-bezier(.2,.7,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .6s cubic-bezier(.2,.7,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.05s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+3){animation-delay:.1s}
+}}
+@keyframes roule{from{transform:translateY(.2em);opacity:.3}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- niveau b : une surface et une ombre douce ---------- */
+:root[data-niveau="b"] #cadre,:root[data-niveau="c"] #cadre{background:radial-gradient(120% 60% at 20% 0%,var(--n1),transparent 70%),var(--base)}
+:root[data-niveau="b"] .lot{background:var(--surface);border-color:transparent;box-shadow:0 0 0 1px var(--trait),0 1px 2px var(--ombre),0 16px 32px -20px var(--ombre);--fond-ici:var(--surface)}
+:root[data-niveau="b"] .alerte{background:var(--surface)}
+
+/* ---------- niveau c : verre, fond vivant très lent, reflets ---------- */
+:root[data-niveau="c"] #cadre{background:var(--base)}
+:root[data-niveau="c"] .lot{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0) 35%),var(--verre);-webkit-backdrop-filter:blur(24px) saturate(1.4);backdrop-filter:blur(24px) saturate(1.4);border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 0 0 1px var(--trait),0 2px 4px -2px var(--ombre),0 24px 48px -24px var(--ombre);--fond-ici:var(--surface)}
+:root[data-niveau="c"] .regle .tete::before{width:20px;height:20px;left:-10px;top:-10px;background:radial-gradient(circle,var(--fa2) 0 2.5px,var(--fa-halo) 3.5px,transparent 70%)}
+:root[data-niveau="c"] .regle .fait{box-shadow:0 0 10px var(--fa-halo)}
+:root[data-niveau="c"] .regle[data-fx="arret"] .fait,:root[data-niveau="c"] .regle[data-fx="fige"] .fait{box-shadow:none}
+:root[data-niveau="c"] .activite{background:var(--verre);border-radius:999px;padding:3px;box-shadow:0 0 0 1px var(--trait)}
+:root[data-niveau="c"] .activite button{border-radius:999px;padding:5px 12px}
+:root[data-niveau="c"] .activite button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein);text-decoration:none}
+:root[data-niveau="c"] .alerte{background:var(--verre);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+:root[data-niveau="c"] .alerte .excl{flex:none;width:18px;height:18px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:13px;line-height:1}
+.etapes{display:inline-flex;gap:3px;align-items:center}
+.etapes i{width:14px;height:3px;border-radius:2px;background:var(--trait)}
+.etapes i.fait{background:var(--texte)}
+.etapes i.ici{background:var(--fa1)}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"])[data-niveau="c"]{
+  .regle .tete.change::before{animation:eclat 1s cubic-bezier(.2,.7,.2,1)}
+}}
+@keyframes eclat{from{transform:scale(1.8)}to{transform:none}}
