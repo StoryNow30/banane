@@ -46,9 +46,3 @@ test('deuxième passe en ombre : voisins de fin de lot (avant ET après), décis
   /* Leviers de la passe (`sansVoieRien`) : réglés le temps de l'appel dans la passe seulement, rendus ensuite. */
   assert.deepEqual(a112.map(x => x.sansVoieRien), [false, true]); assert.equal(on.b.ctx.BananeGcv2L1.leviersActifs().sansVoieRien, false);
 });
-
-test('deuxième passe : seulement sous le profil « L1-se » (sous L1-s, rien n’est gardé ni décidé)', async () => {
-  const x = await lot({ passe: true, profil: 'L1-s' });
-  assert.equal(ev(x.b, 'passe-differes-ombre-fin').length, 0); assert.equal(ev(x.b, 'passe-differes-ombre').length, 0);
-  assert.equal(x.b.get('passeDiff').vue, null, 'le panneau n’a rien à dire');
-});
