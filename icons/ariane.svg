@@ -1,9 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
- <!-- Logo d'Ariane, celui de l'interface Signal (src/signal-rendu.js, IC.logo) : le A tracé par deux rails qui fuient, deux traverses
-      qui s'estompent vers l'horizon. Tuile claire très arrondie (consigne de l'opérateur, 29/10), encre sombre, plus de vert (D-256). -->
- <rect width="64" height="64" rx="22" fill="#ECECE8"/>
- <rect x=".5" y=".5" width="63" height="63" rx="21.5" fill="none" stroke="#000" stroke-opacity=".08"/>
- <g transform="translate(9 9) scale(2.29)" fill="none" stroke="#151517" stroke-width="2.3" stroke-linecap="round">
-  <path d="M5 20L10.4 4M19 20L13.6 4"/><path d="M7.4 15h9.2" stroke-opacity=".7"/><path d="M9 10.4h6" stroke-opacity=".45"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="64" height="64">
+ <!-- Logo d'Ariane, rond (consigne de l'opérateur, 29/10) : le A de l'interface Signal (src/signal-rendu.js, IC.logo), deux rails qui fuient
+      et deux traverses qui s'estompent vers l'horizon, sur un disque clair à dégradé doux et filet intérieur. Aucune teinte d'état, plus de vert (D-256). -->
+ <defs>
+  <linearGradient id="disque" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FAFAF7"/><stop offset="1" stop-color="#DCDBD4"/></linearGradient>
+  <linearGradient id="encre" gradientUnits="userSpaceOnUse" x1="0" y1="30" x2="0" y2="98"><stop offset="0" stop-color="#2A2A2E"/><stop offset="1" stop-color="#121214"/></linearGradient>
+ </defs>
+ <circle cx="64" cy="64" r="64" fill="url(#disque)"/>
+ <circle cx="64" cy="64" r="63.5" fill="none" stroke="#000" stroke-opacity=".1"/>
+ <circle cx="64" cy="64" r="55" fill="none" stroke="#000" stroke-opacity=".07" stroke-width="1.2"/>
+ <g fill="none" stroke="url(#encre)" stroke-linecap="round">
+  <path d="M39 96 L56 31 M89 96 L72 31" stroke-width="7.4"/>
+  <path d="M46.5 76.5 H81.5" stroke-width="6" stroke-opacity=".78"/>
+  <path d="M52 60 H76" stroke-width="5.4" stroke-opacity=".5"/>
  </g>
 </svg>
