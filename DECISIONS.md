@@ -3236,3 +3236,11 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **File de parties (D-244, D-245)** : l'opérateur veut qu'une session ajoute un bouton ou un onglet dans la maquette actuelle (lecture de l'intégrateur : `maquettes/ui-5.0/Q-signal.html`, Signal). Ticket `chantiers/CH-013.md`. Aucun code d'extension avant la validation de la maquette par l'opérateur.
 - **Glisser / clic droit** : les deux gestes sont à départager par un relevé Écho de l'opérateur sur 3 cuts hors vue (molette puis clic droit) avant la version qui porte le patch.
 - Le numéro suivant est D-261.
+
+## D-261 — File de parties : maquette validée, relecture et correction toujours actives (opérateur, 28/10/2026)
+
+- **Décision écrite de l'opérateur** : « Je valide la maquette pour la test 24 et je voudrais que la relecture + correction y soit laissé par défaut (donc à retirer des réglages). » La maquette est la variante A de la file de parties (`maquettes/ui-5.0/S-file-de-parties.html`, chantier CH-013).
+- **Effet** : dans la file de parties, la relecture et la correction passent **toujours** après chaque partie ; l'interrupteur correspondant sort des réglages de la file. Le nombre de parties de la file reste choisi par l'opérateur. Le code de la file (commande de changement de partie, reconnexion automatique) vient dans la 4.9.5.25, pas dans la test 24 : la test 24 ne contient que la maquette.
+- **Condition de départ de la file** : le changement de partie n'a jamais été observé sur un vrai ESV. L'opérateur le fait une fois à la main en Écho pendant la séance de la test 24 (relevé). Premier essai de la file : 2 parties, l'opérateur présent.
+- **Non vérifié** : la variante A est celle que l'intégrateur a comprise comme validée ; l'opérateur ne l'a pas redit par son nom.
+- Le numéro suivant est D-262.

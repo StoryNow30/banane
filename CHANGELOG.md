@@ -1,5 +1,20 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.24 — 4.9.5 test 24 (D-259) (29/10) — test 24
+
+Manifeste `4.9.5.24`, « 4.9.5 test 24 (D-259) » ; base : le tronc `claude/50-test17` (test 23). **La deuxième passe des différés est ALLUMÉE en écriture par défaut (D-259), plafonnée à 10 cuts écrits par lot** : `passeDifferesDefaut` passe à `ombre: true, ecriture: true, ecritureMax: 10`. Les garde-fous restent : garde A des appuis (déplacement inférieur à 100 mm sans appui normal à 4 cuts ou moins : refus), gardes d'écriture existantes, interrupteur `ecriture:false` pour revenir à l'ombre. Décisions de pose, moteur, adaptateur de page, géométrie et GCV2 : `git diff claude/50-test17..HEAD -- src/engine.js src/adapter-page.js src/geometry*.js src/gcv2*.js src/lot-decision.js` est vide (seuls `src/settings.js` et les chaînes de version changent dans `src/`).
+
+### Ce qui change
+- Seconde passe en écriture, 10 cuts au plus par lot ; le panneau dit « ALLUMÉE, en écriture : pose et valide sur place, 10 cut au plus ».
+- `tools/juger-lot.cjs` (CH-011, fiche `fiches/JUGER_LOT.md`) : juge les poses d'un lot, passe comprise, contre l'Écho.
+- Maquette de la file de parties (D-261), non branchée au code.
+
+### Mesures
+- Verify complet : 2 730 essais, 2 728 verts, 0 échec, 0 annulé, 2 ignorés (avant le changement de chaîne de version, refait ensuite).
+
+### Non vérifié
+- La passe en écriture n'a jamais posé dans un vrai lot ESV. Les 28 « poserait » mesurés en ombre : 25 à 20 mm ou moins, aucun à plus de 50 mm (PROBABLE, jugés contre l'ombre, pas contre l'Écho).
+
 ## 4.9.5.23 — 4.9.5 test 23 (L1-e7) (26/10) — test 23
 
 Manifeste `4.9.5.23`, « 4.9.5 test 23 (L1-e7) » ; base : le tronc `claude/50-test17` à bcc4630 (4.9.5.22, test 22 + D-252), puis, par fusions (commits de fusion, aucune réécriture d'historique), dans l'ordre : `cib22` (ciblage du lot), `gardeA` (garde A de la deuxième passe) et `claude/50-ui-5.0` à d7c5ff2 (animations de Signal, Signal seule présentation). **La deuxième passe reste EN OMBRE** (`passeDifferesDefaut.ecriture: false`, D-251) : elle calcule, journalise ce qu'elle poserait, et n'écrit rien dans ESV. Décisions de pose, moteur, adaptateur de page, géométrie et GCV2 : `git diff bcc4630..HEAD -- src/engine.js src/adapter-page.js src/geometry*.js src/gcv2*.js` est vide.
