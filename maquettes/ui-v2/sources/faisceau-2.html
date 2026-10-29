@@ -6,6 +6,14 @@
 <title>Faisceau 2 · Comète</title>
 <style>
 /*POLICE:switzer*/
+/*POLICE:app-geist*/
+/*POLICE:instr-geist-mono*/
+/*POLICE:instrument-sans*/
+/*POLICE:faisceau-newsreader*/
+/*POLICE:atkinson-next*/
+/*POLICE:atkinson-mono*/
+/*POLICE:instr-ibm-plex-sans-condensed*/
+/*POLICE:app-manrope*/
 /* CH-020, piste 2 « Comète ». Part du Faisceau (CH-014) ; physique tirée de libraries.dev
  * (Border beam : fondu d'entrée 0,6 s / sortie 0,5 s ; Voice glow : attaque rapide, relâche
  * lente ; Bot avatars : se mettre au travail vite, s'endormir lentement) et de beUI
@@ -164,6 +172,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 /*COMMUN*/
 </script>
 <script>
+/*INCLURE:faisceau-reglages.js*/
+</script>
+<script>
 /*INCLURE:faisceau-moteur.js*/
 </script>
 <script>
@@ -197,6 +208,16 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     else if (n !== cad.n) { cad.moy = null; cad.sur = false; }
     if (n !== cad.n) { cad.n = n; cad.t = t; }
   }
+  /* Effet d'avancement choisi dans la régie (faisceau-reglages.js) : la carte donne au moteur la
+   * part faite (vide si le total est inconnu) et la phase, qui règle la présence de l'effet. */
+  const avChoisi = () => document.documentElement.getAttribute('data-avancement');
+  function avance(m) {
+    const detail = m.vue === 'reste' || m.vue === 'examen';
+    const phase = detail ? 'vue' : m.vue === 'echo' ? 'encours' : m.phase;
+    const part = detail || m.vue === 'echo' ? '' : m.phase === 'fin' ? 1 : m.compte.part == null ? '' : m.compte.part.toFixed(4);
+    return ` data-part="${part}" data-phase="${phase}"`;
+  }
+  const motCourt = (m, actuel) => !avChoisi() ? actuel : (m.vue === 'echo' || m.compte.total == null ? 'la lumière vit, sans quantité' : 'la lumière montre la part faite');
   function carteLot(m, contenu) {
     const fa = m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : 'absent';
     const mot = m.vue === 'echo' ? 'Écho · observe' : m.titre;
@@ -204,7 +225,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     if (fa === 'court') mesurer(n); else { cad.n = null; cad.sur = false; }
     const unite = m.vue === 'echo' ? 'cut vu' : 'cut';
     const ligne = fa === 'court' ? `<p class="cadence">${cad.moy == null ? 'Cadence en mesure…' : `Cadence mesurée : ${cad.moy.toFixed(1).replace('.', ',')} s par ${unite}`}</p>` : '';
-    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}" aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · suit la cadence' : fa === 'fige' ? ' · faisceau freiné' : ''}</div>${contenu}${ligne}</section>`;
+    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · ' + motCourt(m, 'suit la cadence') : fa === 'fige' ? ' · faisceau freiné' : ''}</div>${contenu}${ligne}</section>`;
   }
   function frise(S, m) {
     const marques = S.restants.slice().sort((a, b) => a.cut - b.cut);

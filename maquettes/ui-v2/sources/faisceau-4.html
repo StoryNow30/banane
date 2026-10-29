@@ -7,6 +7,14 @@
 <style>
 /*POLICE:general-sans*/
 /*POLICE:zodiak*/
+/*POLICE:app-geist*/
+/*POLICE:instr-geist-mono*/
+/*POLICE:instrument-sans*/
+/*POLICE:faisceau-newsreader*/
+/*POLICE:atkinson-next*/
+/*POLICE:atkinson-mono*/
+/*POLICE:instr-ibm-plex-sans-condensed*/
+/*POLICE:app-manrope*/
 /* CH-020, piste 4 « Frise de lumière ». Part du Faisceau (CH-014) ; beUI Timeline (frise
  * qu'on parcourt) et Status Bar (une marque par période, lisible de loin) ; backgrounds.supply
  * (« deux ou trois teintes voisines, jamais plus » ; un réglage de lumière branché sur une
@@ -110,6 +118,13 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 }}
 .regle[data-fx="arret"] .tete::before{opacity:.6}
 .regle[data-fx="arret"] .fait,.regle[data-fx="fige"] .fait{box-shadow:none}
+.regle[data-av="continu"] .fait{transition:width .9s linear}
+.regle[data-av="continu"] .tete{transition:left .9s linear}
+.regle[data-av="paliers"] .fait{background:repeating-linear-gradient(90deg,var(--fa-trace) 0 calc(100% - 3px),transparent calc(100% - 3px) 100%);background-size:calc(100% / var(--k)) 100%;box-shadow:none;border-radius:0}
+.regle[data-av="graduation"] .fait{bottom:18px;height:12px;background:repeating-linear-gradient(90deg,var(--fa1) 0 1.5px,transparent 1.5px 100%);background-size:calc(100% / var(--k)) 100%;box-shadow:none;border-radius:0}
+.regle[data-av="matiere"] .fait{bottom:19px;height:8px;background:var(--fa1);opacity:.28;box-shadow:none}
+:root[data-mouvement="reduit"] .regle .fait,:root[data-mouvement="reduit"] .regle .tete{transition:none!important}
+@media (prefers-reduced-motion:reduce){.regle .fait,.regle .tete{transition:none!important}}
 @keyframes eclat{from{transform:scale(1.9)}to{transform:none}}
 @keyframes souffle{50%{opacity:.45}}
 
@@ -191,6 +206,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 /*COMMUN*/
 </script>
 <script>
+/*INCLURE:faisceau-reglages.js*/
+</script>
+<script>
 /*INCLURE:faisceau-moteur.js*/
 </script>
 <script>
@@ -213,11 +231,21 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     const cle = titre + texte, neuve = cle !== alerteVue; alerteVue = cle;
     return `<div class="alerte verre${neuve ? ' neuve' : ''}" role="alert"><h2><span class="excl" aria-hidden="true">!</span>${esc(titre)}</h2><p>${esc(texte)}</p>${acts && acts.length ? actions(acts) : ''}</div>`;
   }
+  /* Effet d'avancement choisi dans la régie (faisceau-reglages.js) : la carte donne au moteur la
+   * part faite (vide si le total est inconnu) et la phase, qui règle la présence de l'effet. */
+  const avChoisi = () => document.documentElement.getAttribute('data-avancement');
+  function avance(m) {
+    const detail = m.vue === 'reste' || m.vue === 'examen';
+    const phase = detail ? 'vue' : m.vue === 'echo' ? 'encours' : m.phase;
+    const part = detail || m.vue === 'echo' ? '' : m.phase === 'fin' ? 1 : m.compte.part == null ? '' : m.compte.part.toFixed(4);
+    return ` data-part="${part}" data-phase="${phase}"`;
+  }
+  const motCourt = (m, actuel) => !avChoisi() ? actuel : (m.vue === 'echo' || m.compte.total == null ? 'la lumière vit, sans quantité' : 'la lumière montre la part faite');
   function carteLot(m, contenu) {
     const fa = m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : 'absent';
     const mot = m.vue === 'echo' ? 'Écho · observe' : m.titre;
     const n = m.vue === 'echo' ? m.echo.vus : m.compte.faits;
-    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}" aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · le faisceau tourne' : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
+    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · ' + motCourt(m, 'le faisceau tourne') : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
   }
   /* Frise de lumière : position de chaque cut sur la règle du lot. Les marques trop proches
    * montent d'un étage (trois au plus) pour rester touchables (cible de 24 px). */
@@ -234,16 +262,24 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       const lib = `Cut ${r.cut}, ${r.type === 'vert' ? 'vert à examiner' : 'différé'} : examiner`;
       return `<button class="marque${r.type === 'vert' ? ' eau' : ''}" data-forme="${r.type === 'vert' ? 'losange' : 'rond'}" style="left:${x.toFixed(2)}%;bottom:${30 + e * 20}px;--tige:${e * 20 + 2}px" data-a="examiner" data-id="${r.id}" aria-label="${esc(lib)}" title="${esc(lib)}"></button>`;
     }).join('');
-    const faitPc = m.phase === 'fin' ? 100 : pos(c.cut);
-    const tete = m.phase === 'fin' ? '' : `<span class="tete" style="left:${faitPc.toFixed(2)}%" data-valeur="tete-frise" aria-hidden="true"><span hidden>${c.cut}</span></span>`;
-    const ici = m.phase === 'fin' || faitPc < 12 || (!inconnu && faitPc > 86) ? '' : `<span class="ici" style="left:${faitPc.toFixed(2)}%">${c.cut}</span>`;
+    /* la frise suit l'effet d'avancement choisi : continu (la part glisse), paliers (douze
+     * blocs pleins), graduation (un trait tous les 1/48 du lot), matière (une bande à peine
+     * teintée) ; « actuel » : la règle allumée et sa tête, éclat à chaque cut */
+    const av = avChoisi();
+    const vraie = m.phase === 'fin' ? 100 : pos(c.cut);
+    let faitPc = vraie, k = 1;
+    if (av === 'paliers' && !inconnu) { k = Math.floor(vraie / 100 * 12 + 1e-6); faitPc = k / 12 * 100; }
+    if (av === 'graduation' && !inconnu) { k = Math.floor(vraie / 100 * 48 + 1e-6); faitPc = k / 48 * 100; }
+    const garde = av === 'continu' ? ' data-garder="frise-fait"' : '';
+    const tete = m.phase === 'fin' || (av && av !== 'continu') ? '' : `<span class="tete" style="left:${faitPc.toFixed(2)}%"${av === 'continu' ? ' data-garder="frise-tete"' : ' data-valeur="tete-frise"'} aria-hidden="true"><span hidden>${c.cut}</span></span>`;
+    const ici = m.phase === 'fin' || vraie < 12 || (!inconnu && vraie > 86) ? '' : `<span class="ici" style="left:${vraie.toFixed(2)}%">${c.cut}</span>`;
     const fin = inconnu ? '<span class="borne f">fin inconnue</span>' : `<span class="borne f">${d + c.total - 1}</span>`;
     const nd = marques.filter((r) => r.type !== 'vert').length, nv = marques.length - nd;
     const titre = m.phase === 'fin' ? 'Le lot, de bout en bout' : m.phase === 'encours' ? 'Le lot, jusqu’ici' : 'Le lot, arrêté ici';
     return `<div class="frise verre"><h2><span>${titre}</span><span>${marques.length ? 'toucher une marque pour l’examiner' : ''}</span></h2>
-      <div class="regle" data-fx="${fa}" style="--h-regle:${62 + haut * 20}px" role="group" aria-label="Frise du lot, du cut ${d} ${inconnu ? 'à une fin inconnue' : 'au cut ' + (d + c.total - 1)}">
+      <div class="regle" data-fx="${fa}" data-av="${av || ''}" data-fait="${faitPc.toFixed(2)}" style="--k:${Math.max(1, k)};--h-regle:${62 + haut * 20}px" role="group" aria-label="Frise du lot, du cut ${d} ${inconnu ? 'à une fin inconnue' : 'au cut ' + (d + c.total - 1)}">
         <span class="fil${inconnu ? ' ouvert' : ''}"></span>${inconnu ? '<span class="suite" aria-hidden="true"></span>' : ''}
-        <span class="fait" style="width:${faitPc.toFixed(2)}%"></span>${tete}${j}
+        <span class="fait"${garde} style="width:${faitPc.toFixed(2)}%"></span>${tete}${j}
         <span class="borne d">${d}</span>${ici}${fin}
       </div>
       <p class="clef"><b>○ ${nd}</b> différé${nd > 1 ? 's' : ''} · <b>◆ ${nv}</b> à examiner${m.phase === 'encours' ? ' · la lumière s’arrête au cut en cours' : ''}</p></div>`;
@@ -317,6 +353,13 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   /* la frise garde sa position de défilement d'un rendu à l'autre, et se tire à la souris */
   Demo.monter({
     rendre(S, D) { const m = D.modele(); if (m.vue === 'reste') return reste(m); if (m.vue === 'examen' && m.examen) return examen(m); return principal(m, S); },
+    /* en « continu », la part et la tête de la frise sont gardées d'un rendu à l'autre et
+     * glissent vers leur nouvelle place (transition linéaire de la durée d'un cut) */
+    apres() {
+      const r = document.querySelector('.regle[data-av="continu"]'); if (!r) return;
+      const w = r.getAttribute('data-fait') + '%', f = r.querySelector('.fait'), t = r.querySelector('.tete');
+      requestAnimationFrame(() => { if (f) f.style.width = w; if (t) t.style.left = w; });
+    },
   });
   Faisceau.creer({ cadence: 'fixe', tour: 3.6, traine: 0.34, mini: 26 });
   requestAnimationFrame(fond);

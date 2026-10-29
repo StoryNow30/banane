@@ -6,6 +6,14 @@
 <title>Faisceau 1 · Verre épais</title>
 <style>
 /*POLICE:switzer*/
+/*POLICE:app-geist*/
+/*POLICE:instr-geist-mono*/
+/*POLICE:instrument-sans*/
+/*POLICE:faisceau-newsreader*/
+/*POLICE:atkinson-next*/
+/*POLICE:atkinson-mono*/
+/*POLICE:instr-ibm-plex-sans-condensed*/
+/*POLICE:app-manrope*/
 /* CH-020, piste 1 « Verre épais ». Part du Faisceau (CH-014) et de ses références :
  * libraries.dev Border beam (la lumière est une fenêtre qui court sur le bord), SwiftPieces
  * GlassSurface (une seule surface de verre, le reste en couleurs pleines), backgrounds.supply
@@ -176,6 +184,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 /*COMMUN*/
 </script>
 <script>
+/*INCLURE:faisceau-reglages.js*/
+</script>
+<script>
 /*INCLURE:faisceau-moteur.js*/
 </script>
 <script>
@@ -198,10 +209,20 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     const cle = titre + texte, neuve = cle !== alerteVue; alerteVue = cle;
     return `<div class="alerte plan${neuve ? ' neuve' : ''}" role="alert"><h2><span class="los" aria-hidden="true"></span>${esc(titre)}</h2><p>${esc(texte)}</p>${acts && acts.length ? actions(acts) : ''}</div>`;
   }
+  /* Effet d'avancement choisi dans la régie (faisceau-reglages.js) : la carte donne au moteur la
+   * part faite (vide si le total est inconnu) et la phase, qui règle la présence de l'effet. */
+  const avChoisi = () => document.documentElement.getAttribute('data-avancement');
+  function avance(m) {
+    const detail = m.vue === 'reste' || m.vue === 'examen';
+    const phase = detail ? 'vue' : m.vue === 'echo' ? 'encours' : m.phase;
+    const part = detail || m.vue === 'echo' ? '' : m.phase === 'fin' ? 1 : m.compte.part == null ? '' : m.compte.part.toFixed(4);
+    return ` data-part="${part}" data-phase="${phase}"`;
+  }
+  const motCourt = (m, actuel) => !avChoisi() ? actuel : (m.vue === 'echo' || m.compte.total == null ? 'la lumière vit, sans quantité' : 'la lumière montre la part faite');
   function carteLot(m, contenu) {
     const fa = m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : 'absent';
     const mot = m.vue === 'echo' ? 'Écho · observe' : m.titre;
-    return `<section class="lot" data-fx="${fa}" data-faits="${m.compte ? m.compte.faits : 0}" aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · le faisceau tourne' : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
+    return `<section class="lot" data-fx="${fa}" data-faits="${m.compte ? m.compte.faits : 0}"${avance(m)} aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${fa === 'court' ? ' · ' + motCourt(m, 'le faisceau tourne') : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
   }
   function frise(S, m) {
     const marques = S.restants.slice().sort((a, b) => a.cut - b.cut);

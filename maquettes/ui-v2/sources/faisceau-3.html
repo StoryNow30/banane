@@ -6,6 +6,14 @@
 <title>Faisceau 3 · Grammaire</title>
 <style>
 /*POLICE:switzer*/
+/*POLICE:app-geist*/
+/*POLICE:instr-geist-mono*/
+/*POLICE:instrument-sans*/
+/*POLICE:faisceau-newsreader*/
+/*POLICE:atkinson-next*/
+/*POLICE:atkinson-mono*/
+/*POLICE:instr-ibm-plex-sans-condensed*/
+/*POLICE:app-manrope*/
 /* CH-020, piste 3 « Grammaire ». Part du Faisceau (CH-014) et de libraries.dev Border beam,
  * qui donne deux familles de lumière à deux sens : la rotation (quelque chose avance) et la
  * respiration (présence calme, on attend) ; de beUI Todo List (statut par la forme : pointillé,
@@ -172,6 +180,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 /*COMMUN*/
 </script>
 <script>
+/*INCLURE:faisceau-reglages.js*/
+</script>
+<script>
 /*INCLURE:faisceau-moteur.js*/
 </script>
 <script>
@@ -214,12 +225,23 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     if (m.phase === 'fin') return 'fin';
     return m.liaison.etat === 'relie' ? 'pret' : 'arret';
   }
+  /* Effet d'avancement choisi dans la régie (faisceau-reglages.js) : la carte donne au moteur la
+   * part faite (vide si le total est inconnu) et la phase, qui règle la présence de l'effet. */
+  const avChoisi = () => document.documentElement.getAttribute('data-avancement');
+  function avance(m) {
+    const detail = m.vue === 'reste' || m.vue === 'examen';
+    const phase = detail ? 'vue' : m.vue === 'echo' ? 'encours' : m.phase;
+    const part = detail || m.vue === 'echo' ? '' : m.phase === 'fin' ? 1 : m.compte.part == null ? '' : m.compte.part.toFixed(4);
+    return ` data-part="${part}" data-phase="${phase}"`;
+  }
+  const motCourt = (m, actuel) => !avChoisi() ? actuel : (m.vue === 'echo' || m.compte.total == null ? 'la lumière vit, sans quantité' : 'la lumière montre la part faite');
   function carteLot(m, contenu) {
     const fa = m.formeForcee || forme(m);
     const mot = m.vue === 'echo' ? 'Écho' : m.titre;
     const n = m.vue === 'echo' ? m.echo.vus : m.compte.faits;
-    const [court, phrase] = FORMES[fa];
-    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}" aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${court ? ' · ' + esc(court) : ''}</div>${contenu}${phrase ? `<p class="forme">${esc(phrase)}</p>` : ''}</section>`;
+    let [court, phrase] = FORMES[fa];
+    if (fa === 'court' && avChoisi()) { court = motCourt(m, court); phrase = 'La lumière montre la part faite du lot ; la forme des autres états ne change pas.'; }
+    return `<section class="lot verre" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(mot)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg><div class="etat">${esc(mot)}${court ? ' · ' + esc(court) : ''}</div>${contenu}${phrase ? `<p class="forme">${esc(phrase)}</p>` : ''}</section>`;
   }
   function frise(S, m) {
     const marques = S.restants.slice().sort((a, b) => a.cut - b.cut);

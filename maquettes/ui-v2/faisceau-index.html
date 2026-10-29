@@ -41,10 +41,12 @@ footer{padding:0 16px 32px;color:var(--texte-2);font-size:13px;max-width:72em}
     <label>Thème <select id="theme"><option value="auto">système</option><option value="light">clair</option><option value="dark">sombre</option></select></label>
     <label>Largeur <select id="largeur"><option value="360">360 px</option><option value="420" selected>420 px</option><option value="600">600 px</option></select></label>
     <label>Mouvement <select id="mouvement"><option value="systeme">système</option><option value="reduit">réduit</option></select></label>
+    <label>Police <select id="police"><option value="actuelle">actuelle (celle de chaque piste)</option><option value="technique">Technique · Geist + Geist Mono</option><option value="editorial">Éditorial · Instrument Sans + Newsreader</option><option value="lisible">Lisible · Atkinson Hyperlegible Next + Mono</option><option value="condense">Condensé · IBM Plex Sans Condensed</option><option value="rond">Rond · Manrope</option></select></label>
+    <label>Avancement <select id="avancement"><option value="actuel">actuel (celui de chaque piste)</option><option value="continu">Continu · remplissage fluide</option><option value="paliers">Paliers · ne recule jamais</option><option value="graduation">Graduation qui se révèle</option><option value="matiere">Matière · un niveau qui monte</option></select></label>
   </div>
 </header>
 <main><div class="rangee" id="rangee"></div></main>
-<footer>Pour voir chaque piste vivre : scène « En cours », puis « En pause » et « Fin de lot » ; la piste 3 se joue sur toutes les scènes (prêt, arrêt, alerte, relecture, Écho). En mouvement réduit, rien ne se déplace : chaque état garde une forme fixe et son mot.</footer>
+<footer>Police et Avancement s'appliquent à chaud aux quatre pistes (l'original n'a pas ces réglages). Polices : toutes sous licence SIL Open Font License 1.1, embarquées dans chaque page. Avancement : « actuel » garde l'effet propre à chaque piste ; les quatre autres remplacent la tête qui tourne par une mesure de la part faite (sans quantité quand le total est inconnu). Pour voir chaque piste vivre : scène « En cours », puis « En pause » et « Fin de lot » ; la piste 3 se joue sur toutes les scènes (prêt, arrêt, alerte, relecture, Écho). En mouvement réduit, rien ne se déplace : chaque état garde une forme fixe et son mot.</footer>
 <script>
 (function () {
   'use strict';
@@ -60,16 +62,20 @@ footer{padding:0 16px 32px;color:var(--texte-2);font-size:13px;max-width:72em}
   const sel = document.getElementById('scene');
   sel.innerHTML = SCENES.map(([v, t]) => `<option value="${v}"${v === 'encours' ? ' selected' : ''}>${esc(t)}</option>`).join('');
   const r = () => ({ scene: sel.value, theme: document.getElementById('theme').value, largeur: document.getElementById('largeur').value, mouvement: document.getElementById('mouvement').value });
-  const x0 = r();
-  document.getElementById('rangee').innerHTML = PISTES.map(([nom, titre, axe, defaut]) => `<article class="carte${nom === 'faisceau' ? ' origine' : ''}"><h2><a href="${nom}.html">${esc(titre)}</a><span>${esc(axe)}</span></h2><p class="defaut">${esc(defaut)}</p><iframe title="${esc(titre)}" src="${nom}.html?regie=0&seul=1&s=${x0.scene}&t=${x0.theme}&w=${x0.largeur}&m=${x0.mouvement}"></iframe></article>`).join('');
+  const f = () => ({ police: document.getElementById('police').value, avancement: document.getElementById('avancement').value });
+  const x0 = r(), f0 = f();
+  document.getElementById('rangee').innerHTML = PISTES.map(([nom, titre, axe, defaut]) => `<article class="carte${nom === 'faisceau' ? ' origine' : ''}"><h2><a href="${nom}.html">${esc(titre)}</a><span>${esc(axe)}</span></h2><p class="defaut">${esc(defaut)}</p><iframe title="${esc(titre)}" src="${nom}.html?regie=0&seul=1&s=${x0.scene}&t=${x0.theme}&w=${x0.largeur}&m=${x0.mouvement}&police=${f0.police}&av=${f0.avancement}"></iframe></article>`).join('');
   function appliquer() {
     const x = r();
     document.documentElement.style.setProperty('--w', x.largeur + 'px');
     if (x.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', x.theme);
     document.querySelectorAll('iframe').forEach((f) => { try { f.contentWindow.postMessage({ ui2: x }, '*'); } catch (e) { /* cadre pas encore chargé */ } });
   }
+  /* police et avancement : envoyés seuls, sans changer de scène (le lot continue de jouer) */
+  function faisceau() { document.querySelectorAll('iframe').forEach((x) => { try { x.contentWindow.postMessage({ faisceau: f() }, '*'); } catch (e) { /* cadre pas encore chargé */ } }); }
   ['scene', 'theme', 'largeur', 'mouvement'].forEach((id) => document.getElementById(id).addEventListener('change', appliquer));
-  document.addEventListener('load', (e) => { if (e.target.tagName === 'IFRAME') e.target.contentWindow.postMessage({ ui2: r() }, '*'); }, true);
+  ['police', 'avancement'].forEach((id) => document.getElementById(id).addEventListener('change', faisceau));
+  document.addEventListener('load', (e) => { if (e.target.tagName === 'IFRAME') e.target.contentWindow.postMessage({ ui2: r(), faisceau: f() }, '*'); }, true);
   appliquer();
 })();
 </script>

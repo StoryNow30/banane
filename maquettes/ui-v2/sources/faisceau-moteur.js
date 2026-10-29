@@ -20,11 +20,20 @@
  *   pause    longueur (px) du trait de lumière qui reste, figé, en pause (0 = la tête seule)
  *   rayon    rayon des coins de la carte (px)
  *   surTete  fonction (x, y, intensite, carte) appelée à chaque image : la lumière sert ailleurs
- * Mouvement réduit : rien ne se déplace ; chaque état garde une forme fixe (tête, segment, anneau). */
+ * Mouvement réduit : rien ne se déplace ; chaque état garde une forme fixe (tête, segment, anneau).
+ *
+ * Effet d'avancement (racine data-avancement, posé par faisceau-reglages.js) : « actuel » garde
+ * la tête de la piste ; continu, paliers, graduation et matière la remplacent par une mesure de
+ * la part faite (data-part de la carte ; vide = total inconnu : l'effet ne montre alors aucune
+ * quantité). data-phase de la carte règle la présence : en cours, pause (atténué), arrêté
+ * (plus atténué), fin (complet) ; prêt et vues de détail : rien. Les formes propres à un état
+ * qui n'est pas une avance (prêt, Écho, relecture de la piste 3) restent celles de la piste. */
 (function () {
   'use strict';
   const NS = 'http://www.w3.org/2000/svg';
   const N = 26; /* segments de traînée */
+  const K = 12; /* paliers */
+  const G = 48; /* traits de graduation */
 
   function el(nom, attrs, parent) {
     const e = document.createElementNS(NS, nom);
@@ -38,6 +47,8 @@
     const o = Object.assign({ cadence: 'fixe', tour: 3.2, crans: 4, traine: 0.22, anneau: false, onde: false, pause: 0, rayon: 22, selecteur: '.lot', surTete: null, mini: 26 }, opt || {});
     const st = { tete: 0, v: 0, alpha: 0, L: 0, base: null, faits: null, pulse: 0, anneau: 0, mode: null, depuis: 0, P: 0, w: 0, h: 0, cible: 0, souffle: 0, t0: performance.now() };
     let svg = null, geo = null, traits = [], halo = null, tete = null, coeur = null, cercle = null, encoche = null, base = null, onde = null;
+    let jauge = null, paliers = [], gradA = null, gradD = null;
+    const av = { pa: 0, va: 0, vis: 0, cliquet: -1, allume: [], partPrec: null, r: -1, rAge: 1, niv: 0, vn: 0, cle: '' };
 
     function construire(s) {
       s.innerHTML = '';
@@ -51,6 +62,11 @@
       tete = el('circle', { class: 'fx-tete', r: 7 }, s);
       coeur = el('circle', { class: 'fx-coeur', r: 2.2 }, s);
       onde = el('rect', { class: 'fx-onde' }, s);
+      jauge = el('rect', { class: 'fx-jauge' }, s);
+      paliers = [];
+      for (let k = 0; k < K; k++) paliers.push(el('rect', { class: 'fx-palier' }, s));
+      gradA = el('path', { class: 'fx-grad' }, s);
+      gradD = el('path', { class: 'fx-grad-der' }, s);
       geo = base;
       s.setAttribute('data-pret', '1');
       svg = s; st.w = 0;
@@ -60,11 +76,11 @@
       const w = carte.offsetWidth, h = carte.offsetHeight;
       if (w === st.w && h === st.h) return;
       const r = Math.min(o.rayon, h / 2), Pav = st.P;
-      for (const e of [base, cercle, halo, encoche, onde, ...traits]) {
+      for (const e of [base, cercle, halo, encoche, onde, jauge, ...paliers, ...traits]) {
         e.setAttribute('x', 0.75); e.setAttribute('y', 0.75); e.setAttribute('width', Math.max(0, w - 1.5)); e.setAttribute('height', Math.max(0, h - 1.5)); e.setAttribute('rx', r);
       }
       svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-      st.w = w; st.h = h; st.r = r; st.P = geo.getTotalLength();
+      st.w = w; st.h = h; st.r = r; st.P = geo.getTotalLength(); av.cle = '';
       if (Pav) { st.tete = st.tete / Pav * st.P; st.L = st.L / Pav * st.P; if (st.base != null) st.base = st.base / Pav * st.P; }
     }
 
@@ -79,7 +95,8 @@
         if (s !== svg || !s.getAttribute('data-pret')) construire(s);
         dimensionner(carte);
         pas(carte, dt, now);
-        dessiner(carte, now);
+        const prog = avancement(carte, dt, now);
+        dessiner(carte, now, prog);
       }
       requestAnimationFrame(image);
     }
@@ -160,12 +177,12 @@
       st.souffle = approche(st.souffle, (mode === 'fige' || mode === 'pret') && lent ? resp : 1, 0.15, dt);
     }
 
-    function dessiner(carte, now) {
+    function dessiner(carte, now, prog) {
       const P = st.P || 1, mode = st.mode;
       const mod = (x) => ((x % P) + P) % P;
       const h = mod(st.tete), L = Math.max(0, st.L), seg = L / N;
       const sens = st.v < 0 ? -1 : 1;
-      const a = st.alpha * st.souffle;
+      const a = prog ? 0 : st.alpha * st.souffle;
       /* traînée : N traits empilés qui partent tous de la tête, de plus en plus longs, fins et
        * pâles ; leurs opacités se cumulent près de la tête : dégradé et effilement sans couture */
       for (let i = 0; i < N; i++) {
@@ -187,7 +204,7 @@
       coeur.setAttribute('cx', p.x); coeur.setAttribute('cy', p.y); coeur.setAttribute('r', (2.2 * r).toFixed(2));
       tete.style.opacity = Math.min(1, a * 0.95).toFixed(3); coeur.style.opacity = a.toFixed(3);
       /* anneau de fin : la lumière part de la tête et ferme le tour */
-      if (o.anneau && st.anneau > 0.001) {
+      if (o.anneau && st.anneau > 0.001 && !prog) {
         const lg = P * easeOut(st.anneau);
         tiret(cercle, lg, st.anneauDepart ?? 0);
         cercle.style.opacity = Math.min(1, st.anneau * 1.6).toFixed(3);
@@ -205,7 +222,113 @@
         tiret(onde, lg, st.ondeX - lg / 2);
         onde.style.opacity = ((1 - k) * 0.9 * a).toFixed(3);
       } else if (onde) onde.style.opacity = 0;
-      if (o.surTete) o.surTete(p.x, p.y, a * (0.75 + 0.25 * st.pulse), carte, st);
+      if (o.surTete) { if (prog) o.surTete(prog.x, prog.y, prog.i, carte, st); else o.surTete(p.x, p.y, a * (0.75 + 0.25 * st.pulse), carte, st); }
+    }
+
+    /* ---------- effets d'avancement ---------- */
+    function point(d) { try { const P = st.P || 1; return geo.getPointAtLength(((d % P) + P) % P); } catch (e) { return { x: 0, y: 0 }; } }
+    function cacher(sauf) {
+      if (sauf !== 'continu') jauge.style.opacity = 0;
+      if (sauf !== 'paliers') paliers.forEach((e) => { e.style.opacity = 0; });
+      if (sauf !== 'graduation') gradA.style.opacity = 0;
+      if (sauf !== 'graduation' && sauf !== 'matiere') gradD.style.opacity = 0;
+    }
+    /* ressort amorti critique vers la cible, sans jamais la dépasser : la lumière suit la part
+     * mesurée avec un léger retard, d'un mouvement continu, et ne montre jamais plus que le vrai */
+    function suivre(x, v, cible, w, dt) {
+      v += (w * w * (cible - x) - 2 * w * v) * dt; x += v * dt;
+      if (x > cible) { x = cible; v = 0; }
+      return [x, v];
+    }
+    function avancement(carte, dt, now) {
+      const choix = document.documentElement.getAttribute('data-avancement') || 'actuel';
+      const mode = st.mode, P = st.P || 1, R = reduit();
+      const actif = choix !== 'actuel' && !['pret', 'echo', 'relecture'].includes(mode);
+      carte.setAttribute('data-av', actif ? choix : '');
+      if (!actif) { cacher(''); return null; }
+      cacher(choix);
+      const phase = carte.getAttribute('data-phase') || '';
+      const brut = carte.getAttribute('data-part');
+      const connu = brut != null && brut !== '';
+      const part = connu ? Math.max(0, Math.min(1, Number(brut))) : null;
+      const faits = st.faits || 0;
+      const visCible = { encours: 1, pause: 0.7, arrete: 0.5, fin: 1 }[phase] ?? 0;
+      av.vis = R ? visCible : approche(av.vis, visCible, 0.3, dt);
+      /* un nouveau lot : la part redescend nettement, on repart de zéro */
+      if (connu && av.partPrec != null && part < av.partPrec - 0.05) { av.pa = part; av.va = 0; av.cliquet = -1; av.allume = []; av.niv = part; }
+      if (connu) av.partPrec = part;
+      const t = (now - st.t0) / 1000;
+      let f = { x: 0, y: 0 };
+      switch (choix) {
+        case 'continu': {
+          if (connu) {
+            if (R) { av.pa = part; av.va = 0; } else [av.pa, av.va] = suivre(av.pa, av.va, part, 2.6, dt);
+            tiret(jauge, av.pa * P, 0); f = point(av.pa * P);
+          } else {
+            /* total inconnu : une lueur courte glisse lentement ; elle ne dit aucune quantité */
+            const pos = R ? P * 0.2 : (t / 9) * P;
+            tiret(jauge, P * 0.12, pos - P * 0.12); f = point(pos);
+          }
+          jauge.style.opacity = av.vis.toFixed(3);
+          break;
+        }
+        case 'paliers': {
+          /* douze paliers ; un palier ne s'allume que plein, et ne s'éteint plus (cliquet) */
+          const n = connu ? Math.floor(part * K + 1e-6) : Math.floor(faits / 20) % (K + 1);
+          if (!connu && n < av.cliquet) { av.cliquet = -1; av.allume = []; }
+          for (let k = Math.max(0, av.cliquet); k < n; k++) if (av.allume[k] == null) av.allume[k] = R ? -1e9 : now;
+          av.cliquet = Math.max(av.cliquet, n);
+          const ecart = 5, l = P / K - ecart;
+          for (let k = 0; k < K; k++) {
+            const e = paliers[k];
+            tiret(e, l, k * P / K + ecart / 2);
+            const on = k < av.cliquet, age = on ? (now - av.allume[k]) / 650 : 1;
+            const eclat = on && age < 1 ? 1 - age : 0;
+            e.style.opacity = (av.vis * (on ? 1 : 0.16)).toFixed(3);
+            e.style.strokeWidth = (2.6 + 3 * eclat).toFixed(2);
+            e.style.filter = eclat > 0 ? `drop-shadow(0 0 ${(6 * eclat).toFixed(1)}px var(--fa-halo))` : '';
+          }
+          f = point(Math.max(0, av.cliquet) * P / K);
+          break;
+        }
+        case 'graduation': {
+          /* 48 traits, révélés un à un à mesure que le lot avance ; le dernier est plus long */
+          const r = connu ? Math.floor(part * G + 1e-6) : Math.floor(faits / 5) % (G + 1);
+          if (r !== av.r) { if (r > av.r) av.rAge = R ? 1 : 0; av.r = r; av.cle = ''; }
+          av.rAge = Math.min(1, av.rAge + dt / 0.4);
+          const cle = `${r}|${st.w}|${st.h}|${av.rAge < 1 ? av.rAge.toFixed(2) : 1}`;
+          if (cle !== av.cle) {
+            av.cle = cle;
+            let dA = '', dD = '';
+            for (let i = 0; i < r; i++) {
+              const s0 = (i + 0.5) / G * P, p0 = point(s0), a1 = point(s0 - 0.6), a2 = point(s0 + 0.6);
+              let tx = a2.x - a1.x, ty = a2.y - a1.y; const nn = Math.hypot(tx, ty) || 1; tx /= nn; ty /= nn;
+              const der = i === r - 1, lg = der ? 3 + 7 * easeOut(av.rAge) : 5;
+              const x1 = p0.x - ty * 2, y1 = p0.y + tx * 2, x2 = p0.x - ty * (2 + lg), y2 = p0.y + tx * (2 + lg);
+              const seg = `M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}`;
+              if (der) dD = seg; else dA += seg;
+              if (der) f = p0;
+            }
+            gradA.setAttribute('d', dA || 'M0 0'); gradD.setAttribute('d', dD || 'M0 0');
+          }
+          gradA.style.opacity = (av.vis * 0.5).toFixed(3); gradD.style.opacity = av.vis.toFixed(3);
+          if (r > 0) f = point((r - 0.5) / G * P);
+          break;
+        }
+        case 'matiere': {
+          /* un niveau de lumière qui monte dans la carte ; total inconnu : il ne fait que vivre au fond */
+          const cible = visCible === 0 ? 0 : connu ? part : 0.07 + 0.025 * Math.sin(t * 0.9);
+          if (R) { av.niv = cible; av.vn = 0; } else if (connu) [av.niv, av.vn] = suivre(av.niv, av.vn, cible, 2.2, dt); else av.niv = approche(av.niv, cible, 0.4, dt);
+          carte.style.setProperty('--niveau', (av.niv * 100).toFixed(2) + '%');
+          /* deux encoches au niveau, sur les bords gauche et droit, hors du texte */
+          const y = (st.h * (1 - av.niv)).toFixed(1), xd = (st.w - 1).toFixed(1), xg = (st.w - 13).toFixed(1);
+          gradD.setAttribute('d', av.niv > 0.005 ? `M1 ${y}L13 ${y}M${xg} ${y}L${xd} ${y}` : 'M0 0');
+          gradD.style.opacity = (av.vis * 0.9).toFixed(3); av.cle = '';
+          f = { x: st.w / 2, y: st.h * (1 - av.niv) };
+          break;
+        }
+      }
+      return { x: f.x, y: f.y, i: av.vis * 0.8 };
     }
     const easeOut = (x) => 1 - Math.pow(1 - x, 3);
     /* un tiret de longueur lg qui commence à la distance debut ; la période du motif vaut
