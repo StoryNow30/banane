@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane — Détour</title>
+<style>
+/*POLICE:ranade*/
+/* Proposition « Détour ». Ce qui vous demande quelque chose est détouré et posé devant vous, avec son
+ * ombre ; tout ce qui se passe sans vous reste à plat, dans le fond. Le damier dit « rien ici ». */
+:root{
+  --fond:#EFEFED; --plat:#EFEFED; --figure:#FFFFFF; --texte:#151619; --doux:#55575E; --filet:#D3D3CF; --filet-fort:#8F9097;
+  --plein:#151619; --plein-texte:#FFFFFF; --scene:#DEDEDA; --alerte:#8E1F12; --confirme:#A3211A;
+  --matiere:#3A4150; --dam-a:#FFFFFF; --dam-b:#DADAD6; --ombre:0 1px 0 rgba(0,0,0,.06),0 10px 24px -8px rgba(20,22,30,.35);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#17181B; --plat:#17181B; --figure:#24262B; --texte:#EEEEF0; --doux:#A6A8B0; --filet:#2E3036; --filet-fort:#62656E;
+  --plein:#EEEEF0; --plein-texte:#17181B; --scene:#0B0B0D; --alerte:#FFB0A3; --confirme:#E0473D;
+  --matiere:#B8C0CE; --dam-a:#26282D; --dam-b:#1C1D21; --ombre:0 1px 0 rgba(255,255,255,.04),0 12px 28px -8px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --fond:#17181B; --plat:#17181B; --figure:#24262B; --texte:#EEEEF0; --doux:#A6A8B0; --filet:#2E3036; --filet-fort:#62656E;
+  --plein:#EEEEF0; --plein-texte:#17181B; --scene:#0B0B0D; --alerte:#FFB0A3; --confirme:#E0473D;
+  --matiere:#B8C0CE; --dam-a:#26282D; --dam-b:#1C1D21; --ombre:0 1px 0 rgba(255,255,255,.04),0 12px 28px -8px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Ranade',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);font-size:14px;line-height:1.45}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font-size:20px;margin:0 0 8px}
+.notes p{margin:0 0 10px}
+.damier{background-color:var(--dam-a);background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:12px 12px}
+
+/* ---- tailles : 12, 14, 28 ; chiffres tabulaires ---- */
+.mesure dd,.reste-cut,.partie-n,.echo-m dd,.file-nb-v,.bande-etiq{font-variant-numeric:tabular-nums}
+.p{padding:14px 16px 28px;display:flex;flex-direction:column;gap:16px}
+.barre{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.marque{margin:0;font-weight:700;letter-spacing:.01em}
+.titre{font-size:28px;line-height:1.1;font-weight:500;margin:0;letter-spacing:-.015em}
+.phrase{margin:4px 0 0}
+.raison{margin:4px 0 0;font-size:12px;color:var(--doux)}
+
+.bascule{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--filet-fort);border-radius:8px;overflow:hidden}
+.bascule-o{font:inherit;font-size:12px;border:0;background:var(--plat);color:var(--doux);padding:5px 10px;cursor:pointer;display:flex;gap:5px;align-items:baseline}
+.bascule-o+.bascule-o{border-left:1px solid var(--filet-fort)}
+.bascule-o[aria-pressed="true"]{background:var(--plein);color:var(--plein-texte)}
+.bascule-o[aria-disabled="true"]{cursor:not-allowed}
+.bascule-nom{font-weight:700}
+.bascule-sens{display:none}
+@container (min-width:420px){.bascule-sens{display:inline}}
+.raison-bascule{flex-basis:100%;margin:0}
+
+/* liaison : le damier est la place vide d'ESV */
+.liaison{margin:0;display:flex;flex-basis:100%;align-items:center;gap:6px;font-size:12px;color:var(--doux)}
+.liaison b{color:var(--texte);font-weight:700;font-size:14px}
+.liaison-forme{width:14px;height:14px;border:2px solid var(--texte);border-radius:3px}
+.liaison-relie .liaison-forme{box-shadow:inset 0 0 0 5px var(--texte)}
+.liaison-choisir .liaison-forme{box-shadow:inset 5px 0 0 0 var(--texte)}
+.liaison-absent .liaison-forme{border-style:dashed;background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:6px 6px}
+
+/* ---- deux plans : à plat (fond) et détouré (figure) ---- */
+.plat{background:var(--plat)}
+.figure{background:var(--figure);border:1px solid var(--texte);border-radius:10px;box-shadow:var(--ombre);padding:14px;display:flex;flex-direction:column;gap:12px;position:relative}
+.figure-marque{position:absolute;top:-9px;left:12px;font-size:12px;line-height:16px;padding:0 6px;background:var(--figure);border:1px solid var(--texte);border-radius:4px;color:var(--texte)}
+@keyframes detoure{from{clip-path:inset(0 100% 0 0 round 10px);box-shadow:none}60%{clip-path:inset(0 0 0 0 round 10px);box-shadow:none}to{clip-path:inset(-40px -40px -40px -40px);box-shadow:var(--ombre)}}
+#panneau[data-etat-change="1"] .figure{animation:detoure .62s cubic-bezier(.3,.7,.2,1) both}
+
+/* ---- la bande du lot : matière = traité, damier = pas encore ---- */
+.bande{margin:0;position:relative}
+.bande-cadre{position:relative;height:66px;border:1px solid var(--filet-fort);border-radius:6px;overflow:hidden}
+.bande-c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.fourmis{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.fourmis rect{fill:none;stroke-width:1.5;vector-effect:non-scaling-stroke}
+.fourmis .f-a{stroke:#FFFFFF}.fourmis .f-b{stroke:#111111;stroke-dasharray:4 4}
+@keyframes marche{to{stroke-dashoffset:-16}}
+.fourmis.marche .f-b{animation:marche .9s linear infinite}
+.bande-l{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12px;color:var(--doux)}
+.bande-l b{color:var(--texte);font-weight:500}
+.bande-etiq{position:absolute;top:2px;transform:translateX(-50%);font-size:12px;background:var(--figure);color:var(--texte);border:1px solid var(--texte);border-radius:4px;padding:0 5px;white-space:nowrap;transition:left .5s cubic-bezier(.2,.7,.2,1)}
+.bande-etiq[hidden]{display:none}
+.bande-haut{padding-top:26px}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;padding:0;list-style:none;font-size:12px;color:var(--doux)}
+.legende li{display:flex;align-items:center;gap:6px}
+.sw{display:inline-block;flex:none;border-radius:2px}
+.sw-mat{width:14px;height:10px;border:5px solid var(--matiere)}
+.sw-trou{width:6px;height:12px;border:1px solid var(--texte);background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:4px 4px}
+.sw-tic{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--texte);border-radius:0}
+
+/* ---- mesures : à plat ---- */
+.mesures{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:0}
+.mesure dt{font-size:12px;color:var(--doux)}
+.mesure dd{margin:0;font-size:14px;font-weight:500}
+.mesure-grand{grid-column:1 / -1}
+.mesure-grand dd{font-size:28px;letter-spacing:-.015em}
+.mesure-grand dd small{font-size:14px;color:var(--doux)}
+@container (min-width:520px){.mesures{grid-template-columns:repeat(4,1fr)}}
+
+/* ---- boutons ---- */
+.actions{display:flex;flex-direction:column;gap:10px}
+.actions-pr,.actions-arret,.actions-lien{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.actions-pr>.raison{flex-basis:100%;margin-top:-4px}
+.b{font:inherit;cursor:pointer;border-radius:8px;padding:9px 14px;display:inline-flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:42px;justify-content:center}
+.b-lib{font-weight:700}
+.b-note{font-size:12px}
+.b-principal{background:var(--plein);color:var(--plein-texte);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--figure);color:var(--texte);border:1px solid var(--filet-fort)}
+.b-second .b-note,.b-choix .b-note{color:var(--doux)}
+.plat .b-second,.plat .b-choix{background:var(--plat)}
+.b-arret{background:var(--plat);color:var(--texte);border:1px solid var(--filet-fort);flex-direction:row;align-items:center;gap:8px}
+.figure .b-arret{background:var(--figure)}
+.b-arret::before{content:"";width:9px;height:9px;background:var(--texte);border-radius:1px}
+.b-arret.b-confirme{background:var(--confirme);border-color:var(--confirme);color:#FFFFFF}
+.b-arret.b-confirme::before{background:#FFFFFF}
+.b-lien{background:transparent;color:var(--texte);border:0;padding:4px 0;min-height:32px;text-decoration:underline;text-underline-offset:3px}
+.b[aria-disabled="true"]{cursor:not-allowed;background:var(--plat);color:var(--doux);border:1px dashed var(--filet-fort)}
+.b:focus-visible,.bascule-o:focus-visible,.file-inter:focus-visible,input:focus-visible,.bascule-avant:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.bornes{border:1px solid var(--filet-fort);border-radius:10px;margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bornes legend{font-size:12px;color:var(--doux);padding:0 4px}
+.borne{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--doux)}
+.borne input{font:500 14px 'Ranade',sans-serif;font-variant-numeric:tabular-nums;color:var(--texte);background:var(--figure);border:1px solid var(--filet-fort);border-radius:6px;padding:8px;width:100%}
+.borne-off input{border-style:dashed;background-color:var(--dam-a);background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:8px 8px}
+.borne-fdp{grid-column:1 / -1}
+.borne-fdp[aria-pressed="true"]{border-color:var(--texte);box-shadow:inset 3px 0 0 var(--texte)}
+
+/* ---- file : comme une pile de calques ---- */
+.file{display:flex;flex-direction:column;gap:8px}
+.file-inter{font:inherit;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:var(--plat);color:var(--texte);border:1px solid var(--filet-fort);border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left}
+.file-inter .b-note{color:var(--doux)}
+.file-inter-forme{width:30px;height:16px;border:2px solid var(--texte);border-radius:4px;position:relative}
+.file-inter-forme::after{content:"";position:absolute;top:2px;left:2px;width:8px;height:8px;background:var(--texte);border-radius:1px}
+.file-inter[aria-checked="true"] .file-inter-forme{box-shadow:inset 0 0 0 8px var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme::after{left:16px;background:var(--plat)}
+.file-nb{display:flex;align-items:center;gap:10px}
+.file-pm{min-width:42px;align-items:center;padding:6px}
+.file-expl{margin:0;font-size:12px;color:var(--doux)}
+.file-tete{font-size:14px;margin:0;font-weight:700}
+.parties{list-style:none;margin:0;padding:0;border:1px solid var(--filet-fort);border-radius:8px;overflow:hidden}
+.partie{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;padding:8px 10px;font-size:12px;background:var(--plat)}
+.partie+.partie{border-top:1px solid var(--filet)}
+.partie-n{font-weight:700;font-size:14px}
+.partie-etat{color:var(--doux);text-align:right}
+.partie-forme{width:22px;height:14px;border:1px solid var(--texte);border-radius:2px}
+.partie-faite .partie-forme{box-shadow:inset 0 0 0 7px var(--matiere)}
+.partie-courante .partie-forme,.partie-relue .partie-forme{box-shadow:inset 11px 0 0 0 var(--matiere);background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:6px 6px}
+.partie-avenir .partie-forme{border-style:dashed;background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:6px 6px}
+.partie-courante,.partie-relue{background:var(--figure);box-shadow:inset 3px 0 0 var(--texte)}
+.partie-courante .partie-etat,.partie-relue .partie-etat{color:var(--texte)}
+
+.incident,.alerte{display:flex;flex-direction:column;gap:8px}
+.incident-titre,.alerte-titre{margin:0;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.incident-titre::before,.alerte-titre::before{content:"";width:12px;height:12px;border:2px solid var(--alerte);transform:rotate(45deg);flex:none}
+.incident-reprise .incident-titre::before{border-color:var(--texte);transform:none}
+.incident-texte,.alerte-detail,.alerte-bilan{margin:0}
+.alerte-bilan{font-size:12px;color:var(--doux)}
+.incident-choix{display:flex;flex-wrap:wrap;gap:8px}
+.alerte{border-left:3px solid var(--alerte);padding-left:10px}
+
+.reste-tete{display:flex;flex-direction:column;gap:4px}
+.reste-g{font-size:12px;color:var(--doux);margin:6px 0 0;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.reste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.reste-l{background:var(--figure);border:1px solid var(--texte);border-radius:10px;box-shadow:var(--ombre);padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.reste-t{display:flex;align-items:center;gap:8px}
+.reste-cut{font-weight:700}
+.reste-type{font-size:12px;color:var(--doux)}
+.reste-motif{margin:0}
+.reste-a{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.reste-a .b-second{min-height:36px;padding:6px 12px}
+.reste-differe .reste-forme{width:8px;height:14px;border:1px solid var(--texte);background-image:conic-gradient(var(--dam-b) 25%,transparent 0 50%,var(--dam-b) 0 75%,transparent 0);background-size:4px 4px}
+.reste-vert .reste-forme{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid var(--texte)}
+.reste-vide{margin:0;color:var(--doux)}
+
+.coupe{margin:0;position:relative;height:210px;border:1px solid var(--filet-fort);border-radius:8px;overflow:hidden}
+.coupe canvas{position:absolute;inset:0;width:100%;height:100%}
+.coupe-l{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font-size:12px;color:var(--doux)}
+.bascule-avant{font:inherit;font-size:12px;background:var(--plat);color:var(--texte);border:1px solid var(--filet-fort);border-radius:6px;padding:5px 10px;cursor:pointer}
+.bascule-avant[aria-pressed="true"]{background:var(--plein);color:var(--plein-texte);border-color:var(--plein)}
+
+.echo-m{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin:0}
+.echo-m dt{font-size:12px;color:var(--doux)}
+.echo-m dd{margin:0;font-size:28px}
+
+.message{margin:0;min-height:20px;font-size:12px}
+.message:not(:empty){background:var(--figure);border:1px solid var(--texte);border-radius:6px;padding:5px 10px;box-shadow:var(--ombre);align-self:flex-start}
+
+@keyframes leve{from{transform:translateY(5px);opacity:.3}to{transform:none;opacity:1}}
+.change{animation:leve .3s cubic-bezier(.2,.7,.2,1) both;display:inline-block}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+html[data-mouvement="reduit"] *,html[data-mouvement="reduit"] *::before,html[data-mouvement="reduit"] *::after{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Détour"></div></div>
+  <aside class="notes">
+    <h2>Détour</h2>
+    <p><b>Logique.</b> Ce qui vous demande quelque chose est détouré et posé devant vous, avec son ombre ; tout ce qui se passe sans vous reste à plat, dans le fond.</p>
+    <p><b>D’où ça vient.</b> remove.bg : le parcours déposer → image assombrie pendant le calcul → figure seule sur un damier ; les réglages « Add Shadow » et « Blur background » ; le bouton de sortie qui ne s’allume qu’à la fin ; la bascule avant / après. backgrounds.supply : dans chaque collection, la netteté dit l’accès (net = à vous, flou + « Locked » = pas encore). Le vocabulaire des outils d’image : la sélection en « fourmis » qui avance, les calques.</p>
+    <p><b>Ce que ça veut dire ici.</b> Matière pleine = cuts traités ; damier = pas encore traité (rien ici). Trou dans la matière, où l’on revoit le damier = différé : Ariane n’a rien posé là. Petite encoche = vert à examiner. Sélection en fourmis = le cut qu’Ariane travaille ; les fourmis marchent quand elle travaille, s’arrêtent en pause. Carte détourée avec ombre et filet noir = vous êtes attendu (pause, arrêt, incident, fin, alerte, examen) ; pendant que le lot tourne seul, il n’y a aucune carte détourée. Les parties d’une file sont des calques : faits, courant, vides.</p>
+    <p><b>Mouvement.</b> À chaque changement d’état, la carte qui vous attend se détoure : son contour se trace de gauche à droite en 0,4 s, puis l’ombre se pose (0,6 s au total). Les fourmis avancent d’un pas toutes les 0,9 s tant que le lot tourne. Un nouveau différé s’ouvre en trou en 0,45 s. Mouvement réduit : fourmis immobiles, cartes posées sans tracé.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---- Kit des maquettes « matière » : le HTML sémantique des blocs du cahier.
+   * Chaque maquette le met en forme à sa façon ; le sens et les libellés restent ceux du moteur. ---- */
+  const K = (function () {
+    const { esc, n } = Demo.D;
+    const avecNote = (x) => (x.note ? `<span class="b-note">${esc(x.note)}</span>` : '');
+    function bouton(x, plus) {
+      const cls = 'b b-' + x.rang + (x.confirme ? ' b-confirme' : '') + (plus ? ' ' + plus : '');
+      return `<button type="button" class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>`
+        + `<span class="b-lib">${esc(x.libelle)}</span>${avecNote(x)}</button>`
+        + (x.raison ? `<p class="raison">${esc(x.raison)}</p>` : '')
+        + (x.confirme ? '<p class="raison">Appuyer encore pour confirmer. Sans second appui, rien ne s’arrête.</p>' : '');
+    }
+    function actions(liste) {
+      if (!liste || !liste.length) return '';
+      const rang = (r) => liste.filter((x) => x.rang === r).map((x) => bouton(x)).join('');
+      return `<div class="actions"><div class="actions-pr">${rang('principal')}${rang('second')}</div>`
+        + (liste.some((x) => x.rang === 'arret') ? `<div class="actions-arret">${rang('arret')}</div>` : '')
+        + (liste.some((x) => x.rang === 'lien') ? `<div class="actions-lien">${rang('lien')}</div>` : '') + '</div>';
+    }
+    function bascule(m) {
+      const echo = m.activite === 'echo';
+      const bloque = m.activiteBloquee;
+      return `<div class="bascule" role="group" aria-label="Activité d’Ariane">`
+        + `<button type="button" class="bascule-o" data-a="orbite" aria-pressed="${!echo}"><span class="bascule-nom">Orbite</span><span class="bascule-sens">Ariane pose</span></button>`
+        + `<button type="button" class="bascule-o" data-a="echo" aria-pressed="${echo}"${bloque ? ' aria-disabled="true"' : ''}><span class="bascule-nom">Écho</span><span class="bascule-sens">Ariane observe</span></button>`
+        + `</div>` + (bloque ? '<p class="raison raison-bascule">Pour passer en Écho, mettre d’abord le lot en pause ou l’arrêter.</p>' : '');
+    }
+    function liaison(m) {
+      const l = m.liaison;
+      return `<p class="liaison liaison-${l.etat}"><span class="liaison-forme" data-forme="liaison ${l.etat}" aria-hidden="true"></span><b>${esc(l.texte)}</b><span class="liaison-detail">${esc(l.detail)}</span></p>`;
+    }
+    function incident(m) {
+      const i = m.incident;
+      if (!i) return '';
+      const choix = i.actions.filter((x) => x.rang === 'choix');
+      const autres = i.actions.filter((x) => x.rang !== 'choix');
+      return `<section class="incident incident-${i.type}" aria-label="${esc(i.titre)}"><h3 class="incident-titre">${esc(i.titre)}</h3><p class="incident-texte">${esc(i.texte)}</p>`
+        + (choix.length ? `<div class="incident-choix">${choix.map((x) => bouton(x)).join('')}</div>` : '')
+        + autres.map((x) => bouton(x)).join('') + '</section>';
+    }
+    function bornes(m) {
+      const b = m.bornes;
+      return `<fieldset class="bornes"><legend>Bornes du lot</legend>`
+        + `<label class="borne"><span>Premier cut</span><input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label>`
+        + `<label class="borne${b.finDePartie ? ' borne-off' : ''}"><span>Dernier cut</span><input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin de partie"${b.finDePartie ? ' disabled' : ''} aria-label="Dernier cut"></label>`
+        + `<button type="button" class="b b-choix borne-fdp" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="b-lib">Jusqu’à la fin de la partie</span><span class="b-note">${b.finDePartie ? 'oui : le dernier cut sera celui d’ESV' : 'non : s’arrêter au dernier cut'}</span></button>`
+        + `</fieldset>`;
+    }
+    function fileReglage(m) {
+      const f = m.file;
+      return `<section class="file file-reglage" aria-label="File de parties">`
+        + `<button type="button" class="file-inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="file-inter-forme" data-forme="interrupteur" aria-hidden="true"></span><span class="b-lib">File de parties</span><span class="b-note">${f.active ? 'allumée' : 'éteinte'}</span></button>`
+        + (f.active ? `<div class="file-nb"><button type="button" class="b b-choix file-pm" data-a="fileMoins" aria-label="Une partie de moins"${f.nb <= 2 ? ' aria-disabled="true"' : ''}>−</button><span class="file-nb-v" data-valeur="nbparties">${f.nb} parties</span><button type="button" class="b b-choix file-pm" data-a="filePlus" aria-label="Une partie de plus"${f.nb >= 9 ? ' aria-disabled="true"' : ''}>+</button></div>`
+          + `<p class="file-expl">Ariane fait ${f.nb} parties à la suite. Après chacune, elle relit et corrige, puis passe seule à la suivante.</p>`
+          : '<p class="file-expl">Éteinte : un seul lot, sur les bornes ci-dessus.</p>')
+        + `</section>`;
+    }
+    function bilanPartie(p) { return `${n(p.poses)} posés · ${p.differes} différés · ${p.aControler} à examiner`; }
+    function fileSuivi(m) {
+      const f = m.file;
+      if (!f.active || m.phase === 'pret') return '';
+      const lignes = [];
+      for (let i = 1; i <= f.nb; i++) {
+        const p = f.parties.find((x) => x.n === i);
+        let etat, cls;
+        if (p && f.relecture && i === f.courante) { etat = 'relecture et correction en cours'; cls = 'relue'; }
+        else if (p) { etat = bilanPartie(p); cls = 'faite'; }
+        else if (i === f.courante) { etat = m.phase === 'encours' ? 'en cours' : (f.alerte ? 'arrêtée' : m.phase === 'pause' ? 'en pause' : 'arrêtée'); cls = 'courante'; }
+        else { etat = 'à venir'; cls = 'avenir'; }
+        lignes.push(`<li class="partie partie-${cls}"><span class="partie-forme" data-forme="partie ${cls}" aria-hidden="true"></span><span class="partie-n">Partie ${i}</span><span class="partie-etat">${etat}</span></li>`);
+      }
+      const tete = f.finie ? `File terminée : ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`;
+      const alerte = f.alerte ? `<div class="alerte" role="alert"><h3 class="alerte-titre">${esc(f.alerte.titre)}</h3><p class="alerte-detail">${esc(f.alerte.detail)}</p><p class="alerte-bilan">Au moment de l’arrêt : ${m.compte.faits} cuts faits dans la partie ${f.courante}, ${m.compte.differes} différés, ${m.compte.aExaminer} à examiner.</p></div>` : '';
+      return `<section class="file file-suivi" aria-label="File de parties"><h3 class="file-tete" data-valeur="filetete">${tete}</h3>${alerte}<ol class="parties">${lignes.join('')}</ol></section>`;
+    }
+    function message(m) {
+      return `<p class="message" role="status" aria-live="polite">${m.message ? esc(m.message) : ''}</p>`;
+    }
+    function ligneReste(r) {
+      return `<li class="reste-l reste-${r.type}"><div class="reste-t"><span class="reste-forme" data-forme="${r.type}" aria-hidden="true"></span><b class="reste-cut">Cut ${r.cut}</b><span class="reste-type">${r.type === 'differe' ? 'différé' : 'vert à examiner'}</span></div>`
+        + `<p class="reste-motif">${esc(r.motif)}</p><div class="reste-a">${bouton({ a: 'examiner', id: r.id, libelle: 'Examiner', rang: 'second' })}${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'lien' })}</div></li>`;
+    }
+    function reste(m) {
+      const dif = m.restants.filter((r) => r.type === 'differe');
+      const ver = m.restants.filter((r) => r.type === 'vert');
+      const vide = !m.restants.length ? '<p class="reste-vide">Plus rien à revoir dans ce lot.</p>' : '';
+      return `<header class="reste-tete"><h2 class="titre">Ce qui reste</h2><p class="phrase">${dif.length} différés et ${ver.length} verts à examiner. Rien n’est validé sans vous.</p></header>${vide}`
+        + (dif.length ? `<h3 class="reste-g">Différés <span>${dif.length}</span></h3><ul class="reste">${dif.map(ligneReste).join('')}</ul>` : '')
+        + (ver.length ? `<h3 class="reste-g">Verts à examiner <span>${ver.length}</span></h3><ul class="reste">${ver.map(ligneReste).join('')}</ul>` : '')
+        + `<div class="actions"><div class="actions-pr">${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'second' })}</div></div>`;
+    }
+    function examenActions(r) {
+      return `<div class="actions"><div class="actions-pr">${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' })}${bouton({ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second', note: 'le retire de la liste, ne pose rien' })}</div>`
+        + `<div class="actions-lien">${bouton({ a: 'voirReste', libelle: 'Retour à la liste', rang: 'lien' })}${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'lien' })}</div></div>`;
+    }
+    function echo(m) {
+      const e = m.echo;
+      const ecart = e.vus - e.accord;
+      return `<dl class="echo-m"><div><dt>Poses vues</dt><dd data-valeur="echovus">${e.vus}</dd></div><div><dt>En accord avec Ariane</dt><dd data-valeur="echoacc">${e.accord}</dd></div><div><dt>En écart</dt><dd data-valeur="echoec">${ecart}</dd></div><div><dt>Dernière vue</dt><dd>${e.dernier ? 'cut ' + e.dernier : 'aucune'}</dd></div></dl>`;
+    }
+    return { bouton, actions, bascule, liaison, incident, bornes, fileReglage, fileSuivi, message, reste, examenActions, echo, bilanPartie, esc, n };
+  })();
+
+  /* Animation d'une valeur : on s'en rapproche à chaque image, jamais de saut (sauf mouvement réduit). */
+  function vers(actuel, cible, dt, duree) {
+    if (Demo.D.mouvementReduit() || actuel == null) return cible;
+    const k = 1 - Math.pow(0.001, dt / Math.max(1, duree));
+    const v = actuel + (cible - actuel) * k;
+    return Math.abs(cible - v) < 1e-4 ? cible : v;
+  }
+  /* Toile à la bonne taille (pixels réels) ; renvoie le contexte et les dimensions CSS. */
+  function toile(c) {
+    const r = c.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; }
+    const x = c.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { x, w, h };
+  }
+
+  const { esc, n } = K;
+  const V = { part: null, trous: {}, dernier: performance.now(), anim: 0 };
+  let M = null, avant = true;
+
+  function couleurs() {
+    const st = getComputedStyle(document.documentElement);
+    return { mat: st.getPropertyValue('--matiere').trim(), a: st.getPropertyValue('--dam-a').trim(), b: st.getPropertyValue('--dam-b').trim(), t: st.getPropertyValue('--texte').trim() };
+  }
+  function damier(x, x0, y0, w, h, col, cote) {
+    x.fillStyle = col.a; x.fillRect(x0, y0, w, h); x.fillStyle = col.b;
+    for (let i = Math.floor(x0 / cote); i * cote < x0 + w; i++) for (let j = 0; j * cote < h; j++) if ((i + j) % 2) {
+      const a = Math.max(x0, i * cote), b = Math.min(x0 + w, i * cote + cote);
+      if (b > a) x.fillRect(a, y0 + j * cote, b - a, Math.min(cote, h - j * cote));
+    }
+  }
+  function echelleDe(m) { return m.compte.total || Math.max(240, m.compte.faits + 24); }
+  function cible(m) {
+    if (m.vue === 'echo') return Math.min(1, m.echo.vus / 60);
+    if (m.phase === 'pret') return 0;
+    return Math.min(1, m.compte.faits / echelleDe(m));
+  }
+
+  function dessiner(maintenant) {
+    V.anim = 0;
+    const c = document.querySelector('#panneau .bande-c');
+    if (!c || !M) return;
+    const dt = Math.min(100, maintenant - V.dernier); V.dernier = maintenant;
+    const { x, w, h } = toile(c);
+    const col = couleurs();
+    const pc = cible(M);
+    V.part = vers(V.part, pc, dt, 500);
+    damier(x, 0, 0, w, h, col, 6);
+    const fx = w * V.part;
+    x.fillStyle = col.mat; x.fillRect(0, 0, fx, h);
+    let glisse = Math.abs(V.part - pc) > 1e-4;
+    if (M.vue === 'echo') {
+      /* Écho : la part en accord (matière) et la part en écart (matière ajourée) */
+      const e = M.echo, ac = e.vus ? fx * e.accord / e.vus : 0;
+      damier(x, ac, 0, fx - ac, h, col, 6);
+      x.strokeStyle = col.t; x.lineWidth = 1; x.strokeRect(ac + 0.5, 0.5, fx - ac - 1, h - 1);
+    } else if (M.phase !== 'pret') {
+      const ech = echelleDe(M), deb = M.compte.debut;
+      for (const r of M.restants) {
+        const rx = (r.cut - deb + 0.5) / ech * w;
+        if (rx > fx) continue;
+        V.trous[r.id] = vers(V.trous[r.id] == null ? 0 : V.trous[r.id], 1, dt, 450);
+        const o = V.trous[r.id]; if (o < 1) glisse = true;
+        if (r.type === 'differe') {
+          const lw = Math.max(4, Math.min(8, w / ech * 2)) * o;
+          damier(x, rx - lw / 2, 6, lw, h - 12, col, 3);
+          x.strokeStyle = col.t; x.lineWidth = 1; x.strokeRect(rx - lw / 2 - 0.5, 5.5, lw + 1, h - 11);
+        } else {
+          x.fillStyle = col.a; x.beginPath(); x.moveTo(rx - 4 * o, 0); x.lineTo(rx + 4 * o, 0); x.lineTo(rx, 8 * o); x.closePath(); x.fill();
+        }
+      }
+    }
+    if (!Demo.D.mouvementReduit() && glisse) V.anim = requestAnimationFrame(dessiner);
+  }
+  function relancer() { if (!V.anim) V.anim = requestAnimationFrame(dessiner); }
+
+  /* fourmis : autour du cut en cours (travail), autour de toute la bande (relecture) */
+  function majBande(m) {
+    const f = document.querySelector('#panneau .bande');
+    if (!f) return;
+    const svg = f.querySelector('.fourmis'), et = f.querySelector('.bande-etiq');
+    const cadre = f.querySelector('.bande-cadre'), w = cadre.clientWidth, h = cadre.clientHeight;
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    const rects = svg.querySelectorAll('rect');
+    let r = null;
+    const travail = m.vue !== 'echo' && (m.phase === 'encours' || m.phase === 'pause' || m.phase === 'arrete');
+    if (m.file.relecture) r = [1.5, 1.5, w - 3, h - 3];
+    else if (travail) { const p = Math.min(1, m.compte.faits / echelleDe(m)); const cx = w * p; r = [Math.max(1.5, cx - 6), 1.5, 12, h - 3]; }
+    rects.forEach((e) => { if (r) { e.setAttribute('x', r[0]); e.setAttribute('y', r[1]); e.setAttribute('width', r[2]); e.setAttribute('height', r[3]); } e.style.display = r ? '' : 'none'; });
+    svg.classList.toggle('marche', m.phase === 'encours' && !Demo.D.mouvementReduit());
+    et.hidden = !(travail && !m.file.relecture);
+    if (!et.hidden) {
+      const p = Math.min(1, m.compte.faits / echelleDe(m));
+      et.style.left = Math.max(44, Math.min(f.clientWidth - 44, f.clientWidth * p)) + 'px';
+      et.textContent = (m.phase === 'encours' ? 'cut ' : 'arrêt · cut ') + m.compte.cut;
+    }
+    const c = m.compte;
+    const g = f.querySelector('.bl-g'), d = f.querySelector('.bl-d');
+    if (m.vue === 'echo') { g.innerHTML = `<b>${m.echo.accord}</b> en accord`; d.innerHTML = `<b>${m.echo.vus - m.echo.accord}</b> en écart`; }
+    else {
+      g.innerHTML = `<b>cut ${c.debut}</b>`;
+      d.innerHTML = m.phase === 'pret' ? (m.bornes.finDePartie ? '<b>fin de partie</b>' : `<b>cut ${m.bornes.fin}</b>`) : (c.total ? `<b>cut ${c.fin}</b>` : '<b>fin inconnue</b>');
+    }
+    f.setAttribute('aria-label', m.vue === 'echo' ? `Écho : ${m.echo.vus} poses vues, ${m.echo.accord} en accord` : `Lot : ${c.faits} cuts traités${c.total ? ' sur ' + c.total : ', total inconnu'}, ${c.differes} différés`);
+  }
+
+  function bande() {
+    return `<figure class="bande bande-haut" data-garder="bande" aria-label="Lot"><div class="bande-cadre"><canvas class="bande-c" aria-hidden="true"></canvas>`
+      + `<svg class="fourmis" aria-hidden="true" preserveAspectRatio="none"><rect class="f-a"></rect><rect class="f-b"></rect></svg></div>`
+      + `<span class="bande-etiq" hidden>cut</span><div class="bande-l"><span class="bl-g"></span><span class="bl-d"></span></div></figure>`;
+  }
+  function legende(m) {
+    if (m.vue === 'echo') return '<ul class="legende"><li><span class="sw sw-mat" data-forme="matiere" aria-hidden="true"></span>en accord</li><li><span class="sw sw-trou" data-forme="trou" aria-hidden="true"></span>en écart</li></ul>';
+    if (m.phase === 'pret') return '<ul class="legende"><li><span class="sw sw-trou" data-forme="trou" aria-hidden="true"></span>damier : rien de traité</li></ul>';
+    return `<ul class="legende"><li><span class="sw sw-mat" data-forme="matiere" aria-hidden="true"></span>traité</li><li><span class="sw sw-trou" data-forme="trou" aria-hidden="true"></span>trou : différé (${m.compte.differes})</li><li><span class="sw sw-tic" aria-hidden="true"></span>encoche : vert à examiner (${m.compte.aExaminer})</li></ul>`;
+  }
+  function mesures(m) {
+    const c = m.compte;
+    const grand = `<div class="mesure mesure-grand"><dt>Traités</dt><dd><span data-valeur="faits">${c.faits}</span> <small>${c.total ? 'sur ' + c.total : '· total inconnu'}</small></dd></div>`;
+    const cut = `<div class="mesure"><dt>${m.phase === 'encours' ? 'Cut en cours' : 'Arrêté au cut'}</dt><dd data-valeur="cut">${c.cut}</dd></div>`;
+    const temps = `<div class="mesure"><dt>Temps restant</dt><dd data-valeur="temps">${esc(c.tempsTexte)}</dd></div>`;
+    const dif = `<div class="mesure"><dt>Différés</dt><dd data-valeur="dif">${c.differes}</dd></div>`;
+    const ver = `<div class="mesure"><dt>Verts à examiner</dt><dd data-valeur="ver">${c.aExaminer}</dd></div>`;
+    if (m.phase === 'fin') return `<dl class="mesures"><div class="mesure mesure-grand"><dt>Posés</dt><dd>${n(c.poses)} <small>sur ${c.faits} traités</small></dd></div>${dif}${ver}</dl>`;
+    if (m.file.relecture) return `<dl class="mesures">${grand}${dif}${ver}</dl>`;
+    return `<dl class="mesures">${grand}${cut}${temps}${dif}${ver}</dl>`;
+  }
+  /* la carte détourée : seulement quand l'opérateur est attendu */
+  function figure(marque, contenu) { return `<section class="figure" aria-label="${esc(marque)}"><span class="figure-marque">${esc(marque)}</span>${contenu}</section>`; }
+
+  function examen(m) {
+    const r = m.examen;
+    return `<header><p class="raison">Examiner · ${r.type === 'differe' ? 'différé' : 'vert à examiner'}</p><h2 class="titre">Cut ${r.cut}</h2><p class="phrase">${esc(r.motif)}.</p></header>`
+      + `<figure class="coupe damier" data-garder="coupe-${esc(r.id)}" aria-label="Coupe du cut ${r.cut}"><canvas aria-hidden="true"></canvas></figure>`
+      + `<div class="coupe-l"><span>${avant ? 'Coupe et position proposée (traits)' : 'Coupe seule, sans la proposition'}</span><button type="button" class="bascule-avant" aria-pressed="${avant}">Avec la proposition</button></div>`
+      + figure('À vous', K.examenActions(r));
+  }
+  function dessinerCoupe(m) {
+    const f = document.querySelector('#panneau .coupe canvas');
+    if (!f || !m.examen) return;
+    const { x, w, h } = toile(f);
+    const col = couleurs();
+    const cp = Demo.D.coupe(m.examen.cut, 320);
+    x.clearRect(0, 0, w, h);
+    const X = (v) => 14 + (v + 1) / 2 * (w - 28), Z = (v) => h - 24 - (v + 0.45) * (h - 50) / 0.45;
+    x.fillStyle = col.t;
+    for (const [a, b] of cp.pts) x.fillRect(X(a), Z(b), 1.8, 1.8);
+    if (avant) {
+      for (const rx of cp.rails) {
+        x.fillStyle = col.t; x.fillRect(X(rx) - 1, 12, 2, h - 30);
+        x.fillStyle = col.a; x.fillRect(X(rx) - 8, 10, 16, 3);
+      }
+    }
+  }
+
+  function rendre(S, D) {
+    const m = D.modele(); M = m;
+    if (m.vue === 'reste') return `<div class="p">${K.reste(m)}${K.message(m)}</div>`;
+    if (m.vue === 'examen' && m.examen) return `<div class="p">${examen(m)}${K.message(m)}</div>`;
+    const barre = `<div class="barre"><p class="marque">Ariane</p>${K.bascule(m)}${K.liaison(m)}</div>`;
+    const tete = `<header><h2 class="titre">${esc(m.titre)}</h2><p class="phrase">${esc(m.phrase)}</p></header>`;
+    if (m.vue === 'echo') return `<div class="p">${barre}${tete}${bande()}${legende(m)}${K.echo(m)}<div class="plat">${K.actions(m.actions)}</div>${K.message(m)}</div>`;
+    let corps;
+    if (m.phase === 'pret') {
+      const inc = m.incident ? figure('À vous', K.incident(m)) : '';
+      corps = inc + K.bornes(m) + K.fileReglage(m) + (m.incident ? `<div class="plat">${K.actions(m.actions)}</div>` : figure('Prêt à partir', K.actions(m.actions)));
+    } else if (m.phase === 'encours') {
+      corps = mesures(m) + K.fileSuivi(m) + `<div class="plat">${K.actions(m.actions)}</div>`;
+    } else {
+      const haut = m.file.alerte ? K.fileSuivi(m).replace(/<ol class="parties">[\s\S]*<\/ol>/, '') : K.incident(m);
+      corps = figure('À vous', haut + K.actions(m.actions)) + mesures(m) + (m.file.alerte ? K.fileSuivi(m).replace(/<div class="alerte"[\s\S]*?<\/div>/, '') : K.fileSuivi(m));
+    }
+    return `<div class="p">${barre}${tete}${bande()}${legende(m)}${corps}${K.message(m)}</div>`;
+  }
+  function apres() {
+    if (M && M.vue === 'examen') {
+      dessinerCoupe(M);
+      const b = document.querySelector('#panneau .bascule-avant');
+      if (b) b.onclick = () => { avant = !avant; b.setAttribute('aria-pressed', String(avant)); b.previousElementSibling.textContent = avant ? 'Coupe et position proposée (traits)' : 'Coupe seule, sans la proposition'; dessinerCoupe(M); };
+      return;
+    }
+    if (M) majBande(M);
+    relancer();
+  }
+  window.addEventListener('resize', relancer);
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

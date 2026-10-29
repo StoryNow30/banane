@@ -9,7 +9,7 @@
 /*POLICE:atkinson-mono*/
 /* Proposition « Constantes » (famille signalétique et design d'information).
    Logique : le lot se lit comme un moniteur de constantes : une colonne de cinq chiffres alignés, lisibles de loin,
-   chacun avec sa case de score (vide = normal, 1 = à regarder, 3 = à agir), comme un score d'alerte précoce.
+   chacun avec sa case de score (aucune case = normal, 1 = à regarder, 3 = à agir), comme un score d'alerte précoce.
    Couleurs (Radix slate, amber, red, indigo) : les chiffres restent à l'encre ; seule la case de score se colore,
    et elle porte toujours un chiffre. L'indigo ne sert qu'à l'action principale. */
 :root{
@@ -193,7 +193,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-
     </ul>
     <h3>Ce que ça veut dire ici</h3>
     <ul>
-      <li><b>Case vide</b> : constante normale. <b>Case ambre « 1 »</b> : à regarder. <b>Case rouge « 3 »</b> : à agir. Le chiffre dans la case suffit sans couleur.</li>
+      <li><b>Pas de case</b> : constante normale (une case vide se lirait comme une case à cocher). <b>Case ambre « 1 »</b> : à regarder. <b>Case rouge « 3 »</b> : à agir. Le chiffre dans la case suffit sans couleur.</li>
       <li>Les chiffres restent à l'encre : la couleur ne touche jamais une valeur, seulement sa case.</li>
       <li>« Total inconnu » et « temps inconnu » s'écrivent en mots : aucun chiffre deviné.</li>
       <li>Les commandes sont toujours en bas, à la même place, quel que soit l'état.</li>

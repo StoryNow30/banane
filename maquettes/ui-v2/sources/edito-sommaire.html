@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane, proposition « Le sommaire »</title>
+<style>
+/*POLICE:edito-newsreader*/
+/* Proposition « Le sommaire » (famille éditoriale).
+ * Logique : le lot est un petit livre dont le panneau montre la table des matières ; chaque chapitre (préparer,
+ * poser, regarder ce qui reste, exporter ; ou chaque partie d'une file) mène par des points de conduite à son
+ * chiffre, un signet marque le chapitre où l'on est, et le détail descend en notes de bas de page.
+ * Police unique : Newsreader (Google Fonts), dessinée pour la lecture d'actualité à l'écran, à tailles optiques ;
+ * chiffres alignés et à chasse fixe par défaut (mesuré) : la colonne des chiffres reste droite.
+ * Couleurs : encre sur papier ivoire. Un seul ton, le bordeaux du signet : il marque « on en est ici », jamais autre
+ * chose. Ce qui vous attend est dit en toutes lettres (« À vous ») et signalé par une croix † de note. */
+:root{ --scene:#D9D3C5; --papier:#FAF7F0; --encre:#1C1A17; --gris:#5F5A52; --filet:#CFC7B8; --signet:#8C1D2F; --sur-signet:#FAF7F0; --voile:#F1ECE1; }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --scene:#000000; --papier:#1B1916; --encre:#EDE6D8; --gris:#ABA294; --filet:#3C3830; --signet:#E8909C; --sur-signet:#1B1916; --voile:#24211D; }}
+:root[data-theme="dark"]{ --scene:#000000; --papier:#1B1916; --encre:#EDE6D8; --gris:#ABA294; --filet:#3C3830; --signet:#E8909C; --sur-signet:#1B1916; --voile:#24211D; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Newsreader',Georgia,serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--papier);color:var(--encre)}
+.notes{max-width:380px;background:var(--papier);color:var(--encre);padding:18px 20px;font-size:15px;line-height:1.5}
+.notes h2{font-style:italic;font-weight:400;font-size:28px;margin:0 0 8px}
+
+.livre{padding:14px 22px 34px;font-size:17px;line-height:1.45;font-variant-numeric:lining-nums tabular-nums;font-optical-sizing:auto}
+.sc{font-variant-caps:all-small-caps;letter-spacing:.06em}
+/* titre courant, comme en tête de page d'un livre */
+.courant{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;border-bottom:1px solid var(--filet);padding-bottom:8px;font-size:15px;color:var(--gris)}
+.courant button{font:inherit;background:none;border:0;padding:2px 0;margin-right:10px;color:var(--gris);cursor:pointer}
+.courant button[aria-pressed="true"]{color:var(--encre);font-style:italic;font-weight:600}
+.courant button[aria-disabled="true"]{cursor:not-allowed}
+.courant .esv.non{color:var(--encre);font-weight:600}
+/* page de titre */
+.titre-page{text-align:center;margin:26px 0 8px}
+.titre-page .sur{font-size:15px;color:var(--gris)}
+.titre-page h1{font-style:italic;font-weight:400;font-size:clamp(44px,13.5cqi,72px);line-height:1;margin:6px 0 10px;letter-spacing:-.01em}
+.titre-page .chapeau{font-size:18px;margin:0 auto;max-width:24em}
+.titre-page hr{width:48px;border:0;border-top:1px solid var(--encre);margin:16px auto 0}
+.grand{font-size:clamp(22px,6.6cqi,30px);text-align:center;margin:8px 0 0}
+.grand b{font-weight:600}
+
+/* table des matières à points de conduite */
+.toc{position:relative;margin:22px 0 0;padding:0}
+.toc h2{font-weight:400;font-size:15px;text-align:center;color:var(--gris);margin:0 0 6px}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc li{display:flex;align-items:baseline;gap:6px;padding:8px 0 8px 18px;min-height:42px;position:relative}
+.toc .num{width:1.6em;flex:none;color:var(--gris);font-size:15px}
+.toc .lib{flex:none;max-width:62%}
+.toc .pts{flex:1;border-bottom:2px dotted var(--filet);transform:translateY(-4px);min-width:16px}
+.toc .val{flex:none;text-align:right;max-width:46%}
+.toc li.ici .lib{font-weight:600}
+.toc li.ici .val{font-style:italic}
+.toc li.fait .lib,.toc li.fait .val{color:var(--gris)}
+.toc li.sous{padding-left:42px;font-size:15px;min-height:34px;padding-top:4px;padding-bottom:4px}
+.toc li.sous .lib{font-style:italic}
+/* le signet : un ruban dans la marge, glisse au chapitre courant */
+/* le ruban est un filet (bordure) et non un fond, pour que son contraste se mesure contre la page */
+.signet{position:absolute;left:0;top:0;width:8px;height:34px;background:transparent;border-left:8px solid var(--signet);border-top:0 solid var(--signet);transition:top .32s cubic-bezier(.2,.8,.2,1),height .32s cubic-bezier(.2,.8,.2,1);clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%)}
+.legende{font-size:14px;color:var(--gris);text-align:center;margin:8px 0 0}
+.legende i{display:inline-block;width:6px;height:13px;background:var(--signet);vertical-align:-1px;margin-right:6px;clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%)}
+
+/* notes de bas de page */
+.bas{margin-top:22px;border-top:1px solid var(--encre);width:100%;padding-top:8px;font-size:15px}
+.bas p{margin:0 0 6px;padding-left:1.3em;text-indent:-1.3em}
+.bas sup,.appel{font-size:.7em;vertical-align:.5em;line-height:0}
+.avous{border-top:3px double var(--encre);border-bottom:3px double var(--encre);padding:10px 0 12px;margin:18px 0 6px}
+.avous .k{font-weight:700}
+.avous h3{font-style:italic;font-weight:600;font-size:23px;line-height:1.15;margin:2px 0 6px}
+.avous p{margin:0 0 8px}
+
+/* actions */
+.actions{display:flex;flex-direction:column;gap:8px;margin:20px 0 0}
+.btn{font:inherit;font-size:18px;font-weight:600;text-align:left;padding:12px 16px;border:1px solid var(--encre);background:transparent;color:var(--encre);border-radius:1px;cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn:active{transform:scale(.97)}
+.btn small{font-weight:400;font-style:italic;font-size:15px}
+.btn.principal{background:var(--encre);color:var(--papier)}
+.btn.lien{border:0;padding:6px 0;font-weight:400;font-style:italic;text-decoration:underline;text-underline-offset:4px;justify-content:center}
+.btn.arret{font-weight:400}
+.btn.arret.confirme{background:var(--encre);color:var(--papier);font-weight:600}
+.btn[aria-disabled="true"]{cursor:not-allowed;color:var(--gris);border-style:dashed;background:transparent}
+.raison{font-size:15px;font-style:italic;color:var(--gris);margin:-2px 0 2px;text-align:center}
+.petit{font:inherit;font-size:16px;background:transparent;color:var(--encre);border:1px solid var(--encre);padding:6px 12px;border-radius:1px;cursor:pointer}
+.petit.plein{background:var(--encre);color:var(--papier)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+.boutons{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.message{text-align:center;font-style:italic;margin:10px 0 0;padding:6px;border-top:1px solid var(--filet);border-bottom:1px solid var(--filet)}
+
+/* réglage : la page de garde à remplir */
+.garde{margin:12px 0 0;text-align:center;font-size:clamp(20px,5.6cqi,24px);line-height:1.8}
+.garde input{font:inherit;font-weight:600;width:3.4ch;text-align:center;background:var(--voile);color:var(--encre);border:0;border-bottom:1px solid var(--encre);border-radius:0;padding:0}
+.garde .mot{font:inherit;font-style:italic;background:var(--voile);color:var(--encre);border:0;border-bottom:1px solid var(--encre);cursor:pointer;padding:0 4px;border-radius:0}
+.garde .pas{font:inherit;font-size:18px;width:32px;height:32px;line-height:1;background:transparent;color:var(--encre);border:1px solid var(--encre);cursor:pointer;vertical-align:2px}
+figure{margin:14px 0 4px}
+figure svg{display:block;width:100%;height:auto;background:var(--voile)}
+figcaption{font-size:15px;font-style:italic;color:var(--gris);margin-top:6px;text-align:center}
+.reste li{flex-wrap:wrap}
+.reste .boutons{width:100%;padding-left:1.6em}
+
+/* ---------- partition de mouvement ---------- */
+@keyframes poser{from{opacity:0;letter-spacing:.06em}to{opacity:1;letter-spacing:-.01em}}
+@keyframes chiffre{from{opacity:0;transform:translateY(.35em)}to{opacity:1;transform:none}}
+@keyframes paraitre{from{opacity:0}to{opacity:1}}
+/* changement d'état : le titre se pose, ses lettres se resserrent (300 ms) */
+#panneau[data-etat-change="1"] .titre-page h1,.titre-page h1.change{animation:poser .3s cubic-bezier(.2,.8,.2,1) both}
+#panneau[data-etat-change="1"] .titre-page .chapeau,#panneau[data-etat-change="1"] .avous{animation:paraitre .24s ease-out .1s both}
+/* un chiffre de la table qui change monte d'un cran ; le signet glisse au chapitre courant (320 ms) */
+.val.change{animation:chiffre .2s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+:root[data-mouvement="reduit"] *,:root[data-mouvement="reduit"] *::before,:root[data-mouvement="reduit"] *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Le sommaire"></div></div>
+  <aside class="notes">
+    <h2>Le sommaire</h2>
+    <p><b>Logique.</b> Le lot est un petit livre dont le panneau montre la table des matières : chaque chapitre (préparer, poser, regarder ce qui reste, exporter ; ou chaque partie d'une file) mène par des points de conduite à son chiffre ; un signet marque le chapitre où l'on est ; le détail descend en notes de bas de page.</p>
+    <p><b>D'où ça vient.</b> wedoflow, fiche de gabarit : l'index numéroté des pages (« 1. Home … 18. Change Log »). iter0, page « Launch CEO » : la liste verticale des étapes avec un filet à gauche de l'étape courante ; le « Launch brief » qui cite ses sources en pied. dithergarden (vu via insposite) : rubriques numérotées. fontshare, « Pairs » : la mise en colonne de type presse. Newsreader : chiffres alignés à chasse fixe, mesurés.</p>
+    <p><b>Ce que ça veut dire ici.</b> Le signet bordeaux est la seule couleur : il dit « on en est ici » et glisse quand on change de chapitre. Gris = chapitre fini ; gras = chapitre en cours ; « à venir » écrit en toutes lettres. Ce qui vous attend est encadré d'un double filet et commence par « À vous » ; les détails (différés, verts) sont des notes appelées par un chiffre.</p>
+    <p><b>Mouvement.</b> Changement d'état : le titre se pose, ses lettres se resserrent (300 ms). Changement de chapitre : le signet glisse dans la marge (320 ms). Un chiffre de la table qui change monte d'un cran (200 ms). Mouvement réduit : tout est posé, le signet saute.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const ROMAIN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
+  function bouton(x) {
+    const cls = ['btn', x.rang || 'second', x.confirme ? 'confirme' : ''].join(' ');
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+
+  function courant(m) {
+    const bl = m.activiteBloquee, li = m.liaison;
+    const b = (a, l, actif) => `<button data-a="${a}" aria-pressed="${actif}"${bl && !actif ? ' aria-disabled="true" title="Écho attend la pause ou l’arrêt du lot"' : ''}>${l}</button>`;
+    return `<header class="courant"><span role="group" aria-label="Activité">${b('orbite', 'Orbite', m.activite === 'orbite')}${b('echo', 'Écho', m.activite === 'echo')}</span><span class="esv ${li.etat === 'relie' ? '' : 'non'}">${li.etat === 'relie' ? '' : '† '}${esc(li.texte)}, ${esc(li.detail)}</span></header>
+      ${m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : ''}`;
+  }
+
+  function titre(sur, t, chapeau) {
+    return `<div class="titre-page"><div class="sur sc">${esc(sur)}</div><h1 data-valeur="titre">${esc(t)}</h1>${chapeau ? `<p class="chapeau">${chapeau}</p>` : ''}<hr></div>`;
+  }
+
+  /* Ligne de table : numéro, libellé, points de conduite, valeur. etat : fait | ici | loin | sous. */
+  function entree(num, lib, val, etat, cle) {
+    return `<li class="${etat || ''}"${etat === 'ici' ? ' data-ici' : ''}><span class="num">${num || ''}</span><span class="lib">${lib}</span><span class="pts" aria-hidden="true"></span><span class="val"${cle ? ` data-valeur="${cle}"` : ''}>${val}</span></li>`;
+  }
+  const toc = (titreToc, lignes, legende) => `<nav class="toc" aria-label="${esc(titreToc)}"><h2 class="sc">${esc(titreToc)}</h2><span class="signet" data-garder="signet" data-forme="signet" aria-hidden="true"></span><ol>${lignes}</ol>${legende ? '<p class="legende"><i></i>le signet : on en est ici</p>' : ''}</nav>`;
+
+  function avous(k, t, texte, acts) {
+    return `<section class="avous" role="alert"><div class="k sc">† À vous · ${esc(k)}</div><h3>${esc(t)}</h3>${texte ? `<p>${esc(texte)}</p>` : ''}${acts && acts.length ? `<div class="boutons">${acts.map((x) => `<button class="petit" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}>${esc(x.libelle)}</button>`).join('')}</div>` : ''}</section>`;
+  }
+
+  function sur(m) {
+    const b = m.bornes, f = m.file;
+    return (f.active ? `file de ${f.nb} parties · ` : '') + (b.finDePartie ? `du cut ${b.debut} à la fin de partie` : `cuts ${b.debut} à ${b.fin}`);
+  }
+
+  /* Chapitres du lot (ou parties de la file) */
+  function chapitres(m) {
+    const c = m.compte, f = m.file, r = m.restants.length;
+    const enCours = m.phase !== 'fin';
+    const poseVal = c.total == null ? `${n(c.faits)} sur ?` : `${n(c.faits)} sur ${n(c.total)}`;
+    let l = '';
+    if (!f.active) {
+      l += entree('I', 'Préparer', 'fait', 'fait');
+      l += entree('II', m.phase === 'encours' ? 'Poser' : (m.phase === 'fin' ? 'Poser' : 'Poser, interrompu'), poseVal, enCours ? 'ici' : 'fait', 'pose');
+      if (enCours) {
+        l += entree('', 'cut en cours', String(c.cut), 'sous', 'cut');
+        l += entree('', 'temps restant', c.minutes == null ? 'inconnu' : esc(c.tempsTexte), 'sous');
+      }
+      l += entree('III', 'Regarder ce qui reste<span class="appel">1</span>', r ? `${r} cuts` : 'rien', enCours ? 'loin' : 'ici', 'reste');
+      l += entree('IV', 'Exporter le bilan', enCours ? 'à venir' : 'prêt', enCours ? 'loin' : '');
+    } else {
+      f.parties.forEach((p) => { l += entree(ROMAIN[p.n - 1], `Partie ${p.n}`, `${n(p.poses)} posés`, 'fait'); l += entree('', 'relue et corrigée', 'faite', 'sous fait'); });
+      if (m.file.relecture) l += entree('', `relecture de la partie ${f.courante}`, 'en cours', 'sous ici');
+      else if (f.ligneCourante) {
+        l += entree(ROMAIN[f.courante - 1], `Partie ${f.courante}`, poseVal, f.alerte ? 'ici' : 'ici', 'pose');
+        l += entree('', f.alerte ? 'arrêtée, voir † plus haut' : 'cut en cours', f.alerte ? `cut ${c.cut}` : String(c.cut), 'sous', 'cut');
+      }
+      if (!f.finie) for (let k = f.courante + 1; k <= f.nb; k++) l += entree(ROMAIN[k - 1], `Partie ${k}`, 'à venir', 'loin');
+      l += entree('', 'Ce qui reste<span class="appel">1</span>', r ? `${r} cuts` : 'rien', f.finie ? 'ici' : 'loin', 'reste');
+    }
+    return l;
+  }
+
+  function notesBas(m) {
+    const c = m.compte, r = m.restants;
+    const d = r.filter((x) => x.type === 'differe').length;
+    return `<footer class="bas"><p><sup>1</sup> ${d} différé${d > 1 ? 's' : ''} : Ariane n’a pas tranché. ${r.length - d} vert${r.length - d > 1 ? 's' : ''} à examiner : posés, mais à vérifier. Rien n’est validé sans vous.</p>${m.file.active ? '<p><sup>2</sup> Chaque partie est relue et corrigée avant la suivante, qui démarre seule.</p>' : ''}</footer>`;
+  }
+
+  function vuePret(m) {
+    const b = m.bornes, f = m.file;
+    let h = titre(sur(m), m.titre, esc(m.phrase));
+    if (m.incident) h += avous('avant de lancer', m.incident.titre, m.incident.texte, m.incident.actions);
+    h += `<p class="garde">Du cut <input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"> ${b.finDePartie ? '<button class="mot" data-a="finDePartie" role="switch" aria-checked="true">à la fin de la partie</button>' : `au cut <input data-champ="fin" inputmode="numeric" value="${b.fin}" aria-label="Dernier cut">`},<br>
+      ${f.active ? `en <button class="pas" data-a="fileMoins" aria-label="Une partie de moins">−</button> <b>${f.nb}</b> <button class="pas" data-a="filePlus" aria-label="Une partie de plus">+</button> parties.` : 'en une seule partie.'}</p>`;
+    h += actions(m.actions);
+    h += toc('Réglages', entree('', 'Jusqu’où', `<button class="btn lien" style="padding:0;display:inline" data-a="finDePartie" role="switch" aria-checked="${b.finDePartie}">${b.finDePartie ? 'fin de partie' : 'dernier cut'}</button>`, '') + entree('', 'File de parties<span class="appel">2</span>', `<button class="btn lien" style="padding:0;display:inline" data-a="fileBascule" role="switch" aria-checked="${f.active}">${f.active ? 'allumée' : 'éteinte'}</button>`, ''), false);
+    h += `<footer class="bas"><p><sup>2</sup> Allumée, la file enchaîne les parties ; chacune est relue et corrigée avant la suivante. Préparer ne lance rien.</p></footer>`;
+    return h;
+  }
+
+  function vueLot(m) {
+    const c = m.compte, f = m.file;
+    const enMarche = m.phase === 'encours' && !f.relecture;
+    let chap = enMarche ? `<span class="grand"><b>${n(c.faits)}</b> traités sur ${c.total == null ? 'un total inconnu' : n(c.total)}</span>` : esc(m.phrase);
+    let h = titre(sur(m), m.titre, chap);
+    if (f.alerte) h += avous('cause de l’arrêt', f.alerte.titre, f.alerte.detail + ' Rien n’a été forcé.', []);
+    if (m.incident && m.incident.type === 'reprise') h += avous('reprise', m.incident.titre, m.incident.texte, []);
+    if (m.phase === 'fin') h += `<p class="grand"><b>${n(c.poses)}</b> posés · <b>${n(c.differes)}</b> différés · <b>${n(c.aExaminer)}</b> à examiner</p>`;
+    h += actions(m.actions);
+    h += toc(f.active ? 'Les parties' : 'Le lot', chapitres(m), true);
+    if (m.restants.length && m.phase !== 'fin') h += actions([{ a: 'voirReste', libelle: 'Voir ce qui reste', rang: 'lien' }]);
+    return h + notesBas(m);
+  }
+
+  function coupeSVG(cut) {
+    const k = Demo.D.coupe(cut, 260);
+    const X = (x) => (x + 1) * 160, Z = (z) => 150 - (z + 0.6) * 200;
+    const pts = k.pts.map(([x, z]) => `<circle cx="${X(x).toFixed(1)}" cy="${Z(z).toFixed(1)}" r="1.1"/>`).join('');
+    const rails = k.rails.map((r, i) => `<line x1="${X(r)}" x2="${X(r)}" y1="14" y2="150" stroke-width="1.2"/><text x="${X(r) + 5}" y="${i ? 24 : 38}" font-style="italic">${i ? 'rail droit' : 'rail gauche'}</text>`).join('');
+    return `<svg viewBox="0 0 320 160" role="img" aria-label="Coupe du cut ${cut}"><g fill="currentColor" opacity=".8">${pts}</g><g stroke="currentColor" fill="currentColor" font-size="12" font-family="Newsreader, serif">${rails}</g></svg>`;
+  }
+
+  function vueReste(m) {
+    const r = m.restants;
+    let h = titre('index', 'Ce qui reste', `${r.length} cuts à regarder, les différés d’abord.`);
+    h += `<nav class="toc reste" aria-label="Ce qui reste"><ol>${r.map((x, i) => `<li><span class="num">${i + 1}.</span><span class="lib">Cut ${x.cut}, <i>${esc(x.motif.toLowerCase())}</i></span><span class="pts" aria-hidden="true"></span><span class="val">${x.type === 'differe' ? 'différé' : 'vert'}</span><div class="boutons"><button class="petit plein" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div></li>`).join('')}</ol></nav>`;
+    return h + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]);
+  }
+
+  function vueExamen(m) {
+    const x = m.examen;
+    let h = titre(x.type === 'differe' ? 'différé' : 'vert à examiner', 'Cut ' + x.cut, esc(x.motif) + '.');
+    h += `<figure>${coupeSVG(x.cut)}<figcaption>Fig. Coupe du cut ${x.cut} : points relevés et place proposée des deux rails.</figcaption></figure>`;
+    return h + actions([{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'retour', libelle: 'Retour au lot', rang: 'lien' }]);
+  }
+
+  function vueEcho(m) {
+    const e = m.echo;
+    let h = titre('Ariane observe', 'Écho', esc(m.phrase));
+    h += toc('Ce qu’elle a vu', entree('', 'Poses vues', String(e.vus), 'ici', 'vus') + entree('', 'faites comme elle', String(e.accord), 'sous') + entree('', 'faites autrement', String(e.vus - e.accord), 'sous') + entree('', 'Dernier cut vu', e.dernier == null ? 'aucun' : String(e.dernier), ''), true);
+    return h + actions(m.actions);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    let page;
+    if (m.vue === 'echo') page = vueEcho(m);
+    else if (m.vue === 'reste') page = vueReste(m);
+    else if (m.vue === 'examen' && m.examen) page = vueExamen(m);
+    else if (m.phase === 'pret') page = vuePret(m);
+    else page = vueLot(m);
+    return `<article class="livre">${courant(m)}${page}</article>`;
+  }
+
+  /* Le signet est conservé (data-garder) : on le place sur la ligne courante, il y glisse. */
+  function apres(S, D, racine) {
+    const s = racine.querySelector('.signet');
+    if (!s) return;
+    const ici = racine.querySelector('.toc li[data-ici]');
+    if (!ici) { s.style.opacity = '0'; return; }
+    s.style.opacity = '1';
+    s.style.top = (ici.offsetTop + 4) + 'px';
+    s.style.height = Math.max(26, ici.offsetHeight - 8) + 'px';
+  }
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

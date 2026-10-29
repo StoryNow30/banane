@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pile de cartes</title>
+<style>
+/*POLICE:app-hanken*/
+/* Proposition « Pile de cartes » (série app-).
+   Logique : un portefeuille. Chaque chose dont l'opérateur s'occupe est une carte de couleur pleine
+   (Lot, À regarder, File, Écho) dont l'en-tête reste toujours visible dans la pile ; on touche un
+   en-tête, la carte vient devant et s'ouvre. La carte « À regarder » contient un paquet : on traite
+   les cuts un par un, d'un geste (à gauche : vu ; à droite : ouvrir dans ESV) ou par ses boutons.
+   Sources : SwiftPieces (WalletStack : en-têtes empilés, la carte touchée monte, les autres se rangent
+   en lamelles ; SwipeDeck : jeton d'issue qui apparaît en approchant du seuil, la carte suivante se lève),
+   mobbin (glossaire « Card » et « Stacked List »), 60fps (« Trackables card morph to screen »).
+   Sens : la couleur d'une carte dit QUELLE carte c'est (bleu ardoise = Lot, beurre = À regarder,
+   lilas = File, sauge = Écho), jamais un état ; l'état est toujours un mot et une forme. */
+:root{
+  --sol:#EFEDE8; --encre:#17181A; --encre2:#55575C; --trait:#D8D5CE; --surface:#FFFFFF;
+  --c-lot:#D7E3F0; --c-lot-encre:#13202F; --c-lot-encre2:#3B4A5C;
+  --c-reste:#F4DE9E; --c-reste-encre:#271C00; --c-reste-encre2:#5A4710;
+  --c-file:#E1D8F4; --c-file-encre:#1E1532; --c-file-encre2:#4A3E66;
+  --c-echo:#D1E9D9; --c-echo-encre:#0E2818; --c-echo-encre2:#365443;
+  --c-alerte:#B3362A; --c-alerte-encre:#FFFFFF;
+  --scene:#CBC8C0; --ombre:0 -2px 0 rgba(0,0,0,.04),0 -8px 18px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --sol:#111214; --encre:#ECEDEF; --encre2:#A6A9AF; --trait:#2A2C30; --surface:#1A1B1E;
+  --c-alerte:#FF8E80; --c-alerte-encre:#2A0B07;
+  --scene:#000000; --ombre:0 -2px 0 rgba(0,0,0,.4),0 -10px 22px rgba(0,0,0,.45);
+}}
+:root[data-theme="dark"]{
+  --sol:#111214; --encre:#ECEDEF; --encre2:#A6A9AF; --trait:#2A2C30; --surface:#1A1B1E;
+  --c-alerte:#FF8E80; --c-alerte-encre:#2A0B07;
+  --scene:#000000; --ombre:0 -2px 0 rgba(0,0,0,.4),0 -10px 22px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Hanken Grotesk',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--sol)}
+.notes{max-width:400px;background:var(--surface);color:var(--encre);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.notes p{margin:0 0 10px}
+
+.app{height:760px;display:flex;flex-direction:column;background:var(--sol);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums;overflow:hidden;position:relative}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.ico{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.haut{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;flex-wrap:wrap}
+.liaison{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--encre2)}
+.liaison .ico{width:13px;height:13px}
+.mode{margin-left:auto;display:flex;border:1px solid var(--trait);border-radius:999px;padding:2px;background:var(--surface)}
+.mode button{border:0;background:transparent;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600;display:inline-flex;gap:4px;align-items:center;color:var(--encre)}
+.mode button[aria-pressed="true"]{background:var(--encre);color:var(--sol)}
+.mode .ico{width:12px;height:12px}
+.bande{margin:0 12px 8px;border:1.5px solid var(--encre);border-radius:14px;padding:10px 12px;background:var(--surface);display:flex;gap:10px;align-items:flex-start}
+.bande b{display:block}
+.bande p{margin:2px 0 0;color:var(--encre)}
+.bande .choix{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.bande .choix button{border:1.5px solid var(--encre);background:transparent;border-radius:999px;padding:5px 12px;font-weight:600}
+
+/* le portefeuille */
+.portefeuille{flex:1;min-height:0;display:flex;flex-direction:column;padding:0 10px 10px;position:relative}
+.carte{border-radius:22px;color:var(--k-encre);background:var(--k);position:relative;box-shadow:var(--ombre)}
+.carte.lot{--k:var(--c-lot);--k-encre:var(--c-lot-encre);--k-encre2:var(--c-lot-encre2)}
+.carte.reste{--k:var(--c-reste);--k-encre:var(--c-reste-encre);--k-encre2:var(--c-reste-encre2)}
+.carte.file{--k:var(--c-file);--k-encre:var(--c-file-encre);--k-encre2:var(--c-file-encre2)}
+.carte.echo{--k:var(--c-echo);--k-encre:var(--c-echo-encre);--k-encre2:var(--c-echo-encre2)}
+.carte.ouverte{flex:1;min-height:0;display:flex;flex-direction:column}
+.carte.ouverte + .carte{margin-top:10px}
+.carte:not(.ouverte) + .carte:not(.ouverte){margin-top:-14px}
+.carte:not(.ouverte){flex:none}
+.entete{display:flex;align-items:center;gap:10px;padding:14px 18px;border:0;background:transparent;color:inherit;width:100%;text-align:left;min-height:56px;border-radius:22px}
+.entete h2{margin:0;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.entete .etat{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--k-encre)}
+.entete .droite{margin-left:auto;font-weight:700;font-size:16px;white-space:nowrap}
+.entete .droite small{font-weight:500;font-size:13px;color:var(--k-encre2)}
+.carte:not(.ouverte) .entete{min-height:50px;padding:10px 18px 18px}
+.carte.alerte .entete .etat{background:var(--c-alerte);color:var(--c-alerte-encre);border-radius:999px;padding:2px 8px}
+.face{flex:1;min-height:0;overflow-y:auto;padding:0 18px 30px;display:flex;flex-direction:column}
+.face > .actions:last-child{margin-top:auto;padding-top:16px}
+.gros{font-size:clamp(56px,20cqi,96px);font-weight:600;letter-spacing:-.04em;line-height:.95;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.gros small{font-size:clamp(18px,6cqi,26px);font-weight:500;letter-spacing:0;color:var(--k-encre2)}
+.phrase{margin:10px 0 0;font-size:16px}
+.phrase .doux{color:var(--k-encre2)}
+.jauge{height:12px;border-radius:999px;border:1.5px solid var(--k-encre);margin-top:16px;overflow:hidden;position:relative}
+.jauge i{display:block;height:100%;background:var(--k-encre)}
+.jauge.indet i{width:100%;background:repeating-linear-gradient(115deg,var(--k-encre) 0 5px,transparent 5px 12px)}
+.jauge-leg{display:flex;justify-content:space-between;font-size:12px;color:var(--k-encre2);margin-top:5px;gap:8px}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;border-top:1.5px solid var(--k-encre)}
+.trio div{padding:10px 0 0;min-width:0}
+.trio b{font-size:22px;display:block}
+.trio span{font-size:12px;color:var(--k-encre2);display:flex;gap:4px;align-items:center}
+.trio .ico{width:12px;height:12px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.btn{flex:1 1 140px;border:1.5px solid var(--k-encre);background:transparent;color:var(--k-encre);border-radius:14px;padding:11px 14px;font-weight:700;min-height:46px;display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;row-gap:0;position:relative;overflow:hidden}
+.btn > span{white-space:nowrap}
+.btn small{font-weight:500;font-size:12px;flex-basis:100%;text-align:center}
+.btn.principal{background:var(--k-encre);color:var(--k)}
+.btn.arret.confirme{background:var(--c-alerte);color:var(--c-alerte-encre);border-color:var(--c-alerte)}
+.btn .rebours{position:absolute;left:0;bottom:0;height:3px;width:100%;background:currentColor;transform-origin:left}
+.btn.btn[aria-disabled="true"]{border-style:dashed;background:transparent;color:var(--k-encre);cursor:not-allowed}
+.btn.lien{flex:0 0 auto;border:0;text-decoration:underline;text-underline-offset:3px;padding-left:0;padding-right:0}
+.raison{flex-basis:100%;margin:0;font-size:13px;color:var(--k-encre2)}
+.lignes{list-style:none;margin:12px 0 0;padding:0;border-top:1.5px solid var(--k-encre)}
+.lignes li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--k-encre2);flex-wrap:wrap}
+.lignes .cle{color:var(--k-encre2)}
+.lignes .val{font-weight:700}
+.face input{width:88px;font:inherit;font-size:16px;font-weight:700;padding:7px 10px;border-radius:10px;border:1.5px solid var(--k-encre);background:transparent;color:var(--k-encre);text-align:right}
+.inter{border:1.5px solid var(--k-encre);background:transparent;color:var(--k-encre);border-radius:999px;padding:5px 12px;font-weight:600;font-size:13px}
+.inter[aria-pressed="true"]{background:var(--k-encre);color:var(--k)}
+.pas{display:inline-flex;align-items:center;border:1.5px solid var(--k-encre);border-radius:999px}
+.pas button{border:0;background:transparent;width:34px;height:32px;font-size:18px;color:var(--k-encre)}
+.pas b{min-width:26px;text-align:center}
+.cause{border:1.5px solid var(--k-encre);border-radius:14px;padding:10px 12px;margin-top:14px}
+.cause b{display:flex;gap:6px;align-items:center}
+.cause p{margin:4px 0 0}
+/* paquet de cuts à regarder */
+.paquet{position:relative;padding-bottom:20px;margin-top:6px}
+.cut{position:absolute;inset:0 0 20px 0;background:var(--surface);color:var(--encre);border-radius:18px;padding:14px;border:1px solid var(--trait);box-shadow:0 6px 18px rgba(0,0,0,.12);touch-action:pan-y;user-select:none}
+.cut.dessous1{transform:translateY(10px) scale(.95);z-index:1}
+.cut.dessous2{transform:translateY(20px) scale(.9);z-index:0}
+.cut.dessus{z-index:2;cursor:grab;position:relative;inset:auto}
+.cut-tete{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cut-tete b{font-size:20px}
+.cut-tete .rang{margin-left:auto;color:var(--encre2);font-size:13px}
+.cut p{margin:6px 0 0;color:var(--encre)}
+.cut .coupe{width:100%;height:auto;display:block;margin-top:8px;border-radius:10px;background:var(--sol);border:1px solid var(--trait)}
+.coupe-pts circle{fill:var(--encre2)}
+.coupe-rails line{stroke:var(--encre);stroke-width:2;stroke-dasharray:4 3}
+.cut .gestes{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.cut .gestes button{flex:1 1 120px;border:1.5px solid var(--encre);background:transparent;color:var(--encre);border-radius:12px;padding:8px 6px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.cut .gestes button.fort{background:var(--encre);color:var(--surface)}
+.jeton{position:absolute;top:14px;padding:4px 10px;border-radius:999px;font-weight:800;font-size:13px;border:2px solid var(--encre);background:var(--surface);color:var(--encre);opacity:0;pointer-events:none}
+.jeton.g{right:14px} .jeton.d{left:14px}
+.marque{font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--sol);color:var(--encre);display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.marque .ico{width:12px;height:12px}
+.liste-reste{list-style:none;margin:10px 0 0;padding:0}
+.liste-reste li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--k-encre2);flex-wrap:wrap}
+.liste-reste .nom{flex:1 1 150px;min-width:0}
+.liste-reste .nom span{color:var(--k-encre2);font-size:13px;display:block}
+.liste-reste .petit{border:1.5px solid var(--k-encre);background:transparent;color:var(--k-encre);border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700}
+.vide{margin:20px 0;font-size:16px}
+.etapes{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.etape{min-width:34px;height:34px;padding:0 10px;border-radius:999px;border:1.5px solid var(--k-encre);display:inline-flex;align-items:center;justify-content:center;gap:5px;font-weight:700}
+.etape.faite{background:var(--k-encre);color:var(--k)}
+.etape.courante{border-width:3px}
+.etape.cassee{border-style:dashed}
+.toast{position:absolute;left:14px;right:14px;top:50px;background:var(--encre);color:var(--sol);border-radius:14px;padding:10px 14px;display:flex;gap:8px;align-items:center;z-index:9;font-weight:600}
+.toast .ico{color:var(--sol)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Pile de cartes"></div></div>
+  <aside class="notes">
+    <h2>Pile de cartes</h2>
+    <p><b>Logique.</b> Un portefeuille : chaque chose dont l'opérateur s'occupe est une carte pleine (Lot, À regarder, File, Écho) dont l'en-tête reste visible dans la pile, avec son chiffre clé. On touche un en-tête, la carte vient devant et s'ouvre. La carte « À regarder » contient un paquet : on traite les cuts un par un, d'un geste ou par les boutons.</p>
+    <p><b>D'où ça vient.</b> SwiftPieces, pièce WalletStack (« header strips stacked so every header strip shows: tap one and it rises to the top and opens to its whole face », les autres glissent en lamelles) et pièce SwipeDeck (« a tinted outcome badge buds in … and stamps at the threshold », « the cards beneath rise one after another as it leaves ») ; son guide d'animation (décider sur la projection du geste, garder la vitesse du doigt). mobbin, glossaire « Card » et « Stacked List ». 60fps, « Trackables card morph to screen » (une carte qui devient l'écran). v0, gabarit Tasko (une seule tuile pleine qui domine).</p>
+    <p><b>Ce que ça veut dire ici.</b> La couleur d'une carte dit quelle carte c'est (bleu ardoise : Lot ; beurre : À regarder ; lilas : File ; sauge : Écho), jamais un état : l'état est un mot et une forme dans l'en-tête (rond plein, deux barres, carré, coche). Seule exception, l'arrêt d'une file met une pastille brique avec le mot « arrêtée ». Le geste sur un cut : vers la gauche « Vu », vers la droite « Ouvrir dans ESV » ; le jeton du geste apparaît à mi-chemin et se fixe au seuil, la carte suivante se lève. Mouvement réduit : pas de vol, la carte change sur place.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+/* Socle de rendu à mouvement, commun aux maquettes app-* (copié tel quel dans chacune).
+ * Le moteur réécrit #panneau à chaque tic (≈ 0,9 s) : un nœud gardé (data-garder) est détaché puis
+ * rattaché, ce qui annule les transitions et relance les animations CSS (mesuré le 29/10 dans Chromium).
+ * Les animations Web (element.animate) survivent, elles. Donc :
+ *  1. le panneau n'a qu'une racine gardée, .app, mise à jour par différence (les nœuds persistent) ;
+ *  2. tout mouvement passe par element.animate, jamais par transition ou animation CSS sur un nœud gardé ;
+ *  3. attributs de mouvement déclarés dans le HTML produit par la vue :
+ *     data-k="clé"     identité d'un nœud dans une liste (sinon : position et balise) ;
+ *     data-e="nom"     entrée : joue ENTREES[nom] quand le nœud apparaît (pas au premier rendu) ;
+ *     data-v="nom"     valeur : joue VALEURS[nom] quand son texte change ;
+ *     data-flip        forme : sa boîte est mesurée avant et après, et on anime de l'une à l'autre ;
+ *     data-boucle="nom" boucle : BOUCLES[nom] lancée une fois, arrêtée en mouvement réduit ;
+ *     data-u="nom"     action locale (interface seulement), data-id facultatif.
+ *  4. mouvement réduit : aucune trajectoire ni boucle ; seules restent des fondus très courts. */
+const Socle = (function () {
+  'use strict';
+  let racineApp = null, opts = null, dernierS = null, premier = true, cleEtat = '';
+  const local = {};
+  const reduit = () => Demo.D.mouvementReduit();
+
+  function cle(n) { return n.nodeType === 1 ? n.getAttribute('data-k') : null; }
+  function meme(a, b) { return a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && a.getAttribute('data-e') === b.getAttribute('data-e'))); }
+
+  function enfants(a, b) {
+    const anciens = [...a.childNodes], parCle = new Map(), libres = [];
+    anciens.forEach((n) => { const k = cle(n); if (k != null) parCle.set(k, n); else libres.push(n); });
+    let li = 0; const res = [], neufs = [];
+    for (const nb of [...b.childNodes]) {
+      const k = cle(nb); let o = null;
+      if (k != null) { const c = parCle.get(k); if (c && meme(c, nb)) { o = c; parCle.delete(k); } }
+      else {
+        for (let j = li; j < Math.min(libres.length, li + 4); j++) if (meme(libres[j], nb)) { o = libres[j]; li = j + 1; break; }
+      }
+      if (o) { noeud(o, nb); res.push(o); } else { res.push(nb); neufs.push(nb); }
+    }
+    anciens.forEach((n) => { if (!res.includes(n)) n.remove(); });
+    res.forEach((n, i) => { if (a.childNodes[i] !== n) a.insertBefore(n, a.childNodes[i] || null); });
+    /* animer seulement une fois dans le document : un nœud encore dans le gabarit (document inerte)
+       garderait une animation figée sur sa première image (mesuré : opacité 0, plus d'animation). */
+    neufs.forEach(entrer);
+  }
+
+  function attributs(o, n) {
+    for (const at of [...n.attributes]) {
+      if (at.name === 'class') {
+        const transit = [...o.classList].filter((c) => c.startsWith('m-'));
+        const v = [at.value, ...transit].join(' ').trim();
+        if (o.getAttribute('class') !== v) o.setAttribute('class', v);
+      } else if (at.name === 'style' && o.hasAttribute('data-style-libre')) {
+        /* style tenu par le code (feuille glissée, hauteur animée) : on ne l'écrase pas */
+      } else if (o.getAttribute(at.name) !== at.value) o.setAttribute(at.name, at.value);
+    }
+    for (const at of [...o.attributes]) if (!n.hasAttribute(at.name) && at.name !== 'class' && !(at.name === 'style' && o.hasAttribute('data-style-libre'))) o.removeAttribute(at.name);
+    if (o.tagName === 'INPUT' && document.activeElement !== o) o.value = n.getAttribute('value') || '';
+  }
+
+  function noeud(o, n) {
+    if (o.nodeType !== 1) { if (o.nodeValue !== n.nodeValue) o.nodeValue = n.nodeValue; return; }
+    const v = o.getAttribute('data-v'), avant = v ? o.textContent : null;
+    attributs(o, n);
+    enfants(o, n);
+    if (v && !premier && avant !== o.textContent) jouer(o, (opts.valeurs || {})[v]);
+  }
+
+  function entrer(n) {
+    if (n.nodeType !== 1 || premier) return;
+    const liste = n.hasAttribute('data-e') ? [n, ...n.querySelectorAll('[data-e]')] : [...n.querySelectorAll('[data-e]')];
+    liste.forEach((e, i) => jouer(e, (opts.entrees || {})[e.getAttribute('data-e')], i));
+  }
+
+  /* Joue un mouvement [images, options] ou une fonction (el) => [images, options]. */
+  function jouer(el, def, rang) {
+    if (!def || reduit()) return null;
+    const d = typeof def === 'function' ? def(el) : def;
+    if (!d) return null;
+    const o = Object.assign({}, d[1]);
+    if (rang && o.cascade) o.delay = (o.delay || 0) + Math.min(rang, 7) * o.cascade;
+    delete o.cascade;
+    return el.animate(d[0], o);
+  }
+
+  function boucles() {
+    racineApp.querySelectorAll('[data-boucle]').forEach((el) => {
+      const nom = el.getAttribute('data-boucle');
+      if (reduit()) { if (el._boucle) { el._boucle.cancel(); el._boucle = null; } return; }
+      if (el._boucle && el._boucleNom === nom) return;
+      if (el._boucle) el._boucle.cancel();
+      const d = (opts.boucles || {})[nom]; if (!d) return;
+      el._boucle = el.animate(d[0], Object.assign({ iterations: Infinity }, d[1])); el._boucleNom = nom;
+    });
+  }
+
+  function mesurer() {
+    const m = new Map();
+    racineApp.querySelectorAll('[data-flip]').forEach((el) => m.set(el, el.getBoundingClientRect()));
+    return m;
+  }
+  function flip(avant) {
+    if (premier || reduit()) return;
+    avant.forEach((r0, el) => {
+      if (!el.isConnected) return;
+      const r1 = el.getBoundingClientRect(), mode = el.getAttribute('data-flip') || 'h';
+      if (mode === 'h' && Math.abs(r1.height - r0.height) > 1) {
+        el.animate([{ height: r0.height + 'px', overflow: 'hidden' }, { height: r1.height + 'px', overflow: 'hidden' }], { duration: (opts.dureeForme || 420), easing: opts.courbeForme || 'cubic-bezier(.2,.9,.25,1.04)' });
+      }
+      if (mode === 'xy' && (Math.abs(r1.top - r0.top) > 1 || Math.abs(r1.left - r0.left) > 1)) {
+        el.animate([{ transform: `translate(${r0.left - r1.left}px,${r0.top - r1.top}px)` }, { transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+      if (mode === 'wh' && (Math.abs(r1.width - r0.width) > 1 || Math.abs(r1.height - r0.height) > 1)) {
+        /* la forme d'abord (largeur et hauteur), le contenu entre ensuite par son propre data-e */
+        el.animate([{ width: r0.width + 'px', height: r0.height + 'px' }, { width: r1.width + 'px', height: r1.height + 'px' }], { duration: opts.dureeForme || 420, easing: opts.courbeForme || 'cubic-bezier(.2,.9,.25,1.04)' });
+      }
+      if (mode === 'w' && Math.abs(r1.width - r0.width) > 1) {
+        el.animate([{ width: r0.width + 'px' }, { width: r1.width + 'px' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    });
+  }
+
+  function peindre() {
+    if (!racineApp) return;
+    /* le moteur détache puis rattache la racine à chaque tic : un défilement interne retombe à 0
+       (mesuré). On remet chaque zone défilante où l'opérateur l'avait laissée. */
+    racineApp.querySelectorAll('*').forEach((el) => { if (el._defile != null && el.scrollTop !== el._defile) el.scrollTop = el._defile; });
+    const D = Demo.D, S = Demo.etat(), m = D.modele();
+    const k = m.phase + '|' + m.vue + '|' + m.activite + '|' + (m.file.relecture ? 'r' : '') + (m.file.alerte ? 'a' : '') + (m.incident ? m.incident.type : '');
+    if (k !== cleEtat && opts.etat) opts.etat(local, m, cleEtat);
+    cleEtat = k;
+    const avant = mesurer();
+    const t = document.createElement('template');
+    t.innerHTML = opts.vue(m, D, S, local);
+    enfants(racineApp, t.content);
+    flip(avant);
+    boucles();
+    if (opts.apres) opts.apres(racineApp, m, local);
+    premier = false;
+  }
+
+  function monter(o) {
+    opts = o; Object.assign(local, o.local || {});
+    Demo.monter({
+      rendre: () => '<div class="app" data-garder="app"></div>',
+      apres: (S, D, racine) => {
+        const r = racine.querySelector('[data-garder="app"]');
+        if (r !== racineApp) {
+          racineApp = r;
+          racine.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-u]');
+            if (!b || !racine.contains(b) || b.getAttribute('aria-disabled') === 'true') return;
+            if (o.agir) o.agir(b.getAttribute('data-u'), b.getAttribute('data-id'), local, b);
+            peindre();
+          });
+          racine.addEventListener('scroll', (e) => { const t = e.target; if (t !== racine && t.nodeType === 1 && racineApp && racineApp.contains(t)) t._defile = t.scrollTop; }, true);
+          racine.addEventListener('keydown', (e) => { if (o.clavier && o.clavier(e, local)) peindre(); });
+        }
+        if (S !== dernierS) { dernierS = S; Object.assign(local, o.local || {}); cleEtat = ''; if (o.reinit) o.reinit(local); }
+        peindre();
+      },
+    });
+  }
+
+  return { monter, peindre, jouer, local, reduit };
+})();
+
+/* Aides communes aux maquettes app-* (copiées dans chacune) : boutons d'action du modèle, coupe d'un cut. */
+const Aides = (function () {
+  'use strict';
+  const esc = (s) => Demo.D.esc(s == null ? '' : s);
+  const nf = (x) => Demo.D.n(x);
+  /* Attributs d'une action du modèle : data-a, data-id, et l'état désactivé (lisible, jamais estompé). */
+  function attrs(x) {
+    return `data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}`;
+  }
+  function trouver(m, a) { return (m.actions || []).find((x) => x.a === a); }
+  /* Coupe d'un cut : points (gris) et deux repères des rails proposés. Fonctionnel, petit, encadré. */
+  function coupe(cut, classe) {
+    const c = Demo.D.coupe(cut, 280), W = 320, H = 132;
+    const X = (x) => (10 + (x + 1) / 2 * (W - 20)).toFixed(1);
+    const Y = (z) => (H - 10 - (z + 0.56) / 0.5 * (H - 20)).toFixed(1);
+    const pts = c.pts.map(([x, z]) => `<circle cx="${X(x)}" cy="${Y(z)}" r="1.4"/>`).join('');
+    const rails = c.rails.map((x) => `<line x1="${X(x)}" x2="${X(x)}" y1="8" y2="${H - 8}"/>`).join('');
+    return `<svg class="${classe || 'coupe'}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut} : points relevés et position proposée des deux rails"><g class="coupe-pts">${pts}</g><g class="coupe-rails">${rails}</g></svg>`;
+  }
+  return { esc, nf, attrs, trouver, coupe };
+})();
+
+(function () {
+  'use strict';
+  const { esc, nf, attrs, trouver, coupe } = Aides;
+  const I = {
+    rond: '<circle cx="8" cy="8" r="5.5"/>', plein: '<circle cx="8" cy="8" r="4.5" fill="currentColor"/>',
+    pause: '<path d="M5.5 3.5v9M10.5 3.5v9"/>', carre: '<rect x="3.5" y="3.5" width="9" height="9" rx="1.5" fill="currentColor"/>',
+    coche: '<path d="M3 8.5l3.2 3L13 4.5"/>', oeil: '<path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
+    tourne: '<path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.8v2.6h-2.6"/>', alerte: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.5v3.2M8 11.6v.1"/>',
+    lien: '<circle cx="8" cy="8" r="4" fill="currentColor"/>', rompu: '<circle cx="8" cy="8" r="4.5"/><path d="M4.8 11.2l6.4-6.4"/>',
+    info: '<circle cx="8" cy="8" r="6"/><path d="M8 7.2v4M8 4.8v.1"/>', gauche: '<path d="M10 3.5L5.5 8 10 12.5"/>', droite: '<path d="M6 3.5L10.5 8 6 12.5"/>',
+    cadenas: '<rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7"/>',
+  };
+  const ico = (n) => `<svg class="ico" viewBox="0 0 16 16" aria-hidden="true">${I[n]}</svg>`;
+
+  function etatLot(m) {
+    if (m.file.relecture) return ['tourne', 'relecture'];
+    if (m.file.alerte) return ['alerte', 'file arrêtée'];
+    return { pret: ['rond', 'prêt'], encours: ['plein', 'en cours'], pause: ['pause', 'en pause'], arrete: ['carre', 'arrêté'], fin: ['coche', m.file.finie ? 'file terminée' : 'terminé'] }[m.phase];
+  }
+  function bouton(x) {
+    const cls = { principal: 'principal', arret: 'arret', lien: 'lien' }[x.rang] || '';
+    const reb = x.rang === 'arret' && x.confirme ? '<span class="rebours" aria-hidden="true"></span>' : '';
+    return `<button class="btn ${cls}${x.confirme ? ' confirme' : ''}" ${attrs(x)} data-k="b-${x.a}">${x.rang === 'arret' ? ico('carre') : ''}<span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}${reb}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (m, f) => `<div class="actions" data-k="actions">${m.actions.filter(f || ((x) => x.a !== 'voirReste')).map(bouton).join('')}</div>`;
+
+  /* ---------- en-têtes (toujours visibles) ---------- */
+  function entete(nom, m, ouverte) {
+    const c = m.compte;
+    let titre, etat = '', droite = '';
+    if (nom === 'lot') {
+      const [i, mot] = etatLot(m);
+      titre = 'Lot'; etat = `<span class="etat">${ico(i)}<span data-v="etat-lot">${esc(mot)}</span></span>`;
+      if (m.phase === 'pret') droite = m.bornes.finDePartie ? `${m.bornes.debut} → <small>fin</small>` : `${nf(m.bornes.fin - m.bornes.debut + 1)} <small>cuts</small>`;
+      else if (m.file.relecture) droite = `<small>partie</small> ${m.file.courante}`;
+      else droite = `<span data-v="n-lot">${nf(c.faits)}</span> <small>/ ${c.total == null ? '?' : nf(c.total)}</small>`;
+    }
+    if (nom === 'reste') { titre = 'À regarder'; const n = m.restants.length; const nd = m.restants.filter((x) => x.type === 'differe').length; etat = n ? `<span class="etat">${ico('pause')}${nd} différé${nd > 1 ? 's' : ''}</span>` : ''; droite = n ? `<span data-v="n-reste">${n}</span> <small>cut${n > 1 ? 's' : ''}</small>` : '<small>rien</small>'; }
+    if (nom === 'file') { titre = 'File'; const f = m.file; etat = `<span class="etat">${f.active ? ico('tourne') + 'allumée' : 'éteinte'}</span>`; droite = f.active ? (m.phase === 'pret' ? `${f.nb} <small>parties</small>` : `${f.finie ? f.nb : f.courante} <small>/ ${f.nb}</small>`) : ''; }
+    if (nom === 'echo') { titre = 'Écho'; etat = `<span class="etat">${ico('oeil')}Ariane observe</span>`; droite = `${nf(m.echo.vus)} <small>vues</small>`; }
+    return `<button class="entete" data-u="carte" data-id="${nom}" aria-expanded="${ouverte}" aria-label="${titre}${ouverte ? '' : ' : ouvrir la carte'}"><h2>${titre}</h2>${etat}<span class="droite">${droite}</span></button>`;
+  }
+
+  /* ---------- faces ---------- */
+  function faceLot(m) {
+    const c = m.compte, f = m.file;
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      return `<div class="gros">${b.finDePartie ? b.debut : nf(b.fin - b.debut + 1)}<small>${b.finDePartie ? 'premier cut, jusqu’à la fin de la partie' : 'cuts à poser'}</small></div><p class="phrase">${esc(m.phrase)}</p>
+        <ul class="lignes"><li><span class="cle">Premier cut</span><label><span class="sr">Premier cut</span><input data-champ="debut" inputmode="numeric" value="${b.debut}"></label></li>
+        <li><span class="cle">Dernier cut</span>${b.finDePartie ? '<span class="val">fin de partie</span>' : `<label><span class="sr">Dernier cut</span><input data-champ="fin" inputmode="numeric" value="${b.fin}"></label>`}</li>
+        <li><span class="cle">Jusqu'à la fin de la partie</span><button class="inter" data-a="finDePartie" aria-pressed="${b.finDePartie}">${b.finDePartie ? 'Oui' : 'Non'}</button></li>
+        <li><span class="cle">File de parties</span><button class="inter" data-u="carte" data-id="file">${m.file.active ? `allumée, ${m.file.nb} parties` : 'éteinte'} ›</button></li></ul>${actions(m)}`;
+    }
+    if (f.relecture) return `<div class="gros">Partie ${f.courante}<small>relue et corrigée</small></div><p class="phrase">${esc(m.phrase)}</p><div class="jauge indet" aria-label="Durée inconnue"><i data-boucle="trame"></i></div>${actions(m)}`;
+    let h = `<div class="gros"><span data-v="faits">${nf(c.faits)}</span><small>${c.total == null ? 'traités, total inconnu' : 'sur ' + nf(c.total)}</small></div>`;
+    h += m.phase === 'encours' ? `<p class="phrase">${esc(c.tempsTexte)} <span class="doux">· cut <b data-v="cut">${c.cut}</b>${f.active ? ` · partie ${f.courante} sur ${f.nb}` : ''}</span></p>` : `<p class="phrase">${esc(m.phrase)}</p>`;
+    if (c.total != null) h += `<div class="jauge" role="progressbar" aria-valuemin="0" aria-valuemax="${c.total}" aria-valuenow="${c.faits}" aria-label="Cuts traités"><i data-flip="w" style="width:${Math.round(c.part * 1000) / 10}%"></i></div><div class="jauge-leg"><span>cut ${c.debut}</span><span>cut ${c.fin}</span></div>`;
+    else if (m.phase === 'encours') h += `<div class="jauge indet" aria-label="Total inconnu, jamais deviné"><i data-boucle="trame"></i></div><div class="jauge-leg"><span>cut ${c.debut}</span><span>fin de partie</span></div>`;
+    h += `<div class="trio"><div><b data-v="poses">${nf(c.poses)}</b><span>${ico('coche')}posés</span></div><div><b data-v="diff">${nf(c.differes)}</b><span>${ico('pause')}différés</span></div><div><b data-v="exam">${nf(c.aExaminer)}</b><span>${ico('oeil')}à examiner</span></div></div>`;
+    if (f.alerte) h += `<div class="cause"><b>${ico('alerte')}${esc(f.alerte.titre)}</b><p>${esc(f.alerte.detail)}</p></div>`;
+    h += actions(m);
+    return h;
+  }
+  function faceReste(m, L) {
+    const r = m.restants;
+    if (!r.length) return `<p class="vide">Rien à regarder : aucun différé, aucun vert à examiner.</p>`;
+    const dessus = m.vue === 'examen' && m.examen ? m.examen : r[0];
+    const autres = r.filter((x) => x.id !== dessus.id);
+    const ex = m.vue === 'examen' && m.examen;
+    const carteCut = (x, cls, i) => {
+      const marque = `<span class="marque">${x.type === 'differe' ? ico('pause') + 'différé' : ico('oeil') + 'vert à examiner'}</span>`;
+      if (cls !== 'dessus') return `<div class="cut ${cls}" data-k="cut-${x.id}" aria-hidden="true"><div class="cut-tete"><b>Cut ${x.cut}</b>${marque}</div></div>`;
+      return `<div class="cut dessus" data-k="cut-${x.id}" data-style-libre data-id="${x.id}" role="group" aria-label="Cut ${x.cut}, ${x.type === 'differe' ? 'différé' : 'vert à examiner'}">
+        <span class="jeton g" aria-hidden="true">Vu ${ico('coche')}</span><span class="jeton d" aria-hidden="true">Ouvrir dans ESV</span>
+        <div class="cut-tete"><b>Cut ${x.cut}</b>${marque}<span class="rang">1 sur ${r.length}</span></div><p>${esc(x.motif)}</p>
+        ${ex ? coupe(x.cut) : `<p style="color:var(--encre2);font-size:13px">Glisser à gauche : vu. À droite : ouvrir dans ESV.</p>`}
+        <div class="gestes">${ex ? `<button data-a="traiter" data-id="${x.id}">${ico('coche')}Marquer comme vu</button><button class="fort" data-a="ouvrir" data-id="${x.id}">Ouvrir dans ESV</button>`
+          : `<button data-a="examiner" data-id="${x.id}">Examiner</button><button class="fort" data-a="ouvrir" data-id="${x.id}">Ouvrir dans ESV</button>`}</div></div>`;
+    };
+    let h = `<div class="paquet" data-k="paquet">${autres.slice(0, 2).reverse().map((x, i, a) => carteCut(x, a.length === 2 ? (i === 0 ? 'dessous2' : 'dessous1') : 'dessous1')).join('')}${carteCut(dessus, 'dessus')}</div>`;
+    if (ex) h += `<div class="actions"><button class="btn" data-a="voirReste">${ico('gauche')}<span>Retour au paquet</span></button></div>`;
+    h += `<ul class="liste-reste" aria-label="Tous les cuts à regarder">${r.map((x) => `<li data-k="l-${x.id}"><span class="nom"><b>Cut ${x.cut}</b> · ${x.type === 'differe' ? 'différé' : 'vert à examiner'}<span>${esc(x.motif)}</span></span><button class="petit" data-a="examiner" data-id="${x.id}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${x.id}">Ouvrir dans ESV</button></li>`).join('')}</ul>`;
+    return h;
+  }
+  function faceFile(m) {
+    const f = m.file;
+    let h = '';
+    if (m.phase === 'pret' || !f.active) {
+      h += `<ul class="lignes"><li><span class="cle">Enchaîner plusieurs parties, relues après chacune</span><button class="inter" data-a="fileBascule" aria-pressed="${f.active}"${m.phase === 'encours' || m.phase === 'pause' ? ' aria-disabled="true"' : ''}>${f.active ? 'Allumée' : 'Éteinte'}</button></li>
+        ${f.active ? `<li><span class="cle">Nombre de parties</span><span class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><b data-v="nb">${f.nb}</b><button data-a="filePlus" aria-label="Une partie de plus">+</button></span></li>` : ''}</ul>`;
+      if (!f.active) return h;
+    }
+    let et = '';
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), cour = !p && i === f.courante && m.phase !== 'pret';
+      et += `<span class="etape ${p ? 'faite' : cour ? (f.alerte ? 'cassee' : 'courante') : ''}" data-k="et${i}">${p ? ico('coche') : cour && f.alerte ? ico('alerte') : ''}${cour ? 'Partie ' + i : i}</span>`;
+    }
+    h += `<div class="etapes" aria-label="${f.finie ? 'File terminée' : 'Partie ' + f.courante + ' sur ' + f.nb}">${et}</div>`;
+    h += `<ul class="lignes">${f.parties.map((p) => `<li data-k="p${p.n}"><span class="cle">Partie ${p.n}${f.relecture && p.n === f.courante ? ' · relecture' : ''}</span><span class="val">${p.poses} posés · ${p.differes} différés · ${p.aControler} à examiner</span></li>`).join('')}
+      ${f.ligneCourante && m.phase !== 'pret' && !f.relecture ? `<li><span class="cle">Partie ${f.courante} (${f.alerte ? 'arrêtée' : 'en cours'})</span><span class="val">${m.compte.poses} posés · ${m.compte.differes} différés</span></li>` : ''}</ul>`;
+    if (f.alerte) h += `<div class="cause"><b>${ico('alerte')}${esc(f.alerte.titre)}</b><p>${esc(f.alerte.detail)}</p></div>`;
+    const arret = trouver(m, 'arreterFile');
+    if (arret) h += `<div class="actions">${bouton(arret)}</div>`;
+    return h;
+  }
+  function faceEcho(m) {
+    const e = m.echo;
+    return `<div class="gros">${nf(e.vus)}<small>poses vues</small></div><p class="phrase">${esc(m.phrase)}</p>
+      <div class="trio"><div><b>${nf(e.accord)}</b><span>d'accord</span></div><div><b>${nf(e.vus - e.accord)}</b><span>autrement</span></div><div><b>${e.dernier || '—'}</b><span>dernier cut vu</span></div></div>${actions(m)}`;
+  }
+
+  function cartes(m) {
+    if (m.vue === 'echo') return ['echo', 'lot'];
+    const l = ['lot', 'reste'];
+    if (m.file.active) l.push('file'); else if (m.phase === 'pret') l.push('file');
+    return l;
+  }
+  function vue(m, D, S, L) {
+    const liste = cartes(m);
+    if (m.vue === 'reste' || m.vue === 'examen') L.ouverte = 'reste';
+    if (m.vue === 'echo') L.ouverte = 'echo';
+    if (!liste.includes(L.ouverte)) L.ouverte = liste[0];
+    const faces = { lot: faceLot, reste: faceReste, file: faceFile, echo: faceEcho };
+    const carte = (nom, ouverte) => `<section class="carte ${nom} ${ouverte ? 'ouverte' : ''} ${nom === 'lot' && m.file.alerte ? 'alerte' : ''}" data-k="carte-${nom}" data-flip="xy">${entete(nom, m, ouverte)}${ouverte ? `<div class="face" data-k="face-${nom}" data-e="face">${faces[nom](m, L)}</div>` : ''}</section>`;
+    const l = m.liaison, i = l.etat === 'relie' ? 'lien' : l.etat === 'absent' ? 'rompu' : 'info', o = m.activite === 'orbite', bl = m.activiteBloquee;
+    let h = `<div class="haut"><span class="liaison">${ico(i)}${esc(l.texte)} · ${esc(l.detail)}</span><div class="mode" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${o}">Orbite</button><button data-a="echo" aria-pressed="${!o}"${bl ? ' aria-disabled="true" title="Mettre le lot en pause pour passer en Écho"' : ''}>${bl ? ico('cadenas') : ''}Écho</button></div></div>`;
+    const inc = m.incident;
+    if (inc) h += `<div class="bande" data-e="bande" data-k="inc-${inc.type}">${ico(inc.type === 'absent' ? 'rompu' : 'info')}<div><b>${esc(inc.titre)}</b><p>${esc(inc.texte)}</p>${inc.actions.length ? `<div class="choix">${inc.actions.map((a) => `<button ${attrs(a)}>${esc(a.libelle)}</button>`).join('')}</div>` : ''}</div></div>`;
+    if (m.message) h += `<div class="toast" role="status" data-e="toast" data-k="toast">${ico('info')}<span>${esc(m.message)}</span></div>`;
+    /* toutes les cartes sont sœurs : une carte qui change de place reste le même nœud, et son trajet s'anime */
+    h += `<div class="portefeuille">${carte(L.ouverte, true)}${liste.filter((x) => x !== L.ouverte).map((x) => carte(x, false)).join('')}</div>`;
+    return h;
+  }
+  function conseil(m) {
+    if (m.vue === 'reste' || m.vue === 'examen') return 'reste';
+    if (m.vue === 'echo') return 'echo';
+    if (m.file.relecture) return 'file';
+    return 'lot';
+  }
+
+  /* geste sur le cut du dessus : il suit le doigt, le jeton apparaît à mi-chemin, se fixe au seuil */
+  function geste(app) {
+    const c = app.querySelector('.cut.dessus'); if (!c || c._geste) return; c._geste = true;
+    c.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      const x0 = e.clientX, w = c.getBoundingClientRect().width, seuil = w * 0.35; let dx = 0, t0 = performance.now();
+      /* écoute sur la fenêtre : le moteur détache le panneau à chaque tic, ce qui ferait perdre une capture */
+      const jg = c.querySelector('.jeton.g'), jd = c.querySelector('.jeton.d');
+      const mv = (ev) => { dx = ev.clientX - x0; c.style.transform = `translateX(${dx}px) rotate(${dx / w * 8}deg)`; const p = Math.min(1, Math.abs(dx) / seuil); jg.style.opacity = dx < 0 ? Math.max(0, (p - .3) / .7) : 0; jd.style.opacity = dx > 0 ? Math.max(0, (p - .3) / .7) : 0; };
+      const fin = (ev) => {
+        window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', fin); window.removeEventListener('pointercancel', fin);
+        const v = dx / Math.max(1, performance.now() - t0), vise = dx + v * 120, id = c.dataset.id;
+        jg.style.opacity = 0; jd.style.opacity = 0;
+        if (vise < -seuil) {
+          const a = c.animate([{ transform: c.style.transform }, { transform: `translateX(${-w * 1.4}px) rotate(-14deg)`, opacity: 0 }], { duration: 260, easing: 'cubic-bezier(.3,0,.8,.4)', fill: 'forwards' });
+          a.onfinish = () => { a.cancel(); c.style.transform = ''; Demo.agir('traiter', id); };
+        } else {
+          if (vise > seuil) Demo.agir('ouvrir', id);
+          c.animate([{ transform: c.style.transform }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.25,1.12)' });
+          c.style.transform = '';
+        }
+      };
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', fin); window.addEventListener('pointercancel', fin);
+    });
+  }
+
+  Socle.monter({
+    local: { ouverte: 'lot' },
+    vue,
+    etat(L, m) { L.ouverte = conseil(m); },
+    agir(nom, id, L) {
+      if (nom === 'carte') {
+        const m = Demo.D.modele();
+        if (id === 'reste') { Demo.agir('voirReste'); L.ouverte = 'reste'; return; }
+        if ((m.vue === 'reste' || m.vue === 'examen')) Demo.agir('retour');
+        L.ouverte = id;
+      }
+    },
+    apres(app) {
+      geste(app);
+      app.querySelectorAll('.rebours').forEach((b) => { if (!b._joue) { b._joue = true; Socle.jouer(b, [[{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 4000, easing: 'linear', fill: 'forwards' }]); } });
+    },
+    entrees: {
+      face: [[{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 0, offset: .3 }, { opacity: 1, transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      bande: [[{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 240 }],
+      toast: [[{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 220 }],
+    },
+    valeurs: {
+      faits: [[{ transform: 'translateY(.15em)', opacity: .3 }, { transform: 'none', opacity: 1 }], { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      'n-lot': [[{ opacity: .3 }, { opacity: 1 }], { duration: 240 }],
+      'n-reste': [[{ transform: 'translateY(-.4em)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      'etat-lot': [[{ opacity: 0 }, { opacity: 1 }], { duration: 220 }],
+      diff: [[{ transform: 'scale(1.2)' }, { transform: 'none' }], { duration: 300 }],
+      exam: [[{ transform: 'scale(1.2)' }, { transform: 'none' }], { duration: 300 }],
+    },
+    boucles: { trame: [[{ backgroundPosition: '0 0' }, { backgroundPosition: '26px 0' }], { duration: 1000, easing: 'linear' }] },
+  });
+})();
+</script>
+</body>
+</html>

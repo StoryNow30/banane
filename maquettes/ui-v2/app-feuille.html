@@ -1010,7 +1010,7 @@ const Aides = (function () {
     p.addEventListener('pointerdown', (e) => {
       const f = app.querySelector('.feuille'); const h0 = f.getBoundingClientRect().height, y0 = e.clientY;
       let dernier = [{ y: e.clientY, t: performance.now() }], bouge = false;
-      p.setPointerCapture(e.pointerId);
+      /* écoute sur la fenêtre : le moteur détache le panneau à chaque tic, ce qui ferait perdre une capture */
       const mv = (ev) => {
         const d = y0 - ev.clientY; if (Math.abs(d) > 4) bouge = true;
         const H = hauteurs(app); let h = h0 + d;
@@ -1018,14 +1018,14 @@ const Aides = (function () {
         f.style.height = h + 'px'; dernier.push({ y: ev.clientY, t: performance.now() }); if (dernier.length > 5) dernier.shift();
       };
       const fin = () => {
-        p.removeEventListener('pointermove', mv); p.removeEventListener('pointerup', fin); p.removeEventListener('pointercancel', fin);
+        window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', fin); window.removeEventListener('pointercancel', fin);
         if (!bouge) return; L.ignorerClic = true;
         const a = dernier[0], b = dernier[dernier.length - 1]; const v = (a.y - b.y) / Math.max(1, b.t - a.t);
         const H = hauteurs(app), vise = f.getBoundingClientRect().height + v * 180;
         L.cran = CRANS.reduce((best, c) => Math.abs(H[c] - vise) < Math.abs(H[best] - vise) ? c : best, 'bas');
         L.choisi = true; Socle.peindre();
       };
-      p.addEventListener('pointermove', mv); p.addEventListener('pointerup', fin); p.addEventListener('pointercancel', fin);
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', fin); window.addEventListener('pointercancel', fin);
     });
   }
 

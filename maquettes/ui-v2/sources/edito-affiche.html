@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane, proposition « L'affiche »</title>
+<style>
+/*POLICE:edito-technor*/
+/*POLICE:switzer*/
+/* Proposition « L'affiche » (famille éditoriale).
+ * Logique : une affiche lisible à trois mètres ; un mot et un nombre occupent la largeur, le fond dit s'il faut
+ * venir et le mot le redit ; tout le détail est sous la ligne de flottaison, en petit.
+ * Polices : Technor (fontshare, sans « construite », approches serrées, pensée pour l'affichage « plus c'est grand,
+ * mieux c'est ») pour le mot et le nombre ; Switzer (déjà au dépôt, grotesque neutre) pour les consignes.
+ * Fonds (chacun porte un sens, toujours redit par un mot) :
+ *   papier  = tout va bien ou rien n'est lancé (prêt, en cours, Écho) ;
+ *   gris    = arrêté ou en pause par vous : rien ne presse ;
+ *   orange  = à vous : une décision vous attend (ESV absent, onglet à choisir, file arrêtée, reprise) ;
+ *   nuit    = fini : rien ne tourne, le bilan est prêt. */
+:root{
+  --scene:#C9C6BE; --papier:#F2F0EA; --gris-fond:#D6D3CA; --orange:#F25C26; --nuit:#14213D;
+  --encre:#0A0A0A; --encre-douce:#3D3B36; --sur-nuit:#F4F2EC; --sur-nuit-douce:#C3C8D4; --filet:#0A0A0A;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --scene:#000000; --papier:#1A1A18; --gris-fond:#2E2D2A; --orange:#EE5B23; --nuit:#0F1A33;
+  --encre:#F2F0EA; --encre-douce:#C2BFB6; --filet:#F2F0EA;
+}}
+:root[data-theme="dark"]{
+  --scene:#000000; --papier:#1A1A18; --gris-fond:#2E2D2A; --orange:#EE5B23; --nuit:#0F1A33;
+  --encre:#F2F0EA; --encre-douce:#C2BFB6; --filet:#F2F0EA;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Switzer',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--papier);color:var(--encre);transition:background-color .4s cubic-bezier(.2,.8,.2,1),color .4s}
+/* le fond de toute l'affiche porte l'état */
+#panneau[data-ton="gris"]{background:var(--gris-fond)}
+#panneau[data-ton="avous"]{background:var(--orange);color:#0A0A0A;--encre:#0A0A0A;--encre-douce:#1F1F1F;--filet:#0A0A0A}
+#panneau[data-ton="nuit"]{background:var(--nuit);color:var(--sur-nuit);--encre:var(--sur-nuit);--encre-douce:var(--sur-nuit-douce);--filet:var(--sur-nuit)}
+.notes{max-width:380px;background:var(--papier);color:var(--encre);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font-family:'Technor',sans-serif;font-weight:800;font-size:30px;margin:0 0 8px;text-transform:uppercase}
+
+.affiche{padding:12px 18px 30px;min-height:100%;font-size:16px;line-height:1.4}
+.haut{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:13px;font-weight:600;color:var(--encre-douce)}
+.haut .act button{font:inherit;background:none;border:0;padding:4px 0;margin-right:12px;color:var(--encre-douce);cursor:pointer}
+.haut .act button[aria-pressed="true"]{color:var(--encre);border-bottom:3px solid var(--encre)}
+.haut .act button[aria-disabled="true"]{cursor:not-allowed}
+.haut .esv b{color:var(--encre)}
+.mot{font-family:'Technor',sans-serif;font-weight:800;text-transform:uppercase;line-height:.86;letter-spacing:-.01em;margin:18px 0 14px;word-break:keep-all}
+.mot span{display:block}
+.nombre{font-family:'Technor',sans-serif;font-weight:800;line-height:.82;letter-spacing:-.04em;font-size:clamp(110px,40cqi,220px);margin:0;display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.nombre small{font-family:'Switzer',sans-serif;font-weight:700;font-size:18px;letter-spacing:0;line-height:1.2;padding-bottom:.5em;max-width:14em}
+.c{display:inline-block;width:.58em;text-align:center;clip-path:inset(0 -30% 0 -30%);vertical-align:bottom}
+.c i{display:inline-block;font-style:normal}
+.bande{height:16px;border:2px solid var(--filet);margin:16px 0 8px;position:relative}
+.bande i{position:absolute;inset:0 auto 0 0;background:var(--encre);transition:width .85s linear}
+.bande.inconnu{border-style:dashed}
+.ligne{font-size:clamp(19px,5.6cqi,24px);font-weight:700;margin:0 0 4px}
+.ligne span{font-weight:400;color:var(--encre-douce)}
+.cause{font-family:'Technor',sans-serif;font-weight:700;font-size:clamp(28px,9cqi,44px);line-height:1;text-transform:uppercase;margin:0 0 10px}
+.texte{margin:0 0 10px;max-width:34em}
+
+.actions{display:flex;flex-direction:column;gap:10px;margin:20px 0 0}
+.btn{font:inherit;font-size:19px;font-weight:700;text-align:left;cursor:pointer;padding:16px 18px;border:3px solid var(--encre);background:transparent;color:var(--encre);border-radius:0;display:flex;justify-content:space-between;align-items:baseline;gap:10px;transition:transform .08s ease-out}
+.btn:active{transform:scale(.97)}
+.btn small{font-weight:500;font-size:14px}
+.btn.principal{background:var(--encre);color:var(--papier)}
+#panneau[data-ton="avous"] .btn.principal{color:var(--orange)}
+#panneau[data-ton="nuit"] .btn.principal{color:var(--nuit)}
+#panneau[data-ton="gris"] .btn.principal{color:var(--gris-fond)}
+.btn.lien{border:0;padding:6px 0;text-decoration:underline;text-underline-offset:5px}
+.btn.arret{border-width:2px;font-weight:600}
+.btn.arret.confirme{background:var(--orange);color:#0A0A0A;border-color:#0A0A0A}
+.btn[aria-disabled="true"],#panneau .btn.principal[aria-disabled="true"]{cursor:not-allowed;border-style:dashed;font-weight:500;background:transparent;color:var(--encre)}
+.raison{font-size:15px;margin:-4px 0 0;font-weight:600}
+.petit{font:inherit;font-size:16px;font-weight:700;background:transparent;color:var(--encre);border:2px solid var(--encre);padding:8px 14px;cursor:pointer;border-radius:0}
+.petit.plein{background:var(--encre);color:var(--papier)}
+#panneau[data-ton="avous"] .petit.plein{color:var(--orange)}
+button:focus-visible,input:focus-visible{outline:4px solid var(--encre);outline-offset:3px}
+.boutons{display:flex;gap:8px;flex-wrap:wrap}
+
+/* sous la ligne de flottaison : le détail en petit */
+.detail{margin-top:30px;border-top:3px solid var(--filet);padding-top:10px}
+.detail h2{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin:0 0 6px;display:flex;justify-content:space-between}
+.detail h2 span{font-weight:500;color:var(--encre-douce);text-transform:none;letter-spacing:0}
+.detail+.detail{margin-top:18px}
+table{border-collapse:collapse;width:100%;font-size:15px;font-variant-numeric:tabular-nums}
+th{font-size:12px;font-weight:600;color:var(--encre-douce);text-align:right;padding:4px 0 4px 8px;border-bottom:2px solid var(--filet)}
+td{text-align:right;padding:6px 0 6px 8px;border-bottom:1px solid var(--filet)}
+th:first-child,td:first-child{text-align:left;padding-left:0}
+tr.ici td{font-weight:700}
+tr.total td{font-weight:700;border-bottom:0;border-top:2px solid var(--filet)}
+
+/* réglage */
+.bornes{display:flex;align-items:flex-end;gap:8px;flex-wrap:nowrap;margin:6px 0 0}
+.bornes input{font-family:'Technor',sans-serif;font-weight:800;font-size:clamp(46px,16cqi,92px);letter-spacing:-.04em;width:3.2ch;min-width:0;background:transparent;color:var(--encre);border:0;border-bottom:4px solid var(--encre);padding:0;border-radius:0}
+.bornes input:disabled{width:5.4em;font-size:clamp(24px,7.5cqi,40px);border-bottom-style:dashed}
+.bornes .fl{font-family:'Technor',sans-serif;font-weight:800;font-size:clamp(40px,12cqi,64px);padding-bottom:.1em}
+.interrupteur{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;margin:12px 0 0;font:inherit;font-weight:600;background:transparent;color:var(--encre);border:0;border-top:2px solid var(--filet);padding:10px 0 0;cursor:pointer;text-align:left}
+.interrupteur b{border:2px solid var(--encre);padding:3px 10px;font-size:14px;text-transform:uppercase}
+.interrupteur[aria-checked="true"] b{background:var(--encre);color:var(--papier)}
+.pas{display:flex;align-items:center;gap:12px;margin-top:10px;font-weight:600}
+.pas button{font:inherit;font-size:22px;width:46px;height:46px;background:transparent;color:var(--encre);border:2px solid var(--encre);cursor:pointer}
+.pas output{font-family:'Technor',sans-serif;font-weight:800;font-size:44px;min-width:1ch;text-align:center}
+.message{font-weight:700;border:2px solid var(--encre);padding:8px 12px;margin:10px 0 0}
+
+.reste-item{border-top:2px solid var(--filet);padding:10px 0 12px}
+.reste-item .num{font-family:'Technor',sans-serif;font-weight:800;font-size:46px;line-height:1}
+.reste-item .type{font-weight:700;text-transform:uppercase;font-size:13px;margin-left:8px}
+.reste-item p{margin:4px 0 8px}
+figure{margin:0 0 6px}
+figure svg{display:block;width:100%;height:auto;border:2px solid var(--filet)}
+figcaption{font-size:14px;color:var(--encre-douce);margin-top:6px}
+
+/* ---------- partition de mouvement ---------- */
+@keyframes coller{from{clip-path:inset(0 0 100% 0);transform:translateY(-14px)}to{clip-path:inset(0 0 0 0);transform:none}}
+@keyframes baisser{from{transform:translateY(-60%)}to{transform:none}}
+@keyframes monter{from{transform:translateY(60%)}to{transform:none}}
+/* changement d'état : le fond glisse vers sa nouvelle teinte (400 ms) et le mot est « collé » de haut en bas, comme une nouvelle affiche */
+#panneau[data-etat-change="1"] .mot,.mot.change{animation:coller .3s cubic-bezier(.2,.8,.2,1) both}
+#panneau[data-etat-change="1"] .mot span:nth-child(2){animation-delay:.06s}
+/* le nombre de cuts restants baisse : chaque chiffre qui change descend dans sa case */
+.c.change i{animation:baisser .2s cubic-bezier(.2,.8,.2,1)}
+.c.change.up i{animation-name:monter}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+:root[data-mouvement="reduit"] *,:root[data-mouvement="reduit"] *::before,:root[data-mouvement="reduit"] *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition L'affiche"></div></div>
+  <aside class="notes">
+    <h2>L'affiche</h2>
+    <p><b>Logique.</b> Une affiche lisible à trois mètres : un mot et un nombre occupent la largeur ; le fond dit s'il faut venir et le mot le redit ; le détail est sous la ligne de flottaison, en petit.</p>
+    <p><b>D'où ça vient.</b> fontshare, fiche « Details » de Technor (« pour l'affichage, plus c'est grand, mieux c'est ») ; la planche de chaque famille (le nom à 120 px). wedoflow, gabarit Boldest : le nombre géant avec son unité collée en petit. landdding, « Browse by color » et fiches de sites : une couleur est toujours nommée. Le rapport « State of Landing Pages 2026 » de landdding : « la typographie fait davantage le travail ». emilkowal.ski : courbes ease-out, transitions courtes.</p>
+    <p><b>Ce que ça veut dire ici.</b> Fond papier : tout va bien ou rien n'est lancé. Fond gris : arrêté ou en pause par vous, rien ne presse. Fond orange : « À vous », une décision vous attend. Fond nuit : fini, le bilan est prêt. Le nombre géant est ce qui reste à faire ; la bande pleine sous lui, ce qui est fait (pointillée si le total est inconnu).</p>
+    <p><b>Mouvement.</b> Au changement d'état, le fond glisse vers sa teinte (400 ms) et le mot est collé de haut en bas comme une nouvelle affiche (300 ms). À chaque cut, le chiffre qui change descend dans sa case (200 ms). Mouvement réduit : tout est posé d'un coup.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  let precedent = {};
+
+  /* Nombre à cases : chaque chiffre a sa case (Technor est proportionnelle, mesuré) ; seul celui qui change bouge. */
+  function cases(cle, x, sens) {
+    const s = String(x);
+    return [...s].map((d, i) => /\d/.test(d) ? `<span class="c${sens === 'up' ? ' up' : ''}" data-valeur="${cle}-${s.length - i}"><i>${d}</i></span>` : `<span>${esc(d)}</span>`).join('');
+  }
+  /* Le mot remplit la largeur : la taille dépend du mot le plus long, chaque mot sur sa ligne. */
+  function mot(texte) {
+    const mots = texte.toUpperCase().split(' ');
+    const long = Math.max(...mots.map((m) => m.length));
+    const k = Math.min(30, 100 / (long * 0.74));
+    return `<h1 class="mot" data-valeur="mot" style="font-size:${k.toFixed(1)}cqi">${mots.map((m) => `<span>${esc(m)}</span>`).join('')}</h1>`;
+  }
+  function bouton(x) {
+    const cls = ['btn', x.rang || 'second', x.confirme ? 'confirme' : ''].join(' ');
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+
+  function haut(m) {
+    const bl = m.activiteBloquee, li = m.liaison;
+    const b = (a, l, actif) => `<button data-a="${a}" aria-pressed="${actif}"${bl && !actif ? ' aria-disabled="true" title="Écho attend la pause ou l’arrêt du lot"' : ''}>${l}</button>`;
+    return `<div class="haut"><span class="act" role="group" aria-label="Activité">${b('orbite', 'Orbite', m.activite === 'orbite')}${b('echo', 'Écho', m.activite === 'echo')}</span><span class="esv"><b>${esc(li.texte)}</b> · ${esc(li.detail)}</span></div>
+      ${m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : ''}`;
+  }
+
+  function ton(m) {
+    if (m.vue === 'echo' || m.vue === 'reste' || m.vue === 'examen') return 'papier';
+    if (m.incident && m.incident.type !== 'reprise' && m.phase === 'pret') return 'avous';
+    if (m.file.alerte || (m.incident && m.incident.type === 'reprise')) return 'avous';
+    if (m.phase === 'fin') return 'nuit';
+    if (m.phase === 'pause' || m.phase === 'arrete') return 'gris';
+    return 'papier';
+  }
+
+  function tableParties(m) {
+    const f = m.file, c = m.compte;
+    if (!f.active) return '';
+    let l = f.parties.map((p) => `<tr><td>Partie ${p.n}</td><td>${p.poses}</td><td>${p.differes}</td><td>${p.aControler}</td></tr>`).join('');
+    if (f.ligneCourante) l += `<tr class="ici"><td>Partie ${f.courante}, en cours</td><td>${c.poses}</td><td>${c.differes}</td><td>${c.aExaminer}</td></tr>`;
+    if (m.file.relecture) l += `<tr class="ici"><td colspan="4">Partie ${f.courante} : relecture et correction</td></tr>`;
+    if (!f.finie) for (let k = f.courante + 1; k <= f.nb; k++) l += `<tr><td>Partie ${k}, à venir</td><td>–</td><td>–</td><td>–</td></tr>`;
+    if (f.finie) { const t = f.parties.reduce((a, p) => [a[0] + p.poses, a[1] + p.differes, a[2] + p.aControler], [0, 0, 0]); l += `<tr class="total"><td>Ensemble</td><td>${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td></tr>`; }
+    return `<section class="detail"><h2>File de parties<span>${f.finie ? 'toutes faites' : 'partie ' + f.courante + ' sur ' + f.nb}</span></h2><table><thead><tr><th>Partie</th><th>Posés</th><th>Différés</th><th>À examiner</th></tr></thead><tbody>${l}</tbody></table></section>`;
+  }
+
+  function resteDetail(m) {
+    const r = m.restants; if (!r.length) return '';
+    const d = r.filter((x) => x.type === 'differe').length;
+    return `<section class="detail"><h2>Ce qui reste<span>${r.length} cuts</span></h2><p class="texte">${d} différés, ${r.length - d} verts à examiner.</p>${bouton({ a: 'voirReste', libelle: 'Voir la liste', rang: 'lien' })}</section>`;
+  }
+
+  function vuePret(m) {
+    const b = m.bornes, f = m.file;
+    let h = mot(m.incident ? 'À vous' : m.titre);
+    if (m.incident) h += `<p class="cause">${esc(m.incident.titre)}</p><p class="texte">${esc(m.incident.texte)}</p><div class="boutons">${m.incident.actions.map((x) => `<button class="petit plein" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}>${esc(x.libelle)}</button>`).join('')}</div>`;
+    h += `<div class="bornes"><input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"><span class="fl" aria-hidden="true">→</span>${b.finDePartie ? '<input disabled value="fin de partie" aria-label="Dernier cut : fin de partie">' : `<input data-champ="fin" inputmode="numeric" value="${b.fin}" aria-label="Dernier cut">`}</div>
+      <p class="ligne">${b.finDePartie ? 'Du cut ' + b.debut + ' à la fin de la partie' : (b.fin - b.debut + 1) + ' cuts'} <span>· ${f.active ? f.nb + ' parties à la file' : 'une seule partie'}</span></p>`;
+    h += actions(m.actions);
+    h += `<section class="detail"><h2>Réglages<span>ne lancent rien</span></h2>
+      <button class="interrupteur" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span>Aller jusqu’à la fin de la partie</span><b>${b.finDePartie ? 'Oui' : 'Non'}</b></button>
+      <button class="interrupteur" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span>File de parties</span><b>${f.active ? 'Allumée' : 'Éteinte'}</b></button>
+      ${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output data-valeur="nb">${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, chacune relue et corrigée</span></div>` : ''}</section>`;
+    return h;
+  }
+
+  function vueLot(m) {
+    const c = m.compte, f = m.file;
+    const enMarche = m.phase === 'encours' && !f.relecture;
+    let h;
+    if (f.alerte) {
+      h = mot('À vous') + `<p class="cause">${esc(f.alerte.titre)}</p><p class="texte">${esc(f.alerte.detail)} Rien n’a été forcé. ${esc(m.phrase)}</p>`;
+    } else if (m.incident && m.incident.type === 'reprise') {
+      h = mot('À vous') + `<p class="cause">${esc(m.incident.titre)}</p><p class="texte">${esc(m.incident.texte)} ${esc(m.phrase)}</p>`;
+    } else if (m.phase === 'fin') {
+      h = mot(f.finie ? 'File finie' : 'Fini');
+      h += `<p class="ligne">${esc(m.phrase)}</p>`;
+      h += `<p class="nombre" style="font-size:clamp(72px,24cqi,140px)">${n(c.poses)}<small>posés</small></p>`;
+      h += `<p class="ligne">${n(c.differes)} différés <span>· ${n(c.aExaminer)} verts à examiner</span></p>`;
+      return h + actions(m.actions) + tableParties(m);
+    } else if (f.relecture) {
+      h = mot('Relecture') + `<p class="ligne">${esc(m.phrase)}</p>`;
+      return h + actions(m.actions) + tableParties(m) + resteDetail(m);
+    } else {
+      h = mot(m.titre);
+    }
+    const reste = c.total == null ? null : c.total - c.faits;
+    if (reste == null) h += `<p class="nombre">${cases('faits', c.faits, 'up')}<small>faits · total inconnu</small></p>`;
+    else h += `<p class="nombre">${cases('reste', reste)}<small>cuts restent</small></p>`;
+    if (c.total != null) h += `<div class="bande" data-garder="bande" aria-hidden="true"><i></i></div>`;
+    h += `<p class="ligne">${c.total == null ? 'Jusqu’à la fin de la partie' : (enMarche ? 'Encore ' + esc(c.tempsTexte) : 'Arrêté au cut ' + c.cut)} <span>· ${enMarche ? 'cut ' + c.cut + ' · ' : ''}${n(c.faits)} faits${c.total == null ? '' : ' sur ' + n(c.total)}</span></p>`;
+    if (!enMarche && !f.alerte && !m.incident) h += `<p class="texte">${esc(m.phrase)}</p>`;
+    h += actions(m.actions);
+    h += `<section class="detail"><h2>En chemin<span>${c.differes} différés · ${c.aExaminer} verts à examiner</span></h2><p class="texte">Ariane laisse de côté ce qu’elle ne peut pas trancher ; rien n’est validé sans vous.</p></section>`;
+    return h + tableParties(m) + resteDetail(m);
+  }
+
+  function coupeSVG(cut) {
+    const k = Demo.D.coupe(cut, 240);
+    const X = (x) => (x + 1) * 160, Z = (z) => 150 - (z + 0.6) * 200;
+    const pts = k.pts.map(([x, z]) => `<rect x="${X(x).toFixed(1)}" y="${Z(z).toFixed(1)}" width="2.2" height="2.2"/>`).join('');
+    const rails = k.rails.map((r, i) => `<line x1="${X(r)}" x2="${X(r)}" y1="10" y2="152" stroke-width="3"/><text x="${X(r) + 6}" y="${i ? 22 : 38}">${i ? 'rail droit' : 'rail gauche'}</text>`).join('');
+    return `<svg viewBox="0 0 320 160" role="img" aria-label="Coupe du cut ${cut}"><g fill="currentColor" opacity=".8">${pts}</g><g stroke="currentColor" fill="currentColor" font-size="12" font-weight="700" font-family="Switzer, sans-serif">${rails}</g></svg>`;
+  }
+
+  function vueReste(m) {
+    const r = m.restants;
+    let h = mot('Reste') + `<p class="nombre">${cases('nbreste', r.length)}<small>cuts à regarder</small></p>`;
+    h += r.map((x) => `<div class="reste-item"><span class="num">${x.cut}</span><span class="type">${x.type === 'differe' ? 'Différé' : 'Vert à examiner'}</span><p>${esc(x.motif)}</p><div class="boutons"><button class="petit plein" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div></div>`).join('');
+    return h + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]);
+  }
+
+  function vueExamen(m) {
+    const x = m.examen;
+    let h = mot('Cut ' + x.cut) + `<p class="cause">${x.type === 'differe' ? 'Différé' : 'Vert à examiner'}</p><p class="texte">${esc(x.motif)}.</p>`;
+    h += `<figure>${coupeSVG(x.cut)}<figcaption>Coupe du cut ${x.cut} : points relevés et place proposée des deux rails.</figcaption></figure>`;
+    return h + actions([{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'retour', libelle: 'Retour au lot', rang: 'lien' }]);
+  }
+
+  function vueEcho(m) {
+    const e = m.echo;
+    let h = mot('Écho') + `<p class="ligne">${esc(m.phrase)}</p>`;
+    h += `<p class="nombre">${cases('vus', e.vus, 'up')}<small>poses vues</small></p>`;
+    h += `<p class="ligne">${e.accord} pareilles <span>· ${e.vus - e.accord} autrement · dernier cut ${e.dernier == null ? '–' : e.dernier}</span></p>`;
+    return h + actions(m.actions);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    let page;
+    if (m.vue === 'echo') page = vueEcho(m);
+    else if (m.vue === 'reste') page = vueReste(m);
+    else if (m.vue === 'examen' && m.examen) page = vueExamen(m);
+    else if (m.phase === 'pret') page = vuePret(m);
+    else page = vueLot(m);
+    return `<div class="affiche">${haut(m)}${page}</div>`;
+  }
+
+  /* Le fond de l'affiche est porté par #panneau (conservé) : sa teinte glisse d'un état à l'autre. La bande est conservée aussi. */
+  function apres(S, D, racine) {
+    const m = D.modele();
+    racine.setAttribute('data-ton', ton(m));
+    const i = racine.querySelector('.bande[data-garder] i');
+    if (i) i.style.width = (m.compte.part == null ? 0 : Math.min(1, m.compte.part) * 100) + '%';
+  }
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

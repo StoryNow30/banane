@@ -10,7 +10,7 @@
 /* Proposition « Gravité unique » (famille signalétique et design d'information).
    Logique : une seule échelle à trois niveaux (rien à signaler, à regarder, à agir) organise tout le panneau.
    Chaque ligne du tableau porte son niveau ; le bandeau du haut prend le niveau le plus haut présent.
-   Formes : carré creux = rien à signaler ; triangle = à regarder ; octogone barré = à agir.
+   Formes : petit disque plein (voyant éteint) = rien à signaler ; triangle = à regarder ; octogone barré = à agir.
    Couleurs (échelles Radix sand, amber, red) : gris = normal, ambre = à regarder, rouge = à agir. Jamais sans forme ni mot. */
 :root{
   --scene:#E9E8E6; --fond:#FDFDFC; --fond2:#F9F9F8; --fond3:#F1F0EF; --trait:#DAD9D6; --trait-fort:#8D8D86;
@@ -203,14 +203,14 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-
     <ul>
       <li>Carbon Design System, motif « Status indicators » : trois éléments sur quatre (forme, couleur, mot, symbole), statut consolidé au niveau le plus grave, pas d'indicateur quand rien n'est à faire, gris pour « pas commencé ».</li>
       <li>Panneaux d'annonciateurs (aviation, conduite de procédés) : voyant maître qui reprend la pire alarme, rouge = agir, ambre = regarder ; fenêtres à place fixe, car la reconnaissance de motif bat la liste qui défile (article « Alarm management » : éviter l'inondation d'alarmes).</li>
-      <li>Norme ISO 7010 : la forme dit la catégorie avant le mot ; ici carré, triangle, octogone.</li>
+      <li>Norme ISO 7010 : la forme dit la catégorie avant le mot ; ici disque, triangle, octogone.</li>
       <li>Service manual NHS, « Warning callout » : pas plus de deux encadrés d'alerte, un titre précis plutôt qu'un point d'exclamation.</li>
       <li>Radix Colors : échelles sand, amber, red ; pas 12 pour le texte, 9 et 11 pour les aplats (le rouge 9 ne porte pas de texte blanc : 3,91:1 mesuré).</li>
       <li>Police Overpass, interprétation libre de la police des panneaux routiers américains, dessinée pour la lecture à distance.</li>
     </ul>
     <h3>Ce que ça veut dire ici</h3>
     <ul>
-      <li><b>Carré creux gris</b> : rien à signaler. Un lot qui tourne bien ne s'allume pas.</li>
+      <li><b>Petit disque gris plein</b>, un voyant éteint : rien à signaler. Un lot qui tourne bien ne s'allume pas.</li>
       <li><b>Triangle ambre</b> : à regarder, quand vous aurez un moment (cuts différés ou à examiner une fois le lot fini, page rechargée).</li>
       <li><b>Octogone rouge barré</b> : à agir, rien ne peut continuer sans vous (ESV non relié, onglet à choisir, file arrêtée).</li>
       <li>Pendant que le lot tourne, les différés restent gris : on ne demande pas de regarder ce qu'on ne peut pas encore traiter.</li>
