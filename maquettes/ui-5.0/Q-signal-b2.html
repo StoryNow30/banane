@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="fr" data-niveau="b2" data-theme="sombre" data-taille="normal" data-revue="v1" data-cadence="reelle">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signal b2 · Raffinement mesuré</title>
+<meta name="description" content="Maquette Signal : raffinement mesuré, toutes les scènes et la file de parties. Données fictives, aucune connexion à ESV.">
+<style>
+
+/* CH-023 : valeurs communes à toutes les scènes, aux listes et aux dialogues.
+ * IBM Plex et Bricolage Grotesque : fichiers locaux, licences OFL dans fonts/.
+ * Les petites dimensions des repères ne sont pas des espacements de contenu. */
+@font-face{font-family:"IBM Plex Sans";src:url(../../fonts/IBMPlexSans-latin-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"IBM Plex Sans";src:url(../../fonts/IBMPlexSans-latin-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"IBM Plex Mono";src:url(../../fonts/IBMPlexMono-latin-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"IBM Plex Mono";src:url(../../fonts/IBMPlexMono-latin-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"Bricolage Grotesque";src:url(../../fonts/BricolageGrotesque-latin-opsz-wght.woff2) format("woff2");font-weight:200 800;font-display:block}
+:root{
+ --sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+ --t-chiffre:44px;--l-chiffre:48px;--t-etat:28px;--l-etat:36px;--t-texte:15px;--l-texte:24px;--t-meta:13px;--l-meta:20px;
+ --e1:4px;--e2:8px;--e3:12px;--e4:16px;--e5:24px;--e6:32px;--e7:48px;
+ --r-ctl:8px;--r-boite:16px;--d-appui:120ms;--d-local:160ms;--d-glisse:240ms;--d-scene:240ms;
+ --sortie:cubic-bezier(.16,1,.3,1);--entree-sortie:cubic-bezier(.77,0,.175,1);
+ --marge:40px;--marge-v:32px;--barre:56px;--poignee:48px;--cache:64px;--fen-h:760px;--cadre-espacement:0px;
+}
+:root[data-theme="sombre"]{
+ --fond:#151617;--surface:#1E2022;--surface2:#292C2F;--encre:#F1F0EC;--encre2:#B8BAB9;--encre3:#A4A7A7;
+ --filet:#3B3E40;--filet-fort:#606467;--vivant:#A1D0B2;--attention:#EAC388;--alerte:#F2A099;--progression:#D8C5A5;
+ --action:#EEECE5;--action-tx:#20201D;--action-survol:#FFFFFF;
+ --ombre:0 12px 36px rgba(0,0,0,.35);--voile:rgba(0,0,0,.5);--reflet:rgba(255,255,255,.06);color-scheme:dark;
+}
+:root[data-theme="clair"]{
+ --fond:#F5F4F0;--surface:#FFFFFF;--surface2:#EAE9E4;--encre:#242622;--encre2:#525850;--encre3:#62665F;
+ --filet:#DADCD4;--filet-fort:#969C92;--vivant:#2F6546;--attention:#805011;--alerte:#A23D35;--progression:#6B5030;
+ --action:#282D27;--action-tx:#FFFFFF;--action-survol:#10150F;
+ --ombre:0 12px 36px rgba(30,35,25,.14);--voile:rgba(20,24,18,.3);--reflet:rgba(255,255,255,.8);color-scheme:light;
+}
+:root[data-taille="compact"]{--t-chiffre:32px;--l-chiffre:36px;--t-etat:22px;--l-etat:28px;--t-texte:14px;--l-texte:20px;--marge:16px;--marge-v:16px;--barre:48px;--poignee:44px;--cache:48px;--fen-h:480px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;max-width:100%}
+body{font:400 var(--t-texte)/var(--l-texte) var(--sans);background:var(--fond);color:var(--encre);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;cursor:pointer;border-radius:var(--r-ctl);touch-action:manipulation}
+button:disabled,button[aria-disabled="true"]{cursor:not-allowed}
+button{transition:background var(--d-appui) var(--sortie),color var(--d-appui) var(--sortie),transform var(--d-appui) var(--sortie)}
+button:active:not(:disabled):not([aria-disabled="true"]){transform:scale(.97)}
+:focus-visible{outline:2px solid var(--encre);outline-offset:3px}
+[hidden]{display:none!important}
+.mono{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.meta{font-size:var(--t-meta);line-height:var(--l-meta)}.encre2{color:var(--encre2)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.banc{display:flex;align-items:center;flex-wrap:wrap;gap:12px 16px;padding:16px 24px;border-bottom:1px solid var(--filet);background:var(--surface);font-size:13px;line-height:20px}
+.banc>strong{flex-basis:100%;font-size:15px;font-weight:500}.banc label{display:flex;align-items:center;gap:8px;max-width:100%}
+.banc select,.notes select{min-width:0;max-width:100%;background:var(--surface2);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);padding:4px 8px;font-size:13px}
+.banc .seg{display:flex;flex-wrap:wrap;border:1px solid var(--filet);border-radius:var(--r-ctl);padding:4px;gap:4px}
+.banc .seg button{padding:4px 8px;font-size:13px;color:var(--encre2)}.banc .seg button[aria-pressed="true"]{background:var(--surface2);color:var(--encre)}
+.plateau{display:flex;gap:32px;padding:32px 24px;align-items:flex-start;flex-wrap:wrap;max-width:100%}
+.notes{max-width:360px;font-size:13px;line-height:20px;color:var(--encre2)}.notes h2{font-size:15px;font-weight:500;margin-bottom:8px;color:var(--encre)}.notes p{margin-bottom:12px}.notes b{font-weight:500;color:var(--encre)}
+.notes .nouveau{border-bottom:1px solid var(--filet-fort);margin-right:4px}.notes .sim{margin-top:16px;padding-top:16px;border-top:1px solid var(--filet)}
+.notes button{min-height:36px;padding:4px 12px;margin:0 4px 8px 0;border:1px solid var(--filet-fort);border-radius:var(--r-ctl);font-size:13px}
+.notes button:disabled{color:var(--encre3);border-style:dashed}.notes label{display:flex;flex-direction:column;gap:4px}
+:root[data-nu="1"] .banc,:root[data-nu="1"] .notes{display:none}:root[data-nu="1"] .plateau{padding:0;display:block}
+.fen{position:relative;width:600px;max-width:100%;height:var(--fen-h);background:var(--fond);color:var(--encre);display:flex;flex-direction:column;overflow:hidden;flex:0 1 600px;isolation:isolate;container-type:inline-size}
+:root[data-taille="compact"] .fen{width:360px}
+:root[data-nu="1"] .fen{width:100%;max-width:600px}
+:root[data-nu="0"] .fen{outline:1px solid var(--filet)}
+.barre{height:var(--barre);flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--filet)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:500;font-size:15px;letter-spacing:.015em;flex:none}.logo svg{width:18px;height:18px;display:block}
+.bascule{display:inline-flex;align-items:center;border:1px solid var(--filet);border-radius:var(--r-ctl);padding:4px;gap:4px}
+.bascule button{height:28px;padding:0 12px;border-radius:var(--r-ctl);font-size:13px;line-height:20px;color:var(--encre2);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.bascule button[aria-selected="true"]{background:var(--surface2);color:var(--encre);font-weight:500}.bascule button[aria-disabled="true"]{color:var(--encre3)}.bascule button svg{width:12px;height:12px}
+.espace{flex:1;min-width:0}
+.puce{min-width:0;height:32px;display:inline-flex;align-items:center;gap:8px;padding:0 8px;border:1px solid var(--filet);border-radius:var(--r-ctl);background:var(--surface);font-size:13px;line-height:20px;color:var(--encre2);max-width:200px;white-space:nowrap}
+.puce i{display:none}.puce .tx{overflow:hidden;text-overflow:ellipsis}.puce .fl{width:12px;height:12px;flex:none}.puce .court{display:none}
+.puce[data-etat="ko"],.puce[data-etat="aucun"]{border-style:dashed;color:var(--encre)}
+.ico{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--encre2);flex:none}.ico:hover,.ico[aria-pressed="true"]{background:var(--surface2);color:var(--encre)}.ico svg{width:18px;height:18px}
+.barre-note{position:absolute;top:var(--barre);left:16px;right:16px;padding:12px 16px;color:var(--encre);background:var(--surface2);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);font-size:13px;line-height:20px;z-index:4;box-shadow:var(--ombre)}
+.instrument{flex:0 1 auto;min-height:0;max-height:calc(var(--fen-h) - var(--barre) - var(--cache) - var(--poignee) - var(--cadre-espacement));overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding:var(--marge-v) var(--marge);display:flex;flex-direction:column;gap:24px}
+.groupe-etat{display:flex;flex-direction:column;gap:8px}.etat{display:flex;align-items:center;min-height:var(--l-etat)}.etat .mot{font-size:var(--t-etat);line-height:var(--l-etat);font-weight:500;letter-spacing:-.025em;overflow-wrap:anywhere}
+.phrase{color:var(--encre2);font-size:var(--t-texte);line-height:var(--l-texte)}.phrase b,.phrase .mono{font-weight:500;color:var(--encre)}
+.objet{display:flex;flex-direction:column;gap:12px}.compte{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.compte .chiffre{font-family:var(--mono);font-size:var(--t-chiffre);line-height:var(--l-chiffre);font-weight:500;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.compte .suite{color:var(--encre2)}.compte .droite{margin-left:auto;color:var(--encre2);font-size:13px;line-height:20px}.compte .droite b,.compte .droite .dif{font-weight:500;color:var(--encre)}
+.rail{position:relative;height:48px;margin:4px 0 0}.rail-base{position:absolute;left:0;right:0;top:19px;height:1px;background:var(--filet-fort)}
+.rail-fait{position:absolute;left:0;top:18px;height:3px;background:var(--encre);transition:width 220ms linear}
+.rail-grad{position:absolute;top:26px;width:1px;height:4px;background:var(--filet-fort)}.rail-grad.dix{height:8px}
+.rail-num{position:absolute;top:32px;transform:translateX(-50%);font-family:var(--mono);font-size:13px;line-height:16px;color:var(--encre2);letter-spacing:0}.rail-num.fin{transform:translateX(-100%)}.rail-num.debut{transform:none}
+.rail-dif,.rail-corr{position:absolute;top:9px;width:6px;height:6px;border:1.5px solid var(--encre2);border-radius:50%;background:var(--fond);transform:translateX(-50%)}
+.rail-dif:after,.rail-corr:after{content:"";position:absolute;top:5px;left:1px;width:1px;height:5px;background:var(--encre2)}
+.rail-corr{border-radius:0;background:var(--vivant);border-color:var(--vivant)}
+.rail-cur{position:absolute;top:9px;width:2px;height:19px;background:var(--progression);transform:translateX(-50%);transition:left 220ms linear}.rail-cur:after{content:"";position:absolute;left:-3px;top:-4px;width:8px;height:4px;background:inherit;border-radius:0}
+.rail[data-etat="pause"] .rail-cur,.rail[data-etat="relecture"] .rail-cur{background:var(--encre2)!important}.rail[data-etat="fini"] .rail-cur{display:none}
+.rail[data-total="inconnu"] .rail-base{background:repeating-linear-gradient(90deg,var(--filet-fort) 0 4px,transparent 4px 8px)}
+.allure{color:var(--encre2);font-size:13px;line-height:20px}.allure b{font-weight:500;color:var(--encre)}.allure .sep{padding:0 4px;color:var(--encre2)}
+.incident{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--filet-fort);border-left:3px solid var(--alerte);border-radius:var(--r-ctl);background:var(--surface)}
+.incident p{color:var(--encre)}.incident .op{color:var(--encre2);font-size:13px;line-height:20px}.incident .op b{color:var(--encre);font-weight:500}
+dl.fin{display:grid;grid-template-columns:80px minmax(0,1fr);gap:12px 16px;color:var(--encre2)}dl.fin dt{color:var(--encre2);font-size:13px;line-height:24px}dl.fin dd b,dl.fin dd .dif{color:var(--encre);font-weight:500}
+.actions{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap}.principal{min-height:48px;min-width:200px;max-width:100%;padding:12px 24px;background:var(--action);color:var(--action-tx);border-radius:var(--r-ctl);font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center;line-height:24px}
+.principal:hover{background:var(--action-survol)}.principal:disabled{background:var(--surface2);color:var(--encre3);border:1px dashed var(--filet-fort)}.principal svg{width:16px;height:16px;flex:none}.principal .tourne{width:14px;height:14px;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:tourne 1.2s linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}
+.secondaire{min-height:40px;padding:8px 4px;color:var(--encre2);border-radius:var(--r-ctl);line-height:24px}.secondaire:hover{text-decoration:underline;text-underline-offset:4px;color:var(--encre)}.secondaire:disabled{color:var(--encre3)}
+.secondaire.danger{color:var(--encre2)}.secondaire[data-confirme="1"]{color:var(--alerte);font-weight:500;text-decoration:underline;text-underline-offset:4px}
+.raison{width:100%;color:var(--encre2);font-size:13px;line-height:20px}.verrou-ligne{display:flex;align-items:center;gap:8px;color:var(--encre2)}.verrou-ligne svg{width:16px;height:16px;flex:none}
+.zone{flex:1;min-height:var(--poignee);position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.tiroir{position:absolute;inset:0;background:var(--surface);border-top:1px solid var(--filet);display:flex;flex-direction:column;transform:translateY(calc(100% - var(--poignee)));transition:transform var(--d-glisse) var(--sortie)}.tiroir[data-ouvert="1"]{transform:none}
+#tiroir-corps{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.poignee{min-height:var(--poignee);flex:none;width:100%;display:flex;align-items:center;gap:8px;padding:8px var(--marge);text-align:left;color:var(--encre);font-size:13px;line-height:20px;border-radius:0}.poignee:hover{background:var(--surface2)}.poignee:focus-visible{outline-offset:-4px}
+.poignee .fl{width:12px;height:12px;flex:none;color:var(--encre2);transition:transform var(--d-glisse) var(--sortie)}.tiroir[data-ouvert="1"] .poignee .fl{transform:rotate(90deg)}
+.poignee .n{font-family:var(--mono);font-weight:500;color:var(--encre)}.poignee .reste{margin-left:auto;color:var(--encre2);white-space:nowrap}.poignee .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.poignee .court,.poignee .etat-mini{display:none}
+.corps{flex:1;min-height:0;overflow:auto;padding:0 var(--marge) 16px;scrollbar-width:thin}
+.section{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;min-height:40px;color:var(--encre2);font-size:13px;line-height:20px;font-weight:500;border-bottom:1px solid var(--filet);position:sticky;top:0;background:var(--surface);z-index:1;padding:12px 0 8px}.section .n{font-family:var(--mono);color:var(--encre)}.section .d{margin-left:auto;font-weight:400}.section .tag,.v2-note .tag{font-size:13px;color:var(--encre);font-weight:500;white-space:nowrap}
+.ligne{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:4px 12px;align-items:center;min-height:44px;padding:12px 0;border-bottom:1px solid var(--filet);font-size:var(--t-texte);line-height:var(--l-texte);border-radius:0}
+.ligne .cut{font-family:var(--mono);font-weight:500;font-size:13px;text-align:right;align-self:start;padding-top:2px}.ligne .motif{overflow-wrap:anywhere;white-space:normal;min-width:0}.ligne .motif small{display:block;color:var(--encre2);font-size:13px;line-height:20px}.ligne .prec{color:var(--encre2);font-size:13px;line-height:20px;white-space:nowrap;align-self:start;padding-top:2px}
+.ligne[aria-selected="true"]{background:var(--surface2);outline:4px solid var(--surface2)}.ligne.examine .cut,.ligne.examine .motif{color:var(--encre2);text-decoration:line-through;text-decoration-thickness:1px}
+.ligne .outils{display:flex;flex-wrap:wrap;gap:4px;align-items:center}.ligne .outils button{min-height:32px;padding:4px 8px;font-size:13px;line-height:20px;color:var(--encre2);border:1px solid var(--filet);border-radius:var(--r-ctl);display:inline-flex;align-items:center;gap:4px}.ligne .outils button:hover,.ligne .outils button[aria-pressed="true"]{color:var(--encre);background:var(--surface2)}.ligne .outils svg{width:14px;height:14px}
+.vide{padding:16px 0;color:var(--encre2);font-size:13px;line-height:20px}.v2-note{display:flex;gap:8px;padding:12px 0;color:var(--encre2);font-size:13px;line-height:20px}
+.cache{min-height:var(--cache);flex:none;display:flex;align-items:center;gap:12px;padding:8px 16px 8px var(--marge);border-top:1px solid var(--filet);font-size:13px;line-height:20px;color:var(--encre2)}
+.cache-info{display:flex;flex-direction:column;min-width:0;flex:1}.cache .q{color:var(--encre);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cache .r{color:var(--encre2);font-size:13px;line-height:20px}.cache .ok{color:var(--encre)}
+.cache button{min-height:32px;padding:4px 12px;border:1px solid var(--filet-fort);border-radius:var(--r-ctl);color:var(--encre);font-size:13px;line-height:20px;white-space:nowrap;flex:none}.cache button:hover{background:var(--surface2)}.cache button:disabled{color:var(--encre3);border-style:dashed}
+.fictif{font-size:13px;line-height:20px;color:var(--encre2);border-bottom:1px dotted var(--encre2);white-space:nowrap}
+.voile{position:absolute;inset:0;background:var(--voile);z-index:5;animation:fondu var(--d-local) var(--sortie)}
+@keyframes fondu{from{opacity:0}}@keyframes arrive{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+.feuille{position:absolute;inset:var(--barre) 0 0;background:var(--surface);border-top:1px solid var(--filet);z-index:6;display:flex;flex-direction:column;animation:arrive var(--d-glisse) var(--sortie)}
+.feuille .tete{min-height:56px;display:flex;align-items:center;padding:8px 16px 8px var(--marge);gap:12px;border-bottom:1px solid var(--filet);flex:none}.feuille .tete .t{font-weight:500}.feuille .tete kbd{margin-left:auto}
+.feuille .liste{flex:1;min-height:0;overflow:auto;padding:0 var(--marge) 24px;scrollbar-width:thin}
+.reg{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:center;min-height:64px;border-bottom:1px solid var(--filet);padding:12px 0}.reg .lib{display:flex;flex-direction:column;gap:4px;min-width:0}.reg .lib small{color:var(--encre2);font-size:13px;line-height:20px}.reg select{min-height:36px;background:var(--surface2);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);padding:4px 8px;max-width:220px;min-width:0;color:var(--encre);font-size:13px}
+.reg .seg,.file-opts .seg{display:inline-flex;border:1px solid var(--filet);border-radius:var(--r-ctl);padding:4px;gap:4px;flex-wrap:wrap}.reg .seg button,.file-opts .seg button{min-height:28px;min-width:28px;padding:4px 8px;border-radius:var(--r-ctl);font-size:13px;line-height:20px;color:var(--encre2)}.reg .seg button[aria-pressed="true"],.file-opts .seg button[aria-pressed="true"]{background:var(--surface2);color:var(--encre);font-weight:500}.reg .seg button[aria-disabled="true"]{color:var(--encre3)}
+.feuille .bas{padding-top:16px;display:flex;flex-direction:column;gap:16px}.feuille .bas .lien{color:var(--encre);text-align:left;min-height:40px;display:inline-flex;align-items:center;gap:8px}.feuille .bas .lien svg{width:16px;height:16px;flex:none}.feuille .bas .danger-zone{padding-top:16px;border-top:1px solid var(--filet);display:flex;align-items:center;gap:16px;color:var(--encre2);font-size:13px;line-height:20px}.danger-zone button{min-height:36px;padding:8px;border:1px solid var(--alerte);color:var(--alerte);border-radius:var(--r-ctl);font-size:13px;line-height:20px;margin-left:auto;flex:none}
+kbd{font-family:var(--mono);font-size:13px;line-height:20px;padding:0 4px;border:1px solid var(--filet-fort);border-radius:var(--r-ctl);color:var(--encre2)}
+.palette{position:absolute;left:var(--marge);right:var(--marge);top:calc(var(--barre) + 16px);max-height:calc(100% - var(--barre) - 32px);background:var(--surface);border:1px solid var(--filet);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:6;animation:arrive var(--d-glisse) var(--sortie);overflow:auto}
+.palette input{width:100%;height:48px;padding:0 16px;background:transparent;border:0;border-bottom:1px solid var(--filet);color:var(--encre);outline-offset:-4px}.palette input::placeholder{color:var(--encre2)}.palette .cmds{padding:8px}.cmd{display:grid;grid-template-columns:20px minmax(0,1fr);gap:4px 12px;align-items:center;min-height:48px;padding:8px;border-radius:var(--r-ctl);width:100%;text-align:left;color:var(--encre)}.cmd[aria-selected="true"]{background:var(--surface2)}.cmd svg{width:16px;height:16px;color:var(--encre2);grid-row:span 2}.cmd .et{grid-column:2;color:var(--encre2);font-size:13px;line-height:20px;overflow-wrap:anywhere}.cmd[aria-disabled="true"],.cmd[aria-disabled="true"] .et{color:var(--encre3)}
+.palette .pied{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 16px 16px;color:var(--encre2);font-size:13px;line-height:20px;align-items:center}
+.boite{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(464px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto;background:var(--surface);border:1px solid var(--filet);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:7;padding:24px;display:flex;flex-direction:column;gap:16px;animation:fondu var(--d-local) var(--sortie)}
+.boite .t{font-size:var(--t-texte);line-height:var(--l-texte);font-weight:500}.boite dl{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px 16px;font-size:var(--t-texte);line-height:var(--l-texte)}.boite dt,.boite dd{color:var(--encre2)}.boite dd b{color:var(--encre);font-weight:500}.boite .avert{color:var(--attention);font-size:13px;line-height:20px}.boite .bts{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:flex-end;align-items:center}.boite .bts .annuler{min-height:40px;padding:8px;color:var(--encre2)}.boite .bts .danger{min-height:40px;padding:8px 16px;border:1px solid var(--alerte);color:var(--alerte);border-radius:var(--r-ctl);font-weight:500}.boite .bts .principal{min-width:0;min-height:40px;padding:8px 16px}.boite .meta-bas{color:var(--encre2);font-size:13px;line-height:20px}.boite .reg{grid-template-columns:minmax(0,1fr);gap:8px}
+.popover{position:absolute;top:calc(var(--barre) + 8px);right:16px;width:min(360px,calc(100% - 32px));background:var(--surface);border:1px solid var(--filet);border-radius:var(--r-boite);box-shadow:var(--ombre);z-index:6;padding:8px;animation:arrive var(--d-local) var(--sortie)}
+.ong{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;min-height:64px;padding:8px;border-radius:var(--r-ctl)}.ong .lib{display:flex;flex-direction:column;gap:4px}.ong .lib small{color:var(--encre2);font-size:13px;line-height:20px}.ong .lib b{font-weight:500}.ong button{min-height:32px;padding:4px 12px;border:1px solid var(--filet-fort);border-radius:var(--r-ctl);font-size:13px;line-height:20px;color:var(--encre)}.ong button:hover{background:var(--surface2)}.ong button:disabled{color:var(--encre3)}.ong .conn{color:var(--encre);font-size:13px;line-height:20px;white-space:nowrap}.ong .conn i{display:none}.popover .pied{padding:8px;color:var(--encre2);font-size:13px;line-height:20px;display:flex;gap:8px;align-items:center}.popover .pied svg{width:14px;height:14px;flex:none}
+.marques{display:flex;align-items:flex-end;justify-content:flex-end;gap:4px;height:36px;overflow:hidden}.marques i{display:block;width:3px;height:10px;background:var(--encre2);flex:none}.marques i.c{height:24px;background:var(--vivant)}.marques i.en{height:16px;background:var(--progression)}
+.file-opts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;color:var(--encre2)}.reg.sourd .lib,.reg.sourd .lib small{color:var(--encre3)}
+.file-etapes{display:flex;gap:4px;list-style:none;margin:4px 0 0}.file-etapes li{flex:1;border-top:2px solid var(--filet-fort);padding:8px 0 0;font-family:var(--mono);font-size:13px;line-height:20px;color:var(--encre2)}.file-etapes li[aria-current="step"]{border-color:var(--progression);color:var(--encre);font-weight:500}.file-etapes .fait{border-color:var(--encre);color:var(--encre)}
+:root[data-taille="compact"] .barre{padding:0 12px;gap:8px}:root[data-taille="compact"] .logo span,:root[data-taille="compact"] .ico[data-act="palette"]{display:none}
+:root[data-taille="compact"] .bascule{padding:0;border:0;gap:0}:root[data-taille="compact"] .bascule button{padding:0 8px;min-height:32px;height:auto}
+:root[data-taille="compact"] .puce{max-width:130px;gap:4px;padding:0 8px}:root[data-taille="compact"] .puce .long{display:none}:root[data-taille="compact"] .puce .court{display:inline}
+:root[data-taille="compact"] .instrument{gap:12px}:root[data-taille="compact"] .groupe-etat{gap:4px}:root[data-taille="compact"] .objet{gap:8px}:root[data-taille="compact"] .rail{height:44px;margin-top:0}
+:root[data-taille="compact"] .compte .droite{flex-basis:100%;margin-left:0}:root[data-taille="compact"] .actions{gap:4px 12px}:root[data-taille="compact"] .principal{min-width:0;min-height:44px;padding:8px 16px;line-height:20px;flex:1 1 180px}
+:root[data-taille="compact"] .secondaire{min-height:36px;line-height:20px}:root[data-taille="compact"] .actions .raison{flex-basis:100%}
+:root[data-taille="compact"] .zone:has(.tiroir[data-ouvert="1"]){overflow:visible}:root[data-taille="compact"] .tiroir[data-ouvert="1"]{top:calc(-1 * var(--instrument-h,0px));box-shadow:var(--ombre)}
+:root[data-taille="compact"] .tiroir[data-ouvert="1"] .poignee{flex-wrap:wrap;gap:4px 8px}:root[data-taille="compact"] .tiroir[data-ouvert="1"] .poignee .etat-mini{display:block;flex-basis:100%;margin-left:20px;color:var(--encre2)}
+:root[data-taille="compact"] .poignee .long,:root[data-taille="compact"] .poignee .reste{display:none}:root[data-taille="compact"] .poignee .court{display:inline}
+:root[data-taille="compact"] .ligne{grid-template-columns:48px minmax(0,1fr) auto;gap:4px 8px;padding:12px 0}:root[data-taille="compact"] .ligne .outils{grid-column:2/-1}:root[data-taille="compact"] .ligne .motif:has(+.outils){grid-column:2/-1}
+:root[data-taille="compact"] .section .d{flex-basis:100%;margin-left:0}:root[data-taille="compact"] .v2-note{flex-direction:column;gap:4px}
+:root[data-taille="compact"] .cache{gap:8px;padding:8px 12px 8px 16px}:root[data-taille="compact"] .cache .r,:root[data-taille="compact"] .cache .lib{display:none}:root[data-taille="compact"] .cache button{padding:4px 8px}
+:root[data-taille="compact"] .reg{grid-template-columns:minmax(0,1fr);gap:8px}:root[data-taille="compact"] .reg select{max-width:100%;width:100%}:root[data-taille="compact"] .feuille .tete{min-height:48px;gap:8px}:root[data-taille="compact"] .feuille .tete .meta{display:none}
+:root[data-taille="compact"] .feuille .bas .danger-zone{flex-direction:column;align-items:flex-start;gap:8px}:root[data-taille="compact"] .danger-zone button{margin-left:0}
+:root[data-taille="compact"] .boite{padding:16px;gap:12px}:root[data-taille="compact"] .boite dl{grid-template-columns:minmax(0,1fr);gap:4px}:root[data-taille="compact"] .boite dt{margin-top:8px}:root[data-taille="compact"] dl.fin{grid-template-columns:64px minmax(0,1fr);gap:8px}
+/* Le niveau poussé change la matière, pas les commandes ni leur emplacement. */
+:root[data-niveau="b3"]{--r-ctl:12px;--r-boite:20px;--cadre-espacement:32px;--marge:32px;--marge-v:24px;--t-chiffre:64px;--l-chiffre:68px;--t-etat:32px;--l-etat:40px}
+:root[data-niveau="b3"][data-theme="sombre"]{--fond:#151310;--surface:#201D19;--surface2:#2F2A23;--encre:#F4EEE4;--encre2:#C1B5A4;--encre3:#B3A794;--filet:#453D32;--filet-fort:#796D5A;--progression:#E7BE86;--action:#EEE4D3;--action-tx:#252018;--action-survol:#FFF8EA}
+:root[data-niveau="b3"][data-theme="clair"]{--fond:#F1ECE3;--surface:#FCF9F3;--surface2:#E9E0D3;--encre:#2B251E;--encre2:#625547;--encre3:#6D5C46;--filet:#DED3C4;--filet-fort:#A99A86;--progression:#7B4A17;--action:#352B20;--action-tx:#FFF9F0;--action-survol:#21190F}
+:root[data-niveau="b3"] .instrument{margin:16px;padding:24px;gap:24px;background:var(--surface);border:1px solid var(--filet);border-radius:var(--r-boite);box-shadow:inset 0 1px 0 var(--reflet),0 8px 24px -16px rgba(0,0,0,.2)}
+:root[data-niveau="b3"] .etat .mot,:root[data-niveau="b3"] .compte .chiffre{font-family:"Bricolage Grotesque",var(--sans);font-weight:500;letter-spacing:-.035em}
+:root[data-niveau="b3"] .compte .droite{flex-basis:100%;margin-left:0}.fen[data-etat="cours"] .rail-cur{will-change:left}
+:root[data-niveau="b3"] .rail-fait{background:var(--progression);height:2px;top:19px}:root[data-niveau="b3"] .rail-cur{height:18px;top:10px}:root[data-niveau="b3"] .rail-cur:after{width:6px;height:6px;border-radius:50%;left:-2px;top:-4px;background:var(--progression)}
+:root[data-niveau="b3"] .rail[data-etat="pause"] .rail-cur:after,:root[data-niveau="b3"] .rail[data-etat="relecture"] .rail-cur:after{background:var(--encre2)}
+:root[data-niveau="b3"] .bascule{background:var(--surface);border-color:var(--filet)}:root[data-niveau="b3"] .principal:not(:disabled){box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+:root[data-niveau="b3"] .tiroir{border-radius:var(--r-boite) var(--r-boite) 0 0}:root[data-niveau="b3"] .incident{background:var(--fond)}
+:root[data-niveau="b3"][data-taille="compact"]{--marge:16px;--marge-v:16px;--cadre-espacement:16px;--t-chiffre:48px;--l-chiffre:52px;--t-etat:24px;--l-etat:28px;--barre:48px;--poignee:44px;--cache:48px}
+:root[data-niveau="b3"][data-taille="compact"] .instrument{margin:8px;padding:16px;gap:12px}:root[data-niveau="b3"][data-taille="compact"] .bascule{border:0;background:none}
+/* r2 : les commandes conservent leur place, le contenu seul peut défiler. */
+.instrument{overflow:hidden}.contenu-instrument{display:flex;flex-direction:column;gap:24px;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}.instrument>.actions,.instrument>.verrou-ligne{flex:none}
+:root[data-taille="compact"] .contenu-instrument{gap:12px}
+:root[data-taille="compact"] .tiroir[data-ouvert="1"]{top:calc(-1 * (var(--instrument-h,0px) + var(--cadre-espacement)))}
+.temps-cut{font-size:13px;color:var(--encre2);white-space:nowrap}.temps-cut:before{content:" · ";padding:0 4px}
+.file-suivi{font-size:13px;line-height:20px;color:var(--encre2)}.file-detail{margin-top:8px}.file-detail summary{cursor:pointer;min-height:32px;padding:4px 0;font-weight:500;color:var(--encre)}.file-detail p{margin-top:8px}.file-etapes li:not(.fait):not([aria-current]){border-top-style:dashed}.file-etapes li[aria-current="step"]{border-top-width:3px;padding-top:7px}
+/* Toute animation a un but : geste confirmé, zone ouverte ou position du cut.
+ * Le repli système et le repli du banc sont identiques, sans déplacement résiduel. */
+:root[data-reduit="1"] .fen *,:root[data-reduit="1"] .fen *:before,:root[data-reduit="1"] .fen *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+@media(prefers-reduced-motion:reduce){.fen *,.fen *:before,.fen *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(max-width:640px){.plateau{padding:16px;gap:24px}.banc{padding:16px}.notes{max-width:100%}}
+
+</style>
+</head>
+<body>
+
+<header class="banc" aria-label="Banc d'essai de la maquette">
+  <strong>Signal · raffinement mesuré · données entièrement fictives</strong>
+  <label>Scène <select id="sc-scene"></select></label>
+  <span class="seg" role="group" aria-label="Taille"><button data-taille="normal" aria-pressed="true">600 × 760</button><button data-taille="compact" aria-pressed="false">compact 360 × 480</button></span>
+  <span class="seg" role="group" aria-label="Thème"><button data-theme="sombre" aria-pressed="true">sombre</button><button data-theme="clair" aria-pressed="false">clair</button></span>
+  <span class="seg" role="group" aria-label="Revue"><button data-revue="v1" aria-pressed="true">Revue V1 · lire</button><button data-revue="v2" aria-pressed="false">Revue V2 · travailler</button></span>
+  <span class="seg" role="group" aria-label="Cadence de la simulation"><button data-cadence="reelle" aria-pressed="true">simulation 8 s par cut</button><button data-cadence="rapide" aria-pressed="false">2 s par cut</button></span>
+  <label><input type="checkbox" id="sc-reduit"> mouvement réduit</label>
+</header>
+
+<div class="plateau">
+  <div class="fen" id="fen" role="application" aria-label="Ariane"></div>
+  <aside class="notes" id="notes"></aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const D = document, R = D.documentElement, FEN = D.getElementById('fen');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fr = n => String(n).replace('.', ',');
+const quantile = (t, f) => { if (!t.length) return null; const s = [...t].sort((a, b) => a - b), p = f * (s.length - 1), a = Math.floor(p), b = Math.ceil(p); return s[a] + (s[b] - s[a]) * (p - a); };
+const duree = s => { s = Math.max(0, Math.round(s)); if (s < 60) return `${s} s`; const m = Math.floor(s / 60), r = s % 60; return r && m < 10 ? `${m} min ${String(r).padStart(2, '0')}` : `${m} min`; };
+
+/* ─────────────────────────── pictogrammes (SVG inline, trait 1,75) */
+const T = 'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"';
+const SVG = (inner, vb = '0 0 24 24') => `<svg viewBox="${vb}" aria-hidden="true" ${T}>${inner}</svg>`;
+const IC = {
+  logo: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20L10.4 4M19 20L13.6 4"/><path d="M7.4 15h9.2" stroke-opacity=".7"/><path d="M9 10.4h6" stroke-opacity=".45"/></svg>`,
+  fleche: SVG('<path d="M9 6l6 6-6 6"/>'), bas: SVG('<path d="M6 9l6 6 6-6"/>'),
+  cadenas: SVG('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  palette: SVG('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12 14h5"/>'),
+  reglages: SVG('<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>'),
+  pause: SVG('<path d="M8 5v14M16 5v14" stroke-width="2.5"/>'), play: SVG('<path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>'),
+  stop: SVG('<rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor" stroke="none"/>'),
+  coche: SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>'), ouvrir: SVG('<path d="M14 4h6v6M20 4l-9 9M18 13v6H5V6h6"/>'),
+  export: SVG('<path d="M12 4v11M7 10l5 5 5-5M5 19h14"/>'), liste: SVG('<path d="M5 7h14M5 12h14M5 17h9"/>'),
+  retour: SVG('<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v5h5"/>'), main: SVG('<path d="M8 13V6a1.5 1.5 0 0 1 3 0v5V4.5a1.5 1.5 0 0 1 3 0V11V6a1.5 1.5 0 0 1 3 0v8a6 6 0 0 1-6 6h-1a5 5 0 0 1-4.3-2.4L4 13.5a1.4 1.4 0 0 1 2.3-1.6L8 14"/>'),
+  skip: SVG('<path d="M5 6l8 6-8 6zM17 6v12"/>'), toi: SVG('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
+  echo: SVG('<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+};
+/* Glyphes d'état : la forme porte l'état, la couleur confirme. L'anneau « en cours » se remplit avec le temps passé sur le cut (0 → médiane). */
+const C = 2 * Math.PI * 9;
+const GLYPHE = {
+  pret: SVG('<circle cx="12" cy="12" r="9"/>'),
+  cours: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="1.75" stroke-linecap="butt"><circle class="fond-anneau" cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3"/><circle class="arc" cx="12" cy="12" r="9" stroke="currentColor" transform="rotate(-90 12 12)" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}"/></svg>`,
+  dem: SVG('<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><path d="M9.5 8.5v7M14.5 8.5v7" stroke-width="2.2"/>'),
+  pause: SVG('<path d="M8 5v14M16 5v14" stroke-width="2.5"/>'),
+  toi: SVG('<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>'),
+  interrompu: SVG('<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M8 12h8"/>'),
+  fini: SVG('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  arrete: SVG('<rect x="5" y="5" width="14" height="14" rx="1.5"/>'),
+  relecture: SVG('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>'),
+  relpause: SVG('<circle cx="12" cy="12" r="9"/><path d="M9.8 8.5v7M14.2 8.5v7" stroke-width="2"/>'),
+  verrou: SVG('<rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  hors: SVG('<circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/>'),
+  echoVide: SVG('<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>'),
+  echo: SVG('<path d="M12 12h.01" stroke-width="3"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path class="fond-anneau" d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>'),
+};
+
+/* ─────────────────────────── simulation du lot (chiffres inventés) */
+let graine = 7; const al = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
+function lotDeBase() {
+  graine = 7; const cuts = []; let n = 4811;
+  for (let i = 0; i < 31; i++) { n += 1 + (al() < .35 ? 1 : 0) + (al() < .12 ? 1 : 0); const dif = [7, 12, 19, 26].includes(i); cuts.push({ cut: n, statut: dif ? 'differe' : (al() < .15 ? 'voie' : 'pose'), dur: dif ? 14 + al() * 10 : 5.5 + al() * 6 + (al() < .2 ? 4 : 0), rail: dif ? (al() < .5 ? 'rail droit' : 'rail gauche') : '' }); }
+  return { partie: 13, cibles: 120, cuts, encours: { cut: n + 1 + (al() < .4 ? 1 : 0), depuis: 0, attendu: 7.8 }, etat: 'cours', pauseDepuis: 0 };
+}
+const sim = { lot: lotDeBase(), echo: { visites: [], encours: null }, derniereH: performance.now(), tick: null };
+function echoDeBase() { graine = 21; const v = []; let n = 5102; for (let i = 0; i < 148; i++) { n += 1 + (al() < .5 ? 1 : 0); v.push({ cut: n, corrige: al() < .41, dur: 6 + al() * 12 }); } sim.echo = { visites: v, encours: { cut: n + 1, depuis: 4, attendu: 11 } }; }
+echoDeBase();
+const medianeLot = () => { const d = sim.lot.cuts.slice(-20).map(c => c.dur); return d.length >= 3 ? quantile(d, .5) : null; };
+const medianeEcho = () => { const d = sim.echo.visites.slice(-20).map(c => c.dur); return d.length >= 3 ? quantile(d, .5) : null; };
+function avancer(dt) {
+  const L = sim.lot, k = R.dataset.cadence === 'rapide' ? 4 : 1;
+  if (S.scene === 'cours' && (L.etat === 'cours' || L.etat === 'dem')) {
+    L.encours.depuis += dt * k;
+    if (L.encours.depuis >= L.encours.attendu) {
+      const dif = al() < .08, c = L.encours;
+      L.cuts.push({ cut: c.cut, statut: dif ? 'differe' : (al() < .15 ? 'voie' : 'pose'), dur: c.attendu, rail: dif ? 'rail droit' : '' });
+      const prochain = c.cut + 1 + (al() < .4 ? 1 : 0);
+      if (L.etat === 'dem') { L.etat = 'pause'; L.pauseDepuis = 0; L.encours = { cut: prochain, depuis: 0, attendu: 0 }; S.scene = 'pause'; rendre(); return; }
+      if (L.cuts.length >= L.cibles) { if (S.file.en) finirPartie(); else S.scene = 'fin'; rendre(); return; }
+      L.encours = { cut: prochain, depuis: 0, attendu: 5.5 + al() * 6 + (al() < .2 ? 5 : 0) + (al() < .06 ? 12 : 0) };
+      rendre(); return;
+    }
+    majVivant();
+  } else if (S.scene === 'relecture-active') {
+    S.relectureTemps += dt * k;
+    if (S.relectureTemps >= 6.4) { S.relectureTemps = 0; S.relectureIndex++; if (S.relectureIndex >= 96) S.scene = 'fin'; rendre(); }
+  } else if (S.scene === 'pause') { L.pauseDepuis += dt; majVivant(); }
+  else if (S.scene === 'echo' && !S.echoPause && sim.echo.encours) {
+    const e = sim.echo.encours; e.depuis += dt * k;
+    if (e.depuis >= e.attendu) { sim.echo.visites.push({ cut: e.cut, corrige: al() < .4, dur: e.attendu }); sim.echo.encours = { cut: e.cut + 1 + (al() < .5 ? 1 : 0), depuis: 0, attendu: 6 + al() * 12 }; rendre(); return; }
+    majVivant();
+  }
+}
+function boucle() { const t = performance.now(), dt = (t - sim.derniereH) / 1000; sim.derniereH = t; avancer(Math.min(dt, 1)); }
+
+/* ─────────────────────────── état de la maquette */
+const FILE0 = () => ({ allumee: false, n: 2, relecture: true, correction: true, prete: false, en: false, partie: 1, bilans: [], cause: 'page', arret: null });
+const CAUSES = {
+  page: { nom: 'La page ne change pas de partie', court: 'la partie suivante n’a pas pu s’ouvrir', texte: 'Ariane a fini la partie et demandé la suivante, mais la page d’ESV est restée sur la même partie. Elle ne peut pas continuer sans changer de partie.', milieu: false, puce: 'ok' },
+  onglet: { nom: 'Onglet fermé', court: 'l’onglet ESV a été fermé', texte: 'L’onglet connecté n’existe plus. Rouvre la partie dans ESV, reconnecte-la, puis prépare la reprise.', milieu: true, puce: 'aucun' },
+  muet: { nom: 'ESV muet', court: 'ESV ne répond plus', texte: 'ESV ne répond plus. Attends qu’il réponde, ou recharge la page (F5), puis prépare la reprise.', milieu: true, puce: 'ko' },
+  refus: { nom: 'Lot arrêté sur un refus', court: 'le lot s’est arrêté sur un refus', texte: 'ESV a refusé une écriture : le lot s’arrête sur ce refus. Ariane n’insiste pas et ne valide rien de plus.', milieu: true, puce: 'ok' },
+};
+const bilanInvente = (p, F) => ({ p, poses: 109 - p % 2, dif: 11 + p % 2, dur: 44 + 3 * p, relu: `relue et corrigée · ${4 + 2 * p} corrections` });
+const S = { archiveInterruption: false, relectureIndex: 58, relectureTemps: 0, reglages: {}, arretDemande: null, echoPause: false, relectureActive: false, file: FILE0(), placement: 'a', scene: 'cours', tiroir: false, couche: null, sel: null, examines: new Set(), q: '', pi: 0, cacheVide: false, note: '', passer: false };
+const SCENES = [
+  ['file-eteinte', 'File · éteinte (défaut)'], ['file-reglage', 'File · réglage'], ['file-cours', 'File · en cours (partie 2 sur 3)'], ['file-alerte', 'File · alerte d’arrêt et bilan'], ['file-fin', 'File · fin de file'],
+  ['arrete', 'Lot arrêté'], ['relecture-active', 'Relecture en cours'], ['echo-pause', 'Écho · en pause'], ['pret', 'Prêt'], ['cours', 'Lot en cours · allure vivante'], ['pause', 'En pause'], ['incident', 'Incident · rail non résolu (À toi)'], ['interrompu', 'Incident · ESV muet pendant une pose (Interrompu)'], ['esv-muet', 'ESV ne répond plus (entre deux cuts)'], ['fin', 'Fin de lot'],
+  ['relecture', 'Relecture en pause'], ['relecture-f5', 'Relecture en pause après F5'], ['verrou', 'Deuxième passe (verrouillé)'], ['echo-vide', 'Écho · aucune séance'], ['echo', 'Écho · en observation'], ['sans-esv', 'Sans onglet ESV'],
+  ['palette', 'Palette Ctrl K'], ['reglages', 'Feuille de réglages'], ['cache', 'Confirmation de vidage du cache'], ['esv', 'Sélecteur de connexion ESV'],
+];
+const NOTES = {
+  'file-eteinte': 'L’écran Prêt est celui de Signal ; une seule ligne s’y ajoute, « File de parties · éteinte », en bouton secondaire. Éteinte par défaut : « Démarrer jusqu’à la fin de la partie » reste l’action principale et ne change pas.',
+  'file-reglage': 'Réglage, dans une boîte ouverte depuis le bouton : file allumée ou éteinte, nombre de parties. La relecture et la correction ne sont plus un réglage (décision de l’opérateur) : elles suivent chaque partie. « Préparer la file » ne lance rien ; « Lancer la file » apparaît ensuite (lot neuf, partie 1).',
+  'file-cours': 'Partie 2 sur 3. Le lot et son rail sont ceux de Signal. La relecture et la correction suivent chaque partie, toujours ; le tiroir garde le bilan des parties faites. Aucun export automatique ; seul « Arrêter la file » l’arrête. Pause garde son sens habituel.',
+  'file-alerte': 'Continuer est impossible : alerte et bilan, rien n’est exporté ni validé de plus. La cause se choisit à droite. Le principal est « Préparer la reprise », qui ne lance rien ; l’export reste manuel.',
+  'file-fin': 'La file s’éteint d’elle-même à la dernière partie. Trois lignes : parties faites, ce qui reste (toutes parties), export prêt mais jamais automatique. Le tiroir montre le bilan par partie ; la liste des différés ne montre que la dernière partie dans la maquette.',
+  pret: 'Au repos. Un seul bouton, qui dit l’effet (« Démarrer jusqu’à la fin de la partie »). Les bornes du lot sont dans la phrase, pas dans un formulaire : on les change dans la feuille de réglages, au repos.',
+  cours: 'Le rail avance au rythme réel de la simulation : le curseur glisse à chaque cut terminé (240 ms), l’anneau « en cours » se remplit du temps passé sur le cut en cours jusqu’à la médiane (il reste plein si le cut traîne). Ligne d’allure : cuts par minute, médiane des 20 derniers cuts, temps restant estimé (seulement si le total est connu). Pause → « Pause demandée… » → En pause après le cut en cours.',
+  pause: 'Même instrument. Le curseur devient ambre et ne bouge plus. L’allure dit depuis quand, et garde la médiane d’avant la pause. « Reprendre » nomme le cut.',
+  incident: 'Le bloc incident remplace le rail, pas l’état. Une phrase, trois sorties ; « Passer » n’est jamais principal et garde sa confirmation (2 clics).',
+  interrompu: 'ESV s’est tu pendant une pose : l’opération interrompue reste écrite jusqu’à sa clôture. Aucun « Reprendre » : la seule sortie est d’archiver le résultat.',
+  'esv-muet': 'ESV s’est tu entre deux cuts : rien n’était en l’air, « Reprendre » est permis dès qu’ESV répond ; F5 seulement si la page est figée. La puce passe en brique.',
+  fin: 'Trois lignes distinctes, jamais une coche seule. « Voir ce qui reste » ouvre le tiroir ; l’export vient en second ; le cache devient disponible.',
+  relecture: 'La relecture est un état d’Orbite : même rail, en mode relus / sélection, repères verts aux cuts corrigés. Pause, Reprendre, Arrêter à la place de l’action principale.',
+  'relecture-f5': 'Après un F5 d’ESV pendant la relecture : « Reprendre » reste là, grisé, avec sa raison écrite dessous.',
+  verrou: 'Deuxième passe : cadenas, aucune action, cache grisé. Le nom et les états viendront de la session principale.',
+  'echo-vide': 'Écho sans séance : pas de rail. Le cache dit pourquoi il est indisponible.',
+  echo: 'Écho en observation : un compteur de visites et une ligne de marques (haute : corrigée ; basse : validée telle quelle ; claire : visite en cours). L’allure est celle de l’opérateur : médiane par cut.',
+  'sans-esv': 'Aucun onglet ESV : la puce est vide, l’action principale devient « Choisir un onglet ».',
+  palette: 'Ctrl K. Quatre commandes du moment, l’état en petit à droite ; le reste en tapant. Une commande grisée dit sa raison et ne s’exécute pas. Ctrl K ou Échap ferme.',
+  reglages: 'Sept lignes, jamais ouvertes en séance. Le compteur d’exemples (ancien « GCV2 ») vit ici avec sa définition et sa date. En bas : l’ancien panneau et la zone à part.',
+  cache: 'La confirmation d’origine : ce qui sera supprimé, ce qui sera gardé, l’avertissement. Le bouton de suppression n’est jamais le bouton principal.',
+  esv: 'Un clic sur la puce : la liste des onglets (rang, partie, fenêtre, premier plan). Choisir = connecter. Pendant un lot la liste est verrouillée avec la raison.',
+};
+
+/* ─────────────────────────── modèle de chaque scène */
+function modele() {
+  const L = sim.lot, sc = S.scene;
+  const traites = L.cuts.length, poses = L.cuts.filter(c => c.statut === 'pose' || c.statut === 'voie').length, differes = L.cuts.filter(c => c.statut === 'differe').length, sautes = L.cuts.filter(c => c.statut === 'saute').length;
+  const restants = L.cibles - traites, med = medianeLot();
+  const m = { activite: 'orbite', etat: 'pret', glyphe: 'pret', ton: 'encre2', mot: 'Prêt', phrase: '', objet: 'rail', railEtat: 'cours', allure: '', principal: null, secondaire: null, raison: '', incident: null, fin: null, verrou: false,
+    compte: { traites, poses, differes, sautes, cibles: L.cibles, restants }, puce: { etat: 'ok', texte: 'Onglet 2 · partie 13', verrou: false }, bascule: { verrou: false, raison: '' },
+    cache: { dispo: false, q: '1 lot, 190 Mo', raison: 'après le lot' }, poignee: null, tiroir: 'reste' };
+  const F = S.file;
+  const base = sc === 'echo-pause' ? 'echo' : sc === 'relecture-active' ? 'relecture' : sc === 'arrete' ? 'fin' : sc === 'palette' ? 'cours' : sc === 'reglages' || sc === 'esv' ? 'pret' : sc === 'cache' ? 'fin' : sc;
+  const differesListe = L.cuts.filter(c => c.statut === 'differe').map((c, i) => ({ cut: c.cut, motif: c.rail ? 'Rail non résolu' : 'Différé', prec: c.rail || '', heure: `${14 + Math.floor(i / 3)} h ${String((7 * i + 12) % 60).padStart(2, '0')}` })).reverse();
+  m.differes = differesListe;
+  m.verts = base === 'fin' || base === 'relecture' || base === 'relecture-f5' || base === 'cache' ? [[4861, 'Écartement 21 mm sous la médiane', 'PN'], [4874, 'Saut de hauteur, rail droit', '12 mm'], [4875, 'Saut de hauteur, rail droit', '11 mm'], [4890, 'Écartement 18 mm sous la médiane', ''], [4902, 'Écart aux poses voisines', '9 mm'], [4917, 'Écartement 19 mm sous la médiane', ''], [4931, 'Saut de hauteur, rail gauche', '10 mm'], [4944, 'Écart aux poses voisines', '8 mm'], [4958, 'Écartement 22 mm sous la médiane', 'PN']].map(v => ({ cut: v[0], motif: v[1], prec: v[2] })) : null;
+  const allureTexte = (prefixe) => {
+    if (!med) return '';
+    const parMin = 60 / med, reste = restants * med;
+    return `${prefixe || ''}<b>${fr((Math.round(parMin * 10) / 10).toFixed(1))}</b> cuts par minute <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut${L.cibles ? ` <span class="sep">·</span> environ <b>${duree(reste)}</b> restantes` : ''}`;
+  };
+  switch (base) {
+    case 'pret': case 'file-eteinte': case 'file-reglage':
+      m.phrase = `Partie 13 · du cut <span class="mono">4811</span> jusqu’à la fin de la partie`; m.railEtat = 'vide'; m.compte = { traites: 0, poses: 0, differes: 0, sautes: 0, cibles: 120, restants: 120 };
+      m.principal = { texte: 'Démarrer jusqu’à la fin de la partie', ic: 'play', act: 'demarrer' }; m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.poignee = { n: 0, texte: 'Aucun différé pour l’instant' }; m.differes = []; break;
+    case 'cours': {
+      const dem = L.etat === 'dem';
+      m.etat = dem ? 'dem' : 'cours'; m.glyphe = dem ? 'dem' : 'cours'; m.ton = dem ? 'attention' : 'vivant'; m.mot = dem ? 'Pause demandée' : 'En cours';
+      m.phrase = dem ? `Finit le cut <span class="mono">${L.encours.cut}</span>, puis s’arrête` : `Pose du cut <span class="mono">${L.encours.cut}</span>`;
+      m.allure = allureTexte(); m.principal = dem ? { texte: 'Pause demandée…', occupe: true } : { texte: 'Pause', ic: 'pause', act: 'pause' }; m.secondaire = { texte: 'Arrêter', act: 'arreter', danger: true };
+      m.puce.verrou = true; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: differes === 1 ? 'différé · à reprendre après le lot' : 'différés · à reprendre après le lot' }; break; }
+    case 'pause':
+      m.etat = 'pause'; m.glyphe = 'pause'; m.ton = 'attention'; m.mot = 'En pause'; m.railEtat = 'pause';
+      m.phrase = `Après le cut <span class="mono">${L.cuts.at(-1)?.cut ?? '—'}</span> · il reste ${restants} cuts`;
+      m.allure = med ? `en pause depuis <b>${duree(L.pauseDepuis)}</b> <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut avant la pause` : '';
+      m.principal = { texte: `Reprendre au cut ${L.encours.cut}`, ic: 'play', act: 'reprendre' }; m.secondaire = { texte: 'Arrêter', act: 'arreter', danger: true };
+      m.puce.verrou = true; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'incident':
+      m.etat = 'toi'; m.glyphe = 'toi'; m.ton = 'alerte'; m.mot = 'À toi'; m.phrase = `Cut <span class="mono">${L.encours.cut}</span> · rail droit non résolu`;
+      m.incident = { texte: `Le cut <b class="mono">${L.encours.cut}</b> a un rail droit qu’Ariane ne sait pas poser. Réessayer, le reprendre à la main, ou le passer.`, op: '' };
+      m.principal = { texte: 'Réessayer la pose', ic: 'retour', act: 'reessayer' }; m.secondaire = { texte: 'Reprendre à la main', act: 'main' }; m.tertiaire = { texte: 'Passer ce cut', act: 'passer', danger: true };
+      m.puce.verrou = true; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'interrompu':
+      m.etat = 'interrompu'; m.glyphe = 'interrompu'; m.ton = 'alerte'; m.mot = 'Interrompu'; m.phrase = `ESV n’a pas répondu pendant la pose du cut <span class="mono">${L.encours.cut}</span>`;
+      m.incident = { texte: `Ariane n’enverra plus aucune commande à ce cut. Contrôle-le dans ESV, puis archive le résultat interrompu.`, op: `Opération interrompue : <b>cut ${L.encours.cut} · pose non confirmée</b>` };
+      m.principal = { texte: `Archiver le résultat interrompu · cut ${L.encours.cut}`, act: 'archiver' }; m.puce = { etat: 'ko', texte: 'ESV ne répond plus', verrou: true };
+      m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'esv-muet':
+      m.etat = 'muet'; m.glyphe = 'toi'; m.ton = 'alerte'; m.mot = 'ESV ne répond plus'; m.phrase = `Entre deux cuts · après le cut <span class="mono">${L.cuts.at(-1)?.cut}</span>, rien n’était en cours`;
+      m.incident = { texte: 'Attends qu’ESV réponde. Si la page reste figée, recharge-la (F5), puis reprends.', op: '' };
+      m.principal = { texte: `Reprendre au cut ${L.encours.cut}`, ic: 'play', act: 'reprendre', inactif: true }; m.raison = 'Reprise possible quand ESV répond.'; m.secondaire = { texte: 'Arrêter', act: 'arreter', danger: true };
+      m.puce = { etat: 'ko', texte: 'ESV ne répond plus', verrou: true }; m.bascule = { verrou: true, raison: 'Écho est disponible après le lot' }; m.poignee = { n: differes, texte: 'différés · à reprendre après le lot' }; break;
+    case 'fin': case 'file-fin': {
+      const d = 11, v = 9; m.etat = 'fini'; m.glyphe = 'fini'; m.ton = 'vivant'; m.mot = 'Terminé'; m.railEtat = 'fini'; m.objet = 'fin';
+      m.compte = { traites: 120, poses: 109, differes: d, sautes: 0, cibles: 120, restants: 0 };
+      m.fin = [['Lot', `<b>120</b> cuts traités sur <b>120</b> ciblés`], ['Il reste', `<b class="dif">${d}</b> différés, <b>${v}</b> verts à contrôler`], ['Export', S.exportFait ? `fait, <b>3</b> volumes confirmés` : 'prêt']];
+      m.phrase = 'Partie 13 · fin de la partie atteinte';
+      m.principal = S.exportFait ? { texte: 'Exporter à nouveau', ic: 'export', act: 'exporter' } : { texte: 'Voir ce qui reste', ic: 'liste', act: 'tiroir' }; m.secondaire = S.exportFait ? null : { texte: 'Exporter', act: 'exporter' };
+      m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.poignee = { n: d + v, texte: 'à examiner · 11 différés, 9 verts' }; m.differes = m.differes.concat([{ cut: 4866, motif: 'Rail non résolu', prec: 'rail droit', heure: '15 h 02' }, { cut: 4871, motif: 'Différé', prec: '', heure: '15 h 09' }, { cut: 4889, motif: 'Rail non résolu', prec: 'les deux rails', heure: '15 h 31' }, { cut: 4903, motif: 'Différé', prec: '', heure: '15 h 48' }, { cut: 4918, motif: 'Rail non résolu', prec: 'rail gauche', heure: '16 h 05' }, { cut: 4937, motif: 'Différé', prec: '', heure: '16 h 22' }, { cut: 4951, motif: 'Rail non résolu', prec: 'rail droit', heure: '16 h 40' }]).slice(0, 11); break; }
+    case 'relecture': case 'relecture-f5': {
+      const f5 = base === 'relecture-f5'; m.etat = 'relecture'; m.glyphe = 'relpause'; m.ton = 'attention'; m.mot = 'Relecture en pause'; m.railEtat = 'relecture'; m.objet = 'relecture';
+      m.compte = { relus: S.relectureIndex, selection: 96, corriges: 6 }; m.phrase = f5 ? `Relue jusqu’au cut <span class="mono">${4821 + S.relectureIndex}</span> · ESV a été rechargé` : `Relue jusqu’au cut <span class="mono">${4821 + S.relectureIndex}</span> · 6 corrigés`;
+      m.allure = f5 ? `en pause depuis <b>2 min 10</b> <span class="sep">·</span> médiane <b>6,4 s</b> par cut relu avant la pause` : `en pause depuis <b>40 s</b> <span class="sep">·</span> médiane <b>6,4 s</b> par cut relu <span class="sep">·</span> environ <b>4 min</b> restantes`;
+      m.principal = { texte: 'Reprendre la relecture', ic: 'play', act: 'rel-reprendre', inactif: f5 }; if (f5) m.raison = 'Reprise possible quand ESV répond.'; m.secondaire = { texte: 'Arrêter la relecture', act: 'rel-arreter', danger: true };
+      m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la relecture' }; m.bascule = { verrou: true, raison: 'Écho est disponible après la relecture' }; m.poignee = { n: 20, texte: 'à examiner · 11 différés, 9 verts' }; break; }
+    case 'verrou':
+      m.etat = 'verrou'; m.glyphe = 'verrou'; m.ton = 'encre2'; m.mot = 'Deuxième passe'; m.phrase = 'Ariane travaille dans ESV · ne touche à rien'; m.objet = 'aucun'; m.verrou = true;
+      m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la deuxième passe' }; m.bascule = { verrou: true, raison: 'Écho est disponible après la deuxième passe' }; m.puce.verrou = true; m.poignee = { n: 20, texte: 'à examiner · 11 différés, 9 verts' }; break;
+    case 'echo-vide':
+      m.activite = 'echo'; m.etat = 'echoVide'; m.glyphe = 'echoVide'; m.ton = 'encre2'; m.mot = 'Aucune séance'; m.phrase = 'Partie 13 · prête à observer'; m.objet = 'aucun';
+      m.principal = { texte: 'Démarrer l’observation', ic: 'play', act: 'echo-demarrer' }; m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la séance Écho' }; m.poignee = { n: 0, texte: 'Aucune visite pour l’instant' }; m.tiroir = 'visites'; break;
+    case 'echo': {
+      const E = sim.echo, medE = medianeEcho(), corr = E.visites.filter(v => v.corrige).length; m.activite = 'echo'; m.etat = 'echo'; m.glyphe = 'echo'; m.ton = 'vivant'; m.mot = 'En observation'; m.objet = 'echo';
+      m.phrase = `Visite du cut <span class="mono">${E.encours.cut}</span>`; m.compte = { vus: E.visites.length, corriges: corr };
+      m.allure = medE ? `<b>${fr((Math.round(60 / medE * 10) / 10).toFixed(1))}</b> cuts par minute <span class="sep">·</span> médiane <b>${fr(Math.round(medE * 10) / 10)} s</b> par cut <span class="sep">·</span> <b>${corr}</b> corrigés` : '';
+      m.principal = { texte: 'Terminer et télécharger', ic: 'export', act: 'echo-terminer' }; m.secondaire = { texte: 'Pause', act: 'echo-pause' };
+      m.cache = { dispo: false, q: '1 lot, 190 Mo', raison: 'après la séance Écho' }; m.bascule = { verrou: true, raison: 'Orbite est disponible après la séance Écho' }; m.puce.verrou = true; m.poignee = { n: E.visites.length, texte: 'visites' }; m.tiroir = 'visites'; break; }
+    case 'file-alerte': {
+      const cz = CAUSES[F.cause], fait = F.bilans.length, cut = L.encours.cut;
+      m.etat = 'toi'; m.glyphe = 'toi'; m.ton = 'alerte'; m.mot = 'File arrêtée'; m.objet = 'rail';
+      m.phrase = cz.milieu ? `Partie ${fait + 1} sur ${F.n} · arrêtée au cut <span class="mono">${cut}</span>` : `Fin de la partie ${fait} sur ${F.n} · ${cz.court}`;
+      m.compte = { traites: 0, poses: 0, differes: 0, sautes: 0, cibles: 0, restants: 0 };
+      m.incident = { texte: cz.texte, op: `Bilan : <b>${fait}</b> ${fait > 1 ? 'parties faites' : 'partie faite'} sur ${F.n} · rien exporté, rien validé de plus` };
+      m.principal = { texte: `Préparer la reprise · ${F.n - fait} ${F.n - fait > 1 ? 'parties restantes' : 'partie restante'}`, ic: 'liste', act: 'file-reprise' }; m.secondaire = { texte: 'Exporter les parties faites', act: 'exporter' };
+      m.raison = 'Préparer ne lance rien.';
+      if (cz.puce === 'ko') m.puce = { etat: 'ko', texte: 'ESV ne répond plus', verrou: false }; else if (cz.puce === 'aucun') m.puce = { etat: 'aucun', texte: 'Aucun onglet', verrou: false };
+      m.cache = { dispo: true, q: '2 lots, 380 Mo', raison: '' }; m.poignee = { n: 0, texte: 'bilan des parties · ce qui reste' }; break; }
+    case 'sans-esv':
+      m.etat = 'hors'; m.glyphe = 'hors'; m.ton = 'encre2'; m.mot = 'Hors ligne'; m.phrase = 'Aucun onglet ESV ouvert'; m.objet = 'aucun'; m.puce = { etat: 'aucun', texte: 'Aucun onglet', verrou: false };
+      m.principal = { texte: 'Choisir un onglet', act: 'esv' }; m.cache = { dispo: true, q: '1 lot, 190 Mo', raison: '' }; m.poignee = { n: 0, texte: 'Aucun différé pour l’instant' }; m.differes = []; break;
+  }
+  adapterFile(m, base);
+  if (sc === 'arrete') {
+    m.compte = { traites, poses, differes, sautes, cibles: L.cibles, restants };
+    m.etat = 'arrete'; m.mot = 'Lot arrêté'; m.ton = 'encre2'; m.railEtat = 'pause';
+    m.phrase = `Partie 13 · arrêt après le cut <span class="mono">${L.cuts.at(-1)?.cut || '—'}</span>`;
+    m.fin = [['Lot', `<b>${traites}</b> cuts traités sur <b>${L.cibles}</b> ciblés`], ['Il reste', `<b>${differes}</b> différés, <b>${restants}</b> cuts non traités`], ['Export', S.exportFait ? 'fait, <b>3</b> volumes confirmés' : 'prêt']];
+    m.principal = { texte: `Reprendre au cut ${L.encours.cut}`, ic: 'play', act: 'reprendre' };
+    m.secondaire = { texte: 'Exporter', act: 'exporter' }; m.verts = null; m.differes = differesListe;
+    m.poignee = { n: differes, texte: 'différés · lot arrêté' };
+    if (S.archiveInterruption) { m.phrase = 'Résultat interrompu archivé · aucune pose relancée'; m.principal = { texte: 'Préparer un autre lot', act: 'lot-preparer' }; }
+  }
+  if (sc === 'relecture-active') {
+    m.etat = 'relecture-active'; m.mot = 'Relecture en cours'; m.ton = 'encre2';
+    m.principal = { texte: 'Pause', ic: 'pause', act: 'rel-pause' };
+    m.allure = `médiane <b>6,4 s</b> par cut relu <span class="sep">·</span> environ <b>${duree((96 - S.relectureIndex) * 6.4)}</b> restantes`;
+  }
+  if ((sc === 'echo' && S.echoPause) || sc === 'echo-pause') {
+    m.etat = 'echo-pause'; m.mot = 'Écho en pause'; m.ton = 'encre2';
+    m.secondaire = { texte: 'Reprendre', act: 'echo-reprendre' };
+  }
+  if (m.secondaire && S.arretDemande === m.secondaire.act) m.secondaire = { ...m.secondaire, texte: 'Confirmer l’arrêt' };
+
+  if (S.cacheVide) m.cache = { dispo: false, q: 'vidé', raison: '', vide: true };
+  return m;
+}
+
+/* ─────────────────────────── file de parties (CH-013) */
+const nParties = n => `${n} ${n > 1 ? 'parties' : 'partie'}`;
+function fileReglagesHtml() {
+  const F = S.file;
+  const seg = (cle, opts, cur) => `<span class="seg" role="group" aria-label="${esc(cle)}">${opts.map(([v, t]) => `<button type="button" aria-pressed="${String(v) === String(cur)}" data-file="${cle}" data-val="${v}"${cle === 'n' && !F.allumee ? ' aria-disabled="true" title="Allumer la file pour choisir le nombre de parties"' : ''}>${t}</button>`).join('')}</span>`;
+  const l = (t, aide, ctl, sourd) => `<div class="reg${sourd ? ' sourd' : ''}"><span class="lib"><span>${esc(t)}</span>${aide ? `<small>${esc(aide)}</small>` : ''}</span>${ctl}</div>`;
+  return l('File de parties', 'Éteinte par défaut · enchaîne les parties programmées', seg('allumee', [[0, 'Éteinte'], [1, 'Allumée']], F.allumee ? 1 : 0))
+    + l('Nombre de parties', 'Premier essai : 2, l’opérateur présent', seg('n', [[1, '1'], [2, '2'], [3, '3'], [4, '4'], [5, '5'], [8, '8']], F.n), !F.allumee)
+    ;
+}
+const notesFile = '<p class="allure">La relecture et la correction suivent chaque partie, toujours. Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan.</p>';
+function bandeauFile() {
+  const F = S.file;
+  const etapes = Array.from({ length: F.n }, (_, i) => {
+    const p = i + 1, fait = p < F.partie, courant = p === F.partie;
+    const etat = fait ? 'relue et corrigée' : courant ? 'en cours' : 'à venir';
+    return `<li${fait ? ' class="fait"' : ''}${courant ? ' aria-current="step"' : ''} aria-label="Partie ${p}, ${etat}" title="Partie ${p} · ${etat}">${String(p).padStart(2, '0')}</li>`;
+  }).join('');
+  return `<div class="file-suivi"><ol class="file-etapes" aria-label="File de ${F.n} parties">${etapes}</ol><details class="file-detail"><summary>Relecture et correction après chaque partie</summary><p>Après chaque partie : <b>relecture et correction</b>, toujours · aucun export automatique · seul « Arrêter la file » l’arrête. Si continuer est impossible : alerte et bilan.</p></details></div>`;
+}
+function adapterFile(m, base) {
+  const F = S.file, B = S.placement === 'b', etatTxt = F.prete ? 'préparée' : F.allumee ? 'allumée' : 'éteinte';
+  if (base === 'pret' || base === 'file-eteinte' || base === 'file-reglage') {
+    if (B && base === 'file-reglage') {
+      m.activite = 'parties'; m.mot = 'File de parties'; m.glyphe = 'pret'; m.ton = 'encre2'; m.objet = 'file-reglage';
+      m.phrase = F.prete ? `Préparée · <span class="mono">${F.n}</span> ${F.n > 1 ? 'parties' : 'partie'} · rien n’est lancé` : F.allumee ? 'Allumée · pas encore préparée' : 'Éteinte · une partie à la fois';
+      m.principal = F.prete ? { texte: `Lancer la file · ${nParties(F.n)}`, ic: 'play', act: 'file-lancer' } : { texte: 'Préparer la file', act: 'file-preparer', inactif: !F.allumee };
+      m.secondaire = null; m.raison = !F.allumee ? 'File éteinte : allume-la d’abord. Préparer ne lance rien.' : F.prete ? '' : 'Préparer ne lance rien.';
+    } else if (!B) {
+      if (F.prete) { m.principal = { texte: `Lancer la file · ${nParties(F.n)}`, ic: 'play', act: 'file-lancer' }; m.raison = 'File préparée · relecture et correction après chaque partie. Rien n’est lancé.'; }
+      m.secondaire = { texte: `File de parties · ${etatTxt}`, act: 'file-ouvrir' };
+    }
+  }
+  if (F.en && (base === 'cours' || base === 'pause')) {
+    m.phrase = `Partie <b>${F.partie}</b> sur ${F.n} · ${m.phrase.replace(/^./, c => c.toLowerCase())}`;
+    m.secondaire = { texte: 'Arrêter la file', act: 'file-arreter', danger: true };
+    m.bascule = { verrou: true, raison: 'Écho et Parties sont disponibles après la file' };
+    m.fileBandeau = bandeauFile();
+  }
+  const dans = F.en || base === 'file-alerte' || base === 'file-fin';
+  if (dans) {
+    const l = F.bilans.map(b => ({ p: `P${b.p}`, txt: `120 cuts · ${b.poses} posés · ${b.dif} différés`, sous: b.relu, dur: `${b.dur} min` }));
+    if (F.en) l.push({ p: `P${F.partie}`, txt: 'en cours', sous: '', dur: '' });
+    m.parties = l;
+  }
+  if (base === 'file-fin') {
+    const bil = F.bilans.length, d = F.bilans.reduce((a, b) => a + b.dif, 0), v = 9 * bil, op = F.arret === 'operateur';
+    m.mot = op ? 'File arrêtée' : 'File terminée'; m.glyphe = op ? 'arrete' : 'fini'; m.ton = op ? 'attention' : 'vivant';
+    m.phrase = op ? `Arrêtée par l’opérateur · ${bil} ${bil > 1 ? 'parties faites' : 'partie faite'} sur ${F.n}` : `${nParties(bil)} faites · la file s’est éteinte`;
+    m.fin = [['Parties', `<b>${bil}</b> faites sur <b>${F.n}</b>, relues et corrigées`], ['Il reste', `<b class="dif">${d}</b> différés, <b>${v}</b> verts à contrôler · toutes parties`], ['Export', S.exportFait ? 'fait, <b>3</b> volumes confirmés' : 'prêt · jamais automatique']];
+    m.poignee = { n: d + v, texte: `à examiner · ${d} différés, ${v} verts` };
+    m.cache = { dispo: true, q: `${bil} ${bil > 1 ? 'lots' : 'lot'}, ${bil * 190} Mo`, raison: '' };
+  }
+}
+function finirPartie() {
+  const F = S.file; F.bilans.push(bilanInvente(F.partie, F));
+  if (F.partie < F.n) { F.partie++; sim.lot = lotDeBase(); sim.lot.cuts = []; sim.lot.encours = { cut: 4811, depuis: 0, attendu: 7 }; S.scene = 'cours'; S.tiroir = false; }
+  else { F.en = false; F.allumee = false; F.arret = null; S.scene = 'file-fin'; }
+}
+function appliquerCause() { sim.lot = lotDeBase(); if (!CAUSES[S.file.cause].milieu) sim.lot.cuts = []; }
+function boiteFile() {
+  return `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cf-t"><span class="t" id="cf-t">File de parties</span><div>${fileReglagesHtml()}</div><p class="meta-bas">La relecture et la correction suivent chaque partie, toujours. Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Fermer</button>${S.file.prete ? `<button type="button" class="principal" data-act="file-lancer">${IC.play}<span>Lancer la file · ${nParties(S.file.n)}</span></button>` : `<button type="button" class="principal" data-act="file-preparer"${S.file.allumee ? '' : ' disabled'}><span>Préparer la file</span></button>`}</div></div>`;
+}
+
+/* ─────────────────────────── rendu */
+/* Le mot d’état porte le sens : aucun glyphe décoratif à apprendre. */
+const glypheHtml = () => '';
+function railHtml(m) {
+  const L = sim.lot, c = m.compte, total = c.cibles, inconnu = !total;
+  const echelle = total || Math.max(c.traites * 1.4, 40), pos = i => `${(i / echelle * 100).toFixed(3)}%`;
+  let h = `<div class="rail" data-etat="${m.railEtat}" data-total="${inconnu ? 'inconnu' : 'connu'}" role="img" aria-label="${esc(`${c.traites} traités, ${inconnu ? 'total inconnu' : `${total} ciblés`}, ${c.differes} différés`)}"><div class="rail-base"></div>`;
+  if (!inconnu) { for (let k = 0; k <= total; k += 10) h += `<div class="rail-grad${k % 50 === 0 ? ' dix' : ''}" style="left:${pos(k)}"></div>`; h += `<div class="rail-num debut">0</div><div class="rail-num" style="left:50%">${total / 2}</div><div class="rail-num fin" style="left:100%">${total}</div>`; }
+  h += `<div class="rail-fait" style="width:${pos(c.traites)}"></div>`;
+  L.cuts.slice(0, c.traites).forEach((x, i) => { if (x.statut === 'differe') h += `<div class="rail-dif" style="left:${pos(i + .5)}" title="cut ${x.cut}, différé"></div>`; });
+  if (m.railEtat !== 'fini' && m.railEtat !== 'vide') h += `<div class="rail-cur" style="left:${pos(c.traites)}"></div>`;
+  return h + '</div>';
+}
+function railRelecture(m) {
+  const c = m.compte, pos = i => `${(i / c.selection * 100).toFixed(3)}%`;
+  let h = `<div class="rail" data-etat="relecture" data-total="connu" role="img" aria-label="${esc(`${c.relus} relus sur ${c.selection}, ${c.corriges} corrigés`)}"><div class="rail-base"></div>`;
+  for (let k = 0; k <= c.selection; k += 10) h += `<div class="rail-grad" style="left:${pos(Math.min(k, c.selection))}"></div>`;
+  h += `<div class="rail-num debut">0</div><div class="rail-num fin" style="left:100%">${c.selection}</div><div class="rail-fait" style="width:${pos(c.relus)}"></div>`;
+  [4, 11, 19, 27, 41, 52].forEach(i => { h += `<div class="rail-corr" style="left:${pos(i + .5)}"></div>`; });
+  h += `<div class="rail-cur" style="left:${pos(c.relus)};background:var(--attention)"></div></div>`;
+  return h;
+}
+function objetHtml(m) {
+  const c = m.compte;
+  if (m.incident) return `<div class="incident" role="alert"><p>${m.incident.texte}</p>${m.incident.op ? `<p class="op">${m.incident.op}</p>` : ''}</div>`;
+  if (m.objet === 'fin') return `<dl class="fin">${m.fin.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
+  if (m.objet === 'relecture') return `<div class="objet"><div class="compte"><span class="chiffre">${c.relus}</span><span class="suite">relus sur ${c.selection} sélectionnés</span><span class="droite"><b>${c.corriges}</b> corrigés</span></div>${railRelecture(m)}</div>`;
+  if (m.objet === 'echo') { const E = sim.echo; return `<div class="objet"><div class="compte"><span class="chiffre">${c.vus}</span><span class="suite">cuts vus</span><span class="droite"><b>${c.corriges}</b> corrigés · <b>${c.vus - c.corriges}</b> validés tels quels</span></div><div class="marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${E.visites.slice(-60).map(v => `<i class="${v.corrige ? 'c' : ''}"></i>`).join('')}<i class="en"></i></div></div>`; }
+  if (m.objet === 'file-reglage') return `<div class="objet">${fileReglagesHtml()}${notesFile}</div>`;
+  if (m.objet === 'aucun') return '';
+  if (m.railEtat === 'vide') return `<div class="objet"><div class="compte"><span class="chiffre">${c.cibles}</span><span class="suite">cuts ciblés · aucun traité</span></div>${railHtml(m)}</div>`;
+  const droite = `<span class="droite"><b>${c.poses}</b> posés · <span class="dif">${c.differes}</span> différés${c.sautes ? ` · <b>${c.sautes}</b> SKIP` : ''}</span>`;
+  const suite = c.cibles ? `traités sur ${c.cibles} ciblés` : 'traités';
+  return `<div class="objet"><div class="compte"><span class="chiffre">${c.traites}</span><span class="suite">${suite}</span>${droite}</div>${railHtml(m)}</div>`;
+}
+function actionsHtml(m) {
+  if (m.verrou) return `<div class="verrou-ligne">${IC.cadenas}<span>Aucune action jusqu’à la fin de la deuxième passe</span></div>`;
+  let h = '<div class="actions">';
+  if (m.principal) h += `<button type="button" class="principal" data-act="${m.principal.act || ''}"${m.principal.occupe || m.principal.inactif ? ' disabled' : ''}>${m.principal.occupe ? '<span class="tourne" aria-hidden="true"></span>' : m.principal.ic ? IC[m.principal.ic] : ''}<span>${esc(m.principal.texte)}</span></button>`;
+  if (m.secondaire) h += `<button type="button" class="secondaire${m.secondaire.danger ? ' danger' : ''}" data-confirme="${S.arretDemande === m.secondaire.act ? 1 : 0}" data-act="${m.secondaire.act}">${esc(m.secondaire.texte)}</button>`;
+  if (m.tertiaire) h += `<button type="button" class="secondaire${m.tertiaire.danger ? ' danger' : ''}" data-act="${m.tertiaire.act}">${esc(m.tertiaire.texte)}</button>`;
+  if (m.raison) h += `<span class="raison">${esc(m.raison)}</span>`;
+  return h + '</div>';
+}
+function tiroirHtml(m) {
+  const v2 = R.dataset.revue === 'v2', ex = S.examines;
+  const outils = (cut) => v2 ? `<span class="outils"><button type="button" data-ouvrir="${cut}" aria-label="Ouvrir le cut ${cut} dans ESV" title="Ouvrir ce cut dans ESV">${IC.ouvrir}<span>Ouvrir</span></button><button type="button" data-examine="${cut}" aria-pressed="${ex.has(cut)}" aria-label="${ex.has(cut) ? 'Annuler l’examen du' : 'Examiner le'} cut ${cut}" title="Marquer examiné">${IC.coche}<span>${ex.has(cut) ? 'Examiné' : 'Examiner'}</span></button></span>` : '';
+  const ligne = (r, i, prec) => `<div class="ligne${ex.has(r.cut) && v2 ? ' examine' : ''}" role="option" data-row="${i}" aria-selected="${S.sel === i}" tabindex="-1"><span class="cut">${r.cut}</span><span class="motif">${esc(r.motif)}${r.prec ? ` <small>· ${esc(r.prec)}</small>` : ''}</span>${v2 ? outils(r.cut) : `<span class="prec">${esc(prec(r))}</span>`}</div>`;
+  let h = '';
+  if (m.tiroir === 'visites') {
+    const V = [...sim.echo.visites].reverse().slice(0, 40);
+    h += `<div class="section"><span>Visites</span><span class="n">${sim.echo.visites.length}</span><span class="d">les 40 dernières</span></div>`;
+    h += V.length ? V.map((v, i) => `<div class="ligne" role="option" data-row="${i}" aria-selected="${S.sel === i}" tabindex="-1"><span class="cut">${v.cut}</span><span class="motif">${v.corrige ? 'Corrigé · 1 rail' : 'Validé tel quel'}</span><span class="prec">${fr(Math.round(v.dur))} s</span></div>`).join('') : '<div class="vide">Aucune visite pour l’instant.</div>';
+    return `<div class="corps" role="listbox" aria-label="Visites">${h}</div>`;
+  }
+  if (m.parties) h += `<div class="section"><span>Parties</span><span class="n">${m.parties.length}</span><span class="d">bilan · chiffres inventés</span></div>` + m.parties.map(p => `<div class="ligne"><span class="cut">${p.p}</span><span class="motif">${esc(p.txt)}${p.sous ? ` <small>· ${esc(p.sous)}</small>` : ''}</span><span class="prec">${esc(p.dur)}</span></div>`).join('');
+  const dif = m.differes || [], verts = m.verts;
+  const resteD = dif.filter(d => !ex.has(d.cut)).length, resteV = verts ? verts.filter(d => !ex.has(d.cut)).length : 0;
+  if (v2) h += `<div class="v2-note"><span class="tag">V2 · à construire</span><span>Ouvrir un cut dans ESV et le marquer « examiné » n’existent pas encore dans l’extension.</span></div>`;
+  h += `<div class="section"><span>Différés</span><span class="n">${dif.length}</span>${v2 && dif.length ? `<span class="d">reste à examiner <span class="n">${resteD}</span></span>` : '<span class="d">à reprendre après le lot</span>'}</div>`;
+  h += dif.length ? dif.map((d, i) => ligne(d, i, r => r.heure)).join('') : `<div class="vide">Aucun différé pour l’instant.</div>`;
+  h += `<div class="section"><span>Verts à contrôler</span>${verts ? `<span class="n">${verts.length}</span>` : ''}${verts ? (v2 ? `<span class="d">reste à examiner <span class="n">${resteV}</span></span>` : '<span class="d">hors des cuts du lot</span>') : ''}</div>`;
+  h += verts ? verts.map((d, i) => ligne(d, dif.length + i, r => r.prec)).join('') : `<div class="vide">Calculés à la fin du lot.</div>`;
+  return `<div class="corps" role="listbox" aria-label="Ce qui reste">${h}</div>`;
+}
+function poigneeHtml(m) {
+  const p = m.poignee || { n: 0, texte: '' }, v2 = R.dataset.revue === 'v2', total = (m.differes?.length || 0) + (m.verts?.length || 0), reste = total - [...S.examines].filter(c => (m.differes || []).some(d => d.cut === c) || (m.verts || []).some(d => d.cut === c)).length;
+  const n = p.n ? `<span class="n${m.tiroir !== 'visites' && (m.differes?.length) ? ' dif' : ''}">${p.n}</span> ` : '';
+  const court = p.court || (m.tiroir === 'visites' ? (p.n ? 'visites' : 'aucune visite') : p.n ? 'à examiner' : 'rien à examiner');
+  return `<button type="button" class="poignee" data-act="tiroir" aria-expanded="${S.tiroir}" aria-controls="tiroir-corps">${IC.fleche.replace('<svg', '<svg class="fl"')}<span class="txt">${n}<span class="long">${esc(p.texte)}</span><span class="court">${esc(court)}</span></span>${v2 && total && m.tiroir !== 'visites' ? `<span class="reste">reste à examiner ${reste} sur ${total}</span>` : ''}<span class="etat-mini">${glypheHtml(m)}<span>${esc(m.mot)}${m.compte?.traites != null && m.compte.cibles ? ` · ${m.compte.traites} sur ${m.compte.cibles}` : ''}</span></span></button>`;
+}
+function cacheHtml(m) {
+  const c = m.cache;
+  const infos = c.vide ? '<span class="ok">Cache vidé · rien à garder</span>' : `<span class="q"><span class="lib">Cache des exports · </span><span class="mono">${esc(c.q)}</span></span>${c.raison ? `<span class="r">${esc(c.raison)}</span>` : ''}`;
+  return `<footer class="cache"><div class="cache-info">${infos}</div><span class="fictif" title="Maquette : chiffres, numéros et heures fictifs">Fictif</span><button type="button" data-act="cache"${c.dispo && !c.vide ? '' : ' disabled'}>Vider le cache</button></footer>`;
+}
+function barreHtml(m) {
+  const b = m.bascule, puce = m.puce;
+  const seg = (k, t) => `<button type="button" role="tab" aria-selected="${m.activite === k}"${b.verrou && m.activite !== k ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : ''} data-act="activite:${k}">${b.verrou && m.activite !== k ? IC.cadenas : ''}${t}</button>`;
+  const puceIc = puce.verrou && puce.etat === 'ok' ? IC.cadenas : IC.bas;
+  return `<header class="barre"><span class="logo">${IC.logo}<span>Ariane</span></span><div class="bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${S.placement === 'b' ? seg('parties', 'Parties') : ''}</div><span class="espace"></span>
+  <button type="button" class="puce" data-etat="${puce.verrou && puce.etat === 'ok' ? 'verrou' : puce.etat}" data-act="esv" aria-haspopup="listbox" aria-expanded="${S.couche === 'esv'}" title="${puce.verrou ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="tx"><span class="long">${esc(puce.texte)}</span><span class="court">${esc(puce.texte.split(' · ')[0])}</span></span>${puceIc.replace('<svg', '<svg class="fl"')}</button>
+  <button type="button" class="ico" data-act="palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${S.couche === 'palette'}">${IC.palette}</button><button type="button" class="ico" data-act="reglages" aria-label="Réglages" title="Réglages" aria-pressed="${S.couche === 'reglages'}">${IC.reglages}</button></header>${S.note ? `<div class="barre-note" role="status">${esc(S.note)}</div>` : ''}`;
+}
+/* Couches */
+function commandes(m) {
+  const c = [], etat = `${m.activite === 'echo' ? 'Écho' : 'Orbite'} · ${m.mot}${m.compte?.traites != null && m.compte.cibles && m.activite === 'orbite' && m.objet === 'rail' ? ` · ${m.compte.traites} sur ${m.compte.cibles}` : ''}`;
+  if (m.principal && !m.principal.occupe) c.push({ ic: m.principal.ic || 'play', nom: m.principal.texte, act: m.principal.act, et: etat, off: m.principal.inactif ? m.raison : '' });
+  if (m.secondaire) c.push({ ic: m.secondaire.danger ? 'stop' : 'pause', nom: m.secondaire.texte, act: m.secondaire.act, et: '' });
+  c.push({ ic: 'liste', nom: S.tiroir ? 'Fermer le tiroir' : 'Voir ce qui reste', act: 'tiroir', et: m.poignee?.n ? `${m.poignee.n}` : '' });
+  c.push({ ic: 'export', nom: 'Exporter le dossier', act: 'exporter', et: '', off: m.activite === 'orbite' && ['cours', 'dem', 'pause', 'toi', 'interrompu', 'muet'].includes(m.etat) ? 'après le lot' : '' });
+  c.push({ ic: m.activite === 'echo' ? 'play' : 'echo', nom: m.activite === 'echo' ? 'Passer en Orbite' : 'Passer en Écho', act: `activite:${m.activite === 'echo' ? 'orbite' : 'echo'}`, et: '', off: m.bascule.verrou ? m.bascule.raison : '' });
+  c.push({ ic: 'liste', nom: 'File de parties', act: 'file-ouvrir', et: S.file.prete ? 'préparée' : S.file.allumee ? 'allumée' : 'éteinte', off: m.etat === 'pret' ? '' : 'pendant un lot ou une file' });
+  c.push({ ic: 'reglages', nom: 'Réglages', act: 'reglages', et: '' });
+  c.push({ ic: 'liste', nom: 'Ancien panneau (détails techniques)', act: 'ancien', et: '' });
+  c.push({ ic: 'export', nom: 'Vider le cache des exports', act: 'cache', et: m.cache.q, off: m.cache.dispo ? '' : m.cache.raison });
+  return c;
+}
+const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function paletteHtml(m) {
+  const all = commandes(m), q = norm(S.q).trim(), L = q ? all.filter(c => norm(c.nom).includes(q)) : all.slice(0, 4);
+  const i = Math.max(0, Math.min(L.length - 1, S.pi));
+  return `<div class="voile" data-act="fermer"></div><div class="palette" role="dialog" aria-label="Commandes"><input id="pal-q" type="text" value="${esc(S.q)}" placeholder="Commande…" autocomplete="off" spellcheck="false" aria-label="Rechercher une commande"><div class="cmds" role="listbox">${L.length ? L.map((c, k) => `<button type="button" class="cmd" role="option" aria-selected="${k === i}"${c.off ? ' aria-disabled="true"' : ''} data-cmd="${k}" data-act="${c.off ? '' : c.act}" data-fermer="1">${IC[c.ic] || ''}<span>${esc(c.nom)}</span><span class="et">${esc(c.off || c.et)}</span></button>`).join('') : '<div class="cmd"><span></span><span class="et">Aucune commande</span></div>'}</div><div class="pied"><span><kbd>↑</kbd> <kbd>↓</kbd> choisir</span><span><kbd>Entrée</kbd> exécuter</span><span class="espace"></span><span><kbd>Échap</kbd> fermer</span></div></div>`;
+}
+function feuilleHtml() {
+  const sel = (nom, opts, cur) => { cur = S.reglages[nom] ?? cur; return `<select data-reg="${nom}" aria-label="${esc(nom)}">${opts.map(o => `<option${o === cur ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`; };
+  const seg = (nom, opts, cur) => { cur = S.reglages[nom] ?? cur; return `<span class="seg" role="group" aria-label="${esc(nom)}">${opts.map(o => `<button type="button" aria-pressed="${o === cur}" data-seg="${esc(nom)}" data-val="${esc(o)}">${esc(o)}</button>`).join('')}</span>`; };
+  const ligne = (t, aide, ctl, modif) => { const s = [aide, modif ? 'gardé pour le prochain lot' : ''].filter(Boolean).join(' · '); return `<div class="reg"><span class="lib"><span>${esc(t)}</span>${s ? `<small>${esc(s)}</small>` : ''}</span>${ctl}</div>`; };
+  const th = R.dataset.theme === 'clair' ? 'Clair' : 'Sombre';
+  return `<div class="feuille" role="dialog" aria-label="Réglages"><div class="tete"><span class="t">Réglages</span><span class="meta encre2">jamais en séance</span><kbd>Échap</kbd><button type="button" class="ico" data-act="fermer" aria-label="Fermer">${IC.coche.replace('M5 12.5l4.5 4.5L19 7.5', 'M6 6l12 12M18 6L6 18')}</button></div><div class="liste">
+  ${ligne('Après le lot', 'Relecture des verts sûrs', sel('Après le lot', ['Rien', 'Relire sans rien modifier', 'Relire et corriger'], 'Relire et corriger'), true)}
+  ${ligne('Clic du mode rapide', '', sel('Clic du mode rapide', ['Comme avant', 'Rail gauche recentré', 'Tout recentré'], 'Comme avant'), true)}
+  ${ligne('Série de différés', 'Mettre en attente les cuts voisins', seg('Série de différés', ['Non', 'Oui'], 'Non'))}
+  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho', sel('Raison', ['Non', 'Oui · chiffres du haut', 'Oui · Alt + chiffre', 'Oui · pavé numérique'], 'Non'))}
+  ${ligne('Si ESV est rechargé pendant la relecture', '', sel('Si ESV est rechargé', ['Attendre, puis reprendre', 'Arrêter la relecture'], 'Attendre, puis reprendre'))}
+  ${ligne('Thème', '', seg('Thème', ['Sombre', 'Clair', 'Système'], th))}
+  ${ligne('Interface', 'Au démarrage', seg('Interface', ['Instrument', 'Palette'], 'Instrument'))}
+  <div class="reg"><span class="lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au 20/10/2026 · ne mesure aucune qualité</small></span><span class="mono">2 731</span></div>
+  <div class="bas"><button type="button" class="lien" data-act="ancien">${IC.liste}<span>Ancien panneau (détails techniques)</span></button><div class="danger-zone"><span>Séance Écho en cours : supprime ses données, avec confirmation.</span><button type="button" data-act="echo-abandon">Abandonner la séance Écho…</button></div></div></div></div>`;
+}
+const confirmCache = () => `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cc-t"><span class="t" id="cc-t">Vider le cache des exports ?</span><dl><dt>Supprimé</dt><dd><b>1 lot</b>, <b>120 coupes</b> · 120 visites, 2 140 événements, 118 nuages · environ <b>190 Mo</b> (estimation)</dd><dt>Gardé</dt><dd>l’état du lot, les réglages, la reprise</dd></dl><p class="avert">Irréversible. Si tu veux garder ces données, annule et lance d’abord l’export.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Annuler</button><button type="button" class="danger" data-act="cache-vider">Vider le cache</button></div></div>`;
+const confirmPasser = () => `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-labelledby="cp-t"><span class="t" id="cp-t">Passer le cut ${sim.lot.encours.cut} ?</span><p class="encre2">Il sera compté SKIP et restera dans « ce qui reste ». Le lot reprend au cut suivant.</p><div class="bts"><button type="button" class="annuler" data-act="fermer">Annuler</button><button type="button" class="danger" data-act="passer-ok">Passer ce cut</button></div></div>`;
+function popoverEsv(m) {
+  const verrou = m.puce.verrou, aucun = m.puce.etat === 'aucun';
+  const ong = aucun ? '<div class="vide" style="padding:8px">Aucun onglet ESV ouvert. Ouvre une partie dans ESV ; elle apparaîtra ici.</div>'
+    : [['Onglet 1', 'partie 13 · fenêtre 1', false], ['Onglet 2', 'partie 13 · fenêtre 1, au premier plan', true], ['Onglet 3', 'partie 7 · fenêtre 2', false]].map(([n, d, mien]) => `<div class="ong"><span class="lib"><b>${n}</b><small>${d}</small></span>${mien ? '<span class="conn"><i></i>connecté</span>' : `<button type="button" data-act="esv-connecter"${verrou ? ' disabled' : ''}>Connecter</button>`}</div>`).join('');
+  return `<div class="voile" data-act="fermer" style="background:transparent"></div><div class="popover" role="dialog" aria-label="Onglets ESV">${ong}<div class="pied">${verrou ? IC.cadenas + '<span>Une seule connexion, gardée jusqu’à la fin du lot.</span>' : '<span>Une seule connexion, partagée entre Orbite et Écho.</span>'}</div></div>`;
+}
+
+
+/* Mise à jour en place : le focus, le champ de la palette et les zones de lecture
+ * gardent leur identité pendant les changements de compteur et de scène. */
+function memeNoeud(a, b) {
+  if (a.nodeType !== b.nodeType || a.nodeName !== b.nodeName) return false;
+  if (a.nodeType !== 1) return true;
+  const cle = e => e.id || e.getAttribute('data-k') || e.getAttribute('data-act') || e.getAttribute('data-row') || e.getAttribute('data-examine') || '';
+  return cle(a) === cle(b);
+}
+function accorder(a, b) {
+  if (a.nodeType === 3) { if (a.data !== b.data) a.data = b.data; return; }
+  if (a.nodeType !== 1) return;
+  for (const n of a.getAttributeNames()) if (!b.hasAttribute(n) && !(n === 'open' && a.tagName === 'DETAILS')) a.removeAttribute(n);
+  for (const n of b.getAttributeNames()) if (a.getAttribute(n) !== b.getAttribute(n)) a.setAttribute(n, b.getAttribute(n));
+  const enfants = [...b.childNodes];
+  enfants.forEach((n, i) => {
+    let actuel = a.childNodes[i];
+    if (!actuel) { a.append(n.cloneNode(true)); return; }
+    if (!memeNoeud(actuel, n)) {
+      const trouve = [...a.childNodes].slice(i + 1).find(x => memeNoeud(x, n));
+      if (trouve) { a.insertBefore(trouve, actuel); actuel = trouve; }
+      else { a.insertBefore(n.cloneNode(true), actuel); return; }
+    }
+    accorder(actuel, n);
+  });
+  while (a.childNodes.length > enfants.length) a.lastChild.remove();
+}
+function dessiner(html) { const t = D.createElement('template'); t.innerHTML = `<div id="fen" class="fen" role="application" aria-label="Ariane · maquette fictive">${html}</div>`; accorder(FEN, t.content.firstChild); }
+let retourFocus = null;
+function gererDialogue() {
+  const couche = FEN.querySelector('.boite,.feuille,.palette,.popover');
+  for (const el of FEN.querySelectorAll(':scope > .barre,:scope > .instrument,:scope > .zone,:scope > .cache')) el.inert = !!couche;
+  if (couche) {
+    couche.setAttribute('aria-modal', 'true');
+    if (!couche.contains(D.activeElement)) (couche.querySelector('input,button:not(:disabled),select') || couche).focus({ preventScroll: true });
+  }
+}
+function rendre() {
+  const m = modele();
+  const instrument = m.activite === 'echo' || m.objet !== 'rail' || true ? `<section class="instrument" data-k="instrument"><div class="contenu-instrument"><div class="groupe-etat" role="status" aria-live="polite" aria-atomic="true"><div class="etat">${glypheHtml(m)}<span class="mot">${esc(m.mot)}</span></div><p class="phrase">${m.phrase}${['cours','dem','echo'].includes(m.etat) ? `<span class="temps-cut" data-temps-cut aria-live="off">depuis ${duree(m.activite === 'echo' ? sim.echo.encours.depuis : sim.lot.encours.depuis)}</span>` : ''}</p></div>${objetHtml(m)}${m.allure ? `<p class="allure" id="allure">${m.allure}</p>` : ''}${m.fileBandeau || ''}</div>${actionsHtml(m)}</section>` : '';
+  const couche = S.couche === 'echo-abandon' ? `<div class="voile" data-act="fermer"></div><div class="boite" role="dialog" aria-label="Abandonner la séance Écho"><span class="t">Abandonner la séance Écho ?</span><p>Les visites de cette séance fictive seront supprimées. Les réglages sont gardés.</p><div class="bts"><button class="annuler" data-act="fermer">Annuler</button><button class="danger" data-act="echo-abandon-confirmer">Abandonner la séance</button></div></div>` : S.couche === 'palette' ? paletteHtml(m) : S.couche === 'reglages' ? feuilleHtml() : S.couche === 'cache' ? confirmCache() : S.couche === 'esv' ? popoverEsv(m) : S.couche === 'passer' ? confirmPasser() : S.couche === 'file' ? boiteFile() : '';
+  const html = `${barreHtml(m)}${instrument}<div class="zone"><div class="tiroir" data-ouvert="${S.tiroir ? 1 : 0}" id="tiroir">${poigneeHtml(m)}<div id="tiroir-corps"${S.tiroir ? '' : ' inert'}>${tiroirHtml(m)}</div></div></div>${cacheHtml(m)}${couche}`;
+  const ancienneCouche = FEN.querySelector('.boite,.feuille,.palette,.popover');
+  if (!ancienneCouche && S.couche) retourFocus = D.activeElement;
+  const changementScene = rendre.scenePrecedente !== S.scene; rendre.scenePrecedente = S.scene;
+  const scrolls = changementScene ? [] : [...FEN.querySelectorAll('.contenu-instrument,.corps,.feuille .liste')].map(e => [e.className, e.scrollTop]);
+  dessiner(html);
+  FEN.id = 'fen'; FEN.className = 'fen'; FEN.setAttribute('role', 'application'); FEN.setAttribute('aria-label', 'Ariane · maquette fictive'); FEN.dataset.etat = m.etat;
+  for (const [classe, haut] of scrolls) { const e = [...FEN.querySelectorAll('.contenu-instrument,.corps,.feuille .liste')].find(n => n.className === classe); if (e) e.scrollTop = haut; }
+  if (changementScene) for (const e of FEN.querySelectorAll('.contenu-instrument,.corps,.feuille .liste')) e.scrollTop = 0;
+  gererDialogue();
+  if (ancienneCouche && !S.couche) { const cible = retourFocus?.isConnected && !retourFocus.closest('[inert]') ? retourFocus : FEN.querySelector('.principal:not(:disabled),.poignee'); cible?.focus({ preventScroll: true }); }
+  const inst = FEN.querySelector('.instrument'); if (inst) FEN.style.setProperty('--instrument-h', inst.offsetHeight + 'px');
+  if (S.couche === 'palette') { const q = D.getElementById('pal-q'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+  majVivant();
+  const nk = S.file.en && (S.scene === 'cours' || S.scene === 'pause') ? 'file-cours' : S.scene, nf = nk.startsWith('file-') || S.file.en;
+  const n = D.getElementById('notes'); if (n) n.innerHTML = `<h2>${esc(SCENES.find(s => s[0] === nk)?.[1] || '')}</h2><p>${esc(NOTES[nk] || '')}</p>${nf ? `<div class="sim"><h2>Pour jouer la maquette</h2><p>Les chiffres sont inventés ; une partie réelle dure bien plus longtemps.</p><button type="button" data-sim="finir"${S.file.en ? '' : ' disabled'}>Finir la partie</button><button type="button" data-sim="arret"${S.file.en ? '' : ' disabled'}>Provoquer un arrêt</button><br><label>Cause de l’arrêt <select data-sim="cause">${Object.entries(CAUSES).map(([k, c]) => `<option value="${k}"${k === S.file.cause ? ' selected' : ''}>${esc(c.nom)}</option>`).join('')}</select></label></div>` : ''}${S.scene === 'cours' || S.scene === 'pause' ? '<p><b>Allure, honnêtement.</b> Déjà dans l’extension : la durée de chaque cut posé (durationMs), l’heure d’ouverture du cut en cours (cutStartedAt), l’heure de départ du lot. Donc : médiane récente, anneau proportionnel, cuts par minute et temps restant sont calculables sans rien demander de nouveau à ESV. À ajouter dans le code : le calcul lui-même (il existe pour Écho, pas pour le lot) et, pour une vitesse « vraie » qui compte les navigations entre cuts, une heure de fin par cut.</p>' : ''}${R.dataset.revue === 'v2' && m.tiroir !== 'visites' ? '<p><span class="nouveau">V2</span> « Ouvrir dans ESV » et « Examiné » sont des fonctions nouvelles à construire ; V1 (lecture seule) correspond à ce que le panneau sait faire aujourd’hui.</p>' : ''}`;
+}
+/* Mise à jour légère, sans redessiner : l'anneau, le curseur, la ligne d'allure. */
+function majVivant() {
+  const L = sim.lot, arc = FEN.querySelector('.glyphe .arc');
+  const temps = FEN.querySelector('[data-temps-cut]'); if (temps) temps.textContent = `depuis ${duree(S.scene === 'echo' ? sim.echo.encours.depuis : L.encours.depuis)}`;
+  if (arc && S.scene === 'cours') { const med = medianeLot() || L.encours.attendu, p = Math.min(1, L.encours.depuis / med); arc.style.strokeDashoffset = (C * (1 - p)).toFixed(2); }
+  if (S.scene === 'echo' && sim.echo.encours) { /* la marque claire pulse ; rien d'autre */ }
+  const al = D.getElementById('allure');
+  if (al && S.scene === 'pause') { const med = medianeLot(); al.innerHTML = `en pause depuis <b>${duree(L.pauseDepuis)}</b> <span class="sep">·</span> médiane <b>${fr(Math.round(med * 10) / 10)} s</b> par cut avant la pause`; }
+}
+
+/* ─────────────────────────── actions */
+function note(t) { S.note = t; rendre(); clearTimeout(note.h); note.h = setTimeout(() => { S.note = ''; rendre(); }, 2600); }
+function agir(act) {
+  const L = sim.lot;
+  if (['arreter', 'file-arreter', 'rel-arreter'].includes(act)) {
+    if (S.arretDemande !== act) {
+      S.arretDemande = act; clearTimeout(agir.arretHorloge);
+      agir.arretHorloge = setTimeout(() => { S.arretDemande = null; rendre(); }, 4000);
+      rendre(); return;
+    }
+    clearTimeout(agir.arretHorloge); S.arretDemande = null;
+  }
+  switch (act) {
+    case 'file-ouvrir': if (S.placement === 'b') { S.scene = 'file-reglage'; S.couche = null; } else { if (S.scene !== 'file-eteinte' && S.scene !== 'file-reglage') S.scene = 'file-eteinte'; S.couche = 'file'; } S.tiroir = false; break;
+    case 'file-preparer': if (!S.file.allumee) return; S.file.prete = true; S.couche = null; if (S.placement === 'a' && S.scene === 'file-reglage') S.scene = 'file-eteinte'; note('File préparée · rien n’est lancé'); return;
+    case 'file-lancer': { const F = S.file; F.en = true; F.prete = false; F.partie = 1; F.bilans = []; F.arret = null; S.couche = null; sim.lot = lotDeBase(); sim.lot.cuts = []; sim.lot.encours = { cut: 4811, depuis: 0, attendu: 7 }; S.scene = 'cours'; S.tiroir = false; break; }
+    case 'file-arreter': S.file.en = false; S.file.allumee = false; S.file.arret = 'operateur'; S.scene = 'file-fin'; break;
+    case 'file-reprise': { const F = S.file; F.n = F.n - F.bilans.length; F.bilans = []; F.partie = 1; F.prete = true; F.allumee = true; S.scene = S.placement === 'b' ? 'file-reglage' : 'file-eteinte'; S.couche = null; S.tiroir = false; sim.lot = lotDeBase(); note('File préparée pour la reprise · rien n’est lancé'); return; }
+    case 'activite:parties': S.scene = 'file-reglage'; S.couche = null; S.tiroir = false; break;
+    case 'fermer': S.arretDemande = null; S.couche = null; S.q = ''; S.pi = 0; break;
+    case 'tiroir': S.tiroir = !S.tiroir; S.sel = null; break;
+    case 'palette': S.couche = S.couche === 'palette' ? null : 'palette'; S.q = ''; S.pi = 0; break;
+    case 'reglages': S.couche = S.couche === 'reglages' ? null : 'reglages'; break;
+    case 'esv': S.couche = S.couche === 'esv' ? null : 'esv'; break;
+    case 'esv-connecter': S.couche = null; if (S.scene === 'sans-esv') S.scene = 'pret'; note('Connecté à l’onglet 1 · partie 13'); return;
+    case 'cache': S.couche = 'cache'; break;
+    case 'cache-vider': S.couche = null; S.cacheVide = true; setTimeout(() => { S.cacheVide = false; rendre(); }, 3000); break;
+    case 'demarrer': sim.lot = lotDeBase(); sim.lot.cuts = []; sim.lot.encours = { cut: 4811, depuis: 0, attendu: 7 }; S.scene = 'cours'; break;
+    case 'pause': if (L.etat === 'cours') L.etat = 'dem'; break;
+    case 'reprendre': L.etat = 'cours'; L.encours.depuis = 0; L.encours.attendu = 5.5 + al() * 6; S.scene = 'cours'; break;
+    case 'arreter': S.scene = 'arrete'; L.etat = 'arrete'; break;
+    case 'archiver': S.archiveInterruption = true; S.couche = null; S.scene = 'arrete'; L.etat = 'arrete'; break;
+    case 'lot-preparer': S.archiveInterruption = false; S.scene = 'pret'; sim.lot = lotDeBase(); sim.lot.cuts = []; S.tiroir = false; break;
+    case 'reessayer': case 'main': case 'passer-ok': S.couche = null; S.scene = 'cours'; L.etat = 'cours'; L.encours.depuis = 0; if (act === 'passer-ok') { L.cuts.push({ cut: L.encours.cut, statut: 'saute', dur: 0 }); L.encours = { cut: L.encours.cut + 1, depuis: 0, attendu: 7 }; } break;
+    case 'passer': S.couche = 'passer'; break;
+    case 'exporter': S.exportFait = true; note('Export lancé · 3 volumes'); return;
+    case 'rel-reprendre': S.scene = 'relecture-active'; S.relectureActive = true; break;
+    case 'rel-pause': S.scene = 'relecture'; S.relectureActive = false; break;
+    case 'rel-arreter': S.scene = 'fin'; break;
+    case 'echo-demarrer': if (!sim.echo.encours) echoDeBase(); S.echoPause = false; S.scene = 'echo'; break;
+    case 'echo-terminer': S.scene = 'echo-vide'; note('Volumes prêts · téléchargement lancé'); return;
+    case 'echo-pause': S.echoPause = true; break;
+    case 'echo-reprendre': S.echoPause = false; S.scene = 'echo'; break;
+    case 'echo-abandon': S.couche = 'echo-abandon'; break;
+    case 'echo-abandon-confirmer': sim.echo = { visites: [], encours: null }; S.couche = null; S.scene = 'echo-vide'; S.echoPause = false; break;
+    case 'ancien': note('Ancien panneau : ouvert dans la même fenêtre (hors maquette)'); return;
+    case 'activite:orbite': case 'activite:echo': { const m = modele(); if (m.bascule.verrou && !act.endsWith(m.activite)) { note(m.bascule.raison); return; } S.scene = act.endsWith('echo') ? 'echo-vide' : (S.scene === 'file-reglage' ? 'file-eteinte' : 'pret'); S.tiroir = false; break; }
+    default: return;
+  }
+  rendre();
+}
+FEN.addEventListener('click', e => {
+  const fi = e.target.closest('[data-file]'); if (fi) { const F = S.file, k = fi.dataset.file, v = Number(fi.dataset.val); if (fi.matches('[aria-disabled="true"]')) return; if (k === 'n') F.n = v; else F[k] = !!v; if (!F.allumee) F.prete = false; rendre(); return; }
+  const ex = e.target.closest('[data-examine]'); if (ex) { const c = Number(ex.dataset.examine); if (S.examines.has(c)) S.examines.delete(c); else S.examines.add(c); rendre(); return; }
+  const ou = e.target.closest('[data-ouvrir]'); if (ou) { note(`Cut ${ou.dataset.ouvrir} ouvert dans ESV (V2, à construire)`); return; }
+  const row = e.target.closest('[data-row]'); if (row && !e.target.closest('[data-act]')) { S.sel = Number(row.dataset.row); rendre(); return; }
+  const seg = e.target.closest('[data-seg]'); if (seg) { S.reglages[seg.dataset.seg] = seg.dataset.val; if (seg.dataset.seg === 'Thème') regler('theme', seg.dataset.val === 'Système' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'sombre' : 'clair') : seg.dataset.val.toLowerCase()); else { if (seg.dataset.seg === 'Interface' && seg.dataset.val === 'Palette') S.couche = 'palette'; rendre(); } return; }
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  if (a.matches('[aria-disabled="true"]') && a.dataset.raison) { note(a.dataset.raison); return; }
+  if (a.matches('[aria-disabled="true"]')) return;
+  if (a.dataset.fermer) { S.couche = null; S.q = ''; S.pi = 0; }
+  agir(a.dataset.act);
+});
+FEN.addEventListener('change', e => { if (e.target.dataset.reg) S.reglages[e.target.dataset.reg] = e.target.value; });
+FEN.addEventListener('input', e => { if (e.target.id === 'pal-q') { S.q = e.target.value; S.pi = 0; rendre(); } });
+D.addEventListener('keydown', e => {
+  if (e.key === 'Tab' && S.couche) {
+    const couche = FEN.querySelector('.boite,.feuille,.palette,.popover');
+    const elements = [...(couche?.querySelectorAll('button:not(:disabled),input,select,[tabindex="0"]') || [])].filter(n => n.checkVisibility());
+    if (elements.length && ((e.shiftKey && D.activeElement === elements[0]) || (!e.shiftKey && D.activeElement === elements.at(-1)))) { e.preventDefault(); elements[e.shiftKey ? elements.length - 1 : 0].focus(); }
+  }
+  if (e.key === 'Escape' && S.arretDemande) { S.arretDemande = null; clearTimeout(agir.arretHorloge); rendre(); return; }
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); agir('palette'); return; }
+  if (e.key === 'Escape') { if (S.couche) agir('fermer'); else if (S.tiroir) agir('tiroir'); return; }
+  if (S.couche === 'palette') {
+    const L = FEN.querySelectorAll('.cmd[data-cmd]');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { S.pi = Math.max(0, Math.min(L.length - 1, S.pi + (e.key === 'ArrowDown' ? 1 : -1))); rendre(); e.preventDefault(); }
+    else if (e.key === 'Enter') { const c = L[Math.max(0, Math.min(L.length - 1, S.pi))]; if (c && c.getAttribute('aria-disabled') !== 'true' && c.dataset.act) { S.couche = null; S.q = ''; S.pi = 0; agir(c.dataset.act); } e.preventDefault(); }
+    return;
+  }
+  if (S.tiroir && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && !e.target.closest('input,select')) {
+    const n = FEN.querySelectorAll('#tiroir-corps [data-row]').length; if (!n) return;
+    S.sel = Math.max(0, Math.min(n - 1, (S.sel ?? -1) + (e.key === 'ArrowDown' ? 1 : -1))); rendre(); FEN.querySelector(`[data-row="${S.sel}"]`)?.scrollIntoView({ block: 'nearest' }); e.preventDefault();
+  }
+  if (S.tiroir && R.dataset.revue === 'v2' && S.sel !== null && (e.key === 'e' || e.key === 'E') && !e.target.closest('input,select')) { const b = FEN.querySelector(`[data-row="${S.sel}"] [data-examine]`); if (b) b.click(); }
+});
+
+D.getElementById('notes').addEventListener('click', e => { const b = e.target.closest('[data-sim]'); if (!b || b.tagName !== 'BUTTON') return; const F = S.file;
+  if (b.dataset.sim === 'finir' && F.en) { finirPartie(); rendre(); }
+  if (b.dataset.sim === 'arret' && F.en) { F.en = false; appliquerCause(); S.scene = 'file-alerte'; S.tiroir = false; rendre(); } });
+D.getElementById('notes').addEventListener('change', e => { if (e.target.dataset.sim !== 'cause') return; S.file.cause = e.target.value; if (S.scene === 'file-alerte') appliquerCause(); rendre(); });
+
+/* ─────────────────────────── banc d'essai */
+function regler(k, v) {
+  if (k === 'placement') { S.placement = v; R.dataset.placement = v; if (S.scene === 'file-eteinte' || S.scene === 'file-reglage') { scene(S.scene); return; } }
+  if (k === 'taille') R.dataset.taille = v; if (k === 'theme') R.dataset.theme = v; if (k === 'revue') R.dataset.revue = v; if (k === 'cadence') R.dataset.cadence = v;
+  D.querySelectorAll(`.banc [data-${k}]`).forEach(b => b.setAttribute('aria-pressed', b.dataset[k] === v));
+  rendre();
+}
+function scene(id) {
+  S.archiveInterruption = false; S.relectureIndex = 58; S.relectureTemps = 0; S.arretDemande = null; S.echoPause = id === 'echo-pause'; S.file = FILE0(); const F = S.file;
+  if (id === 'file-reglage') { if (S.placement === 'a') { id = 'file-reglage'; } }
+  if (id === 'file-cours') { Object.assign(F, { allumee: true, n: 3, relecture: true, correction: true, en: true, partie: 2, bilans: [bilanInvente(1, { relecture: true, correction: true })] }); }
+  if (id === 'file-alerte') { Object.assign(F, { allumee: true, n: 3, relecture: true, correction: true, bilans: [bilanInvente(1, { relecture: true, correction: true }), bilanInvente(2, { relecture: true, correction: true })] }); }
+  if (id === 'file-fin') { Object.assign(F, { n: 2, relecture: true, correction: true, bilans: [bilanInvente(1, { relecture: true, correction: true }), bilanInvente(2, { relecture: true, correction: true })] }); }
+  if (id === 'arrete') { sim.lot = lotDeBase(); sim.lot.etat = 'arrete'; }
+  const idVue = id; if (id === 'file-cours') id = 'cours';
+  S.scene = id; S.couche = idVue === 'file-reglage' && S.placement === 'a' ? 'file' : id === 'palette' ? 'palette' : id === 'reglages' ? 'reglages' : id === 'cache' ? 'cache' : id === 'esv' ? 'esv' : null; S.tiroir = false; S.sel = null; S.note = ''; S.exportFait = false;
+  if (id === 'file-alerte') appliquerCause();
+  if (id === 'cours' || id === 'palette') { sim.lot = lotDeBase(); sim.lot.etat = 'cours'; } else if (id === 'pause') { sim.lot = lotDeBase(); sim.lot.etat = 'pause'; sim.lot.pauseDepuis = 80; } else if (id === 'incident' || id === 'interrompu' || id === 'esv-muet') { sim.lot = lotDeBase(); sim.lot.etat = 'incident'; }
+  if (id === 'echo') echoDeBase();
+  D.getElementById('sc-scene').value = idVue; rendre();
+}
+const sel = D.getElementById('sc-scene'); sel.innerHTML = SCENES.map(([k, t]) => `<option value="${k}">${esc(t)}</option>`).join(''); sel.addEventListener('change', () => scene(sel.value));
+D.querySelectorAll('.banc .seg button').forEach(b => b.addEventListener('click', () => { const k = Object.keys(b.dataset)[0]; regler(k, b.dataset[k]); }));
+D.getElementById('sc-reduit').addEventListener('change', e => { if (e.target.checked) R.dataset.reduit = '1'; else delete R.dataset.reduit; });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => { if (S.reglages['Thème'] === 'Système') regler('theme', e.matches ? 'sombre' : 'clair'); });
+const P = new URLSearchParams(location.search);
+R.dataset.nu = P.get('nu') === '1' ? '1' : '0';
+if (P.get('taille')) regler('taille', P.get('taille')); if (P.get('theme')) regler('theme', P.get('theme')); if (P.get('revue')) regler('revue', P.get('revue')); if (P.get('cadence')) regler('cadence', P.get('cadence'));
+if (P.get('reduit') === '1') { R.dataset.reduit = '1'; D.getElementById('sc-reduit').checked = true; }
+scene(SCENES.some(s => s[0] === P.get('scene')) ? P.get('scene') : 'cours');
+if (P.get('tiroir') === '1') { S.tiroir = true; rendre(); }
+if (P.get('fige') === '1') { /* captures : on fige l'avancement au premier dessin */ } else sim.tick = setInterval(boucle, 250);
+window.ArianeMaquette = { S, sim, scene, rendre, finirPartie };
+})();
+</script>
+</body>
+</html>

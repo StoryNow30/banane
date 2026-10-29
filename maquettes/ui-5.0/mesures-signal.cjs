@@ -102,7 +102,7 @@ function relever() {
   const debordements = [];
   if (zone.scrollWidth > zone.clientWidth + 1) debordements.push('panneau');
   if (document.documentElement.scrollWidth > innerWidth + 1) debordements.push('page');
-  const cibles = zone.querySelectorAll('.instrument, .barre, .boite, .palette, .feuille, .corps, .cache, .popover');
+  const cibles = zone.querySelectorAll('.instrument, .contenu-instrument, .barre, .boite, .palette, .feuille, .corps, .cache, .popover');
   for (const el of cibles) if (vis(el) && el.scrollWidth > el.clientWidth + 1) debordements.push(el.className);
   for (const el of zone.querySelectorAll('button,input,select')) {
     if (!vis(el)) continue;
@@ -124,7 +124,7 @@ async function appliquer(page, cas, theme, w) {
     if (cas.demande) A.sim.lot.etat = 'dem';
     if (cas.cause) { const e = document.querySelector('[data-sim="cause"]'); if (e) { e.value = cas.cause; e.dispatchEvent(new Event('change', { bubbles: true })); } }
     A.rendre();
-    for (const e of document.querySelectorAll('#fen .corps, #fen .liste, #fen .instrument')) e.scrollTop = 0;
+    for (const e of document.querySelectorAll('#fen .corps, #fen .liste, #fen .instrument, #fen .contenu-instrument')) e.scrollTop = 0;
   }, { cas, theme, w });
 }
 
