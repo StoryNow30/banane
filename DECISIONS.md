@@ -3273,3 +3273,11 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **Décision** : aucune garde dans le code tant qu'un lot jugé indépendant (Écho de la partie 0 de la test 24, y compris les trois cuts qui suivent chaque différé) ne la confirme avec un intervalle ; l'outil `predicteurs-valider.cjs` de CH-015 la mesure en une commande. Le chantier de décodage de voie est clos sous sa forme « choisir entre candidats ».
 - Le numéro suivant est D-266.
 
+## D-266 — Examen de la partie 20 : l'arrondi du clic n'est pas retenu, la partie 20 passe en apprentissage (intégrateur, sur délégation D-262, 29/10/2026)
+
+- **Mesure (CH-012, ouverture unique de la partie 20, critère écrit avant)** : porte de fidélité tenue (646 poses sur 646 rejouées à 0,8 mm). La v6 contre l'opérateur sur 172 jugés : sous 3 mm 53,5 % [46,0 ; 60,8], sous 5 mm 63,4 % [56,0 ; 70,2], sous 10 mm 81,4 % ; sans les 21 cuts décalés de plus de 100 mm (151 jugés) : 60,9 %, 72,2 %, 92,7 %. Clic arrondi, simulé : sous 3 mm −1,8 point [−5,8 ; 0], sous 5 mm −2,7 points [−7,0 ; 0,8] ; critère « non régressif » (borne basse ≥ −3) non satisfait, aucun gain.
+- **Décision** : **l'arrondi du clic au pixel entier n'est pas intégré** (le commit d'essai est annulé par un commit d'annulation, sans réécriture d'historique). La troncature de Chromium est établie (biais de −0,25 mm par axe) mais son effet est sans gain mesurable devant une erreur de pose médiane de 4,7 à 6,7 mm sur les rails déplacés. Il reste une correction connue, pouvant être reprise si l'on cherche la sous-3 mm sur des poses déjà justes.
+- **Rotation (D-192)** : la partie 20 (étiquette de rejeu 10) passe en apprentissage dans `datasets/manifeste-parties.json`. Une nouvelle partie d'examen est à nommer ; candidate : la partie 0 du lot de la test 24, une fois l'Écho fait.
+- **Conséquence pour la v7** : un oracle de 50,7 % sous 3 mm sur la partie 20 (contre 95,7 % sur la partie 17, non représentative) dit que la pose de l'opérateur n'est, pour la moitié des rails, dans aucune hypothèse du jeu actuel : l'effort va aux hypothèses manquantes, pas au pixel. Aucune hypothèse identifiée ne démontre aujourd'hui moins de 5 mm ni moins de 3 mm.
+- Le numéro suivant est D-267.
+
