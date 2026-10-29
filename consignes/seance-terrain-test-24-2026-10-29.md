@@ -9,7 +9,8 @@ Cette version allume la **deuxième passe des différés en écriture** (D-259) 
 1. **Lance un lot de reprise** (Orbite) sur une partie où l'ADV est observé, avec **Écho** actif sur la même séance. Reste devant l'écran.
 2. À la fin, **exporte** (« Exporter tout ») avant toute autre manipulation. Exporte après chaque partie.
 3. Regarde les cuts que la passe a posés : s'ils sont bons, ne touche à rien ; s'ils sont faux, corrige-les. Dis tout de suite si une pose de la passe est fausse de plus de 20 mm ou sur la mauvaise voie.
-4. Aucun SKIP, aucune validation à l'aveugle.
+4. **Écho sur les cuts qui suivent un différé** : en plus des cuts que la passe a posés, repasse en Écho sur les **3 cuts posés qui suivent chaque cut différé** (ils sont les plus souvent décalés : 41 % de faux autour d'un différé contre 5 % ailleurs sur le lot de la partie 20). Corrige-les seulement s'ils sont faux. Cela permet de valider ou de rejeter une garde sur un lot indépendant.
+5. Aucun SKIP, aucune validation à l'aveugle.
 
 ## Deux relevés en Écho (une fois, à la main)
 - **Changer de partie** : en Écho, passe d'une partie à une autre une fois et note ce que fait ESV (reste-t-il connecté, que se passe-t-il à l'écran). Il sert à la file de parties.
