@@ -1,0 +1,40 @@
+--- a/src/adapter-page.js	2026-10-29 10:57:32.182429337 +0000
++++ b/src/adapter-page.js	2026-10-29 10:57:32.206525207 +0000
+@@ -1342,11 +1342,27 @@
+    const parts=[...vus.values()];
+    if(parts.filter(x=>x.current).length!==1){const p=new URL(location.href).searchParams.get('p');for(const x of parts)x.current=/^\d{1,6}$/.test(p||'')&&x.part===Number(p);}
+    const c=parts.filter(x=>x.current);return {status:'ok',current:c.length===1?c[0].part:null,parts};}
++ /* CH-017 (T27a, PROPOSÉ ; appliqué par l'intégrateur après le relevé, par l'opérateur, d'un vrai changement de partie) — CHANGER DE PARTIE.
++  * Clic sur l'entrée « p=N » du sélecteur de parties (SUPPOSÉ : liens `…&p=N`, architecture 5.0 § P, le même que lit `selecteurParties`).
++  * Aucune écriture, aucune pose, aucune validation, aucun SKIP. Refus en clair, rien cliqué : partie invalide, une autre action d'Ariane en cours
++  * (`occupe`), aucun lien vers la partie (`partie-absente`), libellé « Cut N of part P » illisible. Déjà sur la partie : `deja`, rien cliqué.
++  * La réponse part AVANT le clic (il recharge peut-être la page) : elle n'est qu'un ACCUSÉ DE DEMANDE {ok, mode:'lien', de:{part,cut}, vers,
++  * demandeA} ; la PREUVE du changement est la partie lue ensuite par le service worker (« Cut N of part P » et rails présents, borne 60 s). */
++ function changerPartie(options={}){const part=options&&typeof options==='object'?options.part:null;
++   if(!Number.isInteger(part)||part<0||part>1e6)return {ok:false,raison:'partie-invalide'};
++   const autres=[...actionsEnCours.values()].filter(a=>a!=='changerPartie'&&!LECTURES.has(a));
++   if(autres.length)return {ok:false,raison:'occupe',action:autres[0]};
++   const lu=cutLabel();if(!lu)return {ok:false,raison:'libelle-illisible'};
++   const de={part:lu.part,cut:lu.cut};if(lu.part===part)return {ok:true,deja:true,mode:'lien',de,vers:part};
++   const lien=[...document.querySelectorAll('a[href]')].slice(0,5000).find(a=>{try{return new URL(a.getAttribute('href'),location.href).searchParams.get('p')===String(part);}catch{return false;}});
++   if(!lien)return {ok:false,raison:'partie-absente'};
++   setTimeout(()=>{try{lien.click();}catch{/* le service worker ne verra pas la partie : borne */}},0);
++   return {ok:true,mode:'lien',de,vers:part,demandeA:Date.now()};}
+  let intrusion=null;
+  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
+    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
+    const selecteur=options&&typeof options==='object'&&options.contrat===true&&relOn('selecteurParties')?(()=>{try{return selecteurParties();}catch{return {status:'illisible',current:null,parts:[]};}})():null;
+-   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
++   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,capacites:['changerPartie'],...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,changerPartie,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
+    amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
+    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
+    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},
+--- a/src/bridge.js	2026-10-29 10:57:32.182616480 +0000
++++ b/src/bridge.js	2026-10-29 10:57:32.209781094 +0000
+@@ -1,5 +1,5 @@
+ (()=>{'use strict';if(window.__banane3Bridge)return;window.__banane3Bridge=true;
+- const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','goToCut','validerMajEspace','amenerDansLaVue','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','cancel']);
++ const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','goToCut','validerMajEspace','amenerDansLaVue','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','changerPartie','cancel']);
+  let pill=null,strip=null,launcherGeneration=0;
+  /* 4.7.20 (piste H) — bandeau d'état en bas de la page ESV, activé depuis le
+   * panneau. Il ne capte aucun clic (pointer-events: none) : le Pilote clique

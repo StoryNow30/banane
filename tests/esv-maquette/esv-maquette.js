@@ -196,19 +196,20 @@
  function majEtat(){const c=cutCourant();$('maquette-etat').textContent=c?`${etat.scenario.provenance?`rejeu de ${etat.scenario.provenance.entree} (${etat.scenario.provenance.nature}) · `:''}partie ${etat.partie.part}, cut ${c.cut} (${c.status}), ${etat.partie.cuts.length} coupes, latence ${options.latence} ms × ${options.lots} lots`:'—';}
  /* ---------- démarrage : scénario puis liste des coupes (GET paginé) ---------- */
  async function demarrer(){
-  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}`);
+  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}`);
   if(!r0.ok)throw Error((await r0.json().catch(()=>({}))).error||('scénario : HTTP '+r0.status));const s=await r0.json();etat.scenario=s;
   for(const p of s.parties){const lignes=[];let url=`/rails/${p.table}`;for(;;){const r=JSON.parse((await xhr('GET',url)).texte);lignes.push(...r.value);if(!r.suite)break;url=`/rails/${p.table}?npk=${encodeURIComponent(r.suite.npk)}&nrk=${r.suite.nrk}`;}
    etat.listes.set(p.part,lignes);for(const c of p.cuts){const l=lignes[c.cut];if(l&&l.ExtractionStatus)c.status=l.ExtractionStatus;}}
   try{etat.pannes=JSON.parse((await xhr('GET','/maquette/pannes')).texte)||{};}catch{etat.pannes={};}
-  etat.partie=s.parties[0];selecteurParties(s);
+  /* CH-017 : un clic dans le sélecteur recharge la page avec `p=N` : la maquette sert alors la partie N si son scénario l'a (variante « rechargement »). */
+  etat.partie=(q.has('p')&&s.parties.find(p=>String(p.part)===q.get('p')))||s.parties[0];selecteurParties(s);
   let index=Number.isFinite(options.cut)?etat.partie.cuts.findIndex(c=>c.cut===options.cut):-1;
   if(index<0){index=etat.partie.cuts.findIndex(c=>c.status==='invalid');if(index<0)index=0;}
   projection();chargerCut(index,'demarrage');return true;}
  /* T20a — SÉLECTEUR DE PARTIES : SUPPOSÉ (architecture 5.0, § P : « un sélecteur de parties dont chaque entrée est un lien (…&p=N) », lu dans une page
   * enregistrée, jamais relevé par Ariane dans ESV). Une liste de liens `?…&p=N` (parties du scénario et leurs voisines), l'entrée courante marquée
-  * `active` ; le texte « Part N » et la classe sont des hypothèses. `selecteur=0` : pas de sélecteur. Un clic recharge la page (paramètre `p`, sans
-  * effet sur la partie servie : la maquette ne sert que les parties de son scénario). Lu par le relevé en lecture seule de l'adaptateur. */
+  * `active` ; le texte « Part N » et la classe sont des hypothèses. `selecteur=0` : pas de sélecteur. Un clic recharge la page (paramètre `p` ;
+  * CH-017 : la partie servie est alors la partie `p` si le scénario l'a, sinon la première). Lu par le relevé en lecture seule de l'adaptateur. */
  function selecteurParties(s){const ul=$('maquette-parties');if(!ul)return;ul.textContent='';if(!options.selecteur)return;
   const courante=etat.partie?.part,nums=new Set();for(const p of s.parties)for(const n of [p.part-1,p.part,p.part+1])if(n>=0)nums.add(n);
   for(const n of [...nums].sort((a,b)=>a-b)){const li=document.createElement('li'),a=document.createElement('a'),u=new URLSearchParams(location.search);u.set('p',String(n));
