@@ -8,7 +8,8 @@ const { production, base, K, S, EsvTrou, SCOPE, ev, attendre } = require('./help
 async function lot({ passe, profil = null }) {
   const adapter = new EsvTrou([]), b = production({ adapter });
   b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false },
-    lot: { ...S.lot, ...(profil ? { profil } : {}), passeDifferes: { ...S.lot.passeDifferes, ...(passe ? { ecriture: false, passes: 1 } : { ombre: false }) } } };
+    /* CH-019 : la garde « après un différé » différerait le 113 (1 appui, après le 112) ; elle n'est pas l'objet de cet essai : coupée. */
+    lot: { ...S.lot, ...(profil ? { profil } : {}), gardeApresDiffere: false, passeDifferes: { ...S.lot.passeDifferes, ...(passe ? { ecriture: false, passes: 1 } : { ombre: false }) } } };
   const G = b.ctx.BananeGcv2L1, appels = [];
   b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => {
     const cut = a.capture.identity.cut;
