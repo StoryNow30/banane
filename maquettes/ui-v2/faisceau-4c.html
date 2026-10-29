@@ -72,7 +72,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 .scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
-#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:24px;overflow:hidden;background:var(--base)}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:20px;overflow:hidden;background:var(--base)}
 #fond{position:absolute;inset:0;width:100%;height:100%;display:block}
 #panneau{container-type:inline-size;position:relative;height:760px;overflow-y:auto;padding:20px 20px 32px;font-size:15px;line-height:1.5;font-weight:400}
 .notes{max-width:380px;font-size:14px;line-height:1.55;padding:18px 20px;border-radius:18px;border:1px solid var(--trait);background-color:var(--base)}
@@ -86,7 +86,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .etat .non{color:var(--texte-2);display:inline-flex;align-items:center;gap:6px;font-weight:400}
 .etat .non i{width:12px;border-top:1.5px dashed currentColor}
 .activite{display:flex;gap:4px;flex:none}
-.activite button{font:inherit;font-size:13px;background:none;border:0;padding:6px 8px;color:var(--texte-2);cursor:pointer;border-radius:8px}
+.activite button{font:inherit;font-size:13px;background:none;border:0;padding:6px 8px;color:var(--texte-2);cursor:pointer;border-radius:12px}
 .activite button[aria-pressed="true"]{color:var(--texte);font-weight:500;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:6px}
 .activite button[aria-disabled="true"]{cursor:not-allowed}
 
@@ -118,12 +118,14 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .marque{position:absolute;width:24px;height:24px;margin-left:-12px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center;color:var(--texte)}
 .marque::after{content:"";width:8px;height:8px;border:1.5px solid currentColor;border-radius:50%;background:var(--fond-ici,var(--base))}
 .marque.eau{color:var(--eau)}
+.marque::before{content:"";position:absolute;left:11.5px;top:16px;width:1px;height:var(--tige,6px);background:currentColor;opacity:.35}
 .marque.eau::after{border-radius:1px;transform:rotate(45deg);background:currentColor;width:7px;height:7px}
 .marque:hover::after,.marque:focus-visible::after{transform:scale(1.4)}
 .marque.eau:hover::after,.marque.eau:focus-visible::after{transform:rotate(45deg) scale(1.4)}
 .clef{margin:16px 0 0;font-size:13px;color:var(--texte-2);display:flex;gap:16px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .clef b{font-weight:500;color:var(--texte)}
-.clef .eau b{color:var(--eau)}
+.clef .mq{font-style:normal;margin-right:6px;color:var(--texte)}
+.clef .mq.eau{color:var(--eau)}
 .regle[data-av="continu"] .fait{transition:width .9s linear}
 .regle[data-av="continu"] .tete{transition:left .9s linear}
 .regle[data-av="paliers"] .fait{background:repeating-linear-gradient(90deg,var(--fa-trace) 0 calc(100% - 3px),transparent calc(100% - 3px) 100%);background-size:calc(100% / var(--k)) 100%;border-radius:0}
@@ -134,7 +136,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 
 /* gestes : un seul bouton plein (le geste attendu) ; les autres en texte */
 .actions{margin:24px 0 0;display:flex;flex-direction:column;gap:4px}
-.b{font:inherit;font-size:15px;font-weight:500;border-radius:14px;min-height:52px;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--plein);color:var(--sur-plein);border:0;cursor:pointer;text-align:left}
+.b{font:inherit;font-size:15px;font-weight:500;border-radius:12px;min-height:52px;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--plein);color:var(--sur-plein);border:0;cursor:pointer;text-align:left}
 .b .note,.t .note{font-weight:400;font-size:13px}
 .b[aria-disabled="true"]{background:none;color:var(--texte-2);border:1px dashed var(--texte-2);cursor:not-allowed}
 .textes{display:flex;justify-content:center;gap:4px 24px;flex-wrap:wrap}
@@ -144,7 +146,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .raison{font-size:13px;color:var(--texte-2);margin:4px 4px 0}
 
 /* incident : un cadre d'encre (plus épais que les traits), un titre, une phrase */
-.alerte{margin:0 0 16px;padding:16px 20px;border-radius:16px;border:1.5px solid var(--texte)}
+.alerte{margin:0 0 16px;padding:16px 20px;border-radius:20px;border:1.5px solid var(--texte)}
 .alerte h2{font-size:15px;font-weight:500;margin:0;display:flex;align-items:center;gap:8px}
 .alerte p{margin:4px 0 0;color:var(--texte-2)}
 .alerte .actions{margin-top:12px}
@@ -165,13 +167,13 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .inter[aria-checked="true"] .r::after{left:17px;background:var(--sur-plein)}
 .reglage{margin:24px 4px 0}
 .pas{display:flex;align-items:center;gap:12px;margin:8px 0 0 48px;font-size:13px;color:var(--texte-2)}
-.pas button{font:inherit;font-size:15px;width:32px;height:32px;border-radius:10px;border:1px solid var(--trait);background:none;color:var(--texte);cursor:pointer}
+.pas button{font:inherit;font-size:15px;width:32px;height:32px;border-radius:12px;border:1px solid var(--trait);background:none;color:var(--texte);cursor:pointer}
 .pas output{font-size:15px;font-weight:500;color:var(--texte);min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
 
 /* ce qui reste : une liste à filets, une ligne = un cut, toucher la ligne = l'examiner */
 .liste{list-style:none;margin:0;padding:0;border-top:1px solid var(--trait)}
 .ligne{display:grid;grid-template-columns:3.2em 1fr;gap:2px 12px;width:100%;padding:12px 4px;border:0;border-bottom:1px solid var(--trait);background:none;text-align:left;color:var(--texte);font:inherit;cursor:pointer}
-.ligne .c{font-family:var(--chiffre);font-variant-numeric:tabular-nums lining-nums;grid-row:span 2;font-size:15px;padding-top:1px}
+.ligne .c{font-family:var(--chiffre);font-variant-numeric:tabular-nums lining-nums;grid-row:span 2;font-size:15px;padding-top:1px;text-align:right}
 .ligne .g{font-size:13px;font-weight:500}
 .ligne .g.eau{color:var(--eau)}
 .ligne .m{font-size:13px;color:var(--texte-2)}
@@ -200,8 +202,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 :root[data-niveau="c"] .regle .tete::before{width:20px;height:20px;left:-10px;top:-10px;background:radial-gradient(circle,var(--fa2) 0 2.5px,var(--fa-halo) 3.5px,transparent 70%)}
 :root[data-niveau="c"] .regle .fait{box-shadow:0 0 10px var(--fa-halo)}
 :root[data-niveau="c"] .regle[data-fx="arret"] .fait,:root[data-niveau="c"] .regle[data-fx="fige"] .fait{box-shadow:none}
-:root[data-niveau="c"] .activite{background:var(--verre);border-radius:999px;padding:3px;box-shadow:0 0 0 1px var(--trait)}
-:root[data-niveau="c"] .activite button{border-radius:999px;padding:5px 12px}
+:root[data-niveau="c"] .activite{background:var(--verre);border-radius:12px;padding:3px;box-shadow:0 0 0 1px var(--trait)}
+:root[data-niveau="c"] .activite button{border-radius:9px;padding:5px 12px}
 :root[data-niveau="c"] .activite button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein);text-decoration:none}
 :root[data-niveau="c"] .alerte{background:var(--verre);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 :root[data-niveau="c"] .alerte .excl{flex:none;width:18px;height:18px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:13px;line-height:1}
@@ -213,6 +215,19 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   .regle .tete.change::before{animation:eclat 1s cubic-bezier(.2,.7,.2,1)}
 }}
 @keyframes eclat{from{transform:scale(1.8)}to{transform:none}}
+
+/* ---------- niveau c : gestes relevés sur heydamir.design (29/10, accueil lu dans Chromium) ----------
+ * un seul mot en lumière (dégradé chaud dans le texte ; la couleur pleine de repli tient 4,5:1) ;
+ * double cadre : appareil de 26 px, marge de 6 px, verre de 20 px ; bouton plein à liseré chaud et
+ * lueur dessous ; ombres en couches (anneau, reflet haut, ombre portée courte) ; texte un peu ouvert. */
+:root{--mot:#7E4300;--mot-1:#6E3A00;--mot-2:#9A5200;--appareil:#E8E0D3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mot:#F2C890;--mot-1:#F7DCB8;--mot-2:#E3A06A;--appareil:#1C1712}}
+:root[data-theme="dark"]{--mot:#F2C890;--mot-1:#F7DCB8;--mot-2:#E3A06A;--appareil:#1C1712}
+:root[data-niveau="c"] #panneau{letter-spacing:.01em}
+:root[data-niveau="c"] .etat .lumiere{color:var(--mot);background:linear-gradient(100deg,var(--mot-1),var(--mot-2) 45%,var(--mot-1) 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+:root[data-niveau="c"] .appareil{padding:6px;border-radius:26px;background:var(--appareil);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 0 1px var(--trait),0 2px 4px -2px var(--ombre),0 28px 56px -28px var(--ombre)}
+:root[data-niveau="c"] .appareil .lot{box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1px var(--trait)}
+:root[data-niveau="c"] .b:not([aria-disabled="true"]){box-shadow:0 0 0 1px color-mix(in srgb,var(--fa1) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(0,0,0,.18),0 10px 28px -12px var(--fa-halo)}
 
 </style>
 </head>
@@ -1139,9 +1154,12 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     for (let i = 1; i <= f.nb; i++) s += `<i class="${f.finie || i < f.courante ? 'fait' : i === f.courante ? 'ici' : ''}"></i>`;
     return `<span class="etapes" aria-hidden="true">${s}</span>`;
   }
+  /* heydamir : un seul mot en lumière dans l'écran (« trust » sur son accueil). Ici le mot de
+   * l'état, et seulement quand le lot vit ; en 4c. */
+  const enLumiere = (m) => NIV === 'c' && (m.phase === 'encours' || m.vue === 'echo') && m.vue !== 'reste' && m.vue !== 'examen';
   function ligne(m, mot, suite, sansActivite) {
-    const non = m.liaison.etat !== 'relie' ? `<span class="non"><i aria-hidden="true"></i>${esc(m.liaison.texte)}</span>` : '';
-    return `<div class="tete-ligne"><p class="etat">${esc(mot)}${suite ? `<span class="sec">${esc(suite)}</span>` : ''}${etapes(m.file)}${non}</p>${sansActivite ? '' : activite(m)}</div>`;
+    const non = m.liaison.etat !== 'relie' && !m.incident ? `<span class="non"><i aria-hidden="true"></i>${esc(m.liaison.texte)}</span>` : '';
+    return `<div class="tete-ligne"><p class="etat">${enLumiere(m) ? `<span class="lumiere">${esc(mot)}</span>` : esc(mot)}${suite ? `<span class="sec">${esc(suite)}</span>` : ''}${etapes(m.file)}${non}</p>${sansActivite ? '' : activite(m)}</div>`;
   }
   const partieTexte = (f) => (f.active && !f.finie ? `partie ${f.courante} sur ${f.nb}` : '');
 
@@ -1155,7 +1173,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   function carte(m, contenu, etiquette) {
     const fa = m.vue === 'reste' || m.vue === 'examen' ? 'absent' : m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : 'absent';
     const n = m.vue === 'echo' ? m.echo.vus : m.compte.faits;
-    return `<section class="lot" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(etiquette)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg>${contenu}</section>`;
+    const sec = `<section class="lot" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(etiquette)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg>${contenu}</section>`;
+    /* heydamir : double cadre d'appareil, rayons concentriques (dehors = dedans + marge) ; en 4c */
+    return NIV === 'c' ? `<div class="appareil">${sec}</div>` : sec;
   }
   const nombre = (n, unite) => `<p class="grand"><span class="n" data-valeur="n">${n}</span><span class="s">${esc(unite)}</span></p>`;
   const sous = (t) => (t ? `<p class="sous">${esc(t)}</p>` : '');
@@ -1170,8 +1190,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     const etages = [-99, -99, -99, -99]; let haut = 0;
     const j = marques.map((r) => {
       const x = pos(r.cut); let e = etages.findIndex((v) => x - v >= 7.5); if (e < 0) e = 3; etages[e] = x; haut = Math.max(haut, e);
-      const lib = `Cut ${r.cut}, ${r.type === 'vert' ? 'vert à examiner' : 'différé'} : examiner`;
-      return `<button class="marque${r.type === 'vert' ? ' eau' : ''}" data-forme="${r.type === 'vert' ? 'losange' : 'rond'}" style="left:${x.toFixed(2)}%;bottom:${30 + e * 18}px" data-a="examiner" data-id="${r.id}" aria-label="${esc(lib)}" title="${esc(lib)}"></button>`;
+      const lib = `Cut ${r.cut}, ${r.type === 'vert' ? 'à examiner' : 'différé'} : examiner`;
+      return `<button class="marque${r.type === 'vert' ? ' eau' : ''}" data-forme="${r.type === 'vert' ? 'losange' : 'rond'}" style="left:${x.toFixed(2)}%;bottom:${30 + e * 18}px;--tige:${6 + e * 18}px" data-a="examiner" data-id="${r.id}" aria-label="${esc(lib)}" title="${esc(lib)}"></button>`;
     }).join('');
     const av = avChoisi();
     const vraie = m.phase === 'fin' ? 100 : pos(c.cut);
@@ -1182,7 +1202,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     const ici = !riche || m.phase === 'fin' || vraie < 14 || (!inconnu && vraie > 84) ? '' : `<span class="ici" style="left:${vraie.toFixed(2)}%">${c.cut}</span>`;
     const fin = inconnu ? '<span class="borne f">fin inconnue</span>' : `<span class="borne f">${d + c.total - 1}</span>`;
     const nd = marques.filter((r) => r.type !== 'vert').length, nv = marques.length - nd;
-    const clef = marques.length ? `<p class="clef"><span><b>○ ${nd}</b> différé${nd > 1 ? 's' : ''}</span><span class="eau"><b>◆ ${nv}</b> à examiner</span></p>` : '';
+    const clef = marques.length ? `<p class="clef"><span><i class="mq" aria-hidden="true">○</i><b>${nd}</b> différé${nd > 1 ? 's' : ''}</span><span><i class="mq eau" aria-hidden="true">◆</i><b>${nv}</b> à examiner</span></p>` : '';
     return `<div class="regle" data-fx="${fa}" data-av="${av || ''}" data-fait="${fait.toFixed(2)}" style="--k:${Math.max(1, k)};--h-regle:${56 + haut * 18}px" role="group" aria-label="Frise du lot, du cut ${d} ${inconnu ? 'à une fin inconnue' : 'au cut ' + (d + c.total - 1)} ; toucher une marque pour l’examiner">
         <span class="fil${inconnu ? ' ouvert' : ''}"></span>${inconnu ? '<span class="suite" aria-hidden="true"></span>' : ''}
         <span class="fait"${av === 'continu' ? ' data-garder="frise-fait"' : ''} style="width:${fait.toFixed(2)}%"></span>${tete}${j}
@@ -1206,14 +1226,18 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       return h + gestes(m.actions) + message(m);
     }
     if (f.alerte) h += alerte(f.alerte.titre, f.alerte.detail);
-    if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, m.incident.texte, m.incident.actions);
+    /* craft.md : le texte d'une erreur ne répète pas son bouton */
+    const TEXTES = { absent: 'Aucun onglet ESV ne répond dans ce navigateur.', choisir: 'Plusieurs onglets ESV sont ouverts.' };
+    if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, TEXTES[m.incident.type] || m.incident.texte, m.incident.actions);
     if (m.phase === 'pret') {
       const b = m.bornes;
       const total = b.finDePartie ? 'jusqu’à la fin de la partie' : `${b.fin - b.debut + 1} cuts`;
       h += ligne(m, 'Prêt', '');
       h += carte(m, `<div class="bornes"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div>${sous(total)}<button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu’à la fin de la partie</button>`, 'Prêt');
-      /* « Préparer un autre lot » ne fait rien de plus ici : on est déjà en train de préparer */
-      h += gestes(m.actions.filter((x) => x.a !== 'preparer'));
+      /* Règle de kubre : on ne retire pas une fonction pour alléger l'écran ; « Préparer un autre
+       * lot » (bornes suivantes) reste, en texte. La raison du bouton grisé n'est pas répétée
+       * quand un incident l'explique déjà au-dessus. */
+      h += gestes(m.actions.map((x) => (m.incident && x.raison ? { ...x, raison: null } : x)));
       h += `<div class="reglage"><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"></span>Enchaîner plusieurs parties</button>${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues une à une</span></div>` : ''}</div>`;
       return h + message(m);
     }
@@ -1230,7 +1254,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     let phrase = '';
     if (f.relecture) phrase = `relecture et correction de la partie ${f.courante}`;
     else if (m.phase === 'encours') phrase = riche ? c.tempsTexte : `cut ${c.cut} · ${c.tempsTexte}`;
-    else if (m.phase === 'pause') phrase = `au cut ${c.cut} · continuer reprend ce même lot`;
+    else if (m.phase === 'pause') phrase = `au cut ${c.cut}`;
     else if (m.phase === 'arrete') phrase = f.alerte ? `au cut ${c.cut}` : m.incident && m.incident.type === 'reprise' ? `au cut ${c.cut}` : `${(m.phrase.split('.')[0] || '').trim()} · au cut ${c.cut}`;
     h += ligne(m, m.titre, partieTexte(f));
     if (m.incident && m.incident.type === 'reprise') h = h.replace('<div class="tete-ligne">', `<div class="info" role="status"><h2>${esc(m.incident.titre)}</h2><p>${esc(m.incident.texte)}</p></div><div class="tete-ligne">`);
@@ -1240,8 +1264,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   const message = (m) => (m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : '');
 
   function reste(m) {
-    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<li><button class="ligne" data-a="examiner" data-id="${r.id}"><span class="c">${r.cut}</span><span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ vert à examiner' : '○ différé'}</span><span class="m">${esc(r.motif)}</span></button></li>`).join('');
-    return `<div class="tete-ligne"><p class="etat">Ce qui reste<span class="sec">${m.restants.length} cuts</span></p><button class="t" data-a="retour">Retour au lot</button></div><ul class="liste">${l}</ul>` + message(m);
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<li><button class="ligne" data-a="examiner" data-id="${r.id}"><span class="c">${r.cut}</span><span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ à examiner' : '○ différé'}</span><span class="m">${esc(r.motif)}</span></button></li>`).join('');
+    return `<div class="tete-ligne"><p class="etat">Ce qui reste<span class="sec">${m.restants.length} cuts</span></p><button class="t" data-a="retour">Retour au lot</button></div>${l ? `<ul class="liste">${l}</ul>` : '<p class="sous" style="margin:0 4px">Rien à reprendre.</p>'}` + message(m);
   }
   function coupe(r) {
     const { pts, rails } = Demo.D.coupe(r.cut, 320);
@@ -1253,7 +1277,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
   function examen(m) {
     const r = m.examen;
-    const type = r.type === 'vert' ? '◆ vert à examiner' : '○ différé';
+    const type = r.type === 'vert' ? '◆ à examiner' : '○ différé';
     return `<div class="tete-ligne"><p class="etat">Cut ${r.cut}<span class="sec">${type}</span></p><button class="t" data-a="voirReste">Retour à la liste</button></div>`
       + carte(m, `<p class="sous" style="margin:0">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés, en vert d’eau.' : 'Rien de posé ; places envisagées en tireté.'}</p><div class="coupe">${coupe(r)}</div>`, `Cut ${r.cut}`)
       + gestes([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }]) + message(m);

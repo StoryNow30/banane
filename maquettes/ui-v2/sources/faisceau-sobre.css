@@ -26,7 +26,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 .scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
-#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:24px;overflow:hidden;background:var(--base)}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:20px;overflow:hidden;background:var(--base)}
 #fond{position:absolute;inset:0;width:100%;height:100%;display:block}
 #panneau{container-type:inline-size;position:relative;height:760px;overflow-y:auto;padding:20px 20px 32px;font-size:15px;line-height:1.5;font-weight:400}
 .notes{max-width:380px;font-size:14px;line-height:1.55;padding:18px 20px;border-radius:18px;border:1px solid var(--trait);background-color:var(--base)}
@@ -40,7 +40,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .etat .non{color:var(--texte-2);display:inline-flex;align-items:center;gap:6px;font-weight:400}
 .etat .non i{width:12px;border-top:1.5px dashed currentColor}
 .activite{display:flex;gap:4px;flex:none}
-.activite button{font:inherit;font-size:13px;background:none;border:0;padding:6px 8px;color:var(--texte-2);cursor:pointer;border-radius:8px}
+.activite button{font:inherit;font-size:13px;background:none;border:0;padding:6px 8px;color:var(--texte-2);cursor:pointer;border-radius:12px}
 .activite button[aria-pressed="true"]{color:var(--texte);font-weight:500;text-decoration:underline;text-decoration-thickness:1.5px;text-underline-offset:6px}
 .activite button[aria-disabled="true"]{cursor:not-allowed}
 
@@ -72,12 +72,14 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .marque{position:absolute;width:24px;height:24px;margin-left:-12px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center;color:var(--texte)}
 .marque::after{content:"";width:8px;height:8px;border:1.5px solid currentColor;border-radius:50%;background:var(--fond-ici,var(--base))}
 .marque.eau{color:var(--eau)}
+.marque::before{content:"";position:absolute;left:11.5px;top:16px;width:1px;height:var(--tige,6px);background:currentColor;opacity:.35}
 .marque.eau::after{border-radius:1px;transform:rotate(45deg);background:currentColor;width:7px;height:7px}
 .marque:hover::after,.marque:focus-visible::after{transform:scale(1.4)}
 .marque.eau:hover::after,.marque.eau:focus-visible::after{transform:rotate(45deg) scale(1.4)}
 .clef{margin:16px 0 0;font-size:13px;color:var(--texte-2);display:flex;gap:16px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .clef b{font-weight:500;color:var(--texte)}
-.clef .eau b{color:var(--eau)}
+.clef .mq{font-style:normal;margin-right:6px;color:var(--texte)}
+.clef .mq.eau{color:var(--eau)}
 .regle[data-av="continu"] .fait{transition:width .9s linear}
 .regle[data-av="continu"] .tete{transition:left .9s linear}
 .regle[data-av="paliers"] .fait{background:repeating-linear-gradient(90deg,var(--fa-trace) 0 calc(100% - 3px),transparent calc(100% - 3px) 100%);background-size:calc(100% / var(--k)) 100%;border-radius:0}
@@ -88,7 +90,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 
 /* gestes : un seul bouton plein (le geste attendu) ; les autres en texte */
 .actions{margin:24px 0 0;display:flex;flex-direction:column;gap:4px}
-.b{font:inherit;font-size:15px;font-weight:500;border-radius:14px;min-height:52px;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--plein);color:var(--sur-plein);border:0;cursor:pointer;text-align:left}
+.b{font:inherit;font-size:15px;font-weight:500;border-radius:12px;min-height:52px;padding:0 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--plein);color:var(--sur-plein);border:0;cursor:pointer;text-align:left}
 .b .note,.t .note{font-weight:400;font-size:13px}
 .b[aria-disabled="true"]{background:none;color:var(--texte-2);border:1px dashed var(--texte-2);cursor:not-allowed}
 .textes{display:flex;justify-content:center;gap:4px 24px;flex-wrap:wrap}
@@ -98,7 +100,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .raison{font-size:13px;color:var(--texte-2);margin:4px 4px 0}
 
 /* incident : un cadre d'encre (plus épais que les traits), un titre, une phrase */
-.alerte{margin:0 0 16px;padding:16px 20px;border-radius:16px;border:1.5px solid var(--texte)}
+.alerte{margin:0 0 16px;padding:16px 20px;border-radius:20px;border:1.5px solid var(--texte)}
 .alerte h2{font-size:15px;font-weight:500;margin:0;display:flex;align-items:center;gap:8px}
 .alerte p{margin:4px 0 0;color:var(--texte-2)}
 .alerte .actions{margin-top:12px}
@@ -119,13 +121,13 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .inter[aria-checked="true"] .r::after{left:17px;background:var(--sur-plein)}
 .reglage{margin:24px 4px 0}
 .pas{display:flex;align-items:center;gap:12px;margin:8px 0 0 48px;font-size:13px;color:var(--texte-2)}
-.pas button{font:inherit;font-size:15px;width:32px;height:32px;border-radius:10px;border:1px solid var(--trait);background:none;color:var(--texte);cursor:pointer}
+.pas button{font:inherit;font-size:15px;width:32px;height:32px;border-radius:12px;border:1px solid var(--trait);background:none;color:var(--texte);cursor:pointer}
 .pas output{font-size:15px;font-weight:500;color:var(--texte);min-width:2ch;text-align:center;font-variant-numeric:tabular-nums}
 
 /* ce qui reste : une liste à filets, une ligne = un cut, toucher la ligne = l'examiner */
 .liste{list-style:none;margin:0;padding:0;border-top:1px solid var(--trait)}
 .ligne{display:grid;grid-template-columns:3.2em 1fr;gap:2px 12px;width:100%;padding:12px 4px;border:0;border-bottom:1px solid var(--trait);background:none;text-align:left;color:var(--texte);font:inherit;cursor:pointer}
-.ligne .c{font-family:var(--chiffre);font-variant-numeric:tabular-nums lining-nums;grid-row:span 2;font-size:15px;padding-top:1px}
+.ligne .c{font-family:var(--chiffre);font-variant-numeric:tabular-nums lining-nums;grid-row:span 2;font-size:15px;padding-top:1px;text-align:right}
 .ligne .g{font-size:13px;font-weight:500}
 .ligne .g.eau{color:var(--eau)}
 .ligne .m{font-size:13px;color:var(--texte-2)}
@@ -154,8 +156,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 :root[data-niveau="c"] .regle .tete::before{width:20px;height:20px;left:-10px;top:-10px;background:radial-gradient(circle,var(--fa2) 0 2.5px,var(--fa-halo) 3.5px,transparent 70%)}
 :root[data-niveau="c"] .regle .fait{box-shadow:0 0 10px var(--fa-halo)}
 :root[data-niveau="c"] .regle[data-fx="arret"] .fait,:root[data-niveau="c"] .regle[data-fx="fige"] .fait{box-shadow:none}
-:root[data-niveau="c"] .activite{background:var(--verre);border-radius:999px;padding:3px;box-shadow:0 0 0 1px var(--trait)}
-:root[data-niveau="c"] .activite button{border-radius:999px;padding:5px 12px}
+:root[data-niveau="c"] .activite{background:var(--verre);border-radius:12px;padding:3px;box-shadow:0 0 0 1px var(--trait)}
+:root[data-niveau="c"] .activite button{border-radius:9px;padding:5px 12px}
 :root[data-niveau="c"] .activite button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein);text-decoration:none}
 :root[data-niveau="c"] .alerte{background:var(--verre);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 :root[data-niveau="c"] .alerte .excl{flex:none;width:18px;height:18px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:13px;line-height:1}
@@ -167,3 +169,16 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   .regle .tete.change::before{animation:eclat 1s cubic-bezier(.2,.7,.2,1)}
 }}
 @keyframes eclat{from{transform:scale(1.8)}to{transform:none}}
+
+/* ---------- niveau c : gestes relevés sur heydamir.design (29/10, accueil lu dans Chromium) ----------
+ * un seul mot en lumière (dégradé chaud dans le texte ; la couleur pleine de repli tient 4,5:1) ;
+ * double cadre : appareil de 26 px, marge de 6 px, verre de 20 px ; bouton plein à liseré chaud et
+ * lueur dessous ; ombres en couches (anneau, reflet haut, ombre portée courte) ; texte un peu ouvert. */
+:root{--mot:#7E4300;--mot-1:#6E3A00;--mot-2:#9A5200;--appareil:#E8E0D3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--mot:#F2C890;--mot-1:#F7DCB8;--mot-2:#E3A06A;--appareil:#1C1712}}
+:root[data-theme="dark"]{--mot:#F2C890;--mot-1:#F7DCB8;--mot-2:#E3A06A;--appareil:#1C1712}
+:root[data-niveau="c"] #panneau{letter-spacing:.01em}
+:root[data-niveau="c"] .etat .lumiere{color:var(--mot);background:linear-gradient(100deg,var(--mot-1),var(--mot-2) 45%,var(--mot-1) 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+:root[data-niveau="c"] .appareil{padding:6px;border-radius:26px;background:var(--appareil);box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 0 0 1px var(--trait),0 2px 4px -2px var(--ombre),0 28px 56px -28px var(--ombre)}
+:root[data-niveau="c"] .appareil .lot{box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1px var(--trait)}
+:root[data-niveau="c"] .b:not([aria-disabled="true"]){box-shadow:0 0 0 1px color-mix(in srgb,var(--fa1) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.3),inset 0 -1px 0 rgba(0,0,0,.18),0 10px 28px -12px var(--fa-halo)}

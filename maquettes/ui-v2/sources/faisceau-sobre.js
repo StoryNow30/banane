@@ -41,9 +41,12 @@
     for (let i = 1; i <= f.nb; i++) s += `<i class="${f.finie || i < f.courante ? 'fait' : i === f.courante ? 'ici' : ''}"></i>`;
     return `<span class="etapes" aria-hidden="true">${s}</span>`;
   }
+  /* heydamir : un seul mot en lumière dans l'écran (« trust » sur son accueil). Ici le mot de
+   * l'état, et seulement quand le lot vit ; en 4c. */
+  const enLumiere = (m) => NIV === 'c' && (m.phase === 'encours' || m.vue === 'echo') && m.vue !== 'reste' && m.vue !== 'examen';
   function ligne(m, mot, suite, sansActivite) {
-    const non = m.liaison.etat !== 'relie' ? `<span class="non"><i aria-hidden="true"></i>${esc(m.liaison.texte)}</span>` : '';
-    return `<div class="tete-ligne"><p class="etat">${esc(mot)}${suite ? `<span class="sec">${esc(suite)}</span>` : ''}${etapes(m.file)}${non}</p>${sansActivite ? '' : activite(m)}</div>`;
+    const non = m.liaison.etat !== 'relie' && !m.incident ? `<span class="non"><i aria-hidden="true"></i>${esc(m.liaison.texte)}</span>` : '';
+    return `<div class="tete-ligne"><p class="etat">${enLumiere(m) ? `<span class="lumiere">${esc(mot)}</span>` : esc(mot)}${suite ? `<span class="sec">${esc(suite)}</span>` : ''}${etapes(m.file)}${non}</p>${sansActivite ? '' : activite(m)}</div>`;
   }
   const partieTexte = (f) => (f.active && !f.finie ? `partie ${f.courante} sur ${f.nb}` : '');
 
@@ -57,7 +60,9 @@
   function carte(m, contenu, etiquette) {
     const fa = m.vue === 'reste' || m.vue === 'examen' ? 'absent' : m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : 'absent';
     const n = m.vue === 'echo' ? m.echo.vus : m.compte.faits;
-    return `<section class="lot" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(etiquette)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg>${contenu}</section>`;
+    const sec = `<section class="lot" data-fx="${fa}" data-faits="${n}"${avance(m)} aria-label="${esc(etiquette)}"><svg class="fx" data-garder="fx" aria-hidden="true"></svg>${contenu}</section>`;
+    /* heydamir : double cadre d'appareil, rayons concentriques (dehors = dedans + marge) ; en 4c */
+    return NIV === 'c' ? `<div class="appareil">${sec}</div>` : sec;
   }
   const nombre = (n, unite) => `<p class="grand"><span class="n" data-valeur="n">${n}</span><span class="s">${esc(unite)}</span></p>`;
   const sous = (t) => (t ? `<p class="sous">${esc(t)}</p>` : '');
@@ -72,8 +77,8 @@
     const etages = [-99, -99, -99, -99]; let haut = 0;
     const j = marques.map((r) => {
       const x = pos(r.cut); let e = etages.findIndex((v) => x - v >= 7.5); if (e < 0) e = 3; etages[e] = x; haut = Math.max(haut, e);
-      const lib = `Cut ${r.cut}, ${r.type === 'vert' ? 'vert à examiner' : 'différé'} : examiner`;
-      return `<button class="marque${r.type === 'vert' ? ' eau' : ''}" data-forme="${r.type === 'vert' ? 'losange' : 'rond'}" style="left:${x.toFixed(2)}%;bottom:${30 + e * 18}px" data-a="examiner" data-id="${r.id}" aria-label="${esc(lib)}" title="${esc(lib)}"></button>`;
+      const lib = `Cut ${r.cut}, ${r.type === 'vert' ? 'à examiner' : 'différé'} : examiner`;
+      return `<button class="marque${r.type === 'vert' ? ' eau' : ''}" data-forme="${r.type === 'vert' ? 'losange' : 'rond'}" style="left:${x.toFixed(2)}%;bottom:${30 + e * 18}px;--tige:${6 + e * 18}px" data-a="examiner" data-id="${r.id}" aria-label="${esc(lib)}" title="${esc(lib)}"></button>`;
     }).join('');
     const av = avChoisi();
     const vraie = m.phase === 'fin' ? 100 : pos(c.cut);
@@ -84,7 +89,7 @@
     const ici = !riche || m.phase === 'fin' || vraie < 14 || (!inconnu && vraie > 84) ? '' : `<span class="ici" style="left:${vraie.toFixed(2)}%">${c.cut}</span>`;
     const fin = inconnu ? '<span class="borne f">fin inconnue</span>' : `<span class="borne f">${d + c.total - 1}</span>`;
     const nd = marques.filter((r) => r.type !== 'vert').length, nv = marques.length - nd;
-    const clef = marques.length ? `<p class="clef"><span><b>○ ${nd}</b> différé${nd > 1 ? 's' : ''}</span><span class="eau"><b>◆ ${nv}</b> à examiner</span></p>` : '';
+    const clef = marques.length ? `<p class="clef"><span><i class="mq" aria-hidden="true">○</i><b>${nd}</b> différé${nd > 1 ? 's' : ''}</span><span><i class="mq eau" aria-hidden="true">◆</i><b>${nv}</b> à examiner</span></p>` : '';
     return `<div class="regle" data-fx="${fa}" data-av="${av || ''}" data-fait="${fait.toFixed(2)}" style="--k:${Math.max(1, k)};--h-regle:${56 + haut * 18}px" role="group" aria-label="Frise du lot, du cut ${d} ${inconnu ? 'à une fin inconnue' : 'au cut ' + (d + c.total - 1)} ; toucher une marque pour l’examiner">
         <span class="fil${inconnu ? ' ouvert' : ''}"></span>${inconnu ? '<span class="suite" aria-hidden="true"></span>' : ''}
         <span class="fait"${av === 'continu' ? ' data-garder="frise-fait"' : ''} style="width:${fait.toFixed(2)}%"></span>${tete}${j}
@@ -108,14 +113,18 @@
       return h + gestes(m.actions) + message(m);
     }
     if (f.alerte) h += alerte(f.alerte.titre, f.alerte.detail);
-    if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, m.incident.texte, m.incident.actions);
+    /* craft.md : le texte d'une erreur ne répète pas son bouton */
+    const TEXTES = { absent: 'Aucun onglet ESV ne répond dans ce navigateur.', choisir: 'Plusieurs onglets ESV sont ouverts.' };
+    if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, TEXTES[m.incident.type] || m.incident.texte, m.incident.actions);
     if (m.phase === 'pret') {
       const b = m.bornes;
       const total = b.finDePartie ? 'jusqu’à la fin de la partie' : `${b.fin - b.debut + 1} cuts`;
       h += ligne(m, 'Prêt', '');
       h += carte(m, `<div class="bornes"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div>${sous(total)}<button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu’à la fin de la partie</button>`, 'Prêt');
-      /* « Préparer un autre lot » ne fait rien de plus ici : on est déjà en train de préparer */
-      h += gestes(m.actions.filter((x) => x.a !== 'preparer'));
+      /* Règle de kubre : on ne retire pas une fonction pour alléger l'écran ; « Préparer un autre
+       * lot » (bornes suivantes) reste, en texte. La raison du bouton grisé n'est pas répétée
+       * quand un incident l'explique déjà au-dessus. */
+      h += gestes(m.actions.map((x) => (m.incident && x.raison ? { ...x, raison: null } : x)));
       h += `<div class="reglage"><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"></span>Enchaîner plusieurs parties</button>${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues une à une</span></div>` : ''}</div>`;
       return h + message(m);
     }
@@ -132,7 +141,7 @@
     let phrase = '';
     if (f.relecture) phrase = `relecture et correction de la partie ${f.courante}`;
     else if (m.phase === 'encours') phrase = riche ? c.tempsTexte : `cut ${c.cut} · ${c.tempsTexte}`;
-    else if (m.phase === 'pause') phrase = `au cut ${c.cut} · continuer reprend ce même lot`;
+    else if (m.phase === 'pause') phrase = `au cut ${c.cut}`;
     else if (m.phase === 'arrete') phrase = f.alerte ? `au cut ${c.cut}` : m.incident && m.incident.type === 'reprise' ? `au cut ${c.cut}` : `${(m.phrase.split('.')[0] || '').trim()} · au cut ${c.cut}`;
     h += ligne(m, m.titre, partieTexte(f));
     if (m.incident && m.incident.type === 'reprise') h = h.replace('<div class="tete-ligne">', `<div class="info" role="status"><h2>${esc(m.incident.titre)}</h2><p>${esc(m.incident.texte)}</p></div><div class="tete-ligne">`);
@@ -142,8 +151,8 @@
   const message = (m) => (m.message ? `<p class="message" role="status">${esc(m.message)}</p>` : '');
 
   function reste(m) {
-    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<li><button class="ligne" data-a="examiner" data-id="${r.id}"><span class="c">${r.cut}</span><span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ vert à examiner' : '○ différé'}</span><span class="m">${esc(r.motif)}</span></button></li>`).join('');
-    return `<div class="tete-ligne"><p class="etat">Ce qui reste<span class="sec">${m.restants.length} cuts</span></p><button class="t" data-a="retour">Retour au lot</button></div><ul class="liste">${l}</ul>` + message(m);
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<li><button class="ligne" data-a="examiner" data-id="${r.id}"><span class="c">${r.cut}</span><span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ à examiner' : '○ différé'}</span><span class="m">${esc(r.motif)}</span></button></li>`).join('');
+    return `<div class="tete-ligne"><p class="etat">Ce qui reste<span class="sec">${m.restants.length} cuts</span></p><button class="t" data-a="retour">Retour au lot</button></div>${l ? `<ul class="liste">${l}</ul>` : '<p class="sous" style="margin:0 4px">Rien à reprendre.</p>'}` + message(m);
   }
   function coupe(r) {
     const { pts, rails } = Demo.D.coupe(r.cut, 320);
@@ -155,7 +164,7 @@
   }
   function examen(m) {
     const r = m.examen;
-    const type = r.type === 'vert' ? '◆ vert à examiner' : '○ différé';
+    const type = r.type === 'vert' ? '◆ à examiner' : '○ différé';
     return `<div class="tete-ligne"><p class="etat">Cut ${r.cut}<span class="sec">${type}</span></p><button class="t" data-a="voirReste">Retour à la liste</button></div>`
       + carte(m, `<p class="sous" style="margin:0">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés, en vert d’eau.' : 'Rien de posé ; places envisagées en tireté.'}</p><div class="coupe">${coupe(r)}</div>`, `Cut ${r.cut}`)
       + gestes([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }]) + message(m);
