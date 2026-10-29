@@ -137,6 +137,19 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .message{padding:10px 14px;margin:10px 0;font-size:14px}
 .legende{font-size:13px;color:var(--texte-2);padding:10px 14px;margin-top:10px}
 .legende summary{cursor:pointer;color:var(--texte);font-weight:700}
+
+/* Mouvement (partition dans la fiche) : une valeur qui change monte à sa place ; au changement
+ * d'état, les blocs arrivent l'un après l'autre. Rien de tout cela en mouvement réduit. */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .42s cubic-bezier(.2,.8,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .48s cubic-bezier(.2,.8,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.04s}
+  #panneau[data-etat-change="1"]>*:nth-child(3){animation-delay:.08s}
+  #panneau[data-etat-change="1"]>*:nth-child(4){animation-delay:.12s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+5){animation-delay:.16s}
+}}
+@keyframes roule{from{transform:translateY(.35em);opacity:.2}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 </style>
 </head>
 <body>
@@ -200,7 +213,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
 
   let S = etatInitial();
-  let rendreFn = null, apresFn = null, racine = null;
+  let rendreFn = null, apresFn = null, racine = null, etatPrecedent = null;
+  const valeurs = new Map();
   const abonnes = [];
 
   function minutesRestantes() {
@@ -392,6 +406,18 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       const cible = [...racine.querySelectorAll('[data-a]')].find((n) => n.getAttribute('data-a') === a && (n.getAttribute('data-id') || '') === id);
       if (cible) cible.focus();
     }
+    /* Valeurs qui changent : un élément data-valeur="clé" reçoit la classe « change » quand son
+     * texte diffère du rendu précédent ; chaque maquette dessine sa propre transition. */
+    racine.querySelectorAll('[data-valeur]').forEach((e) => {
+      const k = e.getAttribute('data-valeur'), t = e.textContent;
+      if (valeurs.has(k) && valeurs.get(k) !== t && !mouvementReduit()) e.classList.add('change');
+      valeurs.set(k, t);
+    });
+    /* Changement d'état : la racine porte data-etat ; data-etat-change="1" au rendu qui suit un changement. */
+    const cleEtat = S.phase + '|' + S.vue + '|' + S.activite;
+    racine.setAttribute('data-etat', S.phase);
+    racine.setAttribute('data-etat-change', cleEtat !== etatPrecedent && etatPrecedent !== null && !mouvementReduit() ? '1' : '0');
+    etatPrecedent = cleEtat;
     if (apresFn) apresFn(S, D, racine);
     abonnes.forEach((f) => f(S));
     const st = document.getElementById('regie-etat');
@@ -621,7 +647,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
   function principal(m, S) {
     let h = nav(m);
-    if (m.vue === 'echo') return h + carteLot(m, `<p class="grand"><span class="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="case verre"><dt>Mêmes choix</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>` + actions(m.actions);
+    if (m.vue === 'echo') return h + carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="case verre"><dt>Mêmes choix</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>` + actions(m.actions);
     const c = m.compte;
     if (m.file.alerte) h += alerte(m.file.alerte.titre, m.file.alerte.detail);
     if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, m.incident.texte, m.incident.actions);
@@ -630,10 +656,10 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       h += carteLot(m, `<p class="phrase">${esc(m.phrase)}</p><div class="bornes" style="margin-top:12px"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu'à la fin de la partie</button>`);
       h += actions(m.actions) + file(m);
     } else if (m.phase === 'fin') {
-      h += carteLot(m, `<p class="grand"><span class="n">${c.poses}</span><span class="s">posés</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt><span class="rond" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="case verre${c.aExaminer ? ' eau' : ''}"><dt><span class="los" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>` + frise(S, m) + actions(m.actions) + file(m);
+      h += carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${c.poses}</span><span class="s">posés</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt><span class="rond" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="case verre${c.aExaminer ? ' eau' : ''}"><dt><span class="los" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>` + frise(S, m) + actions(m.actions) + file(m);
     } else {
       const av = c.total == null ? '<div class="avance inconnu" role="img" aria-label="Total inconnu"></div>' : `<div class="avance" role="img" aria-label="${Math.round(c.part * 100)} pour cent"><i style="width:${(c.part * 100).toFixed(1)}%"></i></div>`;
-      h += carteLot(m, `<p class="grand"><span class="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${av}<p class="phrase">${esc(m.phrase)}</p>`);
+      h += carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${av}<p class="phrase">${esc(m.phrase)}</p>`);
       if (m.incident && m.incident.type === 'reprise') h += `<div class="bloc verre"><h2>${esc(m.incident.titre)}</h2><p style="margin:0">${esc(m.incident.texte)}</p></div>`;
       h += actions(m.actions) + grille(m) + file(m) + frise(S, m);
     }
@@ -642,7 +668,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
   function reste(m) {
     const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<div class="reste verre"><div class="t">Cut ${r.cut} <span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ vert à examiner' : '○ différé'}</span></div><p class="m">${esc(r.motif)}</p><div class="gestes"><button class="petit p" data-a="examiner" data-id="${r.id}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${r.id}">Ouvrir dans ESV</button></div></div>`).join('');
-    return nav(m) + carteLot({ ...m, phase: 'fin', titre: 'Ce qui reste' }, `<p class="grand"><span class="n">${m.restants.length}</span><span class="s">cuts à reprendre</span></p>`) + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]) + l + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
+    return nav(m) + carteLot({ ...m, phase: 'fin', titre: 'Ce qui reste' }, `<p class="grand"><span class="n" data-valeur="n">${m.restants.length}</span><span class="s">cuts à reprendre</span></p>`) + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]) + l + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
   }
   function coupe(r) {
     const { pts, rails } = Demo.D.coupe(r.cut, 320);
@@ -654,7 +680,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
   function examen(m) {
     const r = m.examen;
-    return nav(m) + carteLot({ ...m, phase: 'fin', titre: r.type === 'vert' ? 'Vert à examiner' : 'Différé' }, `<p class="grand"><span class="n">${r.cut}</span><span class="s">cut</span></p><p class="phrase">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés en vert d’eau.' : 'Rien de posé ; places envisagées en tireté.'}</p>`)
+    return nav(m) + carteLot({ ...m, phase: 'fin', titre: r.type === 'vert' ? 'Vert à examiner' : 'Différé' }, `<p class="grand"><span class="n" data-valeur="n">${r.cut}</span><span class="s">cut</span></p><p class="phrase">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés en vert d’eau.' : 'Rien de posé ; places envisagées en tireté.'}</p>`)
       + `<div class="coupe verre">${coupe(r)}</div>` + actions([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'voirReste', libelle: 'Retour à la liste', rang: 'second' }]) + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
   }
 

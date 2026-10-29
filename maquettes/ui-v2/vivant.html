@@ -128,6 +128,19 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .message{font-size:14px;margin:10px 0;padding:10px 14px;border-radius:14px;background:var(--cadre)}
 .legende{font-size:13px;color:var(--texte-2);margin-top:10px}
 .legende summary{cursor:pointer;color:var(--texte);font-weight:600}
+
+/* Mouvement (partition dans la fiche) : une valeur qui change monte à sa place ; au changement
+ * d'état, les blocs arrivent l'un après l'autre. Rien de tout cela en mouvement réduit. */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .42s cubic-bezier(.2,.8,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .48s cubic-bezier(.2,.8,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.04s}
+  #panneau[data-etat-change="1"]>*:nth-child(3){animation-delay:.08s}
+  #panneau[data-etat-change="1"]>*:nth-child(4){animation-delay:.12s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+5){animation-delay:.16s}
+}}
+@keyframes roule{from{transform:translateY(.35em);opacity:.2}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 </style>
 </head>
 <body>
@@ -191,7 +204,8 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
 
   let S = etatInitial();
-  let rendreFn = null, apresFn = null, racine = null;
+  let rendreFn = null, apresFn = null, racine = null, etatPrecedent = null;
+  const valeurs = new Map();
   const abonnes = [];
 
   function minutesRestantes() {
@@ -383,6 +397,18 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       const cible = [...racine.querySelectorAll('[data-a]')].find((n) => n.getAttribute('data-a') === a && (n.getAttribute('data-id') || '') === id);
       if (cible) cible.focus();
     }
+    /* Valeurs qui changent : un élément data-valeur="clé" reçoit la classe « change » quand son
+     * texte diffère du rendu précédent ; chaque maquette dessine sa propre transition. */
+    racine.querySelectorAll('[data-valeur]').forEach((e) => {
+      const k = e.getAttribute('data-valeur'), t = e.textContent;
+      if (valeurs.has(k) && valeurs.get(k) !== t && !mouvementReduit()) e.classList.add('change');
+      valeurs.set(k, t);
+    });
+    /* Changement d'état : la racine porte data-etat ; data-etat-change="1" au rendu qui suit un changement. */
+    const cleEtat = S.phase + '|' + S.vue + '|' + S.activite;
+    racine.setAttribute('data-etat', S.phase);
+    racine.setAttribute('data-etat-change', cleEtat !== etatPrecedent && etatPrecedent !== null && !mouvementReduit() ? '1' : '0');
+    etatPrecedent = cleEtat;
     if (apresFn) apresFn(S, D, racine);
     abonnes.forEach((f) => f(S));
     const st = document.getElementById('regie-etat');
@@ -634,7 +660,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   function principal(m, S) {
     let h = tete(m) + `<h1 class="titre">${titre(m)}</h1>` + orbe(m);
     if (m.vue === 'echo') {
-      return h + `<p class="sous-titre">${esc(m.phrase)} Rien n’est écrit dans ESV.</p>` + appareil(`<p class="grand"><span class="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><dl class="lignes"><div><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div><dt>Mêmes choix qu'Ariane</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>`) + actions(m.actions);
+      return h + `<p class="sous-titre">${esc(m.phrase)} Rien n’est écrit dans ESV.</p>` + appareil(`<p class="grand"><span class="n" data-valeur="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><dl class="lignes"><div><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div><dt>Mêmes choix qu'Ariane</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>`) + actions(m.actions);
     }
     const c = m.compte;
     h += `<p class="sous-titre">${esc(m.phrase)}</p>` + alerteFile(m);
@@ -644,9 +670,9 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       h += appareil(`<div class="bornes"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu'à la fin de la partie</button>`);
       h += actions(m.actions) + file(m);
     } else if (m.phase === 'fin') {
-      h += appareil(`<p class="grand"><span class="n">${c.poses}</span><span class="s">posés sur ${c.faits}</span></p>${frise(S, m)}<dl class="lignes"><div><dt>Différés</dt><dd>${c.differes}</dd></div><div class="${c.aExaminer ? 'froid' : ''}"><dt>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`) + actions(m.actions) + file(m);
+      h += appareil(`<p class="grand"><span class="n" data-valeur="n">${c.poses}</span><span class="s">posés sur ${c.faits}</span></p>${frise(S, m)}<dl class="lignes"><div><dt>Différés</dt><dd>${c.differes}</dd></div><div class="${c.aExaminer ? 'froid' : ''}"><dt>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`) + actions(m.actions) + file(m);
     } else {
-      h += appareil(`<p class="grand"><span class="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${frise(S, m)}<dl class="lignes"><div><dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd></div><div><dt>Cut en cours</dt><dd>${c.cut}</dd></div><div><dt>Différés</dt><dd>${c.differes}</dd></div><div class="${c.aExaminer ? 'froid' : ''}"><dt>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`);
+      h += appareil(`<p class="grand"><span class="n" data-valeur="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${frise(S, m)}<dl class="lignes"><div><dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd></div><div><dt>Cut en cours</dt><dd>${c.cut}</dd></div><div><dt>Différés</dt><dd>${c.differes}</dd></div><div class="${c.aExaminer ? 'froid' : ''}"><dt>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`);
       h += actions(m.actions) + file(m);
     }
     if (m.message) h += `<p class="message" role="status">${esc(m.message)}</p>`;
@@ -676,19 +702,29 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
     if (f === 'plein') return sph;
     return sph.filter((_, i) => i % 3 === 0);
   }
+  /* Morphose : quand l'activité change, l'ancienne forme se replie et la nouvelle se déploie
+   * (0,6 s, sortie douce) ; en mouvement réduit, la nouvelle forme apparaît d'un coup. */
   function dessinerOrbe(cv, f, t, tourne) {
     const w = cv.clientWidth, dpr = devicePixelRatio || 1;
     if (!w) return;
     if (cv.width !== Math.round(w * dpr)) cv.width = cv.height = Math.round(w * dpr);
     const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, w);
+    const now = performance.now();
+    if (cv._forme !== f) { cv._prec = Demo.D.mouvementReduit() ? null : cv._forme; cv._t0 = now; cv._forme = f; }
+    let k = cv._prec ? Math.min(1, (now - cv._t0) / 600) : 1; k = 1 - Math.pow(1 - k, 3);
+    if (cv._prec && k < 1) couche(ctx, w, cv._prec, t, tourne, 1 - k, 1 - 0.35 * k);
+    couche(ctx, w, f, t, tourne, k, 0.65 + 0.35 * k);
+    if (k >= 1) cv._prec = null;
+  }
+  function couche(ctx, w, f, t, tourne, alpha, echelle) {
     const pts = nuageForme(f, t), rot = tourne ? t * 0.6 : 0.7, tilt = 0.45;
     const cr = Math.cos(rot), sr = Math.sin(rot), ct = Math.cos(tilt), st = Math.sin(tilt);
     const pc = getComputedStyle(document.documentElement).getPropertyValue('--point').trim();
-    const R = w * 0.4;
+    const R = w * 0.4 * echelle;
     const pr = pts.map(([x, y, z]) => { const x1 = x * cr + z * sr, z1 = -x * sr + z * cr; return [x1, y * ct - z1 * st, y * st + z1 * ct]; }).sort((a, b) => a[2] - b[2]);
-    for (const [x, y, z] of pr) { const p = (z + 1) / 2; ctx.fillStyle = `rgba(${pc},${0.2 + p * 0.8})`; const s = Math.max(0.8, w / 60) * (0.6 + p * 0.8); ctx.beginPath(); ctx.arc(w / 2 + x * R, w / 2 - y * R, s, 0, 6.3); ctx.fill(); }
+    for (const [x, y, z] of pr) { const p = (z + 1) / 2; ctx.fillStyle = `rgba(${pc},${((0.2 + p * 0.8) * alpha).toFixed(3)})`; const s = Math.max(0.8, w / 60) * (0.6 + p * 0.8); ctx.beginPath(); ctx.arc(w / 2 + x * R, w / 2 - y * R, s, 0, 6.3); ctx.fill(); }
     if (f === 'cherche') {
-      const a = t * 1.6; ctx.strokeStyle = `rgba(${pc},.9)`; ctx.lineWidth = Math.max(1, w / 50);
+      const a = t * 1.6; ctx.strokeStyle = `rgba(${pc},${(0.9 * alpha).toFixed(3)})`; ctx.lineWidth = Math.max(1, w / 50);
       ctx.beginPath(); ctx.ellipse(w / 2, w / 2, Math.abs(Math.cos(a)) * R, R, 0, 0, 6.3); ctx.stroke();
     }
   }

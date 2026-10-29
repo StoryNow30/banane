@@ -107,6 +107,19 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
 .message{background:var(--surface);border-radius:4px;padding:10px 12px;font-size:14px;margin:10px 0}
 .legende{font-size:13px;color:var(--texte-2);margin-top:12px}
 .legende summary{cursor:pointer;color:var(--texte);font-weight:700}
+
+/* Mouvement (partition dans la fiche) : une valeur qui change monte à sa place ; au changement
+ * d'état, les blocs arrivent l'un après l'autre. Rien de tout cela en mouvement réduit. */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .42s cubic-bezier(.2,.8,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .48s cubic-bezier(.2,.8,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.04s}
+  #panneau[data-etat-change="1"]>*:nth-child(3){animation-delay:.08s}
+  #panneau[data-etat-change="1"]>*:nth-child(4){animation-delay:.12s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+5){animation-delay:.16s}
+}}
+@keyframes roule{from{transform:translateY(.35em);opacity:.2}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 </style>
 </head>
 <body>
@@ -115,7 +128,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   <aside class="notes">
     <h2>Mosaïque</h2>
     <p><b>D'où ça vient.</b> libraries.dev Image : un chargeur où une mosaïque de gros pixels se résout en image nette. inspora : les images en trame et les filtres en pavés gris. backgrounds.supply : les trames ASCII. 60fps : le compteur qui s'anime.</p>
-    <p><b>Ce que ça veut dire ici.</b> Le lot est une image : une tuile par cut, dans l'ordre. Une tuile floue n'est pas encore faite. Quand Ariane pose le cut, la tuile se résout et devient nette. Un différé reste en gros pixels, entouré d'un cadre. Un vert à examiner a un coin corail et un losange. On touche une tuile pour la lire, et on touche une tuile marquée pour l'examiner. De loin, on voit l'image se remplir.</p>
+    <p><b>Ce que ça veut dire ici.</b> Le lot est une image : une tuile par cut, dans l'ordre. Une tuile floue n'est pas encore faite. Quand Ariane pose le cut, la tuile se résout et devient nette. Un différé reste en gros pixels, entouré d'un cadre. Un vert à examiner a un coin corail et un losange. L'image est abstraite (deux ondes qui se croisent) : elle ne représente rien du relevé, elle sert à voir le lot se former. On touche une tuile pour la lire, et on touche une tuile marquée pour l'examiner. De loin, on voit l'image se remplir.</p>
   </aside>
 </main>
 <script>
@@ -158,7 +171,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   }
   function principal(m) {
     let h = haut(m);
-    if (m.vue === 'echo') return h + `<p class="etat">Écho</p><p class="phrase">${esc(m.phrase)}</p><div class="compteur"><span class="n">${m.echo.vus}</span><span class="s">cuts vus</span></div><dl class="pavés"><div class="pavé"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="pavé"><dt>Mêmes choix</dt><dd>${m.echo.accord}/${m.echo.vus}</dd></div></dl>` + actions(m.actions);
+    if (m.vue === 'echo') return h + `<p class="etat">Écho</p><p class="phrase">${esc(m.phrase)}</p><div class="compteur"><span class="n" data-valeur="n">${m.echo.vus}</span><span class="s">cuts vus</span></div><dl class="pavés"><div class="pavé"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="pavé"><dt>Mêmes choix</dt><dd>${m.echo.accord}/${m.echo.vus}</dd></div></dl>` + actions(m.actions);
     const c = m.compte;
     h += `<p class="etat">${esc(m.titre)}</p><p class="phrase">${esc(m.phrase)}</p>`;
     if (m.file.alerte) h += `<div class="cadre alerte" role="alert"><h2>${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></div>`;
@@ -169,7 +182,7 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
       h += mosaique(m) + actions(m.actions) + file(m);
     } else {
       const fin = m.phase === 'fin';
-      h += `<div class="compteur"><span class="n">${fin ? c.poses : c.faits}</span><span class="s">${fin ? 'posés sur ' + c.faits : 'sur ' + esc(c.totalTexte)}</span></div>` + mosaique(m) + actions(m.actions) + pavés(m, fin) + file(m);
+      h += `<div class="compteur"><span class="n" data-valeur="n">${fin ? c.poses : c.faits}</span><span class="s">${fin ? 'posés sur ' + c.faits : 'sur ' + esc(c.totalTexte)}</span></div>` + mosaique(m) + actions(m.actions) + pavés(m, fin) + file(m);
     }
     if (m.message) h += `<p class="message" role="status">${esc(m.message)}</p>`;
     return h + `<details class="legende"><summary>Légende</summary><p>Une tuile = un cut. Floue : à faire. Nette : posé. Gros pixels encadrés : différé. Coin corail et losange : vert à examiner. Rangée tiretée en bas : total inconnu.</p></details>`;
@@ -188,11 +201,10 @@ body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)
   /* L'image du lot, continue sur toute la grille : un relief vu de dessus, traversé par une
    * voie qui serpente. Chaque tuile en montre son morceau de 8 × 8 pixels. */
   function image(gx, gy, W, H) {
-    let b = 0.42 + 0.14 * Math.sin(gx / 23 + gy / 31) + 0.09 * Math.sin(gx / 7.3) * Math.cos(gy / 9.1) + 0.05 * Math.sin(gx * 1.7 + gy * 2.3);
-    const cx = W * 0.5 + W * 0.3 * Math.sin(gy / H * 3.4 + 0.4), d = gx - cx;
-    if (Math.abs(d) < 7) b = 0.62 + 0.04 * Math.sin(gy * 3.1 + gx);
-    if (Math.abs(d) < 4.5 && Math.floor(gy) % 3 === 0) b = 0.78;
-    if (Math.abs(Math.abs(d) - 2.5) < 0.7) b = 1;
+    /* Image abstraite : deux sources d'ondes qui interfèrent, adoucies. Elle ne figure rien du
+     * métier ; elle sert seulement à voir une image se former tuile après tuile. */
+    const d1 = Math.hypot(gx - W * 0.2, gy - H * 0.15), d2 = Math.hypot(gx - W * 0.85, gy - H * 0.8);
+    const b = 0.5 + 0.28 * Math.cos(d1 / 9) * Math.cos(d2 / 13) + 0.12 * Math.sin((gx + gy) / 31);
     return Math.max(0, Math.min(1, b));
   }
   function tuile(i, cols, rows, fin) {

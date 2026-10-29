@@ -49,7 +49,8 @@
   }
 
   let S = etatInitial();
-  let rendreFn = null, apresFn = null, racine = null;
+  let rendreFn = null, apresFn = null, racine = null, etatPrecedent = null;
+  const valeurs = new Map();
   const abonnes = [];
 
   function minutesRestantes() {
@@ -241,6 +242,18 @@
       const cible = [...racine.querySelectorAll('[data-a]')].find((n) => n.getAttribute('data-a') === a && (n.getAttribute('data-id') || '') === id);
       if (cible) cible.focus();
     }
+    /* Valeurs qui changent : un élément data-valeur="clé" reçoit la classe « change » quand son
+     * texte diffère du rendu précédent ; chaque maquette dessine sa propre transition. */
+    racine.querySelectorAll('[data-valeur]').forEach((e) => {
+      const k = e.getAttribute('data-valeur'), t = e.textContent;
+      if (valeurs.has(k) && valeurs.get(k) !== t && !mouvementReduit()) e.classList.add('change');
+      valeurs.set(k, t);
+    });
+    /* Changement d'état : la racine porte data-etat ; data-etat-change="1" au rendu qui suit un changement. */
+    const cleEtat = S.phase + '|' + S.vue + '|' + S.activite;
+    racine.setAttribute('data-etat', S.phase);
+    racine.setAttribute('data-etat-change', cleEtat !== etatPrecedent && etatPrecedent !== null && !mouvementReduit() ? '1' : '0');
+    etatPrecedent = cleEtat;
     if (apresFn) apresFn(S, D, racine);
     abonnes.forEach((f) => f(S));
     const st = document.getElementById('regie-etat');
