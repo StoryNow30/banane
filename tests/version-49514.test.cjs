@@ -24,8 +24,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.5.25',NOM='4.9.5 test 25 (file, vue, garde)';
-test('manifeste et core : 4.9.5.25 / « 4.9.5 test 25 (file, vue, garde) »',()=>{
+const VERSION='4.9.5.25',NOM='4.9.5 test 25 (F-V-G)';
+test('manifeste et core : 4.9.5.25 / « 4.9.5 test 25 (F-V-G) »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
  assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
 });

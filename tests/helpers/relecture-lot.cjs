@@ -110,7 +110,8 @@ let scienceFixture=null;
 async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},calculReel=false,ecartementPartie=undefined,reglagesProposes=null,relecture={},esv=null,observateur=true,clic=null,regles=false,local:localDonne=null}={}){
  const adapter=new EsvRelecture({decalages,loin}),local=localDonne||memoire();if(mode)local.m[CLE]=mode;if(clic)local.m.banane50ClicHumain=clic;
  const b=production({adapter,local});b.local=local;
- b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},
+ /* Test 25 (D-268) : déplacement de la vue livré allumé ; coupé dans ce montage qui compare aux commandes de la base. */
+ b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false},
   observateurPassif:{...S.observateurPassif,actif:observateur},
   /* Les règles métier en ombre voient un ADV dans le nuage de la fixture (81–143) : coupées, sauf demande (`regles`). */
   ...(regles?{}:{reglesMetier:{...S.reglesMetier,ombre:false}}),relecture:{departMs:0,attenteEcritureMs:300,attenteVuMs:120,...relecture},

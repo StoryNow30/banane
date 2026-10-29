@@ -3303,3 +3303,12 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - **À l'opérateur (questions du § 4 du cadrage)** : cible (fautes ≤ 3 % des posés et gain d'acceptation apparié, « sous 5 mm » en indicateur, « sous 3 mm » abandonné), définition de la qualité (un cut regardé et non touché est-il de qualité ?), compromis (plus de différés pour retirer les mauvaises voies : jusqu'à combien ?), effort d'Écho sur les posés par partie neuve, assistance de relecture (ancrage de la référence).
 - Le numéro suivant est D-270.
 
+## D-270 — Réponses de l'opérateur au cadrage de la qualité de pose (opérateur, 29/10/2026)
+
+1. **Cible** : « Je te laisse décider, je veux juste le meilleur gain possible en qualité. » Décision de l'intégrateur (D-262) : deux chiffres, **poses validées à plus de 50 mm au plus 3 % des posés** (D-223, effectif et intervalle donnés) et **gain d'acceptation apparié entre versions** ; « sous 5 mm » reste un indicateur de différence apparié ; « sous 3 mm » est abandonné tant qu'aucune mesure à l'aveugle n'existe.
+2. **Définition** : « Oui. » Un cut que l'opérateur regarde et ne touche pas est une pose de qualité, quelle que soit sa distance à ce qu'il aurait cliqué.
+3. **Compromis** : l'opérateur accepte plus de différés pour retirer les poses sur la mauvaise voie. Raisonnement écrit : si l'opérateur accepte de retirer toutes les poses sur la mauvaise voie, c'est qu'Ariane est en incapacité de les placer sur la bonne voie, quelle que soit la méthode ; cela ouvre un **chantier pour qu'Ariane pose sur la bonne voie quand c'est possible** ; quand ce ne l'est pas, c'est qu'il faut dézoomer ou déplacer la vue (clic droit), et différer est alors normal. Aucun plafond chiffré de points de différés n'est donné : l'intégrateur le fixe au vu des lots mesurés et le dit à l'opérateur.
+4. **Effort** : l'opérateur ne garantit pas une séance d'Écho sur les posés pour chaque lot Orbite ; il essaiera autant que possible et partagera. Conséquence : les mesures sont prévues pour servir même avec peu d'Écho, et chaque lot dit combien de ses posés sont jugeables.
+5. **Assistance de relecture** : « Je ne suis pas vraiment convaincu. » Elle n'est pas lancée.
+- Le numéro suivant est D-271.
+

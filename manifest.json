@@ -23,7 +23,7 @@
     "128": "icons/ariane-128.png"
   },
   "action": {
-    "default_title": "Ouvrir Ariane 4.9.5 test 25 (file, vue, garde) — V1",
+    "default_title": "Ouvrir Ariane 4.9.5 test 25 (F-V-G) — V1",
     "default_icon": {
       "16": "icons/ariane-16.png",
       "32": "icons/ariane-32.png",
@@ -61,5 +61,5 @@
       "run_at": "document_idle"
     }
   ],
-  "version_name": "4.9.5 test 25 (file, vue, garde)"
+  "version_name": "4.9.5 test 25 (F-V-G)"
 }

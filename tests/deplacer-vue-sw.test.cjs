@@ -18,7 +18,7 @@ let defaut;
 before(async()=>{defaut=await lot({});});
 
 test('réglage coupé (défaut) : mêmes commandes, mêmes appels, mêmes décisions que 50-base, octet pour octet',()=>{
- assert.equal(S.deplacerVue.actif,false,'coupé par défaut');
+ assert.equal(S.deplacerVue.actif,true,'livré ALLUMÉ dans la test 25 (D-268) ; le montage `lot()` le coupe pour comparer aux commandes de la base');
  for(const [nom,x] of [['défaut',defaut]]){
   assert.deepEqual(x.b.commands.map(c=>c.action??null),GOLDEN.actions,nom+' : mêmes actions');
   assert.deepEqual(x.b.commands.map(c=>(c.args||[]).length),GOLDEN.nombreArguments,nom+' : mêmes arguments (apply : 2)');

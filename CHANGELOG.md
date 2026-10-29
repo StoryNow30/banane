@@ -1,5 +1,21 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.25 — 4.9.5 test 25 (F-V-G) (29/10) — test 25
+
+Manifeste `4.9.5.25`, « 4.9.5 test 25 (F-V-G) » (F : file de parties, V : vue, G : garde) ; base : la test 24. Décisions de l'opérateur du 29/10 : D-268 (ce qui suit), D-269 (cadrage de la qualité de pose retenu), D-270 (réponses de l'opérateur). Moteur, géométrie, GCV2 et décision du lot : `git diff 43d7b92..HEAD -- src/engine.js src/geometry*.js src/gcv2*.js src/lot-decision.js` est vide ; l'adaptateur de page ne change que par les deux ajouts ci-dessous.
+
+### Ce qui est ALLUMÉ par défaut (ordres de l'opérateur)
+- **File de parties (CH-017)** : la carte « File de parties » est dans le panneau ; la file ne part que si l'opérateur règle le nombre de parties et la lance. Machine à états pure (`src/file-parties.js`), pilote dans `background.js`, registre des écritures qui survit au vidage du cache, reprise après redémarrage du service worker, arrêt avec alerte sur écriture incertaine ou sélecteur illisible, relecture et correction après chaque partie (D-261). L'adaptateur gagne `changerPartie` (clic sur l'entrée `p=N` du sélecteur, aucune pose ni validation). **Le changement de partie n'a jamais été vu sur un vrai ESV** : premier essai avec 2 parties, l'opérateur présent.
+- **Déplacement de la vue au clic droit (CH-018)** : quand la cible d'un rail tombe hors de la vue, le geste réglable (`deplacerVue.deplacement.geste`, `clic-droit`) déplace la vue, puis la remet ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant ; `journalGestes` dit quel geste marche. La molette n'a jamais déplacé la caméra (45 coups sur 45, partie 20).
+- **Garde « après un différé » (CH-019, règle R3 de CH-015)** : un cut que le lot allait valider est différé quand l'un des deux cuts précédents est différé et qu'il a moins de deux appuis ; sans cascade ; jamais de SKIP ni de validation en plus ; événements `garde-apres-differe` et `garde-apres-differe-suivant` au journal. Interrupteur `lot.gardeApresDiffere.actif`. **Non validée hors échantillon** ; effet d'orphelin mesuré hors ligne (D-268).
+
+### Retiré
+- Le détecteur de SKIP de CH-016 (module, outil, essais). La détection `skipOmbre` de la relecture en ombre, déjà journalisée, reste.
+
+### Mesures et limites
+- Verify complet : voir `audit/verification.txt` (relevé par le verify, non écrit à la main).
+- Budget D-223 (pose à plus de 50 mm, 3 % au plus) : non tenu sur la partie 20 du 28/10 (21 poses sur 172 jugées, 12,2 %) ; la garde vise ces cas.
+
 ## 4.9.5.24 — 4.9.5 test 24 (D-259) (29/10) — test 24
 
 Manifeste `4.9.5.24`, « 4.9.5 test 24 (D-259) » ; base : le tronc `claude/50-test17` (test 23). **La deuxième passe des différés est ALLUMÉE en écriture par défaut (D-259), plafonnée à 10 cuts écrits par lot** : `passeDifferesDefaut` passe à `ombre: true, ecriture: true, ecritureMax: 10`. Les garde-fous restent : garde A des appuis (déplacement inférieur à 100 mm sans appui normal à 4 cuts ou moins : refus), gardes d'écriture existantes, interrupteur `ecriture:false` pour revenir à l'ombre. Décisions de pose, moteur, adaptateur de page, géométrie et GCV2 : `git diff claude/50-test17..HEAD -- src/engine.js src/adapter-page.js src/geometry*.js src/gcv2*.js src/lot-decision.js` est vide (seuls `src/settings.js` et les chaînes de version changent dans `src/`).

@@ -17,7 +17,8 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 class EsvTrou extends EsvVue{ajuster(){this.noPoints=this.identity.cut===112;}}
 async function lotDiffere({etat=null,panne=false,profil=null,garde=false}={}){
  const adapter=new EsvTrou([]),b=production({adapter});
- const Sx={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false}};if(profil)Sx.lot={...S.lot,profil};
+ /* Test 25 (D-268) : le déplacement de la vue est livré ALLUMÉ ; ces montages comparent les commandes à celles de la base, donc il est coupé ici (essayé dans tests/deplacer-vue-*.test.cjs). */
+ const Sx={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false}};if(profil)Sx.lot={...S.lot,profil};
  /* CH-019 : la garde « après un différé » (livrée allumée) différerait le 113 (1 appui, après le 112) ; coupée ici (`garde:undefined` : le livré). */
  if(garde!==undefined)Sx.lot={...(Sx.lot||S.lot),gardeApresDiffere:garde};b.ctx.BananeSettings=Sx;
  const G=b.ctx.BananeGcv2L1,forcees=[];
