@@ -183,6 +183,9 @@ test('classer un lot clos : écriture en suspens d’abord ; pause et lot ouvert
   assert.equal(F.classerLot({ etat: 'STOPPED', stoppedAtEnd: { issue: 'dernier-cut-valide' } }), 'fin-normale');
   assert.equal(F.classerLot({ etat: 'STOPPED', arretOperateur: true }), 'operateur');
   assert.equal(F.classerLot({ etat: 'STOPPED' }), 'refus-lot');
+  /* ERROR ne se reprend pas (src/historique-parties.js) : lot clos en anomalie (terrain de la maquette : validation sur place d'un cut déjà « traité »). */
+  assert.equal(F.classerLot({ etat: 'ERROR' }), 'refus-lot');
+  assert.equal(F.classerLot({ etat: 'ERROR', ecritureEnSuspens: true }), 'ecriture-incertaine');
 });
 
 test('registre des écritures : une entrée par partie, remplacée et non doublée, bornée aux 50 dernières ; cuts triés et dédoublonnés', () => {

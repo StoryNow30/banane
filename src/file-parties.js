@@ -198,11 +198,14 @@
   }
 
   /* Classement d'un lot clos, d'après ce que le service worker lit du moteur : `{etat, stoppedAtEnd, arretOperateur, ecritureEnSuspens}`.
-   * Rend un motif de `MOTIFS` (ou null : lot encore ouvert, la file attend, une pause comprise : rien n'arrête la file que l'opérateur). */
+   * Rend un motif de `MOTIFS` (ou null : lot encore ouvert, la file attend, une pause comprise : rien n'arrête la file que l'opérateur).
+   * ERROR ne se reprend pas (src/historique-parties.js : « interrompue ») : lot clos en anomalie. */
+  const CLOS = ['STOPPED', 'COMPLETED', 'FINISHED_WITH_UNCONFIRMED_ACTIONS', 'ERROR'];
   function classerLot(l) {
-    if (!l || !['STOPPED', 'COMPLETED', 'FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(l.etat)) return null;
+    if (!l || !CLOS.includes(l.etat)) return null;
     if (l.ecritureEnSuspens || l.etat === 'FINISHED_WITH_UNCONFIRMED_ACTIONS') return 'ecriture-incertaine';
     if (l.etat === 'COMPLETED') return 'fin-normale';
+    if (l.etat === 'ERROR') return 'refus-lot';
     const issue = l.stoppedAtEnd?.issue, raison = l.stoppedAtEnd?.reason;
     if (issue === 'partie-sans-rouge' || raison === 'partie-sans-rouge') return 'partie-sans-rouge';
     if (issue === 'depart-sur-vert' || raison === 'depart-sur-vert') return 'depart-sur-vert';

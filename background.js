@@ -3309,7 +3309,7 @@ async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.actio
   if(!tab)return void await fileEvenement({type:'onglet-ferme',detail:'onglet ESV fermé ou non choisi'});
   if(e.etat==='lot'&&lotId){const b=engine?.s?.batch;
    if(b?.id!==lotId)return void await fileEvenement({type:'lot-fin',lotId,motif:'refus-lot',detail:'le lot de la file a été remplacé'});
-   if(!OBS_CLOS.includes(b.state))return;
+   if(!FPm().classerLot({etat:b.state}))return;   /* lot ouvert (une pause comprise) : la file attend */
    const s=await fileSuspens(),arret=coordinateurLot.journal.some(t=>t.nom==='arret'&&t.lot===b.id)||obsFins.get(b.id)?.cause==='arret-manuel';
    const motif=FPm().classerLot({etat:b.state,stoppedAtEnd:b.stoppedAtEnd,arretOperateur:arret,ecritureEnSuspens:!!s});
    return void await fileEvenement({type:'lot-fin',lotId,motif,issue:b.stoppedAtEnd?.issue??b.state,resume:fileResume(b),

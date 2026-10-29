@@ -73,6 +73,10 @@ test('refus propre au lot (lot arrêté sans fin de partie) et arrêt par l’op
   let M = montage(); await M.vie(); await M.demarrer(2);
   await M.jusqua(() => M.etat()?.partie?.lotId); M.clore({ stoppedAtEnd: null });
   await M.jusqua(() => M.etat()?.etat === 'arret'); assert.equal(M.etat().motifFin.code, 'refus-lot'); assert.ok(M.etat().alerte);
+  /* lot en ERROR (ne se reprend pas) : arrêt, jamais une attente sans fin */
+  M = montage(); await M.vie(); await M.demarrer(2);
+  await M.jusqua(() => M.etat()?.partie?.lotId); M.clore({ state: 'ERROR', stoppedAtEnd: null });
+  await M.jusqua(() => M.etat()?.etat === 'arret', 3000, 'arrêt sur ERROR'); assert.equal(M.etat().motifFin.code, 'refus-lot');
   M = montage(); await M.vie(); await M.demarrer(2);
   await M.jusqua(() => M.etat()?.partie?.lotId);
   await M.b.api('stop');
