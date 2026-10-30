@@ -2736,7 +2736,8 @@ const passeVivante=()=>relecture.passe?.etat==='preparation'||relecture.passe?.e
 const passeActive=()=>passeVivante()||relecture.passe?.etat==='en-pause';
 const REPRISE_DUREE_MS=24*3600*1000;
 const RANG_MODE={coupee:0,ombre:1,corriger:2};
-async function relectureChoix(){let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
+async function relectureChoix(){const D=globalThis.BananeSettings?.relectureDefaut;if(!D||D.modifiable!==true)return MODES_RELECTURE.includes(D?.mode)?D.mode:'corriger'; /* Test 27 : « corriger » par défaut, non réglable (ordre de l'opérateur, 30/10) */
+ let r={};try{r=await chrome.storage.local.get(CLE_RELECTURE)||{};}catch{r={};}return MODES_RELECTURE.includes(r[CLE_RELECTURE])?r[CLE_RELECTURE]:'coupee';}
 async function relectureChoisir(args){if(!MODES_RELECTURE.includes(args?.mode))throw Error('Relecture après le lot : choix inconnu.');
  await chrome.storage.local.set({[CLE_RELECTURE]:args.mode});return {mode:await relectureChoix()};}
 const relectureDuLot=b=>{const m=b?.scope?.relecture;return m==='ombre'||m==='corriger'?m:null;};
