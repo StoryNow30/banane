@@ -95,14 +95,25 @@ test('Connexion T21 · constat de l’opérateur : « Démarrer le lot » ne par
   const p0=await m.ctx.newPage();await p0.goto(`chrome-extension://${m.id}/panel.html#automatic`);await dormir(800);
   const t=await p0.evaluate(()=>chrome.runtime.sendMessage({kind:'panel',action:'list-tabs'}));
   await p0.evaluate(i=>chrome.runtime.sendMessage({kind:'panel',action:'connect',args:{tabId:i}}),t.result[1].id);await p0.close();
-  await m.panneau.goto(`chrome-extension://${m.id}/panel.html#home`);await dormir(1500);
+  /* CH-026 : l'essai attendait 1,5 s puis 3 s FIXES et échouait souvent (marge d'environ 0,3 s) : il attend maintenant des ÉTATS (la puce nomme l'onglet,
+   * « Démarrer » est actif, le lot a commencé, l'onglet nommé a chargé), chacun borné ; la borne n'est atteinte qu'en cas d'échec. */
+  const nom=t.result[1].title;
+  await m.panneau.goto(`chrome-extension://${m.id}/panel.html#home`);
+  await m.panneau.waitForFunction(n=>(document.querySelector('#ui5 .sg-puce .sg-long')?.textContent||'').includes(n),nom,{timeout:10000}).catch(()=>{});
   const puce=await m.panneau.$eval('#ui5 .sg-puce .sg-long',e=>e.textContent);
   assert.match(puce,/utilisé par Ariane/,'la puce nomme l’onglet ciblé : '+puce);
-  const nom=t.result[1].title;assert.ok(puce.includes(nom),'c’est bien le second onglet');
-  const b=await m.panneau.$('#ui5 .sg-actions button[data-act="legacy:start-batch"]:not([disabled])');assert.ok(b,'onglet listé, nommé, prêt : « Démarrer le lot » actif');
-  const avant=await Promise.all(m.esv.map(e=>e.evaluate(()=>window.__maquette.etat().chargements)));
-  await b.click();await dormir(3000);
-  const apres=await Promise.all(m.esv.map(e=>e.evaluate(()=>window.__maquette.etat().chargements)));
+  assert.ok(puce.includes(nom),'c’est bien le second onglet');
+  const actif='#ui5 .sg-actions button[data-act="legacy:start-batch"]:not([disabled])';
+  const b=await m.panneau.waitForSelector(actif,{timeout:10000}).catch(()=>null);assert.ok(b,'onglet listé, nommé, prêt : « Démarrer le lot » actif');
+  const charges=()=>Promise.all(m.esv.map(e=>e.evaluate(()=>window.__maquette.etat().chargements)));
+  const avant=await charges();
+  await b.click();
+  /* Le lot a démarré (le service worker le dit) et l'onglet nommé a travaillé (une lecture de la maquette au moins). */
+  let apres=avant,lot=null;
+  for(const fin=Date.now()+20000;Date.now()<fin;await dormir(100)){
+   lot=(await m.panneau.evaluate(()=>chrome.runtime.sendMessage({kind:'panel',action:'view'})))?.result?.batch||null;apres=await charges();
+   if(lot&&apres[1]>avant[1])break;}
+  assert.ok(lot,'le lot a démarré');
   assert.equal(apres[0],avant[0],'le premier onglet, non nommé, n’est pas touché');assert.ok(apres[1]>avant[1],'le lot travaille dans l’onglet nommé');
   assert.deepEqual(m.erreurs,[]);
  }finally{await m.fermer();}
