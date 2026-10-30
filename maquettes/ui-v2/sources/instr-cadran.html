@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadran</title>
+<style>
+/*POLICE:instr-satoshi*/
+/*POLICE:instr-ibm-plex-mono*/
+/* Proposition « Cadran » (famille Instruments et matière).
+ * Sources : Scrubbers, face Thermostat (300° de graduations, remplissage seulement hors de la zone calme,
+ * réglage par rotation) et Ruler (étiquette courante en gras) ; libraries.dev, bot-avatars (transitions
+ * d'état lentes vers le repos, vives vers le travail).
+ * Sens : arc allumé = cuts traités ; chiffre central = ce qui reste ; face qui se remplit d'ambre =
+ * Ariane a besoin de vous (toujours dit aussi par un mot) ; cran triangulaire hors de l'anneau = cut différé,
+ * rond creux = vert à examiner. */
+:root{
+  --papier:#F2F0EB; --papier-2:#E7E4DC; --encre:#1A1917; --encre-2:#55524B; --trait:#CFCAC0;
+  --face:#1D1E21; --face-bord:#0E0F10; --face-encre:#F1EFE9; --face-encre-2:#A9A69E; --fenetre:#141517;
+  --ambre:#A9520B; --ambre-texte:#8E4407; --ambre-pale:#F5E3D0;
+  --scene:#D8D4CB; --ombre:0 1px 0 rgba(255,255,255,.6) inset, 0 10px 24px -14px rgba(0,0,0,.45);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --papier:#151514; --papier-2:#1E1E1C; --encre:#EEECE6; --encre-2:#A8A59D; --trait:#34332F;
+  --face:#2A2B2F; --face-bord:#060607; --face-encre:#F1EFE9; --face-encre-2:#B2AFA7; --fenetre:#161719;
+  --ambre:#B65C10; --ambre-texte:#F0A867; --ambre-pale:#3A2512;
+  --scene:#0A0A0A; --ombre:0 1px 0 rgba(255,255,255,.06) inset, 0 12px 26px -14px rgba(0,0,0,.9);
+}}
+:root[data-theme="dark"]{
+  --papier:#151514; --papier-2:#1E1E1C; --encre:#EEECE6; --encre-2:#A8A59D; --trait:#34332F;
+  --face:#2A2B2F; --face-bord:#060607; --face-encre:#F1EFE9; --face-encre-2:#B2AFA7; --fenetre:#161719;
+  --ambre:#B65C10; --ambre-texte:#F0A867; --ambre-pale:#3A2512;
+  --scene:#0A0A0A; --ombre:0 1px 0 rgba(255,255,255,.06) inset, 0 12px 26px -14px rgba(0,0,0,.9);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Satoshi Instr',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--papier);border-radius:16px;font-size:15px;line-height:1.4}
+.notes{max-width:400px;background:var(--papier);color:var(--encre);padding:18px 20px;border-radius:16px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.chiffre,.notes code{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- structure ---------- */
+.p{padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.tete{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.marque{font-weight:700;font-size:16px;letter-spacing:.01em;margin-right:auto}
+.liaison{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--encre-2)}
+.liaison b{color:var(--encre);font-weight:500}
+.liaison svg{flex:none}
+
+/* bascule Orbite / Écho : un interrupteur à deux positions, le curseur glisse sur ressort */
+.bascule{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;background:var(--papier-2);border-radius:10px;padding:3px;border:1px solid var(--trait)}
+.bascule button{position:relative;z-index:1;font:inherit;font-size:13px;font-weight:500;border:0;background:none;color:var(--encre-2);padding:5px 12px;border-radius:8px;cursor:pointer}
+.bascule button[aria-pressed="true"]{color:var(--encre)}
+.bascule .curseur{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);background:var(--papier);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .34s cubic-bezier(.3,1.35,.5,1)}
+.bascule[data-pos="echo"] .curseur{transform:translateX(100%)}
+.bascule[aria-disabled="true"] button{cursor:not-allowed}
+.bascule-note{font-size:12px;color:var(--encre-2);width:100%;margin:-4px 0 0}
+
+/* ---------- le cadran ---------- */
+.instrument{position:relative;width:min(100%,300px);aspect-ratio:1;margin:2px auto 0}
+.face{position:absolute;inset:0;border-radius:50%;background:var(--face);box-shadow:0 0 0 3px var(--face-bord) inset, var(--ombre);overflow:hidden;transition:background-color .5s ease, transform .5s cubic-bezier(.3,1.3,.5,1)}
+/* le remplissage part du centre, comme une face de thermostat qui change de régime */
+.face::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ambre);transform:scale(.001);transition:transform .55s cubic-bezier(.25,1.1,.4,1)}
+.face[data-regime="attention"]{background:var(--ambre)}
+.face[data-regime="attention"]::before{transform:scale(1)}
+.face[data-regime="pause"]{transform:scale(.985)}
+.face svg{position:absolute;inset:0;width:100%;height:100%}
+.face svg .tic{stroke:var(--face-encre);stroke-linecap:round;stroke-width:2;transition:opacity .25s linear}
+.face svg .aiguille{fill:none;stroke:var(--face-encre);stroke-linecap:round;stroke-width:4}
+.face svg .marque-d{fill:var(--face-encre)}
+.face svg .marque-v{fill:none;stroke:var(--face-encre);stroke-width:1.6}
+.face[data-regime="pause"] .tic{opacity:.45 !important}
+.face.prise{cursor:grabbing}
+.instrument[data-reglable="1"] .face{cursor:grab;touch-action:none}
+.instrument[data-reglable="1"] .face:focus-visible{outline:3px solid var(--encre);outline-offset:4px}
+/* fenêtre centrale : verre sombre constant, la lecture ne change jamais de contraste */
+.fenetre{position:absolute;left:50%;top:50%;width:60%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:var(--fenetre);color:var(--face-encre);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px;box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 2px 10px rgba(0,0,0,.5) inset;pointer-events:none}
+.fenetre .grand{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;font-size:clamp(34px,13cqi,52px);line-height:1;letter-spacing:-.02em;display:inline-block}
+.fenetre .unite{font-size:13px;color:var(--face-encre-2);margin-top:4px}
+.fenetre .detail{font-size:12px;color:var(--face-encre-2);margin-top:6px;font-family:'IBM Plex Mono',monospace}
+.fenetre .etat-mot{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--face-encre);margin-bottom:6px}
+.grand.change{animation:rouler .28s cubic-bezier(.2,.9,.3,1)}
+@keyframes rouler{from{transform:translateY(42%);opacity:.2}to{transform:none;opacity:1}}
+
+/* ---------- textes et chiffres ---------- */
+.titre{font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em}
+.phrase{margin:2px 0 0;color:var(--encre-2)}
+.compteurs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)}
+.compteurs div{padding:9px 4px;display:flex;flex-direction:column;gap:2px}
+.compteurs div+div{border-left:1px solid var(--trait);padding-left:12px}
+.compteurs .chiffre{font-size:20px;font-weight:500}
+.compteurs span{font-size:12px;color:var(--encre-2);display:flex;align-items:center;gap:5px}
+.chiffre.change{animation:rouler .28s cubic-bezier(.2,.9,.3,1)}
+.forme{flex:none}
+
+/* ---------- touches ---------- */
+.actions{display:flex;flex-direction:column;gap:8px}
+.rang2{display:flex;gap:8px;flex-wrap:wrap}
+.touche{font:inherit;font-weight:600;font-size:15px;border-radius:12px;padding:12px 16px;border:1.5px solid var(--encre);background:var(--papier);color:var(--encre);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s ease}
+.touche:active{transform:translateY(1px) scale(.99)}
+.touche.principal{background:var(--encre);color:var(--papier);width:100%;font-size:16px;padding:14px 16px}
+.touche.second{flex:1 1 auto}
+.touche.lien{border-color:transparent;background:none;text-decoration:underline;text-underline-offset:3px;padding:8px 2px;justify-content:flex-start}
+.touche.arret{flex:1 1 auto}
+.touche.arret.confirme{background:var(--ambre);border-color:var(--ambre);color:#FFFFFF}
+.touche[aria-disabled="true"]{opacity:1;background:var(--papier-2);color:var(--encre-2);border-color:var(--trait);cursor:not-allowed}
+.touche:focus-visible,.bascule button:focus-visible,.champ input:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+.note{font-size:12px;color:var(--encre-2);margin:-2px 0 0}
+.raison{font-size:13px;color:var(--ambre-texte);margin:0}
+@keyframes appel{0%{transform:translateX(0)}30%{transform:translateX(-3px)}60%{transform:translateX(3px)}100%{transform:none}}
+
+/* ---------- bornes ---------- */
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.champ{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--encre-2)}
+.champ input{font:500 18px 'IBM Plex Mono',monospace;color:var(--encre);background:var(--papier-2);border:1px solid var(--trait);border-radius:10px;padding:8px 10px;width:100%}
+.champ input:disabled{color:var(--encre-2)}
+.case{grid-column:1/-1;display:flex;align-items:center;gap:10px;font:inherit;font-size:14px;background:none;border:0;color:var(--encre);padding:4px 0;cursor:pointer;text-align:left}
+.interrupteur{width:38px;height:22px;border-radius:11px;background:var(--trait);position:relative;flex:none;transition:background-color .2s}
+.interrupteur::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--papier);box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+[aria-pressed="true"] .interrupteur{background:var(--encre)}
+[aria-pressed="true"] .interrupteur::after{transform:translateX(16px)}
+.aide{font-size:12px;color:var(--encre-2);margin:0;grid-column:1/-1}
+
+/* ---------- blocs ---------- */
+.bloc{border:1px solid var(--trait);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.bloc h2{font-size:14px;margin:0;font-weight:700}
+.bloc p{margin:0}
+.bloc.attention{border-color:var(--ambre);background:var(--ambre-pale)}
+.bloc.attention h2{color:var(--ambre-texte)}
+.bloc.attention h2::before{content:"";display:inline-block;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid currentColor;margin-right:7px;vertical-align:-1px}
+.choix{display:flex;gap:8px;flex-wrap:wrap}
+.file-ligne{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pas{display:inline-flex;align-items:center;border:1px solid var(--trait);border-radius:10px;overflow:hidden}
+.pas button{font:inherit;font-size:18px;width:36px;height:34px;border:0;background:var(--papier-2);color:var(--encre);cursor:pointer}
+.pas output{min-width:84px;text-align:center;font-size:14px}
+.parties{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.parties li{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;font-size:13px}
+.parties li .num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--encre)}
+.parties li .det{color:var(--encre-2)}
+.parties li.courante .det{color:var(--encre);font-weight:500}
+.mini{width:22px;height:22px}
+.relecture{display:flex;gap:10px;align-items:center}
+.message{position:sticky;bottom:10px;margin:0 16px;background:var(--encre);color:var(--papier);border-radius:12px;padding:10px 14px;font-size:14px}
+.message.neuf{animation:monte .3s cubic-bezier(.2,1.2,.4,1)}
+@keyframes monte{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- liste de ce qui reste ---------- */
+.liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.liste li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:9px 0;border-bottom:1px solid var(--trait)}
+#panneau[data-etat-change="1"] .liste li{animation:entre .3s both cubic-bezier(.2,.9,.3,1)}
+.groupe{font-size:13px;font-weight:700;margin:10px 0 0;display:flex;gap:6px;align-items:center}
+.retour{font:inherit;font-size:14px;font-weight:600;background:none;border:0;color:var(--encre);padding:4px 0;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lead{font-size:17px;line-height:1.35;margin:0;color:var(--encre);font-weight:500}
+.liste li .quoi{font-weight:600}
+.liste li .motif{grid-column:2;color:var(--encre-2);font-size:13px}
+.liste li .gestes{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+@container (min-width:440px){.liste li{grid-template-columns:auto 1fr auto;align-items:center}.liste li .motif{grid-column:2}.liste li .gestes{grid-column:3;grid-row:1/3;margin:0}}
+.liste .touche{padding:6px 10px;font-size:13px;border-width:1px;border-radius:9px}
+@keyframes entre{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.coupe{width:100%;aspect-ratio:2/1;border-radius:14px;background:var(--face);display:block}
+.coupe .sol{fill:none;stroke:var(--face-encre-2);stroke-width:1.5}
+.coupe .rail{stroke:var(--face-encre);stroke-width:3;stroke-linecap:round}
+.legende{font-size:12px;color:var(--encre-2);margin:0}
+
+/* ---------- transitions d'état (le moteur pose data-etat-change="1" au rendu qui suit un changement) ---------- */
+#panneau[data-etat-change="1"] .titre{animation:entre .35s both cubic-bezier(.2,.9,.3,1)}
+#panneau[data-etat-change="1"] .actions{animation:entre .4s .05s both cubic-bezier(.2,.9,.3,1)}
+#panneau[data-etat-change="1"] .bloc{animation:entre .4s .08s both cubic-bezier(.2,.9,.3,1)}
+
+/* ---------- mouvement réduit : tout se pose sans glisser ---------- */
+@media (prefers-reduced-motion: reduce){ #panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important} }
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Cadran"></div></div>
+  <aside class="notes">
+    <h2>Cadran</h2>
+    <p><b>Logique.</b> Le lot se lit comme un thermostat posé sur le bureau : l'arc allumé est ce qui est fait, le chiffre au centre est ce qui reste, et la face ne se remplit de couleur que lorsqu'Ariane a besoin de vous.</p>
+    <p><b>D'où ça vient.</b> Scrubbers (dépôt haplollc) : la face <code>ThermostatFace.swift</code> (300° de graduations, 90 traits, celles jusqu'à la valeur allumées, un long trait pour la valeur, une face qui ne change de teinte que hors du tiers calme et part du centre), la correspondance angulaire de <code>Scrubber.swift</code> (l'angle déroulé tour après tour) et les crans de <code>ScrubberScale.swift</code> ; la face <code>RulerFace.swift</code> pour la lecture en gras. libraries.dev, paquet bot-avatars (<code>engine.ts</code>) : les changements d'état sont des mélanges doux, plus lents vers le repos que vers le travail.</p>
+    <p><b>Ce que ça veut dire ici.</b></p>
+    <ul>
+      <li><b>Traits allumés</b> : cuts traités sur le total ; quand le total est inconnu, aucun arc n'est allumé (on ne devine pas) et un seul trait avance comme une trotteuse, avec les mots « total inconnu ».</li>
+      <li><b>Long trait</b> : le cut en cours.</li>
+      <li><b>Cran triangulaire hors de l'anneau</b> : un cut différé ; <b>rond creux</b> : un cut posé mais à examiner. Les mêmes formes reviennent dans les compteurs et la liste.</li>
+      <li><b>Face graphite</b> : Ariane tourne seule ou rien n'est en jeu. <b>Face ambre</b>, toujours avec un mot dans la fenêtre (« Arrêté », « Alerte ») et un triangle dans le bloc : elle a besoin de vous. <b>Traits à demi-éteints</b> : en pause.</li>
+      <li><b>Prêt</b> : le cadran se tourne (glisser autour, ou flèches du clavier) pour régler le dernier cut, par crans de 10 ; une graduation vaut 5 cuts.</li>
+      <li><b>File de parties</b> : chaque partie est un petit cadran plein, en cours, ou vide.</li>
+    </ul>
+    <p><b>Mouvement.</b> Un cut qui arrive allume le trait suivant sur un ressort et fait rouler le chiffre ; la mise en route allume l'arc trait après trait ; l'arrêt remplit la face d'ambre depuis le centre ; le cadran relâché revient au cran le plus proche. En mouvement réduit, tout se pose sans glisser.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const pl = (k, un, plus) => n(k) + ' ' + (k > 1 ? plus : un);
+  const NB_TRAITS = 90, BALAYAGE = 300, DEPART = 120; /* degrés, ouverture en bas comme un thermostat */
+  const CUTS_PAR_TRAIT_PRET = 5; /* en PRÊT, une graduation vaut 5 cuts : 90 traits = 450 cuts */
+
+  /* ---------- formes (un seul jeu, trait 1,5) : elles doublent toujours la couleur ---------- */
+  const F = {
+    pose: '<svg class="forme" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>',
+    differe: '<svg class="forme" width="11" height="10" viewBox="0 0 11 10" aria-hidden="true"><path d="M1 1h9L5.5 9z" fill="currentColor"/></svg>',
+    vert: '<svg class="forme" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+    lancer: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2l9 5-9 5z" fill="currentColor"/></svg>',
+    pause: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/></svg>',
+    arret: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="2.5" width="9" height="9" rx="1" fill="currentColor"/></svg>',
+  };
+  const liaisonForme = {
+    relie: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="currentColor"/></svg>',
+    absent: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 9.5l7-7" stroke="currentColor" stroke-width="1.5"/></svg>',
+    choisir: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 1.5a4.5 4.5 0 010 9z" fill="currentColor"/></svg>',
+  };
+
+  function touche(x, extra) {
+    const icone = x.a === 'lancer' || x.a === 'continuer' ? F.lancer : x.a === 'pause' ? F.pause : x.rang === 'arret' ? F.arret : '';
+    const cls = 'touche ' + (x.rang || 'second') + (x.confirme ? ' confirme' : '') + (extra ? ' ' + extra : '');
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${icone}${esc(x.libelle)}</button>`
+      + (x.raison ? `<p class="raison">${esc(x.raison)}</p>` : '') + (x.note ? `<p class="note">${esc(x.note)}</p>` : '');
+  }
+  function actions(liste) {
+    const p = liste.filter((x) => x.rang === 'principal');
+    const autres = liste.filter((x) => x.rang !== 'principal' && x.rang !== 'lien');
+    const liens = liste.filter((x) => x.rang === 'lien');
+    return `<div class="actions">${p.map((x) => touche(x)).join('')}${autres.length ? `<div class="rang2">${autres.map((x) => `<div style="flex:1 1 140px;display:flex;flex-direction:column;gap:4px">${touche(x)}</div>`).join('')}</div>` : ''}${liens.map((x) => touche(x)).join('')}</div>`;
+  }
+
+  function tete(m) {
+    const bloque = m.activiteBloquee;
+    const echo = m.activite === 'echo';
+    return `<div class="tete"><span class="marque">Ariane</span>
+      <div class="bascule" role="group" aria-label="Activité" data-pos="${echo ? 'echo' : 'orbite'}"${bloque ? ' aria-disabled="true"' : ''}>
+        <span class="curseur" aria-hidden="true"></span>
+        <button data-a="orbite" aria-pressed="${!echo}"${bloque ? ' aria-disabled="true"' : ''}>Orbite</button>
+        <button data-a="echo" aria-pressed="${echo}"${bloque ? ' aria-disabled="true"' : ''}>Écho</button>
+      </div>
+      ${bloque ? '<p class="bascule-note">Écho se choisit lot en pause ou arrêté.</p>' : ''}
+      <div class="liaison" style="width:100%">${liaisonForme[m.liaison.etat]}<b>${esc(m.liaison.texte)}</b><span>· ${esc(m.liaison.detail)}</span></div>
+    </div>`;
+  }
+
+  /* Ce que montre la fenêtre centrale du cadran, selon l'état. */
+  function fenetre(m) {
+    const c = m.compte;
+    if (m.vue === 'echo') return `<span class="etat-mot">Écho</span><span class="grand" data-valeur="echo-vus">${m.echo.vus}</span><span class="unite">gestes vus</span><span class="detail">${m.echo.accord} en accord</span>`;
+    if (m.phase === 'pret') {
+      if (m.bornes.finDePartie) return `<span class="etat-mot">Prêt</span><span class="grand">${m.bornes.debut}</span><span class="unite">premier cut</span><span class="detail">jusqu'à la fin de partie</span>`;
+      const nb = m.bornes.fin - m.bornes.debut + 1;
+      return `<span class="etat-mot">Prêt</span><span class="grand" data-lecture>${nb}</span><span class="unite">cuts à poser</span><span class="detail">${m.bornes.debut} → <span data-lecture-fin>${m.bornes.fin}</span></span>`;
+    }
+    if (m.file.relecture) return `<span class="etat-mot">Relecture</span><span class="grand">${m.file.courante}</span><span class="unite">partie relue</span><span class="detail">sur ${m.file.nb}</span>`;
+    if (m.phase === 'fin') return `<span class="etat-mot">${m.file.finie ? 'File finie' : 'Terminé'}</span><span class="grand">${c.faits}</span><span class="unite">cuts traités</span><span class="detail">${c.differes} différés</span>`;
+    const mot = m.phase === 'pause' ? 'En pause' : m.phase === 'arrete' ? (m.file.alerte ? 'Alerte' : 'Arrêté') : 'En cours';
+    if (c.total == null) return `<span class="etat-mot">${mot}</span><span class="grand" data-valeur="faits">${c.faits}</span><span class="unite">traités · total inconnu</span><span class="detail">cut ${c.cut}</span>`;
+    return `<span class="etat-mot">${mot}</span><span class="grand" data-valeur="reste">${c.total - c.faits}</span><span class="unite">restent sur ${n(c.total)}</span><span class="detail">${esc(c.tempsTexte)}</span>`;
+  }
+
+  function compteurs(m) {
+    const c = m.compte;
+    return `<div class="compteurs">
+      <div><span class="chiffre" data-valeur="poses">${n(c.poses)}</span><span>${F.pose}posés</span></div>
+      <div><span class="chiffre" data-valeur="differes">${n(c.differes)}</span><span>${F.differe}différés</span></div>
+      <div><span class="chiffre" data-valeur="examiner">${n(c.aExaminer)}</span><span>${F.vert}à examiner</span></div>
+    </div>`;
+  }
+
+  function miniCadran(part) {
+    /* une partie de la file : pleine (faite), à demi (en cours), vide (à venir) */
+    const r = 9, l = 2 * Math.PI * r;
+    const arc = part === 1 ? l : part > 0 ? l * part : 0;
+    return `<svg class="mini" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="${r}" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="3"/>${arc ? `<circle cx="11" cy="11" r="${r}" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="${arc} ${l}" transform="rotate(-90 11 11)"/>` : ''}</svg>`;
+  }
+
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') {
+      return `<section class="bloc" aria-label="File de parties">
+        <div class="file-ligne"><button class="case" style="width:auto;grid-column:auto" data-a="fileBascule" aria-pressed="${f.active}"><span class="interrupteur" aria-hidden="true"></span><span><b>File de parties</b> · ${f.active ? 'allumée' : 'éteinte'}</span></button>
+        ${f.active ? `<div class="pas" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb} parties</output><button data-a="filePlus" aria-label="Une partie de plus">+</button></div>` : ''}</div>
+        <p class="aide">${f.active ? `Ariane enchaîne ${f.nb} parties ; après chacune, relecture et correction, puis la suivante démarre seule.` : 'Éteinte : le lot s’arrête à la fin de ses bornes.'}</p>
+      </section>`;
+    }
+    if (!f.active) return '';
+    const lignes = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const faite = f.parties.find((p) => p.n === i);
+      let part = 0, det = 'à venir', cls = '';
+      if (faite) { part = 1; det = (f.relecture && i === f.courante ? 'en relecture · ' : 'faite · ') + `${pl(faite.poses, 'posé', 'posés')} · ${pl(faite.differes, 'différé', 'différés')} · ${n(faite.aControler)} à examiner`; if (f.relecture && i === f.courante) cls = 'courante'; }
+      else if (i === f.courante) { cls = 'courante'; part = m.compte.part || .5; det = m.phase === 'arrete' ? `arrêtée au cut ${m.compte.cut}` : `en cours · ${m.compte.faits} traités`; }
+      lignes.push(`<li class="${cls}"><span style="color:var(--encre)">${miniCadran(part)}</span><span><span class="num">Partie ${i}</span> <span class="det">${det}</span></span></li>`);
+    }
+    let haut = `<h2>File de parties · partie ${Math.min(f.courante, f.nb)} sur ${f.nb}</h2>`;
+    if (f.finie) haut = `<h2>File terminée · ${f.nb} parties</h2>`;
+    const rel = '';
+    return `<section class="bloc" aria-label="File de parties">${haut}${rel}<ul class="parties">${lignes.join('')}</ul></section>`;
+  }
+
+  function alerte(m) {
+    const a = m.file.alerte;
+    if (!a) return '';
+    const c = m.compte;
+    return `<section class="bloc attention" role="alert"><h2>${esc(a.titre)}</h2><p>${esc(a.detail)}</p><p class="legende">Bilan de la partie ${m.file.courante} à l'arrêt : ${pl(c.poses, 'posé', 'posés')}, ${pl(c.differes, 'différé', 'différés')}, ${n(c.aExaminer)} à examiner.</p></section>`;
+  }
+
+  function incident(m) {
+    const i = m.incident;
+    if (!i) return '';
+    const att = i.type !== 'reprise';
+    return `<section class="bloc${att ? ' attention' : ''}" role="${att ? 'alert' : 'status'}"><h2>${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((x) => touche(x, i.type === 'choisir' ? 'second' : '')).join('')}</div>` : ''}</section>`;
+  }
+
+  function bornes(m) {
+    const b = m.bornes;
+    return `<section class="bornes" aria-label="Bornes du lot">
+      <label class="champ">Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label>
+      <label class="champ">Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin de partie"' : ''}></label>
+      <button class="case" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="interrupteur" aria-hidden="true"></span>Aller jusqu'à la fin de la partie</button>
+      <p class="aide">Tourner le cadran règle le dernier cut, par crans de 10.</p>
+    </section>`;
+  }
+
+  function vueReste(m) {
+    const items = m.restants;
+    const ligne = (r, i) => `<li style="animation-delay:${Math.min(i, 12) * 30}ms"><span style="padding-top:3px">${r.type === 'differe' ? F.differe : F.vert}</span>
+      <span class="quoi">Cut <span class="chiffre">${r.cut}</span></span>
+      <span class="motif">${esc(r.motif)}</span>
+      <span class="gestes"><button class="touche" data-a="examiner" data-id="${esc(r.id)}">Examiner</button><button class="touche" data-a="ouvrir" data-id="${esc(r.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = items.filter((r) => r.type === 'differe'), v = items.filter((r) => r.type === 'vert');
+    return `<div class="p">
+      <div class="tete"><button class="retour" data-a="retour"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Retour au lot</button></div>
+      <div><h1 class="titre">Ce qui reste</h1><p class="phrase">${pl(d.length, 'différé', 'différés')} et ${pl(v.length, 'vert', 'verts')} à examiner.</p></div>
+      ${d.length ? `<h2 class="groupe">${F.differe}Différés · Ariane n'a rien posé</h2><ul class="liste">${d.map(ligne).join('')}</ul>` : ''}
+      ${v.length ? `<h2 class="groupe">${F.vert}Verts à examiner · posés, à vérifier</h2><ul class="liste">${v.map(ligne).join('')}</ul>` : ''}
+      ${items.length ? '' : '<p>Rien à reprendre : tout a été vu.</p>'}
+    </div>`;
+  }
+
+  function vueExamen(m, D) {
+    const r = m.examen;
+    const cp = D.coupe(r.cut, 180);
+    /* coupe fonctionnelle : profil du sol (moyenne glissante des points) et position proposée des deux rails */
+    const tri = cp.pts.slice().sort((a, b) => a[0] - b[0]);
+    const X = (x) => 20 + (x + 1) * 180, Z = (z) => 150 - (z + 0.5) * 220;
+    let chemin = '';
+    for (let i = 0; i < tri.length; i += 6) { const g = tri.slice(i, i + 6); const x = g.reduce((s, p) => s + p[0], 0) / g.length, z = Math.min(...g.map((p) => p[1])); chemin += (i ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Z(z).toFixed(1); }
+    const rails = cp.rails.map((x) => `<line class="rail" x1="${X(x)}" y1="${Z(-.24)}" x2="${X(x)}" y2="${Z(-.36)}"/>`).join('');
+    return `<div class="p">
+      <div class="tete"><button class="retour" data-a="voirReste"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Ce qui reste</button></div>
+      <h1 class="titre">Cut <span class="chiffre">${r.cut}</span></h1>
+      <p class="phrase" style="margin:0">${r.type === 'differe' ? F.differe + ' Différé' : F.vert + ' Posé, à examiner'} · ${esc(r.motif)}</p>
+      <svg class="coupe" viewBox="0 0 400 200" role="img" aria-label="Coupe du cut ${r.cut} : profil et position proposée des deux rails"><path class="sol" d="${chemin}"/>${rails}</svg>
+      <p class="legende">Profil de la coupe ; les deux traits verticaux marquent la position proposée par Ariane.</p>
+      <div class="actions">${touche({ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'principal' })}
+      ${touche({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'second' })}</div>
+    </div>`;
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    const msg = m.message ? `<div class="message" role="status">${esc(m.message)}</div>` : '';
+    if (m.vue === 'reste') return vueReste(m) + msg;
+    if (m.vue === 'examen' && m.examen) return vueExamen(m, D) + msg;
+    const reglable = m.phase === 'pret' && !m.bornes.finDePartie && m.vue !== 'echo';
+    const instr = `<div class="instrument" data-reglable="${reglable ? 1 : 0}">
+      <div class="face" data-garder="cadran"></div>
+      <div class="fenetre" aria-live="polite">${fenetre(m)}</div></div>`;
+    let corps;
+    if (m.vue === 'echo') {
+      corps = `${instr}<div><h1 class="sr">${esc(m.titre)}</h1><p class="lead">${esc(m.phrase)}</p></div>
+        <div class="compteurs"><div><span class="chiffre" data-valeur="e-vus">${m.echo.vus}</span><span>gestes vus</span></div><div><span class="chiffre" data-valeur="e-acc">${m.echo.accord}</span><span>en accord</span></div><div><span class="chiffre">${m.echo.dernier == null ? '—' : m.echo.dernier}</span><span>dernier cut vu</span></div></div>
+        <p class="legende">L'arc allumé est la part des gestes où Ariane aurait posé comme vous.</p>${actions(m.actions)}`;
+    } else {
+      const reste = m.restants.length && m.phase !== 'fin' && m.phase !== 'pret' ? touche({ a: 'voirReste', libelle: `Voir ce qui reste (${m.restants.length})`, rang: 'lien' }) : '';
+      corps = `${incident(m)}${alerte(m)}${instr}
+        <div><h1 class="sr">${esc(m.titre)}</h1><p class="lead">${esc(m.phrase)}</p></div>
+        ${m.phase === 'pret' ? bornes(m) + file(m) + actions(m.actions) : compteurs(m) + actions(m.actions) + reste + file(m)}`;
+    }
+    return `<div class="p">${tete(m)}${corps}</div>${msg}`;
+  }
+
+  /* ---------- le cadran conservé : dessin, ressort, geste ---------- */
+  const NS = 'http' + '://www.w3.org/2000/svg';
+  const etat = { fraction: 0, cible: 0, vitesse: 0, aiguille: 0, aiguilleCible: 0, va: 0, raf: 0, allume: 0, allumeCible: 0, regime: '', modele: null };
+  function point(deg, r) { const a = deg * Math.PI / 180; return [150 + Math.cos(a) * r, 150 + Math.sin(a) * r]; }
+  function construire(face) {
+    face.innerHTML = '';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 300 300'); svg.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i <= NB_TRAITS; i++) {
+      const deg = DEPART + BALAYAGE * i / NB_TRAITS;
+      const [x1, y1] = point(deg, 136), [x2, y2] = point(deg, 124);
+      const l = document.createElementNS(NS, 'line');
+      l.setAttribute('class', 'tic'); l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+      svg.appendChild(l);
+    }
+    const ai = document.createElementNS(NS, 'line'); ai.setAttribute('class', 'aiguille'); ai.setAttribute('data-forme', 'cut en cours'); svg.appendChild(ai);
+    const g = document.createElementNS(NS, 'g'); g.setAttribute('class', 'marques'); svg.appendChild(g);
+    face.appendChild(svg);
+    face.tabIndex = -1;
+    face.addEventListener('pointerdown', debutGeste);
+    face.addEventListener('keydown', clavier);
+  }
+
+  /* Fraction allumée et position de l'aiguille, selon le modèle. */
+  function cibles(m) {
+    const c = m.compte;
+    if (m.vue === 'echo') { const f = m.echo.vus ? m.echo.accord / m.echo.vus : 0; return { arc: f, aig: f, trotteuse: false }; }
+    if (m.phase === 'pret') {
+      if (m.bornes.finDePartie) return { arc: 1, aig: 0, trotteuse: false, ouvert: true };
+      const f = Math.min(1, (m.bornes.fin - m.bornes.debut + 1) / (NB_TRAITS * CUTS_PAR_TRAIT_PRET)); return { arc: f, aig: f, trotteuse: false };
+    }
+    if (c.total == null) { const f = (c.faits % 60) / 60; return { arc: 0, aig: f, trotteuse: true }; }
+    if (m.phase === 'fin') return { arc: 1, aig: 1, trotteuse: false };
+    if (m.file.relecture) return { arc: 1, aig: 0, trotteuse: false, relecture: true };
+    return { arc: c.part || 0, aig: c.part || 0, trotteuse: false };
+  }
+
+  function regimeDe(m) {
+    if (m.vue === 'echo') return 'calme';
+    if (m.phase === 'arrete' || (m.incident && m.incident.type !== 'reprise')) return 'attention';
+    if (m.phase === 'pause') return 'pause';
+    return 'calme';
+  }
+
+  function peindre(face) {
+    const svg = face.querySelector('svg'); if (!svg) return;
+    const tics = svg.querySelectorAll('.tic');
+    const allume = Math.round(etat.fraction * NB_TRAITS);
+    const ouvert = etat.ouvert;
+    const env = etat.env || 0;
+    tics.forEach((t, i) => {
+      const lit = !ouvert && i <= allume && etat.fraction > 0.0001;
+      /* cloche autour de l'aiguille (face Ruler) : un cut qui arrive, ou un geste vu en Écho, fait gonfler les traits voisins puis retomber */
+      const d = (i / NB_TRAITS - etat.aiguille) / 0.035, cloche = env * Math.exp(-0.5 * d * d);
+      t.style.opacity = ouvert ? (i % 2 ? .25 : .7) : Math.min(1, (lit ? .92 : .26) + cloche * .7);
+      t.style.strokeWidth = 2 + cloche * 1.6;
+    });
+    const deg = DEPART + BALAYAGE * etat.aiguille;
+    const [x1, y1] = point(deg, 140), [x2, y2] = point(deg, 108);
+    const ai = svg.querySelector('.aiguille');
+    ai.setAttribute('x1', x1); ai.setAttribute('y1', y1); ai.setAttribute('x2', x2); ai.setAttribute('y2', y2);
+    ai.style.display = ouvert ? 'none' : '';
+  }
+
+  /* Ressort amorti (réponse ≈ 0,34 s, amortissement 0,82 : celui des crans de Scrubbers). */
+  function animer() {
+    const face = document.querySelector('[data-garder="cadran"]');
+    if (!face) { etat.raf = 0; return; }
+    const dt = 1 / 60, w = 2 * Math.PI / 0.34, z = 0.82;
+    etat.vitesse += (w * w * (etat.cible - etat.fraction) - 2 * z * w * etat.vitesse) * dt;
+    etat.fraction += etat.vitesse * dt;
+    etat.va += (w * w * (etat.aiguilleCible - etat.aiguille) - 2 * z * w * etat.va) * dt;
+    etat.aiguille += etat.va * dt;
+    etat.env = (etat.env || 0) * Math.exp(-dt / 0.45);
+    if (etat.env < 0.01) etat.env = 0;
+    peindre(face);
+    if (!etat.env && Math.abs(etat.cible - etat.fraction) < 0.0005 && Math.abs(etat.vitesse) < 0.001 && Math.abs(etat.aiguilleCible - etat.aiguille) < 0.0005 && Math.abs(etat.va) < 0.001) {
+      etat.fraction = etat.cible; etat.aiguille = etat.aiguilleCible; peindre(face); etat.raf = 0; return;
+    }
+    etat.raf = requestAnimationFrame(animer);
+  }
+
+  function relire(t) {
+    const face = document.querySelector('[data-garder="cadran"]');
+    if (!face || !etat.relecture) { etat.rafRel = 0; return; }
+    const u = (t / 3200) % 1, e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    etat.aiguilleCible = etat.aiguille = e; etat.va = 0;
+    peindre(face);
+    etat.rafRel = requestAnimationFrame(relire);
+  }
+  let geste = null;
+  function lectureLive(fin) {
+    const l = document.querySelector('[data-lecture]'), lf = document.querySelector('[data-lecture-fin]');
+    const m = Demo.D.modele();
+    if (l) l.textContent = fin - m.bornes.debut + 1;
+    if (lf) lf.textContent = fin;
+  }
+  function debutGeste(e) {
+    const inst = e.currentTarget.closest('.instrument');
+    if (!inst || inst.dataset.reglable !== '1') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const m = Demo.D.modele();
+    geste = { cx, cy, angle: Math.atan2(e.clientY - cy, e.clientX - cx), tourne: 0, fin0: m.bornes.fin, debut: m.bornes.debut, fin: m.bornes.fin };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.currentTarget.classList.add('prise');
+    e.currentTarget.addEventListener('pointermove', bougeGeste);
+    e.currentTarget.addEventListener('pointerup', finGeste, { once: true });
+    e.currentTarget.addEventListener('pointercancel', finGeste, { once: true });
+  }
+  function bougeGeste(e) {
+    if (!geste) return;
+    const a = Math.atan2(e.clientY - geste.cy, e.clientX - geste.cx);
+    let d = a - geste.angle; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI;
+    geste.angle = a; geste.tourne += d;
+    /* un tour de 300° couvre les 450 cuts du cadran ; le doigt glisse sans cran, le relâché se pose sur un cran de 10 */
+    const brut = geste.fin0 + geste.tourne / (BALAYAGE * Math.PI / 180) * NB_TRAITS * CUTS_PAR_TRAIT_PRET;
+    geste.fin = Math.max(geste.debut + 1, Math.round(brut));
+    etat.cible = Math.min(1, (geste.fin - geste.debut + 1) / (NB_TRAITS * CUTS_PAR_TRAIT_PRET)); etat.aiguilleCible = etat.cible;
+    if (!etat.raf) etat.raf = requestAnimationFrame(animer);
+    lectureLive(geste.fin);
+  }
+  function finGeste(e) {
+    const face = e.currentTarget;
+    face.classList.remove('prise');
+    face.removeEventListener('pointermove', bougeGeste);
+    if (!geste) return;
+    const fin = Math.max(geste.debut + 1, geste.debut - 1 + Math.round((geste.fin - geste.debut + 1) / 10) * 10);
+    geste = null;
+    Demo.agir('regler', 'fin:' + fin);
+  }
+  function clavier(e) {
+    const inst = e.currentTarget.closest('.instrument');
+    if (!inst || inst.dataset.reglable !== '1') return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); Demo.agir('finPlus'); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); Demo.agir('finMoins'); }
+  }
+
+  let phasePrec = null;
+  let dernierMessage = null;
+  function marquerMessage(racine) {
+    const mg = racine.querySelector('.message'), t = mg ? mg.textContent : null;
+    if (mg && t !== dernierMessage) mg.classList.add('neuf');
+    dernierMessage = t;
+  }
+  function apres(S, D, racine) {
+    marquerMessage(racine);
+    const face = racine.querySelector('[data-garder="cadran"]');
+    if (!face) { phasePrec = null; return; }
+    const neuf = !face.querySelector('svg');
+    if (neuf) construire(face);
+    const m = D.modele();
+    const c = cibles(m);
+    etat.ouvert = !!c.ouvert;
+    const regime = regimeDe(m);
+    face.setAttribute('data-regime', regime);
+    const inst = face.closest('.instrument');
+    if (inst.dataset.reglable === '1') {
+      face.tabIndex = 0; face.setAttribute('role', 'slider'); face.setAttribute('aria-label', 'Dernier cut du lot');
+      face.setAttribute('aria-valuenow', m.bornes.fin); face.setAttribute('aria-valuemin', m.bornes.debut + 1); face.setAttribute('aria-valuemax', 99999);
+    } else { face.tabIndex = -1; face.removeAttribute('role'); ['aria-label', 'aria-valuenow', 'aria-valuemin', 'aria-valuemax'].forEach((a) => face.removeAttribute(a)); }
+    /* marques des différés et des verts, hors de l'anneau, à leur place dans le lot */
+    const g = face.querySelector('.marques');
+    const total = m.compte.total;
+    let html = '';
+    if (total && m.phase !== 'pret' && m.vue !== 'echo') {
+      m.restants.forEach((r) => {
+        const f = (r.cut - m.compte.debut) / total; if (f < 0 || f > 1) return;
+        const deg = DEPART + BALAYAGE * f;
+        if (r.type === 'differe') {
+          const [x, y] = point(deg, 143), [xa, ya] = point(deg - 1.6, 149), [xb, yb] = point(deg + 1.6, 149);
+          html += `<path class="marque-d" data-forme="différé" d="M${x.toFixed(1)} ${y.toFixed(1)}L${xa.toFixed(1)} ${ya.toFixed(1)}L${xb.toFixed(1)} ${yb.toFixed(1)}Z"/>`;
+        } else { const [x, y] = point(deg, 145); html += `<circle class="marque-v" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"/>`; }
+      });
+    }
+    g.innerHTML = html;
+    const reduit = D.mouvementReduit();
+    const demarrage = phasePrec === 'pret' && m.phase === 'encours';
+    if (!geste) { etat.cible = c.arc; etat.aiguilleCible = c.aig; }
+    if (neuf || reduit) {
+      /* première pose : la mise en route allume l'arc depuis zéro ; en mouvement réduit tout se pose d'un coup */
+      etat.fraction = reduit ? etat.cible : 0; etat.aiguille = reduit ? etat.aiguilleCible : 0; etat.vitesse = etat.va = 0;
+    }
+    if (demarrage && !reduit) { etat.fraction = 0; etat.aiguille = 0; }
+    /* attaque immédiate, relâche lente (enveloppe de voice-glow) à chaque cut traité ou geste vu */
+    const pouls = m.vue === 'echo' ? m.echo.vus : m.compte.faits;
+    if (!reduit && !neuf && etat.pouls != null && pouls !== etat.pouls) etat.env = 1;
+    etat.pouls = pouls;
+    if (c.trotteuse && !reduit && etat.aiguilleCible < etat.aiguille - 0.5) etat.aiguille -= 1; /* la trotteuse repasse par le haut sans revenir en arrière */
+    peindre(face);
+    if (!reduit && !etat.raf) etat.raf = requestAnimationFrame(animer);
+    /* relecture : l'aiguille repasse lentement sur toute la partie, comme un relecteur (3,2 s par passage) */
+    etat.relecture = !!c.relecture && !reduit;
+    if (etat.relecture && !etat.rafRel) etat.rafRel = requestAnimationFrame(relire);
+    phasePrec = m.vue === 'echo' ? 'echo' : m.phase;
+  }
+
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

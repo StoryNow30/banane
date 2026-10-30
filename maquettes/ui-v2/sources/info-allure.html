@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Allure du lot</title>
+<style>
+/*POLICE:libre-franklin*/
+/* Proposition « Allure du lot » (famille signalétique et design d'information).
+   Logique : le panneau répond d'abord à « le lot ralentit-il ? » : une phrase avec flèche et signe, une courbe de cadence
+   (cuts par minute) avec sa médiane, et un axe du temps (début, maintenant, fin estimée) qui porte les événements.
+   Couleurs (Radix olive, blue, amber, red) : la courbe et les chiffres à l'encre ; le bleu marque « maintenant »
+   et l'action principale ; ambre et rouge seulement pour un incident, toujours avec un mot. */
+:root{
+  --scene:#E7E9E7; --fond:#FCFDFC; --fond2:#F8FAF8; --fond3:#EFF1EF; --trait:#D7DAD7; --trait-fort:#898E87;
+  --texte:#1D211C; --texte2:#60655F;
+  --bleu:#0D74CE; --sur-bleu:#FFFFFF;
+  --ambre:#FFC53D; --ambre-trait:#AB6400; --ambre-doux:#FFF7C2; --ambre-texte:#4F3422;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#FEEBEC; --rouge-texte:#641723;
+  --focus:#0D74CE;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --scene:#000000; --fond:#111210; --fond2:#181917; --fond3:#212220; --trait:#383A36; --trait-fort:#687066;
+  --texte:#ECEEEC; --texte2:#AFB5AD;
+  --bleu:#70B8FF; --sur-bleu:#0D1520;
+  --ambre:#FFC53D; --ambre-trait:#FFC53D; --ambre-doux:#302008; --ambre-texte:#FFE7B3;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9;
+  --focus:#70B8FF;
+}}
+:root[data-theme="dark"]{
+  --scene:#000000; --fond:#111210; --fond2:#181917; --fond3:#212220; --trait:#383A36; --trait-fort:#687066;
+  --texte:#ECEEEC; --texte2:#AFB5AD;
+  --bleu:#70B8FF; --sur-bleu:#0D1520;
+  --ambre:#FFC53D; --ambre-trait:#FFC53D; --ambre-doux:#302008; --ambre-texte:#FFE7B3;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9;
+  --focus:#70B8FF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Libre Franklin',system-ui,sans-serif;font-size:16px;line-height:1.4}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);border:1px solid var(--trait);border-radius:6px}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;border-radius:6px;font-size:14px}
+.notes h2{font-size:20px;margin:0 0 8px}
+.notes h3{font-size:15px;margin:14px 0 4px}
+.notes p,.notes li{margin:0 0 8px}
+.notes ul{padding-left:18px;margin:0}
+
+/* tailles : 13 / 16 / 20 / 40 ; rayons : 4 et 6 ; graphes : trait 2, grille 1, repères de 8 */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.tab{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.haut{padding:14px 16px 0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.haut h1{margin:0;font-size:20px;font-weight:800}
+.haut .lia{margin-left:auto;font-size:13px;color:var(--texte2)}
+.haut p{flex-basis:100%;margin:2px 0 0;color:var(--texte2)}
+
+/* Chiffres de tête : ce qui est fait, quand ce sera fini. Chiffres proportionnels (grands, isolés). */
+.tete{display:grid;grid-template-columns:1fr auto;gap:0 16px;padding:12px 16px 4px;align-items:end}
+.tete .fig{font-size:40px;font-weight:800;line-height:1;letter-spacing:-.01em}
+.tete .fig small{font-size:20px;font-weight:600;color:var(--texte2);letter-spacing:0}
+.tete .lib{font-size:13px;color:var(--texte2);margin-top:4px}
+.tete .droite{text-align:right}
+
+/* Réponse en phrase, avec indicateur différentiel (flèche + signe ; la couleur n'est pas nécessaire). */
+.allure{margin:12px 16px 0;padding:10px 0;border-top:2px solid var(--texte);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.allure b{font-size:20px;font-weight:800}
+.allure .diff{font-weight:700;white-space:nowrap}
+.allure .diff svg{width:14px;height:14px;vertical-align:-1px;margin-right:2px}
+.allure .diff path{fill:var(--texte)}
+.allure span.ref{color:var(--texte2);font-size:13px;flex-basis:100%}
+
+.graphe{display:block;margin:4px 16px 0}
+.graphe svg{display:block;width:100%;height:auto;overflow:visible}
+.g-grille{stroke:var(--trait);stroke-width:1}
+.g-med{stroke:var(--trait-fort);stroke-width:1}
+.g-ligne{fill:none;stroke:var(--texte);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.g-aire{fill:var(--fond3)}
+.g-avenir{fill:url(#hachures)}
+.g-hach{stroke:var(--trait);stroke-width:1}
+.g-point{fill:var(--bleu);stroke:var(--fond);stroke-width:2}
+.g-texte{font:13px 'Libre Franklin',sans-serif;fill:var(--texte2)}
+.g-texte.fort{fill:var(--texte);font-weight:700}
+.g-dif{fill:var(--fond)}
+.g-dif-bord{fill:none;stroke:var(--texte);stroke-width:2}
+.g-vert{fill:var(--texte)}
+.g-axe{stroke:var(--texte);stroke-width:1}
+.g-now{stroke:var(--bleu);stroke-width:2}
+.legende{display:flex;flex-wrap:wrap;gap:4px 16px;margin:4px 16px 0;font-size:13px;color:var(--texte2)}
+.legende svg{width:12px;height:12px;vertical-align:-1px;margin-right:4px}
+
+.compte{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 16px 0;padding-top:10px;border-top:1px solid var(--trait)}
+.compte div{font-size:13px;color:var(--texte2)}
+.compte b{display:block;font-size:20px;color:var(--texte);font-weight:800}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 0}
+.bornes label{display:block;font-size:13px;font-weight:700;margin-bottom:4px}
+.bornes input{width:100%;font:800 20px 'Libre Franklin',sans-serif;font-variant-numeric:tabular-nums;color:var(--texte);background:var(--fond);border:2px solid var(--trait-fort);border-radius:4px;padding:8px 10px}
+.bornes input:disabled{background:var(--fond3);border-style:dashed;color:var(--texte2)}
+.opt{display:flex;align-items:center;gap:10px;width:calc(100% - 32px);margin:8px 16px 0;background:none;border:0;border-bottom:1px solid var(--trait);padding:10px 0;text-align:left;min-height:48px}
+.opt .case{width:22px;height:22px;border:2px solid var(--trait-fort);border-radius:4px;flex:none;display:flex;align-items:center;justify-content:center}
+.opt[aria-pressed="true"] .case{background:var(--texte);border-color:var(--texte)}
+.opt[aria-pressed="true"] .case::after{content:"";width:10px;height:6px;border:solid var(--fond);border-width:0 0 2.5px 2.5px;transform:rotate(-45deg) translate(1px,-1px)}
+.opt small{margin-left:auto;font-size:13px;color:var(--texte2)}
+.nb{display:flex;align-items:center;gap:10px;margin:8px 16px 0}
+.nb button{width:40px;height:40px;border:2px solid var(--trait-fort);border-radius:4px;background:var(--fond);font-size:20px;font-weight:700}
+.nb b{font-size:20px;min-width:1.5ch;text-align:center}
+
+.encadre{margin:12px 16px 0;border-radius:6px;padding:10px 12px;border-left:6px solid var(--trait-fort);background:var(--fond2)}
+.encadre.att{border-color:var(--ambre-trait);background:var(--ambre-doux)} .encadre.att *{color:var(--ambre-texte)}
+.encadre.agir{border-color:var(--rouge);background:var(--rouge-doux)} .encadre.agir *{color:var(--rouge-texte)}
+.encadre h2{font-size:16px;margin:0 0 2px}
+.encadre p{margin:0}
+.encadre .mot{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:2px}
+.encadre .choix{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.encadre .choix button{text-align:left;background:var(--fond);border:2px solid var(--trait-fort);border-radius:4px;padding:10px 12px;font-weight:700;min-height:44px;color:var(--texte)}
+
+.parties{list-style:none;margin:12px 16px 0;padding:0;border-top:1px solid var(--trait)}
+.parties li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--trait)}
+.parties .p{font-weight:800}
+.parties .e{font-size:13px;color:var(--texte2);text-align:right}
+.parties .barre{grid-column:1/-1;height:6px;border-radius:2px;background:var(--fond3);overflow:hidden;display:flex;gap:2px}
+.parties .barre i{display:block;height:100%;background:var(--texte)}
+
+.actions{display:flex;flex-direction:column;gap:8px;padding:16px}
+.b{min-height:48px;border-radius:4px;font-weight:700;font-size:16px;padding:10px 14px;border:2px solid var(--texte);background:var(--fond);color:var(--texte)}
+.b.principal{background:var(--bleu);border-color:var(--bleu);color:var(--sur-bleu)}
+.b.arret{border-color:var(--trait-fort);margin-top:6px}
+.b.arret.confirme{background:var(--rouge);border-color:var(--rouge);color:var(--sur-rouge)}
+.b[aria-disabled="true"]{background:var(--fond3);color:var(--texte2);border:2px dashed var(--trait-fort);cursor:not-allowed}
+.b small{display:block;font-weight:400;font-size:13px}
+.b.principal small{color:var(--sur-bleu)}
+.b[aria-disabled="true"] small{color:var(--texte)}
+.raison{margin:0;font-size:13px}
+.vers{display:flex;justify-content:space-between;width:calc(100% - 32px);margin:12px 16px 0;background:none;border:0;border-bottom:1px solid var(--trait);padding:10px 0;font-weight:700;min-height:48px;align-items:center}
+.vers span:first-child{text-decoration:underline;text-underline-offset:3px}
+
+.acti{display:flex;margin:0 16px 12px;font-size:13px;gap:6px;align-items:center;flex-wrap:wrap;color:var(--texte2)}
+.acti button{border:2px solid var(--trait-fort);background:var(--fond);border-radius:4px;padding:6px 10px;font-weight:700;color:var(--texte);min-height:40px}
+.acti button[aria-pressed="true"]{background:var(--texte);border-color:var(--texte);color:var(--fond)}
+.acti p{margin:0;flex-basis:100%}
+.acti button[aria-disabled="true"]{border-style:dashed;color:var(--texte2);cursor:not-allowed}
+
+.message{position:sticky;bottom:0;margin:0;padding:0 16px 12px}
+.message:empty{padding:0}
+.message span{display:block;background:var(--texte);color:var(--fond);border-radius:4px;padding:10px 14px}
+
+.barre-vue{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:2px solid var(--texte)}
+.barre-vue h1{margin:0;font-size:20px}
+.barre-vue .b{margin-left:auto;min-height:40px}
+.restes{list-style:none;margin:0;padding:0 16px}
+.restes li{display:grid;grid-template-columns:16px 4.5ch minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--trait)}
+.restes svg{width:12px;height:12px}
+.restes .cut{font-weight:800;text-align:right}
+.restes small{display:block;font-size:13px;color:var(--texte2)}
+.restes .bt{display:flex;gap:6px}
+.restes .bt button{border:2px solid var(--trait-fort);border-radius:4px;background:var(--fond);padding:4px 8px;font-weight:700;font-size:13px;min-height:36px}
+.restes .bt button:first-child{border-color:var(--bleu)}
+.restes h2{grid-column:1/-1}
+.groupe{font-size:16px;margin:16px 16px 4px}
+.coupe{display:block;width:calc(100% - 32px);height:auto;margin:12px 16px 0;border:1px solid var(--trait);border-radius:6px;background:var(--fond2)}
+.coupe .pt{fill:var(--texte2)} .coupe .prop{stroke:var(--bleu);stroke-width:2} .coupe text{font:13px 'Libre Franklin',sans-serif;fill:var(--texte)}
+
+@container (max-width:400px){ .restes li{grid-template-columns:16px 4.5ch minmax(0,1fr)} .restes .bt{grid-column:3} }
+@container (min-width:520px){ .actions{flex-direction:row;flex-wrap:wrap} .actions .b{flex:1 1 40%} .actions .raison{flex-basis:100%} .tete .fig{font-size:48px} }
+
+@media (prefers-reduced-motion: no-preference){
+  html:not([data-mouvement="reduit"]) .neuf.change .g-ligne{stroke-dasharray:var(--l) var(--l);animation:trace 700ms linear}
+  html:not([data-mouvement="reduit"]) .neuf.change .g-point{animation:pose 260ms 600ms cubic-bezier(.16,1,.3,1) backwards}
+  html:not([data-mouvement="reduit"]) .allure.change{animation:fondu 260ms ease-out}
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .haut h1,
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .tete{animation:entree 220ms cubic-bezier(.16,1,.3,1)}
+  html:not([data-mouvement="reduit"]) .message.change span{animation:entree 200ms cubic-bezier(.16,1,.3,1)}
+}
+@keyframes trace{from{stroke-dashoffset:var(--l)}to{stroke-dashoffset:0}}
+@keyframes pose{from{opacity:0}to{opacity:1}}
+@keyframes fondu{from{opacity:.2}to{opacity:1}}
+@keyframes entree{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Allure du lot"></div></div>
+  <aside class="notes">
+    <h2>Allure du lot</h2>
+    <p><b>Logique.</b> Le panneau répond d'abord à « le lot ralentit-il ? » : une phrase avec flèche et signe, la courbe de cadence avec sa médiane, et un axe du temps qui place début, maintenant et fin estimée.</p>
+    <h3>D'où ça vient</h3>
+    <ul>
+      <li>beui.dev, Charts > Sparkline : tuile chiffre + variation signée + petite courbe terminée par un point ; Charts > Status Bar : les événements en ligne sous un axe (ici avec une forme, pas une teinte seule) ; Components > Timeline : début et fin datés sur un axe.</li>
+      <li>swiftpieces, « Data and charts », ScrubChart et LiveStat (fichiers .mdx) : pas d'axe vertical, une seule référence, repères discrets, point final « maintenant ».</li>
+      <li>Skill locale de visualisation : une seule série, donc pas de légende de série ; trait de 2, grille fine et pleine, première et dernière étiquette gardées, texte jamais dans la couleur de la série ; grand chiffre en chiffres proportionnels.</li>
+      <li>Carbon, indicateur différentiel : une flèche ou un signe obligatoire, la couleur facultative.</li>
+      <li>Laws of UX : effet de gradient d'objectif (la fin visible motive) ; seuil de Doherty (réponse immédiate).</li>
+      <li>Police Libre Franklin (tradition des graphiques de presse) ; Radix olive, blue, amber, red.</li>
+    </ul>
+    <h3>Ce que ça veut dire ici</h3>
+    <ul>
+      <li><b>Courbe</b> : cuts par minute, par paquet de 10 cuts complet. <b>Trait fin horizontal</b> : la médiane du lot (valeur écrite dans la légende, pour ne jamais être barrée par la courbe). <b>Point bleu</b> : maintenant.</li>
+      <li><b>Flèche vers le bas et signe moins</b> : le lot ralentit par rapport à sa médiane ; flèche à plat : allure stable. Pas de couleur sur la tendance : ce n'est pas une alarme.</li>
+      <li><b>Rond creux</b> sur l'axe : un cut différé ; <b>carré plein</b> : un cut posé à examiner. <b>Zone hachurée</b> : ce qui reste à faire.</li>
+      <li>Total inconnu : l'axe s'arrête à maintenant, aucune fin n'est dessinée ni écrite.</li>
+      <li>Série de démonstration : calculée à partir des différés du moteur fictif (un différé coûte du temps) ; dans le produit, la cadence serait mesurée.</li>
+      <li><b>Mouvement</b> : chaque nouveau paquet de 10 cuts trace son segment en 0,7 s, à vitesse constante (une progression se montre en linéaire), puis le point « maintenant » apparaît ; un changement d'allure fond la phrase. En mouvement réduit : la courbe change d'un coup.</li>
+    </ul>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const PAQUET = 10, BASE = 0.075, COUT_DIF = 0.35, COUT_VERT = 0.15, DEPART = 9 * 60 + 40; /* départ de démonstration : 09:40 */
+  const heure = (min) => { const t = Math.round(min) % 1440; return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0'); };
+  const virg = (x) => x.toFixed(1).replace('.', ',');
+
+  /* Série de cadence (cuts par minute) par paquet de 10 cuts, déduite des restants (un différé coûte du temps). */
+  function serie(m) {
+    const c = m.compte, debut = c.debut, faits = c.faits;
+    const pts = [];
+    let t = 0;
+    /* Paquets complets seulement : la courbe et la phrase ne changent qu'une fois tous les 10 cuts. */
+    const complets = faits >= PAQUET ? Math.floor(faits / PAQUET) : 0;
+    for (let i = 0; i < complets || (m.phase === 'fin' && i * PAQUET < faits); i++) {
+      const a = debut + i * PAQUET, b = Math.min(debut + faits, a + PAQUET), k = b - a;
+      const dans = m.restants.filter((r) => r.cut >= a && r.cut < b);
+      const duree = k * BASE + dans.filter((r) => r.type === 'differe').length * COUT_DIF + dans.filter((r) => r.type === 'vert').length * COUT_VERT;
+      t += duree;
+      pts.push({ cut: b, cadence: k / duree, t });
+    }
+    return pts;
+  }
+  function mediane(v) { if (!v.length) return 0; const s = [...v].sort((a, b) => a - b); const i = Math.floor(s.length / 2); return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2; }
+
+  function lecture(pts) {
+    if (pts.length < 3) return { mot: 'Trop tôt pour juger', diff: null, ref: 'Il faut au moins 30 cuts.' };
+    const med = mediane(pts.map((p) => p.cadence));
+    const der = pts.slice(-3), act = der.reduce((a, p) => a + p.cadence, 0) / der.length;
+    const ecart = Math.round((act / med - 1) * 100);
+    const mot = ecart <= -10 ? 'Ralentit' : ecart >= 10 ? 'Accélère' : 'Allure stable';
+    return { mot, act, med, ecart, ref: `${virg(act)} cuts par minute sur les 30 derniers cuts ; médiane du lot ${virg(med)}.` };
+  }
+
+  /* Le graphe : courbe, médiane, axe du temps et événements. Largeur réelle du panneau. */
+  function graphe(m, pts) {
+    const c = m.compte;
+    const W = Math.max(280, (document.getElementById('panneau').clientWidth || 420) - 32), H = 150, haut = 12, bas = 96, axeY = 118;
+    const fin = c.total == null ? c.debut + Math.max(c.faits, 1) : c.debut + c.total;
+    const X = (cut) => ((cut - c.debut) / Math.max(1, fin - c.debut)) * (W - 8) + 4;
+    const med = mediane(pts.map((p) => p.cadence));
+    /* Échelle cadrée autour de la médiane (une ligne n'a pas besoin de partir de zéro) : un ralentissement doit se voir. */
+    const vals = pts.map((p) => p.cadence), lo = Math.min(med * 0.6, ...vals) * 0.95, hi = Math.max(med * 1.15, ...vals) * 1.03;
+    const Y = (v) => bas - ((v - lo) / (hi - lo)) * (bas - haut);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cadence du lot en cuts par minute, médiane ${virg(med)}"><defs><pattern id="hachures" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="g-hach" x1="0" y1="0" x2="0" y2="6"/></pattern></defs>`;
+    s += `<line class="g-grille" x1="0" x2="${W}" y1="${bas}" y2="${bas}"/>`;
+    const xNow = X(c.debut + c.faits);
+    if (c.total != null && c.faits < c.total) s += `<rect class="g-avenir" x="${xNow}" y="${haut}" width="${W - 4 - xNow}" height="${bas - haut}"/>`;
+    if (pts.length) {
+      s += `<line class="g-med" x1="4" x2="${xNow}" y1="${Y(med)}" y2="${Y(med)}"/>`;
+      const coords = [[X(c.debut), Y(pts[0].cadence)], ...pts.map((p) => [X(p.cut), Y(p.cadence)])];
+      const avant = coords.slice(0, -1), dernier = coords.slice(-2);
+      s += `<path class="g-ligne" d="M${avant.map((p) => p.map((v) => v.toFixed(1)).join(' ')).join('L')}"/>`;
+      const l = Math.hypot(dernier[1][0] - dernier[0][0], dernier[1][1] - dernier[0][1]).toFixed(1);
+      s += `<g class="neuf" data-valeur="paquets" style="--l:${l}"><title>${pts.length}</title><path class="g-ligne" d="M${dernier.map((p) => p.map((v) => v.toFixed(1)).join(' ')).join('L')}"/><circle class="g-point" data-forme="maintenant" cx="${dernier[1][0].toFixed(1)}" cy="${dernier[1][1].toFixed(1)}" r="5"/></g>`;
+    }
+    /* axe du temps : début, maintenant, fin */
+    s += `<line class="g-axe" x1="4" x2="${c.total == null ? xNow : W - 4}" y1="${axeY}" y2="${axeY}"/>`;
+    for (const r of m.restants) { const x = X(r.cut); s += r.type === 'differe' ? `<circle class="g-dif" cx="${x.toFixed(1)}" cy="${axeY}" r="4"/><circle class="g-dif-bord" data-forme="différé" cx="${x.toFixed(1)}" cy="${axeY}" r="4"/>` : `<rect class="g-vert" data-forme="à examiner" x="${(x - 3.5).toFixed(1)}" y="${axeY - 3.5}" width="7" height="7"/>`; }
+    if (m.phase === 'encours') s += `<line class="g-now" x1="${xNow}" x2="${xNow}" y1="${haut}" y2="${axeY + 6}"/>`;
+    const tNow = pts.length ? pts[pts.length - 1].t : 0;
+    s += `<text class="g-texte" x="4" y="${H - 6}">${heure(DEPART)} · cut ${c.debut}</text>`;
+    if (c.total != null) s += `<text class="g-texte${m.phase === 'fin' ? ' fort' : ''}" x="${W - 4}" y="${H - 6}" text-anchor="end">${m.phase === 'fin' ? heure(DEPART + tNow) + ' · ' : m.phase === 'encours' ? 'vers ' + heure(DEPART + tNow + (c.minutes || 0)) + ' · ' : ''}cut ${c.fin}</text>`;
+    else s += `<text class="g-texte" x="${W - 4}" y="${H - 6}" text-anchor="end">fin inconnue</text>`;
+    return `<figure class="graphe" style="margin:4px 16px 0">${s}</svg></figure>
+      <p class="legende">${pts.length ? `<span><svg viewBox="0 0 12 12" aria-hidden="true"><line x1="0" x2="12" y1="6" y2="6" stroke="currentColor" stroke-width="1"/></svg>médiane ${virg(med)} cuts/min</span>` : ''}<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>différé</span><span><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="2.5" width="7" height="7" fill="currentColor"/></svg>posé, à examiner</span>${c.total != null && c.faits < c.total ? '<span>hachures : reste à faire</span>' : ''}</p>`;
+  }
+
+  function fleche(e) {
+    const d = e <= -10 ? 'M7 13 1 5h12z' : e >= 10 ? 'M7 1l6 8H1z' : 'M1 5h8V1l5 6-5 6V9H1z';
+    return `<svg viewBox="0 0 14 14" aria-hidden="true"><path d="${d}"/></svg>`;
+  }
+
+  function bouton(x) { return `<button class="b ${x.rang || 'second'}${x.confirme ? ' confirme' : ''}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>`; }
+  function actions(m, liste) { const l = liste || m.actions.filter((a) => a.rang !== 'lien'); const r = l.find((a) => a.raison); return l.length ? `<div class="actions">${l.map(bouton).join('')}${r ? `<p class="raison">${esc(r.raison)}</p>` : ''}</div>` : ''; }
+  const message = (m) => `<p class="message" data-valeur="message" role="status">${m.message ? `<span>${esc(m.message)}</span>` : ''}</p>`;
+
+  function haut(m, titre, phrase) { return `<header class="haut"><h1>${esc(titre)}</h1><span class="lia">${esc(m.liaison.texte)}</span>${phrase ? `<p>${esc(phrase)}</p>` : ''}</header>`; }
+
+  function encadres(m) {
+    let h = '';
+    const i = m.incident;
+    if (i) h += `<section class="encadre ${i.type === 'reprise' ? 'att' : 'agir'}"><span class="mot">${i.type === 'reprise' ? 'À regarder' : 'À faire'}</span><h2>${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((a) => `<button data-a="${a.a}"${a.id ? ` data-id="${esc(a.id)}"` : ''}>${esc(a.libelle)}</button>`).join('')}</div>` : ''}</section>`;
+    if (m.file.alerte) h += `<section class="encadre agir"><span class="mot">Arrêt</span><h2>${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></section>`;
+    return h;
+  }
+
+  function parties(m) {
+    const f = m.file;
+    let h = '<ul class="parties" aria-label="Parties de la file">';
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), cour = !f.finie && i === f.courante;
+      const e = p ? `${n(p.poses)} posés · ${p.differes} diff. · ${p.aControler} à ex.` : cour ? (f.alerte ? 'arrêtée ici' : f.relecture ? 'relecture' : 'en cours') : 'à venir';
+      h += `<li><span class="p">Partie ${i}</span><span>${p && cour ? 'relue et corrigée' : ''}</span><span class="e tab">${esc(e)}</span></li>`;
+    }
+    return h + '</ul>';
+  }
+
+  function activite(m) {
+    const o = m.activite === 'orbite', bl = m.activiteBloquee;
+    return `<div class="acti" role="group" aria-label="Activité d'Ariane">Activité : <button data-a="orbite" aria-pressed="${o}"${bl && !o ? ' aria-disabled="true"' : ''}>Orbite, Ariane pose</button><button data-a="echo" aria-pressed="${!o}"${bl ? ' aria-disabled="true"' : ''}>Écho, Ariane observe</button>${bl ? '<p>Mettre le lot en pause pour changer d’activité.</p>' : ''}</div>`;
+  }
+
+  function principal(m) {
+    const c = m.compte, f = m.file;
+    if (m.phase === 'pret') {
+      const b = m.bornes, taille = b.fin - b.debut + 1, duree = Math.round(taille * BASE);
+      let h = haut(m, m.titre, m.liaison.etat === 'relie' ? null : m.phrase) + encadres(m);
+      h += `<div class="tete"><div><div class="fig tab">${b.finDePartie ? '?' : n(taille)}<small> cuts</small></div><div class="lib">${b.finDePartie ? 'jusqu’à la fin de la partie : total inconnu' : `du cut ${b.debut} au cut ${b.fin}`}</div></div><div class="droite"><div class="fig">${b.finDePartie ? '–' : '~' + duree}<small> min</small></div><div class="lib">${b.finDePartie ? 'durée inconnue' : `fin vers ${heure(DEPART + duree)} si lancé à ${heure(DEPART)}`}</div></div></div>`;
+      h += `<div class="bornes"><div><label for="a-debut">Premier cut</label><input id="a-debut" data-champ="debut" inputmode="numeric" value="${b.debut}"></div><div><label for="a-fin">Dernier cut</label><input id="a-fin" data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin de partie"' : ''}></div></div>`;
+      h += `<button class="opt" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="case" aria-hidden="true"></span>Aller jusqu’à la fin de la partie<small>${b.finDePartie ? 'oui' : 'non'}</small></button>`;
+      h += `<button class="opt" data-a="fileBascule" aria-pressed="${f.active}"><span class="case" aria-hidden="true"></span>File de parties<small>${f.active ? 'allumée' : 'éteinte'}</small></button>`;
+      if (f.active) h += `<div class="nb" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une de moins">−</button><b class="tab">${f.nb}</b><button data-a="filePlus" aria-label="Une de plus">+</button><span>parties, chacune relue et corrigée</span></div>`;
+      return h;
+    }
+    const pts = serie(m), lec = lecture(pts);
+    const phrase = f.relecture ? m.phrase : m.phase === 'encours' ? `Ariane pose le cut ${c.cut}.` : m.phrase;
+    let h = haut(m, m.titre, phrase) + encadres(m);
+    const tNow = pts.length ? pts[pts.length - 1].t : 0;
+    const droite = f.relecture ? `<div class="fig tab">${f.courante + 1}<small> / ${f.nb}</small></div><div class="lib">partie suivante, démarre seule après la relecture</div>`
+      : m.phase === 'fin' ? `<div class="fig">${heure(DEPART + tNow)}</div><div class="lib">fini, commencé à ${heure(DEPART)}</div>`
+      : m.phase !== 'encours' ? `<div class="fig tab">${c.total == null ? '?' : n(c.total - c.faits)}</div><div class="lib">cuts restants, ${m.phase === 'pause' ? 'en pause' : 'à l’arrêt'} : pas d’heure de fin</div>`
+      : c.minutes == null ? '<div class="fig">?</div><div class="lib">fin inconnue (total inconnu)</div>'
+        : `<div class="fig">${heure(DEPART + tNow + c.minutes)}</div><div class="lib">fin estimée, ${esc(c.tempsTexte)}</div>`;
+    h += `<div class="tete"><div><div class="fig tab">${n(c.faits)}<small>${c.total == null ? '' : ' / ' + n(c.total)}</small></div><div class="lib">cuts traités${c.total == null ? ', total inconnu' : ''}</div></div><div class="droite">${droite}</div></div>`;
+    if (!f.relecture) {
+      if (m.phase !== 'encours' && m.phase !== 'fin' && lec.ecart != null) lec.mot = 'Avant l’arrêt : ' + lec.mot.toLowerCase();
+      h += `<p class="allure" data-valeur="allure"><b>${esc(lec.mot)}</b>${lec.ecart != null ? `<span class="diff tab">${fleche(lec.ecart)}${lec.ecart > 0 ? '+' : lec.ecart < 0 ? '−' : ''}${Math.abs(lec.ecart)} %</span>` : ''}<span class="ref">${esc(lec.ref)}</span></p>`;
+      h += graphe(m, pts);
+    }
+    const nd = Demo.D.differes().length, nv = Demo.D.verts().length, attente = m.phase === 'encours' || m.phase === 'pause';
+    h += `<div class="compte"><div><b class="tab">${nd}</b>différés${attente && nd ? ', à voir après le lot' : ''}</div><div><b class="tab">${nv}</b>posés à examiner${attente && nv ? ', à voir après' : ''}</div></div>`;
+    const lien = m.actions.find((a) => a.rang === 'lien');
+    if (lien) h += `<button class="vers" data-a="${lien.a}"><span>${esc(lien.libelle)}</span><span aria-hidden="true">→</span></button>`;
+    if (f.active) h += parties(m);
+    return h;
+  }
+
+  function coupe(cut) {
+    const k = Demo.D.coupe(cut, 260), W = 320, H = 150;
+    const X = (x) => 10 + (x + 1) / 2 * (W - 20), Z = (z) => H - 24 - (z + 0.5) * (H - 40) / 0.5;
+    return `<svg class="coupe" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut}">${k.pts.map(([x, z]) => `<rect class="pt" x="${X(x).toFixed(1)}" y="${Z(z).toFixed(1)}" width="2" height="2"/>`).join('')}${k.rails.map((r) => `<line class="prop" x1="${X(r)}" x2="${X(r)}" y1="14" y2="${H - 30}"/>`).join('')}<text x="10" y="${H - 8}">traits : position proposée par Ariane</text></svg>`;
+  }
+  const marque = (t) => t === 'differe' ? '<svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="none" stroke="currentColor" stroke-width="2"/></svg>' : '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="2.5" width="7" height="7" fill="currentColor"/></svg>';
+
+  function vueReste(m) {
+    const ligne = (x) => `<li>${marque(x.type)}<span class="cut tab">${x.cut}</span><span>${esc(x.motif)}</span><span class="bt"><button data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = Demo.D.differes(), v = Demo.D.verts();
+    let h = `<div class="barre-vue"><h1>Ce qui reste <span class="tab">${m.restants.length}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</div>`;
+    if (!m.restants.length) h += '<p class="groupe">Plus rien n’attend.</p>';
+    if (d.length) h += `<h2 class="groupe">Différés, dans l’ordre du lot</h2><ul class="restes">${d.map(ligne).join('')}</ul>`;
+    if (v.length) h += `<h2 class="groupe">Posés à examiner</h2><ul class="restes">${v.map(ligne).join('')}</ul>`;
+    return h + message(m);
+  }
+  function vueExamen(m) {
+    const x = m.examen;
+    return `<div class="barre-vue"><h1>Cut <span class="tab">${x.cut}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</div><header class="haut"><h1>${x.type === 'differe' ? 'Différé' : 'Posé, à examiner'}</h1><p>${esc(x.motif)}.</p></header>${coupe(x.cut)}` + actions(m, [{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Marquer comme vu' }]) + message(m);
+  }
+  function vueEcho(m) {
+    const e = m.echo, pc = e.vus ? Math.round(e.accord / e.vus * 100) : 0;
+    return haut(m, 'Écho', m.phrase) + `<div class="tete"><div><div class="fig tab">${e.vus}</div><div class="lib">cuts observés<br>dernier : cut ${e.dernier == null ? '–' : e.dernier}</div></div><div class="droite"><div class="fig tab">${pc}<small> %</small></div><div class="lib">même choix qu’Ariane (${e.accord} sur ${e.vus})</div></div></div>` + actions(m) + message(m);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    if (m.vue === 'reste') return vueReste(m);
+    if (m.vue === 'examen' && m.examen) return vueExamen(m);
+    if (m.vue === 'echo') return vueEcho(m);
+    return principal(m) + actions(m) + activite(m) + message(m);
+  }
+  Demo.monter({ rendre });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane — Horizon</title>
+<style>
+/*POLICE:gambarino*/
+/*POLICE:general-sans*/
+/* Proposition « Horizon ». Le lot garde ses propres heures : il se lève quand on le lance et se couche
+ * à sa fin. La hauteur du soleil dit où il en est ; le temps qu'il fait dit s'il a besoin de vous.
+ * Le ciel est une image ; tout texte posé dessus l'est sur une étiquette pleine. */
+:root{
+  --fond:#F3F0E8; --surface:#FBFAF6; --texte:#1D1C19; --doux:#5B5850; --filet:#DCD7CB; --filet-fort:#A39E91;
+  --plein:#24262E; --plein-texte:#F7F4EC; --scene:#E2DDD1; --alerte:#8A2F12; --alerte-fond:#F8E9DF; --confirme:#9A2E14;
+  --etiq:#1A1D27; --etiq-texte:#F2EEE4; --etiq-doux:#C9C3B4;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#10121A; --surface:#171A24; --texte:#ECE8DE; --doux:#ABA697; --filet:#2A2E3A; --filet-fort:#5C6070;
+  --plein:#ECE8DE; --plein-texte:#10121A; --scene:#07080C; --alerte:#FFB59A; --alerte-fond:#2B1810; --confirme:#D9542C;
+}}
+:root[data-theme="dark"]{
+  --fond:#10121A; --surface:#171A24; --texte:#ECE8DE; --doux:#ABA697; --filet:#2A2E3A; --filet-fort:#5C6070;
+  --plein:#ECE8DE; --plein-texte:#10121A; --scene:#07080C; --alerte:#FFB59A; --alerte-fond:#2B1810; --confirme:#D9542C;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'General Sans',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);font-size:14px;line-height:1.45}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font:400 22px 'Gambarino',serif;margin:0 0 8px}
+.notes p{margin:0 0 10px}
+
+/* ---- trois tailles : 12, 14, 30 (titres en Gambarino) ; chiffres tabulaires ---- */
+.num,.mesure dd,.partie-n,.reste-cut,.echo-m dd,.file-nb-v{font-variant-numeric:tabular-nums lining-nums}
+.barre{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:12px 16px 10px}
+.marque{font:400 14px 'Gambarino',serif;margin:0;letter-spacing:.02em}
+.p{padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.titre{font:400 30px/1.05 'Gambarino',serif;margin:0}
+.phrase{margin:6px 0 0}
+.heure{margin:0;font-size:14px;color:var(--doux)}
+.heure b{color:var(--texte);font-weight:600}
+.raison{margin:4px 0 0;font-size:12px;color:var(--doux)}
+
+/* bascule : deux pastilles de texte ; celle qui est pressée est pleine et porte un point */
+.bascule{display:inline-flex;gap:4px;background:var(--surface);border:1px solid var(--filet);border-radius:999px;padding:3px}
+.bascule-o{font:inherit;font-size:12px;border:0;background:var(--surface);color:var(--doux);padding:4px 10px;border-radius:999px;cursor:pointer;display:flex;gap:6px;align-items:baseline}
+.bascule-o[aria-pressed="true"]{background:var(--plein);color:var(--plein-texte)}
+.bascule-o[aria-disabled="true"]{cursor:not-allowed}
+.bascule-nom{font-weight:600}
+.bascule-sens{display:none}
+@container (min-width:400px){.bascule-sens{display:inline}}
+.raison-bascule{flex-basis:100%;margin:0}
+
+.liaison{margin:0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--doux)}
+.liaison b{color:var(--texte);font-weight:600}
+.liaison-detail{display:none}
+.liaison-forme{width:10px;height:10px;border:2px solid var(--texte);border-radius:50%}
+.liaison-relie .liaison-forme{box-shadow:inset 0 0 0 4px var(--texte)}
+.liaison-choisir .liaison-forme{box-shadow:inset 3px 0 0 0 var(--texte)}
+.liaison-absent .liaison-forme{border-style:dashed}
+
+/* ---- le ciel : pleine largeur ---- */
+.ciel{margin:0;position:relative;height:214px;overflow:hidden;background:#1A1D27}
+.ciel-c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.etiq{position:absolute;font-size:12px;line-height:1.3;color:var(--etiq-texte);background:var(--etiq);padding:3px 8px;border-radius:999px;white-space:nowrap}
+.etiq i{font-style:normal;color:var(--etiq-doux)}
+.etiq-meteo{left:12px;top:12px}
+.etiq-g{left:12px;bottom:10px}.etiq-d{right:12px;bottom:10px}
+.etiq-soleil{transform:translate(-50%,-100%);transition:left .8s cubic-bezier(.2,.7,.2,1),top .8s cubic-bezier(.2,.7,.2,1)}
+.etiq[hidden]{display:none}
+.legende{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;padding:0;list-style:none;font-size:12px;color:var(--doux)}
+.legende li{display:flex;align-items:center;gap:6px}
+.sw-croix{width:10px;height:10px;position:relative;border:0 solid var(--texte)}
+.sw-croix::before,.sw-croix::after{content:"";position:absolute;background:var(--texte)}
+.sw-croix::before{left:4px;top:0;width:2px;height:10px}.sw-croix::after{top:4px;left:0;height:2px;width:10px}
+.sw-point{width:6px;height:6px;border:3px solid var(--texte);border-radius:50%}
+
+/* ---- mesures en phrase ---- */
+.mesures{display:grid;grid-template-columns:1fr 1fr;margin:0;gap:10px}
+.mesure{background:var(--surface);border:1px solid var(--filet);border-radius:12px;padding:10px 12px}
+.mesure dt{font-size:12px;color:var(--doux)}
+.mesure dd{margin:2px 0 0;font-size:14px;font-weight:600}
+.mesure-grand{grid-column:1 / -1}
+.mesure-grand dd{font:400 30px/1.1 'Gambarino',serif}
+.mesure-grand dd small{font:500 14px 'General Sans',sans-serif;color:var(--doux)}
+@container (min-width:520px){.mesures{grid-template-columns:1fr 1fr 1fr 1fr}.mesure-grand{grid-column:span 2}}
+
+/* ---- boutons : pastilles ---- */
+.actions{display:flex;flex-direction:column;gap:10px}
+.actions-pr,.actions-arret,.actions-lien{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.actions-pr>.raison{flex-basis:100%;margin-top:-4px}
+.b{font:inherit;cursor:pointer;border-radius:22px;padding:9px 18px;display:inline-flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:44px;justify-content:center}
+.b-lib{font-weight:600}
+.b-note{font-size:12px}
+.b-principal{background:var(--plein);color:var(--plein-texte);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--surface);color:var(--texte);border:1px solid var(--filet-fort)}
+.b-second .b-note,.b-choix .b-note{color:var(--doux)}
+.b-arret{background:var(--fond);color:var(--texte);border:1px solid var(--filet-fort);flex-direction:row;align-items:center;gap:8px}
+.b-arret::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--texte)}
+.b-arret.b-confirme{background:var(--confirme);border-color:var(--confirme);color:#FFFFFF}
+.b-arret.b-confirme::before{background:#FFFFFF}
+.b-lien{background:var(--fond);color:var(--texte);border:0;padding:4px 2px;min-height:32px;text-decoration:underline;text-underline-offset:3px}
+.b[aria-disabled="true"]{cursor:not-allowed;background:var(--fond);color:var(--doux);border:1px dashed var(--filet-fort)}
+.b:focus-visible,.bascule-o:focus-visible,.file-inter:focus-visible,input:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.bornes{border:1px solid var(--filet);border-radius:12px;margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface)}
+.bornes legend{font-size:12px;color:var(--doux);padding:0 4px}
+.borne{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--doux)}
+.borne input{font:600 14px 'General Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--texte);background:var(--fond);border:1px solid var(--filet-fort);border-radius:8px;padding:8px 10px;width:100%}
+.borne-off input{border-style:dashed}
+.borne-fdp{grid-column:1 / -1;border-radius:12px}
+.borne-fdp[aria-pressed="true"]{border-color:var(--texte);box-shadow:inset 3px 0 0 var(--texte)}
+
+.file{display:flex;flex-direction:column;gap:8px}
+.file-inter{font:inherit;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:var(--surface);color:var(--texte);border:1px solid var(--filet);border-radius:12px;padding:10px 12px;cursor:pointer;text-align:left}
+.file-inter .b-note{color:var(--doux)}
+.file-inter-forme{width:30px;height:18px;border:2px solid var(--texte);border-radius:999px;position:relative}
+.file-inter-forme::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme{box-shadow:inset 0 0 0 9px var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme::after{left:14px;background:var(--surface)}
+.file-nb{display:flex;align-items:center;gap:10px}
+.file-pm{min-width:44px;align-items:center;padding:6px}
+.file-expl{margin:0;font-size:12px;color:var(--doux)}
+.file-tete{font:400 20px 'Gambarino',serif;margin:0}
+.parties{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.partie{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;padding:8px 12px;background:var(--surface);border:1px solid var(--filet);border-radius:12px;font-size:12px}
+.partie-n{font-weight:600;font-size:14px}
+.partie-etat{color:var(--doux);text-align:right}
+.partie-forme{width:12px;height:12px;border:2px solid var(--texte);border-radius:50%}
+.partie-faite .partie-forme{box-shadow:inset 0 0 0 4px var(--texte)}
+.partie-courante .partie-forme,.partie-relue .partie-forme{box-shadow:inset 4px 0 0 0 var(--texte)}
+.partie-avenir .partie-forme{border-style:dashed}
+.partie-courante,.partie-relue{border-color:var(--texte)}
+.partie-courante .partie-etat,.partie-relue .partie-etat{color:var(--texte)}
+
+.incident,.alerte{border:1px solid var(--alerte);background:var(--alerte-fond);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.incident-reprise{border-color:var(--filet-fort);background:var(--surface)}
+.incident-titre,.alerte-titre{margin:0;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center}
+.incident-titre::before,.alerte-titre::before{content:"!";font:600 12px 'General Sans',sans-serif;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--texte);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.incident-texte,.alerte-detail,.alerte-bilan{margin:0}
+.alerte-bilan{font-size:12px}
+.incident-choix{display:flex;flex-wrap:wrap;gap:8px}
+
+.reste-tete{display:flex;flex-direction:column;gap:4px}
+.reste-g{font:400 20px 'Gambarino',serif;margin:8px 0 0}
+.reste-g span{font:500 14px 'General Sans',sans-serif;color:var(--doux)}
+.reste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.reste-l{padding:10px 12px;background:var(--surface);border:1px solid var(--filet);border-radius:12px;display:flex;flex-direction:column;gap:6px}
+.reste-t{display:flex;align-items:center;gap:8px}
+.reste-cut{font-weight:600}
+.reste-type{font-size:12px;color:var(--doux)}
+.reste-motif{margin:0}
+.reste-a{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.reste-a .b-second{min-height:38px;padding:6px 14px}
+.reste-a .b-lien{background:var(--surface)}
+.reste-differe .reste-forme{width:10px;height:10px;position:relative;border:0 solid var(--texte)}
+.reste-differe .reste-forme::before,.reste-differe .reste-forme::after{content:"";position:absolute;background:var(--texte)}
+.reste-differe .reste-forme::before{left:4px;top:0;width:2px;height:10px}.reste-differe .reste-forme::after{top:4px;left:0;height:2px;width:10px}
+.reste-vert .reste-forme{width:6px;height:6px;border:3px solid var(--texte);border-radius:50%}
+.reste-vide{margin:0;color:var(--doux)}
+
+.coupe{margin:0;background:#151824;border-radius:12px;position:relative;height:200px;overflow:hidden}
+.coupe canvas{position:absolute;inset:0;width:100%;height:100%}
+.coupe .etiq{left:10px;bottom:10px}
+
+.echo-m{display:grid;grid-template-columns:1fr 1fr;margin:0;gap:10px}
+.echo-m div{background:var(--surface);border:1px solid var(--filet);border-radius:12px;padding:10px 12px}
+.echo-m dt{font-size:12px;color:var(--doux)}
+.echo-m dd{margin:0;font:400 30px 'Gambarino',serif}
+
+.message{margin:0;min-height:20px;font-size:12px}
+.message:not(:empty){background:var(--surface);border:1px solid var(--filet);border-radius:999px;padding:6px 12px;align-self:flex-start}
+
+@keyframes leve{from{transform:translateY(6px);opacity:.2}to{transform:none;opacity:1}}
+.change{animation:leve .5s cubic-bezier(.2,.7,.2,1) both;display:inline-block}
+@keyframes arrive{from{opacity:0}to{opacity:1}}
+#panneau[data-etat-change="1"] .titre{animation:arrive .6s ease-out .2s both}
+#panneau[data-etat-change="1"] .phrase,#panneau[data-etat-change="1"] .heure{animation:arrive .6s ease-out .32s both}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+html[data-mouvement="reduit"] *,html[data-mouvement="reduit"] *::before,html[data-mouvement="reduit"] *::after{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Horizon"></div></div>
+  <aside class="notes">
+    <h2>Horizon</h2>
+    <p><b>Logique.</b> Le lot garde ses propres heures : il se lève quand on le lance et se couche à sa fin ; la hauteur du soleil dit où il en est, le temps qu’il fait dit s’il a besoin de vous.</p>
+    <p><b>D’où ça vient.</b> heydamir.design : le concept « Step out of the feed » et sa ligne « keeps its own hours : Day · Dusk · Night · Dawn » avec un petit cadran ; l’accueil, qui dit son état par l’heure (« Asleep, I’ll reply in the morning »). backgrounds.supply : la collection Horizon (une ligne de lumière basse) et le mode Edge Glow du Gradient Lab, dont un seul réglage, la hauteur, fait toute l’ambiance. inspora.design (vu en grille) : deux cadrans superposés, deux heures, deux matières ; un tableau de bord posé sur un crépuscule avec l’heure en grand.</p>
+    <p><b>Ce que ça veut dire ici.</b> Le soleil va du lever (premier cut) au coucher (dernier cut) ; la course faite est tracée en plein, la course restante en pointillé. Ciel clair = Ariane pose seule, rien à faire. Voile immobile = pause (le temps est suspendu). Ciel couvert et gris = lot arrêté. Brouillard = ESV non relié ou onglet à choisir : on ne voit plus l’horizon. Nuit étoilée = lot terminé : chaque étoile est un cut à revoir (croix = différé, point = vert à examiner), leur nombre est écrit. Nuit avec une lueur qui court sur l’horizon = relecture entre deux parties. Écho = nuit d’observation : chaque pose vue de l’opérateur s’allume.</p>
+    <p><b>Mouvement.</b> Le soleil glisse en 0,8 s vers sa nouvelle place à chaque cut ; les nuages dérivent très lentement (90 s pour traverser) tant que le lot tourne et s’arrêtent net en pause ; le ciel se couvre en 1,2 s à l’arrêt ; à la fin, le soleil passe sous l’horizon en 2 s puis les étoiles s’allument une à une. Mouvement réduit : chaque état est une image fixe.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---- Kit des maquettes « matière » : le HTML sémantique des blocs du cahier.
+   * Chaque maquette le met en forme à sa façon ; le sens et les libellés restent ceux du moteur. ---- */
+  const K = (function () {
+    const { esc, n } = Demo.D;
+    const avecNote = (x) => (x.note ? `<span class="b-note">${esc(x.note)}</span>` : '');
+    function bouton(x, plus) {
+      const cls = 'b b-' + x.rang + (x.confirme ? ' b-confirme' : '') + (plus ? ' ' + plus : '');
+      return `<button type="button" class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>`
+        + `<span class="b-lib">${esc(x.libelle)}</span>${avecNote(x)}</button>`
+        + (x.raison ? `<p class="raison">${esc(x.raison)}</p>` : '')
+        + (x.confirme ? '<p class="raison">Appuyer encore pour confirmer. Sans second appui, rien ne s’arrête.</p>' : '');
+    }
+    function actions(liste) {
+      if (!liste || !liste.length) return '';
+      const rang = (r) => liste.filter((x) => x.rang === r).map((x) => bouton(x)).join('');
+      return `<div class="actions"><div class="actions-pr">${rang('principal')}${rang('second')}</div>`
+        + (liste.some((x) => x.rang === 'arret') ? `<div class="actions-arret">${rang('arret')}</div>` : '')
+        + (liste.some((x) => x.rang === 'lien') ? `<div class="actions-lien">${rang('lien')}</div>` : '') + '</div>';
+    }
+    function bascule(m) {
+      const echo = m.activite === 'echo';
+      const bloque = m.activiteBloquee;
+      return `<div class="bascule" role="group" aria-label="Activité d’Ariane">`
+        + `<button type="button" class="bascule-o" data-a="orbite" aria-pressed="${!echo}"><span class="bascule-nom">Orbite</span><span class="bascule-sens">Ariane pose</span></button>`
+        + `<button type="button" class="bascule-o" data-a="echo" aria-pressed="${echo}"${bloque ? ' aria-disabled="true"' : ''}><span class="bascule-nom">Écho</span><span class="bascule-sens">Ariane observe</span></button>`
+        + `</div>` + (bloque ? '<p class="raison raison-bascule">Pour passer en Écho, mettre d’abord le lot en pause ou l’arrêter.</p>' : '');
+    }
+    function liaison(m) {
+      const l = m.liaison;
+      return `<p class="liaison liaison-${l.etat}"><span class="liaison-forme" data-forme="liaison ${l.etat}" aria-hidden="true"></span><b>${esc(l.texte)}</b><span class="liaison-detail">${esc(l.detail)}</span></p>`;
+    }
+    function incident(m) {
+      const i = m.incident;
+      if (!i) return '';
+      const choix = i.actions.filter((x) => x.rang === 'choix');
+      const autres = i.actions.filter((x) => x.rang !== 'choix');
+      return `<section class="incident incident-${i.type}" aria-label="${esc(i.titre)}"><h3 class="incident-titre">${esc(i.titre)}</h3><p class="incident-texte">${esc(i.texte)}</p>`
+        + (choix.length ? `<div class="incident-choix">${choix.map((x) => bouton(x)).join('')}</div>` : '')
+        + autres.map((x) => bouton(x)).join('') + '</section>';
+    }
+    function bornes(m) {
+      const b = m.bornes;
+      return `<fieldset class="bornes"><legend>Bornes du lot</legend>`
+        + `<label class="borne"><span>Premier cut</span><input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label>`
+        + `<label class="borne${b.finDePartie ? ' borne-off' : ''}"><span>Dernier cut</span><input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin de partie"${b.finDePartie ? ' disabled' : ''} aria-label="Dernier cut"></label>`
+        + `<button type="button" class="b b-choix borne-fdp" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="b-lib">Jusqu’à la fin de la partie</span><span class="b-note">${b.finDePartie ? 'oui : le dernier cut sera celui d’ESV' : 'non : s’arrêter au dernier cut'}</span></button>`
+        + `</fieldset>`;
+    }
+    function fileReglage(m) {
+      const f = m.file;
+      return `<section class="file file-reglage" aria-label="File de parties">`
+        + `<button type="button" class="file-inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="file-inter-forme" data-forme="interrupteur" aria-hidden="true"></span><span class="b-lib">File de parties</span><span class="b-note">${f.active ? 'allumée' : 'éteinte'}</span></button>`
+        + (f.active ? `<div class="file-nb"><button type="button" class="b b-choix file-pm" data-a="fileMoins" aria-label="Une partie de moins"${f.nb <= 2 ? ' aria-disabled="true"' : ''}>−</button><span class="file-nb-v" data-valeur="nbparties">${f.nb} parties</span><button type="button" class="b b-choix file-pm" data-a="filePlus" aria-label="Une partie de plus"${f.nb >= 9 ? ' aria-disabled="true"' : ''}>+</button></div>`
+          + `<p class="file-expl">Ariane fait ${f.nb} parties à la suite. Après chacune, elle relit et corrige, puis passe seule à la suivante.</p>`
+          : '<p class="file-expl">Éteinte : un seul lot, sur les bornes ci-dessus.</p>')
+        + `</section>`;
+    }
+    function bilanPartie(p) { return `${n(p.poses)} posés · ${p.differes} différés · ${p.aControler} à examiner`; }
+    function fileSuivi(m) {
+      const f = m.file;
+      if (!f.active || m.phase === 'pret') return '';
+      const lignes = [];
+      for (let i = 1; i <= f.nb; i++) {
+        const p = f.parties.find((x) => x.n === i);
+        let etat, cls;
+        if (p && f.relecture && i === f.courante) { etat = 'relecture et correction en cours'; cls = 'relue'; }
+        else if (p) { etat = bilanPartie(p); cls = 'faite'; }
+        else if (i === f.courante) { etat = m.phase === 'encours' ? 'en cours' : (f.alerte ? 'arrêtée' : m.phase === 'pause' ? 'en pause' : 'arrêtée'); cls = 'courante'; }
+        else { etat = 'à venir'; cls = 'avenir'; }
+        lignes.push(`<li class="partie partie-${cls}"><span class="partie-forme" data-forme="partie ${cls}" aria-hidden="true"></span><span class="partie-n">Partie ${i}</span><span class="partie-etat">${etat}</span></li>`);
+      }
+      const tete = f.finie ? `File terminée : ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`;
+      const alerte = f.alerte ? `<div class="alerte" role="alert"><h3 class="alerte-titre">${esc(f.alerte.titre)}</h3><p class="alerte-detail">${esc(f.alerte.detail)}</p><p class="alerte-bilan">Au moment de l’arrêt : ${m.compte.faits} cuts faits dans la partie ${f.courante}, ${m.compte.differes} différés, ${m.compte.aExaminer} à examiner.</p></div>` : '';
+      return `<section class="file file-suivi" aria-label="File de parties"><h3 class="file-tete" data-valeur="filetete">${tete}</h3>${alerte}<ol class="parties">${lignes.join('')}</ol></section>`;
+    }
+    function message(m) {
+      return `<p class="message" role="status" aria-live="polite">${m.message ? esc(m.message) : ''}</p>`;
+    }
+    function ligneReste(r) {
+      return `<li class="reste-l reste-${r.type}"><div class="reste-t"><span class="reste-forme" data-forme="${r.type}" aria-hidden="true"></span><b class="reste-cut">Cut ${r.cut}</b><span class="reste-type">${r.type === 'differe' ? 'différé' : 'vert à examiner'}</span></div>`
+        + `<p class="reste-motif">${esc(r.motif)}</p><div class="reste-a">${bouton({ a: 'examiner', id: r.id, libelle: 'Examiner', rang: 'second' })}${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'lien' })}</div></li>`;
+    }
+    function reste(m) {
+      const dif = m.restants.filter((r) => r.type === 'differe');
+      const ver = m.restants.filter((r) => r.type === 'vert');
+      const vide = !m.restants.length ? '<p class="reste-vide">Plus rien à revoir dans ce lot.</p>' : '';
+      return `<header class="reste-tete"><h2 class="titre">Ce qui reste</h2><p class="phrase">${dif.length} différés et ${ver.length} verts à examiner. Rien n’est validé sans vous.</p></header>${vide}`
+        + (dif.length ? `<h3 class="reste-g">Différés <span>${dif.length}</span></h3><ul class="reste">${dif.map(ligneReste).join('')}</ul>` : '')
+        + (ver.length ? `<h3 class="reste-g">Verts à examiner <span>${ver.length}</span></h3><ul class="reste">${ver.map(ligneReste).join('')}</ul>` : '')
+        + `<div class="actions"><div class="actions-pr">${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'second' })}</div></div>`;
+    }
+    function examenActions(r) {
+      return `<div class="actions"><div class="actions-pr">${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' })}${bouton({ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second', note: 'le retire de la liste, ne pose rien' })}</div>`
+        + `<div class="actions-lien">${bouton({ a: 'voirReste', libelle: 'Retour à la liste', rang: 'lien' })}${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'lien' })}</div></div>`;
+    }
+    function echo(m) {
+      const e = m.echo;
+      const ecart = e.vus - e.accord;
+      return `<dl class="echo-m"><div><dt>Poses vues</dt><dd data-valeur="echovus">${e.vus}</dd></div><div><dt>En accord avec Ariane</dt><dd data-valeur="echoacc">${e.accord}</dd></div><div><dt>En écart</dt><dd data-valeur="echoec">${ecart}</dd></div><div><dt>Dernière vue</dt><dd>${e.dernier ? 'cut ' + e.dernier : 'aucune'}</dd></div></dl>`;
+    }
+    return { bouton, actions, bascule, liaison, incident, bornes, fileReglage, fileSuivi, message, reste, examenActions, echo, bilanPartie, esc, n };
+  })();
+
+  /* Animation d'une valeur : on s'en rapproche à chaque image, jamais de saut (sauf mouvement réduit). */
+  function vers(actuel, cible, dt, duree) {
+    if (Demo.D.mouvementReduit() || actuel == null) return cible;
+    const k = 1 - Math.pow(0.001, dt / Math.max(1, duree));
+    const v = actuel + (cible - actuel) * k;
+    return Math.abs(cible - v) < 1e-4 ? cible : v;
+  }
+  /* Toile à la bonne taille (pixels réels) ; renvoie le contexte et les dimensions CSS. */
+  function toile(c) {
+    const r = c.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; }
+    const x = c.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { x, w, h };
+  }
+
+  const { esc, n } = K;
+
+  /* ---------- couleurs du ciel ---------- */
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const rgb = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a == null ? 1 : a})`;
+  const CIELS = { /* [haut, horizon] */
+    nuit: [hex('#0A0E1F'), hex('#1E2544')], aube: [hex('#3E4F86'), hex('#F2B48C')], jour: [hex('#5F95CF'), hex('#D3E5F1')],
+    soir: [hex('#3B3F78'), hex('#F08A5A')], gris: [hex('#7D8291'), hex('#B9BCC4')], brume: [hex('#B8BCC2'), hex('#D9DADC')], bleu: [hex('#16203F'), hex('#4B5784')],
+  };
+  function cielDe(p) { /* p : 0 lever → 1 coucher */
+    if (p < 0.12) return [mix(CIELS.aube[0], CIELS.jour[0], p / 0.12), mix(CIELS.aube[1], CIELS.jour[1], p / 0.12)];
+    if (p < 0.82) return CIELS.jour;
+    const t = Math.min(1, (p - 0.82) / 0.18);
+    return [mix(CIELS.jour[0], CIELS.soir[0], t), mix(CIELS.jour[1], CIELS.soir[1], t)];
+  }
+
+  /* ---------- état visuel lissé ---------- */
+  const V = { p: null, nuit: null, gris: null, brume: null, voile: null, t0: performance.now(), dernier: performance.now(), anim: 0, derive: 0, etoiles: 0 };
+  let M = null;
+
+  function cible(m) {
+    const c = m.compte, echelle = c.total || Math.max(240, c.faits + 24);
+    const echo = m.vue === 'echo';
+    let p = m.phase === 'pret' ? -0.06 : Math.min(1, c.faits / echelle);
+    let nuit = 0;
+    if (m.phase === 'fin' || echo || m.file.relecture) { nuit = 1; p = 1.08; }
+    if (m.phase === 'pret') nuit = 0.65;
+    const gris = m.phase === 'arrete' ? 1 : 0;
+    const brume = m.liaison.etat !== 'relie' && !echo ? 1 : 0;
+    const voile = m.phase === 'pause' ? 1 : 0;
+    const tourne = m.phase === 'encours' && !m.file.relecture && !echo;
+    return { p, nuit, gris, brume, voile, echelle, tourne };
+  }
+
+  function nuage(x, cx, cy, r, a) {
+    if (a < 0.01) return;
+    x.save(); x.filter = 'blur(5px)'; x.fillStyle = `rgba(255,255,255,${a})`;
+    x.beginPath(); x.ellipse(cx, cy, r * 4.2, r * 0.55, 0, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.ellipse(cx + r * 1.6, cy - r * 0.35, r * 2.4, r * 0.45, 0, 0, Math.PI * 2); x.fill();
+    x.restore();
+  }
+  function croix(x, cx, cy, r) { /* étoile à quatre branches effilées */
+    x.beginPath();
+    for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, l = i % 2 ? r * 0.22 : r; x.lineTo(cx + Math.cos(a) * l, cy + Math.sin(a) * l); }
+    x.closePath(); x.fill();
+  }
+  function hasardFixe(i) { const s = Math.sin(i * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); }
+
+  function dessiner(maintenant) {
+    V.anim = 0;
+    const c = document.querySelector('#panneau .ciel-c');
+    if (!c || !M) return;
+    const dt = Math.min(100, maintenant - V.dernier); V.dernier = maintenant;
+    const reduit = Demo.D.mouvementReduit();
+    const { x, w, h } = toile(c);
+    const ci = cible(M);
+    V.p = vers(V.p, ci.p, dt, ci.nuit && V.nuit != null && V.nuit < 0.5 ? 2000 : 800);
+    V.nuit = vers(V.nuit, ci.nuit, dt, 1400);
+    V.gris = vers(V.gris, ci.gris, dt, 1200);
+    V.brume = vers(V.brume, ci.brume, dt, 1000);
+    V.voile = vers(V.voile, ci.voile, dt, 700);
+    if (ci.tourne && !reduit) V.derive += dt / 90000;
+
+    const sol = h - 44;
+    /* ciel */
+    let [haut, bas] = cielDe(Math.max(0, Math.min(1, V.p)));
+    haut = mix(haut, CIELS.nuit[0], V.nuit); bas = mix(bas, CIELS.nuit[1], V.nuit);
+    if (M.phase === 'pret') { haut = mix(haut, CIELS.bleu[0], 1); bas = mix(bas, CIELS.bleu[1], 1); }
+    haut = mix(haut, CIELS.gris[0], V.gris); bas = mix(bas, CIELS.gris[1], V.gris);
+    const g = x.createLinearGradient(0, 0, 0, sol);
+    g.addColorStop(0, rgb(haut)); g.addColorStop(1, rgb(bas));
+    x.fillStyle = g; x.fillRect(0, 0, w, sol);
+
+    /* étoiles : fin (cuts à revoir), écho (poses vues), relecture (quelques-unes, fixes) */
+    const echo = M.vue === 'echo';
+    let liste = [];
+    if (echo) { for (let i = 0; i < M.echo.vus; i++) liste.push(i < M.echo.accord ? 'point' : 'croix-pale'); }
+    else if (M.phase === 'fin') liste = M.restants.map((r) => (r.type === 'differe' ? 'croix' : 'point'));
+    V.etoiles = reduit ? liste.length : Math.min(liste.length, V.etoiles + (V.nuit > 0.85 ? dt / 70 : 0));
+    for (let i = 0; i < Math.floor(V.etoiles); i++) {
+      const sx = 16 + hasardFixe(i) * (w - 32), sy = 40 + hasardFixe(i + 99) * (sol - 70);
+      const t = liste[i];
+      if (t === 'point') { x.fillStyle = 'rgba(255,248,226,0.95)'; x.beginPath(); x.arc(sx, sy, 1.8, 0, Math.PI * 2); x.fill(); }
+      else { x.fillStyle = t === 'croix' ? 'rgba(255,240,214,1)' : 'rgba(170,176,196,0.8)'; croix(x, sx, sy, t === 'croix' ? 6 : 4); }
+    }
+
+    /* course du soleil : un arc du lever au coucher ; fait en plein, reste en pointillé */
+    const cx = w / 2, R = Math.min(w * 0.42, sol - 30), cy = sol;
+    const ang = (q) => Math.PI * (1 - q);
+    const pos = (q) => [cx + R * Math.cos(ang(q)), cy - R * Math.sin(ang(q)) * 0.78];
+    if (!echo) {
+      x.lineWidth = 1.2;
+      const fait = Math.max(0, Math.min(1, V.p));
+      x.strokeStyle = `rgba(255,255,255,${0.75 - 0.55 * V.nuit})`;
+      x.beginPath(); for (let q = 0; q <= fait + 1e-6; q += 0.01) { const [a, b] = pos(Math.min(q, fait)); q === 0 ? x.moveTo(a, b) : x.lineTo(a, b); } x.stroke();
+      x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,255,255,0.5)';
+      const fin = M.compte.total || M.phase === 'pret' ? 1 : Math.min(1, fait + 0.25);
+      x.beginPath(); for (let q = fait; q <= fin; q += 0.01) { const [a, b] = pos(q); q === fait ? x.moveTo(a, b) : x.lineTo(a, b); } x.stroke(); x.setLineDash([]);
+      /* soleil */
+      if (V.p > -0.05 && V.p < 1.05 && V.nuit < 0.95) {
+        const [sx, sy] = pos(Math.max(0, Math.min(1, V.p)));
+        const eclat = (1 - V.gris * 0.7) * (1 - V.nuit);
+        const lueur = x.createRadialGradient(sx, sy, 2, sx, sy, 46);
+        lueur.addColorStop(0, `rgba(255,236,190,${0.75 * eclat})`); lueur.addColorStop(1, 'rgba(255,236,190,0)');
+        x.fillStyle = lueur; x.fillRect(sx - 50, sy - 50, 100, 100);
+        x.fillStyle = `rgba(255,246,222,${0.4 + 0.6 * eclat})`; x.beginPath(); x.arc(sx, sy, 8, 0, Math.PI * 2); x.fill();
+      }
+    }
+    /* relecture : une lueur qui parcourt l'horizon de droite à gauche */
+    if (M.file.relecture) {
+      const q = reduit ? 0.5 : 1 - ((maintenant - V.t0) % 4200) / 4200;
+      const lx = w * q, lg = x.createRadialGradient(lx, sol, 2, lx, sol, 70);
+      lg.addColorStop(0, 'rgba(255,214,170,0.75)'); lg.addColorStop(1, 'rgba(255,214,170,0)');
+      x.fillStyle = lg; x.fillRect(lx - 72, sol - 72, 144, 72);
+    }
+    /* nuages : dérivent seulement quand le lot tourne */
+    const nb = 3, an = 0.34 + 0.4 * V.gris;
+    for (let i = 0; i < nb; i++) {
+      const base = hasardFixe(i + 7), xx = ((base + V.derive * (0.7 + i * 0.2)) % 1.2 - 0.1) * w;
+      nuage(x, xx, 46 + i * 24, 8 + i * 3, an * Math.max(0, 1 - V.nuit * 1.4));
+    }
+    /* voile de pause : une couche haute, immobile */
+    if (V.voile > 0.01) { /* voile haut : une bande de brume immobile au-dessus de la course */
+      const vg = x.createLinearGradient(0, 0, 0, sol); vg.addColorStop(0, `rgba(236,236,240,${0.62 * V.voile})`); vg.addColorStop(0.55, `rgba(236,236,240,${0.28 * V.voile})`); vg.addColorStop(1, 'rgba(236,236,240,0)');
+      x.fillStyle = vg; x.fillRect(0, 0, w, sol); }
+    /* sol */
+    const gs = x.createLinearGradient(0, sol, 0, h);
+    const solc = mix(hex('#2C3140'), hex('#11131B'), V.nuit);
+    gs.addColorStop(0, rgb(mix(solc, hex('#3D4150'), 0.3))); gs.addColorStop(1, rgb(hex('#0D0F15')));
+    x.fillStyle = gs; x.fillRect(0, sol, w, h - sol);
+    x.fillStyle = 'rgba(255,255,255,0.35)'; x.fillRect(0, sol, w, 1);
+    /* brouillard : on ne voit plus l'horizon */
+    if (V.brume > 0.01) { const bg = x.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, `rgba(205,208,213,${0.82 * V.brume})`); bg.addColorStop(1, `rgba(225,226,229,${0.97 * V.brume})`); x.fillStyle = bg; x.fillRect(0, 0, w, h); }
+
+    const glisse = [['p', ci.p], ['nuit', ci.nuit], ['gris', ci.gris], ['brume', ci.brume], ['voile', ci.voile]].some(([k, v]) => Math.abs(V[k] - v) > 1e-3)
+      || V.etoiles < liste.length;
+    if (!reduit && (glisse || ci.tourne || M.file.relecture)) V.anim = requestAnimationFrame(dessiner);
+  }
+  function relancer() { if (!V.anim) V.anim = requestAnimationFrame(dessiner); }
+
+  function heureDe(m) {
+    const c = m.compte;
+    if (m.vue === 'echo') return 'Nuit d’observation';
+    if (m.liaison.etat !== 'relie' && m.phase === 'pret') return 'Brouillard';
+    if (m.phase === 'pret') return 'Avant le lever';
+    if (m.file.relecture) return 'Nuit de relecture';
+    if (m.phase === 'fin') return 'Nuit';
+    const p = c.total ? c.faits / c.total : null;
+    let h = p == null ? 'Journée en cours' : p < 0.12 ? 'Lever' : p < 0.42 ? 'Matinée' : p < 0.58 ? 'Midi' : p < 0.82 ? 'Après-midi' : 'Soir';
+    if (m.phase === 'pause') return h + ', temps suspendu';
+    if (m.phase === 'arrete') return h + ', ciel couvert';
+    return h;
+  }
+
+  function majCiel(m) {
+    const f = document.querySelector('#panneau .ciel');
+    if (!f) return;
+    const c = m.compte, ci = cible(m);
+    const echo = m.vue === 'echo';
+    let meteo;
+    if (echo) meteo = `Nuit d’observation <i>· ${m.echo.vus} poses vues</i>`;
+    else if (m.liaison.etat === 'absent') meteo = 'Brouillard <i>· ESV non relié</i>';
+    else if (m.liaison.etat === 'choisir') meteo = 'Brouillard <i>· onglet à choisir</i>';
+    else if (m.file.relecture) meteo = `Nuit <i>· relecture de la partie ${m.file.courante}</i>`;
+    else if (m.phase === 'encours') meteo = 'Ciel clair <i>· Ariane pose seule</i>';
+    else if (m.phase === 'pause') meteo = 'Temps suspendu <i>· en pause</i>';
+    else if (m.phase === 'arrete') meteo = 'Couvert <i>· lot arrêté</i>';
+    else if (m.phase === 'fin') meteo = m.restants.length ? `Nuit <i>· ${m.restants.length} étoiles à revoir</i>` : 'Nuit claire <i>· rien à revoir</i>';
+    else meteo = 'Avant le lever <i>· rien n’est lancé</i>';
+    f.querySelector('.etiq-meteo').innerHTML = meteo;
+    const g = f.querySelector('.etiq-g'), d = f.querySelector('.etiq-d'), so = f.querySelector('.etiq-soleil');
+    g.hidden = d.hidden = echo;
+    g.textContent = 'lever · cut ' + c.debut;
+    d.textContent = m.phase === 'pret' ? (m.bornes.finDePartie ? 'coucher · fin de partie' : 'coucher · cut ' + m.bornes.fin) : (c.total ? 'coucher · cut ' + c.fin : 'coucher inconnu');
+    const montre = !echo && (m.phase === 'encours' || m.phase === 'pause' || m.phase === 'arrete') && !m.file.relecture;
+    so.hidden = !montre;
+    if (montre) {
+      const w = f.clientWidth, sol = f.clientHeight - 44, R = Math.min(w * 0.42, sol - 30);
+      const q = Math.min(1, c.faits / ci.echelle), a = Math.PI * (1 - q);
+      const sx = w / 2 + R * Math.cos(a), sy = sol - R * Math.sin(a) * 0.78;
+      so.style.left = Math.max(56, Math.min(w - 56, sx)) + 'px';
+      so.style.top = Math.max(58, sy - 14) + 'px';
+      so.textContent = (m.phase === 'encours' ? 'cut ' : 'arrêt · cut ') + c.cut;
+    }
+    f.setAttribute('aria-label', 'Ciel du lot : ' + heureDe(m));
+  }
+
+  function ciel() {
+    return `<figure class="ciel" data-garder="ciel" aria-label="Ciel du lot"><canvas class="ciel-c" aria-hidden="true"></canvas>`
+      + `<span class="etiq etiq-meteo">…</span><span class="etiq etiq-soleil" hidden>cut</span><span class="etiq etiq-g">lever</span><span class="etiq etiq-d">coucher</span></figure>`;
+  }
+
+  function mesures(m) {
+    const c = m.compte;
+    const grand = `<div class="mesure mesure-grand"><dt>Cuts traités</dt><dd><span data-valeur="faits">${c.faits}</span> <small>${c.total ? 'sur ' + c.total : '· total inconnu'}</small></dd></div>`;
+    const temps = `<div class="mesure"><dt>${c.total ? 'Avant le coucher' : 'Temps restant'}</dt><dd data-valeur="temps">${esc(c.tempsTexte)}</dd></div>`;
+    const cut = `<div class="mesure"><dt>${m.phase === 'encours' ? 'Cut en cours' : 'Arrêté au cut'}</dt><dd data-valeur="cut">${c.cut}</dd></div>`;
+    const dif = `<div class="mesure"><dt>Différés</dt><dd data-valeur="dif">${c.differes}</dd></div>`;
+    const ver = `<div class="mesure"><dt>Verts à examiner</dt><dd data-valeur="ver">${c.aExaminer}</dd></div>`;
+    if (m.phase === 'fin') return `<dl class="mesures"><div class="mesure mesure-grand"><dt>Posés</dt><dd>${n(c.poses)} <small>sur ${c.faits} traités</small></dd></div>${dif}${ver}</dl>`;
+    if (m.file.relecture) return `<dl class="mesures">${grand}${dif}${ver}</dl>`;
+    return `<dl class="mesures">${grand}${cut}${temps}${dif}${ver}</dl>`;
+  }
+  function legende(m) {
+    if (m.vue === 'echo') return '<ul class="legende"><li><span class="sw-point" data-forme="point" aria-hidden="true"></span>pose vue, en accord</li><li><span class="sw-croix" data-forme="croix" aria-hidden="true"></span>pose vue, en écart</li></ul>';
+    if (m.phase !== 'fin' || !m.restants.length) return '';
+    return `<ul class="legende"><li><span class="sw-croix" data-forme="croix" aria-hidden="true"></span>croix : différé (${m.compte.differes})</li><li><span class="sw-point" data-forme="point" aria-hidden="true"></span>point : vert à examiner (${m.compte.aExaminer})</li></ul>`;
+  }
+
+  function examen(m) {
+    const r = m.examen;
+    return `<header><p class="heure">Examiner · ${r.type === 'differe' ? 'différé' : 'vert à examiner'}</p><h2 class="titre">Cut ${r.cut}</h2><p class="phrase">${esc(r.motif)}.</p></header>`
+      + `<figure class="coupe" data-garder="coupe-${esc(r.id)}" aria-label="Coupe du cut ${r.cut} et position proposée"><canvas aria-hidden="true"></canvas><span class="etiq">Coupe du cut ${r.cut} · traits : position proposée</span></figure>`
+      + K.examenActions(r);
+  }
+  function dessinerCoupe(m) {
+    const f = document.querySelector('#panneau .coupe canvas');
+    if (!f || !m.examen) return;
+    const { x, w, h } = toile(f);
+    const cp = Demo.D.coupe(m.examen.cut, 320);
+    x.clearRect(0, 0, w, h);
+    const X = (v) => 14 + (v + 1) / 2 * (w - 28), Z = (v) => h - 44 - (v + 0.45) * (h - 70) / 0.45;
+    x.fillStyle = 'rgba(240,226,200,0.85)';
+    for (const [a, b] of cp.pts) x.fillRect(X(a), Z(b), 1.6, 1.6);
+    x.strokeStyle = 'rgba(255,255,255,0.9)'; x.lineWidth = 1.5; x.setLineDash(m.examen.type === 'differe' ? [3, 3] : []);
+    for (const rx of cp.rails) { x.beginPath(); x.moveTo(X(rx), 14); x.lineTo(X(rx), h - 40); x.stroke(); }
+    x.setLineDash([]);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele(); M = m;
+    if (m.vue === 'reste') return `<div class="p">${K.reste(m)}${K.message(m)}</div>`;
+    if (m.vue === 'examen' && m.examen) return `<div class="p">${examen(m)}${K.message(m)}</div>`;
+    const barre = `<div class="barre"><p class="marque">Ariane</p>${K.liaison(m)}${K.bascule(m)}</div>`;
+    const tete = `<header><p class="heure"><b data-valeur="heure">${esc(heureDe(m))}</b></p><h2 class="titre">${esc(m.titre)}</h2><p class="phrase">${esc(m.phrase)}</p></header>`;
+    if (m.vue === 'echo') return barre + ciel() + `<div class="p">${tete}${legende(m)}${K.echo(m)}${K.actions(m.actions)}${K.message(m)}</div>`;
+    const corps = m.phase === 'pret' ? K.incident(m) + K.bornes(m) + K.fileReglage(m)
+      : (m.file.alerte ? K.fileSuivi(m) + mesures(m) : K.incident(m) + mesures(m) + K.fileSuivi(m));
+    return barre + ciel() + `<div class="p">${tete}${legende(m)}${corps}${K.actions(m.actions)}${K.message(m)}</div>`;
+  }
+  function apres() {
+    if (M && M.vue === 'examen') { dessinerCoupe(M); return; }
+    if (M) majCiel(M);
+    relancer();
+  }
+  window.addEventListener('resize', relancer);
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>
