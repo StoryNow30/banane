@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');   /* test 27 : les empreintes de base de ces essais sont celles d'un lot sans relecture (choix réglable, coupée) */
 /* Montage des essais de l'ombre des règles métier (regles-metier-ombre) : service worker réel en VM, moteur et GCV1 réels, ESV
  * simulé dont les cuts 112 et 113 sont capturés sans aucun point (le moteur s'abstient, le lot les diffère). Les cuts 114 et 115 sont alors
  * des cuts que le lot pose juste après une grappe de différés : la règle `grappe-differes` se déclenche. Le dernier cut d'un lot

@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');   /* test 27 : les empreintes de base de ces essais sont celles d'un lot sans relecture (choix réglable, coupée) */
 /* 4.9.5.13 (test 13) — montage commun des essais du PROFIL DU LOT (tests/lot-profil-*.test.cjs) : service worker réel en VM, moteur et GCV1 réels, ESV
  * simulé avec une caméra par rail (tests/helpers/deplacer-vue-lot.cjs). Un essai lourd par fichier (délai de 20 s par fichier de tools/verify.cjs). */
 const crypto=require('node:crypto');

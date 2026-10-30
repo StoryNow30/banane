@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');   /* test 27 : les empreintes de base de ces essais sont celles d'un lot sans relecture (choix réglable, coupée) */
 /* 4.8.0 — ESV rafraîchi pendant un lot (direction, 27/09). ESV lent : le remède
  * est F5. Après F5, ESV repart du PREMIER cut non validé de la partie (le
  * premier différé), la page change de repère ; Ariane revient au cut du lot

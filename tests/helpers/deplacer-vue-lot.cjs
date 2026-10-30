@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');   /* test 27 : les empreintes de base de ces essais sont celles d'un lot sans relecture (choix réglable, coupée) */
 /* Montage des essais « déplacer la vue » côté service worker : service worker réel en VM, moteur et GCV1 réels, ESV simulé.
  * La capture porte une caméra par rail, centrée sur sa pose de départ, ±0,2 unité de scène (comme la vue d'ESV) : le cut 112
  * a sa pose de départ à 230 mm de la voie, sa décision (reprise depuis la voie) tombe hors de la vue et le lot le diffère.

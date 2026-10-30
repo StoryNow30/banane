@@ -1,4 +1,5 @@
 'use strict';
+require('./helpers/relecture-reglable.cjs');   /* test 27 : lots sans relecture (sinon « Reprendre » et « Démarrer » attendent la relecture « corriger » par défaut) */
 /* V1, correction proposée (3) : segments d'exécution, réouverture, ERROR et
  * remplacement de lot, sans fabriquer de clôture. Diagnostic partie 23 :
  * lot rouvert puis ERROR, resté sans fin ; navigation postérieure attribuée à

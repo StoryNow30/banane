@@ -1,4 +1,5 @@
 'use strict';
+require('./helpers/relecture-reglable.cjs');   /* test 27 : lots sans relecture (sinon « Reprendre » et « Démarrer » attendent la relecture « corriger » par défaut) */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {pilote,espion,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const MUET='Adaptateur ESV sans réponse. Clique sur Connecter ; après une mise à jour, recharge ESV.';
