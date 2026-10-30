@@ -3408,6 +3408,10 @@ async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.actio
   if(e.etat==='lot'&&lotId){const b=engine?.s?.batch;
    if(b?.id!==lotId)return void await fileEvenement({type:'lot-fin',lotId,motif:'refus-lot',detail:'le lot de la file a été remplacé'});
    if(!FPm().classerLot({etat:b.state}))return;   /* lot ouvert (une pause comprise) : la file attend */
+   /* CH-026-b : le moteur marque la fin du lot AVANT d'avoir fini sa boucle (la validation sur place du dernier cut est encore en vol, mesuré :
+    * acceptée 25 ms après `batch-stopped-at-end`). Tant que la boucle du lot tourne, rien n'est classé : sinon le registre lit une pose « non
+    * validée » qui l'est l'instant d'après, et la file s'arrête à tort en « ecriture-incertaine ». Boucle finie, le registre décide comme avant. */
+   if(engine?.task)return;
    const s=await fileSuspens(),arret=coordinateurLot.journal.some(t=>t.nom==='arret'&&t.lot===b.id)||obsFins.get(b.id)?.cause==='arret-manuel';
    const motif=FPm().classerLot({etat:b.state,stoppedAtEnd:b.stoppedAtEnd,arretOperateur:arret,ecritureEnSuspens:!!s});
    return void await fileEvenement({type:'lot-fin',lotId,motif,issue:b.stoppedAtEnd?.issue??b.state,resume:fileResume(b),
