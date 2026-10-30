@@ -2493,7 +2493,7 @@ function vuePanneau(){const {records,incomplete,...s}=engine.s,b=s.batch,poses=A
   /* Test 17 : deuxième passe des différés, seulement si elle a eu lieu. */
   ...(passeDiff.vue?{passeDifferes:{...passeDiff.vue}}:{}),
   /* CH-017 : file de parties, seulement allumée (src/settings.js `file.actif`). */
-  ...(fileReglage()?{fileParties:FPm().vue(fileP.etat)}:{})};}
+  ...(fileReglage()?(void fileCompleterBilan().catch(()=>{}),{fileParties:FPm().vue(fileP.etat)}):{})};}
 function pollCurrent(){
  /* Pendant une reprise (retour au cut après F5) ou un retour à un cut demandé, la vue ne lit pas ESV. */
  /* T20a : ni pendant un équipement de l'onglet (le statut est alors « reconnecting », puis « ready »). */
@@ -3292,10 +3292,14 @@ async function fileAction(a){fileP.action=a.type;try{
  finally{if(fileP.action===a.type)fileP.action=null;}}
 /* REGISTRE consulté avant tout départ : une écriture d'Ariane non prouvée (pose commandée non validée, résultat à réconcilier, correction de la
  * relecture ou de la passe interrompue, écriture de la passe en vol) ; null si rien n'est en suspens. */
-async function fileSuspens(){const s=engine?.s;
+/* CH-026-c : PORTÉE du registre. `lot` : les écritures du moteur seulement (le lot se classe sur les siennes : à sa fin, la deuxième passe, en
+ * écriture depuis D-259, démarre aussitôt, et son écriture en vol n'est pas une pose du lot laissée en suspens ; constat sur un vrai ESV, 30/10) ;
+ * `passe` : le moteur, la passe et ses corrections (la relecture, qui suit, peut déjà tourner) ; défaut : tout (relecture finie, départ, reprise). */
+async function fileSuspens(portee='tout'){const s=engine?.s;
  if(s?.intent||s?.reconcileRequired)return 'résultat incertain à réconcilier dans ESV';
  if(s?.applied)return `pose d’Ariane au cut ${s.applied.identity?.cut??'?'} non validée`;
- const l=await relectureIntentions();if(l.length)return `correction ${l[0].origine==='passe'?'de la deuxième passe':'de la relecture'} interrompue au cut ${l[0].cut}`;
+ if(portee==='lot')return null;
+ const l=(await relectureIntentions()).filter(x=>portee!=='passe'||x.origine==='passe');if(l.length)return `correction ${l[0].origine==='passe'?'de la deuxième passe':'de la relecture'} interrompue au cut ${l[0].cut}`;
  if(passeDiff.ecriture?.attente||passeDiff.etat?.ecriture?.enVol)return 'écriture de la deuxième passe en vol';
  return null;}
 function fileResume(b){return {traites:cutsTraites(b).size,poses:(b.processed||[]).length,differes:(b.deferred||[]).length,main:(b.manuallyCompleted||[]).length};}
@@ -3412,13 +3416,13 @@ async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.actio
     * acceptée 25 ms après `batch-stopped-at-end`). Tant que la boucle du lot tourne, rien n'est classé : sinon le registre lit une pose « non
     * validée » qui l'est l'instant d'après, et la file s'arrête à tort en « ecriture-incertaine ». Boucle finie, le registre décide comme avant. */
    if(engine?.task)return;
-   const s=await fileSuspens(),arret=coordinateurLot.journal.some(t=>t.nom==='arret'&&t.lot===b.id)||obsFins.get(b.id)?.cause==='arret-manuel';
+   const s=await fileSuspens('lot'),arret=coordinateurLot.journal.some(t=>t.nom==='arret'&&t.lot===b.id)||obsFins.get(b.id)?.cause==='arret-manuel';
    const motif=FPm().classerLot({etat:b.state,stoppedAtEnd:b.stoppedAtEnd,arretOperateur:arret,ecritureEnSuspens:!!s});
    return void await fileEvenement({type:'lot-fin',lotId,motif,issue:b.stoppedAtEnd?.issue??b.state,resume:fileResume(b),
     detail:motif==='ecriture-incertaine'?s||'le lot a fini avec des actions non confirmées':b.stoppedAtEnd?.reason??engine.s.notice??null});}
   if(e.etat==='passe'){if(passeDiff.cours||passeDiff.ecriture)return;
    if(!passeDiff.planifie.has(lotId)&&Date.now()-Date.parse(e.depuis)<R.passeGraceMs)return;
-   const v=passeDiff.vue?.lotId===lotId?passeDiff.vue:null,s=await fileSuspens();
+   const v=passeDiff.vue?.lotId===lotId?passeDiff.vue:null,s=await fileSuspens('passe');
    return void await fileEvenement({type:'passe-fin',lotId,issue:v?v.etat:'absente',ecrits:v?.ecrites??0,ecritureEnSuspens:!!s,detail:s||v?.message||null});}
   if(e.etat==='relecture'){const p=relecture.passe;
    if(p?.lotId===lotId&&['preparation','en-cours','en-pause'].includes(p.etat))return;
@@ -3438,7 +3442,14 @@ async function fileReprendre(){if(!fileReglage())return;let v=null;try{v=(await 
  journalerSimple('file-parties-reprise',{fileId:e.id,etat:e.etat,rang:e.k,vers:r.etat?.etat??null,actions:r.actions.map(a=>a.type),suspens:s,partieAffichee});
  const p=fileP.file.then(()=>fileAppliquer(r,{type:'reprise'}));fileP.file=p.catch(()=>{});await p;}
 const fileReveil=ready.then(()=>fileReprendre()).catch(()=>{});
-async function fileVue(){return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
+/* CH-026-c : file arrêtée, l'activité de sa dernière partie finie depuis (passe, relecture) : son issue va au bilan (src/file-parties.js `completerBilan`).
+ * Appelé à chaque vue du panneau (une lecture d'état, aucune commande ESV). */
+async function fileCompleterBilan(){const e=fileP.etat;if(!e||e.etat!=='arret'||!FPm().completerBilan)return;const lotId=e.bilan?.at(-1)?.lotId;if(!lotId)return;
+ const p=relecture.passe,v=passeDiff.vue,fini=x=>['finie','arretee','erreur','non-lancee'].includes(x);
+ const n=FPm().completerBilan(e,{lotId,passe:v?.lotId===lotId&&!passeDiff.cours&&!passeDiff.ecriture&&v.etat?{issue:v.etat,ecrits:v.ecrites??0}:null,
+  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.etat,corriges:p.corriges,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
+ if(!n)return;await fileSauver(n);journalerSimple('file-parties-bilan-complete',{fileId:n.id,part:n.bilan.at(-1).part,passe:n.bilan.at(-1).passe?.issue??null,relecture:n.bilan.at(-1).relecture?.issue??null});}
+async function fileVue(){await fileCompleterBilan();return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
 async function fileDispatch(action,args){await fileReveil;
  if(action==='file-etat')return fileVue();
  if(action==='file-arreter'){await fileEvenement({type:'arreter',origine:'file-arreter'});return fileVue();}

@@ -229,7 +229,7 @@
     return l.slice(-MAX_REGISTRE);
   }
 
-  /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes, ecritsPasse, refus} ; `partie.relecture.corriges`.
+  /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes, ecritsPasse, refus} ; `partie.relecture` : {corriges, faits}.
    * Différés hors cuts écrits par la passe (D-238 : l'état du lot les garde « différés ») ; médiane des parties précédentes de la file. */
   function alertes(partie, precedents = [], seuils = SEUILS) {
     const out = [], r = partie?.resume || {}, traites = entier(r.traites);
@@ -240,12 +240,26 @@
     const med = ratios.length ? (ratios.length % 2 ? ratios[(ratios.length - 1) / 2] : (ratios[ratios.length / 2 - 1] + ratios[ratios.length / 2]) / 2) : null;
     if (dif !== null && med !== null && med > 0 && part(dif) > seuils.differesFoisMediane * med)
       out.push({ code: 'differes', texte: `différés : ${dif} sur ${traites}, plus de ${seuils.differesFoisMediane} fois la médiane des parties précédentes` });
-    const corr = entier(partie?.relecture?.corriges);
-    if (corr !== null && traites && corr / traites > seuils.corrigesPart) out.push({ code: 'corriges', texte: `cuts corrigés par la relecture : ${corr} sur ${traites}, plus de ${Math.round(seuils.corrigesPart * 100)} %` });
+    /* CH-026-c (décision de l'intégrateur, 30/10) : les corrigés sont rapportés aux cuts RELUS par la relecture (`relecture.faits`), leur population ;
+     * avant, aux cuts traités par le lot (une autre population : « 14 sur 23 » pour 220 relus). Seuil inchangé, proposé et non décidé par l'opérateur. */
+    const corr = entier(partie?.relecture?.corriges), relus = entier(partie?.relecture?.faits);
+    if (corr !== null && relus && corr / relus > seuils.corrigesPart) out.push({ code: 'corriges', texte: `cuts corrigés par la relecture : ${corr} sur ${relus} relus, plus de ${Math.round(seuils.corrigesPart * 100)} %` });
     if (entier(r.refus) !== null && r.refus >= seuils.refus) out.push({ code: 'refus', texte: `${r.refus} refus de la page` });
     return out;
   }
 
+  /* CH-026-c : une file arrêtée pendant qu'une activité de sa dernière partie tournait encore (la passe, la relecture : le service worker les lance
+   * de lui-même) : quand cette activité finit, son issue est portée au bilan de la partie, au lieu de « relecture — » pour toujours. Rien d'autre
+   * ne change (la file reste arrêtée, le motif aussi). Rend le nouvel état, ou null si rien n'est à compléter. */
+  function completerBilan(e, { lotId, passe = null, relecture = null } = {}) {
+    if (!e || e.etat !== 'arret' || !e.bilan.length || typeof lotId !== 'string') return null;
+    const p = e.bilan[e.bilan.length - 1]; if (p.lotId !== lotId) return null;
+    let change = false; const n = copie(e), q = n.bilan[n.bilan.length - 1];
+    if (!q.passe && passe && typeof passe.issue === 'string') { q.passe = { issue: texte(passe.issue, 40), ecrits: entier(passe.ecrits) }; change = true; }
+    if (!q.relecture && relecture && typeof relecture.issue === 'string') {
+      q.relecture = { issue: texte(relecture.issue, 40), corriges: entier(relecture.corriges), faits: entier(relecture.faits), mode: texte(relecture.mode, 20), apresArret: true }; change = true; }
+    return change ? n : null;
+  }
   /* CH-026 : d'où repart une file ARRÊTÉE : le premier rang non fini (la partie interrompue, ou la suivante si l'arrêt est venu entre deux parties),
    * sa partie dans le plan, le nombre de parties restantes. null si la file n'est pas arrêtée ou si tout est fait. */
   function repriseDe(e) {
@@ -264,5 +278,5 @@
   }
 
   return Object.freeze({ CLE_ETAT, CLE_REGISTRE, MAX_REGISTRE, MAX_PARTIES, TENTATIVES_MAX, MOTIFS, SEUILS, ACTIFS, TERMINAUX,
-    planifier, transition, reprise, repriseDe, relire, classerLot, registreAjouter, entreeRegistre, alertes, vue, actif, terminal });
+    planifier, transition, reprise, repriseDe, completerBilan, relire, classerLot, registreAjouter, entreeRegistre, alertes, vue, actif, terminal });
 });
