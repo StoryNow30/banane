@@ -3310,31 +3310,79 @@ async function fileDemarrerLot({part,rang}){const e=fileP.etat;if(!e||e.etat!=='
  const b=engine.s.batch;return fileEvenement({type:'lot-demarre',lotId:b?.id,part});}
 /* CHANGER DE PARTIE (ou revenir sur celle du lot pour la relecture). La commande n'est envoyée que si l'adaptateur dit la connaître (`ping` :
  * `capacites`) ; sa réponse n'est qu'un accusé de demande : la PREUVE est la partie demandée lue dans ESV (« Cut N of part P », rails présents),
- * après un rechargement (onglet ré-équipé) ou sur place, dans la borne. */
+ * après un rechargement (onglet ré-équipé) ou sur place, dans la borne.
+ * CH-026 : vers la partie SUIVANTE, les gestes de l'opérateur d'abord (témoignage du 30/10, jamais mesuré sur un vrai ESV), chacun seulement si
+ * l'adaptateur l'annonce (`changerPartie:<mode>` ; chantiers/CH-026/adaptateur-changement-partie.patch) : (1) `invalide-suivant` (son « Espace » :
+ * plus rien à valider dans la partie, « Next non validated cut ») ; (2) `suivant-dernier` (« dernier cut puis Z » : `goToCut` au dernier cut, puis
+ * « Next cut ») ; (3) `lien`, le clic du sélecteur, en dernier repli (seul chemin du retour sur la partie du lot). Aucun n'émet de validation ni de
+ * SKIP (l'adaptateur le rend dans sa réponse). Une tentative refusée ou sans effet passe à la suivante ; une AUTRE partie ouverte arrête tout.
+ * Chaque tentative est un événement `file-parties-changement` (mode, réponse de la page, compteur, bouton, identité avant et après, délai) ; un
+ * échec, un `file-parties-changement-echec` (toutes les tentatives, sélecteur avant et après) et une alerte qui le dit dans Signal : jamais muet. */
+const FILE_GESTE_BORNE_MS=15000;
 async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.etat;if(!R||!e0)return;
  const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
- const echec=(motif,detail)=>retour?fileRelectureApresRetour(false,detail):fileEvenement({type:'changement-echec',motif,detail});
+ const t0=Date.now(),tentatives=[];let selecteurAvant=null;
+ const sel=x=>x?{status:x.status??null,current:entierOuNul(x.current),n:Array.isArray(x.parts)?x.parts.length:null,vers:Array.isArray(x.parts)?x.parts.some(p=>p?.part===vers):null}:null;
+ const relever=async()=>{try{return sel((await call('ping',{contrat:true}))?.selecteurParties);}catch{return null;}};
+ const resume=()=>tentatives.map(t=>`${t.mode} : ${t.texte}`).join(' ; ');
+ const echec=async(motif,detail)=>{if(!retour||tentatives.length){const apres=await relever();
+   journalerSimple('file-parties-changement-echec',{vers,retour,motif,detail:String(detail||'').slice(0,300),tentatives,selecteurAvant,selecteurApres:apres,dureeMs:Date.now()-t0});}
+  const d=tentatives.length&&!String(detail||'').includes(resume())?`${detail} ; essayé : ${resume()}`:detail;
+  return retour?fileRelectureApresRetour(false,d):fileEvenement({type:'changement-echec',motif,detail:String(d).slice(0,380)});};
  const ok=r=>retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:r.identity.cut});
  const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
  if(!retour)await fileEvenement({type:'changement-envoye',vers});
  const pret=r=>r?.identity?.part===vers&&!!r?.rails?.left&&!!r?.rails?.right;
  let lu=null;try{lu=await readState();}catch{/* lu plus bas */}
  if(pret(lu))return ok(lu);
- let ping=null;try{ping=await call('ping');}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
+ let ping=null;try{ping=await call('ping',{contrat:true});}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
+ selecteurAvant=sel(ping?.selecteurParties);
  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
- let rep=null;try{rep=await call('changerPartie',{part:vers});}catch(x){return echec('changement-impossible',`commande refusée (${String(x?.message||x).slice(0,160)})`);}
- if(rep?.ok!==true&&['partie-absente','libelle-illisible'].includes(rep?.raison))return echec('selecteur-illisible',`la page refuse : ${rep.raison}`);
- if(rep?.ok!==true)return echec('changement-impossible',rep?.raison?`la page refuse : ${String(rep.raison).slice(0,120)}`:'réponse illisible de la page');
- journalerSimple('file-parties-changement',{vers,retour,mode:typeof rep.mode==='string'?rep.mode.slice(0,20):null,de:Number.isInteger(rep.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:null,deja:rep.deja===true});
- const fin=Date.now()+R.changementBorneMs;let vu=false,derniere=null;
- while(Date.now()<fin){if(!attendu())return;
-  let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
-  if(!tab)return echec('onglet-ferme','onglet ESV fermé pendant le changement de partie');
-  if(tab.status&&tab.status!=='complete'){await attendre(R.pollMs);continue;}
-  try{const r=await readState();vu=true;if(pret(r))return ok(r);derniere=r?.identity?.part!==undefined?`ESV affiche la partie ${r.identity.part}`:null;}
-  catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return echec('changement-impossible',y.message);}}
-  await attendre(R.pollMs);}
- return echec(vu?'changement-impossible':'esv-muet',`${vu?`la page d’ESV n’a pas affiché la partie ${vers}`:'ESV ne répond plus'} en ${Math.round(R.changementBorneMs/1000)} s${derniere?` (${derniere})`:''}`);}
+ const modes=[...(retour?[]:['invalide-suivant','suivant-dernier'].filter(m=>ping.capacites.includes('changerPartie:'+m))),'lien'];
+ /* Attente de la preuve d'une tentative acceptée : la partie demandée, ou une autre partie (arrêt), ou rien dans la borne. */
+ const preuve=async borne=>{const fin=Date.now()+borne;let vu=false,derniere=null,partie=null;
+  while(Date.now()<fin){if(!attendu())return {quitte:true};
+   let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+   if(!tab)return {onglet:true};
+   if(tab.status&&tab.status!=='complete'){await attendre(R.pollMs);continue;}
+   try{const r=await readState();vu=true;partie=r?.identity?.part??null;if(pret(r))return {r};derniere=partie!==null?`ESV affiche la partie ${partie}, cut ${r?.identity?.cut??'?'}`:null;}
+   catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return {definitif:y.message};}}
+   await attendre(R.pollMs);}
+  return {vu,derniere,partie};};
+ const de0=lu?.identity?.part??null;let dernierMotif=null;
+ for(const mode of modes){if(!attendu())return;
+  const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null};tentatives.push(T);
+  const fixer=rep=>{T.raison=typeof rep?.raison==='string'?rep.raison.slice(0,40):null;T.de=Number.isInteger(rep?.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:T.de;
+   T.compteur=rep?.compteur&&Number.isInteger(rep.compteur.total)?{traites:entierOuNul(rep.compteur.traites),total:rep.compteur.total}:T.compteur;
+   T.bouton=rep?.bouton?.id?{id:String(rep.bouton.id).slice(0,40),existe:!!rep.bouton.exists,inactif:!!rep.bouton.disabled}:T.bouton;
+   T.sansDecision=rep?.validationCommandSent===false&&rep?.skipCommandSent===false;};
+  const noter=(issue,texte,apres=null)=>{T.issue=issue;T.texte=texte;T.identiteApres=apres;T.dureeMs=Date.now()-t;
+   journalerSimple('file-parties-changement',{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs});};
+  let rep=null;try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+  fixer(rep);
+  /* « Dernier cut puis Z » : l'adaptateur dit le dernier cut (compteur M − 1) ; Ariane y va (`goToCut`, navigation seule), puis redemande. */
+  if(mode==='suivant-dernier'&&rep?.ok!==true&&rep?.raison==='pas-au-dernier-cut'&&Number.isInteger(rep?.dernier)&&Number.isInteger(rep?.de?.part)){
+   let nav=null;try{nav=await call('goToCut',{part:rep.de.part,cut:rep.dernier},{chemin:'auto',borneConnue:rep.dernier},globalThis.BananeCore3.uid());}catch(x){nav={resultat:'erreur',refusal:{code:'ERREUR',message:String(x?.message||x)}};}
+   T.goto={cut:rep.dernier,resultat:typeof nav?.resultat==='string'?nav.resultat:null,chemin:typeof nav?.chemin==='string'?nav.chemin:null,code:typeof nav?.refusal?.code==='string'?nav.refusal.code.slice(0,40):null};
+   if(nav?.confirme!==true){noter('refus',`dernier cut ${rep.dernier} non atteint (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+   try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+   fixer(rep);}
+  if(rep?.ok!==true){const r=rep?.raison;
+   const texte=r==='reste-a-valider'?`il reste des cuts à valider (${T.compteur?.traites??'?'} traités sur ${T.compteur?.total??'?'})`:r==='partie-absente'?`aucune entrée vers la partie ${vers} dans le sélecteur`
+    :r==='bouton-absent'||r==='bouton-desactive'?`bouton ${T.bouton?.id||'?'} ${r==='bouton-absent'?'absent':'désactivé'}`:r?`la page refuse : ${String(r).slice(0,60)}`:'réponse illisible de la page';
+   noter('refus',texte);dernierMotif=['partie-absente','libelle-illisible'].includes(r)?'selecteur-illisible':'changement-impossible';continue;}
+  if(rep.deja){noter('deja','déjà sur la partie');const r=await readState().catch(()=>null);if(pret(r))return ok(r);continue;}
+  const P=await preuve(mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs));
+  if(P.quitte)return;
+  if(P.onglet){noter('onglet-ferme','onglet ESV fermé');return echec('onglet-ferme','onglet ESV fermé pendant le changement de partie');}
+  if(P.definitif){noter('echec',P.definitif.slice(0,160));return echec('changement-impossible',P.definitif);}
+  if(P.r){noter('ok',`partie ${vers} ouverte en ${Math.round((Date.now()-t)/100)/10} s`,{part:vers,cut:entierOuNul(P.r.identity?.cut)});return ok(P.r);}
+  const borne=Math.round((mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs))/1000);
+  if(Number.isInteger(P.partie)&&P.partie!==vers&&P.partie!==(T.de?.part??de0)){noter('autre-partie',`ESV a ouvert la partie ${P.partie}, pas la partie ${vers}`,{part:P.partie,cut:null});
+   return echec('changement-impossible',`ESV a ouvert la partie ${P.partie} au lieu de la partie ${vers} : arrêt prudent`);}
+  noter(P.vu?'sans-effet':'muet',`${P.vu?`la partie ${vers} n’est pas affichée`:'ESV ne répond plus'} après ${borne} s${P.derniere?` (${P.derniere})`:''}`,Number.isInteger(P.partie)?{part:P.partie,cut:null}:null);
+  dernierMotif=P.vu?'changement-impossible':'esv-muet';}
+ return echec(dernierMotif||'changement-impossible',`la page d’ESV n’a pas affiché la partie ${vers}`);}
 /* D-261 : après le retour sur la partie du lot, la relecture est relancée (le chemin « Lancer la relecture », toutes ses gardes). */
 async function fileRelectureApresRetour(revenu,detail=null){const e=fileP.etat,lotId=e?.partie?.lotId;if(!e||e.etat!=='relecture')return;
  const nonLancee=d=>fileEvenement({type:'relecture-fin',lotId,issue:'non-lancee',horsPartie:false,detail:d});

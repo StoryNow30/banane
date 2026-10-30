@@ -40,6 +40,7 @@
  const options={cuts:num('cuts',12),debut:num('debut',100),part:num('part',23),cut:num('cut',NaN),latence:num('latence',40),lots:num('lots',4),
    latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10,source:q.get('source')||'synthetique',valides:num('valides',0)};
  options.selecteur=num('selecteur',1);   /* T20a : sélecteur de parties SUPPOSÉ (0 : absent) */
+ options.traversee=num('traversee',1);   /* CH-026 : témoignage de l'opérateur (30/10) : au dernier cut, « Next cut » (Z) ouvre la partie suivante ; plus rien à valider, « Next non validated cut » aussi. 0 : ESV reste dans la partie */
  /* ESV parle à son serveur en XMLHttpRequest (c'est ce que l'observateur d'Ariane enveloppe) : la maquette aussi. */
  const xhr=(methode,url,corps)=>new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open(methode,url,true);if(corps!==undefined)x.setRequestHeader('content-type','application/json');
    x.onload=()=>res({status:x.status,texte:x.responseText});x.onerror=()=>rej(Error('réseau'));x.send(corps===undefined?null:JSON.stringify(corps));});
@@ -123,7 +124,7 @@
  const liste=()=>etat.listes.get(etat.partie.part)||[];
  const traites=()=>liste().filter(l=>l.ExtractionStatus!=='invalid').length;
  function majCompteur(){$('maquette-compteur').querySelector('.badge').textContent=`${traites()} on ${liste().length}`;
-  $('O2N3DCutNextInvalid3DRail').disabled=prochain('non-valide')<0;$('O2N3DCutPreviousInvalid3DRail').disabled=prochain('non-valide',etat.index,-1)<0;}
+  $('O2N3DCutNextInvalid3DRail').disabled=prochain('non-valide')<0&&!(options.traversee&&partieApres());$('O2N3DCutPreviousInvalid3DRail').disabled=prochain('non-valide',etat.index,-1)<0;}
  /* « non validé » (titres relevés : « Next non validated cut », « Load next non validated cut ») = statut différent de `valid` : un cut passé (skipped) est revisité. Hypothèse déduite des titres. */
  const prochain=(critere,depuis=etat.index,sens=1)=>{for(let i=depuis+sens;i>=0&&i<etat.partie.cuts.length;i+=sens){const s=etat.partie.cuts[i].status;if(s!=='valid')return i;}return -1;};
  /* ---------- écritures vers le « serveur » ---------- */
@@ -137,7 +138,11 @@
  /* ---------- actions (équivalents de ce qu'Ariane observe dans ESV) ---------- */
  function choisirRail(side){etat.side=side;classesCote(side);
   log('rail-choisi',{side});requestAnimationFrame(()=>recentrer(side)); /* la caméra suit à l'image suivante (D-088) */}
- function invalideSuivant(){const i=prochain('non-valide');if(i<0){log('invalide-suivant-aucun');return;}chargerCut(i,'invalide-suivant');}
+ /* CH-026 : la partie suivante du scénario ; y passer recharge le sélecteur (entrée courante) et ouvre son premier cut non validé (ou le premier). */
+ const partieApres=()=>etat.scenario?.parties[etat.scenario.parties.indexOf(etat.partie)+1]||null;
+ function passerPartieSuivante(raison){const suivante=partieApres();if(!suivante){log('partie-suivante-aucune',{raison});return false;}
+  etat.partie=suivante;selecteurParties(etat.scenario);const j=prochain('non-valide',-1);chargerCut(j>=0?j:0,raison);return true;}
+ function invalideSuivant(){const i=prochain('non-valide');if(i<0){if(options.traversee&&passerPartieSuivante('invalide-suivant-partie'))return;log('invalide-suivant-aucun');return;}chargerCut(i,'invalide-suivant');}
  function invalidePrecedent(){const i=prochain('non-valide',etat.index,-1);if(i<0){log('invalide-precedent-aucun');return;}chargerCut(i,'invalide-precedent');}
  function validerEtSuivant(){if(!rails.left)return;void ecrire('valid');const i=prochain('non-valide');
   const cp=etat.pannes.changementPartie;
@@ -147,7 +152,8 @@
   else log('valider-dernier-sans-suite');}
  function validerSurPlace(){if(!rails.left)return;void ecrire('valid');}
  function passer(){if(!rails.left)return;void ecrire('skipped');invalideSuivant();}
- function allerA(index,raison){if(index<0||index>=etat.partie.cuts.length){log('navigation-refusee',{index});return;}chargerCut(index,raison);}
+ function allerA(index,raison){if(index===etat.partie.cuts.length&&options.traversee&&/^(suivant|touche-Z)$/.test(raison)&&passerPartieSuivante(raison+'-partie'))return;
+  if(index<0||index>=etat.partie.cuts.length){log('navigation-refusee',{index});return;}chargerCut(index,raison);}
  $('O2N3DCutLRClick').addEventListener('click',()=>choisirRail('left'));$('O2N3DCutRRClick').addEventListener('click',()=>choisirRail('right'));
  $('O2N3DCutValidate3DRail').addEventListener('click',validerEtSuivant);$('O2N3DCutNextInvalid3DRail').addEventListener('click',invalideSuivant);$('O2N3DCutPreviousInvalid3DRail').addEventListener('click',invalidePrecedent);
  $('O2N3DCutSkip3DRail').addEventListener('click',passer);
@@ -174,7 +180,8 @@
   if(e.shiftKey&&!e.ctrlKey&&(which===8||e.key==='Backspace'))return passer();
   if(e.ctrlKey&&!e.shiftKey&&(which===13||e.key==='Enter'))return validerSurPlace();
   if(e.shiftKey&&!e.ctrlKey&&(which===32||e.key===' '||e.code==='Space'))return validerEtSuivant();
-  if(!e.shiftKey&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&(e.key==='d'||e.key==='D'))return allerA(etat.index+1,'touche-D'); /* U3 : « cut de droite » (hypothèse) */});
+  if(!e.shiftKey&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&(e.key==='d'||e.key==='D'))return allerA(etat.index+1,'touche-D'); /* U3 : « cut de droite » (hypothèse) */
+  if(!e.shiftKey&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&(e.code==='KeyW'||e.key==='z'||e.key==='Z'))return allerA(etat.index+1,'touche-Z'); /* CH-026 : Z (KeyW en AZERTY) = cut suivant (audit navigation du 23/09) */});
  /* Clic dans la vue : pose le rail COURANT au point rayon caméra ∩ plan de coupe,
   * sans vérifier que le point est dans la vue (D-088 P1) ; pixel entier (4.8.0). */
  canvas.addEventListener('click',e=>{const rect=canvas.getBoundingClientRect(),px=Math.trunc(e.clientX-rect.left),py=Math.trunc(e.clientY-rect.top);
@@ -208,12 +215,15 @@
   projection();chargerCut(index,'demarrage');return true;}
  /* T20a — SÉLECTEUR DE PARTIES : SUPPOSÉ (architecture 5.0, § P : « un sélecteur de parties dont chaque entrée est un lien (…&p=N) », lu dans une page
   * enregistrée, jamais relevé par Ariane dans ESV). Une liste de liens `?…&p=N` (parties du scénario et leurs voisines), l'entrée courante marquée
-  * `active` ; le texte « Part N » et la classe sont des hypothèses. `selecteur=0` : pas de sélecteur. Un clic recharge la page (paramètre `p` ;
+  * `active` (classe : hypothèse). `selecteur=0` : pas de sélecteur. Un clic recharge la page (paramètre `p` ;
   * CH-017 : la partie servie est alors la partie `p` si le scénario l'a, sinon la première). Lu par le relevé en lecture seule de l'adaptateur. */
+ /* CH-026 : durci sur le relevé RÉEL du 30/10 (export de la partie 4, `releve-selecteur-parties`) : 15 entrées, de 0 à 14, libellés nus « 0 » à « 14 »,
+  * l'entrée courante marquée ; et `absent` (aucun lien p=) au relevé de 14:38. La maquette offre donc toutes les parties de 0 à la dernière du
+  * scénario, libellées par leur seul numéro. */
  function selecteurParties(s){const ul=$('maquette-parties');if(!ul)return;ul.textContent='';if(!options.selecteur)return;
-  const courante=etat.partie?.part,nums=new Set();for(const p of s.parties)for(const n of [p.part-1,p.part,p.part+1])if(n>=0)nums.add(n);
+  const courante=etat.partie?.part,nums=new Set(),der=Math.max(...s.parties.map(p=>p.part));for(let n=0;n<=der;n++)nums.add(n);
   for(const n of [...nums].sort((a,b)=>a-b)){const li=document.createElement('li'),a=document.createElement('a'),u=new URLSearchParams(location.search);u.set('p',String(n));
-   li.className='list-group-item'+(n===courante?' active':'');a.href='?'+u.toString();a.textContent='Part '+n;if(n===courante)a.className='active';li.appendChild(a);ul.appendChild(li);}
+   li.className='list-group-item'+(n===courante?' active':'');a.href='?'+u.toString();a.textContent=String(n);if(n===courante)a.className='active';li.appendChild(a);ul.appendChild(li);}
   log('selecteur-parties',{parties:[...nums],courante,suppose:true});}
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
    compteur:$('maquette-compteur').textContent.replace(/\s+/g,' ').trim(),traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
