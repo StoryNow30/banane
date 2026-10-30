@@ -1,5 +1,24 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.27 — 4.9.5 test 27 (F-V-G-S) (30/10) — test 27
+
+Manifeste `4.9.5.27` ; base : la test 26. Moteur, géométrie, GCV2 et décision du lot inchangés ; l'adaptateur de page ne change que par `changerPartie` (trois modes, voir ci-dessous). Premier essai de la file de parties sur un vrai ESV (partie 4, 30/10) : arrêt à 6 s puis lot sans file.
+
+### Corrigé (CH-026, CH-026-b)
+- **Arrêt de la file 6 s après son départ** : pendant la file, Signal montrait « Arrêter le lot », placé 1,5 s après le départ exactement sous « Lancer la file » ; ce bouton arrêtait toute la file (motif `operateur`). Il n'existe plus pendant la file ; « Arrêter la file » se confirme (second clic entre 600 ms et 6 s) ; le journal note l'origine de l'arrêt (`file-arreter` ou `stop`). Cause du terrain PROBABLE (un second clic sur « Lancer »), établie sur la maquette.
+- **Reprise au bon rang** : la partie interrompue n'est plus versée au bilan comme une partie faite ; « Reprendre la file » repart de la partie interrompue (ESV doit l'afficher), sans recharger l'extension.
+- **Course de fin de lot dans le tic de la file** (CH-026-b) : le moteur marque la fin du lot avant d'avoir fini sa boucle ; la validation sur place du dernier cut arrivait 25 ms après, et la file s'arrêtait à tort en « ecriture-incertaine ». Le tic ne classe plus un lot tant que sa boucle tourne.
+- **Changement de partie** : trois chemins, dans l'ordre : « Next non validated cut » quand le compteur dit N = M (le « Espace » de l'opérateur) ; aller au dernier cut puis « Next cut » (le « Z ») ; clic du sélecteur en dernier repli. Aucune touche synthétisée (on clique le bouton d'ESV qui porte la commande), aucune validation, aucun SKIP ; arrêt immédiat si une autre partie s'ouvre. Chaque tentative est au journal (`file-parties-changement`, `file-parties-changement-echec`) et dans l'alerte de Signal. **Témoignage de l'opérateur, jamais mesuré sur un vrai ESV** : la traversée de partie par ces gestes ; le sélecteur réel a disparu entre 15:21 et 15:38 dans le journal de la partie 4 (le lien seul n'est pas fiable).
+
+### Nouveau
+- **Onglet « File »** dans Signal (Orbite | Écho | File) : lancer, reprendre, arrêter (confirmé), bilan par partie, départs des parties (validés, invalides, skippés, total, heure).
+- **Relecture « corriger » par défaut**, non réglable (`relectureDefaut` dans `src/settings.js`, ligne retirée de Réglages) ; `modifiable: true` rend l'ancien choix.
+- Barre de Signal : débordement de 11 px entre 480 et 520 px corrigé. Icône ronde (logo de Signal). Essai de connexion T21 robuste (états, plus de délais fixes).
+
+### Non vérifié
+- Le changement de partie sur un vrai ESV (aucun des trois chemins).
+- Le déplacement de vue au clic droit et la garde après un différé n'ont pas été éprouvés par un lot qui en avait besoin (partie 10 : aucun déplacement de vue ; garde 3 fois).
+
 ## 4.9.5.26 — 4.9.5 test 26 (F-V-G-S) (29/10) — test 26
 
 Manifeste `4.9.5.26`, « 4.9.5 test 26 (F-V-G-S) » (S : file de parties visible dans Signal) ; base : la test 25. Moteur, géométrie, GCV2, décision du lot, adaptateur de page, service worker : inchangés (`git diff` de la test 25 à celle-ci sur ces fichiers : voir la fin de cette entrée).
