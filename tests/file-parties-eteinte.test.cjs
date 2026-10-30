@@ -18,7 +18,7 @@ test('file éteinte : actions inconnues, vue, scope et export sans file, aucune 
   for (const a of ['file-etat', 'file-demarrer', 'file-arreter', 'file-oublier']) await assert.rejects(b.api(a, { n: 2, lotArgs: LOT_ARGS }), /Commande inconnue/);
   const v = await b.api('view'); assert.equal(Object.hasOwn(v, 'fileParties'), false);
   await b.api('start', { part: 23, start: 5, end: 9, ...LOT_ARGS });
-  const sc = M.lots[0].scope; assert.equal(Object.hasOwn(sc, 'fileParties'), false); assert.equal(Object.hasOwn(sc, 'relecture'), false, 'relecture coupée par défaut : rien dans le scope');
+  const sc = M.lots[0].scope; assert.equal(Object.hasOwn(sc, 'fileParties'), false); assert.equal(sc.relecture, 'corriger', 'test 27 : relecture « corriger » par défaut (non réglable), figée dans le scope comme avant le choix gardé');
   await b.api('stop'); assert.notEqual(M.engine().s.batch.state, 'RUNNING', '« Arrêter » arrête le lot comme avant');
   const meta = await b.api('journal-meta'); assert.equal(Object.hasOwn(meta, 'fileParties'), false);
   for (const k of [...lus, ...ecrits]) assert.ok(!/^banane60(FileParties|RegistreFile)$/.test(k), 'clé de la file touchée : ' + k);

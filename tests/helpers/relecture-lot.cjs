@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');
 /* 5.0 (D-170 à D-173) — montage des essais de la RELECTURE APRÈS LE LOT : service worker réel en VM, moteur, GCV1 et décision réels,
  * ESV simulé, chrome.storage.local en mémoire (le panneau y garde le choix « relecture »). Données synthétiques.
  * Lot de 111 à 113 : 111 et 112 posés et validés, 113 (dernier cut du lot) a sa pose d'ESV à 230 mm de la voie (cible hors de la vue :

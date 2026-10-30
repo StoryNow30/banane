@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');   /* test 27 : les empreintes de base de ces essais sont celles d'un lot sans relecture (choix réglable, coupée) */
 /* CH-019 — montage des essais de la GARDE « APRÈS UN DIFFÉRÉ » côté service worker (tests/garde-apres-differe-*-sw.test.cjs) : service worker
  * réel en VM, moteur et GCV1 réels, ESV simulé (tests/helpers/lot-profil.cjs). Lot des cuts 111 à 116, le 112 capturé sans point (le moteur
  * s'abstient, le lot le diffère) : les cuts qui suivent n'ont que le 111 pour appui. Profil du lot « actuel » par défaut (la GCV2 ne pose pas le

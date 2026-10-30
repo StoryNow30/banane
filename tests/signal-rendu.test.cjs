@@ -146,7 +146,10 @@ test('palette : quatre commandes à l’ouverture, le reste en tapant ; une comm
 
 test('réglages : les choix du panneau, thème sombre par défaut, détails techniques dans Signal, historique des parties ; aucun « ancien panneau »',()=>{
  const h=S.rendre(snap({gcv2:{total:2731,date:'20/10/2026'},sig:sig({historique:[{part:13,fin:'complete',cibles:120,poses:109,differes:11,sautes:1,depart:{ignores:2},startedAt:'2026-10-25T13:05:00Z'},{part:12,fin:'en-cours',cibles:null,poses:null,differes:null,sautes:0,depart:{ignores:0}},{part:11,fin:'complete',cibles:null,poses:9,differes:0,depart:{ignores:3}},{part:10,fin:'arretee',cibles:null,poses:5,differes:0,sautes:null,depart:null},{part:9,fin:'complete',poses:7,sautes:2}]})}),ui({couche:'reglages'}));
- assert.match(h,/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
+ /* Test 27 : relecture « corriger » par défaut, non réglable : la ligne n'apparaît que si le panneau d'origine montre son choix (`relectureModifiable`). */
+ assert.doesNotMatch(h,/data-sel="relecture"/,'relecture non réglable : pas de ligne « Après le lot »');
+ assert.match(S.rendre(snap({relectureModifiable:true}),ui({couche:'reglages'})),/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);
+ assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
  assert.match(h,/data-act="sg:tech"/);assert.match(h,/<span class="sg-mono">2731<\/span>/);
  assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 1 skippé · 2 ignorés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 skippé<\/span>/,'0 est une valeur connue : affichée, au singulier');
  assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 différés · 3 ignorés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');

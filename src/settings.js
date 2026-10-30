@@ -357,6 +357,8 @@
    * `deplacer-vue-geste` par geste. `molette` et `glisser` : forme des gestes (src/gestes-vue.js) ; leurs durées sont PROVISOIRES,
    * à fixer sur les gestes de l'opérateur relevés par l'Écho (`echo.gestesVue`). `clicFinal` reste faux : Chromium termine un vrai
    * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
+  /* Test 27 (ordre de l'opérateur du 30/10) : la relecture après le lot est « corriger » PAR DÉFAUT et ne se règle plus dans l'interface (plus de case à cocher avant chaque lot). `modifiable:true` rend le choix « coupée / ombre / corriger » du panneau. */
+  const relectureDefaut = Object.freeze({ mode: 'corriger', modifiable: false });
   const deplacerVue = Object.freeze({
     /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
     actif: true,
@@ -548,5 +550,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, relectureDefaut, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file });
 });

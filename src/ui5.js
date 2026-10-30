@@ -21,7 +21,7 @@
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
   const VARIANTES = ['signal'], defaut = 'signal';
   const TAILLE = { signal: [600, 760] };
-  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '' };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
@@ -194,7 +194,26 @@
       alerte: visible('file-alerte') ? txt('file-alerte') : '',
       bilan: visible('file-bilan') ? [...($('file-bilan')?.querySelectorAll?.('li') || [])].map(li => String(li.textContent || '').trim()).filter(Boolean) : [],
       principal: bouton('file-principal'), secondaire: bouton('file-secondaire'),
+      /* CH-026 : l'onglet « File » : le plan, la reprise (src/file-parties.js `repriseDe`), les boutons d'un clic, le nombre choisi (lu même caché),
+       * la partie affichée dans ESV et les départs des parties (fiches de départ du panneau d'origine). */
+      rang: Number.isInteger(f?.rang) ? f.rang : null, part: f?.enCours?.part ?? null, plan: Array.isArray(f?.plan) ? f.plan.slice() : [],
+      faites: (f?.bilan || []).filter(p => !p.interrompue).length, reprise: f?.reprise || null,
+      lancer: bouton('file-lancer'), reprendre: bouton('file-reprendre'),
+      choixTous: [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)),
+      partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
+      departs: departsFile(),
     };
+  }
+  /* Les départs des parties, du plus récent au plus ancien (8 au plus) : validés, invalides, skippés (le compte « skipped » d'ESV au départ du lot,
+   * gardé en `ignores` par src/export-cache.js), total, heure de Paris. Rien d'inventé : un champ absent reste vide. */
+  const HEURE_PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return null; } })();
+  function departsFile() {
+    let f = []; try { f = root.ArianePanel.fichesDepart?.() || []; } catch { f = []; }
+    const n = v => Number.isInteger(v) ? v : null;
+    return f.filter(x => x && typeof x === 'object').slice(-8).reverse().map(x => {
+      const d = typeof x.at === 'string' ? new Date(x.at) : null, ok = d && !isNaN(d) && HEURE_PARIS;
+      return { partie: n(x.partie), heure: ok ? HEURE_PARIS.format(d).replace(',', '').replace(/\s+/, ' ') : '', valides: n(x.valides), invalides: n(x.invalides), skippes: n(x.ignores), total: n(x.total) };
+    });
   }
   function instantane(s) {
     const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';
@@ -219,7 +238,7 @@
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
       echo: { visites: txt('native-count') || '0', corriges: echo.corriges, valides: echo.valides },
       echoRows: echo.echoRows,
-      reglages: rg, exportTexte: txt('export-status'),
+      reglages: rg, relectureModifiable: visible('relecture-choix-champ'), exportTexte: txt('export-status'),
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
       gcv2: gcv2Base,
       file: fileDuPanneau(s),
@@ -353,6 +372,8 @@
     if (quoi === 'tiroir') { ui.tiroir = !ui.tiroir; ui.sel = null; }
     /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
     else if (quoi === 'file-n') { const b = [...($('file-n')?.children || [])].find(x => x.dataset?.n === v); if (b && !b.disabled) b.click(); }
+    /* CH-026 : le troisième onglet « File de parties » : une vue de Signal (rien n'est envoyé au service worker) ; Orbite ou Écho le referme. */
+    else if (quoi === 'onglet-file') { ui.onglet = 'file'; ui.couche = null; ui.tiroir = false; ui.sel = null; }
     else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
     else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
@@ -392,14 +413,25 @@
     else if (nom === 'variante') void setVariante(v);
     setTimeout(() => maj(true), 250);
   }
+  /* CH-026 : « Arrêter la file » se confirme. Le premier clic ne fait que demander (le bouton devient « Confirmer l'arrêt de la file » pendant 6 s) ;
+   * seul un second clic venu au moins 600 ms après arrête : un double clic, ou un clic qui traverse un écran qui vient de changer, ne suffit pas.
+   * La palette garde sa propre confirmation (seconde Entrée, Revue T21 G1). */
+  const CONFIRME_FILE = { minMs: 600, maxMs: 6000 };
+  function confirmerArretFile() {
+    const t = Date.now(), c = ui.confirmeFile;
+    if (c && t - c >= CONFIRME_FILE.minMs && t - c <= CONFIRME_FILE.maxMs) { ui.confirmeFile = null; clearTimeout(confirmerArretFile.h); return true; }
+    if (!c || t - c > CONFIRME_FILE.maxMs) { ui.confirmeFile = t; clearTimeout(confirmerArretFile.h); confirmerArretFile.h = setTimeout(() => { ui.confirmeFile = null; maj(true); }, CONFIRME_FILE.maxMs); }
+    maj(true); return false;
+  }
   function agir(act, depuis) {
     const [type, v] = [act.split(':')[0], act.slice(act.indexOf(':') + 1)];
+    if (act === 'legacy:file-secondaire' && depuis && !confirmerArretFile()) return;
     if (act === 'pause') { const b = root.ArianePanel.state()?.batch; if (b?.state === 'RUNNING' && $('pause') && !$('pause').disabled) { ui.pauseLot = b.id; cliquer('pause'); } }
     else if (type === 'sg') { agirSignal(act); return; }
     else if (type === 'tech') { ouvrirTech(); return; }
     else if (type === 'legacy') cliquer(v);
     else if (type === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
-    else if (type === 'mode') cliquer(v === 'native' ? 'tab-native' : 'tab-automatic');
+    else if (type === 'mode') { ui.onglet = null; cliquer(v === 'native' ? 'tab-native' : 'tab-automatic'); }
     else if (type === 'variante') void setVariante(v);
     maj(true);
   }

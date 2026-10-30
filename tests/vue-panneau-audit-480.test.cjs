@@ -1,4 +1,5 @@
 'use strict';
+require('./helpers/relecture-reglable.cjs');   /* test 27 : un lot sans relecture (sinon elle démarre entre les deux lectures de la vue comparées ici) */
 /* 4.8.0 (audit qualité, P01) : la vue du panneau retire le lourd AVANT de
  * copier l'état, et rend exactement ce que rendait panelView(engine.view()). */
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');

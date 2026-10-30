@@ -13,8 +13,9 @@ test('sélecteur présent : status ok, parties et entrée courante ; sans entré
     const ecrituresAvant=env.serveur.journal.ecritures.length,cutAvant=(await env.etat()).cut;
     let r=await env.appel('ping',[{contrat:true}]);assert.equal(r.error,undefined,r.error);
     const s=r.result.selecteurParties;
-    /* Parties du scénario de la maquette (23 et 24) et leurs voisines ; la partie servie (23) est l'entrée courante. */
-    assert.deepEqual(JSON.parse(JSON.stringify(s)),{status:'ok',current:23,parts:[22,23,24,25].map(n=>({part:n,label:'Part '+n,current:n===23}))});
+    /* CH-026 : comme le relevé réel du 30/10 (« 0 » à « 14 ») : toutes les parties de 0 à la dernière du scénario (24), libellées par leur numéro ;
+     * la partie servie (23) est l'entrée courante. */
+    assert.deepEqual(JSON.parse(JSON.stringify(s)),{status:'ok',current:23,parts:Array.from({length:25},(_,n)=>({part:n,label:String(n),current:n===23}))});
     assert.equal((await env.appel('ping',[])).result.selecteurParties,undefined,'seulement au ping de contrat (équipement)');
     await env.page.evaluate(()=>{for(const e of document.querySelectorAll('#maquette-parties .active'))e.classList.remove('active');});
     r=await env.appel('ping',[{contrat:true}]);assert.equal(r.result.selecteurParties.status,'ok');assert.equal(r.result.selecteurParties.current,null,'aucune entrée marquée, pas de « p » dans l’adresse : courante inconnue');

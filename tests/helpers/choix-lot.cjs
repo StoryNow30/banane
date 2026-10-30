@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');
 /* 4.9.5 test 6 (D-157, D-164) — montage des essais des CHOIX POUR LE LOT (clic du mode rapide, règle « grappe de différés ») :
  * service worker réel en VM, moteur et GCV1 réels, ESV simulé, chrome.storage.local en mémoire (le panneau y garde les choix).
  * `choix` : ce qui est déjà gardé avant le lot (clés de storage.local) ; `pendant(b)` : appelé à la première commande du lot

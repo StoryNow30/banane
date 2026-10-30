@@ -18,15 +18,32 @@ const LOT_ARGS = { testConfirmed: true, allowNavigationEvidence: true, lowConfid
  * demandée 30 ms plus tard (variante « rechargement » : autre page). Réglages : `capacite` (false : adaptateur d'aujourd'hui), `refus`, `bloque`
  * (la page ne change jamais de partie), `muet` (ping sans réponse). */
 class EsvParties extends SimulatedESV {
-  constructor() { super(); Object.assign(this, { parts: [23, 24, 25, 26], capacite: true, refus: null, bloque: false, muet: false }); this.identity.cut = 5; }
+  constructor() { super(); Object.assign(this, { parts: [23, 24, 25, 26], capacite: true, refus: null, bloque: false, muet: false, gestes: false, reste: 0, total: 10, sansEffet: [], ouvre: null }); this.identity.cut = 5; }
+  /* CH-026 : aller à un cut de la partie affichée (navigation seule), comme l'adaptateur. */
+  async goToCut(cible) { this.calls.push('goToCut:' + cible.cut); if (cible.part !== this.identity.part) return { resultat: 'refuse', confirme: false, refusal: { code: 'WRONG_PART', message: 'autre partie' } };
+    this.identity = { ...this.identity, cut: cible.cut }; return { resultat: 'confirme', confirme: true, chemin: 'evenement' }; }
   async ping(o) {
     if (this.muet) throw Error('Adaptateur ESV sans réponse (essai).');
     const r = await super.ping();
-    if (this.capacite) r.capacites = ['changerPartie'];
+    if (this.capacite) r.capacites = ['changerPartie', ...(this.gestes ? ['changerPartie:invalide-suivant', 'changerPartie:suivant-dernier'] : [])];
     if (o?.contrat) r.selecteurParties = { status: 'ok', current: this.identity.part, parts: this.parts.map(part => ({ part, label: 'Part ' + part, current: part === this.identity.part })) };
     return r;
   }
-  async changerPartie({ part }) {
+  async changerPartie({ part, mode }) {
+    /* CH-026 : avec `gestes` (le patch chantiers/CH-026/adaptateur-changement-partie.patch), les modes « invalide-suivant » (plus rien à valider :
+     * « Next non validated cut ») et « suivant-dernier » (au dernier cut : « Next cut ») ouvrent la partie SUIVANTE de la liste d'ESV (témoignage
+     * de l'opérateur) ; `reste` : cuts encore à valider ; `total` : cuts de la partie ; `sansEffet` : modes qui ne font rien ; `ouvre` : la partie
+     * qu'ESV ouvre à la place. Sans `gestes`, le mode est ignoré (adaptateur d'aujourd'hui : il clique le lien). */
+    if (this.gestes && mode && mode !== 'lien') {
+      this.calls.push(`changerPartie:${mode}:${part}`);
+      const de = { part: this.identity.part, cut: this.identity.cut }, compteur = { traites: this.total - this.reste, total: this.total }, base = { mode, de, vers: part, compteur, validationCommandSent: false, skipCommandSent: false };
+      const bouton = { id: mode === 'invalide-suivant' ? 'O2N3DCutNextInvalid3DRail' : 'O2N3DCutNext3DRail', exists: true, disabled: false };
+      if (mode === 'invalide-suivant' && this.reste > 0) return { ok: false, raison: 'reste-a-valider', bouton, ...base };
+      if (mode === 'suivant-dernier' && this.identity.cut !== this.total - 1) return { ok: false, raison: 'pas-au-dernier-cut', dernier: this.total - 1, bouton, ...base };
+      if (!this.sansEffet.includes(mode)) { const suite = this.ouvre ?? this.parts[this.parts.indexOf(this.identity.part) + 1];
+        if (Number.isInteger(suite)) setTimeout(() => { this.identity = { ...this.identity, part: suite, cut: 0 }; }, 30); }
+      return { ok: true, bouton, ...base };
+    }
     this.calls.push('changerPartie:' + part);
     if (this.refus) return { ok: false, raison: this.refus };
     if (!this.parts.includes(part)) return { ok: false, raison: 'partie-absente' };

@@ -1,4 +1,5 @@
 'use strict';
+require('./relecture-reglable.cjs');
 /* Outils communs des essais de la relecture après le lot (tests/relecture-sw-*.test.cjs) : empreinte de la base, lot sans le champ
  * `relecture` du scope, réglages permissifs d'essai, commandes après le lot. Un fichier par essai : chaque fichier d'essai doit
  * finir en moins de 20 s (délai de tools/verify.cjs), et un lot réel en prend 3 à 6. */

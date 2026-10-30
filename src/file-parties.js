@@ -83,7 +83,8 @@
     e.etat = m.file === 'fin' ? 'fin' : 'arret';
     e.motifFin = { code: MOTIFS[motif] ? motif : 'refus-lot', texte: m.texte, detail: texte(detail, 400), at };
     e.alerte = m.alerte ? { code: e.motifFin.code, texte: m.texte, detail: e.motifFin.detail, at, part: e.partie?.part ?? null } : null;
-    if (e.partie) { e.partie.fin = e.partie.fin || at; e.bilan.push(e.partie); e.partie = null; }
+    /* CH-026 : la partie en cours à l'arrêt n'est pas finie (ni relecture ni registre) : marquée `interrompue`, c'est d'elle que repart la reprise. */
+    if (e.partie) { e.partie.fin = e.partie.fin || at; e.partie.interrompue = true; e.bilan.push(e.partie); e.partie = null; }
     e.changement = null; e.depuis = at;
     return e;
   }
@@ -245,15 +246,23 @@
     return out;
   }
 
+  /* CH-026 : d'où repart une file ARRÊTÉE : le premier rang non fini (la partie interrompue, ou la suivante si l'arrêt est venu entre deux parties),
+   * sa partie dans le plan, le nombre de parties restantes. null si la file n'est pas arrêtée ou si tout est fait. */
+  function repriseDe(e) {
+    if (!e || e.etat !== 'arret') return null;
+    const faites = e.bilan.filter(p => !p.interrompue).length, rang = faites;
+    if (rang >= e.plan.length) return null;
+    return { rang, part: e.plan[rang], reste: e.plan.length - rang };
+  }
   /* Vue du panneau (variante A) : quelques champs, jamais d'adresse ni d'identifiant de page. */
   function vue(e) {
     if (!e) return null;
     return { id: e.id, etat: e.etat, n: e.n, plan: e.plan.slice(), rang: e.k, enCours: e.partie ? { part: e.partie.part, rang: e.partie.rang, lot: !!e.partie.lotId } : null,
       changement: e.changement ? { vers: e.changement.vers, tentatives: e.changement.tentatives } : null,
-      bilan: e.bilan.map(p => ({ part: p.part, rang: p.rang, issueLot: p.issueLot, motifs: p.motifs.map(m => m.code), resume: p.resume, passe: p.passe, relecture: p.relecture, alertes: p.alertes || [] })),
-      motifFin: e.motifFin, alerte: e.alerte, reprises: e.reprises || 0 };
+      bilan: e.bilan.map(p => ({ part: p.part, rang: p.rang, issueLot: p.issueLot, motifs: p.motifs.map(m => m.code), resume: p.resume, passe: p.passe, relecture: p.relecture, alertes: p.alertes || [], ...(p.interrompue ? { interrompue: true } : {}) })),
+      motifFin: e.motifFin, alerte: e.alerte, reprises: e.reprises || 0, reprise: repriseDe(e) };
   }
 
   return Object.freeze({ CLE_ETAT, CLE_REGISTRE, MAX_REGISTRE, MAX_PARTIES, TENTATIVES_MAX, MOTIFS, SEUILS, ACTIFS, TERMINAUX,
-    planifier, transition, reprise, relire, classerLot, registreAjouter, entreeRegistre, alertes, vue, actif, terminal });
+    planifier, transition, reprise, repriseDe, relire, classerLot, registreAjouter, entreeRegistre, alertes, vue, actif, terminal });
 });

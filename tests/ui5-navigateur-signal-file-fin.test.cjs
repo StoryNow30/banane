@@ -16,7 +16,7 @@ test('changement de partie, arrêt avec alerte, arrêt pendant un lot ouvert, fi
  }finally{await nav.close();}
  for(const [nom,r] of Object.entries(res))verifier(assert,nom,r);
  const c=res.changement['600'];assert.equal(c.mot,'Changement de partie');assert.equal(c.arreter,true);assert.equal(c.depart,false);
- const a=res.arret['360'];assert.equal(a.mot,'File arrêtée');assert.match(a.alerte,/la page d’ESV ne change pas de partie/);assert.equal(a.bilan,1);assert.match(a.principal,/Préparer la reprise · 1 partie restante/);
+ const a=res.arret['360'];assert.equal(a.mot,'File arrêtée');assert.match(a.alerte,/la page d’ESV ne change pas de partie/);assert.equal(a.bilan,1);assert.match(a.principal,/Reprendre la file · 1 partie restante/,'CH-026 : reprise au rang, plus « Préparer la reprise »');
  const o=res.arretLotOuvert['600'];assert.equal(o.mot,'ESV ne répond plus','le lot ouvert garde l’écran');assert.equal(o.file,true,'la file passe dans le bandeau');
  const f=res.fin['600'];assert.equal(f.mot,'File terminée');assert.equal(f.bilan,2);assert.match(f.principal,/Fermer le bilan/);
 });

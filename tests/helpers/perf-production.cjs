@@ -13,7 +13,10 @@ function production({enabled=true,adapter=new SimulatedESV(),store=new MemorySto
    scripting:{executeScript:async options=>[{frameId:0,result:options.func?null:undefined}]},windows:{onRemoved:{addListener:()=>{}},create:async()=>({id:1}),update:async()=>{}}}};
  vm.createContext(ctx);ctx.importScripts=(...files)=>{for(const f of files){if(f==='src/perf-phase.js'&&!enabled)continue;
   if(f==='src/storage.js'){ctx.BananeStorage3=class{constructor(){return store;}};continue;}
-  vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});}};
+  vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
+  /* Test 27 : un essai qui éprouve la relecture réglable (tests/helpers/relecture-reglable.cjs) la rend aussi au service worker de la VM,
+   * qui lit SA copie de src/settings.js (le `require` de Node ne l'atteint pas : c'est pourquoi l'assistant seul ne suffisait pas). */
+  if(f==='src/settings.js'&&globalThis.__arianeRelectureReglable&&ctx.BananeSettings)ctx.BananeSettings=Object.freeze({...ctx.BananeSettings,relectureDefaut:globalThis.__arianeRelectureReglable});}};
  vm.runInContext(fs.readFileSync(path.join(root,'background.js'),'utf8'),ctx,{filename:'background.js'});
  const sender={id:'test',url:'chrome-extension://test/panel.html',tab:{id:20}};
  const api=(action,args={})=>new Promise((resolve,reject)=>{message({kind:'panel',action,args},sender,r=>r.error?reject(Error(r.error)):resolve(r.result));});

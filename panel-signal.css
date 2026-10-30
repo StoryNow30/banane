@@ -355,3 +355,17 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-feuille .sg-reg:nth-child(n+2){animation-delay:40ms}#ui5.u-signal .sg-feuille .sg-reg:nth-child(n+4){animation-delay:80ms}#ui5.u-signal .sg-feuille .sg-reg:nth-child(n+6){animation-delay:120ms}
 #ui5.u-signal .sg-popover .sg-ong{animation:sg-ligne 220ms var(--sortie) backwards}
 @media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}}
+/* CH-026 : l'onglet « File de parties » (maquette Figma « CH-026 · Onglet File de parties ») : l'instrument défile, des sections titrées, les départs en tableau. */
+#ui5.u-signal .sg-onglet-file{flex:1;min-height:0;overflow:auto;scrollbar-width:thin}
+#ui5.u-signal .sg-of-sec{display:flex;flex-direction:column;gap:var(--e2);min-width:0}
+#ui5.u-signal .sg-of-sec>p{margin:0}
+#ui5.u-signal .sg-of-t{margin:0;font-size:var(--t-meta);line-height:var(--l-meta);font-weight:400;color:var(--encre2)}
+#ui5.u-signal .sg-of-ligne{display:flex;align-items:center;gap:var(--e3);flex-wrap:wrap;color:var(--encre2)}
+#ui5.u-signal .sg-secondaire.sg-cadre{height:36px;padding:0 var(--e4);border:1px solid var(--filet-fort);border-radius:var(--r-ctl);color:var(--encre)}
+#ui5.u-signal .sg-of-departs{width:100%;border-collapse:collapse;font-size:var(--t-meta);line-height:var(--l-meta);table-layout:fixed}
+#ui5.u-signal .sg-of-departs th{font-weight:400;color:var(--encre2);text-align:right;padding:4px 0 4px 4px;border-bottom:1px solid var(--filet)}
+#ui5.u-signal .sg-of-departs td{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;padding:6px 0 6px 4px;border-bottom:1px solid var(--filet);color:var(--encre);overflow-wrap:anywhere}
+#ui5.u-signal .sg-of-departs th:nth-child(-n+2),#ui5.u-signal .sg-of-departs td:nth-child(-n+2){text-align:left}
+#ui5.u-signal .sg-of-departs td:nth-child(2){font-family:inherit}
+#ui5.u-signal .sg-of-departs th:nth-child(1){width:14%}#ui5.u-signal .sg-of-departs th:nth-child(2){width:24%}
+#ui5.u-signal[data-taille="compact"] .sg-of-departs th:nth-child(1){width:13%}#ui5.u-signal[data-taille="compact"] .sg-of-departs th:nth-child(2){width:22%}
