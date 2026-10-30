@@ -246,6 +246,18 @@
     return out;
   }
 
+  /* CH-026-c : une file arrêtée pendant qu'une activité de sa dernière partie tournait encore (la passe, la relecture : le service worker les lance
+   * de lui-même) : quand cette activité finit, son issue est portée au bilan de la partie, au lieu de « relecture — » pour toujours. Rien d'autre
+   * ne change (la file reste arrêtée, le motif aussi). Rend le nouvel état, ou null si rien n'est à compléter. */
+  function completerBilan(e, { lotId, passe = null, relecture = null } = {}) {
+    if (!e || e.etat !== 'arret' || !e.bilan.length || typeof lotId !== 'string') return null;
+    const p = e.bilan[e.bilan.length - 1]; if (p.lotId !== lotId) return null;
+    let change = false; const n = copie(e), q = n.bilan[n.bilan.length - 1];
+    if (!q.passe && passe && typeof passe.issue === 'string') { q.passe = { issue: texte(passe.issue, 40), ecrits: entier(passe.ecrits) }; change = true; }
+    if (!q.relecture && relecture && typeof relecture.issue === 'string') {
+      q.relecture = { issue: texte(relecture.issue, 40), corriges: entier(relecture.corriges), faits: entier(relecture.faits), mode: texte(relecture.mode, 20), apresArret: true }; change = true; }
+    return change ? n : null;
+  }
   /* CH-026 : d'où repart une file ARRÊTÉE : le premier rang non fini (la partie interrompue, ou la suivante si l'arrêt est venu entre deux parties),
    * sa partie dans le plan, le nombre de parties restantes. null si la file n'est pas arrêtée ou si tout est fait. */
   function repriseDe(e) {
@@ -264,5 +276,5 @@
   }
 
   return Object.freeze({ CLE_ETAT, CLE_REGISTRE, MAX_REGISTRE, MAX_PARTIES, TENTATIVES_MAX, MOTIFS, SEUILS, ACTIFS, TERMINAUX,
-    planifier, transition, reprise, repriseDe, relire, classerLot, registreAjouter, entreeRegistre, alertes, vue, actif, terminal });
+    planifier, transition, reprise, repriseDe, completerBilan, relire, classerLot, registreAjouter, entreeRegistre, alertes, vue, actif, terminal });
 });

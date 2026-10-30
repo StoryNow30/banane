@@ -369,3 +369,4 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-of-departs td:nth-child(2){font-family:inherit}
 #ui5.u-signal .sg-of-departs th:nth-child(1){width:14%}#ui5.u-signal .sg-of-departs th:nth-child(2){width:24%}
 #ui5.u-signal[data-taille="compact"] .sg-of-departs th:nth-child(1){width:13%}#ui5.u-signal[data-taille="compact"] .sg-of-departs th:nth-child(2){width:22%}
+#ui5.u-signal .sg-file-attente{color:var(--encre)}   /* CH-026-c : file arrêtée pendant une activité de sa partie */

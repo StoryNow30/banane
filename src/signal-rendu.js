@@ -248,7 +248,11 @@
     /* CH-026 : file arrêtée, « Reprendre la file » (au rang interrompu, `#file-reprendre`) remplace « Préparer la reprise » : celui-ci oubliait la file, et
      * l'écran suivant offrait le « Reprendre » du LOT, que l'opérateur a pris pour la reprise de la file (test 26, 14:22:11 puis 14:22:15). */
     const rep = F.reprendre ? { texte: F.reprendre.texte, act: 'legacy:file-reprendre', ic: 'play', inactif: !F.reprendre.actif } : null;
-    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: F.bilan, principal: rep || fp }); return; }
+    /* CH-026-c : la file arrêtée pendant que le lot, la deuxième passe ou la relecture de sa partie tournent encore : jamais « arrêtée » nu à côté d'une
+     * activité vivante, et rien à reprendre ni à relancer avant sa fin (le service worker le refuserait). */
+    const enCours = activiteFile(s);
+    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: F.bilan, principal: enCours ? null : rep || fp,
+      ...(enCours ? { etatTexte: `attend la fin de ${enCours}`, attente: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la file s’est arrêtée et ne repartira pas seule ; reprends-la à sa fin.` } : {}) }); return; }
     const arret = F.etat === 'arret', ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout');
     m.file = null;
     Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'File arrêtée' : 'File terminée',
@@ -321,7 +325,7 @@
     if (m.fileBilan) return bilanHtml(m.fileBilan);
     const F = m.file; if (!F) return '';
     const bt = (b, cls) => b ? `<button type="button" class="${cls}${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>` : '';
-    return `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>File de parties</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</p>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}${F.principal || F.secondaire ? `<div class="sg-file-bts">${bt(F.principal, 'sg-secondaire')}${bt(F.secondaire, 'sg-secondaire')}</div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`;
+    return `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>File de parties</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</p>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}${F.principal || F.secondaire ? `<div class="sg-file-bts">${bt(F.principal, 'sg-secondaire')}${bt(F.secondaire, 'sg-secondaire')}</div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`;
   }
   /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer la file » (ne lance rien), puis « Lancer la file » (qui referme la boîte). */
   function boiteFileHtml(snap) {
@@ -488,6 +492,8 @@
    * d'origine (`#file-lancer`, `#file-reprendre`, `#file-secondaire`, `#file-n`) ; l'export est celui d'Orbite. Aucun message nouveau au service worker. */
   const nP = n => `${n} ${n > 1 ? 'parties' : 'partie'}`;
   const milliers = v => Number.isInteger(v) ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : '';
+  /* CH-026-c : l'activité de la partie qui tourne encore (le lot, la deuxième passe, la relecture), dite en clair ; null s'il n'y en a pas. */
+  const activiteFile = s => { const a = s.ar || {}; return a.etat === 'rel' ? 'la relecture' : a.etat === 'p2' ? 'la deuxième passe' : a.lotOuvert ? 'le lot' : null; };
   function ongletFileModele(s, u) {
     const F = s.file, actif = !!F.actif, etat = F.etat, R = F.reprise, aff = F.partieAffichee;
     const PH = { lot: 'lot en cours', passe: 'deuxième passe', relecture: 'relecture et correction', changement: 'changement de partie' };
@@ -503,7 +509,14 @@
       return m;
     }
     const seg = F.choixTous || [];
-    if (etat === 'arret') {
+    const enCours = activiteFile(s);
+    if (etat === 'arret' && enCours) {
+      /* CH-026-c : arrêtée pendant que l'activité de la partie tourne : la dire, et rien à reprendre ni à relancer avant sa fin. */
+      const off = b => b && { ...b, inactif: true };
+      Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: `Attend la fin de ${enCours}`, phrase: esc(F.phrase), alerte: F.alerte,
+        lancer: { seg: [], note: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la file s’est arrêtée et ne repartira pas seule. Reprise et nouvelle file : à sa fin.`,
+          boutons: [off(bt(F.reprendre, 'legacy:file-reprendre', 'plein')), off(lancer && { ...lancer, cls: F.reprendre ? 'second' : 'plein' })].filter(Boolean) } });
+    } else if (etat === 'arret') {
       const rep = bt(F.reprendre, 'legacy:file-reprendre', 'plein');
       Object.assign(m, { glyphe: F.alerte ? 'toi' : 'arrete', ton: F.alerte ? 'alerte' : 'attention', mot: 'File arrêtée', phrase: esc(F.phrase), alerte: F.alerte,
         lancer: { seg, note: R ? `La reprise part de la partie ${R.part} (rang ${R.rang + 1} sur ${F.n}) : ESV doit l’afficher. « Nouvelle file » part de la partie affichée.` : 'Tout est fait : une nouvelle file part de la partie affichée.',
