@@ -66,8 +66,13 @@ function controler(r, n) {
   assert.equal(f.etat, 'fin', 'file finie : ' + JSON.stringify(f.motifFin));
   assert.equal(f.motifFin.code, 'nombre-atteint'); assert.equal(f.alerte, null);
   assert.deepEqual(f.bilan.map(p => p.part), [23, 24, 25].slice(0, n));
-  assert.ok(r.chargements.filter(p => p !== null).length >= n - 1, 'au moins un rechargement par changement de partie : ' + JSON.stringify(r.chargements));
+  /* CH-026 : avec le patch d'adaptateur (test 27), le changement de partie passe d'abord par les gestes de l'opérateur (« Next non validated cut »,
+   * « dernier cut puis Next cut »), qui ouvrent la partie suivante SANS recharger la page ; le lien du sélecteur (rechargement) n'est plus qu'un repli.
+   * Preuve : une tentative réussie par changement ; un rechargement pour chaque changement passé par le lien. */
   const ch = r.ev.filter(e => e.type === 'file-parties-changement');
+  const reussis = ch.filter(e => !e.retour && e.issue === 'ok');
+  assert.equal(reussis.length, n - 1, 'une tentative réussie par changement de partie : ' + JSON.stringify(ch.map(e => [e.mode, e.issue, e.texte])));
+  assert.ok(r.chargements.filter(p => p !== null).length >= reussis.filter(e => e.mode === 'lien').length, 'un rechargement par changement passé par le lien : ' + JSON.stringify(r.chargements));
   assert.ok(ch.some(e => !e.retour && e.vers === 24), 'changement vers la partie 24 demandé');
   assert.ok(!r.commandes.includes('skipAndNext'), 'aucun SKIP');
   assert.deepEqual(r.erreurs, []);
@@ -75,7 +80,7 @@ function controler(r, n) {
   console.log(`# file de ${n} parties : ${Math.round(r.dureeMs / 1000)} s ; bilan ${JSON.stringify(f.bilan.map(p => ({ part: p.part, motifs: p.motifs, resume: p.resume, relecture: p.relecture })))} ; changements ${JSON.stringify(ch.map(e => ({ vers: e.vers, retour: e.retour, deja: e.deja })))} ; chargements ${JSON.stringify(r.chargements)} ; écritures serveur ${r.serveur.length}`);
 }
 
-test('file de 2 parties sur la maquette ESV : lots réels, relecture, changement de partie par rechargement, fin « nombre-atteint »', opts, async () => {
+test('file de 2 parties sur la maquette ESV : lots réels, relecture, changement de partie (geste de l’opérateur, ou lien en repli), fin « nombre-atteint »', opts, async () => {
   controler(await file({ n: 2, parties: 3, cuts: 5 }), 2);
 });
 test('file de 3 parties sur la maquette ESV : deux changements de partie, bilan de trois parties', opts, async () => {
