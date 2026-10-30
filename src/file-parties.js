@@ -229,7 +229,7 @@
     return l.slice(-MAX_REGISTRE);
   }
 
-  /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes, ecritsPasse, refus} ; `partie.relecture.corriges`.
+  /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes, ecritsPasse, refus} ; `partie.relecture` : {corriges, faits}.
    * Différés hors cuts écrits par la passe (D-238 : l'état du lot les garde « différés ») ; médiane des parties précédentes de la file. */
   function alertes(partie, precedents = [], seuils = SEUILS) {
     const out = [], r = partie?.resume || {}, traites = entier(r.traites);
@@ -240,8 +240,10 @@
     const med = ratios.length ? (ratios.length % 2 ? ratios[(ratios.length - 1) / 2] : (ratios[ratios.length / 2 - 1] + ratios[ratios.length / 2]) / 2) : null;
     if (dif !== null && med !== null && med > 0 && part(dif) > seuils.differesFoisMediane * med)
       out.push({ code: 'differes', texte: `différés : ${dif} sur ${traites}, plus de ${seuils.differesFoisMediane} fois la médiane des parties précédentes` });
-    const corr = entier(partie?.relecture?.corriges);
-    if (corr !== null && traites && corr / traites > seuils.corrigesPart) out.push({ code: 'corriges', texte: `cuts corrigés par la relecture : ${corr} sur ${traites}, plus de ${Math.round(seuils.corrigesPart * 100)} %` });
+    /* CH-026-c (décision de l'intégrateur, 30/10) : les corrigés sont rapportés aux cuts RELUS par la relecture (`relecture.faits`), leur population ;
+     * avant, aux cuts traités par le lot (une autre population : « 14 sur 23 » pour 220 relus). Seuil inchangé, proposé et non décidé par l'opérateur. */
+    const corr = entier(partie?.relecture?.corriges), relus = entier(partie?.relecture?.faits);
+    if (corr !== null && relus && corr / relus > seuils.corrigesPart) out.push({ code: 'corriges', texte: `cuts corrigés par la relecture : ${corr} sur ${relus} relus, plus de ${Math.round(seuils.corrigesPart * 100)} %` });
     if (entier(r.refus) !== null && r.refus >= seuils.refus) out.push({ code: 'refus', texte: `${r.refus} refus de la page` });
     return out;
   }

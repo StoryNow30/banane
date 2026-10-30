@@ -199,9 +199,13 @@ test('registre des écritures : une entrée par partie, remplacée et non doubl�
 
 test('alerte non bloquante (seuils proposés, non décidés) : différés hors passe au-delà de 2 fois la médiane, plus de 5 % corrigés, au moins 1 refus ; elle n’arrête rien', () => {
   const prec = [{ resume: { traites: 100, differes: 5, ecritsPasse: 0 } }, { resume: { traites: 100, differes: 7, ecritsPasse: 2 } }];
-  assert.deepEqual(F.alertes({ resume: { traites: 100, differes: 10, ecritsPasse: 0 }, relecture: { corriges: 5 } }, prec), []);
-  const a = F.alertes({ resume: { traites: 100, differes: 13, ecritsPasse: 1, refus: 1 }, relecture: { corriges: 6 } }, prec);
+  assert.deepEqual(F.alertes({ resume: { traites: 100, differes: 10, ecritsPasse: 0 }, relecture: { corriges: 5, faits: 100 } }, prec), []);
+  const a = F.alertes({ resume: { traites: 100, differes: 13, ecritsPasse: 1, refus: 1 }, relecture: { corriges: 6, faits: 100 } }, prec);
   assert.deepEqual(a.map(x => x.code), ['differes', 'corriges', 'refus']);
+  /* CH-026-c : population des corrigés = cuts relus (relecture.faits), pas les cuts traités par le lot. Constat du 30/10 : 14 corrigés, 23 traités, 220 relus. */
+  assert.deepEqual(F.alertes({ resume: { traites: 23 }, relecture: { corriges: 14, faits: 220 } }, []).map(x => x.texte), ['cuts corrigés par la relecture : 14 sur 220 relus, plus de 5 %']);
+  assert.deepEqual(F.alertes({ resume: { traites: 23 }, relecture: { corriges: 5, faits: 220 } }, []), [], '5 sur 220 relus (2,3 %) : pas d’alerte (avant : 5 sur 23, alerte)');
+  assert.deepEqual(F.alertes({ resume: { traites: 23 }, relecture: { corriges: 14 } }, []), [], 'relus inconnus : pas d’alerte');
   assert.deepEqual(F.alertes({ resume: { traites: 100, differes: 50 } }, []).map(x => x.code), [], 'première partie : aucune médiane, pas d’alerte de différés');
   /* l'alerte est notée au bilan, la file continue */
   let r = demarrer(2), e = F.transition(r.etat, { type: 'lot-demarre', lotId: 'L', part: 23, at }).etat;
