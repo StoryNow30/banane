@@ -1,5 +1,19 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.28 — 4.9.5 test 28 (F-V-G-S) (30/10) — test 28
+
+Manifeste `4.9.5.28` ; base : la test 27. Moteur, géométrie, GCV2, décision du lot et adaptateur de page inchangés. Premier essai de la 27 sur un vrai ESV (3 parties) : **le changement de partie a marché deux fois** (parties 2 puis 3 faites, « fin-normale », partie 4 démarrée) ; puis la file s'est affichée « arrêtée » pendant que la relecture de la partie 4 tournait.
+
+### Corrigé (CH-026-c)
+- **File « arrêtée » à tort à la fin d'un lot** : la deuxième passe (en écriture, D-259) démarre aussitôt la fin du lot ; le tic de la file comptait son écriture en vol comme une pose non validée (« écriture de la deuxième passe en vol ») et s'arrêtait en `ecriture-incertaine`, sans arrêter l'activité : la passe et la relecture continuaient seules. Le suspens a maintenant une portée : à la fin du lot, le moteur seul ; à la fin de la passe, le moteur et la passe ; à la fin de la relecture, tout. Une écriture vraiment restée en vol, activité finie, arrête toujours la file. Reproduit en VM avec le message exact de l'opérateur.
+- **Affichage cohérent** : file arrêtée pendant le lot, la passe ou la relecture : « File de parties · attend la fin de la relecture », sans « Reprendre la file » ni « Préparer la reprise » ; l'onglet File grise les boutons de reprise ; l'activité finie, l'écran d'arrêt habituel. L'issue de la passe et de la relecture finies après l'arrêt est portée au bilan de la partie.
+- **Alerte « cuts corrigés par la relecture »** : le ratio divisait les corrigés de la relecture (qui relit toute la population de verts) par les cuts traités du lot ; il est rapporté aux cuts relus (« 14 corrigés sur 220 relus »). Seuil 5 % : PROPOSÉ par la 3e relecture, jamais décidé par l'opérateur ; l'alerte ne bloque rien.
+
+### Non vérifié
+- Le cas exact en navigateur (la maquette ne produit pas de différés que la passe écrive à la fin du lot) ; la correction est éprouvée en VM.
+- Quels chemins de changement de partie ont servi sur le vrai ESV (l'export manque).
+
+
 ## 4.9.5.27 — 4.9.5 test 27 (F-V-G-S) (30/10) — test 27
 
 Manifeste `4.9.5.27` ; base : la test 26. Moteur, géométrie, GCV2 et décision du lot inchangés ; l'adaptateur de page ne change que par `changerPartie` (trois modes, voir ci-dessous). Premier essai de la file de parties sur un vrai ESV (partie 4, 30/10) : arrêt à 6 s puis lot sans file.
