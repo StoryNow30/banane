@@ -19,7 +19,7 @@ function extensionAllumee() {
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   /* Le patch de CH-017 est intégré au tronc depuis la test 25 : on ne l'applique que s'il manque encore (copie d'avant l'intégration). */
   const patch = path.join(N.racine, 'chantiers/CH-017/adaptateur-changer-partie.patch');
-  try { execFileSync('git', ['apply', '--reverse', '--check', patch], { cwd: d, stdio: 'ignore' }); } catch { execFileSync('git', ['apply', patch], { cwd: d }); }
+  if (!fs.readFileSync(path.join(d, 'src/adapter-page.js'), 'utf8').includes('function changerPartie')) execFileSync('git', ['apply', patch], { cwd: d });
   const S = path.join(d, 'src/settings.js'), t = fs.readFileSync(S, 'utf8'), a = 'const file = Object.freeze({ actif: false,';
   if (t.includes(a)) fs.writeFileSync(S, t.replace(a, 'const file = Object.freeze({ actif: true,'));
   else assert.ok(/file = (Object\.freeze\()?\{ actif: true,/.test(t));

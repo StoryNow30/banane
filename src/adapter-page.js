@@ -1356,21 +1356,44 @@
   * (`occupe`), aucun lien vers la partie (`partie-absente`), libellé « Cut N of part P » illisible. Déjà sur la partie : `deja`, rien cliqué.
   * La réponse part AVANT le clic (il recharge peut-être la page) : elle n'est qu'un ACCUSÉ DE DEMANDE {ok, mode:'lien', de:{part,cut}, vers,
   * demandeA} ; la PREUVE du changement est la partie lue ensuite par le service worker (« Cut N of part P » et rails présents, borne 60 s). */
- function changerPartie(options={}){const part=options&&typeof options==='object'?options.part:null;
-   if(!Number.isInteger(part)||part<0||part>1e6)return {ok:false,raison:'partie-invalide'};
+ /* CH-026 (PROPOSÉ ; appliqué par l'intégrateur) — LES GESTES DE L'OPÉRATEUR POUR PASSER À LA PARTIE SUIVANTE (témoignage de l'opérateur du 30/10,
+  * jamais mesuré sur un vrai ESV) : « s'il n'y a plus aucun cut à valider devant, Espace » et « aller au dernier cut de la partie puis avancer avec Z ».
+  * Ariane ne synthétise AUCUNE touche : elle clique le bouton d'ESV qui porte la même commande, dont elle lit avant l'existence et l'état.
+  *  - `invalide-suivant` : « Next non validated cut » (`O2N3DCutNextInvalid3DRail`, établi par inspection : buttonNextInvalidCut → loadNextInvalidCut,
+  *    chemin séparé de la validation et du SKIP). Seulement si le compteur « N on M treated » dit N = M (plus rien à valider dans la partie) :
+  *    sinon refus `reste-a-valider`, rien cliqué (le bouton irait au cut non validé, dans la même partie).
+  *  - `suivant-dernier` : « Next cut » (`O2N3DCutNext3DRail`, relevé au banc ESV local, l'équivalent de Z = cut suivant) depuis le DERNIER cut de la
+  *    partie (index M − 1 ; le service worker y va d'abord par `goToCut`). Sinon refus `pas-au-dernier-cut`, rien cliqué.
+  *  - `lien` (défaut, CH-017) : clic sur l'entrée « p=N » du sélecteur, en dernier repli.
+  * Aucun de ces chemins n'émet de validation, de SKIP ni de pose ; chaque réponse le dit, avec le compteur et l'identité lus avant. La réponse part
+  * AVANT le clic : un accusé de demande ; la preuve reste la partie lue ensuite par le service worker. */
+ const MODES_PARTIE=['lien','invalide-suivant','suivant-dernier'];
+ function changerPartie(options={}){const o=options&&typeof options==='object'?options:{},part=o.part,mode=MODES_PARTIE.includes(o.mode)?o.mode:'lien';
+   if(!Number.isInteger(part)||part<0||part>1e6)return {ok:false,raison:'partie-invalide',mode};
    const autres=[...actionsEnCours.values()].filter(a=>a!=='changerPartie'&&!LECTURES.has(a));
-   if(autres.length)return {ok:false,raison:'occupe',action:autres[0]};
-   const lu=cutLabel();if(!lu)return {ok:false,raison:'libelle-illisible'};
-   const de={part:lu.part,cut:lu.cut};if(lu.part===part)return {ok:true,deja:true,mode:'lien',de,vers:part};
+   if(autres.length)return {ok:false,raison:'occupe',action:autres[0],mode};
+   const lu=cutLabel();if(!lu)return {ok:false,raison:'libelle-illisible',mode};
+   const de={part:lu.part,cut:lu.cut};if(lu.part===part)return {ok:true,deja:true,mode,de,vers:part};
+   let compteur=null;try{const r=releverEsv(null);compteur=r.compteur&&!(r.compteursVus>1)?{traites:r.compteur.traites,total:r.compteur.total}:null;}catch{compteur=null;}
+   const base={mode,de,vers:part,compteur,validationCommandSent:false,skipCommandSent:false,keyboardSent:false};
+   if(mode!=='lien'){
+     if(!compteur)return {ok:false,raison:'compteur-illisible',...base};
+     const id=mode==='invalide-suivant'?selectors.next:navigation.suivant,b=commandInfo(id);
+     if(mode==='invalide-suivant'&&compteur.traites<compteur.total)return {ok:false,raison:'reste-a-valider',bouton:b,...base};
+     if(mode==='suivant-dernier'&&lu.cut!==compteur.total-1)return {ok:false,raison:'pas-au-dernier-cut',dernier:compteur.total-1,bouton:b,...base};
+     if(!b.exists)return {ok:false,raison:'bouton-absent',bouton:b,...base};
+     if(b.disabled)return {ok:false,raison:'bouton-desactive',bouton:b,...base};
+     setTimeout(()=>{try{nativeClick(id);}catch{/* le service worker ne verra pas la partie : borne */}},0);
+     return {ok:true,...base,bouton:b,demandeA:Date.now()};}
    const lien=[...document.querySelectorAll('a[href]')].slice(0,5000).find(a=>{try{return new URL(a.getAttribute('href'),location.href).searchParams.get('p')===String(part);}catch{return false;}});
-   if(!lien)return {ok:false,raison:'partie-absente'};
+   if(!lien)return {ok:false,raison:'partie-absente',...base};
    setTimeout(()=>{try{lien.click();}catch{/* le service worker ne verra pas la partie : borne */}},0);
-   return {ok:true,mode:'lien',de,vers:part,demandeA:Date.now()};}
+   return {ok:true,...base,demandeA:Date.now()};}
  let intrusion=null;
  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
    const selecteur=options&&typeof options==='object'&&options.contrat===true&&relOn('selecteurParties')?(()=>{try{return selecteurParties();}catch{return {status:'illisible',current:null,parts:[]};}})():null;
-   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,capacites:['changerPartie'],...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,changerPartie,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
+   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,changerPartie,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
    amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},

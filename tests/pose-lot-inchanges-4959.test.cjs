@@ -28,7 +28,8 @@ const HABILLAGE=['ui5.js','ui5-variante.js','signal-rendu.js'];
  * celle de la deuxième passe ; module du panneau, il ne parle qu'au service worker. Ces deux changements retirés, il est celui de la test 8 (contrôlé plus bas). */
 /* Test 25 (CH-018) : le déplacement de la vue à geste réglable, éteint par défaut. `gestes-vue.js` gagne `sequenceClicDroit` (non appelée tant que le réglage est éteint) ; l'adaptateur gagne un patch (chantiers/CH-018/adapter-deplacement.patch), retiré ici à l'envers avant la comparaison à la test 8 ; les réglages gagnent `deplacerVue.deplacement` (actif:false). */
 const sansClicDroit=s=>s.replace(/ \/\* Glisser au bouton droit \(CH-018\)[\s\S]*?\n   return seq;\n \}\n/,'').replace('sequenceGlisser,sequenceClicDroit,construire','sequenceGlisser,construire');
-const sansPatchs=texte=>sansPatchCH018(texte.replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie'],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
+const sansPatchs=texte=>sansPatchCH018(texte.replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
+/* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
 /* Test 25 (CH-017, D-268) : `changerPartie` (clic sur l'entrée « p=N » du sélecteur de parties, jamais de pose ni de validation) ajouté à l'adaptateur et à la liste du pont ; retiré ici avant la comparaison à la test 8. */
 const sansChangerPartiePont=s=>s.replace("'changerPartie',",'');
 const sansPatchCH018=texte=>{const os=require('node:os'),{spawnSync}=require('node:child_process'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch018-'));
@@ -58,7 +59,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split('4.9.5.26').join('4.9.5.8').split('4.9.5 test 26 (F-V-G-S)').join('4.9.5 test 8'):lire(f);
+  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split('4.9.5.27').join('4.9.5.8').split('4.9.5 test 27 (F-V-G-S)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);

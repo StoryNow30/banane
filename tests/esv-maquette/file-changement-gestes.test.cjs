@@ -16,7 +16,9 @@ function extensionPatchee() {
   for (const f of ['manifest.json', 'background.js', 'panel.html', 'panel.js']) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   for (const r of ['src', 'vendor', 'icons', 'fonts', 'datasets']) if (fs.existsSync(path.join(N.racine, r))) fs.cpSync(path.join(N.racine, r), path.join(d, r), { recursive: true });
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
-  execFileSync('git', ['apply', path.join(N.racine, 'chantiers/CH-026/adaptateur-changement-partie.patch')], { cwd: d });
+  /* Le patch est intégré à l'adaptateur depuis la test 27 : on ne l'applique que s'il manque (copie d'avant l'intégration). */
+  const patch = path.join(N.racine, 'chantiers/CH-026/adaptateur-changement-partie.patch');
+  try { execFileSync('git', ['apply', '--reverse', '--check', patch], { cwd: d, stdio: 'ignore' }); } catch { execFileSync('git', ['apply', patch], { cwd: d }); }
   return d;
 }
 
