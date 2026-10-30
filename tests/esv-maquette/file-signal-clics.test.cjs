@@ -115,7 +115,7 @@ test('CH-026 · onglet « File » : lancer, arrêter (confirmé), puis « Repren
     await m.pan.click('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]');
     await attendreLotDeFile(m);
     const g = (await m.api('file-etat')).file; assert.deepEqual([...g.plan], [23, 24]); assert.equal(g.rang, 0);
-    const ev = ((await m.api('journal')).events || []).filter(e => e.type === 'file-parties' && e.evenement === 'demarrer');
+    const ev = ((await m.api('journal')).events || []).filter(e => e.type === 'file-parties' && e.evenement === 'demarrer').sort((a, b) => String(a.timestamp).localeCompare(String(b.timestamp)));
     assert.equal(ev.length, 2); assert.equal(ev[1].reprise, 23); assert.equal(ev[1].remplace?.etat, 'arret');
     assert.deepEqual((await m.messages()).filter(a => /^file-/.test(a)), ['file-demarrer', 'file-arreter', 'file-demarrer']);
     assert.deepEqual(m.erreurs, []);

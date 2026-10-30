@@ -78,8 +78,9 @@ test('sélecteur disparu après le départ (comme les relevés réels de 14:21 p
 
 test('ni geste ni sélecteur ne changent de partie : arrêt avec alerte lisible dans l’onglet « File », journal complet (3 tentatives, sélecteur avant et après)', { ...opts, timeout: 300000 }, async () => {
   const r = await file({ maquette: { selecteur: 1, traversee: 0 }, sansSelecteurApres: true });
-  assert.equal(r.v?.etat, 'arret'); assert.equal(r.v.motifFin.code, 'changement-impossible');
-  assert.equal(r.signal.mot, 'File arrêtée'); assert.match(r.signal.alerte, /la page d’ESV ne change pas de partie/); assert.match(r.signal.alerte, /essayé : invalide-suivant : .* ; suivant-dernier : .* ; lien : aucune entrée vers la partie 24/);
+  /* Le dernier repli (le lien) ne trouve aucune entrée : motif « selecteur-illisible », celui de la dernière tentative. */
+  assert.equal(r.v?.etat, 'arret'); assert.equal(r.v.motifFin.code, 'selecteur-illisible');
+  assert.equal(r.signal.mot, 'File arrêtée'); assert.match(r.signal.alerte, /le sélecteur de parties d’ESV n’offre plus la partie suivante/); assert.match(r.signal.alerte, /essayé : invalide-suivant : .* ; suivant-dernier : .* ; lien : aucune entrée vers la partie 24/);
   assert.equal(r.echecs.length, 1); assert.equal(r.echecs[0].tentatives.length, 3); assert.deepEqual({ ...r.echecs[0].selecteurAvant }, { status: 'absent', current: null, n: 0, vers: false });
   assert.ok(r.echecs[0].selecteurApres); aucuneDecisionDuGeste(r); assert.deepEqual(r.erreurs, []);
   console.log(`# échec : ${r.signal.alerte}`);
