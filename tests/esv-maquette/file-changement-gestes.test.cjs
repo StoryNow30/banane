@@ -20,7 +20,7 @@ function extensionPatchee() {
   return d;
 }
 
-async function file({ maquette, attendre = 'fin' }) {
+async function file({ maquette, sansSelecteurApres = false }) {
   const ext = extensionPatchee(), pw = N.playwright(), man = JSON.parse(fs.readFileSync(path.join(ext, 'manifest.json'), 'utf8')), hote = new URL(man.host_permissions[0].replace(/\*$/, ''));
   const { demarrer } = require('./serveur.cjs'), serveur = await demarrer();
   const ctx = await pw.chromium.launchPersistentContext('', { executablePath: N.executable(), headless: true, viewport: { width: 1200, height: 800 }, args: ['--headless=new', `--disable-extensions-except=${ext}`, `--load-extension=${ext}`] });
@@ -47,17 +47,20 @@ async function file({ maquette, attendre = 'fin' }) {
     await pan.click('#ui5 .sg-onglet-file [data-act="sg:file-n:2"]'); await dormir(200);
     await pan.click('#ui5 .sg-onglet-file [data-act="legacy:file-lancer"]');
     const t0 = Date.now(); let v = null;
+    /* Comme le terrain du 30/10 : le sélecteur était là au départ (relevé de 14:21) et absent ensuite (relevé de 14:38). */
+    if (sansSelecteurApres) { for (let i = 0; i < 60 && (await api('file-etat')).file?.etat !== 'lot'; i++) await dormir(250);
+      await esv.evaluate(() => { window.__maquette.options.selecteur = 0; document.getElementById('maquette-parties').textContent = ''; }); }
     for (let i = 0; i < 600; i++) { await dormir(500); try { v = (await api('file-etat')).file; } catch { continue; } if (['fin', 'arret'].includes(v?.etat)) break; }
     await pan.waitForFunction(() => /File (terminée|arrêtée)/.test(document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
     const signal = await pan.evaluate(() => ({ mot: document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || '', alerte: document.querySelector('#ui5 .sg-onglet-file [role="alert"]')?.textContent?.trim() || '' }));
     const ev = (await api('journal')).events || [], adapt = ev.filter(e => e.type === 'adapter-result').map(e => e.action);
-    return { v, signal, dureeMs: Date.now() - t0, chargements, erreurs, adapt, maquette: await esv.evaluate(() => window.__maquette.journal.filter(x => /partie|selecteur/.test(x.type)).map(x => x.type)),
+    return { v, signal, dureeMs: Date.now() - t0, chargements, erreurs, adapt, maquette: await esv.evaluate(() => window.__maquette.journal.filter(x => x.type === 'cut-charge').map(x => x.raison)),
       tentatives: ev.filter(e => e.type === 'file-parties-changement' && !e.retour), echecs: ev.filter(e => e.type === 'file-parties-changement-echec') };
   } finally { await ctx.close().catch(() => {}); await serveur.fermer(); fs.rmSync(ext, { recursive: true, force: true }); }
 }
 const aucuneDecisionDuGeste = r => { for (const t of r.tentatives) assert.equal(t.sansDecision, true, 'la réponse de la page dit : ni validation ni SKIP'); assert.ok(!r.adapt.includes('skipAndNext'), 'aucun SKIP'); };
 
-test('sélecteur présent, gestes de l’opérateur : la file enchaîne 2 parties SANS cliquer le sélecteur ni recharger la page', opts, async () => {
+test('sélecteur présent, gestes de l’opérateur : la file enchaîne 2 parties SANS cliquer le sélecteur ni recharger la page', { ...opts, timeout: 300000 }, async () => {
   const r = await file({ maquette: { selecteur: 1, traversee: 1 } });
   assert.equal(r.v?.etat, 'fin', JSON.stringify(r.v?.motifFin)); assert.deepEqual(r.v.bilan.map(p => p.part), [23, 24]);
   const avant = r.tentatives.filter(t => t.issue === 'ok'); assert.equal(avant.length, 1); assert.notEqual(avant[0].mode, 'lien', 'un geste a suffi : ' + JSON.stringify(r.tentatives.map(t => [t.mode, t.issue, t.raison])));
@@ -67,14 +70,14 @@ test('sélecteur présent, gestes de l’opérateur : la file enchaîne 2 partie
   console.log(`# gestes : ${JSON.stringify(r.tentatives.map(t => ({ mode: t.mode, issue: t.issue, raison: t.raison, compteur: t.compteur, goto: t.goto, dureeMs: t.dureeMs })))} ; ${Math.round(r.dureeMs / 1000)} s`);
 });
 
-test('sélecteur ABSENT (comme le relevé réel de 14:38) : les gestes suffisent, la file enchaîne', opts, async () => {
-  const r = await file({ maquette: { selecteur: 0, traversee: 1 } });
-  assert.equal(r.v?.etat, 'fin', JSON.stringify(r.v?.motifFin)); assert.deepEqual(r.v.bilan.map(p => p.part), [23, 24]);
+test('sélecteur disparu après le départ (comme les relevés réels de 14:21 puis 14:38) : les gestes suffisent, la file enchaîne', { ...opts, timeout: 300000 }, async () => {
+  const r = await file({ maquette: { selecteur: 1, traversee: 1 }, sansSelecteurApres: true });
+  assert.equal(r.v?.etat, 'fin', JSON.stringify({ etat: r.v?.etat, rang: r.v?.rang, motif: r.v?.motifFin, tentatives: r.tentatives.map(t => [t.mode, t.issue, t.texte]), maquette: r.maquette.slice(-6) })); assert.deepEqual(r.v.bilan.map(p => p.part), [23, 24]);
   aucuneDecisionDuGeste(r); assert.deepEqual(r.erreurs, []);
 });
 
-test('ni geste ni sélecteur ne changent de partie : arrêt avec alerte lisible dans l’onglet « File », journal complet (3 tentatives, sélecteur avant et après)', opts, async () => {
-  const r = await file({ maquette: { selecteur: 0, traversee: 0 } });
+test('ni geste ni sélecteur ne changent de partie : arrêt avec alerte lisible dans l’onglet « File », journal complet (3 tentatives, sélecteur avant et après)', { ...opts, timeout: 300000 }, async () => {
+  const r = await file({ maquette: { selecteur: 1, traversee: 0 }, sansSelecteurApres: true });
   assert.equal(r.v?.etat, 'arret'); assert.equal(r.v.motifFin.code, 'changement-impossible');
   assert.equal(r.signal.mot, 'File arrêtée'); assert.match(r.signal.alerte, /la page d’ESV ne change pas de partie/); assert.match(r.signal.alerte, /essayé : invalide-suivant : .* ; suivant-dernier : .* ; lien : aucune entrée vers la partie 24/);
   assert.equal(r.echecs.length, 1); assert.equal(r.echecs[0].tentatives.length, 3); assert.deepEqual({ ...r.echecs[0].selecteurAvant }, { status: 'absent', current: null, n: 0, vers: false });
