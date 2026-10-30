@@ -245,12 +245,15 @@
         phrase: `Vers la partie ${mono(F.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` });
       return;
     }
-    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: F.bilan, principal: fp }); return; }
+    /* CH-026 : file arrêtée, « Reprendre la file » (au rang interrompu, `#file-reprendre`) remplace « Préparer la reprise » : celui-ci oubliait la file, et
+     * l'écran suivant offrait le « Reprendre » du LOT, que l'opérateur a pris pour la reprise de la file (test 26, 14:22:11 puis 14:22:15). */
+    const rep = F.reprendre ? { texte: F.reprendre.texte, act: 'legacy:file-reprendre', ic: 'play', inactif: !F.reprendre.actif } : null;
+    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: F.bilan, principal: rep || fp }); return; }
     const arret = F.etat === 'arret', ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout');
     m.file = null;
     Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'File arrêtée' : 'File terminée',
       phrase: esc(F.phrase), objet: null, fin: null, incident: F.alerte ? { texte: F.alerte } : null, verrou: false, raison: '', fileBilan: F.bilan,
-      principal: fp, secondaires: ex ? [versAction(ex)] : [] });
+      principal: rep || fp, secondaires: [ex ? versAction(ex) : null, { texte: 'Onglet File de parties', act: 'sg:onglet-file' }].filter(Boolean) });
   }
   function modeleEcho(s, a, g, m, partie) {
     const { primaire, autres } = boutonsPanneau(s.boutonsEcho, 'native'), E = g.echo || {};
@@ -394,12 +397,15 @@
   }
   function barreHtml(snap, m, ui) {
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
-    const seg = (k, t) => { const off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${m.activite === k}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : m.activite === k ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
+    /* CH-026 : troisième onglet « File » (la file de parties) : une vue de Signal ; Orbite et Écho y redeviennent cliquables. */
+    const surFile = ui.onglet === 'file' && !!snap.file;
+    const seg = (k, t) => { const choisi = !surFile && m.activite === k, off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${choisi}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : choisi ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
+    const segFile = snap.file ? `<button type="button" role="tab" aria-selected="${surFile}"${surFile ? '' : ' data-act="sg:onglet-file"'}>File</button>` : '';
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
     /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
     const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
     const court = String(texte).split(' · ')[0];
-    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}</div><span class="sg-espace"></span>
+    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
 <button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
@@ -421,6 +427,7 @@
     add('export', 'Exporter le dossier', 'legacy:export-tout', '', ex && ex.actif ? '' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant');
     const autre = m.activite === 'echo' ? 'orbite' : 'echo';
     add(autre === 'echo' ? 'echo' : 'orbite', autre === 'echo' ? 'Passer en Écho' : 'Passer en Orbite', `mode:${autre === 'echo' ? 'native' : 'automatic'}`, '', m.bascule.verrou ? m.bascule.raison : '');
+    if (snap.file && ui.onglet !== 'file') add('liste', 'Onglet File de parties', 'sg:onglet-file', '');
     add('reglages', 'Réglages', 'sg:reglages', '');
     add('globe', 'Onglets ESV', 'sg:esv', g.onglet || '');
     if (g.connexion?.reconnect?.visible) add('retour', 'Reconnecter ESV', 'legacy:reconnect', '', g.connexion.reconnect.actif ? '' : 'reconnexion en cours');
@@ -476,8 +483,60 @@
   }
 
   /* ------------------------------------------------------------------ écran */
+  /* CH-026 : L'ONGLET « File de parties » (maquette Figma, page « CH-026 · Onglet File de parties » : prête, en cours, arrêtée avec alerte, finie). D'après
+   * `snap.file` (src/ui5.js : la carte de la file du panneau d'origine et ses boutons). Lancer, reprendre, relancer, arrêter : des clics sur les boutons
+   * d'origine (`#file-lancer`, `#file-reprendre`, `#file-secondaire`, `#file-n`) ; l'export est celui d'Orbite. Aucun message nouveau au service worker. */
+  const nP = n => `${n} ${n > 1 ? 'parties' : 'partie'}`;
+  const milliers = v => Number.isInteger(v) ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : '';
+  function ongletFileModele(s, u) {
+    const F = s.file, actif = !!F.actif, etat = F.etat, R = F.reprise, aff = F.partieAffichee;
+    const PH = { lot: 'lot en cours', passe: 'deuxième passe', relecture: 'relecture et correction', changement: 'changement de partie' };
+    const m = { glyphe: 'pret', ton: 'encre2', mot: 'File prête', phrase: '', bandeau: null, alerte: '', lancer: null, bilan: F.bilan || [], vide: '' };
+    const bt = (b, act, cls) => b ? { texte: b.texte, act, inactif: !b.actif, cls } : null;
+    const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout');
+    const lancer = bt(F.lancer, 'legacy:file-lancer', 'plein');
+    if (actif) {
+      const conf = !!u.confirmeFile;
+      Object.assign(m, { glyphe: 'cours', ton: 'vivant', mot: 'File en cours', phrase: `Partie ${(F.rang ?? 0) + 1} sur ${F.n ?? '?'} · partie ${F.part ?? F.vers ?? '?'} · ${PH[etat] || etat}`,
+        vide: 'Aucune partie finie pour l’instant.',
+        bandeau: { etatTexte: F.etatTexte, phrase: F.phrase, secondaire: F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la file' : F.secondaire.texte, act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif } : null } });
+      return m;
+    }
+    const seg = F.choixTous || [];
+    if (etat === 'arret') {
+      const rep = bt(F.reprendre, 'legacy:file-reprendre', 'plein');
+      Object.assign(m, { glyphe: F.alerte ? 'toi' : 'arrete', ton: F.alerte ? 'alerte' : 'attention', mot: 'File arrêtée', phrase: esc(F.phrase), alerte: F.alerte,
+        lancer: { seg, note: R ? `La reprise part de la partie ${R.part} (rang ${R.rang + 1} sur ${F.n}) : ESV doit l’afficher. « Nouvelle file » part de la partie affichée.` : 'Tout est fait : une nouvelle file part de la partie affichée.',
+          boutons: [rep, lancer && { ...lancer, cls: rep ? 'second' : 'plein' }].filter(Boolean) } });
+    } else if (etat === 'fin') {
+      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'File terminée', phrase: esc(F.phrase),
+        lancer: { seg, note: 'Une nouvelle file part de la partie affichée dans ESV, sans recharger l’extension.', boutons: [lancer, ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', inactif: !ex.actif, cls: 'second' } : null].filter(Boolean) } });
+    } else {
+      Object.assign(m, { phrase: aff !== null ? `Partie ${mono(aff)} affichée dans ESV · rien n’est lancé` : 'Aucune partie affichée dans ESV · rien n’est lancé', vide: 'Aucune file lancée depuis l’ouverture du panneau.',
+        lancer: { seg, note: `À partir de la partie affichée dans ESV${aff !== null ? ` (partie ${aff})` : ''}, puis les suivantes du sélecteur. Relecture et correction après chaque partie, toujours. Pas d’export automatique.`, boutons: [lancer].filter(Boolean) } });
+    }
+    return m;
+  }
+  function ongletFileHtml(s, u) {
+    const m = ongletFileModele(s, u), F = s.file;
+    const bouton = b => b ? `<button type="button" class="${b.cls === 'plein' ? 'sg-principal' : 'sg-secondaire sg-cadre'}${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${b.cls === 'plein' ? ic('play') : ''}<span>${esc(b.texte)}</span></button>` : '';
+    const titre = t => `<h2 class="sg-of-t">${esc(t)}</h2>`;
+    let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
+    if (m.bandeau) { const B = m.bandeau; h += `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>File de parties</b>${B.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(B.etatTexte)}</span>` : ''}</p>${B.phrase ? `<p>${esc(B.phrase)}</p>` : ''}${B.secondaire ? `<div class="sg-file-bts"><button type="button" class="sg-secondaire sg-danger" data-act="${esc(B.secondaire.act)}"${B.secondaire.inactif ? ' disabled' : ''}>${esc(B.secondaire.texte)}</button></div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`; }
+    if (m.alerte) h += `<div class="sg-incident" role="alert"><p>${esc(m.alerte)}</p></div>`;
+    if (m.lancer) { const L = m.lancer;
+      h += `<section class="sg-of-sec" aria-label="Lancer la file">${titre('Lancer la file')}${L.seg.length ? `<div class="sg-of-ligne"><span>Nombre de parties</span><span class="sg-seg" role="group" aria-label="Nombre de parties">${L.seg.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span></div>` : ''}<p class="sg-meta">${esc(L.note)}</p>${L.boutons.length ? `<div class="sg-actions">${L.boutons.map(bouton).join('')}</div>` : ''}</section>`; }
+    h += `<section class="sg-of-sec" aria-label="Bilan de la file">${titre('Bilan de la file')}${m.bilan.length ? bilanHtml(m.bilan) : `<p class="sg-meta">${esc(m.vide)}</p>`}</section>`;
+    const D = F.departs || [];
+    h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">skippés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Chiffres de la liste d’ESV au départ de chaque lot ; skippés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ de partie noté pour l’instant.</p>'}</section>`;
+    return `<section class="sg-instrument sg-onglet-file" aria-live="polite" aria-label="File de parties">${h}</section>`;
+  }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
+    if (u.onglet === 'file' && s.file) {
+      const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
+      return `<div class="sg-fen" data-activite="file" data-etat="${esc(s.file.etat)}">${barreHtml(s, m, u)}${ongletFileHtml(s, u)}${cacheHtml(s, m)}${couche}</div>`;
+    }
     const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${m.bornesLot ? `<p class="sg-lot-bornes">${m.bornesLot}</p>` : ''}</div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${fileHtml(m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
     const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'file' ? boiteFileHtml(s) : '';
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;

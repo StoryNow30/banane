@@ -313,24 +313,31 @@
  const fileUI={n:2,prete:false};
  const nParties=n=>`${n} ${n>1?'parties':'partie'}`;
  function afficherFile(s){const el=$('file-parties');if(!el)return;const present=Object.hasOwn(s||{},'fileParties');el.hidden=!present;if(!present)return;
-  const f=s.fileParties,actifF=!!f&&['lot','passe','relecture','changement'].includes(f.etat),PH={lot:'lot en cours',passe:'deuxième passe',relecture:'relecture et correction',changement:'changement de partie'};
+  const f=s.fileParties,actifF=!!f&&['lot','passe','relecture','changement'].includes(f.etat),faitesF=(f?.bilan||[]).filter(p=>!p.interrompue).length,PH={lot:'lot en cours',passe:'deuxième passe',relecture:'relecture et correction',changement:'changement de partie'};
   $('file-etat').textContent=!f?(fileUI.prete?'préparée':'prête'):actifF?`partie ${f.rang+1} sur ${f.n}`:f.etat==='fin'?'terminée':'arrêtée';
   $('file-phrase').textContent=!f?(fileUI.prete?`Préparée · ${nParties(fileUI.n)} à partir de la partie affichée · rien n’est lancé.`:'Enchaîne les parties programmées (premier essai : 2, l’opérateur présent).')
    :actifF?`Partie ${f.enCours?.part??f.changement?.vers??'?'} · ${PH[f.etat]}${f.changement?` vers la partie ${f.changement.vers}`:''}.`
    :f.etat==='fin'?`${nParties(f.bilan.length)} faites · la file s’est éteinte. Export : prêt, jamais automatique.`
-   :`${f.motifFin?.texte||'arrêtée'} · ${f.bilan.length} ${f.bilan.length>1?'parties faites':'partie faite'} sur ${f.n} · rien exporté.`;
+   :`${f.motifFin?.texte||'arrêtée'} · ${faitesF} ${faitesF>1?'parties faites':'partie faite'} sur ${f.n} · rien exporté.`;
   const reg=$('file-reglage');reg.hidden=!!f;const seg=$('file-n');
-  if(!f&&seg&&seg.childElementCount===0)for(const v of [1,2,3,4,5,8]){const bt=document.createElement('button');bt.type='button';bt.textContent=String(v);bt.dataset.n=String(v);
+  /* CH-026 : les boutons du nombre existent aussi file arrêtée ou finie (cachés ici : l'onglet « File » de Signal les offre pour une nouvelle file). */
+  if(seg&&seg.childElementCount===0)for(const v of [1,2,3,4,5,8]){const bt=document.createElement('button');bt.type='button';bt.textContent=String(v);bt.dataset.n=String(v);
    bt.onclick=()=>{fileUI.n=v;fileUI.prete=false;afficherFile(state);};seg.appendChild(bt);}
   if(seg)for(const bt of seg.children)bt.setAttribute('aria-pressed',String(Number(bt.dataset.n)===fileUI.n));
   const al=$('file-alerte');al.hidden=!f?.alerte;al.textContent=f?.alerte?`${f.alerte.texte}${f.alerte.detail?` (${f.alerte.detail})`:''}.`:'';
   const bil=$('file-bilan');bil.hidden=!f?.bilan?.length;bil.textContent='';
   for(const p of f?.bilan||[]){const li=document.createElement('li'),r=p.resume||{};
-   li.textContent=`Partie ${p.part} · ${r.poses??'?'} posés, ${r.differes??'?'} différés${p.passe?.ecrits?`, ${p.passe.ecrits} écrits par la passe`:''} · relecture ${p.relecture?.issue??'—'}${Number.isInteger(p.relecture?.corriges)?`, ${p.relecture.corriges} corrigés`:''}${p.motifs.length?` · ${p.motifs.join(', ')}`:''}${p.alertes?.length?` · alerte : ${p.alertes.map(a=>a.texte).join(' ; ')}`:''}`;bil.appendChild(li);}
+   li.textContent=`Partie ${p.part}${p.interrompue?' · interrompue':''} · ${r.poses??'?'} posés, ${r.differes??'?'} différés${p.passe?.ecrits?`, ${p.passe.ecrits} écrits par la passe`:''} · relecture ${p.relecture?.issue??'—'}${Number.isInteger(p.relecture?.corriges)?`, ${p.relecture.corriges} corrigés`:''}${p.motifs.length?` · ${p.motifs.join(', ')}`:''}${p.alertes?.length?` · alerte : ${p.alertes.map(a=>a.texte).join(' ; ')}`:''}`;bil.appendChild(li);}
   const pr=$('file-principal'),se=$('file-secondaire');
   if(!f){pr.hidden=false;pr.textContent=fileUI.prete?`Lancer la file · ${nParties(fileUI.n)}`:'Préparer la file';se.hidden=true;}
   else if(actifF){pr.hidden=true;se.hidden=false;se.textContent='Arrêter la file';se.className='danger';}
-  else{pr.hidden=false;const reste=f.n-f.bilan.length;pr.textContent=f.etat==='arret'&&reste>0?`Préparer la reprise · ${nParties(reste)} restante${reste>1?'s':''}`:'Fermer le bilan';se.hidden=true;}}
+  else{pr.hidden=false;const reste=f.reprise?.reste??0;pr.textContent=f.etat==='arret'&&reste>0?`Préparer la reprise · ${nParties(reste)} restante${reste>1?'s':''}`:'Fermer le bilan';se.hidden=true;}
+  /* CH-026 : l'onglet « File » de Signal lance d'un clic (pas d'étape « Préparer ») et reprend une file arrêtée AU RANG INTERROMPU : la partie du plan qui
+   * n'a pas fini (`reprise` de src/file-parties.js : la partie interrompue, ou la suivante), que le service worker exige affichée dans ESV (`depuis`). */
+  const la=$('file-lancer'),rp=$('file-reprendre');
+  if(la){la.hidden=actifF;la.textContent=`${!f?'Lancer la file':f.etat==='fin'?'Relancer une file':'Nouvelle file'} · ${nParties(fileUI.n)}`;}
+  if(rp){const R=f?.reprise;rp.hidden=!(f?.etat==='arret'&&R&&R.reste>0);
+   rp.textContent=R?`Reprendre la file · ${nParties(R.reste)} restante${R.reste>1?'s':''}`:'Reprendre la file';rp.dataset.depuis=R?String(R.part):'';rp.dataset.rang=R?String(R.rang+1):'';}}
  function afficherVerts(s){const el=$('verts-controle'),L=verts.liste,b=s?.batch;if(!el)return;
   if(!vertsActif()||!L||L.actif===false||!Number.isInteger(L.partie)||(b&&OUVERT.includes(b.state))){el.hidden=true;return;}
   el.hidden=false;
@@ -896,7 +903,7 @@
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
- globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,
+ globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),   /* CH-026 : les départs des parties, pour l'onglet « File » */
    apres:f=>{if(typeof f!=='function')return;hooksRendu.push(f);if(state)try{f(state);}catch{/* idem */}}});
  /* T20a (D-243, D-250) — « RECONNECTER » : ré-équipe l'onglet ESV choisi (action `reconnect` du service worker, aucune commande ESV). Caché sans onglet
   * (statut `no-tab`, ou jamais connecté), grisé pendant la reconnexion (`reconnecting`). */
@@ -1339,12 +1346,20 @@ on('native-discard',async()=>{
   note(`Session abandonnée : ${r.clouds} objet(s) LiDAR, ${r.records} visite(s) et ${r.events} événement(s) supprimés.`);
 });
     /* CH-017 : boutons de la file de parties (mêmes réglages du lot que « Démarrer le lot »). */
+    const LOT_FILE={testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',unresolvedPolicy:'defer',lotDecision:'apply',geometryEngine:'geometry-candidate-v1'};
     on('file-principal',async()=>{const f=state?.fileParties;
-     if(f&&['fin','arret'].includes(f.etat)){const reste=f.n-f.bilan.length;await api('file-oublier');if(f.etat==='arret'&&reste>0){fileUI.n=reste;fileUI.prete=true;}return;}
+     if(f&&['fin','arret'].includes(f.etat)){const reste=f.reprise?.reste??0;await api('file-oublier');if(f.etat==='arret'&&reste>0){fileUI.n=reste;fileUI.prete=true;}return;}
      if(!fileUI.prete){fileUI.prete=true;if(state)afficherFile(state);return;}
      if(!state?.current)throw Error('Connecte ESV avant de lancer la file.');
      await api('settings',{mode:'automatic-test'});fileUI.prete=false;
-     return api('file-demarrer',{n:fileUI.n,lotArgs:{testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',unresolvedPolicy:'defer',lotDecision:'apply',geometryEngine:'geometry-candidate-v1'}});});
+     return api('file-demarrer',{n:fileUI.n,lotArgs:LOT_FILE});});
+    /* CH-026 : lancer d'un clic (au repos, ou une nouvelle file après une file arrêtée ou finie : le service worker la remplace) ; reprendre au rang. */
+    on('file-lancer',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer la file.');
+     await api('settings',{mode:'automatic-test'});fileUI.prete=false;return api('file-demarrer',{n:fileUI.n,lotArgs:LOT_FILE});});
+    on('file-reprendre',async()=>{const f=state?.fileParties,reste=f?.reprise?.reste??0,depuis=f?.reprise?.part;
+     if(f?.etat!=='arret'||reste<1||!Number.isInteger(depuis))throw Error('Aucune file arrêtée à reprendre.');
+     if(!state?.current)throw Error('Connecte ESV avant de reprendre la file.');
+     await api('settings',{mode:'automatic-test'});fileUI.prete=false;return api('file-demarrer',{n:reste,depuis,lotArgs:LOT_FILE});});
     if($('file-secondaire'))$('file-secondaire').onclick=()=>{api('file-arreter').then(()=>refresh(),e=>note(e.message,true));};
     on('start-batch',async()=>{if(!state?.current)throw Error('Connecte ESV avant de lancer le lot.');
    await api('settings',{mode:'automatic-test'});

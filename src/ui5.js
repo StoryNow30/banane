@@ -21,7 +21,7 @@
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
   const VARIANTES = ['signal'], defaut = 'signal';
   const TAILLE = { signal: [600, 760] };
-  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '' };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
@@ -194,7 +194,26 @@
       alerte: visible('file-alerte') ? txt('file-alerte') : '',
       bilan: visible('file-bilan') ? [...($('file-bilan')?.querySelectorAll?.('li') || [])].map(li => String(li.textContent || '').trim()).filter(Boolean) : [],
       principal: bouton('file-principal'), secondaire: bouton('file-secondaire'),
+      /* CH-026 : l'onglet « File » : le plan, la reprise (src/file-parties.js `repriseDe`), les boutons d'un clic, le nombre choisi (lu même caché),
+       * la partie affichée dans ESV et les départs des parties (fiches de départ du panneau d'origine). */
+      rang: Number.isInteger(f?.rang) ? f.rang : null, part: f?.enCours?.part ?? null, plan: Array.isArray(f?.plan) ? f.plan.slice() : [],
+      faites: (f?.bilan || []).filter(p => !p.interrompue).length, reprise: f?.reprise || null,
+      lancer: bouton('file-lancer'), reprendre: bouton('file-reprendre'),
+      choixTous: [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)),
+      partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
+      departs: departsFile(),
     };
+  }
+  /* Les départs des parties, du plus récent au plus ancien (8 au plus) : validés, invalides, skippés (le compte « skipped » d'ESV au départ du lot,
+   * gardé en `ignores` par src/export-cache.js), total, heure de Paris. Rien d'inventé : un champ absent reste vide. */
+  const HEURE_PARIS = (() => { try { return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return null; } })();
+  function departsFile() {
+    let f = []; try { f = root.ArianePanel.fichesDepart?.() || []; } catch { f = []; }
+    const n = v => Number.isInteger(v) ? v : null;
+    return f.filter(x => x && typeof x === 'object').slice(-8).reverse().map(x => {
+      const d = typeof x.at === 'string' ? new Date(x.at) : null, ok = d && !isNaN(d) && HEURE_PARIS;
+      return { partie: n(x.partie), heure: ok ? HEURE_PARIS.format(d).replace(',', '').replace(/\s+/, ' ') : '', valides: n(x.valides), invalides: n(x.invalides), skippes: n(x.ignores), total: n(x.total) };
+    });
   }
   function instantane(s) {
     const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';
@@ -353,6 +372,8 @@
     if (quoi === 'tiroir') { ui.tiroir = !ui.tiroir; ui.sel = null; }
     /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
     else if (quoi === 'file-n') { const b = [...($('file-n')?.children || [])].find(x => x.dataset?.n === v); if (b && !b.disabled) b.click(); }
+    /* CH-026 : le troisième onglet « File de parties » : une vue de Signal (rien n'est envoyé au service worker) ; Orbite ou Écho le referme. */
+    else if (quoi === 'onglet-file') { ui.onglet = 'file'; ui.couche = null; ui.tiroir = false; ui.sel = null; }
     else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
     else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
@@ -410,7 +431,7 @@
     else if (type === 'tech') { ouvrirTech(); return; }
     else if (type === 'legacy') cliquer(v);
     else if (type === 'conn') { if ($('tabs')) $('tabs').value = v; cliquer('connect'); }
-    else if (type === 'mode') cliquer(v === 'native' ? 'tab-native' : 'tab-automatic');
+    else if (type === 'mode') { ui.onglet = null; cliquer(v === 'native' ? 'tab-native' : 'tab-automatic'); }
     else if (type === 'variante') void setVariante(v);
     maj(true);
   }

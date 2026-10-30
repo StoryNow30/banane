@@ -3279,7 +3279,8 @@ function fileEvenement(ev){const p=fileP.file.then(()=>fileAppliquer(FPm().trans
 async function fileAppliquer(r,ev){if(r.refus)throw Error('File de parties non lancée : '+r.refus+'.');if(r.ignore)return r;
  const avant=fileP.etat;await fileSauver(r.etat);const e=r.etat||avant;
  journalerSimple('file-parties',{evenement:ev.type,de:avant?.etat??null,vers:r.etat?.etat??null,fileId:e?.id??null,rang:e?.k??null,part:r.etat?.partie?.part??r.etat?.changement?.vers??null,
-  motif:r.etat?.motifFin?.code??null,actions:r.actions.map(a=>a.type),...(ev.type==='arreter'?{origine:ev.origine??null}:{})});
+  motif:r.etat?.motifFin?.code??null,actions:r.actions.map(a=>a.type),...(ev.type==='arreter'?{origine:ev.origine??null}:{}),
+  ...(ev.type==='demarrer'&&ev.remplace?{remplace:ev.remplace}:{}),...(ev.type==='demarrer'&&Number.isInteger(ev.reprise)?{reprise:ev.reprise}:{})});
  fileTicPlanifier();for(const a of r.actions)void fileAction(a);return r;}
 async function fileAction(a){fileP.action=a.type;try{
   if(a.type==='demarrer-lot')await fileDemarrerLot(a);
@@ -3398,9 +3399,16 @@ async function fileDispatch(action,args){await fileReveil;
  if(passeActive()||passeDiff.cours||passeDiff.ecriture||native?.active()||manual?.active())throw Error('File de parties : termine l’activité en cours (relecture, deuxième passe, Écho) avant de la lancer.');
  const s=await fileSuspens();if(s)throw Error(`File de parties non lancée : ${s}. Contrôle ce cut dans ESV d’abord.`);
  let now=null;try{now=await readState();}catch(x){throw Error('File de parties non lancée : ESV ne répond pas ('+String(x?.message||x).slice(0,160)+').');}
+ /* CH-026 : REPRISE d'une file arrêtée, au rang interrompu (`depuis` : la partie du plan qui n'a pas fini). La nouvelle file part de la partie affichée :
+  * elle doit être celle-là, sinon le rang serait faux. Refus en clair, rien n'est gardé. */
+ const depuis=args?.depuis;
+ if(depuis!==undefined&&depuis!==null){if(!Number.isInteger(depuis))throw Error('Reprise de la file : partie de reprise illisible.');
+  if(now?.identity?.part!==depuis)throw Error(`Reprise de la file : ESV affiche la partie ${now?.identity?.part??'?'} ; la reprise part de la partie ${depuis}. Affiche-la dans ESV, puis reprends.`);}
  try{const r=await callSur(selectedTab,'ping',{contrat:true});selecteurNoter(r?.selecteurParties);}catch{/* relevé ancien gardé */}
  const lotArgs=Object.fromEntries(FILE_LOT_ARGS.filter(k=>args?.lotArgs&&Object.hasOwn(args.lotArgs,k)).map(k=>[k,args.lotArgs[k]]));
- await fileEvenement({type:'demarrer',id:globalThis.BananeCore3.uid(),n:Number(args?.n),selecteur:partsSelector,courante:now?.identity?.part,lotArgs});
+ const precedente=fileP.etat&&FPm().terminal(fileP.etat)?{id:fileP.etat.id,etat:fileP.etat.etat,faites:fileP.etat.bilan.filter(p=>!p.interrompue).length,n:fileP.etat.n}:null;
+ await fileEvenement({type:'demarrer',id:globalThis.BananeCore3.uid(),n:Number(args?.n),selecteur:partsSelector,courante:now?.identity?.part,lotArgs,
+  ...(precedente?{remplace:precedente}:{}),...(Number.isInteger(depuis)?{reprise:depuis}:{})});
  return fileVue();}
 async function fileExport(){if(!fileReglage())return {};const r=await fileRegistreLire();return r.length||fileP.etat?{fileParties:{etat:FPm().vue(fileP.etat),registre:r}}:{};}
 /* B3 — transition « demarrage » : le corps de « Démarrer », inchangé (déplacé de `dispatch`). */
