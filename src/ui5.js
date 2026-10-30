@@ -392,8 +392,19 @@
     else if (nom === 'variante') void setVariante(v);
     setTimeout(() => maj(true), 250);
   }
+  /* CH-026 : « Arrêter la file » se confirme. Le premier clic ne fait que demander (le bouton devient « Confirmer l'arrêt de la file » pendant 6 s) ;
+   * seul un second clic venu au moins 600 ms après arrête : un double clic, ou un clic qui traverse un écran qui vient de changer, ne suffit pas.
+   * La palette garde sa propre confirmation (seconde Entrée, Revue T21 G1). */
+  const CONFIRME_FILE = { minMs: 600, maxMs: 6000 };
+  function confirmerArretFile() {
+    const t = Date.now(), c = ui.confirmeFile;
+    if (c && t - c >= CONFIRME_FILE.minMs && t - c <= CONFIRME_FILE.maxMs) { ui.confirmeFile = null; clearTimeout(confirmerArretFile.h); return true; }
+    if (!c || t - c > CONFIRME_FILE.maxMs) { ui.confirmeFile = t; clearTimeout(confirmerArretFile.h); confirmerArretFile.h = setTimeout(() => { ui.confirmeFile = null; maj(true); }, CONFIRME_FILE.maxMs); }
+    maj(true); return false;
+  }
   function agir(act, depuis) {
     const [type, v] = [act.split(':')[0], act.slice(act.indexOf(':') + 1)];
+    if (act === 'legacy:file-secondaire' && depuis && !confirmerArretFile()) return;
     if (act === 'pause') { const b = root.ArianePanel.state()?.batch; if (b?.state === 'RUNNING' && $('pause') && !$('pause').disabled) { ui.pauseLot = b.id; cliquer('pause'); } }
     else if (type === 'sg') { agirSignal(act); return; }
     else if (type === 'tech') { ouvrirTech(); return; }

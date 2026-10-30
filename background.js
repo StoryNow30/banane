@@ -3263,7 +3263,8 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  * `changerPartie` de l'adaptateur, puis la partie demandée lue dans ESV en 60 s au plus, l'onglet ré-équipé après un rechargement), revenir sur la
  * partie du lot pour la relecture, arrêter ce qui travaille. Un TIC (1 s) lit le lot, la passe et la relecture et nourrit la machine : la passe et
  * la relecture partent d'elles-mêmes à la fin du lot (comme sans file). Le registre des écritures (`banane60RegistreFile`) est noté à la fin de
- * chaque partie. Au réveil du service worker : `fileReprendre` (registre d'abord). Commandes ESV de la file : celles du lot, de la passe, de la
+ * chaque partie. Au réveil du service worker : `fileReprendre` (registre d'abord). CH-026 : l'événement `arreter` note la commande qui l'a
+ * porté (`origine` : `file-arreter`, « Arrêter la file » ; `stop`, « Arrêter » du lot pendant la file), que le journal du test 26 ne permettait pas de distinguer. Commandes ESV de la file : celles du lot, de la passe, de la
  * relecture, et `changerPartie` ; aucune autre, jamais de SKIP. Journal : `file-parties`, `file-parties-reprise`, `file-parties-erreur`. */
 const FILE_DEFAUT=Object.freeze({changementBorneMs:60000,ticMs:1000,passeGraceMs:5000,relectureAttenteMs:180000,pollMs:500});
 const FILE_ACTIONS=new Set(['file-etat','file-demarrer','file-arreter','file-oublier']);
@@ -3278,7 +3279,7 @@ function fileEvenement(ev){const p=fileP.file.then(()=>fileAppliquer(FPm().trans
 async function fileAppliquer(r,ev){if(r.refus)throw Error('File de parties non lancée : '+r.refus+'.');if(r.ignore)return r;
  const avant=fileP.etat;await fileSauver(r.etat);const e=r.etat||avant;
  journalerSimple('file-parties',{evenement:ev.type,de:avant?.etat??null,vers:r.etat?.etat??null,fileId:e?.id??null,rang:e?.k??null,part:r.etat?.partie?.part??r.etat?.changement?.vers??null,
-  motif:r.etat?.motifFin?.code??null,actions:r.actions.map(a=>a.type)});
+  motif:r.etat?.motifFin?.code??null,actions:r.actions.map(a=>a.type),...(ev.type==='arreter'?{origine:ev.origine??null}:{})});
  fileTicPlanifier();for(const a of r.actions)void fileAction(a);return r;}
 async function fileAction(a){fileP.action=a.type;try{
   if(a.type==='demarrer-lot')await fileDemarrerLot(a);
@@ -3387,7 +3388,7 @@ const fileReveil=ready.then(()=>fileReprendre()).catch(()=>{});
 async function fileVue(){return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
 async function fileDispatch(action,args){await fileReveil;
  if(action==='file-etat')return fileVue();
- if(action==='file-arreter'){await fileEvenement({type:'arreter'});return fileVue();}
+ if(action==='file-arreter'){await fileEvenement({type:'arreter',origine:'file-arreter'});return fileVue();}
  if(action==='file-oublier'){await fileEvenement({type:'oublier'});return fileVue();}
  /* file-demarrer : mêmes refus qu'un lot, dits AVANT de créer la file (rien n'est gardé si elle ne peut pas partir). */
  if(fileActive())throw Error('File de parties déjà en cours : arrête-la d’abord.');
@@ -3476,7 +3477,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  /* CH-017 : file de parties (éteinte : ces actions restent inconnues, comme avant). Pendant la file, « Arrêter » arrête la file et ce qui
   * travaille ; « Démarrer » à la main est refusé (le lot suivant appartient à la file). */
  if(FILE_ACTIONS.has(action)&&fileReglage())return fileDispatch(action,args);
- if(action==='stop'&&fileActive()){await fileEvenement({type:'arreter'});return engine.view();}
+ if(action==='stop'&&fileActive()){await fileEvenement({type:'arreter',origine:'stop'});return engine.view();}
  if(action==='start'&&fileActive()&&!fileP.demarrage)throw Error('File de parties en cours : le lot suivant part de lui-même. Clique sur « Arrêter la file » pour reprendre la main.');
  /* 5.0 (D-171, revue de la relecture) : relecture après le lot. Pendant sa préparation et pendant la passe, rien qui agisse dans ESV ou
   * sur le lot ne part du panneau ; « Arrêter » (du lot) arrête la relecture (W11). */

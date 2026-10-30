@@ -75,8 +75,11 @@ test('pendant la file : bandeau « partie 1 sur 2 · lot en cours » et « Arrê
  const F={etat:'lot',n:2,rang:0,enCours:{part:13,rang:0,lot:true},changement:null,bilan:[],alerte:null,motifFin:null};
  const p=await pret({fileParties:F});poser(p,{etatTexte:'partie 1 sur 2',phrase:'Partie 13 · lot en cours.',reglage:false,secondaire:'Arrêter la file'});
  p.els.pause.hidden=false;p.els.pause.textContent='Pause';p.els['new-batch'].hidden=false;p.els['new-batch'].textContent='Nouveau lot';
+ p.els.stop.hidden=false;p.els.stop.textContent='Arrêter le lot';
  p.rendu(etat(LOT,{fileParties:F}));const h=p.hote.innerHTML;
- assert.match(h,/class="sg-file"/);assert.match(h,/partie 1 sur 2/);assert.match(h,/Partie 13 · lot en cours/);
+ assert.match(h,/class="sg-file"/);
+ /* CH-026 : « Arrêter le lot » (`stop`) arrête toute la file : retiré pendant la file (arrêt du test 26). */
+ assert.doesNotMatch(h,/data-act="legacy:stop"/);assert.match(h,/partie 1 sur 2/);assert.match(h,/Partie 13 · lot en cours/);
  assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:file-secondaire"[^>]*>Arrêter la file</);
  assert.doesNotMatch(h,/legacy:new-batch|legacy:start-batch/);
  assert.match(h,/relecture et correction<\/b>, toujours/);

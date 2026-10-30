@@ -206,7 +206,7 @@
           actions();
         }
     }
-    fileModele(s, a, m);
+    fileModele(s, a, m, ui);
     gardeDemarrer();
     if (g.connexion?.statut === 'unavailable' && !m.incident && a.etat !== 'p2') m.incident = { texte: 'ESV n’est pas connecté. Si la page ESV est figée, recharge-la (F5), puis reconnecte-la.' };
     if (g.connexion?.statut === 'reconnecting' && !m.incident) m.raison = m.raison || 'Reconnexion à ESV en cours…';
@@ -220,7 +220,11 @@
    * lot encore ouvert ou en alerte : le lot garde l'écran, la file passe dans le bandeau. Chaque bouton est celui de la carte (`#file-principal`,
    * `#file-secondaire`, `#file-n`). */
   const sansDepart = b => b && !/^legacy:(start-batch|new-batch)$/.test(b.act || '');
-  function fileModele(s, a, m) {
+  /* CH-026 : pendant la file, « Arrêter le lot » (`stop`) arrêtait TOUTE la file (le service worker arrête la file sur `stop`) alors que l'écran dit
+   * « seul Arrêter la file l'arrête » ; il apparaissait aussi sous le bouton « Lancer la file » de la boîte (arrêt du test 26). Il est retiré pendant la
+   * file : la file s'arrête par « Arrêter la file », qui se confirme (src/ui5.js, `ui.confirmeFile`). */
+  const sansArretLot = b => sansDepart(b) && b.act !== 'legacy:stop';
+  function fileModele(s, a, m, ui = {}) {
     const F = s.file;
     if (!F) return;
     const P = F.principal, fp = P ? { texte: P.texte, act: 'legacy:file-principal', ic: /^Lancer/.test(P.texte) ? 'play' : '', inactif: !P.actif } : null;
@@ -230,11 +234,12 @@
       m.secondaires.push({ texte: `File de parties · ${F.prete ? 'préparée' : 'prête'}`, act: 'sg:file' });
       return;
     }
-    const Se = F.secondaire ? { texte: F.secondaire.texte, act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif } : null;
+    const conf = !!ui.confirmeFile && F.actif;
+    const Se = F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la file' : F.secondaire.texte, act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif, confirme: conf } : null;
     m.file = { etatTexte: F.etatTexte, phrase: F.phrase, secondaire: Se };
     if (F.actif) {
-      if (!sansDepart(m.principal)) m.principal = null;
-      m.secondaires = m.secondaires.filter(sansDepart);
+      if (!sansArretLot(m.principal)) m.principal = null;
+      m.secondaires = m.secondaires.filter(sansArretLot);
       if (F.etat === 'changement' && !a.lotOuvert) Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Changement de partie', objet: null, fin: null, incident: null, verrou: true,
         verrouTexte: 'Aucune action pendant le changement de partie', principal: null, secondaires: [], raison: '',
         phrase: `Vers la partie ${mono(F.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` });
