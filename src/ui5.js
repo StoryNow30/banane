@@ -215,6 +215,29 @@
       return { partie: n(x.partie), heure: ok ? HEURE_PARIS.format(d).replace(',', '').replace(/\s+/, ' ') : '', valides: n(x.valides), invalides: n(x.invalides), skippes: n(x.ignores), total: n(x.total) };
     });
   }
+  /* CH-028 : LA CORRECTION DANS ORBITE, d'après `s.correction` (service worker, background.js) et les visites de la séance Écho MARQUÉE de la même correction
+   * (`s.native.correction.id`) : statut de chaque cut par src/correction-liste.js (`bilan`), lecture seule. Les boutons sont les déclencheurs cachés du panneau
+   * (`#correction-*`, panel.js) ; « Télécharger la séance Écho » est le bouton d'Écho d'origine (`#native-download`). Rien tant que la vue n'a pas de liste. */
+  const ECHO_OUVERT = ['STARTING', 'RUNNING', 'PAUSED', 'PAUSED_ADAPTER_UNRESPONSIVE'];
+  function correctionDuPanneau(s) {
+    const C = s?.correction; if (!C || !Array.isArray(C.listes) || !C.listes.length) return null;
+    const CL = root.ArianeCorrectionListe, n = s.native, miens = !!n && n.correction?.id === C.id;
+    const V = miens ? (n.visits || []).filter(v => v && v.identity) : [];
+    const vis = V.map((v, i) => ({ identity: v.identity, label: v.label || null, encours: !v.endedAt && i === V.length - 1 && ECHO_OUVERT.includes(n.status) }));
+    const listes = C.listes.map(l => {
+      const E = Array.isArray(l.entrees) ? l.entrees : [], b = CL ? CL.bilan(E, vis) : { lignes: E.map(e => ({ ...e, statut: 'a-faire', visites: 0 })) };
+      return { partie: l.partie, batchId: l.batchId, comptes: l.comptes || null, lignes: b.lignes.map((x, i) => ({ ...x, details: E[i]?.details || {} })) };
+    });
+    const tout = listes.flatMap(l => l.lignes), k = st => tout.filter(x => x.statut === st).length;
+    const bouton = id => { const e = $(id); return e ? { actif: !e.disabled, visible: !e.hidden, texte: String(e.textContent || '').trim() } : null; };
+    const ce = $('correction-etat');
+    return { id: C.id, etat: C.etat, listes, courant: C.courant || null, ouverte: C.etat === 'ouverte' && miens && ECHO_OUVERT.includes(n?.status),
+      comptes: { total: tout.length, aCorriger: tout.filter(x => x.groupe === 'corriger').length, aPoser: tout.filter(x => x.groupe === 'poser').length, corrige: k('corrige'), valide: k('valide'), vu: k('vu'), enCours: k('en-cours'), traites: k('corrige') + k('valide') },
+      partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
+      ouvrir: { etat: ce?.dataset?.etat || '', texte: ce ? String(ce.textContent || '').trim() : '' },
+      boutons: { demarrer: bouton('correction-demarrer'), ouvrir: bouton('correction-ouvrir'), terminer: bouton('correction-terminer'), fermer: bouton('correction-fermer') },
+      telecharger: (b => b && b.visible ? b : null)(bouton('native-download')) };
+  }
   function instantane(s) {
     const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';
     const rg = {
@@ -242,6 +265,7 @@
       onglets: n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : [], ongletChoisi: n?.value || '', connexionNote: txt('tabs-note'),
       gcv2: gcv2Base,
       file: fileDuPanneau(s),
+      correction: correctionDuPanneau(s),
       ar: calculAr(s, statuts),
       sig: calculSig(s, statuts, mode, n?.value || '', n ? [...(n.options || [])].filter(o => o.value).map(o => ({ valeur: o.value, texte: o.textContent })) : []),
     };
@@ -374,6 +398,13 @@
     else if (quoi === 'file-n') { const b = [...($('file-n')?.children || [])].find(x => x.dataset?.n === v); if (b && !b.disabled) b.click(); }
     /* CH-026 : le troisième onglet « File de parties » : une vue de Signal (rien n'est envoyé au service worker) ; Orbite ou Écho le referme. */
     else if (quoi === 'onglet-file') { ui.onglet = 'file'; ui.couche = null; ui.tiroir = false; ui.sel = null; }
+    /* CH-028 : l'onglet « Correction » (une vue de Signal) ; « Ouvrir » recopie « partie:cut » dans `#correction-cible` et clique `#correction-ouvrir`. */
+    else if (quoi === 'onglet-correction') { ui.onglet = 'correction'; ui.couche = null; ui.tiroir = false; ui.sel = null; }
+    else if (quoi === 'corr-ouvrir') {
+      const [part, cut] = reste.map(Number), cible = $('correction-cible'), go = $('correction-ouvrir');
+      if (!go || !cible || go.disabled || !Number.isInteger(part) || !Number.isInteger(cut)) { noter('Ouverture indisponible pour l’instant.'); return; }
+      cible.value = `${part}:${cut}`; cliquer('correction-ouvrir'); noter(`Ouverture du cut ${cut} dans ESV…`); return;
+    }
     else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
     else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }

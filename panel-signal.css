@@ -370,3 +370,26 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-of-departs th:nth-child(1){width:14%}#ui5.u-signal .sg-of-departs th:nth-child(2){width:24%}
 #ui5.u-signal[data-taille="compact"] .sg-of-departs th:nth-child(1){width:13%}#ui5.u-signal[data-taille="compact"] .sg-of-departs th:nth-child(2){width:22%}
 #ui5.u-signal .sg-file-attente{color:var(--encre)}   /* CH-026-c : file arrêtée pendant une activité de sa partie */
+/* CH-028 : l'onglet « Correction » (Figma, page « CH-028 · Correction dans Orbite ») : la liste défile, le reste tient dans la fenêtre. */
+#ui5.u-signal .sg-onglet-corr{flex:1;min-height:0;gap:var(--e4)}
+#ui5.u-signal[data-taille="compact"] .sg-onglet-corr{gap:var(--e3)}
+#ui5.u-signal .sg-corr-liste{flex:1 1 auto;min-height:96px;overflow:auto;scrollbar-width:thin;padding:0 var(--e2);margin:0 calc(-1 * var(--e2))}
+#ui5.u-signal .sg-corr-liste .sg-section{padding-left:0;padding-right:0}
+#ui5.u-signal .sg-ligne.sg-corr{grid-template-columns:72px minmax(0,1fr) auto auto;margin:0}
+#ui5.u-signal[data-taille="compact"] .sg-ligne.sg-corr{grid-template-columns:52px minmax(0,1fr) auto auto}
+#ui5.u-signal .sg-statut{font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2);white-space:nowrap;text-align:right}
+#ui5.u-signal .sg-statut[data-statut="corrige"]{color:var(--vivant)}
+#ui5.u-signal .sg-statut[data-statut="en-cours"]{color:var(--attention)}
+#ui5.u-signal .sg-ligne.sg-corr:has(.sg-statut[data-statut="corrige"]) .sg-cut,#ui5.u-signal .sg-ligne.sg-corr:has(.sg-statut[data-statut="valide"]) .sg-cut{color:var(--encre2)}
+#ui5.u-signal .sg-corr-note{margin:0}
+#ui5.u-signal[data-taille="compact"] .sg-corr-note{display:none}
+#ui5.u-signal[data-taille="compact"] .sg-onglet-corr .sg-droite{display:none}
+/* Quatre onglets dans la barre, en compact : le logo s'efface et la puce garde sa pastille (comme le dessin 360). */
+#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-logo{display:none}
+#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-puce .sg-tx,#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-puce .sg-fl{display:none}
+#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-puce{padding:0 9px}
+#ui5.u-signal .sg-ligne.sg-corr .sg-motif{display:flex;align-items:baseline;gap:6px;min-width:0}
+#ui5.u-signal .sg-ligne.sg-corr .sg-sig{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ui5.u-signal .sg-ligne.sg-corr .sg-motif small{flex:0 1000 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Quatre onglets, entre 480 et 560 px (taille normale) : le nom « Ariane » du logo s'efface pour que la barre tienne (mesuré : 480 px débordait d'un élément). */
+@media (max-width:559px){#ui5.u-signal .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-logo span{display:none}}

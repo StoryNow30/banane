@@ -73,3 +73,13 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
 - **Essais adaptés** :
   - `tests/t20a-connexion-sw.test.cjs` et `tests/t20a-panneau.test.cjs` vérifient maintenant le message de connexion et Reconnecter dans Signal ;
   - `tests/connexion-t21.test.cjs` vérifie qu'un ancien choix « ariane2 » ouvre Signal.
+
+## CH-028 : l'onglet « Correction » (correction dans Orbite)
+
+- **Quand** : dès qu'une liste de cuts à corriger existe. Le panneau la demande une fois par lot clos, ou par file finie, quand ni la relecture, ni la deuxième passe, ni la file ne tournent. L'écran de fin du lot affiche alors la ligne « À corriger » et le bouton « Corriger · N cuts ».
+- **Quoi** : la liste vient de `src/correction-liste.js`, en deux groupes. « À corriger » regroupe les posés signalés, avec le signal le plus fort en clair ; « À poser » regroupe les différés restants. Le statut de chaque cut est lu dans les visites de la séance Écho marquée : à faire, ouvert dans ESV, corrigé (1 ou 2 rails), validé tel quel, vu sans validation.
+- **Gestes** : chaque bouton clique un déclencheur caché du panneau (`#correction-liste`, `-demarrer`, `-ouvrir` avec `#correction-cible`, `-terminer`, `-fermer`). « Télécharger la séance Écho » clique `#native-download`. Aucun message nouveau ne part de `ui5.js`.
+- **Barre à quatre onglets** :
+  - en compact (moins de 480 px), le logo s'efface et la puce garde sa pastille ;
+  - entre 480 et 560 px, le nom « Ariane » s'efface.
+- **Essais** : `tests/ui5-correction.test.cjs`, `tests/ui5-navigateur-signal-correction.test.cjs`, `tests/esv-maquette/correction-signal.test.cjs`.

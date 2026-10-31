@@ -188,7 +188,9 @@
           : P.mode === 'ombre' ? `en ombre : <b>${esc(P.posees)}</b> sur <b>${esc(P.differes)}</b> qu’elle poserait · rien n’est écrit dans ESV`
           : `${P.etat === 'arretee' ? 'arrêtée · ' : ''}<b>${esc(P.ecrites)}</b> posés et validés sur <b>${esc(P.posees)}</b> décidés${P.message ? ' · ' + esc(P.message) : ''}`]);
         actions();
+        correctionFin(s, m);
         if (nDif(a) + (a.vertsNombre || 0) > 0) { const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'); m.secondaires = [ex ? versAction(ex) : null, ...m.secondaires.filter(b => b.act !== 'legacy:export-tout'), ...(m.principal && m.principal.act !== 'legacy:export-tout' ? [m.principal] : [])].filter(Boolean); m.principal = { texte: 'Voir ce qui reste', act: 'sg:tiroir', ic: 'liste' }; }
+        if (m.corrigerBouton) m.secondaires.unshift(m.corrigerBouton);
         break;
       }
       default:
@@ -257,7 +259,20 @@
     m.file = null;
     Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'File arrêtée' : 'File terminée',
       phrase: esc(F.phrase), objet: null, fin: null, incident: F.alerte ? { texte: F.alerte } : null, verrou: false, raison: '', fileBilan: F.bilan,
-      principal: rep || fp, secondaires: [ex ? versAction(ex) : null, { texte: 'Onglet File de parties', act: 'sg:onglet-file' }].filter(Boolean) });
+      principal: rep || fp, secondaires: [corrigerBouton(s), ex ? versAction(ex) : null, { texte: 'Onglet File de parties', act: 'sg:onglet-file' }].filter(Boolean) });
+  }
+  /* CH-028 : LA CORRECTION DANS ORBITE, annoncée sur l'écran de fin du lot (et de la file) : une ligne « À corriger » au bilan et le bouton « Corriger · N cuts »
+   * qui ouvre l'onglet « Correction ». Rien n'est lancé par cet écran. */
+  const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
+  function corrigerBouton(s) {
+    const C = s.correction; if (!C || C.etat === 'terminee') return null;
+    return { texte: C.etat === 'ouverte' ? 'Correction en cours' : `Corriger · ${C.comptes.aCorriger + C.comptes.aPoser} cuts`, act: 'sg:onglet-correction' };
+  }
+  function correctionFin(s, m) {
+    const C = s.correction; if (!C) return;
+    if (C.etat === 'terminee') m.fin.push(['Correction', `<b>${esc(C.comptes.corrige)}</b> ${C.comptes.corrige > 1 ? 'corrigés' : 'corrigé'}, <b>${esc(C.comptes.valide)}</b> ${C.comptes.valide > 1 ? 'validés tels quels' : 'validé tel quel'} · dans l’export`]);
+    else m.fin.push(['À corriger', `<b>${esc(C.comptes.aCorriger)}</b> cuts · <b>${esc(C.comptes.aPoser)}</b> à poser`]);
+    m.corrigerBouton = corrigerBouton(s);
   }
   function modeleEcho(s, a, g, m, partie) {
     const { primaire, autres } = boutonsPanneau(s.boutonsEcho, 'native'), E = g.echo || {};
@@ -402,14 +417,17 @@
   function barreHtml(snap, m, ui) {
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
     /* CH-026 : troisième onglet « File » (la file de parties) : une vue de Signal ; Orbite et Écho y redeviennent cliquables. */
-    const surFile = ui.onglet === 'file' && !!snap.file;
-    const seg = (k, t) => { const choisi = !surFile && m.activite === k, off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${choisi}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : choisi ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
+    const surFile = ui.onglet === 'file' && !!snap.file, surAutre = surFile || (ui.onglet === 'correction' && !!snap.correction);
+    const seg = (k, t) => { const choisi = !surAutre && m.activite === k, off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${choisi}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : choisi ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
     const segFile = snap.file ? `<button type="button" role="tab" aria-selected="${surFile}"${surFile ? '' : ' data-act="sg:onglet-file"'}>File</button>` : '';
+    /* CH-028 : quatrième onglet « Correction », seulement quand une liste existe. */
+    const surCorr = ui.onglet === 'correction' && !!snap.correction;
+    const segCorr = snap.correction ? `<button type="button" role="tab" aria-selected="${surCorr}"${surCorr ? '' : ' data-act="sg:onglet-correction"'}>Correction</button>` : '';
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
     /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
     const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
     const court = String(texte).split(' · ')[0];
-    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité">${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}</div><span class="sg-espace"></span>
+    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité"${segCorr ? ' data-onglets="4"' : ''}>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
 <button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
@@ -432,6 +450,7 @@
     const autre = m.activite === 'echo' ? 'orbite' : 'echo';
     add(autre === 'echo' ? 'echo' : 'orbite', autre === 'echo' ? 'Passer en Écho' : 'Passer en Orbite', `mode:${autre === 'echo' ? 'native' : 'automatic'}`, '', m.bascule.verrou ? m.bascule.raison : '');
     if (snap.file && ui.onglet !== 'file') add('liste', 'Onglet File de parties', 'sg:onglet-file', '');
+    if (snap.correction && ui.onglet !== 'correction') add('liste', 'Onglet Correction', 'sg:onglet-correction', '');
     add('reglages', 'Réglages', 'sg:reglages', '');
     add('globe', 'Onglets ESV', 'sg:esv', g.onglet || '');
     if (g.connexion?.reconnect?.visible) add('retour', 'Reconnecter ESV', 'legacy:reconnect', '', g.connexion.reconnect.actif ? '' : 'reconnexion en cours');
@@ -544,8 +563,88 @@
     h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">skippés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Chiffres de la liste d’ESV au départ de chaque lot ; skippés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ de partie noté pour l’instant.</p>'}</section>`;
     return `<section class="sg-instrument sg-onglet-file" aria-live="polite" aria-label="File de parties">${h}</section>`;
   }
+  /* CH-028 : L'ONGLET « Correction » (Figma, page « CH-028 · Correction dans Orbite » : liste proposée, cut ouvert dans ESV, correction enregistrée, liste
+   * terminée). D'après `snap.correction` (src/ui5.js). Ariane n'écrit rien dans ESV : l'opérateur corrige et valide lui-même, la séance Écho marquée enregistre ;
+   * « Ouvrir » ne sert que pendant la correction ouverte, sur la partie affichée dans ESV. */
+  const LIB_SIGNAL = { 'passe-ecrite': 'écrit par la deuxième passe', 'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui', 'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', differe: 'différé' };
+  const MOTIF_DIFFERE = { 'garde-apres-differe': 'garde après un différé', candidat: 'candidat', 'gauge-out-of-contract': 'écartement hors contrat' };
+  function detailSignal(l) {
+    const [p, ...autres] = l.signaux || [], d = (l.details || {})[p] || {};
+    if (autres.length) return autres.map(k => LIB_SIGNAL[k] || k).join(', ');
+    if (p === 'passe-ecrite' && Number.isFinite(d.decalMm)) return `déplacement ${un(d.decalMm)} mm`;
+    if (p === 'apres-differe' && d.differes?.length) return `cut ${d.differes[0]} différé`;
+    if (p === 'relecture' && Number.isFinite(d.pireMm)) return `écart ${un(d.pireMm)} mm`;
+    if (p === 'garde-suivant' && d.cutsGarde?.length) return `cut ${d.cutsGarde[0]} gardé`;
+    if (p === 'sans-appui' && d.commande) return `commande du lot · ${d.commande}`;
+    if (p === 'differe' && d.motif) return MOTIF_DIFFERE[d.motif] || d.motif;
+    return '';
+  }
+  const STATUT_TEXTE = l => l.statut === 'corrige' ? `corrigé · ${l.rails > 1 ? '2 rails' : '1 rail'}` : l.statut === 'valide' ? 'validé tel quel' : l.statut === 'vu' ? 'vu sans validation' : l.statut === 'en-cours' ? 'ouvert dans ESV' : 'à faire';
+  const parties = L => { const P = [...new Set(L.map(l => l.partie))]; return P.length > 1 ? `Parties ${P.join(', ')}` : `Partie ${P[0]}`; };
+  function ongletCorrectionModele(s) {
+    const C = s.correction, k = C.comptes, tout = C.listes.flatMap(l => l.lignes), B = C.boutons || {};
+    const m = { glyphe: 'pret', ton: 'encre2', mot: 'À corriger', phrase: '', droite: '', principal: null, secondaires: [] };
+    const fermer = B.fermer ? { texte: 'Fermer la liste', act: 'legacy:correction-fermer', inactif: !B.fermer.actif } : null;
+    if (C.etat === 'proposee') {
+      Object.assign(m, { phrase: `${parties(C.listes)} · ${k.aCorriger} à corriger, ${k.aPoser} à poser · tu corriges et valides dans ESV, Ariane n’écrit rien`, droite: 'Écho démarre avec la correction',
+        principal: { texte: 'Commencer la correction', act: 'legacy:correction-demarrer', ic: 'play', inactif: !(B.demarrer?.actif ?? true) }, secondaires: [fermer].filter(Boolean) });
+    } else if (C.etat === 'ouverte' && C.ouverte) {
+      const cour = C.courant ? tout.find(l => l.part === C.courant.part && l.cut === C.courant.cut) : null;
+      const phrase = !cour ? 'Ouvre un cut de la liste · corrige et valide dans ESV ; Écho enregistre chaque visite'
+        : cour.statut === 'corrige' ? `Cut ${mono(cour.cut)} corrigé · ${cour.rails > 1 ? '2 rails' : '1 rail'} · visite enregistrée par Écho`
+        : cour.statut === 'valide' ? `Cut ${mono(cour.cut)} validé tel quel · visite enregistrée par Écho`
+        : `Cut ${mono(cour.cut)} ouvert dans ESV · corrige-le, puis valide dans ESV ; Écho enregistre la visite`;
+      const i0 = cour ? tout.indexOf(cour) : -1, ici = l => C.partieAffichee === null || l.part === C.partieAffichee;
+      const suivant = [...tout.slice(i0 + 1), ...tout.slice(0, Math.max(0, i0))].find(l => l.statut === 'a-faire' && ici(l));
+      const terminer = { texte: 'Terminer la correction', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) };
+      Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: 'Correction en cours', phrase, droite: `${pluriel(k.corrige, 'corrigé', 'corrigés')} · ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}`,
+        principal: suivant ? { texte: `${cour ? 'Ouvrir le suivant' : 'Ouvrir le premier'} · cut ${suivant.cut}`, act: `sg:corr-ouvrir:${suivant.part}:${suivant.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
+        secondaires: suivant ? [terminer] : [] });
+    } else if (C.etat === 'ouverte') {
+      Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Correction interrompue', phrase: 'La séance Écho de la correction n’est plus active · termine la correction pour inscrire le bilan',
+        principal: { texte: 'Terminer la correction', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) } });
+    } else {
+      const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'), T = C.telecharger;
+      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Correction terminée', droite: 'séance Écho close',
+        phrase: `${parties(C.listes)} · ${pluriel(k.corrige, 'corrigé', 'corrigés')}, ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}, ${pluriel(k.vu, 'vu sans validation', 'vus sans validation')} · inscrit dans l’export Orbite`,
+        principal: T ? { texte: 'Télécharger la séance Écho', act: 'legacy:native-download', ic: 'export', inactif: !T.actif } : null,
+        secondaires: [ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', inactif: !ex.actif } : null, fermer].filter(Boolean) });
+      if (!m.principal && m.secondaires.length) m.principal = { ...m.secondaires.shift(), ic: 'export' };
+    }
+    return m;
+  }
+  function ongletCorrectionHtml(s, u) {
+    const C = s.correction, m = ongletCorrectionModele(s), k = C.comptes, ouverte = C.etat === 'ouverte' && C.ouverte, B = C.boutons || {};
+    const outil = l => {
+      if (!ouverte) return '';
+      const ailleurs = C.partieAffichee !== null && l.part !== C.partieAffichee, off = ailleurs || !(B.ouvrir?.actif ?? true);
+      const titre = ailleurs ? `Ouvre la partie ${l.part} dans ESV pour corriger ce cut` : off ? 'Ouverture en cours…' : 'Ouvrir ce cut dans ESV';
+      return `<span class="sg-outils"><button type="button"${off ? ' disabled' : ` data-act="sg:corr-ouvrir:${esc(l.part)}:${esc(l.cut)}"`} title="${esc(titre)}">${ic('ouvrir')}<span>Ouvrir</span></button></span>`;
+    };
+    const ligne = (l, i) => { const det = detailSignal(l);
+      return `<div class="sg-ligne sg-corr" data-k="c:${esc(l.part)}:${esc(l.cut)}" style="--i:${Math.min(i, 12)}" role="listitem"><span class="sg-cut">${esc(l.cut)}</span><span class="sg-motif"><span class="sg-sig">${esc(LIB_SIGNAL[l.signaux?.[0]] || '')}</span>${det ? `<small>· ${esc(det)}</small>` : ''}</span><span class="sg-statut" data-statut="${esc(l.statut)}">${esc(STATUT_TEXTE(l))}</span>${outil(l)}</div>`; };
+    const plusieurs = C.listes.length > 1;
+    let liste = '';
+    for (const L of C.listes) {
+      const A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser'), pre = plusieurs ? `Partie ${esc(L.partie)} · ` : '';
+      liste += `<div class="sg-section"><span>${pre}À corriger</span><span class="sg-n">${A.length}</span><span class="sg-d">posés qu’Ariane juge probablement faux</span></div>${A.length ? A.map(ligne).join('') : '<div class="sg-vide">Aucun posé signalé.</div>'}`;
+      if (P.length) liste += `<div class="sg-section"><span>${pre}À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">différés restants</span></div>${P.map(ligne).join('')}`;
+    }
+    const bt = (b, plein) => b ? `<button type="button" class="${plein ? 'sg-principal' : 'sg-secondaire'}"${b.act ? ` data-act="${esc(b.act)}"` : ''}${b.inactif ? ' disabled' : ''}>${plein && b.ic ? ic(b.ic) : ''}${plein ? `<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
+    const refus = C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? `<p class="sg-raison" role="status">${esc(C.ouvrir.texte)}</p>` : '';
+    let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
+    h += `<div class="sg-compte"><span class="sg-chiffre">${esc(k.traites)}</span><span class="sg-suite">traités sur ${esc(k.total)}</span>${m.droite ? `<span class="sg-droite">${esc(m.droite)}</span>` : ''}</div>`;
+    h += `<div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts à corriger">${liste}</div>${refus}`;
+    h += `<p class="sg-meta sg-corr-note">La correction est une séance Écho : chaque visite est enregistrée comme en Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.</p>`;
+    if (m.principal || m.secondaires.length) h += `<div class="sg-actions">${bt(m.principal, true)}${m.secondaires.map(b => bt(b, false)).join('')}</div>`;
+    return `<section class="sg-instrument sg-onglet-corr" aria-live="polite" aria-label="Correction">${h}</section>`;
+  }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
+    if (u.onglet === 'correction' && s.correction) {
+      const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
+      return `<div class="sg-fen" data-activite="correction" data-etat="${esc(s.correction.etat)}">${barreHtml(s, m, u)}${ongletCorrectionHtml(s, u)}${cacheHtml(s, m)}${couche}</div>`;
+    }
     if (u.onglet === 'file' && s.file) {
       const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
       return `<div class="sg-fen" data-activite="file" data-etat="${esc(s.file.etat)}">${barreHtml(s, m, u)}${ongletFileHtml(s, u)}${cacheHtml(s, m)}${couche}</div>`;
