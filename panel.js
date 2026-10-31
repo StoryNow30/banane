@@ -898,7 +898,7 @@
    }
    /* D3 : ESV a quitté la page ; la marche à suivre (F5, Reprendre) reste affichée. */
    if(s.connection?.status==='unavailable'&&!active(s)&&!s.busy&&!finDePartieProbable(s)){$('connection')?.setAttribute('open','');note(s.connection.message,true);}
-   button('connect',{disabled:busy||recording(s)});majReconnexion(s);majAllerAuCut(s);button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)||s.passeDifferes?.etat==='ecriture'});button('journal',{disabled:working});if(uiError)note(uiError,true);
+   button('connect',{disabled:busy||recording(s)});majReconnexion(s);majAllerAuCut(s);majCorrection(s);button('dataset',{disabled:busy||active(s)});button('export-tout',{disabled:busy||active(s)});button('export-cache-clear',{disabled:busy||working||active(s)||lotNonTermine(s)||s.passeDifferes?.etat==='ecriture'});button('journal',{disabled:working});if(uiError)note(uiError,true);
    rendreFocus();
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
@@ -940,6 +940,36 @@
    catch(e){etatAllerCut('refuse',String(e?.message||e));}
    finally{allerCutEnCours=false;if(state)majAllerAuCut(state);}}
  if($('goto-cut'))$('goto-cut').onclick=()=>allerAuCutSignal();
+ /* CH-028 — LA CORRECTION DANS ORBITE : déclencheurs cachés pour Signal. `#correction-liste` demande la liste (action `correction-liste`), `#correction-demarrer`
+  * démarre la séance Écho marquée, `#correction-ouvrir` (cible « partie:cut » dans `#correction-cible`) amène ESV au cut par la pause d'Écho et le retour au
+  * cut, `#correction-terminer` ferme la séance et inscrit le bilan, `#correction-fermer` efface une liste proposée ou finie. `#correction-etat` dit le
+  * résultat de « Ouvrir » (`data-etat` : en-cours, ok, refuse). La liste est demandée d'elle-même une fois par lot clos (ou par file finie), quand ni la
+  * relecture, ni la deuxième passe, ni la file ne tournent : elle ne lance rien. */
+ let correctionDemandee='',ouvrirEnCours=false;
+ function etatCorrection(etat,texte){const e=$('correction-etat');if(!e)return;e.setAttribute('data-etat',etat);if(e.dataset)e.dataset.etat=etat;e.textContent=texte||'';}
+ function majCorrection(s){
+   for(const id of ['correction-cible','correction-liste','correction-demarrer','correction-ouvrir','correction-terminer','correction-fermer','correction-etat'])if($(id))$(id).hidden=true;
+   const C=s?.correction,b=s?.batch,F=s?.fileParties,ouverte=C?.etat==='ouverte';
+   if($('correction-demarrer'))$('correction-demarrer').disabled=working||C?.etat!=='proposee'||!!(s&&nativeActive(s));
+   if($('correction-ouvrir'))$('correction-ouvrir').disabled=!ouverte||ouvrirEnCours;
+   if($('correction-terminer'))$('correction-terminer').disabled=working||!ouverte;
+   if($('correction-fermer'))$('correction-fermer').disabled=working||ouverte;
+   const fileFinie=F&&['fin','arret'].includes(F.etat)&&!F.actif,lotClos=b&&['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'].includes(b.state);
+   const occupe=working||['preparation','en-cours','en-pause'].includes(s?.relecture?.etat)||['calcul','ecriture'].includes(s?.passeDifferes?.etat)||F?.actif||(s&&nativeActive(s));
+   if($('correction-liste'))$('correction-liste').disabled=!!occupe||!(lotClos||fileFinie)||ouverte;
+   const cle=fileFinie?`file:${F.id||''}:${F.etat}`:lotClos?`lot:${b.id}`:'';
+   if(!cle||occupe||ouverte||cle===correctionDemandee)return;
+   if(C&&!fileFinie&&(C.listes||[]).some(l=>l.batchId===b.id)){correctionDemandee=cle;return;}
+   correctionDemandee=cle;void api('correction-liste').then(()=>refresh()).catch(()=>{});}
+ async function correctionOuvrirSignal(){const m=/^(\d{1,6}):(\d{1,7})$/.exec(String($('correction-cible')?.value??'').trim());
+   if(!m){etatCorrection('refuse','cible invalide');return;}
+   const part=Number(m[1]),cut=Number(m[2]);ouvrirEnCours=true;etatCorrection('en-cours',`Ouverture du cut ${cut} dans ESV…`);if(state)majCorrection(state);
+   try{const x=await api('correction-ouvrir',{part,cut});
+     if(x?.ok)etatCorrection('ok',`ESV affiche le cut ${x.identiteApres?.cut??cut} : corrige-le, puis valide dans ESV.`);else etatCorrection('refuse',String(x?.message||x?.code||'refusé'));}
+   catch(e){etatCorrection('refuse',String(e?.message||e));}
+   finally{ouvrirEnCours=false;await refresh().catch(()=>{});}}
+ if($('correction-ouvrir'))$('correction-ouvrir').onclick=()=>correctionOuvrirSignal();
+ on('correction-liste',()=>api('correction-liste'));on('correction-demarrer',()=>api('correction-demarrer'));on('correction-terminer',()=>api('correction-terminer'));on('correction-fermer',()=>api('correction-fermer'));
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
  /* 4.9.0.16 (test 15, capture de Mic) : deux onglets au même titre ne se distinguaient pas. Chaque
   * libellé dit maintenant, si besoin, la fenêtre, le rang de l'onglet, s'il est au premier plan et

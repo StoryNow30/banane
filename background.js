@@ -2695,7 +2695,7 @@ function lotsACorriger(args){
 function refusCorrection(quoi){const b=engine.s.batch;
  if(b&&!LOT_CLOS.has(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
  if(engine.busy||engine.task)return `${quoi} : une action d’Ariane est en cours.`;
- if(relecture.passe)return `${quoi} : la relecture du lot tourne encore.`;
+ if(['preparation','en-cours','en-pause'].includes(relecture.passe?.etat))return `${quoi} : la relecture du lot tourne encore.`;
  if(passeDiff.vue&&['calcul','ecriture'].includes(passeDiff.vue.etat))return `${quoi} : la deuxième passe tourne encore.`;
  if(fileActive())return `${quoi} : la file de parties tourne encore.`;
  return null;}
@@ -2703,11 +2703,13 @@ async function correctionListe(args){
  const r=refusCorrection('Liste à corriger refusée');if(r)throw Error(r);
  const C=engine.s.correction;if(C?.etat==='ouverte')return vuePanneau();
  const ids=lotsACorriger(args);if(!ids.length)throw Error('Liste à corriger : aucun lot clos.');
- const events=await store.all('events'),deja=new Set(events.filter(e=>e?.type==='correction-liste').map(e=>e.batchId));
+ /* Une fois par lot ET par contenu : une liste qui change (un événement du lot arrivé après une première demande) est inscrite de nouveau ; la dernière fait foi. */
+ const signature=E=>JSON.stringify((E||[]).map(e=>[e.part,e.cut,e.signaux]));
+ const events=await store.all('events'),deja=new Set(events.filter(e=>e?.type==='correction-liste').map(e=>e.batchId+'|'+signature(e.entrees)));
  const listes=[];
  for(const id of ids){const l=CL().construire(events,{batchId:id});if(!l.trouve)continue;
   listes.push({batchId:id,partie:l.partie,entrees:l.entrees,comptes:l.comptes});
-  if(!deja.has(id))await store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'correction-liste',schema:1,sessionId:engine.s.sessionId??null,
+  if(!deja.has(id+'|'+signature(l.entrees)))await store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'correction-liste',schema:1,sessionId:engine.s.sessionId??null,
    batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});}
  if(!listes.length)throw Error('Liste à corriger : le journal ne porte aucune décision de ces lots.');
  const memes=C&&C.etat==='proposee'&&JSON.stringify(C.listes.map(l=>l.batchId))===JSON.stringify(listes.map(l=>l.batchId));
@@ -2716,6 +2718,9 @@ async function correctionListe(args){
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
 async function correctionDemarrer(){
  const C=engine.s.correction;if(!C||C.etat!=='proposee')throw Error('Aucune liste à corriger proposée.');
+ /* « Ouvrir » serait refusé ensuite (retour à un cut, D-067) : dit dès le départ, rien n'est démarré. */
+ if(engine.s.applied)throw Error('Correction non démarrée : une pose d’Ariane est appliquée et pas encore validée (fin du lot) : valide-la, restaure-la ou archive-la, puis recommence.');
+ if(engine.s.intent||engine.s.reconcileRequired)throw Error('Correction non démarrée : un résultat incertain reste à clôturer.');
  const cuts=entreesCorrection(C).map(e=>({part:e.part,cut:e.cut}));if(!cuts.length)throw Error('La liste à corriger est vide.');
  await demarrerEcho({correction:{id:C.id,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.slice(0,2000),version:CL().VERSION}});
  C.etat='ouverte';C.debutA=new Date().toISOString();C.sessionId=engine.s.native?.id??null;await engine.save();
@@ -2734,7 +2739,7 @@ async function correctionOuvrir(args){
  journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:erreur?'erreur':r?.resultat??null,code:r?.code??null,message:erreur?String(erreur.message||erreur).slice(0,160):r?.message??null,
   ecoReprise:engine.s.native?.status??null});
  if(erreur)throw erreur;
- C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();
+ if(r?.ok){C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();}
  return {...r,correction:C};}
 async function correctionTerminer(){
  const C=engine.s.correction;if(!C||C.etat!=='ouverte')throw Error('Aucune correction en cours.');

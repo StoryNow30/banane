@@ -88,3 +88,32 @@ test('« Fermer la liste » efface une liste proposée, jamais une correction ou
   const v = await b.api('correction-fermer');
   assert.equal(v.correction ?? null, null);
 });
+
+test('constats de la maquette : démarrage refusé tant qu’une pose reste appliquée ; liste réinscrite seulement si elle change ; relecture finie ≠ relecture en cours', async () => {
+  const b = await monter();
+  b.fonction(`engine.s.applied={identity:{part:5,cut:19}}`);
+  await b.api('correction-liste');
+  await assert.rejects(b.api('correction-demarrer'), /pose d’Ariane est appliquée/);
+  assert.notEqual(b.fonction('engine.s.native?.status'), 'RUNNING', 'Écho non démarré');
+  b.fonction('engine.s.applied=null');
+  await b.store.putEvent({ eventId: K.uid(), type: 'garde-apres-differe-suivant', timestamp: '2026-10-31T10:00:30Z', batchId: 'B1', identity: { part: 5, cut: 12 }, cutsGarde: [13] });
+  await b.api('correction-liste');
+  assert.equal(evts(b, 'correction-liste').length, 2, 'la liste a changé (cut 12) : réinscrite');
+  await b.api('correction-liste');
+  assert.equal(evts(b, 'correction-liste').length, 2, 'inchangée : pas de doublon');
+  b.fonction(`relecture.passe={etat:'finie',lotId:'B1'}`);
+  await b.api('correction-liste');
+  b.fonction(`relecture.passe={etat:'en-cours',lotId:'B1'}`);
+  await assert.rejects(b.api('correction-liste'), /relecture du lot tourne encore/);
+});
+
+test('« Ouvrir » refusé par le retour au cut : le cut courant n’est pas noté, Écho reprend quand même', async () => {
+  const b = await monter();
+  await b.api('correction-liste'); await b.api('correction-demarrer');
+  b.adapter.goToCut = async function () { this.calls.push('goToCut'); return { resultat: 'refuse', refusal: { code: 'X', message: 'refusé (essai)' }, emissions: 0, commandInvoked: false }; };
+  const r = await b.api('correction-ouvrir', { part: 5, cut: 14 });
+  assert.equal(r.ok, false);
+  assert.equal(b.fonction('engine.s.correction.courant ?? null'), null);
+  assert.equal(b.fonction('engine.s.native.status'), 'RUNNING');
+  assert.equal(evts(b, 'correction-ouvrir').at(-1).resultat, 'refuse');
+});
