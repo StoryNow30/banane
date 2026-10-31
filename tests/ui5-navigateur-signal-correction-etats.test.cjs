@@ -1,5 +1,5 @@
 'use strict';
-/* CH-028 — L'ONGLET « Correction » DE SIGNAL, DANS UN VRAI NAVIGATEUR (ignoré s'il n'y a pas de Chromium, et dit ignoré). Montage :
+/* CH-028 — L'ONGLET « Correction » DE SIGNAL, DANS UN VRAI NAVIGATEUR (ignoré s'il n'y a pas de Chromium, et dit ignoré ; découpé en trois fichiers pour tenir sous 20 s chacun : etats, actions, balayage). Montage :
  * tests/helpers/signal-navigateur.cjs (service worker simulé), lot fini de la partie 13 ; liste fabriquée par src/correction-liste.js sur
  * tests/helpers/correction-journal.cjs. Maquette : Figma, page « CH-028 · Correction dans Orbite » (liste proposée, cut ouvert, correction enregistrée,
  * liste terminée). Mesures : 0 erreur de console, 0 débordement de 360 à 600 px, contraste ≥ 4,5:1, sombre et clair ; chaque bouton envoie l'action du
@@ -56,39 +56,3 @@ test('onglet « Correction » : liste proposée, cut ouvert, correction enregist
   assert.ok(vus.enregistre.boutons.includes('Terminer la correction|legacy:correction-terminer'), JSON.stringify(vus.enregistre.boutons));
 });
 
-test('onglet « Correction » : Commencer, Ouvrir (partie et cut), Terminer envoient les actions des déclencheurs cachés ; rien qui écrive dans ESV', { skip: absent, timeout: 25000 }, async () => {
-  const { chromium } = require(PW), nav = await chromium.launch({ executablePath: CHROMIUM });
-  try {
-    const { page, erreurs } = await monter(nav, ETATS.proposee);
-    await page.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]'); await page.waitForTimeout(200);
-    await page.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-demarrer"]'); await page.waitForTimeout(400);
-    assert.deepEqual((await messages(page)).map(m => m.action).filter(a => a !== 'correction-liste'), ['correction-demarrer']);
-    await poserEtat(page, ETATS.ouvert);
-    await page.click('#ui5 .sg-onglet-corr [data-act="sg:corr-ouvrir:13:16"]'); await page.waitForTimeout(400);
-    const m = (await messages(page)).filter(x => x.action !== 'correction-liste');
-    assert.deepEqual(m.map(x => [x.action, x.args]), [['correction-ouvrir', { part: 13, cut: 16 }]]);
-    await page.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-terminer"]'); await page.waitForTimeout(400);
-    assert.deepEqual((await messages(page)).map(x => x.action).filter(a => a !== 'correction-liste'), ['correction-terminer']);
-    assert.deepEqual(erreurs, []);
-  } finally { await nav.close(); }
-});
-
-test('onglet « Correction » : balayage de 360 à 600 px par pas de 20 (cut ouvert, liste terminée) ; ni débordement ni élément qui sort à droite, barre à quatre onglets comprise', { skip: absent, timeout: 40000 }, async () => {
-  const { chromium } = require(PW), nav = await chromium.launch({ executablePath: CHROMIUM }), defauts = [];
-  const { mesurer } = require('./helpers/signal-file.cjs');
-  try {
-    const { page, erreurs } = await monter(nav, ETATS.ouvert);
-    await page.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]'); await page.waitForTimeout(200);
-    for (const nom of ['ouvert', 'terminee']) {
-      if (nom !== 'ouvert') await poserEtat(page, ETATS[nom]);
-      for (let w = 360; w <= 600; w += 20) for (const h of [480, 760]) {
-        await page.setViewportSize({ width: w, height: h }); await page.waitForTimeout(120);
-        const r = await mesurer(page, EXTRA);
-        const barre = await page.evaluate(() => { const W = document.documentElement.clientWidth; return [...document.querySelectorAll('#ui5 .sg-barre *')].filter(e => { const b = e.getBoundingClientRect(); return b.width && b.right > W + 1; }).length; });
-        if (r.deborde || r.sortants.length || r.faibles.length || barre) defauts.push({ nom, w, h, r: { deborde: r.deborde, sortants: r.sortants, faibles: r.faibles }, barre });
-      }
-    }
-    assert.deepEqual(erreurs, []);
-  } finally { await nav.close(); }
-  assert.deepEqual(defauts, []);
-});
