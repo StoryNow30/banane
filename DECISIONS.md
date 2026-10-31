@@ -3324,3 +3324,12 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 - L'opérateur : « c'est une piste que nous explorerons pour Ariane 6 ou 5.1 ». Rien n'est lancé dans la 5.0.
 - Même jour, sans numéro propre : l'icône de l'extension reprend le logo de Signal, tuile claire très arrondie, sans vert (ordre de l'opérateur).
 - Le numéro suivant est D-273.
+
+## D-273 — Chantiers de fin de 5.0, éveil du système, correction dans Orbite (opérateur, 31/10/2026)
+
+- **Cursor revient parmi les développeurs** ; l'opérateur autorise de lancer en masse tous les chantiers prévus pour la 5.0.
+- **Éveil du système (CH-027)** : « garder le système éveillé via Chrome » ; **ordre écrit : « j'autorise la permission du manifeste »** → permission `power` ajoutée au manifeste (test 29). Constat de l'opérateur : ESV et Ariane ont tourné écran éteint ; l'échec vient de la veille du système : niveau `system` (l'écran peut s'éteindre). Réglage `eveil` dans `src/settings.js`.
+- **Banc de rejeu léger** : approuvé (CH-029) ; la version complète reste pour Ariane 6.
+- **Correction dans Orbite (CH-028)** : « go la correction dans Orbite, où on valide dans ESV une correction définitive enregistrée en Écho » ; liste de cuts à corriger en fin de lot ou de file, inscrite dans l'export Orbite ; Ariane n'écrit rien dans ESV dans cette fonction.
+- **Chantiers en suspens qui avancent** : CH-030 (juger-lot par geste, D-269), CH-031 (journal de la remise de vue), CH-033 (poser sur la bonne voie, recherche, D-270).
+- Le numéro suivant est D-274.
