@@ -34,6 +34,8 @@ const sansPatchs=texte=>sansPatchCH018(texte.replace(/\n \/\* CH-017 \(T27a, PRO
 const sansChangerPartiePont=s=>s.replace("'changerPartie',",'');
 const sansPatchCH018=texte=>{const os=require('node:os'),{spawnSync}=require('node:child_process'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch018-'));
  fs.mkdirSync(path.join(tmp,'src'),{recursive:true});fs.writeFileSync(path.join(tmp,'src/adapter-page.js'),texte);
+ /* Test 29 (CH-031) : la durée de la remise de la vue (`dureeMs`, lecture de l'horloge) s'ajoute à `remettreVue` ; retirée d'abord, avant celle de CH-018. */
+ const r31=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-031/adapter-page-remise.patch')],{encoding:'utf8'});assert.equal(r31.status,0,'le patch de CH-031 se retire de l\'adaptateur : '+(r31.stderr||r31.stdout));
  const r=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
  assert.equal(r.status,0,'le patch de CH-018 se retire de l\'adaptateur : '+(r.stderr||r.stdout));return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');};
 const PANNEAU={'src/gestes-vue.js':sansClicDroit,'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
