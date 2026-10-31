@@ -216,7 +216,7 @@
  function majEtat(){const c=cutCourant();$('maquette-etat').textContent=c?`${etat.scenario.provenance?`rejeu de ${etat.scenario.provenance.entree} (${etat.scenario.provenance.nature}) · `:''}partie ${etat.partie.part}, cut ${c.cut} (${c.status}), ${etat.partie.cuts.length} coupes, latence ${options.latence} ms × ${options.lots} lots`:'—';}
  /* ---------- démarrage : scénario puis liste des coupes (GET paginé) ---------- */
  async function demarrer(){
-  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}${q.has('statut1')?'&statut1='+q.get('statut1'):''}`);
+  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}`);
   if(!r0.ok)throw Error((await r0.json().catch(()=>({}))).error||('scénario : HTTP '+r0.status));const s=await r0.json();etat.scenario=s;
   for(const p of s.parties){const lignes=[];let url=`/rails/${p.table}`;for(;;){const r=JSON.parse((await xhr('GET',url)).texte);lignes.push(...r.value);if(!r.suite)break;url=`/rails/${p.table}?npk=${encodeURIComponent(r.suite.npk)}&nrk=${r.suite.nrk}`;}
    etat.listes.set(p.part,lignes);for(const c of p.cuts){const l=lignes[c.cut];if(l&&l.ExtractionStatus)c.status=l.ExtractionStatus;}}

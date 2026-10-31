@@ -40,7 +40,7 @@ function demarrer(options={}){
   const garder=(cle,fabrique)=>{if(!scenarios.has(cle)){scenarios.set(cle,fabrique());idScenario.set(cle,'s'+idScenario.size);}return {scenario:scenarios.get(cle),id:idScenario.get(cle)};};
   const scenario=q=>{if(q.source==='export'){if(!exportation)throw Error('aucun export chargé (option --export ou BANANE_MAQUETTE_EXPORT)');
       return garder('export|'+(q.part??'')+'|'+(q.valides??''),()=>require('./lecteur-export.cjs').construire(exportation,{part:q.part!==undefined?Number(q.part):undefined,valides:q.valides!==undefined?Number(q.valides):0}));}
-    return garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2,...(q.parties!==undefined?[q.parties]:[]),...(q.statut1!==undefined?[q.statut1]:[])]),()=>S.construire(q));};
+    return garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2,...(q.parties!==undefined?[q.parties]:[])]),()=>S.construire(q));};
   const tables=()=>[...scenarios.values()].flatMap(s=>s.parties);
   const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(body));};
   const serveur=http.createServer((req,res)=>{

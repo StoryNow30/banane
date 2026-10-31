@@ -67,7 +67,7 @@ test('compteur : « N on M treated », N ≤ M, entiers',opts,async()=>{
 /* Changement de partie : durée réelle, page vide pendant le chargement, ouverture au premier cut, refus tant qu'il reste des cuts. */
 const reel=F.changementsResume.dureeMs;
 async function changer({mode,statut1}){
-  const env=await N.ouvrir({maquette:{cuts:5,debut:100,latence:10,parties:2,partie2:4,delaiPartie:'reel',...(statut1?{statut1}:{})}});
+  const env=await N.ouvrir({maquette:{cuts:5,debut:100,latence:10,parties:statut1?'2:'+statut1:2,partie2:4,delaiPartie:'reel'}});
   await env.injecter();
   if(mode==='suivant-dernier')await env.page.evaluate(()=>document.dispatchEvent(new CustomEvent('maquette:goto',{detail:{cut:104}})));
   const avant=await env.etat(),t0=Date.now();
