@@ -67,20 +67,22 @@ function decoupe(capture){const c=capture.clouds?.[0]?.clipping;if(!c||!Array.is
   return {task:c.task||'SHOW_INSIDE',method:c.method||'INSIDE_ANY',boites:c.boxesSceneRelativeToUnit.map(m=>m.slice())};}
 function construire(options={}){
   const nb=Number(options.cuts??12),debut=Number(options.debut??100),part=Number(options.part??23),partie2=Number(options.partie2??4);
+  /* CH-029 : `parties` peut porter un statut imposé à la première partie, « 2:valid » (plus rien à valider : N on N treated). */
+  const [nbParties,statut1]=String(options.parties??2).split(':');
   const base=corpus(),direction=base[0].capture.rails.left.railLocalToSceneRelative.slice(0,3);
   const statut=i=>i%5===4?'valid':i%7===6?'skipped':'invalid';
   const partie=(numero,premier,n,decalageIndex)=>{
     const cuts=[];
     for(let i=0;i<n;i++){const src=base[(decalageIndex+i)%base.length],k=decalageIndex+i;
       const origine=ORIGINE_MONDE.map((v,j)=>arrondi(v+direction[j]*PAS_M*k,6));
-      cuts.push({cut:premier+i,index:i,status:statut(k),origine,source:src.nom,shape:src.capture.shape||'U50',
+      cuts.push({cut:premier+i,index:i,status:(numero===part&&statut1)||statut(k),origine,source:src.nom,shape:src.capture.shape||'U50',
         rails:{left:rail(src.capture,'left',origine),right:rail(src.capture,'right',origine)},noeuds:noeuds(src.capture),decoupe:decoupe(src.capture)});}
     return {part:numero,table:`maquette-${numero}`,cuts};
   };
   return {format:'banane-esv-maquette-scenario-v1',monde:{origine:ORIGINE_MONDE,pas:PAS_M,direction},
     camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,.6]},
     /* CH-017 : `parties` (défaut 2) : parties de plus, de `partie2` cuts chacune, numérotées à la suite (file de parties). */
-    parties:[partie(part,debut,nb,0),...Array.from({length:Math.max(1,Number(options.parties??2))-1},(_,i)=>partie(part+1+i,1,partie2,nb+i*partie2))]};
+    parties:[partie(part,debut,nb,0),...Array.from({length:Math.max(1,Number(nbParties))-1},(_,i)=>partie(part+1+i,1,partie2,nb+i*partie2))]};
 }
 /* Lignes de la liste des coupes (forme de fiches/FICHE_B1.md, valeurs factices). La page d'ESV affiche
  * « Cut N » pour la ligne d'indice N (lecture du code d'ESV, mission B ; B1 s'y fie) : la liste porte donc une

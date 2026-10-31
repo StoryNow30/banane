@@ -40,6 +40,11 @@
  const options={cuts:num('cuts',12),debut:num('debut',100),part:num('part',23),cut:num('cut',NaN),latence:num('latence',40),lots:num('lots',4),
    latenceRails:num('latenceRails',60),decoupeTardive:num('decoupeTardive',1)===1,distanceCamera:10,source:q.get('source')||'synthetique',valides:num('valides',0)};
  options.selecteur=num('selecteur',1);   /* T20a : sélecteur de parties SUPPOSÉ (0 : absent) */
+ options.selecteurRetard=num('selecteurRetard',0);   /* CH-029 : ms avant que le sélecteur n'apparaisse après le chargement (relevés 4.9.5.27 et .28 : absent à la connexion, boutons présents) */
+ options.partiesAffichees=num('partiesAffichees',0);   /* CH-029 : nombre d'entrées du sélecteur (réel : 15 à 28, de 0 à n − 1) ; 0 : jusqu'à la dernière partie du scénario */
+ /* CH-029 : durée du changement de partie. Réel (3 séances, 5 changements) : 9,7 à 12,2 s jusqu'à la partie ouverte, la page se vidant (plus de bouton,
+  * de sélecteur ni d'écouteur) environ 0,4 à 0,6 s après le geste. `reel` = 10 500 ms ; 0 (défaut) : instantané, pour ne pas ralentir les autres essais. */
+ { const d=q.get('delaiPartie'); options.delaiPartie=d==='reel'?10500:(Number.isFinite(Number(d))?Number(d):0); }
  options.traversee=num('traversee',1);   /* CH-026 : témoignage de l'opérateur (30/10) : au dernier cut, « Next cut » (Z) ouvre la partie suivante ; plus rien à valider, « Next non validated cut » aussi. 0 : ESV reste dans la partie */
  /* ESV parle à son serveur en XMLHttpRequest (c'est ce que l'observateur d'Ariane enveloppe) : la maquette aussi. */
  const xhr=(methode,url,corps)=>new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open(methode,url,true);if(corps!==undefined)x.setRequestHeader('content-type','application/json');
@@ -140,8 +145,16 @@
   log('rail-choisi',{side});requestAnimationFrame(()=>recentrer(side)); /* la caméra suit à l'image suivante (D-088) */}
  /* CH-026 : la partie suivante du scénario ; y passer recharge le sélecteur (entrée courante) et ouvre son premier cut non validé (ou le premier). */
  const partieApres=()=>etat.scenario?.parties[etat.scenario.parties.indexOf(etat.partie)+1]||null;
+ /* CH-029 : réel (5 changements sur 5) : la partie suivante s'ouvre à son PREMIER cut, pas au premier non validé. Avec `delaiPartie`, la page se vide
+  * après 450 ms (boutons, sélecteur et écouteurs absents) puis la partie s'ouvre à la fin du délai. */
+ let rechargement=false;
  function passerPartieSuivante(raison){const suivante=partieApres();if(!suivante){log('partie-suivante-aucune',{raison});return false;}
-  etat.partie=suivante;selecteurParties(etat.scenario);const j=prochain('non-valide',-1);chargerCut(j>=0?j:0,raison);return true;}
+  const ouvrir=()=>{rechargement=false;etat.partie=suivante;selecteurParties(etat.scenario);chargerCut(0,raison);majCompteur();};
+  if(!options.delaiPartie){ouvrir();return true;}
+  rechargement=true;setTimeout(()=>{viderPage(true);},450);setTimeout(()=>{viderPage(false);ouvrir();},options.delaiPartie);log('page-rechargee-debut',{raison,delai:options.delaiPartie});return true;}
+ const cachees=[];
+ function viderPage(vide){if(vide){for(const el of [...document.querySelectorAll('header button[id^="O2N3DCut"]'),...document.querySelectorAll('#maquette-parties li')]){cachees.push({el,parent:el.parentNode,suivant:el.nextSibling});el.remove();}viderCut();}
+  else{for(const c of cachees.splice(0))c.parent.insertBefore(c.el,c.suivant&&c.suivant.parentNode===c.parent?c.suivant:null);}}
  function invalideSuivant(){const i=prochain('non-valide');if(i<0){if(options.traversee&&passerPartieSuivante('invalide-suivant-partie'))return;log('invalide-suivant-aucun');return;}chargerCut(i,'invalide-suivant');}
  function invalidePrecedent(){const i=prochain('non-valide',etat.index,-1);if(i<0){log('invalide-precedent-aucun');return;}chargerCut(i,'invalide-precedent');}
  function validerEtSuivant(){if(!rails.left)return;void ecrire('valid');const i=prochain('non-valide');
@@ -171,7 +184,7 @@
  const jq=sel=>{const el=typeof sel==='string'?document.querySelector(sel):sel;return {0:el,length:el?1:0,
    trigger(nom,args=[]){const hs=evenementsJq.get(el)?.[nom]||[];log('evenement-jquery',{nom,args:[].concat(args).map(String)});for(const h of hs)h.handler({type:nom,target:el},...[].concat(args));return this;},
    on(nom,handler){const m=evenementsJq.get(el)||{};(m[nom]=m[nom]||[]).push({handler});evenementsJq.set(el,m);return this;}};};
- jq._data=(el,cle)=>cle==='events'?(evenementsJq.get(el)||{}):undefined;jq.fn={jquery:'maquette-0.1'};
+ jq._data=(el,cle)=>cle==='events'?(rechargement&&cachees.length?{}:(evenementsJq.get(el)||{})):undefined;jq.fn={jquery:'maquette-0.1'};
  window.$=window.jQuery=jq;
  jq('#globalcontainer').on('railPairSelected',function(e,n,i){loadCut(n,i);}).on('railPairUpdated',()=>{}).on('railPairSeen',()=>{}).on('loading',()=>{}).on('newPart',()=>{});
  document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select'))return;const which=e.which||e.keyCode;
@@ -221,7 +234,8 @@
   * l'entrée courante marquée ; et `absent` (aucun lien p=) au relevé de 14:38. La maquette offre donc toutes les parties de 0 à la dernière du
   * scénario, libellées par leur seul numéro. */
  function selecteurParties(s){const ul=$('maquette-parties');if(!ul)return;ul.textContent='';if(!options.selecteur)return;
-  const courante=etat.partie?.part,nums=new Set(),der=Math.max(...s.parties.map(p=>p.part));for(let n=0;n<=der;n++)nums.add(n);
+  if(options.selecteurRetard>0&&!selecteurParties.vu){selecteurParties.vu=true;setTimeout(()=>selecteurParties(s),options.selecteurRetard);return;}
+  const courante=etat.partie?.part,nums=new Set(),der=options.partiesAffichees>0?options.partiesAffichees-1:Math.max(...s.parties.map(p=>p.part));for(let n=0;n<=der;n++)nums.add(n);
   for(const n of [...nums].sort((a,b)=>a-b)){const li=document.createElement('li'),a=document.createElement('a'),u=new URLSearchParams(location.search);u.set('p',String(n));
    li.className='list-group-item'+(n===courante?' active':'');a.href='?'+u.toString();a.textContent=String(n);if(n===courante)a.className='active';li.appendChild(a);ul.appendChild(li);}
   log('selecteur-parties',{parties:[...nums],courante,suppose:true});}
