@@ -566,7 +566,7 @@
   /* CH-028 : L'ONGLET « Correction » (Figma, page « CH-028 · Correction dans Orbite » : liste proposée, cut ouvert dans ESV, correction enregistrée, liste
    * terminée). D'après `snap.correction` (src/ui5.js). Ariane n'écrit rien dans ESV : l'opérateur corrige et valide lui-même, la séance Écho marquée enregistre ;
    * « Ouvrir » ne sert que pendant la correction ouverte, sur la partie affichée dans ESV. */
-  const LIB_SIGNAL = { 'passe-ecrite': 'écrit par la deuxième passe', 'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui', 'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', 'faux-vert': 'faux vert possible', differe: 'différé' };
+  const LIB_SIGNAL = { 'passe-ecrite': 'écrit par la deuxième passe', 'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui', 'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', differe: 'différé' };
   const MOTIF_DIFFERE = { 'garde-apres-differe': 'garde après un différé', candidat: 'candidat', 'gauge-out-of-contract': 'écartement hors contrat' };
   function detailSignal(l) {
     const [p, ...autres] = l.signaux || [], d = (l.details || {})[p] || {};

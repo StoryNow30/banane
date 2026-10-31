@@ -118,3 +118,44 @@ test('« Ouvrir » refusé par le retour au cut : le cut courant n’est pas not
   assert.equal(b.fonction('engine.s.native.status'), 'RUNNING');
   assert.equal(evts(b, 'correction-ouvrir').at(-1).resultat, 'refuse');
 });
+
+/* Demande de la mère (31/10) : l'opérateur ne démarre jamais Écho à la main pour la correction, et aucune séance Écho « correction » ne reste ouverte
+ * par erreur : fin propre à la fin de la liste, à la fermeture du panneau, si Écho est fermé ailleurs (abandon), et après un redémarrage du service worker. */
+const finPropre = async (b, raison) => {
+  assert.equal(b.fonction('engine.s.correction.etat'), 'terminee', raison);
+  assert.notEqual(b.fonction('engine.s.native.status'), 'RUNNING', raison + ' : Écho fermé');
+  assert.ok(!['RUNNING', 'PAUSED', 'STARTING', 'PAUSED_ADAPTER_UNRESPONSIVE'].includes(b.fonction('engine.s.native.status')), raison + ' : aucune séance ouverte');
+  const f = evts(b, 'correction-fin').at(-1); assert.equal(f.raison, raison); return f;
+};
+test('fin propre : la fermeture du panneau termine la correction et ferme sa séance Écho', async () => {
+  const b = await monter(); await b.api('correction-liste');
+  const port = b.connectPanel('chrome-extension://test/panel.html#automatic', 3, 33);
+  await b.api('correction-demarrer');
+  await port.disconnect(); for (let i = 0; i < 30; i++) await new Promise(r => setImmediate(r));
+  await finPropre(b, 'panneau-ferme');
+});
+test('fin propre : la liste finie (chaque cut validé ou corrigé) termine d’elle-même à la lecture suivante de la vue', async () => {
+  const b = await monter(); await b.api('correction-liste'); await b.api('correction-demarrer');
+  await b.api('view'); assert.equal(b.fonction('engine.s.correction.etat'), 'ouverte', 'pas tant que des cuts restent');
+  const cuts = b.fonction('engine.s.correction.listes[0].entrees.map(e=>e.cut)');
+  b.fonction(`engine.s.native.visits=${JSON.stringify(cuts.map((c, i) => ({ visitId: 'v' + c, identity: { part: 5, cut: c }, startedAt: '2026-10-31T10:00:00Z', endedAt: '2026-10-31T10:00:05Z', label: i % 2 ? 'VALIDATE_NO_MOVEMENT' : 'VALIDATE_CORRECTED_LEFT' })))}`);
+  const v = await b.api('view');
+  assert.equal(v.correction.etat, 'terminee');
+  const f = await finPropre(b, 'liste-finie'); assert.equal(f.comptes.traites, cuts.length);
+});
+test('fin propre : Écho terminé ailleurs (onglet Écho, abandon) ou service worker redémarré : la correction se clôt, bilan inscrit', async () => {
+  const b = await monter(); await b.api('correction-liste'); await b.api('correction-demarrer');
+  await b.api('native-end'); await b.api('view');
+  await finPropre(b, 'echo-ferme');
+  const c = await monter(); await c.api('correction-liste'); await c.api('correction-demarrer');
+  c.fonction('correctionVivante=null');   /* ce qu'un redémarrage du service worker laisse : la mémoire de la correction vivante est perdue */
+  await c.api('view');
+  await finPropre(c, 'sw-redemarre');
+});
+test('« Ouvrir » en vol : la pause d’Écho qu’il fait ne clôt pas la correction', async () => {
+  const b = await monter(); await b.api('correction-liste'); await b.api('correction-demarrer');
+  let vue = null; const go = b.adapter.goToCut.bind(b.adapter);
+  b.adapter.goToCut = async function (c) { vue = await b.api('view'); return go(c); };
+  const r = await b.api('correction-ouvrir', { part: 5, cut: 14 });
+  assert.equal(r.ok, true); assert.equal(vue.correction.etat, 'ouverte'); assert.equal(b.fonction('engine.s.correction.etat'), 'ouverte');
+});

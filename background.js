@@ -2356,7 +2356,9 @@ chrome.runtime.onConnect.addListener(port=>{
  if(port.name!=='banane-panel-presence'||port.sender?.id!==chrome.runtime.id||sansFragment!==chrome.runtime.getURL(PANEL))return;
  panelPorts.set(port,{url,windowId:port.sender?.tab?.windowId,tabId:port.sender?.tab?.id});
  if(Number.isInteger(port.sender?.tab?.windowId))panelWindows.set(port.sender.tab.windowId,url);
- port.onDisconnect.addListener(()=>{panelPorts.delete(port);void syncLauncher().catch(()=>{});});
+ port.onDisconnect.addListener(()=>{panelPorts.delete(port);void syncLauncher().catch(()=>{});
+  /* CH-028 : le dernier panneau fermé clôt une correction ouverte (sa séance Écho avec elle). */
+  if(!panelPorts.size)void ready.then(()=>correctionVerifierFin('panneau-ferme')).catch(()=>{});});
  void syncLauncher().catch(()=>{});
 });
 chrome.windows.onRemoved?.addListener(id=>{panelWindows.delete(id);for(const [port,info] of panelPorts)if(info.windowId===id)panelPorts.delete(port);void syncLauncher().catch(()=>{});});
@@ -2716,6 +2718,23 @@ async function correctionListe(args){
  engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes};
  await engine.save();return vuePanneau();}
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
+/* FIN PROPRE (demande de la mère, 31/10) : aucune séance Écho « correction » ne reste ouverte par erreur. `correctionVivante` (mémoire du service worker)
+ * porte l'identifiant de la correction démarrée ou reprise dans CETTE vie du service worker ; `correctionOuverture` couvre la pause d'Écho que fait
+ * « Ouvrir ». `correctionVerifierFin` clôt la correction (Écho fermé, bilan inscrit) quand : la liste est finie (chaque cut validé ou corrigé),
+ * la séance Écho de la correction n'est plus active (terminée depuis l'onglet Écho, abandonnée), ou le service worker a redémarré. Appelée à chaque
+ * lecture de la vue par le panneau ; la fermeture du dernier panneau clôt aussi la correction. */
+let correctionVivante=null,correctionOuverture=false,correctionFinEnCours=null;
+async function correctionVerifierFin(raisonImposee=null){
+ const C=engine.s.correction;if(!C||C.etat!=='ouverte'||correctionOuverture||correctionFinEnCours)return;
+ const n=engine.s.native,miens=n?.correction?.id===C.id;
+ let raison=raisonImposee;
+ if(!raison&&correctionVivante!==C.id)raison='sw-redemarre';
+ if(!raison&&!(miens&&native.active()))raison='echo-ferme';
+ if(!raison&&miens){const b=CL().bilan(entreesCorrection(C),(n.visits||[]).map(v=>({identity:v.identity,label:v.label??null})));
+  if(b.comptes.total&&b.comptes.traites===b.comptes.total)raison='liste-finie';}
+ if(!raison)return;
+ correctionFinEnCours=correctionTerminer({raison}).catch(e=>journalerSimple('correction-fin',{correctionId:C.id,raison,etat:'erreur',message:String(e?.message||e).slice(0,160)})).finally(()=>{correctionFinEnCours=null;});
+ await correctionFinEnCours;}
 async function correctionDemarrer(){
  const C=engine.s.correction;if(!C||C.etat!=='proposee')throw Error('Aucune liste à corriger proposée.');
  /* « Ouvrir » serait refusé ensuite (retour à un cut, D-067) : dit dès le départ, rien n'est démarré. */
@@ -2723,7 +2742,7 @@ async function correctionDemarrer(){
  if(engine.s.intent||engine.s.reconcileRequired)throw Error('Correction non démarrée : un résultat incertain reste à clôturer.');
  const cuts=entreesCorrection(C).map(e=>({part:e.part,cut:e.cut}));if(!cuts.length)throw Error('La liste à corriger est vide.');
  await demarrerEcho({correction:{id:C.id,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.slice(0,2000),version:CL().VERSION}});
- C.etat='ouverte';C.debutA=new Date().toISOString();C.sessionId=engine.s.native?.id??null;await engine.save();
+ C.etat='ouverte';C.debutA=new Date().toISOString();C.sessionId=engine.s.native?.id??null;correctionVivante=C.id;await engine.save();
  journalerSimple('correction-debut',{correctionId:C.id,sessionEcho:C.sessionId,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.length});
  return vuePanneau();}
 const correctionOuverte=()=>{const C=engine.s.correction,n=engine.s.native;return !!C&&C.etat==='ouverte'&&!!n&&n.correction?.id===C.id&&native.active();};
@@ -2732,22 +2751,24 @@ async function correctionOuvrir(args){
  const part=Number.isInteger(args?.part)?args.part:null,cut=Number.isInteger(args?.cut)?args.cut:null;
  if(!entreesCorrection(C).some(e=>e.part===part&&e.cut===cut))throw Error(`Le cut ${cut} de la partie ${part} n’est pas dans la liste à corriger.`);
  const enMarche=engine.s.native.status==='RUNNING';
- if(enMarche)await native.pause();
- let r=null,erreur=null;
- try{r=await allerAuCut({part,cut});}catch(e){erreur=e;}
- finally{if(enMarche||engine.s.native?.status==='PAUSED'){try{await native.resume();}catch(e){erreur=erreur||e;}}}
+ correctionOuverture=true;let r=null,erreur=null;
+ try{if(enMarche)await native.pause();
+  try{r=await allerAuCut({part,cut});}catch(e){erreur=e;}
+  finally{if(enMarche||engine.s.native?.status==='PAUSED'){try{await native.resume();}catch(e){erreur=erreur||e;}}}}
+ finally{correctionOuverture=false;}
  journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:erreur?'erreur':r?.resultat??null,code:r?.code??null,message:erreur?String(erreur.message||erreur).slice(0,160):r?.message??null,
   ecoReprise:engine.s.native?.status??null});
  if(erreur)throw erreur;
  if(r?.ok){C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();}
  return {...r,correction:C};}
-async function correctionTerminer(){
+async function correctionTerminer({raison='operateur'}={}){
  const C=engine.s.correction;if(!C||C.etat!=='ouverte')throw Error('Aucune correction en cours.');
  const n=engine.s.native;if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
+ correctionVivante=null;
  const visites=(engine.s.native?.correction?.id===C.id?engine.s.native.visits:[])||[];
  const b=CL().bilan(entreesCorrection(C),visites.map(v=>({identity:v.identity,label:v.label??null})));
- Object.assign(C,{etat:'terminee',finA:new Date().toISOString(),bilan:b.comptes,courant:null});await engine.save();
- journalerSimple('correction-fin',{correctionId:C.id,sessionEcho:C.sessionId??null,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
+ Object.assign(C,{etat:'terminee',finA:new Date().toISOString(),bilan:b.comptes,courant:null,raisonFin:raison});await engine.save();
+ journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
  return vuePanneau();}
 async function correctionFermer(){const C=engine.s.correction;if(C?.etat==='ouverte')throw Error('Termine la correction avant de fermer la liste.');
  delete engine.s.correction;await engine.save();return vuePanneau();}
@@ -3719,14 +3740,14 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   try{await equiperOnglet(tab);}catch(e){connexionStatut('unavailable',e?.message,tab);throw e;}
   try{await engine.observe();}catch{/* page équipée ; la lecture de la vue reprendra */}
   await engine.save();return engine.view();}
- if(action==='view'){if(selectedTab===null&&engine.s.connection?.status!=='no-tab')connexionStatut('no-tab','Aucun onglet ESV choisi.',null);
+ if(action==='view'){await correctionVerifierFin().catch(()=>{});if(selectedTab===null&&engine.s.connection?.status!=='no-tab')connexionStatut('no-tab','Aucun onglet ESV choisi.',null);
   pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
  /* CH-028 : la correction dans Orbite (avant le refus général « Écho est actif » : la correction EST une séance Écho). */
  if(action==='correction-liste')return correctionListe(args);
  if(action==='correction-demarrer')return correctionDemarrer();
  if(action==='correction-ouvrir')return correctionOuvrir(args);
- if(action==='correction-terminer')return correctionTerminer();
+ if(action==='correction-terminer')return correctionTerminer({raison:'operateur'});
  if(action==='correction-fermer')return correctionFermer();
  if(action==='native-start')return demarrerEcho();
  if(action==='native-pause')return native.pause();

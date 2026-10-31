@@ -19,7 +19,8 @@
  *   garde-suivant    posé que l'événement `garde-apres-differe-suivant` signale (cut voisin d'un cut différé par la garde R3) ;
  *   passe-ecrite     cut écrit par la deuxième passe (pire déplacement du rail donné) ;
  *   relecture        la relecture après le lot dit « je corrigerais » sans avoir corrigé (règle prudente non passée) ;
- *   faux-vert        l'ombre « faux vert » du lot aurait différé ce cut.
+ * L'ombre « faux vert » n'est pas lue : seuls son module, la décision sur le lot et le réglage la nomment (tests/faux-vert-ombre.test.cjs), et elle
+ * n'a signalé aucun cut sur les lots mesurés (partie 20 : 0 sur 721 ; partie 10 : « valider » partout).
  * Chaque entrée : { part, cut, groupe: 'corriger'|'poser', signaux: [cle…], details: {…}, rang }. Le rang ordonne la liste (le plus fort d'abord,
  * puis l'ordre des cuts). Aucun chiffre n'est deviné : un signal absent du journal n'est simplement pas porté. */
 (function (root, factory) {
@@ -30,10 +31,10 @@
   const VERSION = 'correction-liste-1';
   const DEPART_VERT_S = 30, FIN_APRES_ARRET_S = 5;
   /* Ordre de force (le premier est le plus probablement faux). */
-  const SIGNAUX = ['passe-ecrite', 'apres-differe', 'sans-appui', 'garde-suivant', 'relecture', 'faux-vert', 'differe'];
+  const SIGNAUX = ['passe-ecrite', 'apres-differe', 'sans-appui', 'garde-suivant', 'relecture', 'differe'];
   const LIBELLE = {
     'passe-ecrite': 'écrit par la deuxième passe', 'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui',
-    'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', 'faux-vert': 'faux vert possible', differe: 'différé',
+    'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', differe: 'différé',
   };
   const fini = Number.isFinite;
   const instant = e => { const t = Date.parse(e && e.timestamp || ''); return fini(t) ? t : null; };
@@ -96,8 +97,6 @@
       const parLeLot = cmd.action === 'lot';
       if (r1.length) ajoute(c, 'apres-differe', { differes: r1 });
       if (appuis === 0 && (r1.length || parLeLot)) ajoute(c, 'sans-appui', { commande: cmd.reason || null });
-      const fv = L.fauxVertOmbre;
-      if (fv && (fv.verdict === 'differer' || fv.verdict === 'différer')) ajoute(c, 'faux-vert', { raison: fv.raison || null });
     }
     for (const e of ev) if (e.type === 'garde-apres-differe-suivant' && e.batchId === B && dePartie(e) && (poses.has(e.identity.cut))) ajoute(e.identity.cut, 'garde-suivant', { cutsGarde: Array.isArray(e.cutsGarde) ? e.cutsGarde.slice(0, 4) : [] });
     /* Relecture du lot : « je corrigerais » sans correction. Seuls les cuts du lot (cibles) : la relecture visite aussi des verts d'avant le lot,

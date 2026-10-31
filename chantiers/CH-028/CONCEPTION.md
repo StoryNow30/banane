@@ -13,10 +13,9 @@ Elle est lue dans le journal du lot, avec les mêmes définitions que `juger-lot
 | `sans-appui` | posé sans appui de chaîne, par une commande du lot, ou avec R1 | `lotObservation.anchorsUsed`, `command` |
 | `garde-suivant` | posé voisin d'un cut différé par la garde R3 | `garde-apres-differe-suivant` |
 | `relecture` | la relecture dit « je corrigerais » et n'a pas corrigé | `relecture-ombre` |
-| `faux-vert` | l'ombre « faux vert » aurait différé | `lotObservation.fauxVertOmbre` |
 | `differe` | différé restant (groupe « à poser », à part) | cibles sans pose |
 
-Les « verts à contrôler » restent dans le tiroir « Ce qui reste ». Ce ne sont pas des poses d'Ariane.
+L'ombre « faux vert » n'est finalement pas lue : une garde existante (`tests/faux-vert-ombre.test.cjs`) réserve sa lecture à son module, et elle n'a signalé aucun cut sur les lots mesurés. Les « verts à contrôler » restent dans le tiroir « Ce qui reste ». Ce ne sont pas des poses d'Ariane.
 
 ## 3. Où elle vit dans Signal
 - **Un onglet « Correction »** dans la bascule, à côté d'Orbite, Écho et File. Il n'apparaît que lorsqu'une liste existe. Il ne va pas dans le tiroir : le tiroir montre ce qui reste à examiner, alors que la correction est une séance avec un état.
