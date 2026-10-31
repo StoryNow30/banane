@@ -68,12 +68,13 @@ function decoupe(capture){const c=capture.clouds?.[0]?.clipping;if(!c||!Array.is
 function construire(options={}){
   const nb=Number(options.cuts??12),debut=Number(options.debut??100),part=Number(options.part??23),partie2=Number(options.partie2??4);
   const base=corpus(),direction=base[0].capture.rails.left.railLocalToSceneRelative.slice(0,3);
-  const statut=i=>i%5===4?'valid':i%7===6?'skipped':'invalid';
+  /* CH-029 : `statut1` impose un statut à tous les cuts de la première partie (ex. « valid » : plus rien à valider, N on N treated). */
+  const statut=(i,force)=>force||(i%5===4?'valid':i%7===6?'skipped':'invalid');
   const partie=(numero,premier,n,decalageIndex)=>{
     const cuts=[];
     for(let i=0;i<n;i++){const src=base[(decalageIndex+i)%base.length],k=decalageIndex+i;
       const origine=ORIGINE_MONDE.map((v,j)=>arrondi(v+direction[j]*PAS_M*k,6));
-      cuts.push({cut:premier+i,index:i,status:statut(k),origine,source:src.nom,shape:src.capture.shape||'U50',
+      cuts.push({cut:premier+i,index:i,status:statut(k,numero===part?options.statut1:undefined),origine,source:src.nom,shape:src.capture.shape||'U50',
         rails:{left:rail(src.capture,'left',origine),right:rail(src.capture,'right',origine)},noeuds:noeuds(src.capture),decoupe:decoupe(src.capture)});}
     return {part:numero,table:`maquette-${numero}`,cuts};
   };

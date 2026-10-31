@@ -1,0 +1,310 @@
+{
+ "format": "ariane-esv-releves-reels-v1",
+ "provenance": {
+  "collections": [
+   "file-parties 4.9.5.26 (30/10)",
+   "file-3-parties 4.9.5.27 (30/10)",
+   "file 4.9.5.28 (31/10)"
+  ],
+  "qualite": "ÉTABLI : lu dans les journaux Orbite de trois séances sur un vrai ESV. Seulement des comptes, des formes et des délais : aucun numéro de cut précis, identifiant, coordonnée ni adresse.",
+  "extraction": "Dérivé par script des événements releve-selecteur-parties, contrat-esv, avis-contrat-esv, file-parties-changement, reconnexion-auto et esv-releve du journal."
+ },
+ "selecteur": {
+  "releves": [
+   {
+    "version": "4.9.5.26",
+    "etat": "absent",
+    "n": 0,
+    "pageRechargee": true,
+    "current": null,
+    "parts": 0
+   },
+   {
+    "version": "4.9.5.26",
+    "etat": "ok",
+    "n": 15,
+    "pageRechargee": false,
+    "libellesNus": true,
+    "numerosConsecutifsDepuis0": true,
+    "entreesCourantes": 1,
+    "courantDansListe": true
+   },
+   {
+    "version": "4.9.5.27",
+    "etat": "absent",
+    "n": 0,
+    "pageRechargee": false,
+    "current": null,
+    "parts": 0
+   },
+   {
+    "version": "4.9.5.27",
+    "etat": "ok",
+    "n": 28,
+    "pageRechargee": false,
+    "libellesNus": true,
+    "numerosConsecutifsDepuis0": true,
+    "entreesCourantes": 1,
+    "courantDansListe": true
+   },
+   {
+    "version": "4.9.5.27",
+    "etat": "ok",
+    "n": 28,
+    "pageRechargee": false,
+    "libellesNus": true,
+    "numerosConsecutifsDepuis0": true,
+    "entreesCourantes": 1,
+    "courantDansListe": true
+   },
+   {
+    "version": "4.9.5.27",
+    "etat": "absent",
+    "n": 0,
+    "pageRechargee": true,
+    "current": null,
+    "parts": 0
+   },
+   {
+    "version": "4.9.5.28",
+    "etat": "ok",
+    "n": 28,
+    "pageRechargee": false,
+    "libellesNus": true,
+    "numerosConsecutifsDepuis0": true,
+    "entreesCourantes": 1,
+    "courantDansListe": true
+   },
+   {
+    "version": "4.9.5.28",
+    "etat": "absent",
+    "n": 0,
+    "pageRechargee": false,
+    "current": null,
+    "parts": 0
+   },
+   {
+    "version": "4.9.5.28",
+    "etat": "absent",
+    "n": 0,
+    "pageRechargee": true,
+    "current": null,
+    "parts": 0
+   }
+  ],
+  "resume": {
+   "ok": 4,
+   "absent": 5,
+   "nEntrees": [
+    15,
+    28
+   ],
+   "absentPageRechargee": 3,
+   "absentSansRechargement": 2,
+   "absentForme": {
+    "current": null,
+    "n": 0,
+    "parts": 0
+   }
+  }
+ },
+ "contratEsv": {
+  "relevesPageRechargee": 16,
+  "compteEcouteurs": {
+   "railPairSelected": 2,
+   "railPairUpdated": 3,
+   "railPairSeen": 2,
+   "loading": 1,
+   "newPart": 1
+  },
+  "normal": {
+   "forme": 2,
+   "boutons": [
+    "O2N3DCutPreviousInvalid3DRail",
+    "O2N3DCutPrevious3DRail",
+    "O2N3DCutValidate3DRail",
+    "O2N3DCutSkip3DRail",
+    "O2N3DCutNext3DRail",
+    "O2N3DCutNextInvalid3DRail"
+   ],
+   "rails": [
+    "btn btn-outline-secondary leftRail(S|US)Class",
+    "btn btn-outline-secondary rightRail(S|US)Class"
+   ],
+   "jquery": "3.1.1",
+   "potree": "1.8.0",
+   "ecouteurs": [
+    "railPairSelected",
+    "railPairUpdated",
+    "railPairSeen",
+    "loading",
+    "newPart"
+   ],
+   "titres": {
+    "O2N3DCutPreviousInvalid3DRail": "Previous non validated cut",
+    "O2N3DCutPrevious3DRail": "Previous cut",
+    "O2N3DCutValidate3DRail": "Press ↵ to validate both rails (Load next non validated cut)",
+    "O2N3DCutSkip3DRail": "Ignore this cut and load the next one",
+    "O2N3DCutNext3DRail": "Next cut",
+    "O2N3DCutNextInvalid3DRail": "Next non validated cut"
+   },
+   "classesRails": [
+    "btn btn-outline-secondary leftRailSClass",
+    "btn btn-outline-secondary rightRailUSClass"
+   ]
+  },
+  "pageRechargee": {
+   "boutons": [],
+   "rails": [
+    null,
+    null
+   ],
+   "ecouteurs": {
+    "railPairSelected": false,
+    "railPairUpdated": false,
+    "railPairSeen": false,
+    "loading": false,
+    "newPart": false
+   },
+   "titres": []
+  }
+ },
+ "compteur": {
+  "forme": "N on M treated",
+  "releves": 1767,
+  "traitesInferieurOuEgalTotal": true,
+  "entiers": true,
+  "dernierCutEstTotalMoinsUn": true,
+  "note": "Le dernier cut d'une partie est M − 1 (cut 0..M−1) : les deux « dernier cut puis Next cut » sont partis du cut M − 1 et ont ouvert la partie suivante."
+ },
+ "changements": [
+  {
+   "version": "4.9.5.27",
+   "mode": "invalide-suivant",
+   "issue": "refus",
+   "raison": "reste-a-valider",
+   "compteurToutTraite": false,
+   "restants": 3,
+   "dureeMs": null,
+   "delaiRefusMs": 31,
+   "ouvreAuCut": null,
+   "partieSuivante": null,
+   "sansDecision": true,
+   "pageRechargeeApresMs": null,
+   "bouton": "O2N3DCutNextInvalid3DRail",
+   "gotoAvant": null
+  },
+  {
+   "version": "4.9.5.27",
+   "mode": "suivant-dernier",
+   "issue": "ok",
+   "raison": null,
+   "compteurToutTraite": false,
+   "restants": 3,
+   "dureeMs": 9710,
+   "delaiRefusMs": null,
+   "ouvreAuCut": 1,
+   "partieSuivante": true,
+   "sansDecision": true,
+   "pageRechargeeApresMs": 360,
+   "bouton": "O2N3DCutNext3DRail",
+   "gotoAvant": {
+    "resultat": "confirme",
+    "chemin": "evenement"
+   }
+  },
+  {
+   "version": "4.9.5.27",
+   "mode": "invalide-suivant",
+   "issue": "ok",
+   "raison": null,
+   "compteurToutTraite": true,
+   "restants": 0,
+   "dureeMs": 12221,
+   "delaiRefusMs": null,
+   "ouvreAuCut": 1,
+   "partieSuivante": true,
+   "sansDecision": true,
+   "pageRechargeeApresMs": 392,
+   "bouton": "O2N3DCutNextInvalid3DRail",
+   "gotoAvant": null
+  },
+  {
+   "version": "4.9.5.28",
+   "mode": "invalide-suivant",
+   "issue": "ok",
+   "raison": null,
+   "compteurToutTraite": true,
+   "restants": 0,
+   "dureeMs": 10991,
+   "delaiRefusMs": null,
+   "ouvreAuCut": 1,
+   "partieSuivante": true,
+   "sansDecision": true,
+   "pageRechargeeApresMs": 539,
+   "bouton": "O2N3DCutNextInvalid3DRail",
+   "gotoAvant": null
+  },
+  {
+   "version": "4.9.5.28",
+   "mode": "suivant-dernier",
+   "issue": "ok",
+   "raison": null,
+   "compteurToutTraite": false,
+   "restants": 8,
+   "dureeMs": 10263,
+   "delaiRefusMs": null,
+   "ouvreAuCut": 1,
+   "partieSuivante": true,
+   "sansDecision": true,
+   "pageRechargeeApresMs": 373,
+   "bouton": "O2N3DCutNext3DRail",
+   "gotoAvant": {
+    "resultat": "confirme",
+    "chemin": "evenement"
+   }
+  },
+  {
+   "version": "4.9.5.28",
+   "mode": "invalide-suivant",
+   "issue": "ok",
+   "raison": null,
+   "compteurToutTraite": true,
+   "restants": 0,
+   "dureeMs": 10807,
+   "delaiRefusMs": null,
+   "ouvreAuCut": 1,
+   "partieSuivante": true,
+   "sansDecision": true,
+   "pageRechargeeApresMs": 556,
+   "bouton": "O2N3DCutNextInvalid3DRail",
+   "gotoAvant": null
+  },
+  {
+   "version": "4.9.5.28",
+   "mode": "invalide-suivant",
+   "issue": "refus",
+   "raison": "reste-a-valider",
+   "compteurToutTraite": false,
+   "restants": 8,
+   "dureeMs": null,
+   "delaiRefusMs": 110,
+   "ouvreAuCut": null,
+   "partieSuivante": null,
+   "sansDecision": true,
+   "pageRechargeeApresMs": null,
+   "bouton": "O2N3DCutNextInvalid3DRail",
+   "gotoAvant": null
+  }
+ ],
+ "changementsResume": {
+  "n": 7,
+  "ok": 5,
+  "refus": 2,
+  "dureeMs": {
+   "min": 9710,
+   "max": 12221,
+   "n": 5
+  }
+ }
+}
