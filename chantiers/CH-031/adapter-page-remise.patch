@@ -1,0 +1,20 @@
+--- a/src/adapter-page.js	2026-10-31 19:17:36.232754491 +0000
++++ b/src/adapter-page.js	2026-10-31 19:20:54.948116509 +0000
+@@ -709,7 +709,7 @@
+  /* Remettre la vue habituelle : après un glisser, le bouton du rail la recentre ; des crans nets de dézoom sont rendus dans
+   * l'autre sens (par séries de `cransMax`) si l'échelle n'est pas déjà revenue. L'échelle est relue : écart au plus
+   * `remiseTolerance`, sinon `ok:false`. */
+- async function remettreVue(etat,side,expected,o,progress=()=>{}){const rap={ok:true,crans:0,recentre:false,ecartEchelle:0};
++ async function remettreVue(etat,side,expected,o,progress=()=>{}){const t0=Date.now(),rap={ok:true,crans:0,recentre:false,ecartEchelle:0};
+    if(!etat||etat.echelle0===null||(!etat.glisse&&!etat.crans))return rap;
+    const guard=gesteGarde(expected);
+    if(etat.glisse){await select(side,expected);rap.recentre=true;etat.glisse=false;}
+@@ -720,7 +720,7 @@
+        if(reste>0)await sleep(Math.round((o.molette.intervalleMs?.[1]??140)*2));}
+      cam=await cameraImmobile(guard);}
+    etat.crans=0;const ecart=Math.abs(echelleVue(cam)/etat.echelle0-1);rap.ecartEchelle=Math.round(ecart*1e6)/1e6;rap.ok=ecart<=o.remiseTolerance;
+-   progress('vue-remise',{side,...rap});return rap;}
++   rap.dureeMs=Date.now()-t0;progress('vue-remise',{side,...rap});return rap;}
+  /* Action de page, sans pose : sélectionne le rail, amène la cible dans sa vue, puis REMET la vue (pré-vol du service worker,
+   * relevés sur la maquette). Ne clique jamais dans la vue. */
+  async function amenerDansLaVue(cote,cible,attendu,a4,a5){const [options,progress]=typeof a4==='function'?[{},a4]:[a4&&typeof a4==='object'?a4:{},typeof a5==='function'?a5:()=>{}];
