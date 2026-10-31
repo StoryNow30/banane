@@ -95,5 +95,48 @@
    res.raison='camera-immobile';return res;
  }
 
- return {VERSION,GESTES,PLAFOND_TENTATIVES,DEFAUTS,reglages,Journal,sequence,juger,deplacer};
+ /* ------------------------------------------------------------------ journal des événements (CH-031)
+  * JOURNALISATION SEULE : ces fonctions lisent le rapport rendu par la page (`apply` / `amenerDansLaVue`) et fabriquent le détail des
+  * événements `deplacement-vue` (un par côté amené), `deplacement-vue-remise` (un par pose ou pré-vol) et le bilan du lot
+  * `deplacement-vue-bilan`. Elles n'envoient rien à la page et ne décident rien. Aucune position : des NDC, des facteurs, des durées.
+  * Le bilan n'a ni numéro de cut ni identité ; les événements gardent l'identité du cut (ajoutée par le journal du moteur). */
+ const nb=(v,k=1000)=>Number.isFinite(v)?Math.round(v*k)/k:null;
+ const ndc=v=>Array.isArray(v)&&v.length===2&&v.every(Number.isFinite)?v.map(x=>nb(x)):null;
+ const txt=(v,n)=>typeof v==='string'?v.slice(0,n):null;
+ /* Un geste de la page : le détail du module (`geste.deplacement` : geste choisi, tentatives, raison) et la caméra mesurée avant / après. */
+ function gesteJournal(g){if(!g||typeof g!=='object')return null;const d=g.deplacement&&typeof g.deplacement==='object'?g.deplacement:null;
+   return {type:txt(g.type,20),geste:txt(d?.geste,24),tentatives:Number.isInteger(d?.tentatives)?d.tentatives:null,ok:d?d.ok===true:null,raison:txt(d?.raison,40),
+     camera:txt(g.camera,20),sensInverse:g.sensInverse===true,crans:Number.isInteger(g.crans)?g.crans:null,zoom:nb(g.zoom),ndcAvant:ndc(g.ndcAvant),ndcApres:ndc(g.ndcApres),dureeMs:nb(g.dureeMs,1)};}
+ /* `deplacement-vue` : un côté amené. `ctx` : { phase: 'pose'|'pre-vol', geste: geste réglé (facultatif) }. */
+ function detailDeplacement(c,ctx={}){if(!c||typeof c!=='object')return null;
+   const gestes=(Array.isArray(c.gestes)?c.gestes:[]).slice(0,8).map(gesteJournal).filter(Boolean);
+   const tent=gestes.reduce((t,g)=>t+(g.tentatives||0),0);
+   return {phase:txt(ctx.phase,12),cote:c.cote==='left'||c.cote==='right'?c.cote:null,geste:gestes.find(g=>g.geste)?.geste||txt(ctx.geste,24),ok:c.ok===true,raison:txt(c.raison,40),
+     tentatives:tent||null,gestes,ndcAvant:ndc(c.ndcAvant),ndcApres:ndc(c.ndcApres),pixelMm:c.pixelMm&&typeof c.pixelMm==='object'?{avant:nb(c.pixelMm.avant),apres:nb(c.pixelMm.apres)}:null,
+     dureeMs:nb(c.dureeMs,1)};}
+ /* Le texte d'échec de la remise levé par la page (`apply`) : « … (échelle à 2,5 % de la vue habituelle) … ». L'écart y est lu au dixième de
+  * pour cent : c'est le seul endroit où il survit à l'exception tant que la page ne joint pas son rapport (patch CH-031). */
+ const RE_REMISE=/Vue ESV non restituée[^(]*\(échelle à ([0-9]+(?:[,.][0-9]+)?) ?%/;
+ /* `deplacement-vue-remise` : `remise` = rapport de la page ({ok,crans,recentre,ecartEchelle,dureeMs?}) ou null ; `erreur` = exception de la pose.
+  * `ctx` : { phase, dureeApplyMs } — la durée de l'`apply` entier, seule mesure possible hors page tant que la remise n'a pas la sienne. */
+ function detailRemise(remise,erreur,ctx={}){
+   const base={phase:txt(ctx.phase,12),dureeApplyMs:nb(ctx.dureeApplyMs,1)};
+   if(remise&&typeof remise==='object')return {...base,resultat:remise.ok===true?'faite':'echec',ok:remise.ok===true,ecartEchelle:nb(remise.ecartEchelle,1e6),crans:Number.isInteger(remise.crans)?remise.crans:null,
+     recentre:remise.recentre===true,tentative:Number.isInteger(remise.crans)&&remise.crans>0?Math.ceil(remise.crans/Math.max(1,ctx.cransMax||remise.crans)):remise.recentre?1:0,
+     dureeMs:nb(remise.dureeMs,1),raison:remise.ok===true?null:'vue-non-restituee',source:'rapport'};
+   const m=typeof erreur==='string'?RE_REMISE.exec(erreur):null;
+   if(m)return {...base,resultat:'echec',ok:false,ecartEchelle:nb(parseFloat(m[1].replace(',','.'))/100,1e4),crans:null,recentre:null,tentative:null,dureeMs:null,raison:'vue-non-restituee',source:'message'};
+   return {...base,resultat:'inconnu',ok:false,ecartEchelle:null,crans:null,recentre:null,tentative:null,dureeMs:null,raison:'erreur:'+(txt(erreur,100)||'?'),source:'erreur'};}
+ /* Bilan du lot : des comptes seulement. `temps` = durées des côtés amenés + durées de remise connues (la remise sans durée propre n'y entre pas). */
+ class Bilan{
+   constructor(o){this.deplacements=0;this.reussis=0;this.remises=0;this.remisesFaites=0;this.echecs=0;this.remisesInconnues=0;this.tempsMs=0;this.ecartMax=0;if(o&&typeof o==='object')Object.assign(this,o);}
+   noterDeplacement(d){if(!d)return;this.deplacements++;if(d.ok)this.reussis++;else this.echecs++;if(Number.isFinite(d.dureeMs))this.tempsMs+=d.dureeMs;}
+   noterRemise(r){if(!r)return;this.remises++;if(r.resultat==='faite')this.remisesFaites++;else if(r.resultat==='echec')this.echecs++;else this.remisesInconnues++;
+     if(Number.isFinite(r.dureeMs))this.tempsMs+=r.dureeMs;if(Number.isFinite(r.ecartEchelle)&&r.ecartEchelle>this.ecartMax)this.ecartMax=r.ecartEchelle;}
+   vide(){return !this.deplacements&&!this.remises;}
+   resume(){return {version:VERSION,deplacements:this.deplacements,deplacementsReussis:this.reussis,remises:this.remises,remisesFaites:this.remisesFaites,remisesInconnues:this.remisesInconnues,
+     echecs:this.echecs,tempsAjouteMs:nb(this.tempsMs,1),ecartRemiseMax:nb(this.ecartMax,1e6)};}
+ }
+
+ return {VERSION,GESTES,PLAFOND_TENTATIVES,DEFAUTS,reglages,Journal,sequence,juger,deplacer,detailDeplacement,detailRemise,Bilan};
 });

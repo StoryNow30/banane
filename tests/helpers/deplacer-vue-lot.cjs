@@ -28,8 +28,8 @@ class EsvVue extends SimulatedESV{
  async nextWithoutDecision(...a){const r=await super.nextWithoutDecision(...a);this.ajuster();return r;}
 }
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',local=null}={}){
- const adapter=new EsvVue([112],amener),b=production({adapter,local});
+async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',local=null,adapterClasse=null,rapport=null,echec=null}={}){
+ const adapter=new (adapterClasse||EsvVue)([112],amener);adapter.rapport=rapport;adapter.echec=echec;const b=production({adapter,local});
  const S={...b.ctx.BananeSettings};
  /* Test 25 (D-268) : le déplacement de la vue et son geste réglable sont livrés ALLUMÉS ; ces montages essaient le MÉCANISME du lot (plan, pré-vol, scope), pas le geste : sans réglage donné, tout est coupé ; avec un réglage donné, le geste réglable reste coupé sauf demande (`reglage.deplacement`). */
  if(reglage===undefined)S.deplacerVue={...S.deplacerVue,actif:false,deplacement:{...S.deplacerVue.deplacement,actif:false}};

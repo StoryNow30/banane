@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.28',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 28 (F-V-G-S)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -226,15 +226,15 @@ function poserFin(b,at,cause){const c=obsContexte(),prev=obsFins.get(b.id);
  * partie après un différé, SKIP explicite du dernier cut) : aucun jalon `batch-state`, la mesure V1 du lot restait ouverte
  * et le vidage du cache était refusé indéfiniment. Elle est close ici, comme pour « Arrêter » hors tâche (`operatorAfter`),
  * avec l'état réel du lot ; jamais pendant une tâche (la boucle la clôt elle-même), jamais deux fois. */
-function cloreMesureHorsBoucle(){bilanClicsHorsVue(engine?.s?.batch);try{const b=engine?.s?.batch,t=timing?.batch;
+function cloreMesureHorsBoucle(){bilanClicsHorsVue(engine?.s?.batch);bilanDeplacementVue(engine?.s?.batch);try{const b=engine?.s?.batch,t=timing?.batch;
  if(b?.id&&!engine.task&&OBS_CLOS.includes(b.state)&&t?.id===b.id&&!t.closed)timing.closeBatch(b.state);}catch{/* mesure seule : jamais bloquant */}}
-function marquerFinLot(b,cause){bilanClicsHorsVue(b);if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);finLotNoter(b);}
+function marquerFinLot(b,cause){bilanClicsHorsVue(b);bilanDeplacementVue(b);if(b?.id&&engine?.s?.mode==='automatic-test'&&OBS_CLOS.includes(b.state))poserFin(b,Date.now(),cause);finLotNoter(b);}
 /* Sortie de la boucle du moteur (`batch-state`, émis dans son `finally`) : fin naturelle, ou fin de l'action en cours après « Arrêter ». */
-function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;bilanClicsHorsVue(b);
+function finVueParLaBoucle(state){const b=engine?.s?.batch;if(!b?.id||state!==b.state)return;bilanClicsHorsVue(b);bilanDeplacementVue(b);
  if(state==='COMPLETED'||state==='FINISHED_WITH_UNCONFIRMED_ACTIONS')coordinateurLot.transition('fin-de-lot',()=>marquerFinLot(b,'fin-naturelle'));
  else if(state==='STOPPED'&&!b.stoppedAtEnd&&obsFins.get(b.id)?.cause==='arret-manuel')marquerFinLot(b,'arret-manuel');}
 /* Avant un nouveau lot : l'ancien, clos, garde son instant de fin (arrêt au dernier cut compris) et son contexte. */
-function retenirLotClos(){bilanClicsHorsVue(engine?.s?.batch);const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
+function retenirLotClos(){bilanClicsHorsVue(engine?.s?.batch);bilanDeplacementVue(engine?.s?.batch);const b=engine?.s?.batch;if(!b?.id||engine?.s?.mode!=='automatic-test'||!OBS_CLOS.includes(b.state))return;
  const at=finDuLot(b);if(Number.isFinite(at))poserFin(b,at,obsFins.get(b.id)?.cause||'dernier-cut');}
 /* Instant de fin du lot (ms) : arrêt au dernier cut = `stoppedAtEnd.at` (absente ou illisible : NaN, jamais devinée) ; sinon fin relevée ici. */
 function finDuLot(b){if(b.state==='STOPPED'&&b.stoppedAtEnd)return Date.parse(b.stoppedAtEnd.at);const f=obsFins.get(b.id);return f?f.at:NaN;}
@@ -1232,10 +1232,13 @@ adapter.apply=async(...args)=>{
   * avant » (tel-quel) : l'appel d'avant, à l'octet près. */
  const clic=clicHumainDuLot(),optClic=clic?{clicHumain:clic}:null;
  if(plan){const identity=engine.s.before?.identity??null,ev={phase:'pose',identity:identity?{part:identity.part??null,cut:identity.cut??null}:null,batchId:engine.s.batch?.id??null};
+  const t0=Date.now();
   try{result=await applyInESV(...args,{deplacerVue:plan,...optClic});}
-  catch(e){await engine.event('deplacer-vue',{...ev,erreur:String(e?.message||e).slice(0,300)}).catch(()=>{});throw e;}
+  catch(e){await engine.event('deplacer-vue',{...ev,erreur:String(e?.message||e).slice(0,300)}).catch(()=>{});
+   journalerDeplacementVue(null,null,String(e?.message||e),'pose',Date.now()-t0);throw e;}
   const rapport=result&&typeof result==='object'?result.deplacerVue??null:null;if(rapport){result={...result};delete result.deplacerVue;}
-  await engine.event('deplacer-vue',{...ev,cotes:(rapport?.cotes||[]).map(dvAmener),remise:rapport?.remise??null}).catch(()=>{});}
+  await engine.event('deplacer-vue',{...ev,cotes:(rapport?.cotes||[]).map(dvAmener),remise:rapport?.remise??null}).catch(()=>{});
+  journalerDeplacementVue(rapport?.cotes,rapport?.remise,null,'pose',Date.now()-t0);}
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
@@ -1508,10 +1511,32 @@ async function deplacerVuePlanifier({lotObservation,proposal,before,capture,comm
   if(reglage.preVol!==false)for(const s of Object.keys(cotes)){let r;
    try{r=await call('amenerDansLaVue',s,lotObservation.positions[s],identity,{...plan,cotes:undefined,essai:true});}
    catch(e){r={cote:s,ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
-   preVol.push(dvAmener(r));if(!r?.ok)return fin('pre-vol:'+(r?.raison||'?'),{plan:dvPlan(plan),preVol});}
+   preVol.push(dvAmener(r));journalerDeplacementVue(r&&!r.erreur?[r]:null,r?.remise,r?.raison?.startsWith?.('erreur:')?r.raison:null,'pre-vol',null);
+   if(!r?.ok)return fin('pre-vol:'+(r?.raison||'?'),{plan:dvPlan(plan),preVol});}
   await engine.event('deplacer-vue',{...ev,plan:dvPlan(plan),preVol,refus:null});
   return {command:{...large,deplacerVue:plan}};
  }catch(e){return fin('erreur:'+String(e?.message||e).slice(0,100));}}
+/* CH-031 — JOURNAL DE LA REMISE DE LA VUE (fiches/DEPLACEMENT_VUE_JOURNAL.md). JOURNALISATION SEULE, comme `clic-hors-vue` : `store.putEvent`
+ * sans attente, jamais `engine.event` pour l'enregistrement du bilan ; l'identité du cut est celle de l'événement. Rien n'est envoyé à la page,
+ * aucune commande ni décision n'en dépend ; une panne du journal est avalée. Par côté amené : `deplacement-vue` (geste, tentatives, caméra
+ * avant / après, durée) ; par pose ou pré-vol : `deplacement-vue-remise` (faite / échec / inconnue, écart d'échelle, durée) ; en fin de lot :
+ * `deplacement-vue-bilan` (comptes et temps ajouté, sans numéro de cut). */
+const dvJournalBilanHorsLot=new (globalThis.BananeDeplacementVue?.Bilan||class{noterDeplacement(){}noterRemise(){}vide(){return true;}resume(){return null;}})();
+function journalerDeplacementVue(cotes,remise,erreur,phase,dureeApplyMs){try{const DVm=globalThis.BananeDeplacementVue;if(!DVm?.detailDeplacement)return;
+ const b=engine?.s?.batch,enLot=!!b?.id&&b.state==='RUNNING',identity=engine?.s?.before?.identity??null;
+ if(enLot&&!(b.deplacementVue&&typeof b.deplacementVue==='object'))b.deplacementVue={};
+ const bilan=enLot?new DVm.Bilan(b.deplacementVue):dvJournalBilanHorsLot,id=identity&&Number.isInteger(identity.cut)?{part:identity.part??null,cut:identity.cut}:null;
+ const base={batchId:enLot?b.id:null,identity:id},geste=globalThis.BananeSettings?.deplacerVue?.deplacement?.geste??null;
+ const ecrire=(type,d)=>void Promise.resolve(store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type,...base,...d})).catch(()=>{});
+ for(const c of Array.isArray(cotes)?cotes.slice(0,2):[]){const d=DVm.detailDeplacement(c,{phase,geste});if(!d)continue;bilan.noterDeplacement(d);ecrire('deplacement-vue',d);}
+ const aVu=(Array.isArray(cotes)&&cotes.length>0)||(remise&&typeof remise==='object')||!!erreur;
+ if(aVu){const r=DVm.detailRemise(remise,erreur,{phase,dureeApplyMs,cransMax:globalThis.BananeSettings?.deplacerVue?.molette?.cransMax});
+  if(!(r.resultat==='inconnu'&&!(Array.isArray(cotes)&&cotes.length)&&phase==='pose'&&!erreur)){bilan.noterRemise(r);ecrire('deplacement-vue-remise',r);}}
+ if(enLot)Object.assign(b.deplacementVue,bilan);}catch{}}
+/* Bilan du lot clos : une fois, et seulement s'il y a eu un déplacement ou une remise. */
+function bilanDeplacementVue(b){try{const n=b?.deplacementVue,DVm=globalThis.BananeDeplacementVue;if(!b?.id||!n||n.bilanEcrit||!DVm?.Bilan||!OBS_CLOS.includes(b.state))return;
+ const bilan=new DVm.Bilan(n);if(bilan.vide())return;n.bilanEcrit=true;
+ void Promise.resolve(store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'deplacement-vue-bilan',batchId:b.id,etat:b.state,...bilan.resume()})).catch(()=>{});}catch{}}
 /* CH-019 — GARDE « APRÈS UN DIFFÉRÉ » (src/garde-apres-differe.js, réglage `lot.gardeApresDiffere`, livrée ALLUMÉE). Sur un cut que la commande
  * allait VALIDER (pose du lot, de la GCV2, ou paire du moteur aux deux rails résolus), si un des cuts qui le précèdent est un différé du lot
  * (`b.deferred` de la même partie, hors cuts différés par cette garde : pas de cascade) et, règle R3, qu'il a moins d'appuis que le seuil
@@ -1994,9 +2019,12 @@ async function passeDiffApresRedemarrage(){let st;try{st=await chrome.storage.lo
 const passeDiffReveil=ready.then(passeDiffApresRedemarrage).catch(()=>{});
 async function l1PoserSansValider(p){const clic=clicHumainDuLot(),opt={...(clic?{clicHumain:clic}:{}),...(p.plan?{deplacerVue:p.plan}:{})};
  const ev={identity:{part:p.identity.part??null,cut:p.identity.cut??null},batchId:engine?.s?.batch?.id??null,...p.resume,vueDeplacee:!!p.plan};
+ const t0=Date.now();
  try{const r=Object.keys(opt).length?await applyInESV(p.before,p.rails,opt):await applyInESV(p.before,p.rails);
-  await engine.event('l1-pose-sans-valider',{...ev,ok:true,applyCommandSent:true,validateSent:false,...(r?.deplacerVue?{remise:r.deplacerVue.remise??null}:{})}).catch(()=>{});return true;}
- catch(e){await engine.event('l1-pose-sans-valider',{...ev,ok:false,erreur:String(e?.message||e).slice(0,200)}).catch(()=>{});return false;}}
+  await engine.event('l1-pose-sans-valider',{...ev,ok:true,applyCommandSent:true,validateSent:false,...(r?.deplacerVue?{remise:r.deplacerVue.remise??null}:{})}).catch(()=>{});
+  if(p.plan)journalerDeplacementVue(r?.deplacerVue?.cotes,r?.deplacerVue?.remise,null,'pose-l1',Date.now()-t0);return true;}
+ catch(e){await engine.event('l1-pose-sans-valider',{...ev,ok:false,erreur:String(e?.message||e).slice(0,200)}).catch(()=>{});
+  if(p.plan)journalerDeplacementVue(null,null,String(e?.message||e),'pose-l1',Date.now()-t0);return false;}}
 /* B1 (D-095) — VOISINS VALIDÉS LUS DANS LA LISTE DES COUPES D'ESV (src/appuis-liste.js).
  * La liste vit en mémoire de la PAGE (src/esv-observer.js) ; le service worker n'en
  * demande, par le pont, qu'une fenêtre de ±5 lignes autour du cut décidé et la ligne
