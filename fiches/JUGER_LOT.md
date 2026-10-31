@@ -8,7 +8,7 @@ node tools/juger-lot.cjs <dossier-d-export> [--echo <dossier>]... [--partie N]..
 ```
 - `<dossier-d-export>` : les archives du lot (le journal `ariane-journal-v4-*.json` est lu dans les zips, volumes recollés en mémoire). Rien n'est extrait sur le disque.
 - `--echo` : dossier d'export de l'Écho, répétable ; on peut donner la collection entière, l'outil descend jusqu'aux archives. Sans `--echo`, tout posé est « sans Écho » et rien n'est jugé.
-- `--partie` : limite à ces parties ; sans lui, toutes les parties qui ont un lot dans le journal (le dernier lot de chaque partie).
+- `--partie` : limite à ces parties ; sans lui, toutes les parties qui ont un lot dans le journal (la dernière exécution de chaque partie).
 - `--json` : écrit la sortie complète (comptes, millimètres, intervalles ; ni numéro de cut ni coordonnée).
 
 ## Le tableau, une partie puis le total
@@ -49,5 +49,5 @@ Un posé que l'opérateur a regardé sans le corriger ne prouve rien si l'Écho 
 ## Limites
 - Les rôles « réglage » et « examen » (CH-009) ne sont pas classés ici : l'opérateur ou l'intégrateur le dit, l'outil ne le devine pas.
 - Aucun seuil n'est réglé par l'outil ; 20, 50 et 100 mm sont des lectures de comptage, pas des décisions.
-- Le jugement porte sur le dernier lot de chaque partie : une partie reprise (second lot d'une file) n'est comptée que sur ce dernier lot.
+- Le jugement porte sur la **dernière exécution** de chaque partie : ses lots consécutifs (une reprise de file sur la même partie en fait partie ; une autre partie intercalée sépare deux exécutions). Cibles et posés sont l'union des lots de l'exécution. Le cut de départ déjà vert d'un lot (`depart-sur-vert`, signalé par la capture abandonnée ou par l'arrêt du lot) n'est pas une cible.
 - Pas de détail par cut : les listes par cut se produisent avec `precision-poses.cjs --detail` et vont dans `banane-data`.

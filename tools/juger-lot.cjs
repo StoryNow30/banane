@@ -11,7 +11,7 @@
  * (outils/analyse-lots) ; les compteurs et les intervalles viennent de tools/precision-poses.cjs.
  *
  * Définitions (chaque chiffre dit sa population) :
- *   - cible : cut qui a reçu une décision du lot (gcv1-shadow-observed du dernier lot de la partie) ; le cut de départ
+ *   - cible : cut qui a reçu une décision du lot (gcv1-shadow-observed des lots de la dernière exécution de la partie) ; le cut de départ
  *     déjà vert (capture abandonnée « depart-sur-vert » dans les 30 s du départ) n'est pas une cible ;
  *   - posé : cible dont la ligne a reçu une écriture de validation 2xx pendant le lot (du départ à 5 s après l'arrêt du lot : avant la
  *     relecture, avant le lot suivant d'un journal cumulé) ; différé : cible sans cette écriture ;
@@ -51,25 +51,34 @@ function partiesDuJournal(journal) {
   return [...s].sort((a, b) => a - b);
 }
 
-/* Le dernier lot de la partie et sa fenêtre : du départ à la relecture ou au lot suivant. */
-function lotDe(journal, partie) {
+/* Les lots de la dernière exécution de la partie, chacun avec sa fenêtre (du départ à la relecture ou au lot suivant).
+ * Une exécution = les départs consécutifs de la même partie, sans départ d'une autre partie entre eux : une reprise de file
+ * sur la même partie (second lot, parfois fermé au départ sur un vert) en fait partie, un lot d'une exécution antérieure
+ * (une autre partie s'est intercalée) n'en fait pas partie. */
+function lotsDe(journal, partie) {
   const ev = journal.events.filter(e => instant(e) !== null).sort((a, b) => instant(a) - instant(b));
   const departs = ev.filter(e => e.type === 'batch-started' && e.batch && e.batch.id);
-  const mien = departs.filter(e => e.identity && e.identity.part === partie).pop();
-  if (!mien) return null;
-  const B = mien.batch.id, t0 = instant(mien);
-  let fin = Infinity;
-  const suivant = departs.find(e => instant(e) > t0 && e.batch.id !== B);
-  if (suivant) fin = instant(suivant);
-  /* Le dernier cut est validé sur place jusqu'à ~2 s après l'arrêt, parfois après le début de la relecture : la fenêtre
-   * se ferme FIN_APRES_ARRET_S après l'arrêt. Les écritures de la relecture ne portent que sur des cuts déjà posés. */
-  const arret = ev.find(e => e.type === 'batch-stopped-at-end' && instant(e) > t0);
-  if (arret) fin = Math.min(fin, instant(arret) + FIN_APRES_ARRET_S * 1000);
-  else {
-    const rel = ev.find(e => e.type === 'relecture-debut' && e.batchId === B);
-    if (rel) fin = Math.min(fin, instant(rel));
-  }
-  return { ev, B, t0, fin };
+  let i = departs.length - 1;
+  while (i >= 0 && !(departs[i].identity && departs[i].identity.part === partie)) i--;
+  if (i < 0) return null;
+  const run = [departs[i]];
+  while (i > 0 && departs[i - 1].identity && departs[i - 1].identity.part === partie && departs[i - 1].batch.id !== departs[i].batch.id) run.unshift(departs[--i]);
+  const lots = run.map(mien => {
+    const B = mien.batch.id, t0 = instant(mien);
+    let fin = Infinity;
+    const suivant = departs.find(e => instant(e) > t0 && e.batch.id !== B);
+    if (suivant) fin = instant(suivant);
+    /* Le dernier cut est validé sur place jusqu'à ~2 s après l'arrêt, parfois après le début de la relecture : la fenêtre
+     * se ferme FIN_APRES_ARRET_S après l'arrêt. Les écritures de la relecture ne portent que sur des cuts déjà posés. */
+    const arret = ev.find(e => e.type === 'batch-stopped-at-end' && instant(e) > t0);
+    if (arret) fin = Math.min(fin, instant(arret) + FIN_APRES_ARRET_S * 1000);
+    else {
+      const rel = ev.find(e => e.type === 'relecture-debut' && e.batchId === B);
+      if (rel) fin = Math.min(fin, instant(rel));
+    }
+    return { ev, B, t0, fin, cutDepart: mien.identity && Number.isInteger(mien.identity.cut) ? mien.identity.cut : null };
+  });
+  return { ev, lots, B: lots[lots.length - 1].B, t0: lots[0].t0 };
 }
 
 function ciblesDe(lot, partie) {
@@ -78,6 +87,9 @@ function ciblesDe(lot, partie) {
   for (const e of lot.ev) {
     if (e.type === 'capture-abandoned' && e.reason === 'depart-sur-vert' && e.identity && e.identity.part === partie
       && instant(e) >= lot.t0 && instant(e) <= lot.t0 + DEPART_VERT_S * 1000) cibles.delete(e.identity.cut);
+    /* Versions où le départ sur vert ne journalise que l'arrêt du lot (motif « depart-sur-vert », 4.9.5.27) : le cut de départ. */
+    if (e.type === 'batch-stopped-at-end' && e.reason === 'depart-sur-vert' && lot.cutDepart !== null
+      && instant(e) >= lot.t0 && instant(e) <= lot.t0 + DEPART_VERT_S * 1000) cibles.delete(lot.cutDepart);
   }
   return cibles;
 }
@@ -94,6 +106,15 @@ function posesDe(lot, cibles) {
   return poses;
 }
 
+function ciblesPosesDe(run, partie) {
+  const cibles = new Set(), poses = new Set();
+  for (const lot of run.lots) {
+    const c = ciblesDe(lot, partie);
+    for (const x of c) cibles.add(x);
+    for (const x of posesDe(lot, c)) poses.add(x);
+  }
+  return { cibles, poses };
+}
 function indexLignes(journal, echo, partie) {
   if (!echo) return new Map();
   const { table } = J.joindre(echo.records, journal, {
@@ -163,10 +184,10 @@ function etatOmbre(ligne, decal) {
 }
 
 function ombreDe(lot, partie, lignes) {
-  const derniers = new Map();
+  const derniers = new Map(), batchs = new Set(lot.lots.map(l => l.B));
   for (const e of lot.ev) {
     if (e.type !== 'passe-differes-ombre' || e.passe !== 1 || !e.identity || e.identity.part !== partie) continue;
-    if (e.batchId ? e.batchId !== lot.B : instant(e) < lot.t0) continue;
+    if (e.batchId ? !batchs.has(e.batchId) : instant(e) < lot.t0) continue;
     derniers.set(e.identity.cut, e);
   }
   const o = { passe1: derniers.size, poserait: 0, rien: 0, refusGarde: 0, juges: 0, sansEcho: 0, nonJuges: 0 };
@@ -191,7 +212,7 @@ function ombreDe(lot, partie, lignes) {
 
 function analyser(entree, graine = GRAINE) {
   const { partie, journal, echo } = entree;
-  const lot = lotDe(journal, partie);
+  const lot = lotsDe(journal, partie);
   const base = { partie, version: entree.version || journal.version || null, lotTrouve: !!lot };
   if (!lot) {
     return { ...base, cibles: 0, poses: 0, differes: 0, sansEcho: 0, nonJuges: 0, repereNonCalibre: 0, juges: 0, dontCorriges: 0, dontControles: 0,
@@ -199,7 +220,7 @@ function analyser(entree, graine = GRAINE) {
       ombre: { passe1: 0, poserait: 0, rien: 0, refusGarde: 0, juges: 0, sansEcho: 0, nonJuges: 0, plusDe20mm: 0, plusDe50mm: 0, precision: Poses.compter([], { graine }) },
       gestes: gestesDe([]), budgetD223: budgetDe([], 0, 0), _mm: [], _mmO: [], _ev: [] };
   }
-  const cibles = ciblesDe(lot, partie), poses = posesDe(lot, cibles);
+  const { cibles, poses } = ciblesPosesDe(lot, partie);
   const lignes = indexLignes(journal, echo, partie);
   const r = { ...base, cibles: cibles.size, poses: poses.size, differes: cibles.size - poses.size, sansEcho: 0, nonJuges: 0, repereNonCalibre: 0,
     juges: 0, dontCorriges: 0, dontControles: 0, plusDe20mm: 0, plusDe50mm: 0, mauvaiseVoie: 0 };

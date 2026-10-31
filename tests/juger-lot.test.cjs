@@ -285,3 +285,61 @@ test('sortie --json étendue : gestes et budget, ni numéro de cut ni liste inte
     for (const cut of ['9501', '9505', '9507', '9508']) assert.equal(t.includes(cut), false);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+/* ---- CH-030 (travail supplémentaire) : deux lots sur la même partie, le second fermé au départ (« depart-sur-vert ») ---- */
+function deuxLots() {
+  const P = 97, B1 = 'lot-97a', B2 = 'lot-97b', Q = 98;
+  const events = [
+    { eventId: 'bs-q', timestamp: heure(0), type: 'batch-started', identity: id(0, Q), batch: { id: 'lot-98' } },   // une autre partie, avant : exécution distincte
+    { eventId: 'bs-a', timestamp: heure(10), type: 'batch-started', identity: id(1, P), batch: { id: B1 } },
+  ];
+  [9701, 9702, 9703, 9704].forEach((cut, i) => { const p = pose(cut, P, 20 + i * 5); events.push(DEC(cut, P, B1, 19 + i * 5), ...p.events); });
+  events.push(DEC(9705, P, B1, 50));                                   // différé
+  events.push({ eventId: 'bx-a', timestamp: heure(60), type: 'batch-stopped-at-end', identity: null, reason: 'dernier-cut-valide', lastCut: 9705 });
+  events.push({ eventId: 'rd-a', timestamp: heure(65), type: 'relecture-debut', batchId: B1 });
+  // reprise de la file : nouveau départ sur la même partie, fermé au départ sur un vert (30 s)
+  events.push({ eventId: 'bs-b', timestamp: heure(300), type: 'batch-started', identity: id(9704, P), batch: { id: B2 } });
+  events.push(DEC(9704, P, B2, 301));
+  events.push({ eventId: 'ab-b', timestamp: heure(302), type: 'capture-abandoned', reason: 'depart-sur-vert', identity: id(9704, P) });
+  events.push({ eventId: 'bx-b', timestamp: heure(303), type: 'batch-stopped-at-end', identity: null, reason: 'depart-sur-vert', lastCut: 9704 });
+  return { format: 'ariane-journal-v4', version: '4.9.5.27', events, records: [] };
+}
+test('deux lots sur la même partie : cibles = celles des deux lots, le second fermé au départ ne masque pas le premier', () => {
+  const p = L.juger([{ partie: 97, journal: deuxLots(), echo: null }]).parties[0];
+  assert.equal(p.cibles, 5, 'cinq cuts décidés par le premier lot ; le cut de départ déjà vert du second n\'est pas une cible de plus');
+  assert.equal(p.poses, 4);
+  assert.equal(p.differes, 1);
+});
+test('deux lots sur la même partie : un cut différé par le premier lot et posé par le second est posé', () => {
+  const j = deuxLots();
+  const p2 = pose(9705, 97, 301.5);
+  j.events.push(DEC(9705, 97, 'lot-97b', 301.4), ...p2.events);
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 5);
+  assert.equal(p.poses, 5);
+  assert.equal(p.differes, 0);
+});
+test('une autre partie entre deux lots : exécutions distinctes, seule la dernière compte', () => {
+  const j = deuxLots();
+  j.events.push({ eventId: 'bs-q2', timestamp: heure(100), type: 'batch-started', identity: id(0, 98), batch: { id: 'lot-98b' } });
+  j.events.push({ eventId: 'bs-r', timestamp: heure(500), type: 'batch-started', identity: id(1, 97), batch: { id: 'lot-97c' } });
+  j.events.push(DEC(9790, 97, 'lot-97c', 501));
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 1, 'lot-97c seul : les lots 97a et 97b sont d\'une exécution antérieure (la partie 98 s\'est intercalée)');
+});
+test('départ sur vert signalé seulement par l\'arrêt du lot (sans capture-abandoned) : le cut de départ n\'est pas une cible', () => {
+  const j = deuxLots();
+  j.events = j.events.filter(e => e.eventId !== 'ab-b' && !(e.type === 'gcv1-shadow-observed' && e.batchId === 'lot-97b'));
+  j.events.find(e => e.eventId === 'bs-b').identity = id(9799, 97);          // le cut de départ de la reprise n'est pas dans le premier lot
+  j.events.push(DEC(9799, 97, 'lot-97b', 301));
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 5, 'les cinq cuts du premier lot ; le cut de départ déjà vert de la reprise n\'en est pas un sixième');
+  assert.equal(p.differes, 1);
+});
+test('un arrêt « depart-sur-vert » tardif (après 30 s) n\'enlève rien', () => {
+  const j = deuxLots();
+  j.events = j.events.filter(e => e.eventId !== 'ab-b');
+  j.events.find(e => e.eventId === 'bx-b').timestamp = heure(400);
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 5, 'le cut 9704 est déjà une cible du premier lot : l\'union ne le perd pas');
+});
