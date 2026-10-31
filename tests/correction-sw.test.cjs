@@ -6,7 +6,8 @@ const { test } = require('node:test'), assert = require('node:assert/strict');
 const { K } = require('./fixtures.cjs'), Settings = require('../src/settings.js'), EC = require('../src/export-cache.js'), CL = require('../src/correction-liste.js');
 const { background } = require('./helpers/background-harness.cjs');
 const { journal } = require('./helpers/correction-journal.cjs');
-const esv = { id: 'test', url: 'https://esv.lidar.altametris.xyz/rails_validation/test', tab: { id: 1 } };
+/* L'adresse de la page ESV simulée est lue dans manifest.json (aucune adresse ESV écrite dans ce fichier). */
+const esv = { id: 'test', url: require('../manifest.json').host_permissions[0].replace(/\*$/, '') + 'test', tab: { id: 1 } };
 const ECRITURES = ['apply', 'validate', 'skip', 'validateInPlace', 'validerMajEspace', 'nextWithoutDecision'];
 
 async function monter({ lot = { id: 'B1', state: 'COMPLETED', scope: { part: 5 } } } = {}) {
