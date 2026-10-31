@@ -197,3 +197,91 @@ test('ligne de commande : le dossier d\'export est obligatoire, aucun chemin en 
   assert.equal(a.json, 'out.json');
   assert.throws(() => L.lireArguments(['exp', '--inconnu']), /inconnu/);
 });
+
+/* ---- CH-030 : gestes (acceptation / fine / moyenne / faute) et budget D-223 ---- */
+test('geste : un cas limite par seuil (10,0 ; 10,1 ; 50,0 ; 50,1 mm), acceptation seulement si regardé et non touché', () => {
+  assert.equal(L.geste(0, true), 'acceptation');
+  assert.equal(L.geste(0, false), 'fine', 'une validation, même à 0 mm, est un geste');
+  assert.equal(L.geste(10.0, false), 'fine');
+  assert.equal(L.geste(10.1, false), 'moyenne');
+  assert.equal(L.geste(50.0, false), 'moyenne');
+  assert.equal(L.geste(50.1, false), 'faute');
+  assert.equal(L.geste(10.0000004, false), 'fine', 'bruit de virgule flottante sous le micromètre ignoré');
+  assert.equal(L.geste(NaN, false), null);
+});
+
+test('gestes d\'une partie : répartition sur les jugés, par axe et pour le pire rail 3D', () => {
+  const { journal, echoRecords } = lotFictif();
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const p = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]).parties.find(x => x.partie === 96);
+    const g = p.gestes;
+    assert.equal(g.juges, 5);
+    const c = (a) => [a.acceptation.k, a.fine.k, a.moyenne.k, a.faute.k];
+    assert.deepEqual(c(g.pireRail3d), [1, 1, 1, 2], '9502 accepté ; 4 mm fine ; 30 mm moyenne ; 60 et 120 mm fautes');
+    assert.equal(g.pireRail3d.n, 5);
+    assert.deepEqual(c(g.lateral), [1, 2, 1, 1], 'latéral : 0 (long. 60 mm), 4, 30, 120 mm');
+    assert.deepEqual(c(g.vertical), [1, 4, 0, 0]);
+    assert.equal(g.pireRail3d.faute.part, 0.4);
+    assert.ok(g.pireRail3d.faute.bas < 0.4 && g.pireRail3d.faute.haut > 0.4, 'intervalle de Wilson');
+    assert.equal(g.sous5mm.k, 2, '4 mm et le contrôlé');
+    assert.equal(g.sous5mm.n, 5);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('budget D-223 : fautes (> 50 mm) sur les POSÉS, les non jugés ni bons ni mauvais, pire cas et cas semblable', () => {
+  const { journal, echoRecords } = lotFictif();
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const b = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]).parties.find(x => x.partie === 96).budgetD223;
+    assert.equal(b.plafond, 0.03);
+    assert.equal(b.seuilMm, 50);
+    assert.equal(b.poses, 7);
+    assert.equal(b.juges, 5);
+    assert.equal(b.nonJuges, 2, 'sans Écho 1 + non jugés 1');
+    assert.equal(b.fautesJugees, 2);
+    proche(b.couverture.part, 5 / 7, 0.001);
+    proche(b.plancher.part, 2 / 7, 0.001);
+    proche(b.pireCas.part, 4 / 7, 0.001);
+    assert.equal(b.pireCas.k, 4);
+    proche(b.siSemblables.part, 2 / 5, 0.001);
+    assert.equal(b.siSemblables.qualification, 'SUPPOSÉ');
+    assert.equal(b.tenuSurPlancher, false);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('budget et gestes sans Écho ou sans pose : aucun jugé, aucune division par zéro, budget non tranché', () => {
+  const { journal } = lotFictif();
+  const r = L.juger([{ partie: 96, journal, echo: null }, { partie: 95, journal, echo: null }]);
+  const p = r.parties.find(x => x.partie === 96), v = r.parties.find(x => x.partie === 95);
+  assert.equal(p.gestes.juges, 0);
+  assert.equal(p.gestes.pireRail3d.n, 0);
+  assert.equal(p.budgetD223.juges, 0);
+  assert.equal(p.budgetD223.couverture.part, 0);
+  assert.equal(p.budgetD223.siSemblables.part, null);
+  assert.equal(p.budgetD223.tenuSurPlancher, true, 'aucune faute connue : plancher 0');
+  assert.equal(p.budgetD223.tranche, false);
+  assert.equal(v.budgetD223.poses, 0);
+  assert.equal(v.budgetD223.plancher.part, null);
+  assert.equal(r.total.budgetD223.poses, 7);
+});
+
+test('sortie --json étendue : gestes et budget, ni numéro de cut ni liste interne ; le texte dit la population', () => {
+  const { journal, echoRecords } = lotFictif();
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const r = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]);
+    const s = JSON.stringify(r);
+    assert.equal(s.includes('"_ev"'), false);
+    for (const cut of ['9501', '9505', '9507']) assert.equal(s.includes(cut), false);
+    assert.ok(r.total.gestes && r.total.budgetD223);
+    assert.equal(r.total.gestes.pireRail3d.faute.k, 2);
+    const t = L.texte(r);
+    assert.match(t, /acceptation/);
+    assert.match(t, /budget D-223/);
+    assert.match(t, /SUPPOSÉ/);
+    assert.match(t, /sous 5 mm/);
+    assert.match(t, /Wilson/);
+    for (const cut of ['9501', '9505', '9507', '9508']) assert.equal(t.includes(cut), false);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
