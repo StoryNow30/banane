@@ -24,8 +24,8 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.5.28',NOM='4.9.5 test 28 (F-V-G-S)';
-test('manifeste et core : 4.9.5.28 / « 4.9.5 test 28 (F-V-G-S) »',()=>{
+const VERSION='4.9.5.29',NOM='4.9.5 test 29 (F-V-G-S)';
+test('manifeste et core : 4.9.5.29 / « 4.9.5 test 29 (F-V-G-S) »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
  assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
 });
@@ -41,7 +41,7 @@ test('aucune trace d’une autre version de test dans les chaînes de version li
  assert.ok(!/VERSION\|\|'4\.9\.(0[.']|5\.[1-9]')/.test(read('background.js')),'background.js');
  assert.ok(!/home:'4\.9\.(0|5 test [1-9]')/.test(read('panel.js')),'panel.js');
 });
-test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21, 4.9.5.22, 4.9.5.23, 4.9.5.24, 4.9.5.25, 4.9.5.26, 4.9.5.27 et 4.9.5.28 portent l’observateur',()=>{
+test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21, 4.9.5.22, 4.9.5.23, 4.9.5.24, 4.9.5.25, 4.9.5.26, 4.9.5.27, 4.9.5.28 et 4.9.5.29 portent l’observateur',()=>{
  const {measure}=require('../tools/perf-phases.cjs');
  const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13','4.9.5.14','4.9.5.15','4.9.5.16','4.9.5.17','4.9.5.18','4.9.5.19','4.9.5.20','4.9.5.21','4.9.5.22',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
  for(const v of versions)assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);
@@ -55,6 +55,6 @@ test('RM-11 : la raison de la correction ne demande rien de plus au navigateur (
  assert.ok(read('background.js').includes("'src/raison-correction.js','src/native-session.js'"),'chargé avant la session Écho');
  assert.ok(read('panel.html').includes('<script src="src/raison-correction.js"></script><script src="panel.js">'));
  assert.ok(!manifest.content_scripts.some(c=>c.js.includes('src/raison-correction.js')),'jamais injecté dans la page ESV : rien ne lit la raison côté page');
- assert.ok(read('background.js').includes("'src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');"),'modules L1 (et L1-e, avant L1 qui le lit) chargés après la voie recentrée et les règles métier');
+ assert.ok(read('background.js').includes("'src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js'"),'modules L1 (et L1-e, avant L1 qui le lit) chargés après la voie recentrée et les règles métier');
  assert.ok(!manifest.content_scripts.some(c=>c.js.some(f=>/gcv2/.test(f))),'jamais dans la page ESV');
 });

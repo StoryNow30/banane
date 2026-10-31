@@ -1,5 +1,19 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.29 — 4.9.5 test 29 (F-V-G-S) (31/10) — test 29
+
+Manifeste `4.9.5.29` ; base : la test 28. Moteur, géométrie, GCV2 et décision du lot inchangés. Deux files de parties de bout en bout sur un vrai ESV avec la 28 (30/10 : 3 parties, 31/10 : 4 parties, 5 à 8) : 5 changements de partie réussis par les gestes de l'opérateur, aucun arrêt à tort.
+
+### Nouveau
+- **Éveil du système (CH-027)** : pendant un lot, une file, la deuxième passe ou la relecture, Ariane demande à Chrome de ne pas mettre l'ordinateur en veille (`chrome.power`, niveau `system` : l'écran peut s'éteindre). **Permission `power` ajoutée au manifeste, sur ordre écrit de l'opérateur (31/10).** Journal : `eveil-demande`, `eveil-relache`, `eveil-erreur`. Réglage `eveil` dans `src/settings.js`. Non éprouvé sur un vrai poste face à la veille de Windows.
+- **Correction dans Orbite (CH-028)** : à la fin d'un lot ou d'une file, Ariane propose une liste de cuts à corriger (signaux : pose de la passe, après un différé, sans appui, garde sur le suivant, relecture ; les différés restants en groupe « à poser »), inscrite dans l'export Orbite (`correction-liste`, `-debut`, `-ouvrir`, `-fin`). L'opérateur corrige et valide dans ESV ; la correction est enregistrée par une vraie séance Écho marquée `correction` (lisible par `juger-lot` et la jointure sans changement) ; Ariane n'écrit rien dans ESV. Onglet « Correction » dans Signal. Clôture automatique (liste finie, panneau fermé, Écho terminé, redémarrage). Précision hors ligne sur la partie 20 (antérieure à la garde R3) : 13 sur 36 jugés à plus de 50 mm (36 %, taux de base 12 %), rappel 13 sur 21. **Jamais éprouvée sur un vrai ESV.**
+- **Journal de la remise de vue (CH-031)** : `deplacement-vue`, `deplacement-vue-remise`, `deplacement-vue-bilan` ; la durée de la remise vient d'un patch d'adaptateur (lecture d'horloge).
+
+### Non vérifié
+- Éveil face à la veille réelle ; correction dans Orbite sur un vrai ESV (dont le rattachement de la validation au bon cut par Écho) ; déplacement de vue (aucun déplacement dans les journaux récents).
+- Parties 5 à 8 (file de 4) : 176 posés sur 186 cibles, 10 différés ; la passe a écrit 2 cuts de la partie 6 avec des déplacements d'environ 111 et 115 mm : à juger à l'Écho.
+
+
 ## 4.9.5.28 — 4.9.5 test 28 (F-V-G-S) (30/10) — test 28
 
 Manifeste `4.9.5.28` ; base : la test 27. Moteur, géométrie, GCV2, décision du lot et adaptateur de page inchangés. Premier essai de la 27 sur un vrai ESV (3 parties) : **le changement de partie a marché deux fois** (parties 2 puis 3 faites, « fin-normale », partie 4 démarrée) ; puis la file s'est affichée « arrêtée » pendant que la relecture de la partie 4 tournait.
