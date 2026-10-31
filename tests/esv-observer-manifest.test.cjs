@@ -10,7 +10,7 @@ test('manifeste : une entrée, monde MAIN, document_start, même hôte, fichier 
  const e=manifest.content_scripts.filter(c=>c.js.includes('src/esv-observer.js'));assert.equal(e.length,1);
  assert.deepEqual(e[0],{matches:[HOST],js:['src/esv-observer.js'],run_at:'document_start',world:'MAIN'});assert.equal('all_frames' in e[0],false,'cadre principal seulement');
  assert.ok(fs.existsSync(path.join(root,'src/esv-observer.js')));
- assert.deepEqual(manifest.permissions,['storage','unlimitedStorage','scripting','downloads'],'aucune permission de plus');assert.deepEqual(manifest.host_permissions,[HOST],'aucun hôte de plus');
+ assert.deepEqual(manifest.permissions,['storage','unlimitedStorage','scripting','downloads','power'],'une seule permission de plus : « power » (ordre écrit de l\'opérateur, 31/10, éveil du système)');assert.deepEqual(manifest.host_permissions,[HOST],'aucun hôte de plus');
  const autres=manifest.content_scripts.filter(c=>!c.js.includes('src/esv-observer.js'));
  assert.deepEqual(autres.map(c=>[c.js[0],c.run_at,c.world]),[['src/early-input.js','document_start',undefined],['src/bridge.js','document_idle',undefined]],'les deux autres scripts inchangés, dans le monde isolé');
 });

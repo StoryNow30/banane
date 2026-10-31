@@ -3254,6 +3254,21 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue,raison:p.message,faits:p.faits,total:p.total,corriges:p.corriges,refusees:p.refusees,
   vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin||new Date().toISOString())-Date.parse(p.debut)},p);
  await relectureOublierPasse(p);}
+/* Test 29 (CH-027 ; ordre écrit de l'opérateur du 31/10 : « garder le système éveillé via Chrome, j'autorise la permission du manifeste ») — ÉVEIL DU SYSTÈME.
+ * Pendant un lot, une file de parties, la deuxième passe ou la relecture, Ariane demande à Chrome de ne pas mettre l'ordinateur en veille
+ * (`chrome.power.requestKeepAwake`, niveau « system » : l'écran peut s'éteindre, constat de l'opérateur) et relâche la demande dès que plus rien ne tourne.
+ * L'écoute (Écho) n'en fait pas partie : l'opérateur est devant. Une panne de l'API ne touche jamais le lot (journal `eveil-erreur`). */
+const eveil={tenu:false,raison:null,minuteur:null};
+function eveilBesoin(){const R=globalThis.BananeSettings?.eveil;if(!R||R.actif!==true)return null;
+ try{if(typeof fileActive==='function'&&fileActive())return 'file';}catch{/* pas de file */}
+ const seance=seanceObservateur({grace:true});
+ return seance&&/^(lot|relecture|passe-differes):/.test(seance)?seance.split(':')[0]:null;}
+function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='display'?'display':'system';
+ try{
+  if(besoin&&!eveil.tenu){if(!chrome.power?.requestKeepAwake)return;chrome.power.requestKeepAwake(niveau);eveil.tenu=true;eveil.raison=besoin;journalerSimple('eveil-demande',{raison:besoin,niveau});}
+  else if(!besoin&&eveil.tenu){chrome.power?.releaseKeepAwake?.();eveil.tenu=false;journalerSimple('eveil-relache',{apres:eveil.raison});eveil.raison=null;}
+ }catch(e){journalerSimple('eveil-erreur',{message:String(e?.message||e).slice(0,160)});}}
+if(!eveil.minuteur&&typeof setInterval==='function')eveil.minuteur=setInterval(eveilMaj,5000);
 /* CH-017 (T27a ; D-244, D-245, D-247, D-248, D-261) — FILE DE PARTIES : PILOTE DU SERVICE WORKER autour de la machine pure `src/file-parties.js`.
  * ÉTEINTE PAR DÉFAUT (`BananeSettings.file.actif`, src/settings.js) : aucune action « file-* » n'est acceptée (« Commande inconnue », comme avant),
  * aucun tic, aucune lecture du stockage de la file, la vue du panneau et les exports sont ceux d'avant, à l'octet près.
