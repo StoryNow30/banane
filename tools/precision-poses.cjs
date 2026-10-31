@@ -465,4 +465,4 @@ if (require.main === module) {
   try { executer(process.argv.slice(2)); }
   catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { compter, decouvrir, juger, lireEcho, lireJournalDir, lireArguments, executer, texte, FORMAT, ZONE_MM };
+module.exports = { compter, wilson, decouvrir, juger, lireEcho, lireJournalDir, lireArguments, executer, texte, FORMAT, ZONE_MM };

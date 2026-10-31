@@ -197,3 +197,149 @@ test('ligne de commande : le dossier d\'export est obligatoire, aucun chemin en 
   assert.equal(a.json, 'out.json');
   assert.throws(() => L.lireArguments(['exp', '--inconnu']), /inconnu/);
 });
+
+/* ---- CH-030 : gestes (acceptation / fine / moyenne / faute) et budget D-223 ---- */
+test('geste : un cas limite par seuil (10,0 ; 10,1 ; 50,0 ; 50,1 mm), acceptation seulement si regardé et non touché', () => {
+  assert.equal(L.geste(0, true), 'acceptation');
+  assert.equal(L.geste(0, false), 'fine', 'une validation, même à 0 mm, est un geste');
+  assert.equal(L.geste(10.0, false), 'fine');
+  assert.equal(L.geste(10.1, false), 'moyenne');
+  assert.equal(L.geste(50.0, false), 'moyenne');
+  assert.equal(L.geste(50.1, false), 'faute');
+  assert.equal(L.geste(10.0000004, false), 'fine', 'bruit de virgule flottante sous le micromètre ignoré');
+  assert.equal(L.geste(NaN, false), null);
+});
+
+test('gestes d\'une partie : répartition sur les jugés, par axe et pour le pire rail 3D', () => {
+  const { journal, echoRecords } = lotFictif();
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const p = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]).parties.find(x => x.partie === 96);
+    const g = p.gestes;
+    assert.equal(g.juges, 5);
+    const c = (a) => [a.acceptation.k, a.fine.k, a.moyenne.k, a.faute.k];
+    assert.deepEqual(c(g.pireRail3d), [1, 1, 1, 2], '9502 accepté ; 4 mm fine ; 30 mm moyenne ; 60 et 120 mm fautes');
+    assert.equal(g.pireRail3d.n, 5);
+    assert.deepEqual(c(g.lateral), [1, 2, 1, 1], 'latéral : 0 (long. 60 mm), 4, 30, 120 mm');
+    assert.deepEqual(c(g.vertical), [1, 4, 0, 0]);
+    assert.equal(g.pireRail3d.faute.part, 0.4);
+    assert.ok(g.pireRail3d.faute.bas < 0.4 && g.pireRail3d.faute.haut > 0.4, 'intervalle de Wilson');
+    assert.equal(g.sous5mm.k, 2, '4 mm et le contrôlé');
+    assert.equal(g.sous5mm.n, 5);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('budget D-223 : fautes (> 50 mm) sur les POSÉS, les non jugés ni bons ni mauvais, pire cas et cas semblable', () => {
+  const { journal, echoRecords } = lotFictif();
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const b = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]).parties.find(x => x.partie === 96).budgetD223;
+    assert.equal(b.plafond, 0.03);
+    assert.equal(b.seuilMm, 50);
+    assert.equal(b.poses, 7);
+    assert.equal(b.juges, 5);
+    assert.equal(b.nonJuges, 2, 'sans Écho 1 + non jugés 1');
+    assert.equal(b.fautesJugees, 2);
+    proche(b.couverture.part, 5 / 7, 0.001);
+    proche(b.plancher.part, 2 / 7, 0.001);
+    proche(b.pireCas.part, 4 / 7, 0.001);
+    assert.equal(b.pireCas.k, 4);
+    proche(b.siSemblables.part, 2 / 5, 0.001);
+    assert.equal(b.siSemblables.qualification, 'SUPPOSÉ');
+    assert.equal(b.tenuSurPlancher, false);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('budget et gestes sans Écho ou sans pose : aucun jugé, aucune division par zéro, budget non tranché', () => {
+  const { journal } = lotFictif();
+  const r = L.juger([{ partie: 96, journal, echo: null }, { partie: 95, journal, echo: null }]);
+  const p = r.parties.find(x => x.partie === 96), v = r.parties.find(x => x.partie === 95);
+  assert.equal(p.gestes.juges, 0);
+  assert.equal(p.gestes.pireRail3d.n, 0);
+  assert.equal(p.budgetD223.juges, 0);
+  assert.equal(p.budgetD223.couverture.part, 0);
+  assert.equal(p.budgetD223.siSemblables.part, null);
+  assert.equal(p.budgetD223.tenuSurPlancher, true, 'aucune faute connue : plancher 0');
+  assert.equal(p.budgetD223.tranche, false);
+  assert.equal(v.budgetD223.poses, 0);
+  assert.equal(v.budgetD223.plancher.part, null);
+  assert.equal(r.total.budgetD223.poses, 7);
+});
+
+test('sortie --json étendue : gestes et budget, ni numéro de cut ni liste interne ; le texte dit la population', () => {
+  const { journal, echoRecords } = lotFictif();
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const r = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]);
+    const s = JSON.stringify(r);
+    assert.equal(s.includes('"_ev"'), false);
+    for (const cut of ['9501', '9505', '9507']) assert.equal(s.includes(cut), false);
+    assert.ok(r.total.gestes && r.total.budgetD223);
+    assert.equal(r.total.gestes.pireRail3d.faute.k, 2);
+    const t = L.texte(r);
+    assert.match(t, /acceptation/);
+    assert.match(t, /budget D-223/);
+    assert.match(t, /SUPPOSÉ/);
+    assert.match(t, /sous 5 mm/);
+    assert.match(t, /Wilson/);
+    for (const cut of ['9501', '9505', '9507', '9508']) assert.equal(t.includes(cut), false);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+/* ---- CH-030 (travail supplémentaire) : deux lots sur la même partie, le second fermé au départ (« depart-sur-vert ») ---- */
+function deuxLots() {
+  const P = 97, B1 = 'lot-97a', B2 = 'lot-97b', Q = 98;
+  const events = [
+    { eventId: 'bs-q', timestamp: heure(0), type: 'batch-started', identity: id(0, Q), batch: { id: 'lot-98' } },   // une autre partie, avant : exécution distincte
+    { eventId: 'bs-a', timestamp: heure(10), type: 'batch-started', identity: id(1, P), batch: { id: B1 } },
+  ];
+  [9701, 9702, 9703, 9704].forEach((cut, i) => { const p = pose(cut, P, 20 + i * 5); events.push(DEC(cut, P, B1, 19 + i * 5), ...p.events); });
+  events.push(DEC(9705, P, B1, 50));                                   // différé
+  events.push({ eventId: 'bx-a', timestamp: heure(60), type: 'batch-stopped-at-end', identity: null, reason: 'dernier-cut-valide', lastCut: 9705 });
+  events.push({ eventId: 'rd-a', timestamp: heure(65), type: 'relecture-debut', batchId: B1 });
+  // reprise de la file : nouveau départ sur la même partie, fermé au départ sur un vert (30 s)
+  events.push({ eventId: 'bs-b', timestamp: heure(300), type: 'batch-started', identity: id(9704, P), batch: { id: B2 } });
+  events.push(DEC(9704, P, B2, 301));
+  events.push({ eventId: 'ab-b', timestamp: heure(302), type: 'capture-abandoned', reason: 'depart-sur-vert', identity: id(9704, P) });
+  events.push({ eventId: 'bx-b', timestamp: heure(303), type: 'batch-stopped-at-end', identity: null, reason: 'depart-sur-vert', lastCut: 9704 });
+  return { format: 'ariane-journal-v4', version: '4.9.5.27', events, records: [] };
+}
+test('deux lots sur la même partie : cibles = celles des deux lots, le second fermé au départ ne masque pas le premier', () => {
+  const p = L.juger([{ partie: 97, journal: deuxLots(), echo: null }]).parties[0];
+  assert.equal(p.cibles, 5, 'cinq cuts décidés par le premier lot ; le cut de départ déjà vert du second n\'est pas une cible de plus');
+  assert.equal(p.poses, 4);
+  assert.equal(p.differes, 1);
+});
+test('deux lots sur la même partie : un cut différé par le premier lot et posé par le second est posé', () => {
+  const j = deuxLots();
+  const p2 = pose(9705, 97, 301.5);
+  j.events.push(DEC(9705, 97, 'lot-97b', 301.4), ...p2.events);
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 5);
+  assert.equal(p.poses, 5);
+  assert.equal(p.differes, 0);
+});
+test('une autre partie entre deux lots : exécutions distinctes, seule la dernière compte', () => {
+  const j = deuxLots();
+  j.events.push({ eventId: 'bs-q2', timestamp: heure(100), type: 'batch-started', identity: id(0, 98), batch: { id: 'lot-98b' } });
+  j.events.push({ eventId: 'bs-r', timestamp: heure(500), type: 'batch-started', identity: id(1, 97), batch: { id: 'lot-97c' } });
+  j.events.push(DEC(9790, 97, 'lot-97c', 501));
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 1, 'lot-97c seul : les lots 97a et 97b sont d\'une exécution antérieure (la partie 98 s\'est intercalée)');
+});
+test('départ sur vert signalé seulement par l\'arrêt du lot (sans capture-abandoned) : le cut de départ n\'est pas une cible', () => {
+  const j = deuxLots();
+  j.events = j.events.filter(e => e.eventId !== 'ab-b' && !(e.type === 'gcv1-shadow-observed' && e.batchId === 'lot-97b'));
+  j.events.find(e => e.eventId === 'bs-b').identity = id(9799, 97);          // le cut de départ de la reprise n'est pas dans le premier lot
+  j.events.push(DEC(9799, 97, 'lot-97b', 301));
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 5, 'les cinq cuts du premier lot ; le cut de départ déjà vert de la reprise n\'en est pas un sixième');
+  assert.equal(p.differes, 1);
+});
+test('un arrêt « depart-sur-vert » tardif (après 30 s) n\'enlève rien', () => {
+  const j = deuxLots();
+  j.events = j.events.filter(e => e.eventId !== 'ab-b');
+  j.events.find(e => e.eventId === 'bx-b').timestamp = heure(400);
+  const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
+  assert.equal(p.cibles, 5, 'le cut 9704 est déjà une cible du premier lot : l\'union ne le perd pas');
+});
