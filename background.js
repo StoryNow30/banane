@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.28',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 28 (F-V-G-S)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -2678,6 +2678,89 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  if(l&&o.pageId!=null&&l.pageId!=null&&l.pageId!==o.pageId){delete b.retourCut;await engine.save();return;}
  if(!partCut(l)||l.part!==o.part||l.cut!==o.cut)throw Error(`${quoi} refusé : le lot est en pause sur le cut ${o.cut} de la partie ${o.part}, ESV affiche ${partCut(l)?`le cut ${l.cut} de la partie ${l.part}`:'un cut illisible'} (consultation). Reviens au cut ${o.cut} dans ESV, puis recommence ; rien n’a été validé.`);
  delete b.retourCut;await engine.save();}
+/* CH-028 — LA CORRECTION DANS ORBITE (src/correction-liste.js, chantiers/CH-028/CONCEPTION.md). Ariane PROPOSE une liste de cuts à corriger à la fin
+ * d'un lot clos (ou d'une file finie ou arrêtée : un lot par partie), l'opérateur corrige et VALIDE LUI-MÊME dans ESV, et ses visites sont enregistrées par
+ * une VRAIE séance Écho, marquée `correction` (même format de visite : tools/juger-lot.cjs et tools/jointure-echo-orbite.cjs la lisent sans changement).
+ * Ariane n'émet ni pose, ni validation, ni SKIP, ni écriture : la seule commande envoyée à ESV est le « retour à un cut » (lecture seule, `allerAuCut`).
+ * L'adaptateur refuse `goToCut` pendant Écho (adapter-page.js) : « Ouvrir » met Écho en pause (la visite en cours se clôt), va au cut, puis reprend Écho
+ * (nouvelle période, sans continuité supposée), et seulement pour un cut de la liste. État : `engine.s.correction` (gardé, donc dans la vue du panneau).
+ * Journal (export Orbite) : `correction-liste` (une fois par lot), `correction-debut`, `correction-ouvrir`, `correction-fin` (bilan par cut). */
+const CL=()=>globalThis.ArianeCorrectionListe;
+const LOT_CLOS=new Set(['COMPLETED','STOPPED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
+function lotsACorriger(args){
+ const demandes=Array.isArray(args?.batchIds)?args.batchIds.filter(x=>typeof x==='string').slice(0,16):null;if(demandes?.length)return demandes;
+ const F=fileP.etat;
+ if(F&&['fin','arret'].includes(F.etat)&&Array.isArray(F.bilan)){const ids=[...new Set(F.bilan.map(p=>p?.lotId).filter(x=>typeof x==='string'))];if(ids.length)return ids;}
+ const b=engine.s.batch;return b?.id?[b.id]:[];}
+function refusCorrection(quoi){const b=engine.s.batch;
+ if(b&&!LOT_CLOS.has(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
+ if(engine.busy||engine.task)return `${quoi} : une action d’Ariane est en cours.`;
+ if(relecture.passe)return `${quoi} : la relecture du lot tourne encore.`;
+ if(passeDiff.vue&&['calcul','ecriture'].includes(passeDiff.vue.etat))return `${quoi} : la deuxième passe tourne encore.`;
+ if(fileActive())return `${quoi} : la file de parties tourne encore.`;
+ return null;}
+async function correctionListe(args){
+ const r=refusCorrection('Liste à corriger refusée');if(r)throw Error(r);
+ const C=engine.s.correction;if(C?.etat==='ouverte')return vuePanneau();
+ const ids=lotsACorriger(args);if(!ids.length)throw Error('Liste à corriger : aucun lot clos.');
+ const events=await store.all('events'),deja=new Set(events.filter(e=>e?.type==='correction-liste').map(e=>e.batchId));
+ const listes=[];
+ for(const id of ids){const l=CL().construire(events,{batchId:id});if(!l.trouve)continue;
+  listes.push({batchId:id,partie:l.partie,entrees:l.entrees,comptes:l.comptes});
+  if(!deja.has(id))await store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'correction-liste',schema:1,sessionId:engine.s.sessionId??null,
+   batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});}
+ if(!listes.length)throw Error('Liste à corriger : le journal ne porte aucune décision de ces lots.');
+ const memes=C&&C.etat==='proposee'&&JSON.stringify(C.listes.map(l=>l.batchId))===JSON.stringify(listes.map(l=>l.batchId));
+ engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes};
+ await engine.save();return vuePanneau();}
+const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
+async function correctionDemarrer(){
+ const C=engine.s.correction;if(!C||C.etat!=='proposee')throw Error('Aucune liste à corriger proposée.');
+ const cuts=entreesCorrection(C).map(e=>({part:e.part,cut:e.cut}));if(!cuts.length)throw Error('La liste à corriger est vide.');
+ await demarrerEcho({correction:{id:C.id,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.slice(0,2000),version:CL().VERSION}});
+ C.etat='ouverte';C.debutA=new Date().toISOString();C.sessionId=engine.s.native?.id??null;await engine.save();
+ journalerSimple('correction-debut',{correctionId:C.id,sessionEcho:C.sessionId,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.length});
+ return vuePanneau();}
+const correctionOuverte=()=>{const C=engine.s.correction,n=engine.s.native;return !!C&&C.etat==='ouverte'&&!!n&&n.correction?.id===C.id&&native.active();};
+async function correctionOuvrir(args){
+ const C=engine.s.correction;if(!correctionOuverte())throw Error('Aucune correction en cours : commence la correction avant d’ouvrir un cut.');
+ const part=Number.isInteger(args?.part)?args.part:null,cut=Number.isInteger(args?.cut)?args.cut:null;
+ if(!entreesCorrection(C).some(e=>e.part===part&&e.cut===cut))throw Error(`Le cut ${cut} de la partie ${part} n’est pas dans la liste à corriger.`);
+ const enMarche=engine.s.native.status==='RUNNING';
+ if(enMarche)await native.pause();
+ let r=null,erreur=null;
+ try{r=await allerAuCut({part,cut});}catch(e){erreur=e;}
+ finally{if(enMarche||engine.s.native?.status==='PAUSED'){try{await native.resume();}catch(e){erreur=erreur||e;}}}
+ journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:erreur?'erreur':r?.resultat??null,code:r?.code??null,message:erreur?String(erreur.message||erreur).slice(0,160):r?.message??null,
+  ecoReprise:engine.s.native?.status??null});
+ if(erreur)throw erreur;
+ C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();
+ return {...r,correction:C};}
+async function correctionTerminer(){
+ const C=engine.s.correction;if(!C||C.etat!=='ouverte')throw Error('Aucune correction en cours.');
+ const n=engine.s.native;if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
+ const visites=(engine.s.native?.correction?.id===C.id?engine.s.native.visits:[])||[];
+ const b=CL().bilan(entreesCorrection(C),visites.map(v=>({identity:v.identity,label:v.label??null})));
+ Object.assign(C,{etat:'terminee',finA:new Date().toISOString(),bilan:b.comptes,courant:null});await engine.save();
+ journalerSimple('correction-fin',{correctionId:C.id,sessionEcho:C.sessionId??null,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
+ return vuePanneau();}
+async function correctionFermer(){const C=engine.s.correction;if(C?.etat==='ouverte')throw Error('Termine la correction avant de fermer la liste.');
+ delete engine.s.correction;await engine.save();return vuePanneau();}
+
+/* Démarrage d'Écho (bouton « Démarrer l'observation », ou la correction dans Orbite, CH-028 : `extra.correction`). */
+async function demarrerEcho(extra){engine.assertBatchContextFree('démarrer Écho');
+  /* 4.9.0.18 (AM-23, AM-06) : libellé du cut illisible = aucune identité pour toute la séance : refus ; plusieurs onglets ESV : dit. */
+  let vu=await call('nativeSnapshot').catch(e=>e);
+  /* F5 hors séance : la page rechargée n'a plus d'adaptateur. « Connecter » ferait la même chose (injection locale, aucune requête à ESV) ;
+   * sinon le démarrage échouait en laissant une session et une période fantôme à chaque clic (fiches/ECHO_F5.md). */
+  if(vu instanceof Error){try{await equiperOnglet(selectedTab);vu=await call('nativeSnapshot');}
+   catch(e){if(e?.definitif)throw e;throw Error('Écho non démarré : la page ESV ne répond pas ('+(e?.message||vu.message)+'). Clique sur Connecter, puis réessaie.');}}
+  if(vu&&(!Number.isInteger(vu.identity?.part)||!Number.isInteger(vu.identity?.cut)))throw Error('Écho refusé : le libellé du cut n’est pas lisible dans ESV (« Cut N of part M » attendu). Ouvre un cut, puis réessaie.');
+  const onglets=(await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'}).catch(()=>[])).length;
+  const choixRaison=await choixRaisonDuPanneau();   // RM-11 : lu ici, figé dans la séance ; coupé, Écho démarre exactement comme avant
+  const opts={...(choixRaison.actif?{raison:choixRaison}:{}),...(extra||{})};const v=await native.start(Object.keys(opts).length?opts:undefined);const n=engine.s.native;
+  if(n&&onglets>1){n.message=`Observation native active sur l’onglet choisi seulement (${onglets} onglets ESV ouverts : travaille dans celui-ci).`;await engine.save();}
+  return v;}
 /* 5.0 (D-170 à D-176) — RELECTURE APRÈS LE LOT (src/relecture-ombre.js, src/relecture-critere.js, fiches/RELECTURE_OMBRE.md).
  * Choix du panneau gardé dans storage.local (`relecture-choix-etat`, `relecture-choix`) : « coupée » (défaut), « ombre » (visite,
  * calcule, note ; Ariane ne pose et ne valide rien, mais ESV marque lui-même « vu » chaque cut affiché pour la première fois),
@@ -3634,19 +3717,13 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(action==='view'){if(selectedTab===null&&engine.s.connection?.status!=='no-tab')connexionStatut('no-tab','Aucun onglet ESV choisi.',null);
   pollCurrent();const v=vuePanneau();return {...v,assistGauge:assistGauge(v)};}
  // V4.6.0 : une reprise manuelle est un lot actif. Le mode Natif ne prend pas sa place.
- if(action==='native-start'){engine.assertBatchContextFree('démarrer Écho');
-  /* 4.9.0.18 (AM-23, AM-06) : libellé du cut illisible = aucune identité pour toute la séance : refus ; plusieurs onglets ESV : dit. */
-  let vu=await call('nativeSnapshot').catch(e=>e);
-  /* F5 hors séance : la page rechargée n'a plus d'adaptateur. « Connecter » ferait la même chose (injection locale, aucune requête à ESV) ;
-   * sinon le démarrage échouait en laissant une session et une période fantôme à chaque clic (fiches/ECHO_F5.md). */
-  if(vu instanceof Error){try{await equiperOnglet(selectedTab);vu=await call('nativeSnapshot');}
-   catch(e){if(e?.definitif)throw e;throw Error('Écho non démarré : la page ESV ne répond pas ('+(e?.message||vu.message)+'). Clique sur Connecter, puis réessaie.');}}
-  if(vu&&(!Number.isInteger(vu.identity?.part)||!Number.isInteger(vu.identity?.cut)))throw Error('Écho refusé : le libellé du cut n’est pas lisible dans ESV (« Cut N of part M » attendu). Ouvre un cut, puis réessaie.');
-  const onglets=(await chrome.tabs.query({url:'https://esv.lidar.altametris.xyz/rails_validation/*'}).catch(()=>[])).length;
-  const choixRaison=await choixRaisonDuPanneau();   // RM-11 : lu ici, figé dans la séance ; coupé, Écho démarre exactement comme avant
-  const v=await native.start(choixRaison.actif?{raison:choixRaison}:undefined);const n=engine.s.native;
-  if(n&&onglets>1){n.message=`Observation native active sur l’onglet choisi seulement (${onglets} onglets ESV ouverts : travaille dans celui-ci).`;await engine.save();}
-  return v;}
+ /* CH-028 : la correction dans Orbite (avant le refus général « Écho est actif » : la correction EST une séance Écho). */
+ if(action==='correction-liste')return correctionListe(args);
+ if(action==='correction-demarrer')return correctionDemarrer();
+ if(action==='correction-ouvrir')return correctionOuvrir(args);
+ if(action==='correction-terminer')return correctionTerminer();
+ if(action==='correction-fermer')return correctionFermer();
+ if(action==='native-start')return demarrerEcho();
  if(action==='native-pause')return native.pause();
  if(action==='native-resume')return native.resume();
  if(action==='native-end')return native.end({dataset:false});

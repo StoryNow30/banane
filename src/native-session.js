@@ -119,6 +119,8 @@
       message:'Démarrage de l’observation passive…'};
     /* RM-11 : lire les raisons est un choix du panneau, fait avant la séance et gardé jusqu'à sa fin. Coupé, la session n'a rien de plus. */
     if(options?.raison?.actif===true)n.raison=R.nouvelEtat(options.raison.touches);
+    /* CH-028 : séance ouverte par la correction dans Orbite : la liste (identifiant, lots, cuts) est gardée dans la session, donc dans son export ; rien d'autre ne change. */
+    if(options?.correction&&typeof options.correction==='object')n.correction=K.clone(options.correction);
     this.e.s.native=n;this.e.s.mode='observation';const period=this.newPeriod(n);await this.e.save();
     await this.nativeEvent('session-started',{sessionId:n.id,observationPeriodId:period.observationPeriodId,identity:null});
     try{await this.adapter.nativeStart({sessionId:n.id,observationPeriodId:period.observationPeriodId,...(n.raison?{raison:true}:{})});n.status='RUNNING';period.status='RUNNING';
