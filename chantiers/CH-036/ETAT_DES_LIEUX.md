@@ -68,3 +68,10 @@ Lu dans le code du tronc (`src/signal-rendu.js`, `src/ui5.js`, `panel.js` partie
 
 ## 4. Coordination avec CH-035 (convention proposée)
 L'Aurore lit dans `snap.correction` (src/ui5.js) deux champs que CH-035 exposerait : `entreParties` (booléen, le réglage `correctionEntreParties`) et `passage` (`{ etat: 'en-cours'|'refuse'|null, vers, texte }`, d'après l'événement `correction-partie`). Réglage éteint : l'état « autre partie » montre « ouvre la partie 14 dans ESV » (comportement de la 4.9.5.29). À confirmer avec CH-035 par la mère.
+
+## 5. Figma (jalon, 01/11)
+Fichier Signal, page « CH-036 · Constellation et Aurore » (aucune page existante touchée) : clé `ZrK16dO2MGOQp9lufe7lwF`, nœud de page `143:2`.
+- Planche « Lire d'abord » (principes, ce qui change) et « Composants » : Étoile (5 états), Bascule · Constellation et Aurore (4 onglets × normale/compacte), Ligne d'Aurore (6 statuts), Temps de la partie (4), Ligne de partie, Poignée de tiroir, icônes Constellation et Aurore.
+- 13 états × (600 × 760, 360 × 640) × (sombre, clair) = 52 fenêtres. Constellation : prête, en cours, arrêtée, terminée, terminée tiroir ouvert. Aurore : liste proposée, un cut ouvert, cut corrigé, autre partie (traversée CH-035 allumée), autre partie (traversée éteinte), passage, terminée. Orbite : fin de lot avec l'Aurore annoncée.
+- Audit : 5 712 calques, 0 image, IBM Plex Sans et Mono seulement. Données d'exemple fictives.
+- Écarts connus : l'icône « Lancer » de la bibliothèque ne s'affiche pas dans le bouton plein (écart antérieur, CH-025) ; aucun prototype de mouvement.
