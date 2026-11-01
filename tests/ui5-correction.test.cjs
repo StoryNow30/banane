@@ -18,35 +18,37 @@ async function page(extra) {
   return p;
 }
 const html = p => { p.ui.maj(true); return p.hote.innerHTML; };
+/* CH-036 : la correction s'appelle « Aurore » partout où l'opérateur lit ; « Ouvrir l'Aurore · N cuts » est l'action pleine de la fin du lot (décision du
+ * 01/11) ; l'avancement compte les cuts revus (corrigés, validés tels quels, vus). Les déclencheurs (`#correction-*`) et les actions sont les mêmes. */
 
 test('sans liste dans la vue : ni onglet « Correction », ni ligne à la fin du lot', async () => {
   const p = await page({});
   const h = html(p);
-  assert.doesNotMatch(h, /Correction|sg:onglet-correction/);
+  assert.doesNotMatch(h, /Aurore|Correction|sg:onglet-correction/);
   assert.equal(p.ui.instantane(etat()).correction, null);
 });
 
-test('fin du lot : « À corriger » dans le bilan, « Corriger · 7 cuts » (toute la liste) et l’onglet « Correction » dans la bascule', async () => {
+test('fin du lot : « Aurore » dans le bilan, « Ouvrir l’Aurore · 7 cuts » (toute la liste) et l’onglet « Aurore » dans la bascule', async () => {
   const p = await page({ correction: correction('proposee') });
   const h = html(p);
-  assert.match(h, /<dt>À corriger<\/dt><dd><b>6<\/b> cuts · <b>1<\/b> à poser/);
-  assert.match(h, /data-act="sg:onglet-correction"[^>]*>Corriger · 7 cuts</);
-  assert.match(h, /role="tab" aria-selected="false" data-act="sg:onglet-correction">Correction</);
+  assert.match(h, /<dt>Aurore<\/dt><dd><b>7<\/b> cuts à revoir : <b>6<\/b> à corriger, <b>1<\/b> à poser/);
+  assert.match(h, /data-act="sg:onglet-correction"[^>]*>.*Ouvrir l’Aurore · 7 cuts</s);
+  assert.match(h, /role="tab" aria-selected="false" data-act="sg:onglet-correction">Aurore</);
   assert.deepEqual(p.envoyes, []);
 });
 
-test('l’onglet : liste proposée, signaux en clair, « Commencer la correction » clique le déclencheur caché', async () => {
+test('l’onglet : liste proposée, signaux en clair, « Commencer l’Aurore » clique le déclencheur caché', async () => {
   const p = await page({ correction: correction('proposee') });
   p.ui.agir('sg:onglet-correction');
   const h = p.hote.innerHTML;
-  assert.match(h, /role="tab" aria-selected="true"[^>]*>Correction</);
-  assert.match(h, /class="sg-mot">À corriger</);
+  assert.match(h, /role="tab" aria-selected="true"[^>]*>Aurore</);
+  assert.match(h, /class="sg-mot">Prête</);
   assert.match(h, /Partie 5 · 6 à corriger, 1 à poser/);
-  assert.match(h, /<span class="sg-cut">14<\/span><span class="sg-motif"><span class="sg-sig">écrit par la deuxième passe<\/span><small>· déplacement 38,4 mm<\/small>/);
-  assert.match(h, /<span class="sg-cut">15<\/span><span class="sg-motif"><span class="sg-sig">juste après un différé<\/span><small>· posé sans appui<\/small>/);
+  assert.match(h, /<span class="sg-cut">14<\/span><span class="sg-motif"><span class="sg-sig">posé au rattrapage<\/span><small>· déplacement 38,4 mm<\/small>/);
+  assert.match(h, /<span class="sg-cut">15<\/span><span class="sg-motif"><span class="sg-sig">juste après un cut à poser<\/span><small>· posé sans appui<\/small>/);
   assert.match(h, /Section-a-poser|À poser/);
   assert.equal((h.match(/class="sg-statut"[^>]*>à faire</g) || []).length, 7);
-  assert.match(h, /data-act="legacy:correction-demarrer"[^>]*>.*Commencer la correction/s);
+  assert.match(h, /data-act="legacy:correction-demarrer"[^>]*>.*Commencer l’Aurore/s);
   assert.match(h, /data-act="legacy:correction-fermer"[^>]*>Fermer la liste/);
   assert.doesNotMatch(h, /data-act="sg:corr-ouvrir/, '« Ouvrir » n’existe qu’en correction ouverte');
   p.ui.agir('legacy:correction-demarrer');
@@ -59,14 +61,14 @@ test('correction ouverte : statuts lus dans les visites d’Écho, « Ouvrir » 
   const p = await page({ correction: correction('ouverte', { courant: { part: 5, cut: 16 } }), native });
   p.ui.agir('sg:onglet-correction');
   const h = p.hote.innerHTML;
-  assert.match(h, /class="sg-mot">Correction en cours</);
+  assert.match(h, /class="sg-mot">En cours</);
   assert.match(h, /Cut <span class="sg-mono">16<\/span> ouvert dans ESV/);
   assert.match(h, /<span class="sg-cut">14<\/span>.*?class="sg-statut" data-statut="corrige">corrigé · 2 rails</s);
   assert.match(h, /<span class="sg-cut">15<\/span>.*?data-statut="valide">validé tel quel</s);
   assert.match(h, /<span class="sg-cut">16<\/span>.*?data-statut="en-cours">ouvert dans ESV</s);
-  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">traités sur 7<\/span>/);
-  assert.match(h, /data-act="sg:corr-ouvrir:5:17"[^>]*>.*Ouvrir le suivant · cut 17/s, 'le premier cut à faire après le courant');
-  assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer la correction/);
+  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7 revus<\/span>/);
+  assert.match(h, /data-act="sg:corr-ouvrir:5:17"[^>]*>.*Suivant · cut 17/s, 'le premier cut à faire après le courant');
+  assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer l’Aurore/);
   p.ui.agir('sg:corr-ouvrir:5:18');
   assert.equal(p.els['correction-cible'].value, '5:18'); assert.equal(p.els['correction-ouvrir'].clics, 1);
   assert.deepEqual(p.envoyes, []);
@@ -79,10 +81,10 @@ test('liste terminée : bilan, « Télécharger la séance Écho » (bouton d’
   Object.assign(p.els['export-tout'], { hidden: false, textContent: 'Tout exporter' });
   p.ui.agir('sg:onglet-correction');
   const h = p.hote.innerHTML;
-  assert.match(h, /class="sg-mot">Correction terminée</);
+  assert.match(h, /class="sg-mot">Terminée</);
   assert.match(h, /Partie 5 · 1 corrigé, 1 validé tel quel, 1 vu sans validation · inscrit dans l’export Orbite/);
   assert.match(h, /data-act="legacy:native-download"[^>]*>.*Télécharger la séance Écho/s);
-  assert.match(h, /data-act="legacy:export-tout"[^>]*>Exporter le dossier/);
+  assert.match(h, /class="sg-principal" data-act="legacy:export-tout"[^>]*>.*Exporter le dossier/s, 'CH-036 : l’export est l’action pleine');
 });
 
 test('une liste d’une autre partie que celle affichée : « Ouvrir » grisé, avec la raison', async () => {

@@ -378,18 +378,77 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-ligne.sg-corr{grid-template-columns:72px minmax(0,1fr) auto auto;margin:0}
 #ui5.u-signal[data-taille="compact"] .sg-ligne.sg-corr{grid-template-columns:52px minmax(0,1fr) auto auto}
 #ui5.u-signal .sg-statut{font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2);white-space:nowrap;text-align:right}
-#ui5.u-signal .sg-statut[data-statut="corrige"]{color:var(--vivant)}
-#ui5.u-signal .sg-statut[data-statut="en-cours"]{color:var(--attention)}
+/* CH-036 : une seule ligne vivante, le cut ouvert ; corrigé à l’encre, vu sans validation en attention. */
+#ui5.u-signal .sg-statut[data-statut="corrige"]{color:var(--encre)}
+#ui5.u-signal .sg-statut[data-statut="en-cours"]{color:var(--vivant)}
+#ui5.u-signal .sg-statut[data-statut="vu"]{color:var(--attention)}
+#ui5.u-signal .sg-ligne.sg-corr:has(.sg-statut[data-statut="en-cours"]){background:var(--surface2)}
 #ui5.u-signal .sg-ligne.sg-corr:has(.sg-statut[data-statut="corrige"]) .sg-cut,#ui5.u-signal .sg-ligne.sg-corr:has(.sg-statut[data-statut="valide"]) .sg-cut{color:var(--encre2)}
 #ui5.u-signal .sg-corr-note{margin:0}
 #ui5.u-signal[data-taille="compact"] .sg-corr-note{display:none}
 #ui5.u-signal[data-taille="compact"] .sg-onglet-corr .sg-droite{display:none}
-/* Quatre onglets dans la barre, en compact : le logo s'efface et la puce garde sa pastille (comme le dessin 360). */
-#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-logo{display:none}
-#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-puce .sg-tx,#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-puce .sg-fl{display:none}
-#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-puce{padding:0 9px}
 #ui5.u-signal .sg-ligne.sg-corr .sg-motif{display:flex;align-items:baseline;gap:6px;min-width:0}
 #ui5.u-signal .sg-ligne.sg-corr .sg-sig{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ui5.u-signal .sg-ligne.sg-corr .sg-motif small{flex:0 1000 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Quatre onglets, entre 480 et 560 px (taille normale) : le nom « Ariane » du logo s'efface pour que la barre tienne (mesuré : 480 px débordait d'un élément). */
-@media (max-width:559px){#ui5.u-signal .sg-barre:has(.sg-bascule[data-onglets="4"]) .sg-logo span{display:none}}
+@media (max-width:559px){#ui5.u-signal .sg-barre:has(.sg-bascule[data-onglets]) .sg-logo span{display:none}}
+
+/* ───────────────────────────── CH-036 : Constellation et Aurore (Figma, page « CH-036 · Constellation et Aurore », validée le 01/11) */
+/* Barre compacte (< 480 px) : la bascule a son propre rang sous la barre, pleine largeur, libellés gardés (décision de l'opérateur). */
+#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets]){height:auto;flex-wrap:wrap;row-gap:0;padding-bottom:var(--e2)}
+#ui5.u-signal[data-taille="compact"] .sg-barre:has(.sg-bascule[data-onglets])>.sg-espace{height:var(--barre)}
+#ui5.u-signal[data-taille="compact"] .sg-bascule[data-onglets]{order:9;flex:1 0 100%;display:flex}
+#ui5.u-signal[data-taille="compact"] .sg-bascule[data-onglets] button{flex:1 1 auto;justify-content:center;padding:0 6px}
+/* Les étoiles : une par partie, reliées par le fil ; seule la partie en cours est vivante. */
+#ui5.u-signal .sg-astre{display:block;width:16px;height:16px}
+#ui5.u-signal .sg-astre path{fill:currentColor;stroke:currentColor;stroke-width:0;stroke-linejoin:round}
+#ui5.u-signal .sg-etoiles{list-style:none;margin:0;padding:0;display:flex;min-width:0}
+#ui5.u-signal .sg-etoile{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;color:var(--encre)}
+#ui5.u-signal .sg-etoile::before{content:"";position:absolute;top:14px;right:50%;width:100%;height:1px;background:var(--filet-fort)}
+#ui5.u-signal .sg-etoile:first-child::before{display:none}
+#ui5.u-signal .sg-etoile:not([data-etat="a-venir"])::before{background:var(--encre2)}
+#ui5.u-signal .sg-etoile .sg-astre{position:relative;box-sizing:content-box;padding:5px;border:1px solid transparent;border-radius:50%;background:var(--fond)}
+#ui5.u-signal .sg-etoile .sg-mono{font-size:var(--t-texte);line-height:var(--l-texte);font-weight:500}
+#ui5.u-signal .sg-etoile small{font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#ui5.u-signal .sg-etoile[data-etat="a-venir"]{color:var(--encre2)}
+#ui5.u-signal [data-etat="a-venir"]>.sg-astre path,#ui5.u-signal .sg-corr-partie[data-etat="a-faire"]>.sg-astre path{fill:none;stroke-width:1.2}
+#ui5.u-signal .sg-etoile[data-etat="en-cours"] .sg-astre{color:var(--vivant);border-color:color-mix(in srgb,var(--vivant) 50%,transparent)}
+#ui5.u-signal .sg-etoile[data-etat="en-cours"] small{color:var(--vivant)}
+#ui5.u-signal [data-etat="interrompue"]>.sg-astre{color:var(--attention)}
+#ui5.u-signal [data-etat="interrompue"]>.sg-astre path{fill:none;stroke-width:1.4}
+#ui5.u-signal .sg-etoile[data-etat="interrompue"] small{color:var(--attention)}
+#ui5.u-signal [data-etat="alerte"]>.sg-astre{color:var(--alerte)}
+/* Les quatre temps d'une partie : Pose, Rattrapage, Relecture, Passage. */
+#ui5.u-signal .sg-temps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--e2);font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2)}
+#ui5.u-signal .sg-temps li{position:relative;padding-left:12px;background:radial-gradient(circle,var(--encre2) 2.6px,transparent 3.2px) 0 50%/6px 6px no-repeat}
+#ui5.u-signal .sg-temps li+li{margin-left:20px}
+#ui5.u-signal .sg-temps li+li::before{content:"";position:absolute;left:-24px;top:50%;width:16px;height:1px;background:var(--filet-fort)}
+#ui5.u-signal .sg-temps li[data-temps="courant"]{color:var(--encre);background-image:radial-gradient(circle,var(--vivant) 2.6px,transparent 3.2px)}
+#ui5.u-signal .sg-temps li[data-temps="a-venir"]{background-image:radial-gradient(circle,transparent 1.7px,var(--encre3) 2.1px,var(--encre3) 2.8px,transparent 3.2px)}
+#ui5.u-signal[data-taille="compact"] .sg-temps li+li{margin-left:4px}#ui5.u-signal[data-taille="compact"] .sg-temps li+li::before{display:none}
+/* Bilan par partie et départs : visibles d'emblée (décision du 01/11), sous un titre filé. */
+#ui5.u-signal .sg-onglet-file .sg-of-t{display:flex;justify-content:space-between;gap:var(--e2);padding-bottom:6px;border-bottom:1px solid var(--filet);color:var(--encre)}
+#ui5.u-signal .sg-of-d{color:var(--encre2)}
+#ui5.u-signal .sg-of-partie{display:flex;flex-direction:column;gap:2px;min-width:0}
+#ui5.u-signal .sg-of-partie>p{margin:0}
+#ui5.u-signal .sg-of-l{display:flex;align-items:baseline;gap:var(--e3);min-width:0}
+#ui5.u-signal .sg-of-l .sg-astre{width:12px;height:12px;flex:none;align-self:center;color:var(--encre)}
+#ui5.u-signal .sg-of-l b{font-weight:500;white-space:nowrap}
+#ui5.u-signal .sg-of-l span{font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2);min-width:0}
+#ui5.u-signal .sg-of-motifs{padding-left:24px;font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2)}
+#ui5.u-signal .sg-a-droite{margin-left:auto}
+/* L'Aurore : l'horizon (revus sur total, une portion par partie), la partie en tête de chaque groupe. */
+#ui5.u-signal .sg-horizon{display:flex;flex-direction:column;gap:10px;min-width:0}
+#ui5.u-signal .sg-aube{display:flex;gap:6px;min-width:0}
+#ui5.u-signal .sg-aube>span{position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;padding-top:3px}
+#ui5.u-signal .sg-aube>span::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;border-radius:2px;background:var(--filet-fort)}
+#ui5.u-signal .sg-aube i{position:absolute;top:0;left:0;height:3px;border-radius:2px;background:var(--encre)}
+#ui5.u-signal .sg-aube small{font-size:10px;line-height:12px;color:var(--encre2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ui5.u-signal .sg-aube [data-affichee] small{color:var(--encre)}
+#ui5.u-signal .sg-corr-partie{display:flex;align-items:center;gap:var(--e2);padding:10px 0 4px;min-width:0}
+#ui5.u-signal .sg-corr-partie .sg-astre{width:12px;height:12px;flex:none;color:var(--encre)}
+#ui5.u-signal .sg-corr-partie[data-etat="en-cours"] .sg-astre{color:var(--vivant)}
+#ui5.u-signal .sg-corr-partie b{font-weight:500}
+#ui5.u-signal .sg-corr-partie .sg-n,#ui5.u-signal .sg-corr-partie .sg-d{font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2)}
+#ui5.u-signal .sg-corr-partie .sg-d{margin-left:auto;white-space:nowrap}
+#ui5.u-signal .sg-corr-bilan{margin:0 0 var(--e2);padding-left:20px;font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2)}

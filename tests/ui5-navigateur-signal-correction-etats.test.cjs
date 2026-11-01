@@ -48,11 +48,12 @@ test('onglet « Correction » : liste proposée, cut ouvert, correction enregist
     assert.deepEqual(erreurs, []);
   } finally { await nav.close(); }
   for (const [nom, r] of Object.entries(res)) verifier(assert, nom, r);
-  for (const nom of Object.keys(vus)) { assert.equal(vus[nom].onglet, 'correction', nom); assert.equal(vus[nom].choisi, 'Correction', nom); assert.equal(vus[nom].lignes, 7, nom); }
-  assert.equal(res.proposee['600'].mot, 'À corriger'); assert.equal(res.ouvert['600'].mot, 'Correction en cours'); assert.equal(res.terminee['600'].mot, 'Correction terminée');
-  assert.deepEqual(vus.proposee.boutons, ['Commencer la correction|legacy:correction-demarrer', 'Fermer la liste|legacy:correction-fermer']);
+  for (const nom of Object.keys(vus)) { assert.equal(vus[nom].onglet, 'correction', nom); assert.equal(vus[nom].choisi, 'Aurore', nom); assert.equal(vus[nom].lignes, nom === 'terminee' ? 0 : 7, nom + ' (CH-036 : terminée, le bilan par partie remplace la liste)'); }
+  /* CH-036 : l'Aurore (Figma validé le 01/11). */
+  assert.equal(res.proposee['600'].mot, 'Prête'); assert.equal(res.ouvert['600'].mot, 'En cours'); assert.equal(res.terminee['600'].mot, 'Terminée');
+  assert.deepEqual(vus.proposee.boutons, ['Commencer l’Aurore|legacy:correction-demarrer', 'Fermer la liste|legacy:correction-fermer']);
   assert.deepEqual(vus.ouvert.statuts.slice(0, 3), ['valide', 'en-cours', 'a-faire']);
   assert.deepEqual(vus.enregistre.statuts.slice(0, 3), ['valide', 'corrige', 'en-cours']);
-  assert.ok(vus.enregistre.boutons.includes('Terminer la correction|legacy:correction-terminer'), JSON.stringify(vus.enregistre.boutons));
+  assert.ok(vus.enregistre.boutons.includes('Terminer l’Aurore|legacy:correction-terminer'), JSON.stringify(vus.enregistre.boutons));
 });
 

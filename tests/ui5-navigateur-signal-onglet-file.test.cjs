@@ -31,25 +31,26 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
    if(nom!=='prete')await poserEtat(page,st);
    res[nom]=await parLargeurs(page,{extra:EXTRA});
    vus[nom]=await page.evaluate(()=>{const h=document.getElementById('ui5');return {onglet:h.querySelector('.sg-fen')?.dataset.activite,choisi:h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
-    titres:[...h.querySelectorAll('.sg-of-t')].map(e=>e.textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
-    departs:[...h.querySelectorAll('.sg-of-departs tbody tr')].map(r=>[...r.cells].map(c=>c.textContent)),bilan:h.querySelectorAll('.sg-file-bilan li').length,tiroir:!!h.querySelector('.sg-tiroir')};});
+    titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
+    departs:[...h.querySelectorAll('.sg-of-departs tbody tr')].map(r=>[...r.cells].map(c=>c.textContent)),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-of-partie').length,etoiles:[...h.querySelectorAll('.sg-etoile')].map(e=>e.dataset.etat+':'+e.querySelector('.sg-mono').textContent),tiroir:!!h.querySelector('.sg-tiroir')};});
   }
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
  for(const [nom,r] of Object.entries(res))verifier(assert,nom,r);
- for(const nom of Object.keys(vus)){assert.equal(vus[nom].onglet,'file',nom);assert.equal(vus[nom].choisi,'File',nom);assert.equal(vus[nom].tiroir,false,nom+' : pas de tiroir dans l’onglet');
+ for(const nom of Object.keys(vus)){assert.equal(vus[nom].onglet,'file',nom);assert.equal(vus[nom].choisi,'Constellation',nom);assert.equal(vus[nom].tiroir,false,nom+' : pas de tiroir dans l’onglet');
   assert.deepEqual(vus[nom].departs,[['14','30/10 15:40','8 800','493','12','9 305'],['13','30/10 15:21','9 140','165','0','9 305']],nom+' : départs, du plus récent, heure de Paris');}
- assert.equal(res.prete['600'].mot,'File prête');assert.deepEqual(vus.prete.titres,['Lancer la file','Bilan de la file','Départs des parties']);
- assert.ok(vus.prete.boutons.some(b=>/^Lancer la file · 2 parties\|legacy:file-lancer$/.test(b)),JSON.stringify(vus.prete.boutons));
- assert.equal(res.lot['600'].mot,'File en cours');assert.equal(res.lot['360'].arreter,true);assert.equal(res.lot['600'].depart,false);
- assert.deepEqual(vus.lot.titres,['Bilan de la file','Départs des parties'],'pendant la file : pas de lancement');
- assert.equal(res.arret['600'].mot,'File arrêtée');assert.match(res.arret['600'].alerte,/ne change pas de partie/);
- assert.deepEqual(vus.arret.boutons.filter(b=>/file-(reprendre|lancer)/.test(b)),['Reprendre la file · 1 partie restante|legacy:file-reprendre','Nouvelle file · 2 parties|legacy:file-lancer']);
+ /* CH-036 : l'onglet « Constellation » (Figma validé le 01/11) : les étoiles, une action pleine, puis le bilan par partie (dès qu'une partie est faite) et les départs, visibles d'emblée. */
+ assert.equal(res.prete['600'].mot,'Prête');assert.deepEqual(vus.prete.titres,['Départs des parties']);assert.deepEqual(vus.prete.etoiles,['a-venir:13','a-venir:+1']);
+ assert.ok(vus.prete.boutons.some(b=>/^Lancer la Constellation · 2 parties\|legacy:file-lancer$/.test(b)),JSON.stringify(vus.prete.boutons));
+ assert.equal(res.lot['600'].mot,'En cours');assert.deepEqual(vus.lot.etoiles,['en-cours:13','a-venir:14']);assert.equal(res.lot['360'].arreter,true);assert.equal(res.lot['600'].depart,false);
+ assert.deepEqual(vus.lot.titres,['Départs des parties'],'pendant la file : pas de lancement, aucune partie faite');
+ assert.equal(res.arret['600'].mot,'Arrêtée');assert.deepEqual(vus.arret.etoiles,['faite:13','interrompue:14']);assert.deepEqual(vus.arret.titres,['Bilan par partie','Départs des parties']);assert.match(res.arret['600'].alerte,/ne change pas de partie/);
+ assert.deepEqual(vus.arret.boutons.filter(b=>/file-(reprendre|lancer)/.test(b)),['Reprendre à la partie 14 · 1 restante|legacy:file-reprendre','Nouvelle Constellation · 2 parties|legacy:file-lancer']);
  assert.equal(vus.arret.bilan,1);
  for(const nom of ['prete','arret','fin'])assert.ok(vus[nom].boutons.includes('3|sg:file-n:3'),nom+' : le nombre de parties se choisit (aussi après une file)');
  assert.ok(!vus.lot.boutons.some(b=>/sg:file-n/.test(b)),'pas pendant la file');
- assert.equal(res.fin['600'].mot,'File terminée');assert.equal(vus.fin.bilan,2);
- assert.deepEqual(vus.fin.boutons.filter(b=>/file-lancer|export-tout/.test(b)),['Relancer une file · 2 parties|legacy:file-lancer','Exporter le dossier|legacy:export-tout']);
+ assert.equal(res.fin['600'].mot,'Terminée');assert.equal(vus.fin.bilan,2);
+ assert.deepEqual(vus.fin.boutons.filter(b=>/file-lancer|export-tout/.test(b)),['Nouvelle Constellation · 2 parties|legacy:file-lancer','Exporter le dossier|legacy:export-tout']);
 });
 
 test('onglet « File » : nombre, Lancer (un clic), Reprendre au rang (depuis la partie 14), Arrêter confirmé ; Orbite ramène l’instrument',{skip:absent,timeout:25000},async()=>{
@@ -58,7 +59,7 @@ test('onglet « File » : nombre, Lancer (un clic), Reprendre au rang (depuis la
   const {page,erreurs}=await monter(nav,FILE.prete);
   await page.click('#ui5 .sg-bascule [data-act="sg:onglet-file"]');await page.waitForTimeout(200);
   await page.click('#ui5 .sg-onglet-file [data-act="sg:file-n:3"]');await page.waitForTimeout(200);
-  assert.match(await page.textContent('#ui5 .sg-onglet-file .sg-principal'),/Lancer la file · 3 parties/);
+  assert.match(await page.textContent('#ui5 .sg-onglet-file .sg-principal'),/Lancer la Constellation · 3 parties/);
   await page.click('#ui5 .sg-onglet-file .sg-principal');await page.waitForTimeout(400);
   const m1=await messages(page);assert.deepEqual(m1.map(m=>m.action),['settings','file-demarrer'],'un clic lance');assert.equal(m1[1].args.n,3);assert.equal(m1[1].args.depuis,undefined);
   await poserEtat(page,ARRET);
@@ -67,7 +68,7 @@ test('onglet « File » : nombre, Lancer (un clic), Reprendre au rang (depuis la
   await poserEtat(page,FILE.lot);
   const sel='#ui5 .sg-onglet-file [data-act="legacy:file-secondaire"]';
   await page.click(sel);await page.waitForTimeout(200);assert.deepEqual(await messages(page),[],'un clic ne fait que demander');
-  assert.match(await page.textContent(sel),/Confirmer l’arrêt de la file/);
+  assert.match(await page.textContent(sel),/Confirmer l’arrêt de la Constellation/);
   await page.waitForTimeout(500);await page.click(sel);await page.waitForTimeout(300);
   assert.deepEqual((await messages(page)).map(m=>m.action),['file-arreter']);
   await page.click('#ui5 .sg-bascule [data-act="mode:automatic"]');await page.waitForTimeout(250);

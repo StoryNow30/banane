@@ -202,6 +202,13 @@
       choixTous: [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)),
       partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
       departs: departsFile(),
+      /* CH-036 : le bilan par partie, structuré (la vue `fileParties.bilan`, src/file-parties.js), pour la Constellation : posés, à poser, écrits au
+       * rattrapage, relecture, motifs (codes) et alertes. Lecture seule. */
+      parties: (f?.bilan || []).filter(p => p && typeof p === 'object').map(p => ({ part: p.part ?? null, rang: Number.isInteger(p.rang) ? p.rang : null, interrompue: !!p.interrompue,
+        poses: Number.isInteger(p.resume?.poses) ? p.resume.poses : null, differes: Number.isInteger(p.resume?.differes) ? p.resume.differes : null,
+        passe: p.passe ? { issue: p.passe.issue ?? null, ecrits: Number.isInteger(p.passe.ecrits) ? p.passe.ecrits : 0 } : null,
+        relecture: p.relecture ? { issue: p.relecture.issue ?? null, corriges: Number.isInteger(p.relecture.corriges) ? p.relecture.corriges : null } : null,
+        motifs: Array.isArray(p.motifs) ? p.motifs.filter(x => typeof x === 'string') : [], alertes: (p.alertes || []).map(a => String(a?.texte || '')).filter(Boolean) })),
     };
   }
   /* Les départs des parties, du plus récent au plus ancien (8 au plus) : validés, invalides, skippés (le compte « skipped » d'ESV au départ du lot,
