@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.29',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 29 (F-V-G-S)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
@@ -1442,6 +1442,8 @@ async function commandLot(proposal,lotObservation){
   if(ctx&&id&&ctx.identity.cut===id.cut)l1eTransporter(ctx.lotArgs.capture,id,lotObservation.l1eChaine.positions);}
  /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
  if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
+ /* CH-034 : recherche large sur le nuage capturé (réglage `lot.rechercheLarge`, ÉTEINT), avant la garde R3 : différer ou remplacer une pose que le lot allait valider. */
+ command=rechercheLargeCommande(command,lotObservation,proposal,before,capture);
  /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
  command=gardeApresDiffereCommande(command,lotObservation,proposal);
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
@@ -1450,7 +1452,7 @@ async function commandLot(proposal,lotObservation){
   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
  const b=engine.s.batch,cut=engine.s.before?.identity?.cut;
  if(b&&Number.isInteger(cut)){b.lotCommands=b.lotCommands||{};b.lotCommands[cut]={...(b.lotCommands[cut]||{}),cut,action:command.action,stage:lotObservation.stage,
-  ...(command.l1s||command.reason==='gcv2-l1'||l1PoseEnAttente?{l1:true}:{}),...(command.reason==='garde-apres-differe'?{gardeApresDiffere:true}:{})};}
+  ...(command.l1s||command.reason==='gcv2-l1'||l1PoseEnAttente?{l1:true}:{}),...(command.reason==='garde-apres-differe'?{gardeApresDiffere:true}:{}),...(command.rechercheLarge?{rechercheLarge:command.rechercheLarge}:{})};}
  if(command.action==='engine')return proposal;
  engine.s.proposal={...proposal,rails:command.rails,lotCommand:{...lotObservation.command,stage:lotObservation.stage,
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
@@ -1537,6 +1539,50 @@ function journalerDeplacementVue(cotes,remise,erreur,phase,dureeApplyMs){try{con
 function bilanDeplacementVue(b){try{const n=b?.deplacementVue,DVm=globalThis.BananeDeplacementVue;if(!b?.id||!n||n.bilanEcrit||!DVm?.Bilan||!OBS_CLOS.includes(b.state))return;
  const bilan=new DVm.Bilan(n);if(bilan.vide())return;n.bilanEcrit=true;
  void Promise.resolve(store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'deplacement-vue-bilan',batchId:b.id,etat:b.state,...bilan.resume()})).catch(()=>{});}catch{}}
+/* CH-034 — RECHERCHE LARGE (src/recherche-large.js, réglage `lot.rechercheLarge`, livrée ÉTEINTE ; chantiers/CH-034/JOURNAL.md § 2). Sur un cut que la
+ * commande allait VALIDER (pose du lot, de la GCV2, ou paire du moteur aux deux rails résolus), le moteur gelé est relancé sur le nuage capturé à des
+ * graines espacées jusqu'à ±400 mm en travers ; la pose est confrontée aux paires fortes trouvées (module pur) :
+ *   - `differer` : le cut est DIFFÉRÉ comme un cut non résolu (deux abstentions, motif `recherche-large`), comme la garde R3 ; sous L1-se il redevient
+ *     un reste de la deuxième passe et sort du transport local ;
+ *   - `remplacer` (mode 'choisir') : la meilleure paire large devient la commande du lot (position relue à 0,01 mm, écartement admissible, cible dans la
+ *     vue de chaque rail ; hors de la vue : différé, motif `recherche-large`, la vue n'est pas déplacée ici) ; la pose remplacée n'est pas un appui ;
+ *   - `garde` : la commande est rendue telle quelle (le même objet).
+ * Éteinte (`actif:false`), module absent, ou zone hors de `zones` : la commande est rendue telle quelle, rien n'est écrit. Une panne laisse la commande
+ * telle quelle. Événement `recherche-large` à chaque décision (millimètres, pertes, comptes ; jamais une coordonnée). */
+function rechercheLargeCommande(command,lotObservation,proposal,before,capture){
+ const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);
+ if(!R||!R.actif||!command)return command;
+ try{const SIDES=['left','right'],L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,identity=engine.s.before?.identity??null;
+  const valide=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
+  if(!valide||!capture||!before||!Number.isInteger(identity?.cut))return command;
+  if(Array.isArray(R.zones)){let z=null;try{z=l1Zone(identity);}catch{z=null;}if(!z||!R.zones.includes(z.zone))return command;}
+  const expected=K.expectedPoses({rails:before},command.rails);
+  const positions=Object.fromEntries(SIDES.map(s=>[s,expected[s].positionSceneRelative]));
+  const d=RL.decider({capture:{identity:capture.identity??null,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes},positions,R});
+  const resume=RL.resumer(d),ev={identity:{part:identity.part??null,cut:identity.cut},...resume,etage:lotObservation?.stage??null,commandeAvant:{action:command.action,reason:command.reason??null}};
+  const differer=motif=>{const dr=L.deferRails(proposal.rails,lotObservation,'recherche-large','décision sur le lot : recherche large sur le nuage, '+motif+' : cut laissé à l\'opérateur');
+   lotObservation.rechercheLarge={...resume,commande:{action:command.action,reason:command.reason??null}};
+   journalerSimple('recherche-large',{...ev,issue:'differe',motifFinal:motif});
+   if(profilL1se()){const t=l1eTransportDe(identity);for(let i=t.length-1;i>=0;i--)if(t[i]?.identity?.cut===identity.cut)t.splice(i,1);
+    if(passeDiffReglage().mode!=='off'){const z=l1Zone(identity);l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:false});}}
+   return {...dr,rechercheLarge:'differer'};};
+  if(d.etat==='differer')return differer(d.motif);
+  if(d.etat!=='remplacer'||!d.positions){journalerSimple('recherche-large',{...ev,issue:'garde'});return command;}
+  /* Remplacer : la branche « lot » de commandRails, à l'identique (position relue, écartement, vue), sans la décision du lot. */
+  const rails={};
+  for(const s of SIDES){const init=before[s],M=init.sceneRelativeToProfileLocal,q=globalThis.BananeCaptureCore.point(M,d.positions[s]),o=globalThis.BananeCaptureCore.point(M,init.positionSceneRelative);
+   rails[s]={...proposal.rails[s],status:'candidate',delta:[q[0]-o[0],q[1]-o[1],q[2]-o[2]],confidence:0,reasons:['décision sur le lot : recherche large sur le nuage, meilleure paire loin de la pose'],
+    source:'recherche-large',lotDecision:{stage:'recherche-large',version:RL.VERSION}};}
+  let exp2;try{exp2=K.expectedPoses({rails:before},rails);}catch{return differer('remplacer-position-illisible');}
+  if(SIDES.some(s=>globalThis.BananeCaptureCore.distance(exp2[s].positionSceneRelative,d.positions[s])>1e-5))return differer('remplacer-position-mismatch');
+  const G=globalThis.BananeGauge4,gaugeMm=G.gaugeMmOf(exp2,globalThis.BananeCaptureCore);
+  if(!G.admissible(G.classifyMm(gaugeMm)))return differer('remplacer-ecartement-'+G.classifyMm(gaugeMm));
+  const cams=L.viewCameras(capture);
+  for(const s of SIDES){const cam=cams?.[s];if(!cam||!L.inView(cam,d.positions[s]).inView)return differer('remplacer-hors-vue-'+s);}
+  lotObservation.rechercheLarge={...resume,commande:{action:command.action,reason:command.reason??null}};
+  journalerSimple('recherche-large',{...ev,issue:'remplace',gaugeMm:Math.round(gaugeMm*10)/10});
+  return {action:'lot',reason:'recherche-large',rails,gaugeMm:Math.round(gaugeMm*10)/10,rechercheLarge:'remplacer'};
+ }catch(e){journalerSimple('recherche-large',{identity:{part:engine?.s?.before?.identity?.part??null,cut:engine?.s?.before?.identity?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)});return command;}}
 /* CH-019 — GARDE « APRÈS UN DIFFÉRÉ » (src/garde-apres-differe.js, réglage `lot.gardeApresDiffere`, livrée ALLUMÉE). Sur un cut que la commande
  * allait VALIDER (pose du lot, de la GCV2, ou paire du moteur aux deux rails résolus), si un des cuts qui le précèdent est un différé du lot
  * (`b.deferred` de la même partie, hors cuts différés par cette garde : pas de cascade) et, règle R3, qu'il a moins d'appuis que le seuil
@@ -1588,7 +1634,8 @@ function holdLotAnchor(lotObservation,command){
  const L=globalThis.BananeLotDecision,batch=engine.s.batch,candidate=lotAnchorCandidate;lotAnchorCandidate=null;
  if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
  /* D-221 : une pose L1-s (`l1s`) n'est jamais un appui ; sous L1, la pose validée de la GCV2 l'est. */
- lotObservation.anchorHeld=command?.l1s?false:L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
+ /* CH-034 : une pose remplacée par la recherche large n'est jamais un appui (l'appui mémorisé serait celui de la décision du lot, pas la pose commandée). */
+ lotObservation.anchorHeld=command?.l1s||command?.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
 }
 /* 4.9.5.13 (test 13, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
@@ -1753,6 +1800,13 @@ function passeDiffReglage(){const B=globalThis.BananeSettings,R={...B?.passeDiff
  if(R.ombre===true&&passes>0&&leviers&&garde.ok)mode=R.ecriture===true&&max>0&&B?.observateurPassif?.actif!==false?'ecriture':'ombre';
  return {mode,ecritureDemandee:R.ecriture===true,passes,leviers:leviers??{},max,garde};}
 /* Garde A (fiches/GARDE_PASSE_A.md) : chaîne normale = les voisins de la décision du lot (`l1Voisins` : cuts validés par CE lot hors poses de L1), donc ni la GCV2 dans le lot, ni la passe. */
+/* CH-034 : la recherche large sur une pose de la passe (module pur, mode « différer » forcé) ; null si éteinte, sans `passe`, ou en panne. */
+function passeDiffRechercheLarge(r,positions){
+ const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);
+ if(!R||!R.actif||R.passe!==true||!r?.capture||!positions)return null;
+ try{const d=RL.decider({capture:{identity:r.identity??null,rails:r.capture.rails,pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes},positions,R:{...R,mode:'differer'}});
+  return RL.resumer(d);}
+ catch(e){journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)});return null;}}
 function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
 async function l1Commande(args){
  const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
@@ -1837,6 +1891,10 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
     if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
     const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)])),garde=passeDiffGarde(rg,b,r.identity,decal);
     if(garde.bloque){r.motif='garde-appuis';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,l1:G.resumer(g)});continue;}
+    /* CH-034 : recherche large sur le nuage (réglage `lot.rechercheLarge`, ÉTEINT ; `passe:true`), mode « différer » seulement : une pose de la passe qui n'est aucune paire
+     * forte du nuage, ou concurrencée loin d'elle par une paire au moins aussi bonne, n'est pas écrite (motif `recherche-large`). Une panne laisse la pose. */
+    const rl=passeDiffRechercheLarge(r,g.positions);
+    if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
     transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
     r.etat='pose-ombre';n++;
     poses.push({cut:r.identity.cut,passe,decal,r,positions:g.positions});
