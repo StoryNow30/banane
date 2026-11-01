@@ -1800,6 +1800,13 @@ function passeDiffReglage(){const B=globalThis.BananeSettings,R={...B?.passeDiff
  if(R.ombre===true&&passes>0&&leviers&&garde.ok)mode=R.ecriture===true&&max>0&&B?.observateurPassif?.actif!==false?'ecriture':'ombre';
  return {mode,ecritureDemandee:R.ecriture===true,passes,leviers:leviers??{},max,garde};}
 /* Garde A (fiches/GARDE_PASSE_A.md) : chaîne normale = les voisins de la décision du lot (`l1Voisins` : cuts validés par CE lot hors poses de L1), donc ni la GCV2 dans le lot, ni la passe. */
+/* CH-034 : la recherche large sur une pose de la passe (module pur, mode « différer » forcé) ; null si éteinte, sans `passe`, ou en panne. */
+function passeDiffRechercheLarge(r,positions){
+ const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);
+ if(!R||!R.actif||R.passe!==true||!r?.capture||!positions)return null;
+ try{const d=RL.decider({capture:{identity:r.identity??null,rails:r.capture.rails,pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes},positions,R:{...R,mode:'differer'}});
+  return RL.resumer(d);}
+ catch(e){journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)});return null;}}
 function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
 async function l1Commande(args){
  const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
@@ -1884,6 +1891,10 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
     if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
     const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)])),garde=passeDiffGarde(rg,b,r.identity,decal);
     if(garde.bloque){r.motif='garde-appuis';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,l1:G.resumer(g)});continue;}
+    /* CH-034 : recherche large sur le nuage (réglage `lot.rechercheLarge`, ÉTEINT ; `passe:true`), mode « différer » seulement : une pose de la passe qui n'est aucune paire
+     * forte du nuage, ou concurrencée loin d'elle par une paire au moins aussi bonne, n'est pas écrite (motif `recherche-large`). Une panne laisse la pose. */
+    const rl=passeDiffRechercheLarge(r,g.positions);
+    if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
     transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
     r.etat='pose-ombre';n++;
     poses.push({cut:r.identity.cut,passe,decal,r,positions:g.positions});

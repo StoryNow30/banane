@@ -32,7 +32,7 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null});
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true});
  const MODES=['differer','choisir'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
  const r1=v=>fini(v)?Math.round(v*10)/10:null,sig4=v=>fini(v)?Number(v.toPrecision(4)):null;
@@ -55,7 +55,8 @@
   if(!(fini(r.rapport)&&r.rapport>=1))return illisible('rechercheLarge.rapport illisible');
   if(!(Number.isInteger(r.cellulesMax)&&r.cellulesMax>=2))return illisible('rechercheLarge.cellulesMax illisible');
   if(r.zones!==null&&!(Array.isArray(r.zones)&&r.zones.every(z=>typeof z==='string')))return illisible('rechercheLarge.zones illisible');
-  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null};
+  if(typeof r.passe!=='boolean')return illisible('rechercheLarge.passe illisible');
+  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}
