@@ -644,7 +644,9 @@
    const period=n.observationPeriods?.find(item=>item.observationPeriodId===n.currentPeriodId);
    if(period&&!period.endedAt){period.status='INTERRUPTED';period.endedAt=iso();period.endTimeStatus='observed';period.reason=reason;}
    if(n.current){const record=n.current;record.leaveReason=reason;record.endedAt=iso();record.endTimeStatus='observed-page-lost';this.partialReason(record,reason);
-    this.classify(record);await this.saveRecord(record);n.incomplete=unique([...(n.incomplete||[]),record.recordId]);n.current=null;}
+    this.classify(record);await this.saveRecord(record);n.incomplete=unique([...(n.incomplete||[]),record.recordId]);n.current=null;
+    /* CH-037 : fin et étiquette recopiées dans le résumé, comme `visit-ended` (sinon une visite validée puis perdue avec la page restait sans libellé). */
+    const resume=n.visits.find(v=>v.visitId===record.visitId);if(resume){resume.endedAt=record.endedAt;resume.label=record.observedLabelCandidate||null;}}
    n.status='PAUSED_ADAPTER_UNRESPONSIVE';n.currentPeriodId=null;n.pageLost={reason,at:iso()};n.interruptions=(n.interruptions||0)+1;
    n.message=reason==='tab-closed'?'Écho : l’onglet ESV a été fermé. La capture est arrêtée ; rouvre ESV, puis Connecter et Reprendre.'
      :'Écho : la page ESV a été rechargée (F5). La capture est arrêtée jusqu’à la reprise'+(S.echo?.repriseAutomatique?' automatique…':' : clique sur Connecter puis Reprendre.');
