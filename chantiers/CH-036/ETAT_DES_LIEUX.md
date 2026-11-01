@@ -75,3 +75,11 @@ Fichier Signal, page « CH-036 · Constellation et Aurore » (aucune page exista
 - 13 états × (600 × 760, 360 × 640) × (sombre, clair) = 52 fenêtres. Constellation : prête, en cours, arrêtée, terminée, terminée tiroir ouvert. Aurore : liste proposée, un cut ouvert, cut corrigé, autre partie (traversée CH-035 allumée), autre partie (traversée éteinte), passage, terminée. Orbite : fin de lot avec l'Aurore annoncée.
 - Audit : 5 712 calques, 0 image, IBM Plex Sans et Mono seulement. Données d'exemple fictives.
 - Écarts connus : l'icône « Lancer » de la bibliothèque ne s'affiche pas dans le bouton plein (écart antérieur, CH-025) ; aucun prototype de mouvement.
+
+## 6. Décisions de l'opérateur sur le jalon (01/11, relayées par la mère)
+1. Vocabulaire **validé** : Rattrapage, à poser, Passage, sautés.
+2. **Validé** : « Ouvrir l'Aurore · N cuts » en action pleine en fin de Constellation ; en fin de lot d'Orbite, « Ouvrir l'Aurore » devant « Voir ce qui reste ».
+3. **Refusé** : les départs des parties et les motifs restent visibles d'emblée. Dessin repris : section « Bilan par partie » (chaque partie suivie de sa ligne de motifs en clair), puis section « Départs des parties » (tableau, en 360 l'heure sous le numéro de partie) ; la fenêtre défile. Planche « tiroir ouvert » retirée.
+4. **Refusé** : en 360 px les quatre onglets gardent leur libellé ; ils passent sur un second rang sous la barre, pleine largeur.
+5. Convention CH-035 retenue : `snap.correction.entreParties` (booléen), `snap.correction.passage = { etat: 'en-cours'|'refuse'|null, vers, texte }` ; éteint = écran de la 4.9.5.29.
+Figma après reprise : 12 états × 2 tailles × 2 thèmes = 48 fenêtres, 0 image.
