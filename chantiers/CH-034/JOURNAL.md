@@ -65,8 +65,8 @@ Et une pose d'erreur vraie latérale e (même sur les deux rails), bruit strict 
 ### 1.1 Tableau standard de la partie 20 (ÉTABLI, `tools/juger-lot.cjs`, 1 min 42)
 Identique à CH-015 et CH-033 : 889 cibles, 721 posés, 168 différés ; 172 jugés ; acceptation 75 (43,6 % [36,4 ; 51,1]), fine 65 (37,8 %), moyenne 11 (6,4 %), faute 21 (12,2 % [8,1 ; 17,9]) ; latéral : moyenne 5, faute 21 ; vertical : moyenne 17, faute 0 ; sous 5 mm 63,4 %. Budget D-223 : plancher 2,9 % [1,9 ; 4,4], jugés insuffisants pour trancher. Passe en ombre : 80 « poserait » jugés, médiane 3,25 mm, 2 > 50 mm.
 
-### 1.2 Rejeu hors ligne (en cours)
-`tools/banc-differes.cjs rejouer`, profils `base` et `L1-se`, 889 captures retrouvées sur 889, liste d'ESV du lot fournie. Fidélité attendue (CH-012) : 646/646 à 0,8 mm. Résultat à écrire ici.
+### 1.2 Rejeu hors ligne (ÉTABLI, 1/11, 42 min seul ; deux lancements en parallèle d'autres calculs ont été tués par la mémoire de la machine)
+`tools/banc-differes.cjs rejouer`, profils `base` et `L1-se`, 889 captures retrouvées sur 889, liste d'ESV du lot fournie. **Fidélité : 646 poses du lot sur 646 rejouées à 0,8 mm** (médiane 0,48 mm, max 0,68 : la troncature du clic, CH-012), comme CH-012. Sorts : réel posé / base posé / L1-se posé 646 ; réel différé / base différé / L1-se différé 86 ; réel différé / base différé / **L1-se posé 82** ; réel posé par L1 / base différé / L1-se posé 75. Le banc L1-se pose 82 différés réels que le terrain n'a pas posés : le banc suppose les déplacements de vue réussis, le terrain les a tous refusés (CH-015 : 19 sur 19 « caméra immobile ») ; c'est l'écart banc / terrain connu, pas un désaccord du moteur. Le banc n'a pas été rejoué avec la recherche large branchée (elle n'y est pas : le banc n'appelle pas `commandLot`) : la mesure du levier est celle du § 2, faite directement sur les nuages et les poses réelles du journal, ce qui est plus fidèle au terrain que le banc pour cette question.
 
 ## 2. Piste L2 : le nuage lui-même (1/11)
 
@@ -179,3 +179,12 @@ Les 2 fautes gardées : la pose du lot est une paire forte et la paire de la vé
 - **B1 en ombre sur les 172 jugés** (voisins `valid` de la liste à ±5 lignes, repère calibré) : les fautes ont des lignes valides autour d'elles (médiane 4 dans la fenêtre), mais B1 **ne change rien pour 16 fautes sur 21** (« inchangé » ou garde du premier passage sans effet), retirerait 2 poses, en ajouterait 2, en déplacerait 1 (à 140 mm de la pose réelle, sens non jugé) ; sur les 75 acceptations et 65 fines, 12 poses ajoutées (sans vérité pour les juger). PROBABLE : les lignes valides voisines des fautes sont de la même chaîne décalée (extraction d'ESV ou poses du lot déjà validées), comme CH-033 l'a vu pour la continuité : la liste n'est pas une référence indépendante dans ces zones. L'écartement de projet (`RailSpacing`) est déjà la référence de L1-e (lignes valides non touchées).
 - **Décision : pas de levier dans la page** au-delà de ce que L1-e lit ; la référence indépendante est le nuage (§ 2). Rien qui contourne un contrôle d'ESV n'a été regardé.
 - Temps par cut en processus seul (93 jugés des cuts 6 380 à 6 620, le rejeu du banc tournant à côté sur un autre cœur) : médiane 3,7 s, P90 6,4 s, max 9,9 s (14 relances du moteur). ÉTABLI sur cette machine ; la machine de l'opérateur n'est pas mesurée. Leviers de coût : `zones`, `porteeMm`, `pasMm`.
+
+### 2.7 Sensibilité des seuils (lue après l'examen, sur tous les jeux ; aucune valeur livrée n'est changée)
+| rapport × loin | réglage : fautes / justes différées | examen A | examen B | coût récents |
+|---|---|---|---|---|
+| **1,5 × 50 (livré)** | 13/13 ; 1/128 | 6/8 ; 0/12 | 1/1 ; 10/405 | 26/410 |
+| 1,5 × 80 | 13/13 ; 1/128 | 6/8 ; 0/12 | 1/1 ; 8/405 | 19/410 |
+| 2 × 50 | 13/13 ; 5/128 | 7/8 ; 0/12 | 1/1 ; 11/405 | 27/410 |
+| 3 × 50 | 13/13 ; 6/128 | 7/8 ; 0/12 | 1/1 ; 16/405 | 33/410 |
+Lecture : un rapport de 2 rattrape une faute de plus à l'examen pour 4 poses justes de plus différées au réglage ; une distance de 80 mm baisse le coût sans perdre de faute (toutes à plus de 100 mm). Ce sont des réglages à faire sur un lot neuf avec Écho, pas ici : les valeurs livrées restent celles du protocole (1,5 ; 50).
