@@ -18,7 +18,7 @@
   *      compétition ; fenêtre tenue, pente dans le domaine), dédoublonnées à 3 mm, en décalages (mm) depuis la vraie pose de départ ;
   *   3. paires (gauche, droite) admissibles au contrat d'écartement du moteur (`gauge.js`), classées par produit des pertes ;
   *   4. une décision sur la pose que le lot s'apprête à commander (`positions`, repère scène) :
-  *      - mode `differer` (livré quand le réglage est allumé) : la pose du lot n'est aucune paire forte (`pose-sans-paire-forte`), ou une
+  *      - mode `differer` (livré quand le réglage est allumé) : la pose du lot n'est aucune paire forte et la meilleure paire est loin (`pose-sans-paire-forte`), ou une
   *        paire au moins aussi bonne (produit ≤ `rapport` × le sien) est à plus de `loinMm` d'elle (`concurrence`) → `differer` ;
   *        sinon `garde`. C'est le rapport de perte 1,5 du moteur (« plusieurs placements concurrents ») étendu à toute la ROI ;
   *      - mode `choisir` : la meilleure paire large est à plus de `loinMm` de la pose du lot ; si la seconde paire loin d'elle a un
@@ -32,7 +32,7 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true});
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true});
  const MODES=['differer','choisir'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
  const r1=v=>fini(v)?Math.round(v*10)/10:null,sig4=v=>fini(v)?Number(v.toPrecision(4)):null;
@@ -56,7 +56,8 @@
   if(!(Number.isInteger(r.cellulesMax)&&r.cellulesMax>=2))return illisible('rechercheLarge.cellulesMax illisible');
   if(r.zones!==null&&!(Array.isArray(r.zones)&&r.zones.every(z=>typeof z==='string')))return illisible('rechercheLarge.zones illisible');
   if(typeof r.passe!=='boolean')return illisible('rechercheLarge.passe illisible');
-  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe};
+  if(typeof r.sansPaireLoin!=='boolean')return illisible('rechercheLarge.sansPaireLoin illisible');
+  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}
@@ -125,7 +126,9 @@
   const lot=P.find(p=>ecart(p,pose)<=R.presMm)||null,best=P[0];
   res.paireLot=lot,res.meilleure=best;
   if(R.mode==='differer'){
-   if(!lot)return fin({...res,etat:'differer',motif:'pose-sans-paire-forte'});
+   /* Pose du lot sans paire forte : différée seulement si la meilleure paire large est LOIN d'elle (`sansPaireLoin`, livré vrai : règle affinée après l'examen,
+    * JOURNAL § 2.6 : mêmes fautes, moitié moins de poses justes différées) ; une paire forte proche (à `loinMm` au plus) ne contredit pas la pose. */
+   if(!lot){if(R.sansPaireLoin&&ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-proche'});return fin({...res,etat:'differer',motif:'pose-sans-paire-forte'});}
    const conc=P.find(p=>p!==lot&&ecart(p,pose)>R.loinMm&&p.prod<=R.rapport*lot.prod)||null;
    if(conc)return fin({...res,etat:'differer',motif:'concurrence',concurrente:conc});
    return fin({...res,etat:'garde',motif:'pose-unique'});

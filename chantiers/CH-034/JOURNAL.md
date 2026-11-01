@@ -157,3 +157,19 @@ Les 2 fautes gardées : la pose du lot est une paire forte et la paire de la vé
 - Partie 0 de la test 24 (29/10), 2 cuts écrits (déplacements 54 et 38 mm) : paires fortes uniques (« garde », rapport 0,48 et 1,0).
 - Décision : la recherche large garde aussi la passe (clé `passe:true` du réglage, mode « différer » seul : une pose de la passe sans paire forte ou concurrencée n'est pas écrite, motif `recherche-large`). Branchée après la garde A, essai `tests/recherche-large-passe-sw.test.cjs`.
 - L'apprentissage des paramètres L1 sur les corrections (piste L7) n'est pas lancé : le gisement des fautes est traité par le nuage, et 51 posés L1 jugés sur la partie 20 ne suffisent pas à réapprendre un modèle (puissance).
+
+### 2.6 Coût sur les lots récents et règle affinée (1/11, après l'examen)
+**Coût de D (règle du protocole) sur les lots .24 à .28, sans Écho** (`--tous`, 410 posés avec nuage) : partie 0 de la test 24 : 19 sur 232 (8,2 %) ; file du 31/10 : partie 5 : 0 sur 37 ; partie 6 : 13 sur 97 ; partie 7 : 4 sur 21 ; partie 8 : 7 sur 23. **Total 43 sur 410 (10,5 %) : le critère de coût (≤ 8 %) n'est pas tenu par la règle du protocole.** 31 de ces 43 viennent de la branche « pose du lot sans paire forte », surtout aux étages `choice` (12 sur 56 posés : le choix du lot accepte un minimum à 5 points de dessus, le moteur en exige 15 pour une cellule forte) et `gcv2-l1` (7 sur 42) ; premier passage : 8 sur 252.
+
+**Règle affinée, lue APRÈS l'examen (déclarée ici, à confirmer sur un lot neuf) :** une pose sans paire forte n'est différée que si la meilleure paire large est à plus de 50 mm d'elle ; une paire forte proche ne contredit pas la pose. Mesure appariée, même seuils ailleurs :
+
+| Jeu | règle du protocole : différés (fautes / moyennes / fines / acceptations / non jugés) | règle affinée |
+|---|---|---|
+| Réglage, partie 20 < 8 000 (150 jugés) | 13/13, 1, 0, 1 | **13/13**, 0, 0, 1 |
+| Examen A, partie 20 ≥ 8 000 (22) | 6/8, 0, 0, 0 | **6/8**, 0, 0, 0 |
+| Examen B, 8 couples (421) | 1/1, 2, 3, 14 | **1/1**, 0, 2, 8 |
+| Partie 20, 549 posés non jugés | 21 | 14 |
+| Lots .24 à .28, 410 posés | 43 (10,5 %) | **26 (6,3 %)** |
+
+- ÉTABLI (apparié) : la règle affinée différe les mêmes fautes (13 sur 13 au réglage, 7 sur 9 à l'examen) et deux fois moins de poses justes (10 sur 417 à l'examen, 2,4 % ; coût 6,3 % sur les lots récents, sous le critère de 8 %).
+- Elle est livrée comme défaut du réglage (`sansPaireLoin:true`), la règle du protocole restant accessible (`sansPaireLoin:false`). Parce qu'elle a été choisie en regardant l'examen, son coût est PROBABLE, pas ÉTABLI hors échantillon : un lot neuf avec Écho le confirmera (critère de retour arrière du rapport).

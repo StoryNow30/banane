@@ -220,8 +220,10 @@
      * Constat (partie 20 du 28/10, 21 fautes à plus de 50 mm) : le vrai rail est dans le nuage pour 42 rails sur 42, hors des ±80 mm du moteur. Mesuré
      * hors ligne sur le réglage (150 jugés) : 'differer' retire 13 fautes sur 13 sans toucher une fine ni une acceptation ; examen : JOURNAL § 2.5.
      * `passe` (vrai) : allumée, la même garde (mode 'differer' seulement) s'applique à chaque pose que la deuxième passe s'apprête à écrire (motif `recherche-large`).
+     * `sansPaireLoin` (vrai) : une pose du lot qui n'est aucune paire forte n'est différée que si la meilleure paire est à plus de `loinMm` (règle affinée après l'examen,
+     * JOURNAL § 2.6 : mêmes fautes, moitié moins de poses justes différées ; `false` : la règle du protocole, différée dès qu'une paire forte existe ailleurs).
      * Coût : 14 relances du moteur par cut posé (1 à 3 s). `actif:false` (ou `false`) : le lot d'avant, à l'identique ; un réglage illisible l'éteint. */
-    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true }),
+    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true }),
   });
 
   const exportSettings = Object.freeze({
