@@ -57,7 +57,9 @@ test('CH-037 : visite perdue avec la page (changement de partie par l’opérate
   const { b, ouvrir, valider } = await monter();
   const a = await ouvrir(14); await valider(a);
   await b.fonction('native.pageLost("page-reloaded")');
-  assert.equal(b.fonction('engine.s.native.visits').at(-1).label, undefined, 'le résumé d’Écho n’a pas d’étiquette (cause constatée)');
+  assert.equal(b.fonction('engine.s.native.visits').at(-1).label, 'VALIDATE_NO_MOVEMENT', 'pageLost recopie désormais l’étiquette dans le résumé');
+  /* État d'avant le correctif de pageLost (4.9.5.30, cut 9748 du 01/11) : résumé sans fin ni étiquette ; l'étiquette provisoire le couvre. */
+  b.fonction('{const v=engine.s.native.visits.at(-1);delete v.label;delete v.endedAt;}');
   const v = await b.api('view');
   assert.equal(ecran(v)[14], 'valide');
   await b.api('correction-terminer');
