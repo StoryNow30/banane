@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.30',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 30 (F-V-G-S)';
+const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.31',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 31 (F-V-G-S)';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -2836,7 +2836,7 @@ async function correctionOuvrir(args){
  const C=engine.s.correction;if(!correctionOuverte())throw Error('Aucune correction en cours : commence la correction avant d’ouvrir un cut.');
  const part=Number.isInteger(args?.part)?args.part:null,cut=Number.isInteger(args?.cut)?args.cut:null;
  if(!entreesCorrection(C).some(e=>e.part===part&&e.cut===cut))throw Error(`Le cut ${cut} de la partie ${part} n’est pas dans la liste à corriger.`);
- /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie ; éteint, rien n'est lu de plus (4.9.5.30). */
+ /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie ; éteint, rien n'est lu de plus (4.9.5.31). */
  const RP=correctionPartiesReglage();
  if(RP){let lu=null;try{lu=(await call('ping'))?.label||null;}catch{lu=null;}if(partCut(lu)&&lu.part!==part)return correctionOuvrirAilleurs(C,{part,cut},lu,RP);}
  const enMarche=engine.s.native.status==='RUNNING';

@@ -174,3 +174,14 @@ test('Aurore terminée : « Terminée », bilan par partie, « Exporter le dossi
   assert.match(h, /data-act="legacy:native-download"[^>]*>Télécharger la séance Écho/);
   assert.match(h, /Partie 5<\/b>.*?1 corrigé · 1 validé tel quel · 1 vu sans validation/s);
 });
+
+test('Aurore sans liste : le 4e onglet est toujours là et dit ce qui le remplit (remarque de l’opérateur, 01/11)', async () => {
+  const p = await pret({ fileParties: null, correction: null }); poser(p, { principal: 'Préparer la file', lancer: 'Lancer la file · 2 parties' });
+  p.ui.maj(true); let h = p.hote.innerHTML;
+  assert.match(h, /data-onglets="4"/);
+  assert.match(h, /role="tab" aria-selected="false" data-act="sg:onglet-correction">Aurore</);
+  p.ui.agir('sg:onglet-correction'); h = p.hote.innerHTML;
+  assert.match(h, /role="tab" aria-selected="true">Aurore</);
+  assert.match(h, /Pas encore de liste à reprendre/);
+  assert.match(h, /data-activite="correction" data-etat="vide"/);
+});

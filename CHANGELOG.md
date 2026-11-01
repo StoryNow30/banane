@@ -1,5 +1,9 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.31 — 4.9.5 test 31 (F-V-G-S) (01/11) — test 31
+
+Manifeste `4.9.5.31` ; base : la test 30. Moteur, géométrie, GCV2 et décision du lot inchangés. Un seul changement : **l'onglet « Aurore » est toujours dans la barre** (remarque de l'opérateur : « où est le 4e onglet ? »). Dans la test 30 il n'apparaissait qu'une fois une liste de cuts à reprendre née (règle de CH-028 gardée par CH-036). Sans liste, il ouvre un écran qui dit « Pas encore de liste à reprendre » et ce qui le remplit (la fin d'un lot ou d'une Constellation). Aurore entre les parties et recherche large : toujours ÉTEINTES.
+
 ## 4.9.5.30 — 4.9.5 test 30 (F-V-G-S) (01/11) — test 30
 
 Manifeste `4.9.5.30` ; base : la test 29. Moteur, géométrie, GCV2 et décision du lot inchangés (diff vide). Tous les changements de comportement sont derrière des réglages ÉTEINTS : avec les réglages livrés, la pose est celle de la test 29. Rien n'est vu sur un vrai ESV.

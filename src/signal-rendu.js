@@ -430,17 +430,17 @@
   function barreHtml(snap, m, ui) {
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
     /* CH-026 : troisième onglet (la file de parties, « Constellation » depuis CH-036) : une vue de Signal ; Orbite et Écho y redeviennent cliquables. */
-    const surFile = ui.onglet === 'file' && !!snap.file, surAutre = surFile || (ui.onglet === 'correction' && !!snap.correction);
+    const surFile = ui.onglet === 'file' && !!snap.file, surAutre = surFile || ui.onglet === 'correction';
     const seg = (k, t) => { const choisi = !surAutre && m.activite === k, off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${choisi}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : choisi ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
     const segFile = snap.file ? `<button type="button" role="tab" aria-selected="${surFile}"${surFile ? '' : ' data-act="sg:onglet-file"'}>Constellation</button>` : '';
     /* CH-028 : quatrième onglet (la correction, « Aurore » depuis CH-036), seulement quand une liste existe. */
-    const surCorr = ui.onglet === 'correction' && !!snap.correction;
-    const segCorr = snap.correction ? `<button type="button" role="tab" aria-selected="${surCorr}"${surCorr ? '' : ' data-act="sg:onglet-correction"'}>Aurore</button>` : '';
+    const surCorr = ui.onglet === 'correction';
+    const segCorr = `<button type="button" role="tab" aria-selected="${surCorr}"${surCorr ? '' : ' data-act="sg:onglet-correction"'}>Aurore</button>`;
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
     /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
     const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
     const court = String(texte).split(' · ')[0];
-    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité"${segCorr ? ' data-onglets="4"' : segFile ? ' data-onglets="3"' : ''}>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
+    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité"${segFile ? ' data-onglets="4"' : ' data-onglets="3"'}>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
 <button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
@@ -721,6 +721,11 @@
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
+    if (u.onglet === 'correction' && !s.correction) {
+      /* L'Aurore sans liste : l'onglet est toujours là (01/11, remarque de l'opérateur « où est le 4e onglet ? »), il dit ce qui le remplit. */
+      const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
+      return `<div class="sg-fen" data-activite="correction" data-etat="vide">${barreHtml(s, m, u)}<section class="sg-instrument sg-onglet-corr" aria-live="polite" aria-label="Aurore"><div class="sg-groupe-etat"><div class="sg-etat"><span class="sg-mot">Aurore</span></div><p class="sg-phrase">Pas encore de liste à reprendre.</p></div><p class="sg-meta sg-corr-note">L’Aurore naît à la fin d’un lot ou d’une Constellation : Ariane y range les cuts à reprendre, vous les corrigez et les validez dans ESV, Écho enregistre. Ariane ne pose et ne valide rien ici.</p></section>${cacheHtml(s, m)}${couche}</div>`;
+    }
     if (u.onglet === 'correction' && s.correction) {
       const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
       return `<div class="sg-fen" data-activite="correction" data-etat="${esc(s.correction.etat)}">${barreHtml(s, m, u)}${ongletCorrectionHtml(s, u)}${cacheHtml(s, m)}${couche}</div>`;

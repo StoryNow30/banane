@@ -80,7 +80,7 @@ test('Constellation : en cours (rattrapage), arrêtée, terminée ; 360 à 600 e
     assert.deepEqual(erreurs, []);
   } finally { await nav.close(); }
   verifier(res);
-  assert.deepEqual(res['passe 600'].onglets, ['Orbite', 'Écho', 'Constellation', 'Aurore'].filter(o => o !== 'Aurore'));
+  assert.deepEqual(res['passe 600'].onglets, ['Orbite', 'Écho', 'Constellation', 'Aurore']);
   assert.deepEqual(res['fin 360'].onglets, ['Orbite', 'Écho', 'Constellation', 'Aurore']);
   assert.deepEqual(vus.passe.etoiles, ['faite:13', 'en-cours:14', 'a-venir:15']); assert.equal(vus.passe.temps, 'Rattrapage');
   assert.deepEqual(vus.passe.motifs, ['fin normale · rattrapage en ombre, rien d’écrit · relecture finie']);

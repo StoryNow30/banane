@@ -21,10 +21,11 @@ const html = p => { p.ui.maj(true); return p.hote.innerHTML; };
 /* CH-036 : la correction s'appelle « Aurore » partout où l'opérateur lit ; « Ouvrir l'Aurore · N cuts » est l'action pleine de la fin du lot (décision du
  * 01/11) ; l'avancement compte les cuts revus (corrigés, validés tels quels, vus). Les déclencheurs (`#correction-*`) et les actions sont les mêmes. */
 
-test('sans liste dans la vue : ni onglet « Correction », ni ligne à la fin du lot', async () => {
+test('sans liste dans la vue : l’onglet « Aurore » est là (01/11) mais aucune ligne « Ouvrir l’Aurore » ni « Voir l’Aurore »', async () => {
   const p = await page({});
   const h = html(p);
-  assert.doesNotMatch(h, /Aurore|Correction|sg:onglet-correction/);
+  assert.match(h, /data-act="sg:onglet-correction">Aurore</);
+  assert.doesNotMatch(h, /Ouvrir l’Aurore|Voir l’Aurore|Correction/);
   assert.equal(p.ui.instantane(etat()).correction, null);
 });
 
