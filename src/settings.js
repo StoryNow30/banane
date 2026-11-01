@@ -212,6 +212,15 @@
      * condition d'appuis). Elle ne pose ni ne valide jamais rien de plus. `actif: false` (ou `false`) : le lot d'avant, à l'identique. Un
      * réglage illisible applique les valeurs livrées. Règle tirée de la seule partie 20 du 28/10 (échantillon biaisé, SUPPOSÉ généralisable). */
     gardeApresDiffere: Object.freeze({ actif: true, regle: 'R3', coupures: 2, appuisMin: 2 }),
+    /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, chantiers/CH-034/JOURNAL.md § 2), ÉTEINTE par défaut. Allumée, sur un cut que la commande allait
+     * poser et valider, le moteur gelé est relancé sur le nuage capturé à des graines espacées de `pasMm` jusqu'à ±`porteeMm` en travers (la ROI de capture),
+     * et la pose du lot est confrontée aux paires fortes trouvées : mode 'differer' (livré) : différé si une paire au moins aussi bonne (produit des pertes
+     * ≤ `rapport` × le sien) est à plus de `loinMm`, ou si la pose du lot n'est aucune paire forte ; mode 'choisir' : la meilleure paire large, si elle est
+     * loin et unique, remplace la pose (cible dans la vue, sinon différé). `zones` : liste de zones où agir ('pn', 'adv', 'abords'), null = partout.
+     * Constat (partie 20 du 28/10, 21 fautes à plus de 50 mm) : le vrai rail est dans le nuage pour 42 rails sur 42, hors des ±80 mm du moteur. Mesuré
+     * hors ligne sur le réglage (150 jugés) : 'differer' retire 13 fautes sur 13 sans toucher une fine ni une acceptation ; examen : JOURNAL § 2.5.
+     * Coût : 14 relances du moteur par cut posé (1 à 3 s). `actif:false` (ou `false`) : le lot d'avant, à l'identique ; un réglage illisible l'éteint. */
+    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null }),
   });
 
   const exportSettings = Object.freeze({
@@ -532,6 +541,7 @@
       { groupe: 'Continuité', nom: 'Verts à contrôler (fin de lot)', valeur: vertsAControler.actif ? 'actif (liste à consulter, aucune action dans ESV)' : 'coupé', pourquoi: 'Après un lot, liste les verts qu’Ariane n’a pas visités et qui méritent ta relecture (écartement, hauteur d’un rail, grappe de rouges, voisin d’un différé), par plages, avec le temps estimé. Rien n’est cliqué ni changé dans ESV.' },
       { groupe: 'Continuité', nom: 'Deuxième passe des différés (fin de lot)', valeur: lot.passeDifferes.ombre !== true ? 'coupée' : lot.passeDifferes.ecriture !== true ? 'en ombre (calculée et consignée, rien n’est écrit dans ESV)' : 'ALLUMÉE, en écriture : pose et valide sur place' + (lot.passeDifferes.ecritureMax === null ? ', sans plafond de poses' : ', ' + lot.passeDifferes.ecritureMax + ' cut au plus'), pourquoi: 'En fin de lot, redécide les cuts restés sans pose avec les poses d’avant et d’après, puis les pose et les valide sur place (cut rouge vérifié, relecture à 1 mm, validation prouvée, arrêt au premier refus). Pour la couper : case « Deuxième passe des différés en fin de lot (écrit dans ESV) » de « Règles et choix du prochain lot » (Orbite) ; elle arrête aussi une passe qui écrit, avant le cut suivant.' },
       { groupe: 'Continuité', nom: 'Mémoire de la liste d’ESV (E1)', valeur: listeMemoire.actif ? 'active' : 'coupée', pourquoi: 'Garde en local, par partie, les bords qu’Ariane a écrits et un instantané compact de la liste ; compte les cuts que tu as corrigés depuis (aucune requête vers ESV).' },
+      { groupe: 'Continuité', nom: 'Recherche large (CH-034)', valeur: lot.rechercheLarge && lot.rechercheLarge.actif ? 'ACTIVE, mode « ' + lot.rechercheLarge.mode + ' » (±' + lot.rechercheLarge.porteeMm + ' mm par pas de ' + lot.rechercheLarge.pasMm + ')' : 'coupée', pourquoi: 'Relance le moteur sur tout le nuage capturé (±400 mm) avant de valider : un second rail aussi bien ajusté loin de la pose fait différer le cut (ou la remplace, mode « choisir »). Coupée : le lot d’avant.' },
       { groupe: 'Continuité', nom: 'Décision sur le lot (Pilote)', valeur: lot.observe ? 'calculée' : 'coupée', pourquoi: 'Décide chaque cut avec les cuts déjà placés du lot (amendement n°9). Appliquée ou seulement consignée selon le réglage choisi à la création du lot (4.7.10).' },
       { groupe: 'Écho', nom: 'Gestes de validation', valeur: 'Maj+Espace, Ctrl+Entrée, Entrée, bouton', pourquoi: 'Chacun vaut une validation ; une touche répétée ne compte pas deux fois.' },
       { groupe: 'Écho', nom: 'Seuil de déplacement', valeur: (echo.movementThresholdM * 1000) + ' mm', pourquoi: 'En dessous, le rail est dit non déplacé ; la pose exacte reste consignée.' },
