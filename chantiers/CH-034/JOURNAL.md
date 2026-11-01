@@ -67,3 +67,48 @@ Identique à CH-015 et CH-033 : 889 cibles, 721 posés, 168 différés ; 172 jug
 
 ### 1.2 Rejeu hors ligne (en cours)
 `tools/banc-differes.cjs rejouer`, profils `base` et `L1-se`, 889 captures retrouvées sur 889, liste d'ESV du lot fournie. Fidélité attendue (CH-012) : 646/646 à 0,8 mm. Résultat à écrire ici.
+
+## 2. Piste L2 : le nuage lui-même (1/11)
+
+### 2.1 Question écrite avant la mesure
+Pour les 21 fautes de la partie 20 (vérité de l'opérateur à 107–391 mm de la pose du lot, D-265 : hors des ±80 mm de la recherche du moteur), **le vrai rail est-il dans le nuage capturé**, et le moteur, relancé autour de lui, y trouverait-il une cellule forte ? Si non : impasse (la vue ou le nuage manquent) ; si oui : un levier « génération de candidats hors ±80 mm » existe et il faut mesurer s'il distingue le vrai rail du faux.
+Méthode : capture du cut (corpus du lot, 889/889), vérité = pose validée par l'opérateur transportée dans le repère profil de la pose de départ (`micDepuisDepart` de la jointure ; même règle que `juger-lot`) ; moteur gelé relancé sur le rail translaté à la vérité, puis à la pose du lot (`scientificProposeBothAvecReservoir`, réservoir de cellules) ; soutien du nuage à chaque pose (`soutienRail`, points de dessus et de flanc sous le gabarit) ; cellule la plus proche (8 mm) et sa perte (médiane des carrés des distances au gabarit).
+
+### 2.2 Résultat (ÉTABLI, 21 cuts, 42 rails ; script `recherche` du scratchpad, sortie hors dépôt)
+- **Le vrai rail est dans le nuage sur 42 rails sur 42** : 160 à 340 points dans ±40 mm de la vérité ; soutien sous le gabarit à la vérité : dessus 117 à 299 points (seuil du moteur 15), flanc 18 à 81 (seuil 6). La ROI de capture (±400 mm en travers, `native-lidar` `bounds`) contient le vrai rail ; seul le moteur ne regarde pas au-delà de ±180 mm (points) et ±80 mm (recherche).
+- **Le moteur relancé à la vérité trouve une cellule forte à 1 à 13 mm de la vérité sur 39 rails sur 42** (les 3 autres : cellule forte à moins de 8 mm absente, minimum de la relance à 9 à 11 mm). Donc un rail U50 complet, bien lu, pas un bord de nuage.
+- **La pose fausse est aussi un rail** : cellule forte à la pose sur 40 rails sur 42, dessus 44 à 272 points. Ces cuts sont des zones d'appareils de voie (CH-015 : 90 % des fautes en ADV) : deux rails réels à 100 à 400 mm l'un de l'autre, et le moteur, borné à ±80 mm, ne voit que celui qui est près de la pose de départ d'ESV.
+- **Signal qui les distingue, lu dans le seul nuage** : sur 39 rails comparables, **la perte du gabarit est plus petite à la vérité qu'à la pose fausse pour 31** (rapport médian 0,46 ; 8 rails ont la pose fausse mieux ajustée, rapport 1,2 à 3,4). Soutien du dessus nettement plus faible à la pose fausse sur 8 cuts (44 à 147 points contre 220 à 299 à la vérité : un rail d'aiguille, pas un rail courant). PROBABLE : le vrai rail est en général le mieux ajusté au gabarit U50 ; la pose fausse est souvent un rail partiel (lame, contre-rail).
+- Ce que cela ne dit pas : rien sur les posés justes (un second rail fort existe-t-il aussi près d'eux ? c'est le coût) ; une seule partie, 4 épisodes.
+
+### 2.3 Levier dérivé : « recherche large » (définition écrite avant la mesure)
+Le moteur gelé est relancé sur des graines régulièrement espacées en travers (0, ±120, ±240, ±360 mm ; portée ±400 = la ROI), sur le nuage capturé ; union des cellules **fortes** (seuils du moteur : dessus ≥ 15, flanc ≥ 6, rapport de perte ≤ 1,5, pente dans le domaine, fenêtre) de toutes les relances, dédoublonnées à 3 mm ; paires admissibles = écartement 1 420 à 1 470 mm ; classées par produit des pertes. Deux variantes, qui ne lisent que le nuage :
+- **D (différer)** : si la paire du lot n'est pas la meilleure paire large ET qu'une paire large au moins aussi bonne (produit des pertes ≤ 1,5 × celui de la paire du lot) est à plus de 50 mm d'elle : le cut est différé (ambiguïté large, l'équivalent du rapport de perte 1,5 du moteur, étendu à ±400 mm).
+- **C (choisir)** : la meilleure paire large remplace la pose du lot si elle est à plus de 50 mm d'elle et si la seconde paire large à plus de 50 mm de la meilleure a un produit ≥ 1,5 × (sinon : différer).
+**Séparation réglage / examen (CH-033, reprise) : réglage = partie 20, cuts < 8 000 (150 jugés, 13 fautes) ; examen = partie 20, cuts ≥ 8 000 (22 jugés, 8 fautes) et les 8 autres couples du 26/10 (452 jugés, 1 faute ; fausses alarmes) ; coût = posés signalés ou déplacés sur les lots .24 à .28 (sans Écho).** Les seuils ci-dessus (50 mm, 1,5, graines) sont fixés AVANT la lecture du réglage ; s'ils changent sur le réglage, le changement est écrit ici avant l'examen, et l'examen n'est ouvert qu'une fois. Graine des intervalles : 20261101.
+**Critères de succès, écrits avant :**
+- D : sur l'examen, fautes différées ≥ 5 sur 9 ; fines et acceptations différées ≤ 10 % des jugés non fautifs de l'examen ; posés signalés ≤ 8 % des posés des lots récents.
+- C : fautes corrigées (pose large à 20 mm au plus de la vérité) ≥ 5 sur 9 ; **aucune** fine ni acceptation déplacée de plus de 20 mm (D-262 : aucun cut dégradé) ; sur les lots récents, poses déplacées de plus de 50 mm ≤ 3 % des posés.
+- Puissance : avec 9 fautes à l'examen, « ≥ 5 sur 9 » a une borne basse de Wilson à 25 % : l'examen ne peut pas établir un rappel, seulement exclure un levier nul ; ce que l'examen peut établir, c'est l'absence de dégradation sur 474 jugés (borne haute à 0 sur 474 : 0,8 %).
+Coût de calcul : 14 relances du moteur par cut (environ 1 à 2 min) ; le réglage (150 cuts) tourne en trois processus.
+
+## 3. Piste L1 : gardes et politique de différé, par geste (1/11, exploration sur la partie 20 entière)
+
+Script `gardes-geste` (scratchpad, sortie hors dépôt) : pour chaque posé, ce que le lot savait avant de valider (étage, appuis, différés précédents, rails non résolus, confiance, L1, déplacement depuis le départ), et le geste de l'opérateur s'il est jugé. R1 à R3 sont celles de CH-015 (retrouvées à l'identique : R3 38 signalés, 32 jugés, 13 fautes) ; les autres sont des variantes **lues sur les mêmes 172 jugés : réglage, pas examen** (toute la partie 20 ; aucun examen possible du rappel ailleurs : 1 faute sur 452 jugés dans les 8 autres couples).
+
+| Règle « différer si… » | posés signalés (coût, 721) | fautes évitées (21) | moyennes évitées (11) | fines perdues (65) | acceptations perdues (75) |
+|---|---|---|---|---|---|
+| R1 : cut−1 ou cut−2 différé | 41 (5,7 %) | 13 | 3 | 14 | 5 |
+| R3 : R1 et appuis < 2 (livrée test 25) | 38 (5,3 %) | 13 | 3 | 11 | 5 |
+| R2 : R1 et appuis = 0 | 22 (3,1 %) | 10 | 2 | 5 | 2 |
+| R3 avec cut−3 | 48 (6,7 %) | 14 | 6 | 14 | 6 |
+| racine (appuis = 0) | 123 (17,1 %) | 13 | 4 | 6 | 5 |
+| appuis < 2 | 247 (34,3 %) | 18 | 6 | 25 | 20 |
+| L1 (posé par la GCV2) | 70 (9,7 %) | 6 | 2 | 18 | 8 |
+| L1 sous τ (validée par correction, voie, consensus…) | 32 (4,4 %) | 3 | 1 | 11 | 3 |
+| moteur : deux rails non résolus | 88 (12,2 %) | 5 | 1 | 16 | 7 |
+| confiance min < 30 et appuis < 2 | 73 (10,1 %) | 8 | 3 | 6 | 3 |
+| R3 ou L1 sous τ | 63 (8,7 %) | 15 | 4 | 18 | 8 |
+| déplacement depuis le départ > 80 mm | 530 (73,5 %) | 10 | 11 | 61 | 68 |
+
+Lecture (PROBABLE) : (1) **le déplacement depuis la pose de départ d'ESV n'est pas un signal** : 74 % des posés sont à plus de 80 mm du départ (l'extraction d'ESV est loin presque partout). (2) Aucune règle lue dans la chaîne ne dépasse R3 sans coûter plus de fines et d'acceptations qu'elle n'évite de fautes : R3 reste la meilleure de cette famille (13 fautes pour 16 jugés justes perdus et 38 différés). (3) Les 8 fautes que R3 manque sont des premiers passages avec 2 appuis ou plus : **invisibles à toute garde de chaîne** ; seule une référence hors chaîne (le nuage large, § 2) peut les voir.
