@@ -23,7 +23,10 @@
   *        sinon `garde`. C'est le rapport de perte 1,5 du moteur (« plusieurs placements concurrents ») étendu à toute la ROI ;
   *      - mode `choisir` : la meilleure paire large est à plus de `loinMm` de la pose du lot ; si la seconde paire loin d'elle a un
   *        produit ≥ `rapport` × le sien, elle REMPLACE la pose (`remplacer`, positions de scène rendues), sinon `differer` (`ambigu`) ;
-  *        la meilleure paire à `loinMm` au plus de la pose : `garde`.
+  *        la meilleure paire à `loinMm` au plus de la pose : `garde` ;
+  *      - mode `choisir-sur` (JOURNAL § 2.8) : la meilleure paire remplace la pose seulement si elle est loin, unique, soutenue, et si la pose du lot
+  *        n'est aucune paire forte ou vaut `rapport` × son produit au moins ; sinon la règle « différer ».
+  *      Une paire ne contredit la pose que si elle est SOUTENUE (dessus ≥ `soutienTop`, flanc ≥ `soutienFace` sur ses deux rails ; livré 0 et 0).
   * Ce module ne commande rien ; le service worker (`background.js`, `rechercheLargeCommande`) traduit `differer` en deux abstentions et
   * `remplacer` en commande du lot (cible dans la vue, écartement admissible, position relue), ou garde la commande. Une panne ici rend
   * `garde` : la commande du lot ne change jamais par erreur. Réglage `lot.rechercheLarge` (src/settings.js), livré ÉTEINT.
@@ -32,8 +35,8 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true});
- const MODES=['differer','choisir'];
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0});
+ const MODES=['differer','choisir','choisir-sur'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
  const r1=v=>fini(v)?Math.round(v*10)/10:null,sig4=v=>fini(v)?Number(v.toPrecision(4)):null;
  const objet=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -57,7 +60,9 @@
   if(r.zones!==null&&!(Array.isArray(r.zones)&&r.zones.every(z=>typeof z==='string')))return illisible('rechercheLarge.zones illisible');
   if(typeof r.passe!=='boolean')return illisible('rechercheLarge.passe illisible');
   if(typeof r.sansPaireLoin!=='boolean')return illisible('rechercheLarge.sansPaireLoin illisible');
-  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin};
+  for(const k of ['soutienTop','soutienFace'])if(!(fini(r[k])&&r[k]>=0))return illisible('rechercheLarge.'+k+' illisible');
+  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin,
+   soutienTop:r.soutienTop,soutienFace:r.soutienFace};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}
@@ -143,19 +148,32 @@
   if(!P.length)return fin({...res,etat:'garde',motif:'aucune-paire-forte'});
   const lot=P.find(p=>ecart(p,pose)<=R.presMm)||null,best=P[0];
   res.paireLot=lot,res.meilleure=best;
-  if(R.mode==='differer'){
+  /* Une paire ne contredit la pose que si elle est SOUTENUE : dessus ≥ `soutienTop` et flanc ≥ `soutienFace` sur ses deux rails (JOURNAL § 2.8 : les poses justes
+   * différées le sont par des paires pauvres ; livré à 0 = la règle examinée). */
+  const soutenue=p=>Math.min(p.left.top,p.right.top)>=R.soutienTop&&Math.min(p.left.face,p.right.face)>=R.soutienFace;
+  const regleDifferer=()=>{
    /* Pose du lot sans paire forte : différée seulement si la meilleure paire large est LOIN d'elle (`sansPaireLoin`, livré vrai : règle affinée après l'examen,
-    * JOURNAL § 2.6 : mêmes fautes, moitié moins de poses justes différées) ; une paire forte proche (à `loinMm` au plus) ne contredit pas la pose. */
-   if(!lot){if(R.sansPaireLoin&&ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-proche'});return fin({...res,etat:'differer',motif:'pose-sans-paire-forte'});}
-   const conc=P.find(p=>p!==lot&&ecart(p,pose)>R.loinMm&&p.prod<=R.rapport*lot.prod)||null;
+    * JOURNAL § 2.6 : mêmes fautes, moitié moins de poses justes différées) et soutenue ; une paire forte proche (à `loinMm` au plus) ne contredit pas la pose. */
+   if(!lot){if(R.sansPaireLoin&&ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-proche'});
+    if(!soutenue(best))return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-pauvre'});return fin({...res,etat:'differer',motif:'pose-sans-paire-forte'});}
+   const conc=P.find(p=>p!==lot&&ecart(p,pose)>R.loinMm&&p.prod<=R.rapport*lot.prod&&soutenue(p))||null;
    if(conc)return fin({...res,etat:'differer',motif:'concurrence',concurrente:conc});
-   return fin({...res,etat:'garde',motif:'pose-unique'});
+   return fin({...res,etat:'garde',motif:'pose-unique'});};
+  if(R.mode==='differer')return regleDifferer();
+  const remplacement=()=>fin({...res,etat:'remplacer',motif:R.mode==='choisir'?'meilleure-loin':'meilleure-unique',positions:{left:positionDe(capture,'left',best.left),right:positionDe(capture,'right',best.right)}});
+  if(R.mode==='choisir-sur'){
+   /* « Choisir sûr » (JOURNAL § 2.8, C2) : la meilleure paire remplace la pose seulement si elle est loin d'elle, UNIQUE (aucune autre paire loin d'elle à moins de
+    * `rapport` × son produit), soutenue, et si la pose du lot n'est aucune paire forte ou vaut `rapport` × son produit au moins ; sinon la règle « différer ». */
+   if(ecart(best,pose)>R.loinMm&&soutenue(best)&&(!lot||lot.prod>=R.rapport*best.prod)){
+    const second=P.find(p=>p!==best&&ecart(p,best)>R.loinMm)||null;
+    if(!second||second.prod>=R.rapport*best.prod)return remplacement();}
+   return regleDifferer();
   }
   /* mode choisir */
   if(ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'meilleure-proche'});
   const second=P.find(p=>p!==best&&ecart(p,best)>R.loinMm)||null;
   if(second&&second.prod<R.rapport*best.prod)return fin({...res,etat:'differer',motif:'ambigu',concurrente:second});
-  return fin({...res,etat:'remplacer',motif:'meilleure-loin',positions:{left:positionDe(capture,'left',best.left),right:positionDe(capture,'right',best.right)}});
+  return remplacement();
  }
  /* Journal d'une décision : des millimètres (repère profil de la pose de départ), des pertes, des comptes ; jamais une coordonnée de scène. */
  const paireMm=p=>p?{left:[r1(p.left.lat),r1(p.left.vert)],right:[r1(p.right.lat),r1(p.right.vert)],gaugeMm:r1(p.gaugeMm),prod:sig4(p.prod),top:[p.left.top,p.right.top],face:[p.left.face,p.right.face]}:null;
