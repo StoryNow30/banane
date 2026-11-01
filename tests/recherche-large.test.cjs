@@ -109,3 +109,71 @@ test('pureté : aucune lecture des réglages globaux, entrée illisible = garde 
   assert.equal(RL.decider({capture:cap,positions:{left:pos(cap,'left',...V('left')),right:pos(cap,'right',...V('right'))},R:RL.reglage(false)}).etat,'garde');
  }finally{globalThis.BananeSettings=avant;}
 });
+
+/* § 2.8 du journal : soutien minimal de la paire qui contredit la pose (dessus ≥ soutienTop, flanc ≥ soutienFace sur les deux rails), et mode « choisir sûr ». */
+test('soutien : une concurrente pauvre (dessus < soutienTop) ne diffère plus ; livré à 0 = règle examinée ; clés illisibles = coupé',()=>{
+ assert.equal(RL.DEFAUT.soutienTop,0);assert.equal(RL.DEFAUT.soutienFace,0);
+ for(const v of [{actif:true,soutienTop:-1},{actif:true,soutienFace:'x'}]){const x=RL.reglage(v);assert.equal(x.ok,false);assert.equal(x.actif,false);}
+ const cap=captureLeurre({partLeurre:1});
+ const surLeurre={left:pos(cap,'left',...V('left',LEURRE)),right:pos(cap,'right',...V('right',LEURRE))};
+ const d=RL.decider({capture:cap,positions:surLeurre,R});assert.equal(d.etat,'differer');
+ const top=Math.min(d.concurrente.left.top,d.concurrente.right.top);assert.ok(top>=15);
+ const g=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,soutienTop:top+1})});
+ assert.equal(g.etat,'garde',JSON.stringify(RL.resumer(g)));assert.equal(g.motif,'pose-unique');
+ const d2=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,soutienTop:top})});assert.equal(d2.etat,'differer');
+ /* Pose sans paire forte : la meilleure paire loin doit elle aussi être soutenue pour différer. */
+ const cap2=captureLeurre({partLeurre:0.35});
+ const nullePart={left:pos(cap2,'left',70,-4),right:pos(cap2,'right',-70,-3)};
+ const n=RL.decider({capture:cap2,positions:nullePart,R});assert.equal(n.etat,'differer');
+ const n2=RL.decider({capture:cap2,positions:nullePart,R:RL.reglage({actif:true,soutienTop:10000})});assert.equal(n2.etat,'garde');assert.equal(n2.motif,'pose-sans-paire-forte-pauvre');
+});
+
+test('mode choisir-sur : remplace seulement si la meilleure est loin, unique, soutenue et la pose du lot absente ou `rapport` fois moins bonne ; sinon la règle « différer »',()=>{
+ const Rs=RL.reglage({actif:true,mode:'choisir-sur'});assert.equal(Rs.ok,true);
+ const cap=captureLeurre({partLeurre:0.5});
+ const surLeurre={left:pos(cap,'left',...V('left',LEURRE)),right:pos(cap,'right',...V('right',LEURRE))};
+ const d=RL.decider({capture:cap,positions:surLeurre,R:Rs});
+ assert.equal(d.etat,'remplacer',JSON.stringify(RL.resumer(d)));assert.equal(d.motif,'meilleure-unique');
+ assert.ok(C.distance(d.positions.left,pos(cap,'left',...V('left')))*1000<=8);
+ /* Même pose, meilleure paire pauvre (soutien exigé au-delà de ses points) : plus de remplacement, mais la règle « différer » s'applique (concurrence). */
+ const top=Math.min(d.meilleure.left.top,d.meilleure.right.top);
+ const d2=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,mode:'choisir-sur',soutienTop:top+1})});
+ assert.notEqual(d2.etat,'remplacer');
+ /* Leurre aussi bon que la vraie paire : ni unique ni 1,5 × moins bonne : différer (concurrence), jamais remplacer. */
+ const cap2=captureLeurre({partLeurre:1});
+ const a=RL.decider({capture:cap2,positions:{left:pos(cap2,'left',...V('left',LEURRE)),right:pos(cap2,'right',...V('right',LEURRE))},R:Rs});
+ assert.equal(a.etat,'differer',JSON.stringify(RL.resumer(a)));assert.equal(a.motif,'concurrence');
+ /* Pose déjà sur la meilleure : garde. Pose nulle part, meilleure loin et unique : remplacer. */
+ const g=RL.decider({capture:cap,positions:{left:pos(cap,'left',...V('left')),right:pos(cap,'right',...V('right'))},R:Rs});assert.equal(g.etat,'garde');
+ const cap3=captureLeurre({partLeurre:0.35});
+ const n=RL.decider({capture:cap3,positions:{left:pos(cap3,'left',70,-4),right:pos(cap3,'right',-70,-3)},R:Rs});
+ assert.equal(n.etat,'remplacer',JSON.stringify(RL.resumer(n)));
+ const n2=RL.decider({capture:cap3,positions:{left:pos(cap3,'left',70,-4),right:pos(cap3,'right',-70,-3)},R:RL.reglage({actif:true,mode:'choisir-sur',soutienTop:10000})});
+ assert.equal(n2.etat,'garde','meilleure pauvre, pose sans paire forte : ni remplacée ni différée');
+});
+
+/* Temps (JOURNAL § 2.11) : graines sur les PICS de densité du nuage (amas de points à la hauteur du dessus de rail) au lieu de la grille ; relance 0 reprise de la science
+ * du lot quand elle est fournie. Mêmes cellules, moins de relances. */
+test('graines « pics » : les mêmes paires (vraie et leurre à 150 mm) avec moins de relances que la grille ; la science du lot fournie épargne la relance 0',()=>{
+ assert.equal(RL.DEFAUT.grainesMode,'grille');
+ assert.equal(RL.reglage({actif:true,grainesMode:'autre'}).ok,false);
+ const Rp=RL.reglage({actif:true,grainesMode:'pics'});assert.equal(Rp.ok,true);
+ const cap=captureLeurre({partLeurre:1});
+ const g=RL.grainesPics(cap,Rp);
+ assert.ok(g.includes(0)&&g.length>=2&&g.length<=4,'graines : 0 et le pic du leurre : '+JSON.stringify(g));
+ assert.ok(g.some(x=>Math.abs(Math.abs(x)-LEURRE)<=40),'une graine près du leurre : '+JSON.stringify(g));
+ const cg=RL.cellules(cap,R),cp=RL.cellules(cap,Rp);
+ assert.ok(cp.relances<cg.relances,`moins de relances (${cp.relances} < ${cg.relances})`);
+ const pg=RL.paires(cap,cg,R),pp=RL.paires(cap,cp,Rp);
+ const cle=p=>[p.left.lat,p.left.vert,p.right.lat,p.right.vert].map(v=>Math.round(v)).join(',');
+ for(const p of pg.slice(0,4))assert.ok(pp.some(q=>Math.hypot(q.left.lat-p.left.lat,q.left.vert-p.left.vert)<=3&&Math.hypot(q.right.lat-p.right.lat,q.right.vert-p.right.vert)<=3),'paire de la grille retrouvée : '+cle(p));
+ const surLeurre={left:pos(cap,'left',...V('left',LEURRE)),right:pos(cap,'right',...V('right',LEURRE))};
+ const d=RL.decider({capture:cap,positions:surLeurre,R:Rp});assert.equal(d.etat,'differer');assert.equal(d.motif,'concurrence');
+ /* Science du lot fournie : la relance 0 est reprise, une relance de moins, mêmes cellules. */
+ const Sh=require('../src/gcv1-shadow.js');const science=Sh.scientificProposeBothAvecReservoir(cap);
+ const cs=RL.cellules(cap,Rp,science);assert.equal(cs.relances,cp.relances-1);assert.equal(cs.left.length,cp.left.length);assert.equal(cs.right.length,cp.right.length);
+ const ds=RL.decider({capture:cap,positions:surLeurre,R:Rp,science});assert.equal(ds.etat,'differer');assert.equal(ds.cellules.relances,cp.relances-1);
+ /* Nuage vide de pics (points rares) : seule la graine 0. */
+ const cap2=captureLeurre();cap2.pointsSceneRelative=cap2.pointsSceneRelative.filter((_,i)=>i%20===0);cap2.visibleByClipBoxes=cap2.pointsSceneRelative.map(()=>true);
+ assert.deepEqual(RL.grainesPics(cap2,Rp),[0]);
+});

@@ -23,7 +23,10 @@
   *        sinon `garde`. C'est le rapport de perte 1,5 du moteur (« plusieurs placements concurrents ») étendu à toute la ROI ;
   *      - mode `choisir` : la meilleure paire large est à plus de `loinMm` de la pose du lot ; si la seconde paire loin d'elle a un
   *        produit ≥ `rapport` × le sien, elle REMPLACE la pose (`remplacer`, positions de scène rendues), sinon `differer` (`ambigu`) ;
-  *        la meilleure paire à `loinMm` au plus de la pose : `garde`.
+  *        la meilleure paire à `loinMm` au plus de la pose : `garde` ;
+  *      - mode `choisir-sur` (JOURNAL § 2.8) : la meilleure paire remplace la pose seulement si elle est loin, unique, soutenue, et si la pose du lot
+  *        n'est aucune paire forte ou vaut `rapport` × son produit au moins ; sinon la règle « différer ».
+  *      Une paire ne contredit la pose que si elle est SOUTENUE (dessus ≥ `soutienTop`, flanc ≥ `soutienFace` sur ses deux rails ; livré 0 et 0).
   * Ce module ne commande rien ; le service worker (`background.js`, `rechercheLargeCommande`) traduit `differer` en deux abstentions et
   * `remplacer` en commande du lot (cible dans la vue, écartement admissible, position relue), ou garde la commande. Une panne ici rend
   * `garde` : la commande du lot ne change jamais par erreur. Réglage `lot.rechercheLarge` (src/settings.js), livré ÉTEINT.
@@ -32,8 +35,9 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true});
- const MODES=['differer','choisir'];
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0,grainesMode:'grille'});
+ const GRAINES_MODES=['grille','pics'];
+ const MODES=['differer','choisir','choisir-sur'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
  const r1=v=>fini(v)?Math.round(v*10)/10:null,sig4=v=>fini(v)?Number(v.toPrecision(4)):null;
  const objet=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -57,7 +61,10 @@
   if(r.zones!==null&&!(Array.isArray(r.zones)&&r.zones.every(z=>typeof z==='string')))return illisible('rechercheLarge.zones illisible');
   if(typeof r.passe!=='boolean')return illisible('rechercheLarge.passe illisible');
   if(typeof r.sansPaireLoin!=='boolean')return illisible('rechercheLarge.sansPaireLoin illisible');
-  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin};
+  for(const k of ['soutienTop','soutienFace'])if(!(fini(r[k])&&r[k]>=0))return illisible('rechercheLarge.'+k+' illisible');
+  if(!GRAINES_MODES.includes(r.grainesMode))return illisible('rechercheLarge.grainesMode illisible');
+  return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin,
+   soutienTop:r.soutienTop,soutienFace:r.soutienFace,grainesMode:r.grainesMode};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}
@@ -70,10 +77,10 @@
  const capturePrete=cap=>!!(cap&&cap.rails&&Array.isArray(cap.pointsSceneRelative)&&cap.pointsSceneRelative.length&&SIDES.every(s=>cap.rails[s]&&Array.isArray(cap.rails[s].positionSceneRelative)&&Array.isArray(cap.rails[s].sceneRelativeToProfileLocal)));
  /* Une relance : les deux rails de départ translatés en travers de `lat` mm, le moteur gelé relancé, ses cellules FORTES en décalages depuis
   * la vraie pose de départ. */
- function relance(capture,lat){
+ function relance(capture,lat,science){
   const rails={...capture.rails};
   for(const s of SIDES){const rail=capture.rails[s],pos=L.positionOf(rail,[0,lat/1000,0]);rails[s]=O.translated(rail,pos.map((v,i)=>v-rail.positionSceneRelative[i]));}
-  let sci;try{sci=Sh.scientificProposeBothAvecReservoir({...capture,rails});}catch{return null;}
+  let sci;if(lat===0&&science&&science.rails)sci=science;else try{sci=Sh.scientificProposeBothAvecReservoir({...capture,rails});}catch{return null;}
   const out={};
   for(const s of SIDES){
    const r=sci&&sci.rails&&sci.rails[s];if(!r||!r.ok||!r._reservoir){out[s]=[];continue;}
@@ -85,11 +92,46 @@
   return out;
  }
  /* Union des cellules fortes de toutes les relances, dédoublonnées à 3 mm (la perte la plus petite est gardée), classées par perte. */
- function cellules(capture,R){
-  const out={left:[],right:[],relances:0};
+ /* Points du nuage par rail, en travers (mm, repère profil du rail de départ), dans la bande longitudinale et verticale que le moteur lit (±500 et ±100 mm). */
+ function traversParRail(capture){
+  const out={};
+  for(const s of SIDES){const rail=capture.rails[s],M=rail.sceneRelativeToProfileLocal,o=C.point(M,rail.positionSceneRelative),lat=[];
+   const pts=capture.pointsSceneRelative,vis=capture.visibleByClipBoxes;
+   for(let i=0;i<pts.length;i++){if(vis&&vis[i]===false)continue;const p=pts[i];if(!Array.isArray(p)||p.length<3)continue;const q=C.point(M,p);
+    if(Math.abs(q[0]-o[0])>.5||Math.abs(q[2]-o[2])>.1)continue;lat.push([1000*(q[1]-o[1]),1000*(q[2]-o[2])]);}
+   out[s]=lat;}
+  return out;
+ }
+ /* Graines « pics » (temps, JOURNAL § 2.11) : au lieu de la grille, les AMAS de points à la hauteur du dessus de rail (|vert| ≤ 50 mm du départ), en travers, par
+  * cases de 10 mm (au moins 5 points par case, 15 par amas, cases contiguës à une case vide près) ; la graine 0 (la relance du lot) toujours ; une graine par
+  * amas à plus de 60 mm des graines déjà prises, bornée à ±portée. Un rail (dessus ≥ 15 points) fait un amas ; le ballast et les traverses sont sous la bande. */
+ const PICS_VERT_MM=50,PICS_PAS_MM=10,PICS_CASE_MIN=5,PICS_AMAS_MIN=15,PICS_FUSION_MM=60;
+ function grainesPics(capture,R){
+  const t=traversParRail(capture),cases=new Map();
+  for(const s of SIDES)for(const [lat,vert] of t[s]){if(Math.abs(vert)>PICS_VERT_MM||Math.abs(lat)>R.porteeMm+80)continue;const b=Math.round(lat/PICS_PAS_MM);cases.set(b,(cases.get(b)||0)+1);}
+  const idx=[...cases.keys()].filter(b=>cases.get(b)>=PICS_CASE_MIN).sort((a,b)=>a-b);
+  const amas=[];let cur=null;
+  for(const b of idx){const n=cases.get(b);if(cur&&b-cur.fin<=2){cur.fin=b;cur.n+=n;cur.w+=b*n;}else{cur={deb:b,fin:b,n,w:b*n};amas.push(cur);}}
+  const g=[0];
+  for(const c of amas.filter(a=>a.n>=PICS_AMAS_MIN).map(a=>a.w/a.n*PICS_PAS_MM).sort((a,b)=>Math.abs(a)-Math.abs(b))){
+   const x=Math.max(-R.porteeMm,Math.min(R.porteeMm,c));if(g.every(y=>Math.abs(y-x)>PICS_FUSION_MM))g.push(x);}
+  return g;
+ }
+ /* Une graine est UTILE si l'un des deux rails a au moins `GRAINE_POINTS_MIN` points dans la fenêtre de points du moteur autour d'elle (±180 mm) : en dessous,
+  * aucune cellule forte n'est possible (dessus ≥ 15 points), la relance est inutile. Aucun effet sur les cellules trouvées : seul le temps change. */
+ const GRAINE_POINTS_MIN=15,FENETRE_POINTS_MM=180;
+ function grainesUtiles(capture,R){
+  const t=traversParRail(capture);
+  return graines(R).filter(g=>SIDES.some(s=>{let n=0;for(const [x] of t[s])if(Math.abs(x-g)<=FENETRE_POINTS_MM&&++n>=GRAINE_POINTS_MIN)return true;return false;}));
+ }
+ /* `science` (facultatif) : la science du lot sur cette capture (`scientificProposeBothAvecReservoir`, réservoir compris) : reprise comme relance 0. */
+ function cellules(capture,R,science){
+  const out={left:[],right:[],relances:0,grainesSautees:0};
   if(!capturePrete(capture))return out;
-  for(const g of graines(R)){
-   const r=relance(capture,g);if(!r)continue;out.relances++;
+  const utiles=R.grainesMode==='pics'?grainesPics(capture,R):grainesUtiles(capture,R);out.grainesSautees=graines(R).length-utiles.length;
+  const reprise=!!(science&&science.rails&&SIDES.every(s=>science.rails[s]&&science.rails[s]._reservoir));
+  for(const g of utiles){
+   const r=relance(capture,g,reprise?science:null);if(!r)continue;if(!(g===0&&reprise))out.relances++;
    for(const s of SIDES)for(const x of r[s]){const d=out[s].find(c=>Math.hypot(c.lat-x.lat,c.vert-x.vert)<3);if(d){if(x.loss<d.loss)Object.assign(d,x);}else out[s].push({...x});}
   }
   for(const s of SIDES)out[s].sort((p,q)=>p.loss-q.loss);
@@ -110,34 +152,47 @@
  /* La décision. `positions` : la pose que le lot s'apprête à commander, repère scène, par rail. Rend { version, etat, motif, ms, paireLot,
   * meilleure, concurrente, positions (scène, si `remplacer`), cellules:{left,right,relances}, nPaires }. Une entrée illisible ou un réglage
   * éteint rend `garde` : la commande du lot ne change pas. */
- function decider({capture,positions,R}={}){
+ function decider({capture,positions,R,science}={}){
   const t0=Date.now(),base={version:VERSION,etat:'garde',motif:null,mode:R&&R.mode||null,paireLot:null,meilleure:null,concurrente:null,positions:null,cellules:{left:0,right:0,relances:0},nPaires:0};
   const fin=o=>({...base,...o,ms:Date.now()-t0});
   if(!R||R.ok===false||R.actif!==true)return fin({motif:'reglage-eteint'});
   if(!capturePrete(capture)||!positions||!SIDES.every(s=>Array.isArray(positions[s])))return fin({motif:'entree-illisible'});
   const pose={};
   for(const s of SIDES){const d=decalage(capture.rails[s],positions[s]);if(!d)return fin({motif:'entree-illisible'});pose[s]={lat:d[1],vert:d[2]};}
-  const cells=cellules(capture,R);
+  const cells=cellules(capture,R,science);
   const P=paires(capture,cells,R);
-  const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances},nPaires:P.length};
+  const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances,grainesSautees:cells.grainesSautees},nPaires:P.length};
   /* Aucune paire forte nulle part (nuage pauvre) : absence de preuve, pas une preuve contre la pose : la commande du lot est gardée (ajustement écrit après
    * l'examen, JOURNAL § 2.5 : 9 cuts des couples du 26/10, 0 faute parmi eux, 19 posés non jugés de la partie 20). */
   if(!P.length)return fin({...res,etat:'garde',motif:'aucune-paire-forte'});
   const lot=P.find(p=>ecart(p,pose)<=R.presMm)||null,best=P[0];
   res.paireLot=lot,res.meilleure=best;
-  if(R.mode==='differer'){
+  /* Une paire ne contredit la pose que si elle est SOUTENUE : dessus ≥ `soutienTop` et flanc ≥ `soutienFace` sur ses deux rails (JOURNAL § 2.8 : les poses justes
+   * différées le sont par des paires pauvres ; livré à 0 = la règle examinée). */
+  const soutenue=p=>Math.min(p.left.top,p.right.top)>=R.soutienTop&&Math.min(p.left.face,p.right.face)>=R.soutienFace;
+  const regleDifferer=()=>{
    /* Pose du lot sans paire forte : différée seulement si la meilleure paire large est LOIN d'elle (`sansPaireLoin`, livré vrai : règle affinée après l'examen,
-    * JOURNAL § 2.6 : mêmes fautes, moitié moins de poses justes différées) ; une paire forte proche (à `loinMm` au plus) ne contredit pas la pose. */
-   if(!lot){if(R.sansPaireLoin&&ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-proche'});return fin({...res,etat:'differer',motif:'pose-sans-paire-forte'});}
-   const conc=P.find(p=>p!==lot&&ecart(p,pose)>R.loinMm&&p.prod<=R.rapport*lot.prod)||null;
+    * JOURNAL § 2.6 : mêmes fautes, moitié moins de poses justes différées) et soutenue ; une paire forte proche (à `loinMm` au plus) ne contredit pas la pose. */
+   if(!lot){if(R.sansPaireLoin&&ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-proche'});
+    if(!soutenue(best))return fin({...res,etat:'garde',motif:'pose-sans-paire-forte-pauvre'});return fin({...res,etat:'differer',motif:'pose-sans-paire-forte'});}
+   const conc=P.find(p=>p!==lot&&ecart(p,pose)>R.loinMm&&p.prod<=R.rapport*lot.prod&&soutenue(p))||null;
    if(conc)return fin({...res,etat:'differer',motif:'concurrence',concurrente:conc});
-   return fin({...res,etat:'garde',motif:'pose-unique'});
+   return fin({...res,etat:'garde',motif:'pose-unique'});};
+  if(R.mode==='differer')return regleDifferer();
+  const remplacement=()=>fin({...res,etat:'remplacer',motif:R.mode==='choisir'?'meilleure-loin':'meilleure-unique',positions:{left:positionDe(capture,'left',best.left),right:positionDe(capture,'right',best.right)}});
+  if(R.mode==='choisir-sur'){
+   /* « Choisir sûr » (JOURNAL § 2.8, C2) : la meilleure paire remplace la pose seulement si elle est loin d'elle, UNIQUE (aucune autre paire loin d'elle à moins de
+    * `rapport` × son produit), soutenue, et si la pose du lot n'est aucune paire forte ou vaut `rapport` × son produit au moins ; sinon la règle « différer ». */
+   if(ecart(best,pose)>R.loinMm&&soutenue(best)&&(!lot||lot.prod>=R.rapport*best.prod)){
+    const second=P.find(p=>p!==best&&ecart(p,best)>R.loinMm)||null;
+    if(!second||second.prod>=R.rapport*best.prod)return remplacement();}
+   return regleDifferer();
   }
   /* mode choisir */
   if(ecart(best,pose)<=R.loinMm)return fin({...res,etat:'garde',motif:'meilleure-proche'});
   const second=P.find(p=>p!==best&&ecart(p,best)>R.loinMm)||null;
   if(second&&second.prod<R.rapport*best.prod)return fin({...res,etat:'differer',motif:'ambigu',concurrente:second});
-  return fin({...res,etat:'remplacer',motif:'meilleure-loin',positions:{left:positionDe(capture,'left',best.left),right:positionDe(capture,'right',best.right)}});
+  return remplacement();
  }
  /* Journal d'une décision : des millimètres (repère profil de la pose de départ), des pertes, des comptes ; jamais une coordonnée de scène. */
  const paireMm=p=>p?{left:[r1(p.left.lat),r1(p.left.vert)],right:[r1(p.right.lat),r1(p.right.vert)],gaugeMm:r1(p.gaugeMm),prod:sig4(p.prod),top:[p.left.top,p.right.top],face:[p.left.face,p.right.face]}:null;
@@ -146,5 +201,5 @@
   return {version:d.version,etat:d.etat,motif:d.motif,mode:d.mode,ms:d.ms,cellules:d.cellules,nPaires:d.nPaires,paireLot:paireMm(d.paireLot),meilleure:paireMm(d.meilleure),concurrente:paireMm(d.concurrente),
    ...(d.paireLot&&d.meilleure?{rapportMeilleure:sig4(d.meilleure.prod/d.paireLot.prod)}:{})};
  }
- return {VERSION,DEFAUT,MODES,reglage,graines,decalage,relance,cellules,paires,decider,resumer};
+ return {VERSION,DEFAUT,MODES,GRAINES_MODES,reglage,graines,grainesUtiles,grainesPics,decalage,relance,cellules,paires,decider,resumer};
 });

@@ -6,7 +6,9 @@
  *
  *   node tools/banc-differes.cjs rejouer  --partie P:N --journal J.json --corpus C.json [--corpus …] --lot ID --sortie R.jsonl
  *                                         [--profils base,L1,L1-v,L1-s,L1-se] [--parametres datasets/gcv2-parametres-h6.json] [--liste LISTE.json]
- *                                         [--juger-partie-reservee] [--chrono]
+ *                                         [--juger-partie-reservee] [--chrono] [--recherche-large JSON]
+ *                                         (`--recherche-large` ou BANC_RECHERCHE_LARGE, CH-034 : réglage `lot.rechercheLarge` appliqué à chaque pose de chaque profil, chaîne,
+ *                                         L1-s, GCV2 et deuxième passe, comme le service worker ; absent : rien ne change)
  *                                         (`--chrono`, T21a : temps de calcul par cut `ms` = analyse, décision, passe ; garde de non-régression, critère 6-i)
  *   node tools/banc-differes.cjs predire  (mêmes arguments que rejouer ; imprime le SHA-256 du fichier, exige --juger-partie-reservee pour une
  *                                         partie réservée ; aucune entrée humaine, aucun Écho)
@@ -38,6 +40,7 @@ const L1 = require('../src/gcv2-l1.js');
 const EL = require('../src/gcv2-l1e.js');
 const D = require('./diag-differes.cjs');
 const GA = require('../src/garde-passe-appuis.js');
+const RL = require('../src/recherche-large.js');
 const SETTINGS = require('../src/settings.js');
 
 const FORMAT = 'ariane-banc-differes-rejeu-v1', FORMAT_SYNTHESE = 'ariane-banc-differes-synthese-v1', FORMAT_COMPARAISON = 'ariane-banc-differes-comparaison-v1';
@@ -127,13 +130,18 @@ function gardeDuBanc(valeur) {
   if (!R.ok) throw Error('garde des appuis de la passe : ' + R.raison);
   return { actif: R.actif, deplacementMaxMm: R.deplacementMaxMm, appuiNormalMaxCuts: R.appuiNormalMaxCuts };
 }
-function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined }) {
+function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined, rechercheLarge = undefined }) {
   const horloge = () => Number(process.hrtime.bigint()) / 1e6;
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
   /* L1-se : référence d'écartement de chaque cut, lue dans l'instantané de la liste d'ESV du départ de partie (décompacté) ; sans liste : aucune. */
   const referenceDe = cut => liste ? EL.referenceEcartement(liste, cut) : null;
   /* Mesure seulement : leviers de la décision L1-e changés par la variable d'environnement BANC_LEVIERS (JSON), consignés dans l'en-tête. */
   const leviers = L1.reglerLeviers(process.env.BANC_LEVIERS ? JSON.parse(process.env.BANC_LEVIERS) : null);
+  /* CH-034 : recherche large (src/recherche-large.js) sur chaque pose qu'un profil s'apprête à faire (chaîne, L1-s, GCV2, deuxième passe), comme le service worker
+   * (`rechercheLargeCommande`, `passeDiffRechercheLarge`) : option `rechercheLarge` (réglage `lot.rechercheLarge`) ou BANC_RECHERCHE_LARGE (JSON). Absente, `false` ou
+   * éteinte : rien ne change, le module n'est jamais appelé. Un réglage illisible est une erreur (jamais une mesure faite par mégarde). */
+  const RLv = rechercheLarge !== undefined ? rechercheLarge : process.env.BANC_RECHERCHE_LARGE ? JSON.parse(process.env.BANC_RECHERCHE_LARGE) : undefined;
+  const RLR = RLv === undefined || RLv === false ? null : (() => { const r = RL.reglage(RLv); if (!r.ok) throw Error('recherche large : ' + r.raison); return r.actif ? r : null; })();
   const cuts = lot.cuts.slice().sort((a, b) => a.t - b.t);
   const zoneMem = M.creerMemoire('zones-' + lot.id);
   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
@@ -178,6 +186,24 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     /* Cache du cut : deux profils au même état (mêmes options, mêmes appuis, mêmes voisins) ont la même décision et les mêmes hypothèses. */
     const cache = new Map();
     const signe = E => E.anchors.map(a => `${a.identity.cut}:${SIDES.map(s => a.positions[s].map(v => v.toFixed(7)).join(',')).join(';')}`).join('|') + '#' + E.valides.map(v => `${v.identity.cut}:${v.positions.left[1].toFixed(7)}`).join('|');
+    /* CH-034 : une pose (positions de scène) qu'un profil s'apprête à faire, confrontée à la recherche large (mémoïsée par pose : la même pose dans deux profils ne coûte qu'une fois).
+     * Rend null (option absente ou zone hors de `zones`), { garde } (résumé, la pose reste), { out } différé (source `recherche-large`, `origine` = la pose confrontée), ou
+     * { out, positions } remplacé (la meilleure paire, dans la vue `cams` de chaque rail ; hors de la vue : différé). Une panne du module garde la pose, comme le service worker. */
+    const confronter = (positions, etage, cams, origine) => {
+      if (!RLR || (Array.isArray(RLR.zones) && !RLR.zones.includes(zone))) return null;
+      const k = 'rl' + SIDES.map(s => positions[s].map(v => v.toFixed(6)).join(',')).join(';');
+      let rl = cache.get(k);
+      if (!rl) { try { const dd = RL.decider({ capture, positions, R: RLR, science }); rl = { ...RL.resumer(dd), positions: dd.positions || null }; } catch (e) { rl = { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) }; } cache.set(k, rl); }
+      const { positions: pRL, ...resume } = rl;
+      if (rl.etat === 'differer') return { out: { etat: 'differe', source: 'recherche-large', etage, rechercheLarge: { ...resume, origine } } };
+      if (rl.etat === 'remplacer' && pRL) {
+        if (SIDES.every(s => cams && cams[s] && L.inView(cams[s], pRL[s]).inView)) return { positions: pRL, out: { etat: 'pose', source: 'recherche-large', etage, commande: 'lot', vue: null, decal: decalPose(before, pRL), rechercheLarge: { ...resume, origine } } };
+        return { out: { etat: 'differe', source: 'recherche-large', etage, rechercheLarge: { ...resume, origine, motifFinal: 'remplacer-hors-vue' } } };
+      }
+      return { garde: { ...resume, origine } };
+    };
+    /* Une pose `o` d'un profil (L1-s) : différée, remplacée (même vue) ou gardée avec le résumé. */
+    const appliquer = (o, positions, cams) => { const rl = confronter(positions, o.etage, cams, o.source); if (!rl) return o; if (rl.out) return rl.out.etat === 'pose' ? { ...rl.out, vue: o.vue } : rl.out; return { ...o, rechercheLarge: rl.garde }; };
     for (const p of profils) {
       const E = etats[p], opts = optionsDe(p), sig = JSON.stringify(opts) + signe(E);
       const d = cache.has('d' + sig) ? cache.get('d' + sig) : (() => { const x = L.decideCut({ capture, science, anchors: E.anchors, Shadow: Sh, options: opts }); cache.set('d' + sig, x); return x; })();
@@ -210,14 +236,19 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       }
       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
       else if (pose) {
-        E.valides.push({ identity, positions, rails: before });
-        if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
-        out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions), ...(ombre ? { ombre } : {}) };
+        const rl = confronter(positions, d.stage, vue ? camerasLarges : cameras, 'lot');
+        if (rl && rl.out && rl.out.etat === 'differe') { pose = false; out = rl.out; }
+        else if (rl && rl.out) { positions = rl.positions; E.valides.push({ identity, positions, rails: before }); out = { ...rl.out, vue }; } /* remplacée : voisine, jamais appui (service worker : `anchorHeld` faux) */
+        else {
+          E.valides.push({ identity, positions, rails: before });
+          if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
+          out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions), ...(ombre ? { ombre } : {}), ...(rl ? { rechercheLarge: rl.garde } : {}) };
+        }
       } else if (!contre && estL1s(p) && (() => {
         /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
         if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
           const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
-          if (large.action === 'lot') { out = grappeBloque() ? { etat: 'differe', source: 'regle-grappe', etage: d.stage } : { etat: 'pose', source: 'l1s-vue', etage: d.stage, commande: 'lot', vue: 'deplacee', decal: decalPose(before, d.positions) }; return true; }
+          if (large.action === 'lot') { out = grappeBloque() ? { etat: 'differe', source: 'regle-grappe', etage: d.stage } : { etat: 'pose', source: 'l1s-vue', etage: d.stage, commande: 'lot', vue: 'deplacee', decal: decalPose(before, d.positions) }; if (out.etat === 'pose') out = appliquer(out, d.positions, camerasLarges); return true; }
         }
         /* b. La décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis. */
         const o2 = optionsGcv2(), sig2 = JSON.stringify(o2) + signe(E);
@@ -229,11 +260,12 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         if (c2.action !== 'lot') return false;
         const pos2 = d2.positions;
         out = grappeBloque(d2) ? { etat: 'differe', source: 'regle-grappe', etage: d2.stage } : { etat: 'pose', source: 'l1s-chaine', etage: d2.stage, commande: c2.action, vue: vue2, decal: decalPose(before, pos2) };
+        if (out.etat === 'pose') out = appliquer(out, pos2, vue2 ? camerasLarges : cameras);
         return true;
       })()) {
         posesL1s = out.etat === 'pose';
-        /* 4.9.5.15 (fiches/L1_CAP5.md) : sous L1-se, la pose refaite de la chaîne passe par la même correction d'écartement que la GCV2. */
-        if (p === 'L1-se' && out.etat === 'pose' && out.decal) { const cc = L1.corrigerPoseChaine(capture, out.decal, referenceDe(c.cut)); out.decal = cc.decal; out.correction = cc.correction;
+        /* 4.9.5.15 (fiches/L1_CAP5.md) : sous L1-se, la pose refaite de la chaîne passe par la même correction d'écartement que la GCV2 (pas une pose remplacée par la recherche large). */
+        if (p === 'L1-se' && out.etat === 'pose' && out.decal && out.source !== 'recherche-large') { const cc = L1.corrigerPoseChaine(capture, out.decal, referenceDe(c.cut)); out.decal = cc.decal; out.correction = cc.correction;
           if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], out.decal[s].map(v => v / 1000))])), rails: before }); }
       } else if (p === 'base') {
         out = { etat: 'differe', source: 'lot', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, commande: cmd.action === 'engine' ? 'engine' : `${cmd.action}:${cmd.reason}` };
@@ -254,18 +286,23 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             if (cg.action !== 'lot') out = { ...base, etat: 'differe', l1: { ...l1, refusCommande: cg.reason } };
             else if (valider && grappeBloque()) out = { ...base, etat: 'differe', l1: { ...l1, refusCommande: 'regle-grappe' } };
             else if (valider) {
-              /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin. */
-              if (!estL1s(p)) { E.valides.push({ identity, positions: g.positions, rails: before }); L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
-              /* Cap 5, levier « transport » : sous L1-se, une pose de la GCV2 devient voisine de la GCV2 (jamais appui de la chaîne ni voisine de sa décision). */
-              else if (p === 'L1-se' && leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: g.positions, rails: before });
-              out = { ...base, etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true };
+              const vueG = cg.vue === 'deplacer' ? 'deplacee' : null, rl = confronter(g.positions, d.stage, vueG ? camerasLarges : cameras, 'gcv2');
+              if (rl && rl.out && rl.out.etat === 'differe') out = { ...base, ...rl.out, l1 };
+              else {
+                const positionsG = rl && rl.out ? rl.positions : g.positions;
+                /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin (une pose remplacée par la recherche large : voisine, jamais appui). */
+                if (!estL1s(p)) { E.valides.push({ identity, positions: positionsG, rails: before }); if (!(rl && rl.out)) L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
+                /* Cap 5, levier « transport » : sous L1-se, une pose de la GCV2 devient voisine de la GCV2 (jamais appui de la chaîne ni voisine de sa décision). */
+                else if (p === 'L1-se' && leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: positionsG, rails: before });
+                out = rl && rl.out ? { ...base, ...rl.out, vue: vueG, l1, aControler: dec.aControler === true } : { ...base, etat: 'pose', vue: vueG, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true, ...(rl ? { rechercheLarge: rl.garde } : {}) };
+              }
             } else out = { ...base, etat: 'pose-non-validee', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1 };
           }
         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
       }
       ligne.profils[p] = out;
       /* Cap 5 : un différé de L1-se est gardé pour la deuxième passe (fin de lot), avec ce qu'il faut pour le redécider. */
-      if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot'))
+      if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot' || out.source === 'recherche-large'))
         restes.push({ ligne, capture, science, zone, plagesADV: plages.adv, runtimeRails, before, cameras, camerasLarges, identity, cut: c.cut });
       /* L1-s : la mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé). */
       const valideChaine = out.etat === 'pose' && !(estL1s(p) && (posesL1s || out.source === 'gcv2'));
@@ -297,8 +334,14 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             /* Garde A : comme le service worker (`passeDiffGarde`), décalage arrondi au centième de mm, chaîne normale = les voisins de la décision du lot (`E.valides`). */
             const ga = GA.juger({ cut: r.cut, decal: Object.fromEntries(SIDES.map(s => [s, L1.decalage(r.before[s], g.positions[s]).map(v => Math.round(v * 100) / 100)])), cutsNormaux: E.valides.map(v => v.identity.cut) }, { ok: true, ...garde });
             if (ga.bloque) { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: 'garde-appuis', garde: ga, ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
+            /* CH-034 : la recherche large sur la pose de la passe (mode « différer » forcé, `passe:true`), après la garde A, comme le service worker (`passeDiffRechercheLarge`). */
+            if (RLR && RLR.passe === true) {
+              let rl = null; try { rl = RL.resumer(RL.decider({ capture: r.capture, positions: g.positions, R: { ...RLR, mode: 'differer' } })); } catch (e) { rl = { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) }; }
+              if (rl && rl.etat === 'differer') { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: 'recherche-large', garde: ga, rechercheLarge: rl, ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
+              if (rl && rl.etat !== 'erreur') r.rechercheLarge = rl;
+            }
             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
-            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
             poses++;
           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
@@ -311,6 +354,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
     regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null, ...(leviers.deuxiemePasse ? { gardeAppuis: gardeDuBanc(gardeAppuis) } : {}) } } : {}),
     parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
+    ...(RLR ? { rechercheLarge: RLR, moduleRechercheLarge: RL.VERSION } : {}),
     note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
     traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000), ...(chrono ? { chrono: { passeMs } } : {}) };
   return [entete, ...lignes];
@@ -509,6 +553,7 @@ function args(argv) {
     else if (k === '--rejeu') o.rejeu.push(val()); else if (k === '--juges') o.juges.push(val()); else if (k === '--inventaire') o.inventaire = val();
     else if (k === '--json') o.json = val(); else if (k === '--md') o.md = val(); else if (k === '--prediction') o.prediction = val(); else if (k === '--echo') o.echo.push(val());
     else if (k === '--juger-partie-reservee') o.jugerReservee = true; else if (k === '--chrono') o.chrono = true;
+    else if (k === '--recherche-large') o.rechercheLarge = JSON.parse(val());
     else throw Error('argument inconnu : ' + k);
   }
   if (o.profils.some(p => !PROFILS.includes(p))) throw Error(`profils : ${PROFILS.join(', ')}`);
@@ -524,7 +569,7 @@ function main(argv) {
     const j = JSON.parse(fs.readFileSync(a.journal, 'utf8')), R = lotReel(j, a.partie, a.lot), ids = R.lot.cuts.map(c => c.captureId).filter(Boolean);
     const t0 = Date.now(), captures = chargerCaptures(a.corpus, ids);
     journalTexte(`captures retrouvées : ${captures.size}/${ids.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
-    const lignes = rejouerLot({ journal: j, captures, projet: a.projet, partie: a.partie, lotId: a.lot, parametres, profils: a.profils, journalTexte, liste: a.liste ? require('../src/liste-memoire.js').decompacter(JSON.parse(fs.readFileSync(a.liste, 'utf8'))) : null, chrono: !!a.chrono });
+    const lignes = rejouerLot({ journal: j, captures, projet: a.projet, partie: a.partie, lotId: a.lot, parametres, profils: a.profils, journalTexte, liste: a.liste ? require('../src/liste-memoire.js').decompacter(JSON.parse(fs.readFileSync(a.liste, 'utf8'))) : null, chrono: !!a.chrono, rechercheLarge: a.rechercheLarge });
     lignes[0].parametres.sha256 = sha256(bufP);
     const texte = lignes.map(l => JSON.stringify(l)).join('\n') + '\n';
     ecrire(a.sortie, texte);
