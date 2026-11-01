@@ -149,9 +149,11 @@
     const depart = C ? C.part : entier(options.partieAffichee) ? options.partieAffichee : null;
     const i0 = parts.indexOf(depart), tour = i0 < 0 ? parts : [...parts.slice(i0), ...parts.slice(0, i0)];
     const aFaire = x => x.statut === 'a-faire';
+    /* Le cut ouvert n'est jamais le suivant, même avant que sa visite d'Écho soit enregistrée. */
+    const ouvert = x => C && x.part === C.part && x.cut === C.cut;
     let suivant = null;
     for (const p of tour) {
-      const cuts = ordre.filter(x => x.part === p && aFaire(x));
+      const cuts = ordre.filter(x => x.part === p && aFaire(x) && !ouvert(x));
       const apres = p === depart && C && C.part === p ? cuts.filter(x => x.cut > C.cut) : [];
       const x = apres[0] || cuts[0];
       if (x) { suivant = { part: x.part, cut: x.cut }; break; }

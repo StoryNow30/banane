@@ -22,6 +22,8 @@ test('suivant : la partie affichée d’abord, après le cut courant ; puis la p
   const fin = [L(2, [[3], [7, 'corrige']]), L(3, [[1, 'corrige']]), L(4, [[2, 'valide']])];
   assert.deepEqual(CL.parcours(fin, { partieAffichee: 4 }).suivant, { part: 2, cut: 3 }, 'retour au début de la Constellation');
   assert.equal(CL.parcours([L(2, [[3, 'corrige']])], { partieAffichee: 2 }).suivant, null, 'rien à faire');
+  assert.deepEqual(CL.parcours([L(2, [[3], [7]]), L(4, [[2]])], { partieAffichee: 2, courant: { part: 2, cut: 7 } }).suivant, { part: 2, cut: 3 }, 'le cut ouvert, pas encore visité par Écho, n’est jamais le suivant');
+  assert.deepEqual(CL.parcours([L(2, [[7]]), L(4, [[2]])], { partieAffichee: 2, courant: { part: 2, cut: 7 } }).suivant, { part: 4, cut: 2 });
   assert.deepEqual(CL.parcours(listes, { partieAffichee: 9 }).suivant, { part: 2, cut: 3 }, 'partie affichée hors liste : le début');
 });
 
