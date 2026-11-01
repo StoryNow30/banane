@@ -243,7 +243,7 @@ Le banc (`tools/banc-differes.cjs`) reçoit l'option `--recherche-large JSON` (o
 **Levier** (`grainesMode:'pics'`, livré `'grille'`) : les points du nuage à la hauteur du dessus de rail (|vert| ≤ 50 mm du départ, |long| ≤ 500 mm) sont comptés en travers par cases de 10 mm ; un amas = cases contiguës (à une vide près) d'au moins 5 points, 15 au total ; une graine par amas à plus de 60 mm des graines prises, la graine 0 toujours (la relance du lot), bornée à ±400. Un rail (dessus ≥ 15 points pour une cellule forte) fait toujours un amas ; le ballast et les traverses sont sous la bande. Et la science du lot, quand elle est fournie (banc : toujours ; service worker : la passe), tient lieu de relance 0.
 **Mesure (avant/après, mêmes cuts, même module)** : (a) les 21 fautes de la partie 20 : même meilleure paire (3 mm), même décision D, vraie paire en tête ; (b) les 172 jugés de la partie 20 et les 410 posés des lots récents : mêmes décisions D (fautes différées, justes différées, coût), relances et temps par cut avant/après. Critère : aucune décision changée sur les fautes, au plus 1 % de décisions changées ailleurs (et expliquées), temps divisé par 2 au moins.
 
-### 1.4 Résultat du rejeu avec le levier (ÉTABLI, 1/11, 14:10 ; 2 h 20 seul ; témoin avec la même passe en cours, tableau final au § 1.5)
+### 1.4 Résultat du rejeu avec le levier (ÉTABLI, 1/11, 14:10 ; 2 h 20 seul ; témoin au § 1.5)
 Levier livré (`{actif:true}`), profils base et L1-se, passe livrée (2 passes). Jugé par geste contre l'Écho (script `juger-rejeu`), sur les 172 posés réels jugés :
 
 | Profil | geste | n | posé à l'identique | posé déplacé (> 1 mm) | différé (dont par le levier) | classes des poses du profil contre la vérité | mm des poses déplacées |
@@ -259,6 +259,38 @@ Levier livré (`{actif:true}`), profils base et L1-se, passe livrée (2 passes).
 
 Comptes : base + levier : 621 posés, 268 différés (le levier en diffère 32 dans le lot, 14 sur des posés non jugés) ; L1-se + levier : 817 posés, 72 différés (le levier en diffère 23 dans le lot : 20 poses de la chaîne, 3 de la GCV2 ; la passe reprend 146 restes, en pose 78, le levier en retient 15 en passe ; 13 posés non jugés différés en plus ; 119 différés réels posés dont 63 par la passe).
 **Lecture.** (1) Sous L1-se, le profil livré : **12 fautes sur 21 sont différées par le levier dans le lot puis POSÉES PAR LA GCV2 (passe) à 1 à 5 mm de la vérité** : la deuxième passe, avec les voisins validés et le transport, retrouve la vraie paire ; 7 restent différées ; 2 restent des fautes (les indécidables du § 2.8). C'est la réponse à la piste 4 : oui, la passe pose les cuts différés par le levier, et juste. (2) Prix : 2 fines deviennent moyennes (25 et 26 mm, cuts reposés par la passe), 1 acceptation devient moyenne (12 mm), 1 acceptation différée ; le témoin dira ce qui vient de la passe seule (le § 1.2, sans passe, avait déjà 4 fines déplacées : 10, 5, 0, 11). (3) Sous base (chaîne seule) : 20 fautes sur 21 différées, dont 6 par la dynamique des appuis (un cut différé n'est plus appui : les suivants sont différés à leur tour) ; mais 10 acceptations de plus différées par cette dynamique, 0 pose juste déplacée. (4) Temps : 1 415 consultations du module, 2 h 20 contre 42 min : ~4 s par consultation, d'où le § 2.11. Limite : réglage et examen sont confondus ici (même lot) ; la mesure hors échantillon est la garde des 12 lots (§ 7).
+
+### 1.5 Témoin : la passe seule, sans le levier (ÉTABLI, 1/11, 21:05 ; 1 h 16 ; même banc, mêmes leviers de passe, levier absent ; réponse à la piste 4)
+Même rejeu que le § 1.4 sans `--recherche-large`. Jugé par geste (script `juger-rejeu`), sur les 172 posés réels jugés :
+
+| Profil | geste | n | posé à l'identique | posé déplacé (> 1 mm) | différé | classes des poses du profil contre la vérité | mm des poses déplacées |
+|---|---|---|---|---|---|---|---|
+| base, sans levier | faute | 21 | 15 | 0 | 6 | faute 15 | |
+| | moyenne | 11 | 9 | 0 | 2 | moyenne 8, fine 1 | |
+| | fine | 65 | 47 | 0 | 18 | fine 46, moyenne 1 | |
+| | acceptation | 75 | 67 | 0 | 8 | acceptation 67 | |
+| L1-se + passe, sans levier | faute | 21 | 18 | 3 | 0 | **faute 19**, fine 2 | 2 1 239 |
+| | moyenne | 11 | 10 | 1 | 0 | moyenne 9, fine 2 | 4 |
+| | fine | 65 | 61 | 4 | 0 | fine 61, moyenne 4 | 10 5 0 11 |
+| | acceptation | 75 | 74 | 1 | 0 | acceptation 74, fine 1 | 1 |
+
+Comptes : base 646 posés, 243 différés ; L1-se 838 posés, 51 différés ; la passe reprend 83 restes et en pose 35 ; 117 différés réels posés (35 par la passe) ; 0 posé non jugé différé.
+
+**Levier contre témoin, profil livré (L1-se + passe), partie 20 entière (ÉTABLI, même lot que le réglage : lecture conservatrice, la mesure hors échantillon est la garde du § 7)** :
+
+| | témoin | levier | différence |
+|---|---|---|---|
+| fautes restantes (sur 21) | 19 | 2 | **−17** |
+| fautes reposées justes (≤ 10 mm) | 2 (dont une reposée à 239 mm) | 12 (toutes par la passe, 1 à 5 mm) | +10 |
+| fautes différées | 0 | 7 | +7 (sans pose, D-264 respecté) |
+| fines devenues moyennes | 4 (10, 5, 0, 11 mm : dues à la passe seule) | 6 (+ 26 et 25 mm) | **+2** |
+| acceptations devenues moyennes | 0 | 1 (12 mm) | **+1** |
+| acceptations différées | 0 | 1 | +1 |
+| posés non jugés différés | 0 | 15 (13 par le levier) | +15 (549 posés) |
+| différés finaux (sur 889) | 51 | 72 | +21 |
+| durée du rejeu (seul) | 4 576 s | 8 374 s | × 1,83 |
+
+**Lecture.** (1) La passe seule ne corrige presque rien des fautes (2 sur 21, une seule par déplacement net) : c'est bien le levier qui les retire du lot, et la passe qui les repose ensuite avec les voisins validés. (2) Le prix propre au levier est petit et chiffré : 2 fines → moyennes (25, 26 mm), 1 acceptation → moyenne (12 mm), 1 acceptation différée, 13 posés non jugés différés (2,4 % des non jugés ; le § 2.10 estime ~14 fautes cachées parmi eux, donc ces 13 sont en partie des fautes). Les 4 fines → moyennes du témoin ne viennent pas du levier (déjà au § 1.2 sans passe). (3) Solde sur la partie 20 : −17 fautes, +3 moyennes, +21 différés ; bilan de pose à l'opérateur : 17 fautes de moins contre 21 cuts de plus à poser à la main et 3 retouches de plus. (4) Piste 4 tranchée : oui, la deuxième passe pose les cuts différés par le levier (12 de 21, 1 à 5 mm), sans que le levier ait besoin de poser lui-même (modes « choisir » écartés, D-264 tenu). (5) Temps : × 1,83 sur le rejeu complet (le banc consulte le module à chaque pose, 1 415 fois) ; dans l'extension, la consultation n'a lieu qu'à la pose du lot : coût réel ~4 s par cut consulté (§ 1.4), d'où la piste temps du § 2.11.
 
 ### 2.12 « Et sur la partie fine ? » (ÉTABLI, 1/11, 14:15 ; 65 fines, 11 moyennes, 75 acceptations de la partie 20 ; script `partie-fine` du scratchpad)
 **Biais de la pose du lot (correction de l'opérateur = vérité − pose, mm, repère profil du départ).** Fines : lat gauche +1,0 ± 0,8 (IC 95), lat droite −0,9 ± 0,8, vert +0,9 / +1,2 ± 0,7, médianes 0,0 à 0,8, translation commune des deux rails 0,1 ± 0,7, écartement −1,9 ± 0,8 : rien au-dessus du plancher de bruit de la référence (1 mm, § 0.4) ; pas d'effet de zone (61 fines sur 65 en ADV) ni de moitié de partie (première/seconde : 1,5 / 0,6 mm). Moyennes : lat gauche −10 ± 9, porté par 3 cuts à 20 à 32 mm (ADV, rail gauche) : pas un décalage constant. **Aucune correction fixe ou apprise ne réduit la classe fine.**
