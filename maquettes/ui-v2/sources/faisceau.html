@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faisceau</title>
+<style>
+/*POLICE:switzer*/
+/* Proposition « Faisceau ». Sources : libraries.dev Border beam (une lueur qui court sur la
+ * bordure), SwiftPieces (verre, dock), backgrounds.supply (fond profond qui bouge, barre de
+ * navigation en verre), beUI Timeline (frise qu'on fait glisser) et Animated Alert.
+ * Sens : le faisceau court = le lot tourne ; figé = pause ; absent = rien ne tourne.
+ * Le vert d'eau + losange = vert à examiner. */
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+:root{
+  --base:#E7EFEA; --b1:#BFE0D2; --b2:#F0D9B2; --b3:#CFDCE6; --verre:rgba(255,255,255,.82); --verre-2:rgba(255,255,255,.62); --bord:rgba(16,32,28,.14);
+  --texte:#10201C; --texte-2:#45554F; --eau:#0A6A5C; --plein:#10201C; --sur-plein:#F4F8F6; --fa1:#C88A16; --fa2:#10201C; --scene:#C9D5CF;
+  --sans:'Switzer',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --base:#090B0C; --b1:#0F3C39; --b2:#4A3410; --b3:#1B2733; --verre:rgba(15,19,21,.80); --verre-2:rgba(15,19,21,.58); --bord:rgba(255,255,255,.11);
+  --texte:#EEF2F1; --texte-2:#A6B0AD; --eau:#86E0D2; --plein:#EEF2F1; --sur-plein:#0B0E0F; --fa1:#F6D089; --fa2:#FFFFFF; --scene:#000;
+}}
+:root[data-theme="dark"]{
+  --base:#090B0C; --b1:#0F3C39; --b2:#4A3410; --b3:#1B2733; --verre:rgba(15,19,21,.80); --verre-2:rgba(15,19,21,.58); --bord:rgba(255,255,255,.11);
+  --texte:#EEF2F1; --texte-2:#A6B0AD; --eau:#86E0D2; --plein:#EEF2F1; --sur-plein:#0B0E0F; --fa1:#F6D089; --fa2:#FFFFFF; --scene:#000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:var(--sans)}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none;position:relative;border-radius:22px;overflow:hidden;background:var(--base)}
+#fond{position:absolute;inset:0;width:100%;height:100%;display:block}
+#panneau{container-type:inline-size;position:relative;height:760px;overflow-y:auto;background-color:transparent;padding:12px 12px 22px;font-size:15px;line-height:1.45}
+.notes{max-width:380px;font-size:14px;line-height:1.55;background:var(--verre);padding:18px 20px;border-radius:18px;border:1px solid var(--bord)}
+.notes{background-color:var(--base)}
+.notes h2{font-size:18px;margin:0 0 8px}.notes p{margin:0 0 10px}
+
+.verre{background:var(--verre);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);border:1px solid var(--bord);border-radius:18px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;position:sticky;top:0;z-index:2}
+.nav .nom{font-weight:700;letter-spacing:-.01em}
+.nav .liaison{font-size:12px;color:var(--texte-2);display:flex;align-items:center;gap:6px}
+.nav .liaison.non{color:var(--eau);font-weight:700}
+.nav .seg{margin-left:auto;display:flex;gap:2px;background:var(--verre-2);border-radius:999px;padding:3px;border:1px solid var(--bord)}
+.nav .seg button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:6px 12px;background:none;color:var(--texte-2);cursor:pointer}
+.nav .seg button[aria-pressed="true"]{background:var(--plein);color:var(--sur-plein)}
+.nav .seg button[aria-disabled="true"]{cursor:not-allowed}
+.trait{width:14px;height:2px;background:currentColor;display:inline-block}
+.non .trait{background:none;border-top:2px dashed currentColor}
+
+/* carte du lot, avec faisceau */
+.lot{position:relative;margin:14px 0 12px;padding:18px 16px;border-radius:22px}
+.lot::before{content:"";position:absolute;inset:-1px;border-radius:23px;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from var(--ang),transparent 0 62%,var(--fa1) 76%,var(--fa2) 80%,var(--eau) 86%,transparent 92%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0}
+.lot::after{content:"";position:absolute;inset:-6px;border-radius:28px;pointer-events:none;opacity:0;filter:blur(10px);
+  background:conic-gradient(from var(--ang),transparent 0 66%,var(--fa1) 78%,var(--eau) 86%,transparent 92%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;padding:6px}
+.lot.court::after{opacity:.75}.lot.fige::after{opacity:.35;--ang:200deg}
+.lot.court::before,.lot.fige::before{opacity:1}
+.lot.fige::before{--ang:200deg}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .lot.court::before,:root:not([data-mouvement="reduit"]) .lot.court::after{animation:tourne 3.2s linear infinite;animation-delay:var(--decal,0s)}}
+@keyframes tourne{to{--ang:360deg}}
+.lot .etat{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--texte-2);display:flex;align-items:center;gap:8px}
+.lot .grand{display:flex;align-items:baseline;gap:8px;margin:6px 0 0}
+.lot .grand .n{font-size:clamp(56px,19cqi,76px);font-weight:700;letter-spacing:-.045em;line-height:.95;font-variant-numeric:tabular-nums}
+.lot .grand .s{font-size:17px;color:var(--texte-2)}
+.lot .phrase{margin:10px 0 0}
+.avance{height:4px;border-radius:2px;background:var(--bord);margin:14px 0 0;position:relative;overflow:hidden}
+.avance i{position:absolute;inset:0 auto 0 0;background:var(--texte);border-radius:2px}
+.avance.inconnu{background:repeating-linear-gradient(90deg,var(--bord) 0 6px,transparent 6px 10px)}
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.case{padding:12px 14px;border-radius:16px}
+.case dt{font-size:12px;color:var(--texte-2)} .case dd{margin:2px 0 0;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.case.eau dt,.case.eau dd{color:var(--eau)}
+.los{display:inline-block;width:8px;height:8px;background:currentColor;transform:rotate(45deg);margin-right:6px}
+.rond{display:inline-block;width:8px;height:8px;border:1.5px solid currentColor;border-radius:50%;margin-right:6px}
+
+/* frise glissable */
+.frise{padding:12px 0 10px;margin:12px 0}
+.frise h2{font-size:13px;font-weight:700;margin:0 14px 8px;color:var(--texte-2)}
+.piste{display:flex;gap:8px;overflow-x:auto;padding:4px 14px 8px;scroll-snap-type:x mandatory;cursor:grab;scrollbar-width:thin}
+.jalon{flex:none;scroll-snap-align:start;border-radius:14px;padding:8px 12px;border:1px solid var(--bord);background:var(--verre-2);font:inherit;color:var(--texte);text-align:left;cursor:pointer;min-width:112px}
+.jalon b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+.jalon span{font-size:12px;color:var(--texte-2)}
+.jalon.eau span{color:var(--eau);font-weight:700}
+.jalon.ici{border:1.5px solid var(--texte)}
+
+.actions{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.b{font:inherit;font-size:16px;font-weight:600;border-radius:16px;padding:14px 16px;min-height:50px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.b .note{font-size:12px;font-weight:500}
+.b-principal{background:var(--plein);color:var(--sur-plein);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--verre);color:var(--texte);border:1px solid var(--bord);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.b-arret{background:var(--verre);color:var(--texte);border:1.5px solid var(--texte-2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.b-arret.confirme{border:2.5px solid var(--texte)}
+.b[aria-disabled="true"]{background:var(--verre-2);color:var(--texte-2);border:1px dashed var(--texte-2);cursor:not-allowed}
+.raison{font-size:13px;color:var(--texte-2);margin:0 4px}
+.lien{font:inherit;font-size:14px;font-weight:700;color:var(--texte);background:none;border:0;padding:6px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.alerte{padding:14px 16px;margin:12px 0;border:1.5px solid var(--eau)}
+.alerte h2{font-size:15px;margin:0 0 4px;color:var(--eau);display:flex;align-items:center}
+.alerte p{margin:0 0 6px}
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]) .alerte.neuve{animation:deplie .45s cubic-bezier(.2,.9,.3,1.2)}}
+@keyframes deplie{from{transform:translateY(-8px) scale(.98);opacity:.4}to{transform:none;opacity:1}}
+.bloc{padding:14px 16px;margin:12px 0}
+.bloc h2{font-size:14px;margin:0 0 8px}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bornes label{font-size:12px;color:var(--texte-2);display:flex;flex-direction:column;gap:4px}
+.bornes input{font:inherit;font-size:26px;font-weight:700;letter-spacing:-.02em;background:var(--verre-2);border:1px solid var(--bord);border-radius:14px;padding:8px 12px;color:var(--texte);width:100%;font-variant-numeric:tabular-nums}
+.bornes input:disabled{color:var(--texte-2)}
+.inter{display:flex;align-items:center;gap:10px;font:inherit;background:none;border:0;color:var(--texte);padding:10px 0 0;cursor:pointer;text-align:left}
+.inter .r{width:40px;height:24px;border-radius:999px;background:var(--verre-2);border:1px solid var(--bord);position:relative;flex:none}
+.inter .r::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;top:2px;left:2px;background:var(--texte-2)}
+.inter[aria-checked="true"] .r{background:var(--plein)}
+.inter[aria-checked="true"] .r::after{left:18px;background:var(--sur-plein)}
+.pas{display:flex;align-items:center;gap:10px;margin-top:10px}
+.pas button{font:inherit;font-size:18px;width:40px;height:40px;border-radius:12px;border:1px solid var(--bord);background:var(--verre-2);color:var(--texte);cursor:pointer}
+.pas output{font-size:24px;font-weight:700;min-width:2ch;text-align:center}
+.etapes{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.etapes li{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:12px;background:var(--verre-2);font-size:14px}
+.etapes li.ici{outline:1.5px solid var(--texte);font-weight:700}
+.etapes li span:last-child{font-variant-numeric:tabular-nums;text-align:right}
+.reste{padding:14px 16px;margin:10px 0}
+.reste .t{font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.reste .g{font-size:12px;font-weight:700;color:var(--texte-2)}
+.reste .g.eau{color:var(--eau)}
+.reste .m{color:var(--texte-2);margin:4px 0 10px;font-size:14px}
+.reste .gestes{display:flex;gap:8px}
+.petit{font:inherit;font-size:13px;font-weight:600;border-radius:12px;padding:8px 12px;background:var(--verre-2);color:var(--texte);border:1px solid var(--bord);cursor:pointer}
+.petit.p{background:var(--plein);color:var(--sur-plein);border-color:var(--plein)}
+.coupe{padding:10px;margin:12px 0}
+.coupe svg{display:block;width:100%;height:auto}
+.message{padding:10px 14px;margin:10px 0;font-size:14px}
+.legende{font-size:13px;color:var(--texte-2);padding:10px 14px;margin-top:10px}
+.legende summary{cursor:pointer;color:var(--texte);font-weight:700}
+
+/* Mouvement (partition dans la fiche) : une valeur qui change monte à sa place ; au changement
+ * d'état, les blocs arrivent l'un après l'autre. Rien de tout cela en mouvement réduit. */
+@media (prefers-reduced-motion:no-preference){:root:not([data-mouvement="reduit"]){
+  .change{display:inline-block;animation:roule .42s cubic-bezier(.2,.8,.2,1)}
+  #panneau[data-etat-change="1"]>*{animation:arrive .48s cubic-bezier(.2,.8,.2,1) both}
+  #panneau[data-etat-change="1"]>*:nth-child(2){animation-delay:.04s}
+  #panneau[data-etat-change="1"]>*:nth-child(3){animation-delay:.08s}
+  #panneau[data-etat-change="1"]>*:nth-child(4){animation-delay:.12s}
+  #panneau[data-etat-change="1"]>*:nth-child(n+5){animation-delay:.16s}
+}}
+@keyframes roule{from{transform:translateY(.35em);opacity:.2}to{transform:none;opacity:1}}
+@keyframes arrive{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><canvas id="fond" aria-hidden="true"></canvas><div id="panneau" aria-label="Panneau Ariane, proposition Faisceau"></div></div>
+  <aside class="notes">
+    <h2>Faisceau</h2>
+    <p><b>D'où ça vient.</b> libraries.dev, Border beam : une lueur qui court sur la bordure d'une carte. SwiftPieces : le verre et les cartes posées sur un fond. backgrounds.supply : un fond profond qui respire et une barre de navigation en verre. beUI : la frise qu'on fait glisser (Timeline) et l'alerte qui se déplie (Animated Alert).</p>
+    <p><b>Ce que ça veut dire ici.</b> Le faisceau fait le tour de la carte du lot tant qu'Ariane pose : de loin, on voit que ça vit. En pause, il s'arrête net sur place ; à l'arrêt ou à la fin, il disparaît. La frise aligne les cuts remarquables : on la fait glisser, on touche un jalon pour l'examiner. Le vert d'eau avec un losange veut dire « vert à examiner », et rien d'autre.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc } = Demo.D;
+  function bouton(x) {
+    const cls = { principal: 'b b-principal', second: 'b b-second', arret: 'b b-arret' + (x.confirme ? ' confirme' : ''), choix: 'b b-choix', lien: 'lien' }[x.rang];
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}><span>${esc(x.libelle)}</span>${x.note ? `<span class="note">${esc(x.note)}</span>` : ''}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  const actions = (l) => `<div class="actions">${l.map(bouton).join('')}</div>`;
+  let alerteVue = '';
+  function nav(m) {
+    const bl = m.activiteBloquee ? ' aria-disabled="true" title="Mettre le lot en pause ou l’arrêter avant de changer d’activité"' : '';
+    const ok = m.liaison.etat === 'relie';
+    return `<div class="nav verre"><div><div class="nom">Ariane</div><div class="liaison${ok ? '' : ' non'}"><span class="trait" aria-hidden="true"></span>${esc(m.liaison.texte)}</div></div>
+      <div class="seg" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${m.activite === 'orbite'}"${m.activite === 'echo' ? '' : bl}>Orbite</button><button data-a="echo" aria-pressed="${m.activite === 'echo'}"${bl}>Écho</button></div></div>`;
+  }
+  function alerte(titre, texte, acts) {
+    const cle = titre + texte, neuve = cle !== alerteVue; alerteVue = cle;
+    return `<div class="alerte verre${neuve ? ' neuve' : ''}" role="alert"><h2><span class="los" aria-hidden="true"></span>${esc(titre)}</h2><p>${esc(texte)}</p>${acts && acts.length ? actions(acts) : ''}</div>`;
+  }
+  function carteLot(m, contenu) {
+    const fa = m.phase === 'encours' || m.vue === 'echo' ? 'court' : m.phase === 'pause' ? 'fige' : '';
+    const mot = m.vue === 'echo' ? 'Écho · observe' : m.titre;
+    /* Phase calée sur l'horloge : le rendu périodique ne relance pas le faisceau à zéro. */
+    const decal = `-${((performance.now() % 3200) / 1000).toFixed(3)}s`;
+    return `<section class="lot verre ${fa}" style="--decal:${decal}" aria-label="${esc(mot)}"><div class="etat">${esc(mot)}${fa === 'court' ? ' · le faisceau tourne' : fa === 'fige' ? ' · faisceau arrêté' : ''}</div>${contenu}</section>`;
+  }
+  function frise(S, m) {
+    const marques = S.restants.slice().sort((a, b) => a.cut - b.cut);
+    if (!marques.length && m.phase !== 'encours') return '';
+    const j = marques.map((r) => `<button class="jalon${r.type === 'vert' ? ' eau' : ''}" data-a="examiner" data-id="${r.id}"><b>${r.cut}</b><span>${r.type === 'vert' ? '◆ à examiner' : '○ différé'}</span></button>`).join('');
+    const ici = m.phase === 'encours' ? `<span class="jalon ici" aria-current="step"><b>${m.compte.cut}</b><span>en cours</span></span>` : '';
+    return `<div class="frise verre"><h2>Repères du lot · glisser, toucher pour examiner</h2><div class="piste" data-garder-defile="piste">${j}${ici}</div></div>`;
+  }
+  function grille(m) {
+    const c = m.compte;
+    return `<dl class="grille"><div class="case verre"><dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd></div><div class="case verre"><dt>Cut en cours</dt><dd>${c.cut}</dd></div><div class="case verre"><dt><span class="rond" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="case verre${c.aExaminer ? ' eau' : ''}"><dt><span class="los" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>`;
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') return `<div class="bloc verre"><h2>File de parties</h2><button class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="r" aria-hidden="true"></span>Enchaîner plusieurs parties · ${f.active ? 'allumée' : 'éteinte'}</button>${f.active ? `<div class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb}</output><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, relues et corrigées une à une</span></div>` : ''}</div>`;
+    if (!f.active) return '';
+    let l = '';
+    for (let i = 1; i <= f.nb; i++) { const p = f.parties.find((x) => x.n === i), ici = i === f.courante && !f.finie; l += `<li class="${ici ? 'ici' : ''}"><span>Partie ${i}</span><span>${p ? `${p.poses} posés · ${p.differes} ○ · ${p.aControler} ◆` : ici ? (f.relecture ? 'relecture' : m.phase === 'arrete' ? 'arrêtée' : 'en cours') : 'à venir'}</span></li>`; }
+    return `<div class="bloc verre"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`}</h2><ol class="etapes">${l}</ol></div>`;
+  }
+  function principal(m, S) {
+    let h = nav(m);
+    if (m.vue === 'echo') return h + carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${m.echo.vus}</span><span class="s">cuts vus</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt>Dernier cut vu</dt><dd>${m.echo.dernier ?? '—'}</dd></div><div class="case verre"><dt>Mêmes choix</dt><dd>${m.echo.accord} / ${m.echo.vus}</dd></div></dl>` + actions(m.actions);
+    const c = m.compte;
+    if (m.file.alerte) h += alerte(m.file.alerte.titre, m.file.alerte.detail);
+    if (m.incident && m.incident.type !== 'reprise') h += alerte(m.incident.titre, m.incident.texte, m.incident.actions);
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      h += carteLot(m, `<p class="phrase">${esc(m.phrase)}</p><div class="bornes" style="margin-top:12px"><label>Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label><label>Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin"${b.finDePartie ? ' disabled' : ''}></label></div><button class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="r" aria-hidden="true"></span>Jusqu'à la fin de la partie</button>`);
+      h += actions(m.actions) + file(m);
+    } else if (m.phase === 'fin') {
+      h += carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${c.poses}</span><span class="s">posés</span></p><p class="phrase">${esc(m.phrase)}</p>`) + `<dl class="grille"><div class="case verre"><dt><span class="rond" aria-hidden="true"></span>Différés</dt><dd>${c.differes}</dd></div><div class="case verre${c.aExaminer ? ' eau' : ''}"><dt><span class="los" aria-hidden="true"></span>Verts à examiner</dt><dd>${c.aExaminer}</dd></div></dl>` + frise(S, m) + actions(m.actions) + file(m);
+    } else {
+      const av = c.total == null ? '<div class="avance inconnu" role="img" aria-label="Total inconnu"></div>' : `<div class="avance" role="img" aria-label="${Math.round(c.part * 100)} pour cent"><i style="width:${(c.part * 100).toFixed(1)}%"></i></div>`;
+      h += carteLot(m, `<p class="grand"><span class="n" data-valeur="n">${c.faits}</span><span class="s">sur ${esc(c.totalTexte)}</span></p>${av}<p class="phrase">${esc(m.phrase)}</p>`);
+      if (m.incident && m.incident.type === 'reprise') h += `<div class="bloc verre"><h2>${esc(m.incident.titre)}</h2><p style="margin:0">${esc(m.incident.texte)}</p></div>`;
+      h += actions(m.actions) + grille(m) + file(m) + frise(S, m);
+    }
+    if (m.message) h += `<p class="message verre" role="status">${esc(m.message)}</p>`;
+    return h + `<details class="legende verre"><summary>Légende</summary><p>Faisceau qui tourne : le lot tourne. Faisceau figé : pause. Pas de faisceau : rien ne tourne. ○ différé ; ◆ vert d'eau : vert à examiner. Trait tireté devant ESV : non relié.</p></details>`;
+  }
+  function reste(m) {
+    const l = m.restants.slice().sort((a, b) => a.cut - b.cut).map((r) => `<div class="reste verre"><div class="t">Cut ${r.cut} <span class="g${r.type === 'vert' ? ' eau' : ''}">${r.type === 'vert' ? '◆ vert à examiner' : '○ différé'}</span></div><p class="m">${esc(r.motif)}</p><div class="gestes"><button class="petit p" data-a="examiner" data-id="${r.id}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${r.id}">Ouvrir dans ESV</button></div></div>`).join('');
+    return nav(m) + carteLot({ ...m, phase: 'fin', titre: 'Ce qui reste' }, `<p class="grand"><span class="n" data-valeur="n">${m.restants.length}</span><span class="s">cuts à reprendre</span></p>`) + actions([{ a: 'retour', libelle: 'Retour au lot', rang: 'second' }]) + l + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
+  }
+  function coupe(r) {
+    const { pts, rails } = Demo.D.coupe(r.cut, 320);
+    const W = 360, H = 190, X = (x) => 14 + (x + 1) / 2 * (W - 28), Z = (z) => 30 - (z + 0.1) * 340;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${r.cut}">`;
+    for (const [x, z] of pts) s += `<circle cx="${X(x).toFixed(1)}" cy="${Z(z).toFixed(1)}" r="1.3" fill="var(--texte)" opacity=".8"/>`;
+    for (const rx of rails) s += `<line x1="${X(rx)}" y1="${Z(-0.16) - 26}" x2="${X(rx)}" y2="${Z(-0.16) + 2}" stroke="var(--eau)" stroke-width="3"${r.type === 'vert' ? '' : ' stroke-dasharray="3 4"'}/>`;
+    return s + '</svg>';
+  }
+  function examen(m) {
+    const r = m.examen;
+    return nav(m) + carteLot({ ...m, phase: 'fin', titre: r.type === 'vert' ? 'Vert à examiner' : 'Différé' }, `<p class="grand"><span class="n" data-valeur="n">${r.cut}</span><span class="s">cut</span></p><p class="phrase">${esc(r.motif)}. ${r.type === 'vert' ? 'Rails posés en vert d’eau.' : 'Rien de posé ; places envisagées en tireté.'}</p>`)
+      + `<div class="coupe verre">${coupe(r)}</div>` + actions([{ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second' }, { a: 'voirReste', libelle: 'Retour à la liste', rang: 'second' }]) + (m.message ? `<p class="message verre" role="status">${esc(m.message)}</p>` : '');
+  }
+
+  /* fond qui respire : trois nappes floues ; immobile en mouvement réduit */
+  function fond(t) {
+    const cv = document.getElementById('fond'), w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== w) { cv.width = w; cv.height = h; }
+    const ctx = cv.getContext('2d'), st = getComputedStyle(document.documentElement);
+    const tt = Demo.D.mouvementReduit() ? 0 : t / 9000;
+    ctx.fillStyle = st.getPropertyValue('--base'); ctx.fillRect(0, 0, w, h);
+    const nappes = [['--b1', 0.2 + Math.sin(tt) * 0.1, 0.18, 0.55], ['--b2', 0.85, 0.45 + Math.cos(tt * 1.3) * 0.1, 0.5], ['--b3', 0.3 + Math.cos(tt * 0.7) * 0.15, 0.85, 0.6]];
+    for (const [v, x, y, r] of nappes) {
+      const g = ctx.createRadialGradient(x * w, y * h, 0, x * w, y * h, r * Math.max(w, h));
+      g.addColorStop(0, st.getPropertyValue(v).trim()); g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    }
+    requestAnimationFrame(fond);
+  }
+  /* la frise garde sa position de défilement d'un rendu à l'autre, et se tire à la souris */
+  let defile = 0;
+  Demo.monter({
+    rendre(S, D) { const p = document.querySelector('.piste'); if (p) defile = p.scrollLeft; const m = D.modele(); if (m.vue === 'reste') return reste(m); if (m.vue === 'examen' && m.examen) return examen(m); return principal(m, S); },
+    apres() {
+      const p = document.querySelector('.piste'); if (!p) return; p.scrollLeft = defile;
+      let x0 = null, s0 = 0, bouge = false;
+      p.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; x0 = e.clientX; s0 = p.scrollLeft; bouge = false; });
+      p.addEventListener('pointermove', (e) => { if (x0 == null) return; if (Math.abs(e.clientX - x0) > 4) bouge = true; p.scrollLeft = s0 - (e.clientX - x0); });
+      p.addEventListener('pointerup', () => { x0 = null; });
+      p.addEventListener('click', (e) => { if (bouge) { e.stopPropagation(); e.preventDefault(); bouge = false; } }, true);
+    },
+  });
+  requestAnimationFrame(fond);
+})();
+</script>
+</body>
+</html>
