@@ -119,7 +119,9 @@
   const cells=cellules(capture,R);
   const P=paires(capture,cells,R);
   const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances},nPaires:P.length};
-  if(!P.length)return fin({...res,motif:'aucune-paire-forte',etat:R.mode==='differer'?'differer':'garde'});
+  /* Aucune paire forte nulle part (nuage pauvre) : absence de preuve, pas une preuve contre la pose : la commande du lot est gardée (ajustement écrit après
+   * l'examen, JOURNAL § 2.5 : 9 cuts des couples du 26/10, 0 faute parmi eux, 19 posés non jugés de la partie 20). */
+  if(!P.length)return fin({...res,etat:'garde',motif:'aucune-paire-forte'});
   const lot=P.find(p=>ecart(p,pose)<=R.presMm)||null,best=P[0];
   res.paireLot=lot,res.meilleure=best;
   if(R.mode==='differer'){

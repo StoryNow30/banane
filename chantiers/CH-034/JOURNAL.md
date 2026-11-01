@@ -126,3 +126,34 @@ Lecture (PROBABLE) : (1) **le déplacement depuis la pose de départ d'ESV n'est
 | C : remplacée par la meilleure paire large | **12, toutes à 20 mm au plus de la vérité** ; 1 différée | 0 (1 différée) | **0** | 0 (1 différée) |
 - ÉTABLI sur le réglage : la recherche large ne touche aucune pose fine ni acceptée ; elle retire ou corrige toutes les fautes du réglage. 4 fautes sur 13 ont une pose du lot qui n'est **aucune paire forte** de la recherche large (le lot a posé sur une cellule faible : L1 corrigée ou chaîne).
 - Les seuils ne sont pas modifiés. L'examen (§ 2.3) est ouvert une fois, ci-dessous, après ce commit.
+
+### 2.5 EXAMEN (ouvert une fois, 1/11 ; seuils du § 2.3 inchangés ; scripts du scratchpad, sorties hors dépôt)
+**A. Partie 20, cuts ≥ 8 000** (22 jugés : 8 fautes, 2 moyennes, 5 fines, 7 acceptations) :
+| Variante | fautes (8) | moyennes (2) | fines (5) | acceptations (7) |
+|---|---|---|---|---|
+| D différé | **6** (5 concurrence, 1 pose sans paire forte) ; 2 gardées | 0 | **0** | **0** |
+| C remplacé | **6, toutes à 20 mm au plus de la vérité** ; 2 gardées | 0 | 0 | 0 |
+Les 2 fautes gardées : la pose du lot est une paire forte et la paire de la vérité, présente, a un produit de pertes de plus de 1,5 × le sien (le faux rail est ici le mieux ajusté).
+
+**B. Les 8 autres couples du 26/10** (421 jugés : 1 faute, 15 moyennes, 146 fines, 259 acceptations) :
+| Variante | faute (1) | moyennes (15) | fines (146) | acceptations (259) |
+|---|---|---|---|---|
+| D différé | **1** (pose sans paire forte) | 5 (2 pose sans paire forte, 3 aucune paire forte) | 5 (1 concurrence, 2 pose sans paire forte, 2 aucune paire forte) | 18 (6 concurrence, 8 pose sans paire forte, 4 aucune paire forte) |
+| C remplacé | 1, à 20 mm | 0 | **1 remplacée à plus de 50 mm de la vérité** | **4 remplacées à plus de 50 mm** |
+
+**Critères écrits avant (§ 2.3), verdict :**
+- **D (différer) : TIENT.** Fautes différées à l'examen : **7 sur 9** (critère ≥ 5 ; Wilson [45 ; 94] %) ; fines et acceptations différées : 23 sur 417 (5,5 %, critère ≤ 10 %) ; aucune pose jugée déplacée. ÉTABLI sur l'examen.
+- **C (choisir) : NE TIENT PAS.** 7 fautes sur 9 corrigées à 20 mm, mais 5 poses justes (1 fine, 4 acceptations) remplacées par une paire à plus de 50 mm de la vérité : le critère « aucune dégradation » tombe. Mode rejeté pour l'autonomie (il reste dans le module, jamais livré allumé) ; il demanderait une seconde preuve (voisins, liste) avant de déplacer une pose : non cherché ici.
+- Puissance : 9 fautes à l'examen ; l'absence de dégradation est établie sur 439 jugés non fautifs (0 déplacé ; borne haute de Wilson 0,9 %).
+
+**Coût (D), partie 20 entière (721 posés, dont 549 non jugés) :** différés par D : 21 jugés (19 fautes, 1 moyenne, 1 acceptation) + 40 non jugés (7 concurrence, 14 pose sans paire forte, 19 aucune paire forte) = 61 (8,5 %) ; sans la branche « aucune paire forte » : 42 (5,8 %). Parmi les 549 posés non jugés, 21 sont signalés par concurrence ou absence de paire forte : PROBABLE, des fautes que l'Écho n'a pas vues (CH-015 : 544 posés sans Écho). Coût sur les lots récents : § 2.6.
+
+**Ajustement écrit APRÈS l'examen (conservateur, module `src/recherche-large.js`) :** la branche « aucune paire forte nulle part » (nuage pauvre : 9 jugés des couples, 0 faute ; 19 non jugés de la partie 20 ; 0 au réglage) rend désormais `garde` au lieu de `differer` : l'absence de paire forte n'est pas une preuve contre la pose. Effet : fautes différées inchangées (7 sur 9), fines et acceptations différées 17 sur 417 (4,1 %), coût partie 20 : 42 posés (5,8 %). Toute autre valeur de seuil reste celle du § 2.3.
+
+**Temps de calcul** (14 relances du moteur par cut, 3 processus en parallèle sur cette machine) : médiane 3,4 s, P90 7,5 s, max 33 s par cut ; seul, de l'ordre de 1,5 à 3 s (SUPPOSÉ : à mesurer au terrain, champ `ms` de l'événement `recherche-large`). Le réglage `zones` permet de limiter aux zones d'appareils de voie si le coût gêne.
+
+## 5. Piste L8 : la deuxième passe (1/11, ÉTABLI sur les journaux, module `src/recherche-large.js`)
+- Partie 6 du 31/10 (4.9.5.28), 2 cuts écrits par la passe à ≈ 111 et 115 mm du départ : **la pose écrite n'est aucune paire forte de leur nuage** (recherche large : 13 et 30 cellules fortes sur le rail gauche, 3 et 18 sur le droit, 1 et 5 paires au contrat, la meilleure à plus de 100 mm de la pose écrite). PROBABLE : les deux écritures sont fausses ; à juger à l'Écho. La garde A les avait laissées (loin du départ : > 100 mm, appuis non regardés).
+- Partie 0 de la test 24 (29/10), 2 cuts écrits (déplacements 54 et 38 mm) : paires fortes uniques (« garde », rapport 0,48 et 1,0).
+- Décision : la recherche large garde aussi la passe (clé `passe:true` du réglage, mode « différer » seul : une pose de la passe sans paire forte ou concurrencée n'est pas écrite, motif `recherche-large`). Branchée après la garde A, essai `tests/recherche-large-passe-sw.test.cjs`.
+- L'apprentissage des paramètres L1 sur les corrections (piste L7) n'est pas lancé : le gisement des fautes est traité par le nuage, et 51 posés L1 jugés sur la partie 20 ne suffisent pas à réapprendre un modèle (puissance).

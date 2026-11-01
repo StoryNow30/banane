@@ -90,6 +90,12 @@ test('mode choisir : pose du lot sur un leurre moins bon → remplacée par la v
  assert.equal(g.etat,'garde');
 });
 
+test('nuage sans aucune paire forte (points trop rares) : garde, motif aucune-paire-forte (absence de preuve, pas une preuve contre la pose)',()=>{
+ const cap=captureLeurre();cap.pointsSceneRelative=cap.pointsSceneRelative.filter((_,i)=>i%9===0);cap.visibleByClipBoxes=cap.pointsSceneRelative.map(()=>true);
+ const d=RL.decider({capture:cap,positions:{left:pos(cap,'left',...V('left')),right:pos(cap,'right',...V('right'))},R});
+ assert.equal(d.etat,'garde',JSON.stringify(RL.resumer(d)));assert.equal(d.motif,'aucune-paire-forte');assert.equal(d.nPaires,0);
+});
+
 test('pureté : aucune lecture des réglages globaux, entrée illisible = garde (une panne ne change jamais la commande)',()=>{
  const avant=globalThis.BananeSettings;globalThis.BananeSettings={lot:{rechercheLarge:{actif:true,mode:'choisir'}}};
  try{
