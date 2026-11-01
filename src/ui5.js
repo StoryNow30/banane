@@ -241,13 +241,17 @@
     return { id: C.id, etat: C.etat, listes, courant: C.courant || null, ouverte: C.etat === 'ouverte' && miens && ECHO_OUVERT.includes(n?.status),
       comptes: { total: tout.length, aCorriger: tout.filter(x => x.groupe === 'corriger').length, aPoser: tout.filter(x => x.groupe === 'poser').length, corrige: k('corrige'), valide: k('valide'), vu: k('vu'), enCours: k('en-cours'), traites: k('corrige') + k('valide') },
       partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
+      /* CH-035 : Aurore entre les parties (réglage allumé à la naissance de la liste) : parcours et état par partie (src/correction-liste.js, `parcours`). */
+      /* Convention de CH-036 (relayée par l'intégrateur, 01/11) : `entreParties` (booléen) et `passage` ({ etat: 'en-cours'|'refuse', vers, texte }, ou
+       * null). Réglage éteint : `entreParties:false`, `passage:null`, et l'écran de la 4.9.5.29. */
+      entreParties: C.entreParties === true,
+      passage: C.entreParties !== true ? null : C.changement ? { etat: 'en-cours', vers: C.changement.vers, texte: `Passage à la partie ${C.changement.vers} dans ESV…` }
+        : C.passage && C.passage.etat === 'refuse' ? { etat: 'refuse', vers: C.passage.vers, texte: C.passage.texte } : null,
+      ...(C.entreParties === true && CL?.parcours ? { changement: C.changement || null,
+        parcours: CL.parcours(listes, { partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null, courant: C.courant || null }) } : {}),
       ouvrir: { etat: ce?.dataset?.etat || '', texte: ce ? String(ce.textContent || '').trim() : '' },
       boutons: { demarrer: bouton('correction-demarrer'), ouvrir: bouton('correction-ouvrir'), terminer: bouton('correction-terminer'), fermer: bouton('correction-fermer') },
-      telecharger: (b => b && b.visible ? b : null)(bouton('native-download')),
-      /* CH-036 : la traversée des parties de CH-035 (convention du 01/11) : `entreParties` (le réglage `correctionEntreParties`) et `passage`
-       * { etat: 'en-cours' | 'refuse' | null, vers, texte }. Absents (CH-035 non fusionné, ou réglage éteint) : l'écran de la 4.9.5.29. */
-      entreParties: C.entreParties === true,
-      passage: C.passage && typeof C.passage === 'object' ? { etat: ['en-cours', 'refuse'].includes(C.passage.etat) ? C.passage.etat : null, vers: C.passage.vers ?? null, texte: String(C.passage.texte || '') } : null };
+      telecharger: (b => b && b.visible ? b : null)(bouton('native-download')) };
   }
   function instantane(s) {
     const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';

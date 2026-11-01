@@ -415,6 +415,12 @@
    * été vu sur un vrai ESV : premier essai avec 2 parties, l'opérateur présent. `actif:false` : aucune action de la file n'existe, le panneau et les
    * exports sont ceux d'avant. `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
   const file = Object.freeze({ actif: true, changementBorneMs: 60000 });
+  /* CH-035 — L'AURORE ENTRE LES PARTIES D'UNE CONSTELLATION (correction dans Orbite après une file, chantiers/CH-035/CONCEPTION.md). Allumé, « Ouvrir »
+   * un cut d'une autre partie change de partie par les boutons d'ESV (`changerPartie` de l'adaptateur, ses modes ; aucune touche, aucune validation,
+   * aucun SKIP), Écho en pause pendant le trajet, puis va au cut. ÉTEINT tant que l'opérateur ne l'a pas éprouvé sur un vrai poste : éteint, le
+   * comportement est celui de la 4.9.5.29 (seule la partie chargée s'ouvre). `changementBorneMs` : borne du changement par le lien (les gestes : 15 s) ;
+   * `gotoBorneMs` : borne du retour au cut juste après le changement (compteur de la partie pas encore lu) ; `pollMs` : pas des relectures. */
+  const correctionEntreParties = Object.freeze({ actif: false, changementBorneMs: 60000, gotoBorneMs: 15000, pollMs: 500 });
   /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
    * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
    * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.
@@ -552,5 +558,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file, correctionEntreParties });
 });

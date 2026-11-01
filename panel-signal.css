@@ -411,7 +411,7 @@ body.ui5:has(#ui5.u-signal){background:#121314}
 #ui5.u-signal .sg-etoile .sg-mono{font-size:var(--t-texte);line-height:var(--l-texte);font-weight:500}
 #ui5.u-signal .sg-etoile small{font-size:var(--t-meta);line-height:var(--l-meta);color:var(--encre2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #ui5.u-signal .sg-etoile[data-etat="a-venir"]{color:var(--encre2)}
-#ui5.u-signal [data-etat="a-venir"]>.sg-astre path{fill:none;stroke-width:1.2}
+#ui5.u-signal [data-etat="a-venir"]>.sg-astre path,#ui5.u-signal .sg-corr-partie[data-etat="a-faire"]>.sg-astre path{fill:none;stroke-width:1.2}
 #ui5.u-signal .sg-etoile[data-etat="en-cours"] .sg-astre{color:var(--vivant);border-color:color-mix(in srgb,var(--vivant) 50%,transparent)}
 #ui5.u-signal .sg-etoile[data-etat="en-cours"] small{color:var(--vivant)}
 #ui5.u-signal [data-etat="interrompue"]>.sg-astre{color:var(--attention)}

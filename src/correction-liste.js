@@ -29,6 +29,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const VERSION = 'correction-liste-1';
+  const VERSION_PARCOURS = 'correction-parcours-1';
   const DEPART_VERT_S = 30, FIN_APRES_ARRET_S = 5;
   /* Ordre de force (le premier est le plus probablement faux). */
   const SIGNAUX = ['passe-ecrite', 'apres-differe', 'sans-appui', 'garde-suivant', 'relecture', 'differe'];
@@ -130,5 +131,41 @@
     return { lignes, comptes: { total: lignes.length, ...c, traites: c.corrige + c.valide } };
   }
 
-  return { VERSION, SIGNAUX, LIBELLE, construire, statutDe, bilan, lotDe };
+  /* CH-035 — PARCOURS DE L'AURORE SUR PLUSIEURS PARTIES (chantiers/CH-035/CONCEPTION.md § 2). `listes` : [{ partie, lignes: [{ part, cut, statut }] }]
+   * (les lignes de `bilan`) ; options : `partieAffichee` (lue dans ESV), `courant` ({ part, cut } du dernier cut ouvert). Aucun état gardé : tout se lit
+   * sur les statuts, donc sur les visites d'Écho (reprise après un arrêt sans curseur). Ordre : les parties dans l'ordre des listes (celui de la
+   * Constellation), puis les cuts par numéro croissant. Suivant : premier cut « à faire » de la partie de départ (celle du cut courant, sinon la partie
+   * affichée) après le cut courant, puis le reste de cette partie, puis les parties suivantes, puis retour au début. État d'une partie : `faite` (plus
+   * rien « à faire » ni « en cours »), `en-cours` (cut ouvert, partie du cut courant ou déjà entamée), `a-faire`. */
+  function parcours(listes, options = {}) {
+    const parts = [], par = new Map();
+    for (const l of listes || []) for (const x of (l && l.lignes) || []) {
+      if (!x || !entier(x.part) || !entier(x.cut)) continue;
+      if (!par.has(x.part)) { par.set(x.part, new Map()); parts.push(x.part); }
+      const m = par.get(x.part); if (!m.has(x.cut)) m.set(x.cut, x.statut || 'a-faire');
+    }
+    const ordre = parts.flatMap(p => [...par.get(p).entries()].sort((a, b) => a[0] - b[0]).map(([cut, statut]) => ({ part: p, cut, statut })));
+    const C = options.courant && entier(options.courant.part) && entier(options.courant.cut) ? options.courant : null;
+    const depart = C ? C.part : entier(options.partieAffichee) ? options.partieAffichee : null;
+    const i0 = parts.indexOf(depart), tour = i0 < 0 ? parts : [...parts.slice(i0), ...parts.slice(0, i0)];
+    const aFaire = x => x.statut === 'a-faire';
+    /* Le cut ouvert n'est jamais le suivant, même avant que sa visite d'Écho soit enregistrée. */
+    const ouvert = x => C && x.part === C.part && x.cut === C.cut;
+    let suivant = null;
+    for (const p of tour) {
+      const cuts = ordre.filter(x => x.part === p && aFaire(x) && !ouvert(x));
+      const apres = p === depart && C && C.part === p ? cuts.filter(x => x.cut > C.cut) : [];
+      const x = apres[0] || cuts[0];
+      if (x) { suivant = { part: x.part, cut: x.cut }; break; }
+    }
+    const parties = parts.map(p => {
+      const L = ordre.filter(x => x.part === p), faits = L.filter(x => x.statut === 'corrige' || x.statut === 'valide').length;
+      const reste = L.some(x => aFaire(x) || x.statut === 'en-cours');
+      const entamee = L.some(x => !aFaire(x)) || (C && C.part === p);
+      return { partie: p, etat: !reste ? 'faite' : entamee ? 'en-cours' : 'a-faire', faits, total: L.length };
+    });
+    return { version: VERSION_PARCOURS, ordre: ordre.map(({ part, cut }) => ({ part, cut })), suivant, parties };
+  }
+
+  return { VERSION, VERSION_PARCOURS, SIGNAUX, LIBELLE, construire, statutDe, bilan, lotDe, parcours };
 });

@@ -148,13 +148,14 @@ test('autre partie, traversée éteinte (4.9.5.29) : « Ouvrir » grisé avec la
   assert.doesNotMatch(h, /Passer à la partie/);
 });
 
-test('autre partie, traversée allumée (CH-035, `entreParties`) : « Passer à la partie 5 · cut 14 » ; passage en cours : écran verrouillé', async () => {
+/* Depuis la fusion de CH-035 : `passage` est dérivé par src/ui5.js de la vue du service worker (`changement` en cours, ou `passage` refusé). */
+test('autre partie, traversée allumée (CH-035, `entreParties`) : « Passer à la partie 5 · cut 13 » (le parcours de CH-035 : cuts par numéro croissant) ; passage en cours : écran verrouillé', async () => {
   const native = { status: 'RUNNING', correction: { id: 'C1' }, visits: [] };
   const p = await aurore({ correction: correction('ouverte', { entreParties: true }), native, current: { identity: { part: 7, cut: 3 } } });
   p.ui.agir('sg:onglet-correction'); let h = p.hote.innerHTML;
-  assert.match(h, /class="sg-principal" data-act="sg:corr-ouvrir:5:14"[^>]*>.*Passer à la partie 5 · cut 14/s);
+  assert.match(h, /class="sg-principal" data-act="sg:corr-ouvrir:5:13"[^>]*>.*Passer à la partie 5 · cut 13/s);
   assert.match(h, /data-act="sg:corr-ouvrir:5:15"/, '« Ouvrir » sert aussi pour une autre partie');
-  p.rendu(etat5({ correction: correction('ouverte', { entreParties: true, passage: { etat: 'en-cours', vers: 5, texte: '' } }), native, current: { identity: { part: 7, cut: 3 } } }));
+  p.rendu(etat5({ correction: correction('ouverte', { entreParties: true, changement: { vers: 5 } }), native, current: { identity: { part: 7, cut: 3 } } }));
   h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Passage</); assert.match(h, /Vers la partie <span class="sg-mono">5<\/span>/);
   assert.doesNotMatch(h, /data-act="sg:corr-ouvrir/);

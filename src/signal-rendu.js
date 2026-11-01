@@ -659,11 +659,14 @@
         : cour.statut === 'corrige' ? `Cut ${mono(cour.cut)} corrigé · ${cour.rails > 1 ? '2 rails' : '1 rail'} · visite enregistrée par Écho${suite}`
         : cour.statut === 'valide' ? `Cut ${mono(cour.cut)} validé tel quel · visite enregistrée par Écho${suite}`
         : `Cut ${mono(cour.cut)} ouvert dans ESV · corrige-le, puis valide dans ESV ; Écho enregistre la visite`;
+      /* CH-035 : traversée allumée, le suivant est celui du parcours (partie affichée d'abord, puis les suivantes), même dans une autre partie. */
+      const suivantP = trav && C.parcours ? (C.parcours.suivant ? tout.find(l => l.part === C.parcours.suivant.part && l.cut === C.parcours.suivant.cut) || null : null) : undefined;
+      const suivantF = suivantP !== undefined ? suivantP : suivant;
       const terminer = { texte: 'Terminer l’Aurore', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) };
-      const autrePartie = suivant && aff !== null && suivant.part !== aff;
+      const autrePartie = suivantF && aff !== null && suivantF.part !== aff;
       Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: 'En cours', phrase, droite: `${pluriel(k.corrige, 'corrigé', 'corrigés')} · ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}`,
-        principal: suivant ? { texte: autrePartie ? `Passer à la partie ${suivant.part} · cut ${suivant.cut}` : `Suivant · cut ${suivant.cut}`, act: `sg:corr-ouvrir:${suivant.part}:${suivant.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
-        secondaires: suivant ? [terminer] : [], note: autrePartie ? 'Ariane change de partie par les boutons d’ESV, attend la partie chargée, puis ouvre le cut. Elle ne valide rien.' : '' });
+        principal: suivantF ? { texte: autrePartie ? `Passer à la partie ${suivantF.part} · cut ${suivantF.cut}` : `Suivant · cut ${suivantF.cut}`, act: `sg:corr-ouvrir:${suivantF.part}:${suivantF.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
+        secondaires: suivantF ? [terminer] : [], note: autrePartie ? 'Ariane change de partie par les boutons d’ESV, attend la partie chargée, puis ouvre le cut. Elle ne valide rien.' : '' });
     } else if (C.etat === 'ouverte') {
       Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Aurore interrompue', phrase: 'La séance Écho de l’Aurore n’est plus active · termine l’Aurore pour inscrire le bilan',
         principal: { texte: 'Terminer l’Aurore', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) } });
@@ -689,15 +692,18 @@
     const ligne = (l, i) => { const det = detailSignal(l);
       return `<div class="sg-ligne sg-corr" data-k="c:${esc(l.part)}:${esc(l.cut)}" style="--i:${Math.min(i, 12)}" role="listitem"><span class="sg-cut">${esc(l.cut)}</span><span class="sg-motif"><span class="sg-sig">${esc(LIB_SIGNAL[l.signaux?.[0]] || '')}</span>${det ? `<small>· ${esc(det)}</small>` : ''}</span><span class="sg-statut" data-statut="${esc(l.statut)}">${esc(STATUT_TEXTE(l))}</span>${outil(l)}</div>`; };
     const plusieurs = C.listes.length > 1;
-    const etatPartie = L => L.lignes.every(revu) ? 'faite' : L.lignes.some(l => l.statut === 'en-cours') || (ouverte && L.lignes.some(revu)) ? 'en-cours' : 'a-venir';
+    const etatPartie = L => L.lignes.every(revu) ? 'faite' : L.lignes.some(l => l.statut === 'en-cours') || (ouverte && L.lignes.some(revu)) ? 'en-cours' : 'a-faire';
     const notePartie = (L, e) => e === 'faite' ? 'revue' : aff !== null && L.partie === aff ? 'affichée dans ESV' : aff !== null && ouverte && !trav ? 'à ouvrir dans ESV' : '';
     let liste = '';
     for (const L of C.listes) {
-      const e = etatPartie(L), A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser'), note = notePartie(L, e);
-      liste += `<div class="sg-corr-partie" data-etat="${e}">${ETOILE}<b class="sg-mono">Partie ${esc(L.partie)}</b><span class="sg-n">${L.lignes.filter(revu).length} sur ${L.lignes.length}</span>${note ? `<span class="sg-d">${esc(note)}</span>` : ''}</div>`;
+      const A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser');
+      /* CH-035 : l'état par partie du parcours (à faire, en cours, faite) quand la traversée est allumée ; sinon, calculé ici. Habillage : CH-036. */
+      const EP = trav && plusieurs ? (C.parcours?.parties || []).find(x => x.partie === L.partie) : null;
+      const e = EP ? EP.etat : etatPartie(L), note = notePartie(L, e);
+      liste += `<div class="sg-corr-partie" data-partie="${esc(L.partie)}" data-etat="${esc(e)}">${ETOILE}<b class="sg-mono">Partie ${esc(L.partie)}</b><span class="sg-n">${L.lignes.filter(revu).length} sur ${L.lignes.length}</span>${note ? `<span class="sg-d">${esc(note)}</span>` : ''}</div>`;
       if (C.etat === 'terminee') { const c = st => L.lignes.filter(l => l.statut === st).length;
         liste += `<p class="sg-corr-bilan">${esc([pluriel(c('corrige'), 'corrigé', 'corrigés'), pluriel(c('valide'), 'validé tel quel', 'validés tels quels'), pluriel(c('vu'), 'vu sans validation', 'vus sans validation')].join(' · '))}</p>`; continue; }
-      if (plusieurs && e === 'faite' && ouverte) continue;
+      /* Une partie revue ne se replie pas (écart au dessin) : l'opérateur doit pouvoir revenir sur un de ses cuts (retour en arrière de CH-035). */
       liste += `<div class="sg-section"><span>À corriger</span><span class="sg-n">${A.length}</span><span class="sg-d">posés qu’Ariane juge probablement faux</span></div>${A.length ? A.map(ligne).join('') : '<div class="sg-vide">Aucun posé signalé.</div>'}`;
       if (P.length) liste += `<div class="sg-section"><span>À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">laissés par le lot</span></div>${P.map(ligne).join('')}`;
     }
