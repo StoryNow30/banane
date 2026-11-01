@@ -46,15 +46,15 @@ async function lancerParLaBoite(m) {
   await m.pan.click('#ui5 [data-act="sg:file"]'); await m.pan.waitForSelector('#ui5 .sg-boite');
   await m.pan.click('#ui5 .sg-boite [data-act="sg:file-n:2"]'); await dormir(150);
   await m.pan.click('#ui5 .sg-boite [data-act="legacy:file-principal"]');
-  await m.pan.waitForFunction(() => /Lancer la file/.test(document.querySelector('#ui5 .sg-boite [data-act="legacy:file-principal"]')?.textContent || ''));
+  await m.pan.waitForFunction(() => /Lancer la Constellation/.test(document.querySelector('#ui5 .sg-boite [data-act="legacy:file-principal"]')?.textContent || ''));
   const r = await m.pan.locator('#ui5 .sg-boite [data-act="legacy:file-principal"]').boundingBox();
   await m.pan.mouse.click(r.x + r.width / 2, r.y + r.height / 2);
   return r;
 }
-/* La file est dans son lot, le lot tourne, et l'écran de Signal le dit. */
+/* La file est dans son lot, le lot tourne, et l'écran de Signal le dit : le bandeau d'Orbite, ou (CH-036) l'étoile vivante de l'onglet Constellation. */
 async function attendreLotDeFile(m) {
   for (let i = 0; i < 60; i++) { const f = (await m.api('file-etat')).file, b = (await m.api('view')).batch;
-    if (f?.etat === 'lot' && b?.state === 'RUNNING' && await m.pan.isVisible('#ui5 .sg-file')) return; await dormir(250); }
+    if (f?.etat === 'lot' && b?.state === 'RUNNING' && (await m.pan.isVisible('#ui5 .sg-file') || await m.pan.isVisible('#ui5 .sg-onglet-file .sg-etoile[data-etat="en-cours"]'))) return; await dormir(250); }
   throw Error('la file n’est pas entrée dans son lot');
 }
 
@@ -87,7 +87,7 @@ test('CH-026 · « Arrêter la file » se confirme : un clic ne fait que demande
     const p = await centre(m.pan, sel);
     await m.pan.mouse.dblclick(p.x, p.y); await dormir(400);
     assert.equal((await m.api('file-etat')).file?.etat, 'lot', 'un double clic ne vaut pas confirmation');
-    assert.match(await m.pan.textContent(sel), /Confirmer l’arrêt de la file/);
+    assert.match(await m.pan.textContent(sel), /Confirmer l’arrêt de la Constellation/);
     await dormir(700); await m.pan.click(sel);
     let f = null; for (let i = 0; i < 40; i++) { f = (await m.api('file-etat')).file; if (f?.etat === 'arret') break; await dormir(250); }
     assert.equal(f?.etat, 'arret'); assert.equal(f.motifFin?.code, 'operateur');
@@ -111,7 +111,7 @@ test('CH-026 · onglet « File » : lancer, arrêter (confirmé), puis « Repren
     assert.equal(f?.etat, 'arret'); assert.deepEqual({ ...f.reprise }, { rang: 0, part: 23, reste: 2 }, 'la partie 23, interrompue, est à refaire');
     for (let i = 0; i < 40; i++) { const b = (await m.api('view')).batch; if (b && b.state !== 'RUNNING') break; await dormir(250); }
     await m.pan.waitForSelector('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]', { timeout: 5000 });
-    assert.match(await m.pan.textContent('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]'), /Reprendre la file · 2 parties restantes/);
+    assert.match(await m.pan.textContent('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]'), /Reprendre à la partie \d+ · 2 restantes/);
     await m.pan.click('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]');
     await attendreLotDeFile(m);
     const g = (await m.api('file-etat')).file; assert.deepEqual([...g.plan], [23, 24]); assert.equal(g.rang, 0);

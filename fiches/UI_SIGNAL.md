@@ -83,3 +83,14 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
   - en compact (moins de 480 px), le logo s'efface et la puce garde sa pastille ;
   - entre 480 et 560 px, le nom « Ariane » s'efface.
 - **Essais** : `tests/ui5-correction.test.cjs`, `tests/ui5-navigateur-signal-correction.test.cjs`, `tests/esv-maquette/correction-signal.test.cjs`.
+
+## CH-036 : Constellation et Aurore
+
+- **Noms** (D-274, décisions de l'opérateur du 01/11) : l'onglet de la file de parties s'appelle « Constellation », celui de la correction « Aurore ». Les libellés que l'opérateur lit changent ; les identifiants (`file*`, `correction*`, `sg:onglet-file`, `sg:onglet-correction`, `#file-*`, `#correction-*`), les messages, l'export et le journal ne changent pas. Les textes écrits par `panel.js` (carte d'origine) sont traduits dans `src/signal-rendu.js` (`vf`) : rattrapage (deuxième passe), à poser (différés), passage (changement de partie), sautés (skipped).
+- **Dessin** : Figma, fichier Signal, page « CH-036 · Constellation et Aurore » (48 fenêtres, 600 et 360, sombre et clair).
+- **Constellation** : les étoiles, une par partie (à venir, en cours, faite, interrompue, alerte), reliées par le fil ; sous l'étoile en cours, ses quatre temps (Pose, Rattrapage, Relecture, Passage). Une action pleine : Lancer, Reprendre à la partie N, ou, à la fin, « Ouvrir l'Aurore · N cuts ». Puis, visibles d'emblée : le bilan par partie (chiffres, puis une ligne de motifs en clair) et les départs des parties. Le bilan structuré vient de la vue `fileParties.bilan` (`src/ui5.js`, `parties`).
+- **Aurore** : l'horizon (revus sur total, une portion par partie), la liste groupée par partie puis « à corriger » / « à poser » ; le cut ouvert est la seule ligne vivante ; « Suivant · cut N ». Terminée : le bilan par partie, l'export en action pleine.
+- **Traversée des parties (CH-035)** : Signal lit `snap.correction.entreParties` (booléen) et `snap.correction.passage` { etat: 'en-cours' | 'refuse' | null, vers, texte }. Allumée : « Ouvrir » sert aussi pour une autre partie, « Passer à la partie N · cut M » ; passage en cours : écran verrouillé. Absente ou éteinte : l'écran de la 4.9.5.29 (« Ouvre la partie N dans ESV »).
+- **Orbite** : en fin de lot, la ligne « Aurore » et « Ouvrir l'Aurore · N cuts » en action pleine (« Voir ce qui reste » en second). Bandeau et boîte : « Constellation ».
+- **Barre compacte** (< 480 px) : la bascule a son propre rang sous la barre, pleine largeur, les quatre libellés gardés.
+- **Essais** : `tests/ui5-constellation-aurore.test.cjs` (vm), `tests/ui5-navigateur-signal-constellation-aurore.test.cjs` (navigateur, 360 à 600 par pas de 40, sombre et clair).

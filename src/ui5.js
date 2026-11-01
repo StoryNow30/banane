@@ -202,6 +202,13 @@
       choixTous: [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)),
       partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
       departs: departsFile(),
+      /* CH-036 : le bilan par partie, structuré (la vue `fileParties.bilan`, src/file-parties.js), pour la Constellation : posés, à poser, écrits au
+       * rattrapage, relecture, motifs (codes) et alertes. Lecture seule. */
+      parties: (f?.bilan || []).filter(p => p && typeof p === 'object').map(p => ({ part: p.part ?? null, rang: Number.isInteger(p.rang) ? p.rang : null, interrompue: !!p.interrompue,
+        poses: Number.isInteger(p.resume?.poses) ? p.resume.poses : null, differes: Number.isInteger(p.resume?.differes) ? p.resume.differes : null,
+        passe: p.passe ? { issue: p.passe.issue ?? null, ecrits: Number.isInteger(p.passe.ecrits) ? p.passe.ecrits : 0 } : null,
+        relecture: p.relecture ? { issue: p.relecture.issue ?? null, corriges: Number.isInteger(p.relecture.corriges) ? p.relecture.corriges : null } : null,
+        motifs: Array.isArray(p.motifs) ? p.motifs.filter(x => typeof x === 'string') : [], alertes: (p.alertes || []).map(a => String(a?.texte || '')).filter(Boolean) })),
     };
   }
   /* Les départs des parties, du plus récent au plus ancien (8 au plus) : validés, invalides, skippés (le compte « skipped » d'ESV au départ du lot,
@@ -236,7 +243,11 @@
       partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
       ouvrir: { etat: ce?.dataset?.etat || '', texte: ce ? String(ce.textContent || '').trim() : '' },
       boutons: { demarrer: bouton('correction-demarrer'), ouvrir: bouton('correction-ouvrir'), terminer: bouton('correction-terminer'), fermer: bouton('correction-fermer') },
-      telecharger: (b => b && b.visible ? b : null)(bouton('native-download')) };
+      telecharger: (b => b && b.visible ? b : null)(bouton('native-download')),
+      /* CH-036 : la traversée des parties de CH-035 (convention du 01/11) : `entreParties` (le réglage `correctionEntreParties`) et `passage`
+       * { etat: 'en-cours' | 'refuse' | null, vers, texte }. Absents (CH-035 non fusionné, ou réglage éteint) : l'écran de la 4.9.5.29. */
+      entreParties: C.entreParties === true,
+      passage: C.passage && typeof C.passage === 'object' ? { etat: ['en-cours', 'refuse'].includes(C.passage.etat) ? C.passage.etat : null, vers: C.passage.vers ?? null, texte: String(C.passage.texte || '') } : null };
   }
   function instantane(s) {
     const statuts = statutsLot(s), echo = lignesEcho(s), n = $('tabs'), mode = D.body?.dataset?.window || 'home';

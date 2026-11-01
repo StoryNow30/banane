@@ -67,8 +67,16 @@
     retour: '<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v5h5"/>', croix: '<path d="M6 6l12 12M18 6L6 18"/>', globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
     echo: '<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
     orbite: '<circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="9" ry="4.2" transform="rotate(-25 12 12)"/>',
+    aurore: '<path d="M5 16.5a7 7 0 0 1 14 0"/><path d="M3 19.5h18"/><path d="M12 4.5v2.5M5.6 8.1l1.6 1.6M18.4 8.1l-1.6 1.6"/>',
   };
   const ic = (n, cls) => SVG(IC[n] || '', cls);
+  /* CH-036 : le signe d'une partie de la Constellation (étoile à quatre branches), et le vocabulaire de l'opérateur (D-274, décisions du 01/11) :
+   * « Constellation » pour la file de parties, « Aurore » pour la correction ; rattrapage (deuxième passe), à poser (différés), passage (changement
+   * de partie), sautés (skipped). Les textes écrits par le panneau d'origine (panel.js) sont traduits ici ; les identifiants internes ne changent pas. */
+  const ETOILE = '<svg class="sg-astre" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .9C8.5 5 11 7.5 15.1 8 11 8.5 8.5 11 8 15.1 7.5 11 5 8.5.9 8 5 7.5 7.5 5 8 .9Z"/></svg>';
+  const vf = t => String(t || '').replace(/Relancer une file|Nouvelle file/g, 'Nouvelle Constellation').replace(/\b([Ll])a file\b/g, (x, l) => `${l}a Constellation`)
+    .replace(/File de parties/g, 'Constellation').replace(/deuxième passe/g, 'rattrapage').replace(/changement de partie/g, 'passage').replace(/relecture et correction/g, 'relecture')
+    .replace(/(\d+) différés?/g, '$1 à poser').replace(/écrits? par la passe/g, 'écrits au rattrapage');
   /* Glyphes d'état : la forme porte l'état, la couleur confirme. L'anneau « en cours » se remplit avec le temps passé sur le cut (0 → médiane) ;
    * src/ui5.js le met à jour entre deux rendus d'après `data-debut` et `data-med`. */
   const C = 2 * Math.PI * 9;
@@ -190,7 +198,8 @@
         actions();
         correctionFin(s, m);
         if (nDif(a) + (a.vertsNombre || 0) > 0) { const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'); m.secondaires = [ex ? versAction(ex) : null, ...m.secondaires.filter(b => b.act !== 'legacy:export-tout'), ...(m.principal && m.principal.act !== 'legacy:export-tout' ? [m.principal] : [])].filter(Boolean); m.principal = { texte: 'Voir ce qui reste', act: 'sg:tiroir', ic: 'liste' }; }
-        if (m.corrigerBouton) m.secondaires.unshift(m.corrigerBouton);
+        /* CH-036 (décision du 01/11) : « Ouvrir l'Aurore · N cuts » est l'action pleine ; « Voir ce qui reste » passe en second. */
+        if (m.corrigerBouton) { if (m.corrigerBouton.act === 'sg:onglet-correction' && !/en cours/.test(m.corrigerBouton.texte)) { if (m.principal) m.secondaires.unshift(m.principal); m.principal = { ...m.corrigerBouton, ic: 'aurore' }; } else m.secondaires.unshift(m.corrigerBouton); }
         break;
       }
       default:
@@ -229,49 +238,53 @@
   function fileModele(s, a, m, ui = {}) {
     const F = s.file;
     if (!F) return;
-    const P = F.principal, fp = P ? { texte: P.texte, act: 'legacy:file-principal', ic: /^Lancer/.test(P.texte) ? 'play' : '', inactif: !P.actif } : null;
+    const P = F.principal, fp = P ? { texte: vf(P.texte), act: 'legacy:file-principal', ic: /^Lancer/.test(P.texte) ? 'play' : '', inactif: !P.actif } : null;
     if (F.etat === 'repos') {
       if (m.etat !== 'pret' || m.glyphe !== 'pret') return;
-      if (F.prete && fp) { m.secondaires = [m.principal, ...m.secondaires].filter(Boolean); m.principal = fp; m.raison = m.raison || 'File préparée · relecture et correction après chaque partie. Rien n’est lancé.'; }
-      m.secondaires.push({ texte: `File de parties · ${F.prete ? 'préparée' : 'prête'}`, act: 'sg:file' });
+      if (F.prete && fp) { m.secondaires = [m.principal, ...m.secondaires].filter(Boolean); m.principal = fp; m.raison = m.raison || 'Constellation préparée · relecture après chaque partie. Rien n’est lancé.'; }
+      m.secondaires.push({ texte: `Constellation · ${F.prete ? 'préparée' : 'prête'}`, act: 'sg:file' });
       return;
     }
     const conf = !!ui.confirmeFile && F.actif;
-    const Se = F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la file' : F.secondaire.texte, act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif, confirme: conf } : null;
-    m.file = { etatTexte: F.etatTexte, phrase: F.phrase, secondaire: Se };
+    const Se = F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la Constellation' : vf(F.secondaire.texte), act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif, confirme: conf } : null;
+    m.file = { etatTexte: vf(F.etatTexte), phrase: vf(F.phrase), secondaire: Se };
     if (F.actif) {
       if (!sansArretLot(m.principal)) m.principal = null;
       m.secondaires = m.secondaires.filter(sansArretLot);
-      if (F.etat === 'changement' && !a.lotOuvert) Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Changement de partie', objet: null, fin: null, incident: null, verrou: true,
-        verrouTexte: 'Aucune action pendant le changement de partie', principal: null, secondaires: [], raison: '',
+      if (F.etat === 'changement' && !a.lotOuvert) Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Passage', objet: null, fin: null, incident: null, verrou: true,
+        verrouTexte: 'Aucune action pendant le passage à la partie suivante', principal: null, secondaires: [], raison: '',
         phrase: `Vers la partie ${mono(F.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` });
       return;
     }
-    /* CH-026 : file arrêtée, « Reprendre la file » (au rang interrompu, `#file-reprendre`) remplace « Préparer la reprise » : celui-ci oubliait la file, et
+    /* CH-026 : file arrêtée, « Reprendre » (au rang interrompu, `#file-reprendre`) remplace « Préparer la reprise » : celui-ci oubliait la file, et
      * l'écran suivant offrait le « Reprendre » du LOT, que l'opérateur a pris pour la reprise de la file (test 26, 14:22:11 puis 14:22:15). */
-    const rep = F.reprendre ? { texte: F.reprendre.texte, act: 'legacy:file-reprendre', ic: 'play', inactif: !F.reprendre.actif } : null;
+    const rep = F.reprendre ? { texte: texteReprise(F), act: 'legacy:file-reprendre', ic: 'play', inactif: !F.reprendre.actif } : null;
     /* CH-026-c : la file arrêtée pendant que le lot, la deuxième passe ou la relecture de sa partie tournent encore : jamais « arrêtée » nu à côté d'une
      * activité vivante, et rien à reprendre ni à relancer avant sa fin (le service worker le refuserait). */
     const enCours = activiteFile(s);
-    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: F.bilan, principal: enCours ? null : rep || fp,
-      ...(enCours ? { etatTexte: `attend la fin de ${enCours}`, attente: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la file s’est arrêtée et ne repartira pas seule ; reprends-la à sa fin.` } : {}) }); return; }
+    if (a.lotOuvert || ['alerte', 'p2', 'rel'].includes(m.etat)) { Object.assign(m.file, { alerte: F.alerte, bilan: (F.bilan || []).map(vf), principal: enCours ? null : rep || fp,
+      ...(enCours ? { etatTexte: `attend la fin ${finDe(enCours)}`, attente: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la Constellation s’est arrêtée et ne repartira pas seule ; reprends-la à sa fin.` } : {}) }); return; }
     const arret = F.etat === 'arret', ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout');
+    /* CH-036 (décision du 01/11) : à la fin d'une Constellation, l'Aurore est la suite : « Ouvrir l'Aurore · N cuts » est l'action pleine. */
+    const aur = !arret ? corrigerBouton(s) : null, plein = aur && !/en cours/.test(aur.texte) ? { ...aur, ic: 'aurore' } : null;
     m.file = null;
-    Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'File arrêtée' : 'File terminée',
-      phrase: esc(F.phrase), objet: null, fin: null, incident: F.alerte ? { texte: F.alerte } : null, verrou: false, raison: '', fileBilan: F.bilan,
-      principal: rep || fp, secondaires: [corrigerBouton(s), ex ? versAction(ex) : null, { texte: 'Onglet File de parties', act: 'sg:onglet-file' }].filter(Boolean) });
+    Object.assign(m, { glyphe: arret ? (F.alerte ? 'toi' : 'arrete') : 'fini', ton: arret ? (F.alerte ? 'alerte' : 'attention') : 'vivant', mot: arret ? 'Constellation arrêtée' : 'Constellation terminée',
+      phrase: esc(vf(F.phrase)), objet: null, fin: null, incident: F.alerte ? { texte: F.alerte } : null, verrou: false, raison: '', fileBilan: (F.bilan || []).map(vf),
+      principal: plein || rep || fp, secondaires: [plein ? rep || fp : corrigerBouton(s), ex ? versAction(ex) : null, { texte: 'Voir la Constellation', act: 'sg:onglet-file' }].filter(Boolean) });
   }
-  /* CH-028 : LA CORRECTION DANS ORBITE, annoncée sur l'écran de fin du lot (et de la file) : une ligne « À corriger » au bilan et le bouton « Corriger · N cuts »
-   * qui ouvre l'onglet « Correction ». Rien n'est lancé par cet écran. */
+  const texteReprise = F => { const R = F.reprise, n = R ? R.reste ?? R.restantes : null;
+    return R && R.part != null && Number.isInteger(n) ? `Reprendre à la partie ${R.part} · ${n} ${n > 1 ? 'restantes' : 'restante'}` : vf(F.reprendre?.texte || 'Reprendre la Constellation'); };
+  /* CH-028 : LA CORRECTION DANS ORBITE (l'Aurore, CH-036), annoncée sur l'écran de fin du lot (et de la file) : une ligne « Aurore » au bilan et le bouton
+   * « Ouvrir l'Aurore · N cuts » qui ouvre son onglet. Rien n'est lancé par cet écran. */
   const pluriel = (n, un, plusieurs) => `${n} ${n > 1 ? plusieurs : un}`;
   function corrigerBouton(s) {
     const C = s.correction; if (!C || C.etat === 'terminee') return null;
-    return { texte: C.etat === 'ouverte' ? 'Correction en cours' : `Corriger · ${C.comptes.aCorriger + C.comptes.aPoser} cuts`, act: 'sg:onglet-correction' };
+    return { texte: C.etat === 'ouverte' ? 'Aurore en cours' : `Ouvrir l’Aurore · ${C.comptes.aCorriger + C.comptes.aPoser} cuts`, act: 'sg:onglet-correction' };
   }
   function correctionFin(s, m) {
     const C = s.correction; if (!C) return;
-    if (C.etat === 'terminee') m.fin.push(['Correction', `<b>${esc(C.comptes.corrige)}</b> ${C.comptes.corrige > 1 ? 'corrigés' : 'corrigé'}, <b>${esc(C.comptes.valide)}</b> ${C.comptes.valide > 1 ? 'validés tels quels' : 'validé tel quel'} · dans l’export`]);
-    else m.fin.push(['À corriger', `<b>${esc(C.comptes.aCorriger)}</b> cuts · <b>${esc(C.comptes.aPoser)}</b> à poser`]);
+    if (C.etat === 'terminee') m.fin.push(['Aurore', `<b>${esc(C.comptes.corrige)}</b> ${C.comptes.corrige > 1 ? 'corrigés' : 'corrigé'}, <b>${esc(C.comptes.valide)}</b> ${C.comptes.valide > 1 ? 'validés tels quels' : 'validé tel quel'} · dans l’export`]);
+    else m.fin.push(['Aurore', `<b>${esc(C.comptes.aCorriger + C.comptes.aPoser)}</b> cuts à revoir : <b>${esc(C.comptes.aCorriger)}</b> à corriger, <b>${esc(C.comptes.aPoser)}</b> à poser`]);
     m.corrigerBouton = corrigerBouton(s);
   }
   function modeleEcho(s, a, g, m, partie) {
@@ -334,23 +347,23 @@
     return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des différés : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
   }
   /* CH-025 : le bandeau de la file (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de la file). */
-  const NOTE_FILE = 'Après chaque partie : <b>relecture et correction</b>, toujours <span class="sg-sep">·</span> aucun export automatique <span class="sg-sep">·</span> seul « Arrêter la file » l’arrête';
+  const NOTE_FILE = 'Après chaque partie : <b>relecture</b>, toujours <span class="sg-sep">·</span> aucun export automatique <span class="sg-sep">·</span> seul « Arrêter » l’interrompt';
   const bilanHtml = L => L?.length ? `<ol class="sg-file-bilan" aria-label="Bilan par partie">${L.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '';
   function fileHtml(m) {
     if (m.fileBilan) return bilanHtml(m.fileBilan);
     const F = m.file; if (!F) return '';
     const bt = (b, cls) => b ? `<button type="button" class="${cls}${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>` : '';
-    return `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>File de parties</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</p>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}${F.principal || F.secondaire ? `<div class="sg-file-bts">${bt(F.principal, 'sg-secondaire')}${bt(F.secondaire, 'sg-secondaire')}</div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`;
+    return `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>Constellation</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</p>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}${F.principal || F.secondaire ? `<div class="sg-file-bts">${bt(F.principal, 'sg-secondaire')}${bt(F.secondaire, 'sg-secondaire')}</div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`;
   }
-  /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer la file » (ne lance rien), puis « Lancer la file » (qui referme la boîte). */
+  /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer » (ne lance rien), puis « Lancer » (qui referme la boîte). */
   function boiteFileHtml(snap) {
     const F = snap.file; if (!F || F.etat !== 'repos') return '';
     const P = F.principal;
     const seg = F.choix.length ? `<span class="sg-seg" role="group" aria-label="Nombre de parties">${F.choix.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span>` : '';
-    return `<div class="sg-voile" data-k="voile-file" data-act="sg:fermer"></div><div class="sg-boite" data-k="file" role="dialog" aria-labelledby="sg-file-t"><span class="sg-t" id="sg-file-t">File de parties</span>
-<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${seg}</div>${F.phrase ? `<p class="sg-meta">${esc(F.phrase)}</p>` : ''}
-<p class="sg-meta">La relecture et la correction suivent chaque partie, toujours. Pas d’export automatique. Rien n’arrête la file que « Arrêter la file », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p>
-<div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}>${F.prete ? ic('play') : ''}<span>${esc(P.texte)}</span></button>` : ''}</div></div>`;
+    return `<div class="sg-voile" data-k="voile-file" data-act="sg:fermer"></div><div class="sg-boite" data-k="file" role="dialog" aria-labelledby="sg-file-t"><span class="sg-t" id="sg-file-t">Constellation</span>
+<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${seg}</div>${F.phrase ? `<p class="sg-meta">${esc(vf(F.phrase))}</p>` : ''}
+<p class="sg-meta">La relecture suit chaque partie, toujours. Pas d’export automatique. Rien n’arrête la Constellation que « Arrêter », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p>
+<div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}>${F.prete ? ic('play') : ''}<span>${esc(vf(P.texte))}</span></button>` : ''}</div></div>`;
   }
   function actionsHtml(m) {
     if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin de la deuxième passe')}</span></div>`;
@@ -416,18 +429,18 @@
   }
   function barreHtml(snap, m, ui) {
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
-    /* CH-026 : troisième onglet « File » (la file de parties) : une vue de Signal ; Orbite et Écho y redeviennent cliquables. */
+    /* CH-026 : troisième onglet (la file de parties, « Constellation » depuis CH-036) : une vue de Signal ; Orbite et Écho y redeviennent cliquables. */
     const surFile = ui.onglet === 'file' && !!snap.file, surAutre = surFile || (ui.onglet === 'correction' && !!snap.correction);
     const seg = (k, t) => { const choisi = !surAutre && m.activite === k, off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${choisi}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : choisi ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
-    const segFile = snap.file ? `<button type="button" role="tab" aria-selected="${surFile}"${surFile ? '' : ' data-act="sg:onglet-file"'}>File</button>` : '';
-    /* CH-028 : quatrième onglet « Correction », seulement quand une liste existe. */
+    const segFile = snap.file ? `<button type="button" role="tab" aria-selected="${surFile}"${surFile ? '' : ' data-act="sg:onglet-file"'}>Constellation</button>` : '';
+    /* CH-028 : quatrième onglet (la correction, « Aurore » depuis CH-036), seulement quand une liste existe. */
     const surCorr = ui.onglet === 'correction' && !!snap.correction;
-    const segCorr = snap.correction ? `<button type="button" role="tab" aria-selected="${surCorr}"${surCorr ? '' : ' data-act="sg:onglet-correction"'}>Correction</button>` : '';
+    const segCorr = snap.correction ? `<button type="button" role="tab" aria-selected="${surCorr}"${surCorr ? '' : ' data-act="sg:onglet-correction"'}>Aurore</button>` : '';
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
     /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
     const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
     const court = String(texte).split(' · ')[0];
-    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité"${segCorr ? ' data-onglets="4"' : ''}>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
+    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité"${segCorr ? ' data-onglets="4"' : segFile ? ' data-onglets="3"' : ''}>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
 <button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
@@ -442,15 +455,15 @@
     if (m.principal && !m.principal.occupe) add(m.principal.ic || 'play', m.principal.texte, m.principal.act, etat, m.principal.inactif ? m.raison || 'indisponible' : '', m.principal.danger);
     for (const b of m.secondaires) add(b.danger ? 'stop' : b.ic || 'coche', b.texte, b.act, '', b.inactif ? 'indisponible' : '', b.danger);
     /* CH-025 : pendant la file, « Arrêter la file » (bandeau) ; arrêtée pendant que le lot garde l'écran, son bouton de reprise ou de bilan. */
-    if (m.file?.secondaire) add('stop', m.file.secondaire.texte, m.file.secondaire.act, 'File de parties', m.file.secondaire.inactif ? 'indisponible' : '', true);
-    if (m.file?.principal) add('liste', m.file.principal.texte, m.file.principal.act, 'File de parties', m.file.principal.inactif ? 'indisponible' : '');
+    if (m.file?.secondaire) add('stop', m.file.secondaire.texte, m.file.secondaire.act, 'Constellation', m.file.secondaire.inactif ? 'indisponible' : '', true);
+    if (m.file?.principal) add('liste', m.file.principal.texte, m.file.principal.act, 'Constellation', m.file.principal.inactif ? 'indisponible' : '');
     add('liste', ui.tiroir ? 'Fermer le tiroir' : 'Voir ce qui reste', 'sg:tiroir', '');
     const ex = (snap.boutonsOrbite || []).find(b => b.id === 'export-tout');
     add('export', 'Exporter le dossier', 'legacy:export-tout', '', ex && ex.actif ? '' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant');
     const autre = m.activite === 'echo' ? 'orbite' : 'echo';
     add(autre === 'echo' ? 'echo' : 'orbite', autre === 'echo' ? 'Passer en Écho' : 'Passer en Orbite', `mode:${autre === 'echo' ? 'native' : 'automatic'}`, '', m.bascule.verrou ? m.bascule.raison : '');
-    if (snap.file && ui.onglet !== 'file') add('liste', 'Onglet File de parties', 'sg:onglet-file', '');
-    if (snap.correction && ui.onglet !== 'correction') add('liste', 'Onglet Correction', 'sg:onglet-correction', '');
+    if (snap.file && ui.onglet !== 'file') add('liste', 'Voir la Constellation', 'sg:onglet-file', 'file de parties');
+    if (snap.correction && ui.onglet !== 'correction') add('aurore', 'Voir l’Aurore', 'sg:onglet-correction', 'correction');
     add('reglages', 'Réglages', 'sg:reglages', '');
     add('globe', 'Onglets ESV', 'sg:esv', g.onglet || '');
     if (g.connexion?.reconnect?.visible) add('retour', 'Reconnecter ESV', 'legacy:reconnect', '', g.connexion.reconnect.actif ? '' : 'reconnexion en cours');
@@ -512,132 +525,193 @@
   const nP = n => `${n} ${n > 1 ? 'parties' : 'partie'}`;
   const milliers = v => Number.isInteger(v) ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : '';
   /* CH-026-c : l'activité de la partie qui tourne encore (le lot, la deuxième passe, la relecture), dite en clair ; null s'il n'y en a pas. */
-  const activiteFile = s => { const a = s.ar || {}; return a.etat === 'rel' ? 'la relecture' : a.etat === 'p2' ? 'la deuxième passe' : a.lotOuvert ? 'le lot' : null; };
+  /* CH-036 : en mots de l'opérateur (« le rattrapage » pour la deuxième passe) ; `finDe` accorde « de le » en « du ». */
+  const activiteFile = s => { const a = s.ar || {}; return a.etat === 'rel' ? 'la relecture' : a.etat === 'p2' ? 'le rattrapage' : a.lotOuvert ? 'le lot' : null; };
+  const finDe = x => x.startsWith('le ') ? `du ${x.slice(3)}` : `de ${x}`;
+  /* CH-036 : L'ONGLET « Constellation » (Figma, page « CH-036 · Constellation et Aurore », validée par l'opérateur le 01/11). Un objet : les étoiles, une par
+   * partie, reliées par le fil ; la partie en cours est la seule vivante, ses quatre temps dessous. Une action pleine. Puis, visibles d'emblée (décision
+   * du 01/11) : le bilan par partie, chaque partie suivie de sa ligne de motifs en clair, et les départs des parties. Les boutons restent ceux de CH-026
+   * (`#file-lancer`, `#file-reprendre`, `#file-secondaire`, `#file-n`). */
+  const ORDINAL = ['première', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième'];
+  const TEMPS = [['lot', 'Pose'], ['passe', 'Rattrapage'], ['relecture', 'Relecture'], ['changement', 'Passage']];
+  const MOTIF_CLAIR = { 'fin-normale': 'fin normale', 'partie-sans-rouge': 'aucun cut rouge, comptée comme faite', 'depart-sur-vert': 'départ sur un vert, rien devant',
+    'passe-arretee': 'rattrapage arrêté', 'relecture-arretee': 'relecture arrêtée', 'nombre-atteint': 'dernière partie', operateur: 'arrêtée par l’opérateur',
+    'ecriture-incertaine': 'pose écrite non validée', 'refus-lot': 'lot arrêté sur un refus', 'lot-non-demarre': 'lot non démarré', 'changement-impossible': 'passage impossible',
+    'commande-absente': 'passage impossible : commande absente', 'onglet-ferme': 'onglet ESV fermé', 'selecteur-illisible': 'sélecteur de parties illisible', 'esv-muet': 'ESV ne répond plus' };
+  const nb = (n, mot, mots) => `${n} ${Number(n) > 1 ? mots : mot}`;
+  function partieFile(b) {
+    const ch = [b.interrompue ? 'interrompue' : '', Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : '', Number.isInteger(b.differes) ? `${b.differes} à poser` : '',
+      b.passe?.ecrits > 0 ? `${b.passe.ecrits} au rattrapage` : '', Number.isInteger(b.relecture?.corriges) ? nb(b.relecture.corriges, 'corrigé', 'corrigés') : ''].filter(Boolean).join(' · ');
+    const pa = b.passe, ps = !pa || pa.issue === 'absente' ? '' : pa.ecrits > 0 ? '' : pa.issue === 'arretee' ? 'rattrapage arrêté' : pa.issue === 'erreur' ? 'rattrapage en erreur' : pa.issue === 'finie' ? 'rattrapage : rien d’écrit' : 'rattrapage en ombre, rien d’écrit';
+    const rl = b.relecture?.issue ? `relecture ${b.relecture.issue === 'finie' ? 'finie' : b.relecture.issue === 'arretee' ? 'arrêtée' : b.relecture.issue.replace(/-/g, ' ')}` : '';
+    const motifs = [...new Set((b.motifs || []).map(c => MOTIF_CLAIR[c] || c.replace(/-/g, ' ')))].filter(t => t !== 'rattrapage arrêté' || !ps.includes('arrêté'))
+      .filter(t => t !== 'relecture arrêtée' || !rl.includes('arrêtée'));
+    return { ch, motifs: [...motifs, ps, rl, ...(b.alertes || [])].filter(Boolean).join(' · '), etat: b.interrompue ? 'interrompue' : b.alertes?.length ? 'alerte' : 'faite' };
+  }
+  function etoilesFile(s, F) {
+    const plan = F.plan?.length ? F.plan : null, choisi = (F.choixTous || []).find(c => c.choisi)?.n, N = plan ? plan.length : F.n || choisi || 1, B = F.parties || [], R = F.reprise;
+    const L = [];
+    for (let i = 0; i < Math.min(N, 8); i++) {
+      const part = plan ? plan[i] : i === 0 ? F.partieAffichee : null, b = B.find(x => x.rang === i);
+      let e = 'a-venir', sous = plan ? 'à venir' : i === 0 ? 'affichée' : 'suivante';
+      if (F.actif && F.rang === i) { e = 'en-cours'; sous = F.etat === 'changement' ? 'passage' : 'en cours'; }
+      else if (b && !b.interrompue) { const p = partieFile(b); e = p.etat; sous = Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : 'faite'; }
+      else if ((b && b.interrompue) || (F.etat === 'arret' && R && R.rang === i)) { e = 'interrompue'; sous = 'à reprendre'; }
+      L.push({ e, num: part ?? (i ? `+${i}` : '?'), sous });
+    }
+    return L;
+  }
   function ongletFileModele(s, u) {
     const F = s.file, actif = !!F.actif, etat = F.etat, R = F.reprise, aff = F.partieAffichee;
-    const PH = { lot: 'lot en cours', passe: 'deuxième passe', relecture: 'relecture et correction', changement: 'changement de partie' };
-    const m = { glyphe: 'pret', ton: 'encre2', mot: 'File prête', phrase: '', bandeau: null, alerte: '', lancer: null, bilan: F.bilan || [], vide: '' };
-    const bt = (b, act, cls) => b ? { texte: b.texte, act, inactif: !b.actif, cls } : null;
-    const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout');
-    const lancer = bt(F.lancer, 'legacy:file-lancer', 'plein');
+    const m = { glyphe: 'pret', ton: 'encre2', mot: 'Prête', phrase: '', bandeau: null, alerte: '', lancer: null, temps: null, note: '' };
+    const bt = (b, act, cls, texte) => b ? { texte: texte || vf(b.texte), act, inactif: !b.actif, cls } : null;
+    const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'), exB = ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', inactif: !ex.actif, cls: 'second' } : null;
+    const lancer = bt(F.lancer, 'legacy:file-lancer', 'plein'), seg = F.choixTous || [];
     if (actif) {
-      const conf = !!u.confirmeFile;
-      Object.assign(m, { glyphe: 'cours', ton: 'vivant', mot: 'File en cours', phrase: `Partie ${(F.rang ?? 0) + 1} sur ${F.n ?? '?'} · partie ${F.part ?? F.vers ?? '?'} · ${PH[etat] || etat}`,
-        vide: 'Aucune partie finie pour l’instant.',
-        bandeau: { etatTexte: F.etatTexte, phrase: F.phrase, secondaire: F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la file' : F.secondaire.texte, act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif } : null } });
+      const conf = !!u.confirmeFile, k = TEMPS.findIndex(t => t[0] === etat), part = F.part ?? F.vers ?? '?';
+      Object.assign(m, { glyphe: 'cours', ton: 'vivant', mot: etat === 'changement' ? 'Passage' : 'En cours', temps: k,
+        phrase: etat === 'changement' ? `Vers la partie ${mono(F.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` : `Partie ${mono(part)}, la ${ORDINAL[F.rang ?? 0] || `${(F.rang ?? 0) + 1}ᵉ`} sur ${esc(F.n ?? '?')}`,
+        lancer: { seg: [], note: etat === 'lot' && s.ar?.cibles ? `Pose : ${esc(s.ar.traites ?? 0)} cuts sur ${esc(s.ar.cibles)} · le détail du lot est dans Orbite.` : '',
+          boutons: [{ texte: 'Suivre dans Orbite', act: 'mode:automatic', cls: 'second' }, F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la Constellation' : vf(F.secondaire.texte), act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif, cls: 'second', droite: true } : null].filter(Boolean) } });
       return m;
     }
-    const seg = F.choixTous || [];
     const enCours = activiteFile(s);
     if (etat === 'arret' && enCours) {
       /* CH-026-c : arrêtée pendant que l'activité de la partie tourne : la dire, et rien à reprendre ni à relancer avant sa fin. */
       const off = b => b && { ...b, inactif: true };
-      Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: `Attend la fin de ${enCours}`, phrase: esc(F.phrase), alerte: F.alerte,
-        lancer: { seg: [], note: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la file s’est arrêtée et ne repartira pas seule. Reprise et nouvelle file : à sa fin.`,
-          boutons: [off(bt(F.reprendre, 'legacy:file-reprendre', 'plein')), off(lancer && { ...lancer, cls: F.reprendre ? 'second' : 'plein' })].filter(Boolean) } });
+      Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: `Attend la fin ${finDe(enCours)}`, phrase: esc(vf(F.phrase)), alerte: F.alerte,
+        lancer: { seg: [], note: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la Constellation s’est arrêtée et ne repartira pas seule. Reprise et nouvelle Constellation : à sa fin.`,
+          boutons: [off(bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F))), off(lancer && { ...lancer, cls: F.reprendre ? 'second' : 'plein' })].filter(Boolean) } });
     } else if (etat === 'arret') {
-      const rep = bt(F.reprendre, 'legacy:file-reprendre', 'plein');
-      Object.assign(m, { glyphe: F.alerte ? 'toi' : 'arrete', ton: F.alerte ? 'alerte' : 'attention', mot: 'File arrêtée', phrase: esc(F.phrase), alerte: F.alerte,
-        lancer: { seg, note: R ? `La reprise part de la partie ${R.part} (rang ${R.rang + 1} sur ${F.n}) : ESV doit l’afficher. « Nouvelle file » part de la partie affichée.` : 'Tout est fait : une nouvelle file part de la partie affichée.',
+      const rep = bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F));
+      Object.assign(m, { glyphe: F.alerte ? 'toi' : 'arrete', ton: F.alerte ? 'alerte' : 'attention', mot: 'Arrêtée', phrase: esc(vf(F.phrase)), alerte: F.alerte,
+        lancer: { seg, note: R ? `ESV doit afficher la partie ${R.part} : ouvre-la, puis reprends. « Nouvelle Constellation » part de la partie affichée.` : 'Tout est fait : une nouvelle Constellation part de la partie affichée.',
           boutons: [rep, lancer && { ...lancer, cls: rep ? 'second' : 'plein' }].filter(Boolean) } });
     } else if (etat === 'fin') {
-      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'File terminée', phrase: esc(F.phrase),
-        lancer: { seg, note: 'Une nouvelle file part de la partie affichée dans ESV, sans recharger l’extension.', boutons: [lancer, ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', inactif: !ex.actif, cls: 'second' } : null].filter(Boolean) } });
+      const aur = corrigerBouton(s), plein = aur && !/en cours/.test(aur.texte) ? { texte: aur.texte, act: aur.act, cls: 'plein', ic: 'aurore' } : null;
+      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Terminée', phrase: esc(vf(F.phrase)),
+        lancer: { seg, note: 'Une nouvelle Constellation part de la partie affichée dans ESV, sans recharger l’extension.', boutons: [plein, lancer && { ...lancer, cls: plein ? 'second' : 'plein' }, exB].filter(Boolean) } });
     } else {
-      Object.assign(m, { phrase: aff !== null ? `Partie ${mono(aff)} affichée dans ESV · rien n’est lancé` : 'Aucune partie affichée dans ESV · rien n’est lancé', vide: 'Aucune file lancée depuis l’ouverture du panneau.',
-        lancer: { seg, note: `À partir de la partie affichée dans ESV${aff !== null ? ` (partie ${aff})` : ''}, puis les suivantes du sélecteur. Relecture et correction après chaque partie, toujours. Pas d’export automatique.`, boutons: [lancer].filter(Boolean) } });
+      Object.assign(m, { phrase: aff !== null ? `Partie ${mono(aff)} affichée dans ESV · rien n’est lancé` : 'Aucune partie affichée dans ESV · rien n’est lancé',
+        lancer: { seg, note: 'Après chaque partie : relecture, toujours. Aucun export automatique. Seul « Arrêter » interrompt la Constellation.', boutons: [lancer].filter(Boolean) } });
     }
     return m;
   }
   function ongletFileHtml(s, u) {
     const m = ongletFileModele(s, u), F = s.file;
-    const bouton = b => b ? `<button type="button" class="${b.cls === 'plein' ? 'sg-principal' : 'sg-secondaire sg-cadre'}${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${b.cls === 'plein' ? ic('play') : ''}<span>${esc(b.texte)}</span></button>` : '';
-    const titre = t => `<h2 class="sg-of-t">${esc(t)}</h2>`;
+    const bouton = b => b ? `<button type="button" class="${b.cls === 'plein' ? 'sg-principal' : 'sg-secondaire sg-cadre'}${b.danger ? ' sg-danger' : ''}${b.droite ? ' sg-a-droite' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${b.cls === 'plein' ? `${ic(b.ic || 'play')}<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
+    const titre = (t, d) => `<h2 class="sg-of-t"><span>${esc(t)}</span>${d ? `<span class="sg-of-d">${esc(d)}</span>` : ''}</h2>`;
     let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
-    if (m.bandeau) { const B = m.bandeau; h += `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>File de parties</b>${B.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(B.etatTexte)}</span>` : ''}</p>${B.phrase ? `<p>${esc(B.phrase)}</p>` : ''}${B.secondaire ? `<div class="sg-file-bts"><button type="button" class="sg-secondaire sg-danger" data-act="${esc(B.secondaire.act)}"${B.secondaire.inactif ? ' disabled' : ''}>${esc(B.secondaire.texte)}</button></div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`; }
     if (m.alerte) h += `<div class="sg-incident" role="alert"><p>${esc(m.alerte)}</p></div>`;
+    const E = etoilesFile(s, F);
+    h += `<ol class="sg-etoiles" aria-label="Parties de la Constellation" style="--n:${E.length}">${E.map(x => `<li class="sg-etoile" data-etat="${x.e}">${ETOILE}<span class="sg-mono">${esc(x.num)}</span><small>${esc(x.sous)}</small></li>`).join('')}</ol>`;
+    if (m.temps !== null && m.temps >= 0) h += `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < m.temps ? 'fait' : i === m.temps ? 'courant' : 'a-venir'}"${i === m.temps ? ' aria-current="step"' : ''}>${t[1]}</li>`).join('')}</ol>`;
     if (m.lancer) { const L = m.lancer;
-      h += `<section class="sg-of-sec" aria-label="Lancer la file">${titre('Lancer la file')}${L.seg.length ? `<div class="sg-of-ligne"><span>Nombre de parties</span><span class="sg-seg" role="group" aria-label="Nombre de parties">${L.seg.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span></div>` : ''}<p class="sg-meta">${esc(L.note)}</p>${L.boutons.length ? `<div class="sg-actions">${L.boutons.map(bouton).join('')}</div>` : ''}</section>`; }
-    h += `<section class="sg-of-sec" aria-label="Bilan de la file">${titre('Bilan de la file')}${m.bilan.length ? bilanHtml(m.bilan) : `<p class="sg-meta">${esc(m.vide)}</p>`}</section>`;
+      if (L.seg.length) h += `<div class="sg-of-ligne"><span>Nombre de parties</span><span class="sg-seg" role="group" aria-label="Nombre de parties">${L.seg.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span></div>`;
+      if (L.boutons.length) h += `<div class="sg-actions">${L.boutons.map(bouton).join('')}</div>`;
+      if (L.note) h += `<p class="sg-meta">${L.note}</p>`; }
+    const B = F.parties || [];
+    if (B.length) h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie', `${B.filter(b => !b.interrompue).length} sur ${F.n ?? B.length}`)}${B.map(b => { const p = partieFile(b);
+      return `<div class="sg-of-partie" data-etat="${p.etat}"><p class="sg-of-l">${ETOILE}<b class="sg-mono">Partie ${esc(b.part)}</b><span>${esc(p.ch)}</span></p>${p.motifs ? `<p class="sg-of-motifs">${esc(p.motifs)}</p>` : ''}</div>`; }).join('')}</section>`;
+    else if (F.bilan?.length) h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie')}${bilanHtml(F.bilan.map(vf))}</section>`;
     const D = F.departs || [];
-    h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">skippés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Chiffres de la liste d’ESV au départ de chaque lot ; skippés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ de partie noté pour l’instant.</p>'}</section>`;
-    return `<section class="sg-instrument sg-onglet-file" aria-live="polite" aria-label="File de parties">${h}</section>`;
+    h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">sautés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Chiffres de la liste d’ESV au départ de chaque partie ; sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
+    return `<section class="sg-instrument sg-onglet-file" aria-live="polite" aria-label="Constellation">${h}</section>`;
   }
-  /* CH-028 : L'ONGLET « Correction » (Figma, page « CH-028 · Correction dans Orbite » : liste proposée, cut ouvert dans ESV, correction enregistrée, liste
-   * terminée). D'après `snap.correction` (src/ui5.js). Ariane n'écrit rien dans ESV : l'opérateur corrige et valide lui-même, la séance Écho marquée enregistre ;
-   * « Ouvrir » ne sert que pendant la correction ouverte, sur la partie affichée dans ESV. */
-  const LIB_SIGNAL = { 'passe-ecrite': 'écrit par la deuxième passe', 'apres-differe': 'juste après un différé', 'sans-appui': 'posé sans appui', 'garde-suivant': 'voisin d’un cut gardé', relecture: 'la relecture le corrigerait', differe: 'différé' };
-  const MOTIF_DIFFERE = { 'garde-apres-differe': 'garde après un différé', candidat: 'candidat', 'gauge-out-of-contract': 'écartement hors contrat' };
+  /* CH-028, puis CH-036 : L'ONGLET « Aurore » (Figma, page « CH-036 · Constellation et Aurore ») : l'horizon (revus sur total, une portion par partie),
+   * la liste groupée par partie, puis « à corriger » et « à poser » ; le cut ouvert est la seule ligne vivante ; l'action pleine est toujours la suivante.
+   * D'après `snap.correction` (src/ui5.js). Ariane n'écrit rien dans ESV : l'opérateur corrige et valide lui-même, la séance Écho marquée enregistre.
+   * Traversée des parties (CH-035) : `entreParties` (réglage) et `passage` { etat, vers, texte } ; éteinte, l'écran est celui de la 4.9.5.29. */
+  const LIB_SIGNAL = { 'passe-ecrite': 'posé au rattrapage', 'apres-differe': 'juste après un cut à poser', 'sans-appui': 'posé sans appui', 'garde-suivant': 'voisin d’un cut mis de côté', relecture: 'la relecture le corrigerait', differe: 'à poser' };
+  const MOTIF_DIFFERE = { 'garde-apres-differe': 'mis de côté par prudence', candidat: 'candidat', 'gauge-out-of-contract': 'écartement hors contrat' };
   function detailSignal(l) {
     const [p, ...autres] = l.signaux || [], d = (l.details || {})[p] || {};
     if (autres.length) return autres.map(k => LIB_SIGNAL[k] || k).join(', ');
     if (p === 'passe-ecrite' && Number.isFinite(d.decalMm)) return `déplacement ${un(d.decalMm)} mm`;
-    if (p === 'apres-differe' && d.differes?.length) return `cut ${d.differes[0]} différé`;
+    if (p === 'apres-differe' && d.differes?.length) return `cut ${d.differes[0]}`;
     if (p === 'relecture' && Number.isFinite(d.pireMm)) return `écart ${un(d.pireMm)} mm`;
-    if (p === 'garde-suivant' && d.cutsGarde?.length) return `cut ${d.cutsGarde[0]} gardé`;
+    if (p === 'garde-suivant' && d.cutsGarde?.length) return `cut ${d.cutsGarde[0]}`;
     if (p === 'sans-appui' && d.commande) return `commande du lot · ${d.commande}`;
     if (p === 'differe' && d.motif) return MOTIF_DIFFERE[d.motif] || d.motif;
     return '';
   }
   const STATUT_TEXTE = l => l.statut === 'corrige' ? `corrigé · ${l.rails > 1 ? '2 rails' : '1 rail'}` : l.statut === 'valide' ? 'validé tel quel' : l.statut === 'vu' ? 'vu sans validation' : l.statut === 'en-cours' ? 'ouvert dans ESV' : 'à faire';
-  const parties = L => { const P = [...new Set(L.map(l => l.partie))]; return P.length > 1 ? `Parties ${P.join(', ')}` : `Partie ${P[0]}`; };
+  const revu = l => ['corrige', 'valide', 'vu'].includes(l.statut);
+  const parties = L => { const P = [...new Set(L.map(l => l.partie))]; return P.length > 1 ? `${P.length} parties` : `Partie ${P[0]}`; };
   function ongletCorrectionModele(s) {
-    const C = s.correction, k = C.comptes, tout = C.listes.flatMap(l => l.lignes), B = C.boutons || {};
-    const m = { glyphe: 'pret', ton: 'encre2', mot: 'À corriger', phrase: '', droite: '', principal: null, secondaires: [] };
-    const fermer = B.fermer ? { texte: 'Fermer la liste', act: 'legacy:correction-fermer', inactif: !B.fermer.actif } : null;
+    const C = s.correction, k = C.comptes, tout = C.listes.flatMap(l => l.lignes), B = C.boutons || {}, aff = C.partieAffichee, trav = !!C.entreParties, PA = trav ? C.passage || null : null;
+    const m = { glyphe: 'pret', ton: 'encre2', mot: 'Prête', phrase: '', droite: '', principal: null, secondaires: [], verrou: false };
+    const fermer = t => B.fermer ? { texte: t, act: 'legacy:correction-fermer', inactif: !B.fermer.actif } : null;
     if (C.etat === 'proposee') {
-      Object.assign(m, { phrase: `${parties(C.listes)} · ${k.aCorriger} à corriger, ${k.aPoser} à poser · tu corriges et valides dans ESV, Ariane n’écrit rien`, droite: 'Écho démarre avec la correction',
-        principal: { texte: 'Commencer la correction', act: 'legacy:correction-demarrer', ic: 'play', inactif: !(B.demarrer?.actif ?? true) }, secondaires: [fermer].filter(Boolean) });
+      Object.assign(m, { phrase: `${parties(C.listes)} · ${k.aCorriger} à corriger, ${k.aPoser} à poser · tu corriges et valides dans ESV ; Ariane n’écrit rien`, droite: 'Écho démarre avec l’Aurore',
+        principal: { texte: 'Commencer l’Aurore', act: 'legacy:correction-demarrer', ic: 'play', inactif: !(B.demarrer?.actif ?? true) }, secondaires: [fermer('Fermer la liste')].filter(Boolean) });
+    } else if (C.etat === 'ouverte' && C.ouverte && PA?.etat === 'en-cours') {
+      Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Passage', verrou: true, droite: `${pluriel(k.corrige, 'corrigé', 'corrigés')} · ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}`,
+        phrase: `Vers la partie ${mono(PA.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` });
     } else if (C.etat === 'ouverte' && C.ouverte) {
       const cour = C.courant ? tout.find(l => l.part === C.courant.part && l.cut === C.courant.cut) : null;
-      const phrase = !cour ? 'Ouvre un cut de la liste · corrige et valide dans ESV ; Écho enregistre chaque visite'
-        : cour.statut === 'corrige' ? `Cut ${mono(cour.cut)} corrigé · ${cour.rails > 1 ? '2 rails' : '1 rail'} · visite enregistrée par Écho`
-        : cour.statut === 'valide' ? `Cut ${mono(cour.cut)} validé tel quel · visite enregistrée par Écho`
+      const ici = l => aff === null || l.part === aff, ouvrable = l => trav || ici(l);
+      const i0 = cour ? tout.indexOf(cour) : -1;
+      const suivant = [...tout.slice(i0 + 1), ...tout.slice(0, Math.max(0, i0))].find(l => l.statut === 'a-faire' && ouvrable(l));
+      const ailleurs = !suivant ? tout.find(l => l.statut === 'a-faire' && !ici(l)) : null;
+      const suite = ailleurs ? ` · ouvre la partie ${ailleurs.part} dans ESV pour continuer` : '';
+      const phrase = !cour ? (ailleurs ? `Rien à revoir dans la partie affichée${suite}` : 'Ouvre un cut de la liste · corrige et valide dans ESV ; Écho enregistre chaque visite')
+        : cour.statut === 'corrige' ? `Cut ${mono(cour.cut)} corrigé · ${cour.rails > 1 ? '2 rails' : '1 rail'} · visite enregistrée par Écho${suite}`
+        : cour.statut === 'valide' ? `Cut ${mono(cour.cut)} validé tel quel · visite enregistrée par Écho${suite}`
         : `Cut ${mono(cour.cut)} ouvert dans ESV · corrige-le, puis valide dans ESV ; Écho enregistre la visite`;
-      const i0 = cour ? tout.indexOf(cour) : -1, ici = l => C.partieAffichee === null || l.part === C.partieAffichee;
-      const suivant = [...tout.slice(i0 + 1), ...tout.slice(0, Math.max(0, i0))].find(l => l.statut === 'a-faire' && ici(l));
-      const terminer = { texte: 'Terminer la correction', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) };
-      Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: 'Correction en cours', phrase, droite: `${pluriel(k.corrige, 'corrigé', 'corrigés')} · ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}`,
-        principal: suivant ? { texte: `${cour ? 'Ouvrir le suivant' : 'Ouvrir le premier'} · cut ${suivant.cut}`, act: `sg:corr-ouvrir:${suivant.part}:${suivant.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
-        secondaires: suivant ? [terminer] : [] });
+      const terminer = { texte: 'Terminer l’Aurore', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) };
+      const autrePartie = suivant && aff !== null && suivant.part !== aff;
+      Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: 'En cours', phrase, droite: `${pluriel(k.corrige, 'corrigé', 'corrigés')} · ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}`,
+        principal: suivant ? { texte: autrePartie ? `Passer à la partie ${suivant.part} · cut ${suivant.cut}` : `Suivant · cut ${suivant.cut}`, act: `sg:corr-ouvrir:${suivant.part}:${suivant.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
+        secondaires: suivant ? [terminer] : [], note: autrePartie ? 'Ariane change de partie par les boutons d’ESV, attend la partie chargée, puis ouvre le cut. Elle ne valide rien.' : '' });
     } else if (C.etat === 'ouverte') {
-      Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Correction interrompue', phrase: 'La séance Écho de la correction n’est plus active · termine la correction pour inscrire le bilan',
-        principal: { texte: 'Terminer la correction', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) } });
+      Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Aurore interrompue', phrase: 'La séance Écho de l’Aurore n’est plus active · termine l’Aurore pour inscrire le bilan',
+        principal: { texte: 'Terminer l’Aurore', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) } });
     } else {
       const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'), T = C.telecharger;
-      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Correction terminée', droite: 'séance Écho close',
+      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Terminée', droite: 'séance Écho close',
         phrase: `${parties(C.listes)} · ${pluriel(k.corrige, 'corrigé', 'corrigés')}, ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}, ${pluriel(k.vu, 'vu sans validation', 'vus sans validation')} · inscrit dans l’export Orbite`,
-        principal: T ? { texte: 'Télécharger la séance Écho', act: 'legacy:native-download', ic: 'export', inactif: !T.actif } : null,
-        secondaires: [ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', inactif: !ex.actif } : null, fermer].filter(Boolean) });
+        principal: ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', ic: 'export', inactif: !ex.actif } : null,
+        secondaires: [T ? { texte: 'Télécharger la séance Écho', act: 'legacy:native-download', inactif: !T.actif } : null, fermer('Fermer l’Aurore')].filter(Boolean) });
       if (!m.principal && m.secondaires.length) m.principal = { ...m.secondaires.shift(), ic: 'export' };
     }
     return m;
   }
   function ongletCorrectionHtml(s, u) {
-    const C = s.correction, m = ongletCorrectionModele(s), k = C.comptes, ouverte = C.etat === 'ouverte' && C.ouverte, B = C.boutons || {};
+    const C = s.correction, m = ongletCorrectionModele(s), ouverte = C.etat === 'ouverte' && C.ouverte && !m.verrou, B = C.boutons || {}, aff = C.partieAffichee, trav = !!C.entreParties;
+    const tout = C.listes.flatMap(l => l.lignes), n = tout.filter(revu).length;
     const outil = l => {
       if (!ouverte) return '';
-      const ailleurs = C.partieAffichee !== null && l.part !== C.partieAffichee, off = ailleurs || !(B.ouvrir?.actif ?? true);
-      const titre = ailleurs ? `Ouvre la partie ${l.part} dans ESV pour corriger ce cut` : off ? 'Ouverture en cours…' : 'Ouvrir ce cut dans ESV';
+      const ailleurs = aff !== null && l.part !== aff && !trav, off = ailleurs || !(B.ouvrir?.actif ?? true);
+      const titre = ailleurs ? `Ouvre la partie ${l.part} dans ESV pour corriger ce cut` : off ? 'Ouverture en cours…' : aff !== null && l.part !== aff ? `Passer à la partie ${l.part} et ouvrir ce cut` : 'Ouvrir ce cut dans ESV';
       return `<span class="sg-outils"><button type="button"${off ? ' disabled' : ` data-act="sg:corr-ouvrir:${esc(l.part)}:${esc(l.cut)}"`} title="${esc(titre)}">${ic('ouvrir')}<span>Ouvrir</span></button></span>`;
     };
     const ligne = (l, i) => { const det = detailSignal(l);
       return `<div class="sg-ligne sg-corr" data-k="c:${esc(l.part)}:${esc(l.cut)}" style="--i:${Math.min(i, 12)}" role="listitem"><span class="sg-cut">${esc(l.cut)}</span><span class="sg-motif"><span class="sg-sig">${esc(LIB_SIGNAL[l.signaux?.[0]] || '')}</span>${det ? `<small>· ${esc(det)}</small>` : ''}</span><span class="sg-statut" data-statut="${esc(l.statut)}">${esc(STATUT_TEXTE(l))}</span>${outil(l)}</div>`; };
     const plusieurs = C.listes.length > 1;
+    const etatPartie = L => L.lignes.every(revu) ? 'faite' : L.lignes.some(l => l.statut === 'en-cours') || (ouverte && L.lignes.some(revu)) ? 'en-cours' : 'a-venir';
+    const notePartie = (L, e) => e === 'faite' ? 'revue' : aff !== null && L.partie === aff ? 'affichée dans ESV' : aff !== null && ouverte && !trav ? 'à ouvrir dans ESV' : '';
     let liste = '';
     for (const L of C.listes) {
-      const A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser'), pre = plusieurs ? `Partie ${esc(L.partie)} · ` : '';
-      liste += `<div class="sg-section"><span>${pre}À corriger</span><span class="sg-n">${A.length}</span><span class="sg-d">posés qu’Ariane juge probablement faux</span></div>${A.length ? A.map(ligne).join('') : '<div class="sg-vide">Aucun posé signalé.</div>'}`;
-      if (P.length) liste += `<div class="sg-section"><span>${pre}À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">différés restants</span></div>${P.map(ligne).join('')}`;
+      const e = etatPartie(L), A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser'), note = notePartie(L, e);
+      liste += `<div class="sg-corr-partie" data-etat="${e}">${ETOILE}<b class="sg-mono">Partie ${esc(L.partie)}</b><span class="sg-n">${L.lignes.filter(revu).length} sur ${L.lignes.length}</span>${note ? `<span class="sg-d">${esc(note)}</span>` : ''}</div>`;
+      if (C.etat === 'terminee') { const c = st => L.lignes.filter(l => l.statut === st).length;
+        liste += `<p class="sg-corr-bilan">${esc([pluriel(c('corrige'), 'corrigé', 'corrigés'), pluriel(c('valide'), 'validé tel quel', 'validés tels quels'), pluriel(c('vu'), 'vu sans validation', 'vus sans validation')].join(' · '))}</p>`; continue; }
+      if (plusieurs && e === 'faite' && ouverte) continue;
+      liste += `<div class="sg-section"><span>À corriger</span><span class="sg-n">${A.length}</span><span class="sg-d">posés qu’Ariane juge probablement faux</span></div>${A.length ? A.map(ligne).join('') : '<div class="sg-vide">Aucun posé signalé.</div>'}`;
+      if (P.length) liste += `<div class="sg-section"><span>À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">laissés par le lot</span></div>${P.map(ligne).join('')}`;
     }
     const bt = (b, plein) => b ? `<button type="button" class="${plein ? 'sg-principal' : 'sg-secondaire'}"${b.act ? ` data-act="${esc(b.act)}"` : ''}${b.inactif ? ' disabled' : ''}>${plein && b.ic ? ic(b.ic) : ''}${plein ? `<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
-    const refus = C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? `<p class="sg-raison" role="status">${esc(C.ouvrir.texte)}</p>` : '';
+    const PA = trav ? C.passage : null;
+    const refus = PA?.etat === 'refuse' && PA.texte ? `<p class="sg-raison" role="status">${esc(PA.texte)}</p>` : C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? `<p class="sg-raison" role="status">${esc(C.ouvrir.texte)}</p>` : '';
+    const aube = C.listes.map(L => { const t = L.lignes.length, f = L.lignes.filter(revu).length; return `<span data-partie="${esc(L.partie)}"${aff !== null && L.partie === aff ? ' data-affichee="1"' : ''} style="flex:${Math.max(1, t)} 1 0"><i style="width:${t ? Math.round(f / t * 100) : 0}%"></i><small class="sg-mono">${esc(L.partie)} · ${f} sur ${t}</small></span>`; }).join('');
     let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
-    h += `<div class="sg-compte"><span class="sg-chiffre">${esc(k.traites)}</span><span class="sg-suite">traités sur ${esc(k.total)}</span>${m.droite ? `<span class="sg-droite">${esc(m.droite)}</span>` : ''}</div>`;
-    h += `<div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts à corriger">${liste}</div>${refus}`;
-    h += `<p class="sg-meta sg-corr-note">La correction est une séance Écho : chaque visite est enregistrée comme en Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.</p>`;
-    if (m.principal || m.secondaires.length) h += `<div class="sg-actions">${bt(m.principal, true)}${m.secondaires.map(b => bt(b, false)).join('')}</div>`;
-    return `<section class="sg-instrument sg-onglet-corr" aria-live="polite" aria-label="Correction">${h}</section>`;
+    h += `<div class="sg-horizon"><div class="sg-compte"><span class="sg-chiffre">${esc(n)}</span><span class="sg-suite">sur ${esc(tout.length)} revus</span>${m.droite ? `<span class="sg-droite">${esc(m.droite)}</span>` : ''}</div><div class="sg-aube" aria-hidden="true">${aube}</div></div>`;
+    h += `<div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts de l’Aurore">${liste}</div>${refus}`;
+    if (m.verrou) h += `<div class="sg-verrou-ligne">${ic('cadenas')}<span>Aucune action pendant le passage · le cut s’ouvrira seul</span></div>`;
+    else if (m.principal || m.secondaires.length) h += `<div class="sg-actions">${bt(m.principal, true)}${m.secondaires.map(b => bt(b, false)).join('')}</div>`;
+    h += `<p class="sg-meta sg-corr-note">${esc(m.note || 'Chaque visite est enregistrée par Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.')}</p>`;
+    return `<section class="sg-instrument sg-onglet-corr" aria-live="polite" aria-label="Aurore">${h}</section>`;
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);

@@ -22,19 +22,20 @@ const legacy=h=>[...h.matchAll(/data-act="legacy:([a-z0-9-]+)"/g)].map(m=>m[1]);
 const F=x=>({etat:'arret',actif:false,n:3,rang:2,etatTexte:'arrêtée',phrase:'pose écrite non validée : contrôle le cut dans ESV · 2 parties faites sur 3 · rien exporté.',alerte:'pose écrite non validée : contrôle le cut dans ESV (pose d’Ariane au cut 5346 non validée).',
  bilan:['Partie 2 · 23 posés','Partie 3 · 31 posés','Partie 4 · interrompue · 48 posés, 3 différés · relecture —'],principal:{texte:'Préparer la reprise · 1 partie restante',actif:true},secondaire:null,
  reprendre:{texte:'Reprendre la file · 1 partie restante',actif:true},lancer:{texte:'Nouvelle file · 3 parties',actif:true},reprise:{rang:2,part:4,reste:1},choixTous:[{n:1,choisi:false},{n:3,choisi:true}],partieAffichee:4,departs:[],faites:2,...x});
-for(const [etat,mot] of [['rel','la relecture'],['p2','la deuxième passe']]){
- test(`orbite, ${mot} de la partie tourne, file arrêtée : bandeau « attend la fin de ${mot} », aucune reprise offerte`,()=>{
+/* CH-036 : mots de l'opérateur (« Constellation », « rattrapage » pour la deuxième passe, décision du 01/11) ; les mêmes garanties. */
+for(const [etat,mot] of [['rel','de la relecture'],['p2','du rattrapage']]){
+ test(`orbite, activité ${mot} de la partie, file arrêtée : bandeau « attend la fin ${mot} », aucune reprise offerte`,()=>{
   const h=S.rendre(snap({ar:ar(etat),file:F()}),ui());
-  assert.match(h,new RegExp(`attend la fin de ${mot}`));assert.match(h,/la file s’est arrêtée et ne repartira pas seule/);
+  assert.match(h,new RegExp(`attend la fin ${mot}`));assert.match(h,/la Constellation s’est arrêtée et ne repartira pas seule/);
   assert.doesNotMatch(h,/data-act="legacy:file-(reprendre|principal|lancer)"/,'ni « Reprendre la file » ni « Préparer la reprise » pendant l’activité');
  });
- test(`onglet File, ${mot} tourne, file arrêtée : « Attend la fin de ${mot} », boutons de reprise et de nouvelle file grisés`,()=>{
+ test(`onglet Constellation, activité ${mot} en cours, file arrêtée : « Attend la fin ${mot} », boutons de reprise et de nouvelle file grisés`,()=>{
   const h=S.rendre(snap({ar:ar(etat),file:F()}),ui({onglet:'file'}));
-  assert.match(h,new RegExp(`class="sg-mot">Attend la fin de ${mot}<`));assert.doesNotMatch(h,/class="sg-mot">File arrêtée</);
+  assert.match(h,new RegExp(`class="sg-mot">Attend la fin ${mot}<`));assert.doesNotMatch(h,/class="sg-mot">Arrêtée</);
   assert.match(h,/data-act="legacy:file-reprendre" disabled/);assert.match(h,/data-act="legacy:file-lancer" disabled/);
  });
 }
-test('activité finie (lot clos) : l’écran d’arrêt habituel, avec « Reprendre la file »',()=>{
+test('activité finie (lot clos) : l’écran d’arrêt habituel, avec « Reprendre à la partie 4 » (au rang)',()=>{
  const h=S.rendre(snap({ar:ar('fini'),file:F()}),ui({onglet:'file'}));
- assert.match(h,/class="sg-mot">File arrêtée</);assert.match(h,/data-act="legacy:file-reprendre">/);
+ assert.match(h,/class="sg-mot">Arrêtée</);assert.match(h,/data-act="legacy:file-reprendre">.*Reprendre à la partie 4 · 1 restante/);
 });

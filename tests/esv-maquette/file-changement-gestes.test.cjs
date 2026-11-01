@@ -53,7 +53,7 @@ async function file({ maquette, sansSelecteurApres = false }) {
     if (sansSelecteurApres) { for (let i = 0; i < 60 && (await api('file-etat')).file?.etat !== 'lot'; i++) await dormir(250);
       await esv.evaluate(() => { window.__maquette.options.selecteur = 0; document.getElementById('maquette-parties').textContent = ''; }); }
     for (let i = 0; i < 600; i++) { await dormir(500); try { v = (await api('file-etat')).file; } catch { continue; } if (['fin', 'arret'].includes(v?.etat)) break; }
-    await pan.waitForFunction(() => /File (terminée|arrêtée)/.test(document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
+    await pan.waitForFunction(() => /^(Terminée|Arrêtée)$/.test(document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
     const signal = await pan.evaluate(() => ({ mot: document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || '', alerte: document.querySelector('#ui5 .sg-onglet-file [role="alert"]')?.textContent?.trim() || '' }));
     const ev = (await api('journal')).events || [], adapt = ev.filter(e => e.type === 'adapter-result').map(e => e.action);
     return { v, signal, dureeMs: Date.now() - t0, chargements, erreurs, adapt, maquette: await esv.evaluate(() => window.__maquette.journal.filter(x => x.type === 'cut-charge').map(x => x.raison)),
@@ -82,7 +82,7 @@ test('ni geste ni sélecteur ne changent de partie : arrêt avec alerte lisible 
   const r = await file({ maquette: { selecteur: 1, traversee: 0 }, sansSelecteurApres: true });
   /* Le dernier repli (le lien) ne trouve aucune entrée : motif « selecteur-illisible », celui de la dernière tentative. */
   assert.equal(r.v?.etat, 'arret'); assert.equal(r.v.motifFin.code, 'selecteur-illisible');
-  assert.equal(r.signal.mot, 'File arrêtée'); assert.match(r.signal.alerte, /le sélecteur de parties d’ESV n’offre plus la partie suivante/); assert.match(r.signal.alerte, /essayé : invalide-suivant : .* ; suivant-dernier : .* ; lien : aucune entrée vers la partie 24/);
+  assert.equal(r.signal.mot, 'Arrêtée'); assert.match(r.signal.alerte, /le sélecteur de parties d’ESV n’offre plus la partie suivante/); assert.match(r.signal.alerte, /essayé : invalide-suivant : .* ; suivant-dernier : .* ; lien : aucune entrée vers la partie 24/);
   assert.equal(r.echecs.length, 1); assert.equal(r.echecs[0].tentatives.length, 3); assert.deepEqual({ ...r.echecs[0].selecteurAvant }, { status: 'absent', current: null, n: 0, vers: false });
   assert.ok(r.echecs[0].selecteurApres); aucuneDecisionDuGeste(r); assert.deepEqual(r.erreurs, []);
   console.log(`# échec : ${r.signal.alerte}`);

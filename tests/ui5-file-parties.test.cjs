@@ -30,6 +30,8 @@ async function pret(extra){
  return p;
 }
 const html=p=>{p.ui.maj(true);return p.hote.innerHTML;};
+/* CH-036 : les libellés que l'opérateur lit deviennent « Constellation » (la file), « rattrapage » (deuxième passe), « passage » (changement de partie),
+ * « à poser » (différés) ; les identifiants (`file-*`, `sg:file`) et les clics sur les boutons d'origine sont les mêmes. */
 
 test('sans `fileParties` dans la vue (file éteinte), Signal ne montre rien de la file',async()=>{
  const p=await pret({});p.els['file-parties'].hidden=true;
@@ -38,16 +40,16 @@ test('sans `fileParties` dans la vue (file éteinte), Signal ne montre rien de l
  assert.equal(p.ui.instantane(etat(null)).file,null);
 });
 
-test('au repos, écran « Prêt » : une entrée « File de parties · prête » ouvre la boîte ; le nombre et « Préparer » cliquent la carte d’origine',async()=>{
+test('au repos, écran « Prêt » : une entrée « Constellation · prête » ouvre la boîte ; le nombre et « Préparer » cliquent la carte d’origine',async()=>{
  const p=await pret({fileParties:null});poser(p,{principal:'Préparer la file'});
  let h=html(p);
- assert.match(h,/data-act="sg:file"[^>]*>File de parties · prête</);
+ assert.match(h,/data-act="sg:file"[^>]*>Constellation · prête</);
  assert.match(h,/class="sg-principal"[^>]*data-act="legacy:start-batch"/,'« Démarrer le lot » reste l’action principale');
  assert.doesNotMatch(h,/sg-boite/,'la boîte est fermée');
  p.ui.agir('sg:file');h=p.hote.innerHTML;
  assert.match(h,/class="sg-boite"[^>]*role="dialog"/);
  for(const n of [1,2,3,4,5,8])assert.match(h,new RegExp(`aria-pressed="${n===2}" data-act="sg:file-n:${n}"`),'nombre '+n);
- assert.match(h,/data-act="legacy:file-principal"[^>]*><span>Préparer la file</);
+ assert.match(h,/data-act="legacy:file-principal"[^>]*><span>Préparer la Constellation</);
  p.ui.agir('sg:file-n:3');
  assert.equal(p.els['file-n'].children.find(b=>b.dataset.n==='3').clics,1,'le bouton 3 de la carte est cliqué');
  assert.equal(p.ui.ui.couche,'file','la boîte reste ouverte');
@@ -55,13 +57,13 @@ test('au repos, écran « Prêt » : une entrée « File de parties · prête »
  assert.deepEqual(js(p.envoyes),[],'aucun message nouveau');
 });
 
-test('préparée : « Lancer la file » devient l’action principale, « Démarrer le lot » passe à côté ; rien n’est lancé sans clic',async()=>{
+test('préparée : « Lancer la Constellation » devient l’action principale, « Démarrer le lot » passe à côté ; rien n’est lancé sans clic',async()=>{
  const p=await pret({fileParties:null});
  poser(p,{etatTexte:'préparée',phrase:'Préparée · 2 parties à partir de la partie affichée · rien n’est lancé.',principal:'Lancer la file · 2 parties'});
  const h=html(p);
- assert.match(h,/class="sg-principal"[^>]*data-act="legacy:file-principal"[^>]*>.*Lancer la file · 2 parties/);
+ assert.match(h,/class="sg-principal"[^>]*data-act="legacy:file-principal"[^>]*>.*Lancer la Constellation · 2 parties/);
  assert.match(h,/class="sg-secondaire"[^>]*data-act="legacy:start-batch"/);
- assert.match(h,/File de parties · préparée/);assert.match(h,/Rien n’est lancé/);
+ assert.match(h,/Constellation · préparée/);assert.match(h,/Rien n’est lancé/);
  assert.equal(p.els['file-principal'].clics,0);
 });
 
@@ -69,10 +71,10 @@ test('l’entrée n’existe que dans l’écran « Prêt » : pas pendant un lo
  const p=await pret({fileParties:null});poser(p,{principal:'Préparer la file'});
  p.els.pause.hidden=false;p.els.pause.textContent='Pause';
  p.rendu(etat(LOT,{fileParties:null}));
- assert.doesNotMatch(p.hote.innerHTML,/File de parties/);
+ assert.doesNotMatch(p.hote.innerHTML,/data-act="sg:file"/,'l’entrée de la boîte n’existe pas (l’onglet « Constellation » de la bascule, lui, reste)');
 });
 
-test('pendant la file : bandeau « partie 1 sur 2 · lot en cours » et « Arrêter la file » (clic de `#file-secondaire`) ; ni « Démarrer » ni « Nouveau lot »',async()=>{
+test('pendant la file : bandeau « partie 1 sur 2 · lot en cours » et « Arrêter la Constellation » (clic de `#file-secondaire`) ; ni « Démarrer » ni « Nouveau lot »',async()=>{
  const F={etat:'lot',n:2,rang:0,enCours:{part:13,rang:0,lot:true},changement:null,bilan:[],alerte:null,motifFin:null};
  const p=await pret({fileParties:F});poser(p,{etatTexte:'partie 1 sur 2',phrase:'Partie 13 · lot en cours.',reglage:false,secondaire:'Arrêter la file'});
  p.els.pause.hidden=false;p.els.pause.textContent='Pause';p.els['new-batch'].hidden=false;p.els['new-batch'].textContent='Nouveau lot';
@@ -80,67 +82,67 @@ test('pendant la file : bandeau « partie 1 sur 2 · lot en cours » et « Arrê
  p.rendu(etat(LOT,{fileParties:F}));const h=p.hote.innerHTML;
  assert.match(h,/class="sg-file"/);
  /* CH-026 : « Arrêter le lot » (`stop`) arrête toute la file : retiré pendant la file (arrêt du test 26). */
- assert.doesNotMatch(h,/data-act="legacy:stop"/);assert.match(h,/partie 1 sur 2/);assert.match(h,/Partie 13 · lot en cours/);
- assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:file-secondaire"[^>]*>Arrêter la file</);
+ assert.doesNotMatch(h,/data-act="legacy:stop"/);assert.match(h,/partie 1 sur 2/);assert.match(h,/Partie 13 · lot en cours/);assert.match(h,/<b>Constellation<\/b>/);
+ assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:file-secondaire"[^>]*>Arrêter la Constellation</);
  assert.doesNotMatch(h,/legacy:new-batch|legacy:start-batch/);
- assert.match(h,/relecture et correction<\/b>, toujours/);
+ assert.match(h,/relecture<\/b>, toujours/);
  p.ui.agir('legacy:file-secondaire');assert.equal(p.els['file-secondaire'].clics,1);
  assert.deepEqual(js(p.envoyes),[]);
 });
 
-test('pendant la deuxième passe et la relecture de la file : le bandeau et « Arrêter la file » restent',async()=>{
- for(const [phase,ph] of [['passe','deuxième passe'],['relecture','relecture et correction']]){
+test('pendant le rattrapage (deuxième passe) et la relecture de la file : le bandeau et « Arrêter la Constellation » restent',async()=>{
+ for(const [phase,ph,lu] of [['passe','deuxième passe','rattrapage'],['relecture','relecture et correction','relecture']]){
   const F={etat:phase,n:2,rang:0,enCours:{part:13,rang:0,lot:true},changement:null,bilan:[],alerte:null};
   const p=await pret({fileParties:F});poser(p,{etatTexte:'partie 1 sur 2',phrase:`Partie 13 · ${ph}.`,reglage:false,secondaire:'Arrêter la file'});
   const b={...LOT,state:'COMPLETED',activeIdentity:null};
   p.rendu(etat(b,{fileParties:F,passeDifferes:phase==='passe'?{etat:'ecriture',lotId:'L1',cut:4813,ecrites:1,demandees:3}:null}));
   const h=p.hote.innerHTML;
-  assert.match(h,new RegExp(`Partie 13 · ${ph}`),phase);assert.match(h,/data-act="legacy:file-secondaire"/,phase);
+  assert.match(h,new RegExp(`Partie 13 · ${lu}\\.`),phase);assert.match(h,/data-act="legacy:file-secondaire"/,phase);
  }
 });
 
-test('changement de partie : « Changement de partie », vers la partie suivante, aucune action du lot fini ; « Arrêter la file » reste',async()=>{
+test('changement de partie : « Passage », vers la partie suivante, aucune action du lot fini ; « Arrêter la Constellation » reste',async()=>{
  const F={etat:'changement',n:2,rang:1,enCours:null,changement:{vers:14,tentatives:1},bilan:[{part:13}],alerte:null};
  const p=await pret({fileParties:F});poser(p,{etatTexte:'partie 2 sur 2',phrase:'Partie 14 · changement de partie vers la partie 14.',reglage:false,secondaire:'Arrêter la file'});
  p.els['export-tout'].hidden=false;p.els['export-tout'].textContent='Exporter';p.els['new-batch'].hidden=false;p.els['new-batch'].textContent='Nouveau lot';
  p.rendu(etat({...LOT,state:'COMPLETED',activeIdentity:null},{fileParties:F}));const h=p.hote.innerHTML;
- assert.match(h,/class="sg-mot">Changement de partie</);assert.match(h,/partie <span class="sg-mono">14<\/span>/);
+ assert.match(h,/class="sg-mot">Passage</);assert.match(h,/partie <span class="sg-mono">14<\/span>/);
  assert.doesNotMatch(h,/legacy:new-batch|legacy:start-batch/);assert.match(h,/data-act="legacy:file-secondaire"/);
 });
 
-test('file arrêtée sur une alerte, lot clos : « File arrêtée », l’alerte, le bilan par partie, « Reprendre la file » au rang (CH-026, clic de `#file-reprendre`) et l’onglet File',async()=>{
+test('file arrêtée sur une alerte, lot clos : « Constellation arrêtée », l’alerte, le bilan par partie, la reprise au rang (CH-026, clic de `#file-reprendre`) et l’onglet',async()=>{
  const F={etat:'arret',n:2,rang:1,enCours:null,changement:null,bilan:[{part:13}],alerte:{texte:'la page d’ESV ne change pas de partie'},motifFin:{code:'changement-impossible',texte:'la page d’ESV ne change pas de partie'}};
  const p=await pret({fileParties:F});
  poser(p,{etatTexte:'arrêtée',phrase:'la page d’ESV ne change pas de partie · 1 partie faite sur 2 · rien exporté.',reglage:false,alerte:'la page d’ESV ne change pas de partie.',
   bilan:['Partie 13 · 120 posés, 6 différés · relecture finie, 3 corrigés'],principal:'Préparer la reprise · 1 partie restante',reprendre:'Reprendre la file · 1 partie restante',lancer:'Nouvelle file · 2 parties'});
  p.els['export-tout'].hidden=false;p.els['export-tout'].textContent='Exporter';
  p.rendu(etat({...LOT,state:'COMPLETED',activeIdentity:null},{fileParties:F}));const h=p.hote.innerHTML;
- assert.match(h,/class="sg-mot">File arrêtée</);assert.match(h,/role="alert"[^>]*>.*la page d’ESV ne change pas de partie/s);
- assert.match(h,/1 partie faite sur 2/);assert.match(h,/<li>Partie 13 · 120 posés, 6 différés · relecture finie, 3 corrigés<\/li>/);
+ assert.match(h,/class="sg-mot">Constellation arrêtée</);assert.match(h,/role="alert"[^>]*>.*la page d’ESV ne change pas de partie/s);
+ assert.match(h,/1 partie faite sur 2/);assert.match(h,/<li>Partie 13 · 120 posés, 6 à poser · relecture finie, 3 corrigés<\/li>/);
  /* CH-026 : « Préparer la reprise » oubliait la file et menait au « Reprendre » du lot (test 26) : « Reprendre la file » le remplace. */
- assert.match(h,/class="sg-principal"[^>]*data-act="legacy:file-reprendre"[^>]*>.*Reprendre la file · 1 partie restante/);assert.doesNotMatch(h,/Préparer la reprise/);
- assert.match(h,/data-act="sg:onglet-file">Onglet File de parties</);
+ assert.match(h,/class="sg-principal"[^>]*data-act="legacy:file-reprendre"[^>]*>.*Reprendre la Constellation · 1 partie restante/);assert.doesNotMatch(h,/Préparer la reprise/);
+ assert.match(h,/data-act="sg:onglet-file">Voir la Constellation</);
  p.ui.agir('legacy:file-reprendre');assert.equal(p.els['file-reprendre'].clics,1);
 });
 
-test('file finie : « File terminée », le bilan, « Fermer le bilan » ; l’export reste un bouton, jamais automatique',async()=>{
+test('file finie : « Constellation terminée », le bilan, « Fermer le bilan » ; l’export reste un bouton, jamais automatique',async()=>{
  const F={etat:'fin',n:2,rang:2,enCours:null,changement:null,bilan:[{part:13},{part:14}],alerte:null,motifFin:null};
  const p=await pret({fileParties:F});
  poser(p,{etatTexte:'terminée',phrase:'2 parties faites · la file s’est éteinte. Export : prêt, jamais automatique.',reglage:false,bilan:['Partie 13 · …','Partie 14 · …'],principal:'Fermer le bilan'});
  p.els['export-tout'].hidden=false;p.els['export-tout'].textContent='Exporter';
  p.rendu(etat({...LOT,state:'COMPLETED',activeIdentity:null},{fileParties:F}));const h=p.hote.innerHTML;
- assert.match(h,/class="sg-mot">File terminée</);assert.match(h,/la file s’est éteinte/);assert.equal((h.match(/<li>Partie 1[34]/g)||[]).length,2);
+ assert.match(h,/class="sg-mot">Constellation terminée</);assert.match(h,/la Constellation s’est éteinte/);assert.equal((h.match(/<li>Partie 1[34]/g)||[]).length,2);
  assert.match(h,/data-act="legacy:file-principal"[^>]*>.*Fermer le bilan/);assert.match(h,/data-act="legacy:export-tout"/);
  assert.equal(p.els['export-tout'].clics,0);assert.deepEqual(js(p.envoyes),[]);
 });
 
-test('palette : « File de parties » au repos, « Arrêter la file » pendant la file (commande dangereuse : seconde Entrée)',async()=>{
+test('palette : « Constellation » au repos, « Arrêter la Constellation » pendant la file (commande dangereuse : seconde Entrée)',async()=>{
  const S5=require('../src/signal-rendu.js');
  const p=await pret({fileParties:null});poser(p,{principal:'Préparer la file'});
- let L=S5.paletteListe(p.ui.instantane(etat(null,{fileParties:null})),{q:'file'});
- assert.ok(L.some(c=>c.act==='sg:file'&&/^File de parties/.test(c.nom)));
+ let L=S5.paletteListe(p.ui.instantane(etat(null,{fileParties:null})),{q:'constellation'});
+ assert.ok(L.some(c=>c.act==='sg:file'&&/^Constellation/.test(c.nom)));
  const F={etat:'lot',n:2,rang:0,enCours:{part:13,rang:0,lot:true},changement:null,bilan:[],alerte:null};
  poser(p,{etatTexte:'partie 1 sur 2',phrase:'Partie 13 · lot en cours.',reglage:false,secondaire:'Arrêter la file'});
- L=S5.paletteListe(p.ui.instantane(etat(LOT,{fileParties:F})),{q:'file'});
+ L=S5.paletteListe(p.ui.instantane(etat(LOT,{fileParties:F})),{q:'constellation'});
  const a=L.find(c=>c.act==='legacy:file-secondaire');assert.ok(a);assert.equal(a.danger,true);assert.equal(a.off,'');
 });
