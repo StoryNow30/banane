@@ -1203,13 +1203,17 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  * Absent, illisible ou inconnu : le défaut. Hors d'un lot en cours (assisté, restauration), rien ne change.
  * Test 18 : `passeDifferes`, l'interrupteur de la deuxième passe des différés (« écrit dans ESV »), gardé au même endroit mais PAS figé dans le scope : il est lu
  * à la fin de chaque lot, à chaque relance et avant chaque cut écrit (`passeDiffAllumee`). Absent : allumée (livrée) ; `false`, toute autre valeur ou stockage illisible : coupée. */
-const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',CLE_PASSE_DIFFERES='banane51PasseDifferes',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
-async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES])||{};}catch{r=null;}
+const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',CLE_PASSE_DIFFERES='banane51PasseDifferes',CLE_AURORE_PASSAGE='banane53AurorePassage',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
+async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES,CLE_AURORE_PASSAGE])||{};}catch{r=null;}
  const p=r?.[CLE_PASSE_DIFFERES];
- return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true)};}
+ /* CH-037 : `aurorePassage`, l'interrupteur de l'opérateur pour le passage entre parties de l'Aurore (réglages de Signal). Absent : allumé (suit
+  * `correctionEntreParties.actif`) ; `false` : éteint. Lu à chaque « Ouvrir » ; ne vaut que si le réglage du dépôt est allumé. */
+ return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true),
+  aurorePassage:r?.[CLE_AURORE_PASSAGE]!==false};}
 async function choixLot(args){
  if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
  if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}
+ if(args&&'aurorePassage' in args){if(typeof args.aurorePassage!=='boolean')throw Error('Passage entre parties de l’Aurore : oui ou non.');await chrome.storage.local.set({[CLE_AURORE_PASSAGE]:args.aurorePassage});}
  if(args&&'passeDifferes' in args){if(typeof args.passeDifferes!=='boolean')throw Error('Deuxième passe : oui ou non.');await chrome.storage.local.set({[CLE_PASSE_DIFFERES]:args.passeDifferes});}
  return choixDuLot();}
 const passeDiffAllumee=async()=>(await choixDuLot()).passeDifferes;
@@ -2801,7 +2805,7 @@ async function correctionListe(args){
    batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});}
  if(!listes.length)throw Error('Liste à corriger : le journal ne porte aucune décision de ces lots.');
  const memes=C&&C.etat==='proposee'&&JSON.stringify(C.listes.map(l=>l.batchId))===JSON.stringify(listes.map(l=>l.batchId));
- engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...(correctionPartiesReglage()?{entreParties:true}:{})};
+ engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...((await correctionPassage()).R?{entreParties:true}:{})};
  await engine.save();return vuePanneau();}
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
 /* FIN PROPRE (demande de la mère, 31/10) : aucune séance Écho « correction » ne reste ouverte par erreur. `correctionVivante` (mémoire du service worker)
@@ -2811,6 +2815,9 @@ const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
  * lecture de la vue par le panneau ; la fermeture du dernier panneau clôt aussi la correction. */
 let correctionVivante=null,correctionOuverture=false,correctionFinEnCours=null;
 async function correctionVerifierFin(raisonImposee=null){
+ /* CH-037 : la vue suit le réglage effectif (dépôt et interrupteur de l'opérateur), relu à chaque lecture de la vue. */
+ {const C0=engine.s.correction;if(C0&&C0.etat!=='terminee'&&!correctionOuverture){const t=!!(await correctionPassage()).R;
+  if(t!==(C0.entreParties===true)){if(t)C0.entreParties=true;else delete C0.entreParties;await engine.save();}}}
  const C=engine.s.correction;if(!C||C.etat!=='ouverte'||correctionOuverture||correctionFinEnCours)return;
  const n=engine.s.native,miens=n?.correction?.id===C.id;
  let raison=raisonImposee;
@@ -2836,9 +2843,18 @@ async function correctionOuvrir(args){
  const C=engine.s.correction;if(!correctionOuverte())throw Error('Aucune correction en cours : commence la correction avant d’ouvrir un cut.');
  const part=Number.isInteger(args?.part)?args.part:null,cut=Number.isInteger(args?.cut)?args.cut:null;
  if(!entreesCorrection(C).some(e=>e.part===part&&e.cut===cut))throw Error(`Le cut ${cut} de la partie ${part} n’est pas dans la liste à corriger.`);
- /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie ; éteint, rien n'est lu de plus (4.9.5.31). */
- const RP=correctionPartiesReglage();
- if(RP){let lu=null;try{lu=(await call('ping'))?.label||null;}catch{lu=null;}if(partCut(lu)&&lu.part!==part)return correctionOuvrirAilleurs(C,{part,cut},lu,RP);}
+ /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie. CH-037 : éteint, le refus est dit tout de suite,
+  * avec sa raison, sans pause d'Écho ni commande à ESV (un clic sur « Ouvrir » n'est jamais muet). */
+ const P=await correctionPassage(),RP=P.R;if(RP)C.entreParties=true;else delete C.entreParties;
+ let lu=null;try{lu=(await call('ping'))?.label||null;}catch{lu=null;}
+ if(partCut(lu)&&lu.part!==part){
+  if(RP)return correctionOuvrirAilleurs(C,{part,cut},lu,RP);
+  const message=`Le cut ${cut} est dans la partie ${part} ; ESV affiche la partie ${lu.part}. Le passage entre parties est éteint ${P.eteint==='operateur'?'dans les réglages de Signal (Aurore)':'dans cette version (réglage du dépôt)'} : ouvre la partie ${part} dans ESV${P.eteint==='operateur'?', ou rallume le passage':''}. Rien n’a été validé.`;
+  C.passage={etat:'refuse',vers:part,texte:message.slice(0,300)};await engine.save();
+  journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:'refuse',code:'PASSAGE_ETEINT',message:message.slice(0,300),ecoReprise:engine.s.native?.status??null,
+   changementPartie:{de:lu.part,vers:part,resultat:'eteint',eteint:P.eteint}});
+  return {ok:false,resultat:'refuse',code:'PASSAGE_ETEINT',message,cible:{part,cut},correction:C};}
+ if(C.passage)delete C.passage;
  const enMarche=engine.s.native.status==='RUNNING';
  correctionOuverture=true;let r=null,erreur=null;
  try{if(enMarche)await native.pause();
@@ -2856,6 +2872,10 @@ async function correctionOuvrir(args){
  * passagère, `gotoBorneMs`), puis reprise d'Écho (nouvelle période). Une seule séance Écho pour toute l'Aurore : chaque visite porte son identité.
  * Journal : `correction-partie` (de, vers, cible, résultat, motif, mode, tentatives, durée), chaque tentative `correction-partie-tentative`. */
 const correctionPartiesReglage=()=>{const r=globalThis.BananeSettings?.correctionEntreParties;return r&&r.actif===true?{changementBorneMs:60000,gotoBorneMs:15000,pollMs:500,...r}:null;};
+/* CH-037 : le réglage EFFECTIF, relu à chaque « Ouvrir » (et non plus figé à la naissance de la liste) : le dépôt (`src/settings.js`) ET l'interrupteur
+ * de l'opérateur (réglages de Signal). `{R}` allumé, sinon `{R:null, eteint:'depot'|'operateur'}` pour dire pourquoi. */
+async function correctionPassage(){const R=correctionPartiesReglage();if(!R)return {R:null,eteint:'depot'};
+ let ok=true;try{ok=(await choixDuLot()).aurorePassage!==false;}catch{ok=true;}return ok?{R}:{R:null,eteint:'operateur'};}
 const GOTO_PASSAGERS=new Set(['OUT_OF_BOUNDS','IDENTITY_UNAVAILABLE_BEFORE','ADAPTER_BUSY','NAVIGATION_PATH_UNAVAILABLE','ESV_ILLISIBLE']);
 async function allerAuCutApresChangement(cible,RP){const fin=Date.now()+RP.gotoBorneMs;let r=null;
  for(;;){r=await allerAuCut(cible);if(r?.ok||!GOTO_PASSAGERS.has(r?.code)||Date.now()>=fin)return r;await attendre(RP.pollMs);}}

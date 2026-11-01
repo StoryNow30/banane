@@ -433,10 +433,12 @@
   const file = Object.freeze({ actif: true, changementBorneMs: 60000 });
   /* CH-035 — L'AURORE ENTRE LES PARTIES D'UNE CONSTELLATION (correction dans Orbite après une file, chantiers/CH-035/CONCEPTION.md). Allumé, « Ouvrir »
    * un cut d'une autre partie change de partie par les boutons d'ESV (`changerPartie` de l'adaptateur, ses modes ; aucune touche, aucune validation,
-   * aucun SKIP), Écho en pause pendant le trajet, puis va au cut. ÉTEINT tant que l'opérateur ne l'a pas éprouvé sur un vrai poste : éteint, le
-   * comportement est celui de la 4.9.5.29 (seule la partie chargée s'ouvre). `changementBorneMs` : borne du changement par le lien (les gestes : 15 s) ;
+   * aucun SKIP), Écho en pause pendant le trajet, puis va au cut. CH-037 : ALLUMÉ par défaut (décision de l'opérateur du 01/11 : il veut traverser
+   * les parties ; le passage se fait par le lien du sélecteur seul, aucun geste qui écrive dans ESV). L'opérateur peut l'éteindre dans les réglages
+   * de Signal (`banane53AurorePassage`, storage.local) ; `actif:false` ici l'éteint pour tous. Éteint, seule la partie chargée s'ouvre, et un clic
+   * sur un cut d'une autre partie est refusé avec sa raison (jamais muet). `changementBorneMs` : borne du changement par le lien (les gestes : 15 s) ;
    * `gotoBorneMs` : borne du retour au cut juste après le changement (compteur de la partie pas encore lu) ; `pollMs` : pas des relectures. */
-  const correctionEntreParties = Object.freeze({ actif: false, changementBorneMs: 60000, gotoBorneMs: 15000, pollMs: 500 });
+  const correctionEntreParties = Object.freeze({ actif: true, changementBorneMs: 60000, gotoBorneMs: 15000, pollMs: 500 });
   /* RETOUR À UN CUT (4.9, cadrage « Revenir à un cut », D-077 point 3) — LECTURE SEULE.
    * Action `goToCut` de l'adaptateur, demandée par l'action de panneau `goto-cut`. Elle
    * ne décide, ne pose, ne valide ni ne skippe rien ; aucune action du lot ne l'appelle.

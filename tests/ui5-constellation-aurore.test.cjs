@@ -139,11 +139,11 @@ test('Aurore ouverte : le cut ouvert, « Suivant · cut 17 », « Terminer l’A
   assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer l’Aurore/);
 });
 
-test('autre partie, traversée éteinte (4.9.5.29) : « Ouvrir » grisé avec la raison, la phrase dit d’ouvrir la partie dans ESV', async () => {
+test('autre partie, traversée éteinte : « Ouvrir » reste actif (CH-037 : jamais muet), la phrase dit d’ouvrir la partie dans ESV', async () => {
   const native = { status: 'RUNNING', correction: { id: 'C1' }, visits: [] };
   const p = await aurore({ correction: correction('ouverte'), native, current: { identity: { part: 7, cut: 3 } } });
   p.ui.agir('sg:onglet-correction'); const h = p.hote.innerHTML;
-  assert.match(h, /<button type="button" disabled title="Ouvre la partie 5 dans ESV pour corriger ce cut">/);
+  assert.match(h, /data-act="sg:corr-ouvrir:5:\d+" title="Partie 5 : le passage entre parties est éteint ; le clic dit quoi faire">/);
   assert.match(h, /ouvre la partie 5 dans ESV pour continuer/);
   assert.doesNotMatch(h, /Passer à la partie/);
 });

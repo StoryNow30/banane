@@ -88,10 +88,19 @@ test('liste terminée : bilan, « Télécharger la séance Écho » (bouton d’
   assert.match(h, /class="sg-principal" data-act="legacy:export-tout"[^>]*>.*Exporter le dossier/s, 'CH-036 : l’export est l’action pleine');
 });
 
-test('une liste d’une autre partie que celle affichée : « Ouvrir » grisé, avec la raison', async () => {
+test('CH-037 : une liste d’une autre partie que celle affichée, passage éteint : « Ouvrir » reste actif (jamais muet), la raison viendra du refus', async () => {
   const native = { status: 'RUNNING', correction: { id: 'C1' }, visits: [] };
   const p = await page({ correction: correction('ouverte'), native, current: { identity: { part: 7, cut: 3 } } });
   p.ui.agir('sg:onglet-correction');
   const h = p.hote.innerHTML;
-  assert.match(h, /<button type="button" disabled title="Ouvre la partie 5 dans ESV pour corriger ce cut">/);
+  assert.doesNotMatch(h, /<button type="button" disabled title="[^"]*partie 5/);
+  assert.match(h, /data-act="sg:corr-ouvrir:5:\d+" title="Partie 5 : le passage entre parties est éteint ; le clic dit quoi faire">/);
+});
+
+test('CH-037 : le refus du passage (réglage éteint) est affiché dans l’onglet Aurore', async () => {
+  const native = { status: 'RUNNING', correction: { id: 'C1' }, visits: [] };
+  const C = { ...correction('ouverte'), passage: { etat: 'refuse', vers: 5, texte: 'Le cut 12 est dans la partie 5 ; ESV affiche la partie 7. Le passage entre parties est éteint.' } };
+  const p = await page({ correction: C, native, current: { identity: { part: 7, cut: 3 } } });
+  p.ui.agir('sg:onglet-correction');
+  assert.match(p.hote.innerHTML, /<p class="sg-raison" role="status">Le cut 12 est dans la partie 5 ; ESV affiche la partie 7\. Le passage entre parties est éteint\.<\/p>/);
 });

@@ -550,6 +550,8 @@
    if(!choixLot)return;
    for(const [v,id] of Object.entries(IDS_CLIC))if($(id)&&document.activeElement!==$(id))$(id).checked=choixLot.clicHumain===v;
    if($('grappe-differes')&&document.activeElement!==$('grappe-differes'))$('grappe-differes').checked=choixLot.regleGrappeDifferes===true;
+   /* CH-037 : passage entre parties de l'Aurore (absent : allumé). */
+   if($('aurore-passage')&&document.activeElement!==$('aurore-passage'))$('aurore-passage').checked=choixLot.aurorePassage!==false;
    /* Test 18 : l'interrupteur de la deuxième passe reste « inconnu » (indéterminé) tant que le service worker ne l'a pas dit : jamais « coupée » par défaut d'affichage. */
    if($('passe-differes')&&document.activeElement!==$('passe-differes')&&typeof choixLot.passeDifferes==='boolean'){$('passe-differes').indeterminate=false;$('passe-differes').checked=choixLot.passeDifferes;}
    ecrire('clic-prochain',`« ${NOMS_CLIC[choixLot.clicHumain]} »`);
@@ -1761,6 +1763,7 @@ on('native-discard',async()=>{
  /* `click` : il part aussi au clavier (Espace, flèches), une fois la case cochée. */
  for(const [v,id] of Object.entries(IDS_CLIC))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixLot({clicHumain:v});};
  if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
+ if($('aurore-passage'))$('aurore-passage').onclick=()=>changerChoixLot({aurorePassage:$('aurore-passage').checked===true});
  if($('passe-differes')){$('passe-differes').indeterminate=true;$('passe-differes').onclick=()=>changerChoixLot({passeDifferes:$('passe-differes').checked===true});}
  api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});
  /* RM-11 : choix de la raison de la correction, relu au service worker à l'ouverture ; pastilles et touches du panneau. */
