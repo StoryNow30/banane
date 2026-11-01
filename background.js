@@ -2808,6 +2808,27 @@ async function correctionListe(args){
  engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...((await correctionPassage()).R?{entreParties:true}:{})};
  await engine.save();return vuePanneau();}
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
+/* CH-037 (défaut 2, test 30) — ÉTIQUETTES PROVISOIRES DES VISITES. Écho ne pose le libellé d'une visite dans son résumé (`n.visits`) qu'à la CLÔTURE de la
+ * visite (`visit-ended`) : la visite ouverte reste « ouverte » après Maj+Espace tant que l'opérateur ne change pas de cut, et une visite perdue avec la page
+ * (`pageLost`, rechargement par un changement de partie : cut 9748 de la partie 11 le 01/11) ne reçoit jamais le sien. Le signal fiable est déjà là :
+ * l'intention VALIDATE observée en direct dans l'enregistrement de la visite (`operatorIntents`, `humanFinalReference`). L'étiquette provisoire est
+ * calculée par la MÊME classification qu'Écho (`native.classify`) sur une COPIE de l'enregistrement (rien n'est écrit dans Écho). Visite close sans
+ * résumé : l'étiquette déjà classée de l'enregistrement. Gardé dans `C.issues` (visitId → libellé) ; le libellé d'Écho l'emporte toujours
+ * (`visitesFusionnees`, src/correction-liste.js). */
+function etiquetteProvisoire(rec,courant){if(!rec)return null;
+ if(!courant)return rec.endedAt&&typeof rec.observedLabelCandidate==='string'?rec.observedLabelCandidate:null;
+ if(!(rec.operatorIntents||[]).some(x=>x?.intent==='VALIDATE'))return null;
+ let c=null;try{c=JSON.parse(JSON.stringify(rec));native.classify(c);}catch{return null;}
+ const l=c?.observedLabelCandidate;return typeof l==='string'&&/^VALIDATE/.test(l)?l:null;}
+async function correctionIssues(C){const n=engine.s.native;if(!C||!n||n.correction?.id!==C.id)return C?.issues||{};
+ const I={...(C.issues||{})};let change=false;
+ for(const v of n.visits||[]){if(!v?.visitId||v.label)continue;
+  const courant=n.current?.visitId===v.visitId;if(!courant&&I[v.visitId])continue;
+  let rec=courant?n.current:null;if(!rec){try{rec=await native.recordById(v.visitId);}catch{rec=null;}}
+  const l=etiquetteProvisoire(rec,courant);
+  if(l&&I[v.visitId]!==l){I[v.visitId]=l;change=true;}else if(!l&&I[v.visitId]){delete I[v.visitId];change=true;}}
+ if(change){C.issues=I;await engine.save();}return I;}
+const visitesDeCorrection=(C,n,I)=>CL().visitesFusionnees(n?.correction?.id===C.id?n.visits:[],{issues:I,echoOuvert:false});
 /* FIN PROPRE (demande de la mère, 31/10) : aucune séance Écho « correction » ne reste ouverte par erreur. `correctionVivante` (mémoire du service worker)
  * porte l'identifiant de la correction démarrée ou reprise dans CETTE vie du service worker ; `correctionOuverture` couvre la pause d'Écho que fait
  * « Ouvrir ». `correctionVerifierFin` clôt la correction (Écho fermé, bilan inscrit) quand : la liste est finie (chaque cut validé ou corrigé),
@@ -2823,7 +2844,7 @@ async function correctionVerifierFin(raisonImposee=null){
  let raison=raisonImposee;
  if(!raison&&correctionVivante!==C.id)raison='sw-redemarre';
  if(!raison&&!(miens&&native.active()))raison='echo-ferme';
- if(!raison&&miens){const b=CL().bilan(entreesCorrection(C),(n.visits||[]).map(v=>({identity:v.identity,label:v.label??null})));
+ if(!raison&&miens){const b=CL().bilan(entreesCorrection(C),visitesDeCorrection(C,n,await correctionIssues(C)));
   if(b.comptes.total&&b.comptes.traites===b.comptes.total)raison='liste-finie';}
  if(!raison)return;
  correctionFinEnCours=correctionTerminer({raison}).catch(e=>journalerSimple('correction-fin',{correctionId:C.id,raison,etat:'erreur',message:String(e?.message||e).slice(0,160)})).finally(()=>{correctionFinEnCours=null;});
@@ -2907,12 +2928,13 @@ async function correctionOuvrirAilleurs(C,{part,cut},lu,RP){const t0=Date.now(),
  return {...r,correction:C,changementPartie:{de,vers:part,resultat}};}
 async function correctionTerminer({raison='operateur'}={}){
  const C=engine.s.correction;if(!C||C.etat!=='ouverte')throw Error('Aucune correction en cours.');
- const n=engine.s.native;if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
+ const n=engine.s.native;await correctionIssues(C).catch(()=>{});if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
  correctionVivante=null;
- const visites=(engine.s.native?.correction?.id===C.id?engine.s.native.visits:[])||[];
- const b=CL().bilan(entreesCorrection(C),visites.map(v=>({identity:v.identity,label:v.label??null})));
+ /* CH-037 : les mêmes visites fusionnées que l'écran (étiquettes provisoires comprises), donc le même résultat. */
+ const I=await correctionIssues(C).catch(()=>C.issues||{});
+ const b=CL().bilan(entreesCorrection(C),visitesDeCorrection(C,engine.s.native,I));
  Object.assign(C,{etat:'terminee',finA:new Date().toISOString(),bilan:b.comptes,courant:null,raisonFin:raison});await engine.save();
- journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
+ journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,regleStatut:CL().REGLE_STATUT,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
  return vuePanneau();}
 async function correctionFermer(){const C=engine.s.correction;if(C?.etat==='ouverte')throw Error('Termine la correction avant de fermer la liste.');
  delete engine.s.correction;await engine.save();return vuePanneau();}

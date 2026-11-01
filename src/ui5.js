@@ -230,7 +230,9 @@
     const C = s?.correction; if (!C || !Array.isArray(C.listes) || !C.listes.length) return null;
     const CL = root.ArianeCorrectionListe, n = s.native, miens = !!n && n.correction?.id === C.id;
     const V = miens ? (n.visits || []).filter(v => v && v.identity) : [];
-    const vis = V.map((v, i) => ({ identity: v.identity, label: v.label || null, encours: !v.endedAt && i === V.length - 1 && ECHO_OUVERT.includes(n.status) }));
+    /* CH-037 : la fusion commune (src/correction-liste.js) : étiquettes provisoires du service worker (`C.issues`) comprises, la même que le bilan. */
+    const vis = CL?.visitesFusionnees ? CL.visitesFusionnees(V, { issues: C.issues || null, echoOuvert: ECHO_OUVERT.includes(n?.status) })
+      : V.map((v, i) => ({ identity: v.identity, label: v.label || null, encours: !v.endedAt && i === V.length - 1 && ECHO_OUVERT.includes(n.status) }));
     const listes = C.listes.map(l => {
       const E = Array.isArray(l.entrees) ? l.entrees : [], b = CL ? CL.bilan(E, vis) : { lignes: E.map(e => ({ ...e, statut: 'a-faire', visites: 0 })) };
       return { partie: l.partie, batchId: l.batchId, comptes: l.comptes || null, lignes: b.lignes.map((x, i) => ({ ...x, details: E[i]?.details || {} })) };

@@ -75,6 +75,10 @@ test('CH-028 · correction de bout en bout par Signal : liste, séance Écho mar
      * (ESV le fait après l'écriture du serveur), et Écho rattache alors la validation à la visite du cut SUIVANT (mesuré ici, 31/10). Artefact de la
      * maquette (SUPPOSÉ) : à vérifier sur un vrai ESV avant de s'y fier. */
     await dormir(1200); await esv.bringToFront(); await esv.locator('body').click({ position: { x: 5, y: 5 } }).catch(() => {}); await esv.keyboard.press('Control+Enter'); await dormir(2000);
+    /* CH-037 (défaut 2) : validé SUR PLACE, sans navigation, la visite reste ouverte dans Écho ; la ligne de Signal passe « validé » quand même
+     * (étiquette provisoire du service worker, même classification qu'Écho), avant « Terminer ». */
+    assert.equal(await esv.evaluate(() => window.__maquette.etat().cut), cible, 'aucune navigation après la validation sur place');
+    await pan.waitForSelector(`#ui5 .sg-corr[data-k="c:${part}:${cible}"] .sg-statut[data-statut="valide"]`, { timeout: 10000 });
     await pan.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-terminer"]');
     await attendre(async () => (await api('view')).correction?.etat === 'terminee', 'correction terminée');
     const j = ((await api('journal')).events || []).slice().sort((a, b) => a.timestamp < b.timestamp ? -1 : 1), de = t => j.filter(e => e.type === t);

@@ -114,16 +114,32 @@
       comptes: { cibles: cibles.size, poses: poses.size + passe.size, differes: differes.size, aCorriger: entrees.filter(e => e.groupe === 'corriger').length, aPoser: entrees.filter(e => e.groupe === 'poser').length, parSignal } };
   }
 
-  /* Statut d'une entrée d'après les visites d'Écho (format de la séance Écho : `visits` de la session, `label`, `identity`) : la DERNIÈRE visite
-   * du cut décide. corrige (validation avec un rail déplacé), valide (validation sans déplacement), vu (visite sans validation), a-faire. */
+  /* Statut d'une entrée d'après les visites d'Écho (format de la séance Écho : `visits` de la session, `label`, `identity`, `encours`).
+   * CH-037 (défaut 2, test 30) : le résultat le PLUS FORT parmi les visites du cut décide, et non plus la dernière visite (cut 3250 de la partie 10 le
+   * 01/11 : corrigé, puis validé, puis une visite sans décision, et le bilan disait « vu »). corrige (validation avec un rail déplacé) > valide (validation
+   * sans déplacement) > en-cours (visite ouverte, sans libellé) > vu (visite sans validation) > a-faire (aucune visite). À force égale, la plus récente ;
+   * le libellé et les rails rendus sont ceux de la visite retenue. ESV n'a aucun geste « dévalider » observé par Écho : une revisite ne défait rien. */
+  const REGLE_STATUT = 'le résultat le plus fort parmi les visites : corrigé > validé > ouvert > vu > à faire ; à force égale, la plus récente';
+  const FORCE = { corrige: 4, valide: 3, 'en-cours': 2, vu: 1 };
+  const statutVisite = x => { const l = String(x.label || '');
+    return /^VALIDATE_CORRECTED/.test(l) ? 'corrige' : l === 'VALIDATE_NO_MOVEMENT' ? 'valide' : !l && x.encours ? 'en-cours' : 'vu'; };
   function statutDe(entree, visites) {
     const v = (visites || []).filter(x => x && x.identity && x.identity.part === entree.part && x.identity.cut === entree.cut);
     if (!v.length) return { statut: 'a-faire', visites: 0 };
-    const enCours = v.find(x => x.encours);
-    if (enCours) return { statut: 'en-cours', visites: v.length };
-    const l = String(v[v.length - 1].label || '');
-    const statut = /^VALIDATE_CORRECTED/.test(l) ? 'corrige' : l === 'VALIDATE_NO_MOVEMENT' ? 'valide' : 'vu';
-    return { statut, visites: v.length, label: l || null, rails: /BOTH/.test(l) ? 2 : /^VALIDATE_CORRECTED/.test(l) ? 1 : 0 };
+    let best = null, st = null;
+    for (const x of v) { const s = statutVisite(x); if (!best || FORCE[s] >= FORCE[st]) { best = x; st = s; } }
+    if (st === 'en-cours') return { statut: 'en-cours', visites: v.length };
+    const l = String(best.label || '');
+    return { statut: st, visites: v.length, label: l || null, rails: /BOTH/.test(l) ? 2 : /^VALIDATE_CORRECTED/.test(l) ? 1 : 0 };
+  }
+  /* CH-037 (défaut 2) : LA fusion des visites d'Écho (`n.visits` : identité, `label` posé à la clôture de la visite) et des étiquettes provisoires du
+   * service worker (`issues`, par visitId : la visite OUVERTE dont Maj+Espace est observé, ou une visite perdue avec la page, dont le résumé n'a jamais
+   * reçu d'étiquette). Le libellé d'Écho l'emporte toujours. `echoOuvert` : la séance observe (la dernière visite sans fin est « ouverte »). Une seule
+   * fonction pour l'écran (src/ui5.js), la fin « liste finie » et `correction-fin` (background.js) : le même résultat partout. */
+  function visitesFusionnees(visites, { issues = null, echoOuvert = false } = {}) {
+    const V = (visites || []).filter(v => v && v.identity), I = issues && typeof issues === 'object' ? issues : {};
+    return V.map((v, i) => { const p = !v.label && typeof I[v.visitId] === 'string' ? I[v.visitId] : null;
+      return { identity: v.identity, label: v.label || p || null, encours: !v.endedAt && i === V.length - 1 && !!echoOuvert, provisoire: !!p }; });
   }
   function bilan(entrees, visites) {
     const c = { 'a-faire': 0, 'en-cours': 0, corrige: 0, valide: 0, vu: 0 };
@@ -167,5 +183,5 @@
     return { version: VERSION_PARCOURS, ordre: ordre.map(({ part, cut }) => ({ part, cut })), suivant, parties };
   }
 
-  return { VERSION, VERSION_PARCOURS, SIGNAUX, LIBELLE, construire, statutDe, bilan, lotDe, parcours };
+  return { VERSION, VERSION_PARCOURS, SIGNAUX, LIBELLE, REGLE_STATUT, construire, statutDe, visitesFusionnees, bilan, lotDe, parcours };
 });
