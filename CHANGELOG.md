@@ -7,13 +7,14 @@ Manifeste `4.9.5.32` ; base : la test 31. Moteur, géométrie, GCV2 et décision
 ### Corrigé
 - **« Ouvrir » vers une autre partie restait muet (CH-037)** : le passage entre parties de l'Aurore (`correctionEntreParties`) est ALLUMÉ par défaut ; un interrupteur « Aurore · passage entre parties » est dans les réglages (panneau et Signal) ; le bouton « Ouvrir » n'est plus jamais désactivé : un refus dit sa raison dans Signal et dans le journal (`correction-ouvrir`, code `PASSAGE_ETEINT` si l'interrupteur est éteint). Le changement de partie se fait par le lien d'ESV (jamais un geste qui écrive dans ESV).
 - **Le dernier cut validé restait affiché non validé jusqu'à la navigation suivante (CH-037)** : une visite ouverte est comptée dès que la validation est observée, une visite perdue avec la page l'est aussi, et un cut visité plusieurs fois prend son résultat le plus fort (corrigé > validé > ouvert > vu). Rejeu sur l'Écho du 01/11 : 28 corrigés / 5 validés / 1 vu devient 29 / 5 / 0.
+- **Écho : une visite perdue avec la page garde son étiquette (CH-037)** : `pageLost` (`src/native-session.js`) recopie la fin et l'étiquette de la visite dans le résumé, comme `visit-ended` (3 lignes ; essai rouge puis vert).
 - **Outil `juger-lot`** : un cut écrit par la passe est jugé sur la correction seule (l'ombre ajoutait le décalage deux fois : six écritures justes, médiane 2,9 mm, étaient lues à 55 mm).
 
 ### Inchangé, éteint
 - Recherche large (`lot.rechercheLarge`) : ÉTEINTE.
 
 ### Non vérifié
-- Le passage par le lien pendant une séance Écho n'a jamais été vu sur un vrai ESV ; l'esthétique de la Constellation et de l'Aurore est à reprendre (deux directions dans Figma, choix de l'opérateur attendu) ; le défaut de `pageLost` dans `src/native-session.js` (l'étiquette n'est pas recopiée dans la liste des visites d'Écho, hors Aurore) reste à traiter.
+- Le passage par le lien pendant une séance Écho n'a jamais été vu sur un vrai ESV ; l'esthétique de la Constellation et de l'Aurore est à reprendre (deux directions dans Figma, choix de l'opérateur attendu) ; la clôture après un redémarrage du service worker (`src/native-session.js`, vers la ligne 90) laisse encore le résumé de la visite sans étiquette (l'Aurore est couverte par son étiquette provisoire).
 
 ## 4.9.5.31 — 4.9.5 test 31 (F-V-G-S) (01/11) — test 31
 
