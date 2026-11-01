@@ -1,5 +1,20 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.32 — 4.9.5 test 32 (F-V-G-S) (01/11) — test 32
+
+Manifeste `4.9.5.32` ; base : la test 31. Moteur, géométrie, GCV2 et décision du lot inchangés. Corrige les deux défauts de l'Aurore constatés par l'opérateur sur un vrai ESV avec la test 30.
+
+### Corrigé
+- **« Ouvrir » vers une autre partie restait muet (CH-037)** : le passage entre parties de l'Aurore (`correctionEntreParties`) est ALLUMÉ par défaut ; un interrupteur « Aurore · passage entre parties » est dans les réglages (panneau et Signal) ; le bouton « Ouvrir » n'est plus jamais désactivé : un refus dit sa raison dans Signal et dans le journal (`correction-ouvrir`, code `PASSAGE_ETEINT` si l'interrupteur est éteint). Le changement de partie se fait par le lien d'ESV (jamais un geste qui écrive dans ESV).
+- **Le dernier cut validé restait affiché non validé jusqu'à la navigation suivante (CH-037)** : une visite ouverte est comptée dès que la validation est observée, une visite perdue avec la page l'est aussi, et un cut visité plusieurs fois prend son résultat le plus fort (corrigé > validé > ouvert > vu). Rejeu sur l'Écho du 01/11 : 28 corrigés / 5 validés / 1 vu devient 29 / 5 / 0.
+- **Outil `juger-lot`** : un cut écrit par la passe est jugé sur la correction seule (l'ombre ajoutait le décalage deux fois : six écritures justes, médiane 2,9 mm, étaient lues à 55 mm).
+
+### Inchangé, éteint
+- Recherche large (`lot.rechercheLarge`) : ÉTEINTE.
+
+### Non vérifié
+- Le passage par le lien pendant une séance Écho n'a jamais été vu sur un vrai ESV ; l'esthétique de la Constellation et de l'Aurore est à reprendre (deux directions dans Figma, choix de l'opérateur attendu) ; le défaut de `pageLost` dans `src/native-session.js` (l'étiquette n'est pas recopiée dans la liste des visites d'Écho, hors Aurore) reste à traiter.
+
 ## 4.9.5.31 — 4.9.5 test 31 (F-V-G-S) (01/11) — test 31
 
 Manifeste `4.9.5.31` ; base : la test 30. Moteur, géométrie, GCV2 et décision du lot inchangés. Un seul changement : **l'onglet « Aurore » est toujours dans la barre** (remarque de l'opérateur : « où est le 4e onglet ? »). Dans la test 30 il n'apparaissait qu'une fois une liste de cuts à reprendre née (règle de CH-028 gardée par CH-036). Sans liste, il ouvre un écran qui dit « Pas encore de liste à reprendre » et ce qui le remplit (la fin d'un lot ou d'une Constellation). Aurore entre les parties et recherche large : toujours ÉTEINTES.
