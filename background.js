@@ -2804,10 +2804,13 @@ async function allerAuCutApresChangement(cible,RP){const fin=Date.now()+RP.gotoB
 async function correctionOuvrirAilleurs(C,{part,cut},lu,RP){const t0=Date.now(),de=lu.part;
  const enMarche=engine.s.native.status==='RUNNING';
  correctionOuverture=true;let X=null,r=null,erreur=null;
- C.changement={de,vers:part,cut,depuis:new Date().toISOString()};await engine.save();
+ C.changement={de,vers:part,cut,depuis:new Date().toISOString()};delete C.passage;await engine.save();
  try{if(enMarche)await native.pause();
+  /* Réserve de l'intégrateur (01/11) : l'opérateur corrige ici des cuts déjà posés ; les gestes de la file (« Next non validated cut », « dernier cut puis
+   * Next cut ») n'ont jamais été relevés sur un vrai ESV quant à ce qu'ils écrivent dans la partie quittée : l'Aurore change TOUJOURS de partie par le
+   * lien du sélecteur (navigation seule), y compris vers la partie suivante. */
   try{X=await changerPartieEsv(part,{R:RP,attendu:()=>engine.s.correction?.id===C.id&&engine.s.correction.etat==='ouverte',
-    gestes:d=>Number.isInteger(d)&&part===d+1,typeTentative:'correction-partie-tentative'});
+    gestes:()=>false,typeTentative:'correction-partie-tentative'});
    if(X.ok)r=await allerAuCutApresChangement({part,cut},RP);}
   catch(e){erreur=e;}
   finally{if(enMarche||engine.s.native?.status==='PAUSED'){try{await native.resume();}catch(e){erreur=erreur||e;}}}}
@@ -2820,6 +2823,7 @@ async function correctionOuvrirAilleurs(C,{part,cut},lu,RP){const t0=Date.now(),
  journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:erreur?'erreur':X?.ok?r?.resultat??null:'refuse',code:r?.code??(X?.ok?null:'CHANGEMENT_PARTIE'),
   message:erreur?String(erreur.message||erreur).slice(0,160):r?.message??detail,ecoReprise:engine.s.native?.status??null,changementPartie:{de,vers:part,resultat}});
  if(erreur)throw erreur;
+ if(!X?.ok){C.passage={etat:'refuse',vers:part,texte:`Partie ${part} non ouverte dans ESV : ${detail}`.slice(0,300)};await engine.save();}
  if(!X?.ok)return {ok:false,resultat:'refuse',code:'CHANGEMENT_PARTIE',message:`Partie ${part} non ouverte dans ESV (${detail}) : rien n’a été validé ; ESV reste sur la partie affichée.`,cible:{part,cut},correction:C};
  if(r?.ok){C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();}
  return {...r,correction:C,changementPartie:{de,vers:part,resultat}};}
