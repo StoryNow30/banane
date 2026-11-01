@@ -160,14 +160,14 @@ test('R4b · Écho : « validés tels quels » compte les validations sans corre
 /* ------------------------------------------------------------------ R1 */
 test('R1 · deuxième passe en ombre : en fin de lot, ce qu’elle poserait ; en calcul : dit ; d’un autre lot : rien',async()=>{
  const f=x=>S.rendre(snap({ar:ar('fini',{lotOuvert:false,passeFin:x}),boutonsOrbite:[b('export-tout','Tout télécharger','primary')]}),ui());
- assert.match(f({mode:'ombre',etat:'finie',posees:3,differes:7,ecrites:0}),/<dt>Deuxième passe<\/dt><dd>en ombre : <b>3<\/b> sur <b>7<\/b> qu’elle poserait · rien n’est écrit dans ESV/);
- assert.match(f({mode:'ombre',etat:'calcul',posees:0,differes:0,ecrites:0}),/<dt>Deuxième passe<\/dt><dd>calcul des cuts restés sans pose…/);
+ assert.match(f({mode:'ombre',etat:'finie',posees:3,differes:7,ecrites:0}),/<dt>Rattrapage<\/dt><dd>en ombre : <b>3<\/b> sur <b>7<\/b> qu’elle poserait · rien n’est écrit dans ESV/);
+ assert.match(f({mode:'ombre',etat:'calcul',posees:0,differes:0,ecrites:0}),/<dt>Rattrapage<\/dt><dd>calcul des cuts restés sans pose…/);
  assert.match(f({mode:'ecriture',etat:'finie',posees:3,differes:7,ecrites:2}),/<b>2<\/b> posés et validés sur <b>3<\/b> décidés/);
- assert.doesNotMatch(f(null),/Deuxième passe/);
+ assert.doesNotMatch(f(null),/Rattrapage/);
  const p=await monter({etat:etat(LOT_FINI)});
  const passe=x=>p.ui.instantane(etat(LOT_FINI,{passeDifferes:{lotId:'L1',mode:'ombre',etat:'finie',differes:7,posees:3,demandees:0,ecrites:0,cut:null,message:null,...x}})).ar.passeFin;
  assert.deepEqual(js(passe()),{mode:'ombre',etat:'finie',posees:3,differes:7,ecrites:0,message:null});
- assert.equal(passe({lotId:'L0'}),null,'la passe d’un autre lot');assert.equal(passe({mode:'ecriture',etat:'ecriture'}),null,'en écriture : c’est l’état « Deuxième passe »');
+ assert.equal(passe({lotId:'L0'}),null,'la passe d’un autre lot');assert.equal(passe({mode:'ecriture',etat:'ecriture'}),null,'en écriture : c’est l’état « Rattrapage » (deuxième passe)');
 });
 
 /* ------------------------------------------------------------------ G1 */

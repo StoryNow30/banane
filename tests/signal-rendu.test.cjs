@@ -8,6 +8,7 @@
  * Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const S=require('../src/signal-rendu.js');
+/* CH-036 : l'écran Orbite dans les mots de l'opérateur (décision du 01/11) : Rattrapage, à poser, sautés. */
 const html=fs.readFileSync(path.join(__dirname,'..','panel.html'),'utf8'),IDS=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
 /* T20a : les éléments du panneau que Signal lit pour la connexion et « Ouvrir dans ESV » existent dans panel.html. */
 const A_VENIR=new Set();
@@ -48,7 +49,7 @@ test('allure : médiane des 20 derniers cuts posés (au moins 3 durées), depuis
 
 test('chaque état a son glyphe et son mot ; une seule action principale, celle du panneau',()=>{
  const cas=[['pret',{},/Prêt/,'pret'],['dem',{},/Pause demandée/,'dem'],['pause',{},/En pause/,'pause'],['alerte',{etatTexte:'À toi',alerte:'Le cut 4812 a un rail qu’Ariane ne sait pas poser.'},/À toi/,'toi'],
-  ['alerte',{etatTexte:'Résultat incertain',alerte:'L’opération sur le cut 4812 n’a pas été confirmée.'},/Interrompu/,'interrompu'],['p2',{passe2:{cut:4787,ecrites:1,demandees:3}},/Deuxième passe/,'verrou'],
+  ['alerte',{etatTexte:'Résultat incertain',alerte:'L’opération sur le cut 4812 n’a pas été confirmée.'},/Interrompu/,'interrompu'],['p2',{passe2:{cut:4787,ecrites:1,demandees:3}},/Rattrapage/,'verrou'],
   ['fini',{lotOuvert:false},/Terminé/,'fini'],['arrete',{lotOuvert:false},/Arrêté/,'arrete']];
  for(const [etat,x,mot,glyphe] of cas){
   const h=S.rendre(snap({ar:ar(etat,x),boutonsOrbite:[b('resume','Reprendre au cut 4812','primary'),b('stop','Arrêter le lot','danger')]}),ui());
@@ -64,7 +65,7 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
 
 test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’export vient en second ; rien à examiner : le bouton du panneau',()=>{
  const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:9,aExaminer:13}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary'),b('new-batch','Nouveau lot')],exportTexte:''}),ui());
- assert.match(f,/<dt>Lot<\/dt><dd><b>31<\/b> cuts traités sur <b>120<\/b> ciblés/);assert.match(f,/<b class="sg-dif">2<\/b> différés, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
+ assert.match(f,/<dt>Lot<\/dt><dd><b>31<\/b> cuts traités sur <b>120<\/b> ciblés/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
  assert.match(f,/class="sg-principal" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
  const r=S.rendre(snap({ar:ar('fini',{lotOuvert:false,differes:0,differesListe:[],aExaminer:0}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary')]}),ui());
  assert.match(r,/class="sg-principal" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
@@ -73,7 +74,7 @@ test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’ex
 test('Revue V2 : différés puis verts (par plage), « Ouvrir » seulement par le bouton caché du panneau, « Examiner » barré et décompté',()=>{
  const a=ar('fini',{lotOuvert:false,verts:[{libelle:'Abords de PN',detail:'4861–4875 · 4 cuts'}],vertsNombre:4,aExaminer:6});
  const sans=S.rendre(snap({ar:a}),ui({tiroir:true}));
- assert.match(sans,/<div id="sg-tiroir-corps">/,'ouvert : pas inert');assert.match(sans,/<span>Différés<\/span><span class="sg-n">2<\/span>/);
+ assert.match(sans,/<div id="sg-tiroir-corps">/,'ouvert : pas inert');assert.match(sans,/<span>À poser<\/span><span class="sg-n">2<\/span>/);
  assert.match(sans,/<button type="button" disabled title="Disponible avec la prochaine mise à jour du moteur">/,'sans #goto-cut : Ouvrir grisé, avec sa raison');
  assert.doesNotMatch(sans,/sg:ouvrir/);assert.match(sans,/<span class="sg-cut">4861<\/span><span class="sg-motif">Abords de PN <small>· 4861–4875 · 4 cuts<\/small>/);
  const avec=S.rendre(snap({ar:a,sig:sig({goto:{present:true,actif:true,raison:'',etat:'',texte:''},examines:['d:4809']})}),ui({tiroir:true}));
@@ -151,9 +152,9 @@ test('réglages : les choix du panneau, thème sombre par défaut, détails tech
  assert.match(S.rendre(snap({relectureModifiable:true}),ui({couche:'reglages'})),/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);
  assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
  assert.match(h,/data-act="sg:tech"/);assert.match(h,/<span class="sg-mono">2731<\/span>/);
- assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 différés · 1 skippé · 2 ignorés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 skippé<\/span>/,'0 est une valeur connue : affichée, au singulier');
- assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 différés · 3 ignorés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');
- assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 différés<\/span>/,'sautes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 skippés<\/span>/,'pluriel');
+ assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 à poser · 1 sauté · 2 sautés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 sauté<\/span>/,'0 est une valeur connue : affichée, au singulier');
+ assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 à poser · 3 sautés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');
+ assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 à poser<\/span>/,'sautes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 sautés<\/span>/,'pluriel');
  assert.doesNotMatch(h,/data-sel="variante"|ariane2/,"test 23 : plus de choix d’interface");assert.doesNotMatch(h,/ancienne|Ancien panneau|ancien panneau/);
  assert.doesNotMatch(S.rendre(snap(),ui({couche:'reglages'})),/Parties traitées/,'sans historique du moteur : rien');
  const f5=S.rendre(snap({sig:sig({f5:'arret'})}),ui({couche:'reglages'}));assert.match(f5,/<select data-sel="f5"[^>]*>.*<option value="arret" selected>/);

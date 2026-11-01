@@ -22,5 +22,5 @@ test('file prête, préparée, puis lot, deuxième passe, relecture : l’entré
  assert.equal(res.prete['600'].mot,'Prêt');assert.match(res.prete['600'].principal,/Démarrer le lot/);assert.equal(res.prete['600'].file,false);
  assert.equal(res.preparee['360'].boite,true);assert.equal(res.preparee.clair.theme,'clair');
  for(const nom of ['lot','passe','relecture'])for(const k of ['600','360']){assert.equal(res[nom][k].file,true,nom);assert.equal(res[nom][k].arreter,true,nom);assert.equal(res[nom][k].depart,false,nom+' : ni « Démarrer » ni « Nouveau lot »');}
- assert.equal(res.lot['600'].mot,'En cours');assert.equal(res.passe['600'].mot,'Deuxième passe');
+ assert.equal(res.lot['600'].mot,'En cours');assert.equal(res.passe['600'].mot,'Rattrapage');
 });
