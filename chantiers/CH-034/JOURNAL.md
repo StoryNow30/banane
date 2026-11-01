@@ -188,3 +188,29 @@ Les 2 fautes gardées : la pose du lot est une paire forte et la paire de la vé
 | 2 × 50 | 13/13 ; 5/128 | 7/8 ; 0/12 | 1/1 ; 11/405 | 27/410 |
 | 3 × 50 | 13/13 ; 6/128 | 7/8 ; 0/12 | 1/1 ; 16/405 | 33/410 |
 Lecture : un rapport de 2 rattrape une faute de plus à l'examen pour 4 poses justes de plus différées au réglage ; une distance de 80 mm baisse le coût sans perdre de faute (toutes à plus de 100 mm). Ce sont des réglages à faire sur un lot neuf avec Écho, pas ici : les valeurs livrées restent celles du protocole (1,5 ; 50).
+
+### 2.8 Soutien minimal de la paire concurrente, et un mode « choisir sûr » (lus après l'examen, sur les sorties déjà calculées ; 1/11 après-midi, pistes 1 et 2 de l'intégrateur)
+**Question (écrite avant le balayage).** Les poses justes différées par D (règle affinée : 10 sur 417 à l'examen, 26 posés sur 410 sur les lots récents) le sont-elles par des paires concurrentes PAUVRES (peu de points de dessus ou de flanc sous le gabarit), que les fautes n'ont pas ? Si oui, exiger un soutien minimal de la paire concurrente (dessus ≥ T sur les deux rails, flanc ≥ F) baisse le coût sans perdre de faute. Même question pour un mode « choisir sûr » (C2) : remplacer la pose du lot seulement quand la meilleure paire large est loin (> 50 mm), UNIQUE (seconde paire loin d'elle à produit ≥ 1,5 × le sien), SOUTENUE (dessus ≥ T, flanc ≥ F), et que la pose du lot n'est aucune paire forte ou a un produit ≥ 1,5 × celui de la meilleure.
+**Mesure (ÉTABLI sur les sorties, script `soutien-balayage` du scratchpad ; jeux : réglage 150 jugés, examen A 22, examen B 421, non jugés de la partie 20 549, récents 410).** Le soutien d'une paire est celui de ses deux cellules fortes (points de dessus et de flanc lus par le moteur).
+
+| D affinée + soutien (T dessus, F flanc) | réglage : fautes / justes différées | examen A | examen B | non jugés p20 | coût récents |
+|---|---|---|---|---|---|
+| **0, 0 (livré)** | 13/13 ; 1/137 | 6/8 ; 0/14 | 1/1 ; 10/420 | 14/549 | 26/410 (6,3 %) |
+| 60, 0 | 13/13 ; 1/137 | 6/8 ; 0/14 | 1/1 ; 3/420 | 13/549 | 10/410 (2,4 %) |
+| 90, 0 | 13/13 ; 1/137 | 6/8 ; 0/14 | **0/1** ; **0/420** | 12/549 | 7/410 (1,7 %) |
+| 100, 8 | 13/13 ; 1/137 | 6/8 ; 0/14 | 0/1 ; 0/420 | 12/549 | 6/410 |
+| 120, 10 | 13/13 ; 1/137 | 6/8 ; 0/14 | 0/1 ; 0/420 | 11/549 | 3/410 |
+| 150, 10 | 13/13 ; 1/137 | 6/8 ; 0/14 | 0/1 ; 0/420 | 5/549 | 1/410 |
+
+| C2 « choisir sûr » (T, F) | réglage : fautes corrigées à 20 mm / justes remplacées > 50 mm | examen A | examen B | non jugés p20 remplacés | récents remplacés |
+|---|---|---|---|---|---|
+| 0, 0 | 12/13 ; 0 | 6/8 ; 0 | 1/1 ; **5** | 3/549 | 20/410 |
+| **90, 0** | 12/13 ; 0 | 6/8 ; 0 | 0/1 ; **0** | 2/549 | 7/410 |
+| 120, 10 | 12/13 ; 0 | 6/8 ; 0 | 0/1 ; 0 | 2/549 | 3/410 |
+| 150, 10 | 12/13 ; 0 | 5/8 ; 0 | 0/1 ; 0 | 1/549 | 1/410 |
+
+**Lecture.** Les poses justes différées (et les 5 poses justes que C remplaçait) sont toutes concurrencées par des paires dont un rail a moins de 90 points de dessus ; les 19 fautes de la partie 20 ont leur concurrente (le vrai rail) à 117 points et plus (§ 2.2). À T = 60 déjà, le coût tombe de 26 à 10 posés sur 410. La seule faute des couples du 26/10 (examen B) se perd dès T = 60 : sa concurrente est un rail pauvre. **Ce seuil est lu après l'examen** : il n'est pas prouvé hors échantillon ; les 19 fautes de la partie 20 sont dans le réglage ou dans l'examen A déjà ouvert. PROBABLE : T = 90 garde les fautes d'appareils de voie (rails complets) et ne diffère plus les poses justes. Décision : les clés `soutienTop` et `soutienFace` sont ajoutées au réglage, **livrées à 0** (= la règle examinée), avec le mode `choisir-sur` (C2) ; leur valeur recommandée pour un essai terrain (T = 90, F = 0) est écrite dans le rapport, à confirmer sur un lot neuf AVANT toute mise en défaut.
+**Piste 3 (les 2 fautes non différées de l'examen A, ÉTABLI sur les sorties, pas de numéro ici).** L'une : la vraie paire est forte mais son produit vaut 1,54 × celui de la pose du lot (rapport 1,5 : à 1,6 elle serait différée ; § 2.7, rapport 2 : 7/8). L'autre : les deux paires ont le même soutien et des produits proches, la pose du lot est la meilleure par le gabarit : indécidable par le nuage seul. Aucun seuil ne la rattrape sans coût ; elle est du ressort de l'Écho.
+
+### 2.9 Temps par cut : graines utiles seulement (ÉTABLI, 1/11)
+Une graine est inutile si aucun des deux rails n'a 15 points au moins dans la fenêtre de ±180 mm du moteur autour d'elle (aucune cellule forte possible : dessus ≥ 15) ; le module ne relance plus le moteur sur ces graines (`grainesUtiles`, compte `grainesSautees` au journal). Aucun effet sur les cellules trouvées (paires identiques sur les 93 cuts chronométrés, même script que § 2.7) ; temps par cut, processus seul : médiane 3,5 s (avant 3,7), P90 5,6 s, maximum 8,2 s. Le gain est faible sur la partie 20 (nuages denses sur ±400 mm) ; il compte sur les nuages tronqués. Essais `tests/recherche-large.test.cjs` verts (7).

@@ -85,10 +85,28 @@
   return out;
  }
  /* Union des cellules fortes de toutes les relances, dédoublonnées à 3 mm (la perte la plus petite est gardée), classées par perte. */
+ /* Points du nuage par rail, en travers (mm, repère profil du rail de départ), dans la bande longitudinale et verticale que le moteur lit (±500 et ±100 mm). */
+ function traversParRail(capture){
+  const out={};
+  for(const s of SIDES){const rail=capture.rails[s],M=rail.sceneRelativeToProfileLocal,o=C.point(M,rail.positionSceneRelative),lat=[];
+   const pts=capture.pointsSceneRelative,vis=capture.visibleByClipBoxes;
+   for(let i=0;i<pts.length;i++){if(vis&&vis[i]===false)continue;const p=pts[i];if(!Array.isArray(p)||p.length<3)continue;const q=C.point(M,p);
+    if(Math.abs(q[0]-o[0])>.5||Math.abs(q[2]-o[2])>.1)continue;lat.push(1000*(q[1]-o[1]));}
+   out[s]=lat;}
+  return out;
+ }
+ /* Une graine est UTILE si l'un des deux rails a au moins `GRAINE_POINTS_MIN` points dans la fenêtre de points du moteur autour d'elle (±180 mm) : en dessous,
+  * aucune cellule forte n'est possible (dessus ≥ 15 points), la relance est inutile. Aucun effet sur les cellules trouvées : seul le temps change. */
+ const GRAINE_POINTS_MIN=15,FENETRE_POINTS_MM=180;
+ function grainesUtiles(capture,R){
+  const t=traversParRail(capture);
+  return graines(R).filter(g=>SIDES.some(s=>{let n=0;for(const x of t[s])if(Math.abs(x-g)<=FENETRE_POINTS_MM&&++n>=GRAINE_POINTS_MIN)return true;return false;}));
+ }
  function cellules(capture,R){
-  const out={left:[],right:[],relances:0};
+  const out={left:[],right:[],relances:0,grainesSautees:0};
   if(!capturePrete(capture))return out;
-  for(const g of graines(R)){
+  const utiles=grainesUtiles(capture,R);out.grainesSautees=graines(R).length-utiles.length;
+  for(const g of utiles){
    const r=relance(capture,g);if(!r)continue;out.relances++;
    for(const s of SIDES)for(const x of r[s]){const d=out[s].find(c=>Math.hypot(c.lat-x.lat,c.vert-x.vert)<3);if(d){if(x.loss<d.loss)Object.assign(d,x);}else out[s].push({...x});}
   }
@@ -119,7 +137,7 @@
   for(const s of SIDES){const d=decalage(capture.rails[s],positions[s]);if(!d)return fin({motif:'entree-illisible'});pose[s]={lat:d[1],vert:d[2]};}
   const cells=cellules(capture,R);
   const P=paires(capture,cells,R);
-  const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances},nPaires:P.length};
+  const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances,grainesSautees:cells.grainesSautees},nPaires:P.length};
   /* Aucune paire forte nulle part (nuage pauvre) : absence de preuve, pas une preuve contre la pose : la commande du lot est gardée (ajustement écrit après
    * l'examen, JOURNAL § 2.5 : 9 cuts des couples du 26/10, 0 faute parmi eux, 19 posés non jugés de la partie 20). */
   if(!P.length)return fin({...res,etat:'garde',motif:'aucune-paire-forte'});
@@ -146,5 +164,5 @@
   return {version:d.version,etat:d.etat,motif:d.motif,mode:d.mode,ms:d.ms,cellules:d.cellules,nPaires:d.nPaires,paireLot:paireMm(d.paireLot),meilleure:paireMm(d.meilleure),concurrente:paireMm(d.concurrente),
    ...(d.paireLot&&d.meilleure?{rapportMeilleure:sig4(d.meilleure.prod/d.paireLot.prod)}:{})};
  }
- return {VERSION,DEFAUT,MODES,reglage,graines,decalage,relance,cellules,paires,decider,resumer};
+ return {VERSION,DEFAUT,MODES,reglage,graines,grainesUtiles,decalage,relance,cellules,paires,decider,resumer};
 });
