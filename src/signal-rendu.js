@@ -164,7 +164,7 @@
         actions(); break;
       }
       case 'p2':
-        Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Deuxième passe', verrou: true,
+        Object.assign(m, { glyphe: 'verrou', ton: 'encre2', mot: 'Rattrapage', verrou: true,
           phrase: `Ariane travaille dans ESV · ne touche à rien${a.passe2?.cut != null ? ` · cut ${mono(a.passe2.cut)}` : ''}${a.passe2 ? ` · ${esc(a.passe2.ecrites ?? 0)} posé sur ${esc(a.passe2.demandees ?? 0)}` : ''}` });
         break;
       case 'rel': {
@@ -184,7 +184,7 @@
           phrase: [partie, esc(s.lot?.finPartie || '')].filter(Boolean).join(' · ') });
         m.fin = [['Lot', `<b>${esc(a.traites)}</b> cuts traités${a.cibles ? ` sur <b>${esc(a.cibles)}</b> ciblés` : ''}`],
           /* Revue T21 (R4) : `vertsNombre` nul = liste des verts pas encore calculée (src/ui5.js) : jamais « 0 vert » ni « rien à examiner ». */
-          ['Il reste', a.vertsNombre === null ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')} · verts pas encore calculés` : nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> ${pl(nDif(a), 'différé')}, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
+          ['Il reste', a.vertsNombre === null ? `<b class="sg-dif">${esc(nDif(a))}</b> à poser · verts pas encore calculés` : nDif(a) + (a.vertsNombre || 0) ? `<b class="sg-dif">${esc(nDif(a))}</b> à poser, <b>${esc(a.vertsNombre || 0)}</b> ${pl(a.vertsNombre || 0, 'vert')} à contrôler` : 'rien à examiner'],
           ['Export', esc(s.exportTexte || 'prêt')]];
         /* Ciblage T22 : où le lot s'est arrêté. ESV passé au-delà de son dernier cut (même partie) : les cuts suivants ne sont pas de ce lot, et c'est dit. */
         if (bornes) m.fin.splice(1, 0, ['Bornes', bornes]);
@@ -192,7 +192,7 @@
         if (H) m.fin.splice(1, 0, ['Fin du lot', `après le cut ${mono(H.cut ?? '…')}, ESV est passé au cut ${mono(H.vers)}, hors du lot : rien après le cut ${mono(H.fin)} n’est traité par ce lot`]);
         /* Revue T21 (R1) : le résultat de la deuxième passe (en ombre : ce qu'elle poserait, rien n'est écrit), comme le panneau d'avant le disait. */
         const P = a.passeFin;
-        if (P) m.fin.push(['Deuxième passe', P.etat === 'calcul' ? 'calcul des cuts restés sans pose…' : P.etat === 'erreur' ? `en erreur${P.message ? ' · ' + esc(P.message) : ''}`
+        if (P) m.fin.push(['Rattrapage', P.etat === 'calcul' ? 'calcul des cuts restés sans pose…' : P.etat === 'erreur' ? `en erreur${P.message ? ' · ' + esc(P.message) : ''}`
           : P.mode === 'ombre' ? `en ombre : <b>${esc(P.posees)}</b> sur <b>${esc(P.differes)}</b> qu’elle poserait · rien n’est écrit dans ESV`
           : `${P.etat === 'arretee' ? 'arrêtée · ' : ''}<b>${esc(P.ecrites)}</b> posés et validés sur <b>${esc(P.posees)}</b> décidés${P.message ? ' · ' + esc(P.message) : ''}`]);
         actions();
@@ -311,7 +311,7 @@
     const total = a.cibles || null, n = statuts.length, traites = a.traites || 0;
     const echelle = total || Math.max(10, Math.ceil(Math.max(n, traites) * 1.25 / 10) * 10);
     const pos = i => `${Math.max(0, Math.min(100, i / echelle * 100)).toFixed(3)}%`;
-    let h = `<div class="sg-rail" data-etat="${esc(etat || 'cours')}" data-total="${total ? 'connu' : 'inconnu'}" role="img" aria-label="${esc(`${traites} traités${total ? ` sur ${total} ciblés` : ', total inconnu'}, ${a.differes || 0} différés`)}"><div class="sg-rail-base"></div>`;
+    let h = `<div class="sg-rail" data-etat="${esc(etat || 'cours')}" data-total="${total ? 'connu' : 'inconnu'}" role="img" aria-label="${esc(`${traites} traités${total ? ` sur ${total} ciblés` : ', total inconnu'}, ${a.differes || 0} à poser`)}"><div class="sg-rail-base"></div>`;
     if (total) {
       const pas = total > 400 ? 50 : 10;
       for (let k = 0; k <= total; k += pas) h += `<div class="sg-rail-grad${k % (pas * 5) === 0 ? ' sg-dix' : ''}" style="left:${pos(k)}"></div>`;
@@ -334,7 +334,7 @@
     }
     if (m.objet !== 'rail') return '';
     if (m.railEtat === 'vide') return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
-    const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> différés</span>`;
+    const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> à poser</span>`;
     /* Ciblage T22 : M inconnu (src/ui5.js) : dit tel quel ; le rail n'a alors ni graduations ni total, et l'allure aucun temps restant. */
     return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités · total inconnu'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
   }
@@ -344,7 +344,7 @@
   function bornesHtml(snap, m) {
     const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
     if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors' || m.file || m.fileBilan) return '';
-    return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des différés : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
+    return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des cuts à poser : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
   }
   /* CH-025 : le bandeau de la file (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de la file). */
   const NOTE_FILE = 'Après chaque partie : <b>relecture</b>, toujours <span class="sg-sep">·</span> aucun export automatique <span class="sg-sep">·</span> seul « Arrêter » l’interrompt';
@@ -366,7 +366,7 @@
 <div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}>${F.prete ? ic('play') : ''}<span>${esc(vf(P.texte))}</span></button>` : ''}</div></div>`;
   }
   function actionsHtml(m) {
-    if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin de la deuxième passe')}</span></div>`;
+    if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin du rattrapage')}</span></div>`;
     if (!m.principal && !m.secondaires.length) return m.raison ? `<p class="sg-raison">${esc(m.raison)}</p>` : '';
     let h = '<div class="sg-actions">';
     const p = m.principal;
@@ -399,8 +399,8 @@
     const reste = L => L.filter(r => !ex.has(r.cle)).length;
     const etatGo = go.etat === 'refuse' ? `<div class="sg-note-ligne sg-refus" role="status">${esc(go.texte || 'Ouverture refusée')}</div>` : go.etat === 'en-cours' ? '<div class="sg-note-ligne" role="status">Ouverture du cut dans ESV…</div>' : '';
     let h = etatGo;
-    h += `<div class="sg-section"><span>Différés</span><span class="sg-n">${D.length}</span>${D.length ? `<span class="sg-d">reste à examiner <span class="sg-n">${reste(D)}</span></span>` : `<span class="sg-d">${a.lotOuvert ? 'à reprendre après le lot' : ''}</span>`}</div>`;
-    h += D.length ? D.map((r, i) => ligne(r, i)).join('') : `<div class="sg-vide">${a.lotOuvert ? 'Aucun différé pour l’instant.' : 'Aucun différé.'}</div>`;
+    h += `<div class="sg-section"><span>À poser</span><span class="sg-n">${D.length}</span>${D.length ? `<span class="sg-d">reste à examiner <span class="sg-n">${reste(D)}</span></span>` : `<span class="sg-d">${a.lotOuvert ? 'à reprendre après le lot' : ''}</span>`}</div>`;
+    h += D.length ? D.map((r, i) => ligne(r, i)).join('') : `<div class="sg-vide">${a.lotOuvert ? 'Aucun cut à poser pour l’instant.' : 'Aucun cut à poser.'}</div>`;
     h += `<div class="sg-section"><span>Verts à contrôler</span>${V.length ? `<span class="sg-n">${esc(a.vertsNombre || V.length)}</span><span class="sg-d">reste à examiner <span class="sg-n">${reste(V)}</span> plages</span>` : ''}</div>`;
     h += V.length ? V.map((r, i) => ligne(r, D.length + i)).join('') + (a.vertsLigne ? `<div class="sg-vide sg-petit">${esc(a.vertsLigne)}</div>` : '') : `<div class="sg-vide">${a.lotOuvert ? 'Calculés à la fin du lot.' : 'Aucun vert suspect, ou liste pas encore calculée.'}</div>`;
     return `<div class="sg-corps" role="listbox" aria-label="Ce qui reste">${h}</div>`;
@@ -413,7 +413,7 @@
       const { D, V } = lignesRevue(a), total = D.length + V.length, reste = [...D, ...V].filter(r => !ex.has(r.cle)).length;
       const d = nDif(a), v = a.vertsNombre || 0, vInc = a.vertsNombre === null && !a.lotOuvert;
       n = a.lotOuvert ? d : d + v;
-      long = a.lotOuvert ? (d ? `${pl(d, 'différé')} · à reprendre après le lot` : 'Aucun différé pour l’instant') : n ? `à examiner · ${d} ${pl(d, 'différé')}, ${vInc ? 'verts pas encore calculés' : `${v} ${pl(v, 'vert')}`}` : vInc ? 'Verts pas encore calculés' : 'Rien à examiner';
+      long = a.lotOuvert ? (d ? `à poser · à reprendre après le lot` : 'Aucun cut à poser pour l’instant') : n ? `à examiner · ${d} à poser, ${vInc ? 'verts pas encore calculés' : `${v} ${pl(v, 'vert')}`}` : vInc ? 'Verts pas encore calculés' : 'Rien à examiner';
       court = n ? 'à examiner' : vInc ? 'verts pas calculés' : 'rien à examiner';
       if (total && !a.lotOuvert) resteTx = `reste à examiner ${reste} sur ${total}`;
     }
@@ -424,7 +424,7 @@
   function cacheHtml(snap, m) {
     const a = snap.ar || {}, rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);
     const ok = a.cache?.actif === true && !rel;
-    const raison = ok ? '' : a.etat === 'p2' ? 'après la deuxième passe' : rel ? 'après la relecture' : m.activite === 'echo' && echoOuvert(a.echoEtat) ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
+    const raison = ok ? '' : a.etat === 'p2' ? 'après le rattrapage' : rel ? 'après la relecture' : m.activite === 'echo' && echoOuvert(a.echoEtat) ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
     return `<footer class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span></span>${raison ? `<span class="sg-r">· ${esc(raison)}</span>` : ''}<span class="sg-espace"></span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></footer>`;
   }
   function barreHtml(snap, m, ui) {
@@ -495,7 +495,7 @@
     const FIN = { complete: 'terminée', arretee: 'arrêtée', 'en-cours': 'en cours', interrompue: 'interrompue' };
     /* Heure de Paris (règle du panneau d'origine, `paris()` de panel.js), pas celle de la machine. */
     const jour = iso => { const d = iso ? new Date(iso) : null; if (!d || isNaN(d) || !PARIS) return ''; const q = {}; for (const x of PARIS.formatToParts(d)) q[x.type] = x.value; return `${q.day}/${q.month} ${Number(q.hour === '24' ? 0 : q.hour)} h ${q.minute}`; };
-    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} différés` : ''}${Number.isInteger(p.sautes) ? ` · ${esc(p.sautes)} ${pl(p.sautes, 'skippé')}` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} ignorés au départ` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
+    const L = H.slice(0, 12).map(p => `<div class="sg-hist"><span class="sg-mono">${esc(p.part ?? '—')}</span><span>${esc(FIN[p.fin] || p.fin || '')}${p.cibles != null ? ` · ${esc(p.cibles)} ciblés` : ''}${p.poses != null ? ` · ${esc(p.poses)} posés` : ''}${p.differes != null ? ` · ${esc(p.differes)} à poser` : ''}${Number.isInteger(p.sautes) ? ` · ${esc(p.sautes)} ${pl(p.sautes, 'sauté')}` : ''}${p.depart?.ignores ? ` · ${esc(p.depart.ignores)} sautés au départ` : ''}</span><small>${esc(jour(p.startedAt))}</small></div>`).join('');
     return `<div class="sg-reg sg-reg-bloc"><span class="sg-lib"><span>Parties traitées</span><small>Gardées même après un vidage du cache</small></span></div>${L || '<div class="sg-vide sg-petit">Aucune partie enregistrée pour l’instant.</div>'}`;
   }
   function feuilleHtml(snap) {
@@ -507,8 +507,8 @@
     return `<div class="sg-feuille" data-k="reglages" role="dialog" aria-label="Réglages"><div class="sg-tete"><span class="sg-t">Réglages</span><span class="sg-meta">jamais en séance</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:fermer" aria-label="Fermer">${ic('croix')}</button></div><div class="sg-liste">
  ${snap.relectureModifiable ? ligne('Après le lot', 'Relecture des verts sûrs · gardé pour le prochain lot', sel('relecture', [['coupee', 'Rien'], ['ombre', 'Relire sans rien modifier'], ['corriger', 'Relire et corriger']], r.relecture, 'Après le lot')) : ''}
  ${ligne('Clic du mode rapide', 'gardé pour le prochain lot', sel('clic', [['tel-quel', 'Comme avant'], ['gauche-recentre', 'Rail gauche recentré'], ['tout-recentre', 'Tout recentré']], r.clic, 'Clic du mode rapide'))}
- ${ligne('Série de différés', 'Mettre en attente les cuts voisins', seg('grappe', [['non', 'Non'], ['oui', 'Oui']], r.grappe ? 'oui' : 'non', 'Série de différés'))}
- ${ligne('Deuxième passe (en ombre)', 'En fin de lot, note ce qu’elle poserait pour les cuts restés sans pose, sans rien écrire dans ESV', sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non', 'Deuxième passe'))}
+ ${ligne('Série de cuts à poser', 'Mettre en attente les cuts voisins', seg('grappe', [['non', 'Non'], ['oui', 'Oui']], r.grappe ? 'oui' : 'non', 'Série de cuts à poser'))}
+ ${ligne('Rattrapage (en ombre)', 'En fin de lot, note ce qu’elle poserait pour les cuts restés sans pose, sans rien écrire dans ESV', sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non', 'Rattrapage'))}
  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho', sel('raison', [['non', 'Non'], ['chiffres', 'Oui · chiffres du haut'], ['alt-chiffres', 'Oui · Alt + chiffre'], ['pave', 'Oui · pavé numérique']], r.raison ? r.touches || 'chiffres' : 'non', 'Raison de la correction'))}
  ${g.f5 ? ligne('Si ESV est rechargé pendant la relecture', '', sel('f5', [['pause', 'Attendre, puis reprendre'], ['arret', 'Arrêter la relecture']], g.f5, 'Si ESV est rechargé')) : ''}
  ${ligne('Bandeau dans ESV', 'Une ligne d’état au bas de la page ESV', seg('bandeau', [['non', 'Éteint'], ['oui', 'Allumé']], r.bandeau ? 'oui' : 'non', 'Bandeau dans ESV'))}

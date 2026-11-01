@@ -51,7 +51,7 @@ test('Ciblage T22 · fin retenue pour la partie, rien touché : le lot part avec
   const e=await page.evaluate(()=>({compte:document.querySelector('#ui5 .sg-compte').textContent,grads:[...document.querySelectorAll('#ui5 .sg-rail-num')].map(x=>x.textContent),
    rail:document.querySelector('#ui5 .sg-rail').dataset.total,allure:document.querySelector('#ui5 .sg-allure').textContent,bornes:document.querySelector('#ui5 .sg-lot-bornes')?.textContent,
    actions:[...document.querySelectorAll('#ui5 .sg-actions button')].map(b=>b.textContent.trim())}));
-  assert.match(e.compte,/13traités sur 74 ciblés13 posés · 0 différés/);assert.deepEqual(e.grads,['0','37','74']);assert.equal(e.rail,'connu');
+  assert.match(e.compte,/13traités sur 74 ciblés13 posés · 0 à poser/);assert.deepEqual(e.grads,['0','37','74']);assert.equal(e.rail,'connu');
   assert.match(e.allure,/médiane 2,8 s par cut · environ 2 min 51 restantes/,'61 restants × 2,8 s');
   assert.equal(e.bornes,'Lot du cut 0 au cut 8770');assert.deepEqual(e.actions,['Pause','Arrêter le lot']);
   assert.deepEqual(erreurs,[]);await page.close();

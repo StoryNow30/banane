@@ -94,3 +94,4 @@ Construit sur le tronc après l'étape R, d'après la maquette `maquettes/ui-5.0
 - **Orbite** : en fin de lot, la ligne « Aurore » et « Ouvrir l'Aurore · N cuts » en action pleine (« Voir ce qui reste » en second). Bandeau et boîte : « Constellation ».
 - **Barre compacte** (< 480 px) : la bascule a son propre rang sous la barre, pleine largeur, les quatre libellés gardés.
 - **Essais** : `tests/ui5-constellation-aurore.test.cjs` (vm), `tests/ui5-navigateur-signal-constellation-aurore.test.cjs` (navigateur, 360 à 600 par pas de 40, sombre et clair).
+- **Orbite dans les mots de l'opérateur** (même chantier) : Rattrapage (deuxième passe), à poser (différés), sautés (skipped, ignorés au départ), dans les libellés visibles seulement. Essai : `tests/signal-vocabulaire-orbite.test.cjs`.

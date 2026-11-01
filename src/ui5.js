@@ -129,7 +129,7 @@
       : { debut: $('start')?.value || null, fin: finVisible($('end')?.value) };
     const differesListe = (b?.deferred || []).map(d => {
       const r = Array.isArray(d.unresolvedRails) ? d.unresolvedRails : [];
-      return { cut: cutDe(d), motif: r.length ? 'Rail non résolu' : 'Différé', precision: r.length === 2 ? 'les deux rails' : r.length ? (RAILS[r[0]] || '') : '', heure: heure(d.deferredAt) };
+      return { cut: cutDe(d), motif: r.length ? 'Rail non résolu' : 'À poser', precision: r.length === 2 ? 'les deux rails' : r.length ? (RAILS[r[0]] || '') : '', heure: heure(d.deferredAt) };
     }).filter(d => d.cut !== null).reverse();
     const plages = [...($('verts-plages')?.querySelectorAll?.('li') || [])].map(li => ({ libelle: String(li.querySelector('b')?.textContent || '').trim(), detail: String(li.querySelector('span')?.textContent || '').trim() }));
     const vertsNombre = plages.reduce((n, p) => n + (Number((p.detail.match(/·\s*(\d+)/) || [])[1]) || 0), 0);
