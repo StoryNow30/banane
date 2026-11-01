@@ -118,3 +118,11 @@ Lecture (PROBABLE) : (1) **le déplacement depuis la pose de départ d'ESV n'est
 - Les 65 poses « fines » (130 rails) : 35 rails non touchés (0 mm) ; sur les 95 rails retouchés, correction latérale médiane 1,2 mm (P75 3,8, P90 6,1), verticale 1,3 mm (P75 2,9, P90 4,7) ; **11 rails retouchés de moins d'un pixel (0,5 mm) en latéral, 17 en vertical**. Les retouches fines valent 2 à 8 pixels : ce n'est pas le pixel qui les cause.
 - Ce qu'un zoom ×2 au clic rendrait (calcul) : pixel 0,25 mm, biais de troncature −0,12 mm par axe au lieu de −0,25 : un gain au plus de 0,13 mm par axe, sous le bruit de la référence (1 mm) et sous la tolérance de fin de réglage de l'opérateur (0,75 mm). L'oracle (§ 0.4) le confirme : rien n'est mesurable sous 6 mm d'erreur vraie, et le clic arrondi simulé (D-266) n'a rien gagné.
 - **Décision : impasse mesurée, pas de levier.** Un zoom au clic ajouterait des gestes de vue (lectures de nœuds, remise de vue : CH-018) pour un gain inférieur au bruit. Détour : aucun ; le gisement « fine » n'existe pas (§ 0.4), seuls « moyenne » et « faute » comptent.
+
+### 2.4 Résultat du RÉGLAGE (partie 20, cuts < 8 000 ; 150 jugés : 13 fautes, 9 moyennes, 60 fines, 68 acceptations ; seuils inchangés : 50 mm, rapport 1,5, graines 0 à ±360 par 120)
+| Variante | fautes (13) | moyennes (9) | fines (60) | acceptations (68) |
+|---|---|---|---|---|
+| D : différé pour ambiguïté large | **13** (9 par concurrence, 4 parce que la pose du lot n'est aucune paire forte) | 1 | **0** | 1 |
+| C : remplacée par la meilleure paire large | **12, toutes à 20 mm au plus de la vérité** ; 1 différée | 0 (1 différée) | **0** | 0 (1 différée) |
+- ÉTABLI sur le réglage : la recherche large ne touche aucune pose fine ni acceptée ; elle retire ou corrige toutes les fautes du réglage. 4 fautes sur 13 ont une pose du lot qui n'est **aucune paire forte** de la recherche large (le lot a posé sur une cellule faible : L1 corrigée ou chaîne).
+- Les seuils ne sont pas modifiés. L'examen (§ 2.3) est ouvert une fois, ci-dessous, après ce commit.
