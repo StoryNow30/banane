@@ -105,7 +105,11 @@
  /* Graines « pics » (temps, JOURNAL § 2.11) : au lieu de la grille, les AMAS de points à la hauteur du dessus de rail (|vert| ≤ 50 mm du départ), en travers, par
   * cases de 10 mm (au moins 5 points par case, 15 par amas, cases contiguës à une case vide près) ; la graine 0 (la relance du lot) toujours ; une graine par
   * amas à plus de 60 mm des graines déjà prises, bornée à ±portée. Un rail (dessus ≥ 15 points) fait un amas ; le ballast et les traverses sont sous la bande. */
- const PICS_VERT_MM=50,PICS_PAS_MM=10,PICS_CASE_MIN=5,PICS_AMAS_MIN=15,PICS_FUSION_MM=60;
+ const PICS_VERT_MM=50,PICS_PAS_MM=10,PICS_CASE_MIN=5,PICS_AMAS_MIN=15,PICS_FUSION_MM=60,PICS_LARGE_MM=120;
+ /* Un amas plus large que `PICS_LARGE_MM` (dalle, appareil de voie : amas continu de plusieurs centaines de mm) reçoit une graine tous les 120 mm au plus,
+  * réparties sur sa largeur (aucun point à plus de 60 mm d'une graine) : son centre pondéré seul manquait un vrai rail en bord d'amas (JOURNAL § 2.11). */
+ const centresAmas=a=>{const deb=a.deb*PICS_PAS_MM,W=(a.fin-a.deb)*PICS_PAS_MM;if(W<=PICS_LARGE_MM)return [a.w/a.n*PICS_PAS_MM];
+  const k=Math.ceil(W/PICS_LARGE_MM),out=[];for(let i=0;i<k;i++)out.push(deb+W*(i+0.5)/k);return out;};
  function grainesPics(capture,R){
   const t=traversParRail(capture),cases=new Map();
   for(const s of SIDES)for(const [lat,vert] of t[s]){if(Math.abs(vert)>PICS_VERT_MM||Math.abs(lat)>R.porteeMm+80)continue;const b=Math.round(lat/PICS_PAS_MM);cases.set(b,(cases.get(b)||0)+1);}
@@ -113,7 +117,7 @@
   const amas=[];let cur=null;
   for(const b of idx){const n=cases.get(b);if(cur&&b-cur.fin<=2){cur.fin=b;cur.n+=n;cur.w+=b*n;}else{cur={deb:b,fin:b,n,w:b*n};amas.push(cur);}}
   const g=[0];
-  for(const c of amas.filter(a=>a.n>=PICS_AMAS_MIN).map(a=>a.w/a.n*PICS_PAS_MM).sort((a,b)=>Math.abs(a)-Math.abs(b))){
+  for(const c of amas.filter(a=>a.n>=PICS_AMAS_MIN).flatMap(centresAmas).sort((a,b)=>Math.abs(a)-Math.abs(b))){
    const x=Math.max(-R.porteeMm,Math.min(R.porteeMm,c));if(g.every(y=>Math.abs(y-x)>PICS_FUSION_MM))g.push(x);}
   return g;
  }
