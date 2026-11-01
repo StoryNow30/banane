@@ -193,7 +193,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       if (!RLR || (Array.isArray(RLR.zones) && !RLR.zones.includes(zone))) return null;
       const k = 'rl' + SIDES.map(s => positions[s].map(v => v.toFixed(6)).join(',')).join(';');
       let rl = cache.get(k);
-      if (!rl) { try { const dd = RL.decider({ capture, positions, R: RLR }); rl = { ...RL.resumer(dd), positions: dd.positions || null }; } catch (e) { rl = { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) }; } cache.set(k, rl); }
+      if (!rl) { try { const dd = RL.decider({ capture, positions, R: RLR, science }); rl = { ...RL.resumer(dd), positions: dd.positions || null }; } catch (e) { rl = { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) }; } cache.set(k, rl); }
       const { positions: pRL, ...resume } = rl;
       if (rl.etat === 'differer') return { out: { etat: 'differe', source: 'recherche-large', etage, rechercheLarge: { ...resume, origine } } };
       if (rl.etat === 'remplacer' && pRL) {

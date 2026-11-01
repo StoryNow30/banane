@@ -225,8 +225,9 @@
      * `soutienTop`, `soutienFace` (0 et 0 = la règle examinée) : une paire ne contredit la pose que si ses deux rails ont au moins tant de points de dessus et de flanc
      * (JOURNAL § 2.8 : lu après l'examen, 90 et 0 ne diffèrent plus aucune pose juste des jeux connus ; à confirmer sur un lot neuf). Mode 'choisir-sur' : la meilleure
      * paire remplace la pose seulement si elle est loin, unique, soutenue, et la pose du lot absente ou `rapport` fois moins bonne ; sinon la règle 'differer'.
+     * `grainesMode` ('grille' = graines régulières, la règle examinée ; 'pics' = une graine par amas de points à la hauteur du rail, JOURNAL § 2.11 : moins de relances).
      * Coût : 14 relances du moteur par cut posé (1 à 3 s). `actif:false` (ou `false`) : le lot d'avant, à l'identique ; un réglage illisible l'éteint. */
-    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 0, soutienFace: 0 }),
+    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 0, soutienFace: 0, grainesMode: 'grille' }),
   });
 
   const exportSettings = Object.freeze({

@@ -151,3 +151,29 @@ test('mode choisir-sur : remplace seulement si la meilleure est loin, unique, so
  const n2=RL.decider({capture:cap3,positions:{left:pos(cap3,'left',70,-4),right:pos(cap3,'right',-70,-3)},R:RL.reglage({actif:true,mode:'choisir-sur',soutienTop:10000})});
  assert.equal(n2.etat,'garde','meilleure pauvre, pose sans paire forte : ni remplacée ni différée');
 });
+
+/* Temps (JOURNAL § 2.11) : graines sur les PICS de densité du nuage (amas de points à la hauteur du dessus de rail) au lieu de la grille ; relance 0 reprise de la science
+ * du lot quand elle est fournie. Mêmes cellules, moins de relances. */
+test('graines « pics » : les mêmes paires (vraie et leurre à 150 mm) avec moins de relances que la grille ; la science du lot fournie épargne la relance 0',()=>{
+ assert.equal(RL.DEFAUT.grainesMode,'grille');
+ assert.equal(RL.reglage({actif:true,grainesMode:'autre'}).ok,false);
+ const Rp=RL.reglage({actif:true,grainesMode:'pics'});assert.equal(Rp.ok,true);
+ const cap=captureLeurre({partLeurre:1});
+ const g=RL.grainesPics(cap,Rp);
+ assert.ok(g.includes(0)&&g.length>=2&&g.length<=4,'graines : 0 et le pic du leurre : '+JSON.stringify(g));
+ assert.ok(g.some(x=>Math.abs(Math.abs(x)-LEURRE)<=40),'une graine près du leurre : '+JSON.stringify(g));
+ const cg=RL.cellules(cap,R),cp=RL.cellules(cap,Rp);
+ assert.ok(cp.relances<cg.relances,`moins de relances (${cp.relances} < ${cg.relances})`);
+ const pg=RL.paires(cap,cg,R),pp=RL.paires(cap,cp,Rp);
+ const cle=p=>[p.left.lat,p.left.vert,p.right.lat,p.right.vert].map(v=>Math.round(v)).join(',');
+ for(const p of pg.slice(0,4))assert.ok(pp.some(q=>Math.hypot(q.left.lat-p.left.lat,q.left.vert-p.left.vert)<=3&&Math.hypot(q.right.lat-p.right.lat,q.right.vert-p.right.vert)<=3),'paire de la grille retrouvée : '+cle(p));
+ const surLeurre={left:pos(cap,'left',...V('left',LEURRE)),right:pos(cap,'right',...V('right',LEURRE))};
+ const d=RL.decider({capture:cap,positions:surLeurre,R:Rp});assert.equal(d.etat,'differer');assert.equal(d.motif,'concurrence');
+ /* Science du lot fournie : la relance 0 est reprise, une relance de moins, mêmes cellules. */
+ const Sh=require('../src/gcv1-shadow.js');const science=Sh.scientificProposeBothAvecReservoir(cap);
+ const cs=RL.cellules(cap,Rp,science);assert.equal(cs.relances,cp.relances-1);assert.equal(cs.left.length,cp.left.length);assert.equal(cs.right.length,cp.right.length);
+ const ds=RL.decider({capture:cap,positions:surLeurre,R:Rp,science});assert.equal(ds.etat,'differer');assert.equal(ds.cellules.relances,cp.relances-1);
+ /* Nuage vide de pics (points rares) : seule la graine 0. */
+ const cap2=captureLeurre();cap2.pointsSceneRelative=cap2.pointsSceneRelative.filter((_,i)=>i%20===0);cap2.visibleByClipBoxes=cap2.pointsSceneRelative.map(()=>true);
+ assert.deepEqual(RL.grainesPics(cap2,Rp),[0]);
+});

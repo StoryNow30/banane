@@ -35,7 +35,8 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0});
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0,grainesMode:'grille'});
+ const GRAINES_MODES=['grille','pics'];
  const MODES=['differer','choisir','choisir-sur'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
  const r1=v=>fini(v)?Math.round(v*10)/10:null,sig4=v=>fini(v)?Number(v.toPrecision(4)):null;
@@ -61,8 +62,9 @@
   if(typeof r.passe!=='boolean')return illisible('rechercheLarge.passe illisible');
   if(typeof r.sansPaireLoin!=='boolean')return illisible('rechercheLarge.sansPaireLoin illisible');
   for(const k of ['soutienTop','soutienFace'])if(!(fini(r[k])&&r[k]>=0))return illisible('rechercheLarge.'+k+' illisible');
+  if(!GRAINES_MODES.includes(r.grainesMode))return illisible('rechercheLarge.grainesMode illisible');
   return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin,
-   soutienTop:r.soutienTop,soutienFace:r.soutienFace};
+   soutienTop:r.soutienTop,soutienFace:r.soutienFace,grainesMode:r.grainesMode};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}
@@ -75,10 +77,10 @@
  const capturePrete=cap=>!!(cap&&cap.rails&&Array.isArray(cap.pointsSceneRelative)&&cap.pointsSceneRelative.length&&SIDES.every(s=>cap.rails[s]&&Array.isArray(cap.rails[s].positionSceneRelative)&&Array.isArray(cap.rails[s].sceneRelativeToProfileLocal)));
  /* Une relance : les deux rails de départ translatés en travers de `lat` mm, le moteur gelé relancé, ses cellules FORTES en décalages depuis
   * la vraie pose de départ. */
- function relance(capture,lat){
+ function relance(capture,lat,science){
   const rails={...capture.rails};
   for(const s of SIDES){const rail=capture.rails[s],pos=L.positionOf(rail,[0,lat/1000,0]);rails[s]=O.translated(rail,pos.map((v,i)=>v-rail.positionSceneRelative[i]));}
-  let sci;try{sci=Sh.scientificProposeBothAvecReservoir({...capture,rails});}catch{return null;}
+  let sci;if(lat===0&&science&&science.rails)sci=science;else try{sci=Sh.scientificProposeBothAvecReservoir({...capture,rails});}catch{return null;}
   const out={};
   for(const s of SIDES){
    const r=sci&&sci.rails&&sci.rails[s];if(!r||!r.ok||!r._reservoir){out[s]=[];continue;}
@@ -96,23 +98,40 @@
   for(const s of SIDES){const rail=capture.rails[s],M=rail.sceneRelativeToProfileLocal,o=C.point(M,rail.positionSceneRelative),lat=[];
    const pts=capture.pointsSceneRelative,vis=capture.visibleByClipBoxes;
    for(let i=0;i<pts.length;i++){if(vis&&vis[i]===false)continue;const p=pts[i];if(!Array.isArray(p)||p.length<3)continue;const q=C.point(M,p);
-    if(Math.abs(q[0]-o[0])>.5||Math.abs(q[2]-o[2])>.1)continue;lat.push(1000*(q[1]-o[1]));}
+    if(Math.abs(q[0]-o[0])>.5||Math.abs(q[2]-o[2])>.1)continue;lat.push([1000*(q[1]-o[1]),1000*(q[2]-o[2])]);}
    out[s]=lat;}
   return out;
+ }
+ /* Graines « pics » (temps, JOURNAL § 2.11) : au lieu de la grille, les AMAS de points à la hauteur du dessus de rail (|vert| ≤ 50 mm du départ), en travers, par
+  * cases de 10 mm (au moins 5 points par case, 15 par amas, cases contiguës à une case vide près) ; la graine 0 (la relance du lot) toujours ; une graine par
+  * amas à plus de 60 mm des graines déjà prises, bornée à ±portée. Un rail (dessus ≥ 15 points) fait un amas ; le ballast et les traverses sont sous la bande. */
+ const PICS_VERT_MM=50,PICS_PAS_MM=10,PICS_CASE_MIN=5,PICS_AMAS_MIN=15,PICS_FUSION_MM=60;
+ function grainesPics(capture,R){
+  const t=traversParRail(capture),cases=new Map();
+  for(const s of SIDES)for(const [lat,vert] of t[s]){if(Math.abs(vert)>PICS_VERT_MM||Math.abs(lat)>R.porteeMm+80)continue;const b=Math.round(lat/PICS_PAS_MM);cases.set(b,(cases.get(b)||0)+1);}
+  const idx=[...cases.keys()].filter(b=>cases.get(b)>=PICS_CASE_MIN).sort((a,b)=>a-b);
+  const amas=[];let cur=null;
+  for(const b of idx){const n=cases.get(b);if(cur&&b-cur.fin<=2){cur.fin=b;cur.n+=n;cur.w+=b*n;}else{cur={deb:b,fin:b,n,w:b*n};amas.push(cur);}}
+  const g=[0];
+  for(const c of amas.filter(a=>a.n>=PICS_AMAS_MIN).map(a=>a.w/a.n*PICS_PAS_MM).sort((a,b)=>Math.abs(a)-Math.abs(b))){
+   const x=Math.max(-R.porteeMm,Math.min(R.porteeMm,c));if(g.every(y=>Math.abs(y-x)>PICS_FUSION_MM))g.push(x);}
+  return g;
  }
  /* Une graine est UTILE si l'un des deux rails a au moins `GRAINE_POINTS_MIN` points dans la fenêtre de points du moteur autour d'elle (±180 mm) : en dessous,
   * aucune cellule forte n'est possible (dessus ≥ 15 points), la relance est inutile. Aucun effet sur les cellules trouvées : seul le temps change. */
  const GRAINE_POINTS_MIN=15,FENETRE_POINTS_MM=180;
  function grainesUtiles(capture,R){
   const t=traversParRail(capture);
-  return graines(R).filter(g=>SIDES.some(s=>{let n=0;for(const x of t[s])if(Math.abs(x-g)<=FENETRE_POINTS_MM&&++n>=GRAINE_POINTS_MIN)return true;return false;}));
+  return graines(R).filter(g=>SIDES.some(s=>{let n=0;for(const [x] of t[s])if(Math.abs(x-g)<=FENETRE_POINTS_MM&&++n>=GRAINE_POINTS_MIN)return true;return false;}));
  }
- function cellules(capture,R){
+ /* `science` (facultatif) : la science du lot sur cette capture (`scientificProposeBothAvecReservoir`, réservoir compris) : reprise comme relance 0. */
+ function cellules(capture,R,science){
   const out={left:[],right:[],relances:0,grainesSautees:0};
   if(!capturePrete(capture))return out;
-  const utiles=grainesUtiles(capture,R);out.grainesSautees=graines(R).length-utiles.length;
+  const utiles=R.grainesMode==='pics'?grainesPics(capture,R):grainesUtiles(capture,R);out.grainesSautees=graines(R).length-utiles.length;
+  const reprise=!!(science&&science.rails&&SIDES.every(s=>science.rails[s]&&science.rails[s]._reservoir));
   for(const g of utiles){
-   const r=relance(capture,g);if(!r)continue;out.relances++;
+   const r=relance(capture,g,reprise?science:null);if(!r)continue;if(!(g===0&&reprise))out.relances++;
    for(const s of SIDES)for(const x of r[s]){const d=out[s].find(c=>Math.hypot(c.lat-x.lat,c.vert-x.vert)<3);if(d){if(x.loss<d.loss)Object.assign(d,x);}else out[s].push({...x});}
   }
   for(const s of SIDES)out[s].sort((p,q)=>p.loss-q.loss);
@@ -133,14 +152,14 @@
  /* La décision. `positions` : la pose que le lot s'apprête à commander, repère scène, par rail. Rend { version, etat, motif, ms, paireLot,
   * meilleure, concurrente, positions (scène, si `remplacer`), cellules:{left,right,relances}, nPaires }. Une entrée illisible ou un réglage
   * éteint rend `garde` : la commande du lot ne change pas. */
- function decider({capture,positions,R}={}){
+ function decider({capture,positions,R,science}={}){
   const t0=Date.now(),base={version:VERSION,etat:'garde',motif:null,mode:R&&R.mode||null,paireLot:null,meilleure:null,concurrente:null,positions:null,cellules:{left:0,right:0,relances:0},nPaires:0};
   const fin=o=>({...base,...o,ms:Date.now()-t0});
   if(!R||R.ok===false||R.actif!==true)return fin({motif:'reglage-eteint'});
   if(!capturePrete(capture)||!positions||!SIDES.every(s=>Array.isArray(positions[s])))return fin({motif:'entree-illisible'});
   const pose={};
   for(const s of SIDES){const d=decalage(capture.rails[s],positions[s]);if(!d)return fin({motif:'entree-illisible'});pose[s]={lat:d[1],vert:d[2]};}
-  const cells=cellules(capture,R);
+  const cells=cellules(capture,R,science);
   const P=paires(capture,cells,R);
   const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances,grainesSautees:cells.grainesSautees},nPaires:P.length};
   /* Aucune paire forte nulle part (nuage pauvre) : absence de preuve, pas une preuve contre la pose : la commande du lot est gardée (ajustement écrit après
@@ -182,5 +201,5 @@
   return {version:d.version,etat:d.etat,motif:d.motif,mode:d.mode,ms:d.ms,cellules:d.cellules,nPaires:d.nPaires,paireLot:paireMm(d.paireLot),meilleure:paireMm(d.meilleure),concurrente:paireMm(d.concurrente),
    ...(d.paireLot&&d.meilleure?{rapportMeilleure:sig4(d.meilleure.prod/d.paireLot.prod)}:{})};
  }
- return {VERSION,DEFAUT,MODES,reglage,graines,grainesUtiles,decalage,relance,cellules,paires,decider,resumer};
+ return {VERSION,DEFAUT,MODES,GRAINES_MODES,reglage,graines,grainesUtiles,grainesPics,decalage,relance,cellules,paires,decider,resumer};
 });
