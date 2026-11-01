@@ -39,3 +39,12 @@ test('réglages : « Rattrapage (en ombre) », « Série de cuts à poser » ; h
  assert.match(texte(h),/6 à poser · 2 sautés · 3 sautés au départ/);
  assert.doesNotMatch(texte(h),/[Dd]euxième passe|différés?\b|skipp|ignorés/);
 });
+test('CH-037 : réglages : « Aurore · passage entre parties » (Allumé / Éteint), seulement quand le panneau porte l’interrupteur',()=>{
+ const base=snap({sig:sig({historique:[]})});
+ const sans=S.rendre(base,ui({couche:'reglages'}));assert.doesNotMatch(texte(sans),/passage entre parties/);
+ const avec=S.rendre({...base,reglages:{...(base.reglages||{}),passage:true}},ui({couche:'reglages'}));
+ assert.match(texte(avec),/Aurore · passage entre parties/);
+ assert.match(avec,/aria-pressed="true" data-act="sg:choix:passage:oui">Allumé/);
+ const eteint=S.rendre({...base,reglages:{...(base.reglages||{}),passage:false}},ui({couche:'reglages'}));
+ assert.match(eteint,/aria-pressed="true" data-act="sg:choix:passage:non">Éteint/);
+});

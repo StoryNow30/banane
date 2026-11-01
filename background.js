@@ -1203,13 +1203,17 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  * Absent, illisible ou inconnu : le défaut. Hors d'un lot en cours (assisté, restauration), rien ne change.
  * Test 18 : `passeDifferes`, l'interrupteur de la deuxième passe des différés (« écrit dans ESV »), gardé au même endroit mais PAS figé dans le scope : il est lu
  * à la fin de chaque lot, à chaque relance et avant chaque cut écrit (`passeDiffAllumee`). Absent : allumée (livrée) ; `false`, toute autre valeur ou stockage illisible : coupée. */
-const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',CLE_PASSE_DIFFERES='banane51PasseDifferes',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
-async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES])||{};}catch{r=null;}
+const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',CLE_PASSE_DIFFERES='banane51PasseDifferes',CLE_AURORE_PASSAGE='banane53AurorePassage',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
+async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES,CLE_AURORE_PASSAGE])||{};}catch{r=null;}
  const p=r?.[CLE_PASSE_DIFFERES];
- return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true)};}
+ /* CH-037 : `aurorePassage`, l'interrupteur de l'opérateur pour le passage entre parties de l'Aurore (réglages de Signal). Absent : allumé (suit
+  * `correctionEntreParties.actif`) ; `false` : éteint. Lu à chaque « Ouvrir » ; ne vaut que si le réglage du dépôt est allumé. */
+ return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true),
+  aurorePassage:r?.[CLE_AURORE_PASSAGE]!==false};}
 async function choixLot(args){
  if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
  if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}
+ if(args&&'aurorePassage' in args){if(typeof args.aurorePassage!=='boolean')throw Error('Passage entre parties de l’Aurore : oui ou non.');await chrome.storage.local.set({[CLE_AURORE_PASSAGE]:args.aurorePassage});}
  if(args&&'passeDifferes' in args){if(typeof args.passeDifferes!=='boolean')throw Error('Deuxième passe : oui ou non.');await chrome.storage.local.set({[CLE_PASSE_DIFFERES]:args.passeDifferes});}
  return choixDuLot();}
 const passeDiffAllumee=async()=>(await choixDuLot()).passeDifferes;
@@ -2801,9 +2805,30 @@ async function correctionListe(args){
    batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});}
  if(!listes.length)throw Error('Liste à corriger : le journal ne porte aucune décision de ces lots.');
  const memes=C&&C.etat==='proposee'&&JSON.stringify(C.listes.map(l=>l.batchId))===JSON.stringify(listes.map(l=>l.batchId));
- engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...(correctionPartiesReglage()?{entreParties:true}:{})};
+ engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...((await correctionPassage()).R?{entreParties:true}:{})};
  await engine.save();return vuePanneau();}
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
+/* CH-037 (défaut 2, test 30) — ÉTIQUETTES PROVISOIRES DES VISITES. Écho ne pose le libellé d'une visite dans son résumé (`n.visits`) qu'à la CLÔTURE de la
+ * visite (`visit-ended`) : la visite ouverte reste « ouverte » après Maj+Espace tant que l'opérateur ne change pas de cut, et une visite perdue avec la page
+ * (`pageLost`, rechargement par un changement de partie : cut 9748 de la partie 11 le 01/11) ne reçoit jamais le sien. Le signal fiable est déjà là :
+ * l'intention VALIDATE observée en direct dans l'enregistrement de la visite (`operatorIntents`, `humanFinalReference`). L'étiquette provisoire est
+ * calculée par la MÊME classification qu'Écho (`native.classify`) sur une COPIE de l'enregistrement (rien n'est écrit dans Écho). Visite close sans
+ * résumé : l'étiquette déjà classée de l'enregistrement. Gardé dans `C.issues` (visitId → libellé) ; le libellé d'Écho l'emporte toujours
+ * (`visitesFusionnees`, src/correction-liste.js). */
+function etiquetteProvisoire(rec,courant){if(!rec)return null;
+ if(!courant)return rec.endedAt&&typeof rec.observedLabelCandidate==='string'?rec.observedLabelCandidate:null;
+ if(!(rec.operatorIntents||[]).some(x=>x?.intent==='VALIDATE'))return null;
+ let c=null;try{c=JSON.parse(JSON.stringify(rec));native.classify(c);}catch{return null;}
+ const l=c?.observedLabelCandidate;return typeof l==='string'&&/^VALIDATE/.test(l)?l:null;}
+async function correctionIssues(C){const n=engine.s.native;if(!C||!n||n.correction?.id!==C.id)return C?.issues||{};
+ const I={...(C.issues||{})};let change=false;
+ for(const v of n.visits||[]){if(!v?.visitId||v.label)continue;
+  const courant=n.current?.visitId===v.visitId;if(!courant&&I[v.visitId])continue;
+  let rec=courant?n.current:null;if(!rec){try{rec=await native.recordById(v.visitId);}catch{rec=null;}}
+  const l=etiquetteProvisoire(rec,courant);
+  if(l&&I[v.visitId]!==l){I[v.visitId]=l;change=true;}else if(!l&&I[v.visitId]){delete I[v.visitId];change=true;}}
+ if(change){C.issues=I;await engine.save();}return I;}
+const visitesDeCorrection=(C,n,I)=>CL().visitesFusionnees(n?.correction?.id===C.id?n.visits:[],{issues:I,echoOuvert:false});
 /* FIN PROPRE (demande de la mère, 31/10) : aucune séance Écho « correction » ne reste ouverte par erreur. `correctionVivante` (mémoire du service worker)
  * porte l'identifiant de la correction démarrée ou reprise dans CETTE vie du service worker ; `correctionOuverture` couvre la pause d'Écho que fait
  * « Ouvrir ». `correctionVerifierFin` clôt la correction (Écho fermé, bilan inscrit) quand : la liste est finie (chaque cut validé ou corrigé),
@@ -2811,12 +2836,15 @@ const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
  * lecture de la vue par le panneau ; la fermeture du dernier panneau clôt aussi la correction. */
 let correctionVivante=null,correctionOuverture=false,correctionFinEnCours=null;
 async function correctionVerifierFin(raisonImposee=null){
+ /* CH-037 : la vue suit le réglage effectif (dépôt et interrupteur de l'opérateur), relu à chaque lecture de la vue. */
+ {const C0=engine.s.correction;if(C0&&C0.etat!=='terminee'&&!correctionOuverture){const t=!!(await correctionPassage()).R;
+  if(t!==(C0.entreParties===true)){if(t)C0.entreParties=true;else delete C0.entreParties;await engine.save();}}}
  const C=engine.s.correction;if(!C||C.etat!=='ouverte'||correctionOuverture||correctionFinEnCours)return;
  const n=engine.s.native,miens=n?.correction?.id===C.id;
  let raison=raisonImposee;
  if(!raison&&correctionVivante!==C.id)raison='sw-redemarre';
  if(!raison&&!(miens&&native.active()))raison='echo-ferme';
- if(!raison&&miens){const b=CL().bilan(entreesCorrection(C),(n.visits||[]).map(v=>({identity:v.identity,label:v.label??null})));
+ if(!raison&&miens){const b=CL().bilan(entreesCorrection(C),visitesDeCorrection(C,n,await correctionIssues(C)));
   if(b.comptes.total&&b.comptes.traites===b.comptes.total)raison='liste-finie';}
  if(!raison)return;
  correctionFinEnCours=correctionTerminer({raison}).catch(e=>journalerSimple('correction-fin',{correctionId:C.id,raison,etat:'erreur',message:String(e?.message||e).slice(0,160)})).finally(()=>{correctionFinEnCours=null;});
@@ -2836,9 +2864,18 @@ async function correctionOuvrir(args){
  const C=engine.s.correction;if(!correctionOuverte())throw Error('Aucune correction en cours : commence la correction avant d’ouvrir un cut.');
  const part=Number.isInteger(args?.part)?args.part:null,cut=Number.isInteger(args?.cut)?args.cut:null;
  if(!entreesCorrection(C).some(e=>e.part===part&&e.cut===cut))throw Error(`Le cut ${cut} de la partie ${part} n’est pas dans la liste à corriger.`);
- /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie ; éteint, rien n'est lu de plus (4.9.5.31). */
- const RP=correctionPartiesReglage();
- if(RP){let lu=null;try{lu=(await call('ping'))?.label||null;}catch{lu=null;}if(partCut(lu)&&lu.part!==part)return correctionOuvrirAilleurs(C,{part,cut},lu,RP);}
+ /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie. CH-037 : éteint, le refus est dit tout de suite,
+  * avec sa raison, sans pause d'Écho ni commande à ESV (un clic sur « Ouvrir » n'est jamais muet). */
+ const P=await correctionPassage(),RP=P.R;if(RP)C.entreParties=true;else delete C.entreParties;
+ let lu=null;try{lu=(await call('ping'))?.label||null;}catch{lu=null;}
+ if(partCut(lu)&&lu.part!==part){
+  if(RP)return correctionOuvrirAilleurs(C,{part,cut},lu,RP);
+  const message=`Le cut ${cut} est dans la partie ${part} ; ESV affiche la partie ${lu.part}. Le passage entre parties est éteint ${P.eteint==='operateur'?'dans les réglages de Signal (Aurore)':'dans cette version (réglage du dépôt)'} : ouvre la partie ${part} dans ESV${P.eteint==='operateur'?', ou rallume le passage':''}. Rien n’a été validé.`;
+  C.passage={etat:'refuse',vers:part,texte:message.slice(0,300)};await engine.save();
+  journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:'refuse',code:'PASSAGE_ETEINT',message:message.slice(0,300),ecoReprise:engine.s.native?.status??null,
+   changementPartie:{de:lu.part,vers:part,resultat:'eteint',eteint:P.eteint}});
+  return {ok:false,resultat:'refuse',code:'PASSAGE_ETEINT',message,cible:{part,cut},correction:C};}
+ if(C.passage)delete C.passage;
  const enMarche=engine.s.native.status==='RUNNING';
  correctionOuverture=true;let r=null,erreur=null;
  try{if(enMarche)await native.pause();
@@ -2856,6 +2893,10 @@ async function correctionOuvrir(args){
  * passagère, `gotoBorneMs`), puis reprise d'Écho (nouvelle période). Une seule séance Écho pour toute l'Aurore : chaque visite porte son identité.
  * Journal : `correction-partie` (de, vers, cible, résultat, motif, mode, tentatives, durée), chaque tentative `correction-partie-tentative`. */
 const correctionPartiesReglage=()=>{const r=globalThis.BananeSettings?.correctionEntreParties;return r&&r.actif===true?{changementBorneMs:60000,gotoBorneMs:15000,pollMs:500,...r}:null;};
+/* CH-037 : le réglage EFFECTIF, relu à chaque « Ouvrir » (et non plus figé à la naissance de la liste) : le dépôt (`src/settings.js`) ET l'interrupteur
+ * de l'opérateur (réglages de Signal). `{R}` allumé, sinon `{R:null, eteint:'depot'|'operateur'}` pour dire pourquoi. */
+async function correctionPassage(){const R=correctionPartiesReglage();if(!R)return {R:null,eteint:'depot'};
+ let ok=true;try{ok=(await choixDuLot()).aurorePassage!==false;}catch{ok=true;}return ok?{R}:{R:null,eteint:'operateur'};}
 const GOTO_PASSAGERS=new Set(['OUT_OF_BOUNDS','IDENTITY_UNAVAILABLE_BEFORE','ADAPTER_BUSY','NAVIGATION_PATH_UNAVAILABLE','ESV_ILLISIBLE']);
 async function allerAuCutApresChangement(cible,RP){const fin=Date.now()+RP.gotoBorneMs;let r=null;
  for(;;){r=await allerAuCut(cible);if(r?.ok||!GOTO_PASSAGERS.has(r?.code)||Date.now()>=fin)return r;await attendre(RP.pollMs);}}
@@ -2887,12 +2928,13 @@ async function correctionOuvrirAilleurs(C,{part,cut},lu,RP){const t0=Date.now(),
  return {...r,correction:C,changementPartie:{de,vers:part,resultat}};}
 async function correctionTerminer({raison='operateur'}={}){
  const C=engine.s.correction;if(!C||C.etat!=='ouverte')throw Error('Aucune correction en cours.');
- const n=engine.s.native;if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
+ const n=engine.s.native;await correctionIssues(C).catch(()=>{});if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
  correctionVivante=null;
- const visites=(engine.s.native?.correction?.id===C.id?engine.s.native.visits:[])||[];
- const b=CL().bilan(entreesCorrection(C),visites.map(v=>({identity:v.identity,label:v.label??null})));
+ /* CH-037 : les mêmes visites fusionnées que l'écran (étiquettes provisoires comprises), donc le même résultat. */
+ const I=await correctionIssues(C).catch(()=>C.issues||{});
+ const b=CL().bilan(entreesCorrection(C),visitesDeCorrection(C,engine.s.native,I));
  Object.assign(C,{etat:'terminee',finA:new Date().toISOString(),bilan:b.comptes,courant:null,raisonFin:raison});await engine.save();
- journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
+ journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,regleStatut:CL().REGLE_STATUT,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
  return vuePanneau();}
 async function correctionFermer(){const C=engine.s.correction;if(C?.etat==='ouverte')throw Error('Termine la correction avant de fermer la liste.');
  delete engine.s.correction;await engine.save();return vuePanneau();}

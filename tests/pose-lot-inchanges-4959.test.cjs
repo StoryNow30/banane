@@ -112,7 +112,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* Test 27 (CH-026, ordre de l'opérateur du 30/10) : clé ajoutée au premier niveau, la relecture « corriger » par défaut, non réglable. */
  assert.deepEqual({...relectureDefaut},{mode:'corriger',modifiable:false},'relecture après le lot : « corriger » par défaut, non réglable');
  /* CH-035 : clé ajoutée au premier niveau, l'Aurore entre les parties d'une Constellation, ÉTEINTE tant que l'opérateur ne l'a pas éprouvée. */
- assert.equal(correctionEntreParties.actif,false,'Aurore entre les parties : éteinte par défaut');
+ assert.equal(correctionEntreParties.actif,true,'Aurore entre les parties : allumée par défaut (CH-037, décision de l’opérateur du 01/11), sans effet sur le lot');
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
  assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
@@ -134,6 +134,6 @@ test('lot : avec la raison allumée au panneau, les commandes envoyées à ESV s
  assert.equal('clicHumain' in scope,false,'le scope du lot est celui d\'avant');assert.equal('lotProfil' in scope,false,'profil « actuel » : le scope n\'en porte rien');assert.equal('regleGrappeDifferes' in scope,false);
  const etatLot=neutre(avec.b.get('engine').s.batch);assert.ok(!JSON.stringify(etatLot).includes('raison'),'aucune raison dans l\'état du lot');
  /* Le choix du lot garde sa forme, rien de la raison ; test 18 : plus l'interrupteur de la deuxième passe, gardé au même endroit mais jamais figé dans le scope. */
- assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['clicHumain','passeDifferes','regleGrappeDifferes']);assert.equal('passeDifferes' in scope,false);
+ assert.deepEqual(Object.keys(await avec.b.api('choix-lot-etat')).sort(),['aurorePassage','clicHumain','passeDifferes','regleGrappeDifferes']);assert.equal('passeDifferes' in scope,false);assert.equal('aurorePassage' in scope,false,'CH-037 : l’interrupteur de l’Aurore n’entre pas dans le lot');
  assert.equal((await avec.b.api('raison-choix-etat')).actif,true,'le choix de la raison est à part');
 });

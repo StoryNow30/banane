@@ -507,6 +507,7 @@
     return `<div class="sg-feuille" data-k="reglages" role="dialog" aria-label="Réglages"><div class="sg-tete"><span class="sg-t">Réglages</span><span class="sg-meta">jamais en séance</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:fermer" aria-label="Fermer">${ic('croix')}</button></div><div class="sg-liste">
  ${snap.relectureModifiable ? ligne('Après le lot', 'Relecture des verts sûrs · gardé pour le prochain lot', sel('relecture', [['coupee', 'Rien'], ['ombre', 'Relire sans rien modifier'], ['corriger', 'Relire et corriger']], r.relecture, 'Après le lot')) : ''}
  ${ligne('Clic du mode rapide', 'gardé pour le prochain lot', sel('clic', [['tel-quel', 'Comme avant'], ['gauche-recentre', 'Rail gauche recentré'], ['tout-recentre', 'Tout recentré']], r.clic, 'Clic du mode rapide'))}
+ ${r.passage === null || r.passage === undefined ? '' : ligne('Aurore · passage entre parties', 'Ouvrir un cut d’une autre partie : Ariane change de partie dans ESV, sans rien valider', seg('passage', [['non', 'Éteint'], ['oui', 'Allumé']], r.passage ? 'oui' : 'non', 'Aurore · passage entre parties'))}
  ${ligne('Série de cuts à poser', 'Mettre en attente les cuts voisins', seg('grappe', [['non', 'Non'], ['oui', 'Oui']], r.grappe ? 'oui' : 'non', 'Série de cuts à poser'))}
  ${ligne('Rattrapage (en ombre)', 'En fin de lot, note ce qu’elle poserait pour les cuts restés sans pose, sans rien écrire dans ESV', sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non', 'Rattrapage'))}
  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho', sel('raison', [['non', 'Non'], ['chiffres', 'Oui · chiffres du haut'], ['alt-chiffres', 'Oui · Alt + chiffre'], ['pave', 'Oui · pavé numérique']], r.raison ? r.touches || 'chiffres' : 'non', 'Raison de la correction'))}
@@ -685,8 +686,9 @@
     const tout = C.listes.flatMap(l => l.lignes), n = tout.filter(revu).length;
     const outil = l => {
       if (!ouverte) return '';
-      const ailleurs = aff !== null && l.part !== aff && !trav, off = ailleurs || !(B.ouvrir?.actif ?? true);
-      const titre = ailleurs ? `Ouvre la partie ${l.part} dans ESV pour corriger ce cut` : off ? 'Ouverture en cours…' : aff !== null && l.part !== aff ? `Passer à la partie ${l.part} et ouvrir ce cut` : 'Ouvrir ce cut dans ESV';
+      /* CH-037 (défaut 1) : un cut d'une autre partie n'est JAMAIS désactivé (le clic restait muet) ; passage éteint, le service worker refuse et dit pourquoi. */
+      const ailleurs = aff !== null && l.part !== aff && !trav, off = !(B.ouvrir?.actif ?? true);
+      const titre = off ? 'Ouverture en cours…' : ailleurs ? `Partie ${l.part} : le passage entre parties est éteint ; le clic dit quoi faire` : aff !== null && l.part !== aff ? `Passer à la partie ${l.part} et ouvrir ce cut` : 'Ouvrir ce cut dans ESV';
       return `<span class="sg-outils"><button type="button"${off ? ' disabled' : ` data-act="sg:corr-ouvrir:${esc(l.part)}:${esc(l.cut)}"`} title="${esc(titre)}">${ic('ouvrir')}<span>Ouvrir</span></button></span>`;
     };
     const ligne = (l, i) => { const det = detailSignal(l);
@@ -708,7 +710,7 @@
       if (P.length) liste += `<div class="sg-section"><span>À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">laissés par le lot</span></div>${P.map(ligne).join('')}`;
     }
     const bt = (b, plein) => b ? `<button type="button" class="${plein ? 'sg-principal' : 'sg-secondaire'}"${b.act ? ` data-act="${esc(b.act)}"` : ''}${b.inactif ? ' disabled' : ''}>${plein && b.ic ? ic(b.ic) : ''}${plein ? `<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
-    const PA = trav ? C.passage : null;
+    const PA = C.passage || null;
     const refus = PA?.etat === 'refuse' && PA.texte ? `<p class="sg-raison" role="status">${esc(PA.texte)}</p>` : C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? `<p class="sg-raison" role="status">${esc(C.ouvrir.texte)}</p>` : '';
     const aube = C.listes.map(L => { const t = L.lignes.length, f = L.lignes.filter(revu).length; return `<span data-partie="${esc(L.partie)}"${aff !== null && L.partie === aff ? ' data-affichee="1"' : ''} style="flex:${Math.max(1, t)} 1 0"><i style="width:${t ? Math.round(f / t * 100) : 0}%"></i><small class="sg-mono">${esc(L.partie)} · ${f} sur ${t}</small></span>`; }).join('');
     let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
