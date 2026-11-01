@@ -3,7 +3,7 @@
  * L'extension est une COPIE TEMPORAIRE du dépôt avec `correctionEntreParties.actif:true` (le dépôt le garde éteint). Les LOTS sont FABRIQUÉS au journal du
  * service worker (dit ici, jamais ailleurs) : `batch-started`, une décision par cut et une écriture de la deuxième passe (signal `passe-ecrite`) pour chaque
  * cut de la liste ; le sujet est le parcours entre les parties, pas le lot (le lot réel de la correction est éprouvé par correction-signal.test.cjs).
- * Prouve SUR LA MAQUETTE seulement : « Ouvrir » change de partie par les boutons d'ESV (gestes vers la suivante, lien sinon), Écho en pause pendant le
+ * Prouve SUR LA MAQUETTE seulement : « Ouvrir » change de partie par le lien du sélecteur d'ESV (jamais un geste de la file, réserve de l'intégrateur du 01/11), Écho en pause pendant le
  * trajet et repris, le cut atteint ; retour en arrière ; partie déjà chargée sans changement ; panne (partie absente du sélecteur) dite, ESV reste sur sa
  * partie ; aucune écriture, aucun SKIP ; 0 erreur de console ; `correction-partie` au journal. Ne prouve rien sur un vrai ESV.
  *   CHROMIUM=/opt/pw-browsers/chromium node --test --test-timeout=900000 tests/esv-maquette/correction-parties.test.cjs */
@@ -20,6 +20,9 @@ function extensionAllumee() {
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   const S = path.join(d, 'src/settings.js'), t = fs.readFileSync(S, 'utf8'), a = 'const correctionEntreParties = Object.freeze({ actif: false,';
   assert.ok(t.includes(a), 'réglage éteint dans le dépôt'); fs.writeFileSync(S, t.replace(a, 'const correctionEntreParties = Object.freeze({ actif: true,'));
+  /* AUCUN PATCH D'ADAPTATEUR : la page d'ESV est pilotée par l'adaptateur du dépôt, octet pour octet (seul le réglage change dans la copie). */
+  const h = f => require('node:crypto').createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+  for (const f of ['src/adapter-page.js', 'src/bridge.js', 'src/native-page.js']) assert.equal(h(path.join(d, f)), h(path.join(N.racine, f)), f + ' identique au dépôt');
   return d;
 }
 
@@ -123,7 +126,7 @@ test('Aurore sur 3 parties de la maquette : suivant vers 24 puis 25, panne vers 
   assert.deepEqual([R.meme.maquette.part, R.meme.maquette.cut], [23, 105]); assert.ok(R.sansChangement, 'partie déjà chargée : aucun changement de partie');
   const cp = R.j.filter(e => e.type === 'correction-partie');
   assert.deepEqual(cp.map(e => [e.de, e.vers, e.resultat]), [[23, 24, 'ok'], [24, 25, 'ok'], [25, 27, 'echec'], [25, 23, 'ok']]);
-  assert.equal(cp[3].mode, 'lien', 'retour en arrière : le lien'); assert.equal(cp[2].motif, 'selecteur-illisible');
+  assert.deepEqual(cp.filter(e => e.resultat === 'ok').map(e => e.mode), ['lien', 'lien', 'lien'], 'le lien seul, vers la suivante comme en arrière (réserve de l’intégrateur)'); assert.equal(cp[2].motif, 'selecteur-illisible');
   const fin = controleCommun(R);
   const visites = new Set(fin.lignes.filter(l => l.visites > 0).map(l => l.part + ':' + l.cut));
   for (const x of R.pas) assert.ok(visites.has(x.cible.part + ':' + x.cible.cut), 'visite Écho du cut ' + JSON.stringify(x.cible));
@@ -144,7 +147,7 @@ test('forme de la file du 31/10 (1, 24, 0, 3 cuts sur 4 parties) : le parcours a
   assert.deepEqual(R.pas.map(x => [x.maquette.part, x.maquette.cut]), attendu, 'chaque cut atteint dans la maquette');
   const cp = R.j.filter(e => e.type === 'correction-partie');
   assert.deepEqual(cp.map(e => [e.de, e.vers, e.resultat]), [[23, 24, 'ok'], [24, 26, 'ok']]);
-  assert.equal(cp[1].mode, 'lien', 'saut de la partie vide : le lien seul');
+  assert.deepEqual(cp.map(e => e.mode), ['lien', 'lien'], 'le lien seul, y compris vers la partie suivante');
   controleCommun(R);
   console.log(`# forme du 31/10 : ${R.pas.length} cuts atteints ; changements ${JSON.stringify(cp.map(e => ({ de: e.de, vers: e.vers, mode: e.mode, dureeMs: e.dureeMs })))}`);
 });

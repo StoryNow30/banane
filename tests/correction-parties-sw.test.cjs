@@ -84,15 +84,14 @@ test('partie courante déjà chargée : aucun changerPartie, chemin de CH-028 in
   assert.equal(evts(b, 'correction-partie').length, 0);
 });
 
-test('vers la partie suivante, adaptateur à gestes : « Next non validated cut » d’abord ; un saut (5 → 7) n’essaie que le lien', async () => {
-  let b = await monter({ gestes: true });
-  assert.equal((await b.api('correction-ouvrir', { part: 6, cut: 14 })).ok, true);
-  assert.deepEqual(trajet(b).filter(x => /^changerPartie/.test(x)), ['changerPartie:invalide-suivant:6']);
-  assert.equal(evts(b, 'correction-partie').at(-1).mode, 'invalide-suivant');
-  b = await monter({ gestes: true });
-  assert.equal((await b.api('correction-ouvrir', { part: 7, cut: 14 })).ok, true);
-  assert.deepEqual(trajet(b).filter(x => /^changerPartie/.test(x)), ['changerPartie:lien:7']);
-  sansEcriture(b);
+test('vers la partie suivante, adaptateur à gestes : le LIEN seul (réserve de l’intégrateur : aucun geste de la file dans l’Aurore), comme pour un saut', async () => {
+  for (const vers of [6, 7]) {
+    const b = await monter({ gestes: true });
+    assert.equal((await b.api('correction-ouvrir', { part: vers, cut: 14 })).ok, true);
+    assert.deepEqual(trajet(b).filter(x => /^changerPartie/.test(x)), ['changerPartie:lien:' + vers], 'aucun geste vers la partie ' + vers);
+    assert.equal(evts(b, 'correction-partie').at(-1).mode, 'lien');
+    sansEcriture(b);
+  }
 });
 
 test('panne : changement sans effet (borne), partie absente, autre partie ouverte : refus dit, Écho repris, rien d’autre envoyé', async () => {
@@ -101,6 +100,7 @@ test('panne : changement sans effet (borne), partie absente, autre partie ouvert
   assert.equal(r.ok, false); assert.equal(r.code, 'CHANGEMENT_PARTIE'); assert.match(r.message, /partie 6/);
   assert.equal(b.fonction('engine.s.native.status'), 'RUNNING', 'Écho repris sur la partie affichée');
   assert.ok(!trajet(b).some(x => /^goToCut/.test(x)), 'aucun retour au cut sans la partie');
+  assert.deepEqual({ ...b.fonction('engine.s.correction.passage') }, { etat: 'refuse', vers: 6, texte: b.fonction('engine.s.correction.passage.texte') }); assert.match(b.fonction('engine.s.correction.passage.texte'), /Partie 6 non ouverte/);
   let e = evts(b, 'correction-partie').at(-1); assert.equal(e.resultat, 'echec'); assert.equal(e.motif, 'changement-impossible'); assert.ok(e.tentatives.length >= 1);
   b = await monter(); b.adapter.parts = [5, 7];
   r = await b.api('correction-ouvrir', { part: 6, cut: 14 }); assert.equal(r.ok, false);
