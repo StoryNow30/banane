@@ -595,10 +595,12 @@
         : cour.statut === 'valide' ? `Cut ${mono(cour.cut)} validé tel quel · visite enregistrée par Écho`
         : `Cut ${mono(cour.cut)} ouvert dans ESV · corrige-le, puis valide dans ESV ; Écho enregistre la visite`;
       const i0 = cour ? tout.indexOf(cour) : -1, ici = l => C.partieAffichee === null || l.part === C.partieAffichee;
-      const suivant = [...tout.slice(i0 + 1), ...tout.slice(0, Math.max(0, i0))].find(l => l.statut === 'a-faire' && ici(l));
+      /* CH-035 : allumé, le suivant est celui du parcours (partie affichée d'abord, puis les suivantes), même dans une autre partie. */
+      const suivant = C.entreParties ? (C.parcours?.suivant ? tout.find(l => l.part === C.parcours.suivant.part && l.cut === C.parcours.suivant.cut) : null)
+        : [...tout.slice(i0 + 1), ...tout.slice(0, Math.max(0, i0))].find(l => l.statut === 'a-faire' && ici(l));
       const terminer = { texte: 'Terminer la correction', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) };
       Object.assign(m, { glyphe: 'echo', ton: 'vivant', mot: 'Correction en cours', phrase, droite: `${pluriel(k.corrige, 'corrigé', 'corrigés')} · ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}`,
-        principal: suivant ? { texte: `${cour ? 'Ouvrir le suivant' : 'Ouvrir le premier'} · cut ${suivant.cut}`, act: `sg:corr-ouvrir:${suivant.part}:${suivant.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
+        principal: suivant ? { texte: `${cour ? 'Ouvrir le suivant' : 'Ouvrir le premier'} · ${C.entreParties && suivant.part !== C.partieAffichee ? `partie ${suivant.part}, ` : ''}cut ${suivant.cut}`, act: `sg:corr-ouvrir:${suivant.part}:${suivant.cut}`, ic: 'ouvrir', inactif: !(B.ouvrir?.actif ?? true) } : terminer,
         secondaires: suivant ? [terminer] : [] });
     } else if (C.etat === 'ouverte') {
       Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: 'Correction interrompue', phrase: 'La séance Écho de la correction n’est plus active · termine la correction pour inscrire le bilan',
@@ -617,8 +619,8 @@
     const C = s.correction, m = ongletCorrectionModele(s), k = C.comptes, ouverte = C.etat === 'ouverte' && C.ouverte, B = C.boutons || {};
     const outil = l => {
       if (!ouverte) return '';
-      const ailleurs = C.partieAffichee !== null && l.part !== C.partieAffichee, off = ailleurs || !(B.ouvrir?.actif ?? true);
-      const titre = ailleurs ? `Ouvre la partie ${l.part} dans ESV pour corriger ce cut` : off ? 'Ouverture en cours…' : 'Ouvrir ce cut dans ESV';
+      const ailleurs = C.partieAffichee !== null && l.part !== C.partieAffichee, off = (ailleurs && !C.entreParties) || !(B.ouvrir?.actif ?? true);
+      const titre = ailleurs && !C.entreParties ? `Ouvre la partie ${l.part} dans ESV pour corriger ce cut` : off ? 'Ouverture en cours…' : ailleurs ? `Ouvrir ce cut dans ESV (changement vers la partie ${l.part})` : 'Ouvrir ce cut dans ESV';
       return `<span class="sg-outils"><button type="button"${off ? ' disabled' : ` data-act="sg:corr-ouvrir:${esc(l.part)}:${esc(l.cut)}"`} title="${esc(titre)}">${ic('ouvrir')}<span>Ouvrir</span></button></span>`;
     };
     const ligne = (l, i) => { const det = detailSignal(l);
@@ -627,6 +629,9 @@
     let liste = '';
     for (const L of C.listes) {
       const A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser'), pre = plusieurs ? `Partie ${esc(L.partie)} · ` : '';
+      /* CH-035 : une ligne d'état par partie (à faire, en cours, faite) ; l'habillage est le travail de CH-036. */
+      const EP = C.entreParties && plusieurs ? (C.parcours?.parties || []).find(x => x.partie === L.partie) : null;
+      if (EP) liste += `<div class="sg-section sg-corr-partie" data-partie="${esc(L.partie)}" data-etat="${esc(EP.etat)}"><span>Partie ${esc(L.partie)}</span><span class="sg-n">${esc(EP.faits)}/${esc(EP.total)}</span><span class="sg-d">${EP.etat === 'faite' ? 'faite' : EP.etat === 'en-cours' ? 'en cours' : 'à faire'}</span></div>`;
       liste += `<div class="sg-section"><span>${pre}À corriger</span><span class="sg-n">${A.length}</span><span class="sg-d">posés qu’Ariane juge probablement faux</span></div>${A.length ? A.map(ligne).join('') : '<div class="sg-vide">Aucun posé signalé.</div>'}`;
       if (P.length) liste += `<div class="sg-section"><span>${pre}À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">différés restants</span></div>${P.map(ligne).join('')}`;
     }

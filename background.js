@@ -2743,7 +2743,7 @@ async function correctionListe(args){
    batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});}
  if(!listes.length)throw Error('Liste à corriger : le journal ne porte aucune décision de ces lots.');
  const memes=C&&C.etat==='proposee'&&JSON.stringify(C.listes.map(l=>l.batchId))===JSON.stringify(listes.map(l=>l.batchId));
- engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes};
+ engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...(correctionPartiesReglage()?{entreParties:true}:{})};
  await engine.save();return vuePanneau();}
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
 /* FIN PROPRE (demande de la mère, 31/10) : aucune séance Écho « correction » ne reste ouverte par erreur. `correctionVivante` (mémoire du service worker)
@@ -2778,6 +2778,9 @@ async function correctionOuvrir(args){
  const C=engine.s.correction;if(!correctionOuverte())throw Error('Aucune correction en cours : commence la correction avant d’ouvrir un cut.');
  const part=Number.isInteger(args?.part)?args.part:null,cut=Number.isInteger(args?.cut)?args.cut:null;
  if(!entreesCorrection(C).some(e=>e.part===part&&e.cut===cut))throw Error(`Le cut ${cut} de la partie ${part} n’est pas dans la liste à corriger.`);
+ /* CH-035 : allumé, un cut d'une AUTRE partie que celle affichée passe par le changement de partie ; éteint, rien n'est lu de plus (4.9.5.29). */
+ const RP=correctionPartiesReglage();
+ if(RP){let lu=null;try{lu=(await call('ping'))?.label||null;}catch{lu=null;}if(partCut(lu)&&lu.part!==part)return correctionOuvrirAilleurs(C,{part,cut},lu,RP);}
  const enMarche=engine.s.native.status==='RUNNING';
  correctionOuverture=true;let r=null,erreur=null;
  try{if(enMarche)await native.pause();
@@ -2789,6 +2792,37 @@ async function correctionOuvrir(args){
  if(erreur)throw erreur;
  if(r?.ok){C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();}
  return {...r,correction:C};}
+/* CH-035 — L'AURORE ENTRE LES PARTIES (chantiers/CH-035/CONCEPTION.md). Écho en pause pendant TOUT le trajet (la visite en cours se clôt), changement de
+ * partie par le cœur commun à la file (`changerPartieEsv` : `ping` et ses capacités, gestes vers la partie suivante seulement, sinon le lien du
+ * sélecteur ; preuve = la partie lue dans la page, rails présents), retour au cut (rejoué tant que la page nouvellement chargée le refuse de façon
+ * passagère, `gotoBorneMs`), puis reprise d'Écho (nouvelle période). Une seule séance Écho pour toute l'Aurore : chaque visite porte son identité.
+ * Journal : `correction-partie` (de, vers, cible, résultat, motif, mode, tentatives, durée), chaque tentative `correction-partie-tentative`. */
+const correctionPartiesReglage=()=>{const r=globalThis.BananeSettings?.correctionEntreParties;return r&&r.actif===true?{changementBorneMs:60000,gotoBorneMs:15000,pollMs:500,...r}:null;};
+const GOTO_PASSAGERS=new Set(['OUT_OF_BOUNDS','IDENTITY_UNAVAILABLE_BEFORE','ADAPTER_BUSY','NAVIGATION_PATH_UNAVAILABLE','ESV_ILLISIBLE']);
+async function allerAuCutApresChangement(cible,RP){const fin=Date.now()+RP.gotoBorneMs;let r=null;
+ for(;;){r=await allerAuCut(cible);if(r?.ok||!GOTO_PASSAGERS.has(r?.code)||Date.now()>=fin)return r;await attendre(RP.pollMs);}}
+async function correctionOuvrirAilleurs(C,{part,cut},lu,RP){const t0=Date.now(),de=lu.part;
+ const enMarche=engine.s.native.status==='RUNNING';
+ correctionOuverture=true;let X=null,r=null,erreur=null;
+ C.changement={de,vers:part,cut,depuis:new Date().toISOString()};await engine.save();
+ try{if(enMarche)await native.pause();
+  try{X=await changerPartieEsv(part,{R:RP,attendu:()=>engine.s.correction?.id===C.id&&engine.s.correction.etat==='ouverte',
+    gestes:d=>Number.isInteger(d)&&part===d+1,typeTentative:'correction-partie-tentative'});
+   if(X.ok)r=await allerAuCutApresChangement({part,cut},RP);}
+  catch(e){erreur=e;}
+  finally{if(enMarche||engine.s.native?.status==='PAUSED'){try{await native.resume();}catch(e){erreur=erreur||e;}}}}
+ finally{correctionOuverture=false;delete C.changement;}
+ const resultat=X?.ok?(X.tentatives.length?'ok':'deja'):'echec',reussie=X?.tentatives?.find(t=>t.issue==='ok');
+ const detail=X&&!X.ok?String(X.quitte?'correction close pendant le changement':X.detail||'').slice(0,300):null;
+ journalerSimple('correction-partie',{correctionId:C.id,version:CL().VERSION_PARCOURS,de,vers:part,cible:{part,cut},resultat,motif:X&&!X.ok?X.quitte?'quitte':X.motif??null:null,detail,
+  mode:reussie?.mode??null,tentatives:(X?.tentatives||[]).map(t=>({mode:t.mode,issue:t.issue,raison:t.raison,dureeMs:t.dureeMs})),dureeMs:Date.now()-t0,ecoReprise:engine.s.native?.status??null,
+  ...(erreur?{erreur:String(erreur.message||erreur).slice(0,160)}:{})});
+ journalerSimple('correction-ouvrir',{correctionId:C.id,identity:{part,cut},resultat:erreur?'erreur':X?.ok?r?.resultat??null:'refuse',code:r?.code??(X?.ok?null:'CHANGEMENT_PARTIE'),
+  message:erreur?String(erreur.message||erreur).slice(0,160):r?.message??detail,ecoReprise:engine.s.native?.status??null,changementPartie:{de,vers:part,resultat}});
+ if(erreur)throw erreur;
+ if(!X?.ok)return {ok:false,resultat:'refuse',code:'CHANGEMENT_PARTIE',message:`Partie ${part} non ouverte dans ESV (${detail}) : rien n’a été validé ; ESV reste sur la partie affichée.`,cible:{part,cut},correction:C};
+ if(r?.ok){C.courant={part,cut,at:new Date().toISOString(),resultat:r.resultat};await engine.save();}
+ return {...r,correction:C,changementPartie:{de,vers:part,resultat}};}
 async function correctionTerminer({raison='operateur'}={}){
  const C=engine.s.correction;if(!C||C.etat!=='ouverte')throw Error('Aucune correction en cours.');
  const n=engine.s.native;if(n?.correction?.id===C.id&&native.active())await native.end({dataset:false});
@@ -3477,24 +3511,35 @@ async function fileDemarrerLot({part,rang}){const e=fileP.etat;if(!e||e.etat!=='
 const FILE_GESTE_BORNE_MS=15000;
 async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.etat;if(!R||!e0)return;
  const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
+ const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
+ if(!retour)await fileEvenement({type:'changement-envoye',vers});
+ const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour});
+ if(X.quitte)return;
+ if(X.ok)return retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:X.r.identity.cut});
+ if(X.journalEchec)journalerSimple('file-parties-changement-echec',{vers,retour,motif:X.motif,detail:String(X.detail||'').slice(0,300),tentatives:X.tentatives,selecteurAvant:X.selecteurAvant,selecteurApres:X.selecteurApres,dureeMs:Date.now()-X.t0});
+ const resume=X.tentatives.map(t=>`${t.mode} : ${t.texte}`).join(' ; ');
+ const d=X.tentatives.length&&!String(X.detail||'').includes(resume)?`${X.detail} ; essayé : ${resume}`:X.detail;
+ return retour?fileRelectureApresRetour(false,d):fileEvenement({type:'changement-echec',motif:X.motif,detail:String(d).slice(0,380)});}
+/* CH-035 : LE CŒUR DU CHANGEMENT DE PARTIE, commun à la file (CH-017, CH-026) et à l'Aurore entre parties (correction dans Orbite). Extrait tel quel de
+ * `fileChangerPartie` : `ping` et ses `capacites`, les modes de l'adaptateur (`gestes(de)` dit si les deux gestes vers la partie SUIVANTE sont permis),
+ * la preuve (partie lue dans la page, rails présents, onglet ré-équipé), les bornes, un événement par tentative (`typeTentative`), l'arrêt prudent si ESV
+ * ouvre une autre partie. `attendu()` faux : on quitte sans rien conclure. Rend {ok, r} ou {ok:false, motif, detail, journalEchec, selecteurApres},
+ * avec toujours {tentatives, selecteurAvant, t0} ; ne touche à aucun état de la file ni de la correction. */
+async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement'}){
  const t0=Date.now(),tentatives=[];let selecteurAvant=null;
  const sel=x=>x?{status:x.status??null,current:entierOuNul(x.current),n:Array.isArray(x.parts)?x.parts.length:null,vers:Array.isArray(x.parts)?x.parts.some(p=>p?.part===vers):null}:null;
  const relever=async()=>{try{return sel((await call('ping',{contrat:true}))?.selecteurParties);}catch{return null;}};
- const resume=()=>tentatives.map(t=>`${t.mode} : ${t.texte}`).join(' ; ');
- const echec=async(motif,detail)=>{if(!retour||tentatives.length){const apres=await relever();
-   journalerSimple('file-parties-changement-echec',{vers,retour,motif,detail:String(detail||'').slice(0,300),tentatives,selecteurAvant,selecteurApres:apres,dureeMs:Date.now()-t0});}
-  const d=tentatives.length&&!String(detail||'').includes(resume())?`${detail} ; essayé : ${resume()}`:detail;
-  return retour?fileRelectureApresRetour(false,d):fileEvenement({type:'changement-echec',motif,detail:String(d).slice(0,380)});};
- const ok=r=>retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:r.identity.cut});
- const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
- if(!retour)await fileEvenement({type:'changement-envoye',vers});
+ const fin=x=>({...x,tentatives,selecteurAvant,t0});
+ const echec=async(motif,detail)=>{const journalEchec=!retour||tentatives.length>0;return fin({ok:false,motif,detail,journalEchec,selecteurApres:journalEchec?await relever():null});};
+ const ok=r=>fin({ok:true,r});
  const pret=r=>r?.identity?.part===vers&&!!r?.rails?.left&&!!r?.rails?.right;
  let lu=null;try{lu=await readState();}catch{/* lu plus bas */}
  if(pret(lu))return ok(lu);
  let ping=null;try{ping=await call('ping',{contrat:true});}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
  selecteurAvant=sel(ping?.selecteurParties);
  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
- const modes=[...(retour?[]:['invalide-suivant','suivant-dernier'].filter(m=>ping.capacites.includes('changerPartie:'+m))),'lien'];
+ const de0=lu?.identity?.part??null;
+ const modes=[...(gestes(de0??entierOuNul(ping?.label?.part))?['invalide-suivant','suivant-dernier'].filter(m=>ping.capacites.includes('changerPartie:'+m)):[]),'lien'];
  /* Attente de la preuve d'une tentative acceptée : la partie demandée, ou une autre partie (arrêt), ou rien dans la borne. */
  const preuve=async borne=>{const fin=Date.now()+borne;let vu=false,derniere=null,partie=null;
   while(Date.now()<fin){if(!attendu())return {quitte:true};
@@ -3505,15 +3550,15 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
    catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return {definitif:y.message};}}
    await attendre(R.pollMs);}
   return {vu,derniere,partie};};
- const de0=lu?.identity?.part??null;let dernierMotif=null;
- for(const mode of modes){if(!attendu())return;
+ let dernierMotif=null;
+ for(const mode of modes){if(!attendu())return fin({quitte:true});
   const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null};tentatives.push(T);
   const fixer=rep=>{T.raison=typeof rep?.raison==='string'?rep.raison.slice(0,40):null;T.de=Number.isInteger(rep?.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:T.de;
    T.compteur=rep?.compteur&&Number.isInteger(rep.compteur.total)?{traites:entierOuNul(rep.compteur.traites),total:rep.compteur.total}:T.compteur;
    T.bouton=rep?.bouton?.id?{id:String(rep.bouton.id).slice(0,40),existe:!!rep.bouton.exists,inactif:!!rep.bouton.disabled}:T.bouton;
    T.sansDecision=rep?.validationCommandSent===false&&rep?.skipCommandSent===false;};
   const noter=(issue,texte,apres=null)=>{T.issue=issue;T.texte=texte;T.identiteApres=apres;T.dureeMs=Date.now()-t;
-   journalerSimple('file-parties-changement',{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs});};
+   journalerSimple(typeTentative,{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs});};
   let rep=null;try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
   fixer(rep);
   /* « Dernier cut puis Z » : l'adaptateur dit le dernier cut (compteur M − 1) ; Ariane y va (`goToCut`, navigation seule), puis redemande. */
@@ -3529,7 +3574,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
    noter('refus',texte);dernierMotif=['partie-absente','libelle-illisible'].includes(r)?'selecteur-illisible':'changement-impossible';continue;}
   if(rep.deja){noter('deja','déjà sur la partie');const r=await readState().catch(()=>null);if(pret(r))return ok(r);continue;}
   const P=await preuve(mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs));
-  if(P.quitte)return;
+  if(P.quitte)return fin({quitte:true});
   if(P.onglet){noter('onglet-ferme','onglet ESV fermé');return echec('onglet-ferme','onglet ESV fermé pendant le changement de partie');}
   if(P.definitif){noter('echec',P.definitif.slice(0,160));return echec('changement-impossible',P.definitif);}
   if(P.r){noter('ok',`partie ${vers} ouverte en ${Math.round((Date.now()-t)/100)/10} s`,{part:vers,cut:entierOuNul(P.r.identity?.cut)});return ok(P.r);}

@@ -234,6 +234,9 @@
     return { id: C.id, etat: C.etat, listes, courant: C.courant || null, ouverte: C.etat === 'ouverte' && miens && ECHO_OUVERT.includes(n?.status),
       comptes: { total: tout.length, aCorriger: tout.filter(x => x.groupe === 'corriger').length, aPoser: tout.filter(x => x.groupe === 'poser').length, corrige: k('corrige'), valide: k('valide'), vu: k('vu'), enCours: k('en-cours'), traites: k('corrige') + k('valide') },
       partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
+      /* CH-035 : Aurore entre les parties (réglage allumé à la naissance de la liste) : parcours et état par partie (src/correction-liste.js, `parcours`). */
+      ...(C.entreParties === true && CL?.parcours ? { entreParties: true, changement: C.changement || null,
+        parcours: CL.parcours(listes, { partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null, courant: C.courant || null }) } : {}),
       ouvrir: { etat: ce?.dataset?.etat || '', texte: ce ? String(ce.textContent || '').trim() : '' },
       boutons: { demarrer: bouton('correction-demarrer'), ouvrir: bouton('correction-ouvrir'), terminer: bouton('correction-terminer'), fermer: bouton('correction-fermer') },
       telecharger: (b => b && b.visible ? b : null)(bouton('native-download')) };
