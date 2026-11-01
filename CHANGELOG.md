@@ -1,5 +1,17 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.30 — 4.9.5 test 30 (F-V-G-S) (01/11) — test 30
+
+Manifeste `4.9.5.30` ; base : la test 29. Moteur, géométrie, GCV2 et décision du lot inchangés (diff vide). Tous les changements de comportement sont derrière des réglages ÉTEINTS : avec les réglages livrés, la pose est celle de la test 29. Rien n'est vu sur un vrai ESV.
+
+### Nouveau
+- **Constellation et Aurore (D-274, CH-036)** : la file de parties s'appelle « Constellation », la correction dans Orbite « Aurore ». Vocabulaire : « Rattrapage » (deuxième passe), « à poser » (différé), « Passage » (changement de partie), « sautés » (skippés). Onglets refaits (bilan par partie avec motifs en clair, départs des parties visibles d'emblée, horizon par partie dans l'Aurore, « Ouvrir l'Aurore · N cuts » en action principale à la fin d'un lot et d'une Constellation) ; en 360 px les onglets gardent leur libellé. Identifiants, messages, export et journal inchangés.
+- **L'Aurore entre les parties (CH-035)** : réglage `correctionEntreParties`, ÉTEINT. Allumé, « Ouvrir » un cut d'une autre partie change de partie par le lien (jamais de geste qui écrive dans ESV), reprend Écho et va au cut ; une seule séance Écho pour toute l'Aurore ; événements `correction-partie` et `correction-partie-tentative`. Éteint : comportement de la test 29.
+- **Recherche large sur le nuage (CH-034)** : réglage `lot.rechercheLarge`, ÉTEINT. Relance le moteur sur le nuage capturé (±400 mm) et diffère le cut quand une paire concurrente soutenue existe loin de la pose (modes « differer » et « choisir-sur », graines « grille » ou « pics », banc de rejeu `--recherche-large`). Sur la partie 20 : 19 fautes sur 21 différées, 0 pose juste déplacée sur 439 jugés (ÉTABLI, réglage et examen sur un même lot) ; le budget D-223 n'est pas prouvé tenu (il faut un lot avec le levier allumé et un Écho).
+
+### Non vérifié
+- Aucune de ces fonctions n'a été vue sur un vrai ESV. L'Aurore entre les parties (changement de partie pendant une séance Écho, redémarrage du service worker) et la recherche large (temps de calcul d'environ 3,5 s par cut posé) sont à éprouver réglage par réglage.
+
 ## 4.9.5.29 — 4.9.5 test 29 (F-V-G-S) (31/10) — test 29
 
 Manifeste `4.9.5.29` ; base : la test 28. Moteur, géométrie, GCV2 et décision du lot inchangés. Deux files de parties de bout en bout sur un vrai ESV avec la 28 (30/10 : 3 parties, 31/10 : 4 parties, 5 à 8) : 5 changements de partie réussis par les gestes de l'opérateur, aucun arrêt à tort.
