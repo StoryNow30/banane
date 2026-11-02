@@ -87,7 +87,10 @@
     period.reason='worker-restarted-before-period-closure';}
    if(n.current){const record=n.current;record.leaveReason='worker-restart';record.endTimeStatus='unknown';record.endedAt=null;
     record.recoveredClosure={status:'INTERRUPTED_RECOVERED',recoveredAt,endTimeStatus:'unknown',finalStateInvented:false};
-    this.partialReason(record,'worker-restarted-before-visit-closure');this.classify(record);await this.saveRecord(record);n.incomplete=unique([...(n.incomplete||[]),record.recordId]);n.current=null;}
+    this.partialReason(record,'worker-restarted-before-visit-closure');this.classify(record);await this.saveRecord(record);n.incomplete=unique([...(n.incomplete||[]),record.recordId]);
+    /* 02/11 : comme `visit-ended` et `pageLost`, l'étiquette est recopiée dans le résumé `n.visits` (la fin reste inconnue). */
+    {const resume=(n.visits||[]).find(v=>v.visitId===record.visitId);if(resume)resume.label=record.observedLabelCandidate||null;}
+    n.current=null;}
    n.status='PAUSED';n.currentPeriodId=null;n.message='Observation native interrompue. Reprendre créera une nouvelle période sans inventer la continuité pendant l’interruption.';
    n.interruptions=(n.interruptions||0)+1;await this.nativeEvent('recovered-closure',{sessionId:n.id,observationPeriodId:period?.observationPeriodId||null,
     identity:null,recoveredAt,endTimeStatus:'unknown',finalStateInvented:false});await this.e.save();}

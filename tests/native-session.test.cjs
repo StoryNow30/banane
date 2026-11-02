@@ -180,3 +180,9 @@ test('a contradictory final frame revokes a prior checkpoint with explicit evide
  assert.ok(result.geometryEligibility.left.reasons.includes('capture-report-contradicts-snapshot-frame'));
  assert.equal(result.railSnapshots.left[0].qualificationStatus,'qualified-candidate');assert.equal(result.railSnapshots.left[0].revocations.length,1);
 });
+
+test('a worker restart copies the label of the recovered visit into the n.visits summary (02/11 : the summary stayed without label)',async()=>{
+ const f=await fixture();await f.sessions.start();await f.open();const nextEngine=new Engine(f.adapter,f.store);await nextEngine.init();const next=new Sessions(nextEngine,f.adapter,f.store);await next.init();
+ const record=f.store.records.find(item=>item.visitId==='visit-1'),resume=nextEngine.s.native.visits.find(item=>item.visitId==='visit-1');
+ assert.ok(record.observedLabelCandidate,'the recovered record is classified');assert.equal(resume.label,record.observedLabelCandidate);
+});

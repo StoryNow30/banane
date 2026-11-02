@@ -39,7 +39,7 @@ async function lotForce({forcer,panne=false,mode='differer'}={}){
 const d111=b=>decisions(b).find(([c])=>c===111)[1];
 
 test('éteint (livré) : mêmes commandes, appels et décisions que la base, octet pour octet ; aucun événement de recherche large',async()=>{
- assert.equal(S.lot.rechercheLarge.actif,false,'livrée ÉTEINTE');
+ assert.equal(S.lot.rechercheLarge.actif,true,'ALLUMÉE par défaut (ordre de l\'opérateur, 02/11)');
  const x=await lot({});
  assert.deepEqual(x.b.commands.map(c=>c.action??null),GOLDEN.actions);
  assert.equal(h(versionGolden(neutre(x.b.commands))),GOLDEN.empreinteCommandes,'commandes identiques octet pour octet');

@@ -37,7 +37,9 @@ async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',l
  /* L'ombre de la voie prédite est coupée ici : elle ne commande rien et alourdit l'essai (essayée à part). */
  if(!ombre)S.voiePrediteOmbre={...S.voiePrediteOmbre,actif:false};if(seuilsVoie)S.voiePrediteOmbre={...S.voiePrediteOmbre,...seuilsVoie};
  /* 4.9.5.13 : profil du lot « actuel » par défaut ici (empreintes de la base) ; `profil:null` : le défaut livré (« L1 »). */
- if(profil)S.lot={...S.lot,profil};b.ctx.BananeSettings=S;
+ if(profil)S.lot={...S.lot,profil};
+ /* 02/11 (ordre de l'opérateur) : la recherche large est ALLUMÉE par défaut ; ces montages essaient le mécanisme du lot sans elle (essayée à part : recherche-large-*.test.cjs). */
+ S.lot={...S.lot,rechercheLarge:{...S.lot.rechercheLarge,actif:false}};b.ctx.BananeSettings=S;
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);
  await b.api('start',{part:23,start:111,end:112,...SCOPE});await b.settle();await attendre(20);

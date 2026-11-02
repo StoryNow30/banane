@@ -10,7 +10,6 @@ const S = require('../src/settings.js');
 test('passe : « différer » forcé sur le 112 → rien (recherche-large) ; « garde » sur le 114 → poserait ; le module est appelé avec le nuage de la passe', async () => {
   const appels = [];
   const surPasse = (b) => {
-    if (b.ctx.BananeSettings.lot.rechercheLarge.actif) return;
     b.ctx.BananeSettings = { ...b.ctx.BananeSettings, lot: { ...b.ctx.BananeSettings.lot, rechercheLarge: { ...S.lot.rechercheLarge, actif: true, passe: true } } };
     const RL = b.ctx.BananeRechercheLarge;
     b.ctx.BananeRechercheLarge = { ...RL, decider: a => { const cut = a.capture?.identity?.cut ?? null; appels.push({ cut, mode: a.R.mode, rails: !!(a.capture.rails && a.capture.rails.left) });

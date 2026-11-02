@@ -227,7 +227,7 @@
      * paire remplace la pose seulement si elle est loin, unique, soutenue, et la pose du lot absente ou `rapport` fois moins bonne ; sinon la règle 'differer'.
      * `grainesMode` ('grille' = graines régulières, la règle examinée ; 'pics' = une graine par amas de points à la hauteur du rail, JOURNAL § 2.11 : moins de relances).
      * Coût : 14 relances du moteur par cut posé (1 à 3 s). `actif:false` (ou `false`) : le lot d'avant, à l'identique ; un réglage illisible l'éteint. */
-    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 0, soutienFace: 0, grainesMode: 'grille' }),
+    rechercheLarge: Object.freeze({ actif: true, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 60, soutienFace: 0, grainesMode: 'grille' }),
   });
 
   const exportSettings = Object.freeze({

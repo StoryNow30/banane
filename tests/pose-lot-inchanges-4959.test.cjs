@@ -103,7 +103,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge']);
- assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est livrée ÉTEINTE');assert.equal(rechercheLarge.mode,'differer');
+ assert.equal(rechercheLarge.actif,true,'CH-034 : la recherche large est ALLUMÉE par défaut (ordre de l\'opérateur, 02/11)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
  /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */
  assert.deepEqual({...gardeApresDiffere},{actif:true,regle:'R3',coupures:2,appuisMin:2},'garde après un différé : R3, 2 cuts, moins de 2 appuis');
  assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
