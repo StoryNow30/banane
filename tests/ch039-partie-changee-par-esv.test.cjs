@@ -161,6 +161,24 @@ test('newPart PERDU (page gelée avant l’envoi du pont), la page rechargée af
   assert.equal(p?.preuve, 'page-rechargee'); assert.equal(p.partieOuverte, 24); assert.ok(!r.b.store.events.some(e => e.type === 'batch-error'));
 });
 
+/* CH-043 (terrain du 02/11, 14:42:50, partie 15, cut 5946 sur 10002) : un F5 de l'opérateur rouvre ESV sur la partie 0 ; la « page rechargée » faisait la preuve
+ * d'une fin de partie alors qu'il restait 41 cuts à valider : lot clos à tort, file arrêtée. Le compteur du cut validé dit qu'il en reste devant : le lot
+ * reste « sans réponse » (reprenable), aucun `partie-changee-par-esv`. Rouge avant le garde, vert après. */
+test('CH-043 : F5 sur le cut validé alors qu’il reste des cuts devant (compteur 9960 sur 10002), ESV rouvre la partie 24 : le lot N’EST PAS clos', async () => {
+  /* Aucun rouge derrière le départ du lot : lu (0) avant la validation, comme la lecture de `rougesDerriereLot` le ferait. */
+  const esv = (e, b) => { esvQuiChangeDePartie({ newPart: false, page: 24 })(e, b); const v = e.validateAndNext.bind(e);
+    e.validateAndNext = async (...a) => { Object.assign(b.fonction('derriereLot'), { lot: b.fonction('engine').s.batch.id, n: 0 }); return v(...a); }; };
+  const { r, view } = await dernierCut({ mesure: { total: 10002, traites: 9960 }, esv, options: { start: 100, end: 0, endMode: 'partie', settings: reglages } });
+  const ev = r.b.store.events;
+  assert.ok(!ev.some(e => e.type === 'partie-changee-par-esv'), 'pas de fin de partie constatée');
+  assert.equal(view.batch.state, 'PAUSED_ADAPTER_UNRESPONSIVE', view.notice); assert.ok(!view.batch.stoppedAtEnd, 'lot non clos');
+});
+test('CH-043 : même scène, compteur « plus rien devant » (9999 sur 10002, 1 cut différé) : la preuve par la page vaut toujours (fin de partie)', async () => {
+  const { r, view } = await dernierCut({ mesure: { total: 10002, traites: 10000 }, esv: esvQuiChangeDePartie({ newPart: false, page: 24 }),
+    options: { start: 100, end: 0, endMode: 'partie', settings: reglages } });
+  assert.equal(view.batch.stoppedAtEnd?.reason, 'partie-changee-par-esv', view.notice); assert.equal(r.b.store.events.find(e => e.type === 'partie-changee-par-esv').preuve, 'page-rechargee');
+});
+
 /* ---------- 3. pilote de la file (service worker réel, lot simulé) ---------- */
 test.afterEach(fermer);
 const cloreParEsv = M => { M.adapter.identity = { ...M.adapter.identity, part: 24, cut: 0, pageId: 'page-24' };

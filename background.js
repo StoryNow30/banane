@@ -652,6 +652,14 @@ async function partieDeLaPageRechargee(b,R){const fin=Date.now()+R.rechargeMs,pa
    if(Number.isInteger(p))return p!==part?{part:p,recuMs:Date.now(),par:'page',cut:entierOuNul(r.identity.cut)}:null;}catch(x){if(x?.definitif)return null;}
   await attendre(R.rechargePollMs);}
  return null;}
+/* Vrai seulement quand le compteur « N on M treated » relevé sur le cut validé dit, par excès sûr, qu'il reste des cuts à valider DEVANT (les rouges laissés
+ * derrière le départ du lot sont déduits ; inconnus, on ne conclut pas : le comportement d'avant reste). */
+function resteDevantPreuve(b,sc,cut){const t=b?.totalReleve;
+ if(!t||t.part!==sc.part||t.cut!==cut||!Number.isInteger(t.total)||!Number.isInteger(t.traites))return false;
+ const differes=new Set((b.deferred||[]).map(d=>d?.cut??d?.identity?.cut).filter(Number.isInteger)).size;
+ const derriere=Number.isInteger(sc.start)&&sc.start<=1?0:derriereLot.lot===b.id&&Number.isInteger(derriereLot.n)?derriereLot.n:null;
+ if(derriere===null)return false;
+ return t.total-t.traites-1-differes-derriere>0;}
 async function partieChangeeParEsv(e){try{
  /* Page PERDUE (rechargée, fermée, gelée) seulement : un ESV muet garde son attente et sa sortie de partie d'avant (KI-061, KI-063). */
  if(e?.code!=='ESV_PAGE_ABSENTE')return null;
@@ -670,6 +678,10 @@ async function partieChangeeParEsv(e){try{
   while(chargementEsv.debutMs<envoi.envoiMs&&Date.now()<t){await attendre(R.pollMs);if(engine.s.batch!==b||b.state!=='RUNNING')return null;}
   if(chargementEsv.debutMs>=envoi.envoiMs)n=await partieDeLaPageRechargee(b,R);}
  if(!n||engine.s.batch!==b||b.state!=='RUNNING')return null;
+ /* CH-043 (terrain du 02/11, 14:42:50) : un F5 de l'opérateur rouvre ESV sur une AUTRE partie (la 0), et la « page rechargée » faisait alors la preuve
+  * d'une fin de partie : le lot (cut 5946 sur 10002, 41 cuts encore à valider) était clos à tort, la file n'arrivait plus à revenir. La preuve par la page
+  * ne vaut que si le compteur du cut validé dit qu'il n'y a plus rien à valider devant ; `newPart` vu (`n.par` absent) reste une preuve en soi. */
+ if(n.par==='page'&&resteDevantPreuve(b,sc,last.cut))return null;
  const annonce=ev.nextIdentity??null;
  await engine.event('partie-changee-par-esv',{identity:null,part:sc.part,cutValide:last.cut,partieOuverte:n.part,cutAnnonce:Number.isInteger(annonce?.cut)?annonce.cut:null,
   apresValidationMs:depuis===null?null:n.recuMs-depuis,preuve:n.par==='page'?'page-rechargee':'newPart',message:String(e?.message||'').slice(0,160)});
@@ -2634,7 +2646,8 @@ async function fileRepriseApresRechargement(tabId){
  if(engine?.s?.batch?.id!==b0.id||engine.s.batch.state!=='PAUSED_ADAPTER_UNRESPONSIVE')return;
  const lot=b0.id,gen=chargementEsv.gen,D=repriseEchoDelais(),t0=Date.now(),fin=Date.now()+Math.max(D.delaiMaxMs,90000);
  const ouvert=()=>engine?.s?.batch?.id===lot&&engine.s.batch.state==='PAUSED_ADAPTER_UNRESPONSIVE';
- const dire=(resultat,motif)=>journalerSimple('file-reprise-rechargement',{lotId:lot,part:b0.scope?.part??null,resultat,motif:motif?String(motif).slice(0,200):null,ms:Date.now()-t0});
+ const dire=(resultat,motif)=>{journalerSimple('file-reprise-rechargement',{lotId:lot,part:b0.scope?.part??null,resultat,motif:motif?String(motif).slice(0,200):null,ms:Date.now()-t0});
+  if(['echec','refus'].includes(resultat)&&ouvert()){engine.s.notice='La Constellation n’a pas pu reprendre seule après le rechargement ('+String(motif||'raison inconnue').slice(0,200)+') : clique sur « Reprendre ».';void engine.save().catch(()=>{});}};
  let derniere=null,genEquipe=-1,echecs=0,pret=false;
  while(Date.now()<fin){
   if(gen!==chargementEsv.gen||tabId!==selectedTab)return dire('abandon','page rechargée de nouveau ou onglet changé');
@@ -2648,6 +2661,15 @@ async function fileRepriseApresRechargement(tabId){
   catch(x){derniere=x;genEquipe=-1;if(x?.definitif||++echecs>=5)return dire('refus',x.message);await attendre(1500*echecs);continue;}
   await attendre(D.pollMs);}
  if(!pret)return dire('echec',derniere?.message||'ESV n’a pas fini de charger');
+ /* ESV rouvre une AUTRE partie après un F5 (la 0 le 02/11) : retour par le lien du sélecteur, qui n'apparaît qu'un moment après le chargement (relevé
+  * absent à 1 s, présent à 10 s : terrain du 02/11) ; quelques essais espacés, bornés. Un geste n'est jamais utilisé, rien n'est écrit. */
+ try{const part=b0.scope?.part,ici=await readState().catch(()=>null);
+  if(Number.isInteger(part)&&ici?.identity&&ici.identity.part!==part){
+   const attendu=()=>ouvert()&&fileActive()&&fileP.etat?.partie?.lotId===lot;let X=null;
+   for(let i=0;i<6&&attendu();i++){X=await changerPartieEsv(part,{retour:true,attendu,R,gestes:()=>false,typeTentative:'file-reprise-rechargement-partie'});
+    if(X.ok||X.quitte||!['selecteur-illisible','esv-muet'].includes(X.motif))break;await attendre(3000);}
+   if(!X?.ok){return dire('refus',`retour sur la partie ${part} impossible : ${X?.detail||X?.motif||'?'}`);}}}
+ catch(x){return dire('refus',x?.message);}
  try{await coordinateurLot.transition('reprise',async()=>{if(repriseEnCours||!ouvert())return;
    repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}});
   dire('reprise',null);}
