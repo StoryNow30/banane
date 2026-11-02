@@ -36,15 +36,20 @@ def entrainer(fam, X):
     for i, axe in ((0, 'lat'), (1, 'vert')):
         mod = FAMILLES[fam](); mod.fit(F, T[:, i]); m[axe] = mod
     return m
-def corr_de(m, plafond, mort, axes=('lat', 'vert')):
+def predire(m, X):
+    """Prédictions en bloc (lat, vert) pour chaque (cut, rail) de X : dict (nom, cut, side) -> (plat, pvert)."""
+    F = np.array([feats(x, s) for x in X for s in SIDES]); cles = [(x['nom'], x['cut'], s) for x in X for s in SIDES]
+    pl = m['lat'].predict(F); pv = m['vert'].predict(F)
+    return dict(zip(cles, zip(pl, pv)))
+def corr_de(P, plafond, mort, axes=('lat', 'vert')):
     def f(x):
         out = {}; touche = False
         for s in SIDES:
-            fe = np.array([feats(x, s)]); dl = dv = 0.0
+            pl, pv = P[(x['nom'], x['cut'], s)]; dl = dv = 0.0
             if 'lat' in axes:
-                p = float(m['lat'].predict(fe)[0]); p = float(np.sign(p) * min(abs(p), plafond)); dl = p * (x['sensLat'][s] if x.get('sensLat') else 1) if abs(p) >= mort else 0.0
+                p = float(np.sign(pl) * min(abs(pl), plafond)); dl = p * (x['sensLat'][s] if x.get('sensLat') else 1) if abs(p) >= mort else 0.0
             if 'vert' in axes:
-                p = float(m['vert'].predict(fe)[0]); p = float(np.sign(p) * min(abs(p), plafond)); dv = p if abs(p) >= mort else 0.0
+                p = float(np.sign(pv) * min(abs(pv), plafond)); dv = p if abs(p) >= mort else 0.0
             out[s] = [dl, dv]; touche = touche or dl != 0 or dv != 0
         return out if touche else None
     return f
@@ -57,9 +62,9 @@ for fam in sys.argv[3].split(',') if len(sys.argv) > 3 else ('ridge', 'foret', '
             test = [x for x in L if x['nom'] == k]; train = [x for x in L if x['nom'] != k]
             # imbriqué : hyperparamètres choisis par une sous-validation (un sous-pli : les lots d'apprentissage coupés en deux par rang)
             moitie = sorted(set(x['nom'] for x in train)); A = [x for x in train if x['nom'] in moitie[::2]]; B = [x for x in train if x['nom'] in moitie[1::2]]
-            mA = entrainer(fam, A); mB = entrainer(fam, B)
-            best = min(GR, key=lambda g: score(B, corr_de(mA, *g, axes)) + score(A, corr_de(mB, *g, axes)))
-            m = entrainer(fam, train); choix[k] = best
-            pool += appliquer(test, corr_de(m, *best, axes))
+            PA = predire(entrainer(fam, A), B); PB = predire(entrainer(fam, B), A)
+            best = min(GR, key=lambda g: score(B, corr_de(PA, *g, axes)) + score(A, corr_de(PB, *g, axes)))
+            P = predire(entrainer(fam, train), test); choix[k] = best
+            pool += appliquer(test, corr_de(P, *best, axes))
         s = juger(pool, f'piste 4 {fam} axes {axes} (jeux {jeux}, LOLO imbriqué, {len(lots)} lots)')
         print(texte(s)); print('  choix (plafond, zone morte) :', choix, flush=True)
