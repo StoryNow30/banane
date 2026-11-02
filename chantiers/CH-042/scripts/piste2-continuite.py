@@ -17,12 +17,24 @@ def prediction(x):
     if not av or not ap: return None
     a = max(av, key=lambda r: r[0]); b = min(ap, key=lambda r: r[0]); t = -a[0] / (b[0] - a[0])
     return {'left': [a[3 + i] + t * (b[3 + i] - a[3 + i]) for i in range(3)], 'right': [a[6 + i] + t * (b[6 + i] - a[6 + i]) for i in range(3)], 'portee': max(-a[0], b[0])}
+# Scène → monde : une translation PAR LOT, médiane sur les cuts dont la ligne de la liste est la pose de départ vue par le lot (même écartement à
+# 1 mm près, mêmes deux rails) ; un lot sans un tel cut n'est pas évaluable (l'instantané de liste n'est pas celui que le lot a lu).
+TR = {}
+for lot in lots:
+    ts = []
+    for x in L:
+        if x['nom'] != lot: continue
+        r0 = next((r for r in x['voisinage'] if r[0] == 0), None)
+        if not r0: continue
+        gl = np.linalg.norm(np.array(r0[6:9]) - np.array(r0[3:6])); gd = x['gauges']['depart']
+        tl = np.array(r0[3:6]) - np.array(x['scene']['depart']['left']); tr = np.array(r0[6:9]) - np.array(x['scene']['depart']['right'])
+        if abs(gl - gd) < 1 and np.linalg.norm(tl - tr) < 1: ts.append((tl + tr) / 2)
+    if len(ts) >= 3: TR[lot] = np.median(np.array(ts), axis=0)
+print('translation scène→monde connue pour', len(TR), 'lots sur', len(lots), ':', sorted(TR))
 def monde(x, pos_scene, s):
-    """Scène → monde : translation lue sur la ligne du cut (départ ESV) = bords de la liste à l'indice 0 moins la position scène du départ."""
-    r0 = next((r for r in x['voisinage'] if r[0] == 0), None)
-    if not r0: return None
-    d = x['scene']['depart'][s]; w = r0[3:6] if s == 'left' else r0[6:9]
-    return [pos_scene[i] + (w[i] - d[i]) for i in range(3)]
+    t = TR.get(x['nom'])
+    if t is None: return None
+    return [pos_scene[i] + t[i] for i in range(3)]
 def ecarts(x):
     """Pour chaque rail : écart de la pose et de la vérité à la prédiction, projeté sur l'axe latéral du rail (approché par la direction
     gauche→droite de la paire prédite, horizontale) et en hauteur (z)."""
