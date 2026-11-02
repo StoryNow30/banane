@@ -4,8 +4,9 @@
  * de calcul de chaque appel. Lecture seule des exports (banane-data) ; sortie JSON lignes HORS DÉPÔT (millimètres dans le repère profil de la pose de
  * départ, numéros de cut, comptes ; jamais une coordonnée de scène).
  *   node tools/ch041/decisions.cjs --partie P:N --journal J.json --corpus C.json [--corpus …] --sortie R.jsonl [--lot ID] [--reglage JSON] [--max N]
- * Réglage : `lot.rechercheLarge` de src/settings.js avec `actif:true`, puis les clés de `--reglage` (JSON) par-dessus. C'est la « décision de référence »
- * du protocole (chantiers/CH-041/JOURNAL.md § 0.4) quand `--reglage` est vide ; une décision candidate sinon. Les captures sont lues un fichier de corpus
+ * Réglage : `lot.rechercheLarge` de src/settings.js avec `actif:true`, puis les clés de `--reglage` (JSON) par-dessus. La « décision de référence » du protocole
+ * (chantiers/CH-041/JOURNAL.md § 0.4, la grille de CH-034) est `--reglage '{"porte":false}'` (depuis que `porte` est livrée vraie dans src/settings.js, un
+ * `--reglage` vide est la candidate) ; l'en-tête de la sortie consigne le réglage réellement lu : c'est lui qui fait foi. Les captures sont lues un fichier de corpus
  * à la fois (mémoire bornée). */
 const fs = require('node:fs'), path = require('node:path');
 const B = require('../banc-differes.cjs');

@@ -230,8 +230,9 @@
     /* CH-041 : `porte` (vrai) : avant toute relance, l'histogramme du nuage (travers × hauteur) dit si une cellule forte soutenue peut exister loin de la pose ;
      * sinon « garde » sans relance, et les graines qui ne peuvent rien donner sont sautées (mêmes décisions que la grille : chantiers/CH-041/JOURNAL.md § 2).
      * `parallele` (vrai) : dès la capture reçue, les relances sont calculées dans des fils d'un document hors écran (permission `offscreen`) pendant que le lot
-     * décide ; la commande n'attend que le reliquat. Sans la permission : calcul sur place, comme avant. */
-    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 60, soutienFace: 0, grainesMode: 'grille', porte: true, parallele: true }),
+     * décide ; la commande n'attend que le reliquat. Sans la permission : calcul sur place, comme avant. `fils` (0) : nombre de fils de calcul, 0 = cœurs de la
+     * machine moins un, plafonné à 6 (chaque fil porte une copie du moteur et de la capture, 20 à 37 Mo transitoires : CH-034 § 2.13). */
+    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 60, soutienFace: 0, grainesMode: 'grille', porte: true, parallele: true, fils: 0 }),
   });
 
   const exportSettings = Object.freeze({

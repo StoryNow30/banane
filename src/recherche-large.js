@@ -35,7 +35,7 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0,grainesMode:'grille',porte:true,parallele:true});
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0,grainesMode:'grille',porte:true,parallele:true,fils:0});
  const GRAINES_MODES=['grille','pics'];
  const MODES=['differer','choisir','choisir-sur'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
@@ -65,8 +65,9 @@
   if(!GRAINES_MODES.includes(r.grainesMode))return illisible('rechercheLarge.grainesMode illisible');
   if(typeof r.porte!=='boolean')return illisible('rechercheLarge.porte illisible');
   if(typeof r.parallele!=='boolean')return illisible('rechercheLarge.parallele illisible');
+  if(!(Number.isInteger(r.fils)&&r.fils>=0&&r.fils<=16))return illisible('rechercheLarge.fils illisible');
   return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin,
-   soutienTop:r.soutienTop,soutienFace:r.soutienFace,grainesMode:r.grainesMode,porte:r.porte,parallele:r.parallele};
+   soutienTop:r.soutienTop,soutienFace:r.soutienFace,grainesMode:r.grainesMode,porte:r.porte,parallele:r.parallele,fils:r.fils};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}

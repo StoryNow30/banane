@@ -38,7 +38,7 @@ async function lot({sansOffscreen=false,mode='nominal',porteFermee=false,delaiMs
 
 test('nominal : les relances partent à la capture AVANT (graines choisies, capture, configuration du moteur), la commande les attend et les passe au module ; journal',async()=>{
  const x=await lot();
- assert.equal(x.creations.length,1);assert.deepEqual(j(x.creations[0].reasons),['WORKERS']);assert.equal(x.creations[0].url,'offscreen-recherche-large.html');
+ assert.equal(x.creations.length,1);assert.deepEqual(j(x.creations[0].reasons),['WORKERS']);assert.equal(x.creations[0].url,'offscreen-recherche-large.html','0 fil demandé = adresse nue, le document choisit (cœurs moins un)');
  assert.ok(x.recus.length>=1,'au moins une demande de calcul');const d=x.recus[0];
  assert.equal(d.type,'calculer');assert.ok(Array.isArray(d.graines)&&d.graines.includes(0));assert.ok(d.capture.points>0,'la capture part avec ses points');
  assert.ok(d.moteur&&typeof d.moteur.partialFlank==='boolean'&&typeof d.moteur.convention==='boolean','configuration du moteur transmise');

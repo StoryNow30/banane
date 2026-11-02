@@ -4,7 +4,8 @@
  * `banane-recherche-large`, reçoit une capture et des graines (`calculer`), répartit les graines sur les fils, et rend l'union des relances (`resultat`) ou
  * une erreur (`erreur`). Il ne décide rien : la décision reste dans le service worker (`rechercheLargeCommande`). Pas de DOM, pas d'ESV, pas de stockage. */
 (()=>{
- const FILS_MAX=4,K=Math.max(1,Math.min(FILS_MAX,(navigator.hardwareConcurrency||2)-1));
+ /* Nombre de fils : `?fils=N` de l'adresse du document (réglage `lot.rechercheLarge.fils`), 0 ou absent = cœurs moins un, plafonné à FILS_MAX. */
+ const FILS_MAX=6,demande=Number(new URLSearchParams(location.search).get('fils'))||0,K=Math.max(1,Math.min(FILS_MAX,demande>0?demande:(navigator.hardwareConcurrency||2)-1));
  const fils=[];for(let i=0;i<K;i++)fils.push(new Worker('src/recherche-large-worker.js'));
  let seq=0;const attentes=new Map();
  for(const w of fils){w.onmessage=e=>{const m=e.data,a=m&&attentes.get(m.id);if(!a)return;attentes.delete(m.id);if(m.type==='erreur')a.reject(Error(m.message));else a.resolve(m);};

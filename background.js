@@ -1590,26 +1590,26 @@ function rlExecuteurConnecte(port){
   for(const d of RL_EXEC.demandes.values()){clearTimeout(d.timer);d.reject(Error('document hors écran déconnecté'));}RL_EXEC.demandes.clear();});
  for(const f of RL_EXEC.enAttentePort.splice(0))f(port);
 }
-async function rlExecuteurPort(){
+async function rlExecuteurPort(fils=0){
  if(RL_EXEC.port)return RL_EXEC.port;
  if(!RL_EXEC.creation)RL_EXEC.creation=(async()=>{
   const attente=new Promise((resolve,reject)=>{const t=setTimeout(()=>{RL_EXEC.enAttentePort=RL_EXEC.enAttentePort.filter(f=>f!==fin);reject(Error('document hors écran muet'));},RL_EXEC.DELAI_MS);
    const fin=p=>{clearTimeout(t);resolve(p);};RL_EXEC.enAttentePort.push(fin);});
-  try{await chrome.offscreen.createDocument({url:'offscreen-recherche-large.html',reasons:['WORKERS'],justification:'Recherche large (CH-034) : relances du moteur sur le nuage capturé dans des fils de calcul parallèles, hors du service worker (CH-041).'});}
+  try{await chrome.offscreen.createDocument({url:'offscreen-recherche-large.html'+(Number.isInteger(fils)&&fils>0?'?fils='+fils:''),reasons:['WORKERS'],justification:'Recherche large (CH-034) : relances du moteur sur le nuage capturé dans des fils de calcul parallèles, hors du service worker (CH-041).'});}
   catch(e){if(!/single offscreen|already|exist/i.test(String(e?.message||e))){RL_EXEC.enAttentePort.splice(0);throw e;}}
   return attente;
  })().finally(()=>{RL_EXEC.creation=null;});
  return RL_EXEC.creation;
 }
-async function rlDemander(message){
- const port=await rlExecuteurPort(),id=++RL_EXEC.id;
+async function rlDemander(message,fils=0){
+ const port=await rlExecuteurPort(fils),id=++RL_EXEC.id;
  return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{RL_EXEC.demandes.delete(id);reject(Error('exécuteur : délai dépassé'));},RL_EXEC.DELAI_MS);
   RL_EXEC.demandes.set(id,{resolve,reject,timer});
   try{port.postMessage({...message,id});}catch(e){clearTimeout(timer);RL_EXEC.demandes.delete(id);reject(e);}});
 }
 /* Au départ d'un lot : le document hors écran est ouvert et ses fils chargent le moteur (importScripts) AVANT la première capture ; mesuré dans Chromium : la
  * première demande paie sinon l'ouverture et le chargement (tests/esv-maquette/recherche-large-executeur.test.cjs). Rien si la recherche large est éteinte. */
-function rlPrechauffer(){const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);if(!rlExecuteurDisponible(R))return;void rlExecuteurPort().catch(()=>{});}
+function rlPrechauffer(){const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);if(!rlExecuteurDisponible(R))return;void rlExecuteurPort(R.fils).catch(()=>{});}
 /* Dès la capture AVANT enregistrée (lot Orbite seulement) : la capture est relue du magasin, les graines choisies (sans la pose), les relances demandées à
  * l'exécuteur ; la promesse est rangée par identifiant de capture (les trois dernières au plus). Rien ne bloque : une panne est lue à la commande. */
 function rlPrecalculer(lidarId){
@@ -1620,7 +1620,7 @@ function rlPrecalculer(lidarId){
   if(!capture?.rails||!Array.isArray(capture.pointsSceneRelative))throw Error('capture illisible');
   const cap={rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes};
   const {utiles}=RL.grainesChoisies(cap,R),etat=globalThis.BananeGCV1Shadow?.state?.()||{};
-  const r=await rlDemander({type:'calculer',capture:cap,graines:utiles,moteur:{partialFlank:etat.partialFlank,convention:etat.convention}});
+  const r=await rlDemander({type:'calculer',capture:cap,graines:utiles,moteur:{partialFlank:etat.partialFlank,convention:etat.convention}},R.fils);
   return {relances:new Map((r.relances||[]).map(x=>[x.graine,{left:x.left,right:x.right}])),calculMs:r.ms??null,fils:r.fils??null,graines:utiles.length};})();
  p.catch(()=>{});
  RL_EXEC.precalcs.set(lidarId,{promesse:p,t0});

@@ -82,3 +82,34 @@ Lot du 2/11 (4.9.5.33, 11 posés, partie à appareils) : cycle 3 440 (9 820), fe
 | 2/11 partie 1 | 83 | 4 (2 / 2) | sans Écho | sans Écho | 1 528 / 1 617 | 6 | 5 299 |
 
 Lecture : CH-034 donnait, au soutien 60, 10 différés sur 410 sur les lots .24/.28 et 11 sur 219 sur Aurore : retrouvés (10 sur 406, 10 sur 213). Sur le jeu neuf du 2/11 (§ 0.8), réponses aux questions (1) et (2) : **la faute est différée** ; prix 7 différés sur 123 posés (5,7 %), sous le critère de retour arrière de 8 % (CH-034 § 5), mais 6 poses justes sur 115 jugées justes (5,2 %), plus que sur la partie 20 (1 sur 140) : les nuages du 2/11 sont denses (18 000 points, voie à appareils et dalle) et portent des paires concurrentes complètes (dessus 228 à 292) à 100 à 150 mm des poses justes. PROBABLE : c'est le prix de la règle elle-même, pas d'un défaut de calcul (les deux paires ont le même soutien et des produits proches : indécidable par le nuage seul, CH-034 § 2.8 piste 3). À dire à l'intégrateur ; aucun seuil touché ici.
+
+### 2.2 La candidate (porte + graines exactes) contre la grille, partie 20 entière (ÉTABLI, 13:05 ; `tools/ch041/comparer.cjs`, référence `porte:false`, candidate `porte:true`, mêmes seuils)
+| critère | résultat |
+|---|---|
+| (a) accord des états | **721 sur 721 (100 %)** |
+| (b) fautes différées par la grille conservées | **19 sur 19** (21 fautes jugées) |
+| (c) poses justes différées en plus | **0** (1 acceptation sur 140 dans les deux cas) ; non jugés différés 13 et 13 |
+| porte | fermée **291 sur 721 (40 %)** ; la grille dit `garde` sur les 291 ; coût 4 ms en médiane (max 153) |
+| relances | grille 4 080 ; candidate 2 649 (porte fermée : 0 ; porte ouverte : 2 649 contre 2 673 : les graines exactes n'épargnent presque rien sur ces nuages denses) |
+| temps du module par cut, en série, sous charge | grille 3 128 ms médiane, 4 277 moyenne ; candidate 2 960 médiane, 3 384 moyenne ; sur les cuts ouverts : 4 109 contre 4 150 |
+| par étage (n / fermés / grille différer) | première passe 516 / 255 / 14 ; fenêtre 93 / 19 / 4 ; différé 74 / 17 / 6 ; choix 31 / 0 / 6 ; passage 7 / 0 / 3 |
+
+**Lecture.** La porte est exacte sur ce lot (aucune décision changée, aucune faute perdue) et ferme 40 % des cuts ; mais la partie 20 est une voie sur dalle à appareils : six cuts sur dix ont, loin de la pose, une structure à dessus et flanc (contre-rail, gorge, second rail) que seule la grille peut départager, et ces cuts ont des nuages de 17 000 points où chaque relance coûte 0,5 à 1 s. **Sur ce lot, la porte seule ne tient pas le critère (d)** : il faut l'exécution cachée (§ 3, § 4).
+
+**Erreur de méthode corrigée (13:00).** Les premières « références » des jeux d'examen avaient été calculées avec `--reglage '{}'` APRÈS que `porte:true` fut inscrite dans `src/settings.js` : c'étaient des candidates (et de versions successives de la porte), pas la grille ; seule la référence de la partie 20 (lancée avant) était la grille. Les références des jeux d'examen sont recalculées avec `porte:false` explicite (§ 2.3) ; `tools/ch041/decisions.cjs` le dit en tête et consigne le réglage lu dans l'en-tête de sortie. La portée d'une cellule depuis sa graine a aussi été corrigée entre-temps (90 → 270 mm, § 2.4) ; la comparaison ci-dessus est faite avec le module corrigé des deux côtés.
+
+### 2.4 Impasse levée : portée d'une cellule depuis sa graine (ÉTABLI, 12:40)
+Première version des graines exactes : portée ±90 mm (la fenêtre de recherche du moteur). Sur 245 cuts de la partie 20 : 1 désaccord, `concurrence` → `pose-unique` : la concurrente à 250 mm de la pose venait d'une graine sautée. Cause lue dans le moteur : il centre sa recherche sur la graine ET sur l'hypothèse médiane des points lus (±180 mm), et accepte une cellule à ±90 mm de l'un ou l'autre centre : une cellule peut être à 270 mm de sa graine. Portée portée à 270 mm et filtre pris en intersection avec la grille utile de CH-034 (15 points à ±180 mm) : exact par construction, jamais plus de relances. Depuis : 0 désaccord sur 721.
+
+## 4. H3 mesuré : le temps mural des fils, et ce qui resterait au cycle (ÉTABLI puis SUPPOSÉ, 13:10)
+**Chromium 153, extension réelle avec la permission, 25 captures RÉELLES de la partie 20 (17 005 points en médiane, 5 graines), fils chauds, machine au repos, 3 fils (4 cœurs ici)** (`tools/ch041/chrono-executeur.cjs`) : aller-retour parallèle **1 145 ms en médiane** (P90 5 173) contre **2 257 ms** pour le même calcul en série dans le service worker (P90 10 885) ; rapport médian **1,98** ; cellules identiques 25 sur 25. ÉTABLI.
+
+**Estimation du reliquat sur la partie 20 entière** (`tools/ch041/reliquat.cjs` : fenêtre réelle capture reçue → décision de chaque cut, temps de la candidate × 1,2 pour la machine de l'opérateur ÷ 1,98 pour les fils + 60 ms d'envoi ; SUPPOSÉ : rapport et surcoût constants, fenêtre indépendante du levier) :
+
+| temps ajouté par cut posé (721) | médiane | moyenne | P90 | cuts avec reliquat |
+|---|---|---|---|---|
+| CH-034 (grille en série, sans porte) | 3 754 ms | 5 132 ms | 7 878 ms | — |
+| porte + graines exactes, en série | 3 552 ms | 4 061 ms | 7 855 ms | — |
+| **porte + exécuteur à 3 fils** | **8 ms** | **836 ms** | 2 063 ms | 344 sur 721 |
+
+Lecture : la médiane tient le critère (d) (≤ 630 ms) de très loin ; la moyenne ne le tient pas sur CE lot (836 ms > 300 ms) : un cut sur deux garde un reliquat, et les plus lourds (17 000 points, 7 relances, 5 à 8 s en série) dépassent la fenêtre même divisés par deux. Deux leviers restent, dits au rapport : le nombre de fils (réglage `fils`, 0 = cœurs − 1 ; à 6 fils le rapport attendu est ~3 et la moyenne tomberait vers 0,4 s, SUPPOSÉ, à mesurer sur la machine de l'opérateur) et la restriction par zone (`zones`) sur les voies sur dalle. Sur les jeux de voie courante (§ 2.3), les nuages sont trois fois plus légers : à chiffrer de la même façon.
