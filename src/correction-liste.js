@@ -186,14 +186,15 @@
   /* CH-040 — LA COUVERTURE DE L'AURORE (chantiers/CH-040/NOTE.md) : les lots de TOUT le journal (la session depuis le dernier vidage), et non plus ceux du
    * bilan de la dernière file (02/11 : une file relancée sur la partie 1 avait masqué la partie 0 et le premier lot de la partie 1). Pur : lit le journal.
    *   - lots : chaque `batch-started` (identifiant unique, premier départ), sauf `lotOuvert` ; les MAX_LOTS_COUVERTURE plus récents ;
-   *   - lot repris : couvert par une Aurore terminée (`correction-debut` puis `correction-fin` de la même correction) avec une fin VOLONTAIRE
-   *     (`operateur`, `liste-finie`) : exclu ; fin accidentelle (`sw-redemarre`, `echo-ferme`, erreur) : seuls ses cuts corrigés ou validés sont retirés ;
+   *   - lot repris : couvert par une Aurore terminée (`correction-debut` puis `correction-fin` de la même correction). Fin `liste-finie` (tout y est
+   *     traité) : exclu. Toute autre fin (`operateur` : « Terminer » à la main, `sw-redemarre`, `echo-ferme`) : le lot reste, seuls ses cuts corrigés ou
+   *     validés sont retirés ; un cut « à faire », « en cours » ou « vu » reste proposé (décision de l'intégrateur du 02/11 : ne rien perdre) ;
    *   - une liste par partie, dans l'ordre du premier départ de lot de la partie (celui de la Constellation pour une file seule) ;
    *   - fusion par cut : le DERNIER lot qui a eu le cut pour cible (posé ou différé) décide ; s'il ne le signale pas, le cut n'est plus proposé ; s'il est
    *     repris, non plus. Chaque entrée porte son `batchId`, la liste de la partie `batchIds` (lots portés) et `batchId` (le plus récent).
    * `parLot` : la liste de chaque lot, telle que `construire` la rend (le service worker l'inscrit au journal, `correction-liste`, une fois par lot). */
   const VERSION_COUVERTURE = 'correction-couverture-1', MAX_LOTS_COUVERTURE = 16;
-  const FINS_VOLONTAIRES = new Set(['operateur', 'liste-finie']);
+  const FINS_EXCLUANTES = new Set(['liste-finie']);
   function couverture(events, options = {}) {
     const ev = (events || []).filter(e => e && instant(e) !== null).sort((a, b) => instant(a) - instant(b));
     const max = entier(options.max) && options.max > 0 ? options.max : MAX_LOTS_COUVERTURE;
@@ -207,9 +208,9 @@
       if (e.type === 'correction-fin' && e.correctionId && e.etat !== 'erreur') fins.set(e.correctionId, e); }
     const exclus = new Map(), traites = new Map();
     for (const [id, f] of fins) { const d = debuts.get(id); if (!d) continue;
-      if (FINS_VOLONTAIRES.has(f.raison)) { for (const b of d.batchIds) if (typeof b === 'string') exclus.set(b, { correctionId: id, fin: f.raison, t: instant(f) }); continue; }
+      if (FINS_EXCLUANTES.has(f.raison)) { for (const b of d.batchIds) if (typeof b === 'string') exclus.set(b, { correctionId: id, fin: f.raison, t: instant(f) }); continue; }
       for (const l of Array.isArray(f.lignes) ? f.lignes : []) if (l && entier(l.part) && entier(l.cut) && (l.statut === 'corrige' || l.statut === 'valide'))
-        traites.set(l.part + '|' + l.cut, { correctionId: id, statut: l.statut, batchIds: d.batchIds, t: instant(f) }); }
+        traites.set(l.part + '|' + l.cut, { correctionId: id, statut: l.statut, fin: f.raison ?? null, batchIds: d.batchIds, t: instant(f) }); }
     const parLot = [], decide = new Map(), ordre = [];
     for (const x of lots) {
       const l = construire(ev, { batchId: x.batchId, population: true });
@@ -226,7 +227,7 @@
       for (const [cut, x] of decide.get(p)) { if (!x.entree) continue; apresFusion++;
         if (exclus.has(x.batchId)) continue;
         const t = traites.get(p + '|' + cut);
-        if (t && t.batchIds.includes(x.batchId)) { retires.push({ part: p, cut, batchId: x.batchId, correctionId: t.correctionId, statut: t.statut }); continue; }
+        if (t && t.batchIds.includes(x.batchId)) { retires.push({ part: p, cut, batchId: x.batchId, correctionId: t.correctionId, statut: t.statut, fin: t.fin }); continue; }
         garde.push({ ...x.entree, batchId: x.batchId, force: Math.min(...x.entree.signaux.map(k => SIGNAUX.indexOf(k))) }); }
       const ids = parLot.filter(l => l.partie === p && !exclus.has(l.batchId)).map(l => l.batchId);
       if (!ids.length) continue;

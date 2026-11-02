@@ -8,7 +8,8 @@ const { background } = require('./helpers/background-harness.cjs');
 const { session } = require('./helpers/aurore-session.cjs');
 const ECRITURES = /^(apply|validate|skip|validateInPlace|validerMajEspace|nextWithoutDecision)/;
 
-async function monter(opts = {}) {
+const FINIE = { finD: 'liste-finie', lignesD: [{ part: 2, cut: 20, statut: 'corrige' }, { part: 2, cut: 21, statut: 'valide' }] };
+async function monter(opts = FINIE) {
   const b = background({ globals: { BananeCore3: K, BananeSettings: Settings, BananeExportCache: EC, ArianeCorrectionListe: CL } });
   b.adapter.identity.part = 1; b.adapter.identity.cut = 14;
   b.adapter.ping = async function () { return { version: K.VERSION, pageId: this.identity.pageId, proprietaire: 'test', label: { part: this.identity.part, cut: this.identity.cut, pageId: this.identity.pageId } }; };
@@ -46,11 +47,25 @@ test('la séance Écho et `correction-debut` portent tous les lots ; aucune écr
   assert.ok(!b.adapter.calls.some(c => ECRITURES.test(c)), b.adapter.calls.join(','));
 });
 
-test('une Aurore terminée par l’opérateur sort ses lots de la liste suivante', async () => {
+test('« Terminer » à la main avant la fin : rien de traité, donc tout est reproposé (décision du 02/11 : ne rien perdre)', async () => {
   const b = await monter({ avecD: false });
   await b.api('correction-liste'); await b.api('correction-demarrer'); await b.api('correction-terminer');
-  await assert.rejects(b.api('correction-liste'), /déjà été repris/);
-  assert.equal(b.fonction('engine.s.correction.etat'), 'terminee', 'la fin reste affichée');
+  const v = await b.api('correction-liste');
+  assert.equal(v.correction.etat, 'proposee');
+  assert.deepEqual(v.correction.listes.map(l => l.entrees.length), [3, 4]);
+});
+
+test('Aurore terminée à la main, un cut traité : seul lui sort ; le lot « liste finie » ne revient pas', async () => {
+  const b = await monter({ finD: 'operateur', lignesD: [{ part: 2, cut: 20, statut: 'corrige' }, { part: 2, cut: 21, statut: 'vu' }] });
+  const v = await b.api('correction-liste');
+  assert.deepEqual(v.correction.listes.map(l => [l.partie, l.entrees.map(e => e.cut)]).at(-1), [2, [21]]);
+  const [cv] = evts(b, 'correction-couverture');
+  assert.deepEqual(cv.retires.map(x => [x.cut, x.statut, x.fin]), [[20, 'corrige', 'operateur']]);
+  const b2 = await monter(FINIE);
+  await b2.api('correction-liste'); await b2.api('correction-demarrer');
+  b2.fonction("engine.s.correction.etat='terminee'");
+  await b2.store.putEvent({ eventId: K.uid(), timestamp: new Date().toISOString(), type: 'correction-fin', correctionId: b2.fonction('engine.s.correction.id'), raison: 'liste-finie', lignes: [] });
+  await assert.rejects(b2.api('correction-liste'), /déjà été repris/);
 });
 
 test('lots demandés (`batchIds`) : inchangé, ces lots-là, une liste par lot', async () => {

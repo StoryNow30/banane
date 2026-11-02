@@ -5,7 +5,7 @@ const { test } = require('node:test'), assert = require('node:assert/strict');
 const { monter } = require('./helpers/ui5-page.cjs');
 const CL = require('../src/correction-liste.js');
 const { session } = require('./helpers/aurore-session.cjs');
-const K = CL.couverture(session());
+const K = CL.couverture(session({ finD: 'liste-finie', lignesD: [{ part: 2, cut: 20, statut: 'corrige' }, { part: 2, cut: 21, statut: 'valide' }] }));
 const LOT = { id: 'C', state: 'COMPLETED', scope: { part: 1, start: 12, end: 14 }, processed: [], deferred: [] };
 async function page(listes) {
   const p = await monter({ etat: { batch: LOT, current: { identity: { part: 1, cut: 14 } }, connection: { status: 'ready', tabId: 12 }, native: { status: 'IDLE', visits: [] },

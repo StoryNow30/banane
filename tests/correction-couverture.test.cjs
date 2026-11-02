@@ -8,14 +8,14 @@ const { journal } = require('./helpers/correction-journal.cjs');
 const cuts = l => l.entrees.map(e => e.cut).sort((a, b) => a - b);
 
 test('deux files, un lot sur erreur : toutes les parties, dans l’ordre des départs ; le lot repris exclu', () => {
-  const r = L.couverture(session());
+  const r = L.couverture(session({ finD: 'liste-finie', lignesD: [{ part: 2, cut: 20, groupe: 'corriger', statut: 'corrige' }, { part: 2, cut: 21, groupe: 'poser', statut: 'valide' }] }));
   assert.equal(r.version, L.VERSION_COUVERTURE);
   assert.deepEqual(r.listes.map(l => l.partie), [0, 1], 'partie 0 (file 1) et partie 1 (deux lots) ; partie 2 déjà reprise');
   assert.deepEqual(cuts(r.listes[0]), [2, 3, 4], '4 suit un différé (n − 2) : R1');
   assert.deepEqual(r.listes[1].batchIds, ['B', 'C']); assert.equal(r.listes[1].batchId, 'C');
   assert.deepEqual(cuts(r.listes[1]), [10, 11, 13, 14], 'le cut 12, posé proprement par le lot C, n’est plus à poser');
   assert.deepEqual(r.comptes, { lots: 4, avantFusion: 10, apresFusion: 9, proposes: 7, lotsExclus: 1, cutsRetires: 0 });
-  assert.deepEqual(r.exclus, [{ batchId: 'D', partie: 2, raison: 'aurore-terminee', correctionId: 'X', fin: 'operateur' }]);
+  assert.deepEqual(r.exclus, [{ batchId: 'D', partie: 2, raison: 'aurore-terminee', correctionId: 'X', fin: 'liste-finie' }]);
 });
 
 test('fusion par cut : le dernier lot qui a eu le cut pour cible décide, son entrée porte son lot', () => {
@@ -32,18 +32,25 @@ test('Aurore finie par accident (service worker redémarré) : le lot reste, seu
   const r = L.couverture(session({ finD: 'sw-redemarre' }));
   assert.deepEqual(r.listes.map(l => l.partie), [0, 1, 2]);
   assert.deepEqual(cuts(r.listes[2]), [21]);
-  assert.deepEqual(r.retires, [{ part: 2, cut: 20, batchId: 'D', correctionId: 'X', statut: 'corrige' }]);
+  assert.deepEqual(r.retires, [{ part: 2, cut: 20, batchId: 'D', correctionId: 'X', statut: 'corrige', fin: 'sw-redemarre' }]);
   assert.equal(r.comptes.cutsRetires, 1); assert.equal(r.comptes.lotsExclus, 0);
 });
 
-test('« liste finie » exclut aussi ; une Aurore sans fin (encore ouverte) n’exclut rien', () => {
+test('Aurore terminée à la main (« Terminer », décision du 02/11) : le lot reste, seuls ses cuts traités sont retirés ; « vu » et « à faire » restent', () => {
+  const r = L.couverture(session({ finD: 'operateur', lignesD: [{ part: 2, cut: 20, statut: 'corrige' }, { part: 2, cut: 21, statut: 'vu' }] }));
+  assert.deepEqual(r.listes.map(l => l.partie), [0, 1, 2]);
+  assert.deepEqual(cuts(r.listes[2]), [21], 'le cut « vu » reste proposé');
+  assert.equal(r.comptes.lotsExclus, 0); assert.equal(r.comptes.cutsRetires, 1);
+});
+
+test('« liste finie » exclut le lot ; une Aurore sans fin (encore ouverte) n’exclut rien', () => {
   assert.deepEqual(L.couverture(session({ finD: 'liste-finie' })).listes.map(l => l.partie), [0, 1]);
   const ev = session().filter(e => e.type !== 'correction-fin');
   assert.deepEqual(L.couverture(ev).listes.map(l => l.partie), [0, 1, 2]);
 });
 
 test('un cut repris puis ciblé de nouveau par un lot plus récent revient, avec le signal le plus récent', () => {
-  const ev = session();
+  const ev = session({ finD: 'liste-finie', lignesD: [{ part: 2, cut: 20, groupe: 'corriger', statut: 'corrige' }, { part: 2, cut: 21, groupe: 'poser', statut: 'valide' }] });
   lot(ev, { id: 'E', partie: 2, t: 3000, cuts: [[20, 'differe']] });
   const r = L.couverture(ev), p2 = r.listes.find(l => l.partie === 2);
   assert.deepEqual(p2.entrees.map(e => [e.cut, e.groupe, e.batchId]), [[20, 'poser', 'E']]);
