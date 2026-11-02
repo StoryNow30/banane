@@ -139,9 +139,12 @@
   * d'une case. Le flanc compte : une surface plane (dalle, platelage, 70 mm sous le rail sur la partie 20) a des centaines de points de « dessus » et aucun
   * flanc ; seul un rail, une contre-rail ou un bord de gorge en a. Si aucune position loin de la pose n'a à la fois ≥ max(soutienTop, 15) de dessus et ≥ 6 de
   * flanc sur aucun des deux rails, aucune relance ne peut changer la décision : `garde`, motif `porte-fermee`, zéro relance. Porte ouverte, les graines de la
-  * grille dont la fenêtre de recherche (±90 mm) ne contient aucune position à ≥ 15 de dessus et ≥ 6 de flanc sont sautées : elles ne pouvaient donner aucune
+  * grille dont la portée (±270 mm : points lus à ±180, recherche à ±90 autour de la graine ou de l'hypothèse médiane) ne contient aucune position à ≥ 15 de dessus et ≥ 6 de flanc sont sautées : elles ne pouvaient donner aucune
   * cellule forte ; les cellules trouvées sont celles de la grille. Un repère de rail illisible laisse la porte ouverte et la grille entière. */
- const PORTE_PAS_MM=2,PORTE_LONG_M=.5,PORTE_VERT_MM=100,PORTE_BORD_MM=12,PORTE_PORTEE_CELLULE_MM=90,PORTE_TOP_MIN=15,PORTE_FACE_MIN=6,PORTE_FACE_LARGE_MM=10,PORTE_FACE_HAUT_MM=9,PORTE_FACE_BAS_MM=34;
+ /* Portée d'une cellule depuis sa graine : le moteur lit les points à ±180 mm de la graine, centre sa recherche sur la graine ET sur l'hypothèse médiane de ces
+  * points (`recenterWindow`), et accepte une cellule à ±90 mm de l'un ou l'autre centre : une cellule peut donc être à 270 mm de sa graine (mesuré : une
+  * concurrente à 250 mm trouvée par une graine qu'une portée de 90 mm sautait, un cut de la partie 20). */
+ const PORTE_PAS_MM=2,PORTE_LONG_M=.5,PORTE_VERT_MM=100,PORTE_BORD_MM=12,PORTE_PORTEE_CELLULE_MM=180+90,PORTE_TOP_MIN=15,PORTE_FACE_MIN=6,PORTE_FACE_LARGE_MM=10,PORTE_FACE_HAUT_MM=9,PORTE_FACE_BAS_MM=34;
  const mediane=a=>{const s=a.slice().sort((x,y)=>x-y);return s.length?s[s.length>>1]:NaN;};
  /* Le repère d'un rail comme le moteur le lit (`prepareFrame` du moteur gelé) : matrice scène → profil, sens du profil (médiane du contour en travers),
   * largeur du champignon (m). */
@@ -209,11 +212,13 @@
   for(const s of SIDES){if(!A[s]||A[s].u===undefined){illisible=true;continue;}rails[s]={max:A[s].max,u:A[s].u,z:A[s].z};max=Math.max(max,A[s].max);}
   return {ouverte:illisible||max>=seuil,seuil,max,rails,...(illisible?{illisible:true}:{})};
  }
- /* Graines exactes : une graine g de la grille est gardée si, sur l'un des deux rails, une position u à ±90 mm de son centre (u = sens × g) peut porter une
+ /* Graines exactes : une graine g de la grille est gardée si, sur l'un des deux rails, une position u à ±270 mm de son centre (u = sens × g) peut porter une
   * cellule forte ; sinon aucune cellule forte n'en peut sortir. Repli sur `grainesUtiles` si un repère est illisible. */
  function grainesExactes(capture,R,A){
   if(!SIDES.every(s=>A&&A[s]&&A[s].fort))return grainesUtiles(capture,R);
-  return graines(R).filter(g=>SIDES.some(s=>{const a=A[s],c=a.sign*g,i0=Math.max(0,Math.floor((c-PORTE_PORTEE_CELLULE_MM-a.uDebut)/PORTE_PAS_MM)),i1=Math.min(a.fort.length-1,Math.ceil((c+PORTE_PORTEE_CELLULE_MM-a.uDebut)/PORTE_PAS_MM));
+  /* Les deux conditions sont nécessaires (15 points lus à ±180 mm de la graine, ET une position forte possible dans sa portée) : l'intersection reste exacte et
+   * ne relance jamais plus que la grille utile de CH-034. */
+  return grainesUtiles(capture,R).filter(g=>SIDES.some(s=>{const a=A[s],c=a.sign*g,i0=Math.max(0,Math.floor((c-PORTE_PORTEE_CELLULE_MM-a.uDebut)/PORTE_PAS_MM)),i1=Math.min(a.fort.length-1,Math.ceil((c+PORTE_PORTEE_CELLULE_MM-a.uDebut)/PORTE_PAS_MM));
    for(let i=i0;i<=i1;i++)if(a.fort[i])return true;return false;}));
  }
  /* Histogrammes et analyses des deux rails (null pour un rail illisible). */
