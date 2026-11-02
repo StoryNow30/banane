@@ -1634,7 +1634,7 @@ async function rlRelancesPrecalculees(RL,R,cap,positions){
  if(!pre)return {relances:null,executeur:null};
  RL_EXEC.precalcs.delete(id);
  const t1=Date.now(),cacheMs=t1-pre.t0;
- if(R.porte){let ouverte=true;try{ouverte=RL.porte(RL.analyser(cap,positions,R),R).ouverte;}catch{ouverte=true;}
+ if(R.porte){let ouverte=true;try{ouverte=RL.porte(RL.analyser(cap,positions,R),R,cap).ouverte;}catch{ouverte=true;}
   if(!ouverte)return {relances:null,executeur:{precalcule:false,porteFermee:true,cacheMs}};}
  try{const x=await pre.promesse;return {relances:x.relances,executeur:{precalcule:true,attenteMs:Date.now()-t1,cacheMs,calculMs:x.calculMs,fils:x.fils,graines:x.graines}};}
  catch(e){return {relances:null,executeur:{precalcule:false,attenteMs:Date.now()-t1,cacheMs,erreur:String(e?.message||e).slice(0,80)}};}

@@ -175,7 +175,8 @@
   /* Sommes cumulées : S[(i)*(nZ+1)+j] = somme des cases u < i, z < j. */
   const W=nZ+1,S=new Int32Array((nU+1)*W);
   for(let i=0;i<nU;i++){let ligne=0;for(let j=0;j<nZ;j++){ligne+=h[i*nZ+j];S[(i+1)*W+(j+1)]=S[i*W+(j+1)]+ligne;}}
-  return {sign,width:cadre.width,uMin,nU,zMin,nZ,S,W,poseU,poseV};
+  const o=C.point(M,capture.rails[s].positionSceneRelative);
+  return {sign,width:cadre.width,uMin,nU,zMin,nZ,S,W,poseU,poseV,o1:o[1]*1000};
  }
  /* Majorant du nombre de points dans le rectangle (u0, u1) × (z0, z1) (mm, bornes élargies à la case). */
  function rect(H,u0,u1,z0,z1){
@@ -197,21 +198,36 @@
  /* L'analyse d'un rail : à chaque position u de la portée des graines (pas de 2 mm), `fort[i]` dit si une cellule forte y est possible à une hauteur
   * quelconque (dessus ≥ 15, flanc ≥ 6) ; `max` est le plus grand dessus possible d'une cellule forte LOIN de la pose (travers et hauteur, > loinMm), avec
   * sa position relative à la pose. Sans pose (`poseU` null) : `fort` seulement. */
+ const positionDe=(capture,s,c)=>L.positionOf(capture.rails[s],[0,c.lat/1000,c.vert/1000]);
+ const PORTE_CASE_SOUTENUE_MM=10,PORTE_MARGE_ECARTEMENT_MM=20;
  function analyserRail(H,R){
-  const fin=R.porteeMm+PORTE_PORTEE_CELLULE_MM,n=Math.floor(2*fin/PORTE_PAS_MM)+1,fort=new Uint8Array(n),faceMin=Math.max(PORTE_FACE_MIN,R.soutienFace||0);
-  let max=0,uMax=null,zMax=null;
+  const fin=R.porteeMm+PORTE_PORTEE_CELLULE_MM,n=Math.floor(2*fin/PORTE_PAS_MM)+1,fort=new Uint8Array(n),faceMin=Math.max(PORTE_FACE_MIN,R.soutienFace||0),seuil=Math.max(R.soutienTop,PORTE_TOP_MIN);
+  let max=0,uMax=null,zMax=null;const soutenus=new Map();
   for(let i=0;i<n;i++){const u=-fin+i*PORTE_PAS_MM;
    for(let z=-PORTE_VERT_MM+PORTE_BORD_MM;z<=PORTE_VERT_MM-PORTE_BORD_MM;z+=PORTE_PAS_MM){
     const d=dessusMax(H,u,z);if(d<PORTE_TOP_MIN)continue;
     if(flancMax(H,u,z)<faceMin)continue;
     fort[i]=1;
+    if(d>=seuil){const k=Math.round(u/PORTE_CASE_SOUTENUE_MM),c=soutenus.get(k);if(!c||d>c.top)soutenus.set(k,{u,z,top:d});}
     if(H.poseU!==null&&d>max&&Math.hypot(u-H.poseU,z-H.poseV)>R.loinMm){max=d;uMax=u;zMax=z;}}}
-  return {fort,uDebut:-fin,max,u:uMax===null?null:r1(uMax-H.poseU),z:zMax===null?null:r1(zMax-H.poseV)};
+  return {fort,uDebut:-fin,max,u:uMax===null?null:r1(uMax-H.poseU),z:zMax===null?null:r1(zMax-H.poseV),soutenus:[...soutenus.values()],sign:H.sign,o1:H.o1,poseU:H.poseU,poseV:H.poseV};
  }
- function porte(A,R){
-  const seuil=Math.max(R.soutienTop,PORTE_TOP_MIN),rails={};let max=0,illisible=false;
-  for(const s of SIDES){if(!A[s]||A[s].u===undefined){illisible=true;continue;}rails[s]={max:A[s].max,u:A[s].u,z:A[s].z};max=Math.max(max,A[s].max);}
-  return {ouverte:illisible||max>=seuil,seuil,max,rails,...(illisible?{illisible:true}:{})};
+ /* La porte du cut. Une paire ne contredit la pose que si ses DEUX rails sont soutenus (dessus ≥ seuil, flanc ≥ 6), si l'un au moins est loin de la pose, et si
+  * son écartement est admissible (contrat `gauge.js`) : la porte cherche une telle paire parmi les positions soutenues des deux rails (cases de 10 mm, la plus
+  * fournie par case), écartement calculé sur les vraies positions de scène (`positionDe`), élargi de 20 mm pour la case et la hauteur. Un rail seul loin de la
+  * pose (quai, mur, caniveau, rail d'une autre voie) sans partenaire à l'écartement n'ouvre pas la porte : le moteur ne pourrait en faire aucune paire. */
+ function porte(A,R,capture){
+  const seuil=Math.max(R.soutienTop,PORTE_TOP_MIN),rails={};let illisible=false,max=0;
+  for(const s of SIDES){if(!A[s]||A[s].poseU===null){illisible=true;continue;}rails[s]={max:A[s].max,u:A[s].u,z:A[s].z};max=Math.max(max,A[s].max);}
+  if(illisible)return {ouverte:true,seuil,max,rails,illisible:true};
+  if(max<seuil)return {ouverte:false,seuil,max,rails,paires:0};
+  const pos=(s,c)=>positionDe(capture,s,{lat:A[s].sign*c.u-A[s].o1,vert:c.z});
+  const loin=(s,c)=>Math.hypot(c.u-A[s].poseU,c.z-A[s].poseV)>R.loinMm;
+  let paires=0,exemple=null;
+  for(const [s,o] of [['left','right'],['right','left']])for(const a of A[s].soutenus){if(!loin(s,a))continue;const pa=pos(s,a);
+   for(const b of A[o].soutenus){const gm=1000*C.distance(pa,pos(o,b));
+    if(gm>=Gauge.CONTRACT.lowMm-PORTE_MARGE_ECARTEMENT_MM&&gm<=Gauge.CONTRACT.maximumMm+PORTE_MARGE_ECARTEMENT_MM){paires++;if(!exemple)exemple={[s]:r1(a.u-A[s].poseU),[o]:r1(b.u-A[o].poseU),gaugeMm:r1(gm)};}}}
+  return {ouverte:paires>0,seuil,max,rails,paires,...(exemple?{exemple}:{})};
  }
  /* Graines exactes : une graine g de la grille est gardée si, sur l'un des deux rails, une position u à ±270 mm de son centre (u = sens × g) peut porter une
   * cellule forte ; sinon aucune cellule forte n'en peut sortir. Repli sur `grainesUtiles` si un repère est illisible. */
@@ -223,7 +239,7 @@
    for(let i=i0;i<=i1;i++)if(a.fort[i])return true;return false;}));
  }
  /* Histogrammes et analyses des deux rails (null pour un rail illisible). */
- function analyser(capture,positions,R){const A={};for(const s of SIDES){const H=histogramme(capture,s,positions?positions[s]:null,R);A[s]=H?{...analyserRail(H,R),sign:H.sign}:null;}return A;}
+ function analyser(capture,positions,R){const A={};for(const s of SIDES){const H=histogramme(capture,s,positions?positions[s]:null,R);A[s]=H?analyserRail(H,R):null;}return A;}
  /* `science` (facultatif) : la science du lot sur cette capture (`scientificProposeBothAvecReservoir`, réservoir compris) : reprise comme relance 0.
   * `A` (facultatif, CH-041) : l'analyse de la porte (`analyser`), déjà faite par `decider` ; porte au réglage et A absent : elle est faite ici. */
  /* Les graines à relancer sur cette capture (grille, pics, ou graines exactes de la porte) et le compte des graines sautées ; ne dépend pas de la pose :
@@ -249,7 +265,6 @@
   for(const s of SIDES)out[s].sort((p,q)=>p.loss-q.loss);
   return out;
  }
- const positionDe=(capture,s,c)=>L.positionOf(capture.rails[s],[0,c.lat/1000,c.vert/1000]);
  /* Paires (gauche, droite) parmi les `cellulesMax` meilleures cellules de chaque rail, à l'écartement admissible du contrat, par produit des pertes. */
  function paires(capture,cells,R){
   const out=[];
@@ -273,7 +288,7 @@
   for(const s of SIDES){const d=decalage(capture.rails[s],positions[s]);if(!d)return fin({motif:'entree-illisible'});pose[s]={lat:d[1],vert:d[2]};}
   /* CH-041 : la porte (H1). Fermée : aucune relance, la commande est gardée ; ouverte : la grille, aux graines exactes (H2). */
   let A=null,pt=null;
-  if(R.porte){A=analyser(capture,positions,R);pt=porte(A,R);
+  if(R.porte){A=analyser(capture,positions,R);pt=porte(A,R,capture);
    if(!pt.ouverte)return fin({etat:'garde',motif:'porte-fermee',porte:pt,cellules:{left:0,right:0,relances:0,grainesSautees:graines(R).length}});}
   const cells=cellules(capture,R,science,A,relances);
   const P=paires(capture,cells,R);

@@ -74,7 +74,8 @@ test('mode différer : pose du lot sur le leurre, vraie paire aussi bonne à 150
  assert.equal(n.etat,'differer');assert.equal(n.motif,'pose-sans-paire-forte');
  /* Pose sans paire forte mais la meilleure paire est PROCHE (30 mm) : gardée (règle affinée, `sansPaireLoin`) ; règle du protocole : différée. */
  const presque={left:pos(cap2,'left',12+30,-4),right:pos(cap2,'right',-10+30,-3)};
- const pr=RL.decider({capture:cap2,positions:presque,R});assert.equal(pr.etat,'garde',JSON.stringify(RL.resumer(pr)));assert.equal(pr.motif,'pose-sans-paire-forte-proche');
+ const pr0=RL.decider({capture:cap2,positions:presque,R:RL.reglage({actif:true,porte:false})});assert.equal(pr0.etat,'garde',JSON.stringify(RL.resumer(pr0)));assert.equal(pr0.motif,'pose-sans-paire-forte-proche');
+ const pr=RL.decider({capture:cap2,positions:presque,R});assert.equal(pr.etat,'garde');assert.equal(pr.motif,'porte-fermee','CH-041 : le leurre faible (14 points) ne peut faire aucune paire soutenue loin de la pose');
  const pr2=RL.decider({capture:cap2,positions:presque,R:RL.reglage({actif:true,sansPaireLoin:false})});assert.equal(pr2.etat,'differer');assert.equal(pr2.motif,'pose-sans-paire-forte');
  assert.ok(Number.isFinite(d.ms)&&d.version===RL.VERSION);
  /* Aucune coordonnée de scène dans le résumé : des millimètres et des comptes. */
