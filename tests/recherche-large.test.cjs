@@ -177,3 +177,18 @@ test('graines « pics » : les mêmes paires (vraie et leurre à 150 mm) avec mo
  const cap2=captureLeurre();cap2.pointsSceneRelative=cap2.pointsSceneRelative.filter((_,i)=>i%20===0);cap2.visibleByClipBoxes=cap2.pointsSceneRelative.map(()=>true);
  assert.deepEqual(RL.grainesPics(cap2,Rp),[0]);
 });
+
+test('graines « pics », amas large : un amas continu de 300 mm de large (dalle, appareil de voie) reçoit une graine tous les 120 mm au plus, aucun point à plus de 60 mm d\'une graine ; un amas étroit garde une seule graine',()=>{
+ const Rp=RL.reglage({actif:true,grainesMode:'pics'});
+ /* Nappe de points dense et continue de −330 à −30 mm en travers du rail gauche (300 mm), à la hauteur du dessus : un seul amas. */
+ const cap=captureLeurre({partLeurre:0});
+ const nappe=[];for(let y=-0.330;y<=-0.030;y+=0.004)for(let k=0;k<3;k++)nappe.push([0,y+k*0.001,-0.004]);
+ cap.pointsSceneRelative=cap.pointsSceneRelative.concat(nappe);cap.visibleByClipBoxes=cap.pointsSceneRelative.map(()=>true);
+ const g=RL.grainesPics(cap,Rp);
+ assert.ok(g.includes(0),'graine 0 : '+JSON.stringify(g));
+ for(let y=-330;y<=-30;y+=10)assert.ok(g.some(x=>Math.abs(x-y)<=60),`point à ${y} mm à ≤ 60 mm d'une graine : `+JSON.stringify(g));
+ assert.ok(g.length<=6,'pas plus de 6 graines : '+JSON.stringify(g));
+ /* Amas étroit (le leurre de 150 mm du § ci-dessus) : une graine et une seule près de lui. */
+ const g2=RL.grainesPics(captureLeurre({partLeurre:1}),Rp);
+ assert.equal(g2.filter(x=>Math.abs(Math.abs(x)-LEURRE)<=60).length,1,'une seule graine près du leurre : '+JSON.stringify(g2));
+});
