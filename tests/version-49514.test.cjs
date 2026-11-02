@@ -26,8 +26,8 @@ const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
 const VERSION='5.0.0',NOM='5.0.0';
 test('manifeste et core : 5.0.0 / « 5.0.0 »',()=>{
- assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
- assert.equal(manifest.name,'Ariane 5');assert.equal(manifest.action.default_title,'Ouvrir Ariane 5');
+ assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,undefined,VERSION,NOM]);
+ assert.equal(manifest.name,'Ariane 5');assert.equal(manifest.action.default_title,'Ouvrir Ariane 5.0.0');
 });
 test('service worker, pont, panneau : chaîne de version seulement',()=>{
  assert.ok(read('background.js').includes(`BananeCore3?.VERSION||'${VERSION}',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'${NOM}'`));

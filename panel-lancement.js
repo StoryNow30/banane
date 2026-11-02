@@ -10,6 +10,8 @@
  let ferme=false,raf=0,timer=0;
  const fermer=()=>{if(ferme)return;ferme=true;cancelAnimationFrame(raf);clearTimeout(timer);el.classList.add('fini');el.hidden=true;document.removeEventListener('keydown',fermer,true);};
  el.addEventListener('click',fermer);document.addEventListener('keydown',fermer,true);
+ /* Un navigateur piloté par un robot (essais, `navigator.webdriver`) ne voit pas l'écran : il masquerait le panneau aux essais qui cliquent. Les essais du lancement le forcent. */
+ if(navigator.webdriver&&!window.__lancementForce){fermer();return;}
  const calme=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
  /* Titre : une lettre après l'autre, puis un balayage de lumière (CSS). */
  const nom=el.querySelector('.lanc-nom h2');

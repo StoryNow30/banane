@@ -9,6 +9,7 @@ const racine = path.resolve(__dirname, '..'), url = 'file://' + path.join(racine
 async function ouvrir(contexte = {}) {
   const pw = require('playwright'), exe = process.env.CHROMIUM || undefined;
   const nav = await pw.chromium.launch({ executablePath: exe, headless: true }), page = await (await nav.newContext({ viewport: { width: 420, height: 640 }, ...contexte })).newPage();
+  await page.addInitScript(() => { window.__lancementForce = true; });
   return { nav, page };
 }
 const lumi = (page, x, y) => page.evaluate(([x, y]) => { const c = document.getElementById('lancement-toile'), d = c.getContext('2d').getImageData(x * (c.width / c.clientWidth), y * (c.height / c.clientHeight), 1, 1).data; return [d[0], d[1], d[2]]; }, [x, y]);
@@ -16,7 +17,7 @@ const lumi = (page, x, y) => page.evaluate(([x, y]) => { const c = document.getE
 test('le canvas dessine : nuit sombre au départ, flamme et fumée à l\'allumage, espace au décollage', opts, async () => {
   const { nav, page } = await ouvrir();
   try {
-    await page.addInitScript(() => { window.__lancementManuel = true; });
+    await page.addInitScript(() => { window.__lancementForce = true; window.__lancementManuel = true; });
     await page.goto(url);
     await page.evaluate(() => window.__lancementRendre(0.8)); const nuit = await lumi(page, 210, 20);
     await page.evaluate(() => window.__lancementRendre(1.0)); const flamme = await lumi(page, 210, 560);

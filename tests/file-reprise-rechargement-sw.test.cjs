@@ -3,7 +3,8 @@
  * la page rechargée est ré-équipée et attendue prête, ESV rouvre une autre partie (la 0 le 02/11) : retour par le lien du sélecteur, puis la reprise
  * ordinaire du lot. Hors file, pause de l'opérateur ou réglage coupé : rien ne part. Service worker réel en VM, lot et ESV simulés. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
-const { montage, fermer, FICHE } = require('./helpers/file-parties-sw.cjs');
+const { montage, fermer, FICHE: FICHE0 } = require('./helpers/file-parties-sw.cjs');
+const FICHE = { ...FICHE0, repriseRetourPauseMs: 40 };   /* pas entre deux essais de retour : 3 s en production, bref ici */
 test.afterEach(fermer);
 const attendre = ms => new Promise(r => setTimeout(r, ms));
 
@@ -33,7 +34,7 @@ test('F5 : lot de la file « sans réponse », ESV rouvre une autre partie → r
 });
 test('F5 : le sélecteur n’est pas encore lisible (partie absente), il le devient → le retour réussit à un des essais suivants', async () => {
   const { M, part, reprises } = await enPause();
-  M.adapter.refus = 'partie-absente'; setTimeout(() => { M.adapter.refus = null; }, 400);
+  M.adapter.refus = 'partie-absente'; setTimeout(() => { M.adapter.refus = null; }, 120);
   await lancer(M);
   assert.equal(M.adapter.identity.part, part); assert.equal(reprises(), 1);
 });

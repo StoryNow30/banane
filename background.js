@@ -2667,7 +2667,7 @@ async function fileRepriseApresRechargement(tabId){
   if(Number.isInteger(part)&&ici?.identity&&ici.identity.part!==part){
    const attendu=()=>ouvert()&&fileActive()&&fileP.etat?.partie?.lotId===lot;let X=null;
    for(let i=0;i<6&&attendu();i++){X=await changerPartieEsv(part,{retour:true,attendu,R,gestes:()=>false,typeTentative:'file-reprise-rechargement-partie'});
-    if(X.ok||X.quitte||!['selecteur-illisible','esv-muet'].includes(X.motif))break;await attendre(3000);}
+    if(X.ok||X.quitte||!['selecteur-illisible','esv-muet'].includes(X.motif))break;await attendre(R.repriseRetourPauseMs);}
    if(!X?.ok){return dire('refus',`retour sur la partie ${part} impossible : ${X?.detail||X?.motif||'?'}`);}}}
  catch(x){return dire('refus',x?.message);}
  try{await coordinateurLot.transition('reprise',async()=>{if(repriseEnCours||!ouvert())return;
@@ -3741,7 +3741,7 @@ if(!eveil.minuteur&&typeof setInterval==='function')eveil.minuteur=setInterval(e
  * chaque partie. Au réveil du service worker : `fileReprendre` (registre d'abord). CH-026 : l'événement `arreter` note la commande qui l'a
  * porté (`origine` : `file-arreter`, « Arrêter la file » ; `stop`, « Arrêter » du lot pendant la file), que le journal du test 26 ne permettait pas de distinguer. Commandes ESV de la file : celles du lot, de la passe, de la
  * relecture, et `changerPartie` ; aucune autre, jamais de SKIP. Journal : `file-parties`, `file-parties-reprise`, `file-parties-erreur`. */
-const FILE_DEFAUT=Object.freeze({changementBorneMs:60000,ticMs:1000,passeGraceMs:5000,relectureAttenteMs:180000,pollMs:500});
+const FILE_DEFAUT=Object.freeze({repriseRetourPauseMs:3000,changementBorneMs:60000,ticMs:1000,passeGraceMs:5000,relectureAttenteMs:180000,pollMs:500});
 const FILE_ACTIONS=new Set(['file-etat','file-demarrer','file-arreter','file-oublier']);
 const FILE_LOT_ARGS=['testConfirmed','allowNavigationEvidence','lowConfidence','unresolvedPolicy','lotDecision','geometryEngine'];
 const fileP={etat:null,file:Promise.resolve(),tic:null,ticEnCours:false,demarrage:null,action:null};
