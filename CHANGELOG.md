@@ -1,5 +1,22 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.35 — 4.9.5 test 35 (F-V-G-S) (02/11) — test 35
+
+Manifeste `4.9.5.35` ; base : la test 33 (la 34 n'a pas été livrée). Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Corrige les défauts constatés sur un vrai ESV avec les tests 31 à 33.
+
+### Corrigé
+- **Un lot ne s'arrête plus parce que la vue d'ESV n'a pas pu être remise (CH-038)** : au cut 115 de la partie 0 (02/11), les deux rails étaient posés, puis la remise de la vue était impossible (ESV recentre le bouton du rail sur sa position d'origine, la cible est à 200 mm) et la pose levait « Vue ESV non recentrée » : lot arrêté en écriture incertaine. Maintenant la vue habituelle est mémorisée avant les gestes ; la remise (2 pressions de 1,5 s au plus) réussit si la vue est revenue OU si le rail est dans la vue ; sinon la pose rend `vueNonRestituee:true` (avertissement `vue-non-restituee`), le cut est validé et le lot continue. Trois remises ratées de suite arrêtent le lot, après la validation du cut, avec une raison claire. Jamais de SKIP. Patch d'adaptateur : `chantiers/CH-038/adaptateur-remise-vue.patch`.
+- **ESV change de partie à la validation du dernier cut (CH-039)** : le lot ne reconnaissait pas le dernier cut quand un lot précédent de la même partie avait différé des cuts (3 cuts non comptés) ; ESV chargeait la partie suivante, le lot s'arrêtait en erreur sans Rattrapage ni relecture. Maintenant le dernier cut est reconnu par la table de liste de la page ; si ESV change de partie seul après une validation acceptée, le lot se clôt (« partie changée par ESV »), la Constellation ramène ESV sur la partie du lot par le lien, puis enchaîne Rattrapage et relecture ; si le retour échoue, elle s'arrête avec l'alerte « ESV a changé de partie seul ; retour impossible ».
+- **L'Aurore couvre tous les lots de la session (CH-040)** : la liste ne prenait que les lots de la dernière file (la partie 0 disparaissait). Elle prend maintenant tous les lots clos du journal depuis le dernier vidage, une liste par partie (ordre du premier départ), fusion par cut ; seul un lot dont la liste est finie est exclu ; une Aurore terminée à la main ne retire que les cuts corrigés ou validés. Événement `correction-couverture`.
+- **Vider le cache avec Écho en pause** : le vidage n'est plus refusé quand la session Écho est en pause (page ESV rechargée) ; seul un Écho qui tourne le bloque ; les données de la séance Écho restent gardées.
+- **Écho : étiquette après un redémarrage du service worker** : la visite récupérée recopie son étiquette dans le résumé `n.visits`.
+
+### Inchangé, éteint
+- Recherche large (`lot.rechercheLarge`) : ÉTEINTE par défaut, ordre de l'opérateur (son temps de calcul doit d'abord disparaître, CH-041).
+
+### Non vérifié
+- Le comportement du vrai ESV après une remise de vue ratée (mode « recentrage sur l'origine » de la maquette tiré du journal, SUPPOSÉ) ; la séquence d'ESV à la fin de partie n'a été vue qu'une fois ; la présence du sélecteur de parties après le rechargement, nécessaire au retour de la file, n'est pas garantie ; la table de liste dans la vraie page n'est pas vérifiée ; un lot lancé sans file n'est pas ramené seul à sa partie.
+
 ## 4.9.5.34 — 4.9.5 test 34 (F-V-G-S) (02/11) — test 34
 
 Manifeste `4.9.5.34` ; base : la test 33. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Corrige l'arrêt du lot constaté sur un vrai ESV avec la test 33 (CH-038).
