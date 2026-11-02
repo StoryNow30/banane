@@ -70,10 +70,9 @@
     aurore: '<path d="M5 16.5a7 7 0 0 1 14 0"/><path d="M3 19.5h18"/><path d="M12 4.5v2.5M5.6 8.1l1.6 1.6M18.4 8.1l-1.6 1.6"/>',
   };
   const ic = (n, cls) => SVG(IC[n] || '', cls);
-  /* CH-036 : le signe d'une partie de la Constellation (étoile à quatre branches), et le vocabulaire de l'opérateur (D-274, décisions du 01/11) :
+  /* CH-036 : le vocabulaire de l'opérateur (D-274, décisions du 01/11) :
    * « Constellation » pour la file de parties, « Aurore » pour la correction ; rattrapage (deuxième passe), à poser (différés), passage (changement
    * de partie), sautés (skipped). Les textes écrits par le panneau d'origine (panel.js) sont traduits ici ; les identifiants internes ne changent pas. */
-  const ETOILE = '<svg class="sg-astre" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .9C8.5 5 11 7.5 15.1 8 11 8.5 8.5 11 8 15.1 7.5 11 5 8.5.9 8 5 7.5 7.5 5 8 .9Z"/></svg>';
   const vf = t => String(t || '').replace(/Relancer une file|Nouvelle file/g, 'Nouvelle Constellation').replace(/\b([Ll])a file\b/g, (x, l) => `${l}a Constellation`)
     .replace(/File de parties/g, 'Constellation').replace(/deuxième passe/g, 'rattrapage').replace(/changement de partie/g, 'passage').replace(/relecture et correction/g, 'relecture')
     .replace(/(\d+) différés?/g, '$1 à poser').replace(/écrits? par la passe/g, 'écrits au rattrapage');
@@ -562,6 +561,23 @@
     }
     return L;
   }
+  /* CH-036, direction B « Cadran » (choisie par l'opérateur le 02/11 ; Figma, page « CH-036 b · Deux directions ») : l'objet est une orbite, un anneau
+   * segmenté, un arc par partie (Constellation : une partie ; Aurore : la liste d'une partie, à la mesure de ses cuts). Fait = encre, en cours = vivant,
+   * interrompu = attention ; la pointe est le bout de l'avancement (vivante pour la Constellation, chaude pour l'Aurore : l'aube). Les actions sont dans
+   * l'en-tête, à côté de l'anneau ; des filets plutôt que des cartes ; de grands chiffres en registre. */
+  function anneauHtml(segs, chiffre, suite, label, pointeTon) {
+    const R = 52, Cc = 2 * Math.PI * R, g = segs.length > 1 ? 6 : 0, tot = segs.reduce((x, y) => x + y.poids, 0) || 1, f2 = v => v.toFixed(2);
+    let a = 0, h = '';
+    for (const sg of segs) {
+      const L = Math.max(0, Cc * sg.poids / tot - g), off = a + g / 2, f = Math.max(0, Math.min(1, sg.fait || 0));
+      h += `<circle class="sg-piste" r="${R}" cx="60" cy="60" stroke-dasharray="${f2(L)} ${f2(Cc)}" stroke-dashoffset="${f2(-off)}"/>`;
+      h += `<circle class="sg-arc" data-etat="${esc(sg.etat)}"${sg.partie != null ? ` data-partie="${esc(sg.partie)}"` : ''} r="${R}" cx="60" cy="60" stroke-dasharray="${f2(L * f)} ${f2(Cc)}" stroke-dashoffset="${f2(-off)}"/>`;
+      if (sg.pointe && f < 1) { const t = (off + L * f) / Cc * 2 * Math.PI; h += `<circle class="sg-pointe" data-ton="${pointeTon || 'vivant'}" r="4.5" cx="${f2(60 + R * Math.cos(t))}" cy="${f2(60 + R * Math.sin(t))}"/>`; }
+      a += Cc * sg.poids / tot;
+    }
+    return `<div class="sg-anneau" role="img" aria-label="${esc(label)}"><svg viewBox="0 0 120 120" aria-hidden="true"><g transform="rotate(-90 60 60)">${h}</g></svg><span class="sg-anneau-c"><span class="sg-chiffre">${esc(chiffre)}</span><span class="sg-suite">${esc(suite)}</span></span></div>`;
+  }
+  const cadranHtml = (anneau, m, boutons, droite) => `<div class="sg-cadran" data-k="cadran">${anneau}<div class="sg-cadran-t"><div class="sg-etat"><span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${droite ? `<p class="sg-cadran-d">${esc(droite)}</p>` : ''}</div>${boutons ? `<div class="sg-actions sg-cadran-a">${boutons}</div>` : ''}</div>`;
   function ongletFileModele(s, u) {
     const F = s.file, actif = !!F.actif, etat = F.etat, R = F.reprise, aff = F.partieAffichee;
     const m = { glyphe: 'pret', ton: 'encre2', mot: 'Prête', phrase: '', bandeau: null, alerte: '', lancer: null, temps: null, note: '' };
@@ -599,25 +615,30 @@
     return m;
   }
   function ongletFileHtml(s, u) {
-    const m = ongletFileModele(s, u), F = s.file;
+    const m = ongletFileModele(s, u), F = s.file, E = etoilesFile(s, F), B = F.parties || [], k = m.temps;
     const bouton = b => b ? `<button type="button" class="${b.cls === 'plein' ? 'sg-principal' : 'sg-secondaire sg-cadre'}${b.danger ? ' sg-danger' : ''}${b.droite ? ' sg-a-droite' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${b.cls === 'plein' ? `${ic(b.ic || 'play')}<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
     const titre = (t, d) => `<h2 class="sg-of-t"><span>${esc(t)}</span>${d ? `<span class="sg-of-d">${esc(d)}</span>` : ''}</h2>`;
-    let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
-    if (m.alerte) h += `<div class="sg-incident" role="alert"><p>${esc(m.alerte)}</p></div>`;
-    const E = etoilesFile(s, F);
-    h += `<ol class="sg-etoiles" aria-label="Parties de la Constellation" style="--n:${E.length}">${E.map(x => `<li class="sg-etoile" data-etat="${x.e}">${ETOILE}<span class="sg-mono">${esc(x.num)}</span><small>${esc(x.sous)}</small></li>`).join('')}</ol>`;
-    if (m.temps !== null && m.temps >= 0) h += `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < m.temps ? 'fait' : i === m.temps ? 'courant' : 'a-venir'}"${i === m.temps ? ' aria-current="step"' : ''}>${t[1]}</li>`).join('')}</ol>`;
-    if (m.lancer) { const L = m.lancer;
-      if (L.seg.length) h += `<div class="sg-of-ligne"><span>Nombre de parties</span><span class="sg-seg" role="group" aria-label="Nombre de parties">${L.seg.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span></div>`;
-      if (L.boutons.length) h += `<div class="sg-actions">${L.boutons.map(bouton).join('')}</div>`;
-      if (L.note) h += `<p class="sg-meta">${L.note}</p>`; }
-    const B = F.parties || [];
-    if (B.length) h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie', `${B.filter(b => !b.interrompue).length} sur ${F.n ?? B.length}`)}${B.map(b => { const p = partieFile(b);
-      return `<div class="sg-of-partie" data-etat="${p.etat}"><p class="sg-of-l">${ETOILE}<b class="sg-mono">Partie ${esc(b.part)}</b><span>${esc(p.ch)}</span></p>${p.motifs ? `<p class="sg-of-motifs">${esc(p.motifs)}</p>` : ''}</div>`; }).join('')}</section>`;
-    else if (F.bilan?.length) h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie')}${bilanHtml(F.bilan.map(vf))}</section>`;
+    const faites = B.filter(b => !b.interrompue).length, n = F.n ?? E.length;
+    const cours = k !== null && k >= 0 ? (k + (k === 0 && s.ar?.cibles ? Math.min(1, (s.ar.traites || 0) / s.ar.cibles) : 0.5)) / 4 : 0.5;
+    const segs = E.map(x => ({ poids: 1, etat: x.e, partie: x.num, fait: x.e === 'a-venir' ? 0 : x.e === 'en-cours' ? cours : 1, pointe: x.e === 'en-cours' }));
+    const [chiffre, suite] = F.actif ? [`${(F.rang ?? 0) + 1}/${n}`, `partie ${F.part ?? F.vers ?? '?'}`] : F.etat === 'repos' ? [String(E.length), E.length > 1 ? 'parties' : 'partie'] : [`${faites}/${n}`, faites > 1 ? 'faites' : 'faite'];
+    const L = m.lancer || { seg: [], note: '', boutons: [] };
+    let h = cadranHtml(anneauHtml(segs, chiffre, suite, `Constellation : ${chiffre} ${suite}`, 'vivant'), m, L.boutons.map(bouton).join(''));
+    if (m.alerte) h += `<div class="sg-alerte" role="alert"><p>${esc(m.alerte)}</p></div>`;
+    if (L.seg.length) h += `<div class="sg-of-ligne"><span>Nombre de parties</span><span class="sg-seg" role="group" aria-label="Nombre de parties">${L.seg.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span></div>`;
+    if (L.note) h += `<p class="sg-meta sg-of-note">${L.note}</p>`;
+    if (k !== null && k >= 0) h += `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < k ? 'fait' : i === k ? 'courant' : 'a-venir'}"${i === k ? ' aria-current="step"' : ''}><span class="sg-mono">0${i + 1}</span>${t[1]}</li>`).join('')}</ol>`;
+    /* Le registre : une ligne par partie commencée (faite, en cours, interrompue), chiffres alignés puis motifs en clair (décision du 01/11 : visibles d'emblée). */
+    const rangs = E.map((x, i) => ({ x, b: B.find(y => y.rang === i) })).filter(({ x }) => x.e !== 'a-venir');
+    if (rangs.length) {
+      const tiret = '<span class="sg-mono sg-vide-n">—</span>', nb = v => Number.isInteger(v) ? `<span class="sg-mono">${esc(v)}</span>` : tiret;
+      h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie', `${faites} sur ${n}`)}<div class="sg-registre" role="table" aria-label="Bilan par partie"><div class="sg-reg-tete" role="row"><span>Partie</span><span>posés</span><span>à poser</span><span><span class="sg-long">corrigés</span><span class="sg-court">corr.</span></span></div>${rangs.map(({ x, b }) => {
+        const p = b ? partieFile(b) : null, mot = x.e === 'en-cours' ? `en cours${k !== null && k >= 0 ? ` · ${TEMPS[k][1].toLowerCase()}` : ''}` : x.e === 'interrompue' ? ['à reprendre', p?.motifs].filter(Boolean).join(' · ') : p?.motifs || '';
+        return `<div class="sg-reg-partie" data-etat="${x.e}" role="row"><span class="sg-reg-p"><i aria-hidden="true"></i><b class="sg-mono">${esc(x.num)}</b></span>${nb(b?.poses)}${nb(b?.differes)}${nb(b?.relecture?.corriges)}${mot ? `<p class="sg-reg-motifs">${esc(mot)}</p>` : ''}</div>`; }).join('')}</div></section>`;
+    } else if (F.bilan?.length) h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie')}${bilanHtml(F.bilan.map(vf))}</section>`;
     const D = F.departs || [];
-    h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">sautés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Chiffres de la liste d’ESV au départ de chaque partie ; sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
-    return `<section class="sg-instrument sg-onglet-file" aria-live="polite" aria-label="Constellation">${h}</section>`;
+    h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties', D.length ? 'chiffres d’ESV au départ' : '')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">sautés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
+    return `<section class="sg-instrument sg-onglet-file sg-b" aria-live="polite" aria-label="Constellation">${h}</section>`;
   }
   /* CH-028, puis CH-036 : L'ONGLET « Aurore » (Figma, page « CH-036 · Constellation et Aurore ») : l'horizon (revus sur total, une portion par partie),
    * la liste groupée par partie, puis « à corriger » et « à poser » ; le cut ouvert est la seule ligne vivante ; l'action pleine est toujours la suivante.
@@ -673,8 +694,9 @@
         principal: { texte: 'Terminer l’Aurore', act: 'legacy:correction-terminer', inactif: !(B.terminer?.actif ?? true) } });
     } else {
       const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'), T = C.telecharger;
-      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Terminée', droite: 'séance Écho close',
-        phrase: `${parties(C.listes)} · ${pluriel(k.corrige, 'corrigé', 'corrigés')}, ${pluriel(k.valide, 'validé tel quel', 'validés tels quels')}, ${pluriel(k.vu, 'vu sans validation', 'vus sans validation')} · inscrit dans l’export Orbite`,
+      /* Direction B : les trois chiffres sont dits une seule fois, en grand sous l'en-tête (retour de l'opérateur : « mêmes chiffres trois fois »). */
+      Object.assign(m, { glyphe: 'fini', ton: 'vivant', mot: 'Terminée', droite: '',
+        phrase: `${parties(C.listes)} · inscrit dans l’export Orbite · séance Écho close`,
         principal: ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', ic: 'export', inactif: !ex.actif } : null,
         secondaires: [T ? { texte: 'Télécharger la séance Écho', act: 'legacy:native-download', inactif: !T.actif } : null, fermer('Fermer l’Aurore')].filter(Boolean) });
       if (!m.principal && m.secondaires.length) m.principal = { ...m.secondaires.shift(), ic: 'export' };
@@ -692,7 +714,7 @@
       return `<span class="sg-outils"><button type="button"${off ? ' disabled' : ` data-act="sg:corr-ouvrir:${esc(l.part)}:${esc(l.cut)}"`} title="${esc(titre)}">${ic('ouvrir')}<span>Ouvrir</span></button></span>`;
     };
     const ligne = (l, i) => { const det = detailSignal(l);
-      return `<div class="sg-ligne sg-corr" data-k="c:${esc(l.part)}:${esc(l.cut)}" style="--i:${Math.min(i, 12)}" role="listitem"><span class="sg-cut">${esc(l.cut)}</span><span class="sg-motif"><span class="sg-sig">${esc(LIB_SIGNAL[l.signaux?.[0]] || '')}</span>${det ? `<small>· ${esc(det)}</small>` : ''}</span><span class="sg-statut" data-statut="${esc(l.statut)}">${esc(STATUT_TEXTE(l))}</span>${outil(l)}</div>`; };
+      return `<div class="sg-ligne sg-corr" data-k="c:${esc(l.part)}:${esc(l.cut)}" style="--i:${Math.min(i, 12)}" role="listitem"><span class="sg-cut">${esc(l.cut)}</span><span class="sg-motif"><span class="sg-sig">${esc(LIB_SIGNAL[l.signaux?.[0]] || '')}</span>${det ? `<small>${esc(det)}</small>` : ''}</span><span class="sg-statut" data-statut="${esc(l.statut)}">${esc(STATUT_TEXTE(l))}</span>${outil(l)}</div>`; };
     const plusieurs = C.listes.length > 1;
     const etatPartie = L => L.lignes.every(revu) ? 'faite' : L.lignes.some(l => l.statut === 'en-cours') || (ouverte && L.lignes.some(revu)) ? 'en-cours' : 'a-faire';
     const notePartie = (L, e) => e === 'faite' ? 'revue' : aff !== null && L.partie === aff ? 'affichée dans ESV' : aff !== null && ouverte && !trav ? 'à ouvrir dans ESV' : '';
@@ -702,7 +724,7 @@
       /* CH-035 : l'état par partie du parcours (à faire, en cours, faite) quand la traversée est allumée ; sinon, calculé ici. Habillage : CH-036. */
       const EP = trav && plusieurs ? (C.parcours?.parties || []).find(x => x.partie === L.partie) : null;
       const e = EP ? EP.etat : etatPartie(L), note = notePartie(L, e);
-      liste += `<div class="sg-corr-partie" data-partie="${esc(L.partie)}" data-etat="${esc(e)}">${ETOILE}<b class="sg-mono">Partie ${esc(L.partie)}</b><span class="sg-n">${L.lignes.filter(revu).length} sur ${L.lignes.length}</span>${note ? `<span class="sg-d">${esc(note)}</span>` : ''}</div>`;
+      liste += `<div class="sg-corr-partie" data-partie="${esc(L.partie)}" data-etat="${esc(e)}"${aff !== null && L.partie === aff ? ' data-affichee="1"' : ''}><b class="sg-mono">Partie ${esc(L.partie)}</b><span class="sg-n">${L.lignes.filter(revu).length} sur ${L.lignes.length}</span>${note ? `<span class="sg-d">${esc(note)}</span>` : ''}</div>`;
       if (C.etat === 'terminee') { const c = st => L.lignes.filter(l => l.statut === st).length;
         liste += `<p class="sg-corr-bilan">${esc([pluriel(c('corrige'), 'corrigé', 'corrigés'), pluriel(c('valide'), 'validé tel quel', 'validés tels quels'), pluriel(c('vu'), 'vu sans validation', 'vus sans validation')].join(' · '))}</p>`; continue; }
       /* Une partie revue ne se replie pas (écart au dessin) : l'opérateur doit pouvoir revenir sur un de ses cuts (retour en arrière de CH-035). */
@@ -712,21 +734,26 @@
     const bt = (b, plein) => b ? `<button type="button" class="${plein ? 'sg-principal' : 'sg-secondaire'}"${b.act ? ` data-act="${esc(b.act)}"` : ''}${b.inactif ? ' disabled' : ''}>${plein && b.ic ? ic(b.ic) : ''}${plein ? `<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
     const PA = C.passage || null;
     const refus = PA?.etat === 'refuse' && PA.texte ? `<p class="sg-raison" role="status">${esc(PA.texte)}</p>` : C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? `<p class="sg-raison" role="status">${esc(C.ouvrir.texte)}</p>` : '';
-    const aube = C.listes.map(L => { const t = L.lignes.length, f = L.lignes.filter(revu).length; return `<span data-partie="${esc(L.partie)}"${aff !== null && L.partie === aff ? ' data-affichee="1"' : ''} style="flex:${Math.max(1, t)} 1 0"><i style="width:${t ? Math.round(f / t * 100) : 0}%"></i><small class="sg-mono">${esc(L.partie)} · ${f} sur ${t}</small></span>`; }).join('');
-    let h = `<div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p></div>`;
-    h += `<div class="sg-horizon"><div class="sg-compte"><span class="sg-chiffre">${esc(n)}</span><span class="sg-suite">sur ${esc(tout.length)} revus</span>${m.droite ? `<span class="sg-droite">${esc(m.droite)}</span>` : ''}</div><div class="sg-aube" aria-hidden="true">${aube}</div></div>`;
-    h += `<div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts de l’Aurore">${liste}</div>${refus}`;
+    /* Direction B : un arc par partie, à la mesure de ses cuts ; la pointe chaude au bout de l'avancement de la partie en cours (l'aube). */
+    const segs = C.listes.map(L => { const t = L.lignes.length, f = L.lignes.filter(revu).length, EP = trav && plusieurs ? (C.parcours?.parties || []).find(x => x.partie === L.partie) : null, e = EP ? EP.etat : etatPartie(L);
+      return { poids: Math.max(1, t), fait: t ? f / t : 0, etat: e, partie: L.partie, pointe: C.etat !== 'terminee' && e === 'en-cours' }; });
+    const bouts = m.verrou ? '' : `${bt(m.principal, true)}${m.secondaires.map(b => bt(b, false)).join('')}`;
+    let h = cadranHtml(anneauHtml(segs, String(n), `sur ${tout.length}`, `Aurore : ${n} revus sur ${tout.length}`, 'attention'), m, bouts, m.droite);
+    if (refus) h += refus;
     if (m.verrou) h += `<div class="sg-verrou-ligne">${ic('cadenas')}<span>Aucune action pendant le passage · le cut s’ouvrira seul</span></div>`;
-    else if (m.principal || m.secondaires.length) h += `<div class="sg-actions">${bt(m.principal, true)}${m.secondaires.map(b => bt(b, false)).join('')}</div>`;
-    h += `<p class="sg-meta sg-corr-note">${esc(m.note || 'Chaque visite est enregistrée par Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.')}</p>`;
-    return `<section class="sg-instrument sg-onglet-corr" aria-live="polite" aria-label="Aurore">${h}</section>`;
+    if (m.note) h += `<p class="sg-meta sg-of-note">${esc(m.note)}</p>`;
+    if (C.etat === 'terminee') { const k = C.comptes;
+      h += `<div class="sg-trois">${[[k.corrige, 'corrigé', 'corrigés'], [k.valide, 'validé tel quel', 'validés tels quels'], [k.vu, 'vu sans validation', 'vus sans validation']].map(([v, a, b]) => `<div><span class="sg-mono">${esc(v)}</span><span>${v > 1 ? b : a}</span></div>`).join('')}</div>`; }
+    h += `<div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts de l’Aurore">${liste}</div>`;
+    h += `<p class="sg-meta sg-corr-note">Chaque visite est enregistrée par Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.</p>`;
+    return `<section class="sg-instrument sg-onglet-corr sg-b" aria-live="polite" aria-label="Aurore">${h}</section>`;
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
     if (u.onglet === 'correction' && !s.correction) {
       /* L'Aurore sans liste : l'onglet est toujours là (01/11, remarque de l'opérateur « où est le 4e onglet ? »), il dit ce qui le remplit. */
       const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
-      return `<div class="sg-fen" data-activite="correction" data-etat="vide">${barreHtml(s, m, u)}<section class="sg-instrument sg-onglet-corr" aria-live="polite" aria-label="Aurore"><div class="sg-groupe-etat"><div class="sg-etat"><span class="sg-mot">Aurore</span></div><p class="sg-phrase">Pas encore de liste à reprendre.</p></div><p class="sg-meta sg-corr-note">L’Aurore naît à la fin d’un lot ou d’une Constellation : Ariane y range les cuts à reprendre, vous les corrigez et les validez dans ESV, Écho enregistre. Ariane ne pose et ne valide rien ici.</p></section>${cacheHtml(s, m)}${couche}</div>`;
+      return `<div class="sg-fen" data-activite="correction" data-etat="vide">${barreHtml(s, m, u)}<section class="sg-instrument sg-onglet-corr sg-b" aria-live="polite" aria-label="Aurore">${cadranHtml(anneauHtml([{ poids: 1, fait: 0, etat: 'a-faire' }], '0', 'à revoir', 'Aurore : rien à revoir'), { mot: 'Rien à revoir', phrase: 'Pas encore de liste à reprendre.' }, '')}<p class="sg-meta sg-corr-note">L’Aurore naît à la fin d’un lot ou d’une Constellation : Ariane y range les cuts à reprendre, vous les corrigez et les validez dans ESV, Écho enregistre. Ariane ne pose et ne valide rien ici.</p></section>${cacheHtml(s, m)}${couche}</div>`;
     }
     if (u.onglet === 'correction' && s.correction) {
       const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';

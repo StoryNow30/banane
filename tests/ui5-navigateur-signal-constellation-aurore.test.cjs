@@ -3,7 +3,7 @@
  * « CH-036 · Constellation et Aurore », validée par l'opérateur le 01/11 (départs et motifs visibles d'emblée ; en 360 px, les quatre onglets gardent leur
  * libellé, sur leur propre rang sous la barre). Montage : tests/helpers/signal-navigateur.cjs (service worker simulé). Mesures, de 360 à 600 px puis en
  * clair : 0 erreur de console, rien qui déborde (barre comprise), contraste ≥ 4,5:1 sur les textes nouveaux ; en compact, la bascule est sous la barre et
- * aucun libellé d'onglet n'est coupé. La barre est mesurée par ses enfants directs et ses onglets : le nom de l'onglet ESV dans la puce se rogne (points
+ * aucun libellé d'onglet n'est coupé. Direction B « Cadran » (02/11) : l'anneau, le registre, les temps numérotés. La barre est mesurée par ses enfants directs et ses onglets : le nom de l'onglet ESV dans la puce se rogne (points
  * de suspension), c'est voulu. Données fabriquées. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const { CHROMIUM, PW, absent, ouvrir, SC } = require('./helpers/signal-navigateur.cjs');
@@ -28,7 +28,7 @@ const AURORE = {
   ouverte: { ...SC.fin, current: { identity: { part: 13, cut: 15 } }, correction: corr('ouverte', { entreParties: true, courant: { part: 13, cut: 15 } }),
     native: { id: 'n1', status: 'RUNNING', correction: { id: 'C1' }, visits: [visite(13, 14, 'VALIDATE_NO_MOVEMENT'), visite(13, 15, null, false)] } },
 };
-const TEXTES = '.sg-mot,.sg-phrase,.sg-actions button,.sg-etoile small,.sg-etoile .sg-mono,.sg-temps li,.sg-of-t span,.sg-of-l span,.sg-of-l b,.sg-of-motifs,.sg-of-departs th,.sg-of-departs td,.sg-meta,.sg-corr-partie span,.sg-corr-partie b,.sg-aube small,.sg-suite,.sg-statut,.sg-sig,.sg-bascule button,.sg-incident p';
+const TEXTES = '.sg-chiffre,.sg-suite,.sg-reg-tete span,.sg-reg-partie .sg-mono,.sg-reg-motifs,.sg-cadran-d,.sg-alerte p,.sg-trois span,.sg-mot,.sg-phrase,.sg-actions button,.sg-etoile small,.sg-etoile .sg-mono,.sg-temps li,.sg-of-t span,.sg-of-l span,.sg-of-l b,.sg-of-motifs,.sg-of-departs th,.sg-of-departs td,.sg-meta,.sg-corr-partie span,.sg-corr-partie b,.sg-aube small,.sg-suite,.sg-statut,.sg-sig,.sg-bascule button,.sg-incident p';
 const LARGEURS = [600, 560, 520, 480, 440, 400, 360];
 
 function mesurer(page) {
@@ -73,8 +73,8 @@ test('Constellation : en cours (rattrapage), arrêtée, terminée ; 360 à 600 e
     for (const nom of ['passe', 'arret', 'fin']) {
       if (nom !== 'passe') await poserEtat(page, CONSTELLATION[nom]);
       vus[nom] = await page.evaluate(() => { const h = document.getElementById('ui5');
-        return { etoiles: [...h.querySelectorAll('.sg-etoile')].map(e => e.dataset.etat + ':' + e.querySelector('.sg-mono').textContent), temps: h.querySelector('.sg-temps [aria-current]')?.textContent || '',
-          motifs: [...h.querySelectorAll('.sg-of-motifs')].map(e => e.textContent), titres: [...h.querySelectorAll('.sg-of-t span:first-child')].map(e => e.textContent), principal: h.querySelector('.sg-principal')?.textContent.trim() || '' }; });
+        return { etoiles: [...h.querySelectorAll('.sg-anneau .sg-arc')].map(e => e.dataset.etat + ':' + e.dataset.partie), temps: h.querySelector('.sg-temps [aria-current]')?.textContent.replace(/^\d+/, '') || '',
+          motifs: [...h.querySelectorAll('.sg-reg-motifs')].map(e => e.textContent), titres: [...h.querySelectorAll('.sg-of-t span:first-child')].map(e => e.textContent), principal: h.querySelector('.sg-principal')?.textContent.trim() || '' }; });
       await balayer(page, nom, res);
     }
     assert.deepEqual(erreurs, []);
@@ -83,7 +83,7 @@ test('Constellation : en cours (rattrapage), arrêtée, terminée ; 360 à 600 e
   assert.deepEqual(res['passe 600'].onglets, ['Orbite', 'Écho', 'Constellation', 'Aurore']);
   assert.deepEqual(res['fin 360'].onglets, ['Orbite', 'Écho', 'Constellation', 'Aurore']);
   assert.deepEqual(vus.passe.etoiles, ['faite:13', 'en-cours:14', 'a-venir:15']); assert.equal(vus.passe.temps, 'Rattrapage');
-  assert.deepEqual(vus.passe.motifs, ['fin normale · rattrapage en ombre, rien d’écrit · relecture finie']);
+  assert.deepEqual(vus.passe.motifs, ['fin normale · rattrapage en ombre, rien d’écrit · relecture finie', 'en cours · rattrapage']);
   assert.deepEqual(vus.arret.etoiles, ['faite:13', 'interrompue:14', 'a-venir:15']); assert.match(vus.arret.principal, /Reprendre à la partie 14 · 2 restantes/);
   assert.deepEqual(vus.fin.titres, ['Bilan par partie', 'Départs des parties'], 'bilan et départs visibles d’emblée');
   assert.match(vus.fin.principal, /Ouvrir l’Aurore · \d+ cuts/);
@@ -97,7 +97,7 @@ test('Aurore : proposée puis ouverte sur deux parties (traversée allumée) ; 3
     for (const nom of ['proposee', 'ouverte']) {
       if (nom !== 'proposee') await poserEtat(page, AURORE[nom]);
       vus[nom] = await page.evaluate(() => { const h = document.getElementById('ui5');
-        return { parties: [...h.querySelectorAll('.sg-corr-partie')].map(e => e.textContent), aube: [...h.querySelectorAll('.sg-aube > span')].map(e => e.dataset.partie), principal: h.querySelector('.sg-principal')?.textContent.trim() || '',
+        return { parties: [...h.querySelectorAll('.sg-corr-partie')].map(e => e.textContent), aube: [...h.querySelectorAll('.sg-anneau .sg-arc')].map(e => e.dataset.partie), principal: h.querySelector('.sg-principal')?.textContent.trim() || '',
           ouvrir14: !!h.querySelector('[data-act^="sg:corr-ouvrir:14:"]') }; });
       await balayer(page, nom, res);
     }

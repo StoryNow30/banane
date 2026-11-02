@@ -45,8 +45,8 @@ test('l’onglet : liste proposée, signaux en clair, « Commencer l’Aurore »
   assert.match(h, /role="tab" aria-selected="true"[^>]*>Aurore</);
   assert.match(h, /class="sg-mot">Prête</);
   assert.match(h, /Partie 5 · 6 à corriger, 1 à poser/);
-  assert.match(h, /<span class="sg-cut">14<\/span><span class="sg-motif"><span class="sg-sig">posé au rattrapage<\/span><small>· déplacement 38,4 mm<\/small>/);
-  assert.match(h, /<span class="sg-cut">15<\/span><span class="sg-motif"><span class="sg-sig">juste après un cut à poser<\/span><small>· posé sans appui<\/small>/);
+  assert.match(h, /<span class="sg-cut">14<\/span><span class="sg-motif"><span class="sg-sig">posé au rattrapage<\/span><small>déplacement 38,4 mm<\/small>/);
+  assert.match(h, /<span class="sg-cut">15<\/span><span class="sg-motif"><span class="sg-sig">juste après un cut à poser<\/span><small>posé sans appui<\/small>/);
   assert.match(h, /Section-a-poser|À poser/);
   assert.equal((h.match(/class="sg-statut"[^>]*>à faire</g) || []).length, 7);
   assert.match(h, /data-act="legacy:correction-demarrer"[^>]*>.*Commencer l’Aurore/s);
@@ -83,7 +83,8 @@ test('liste terminée : bilan, « Télécharger la séance Écho » (bouton d’
   p.ui.agir('sg:onglet-correction');
   const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Terminée</);
-  assert.match(h, /Partie 5 · 1 corrigé, 1 validé tel quel, 1 vu sans validation · inscrit dans l’export Orbite/);
+  assert.match(h, /Partie 5 · inscrit dans l’export Orbite · séance Écho close/);
+  assert.match(h, /class="sg-trois"><div><span class="sg-mono">1<\/span><span>corrigé<\/span><\/div><div><span class="sg-mono">1<\/span><span>validé tel quel<\/span><\/div><div><span class="sg-mono">1<\/span><span>vu sans validation<\/span>/, 'CH-036 B : les trois chiffres, une seule fois');
   assert.match(h, /data-act="legacy:native-download"[^>]*>.*Télécharger la séance Écho/s);
   assert.match(h, /class="sg-principal" data-act="legacy:export-tout"[^>]*>.*Exporter le dossier/s, 'CH-036 : l’export est l’action pleine');
 });
