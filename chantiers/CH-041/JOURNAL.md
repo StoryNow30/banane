@@ -113,3 +113,38 @@ Première version des graines exactes : portée ±90 mm (la fenêtre de recherch
 | **porte + exécuteur à 3 fils** | **8 ms** | **836 ms** | 2 063 ms | 344 sur 721 |
 
 Lecture : la médiane tient le critère (d) (≤ 630 ms) de très loin ; la moyenne ne le tient pas sur CE lot (836 ms > 300 ms) : un cut sur deux garde un reliquat, et les plus lourds (17 000 points, 7 relances, 5 à 8 s en série) dépassent la fenêtre même divisés par deux. Deux leviers restent, dits au rapport : le nombre de fils (réglage `fils`, 0 = cœurs − 1 ; à 6 fils le rapport attendu est ~3 et la moyenne tomberait vers 0,4 s, SUPPOSÉ, à mesurer sur la machine de l'opérateur) et la restriction par zone (`zones`) sur les voies sur dalle. Sur les jeux de voie courante (§ 2.3), les nuages sont trois fois plus légers : à chiffrer de la même façon.
+
+### 2.3 La candidate définitive (porte à écartement + graines exactes) contre la grille, tous les jeux (ÉTABLI, 13:55 ; références `porte:false`, candidate `porte:true`, module c50b18f + porte à écartement)
+La porte exige désormais une **paire** soutenue admissible (deux positions à dessus ≥ 60 et flanc ≥ 6, l'une loin de la pose, écartement du contrat ± 20 mm sur les vraies positions) : un rail seul loin de la pose (quai, mur, caniveau, rail d'une autre voie) n'ouvre plus.
+
+| jeu | cuts | (a) accord | (b) fautes conservées | (c) justes différées en plus | porte fermée | relances grille → candidate | ms par cut en série, médiane grille → candidate (sous charge) |
+|---|---|---|---|---|---|---|---|
+| partie 20 | 721 | **721 / 721** | **19 / 19** | 0 (1 / 140 des deux côtés) | **377 (52 %)** | 4 080 → 2 093 | 3 128 → 10 |
+| .24 partie 0 | 230 | 230 / 230 | — | — | 128 (56 %) | 1 382 → 639 | 3 082 → 6 |
+| .28 parties 5 à 8 | 176 | 176 / 176 | — | — | 51 (29 %) | 1 103 → 817 | 3 091 → 2 236 |
+| Aurore 10 et 11 | 213 | 213 / 213 | — (0 faute) | — | 110 (52 %) | 1 200 → 638 | 1 277 → 12 |
+| 2/11 partie 0 (Écho) | 123 | 123 / 123 | **1 / 1** | 0 (6 / 112 des deux côtés) | 41 (33 %) | 695 → 493 | 4 069 → 3 800 |
+| 2/11 partie 1 | 83 | 83 / 83 | — | — | 34 (41 %) | 504 → 287 | 1 379 → 1 085 |
+| **total** | **1 546** | **1 546 / 1 546 (100 %)** | **20 / 20** | **0** | 741 (48 %) | 8 964 → 4 967 (− 45 %) | |
+
+**Verdict (a), (b), (c) : tenus partout, sans marge à discuter** : la porte est un majorant exact (aucune décision changée sur 1 546 cuts, bornes hautes de Wilson 0,25 % de désaccords, 15 % de fautes perdues sur 20). Sur les cuts ouverts, les graines exactes épargnent peu (2 à 10 % des relances) : la porte fait presque tout le gain, et elle ne ferme que la moitié des cuts : l'autre moitié a réellement, loin de la pose, une paire que seul le moteur départage (contre-rails et gorges des voies sur dalle, rails d'appareils, voies voisines à l'écartement). Le temps en série sur un cut ouvert est celui de la grille.
+
+## 5. Le critère (d) : ce qui est établi, ce qui est estimé, ce qui manque (14:00)
+- **Établi** : (1) le temps d'une porte : 4 à 12 ms par cut (max 164) ; (2) les fils : dans Chromium 153, sur captures réelles, machine au repos, 3 fils : × 1,98 (partie 20, 17 000 points, aller-retour 1 145 ms contre 2 257 en série) et × 1,90 (Aurore, 4 800 points, 424 ms contre 766) ; cellules identiques 50 sur 50 ; (3) la fenêtre réelle capture reçue → décision chez l'opérateur : 1,6 s sur la partie 20, 1,7 s sur .24, 1,4 à 1,8 s sur le 2/11, mais **0,2 à 0,4 s sur .28 et Aurore** (nuages légers : l'analyse du moteur est rapide, il n'y a presque rien derrière quoi se cacher).
+- **Estimé** (`tools/ch041/reliquat.cjs`, candidate × 1,2 pour la machine de l'opérateur ÷ 1,98 pour 3 fils + 60 ms ; temps de la candidate mesurés sous charge, donc majorés ; SUPPOSÉ) :
+
+| jeu | cuts | temps ajouté par cut posé CH-034 (médiane / moyenne, ms) | porte + fils, estimé (médiane / moyenne / P90) | cuts avec reliquat |
+|---|---|---|---|---|
+| partie 20 (dalle, appareils) | 721 | 3 754 / 5 132 | **6 / 846** / 2 196 | 275 (38 %) |
+| .24 partie 0 | 230 | 3 698 / 3 505 | **5 / 98** / 328 | 38 (17 %) |
+| .28 partie 5 | 37 | 7 343 / 6 983 | 3 227 / 3 007 / 3 853 | 34 (92 %) |
+| .28 partie 6 | 95 | 2 845 / 3 971 | 882 / 1 408 / 3 105 | 72 (76 %) |
+| .28 partie 7 | 21 | 1 788 / 3 240 | 5 / 812 / 2 616 | 9 |
+| .28 partie 8 | 23 | 1 100 / 1 644 | 6 / 209 / 352 | 5 |
+| Aurore 10 | 139 | 1 682 / 2 488 | 285 / 775 / 2 940 | 76 (55 %) |
+| Aurore 11 | 74 | 667 / 1 983 | 5 / 813 / 2 590 | 25 (34 %) |
+| 2/11 partie 0 | 123 | 4 883 / 4 837 | **7 / 530** / 1 876 | 52 (42 %) |
+| 2/11 partie 1 | 83 | 1 655 / 1 853 | **5 / 65** / 104 | 9 (11 %) |
+
+**Lecture honnête.** La médiane tient le critère (≤ 630 ms) sur tous les jeux sauf .28 parties 5 et 6 (fenêtre de 0,4 s, porte fermée sur 8 et 22 % des cuts : ces deux parties sont des voies où presque chaque cut a une paire concurrente possible loin de la pose, probablement une voie voisine à l'écartement nominal, à vérifier sur place). **La moyenne (≤ 300 ms) ne tient, par l'estimation, que sur .24, .28 partie 8 et le 2/11 partie 1** ; elle vaut 0,5 à 0,85 s sur la partie 20, le 2/11 partie 0 et Aurore, 1,4 à 3 s sur .28 parties 5 et 6. La cause est structurelle : une relance du moteur gelé coûte 0,5 à 1 s et il en faut 6 ou 7 sur un cut ouvert ; divisées par 2 (3 fils) ou 3 (6 fils), elles dépassent une fenêtre de 0,2 à 1,7 s dès que le nuage est fourni. Ce qui reste pour descendre : plus de fils (réglage `fils`, machine de l'opérateur : cœurs inconnus), ou les zones (`zones:['adv','abords']`, qui enlève la voie courante : CH-034 § 2.11 rappelle que les fautes connues sont en appareils ; le coût en fautes d'une voie courante à voie voisine n'est pas connu), ou toucher au moteur gelé (interdit ici). **Mesure vraie à faire sur le terrain** : l'événement `recherche-large` porte `executeur.attenteMs` ; `node tools/ch041/cycle-lot.cjs <journal> --partie N` en donne la médiane et la moyenne par cut consulté.
+- **Non fait** : H4 (reprendre la science de la GCV2 comme relance 0 dans le lot : une relance de moins sur les cuts que la chaîne ne pose pas ; la passe le fait déjà) ; piste 6 (décider après la pose : écarté, § 0.6) ; mesure sur la machine de l'opérateur (outil prêt).
