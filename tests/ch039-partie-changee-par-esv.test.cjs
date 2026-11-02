@@ -14,7 +14,8 @@ const { pilote } = require('./helpers/pilote-lot.cjs');
 const L = require('../src/lot-decision.js'), S = require('../src/settings.js');
 const { montage, fermer } = require('./helpers/file-parties-sw.cjs');
 const attendre = ms => new Promise(r => setTimeout(r, ms));
-const ESV_SENDER = { id: 'test', url: 'https://esv.lidar.altametris.xyz/rails_validation/test', tab: { id: 1 } };
+/* L'expéditeur des observations : l'onglet ESV simulé du montage (son adresse vient du montage, jamais écrite ici). */
+const expediteur = async b => ({ id: 'test', tab: { id: 1 }, url: (await b.ctx.chrome.tabs.get(1)).url });
 const AT = '2026-11-02T09:09:25.000Z';
 
 /* ---------- 3. machine de la file (pure) ---------- */
@@ -126,7 +127,7 @@ function esvQuiChangeDePartie({ newPart = true, page = null } = {}) {
     esv.validateAndNext = async (...a) => { const ev = await valider(...a);
       if (a[0]?.cut === 100) { parti = true; if (page !== null) void b.ctx.chrome.tabs.reload(1);   /* Chrome : onglet « loading » puis « complete » */
         if (newPart) await b.message({ kind: 'esv-observation', observer: 'obs-1', entries: [{ seq: 1, kind: 'esv-event', nom: 'railPairUpdated', args: ['23', 100, 'valid'], pageMs: 1 },
-          { seq: 2, kind: 'esv-event', nom: 'railPairSelected', args: ['23', 101], pageMs: 2 }, { seq: 3, kind: 'esv-event', nom: 'newPart', args: ['24'], pageMs: 3 }] }, ESV_SENDER); }
+          { seq: 2, kind: 'esv-event', nom: 'railPairSelected', args: ['23', 101], pageMs: 2 }, { seq: 3, kind: 'esv-event', nom: 'newPart', args: ['24'], pageMs: 3 }] }, await expediteur(b)); }
       return ev; };
     const capturer = esv.capture.bind(esv);
     esv.capture = async (...a) => { if (parti) throw Error(BFCACHE); return capturer(...a); };
