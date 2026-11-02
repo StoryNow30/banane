@@ -209,7 +209,7 @@
     if(flancMax(H,u,z)<faceMin)continue;
     fort[i]=1;
     if(d>=seuil){const k=Math.round(u/PORTE_CASE_SOUTENUE_MM),c=soutenus.get(k);if(!c||d>c.top)soutenus.set(k,{u,z,top:d});}
-    if(H.poseU!==null&&d>max&&Math.hypot(u-H.poseU,z-H.poseV)>R.loinMm){max=d;uMax=u;zMax=z;}}}
+    if(H.poseU!==null&&d>max&&Math.hypot(u-H.poseU,z-H.poseV)>(R.sansPaireLoin?R.loinMm:0)){max=d;uMax=u;zMax=z;}}}
   return {fort,uDebut:-fin,max,u:uMax===null?null:r1(uMax-H.poseU),z:zMax===null?null:r1(zMax-H.poseV),soutenus:[...soutenus.values()],sign:H.sign,o1:H.o1,poseU:H.poseU,poseV:H.poseV};
  }
  /* La porte du cut. Une paire ne contredit la pose que si ses DEUX rails sont soutenus (dessus ≥ seuil, flanc ≥ 6), si l'un au moins est loin de la pose, et si
@@ -222,7 +222,8 @@
   if(illisible)return {ouverte:true,seuil,max,rails,illisible:true};
   if(max<seuil)return {ouverte:false,seuil,max,rails,paires:0};
   const pos=(s,c)=>positionDe(capture,s,{lat:A[s].sign*c.u-A[s].o1,vert:c.z});
-  const loin=(s,c)=>Math.hypot(c.u-A[s].poseU,c.z-A[s].poseV)>R.loinMm;
+  /* Règle du protocole (`sansPaireLoin:false`) : une pose sans paire forte est différée dès qu'une paire soutenue existe, où qu'elle soit : « loin » vaut alors 0. */
+  const seuilLoin=R.sansPaireLoin?R.loinMm:0,loin=(s,c)=>Math.hypot(c.u-A[s].poseU,c.z-A[s].poseV)>seuilLoin;
   let paires=0,exemple=null;
   for(const [s,o] of [['left','right'],['right','left']])for(const a of A[s].soutenus){if(!loin(s,a))continue;const pa=pos(s,a);
    for(const b of A[o].soutenus){const gm=1000*C.distance(pa,pos(o,b));
