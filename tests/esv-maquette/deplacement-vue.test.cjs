@@ -16,6 +16,9 @@ function adaptateur(avecPatch){
   fs.mkdirSync(path.join(tmp,'src'),{recursive:true});
   fs.copyFileSync(path.join(N.racine,'src/adapter-page.js'),path.join(tmp,'src/adapter-page.js'));
   /* Test 25 : l'adaptateur porte le patch de CH-018 ; la proposition de CH-007 a été écrite contre celui d'avant : on retire d'abord le patch de CH-018. */
+  /* Test 34 : le patch de CH-038 (remise de la vue) est retiré avant celui de CH-018. */
+  const r38=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(N.racine,'chantiers/CH-038/adaptateur-remise-vue.patch')],{encoding:'utf8'});
+  if(r38.status!==0)throw Error(r38.stderr||r38.stdout||'patch -R CH-038');
   const retour=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(N.racine,'chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
   if(retour.status!==0)throw Error(retour.stderr||retour.stdout||'patch -R');
   const r=spawnSync('patch',['-p1','-d',tmp,'-i',patch],{encoding:'utf8'});

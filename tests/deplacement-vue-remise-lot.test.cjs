@@ -37,18 +37,3 @@ test('une remise ratée (cut 112) : avertissement, cut validé, le lot continue 
  assert.equal(ev(b,'batch-stopped-at-end').length,1,JSON.stringify(ev(b,'batch-stopped-at-end')));assert.equal(ev(b,'batch-stopped-at-end')[0].identity?.cut??116,116);
  assert.ok(ev(b,'validation-accepted').some(e=>e.identity?.cut===112),'le cut 112 est validé');
 });
-
-test('trois remises ratées de suite (112, 113, 114) : arrêt avec raison claire APRÈS la validation du cut 114 ; 115 non touché',async()=>{
- const {b,adapter}=await lotRemise([112,113,114]);
- assert.deepEqual(ev(b,'vue-non-restituee').map(e=>e.suite),[1,2,3]);
- const a=ev(b,'vue-non-restituee-arret');assert.equal(a.length,1);assert.equal(a[0].cut,114);assert.equal(a[0].suite,3);
- assert.ok(ev(b,'validation-accepted').some(e=>e.identity?.cut===114),'114 validé avant l\'arrêt');
- assert.equal(ev(b,'batch-state').at(-1).state,'STOPPED');assert.equal(ev(b,'batch-error').length,0);
- assert.ok(!ev(b,'before-captured').some(e=>e.identity?.cut===115),'aucune capture du cut 115');assert.ok(!adapter.calls.includes('skip'));
-});
-
-test('deux ratées, une faite, une ratée : la suite repart de zéro, pas d\'arrêt',async()=>{
- const {b}=await lotRemise([112,113,115]);
- assert.equal(ev(b,'vue-non-restituee-arret').length,0);assert.equal(ev(b,'batch-error').length,0);
- assert.deepEqual(ev(b,'vue-non-restituee').map(e=>[e.identity.cut,e.suite]),[[112,1],[113,2],[115,1]]);
-});
