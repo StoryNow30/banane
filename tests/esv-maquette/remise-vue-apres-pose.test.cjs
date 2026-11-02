@@ -96,14 +96,23 @@ test('vert (patch CH-038), pré-vol : sans pose, le bouton ramène la vue habitu
   }finally{await env.fermer();}
 });
 
-test('vert (patch CH-038), panne simulée APRÈS écriture : le bouton ne ramène ni la vue habituelle ni le rail ; erreur claire « Vue ESV non restituée », rails posés',opts,async()=>{
+test('vert (patch CH-038), panne simulée APRÈS écriture : remise bornée (≤ 3,5 s), apply rend son résultat marqué vueNonRestituee ; le cut SUIVANT est posé correctement',opts,async()=>{
   const env=await preparer(true,'ailleurs');
   try{const {before,cible,proposals}=await poseHorsVue(env);
-    const r=await env.appel('apply',[before,proposals,PLAN]);
-    assert.match(String(r.error),/^Vue ESV non restituée après le déplacement de vue \(échelle à 0,0 % de la vue habituelle, le bouton du rail droit n’a ramené ni la vue habituelle ni le rail dans la vue en 3 pressions\) : les deux rails sont posés, rien n’est validé/);
-    const DV=require('../../src/deplacement-vue.js'),d=DV.detailRemise(null,r.error,{phase:'pose'});
-    assert.equal(d.resultat,'echec','classée échec, plus « inconnu »');assert.equal(d.raison,'vue-non-restituee');
-    const apres=(await env.appel('state',[])).result;assert.ok(dist(apres.rails.right.positionSceneRelative,cible)<=.001);
+    const t0=Date.now(),r=await env.appel('apply',[before,proposals,PLAN]),duree=Date.now()-t0;
+    assert.equal(r.error,undefined,'une vue non restituée ne lève plus : '+r.error);
+    assert.equal(r.result.vueNonRestituee,true);const rem=r.result.deplacerVue.remise;
+    assert.equal(rem.ok,false);assert.equal(rem.raison,'recentrage-impossible');assert.equal(rem.pressions,2);assert.ok(rem.dureeMs<=3500,'remise bornée : '+rem.dureeMs+' ms');
+    assert.ok(Number.isFinite(rem.ecartVueMm)&&rem.ecartVueMm>100,'écart de la vue rapporté : '+rem.ecartVueMm);
+    assert.ok(dist(r.result.rails.right.positionSceneRelative,cible)<=.001,'rail droit posé');
+    assert.ok(duree<15000,'apply entier : '+duree+' ms');
+    /* Cut suivant : la page repart de l'état réel de la caméra (vue laissée décalée) ; le bouton du rail la recentre, le geste amène la cible. */
+    const v=await env.appel('validateAndNext',[before.identity,{part:23,end:107}]);assert.equal(v.error,undefined,v.error);
+    await env.page.waitForFunction(c=>window.__maquette.etat().railsPrets&&window.__maquette.etat().cut!==c,before.identity.cut).catch(()=>{});
+    const suivant=await poseHorsVue(env);assert.notEqual(suivant.before.identity.cut,before.identity.cut);
+    const r2=await env.appel('apply',[suivant.before,suivant.proposals,PLAN]);
+    assert.equal(r2.error,undefined,r2.error);assert.ok(dist(r2.result.rails.right.positionSceneRelative,suivant.cible)<=.001,'cut suivant posé à la cible');
+    assert.equal(r2.result.deplacerVue.cotes.find(c=>c.cote==='right').ok,true);
     assert.deepEqual(env.erreurs,[]);
   }finally{await env.fermer();}
 });

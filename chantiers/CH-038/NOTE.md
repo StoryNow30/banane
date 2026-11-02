@@ -27,9 +27,14 @@ Export de la 4.9.5.33 (02/11, `banane-data`, collection `2026-11-02_v4.9.5.33_lo
 ## Après l'arrêt (hors cause, ÉTABLI)
 L'opérateur clôt le résultat incertain à 07:56:16. Chaque relance part du cut affiché (115), qui porte un résultat incertain archivé : refus « aucune nouvelle écriture automatique dans cette page » (`lot-non-demarre`). C'est une garde existante, pas un défaut. Le cut a été corrigé en Écho à 07:57 (`correction-liste` : 12 posés sur 12).
 
-## Ce que le lot aurait dû faire
-Cible hors vue à 200 mm, geste réussi, deux rails posés : la remise devait juger que **la vue habituelle est revenue** (caméra revenue à celle d'avant les gestes), et non que « le rail posé est dans la vue habituelle », ce qui est faux par construction quand la cible était hors vue. Remise jugée faite, la validation suit : le cut est posé et le lot continue. Si la vue ne revient vraiment pas après une écriture : arrêt avec une raison claire (« vue non restituée, deux rails posés, rien validé »), classée `echec` et non `inconnu`. Une panne de vue AVANT toute écriture (bouton, geste) doit différer le cut, sans écriture et sans SKIP.
+## Ce que le lot aurait dû faire (exigences de l'opérateur et de l'intégrateur, 02/11 : « il ne doit pas s'arrêter pour cette raison »)
+- Aucune validation n'a été envoyée pour le cut 115 (ÉTABLI : `validation-intent`, `-observation`, `-accepted`, `-ecriture-observee` existent pour les cuts 1 et 105 à 114, pas pour 115). Seuls les rails ont été déplacés. C'est l'ordre du code : `apply` pose et relit, puis le moteur valide.
+- Une vue non restituée n'est pas une pose ratée : les deux rails sont posés et relus. `apply` doit rendre son résultat normal, marqué `vueNonRestituee`, avec un détail (pressions, écarts), et le cut est validé comme les autres.
+- La remise est bornée à quelques secondes, jamais 3 × 12 s. Elle accepte « vue habituelle revenue » ou « rail dans la vue ».
+- Le service worker journalise l'avertissement `vue-non-restituee` et ne s'arrête jamais pour la vue, sauf après N remises ratées de suite (N = 3). Dans ce cas, il s'arrête après la validation du cut, avec une raison claire.
+- Le cut suivant repart de l'état réel de la caméra (le bouton du rail recentre). Une panne avant `apply` (pré-vol) diffère déjà le cut. Pas de patch moteur (`src/engine.js` est gelé sur la base V4.6.0).
+- Toujours jamais de SKIP, jamais de validation d'un cut non résolu.
 
-## Correctif retenu (détail dans le rapport)
-1. Page (patch d'adaptateur) : la vue habituelle de chaque côté est mémorisée avant les gestes. La remise après glisser presse le bouton et accepte « caméra stable revenue à cette vue » ou « rail dans la vue ». En cas d'échec, elle rend `ok:false` au lieu de lever, et `apply` lève le message « Vue ESV non restituée » (classé `echec`). Le pré-vol exige le retour à la vue habituelle.
-2. Service worker : la raison est dite (`deplacer-vue`, `ecriture` avant ou après) ; la remise est classée `echec`. Le réglage `deplacerVue` reste allumé (D-268) : la cause se corrige.
+## Correctif retenu
+1. Page (patch d'adaptateur) : vue habituelle mémorisée avant les gestes ; remise bornée (2 pressions de 1,5 s par défaut, réglables par le plan) ; `apply` ne lève plus pour une vue non restituée ; le pré-vol exige la vue revenue.
+2. Service worker : avertissement `vue-non-restituee`, compte des remises ratées de suite, arrêt après la validation du 3e (`vue-non-restituee-arret`). Une erreur de pose avec plan dit ce qui est écrit dans ESV (`ecriture`). Le réglage `deplacerVue` reste allumé (D-268).

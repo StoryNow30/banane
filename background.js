@@ -701,10 +701,28 @@ adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',asyn
  const envoi=ecritureNoterValidation(args[0]);
  try{
  const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return await validerSurPlace(args[0],dernier,args[1]);
- const evidence=await validateInESV(...args);
+ const evidence=await validateInESV(...args);await dvArretApresValidation();
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
  return evidence;}finally{if(envoi)envoi.retourMs=Date.now();}});
+/* CH-038 (ordre de l'opérateur et de l'intégrateur, 02/11 : « il ne doit pas s'arrêter pour cette raison ») — VUE NON RESTITUÉE APRÈS UNE POSE.
+ * La page (patch chantiers/CH-038/adaptateur-remise-vue.patch) ne lève plus : les rails sont posés et relus, le cut est validé comme les
+ * autres. Ici : un AVERTISSEMENT `vue-non-restituee` (cut, raison, pressions, écarts ; jamais de position) et le compte des remises
+ * ratées DE SUITE dans le lot (une remise faite le remet à zéro). À `remiseEchecsMax` (défaut 3), le lot s'arrête APRÈS la validation du
+ * cut en cours (aucune pose laissée non validée), avec une raison claire. Aucune commande nouvelle, jamais de SKIP. */
+const dvRemises={lot:null,suite:0,arret:null};
+async function dvNoterRemise(ev,remise){if(!remise||typeof remise!=='object')return;const b=engine.s.batch,lot=b?.id??null;
+ if(dvRemises.lot!==lot){dvRemises.lot=lot;dvRemises.suite=0;dvRemises.arret=null;}
+ if(remise.ok!==false){dvRemises.suite=0;return;}
+ dvRemises.suite++;const max=Math.max(1,globalThis.BananeSettings?.deplacerVue?.remiseEchecsMax??3),r=v=>Number.isFinite(v)?v:null;
+ await engine.event('vue-non-restituee',{identity:ev.identity,batchId:lot,raison:remise.raison??null,pressions:r(remise.pressions),ecartEchelle:r(remise.ecartEchelle),
+  ecartVueMm:r(remise.ecartVueMm),ndcRail:Array.isArray(remise.ndcRail)?remise.ndcRail:null,suite:dvRemises.suite,max,avertissement:true}).catch(()=>{});
+ if(lot&&dvRemises.suite>=max)dvRemises.arret={lot,cut:ev.identity?.cut??null};}
+/* Appelé après une validation prouvée : arrêt demandé par `dvNoterRemise` → le lot s'arrête là, cut validé. */
+async function dvArretApresValidation(){const b=engine.s.batch;if(!dvRemises.arret||dvRemises.arret.lot!==b?.id||b.state!=='RUNNING')return;
+ const {cut}=dvRemises.arret,n=dvRemises.suite;dvRemises.arret=null;dvRemises.suite=0;b.state='STOPPED';
+ engine.s.notice=`Lot arrêté : la vue d’ESV n’a pas été remise après ${n} déplacements de vue de suite (dernier : cut ${cut}, posé et validé). Remets la vue d’ESV (bouton d’un rail), puis relance le lot.`;
+ await engine.event('vue-non-restituee-arret',{identity:null,batchId:b.id,cut,suite:n}).catch(()=>{});}
 const readState=adapter.state,unresponsive=e=>/Adaptateur ESV sans réponse/.test(e?.message||'');
 /* 4.8.0 (KI-063) — ESV LU DANS UNE AUTRE PARTIE. Après un silence, ESV peut
  * revenir sur une autre partie (terrain du 26/09 : partie 13 muette 30 s après
@@ -1249,7 +1267,9 @@ adapter.apply=async(...args)=>{
    throw e;}
   const rapport=result&&typeof result==='object'?result.deplacerVue??null:null;if(rapport){result={...result};delete result.deplacerVue;}
   await engine.event('deplacer-vue',{...ev,cotes:(rapport?.cotes||[]).map(dvAmener),remise:rapport?.remise??null}).catch(()=>{});
-  journalerDeplacementVue(rapport?.cotes,rapport?.remise,null,'pose',Date.now()-t0);}
+  journalerDeplacementVue(rapport?.cotes,rapport?.remise,null,'pose',Date.now()-t0);
+  if(result&&typeof result==='object'&&'vueNonRestituee' in result){result={...result};delete result.vueNonRestituee;}
+  await dvNoterRemise(ev,rapport?.remise??null);}
  else result=optClic?await applyInESV(...args,optClic):await applyInESV(...args);
  if(stopAtLotEnd())await coordinateurLot.transition('fin-de-lot',()=>engine.event('batch-stopped-at-end',{identity:engine.s.before?.identity??null,applied:true}));return result;};
 adapter.capabilities={serverConfirmation:false};
@@ -1483,7 +1503,7 @@ async function commandLot(proposal,lotObservation){
  * de la page). Aucune position n'y est écrite : des NDC, des facteurs, des pixels, des comptes. */
 function deplacerVueReglage(){const v=globalThis.BananeSettings?.deplacerVue;return v&&v.actif===true?v:null;}
 let dvContexte=null,dvMemoire=null;
-const DV_TRANSMIS=['gestesMax','dezoomMax','glissementPxMax','pixelMaxMm','marge','remiseTolerance','molette','glisser'];
+const DV_TRANSMIS=['gestesMax','dezoomMax','glissementPxMax','pixelMaxMm','marge','remiseTolerance','remisePressions','remiseAttenteMs','molette','glisser'];
 const dvR=(v,k=1000)=>Number.isFinite(v)?Math.round(v*k)/k:null;
 const dvAmener=r=>r?{cote:r.cote??null,ok:!!r.ok,raison:r.raison??null,gestes:(r.gestes||[]).map(g=>({type:g.type,crans:g.crans??null,px:g.px??null,py:g.py??null,facteurCran:g.facteurCran??null,gain:g.gain??null,camera:g.camera??null,ndcApres:g.ndcApres??null,dureeMs:g.dureeMs??null})),
  ndcAvant:r.ndcAvant??null,ndcApres:r.ndcApres??null,pixelMm:r.pixelMm??null,dureeMs:r.dureeMs??null,remise:r.remise??null}:null;
