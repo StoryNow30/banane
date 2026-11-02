@@ -1,0 +1,15 @@
+Patch pour l'intégrateur (CH-041, H3) : la permission `offscreen` permet au service worker d'ouvrir le document hors écran
+`offscreen-recherche-large.html` qui porte les fils de calcul de la recherche large. Sans elle, le code se replie sur le calcul
+sur place (mêmes décisions, temps de CH-034). `manifest.json` est interdit à l'exécutant : à appliquer par l'intégrateur.
+--- a/manifest.json
++++ b/manifest.json
+@@ -7,6 +7,7 @@
+   "permissions": [
+     "storage",
+     "unlimitedStorage",
+     "scripting",
+     "downloads",
+-    "power"
++    "power",
++    "offscreen"
+   ],

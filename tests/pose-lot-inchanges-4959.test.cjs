@@ -63,7 +63,7 @@ const GARDE_APRES_DIFFERE=['garde-apres-differe.js'];
 const CORRECTION=['correction-liste.js'];
 /* CH-034 : la recherche large (src/recherche-large.js), module pur lu par le service worker au moment de la commande du lot, ÉTEINT par défaut
  * (réglage `lot.rechercheLarge`) ; éteint, les commandes sont celles d'avant (tests/recherche-large-sw.test.cjs). */
-const RECHERCHE_LARGE=['recherche-large.js'];
+const RECHERCHE_LARGE=['recherche-large.js','recherche-large-offscreen.js','recherche-large-worker.js'];
 
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];

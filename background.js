@@ -1318,6 +1318,9 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if((type==='applied-verified'||type==='validation-intent')&&rest[0]&&rest[0].serverConfirmed===false){rest[0]={...rest[0],serverConfirmed:null};
     if(type==='applied-verified'&&engine.s.applied&&engine.s.applied.serverConfirmed===false)engine.s.applied.serverConfirmed=null;}
    if(type==='validation-observation')preuveServeurEnAttente(rest[0]?.identity);
+   /* CH-041 : la capture AVANT est enregistrée : les relances de la recherche large partent vers l'exécuteur parallèle (rien si elle est éteinte). */
+   if(type==='before-captured'&&rest[0]?.lidarId)rlPrecalculer(rest[0].lidarId);
+   if(type==='batch-started')rlPrechauffer();
    const r=await evenement(type,...rest);
    /* 5.0 (D-171) : fin naturelle d'un lot créé avec la relecture : la passe est planifiée (rien si elle est coupée). */
    if(type==='batch-state'||type==='batch-stopped-at-end'){relecturePlanifier();passeDiffPlanifier();}
@@ -1474,7 +1477,7 @@ async function commandLot(proposal,lotObservation){
  /* 4.9.5.13 (L1) : un cut que la chaîne ne pose pas passe à la GCV2 (src/gcv2-l1.js). */
  if(profilL1())command=await l1Commande({command,lotObservation,proposal,before,capture});
  /* CH-034 : recherche large sur le nuage capturé (réglage `lot.rechercheLarge`, ÉTEINT), avant la garde R3 : différer ou remplacer une pose que le lot allait valider. */
- command=rechercheLargeCommande(command,lotObservation,proposal,before,capture);
+ command=await rechercheLargeCommande(command,lotObservation,proposal,before,capture);
  /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
  command=gardeApresDiffereCommande(command,lotObservation,proposal);
  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
@@ -1570,6 +1573,72 @@ function journalerDeplacementVue(cotes,remise,erreur,phase,dureeApplyMs){try{con
 function bilanDeplacementVue(b){try{const n=b?.deplacementVue,DVm=globalThis.BananeDeplacementVue;if(!b?.id||!n||n.bilanEcrit||!DVm?.Bilan||!OBS_CLOS.includes(b.state))return;
  const bilan=new DVm.Bilan(n);if(bilan.vide())return;n.bilanEcrit=true;
  void Promise.resolve(store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'deplacement-vue-bilan',batchId:b.id,etat:b.state,...bilan.resume()})).catch(()=>{});}catch{}}
+/* CH-041 — EXÉCUTEUR PARALLÈLE DE LA RECHERCHE LARGE (chantiers/CH-041/JOURNAL.md § 0.6, H3 ; réglage `lot.rechercheLarge.parallele`, vrai). Les relances du
+ * moteur gelé ne dépendent que de la capture : dès que la capture AVANT est enregistrée (`before-captured`), elles sont demandées à un document hors écran
+ * (offscreen-recherche-large.html, permission `offscreen` du manifeste) qui les répartit sur des Worker ; pendant ce temps le service worker fait l'analyse,
+ * la décision du lot et la GCV2 ; `rechercheLargeCommande` n'attend que le reliquat, et seulement si la porte est ouverte. Sans permission `offscreen` (le
+ * manifeste du dépôt ne l'a pas : chantiers/CH-041/propositions/manifest-offscreen.patch), sans document (panne, délai dépassé) ou recherche large éteinte :
+ * rien n'est demandé, le calcul se fait sur place comme avant ; `relance` est une fonction pure : les décisions sont les mêmes dans tous les cas. Le document
+ * reçoit la configuration du moteur (flanc partiel, calage) pour calculer à l'identique. Rien d'ESV, rien d'écrit : des millimètres et des comptes. */
+const RL_EXEC={port:null,enAttentePort:[],demandes:new Map(),precalcs:new Map(),id:0,creation:null,DELAI_MS:20000,MAX_PRECALCS:3};
+const rlExecuteurDisponible=R=>!!(R&&R.actif&&R.parallele&&typeof chrome!=='undefined'&&chrome.offscreen&&typeof chrome.offscreen.createDocument==='function');
+function rlExecuteurConnecte(port){
+ RL_EXEC.port=port;
+ port.onMessage.addListener(m=>{const d=m&&RL_EXEC.demandes.get(m.id);if(!d)return;RL_EXEC.demandes.delete(m.id);clearTimeout(d.timer);
+  if(m.type==='resultat')d.resolve(m);else d.reject(Error(m.message||'exécuteur en erreur'));});
+ port.onDisconnect.addListener(()=>{if(RL_EXEC.port===port)RL_EXEC.port=null;
+  for(const d of RL_EXEC.demandes.values()){clearTimeout(d.timer);d.reject(Error('document hors écran déconnecté'));}RL_EXEC.demandes.clear();});
+ for(const f of RL_EXEC.enAttentePort.splice(0))f(port);
+}
+async function rlExecuteurPort(){
+ if(RL_EXEC.port)return RL_EXEC.port;
+ if(!RL_EXEC.creation)RL_EXEC.creation=(async()=>{
+  const attente=new Promise((resolve,reject)=>{const t=setTimeout(()=>{RL_EXEC.enAttentePort=RL_EXEC.enAttentePort.filter(f=>f!==fin);reject(Error('document hors écran muet'));},RL_EXEC.DELAI_MS);
+   const fin=p=>{clearTimeout(t);resolve(p);};RL_EXEC.enAttentePort.push(fin);});
+  try{await chrome.offscreen.createDocument({url:'offscreen-recherche-large.html',reasons:['WORKERS'],justification:'Recherche large (CH-034) : relances du moteur sur le nuage capturé dans des fils de calcul parallèles, hors du service worker (CH-041).'});}
+  catch(e){if(!/single offscreen|already|exist/i.test(String(e?.message||e))){RL_EXEC.enAttentePort.splice(0);throw e;}}
+  return attente;
+ })().finally(()=>{RL_EXEC.creation=null;});
+ return RL_EXEC.creation;
+}
+async function rlDemander(message){
+ const port=await rlExecuteurPort(),id=++RL_EXEC.id;
+ return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{RL_EXEC.demandes.delete(id);reject(Error('exécuteur : délai dépassé'));},RL_EXEC.DELAI_MS);
+  RL_EXEC.demandes.set(id,{resolve,reject,timer});
+  try{port.postMessage({...message,id});}catch(e){clearTimeout(timer);RL_EXEC.demandes.delete(id);reject(e);}});
+}
+/* Au départ d'un lot : le document hors écran est ouvert et ses fils chargent le moteur (importScripts) AVANT la première capture ; mesuré dans Chromium : la
+ * première demande paie sinon l'ouverture et le chargement (tests/esv-maquette/recherche-large-executeur.test.cjs). Rien si la recherche large est éteinte. */
+function rlPrechauffer(){const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);if(!rlExecuteurDisponible(R))return;void rlExecuteurPort().catch(()=>{});}
+/* Dès la capture AVANT enregistrée (lot Orbite seulement) : la capture est relue du magasin, les graines choisies (sans la pose), les relances demandées à
+ * l'exécuteur ; la promesse est rangée par identifiant de capture (les trois dernières au plus). Rien ne bloque : une panne est lue à la commande. */
+function rlPrecalculer(lidarId){
+ const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);
+ if(!RL||!rlExecuteurDisponible(R)||!lidarId||engine?.s?.mode!=='automatic-test'||!engine?.s?.batch)return null;
+ const t0=Date.now();
+ const p=(async()=>{const capture=await store.getCloud(lidarId);
+  if(!capture?.rails||!Array.isArray(capture.pointsSceneRelative))throw Error('capture illisible');
+  const cap={rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes};
+  const {utiles}=RL.grainesChoisies(cap,R),etat=globalThis.BananeGCV1Shadow?.state?.()||{};
+  const r=await rlDemander({type:'calculer',capture:cap,graines:utiles,moteur:{partialFlank:etat.partialFlank,convention:etat.convention}});
+  return {relances:new Map((r.relances||[]).map(x=>[x.graine,{left:x.left,right:x.right}])),calculMs:r.ms??null,fils:r.fils??null,graines:utiles.length};})();
+ p.catch(()=>{});
+ RL_EXEC.precalcs.set(lidarId,{promesse:p,t0});
+ while(RL_EXEC.precalcs.size>RL_EXEC.MAX_PRECALCS)RL_EXEC.precalcs.delete(RL_EXEC.precalcs.keys().next().value);
+ return p;
+}
+/* À la commande : les relances précalculées pour la capture du cut, attendues seulement si la porte est ouverte (une porte fermée ne relance rien) ; une panne
+ * ou un délai dépassé rend `relances` null : `decider` relance alors sur place. `executeur` résume ce qui s'est passé pour le journal (ms, jamais une coordonnée). */
+async function rlRelancesPrecalculees(RL,R,cap,positions){
+ const id=engine?.s?.lidarId,pre=id?RL_EXEC.precalcs.get(id):null;
+ if(!pre)return {relances:null,executeur:null};
+ RL_EXEC.precalcs.delete(id);
+ const t1=Date.now(),cacheMs=t1-pre.t0;
+ if(R.porte){let ouverte=true;try{ouverte=RL.porte(RL.analyser(cap,positions,R),R).ouverte;}catch{ouverte=true;}
+  if(!ouverte)return {relances:null,executeur:{precalcule:false,porteFermee:true,cacheMs}};}
+ try{const x=await pre.promesse;return {relances:x.relances,executeur:{precalcule:true,attenteMs:Date.now()-t1,cacheMs,calculMs:x.calculMs,fils:x.fils,graines:x.graines}};}
+ catch(e){return {relances:null,executeur:{precalcule:false,attenteMs:Date.now()-t1,cacheMs,erreur:String(e?.message||e).slice(0,80)}};}
+}
 /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, réglage `lot.rechercheLarge`, livrée ÉTEINTE ; chantiers/CH-034/JOURNAL.md § 2). Sur un cut que la
  * commande allait VALIDER (pose du lot, de la GCV2, ou paire du moteur aux deux rails résolus), le moteur gelé est relancé sur le nuage capturé à des
  * graines espacées jusqu'à ±400 mm en travers ; la pose est confrontée aux paires fortes trouvées (module pur) :
@@ -1580,7 +1649,7 @@ function bilanDeplacementVue(b){try{const n=b?.deplacementVue,DVm=globalThis.Ban
  *   - `garde` : la commande est rendue telle quelle (le même objet).
  * Éteinte (`actif:false`), module absent, ou zone hors de `zones` : la commande est rendue telle quelle, rien n'est écrit. Une panne laisse la commande
  * telle quelle. Événement `recherche-large` à chaque décision (millimètres, pertes, comptes ; jamais une coordonnée). */
-function rechercheLargeCommande(command,lotObservation,proposal,before,capture){
+async function rechercheLargeCommande(command,lotObservation,proposal,before,capture){
  const RL=globalThis.BananeRechercheLarge,R=RL?.reglage(globalThis.BananeSettings?.lot?.rechercheLarge);
  if(!R||!R.actif||!command)return command;
  try{const SIDES=['left','right'],L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,identity=engine.s.before?.identity??null;
@@ -1589,8 +1658,11 @@ function rechercheLargeCommande(command,lotObservation,proposal,before,capture){
   if(Array.isArray(R.zones)){let z=null;try{z=l1Zone(identity);}catch{z=null;}if(!z||!R.zones.includes(z.zone))return command;}
   const expected=K.expectedPoses({rails:before},command.rails);
   const positions=Object.fromEntries(SIDES.map(s=>[s,expected[s].positionSceneRelative]));
-  const d=RL.decider({capture:{identity:capture.identity??null,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes},positions,R});
-  const resume=RL.resumer(d),ev={identity:{part:identity.part??null,cut:identity.cut},...resume,etage:lotObservation?.stage??null,commandeAvant:{action:command.action,reason:command.reason??null}};
+  const cap={identity:capture.identity??null,rails:capture.rails,pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes};
+  /* CH-041 : les relances déjà demandées à l'exécuteur parallèle à la capture AVANT ; attendues seulement si la porte est ouverte (ou absente du réglage). */
+  const {relances,executeur}=await rlRelancesPrecalculees(RL,R,cap,positions);
+  const d=RL.decider({capture:cap,positions,R,relances});
+  const resume=RL.resumer(d),ev={identity:{part:identity.part??null,cut:identity.cut},...resume,etage:lotObservation?.stage??null,commandeAvant:{action:command.action,reason:command.reason??null},...(executeur?{executeur}:{})};
   const differer=motif=>{const dr=L.deferRails(proposal.rails,lotObservation,'recherche-large','décision sur le lot : recherche large sur le nuage, '+motif+' : cut laissé à l\'opérateur');
    lotObservation.rechercheLarge={...resume,commande:{action:command.action,reason:command.reason??null}};
    journalerSimple('recherche-large',{...ev,issue:'differe',motifFinal:motif});
@@ -2467,6 +2539,8 @@ async function openPanel(which='home'){if(!VIEWS.includes(which))throw Error('Vu
  await syncLauncher();}
 chrome.action.onClicked.addListener(()=>openPanel());
 chrome.runtime.onConnect.addListener(port=>{
+ /* CH-041 : le document hors écran de la recherche large se connecte ici. */
+ if(port.name==='banane-recherche-large'&&port.sender?.id===chrome.runtime.id){rlExecuteurConnecte(port);return;}
  const url=port.sender?.url||port.sender?.tab?.url;
  // Le fragment d'URL porte la vue : il ne doit pas fausser la comparaison.
  const sansFragment=(url||'').split('#')[0];

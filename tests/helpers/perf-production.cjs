@@ -2,11 +2,13 @@
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('../fixtures.cjs');
 /* `store`, `local`, `session` (facultatifs) : partagés entre deux « vies » du service worker pour simuler son redémarrage. */
-function production({enabled=true,adapter=new SimulatedESV(),store=new MemoryStore(),local=null,session=null}={}){
- const root=path.resolve(__dirname,'../..'),commands=[];let message;
+/* `offscreen` (CH-041, facultatif) : `{createDocument(options)}` simule `chrome.offscreen` ; les écouteurs de `chrome.runtime.onConnect` sont gardés et `connect(port)`
+ * les appelle (un port simulé, comme celui du document hors écran). Sans l'option : `chrome.offscreen` absent, comme un manifeste sans la permission. */
+function production({enabled=true,adapter=new SimulatedESV(),store=new MemoryStore(),local=null,session=null,offscreen=null}={}){
+ const root=path.resolve(__dirname,'../..'),commands=[],connexions=[];let message;
  store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];
  const ctx={console,URL,TextEncoder,performance,setTimeout,clearTimeout,crypto:require('node:crypto').webcrypto,Date,
-  chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>message=f},onConnect:{addListener:()=>{}}},
+  chrome:{runtime:{id:'test',getURL:p=>'chrome-extension://test/'+p,onMessage:{addListener:f=>message=f},onConnect:{addListener:f=>connexions.push(f)}},...(offscreen?{offscreen}:{}),
    action:{onClicked:{addListener:()=>{}}},storage:{local:local||{get:async()=>({}),set:async()=>{}},...(session?{session}:{})},
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),query:async()=>[],onRemoved:{addListener:()=>{}},
     sendMessage:async(id,m)=>{if(m.kind==='launcher-visibility')return {ok:true};if(m.kind==='liste-instantane')return {ok:false,reason:'banc-sans-table'};/* E1 : lecture de la mémoire de la page par le pont, pas une commande ESV */commands.push({action:m.action,args:m.args});return {result:await adapter[m.action](...m.args)};}},
@@ -25,7 +27,8 @@ function production({enabled=true,adapter=new SimulatedESV(),store=new MemorySto
  const esvSender={id:'test',tab:{id:1},url:'https://esv.lidar.altametris.xyz/rails_validation/test'};
  const raw=(m,sender=esvSender)=>{let out;const returned=message(m,sender,v=>{out=v;});return {get out(){return out;},returned};};   // `out` lu au moment voulu (réponse différée)
  const settle=async()=>{const e=get('engine');if(e.task)await e.task;return api('view');};
- return {ctx,api,raw,get,store,adapter,commands,settle};
+ const connect=port=>{for(const f of connexions)f(port);};
+ return {ctx,api,raw,get,store,adapter,commands,settle,connect};
 }
 function normalize(x){return JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v));}
 /* Stockage chrome.storage.* en mémoire (get par clé, liste ou tout ; set ; remove). */
