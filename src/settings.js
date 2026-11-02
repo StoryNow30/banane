@@ -227,7 +227,11 @@
      * paire remplace la pose seulement si elle est loin, unique, soutenue, et la pose du lot absente ou `rapport` fois moins bonne ; sinon la règle 'differer'.
      * `grainesMode` ('grille' = graines régulières, la règle examinée ; 'pics' = une graine par amas de points à la hauteur du rail, JOURNAL § 2.11 : moins de relances).
      * Coût : 14 relances du moteur par cut posé (1 à 3 s). `actif:false` (ou `false`) : le lot d'avant, à l'identique ; un réglage illisible l'éteint. */
-    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 60, soutienFace: 0, grainesMode: 'grille' }),
+    /* CH-041 : `porte` (vrai) : avant toute relance, l'histogramme du nuage (travers × hauteur) dit si une cellule forte soutenue peut exister loin de la pose ;
+     * sinon « garde » sans relance, et les graines qui ne peuvent rien donner sont sautées (mêmes décisions que la grille : chantiers/CH-041/JOURNAL.md § 2).
+     * `parallele` (vrai) : dès la capture reçue, les relances sont calculées dans des fils d'un document hors écran (permission `offscreen`) pendant que le lot
+     * décide ; la commande n'attend que le reliquat. Sans la permission : calcul sur place, comme avant. */
+    rechercheLarge: Object.freeze({ actif: false, mode: 'differer', porteeMm: 400, pasMm: 120, loinMm: 50, rapport: 1.5, presMm: 15, cellulesMax: 12, zones: null, passe: true, sansPaireLoin: true, soutienTop: 60, soutienFace: 0, grainesMode: 'grille', porte: true, parallele: true }),
   });
 
   const exportSettings = Object.freeze({

@@ -35,7 +35,7 @@
   * déplacée. Examen : JOURNAL § 2.5. Coût : 2 × (1 + 2 × portée/pas) relances du moteur par cut posé (14 avec les valeurs livrées). */
  const VERSION='recherche-large-1';
  const SIDES=['left','right'];
- const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0,grainesMode:'grille'});
+ const DEFAUT=Object.freeze({actif:false,mode:'differer',porteeMm:400,pasMm:120,loinMm:50,rapport:1.5,presMm:15,cellulesMax:12,zones:null,passe:true,sansPaireLoin:true,soutienTop:0,soutienFace:0,grainesMode:'grille',porte:true,parallele:true});
  const GRAINES_MODES=['grille','pics'];
  const MODES=['differer','choisir','choisir-sur'];
  const fini=v=>typeof v==='number'&&Number.isFinite(v);
@@ -63,8 +63,10 @@
   if(typeof r.sansPaireLoin!=='boolean')return illisible('rechercheLarge.sansPaireLoin illisible');
   for(const k of ['soutienTop','soutienFace'])if(!(fini(r[k])&&r[k]>=0))return illisible('rechercheLarge.'+k+' illisible');
   if(!GRAINES_MODES.includes(r.grainesMode))return illisible('rechercheLarge.grainesMode illisible');
+  if(typeof r.porte!=='boolean')return illisible('rechercheLarge.porte illisible');
+  if(typeof r.parallele!=='boolean')return illisible('rechercheLarge.parallele illisible');
   return {ok:true,actif:r.actif,mode:r.mode,porteeMm:r.porteeMm,pasMm:r.pasMm,loinMm:r.loinMm,rapport:r.rapport,presMm:r.presMm,cellulesMax:r.cellulesMax,zones:r.zones?r.zones.slice():null,passe:r.passe,sansPaireLoin:r.sansPaireLoin,
-   soutienTop:r.soutienTop,soutienFace:r.soutienFace,grainesMode:r.grainesMode};
+   soutienTop:r.soutienTop,soutienFace:r.soutienFace,grainesMode:r.grainesMode,porte:r.porte,parallele:r.parallele};
  }
  /* Graines en travers (mm) : 0, puis ±pas, ±2 pas… jusqu'à ±portée. */
  function graines(R){const g=[0];for(let x=R.pasMm;x<=R.porteeMm+1e-9;x+=R.pasMm){g.push(x);g.push(-x);}return g;}
@@ -128,14 +130,114 @@
   const t=traversParRail(capture);
   return graines(R).filter(g=>SIDES.some(s=>{let n=0;for(const [x] of t[s])if(Math.abs(x-g)<=FENETRE_POINTS_MM&&++n>=GRAINE_POINTS_MIN)return true;return false;}));
  }
- /* `science` (facultatif) : la science du lot sur cette capture (`scientificProposeBothAvecReservoir`, réservoir compris) : reprise comme relance 0. */
- function cellules(capture,R,science){
-  const out={left:[],right:[],relances:0,grainesSautees:0};
+ /* CH-041 — LA PORTE et les GRAINES EXACTES (chantiers/CH-041/JOURNAL.md § 0.6, H1 et H2 ; réglage `porte`, livré vrai ; `porte:false` = la grille de CH-034 telle quelle).
+  * Une cellule FORTE du moteur gelé (`qualifyStrong`) a au moins `minTop` (15) points de dessus dans la fenêtre du champignon (u + 12 mm à u + largeur − 12 mm,
+  * à 12 mm de sa hauteur z) ET au moins `minFace` (6) points de flanc (à 10 mm en travers de u, 9 à 34 mm sous le dessus), parmi les points que le moteur lit
+  * (|long| ≤ 500 mm, |travers| < 180 mm de la graine, |vert| < 100 mm, repère profil du rail) ; une paire ne contredit la pose que si ses deux rails ont
+  * ≥ `soutienTop` points de dessus et si l'un d'eux est à plus de `loinMm` de la pose (travers et hauteur). Un histogramme des points en travers ET en hauteur
+  * (cases de 2 mm × 2 mm, par rail, sommes cumulées) MAJORE donc le dessus et le flanc de toute cellule possible à chaque position (u, z), fenêtres élargies
+  * d'une case. Le flanc compte : une surface plane (dalle, platelage, 70 mm sous le rail sur la partie 20) a des centaines de points de « dessus » et aucun
+  * flanc ; seul un rail, une contre-rail ou un bord de gorge en a. Si aucune position loin de la pose n'a à la fois ≥ max(soutienTop, 15) de dessus et ≥ 6 de
+  * flanc sur aucun des deux rails, aucune relance ne peut changer la décision : `garde`, motif `porte-fermee`, zéro relance. Porte ouverte, les graines de la
+  * grille dont la fenêtre de recherche (±90 mm) ne contient aucune position à ≥ 15 de dessus et ≥ 6 de flanc sont sautées : elles ne pouvaient donner aucune
+  * cellule forte ; les cellules trouvées sont celles de la grille. Un repère de rail illisible laisse la porte ouverte et la grille entière. */
+ const PORTE_PAS_MM=2,PORTE_LONG_M=.5,PORTE_VERT_MM=100,PORTE_BORD_MM=12,PORTE_PORTEE_CELLULE_MM=90,PORTE_TOP_MIN=15,PORTE_FACE_MIN=6,PORTE_FACE_LARGE_MM=10,PORTE_FACE_HAUT_MM=9,PORTE_FACE_BAS_MM=34;
+ const mediane=a=>{const s=a.slice().sort((x,y)=>x-y);return s.length?s[s.length>>1]:NaN;};
+ /* Le repère d'un rail comme le moteur le lit (`prepareFrame` du moteur gelé) : matrice scène → profil, sens du profil (médiane du contour en travers),
+  * largeur du champignon (m). */
+ function cadreRail(rail){
+  const M=rail&&rail.sceneRelativeToProfileLocal;if(!Array.isArray(M)||M.length!==16)return null;
+  const contour=(rail.profileContours||[]).reduce((a,b)=>((b&&b.verticesSceneRelative&&b.verticesSceneRelative.length)||0)>((a&&a.verticesSceneRelative&&a.verticesSceneRelative.length)||0)?b:a,null);
+  if(!contour)return null;
+  const shape=contour.verticesSceneRelative.map(p=>C.point(M,p)),sign=Math.sign(mediane(shape.map(p=>p[1])));
+  if(!sign)return null;
+  const tete=shape.map(p=>[sign*p[1],p[2]]).filter(p=>p[1]>-.012).map(p=>p[0]);
+  if(!tete.length)return null;const width=Math.max(...tete);
+  if(!(width>.025&&width<.12))return null;
+  return {M,sign,width};
+ }
+ /* Histogramme (u = sens du profil × travers, z = hauteur ; mm du repère profil, cases de 2 mm, sommes cumulées en deux dimensions) des points que le moteur
+  * lit. `position` (facultative) : la pose du lot sur ce rail (scène). Rend null si le repère du rail est illisible. */
+ function histogramme(capture,s,position,R){
+  const cadre=cadreRail(capture.rails[s]);if(!cadre)return null;
+  const {M,sign}=cadre,pts=capture.pointsSceneRelative,vis=capture.visibleByClipBoxes;
+  const q0=Array.isArray(position)?C.point(M,position):null,poseU=q0?sign*q0[1]*1000:null,poseV=q0?q0[2]*1000:null;
+  const bord=R.porteeMm+PORTE_PORTEE_CELLULE_MM+cadre.width*1000+2*PORTE_PAS_MM,uMin=-bord,nU=Math.ceil(2*bord/PORTE_PAS_MM)+1,zMin=-PORTE_VERT_MM,nZ=Math.ceil(2*PORTE_VERT_MM/PORTE_PAS_MM)+1;
+  const h=new Int32Array(nU*nZ);
+  for(let i=0;i<pts.length;i++){if(vis&&vis[i]===false)continue;const p=pts[i];if(!Array.isArray(p)||p.length<3)continue;
+   const q=C.point(M,p);if(!(Math.abs(q[0])<=PORTE_LONG_M))continue;
+   const bu=Math.floor((sign*q[1]*1000-uMin)/PORTE_PAS_MM),bz=Math.floor((q[2]*1000-zMin)/PORTE_PAS_MM);if(bu<0||bu>=nU||bz<0||bz>=nZ)continue;
+   h[bu*nZ+bz]++;}
+  /* Sommes cumulées : S[(i)*(nZ+1)+j] = somme des cases u < i, z < j. */
+  const W=nZ+1,S=new Int32Array((nU+1)*W);
+  for(let i=0;i<nU;i++){let ligne=0;for(let j=0;j<nZ;j++){ligne+=h[i*nZ+j];S[(i+1)*W+(j+1)]=S[i*W+(j+1)]+ligne;}}
+  return {sign,width:cadre.width,uMin,nU,zMin,nZ,S,W,poseU,poseV};
+ }
+ /* Majorant du nombre de points dans le rectangle (u0, u1) × (z0, z1) (mm, bornes élargies à la case). */
+ function rect(H,u0,u1,z0,z1){
+  const iu0=Math.max(0,Math.min(H.nU,Math.floor((u0-H.uMin)/PORTE_PAS_MM))),iu1=Math.max(0,Math.min(H.nU,Math.floor((u1-H.uMin)/PORTE_PAS_MM)+1));
+  const iz0=Math.max(0,Math.min(H.nZ,Math.floor((z0-H.zMin)/PORTE_PAS_MM))),iz1=Math.max(0,Math.min(H.nZ,Math.floor((z1-H.zMin)/PORTE_PAS_MM)+1));
+  if(iu1<=iu0||iz1<=iz0)return 0;const S=H.S,W=H.W;return S[iu1*W+iz1]-S[iu0*W+iz1]-S[iu1*W+iz0]+S[iu0*W+iz0];
+ }
+ const dessusMax=(H,u,z)=>rect(H,u+PORTE_BORD_MM,u+H.width*1000-PORTE_BORD_MM,z-PORTE_BORD_MM,z+PORTE_BORD_MM);
+ /* Le flanc se compte sous la LIGNE DU DESSUS que le moteur ajuste sur les points de dessus (9 à 34 mm sous elle, à 10 mm en travers de u) ; cette ligne est
+  * comprise entre la plus basse et la plus haute case non vide du dessus (bande ±12 mm autour de z) : le flanc possible est majoré par le rectangle
+  * (z_bas − 34 − 4, z_haut − 9 + 4), 4 mm de marge pour la pente. Une surface plane (dalle) a son dessus sur une seule hauteur et rien dessous : flanc 0. */
+ const PORTE_PENTE_MM=4;
+ function flancMax(H,u,z){
+  const u0=u+PORTE_BORD_MM,u1=u+H.width*1000-PORTE_BORD_MM;let zBas=null,zHaut=null;
+  for(let zz=z-PORTE_BORD_MM;zz<=z+PORTE_BORD_MM;zz+=PORTE_PAS_MM)if(rect(H,u0,u1,zz,zz)>0){if(zBas===null)zBas=zz;zHaut=zz;}
+  if(zBas===null)return 0;
+  return rect(H,u-PORTE_FACE_LARGE_MM,u+PORTE_FACE_LARGE_MM,zBas-PORTE_FACE_BAS_MM-PORTE_PENTE_MM,zHaut-PORTE_FACE_HAUT_MM+PORTE_PENTE_MM);
+ }
+ /* L'analyse d'un rail : à chaque position u de la portée des graines (pas de 2 mm), `fort[i]` dit si une cellule forte y est possible à une hauteur
+  * quelconque (dessus ≥ 15, flanc ≥ 6) ; `max` est le plus grand dessus possible d'une cellule forte LOIN de la pose (travers et hauteur, > loinMm), avec
+  * sa position relative à la pose. Sans pose (`poseU` null) : `fort` seulement. */
+ function analyserRail(H,R){
+  const fin=R.porteeMm+PORTE_PORTEE_CELLULE_MM,n=Math.floor(2*fin/PORTE_PAS_MM)+1,fort=new Uint8Array(n),faceMin=Math.max(PORTE_FACE_MIN,R.soutienFace||0);
+  let max=0,uMax=null,zMax=null;
+  for(let i=0;i<n;i++){const u=-fin+i*PORTE_PAS_MM;
+   for(let z=-PORTE_VERT_MM+PORTE_BORD_MM;z<=PORTE_VERT_MM-PORTE_BORD_MM;z+=PORTE_PAS_MM){
+    const d=dessusMax(H,u,z);if(d<PORTE_TOP_MIN)continue;
+    if(flancMax(H,u,z)<faceMin)continue;
+    fort[i]=1;
+    if(H.poseU!==null&&d>max&&Math.hypot(u-H.poseU,z-H.poseV)>R.loinMm){max=d;uMax=u;zMax=z;}}}
+  return {fort,uDebut:-fin,max,u:uMax===null?null:r1(uMax-H.poseU),z:zMax===null?null:r1(zMax-H.poseV)};
+ }
+ function porte(A,R){
+  const seuil=Math.max(R.soutienTop,PORTE_TOP_MIN),rails={};let max=0,illisible=false;
+  for(const s of SIDES){if(!A[s]||A[s].u===undefined){illisible=true;continue;}rails[s]={max:A[s].max,u:A[s].u,z:A[s].z};max=Math.max(max,A[s].max);}
+  return {ouverte:illisible||max>=seuil,seuil,max,rails,...(illisible?{illisible:true}:{})};
+ }
+ /* Graines exactes : une graine g de la grille est gardée si, sur l'un des deux rails, une position u à ±90 mm de son centre (u = sens × g) peut porter une
+  * cellule forte ; sinon aucune cellule forte n'en peut sortir. Repli sur `grainesUtiles` si un repère est illisible. */
+ function grainesExactes(capture,R,A){
+  if(!SIDES.every(s=>A&&A[s]&&A[s].fort))return grainesUtiles(capture,R);
+  return graines(R).filter(g=>SIDES.some(s=>{const a=A[s],c=a.sign*g,i0=Math.max(0,Math.floor((c-PORTE_PORTEE_CELLULE_MM-a.uDebut)/PORTE_PAS_MM)),i1=Math.min(a.fort.length-1,Math.ceil((c+PORTE_PORTEE_CELLULE_MM-a.uDebut)/PORTE_PAS_MM));
+   for(let i=i0;i<=i1;i++)if(a.fort[i])return true;return false;}));
+ }
+ /* Histogrammes et analyses des deux rails (null pour un rail illisible). */
+ function analyser(capture,positions,R){const A={};for(const s of SIDES){const H=histogramme(capture,s,positions?positions[s]:null,R);A[s]=H?{...analyserRail(H,R),sign:H.sign}:null;}return A;}
+ /* `science` (facultatif) : la science du lot sur cette capture (`scientificProposeBothAvecReservoir`, réservoir compris) : reprise comme relance 0.
+  * `A` (facultatif, CH-041) : l'analyse de la porte (`analyser`), déjà faite par `decider` ; porte au réglage et A absent : elle est faite ici. */
+ /* Les graines à relancer sur cette capture (grille, pics, ou graines exactes de la porte) et le compte des graines sautées ; ne dépend pas de la pose :
+  * c'est ce qu'un exécuteur parallèle (CH-041, H3) peut calculer dès la capture reçue, avant la décision du lot. */
+ function grainesChoisies(capture,R,A){
+  if(!capturePrete(capture))return {utiles:[],sautees:graines(R).length};
+  if(R.porte&&R.grainesMode!=='pics'&&!A)A=analyser(capture,null,R);
+  const utiles=R.grainesMode==='pics'?grainesPics(capture,R):R.porte?grainesExactes(capture,R,A):grainesUtiles(capture,R);
+  return {utiles,sautees:graines(R).length-utiles.length};
+ }
+ /* `relances` (facultatif, CH-041) : relances déjà faites ailleurs, { graine → { left, right } } (le résultat de `relance`) ; une graine utile absente est
+  * relancée ici. Le résultat est le même que sans elles : `relance` est une fonction pure de la capture et de la graine. */
+ function cellules(capture,R,science,A,relances){
+  const out={left:[],right:[],relances:0,grainesSautees:0,precalculees:0};
   if(!capturePrete(capture))return out;
-  const utiles=R.grainesMode==='pics'?grainesPics(capture,R):grainesUtiles(capture,R);out.grainesSautees=graines(R).length-utiles.length;
+  const {utiles,sautees}=grainesChoisies(capture,R,A);out.grainesSautees=sautees;
   const reprise=!!(science&&science.rails&&SIDES.every(s=>science.rails[s]&&science.rails[s]._reservoir));
   for(const g of utiles){
-   const r=relance(capture,g,reprise?science:null);if(!r)continue;if(!(g===0&&reprise))out.relances++;
+   const pre=relances&&typeof relances.get==='function'?relances.get(g):null;
+   const r=pre&&SIDES.every(s=>Array.isArray(pre[s]))?pre:relance(capture,g,reprise?science:null);if(!r)continue;if(pre&&r===pre)out.precalculees++;else if(!(g===0&&reprise))out.relances++;
    for(const s of SIDES)for(const x of r[s]){const d=out[s].find(c=>Math.hypot(c.lat-x.lat,c.vert-x.vert)<3);if(d){if(x.loss<d.loss)Object.assign(d,x);}else out[s].push({...x});}
   }
   for(const s of SIDES)out[s].sort((p,q)=>p.loss-q.loss);
@@ -156,16 +258,20 @@
  /* La décision. `positions` : la pose que le lot s'apprête à commander, repère scène, par rail. Rend { version, etat, motif, ms, paireLot,
   * meilleure, concurrente, positions (scène, si `remplacer`), cellules:{left,right,relances}, nPaires }. Une entrée illisible ou un réglage
   * éteint rend `garde` : la commande du lot ne change pas. */
- function decider({capture,positions,R,science}={}){
-  const t0=Date.now(),base={version:VERSION,etat:'garde',motif:null,mode:R&&R.mode||null,paireLot:null,meilleure:null,concurrente:null,positions:null,cellules:{left:0,right:0,relances:0},nPaires:0};
+ function decider({capture,positions,R,science,relances}={}){
+  const t0=Date.now(),base={version:VERSION,etat:'garde',motif:null,mode:R&&R.mode||null,paireLot:null,meilleure:null,concurrente:null,positions:null,cellules:{left:0,right:0,relances:0},nPaires:0,porte:null};
   const fin=o=>({...base,...o,ms:Date.now()-t0});
   if(!R||R.ok===false||R.actif!==true)return fin({motif:'reglage-eteint'});
   if(!capturePrete(capture)||!positions||!SIDES.every(s=>Array.isArray(positions[s])))return fin({motif:'entree-illisible'});
   const pose={};
   for(const s of SIDES){const d=decalage(capture.rails[s],positions[s]);if(!d)return fin({motif:'entree-illisible'});pose[s]={lat:d[1],vert:d[2]};}
-  const cells=cellules(capture,R,science);
+  /* CH-041 : la porte (H1). Fermée : aucune relance, la commande est gardée ; ouverte : la grille, aux graines exactes (H2). */
+  let A=null,pt=null;
+  if(R.porte){A=analyser(capture,positions,R);pt=porte(A,R);
+   if(!pt.ouverte)return fin({etat:'garde',motif:'porte-fermee',porte:pt,cellules:{left:0,right:0,relances:0,grainesSautees:graines(R).length}});}
+  const cells=cellules(capture,R,science,A,relances);
   const P=paires(capture,cells,R);
-  const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances,grainesSautees:cells.grainesSautees},nPaires:P.length};
+  const res={cellules:{left:cells.left.length,right:cells.right.length,relances:cells.relances,grainesSautees:cells.grainesSautees,precalculees:cells.precalculees},nPaires:P.length,...(pt?{porte:pt}:{})};
   /* Aucune paire forte nulle part (nuage pauvre) : absence de preuve, pas une preuve contre la pose : la commande du lot est gardée (ajustement écrit après
    * l'examen, JOURNAL § 2.5 : 9 cuts des couples du 26/10, 0 faute parmi eux, 19 posés non jugés de la partie 20). */
   if(!P.length)return fin({...res,etat:'garde',motif:'aucune-paire-forte'});
@@ -202,8 +308,8 @@
  const paireMm=p=>p?{left:[r1(p.left.lat),r1(p.left.vert)],right:[r1(p.right.lat),r1(p.right.vert)],gaugeMm:r1(p.gaugeMm),prod:sig4(p.prod),top:[p.left.top,p.right.top],face:[p.left.face,p.right.face]}:null;
  function resumer(d){
   if(!d)return null;
-  return {version:d.version,etat:d.etat,motif:d.motif,mode:d.mode,ms:d.ms,cellules:d.cellules,nPaires:d.nPaires,paireLot:paireMm(d.paireLot),meilleure:paireMm(d.meilleure),concurrente:paireMm(d.concurrente),
+  return {version:d.version,etat:d.etat,motif:d.motif,mode:d.mode,ms:d.ms,cellules:d.cellules,nPaires:d.nPaires,paireLot:paireMm(d.paireLot),meilleure:paireMm(d.meilleure),concurrente:paireMm(d.concurrente),...(d.porte?{porte:d.porte}:{}),
    ...(d.paireLot&&d.meilleure?{rapportMeilleure:sig4(d.meilleure.prod/d.paireLot.prod)}:{})};
  }
- return {VERSION,DEFAUT,MODES,GRAINES_MODES,reglage,graines,grainesUtiles,grainesPics,decalage,relance,cellules,paires,decider,resumer};
+ return {VERSION,DEFAUT,MODES,GRAINES_MODES,reglage,graines,grainesUtiles,grainesPics,grainesExactes,grainesChoisies,histogramme,analyserRail,analyser,porte,cadreRail,decalage,relance,cellules,paires,decider,resumer};
 });

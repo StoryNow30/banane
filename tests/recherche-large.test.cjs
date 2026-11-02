@@ -39,8 +39,10 @@ test('réglage : absent = livré ÉTEINT ; false = coupé ; clé par clé ; illi
 
 test('cellules larges : les deux vrais rails ET les deux leurres à 150 mm sont des cellules fortes, en décalages depuis la pose de départ',()=>{
  const cap=captureLeurre();
- const c=RL.cellules(cap,R);
- assert.ok(c.relances>=5,'plusieurs relances du moteur');
+ const c=RL.cellules(cap,RL.reglage({actif:true,porte:false}));
+ assert.ok(c.relances>=5,'plusieurs relances du moteur (grille entière)');
+ /* CH-041 : aux graines exactes (porte livrée), mêmes cellules, moins de relances. */
+ const ce=RL.cellules(cap,R);assert.ok(ce.relances<=c.relances);for(const s of ['left','right'])assert.deepEqual(ce[s].map(x=>[Math.round(x.lat),Math.round(x.vert)]),c[s].map(x=>[Math.round(x.lat),Math.round(x.vert)]));
  for(const s of ['left','right']){
   const pres=(lat,vert)=>c[s].find(x=>Math.hypot(x.lat-lat,x.vert-vert)<=8);
   const vrai=pres(...V(s)),leurre=pres(...V(s,LEURRE));
@@ -97,7 +99,9 @@ test('mode choisir : pose du lot sur un leurre moins bon → remplacée par la v
 test('nuage sans aucune paire forte (points trop rares) : garde, motif aucune-paire-forte (absence de preuve, pas une preuve contre la pose)',()=>{
  const cap=captureLeurre();cap.pointsSceneRelative=cap.pointsSceneRelative.filter((_,i)=>i%9===0);cap.visibleByClipBoxes=cap.pointsSceneRelative.map(()=>true);
  const d=RL.decider({capture:cap,positions:{left:pos(cap,'left',...V('left')),right:pos(cap,'right',...V('right'))},R});
- assert.equal(d.etat,'garde',JSON.stringify(RL.resumer(d)));assert.equal(d.motif,'aucune-paire-forte');assert.equal(d.nPaires,0);
+ assert.equal(d.etat,'garde',JSON.stringify(RL.resumer(d)));assert.equal(d.motif,'porte-fermee','CH-041 : la porte voit qu\'aucune cellule forte n\'est possible loin de la pose');
+ const d0=RL.decider({capture:cap,positions:{left:pos(cap,'left',...V('left')),right:pos(cap,'right',...V('right'))},R:RL.reglage({actif:true,porte:false})});
+ assert.equal(d0.etat,'garde');assert.equal(d0.motif,'aucune-paire-forte');assert.equal(d0.nPaires,0);
 });
 
 test('pureté : aucune lecture des réglages globaux, entrée illisible = garde (une panne ne change jamais la commande)',()=>{
@@ -119,13 +123,15 @@ test('soutien : une concurrente pauvre (dessus < soutienTop) ne diffère plus ; 
  const d=RL.decider({capture:cap,positions:surLeurre,R});assert.equal(d.etat,'differer');
  const top=Math.min(d.concurrente.left.top,d.concurrente.right.top);assert.ok(top>=15);
  const g=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,soutienTop:top+1})});
- assert.equal(g.etat,'garde',JSON.stringify(RL.resumer(g)));assert.equal(g.motif,'pose-unique');
+ assert.equal(g.etat,'garde',JSON.stringify(RL.resumer(g)));assert.ok(['pose-unique','porte-fermee'].includes(g.motif),g.motif);
+ const g0=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,soutienTop:top+1,porte:false})});assert.equal(g0.etat,'garde');assert.equal(g0.motif,'pose-unique');
  const d2=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,soutienTop:top})});assert.equal(d2.etat,'differer');
  /* Pose sans paire forte : la meilleure paire loin doit elle aussi être soutenue pour différer. */
  const cap2=captureLeurre({partLeurre:0.35});
  const nullePart={left:pos(cap2,'left',70,-4),right:pos(cap2,'right',-70,-3)};
  const n=RL.decider({capture:cap2,positions:nullePart,R});assert.equal(n.etat,'differer');
- const n2=RL.decider({capture:cap2,positions:nullePart,R:RL.reglage({actif:true,soutienTop:10000})});assert.equal(n2.etat,'garde');assert.equal(n2.motif,'pose-sans-paire-forte-pauvre');
+ const n2=RL.decider({capture:cap2,positions:nullePart,R:RL.reglage({actif:true,soutienTop:10000,porte:false})});assert.equal(n2.etat,'garde');assert.equal(n2.motif,'pose-sans-paire-forte-pauvre');
+ const n3=RL.decider({capture:cap2,positions:nullePart,R:RL.reglage({actif:true,soutienTop:10000})});assert.equal(n3.etat,'garde');assert.equal(n3.motif,'porte-fermee','CH-041 : même décision, sans relance');
 });
 
 test('mode choisir-sur : remplace seulement si la meilleure est loin, unique, soutenue et la pose du lot absente ou `rapport` fois moins bonne ; sinon la règle « différer »',()=>{
@@ -191,4 +197,56 @@ test('graines « pics », amas large : un amas continu de 300 mm de large (dalle
  /* Amas étroit (le leurre de 150 mm du § ci-dessus) : une graine et une seule près de lui. */
  const g2=RL.grainesPics(captureLeurre({partLeurre:1}),Rp);
  assert.equal(g2.filter(x=>Math.abs(Math.abs(x)-LEURRE)<=60).length,1,'une seule graine près du leurre : '+JSON.stringify(g2));
+});
+
+/* CH-041 (chantiers/CH-041/JOURNAL.md § 0.6, H1 et H2) : la PORTE. Avant toute relance, un histogramme en travers des points à la hauteur du
+ * champignon dit s'il PEUT exister, loin de la pose (> loinMm), une cellule de dessus ≥ soutienTop (au moins 15, le minimum d'une cellule forte) ;
+ * sinon la décision est « garde » sans aucune relance. Les graines de la grille dont la fenêtre ne peut donner aucune cellule forte sont sautées. */
+test('porte : sans amas loin de la pose, garde sans relance ; un leurre loin l\'ouvre ; un leurre sous le soutien demandé la ferme ; mêmes décisions porte ouverte ou grille seule',()=>{
+ assert.equal(RL.DEFAUT.porte,true);
+ assert.equal(RL.reglage({actif:true,porte:'oui'}).ok,false);
+ const sansLeurre=F.capture({graine:7,leurre:false});
+ const surVrai=c=>({left:pos(c,'left',...V('left')),right:pos(c,'right',...V('right'))});
+ const g=RL.decider({capture:sansLeurre,positions:surVrai(sansLeurre),R});
+ assert.equal(g.etat,'garde');assert.equal(g.motif,'porte-fermee');assert.equal(g.cellules.relances,0,'aucune relance du moteur');
+ assert.ok(g.porte&&g.porte.ouverte===false&&Number.isFinite(g.porte.max));
+ /* La même capture, porte coupée : la grille tourne et garde aussi (pose unique). */
+ const g2=RL.decider({capture:sansLeurre,positions:surVrai(sansLeurre),R:RL.reglage({actif:true,porte:false})});
+ assert.equal(g2.etat,'garde');assert.ok(g2.cellules.relances>0);
+ /* Un leurre complet à 150 mm : la porte s'ouvre, la décision est celle de la grille (concurrence quand la pose est sur le leurre). */
+ const cap=captureLeurre({partLeurre:1});
+ const surLeurre={left:pos(cap,'left',...V('left',LEURRE)),right:pos(cap,'right',...V('right',LEURRE))};
+ const d=RL.decider({capture:cap,positions:surLeurre,R}),d0=RL.decider({capture:cap,positions:surLeurre,R:RL.reglage({actif:true,porte:false})});
+ assert.equal(d.porte.ouverte,true);assert.equal(d.etat,'differer');assert.equal(d.etat,d0.etat);assert.equal(d.motif,d0.motif);
+ assert.deepEqual(RL.resumer(d).meilleure,RL.resumer(d0).meilleure,'mêmes cellules, mêmes paires');
+ /* Le leurre a 40 points de dessus (la porte en majore le compte de quelques points : flanc, bords de case) : un soutien demandé de 60 la ferme (aucune concurrente
+  * soutenue possible), zéro relance ; la grille seule dit la même chose. */
+ const f=RL.decider({capture:cap,positions:surVrai(cap),R:RL.reglage({actif:true,soutienTop:60})});
+ assert.equal(f.etat,'garde');assert.equal(f.motif,'porte-fermee');assert.equal(f.cellules.relances,0);assert.ok(f.porte.max>=40&&f.porte.max<60,'majorant serré : '+f.porte.max);
+ const f0=RL.decider({capture:cap,positions:surVrai(cap),R:RL.reglage({actif:true,soutienTop:60,porte:false})});assert.equal(f0.etat,'garde');
+ /* Pose nulle part (70 mm du vrai rail, aucun leurre) : les vrais rails sont loin de la pose, la porte s'ouvre, la grille dit « pose sans paire forte ». */
+ const cap2=captureLeurre({partLeurre:0.35});
+ const nullePart={left:pos(cap2,'left',70,-4),right:pos(cap2,'right',-70,-3)};
+ const n=RL.decider({capture:cap2,positions:nullePart,R});assert.equal(n.porte.ouverte,true);assert.equal(n.etat,'differer');assert.equal(n.motif,'pose-sans-paire-forte');
+ /* Graines : la porte ouverte ne relance qu'aux graines dont la fenêtre peut donner une cellule forte ; les cellules sont celles de la grille. */
+ assert.ok(d.cellules.relances<=d0.cellules.relances);
+ const c1=RL.cellules(cap,R),c0=RL.cellules(cap,RL.reglage({actif:true,porte:false}));
+ for(const s of ['left','right'])assert.deepEqual(c1[s].map(x=>[r(x.lat),r(x.vert)]),c0[s].map(x=>[r(x.lat),r(x.vert)]),s+' : mêmes cellules fortes');
+ /* Rien dans le résumé n'est une coordonnée de scène. */
+ assert.equal(JSON.stringify(RL.resumer(g)).includes('positionSceneRelative'),false);
+});
+const r=v=>Math.round(v*10)/10;
+
+/* CH-041 (H3) : des relances faites ailleurs (exécuteur parallèle), passées à `decider`, donnent la même décision et les mêmes cellules ; une graine
+ * manquante est relancée sur place ; `grainesChoisies` ne lit pas la pose. */
+test('relances précalculées : même décision, mêmes cellules ; graine manquante relancée ; graines choisies sans la pose',()=>{
+ const cap=captureLeurre({partLeurre:1});
+ const surLeurre={left:pos(cap,'left',...V('left',LEURRE)),right:pos(cap,'right',...V('right',LEURRE))};
+ const {utiles,sautees}=RL.grainesChoisies(cap,R);assert.ok(utiles.length>=2&&utiles.includes(0));assert.equal(utiles.length+sautees,RL.graines(R).length);
+ const rel=new Map(utiles.map(g=>[g,RL.relance(cap,g,null)]));
+ const d0=RL.decider({capture:cap,positions:surLeurre,R}),d=RL.decider({capture:cap,positions:surLeurre,R,relances:rel});
+ assert.equal(d.etat,d0.etat);assert.equal(d.motif,d0.motif);assert.deepEqual(RL.resumer(d).meilleure,RL.resumer(d0).meilleure);assert.deepEqual(RL.resumer(d).concurrente,RL.resumer(d0).concurrente);
+ assert.equal(d.cellules.relances,0,'aucune relance sur place');assert.equal(d.cellules.precalculees,utiles.length);
+ rel.delete(utiles[utiles.length-1]);
+ const d2=RL.decider({capture:cap,positions:surLeurre,R,relances:rel});assert.equal(d2.cellules.relances,1);assert.equal(d2.etat,d0.etat);assert.deepEqual(RL.resumer(d2).meilleure,RL.resumer(d0).meilleure);
 });
