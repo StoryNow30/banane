@@ -80,12 +80,11 @@ function etatPose(l) {
 const r2 = v => fini(v) ? Math.round(v * 100) / 100 : null;
 
 /* --- lecture --- */
-let journal = null, liste = null;
+let journal = null, liste = null; const snaps = [];
 for (const d of a.lot) { const j = Poses.lireJournalDir(d); if (!journal) journal = j; else { journal.events.push(...j.events); journal.records.push(...(j.records || [])); }
-  /* Instantané de la liste d'ESV de la partie (référence d'écartement des lignes valides non touchées, comme L1-e) : le plus récent. */
-  for (const e of V.entrees(d)) if (new RegExp('^ariane-liste-partie' + partie + '-').test(e.nom)) { try { const snap = JSON.parse(e.lire()); if (!liste || String(snap.at) > String(liste.at)) liste = snap; } catch {} }
+  /* Instantanés de la liste d'ESV de la partie (référence d'écartement des lignes valides non touchées, comme L1-e). */
+  for (const e of V.entrees(d)) if (new RegExp('^ariane-liste-partie' + partie + '-').test(e.nom)) { try { snaps.push(JSON.parse(e.lire())); } catch {} }
 }
-const table = liste ? LM.decompacter(liste) : null;
 const refListe = cut => { const r = table ? EL.referenceEcartement(table, cut) : null; return r ? { mm: r.mm, n: r.n, distMax: r.distMax } : null; };
 /* Écartement (mm) de deux positions de scène ; point de scène d'un décalage [long, lat, vert] (mm) dans le repère profil du rail de départ. */
 const ecart = (p, q) => p && q ? 1000 * Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) : null;
@@ -94,6 +93,10 @@ const depuisDecal = (rail, d) => { const o = C.point(rail.sceneRelativeToProfile
 const sensLat = (rails) => { const out = {}; for (const s of ['left', 'right']) { const o = s === 'left' ? 'right' : 'left'; const p0 = depuisDecal(rails[s], [0, 0, 0]), p1 = depuisDecal(rails[s], [0, 1, 0]); out[s] = ecart(p1, rails[o].positionSceneRelative) > ecart(p0, rails[o].positionSceneRelative) ? 1 : -1; } return out; };
 const run = lotsDe(journal);
 if (!run) { console.error(`${a.nom} : aucun lot de la partie ${partie}`); process.exit(1); }
+/* La liste : le dernier instantané AVANT le départ du lot (celui que le lot a lu) ; à défaut le plus ancien (jamais un instantané postérieur : il porterait les écritures du lot). */
+{ const avant = snaps.filter(s => Date.parse(s.at || '') <= run.t0).sort((x, y) => String(x.at).localeCompare(String(y.at))); liste = avant.length ? avant[avant.length - 1] : (snaps.sort((x, y) => String(x.at).localeCompare(String(y.at)))[0] || null); }
+const table = liste ? LM.decompacter(liste) : null;
+console.error(`liste : ${snaps.length} instantané(s), retenu ${liste ? liste.at : 'aucun'} (départ du lot ${new Date(run.t0).toISOString()})`);
 const tPose = new Map(), cibles = new Set(), poses = new Set();
 for (const lot of run.lots) { const c = ciblesDe(lot); for (const x of c) cibles.add(x); for (const x of posesDe(lot, c, tPose)) poses.add(x); }
 const batchs = new Set(run.lots.map(l => l.B));

@@ -13,6 +13,7 @@ T = {(x['nom'], x['cut']): x for x in charger(sys.argv[1])}
 N = []
 for f in sorted(glob.glob(os.path.join(sys.argv[2], '*.jsonl'))):
     for l in open(f):
+        if not l.strip(): continue
         n = json.loads(l)
         if n.get('erreur') or (n['nom'], n['cut']) not in T: continue
         n['x'] = T[(n['nom'], n['cut'])]; N.append(n)
