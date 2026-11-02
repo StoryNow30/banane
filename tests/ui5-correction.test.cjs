@@ -67,7 +67,7 @@ test('correction ouverte : statuts lus dans les visites d’Écho, « Ouvrir » 
   assert.match(h, /<span class="sg-cut">14<\/span>.*?class="sg-statut" data-statut="corrige">corrigé · 2 rails</s);
   assert.match(h, /<span class="sg-cut">15<\/span>.*?data-statut="valide">validé tel quel</s);
   assert.match(h, /<span class="sg-cut">16<\/span>.*?data-statut="en-cours">ouvert dans ESV</s);
-  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7 revus<\/span>/);
+  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7<\/span>/, 'CH-036 B : le centre de l’anneau');
   assert.match(h, /data-act="sg:corr-ouvrir:5:17"[^>]*>.*Suivant · cut 17/s, 'le premier cut à faire après le courant');
   assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer l’Aurore/);
   p.ui.agir('sg:corr-ouvrir:5:18');
