@@ -537,7 +537,8 @@
   const MOTIF_CLAIR = { 'fin-normale': 'fin normale', 'partie-sans-rouge': 'aucun cut rouge, comptée comme faite', 'depart-sur-vert': 'départ sur un vert, rien devant',
     'passe-arretee': 'rattrapage arrêté', 'relecture-arretee': 'relecture arrêtée', 'nombre-atteint': 'dernière partie', operateur: 'arrêtée par l’opérateur',
     'ecriture-incertaine': 'pose écrite non validée', 'refus-lot': 'lot arrêté sur un refus', 'lot-non-demarre': 'lot non démarré', 'changement-impossible': 'passage impossible',
-    'commande-absente': 'passage impossible : commande absente', 'onglet-ferme': 'onglet ESV fermé', 'selecteur-illisible': 'sélecteur de parties illisible', 'esv-muet': 'ESV ne répond plus' };
+    'commande-absente': 'passage impossible : commande absente', 'onglet-ferme': 'onglet ESV fermé', 'selecteur-illisible': 'sélecteur de parties illisible', 'esv-muet': 'ESV ne répond plus',
+    /* CH-039 */ 'partie-changee-par-esv': 'ESV a ouvert seul la partie suivante, retour sur la partie', 'retour-impossible': 'ESV a changé de partie seul ; retour impossible' };
   const nb = (n, mot, mots) => `${n} ${Number(n) > 1 ? mots : mot}`;
   function partieFile(b) {
     const ch = [b.interrompue ? 'interrompue' : '', Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : '', Number.isInteger(b.differes) ? `${b.differes} à poser` : '',
