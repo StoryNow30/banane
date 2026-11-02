@@ -17,12 +17,13 @@ const raison=N.indisponible(),opts=raison?{skip:raison}:{};
 const PATCH=path.join(N.racine,'chantiers/CH-038/adaptateur-remise-vue.patch');
 
 function adaptateur(avecPatch){
+  /* Depuis la test 34 le patch de CH-038 est DANS l'adaptateur du dépôt : « avec le patch » = le dépôt, « sans » = le dépôt moins le patch (git apply -R). */
   const source=path.join(N.racine,'src/adapter-page.js');
-  if(!avecPatch)return fs.readFileSync(source,'utf8');
+  if(avecPatch)return fs.readFileSync(source,'utf8');
   const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch038-'));
   fs.mkdirSync(path.join(tmp,'src'),{recursive:true});fs.copyFileSync(source,path.join(tmp,'src/adapter-page.js'));
-  const r=spawnSync('git',['apply',PATCH],{cwd:tmp,encoding:'utf8'});
-  if(r.status!==0)throw Error('git apply : '+(r.stderr||r.stdout));
+  const r=spawnSync('git',['apply','-R',PATCH],{cwd:tmp,encoding:'utf8'});
+  if(r.status!==0)throw Error('git apply -R : '+(r.stderr||r.stdout));
   return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');
 }
 async function preparer(avecPatch,recentrage){
@@ -51,7 +52,7 @@ async function poseHorsVue(env){
 const PLAN={deplacerVue:{version:'deplacer-vue-v1',cotes:{right:{geste:'glissement'}},deplacement:{actif:true,geste:'clic-droit',tentativesMax:2}}};
 const dist=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
 
-test('rouge (adaptateur du dépôt) : rail posé hors de la vue habituelle, le bouton ramène la vue d\'origine, la remise lève « Vue ESV non recentrée »',opts,async()=>{
+test('rouge (adaptateur du dépôt SANS le patch, git apply -R) : rail posé hors de la vue habituelle, le bouton ramène la vue d\'origine, la remise lève « Vue ESV non recentrée »',opts,async()=>{
   const env=await preparer(false,'origine');
   try{const {before,cible,proposals}=await poseHorsVue(env);
     const r=await env.appel('apply',[before,proposals,PLAN]);
