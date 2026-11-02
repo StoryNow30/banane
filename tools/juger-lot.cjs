@@ -190,8 +190,17 @@ function ombreDe(lot, partie, lignes) {
     if (e.batchId ? !batchs.has(e.batchId) : instant(e) < lot.t0) continue;
     derniers.set(e.identity.cut, e);
   }
-  const o = { passe1: derniers.size, poserait: 0, rien: 0, refusGarde: 0, juges: 0, sansEcho: 0, nonJuges: 0 };
+  const o = { passe1: derniers.size, poserait: 0, rien: 0, refusGarde: 0, juges: 0, sansEcho: 0, nonJuges: 0, ecrits: 0 };
   const mm = [];
+  /* Cuts que la passe a RÉELLEMENT écrits dans ce lot (D-259, `passe-differes-ecriture` « ecrit ») : l'Écho les a vus à la pose de la passe, et la
+   * correction de l'opérateur est déjà relative à cette pose. Ajouter le décalage de la passe une seconde fois mesurait le déplacement de la passe,
+   * pas son erreur (CH-034, § 8 : six écritures justes lues à 55 mm de médiane). Pour ces cuts l'écart de l'ombre est la correction seule. */
+  const ecrits = new Set();
+  for (const e of lot.ev) {
+    if (e.type !== 'passe-differes-ecriture' || e.resultat !== 'ecrit' || !e.identity || e.identity.part !== partie) continue;
+    if (e.batchId ? !batchs.has(e.batchId) : instant(e) < lot.t0) continue;
+    ecrits.add(e.identity.cut);
+  }
   for (const e of derniers.values()) {
     if (e.decision === 'rien') {
       o.rien++;
@@ -201,6 +210,15 @@ function ombreDe(lot, partie, lignes) {
     if (e.decision !== 'poserait') continue;
     o.poserait++;
     const d = e.decal;
+    if (ecrits.has(e.identity.cut)) {
+      o.ecrits++;
+      const lg = lignes.get(e.identity.cut);
+      if (!lg || !lg.dansEcho) { o.sansEcho++; continue; }
+      /* Base « premiere-visite » : la première visite de l'Écho voit la pose écrite par la passe ; la correction est relative à elle. */
+      const emm = lg.referenceHumaine === 'observee' ? (lg.regleVisiteBon ? 0 : lg.ecartHumain && lg.ecartHumain.maxDist3dMm) : null;
+      if (fini(emm)) { o.juges++; mm.push(emm); } else o.nonJuges++;
+      continue;
+    }
     const et = d && Array.isArray(d.left) && Array.isArray(d.right)
       ? etatOmbre(lignes.get(e.identity.cut), { left: d.left.slice(0, 3), right: d.right.slice(0, 3) }) : { etat: 'non-juge' };
     if (et.etat === 'juge') { o.juges++; mm.push(et.mm); }

@@ -1,6 +1,6 @@
 'use strict';
 /* CH-035 — L'AURORE ENTRE LES PARTIES D'UNE CONSTELLATION, extension réelle dans Chromium, ESV = maquette, chaque « Ouvrir » par un clic de Signal.
- * L'extension est une COPIE TEMPORAIRE du dépôt avec `correctionEntreParties.actif:true` (le dépôt le garde éteint). Les LOTS sont FABRIQUÉS au journal du
+ * L'extension est une COPIE TEMPORAIRE du dépôt (CH-037 : `correctionEntreParties.actif:true` est le défaut du dépôt ; la copie l'éteint pour l'essai du refus). Les LOTS sont FABRIQUÉS au journal du
  * service worker (dit ici, jamais ailleurs) : `batch-started`, une décision par cut et une écriture de la deuxième passe (signal `passe-ecrite`) pour chaque
  * cut de la liste ; le sujet est le parcours entre les parties, pas le lot (le lot réel de la correction est éprouvé par correction-signal.test.cjs).
  * Prouve SUR LA MAQUETTE seulement : « Ouvrir » change de partie par le lien du sélecteur d'ESV (jamais un geste de la file, réserve de l'intégrateur du 01/11), Écho en pause pendant le
@@ -13,13 +13,13 @@ const raison = N.indisponible(), opts = raison ? { skip: raison } : {};
 const dormir = ms => new Promise(r => setTimeout(r, ms));
 async function attendre(f, quoi, n = 160, ms = 250) { for (let i = 0; i < n; i++) { const v = await f().catch(() => null); if (v) return v; await dormir(ms); } throw Error('attente dépassée : ' + quoi); }
 
-function extensionAllumee() {
+function extensionAllumee(actif = true) {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ariane-aurore-'));
   for (const f of ['manifest.json', 'background.js', 'panel.html', 'panel.js']) if (fs.existsSync(path.join(N.racine, f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   for (const r of ['src', 'vendor', 'icons', 'fonts', 'datasets']) if (fs.existsSync(path.join(N.racine, r))) fs.cpSync(path.join(N.racine, r), path.join(d, r), { recursive: true });
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
-  const S = path.join(d, 'src/settings.js'), t = fs.readFileSync(S, 'utf8'), a = 'const correctionEntreParties = Object.freeze({ actif: false,';
-  assert.ok(t.includes(a), 'réglage éteint dans le dépôt'); fs.writeFileSync(S, t.replace(a, 'const correctionEntreParties = Object.freeze({ actif: true,'));
+  const S = path.join(d, 'src/settings.js'), t = fs.readFileSync(S, 'utf8'), a = 'const correctionEntreParties = Object.freeze({ actif: true,';
+  assert.ok(t.includes(a), 'réglage allumé dans le dépôt (CH-037)'); if (!actif) fs.writeFileSync(S, t.replace(a, 'const correctionEntreParties = Object.freeze({ actif: false,'));
   /* AUCUN PATCH D'ADAPTATEUR : la page d'ESV est pilotée par l'adaptateur du dépôt, octet pour octet (seul le réglage change dans la copie). */
   const h = f => require('node:crypto').createHash('sha256').update(fs.readFileSync(f)).digest('hex');
   for (const f of ['src/adapter-page.js', 'src/bridge.js', 'src/native-page.js']) assert.equal(h(path.join(d, f)), h(path.join(N.racine, f)), f + ' identique au dépôt');
@@ -27,8 +27,8 @@ function extensionAllumee() {
 }
 
 /* `lots` : [{ part, cuts: [...] }] dans l'ordre de la Constellation. */
-async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer }) {
-  const ext = extensionAllumee(), man = JSON.parse(fs.readFileSync(path.join(ext, 'manifest.json'), 'utf8')), hote = new URL(man.host_permissions[0].replace(/\*$/, ''));
+async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer, actif = true }) {
+  const ext = extensionAllumee(actif), man = JSON.parse(fs.readFileSync(path.join(ext, 'manifest.json'), 'utf8')), hote = new URL(man.host_permissions[0].replace(/\*$/, ''));
   const { demarrer } = require('./serveur.cjs'), serveur = await demarrer();
   const ctx = await N.playwright().chromium.launchPersistentContext('', { executablePath: N.executable(), headless: true, viewport: { width: 1200, height: 800 },
     args: ['--headless=new', `--disable-extensions-except=${ext}`, `--load-extension=${ext}`] });
@@ -63,7 +63,7 @@ async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer }) {
       engine.s.batch = { id: 'aurore-B' + P, state: 'COMPLETED', step: 'fin', scope: { part: P, start: 1, end: 2 }, processed: [], skipped: [], paused: [], interrupted: [], sequence: [], deferred: [], manuallyCompleted: [],
         activeIdentity: { part: P, cut: 1 }, lastCompletedIdentity: null, startedAt: new Date(t0).toISOString(), endedAt: new Date(t0 + 1000).toISOString() }; await engine.save(); }, { lots, t0 });
     const ids = lots.map(L => 'aurore-B' + L.part);
-    await attendre(async () => { const v = await api('correction-liste', { batchIds: ids }); return v?.correction?.listes?.length === lots.length && v.correction.entreParties === true; }, 'liste de toutes les parties', 40);
+    await attendre(async () => { const v = await api('correction-liste', { batchIds: ids }); return v?.correction?.listes?.length === lots.length && (v.correction.entreParties === true) === actif; }, 'liste de toutes les parties', 40);
     try { await pan.waitForSelector('#ui5 .sg-bascule [data-act="sg:onglet-correction"]', { timeout: 10000 }); }
     catch (e) { console.log('# signal', await pan.evaluate(() => document.getElementById('notice')?.textContent)); throw e; }
     await pan.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]');
@@ -85,7 +85,7 @@ async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer }) {
       return { cible: { part: Number(p), cut: Number(c) }, maquette: m, ev };
     };
     const principal = '#ui5 .sg-onglet-corr .sg-actions .sg-principal[data-act^="sg:corr-ouvrir:"]';
-    const r = await jouer({ ouvrir, principal, pan, api, journal, maquette });
+    const r = await jouer({ ouvrir, principal, pan, api, journal, maquette, esv });
     await pan.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-terminer"]');
     await attendre(async () => (await api('view')).correction?.etat === 'terminee', 'correction terminée');
     const j = await journal();
@@ -104,6 +104,7 @@ test('Aurore sur 3 parties de la maquette : suivant vers 24 puis 25, panne vers 
   const lots = [{ part: 23, cuts: [102, 105] }, { part: 24, cuts: [2, 4] }, { part: 25, cuts: [1, 3] }, { part: 27, cuts: [1] }];
   const R = await aurore({ parties: 3, lots, jouer: async ({ ouvrir, principal, pan, journal }) => {
     const pas = [];
+    const echo0 = (await journal()).find(e => e.type === 'correction-debut')?.sessionEcho;
     for (let i = 0; i < 6; i++) pas.push(await ouvrir(principal));
     const panne = await ouvrir(principal);
     const etats = await pan.$$eval('#ui5 .sg-corr-partie', l => l.map(x => [Number(x.dataset.partie), x.dataset.etat]));
@@ -111,7 +112,7 @@ test('Aurore sur 3 parties de la maquette : suivant vers 24 puis 25, panne vers 
     const n0 = (await journal()).filter(e => e.type === 'correction-partie').length;
     const meme = await ouvrir('#ui5 .sg-onglet-corr [data-act="sg:corr-ouvrir:23:105"]');
     const n1 = (await journal()).filter(e => e.type === 'correction-partie').length;
-    return { pas, panne, retour, meme, etats, sansChangement: n1 === n0 };
+    return { pas, panne, retour, meme, etats, sansChangement: n1 === n0, echo0 };
   } });
   /* Parcours : par partie, puis par cut ; chaque cut atteint dans la maquette. */
   assert.deepEqual(R.pas.map(x => [x.cible.part, x.cible.cut]), [[23, 102], [23, 105], [24, 2], [24, 4], [25, 1], [25, 3]]);
@@ -128,6 +129,10 @@ test('Aurore sur 3 parties de la maquette : suivant vers 24 puis 25, panne vers 
   assert.deepEqual(cp.map(e => [e.de, e.vers, e.resultat]), [[23, 24, 'ok'], [24, 25, 'ok'], [25, 27, 'echec'], [25, 23, 'ok']]);
   assert.deepEqual(cp.filter(e => e.resultat === 'ok').map(e => e.mode), ['lien', 'lien', 'lien'], 'le lien seul, vers la suivante comme en arrière (réserve de l’intégrateur)'); assert.equal(cp[2].motif, 'selecteur-illisible');
   const fin = controleCommun(R);
+  /* CH-037 : Écho actif pendant les passages : une seule séance de bout en bout, reprise après chaque passage, et la visite du cut atteint dans la nouvelle
+   * partie est enregistrée par cette même séance. */
+  assert.ok(R.echo0); assert.equal(fin.sessionEcho, R.echo0, 'une seule séance Écho pour toute l’Aurore');
+  for (const e of cp.filter(e => e.resultat === 'ok')) assert.equal(e.ecoReprise, 'RUNNING', 'Écho repris après le passage ' + e.de + ' → ' + e.vers);
   const visites = new Set(fin.lignes.filter(l => l.visites > 0).map(l => l.part + ':' + l.cut));
   for (const x of R.pas) assert.ok(visites.has(x.cible.part + ':' + x.cible.cut), 'visite Écho du cut ' + JSON.stringify(x.cible));
   console.log(`# Aurore 3 parties : changements ${JSON.stringify(cp.map(e => ({ de: e.de, vers: e.vers, resultat: e.resultat, mode: e.mode, dureeMs: e.dureeMs })))} ; chargements ${JSON.stringify(R.chargements)}`);
@@ -150,4 +155,29 @@ test('forme de la file du 31/10 (1, 24, 0, 3 cuts sur 4 parties) : le parcours a
   assert.deepEqual(cp.map(e => e.mode), ['lien', 'lien'], 'le lien seul, y compris vers la partie suivante');
   controleCommun(R);
   console.log(`# forme du 31/10 : ${R.pas.length} cuts atteints ; changements ${JSON.stringify(cp.map(e => ({ de: e.de, vers: e.vers, mode: e.mode, dureeMs: e.dureeMs })))}`);
+});
+
+/* CH-037 (défaut 1, test 30) : réglage ÉTEINT (copie), un clic sur « Ouvrir » d'un cut d'une autre partie n'est plus muet : le bouton est actif, le refus
+ * revient au service worker avec sa raison, affichée dans Signal ; aucune pause d'Écho, aucune commande à ESV, ESV reste sur sa partie. Puis la partie
+ * affichée s'ouvre normalement. Ne prouve rien sur un vrai ESV. */
+test('CH-037 : passage éteint, « Ouvrir » vers une autre partie est refusé avec sa raison dans Signal, ESV reste sur sa partie', opts, async () => {
+  const lots = [{ part: 23, cuts: [102, 105] }, { part: 24, cuts: [2, 4] }];
+  const R = await aurore({ parties: 2, lots, actif: false, jouer: async ({ pan, api, journal, maquette }) => {
+    const sel = '#ui5 .sg-onglet-corr [data-act="sg:corr-ouvrir:24:2"]';
+    await attendre(async () => { const b = await pan.$(sel); return b && !(await b.evaluate(x => x.disabled)); }, 'bouton actif vers la partie 24', 120);
+    const n0 = (await journal()).filter(e => e.type === 'correction-ouvrir').length, avant = await maquette();
+    await pan.click(sel);
+    await attendre(async () => (await journal()).filter(e => e.type === 'correction-ouvrir').length > n0, 'refus journalisé', 120);
+    const raison = await attendre(async () => pan.$eval('#ui5 .sg-onglet-corr .sg-raison', x => x.textContent).catch(() => null), 'raison affichée', 60);
+    const ev = (await journal()).filter(e => e.type === 'correction-ouvrir').at(-1), apres = await maquette(), echo = (await api('view')).native?.status;
+    return { raison, ev, avant, apres, echo };
+  } });
+  assert.match(R.raison, /partie 24/); assert.match(R.raison, /éteint/);
+  assert.equal(R.ev.resultat, 'refuse'); assert.equal(R.ev.code, 'PASSAGE_ETEINT');
+  assert.deepEqual([R.apres.part, R.apres.cut], [R.avant.part, R.avant.cut], 'ESV reste sur sa partie et son cut');
+  assert.equal(R.echo, 'RUNNING', 'Écho jamais mis en pause');
+  assert.equal(R.j.filter(e => e.type === 'correction-partie').length, 0);
+  assert.equal(R.chargements.length, 1, 'aucun rechargement de la page ESV');
+  controleCommun(R);
+  console.log(`# passage éteint : raison affichée « ${R.raison} »`);
 });

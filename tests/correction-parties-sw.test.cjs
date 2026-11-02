@@ -13,9 +13,10 @@ const REGLAGE = { actif: true, changementBorneMs: 300, gotoBorneMs: 300, pollMs:
 /* Trois lots, parties 5, 6, 7 (même journal fabriqué, décalé), ESV affiche la partie 5. Faux adaptateur : `changerPartie` (lien, ou gestes vers la
  * partie suivante) ouvre la partie demandée 20 ms plus tard ; `bloque` : rien ne change ; `ouvre` : ESV ouvre une autre partie ; `compteurTardif` :
  * `goToCut` refuse OUT_OF_BOUNDS les N premières fois après un changement (cache de la partie vide). */
-async function monter({ reglage = REGLAGE, gestes = false } = {}) {
+async function monter({ reglage = REGLAGE, gestes = false, stock = {} } = {}) {
   const S = { ...Settings, correctionEntreParties: reglage };
-  const b = background({ globals: { BananeCore3: K, BananeSettings: S, BananeExportCache: EC, ArianeCorrectionListe: CL, setTimeout, clearTimeout } });
+  const storageLocal = { get: async k => Object.fromEntries((Array.isArray(k) ? k : [k]).filter(x => x in stock).map(x => [x, stock[x]])), set: async o => { Object.assign(stock, o); } };
+  const b = background({ storageLocal, globals: { BananeCore3: K, BananeSettings: S, BananeExportCache: EC, ArianeCorrectionListe: CL, setTimeout, clearTimeout } });
   const A = b.adapter; Object.assign(A, { parts: [5, 6, 7], bloque: false, ouvre: null, compteurTardif: 0, tardif: 0 });
   A.identity.part = 5; A.identity.cut = 10;
   A.ping = async function (o) { return { version: K.VERSION, pageId: this.identity.pageId, proprietaire: 'test', label: { part: this.identity.part, cut: this.identity.cut, pageId: this.identity.pageId },
@@ -46,14 +47,49 @@ const evts = (b, type) => b.store.events.filter(e => e.type === type);
 const trajet = b => b.adapter.calls.filter(x => /^(nativePause|nativeResume|goToCut|changerPartie)/.test(x));
 const sansEcriture = b => assert.ok(!b.adapter.calls.some(c => ECRITURES.test(c)), 'aucune pose, validation ni SKIP : ' + b.adapter.calls.join(','));
 
-test('éteint (défaut du dépôt) : le réglage existe, éteint ; un cut d’une autre partie est refusé comme en 4.9.5.29, sans changerPartie', async () => {
-  assert.equal(Settings.correctionEntreParties.actif, false);
-  const b = await monter({ reglage: Settings.correctionEntreParties });
-  assert.equal(b.fonction('engine.s.correction.entreParties'), undefined, 'aucun champ nouveau dans l’état');
+/* CH-037 (défaut 1, test 30) : éteint, le bouton « Ouvrir » d'une autre partie était désactivé et le clic restait muet. Le réglage est allumé par défaut ;
+ * éteint (dépôt ou interrupteur de l'opérateur), le clic est refusé tout de suite, avec sa raison, sans pause d'Écho ni commande à ESV. */
+test('CH-037 : allumé par défaut dans le dépôt ; « Ouvrir » vers une autre partie passe par le lien', async () => {
+  assert.equal(Settings.correctionEntreParties.actif, true);
+  const b = await monter({ reglage: { ...Settings.correctionEntreParties, pollMs: 10 } });
+  assert.equal(b.fonction('engine.s.correction.entreParties'), true);
   const r = await b.api('correction-ouvrir', { part: 6, cut: 14 });
-  assert.equal(r.ok, false); assert.equal(r.code, 'WRONG_PART');
-  assert.deepEqual(trajet(b), ['nativePause', 'goToCut:6:14', 'nativeResume']);
-  assert.equal(evts(b, 'correction-partie').length, 0);
+  assert.equal(r.ok, true, JSON.stringify(r));
+  assert.deepEqual(trajet(b), ['nativePause', 'changerPartie:lien:6', 'goToCut:6:14', 'nativeResume']);
+  sansEcriture(b);
+});
+
+test('CH-037 : éteint dans le dépôt, le clic vers une autre partie est refusé avec sa raison, sans pause d’Écho ni commande', async () => {
+  const b = await monter({ reglage: { ...Settings.correctionEntreParties, actif: false } });
+  assert.equal(b.fonction('engine.s.correction.entreParties'), undefined);
+  const r = await b.api('correction-ouvrir', { part: 6, cut: 14 });
+  assert.equal(r.ok, false); assert.equal(r.code, 'PASSAGE_ETEINT');
+  assert.match(r.message, /partie 6/); assert.match(r.message, /ESV affiche la partie 5/); assert.match(r.message, /éteint/);
+  assert.deepEqual(trajet(b), [], 'ni pause d’Écho, ni goToCut, ni changerPartie');
+  assert.equal(b.fonction('engine.s.native.status'), 'RUNNING');
+  const j = evts(b, 'correction-ouvrir').at(-1);
+  assert.equal(j.resultat, 'refuse'); assert.equal(j.code, 'PASSAGE_ETEINT'); assert.equal(j.changementPartie.eteint, 'depot');
+  assert.equal(b.fonction('engine.s.correction.passage.etat'), 'refuse');
+  /* La partie affichée s'ouvre toujours, et le refus affiché s'efface. */
+  const r2 = await b.api('correction-ouvrir', { part: 5, cut: 13 }); assert.equal(r2.ok, true);
+  assert.equal(b.fonction('engine.s.correction.passage'), undefined);
+  sansEcriture(b);
+});
+
+test('CH-037 : l’interrupteur de l’opérateur (réglages de Signal) éteint le passage, relu au clic ; rallumé, le passage repart', async () => {
+  const stock = {};
+  const b = await monter({ stock });
+  assert.equal((await b.api('choix-lot')).aurorePassage, true, 'absent : allumé');
+  assert.equal((await b.api('choix-lot', { aurorePassage: false })).aurorePassage, false);
+  let r = await b.api('correction-ouvrir', { part: 6, cut: 14 });
+  assert.equal(r.code, 'PASSAGE_ETEINT'); assert.match(r.message, /réglages de Signal/);
+  assert.equal(evts(b, 'correction-ouvrir').at(-1).changementPartie.eteint, 'operateur');
+  assert.deepEqual(trajet(b), []);
+  await b.api('view'); assert.equal(b.fonction('engine.s.correction.entreParties'), undefined, 'la vue suit l’interrupteur');
+  await b.api('choix-lot', { aurorePassage: true });
+  await b.api('view'); assert.equal(b.fonction('engine.s.correction.entreParties'), true);
+  r = await b.api('correction-ouvrir', { part: 6, cut: 14 }); assert.equal(r.ok, true, JSON.stringify(r));
+  await assert.rejects(b.api('choix-lot', { aurorePassage: 'oui' }), /oui ou non/);
 });
 
 test('allumé : 3 parties, aller vers la partie 6 puis 7 (lien), retour en arrière vers 5 ; Écho en pause tout le trajet, repris ; journal correction-partie', async () => {

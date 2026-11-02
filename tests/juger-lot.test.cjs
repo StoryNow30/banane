@@ -343,3 +343,16 @@ test('un arrêt « depart-sur-vert » tardif (après 30 s) n\'enlève rien', () 
   const p = L.juger([{ partie: 97, journal: j, echo: null }]).parties[0];
   assert.equal(p.cibles, 5, 'le cut 9704 est déjà une cible du premier lot : l\'union ne le perd pas');
 });
+
+test('passe en ombre : un cut que la passe a ÉCRIT est jugé sur la correction seule, sans ajouter le décalage une seconde fois (CH-034 § 8)', () => {
+  const { journal, echoRecords } = lotFictif();
+  /* La passe a écrit le cut 9508 : l'Écho l'a vu à la pose de la passe, la correction de l'opérateur (5 mm) est relative à elle. */
+  journal.events.push({ eventId: 'pe-9508', timestamp: journal.events.find(e => e.eventId === 'pa-9508-1').timestamp, type: 'passe-differes-ecriture', resultat: 'ecrit', batchId: journal.events.find(e => e.eventId === 'pa-9508-1').batchId, identity: { part: 96, cut: 9508 } });
+  const dir = ecrireEcho(echoRecords);
+  try {
+    const p = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]).parties.find(x => x.partie === 96);
+    assert.equal(p.ombre.ecrits, 1);
+    assert.equal(p.ombre.juges, 1);
+    proche(p.ombre.precision.medianeMm, 5);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

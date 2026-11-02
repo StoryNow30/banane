@@ -230,7 +230,9 @@
     const C = s?.correction; if (!C || !Array.isArray(C.listes) || !C.listes.length) return null;
     const CL = root.ArianeCorrectionListe, n = s.native, miens = !!n && n.correction?.id === C.id;
     const V = miens ? (n.visits || []).filter(v => v && v.identity) : [];
-    const vis = V.map((v, i) => ({ identity: v.identity, label: v.label || null, encours: !v.endedAt && i === V.length - 1 && ECHO_OUVERT.includes(n.status) }));
+    /* CH-037 : la fusion commune (src/correction-liste.js) : étiquettes provisoires du service worker (`C.issues`) comprises, la même que le bilan. */
+    const vis = CL?.visitesFusionnees ? CL.visitesFusionnees(V, { issues: C.issues || null, echoOuvert: ECHO_OUVERT.includes(n?.status) })
+      : V.map((v, i) => ({ identity: v.identity, label: v.label || null, encours: !v.endedAt && i === V.length - 1 && ECHO_OUVERT.includes(n.status) }));
     const listes = C.listes.map(l => {
       const E = Array.isArray(l.entrees) ? l.entrees : [], b = CL ? CL.bilan(E, vis) : { lignes: E.map(e => ({ ...e, statut: 'a-faire', visites: 0 })) };
       return { partie: l.partie, batchId: l.batchId, comptes: l.comptes || null, lignes: b.lignes.map((x, i) => ({ ...x, details: E[i]?.details || {} })) };
@@ -245,7 +247,8 @@
       /* Convention de CH-036 (relayée par l'intégrateur, 01/11) : `entreParties` (booléen) et `passage` ({ etat: 'en-cours'|'refuse', vers, texte }, ou
        * null). Réglage éteint : `entreParties:false`, `passage:null`, et l'écran de la 4.9.5.29. */
       entreParties: C.entreParties === true,
-      passage: C.entreParties !== true ? null : C.changement ? { etat: 'en-cours', vers: C.changement.vers, texte: `Passage à la partie ${C.changement.vers} dans ESV…` }
+      /* CH-037 : un refus de passage est dit même réglage éteint (« Ouvrir » n'est jamais muet). */
+      passage: C.entreParties === true && C.changement ? { etat: 'en-cours', vers: C.changement.vers, texte: `Passage à la partie ${C.changement.vers} dans ESV…` }
         : C.passage && C.passage.etat === 'refuse' ? { etat: 'refuse', vers: C.passage.vers, texte: C.passage.texte } : null,
       ...(C.entreParties === true && CL?.parcours ? { changement: C.changement || null,
         parcours: CL.parcours(listes, { partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null, courant: C.courant || null }) } : {}),
@@ -258,7 +261,7 @@
     const rg = {
       relecture: coche([['coupee', 'relecture-coupee'], ['ombre', 'relecture-ombre'], ['corriger', 'relecture-corriger']]),
       clic: coche([['tel-quel', 'clic-tel-quel'], ['gauche-recentre', 'clic-gauche-recentre'], ['tout-recentre', 'clic-tout-recentre']]),
-      grappe: !!$('grappe-differes')?.checked, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, raison: !!$('raison-actif')?.checked,
+      grappe: !!$('grappe-differes')?.checked, passage: $('aurore-passage') ? !!$('aurore-passage').checked : null, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, raison: !!$('raison-actif')?.checked,
       touches: coche([['chiffres', 'raison-touches-chiffres'], ['alt-chiffres', 'raison-touches-alt-chiffres'], ['pave', 'raison-touches-pave']]),
       bandeau: $('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true',
     };
@@ -445,6 +448,7 @@
     if (nom === 'relecture') cliquer('relecture-' + v);
     else if (nom === 'clic') cliquer('clic-' + v);
     else if (nom === 'grappe') { if ((v === 'oui') !== !!$('grappe-differes')?.checked) cliquer('grappe-differes'); }
+    else if (nom === 'passage') { if ((v === 'oui') !== !!$('aurore-passage')?.checked) cliquer('aurore-passage'); }
     else if (nom === 'passe2') {
       /* État inconnu (case indéterminée) : la case prend l'inverse du choix, le clic la met au choix. */
       const c = $('passe-differes'); if (!v || !c) return;

@@ -1,5 +1,37 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.32 — 4.9.5 test 32 (F-V-G-S) (01/11) — test 32
+
+Manifeste `4.9.5.32` ; base : la test 31. Moteur, géométrie, GCV2 et décision du lot inchangés. Corrige les deux défauts de l'Aurore constatés par l'opérateur sur un vrai ESV avec la test 30.
+
+### Corrigé
+- **« Ouvrir » vers une autre partie restait muet (CH-037)** : le passage entre parties de l'Aurore (`correctionEntreParties`) est ALLUMÉ par défaut ; un interrupteur « Aurore · passage entre parties » est dans les réglages (panneau et Signal) ; le bouton « Ouvrir » n'est plus jamais désactivé : un refus dit sa raison dans Signal et dans le journal (`correction-ouvrir`, code `PASSAGE_ETEINT` si l'interrupteur est éteint). Le changement de partie se fait par le lien d'ESV (jamais un geste qui écrive dans ESV).
+- **Le dernier cut validé restait affiché non validé jusqu'à la navigation suivante (CH-037)** : une visite ouverte est comptée dès que la validation est observée, une visite perdue avec la page l'est aussi, et un cut visité plusieurs fois prend son résultat le plus fort (corrigé > validé > ouvert > vu). Rejeu sur l'Écho du 01/11 : 28 corrigés / 5 validés / 1 vu devient 29 / 5 / 0.
+- **Écho : une visite perdue avec la page garde son étiquette (CH-037)** : `pageLost` (`src/native-session.js`) recopie la fin et l'étiquette de la visite dans le résumé, comme `visit-ended` (3 lignes ; essai rouge puis vert).
+- **Outil `juger-lot`** : un cut écrit par la passe est jugé sur la correction seule (l'ombre ajoutait le décalage deux fois : six écritures justes, médiane 2,9 mm, étaient lues à 55 mm).
+
+### Inchangé, éteint
+- Recherche large (`lot.rechercheLarge`) : ÉTEINTE.
+
+### Non vérifié
+- Le passage par le lien pendant une séance Écho n'a jamais été vu sur un vrai ESV ; l'esthétique de la Constellation et de l'Aurore est à reprendre (deux directions dans Figma, choix de l'opérateur attendu) ; la clôture après un redémarrage du service worker (`src/native-session.js`, vers la ligne 90) laisse encore le résumé de la visite sans étiquette (l'Aurore est couverte par son étiquette provisoire).
+
+## 4.9.5.31 — 4.9.5 test 31 (F-V-G-S) (01/11) — test 31
+
+Manifeste `4.9.5.31` ; base : la test 30. Moteur, géométrie, GCV2 et décision du lot inchangés. Un seul changement : **l'onglet « Aurore » est toujours dans la barre** (remarque de l'opérateur : « où est le 4e onglet ? »). Dans la test 30 il n'apparaissait qu'une fois une liste de cuts à reprendre née (règle de CH-028 gardée par CH-036). Sans liste, il ouvre un écran qui dit « Pas encore de liste à reprendre » et ce qui le remplit (la fin d'un lot ou d'une Constellation). Aurore entre les parties et recherche large : toujours ÉTEINTES.
+
+## 4.9.5.30 — 4.9.5 test 30 (F-V-G-S) (01/11) — test 30
+
+Manifeste `4.9.5.30` ; base : la test 29. Moteur, géométrie, GCV2 et décision du lot inchangés (diff vide). Tous les changements de comportement sont derrière des réglages ÉTEINTS : avec les réglages livrés, la pose est celle de la test 29. Rien n'est vu sur un vrai ESV.
+
+### Nouveau
+- **Constellation et Aurore (D-274, CH-036)** : la file de parties s'appelle « Constellation », la correction dans Orbite « Aurore ». Vocabulaire : « Rattrapage » (deuxième passe), « à poser » (différé), « Passage » (changement de partie), « sautés » (skippés). Onglets refaits (bilan par partie avec motifs en clair, départs des parties visibles d'emblée, horizon par partie dans l'Aurore, « Ouvrir l'Aurore · N cuts » en action principale à la fin d'un lot et d'une Constellation) ; en 360 px les onglets gardent leur libellé. Identifiants, messages, export et journal inchangés.
+- **L'Aurore entre les parties (CH-035)** : réglage `correctionEntreParties`, ÉTEINT. Allumé, « Ouvrir » un cut d'une autre partie change de partie par le lien (jamais de geste qui écrive dans ESV), reprend Écho et va au cut ; une seule séance Écho pour toute l'Aurore ; événements `correction-partie` et `correction-partie-tentative`. Éteint : comportement de la test 29.
+- **Recherche large sur le nuage (CH-034)** : réglage `lot.rechercheLarge`, ÉTEINT. Relance le moteur sur le nuage capturé (±400 mm) et diffère le cut quand une paire concurrente soutenue existe loin de la pose (modes « differer » et « choisir-sur », graines « grille » ou « pics », banc de rejeu `--recherche-large`). Sur la partie 20 : 19 fautes sur 21 différées, 0 pose juste déplacée sur 439 jugés (ÉTABLI, réglage et examen sur un même lot) ; le budget D-223 n'est pas prouvé tenu (il faut un lot avec le levier allumé et un Écho).
+
+### Non vérifié
+- Aucune de ces fonctions n'a été vue sur un vrai ESV. L'Aurore entre les parties (changement de partie pendant une séance Écho, redémarrage du service worker) et la recherche large (temps de calcul d'environ 3,5 s par cut posé) sont à éprouver réglage par réglage.
+
 ## 4.9.5.29 — 4.9.5 test 29 (F-V-G-S) (31/10) — test 29
 
 Manifeste `4.9.5.29` ; base : la test 28. Moteur, géométrie, GCV2 et décision du lot inchangés. Deux files de parties de bout en bout sur un vrai ESV avec la 28 (30/10 : 3 parties, 31/10 : 4 parties, 5 à 8) : 5 changements de partie réussis par les gestes de l'opérateur, aucun arrêt à tort.

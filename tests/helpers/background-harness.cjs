@@ -4,11 +4,11 @@
  * `background-lot.test.cjs` (découpés pour tenir sous 10 s par fichier). */
 const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const {MemoryStore,SimulatedESV}=require('../fixtures.cjs');
-function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={},executeScript=null,runtimeId='test'}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved,onTabUpdated;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
+function background({shadow,adapter=new SimulatedESV(),store=new MemoryStore(),globals={},executeScript=null,runtimeId='test',storageLocal=null}={}){store.all=async n=>n==='clouds'?[...store.clouds.values()]:store[n];store.keys=async()=>[...store.clouds.keys()];let onMessage,onConnect,click,onWindowRemoved,onTabRemoved,onTabUpdated;const opened=[],injected=[],panelTabs=[],launcherMessages=[];
  const ctx={URL,console,importScripts:()=>{},BananeEngine3:require('../../src/engine.js'),BananeManualSession4:require('../../src/manual-session.js'),BananeNativeSession4:require('../../src/native-session.js'),BananeGCV1Export:require('../../src/gcv1-export.js'),BananeStorage3:class{constructor(){return store;}},BananeGeometryBrain:require('../../src/geometry-brain.js'),
   BananeGCV1Shadow:shadow,...globals,
   chrome:{runtime:{id:runtimeId,getURL:p=>`chrome-extension://${runtimeId}/`+p,onMessage:{addListener:f=>onMessage=f},onConnect:{addListener:f=>onConnect=f}},
-   action:{onClicked:{addListener:f=>click=f}},storage:{local:{get:async()=>({}),set:async()=>{}}},
+   action:{onClicked:{addListener:f=>click=f}},storage:{local:storageLocal||{get:async()=>({}),set:async()=>{}}},
    tabs:{get:async id=>({id,url:'https://esv.lidar.altametris.xyz/rails_validation/test'}),query:async({url}={})=>!url?[{id:1,url:'https://esv.lidar.altametris.xyz/rails_validation/test',title:'ESV TEST'},...panelTabs]:
      Array.isArray(url)?[]:url.startsWith('chrome-extension:')?[]:[{id:1,title:'ESV TEST'}],
     sendMessage:async(id,m)=>m.kind==='launcher-visibility'?launcherMessages.push(m):({result:await adapter[m.action](...m.args)}),
