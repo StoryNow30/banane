@@ -2640,7 +2640,7 @@ async function flushMesure(){if(!timing)return null;
  * dont la mesure V1 a été vidée sortent de `v1TimingExport.lots` (leur santé n'est
  * plus dans le journal, ce n'est pas une perte à signaler à chaque export). */
 const cacheExport=()=>globalThis.BananeExportCache;
-const contexteVidage=depuis=>({state:engine.s,busy:engine.busy,task:engine.task,nativeActive:native.active(),manualActive:manual.active(),timing,graceObservations:graceObservations(depuis)});
+const contexteVidage=depuis=>({state:engine.s,busy:engine.busy,task:engine.task,nativeActive:native.running(),manualActive:manual.active(),timing,graceObservations:graceObservations(depuis)});
 /* Un lot vidé n'est masqué de la mesure V1 que s'il est CLOS et dans le même segment qu'au vidage :
  * repris ou rouvert, sa santé redevient visible (aucune mesure V1 masquée). */
 const lotVideMasque=(e,t)=>{const id=typeof e==='string'?e:e.id,b=t?.batches?.get?.(id);
