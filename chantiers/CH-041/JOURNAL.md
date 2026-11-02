@@ -70,3 +70,15 @@ Lot du 2/11 (4.9.5.33, 11 posés, partie à appareils) : cycle 3 440 (9 820), fe
 
 ### 0.8 Jeu ajouté par l'intégrateur (2/11, 10:53 ; écrit AVANT la mesure)
 **Examen 4, hors échantillon strict, couverture 98 %** : lot Orbite de la partie 0 du 2/11 (`2026-11-02_v4.9.5.31_aurore-une-seule-partie`, 4.9.5.31, sans recherche large ; 151 cibles, 123 posés, 28 différés) et son Écho final (`2026-11-02_v4.9.5.31_partie0-echo-complet`, 360 visites) : 121 jugés sur 123 posés, **1 faute** (196,7 mm, mauvaise voie), fine 50,4 %, acceptation 42,2 % (chiffres de l'intégrateur, `tools/juger-lot.cjs`). Questions, dans l'ordre : (1) la référence (grille, soutien 60) diffère-t-elle la faute ? (2) combien de poses justes (fine, acceptation) diffère-t-elle sur les 121 jugés (critère de retour arrière de CH-034 : 8 % des posés) ? (3) la candidate (porte, graines exactes) rend-elle les mêmes décisions que la grille (critères a, b, c du § 0.5) ? Les décisions sont calculées sur la pose RÉELLE du lot (comme partout ici), aucun seuil n'est touché.
+
+## 2. H1 et H2 : la porte et les graines exactes, mesurées (2/11)
+### 2.1 La référence reproduit CH-034 (ÉTABLI, 12:30 ; `tools/ch041/decisions.cjs`, réglage livré + `actif:true`, pose réelle du lot, `porte:false`)
+| jeu | posés avec capture | différés par la grille (concurrence / pose sans paire forte) | fautes jugées différées | poses justes jugées différées | ms par cut, médiane / moyenne (sous charge de 2 à 3 calculs) | relances médiane | points médiane |
+|---|---|---|---|---|---|---|---|
+| partie 20 (réglage) | 721 | 33 (24 / 9) | **19 sur 21** | 1 acceptation sur 140 ; 13 non jugés | 3 128 / 4 277 | 6 | 16 863 |
+| .24 partie 0 + .28 parties 5 à 8 | 230 + 176 | 7 + 3 = 10 (9 / 1) | sans Écho | sans Écho | 2 208 / 1 967 ; 2 335 / 2 911 | 5 ; 7 | 8 923 ; 5 119 |
+| Aurore parties 10 et 11 | 213 | 10 (6 / 4) | 0 faute connue | (27 vérités, § 8 de CH-034) | 1 033 / 1 575 | 4 | 4 791 |
+| 2/11 partie 0 (Écho 121 jugés) | 123 | 7 (7 / 0) | **1 sur 1** (196,7 mm : concurrence, meilleure paire à 195 mm de la pose, dessus 268 et 272) | **6 sur 115** (3 acceptations, 3 fines : 5,2 %) | 3 783 / 3 294 | 6 | 18 099 |
+| 2/11 partie 1 | 83 | 4 (2 / 2) | sans Écho | sans Écho | 1 528 / 1 617 | 6 | 5 299 |
+
+Lecture : CH-034 donnait, au soutien 60, 10 différés sur 410 sur les lots .24/.28 et 11 sur 219 sur Aurore : retrouvés (10 sur 406, 10 sur 213). Sur le jeu neuf du 2/11 (§ 0.8), réponses aux questions (1) et (2) : **la faute est différée** ; prix 7 différés sur 123 posés (5,7 %), sous le critère de retour arrière de 8 % (CH-034 § 5), mais 6 poses justes sur 115 jugées justes (5,2 %), plus que sur la partie 20 (1 sur 140) : les nuages du 2/11 sont denses (18 000 points, voie à appareils et dalle) et portent des paires concurrentes complètes (dessus 228 à 292) à 100 à 150 mm des poses justes. PROBABLE : c'est le prix de la règle elle-même, pas d'un défaut de calcul (les deux paires ont le même soutien et des produits proches : indécidable par le nuage seul, CH-034 § 2.8 piste 3). À dire à l'intégrateur ; aucun seuil touché ici.
