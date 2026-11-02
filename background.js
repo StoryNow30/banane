@@ -465,6 +465,7 @@ function rangerObservations(m){try{
  for(const x of m.entries){
   if(!x||typeof x!=='object'){rejected++;continue;}
   const fields=obsFields(x);if(!fields){rejected++;continue;}
+  if(fields.kind==='esv-event')try{esvEvenementNoter(fields);}catch{/* relevé seulement */}
   /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
   if(fields.kind==='write')try{ecritureObservee(fields);relectureEcriture(fields);passeDiffEcriture(fields);}catch{}
   try{relevesObservation(fields,m.observer);}catch{}
@@ -565,6 +566,7 @@ async function clore(reason,last,next,{annonce=null,surNavigation=true,finSansPo
    ?`Fin du lot : ESV ne répond plus sur le dernier cut du lot (${next?.cut}), où rien n’a été posé. Contrôle-le dans ESV ; le lot est clos.`
    :reason==='adapter-lost-after-navigation'
    ?`Fin du lot : après la validation du cut ${last}, ESV est passé au cut ${next?.cut} et ne répond plus (changement de partie probable). Le lot est clos ; recharge ESV avant un autre lot.`
+   :reason==='partie-changee-par-esv'?`Fin du lot : après la validation du cut ${last}, ESV a ouvert seul la partie ${next?.part} (plus aucun cut à valider devant). Le lot est clos, rien n’est incertain ; ${fileActive()&&fileP.etat?.partie?.lotId===b.id?`la file ramène ESV sur la partie ${b.scope.part} pour le Rattrapage et la relecture.`:`reviens sur la partie ${b.scope.part} pour le Rattrapage et la relecture.`}`
    :surNavigation?`Fin du lot : après la validation du cut ${last}, ESV est passé ${where()}, hors du lot. Le lot est clos ; aucun cut hors du lot n'est traité.`
    :`Fin du lot : ESV affiche la partie ${next?.part} pendant le cut ${last}, qu’Ariane n’a pas validé. Le lot est clos ; contrôle ce cut dans ESV.`);
  await engine.event('batch-stopped-at-end',{identity:null,reason,lastCut:last??null,target:b.stoppedAtEnd.target});
@@ -594,6 +596,86 @@ function dernierCutCertain(cut){const b=engine.s.batch,sc=b?.scope,t=b?.totalRel
  if(!Number.isInteger(traites)||traites<0||traites>=t.total||(b.skipped?.length||0)>0||(b.manuallyCompleted?.length||0)>0)return null;
  if(differes.some(c=>!Number.isInteger(c)||c>=cut))return null;
  return t.total-traites-differes.length-1===0?{part:sc.part,cut,total:t.total,motif:'dernier-invalide'}:null;}
+/* CH-039 (terrain du 02/11, partie 1, lot repris au cut 535) — DERNIER CUT À VALIDER, LU DANS LA LISTE DE LA PAGE. `dernierCutCertain` ne compte
+ * que les différés DU LOT : les rouges laissés DERRIÈRE le départ du lot (différés par un lot antérieur de la partie, ici 354, 355 et 362 du lot
+ * arrêté en erreur au cut 535) gonflent « devant » : 3 au cut 3080, le dernier rouge de la partie. Le bouton habituel a été envoyé ; ESV a validé,
+ * s'est posé sur le dernier cut (10027, déjà vert), a ouvert seul la partie 2 et rechargé la page : le lot est tombé en erreur, sans Rattrapage ni
+ * relecture. Ici : les rouges derrière le départ du lot sont comptés UNE fois par lot dans la table de la liste tenue par la page (`liste-instantane` :
+ * aucune requête, aucune commande ; `tableDeLaPartie`, déjà celle du départ sur un cut vert) ; quand restants − différés du lot − rouges derrière − 1
+ * vaut 0, une SECONDE lecture de la table confirme : autant de rouges que M − N (compteur frais du cut), le cut courant rouge, AUCUN rouge devant.
+ * Sinon rien ne change (bouton habituel, comme avant). Un doute (table absente, incohérente, ancienne) ne fait jamais un « dernier » : au pire, la
+ * fin de partie par ESV est rattrapée plus bas (`partieChangeeParEsv`). Les rouges derrière ne changent qu'à la main : un rouge validé entre-temps
+ * déclenche la seconde lecture trop tôt (elle refuse), un rouge ajouté la retarde (rien de pire qu'avant). */
+const derriereLot={lot:null,essais:0,n:null,cours:null};
+function rougesDerriereLot(b,total){if(derriereLot.lot!==b.id)Object.assign(derriereLot,{lot:b.id,essais:0,n:null,cours:null});
+ if(derriereLot.n!==null||derriereLot.cours||derriereLot.essais>=2)return derriereLot.cours||Promise.resolve(derriereLot.n);derriereLot.essais++;
+ const lot=b.id,debut=b.scope?.start;
+ return derriereLot.cours=tableDeLaPartie(total).then(st=>{if(derriereLot.lot!==lot||!st||!Number.isInteger(debut))return null;
+  let n=0;for(let i=0;i<Math.min(debut,st.length);i++)if(rougeListe(st[i]))n++;derriereLot.n=n;return n;}).finally(()=>{if(derriereLot.lot===lot)derriereLot.cours=null;});}
+async function dernierParListe(cut){const b=engine.s.batch,sc=b?.scope,t=b?.totalReleve;
+ if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(cut)||!t)return null;
+ if(t.part!==sc.part||t.cut!==cut||t.totalSource!=='compteur'||!Number.isInteger(t.total)||t.total<1||cut>=t.total)return null;
+ const depuis=Date.parse(b.cutStartedAt),releve=Date.parse(t.at);if(!Number.isFinite(depuis)||!Number.isFinite(releve)||releve<depuis)return null;
+ const traites=t.traites,differes=[...new Set((b.deferred||[]).map(d=>d?.cut??d?.identity?.cut))];
+ if(!Number.isInteger(traites)||traites<0||traites>=t.total||(b.skipped?.length||0)>0||(b.manuallyCompleted?.length||0)>0)return null;
+ if(differes.some(c=>!Number.isInteger(c)||c>=cut))return null;
+ const restants=t.total-traites,devant=restants-differes.length-1;if(devant<=0)return null;   /* devant = 0 : `dernierCutCertain` l'a déjà dit */
+ /* Première lecture lancée sans l'attendre (le lot ne ralentit pas) : elle sert aux cuts suivants. */
+ const derriere=derriereLot.lot===b.id?derriereLot.n:null;if(derriere===null){void rougesDerriereLot(b,t.total).catch(()=>{});return null;}
+ if(!(derriere>0)||devant-derriere!==0)return null;
+ const st=await tableDeLaPartie(t.total);let rouges=0,premierDevant=null;
+ if(st)for(let i=0;i<st.length;i++)if(rougeListe(st[i])){rouges++;if(i>cut&&premierDevant===null)premierDevant=i;}
+ const confirme=!!st&&rouges===restants&&rougeListe(st[cut])&&premierDevant===null;
+ journalerSimple('dernier-cut-par-liste',{identity:{part:sc.part,cut},total:t.total,traites,differesLot:differes.length,rougesDerriere:derriere,
+  table:st?{rouges,courantRouge:rougeListe(st[cut]),premierDevant}:null,confirme});
+ return confirme?{part:sc.part,cut,total:t.total,motif:'dernier-invalide',source:'liste',rougesDerriere:derriere}:null;}
+const dernierCutConfirme=async cut=>dernierCutCertain(cut)??await dernierParListe(cut);
+/* CH-039 — ESV CHANGE LUI-MÊME DE PARTIE APRÈS UNE VALIDATION ACCEPTÉE (terrain du 02/11, 09:09:25) : la page émet `railPairUpdated` (cut validé),
+ * `railPairSelected` (le dernier cut de la partie), puis `newPart` (la partie suivante) et se recharge ; la commande suivante du lot (la capture du
+ * cut « suivant ») échoue « page ESV rechargée ou fermée » et le moteur, épinglé, passait le lot en `PAUSED_ADAPTER_UNRESPONSIVE` (`batch-error`) :
+ * la file attendait sans fin. Ici, sur cette perte de page, si (1) le dernier cut du lot est validé et accepté sur navigation observée, (2) rien
+ * n'est posé ni en intention depuis, (3) l'observateur passif a vu `newPart` d'une AUTRE partie après l'envoi de cette validation (attendu au plus
+ * `attenteMs`, les observations arrivant par paquets) : le lot se clôt en fin de partie constatée « partie-changee-par-esv » (aucune écriture
+ * incertaine : la pose du cut est validée). `newPart` peut manquer (le pont envoie les observations par paquets de 250 ms ; une page gelée par
+ * le rechargement ne les envoie plus) : si la page est perdue au plus `apresValidationMs` après le retour de cette validation et que l'onglet s'est
+ * mis à recharger depuis l'envoi, la PAGE RECHARGÉE fait la preuve (onglet chargé, ré-équipé, partie lue AUTRE que celle du lot, en `rechargeMs` au plus) ; même partie, ou rien de lisible :
+ * comme avant (F5 de l'opérateur : « Reprendre »). Aucune commande nouvelle (lecture d'état seulement). */
+const esvPartieVue={nouvelle:null};
+function esvEvenementNoter(f){if(f.nom!=='newPart')return;const p=Number(f.args?.[0]);if(!Number.isInteger(p)||p<0||p>1e7)return;
+ esvPartieVue.nouvelle={part:p,recuMs:Date.now(),lot:engine?.s?.batch?.id??null};}
+const reglagePartieEsv=()=>({attenteMs:1500,pollMs:50,fenetreMs:15000,apresValidationMs:3000,rechargeMs:30000,rechargePollMs:500,...(globalThis.BananeSettings?.lot?.partieChangeeParEsv||{})});
+async function partieDeLaPageRechargee(b,R){const fin=Date.now()+R.rechargeMs,part=b.scope.part;
+ while(Date.now()<fin){if(engine.s.batch!==b||b.state!=='RUNNING')return null;
+  let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+  if(!tab||tab.url&&!esvURL(tab.url))return null;
+  if(!tab.status||tab.status==='complete')try{await equiperOnglet(selectedTab);const r=await readState();const p=r?.identity?.part;
+   if(Number.isInteger(p))return p!==part?{part:p,recuMs:Date.now(),par:'page',cut:entierOuNul(r.identity.cut)}:null;}catch(x){if(x?.definitif)return null;}
+  await attendre(R.rechargePollMs);}
+ return null;}
+async function partieChangeeParEsv(e){try{
+ /* Page PERDUE (rechargée, fermée, gelée) seulement : un ESV muet garde son attente et sa sortie de partie d'avant (KI-061, KI-063). */
+ if(e?.code!=='ESV_PAGE_ABSENTE')return null;
+ const b=engine?.s?.batch,sc=b?.scope,last=b?.processed?.at(-1),ev=last?.evidence;
+ if(b?.state!=='RUNNING'||sc?.geometryEngine!==GCV1_ENGINE||!Number.isInteger(sc.part)||!Number.isInteger(last?.cut))return null;
+ if(ev?.commandSent!==true||ev.navigationObserved!==true||ev.operatorDecision!==undefined&&ev.operatorDecision!=='VALIDATE')return null;   /* `processed` : cuts validés par le lot */
+ const s=engine.s;if(s.applied||s.intent||s.reconcileRequired||s.deferIntent)return null;
+ const R=reglagePartieEsv(),envoi=ecrituresLot.validations.findLast(v=>v.lot===b.id&&v.cut===last.cut),depuis=envoi?.envoiMs??null;
+ const vue=()=>{const n=esvPartieVue.nouvelle;return n&&n.lot===b.id&&n.part!==sc.part&&(depuis===null?Date.now()-n.recuMs<R.fenetreMs:n.recuMs>=depuis-500&&n.recuMs-depuis<R.fenetreMs)?n:null;};
+ const perteMs=Date.now();
+ const fin=Date.now()+R.attenteMs;while(!vue()&&Date.now()<fin){await attendre(R.pollMs);if(engine.s.batch!==b||b.state!=='RUNNING')return null;}
+ let n=vue();
+ /* Sans `newPart` : seulement si l'onglet a commencé à se RECHARGER après l'envoi de la validation (Chrome le dit, `chargementEsvReset`) ; une page
+  * perdue sans rechargement (onglet fermé, port coupé) garde le comportement d'avant, à la commande près. */
+ if(!n&&Number.isFinite(envoi?.retourMs)&&perteMs-envoi.retourMs<=R.apresValidationMs){const t=Date.now()+R.attenteMs;
+  while(chargementEsv.debutMs<envoi.envoiMs&&Date.now()<t){await attendre(R.pollMs);if(engine.s.batch!==b||b.state!=='RUNNING')return null;}
+  if(chargementEsv.debutMs>=envoi.envoiMs)n=await partieDeLaPageRechargee(b,R);}
+ if(!n||engine.s.batch!==b||b.state!=='RUNNING')return null;
+ const annonce=ev.nextIdentity??null;
+ await engine.event('partie-changee-par-esv',{identity:null,part:sc.part,cutValide:last.cut,partieOuverte:n.part,cutAnnonce:Number.isInteger(annonce?.cut)?annonce.cut:null,
+  apresValidationMs:depuis===null?null:n.recuMs-depuis,preuve:n.par==='page'?'page-rechargee':'newPart',message:String(e?.message||'').slice(0,160)});
+ await closeAtExit('partie-changee-par-esv',last.cut,{part:n.part,cut:null},{annonce,surNavigation:true});
+ return Error(`Fin du lot : après la validation du cut ${last.cut}, ESV a ouvert seul la partie ${n.part} (plus aucun cut à valider devant).`);
+}catch{return null;}}
 const validateInESV=adapter.validateAndNext,validateInPlaceInESV=adapter.validateInPlace;
 /* Preuve d'une validation sur place (Ctrl+Entrée) : commande envoyée, identité inchangée, aucune navigation, compteur « N on M treated » de N à N+1 sur le même total. */
 const enPlaceProuvee=(e,identity)=>{const K=globalThis.BananeCore3,av=e?.compteurAvant,ap=e?.compteurApres;
@@ -700,7 +782,7 @@ function preuveServeurEnAttente(identity){try{const K=globalThis.BananeCore3,id=
 adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',async()=>{
  const envoi=ecritureNoterValidation(args[0]);
  try{
- const dernier=dernierCutCertain(args[0]?.cut);if(dernier)return await validerSurPlace(args[0],dernier,args[1]);
+ const dernier=await dernierCutConfirme(args[0]?.cut);if(dernier)return await validerSurPlace(args[0],dernier,args[1]);
  const evidence=await validateInESV(...args);await dvArretApresValidation();
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
@@ -747,6 +829,8 @@ adapter.state=async(...args)=>{
   * comme avant (revue 4.8.0). */
  const lot=engine.s.batch,enCours=lot?.state==='RUNNING'&&lot.scope?.geometryEngine===GCV1_ENGINE;
  try{return await horsPartie(await readState(...args));}catch(e){if(!unresponsive(e))throw e;
+   /* CH-039 : page perdue juste après une validation acceptée, ESV ayant annoncé une autre partie : fin de partie, pas une erreur. */
+   const fin=enCours?await partieChangeeParEsv(e):null;if(fin)throw fin;
    const S=globalThis.BananeSettings?.lot||{},b=engine.s.batch;let sansReponse=e;
    /* Page rechargée (F5) ou fermée : aucune relecture ne peut réussir avant la
     * réinstallation d'Ariane ; « Reprendre » s'en charge. */
@@ -1287,7 +1371,8 @@ async function recaptureVide(args,r){const cfg=globalThis.BananeSettings?.lot?.r
   essais.push({points:n(x)});if(n(x)>n(best))best=x;}
  await engine.event('recapture-vide',{identity:{part:r.identity?.part??null,cut:r.identity?.cut??null},batchId:b.id??null,pointsAvant:avant,pointsApres:n(best),essais}).catch(()=>{});
  return best;}
-adapter.capture=async(...args)=>{const r=await recaptureVide(args,await captureESV(...args)),c=clicHumainDuLot();
+adapter.capture=async(...args)=>{let r0;try{r0=await captureESV(...args);}catch(e){throw (await partieChangeeParEsv(e))||e;}   /* CH-039 */
+ const r=await recaptureVide(args,r0),c=clicHumainDuLot();
  if(c&&r&&typeof r==='object'&&!r.readStrategy?.clicHumain)r.readStrategy={...(r.readStrategy&&typeof r.readStrategy==='object'?r.readStrategy:{}),clicHumain:c,clicHumainSource:'lot'};
  return r;};
 /* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
@@ -1302,7 +1387,7 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
  /* 4.8.6 (KI-069) : différé sur le dernier cut de la partie : aucune commande « suivant »
   * (le moteur épinglé attendrait un changement de cut) ; le lot se ferme ici, rien n'est envoyé à ESV. */
  const differer=engine.deferUnresolved.bind(engine);
- engine.deferUnresolved=(now,b,eligibility)=>coordinateurLot.transition('differe',async()=>{const d=dernierCutCertain(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
+ engine.deferUnresolved=(now,b,eligibility)=>coordinateurLot.transition('differe',async()=>{const d=await dernierCutConfirme(now?.identity?.cut);if(!d)return differer(now,b,eligibility);
    await engine.event('dernier-cut-differe',{identity:null,part:d.part,cut:d.cut,total:d.total,motif:d.motif,commande:null});
    b.interrupted=Array.isArray(b.interrupted)?b.interrupted:[];
    b.interrupted.push({identity:globalThis.BananeCore3.completeIdentity(now.identity),status:'DEFER_DERNIER_CUT_SANS_ENVOI',commandInvoked:false,total:d.total});
@@ -2025,8 +2110,14 @@ async function passeDiffPoser(b,p,E){
  journalerSimple('validation-accepted',{identity:now.identity,action:'VALIDATE',passeDifferes:true});
  return {resultat:'ecrit',gaugeMm:cg.gaugeMm,compteur:[ev.compteurAvant.traites,ev.compteurApres.traites,ev.compteurApres.total],ms:Date.now()-t0};}
 function passeDiffEcriture(f){const a=passeDiff.ecriture?.attente;if(a&&f?.kind==='write')ecritureAttendue(a,f,ecritureOk(f.status),f.body&&typeof f.body==='object'?f.body:null);}
+/* CH-039 : lot de la file clos parce qu'ESV a ouvert seul une autre partie (page rechargée, « partie-changee-par-esv » ; ou sur place après une
+ * validation, « navigation-other-part », KI-063) : la passe et la relecture ATTENDENT que la file ait ramené ESV sur la partie du lot
+ * (`fileRetourLot`), qui les planifie ensuite. Sans file : comme avant. */
+function sortieDePartie(b){const f=b?.stoppedAtEnd;if(!f)return false;
+ return f.reason==='partie-changee-par-esv'||f.reason==='navigation-other-part'&&Number.isInteger(f.target?.part)&&f.target.part!==b.scope?.part;}
+function attendRetourPartie(b){return sortieDePartie(b)&&!b.stoppedAtEnd.retour&&fileActive()&&fileP.etat?.partie?.lotId===b.id;}
 function passeDiffPlanifier(){const b=engine?.s?.batch,rg=passeDiffReglage();
- if(!b?.id||passeDiff.planifie.has(b.id)||rg.mode==='off'||!profilL1se())return;
+ if(!b?.id||passeDiff.planifie.has(b.id)||rg.mode==='off'||!profilL1se()||attendRetourPartie(b))return;
  if(!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd))return;
  const vue={lotId:b.id,mode:rg.mode,etat:'calcul',differes:0,posees:0,demandees:0,ecrites:0,cut:null,message:null};
  passeDiff.planifie.add(b.id);
@@ -3084,7 +3175,7 @@ function relectureNouvelle(b,auto){const debut=new Date().toISOString();
   vus:0,vusCuts:new Set(),cutsNeufs:0,cutsNeufsAnnonces:null,cut:null,plage:null,message:'Relecture en préparation : elle part dans un instant.',debut,fin:null,arret:false,reglages:null,operationId:null,attente:null,reprise:false,repriseF5:'pause',pauseDemandee:false,pauseRaison:null,point:null,pointStocke:null};
  return relecture.passe;}
 /* Fin naturelle d'un lot créé avec la relecture : la passe est planifiée une fois par lot, et existe dès maintenant (« preparation »). */
-function relecturePlanifier(){const b=engine?.s?.batch;if(!b?.id||relecture.planifie.has(b.id)||!relectureDuLot(b)||passeActive())return;
+function relecturePlanifier(){const b=engine?.s?.batch;if(!b?.id||relecture.planifie.has(b.id)||!relectureDuLot(b)||passeActive()||attendRetourPartie(b))return;
  if(!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd))return;
  relecture.planifie.add(b.id);const p=relectureNouvelle(b,true);
  setTimeout(()=>{void relectureLancer({auto:true,passe:p}).catch(()=>{});},Math.max(0,reglageRelecture().departMs||0));}
@@ -3613,6 +3704,7 @@ async function fileAction(a){fileP.action=a.type;try{
   if(a.type==='demarrer-lot')await fileDemarrerLot(a);
   else if(a.type==='changer-partie')await fileChangerPartie(a.vers,false);
   else if(a.type==='retour-partie')await fileChangerPartie(a.vers,true);
+  else if(a.type==='retour-lot')await fileRetourLot(a.vers);
   else if(a.type==='arreter-activite')await fileArreterActivite();
   else if(a.type==='registre')await fileRegistreNoter(a.rang);}
  catch(e){journalerSimple('file-parties-erreur',{action:a.type,message:String(e?.message||e).slice(0,200)});}
@@ -3725,6 +3817,28 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
   noter(P.vu?'sans-effet':'muet',`${P.vu?`la partie ${vers} n’est pas affichée`:'ESV ne répond plus'} après ${borne} s${P.derniere?` (${P.derniere})`:''}`,Number.isInteger(P.partie)?{part:P.partie,cut:null}:null);
   dernierMotif=P.vu?'changement-impossible':'esv-muet';}
  return echec(dernierMotif||'changement-impossible',`la page d’ESV n’a pas affiché la partie ${vers}`);}
+/* CH-039 — RETOUR SUR LA PARTIE DU LOT APRÈS QU'ESV A OUVERT SEUL LA SUIVANTE. La page vient de se recharger : on attend l'onglet chargé et ré-équipé
+ * (la reconnexion automatique le fait d'elle-même, lot clos ; ici aussi, bornée), puis le changement de partie par le LIEN du sélecteur (jamais un
+ * geste : aucun geste ne revient en arrière, et aucun n'écrit), la preuve étant la partie du lot lue dans ESV. Revenu : la passe (Rattrapage) et la
+ * relecture partent, comme à une fin de lot ordinaire. Échec : arrêt de la file, alerte « ESV a changé de partie seul ; retour impossible ». */
+async function fileRetourLot(vers){const R=fileReglage(),e0=fileP.etat,lotId=e0?.partie?.lotId;if(!R||!e0||!lotId)return;
+ const attendu=()=>fileP.etat?.id===e0.id&&fileP.etat.etat==='passe'&&fileP.etat.partie?.lotId===lotId&&!!fileP.etat.partie.retourLot&&!fileP.etat.partie.retourLot.fait;
+ const t0=Date.now(),fin=t0+R.changementBorneMs;let equipe=false,derniere=null;
+ while(!equipe&&Date.now()<fin){if(!attendu())return;
+  let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+  if(!tab)return fileEvenement({type:'retour-lot-echec',lotId,detail:'onglet ESV fermé'});
+  if(tab.status&&tab.status!=='complete'){await attendre(R.pollMs);continue;}
+  try{await equiperOnglet(selectedTab);equipe=true;}catch(x){derniere=String(x?.message||x).slice(0,160);if(x?.definitif)break;await attendre(R.pollMs);}}
+ if(!attendu())return;
+ if(!equipe)return fileEvenement({type:'retour-lot-echec',lotId,detail:`page ESV non reconnectée après le changement de partie${derniere?` (${derniere})`:''}`});
+ const X=await changerPartieEsv(vers,{retour:true,attendu,R,gestes:()=>false});
+ if(X.quitte||!attendu())return;
+ journalerSimple('file-parties-retour-lot',{vers,ok:!!X.ok,motif:X.ok?null:X.motif??null,detail:X.ok?null:String(X.detail||'').slice(0,300),tentatives:X.tentatives?.length??0,dureeMs:Date.now()-t0});
+ if(!X.ok){const resume=(X.tentatives||[]).map(t=>`${t.mode} : ${t.texte}`).join(' ; ');
+  return fileEvenement({type:'retour-lot-echec',lotId,detail:`retour sur la partie ${vers} impossible : ${X.detail||X.motif||'?'}${resume&&!String(X.detail||'').includes(resume)?` ; essayé : ${resume}`:''}`.slice(0,380)});}
+ const b=engine?.s?.batch;if(b?.id===lotId&&b.stoppedAtEnd){b.stoppedAtEnd.retour={at:new Date().toISOString(),part:vers};engine.s.notice=`ESV est revenu sur la partie ${vers} : Rattrapage et relecture de la partie.`;await engine.save().catch(()=>{});}
+ await fileEvenement({type:'retour-lot-ok',lotId,part:vers});
+ relecturePlanifier();passeDiffPlanifier();}
 /* D-261 : après le retour sur la partie du lot, la relecture est relancée (le chemin « Lancer la relecture », toutes ses gardes). */
 async function fileRelectureApresRetour(revenu,detail=null){const e=fileP.etat,lotId=e?.partie?.lotId;if(!e||e.etat!=='relecture')return;
  const nonLancee=d=>fileEvenement({type:'relecture-fin',lotId,issue:'non-lancee',horsPartie:false,detail:d});
@@ -3756,9 +3870,10 @@ async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.actio
    if(engine?.task)return;
    const s=await fileSuspens('lot'),arret=coordinateurLot.journal.some(t=>t.nom==='arret'&&t.lot===b.id)||obsFins.get(b.id)?.cause==='arret-manuel';
    const motif=FPm().classerLot({etat:b.state,stoppedAtEnd:b.stoppedAtEnd,arretOperateur:arret,ecritureEnSuspens:!!s});
-   return void await fileEvenement({type:'lot-fin',lotId,motif,issue:b.stoppedAtEnd?.issue??b.state,resume:fileResume(b),
+   return void await fileEvenement({type:'lot-fin',lotId,motif,issue:b.stoppedAtEnd?.issue??b.state,resume:fileResume(b),horsPartie:sortieDePartie(b),
     detail:motif==='ecriture-incertaine'?s||'le lot a fini avec des actions non confirmées':b.stoppedAtEnd?.reason??engine.s.notice??null});}
   if(e.etat==='passe'){if(passeDiff.cours||passeDiff.ecriture)return;
+   if(e.partie?.retourLot&&!e.partie.retourLot.fait)return;   /* CH-039 : la passe attend le retour sur la partie du lot */
    if(!passeDiff.planifie.has(lotId)&&Date.now()-Date.parse(e.depuis)<R.passeGraceMs)return;
    const v=passeDiff.vue?.lotId===lotId?passeDiff.vue:null,s=await fileSuspens('passe');
    return void await fileEvenement({type:'passe-fin',lotId,issue:v?v.etat:'absente',ecrits:v?.ecrites??0,ecritureEnSuspens:!!s,detail:s||v?.message||null});}

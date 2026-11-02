@@ -12,6 +12,9 @@
  *   lot --refus propre au lot, arrêt par l'opérateur--> arret
  *   changement --60 s sans la partie, onglet fermé, ESV muet, commande absente, sélecteur sans la partie--> arret
  *   relecture non lancée, ESV sur une autre partie --> retour sur la partie du lot puis relance de la relecture (une fois, D-261)
+ *   CH-039 : lot --lot-fin « partie-changee-par-esv » (ESV a ouvert seul la partie suivante après la validation du dernier cut)--> passe, retour sur
+ *            la partie du lot d'abord (action `retour-lot`, le LIEN du sélecteur) ; --retour-lot-ok--> la passe et la relecture partent ;
+ *            --retour-lot-echec--> arret « retour-impossible »
  *   tout état actif --arreter--> arret « operateur » ; --suspens (registre)--> arret « ecriture-incertaine »
  * La passe et la relecture ne sont jamais lancées par la file : le service worker les lance déjà à la fin de chaque lot (D-238 : la passe
  * d'abord, la relecture ensuite). La file attend leur fin. D-261 : la relecture et la correction passent TOUJOURS après chaque partie ;
@@ -38,6 +41,7 @@
     'fin-normale': { file: 'continue', texte: 'fin normale du lot' },
     'partie-sans-rouge': { file: 'continue', texte: 'partie sans cut rouge : comptée comme faite' },
     'depart-sur-vert': { file: 'continue', texte: 'départ sur un cut vert, rien à traiter devant (aucune pose écrite)' },
+    'partie-changee-par-esv': { file: 'continue', texte: 'ESV a ouvert seul la partie suivante après la validation du dernier cut : retour sur la partie du lot' },
     'passe-arretee': { file: 'continue', texte: 'deuxième passe arrêtée sans écriture en suspens' },
     'relecture-arretee': { file: 'continue', texte: 'relecture arrêtée sans écriture en suspens' },
     'nombre-atteint': { file: 'fin', texte: 'nombre de parties atteint' },
@@ -50,6 +54,7 @@
     'onglet-ferme': { file: 'arret', alerte: true, texte: 'l’onglet ESV a été fermé' },
     'selecteur-illisible': { file: 'arret', alerte: true, texte: 'le sélecteur de parties d’ESV n’offre plus la partie suivante : arrêt prudent' },
     'esv-muet': { file: 'arret', alerte: true, texte: 'ESV ne répond plus' },
+    'retour-impossible': { file: 'arret', alerte: true, texte: 'ESV a changé de partie seul ; retour impossible' },
   });
   /* Seuils de l'alerte : valeurs initiales proposées (architecture 5.0, module P), non décidées, révisables. */
   const SEUILS = Object.freeze({ differesFoisMediane: 2, corrigesPart: 0.05, refus: 1 });
@@ -132,11 +137,22 @@
           const m = MOTIFS[ev.motif];
           if (!m || ev.motif === 'nombre-atteint' || ev.motif === 'passe-arretee' || ev.motif === 'relecture-arretee') { arreter(e, 'refus-lot', at, `motif de fin de lot inconnu : ${ev.motif}`); return { etat: e, actions: [] }; }
           if (m.file === 'arret') { arreter(e, ev.motif, at, ev.detail); return { etat: e, actions: [] }; }
-          noter(e, ev.motif, ev.detail); e.etat = 'passe'; e.depuis = at; return { etat: e, actions: [] };
+          noter(e, ev.motif, ev.detail); e.etat = 'passe'; e.depuis = at;
+          /* CH-039 : ESV est sur une autre partie (ouverte seule, avec ou sans rechargement) ; la passe et la relecture (lancées par le service
+           * worker) attendent le retour. */
+          if (ev.motif === 'partie-changee-par-esv' || ev.horsPartie === true) { e.partie.retourLot = { at, fait: false }; return { etat: e, actions: [{ type: 'retour-lot', vers: e.partie.part }] }; }
+          return { etat: e, actions: [] };
         }
         return ignore(`événement ${type} hors de l’état lot`);
       case 'passe':
+        if (type === 'retour-lot-ok' || type === 'retour-lot-echec') {
+          if (!e.partie.retourLot || e.partie.retourLot.fait) return ignore('aucun retour sur la partie du lot en attente');
+          if (ev.lotId !== e.partie.lotId) return ignore('retour d’un autre lot');
+          if (type === 'retour-lot-echec') { arreter(e, 'retour-impossible', at, ev.detail); return { etat: e, actions: [] }; }
+          e.partie.retourLot.fait = true; e.partie.retourLot.revenuA = at; e.depuis = at; return { etat: e, actions: [] };
+        }
         if (type !== 'passe-fin') return ignore(`événement ${type} hors de l’état passe`);
+        if (e.partie.retourLot && !e.partie.retourLot.fait) return ignore('retour sur la partie du lot en attente');
         if (ev.lotId !== e.partie.lotId) return ignore('fin de passe d’un autre lot');
         e.partie.passe = { issue: texte(ev.issue, 40), ecrits: entier(ev.ecrits) };
         if (ev.ecritureEnSuspens) { arreter(e, 'ecriture-incertaine', at, ev.detail); return { etat: e, actions: [] }; }
@@ -191,6 +207,8 @@
       if (l && l.id && l.rang === e.k && l.part === e.partie.part) { e.partie.lotId = l.id; return { etat: e, actions: [] }; }
       return { etat: e, actions: [{ type: 'demarrer-lot', part: e.partie.part, rang: e.k }] };
     }
+    /* CH-039 : retour sur la partie du lot perdu au redémarrage : rejoué (le service worker vérifie d'abord la partie affichée). */
+    if (e.etat === 'passe' && e.partie.retourLot && !e.partie.retourLot.fait) return { etat: e, actions: [{ type: 'retour-lot', vers: e.partie.part }] };
     if (e.etat === 'changement') {
       if (constat.partieAffichee === e.changement.vers) return transition(e, { type: 'changement-ok', part: e.changement.vers, at });
       if (e.changement.tentatives >= TENTATIVES_MAX) { arreter(e, 'changement-impossible', at, `partie ${e.changement.vers} non atteinte après ${e.changement.tentatives} tentatives`); return { etat: e, actions: [] }; }
@@ -211,6 +229,7 @@
     const issue = l.stoppedAtEnd?.issue, raison = l.stoppedAtEnd?.reason;
     if (issue === 'partie-sans-rouge' || raison === 'partie-sans-rouge') return 'partie-sans-rouge';
     if (issue === 'depart-sur-vert' || raison === 'depart-sur-vert') return 'depart-sur-vert';
+    if (raison === 'partie-changee-par-esv') return 'partie-changee-par-esv';   /* CH-039 */
     if (l.stoppedAtEnd) return 'fin-normale';
     return l.arretOperateur ? 'operateur' : 'refus-lot';
   }
@@ -271,7 +290,7 @@
   /* Vue du panneau (variante A) : quelques champs, jamais d'adresse ni d'identifiant de page. */
   function vue(e) {
     if (!e) return null;
-    return { id: e.id, etat: e.etat, n: e.n, plan: e.plan.slice(), rang: e.k, enCours: e.partie ? { part: e.partie.part, rang: e.partie.rang, lot: !!e.partie.lotId } : null,
+    return { id: e.id, etat: e.etat, n: e.n, plan: e.plan.slice(), rang: e.k, enCours: e.partie ? { part: e.partie.part, rang: e.partie.rang, lot: !!e.partie.lotId, ...(e.partie.retourLot && !e.partie.retourLot.fait ? { retour: true } : {}) } : null,
       changement: e.changement ? { vers: e.changement.vers, tentatives: e.changement.tentatives } : null,
       bilan: e.bilan.map(p => ({ part: p.part, rang: p.rang, issueLot: p.issueLot, motifs: p.motifs.map(m => m.code), resume: p.resume, passe: p.passe, relecture: p.relecture, alertes: p.alertes || [], ...(p.interrompue ? { interrompue: true } : {}) })),
       motifFin: e.motifFin, alerte: e.alerte, reprises: e.reprises || 0, reprise: repriseDe(e) };
