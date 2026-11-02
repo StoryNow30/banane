@@ -235,7 +235,7 @@
       : V.map((v, i) => ({ identity: v.identity, label: v.label || null, encours: !v.endedAt && i === V.length - 1 && ECHO_OUVERT.includes(n.status) }));
     const listes = C.listes.map(l => {
       const E = Array.isArray(l.entrees) ? l.entrees : [], b = CL ? CL.bilan(E, vis) : { lignes: E.map(e => ({ ...e, statut: 'a-faire', visites: 0 })) };
-      return { partie: l.partie, batchId: l.batchId, comptes: l.comptes || null, lignes: b.lignes.map((x, i) => ({ ...x, details: E[i]?.details || {} })) };
+      return { partie: l.partie, batchId: l.batchId, batchIds: Array.isArray(l.batchIds) ? l.batchIds : [l.batchId], comptes: l.comptes || null, lignes: b.lignes.map((x, i) => ({ ...x, details: E[i]?.details || {} })) };
     });
     const tout = listes.flatMap(l => l.lignes), k = st => tout.filter(x => x.statut === st).length;
     const bouton = id => { const e = $(id); return e ? { actif: !e.disabled, visible: !e.hidden, texte: String(e.textContent || '').trim() } : null; };

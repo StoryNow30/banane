@@ -8,6 +8,11 @@
  *     service worker la construit depuis le bilan de la file) et le parcours (`parcours`, ordre partie puis cut) : combien de cuts, de combien de
  *     parties, et la forme (cuts par partie) que l'essai de la maquette rejoue.
  *
+ *   node tools/aurore-parties.cjs couverture <dossier d'export d'une session> [--json sortie.json]
+ *     CH-040 : la liste de l'Aurore telle que le service worker la construit désormais (`couverture`, src/correction-liste.js) : tous les lots du
+ *     journal, lots repris par une Aurore terminée exclus, une liste par partie, fusion par cut. Donne les entrées par lot (avant fusion), après
+ *     fusion, et proposées (après exclusion).
+ *
  *   node tools/aurore-parties.cjs traverse --echo <dossier Écho A> --echo <dossier Écho B> [--json sortie.json]
  *     Deux séances Écho RÉELLES de deux parties différentes sont fondues en UNE séance (même identifiant de session, `visitIndex` continu), comme
  *     l'est une Aurore qui traverse les parties. Pour chaque partie, la table de tools/jointure-echo-orbite.cjs (Écho seul, `joindre`) est calculée
@@ -24,6 +29,11 @@ function journalDe(dossier) {
   const events = [];
   for (const n of f) { const d = JSON.parse(fs.readFileSync(path.join(dossier, n), 'utf8')); events.push(...(d.events || [])); }
   return events;
+}
+function couverture(dossier) {
+  const K = CL.couverture(journalDe(dossier));
+  return { version: K.version, lots: K.lots, comptes: K.comptes, exclus: K.exclus, retires: K.retires,
+    parties: K.listes.map(l => ({ partie: l.partie, batchIds: l.batchIds, cuts: l.entrees.length, aCorriger: l.comptes.aCorriger, aPoser: l.comptes.aPoser })) };
 }
 function liste(dossier) {
   const ev = journalDe(dossier), vus = new Set(), parties = [];
@@ -61,10 +71,10 @@ function traverse(dossiers) {
 function principal(argv) {
   const [cmd, ...r] = argv, o = { echo: [], json: null, pos: [] };
   for (let i = 0; i < r.length; i++) { if (r[i] === '--echo') o.echo.push(r[++i]); else if (r[i] === '--json') o.json = r[++i]; else o.pos.push(r[i]); }
-  const out = cmd === 'liste' ? liste(o.pos[0]) : cmd === 'traverse' ? traverse(o.echo) : null;
+  const out = cmd === 'liste' ? liste(o.pos[0]) : cmd === 'couverture' ? couverture(o.pos[0]) : cmd === 'traverse' ? traverse(o.echo) : null;
   if (!out) { console.error('Usage : node tools/aurore-parties.cjs liste <dossier> | traverse --echo A --echo B [--json f]'); process.exit(2); }
   if (o.json) fs.writeFileSync(o.json, JSON.stringify(out, null, 1));
   const { ordre, ...court } = out; console.log(JSON.stringify(court, null, 1));
 }
 if (require.main === module) principal(process.argv.slice(2));
-module.exports = { liste, traverse };
+module.exports = { liste, couverture, traverse };

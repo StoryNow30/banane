@@ -63,7 +63,9 @@ async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer, actif = tru
       engine.s.batch = { id: 'aurore-B' + P, state: 'COMPLETED', step: 'fin', scope: { part: P, start: 1, end: 2 }, processed: [], skipped: [], paused: [], interrupted: [], sequence: [], deferred: [], manuallyCompleted: [],
         activeIdentity: { part: P, cut: 1 }, lastCompletedIdentity: null, startedAt: new Date(t0).toISOString(), endedAt: new Date(t0 + 1000).toISOString() }; await engine.save(); }, { lots, t0 });
     const ids = lots.map(L => 'aurore-B' + L.part);
-    await attendre(async () => { const v = await api('correction-liste', { batchIds: ids }); return v?.correction?.listes?.length === lots.length && (v.correction.entreParties === true) === actif; }, 'liste de toutes les parties', 40);
+    /* CH-040 : sans `batchIds` (le chemin du panneau) : la couverture lit tous les lots du journal ; mêmes listes, dans l'ordre des départs, que lot par lot. */
+    await attendre(async () => { const v = await api('correction-liste'); return v?.correction?.listes?.length === lots.length && (v.correction.entreParties === true) === actif
+      && JSON.stringify(v.correction.listes.map(l => l.batchId)) === JSON.stringify(ids); }, 'liste de toutes les parties', 40);
     try { await pan.waitForSelector('#ui5 .sg-bascule [data-act="sg:onglet-correction"]', { timeout: 10000 }); }
     catch (e) { console.log('# signal', await pan.evaluate(() => document.getElementById('notice')?.textContent)); throw e; }
     await pan.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]');
