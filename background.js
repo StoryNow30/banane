@@ -1238,8 +1238,15 @@ adapter.apply=async(...args)=>{
  if(plan){const identity=engine.s.before?.identity??null,ev={phase:'pose',identity:identity?{part:identity.part??null,cut:identity.cut??null}:null,batchId:engine.s.batch?.id??null};
   const t0=Date.now();
   try{result=await applyInESV(...args,{deplacerVue:plan,...optClic});}
-  catch(e){await engine.event('deplacer-vue',{...ev,erreur:String(e?.message||e).slice(0,300)}).catch(()=>{});
-   journalerDeplacementVue(null,null,String(e?.message||e),'pose',Date.now()-t0);throw e;}
+  catch(e){const message=String(e?.message||e);
+   /* CH-038 : ESV est relu pour DIRE ce qui est écrit (aucune commande, aucune décision de plus) : rails identiques à ceux d'avant la pose
+    * → 'aucune' ; différents → 'faite' (le lot s'arrête, résultat à réconcilier, comme avant) ; ESV illisible → 'inconnue'. */
+   let ecriture='inconnue';try{const avant=args[0]?.rails,now=await readState();if(avant&&now?.rails)ecriture=globalThis.BananeCore3.equalPoses(now.rails,avant,1e-6)?'aucune':'faite';}catch{/* inconnue */}
+   await engine.event('deplacer-vue',{...ev,erreur:message.slice(0,300),ecriture}).catch(()=>{});
+   journalerDeplacementVue(null,null,message,'pose',Date.now()-t0);
+   const dit={faite:' Déplacement de vue : les rails sont écrits dans ESV, rien n’est validé ; contrôle le cut.',aucune:' Déplacement de vue : aucun rail n’a bougé dans ESV.',inconnue:' Déplacement de vue : ESV illisible, contrôle le cut.'}[ecriture];
+   if(e&&typeof e==='object'&&!message.includes(dit.trim()))try{e.message=message+dit;}catch{/* message figé */}
+   throw e;}
   const rapport=result&&typeof result==='object'?result.deplacerVue??null:null;if(rapport){result={...result};delete result.deplacerVue;}
   await engine.event('deplacer-vue',{...ev,cotes:(rapport?.cotes||[]).map(dvAmener),remise:rapport?.remise??null}).catch(()=>{});
   journalerDeplacementVue(rapport?.cotes,rapport?.remise,null,'pose',Date.now()-t0);}
