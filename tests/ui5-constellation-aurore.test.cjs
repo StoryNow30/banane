@@ -1,5 +1,7 @@
 'use strict';
-/* CH-036 — LA CONSTELLATION (file de parties) ET L'AURORE (correction) DANS SIGNAL, d'après le dessin validé par l'opérateur (Figma, page
+/* CH-036 — LA CONSTELLATION (file de parties) ET L'AURORE (correction) DANS SIGNAL, direction B « Cadran » choisie par l'opérateur le 02/11 (Figma, page
+ * « CH-036 b · Deux directions » : un anneau segmenté, un arc par partie ; des filets ; de grands chiffres en registre ; les actions dans l'en-tête).
+ * Avant : d'après le dessin validé par l'opérateur (Figma, page
  * « CH-036 · Constellation et Aurore », décisions du 01/11 : vocabulaire Rattrapage / à poser / Passage / sautés ; « Ouvrir l'Aurore » en action pleine ;
  * départs des parties et motifs visibles d'emblée ; onglets libellés en 360 px). Contre la page minimale (tests/helpers/ui5-page.cjs) : les identifiants
  * internes (`file*`, `correction*`, `sg:onglet-file`, `sg:onglet-correction`) ne changent pas, seuls les libellés que l'opérateur lit changent ; chaque
@@ -45,8 +47,8 @@ test('Constellation prête : étoiles du plan (la partie affichée, puis les sui
   const p = await pret({ fileParties: null }); poser(p, { principal: 'Préparer la file', lancer: 'Lancer la file · 3 parties', choisi: 3 });
   p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Prête</);
-  assert.equal((h.match(/class="sg-etoile" data-etat="a-venir"/g) || []).length, 3);
-  assert.match(h, /data-etat="a-venir"[^>]*>.*?<span class="sg-mono">13<\/span>/s);
+  assert.equal((h.match(/class="sg-arc" data-etat="a-venir"/g) || []).length, 3, 'un arc par partie du plan');
+  assert.match(h, /<span class="sg-chiffre">3<\/span><span class="sg-suite">parties<\/span>/);
   assert.match(h, /class="sg-principal" data-act="legacy:file-lancer"[^>]*>.*Lancer la Constellation · 3 parties/s);
   assert.match(h, /aria-label="Départs des parties"/, 'les départs restent visibles d’emblée (décision du 01/11)');
   assert.doesNotMatch(h, /\bla file\b|File de parties/);
@@ -57,13 +59,13 @@ test('Constellation en cours : l’étoile vivante, les quatre temps (Rattrapage
   const F = { etat: 'passe', n: 3, rang: 1, plan: [13, 14, 15], enCours: { part: 14, rang: 1 }, changement: null, bilan: [P13], alerte: null, motifFin: null };
   const p = await pret({ fileParties: F }); poser(p, { etatTexte: 'partie 2 sur 3', phrase: 'Partie 14 · deuxième passe.', reglage: false, secondaire: 'Arrêter la file' });
   p.rendu(etat({ ...LOT, state: 'COMPLETED', activeIdentity: null }, { fileParties: F })); p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
-  assert.match(h, /class="sg-etoile" data-etat="faite"[^>]*>.*?13<\/span><small>112 posés<\/small>/s);
-  assert.match(h, /class="sg-etoile" data-etat="en-cours"[^>]*>.*?14<\/span>/s);
-  assert.match(h, /class="sg-etoile" data-etat="a-venir"[^>]*>.*?15<\/span>/s);
-  assert.match(h, /<li data-temps="fait">Pose<\/li><li data-temps="courant" aria-current="step">Rattrapage<\/li><li data-temps="a-venir">Relecture<\/li><li data-temps="a-venir">Passage<\/li>/);
+  assert.match(h, /class="sg-arc" data-etat="faite" data-partie="13"/); assert.match(h, /class="sg-arc" data-etat="en-cours" data-partie="14"/); assert.match(h, /class="sg-arc" data-etat="a-venir" data-partie="15"/);
+  assert.match(h, /<span class="sg-chiffre">2\/3<\/span><span class="sg-suite">partie 14<\/span>/);
+  assert.match(h, /<li data-temps="fait"><span class="sg-mono">01<\/span>Pose<\/li><li data-temps="courant" aria-current="step"><span class="sg-mono">02<\/span>Rattrapage<\/li><li data-temps="a-venir"><span class="sg-mono">03<\/span>Relecture<\/li><li data-temps="a-venir"><span class="sg-mono">04<\/span>Passage<\/li>/);
+  assert.match(h, /class="sg-reg-partie" data-etat="faite" role="row"><span class="sg-reg-p"><i aria-hidden="true"><\/i><b class="sg-mono">13<\/b><\/span><span class="sg-mono">112<\/span><span class="sg-mono">6<\/span><span class="sg-mono">3<\/span>/);
+  assert.match(h, /class="sg-reg-partie" data-etat="en-cours" role="row">.*?<b class="sg-mono">14<\/b>/s);
   assert.match(h, /data-act="legacy:file-secondaire"[^>]*>Arrêter la Constellation</);
-  assert.match(h, /Partie 13<\/b>.*?112 posés · 6 à poser · 3 corrigés/s);
-  assert.match(h, /class="sg-of-motifs">fin normale · rattrapage en ombre, rien d’écrit · relecture finie</);
+  assert.match(h, /class="sg-reg-motifs">fin normale · rattrapage en ombre, rien d’écrit · relecture finie</);
   assert.doesNotMatch(h, /deuxième passe|différés/, 'mots de l’opérateur (décision du 01/11)');
 });
 
@@ -76,7 +78,8 @@ test('Constellation arrêtée : la raison, l’étoile à reprendre, « Reprendr
   p.rendu(etat({ ...LOT, state: 'COMPLETED', activeIdentity: null }, { fileParties: F })); p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Arrêtée</);
   assert.match(h, /role="alert"[^>]*>.*la page d’ESV ne change pas de partie/s);
-  assert.match(h, /class="sg-etoile" data-etat="interrompue"[^>]*>.*?14<\/span><small>à reprendre<\/small>/s);
+  assert.match(h, /class="sg-arc" data-etat="interrompue" data-partie="14"/);
+  assert.match(h, /class="sg-reg-partie" data-etat="interrompue" role="row">.*?<b class="sg-mono">14<\/b>.*?class="sg-reg-motifs">à reprendre</s);
   assert.match(h, /class="sg-principal" data-act="legacy:file-reprendre"[^>]*>.*Reprendre à la partie 14 · 1 restante/s);
   assert.match(h, /data-act="legacy:file-lancer"[^>]*>.*Nouvelle Constellation · 2 parties/s);
   p.ui.agir('legacy:file-reprendre'); assert.equal(p.els['file-reprendre'].clics, 1);
@@ -120,8 +123,8 @@ test('Aurore proposée : « Prête », l’horizon (0 sur 7 revus), la partie, l
   const p = await aurore({ correction: correction('proposee') });
   p.ui.agir('sg:onglet-correction'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Prête</);
-  assert.match(h, /<span class="sg-chiffre">0<\/span><span class="sg-suite">sur 7 revus<\/span>/);
-  assert.match(h, /class="sg-aube"[^>]*>.*?data-partie="5"/s);
+  assert.match(h, /<span class="sg-chiffre">0<\/span><span class="sg-suite">sur 7<\/span>/);
+  assert.match(h, /class="sg-arc" data-etat="a-faire" data-partie="5"/);
   assert.match(h, /class="sg-corr-partie"[^>]*>.*?Partie 5<\/b>.*?0 sur 7/s);
   assert.match(h, /<span class="sg-cut">14<\/span><span class="sg-motif"><span class="sg-sig">posé au rattrapage<\/span>/);
   assert.match(h, /<span class="sg-cut">15<\/span><span class="sg-motif"><span class="sg-sig">juste après un cut à poser<\/span>/);
@@ -134,7 +137,7 @@ test('Aurore ouverte : le cut ouvert, « Suivant · cut 17 », « Terminer l’A
   const p = await aurore({ correction: correction('ouverte', { courant: { part: 5, cut: 16 } }), native });
   p.ui.agir('sg:onglet-correction'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">En cours</);
-  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7 revus<\/span>/);
+  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7<\/span>/);
   assert.match(h, /data-act="sg:corr-ouvrir:5:17"[^>]*>.*Suivant · cut 17/s);
   assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer l’Aurore/);
 });
