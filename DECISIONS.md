@@ -3336,3 +3336,10 @@ Demande de l'opérateur : « Il faudra tester la vague V0 sur un autre projet é
 
 ## D-274 — Noms : « Constellation » (la file de parties) et « Aurore » (la correction dans Orbite) (opérateur, 01/11)
 Les libellés visibles de la file de parties deviennent « Constellation » et ceux de la correction « Aurore ». Les identifiants internes (`file*`, `correction*`) ne changent pas. Mots visibles validés avec le dessin de CH-036 : « Rattrapage » (deuxième passe), « à poser » (différé), « Passage » (changement de partie), « sautés » (skippés) ; les termes techniques restent dans le diagnostic. Les départs des parties et les motifs restent visibles d'emblée (pas de tiroir) ; en 360 px les onglets inactifs gardent leur libellé. En fin de lot et de Constellation, « Ouvrir l'Aurore · N cuts » est l'action principale. Décision de l'opérateur : l'Aurore doit pouvoir traverser les parties d'une Constellation (CH-035, réglage `correctionEntreParties`, éteint tant qu'il n'est pas éprouvé sur un vrai poste).
+
+## D-275 — Fermeture des chantiers de gain de qualité de pose (opérateur, 02/11)
+- L'opérateur ferme les chantiers de gain en qualité de pose : CH-034 (recherche large), CH-041 (recherche large sans temps de calcul), CH-042 (gain « coûte que coûte »). Les sessions sont archivées ; les branches `chantier/CH-034`, `CH-041`, `CH-042` restent comme archives, rien n'est fusionné dans le tronc.
+- ÉTABLI (CH-042, 22 couples lot + vérité, 1 575 poses jugées, leave-one-lot-out) : huit pistes mesurées, aucune ne tient hors échantillon ; la hauteur apprise livrée dégrade (+0,12 mm) : elle reste éteinte.
+- ÉTABLI (CH-041) : la porte rend la décision de CH-034 sur 1 546 cuts sur 1 546, calcul divisé par 1,8 ; critère de durée non prouvé sur les voies denses. `rechercheLarge.actif` reste `false` ; la permission `offscreen` du manifeste n'est pas ajoutée.
+- Rouvrir : un Écho complet sur 4 à 5 lots avec appareils de voie (~600 poses jugées), sur ordre de l'opérateur.
+- Le numéro suivant est D-276.
