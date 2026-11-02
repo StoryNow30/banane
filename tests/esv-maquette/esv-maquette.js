@@ -45,6 +45,10 @@
  /* CH-029 : durée du changement de partie. Réel (3 séances, 5 changements) : 9,7 à 12,2 s jusqu'à la partie ouverte, la page se vidant (plus de bouton,
   * de sélecteur ni d'écouteur) environ 0,4 à 0,6 s après le geste. `reel` = 10 500 ms ; 0 (défaut) : instantané, pour ne pas ralentir les autres essais. */
  { const d=q.get('delaiPartie'); options.delaiPartie=d==='reel'?10500:(Number.isFinite(Number(d))?Number(d):0); }
+ /* CH-038 : cible du bouton d'un rail. 'rail' (défaut) : la position COURANTE du rail. 'origine' : sa position au chargement du cut,
+  * même après une pose (comportement SUPPOSÉ d'ESV, déduit du lot arrêté au cut 115 du 02/11 : après la pose d'un rail sur une cible
+  * hors de la vue habituelle, le bouton ne l'a jamais ramené dans la vue). */
+ options.recentrage=['origine','ailleurs'].includes(q.get('recentrage'))?q.get('recentrage'):'rail';   /* 'ailleurs' : origine décalée de 0,5 unité pour un rail déjà posé (panne simulée) */
  options.traversee=num('traversee',1);   /* CH-026 : témoignage de l'opérateur (30/10) : au dernier cut, « Next cut » (Z) ouvre la partie suivante ; plus rien à valider, « Next non validated cut » aussi. 0 : ESV reste dans la partie */
  /* ESV parle à son serveur en XMLHttpRequest (c'est ce que l'observateur d'Ariane enveloppe) : la maquette aussi. */
  const xhr=(methode,url,corps)=>new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open(methode,url,true);if(corps!==undefined)x.setRequestHeader('content-type','application/json');
@@ -67,8 +71,11 @@
  /* ---------- caméra ---------- */
  function projection(){const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height,s=etat.scenario?.camera?.echelle??5;
   camera.projectionMatrix.elements=[s,0,0,0, 0,s*w/h,0,0, 0,0,-(etat.scenario?.camera?.profondeur??1e-4),0, 0,0,0,1];}
+ const origines={left:null,right:null};
  function recentrer(side){const c=cutCourant();if(!c||!rails.left||!rails.right)return;
-  const L=pt(rails.left.matrixWorld.elements,[0,0,0]),R=pt(rails.right.matrixWorld.elements,[0,0,0]);
+  const L0=pt(rails.left.matrixWorld.elements,[0,0,0]),R0=pt(rails.right.matrixWorld.elements,[0,0,0]);
+  const [L,R]=options.recentrage!=='rail'&&origines.left&&origines.right?[origines.left.slice(),origines.right.slice()]:[L0,R0];
+  if(options.recentrage==='ailleurs'&&etat.posee?.[side]){L[2]+=.5;R[2]+=.5;}
   const X=unit([R[0]-L[0],R[1]-L[1],0]),Y=[0,0,1],Z=cross(X,Y),cible=side==='right'?R:L;
   poser(camera,{position:cible.map((v,i)=>v+Z[i]*options.distanceCamera),quaternion:(({x,y,z,w})=>[x,y,z,w])(quatColonnes(X,Y,Z))});
   majMonde(camera);projection();dessiner();log('camera-recentree',{side});}
@@ -96,7 +103,7 @@
   majCompteur();log('cut-charge',{cut:c.cut,part:etat.partie.part,raison,status:c.status});
   /* Les rails arrivent après le libellé (Ariane attend « ses rails ne sont pas encore disponibles ») ; panne railsAbsents : jamais. */
   if(concerne(etat.pannes.railsAbsents,c.cut))log('panne',{cut:c.cut,panne:'railsAbsents'});
-  else etat.minuteries.push(setTimeout(()=>{for(const s of ['left','right']){rails[s]=ajouter(root,construireRail(s,c.rails[s]));}majMonde(root);decoupe(etat.scenario.decoupe.dimensions[2]);recentrer('left');etat.side=null;log('rails-prets',{cut:c.cut});},options.latenceRails));
+  else etat.minuteries.push(setTimeout(()=>{for(const s of ['left','right']){rails[s]=ajouter(root,construireRail(s,c.rails[s]));}majMonde(root);for(const s of ['left','right'])origines[s]=pt(rails[s].matrixWorld.elements,[0,0,0]);etat.posee={};decoupe(etat.scenario.decoupe.dimensions[2]);recentrer('left');etat.side=null;log('rails-prets',{cut:c.cut});},options.latenceRails));
   /* Nœuds de points : demandés au serveur AU CHARGEMENT DU CUT (comme Potree), gardés en cache (comme Potree), puis
    * rendus visibles par lots avec latence ; Potree.numNodesLoading pendant le chargement. */
   window.Potree.numNodesLoading=c.points?.noeuds??c.noeuds?.length??0;
@@ -203,7 +210,7 @@
   const cam=camera.matrixWorld.elements,railCam=pt(inv(cam),pt(rails[etat.side].matrixWorld.elements,[0,0,0]));
   const monde=pt(cam,[ndc[0]/P[0],ndc[1]/P[5],railCam[2]]),avant=pt(rails[etat.side].matrixWorld.elements,[0,0,0]),d=monde.map((v,i)=>v-avant[i]);
   const r=rails[etat.side];r.position.x+=d[0];r.position.y+=d[1];r.position.z+=d[2];majMonde(r);dessiner();
-  log('rail-pose',{side:etat.side,px,py,deplacementMm:d.map(v=>Math.round(v*1e4)/10)});});
+  etat.posee={...etat.posee,[etat.side]:true};log('rail-pose',{side:etat.side,px,py,deplacementMm:d.map(v=>Math.round(v*1e4)/10)});});
  /* ---------- rendu 2D (confort visuel seulement) ---------- */
  let dessinDemande=false;function dessiner(){if(dessinDemande)return;dessinDemande=true;requestAnimationFrame(()=>{dessinDemande=false;rendre();});}
  function rendre(){const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.fillStyle='#0e0f12';ctx.fillRect(0,0,w,h);if(!cutCourant()||!rails.left)return;

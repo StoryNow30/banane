@@ -117,6 +117,9 @@
  /* Le texte d'échec de la remise levé par la page (`apply`) : « … (échelle à 2,5 % de la vue habituelle) … ». L'écart y est lu au dixième de
   * pour cent : c'est le seul endroit où il survit à l'exception tant que la page ne joint pas son rapport (patch CH-031). */
  const RE_REMISE=/Vue ESV non restituée[^(]*\(échelle à ([0-9]+(?:[,.][0-9]+)?) ?%/;
+ /* CH-038 : « Vue ESV non recentrée » levée pendant une pose avec déplacement = le bouton du rail n'a pas ramené la vue (page d'avant le
+  * patch CH-038, cut 115 du 02/11). C'est un échec de remise de la vue, pas une erreur inconnue. */
+ const RE_RECENTRAGE=/^Vue ESV non recentrée sur le rail /;
  /* `deplacement-vue-remise` : `remise` = rapport de la page ({ok,crans,recentre,ecartEchelle,dureeMs?}) ou null ; `erreur` = exception de la pose.
   * `ctx` : { phase, dureeApplyMs } — la durée de l'`apply` entier, seule mesure possible hors page tant que la remise n'a pas la sienne. */
  function detailRemise(remise,erreur,ctx={}){
@@ -126,6 +129,7 @@
      dureeMs:nb(remise.dureeMs,1),raison:remise.ok===true?null:'vue-non-restituee',source:'rapport'};
    const m=typeof erreur==='string'?RE_REMISE.exec(erreur):null;
    if(m)return {...base,resultat:'echec',ok:false,ecartEchelle:nb(parseFloat(m[1].replace(',','.'))/100,1e4),crans:null,recentre:null,tentative:null,dureeMs:null,raison:'vue-non-restituee',source:'message'};
+   if(typeof erreur==='string'&&RE_RECENTRAGE.test(erreur))return {...base,resultat:'echec',ok:false,ecartEchelle:null,crans:null,recentre:false,tentative:null,dureeMs:null,raison:'recentrage-impossible',source:'message'};
    return {...base,resultat:'inconnu',ok:false,ecartEchelle:null,crans:null,recentre:null,tentative:null,dureeMs:null,raison:'erreur:'+(txt(erreur,100)||'?'),source:'erreur'};}
  /* Bilan du lot : des comptes seulement. `temps` = durées des côtés amenés + durées de remise connues (la remise sans durée propre n'y entre pas). */
  class Bilan{

@@ -1,0 +1,89 @@
+--- a/src/adapter-page.js	2026-11-02 08:17:55.444769840 +0000
++++ b/src/adapter-page.js	2026-11-02 08:36:27.595539738 +0000
+@@ -638,7 +638,7 @@
+    return {...VUE_DEFAUTS,...S,...o,deplacement:{...(S.deplacement||{}),...(o.deplacement||{})},molette:{facteurSuppose:1.1,...E.molette,...(S.molette||{}),...(o.molette||{})},glisser:{viseNdc:.8,...E.glisser,...(S.glisser||{}),...(o.glisser||{})}};}
+  /* État partagé par les deux rails d'une pose : échelle de la vue habituelle, crans nets de dézoom, glisser fait, facteur d'un
+   * cran et gain du glisser mesurés. */
+- const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,facteurCran:o.molette.facteurSuppose,gain:1});
++ const etatVue=o=>({echelle0:null,pixel0:null,crans:0,glisse:false,facteurCran:o.molette.facteurSuppose,gain:1,vues:{}});
+  const echelleVue=cam=>Math.abs(cam?.projection?.[0]??NaN);
+  const r3v=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
+  const ndcVue=v=>v?[r3v(v.ndc[0]),r3v(v.ndc[1])]:null;
+@@ -658,6 +658,8 @@
+    if(!cam?.viewport||!Number.isFinite(echelleVue(cam))){rapport.raison='camera-illisible';return rapport;}
+    if(etat.echelle0===null){etat.echelle0=echelleVue(cam);etat.pixel0=pixelMm(cam);}
+    else if(Math.abs(echelleVue(cam)/etat.echelle0-1)<=1e-9)etat.crans=0;   // la vue a été remise par ESV (recentrage)
++   /* CH-038 : vue habituelle de ce côté (caméra posée par le bouton du rail, avant tout geste), référence de la remise. */
++   if(etat.vues&&!etat.vues[side])etat.vues[side]=cam;
+    const poses0=assertExpected(expected).rails;
+    let v=projectToView(cam,target);rapport.ndcAvant=ndcVue(v);rapport.pixelMm.avant=r3v(pixelMm(cam));
+    if(dansVue(v,o.marge)){rapport.ok=true;rapport.raison='dans-la-vue';rapport.ndcApres=rapport.ndcAvant;rapport.pixelMm.apres=rapport.pixelMm.avant;rapport.dureeMs=Date.now()-debut;return rapport;}
+@@ -706,20 +708,45 @@
+    }
+    if(!rapport.ok&&!rapport.raison)rapport.raison='gestes-epuises';
+    rapport.ndcApres=ndcVue(v);rapport.pixelMm.apres=r3v(pixelMm(cam));rapport.dureeMs=Date.now()-debut;return rapport;}
++ /* CH-038 (lot arrêté au cut 115, 02/11) : après un glisser, le bouton du rail ramène la vue HABITUELLE du cut. Si le rail vient d'être
++  * posé sur une cible hors de cette vue (le cas même du déplacement), il y reste hors vue : « rail dans la vue » (le critère de `select`)
++  * est alors impossible, trois attentes de 12 s puis « Vue ESV non recentrée ». La remise accepte donc : caméra stable ET (revenue à la
++  * vue habituelle mémorisée avant les gestes, à 1 mm et `remiseTolerance` d'échelle près, OU rail dans la vue). Elle ne lève pas sur un
++  * délai : elle rend `ok:false`. Bornée (ordre de l'intégrateur, 02/11 : jamais 3 × 12 s) : `remisePressions` pressions (défaut 2) de
++  * `remiseAttenteMs` chacune (défaut 1 500 ms), soit 3 s au plus ; les crans de molette sont rendus ensuite, comme avant. */
++ const procheVue=(a,b,tol)=>!!a&&!!b&&a.cameraToSceneRelative.every((x,i)=>Math.abs(x-b.cameraToSceneRelative[i])<=([12,13,14].includes(i)?1e-3:1e-4))
++   &&Math.abs(echelleVue(a)/echelleVue(b)-1)<=tol;
++ async function recentrerRemise(side,expected,ref,o){const essais=Math.max(1,Math.min(4,o?.remisePressions??2)),attente=Math.max(300,Math.min(12000,o?.remiseAttenteMs??1500)),tol=o?.remiseTolerance??.02;
++   const r={ok:false,vueHabituelle:false,railDansVue:false,pressions:0,ndcRail:null};
++   for(let essai=1;essai<=essais;essai++){assertExpected(expected);if(cancelled)throw Error('Action interrompue.');nativeClick(selectors[side]);r.pressions++;
++     let prec=null,stable=0;const debut=Date.now();
++     while(Date.now()-debut<attente){await sleep(P.sondageMs);if(cancelled)throw Error('Action interrompue.');
++       const now=assertExpected(expected),c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);if(!cam){stable=0;prec=null;continue;}
++       const cle=JSON.stringify(cam.cameraToSceneRelative)+'|'+echelleVue(cam);stable=cle===prec?stable+1:0;prec=cle;if(stable<P.lecturesStables)continue;
++       const v=projectToView(cam,now.rails[side]?.positionSceneRelative);r.ndcRail=v?[r3v(v.ndc[0]),r3v(v.ndc[1])]:null;
++       r.vueHabituelle=procheVue(cam,ref,tol);r.railDansVue=!!v?.inView;
++       if(r.vueHabituelle||r.railDansVue){r.ok=true;return r;}}}
++   return r;}
+  /* Remettre la vue habituelle : après un glisser, le bouton du rail la recentre ; des crans nets de dézoom sont rendus dans
+   * l'autre sens (par séries de `cransMax`) si l'échelle n'est pas déjà revenue. L'échelle est relue : écart au plus
+   * `remiseTolerance`, sinon `ok:false`. */
+  async function remettreVue(etat,side,expected,o,progress=()=>{}){const t0=Date.now(),rap={ok:true,crans:0,recentre:false,ecartEchelle:0};
+    if(!etat||etat.echelle0===null||(!etat.glisse&&!etat.crans))return rap;
+    const guard=gesteGarde(expected);
+-   if(etat.glisse){await select(side,expected);rap.recentre=true;etat.glisse=false;}
++   if(etat.glisse){const rc=await recentrerRemise(side,expected,etat.vues?.[side]??null,o);etat.glisse=false;
++     Object.assign(rap,{recentre:rc.ok,vueHabituelle:rc.vueHabituelle,railDansVue:rc.railDansVue,pressions:rc.pressions});
++     if(!rc.ok){rap.ok=false;rap.raison='recentrage-impossible';rap.ndcRail=rc.ndcRail;}}
++   const camAvant=etat.vues?.[side]??null;
+    let c=context(),cam=L.cameraSnapshot(c.viewer,c.frame.origin);
+    if(etat.crans&&Math.abs(echelleVue(cam)/etat.echelle0-1)>1e-9){const {x,y}=centreVue(c),sens=etat.crans>0?-o.molette.sensDezoom:o.molette.sensDezoom;
+      let reste=Math.abs(etat.crans);
+      while(reste>0){const n=Math.min(reste,o.molette.cransMax);await emettreGeste(c,GV.sequenceMolette({x,y,crans:n,sens,reglages:o.molette}),guard);reste-=n;rap.crans+=n;
+        if(reste>0)await sleep(Math.round((o.molette.intervalleMs?.[1]??140)*2));}
+      cam=await cameraImmobile(guard);}
+-   etat.crans=0;const ecart=Math.abs(echelleVue(cam)/etat.echelle0-1);rap.ecartEchelle=Math.round(ecart*1e6)/1e6;rap.ok=ecart<=o.remiseTolerance;
++   etat.crans=0;const ecart=Math.abs(echelleVue(cam)/etat.echelle0-1);rap.ecartEchelle=Math.round(ecart*1e6)/1e6;rap.ok=rap.ok&&ecart<=o.remiseTolerance;
++   if(!rap.raison&&!rap.ok)rap.raison='echelle';
++   /* CH-038 : caméra avant (vue habituelle mémorisée) et après la remise, en écart seulement (mm, échelle), jamais en position. */
++   if(!rap.ok&&camAvant&&cam){const d=[12,13,14].map(i=>cam.cameraToSceneRelative[i]-camAvant.cameraToSceneRelative[i]);rap.ecartVueMm=Math.round(Math.hypot(...d)*1e4)/10;}
+    rap.dureeMs=Date.now()-t0;progress('vue-remise',{side,...rap});return rap;}
+  /* Action de page, sans pose : sélectionne le rail, amène la cible dans sa vue, puis REMET la vue (pré-vol du service worker,
+   * relevés sur la maquette). Ne clique jamais dans la vue. */
+@@ -730,6 +757,8 @@
+    await select(cote,attendu);
+    const r={version:VUE_VERSION,...await amenerVue(cote,cible,attendu,etat,o,progress)};
+    r.remise=await remettreVue(etat,cote,attendu,o,progress);if(r.ok&&!r.remise.ok){r.ok=false;r.raison='vue-non-restituee';}
++   /* CH-038 : sans pose, le rail n'a pas bougé ; le bouton doit ramener la vue habituelle elle-même (c'est ce que la pose exigera). */
++   if(r.ok&&r.remise.recentre===true&&r.remise.vueHabituelle!==true){r.ok=false;r.raison='vue-habituelle-non-revenue';}
+    if(journalVue&&o.deplacement?.actif===true)r.journalGestes=journalVue.resume();
+    return r;}
+  /* `options` (troisième argument, facultatif) : `{deplacerVue}` envoyé par le service worker pour un cut que la vue seule
+@@ -752,8 +781,9 @@
+      await clickPosition(s,expected[s].positionSceneRelative,before.identity,vue,mode);if(vue)vue.poses.push(s);}
+    if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}
+    const remise=await remettreVue(vue.etat,'right',before.identity,reglages,progress);
+-   if(!remise.ok)throw Error(`Vue ESV non restituée après le déplacement de vue (échelle à ${(remise.ecartEchelle*100).toFixed(1).replace('.',',')} % de la vue habituelle) : les deux rails sont posés, rien n’est validé. Remets la vue d’ESV, puis contrôle le cut. État à réconcilier.`);
+-   const fin=snapshot();fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise,...(journalVue&&reglages.deplacement?.actif===true?{journalGestes:journalVue.resume()}:{})};fin.vueFin=vueFin(fin);return fin;}
++   /* CH-038 (ordre de l'intégrateur, 02/11) : une vue non restituée n'est pas une pose ratée. Les deux rails sont posés et relus ; `apply`
++    * rend son résultat normal, marqué `vueNonRestituee`, et le service worker décide (avertissement, arrêt après N de suite). */
++   const fin=snapshot();if(!remise.ok)fin.vueNonRestituee=true;fin.deplacerVue={version:VUE_VERSION,cotes:vue.rapports,remise,...(journalVue&&reglages.deplacement?.actif===true?{journalGestes:journalVue.resume()}:{})};fin.vueFin=vueFin(fin);return fin;}
+  /* 4.9.5.13 (analyse du lot 2:19 : le journal d'un `apply` ne gardait que « reçu » et une durée) : position de chaque rail posé dans la vue
+   * ACTIVE d'ESV à la fin de la pose (NDC, dans la vue ou non, taille du pixel). Lecture seule ; une lecture impossible est dite, jamais levée.
+   * Le moteur consigne le résultat d'`apply` en entier (`applied-verified`, `observed`). */
