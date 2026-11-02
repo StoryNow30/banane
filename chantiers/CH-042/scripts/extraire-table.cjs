@@ -139,7 +139,7 @@ for (const cut of [...poses].sort((x, y) => x - y)) {
   const e = decisions.get(cut), o = e && e.lotObservation;
   if (!o) n.sansDecision++;
   /* Écartements : départ (pose d'ESV), pose du lot, vérité ; sens de l'axe latéral de chaque rail. */
-  let gauges = null, sens = null;
+  let gauges = null, sens = null, scene = null;
   if (pa && pa.initial.left && pa.initial.right && pa.initial.left.sceneRelativeToProfileLocal && pa.initial.right.sceneRelativeToProfileLocal) {
     const I = pa.initial, P = pa.posee;
     gauges = { depart: ecart(I.left.positionSceneRelative, I.right.positionSceneRelative), pose: ecart(P.left.positionSceneRelative, P.right.positionSceneRelative), verite: null };
@@ -147,6 +147,22 @@ for (const cut of [...poses].sort((x, y) => x - y)) {
     if (verite && verite[cut] && verite[cut].mic) { try { gauges.verite = ecart(depuisDecal(I.left, verite[cut].mic.left), depuisDecal(I.right, verite[cut].mic.right)); } catch {} }
     else { const lg = lignes.get(cut), h = lg && lg.poseHumaineFinale; if (h && h.gauche && h.droite) gauges.verite = ecart([h.gauche.x, h.gauche.y, h.gauche.z], [h.droite.x, h.droite.y, h.droite.z]); else if (et.etat === 'controle') gauges.verite = gauges.pose; }
     for (const k in gauges) gauges[k] = r2(gauges[k]);
+    /* Positions de scène (mm) du départ, de la pose et de la vérité (vérité = départ + déplacement + erreur, repère profil du départ). */
+    try {
+      const mm3 = p => p.map(v => Math.round(v * 1000 * 100) / 100);
+      scene = { depart: { left: mm3(I.left.positionSceneRelative), right: mm3(I.right.positionSceneRelative) }, pose: { left: mm3(P.left.positionSceneRelative), right: mm3(P.right.positionSceneRelative) }, verite: null };
+      if (et.err && deplacement) scene.verite = Object.fromEntries(['left', 'right'].map(s => [s, mm3(depuisDecal(I[s], [0, 1, 2].map(i => deplacement[s][i] + et.err[s][i])))]));
+    } catch { scene = null; }
+  }
+  /* Voisinage dans la liste d'ESV (lignes à ±40 cuts) : [écart d'indice, statut, drapeaux, six bords en mm (monde)] ; seules les lignes complètes. */
+  let voisinage = null;
+  if (table) {
+    voisinage = [];
+    for (let i = Math.max(0, cut - 40); i <= Math.min(table.n - 1, cut + 40); i++) {
+      const e = table.ed.slice(6 * i, 6 * i + 6);
+      if (e.length < 6 || !e.every(fini)) continue;
+      voisinage.push([i - cut, table.st[i], table.fl[i], ...e.map(v => Math.round(v * 10) / 100)]);
+    }
   }
   const geste = et.etat === 'controle' ? 'acceptation' : et.etat === 'corrige' ? JL.geste(et.mm, false) : null;
   if (geste) { n.juges++; if (geste === 'acceptation') n.controles++; }
@@ -166,7 +182,7 @@ for (const cut of [...poses].sort((x, y) => x - y)) {
     appuiDistance: o && o.anchorsUsed && o.anchorsUsed.length ? Math.min(...o.anchorsUsed.map(x => Math.abs(x - cut))) : null,
     appui: o ? o.anchor : null, gaugeMm: o ? o.gaugeMm : null, gaugeRefMm: o && o.gaugeReference ? o.gaugeReference.mm : null, flushPct: o ? o.flushPct : null,
     pn: o && o.levelCrossing ? !!o.levelCrossing.read : null, l1: o && o.l1 ? { etat: o.l1.etat, hypothese: o.l1.hypothese || null, p: o.l1.p ?? null } : null,
-    zone: rm ? (rm.zone || rm.regles || null) : null, gauges, sensLat: sens, refListe: refListe(cut), engineMs: o ? o.engineMs : null, version: journal.version || null,
+    zone: rm ? (rm.zone || rm.regles || null) : null, gauges, sensLat: sens, refListe: refListe(cut), captureId: e ? e.lidarCaptureId || null : null, scene, voisinage, engineMs: o ? o.engineMs : null, version: journal.version || null,
     rails: { left: sig('left'), right: sig('right') } });
 }
 fs.writeFileSync(a.sortie, out.map(x => JSON.stringify(x)).join('\n') + '\n');
