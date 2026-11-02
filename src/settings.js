@@ -430,7 +430,7 @@
    * l'opérateur règle le nombre de parties et la lance ; le patch de l'adaptateur (`changerPartie`) est appliqué. Le changement de partie n'a jamais
    * été vu sur un vrai ESV : premier essai avec 2 parties, l'opérateur présent. `actif:false` : aucune action de la file n'existe, le panneau et les
    * exports sont ceux d'avant. `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
-  const file = Object.freeze({ actif: true, changementBorneMs: 60000 });
+  const file = Object.freeze({ actif: true, changementBorneMs: 60000, repriseApresRechargement: true });
   /* CH-035 — L'AURORE ENTRE LES PARTIES D'UNE CONSTELLATION (correction dans Orbite après une file, chantiers/CH-035/CONCEPTION.md). Allumé, « Ouvrir »
    * un cut d'une autre partie change de partie par les boutons d'ESV (`changerPartie` de l'adaptateur, ses modes ; aucune touche, aucune validation,
    * aucun SKIP), Écho en pause pendant le trajet, puis va au cut. CH-037 : ALLUMÉ par défaut (décision de l'opérateur du 01/11 : il veut traverser
