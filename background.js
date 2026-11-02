@@ -2618,12 +2618,47 @@ async function echoRepriseCorps(tabId){const n=engine?.s?.native;if(!n||n.status
   n.message='Écho : reprise automatique impossible après le rechargement ('+(derniere?.message||'ESV n’a pas fini de charger : '+(attente||'page sans réponse'))+'). Clique sur Connecter puis Reprendre.';
   if(engine.s.connection?.status!=='ready')connexionStatut('unavailable',n.message,tabId);
   await engine.save();await syncLauncher().catch(()=>{});}}
+/* CH-043 (terrain du 02/11, test 35) — LE LOT D'UNE CONSTELLATION REPREND SEUL APRÈS F5. Avant, un lot ouvert « n'est jamais relancé seul » :
+ * il restait en « adaptateur sans réponse » jusqu'au clic sur « Reprendre », et la Constellation attendait (`fileTic` : lot ouvert, la file attend).
+ * Désormais, quand le lot de la file en cours est en « adaptateur sans réponse » (page perdue, pas une pause de l'opérateur), la page rechargée est
+ * ré-équipée, attendue prête (cut et liste lus, comme Écho), puis la reprise ordinaire du lot (`reprendreLot`) est lancée : mêmes refus qu'au clic
+ * (pose en vol à contrôler, cut non retrouvé), même lot, mêmes `processed` : la relecture porte sur TOUS les cuts du lot, d'avant et d'après F5.
+ * Un refus laisse le lot en pause avec son message : « Reprendre » reste là. Réglage `file.repriseApresRechargement` (défaut : vrai). Journal :
+ * `file-reprise-rechargement`. Aucune commande n'est envoyée à ESV hors celles de la reprise du lot. */
+async function fileRepriseApresRechargement(tabId){
+ const R=fileReglage();if(!R||R.repriseApresRechargement===false||!fileActive()||tabId!==selectedTab)return;
+ const e=fileP.etat,b0=engine?.s?.batch;
+ if(e.etat!=='lot'||!e.partie?.lotId||b0?.id!==e.partie.lotId||!['RUNNING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b0.state))return;
+ /* Lot encore « en cours » à la fin du chargement : le moteur n'a pas encore vu la page perdue ; on lui laisse 30 s pour s'arrêter ou se reconnecter seul. */
+ for(let i=0;i<60&&engine?.s?.batch?.id===b0.id&&engine.s.batch.state==='RUNNING';i++)await attendre(500);
+ if(engine?.s?.batch?.id!==b0.id||engine.s.batch.state!=='PAUSED_ADAPTER_UNRESPONSIVE')return;
+ const lot=b0.id,gen=chargementEsv.gen,D=repriseEchoDelais(),t0=Date.now(),fin=Date.now()+Math.max(D.delaiMaxMs,90000);
+ const ouvert=()=>engine?.s?.batch?.id===lot&&engine.s.batch.state==='PAUSED_ADAPTER_UNRESPONSIVE';
+ const dire=(resultat,motif)=>journalerSimple('file-reprise-rechargement',{lotId:lot,part:b0.scope?.part??null,resultat,motif:motif?String(motif).slice(0,200):null,ms:Date.now()-t0});
+ let derniere=null,genEquipe=-1,echecs=0,pret=false;
+ while(Date.now()<fin){
+  if(gen!==chargementEsv.gen||tabId!==selectedTab)return dire('abandon','page rechargée de nouveau ou onglet changé');
+  if(!ouvert()||!fileActive())return dire('abandon','lot repris ou arrêté entre-temps');
+  if(engine.busy||engine.task||repriseEnCours||native?.active()||manual?.active())return dire('abandon','autre activité en cours');
+  try{const tab=await chrome.tabs.get(tabId);if(!esvURL(tab?.url))return dire('abandon','onglet hors ESV');
+   if(tab.status&&tab.status!=='complete'){await attendre(D.pollMs);continue;}
+   if(genEquipe!==chargementEsv.gen){await equiperOnglet(tabId);genEquipe=chargementEsv.gen;}
+   const ping=await callSur(tabId,'ping');
+   if(chargementEsvPret(ping?.label,D)){pret=true;break;}}
+  catch(x){derniere=x;genEquipe=-1;if(x?.definitif||++echecs>=5)return dire('refus',x.message);await attendre(1500*echecs);continue;}
+  await attendre(D.pollMs);}
+ if(!pret)return dire('echec',derniere?.message||'ESV n’a pas fini de charger');
+ try{await coordinateurLot.transition('reprise',async()=>{if(repriseEnCours||!ouvert())return;
+   repriseEnCours=true;try{await reprendreLot();}finally{repriseEnCours=false;}});
+  dire('reprise',null);}
+ catch(x){dire('refus',x?.message);
+  if(engine?.s?.batch?.id===lot){engine.s.notice='La Constellation n’a pas pu reprendre seule après le rechargement : '+String(x?.message||x).slice(0,240);try{await engine.save();}catch{/* mémoire seule */}}}}
 chrome.tabs.onUpdated?.addListener((tabId,info,tab)=>{if(tabId!==selectedTab)return;
  if(info.status==='loading')chargementEsvReset();
  void ready.then(async()=>{
   /* T20a : perte de la page, dite tout de suite (statut). */
   if(info.status==='loading'){connexionStatut('unavailable','Page ESV en cours de rechargement.',tabId);if(native?.running())await echoPagePerdue('page-reloaded');}
-  else if(info.status==='complete'&&esvURL(tab?.url)){await Promise.all([echoReprise(tabId),reconnexionAuto(tabId)]);}
+  else if(info.status==='complete'&&esvURL(tab?.url)){await Promise.all([echoReprise(tabId),reconnexionAuto(tabId),fileRepriseApresRechargement(tabId)]);}
   else if(info.status==='complete'&&tab?.url&&!esvURL(tab.url))connexionStatut('unavailable','L’onglet choisi n’affiche plus ESV : rouvre ESV dans cet onglet.',tabId);}).catch(()=>{});});
 /* T20a (D-243, D-248, architecture module U) — RECONNEXION AUTOMATIQUE APRÈS F5. À la fin du chargement de l'onglet choisi (`complete`), l'onglet est
  * ré-équipé (`equiperOnglet` : sonde, adaptateur, pont, `ping` ; aucune commande ESV), sauf pendant ce qui gère déjà la page ou ne doit pas être
