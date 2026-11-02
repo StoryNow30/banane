@@ -1,5 +1,16 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.34 — 4.9.5 test 34 (F-V-G-S) (02/11) — test 34
+
+Manifeste `4.9.5.34` ; base : la test 33. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Corrige l'arrêt du lot constaté sur un vrai ESV avec la test 33 (CH-038).
+
+### Corrigé
+- **Un lot ne s'arrête plus parce que la vue d'ESV n'a pas pu être remise** : au cut 115 de la partie 0 (02/11), les deux rails étaient posés, puis la remise de la vue (« rail dans la vue ») était impossible (ESV recentre le bouton du rail sur sa position d'origine, la cible est à 200 mm) ; la pose levait « Vue ESV non recentrée » et le lot s'arrêtait en « écriture incertaine ». Maintenant : la vue habituelle est mémorisée avant les gestes ; la remise (2 pressions de 1,5 s au plus) réussit si la vue est revenue OU si le rail est dans la vue ; sinon la pose rend `vueNonRestituee:true` (avertissement `vue-non-restituee`, aucune erreur), le cut est validé comme d'habitude et le lot continue ; le cut suivant repart de l'état réel de la caméra. Garde-fou : 3 remises ratées de suite arrêtent le lot, APRÈS la validation du cut, avec une raison claire (`vue-non-restituee-arret`) ; une remise réussie remet le compte à zéro. Le pré-vol exige toujours la vue revenue (sinon le cut est différé). Jamais de SKIP. Patch d'adaptateur : `chantiers/CH-038/adaptateur-remise-vue.patch`.
+- **Autres arrêts conservés** : une erreur de pose qui n'est pas une remise de vue (clic sans effet, geste qui déplace un rail, ESV muet) arrête le lot comme avant, mais le journal dit désormais si quelque chose a été écrit dans ESV (`deplacer-vue.ecriture` : aucune, faite ou inconnue).
+
+### Non vérifié
+- Le comportement du vrai ESV après une remise ratée (le mode « recentrage sur l'origine » de la maquette est tiré du journal, SUPPOSÉ).
+
 ## 4.9.5.33 — 4.9.5 test 33 (F-V-G-S) (02/11) — test 33
 
 Manifeste `4.9.5.33` ; base : la test 32. Moteur, géométrie, GCV2 et décision du lot inchangés. Nouvelle présentation de la Constellation et de l'Aurore, direction « Cadran » choisie par l'opérateur (CH-036).

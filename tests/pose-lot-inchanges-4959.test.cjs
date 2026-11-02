@@ -34,6 +34,8 @@ const sansPatchs=texte=>sansPatchCH018(texte.replace(/\n \/\* CH-017 \(T27a, PRO
 const sansChangerPartiePont=s=>s.replace("'changerPartie',",'');
 const sansPatchCH018=texte=>{const os=require('node:os'),{spawnSync}=require('node:child_process'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch018-'));
  fs.mkdirSync(path.join(tmp,'src'),{recursive:true});fs.writeFileSync(path.join(tmp,'src/adapter-page.js'),texte);
+ /* Test 34 (CH-038) : la remise de la vue ne lève plus (`vueNonRestituee`), retirée la première (chantiers/CH-038/adaptateur-remise-vue.patch). */
+ const r38=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-038/adaptateur-remise-vue.patch')],{encoding:'utf8'});assert.equal(r38.status,0,'le patch de CH-038 se retire de l\'adaptateur : '+(r38.stderr||r38.stdout));
  /* Test 29 (CH-031) : la durée de la remise de la vue (`dureeMs`, lecture de l'horloge) s'ajoute à `remettreVue` ; retirée d'abord, avant celle de CH-018. */
  const r31=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-031/adapter-page-remise.patch')],{encoding:'utf8'});assert.equal(r31.status,0,'le patch de CH-031 se retire de l\'adaptateur : '+(r31.stderr||r31.stdout));
  const r=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
@@ -67,7 +69,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split('4.9.5.33').join('4.9.5.8').split('4.9.5 test 33 (F-V-G-S)').join('4.9.5 test 8'):lire(f);
+  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split('4.9.5.34').join('4.9.5.8').split('4.9.5 test 34 (F-V-G-S)').join('4.9.5 test 8'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
