@@ -1,0 +1,24 @@
+/* Ariane 5 — écran de lancement (voir panel-lancement.js) : le canvas porte la fusée, ce fichier le cadre et le titre. Rien ne touche à la pose ni à ESV. */
+#lancement{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#05070b;color:#e9eef9;cursor:pointer}
+#lancement[hidden],#lancement.fini{display:none}
+#lancement-toile{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lanc-nom{position:relative;text-align:center;pointer-events:none;top:-14vh}
+.lanc-nom h2{margin:0;font:600 clamp(30px,10vw,60px)/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.3em;padding-left:.3em;color:#f4f7ff;text-shadow:0 2px 28px rgba(120,160,255,.55)}
+.lanc-nom h2 span{display:inline-block;opacity:0;transform:translateY(14px) scale(1.15);filter:blur(8px)}
+.lanc-nom small{display:block;margin-top:1.2em;opacity:0;font:500 clamp(10px,2.5vw,13px)/1.4 system-ui,sans-serif;letter-spacing:.24em;color:#9fb0d6;text-transform:uppercase}
+.lanc-trait{display:block;margin:1.3em auto 0;width:0;height:0;border-top:3px double #8fa0c4;opacity:0}
+#lancement.titre .lanc-nom h2 span{animation:lanc-lettre .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*.07s)}
+#lancement.titre .lanc-nom h2{animation:lanc-lueur 1.4s ease-out .5s both}
+#lancement.titre .lanc-nom small{animation:lanc-fondu .8s ease-out .75s forwards}
+#lancement.titre .lanc-trait{animation:lanc-trait .9s cubic-bezier(.2,.8,.2,1) .55s forwards}
+.lanc-passer{position:absolute;right:14px;bottom:12px;font:500 12px/1 system-ui,sans-serif;color:#7f8cab;letter-spacing:.06em;pointer-events:none;opacity:.8}
+@keyframes lanc-lettre{to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes lanc-lueur{0%{text-shadow:0 0 0 rgba(160,190,255,0)}35%{text-shadow:0 0 40px rgba(170,200,255,.95),0 0 80px rgba(120,160,255,.6)}100%{text-shadow:0 2px 28px rgba(120,160,255,.55)}}
+@keyframes lanc-fondu{to{opacity:1}}
+@keyframes lanc-trait{to{width:min(220px,52vw);opacity:.9}}
+/* Sans mouvement : le nom seul, net, bref (le script ferme l'écran au bout d'1,5 s). */
+#lancement.calme{background:radial-gradient(120% 90% at 50% 100%,#1b2233 0%,#0b0e16 60%,#05070b 100%)}
+#lancement.calme #lancement-toile,#lancement.calme .lanc-passer{display:none}
+#lancement.calme .lanc-nom{top:0}
+#lancement.calme .lanc-nom h2 span{opacity:1;transform:none;filter:none}
+#lancement.calme .lanc-nom small{opacity:1}

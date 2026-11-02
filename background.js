@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'4.9.5.35',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'4.9.5 test 35 (F-V-G-S)';
+const VERSION=globalThis.BananeCore3?.VERSION||'5.0.0',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5.0.0';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -2667,7 +2667,7 @@ async function fileRepriseApresRechargement(tabId){
   if(Number.isInteger(part)&&ici?.identity&&ici.identity.part!==part){
    const attendu=()=>ouvert()&&fileActive()&&fileP.etat?.partie?.lotId===lot;let X=null;
    for(let i=0;i<6&&attendu();i++){X=await changerPartieEsv(part,{retour:true,attendu,R,gestes:()=>false,typeTentative:'file-reprise-rechargement-partie'});
-    if(X.ok||X.quitte||!['selecteur-illisible','esv-muet'].includes(X.motif))break;await attendre(3000);}
+    if(X.ok||X.quitte||!['selecteur-illisible','esv-muet'].includes(X.motif))break;await attendre(R.repriseRetourPauseMs);}
    if(!X?.ok){return dire('refus',`retour sur la partie ${part} impossible : ${X?.detail||X?.motif||'?'}`);}}}
  catch(x){return dire('refus',x?.message);}
  try{await coordinateurLot.transition('reprise',async()=>{if(repriseEnCours||!ouvert())return;
@@ -3741,7 +3741,7 @@ if(!eveil.minuteur&&typeof setInterval==='function')eveil.minuteur=setInterval(e
  * chaque partie. Au réveil du service worker : `fileReprendre` (registre d'abord). CH-026 : l'événement `arreter` note la commande qui l'a
  * porté (`origine` : `file-arreter`, « Arrêter la file » ; `stop`, « Arrêter » du lot pendant la file), que le journal du test 26 ne permettait pas de distinguer. Commandes ESV de la file : celles du lot, de la passe, de la
  * relecture, et `changerPartie` ; aucune autre, jamais de SKIP. Journal : `file-parties`, `file-parties-reprise`, `file-parties-erreur`. */
-const FILE_DEFAUT=Object.freeze({changementBorneMs:60000,ticMs:1000,passeGraceMs:5000,relectureAttenteMs:180000,pollMs:500});
+const FILE_DEFAUT=Object.freeze({repriseRetourPauseMs:3000,changementBorneMs:60000,ticMs:1000,passeGraceMs:5000,relectureAttenteMs:180000,pollMs:500});
 const FILE_ACTIONS=new Set(['file-etat','file-demarrer','file-arreter','file-oublier']);
 const FILE_LOT_ARGS=['testConfirmed','allowNavigationEvidence','lowConfidence','unresolvedPolicy','lotDecision','geometryEngine'];
 const fileP={etat:null,file:Promise.resolve(),tic:null,ticEnCours:false,demarrage:null,action:null};

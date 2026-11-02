@@ -1,5 +1,22 @@
 # Banane V4 TEST — journal des versions
 
+## 5.0.0 — Ariane 5 (02/11) — version officielle
+
+Manifeste `5.0.0`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Ordre de l'opérateur : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails ».
+
+### Nouveau
+- **Ariane 5** : nom de l'extension, titre de la fenêtre et du bouton, version `5.0.0` (D-276).
+- **Écran de lancement** : à l'ouverture du panneau, une fusée à deux propulseurs décolle des rails (canvas, ≈ 4,7 s), le titre « ARIANE 5 » se révèle avec les quatre noms (Écho, Orbite, Constellation, Aurore). Un clic ou une touche le passe ; « réduire les animations » le remplace par le nom seul. Pure présentation, rien n'attend cet écran.
+
+### Corrigé
+- **F5 pendant une Constellation (CH-043)** : un F5 sur le cut validé ne clôt plus le lot comme une fin de partie quand le compteur dit qu'il reste des cuts devant (ESV rouvre la partie 0 après un F5) ; la Constellation reprend seule le lot après le rechargement, ramène ESV sur la partie du lot par le lien et reprend le même lot, donc la relecture couvre tous ses cuts (réglage `file.repriseApresRechargement`, vrai par défaut).
+
+### Inchangé, éteint
+- Recherche large (`lot.rechercheLarge`) : ÉTEINTE (D-275, CH-034, CH-041, CH-042 clos).
+
+### Non vérifié
+- Le retour par le lien après un F5 sur un vrai poste ; l'essai sous Edge ; le budget D-223 sur un échantillon non biaisé (couverture de l'Écho de 10 à 17 %).
+
 ## 4.9.5.35 — 4.9.5 test 35 (F-V-G-S) (02/11) — test 35
 
 Manifeste `4.9.5.35` ; base : la test 33 (la 34 n'a pas été livrée). Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Corrige les défauts constatés sur un vrai ESV avec les tests 31 à 33.
