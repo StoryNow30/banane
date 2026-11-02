@@ -183,5 +183,64 @@
     return { version: VERSION_PARCOURS, ordre: ordre.map(({ part, cut }) => ({ part, cut })), suivant, parties };
   }
 
-  return { VERSION, VERSION_PARCOURS, SIGNAUX, LIBELLE, REGLE_STATUT, construire, statutDe, visitesFusionnees, bilan, lotDe, parcours };
+  /* CH-040 — LA COUVERTURE DE L'AURORE (chantiers/CH-040/NOTE.md) : les lots de TOUT le journal (la session depuis le dernier vidage), et non plus ceux du
+   * bilan de la dernière file (02/11 : une file relancée sur la partie 1 avait masqué la partie 0 et le premier lot de la partie 1). Pur : lit le journal.
+   *   - lots : chaque `batch-started` (identifiant unique, premier départ), sauf `lotOuvert` ; les MAX_LOTS_COUVERTURE plus récents ;
+   *   - lot repris : couvert par une Aurore terminée (`correction-debut` puis `correction-fin` de la même correction). Fin `liste-finie` (tout y est
+   *     traité) : exclu. Toute autre fin (`operateur` : « Terminer » à la main, `sw-redemarre`, `echo-ferme`) : le lot reste, seuls ses cuts corrigés ou
+   *     validés sont retirés ; un cut « à faire », « en cours » ou « vu » reste proposé (décision de l'intégrateur du 02/11 : ne rien perdre) ;
+   *   - une liste par partie, dans l'ordre du premier départ de lot de la partie (celui de la Constellation pour une file seule) ;
+   *   - fusion par cut : le DERNIER lot qui a eu le cut pour cible (posé ou différé) décide ; s'il ne le signale pas, le cut n'est plus proposé ; s'il est
+   *     repris, non plus. Chaque entrée porte son `batchId`, la liste de la partie `batchIds` (lots portés) et `batchId` (le plus récent).
+   * `parLot` : la liste de chaque lot, telle que `construire` la rend (le service worker l'inscrit au journal, `correction-liste`, une fois par lot). */
+  const VERSION_COUVERTURE = 'correction-couverture-1', MAX_LOTS_COUVERTURE = 16;
+  const FINS_EXCLUANTES = new Set(['liste-finie']);
+  function couverture(events, options = {}) {
+    const ev = (events || []).filter(e => e && instant(e) !== null).sort((a, b) => instant(a) - instant(b));
+    const max = entier(options.max) && options.max > 0 ? options.max : MAX_LOTS_COUVERTURE;
+    const vus = new Map();
+    for (const e of ev) if (e.type === 'batch-started' && e.batch && typeof e.batch.id === 'string' && e.identity && entier(e.identity.part) && !vus.has(e.batch.id) && e.batch.id !== options.lotOuvert)
+      vus.set(e.batch.id, { batchId: e.batch.id, partie: e.identity.part, debut: e.timestamp });
+    const lots = [...vus.values()].slice(-max);
+    /* Aurores terminées : correction → lots couverts ; dernière fin de chaque correction. */
+    const debuts = new Map(), fins = new Map();
+    for (const e of ev) { if (e.type === 'correction-debut' && e.correctionId && Array.isArray(e.batchIds)) debuts.set(e.correctionId, { batchIds: e.batchIds, t: instant(e) });
+      if (e.type === 'correction-fin' && e.correctionId && e.etat !== 'erreur') fins.set(e.correctionId, e); }
+    const exclus = new Map(), traites = new Map();
+    for (const [id, f] of fins) { const d = debuts.get(id); if (!d) continue;
+      if (FINS_EXCLUANTES.has(f.raison)) { for (const b of d.batchIds) if (typeof b === 'string') exclus.set(b, { correctionId: id, fin: f.raison, t: instant(f) }); continue; }
+      for (const l of Array.isArray(f.lignes) ? f.lignes : []) if (l && entier(l.part) && entier(l.cut) && (l.statut === 'corrige' || l.statut === 'valide'))
+        traites.set(l.part + '|' + l.cut, { correctionId: id, statut: l.statut, fin: f.raison ?? null, batchIds: d.batchIds, t: instant(f) }); }
+    const parLot = [], decide = new Map(), ordre = [];
+    for (const x of lots) {
+      const l = construire(ev, { batchId: x.batchId, population: true });
+      if (!l.trouve) continue;
+      parLot.push({ ...x, partie: l.partie, liste: { ...l, population: undefined } });
+      if (!decide.has(l.partie)) { decide.set(l.partie, new Map()); ordre.push(l.partie); }
+      const D = decide.get(l.partie), E = new Map(l.entrees.map(e => [e.cut, e]));
+      for (const c of [...l.population.poses, ...l.population.differes]) D.set(c, { batchId: x.batchId, entree: E.get(c) || null });
+    }
+    const retires = [], listes = [];
+    let apresFusion = 0;
+    for (const p of ordre) {
+      const garde = [];
+      for (const [cut, x] of decide.get(p)) { if (!x.entree) continue; apresFusion++;
+        if (exclus.has(x.batchId)) continue;
+        const t = traites.get(p + '|' + cut);
+        if (t && t.batchIds.includes(x.batchId)) { retires.push({ part: p, cut, batchId: x.batchId, correctionId: t.correctionId, statut: t.statut, fin: t.fin }); continue; }
+        garde.push({ ...x.entree, batchId: x.batchId, force: Math.min(...x.entree.signaux.map(k => SIGNAUX.indexOf(k))) }); }
+      const ids = parLot.filter(l => l.partie === p && !exclus.has(l.batchId)).map(l => l.batchId);
+      if (!ids.length) continue;
+      const entrees = garde.sort((a, b) => (a.groupe === b.groupe ? 0 : a.groupe === 'corriger' ? -1 : 1) || a.force - b.force || b.signaux.length - a.signaux.length || a.cut - b.cut)
+        .map((e, i) => { const { force, ...r } = e; return { ...r, rang: i + 1 }; });
+      listes.push({ partie: p, batchId: ids.at(-1), batchIds: ids, entrees,
+        comptes: { lots: ids.length, aCorriger: entrees.filter(e => e.groupe === 'corriger').length, aPoser: entrees.filter(e => e.groupe === 'poser').length } });
+    }
+    const ex = parLot.filter(l => exclus.has(l.batchId)).map(l => { const x = exclus.get(l.batchId); return { batchId: l.batchId, partie: l.partie, raison: 'aurore-terminee', correctionId: x.correctionId, fin: x.fin }; });
+    return { version: VERSION_COUVERTURE, listes, parLot, exclus: ex, retires,
+      lots: parLot.map(l => ({ batchId: l.batchId, partie: l.partie, debut: l.debut, entrees: l.liste.entrees.length, exclu: exclus.has(l.batchId) })),
+      comptes: { lots: parLot.length, avantFusion: parLot.reduce((s, l) => s + l.liste.entrees.length, 0), apresFusion, proposes: listes.reduce((s, l) => s + l.entrees.length, 0), lotsExclus: ex.length, cutsRetires: retires.length } };
+  }
+
+  return { VERSION, VERSION_PARCOURS, VERSION_COUVERTURE, MAX_LOTS_COUVERTURE, SIGNAUX, LIBELLE, REGLE_STATUT, construire, couverture, statutDe, visitesFusionnees, bilan, lotDe, parcours };
 });

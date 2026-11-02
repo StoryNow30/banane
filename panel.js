@@ -961,7 +961,7 @@
    if($('correction-liste'))$('correction-liste').disabled=!!occupe||!(lotClos||fileFinie)||ouverte;
    const cle=fileFinie?`file:${F.id||''}:${F.etat}`:lotClos?`lot:${b.id}`:'';
    if(!cle||occupe||ouverte||cle===correctionDemandee)return;
-   if(C&&!fileFinie&&(C.listes||[]).some(l=>l.batchId===b.id)){correctionDemandee=cle;return;}
+   if(C&&!fileFinie&&(C.listes||[]).some(l=>(Array.isArray(l.batchIds)?l.batchIds:[l.batchId]).includes(b.id))){correctionDemandee=cle;return;}
    correctionDemandee=cle;void api('correction-liste').then(()=>refresh()).catch(()=>{});}
  async function correctionOuvrirSignal(){const m=/^(\d{1,6}):(\d{1,7})$/.exec(String($('correction-cible')?.value??'').trim());
    if(!m){etatCorrection('refuse','cible invalide');return;}

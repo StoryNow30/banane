@@ -2806,11 +2806,10 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  * Journal (export Orbite) : `correction-liste` (une fois par lot), `correction-debut`, `correction-ouvrir`, `correction-fin` (bilan par cut). */
 const CL=()=>globalThis.ArianeCorrectionListe;
 const LOT_CLOS=new Set(['COMPLETED','STOPPED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
-function lotsACorriger(args){
- const demandes=Array.isArray(args?.batchIds)?args.batchIds.filter(x=>typeof x==='string').slice(0,16):null;if(demandes?.length)return demandes;
- const F=fileP.etat;
- if(F&&['fin','arret'].includes(F.etat)&&Array.isArray(F.bilan)){const ids=[...new Set(F.bilan.map(p=>p?.lotId).filter(x=>typeof x==='string'))];if(ids.length)return ids;}
- const b=engine.s.batch;return b?.id?[b.id]:[];}
+/* CH-040 : seuls les lots DEMANDÉS passent encore par ici (`batchIds`, une liste par lot, comme en CH-028). Sans demande, la liste couvre tous les lots
+ * clos du journal (`couverture`, src/correction-liste.js) : le bilan de la dernière file n'en est plus la source (02/11 : une file relancée sur la partie 1
+ * avait masqué la partie 0 et le premier lot de la partie 1). */
+function lotsDemandes(args){const d=Array.isArray(args?.batchIds)?args.batchIds.filter(x=>typeof x==='string').slice(0,16):null;return d?.length?d:null;}
 function refusCorrection(quoi){const b=engine.s.batch;
  if(b&&!LOT_CLOS.has(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
  if(engine.busy||engine.task)return `${quoi} : une action d’Ariane est en cours.`;
@@ -2821,20 +2820,31 @@ function refusCorrection(quoi){const b=engine.s.batch;
 async function correctionListe(args){
  const r=refusCorrection('Liste à corriger refusée');if(r)throw Error(r);
  const C=engine.s.correction;if(C?.etat==='ouverte')return vuePanneau();
- const ids=lotsACorriger(args);if(!ids.length)throw Error('Liste à corriger : aucun lot clos.');
+ const demandes=lotsDemandes(args),events=await store.all('events');
  /* Une fois par lot ET par contenu : une liste qui change (un événement du lot arrivé après une première demande) est inscrite de nouveau ; la dernière fait foi. */
  const signature=E=>JSON.stringify((E||[]).map(e=>[e.part,e.cut,e.signaux]));
- const events=await store.all('events'),deja=new Set(events.filter(e=>e?.type==='correction-liste').map(e=>e.batchId+'|'+signature(e.entrees)));
+ const deja=new Set(events.filter(e=>e?.type==='correction-liste').map(e=>e.batchId+'|'+signature(e.entrees)));
+ const inscrire=async(id,l)=>{if(!deja.has(id+'|'+signature(l.entrees)))await store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'correction-liste',schema:1,sessionId:engine.s.sessionId??null,
+   batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});};
  const listes=[];
- for(const id of ids){const l=CL().construire(events,{batchId:id});if(!l.trouve)continue;
-  listes.push({batchId:id,partie:l.partie,entrees:l.entrees,comptes:l.comptes});
-  if(!deja.has(id+'|'+signature(l.entrees)))await store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'correction-liste',schema:1,sessionId:engine.s.sessionId??null,
-   batchId:id,partie:l.partie,version:CL().VERSION,debutLot:l.debut,comptes:l.comptes,entrees:l.entrees});}
+ if(demandes){for(const id of demandes){const l=CL().construire(events,{batchId:id});if(!l.trouve)continue;
+   listes.push({batchId:id,batchIds:[id],partie:l.partie,entrees:l.entrees,comptes:l.comptes});await inscrire(id,l);}}
+ else{const b=engine.s.batch,K=CL().couverture(events,{lotOuvert:b?.id&&!LOT_CLOS.has(b.state)?b.id:null});
+  for(const x of K.parLot)if(!K.exclus.some(e=>e.batchId===x.batchId))await inscrire(x.batchId,x.liste);
+  listes.push(...K.listes);
+  if(!listes.length&&K.exclus.length)throw Error(`Liste à corriger : les ${K.exclus.length>1?`${K.exclus.length} lots du journal ont`:'lot du journal a'} déjà été repris par une Aurore terminée.`);
+  /* La couverture (parties, lots retenus et exclus, entrées avant et après fusion) entre au journal, donc dans l'export Orbite ; une fois par contenu. */
+  const cv={version:K.version,comptes:K.comptes,parties:K.listes.map(l=>({partie:l.partie,batchIds:l.batchIds,cuts:l.entrees.length})),exclus:K.exclus,retires:K.retires.slice(0,200)};
+  const sig=JSON.stringify(cv);
+  if(!events.some(e=>e?.type==='correction-couverture'&&JSON.stringify({version:e.version,comptes:e.comptes,parties:e.parties,exclus:e.exclus,retires:e.retires})===sig))
+   await store.putEvent({eventId:globalThis.BananeCore3.uid(),timestamp:new Date().toISOString(),type:'correction-couverture',schema:1,sessionId:engine.s.sessionId??null,...cv});}
  if(!listes.length)throw Error('Liste à corriger : le journal ne porte aucune décision de ces lots.');
- const memes=C&&C.etat==='proposee'&&JSON.stringify(C.listes.map(l=>l.batchId))===JSON.stringify(listes.map(l=>l.batchId));
+ const lotsDe=L=>L.flatMap(l=>l.batchIds||[l.batchId]),memes=C&&C.etat==='proposee'&&JSON.stringify(lotsDe(C.listes))===JSON.stringify(lotsDe(listes));
  engine.s.correction={id:memes?C.id:globalThis.BananeCore3.uid(),etat:'proposee',creeA:memes?C.creeA:new Date().toISOString(),listes,...((await correctionPassage()).R?{entreParties:true}:{})};
  await engine.save();return vuePanneau();}
 const entreesCorrection=C=>(C?.listes||[]).flatMap(l=>l.entrees);
+/* CH-040 : tous les lots portés (une partie peut en porter plusieurs), dans l'ordre des listes, sans doublon. */
+const lotsCorrection=C=>[...new Set((C?.listes||[]).flatMap(l=>Array.isArray(l.batchIds)?l.batchIds:[l.batchId]).filter(x=>typeof x==='string'))];
 /* CH-037 (défaut 2, test 30) — ÉTIQUETTES PROVISOIRES DES VISITES. Écho ne pose le libellé d'une visite dans son résumé (`n.visits`) qu'à la CLÔTURE de la
  * visite (`visit-ended`) : la visite ouverte reste « ouverte » après Maj+Espace tant que l'opérateur ne change pas de cut, et une visite perdue avec la page
  * (`pageLost`, rechargement par un changement de partie : cut 9748 de la partie 11 le 01/11) ne reçoit jamais le sien. Le signal fiable est déjà là :
@@ -2882,9 +2892,9 @@ async function correctionDemarrer(){
  if(engine.s.applied)throw Error('Correction non démarrée : une pose d’Ariane est appliquée et pas encore validée (fin du lot) : valide-la, restaure-la ou archive-la, puis recommence.');
  if(engine.s.intent||engine.s.reconcileRequired)throw Error('Correction non démarrée : un résultat incertain reste à clôturer.');
  const cuts=entreesCorrection(C).map(e=>({part:e.part,cut:e.cut}));if(!cuts.length)throw Error('La liste à corriger est vide.');
- await demarrerEcho({correction:{id:C.id,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.slice(0,2000),version:CL().VERSION}});
+ await demarrerEcho({correction:{id:C.id,batchIds:lotsCorrection(C),cuts:cuts.slice(0,2000),version:CL().VERSION}});
  C.etat='ouverte';C.debutA=new Date().toISOString();C.sessionId=engine.s.native?.id??null;correctionVivante=C.id;await engine.save();
- journalerSimple('correction-debut',{correctionId:C.id,sessionEcho:C.sessionId,batchIds:C.listes.map(l=>l.batchId),cuts:cuts.length});
+ journalerSimple('correction-debut',{correctionId:C.id,sessionEcho:C.sessionId,batchIds:lotsCorrection(C),cuts:cuts.length});
  return vuePanneau();}
 const correctionOuverte=()=>{const C=engine.s.correction,n=engine.s.native;return !!C&&C.etat==='ouverte'&&!!n&&n.correction?.id===C.id&&native.active();};
 async function correctionOuvrir(args){

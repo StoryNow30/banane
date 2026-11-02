@@ -659,7 +659,10 @@
   }
   const STATUT_TEXTE = l => l.statut === 'corrige' ? `corrigé · ${l.rails > 1 ? '2 rails' : '1 rail'}` : l.statut === 'valide' ? 'validé tel quel' : l.statut === 'vu' ? 'vu sans validation' : l.statut === 'en-cours' ? 'ouvert dans ESV' : 'à faire';
   const revu = l => ['corrige', 'valide', 'vu'].includes(l.statut);
-  const parties = L => { const P = [...new Set(L.map(l => l.partie))]; return P.length > 1 ? `${P.length} parties` : `Partie ${P[0]}`; };
+  /* CH-040 : l'Aurore dit quelles parties et combien de lots elle couvre (une partie peut en porter plusieurs : file relancée, lot repris). */
+  const nLots = L => new Set(L.flatMap(l => Array.isArray(l.batchIds) ? l.batchIds : [l.batchId])).size;
+  const parties = L => { const P = [...new Set(L.map(l => l.partie))], n = nLots(L), lots = n > P.length ? ` · ${n} lots` : '';
+    return (P.length > 1 ? (P.length <= 4 ? `Parties ${P.join(', ')}` : `${P.length} parties`) : `Partie ${P[0]}`) + lots; };
   function ongletCorrectionModele(s) {
     const C = s.correction, k = C.comptes, tout = C.listes.flatMap(l => l.lignes), B = C.boutons || {}, aff = C.partieAffichee, trav = !!C.entreParties, PA = trav ? C.passage || null : null;
     const m = { glyphe: 'pret', ton: 'encre2', mot: 'Prête', phrase: '', droite: '', principal: null, secondaires: [], verrou: false };
@@ -723,7 +726,7 @@
       const A = L.lignes.filter(l => l.groupe === 'corriger'), P = L.lignes.filter(l => l.groupe === 'poser');
       /* CH-035 : l'état par partie du parcours (à faire, en cours, faite) quand la traversée est allumée ; sinon, calculé ici. Habillage : CH-036. */
       const EP = trav && plusieurs ? (C.parcours?.parties || []).find(x => x.partie === L.partie) : null;
-      const e = EP ? EP.etat : etatPartie(L), note = notePartie(L, e);
+      const e = EP ? EP.etat : etatPartie(L), nl = Array.isArray(L.batchIds) ? L.batchIds.length : 1, note = [nl > 1 ? `${nl} lots` : '', notePartie(L, e)].filter(Boolean).join(' · ');
       liste += `<div class="sg-corr-partie" data-partie="${esc(L.partie)}" data-etat="${esc(e)}"${aff !== null && L.partie === aff ? ' data-affichee="1"' : ''}><b class="sg-mono">Partie ${esc(L.partie)}</b><span class="sg-n">${L.lignes.filter(revu).length} sur ${L.lignes.length}</span>${note ? `<span class="sg-d">${esc(note)}</span>` : ''}</div>`;
       if (C.etat === 'terminee') { const c = st => L.lignes.filter(l => l.statut === st).length;
         liste += `<p class="sg-corr-bilan">${esc([pluriel(c('corrige'), 'corrigé', 'corrigés'), pluriel(c('valide'), 'validé tel quel', 'validés tels quels'), pluriel(c('vu'), 'vu sans validation', 'vus sans validation')].join(' · '))}</p>`; continue; }
