@@ -14,6 +14,9 @@ const J = require(R + 'jointure-echo-orbite.cjs');
 const Poses = require(R + 'precision-poses.cjs');
 const JL = require(R + 'juger-lot.cjs');
 const V = require(R + 'lire-volumes.cjs');
+const C = require(path.join(__dirname, '..', '..', '..', 'vendor', 'capture-core.js'));
+const EL = require(path.join(__dirname, '..', '..', '..', 'src', 'gcv2-l1e.js'));
+const LM = require(path.join(__dirname, '..', '..', '..', 'src', 'liste-memoire.js'));
 
 const a = { lot: [], echo: [] }; const av = process.argv.slice(2);
 for (let i = 0; i < av.length; i += 2) { const k = av[i].replace(/^--/, ''); if (k === 'lot' || k === 'echo') a[k].push(av[i + 1]); else a[k] = av[i + 1]; }
@@ -77,8 +80,18 @@ function etatPose(l) {
 const r2 = v => fini(v) ? Math.round(v * 100) / 100 : null;
 
 /* --- lecture --- */
-let journal = null;
-for (const d of a.lot) { const j = Poses.lireJournalDir(d); if (!journal) journal = j; else { journal.events.push(...j.events); journal.records.push(...(j.records || [])); } }
+let journal = null, liste = null;
+for (const d of a.lot) { const j = Poses.lireJournalDir(d); if (!journal) journal = j; else { journal.events.push(...j.events); journal.records.push(...(j.records || [])); }
+  /* Instantané de la liste d'ESV de la partie (référence d'écartement des lignes valides non touchées, comme L1-e) : le plus récent. */
+  for (const e of V.entrees(d)) if (new RegExp('^ariane-liste-partie' + partie + '-').test(e.nom)) { try { const snap = JSON.parse(e.lire()); if (!liste || String(snap.at) > String(liste.at)) liste = snap; } catch {} }
+}
+const table = liste ? LM.decompacter(liste) : null;
+const refListe = cut => { const r = table ? EL.referenceEcartement(table, cut) : null; return r ? { mm: r.mm, n: r.n, distMax: r.distMax } : null; };
+/* Écartement (mm) de deux positions de scène ; point de scène d'un décalage [long, lat, vert] (mm) dans le repère profil du rail de départ. */
+const ecart = (p, q) => p && q ? 1000 * Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) : null;
+const depuisDecal = (rail, d) => { const o = C.point(rail.sceneRelativeToProfileLocal, rail.positionSceneRelative); return C.point(rail.profileLocalToSceneRelative, [o[0] + d[0] / 1000, o[1] + d[1] / 1000, o[2] + d[2] / 1000]); };
+/* Sens de l'axe latéral du repère profil de chaque rail par rapport à l'écartement : +1 si un décalage latéral positif ÉLARGIT la paire. */
+const sensLat = (rails) => { const out = {}; for (const s of ['left', 'right']) { const o = s === 'left' ? 'right' : 'left'; const p0 = depuisDecal(rails[s], [0, 0, 0]), p1 = depuisDecal(rails[s], [0, 1, 0]); out[s] = ecart(p1, rails[o].positionSceneRelative) > ecart(p0, rails[o].positionSceneRelative) ? 1 : -1; } return out; };
 const run = lotsDe(journal);
 if (!run) { console.error(`${a.nom} : aucun lot de la partie ${partie}`); process.exit(1); }
 const tPose = new Map(), cibles = new Set(), poses = new Set();
@@ -97,7 +110,7 @@ const ligneDe = cut => jr.get(`${partie}|${cut}`) || null;
 let lignes = new Map(), verite = null;
 if (a.echo.length) {
   const echo = Poses.lireEcho(JL.dossiersEcho(a.echo));
-  const { table } = J.joindre(echo.records, journal, { partie, base: 'auto', poses: false, visiteSansActionBonne: true, sessions: echo.sessions || [],
+  const { table } = J.joindre(echo.records, journal, { partie, base: 'auto', poses: true, visiteSansActionBonne: true, sessions: echo.sessions || [],
     pagesPerdues: echo.pagesPerdues || [], capturesParVisite: echo.capturesParVisite || {}, evenementsEcho: echo.evenements || [] });
   for (const l of table) if (l.partie === partie) lignes.set(l.cut, l);
 } else if (a.verite) verite = JSON.parse(fs.readFileSync(a.verite, 'utf8'));
@@ -125,6 +138,16 @@ for (const cut of [...poses].sort((x, y) => x - y)) {
   } else et = etatPose(lignes.get(cut));
   const e = decisions.get(cut), o = e && e.lotObservation;
   if (!o) n.sansDecision++;
+  /* Écartements : départ (pose d'ESV), pose du lot, vérité ; sens de l'axe latéral de chaque rail. */
+  let gauges = null, sens = null;
+  if (pa && pa.initial.left && pa.initial.right && pa.initial.left.sceneRelativeToProfileLocal && pa.initial.right.sceneRelativeToProfileLocal) {
+    const I = pa.initial, P = pa.posee;
+    gauges = { depart: ecart(I.left.positionSceneRelative, I.right.positionSceneRelative), pose: ecart(P.left.positionSceneRelative, P.right.positionSceneRelative), verite: null };
+    try { sens = sensLat(I); } catch { sens = null; }
+    if (verite && verite[cut] && verite[cut].mic) { try { gauges.verite = ecart(depuisDecal(I.left, verite[cut].mic.left), depuisDecal(I.right, verite[cut].mic.right)); } catch {} }
+    else { const lg = lignes.get(cut), h = lg && lg.poseHumaineFinale; if (h && h.gauche && h.droite) gauges.verite = ecart([h.gauche.x, h.gauche.y, h.gauche.z], [h.droite.x, h.droite.y, h.droite.z]); else if (et.etat === 'controle') gauges.verite = gauges.pose; }
+    for (const k in gauges) gauges[k] = r2(gauges[k]);
+  }
   const geste = et.etat === 'controle' ? 'acceptation' : et.etat === 'corrige' ? JL.geste(et.mm, false) : null;
   if (geste) { n.juges++; if (geste === 'acceptation') n.controles++; }
   const rm = releves.get(cut);
@@ -143,7 +166,7 @@ for (const cut of [...poses].sort((x, y) => x - y)) {
     appuiDistance: o && o.anchorsUsed && o.anchorsUsed.length ? Math.min(...o.anchorsUsed.map(x => Math.abs(x - cut))) : null,
     appui: o ? o.anchor : null, gaugeMm: o ? o.gaugeMm : null, gaugeRefMm: o && o.gaugeReference ? o.gaugeReference.mm : null, flushPct: o ? o.flushPct : null,
     pn: o && o.levelCrossing ? !!o.levelCrossing.read : null, l1: o && o.l1 ? { etat: o.l1.etat, hypothese: o.l1.hypothese || null, p: o.l1.p ?? null } : null,
-    zone: rm ? (rm.zone || rm.regles || null) : null, engineMs: o ? o.engineMs : null, version: journal.version || null,
+    zone: rm ? (rm.zone || rm.regles || null) : null, gauges, sensLat: sens, refListe: refListe(cut), engineMs: o ? o.engineMs : null, version: journal.version || null,
     rails: { left: sig('left'), right: sig('right') } });
 }
 fs.writeFileSync(a.sortie, out.map(x => JSON.stringify(x)).join('\n') + '\n');
