@@ -100,6 +100,8 @@ Prédiction de chaque rail par la droite ajustée sur les posés du même lot à
 | forêt | latéral | 268 | +0,44 [+0,36 ; +0,53] | 125 → 128 | 0 | 115 |
 | forêt | les deux | 297 | +0,40 [+0,31 ; +0,50] | 125 → 121 | 3 | 121 |
 | boosting | vertical | 51 | +0,04 [−0,01 ; +0,09] | 125 → 125 | 11 | 13 (1,0 pt) |
+| boosting | latéral | 422 | +0,85 [+0,74 ; +0,96] | 125 → 135 (1 faute nouvelle) | 0 | 213 (15,8 pt) |
+| boosting | les deux | 435 | +0,86 [+0,74 ; +0,97] | 125 → 131 | 8 | 219 (16,2 pt) |
 **Verdict : ne tient pas.** Le seul modèle qui gagne (ridge vertical, 44 cuts : il retrouve la correction des rails refusés de la piste 1, +5 mm plafonnés) passe le critère 1 de justesse (borne haute −0,00) et manque le critère 3 (7 acceptations déplacées de plus de 2 mm : 0,52 point pour 0,5 admis) ; son gain est 7 moyennes sur 1 350 cuts. Le latéral n'a aucun prédicteur dans les signaux du lot : tout modèle y déplace des centaines d'acceptations. Les modèles non linéaires (forêt, boosting) n'apprennent rien de plus et dégradent davantage : il n'y a pas de structure cachée dans ces traits.
 
 ## 11. Conclusion (2/11)
