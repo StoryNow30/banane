@@ -42,7 +42,7 @@ const rail=page=>page.evaluate(()=>{const r=document.querySelector('#ui5 .sg-rai
   grads:q('.sg-rail-grad').length,fait:q('.sg-rail-fait').map(e=>e.getAttribute('style')),cur:q('.sg-rail-cur').length,
   bornes:document.querySelector('#ui5 .sg-lot-bornes')?.textContent||null,allure:document.querySelector('#ui5 .sg-allure')?.textContent||''};});
 
-test('Test 23 · total inconnu puis connu : mise à jour en place, graduations justes, rien réécrit chaque seconde ; lot suivant de total différent',{skip:absent,timeout:60000},async()=>{
+test('Test 23 · total inconnu puis connu : mise à jour en place, graduations justes, rien réécrit chaque seconde ; (la suite, R6 et le lot suivant, est dans ciblage-mouvement-t23b)',{skip:absent,timeout:60000},async()=>{
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,lotDe('LA',8770));
@@ -65,15 +65,6 @@ test('Test 23 · total inconnu puis connu : mise à jour en place, graduations j
   await page.evaluate(()=>{const l=window.__E.lot;l.processed.push({identity:{part:23,cut:400},cut:400,durationMs:2800});l.sequence.push({identity:{part:23,cut:400}});});
   await page.waitForFunction(()=>/14\s*traités/.test(document.querySelector('#ui5 .sg-compte')?.textContent||''),null,{timeout:8000});
   assert.deepEqual(await page.evaluate(()=>({meme:window.__cur===document.querySelector('#ui5 .sg-rail-cur'),bouge:window.__left!==document.querySelector('#ui5 .sg-rail-cur').style.left})),{meme:true,bouge:true},'le curseur glisse sur place');
-  /* R6 : sans changement, aucune réécriture de structure en 3 s (seuls l'anneau et « en pause depuis » avancent, par attribut) */
-  const n=await page.evaluate(()=>new Promise(r=>{let c=0;const o=new MutationObserver(l=>{for(const x of l)if(x.type==='childList'||x.type==='characterData')c++;});o.observe(document.getElementById('ui5'),{subtree:true,childList:true,characterData:true});setTimeout(()=>{o.disconnect();r(c);},3000);}));
-  assert.equal(n,0,'aucune réécriture de structure ni de texte chaque seconde');
-  /* lot suivant, total différent (80) : les graduations sont redessinées justes, le « 0 » n'a pas de style hérité */
-  const inv2=Array.from({length:80},(_,i)=>10+i*110);
-  await page.evaluate(({f,i,l})=>{window.__stockage.banane3FichesDepart=[f];window.__stockage['banane5ListeInstantane:23']=i;window.__E.lot=l;},{f:ficheDe('LB',80),i:instDe(inv2,23),l:lotDe('LB',8770)});
-  await page.waitForFunction(()=>/sur 80 ciblés/.test(document.querySelector('#ui5 .sg-compte')?.textContent||''),null,{timeout:15000});
-  const c=await rail(page);
-  assert.deepEqual(c.nums.map(x=>x.t),['0','40','80']);assert.equal(c.nums[0].style,null,'« 0 » sans style hérité après un changement de total');assert.match(c.nums[1].style,/left:50%/);assert.match(c.nums[2].style,/left:100%/);
   assert.deepEqual(erreurs,[]);await page.close();
  }finally{await nav.close();}
 });
