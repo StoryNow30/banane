@@ -3343,3 +3343,8 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - ÉTABLI (CH-041) : la porte rend la décision de CH-034 sur 1 546 cuts sur 1 546, calcul divisé par 1,8 ; critère de durée non prouvé sur les voies denses. `rechercheLarge.actif` reste `false` ; la permission `offscreen` du manifeste n'est pas ajoutée.
 - Rouvrir : un Écho complet sur 4 à 5 lots avec appareils de voie (~600 poses jugées), sur ordre de l'opérateur.
 - Le numéro suivant est D-276.
+
+## D-276 — Lancement de la 5.0 : « Ariane 5 » (opérateur, 02/11)
+- Ordre : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails », puis « une animation plus travaillée, digne de tout le travail accompli ».
+- Version officielle `5.0.0`, nom « Ariane 5 » (manifeste, fenêtre, bouton), écran de lancement animé (fusée à deux propulseurs qui décolle des rails), passable d'un clic.
+- Le numéro suivant est D-277.

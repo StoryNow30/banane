@@ -24,15 +24,15 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='4.9.5.35',NOM='4.9.5 test 35 (F-V-G-S)';
-test('manifeste et core : 4.9.5.35 / « 4.9.5 test 35 (F-V-G-S) »',()=>{
+const VERSION='5.0.0',NOM='5.0.0';
+test('manifeste et core : 5.0.0 / « 5.0.0 »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,NOM,VERSION,NOM]);
- assert.equal(manifest.action.default_title,`Ouvrir Ariane ${NOM} — V1`);
+ assert.equal(manifest.name,'Ariane 5');assert.equal(manifest.action.default_title,'Ouvrir Ariane 5');
 });
 test('service worker, pont, panneau : chaîne de version seulement',()=>{
  assert.ok(read('background.js').includes(`BananeCore3?.VERSION||'${VERSION}',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'${NOM}'`));
  assert.ok(read('src/bridge.js').includes(`'Ariane ${NOM} · ouvrir'`));assert.ok(read('panel.js').includes(`home:'${NOM}'`));
- const html=read('panel.html');for(const t of [`<title>Ariane ${NOM}</title>`,`<span>${NOM}</span>`,`<footer>Ariane ${NOM} ·`])assert.ok(html.includes(t),t);
+ const html=read('panel.html');for(const t of ['<title>Ariane 5</title>',`<span>${NOM}</span>`,'<footer>Ariane 5 ·','id="lancement"'])assert.ok(html.includes(t),t);
 });
 test('aucune trace d’une autre version de test dans les chaînes de version livrées',()=>{
  for(const f of ['manifest.json','src/core.js','src/bridge.js','panel.html'])
@@ -41,7 +41,7 @@ test('aucune trace d’une autre version de test dans les chaînes de version li
  assert.ok(!/VERSION\|\|'4\.9\.(0[.']|5\.[1-9]')/.test(read('background.js')),'background.js');
  assert.ok(!/home:'4\.9\.(0|5 test [1-9]')/.test(read('panel.js')),'panel.js');
 });
-test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21, 4.9.5.22, 4.9.5.23, 4.9.5.24, 4.9.5.25, 4.9.5.26, 4.9.5.27, 4.9.5.28 et 4.9.5.35 portent l’observateur',()=>{
+test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21, 4.9.5.22, 4.9.5.23, 4.9.5.24, 4.9.5.25, 4.9.5.26, 4.9.5.27, 4.9.5.28 et 5.0.0 portent l’observateur',()=>{
  const {measure}=require('../tools/perf-phases.cjs');
  const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13','4.9.5.14','4.9.5.15','4.9.5.16','4.9.5.17','4.9.5.18','4.9.5.19','4.9.5.20','4.9.5.21','4.9.5.22',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
  for(const v of versions)assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);
@@ -49,7 +49,7 @@ test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.
 });
 test('RM-11 : la raison de la correction ne demande rien de plus au navigateur (manifeste inchangé hors la version), son module est chargé par le service worker et le panneau ; test 13 : les modules L1 sont chargés par le service worker seulement',()=>{
  /* Empreinte du manifeste (test 29 : la test 8 + la permission « power » de l'éveil, ordre écrit de l'opérateur), version et titre ramenés à « X » : permissions, hôtes, scripts de contenu, icônes, service worker : les mêmes. */
- const n=JSON.parse(JSON.stringify(manifest));n.version='X';n.version_name='X';n.action.default_title='X';
+ const n=JSON.parse(JSON.stringify(manifest));n.version='X';n.version_name='X';n.action.default_title='X';n.name='Ariane';
  assert.equal(require('node:crypto').createHash('sha256').update(JSON.stringify(n)).digest('hex'),'2c0e474c33df28550ce10a1133e05575f0bb9abd3b452f83af5c8a5a9767aed9');
  assert.deepEqual(manifest.permissions,['storage','unlimitedStorage','scripting','downloads','power'],'test 29 : « power » ajoutée sur ordre écrit de l\'opérateur (éveil du système)');assert.ok(!('commands' in manifest),'aucun raccourci d\'extension : les touches de raison ne sont pas des commandes');
  assert.ok(read('background.js').includes("'src/raison-correction.js','src/native-session.js'"),'chargé avant la session Écho');
