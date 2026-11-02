@@ -38,14 +38,28 @@ function tableau(lignes, titre) {
   out += `| médiane (ms) | ${K.map(k => r0(med(lignes.map(l => l[k])))).join(' | ')} |\n| P90 (ms) | ${K.map(k => r0(q(lignes.map(l => l[k]), 0.9))).join(' | ')} |\n`;
   return out;
 }
+/* Le levier lui-même, quand il a tourné (événements `recherche-large` du journal, CH-034 et CH-041) : par cut consulté, `ms` du module (porte + relances sur place),
+ * `executeur.attenteMs` (ce qui s'est vraiment ajouté au cycle quand les relances étaient précalculées), part des portes fermées, des précalculs, des pannes.
+ * C'est la mesure du critère (d) sur la machine de l'opérateur : médiane et moyenne du temps ajouté par cut consulté. */
+function levier(journal, partie) {
+  const ev = (journal.events || []).filter(e => e.type === 'recherche-large' && e.identity && (partie === undefined || e.identity.part === partie) && e.etat !== 'erreur' && !e.passe);
+  if (!ev.length) return null;
+  const ajoute = e => e.executeur && e.executeur.precalcule ? (e.executeur.attenteMs || 0) + (e.ms || 0) : (e.ms || 0);
+  const a = ev.map(ajoute), moy = x => x.length ? x.reduce((u, v) => u + v, 0) / x.length : null;
+  const K = ['consultés', 'porte fermée', 'précalculés', 'pannes exécuteur', 'différés', 'ajouté médiane ms', 'ajouté moyenne ms', 'ajouté P90 ms', 'module ms médiane', 'attente ms médiane', 'cache ms médiane'];
+  const V = [ev.length, ev.filter(e => e.porte && e.porte.ouverte === false).length, ev.filter(e => e.executeur && e.executeur.precalcule).length, ev.filter(e => e.executeur && e.executeur.erreur).length, ev.filter(e => e.issue === 'differe').length,
+    r0(med(a)), r0(moy(a)), r0(q(a, .9)), r0(med(ev.map(e => e.ms))), r0(med(ev.filter(e => e.executeur && e.executeur.precalcule).map(e => e.executeur.attenteMs))), r0(med(ev.filter(e => e.executeur).map(e => e.executeur.cacheMs)))];
+  return `recherche large (événements du journal)\n| ${K.join(' | ')} |\n|${K.map(() => '---').join('|')}|\n| ${V.join(' | ')} |\n`;
+}
 function main(argv) {
   const f = argv[0]; if (!f) throw Error('usage : cycle-lot.cjs <journal.json> [--partie N]');
   const ip = argv.indexOf('--partie'), partie = ip >= 0 ? Number(argv[ip + 1]) : undefined;
   const journal = JSON.parse(fs.readFileSync(f, 'utf8')), L = analyser(journal, partie);
   let out = `journal ${journal.version || '?'}${partie !== undefined ? ', partie ' + partie : ''}\n` + tableau(L, 'tous');
   for (const c of ['lot', 'engine']) { const l = L.filter(x => x.cmd === c); if (l.length) out += tableau(l, 'commande ' + c); }
+  const lv = levier(journal, partie); if (lv) out += lv;
   process.stdout.write(out);
   return L;
 }
-module.exports = { analyser, tableau, med, q };
+module.exports = { analyser, tableau, levier, med, q };
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { console.error('cycle-lot : ' + e.message); process.exitCode = 1; } }
