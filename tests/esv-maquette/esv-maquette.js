@@ -49,6 +49,11 @@
   * même après une pose (comportement SUPPOSÉ d'ESV, déduit du lot arrêté au cut 115 du 02/11 : après la pose d'un rail sur une cible
   * hors de la vue habituelle, le bouton ne l'a jamais ramené dans la vue). */
  options.recentrage=['origine','ailleurs'].includes(q.get('recentrage'))?q.get('recentrage'):'rail';   /* 'ailleurs' : origine décalée de 0,5 unité pour un rail déjà posé (panne simulée) */
+ /* CH-039 : relevé réel du 02/11 (partie 1, cut 3080) : « Load next non validated cut » sans rouge devant → ESV émet `railPairUpdated` (cut validé),
+  * `railPairSelected` du DERNIER cut de la partie (M − 1, déjà vert), puis `newPart` de la suivante, et RECHARGE la page sur elle (port de l'extension
+  * fermé, « back/forward cache »). `finPartie=rechargement` : ce comportement ; défaut `sur-place` : la partie suivante s'ouvre sans rechargement (avant). */
+ options.finPartie=q.get('finPartie')==='rechargement'?'rechargement':'sur-place';
+ options.delaiRechargement=num('delaiRechargement',150);
  options.traversee=num('traversee',1);   /* CH-026 : témoignage de l'opérateur (30/10) : au dernier cut, « Next cut » (Z) ouvre la partie suivante ; plus rien à valider, « Next non validated cut » aussi. 0 : ESV reste dans la partie */
  /* ESV parle à son serveur en XMLHttpRequest (c'est ce que l'observateur d'Ariane enveloppe) : la maquette aussi. */
  const xhr=(methode,url,corps)=>new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open(methode,url,true);if(corps!==undefined)x.setRequestHeader('content-type','application/json');
@@ -168,8 +173,18 @@
   const cp=etat.pannes.changementPartie;
   if(i>=0&&!(cp&&Number(cp.apresCut)===cutCourant().cut))return chargerCut(i,'valider-et-suivant');
   const suivante=etat.scenario.parties[etat.scenario.parties.indexOf(etat.partie)+1];
+  if(suivante&&(options.finPartie==='rechargement'||cp?.rechargement===true))return partirEnRechargeant(suivante);
   if(suivante){etat.partie=suivante;const j=prochain('non-valide',-1);chargerCut(j>=0?j:0,'partie-suivante');} /* terrain du 30/09 : au dernier cut, ESV charge la partie suivante */
   else log('valider-dernier-sans-suite');}
+ /* CH-039 : la séquence relevée le 02/11, dans l'ordre : écriture de la validation (réponse attendue : le serveur l'a gardée), `railPairUpdated`,
+  * `railPairSelected` du dernier cut (chargé par le gestionnaire d'ESV, comme un saut), `newPart`, puis rechargement de la page sur la partie suivante. */
+ function partirEnRechargeant(suivante){const c=cutCourant(),part=String(etat.partie.part),dernier=etat.partie.cuts.at(-1);
+  void ecrire('valid').then(()=>{
+   jq('#globalcontainer').trigger('railPairUpdated',[part,c.cut,'valid']);
+   jq('#globalcontainer').trigger('railPairSelected',[part,dernier.cut]);
+   jq('#globalcontainer').trigger('newPart',[String(suivante.part)]);
+   log('partie-changee-par-esv',{cut:c.cut,dernier:dernier.cut,vers:suivante.part,delai:options.delaiRechargement});
+   setTimeout(()=>{const u=new URLSearchParams(location.search);u.set('p',String(suivante.part));u.delete('cut');location.search='?'+u.toString();},options.delaiRechargement);});}
  function validerSurPlace(){if(!rails.left)return;void ecrire('valid');}
  function passer(){if(!rails.left)return;void ecrire('skipped');invalideSuivant();}
  function allerA(index,raison){if(index===etat.partie.cuts.length&&options.traversee&&/^(suivant|touche-Z)$/.test(raison)&&passerPartieSuivante(raison+'-partie'))return;
@@ -190,7 +205,8 @@
    const i=etat.partie.cuts.findIndex(c=>c.cut===Number(index));if(i<0)throw Error('loadCut : index hors de la partie');chargerCut(i,'evenement-railPairSelected');}
  const jq=sel=>{const el=typeof sel==='string'?document.querySelector(sel):sel;return {0:el,length:el?1:0,
    trigger(nom,args=[]){const hs=evenementsJq.get(el)?.[nom]||[];log('evenement-jquery',{nom,args:[].concat(args).map(String)});for(const h of hs)h.handler({type:nom,target:el},...[].concat(args));return this;},
-   on(nom,handler){const m=evenementsJq.get(el)||{};(m[nom]=m[nom]||[]).push({handler});evenementsJq.set(el,m);return this;}};};
+   /* CH-039 : « nom.espace nom2.espace » comme jQuery (l'observateur d'Ariane pose ses écouteurs en ombre sous l'espace `banane53`). */
+   on(noms,handler){const m=evenementsJq.get(el)||{};for(const brut of String(noms).split(/\s+/).filter(Boolean)){const [nom,...ns]=brut.split('.');(m[nom]=m[nom]||[]).push({handler,namespace:ns.join('.')});}evenementsJq.set(el,m);return this;}};};
  jq._data=(el,cle)=>cle==='events'?(rechargement&&cachees.length?{}:(evenementsJq.get(el)||{})):undefined;jq.fn={jquery:'maquette-0.1'};
  window.$=window.jQuery=jq;
  jq('#globalcontainer').on('railPairSelected',function(e,n,i){loadCut(n,i);}).on('railPairUpdated',()=>{}).on('railPairSeen',()=>{}).on('loading',()=>{}).on('newPart',()=>{});
