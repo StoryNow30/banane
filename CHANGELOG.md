@@ -1,5 +1,17 @@
 # Banane V4 TEST — journal des versions
 
+## 4.9.5.33 — 4.9.5 test 33 (F-V-G-S) (02/11) — test 33
+
+Manifeste `4.9.5.33` ; base : la test 32. Moteur, géométrie, GCV2 et décision du lot inchangés. Nouvelle présentation de la Constellation et de l'Aurore, direction « Cadran » choisie par l'opérateur (CH-036).
+
+### Nouveau
+- **Constellation et Aurore en « Cadran »** : un en-tête avec un anneau segmenté (un arc par partie ; pour l'Aurore, un arc par liste et une pointe chaude au bout de l'avancement), le chiffre au centre, le mot, la phrase et les actions en pilules ; rubriques en capitales de 12 px ; temps numérotés 01 à 04 avec un filet vivant sur le temps courant ; registre des parties (posés, à poser, corrigés alignés, puis la ligne de motifs) ; départs des parties visibles d'emblée ; Aurore par partie avec statuts signés ○ ● ✓ ◐, sans aucune troncature ; fin d'Aurore en trois grands chiffres dits une fois ; état vide « Rien à revoir ».
+- **Puce de l'onglet ESV** réduite à sa pastille entre 480 et 559 px quand les quatre onglets sont là (une règle CSS isolée).
+- Comportements de la 32 conservés : « Ouvrir » jamais muet, refus avec sa raison, le résultat le plus fort décide, parcours entre parties. Identifiants, messages et export inchangés.
+
+### Non vérifié
+- L'anneau dans la vraie fenêtre de Chrome (zoom, mise à l'échelle), le passage entre parties de l'Aurore sur un vrai ESV avec cet habillage, le thème clair en plein jour.
+
 ## 4.9.5.32 — 4.9.5 test 32 (F-V-G-S) (01/11) — test 32
 
 Manifeste `4.9.5.32` ; base : la test 31. Moteur, géométrie, GCV2 et décision du lot inchangés. Corrige les deux défauts de l'Aurore constatés par l'opérateur sur un vrai ESV avec la test 30.
