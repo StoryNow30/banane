@@ -3352,4 +3352,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Ordre : « le défaut le plus important, c'est que ça laisse mon ordi tomber en veille » ; go donné après l'export de la Constellation 17→24.
 - Constat ÉTABLI (export, `banane-data`, collection `2026-11-03_v5_constellation-parties-17-24`) : captures figées 41/90/90 s à 11:23-11:25 UTC, demande d'éveil « system » tenue ; arrêt « occupé » de la file à 11:25:26 ; pause de 74 min à 12:50. Cause de la veille : PROBABLE (niveau « system » insuffisant sous Windows).
 - Décision : `eveil.niveau` = « display » (l'écran reste allumé tant qu'un lot, une file, une passe ou une relecture tourne ; remplace le choix « l'écran peut s'éteindre » du test 29) ; attente « occupé » 9 essais ~106 s ; événement `veille-detectee`. Une veille manuelle (capot, menu) reste hors de portée d'Ariane : la notice le dit.
-- Le numéro suivant est D-278.
+
+## D-278 — Ariane 5 officielle : étiquette `v5` (opérateur, 03/11)
+- Ordre : « tu pourras pousser et valider sur le git et tout pour Ariane 5 officielle », après l'essai terrain du paquet `ariane-v5.zip`.
+- Preuve (export de la Constellation 25-26, `banane-data`, collection `2026-11-03_v5_constellation-parties-25-26`) : ÉTABLI, 0 événement `veille-detectee`, aucune capture de plus de 15 s, aucun écart de plus de 56 s, 0 SKIP ; TÉMOIGNAGE de l'opérateur : pas de veille.
+- Acte : étiquette `v5` sur le tronc au commit du paquet (`ae65426`, SHA-256 du paquet `81e30bc2…b9b1`). `main` n'est pas touchée (historiques sans lien : 412 contre 405 commits ; la route reste à choisir par l'opérateur). Publication GitHub et Chrome Web Store : hors des moyens de l'intégrateur.
+- Ouvert : 68 différés sur 297 en partie 26 (23 %) contre 1 à 10 dans l'export précédent, cause non analysée ; `deplacement-vue-remise-lot-compte` à 19 s sur 20 s de limite.
+- Le numéro suivant est D-279.

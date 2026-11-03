@@ -5,6 +5,10 @@ cours, où en sont les mesures. Le plan est dans `PLAN_SUITE.md`, les règles
 dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le
 29/09). `PROJECT_STATE.md` n'est plus que l'historique.
 
+## État au 3 novembre 2026 — Ariane 5
+
+**Version officielle : Ariane 5** (manifeste `5`), étiquette `v5` sur le tronc `claude/50-test17` (`ae65426`), paquet `ariane-v5.zip` (SHA-256 `81e30bc27151215181db4a85e2080171595b2030182359ccce2914ae8061b9b1`), notice : `NOTICE_UTILISATION.md`. Décisions D-276 à D-278. Terrain : Constellation 25-26 sans veille (voir D-278). Le tableau ci-dessous (29 septembre) est l'état historique de la 4.8.5.
+
 ## État au 29 septembre 2026
 
 | | |
