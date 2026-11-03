@@ -1,7 +1,8 @@
 'use strict';
-/* Ariane 5 : l'écran de lancement (fusée à deux propulseurs qui décolle des rails). Pure présentation : le panneau est ouvert dans Chromium sans chrome.*, l'animation
- * est lue à des instants précis (`__lancementRendre`) ; on vérifie que le canvas dessine (fusée, flammes, ciel), que le titre apparaît, qu'un clic ou une touche
- * retire l'écran sans attendre, que « réduire les animations » donne le nom seul, et que le code ne parle ni au service worker ni à ESV. */
+/* Ariane 5 : l'écran de lancement épuré (fusée au trait, silhouette blanche sur fond noir, un filet de lumière, puis le nom). Pure présentation : le panneau est ouvert
+ * dans Chromium sans chrome.*, les animations CSS sont lues à des instants précis (Web Animations : pause + currentTime) ; on vérifie que la fusée est au sol puis
+ * quitte l'écran par le haut, que le titre apparaît, qu'un clic ou une touche retire l'écran sans attendre, que « réduire les animations » donne le nom seul, et que
+ * le code ne parle ni au service worker ni à ESV. */
 const { test } = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const N = require('./esv-maquette/navigateur.cjs');
 const raison = N.indisponible(), opts = raison ? { skip: raison } : {};
@@ -12,23 +13,24 @@ async function ouvrir(contexte = {}) {
   await page.addInitScript(() => { window.__lancementForce = true; });
   return { nav, page };
 }
-const lumi = (page, x, y) => page.evaluate(([x, y]) => { const c = document.getElementById('lancement-toile'), d = c.getContext('2d').getImageData(x * (c.width / c.clientWidth), y * (c.height / c.clientHeight), 1, 1).data; return [d[0], d[1], d[2]]; }, [x, y]);
+const a = (page, t) => page.evaluate(t => { for (const x of document.getAnimations()) { x.pause(); x.currentTime = t * 1000; } }, t);
+const rect = (page, sel) => page.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return { top: r.top, bottom: r.bottom, h: window.innerHeight }; }, sel);
+const opacite = (page, sel) => page.evaluate(s => Number(getComputedStyle(document.querySelector(s)).opacity), sel);
 
-test('le canvas dessine : nuit sombre au départ, flamme et fumée à l\'allumage, espace au décollage', opts, async () => {
+test('la fusée est au sol au début, monte, quitte l\'écran par le haut ; le nom apparaît ensuite', opts, async () => {
   const { nav, page } = await ouvrir();
   try {
-    await page.addInitScript(() => { window.__lancementForce = true; window.__lancementManuel = true; });
     await page.goto(url);
-    await page.evaluate(() => window.__lancementRendre(0.8)); const nuit = await lumi(page, 210, 20);
-    await page.evaluate(() => window.__lancementRendre(1.0)); const flamme = await lumi(page, 210, 560);
-    assert.ok(flamme[0] > 200 && flamme[1] > 150, 'flamme/fumée claire sous la fusée : ' + flamme);
-    await page.evaluate(() => window.__lancementRendre(2.8)); const espace = await lumi(page, 30, 300);
-    assert.ok(espace.every(v => v < 70), 'ciel profond au décollage : ' + espace);
-    assert.ok(nuit.every(v => v < 120), 'ciel du haut sombre au départ : ' + nuit);
-    await page.evaluate(() => window.__lancementRendre(3.4)); await page.waitForTimeout(1600);
-    assert.ok(await page.evaluate(() => document.getElementById('lancement').classList.contains('titre')));
-    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.lanc-nom h2 span:last-child')).opacity), '1', 'titre lisible');
-    assert.equal(await page.evaluate(() => document.querySelector('.lanc-nom h2').textContent.replace(/ /g, ' ')), 'ARIANE 5');
+    await a(page, 0.6); const sol = await rect(page, '.lanc-fusee');
+    assert.ok(sol.bottom > sol.h * 0.5 && sol.top > sol.h * 0.4, 'la fusée est dans la moitié basse au départ : ' + JSON.stringify(sol));
+    await a(page, 1.9); const vol = await rect(page, '.lanc-fusee');
+    assert.ok(vol.top < sol.top - 60, 'elle a monté : ' + JSON.stringify([sol.top, vol.top]));
+    await a(page, 2.6); const sortie = await rect(page, '.lanc-fusee');
+    assert.ok(sortie.bottom < 0, 'elle a quitté l\'écran par le haut : ' + JSON.stringify(sortie));
+    await a(page, 0.4); assert.equal(await opacite(page, '.lanc-nom h2'), 0, 'pas de titre pendant le décollage');
+    await a(page, 3.3); assert.ok(await opacite(page, '.lanc-nom h2') > 0.99, 'titre lisible');
+    assert.equal(await page.evaluate(() => document.querySelector('.lanc-nom h2').textContent), 'ARIANE 5');
+    await a(page, 3.7); assert.ok(await opacite(page, '.lanc-nom small') > 0.99);
   } finally { await nav.close(); }
 });
 test('un clic retire l\'écran aussitôt ; une touche aussi', opts, async () => {
@@ -44,12 +46,12 @@ test('sans geste, l\'écran part tout seul en moins de 6 s', opts, async () => {
   const { nav, page } = await ouvrir();
   try { await page.goto(url); await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 6000 }); } finally { await nav.close(); }
 });
-test('« réduire les animations » : le nom seul, sans canvas, puis l\'écran part', opts, async () => {
+test('« réduire les animations » : le nom seul, sans dessin, puis l\'écran part', opts, async () => {
   const { nav, page } = await ouvrir({ reducedMotion: 'reduce' });
   try { await page.goto(url);
-    assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('lancement-toile')).display), 'none');
-    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.lanc-nom h2 span')).opacity), '1');
-    await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 3000 });
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#lancement svg')).display), 'none');
+    await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('.lanc-nom h2')).opacity) > 0.98, null, { timeout: 1500 });
+    await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 3500 });
   } finally { await nav.close(); }
 });
 test('pure présentation : le code du lancement ne touche ni au service worker, ni à ESV, ni au stockage', () => {

@@ -5,7 +5,7 @@
 const { test } = require('node:test'), assert0 = require('node:assert/strict');
 /* Les objets viennent de la VM (autre royaume) : comparés par leur JSON. */
 const j = x => JSON.parse(JSON.stringify(x ?? null)), assert = Object.assign(Object.create(assert0), { deepEqual: (a, b, m) => assert0.deepStrictEqual(j(a), j(b), m) });
-const { montage, fermer, LOT_ARGS } = require('./helpers/file-parties-sw.cjs');
+const { montage, fermer, LOT_ARGS, FICHE } = require('./helpers/file-parties-sw.cjs');
 test.afterEach(fermer);
 const COMMANDES_FILE = new Set(['ping', 'state', 'changerPartie']);
 
@@ -105,7 +105,7 @@ for (const [nom, regler, motif] of [
   ['la page ne change jamais de partie (borne)', a => { a.bloque = true; }, 'changement-impossible'],
   ['ESV muet au moment du changement', a => { a.muet = true; }, 'esv-muet'],
 ]) test(`changement de partie : ${nom} → arrêt « ${motif} », alerte et bilan`, async () => {
-  const M = montage(); await M.vie(); await M.demarrer(2);
+  const M = montage({ fiche: { ...FICHE, occupeAttentesMs: [5, 5] } }); await M.vie(); await M.demarrer(2);
   await M.partie(0); regler(M.adapter);
   await M.jusqua(() => M.etat()?.etat === 'arret', 4000, 'arrêt');
   assert.equal(M.etat().motifFin.code, motif); assert.ok(M.etat().alerte); assert.equal(M.etat().bilan.length, 1);
@@ -158,4 +158,22 @@ test('redémarrage avec une pose d’Ariane non validée gardée par le moteur :
   await M.jusqua(() => M.etat()?.etat === 'arret', 3000, 'arrêt à la reprise');
   assert.equal(M.etat().motifFin.code, 'ecriture-incertaine'); assert.match(M.etat().alerte.detail, /cut 4/);
   assert.deepEqual(M.adapter.calls.filter(c => c.startsWith('changerPartie')), ['changerPartie:24'], 'aucun changement rejoué');
+});
+
+/* CH-044 (terrain du 03/11) : la page refuse « occupe » (une action d'Ariane n'a pas fini) : refus passager, la demande est redite après une attente. */
+test('changement de partie : la page est « occupée » un instant puis libre → la partie change, sans arrêt de la file', async () => {
+  const M = montage({ fiche: { ...FICHE, occupeAttentesMs: [20, 40, 80, 160, 320] } }); await M.vie(); await M.demarrer(2);
+  await M.jusqua(() => M.etat()?.partie?.lotId, 2000, 'lot de la file');
+  M.adapter.refus = 'occupe'; setTimeout(() => { M.adapter.refus = null; }, 150);
+  M.clore(); await M.jusqua(() => M.etat()?.etat === 'relecture', 3000, 'relecture'); M.relire();
+  await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1, 5000, 'lot de la partie suivante');
+  assert.ok(M.adapter.calls.includes('changerPartie:24'));
+  const t = M.journal('file-parties-changement'); assert.ok(t.length >= 1 && t.at(-1).issue === 'ok', JSON.stringify(t.map(x => [x.mode, x.issue, x.texte])));
+});
+test('changement de partie : la page reste « occupée » → arrêt avec l\'action en cause nommée', async () => {
+  const M = montage({ fiche: { ...FICHE, occupeAttentesMs: [10, 10] } }); await M.vie(); await M.demarrer(2);
+  await M.jusqua(() => M.etat()?.partie?.lotId, 2000, 'lot de la file');
+  M.adapter.refus = 'occupe'; M.clore(); await M.jusqua(() => M.etat()?.etat === 'relecture', 3000, 'relecture'); M.relire();
+  await M.jusqua(() => M.etat()?.etat === 'arret', 5000, 'arrêt');
+  assert.match(M.etat().alerte.detail || '', /action d’Ariane est encore en cours/);
 });

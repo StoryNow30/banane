@@ -2,8 +2,21 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ariane 5</title><link rel="stylesheet" href="panel.css"><link rel="stylesheet" href="panel-ui5.css"><link rel="stylesheet" href="panel-signal.css"><link rel="stylesheet" href="panel-lancement.css"></head>
 <body data-window="home">
 <div id="lancement" role="presentation" aria-hidden="true">
- <canvas id="lancement-toile"></canvas>
- <div class="lanc-nom"><h2>ARIANE 5</h2><i class="lanc-trait"></i><small>Écho · Orbite · Constellation · Aurore</small></div>
+ <svg viewBox="0 0 240 400" preserveAspectRatio="xMidYMid meet" focusable="false">
+  <defs>
+   <linearGradient id="lanc-degrade" gradientUnits="userSpaceOnUse" x1="0" y1="331" x2="0" y2="-229"><stop offset="0" stop-color="#f2f4f7" stop-opacity="0"/><stop offset="1" stop-color="#f2f4f7" stop-opacity=".9"/></linearGradient>
+   <linearGradient id="lanc-feu" gradientUnits="userSpaceOnUse" x1="0" y1="332" x2="0" y2="378"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <line class="lanc-sol" x1="84" y1="332" x2="156" y2="332"/>
+  <line class="lanc-trace" x1="120" y1="331" x2="120" y2="-229"/>
+  <g class="lanc-fusee">
+   <g class="lanc-flamme"><path d="M117.2 332 L120 378 L122.8 332 Z"/></g>
+   <path class="lanc-corps" d="M120 260 C128.6 281 130 312 128.6 331 L111.4 331 C110 312 111.4 281 120 260 Z"/>
+   <path class="lanc-corps" d="M111.4 313 C108 322 104.5 330 102.5 339 L111.4 331 Z M128.6 313 C132 322 135.5 330 137.5 339 L128.6 331 Z"/>
+   <circle cx="120" cy="295" r="2.5" fill="#07090b"/>
+  </g>
+ </svg>
+ <div class="lanc-nom"><h2>ARIANE 5</h2><i></i><small>Écho · Orbite · Constellation · Aurore</small></div>
  <span class="lanc-passer">cliquer pour passer</span>
 </div>
 <main>

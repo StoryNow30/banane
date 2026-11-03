@@ -3840,6 +3840,13 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
    catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return {definitif:y.message};}}
    await attendre(R.pollMs);}
   return {vu,derniere,partie};};
+ /* CH-044 (terrain du 03/11, Constellation arrêtée à la partie 18) : les trois modes ont été refusés « occupe » d'affilée, une action d'Ariane de la page
+  * (capture, pose, lecture) n'ayant pas fini au moment de la demande ; le refus est passager, comme pour la passe (`occupeAttentesMs`). La demande est
+  * redite après des attentes croissantes (au plus ~12 s) avant de conclure ; l'action en cause est nommée dans le journal. */
+ const OCC=(Array.isArray(R.occupeAttentesMs)?R.occupeAttentesMs:[250,500,1000,2000,4000,4000]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);
+ const demander=async mode=>{let rep=await call('changerPartie',{part:vers,mode});
+  for(const w of OCC){if(rep?.raison!=='occupe'||!attendu())break;await attendre(w);rep=await call('changerPartie',{part:vers,mode});}
+  return rep;};
  let dernierMotif=null;
  for(const mode of modes){if(!attendu())return fin({quitte:true});
   const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null};tentatives.push(T);
@@ -3849,18 +3856,18 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
    T.sansDecision=rep?.validationCommandSent===false&&rep?.skipCommandSent===false;};
   const noter=(issue,texte,apres=null)=>{T.issue=issue;T.texte=texte;T.identiteApres=apres;T.dureeMs=Date.now()-t;
    journalerSimple(typeTentative,{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs});};
-  let rep=null;try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+  let rep=null;try{rep=await demander(mode);}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
   fixer(rep);
   /* « Dernier cut puis Z » : l'adaptateur dit le dernier cut (compteur M − 1) ; Ariane y va (`goToCut`, navigation seule), puis redemande. */
   if(mode==='suivant-dernier'&&rep?.ok!==true&&rep?.raison==='pas-au-dernier-cut'&&Number.isInteger(rep?.dernier)&&Number.isInteger(rep?.de?.part)){
    let nav=null;try{nav=await call('goToCut',{part:rep.de.part,cut:rep.dernier},{chemin:'auto',borneConnue:rep.dernier},globalThis.BananeCore3.uid());}catch(x){nav={resultat:'erreur',refusal:{code:'ERREUR',message:String(x?.message||x)}};}
    T.goto={cut:rep.dernier,resultat:typeof nav?.resultat==='string'?nav.resultat:null,chemin:typeof nav?.chemin==='string'?nav.chemin:null,code:typeof nav?.refusal?.code==='string'?nav.refusal.code.slice(0,40):null};
    if(nav?.confirme!==true){noter('refus',`dernier cut ${rep.dernier} non atteint (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,120)})`);dernierMotif='changement-impossible';continue;}
-   try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+   try{rep=await demander(mode);}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
    fixer(rep);}
   if(rep?.ok!==true){const r=rep?.raison;
    const texte=r==='reste-a-valider'?`il reste des cuts à valider (${T.compteur?.traites??'?'} traités sur ${T.compteur?.total??'?'})`:r==='partie-absente'?`aucune entrée vers la partie ${vers} dans le sélecteur`
-    :r==='bouton-absent'||r==='bouton-desactive'?`bouton ${T.bouton?.id||'?'} ${r==='bouton-absent'?'absent':'désactivé'}`:r?`la page refuse : ${String(r).slice(0,60)}`:'réponse illisible de la page';
+    :r==='occupe'?`une action d’Ariane est encore en cours dans la page (${String(rep?.action||'inconnue').slice(0,40)})`:r==='bouton-absent'||r==='bouton-desactive'?`bouton ${T.bouton?.id||'?'} ${r==='bouton-absent'?'absent':'désactivé'}`:r?`la page refuse : ${String(r).slice(0,60)}`:'réponse illisible de la page';
    noter('refus',texte);dernierMotif=['partie-absente','libelle-illisible'].includes(r)?'selecteur-illisible':'changement-impossible';continue;}
   if(rep.deja){noter('deja','déjà sur la partie');const r=await readState().catch(()=>null);if(pret(r))return ok(r);continue;}
   const P=await preuve(mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs));
