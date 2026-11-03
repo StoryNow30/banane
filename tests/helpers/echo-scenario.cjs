@@ -60,7 +60,7 @@ const jouer=async function jouer({racine=path.resolve(__dirname,'../..'),demarra
 /* Empreintes d'un résultat : SHA-256 du texte de chaque partie (l'ordre des clés compte : octet pour octet), la chaîne de version rendue à celle
  * de la référence. `visites` et `evenements` donnent une empreinte par élément, pour dire LAQUELLE a changé. */
 jouer.empreintes=(res,versionDeReference,versionCourante)=>{
- const h=v=>crypto.createHash('sha256').update(JSON.stringify(v).split(versionCourante||versionDeReference).join(versionDeReference)).digest('hex');
+ const h=v=>crypto.createHash('sha256').update(((c,r)=>/^\d+$/.test(c)?JSON.stringify(v).split('"'+c+'"').join('"'+r+'"'):JSON.stringify(v).split(c).join(r))(versionCourante||versionDeReference,versionDeReference)).digest('hex');
  return {records:h(res.records),events:h(res.events),native:h(res.native),dataset:h(res.dataset),
   visites:res.records.map(r=>[r.visitId,h(r)]),evenements:res.events.map(e=>[e.type,h(e)])};};
 module.exports=jouer;

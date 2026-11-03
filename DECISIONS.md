@@ -3347,4 +3347,9 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 ## D-276 — Lancement de la 5.0 : « Ariane 5 » (opérateur, 02/11)
 - Ordre : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails », puis « une animation plus travaillée, digne de tout le travail accompli ».
 - Version officielle nommée `5` (ordre de l'opérateur, 03/11 : « en 5, et non pas 5.0 ni 5.0.0 ») : manifeste `version` « 5 », nom « Ariane 5 », paquet `ariane-v5.zip`. Écran de lancement : fusée au trait, minimaliste (refaite le 03/11, sans consigne antérieure), passable d'un clic. Aucun paquet n'est renvoyé avant l'export de l'opérateur (essai terrain de l'écran de lancement et de la Constellation).
-- Le numéro suivant est D-277.
+
+## D-277 — Veille du PC : écran allumé pendant le travail (opérateur, 03/11)
+- Ordre : « le défaut le plus important, c'est que ça laisse mon ordi tomber en veille » ; go donné après l'export de la Constellation 17→24.
+- Constat ÉTABLI (export, `banane-data`, collection `2026-11-03_v5_constellation-parties-17-24`) : captures figées 41/90/90 s à 11:23-11:25 UTC, demande d'éveil « system » tenue ; arrêt « occupé » de la file à 11:25:26 ; pause de 74 min à 12:50. Cause de la veille : PROBABLE (niveau « system » insuffisant sous Windows).
+- Décision : `eveil.niveau` = « display » (l'écran reste allumé tant qu'un lot, une file, une passe ou une relecture tourne ; remplace le choix « l'écran peut s'éteindre » du test 29) ; attente « occupé » 9 essais ~106 s ; événement `veille-detectee`. Une veille manuelle (capot, menu) reste hors de portée d'Ariane : la notice le dit.
+- Le numéro suivant est D-278.

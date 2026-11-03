@@ -13,6 +13,9 @@ Manifeste `5`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/
 
 - **Constellation : changement de partie refusé « occupé » (CH-044)** : la page refuse le changement quand une de ses actions n'a pas fini ; la demande est redite après des attentes croissantes (au plus ~12 s) avant d'arrêter la file, et l'action en cause est nommée dans le journal et l'alerte.
 
+- **Veille du PC pendant une Constellation (CH-045)** : l'export de la Constellation 17→24 (22 volumes) montre trois captures figées de 41, 90 et 90 s à 11:23-11:25 UTC (ÉTABLI) pendant que la demande d'éveil « system » était tenue ; la navigation de la file, refusée « occupé » 6 fois en 11,75 s, a arrêté la file sur la partie 18 ; plus tard une pause de 74 min (12:50 → 14:03). Le niveau « system » ne retient pas la veille de Windows écran éteint (PROBABLE) : la demande d'éveil passe au niveau « display » (écran allumé), l'attente d'une page occupée passe à 9 essais, ~106 s, et le journal note `veille-detectee` quand les minuteurs sont figés plus de 30 s. **Non vérifié sur un vrai poste.**
+- **Notice d'utilisation** : `NOTICE_UTILISATION.md`.
+
 ### Inchangé, éteint
 - Recherche large (`lot.rechercheLarge`) : ÉTEINTE (D-275, CH-034, CH-041, CH-042 clos).
 
