@@ -69,7 +69,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5.0.0',VERSION_NAME='5.0.0'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5.0.0 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):lire(f);
+  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);

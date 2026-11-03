@@ -1,11 +1,11 @@
 # Banane V4 TEST — journal des versions
 
-## 5.0.0 — Ariane 5 (02/11) — version officielle
+## 5 — Ariane 5 (version officielle)
 
-Manifeste `5.0.0`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Ordre de l'opérateur : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails ».
+Manifeste `5`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Ordre de l'opérateur : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails ».
 
 ### Nouveau
-- **Ariane 5** : nom de l'extension, titre de la fenêtre et du bouton, version `5.0.0` (D-276).
+- **Ariane 5** : nom de l'extension, titre de la fenêtre et du bouton, version `5` (D-276).
 - **Écran de lancement (épuré)** : à l'ouverture du panneau, une fusée au trait (silhouette blanche sur fond noir) décolle sur un seul filet de lumière, puis le titre « ARIANE 5 » avec les quatre noms (Écho, Orbite, Constellation, Aurore) apparaît dans le silence (≈ 3,9 s, SVG et CSS, sans fumée ni étincelles). Un clic ou une touche le passe ; « réduire les animations » donne le nom seul. Pure présentation, rien n'attend cet écran.
 
 ### Corrigé

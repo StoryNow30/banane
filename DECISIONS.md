@@ -3346,5 +3346,5 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 
 ## D-276 — Lancement de la 5.0 : « Ariane 5 » (opérateur, 02/11)
 - Ordre : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails », puis « une animation plus travaillée, digne de tout le travail accompli ».
-- Version officielle `5.0.0`, nom « Ariane 5 » (manifeste, fenêtre, bouton), écran de lancement animé (fusée à deux propulseurs qui décolle des rails), passable d'un clic.
+- Version officielle nommée `5` (ordre de l'opérateur, 03/11 : « en 5, et non pas 5.0 ni 5.0.0 ») : manifeste `version` « 5 », nom « Ariane 5 », paquet `ariane-v5.zip`. Écran de lancement : fusée au trait, minimaliste (refaite le 03/11, sans consigne antérieure), passable d'un clic. Aucun paquet n'est renvoyé avant l'export de l'opérateur (essai terrain de l'écran de lancement et de la Constellation).
 - Le numéro suivant est D-277.
