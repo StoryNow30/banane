@@ -3187,9 +3187,9 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : budget global de la sélection si entier (hors PN) ;
  * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
 /* 4.9.5.13 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
- * finie (`ADAPTER_BUSY`, terrain 2:19) : 6 essais au plus, 11,75 s en tout. */
+ * finie (`ADAPTER_BUSY`, terrain 2:19) : 9 essais au plus, environ 106 s en tout (CH-045 : l’export de la Constellation 17→24 montre une capture figée 90 s, PC en veille, qui a fait échouer les 6 essais de 11,75 s). */
 const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
- occupeAttentesMs:[250,500,1000,2000,4000,4000],...(globalThis.BananeSettings?.relecture||{})});
+ occupeAttentesMs:[250,500,1000,2000,4000,8000,15000,30000,45000],...(globalThis.BananeSettings?.relecture||{})});
 /* Test 17 (D-232 à D-234) : une passe EN PAUSE n'agit plus, mais reste « active » pour les gardes : ni lot, ni Écho, ni retour à un cut,
  * ni seconde passe tant qu'elle n'est pas reprise ou arrêtée. `passeVivante` : celle qui travaille ou se prépare (l'ancien sens de `passeActive`). */
 const passeVivante=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
@@ -3718,13 +3718,15 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  * Pendant un lot, une file de parties, la deuxième passe ou la relecture, Ariane demande à Chrome de ne pas mettre l'ordinateur en veille
  * (`chrome.power.requestKeepAwake`, niveau « system » : l'écran peut s'éteindre, constat de l'opérateur) et relâche la demande dès que plus rien ne tourne.
  * L'écoute (Écho) n'en fait pas partie : l'opérateur est devant. Une panne de l'API ne touche jamais le lot (journal `eveil-erreur`). */
-const eveil={tenu:false,raison:null,minuteur:null};
+const eveil={tenu:false,raison:null,minuteur:null,dernier:0};
 function eveilBesoin(){const R=globalThis.BananeSettings?.eveil;if(!R||R.actif!==true)return null;
  try{if(typeof fileActive==='function'&&fileActive())return 'file';}catch{/* pas de file */}
  const seance=seanceObservateur({grace:true});
  return seance&&/^(lot|relecture|passe-differes):/.test(seance)?seance.split(':')[0]:null;}
-function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='display'?'display':'system';
+function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='system'?'system':'display';
  try{
+  /* CH-045 : le minuteur bat toutes les 5 s ; un écart de plus de 30 s alors que la demande est tenue = les minuteurs ont été figés (veille du PC, PROBABLE). Mesure pour le prochain export. */
+  const maintenant=Date.now();if(eveil.tenu&&eveil.dernier&&maintenant-eveil.dernier>30000)journalerSimple('veille-detectee',{ecartMs:maintenant-eveil.dernier,raison:eveil.raison});eveil.dernier=maintenant;
   if(besoin&&!eveil.tenu){if(!chrome.power?.requestKeepAwake)return;chrome.power.requestKeepAwake(niveau);eveil.tenu=true;eveil.raison=besoin;journalerSimple('eveil-demande',{raison:besoin,niveau});}
   else if(!besoin&&eveil.tenu){chrome.power?.releaseKeepAwake?.();eveil.tenu=false;journalerSimple('eveil-relache',{apres:eveil.raison});eveil.raison=null;}
  }catch(e){journalerSimple('eveil-erreur',{message:String(e?.message||e).slice(0,160)});}}
@@ -3843,7 +3845,7 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  /* CH-044 (terrain du 03/11, Constellation arrêtée à la partie 18) : les trois modes ont été refusés « occupe » d'affilée, une action d'Ariane de la page
   * (capture, pose, lecture) n'ayant pas fini au moment de la demande ; le refus est passager, comme pour la passe (`occupeAttentesMs`). La demande est
   * redite après des attentes croissantes (au plus ~12 s) avant de conclure ; l'action en cause est nommée dans le journal. */
- const OCC=(Array.isArray(R.occupeAttentesMs)?R.occupeAttentesMs:[250,500,1000,2000,4000,4000]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);
+ const OCC=(Array.isArray(R.occupeAttentesMs)?R.occupeAttentesMs:[250,500,1000,2000,4000,8000,15000,30000,45000]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);
  const demander=async mode=>{let rep=await call('changerPartie',{part:vers,mode});
   for(const w of OCC){if(rep?.raison!=='occupe'||!attendu())break;await attendre(w);rep=await call('changerPartie',{part:vers,mode});}
   return rep;};
