@@ -96,10 +96,10 @@ test('la version officielle est cohérente entre le code et le manifeste', () =>
   const manifest = require('../manifest.json');
   assert.equal(manifest.version, K.VERSION, 'manifeste et core.js doivent annoncer la même version');
   /* 4.8.5 (D-061) : une version de test porte un quatrième nombre, 4.8.5.N. */
-  assert.match(K.VERSION, /^\d+\.\d+\.\d+(\.\d+)?$/, 'stable X.Y.Z ou test X.Y.Z.N');
+  assert.match(K.VERSION, /^\d+(\.\d+){0,3}$/, 'stable (5, X.Y.Z) ou test X.Y.Z.N');
   const parts=manifest.version.split('.');assert.ok(parts.every(n=>Number(n)<=65535));
   /* 4.9.5.13 : une étiquette courte entre parenthèses peut suivre le numéro de test (« 4.9.5 test 13 (L1) »). */
-  if(parts.length===4)assert.match(manifest.version_name,new RegExp(`^${parts.slice(0,3).join('\\.')} test ${parts[3]}( \\([A-Za-z0-9-]{1,12}\\))?$`));else assert.equal(manifest.version_name,undefined);
+  if(parts.length>=4)assert.match(manifest.version_name,new RegExp(`^${parts.slice(0,3).join('\\.')} test ${parts[3]}( \\([A-Za-z0-9-]{1,12}\\))?$`));else assert.equal(manifest.version_name,undefined);
   assert.equal(K.VERSION_NAME,manifest.version_name||manifest.version);
 });
 

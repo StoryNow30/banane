@@ -11,7 +11,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),crypto=re
 const {pilote,esvLent,reglages,attendreFin,L}=require('./helpers/esv-lent.cjs');
 const COUPE='Could not establish connection. Receiving end does not exist.';
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
-const neutre=x=>JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>').replace(/4\.9\.5\.\d+|4\.9\.5 test \d+|5\.0\.0/g,'<version>'));
+const neutre=x=>JSON.parse(JSON.stringify(x,(k,v)=>k==='capturedAt'?'<clock>':v).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>').replace(/4\.9\.5\.\d+|4\.9\.5 test \d+/g,'<version>').replace(/"(version|versionName|extensionVersion)":"5"/g,'"$1":"<version>"'));
 const empreinte=messages=>crypto.createHash('sha256').update(JSON.stringify(neutre(messages))).digest('hex');
 /* Relevé de chaque message à la page, posé avant « Connecter ». */
 const releve=messages=>(esv,b)=>{const envoi=b.ctx.chrome.tabs.sendMessage;

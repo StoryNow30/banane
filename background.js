@@ -14,7 +14,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
  'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
-const VERSION=globalThis.BananeCore3?.VERSION||'5.0.0',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5.0.0';
+const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -3187,9 +3187,9 @@ const relecture={passe:null,tache:null,planifie:new Set(),attente:null,gen:0};
  * vérifié ; toute autre valeur ramène « corriger » à « ombre ») ; `plafondCuts` : budget global de la sélection si entier (hors PN) ;
  * `plafondParZone` : budgets par zone (adv, abords, vert-hors-zone, ecartement ; PN hors budget) qui remplacent ceux du module (D-180). */
 /* 4.9.5.13 : `occupeAttentesMs` — attentes successives avant de redemander un passage que la page a refusé parce qu'une de ses actions n'était pas
- * finie (`ADAPTER_BUSY`, terrain 2:19) : 6 essais au plus, 11,75 s en tout. */
+ * finie (`ADAPTER_BUSY`, terrain 2:19) : 9 essais au plus, environ 106 s en tout (CH-045 : l’export de la Constellation 17→24 montre une capture figée 90 s, PC en veille, qui a fait échouer les 6 essais de 11,75 s). */
 const reglageRelecture=()=>({departMs:0,attenteEcritureMs:6000,attenteVuMs:2500,pasMax:40,plafondCuts:null,plafondParZone:null,validation:'maj-espace',
- occupeAttentesMs:[250,500,1000,2000,4000,4000],...(globalThis.BananeSettings?.relecture||{})});
+ occupeAttentesMs:[250,500,1000,2000,4000,8000,15000,30000,45000],...(globalThis.BananeSettings?.relecture||{})});
 /* Test 17 (D-232 à D-234) : une passe EN PAUSE n'agit plus, mais reste « active » pour les gardes : ni lot, ni Écho, ni retour à un cut,
  * ni seconde passe tant qu'elle n'est pas reprise ou arrêtée. `passeVivante` : celle qui travaille ou se prépare (l'ancien sens de `passeActive`). */
 const passeVivante=()=>relecture.passe?.etat==='preparation'||relecture.passe?.etat==='en-cours';
@@ -3718,13 +3718,15 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
  * Pendant un lot, une file de parties, la deuxième passe ou la relecture, Ariane demande à Chrome de ne pas mettre l'ordinateur en veille
  * (`chrome.power.requestKeepAwake`, niveau « system » : l'écran peut s'éteindre, constat de l'opérateur) et relâche la demande dès que plus rien ne tourne.
  * L'écoute (Écho) n'en fait pas partie : l'opérateur est devant. Une panne de l'API ne touche jamais le lot (journal `eveil-erreur`). */
-const eveil={tenu:false,raison:null,minuteur:null};
+const eveil={tenu:false,raison:null,minuteur:null,dernier:0};
 function eveilBesoin(){const R=globalThis.BananeSettings?.eveil;if(!R||R.actif!==true)return null;
  try{if(typeof fileActive==='function'&&fileActive())return 'file';}catch{/* pas de file */}
  const seance=seanceObservateur({grace:true});
  return seance&&/^(lot|relecture|passe-differes):/.test(seance)?seance.split(':')[0]:null;}
-function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='display'?'display':'system';
+function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='system'?'system':'display';
  try{
+  /* CH-045 : le minuteur bat toutes les 5 s ; un écart de plus de 30 s alors que la demande est tenue = les minuteurs ont été figés (veille du PC, PROBABLE). Mesure pour le prochain export. */
+  const maintenant=Date.now();if(eveil.tenu&&eveil.dernier&&maintenant-eveil.dernier>30000)journalerSimple('veille-detectee',{ecartMs:maintenant-eveil.dernier,raison:eveil.raison});eveil.dernier=maintenant;
   if(besoin&&!eveil.tenu){if(!chrome.power?.requestKeepAwake)return;chrome.power.requestKeepAwake(niveau);eveil.tenu=true;eveil.raison=besoin;journalerSimple('eveil-demande',{raison:besoin,niveau});}
   else if(!besoin&&eveil.tenu){chrome.power?.releaseKeepAwake?.();eveil.tenu=false;journalerSimple('eveil-relache',{apres:eveil.raison});eveil.raison=null;}
  }catch(e){journalerSimple('eveil-erreur',{message:String(e?.message||e).slice(0,160)});}}
@@ -3840,6 +3842,13 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
    catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return {definitif:y.message};}}
    await attendre(R.pollMs);}
   return {vu,derniere,partie};};
+ /* CH-044 (terrain du 03/11, Constellation arrêtée à la partie 18) : les trois modes ont été refusés « occupe » d'affilée, une action d'Ariane de la page
+  * (capture, pose, lecture) n'ayant pas fini au moment de la demande ; le refus est passager, comme pour la passe (`occupeAttentesMs`). La demande est
+  * redite après des attentes croissantes (au plus ~12 s) avant de conclure ; l'action en cause est nommée dans le journal. */
+ const OCC=(Array.isArray(R.occupeAttentesMs)?R.occupeAttentesMs:[250,500,1000,2000,4000,8000,15000,30000,45000]).filter(x=>Number.isFinite(x)&&x>=0).slice(0,10);
+ const demander=async mode=>{let rep=await call('changerPartie',{part:vers,mode});
+  for(const w of OCC){if(rep?.raison!=='occupe'||!attendu())break;await attendre(w);rep=await call('changerPartie',{part:vers,mode});}
+  return rep;};
  let dernierMotif=null;
  for(const mode of modes){if(!attendu())return fin({quitte:true});
   const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null};tentatives.push(T);
@@ -3849,18 +3858,18 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
    T.sansDecision=rep?.validationCommandSent===false&&rep?.skipCommandSent===false;};
   const noter=(issue,texte,apres=null)=>{T.issue=issue;T.texte=texte;T.identiteApres=apres;T.dureeMs=Date.now()-t;
    journalerSimple(typeTentative,{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs});};
-  let rep=null;try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+  let rep=null;try{rep=await demander(mode);}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
   fixer(rep);
   /* « Dernier cut puis Z » : l'adaptateur dit le dernier cut (compteur M − 1) ; Ariane y va (`goToCut`, navigation seule), puis redemande. */
   if(mode==='suivant-dernier'&&rep?.ok!==true&&rep?.raison==='pas-au-dernier-cut'&&Number.isInteger(rep?.dernier)&&Number.isInteger(rep?.de?.part)){
    let nav=null;try{nav=await call('goToCut',{part:rep.de.part,cut:rep.dernier},{chemin:'auto',borneConnue:rep.dernier},globalThis.BananeCore3.uid());}catch(x){nav={resultat:'erreur',refusal:{code:'ERREUR',message:String(x?.message||x)}};}
    T.goto={cut:rep.dernier,resultat:typeof nav?.resultat==='string'?nav.resultat:null,chemin:typeof nav?.chemin==='string'?nav.chemin:null,code:typeof nav?.refusal?.code==='string'?nav.refusal.code.slice(0,40):null};
    if(nav?.confirme!==true){noter('refus',`dernier cut ${rep.dernier} non atteint (${String(nav?.refusal?.message||nav?.resultat||'résultat inconnu').slice(0,120)})`);dernierMotif='changement-impossible';continue;}
-   try{rep=await call('changerPartie',{part:vers,mode});}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
+   try{rep=await demander(mode);}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
    fixer(rep);}
   if(rep?.ok!==true){const r=rep?.raison;
    const texte=r==='reste-a-valider'?`il reste des cuts à valider (${T.compteur?.traites??'?'} traités sur ${T.compteur?.total??'?'})`:r==='partie-absente'?`aucune entrée vers la partie ${vers} dans le sélecteur`
-    :r==='bouton-absent'||r==='bouton-desactive'?`bouton ${T.bouton?.id||'?'} ${r==='bouton-absent'?'absent':'désactivé'}`:r?`la page refuse : ${String(r).slice(0,60)}`:'réponse illisible de la page';
+    :r==='occupe'?`une action d’Ariane est encore en cours dans la page (${String(rep?.action||'inconnue').slice(0,40)})`:r==='bouton-absent'||r==='bouton-desactive'?`bouton ${T.bouton?.id||'?'} ${r==='bouton-absent'?'absent':'désactivé'}`:r?`la page refuse : ${String(r).slice(0,60)}`:'réponse illisible de la page';
    noter('refus',texte);dernierMotif=['partie-absente','libelle-illisible'].includes(r)?'selecteur-illisible':'changement-impossible';continue;}
   if(rep.deja){noter('deja','déjà sur la partie');const r=await readState().catch(()=>null);if(pret(r))return ok(r);continue;}
   const P=await preuve(mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs));

@@ -10,9 +10,9 @@ const root=path.resolve(__dirname,'..'),manifest=JSON.parse(fs.readFileSync(path
 const AUTRE=/Une autre Ariane \(4\.8\.0\) est active dans cet onglet : désactive-la dans edge:\/\/extensions, puis F5 sur ESV/;
 
 function versionAffichee(m){
-  assert.match(m.version,/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:\.(0|[1-9]\d*))?$/);
+  assert.match(m.version,/^(0|[1-9]\d*)(?:\.(0|[1-9]\d*)){0,3}$/);
   const parts=m.version.split('.');assert.ok(parts.every(n=>Number(n)<=65535),'numéros MV3 bornés');
-  if(parts.length===3){assert.equal(m.version_name,undefined,'une stable ne porte pas de nom de test');return m.version;}
+  if(parts.length<=3){assert.equal(m.version_name,undefined,'une stable ne porte pas de nom de test');return m.version;}
   /* 4.9.5.13 : une étiquette courte entre parenthèses peut suivre le numéro (« 4.9.5 test 13 (L1) »). */
   const nom=`${parts.slice(0,3).join('.')} test ${parts[3]}`,etiquette=typeof m.version_name==='string'?m.version_name.slice(nom.length):null;
   assert.ok(typeof m.version_name==='string'&&m.version_name.startsWith(nom)&&/^(| \([A-Za-z0-9-]{1,12}\))$/.test(etiquette),'le nom doit correspondre au quatrième numéro');return m.version_name;
@@ -28,7 +28,7 @@ test('numérotation stable/test : format MV3, nom exact et identités courantes 
   const titre=`Ouvrir Ariane ${nom}`;assert.ok(manifest.action.default_title===titre||manifest.action.default_title.startsWith(titre+' — '));
   const html=fs.readFileSync(path.join(root,'panel.html'),'utf8');
   /* D-276 : la stable se nomme « Ariane 5 » (titre et pied) ; le numéro reste lisible dans l'en-tête (`<span>`). */
-  const stable=manifest.version.split('.').length===3,marque=stable?'Ariane 5':`Ariane ${nom}`;
+  const marque=`Ariane ${nom}`;
   for(const text of [`<title>${marque}</title>`,`<span>${nom}</span>`,`<footer>${marque} ·`])assert.ok(html.includes(text),text);
   assert.ok(fs.readFileSync(path.join(root,'panel.js'),'utf8').includes(`home:'${nom}'`));
   assert.ok(fs.readFileSync(path.join(root,'src/bridge.js'),'utf8').includes(`'Ariane ${nom} · ouvrir'`));

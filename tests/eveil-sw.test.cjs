@@ -10,19 +10,19 @@ function montage(){const b=production({local:memoire()}),appels=[];b.fonction=b.
  const seance=s=>b.fonction('seanceObservateur=()=>'+JSON.stringify(s)),file=f=>b.fonction("fileP.etat="+(f?"{etat:'lot'}":"null"));
  return {b,appels,seance,file,maj:()=>b.fonction('eveilMaj()')};}
 
-test('lot, relecture, deuxième passe : une demande « system », puis un relâchement quand plus rien ne tourne',()=>{
+test('lot, relecture, deuxième passe : une demande « display », puis un relâchement quand plus rien ne tourne',()=>{
  const {appels,seance,maj}=montage();
  maj();assert.deepEqual(appels,[],'rien ne tourne : aucune demande');
- seance('lot:L1');maj();maj();assert.deepEqual(appels,['demande:system'],'une seule demande, pas une par minuteur');
- seance('relecture:L1');maj();assert.deepEqual(appels,['demande:system'],'le lot puis la relecture : la demande est gardée');
- seance('passe-differes:L1');maj();assert.deepEqual(appels,['demande:system']);
- seance(null);maj();assert.deepEqual(appels,['demande:system','relache']);
+ seance('lot:L1');maj();maj();assert.deepEqual(appels,['demande:display'],'une seule demande, pas une par minuteur');
+ seance('relecture:L1');maj();assert.deepEqual(appels,['demande:display'],'le lot puis la relecture : la demande est gardée');
+ seance('passe-differes:L1');maj();assert.deepEqual(appels,['demande:display']);
+ seance(null);maj();assert.deepEqual(appels,['demande:display','relache']);
  maj();assert.equal(appels.length,2,'rien de plus');});
 
 test('la file de parties garde le système éveillé, même entre deux lots',()=>{
  const {appels,seance,file,maj}=montage();
- seance(null);file(true);maj();assert.deepEqual(appels,['demande:system']);
- file(false);maj();assert.deepEqual(appels,['demande:system','relache']);});
+ seance(null);file(true);maj();assert.deepEqual(appels,['demande:display']);
+ file(false);maj();assert.deepEqual(appels,['demande:display','relache']);});
 
 test('l’écoute (Écho, manuelle ou native) ne demande rien : l’opérateur est devant',()=>{
  const {appels,seance,maj}=montage();
@@ -31,7 +31,7 @@ test('l’écoute (Écho, manuelle ou native) ne demande rien : l’opérateur e
 test('une panne de l’API ne casse rien : pas d’exception, la demande est retentée au tour suivant',()=>{
  const {b,appels,seance,maj}=montage();b.ctx.chrome.power.requestKeepAwake=()=>{throw Error('refus de chrome');};
  seance('lot:L1');assert.doesNotThrow(maj);assert.deepEqual(appels,[]);
- b.ctx.chrome.power.requestKeepAwake=n=>appels.push('demande:'+n);maj();assert.deepEqual(appels,['demande:system']);});
+ b.ctx.chrome.power.requestKeepAwake=n=>appels.push('demande:'+n);maj();assert.deepEqual(appels,['demande:display']);});
 
 test('sans l’API (`chrome.power` absent) : aucun effet, aucune exception',()=>{
  const {b,seance}=montage();delete b.ctx.chrome.power;seance('lot:L1');assert.doesNotThrow(()=>b.fonction('eveilMaj()'));});
@@ -42,3 +42,16 @@ test('réglage coupé (`eveil.actif: false`) : aucune demande',()=>{
 
 test('le manifeste déclare la permission « power » (ordre écrit de l’opérateur, 31/10)',()=>{
  const m=require('../manifest.json');assert.ok(m.permissions.includes('power'));});
+
+test('CH-045 : un écart de plus de 30 s entre deux tours alors que la demande est tenue est journalisé « veille-detectee » ; un écart court ne l’est pas',()=>{
+ const {b,seance,maj}=montage();seance('lot:L1');
+ const vrai=Date.now;let t=1e12;b.ctx.Date=Object.assign(function(...a){return new vrai.constructor(...a);},{now:()=>t});
+ b.fonction('globalThis.__j=[];const _js=journalerSimple;journalerSimple=(n,d)=>{globalThis.__j.push([n,d]);return _js(n,d);}');
+ maj();t+=5000;maj();assert.equal(b.fonction('globalThis.__j.filter(x=>x[0]==="veille-detectee").length'),0,'5 s : rien');
+ t+=95000;maj();assert.equal(b.fonction('globalThis.__j.filter(x=>x[0]==="veille-detectee").length'),1,'95 s : une veille');
+ assert.equal(b.fonction('globalThis.__j.find(x=>x[0]==="veille-detectee")[1].ecartMs'),95000);});
+
+test('CH-045 : le niveau par défaut est « display » (l’écran reste allumé) ; « system » reste honoré si le réglage le demande',()=>{
+ const {b,appels,seance,maj}=montage();assert.equal(b.fonction('BananeSettings.eveil.niveau'),'display');
+ b.fonction('globalThis.BananeSettings=Object.freeze({...globalThis.BananeSettings,eveil:Object.freeze({actif:true,niveau:"system"})})');
+ seance('lot:L1');maj();assert.deepEqual(appels,['demande:system']);});

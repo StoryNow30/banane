@@ -1,24 +1,33 @@
-/* Ariane 5 — écran de lancement (voir panel-lancement.js) : le canvas porte la fusée, ce fichier le cadre et le titre. Rien ne touche à la pose ni à ESV. */
-#lancement{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#05070b;color:#e9eef9;cursor:pointer}
+/* Ariane 5 — ÉCRAN DE LANCEMENT, version épurée : une fusée au trait, monochrome, décolle sur un seul filet de lumière ; le nom apparaît dans le silence.
+ * Aucune fumée, aucune étincelle, aucune image : un SVG de traits fins et des animations de transform et d'opacité. Un clic ou une touche le passe ;
+ * « réduire les animations » le remplace par le nom seul. Pure présentation (panel-lancement.js). Durée ≈ 3,9 s. */
+#lancement{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#07090b;color:#f2f4f7;cursor:pointer;
+ animation:lanc-sortie .5s ease-in 3.4s forwards}
 #lancement[hidden],#lancement.fini{display:none}
-#lancement-toile{position:absolute;inset:0;width:100%;height:100%;display:block}
-.lanc-nom{position:relative;text-align:center;pointer-events:none;top:-14vh}
-.lanc-nom h2{margin:0;font:600 clamp(30px,10vw,60px)/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.3em;padding-left:.3em;color:#f4f7ff;text-shadow:0 2px 28px rgba(120,160,255,.55)}
-.lanc-nom h2 span{display:inline-block;opacity:0;transform:translateY(14px) scale(1.15);filter:blur(8px)}
-.lanc-nom small{display:block;margin-top:1.2em;opacity:0;font:500 clamp(10px,2.5vw,13px)/1.4 system-ui,sans-serif;letter-spacing:.24em;color:#9fb0d6;text-transform:uppercase}
-.lanc-trait{display:block;margin:1.3em auto 0;width:0;height:0;border-top:3px double #8fa0c4;opacity:0}
-#lancement.titre .lanc-nom h2 span{animation:lanc-lettre .7s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i)*.07s)}
-#lancement.titre .lanc-nom h2{animation:lanc-lueur 1.4s ease-out .5s both}
-#lancement.titre .lanc-nom small{animation:lanc-fondu .8s ease-out .75s forwards}
-#lancement.titre .lanc-trait{animation:lanc-trait .9s cubic-bezier(.2,.8,.2,1) .55s forwards}
-.lanc-passer{position:absolute;right:14px;bottom:12px;font:500 12px/1 system-ui,sans-serif;color:#7f8cab;letter-spacing:.06em;pointer-events:none;opacity:.8}
-@keyframes lanc-lettre{to{opacity:1;transform:none;filter:blur(0)}}
-@keyframes lanc-lueur{0%{text-shadow:0 0 0 rgba(160,190,255,0)}35%{text-shadow:0 0 40px rgba(170,200,255,.95),0 0 80px rgba(120,160,255,.6)}100%{text-shadow:0 2px 28px rgba(120,160,255,.55)}}
+#lancement svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#lancement svg *{transform-box:view-box}
+.lanc-sol{stroke:#f2f4f7;stroke-width:1;opacity:0;stroke-linecap:round;animation:lanc-fondu-sol 1s ease-out .15s forwards}
+.lanc-trace{stroke:url(#lanc-degrade);stroke-width:1.4;stroke-linecap:round;transform-origin:120px 331px;transform:scaleY(0);animation:lanc-montee-trace 1.45s cubic-bezier(.6,.02,.95,.5) 1.05s forwards}
+.lanc-fusee{opacity:0;animation:lanc-apparait .7s ease-out .2s forwards,lanc-montee 1.45s cubic-bezier(.6,.02,.95,.5) 1.05s forwards}
+.lanc-corps{fill:#f2f4f7}
+.lanc-flamme{transform-origin:120px 331px;transform:scaleY(0);opacity:0;animation:lanc-allume .45s ease-out .8s forwards,lanc-vacille .16s ease-in-out 1.25s infinite alternate}
+.lanc-flamme path{fill:url(#lanc-feu)}
+.lanc-nom{position:relative;text-align:center;pointer-events:none;top:-3vh}
+.lanc-nom h2{margin:0;font:300 clamp(28px,8.5vw,52px)/1 system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:.5em;padding-left:.5em;color:#f2f4f7;opacity:0;animation:lanc-titre 1.2s cubic-bezier(.2,.7,.2,1) 2.2s forwards}
+.lanc-nom i{display:block;margin:1.6em auto 0;height:1px;width:0;background:#f2f4f7;opacity:.55;animation:lanc-filet .9s cubic-bezier(.2,.7,.2,1) 2.5s forwards}
+.lanc-nom small{display:block;margin-top:1.4em;opacity:0;font:400 clamp(10px,2.3vw,12px)/1.4 system-ui,sans-serif;letter-spacing:.3em;color:#a4acba;text-transform:uppercase;animation:lanc-fondu .9s ease-out 2.7s forwards}
+.lanc-passer{position:absolute;right:14px;bottom:12px;font:400 11px/1 system-ui,sans-serif;color:#6c7480;letter-spacing:.08em;pointer-events:none}
+@keyframes lanc-apparait{to{opacity:1}}
+@keyframes lanc-fondu-sol{to{opacity:.35}}
+@keyframes lanc-montee{from{transform:translateY(0)}to{transform:translateY(-560px)}}
+@keyframes lanc-montee-trace{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes lanc-allume{to{transform:scaleY(1);opacity:1}}
+@keyframes lanc-vacille{from{transform:scaleY(.86)}to{transform:scaleY(1.08)}}
+@keyframes lanc-titre{from{opacity:0;letter-spacing:.8em}to{opacity:1;letter-spacing:.5em}}
+@keyframes lanc-filet{to{width:min(160px,38vw)}}
 @keyframes lanc-fondu{to{opacity:1}}
-@keyframes lanc-trait{to{width:min(220px,52vw);opacity:.9}}
-/* Sans mouvement : le nom seul, net, bref (le script ferme l'écran au bout d'1,5 s). */
-#lancement.calme{background:radial-gradient(120% 90% at 50% 100%,#1b2233 0%,#0b0e16 60%,#05070b 100%)}
-#lancement.calme #lancement-toile,#lancement.calme .lanc-passer{display:none}
-#lancement.calme .lanc-nom{top:0}
-#lancement.calme .lanc-nom h2 span{opacity:1;transform:none;filter:none}
-#lancement.calme .lanc-nom small{opacity:1}
+@keyframes lanc-sortie{to{opacity:0;visibility:hidden}}
+/* Sans mouvement (panel.css coupe toute animation) : l'état final, net ; le script retire l'écran au bout d'1,6 s. */
+@media (prefers-reduced-motion:reduce){
+ #lancement svg,.lanc-passer{display:none}
+ .lanc-nom{top:0}.lanc-nom h2{opacity:1;letter-spacing:.5em}.lanc-nom small{opacity:1}.lanc-nom i{width:min(160px,38vw)}}

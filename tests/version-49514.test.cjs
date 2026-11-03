@@ -24,10 +24,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8'),manifest=require('../manifest.json'),K=require('../src/core.js');
-const VERSION='5.0.0',NOM='5.0.0';
-test('manifeste et core : 5.0.0 / « 5.0.0 »',()=>{
+const VERSION='5',NOM='5';
+test('manifeste et core : 5 / « 5 »',()=>{
  assert.deepEqual([manifest.version,manifest.version_name,K.VERSION,K.VERSION_NAME],[VERSION,undefined,VERSION,NOM]);
- assert.equal(manifest.name,'Ariane 5');assert.equal(manifest.action.default_title,'Ouvrir Ariane 5.0.0');
+ assert.equal(manifest.name,'Ariane 5');assert.equal(manifest.action.default_title,'Ouvrir Ariane 5');
 });
 test('service worker, pont, panneau : chaîne de version seulement',()=>{
  assert.ok(read('background.js').includes(`BananeCore3?.VERSION||'${VERSION}',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'${NOM}'`));
@@ -41,7 +41,7 @@ test('aucune trace d’une autre version de test dans les chaînes de version li
  assert.ok(!/VERSION\|\|'4\.9\.(0[.']|5\.[1-9]')/.test(read('background.js')),'background.js');
  assert.ok(!/home:'4\.9\.(0|5 test [1-9]')/.test(read('panel.js')),'panel.js');
 });
-test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21, 4.9.5.22, 4.9.5.23, 4.9.5.24, 4.9.5.25, 4.9.5.26, 4.9.5.27, 4.9.5.28 et 5.0.0 portent l’observateur',()=>{
+test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.9.0, 4.9.5.1, 4.9.5.2, 4.9.5.3, 4.9.5.4, 4.9.5.5, 4.9.5.6, 4.9.5.7, 4.9.5.8, 4.9.5.9, 4.9.5.13, 4.9.5.14, 4.9.5.15, 4.9.5.16, 4.9.5.17, 4.9.5.18, 4.9.5.19, 4.9.5.20, 4.9.5.21, 4.9.5.22, 4.9.5.23, 4.9.5.24, 4.9.5.25, 4.9.5.26, 4.9.5.27, 4.9.5.28 et 5 portent l’observateur',()=>{
  const {measure}=require('../tools/perf-phases.cjs');
  const versions=['4.9.0','4.9.5.1','4.9.5.2','4.9.5.3','4.9.5.4','4.9.5.5','4.9.5.6','4.9.5.7','4.9.5.8','4.9.5.9','4.9.5.13','4.9.5.14','4.9.5.15','4.9.5.16','4.9.5.17','4.9.5.18','4.9.5.19','4.9.5.20','4.9.5.21','4.9.5.22',VERSION];for(let n=2;n<=20;n++)versions.push(`4.9.0.${n}`);
  for(const v of versions)assert.equal(measure({version:v,events:[]}).observations.observerExpected,true,v);

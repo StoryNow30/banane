@@ -1,15 +1,20 @@
 # Banane V4 TEST — journal des versions
 
-## 5.0.0 — Ariane 5 (02/11) — version officielle
+## 5 — Ariane 5 (version officielle)
 
-Manifeste `5.0.0`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Ordre de l'opérateur : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails ».
+Manifeste `5`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Ordre de l'opérateur : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails ».
 
 ### Nouveau
-- **Ariane 5** : nom de l'extension, titre de la fenêtre et du bouton, version `5.0.0` (D-276).
-- **Écran de lancement** : à l'ouverture du panneau, une fusée à deux propulseurs décolle des rails (canvas, ≈ 4,7 s), le titre « ARIANE 5 » se révèle avec les quatre noms (Écho, Orbite, Constellation, Aurore). Un clic ou une touche le passe ; « réduire les animations » le remplace par le nom seul. Pure présentation, rien n'attend cet écran.
+- **Ariane 5** : nom de l'extension, titre de la fenêtre et du bouton, version `5` (D-276).
+- **Écran de lancement (épuré)** : à l'ouverture du panneau, une fusée au trait (silhouette blanche sur fond noir) décolle sur un seul filet de lumière, puis le titre « ARIANE 5 » avec les quatre noms (Écho, Orbite, Constellation, Aurore) apparaît dans le silence (≈ 3,9 s, SVG et CSS, sans fumée ni étincelles). Un clic ou une touche le passe ; « réduire les animations » donne le nom seul. Pure présentation, rien n'attend cet écran.
 
 ### Corrigé
 - **F5 pendant une Constellation (CH-043)** : un F5 sur le cut validé ne clôt plus le lot comme une fin de partie quand le compteur dit qu'il reste des cuts devant (ESV rouvre la partie 0 après un F5) ; la Constellation reprend seule le lot après le rechargement, ramène ESV sur la partie du lot par le lien et reprend le même lot, donc la relecture couvre tous ses cuts (réglage `file.repriseApresRechargement`, vrai par défaut).
+
+- **Constellation : changement de partie refusé « occupé » (CH-044)** : la page refuse le changement quand une de ses actions n'a pas fini ; la demande est redite après des attentes croissantes (au plus ~12 s) avant d'arrêter la file, et l'action en cause est nommée dans le journal et l'alerte.
+
+- **Veille du PC pendant une Constellation (CH-045)** : l'export de la Constellation 17→24 (22 volumes) montre trois captures figées de 41, 90 et 90 s à 11:23-11:25 UTC (ÉTABLI) pendant que la demande d'éveil « system » était tenue ; la navigation de la file, refusée « occupé » 6 fois en 11,75 s, a arrêté la file sur la partie 18 ; plus tard une pause de 74 min (12:50 → 14:03). Le niveau « system » ne retient pas la veille de Windows écran éteint (PROBABLE) : la demande d'éveil passe au niveau « display » (écran allumé), l'attente d'une page occupée passe à 9 essais, ~106 s, et le journal note `veille-detectee` quand les minuteurs sont figés plus de 30 s. **Non vérifié sur un vrai poste.**
+- **Notice d'utilisation** : `NOTICE_UTILISATION.md`.
 
 ### Inchangé, éteint
 - Recherche large (`lot.rechercheLarge`) : ÉTEINTE (D-275, CH-034, CH-041, CH-042 clos).

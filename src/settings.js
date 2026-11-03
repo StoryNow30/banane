@@ -374,8 +374,8 @@
    * à fixer sur les gestes de l'opérateur relevés par l'Écho (`echo.gestesVue`). `clicFinal` reste faux : Chromium termine un vrai
    * glisser par un `click`, et un clic dans la vue d'ESV pose le rail courant. */
   /* Test 27 (ordre de l'opérateur du 30/10) : la relecture après le lot est « corriger » PAR DÉFAUT et ne se règle plus dans l'interface (plus de case à cocher avant chaque lot). `modifiable:true` rend le choix « coupée / ombre / corriger » du panneau. */
-  /* Test 29 (CH-027, ordre écrit de l'opérateur du 31/10) : garder le système éveillé pendant un lot, une file, la deuxième passe ou la relecture (`chrome.power`, permission `power` du manifeste). `niveau: 'system'` : l'écran peut s'éteindre (constat de l'opérateur : ESV et Ariane ont tourné écran éteint) ; `'display'` garde aussi l'écran allumé. */
-  const eveil = Object.freeze({ actif: true, niveau: 'system' });
+  /* Test 29 (CH-027, ordre écrit de l'opérateur du 31/10) : garder le système éveillé pendant un lot, une file, la deuxième passe ou la relecture (`chrome.power`, permission `power` du manifeste). `niveau: 'display'` (CH-045, ordre de l'opérateur du 03/11 : « le défaut le plus important, c'est que ça laisse mon ordi tomber en veille ») : l'écran reste allumé. Constat (export de la Constellation 17→24) : avec `'system'`, le PC est tombé en veille pendant la demande tenue (captures figées de 90 s, pause de 74 min) ; `'system'` ne retient pas la veille moderne de Windows écran éteint. */
+  const eveil = Object.freeze({ actif: true, niveau: 'display' });
   const relectureDefaut = Object.freeze({ mode: 'corriger', modifiable: false });
   const deplacerVue = Object.freeze({
     /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
