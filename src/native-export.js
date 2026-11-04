@@ -347,5 +347,41 @@
   /* Le jalon n'avance que si TOUS les fichiers du vidage sont confirmés écrits ; sinon on garde l'ancien, donc rien n'est perdu. */
   function confirmerJalon(resultat, confirme) { return confirme === true ? resultat.jalon : resultat.jalonAvant; }
 
-  return { deltaMetadonnees, confirmerJalon, FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, alleger, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
+  /* --- CH-049-C : le bilan ne recopie pas les événements du journal ---
+   *
+   * Mesuré le 04/11 sur « Tout télécharger » (lot des parties 6-15) : les 131 379 événements du bilan sont les 131 377 du journal, mêmes octets, même
+   * ordre, plus 2 événements insérés ; ils pèsent 20,5 Mo compressés sur les 21,7 Mo du volume du bilan (7 % du zip du lot). `evenementsParReference`
+   * remplace cette copie par {journal, total, signature, ajouts:[{position, evenement}]} quand le bilan est EXACTEMENT le journal avec des insertions ;
+   * sinon (événement modifié, retiré ou réordonné) elle rend null et le bilan garde sa liste. `rehydraterEvenements` la relit à l'identique et refuse un
+   * autre journal (taille ou signature). Fonctions pures, non branchées : tant que les outils lisent `bilan.events` directement, l'intégrateur décide. */
+  const signatureListe = liste => {
+    let h = 'liste';
+    for (const e of liste) h = empreinte(h + empreinte(JSON.stringify(e)));
+    return h;
+  };
+  function evenementsParReference(evenements, reference, options) {
+    const plafond = Math.max(16, Math.floor(reference.length * ((options && options.partMaxAjouts) || 0.01)));
+    const ajouts = [];
+    let j = 0;
+    for (let i = 0; i < evenements.length; i++) {
+      if (j < reference.length && JSON.stringify(evenements[i]) === JSON.stringify(reference[j])) { j++; continue; }
+      ajouts.push({ position: i, evenement: evenements[i] });
+      if (ajouts.length > plafond) return null;
+    }
+    if (j !== reference.length) return null;
+    return { reference: 'journal', total: evenements.length, longueurJournal: reference.length, signature: signatureListe(reference), ajouts };
+  }
+  function rehydraterEvenements(ref, reference) {
+    if (!ref || reference.length !== ref.longueurJournal) throw Error('Ce n’est pas le journal de cet export (taille différente) : le bilan ne peut pas être reconstruit.');
+    if (signatureListe(reference) !== ref.signature) throw Error('Ce n’est pas le journal de cet export (contenu différent) : le bilan ne peut pas être reconstruit.');
+    const out = [], ajouts = ref.ajouts;
+    let a = 0, j = 0;
+    for (let i = 0; i < ref.total; i++) {
+      if (a < ajouts.length && ajouts[a].position === i) out.push(ajouts[a++].evenement);
+      else out.push(reference[j++]);
+    }
+    return out;
+  }
+
+  return { evenementsParReference, rehydraterEvenements, deltaMetadonnees, confirmerJalon, FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, alleger, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
 });
