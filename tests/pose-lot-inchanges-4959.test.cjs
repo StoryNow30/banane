@@ -13,7 +13,7 @@ const REF=require('./pose-inchangee-4958.json');
 const racine=path.resolve(__dirname,'..'),lire=f=>fs.readFileSync(path.join(racine,f),'utf8');
 const sha=t=>crypto.createHash('sha256').update(t).digest('hex');
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
-const ECHO={'src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
+const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
 const VERSION_SEULE=['src/core.js','src/bridge.js'];   // le numéro de version, rien d'autre
 /* 4.9.5.13 (test 13, profil du lot « L1 ») : le moteur rend son réservoir SUR DEMANDE (sortie par défaut inchangée, tests/gcv2-l1.test.cjs) ; deux
