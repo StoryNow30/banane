@@ -48,12 +48,14 @@ for (const [stamp, segs] of groupes) {
     if (s !== premier || !auto) { fs.writeFileSync(fd, s.buf); modifies.push(fd); continue; }
     const complet = X.expand(s.doc);
     if (complet.session && complet.session.id !== session) { session = complet.session.id; jalon = null; }
+    /* Durée de fabrication (compactage + sérialisation + compression), comme le panneau, du vidage complet puis du delta. */
+    const chrono = f => { const t = process.hrtime.bigint(); const v = f(); return [v, Number(process.hrtime.bigint() - t) / 1e6]; };
+    const [, msPlein] = chrono(() => def(Buffer.from(JSON.stringify(X.compact(complet, {})))));
     const r = X.deltaMetadonnees(complet, jalon);
-    const sortieDoc = X.compact(r.doc, {});
-    const buf = Buffer.from(JSON.stringify(sortieDoc));
+    const [buf, msDelta] = chrono(() => { const b = Buffer.from(JSON.stringify(X.compact(r.doc, {}))); def(b); return b; });
     fs.writeFileSync(fd, buf); modifies.push(fd);
     jalon = X.confirmerJalon(r, true);
-    delta = { stats: r.stats, avant: s.buf.length, apres: buf.length, avantZ: def(s.buf), apresZ: def(buf) };
+    delta = { msPlein, msDelta, stats: r.stats, avant: s.buf.length, apres: buf.length, avantZ: def(s.buf), apresZ: def(buf) };
   }
   const nom = segs.map(s => s.e.nom.replace(/^ariane-echo-.*?(seg\d+)\.json$/, '$1')).join('+');
   lignes.push({ stamp, auto, segments: nom, ...(delta || {}) });
@@ -74,7 +76,7 @@ const tot = lignes.filter(l => l.avant).reduce((t, l) => ({ avant: t.avant + l.a
 const totSerie = { avant: lus.reduce((n, l) => n + l.buf.length, 0), avantZ: lus.reduce((n, l) => n + def(l.buf), 0) };
 console.log('Vidages automatiques (premier segment, en-tête complet) :');
 for (const l of lignes) console.log(`  ${l.stamp} ${l.auto ? 'auto ' : 'final'} ${l.segments}` + (l.avant
-  ? `  ${mo(l.avant)} -> ${mo(l.apres)} Mo brut, ${mo(l.avantZ)} -> ${mo(l.apresZ)} Mo compressé ; événements ${l.stats.events.envoyes}/${l.stats.events.total}, visites ${l.stats.records.envoyes}/${l.stats.records.total}` : '  (inchangé)'));
+  ? `  ${mo(l.avant)} -> ${mo(l.apres)} Mo brut, ${mo(l.avantZ)} -> ${mo(l.apresZ)} Mo compressé ; événements ${l.stats.events.envoyes}/${l.stats.events.total}, visites ${l.stats.records.envoyes}/${l.stats.records.total} ; fabrication ${(l.msPlein / 1000).toFixed(1)} -> ${(l.msDelta / 1000).toFixed(1)} s` : '  (inchangé)'));
 console.log(`Segments d'en-tête réécrits : ${mo(tot.avant)} -> ${mo(tot.apres)} Mo brut (${(100 - tot.apres / tot.avant * 100).toFixed(1)} % en moins), ${mo(tot.avantZ)} -> ${mo(tot.apresZ)} Mo compressé (${(100 - tot.apresZ / tot.avantZ * 100).toFixed(1)} % en moins)`);
 const serieApres = totSerie.avant - tot.avant + tot.apres, serieApresZ = totSerie.avantZ - tot.avantZ + tot.apresZ;
 console.log(`Série entière : ${mo(totSerie.avant)} -> ${mo(serieApres)} Mo brut (${(100 - serieApres / totSerie.avant * 100).toFixed(1)} %), ${mo(totSerie.avantZ)} -> ${mo(serieApresZ)} Mo compressé (${(100 - serieApresZ / totSerie.avantZ * 100).toFixed(1)} %)`);
