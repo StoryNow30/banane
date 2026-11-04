@@ -289,5 +289,99 @@
     return out;
   }
 
-  return { FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, alleger, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
+  /* --- CH-049-C : vidage automatique en DELTA ---
+   *
+   * Mesuré le 04/11 sur l'Écho des parties 13-14-15 (8 segments à métadonnées, un vidage toutes les ~2 min) : chaque vidage
+   * réécrit l'instantané COMPLET de la session (événements, visites, dictionnaires), car seuls les nuages sont purgés après
+   * confirmation. Sur 54,3 Mo d'événements écrits, 37,9 Mo (70 %) l'étaient déjà ; sur 74,5 Mo d'entrées de dictionnaire,
+   * 54,2 Mo (73 %) ; les visites, développées, sont identiques d'un vidage à l'autre à quelques champs près.
+   *
+   * Le delta n'écrit, pour un vidage automatique, que les événements et les visites NEUFS OU MODIFIÉS depuis le dernier vidage
+   * confirmé écrit. Les nuages, la session et le reste de l'en-tête ne changent pas. L'export final reste complet (il n'appelle
+   * pas ceci). merge-segments relit déjà ces séries : union des événements (par eventId, sinon eventSeq) et des visites (par
+   * recordId), le dernier segment en date l'emporte. Aucune entrée n'est modifiée ; le jalon est une valeur (empreintes), jamais
+   * le contenu. Un élément sans identifiant est toujours renvoyé : on ne devine pas. Une autre session remet tout à zéro. */
+  const empreinte = s => {   // cyrb53 : 53 bits, sans dépendance ; une collision ne ferait que taire une modification, d'où deux empreintes
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57, h3 = 0x9e3779b1;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); h3 = Math.imul(h3 ^ c, 2246822519);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36) + '.' + (h3 >>> 0).toString(36) + '.' + s.length;
+  };
+  const cleEvenement = e => e && (e.eventId || (e.eventSeq !== undefined && e.eventSeq !== null ? 'seq:' + e.eventSeq : null));
+  const cleVisite = r => r && (r.recordId || r.id || null);
+  function deltaListe(liste, cle, avant) {
+    const suivant = new Map(), gardes = [];
+    for (const x of liste || []) {
+      const k = cle(x);
+      if (k === null || k === undefined) { gardes.push(x); continue; }
+      const h = empreinte(JSON.stringify(x));
+      suivant.set(k, h);
+      if (!avant || avant.get(k) !== h) gardes.push(x);
+    }
+    return { gardes, suivant };
+  }
+  /* `doc` : le jeu d'export non compacté (records, events, clouds…). `jalon` : rendu par `confirmerJalon`, ou null.
+   * Rend { doc, jalon (à n'adopter qu'après confirmation), jalonAvant, stats }. */
+  function deltaMetadonnees(doc, jalon) {
+    const session = doc && doc.session && doc.session.id;
+    const valide = jalon && jalon.version === 1 && session !== undefined && jalon.session === session;
+    const ev = deltaListe(doc.events, cleEvenement, valide ? jalon.events : null);
+    const rc = deltaListe(doc.records, cleVisite, valide ? jalon.records : null);
+    const stats = {
+      events: { total: (doc.events || []).length, envoyes: ev.gardes.length },
+      records: { total: (doc.records || []).length, envoyes: rc.gardes.length },
+    };
+    return {
+      doc: { ...doc, events: ev.gardes, records: rc.gardes,
+        deltaVidage: { ...stats, note: 'Vidage en delta : événements et visites neufs ou modifiés depuis le vidage précédent ; ' +
+          'tools/merge-segments.cjs réunit la série (l’export final est complet).' } },
+      jalon: { version: 1, session: session === undefined ? null : session, events: ev.suivant, records: rc.suivant },
+      jalonAvant: valide ? jalon : null,
+      stats,
+    };
+  }
+  /* Le jalon n'avance que si TOUS les fichiers du vidage sont confirmés écrits ; sinon on garde l'ancien, donc rien n'est perdu. */
+  function confirmerJalon(resultat, confirme) { return confirme === true ? resultat.jalon : resultat.jalonAvant; }
+
+  /* --- CH-049-C : le bilan ne recopie pas les événements du journal ---
+   *
+   * Mesuré le 04/11 sur « Tout télécharger » (lot des parties 6-15) : les 131 379 événements du bilan sont les 131 377 du journal, mêmes octets, même
+   * ordre, plus 2 événements insérés ; ils pèsent 20,5 Mo compressés sur les 21,7 Mo du volume du bilan (7 % du zip du lot). `evenementsParReference`
+   * remplace cette copie par {journal, total, signature, ajouts:[{position, evenement}]} quand le bilan est EXACTEMENT le journal avec des insertions ;
+   * sinon (événement modifié, retiré ou réordonné) elle rend null et le bilan garde sa liste. `rehydraterEvenements` la relit à l'identique et refuse un
+   * autre journal (taille ou signature). Fonctions pures, non branchées : tant que les outils lisent `bilan.events` directement, l'intégrateur décide. */
+  const signatureListe = liste => {
+    let h = 'liste';
+    for (const e of liste) h = empreinte(h + empreinte(JSON.stringify(e)));
+    return h;
+  };
+  function evenementsParReference(evenements, reference, options) {
+    const plafond = Math.max(16, Math.floor(reference.length * ((options && options.partMaxAjouts) || 0.01)));
+    const ajouts = [];
+    let j = 0;
+    for (let i = 0; i < evenements.length; i++) {
+      if (j < reference.length && JSON.stringify(evenements[i]) === JSON.stringify(reference[j])) { j++; continue; }
+      ajouts.push({ position: i, evenement: evenements[i] });
+      if (ajouts.length > plafond) return null;
+    }
+    if (j !== reference.length) return null;
+    return { reference: 'journal', total: evenements.length, longueurJournal: reference.length, signature: signatureListe(reference), ajouts };
+  }
+  function rehydraterEvenements(ref, reference) {
+    if (!ref || reference.length !== ref.longueurJournal) throw Error('Ce n’est pas le journal de cet export (taille différente) : le bilan ne peut pas être reconstruit.');
+    if (signatureListe(reference) !== ref.signature) throw Error('Ce n’est pas le journal de cet export (contenu différent) : le bilan ne peut pas être reconstruit.');
+    const out = [], ajouts = ref.ajouts;
+    let a = 0, j = 0;
+    for (let i = 0; i < ref.total; i++) {
+      if (a < ajouts.length && ajouts[a].position === i) out.push(ajouts[a++].evenement);
+      else out.push(reference[j++]);
+    }
+    return out;
+  }
+
+  return { evenementsParReference, rehydraterEvenements, deltaMetadonnees, confirmerJalon, FORMAT, REF, SHAPES, UNE_FOIS, MODES, MODE_DEFAUT, exportMode, alleger, enteteMince, createInterner, foldRefs, unfoldRefs, compactCloud, expandCloud, compact, expand, misfiledHead };
 });

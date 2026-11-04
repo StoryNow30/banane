@@ -3837,12 +3837,15 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  const de0=lu?.identity?.part??null;
  const modes=[...(gestes(de0??entierOuNul(ping?.label?.part))?['invalide-suivant','suivant-dernier'].filter(m=>ping.capacites.includes('changerPartie:'+m)):[]),'lien'];
  /* Attente de la preuve d'une tentative acceptée : la partie demandée, ou une autre partie (arrêt), ou rien dans la borne. */
- const preuve=async borne=>{const fin=Date.now()+borne;let vu=false,derniere=null,partie=null;
+ const preuve=async(borne,T,t)=>{const fin=Date.now()+borne;let vu=false,derniere=null,partie=null;
+  /* CH-049-C : jalons en ms depuis le début de la tentative (page rechargée, chargée, première lecture, première AUTRE partie lue, partie attendue lue), une fois chacun. */
+  const jal=k=>{if(!(k in T.jalons))T.jalons[k]=Date.now()-t;};
   while(Date.now()<fin){if(!attendu())return {quitte:true};
    let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
    if(!tab)return {onglet:true};
-   if(tab.status&&tab.status!=='complete'){await attendre(R.pollMs);continue;}
-   try{const r=await readState();vu=true;partie=r?.identity?.part??null;if(pret(r))return {r};derniere=partie!==null?`ESV affiche la partie ${partie}, cut ${r?.identity?.cut??'?'}`:null;}
+   if(tab.status&&tab.status!=='complete'){jal('rechargee');await attendre(R.pollMs);continue;}
+   if('rechargee' in T.jalons)jal('chargee');
+   try{const r=await readState();vu=true;partie=r?.identity?.part??null;jal('lecture');if(partie!==null&&partie!==vers&&!('autrePartie' in T.jalons))T.jalons.autrePartie={ms:Date.now()-t,part:partie};if(pret(r)){jal('partieLue');return {r};}derniere=partie!==null?`ESV affiche la partie ${partie}, cut ${r?.identity?.cut??'?'}`:null;}
    catch(x){derniere=String(x?.message||x).slice(0,160);try{await equiperOnglet(selectedTab);}catch(y){if(y?.definitif)return {definitif:y.message};}}
    await attendre(R.pollMs);}
   return {vu,derniere,partie};};
@@ -3856,13 +3859,13 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  let dernierMotif=null,autrePartieOuverte=false;
  for(const mode of modes){if(!attendu())return fin({quitte:true});
   if(autrePartieOuverte&&mode!=='lien')continue;   /* CH-046 : ESV est sur une autre partie, plus aucun geste n'y est tenté, seul le lien */
-  const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null};tentatives.push(T);
+  const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null,jalons:{}};tentatives.push(T);
   const fixer=rep=>{T.raison=typeof rep?.raison==='string'?rep.raison.slice(0,40):null;T.de=Number.isInteger(rep?.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:T.de;
    T.compteur=rep?.compteur&&Number.isInteger(rep.compteur.total)?{traites:entierOuNul(rep.compteur.traites),total:rep.compteur.total}:T.compteur;
    T.bouton=rep?.bouton?.id?{id:String(rep.bouton.id).slice(0,40),existe:!!rep.bouton.exists,inactif:!!rep.bouton.disabled}:T.bouton;
    T.sansDecision=rep?.validationCommandSent===false&&rep?.skipCommandSent===false;};
   const noter=(issue,texte,apres=null)=>{T.issue=issue;T.texte=texte;T.identiteApres=apres;T.dureeMs=Date.now()-t;
-   journalerSimple(typeTentative,{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs});};
+   journalerSimple(typeTentative,{vers,retour,mode,de:T.de,deja:issue==='deja',tentative:tentatives.length,raison:T.raison,compteur:T.compteur,bouton:T.bouton,goto:T.goto,issue,texte:texte.slice(0,200),identiteApres:apres,sansDecision:T.sansDecision??null,dureeMs:T.dureeMs,jalons:T.jalons});};
   let rep=null;try{rep=await demander(mode);}catch(x){fixer(null);noter('refus',`commande refusée (${String(x?.message||x).slice(0,120)})`);dernierMotif='changement-impossible';continue;}
   fixer(rep);
   /* « Dernier cut puis Z » : l'adaptateur dit le dernier cut (compteur M − 1) ; Ariane y va (`goToCut`, navigation seule), puis redemande. */
@@ -3877,7 +3880,7 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
     :r==='occupe'?`une action d’Ariane est encore en cours dans la page (${String(rep?.action||'inconnue').slice(0,40)})`:r==='bouton-absent'||r==='bouton-desactive'?`bouton ${T.bouton?.id||'?'} ${r==='bouton-absent'?'absent':'désactivé'}`:r?`la page refuse : ${String(r).slice(0,60)}`:'réponse illisible de la page';
    noter('refus',texte);dernierMotif=['partie-absente','libelle-illisible'].includes(r)?'selecteur-illisible':'changement-impossible';continue;}
   if(rep.deja){noter('deja','déjà sur la partie');const r=await readState().catch(()=>null);if(pret(r))return ok(r);continue;}
-  const P=await preuve(mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs));
+  const P=await preuve(mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs),T,t);
   if(P.quitte)return fin({quitte:true});
   if(P.onglet){noter('onglet-ferme','onglet ESV fermé');return echec('onglet-ferme','onglet ESV fermé pendant le changement de partie');}
   if(P.definitif){noter('echec',P.definitif.slice(0,160));return echec('changement-impossible',P.definitif);}
