@@ -86,3 +86,28 @@ test('adaptateur d’aujourd’hui (sans les modes) : seul le lien, jamais un mo
   assert.ok(!M.adapter.calls.some(c => /changerPartie:(invalide|suivant)/.test(c)));
   assert.deepEqual(tentatives(M).map(x => [x.mode, x.issue]), [['lien', 'ok']]);
 });
+
+/* CH-049-C (mesure de CH-049-E : le changement de partie prend 10,4 s en moyenne, 16,2 s au plus, sans requête de points ; le journal ne dit pas où
+ * l'attente se passe). Chaque tentative porte maintenant des JALONS en ms depuis son début : page rechargée, page chargée, première lecture d'ESV,
+ * première lecture d'une AUTRE partie (laquelle), partie attendue lue. Quelques entiers par tentative, rien d'autre ne change. */
+test('CH-049-C : la tentative réussie porte ses jalons (entiers, ordonnés), sans changer le reste de l’événement', async () => {
+  const M = montage(); await jusquauChangement(M, { reste: 0 });
+  await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1, 3000, 'lot de la partie 24');
+  const t = tentatives(M)[0];
+  assert.ok(t.jalons && typeof t.jalons === 'object', 'jalons présents');
+  assert.ok(Number.isInteger(t.jalons.partieLue), 'partie attendue lue : ' + JSON.stringify(t.jalons));
+  assert.ok(Number.isInteger(t.jalons.lecture) && t.jalons.lecture <= t.jalons.partieLue, 'première lecture avant la partie attendue');
+  assert.ok(t.jalons.partieLue <= t.dureeMs, 'jalon final dans la durée de la tentative');
+  for (const [k, v] of Object.entries(t.jalons)) if (k !== 'autrePartie') assert.ok(Number.isInteger(v) && v >= 0, k);
+  assert.ok(JSON.stringify(t.jalons).length < 160, 'quelques entiers seulement');
+  assert.equal(t.issue, 'ok'); assert.equal(t.sansDecision, true);
+});
+test('CH-049-C : une tentative sans effet porte des jalons sans « partieLue »', async () => {
+  const M = montage(); await jusquauChangement(M, { reste: 0, sansEffet: ['invalide-suivant', 'suivant-dernier'] });
+  M.adapter.identity.cut = 9;
+  await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1, 5000, 'lot de la partie 24');
+  const t = tentatives(M);
+  assert.equal(t[0].issue, 'sans-effet');
+  assert.ok(t[0].jalons && !('partieLue' in t[0].jalons), JSON.stringify(t[0].jalons));
+  assert.ok(Number.isInteger(t[2].jalons.partieLue));
+});
