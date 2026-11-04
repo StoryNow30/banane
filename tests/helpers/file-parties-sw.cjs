@@ -18,7 +18,7 @@ const LOT_ARGS = { testConfirmed: true, allowNavigationEvidence: true, lowConfid
  * demandée 30 ms plus tard (variante « rechargement » : autre page). Réglages : `capacite` (false : adaptateur d'aujourd'hui), `refus`, `bloque`
  * (la page ne change jamais de partie), `muet` (ping sans réponse). */
 class EsvParties extends SimulatedESV {
-  constructor() { super(); Object.assign(this, { parts: [23, 24, 25, 26], capacite: true, refus: null, bloque: false, muet: false, gestes: false, reste: 0, total: 10, sansEffet: [], ouvre: null }); this.identity.cut = 5; }
+  constructor() { super(); Object.assign(this, { parts: [23, 24, 25, 26], capacite: true, refus: null, bloque: false, muet: false, gestes: false, reste: 0, total: 10, sansEffet: [], ouvre: null, lienOuvre: null }); this.identity.cut = 5; }
   /* CH-026 : aller à un cut de la partie affichée (navigation seule), comme l'adaptateur. */
   async goToCut(cible) { this.calls.push('goToCut:' + cible.cut); if (cible.part !== this.identity.part) return { resultat: 'refuse', confirme: false, refusal: { code: 'WRONG_PART', message: 'autre partie' } };
     this.identity = { ...this.identity, cut: cible.cut }; return { resultat: 'confirme', confirme: true, chemin: 'evenement' }; }
@@ -49,7 +49,8 @@ class EsvParties extends SimulatedESV {
     if (!this.parts.includes(part)) return { ok: false, raison: 'partie-absente' };
     const de = { part: this.identity.part, cut: this.identity.cut };
     if (part === this.identity.part) return { ok: true, deja: true, mode: 'lien', de, vers: part };
-    if (!this.bloque) setTimeout(() => { this.identity = { ...this.identity, part, cut: 1, pageId: 'page-' + part }; }, 30);
+    const ouverte = this.lienOuvre ?? part;   /* CH-046 : `lienOuvre` = la partie qu'ESV ouvre à la place quand on clique le lien */
+    if (!this.bloque) setTimeout(() => { this.identity = { ...this.identity, part: ouverte, cut: 1, pageId: 'page-' + ouverte }; }, 30);
     return { ok: true, mode: 'lien', de, vers: part };
   }
 }
