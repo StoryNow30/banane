@@ -3849,8 +3849,9 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  const demander=async mode=>{let rep=await call('changerPartie',{part:vers,mode});
   for(const w of OCC){if(rep?.raison!=='occupe'||!attendu())break;await attendre(w);rep=await call('changerPartie',{part:vers,mode});}
   return rep;};
- let dernierMotif=null;
+ let dernierMotif=null,autrePartieOuverte=false;
  for(const mode of modes){if(!attendu())return fin({quitte:true});
+  if(autrePartieOuverte&&mode!=='lien')continue;   /* CH-046 : ESV est sur une autre partie, plus aucun geste n'y est tenté, seul le lien */
   const t=Date.now(),T={mode,raison:null,de:null,compteur:null,bouton:null,goto:null,issue:null,texte:'',identiteApres:null,dureeMs:null};tentatives.push(T);
   const fixer=rep=>{T.raison=typeof rep?.raison==='string'?rep.raison.slice(0,40):null;T.de=Number.isInteger(rep?.de?.part)?{part:rep.de.part,cut:entierOuNul(rep.de.cut)}:T.de;
    T.compteur=rep?.compteur&&Number.isInteger(rep.compteur.total)?{traites:entierOuNul(rep.compteur.traites),total:rep.compteur.total}:T.compteur;
@@ -3879,6 +3880,8 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
   if(P.r){noter('ok',`partie ${vers} ouverte en ${Math.round((Date.now()-t)/100)/10} s`,{part:vers,cut:entierOuNul(P.r.identity?.cut)});return ok(P.r);}
   const borne=Math.round((mode==='lien'?R.changementBorneMs:Math.min(FILE_GESTE_BORNE_MS,R.changementBorneMs))/1000);
   if(Number.isInteger(P.partie)&&P.partie!==vers&&P.partie!==(T.de?.part??de0)){noter('autre-partie',`ESV a ouvert la partie ${P.partie}, pas la partie ${vers}`,{part:P.partie,cut:null});
+   /* CH-046 (terrain du 03/11, deux Constellations arrêtées aux passages 1→2 et 2→3) : après un geste, ESV rouvre seul la partie 0 (la plus petite qui garde des cuts à valider, PROBABLE) et l'arrêt prudent coupait la file avant le lien du sélecteur. Un geste qui aboutit à une autre partie passe au lien, navigation seule vers la partie du plan ; seul le lien lui-même, s'il échoue ou s'il aboutit ailleurs, arrête la file. */
+   if(mode!=='lien'&&!retour){dernierMotif='changement-impossible';autrePartieOuverte=true;continue;}
    return echec('changement-impossible',`ESV a ouvert la partie ${P.partie} au lieu de la partie ${vers} : arrêt prudent`);}
   noter(P.vu?'sans-effet':'muet',`${P.vu?`la partie ${vers} n’est pas affichée`:'ESV ne répond plus'} après ${borne} s${P.derniere?` (${P.derniere})`:''}`,Number.isInteger(P.partie)?{part:P.partie,cut:null}:null);
   dernierMotif=P.vu?'changement-impossible':'esv-muet';}

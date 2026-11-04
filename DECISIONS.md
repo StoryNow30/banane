@@ -3358,4 +3358,8 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Preuve (export de la Constellation 25-26, `banane-data`, collection `2026-11-03_v5_constellation-parties-25-26`) : ÉTABLI, 0 événement `veille-detectee`, aucune capture de plus de 15 s, aucun écart de plus de 56 s, 0 SKIP ; TÉMOIGNAGE de l'opérateur : pas de veille.
 - Acte : étiquette `v5` sur le tronc au commit du paquet (`ae65426`, SHA-256 du paquet `81e30bc2…b9b1`). `main` n'est pas touchée (historiques sans lien : 412 contre 405 commits ; la route reste à choisir par l'opérateur). Publication GitHub et Chrome Web Store : hors des moyens de l'intégrateur.
 - Ouvert : 68 différés sur 297 en partie 26 (23 %) contre 1 à 10 dans l'export précédent, cause non analysée ; `deplacement-vue-remise-lot-compte` à 19 s sur 20 s de limite.
-- Le numéro suivant est D-279.
+
+## D-279 — Changement de partie : le lien après un geste qui ouvre une autre partie (CH-046, 04/11)
+- Constat (captures de l'opérateur, deux arrêts) : « ESV a ouvert la partie 0 au lieu de la partie 2 », puis « … au lieu de la partie 3 », après « invalide-suivant » refusé (reste un cut) et « suivant-dernier ». Hypothèse PROBABLE : ESV ouvre la plus petite partie qui garde des cuts à valider (la partie 0 avait 2 cuts à poser). Journal de ces deux séances non lu.
+- Décision de l'intégrateur, sur le constat de l'opérateur « de nouveau ce bug » : après un geste qui ouvre une autre partie, plus de second geste, le lien du sélecteur vers la partie du plan ; arrêt prudent seulement si le lien échoue ou aboutit ailleurs. Ni validation ni SKIP.
+- Le numéro suivant est D-280.

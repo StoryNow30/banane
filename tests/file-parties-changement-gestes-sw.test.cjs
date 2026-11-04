@@ -52,12 +52,20 @@ test('tout échoue : arrêt « changement-impossible » avec une alerte qui dit 
   sansDecision(M);
 });
 
-test('un geste ouvre une AUTRE partie que la suivante prévue : arrêt prudent immédiat, rien d’autre n’est essayé', async () => {
+test('CH-046 : un geste ouvre une AUTRE partie que la suivante prévue (ESV rouvre la partie 0) : plus aucun autre geste, le lien du sélecteur amène à la partie du plan, la file continue', async () => {
   const M = montage(); await jusquauChangement(M, { reste: 0, ouvre: 26 });
-  await M.jusqua(() => M.etat()?.etat === 'arret', 3000, 'arrêt');
-  assert.match(M.etat().alerte.detail, /ESV a ouvert la partie 26 au lieu de la partie 24 : arrêt prudent/);
-  assert.deepEqual(tentatives(M).map(x => [x.mode, x.issue]), [['invalide-suivant', 'autre-partie']]);
-  assert.ok(!M.adapter.calls.includes('changerPartie:24'));
+  await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1, 3000, 'lot de la partie 24 après le lien');
+  assert.deepEqual(tentatives(M).map(x => [x.mode, x.issue]), [['invalide-suivant', 'autre-partie'], ['lien', 'ok']], 'aucun second geste depuis la mauvaise partie');
+  assert.ok(M.adapter.calls.includes('changerPartie:24'), 'le lien est demandé');
+  assert.ok(!M.adapter.calls.some(c => /^changerPartie:suivant-dernier/.test(c)), 'aucun second geste');
+  sansDecision(M);
+});
+
+test('CH-046 : le lien lui-même aboutit ailleurs : arrêt prudent, comme avant', async () => {
+  const M = montage(); await jusquauChangement(M, { reste: 0, ouvre: 26, lienOuvre: 27 });
+  await M.jusqua(() => M.etat()?.etat === 'arret', 5000, 'arrêt');
+  assert.match(M.etat().alerte.detail, /ESV a ouvert la partie 27 au lieu de la partie 24|n’a pas affiché la partie 24/);
+  sansDecision(M);
 });
 
 test('adaptateur d’aujourd’hui (sans les modes) : seul le lien, jamais un mode qu’il ignorerait ; tentative journalisée', async () => {
