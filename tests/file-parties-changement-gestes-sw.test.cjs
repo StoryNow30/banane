@@ -68,6 +68,18 @@ test('CH-046 : le lien lui-même aboutit ailleurs : arrêt prudent, comme avant'
   sansDecision(M);
 });
 
+test('CH-047 : ESV repasse d’abord par la partie 0 puis ouvre la bonne partie plus tard : la file attend, aucun arrêt, aucun lien cliqué', async () => {
+  const M = montage(); await jusquauChangement(M, { reste: 0, transitoire: 0, retard: 350 });
+  await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1, 3000, 'lot de la partie 24 après le passage par la partie 0');
+  assert.deepEqual(tentatives(M).map(x => [x.mode, x.issue]), [['invalide-suivant', 'ok']]);
+  assert.ok(!M.adapter.calls.includes('changerPartie:24'), 'le lien n’est pas cliqué'); sansDecision(M);
+});
+
+test('CH-047 : la borne des gestes couvre le délai constaté sur le terrain (13 à 17 s) avec de la marge', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'background.js'), 'utf8');
+  const m = /const FILE_GESTE_BORNE_MS=(\d+);/.exec(src); assert.ok(m && Number(m[1]) >= 40000, 'borne des gestes : ' + (m && m[1]));
+});
+
 test('adaptateur d’aujourd’hui (sans les modes) : seul le lien, jamais un mode qu’il ignorerait ; tentative journalisée', async () => {
   const M = montage(); await M.vie(); await M.demarrer(2); await M.partie(0);
   await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1, 3000, 'lot de la partie 24');

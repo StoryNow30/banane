@@ -18,7 +18,7 @@ const LOT_ARGS = { testConfirmed: true, allowNavigationEvidence: true, lowConfid
  * demandée 30 ms plus tard (variante « rechargement » : autre page). Réglages : `capacite` (false : adaptateur d'aujourd'hui), `refus`, `bloque`
  * (la page ne change jamais de partie), `muet` (ping sans réponse). */
 class EsvParties extends SimulatedESV {
-  constructor() { super(); Object.assign(this, { parts: [23, 24, 25, 26], capacite: true, refus: null, bloque: false, muet: false, gestes: false, reste: 0, total: 10, sansEffet: [], ouvre: null, lienOuvre: null }); this.identity.cut = 5; }
+  constructor() { super(); Object.assign(this, { parts: [23, 24, 25, 26], capacite: true, refus: null, bloque: false, muet: false, gestes: false, reste: 0, total: 10, sansEffet: [], ouvre: null, lienOuvre: null, transitoire: null, retard: null }); this.identity.cut = 5; }
   /* CH-026 : aller à un cut de la partie affichée (navigation seule), comme l'adaptateur. */
   async goToCut(cible) { this.calls.push('goToCut:' + cible.cut); if (cible.part !== this.identity.part) return { resultat: 'refuse', confirme: false, refusal: { code: 'WRONG_PART', message: 'autre partie' } };
     this.identity = { ...this.identity, cut: cible.cut }; return { resultat: 'confirme', confirme: true, chemin: 'evenement' }; }
@@ -41,7 +41,8 @@ class EsvParties extends SimulatedESV {
       if (mode === 'invalide-suivant' && this.reste > 0) return { ok: false, raison: 'reste-a-valider', bouton, ...base };
       if (mode === 'suivant-dernier' && this.identity.cut !== this.total - 1) return { ok: false, raison: 'pas-au-dernier-cut', dernier: this.total - 1, bouton, ...base };
       if (!this.sansEffet.includes(mode)) { const suite = this.ouvre ?? this.parts[this.parts.indexOf(this.identity.part) + 1];
-        if (Number.isInteger(suite)) setTimeout(() => { this.identity = { ...this.identity, part: suite, cut: 0 }; }, 30); }
+        if (this.transitoire !== null && this.transitoire !== undefined) { setTimeout(() => { this.identity = { ...this.identity, part: this.transitoire, cut: 0 }; }, 30); if (Number.isInteger(suite)) setTimeout(() => { this.identity = { ...this.identity, part: suite, cut: 1 }; }, this.retard ?? 300); }   /* CH-047 : ESV passe d'abord par la partie `transitoire` (0), puis ouvre la bonne après `retard` ms */
+        else if (Number.isInteger(suite)) setTimeout(() => { this.identity = { ...this.identity, part: suite, cut: 0 }; }, 30); }
       return { ok: true, bouton, ...base };
     }
     this.calls.push('changerPartie:' + part);

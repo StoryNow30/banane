@@ -3800,7 +3800,8 @@ async function fileDemarrerLot({part,rang}){const e=fileP.etat;if(!e||e.etat!=='
  * SKIP (l'adaptateur le rend dans sa réponse). Une tentative refusée ou sans effet passe à la suivante ; une AUTRE partie ouverte arrête tout.
  * Chaque tentative est un événement `file-parties-changement` (mode, réponse de la page, compteur, bouton, identité avant et après, délai) ; un
  * échec, un `file-parties-changement-echec` (toutes les tentatives, sélecteur avant et après) et une alerte qui le dit dans Signal : jamais muet. */
-const FILE_GESTE_BORNE_MS=15000;
+/* CH-047 (journal du 04/11, deux Constellations arrêtées « ESV a ouvert la partie 0 ») : après le geste, ESV recharge la page et affiche d'abord la partie 0 (comme après un F5), puis la bonne partie ~13 à 17 s plus tard (réussis : 13,2 s et 13,5 s ; arrêtés à 15,4 s, la partie 2 arrivant 1,2 s après). La borne de 15 s était trop juste : 45 s. */
+const FILE_GESTE_BORNE_MS=45000;
 async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.etat;if(!R||!e0)return;
  const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
  const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
