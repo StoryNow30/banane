@@ -3117,9 +3117,12 @@ async function correctionTerminer({raison='operateur'}={}){
  correctionVivante=null;
  /* CH-037 : les mêmes visites fusionnées que l'écran (étiquettes provisoires comprises), donc le même résultat. */
  const I=await correctionIssues(C).catch(()=>C.issues||{});
- const b=CL().bilan(entreesCorrection(C),visitesDeCorrection(C,engine.s.native,I));
+ const visites=visitesDeCorrection(C,engine.s.native,I);
+ /* CH-049-B : l'enregistrement d'apprentissage de chaque cut validé ou corrigé est relu (lecture seule) pour dire s'il est complet et, sinon, ce qui manque. */
+ const enr={};for(const x of visites){if(!x.visitId||enr[x.visitId]!==undefined)continue;try{enr[x.visitId]=await native.recordById(x.visitId);}catch{enr[x.visitId]=null;}}
+ const b=CL().bilan(entreesCorrection(C),visites,enr);
  Object.assign(C,{etat:'terminee',finA:new Date().toISOString(),bilan:b.comptes,courant:null,raisonFin:raison});await engine.save();
- journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,regleStatut:CL().REGLE_STATUT,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null}))});
+ journalerSimple('correction-fin',{correctionId:C.id,raison,sessionEcho:C.sessionId??null,regleStatut:CL().REGLE_STATUT,comptes:b.comptes,lignes:b.lignes.map(l=>({part:l.part,cut:l.cut,groupe:l.groupe,statut:l.statut,visites:l.visites,label:l.label??null,visitId:l.visitId??null,...('apprenable' in l?{apprenable:l.apprenable,pertes:l.pertes}:{})}))});
  return vuePanneau();}
 async function correctionFermer(){const C=engine.s.correction;if(C?.etat==='ouverte')throw Error('Termine la correction avant de fermer la liste.');
  delete engine.s.correction;await engine.save();return vuePanneau();}

@@ -81,6 +81,21 @@ test('correction de bout en bout : séance Écho marquée, « Ouvrir » = pause 
   assert.deepEqual(b.adapter.calls.filter(x => ECRITURES.includes(x)), [], 'Ariane n’écrit rien dans ESV');
 });
 
+test('CH-049-B : correction-fin nomme la visite retenue de chaque cut et, pour un cut validé, si son enregistrement est apprenable et ce qui manque', async () => {
+  const b = await monter();
+  await b.api('correction-liste'); await b.api('correction-demarrer');
+  await b.api('correction-ouvrir', { part: 5, cut: 14 });
+  await visite(b, 14, 'x');
+  /* la visite est close ; l'étiquette de validation est posée comme Écho le fait à la clôture (l'enregistrement, lui, n'a aucune intention VALIDATE) */
+  b.fonction(`engine.s.native.visits.forEach(v=>{if(v.visitId==='v14')v.label='VALIDATE_NO_MOVEMENT';})`);
+  await b.api('correction-terminer');
+  const f = evts(b, 'correction-fin').at(-1), l = f.lignes.find(x => x.cut === 14);
+  assert.equal(l.visitId, 'v14');
+  assert.equal(l.statut, 'valide'); assert.equal(l.apprenable, false); assert.deepEqual(l.pertes, ['sans-validation']);
+  assert.equal(f.comptes.apprenables, 0);
+  assert.equal(f.lignes.find(x => x.cut !== 14).visitId ?? null, null, 'un cut non visité n’a pas de visite');
+});
+
 test('« Fermer la liste » efface une liste proposée, jamais une correction ouverte', async () => {
   const b = await monter();
   await b.api('correction-liste'); await b.api('correction-demarrer');
