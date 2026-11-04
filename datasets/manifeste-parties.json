@@ -81,6 +81,18 @@
       ],
       "date": "2026-10-29",
       "motif": "Partie 20 du lot du 28/10 (4.9.5.23), 172 poses jugées contre l'Écho de l'opérateur. Étiquette 10 = étiquette de rejeu du chantier CH-012. Jugée d'abord en examen à paramètres figés (aucun) : ouverture unique le 29/10, résultat défavorable à l'arrondi du clic (D-266). Passe en apprentissage par décision écrite (rotation D-192, D-262, D-266) : elle peut servir à régler la v7 ; une nouvelle partie d'examen devra être nommée (candidate : la partie 0 du lot de la test 24, une fois son Écho fait)."
+    },
+    {
+      "projet": 11,
+      "parties": [
+        10,
+        13,
+        14,
+        15
+      ],
+      "date": "2026-11-04",
+      "motif": "Lot Orbite du 04/11 (version 5, 19 volumes) relu en Écho par l'opérateur : parties 13, 14, 15 (Écho de 280 visites, 132 validations humaines) et partie 10 (Écho de 22 visites, 20 validations). Jointure Écho ↔ Orbite (tools/jointure-echo-orbite.cjs) : cuts différés par Ariane puis posés à la main, écarts à la pose humaine de 20 à 145 mm en médiane selon la partie. Jamais jugées en examen avant ce passage : l'ordre de l'opérateur (« mets tout ce que tu peux en apprentissage ») les fait passer directement en apprentissage, sans partie d'examen restante. Étiquette 11 = étiquette de rejeu, le projet réel n'est pas établi.",
+      "decision": "D-281"
     }
   ],
   "temoins": [
@@ -96,6 +108,6 @@
   "reservees": {
     "depuis": "2026-10-19",
     "parties": [],
-    "note": "Aucune partie reçue après la date du fichier n'est encore nommée ici. Une partie absente de la liste d'apprentissage est réservée, nommée ou non."
+    "note": "Une partie absente de la liste d'apprentissage est réservée, nommée ou non. Reçues le 04/11 sans Écho (aucune vérité humaine, rien à apprendre) : parties 0 à 4, 6 à 9, 11, 12 du lot de la version 5 ; elles restent réservées."
   }
 }

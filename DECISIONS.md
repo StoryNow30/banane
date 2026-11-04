@@ -3366,4 +3366,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 ## D-280 — Changement de partie : la borne des gestes passe à 45 s (CH-047, 04/11)
 - Constat ÉTABLI (export du 04/11, `banane-data`, collection `2026-11-04_v5_constellation-parties-0-4`) : après « suivant-dernier », la page se recharge, ESV affiche la partie 0 puis la bonne partie 13 à 17 s plus tard. Réussis : 13,2 s (0→1) et 13,5 s (3→4) ; arrêtés : 15,4 s (1→2 et 2→3), la partie 2 apparaissant à 09:05:07,357, 1,2 s après l'abandon.
 - Décision de l'intégrateur sur l'ordre « repère les bugs et corrige » : `FILE_GESTE_BORNE_MS` 15 s → 45 s. L'hypothèse de D-279 (ESV rouvre la plus petite partie à cuts restants) est réfutée par le passage 3→4 ; le lien de CH-046 est gardé comme filet.
-- Le numéro suivant est D-281.
+
+## D-281 — Parties 10, 13, 14, 15 du lot du 04/11 en apprentissage (opérateur, 04/11)
+- Ordre : « go, mets tout ce que tu peux en apprentissage », après l'envoi du lot Orbite du 04/11 (19 volumes) et des Écho des parties 10 et 13-14-15.
+- « Tout ce que je peux » = les parties qui ont une vérité humaine : 10, 13, 14, 15 (jointure Écho ↔ Orbite faite). Les parties 0 à 4, 6 à 9, 11 et 12 du même lot n'ont pas d'Écho : rien à apprendre, elles restent réservées. Manifeste : bloc « projet 11 » (étiquette de rejeu), décision D-281.
+- Ce que cela change : ces parties ne servent plus à juger un réglage (règle du manifeste, D-192). Il ne reste aucune partie d'examen vierge de ce lot ; une nouvelle partie d'examen devra être nommée à la prochaine réception d'un lot avec Écho.
+- Ce que cela ne fait pas : aucun réglage n'a été modifié ni aucun apprentissage lancé. Mesures de la jointure (ÉTABLI) : cuts différés par Ariane puis posés à la main, écart médian à la pose de départ 20 à 34 mm (partie 13, 28 cuts), 44 à 58 mm (partie 14, 10 cuts), 91 à 145 mm (partie 15, 8 cuts), 59 à 111 mm (partie 10, 18 cuts) ; poses d'Ariane revues à la main (partie 14, 7 cuts) : écart médian 4,1 mm, au plus 10,3 mm.
+- Le numéro suivant est D-282.
