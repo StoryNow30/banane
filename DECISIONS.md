@@ -3362,4 +3362,8 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 ## D-279 — Changement de partie : le lien après un geste qui ouvre une autre partie (CH-046, 04/11)
 - Constat (captures de l'opérateur, deux arrêts) : « ESV a ouvert la partie 0 au lieu de la partie 2 », puis « … au lieu de la partie 3 », après « invalide-suivant » refusé (reste un cut) et « suivant-dernier ». Hypothèse PROBABLE : ESV ouvre la plus petite partie qui garde des cuts à valider (la partie 0 avait 2 cuts à poser). Journal de ces deux séances non lu.
 - Décision de l'intégrateur, sur le constat de l'opérateur « de nouveau ce bug » : après un geste qui ouvre une autre partie, plus de second geste, le lien du sélecteur vers la partie du plan ; arrêt prudent seulement si le lien échoue ou aboutit ailleurs. Ni validation ni SKIP.
-- Le numéro suivant est D-280.
+
+## D-280 — Changement de partie : la borne des gestes passe à 45 s (CH-047, 04/11)
+- Constat ÉTABLI (export du 04/11, `banane-data`, collection `2026-11-04_v5_constellation-parties-0-4`) : après « suivant-dernier », la page se recharge, ESV affiche la partie 0 puis la bonne partie 13 à 17 s plus tard. Réussis : 13,2 s (0→1) et 13,5 s (3→4) ; arrêtés : 15,4 s (1→2 et 2→3), la partie 2 apparaissant à 09:05:07,357, 1,2 s après l'abandon.
+- Décision de l'intégrateur sur l'ordre « repère les bugs et corrige » : `FILE_GESTE_BORNE_MS` 15 s → 45 s. L'hypothèse de D-279 (ESV rouvre la plus petite partie à cuts restants) est réfutée par le passage 3→4 ; le lien de CH-046 est gardé comme filet.
+- Le numéro suivant est D-281.
