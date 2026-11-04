@@ -3372,4 +3372,9 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - « Tout ce que je peux » = les parties qui ont une vérité humaine : 10, 13, 14, 15 (jointure Écho ↔ Orbite faite). Les parties 0 à 4, 6 à 9, 11 et 12 du même lot n'ont pas d'Écho : rien à apprendre, elles restent réservées. Manifeste : bloc « projet 11 » (étiquette de rejeu), décision D-281.
 - Ce que cela change : ces parties ne servent plus à juger un réglage (règle du manifeste, D-192). Il ne reste aucune partie d'examen vierge de ce lot ; une nouvelle partie d'examen devra être nommée à la prochaine réception d'un lot avec Écho.
 - Ce que cela ne fait pas : aucun réglage n'a été modifié ni aucun apprentissage lancé. Mesures de la jointure (ÉTABLI) : cuts différés par Ariane puis posés à la main, écart médian à la pose de départ 20 à 34 mm (partie 13, 28 cuts), 44 à 58 mm (partie 14, 10 cuts), 91 à 145 mm (partie 15, 8 cuts), 59 à 111 mm (partie 10, 18 cuts) ; poses d'Ariane revues à la main (partie 14, 7 cuts) : écart médian 4,1 mm, au plus 10,3 mm.
-- Le numéro suivant est D-282.
+
+## D-282 — Un zip demandé = la tête à jour du tronc, vérifiée (opérateur, 04/11)
+- Ordre : « quand je te redemande un zip, tu me donnes le tout dernier mis à jour sans bug ». Cause : deux paquets de numéros identiques (« 5 ») et de même nom ont été envoyés à des moments différents ; l'opérateur ne pouvait pas savoir lequel tournait.
+- Règle : à chaque demande de zip, l'intégrateur le fabrique depuis la tête du tronc après un verify complet vert, le nomme `ariane-v5-<commit>.zip` (la version interne reste « 5 », D-276) et dit en une ligne ce qu'il contient de nouveau, son empreinte et ce qui reste ouvert. « Sans bug » s'entend « sans bug connu, essais verts ».
+- À faire dans le lot suivant : écrire le commit dans le journal et sur le panneau, pour que les exports disent quel paquet a tourné.
+- Le numéro suivant est D-283.
