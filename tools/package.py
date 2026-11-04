@@ -3,9 +3,20 @@ import argparse
 import json
 import re
 from pathlib import Path
+import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def build_stamp():
+    """D-282 : identifiant court du commit d'où vient le paquet (« +modifie » si l'arbre de travail n'est pas propre), écrit dans `BUILD` à la racine du zip, lu par le panneau et par le journal pour que les exports disent quel paquet a tourné."""
+    try:
+        commit = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True, check=True).stdout.strip()
+        sale = subprocess.run(['git', '-C', str(ROOT), 'status', '--porcelain', '--untracked-files=no'], capture_output=True, text=True, check=True).stdout.strip()
+        return commit + ('+modifie' if sale else '')
+    except (OSError, subprocess.CalledProcessError):
+        return 'inconnu'
 
 
 def build(destination, include_tests=False):
@@ -44,6 +55,7 @@ def build(destination, include_tests=False):
                 raise ValueError(f'Symlink refused: {relative}')
             if file.is_file() and file.suffix not in ('.zip', '.pyc') and file.resolve() != destination:
                 archive.write(file, relative.as_posix())
+        archive.writestr('BUILD', build_stamp() + '\n')
     with zipfile.ZipFile(destination) as archive:
         if archive.testzip() is not None:
             raise ValueError('Archive CRC check failed')

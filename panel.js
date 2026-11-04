@@ -1305,7 +1305,7 @@
  /* 4.8.0 (audit qualité) : `vidage` est la promesse du vidage en cours. L'export final
   * l'attend : sinon il pourrait lister un nuage que le vidage purge ensuite,
   * pendant qu'il attend la confirmation de son fichier. */
- let autoExporting=false,vidage=null;
+ let autoExporting=false,vidage=null,jalonVidage=null;
  async function autoExportIfAdvised(){
    if(autoExporting||working)return;
    autoExporting=true;let finir=()=>{};vidage=new Promise(r=>{finir=r;});
@@ -1315,9 +1315,14 @@
      note(`Vidage automatique : ${(advice.bytesPending/1048576).toFixed(0)} Mo en attente, écriture d’un segment…`);
      const manifeste=await api('native-export-manifest');
      if(!manifeste?.cloudIds?.length)return;
-     const plan=await assembler(manifeste),Z=globalThis.BananeZip;
-     const {acked,nonConfirmes,written}=Z?.createZip&&typeof Blob==='function'?await exportEchoZip(Z,plan,{label:'-auto',startIndex:advice.segments||0})
+     const complet=await assembler(manifeste),Z=globalThis.BananeZip,NX=globalThis.BananeNativeExport;
+     /* CH-049-C : vidage en delta (événements et visites neufs ou modifiés depuis le dernier vidage confirmé) ; l'export final reste complet.
+      * Réglage `export.videDelta:false` pour revenir à l'instantané complet. Jalon perdu (panneau rechargé) = premier vidage complet. */
+     const delta=NX?.deltaMetadonnees&&SET()?.export?.videDelta!==false?NX.deltaMetadonnees(complet,jalonVidage):null,plan=delta?delta.doc:complet;
+     const sortie=Z?.createZip&&typeof Blob==='function'?await exportEchoZip(Z,plan,{label:'-auto',startIndex:advice.segments||0,delta:delta?.stats})
        :await writeSegments(plan,'ariane-native-v4',{label:'-auto',startIndex:advice.segments||0});
+     const {acked,nonConfirmes,written}=sortie;
+     if(delta)jalonVidage=NX.confirmerJalon(delta,sortie.confirme??(written.length>0&&written.every(w=>w.confirme)));
      /* Tout ce qui est écrit sort de la file d'attente (sinon le vidage
       * reprendrait toutes les 5 s) ; seul le confirmé est purgé. */
      await api('native-export-ack',{ids:[...acked,...nonConfirmes],confirmed:acked,fichiers:written.length});
@@ -1656,7 +1661,7 @@ on('native-discard',async()=>{
   * en heure de Paris qui nomme la session, les parties relues, la période observée et les départs de ces parties.
   * `label` '-auto' : vidage automatique en cours de séance (mêmes volumes, nom distinct). Les nuages ne sont acquittés
   * (purgeables) que si TOUS les volumes sont confirmés écrits par le navigateur. */
- async function exportEchoZip(Z,data,{label='',startIndex=0}={}){
+ async function exportEchoZip(Z,data,{label='',startIndex=0,delta=null}={}){
    const maintenant=new Date(),session=data.session||{},records=Array.isArray(data.records)?data.records:[];
    /* Parties relues : celles des visites où l'opérateur a décidé quelque chose ; à défaut, toute partie numérotée au-dessus de 0
     * (le chargement d'ESV passe par un « cut 0 / partie 0 » ou un libellé illisible, sans rapport avec le travail). */
@@ -1668,7 +1673,8 @@ on('native-discard',async()=>{
    const L=await exportListe(parties);
    const debut=session.startedAt?dateHeureParis(session.startedAt):'?',periode=session.finishedAt?`du ${debut} au ${dateHeureParis(session.finishedAt)}`:`depuis le ${debut} (session en cours)`;
    const corps=`Session Écho ${session.id||'?'} · version ${data.version||K_VERSION()} · ${records.length} visite(s) · partie(s) ${parties.length?parties.join(', '):'?'} · ${periode}.\n`+
-     (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+departs+L.texte;
+     (label?`Vidage automatique en cours de séance (segments ${startIndex+1} et suivants) : l'export final en fin de séance complète cet envoi.\n`:'')+
+     (delta?`Vidage en delta : ${delta.events.envoyes} événement(s) sur ${delta.events.total} et ${delta.records.envoyes} visite(s) sur ${delta.records.total} (les autres sont dans les envois précédents ; tools/merge-segments.cjs réunit la série).\n`:'')+departs+L.texte;
    let r;
    const V=volumesZip(Z,{base,maintenant,tete:`Export Ariane — mode Écho (relecture) — ${dateHeureParis(maintenant)}\n`,corps,
      pied:()=>r?.segments>1?'Plusieurs segments JSON : node tools/merge-segments.cjs --out SESSION.json --dir DOSSIER (les zip sont lus tels quels). Les visites et les événements sont dans le premier segment.\n':''});
@@ -1842,4 +1848,6 @@ on('native-discard',async()=>{
  /* Après les autres minuteries (les essais du panneau les désignent par leur rang). */
  void majDeparts();setInterval(()=>{if(!working)void majDeparts();},5000);
  if(which==='native'){renderReglages();void renderHealth();}
+ /* D-282 : le panneau dit de quel paquet il vient (fichier BUILD du zip). */
+ try{const cible=document.getElementById('build');if(cible&&typeof fetch==='function')fetch(chrome.runtime.getURL('BUILD')).then(r=>r.ok?r.text():'').then(t=>{t=String(t).trim();if(/^[0-9a-f]{4,40}(\+modifie)?$/.test(t))cible.textContent='· paquet '+t;}).catch(()=>{});}catch{/* hors paquet */}
 })();
