@@ -128,9 +128,9 @@
     if (!v.length) return { statut: 'a-faire', visites: 0 };
     let best = null, st = null;
     for (const x of v) { const s = statutVisite(x); if (!best || FORCE[s] >= FORCE[st]) { best = x; st = s; } }
-    if (st === 'en-cours') return { statut: 'en-cours', visites: v.length };
+    if (st === 'en-cours') return { statut: 'en-cours', visites: v.length, visitId: best.visitId ?? null };
     const l = String(best.label || '');
-    return { statut: st, visites: v.length, label: l || null, rails: /BOTH/.test(l) ? 2 : /^VALIDATE_CORRECTED/.test(l) ? 1 : 0 };
+    return { statut: st, visites: v.length, visitId: best.visitId ?? null, label: l || null, rails: /BOTH/.test(l) ? 2 : /^VALIDATE_CORRECTED/.test(l) ? 1 : 0 };
   }
   /* CH-037 (défaut 2) : LA fusion des visites d'Écho (`n.visits` : identité, `label` posé à la clôture de la visite) et des étiquettes provisoires du
    * service worker (`issues`, par visitId : la visite OUVERTE dont Maj+Espace est observé, ou une visite perdue avec la page, dont le résumé n'a jamais
@@ -139,12 +139,39 @@
   function visitesFusionnees(visites, { issues = null, echoOuvert = false } = {}) {
     const V = (visites || []).filter(v => v && v.identity), I = issues && typeof issues === 'object' ? issues : {};
     return V.map((v, i) => { const p = !v.label && typeof I[v.visitId] === 'string' ? I[v.visitId] : null;
-      return { identity: v.identity, label: v.label || p || null, encours: !v.endedAt && i === V.length - 1 && !!echoOuvert, provisoire: !!p }; });
+      return { visitId: v.visitId ?? null, identity: v.identity, label: v.label || p || null, encours: !v.endedAt && i === V.length - 1 && !!echoOuvert, provisoire: !!p }; });
   }
-  function bilan(entrees, visites) {
-    const c = { 'a-faire': 0, 'en-cours': 0, corrige: 0, valide: 0, vu: 0 };
-    const lignes = (entrees || []).map(e => { const s = statutDe(e, visites); c[s.statut]++; return { part: e.part, cut: e.cut, groupe: e.groupe, signaux: e.signaux, ...s }; });
-    return { lignes, comptes: { total: lignes.length, ...c, traites: c.corrige + c.valide } };
+  /* CH-049-B — L'ENREGISTREMENT D'APPRENTISSAGE d'une correction. La visite Écho de l'Aurore est l'enregistrement (pose d'avant = état initial
+   * des rails, pose humaine = référence finale, cut = identité, nuage = captureId) ; la pose d'Ariane se joint par le journal Orbite
+   * (tools/jointure-echo-orbite.cjs). Les quatre critères de CH-049, lus sur l'enregistrement (forme banane-native-visit-v2), sans rien deviner :
+   *   etat-initial-gauche / etat-initial-droite : `geometryEligibility.<rail>.status` n'est pas « comparable-candidate » ;
+   *   reference-humaine : `humanFinalReference.status` n'est pas « candidate-observed » ;
+   *   nuage : aucun captureId stocké (`lidarCaptureIds`), ou le captureId d'un rail qualifié n'est pas parmi eux ;
+   *   intention-ambigue : `multiIntent`, plusieurs intentions VALIDATE, ou `intentCollapse` ;
+   *   sans-validation : la visite n'a aucune intention VALIDATE (rien à apprendre) ; enregistrement-absent : visite illisible.
+   * Le nuage n'est vérifié qu'au stockage : sa présence dans l'export déposé est mesurée hors ligne. */
+  function apprenabilite(rec) {
+    if (!rec || typeof rec !== 'object') return { apprenable: false, pertes: ['enregistrement-absent'] };
+    const intents = (Array.isArray(rec.operatorIntents) ? rec.operatorIntents : []).filter(x => x && x.intent === 'VALIDATE');
+    if (!intents.length) return { apprenable: false, pertes: ['sans-validation'] };
+    const pertes = [], E = rec.geometryEligibility || {};
+    for (const [c, nom] of [['left', 'gauche'], ['right', 'droite']]) if (!(E[c] && E[c].status === 'comparable-candidate')) pertes.push('etat-initial-' + nom);
+    if (!(rec.humanFinalReference && rec.humanFinalReference.status === 'candidate-observed')) pertes.push('reference-humaine');
+    const stockes = new Set(Array.isArray(rec.lidarCaptureIds) ? rec.lidarCaptureIds : []);
+    const voulus = ['left', 'right'].map(c => E[c] && E[c].status === 'comparable-candidate' ? E[c].captureId : null).filter(Boolean);
+    if (!stockes.size || voulus.some(i => !stockes.has(i))) pertes.push('nuage');
+    if (rec.multiIntent === true || intents.length > 1 || rec.intentCollapse) pertes.push('intention-ambigue');
+    return { apprenable: !pertes.length, pertes };
+  }
+  /* `enregistrements` (optionnel) : { visitId → enregistrement } ; fourni, chaque ligne dit si la visite retenue est apprenable. */
+  function bilan(entrees, visites, enregistrements) {
+    const c = { 'a-faire': 0, 'en-cours': 0, corrige: 0, valide: 0, vu: 0 }, avec = !!enregistrements && typeof enregistrements === 'object';
+    let apprenables = 0;
+    const lignes = (entrees || []).map(e => { const s = statutDe(e, visites); c[s.statut]++;
+      const a = avec && s.visitId && (s.statut === 'corrige' || s.statut === 'valide') ? apprenabilite(enregistrements[s.visitId]) : null;
+      if (a && a.apprenable) apprenables++;
+      return { part: e.part, cut: e.cut, groupe: e.groupe, signaux: e.signaux, ...s, ...(a || {}) }; });
+    return { lignes, comptes: { total: lignes.length, ...c, traites: c.corrige + c.valide, ...(avec ? { apprenables } : {}) } };
   }
 
   /* CH-035 — PARCOURS DE L'AURORE SUR PLUSIEURS PARTIES (chantiers/CH-035/CONCEPTION.md § 2). `listes` : [{ partie, lignes: [{ part, cut, statut }] }]
@@ -242,5 +269,5 @@
       comptes: { lots: parLot.length, avantFusion: parLot.reduce((s, l) => s + l.liste.entrees.length, 0), apresFusion, proposes: listes.reduce((s, l) => s + l.entrees.length, 0), lotsExclus: ex.length, cutsRetires: retires.length } };
   }
 
-  return { VERSION, VERSION_PARCOURS, VERSION_COUVERTURE, MAX_LOTS_COUVERTURE, SIGNAUX, LIBELLE, REGLE_STATUT, construire, couverture, statutDe, visitesFusionnees, bilan, lotDe, parcours };
+  return { VERSION, VERSION_PARCOURS, VERSION_COUVERTURE, MAX_LOTS_COUVERTURE, SIGNAUX, LIBELLE, REGLE_STATUT, construire, couverture, statutDe, visitesFusionnees, apprenabilite, bilan, lotDe, parcours };
 });
