@@ -217,7 +217,18 @@
    (typeof performance!=='undefined'&&typeof performance.now==='function'?()=>performance.now():clock);
   let sliceStart=sliceClock(),pauses=0;
   const sliceDue=()=>sliceMs!==null&&sliceClock()-sliceStart>=sliceMs;
-  const rest=async()=>{await pause();pauses++;guard();sliceStart=sliceClock();};
+  /* CH-049-A — la découpe d'ESV bouge juste après un changement de cut (mesuré sur 527 captures : 95 finissent en
+   * CLIP_CHANGED, toutes la 1re de leur visite). Elle n'était comparée qu'à un checkpoint, donc après 2 048 points
+   * retenus : 300 à 500 ms de lecture jetée, pendant lesquelles l'opérateur atteint le rail. Elle l'est maintenant à
+   * chaque pause (comparaison de quelques nombres par nuage), et la lecture s'arrête au plus tôt, avec le même code
+   * CLIP_CHANGED ; ce qui était déjà sauvegardé n'est pas révoqué, ce qui ne l'était pas reste perdu comme avant.
+   * La référence `clippingByCloud` n'existe qu'une fois les nœuds préparés : avant, il n'y a rien à comparer. */
+  let clippingByCloud=null;
+  const clipUnchanged=()=>!clippingByCloud||!inventory.clouds.some((_,index)=>JSON.stringify(clippingByCloud[index])!==
+   JSON.stringify(L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{})));
+  const rest=async()=>{await pause();pauses++;guard();
+   if(!clipUnchanged()){const error=Error('clip-state-changed-during-read');error.code='CLIP_CHANGED';throw error;}
+   sliceStart=sliceClock();};
   let prepared=[];
   try{if(sliceMs!==null)guard();
    for(const [index,node] of inventory.nodes.entries()){if(sliceMs===null)guard();prepared.push(prepareNode(node,options.origin,frames,settings.bounds,index,settings.probeCount,options.directRead!==false));
@@ -227,7 +238,7 @@
   prepared.sort((a,b)=>{for(let i=0;i<a.priority.length;i++)if(a.priority[i]!==b.priority[i])return a.priority[i]-b.priority[i];return 0;});
   const preparedByIndex=new Map(prepared.map(entry=>[entry.index,entry]));
   prepared.forEach((entry,rank)=>{entry.report.priorityRank=rank;result.sourceNodes.push(entry.report);trace.pointsAvailableInBuffers+=entry.range.count;trace.diagnosticProbesRead+=entry.probesRead;});
-  const clippingByCloud=inventory.clouds.map((cloud,index)=>L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{}));
+  clippingByCloud=inventory.clouds.map((cloud,index)=>L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{}));
   result.clouds=inventory.clouds.map((cloud,index)=>({...clone(cloud),clipping:clippingByCloud[index]}));
   let termination=null,chunkIndex=0,allRead=true;
   async function checkpoint(force=false){
