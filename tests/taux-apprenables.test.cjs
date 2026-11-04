@@ -86,3 +86,20 @@ test('journal Orbite : recoupement minimal, partie filtrable, poids', () => {
   assert.ok(r.poids.octets > 0 && r.poids.octetsParCutValide > 0);
   assert.equal(mesure([seg], { partie: 91 }).cutsValides, 0);
 });
+
+/* Critère 1 (état initial qualifié) : il ne dépend que de l'identifiant de capture de départ de chaque rail, pas des motifs
+ * de référence que l'Écho ajoute ensuite (statut « excluded » avec un captureId conservé). Ces essais figent le comportement
+ * actuel ; ils ne sont pas rouges, car le critère n'a pas été modifié (voir le rapport). */
+test('critère 1 : motifs de référence sans effet tant que les deux captureId existent', () => {
+  const v = visite(1, 0);
+  v.geometryEligibility.left = { ...v.geometryEligibility.left, status: 'excluded', reasons: ['human-final-reference-not-freshly-observed'] };
+  const r = mesure([segment({ index: 1, records: [v], clouds: ids(1).map(id => nuage(id)), declares: ids(1) })]);
+  assert.equal(r.echecsIndependants.c1, 0); assert.equal(r.cutsApprenables, 1);
+});
+test('critère 1 : un seul rail qualifié, ou aucune éligibilité, donne « état initial non qualifié »', () => {
+  const sansEligibilite = visite(2, 1); delete sansEligibilite.geometryEligibility;
+  const recs = [visite(1, 0, { captures: { left: 'cap-1-0-L', right: null } }), sansEligibilite];
+  const r = mesure([segment({ index: 1, records: recs, clouds: [nuage('cap-1-0-L')], declares: ['cap-1-0-L'] })]);
+  assert.equal(r.cutsValides, 2); assert.equal(r.cutsApprenables, 0);
+  assert.equal(r.pertesCascade['etat-initial-non-qualifie'], 2);
+});
