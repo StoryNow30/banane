@@ -3389,4 +3389,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Constat ÉTABLI (listes d'ESV du 04/11, après relecture et Écho) : partie 10, 11 cuts vus isolés et 8 trous de 1 à 3 cuts entre deux cuts vus ; partie 13, 13 cuts vus isolés et 2 trous. Cause dans le code : un cut « À contrôler » était relu sans voisins (aucune marge) et aucun trou n'était bouché entre deux plages (`fusionTrouCuts` 0, choix de l'étude).
 - Décision (src/relecture-ombre.js, sélection) : marge d'un cut autour de chaque cut « À contrôler » (`aControler.marge` 1) ; tout trou de 1 à 3 cuts entre deux cuts couverts est relu (`trouMaxCuts` 3, motif « trou », zone du cut qui le précède). Les poses du lot restent traversées, la règle prudente de correction (src/relecture-critere.js) est inchangée. Les isolés, différés, grappes et écartements avaient déjà leur marge.
 - Effet attendu : quelques cuts relus de plus par partie (PROBABLE quelques dizaines, ~3 s chacun) ; à mesurer sur le prochain lot (listes d'ESV après relecture).
-- Le numéro suivant est D-285.
+
+## D-285 — Apprentissage : étiquetage, parties d'examen, file prioritaire, séance tirée au sort (opérateur, 05/11)
+- Ordre : « Top, je valide tout », après les rapports CH-051 (§ 5) et CH-053-S, et le premier examen vierge (CH-053-M).
+- Validé : (1) règle d'étiquetage : Écho allumé pour toute validation manuelle ; validation sans mouvement en moins de 1,5 s écartée de l'apprentissage ; (2) parties d'examen : 8 à 12 du 05/11 (réservées), partie 11 du 04/11 en réserve ; (3) brancher la file prioritaire des cuts à corriger (src/file-prioritaire.js) dans le panneau, pour mesurer en séance le coût réel des sauts ; (4) protocole de séance Écho tirée au sort (environ 150 posés par partie) pour les mesures suivantes.
+- Examen ÉTABLI (CH-053-M, parties 8 à 12 du 05/11, paramètres figés, une seule lecture) : 229 posés d'Ariane jugés, 227 à 10 mm ou moins (99,1 %), 0 à plus de 50 mm (borne haute 1,7 %), 0 mauvaise voie ; D-223 et « 90 % à 10 mm » DÉMONTRÉS sur les posés jugés. Réserve : 229 jugés sur 831 posés, choisis par l'opérateur (biais possible).
+- NON couvert par cet ordre : l'activation de la règle de choix de voie de CH-053-M (encore en ombre, à juger sur l'examen du 05/11 puis à proposer avec ses chiffres).
+- Le numéro suivant est D-286.
