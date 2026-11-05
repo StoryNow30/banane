@@ -5,7 +5,8 @@
  * Outil hors ligne, lecture seule, aucune dépendance. Ne rapporte que du compté sur l'export.
  *
  *   node tools/taux-apprenables.cjs --echo <dossier|fichier.json|volume.zip …> [--journal ariane-journal-v4-….json]
- *        [--partie N] [--json sortie.json]
+ *        [--partie N] [--assouplie] [--json sortie.json]
+ *   --assouplie relit les points : lancer avec `node --max-old-space-size=6000` sur une grosse session.
  *
  * DÉFINITION (chantiers/CH-049.md) — un cut est apprenable si l'export contient, pour lui :
  *   (1) l'état initial qualifié des DEUX rails  : la visite retenue a, pour chaque rail, un instantané de départ
@@ -31,6 +32,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const V = require('./lire-volumes.cjs');
 const { mergeFiles } = require('./merge-segments.cjs');
+const { reconstruireCut, etiquette, memeEtiquette } = require('../src/native-reconstruction.js');
 
 const NOM_EXPORT_ECHO = /^(ariane|banane)-(native-v\d+|echo)-/;
 const COTES = ['left', 'right'];
@@ -71,8 +73,9 @@ const intentionsDe = r => (r.operatorIntents || []).map(i => i && i.intent).filt
 const rangVisite = r => `${r.startedAt || ''}|${String(r.visitIndex ?? 0).padStart(8, '0')}`;
 const ecritureValidation = r => (r.serverWrites || []).some(w => w && w.kind === 'validation' && w.status >= 200 && w.status < 300);
 
-function mesurer(entrees, { partie = null, journal = null } = {}) {
-  const { merged, missing, totalPoints } = mergeFiles(entrees, { leger: true });
+function mesurer(entrees, { partie = null, journal = null, assouplie = false } = {}) {
+  /* CH-053-C : la définition assouplie recalcule la couverture dans le repère initial, il lui faut les points (export non allégé). */
+  const { merged, missing, totalPoints } = mergeFiles(entrees, { leger: !assouplie });
   const manquantsDeclares = new Set(missing);
   const nuages = new Map();
   for (const c of merged.clouds || []) for (const id of [c.captureId, c.chunkId]) if (id) nuages.set(id, c);
@@ -87,6 +90,7 @@ function mesurer(entrees, { partie = null, journal = null } = {}) {
   }
 
   const cuts = [];
+  let res_assouplie = null;
   for (const [cle, visites] of parCut) {
     visites.sort((a, b) => rangVisite(a).localeCompare(rangVisite(b)));
     const valide = visites.some(r => intentionsDe(r).includes('VALIDATE'));
@@ -116,7 +120,16 @@ function mesurer(entrees, { partie = null, journal = null } = {}) {
     const debuts = bornes.map(c => ms(c.startedAt)).filter(fini), fins = bornes.map(c => ms(c.completedAt)).filter(fini);
     const dCapture = debuts.length && fins.length ? (Math.max(...fins) - Math.min(...debuts)) / 1000 : null;
     const [part, cut] = cle.split('|');
-    cuts.push({ part, cut: Number(cut), visites: visites.length, visiteRetenue: v.visitIndex ?? null, c1, c2, c3, c4, c3cause, c4cause,
+    let assoupli = null;
+    if (assouplie) {
+      const rec = reconstruireCut(v, { nuages });
+      const eti = COTES.map(s => { const base = v.startPose && v.startPose.rails && v.startPose.rails[s] || v.beforeEstablished && v.beforeEstablished.rails && v.beforeEstablished.rails[s];
+        return { stricte: etiquette(v, s, base), assouplie: etiquette(v, s, v.beforeEstablished && v.beforeEstablished.rails && v.beforeEstablished.rails[s]) }; });
+      const manque = COTES.some(s => (rec.rails[s].chunkIds || []).some(x => !nuages.has(x)));
+      assoupli = { c1: rec.qualifie, nuageRetrouve: !manque, stricteRelue: rec.stricte, voies: COTES.map(s => rec.rails[s].voie), raisons: COTES.map(s => rec.rails[s].raisons),
+        etiquetteAccord: eti.every(e => memeEtiquette(e.stricte, e.assouplie)) };
+    }
+    cuts.push({ part, cut: Number(cut), assoupli, visites: visites.length, visiteRetenue: v.visitIndex ?? null, c1, c2, c3, c4, c3cause, c4cause,
       apprenable: c1 && c2 && c3 && c4, dureeVisiteS: dVisite, dureeCaptureS: dCapture, ecritureValidation: ecritureValidation(v) });
   }
 
@@ -130,6 +143,20 @@ function mesurer(entrees, { partie = null, journal = null } = {}) {
   const fins = {};
   for (const c of merged.clouds || []) { const k = c.termination && c.termination.code || (c.status === 'reading' ? 'NOT_REPORTED' : 'NONE'); fins[k] = (fins[k] || 0) + 1; }
 
+  if (assouplie) {
+    for (const c of cuts) { c.c1r = !!(c.assoupli && c.assoupli.c1 && c.assoupli.nuageRetrouve); }
+    const ap = cuts.filter(c => c.c2 && c.c4 && (c.c1 ? c.c3 : c.c1r));
+    const stricts = cuts.filter(c => c.apprenable);
+    const voies = {};
+    for (const c of cuts) if (!c.c1 && c.c1r) { const k = c.assoupli.voies.join('+'); voies[k] = (voies[k] || 0) + 1; }
+    res_assouplie = {
+      qualification: missing.length > 0 ? 'PROBABLE (export partiel)' : 'ÉTABLI sur l\'export compté ; la définition assouplie est un PROPOSÉ, adoptée seulement si l\'accord tient',
+      cutsApprenablesAssouplie: ap.length, tauxAssouplieAbsolu: pct(ap.length, n),
+      gainParRapportAuStrict: ap.length - stricts.length, parVoieDesCutsRecuperes: voies,
+      accord: { cutsStrictsComparables: stricts.length, memeEtiquette: stricts.filter(c => c.assoupli && c.assoupli.etiquetteAccord).length,
+        stricteRelueEgaleExportee: cuts.filter(c => c.assoupli && c.assoupli.stricteRelue === c.c1).length, cutsTotal: n },
+      raisonsDesNonRecuperes: (() => { const m = {}; for (const c of cuts) if (!c.c1 && !c.c1r) for (const r of c.assoupli.raisons.flat()) m[r] = (m[r] || 0) + 1; return m; })() };
+  }
   const poids = poidsDisque(entrees);
   const partiel = missing.length > 0;
   const res = {
@@ -148,6 +175,7 @@ function mesurer(entrees, { partie = null, journal = null } = {}) {
     cuts,
   };
   if (journal) res.orbite = croiserJournal(journal, cuts);
+  if (assouplie) res.assouplie = res_assouplie;
   return res;
 }
 
@@ -181,6 +209,10 @@ function rapport(r) {
   L.push(`Durée de capture par cut (s)   : n=${d.captureParCut.n} médiane ${d.captureParCut.medianeS} p90 ${d.captureParCut.p90S} max ${d.captureParCut.maxS}`);
   L.push(`Poids de l'export : ${r.poids.fichiers} fichier(s), ${(r.poids.octets / 1e6).toFixed(1)} Mo ; ${r.poids.octetsParCutValide === null ? 'n/a' : (r.poids.octetsParCutValide / 1e6).toFixed(2)} Mo par cut validé, ${r.poids.octetsParCutApprenable === null ? 'n/a' : (r.poids.octetsParCutApprenable / 1e6).toFixed(2)} Mo par cut apprenable`);
   if (r.orbite) L.push(`Orbite : ${r.orbite.cutsPosesAuJournal} cut(s) posé(s) au journal ; validés ${JSON.stringify(r.orbite.valides)} ; apprenables ${JSON.stringify(r.orbite.apprenables)}   [${r.orbite.qualification}]`);
+  if (r.assouplie) { const a = r.assouplie;
+    L.push(`Définition ASSOUPLIE (proposée, CH-053-C) : ${a.cutsApprenablesAssouplie} / ${r.cutsValides} = ${a.tauxAssouplieAbsolu} %  (gain ${a.gainParRapportAuStrict} cut(s) sur le strict)  [${a.qualification}]`);
+    L.push(`   voies des cuts récupérés : ${JSON.stringify(a.parVoieDesCutsRecuperes)} ; accord d'étiquettes (±1 mm) sur les cuts stricts : ${a.accord.memeEtiquette} / ${a.accord.cutsStrictsComparables} ; stricte relue = stricte exportée : ${a.accord.stricteRelueEgaleExportee} / ${a.accord.cutsTotal}`);
+    L.push(`   raisons des non récupérés : ${JSON.stringify(a.raisonsDesNonRecuperes)}`); }
   L.push('Ce que la métrique ne mesure PAS : (a) la qualité de la pose humaine (une validation par réflexe compte comme apprenable) ; (b) les cuts non validés (SKIP, non visités, laissés à Ariane) : ils sont hors dénominateur ; (c) la représentativité des cuts validés ; (d) l\'exactitude du nuage (présent ≠ utile) ; (e) l\'utilité d\'apprentissage d\'un cut (un cut sans correction est « apprenable » comme un cut corrigé) ; (f) un export partiel donne une borne basse.');
   return L.join('\n');
 }
@@ -196,7 +228,7 @@ function main() {
   if (!entrees.length) { console.error('Aucun export Écho trouvé.'); process.exit(1); }
   const journal = opt('--journal') ? JSON.parse(fs.readFileSync(opt('--journal'), 'utf8')) : null;
   const partie = opt('--partie') !== undefined ? Number(opt('--partie')) : null;
-  const res = mesurer(entrees, { partie, journal });
+  const res = mesurer(entrees, { partie, journal, assouplie: argv.includes('--assouplie') });
   console.log(rapport(res));
   if (opt('--json')) fs.writeFileSync(opt('--json'), JSON.stringify(res, null, 1));
 }
