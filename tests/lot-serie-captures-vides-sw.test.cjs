@@ -24,9 +24,9 @@ async function lot(reglage) {
 }
 const parCut = x => x.adapter.captures.reduce((m, [c, n]) => { (m[c] = m[c] || []).push(n); return m; }, {});
 
-test('série de captures vides : coupée par défaut (rien) ; active (attente et recapture au seuil, puis différés sans attente, série refermée par une capture pleine)', async () => {
-  assert.equal(S.lot.serieCapturesVides.actif, false, 'coupée par défaut');
-  const x = await lot(null);
+test('série de captures vides : allumée par défaut (D-283) ; coupée = une capture par cut vide ; active (attente et recapture au seuil, puis différés sans attente, série refermée par une capture pleine)', async () => {
+  assert.equal(S.lot.serieCapturesVides.actif, true, 'allumée par défaut (D-283, décision de l\'opérateur du 05/11)');
+  const x = await lot({ ...S.lot.serieCapturesVides, actif: false });
   const cx = parCut(x);
   assert.deepEqual([cx[112], cx[113], cx[114]], [[0], [0], [0]], 'coupée : une seule capture par cut vide');
   assert.equal(x.b.store.events.filter(e => e.type === 'serie-captures-vides').length, 0);
