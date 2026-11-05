@@ -67,6 +67,9 @@ const RECHERCHE_LARGE=['recherche-large.js'];
 /* CH-051 : la garde « série de captures vides » (src/serie-captures-vides.js), détecteur pur lu par le service worker autour de la capture du lot,
  * ALLUMÉE par défaut depuis D-283 (décision de l'opérateur du 05/11, réglage `lot.serieCapturesVides`, retour arrière `actif:false`) ; coupée, la capture est celle d'avant (tests/lot-serie-captures-vides-sw.test.cjs). */
 const SERIE_VIDES=['serie-captures-vides.js'];
+/* CH-055 : la règle de voie « b1-ecart » EN OMBRE (src/voie-b1-ecart.js, mesure chantiers/CH-053/M-rapport.md), module pur lu par le service worker après
+ * la commande d'un cut différé (réglage `lot.voieB1EcartOmbre`, consigné seulement) ; coupé ou actif, les commandes sont celles d'avant (tests/voie-b1-ecart-ombre-sw.test.cjs). */
+const VOIE_B1_ECART=['voie-b1-ecart.js'];
 /* CH-053-S : la file prioritaire des cuts à corriger (src/file-prioritaire.js), module pur NON BRANCHÉ (ni service worker ni panneau) : il range des candidats, ne lit ni ne commande la pose. */
 const FILE_PRIORITAIRE=['file-prioritaire.js'];
 /* CH-053-C : la reconstruction de l'état initial d'Écho (src/native-reconstruction.js), module pur lu HORS LIGNE par tools/taux-apprenables.cjs (définition assouplie) : ni le service worker, ni la page, ni le lot ne le lisent. */
@@ -90,7 +93,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -119,10 +122,11 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,relectureDefaut,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','voieB1EcartOmbre']);
+ assert.deepEqual({...voieB1EcartOmbre},{actif:true,fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4},'CH-055 : règle b1-ecart en OMBRE (consignée seulement), allumée par défaut');
  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');
  assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est ÉTEINTE par défaut (ordre de l\'opérateur, 02/11 : tant que son temps de calcul n\'est pas supprimé, CH-041)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
  /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */

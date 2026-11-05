@@ -56,6 +56,23 @@
  * `--ombre` : l'ombre d'Orbite (`voie-predite-ombre`, module src/voie-recentree.js) rejouée sur le lot, un événement par cut
  * différé du témoin, tel que l'extension le consignerait ; son résumé (posables, jugement, poids en octets) entre dans la sortie.
  *
+ * CH-053-M (05/11, en ombre, hors ligne) : deux SOURCES DE VOIE qui ne viennent d'aucun appui, pour les voies décalées hors de la
+ * grille de ±80 mm du moteur (D-265) :
+ *   - « ecart » (complément par l'écartement) : quand le moteur a trouvé UN rail (candidat publié, ou publié avant la garde
+ *     d'écartement, ou A* brut) et pas l'autre, l'autre rail est cherché là où la paire aurait l'écartement de référence (lignes
+ *     valides non touchées de la liste d'ESV, `src/gcv2-l1e.js`, sinon les appuis, sinon 1 435 mm), de chaque côté du rail trouvé ;
+ *     le moteur est RELANCÉ depuis cette paire (même reprise que la voie prédite : `LotDecision.decideCut`, appuis fictifs
+ *     `appuisDepuisDecalage`), et sa propre qualification décide (minimum à `choix` mm, points de dessus et de flanc, contrat
+ *     d'écartement, garde d'écartement voisin). Deux rails trouvés ⇒ deux compléments ; s'ils ne tombent pas sur la même paire
+ *     (à 20 mm), abstention (« ecart:plusieurs »).
+ *   - « balayage » : sans aucun rail trouvé, la paire de départ est glissée en travers par pas de `pas` mm jusqu'à ±`portee` mm,
+ *     à l'écartement de référence, et le moteur relancé à chaque pas ; les poses qualifiées sont groupées (à 25 mm) ; une seule
+ *     voie ⇒ posée, plusieurs ⇒ abstention (« plusieurs-voies »), aucune ⇒ différé.
+ *   Les deux sources viennent APRÈS les appuis du lot et la liste d'ESV (B1), sur les seuls cuts encore différés ; rien n'est
+ *   activé dans l'extension. `--partie P:N` filtre aussi le corpus et le journal (lot de plusieurs parties) ; `--echo SESSION.json`
+ *   complète les captures du lot vides (série de captures sans point, D-283) par le nuage de la PREMIÈRE visite de l'Écho, comme
+ *   CH-049-F ; `--liste-esv INSTANTANE.json` lit les lignes de B1 et la référence d'écartement dans l'instantané compact de la liste.
+ *
  * Sorties : agrégats seulement (comptes, millimètres d'écart, facteurs de
  * dézoom), jamais de coordonnée absolue ni d'identifiant de projet. Les fichiers
  * d'entrée restent hors du dépôt.
@@ -72,6 +89,10 @@ const B=require('../src/appuis-liste.js');
 const V=require('../src/voie-recentree.js');
 const zlib=require('node:zlib');
 const Manifeste=require('./manifeste-parties.cjs');
+const L1e=require('../src/gcv2-l1e.js');
+const ListeMemoire=require('../src/liste-memoire.js');
+const Native=require('./native-offline-evaluate.cjs');
+const VB=require('../src/voie-b1-ecart.js');
 
 const SIDES=['left','right'];
 const FR={left:'gauche',right:'droite'};
@@ -91,23 +112,81 @@ function allegerCapture(c){
   return {cut:c.cut,captureId:c.captureId,identity:c.identity,rails:c.rails,pointsSceneRelative:c.pointsSceneRelative,
     visibleByClipBoxes:c.visibleByClipBoxes,camera:c.camera,viewCaptures:(c.viewCaptures||[]).map(v=>({camera:v&&v.camera}))};
 }
-function chargerCaptures(fichiers){
+/* `partie` (CH-053-M) : un corpus de plusieurs parties ne garde que celle-là (le lot du 04/11 en porte dix) ; sans partie, comme avant. */
+const dePartie=(identity,partie)=>partie==null||(identity&&identity.part===partie);
+function chargerCaptures(fichiers,partie=null){
   const captures=new Map();
   for(const f of fichiers){
     const seg=lireJson(f);
-    for(const c of seg.clouds||[]){if(Number.isInteger(c.cut)&&c.rails?.left&&c.rails?.right)captures.set(c.cut,allegerCapture(c));}
+    for(const c of seg.clouds||[]){if(Number.isInteger(c.cut)&&c.rails?.left&&c.rails?.right&&dePartie(c.identity,partie))captures.set(c.cut,allegerCapture(c));}
   }
   return captures;
 }
 /* Ordre du lot : les « proposed » du journal, par date. Repli : ordre croissant. */
-function lireJournal(chemin){
-  const j=lireJson(chemin),ev=j.events||[],vus=new Set(),ordre=[],b1={};
+function lireJournal(chemin,partie=null){
+  const j=lireJson(chemin),ev=(j.events||[]).filter(e=>dePartie(e.identity,partie)),vus=new Set(),ordre=[],b1={};
   for(const e of ev.filter(e=>e.type==='proposed').sort((a,b)=>String(a.timestamp)<String(b.timestamp)?-1:1)){
     const c=e.identity?.cut;if(Number.isInteger(c)&&!vus.has(c)){vus.add(c);ordre.push(c);}
   }
   for(const e of ev)if(e.type==='b1-ombre'&&Number.isInteger(e.identity?.cut))
     b1[e.identity.cut]={reel:e.reel?.stage??null,hypothese:e.hypothese?.stage??null,gardes:(e.gardes||[]).length};
   return {ordre,b1};
+}
+/* CH-053-M — lignes de B1 depuis l'instantané compact de la liste d'ESV (`ariane-liste-partieN-*.json`, dixième de mm monde) :
+ * { cut, statut, left, right } en mètres, lignes aux six bords seulement. Rend aussi la table décompactée (référence d'écartement L1-e). */
+const STATUTS_LISTE=['valid','invalid','skipped','autre'];
+function lignesDepuisInstantane(snap){
+  const t=ListeMemoire.decompacter(snap);if(!t)throw Error('instantané de liste illisible (format ariane-liste-instantane-1 attendu)');
+  const out=[];
+  for(let i=0;i<t.n;i++){
+    const e=t.ed.slice(6*i,6*i+6);if(!e.every(Number.isFinite))continue;
+    out.push({cut:i,statut:STATUTS_LISTE[t.st[i]]||'autre',left:e.slice(0,3).map(v=>v/1e4),right:e.slice(3).map(v=>v/1e4)});
+  }
+  out.table=t;
+  return out;
+}
+/* CH-053-M — captures manquantes ou vides du lot complétées par le nuage de l'Écho (série de captures sans point, D-283) : pose de départ de la
+ * PREMIÈRE visite du cut, et les blocs de points de toutes ses visites pris autour de cette même pose (même construction que l'entrée sans fuite
+ * de tools/relecture-autonome.cjs et de tools/gcv2-jeu.cjs : points visibles ; si aucun ne l'est, tous). Le nuage ne reçoit jamais la pose humaine.
+ * L'identité garde le repère de scène de l'Écho : les appuis du lot (autre repère) ne s'y appliquent pas ; sans caméra, la vue est tenue pour
+ * déplaçable (`sourceEcho`). */
+function completerParEcho(captures,fichiers,partie,journal=()=>{}){
+  let ajoutees=0;
+  const memePose=(a,b)=>Array.isArray(a)&&Array.isArray(b)&&a.length===3&&b.length===3&&a.every((v,i)=>Math.abs(v-b[i])<1e-6);
+  /* Les fichiers sont une session fusionnée ou ses segments (instantanés : visites complètes, nuages incrémentaux) : visites et blocs sont
+   * réunis sur tous les fichiers avant de construire les captures (union par identifiant). */
+  const visites=new Map(),chunks=new Map();
+  for(const f of fichiers){
+    const s=lireJson(f);
+    for(const r of (s.records||[]))if(dePartie(r.identity,partie)&&Number.isInteger(r.identity?.cut)&&r.visitId&&!visites.has(r.visitId))visites.set(r.visitId,r);
+    for(const c of s.clouds||[]){
+      if(c?.format!=='banane-native-lidar-chunk-v1'||!SIDES.includes(c.side)||!Array.isArray(c.pointsSceneRelative))continue;
+      const k=c.chunkId||(c.captureId+'|'+c.side+'|'+chunks.size);if(chunks.has(k))continue;
+      chunks.set(k,{visitId:c.visitId,side:c.side,rail:c.rail,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes});
+    }
+  }
+  const parCut=new Map();
+  for(const r of [...visites.values()].sort((a,b)=>String(a.startedAt).localeCompare(String(b.startedAt)))){if(!parCut.has(r.identity.cut))parCut.set(r.identity.cut,[]);parCut.get(r.identity.cut).push(r);}
+  const chunksParCut=new Map();
+  for(const c of chunks.values()){const r=visites.get(c.visitId);if(!r)continue;const cut=r.identity.cut;if(!chunksParCut.has(cut))chunksParCut.set(cut,[]);chunksParCut.get(cut).push(c);}
+  for(const [cut,rs] of parCut){
+    const deja=captures.get(cut);if(deja&&deja.pointsSceneRelative?.length>0)continue;
+    const r0=rs[0],before=r0.beforeEstablished?.rails;
+    if(!before||!SIDES.every(sd=>before[sd]&&Array.isArray(before[sd].positionSceneRelative)))continue;
+    const ch=(chunksParCut.get(cut)||[]).filter(c=>c.rail&&memePose(c.rail.positionSceneRelative,before[c.side].positionSceneRelative));
+    if(!ch.length)continue;
+    const rails={};
+    for(const sd of SIDES){const k=ch.find(c=>c.side===sd);rails[sd]={...(k?k.rail:{}),...before[sd],profileContours:(before[sd].profileContours?.length?before[sd]:(k?k.rail:{})).profileContours||[]};}
+    if(!SIDES.every(sd=>rails[sd].sceneRelativeToProfileLocal&&rails[sd].profileContours.length))continue;
+    const pts=[],vis=[];let visibles=0;
+    for(const c of ch)for(let i=0;i<c.pointsSceneRelative.length;i++){pts.push(c.pointsSceneRelative[i]);const v=c.visibleByClipBoxes?.[i]===true;vis.push(v);if(v)visibles++;}
+    if(!visibles)vis.fill(true);
+    captures.set(cut,{cut,captureId:r0.recordId||null,identity:{...r0.identity,frameId:r0.identity?.frameId??null},rails,pointsSceneRelative:pts,visibleByClipBoxes:vis,
+      camera:null,viewCaptures:[],sourceEcho:true,visibiliteForcee:!visibles});
+    ajoutees++;
+  }
+  journal(`captures complétées par l'Écho : ${ajoutees}`);
+  return ajoutees;
 }
 /* Référence : pose de l'opérateur depuis la pose de départ (repère profil, mm), par cut. */
 function lireReference(chemin){
@@ -199,7 +278,10 @@ function fenetreListe(lignesParCut,cut,fenetre=B.DEFAULTS.fenetre){
  *   fenetre : demi-largeur (mm) de la fenêtre d'acceptation autour de la prédiction (`guardMm`) ;
  *   choix   : demi-largeur (mm) du choix du minimum local près de la prédiction (`chooseMm`) ;
  *   vue     : 'seule' (la cible doit déjà tomber dans la vue, comme l'adaptateur) ou 'deplacee'. */
-const BASE={source:'lot',gap:3,appuis:2,b1:false,plafond:false,memoire:'propre',fenetre:30,choix:15,vue:'seule'};
+const BASE={source:'lot',gap:3,appuis:2,b1:false,plafond:false,memoire:'propre',fenetre:30,choix:15,vue:'seule',ecart:false,balayage:false};
+/* CH-053-M : réglages des deux sources hors appui (voir l'en-tête). `ecart` : 'les-deux' | 'gauche' | 'droite' (rail trouvé pris comme sûr). */
+const ECART=Object.freeze({accordMm:VB.REGLAGE.accordMm,gRefDefautMm:VB.REGLAGE.gRefDefautMm,solutionPasMm:VB.REGLAGE.solutionPasMm,solutionPorteeMm:VB.REGLAGE.solutionPorteeMm,solutionTolMm:VB.REGLAGE.solutionTolMm});
+const BALAYAGE=Object.freeze({pasMm:50,porteeMm:250,groupeMm:25});
 function variante(id,o){return {id,...BASE,...o};}
 const VARIANTES=[
   variante('temoin',{}),
@@ -247,6 +329,17 @@ const VARIANTES=[
   ...[10,15,20,50,80].map(w=>variante('b1-prol10-serie-f'+w,{b1:true,source:'prolonge',gap:10,memoire:'propre',vue:'deplacee',fenetre:w,choix:Math.min(w,15)})),
   variante('b1-prol10-serie-c30',{b1:true,source:'prolonge',gap:10,memoire:'propre',vue:'deplacee',fenetre:30,choix:30}),
   variante('prol10-serie-c30',{source:'prolonge',gap:10,memoire:'propre',vue:'deplacee',fenetre:30,choix:30}),
+  /* CH-053-M : sources hors appui (ombre). */
+  variante('ecart-serie',{ecart:'les-deux',memoire:'propre',vue:'deplacee'}),
+  variante('ecart-g-serie',{ecart:'gauche',memoire:'propre',vue:'deplacee'}),
+  variante('ecart-d-serie',{ecart:'droite',memoire:'propre',vue:'deplacee'}),
+  variante('balayage-serie',{balayage:true,memoire:'propre',vue:'deplacee'}),
+  variante('ecart-balayage-serie',{ecart:'les-deux',balayage:true,memoire:'propre',vue:'deplacee'}),
+  variante('b1-ecart-serie',{b1:true,ecart:'les-deux',memoire:'propre',vue:'deplacee'}),
+  variante('b1-ecart-balayage-serie',{b1:true,ecart:'les-deux',balayage:true,memoire:'propre',vue:'deplacee'}),
+  variante('b1-prol10-ecart-balayage-serie',{b1:true,source:'prolonge',gap:10,ecart:'les-deux',balayage:true,memoire:'propre',vue:'deplacee'}),
+  variante('ecart-balayage-reelle',{ecart:'les-deux',balayage:true,memoire:'reelle',vue:'deplacee'}),
+  variante('ecart-balayage-c30-serie',{ecart:'les-deux',balayage:true,memoire:'propre',vue:'deplacee',choix:30}),
 ];
 
 /* ------------------------------------------------------------------ moteur mémoïsé */
@@ -270,6 +363,35 @@ function lireCache(chemin,cache){
 function ecrireCache(chemin,cache){if(chemin)fs.writeFileSync(chemin,JSON.stringify(Object.fromEntries(cache)));}
 /* Ce que le moteur relancé depuis la voie a vu, par rail (module commun). */
 const traceMoteur=V.traceMoteur;
+
+/* ------------------------------------------------------------------ CH-053-M : sources de voie hors appui */
+/* Écartement de référence (mm) au cut : lignes valides non touchées de la liste d'ESV (L1-e), sinon la médiane des appuis réels, sinon le défaut. */
+function ecartementReference(ctx,cut,ancres){
+  if(ctx.tableListe){const r=L1e.referenceEcartement(ctx.tableListe,cut);if(r&&Number.isFinite(r.mm))return {mm:r.mm,source:'liste'};}
+  const g=(ancres||[]).filter(a=>a.positions?.left&&a.positions?.right).map(a=>C.distance(a.positions.left,a.positions.right)*1000);
+  if(g.length)return {mm:med(g),source:'appuis'};
+  return {mm:ECART.gRefDefautMm,source:'defaut'};
+}
+/* Rail trouvé, solutions d'écartement, relance depuis une paire et source « ecart » : ceux du module pur src/voie-b1-ecart.js (CH-055), que le service
+ * worker emploie en ombre ; le rejeu et l'extension ne peuvent pas diverger. */
+const {railTrouve,solutionsEcartement,relancerDepuis,poseMmDe,ecartPoses}=VB;
+function sourceEcart(decider,args,cap,science,gRef,opts,quels='les-deux'){return VB.sourceEcart(decider,args,cap,science,gRef,opts,quels,{...VB.REGLAGE,accordMm:ECART.accordMm,essaisMax:99,solutionPorteeMm:ECART.solutionPorteeMm,solutionPasMm:ECART.solutionPasMm,solutionTolMm:ECART.solutionTolMm});}
+/* Source « balayage » : la paire de départ glissée en travers à l'écartement de référence, le moteur relancé à chaque pas ; une seule voie
+ * qualifiée ⇒ posée. Rend { decision, relance, raison, essais, voies }. */
+function sourceBalayage(decider,args,cap,gRef,opts,o=BALAYAGE){
+  const poses=[];let essais=0;
+  for(let d=-o.porteeMm;d<=o.porteeMm+1e-9;d+=o.pasMm){
+    for(const sol of solutionsEcartement(cap,'left',[0,d/1000,0],gRef)){
+      essais++;
+      const e=relancerDepuis(decider,args,cap,{left:[d,0],right:[sol.lat,sol.vert]},opts);
+      if(e.decision.stage!=='deferred'&&e.decision.positions)poses.push({...e,pose:poseMmDe(cap,e.decision),depuisMm:d});
+    }
+  }
+  const groupes=[];for(const p of poses)if(!groupes.some(g=>ecartPoses(g.pose,p.pose)<=o.groupeMm))groupes.push(p);
+  if(!groupes.length)return {decision:null,raison:'balayage:aucune-voie',essais,voies:0};
+  if(groupes.length>1)return {decision:null,raison:'plusieurs-voies:'+groupes.length,essais,voies:groupes.length};
+  return {...groupes[0],raison:null,essais,voies:1};
+}
 
 /* ------------------------------------------------------------------ rejeu d'un lot */
 function optionsDe(v){return {gap:v.gap,anchors:v.appuis,guardMm:v.fenetre,chooseMm:v.choix};}
@@ -309,6 +431,16 @@ function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
       if(decision.stage==='deferred'&&(v.source==='prolonge'||v.fenetre!==BASE.fenetre||v.choix!==BASE.choix)){
         const e=decider(argsV);if(e.decision.stage!=='deferred'){decision=e.decision;relance=e.relance;source=v.source==='prolonge'?'prolonge':'fenetre';}
       }
+      /* CH-053-M : sources hors appui, sur les seuls cuts encore différés ; le motif du refus est gardé pour le détail. */
+      let refusSource=null;
+      if(decision.stage==='deferred'&&(v.ecart||v.balayage)){
+        const gRef=ecartementReference(ctx,cut,ancres);
+        if(v.ecart){const e=sourceEcart(decider,argsV,cap,science,gRef.mm,opts,v.ecart);
+          if(e.decision){decision=e.decision;relance=e.relance;source='ecart';}else refusSource=e.raison;}
+        if(decision.stage==='deferred'&&v.balayage){const b=sourceBalayage(decider,argsV,cap,gRef.mm,opts);
+          if(b.decision){decision=b.decision;relance=b.relance;source='balayage';}else refusSource=b.raison;}
+        if(decision.stage==='deferred'&&refusSource)decision={...decision,reason:refusSource+(decision.reason?' | '+decision.reason:''),gRef:gRef};
+      }
       if(v.plafond&&decision.stage==='deferred'){
         const miens=[];
         for(let i=cut-5;i<=cut+5;i++){
@@ -330,6 +462,9 @@ function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
     else if(command.action==='engine'&&runtime&&SIDES.every(s=>runtime[s].status==='candidate')){
       try{const e=K.expectedPoses({rails:cap.rails},runtime);positions=Object.fromEntries(SIDES.map(s=>[s,e[s].positionSceneRelative]));}catch{positions=null;}
     }
+    /* CH-053-M : capture venue de l'Écho (sans caméra) : la commande refuse toute pose de la voie (« vue inconnue ») ; la vue est tenue pour
+     * déplaçable (variantes à vue déplacée seulement) et la pose de la décision est prise telle quelle, comme CH-049-F. */
+    if(!positions&&cap.sourceEcho&&v.vue==='deplacee'&&decision.positions&&['window','choice','crossing'].includes(decision.stage)&&/^vue-inconnue/.test(command.reason||''))positions=decision.positions;
     /* Tout rail posé doit être cliquable : un moteur dont la cible est hors de la vue arrête le lot (KI-051). */
     let bloqueHorsVue=false;
     if(positions&&v.vue==='seule'){const vv=vueNecessaire(cap,positions);if(!vv.dans){bloqueHorsVue=true;positions=null;}}
@@ -338,7 +473,7 @@ function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
     const r={cut,stage:decision.stage,reason:decision.reason??null,action:command.action,commandReason:command.reason??null,source,profondeur,
       posee:!!positions,bloqueHorsVue,refuseVue:/^hors-vue/.test(command.reason||''),anchorsUsed:(decision.anchorsUsed||[]).slice(),fromPredictionMm:decision.fromPredictionMm??null,
       guardMm:decision.guardMm??null,validatedAnchors:decision.validatedAnchors||null,framed:!!decision.framedAnchors,
-      moteur:decision.stage==='window'||decision.stage==='choice'?traceMoteur(relance):null,
+      moteur:decision.stage==='window'||decision.stage==='choice'?traceMoteur(relance):null,gRef:decision.gRef||null,
       choisi:decision.chosen?Object.fromEntries(Object.entries(decision.chosen).map(([k,c])=>[k,{deMm:c.fromPredictionMm??null,haut:c.top??null,flanc:c.face??null,rapport:c.lossRatio??null}])):null};
     if(positions){
       /* Déplacement depuis le départ et, pour une reprise ou un choix, écarts à la prédiction, dévers et écartement comparés à ceux
@@ -469,27 +604,30 @@ function validerB1(run,ctx){
 }
 /* Lignes de détail, sans coordonnée absolue : décalages en mm, comptes, numéros de cut. */
 function detail(run,ctx){
-  return [...run.resultats.values()].map(r=>({cut:r.cut,classe:ctx.ref.get(r.cut)?.classe||null,stage:r.stage,reason:r.reason,source:r.source,posee:r.posee,profondeur:r.profondeur,refuseVue:r.refuseVue,refuseRegle:r.refuseRegle||null,
+  return [...run.resultats.values()].map(r=>({cut:r.cut,classe:ctx.ref.get(r.cut)?.classe||null,stage:r.stage,reason:r.reason,source:r.source,posee:r.posee,action:r.action,commandReason:r.commandReason,profondeur:r.profondeur,refuseVue:r.refuseVue,refuseRegle:r.refuseRegle||null,
     bloqueHorsVue:r.bloqueHorsVue,pire:r.ecart?r1(r.ecart.pire):null,jug:jugement(r),anchorsUsed:r.anchorsUsed,validatedAnchors:r.validatedAnchors,
     fromPredictionMm:r.fromPredictionMm,predictionEcartMm:r1(r.predictionEcartMm),devLatMm:r1(r.devLatMm),devVertMm:r1(r.devVertMm),deversEcartMm:r1(r.deversEcartMm),ecartVoisinMm:r1(r.ecartVoisinMm),ecartementMm:r1(r.ecartementMm),deplacementMm:r.deplacementMm?Object.fromEntries(SIDES.map(s=>[s,r.deplacementMm[s].map(r1)])):null,
-    vue:r.vue?{dans:r.vue.dans,dezoom:r2(r.vue.dezoom),panPx:r1(r.vue.panPx),panMm:r1(r.vue.panMm)}:null,moteur:r.moteur,choisi:r.choisi}));
+    vue:r.vue?{dans:r.vue.dans,dezoom:r2(r.vue.dezoom),panPx:r1(r.vue.panPx),panMm:r1(r.vue.panMm)}:null,moteur:r.moteur,choisi:r.choisi,gRef:r.gRef||null}));
 }
 
 /* ------------------------------------------------------------------ exécution */
-function preparer(opt){
-  const captures=chargerCaptures(opt.corpus);
-  const journal=lireJournal(opt.journal),ref=lireReference(opt.jointure);
+function preparer(opt,log=()=>{}){
+  const partie=opt.partie?.length===1?opt.partie[0].partie:null;
+  const captures=chargerCaptures(opt.corpus,partie);
+  if(opt.echo?.length)completerParEcho(captures,opt.echo,partie,log);
+  const journal=lireJournal(opt.journal,partie),ref=lireReference(opt.jointure);
   const ordre=journal.ordre.filter(c=>captures.has(c));
   for(const c of [...captures.keys()].sort((a,b)=>a-b))if(!ordre.includes(c))ordre.push(c);
-  let lignesParCut=null,T=null,repere=null;
-  if(opt.lignes){
-    const lignes=lireLignes(opt.lignes);
+  let lignesParCut=null,T=null,repere=null,tableListe=null;
+  if(opt.lignes||opt.listeEsv){
+    const lignes=opt.listeEsv?lignesDepuisInstantane(lireJson(opt.listeEsv)):lireLignes(opt.lignes);
+    tableListe=lignes.table||null;
     repere=estimerT(lignes,captures);T=repere?repere.T:null;
     lignesParCut=new Map(lignes.map(l=>[l.cut,l]));
   }
   const zones=opt.zones?lireZones(opt.zones):null;
   const cache=new Map();lireCache(opt.cache,cache);
-  return {captures,journal,ref,ordre,lignesParCut,T,repere,zones,cache,cheminCache:opt.cache||null};
+  return {captures,journal,ref,ordre,lignesParCut,T,repere,tableListe,zones,cache,cheminCache:opt.cache||null};
 }
 function executer(ctx,ids,log=()=>{}){
   const choisies=VARIANTES.filter(v=>!ids||ids.includes(v.id));
@@ -548,15 +686,20 @@ function ombreLot(ctx,temoin,{seuils=V.REGLE_PRUDENTE,jugement=V.JUGEMENT}={}){
  * la voie décalée de `decalageMm` (plus loin que la fenêtre d'analyse de ±180 mm et que la vue de ±200 mm) : le moteur s'abstient,
  * la voie prédite par les appuis le retrouve, et le clic tombe hors de la vue. La pose de l'opérateur est la vérité. Aucune donnée réelle. */
 function aleatoire(graine){let a=graine>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
-function fixtureSynthetique({coupes=7,premiers=3,decalageMm=230,erreurDepartMm=6,bruitMm=.5,graine=7,origine=[300,400,-5]}={}){
+/* CH-053-M : `decalageMm` peut être donné par rail ({left, right}) ; `voiesMm` ajoute des voies entières (mêmes rails, mêmes points) décalées
+ * en travers de la vraie voie, pour mesurer l'abstention du balayage devant plusieurs voies. */
+function fixtureSynthetique({coupes=7,premiers=3,decalageMm=230,erreurDepartMm=6,bruitMm=.5,graine=7,origine=[300,400,-5],voiesMm=[]}={}){
   const rnd=aleatoire(graine),gauss=()=>{let u=0;for(let i=0;i<6;i++)u+=rnd();return(u-3)*Math.SQRT2;};
   const LARGEUR=.064,vue={left:0,top:0,width:1042,height:944};
   const captures=new Map(),ref=new Map(),ordre=[];
+  const decalDe=s=>typeof decalageMm==='object'&&decalageMm?decalageMm[s]:decalageMm;
   for(let cut=1;cut<=coupes;cut++){
-    const decal=(cut<=premiers?erreurDepartMm:decalageMm)/1000,x=origine[0]+cut,sceneFrame='f-synth';
+    const x=origine[0]+cut,sceneFrame='f-synth';
     const rails={},points=[],visible=[];
     const lat0={left:origine[1]+.715,right:origine[1]-.715};
+    const decals={};
     for(const s of SIDES){
+      const decal=(cut<=premiers?erreurDepartMm:decalDe(s))/1000;decals[s]=decal;
       const sens=s==='left'?1:-1,vrai=[x,lat0[s],origine[2]],depart=[x,lat0[s]+decal,origine[2]];
       const P=C.translation(depart),M=C.inverse(P);
       /* contour du champignon dans le repère de scène, sommets tous les 2 mm (dessus, flanc intérieur, dessous) */
@@ -567,9 +710,11 @@ function fixtureSynthetique({coupes=7,premiers=3,decalageMm=230,erreurDepartMm=6
       rails[s]={positionSceneRelative:depart,profileOriginSceneRelative:depart.slice(),profileAxisLengthsSceneUnits:[1,1,1],
         railLocalToSceneRelative:P.slice(),profileLocalToSceneRelative:P.slice(),sceneRelativeToProfileLocal:M,rotation:[0,0,0,1],profileRotation:[0,0,0,1],
         profileContours:[{type:'Line',verticesSceneRelative:verts}]};
-      for(let i=0;i<220;i++){const u=rnd()*LARGEUR;points.push([x+(rnd()-.5)*.3,vrai[1]+sens*u+gauss()*bruitMm/1000,vrai[2]+gauss()*bruitMm/1000]);visible.push(true);}
-      for(let i=0;i<90;i++){const z=-.004-rnd()*.032;points.push([x+(rnd()-.5)*.3,vrai[1]+gauss()*bruitMm/1000,vrai[2]+z+gauss()*bruitMm/1000]);visible.push(true);}
-      for(let i=0;i<30;i++){points.push([x+(rnd()-.5)*.3,vrai[1]-sens*(.03+rnd()*.1),vrai[2]-.06-rnd()*.03]);visible.push(true);}
+      for(const off of [0,...voiesMm]){const y=vrai[1]+off/1000;
+        for(let i=0;i<220;i++){const u=rnd()*LARGEUR;points.push([x+(rnd()-.5)*.3,y+sens*u+gauss()*bruitMm/1000,vrai[2]+gauss()*bruitMm/1000]);visible.push(true);}
+        for(let i=0;i<90;i++){const z=-.004-rnd()*.032;points.push([x+(rnd()-.5)*.3,y+gauss()*bruitMm/1000,vrai[2]+z+gauss()*bruitMm/1000]);visible.push(true);}
+        for(let i=0;i<30;i++){points.push([x+(rnd()-.5)*.3,y-sens*(.03+rnd()*.1),vrai[2]-.06-rnd()*.03]);visible.push(true);}
+      }
     }
     const camera=p=>({type:'OrthographicCamera',
       sceneRelativeToCamera:[0,0,1,0, 1,0,0,0, 0,1,0,0, -p[1],-p[2],-p[0],1],
@@ -577,7 +722,7 @@ function fixtureSynthetique({coupes=7,premiers=3,decalageMm=230,erreurDepartMm=6
     captures.set(cut,{cut,captureId:'synth-'+cut,identity:{pageId:'synth',part:1,cut,shape:'U50',frameId:sceneFrame,projectId:null},rails,
       pointsSceneRelative:points,visibleByClipBoxes:visible,camera:camera(rails.left.positionSceneRelative),
       viewCaptures:SIDES.map(s=>({camera:camera(rails[s].positionSceneRelative)}))});
-    const mic=Object.fromEntries(SIDES.map(s=>[s,[0,-decal*1000,0]]));
+    const mic=Object.fromEntries(SIDES.map(s=>[s,[0,-decals[s]*1000,0]]));
     ref.set(cut,{classe:cut<=premiers?'posee':'differee',mic,ariane:null});
     ordre.push(cut);
   }
@@ -614,6 +759,7 @@ function lireArgs(argv){
     if(a==='--corpus')o.corpus.push(val());else if(a==='--journal')o.journal=val();else if(a==='--jointure')o.jointure=val();
     else if(a==='--lignes')o.lignes=val();else if(a==='--cache')o.cache=val();else if(a==='--detail')o.detail=val();else if(a==='--csv')o.csv=val();else if(a==='--zones')o.zones=val();else if(a==='--sortie')o.sortie=val();
     else if(a==='--ombre')o.ombre=val();
+    else if(a==='--echo')(o.echo=o.echo||[]).push(val());else if(a==='--liste-esv')o.listeEsv=val();
     else if(a==='--partie')o.partie=Manifeste.lireDesignations(val());else if(a==='--juger-partie-reservee')o.jugerReservee=true;
     else if(a==='--variantes')o.variantes=val().split(',');else if(a==='--essai')o.essai=true;else if(a==='--liste')o.liste=true;
     else if(a==='--rapport'){o.rapport=[];while(i+1<argv.length&&!argv[i+1].startsWith('--'))o.rapport.push(argv[++i]);}
@@ -629,8 +775,8 @@ function main(argv=process.argv.slice(2)){
   if(o.rapport){console.log(rapportTexte(o.rapport.map(lireJson)));return;}
   if(o.essai){const ctx=fixtureSynthetique(),res=executer(ctx,['temoin','vue-reelle','vue-serie'],m=>console.error(m));
     console.log(rapportTexte(res.sorties.map(x=>({variantes:[x.synthese]}))));return;}
-  if(!o.corpus.length||!o.journal||!o.jointure)throw Error('Usage : --corpus SEG [--corpus SEG...] --journal J --jointure JT [--lignes L] [--zones Z] [--variantes ids] [--sortie S] [--ombre O.jsonl]');
-  const ctx=preparer(o);
+  if(!o.corpus.length||!o.journal||!o.jointure)throw Error('Usage : --corpus SEG [--corpus SEG...] --journal J --jointure JT [--lignes L | --liste-esv I.json] [--echo S.json] [--partie P:N] [--zones Z] [--variantes ids] [--sortie S] [--ombre O.jsonl]');
+  const ctx=preparer(o,m=>console.error(m));
   console.error(`captures ${ctx.captures.size}, cuts rejoués ${ctx.ordre.length}${ctx.repere?`, T sur ${ctx.repere.paires} paires, ${ctx.repere.cadres} cadre(s) de scène (écart max ${r2(ctx.repere.ecartMaxMm)} mm)`:''}`);
   const res=executer(ctx,o.variantes,m=>console.error(m));
   ecrireCache(ctx.cheminCache,ctx.cache);
@@ -645,5 +791,5 @@ function main(argv=process.argv.slice(2)){
   if(o.sortie)fs.writeFileSync(o.sortie,JSON.stringify(sortie,null,1)+'\n');else console.log(JSON.stringify(sortie,null,1));
 }
 if(require.main===module){try{main();}catch(e){console.error(e.stack||e);process.exitCode=1;}}
-module.exports={VARIANTES,variante,chargerCaptures,lireJournal,lireReference,lireZones,estimerT,fenetreListe,vueNecessaire,camerasLarges,localMm,ecartAMic,
+module.exports={VARIANTES,variante,chargerCaptures,lireJournal,lireReference,lireZones,estimerT,fenetreListe,lignesDepuisInstantane,completerParEcho,ecartementReference,railTrouve,solutionsEcartement,sourceEcart,sourceBalayage,ECART,BALAYAGE,vueNecessaire,camerasLarges,localMm,ecartAMic,
   fixtureSynthetique,regleAccepte,ombreLot,csvVariante,rapportTexte,rejouerLot,executer,synthese,validerTemoin,validerB1,detail,lireCache,ecrireCache,jugement,compter,statsVue,preparer,positionMic,main,FAUX_MM,MAUVAISE_VOIE_MM};

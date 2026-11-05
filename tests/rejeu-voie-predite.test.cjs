@@ -137,3 +137,26 @@ test('lecture du journal, de la jointure et du corpus : ordre du lot, pose de l\
     assert.deepEqual([...caps.keys()],[10]);assert.equal(caps.get(10).nodes,undefined);assert.equal(caps.get(10).viewCaptures.length,1);
   }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('CH-053-M, lecture par partie : un corpus et un journal de plusieurs parties ne gardent que la partie demandée',()=>{
+  const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'voie-'));
+  try{
+    const seg={clouds:[{cut:10,identity:{part:1,cut:10},rails:ctx.captures.get(1).rails,pointsSceneRelative:[[0,0,0]],visibleByClipBoxes:[true]},
+      {cut:10,identity:{part:2,cut:10},rails:ctx.captures.get(2).rails,pointsSceneRelative:[[0,0,0]],visibleByClipBoxes:[true]},
+      {cut:11,identity:{part:2,cut:11},rails:ctx.captures.get(2).rails,pointsSceneRelative:[],visibleByClipBoxes:[]}]};
+    fs.writeFileSync(path.join(dir,'c.json'),JSON.stringify(seg));
+    const caps=T.chargerCaptures([path.join(dir,'c.json')],2);
+    assert.deepEqual([...caps.keys()],[10,11]);assert.equal(caps.get(10).identity.part,2);
+    const journal={events:[{type:'proposed',timestamp:'2026-01-01T00:00:01Z',identity:{part:1,cut:10}},{type:'proposed',timestamp:'2026-01-01T00:00:02Z',identity:{part:2,cut:11}},
+      {type:'proposed',timestamp:'2026-01-01T00:00:03Z',identity:{part:2,cut:10}}]};
+    fs.writeFileSync(path.join(dir,'j.json'),JSON.stringify(journal));
+    assert.deepEqual(T.lireJournal(path.join(dir,'j.json'),2).ordre,[11,10]);
+    assert.deepEqual(T.lireJournal(path.join(dir,'j.json')).ordre,[10,11],'sans partie : comme avant');
+    /* Instantané compact de la liste d'ESV → lignes de B1 (monde, mètres), lignes valides et invalides, sans bord = ignorée. */
+    const snap={format:'ariane-liste-instantane-1',partie:2,r:[[0,10000,20000,30,10000,34300,30],[9,100,100,0,100,100,0],[0,null,null,null,null,null,null]]};
+    const lignes=T.lignesDepuisInstantane(snap);
+    assert.deepEqual(lignes.map(l=>[l.cut,l.statut]),[[0,'valid'],[1,'invalid']]);
+    assert.deepEqual(lignes[0].left,[1,2,0.003]);assert.deepEqual(lignes[1].right,[1.01,3.44,0.003]);
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
