@@ -89,7 +89,11 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
-  .replace(/\n   const selecteur=options[^\n]*/,'').replace(",...(selecteur?{selecteurParties:selecteur}:{})",'');
+  .replace(/\n   const selecteur=options[^\n]*/,'').replace(",...(selecteur?{selecteurParties:selecteur}:{})",'')
+  /* CH-050 (D-283) : diagnostic du repli de stabilité (CH-049-A), quatre entiers ajoutés à la sortie de `attendreChargement`, jamais lus par la décision : sans ces lignes, l'adaptateur est celui de la test 8. */
+  .replace(/\n   \/\* CH-049-A — DIAGNOSTIC DU REPLI[\s\S]*?   let vu=false,ch=0,tc=0,gm=0;/,'')
+  .replace("if(sig.value!==valeur){const precedent=depuis;valeur=sig.value;depuis=Date.now();if(vu){ch++;gm=Math.max(gm,depuis-precedent);tc=depuis-debut;}vu=true;}","if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}")
+  .replace(',pc,nc,vc,ch,tc,gm,at:Date.now()-debut}}',',pc,nc,vc}}').replace(',pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut}}',',pc,nc,vc,m:manque}}');
  assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
  for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
