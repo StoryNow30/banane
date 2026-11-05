@@ -20,10 +20,10 @@ function extensionAllumee() {
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   const S = path.join(d, 'src/settings.js');
   let t = fs.readFileSync(S, 'utf8');
-  const a = 'const file = Object.freeze({ actif: false,', b = 'serieCapturesVides: Object.freeze({ actif: false, seuil: 3, attenteMs: 20000,';
-  /* La file est livrée allumée depuis la test 25 (D-268) ; on l'allume si une copie l'avait éteinte. La garde, elle, est coupée dans le dépôt. */
+  const a = 'const file = Object.freeze({ actif: false,', b = 'serieCapturesVides: Object.freeze({ actif: true, seuil: 3, attenteMs: 20000,';
+  /* La file est livrée allumée depuis la test 25 (D-268) ; on l'allume si une copie l'avait éteinte. La garde est allumée dans le dépôt (D-283) ; la copie raccourcit seulement son attente (300 ms). */
   if (t.includes(a)) t = t.replace(a, 'const file = Object.freeze({ actif: true,'); else assert.ok(/file = (Object\.freeze\()?\{ actif: true,/.test(t), 'file de parties allumée');
-  assert.ok(t.includes(b), 'garde coupée dans le dépôt');
+  assert.ok(t.includes(b), 'garde allumée dans le dépôt (D-283)');
   t = t.replace(b, 'serieCapturesVides: Object.freeze({ actif: true, seuil: 3, attenteMs: 300,');
   fs.writeFileSync(S, t);
   return d;
