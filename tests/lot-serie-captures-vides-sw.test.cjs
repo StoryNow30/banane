@@ -19,7 +19,7 @@ async function lot(reglage) {
     lot: { ...S.lot, gardeApresDiffere: false, ...(reglage ? { serieCapturesVides: reglage } : {}) } };
   await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
   adapter.identity.cut = 111; adapter.rails = K.clone(base.rails);
-  await b.api('start', { part: 23, start: 111, end: 116, ...SCOPE }); await b.settle(); await attendre(30);
+  await b.api('start', { part: 23, start: 111, end: 115, ...SCOPE });   /* 115 : la capture pleine qui referme la série ; le 116 n'apportait rien (durée de l'essai) */ await b.settle(); await attendre(30);
   return { b, adapter };
 }
 const parCut = x => x.adapter.captures.reduce((m, [c, n]) => { (m[c] = m[c] || []).push(n); return m; }, {});
