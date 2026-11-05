@@ -14,6 +14,9 @@ const depart=cut=>[H.decaler(G0,cut),H.decaler(D0,cut)],mic=cut=>[H.decaler(G0,c
 const pose=(dLat,dVert=0)=>({left:[0,-150+dLat,dVert],right:[0,-150+dLat,dVert]});
 const voie=(cut,posable,p,raison=null)=>({eventId:'vo'+cut,timestamp:'2031-05-01T07:30:00.000Z',type:'voie-predite-ombre',schema:1,batchId:'lot-1',identity:{part:90,cut},
   version:'voie-predite-ombre-v1',etage:'window',poseMm:p,verdict:{posable,raison}});
+/* CH-055 : l'ombre « b1-ecart » d'Orbite, même format de pose et de verdict, plus la source retenue. */
+const b1ecart=(cut,posable,p,source,raison=null,passe=null)=>({eventId:'be'+cut,timestamp:'2031-05-01T07:31:00.000Z',type:'voie-b1-ecart-ombre',schema:1,batchId:'lot-1',identity:{part:90,cut},
+  version:'voie-b1-ecart-ombre-v1',etage:posable?'window':null,source,poseMm:p,verdict:{posable,raison},...(passe!=null?{passe}:{})});
 const memoire=(cut,posable,p,raison=null)=>({eventId:'mo'+cut,timestamp:'2031-05-01T08:30:00.000Z',type:'memoire-differes-ombre',schema:1,nativeSessionId:'S1',identity:{part:90,cut},
   version:'memoire-differes-ombre-v1',etat:'calcule',frontiere:'avant-reference',poseMm:p,verdict:{posable,raison}});
 
@@ -26,6 +29,7 @@ function fixture(){
   const j=H.journal([]);
   for(const cut of [11,12,13,14])j.events.push({eventId:'df'+cut,timestamp:'2031-05-01T07:00:00.000Z',type:'defer-finalized',identity:H.identite(cut),status:'deferred',rails:{}});
   j.events.push(voie(11,true,pose(2)),voie(12,true,pose(8,1)),voie(13,false,pose(30),'confiance'),voie(14,false,null,'differe:no-anchor'));
+  j.events.push(b1ecart(11,true,pose(3),'b1'),b1ecart(12,true,pose(70),'ecart'),b1ecart(13,false,null,null,'ecart:aucun-rail-trouve'),b1ecart(13,true,pose(4),'serie',null,1),b1ecart(14,false,null,null,'b1:sans-ligne | ecart:plusieurs'));
   const fj=path.join(dossier,'ariane-journal-v4-synth.json');fs.writeFileSync(fj,JSON.stringify(j));
   return {dossier,fj};
 }
@@ -50,8 +54,15 @@ test('jugement commun : chaque ombre, contre la pose finale de l\'opérateur, da
   assert.deepEqual(v.refuseesAvecPose,{n:1,juste10:0,fausse:1,mauvaiseVoie:0});
   assert.deepEqual([m.evenements,m.posables,m.juste5,m.juste10,m.fausse,m.mauvaiseVoie,m.abstenues],[4,3,1,1,1,1,1]);
   assert.deepEqual(v.seuils,{...V.JUGEMENT});
+  /* CH-055 : l'ombre « b1-ecart », même grille ; la dernière du cut fait foi (13 : celle de la deuxième passe) ; la source est gardée. */
+  assert.deepEqual(o(11).b1Ecart,{posable:true,raison:null,ecartMm:3,jugement:'juste5',source:'b1',passe:null});
+  assert.equal(o(12).b1Ecart.jugement,'mauvaise-voie');assert.equal(o(12).b1Ecart.source,'ecart');
+  assert.deepEqual(o(13).b1Ecart,{posable:true,raison:null,ecartMm:4,jugement:'juste5',source:'serie',passe:1});
+  assert.deepEqual(o(14).b1Ecart,{posable:false,raison:'b1:sans-ligne | ecart:plusieurs',ecartMm:null,jugement:'abstenue',source:null,passe:null});
+  const b=resume.ombres.b1Ecart;assert.deepEqual([b.evenements,b.posables,b.juste5,b.juste10,b.fausse,b.mauvaiseVoie,b.abstenues],[4,3,2,2,0,1,1]);
+  assert.deepEqual(b.parSource,{b1:1,ecart:1,serie:1});
   /* Le texte le dit. */
-  const t=J.texte(resume);assert.match(t,/Ombre voie prédite \(Orbite\)/);assert.match(t,/Ombre mémoire des différés \(Écho\)/);
+  const t=J.texte(resume);assert.match(t,/Ombre voie prédite \(Orbite\)/);assert.match(t,/Ombre mémoire des différés \(Écho\)/);assert.match(t,/Ombre voie B1-écart \(Orbite, CH-055\)/);assert.match(t,/sources des posables : b1 1, ecart 1, serie 1/);
 });
 
 test('sans événement d\'ombre : rien n\'est ajouté au résumé, la jointure d\'avant est inchangée',()=>{

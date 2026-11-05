@@ -383,6 +383,8 @@ function journalParCut(journal) {
     if (!id || !Number.isInteger(id.part) || !Number.isInteger(id.cut)) continue;
     /* Ombre d'Orbite (5.0) : la dernière du cut ; elle ne change ni la classe ni le « vu » du cut. */
     if (e.type === 'voie-predite-ombre') { const c = par.get(cleCut(id.part, id.cut)); if (c) c.voieOmbre = e; else ombresSansCut.push(e); continue; }
+    /* CH-055 : ombre « b1-ecart » d'Orbite, la dernière du cut (celle de la deuxième passe, portant `passe`, remplace celle du lot). */
+    if (e.type === 'voie-b1-ecart-ombre') { const c = par.get(cleCut(id.part, id.cut)); if (c) c.b1EcartOmbre = e; else ombresSansCut.push(e); continue; }
     if (!TYPES_VUS.has(e.type)) continue;
     const c = get(id);
     c.vu = true;
@@ -401,7 +403,7 @@ function journalParCut(journal) {
     if (!ancien || String(r.capturedAt || '') >= String(ancien.capturedAt || '')) recs.set(k, r);
   }
   for (const [k, r] of recs) if (par.has(k)) par.get(k).record = r;
-  for (const e of ombresSansCut) { const id = identiteDe(e), c = par.get(cleCut(id.part, id.cut)); if (c) c.voieOmbre = e; }
+  for (const e of ombresSansCut) { const id = identiteDe(e), c = par.get(cleCut(id.part, id.cut)); if (c) { if (e.type === 'voie-b1-ecart-ombre') c.b1EcartOmbre = e; else c.voieOmbre = e; } }
   return par;
 }
 const classeDe = c => !c || !c.vu ? 'hors-journal' : c.posee ? 'posee' : c.differee ? 'differee' : 'autre';
@@ -692,16 +694,19 @@ function joindre(records, journal, options = {}) {
   }
 
   /* Ombres : jugées contre la pose finale de l'opérateur, dans la même grille. */
-  const jugeesVoie = [], jugeesMemoire = [];
+  const jugeesVoie = [], jugeesMemoire = [], jugeesB1Ecart = [];
   for (const l of lignes) {
-    const k = cleCut(l.partie, l.cut), ev = jr.get(k) && jr.get(k).voieOmbre, em = ombresEcho.get(k);
-    if (!ev && !em) continue;
+    const k = cleCut(l.partie, l.cut), ev = jr.get(k) && jr.get(k).voieOmbre, em = ombresEcho.get(k), eb = jr.get(k) && jr.get(k).b1EcartOmbre;
+    if (!ev && !em && !eb) continue;
     const mic = micDepuisDepart(l);
     l.ombres = {};
     if (ev) { l.ombres.voie = jugerOmbre(ev, mic); jugeesVoie.push(l.ombres.voie); }
     if (em) { l.ombres.memoire = jugerOmbre(em, mic); jugeesMemoire.push(l.ombres.memoire); }
+    /* CH-055 : l'ombre « b1-ecart » (journal Orbite), même grille ; la source retenue (serie, b1, ecart) est gardée à côté. */
+    if (eb) { l.ombres.b1Ecart = { ...jugerOmbre(eb, mic), source: eb.source ?? null, passe: eb.passe ?? null }; jugeesB1Ecart.push(l.ombres.b1Ecart); }
   }
-  const ombres = jugeesVoie.length || jugeesMemoire.length ? { voie: resumerOmbre(jugeesVoie), memoire: resumerOmbre(jugeesMemoire) } : null;
+  const ombres = jugeesVoie.length || jugeesMemoire.length || jugeesB1Ecart.length ? { voie: resumerOmbre(jugeesVoie), memoire: resumerOmbre(jugeesMemoire), b1Ecart: resumerOmbre(jugeesB1Ecart) } : null;
+  if (ombres && jugeesB1Ecart.length) { ombres.b1Ecart.parSource = {}; for (const j of jugeesB1Ecart) if (j.posable) { const k = j.source || 'inconnue'; ombres.b1Ecart.parSource[k] = (ombres.b1Ecart.parSource[k] || 0) + 1; } }
   const cutsMultiSessions = [...echo.values()].filter(c => new Set(c.visites.map(sessionDe)).size > 1).length;
   const resume = resumer(lignes, { base: sansJournal && base === 'auto' ? 'premiere' : base, sansJournal, repere, partiesEchoIgnorees: [...partiesEchoIgnorees].sort((x, y) => x - y), projetsDifferents, cutsMultiSessions, regle, ecartements,
     sessionsChevauchantes: sessionsChevauchantes(records, options.sessions) });
@@ -889,11 +894,12 @@ function texte(resume, entete = []) {
     if (sr) L.push(`  > 10 mm : avec la règle ${nc(c.corrections.sup10mm.cuts)} sur ${c.avecReference} avec référence, sans la règle ${sr.sup10mm} sur ${sr.avecReference}`
       + ` ; > 5 mm : avec la règle ${c.corrections.sup5mm.cuts}, sans la règle ${sr.sup5mm}`);
   }
-  if (resume.ombres) for (const [k, titre] of [['voie', 'Ombre voie prédite (Orbite)'], ['memoire', 'Ombre mémoire des différés (Écho)']]) {
-    const o = resume.ombres[k];
+  if (resume.ombres) for (const [k, titre] of [['voie', 'Ombre voie prédite (Orbite)'], ['memoire', 'Ombre mémoire des différés (Écho)'], ['b1Ecart', 'Ombre voie B1-écart (Orbite, CH-055)']]) {
+    const o = resume.ombres[k]; if (!o) continue;
     L.push('', `${titre} : ${o.evenements} événement(s), ${o.posables} posable(s) — juste à 5 mm ${o.juste5}, à 10 mm ${o.juste10}, fausses ${o.fausse}, mauvaise voie (> ${o.seuils.mauvaiseVoieMm} mm) ${o.mauvaiseVoie}, non jugées ${o.nonJugees} ; abstenues ${o.abstenues}`
       + (o.refuseesAvecPose.n ? ` (dont ${o.refuseesAvecPose.n} avec une pose : ${o.refuseesAvecPose.juste10} juste(s), ${o.refuseesAvecPose.fausse} fausse(s), ${o.refuseesAvecPose.mauvaiseVoie} mauvaise voie)` : '')
-      + (Object.keys(o.parRaison).length ? ` ; raisons : ${Object.entries(o.parRaison).sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ')}` : '') + '.');
+      + (Object.keys(o.parRaison).length ? ` ; raisons : ${Object.entries(o.parRaison).sort((a, b) => b[1] - a[1]).map(([r, n]) => `${r} ${n}`).join(', ')}` : '')
+      + (o.parSource ? ` ; sources des posables : ${Object.entries(o.parSource).map(([r, n]) => `${r} ${n}`).join(', ') || 'aucune'}` : '') + '.');
   }
   const rz = resume.raison;
   if (rz) {

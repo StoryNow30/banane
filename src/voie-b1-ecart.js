@@ -10,7 +10,8 @@
   * (validation croisée par partie), 5 faux de 11 à 31 mm, 0 à plus de 50 mm sur 33 poses ; sur l'examen 8-12 du 05/11 : 14 justes sur 22, 0 faux. Les
   * différés qu'elle rattrape sont des voies décalées de 60 à 150 mm (le moteur trouve un rail et accroche pour l'autre une structure à 60-70 mm, contre-rail
   * de passage à niveau ; la pose d'ESV d'une ligne invalide est un gabarit à 1 500 mm). Sources, dans cet ordre, sur un cut que le lot DIFFÈRE :
-  *   1. « serie » : la chaîne de l'ombre (ses propres poses, jamais celles du lot : `appuisOmbre` de voie-recentree), même reprise que la voie prédite ;
+  *   1. « lot » / « serie » : la reprise depuis la voie des appuis réels (quand la commande l'a refusée : la vue) et la chaîne de l'ombre (ses propres
+  *      poses, jamais celles du lot : `appuisOmbre` de voie-recentree), même reprise que la voie prédite ;
   *   2. « b1 » : les lignes VALIDES de la liste d'ESV à `fenetreListe` cuts (instantané compact de la liste, src/liste-memoire.js), ramenées en scène par
   *      la translation T lue sur la ligne du cut lui-même (sa pose de départ, invalide, est la pose d'ESV à 0 mm : S6 de la 4.9.5.3), puis `decideCut`
   *      avec ces voisins validés (D-095, dernier recours) ;
@@ -25,6 +26,10 @@
  const SIDES=['left','right'],FR={left:'gauche',right:'droite'};
  const REGLAGE=Object.freeze({fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4,solutionPorteeMm:320,solutionPasMm:1,solutionTolMm:0.5});
  const STATUTS=['valid','invalid','skipped','autre'];
+ /* Étages admis pour une pose de l'ombre : une reprise depuis la voie (window) ou un choix près d'elle (choice). Jamais « first-pass » : c'est la paire
+  * du moteur telle quelle, que le lot a déjà jugée (différée par sa garde ou sa commande). */
+ const ETAGES=Object.freeze(['window','choice']);
+ const posee=d=>!!(d&&ETAGES.includes(d.stage)&&d.positions);
  const r1=v=>Number.isFinite(v)?Math.round(v*10)/10:null,r2=v=>Number.isFinite(v)?Math.round(v*100)/100:null;
  const med=a=>{if(!a.length)return null;const b=a.slice().sort((x,y)=>x-y),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
 
@@ -98,7 +103,7 @@
        essais++;
        const decalage={[sur]:[t.delta[1]*1000,t.delta[2]*1000],[autre]:[sol.lat,sol.vert]};
        const e=relancerDepuis(decider,args,cap,decalage,opts);
-       if(e.decision&&e.decision.stage!=='deferred'&&e.decision.positions)poses.push({...e,sur,origine:t.origine,pose:poseMmDe(cap,e.decision)});
+       if(posee(e.decision))poses.push({...e,sur,origine:t.origine,pose:poseMmDe(cap,e.decision)});
      }
    }
    if(!poses.length)return {decision:null,raison:'ecart:aucune-pose-qualifiee',essais};
@@ -124,13 +129,15 @@
      const decider=a=>{relance=null;const d=L.decideCut(a);return {decision:d,relance};};
      const ancres=V.appuisOmbre(mem,ancresReelles),deOmbre=new Set(mem.poses.map(p=>p.identity.cut));
      let d=null,source=null,raisons=[],essais=0,appuisB1=[];
-     /* 1. La chaîne de l'ombre (seulement si une pose de l'ombre est à portée : sinon la décision réelle a déjà tout dit). */
-     if(V.doitRecalculer(mem,identity,null)){const e=decider({...args,anchors:ancres,options:opts});essais++;if(e.decision.stage!=='deferred'&&e.decision.positions){d=e;source='serie';}else raisons.push('serie:'+String(e.decision.reason||'?').slice(0,40));}
+     /* 1. La voie du lot et la chaîne de l'ombre : relance avec les appuis réels et les poses de l'ombre, si la décision réelle a une pose (reprise
+      * refusée par la commande : la vue) ou si une pose de l'ombre est à portée ; sinon la décision réelle a déjà tout dit. */
+     if(V.doitRecalculer(mem,identity,decisionReelle)){const e=decider({...args,anchors:ancres,options:opts});essais++;
+       if(posee(e.decision)){d=e;source=(e.decision.anchorsUsed||[]).some(c=>deOmbre.has(c))?'serie':'lot';}else raisons.push('serie:'+String(e.decision.reason||e.decision.stage||'?').slice(0,40));}
      /* 2. Les lignes valides de la liste d'ESV. */
      const rows=lignesDeTable(table,identity.cut,o.fenetreListe),rep=rows.length?repereDepuisLigne(rows,identity.cut,capture.rails):{etat:'sans-liste',T:null};
      if(!d){
        if(rep.T){appuisB1=B.appuis(rows,rep.T,identity);
-         if(appuisB1.length){const e=decider({...args,anchors:ancres,validated:appuisB1,options:opts});essais++;if(e.decision.stage!=='deferred'&&e.decision.positions){d=e;source='b1';}else raisons.push('b1:'+String(e.decision.reason||'?').slice(0,40));}
+         if(appuisB1.length){const e=decider({...args,anchors:ancres,validated:appuisB1,options:opts});essais++;if(posee(e.decision)){d=e;source='b1';}else raisons.push('b1:'+String(e.decision.reason||e.decision.stage||'?').slice(0,40));}
          else raisons.push('b1:aucune-ligne-valide');}
        else raisons.push('b1:'+rep.etat);
      }
@@ -153,5 +160,5 @@
    }catch(e){return {evenement:{...base,etat:'erreur',source:null,poseMm:null,verdict:{posable:false,raison:'erreur'},message:String(e?.message||e).slice(0,160)},r:null};}
  }
 
- return {VERSION,REGLAGE,lignesDeTable,repereDepuisLigne,ecartementReference,railTrouve,solutionsEcartement,relancerDepuis,poseMmDe,ecartPoses,sourceEcart,creerMemoire,evaluer};
+ return {VERSION,REGLAGE,ETAGES,lignesDeTable,repereDepuisLigne,ecartementReference,railTrouve,solutionsEcartement,relancerDepuis,poseMmDe,ecartPoses,sourceEcart,creerMemoire,evaluer};
 });
