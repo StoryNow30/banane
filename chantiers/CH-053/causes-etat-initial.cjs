@@ -19,7 +19,7 @@ const { mergeFiles } = require('../../tools/merge-segments.cjs');
 const { entreesEcho } = require('../../tools/taux-apprenables.cjs');
 const { reconstruireCut } = require('../../src/native-reconstruction.js');
 
-const COTES = ['left', 'right'];
+const COTES = ['left', 'right'], MIN_POINTS = 128;
 const intentionsDe = r => (r.operatorIntents || []).map(i => i && i.intent).filter(Boolean);
 const rang = r => `${r.startedAt || ''}|${String(r.visitIndex ?? 0).padStart(8, '0')}`;
 const sig = c => JSON.stringify((c && c.clouds || []).map(x => x && x.clipping || null));
@@ -53,8 +53,20 @@ function causes(entrees, { partie = null } = {}) {
     const tardiveDeuxRails = COTES.every(s => (v.railSnapshots && v.railSnapshots[s] || []).some(x => x.coverage && x.coverage.status === 'qualified-candidate'));
     const memeDecoupe = tardive.some(cap => sig(nuages.get(cap.captureId)) === sig(nuages.get(premiere && premiere.captureId)));
     const rec = reconstruireCut(v, { nuages });
+    /* Borne HAUTE de la piste 2 au niveau du CUT (paire) : chaque rail non couvert par la définition assouplie a une capture
+     * CLIP_CHANGED de la visite qui a retenu au moins MIN_POINTS points sans en sauvegarder aucun. La répartition longitudinale
+     * n'est pas dans l'export : c'est une borne, pas un gain. */
+    const clipPerdu = s => caps.some(cap => { const c = nuages.get(cap.captureId), o = c && c.railObservations && c.railObservations[s];
+      return cap.termination && cap.termination.code === 'CLIP_CHANGED' && o && (o.pointsRetained || 0) >= MIN_POINTS && !((o.checkpointedPoints || 0) > 0); });
+    const bornePaire = COTES.every(s => rec.rails[s].qualifie || clipPerdu(s));
+    /* Captures arrêtées par le geste de l'opérateur (4.7.4) : aucune capture n'est lancée après le premier geste qui déplace un
+     * rail. Cut « bloqué par le geste » = un geste a eu lieu pendant la visite, la visite a duré au moins 1 s après lui, et aucune
+     * capture n'a démarré après. Avec la définition assouplie, une capture après geste (rail déplacé) est exploitable. */
+    const t = x => Date.parse(x || ''), geste = t(v.startPose && v.startPose.firstGesture && v.startPose.firstGesture.observedAt), finVisite = t(v.endedAt);
+    const dernierDebut = Math.max(-Infinity, ...caps.map(cap => t(cap.startedAt)).filter(Number.isFinite));
+    const bloqueParGeste = Number.isFinite(geste) && Number.isFinite(finVisite) && finVisite - geste >= 1000 && dernierDebut <= geste;
     lignes.push({ qualifieStrict: c1, premiereFin: fin, captures: caps.length, captureTardive: tardive.length > 0, tardiveDeuxRails, memeDecoupeQueLaPremiere: tardive.length > 0 && memeDecoupe,
-      recuperable: !c1 && rec.qualifie, voies: !c1 && rec.qualifie ? COTES.map(s => rec.rails[s].voie) : null,
+      recuperable: !c1 && rec.qualifie, bornePaire, bloqueParGeste, dureeVisiteMs: t(v.endedAt) - t(v.startedAt), voies: !c1 && rec.qualifie ? COTES.map(s => rec.rails[s].voie) : null,
       raisons: !c1 && !rec.qualifie ? [...new Set(COTES.flatMap(s => rec.rails[s].raisons))] : null });
   }
   const perdus = lignes.filter(l => !l.qualifieStrict);
@@ -65,7 +77,11 @@ function causes(entrees, { partie = null } = {}) {
     avecCaptureTardiveQualifiee: perdus.filter(l => l.captureTardive).length,
     ...{ memeDecoupe: perdus.filter(l => l.memeDecoupeQueLaPremiere).length },
     avecInstantaneQualifiePourLesDeuxRails: perdus.filter(l => l.tardiveDeuxRails).length,
-    recuperables: perdus.filter(l => l.recuperable).length, parVoie: compte(perdus.filter(l => l.recuperable), l => l.voies.join('+')),
+    recuperables: perdus.filter(l => l.recuperable).length,
+    bornePaireReclassement: { qualification: 'borne HAUTE au niveau du cut, non un gain', nonRecuperesQuePisteDeuxPourraitCompleter: perdus.filter(l => !l.recuperable && l.bornePaire).length,
+      tauxStrictPlusBorneAssouplieEtReclassementPct: lignes.length ? Math.round((lignes.length - perdus.length + perdus.filter(l => l.recuperable || l.bornePaire).length) / lignes.length * 1000) / 10 : null },
+    bloquesParLeGeste: { nonRecuperes: perdus.filter(l => !l.recuperable && l.bloqueParGeste).length, parCause: compte(perdus.filter(l => !l.recuperable && l.bloqueParGeste), l => l.premiereFin) },
+    dureeVisiteMsNonRecuperes: (() => { const a = perdus.filter(l => !l.recuperable).map(l => l.dureeVisiteMs).filter(Number.isFinite).sort((x, y) => x - y); const g = p => a.length ? a[Math.floor((a.length - 1) * p)] : null; return { n: a.length, p10: g(.1), mediane: g(.5), p90: g(.9) }; })(), parVoie: compte(perdus.filter(l => l.recuperable), l => l.voies.join('+')),
     recuperablesParCause: compte(perdus.filter(l => l.recuperable), l => l.premiereFin),
     nonRecuperesParRaison: compte(perdus.filter(l => !l.recuperable).flatMap(l => l.raisons || ['inconnue']), x => x),
     tauxStrictPct: lignes.length ? Math.round((lignes.length - perdus.length) / lignes.length * 1000) / 10 : null,

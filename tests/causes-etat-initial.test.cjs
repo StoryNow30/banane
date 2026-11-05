@@ -54,6 +54,19 @@ test('causes : ventilation par fin de la 1re capture et cuts récupérables par 
   assert.deepEqual(r.parVoie, { 'instantane-meme-pose+instantane-meme-pose': 1, 'instantane-pose-differente+instantane-pose-differente': 1 });
   assert.equal(r.tauxStrictPct, 25); assert.equal(r.tauxAssoupliPct, 75);
 });
+test('causes : borne haute de la piste 2 (CLIP_CHANGED, points retenus non sauvegardés) et cuts bloqués par le geste', () => {
+  const clip = visite(5, { premiereFin: 'CLIP_CHANGED' });                    // aucun instantané, mais 2 rails ont retenu 2 000 points perdus
+  const geste = visite(6, { premiereFin: 'RESOURCE_LIMIT' });                  // un geste à +1 s, visite de 6 s, aucune capture après
+  geste.startPose = { rails: geste.beforeEstablished.rails, firstGesture: { observedAt: iso(6 * 20 + 1.5) } };
+  const e = session([clip, geste]);
+  const d = fs.readdirSync(path.dirname(e[0].chemin)), f = path.join(path.dirname(e[0].chemin), d[0]), doc = JSON.parse(fs.readFileSync(f, 'utf8'));
+  for (const c of doc.clouds) if (c.captureId === 'a5') c.railObservations = { left: { pointsRetained: 2000, checkpointedPoints: 0 }, right: { pointsRetained: 2000, checkpointedPoints: 0 } };
+  fs.writeFileSync(f, JSON.stringify(doc));
+  const r = causes(entreesEcho([path.dirname(f)]));
+  assert.equal(r.nonQualifies, 2); assert.equal(r.recuperables, 0);
+  assert.equal(r.bornePaireReclassement.nonRecuperesQuePisteDeuxPourraitCompleter, 1);
+  assert.deepEqual(r.bloquesParLeGeste, { nonRecuperes: 1, parCause: { RESOURCE_LIMIT: 1 } });
+});
 test('taux-apprenables --assouplie : strict inchangé, assoupli plus haut, accord et parité', () => {
   const e = session([visite(1, { strict: true }), visite(2, { premiereFin: 'CLIP_CHANGED', tardive: true, intentAt: 1 }), visite(3, { premiereFin: 'TARGET_CHANGED' })]);
   const strict = mesurer(e), ass = mesurer(e, { assouplie: true });
