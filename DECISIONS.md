@@ -3395,4 +3395,8 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Validé : (1) règle d'étiquetage : Écho allumé pour toute validation manuelle ; validation sans mouvement en moins de 1,5 s écartée de l'apprentissage ; (2) parties d'examen : 8 à 12 du 05/11 (réservées), partie 11 du 04/11 en réserve ; (3) brancher la file prioritaire des cuts à corriger (src/file-prioritaire.js) dans le panneau, pour mesurer en séance le coût réel des sauts ; (4) protocole de séance Écho tirée au sort (environ 150 posés par partie) pour les mesures suivantes.
 - Examen ÉTABLI (CH-053-M, parties 8 à 12 du 05/11, paramètres figés, une seule lecture) : 229 posés d'Ariane jugés, 227 à 10 mm ou moins (99,1 %), 0 à plus de 50 mm (borne haute 1,7 %), 0 mauvaise voie ; D-223 et « 90 % à 10 mm » DÉMONTRÉS sur les posés jugés. Réserve : 229 jugés sur 831 posés, choisis par l'opérateur (biais possible).
 - NON couvert par cet ordre : l'activation de la règle de choix de voie de CH-053-M (encore en ombre, à juger sur l'examen du 05/11 puis à proposer avec ses chiffres).
-- Le numéro suivant est D-286.
+
+## D-286 — Dépôts publics, volontairement (opérateur, 05/11)
+- Ordre : « C'est public et c'est exprès », en réponse à l'alerte de l'intégrateur (banane et banane-data publics sur GitHub).
+- Conséquence : les dépôts de données dérivées dans banane-data reprennent. Les interdits de CLAUDE.md restent entiers dans banane (aucun nom d'opérateur, code projet, adresse ESV, UUID ni capture d'écran).
+- Le numéro suivant est D-287.
