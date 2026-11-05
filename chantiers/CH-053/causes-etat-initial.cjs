@@ -4,7 +4,7 @@
  * causes-etat-initial.cjs — CH-053-C : ventile les cuts validés dont l'état initial n'est pas qualifié (définition stricte)
  * par CAUSE, et compte ce que chaque piste récupère. Hors ligne, lecture seule, aucune donnée versée.
  *
- *   node chantiers/CH-053/causes-etat-initial.cjs --echo <dossier|fichiers|volumes zip …> [--partie N] [--json sortie.json]
+ *   node --max-old-space-size=6000 chantiers/CH-053/causes-etat-initial.cjs --echo <dossier|fichiers|volumes zip …> [--partie N] [--json sortie.json]
  *
  * Cause d'un cut non qualifié = fin de la PREMIÈRE capture de la visite retenue (CLIP_CHANGED, RAIL_STATE_CHANGED sur geste,
  * TARGET_CHANGED, RESOURCE_LIMIT, NO_RAIL_OBSERVED, autre), ou « aucune-capture ». Pour chaque cut non qualifié on dit aussi :
@@ -94,7 +94,7 @@ function main() {
   const argv = process.argv.slice(2), opt = n => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const iE = argv.indexOf('--echo'), chemins = [];
   if (iE >= 0) for (let i = iE + 1; i < argv.length && !argv[i].startsWith('--'); i++) chemins.push(argv[i]);
-  if (!chemins.length) { console.error('Usage : --echo <dossier|fichiers|volumes zip …> [--partie N] [--json sortie.json]'); process.exit(1); }
+  if (!chemins.length) { console.error('Usage : node --max-old-space-size=6000 causes-etat-initial.cjs --echo <dossier|fichiers|volumes zip …> [--partie N] [--json sortie.json]  (une grosse session relit les points : 6 Go de tas)'); process.exit(1); }
   const entrees = entreesEcho(chemins);
   if (!entrees.length) { console.error('Aucun export Écho trouvé.'); process.exit(1); }
   const res = causes(entrees, { partie: opt('--partie') !== undefined ? Number(opt('--partie')) : null });

@@ -6,6 +6,7 @@
  *
  *   node tools/taux-apprenables.cjs --echo <dossier|fichier.json|volume.zip …> [--journal ariane-journal-v4-….json]
  *        [--partie N] [--assouplie] [--json sortie.json]
+ *   --assouplie relit les points : lancer avec `node --max-old-space-size=6000` sur une grosse session.
  *
  * DÉFINITION (chantiers/CH-049.md) — un cut est apprenable si l'export contient, pour lui :
  *   (1) l'état initial qualifié des DEUX rails  : la visite retenue a, pour chaque rail, un instantané de départ
