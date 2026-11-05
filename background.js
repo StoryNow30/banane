@@ -16,7 +16,7 @@ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gaug
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
 /* D-282 : identifiant du commit d'où vient le paquet (fichier BUILD écrit par tools/package.py), lu une fois ; « inconnu » hors paquet. Écrit dans le journal (`build`) pour que les exports disent quel paquet a tourné. */
-let BUILD='inconnu';try{if(typeof fetch==='function'&&chrome?.runtime?.getURL)fetch(chrome.runtime.getURL('BUILD')).then(r=>r.ok?r.text():'').then(t=>{t=String(t).trim();if(/^[0-9a-f]{4,40}(\+modifie)?$/.test(t))BUILD=t;}).catch(()=>{});}catch{/* sans fichier BUILD */}
+let BUILD='inconnu';const BUILD_PRET=(async()=>{try{if(typeof fetch!=='function'||!chrome?.runtime?.getURL)return;const r=await fetch(chrome.runtime.getURL('BUILD'));const t=r.ok?String(await r.text()).trim():'';if(/^[0-9a-f]{4,40}(\+modifie)?$/.test(t))BUILD=t;}catch{/* sans fichier BUILD */}})();
 /* 4.7.21 — CERVEAU DE PLACEMENT ACTIF PAR DÉFAUT (direction, 26/09 : « tout
  * cela, je l'active à chaque fois »). Son état vivait en mémoire du service
  * worker et repartait éteint à chaque redémarrage de Chrome. Dans un lot
@@ -4241,6 +4241,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  const timingMeta={...(exporte?await fileExport():{}),...(v1TimingExport?{v1TimingExport}:{}),...(periode?{exportPeriod:periode.exportPeriod}:{}),...(periode?.fichesDepart?.length?{fichesDepart:periode.fichesDepart}:{}),...(periode?.finsLot?.length?{finsLot:periode.finsLot}:{})};
  /* 4.9.0.16 (test 15, 5c) : les 64 dernières transitions du lot (B3), dans le journal exporté. */
  const transitionsLot=coordinateurLot.journal.map(t=>({nom:t.nom,lot:t.lot,etat:t.etat,at:t.at??null}));
+ if(action==='build'){await BUILD_PRET;return {build:BUILD};}
  if(action==='journal-meta')return {...timingMeta,format:'banane-test-journal-v4',version:VERSION,build:BUILD,state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),transitionsLot};
  if(action==='dataset-meta')return {...timingMeta,format:'banane-test-dataset-v4',version:VERSION,exportedAt:new Date().toISOString(),state:exportState(),stateOmits:['records','incomplete'],closureSummary:await closureExport(),cloudIds:await store.keys('clouds')};
  /* 4.9.0.18 (KI-068) : le journal et le bilan d'Orbite rendus par message (repli du panneau) ne portent plus les visites ni les

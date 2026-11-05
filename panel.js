@@ -1848,6 +1848,6 @@ on('native-discard',async()=>{
  /* Après les autres minuteries (les essais du panneau les désignent par leur rang). */
  void majDeparts();setInterval(()=>{if(!working)void majDeparts();},5000);
  if(which==='native'){renderReglages();void renderHealth();}
- /* D-282 : le panneau dit de quel paquet il vient (fichier BUILD du zip). */
- try{const cible=document.getElementById('build');if(cible&&typeof fetch==='function')fetch(chrome.runtime.getURL('BUILD')).then(r=>r.ok?r.text():'').then(t=>{t=String(t).trim();if(/^[0-9a-f]{4,40}(\+modifie)?$/.test(t))cible.textContent='· paquet '+t;}).catch(()=>{});}catch{/* hors paquet */}
+ /* D-282 : le panneau dit de quel paquet il vient (fichier BUILD du zip, lu par le service worker : aucune requête de fichier depuis le panneau). */
+ void api('build').then(r=>{const cible=document.getElementById('build');if(cible&&r&&typeof r.build==='string'&&r.build!=='inconnu')cible.textContent='· paquet '+r.build;}).catch(()=>{});
 })();
