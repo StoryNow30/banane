@@ -39,9 +39,9 @@ test('entonnoir : du lot aux cuts qui portent une information pour l’apprentis
   assert.deepEqual(p.etiquettes, { sansMouvement: 2, sansMouvementRapide: 2, visitesCourtes: 2, corrigees: 5, plus10mm: 3, plus50mm: 2 });
   assert.deepEqual(p.differesJuges.parMotif, { 'input/input': { n: 2, plus50mm: 1, medianeMm: 67 }, 'gauge-out-of-contract/gauge-out-of-contract': { n: 1, plus50mm: 1, medianeMm: 140 }, 'candidate/candidate': { n: 1, plus50mm: 0, medianeMm: 0 } });
   assert.equal(p.differesJuges.sansTraitsAriane, 2, 'différés « aucun point » : aucune hypothèse de la GCV2 au lot');
-  assert.deepEqual(p.apprenables, { references: 7, paireQualifiee: 5, informatifs: 3 }, 'informatif = paire qualifiée et correction de plus de 10 mm');
+  assert.deepEqual(p.apprenables, { references: 7, paireQualifiee: 5, informatifs: 2 }, 'informatif = paire qualifiée et correction de plus de 10 mm (cuts 10 et 12 ; le 11 n’a pas de paire qualifiée)');
   assert.equal(r.total.lot.cuts, 9);
-  assert.equal(r.total.apprenables.informatifs, 3);
+  assert.equal(r.total.apprenables.informatifs, 2);
 });
 
 test('sans éligibilité : la paire qualifiée n’est pas inventée', () => {
