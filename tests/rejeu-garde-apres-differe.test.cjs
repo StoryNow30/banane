@@ -51,3 +51,13 @@ test('variantes listées ; le journal donne les cuts de la garde réelle et les 
   const j=R.lireJournal(f);
   assert.deepEqual([...j.gardeReel],[5]);assert.deepEqual(j.zonesJournal[5],{pn:true,adv:false});
 });
+test('synthèse CH-056 : retenus contre le témoin, jugés à 10 et 50 mm, borne de Wilson',()=>{
+  const S=require('../chantiers/CH-056/synthese.cjs');
+  const d={temoin:[{cut:1,posee:true,pire:3},{cut:2,posee:true,pire:60},{cut:3,posee:true,pire:null},{cut:4,posee:false}],
+    'garde-x':[{cut:1,posee:false,garde:true},{cut:2,posee:false,garde:true},{cut:3,posee:false},{cut:4,posee:false}]};
+  const s=S.synthese({7:d});
+  assert.equal(s['garde-x'].retenus,3);assert.equal(s['garde-x'].retenusJustes,1);assert.equal(s['garde-x'].retenus50,1);
+  assert.deepEqual(s['garde-x'].retenusCuts,['7/1:3','7/2:60','7/3*:nj']);
+  assert.equal(s.temoin.poses50,1);assert.equal(s.temoin.posesJuges,2);
+  assert.ok(Math.abs(S.wilson(0,125)[1]-0.0298)<0.001);
+});
