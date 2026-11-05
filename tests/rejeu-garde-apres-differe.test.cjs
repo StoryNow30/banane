@@ -61,3 +61,14 @@ test('synthèse CH-056 : retenus contre le témoin, jugés à 10 et 50 mm, borne
   assert.equal(s.temoin.poses50,1);assert.equal(s.temoin.posesJuges,2);
   assert.ok(Math.abs(S.wilson(0,125)[1]-0.0298)<0.001);
 });
+test('Écho en segments compactés (références vers `dictionaries`) : mêmes captures complétées que la session dépliée',()=>{
+  const fx=R.fixtureSynthetique(),cap=fx.captures.get(3);
+  const rec={visitId:'v1',startedAt:'1',identity:{...cap.identity,part:1,cut:3},beforeEstablished:{rails:cap.rails}};
+  const clouds=['left','right'].map(s=>({format:'banane-native-lidar-chunk-v1',chunkId:'k'+s,visitId:'v1',side:s,rail:cap.rails[s],
+    pointsSceneRelative:cap.pointsSceneRelative.slice(0,50),visibleByClipBoxes:Array(50).fill(true)}));
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ch056e-')),a=path.join(dir,'a.json'),b=path.join(dir,'b.json');
+  fs.writeFileSync(a,JSON.stringify({records:[rec],clouds}));
+  fs.writeFileSync(b,JSON.stringify({records:[{...rec,identity:{__ref:'identities:0'}}],clouds,dictionaries:{identities:[rec.identity]}}));
+  const ca=new Map(),cb=new Map();R.completerParEcho(ca,[a],1);R.completerParEcho(cb,[b],1);
+  assert.equal(ca.size,1);assert.equal(cb.size,1);assert.equal(cb.get(3).pointsSceneRelative.length,ca.get(3).pointsSceneRelative.length);
+});

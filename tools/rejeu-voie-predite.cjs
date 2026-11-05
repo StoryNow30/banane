@@ -93,6 +93,7 @@ const L1e=require('../src/gcv2-l1e.js');
 const ListeMemoire=require('../src/liste-memoire.js');
 const Native=require('./native-offline-evaluate.cjs');
 const GA=require('../src/garde-apres-differe.js');
+const NativeExport=require('../src/native-export.js');
 
 const SIDES=['left','right'];
 const FR={left:'gauche',right:'droite'};
@@ -162,7 +163,9 @@ function completerParEcho(captures,fichiers,partie,journal=()=>{}){
    * réunis sur tous les fichiers avant de construire les captures (union par identifiant). */
   const visites=new Map(),chunks=new Map();
   for(const f of fichiers){
-    const s=lireJson(f);
+    let s=lireJson(f);
+    /* CH-056 : segment compacté (références `__ref` vers `dictionaries`) : déplié avant lecture, comme jointure-echo-orbite. */
+    if(s&&s.dictionaries)s={...s,...NativeExport.unfoldRefs({records:s.records||[],clouds:s.clouds||[]},s.dictionaries)};
     for(const r of (s.records||[]))if(dePartie(r.identity,partie)&&Number.isInteger(r.identity?.cut)&&r.visitId&&!visites.has(r.visitId))visites.set(r.visitId,r);
     for(const c of s.clouds||[]){
       if(c?.format!=='banane-native-lidar-chunk-v1'||!SIDES.includes(c.side)||!Array.isArray(c.pointsSceneRelative))continue;
