@@ -34,8 +34,8 @@
   /* Taux mesurés le 04/11 (parties 10, 13, 14, 15 ; 250 cuts visités ; coût = temps de visite cumulé du cut). Voir chantiers/CH-053/S-rapport.md
    * et `tools/file-prioritaire.cjs simuler`. Ils servent de défaut ; la preuve du gain est la validation croisée par partie de la simulation. */
   const TAUX_DEFAUT = Object.freeze(Object.fromEntries(Object.entries({
-    'D-contrat': [8, 7, 7, 30], 'D-sanspoints': [46, 25, 0, 172], 'D-points': [11, 4, 4, 96],
-    'vert-fort': [10, 5, 0, 21], 'vert-moyen': [22, 2, 0, 36], 'vert-faible': [68, 1, 0, 88], 'vert-inconnu': [70, 5, 0, 129], 'posee-ariane': [13, 1, 0, 21],
+    'D-contrat': [8, 7, 7, 29.8], 'D-sanspoints': [46, 25, 0, 172], 'D-points': [11, 4, 4, 95.5],
+    'vert-fort': [10, 5, 0, 21.1], 'vert-moyen': [22, 2, 0, 36.3], 'vert-faible': [68, 1, 0, 88], 'vert-inconnu': [70, 5, 0, 129.5], 'posee-ariane': [14, 1, 0, 23.8],
   }).map(([k, [n, informatifs, avecTraits, coutS]]) => [k, Object.freeze(taux(n, informatifs, avecTraits, coutS))])));
 
   function taux(n, informatifs, avecTraits, coutS) {
@@ -83,8 +83,9 @@
       if (!du && !(fini(parMin) && parMin >= plancher)) { ecartes.push({ part: c.part, cut: c.cut, classe: cl, attenduParMin: parMin }); continue; }
       entrees.push({ ...e, _r: fini(parMin) ? parMin : -1 });
     }
-    entrees.sort((a, b) => b._r - a._r || a.part - b.part || a.cut - b.cut);
-    return { version: VERSION, critere: traits ? 'avec-traits' : 'informatif', plancherParMin: plancher, dejaJuges, taux: T,
+    /* `ordre: 'balayage'` : la même file, parcourue partie par partie dans l'ordre des cuts (moins de sauts ; la simulation du 04/11 la mesure meilleure). */
+    if (options.ordre === 'balayage') entrees.sort((a, b) => a.part - b.part || a.cut - b.cut); else entrees.sort((a, b) => b._r - a._r || a.part - b.part || a.cut - b.cut);
+    return { version: VERSION, ordre: options.ordre === 'balayage' ? 'balayage' : 'rendement', critere: traits ? 'avec-traits' : 'informatif', plancherParMin: plancher, dejaJuges, taux: T,
       entrees: entrees.map(({ _r, ...e }, i) => ({ ...e, rang: i + 1 })), ecartes };
   }
 

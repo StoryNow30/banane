@@ -88,3 +88,103 @@ test('ordonner : sans taux fourni, les taux mesurés le 04/11 servent (module sa
   assert.equal(R.entrees.length, 2);
   assert.ok(R.taux['vert-fort'].parMin > R.taux['vert-faible'].parMin);
 });
+
+/* ------------------------------------------------------------------ simulation (tools/file-prioritaire.cjs) */
+const S = require('../tools/file-prioritaire.cjs');
+const ob = (part, cut, classe, informatif, coutS, extra = {}) => ({ part, cut, classe, informatif, coutS, sautReel: 0, premiereVisite: part * 1000 + cut, ...extra });
+function jeuFictif() {
+  const o = [];
+  for (const p of [1, 2]) {
+    o.push(ob(p, 10, 'D-sanspoints', true, 4), ob(p, 11, 'D-sanspoints', true, 4), ob(p, 12, 'D-sanspoints', false, 4));
+    for (const c of [50, 51, 52, 53]) o.push(ob(p, c, 'vert-faible', false, 1));
+  }
+  return o;
+}
+
+test('simuler : la pratique actuelle est l’ensemble des cuts visités, dans l’ordre des visites', () => {
+  const r = S.simuler(jeuFictif(), { coutSaut: 0 });
+  assert.equal(r.actuel.cuts, 14); assert.equal(r.actuel.informatifs, 4); assert.equal(r.actuel.tempsS, 32);
+  assert.equal(r.actuel.parMin, 7.5);
+});
+
+test('simuler : la file écarte les verts sans rendement ; sans coût de saut, le gain vient du temps non perdu', () => {
+  const r = S.simuler(jeuFictif(), { coutSaut: 0 });
+  assert.equal(r.file.cuts, 6); assert.equal(r.file.informatifs, 4); assert.equal(r.file.tempsS, 24);
+  assert.equal(r.file.parMin, 10); assert.equal(r.file.rapport, 1.33);
+});
+
+test('simuler : chaque saut entre cuts non voisins coûte coutSaut (un par partie ici, entrée de la plage)', () => {
+  const r = S.simuler(jeuFictif(), { coutSaut: 6 });
+  assert.equal(r.file.tempsS, 36); assert.equal(r.file.parMin, 6.7);
+  assert.ok(r.file.rapport < 1, 'avec ce saut la file ne gagne rien sur ce jeu fictif : le résultat le dit');
+});
+
+test('simuler : le coût d’un saut subi pendant la pratique actuelle est retiré avant de recompter la file', () => {
+  const o = jeuFictif().map(x => (x.part === 1 && x.cut === 10 ? { ...x, coutS: 10, sautReel: 1 } : x));
+  const r = S.simuler(o, { coutSaut: 6 });
+  assert.equal(r.actuel.tempsS, 38);
+  assert.equal(r.file.tempsS, 36, 'cut 10 : 10 s mesurés dont 6 de saut → 4 s de base, puis un saut compté une fois en tête de plage');
+});
+
+test('simuler : validation croisée par partie (les taux de la partie jugée ne servent pas)', () => {
+  const o = jeuFictif().filter(x => x.part === 1).concat(
+    [ob(2, 10, 'D-sanspoints', true, 4), ob(2, 50, 'vert-moyen', true, 1)]);
+  const r = S.simuler(o, { coutSaut: 0 });
+  /* Partie 2 : la classe vert-moyen n’a aucune observation hors partie 2 → pas de taux → le vert est écarté, même s’il était informatif. */
+  assert.equal(r.file.informatifs, 2 + 1);
+  assert.equal(r.perdus.informatifs, 1);
+});
+
+test('simuler : la borne haute ne garde que les cuts informatifs, au coût de base', () => {
+  const r = S.simuler(jeuFictif(), { coutSaut: 0 });
+  assert.equal(r.borne.cuts, 4); assert.equal(r.borne.tempsS, 16); assert.equal(r.borne.parMin, 15);
+});
+
+test('simuler : la tête de file ne garde que les classes au moins aussi productives que la pratique actuelle', () => {
+  const o = jeuFictif().concat([ob(1, 20, 'D-points', false, 9), ob(2, 20, 'D-points', false, 9)]);
+  const r = S.simuler(o, { coutSaut: 0 });
+  assert.equal(r.file.cuts, 8, 'la file complète garde les deux différés D-points (travail dû)');
+  assert.equal(r.tete.cuts, 6, 'la tête les laisse pour après');
+});
+
+test('etiquetage : retirer les validations sans mouvement de moins de 1,5 s change le dénominateur, jamais le nombre d’informatifs', () => {
+  const refs = [
+    { etiquette: 'VALIDATE_NO_MOVEMENT', dureeVisiteS: 0.9, qualifiee: true, mm: 0 }, { etiquette: 'VALIDATE_NO_MOVEMENT', dureeVisiteS: 3, qualifiee: true, mm: 0 },
+    { etiquette: 'VALIDATE_CORRECTED_BOTH', dureeVisiteS: 2, qualifiee: true, mm: 40 }, { etiquette: 'VALIDATE_CORRECTED_BOTH', dureeVisiteS: 2, qualifiee: false, mm: 40 },
+  ];
+  const e = S.effetEtiquetage(refs);
+  assert.deepEqual({ refs: e.avant.references, app: e.avant.apprenables, inf: e.avant.informatifs }, { refs: 4, app: 3, inf: 1 });
+  assert.deepEqual({ refs: e.apres.references, app: e.apres.apprenables, inf: e.apres.informatifs }, { refs: 3, app: 2, inf: 1 });
+  assert.equal(e.retirees, 1); assert.equal(e.retireesInformatives, 0);
+});
+
+test('plan de séance : tailles de l’échantillon qui démontre D-223 (plus de 50 mm au plus 3 %, borne haute de Wilson à 95 %)', () => {
+  assert.equal(S.tailleD223(0), 125);
+  assert.equal(S.tailleD223(1), 185);
+  assert.equal(S.tailleD223(2), 239);
+});
+
+test('ordonner : l’ordre « balayage » garde les mêmes cuts mais les parcourt partie par partie dans l’ordre des cuts', () => {
+  const taux = F.apprendreTaux([{ classe: 'D-contrat', informatif: true, coutS: 4 }, { classe: 'D-sanspoints', informatif: true, coutS: 8 }]);
+  const c = [D(2, 5, 'input/input'), D(1, 9, 'gauge-out-of-contract/gauge-out-of-contract'), D(1, 3, 'input/input')];
+  assert.deepEqual(F.ordonner(c, { taux }).entrees.map(e => e.cut), [9, 3, 5]);
+  const b = F.ordonner(c, { taux, ordre: 'balayage' });
+  assert.deepEqual(b.entrees.map(e => `${e.part}:${e.cut}`), ['1:3', '1:9', '2:5']);
+  assert.equal(b.ordre, 'balayage');
+});
+
+test('echantillon : tirage reproductible, sans doublon, borné par les posés disponibles', () => {
+  const cuts = Array.from({ length: 200 }, (_, i) => i + 1000);
+  const a = S.echantillonPoses(cuts, 125, 42), b = S.echantillonPoses(cuts, 125, 42), c = S.echantillonPoses(cuts, 125, 43);
+  assert.deepEqual(a, b); assert.notDeepEqual(a, c);
+  assert.equal(new Set(a).size, 125); assert.ok(a.every(x => cuts.includes(x)));
+  assert.deepEqual(a, [...a].sort((x, y) => x - y));
+  assert.equal(S.echantillonPoses([1, 2, 3], 10, 7).length, 3);
+});
+
+test('echantillon : l’ordre du tirage permet de juger par tranches (les 125 premiers forment eux-mêmes un tirage au sort)', () => {
+  const cuts = Array.from({ length: 300 }, (_, i) => i);
+  const t = S.echantillonPoses(cuts, 239, 9, { ordreDuTirage: true });
+  assert.equal(t.length, 239);
+  assert.deepEqual([...S.echantillonPoses(cuts, 125, 9, { ordreDuTirage: true })], t.slice(0, 125), 'même graine : la tranche A est le début du tirage complet');
+});
