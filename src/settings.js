@@ -193,6 +193,12 @@
      * après `attenteMs` (le nuage du cut finit de charger), jusqu'à `essais` fois ; la plus fournie est gardée, sinon le cut suit son sort
      * d'avant. Événement `recapture-vide` (points avant et après). Non mesurable au banc : le corpus ne garde que la capture faite. */
     recaptureVide: Object.freeze({ actif: false, minPoints: 100, attenteMs: 1500, essais: 2 }),
+    /* CH-051 — SÉRIE DE CAPTURES VIDES, COUPÉE par défaut (src/serie-captures-vides.js). Lot du 04/11 : ESV a cessé de charger les nœuds de points
+     * pendant 22,7 min (partie 10) puis 76 s (partie 13), chaque fois juste après une requête de points en échec ; chaque capture rendait 0 point et le
+     * lot a différé 362 cuts sans rien remarquer. Active : après `seuil` captures vides consécutives, attendre `attenteMs` et recapturer le même cut ;
+     * encore vide : recharger la page ESV une fois par série (seulement si une Constellation peut reprendre le lot et que rien n'est posé), puis
+     * différer sans attendre, avec un nouvel essai tous les `reessaiApresCuts` cuts vides. Événement `serie-captures-vides`. Jamais de pose ni d'écriture. */
+    serieCapturesVides: Object.freeze({ actif: false, seuil: 3, attenteMs: 20000, attentesParEssai: 1, rechargement: true, rechargementsParSerie: 1, reessaiApresCuts: 10 }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
      * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE

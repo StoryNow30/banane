@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
 /* D-282 : identifiant du commit d'où vient le paquet (fichier BUILD écrit par tools/package.py), lu une fois ; « inconnu » hors paquet. Écrit dans le journal (`build`) pour que les exports disent quel paquet a tourné. */
@@ -1385,8 +1385,39 @@ async function recaptureVide(args,r){const cfg=globalThis.BananeSettings?.lot?.r
   essais.push({points:n(x)});if(n(x)>n(best))best=x;}
  await engine.event('recapture-vide',{identity:{part:r.identity?.part??null,cut:r.identity?.cut??null},batchId:b.id??null,pointsAvant:avant,pointsApres:n(best),essais}).catch(()=>{});
  return best;}
+/* CH-051 (réglage `lot.serieCapturesVides`, coupé par défaut) : GARDE « SÉRIE DE CAPTURES VIDES ». Le détecteur est pur (src/serie-captures-vides.js) ;
+ * ici seulement : l'état par lot, l'attente et la recapture, le rechargement de la page quand une Constellation peut reprendre le lot
+ * (fileRepriseApresRechargement, CH-043), l'événement `serie-captures-vides`. Aucune pose, aucune validation, aucune écriture : un cut laissé vide
+ * suit son sort d'avant (différé). Le rechargement n'a pas été essayé sur un vrai ESV (SUPPOSÉ qu'il relance le chargeur de points). */
+let serieVides=null;
+function serieVidesEtat(){const G=globalThis.BananeSerieCapturesVides,b=engine?.s?.batch;if(!G||!b?.id)return null;
+ if(!serieVides||serieVides.lotId!==b.id)serieVides={lotId:b.id,etat:G.creer(globalThis.BananeSettings?.lot?.serieCapturesVides),rechargementEnCours:false};
+ return serieVides;}
+async function gardeSerieVides(args,r){const G=globalThis.BananeSerieCapturesVides,b=engine?.s?.batch,sv=serieVidesEtat();
+ if(!sv||!sv.etat.reglage.actif||b?.state!=='RUNNING'||!r||typeof r!=='object')return r;
+ const e=sv.etat,n=c=>Array.isArray(c?.pointsSceneRelative)?c.pointsSceneRelative.length:0;
+ const identity={part:r.identity?.part??null,cut:r.identity?.cut??null};
+ const dire=(d,plus)=>engine.event('serie-captures-vides',{identity,batchId:b.id??null,action:d.action,motif:d.motif??null,...G.bilan(e),...(plus||{})}).catch(()=>{});
+ const apresRechargement=sv.rechargementEnCours;sv.rechargementEnCours=false;
+ let d=G.observer(e,{points:n(r)},apresRechargement?{apresRechargement:true}:undefined);
+ if(d.action==='rien')return r;
+ let best=r;
+ if(d.action==='attendre'){await dire(d);await attendreMs(d.attenteMs);
+  let x=null;try{x=await captureESV(...args);}catch(err){await dire({action:'erreur',motif:'recapture'},{erreur:String(err?.message||err).slice(0,120)});return best;}
+  if(n(x)>n(best))best=x;
+  /* Le rechargement n'est possible que si la Constellation reprend seule le lot après la page perdue et que rien n'est posé sur ce cut. */
+  const possible=(()=>{try{return typeof fileActive==='function'&&fileActive()&&fileReglage()?.repriseApresRechargement!==false&&b.step==='capture'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.applied;}catch{return false;}})();
+  d=G.observer(e,{points:n(x)},{apresAttente:true,rechargementPossible:possible});
+  if(d.action==='rien')return best;
+  if(d.action==='attendre'){await dire(d);return best;}}
+ if(d.action==='recharger'){await dire(d);
+  engine.s.notice=`ESV ne charge plus les points (${e.vides} captures vides de suite) : Ariane recharge la page ; la Constellation reprend le lot.`;await engine.save().catch(()=>{});
+  sv.rechargementEnCours=true;
+  try{await chrome.tabs.reload(selectedTab);}catch(err){sv.rechargementEnCours=false;await dire({action:'erreur',motif:'rechargement'},{erreur:String(err?.message||err).slice(0,120)});}
+  return best;}
+ await dire(d);return best;}
 adapter.capture=async(...args)=>{let r0;try{r0=await captureESV(...args);}catch(e){throw (await partieChangeeParEsv(e))||e;}   /* CH-039 */
- const r=await recaptureVide(args,r0),c=clicHumainDuLot();
+ const r=await gardeSerieVides(args,await recaptureVide(args,r0)),c=clicHumainDuLot();
  if(c&&r&&typeof r==='object'&&!r.readStrategy?.clicHumain)r.readStrategy={...(r.readStrategy&&typeof r.readStrategy==='object'?r.readStrategy:{}),clicHumain:c,clicHumainSource:'lot'};
  return r;};
 /* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
