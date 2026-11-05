@@ -137,3 +137,58 @@ test('lecture du journal, de la jointure et du corpus : ordre du lot, pose de l\
     assert.deepEqual([...caps.keys()],[10]);assert.equal(caps.get(10).nodes,undefined);assert.equal(caps.get(10).viewCaptures.length,1);
   }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+/* ------------------------------------------------------------------ CH-053-M : sources de voie hors de la fenêtre du moteur (ombre, hors ligne) */
+test('CH-053-M, balayage : sans aucun appui, une voie unique décalée de 230 mm est retrouvée par le balayage, jamais par le témoin',()=>{
+  const ctx2=T.fixtureSynthetique({premiers:0,coupes:5});
+  const res2=T.executer(ctx2,['temoin','balayage-serie']);
+  const t=res2.sorties.find(x=>x.synthese.id==='temoin').synthese,b=res2.sorties.find(x=>x.synthese.id==='balayage-serie');
+  assert.equal(t.differes.poses,0);
+  assert.equal(b.synthese.differes.poses,5);assert.equal(b.synthese.differes.juste10,5);assert.equal(b.synthese.differes.faux,0);
+  for(const r of b.detail){assert.equal(r.source,'balayage',`cut ${r.cut} : source ${r.source}`);assert.ok(r.pire<=5,`cut ${r.cut} : ${r.pire} mm`);}
+});
+
+test('CH-053-M, balayage : deux voies plausibles dans la portée du balayage ⇒ abstention (« plusieurs voies »), aucune pose',()=>{
+  /* La vraie voie est à −230 mm de la pose de départ (décalage 230) ; une seconde voie, à +460 mm de la vraie, tombe à +230 mm du départ. */
+  const ctx2=T.fixtureSynthetique({premiers:0,coupes:3,voiesMm:[460]});
+  const res2=T.executer(ctx2,['balayage-serie']);
+  const b=res2.sorties[0];
+  assert.equal(b.synthese.differes.poses,0,'une seule des deux voies ne peut pas être choisie');
+  for(const r of b.detail)assert.match(String(r.reason),/plusieurs-voies/);
+});
+
+test('CH-053-M, complément par l\'écartement : un rail trouvé par le moteur, l\'autre hors de sa fenêtre ⇒ l\'autre rail est cherché à l\'écartement de référence',()=>{
+  /* Le rail droit est à 230 mm, hors de la fenêtre d'analyse de ±180 mm (à 150 mm, le moteur le trouve encore seul : mesuré). */
+  const ctx2=T.fixtureSynthetique({premiers:0,coupes:4,decalageMm:{left:6,right:230}});
+  const res2=T.executer(ctx2,['temoin','ecart-serie','ecart-balayage-reelle']);
+  const t=res2.sorties.find(x=>x.synthese.id==='temoin').synthese,e=res2.sorties.find(x=>x.synthese.id==='ecart-serie'),f=res2.sorties.find(x=>x.synthese.id==='ecart-balayage-reelle');
+  assert.equal(t.differes.poses,0,'le témoin diffère : aucun appui, le rail droit hors de la fenêtre');
+  assert.equal(e.synthese.differes.poses,4);assert.equal(e.synthese.differes.juste10,4);assert.equal(e.synthese.differes.faux,0);
+  assert.equal(e.detail.find(r=>r.cut===1).source,'ecart','le premier cut vient du complément ; en série, les suivants peuvent venir de la chaîne');
+  for(const r of e.detail)assert.ok(r.pire<=5,`cut ${r.cut} : ${r.pire} mm`);
+  /* Mémoire réelle (aucune chaîne sur ses propres poses) : chaque cut vient du complément. */
+  for(const r of f.detail){assert.equal(r.source,'ecart',`cut ${r.cut} : ${r.source}`);assert.ok(r.pire<=5);}
+});
+
+test('CH-053-M, lecture par partie : un corpus et un journal de plusieurs parties ne gardent que la partie demandée',()=>{
+  const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'voie-'));
+  try{
+    const seg={clouds:[{cut:10,identity:{part:1,cut:10},rails:ctx.captures.get(1).rails,pointsSceneRelative:[[0,0,0]],visibleByClipBoxes:[true]},
+      {cut:10,identity:{part:2,cut:10},rails:ctx.captures.get(2).rails,pointsSceneRelative:[[0,0,0]],visibleByClipBoxes:[true]},
+      {cut:11,identity:{part:2,cut:11},rails:ctx.captures.get(2).rails,pointsSceneRelative:[],visibleByClipBoxes:[]}]};
+    fs.writeFileSync(path.join(dir,'c.json'),JSON.stringify(seg));
+    const caps=T.chargerCaptures([path.join(dir,'c.json')],2);
+    assert.deepEqual([...caps.keys()],[10,11]);assert.equal(caps.get(10).identity.part,2);
+    const journal={events:[{type:'proposed',timestamp:'2026-01-01T00:00:01Z',identity:{part:1,cut:10}},{type:'proposed',timestamp:'2026-01-01T00:00:02Z',identity:{part:2,cut:11}},
+      {type:'proposed',timestamp:'2026-01-01T00:00:03Z',identity:{part:2,cut:10}}]};
+    fs.writeFileSync(path.join(dir,'j.json'),JSON.stringify(journal));
+    assert.deepEqual(T.lireJournal(path.join(dir,'j.json'),2).ordre,[11,10]);
+    assert.deepEqual(T.lireJournal(path.join(dir,'j.json')).ordre,[10,11],'sans partie : comme avant');
+    /* Instantané compact de la liste d'ESV → lignes de B1 (monde, mètres), lignes valides et invalides, sans bord = ignorée. */
+    const snap={format:'ariane-liste-instantane-1',partie:2,r:[[0,10000,20000,30,10000,34300,30],[9,100,100,0,100,100,0],[0,null,null,null,null,null,null]]};
+    const lignes=T.lignesDepuisInstantane(snap);
+    assert.deepEqual(lignes.map(l=>[l.cut,l.statut]),[[0,'valid'],[1,'invalid']]);
+    assert.deepEqual(lignes[0].left,[1,2,0.003]);assert.deepEqual(lignes[1].right,[1.01,3.44,0.003]);
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
