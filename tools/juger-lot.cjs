@@ -236,6 +236,7 @@ function analyser(entree, graine = GRAINE) {
     return { ...base, cibles: 0, poses: 0, differes: 0, sansEcho: 0, nonJuges: 0, repereNonCalibre: 0, juges: 0, dontCorriges: 0, dontControles: 0,
       plusDe20mm: 0, plusDe50mm: 0, mauvaiseVoie: 0, precision: Poses.compter([], { graine }),
       ombre: { passe1: 0, poserait: 0, rien: 0, refusGarde: 0, juges: 0, sansEcho: 0, nonJuges: 0, plusDe20mm: 0, plusDe50mm: 0, precision: Poses.compter([], { graine }) },
+      ombreB1Ecart: { evenements: 0, posables: 0, juges: 0, juste5: 0, juste10: 0, fausse: 0, plusDe50mm: 0, abstenues: 0, parSource: {} },
       gestes: gestesDe([]), budgetD223: budgetDe([], 0, 0), _mm: [], _mmO: [], _ev: [] };
   }
   const { cibles, poses } = ciblesPosesDe(lot, partie);
@@ -258,6 +259,22 @@ function analyser(entree, graine = GRAINE) {
     }
   }
   const { o, mm: mmO } = ombreDe(lot, partie, lignes);
+  /* CH-055 : ombre « b1-ecart » (événements `voie-b1-ecart-ombre` du journal, jugés par la jointure contre la pose finale de l'opérateur), sur les
+   * différés de ce lot ; à part, jamais additionnée au lot. */
+  const ob = { evenements: 0, posables: 0, juges: 0, juste5: 0, juste10: 0, fausse: 0, plusDe50mm: 0, abstenues: 0, parSource: {} };
+  for (const cut of cibles) {
+    if (poses.has(cut)) continue;
+    const j = lignes.get(cut)?.ombres?.b1Ecart; if (!j) continue;
+    ob.evenements++;
+    if (!j.posable) { ob.abstenues++; continue; }
+    ob.posables++; ob.parSource[j.source || 'inconnue'] = (ob.parSource[j.source || 'inconnue'] || 0) + 1;
+    if (!fini(j.ecartMm)) continue;
+    ob.juges++;
+    if (j.ecartMm <= 5) ob.juste5++;
+    if (j.ecartMm <= 10) ob.juste10++; else ob.fausse++;
+    if (j.ecartMm > 50) ob.plusDe50mm++;
+  }
+  r.ombreB1Ecart = ob;
   o.plusDe20mm = mmO.filter(x => x > 20).length;
   o.plusDe50mm = mmO.filter(x => x > 50).length;
   o.precision = Poses.compter(mmO, { graine: graine + 1 });
@@ -280,6 +297,9 @@ function juger(entrees, options = {}) {
   total.ombre = {};
   for (const k of SOMMES_O) total.ombre[k] = parties.reduce((a, p) => a + p.ombre[k], 0);
   total.ombre.precision = Poses.compter(parties.flatMap(p => p._mmO), { graine: graine + 1 });
+  total.ombreB1Ecart = { evenements: 0, posables: 0, juges: 0, juste5: 0, juste10: 0, fausse: 0, plusDe50mm: 0, abstenues: 0, parSource: {} };
+  for (const p of parties) { const b = p.ombreB1Ecart || {}; for (const k of Object.keys(total.ombreB1Ecart)) if (k !== 'parSource') total.ombreB1Ecart[k] += b[k] || 0;
+    for (const [s, n] of Object.entries(b.parSource || {})) total.ombreB1Ecart.parSource[s] = (total.ombreB1Ecart.parSource[s] || 0) + n; }
   const pub = ({ _mm, _mmO, _ev, ...reste }) => reste;
   return {
     format: FORMAT, graine, mauvaiseVoieLatMm: MAUVAISE_VOIE_LAT_MM,
@@ -305,6 +325,9 @@ function bloc(titre, p) {
   L.push(`  passe en ombre (à part) : passe 1 sur ${o.passe1} différés, « poserait » ${o.poserait}, « rien » ${o.rien} dont refus de la garde ${o.refusGarde}`);
   L.push(`  sur ${o.poserait} « poserait » : jugés ${o.juges}, sans Écho ${o.sansEcho}, non jugés ${o.nonJuges}` + (o.juges
     ? ` ; médiane ${virgule(o.precision.medianeMm)} mm, max ${virgule(o.precision.maxMm)} mm, > 20 mm ${pc(o.plusDe20mm, o.juges)}, > 50 mm ${pc(o.plusDe50mm, o.juges)}` : ''));
+  const ob = p.ombreB1Ecart;
+  if (ob && ob.evenements) L.push(`  ombre voie B1-écart (CH-055, à part) : ${ob.evenements} différé(s) avec événement, posables ${ob.posables} (${Object.entries(ob.parSource).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucune source'}), abstenues ${ob.abstenues}`
+    + ` ; jugés ${ob.juges} : à 5 mm ${ob.juste5}, à 10 mm ${ob.juste10}, > 10 mm ${ob.fausse}, > 50 mm ${ob.plusDe50mm}`);
   L.push(...blocGestes(p));
   return L;
 }

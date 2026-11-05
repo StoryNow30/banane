@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js');
+ 'src/gcv1-export.js','src/engine.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js');
 const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
 /* D-282 : identifiant du commit d'où vient le paquet (fichier BUILD écrit par tools/package.py), lu une fois ; « inconnu » hors paquet. Écrit dans le journal (`build`) pour que les exports disent quel paquet a tourné. */
@@ -1510,6 +1510,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if(lotObservation&&pilotScope)holdLotAnchor(lotObservation,pilotScope.lotDecision==='apply'?lotObservation.command??null:null);
    /* 5.0 (I8) : ombre de la voie prédite, APRÈS la décision et la commande, sur des copies ; elle ne rend rien. */
    if(lotObservation&&pilotScope)voieOmbrePlanifier(lotObservation,propositionMoteur,proposal);
+   /* CH-055 : ombre « b1-ecart », APRÈS la décision et la commande, sur des copies, calcul différé ; elle ne rend rien. */
+   if(lotObservation&&pilotScope)b1EcartPlanifier(lotObservation,proposal);
    /* 5.0 : règles métier de Mic, consignées APRÈS la décision et la commande (src/regles-metier.js) ; rien n'est rendu au lot. */
    if(lotObservation&&pilotScope)reglesMetierNoter(lotObservation,proposal);
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
@@ -2054,7 +2056,9 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
     const ref=globalThis.BananeGcv2L1e.referenceEcartement(await l1eTable(r.identity.part),r.identity.cut);
     const g=decider({capture:r.capture,science:r.science,appuis:anchors.slice(),options:{...G.REGLE.lotOptions},voisins:l1Voisins(b,r.identity),voisinsTransport:transport.slice(),
      zone:r.zone,plagesADV:r.adv,modele:l1Modele(),regle:G.REGLE_E,reference:ref,voieListe:await l1eVoieListe(r.capture,r.identity)});
-    if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
+    if(g.decision.etat!=='valider'){r.motif=g.decision.motif??null;await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});
+     /* CH-055 : l'ombre « b1-ecart » sur le reste laissé « rien » (consignée seulement, jamais écrite). */
+     if(passe===passe0)await b1EcartPasse(r,b,passe,anchors);continue;}
     const cg=G.commander({positions:g.positions,runtimeRails:r.runtimeRails,before:r.capture.rails,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),camerasLarges:VR.camerasLarges(r.cloud),valider:true});
     if(cg.action!=='lot'){r.motif='commande:'+(cg.reason??'refus');await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,l1:G.resumer(g)});continue;}
     const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(r.capture.rails[s],g.positions[s]).map(v=>Math.round(v*100)/100)])),garde=passeDiffGarde(rg,b,r.identity,decal);
@@ -2415,6 +2419,8 @@ async function observeLot(shadow){
  if(decision.anchor)lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:decision.positions,stage:decision.stage};
  /* 5.0 (I8) : ce que l'ombre de la voie prédite lira, en copie (capture, science, appuis réels AU MOMENT de la décision). */
  voieOmbreNoter(identity,capture,shadow,state.anchors,decision);
+ /* CH-055 : ce que l'ombre « b1-ecart » lira, en copie (même frontière que la voie prédite). */
+ b1EcartNoter(identity,capture,shadow,state.anchors,decision);
  /* 5.0 (D-147) : ce que la règle prudente de « déplacer la vue » relira, seulement si le réglage est actif (références, sans copie). */
  dvContexte=deplacerVueReglage()?{identity,lotArgs,anchors:state.anchors.slice(),decision}:null;
  /* 4.9.5.13 (L1) : ce que la GCV2 lira si la chaîne ne pose pas ce cut (capture, options, appuis AU MOMENT de la décision). */
@@ -2569,6 +2575,49 @@ function voieOmbrePlanifier(lotObservation,propositionMoteur,propositionFinale){
 }catch{/* ombre : jamais bloquant */}}
 function voieOmbrePousser(f){voieOmbreFile.push(f);while(voieOmbreFile.length>8)try{voieOmbreFile.shift()();}catch{}clearTimeout(voieOmbreMinuterie);voieOmbreMinuterie=setTimeout(voieOmbreVider,4000);}
 function voieOmbreVider(){clearTimeout(voieOmbreMinuterie);voieOmbreMinuterie=null;for(const f of voieOmbreFile.splice(0))try{f();}catch{/* jamais bloquant */}}
+/* CH-055 — RÈGLE DE VOIE « B1-ECART » EN OMBRE (src/voie-b1-ecart.js, réglage `lot.voieB1EcartOmbre` ; mesure : chantiers/CH-053/M-rapport.md). Pour chaque cut
+ * que le lot DIFFÈRE, l'événement `voie-b1-ecart-ombre` consigne ce qu'aurait posé la règle : la chaîne de l'ombre, puis les lignes valides de la liste d'ESV
+ * (instantané de src/liste-memoire.js, lu une fois par lot), puis le rail trouvé complété par l'écartement de référence (L1-e), le moteur relancé depuis la
+ * paire. CONSIGNÉ SEULEMENT : le calcul part après la décision et la commande du cut, sur des copies, dans la même file différée que la voie prédite (quand
+ * la page travaille à la capture suivante, sinon 4 s) ; il ne rend rien au lot, n'écrit ni dans `batch` ni dans ses appuis, n'envoie aucune commande.
+ * Mémoire propre au lot, volatile. Une panne ne laisse qu'un événement « erreur ». */
+const b1Ecart={mem:null,premier:true,contexte:null};
+const b1EcartReglage=()=>{const r=globalThis.BananeSettings?.lot?.voieB1EcartOmbre;return r&&r.actif===true&&globalThis.BananeVoieB1Ecart?r:null;};
+function b1EcartNoter(identity,capture,shadow,anchors,decision){try{
+ b1Ecart.contexte=null;if(!b1EcartReglage())return;
+ const copie=x=>x==null?x:JSON.parse(JSON.stringify(x));
+ b1Ecart.contexte={identity:copie(identity),decision:copie(decision),anchors:copie(anchors||[]),science:copie({rails:shadow.rails,summary:shadow.summary}),
+  capture:{identity:copie(identity),rails:copie(capture.rails),pointsSceneRelative:capture.pointsSceneRelative,visibleByClipBoxes:capture.visibleByClipBoxes}};
+}catch{b1Ecart.contexte=null;}}
+function b1EcartPlanifier(lotObservation,propositionFinale){try{
+ const ctx=b1Ecart.contexte;b1Ecart.contexte=null;
+ const reglage=b1EcartReglage(),M=globalThis.BananeVoieB1Ecart,b=engine.s.batch;
+ if(!ctx||!reglage||!b?.id)return;
+ if(b1Ecart.mem?.batchId!==b.id){b1Ecart.mem=M.creerMemoire(b.id);b1Ecart.premier=true;}
+ const differe=!['left','right'].every(s=>propositionFinale?.rails?.[s]?.status==='candidate');
+ if(!differe)return;
+ const commande=lotObservation.command?{action:lotObservation.command.action,reason:lotObservation.command.reason??null}:null;
+ const ctxEv={batchId:b.id,sessionId:engine.s.sessionId??null},part=ctx.identity.part;
+ voieOmbrePousser(()=>{void b1EcartEvaluer({ctx,commande,reglage,part,ctxEv,mem:b1Ecart.mem});});
+}catch{/* ombre : jamais bloquant */}}
+async function b1EcartEvaluer({ctx,commande,reglage,part,ctxEv,mem,passe=null}){
+ const M=globalThis.BananeVoieB1Ecart,K=globalThis.BananeCore3,t0=Date.now();let ev;
+ try{const table=await l1eTable(part);
+  ev={...M.evaluer({mem,capture:ctx.capture,science:ctx.science,Shadow:globalThis.BananeGCV1Shadow,table,ancresReelles:ctx.anchors,decisionReelle:ctx.decision,commandeReelle:commande,reglage}).evenement,ms:Date.now()-t0};}
+ catch(e){ev={version:'voie-b1-ecart-ombre-v1',identity:{part:ctx.identity?.part??null,cut:ctx.identity?.cut??null},etat:'erreur',verdict:{posable:false,raison:'erreur'},message:String(e?.message||e).slice(0,160),ms:Date.now()-t0};}
+ if(passe!=null)ev.passe=passe;
+ if(b1Ecart.premier){ev.seuils={...reglage};b1Ecart.premier=false;}
+ try{void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'voie-b1-ecart-ombre',schema:1,...ctxEv,...ev})).catch(()=>{});}catch{/* le journal n'est pas critique */}
+}
+/* Deuxième passe : un reste que la passe laisse « rien » reçoit la même ombre (appuis de la passe, mémoire du lot), à la fin du lot. */
+async function b1EcartPasse(r,b,passe,anchors){try{
+ const reglage=b1EcartReglage(),M=globalThis.BananeVoieB1Ecart;if(!reglage||!r?.capture||!r?.science||!b?.id)return;
+ if(b1Ecart.mem?.batchId!==b.id){b1Ecart.mem=M.creerMemoire(b.id);b1Ecart.premier=true;}
+ const copie=x=>x==null?x:JSON.parse(JSON.stringify(x));
+ const ctx={identity:copie(r.identity),decision:null,anchors:copie(anchors||[]),science:copie({rails:r.science.rails,summary:r.science.summary}),
+  capture:{identity:copie(r.capture.identity),rails:copie(r.capture.rails),pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes}};
+ await b1EcartEvaluer({ctx,commande:null,reglage,part:r.identity.part,ctxEv:{batchId:b.id,sessionId:engine.s.sessionId??null},mem:b1Ecart.mem,passe});
+}catch{/* jamais bloquant */}}
 /* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
  * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
 function promouvoirAppuis(batch,state,processed,max){const L=globalThis.BananeLotDecision,waiting=(state.pending||[]).map(p=>p.identity.cut);
