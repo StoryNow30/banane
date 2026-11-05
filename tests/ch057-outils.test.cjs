@@ -100,3 +100,20 @@ test('agrégats : aucune coordonnée ne sort, l’écartement de l’opérateur 
   assert.equal(e.n, 1); assert.equal(e.medianeMm, 1435); assert.equal(e.dans1430a1447, 1);
   assert.ok(!/\d{5,}\.\d/.test(JSON.stringify(e)));
 });
+
+test('écritures de la passe : seules les écritures « ecrit » comptent, jugées sur la pose vue à la première visite', () => {
+  const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+  const E = require('../chantiers/CH-057/ecritures-passe.cjs');
+  const j = { events: [
+    { type: 'passe-differes-ecriture', resultat: 'ecrit', identity: { part: 14, cut: 4135 }, passe: 1 },
+    { type: 'passe-differes-ecriture', resultat: 'refuse', identity: { part: 14, cut: 4136 }, passe: 1 },
+    { type: 'passe-differes-ecriture', resultat: 'ecrit', identity: { part: 9, cut: 1 }, passe: 1 },
+  ] };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ch057-'));
+  fs.writeFileSync(path.join(dir, 'table11-14.json'), JSON.stringify({ table: [{ cut: 4135, dansEcho: true, base: 'premiere-visite', ecartHumain: { maxDist3dMm: 10.247 }, etiquetteEcho: 'VALIDATE_CORRECTED_BOTH' }] }));
+  const rows = E.juger(E.ecritures(j), '11', dir);
+  assert.equal(rows.length, 2);
+  assert.deepEqual([rows[0].jugement, rows[0].ecartMm], ['faux', 10.2]);
+  assert.equal(rows[1].jugement, 'hors-des-9');
+  assert.deepEqual(E.bilan(rows), { ecrits: 2, faux: 1, 'hors-des-9': 1 });
+});

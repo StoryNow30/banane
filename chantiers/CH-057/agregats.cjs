@@ -41,6 +41,10 @@ function agreger(d){
     for(const [v,x] of Object.entries(V.lot))out.voie.lot[v]={poses:x.poses,posesJuges:x.posesJuges,justes:x.justes,plus10:x.plus10,plus50:x.plus50,plus50IC:x.plus50IC,fautes50:x.fautes50,differes:x.differes};}
   const G=lire(d,'res/synthese-garde.json');
   if(G)out.garde=Object.fromEntries(Object.entries(G).map(([v,x])=>[v,{retenus:x.retenus,retenusJuges:x.retenusJuges,retenusJustes:x.retenusJustes,retenusFaux:x.retenusFaux,retenus50:x.retenus50,retenusCuts:x.retenusCuts,differes:x.differes,posesJuges:x.posesJuges,poses50:x.poses50,borne50:x.borne50}]));
+  const EP=lire(d,'res/ecritures-passe.json');
+  if(EP)out.ecrituresPasse={bilan:EP.bilan,cuts:EP.cuts.map(r=>({partie:`${r.projet}:${r.partie}`,cut:r.cut,passe:r.passe,jugement:r.jugement,ecartMm:r.ecartMm??null,etiquette:r.etiquette??null}))};
+  const FA=lire(d,'res/gcv2-fige-lot-actions.json');
+  if(FA)out.gcv2FigeErreurs=FA.filter(r=>r.e>10).map(r=>({partie:r.p,cut:r.cut,role:r.role,zone:r.zone,micMm:r.mic,erreurMm:r.e}));
   const GR=lire(d,'res/garde-reelle.json');
   if(GR)out.gardeReelle=GR.synthese;
   const H=lire(d,'res/hauteur-etudier.json');
