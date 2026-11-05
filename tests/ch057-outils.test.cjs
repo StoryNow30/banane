@@ -74,3 +74,29 @@ test('rejeu CH-057 : les variantes ajoutées ont les bons réglages et ne doublo
   const g = R.VARIANTES.find(v => v.id === 'b1-ecart-serie-garde-pn-adv');
   assert.deepEqual(g.garde, { regle: 'R3', coupures: 2, appuisMin: 2, zone: 'pn-adv' });
 });
+
+test('garde réelle : bilan par zone, pose du témoin jugée, cuts non posés par le témoin hors du jugement', () => {
+  const G = require('../chantiers/CH-057/garde-reelle.cjs');
+  const rows = [
+    { partie: '12:10', cut: 1, pnAdv: false, temoinPose: true, pireMm: 2.4 },
+    { partie: '12:10', cut: 2, pnAdv: true, temoinPose: true, pireMm: 60.3 },
+    { partie: '12:10', cut: 3, pnAdv: true, temoinPose: true, pireMm: 33 },
+    { partie: '12:10', cut: 4, pnAdv: true, temoinPose: false, pireMm: null },
+    { partie: '12:10', cut: 5, pnAdv: false, temoinPose: true, pireMm: null },
+  ];
+  const s = G.synthese(rows);
+  assert.equal(s.tout.retenus, 5); assert.equal(s.tout.posesTemoin, 4); assert.equal(s.tout.juges, 3);
+  assert.deepEqual([s.pnAdv.justes, s.pnAdv.faux10a50, s.pnAdv.plus50], [0, 1, 1]);
+  assert.deepEqual([s.horsPnAdv.juges, s.horsPnAdv.justes, s.horsPnAdv.plus50], [1, 1, 0]);
+});
+
+test('agrégats : aucune coordonnée ne sort, l’écartement de l’opérateur est une distance en mm', () => {
+  const A = require('../chantiers/CH-057/agregats.cjs');
+  const table = { table: [
+    { etiquetteEcho: 'VALIDATE_NO_MOVEMENT', poseHumaineFinale: { gauche: { x: 732923.354, y: 6571329.905, z: 255.868 }, droite: { x: 732921.919, y: 6571329.905, z: 255.868 } } },
+    { etiquetteEcho: 'SKIP', poseHumaineFinale: { gauche: { x: 0, y: 0, z: 0 }, droite: { x: 9, y: 0, z: 0 } } },
+  ] };
+  const e = A.ecartements(table);
+  assert.equal(e.n, 1); assert.equal(e.medianeMm, 1435); assert.equal(e.dans1430a1447, 1);
+  assert.ok(!/\d{5,}\.\d/.test(JSON.stringify(e)));
+});

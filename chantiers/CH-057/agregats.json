@@ -1,0 +1,3282 @@
+{
+ "format": "ch057-agregats-v1",
+ "date": "2026-11-05",
+ "parties": [
+  "11:10",
+  "11:13",
+  "11:14",
+  "11:15",
+  "12:8",
+  "12:9",
+  "12:10",
+  "12:11",
+  "12:12"
+ ],
+ "note": "Agrégats seulement : comptes, parts, mm, numéros de partie et de cut. Aucune coordonnée.",
+ "apprenables": {
+  "11:10": {
+   "valides": 19,
+   "strict": 12,
+   "assouplie": 12,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 7,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "CLIP_CHANGED": 6,
+    "RAIL_STATE_CHANGED": 1
+   },
+   "captureTardiveQualifiee": 6
+  },
+  "11:13": {
+   "valides": 60,
+   "strict": 40,
+   "assouplie": 44,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 20,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "sans-fin-anormale": 4,
+    "CLIP_CHANGED": 15,
+    "TARGET_CHANGED": 1
+   },
+   "captureTardiveQualifiee": 17
+  },
+  "11:14": {
+   "valides": 30,
+   "strict": 17,
+   "assouplie": 17,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 12,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 1
+   },
+   "causesEtatInitial": {
+    "CLIP_CHANGED": 7,
+    "RAIL_STATE_CHANGED": 3,
+    "RESOURCE_LIMIT": 2
+   },
+   "captureTardiveQualifiee": 10
+  },
+  "11:15": {
+   "valides": 25,
+   "strict": 13,
+   "assouplie": 14,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 12,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "CLIP_CHANGED": 8,
+    "RAIL_STATE_CHANGED": 3,
+    "sans-fin-anormale": 1
+   },
+   "captureTardiveQualifiee": 10
+  },
+  "12:8": {
+   "valides": 31,
+   "strict": 15,
+   "assouplie": 16,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 15,
+    "pose-humaine-absente": 1,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "sans-fin-anormale": 10,
+    "CLIP_CHANGED": 4,
+    "RESOURCE_LIMIT": 1
+   },
+   "captureTardiveQualifiee": 4
+  },
+  "12:9": {
+   "valides": 210,
+   "strict": 18,
+   "assouplie": 18,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 192,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "sans-fin-anormale": 68,
+    "RAIL_STATE_CHANGED": 1,
+    "CLIP_CHANGED": 106,
+    "RESOURCE_LIMIT": 14,
+    "NO_RAIL_OBSERVED": 1,
+    "aucune-capture": 1,
+    "TARGET_CHANGED": 1
+   },
+   "captureTardiveQualifiee": 54
+  },
+  "12:10": {
+   "valides": 180,
+   "strict": 94,
+   "assouplie": 98,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 83,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 3
+   },
+   "causesEtatInitial": {
+    "sans-fin-anormale": 19,
+    "CLIP_CHANGED": 43,
+    "RESOURCE_LIMIT": 6,
+    "RAIL_STATE_CHANGED": 9,
+    "COLLECTOR_STOPPED": 1,
+    "aucune-capture": 4,
+    "TARGET_CHANGED": 1
+   },
+   "captureTardiveQualifiee": 41
+  },
+  "12:11": {
+   "valides": 131,
+   "strict": 53,
+   "assouplie": 57,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 78,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "sans-fin-anormale": 19,
+    "CLIP_CHANGED": 39,
+    "RAIL_STATE_CHANGED": 12,
+    "RESOURCE_LIMIT": 4,
+    "TARGET_CHANGED": 3,
+    "aucune-capture": 1
+   },
+   "captureTardiveQualifiee": 43
+  },
+  "12:12": {
+   "valides": 64,
+   "strict": 22,
+   "assouplie": 26,
+   "pertesCascade": {
+    "etat-initial-non-qualifie": 42,
+    "pose-humaine-absente": 0,
+    "nuage-introuvable": 0,
+    "intention-ambigue": 0
+   },
+   "causesEtatInitial": {
+    "RAIL_STATE_CHANGED": 11,
+    "sans-fin-anormale": 13,
+    "CLIP_CHANGED": 12,
+    "aucune-capture": 1,
+    "RESOURCE_LIMIT": 4,
+    "TARGET_CHANGED": 1
+   },
+   "captureTardiveQualifiee": 22
+  }
+ },
+ "apprenablesTotal": {
+  "valides": 750,
+  "strict": 284,
+  "assouplie": 302
+ },
+ "rappel": {
+  "jugeables": 805,
+  "grosses": 99,
+  "paireA10": {
+   "k": 82,
+   "n": 99
+  }
+ },
+ "gcv2": {
+  "cvLot": {
+   "total": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 33,
+    "justes": 5,
+    "justes5": 3,
+    "abimes": 0,
+    "mauvaiseVoie": 0,
+    "erreurs": 0
+   },
+   "prudente": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 12,
+    "justes": 5,
+    "justes5": 4,
+    "abimes": 0,
+    "mauvaiseVoie": 0,
+    "erreurs": 0
+   },
+   "h0": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 0,
+    "justes": 0,
+    "justes5": 0,
+    "abimes": 0,
+    "mauvaiseVoie": 0,
+    "erreurs": 0
+   },
+   "parPartie": {
+    "11:10": {
+     "gcv2": {
+      "visites": 18,
+      "micSup10": 15,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "11:13": {
+     "gcv2": {
+      "visites": 84,
+      "micSup10": 27,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": []
+    },
+    "11:14": {
+     "gcv2": {
+      "visites": 28,
+      "micSup10": 12,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "11:15": {
+     "gcv2": {
+      "visites": 22,
+      "micSup10": 8,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:10": {
+     "gcv2": {
+      "visites": 210,
+      "micSup10": 27,
+      "agit": 28,
+      "justes": 4,
+      "justes5": 2,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:11": {
+     "gcv2": {
+      "visites": 127,
+      "micSup10": 5,
+      "agit": 3,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:12": {
+     "gcv2": {
+      "visites": 47,
+      "micSup10": 2,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:8": {
+     "gcv2": {
+      "visites": 40,
+      "micSup10": 1,
+      "agit": 2,
+      "justes": 1,
+      "justes5": 1,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:9": {
+     "gcv2": {
+      "visites": 229,
+      "micSup10": 2,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    }
+   }
+  },
+  "cvRelecture": {
+   "total": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 33,
+    "justes": 5,
+    "justes5": 4,
+    "abimes": 0,
+    "mauvaiseVoie": 0,
+    "erreurs": 1
+   },
+   "prudente": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 12,
+    "justes": 5,
+    "justes5": 4,
+    "abimes": 0,
+    "mauvaiseVoie": 0,
+    "erreurs": 0
+   },
+   "h0": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 0,
+    "justes": 0,
+    "justes5": 0,
+    "abimes": 0,
+    "mauvaiseVoie": 0,
+    "erreurs": 0
+   },
+   "parPartie": {
+    "11:10": {
+     "gcv2": {
+      "visites": 18,
+      "micSup10": 15,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "11:13": {
+     "gcv2": {
+      "visites": 84,
+      "micSup10": 27,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": []
+    },
+    "11:14": {
+     "gcv2": {
+      "visites": 28,
+      "micSup10": 12,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "11:15": {
+     "gcv2": {
+      "visites": 22,
+      "micSup10": 8,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:10": {
+     "gcv2": {
+      "visites": 210,
+      "micSup10": 27,
+      "agit": 27,
+      "justes": 4,
+      "justes5": 3,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:11": {
+     "gcv2": {
+      "visites": 127,
+      "micSup10": 5,
+      "agit": 4,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 1
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:12": {
+     "gcv2": {
+      "visites": 47,
+      "micSup10": 2,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:8": {
+     "gcv2": {
+      "visites": 40,
+      "micSup10": 1,
+      "agit": 2,
+      "justes": 1,
+      "justes5": 1,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    },
+    "12:9": {
+     "gcv2": {
+      "visites": 229,
+      "micSup10": 2,
+      "agit": 0,
+      "justes": 0,
+      "justes5": 0,
+      "abimes": 0,
+      "mauvaiseVoie": 0,
+      "erreurs": 0
+     },
+     "seuilsActifs": [
+      "adv"
+     ]
+    }
+   }
+  },
+  "figeLot": {
+   "parametres": {
+    "date": "2026-10-19",
+    "parties": [
+     "1:12",
+     "1:13",
+     "1:14",
+     "1:15",
+     "1:16",
+     "1:17",
+     "1:24",
+     "1:29",
+     "2:1",
+     "2:10",
+     "2:11"
+    ]
+   },
+   "total": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 367,
+    "justes": 27,
+    "justes5": 23,
+    "abimes": 0,
+    "mauvaiseVoie": 1,
+    "erreurs": 8
+   },
+   "parPartie": {
+    "11:10": {
+     "visites": 18,
+     "micSup10": 15,
+     "agit": 3,
+     "justes": 0,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 1,
+     "erreurs": 1
+    },
+    "11:13": {
+     "visites": 84,
+     "micSup10": 27,
+     "agit": 37,
+     "justes": 15,
+     "justes5": 14,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 4
+    },
+    "11:14": {
+     "visites": 28,
+     "micSup10": 12,
+     "agit": 8,
+     "justes": 2,
+     "justes5": 1,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 1
+    },
+    "11:15": {
+     "visites": 22,
+     "micSup10": 8,
+     "agit": 12,
+     "justes": 0,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "12:10": {
+     "visites": 210,
+     "micSup10": 27,
+     "agit": 81,
+     "justes": 5,
+     "justes5": 4,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "12:11": {
+     "visites": 127,
+     "micSup10": 5,
+     "agit": 56,
+     "justes": 1,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 1
+    },
+    "12:12": {
+     "visites": 47,
+     "micSup10": 2,
+     "agit": 20,
+     "justes": 1,
+     "justes5": 1,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 1
+    },
+    "12:8": {
+     "visites": 40,
+     "micSup10": 1,
+     "agit": 18,
+     "justes": 1,
+     "justes5": 1,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "12:9": {
+     "visites": 229,
+     "micSup10": 2,
+     "agit": 132,
+     "justes": 2,
+     "justes5": 2,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    }
+   }
+  },
+  "figeRelecture": {
+   "parametres": {
+    "date": "2026-10-19",
+    "parties": [
+     "1:12",
+     "1:13",
+     "1:14",
+     "1:15",
+     "1:16",
+     "1:17",
+     "1:24",
+     "1:29",
+     "2:1",
+     "2:10",
+     "2:11"
+    ]
+   },
+   "total": {
+    "visites": 805,
+    "micSup10": 99,
+    "agit": 320,
+    "justes": 29,
+    "justes5": 24,
+    "abimes": 1,
+    "mauvaiseVoie": 0,
+    "erreurs": 9
+   },
+   "parPartie": {
+    "11:10": {
+     "visites": 18,
+     "micSup10": 15,
+     "agit": 2,
+     "justes": 0,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "11:13": {
+     "visites": 84,
+     "micSup10": 27,
+     "agit": 37,
+     "justes": 17,
+     "justes5": 16,
+     "abimes": 1,
+     "mauvaiseVoie": 0,
+     "erreurs": 6
+    },
+    "11:14": {
+     "visites": 28,
+     "micSup10": 12,
+     "agit": 9,
+     "justes": 2,
+     "justes5": 1,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "11:15": {
+     "visites": 22,
+     "micSup10": 8,
+     "agit": 10,
+     "justes": 0,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "12:10": {
+     "visites": 210,
+     "micSup10": 27,
+     "agit": 69,
+     "justes": 6,
+     "justes5": 4,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    },
+    "12:11": {
+     "visites": 127,
+     "micSup10": 5,
+     "agit": 46,
+     "justes": 1,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 1
+    },
+    "12:12": {
+     "visites": 47,
+     "micSup10": 2,
+     "agit": 22,
+     "justes": 1,
+     "justes5": 1,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 1
+    },
+    "12:8": {
+     "visites": 40,
+     "micSup10": 1,
+     "agit": 17,
+     "justes": 0,
+     "justes5": 0,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 1
+    },
+    "12:9": {
+     "visites": 229,
+     "micSup10": 2,
+     "agit": 108,
+     "justes": 2,
+     "justes5": 2,
+     "abimes": 0,
+     "mauvaiseVoie": 0,
+     "erreurs": 0
+    }
+   }
+  }
+ },
+ "voie": {
+  "variantes": [
+   "temoin",
+   "garde-livree",
+   "garde-r3-c2-a2-pn-adv",
+   "b1-serie",
+   "plafond-serie",
+   "ecart-serie",
+   "b1-ecart-serie",
+   "b1-ecart-serie-f20-c10",
+   "b1-ecart-serie-f20-c15",
+   "b1-ecart-serie-f30-c10",
+   "b1-ecart-serie-f30-c30",
+   "b1-ecart-serie-f50-c10",
+   "b1-ecart-serie-f50-c15",
+   "b1-ecart-serie-f50-c30",
+   "b1-ecart-serie-garde-livree",
+   "b1-ecart-serie-garde-pn-adv"
+  ],
+  "perimetres": {
+   "grosses": {
+    "total": {
+     "temoin": {
+      "n": 67,
+      "poses": 10,
+      "justes": 10,
+      "faux": 0,
+      "plus50": 0,
+      "justesIC": [
+       8.3,
+       25.3
+      ],
+      "fautes": []
+     },
+     "garde-livree": {
+      "n": 67,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "justesIC": [
+       0,
+       5.4
+      ],
+      "fautes": []
+     },
+     "garde-r3-c2-a2-pn-adv": {
+      "n": 67,
+      "poses": 4,
+      "justes": 4,
+      "faux": 0,
+      "plus50": 0,
+      "justesIC": [
+       2.3,
+       14.4
+      ],
+      "fautes": []
+     },
+     "b1-serie": {
+      "n": 67,
+      "poses": 40,
+      "justes": 38,
+      "faux": 2,
+      "plus50": 0,
+      "justesIC": [
+       44.8,
+       67.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       }
+      ]
+     },
+     "plafond-serie": {
+      "n": 67,
+      "poses": 38,
+      "justes": 33,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       37.7,
+       60.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4213,
+        "source": "plafond",
+        "pireMm": 16.5
+       },
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:14",
+        "cut": 4132,
+        "source": "lot",
+        "pireMm": 11.5
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.2
+       }
+      ]
+     },
+     "ecart-serie": {
+      "n": 67,
+      "poses": 43,
+      "justes": 37,
+      "faux": 6,
+      "plus50": 1,
+      "justesIC": [
+       43.4,
+       66.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       },
+       {
+        "partie": "12:10",
+        "cut": 4981,
+        "source": "ecart",
+        "pireMm": 130.4
+       }
+      ]
+     },
+     "b1-ecart-serie": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f20-c10": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f20-c15": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f30-c10": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f30-c30": {
+      "n": 67,
+      "poses": 46,
+      "justes": 41,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       49.2,
+       72
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5730,
+        "source": "b1",
+        "pireMm": 16.5
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f50-c10": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f50-c15": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f50-c30": {
+      "n": 67,
+      "poses": 46,
+      "justes": 41,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       49.2,
+       72
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5730,
+        "source": "b1",
+        "pireMm": 16.5
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-garde-livree": {
+      "n": 67,
+      "poses": 43,
+      "justes": 39,
+      "faux": 4,
+      "plus50": 0,
+      "justesIC": [
+       46.3,
+       69.3
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-garde-pn-adv": {
+      "n": 67,
+      "poses": 45,
+      "justes": 40,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       47.7,
+       70.6
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     }
+    },
+    "atteignableApres": {
+     "k": 44,
+     "n": 67,
+     "ic": [
+      53.7,
+      75.9
+     ],
+     "parPartie": {
+      "11:10": {
+       "k": 6,
+       "n": 14
+      },
+      "11:13": {
+       "k": 12,
+       "n": 18
+      },
+      "11:14": {
+       "k": 6,
+       "n": 8
+      },
+      "11:15": {
+       "k": 4,
+       "n": 5
+      },
+      "12:10": {
+       "k": 12,
+       "n": 16
+      },
+      "12:11": {
+       "k": 2,
+       "n": 2
+      },
+      "12:12": {
+       "k": 2,
+       "n": 2
+      },
+      "12:8": {
+       "k": 0,
+       "n": 1
+      },
+      "12:9": {
+       "k": 0,
+       "n": 1
+      }
+     }
+    },
+    "validationCroisee": {
+     "total": {
+      "n": 67,
+      "poses": 49,
+      "justes": 44,
+      "faux": 5,
+      "plus50": 0,
+      "fautes": [
+       {
+        "partie": "11:10",
+        "variante": "b1-ecart-serie",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "variante": "b1-ecart-serie",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "variante": "b1-ecart-serie",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "variante": "b1-ecart-serie",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "variante": "b1-ecart-serie",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ],
+      "justesIC": [
+       53.7,
+       75.9
+      ],
+      "plus50IC": [
+       0,
+       7.3
+      ]
+     },
+     "choix": {
+      "11:10": {
+       "choisie": "b1-ecart-serie",
+       "n": 14,
+       "justes": 6,
+       "faux": 3,
+       "plus50": 0
+      },
+      "11:13": {
+       "choisie": "b1-ecart-serie",
+       "n": 18,
+       "justes": 12,
+       "faux": 1,
+       "plus50": 0
+      },
+      "11:14": {
+       "choisie": "b1-ecart-serie",
+       "n": 8,
+       "justes": 6,
+       "faux": 0,
+       "plus50": 0
+      },
+      "11:15": {
+       "choisie": "b1-ecart-serie",
+       "n": 5,
+       "justes": 4,
+       "faux": 1,
+       "plus50": 0
+      },
+      "12:10": {
+       "choisie": "b1-ecart-serie",
+       "n": 16,
+       "justes": 12,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:11": {
+       "choisie": "b1-ecart-serie",
+       "n": 2,
+       "justes": 2,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:12": {
+       "choisie": "b1-ecart-serie",
+       "n": 2,
+       "justes": 2,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:8": {
+       "choisie": "b1-ecart-serie",
+       "n": 1,
+       "justes": 0,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:9": {
+       "choisie": "b1-ecart-serie",
+       "n": 1,
+       "justes": 0,
+       "faux": 0,
+       "plus50": 0
+      }
+     }
+    }
+   },
+   "tous": {
+    "total": {
+     "temoin": {
+      "n": 82,
+      "poses": 18,
+      "justes": 18,
+      "faux": 0,
+      "plus50": 0,
+      "justesIC": [
+       14.4,
+       32.1
+      ],
+      "fautes": []
+     },
+     "garde-livree": {
+      "n": 82,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "justesIC": [
+       0,
+       4.5
+      ],
+      "fautes": []
+     },
+     "garde-r3-c2-a2-pn-adv": {
+      "n": 82,
+      "poses": 12,
+      "justes": 12,
+      "faux": 0,
+      "plus50": 0,
+      "justesIC": [
+       8.6,
+       23.9
+      ],
+      "fautes": []
+     },
+     "b1-serie": {
+      "n": 82,
+      "poses": 53,
+      "justes": 51,
+      "faux": 2,
+      "plus50": 0,
+      "justesIC": [
+       51.4,
+       71.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       }
+      ]
+     },
+     "plafond-serie": {
+      "n": 82,
+      "poses": 51,
+      "justes": 46,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       45.3,
+       66.3
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4213,
+        "source": "plafond",
+        "pireMm": 16.5
+       },
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:14",
+        "cut": 4132,
+        "source": "lot",
+        "pireMm": 11.5
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.2
+       }
+      ]
+     },
+     "ecart-serie": {
+      "n": 82,
+      "poses": 56,
+      "justes": 50,
+      "faux": 6,
+      "plus50": 1,
+      "justesIC": [
+       50.2,
+       70.8
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       },
+       {
+        "partie": "12:10",
+        "cut": 4981,
+        "source": "ecart",
+        "pireMm": 130.4
+       }
+      ]
+     },
+     "b1-ecart-serie": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f20-c10": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f20-c15": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f30-c10": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f30-c30": {
+      "n": 82,
+      "poses": 60,
+      "justes": 55,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       56.3,
+       76.3
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5730,
+        "source": "b1",
+        "pireMm": 16.5
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f50-c10": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f50-c15": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-f50-c30": {
+      "n": 82,
+      "poses": 60,
+      "justes": 55,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       56.3,
+       76.3
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5730,
+        "source": "b1",
+        "pireMm": 16.5
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-garde-livree": {
+      "n": 82,
+      "poses": 55,
+      "justes": 51,
+      "faux": 4,
+      "plus50": 0,
+      "justesIC": [
+       51.4,
+       71.9
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     },
+     "b1-ecart-serie-garde-pn-adv": {
+      "n": 82,
+      "poses": 59,
+      "justes": 54,
+      "faux": 5,
+      "plus50": 0,
+      "justesIC": [
+       55.1,
+       75.2
+      ],
+      "fautes": [
+       {
+        "partie": "11:10",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ]
+     }
+    },
+    "atteignableApres": {
+     "k": 59,
+     "n": 82,
+     "ic": [
+      61.4,
+      80.5
+     ],
+     "parPartie": {
+      "11:10": {
+       "k": 8,
+       "n": 16
+      },
+      "11:13": {
+       "k": 15,
+       "n": 21
+      },
+      "11:14": {
+       "k": 8,
+       "n": 10
+      },
+      "11:15": {
+       "k": 7,
+       "n": 8
+      },
+      "12:10": {
+       "k": 16,
+       "n": 20
+      },
+      "12:11": {
+       "k": 2,
+       "n": 2
+      },
+      "12:12": {
+       "k": 3,
+       "n": 3
+      },
+      "12:8": {
+       "k": 0,
+       "n": 1
+      },
+      "12:9": {
+       "k": 0,
+       "n": 1
+      }
+     }
+    },
+    "validationCroisee": {
+     "total": {
+      "n": 82,
+      "poses": 63,
+      "justes": 58,
+      "faux": 5,
+      "plus50": 0,
+      "fautes": [
+       {
+        "partie": "11:10",
+        "variante": "b1-ecart-serie",
+        "cut": 4221,
+        "source": "lot",
+        "pireMm": 31.3
+       },
+       {
+        "partie": "11:10",
+        "variante": "b1-ecart-serie",
+        "cut": 4224,
+        "source": "ecart",
+        "pireMm": 10.8
+       },
+       {
+        "partie": "11:10",
+        "variante": "b1-ecart-serie",
+        "cut": 4228,
+        "source": "ecart",
+        "pireMm": 11.1
+       },
+       {
+        "partie": "11:13",
+        "variante": "b1-ecart-serie",
+        "cut": 5808,
+        "source": "lot",
+        "pireMm": 11.7
+       },
+       {
+        "partie": "11:15",
+        "variante": "b1-ecart-serie",
+        "cut": 469,
+        "source": "lot",
+        "pireMm": 23.4
+       }
+      ],
+      "justesIC": [
+       60.1,
+       79.5
+      ],
+      "plus50IC": [
+       0,
+       5.7
+      ]
+     },
+     "choix": {
+      "11:10": {
+       "choisie": "b1-ecart-serie",
+       "n": 16,
+       "justes": 8,
+       "faux": 3,
+       "plus50": 0
+      },
+      "11:13": {
+       "choisie": "b1-ecart-serie",
+       "n": 21,
+       "justes": 15,
+       "faux": 1,
+       "plus50": 0
+      },
+      "11:14": {
+       "choisie": "b1-ecart-serie",
+       "n": 10,
+       "justes": 8,
+       "faux": 0,
+       "plus50": 0
+      },
+      "11:15": {
+       "choisie": "b1-ecart-serie",
+       "n": 8,
+       "justes": 6,
+       "faux": 1,
+       "plus50": 0
+      },
+      "12:10": {
+       "choisie": "b1-ecart-serie",
+       "n": 20,
+       "justes": 16,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:11": {
+       "choisie": "b1-ecart-serie",
+       "n": 2,
+       "justes": 2,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:12": {
+       "choisie": "b1-ecart-serie",
+       "n": 3,
+       "justes": 3,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:8": {
+       "choisie": "b1-ecart-serie",
+       "n": 1,
+       "justes": 0,
+       "faux": 0,
+       "plus50": 0
+      },
+      "12:9": {
+       "choisie": "b1-ecart-serie",
+       "n": 1,
+       "justes": 0,
+       "faux": 0,
+       "plus50": 0
+      }
+     }
+    }
+   }
+  },
+  "lot": {
+   "temoin": {
+    "poses": 1021,
+    "posesJuges": 97,
+    "justes": 93,
+    "plus10": 4,
+    "plus50": 2,
+    "plus50IC": [
+     0.6,
+     7.2
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 1140
+   },
+   "garde-livree": {
+    "poses": 928,
+    "posesJuges": 63,
+    "justes": 63,
+    "plus10": 0,
+    "plus50": 0,
+    "plus50IC": [
+     0,
+     5.7
+    ],
+    "fautes50": [],
+    "differes": 1233
+   },
+   "garde-r3-c2-a2-pn-adv": {
+    "poses": 953,
+    "posesJuges": 84,
+    "justes": 84,
+    "plus10": 0,
+    "plus50": 0,
+    "plus50IC": [
+     0,
+     4.4
+    ],
+    "fautes50": [],
+    "differes": 1208
+   },
+   "b1-serie": {
+    "poses": 1641,
+    "posesJuges": 546,
+    "justes": 534,
+    "plus10": 12,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 520
+   },
+   "plafond-serie": {
+    "poses": 1472,
+    "posesJuges": 427,
+    "justes": 415,
+    "plus10": 12,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.7
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 689
+   },
+   "ecart-serie": {
+    "poses": 1646,
+    "posesJuges": 539,
+    "justes": 523,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4136:60.1",
+     "12:10/4981:130.4"
+    ],
+    "differes": 515
+   },
+   "b1-ecart-serie": {
+    "poses": 1686,
+    "posesJuges": 569,
+    "justes": 553,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 475
+   },
+   "b1-ecart-serie-f20-c10": {
+    "poses": 1684,
+    "posesJuges": 568,
+    "justes": 552,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 477
+   },
+   "b1-ecart-serie-f20-c15": {
+    "poses": 1686,
+    "posesJuges": 569,
+    "justes": 553,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 475
+   },
+   "b1-ecart-serie-f30-c10": {
+    "poses": 1684,
+    "posesJuges": 568,
+    "justes": 552,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 477
+   },
+   "b1-ecart-serie-f30-c30": {
+    "poses": 1685,
+    "posesJuges": 566,
+    "justes": 549,
+    "plus10": 17,
+    "plus50": 3,
+    "plus50IC": [
+     0.2,
+     1.5
+    ],
+    "fautes50": [
+     "11:13/6329:117.2",
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 476
+   },
+   "b1-ecart-serie-f50-c10": {
+    "poses": 1684,
+    "posesJuges": 568,
+    "justes": 552,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 477
+   },
+   "b1-ecart-serie-f50-c15": {
+    "poses": 1686,
+    "posesJuges": 569,
+    "justes": 553,
+    "plus10": 16,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 475
+   },
+   "b1-ecart-serie-f50-c30": {
+    "poses": 1685,
+    "posesJuges": 566,
+    "justes": 549,
+    "plus10": 17,
+    "plus50": 3,
+    "plus50IC": [
+     0.2,
+     1.5
+    ],
+    "fautes50": [
+     "11:13/6329:117.2",
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 476
+   },
+   "b1-ecart-serie-garde-livree": {
+    "poses": 1598,
+    "posesJuges": 510,
+    "justes": 498,
+    "plus10": 12,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.4
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 563
+   },
+   "b1-ecart-serie-garde-pn-adv": {
+    "poses": 1667,
+    "posesJuges": 563,
+    "justes": 549,
+    "plus10": 14,
+    "plus50": 2,
+    "plus50IC": [
+     0.1,
+     1.3
+    ],
+    "fautes50": [
+     "11:14/4135:60.3",
+     "11:14/4136:60.1"
+    ],
+    "differes": 494
+   }
+  }
+ },
+ "garde": {
+  "temoin": {
+   "retenus": 0,
+   "retenusJuges": 0,
+   "retenusJustes": 0,
+   "retenusFaux": 0,
+   "retenus50": 0,
+   "retenusCuts": [],
+   "differes": 1140,
+   "posesJuges": 97,
+   "poses50": 2,
+   "borne50": 7.2
+  },
+  "garde-livree": {
+   "retenus": 94,
+   "retenusJuges": 34,
+   "retenusJustes": 30,
+   "retenusFaux": 4,
+   "retenus50": 2,
+   "retenusCuts": [
+    "11:10/1429:nj",
+    "11:10/7490:nj",
+    "11:10/8173:nj",
+    "11:10/8200:nj",
+    "11:10/8201*:nj",
+    "11:10/8202*:nj",
+    "11:10/8203*:nj",
+    "11:10/8204:nj",
+    "11:13/137:nj",
+    "11:13/218:nj",
+    "11:13/224:nj",
+    "11:13/225*:nj",
+    "11:13/228:nj",
+    "11:13/394:nj",
+    "11:13/542:2.8",
+    "11:13/543:1.8",
+    "11:13/2491:nj",
+    "11:14/171:4.8",
+    "11:14/4135:60.3",
+    "11:14/4136:60.1",
+    "11:14/4144:nj",
+    "11:14/4145:4.9",
+    "11:14/4284:nj",
+    "11:14/4891:nj",
+    "11:14/4892:nj",
+    "11:14/5341:2.5",
+    "12:8/905:nj",
+    "12:8/906:nj",
+    "12:8/2734:33.2",
+    "12:8/2735:35.4",
+    "12:8/2776:nj",
+    "12:8/2777*:nj",
+    "12:8/2778*:nj",
+    "12:10/2006:1.7",
+    "12:10/2007:1.3",
+    "12:10/2009*:3.3",
+    "12:10/2010:3.6",
+    "12:10/2011:2.4",
+    "12:10/3700:6.6",
+    "12:10/3701*:2.1",
+    "12:10/3702*:0.7",
+    "12:10/3937:0.5",
+    "12:10/3938:nj",
+    "12:10/4065:nj",
+    "12:10/4066*:nj",
+    "12:10/4067*:nj",
+    "12:10/4073:nj",
+    "12:10/4074:nj",
+    "12:10/4188:nj",
+    "12:10/4189*:nj",
+    "12:10/4190:nj",
+    "12:10/4233:nj",
+    "12:10/4234:nj",
+    "12:10/4946:3.8",
+    "12:10/4947:nj",
+    "12:10/4954:nj",
+    "12:10/4955:nj",
+    "12:10/4975:2.4",
+    "12:10/4976:4.5",
+    "12:10/4977*:4.7",
+    "12:10/4979*:2.9",
+    "12:10/4982:4.6",
+    "12:10/5241:nj",
+    "12:10/6082:nj",
+    "12:10/6083:nj",
+    "12:10/6085*:nj",
+    "12:10/6086:nj",
+    "12:10/6087:nj",
+    "12:10/6327:0.5",
+    "12:10/6379:nj",
+    "12:10/6425:nj",
+    "12:11/1914:9.2",
+    "12:11/4907:nj",
+    "12:11/4948:nj",
+    "12:11/4949:nj",
+    "12:11/4950*:nj",
+    "12:11/5162:4.8",
+    "12:11/5163*:nj",
+    "12:11/5164:nj",
+    "12:11/5185:nj",
+    "12:11/5440:0.5",
+    "12:11/5701:0.4",
+    "12:11/5842:nj",
+    "12:11/6089:nj",
+    "12:11/6090*:nj",
+    "12:11/6092:nj",
+    "12:11/6093*:nj",
+    "12:11/6094:nj",
+    "12:11/6161:nj",
+    "12:11/8674:3.6",
+    "12:11/8747:3.8",
+    "12:11/9051:0.6",
+    "12:12/9336:3.2",
+    "12:12/9337:3"
+   ],
+   "differes": 1233,
+   "posesJuges": 63,
+   "poses50": 0,
+   "borne50": 5.7
+  },
+  "garde-r3-c2-a2-pn-adv": {
+   "retenus": 69,
+   "retenusJuges": 13,
+   "retenusJustes": 9,
+   "retenusFaux": 4,
+   "retenus50": 2,
+   "retenusCuts": [
+    "11:10/1429:nj",
+    "11:10/7490:nj",
+    "11:10/8173:nj",
+    "11:10/8200:nj",
+    "11:10/8201*:nj",
+    "11:10/8202*:nj",
+    "11:10/8203*:nj",
+    "11:10/8204:nj",
+    "11:13/137:nj",
+    "11:13/218:nj",
+    "11:13/224:nj",
+    "11:13/225*:nj",
+    "11:13/228:nj",
+    "11:13/394:nj",
+    "11:14/171:4.8",
+    "11:14/4135:60.3",
+    "11:14/4136:60.1",
+    "11:14/4144:nj",
+    "11:14/4145:4.9",
+    "11:14/4891:nj",
+    "11:14/4892:nj",
+    "12:8/905:nj",
+    "12:8/906:nj",
+    "12:8/2734:33.2",
+    "12:8/2735:35.4",
+    "12:8/2776:nj",
+    "12:8/2777*:nj",
+    "12:8/2778*:nj",
+    "12:10/3937:0.5",
+    "12:10/3938:nj",
+    "12:10/4065:nj",
+    "12:10/4066*:nj",
+    "12:10/4067*:nj",
+    "12:10/4073:nj",
+    "12:10/4074:nj",
+    "12:10/4188:nj",
+    "12:10/4189*:nj",
+    "12:10/4190:nj",
+    "12:10/4233:nj",
+    "12:10/4234:nj",
+    "12:10/4954:nj",
+    "12:10/4955:nj",
+    "12:10/4975:2.4",
+    "12:10/4976:4.5",
+    "12:10/4977*:4.7",
+    "12:10/4979*:2.9",
+    "12:10/4982:4.6",
+    "12:10/6082:nj",
+    "12:10/6083:nj",
+    "12:10/6085*:nj",
+    "12:10/6086:nj",
+    "12:10/6087:nj",
+    "12:10/6379:nj",
+    "12:10/6425:nj",
+    "12:11/4907:nj",
+    "12:11/4948:nj",
+    "12:11/4949:nj",
+    "12:11/4950*:nj",
+    "12:11/5162:4.8",
+    "12:11/5163*:nj",
+    "12:11/5164:nj",
+    "12:11/5185:nj",
+    "12:11/5842:nj",
+    "12:11/6089:nj",
+    "12:11/6090*:nj",
+    "12:11/6092:nj",
+    "12:11/6093*:nj",
+    "12:11/6094:nj",
+    "12:11/6161:nj"
+   ],
+   "differes": 1208,
+   "posesJuges": 84,
+   "poses50": 0,
+   "borne50": 4.4
+  },
+  "b1-ecart-serie": {
+   "retenus": 0,
+   "retenusJuges": 0,
+   "retenusJustes": 0,
+   "retenusFaux": 0,
+   "retenus50": 0,
+   "retenusCuts": [],
+   "differes": 475,
+   "posesJuges": 569,
+   "poses50": 2,
+   "borne50": 1.3
+  },
+  "b1-ecart-serie-garde-livree": {
+   "retenus": 20,
+   "retenusJuges": 8,
+   "retenusJustes": 6,
+   "retenusFaux": 2,
+   "retenus50": 0,
+   "retenusCuts": [
+    "11:10/1429:nj",
+    "11:10/7490:nj",
+    "11:10/8173:nj",
+    "11:14/4144:nj",
+    "11:14/5341:2.5",
+    "12:8/905:nj",
+    "12:8/2734:33.2",
+    "12:8/2735:35.4",
+    "12:10/4233:nj",
+    "12:10/4975:2.4",
+    "12:10/4976:4.5",
+    "12:10/4977*:4.7",
+    "12:10/4979*:2.9",
+    "12:10/6379:nj",
+    "12:10/6425:nj",
+    "12:11/4907:nj",
+    "12:11/5185:nj",
+    "12:11/5701:0.4",
+    "12:11/5842:nj",
+    "12:11/6161:nj"
+   ],
+   "differes": 563,
+   "posesJuges": 510,
+   "poses50": 2,
+   "borne50": 1.4
+  },
+  "b1-ecart-serie-garde-pn-adv": {
+   "retenus": 18,
+   "retenusJuges": 6,
+   "retenusJustes": 4,
+   "retenusFaux": 2,
+   "retenus50": 0,
+   "retenusCuts": [
+    "11:10/1429:nj",
+    "11:10/7490:nj",
+    "11:10/8173:nj",
+    "11:14/4144:nj",
+    "12:8/905:nj",
+    "12:8/2734:33.2",
+    "12:8/2735:35.4",
+    "12:10/4233:nj",
+    "12:10/4975:2.4",
+    "12:10/4976:4.5",
+    "12:10/4977*:4.7",
+    "12:10/4979*:2.9",
+    "12:10/6379:nj",
+    "12:10/6425:nj",
+    "12:11/4907:nj",
+    "12:11/5185:nj",
+    "12:11/5842:nj",
+    "12:11/6161:nj"
+   ],
+   "differes": 494,
+   "posesJuges": 563,
+   "poses50": 2,
+   "borne50": 1.3
+  }
+ },
+ "gardeReelle": {
+  "tout": {
+   "retenus": 25,
+   "posesTemoin": 23,
+   "juges": 20,
+   "justes": 16,
+   "faux10a50": 2,
+   "plus50": 2,
+   "cuts": [
+    "11:13/542:2.8",
+    "11:13/543:1.8",
+    "11:14/171:4.8",
+    "11:14/4135:60.3",
+    "11:14/4136:60.1",
+    "11:14/5341:2.5",
+    "12:8/2734:33.2",
+    "12:8/2735:35.4",
+    "12:10/2006:1.7",
+    "12:10/2007:1.3",
+    "12:10/2010:3.6",
+    "12:10/2011:2.4",
+    "12:10/3700:6.6",
+    "12:10/3701:2.1",
+    "12:10/4975:2.4",
+    "12:10/4976:4.5",
+    "12:10/4979:2.9",
+    "12:10/4982:4.6",
+    "12:12/9336:3.2",
+    "12:12/9337:3"
+   ],
+   "justesIC": [
+    58.4,
+    91.9
+   ],
+   "plus50IC": [
+    2.8,
+    30.1
+   ]
+  },
+  "pnAdv": {
+   "retenus": 14,
+   "posesTemoin": 12,
+   "juges": 9,
+   "justes": 5,
+   "faux10a50": 2,
+   "plus50": 2,
+   "cuts": [
+    "11:14/171:4.8",
+    "11:14/4135:60.3",
+    "11:14/4136:60.1",
+    "12:8/2734:33.2",
+    "12:8/2735:35.4",
+    "12:10/4975:2.4",
+    "12:10/4976:4.5",
+    "12:10/4979:2.9",
+    "12:10/4982:4.6"
+   ],
+   "justesIC": [
+    26.7,
+    81.1
+   ],
+   "plus50IC": [
+    6.3,
+    54.7
+   ]
+  },
+  "horsPnAdv": {
+   "retenus": 11,
+   "posesTemoin": 11,
+   "juges": 11,
+   "justes": 11,
+   "faux10a50": 0,
+   "plus50": 0,
+   "cuts": [
+    "11:13/542:2.8",
+    "11:13/543:1.8",
+    "11:14/5341:2.5",
+    "12:10/2006:1.7",
+    "12:10/2007:1.3",
+    "12:10/2010:3.6",
+    "12:10/2011:2.4",
+    "12:10/3700:6.6",
+    "12:10/3701:2.1",
+    "12:12/9336:3.2",
+    "12:12/9337:3"
+   ],
+   "justesIC": [
+    74.1,
+    100
+   ],
+   "plus50IC": [
+    0,
+    25.9
+   ]
+  },
+  "zoneInconnue": {
+   "retenus": 0,
+   "posesTemoin": 0,
+   "juges": 0,
+   "justes": 0,
+   "faux10a50": 0,
+   "plus50": 0,
+   "cuts": [],
+   "justesIC": [
+    null,
+    null
+   ],
+   "plus50IC": [
+    null,
+    null
+   ]
+  }
+ },
+ "hauteur": {
+  "parties": [
+   "11:14",
+   "12:10",
+   "12:11",
+   "12:12",
+   "12:8",
+   "12:9"
+  ],
+  "rails": 378,
+  "classement": [
+   "aucun",
+   "lineaire",
+   "morceaux",
+   "p8",
+   "p8Appris"
+  ],
+  "retenu": {
+   "famille": "lineaire",
+   "premierAuClassement": "aucun",
+   "modele": {
+    "plafondMm": 3,
+    "pointsDessusMin": 15,
+    "etages": [
+     "first-pass",
+     "window",
+     "choice"
+    ],
+    "applique": {
+     "a": 0.02,
+     "b": 0,
+     "part": 0
+    },
+    "refuse": {
+     "a": 38.73,
+     "b": -4.67,
+     "part": 0
+    }
+   },
+   "plis": [
+    {
+     "partie": "11:14",
+     "applique": {
+      "a": 0.09,
+      "b": -0.02
+     },
+     "refuse": {
+      "a": 0,
+      "b": 0
+     },
+     "enveloppe": {
+      "partApplique": 0,
+      "partRefuse": 0,
+      "plafondMm": 3
+     }
+    },
+    {
+     "partie": "12:8",
+     "applique": {
+      "a": 0.03,
+      "b": -0.01
+     },
+     "refuse": {
+      "a": 38.73,
+      "b": -4.67
+     },
+     "enveloppe": {
+      "partApplique": 0,
+      "partRefuse": 0,
+      "plafondMm": 3
+     }
+    },
+    {
+     "partie": "12:9",
+     "applique": {
+      "a": -0.28,
+      "b": 0.04
+     },
+     "refuse": {
+      "a": 0,
+      "b": 0
+     },
+     "enveloppe": {
+      "partApplique": 0,
+      "partRefuse": 0,
+      "plafondMm": 3
+     }
+    },
+    {
+     "partie": "12:10",
+     "applique": {
+      "a": -0.32,
+      "b": 0.05
+     },
+     "refuse": {
+      "a": 0,
+      "b": 0
+     },
+     "enveloppe": {
+      "partApplique": 0,
+      "partRefuse": 0,
+      "plafondMm": 3
+     }
+    },
+    {
+     "partie": "12:11",
+     "applique": {
+      "a": 0.49,
+      "b": -0.1
+     },
+     "refuse": {
+      "a": 0,
+      "b": 0
+     },
+     "enveloppe": {
+      "partApplique": 0,
+      "partRefuse": 0,
+      "plafondMm": 3
+     }
+    },
+    {
+     "partie": "12:12",
+     "applique": {
+      "a": -0.05,
+      "b": 0.01
+     },
+     "refuse": {
+      "a": 38.73,
+      "b": -4.67
+     },
+     "enveloppe": {
+      "partApplique": 0,
+      "partRefuse": 0,
+      "plafondMm": 3
+     }
+    }
+   ],
+   "figeEnEchantillon": {
+    "parPartie": [
+     {
+      "partie": "11:14",
+      "bilan": {
+       "cuts": 5,
+       "cutsTouches": 0,
+       "fauxVertsAvant": 0,
+       "fauxVertsApres": 0,
+       "corriges": 0,
+       "nouveaux": 0,
+       "corrigesFrancs": 0,
+       "nouveauxFrancs": 0,
+       "bruitMm": 2.3,
+       "sup5Avant": 4,
+       "sup5Apres": 4,
+       "medianeVerticaleAvantMm": 0.31,
+       "medianeVerticaleApresMm": 0.31,
+       "medianeCutAvantMm": 5.87,
+       "medianeCutApresMm": 5.87
+      }
+     },
+     {
+      "partie": "12:8",
+      "bilan": {
+       "cuts": 19,
+       "cutsTouches": 0,
+       "fauxVertsAvant": 0,
+       "fauxVertsApres": 0,
+       "corriges": 0,
+       "nouveaux": 0,
+       "corrigesFrancs": 0,
+       "nouveauxFrancs": 0,
+       "bruitMm": 2.3,
+       "sup5Avant": 2,
+       "sup5Apres": 2,
+       "medianeVerticaleAvantMm": 0,
+       "medianeVerticaleApresMm": 0,
+       "medianeCutAvantMm": 0,
+       "medianeCutApresMm": 0
+      }
+     },
+     {
+      "partie": "12:9",
+      "bilan": {
+       "cuts": 56,
+       "cutsTouches": 0,
+       "fauxVertsAvant": 0,
+       "fauxVertsApres": 0,
+       "corriges": 0,
+       "nouveaux": 0,
+       "corrigesFrancs": 0,
+       "nouveauxFrancs": 0,
+       "bruitMm": 2.3,
+       "sup5Avant": 6,
+       "sup5Apres": 6,
+       "medianeVerticaleAvantMm": 0,
+       "medianeVerticaleApresMm": 0,
+       "medianeCutAvantMm": 2.77,
+       "medianeCutApresMm": 2.77
+      }
+     },
+     {
+      "partie": "12:10",
+      "bilan": {
+       "cuts": 37,
+       "cutsTouches": 0,
+       "fauxVertsAvant": 0,
+       "fauxVertsApres": 0,
+       "corriges": 0,
+       "nouveaux": 0,
+       "corrigesFrancs": 0,
+       "nouveauxFrancs": 0,
+       "bruitMm": 2.3,
+       "sup5Avant": 9,
+       "sup5Apres": 9,
+       "medianeVerticaleAvantMm": 0.53,
+       "medianeVerticaleApresMm": 0.53,
+       "medianeCutAvantMm": 3.5,
+       "medianeCutApresMm": 3.5
+      }
+     },
+     {
+      "partie": "12:11",
+      "bilan": {
+       "cuts": 51,
+       "cutsTouches": 0,
+       "fauxVertsAvant": 2,
+       "fauxVertsApres": 2,
+       "corriges": 0,
+       "nouveaux": 0,
+       "corrigesFrancs": 0,
+       "nouveauxFrancs": 0,
+       "bruitMm": 2.3,
+       "sup5Avant": 7,
+       "sup5Apres": 7,
+       "medianeVerticaleAvantMm": 0.04,
+       "medianeVerticaleApresMm": 0.04,
+       "medianeCutAvantMm": 3.03,
+       "medianeCutApresMm": 3.03
+      }
+     },
+     {
+      "partie": "12:12",
+      "bilan": {
+       "cuts": 21,
+       "cutsTouches": 0,
+       "fauxVertsAvant": 0,
+       "fauxVertsApres": 0,
+       "corriges": 0,
+       "nouveaux": 0,
+       "corrigesFrancs": 0,
+       "nouveauxFrancs": 0,
+       "bruitMm": 2.3,
+       "sup5Avant": 8,
+       "sup5Apres": 8,
+       "medianeVerticaleAvantMm": 0.73,
+       "medianeVerticaleApresMm": 0.73,
+       "medianeCutAvantMm": 4.11,
+       "medianeCutApresMm": 4.11
+      }
+     }
+    ],
+    "cumul": {
+     "cuts": 189,
+     "cutsTouches": 0,
+     "fauxVertsAvant": 2,
+     "fauxVertsApres": 2,
+     "corriges": 0,
+     "nouveaux": 0,
+     "corrigesFrancs": 0,
+     "nouveauxFrancs": 0,
+     "sup5Avant": 36,
+     "sup5Apres": 36
+    }
+   }
+  }
+ },
+ "ecartementOperateur": {
+  "11:10": {
+   "n": 19,
+   "medianeMm": 1451.1,
+   "p10Mm": 1446.3,
+   "p90Mm": 1452.2,
+   "dans1430a1447": 4,
+   "hors1420a1470": 0
+  },
+  "11:13": {
+   "n": 60,
+   "medianeMm": 1434.6,
+   "p10Mm": 1429.6,
+   "p90Mm": 1440.5,
+   "dans1430a1447": 51,
+   "hors1420a1470": 0
+  },
+  "11:14": {
+   "n": 29,
+   "medianeMm": 1444.3,
+   "p10Mm": 1432.5,
+   "p90Mm": 1451.8,
+   "dans1430a1447": 17,
+   "hors1420a1470": 0
+  },
+  "11:15": {
+   "n": 24,
+   "medianeMm": 1443.4,
+   "p10Mm": 1439.9,
+   "p90Mm": 1446.3,
+   "dans1430a1447": 23,
+   "hors1420a1470": 0
+  },
+  "12:8": {
+   "n": 31,
+   "medianeMm": 1437.4,
+   "p10Mm": 1433.8,
+   "p90Mm": 1441,
+   "dans1430a1447": 30,
+   "hors1420a1470": 0
+  },
+  "12:9": {
+   "n": 210,
+   "medianeMm": 1438.6,
+   "p10Mm": 1434.1,
+   "p90Mm": 1443.4,
+   "dans1430a1447": 209,
+   "hors1420a1470": 0
+  },
+  "12:10": {
+   "n": 177,
+   "medianeMm": 1438.5,
+   "p10Mm": 1432.9,
+   "p90Mm": 1444.2,
+   "dans1430a1447": 163,
+   "hors1420a1470": 0
+  },
+  "12:11": {
+   "n": 131,
+   "medianeMm": 1438.1,
+   "p10Mm": 1433.5,
+   "p90Mm": 1441.3,
+   "dans1430a1447": 129,
+   "hors1420a1470": 0
+  },
+  "12:12": {
+   "n": 64,
+   "medianeMm": 1437.8,
+   "p10Mm": 1433.1,
+   "p90Mm": 1441.8,
+   "dans1430a1447": 64,
+   "hors1420a1470": 0
+  }
+ }
+}
