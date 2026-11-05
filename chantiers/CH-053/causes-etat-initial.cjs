@@ -48,9 +48,12 @@ function causes(entrees, { partie = null } = {}) {
     const tardives = caps.slice(1);
     const aCouverture = cap => COTES.some(s => (v.railSnapshots && v.railSnapshots[s] || []).some(x => x.captureId === cap.captureId && x.coverage && x.coverage.status === 'qualified-candidate'));
     const tardive = tardives.filter(aCouverture);
+    /* Un cut n'est récupérable que si LES DEUX rails ont un instantané à couverture qualifiée dans la visite (une capture tardive qui ne
+     * qualifie qu'un rail ne suffit pas) : on le compte à part. */
+    const tardiveDeuxRails = COTES.every(s => (v.railSnapshots && v.railSnapshots[s] || []).some(x => x.coverage && x.coverage.status === 'qualified-candidate'));
     const memeDecoupe = tardive.some(cap => sig(nuages.get(cap.captureId)) === sig(nuages.get(premiere && premiere.captureId)));
     const rec = reconstruireCut(v, { nuages });
-    lignes.push({ qualifieStrict: c1, premiereFin: fin, captures: caps.length, captureTardive: tardive.length > 0, memeDecoupeQueLaPremiere: tardive.length > 0 && memeDecoupe,
+    lignes.push({ qualifieStrict: c1, premiereFin: fin, captures: caps.length, captureTardive: tardive.length > 0, tardiveDeuxRails, memeDecoupeQueLaPremiere: tardive.length > 0 && memeDecoupe,
       recuperable: !c1 && rec.qualifie, voies: !c1 && rec.qualifie ? COTES.map(s => rec.rails[s].voie) : null,
       raisons: !c1 && !rec.qualifie ? [...new Set(COTES.flatMap(s => rec.rails[s].raisons))] : null });
   }
@@ -61,6 +64,7 @@ function causes(entrees, { partie = null } = {}) {
     parCause: compte(perdus, l => l.premiereFin),
     avecCaptureTardiveQualifiee: perdus.filter(l => l.captureTardive).length,
     ...{ memeDecoupe: perdus.filter(l => l.memeDecoupeQueLaPremiere).length },
+    avecInstantaneQualifiePourLesDeuxRails: perdus.filter(l => l.tardiveDeuxRails).length,
     recuperables: perdus.filter(l => l.recuperable).length, parVoie: compte(perdus.filter(l => l.recuperable), l => l.voies.join('+')),
     recuperablesParCause: compte(perdus.filter(l => l.recuperable), l => l.premiereFin),
     nonRecuperesParRaison: compte(perdus.filter(l => !l.recuperable).flatMap(l => l.raisons || ['inconnue']), x => x),
