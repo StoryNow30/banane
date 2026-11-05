@@ -152,33 +152,37 @@ function lignesDepuisInstantane(snap){
 function completerParEcho(captures,fichiers,partie,journal=()=>{}){
   let ajoutees=0;
   const memePose=(a,b)=>Array.isArray(a)&&Array.isArray(b)&&a.length===3&&b.length===3&&a.every((v,i)=>Math.abs(v-b[i])<1e-6);
+  /* Les fichiers sont une session fusionnée ou ses segments (instantanés : visites complètes, nuages incrémentaux) : visites et blocs sont
+   * réunis sur tous les fichiers avant de construire les captures (union par identifiant). */
+  const visites=new Map(),chunks=new Map();
   for(const f of fichiers){
     const s=lireJson(f);
-    const recs=(s.records||[]).filter(r=>dePartie(r.identity,partie)&&Number.isInteger(r.identity?.cut)).sort((a,b)=>String(a.startedAt).localeCompare(String(b.startedAt)));
-    const visites=new Map();for(const r of recs)visites.set(r.visitId,r);
-    const parCut=new Map();for(const r of recs){if(!parCut.has(r.identity.cut))parCut.set(r.identity.cut,[]);parCut.get(r.identity.cut).push(r);}
-    const chunksParCut=new Map();
+    for(const r of (s.records||[]))if(dePartie(r.identity,partie)&&Number.isInteger(r.identity?.cut)&&r.visitId&&!visites.has(r.visitId))visites.set(r.visitId,r);
     for(const c of s.clouds||[]){
       if(c?.format!=='banane-native-lidar-chunk-v1'||!SIDES.includes(c.side)||!Array.isArray(c.pointsSceneRelative))continue;
-      const r=visites.get(c.visitId);if(!r)continue;
-      const cut=r.identity.cut;if(!chunksParCut.has(cut))chunksParCut.set(cut,[]);chunksParCut.get(cut).push(c);
+      const k=c.chunkId||(c.captureId+'|'+c.side+'|'+chunks.size);if(chunks.has(k))continue;
+      chunks.set(k,{visitId:c.visitId,side:c.side,rail:c.rail,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes});
     }
-    for(const [cut,rs] of parCut){
-      const deja=captures.get(cut);if(deja&&deja.pointsSceneRelative?.length>0)continue;
-      const r0=rs[0],before=r0.beforeEstablished?.rails;
-      if(!before||!SIDES.every(sd=>before[sd]&&Array.isArray(before[sd].positionSceneRelative)))continue;
-      const chunks=(chunksParCut.get(cut)||[]).filter(c=>c.rail&&memePose(c.rail.positionSceneRelative,before[c.side].positionSceneRelative));
-      if(!chunks.length)continue;
-      const rails={};
-      for(const sd of SIDES){const k=chunks.find(c=>c.side===sd);rails[sd]={...(k?k.rail:{}),...before[sd],profileContours:(before[sd].profileContours?.length?before[sd]:(k?k.rail:{})).profileContours||[]};}
-      if(!SIDES.every(sd=>rails[sd].sceneRelativeToProfileLocal&&rails[sd].profileContours.length))continue;
-      const pts=[],vis=[];let visibles=0;
-      for(const c of chunks)for(let i=0;i<c.pointsSceneRelative.length;i++){pts.push(c.pointsSceneRelative[i]);const v=c.visibleByClipBoxes?.[i]===true;vis.push(v);if(v)visibles++;}
-      if(!visibles)vis.fill(true);
-      captures.set(cut,{cut,captureId:r0.recordId||null,identity:{...r0.identity,frameId:r0.identity?.frameId??null},rails,pointsSceneRelative:pts,visibleByClipBoxes:vis,
-        camera:null,viewCaptures:[],sourceEcho:true,visibiliteForcee:!visibles});
-      ajoutees++;
-    }
+  }
+  const parCut=new Map();
+  for(const r of [...visites.values()].sort((a,b)=>String(a.startedAt).localeCompare(String(b.startedAt)))){if(!parCut.has(r.identity.cut))parCut.set(r.identity.cut,[]);parCut.get(r.identity.cut).push(r);}
+  const chunksParCut=new Map();
+  for(const c of chunks.values()){const r=visites.get(c.visitId);if(!r)continue;const cut=r.identity.cut;if(!chunksParCut.has(cut))chunksParCut.set(cut,[]);chunksParCut.get(cut).push(c);}
+  for(const [cut,rs] of parCut){
+    const deja=captures.get(cut);if(deja&&deja.pointsSceneRelative?.length>0)continue;
+    const r0=rs[0],before=r0.beforeEstablished?.rails;
+    if(!before||!SIDES.every(sd=>before[sd]&&Array.isArray(before[sd].positionSceneRelative)))continue;
+    const ch=(chunksParCut.get(cut)||[]).filter(c=>c.rail&&memePose(c.rail.positionSceneRelative,before[c.side].positionSceneRelative));
+    if(!ch.length)continue;
+    const rails={};
+    for(const sd of SIDES){const k=ch.find(c=>c.side===sd);rails[sd]={...(k?k.rail:{}),...before[sd],profileContours:(before[sd].profileContours?.length?before[sd]:(k?k.rail:{})).profileContours||[]};}
+    if(!SIDES.every(sd=>rails[sd].sceneRelativeToProfileLocal&&rails[sd].profileContours.length))continue;
+    const pts=[],vis=[];let visibles=0;
+    for(const c of ch)for(let i=0;i<c.pointsSceneRelative.length;i++){pts.push(c.pointsSceneRelative[i]);const v=c.visibleByClipBoxes?.[i]===true;vis.push(v);if(v)visibles++;}
+    if(!visibles)vis.fill(true);
+    captures.set(cut,{cut,captureId:r0.recordId||null,identity:{...r0.identity,frameId:r0.identity?.frameId??null},rails,pointsSceneRelative:pts,visibleByClipBoxes:vis,
+      camera:null,viewCaptures:[],sourceEcho:true,visibiliteForcee:!visibles});
+    ajoutees++;
   }
   journal(`captures complétées par l'Écho : ${ajoutees}`);
   return ajoutees;
