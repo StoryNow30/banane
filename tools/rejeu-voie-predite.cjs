@@ -92,6 +92,7 @@ const Manifeste=require('./manifeste-parties.cjs');
 const L1e=require('../src/gcv2-l1e.js');
 const ListeMemoire=require('../src/liste-memoire.js');
 const Native=require('./native-offline-evaluate.cjs');
+const VB=require('../src/voie-b1-ecart.js');
 
 const SIDES=['left','right'];
 const FR={left:'gauche',right:'droite'};
@@ -279,7 +280,7 @@ function fenetreListe(lignesParCut,cut,fenetre=B.DEFAULTS.fenetre){
  *   vue     : 'seule' (la cible doit déjà tomber dans la vue, comme l'adaptateur) ou 'deplacee'. */
 const BASE={source:'lot',gap:3,appuis:2,b1:false,plafond:false,memoire:'propre',fenetre:30,choix:15,vue:'seule',ecart:false,balayage:false};
 /* CH-053-M : réglages des deux sources hors appui (voir l'en-tête). `ecart` : 'les-deux' | 'gauche' | 'droite' (rail trouvé pris comme sûr). */
-const ECART=Object.freeze({accordMm:20,gRefDefautMm:1435,solutionPasMm:1,solutionPorteeMm:320,solutionTolMm:0.5});
+const ECART=Object.freeze({accordMm:VB.REGLAGE.accordMm,gRefDefautMm:VB.REGLAGE.gRefDefautMm,solutionPasMm:VB.REGLAGE.solutionPasMm,solutionPorteeMm:VB.REGLAGE.solutionPorteeMm,solutionTolMm:VB.REGLAGE.solutionTolMm});
 const BALAYAGE=Object.freeze({pasMm:50,porteeMm:250,groupeMm:25});
 function variante(id,o){return {id,...BASE,...o};}
 const VARIANTES=[
@@ -371,58 +372,10 @@ function ecartementReference(ctx,cut,ancres){
   if(g.length)return {mm:med(g),source:'appuis'};
   return {mm:ECART.gRefDefautMm,source:'defaut'};
 }
-/* Rail trouvé par le moteur (décalage [long, lat, vert] en m, repère profil du rail de départ) : candidat publié, publié avant la garde
- * d'écartement de la paire, sinon A* brut. Rien d'autre : jamais la pose de l'opérateur. */
-function railTrouve(rail){
-  if(!rail||rail.ok!==true)return null;
-  if(rail.next?.status==='candidate'&&Array.isArray(rail.next.delta))return {delta:rail.next.delta,origine:'publie'};
-  const g=rail.pairGauge?.publishedBeforeGate?.delta;if(Array.isArray(g))return {delta:g,origine:'avant-garde'};
-  if(rail.astar?.status==='candidate'&&Array.isArray(rail.astar.delta))return {delta:rail.astar.delta,origine:'astar'};
-  return null;
-}
-/* Décalages latéraux (mm) de `autre` qui donnent à la paire l'écartement `gRef`, le rail `sur` étant à `deltaSur` (m) : les minima locaux de
- * |écartement − gRef| sur ±portée, de chaque côté du rail sûr (deux solutions au plus). La hauteur de l'autre rail est celle du rail sûr. */
-function solutionsEcartement(cap,sur,deltaSur,gRef,o=ECART){
-  const autre=sur==='left'?'right':'left',posSur=L.positionOf(cap.rails[sur],deltaSur),vert=deltaSur[2];
-  const g=a=>C.distance(L.positionOf(cap.rails[autre],[0,a/1000,vert]),posSur)*1000;
-  const sols=[];let prev=null,prev2=null;
-  for(let a=-o.solutionPorteeMm;a<=o.solutionPorteeMm;a+=o.solutionPasMm){
-    const e=Math.abs(g(a)-gRef);
-    if(prev!==null&&prev2!==null&&prev.e<=prev2.e&&prev.e<=e&&prev.e<=5)sols.push(prev.a);
-    prev2=prev;prev={a,e};
-  }
-  /* affinage : bissection locale autour de chaque solution */
-  return sols.map(a0=>{let lo=a0-o.solutionPasMm,hi=a0+o.solutionPasMm;for(let k=0;k<20;k++){const m=(lo+hi)/2;const ml=g(lo)-gRef,mm=g(m)-gRef;if(Math.sign(ml)===Math.sign(mm))lo=m;else hi=m;}
-    const a=(lo+hi)/2;return Math.abs(g(a)-gRef)<=o.solutionTolMm?{lat:a,vert:vert*1000}:null;}).filter(Boolean);
-}
-/* Relance du moteur depuis une paire donnée en décalages (mm, [lat, vert] par rail) : appuis fictifs sur la droite parallèle à la pose de
- * départ (`appuisDepuisDecalage`), même reprise que la voie prédite. Rend { decision, relance } ; la décision porte `positions` si elle pose. */
-function relancerDepuis(decider,args,cap,decalage,opts){
-  const anchors=V.appuisDepuisDecalage(cap,decalage);
-  return decider({...args,anchors,options:opts});
-}
-const poseMmDe=(cap,decision)=>decision?.positions?Object.fromEntries(SIDES.map(s=>{const l=localMm(cap.rails[s],decision.positions[s]);return [s,[l[1],l[2]]];})):null;
-const ecartPoses=(a,b)=>Math.max(...SIDES.map(s=>Math.hypot(a[s][0]-b[s][0],a[s][1]-b[s][1])));
-/* Source « ecart » : complément du rail manquant par l'écartement de référence, depuis chaque rail trouvé (`quels` : 'les-deux' | 'gauche' |
- * 'droite'). Rend { decision, relance, raison, essais }. */
-function sourceEcart(decider,args,cap,science,gRef,opts,quels='les-deux'){
-  const trouves=SIDES.filter(s=>(quels==='les-deux'||FR[s]===quels)&&railTrouve(science.rails[s]));
-  if(!trouves.length)return {decision:null,raison:'ecart:aucun-rail-trouve',essais:0};
-  const poses=[];let essais=0;
-  for(const sur of trouves){
-    const t=railTrouve(science.rails[sur]),autre=sur==='left'?'right':'left';
-    for(const sol of solutionsEcartement(cap,sur,t.delta,gRef)){
-      essais++;
-      const decalage={[sur]:[t.delta[1]*1000,t.delta[2]*1000],[autre]:[sol.lat,sol.vert]};
-      const e=relancerDepuis(decider,args,cap,decalage,opts);
-      if(e.decision.stage!=='deferred'&&e.decision.positions)poses.push({...e,sur,origine:t.origine,pose:poseMmDe(cap,e.decision)});
-    }
-  }
-  if(!poses.length)return {decision:null,raison:'ecart:aucune-pose-qualifiee',essais};
-  const groupes=[];for(const p of poses)if(!groupes.some(g=>ecartPoses(g.pose,p.pose)<=ECART.accordMm))groupes.push(p);
-  if(groupes.length>1)return {decision:null,raison:'ecart:plusieurs',essais};
-  return {...groupes[0],raison:null,essais,accord:poses.length};
-}
+/* Rail trouvé, solutions d'écartement, relance depuis une paire et source « ecart » : ceux du module pur src/voie-b1-ecart.js (CH-055), que le service
+ * worker emploie en ombre ; le rejeu et l'extension ne peuvent pas diverger. */
+const {railTrouve,solutionsEcartement,relancerDepuis,poseMmDe,ecartPoses}=VB;
+function sourceEcart(decider,args,cap,science,gRef,opts,quels='les-deux'){return VB.sourceEcart(decider,args,cap,science,gRef,opts,quels,{...VB.REGLAGE,accordMm:ECART.accordMm,essaisMax:99,solutionPorteeMm:ECART.solutionPorteeMm,solutionPasMm:ECART.solutionPasMm,solutionTolMm:ECART.solutionTolMm});}
 /* Source « balayage » : la paire de départ glissée en travers à l'écartement de référence, le moteur relancé à chaque pas ; une seule voie
  * qualifiée ⇒ posée. Rend { decision, relance, raison, essais, voies }. */
 function sourceBalayage(decider,args,cap,gRef,opts,o=BALAYAGE){
