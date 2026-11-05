@@ -1,0 +1,20 @@
+# CH-053-C — capture (T1) : rapport d'étape (données non lues)
+
+**État : code et essais livrés sur données SYNTHÉTIQUES ; aucune mesure sur les exports réels** (l'accès à `banane-data` m'a été refusé ; la mère lance les outils en local et me renvoie les chiffres). Taux de départ 61,2 % (82/134, CH-049-D) ; **taux après : NON MESURÉ**. Cible 85 % : ni atteinte ni déclarée hors d'atteinte, faute de mesure.
+
+## Livré (ÉTABLI par les essais, pas par le terrain)
+- **Piste 2, `src/native-lidar.js`** : sur CLIP_CHANGED, le tampon retenu mais non sauvegardé est reclassé contre la découpe courante (visibilité = fonction du point et de la découpe) et sauvegardé dans un bloc marqué `clipStatus: reclassified-to-current-clip` (+ `reclassification`, raison `clip-reclassified-not-strict`). Même code de terminaison, blocs antérieurs intacts. Réglage `reclasserDecoupe` (vrai par défaut ; `false` = comportement d'avant). **Le bloc est refusé par `chooseGeometry`** (découpe non vérifiée) : le taux strict et les étiquettes ne bougent pas. Essai `tests/native-lidar-reclasser.test.cjs` (3) : visibilité reclassée = visibilité d'une lecture directe, sans bloc reclassé quand la découpe ne bouge pas. Famille `native-*` : 124 essais verts.
+- **Piste 3, `src/native-reconstruction.js`** (hors ligne) : réutilise `chooseGeometry` sur une copie de la visite où l'on relâche, un par un et nommés, la pose (couverture recalculée dans le repère initial si les points sont dans l'export, sinon écart ≤ 1 mm), l'intention (instantané acquis après le geste) et la découpe reclassée. Garde d'étiquette : la pose de départ de l'étiquette doit être l'état initial à 1 mm. Une couverture non qualifiée à la source n'est jamais rattrapée.
+- **Outils** : `node tools/taux-apprenables.cjs --echo … --assouplie` (le strict reste calculé à l'identique ; ajoute taux assoupli, voies, accord, parité) ; `node chantiers/CH-053/causes-etat-initial.cjs --echo …` (cause = fin de la 1re capture ; cuts avec capture tardive qualifiée ; même découpe ; récupérables par voie ; raisons des non récupérés). Essais `tests/native-reconstruction.test.cjs` (9), `tests/causes-etat-initial.test.cjs` (2).
+
+## Accord d'étiquettes (définition assouplie)
+Sur synthétique : pour les cuts stricts, étiquette (pose finale, correction) par la voie stricte = par la voie assouplie à ±1 mm (5 cas). **Limite structurelle** : l'étiquette vient de la référence humaine et de la pose de départ, jamais du nuage ; l'assouplissement ne porte que sur le choix du nuage. Le risque réel est ailleurs : un nuage pris rail déplacé a sa région de lecture décalée, d'où le recalcul de couverture dans le repère initial. L'accord sur les vrais exports est à mesurer (`accord` dans la sortie `--assouplie`) : adopter seulement si `memeEtiquette = cutsStrictsComparables` et `stricteRelueEgaleExportee = cutsTotal`.
+
+## Non mesuré / risques
+- Le gain réel des deux pistes (**SUPPOSÉ**, borne haute 32 rails sur 48 par CLIP_CHANGED selon CH-049-A, dont une part sans point sauvegardé). Les 42 CLIP_CHANGED de moins de 50 ms n'ont rien à reclasser.
+- **PROBABLE** : un tampon reclassé seul peut ne pas atteindre la couverture (128 points, 6 classes, 0,4 m) ; le chiffre dira.
+- Les blocs reclassés alourdissent un peu l'export (≤ 2 048 points par rail et par capture interrompue).
+- La métrique ne mesure pas : qualité de la pose humaine, cuts non validés, utilité d'apprentissage, exactitude du nuage. Un cut récupéré par la voie assouplie n'est apprenable que si une règle d'apprentissage accepte aussi ce nuage : à décider par l'opérateur, rien n'est activé côté décision.
+
+## À lancer (mère, exports réels, deux sessions « avant »)
+`node tools/taux-apprenables.cjs --echo <segments…> --assouplie --json sortie.json` et `node chantiers/CH-053/causes-etat-initial.cjs --echo <segments…>` ; sur la session du 05/11, vérifier d'abord le champ `build` du journal (la correction de découpe de CH-049-A et les blocs reclassés y sont-ils ?). Les blocs reclassés n'existent que dans les exports faits avec ce code : sur les exports passés, seule la voie « instantané tardif » est mesurable.

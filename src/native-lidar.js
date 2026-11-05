@@ -273,7 +273,7 @@
       acquisitionStartedAt:startedAt,acquiredThroughAt,coverage:visibleCoverage,transform:clone(transformChecks[side]),
       associationStatus:options.associationByRail?.[side]||'same-target-and-rail-pose',sourceStatus:'reference-version-and-matrix-stable-through-checkpoint',
       clipStatus:reclass?'reclassified-to-current-clip':clippingByCloud.every(clip=>clip.classificationAvailable)?'verified-classifiable':'unverified',
-      coordinateSystem:clone(result.coordinateSystem),chunkIds:[...emittedIds[side],`${captureId}:${side}:${chunkIndex-1}`]},
+      coordinateSystem:clone(result.coordinateSystem),chunkIds:reclass?[`${captureId}:${side}:${chunkIndex-1}`]:[...emittedIds[side],`${captureId}:${side}:${chunkIndex-1}`]},
      pointsSceneRelative:buffer.scene.splice(0),pointsProfileLocal:buffer.local.splice(0),pointSources:buffer.sources.splice(0),visibleByClipBoxes:buffer.visible.splice(0)};
     chunk.qualification.exclusionReasons=chunk.qualification.coverage.exclusionReasons.slice();
     if(reclass){chunk.reclassification=reclassification;chunk.qualification.exclusionReasons.push('clip-reclassified-not-strict');}
