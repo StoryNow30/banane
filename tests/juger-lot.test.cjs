@@ -45,7 +45,7 @@ function lotFictif() {
   const posés = [9501, 9502, 9503, 9504, 9505, 9506, 9507];
   posés.forEach((cut, i) => { const p = pose(cut, P, 20 + i * 5); events.push(DEC(cut, P, B, 19 + i * 5), ...p.events); records.push(p.record); });
   const différés = [9508, 9509, 9510];
-  différés.forEach((cut, i) => events.push(DEC(cut, P, B, 60 + i)));
+  différés.forEach((cut, i) => events.push(DEC(cut, P, B, 60 + i), { eventId: `df-${cut}`, timestamp: heure(60.2 + i), type: 'defer-finalized', identity: id(cut, P), status: 'deferred', rails: {} }));
   events.push({ eventId: 'bx-96', timestamp: heure(100), type: 'batch-stopped-at-end', identity: null, reason: 'dernier-cut-valide', lastCut: 9510 });
   const passe = (cut, passe, decision, extra = {}) => ({ eventId: `pa-${cut}-${passe}`, timestamp: heure(110 + cut % 100), type: 'passe-differes-ombre', batchId: B, identity: { part: P, cut }, passe, decision, ...extra });
   events.push(
@@ -53,6 +53,10 @@ function lotFictif() {
     passe(9508, 2, 'poserait', { decal: { left: [0, 90, 0], right: [0, 0, 0] } }),
     passe(9509, 1, 'rien', { motif: 'garde-appuis', garde: { bloque: true, motif: 'garde-appuis' } }),
     passe(9510, 1, 'rien', { motif: 'sans-voie' }));
+  /* CH-055 : l'ombre « b1-ecart » sur deux différés : 9508 posable (source ecart, rail droit à +6 mm : à 1 mm de l'opérateur), 9509 abstenue. */
+  const b1e = (cut, extra) => ({ eventId: `be-${cut}`, timestamp: heure(60.5 + cut % 100), type: 'voie-b1-ecart-ombre', schema: 1, batchId: B, identity: { part: P, cut }, version: 'voie-b1-ecart-ombre-v1', ...extra });
+  events.push(b1e(9508, { source: 'ecart', etage: 'window', poseMm: { left: [0, 0, 0], right: [0, 6, 0] }, verdict: { posable: true, raison: null } }),
+    b1e(9509, { source: null, etage: null, poseMm: null, verdict: { posable: false, raison: 'ecart:aucun-rail-trouve' } }));
   const v = (cut, debut, secondes, validation, derniere) => S.visite({ session: 'sess-jl', index: cut, cut, partie: P,
     debut: { minutes: debut }, fin: { minutes: debut, secondes }, initiale: [G0, D0], derniere, validation });
   const echo = [
@@ -101,9 +105,13 @@ test('passe en ombre à part : poserait (passe 1 seulement), jugés contre l\'É
   const { journal, echoRecords } = lotFictif();
   const dir = ecrireEcho(echoRecords);
   try {
-    const p = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]).parties.find(x => x.partie === 96);
+    const r = L.juger([{ partie: 96, journal, echo: L.lireEcho(dir) }]), p = r.parties.find(x => x.partie === 96);
     assert.equal(p.ombre.poserait, 1, 'la passe 2 n\'est pas comptée');
     assert.equal(p.ombre.juges, 1);
+    /* CH-055 : l'ombre b1-ecart, à part. */
+    assert.deepEqual(p.ombreB1Ecart, { evenements: 2, posables: 1, juges: 1, juste5: 1, juste10: 1, fausse: 0, plusDe50mm: 0, abstenues: 1, parSource: { ecart: 1 } });
+    assert.deepEqual(r.total.ombreB1Ecart, p.ombreB1Ecart);
+    assert.match(L.texte(r), /ombre voie B1-écart \(CH-055, à part\) : 2 différé\(s\) avec événement, posables 1 \(ecart 1\), abstenues 1 ; jugés 1 : à 5 mm 1, à 10 mm 1, > 10 mm 0, > 50 mm 0/);
     proche(p.ombre.precision.medianeMm, 1);
     assert.equal(p.ombre.rien, 2);
     assert.equal(p.ombre.refusGarde, 1);
