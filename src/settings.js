@@ -193,6 +193,12 @@
      * après `attenteMs` (le nuage du cut finit de charger), jusqu'à `essais` fois ; la plus fournie est gardée, sinon le cut suit son sort
      * d'avant. Événement `recapture-vide` (points avant et après). Non mesurable au banc : le corpus ne garde que la capture faite. */
     recaptureVide: Object.freeze({ actif: false, minPoints: 100, attenteMs: 1500, essais: 2 }),
+    /* CH-051 — SÉRIE DE CAPTURES VIDES, ALLUMÉE par défaut (D-283, ordre de l'opérateur du 05/11 ; src/serie-captures-vides.js ; retour arrière : actif:false). Lot du 04/11 : ESV a cessé de charger les nœuds de points
+     * pendant 22,7 min (partie 10) puis 76 s (partie 13), chaque fois juste après une requête de points en échec ; chaque capture rendait 0 point et le
+     * lot a différé 362 cuts sans rien remarquer. Active : après `seuil` captures vides consécutives, attendre `attenteMs` et recapturer le même cut ;
+     * encore vide : recharger la page ESV une fois par série (seulement si une Constellation peut reprendre le lot et que rien n'est posé), puis
+     * différer sans attendre, avec un nouvel essai tous les `reessaiApresCuts` cuts vides. Événement `serie-captures-vides`. Jamais de pose ni d'écriture. */
+    serieCapturesVides: Object.freeze({ actif: true, seuil: 3, attenteMs: 20000, attentesParEssai: 1, rechargement: true, rechargementsParSerie: 1, reessaiApresCuts: 10 }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
      * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE
@@ -212,6 +218,13 @@
      * condition d'appuis). Elle ne pose ni ne valide jamais rien de plus. `actif: false` (ou `false`) : le lot d'avant, à l'identique. Un
      * réglage illisible applique les valeurs livrées. Règle tirée de la seule partie 20 du 28/10 (échantillon biaisé, SUPPOSÉ généralisable). */
     gardeApresDiffere: Object.freeze({ actif: true, regle: 'R3', coupures: 2, appuisMin: 2 }),
+    /* CH-055 (05/11) — RÈGLE DE VOIE « B1-ECART » EN OMBRE (src/voie-b1-ecart.js ; mesure : chantiers/CH-053/M-rapport.md). Pour chaque cut que le lot
+     * DIFFÈRE (et chaque reste de la deuxième passe), le service worker consigne (`voie-b1-ecart-ombre`) ce qu'aurait posé la règle : la chaîne de
+     * l'ombre, puis les lignes valides de la liste d'ESV (B1), puis le rail trouvé complété par l'écartement de référence, le moteur relancé depuis la
+     * paire. CONSIGNÉ SEULEMENT, hors du chemin de la décision (calcul différé, après la commande du cut, quand la page travaille) : rien n'est posé,
+     * aucune vue n'est déplacée, aucune commande n'est envoyée ; décision, pose et appuis du lot sont identiques avec et sans. Activer une POSE est une
+     * décision de l'opérateur, après deux lots en ombre jugés contre l'Écho des différés. `actif:false` : rien n'est calculé ni consigné. */
+    voieB1EcartOmbre: Object.freeze({ actif: true, fenetreListe: 5, fenetreMm: 30, choixMm: 15, accordMm: 20, gRefDefautMm: 1435, essaisMax: 4 }),
     /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, chantiers/CH-034/JOURNAL.md § 2), ÉTEINTE par défaut. Allumée, sur un cut que la commande allait
      * poser et valider, le moteur gelé est relancé sur le nuage capturé à des graines espacées de `pasMm` jusqu'à ±`porteeMm` en travers (la ROI de capture),
      * et la pose du lot est confrontée aux paires fortes trouvées : mode 'differer' (livré) : différé si une paire au moins aussi bonne (produit des pertes
@@ -546,6 +559,7 @@
       { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Plafond du calage de convention (P1)', valeur: conventionPlafond === 'vertical' ? 'actif sur le vertical seulement (8 mm au plus)' : conventionPlafond ? 'actif (8 mm au plus par axe)' : 'coupé (rail hors domaine posé brut)', pourquoi: 'Un rail dont le décalage de convention dépasse 8 mm est posé avec 8 mm au plus au lieu d’être refusé ; le reste est consigné (D-129). Garde de paire inchangée.' },
       { groupe: 'Continuité', nom: 'Correction verticale en ombre (P8)', valeur: ombreVerticaleRefusee.actif ? 'consignée seulement (' + String(ombreVerticaleRefusee.mm).replace('.', ',') + ' mm sur les rails à convention refusée)' : 'coupée', pourquoi: 'Note dans la décision la pose qu’aurait donnée une correction verticale apprise (Mic remonte ces rails, D-140), à côté de la pose réelle. Jamais appliquée : la pose est la même avec ou sans.' },
+      { groupe: 'Continuité', nom: 'Voie B1-écart en ombre (Orbite)', valeur: lot.voieB1EcartOmbre && lot.voieB1EcartOmbre.actif ? 'consignée seulement (liste d’ESV puis complément par l’écartement, à chaque cut différé)' : 'coupée', pourquoi: 'Note ce qu’aurait posé la règle mesurée par CH-053-M sur les différés (voie décalée). Jamais posé, aucune vue déplacée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Voie prédite en ombre (Orbite)', valeur: voiePrediteOmbre.actif ? 'consignée seulement (règle prudente D-147, à chaque cut différé)' : 'coupée', pourquoi: 'Note ce qu’aurait posé le moteur recentré sur la voie du lot, et le geste de vue qu’il aurait fallu. Jamais posé, aucune vue déplacée : la pose est la même avec ou sans.' },
       { groupe: 'Continuité', nom: 'Mémoire des différés en ombre (Écho)', valeur: memoireDifferesOmbre.actif ? 'consignée seulement (série de différés, ' + memoireDifferesOmbre.K + ' dernières corrections)' : 'coupée', pourquoi: 'Note, avant de lire ta référence sur le cut, la pose qu’aurait donnée la voie de tes corrections précédentes de la série. Rien n’est posé ni commandé.' },
       { groupe: 'Continuité', nom: 'Déplacer la vue (Orbite)', valeur: deplacerVue.actif ? 'actif (dézoom ≤ ×' + String(deplacerVue.dezoomMax).replace('.', ',') + ' ou glisser ≤ ' + deplacerVue.glissementPxMax + ' px, ' + deplacerVue.gestesMax + ' gestes par rail au plus)' : 'coupé', pourquoi: 'Quand la cible d’un rail tombe hors de la vue d’ESV, Ariane dézoome à la molette ou glisse la vue comme toi, pose, puis remet la vue. Coupé : ces cuts restent différés.' },

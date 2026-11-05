@@ -8,7 +8,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(C,L){
  'use strict';
  const SIDES=['left','right'],finite=Number.isFinite;
- const DEFAULTS=Object.freeze({bounds:[.5,.4,.3],usefulBounds:[.5,.18,.10],maxNodes:512,maxPointsPerRail:50000,
+ const DEFAULTS=Object.freeze({reclasserDecoupe:true,bounds:[.5,.4,.3],usefulBounds:[.5,.18,.10],maxNodes:512,maxPointsPerRail:50000,
   maxInspected:500000,maxMillis:1800,yieldEvery:2048,probeCount:33,checkpointPoints:2048,
   coverage:{minimumPoints:128,minimumUsefulPoints:64,minimumLongitudinalBins:6,minimumLongitudinalSpan:.4}});
  const uid=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`;
@@ -241,34 +241,49 @@
   clippingByCloud=inventory.clouds.map((cloud,index)=>L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{}));
   result.clouds=inventory.clouds.map((cloud,index)=>({...clone(cloud),clipping:clippingByCloud[index]}));
   let termination=null,chunkIndex=0,allRead=true;
-  async function checkpoint(force=false){
+  /* CH-053-C (piste « reclasser ») — `reclass` : la découpe a bougé ; au lieu de jeter le tampon non sauvegardé, on
+   * reclasse ses points contre la découpe COURANTE (la visibilité est une fonction du point et de la découpe seulement) et on
+   * les sauvegarde dans un bloc marqué `reclassified-to-current-clip`, couverture recalculée sur ces seuls points. La définition
+   * stricte le refuse (clipStatus), la définition assouplie le retient. Les blocs d'avant ne sont pas touchés. */
+  async function checkpoint(force=false,reclass=false){
    for(const side of sides){const buffer=chunks[side];if(!buffer.scene.length||!force&&buffer.scene.length<settings.checkpointPoints)continue;
     // No old checkpoint is retroactively revoked by a later interruption. Only
     // the segment currently in memory must still agree with its source/view.
     guard();const sources=[...new Set(buffer.sources.map(source=>source[0]))];
     for(const index of sources)if(!sourceUnchanged(preparedByIndex.get(index))){const error=Error('source-changed-before-checkpoint');error.code='SOURCE_CHANGED';throw error;}
-    if(inventory.clouds.some((_,index)=>JSON.stringify(clippingByCloud[index])!==JSON.stringify(L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{})))){
+    let reclassification=null,coverageAcc=accumulators[side];
+    if(reclass){
+     const now=inventory.clouds.map((_,index)=>L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{}));
+     coverageAcc=coverageAccumulator(settings);let changed=0;
+     buffer.scene.forEach((point,i)=>{const cloudIndex=preparedByIndex.get(buffer.sources[i][0]).node.cloudIndex,visible=L.boxVisible(now[cloudIndex],point);
+      if(visible!==buffer.visible[i])changed++;buffer.visible[i]=visible;if(visible===true)coverageAcc.add(buffer.local[i]);});
+     reclassification={points:buffer.scene.length,visibilityChanged:changed,clipBefore:clone(clippingByCloud),clipNow:clone(now),
+      note:'Points lus sous l\'ancienne découpe, reclassés contre la découpe courante ; couverture recalculée sur ces seuls points.'};
+     clippingByCloud=now;
+    }else if(inventory.clouds.some((_,index)=>JSON.stringify(clippingByCloud[index])!==JSON.stringify(L.clipSnapshot(options.viewer.scene.pointclouds[index],options.origin,options.enums||{})))){
      const error=Error('clip-state-changed-before-checkpoint');error.code='CLIP_CHANGED';throw error;}
-    const acquiredThroughAt=nowIso(),visibleCoverage=coverageFrom(accumulators[side],settings,transformChecks[side],options.associationByRail?.[side]||'same-target-and-rail-pose',null);
+    const acquiredThroughAt=nowIso(),visibleCoverage=coverageFrom(coverageAcc,settings,transformChecks[side],options.associationByRail?.[side]||'same-target-and-rail-pose',null);
     const chunk={format:'banane-native-lidar-chunk-v1',version:result.version,chunkId:`${captureId}:${side}:${chunkIndex++}`,captureId,visitId:result.visitId,side,
      identity:clone(identity),capturedAt:acquiredThroughAt,viewObservation:clone(result.viewObservation),rail:clone(frames[side]),coordinateSystem:clone(result.coordinateSystem),
      acquisition:{startedAt:buffer.firstReadAt||startedAt,endedAt:acquiredThroughAt,emittedAt:nowIso(),sourceStatus:'reference-version-and-matrix-stable-through-checkpoint',
       sourceNodes:sources.map(index=>({nodeId:preparedByIndex.get(index).report.nodeId,source:preparedByIndex.get(index).report.source,
        positionVersion:preparedByIndex.get(index).node.position.version??null,positionDataVersion:preparedByIndex.get(index).node.position.data?.version??null})),
-      clipStatus:'unchanged-through-checkpoint'},
+      clipStatus:reclass?'reclassified-to-current-clip':'unchanged-through-checkpoint'},
      qualification:{format:'banane-native-rail-snapshot-v1',criteriaVersion:'native-visible-roi-v1',status:visibleCoverage.status,
       acquisitionStartedAt:startedAt,acquiredThroughAt,coverage:visibleCoverage,transform:clone(transformChecks[side]),
       associationStatus:options.associationByRail?.[side]||'same-target-and-rail-pose',sourceStatus:'reference-version-and-matrix-stable-through-checkpoint',
-      clipStatus:clippingByCloud.every(clip=>clip.classificationAvailable)?'verified-classifiable':'unverified',
-      coordinateSystem:clone(result.coordinateSystem),chunkIds:[...emittedIds[side],`${captureId}:${side}:${chunkIndex-1}`]},
+      clipStatus:reclass?'reclassified-to-current-clip':clippingByCloud.every(clip=>clip.classificationAvailable)?'verified-classifiable':'unverified',
+      coordinateSystem:clone(result.coordinateSystem),chunkIds:reclass?[`${captureId}:${side}:${chunkIndex-1}`]:[...emittedIds[side],`${captureId}:${side}:${chunkIndex-1}`]},
      pointsSceneRelative:buffer.scene.splice(0),pointsProfileLocal:buffer.local.splice(0),pointSources:buffer.sources.splice(0),visibleByClipBoxes:buffer.visible.splice(0)};
     chunk.qualification.exclusionReasons=chunk.qualification.coverage.exclusionReasons.slice();
-    if(chunk.qualification.clipStatus!=='verified-classifiable'){
+    if(reclass){chunk.reclassification=reclassification;chunk.qualification.exclusionReasons.push('clip-reclassified-not-strict');}
+    else if(chunk.qualification.clipStatus!=='verified-classifiable'){
      chunk.qualification.status='insufficient';chunk.qualification.exclusionReasons.push('clip-state-not-classifiable');}
     const receipt=await onCheckpoint(chunk);emittedIds[side].push(chunk.chunkId);buffer.firstReadAt=null;
-    if(chunk.qualification.status==='qualified-candidate'&&!firstSnapshots[side])firstSnapshots[side]={...clone(chunk.qualification),snapshotId:chunk.chunkId,
+    if(!reclass&&chunk.qualification.status==='qualified-candidate'&&!firstSnapshots[side])firstSnapshots[side]={...clone(chunk.qualification),snapshotId:chunk.chunkId,
       storageConfirmedAt:receipt?.storageConfirmedAt||null,chunkIds:emittedIds[side].slice()};
-    trace.pointsCheckpointed+=chunk.pointsSceneRelative.length;trace.perRail[side].pointsCheckpointed+=chunk.pointsSceneRelative.length;}}
+    trace.pointsCheckpointed+=chunk.pointsSceneRelative.length;trace.perRail[side].pointsCheckpointed+=chunk.pointsSceneRelative.length;
+    if(reclass){trace.pointsReclassified=(trace.pointsReclassified||0)+chunk.pointsSceneRelative.length;}}}
   const CLOCK_EVERY=256,FAST_CHUNK=4096,saturatedNow=()=>sides.every(side=>railCounts[side]>=settings.maxPointsPerRail);
   let saturated=saturatedNow();
   /* Rétention d'un point candidat : transformations, visibilité, tampons et
@@ -375,7 +390,8 @@
     }
     if(entry.report.status==='reading')entry.report.status='complete';
    }catch(error){termination=normalizeTermination(error);entry.report.status='partial-'+termination.code.toLowerCase().replaceAll('_','-');allRead=false;break;}}
-  try{await checkpoint(true);}catch(error){termination=normalizeTermination(error);if(termination.code==='READ_ERROR')termination.code='CHECKPOINT_FAILED';allRead=false;}
+  try{await checkpoint(true,termination?.code==='CLIP_CHANGED'&&settings.reclasserDecoupe!==false);}
+  catch(error){const fin=normalizeTermination(error);if(!(termination?.code==='CLIP_CHANGED'&&fin.code==='CLIP_CHANGED')){termination=fin;if(termination.code==='READ_ERROR')termination.code='CHECKPOINT_FAILED';}allRead=false;}
   result.termination=termination;result.completedAt=nowIso();result.pacing={mode:sliceMs!==null?'time-slices':'point-count',sliceMs,yieldEvery:settings.yieldEvery,pauses};result.status=termination?(termination.code==='RESOURCE_LIMIT'?'partial-resource-limit':'partial-interrupted'):(allRead?'complete-loaded-buffers':'partial');
   for(const side of sides){const associationStatus=options.associationByRail?.[side]||'same-target-and-rail-pose',assessment=coverageFrom(accumulators[side],settings,transformChecks[side],associationStatus,termination);
    result.railObservations[side]={side,rail:clone(frames[side]),capturedAt:startedAt,completedAt:result.completedAt,associationStatus,transform:transformChecks[side],

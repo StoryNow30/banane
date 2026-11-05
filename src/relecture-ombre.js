@@ -48,8 +48,13 @@
  const VERSION='relecture-ombre-v1';
  const DEFAULTS=Object.freeze({version:VERSION,
   isole:Object.freeze({marge:1}),differe:Object.freeze({marge:2}),grappe:Object.freeze({trouCuts:5,min:3,marge:3}),
+  /* D-284 (ordre de l'opérateur du 05/11 : « trop de cuts isolés où le cut d'avant et d'après ne sont pas vérifiés », « des trous de deux ou trois
+   * cuts qui sont à vérifier ») : un cut « À contrôler » est relu avec `aControler.marge` cut(s) de part et d'autre, et tout trou de
+   * `trouMaxCuts` cuts au plus entre deux cuts couverts est bouché (motif « trou », zone du cut qui le précède). Mesuré avant la règle sur les
+   * listes d'ESV du 04/11 : 11 et 13 cuts vus isolés, 8 et 2 trous de 1 à 3 cuts (parties 10 et 13). */
+  aControler:Object.freeze({marge:1}),trouMaxCuts:3,
   fusionTrouCuts:0,relireCutsDuLot:false,
-  priorites:Object.freeze(['pn','adv','grappe','differe','isole','a-controler','ecartement']),
+  priorites:Object.freeze(['pn','adv','grappe','differe','isole','a-controler','ecartement','trou']),
   /* Plafond par zone (D-180), en cuts relus ; mesuré sur les parties d'apprentissage (fiches/RELECTURE_OMBRE.md § 11). PN : aucun. À 3,5 s
    * par cut relu, la passe d'une partie avec lot reste autour de 10 minutes au plus (PN compris). Les abords ont le meilleur rendement
    * (aucune erreur sur les corrections de l'étude), l'ADV le plus faible (peu de corrections à faire, 18 % d'erreurs). */
@@ -64,7 +69,7 @@
   tempsParCutS:3,tempsTraverseS:1,
   seuilCorrigerMm:5,zoneGrise:Object.freeze([3.6,6.4])});
  const SIDES=['left','right'],NOM={left:'gauche',right:'droit'};
- const LIBELLE={pn:'PN',adv:'ADV',grappe:'grappe',differe:'autour du différé',isole:'cut isolé','a-controler':'à contrôler',ecartement:'écartement'};
+ const LIBELLE={pn:'PN',adv:'ADV',grappe:'grappe',differe:'autour du différé',isole:'cut isolé','a-controler':'à contrôler',ecartement:'écartement',trou:'trou bouché'};
  /* Type de zone d'une plage, pour la règle prudente de correction (src/relecture-critere.js) : celui de son motif le plus prioritaire.
   * Abords : autour des cuts du lot (grappe, différé, cut isolé) ; vert hors zone : la liste « À contrôler » seule. */
  const ZONE={pn:'pn',adv:'adv',grappe:'abords',differe:'abords',isole:'abords','a-controler':'vert-hors-zone',ecartement:'ecartement'};
@@ -107,11 +112,17 @@
    let ps=(Array.isArray(e[cle])?e[cle]:[]).map(plage).filter(Boolean);
    if(motif==='adv')ps=enchainer(ps,cfg.adv.fusionTrouCuts);
    if(motif==='ecartement')ps=ps.map(([a,z])=>[a-cfg.ecartement.marge,z+cfg.ecartement.marge]);
+   if(motif==='a-controler'){const m=entier(cfg.aControler?.marge)?cfg.aControler.marge:0;ps=ps.map(([a,z])=>[a-m,z+m]);}
    for(const p of ps)brutes.push({a:p[0],z:p[1],motif});}
   const bornees=brutes.map(p=>({...p,a:Math.max(0,p.a),z:Math.min(max,p.z)})).filter(p=>p.a<=p.z);
+  /* D-284 : trou de 1 à `trouMaxCuts` cuts entre deux cuts couverts : bouché, avec la zone du cut couvert qui le précède. */
+  {const tmax=entier(cfg.trouMaxCuts)?cfg.trouMaxCuts:0;
+   if(tmax>0){const zde=new Map();for(const z of ORDRE_ZONES)for(const p of bornees)if((p.zone||ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zde.has(c))zde.set(c,z);
+    const cs=[...zde.keys()].sort((a,b)=>a-b);
+    for(let i=1;i<cs.length;i++){const g=cs[i]-cs[i-1]-1;if(g>=1&&g<=tmax)bornees.push({a:cs[i-1]+1,z:cs[i]-1,motif:'trou',zone:zde.get(cs[i-1])});}}}
   /* Type de zone de chaque cut : le premier type qui le couvre (pn, adv, abords, vert-hors-zone) ; motifs : tous ceux qui le couvrent. */
   const zoneDe=new Map(),motifsDe=new Map();
-  for(const z of ORDRE_ZONES)for(const p of bornees)if((ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))zoneDe.set(c,z);
+  for(const z of ORDRE_ZONES)for(const p of bornees)if((p.zone||ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))zoneDe.set(c,z);
   for(const p of bornees)for(let c=p.a;c<=p.z;c++){if(!motifsDe.has(c))motifsDe.set(c,new Set());motifsDe.get(c).add(p.motif);}
   /* Plages : cuts couverts consécutifs DU MÊME TYPE DE ZONE (trou de `fusionTrouCuts` au plus : les cuts du trou ne sont pas relus). */
   const couverts=[...zoneDe.keys()].sort((a,b)=>a-b),fondues=[];

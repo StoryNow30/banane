@@ -3377,4 +3377,32 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Ordre : « quand je te redemande un zip, tu me donnes le tout dernier mis à jour sans bug ». Cause : deux paquets de numéros identiques (« 5 ») et de même nom ont été envoyés à des moments différents ; l'opérateur ne pouvait pas savoir lequel tournait.
 - Règle : à chaque demande de zip, l'intégrateur le fabrique depuis la tête du tronc après un verify complet vert, le nomme `ariane-v5-<commit>.zip` (la version interne reste « 5 », D-276) et dit en une ligne ce qu'il contient de nouveau, son empreinte et ce qui reste ouvert. « Sans bug » s'entend « sans bug connu, essais verts ».
 - À faire dans le lot suivant : écrire le commit dans le journal et sur le panneau, pour que les exports disent quel paquet a tourné.
-- Le numéro suivant est D-283.
+
+## D-283 — Rechargement de la page ESV par Ariane quand ESV ne charge plus les points (opérateur, 05/11)
+- Ordre : « oui go, je valide la décision a » (rapport CH-051 § 5 a : autoriser Ariane à recharger la page ESV d'elle-même pendant un lot en Constellation quand ESV ne charge plus les points).
+- Constat ÉTABLI (journal du 04/11, CH-051) : deux séries de captures à 0 point, 362 cuts différés, 35 minutes ; les deux séries commencent 10 s et 2 s après une requête de points en échec (502) ; hors blocage, aucune suite de 3 captures vides ou plus sur 7 931 captures.
+- Décision : la garde « série de captures vides » (`lot.serieCapturesVides`, `src/serie-captures-vides.js`) peut être ALLUMÉE par défaut une fois son essai en maquette (panne « nuage sans point » plus 502) vert et le verify complet vert. Conditions inchangées : seuil de 3 captures vides d'affilée alors que la page avait des points et que les requêtes de points se sont arrêtées ; au plus un rechargement par série ; rechargement seulement si une Constellation peut reprendre et que rien n'est posé ; jamais de SKIP ni de validation d'un cut non résolu (D-264).
+- Retour arrière : le réglage `lot.serieCapturesVides.actif` repasse à `false`.
+
+## D-284 — Relecture : les voisins d'un cut relu et les trous de 2 ou 3 cuts sont vérifiés (opérateur, 05/11)
+- Ordre : « il y a bien trop de cuts isolés où le cut d'avant et d'après ne sont pas vérifiés. Je veux qu'à partir de maintenant ils le soient tous […] Il y a d'autres grappes où des cuts à proximité ne sont pas vérifiés ou avec des trous de deux ou trois cuts qui sont à vérifier. » ; l'opérateur juge que ses exemples suffisent.
+- Constat ÉTABLI (listes d'ESV du 04/11, après relecture et Écho) : partie 10, 11 cuts vus isolés et 8 trous de 1 à 3 cuts entre deux cuts vus ; partie 13, 13 cuts vus isolés et 2 trous. Cause dans le code : un cut « À contrôler » était relu sans voisins (aucune marge) et aucun trou n'était bouché entre deux plages (`fusionTrouCuts` 0, choix de l'étude).
+- Décision (src/relecture-ombre.js, sélection) : marge d'un cut autour de chaque cut « À contrôler » (`aControler.marge` 1) ; tout trou de 1 à 3 cuts entre deux cuts couverts est relu (`trouMaxCuts` 3, motif « trou », zone du cut qui le précède). Les poses du lot restent traversées, la règle prudente de correction (src/relecture-critere.js) est inchangée. Les isolés, différés, grappes et écartements avaient déjà leur marge.
+- Effet attendu : quelques cuts relus de plus par partie (PROBABLE quelques dizaines, ~3 s chacun) ; à mesurer sur le prochain lot (listes d'ESV après relecture).
+
+## D-285 — Apprentissage : étiquetage, parties d'examen, file prioritaire, séance tirée au sort (opérateur, 05/11)
+- Ordre : « Top, je valide tout », après les rapports CH-051 (§ 5) et CH-053-S, et le premier examen vierge (CH-053-M).
+- Validé : (1) règle d'étiquetage : Écho allumé pour toute validation manuelle ; validation sans mouvement en moins de 1,5 s écartée de l'apprentissage ; (2) parties d'examen : 8 à 12 du 05/11 (réservées), partie 11 du 04/11 en réserve ; (3) brancher la file prioritaire des cuts à corriger (src/file-prioritaire.js) dans le panneau, pour mesurer en séance le coût réel des sauts ; (4) protocole de séance Écho tirée au sort (environ 150 posés par partie) pour les mesures suivantes.
+- Examen ÉTABLI (CH-053-M, parties 8 à 12 du 05/11, paramètres figés, une seule lecture) : 229 posés d'Ariane jugés, 227 à 10 mm ou moins (99,1 %), 0 à plus de 50 mm (borne haute 1,7 %), 0 mauvaise voie ; D-223 et « 90 % à 10 mm » DÉMONTRÉS sur les posés jugés. Réserve : 229 jugés sur 831 posés, choisis par l'opérateur (biais possible).
+- NON couvert par cet ordre : l'activation de la règle de choix de voie de CH-053-M (encore en ombre, à juger sur l'examen du 05/11 puis à proposer avec ses chiffres).
+
+## D-286 — Dépôts publics, volontairement (opérateur, 05/11)
+- Ordre : « C'est public et c'est exprès », en réponse à l'alerte de l'intégrateur (banane et banane-data publics sur GitHub).
+- Conséquence : les dépôts de données dérivées dans banane-data reprennent. Les interdits de CLAUDE.md restent entiers dans banane (aucun nom d'opérateur, code projet, adresse ESV, UUID ni capture d'écran).
+
+## D-287 — Les parties 8 à 12 du 05/11 passent en apprentissage (opérateur, 05/11)
+- Ordre : « Je veux que les cuts des exports d'aujourd'hui soient appris selon les avances récentes. »
+- Effet : manifeste des parties, projet 12 (étiquette de rejeu), parties 8 à 12 en apprentissage. Elles avaient été jugées une fois en examen à paramètres figés (CH-053-M, CH-056) ; ces chiffres d'examen restent valables, mais ces parties ne peuvent plus juger un réglage.
+- Conséquence : aucune partie jugée par l'Écho ne reste réservée. La prochaine partie reçue avec Écho sert d'examen ; d'ici là, les gains se mesurent en validation croisée par partie (chaque partie jugée par un modèle appris sur les autres), PROBABLE au mieux.
+- NON couvert : l'activation de paramètres ou de règles appris (règle de voie b1-écart, garde limitée aux PN/ADV, paramètres GCV2) ; chacune demande sa décision écrite, avec ses chiffres.
+- Le numéro suivant est D-288.

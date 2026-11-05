@@ -16,7 +16,7 @@ async function monter(nbOnglets){
  const erreurs=[];
  await ctx.route(hp.origin+'/**',async route=>{const u=new URL(route.request().url());let c=u.pathname;
   if(c.startsWith(hp.pathname)){const r=c.slice(hp.pathname.length);c='/tests/esv-maquette/'+(r===''||r==='maquette'?'esv.html':r);}
-  try{await route.fulfill({response:await route.fetch({url:serveur.url+c+u.search})});}catch(e){erreurs.push('route '+c+' : '+e.message);await route.abort();}});
+  try{await route.fulfill({response:await route.fetch({url:serveur.url+c+u.search})});}catch(e){erreurs.push('route '+c+' : '+e.message);await route.abort().catch(()=>{});}});
  for(let i=0;i<80&&!ctx.serviceWorkers().length;i++)await dormir(250);
  const sw=ctx.serviceWorkers()[0];if(!sw)throw Error('extension non chargée');const id=sw.url().split('/')[2];
  sw.on('console',m=>{if(m.type()==='error')erreurs.push('sw: '+m.text());});

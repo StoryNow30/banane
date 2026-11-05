@@ -22,7 +22,7 @@ async function lotRemise(ratees){
  Sx.voiePrediteOmbre={...Sx.voiePrediteOmbre,actif:false};Sx.lot={...Sx.lot,profil:'actuel'};b.ctx.BananeSettings=Sx;
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);
- await b.api('start',{part:23,start:111,end:116,...SCOPE});await b.settle();await attendre(20);
+ await b.api('start',{part:23,start:111,end:115,...SCOPE});await b.settle();await attendre(20);   /* 115 : dernier cut utile de l'essai ; le 116 n'apportait rien (durée de l'essai, limite de 20 s) */
  return {b,adapter};
 }
 

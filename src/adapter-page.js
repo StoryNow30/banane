@@ -352,22 +352,27 @@
    let valeur=null,depuis=Date.now(),precedente=null,imagePrecedente=null,images=0,derniere=null;
    /* Diagnostic seulement (voir plus haut) : jamais lu par la décision. */
    let nlMax=null,paires=0,pc=0,nc=0,vc=0,manque='images';
+   /* CH-049-A — DIAGNOSTIC DU REPLI, SANS RIEN CHANGER À LA DÉCISION (jamais lu par elle). Au repli, le compteur d'ESV reste ≠ 0 et seule la
+    * stabilité des nœuds ferme l'attente (800 ms). Pour savoir si un silence plus court suffirait : ch = changements de la signature des
+    * nœuds pendant l'attente, tc = ms (depuis le début de l'attente) du dernier, gm = plus long silence (ms) qui a précédé un changement
+    * (un silence Q < gm aurait fermé l'attente avant ce changement), at = durée d'attente (ms). Quatre entiers par lecture. */
+   let vu=false,ch=0,tc=0,gm=0;
    while(Date.now()-debut<12000){
      if(cancelled)throw Error('Action interrompue.');guard();
      /* Une lecture qui échoue est réessayée à l'image suivante, comme `waitFor` le faisait. */
      let sig,vue;try{sig=loadedSignature();vue=sceneEsv();}catch(e){derniere=e;precedente=null;await prochaineImage();continue;}
      const f=imageEsv(),nl=chargementsEsv(),libre=nl===0;
      if(nl!==null&&(nlMax===null||nl>nlMax))nlMax=nl;
-     if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}
+     if(sig.value!==valeur){const precedent=depuis;valeur=sig.value;depuis=Date.now();if(vu){ch++;gm=Math.max(gm,depuis-precedent);tc=depuis-debut;}vu=true;}
      if(f!==null&&f!==imagePrecedente){images++;
        if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
-         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc}};
+         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc,ch,tc,gm,at:Date.now()-debut}};
        if(precedente){paires++;const charge=!libre||!precedente.libre,noeuds=precedente.valeur!==sig.value,change=precedente.vue!==vue;
          if(charge)pc++;if(noeuds)nc++;if(change)vc++;
          manque=f0===null||f-f0<3?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
        precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
      if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEsv();
-       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque}};}
+       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut}};}
      await prochaineImage();}
    throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
  /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties

@@ -11,7 +11,7 @@ test('le paquet porte un fichier BUILD au format du commit court, lu tel quel pa
 });
 test('le journal écrit `build` et le panneau a son emplacement ; la valeur est filtrée',()=>{
   const bg=fs.readFileSync(path.join(racine,'background.js'),'utf8'),pj=fs.readFileSync(path.join(racine,'panel.js'),'utf8'),ph=fs.readFileSync(path.join(racine,'panel.html'),'utf8');
-  assert.match(bg,/let BUILD='inconnu'/);assert.match(bg,/version:VERSION,build:BUILD,/);
+  assert.match(bg,/let BUILD='inconnu'/);assert.match(bg,/version:VERSION,build:BUILD,/);assert.match(bg,/action==='build'/);assert.ok(!/fetch\(chrome\.runtime\.getURL\('BUILD'\)\)/.test(pj),'le panneau ne demande pas le fichier : il passe par le service worker');
   assert.match(ph,/id="build"/);assert.match(pj,/getElementById\('build'\)/);
-  assert.ok(/\[0-9a-f\]\{4,40\}/.test(bg)&&/\[0-9a-f\]\{4,40\}/.test(pj),'la valeur lue est filtrée par une expression');
+  assert.ok(/\[0-9a-f\]\{4,40\}/.test(bg),'la valeur lue est filtrée par une expression');
 });

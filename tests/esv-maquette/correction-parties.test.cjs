@@ -15,7 +15,7 @@ async function attendre(f, quoi, n = 160, ms = 250) { for (let i = 0; i < n; i++
 
 function extensionAllumee(actif = true) {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ariane-aurore-'));
-  for (const f of ['manifest.json', 'background.js', 'panel.html', 'panel.js']) if (fs.existsSync(path.join(N.racine, f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
+  for (const f of ['manifest.json', 'background.js', 'panel.html', 'panel.js', 'panel-lancement.js']) if (fs.existsSync(path.join(N.racine, f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   for (const r of ['src', 'vendor', 'icons', 'fonts', 'datasets']) if (fs.existsSync(path.join(N.racine, r))) fs.cpSync(path.join(N.racine, r), path.join(d, r), { recursive: true });
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   const S = path.join(d, 'src/settings.js'), t = fs.readFileSync(S, 'utf8'), a = 'const correctionEntreParties = Object.freeze({ actif: true,';

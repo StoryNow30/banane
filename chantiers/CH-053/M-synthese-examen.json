@@ -1,0 +1,554 @@
+{
+ "format": "ch053m-synthese-v1",
+ "parties": [
+  "8",
+  "9",
+  "10",
+  "11",
+  "12"
+ ],
+ "variantes": [
+  "temoin",
+  "b1-ecart-serie"
+ ],
+ "perimetres": {
+  "grosses": {
+   "parPartie": {
+    "temoin": {
+     "8": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "9": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "10": {
+      "n": 16,
+      "poses": 8,
+      "justes": 8,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "lot": 8
+      },
+      "fautes": []
+     },
+     "11": {
+      "n": 2,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "12": {
+      "n": 2,
+      "poses": 1,
+      "justes": 1,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "lot": 1
+      },
+      "fautes": []
+     }
+    },
+    "b1-ecart-serie": {
+     "8": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "9": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "10": {
+      "n": 16,
+      "poses": 12,
+      "justes": 12,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 4,
+       "lot": 8
+      },
+      "fautes": []
+     },
+     "11": {
+      "n": 2,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "12": {
+      "n": 2,
+      "poses": 2,
+      "justes": 2,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 1,
+       "lot": 1
+      },
+      "fautes": []
+     }
+    }
+   },
+   "total": {
+    "temoin": {
+     "n": 22,
+     "poses": 9,
+     "justes": 9,
+     "faux": 0,
+     "plus50": 0,
+     "nonJuges": 0,
+     "sources": {
+      "lot": 9
+     },
+     "fautes": []
+    },
+    "b1-ecart-serie": {
+     "n": 22,
+     "poses": 14,
+     "justes": 14,
+     "faux": 0,
+     "plus50": 0,
+     "nonJuges": 0,
+     "sources": {
+      "b1": 5,
+      "lot": 9
+     },
+     "fautes": []
+    }
+   },
+   "validationCroisee": {
+    "parPartie": {
+     "8": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 14,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "9": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 14,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "10": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 2,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 16,
+      "poses": 12,
+      "justes": 12,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 4,
+       "lot": 8
+      },
+      "fautes": []
+     },
+     "11": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 14,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 2,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "12": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 12,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 2,
+      "poses": 2,
+      "justes": 2,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 1,
+       "lot": 1
+      },
+      "fautes": []
+     }
+    },
+    "total": {
+     "n": 22,
+     "poses": 14,
+     "justes": 14,
+     "faux": 0,
+     "plus50": 0,
+     "fautes": []
+    }
+   },
+   "atteignableApres": {
+    "k": 14,
+    "n": 22,
+    "parPartie": {
+     "8": {
+      "k": 0,
+      "n": 1
+     },
+     "9": {
+      "k": 0,
+      "n": 1
+     },
+     "10": {
+      "k": 12,
+      "n": 16
+     },
+     "11": {
+      "k": 0,
+      "n": 2
+     },
+     "12": {
+      "k": 2,
+      "n": 2
+     }
+    }
+   }
+  },
+  "tous": {
+   "parPartie": {
+    "temoin": {
+     "8": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "9": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "10": {
+      "n": 20,
+      "poses": 12,
+      "justes": 12,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "lot": 12
+      },
+      "fautes": []
+     },
+     "11": {
+      "n": 2,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "12": {
+      "n": 3,
+      "poses": 2,
+      "justes": 2,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "lot": 2
+      },
+      "fautes": []
+     }
+    },
+    "b1-ecart-serie": {
+     "8": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "9": {
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "10": {
+      "n": 20,
+      "poses": 16,
+      "justes": 16,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 4,
+       "lot": 12
+      },
+      "fautes": []
+     },
+     "11": {
+      "n": 2,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "12": {
+      "n": 3,
+      "poses": 3,
+      "justes": 3,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 1,
+       "lot": 2
+      },
+      "fautes": []
+     }
+    }
+   },
+   "total": {
+    "temoin": {
+     "n": 27,
+     "poses": 14,
+     "justes": 14,
+     "faux": 0,
+     "plus50": 0,
+     "nonJuges": 0,
+     "sources": {
+      "lot": 14
+     },
+     "fautes": []
+    },
+    "b1-ecart-serie": {
+     "n": 27,
+     "poses": 19,
+     "justes": 19,
+     "faux": 0,
+     "plus50": 0,
+     "nonJuges": 0,
+     "sources": {
+      "b1": 5,
+      "lot": 14
+     },
+     "fautes": []
+    }
+   },
+   "validationCroisee": {
+    "parPartie": {
+     "8": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 19,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "9": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 19,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 1,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "10": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 3,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 20,
+      "poses": 16,
+      "justes": 16,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 4,
+       "lot": 12
+      },
+      "fautes": []
+     },
+     "11": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 19,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 2,
+      "poses": 0,
+      "justes": 0,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {},
+      "fautes": []
+     },
+     "12": {
+      "choisie": "b1-ecart-serie",
+      "surLesAutres": {
+       "j": 16,
+       "f": 0,
+       "p50": 0
+      },
+      "n": 3,
+      "poses": 3,
+      "justes": 3,
+      "faux": 0,
+      "plus50": 0,
+      "nonJuges": 0,
+      "sources": {
+       "b1": 1,
+       "lot": 2
+      },
+      "fautes": []
+     }
+    },
+    "total": {
+     "n": 27,
+     "poses": 19,
+     "justes": 19,
+     "faux": 0,
+     "plus50": 0,
+     "fautes": []
+    }
+   },
+   "atteignableApres": {
+    "k": 19,
+    "n": 27,
+    "parPartie": {
+     "8": {
+      "k": 0,
+      "n": 1
+     },
+     "9": {
+      "k": 0,
+      "n": 1
+     },
+     "10": {
+      "k": 16,
+      "n": 20
+     },
+     "11": {
+      "k": 0,
+      "n": 2
+     },
+     "12": {
+      "k": 3,
+      "n": 3
+     }
+    }
+   }
+  }
+ }
+}
