@@ -212,12 +212,13 @@
      * Garde de livraison (valable une fois l'écriture rallumée) : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
      * validation prouvée, arrêt au premier refus). */
     passeDifferes: passeDifferesDefaut,
-    /* Test 25 (CH-019, D-262 ; analyse CH-015, D-265) — GARDE « APRÈS UN DIFFÉRÉ » (src/garde-apres-differe.js), ALLUMÉE par défaut. Un cut que le lot
+    /* Test 25 (CH-019, D-262 ; analyse CH-015, D-265) — GARDE « APRÈS UN DIFFÉRÉ » (src/garde-apres-differe.js), ALLUMÉE jusqu'à D-288 (05/11 : coupée, en ombre). Un cut que le lot
      * allait valider est DIFFÉRÉ (motif `garde-apres-differe`, événement du même nom) quand un des `coupures` cuts qui le précèdent est un différé
      * du lot (moteur, chaîne ou GCV2 ; jamais un différé de cette garde) et, règle 'R3', qu'il a moins de `appuisMin` appuis ('R1' : sans la
      * condition d'appuis). Elle ne pose ni ne valide jamais rien de plus. `actif: false` (ou `false`) : le lot d'avant, à l'identique. Un
      * réglage illisible applique les valeurs livrées. Règle tirée de la seule partie 20 du 28/10 (échantillon biaisé, SUPPOSÉ généralisable). */
-    gardeApresDiffere: Object.freeze({ actif: true, regle: 'R3', coupures: 2, appuisMin: 2 }),
+    /* D-288 (opérateur, 05/11) : garde coupée (« retirer partout »), gardée en OMBRE : elle consigne les cuts qu'elle aurait différés, sans jamais différer. */
+    gardeApresDiffere: Object.freeze({ actif: false, ombre: true, regle: 'R3', coupures: 2, appuisMin: 2 }),
     /* CH-055 (05/11) — RÈGLE DE VOIE « B1-ECART » EN OMBRE (src/voie-b1-ecart.js ; mesure : chantiers/CH-053/M-rapport.md). Pour chaque cut que le lot
      * DIFFÈRE (et chaque reste de la deuxième passe), le service worker consigne (`voie-b1-ecart-ombre`) ce qu'aurait posé la règle : la chaîne de
      * l'ombre, puis les lignes valides de la liste d'ESV (B1), puis le rail trouvé complété par l'écartement de référence, le moteur relancé depuis la

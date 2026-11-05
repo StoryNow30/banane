@@ -130,7 +130,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');
  assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est ÉTEINTE par défaut (ordre de l\'opérateur, 02/11 : tant que son temps de calcul n\'est pas supprimé, CH-041)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
  /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */
- assert.deepEqual({...gardeApresDiffere},{actif:true,regle:'R3',coupures:2,appuisMin:2},'garde après un différé : R3, 2 cuts, moins de 2 appuis');
+ assert.deepEqual({...gardeApresDiffere},{actif:false,ombre:true,regle:'R3',coupures:2,appuisMin:2},'D-288 : garde après un différé coupée, en ombre (R3, 2 cuts, moins de 2 appuis consignés)');
  assert.equal(recaptureVide.actif,false,'recapture des captures vides : coupée par défaut');
  /* Test 17 : la deuxième passe des différés, ALLUMÉE par la décision de l'opérateur ; test 21 (D-251, 26/10) : livrée EN OMBRE ; test 24 (D-259, 28/10) : livrée ALLUMÉE EN ÉCRITURE, plafonnée à 10 cuts par lot ; le reste est l'empreinte d'avant. */
  assert.deepEqual([passeDifferes.ombre,passeDifferes.ecriture,passeDifferes.ecritureMax],[true,true,10],'deuxième passe des différés : écriture, 10 cuts au plus par lot (D-259)');
