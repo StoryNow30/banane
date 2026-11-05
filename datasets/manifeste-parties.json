@@ -93,6 +93,19 @@
       "date": "2026-11-04",
       "motif": "Lot Orbite du 04/11 (version 5, 19 volumes) relu en Écho par l'opérateur : parties 13, 14, 15 (Écho de 280 visites, 132 validations humaines) et partie 10 (Écho de 22 visites, 20 validations). Jointure Écho ↔ Orbite (tools/jointure-echo-orbite.cjs) : cuts différés par Ariane puis posés à la main, écarts à la pose humaine de 20 à 145 mm en médiane selon la partie. Jamais jugées en examen avant ce passage : l'ordre de l'opérateur (« mets tout ce que tu peux en apprentissage ») les fait passer directement en apprentissage, sans partie d'examen restante. Étiquette 11 = étiquette de rejeu, le projet réel n'est pas établi.",
       "decision": "D-281"
+    },
+    {
+      "projet": 12,
+      "parties": [
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "date": "2026-11-05",
+      "motif": "Lot Constellation du 05/11 (version 5, 9 volumes) et Écho de l'opérateur (15 envois « -auto », session = leur union). Jugées une fois en examen à paramètres figés (CH-053-M, CH-056 : 229 posés jugés, 227 à 10 mm ou moins). Passées en apprentissage sur ordre de l'opérateur (« je veux que les cuts des exports d'aujourd'hui soient appris »). Étiquette 12 = étiquette de rejeu, le projet réel n'est pas établi. Après ce passage, aucune partie jugée par l'Écho ne reste réservée : la prochaine partie reçue avec Écho sert d'examen.",
+      "decision": "D-287"
     }
   ],
   "temoins": [

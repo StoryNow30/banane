@@ -3399,4 +3399,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 ## D-286 — Dépôts publics, volontairement (opérateur, 05/11)
 - Ordre : « C'est public et c'est exprès », en réponse à l'alerte de l'intégrateur (banane et banane-data publics sur GitHub).
 - Conséquence : les dépôts de données dérivées dans banane-data reprennent. Les interdits de CLAUDE.md restent entiers dans banane (aucun nom d'opérateur, code projet, adresse ESV, UUID ni capture d'écran).
-- Le numéro suivant est D-287.
+
+## D-287 — Les parties 8 à 12 du 05/11 passent en apprentissage (opérateur, 05/11)
+- Ordre : « Je veux que les cuts des exports d'aujourd'hui soient appris selon les avances récentes. »
+- Effet : manifeste des parties, projet 12 (étiquette de rejeu), parties 8 à 12 en apprentissage. Elles avaient été jugées une fois en examen à paramètres figés (CH-053-M, CH-056) ; ces chiffres d'examen restent valables, mais ces parties ne peuvent plus juger un réglage.
+- Conséquence : aucune partie jugée par l'Écho ne reste réservée. La prochaine partie reçue avec Écho sert d'examen ; d'ici là, les gains se mesurent en validation croisée par partie (chaque partie jugée par un modèle appris sur les autres), PROBABLE au mieux.
+- NON couvert : l'activation de paramètres ou de règles appris (règle de voie b1-écart, garde limitée aux PN/ADV, paramètres GCV2) ; chacune demande sa décision écrite, avec ses chiffres.
+- Le numéro suivant est D-288.
