@@ -68,11 +68,20 @@ const RECHERCHE_LARGE=['recherche-large.js'];
  * ALLUMÉE par défaut depuis D-283 (décision de l'opérateur du 05/11, réglage `lot.serieCapturesVides`, retour arrière `actif:false`) ; coupée, la capture est celle d'avant (tests/lot-serie-captures-vides-sw.test.cjs). */
 const SERIE_VIDES=['serie-captures-vides.js'];
 
+/* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
+ * plus ; sans ces lignes, src/relecture-ombre.js est celui de la test 8. Toute autre modification du fichier reste détectée. */
+const sansD284=t=>t
+ .replace(/\n  \/\* D-284 \(ordre de l'opérateur du 05\/11[\s\S]*?aControler:Object\.freeze\(\{marge:1\}\),trouMaxCuts:3,/,'')
+ .replace(",trou:'trou bouché'};","};")
+ .replace(/\n   if\(motif==='a-controler'\)\{const m=[^\n]*/,'')
+ .replace(/\n  \/\* D-284 : trou de 1 à[\s\S]*?\}\}\}/,'')
+ .replace("(p.zone||ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))","(ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))")
+ .replace("'ecartement','trou']),","'ecartement']),");
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f])continue;
-  const texte=PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):lire(f);
+  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
@@ -100,7 +109,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
  for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
-  assert.equal(sha(lire(f)),REF.fichiers[f],f);
+  assert.equal(sha(f==='src/relecture-ombre.js'?sansD284(lire(f)):lire(f)),REF.fichiers[f],f);
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
  const diff=lire('src/native-session.js');assert.ok(!/batch\.scope|startBatch|lotCommands|applyInESV/.test(diff.slice(diff.indexOf('RM-11 (fiches/RM11'),diff.indexOf('summariseGesture(record,observed){'))));
 });

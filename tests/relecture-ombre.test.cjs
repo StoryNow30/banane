@@ -38,14 +38,26 @@ test('différé : ses abords (2 cuts) et le différé lui-même, relu avec le r�
  assert.ok(s.plages[0].motifs.includes('differe'));
 });
 
-test('PN, ADV et « À contrôler » : la plage entière, chaque cut ; ordre des cuts ; fusion des plages proches',()=>{
+test('PN, ADV et « À contrôler » : la plage entière, chaque cut ; ordre des cuts ; D-284 : un cut « À contrôler » est relu avec ses voisins, un trou de 3 cuts au plus est bouché',()=>{
  const s=R.selection({partie:29,zonesPN:[[1652,1667]],zonesADV:[[6608,6620]],aControler:[[5936,5940],6000,6003]});
- assert.deepEqual(plagesDe(s),[[1652,1667],[5936,5940],[6000,6000],[6003,6003],[6608,6620]]);
- assert.deepEqual(s.plages.map(p=>p.motifs),[['pn'],['a-controler'],['a-controler'],['a-controler'],['adv']]);
- assert.equal(s.cuts.length,16+5+2+13);assert.deepEqual(s.parZone,{pn:16,adv:13,abords:0,'vert-hors-zone':7,ecartement:0});
+ /* D-284 (ordre de l'opérateur du 05/11) : marge d'un cut autour de chaque « À contrôler » ; 6000 et 6003 donnent 5999–6001 et 6002–6004, d'un seul tenant. */
+ assert.deepEqual(plagesDe(s),[[1652,1667],[5935,5941],[5999,6004],[6608,6620]]);
+ assert.deepEqual(s.plages.map(p=>p.motifs),[['pn'],['a-controler'],['a-controler'],['adv']]);
+ assert.equal(s.cuts.length,16+7+6+13);assert.deepEqual(s.parZone,{pn:16,adv:13,abords:0,'vert-hors-zone':13,ecartement:0});
  const c=cutsDe(s);assert.deepEqual(c,[...c].sort((a,b)=>a-b),'dans l’ordre des cuts');
- /* 6000 et 6003 : comme l'étude, aucun cut ajouté pour boucher le trou (6001 et 6002 ne sont pas relus). */
- assert.equal(s.plages[2].libelle,'à contrôler 6000');
+ assert.equal(s.plages[2].libelle,'à contrôler 5999–6004');
+});
+
+test('D-284 : aucun cut relu n\'est laissé seul ; un trou de 1 à 3 cuts entre deux cuts relus est bouché, un trou de 4 cuts ne l\'est pas',()=>{
+ /* Deux cuts isolés du lot (100 et 104) : 99–101 et 103–105, le trou 102 est bouché. 200 et 206 : 199–201 et 205–207, trou de 3 (202–204) bouché.
+  * 300 et 307 : 299–301 et 306–308, trou de 4 (302–305) laissé. */
+ const s=R.selection({partie:29,lot:[100,104,200,206,300,307].map(cut=>({cut,differe:false})),total:1000});
+ const relus=new Set(s.plages.flatMap(p=>{const o=[];for(let c=p.debut;c<=p.fin;c++)o.push(c);return o;}));
+ for(const c of [102,202,203,204])assert.ok(relus.has(c),'trou bouché : '+c);
+ for(const c of [302,303,304,305])assert.ok(!relus.has(c),'trou de 4 laissé : '+c);
+ const trous=s.plages.filter(p=>p.motifs.includes('trou'));assert.ok(trous.length>=1,'le motif « trou » est nommé');
+ /* Les cuts du lot restent traversés (pas relus) : la règle ajoute des voisins, elle ne relit pas les poses du lot. */
+ assert.ok(!s.cuts.some(x=>[100,104,200,206].includes(x.cut)));
 });
 
 test('D-172 : les cuts 0 à 3 d’une partie ne sont jamais exclus ; bornes 0 et total − 1',()=>{
@@ -60,10 +72,10 @@ test('plafond de cuts : PN hors budget ; les autres plages entières, par priori
  const entree={partie:29,lot:[{cut:323,differe:false}],zonesPN:[[1652,1667]],aControler:[[100,104]]};
  const s=R.selection(entree,{plafondCuts:5});
  assert.deepEqual(plagesDe(s),[[322,324],[1652,1667]],'PN (16, hors budget) et isolé (2) ; « À contrôler » (5) ne tient plus dans les 3 restants');
- assert.deepEqual(s.horsPlafond.map(p=>[p.debut,p.fin,p.raison]),[[100,104,'plafond-cuts']]);
+ assert.deepEqual(s.horsPlafond.map(p=>[p.debut,p.fin,p.raison]),[[99,105,'plafond-cuts']],'D-284 : « À contrôler » avec ses voisins');
  assert.equal(s.total,18);
  assert.equal(s.tempsEstimeS,Math.round(18*R.DEFAULTS.tempsParCutS+1*R.DEFAULTS.tempsTraverseS));
- assert.deepEqual(plagesDe(R.selection(entree,{plafondCuts:18})),[[100,104],[322,324],[1652,1667]],'avec 18 : tout tient (le PN ne compte pas)');
+ assert.deepEqual(plagesDe(R.selection(entree,{plafondCuts:18})),[[99,105],[322,324],[1652,1667]],'avec 18 : tout tient (le PN ne compte pas)');
  /* Une seule plage plus grande que le plafond : elle est coupée (on garde son début) plutôt que rien. */
  const u=R.selection({partie:29,zonesADV:[[1000,1099]]},{plafondCuts:30});
  assert.deepEqual(plagesDe(u),[[1000,1029]]);assert.equal(u.horsPlafond[0].raison,'plafond-cuts');assert.deepEqual([u.horsPlafond[0].debut,u.horsPlafond[0].fin],[1030,1099]);
@@ -126,14 +138,14 @@ test('skipOmbre (D-172) : « aucun-point » seulement après deux captures compl
  assert.ok(!/un-seul-scanner/.test(require('node:fs').readFileSync(require.resolve('../src/relecture-ombre.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'')));
 });
 
-test('sélection alignée sur l’étude : hors grappe, chaque cut du lot avec ses voisins (sans boucher le trou) ; zone de chaque cut par ordre pn, adv, abords, liste',()=>{
- /* Deux cuts du lot à 4 cuts l'un de l'autre (paire, pas une grappe) : 9, 11 et 13, 15 ; 12 n'est pas relu. */
+test('sélection : hors grappe, chaque cut du lot avec ses voisins ; D-284 : le trou d’un cut entre eux est bouché ; zone de chaque cut par ordre pn, adv, abords, liste',()=>{
+ /* Deux cuts du lot à 4 cuts l'un de l'autre (paire, pas une grappe) : 9, 11 et 13, 15 ; D-284 : 12 (trou d'un cut) est relu aussi. */
  const s=R.selection({partie:1,lot:[{cut:10},{cut:14}]});
- assert.deepEqual(cutsDe(s),[9,11,13,15]);
+ assert.deepEqual(cutsDe(s),[9,11,12,13,15]);
  /* Une plage qui touche un PN : chaque cut garde son type (abords hors du PN, pn dedans) ; c'est le type qui dit si l'on corrige. */
  const t=R.selection({partie:1,lot:[{cut:10},{cut:14}],zonesPN:[[16,20]],aControler:[21]});
- assert.deepEqual(s.cuts.map(c=>c.zone),['abords','abords','abords','abords']);
- assert.deepEqual(t.cuts.filter(c=>c.cut>=13).map(c=>[c.cut,c.zone]),[[13,'abords'],[15,'abords'],[16,'pn'],[17,'pn'],[18,'pn'],[19,'pn'],[20,'pn'],[21,'vert-hors-zone']]);
+ assert.deepEqual(s.cuts.map(c=>c.zone),['abords','abords','abords','abords','abords']);
+ assert.deepEqual(t.cuts.filter(c=>c.cut>=13).map(c=>[c.cut,c.zone]),[[13,'abords'],[15,'abords'],[16,'pn'],[17,'pn'],[18,'pn'],[19,'pn'],[20,'pn'],[21,'vert-hors-zone'],[22,'vert-hors-zone']]);
  /* Marges du fichier proposé (bloc `selection`) : options de la sélection. */
  assert.deepEqual(R.optionsSelection({grappeMin:3,trouCuts:5,margeGrappe:3,margeIsole:1,margeDiffere:2}),{grappe:{min:3,trouCuts:5,marge:3},isole:{marge:1},differe:{marge:2}});
  const u=R.selection({partie:1,lot:[{cut:50,differe:true}]},R.optionsSelection({margeDiffere:4,margeIsole:0}));assert.deepEqual(cutsDe(u),[46,47,48,49,50,51,52,53,54]);
@@ -201,7 +213,7 @@ test('plafond par zone : l’ADV ne mange plus le budget des abords ; PN jamais 
  assert.deepEqual(s.cuts.filter(c=>c.zone==='adv').map(c=>c.cut).slice(0,2),[256,257]);
  assert.ok(nb('abords')>0&&nb('abords')<=30,'les abords ont leur budget, même avec une ADV de 434 cuts');
  assert.deepEqual(s.cuts.filter(c=>c.zone==='abords').map(c=>c.cut).filter(c=>c>=897&&c<=907).length>0,true,'grappe 897–907 gardée (priorité grappe)');
- assert.equal(nb('vert-hors-zone'),10,'D-185 : la liste « À contrôler » n’est jamais coupée par un budget de zone');
+ assert.equal(nb('vert-hors-zone'),12,'D-185 : la liste « À contrôler » n’est jamais coupée par un budget de zone ; D-284 : avec ses deux voisins (1499 et 1510)');
  assert.ok(s.horsPlafond.some(p=>p.debut===316&&p.fin===400)&&s.horsPlafond.some(p=>p.debut===415&&p.fin===689),'reste de l’ADV (de part et d’autre du PN) rendu hors plafond');
  assert.ok(!s.horsPlafond.some(p=>p.debut>=1500&&p.fin<=1509),'rien de la liste rendu hors plafond');
  assert.deepEqual(s.plafondParZone,{adv:60,abords:30,'vert-hors-zone':4,ecartement:0});
