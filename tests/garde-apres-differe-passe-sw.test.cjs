@@ -6,7 +6,7 @@ const {SCOPE,production,base,K,S,EsvTrou,attendre,ev,decisions}=require('./helpe
 
 test('L1-se : 113 différé par la garde, repris par la deuxième passe',async()=>{
  const adapter=new EsvTrou([]),b=production({adapter});
- b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},lot:{...S.lot,passeDifferes:{...S.lot.passeDifferes,ecriture:false}}};
+ b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},lot:{...S.lot,passeDifferes:{...S.lot.passeDifferes,ecriture:false},gardeApresDiffere:{actif:true,ombre:false,regle:'R3',coupures:2,appuisMin:2}}};
  const G=b.ctx.BananeGcv2L1;b.ctx.BananeGcv2L1={...G,deciderDiffere:a=>{const r=G.deciderDiffere(a);return a.capture.identity.cut!==112?r:{...r,decision:{...r.decision,etat:'rien',motif:'force'}};}};
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=111;adapter.rails=K.clone(base.rails);adapter.ajuster();

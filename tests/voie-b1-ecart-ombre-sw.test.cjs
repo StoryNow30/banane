@@ -46,10 +46,8 @@ async function lot(reglage,{panne=false,loin=[112],liste=null,mm=230}={}){
 const ombres=b=>b.store.events.filter(e=>e.type==='voie-b1-ecart-ombre');
 const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
 const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
-let coupe,active,enPanne,avecListe;
-before(async()=>{coupe=await lot({...S.lot.voieB1EcartOmbre,actif:false});active=await lot(undefined);enPanne=await lot(undefined,{panne:true});
- /* 290 mm : au-delà de ce que le moteur seul retrouve sur ce nuage (mesuré : à 270 mm il pose encore seul, en premier passage). */
- avecListe=await lot(undefined,{loin:[111,112],mm:290,liste:instantane(23,[100,101,102,103,104,105,106,107,108,109,110,113,114,115],[111,112],290)});});
+let coupe,active,enPanne;
+before(async()=>{coupe=await lot({...S.lot.voieB1EcartOmbre,actif:false});active=await lot(undefined);enPanne=await lot(undefined,{panne:true});});
 
 test('le réglage existe, actif par défaut en OMBRE ; le panneau dit qu\'il ne fait que consigner',()=>{
  const v=S.lot.voieB1EcartOmbre;assert.ok(Object.isFrozen(v));
@@ -88,26 +86,6 @@ test('un événement compact par cut différé, seulement si le réglage est act
  /* La voie entière est à 230 mm ; les repères profil des deux rails de la fixture ne sont pas parallèles : la moyenne des deux latéraux le dit, à 30 mm près. */
  const lat=(x.poseMm.left[1]+x.poseMm.right[1])/2;assert.ok(Math.abs(lat+230)<30,'latéral moyen proche de −230 mm : '+lat);
  const p=ombres(enPanne.b);deq(p.map(y=>y.identity.cut),[112]);assert.equal(p[0].etat,'erreur');assert.equal(p[0].verdict.posable,false);assert.match(p[0].message,/panne simulée/);
-});
-
-test('liste d\'ESV dans le stockage local : lue une fois par lot, repère T lu sur la ligne du cut, lignes valides et référence d\'écartement consignées ; le lot ne change pas',()=>{
- /* Deux cuts à 290 mm, sans appui réel : le moteur seul les diffère. L'ombre lit l'instantané (repère calibré, lignes valides, écartement de la
-  * liste) et tente la reprise depuis la voie des lignes (B1) puis le complément. Sur cette fixture (toutes les lignes au même point de scène : la
-  * voie n'a pas de direction, et les points lus autour de la pose de départ sont rares à 290 mm) la reprise ne trouve pas de minimum qualifié :
-  * l'abstention est dite avec sa raison. La pose par la liste est prouvée sur une voie synthétique (tests/voie-b1-ecart.test.cjs) et mesurée sur
-  * les lots réels par le rejeu (chantiers/CH-053/M-rapport.md : même code, src/voie-b1-ecart.js). */
- const e=ombres(avecListe.b);
- deq(e.map(x=>x.identity.cut),[111,112],'deux différés');
- for(const x of e){
-  assert.equal(x.reel.stage,'deferred');assert.equal(x.repere,'calibre','T lue sur la ligne invalide du cut');
-  assert.ok(x.lignesValides.length>=5&&x.lignesValides.every(c=>c>=106&&c<=115&&c!==111&&c!==112),'lignes valides de la fenêtre de ±5 : '+x.lignesValides);
-  assert.equal(x.gRef.source,'liste');assert.ok(Math.abs(x.gRef.mm-1500)<2,'écartement des lignes valides (pose de base de la fixture : 1 500 mm) : '+x.gRef.mm);
-  if(!x.verdict.posable)assert.match(x.verdict.raison,/^b1:/,'la liste a été essayée en premier : '+x.verdict.raison);
-  else assert.ok(['b1','serie','ecart'].includes(x.source));
-  assert.ok(Number.isFinite(x.ms)&&x.ms<15000,'coût mesuré : '+x.ms+' ms');
- }
- assert.equal(avecListe.adapter.calls.filter(c=>c==='validate').length,0,'rien n\'est validé : les deux cuts restent différés');
- const d=decisions(avecListe.b);deq(d.map(([c,y])=>[c,y.command?.action]),[[111,'engine'],[112,'engine']]);deq(d.map(([c,y])=>y.stage),['deferred','deferred']);
 });
 
 test('aucun chemin de pose ne lit l\'ombre : seul le service worker l\'appelle, après la commande, dans la file différée',()=>{

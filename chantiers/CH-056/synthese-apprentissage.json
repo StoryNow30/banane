@@ -1,0 +1,2023 @@
+{
+ "temoin": {
+  "retenus": 0,
+  "retenusJuges": 0,
+  "retenusJustes": 0,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [],
+  "gagnes": 0,
+  "differes": 545,
+  "poses": 317,
+  "posesJuges": 10,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 8,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 0,
+    "differes": 124
+   },
+   "14": {
+    "retenus": 0,
+    "differes": 46
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 51,
+  "retenusJustesIC": null
+ },
+ "garde-livree": {
+  "retenus": 26,
+  "retenusJuges": 7,
+  "retenusJustes": 5,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/7490:nj",
+   "10/8173:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 570,
+  "poses": 292,
+  "posesJuges": 3,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 3,
+  "parPartie": {
+   "10": {
+    "retenus": 8,
+    "differes": 353
+   },
+   "13": {
+    "retenus": 9,
+    "differes": 132
+   },
+   "14": {
+    "retenus": 9,
+    "differes": 55
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.2,
+  "retenusJustesIC": [
+   35.9,
+   91.8
+  ]
+ },
+ "garde-r3-c1-a1-tout": {
+  "retenus": 18,
+  "retenusJuges": 4,
+  "retenusJustes": 3,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 562,
+  "poses": 300,
+  "posesJuges": 6,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 5,
+    "differes": 350
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 6,
+    "differes": 52
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.4,
+  "retenusJustesIC": [
+   30.1,
+   95.4
+  ]
+ },
+ "garde-r3-c1-a2-tout": {
+  "retenus": 19,
+  "retenusJuges": 4,
+  "retenusJustes": 3,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/7490:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 563,
+  "poses": 299,
+  "posesJuges": 6,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 6,
+    "differes": 351
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 6,
+    "differes": 52
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.4,
+  "retenusJustesIC": [
+   30.1,
+   95.4
+  ]
+ },
+ "garde-r3-c1-a3-tout": {
+  "retenus": 20,
+  "retenusJuges": 4,
+  "retenusJustes": 3,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 564,
+  "poses": 298,
+  "posesJuges": 6,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 7,
+    "differes": 352
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 6,
+    "differes": 52
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.4,
+  "retenusJustesIC": [
+   30.1,
+   95.4
+  ]
+ },
+ "garde-r1-c1-tout": {
+  "retenus": 20,
+  "retenusJuges": 4,
+  "retenusJustes": 3,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 564,
+  "poses": 298,
+  "posesJuges": 6,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 7,
+    "differes": 352
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 6,
+    "differes": 52
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.4,
+  "retenusJustesIC": [
+   30.1,
+   95.4
+  ]
+ },
+ "garde-r3-c2-a1-tout": {
+  "retenus": 20,
+  "retenusJuges": 4,
+  "retenusJustes": 3,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 564,
+  "poses": 298,
+  "posesJuges": 6,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 6,
+    "differes": 351
+   },
+   "13": {
+    "retenus": 8,
+    "differes": 131
+   },
+   "14": {
+    "retenus": 6,
+    "differes": 52
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.4,
+  "retenusJustesIC": [
+   30.1,
+   95.4
+  ]
+ },
+ "garde-r3-c2-a3-tout": {
+  "retenus": 27,
+  "retenusJuges": 7,
+  "retenusJustes": 5,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 571,
+  "poses": 291,
+  "posesJuges": 3,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 3,
+  "parPartie": {
+   "10": {
+    "retenus": 9,
+    "differes": 354
+   },
+   "13": {
+    "retenus": 9,
+    "differes": 132
+   },
+   "14": {
+    "retenus": 9,
+    "differes": 55
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.2,
+  "retenusJustesIC": [
+   35.9,
+   91.8
+  ]
+ },
+ "garde-r1-c2-tout": {
+  "retenus": 27,
+  "retenusJuges": 7,
+  "retenusJustes": 5,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 571,
+  "poses": 291,
+  "posesJuges": 3,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 3,
+  "parPartie": {
+   "10": {
+    "retenus": 9,
+    "differes": 354
+   },
+   "13": {
+    "retenus": 9,
+    "differes": 132
+   },
+   "14": {
+    "retenus": 9,
+    "differes": 55
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.2,
+  "retenusJustesIC": [
+   35.9,
+   91.8
+  ]
+ },
+ "garde-r3-c3-a1-tout": {
+  "retenus": 21,
+  "retenusJuges": 4,
+  "retenusJustes": 3,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 565,
+  "poses": 297,
+  "posesJuges": 6,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 7,
+    "differes": 352
+   },
+   "13": {
+    "retenus": 8,
+    "differes": 131
+   },
+   "14": {
+    "retenus": 6,
+    "differes": 52
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.4,
+  "retenusJustesIC": [
+   30.1,
+   95.4
+  ]
+ },
+ "garde-r3-c3-a2-tout": {
+  "retenus": 29,
+  "retenusJuges": 7,
+  "retenusJustes": 5,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/1430:nj",
+   "10/7490:nj",
+   "10/8173:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/138:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 573,
+  "poses": 289,
+  "posesJuges": 3,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 3,
+  "parPartie": {
+   "10": {
+    "retenus": 10,
+    "differes": 355
+   },
+   "13": {
+    "retenus": 10,
+    "differes": 133
+   },
+   "14": {
+    "retenus": 9,
+    "differes": 55
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.2,
+  "retenusJustesIC": [
+   35.9,
+   91.8
+  ]
+ },
+ "garde-r3-c3-a3-tout": {
+  "retenus": 32,
+  "retenusJuges": 7,
+  "retenusJustes": 5,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/1430:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/138:nj",
+   "13/218:nj",
+   "13/224*:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4137:nj",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/4893:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 576,
+  "poses": 286,
+  "posesJuges": 3,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 3,
+  "parPartie": {
+   "10": {
+    "retenus": 11,
+    "differes": 356
+   },
+   "13": {
+    "retenus": 10,
+    "differes": 133
+   },
+   "14": {
+    "retenus": 11,
+    "differes": 57
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.2,
+  "retenusJustesIC": [
+   35.9,
+   91.8
+  ]
+ },
+ "garde-r1-c3-tout": {
+  "retenus": 32,
+  "retenusJuges": 7,
+  "retenusJustes": 5,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/1430:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/138:nj",
+   "13/218:nj",
+   "13/224*:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4137:nj",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4284:nj",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/4893:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 1,
+  "differes": 576,
+  "poses": 286,
+  "posesJuges": 3,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 3,
+  "parPartie": {
+   "10": {
+    "retenus": 11,
+    "differes": 356
+   },
+   "13": {
+    "retenus": 10,
+    "differes": 133
+   },
+   "14": {
+    "retenus": 11,
+    "differes": 57
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 56.2,
+  "retenusJustesIC": [
+   35.9,
+   91.8
+  ]
+ },
+ "garde-r3-c1-a1-pn-adv": {
+  "retenus": 14,
+  "retenusJuges": 2,
+  "retenusJustes": 1,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4891:nj"
+  ],
+  "gagnes": 1,
+  "differes": 558,
+  "poses": 304,
+  "posesJuges": 8,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 7,
+  "parPartie": {
+   "10": {
+    "retenus": 5,
+    "differes": 350
+   },
+   "13": {
+    "retenus": 5,
+    "differes": 128
+   },
+   "14": {
+    "retenus": 4,
+    "differes": 50
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 47.1,
+  "retenusJustesIC": [
+   9.5,
+   90.5
+  ]
+ },
+ "garde-r3-c1-a2-pn-adv": {
+  "retenus": 15,
+  "retenusJuges": 2,
+  "retenusJustes": 1,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/7490:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4891:nj"
+  ],
+  "gagnes": 1,
+  "differes": 559,
+  "poses": 303,
+  "posesJuges": 8,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 7,
+  "parPartie": {
+   "10": {
+    "retenus": 6,
+    "differes": 351
+   },
+   "13": {
+    "retenus": 5,
+    "differes": 128
+   },
+   "14": {
+    "retenus": 4,
+    "differes": 50
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 47.1,
+  "retenusJustesIC": [
+   9.5,
+   90.5
+  ]
+ },
+ "garde-r3-c1-a3-pn-adv": {
+  "retenus": 16,
+  "retenusJuges": 2,
+  "retenusJustes": 1,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4891:nj"
+  ],
+  "gagnes": 1,
+  "differes": 560,
+  "poses": 302,
+  "posesJuges": 8,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 7,
+  "parPartie": {
+   "10": {
+    "retenus": 7,
+    "differes": 352
+   },
+   "13": {
+    "retenus": 5,
+    "differes": 128
+   },
+   "14": {
+    "retenus": 4,
+    "differes": 50
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 47.1,
+  "retenusJustesIC": [
+   9.5,
+   90.5
+  ]
+ },
+ "garde-r1-c1-pn-adv": {
+  "retenus": 16,
+  "retenusJuges": 2,
+  "retenusJustes": 1,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4891:nj"
+  ],
+  "gagnes": 1,
+  "differes": 560,
+  "poses": 302,
+  "posesJuges": 8,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 7,
+  "parPartie": {
+   "10": {
+    "retenus": 7,
+    "differes": 352
+   },
+   "13": {
+    "retenus": 5,
+    "differes": 128
+   },
+   "14": {
+    "retenus": 4,
+    "differes": 50
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 47.1,
+  "retenusJustesIC": [
+   9.5,
+   90.5
+  ]
+ },
+ "garde-r3-c2-a1-pn-adv": {
+  "retenus": 16,
+  "retenusJuges": 2,
+  "retenusJustes": 1,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4891:nj"
+  ],
+  "gagnes": 1,
+  "differes": 560,
+  "poses": 302,
+  "posesJuges": 8,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 7,
+  "parPartie": {
+   "10": {
+    "retenus": 6,
+    "differes": 351
+   },
+   "13": {
+    "retenus": 6,
+    "differes": 129
+   },
+   "14": {
+    "retenus": 4,
+    "differes": 50
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 47.1,
+  "retenusJustesIC": [
+   9.5,
+   90.5
+  ]
+ },
+ "garde-r3-c2-a2-pn-adv": {
+  "retenus": 21,
+  "retenusJuges": 4,
+  "retenusJustes": 2,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/7490:nj",
+   "10/8173:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4891:nj",
+   "14/4892:nj"
+  ],
+  "gagnes": 1,
+  "differes": 565,
+  "poses": 297,
+  "posesJuges": 6,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 8,
+    "differes": 353
+   },
+   "13": {
+    "retenus": 6,
+    "differes": 129
+   },
+   "14": {
+    "retenus": 7,
+    "differes": 53
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 39,
+  "retenusJustesIC": [
+   15,
+   85
+  ]
+ },
+ "garde-r3-c2-a3-pn-adv": {
+  "retenus": 22,
+  "retenusJuges": 4,
+  "retenusJustes": 2,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4891:nj",
+   "14/4892:nj"
+  ],
+  "gagnes": 1,
+  "differes": 566,
+  "poses": 296,
+  "posesJuges": 6,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 9,
+    "differes": 354
+   },
+   "13": {
+    "retenus": 6,
+    "differes": 129
+   },
+   "14": {
+    "retenus": 7,
+    "differes": 53
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 39,
+  "retenusJustesIC": [
+   15,
+   85
+  ]
+ },
+ "garde-r1-c2-pn-adv": {
+  "retenus": 22,
+  "retenusJuges": 4,
+  "retenusJustes": 2,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4891:nj",
+   "14/4892:nj"
+  ],
+  "gagnes": 1,
+  "differes": 566,
+  "poses": 296,
+  "posesJuges": 6,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 9,
+    "differes": 354
+   },
+   "13": {
+    "retenus": 6,
+    "differes": 129
+   },
+   "14": {
+    "retenus": 7,
+    "differes": 53
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 39,
+  "retenusJustesIC": [
+   15,
+   85
+  ]
+ },
+ "garde-r3-c3-a1-pn-adv": {
+  "retenus": 17,
+  "retenusJuges": 2,
+  "retenusJustes": 1,
+  "retenusFaux": 1,
+  "retenus50": 1,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4144:nj",
+   "14/4891:nj"
+  ],
+  "gagnes": 1,
+  "differes": 561,
+  "poses": 301,
+  "posesJuges": 8,
+  "poses50": 1,
+  "posesFaux": 1,
+  "posesJustes": 7,
+  "parPartie": {
+   "10": {
+    "retenus": 7,
+    "differes": 352
+   },
+   "13": {
+    "retenus": 6,
+    "differes": 129
+   },
+   "14": {
+    "retenus": 4,
+    "differes": 50
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 47.1,
+  "retenusJustesIC": [
+   9.5,
+   90.5
+  ]
+ },
+ "garde-r3-c3-a2-pn-adv": {
+  "retenus": 24,
+  "retenusJuges": 4,
+  "retenusJustes": 2,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/1430:nj",
+   "10/7490:nj",
+   "10/8173:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/138:nj",
+   "13/218:nj",
+   "13/224:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4891:nj",
+   "14/4892:nj"
+  ],
+  "gagnes": 1,
+  "differes": 568,
+  "poses": 294,
+  "posesJuges": 6,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 10,
+    "differes": 355
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 7,
+    "differes": 53
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 39,
+  "retenusJustesIC": [
+   15,
+   85
+  ]
+ },
+ "garde-r3-c3-a3-pn-adv": {
+  "retenus": 27,
+  "retenusJuges": 4,
+  "retenusJustes": 2,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/1430:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/138:nj",
+   "13/218:nj",
+   "13/224*:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4137:nj",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/4893:nj"
+  ],
+  "gagnes": 1,
+  "differes": 571,
+  "poses": 291,
+  "posesJuges": 6,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 11,
+    "differes": 356
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 9,
+    "differes": 55
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 39,
+  "retenusJustesIC": [
+   15,
+   85
+  ]
+ },
+ "garde-r1-c3-pn-adv": {
+  "retenus": 27,
+  "retenusJuges": 4,
+  "retenusJustes": 2,
+  "retenusFaux": 2,
+  "retenus50": 2,
+  "retenusCuts": [
+   "10/1429:nj",
+   "10/1430:nj",
+   "10/7490:nj",
+   "10/8172:nj",
+   "10/8173:nj",
+   "10/8174:nj",
+   "10/8200:nj",
+   "10/8201*:nj",
+   "10/8202*:nj",
+   "10/8203*:nj",
+   "10/8204:nj",
+   "13/137:nj",
+   "13/138:nj",
+   "13/218:nj",
+   "13/224*:nj",
+   "13/225*:nj",
+   "13/228:nj",
+   "13/394:nj",
+   "14/171:4.8",
+   "14/4135:60.3",
+   "14/4136:60.1",
+   "14/4137:nj",
+   "14/4144:nj",
+   "14/4145:4.9",
+   "14/4891:nj",
+   "14/4892:nj",
+   "14/4893:nj"
+  ],
+  "gagnes": 1,
+  "differes": 571,
+  "poses": 291,
+  "posesJuges": 6,
+  "poses50": 0,
+  "posesFaux": 0,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 11,
+    "differes": 356
+   },
+   "13": {
+    "retenus": 7,
+    "differes": 130
+   },
+   "14": {
+    "retenus": 9,
+    "differes": 55
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 39,
+  "retenusJustesIC": [
+   15,
+   85
+  ]
+ },
+ "garde-r3-c1-a1-hors-pn-adv": {
+  "retenus": 4,
+  "retenusJuges": 2,
+  "retenusJustes": 2,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 549,
+  "poses": 313,
+  "posesJuges": 8,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 2,
+    "differes": 126
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 59.1,
+  "retenusJustesIC": [
+   34.2,
+   100
+  ]
+ },
+ "garde-r3-c1-a2-hors-pn-adv": {
+  "retenus": 4,
+  "retenusJuges": 2,
+  "retenusJustes": 2,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 549,
+  "poses": 313,
+  "posesJuges": 8,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 2,
+    "differes": 126
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 59.1,
+  "retenusJustesIC": [
+   34.2,
+   100
+  ]
+ },
+ "garde-r3-c1-a3-hors-pn-adv": {
+  "retenus": 4,
+  "retenusJuges": 2,
+  "retenusJustes": 2,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 549,
+  "poses": 313,
+  "posesJuges": 8,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 2,
+    "differes": 126
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 59.1,
+  "retenusJustesIC": [
+   34.2,
+   100
+  ]
+ },
+ "garde-r1-c1-hors-pn-adv": {
+  "retenus": 4,
+  "retenusJuges": 2,
+  "retenusJustes": 2,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 549,
+  "poses": 313,
+  "posesJuges": 8,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 2,
+    "differes": 126
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 59.1,
+  "retenusJustesIC": [
+   34.2,
+   100
+  ]
+ },
+ "garde-r3-c2-a1-hors-pn-adv": {
+  "retenus": 4,
+  "retenusJuges": 2,
+  "retenusJustes": 2,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 549,
+  "poses": 313,
+  "posesJuges": 8,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 2,
+    "differes": 126
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 59.1,
+  "retenusJustesIC": [
+   34.2,
+   100
+  ]
+ },
+ "garde-r3-c2-a2-hors-pn-adv": {
+  "retenus": 5,
+  "retenusJuges": 3,
+  "retenusJustes": 3,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 550,
+  "poses": 312,
+  "posesJuges": 7,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 3,
+    "differes": 127
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 64.1,
+  "retenusJustesIC": [
+   43.8,
+   100
+  ]
+ },
+ "garde-r3-c2-a3-hors-pn-adv": {
+  "retenus": 5,
+  "retenusJuges": 3,
+  "retenusJustes": 3,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 550,
+  "poses": 312,
+  "posesJuges": 7,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 3,
+    "differes": 127
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 64.1,
+  "retenusJustesIC": [
+   43.8,
+   100
+  ]
+ },
+ "garde-r1-c2-hors-pn-adv": {
+  "retenus": 5,
+  "retenusJuges": 3,
+  "retenusJustes": 3,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 550,
+  "poses": 312,
+  "posesJuges": 7,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 3,
+    "differes": 127
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 64.1,
+  "retenusJustesIC": [
+   43.8,
+   100
+  ]
+ },
+ "garde-r3-c3-a1-hors-pn-adv": {
+  "retenus": 4,
+  "retenusJuges": 2,
+  "retenusJustes": 2,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 549,
+  "poses": 313,
+  "posesJuges": 8,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 6,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 2,
+    "differes": 126
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 59.1,
+  "retenusJustesIC": [
+   34.2,
+   100
+  ]
+ },
+ "garde-r3-c3-a2-hors-pn-adv": {
+  "retenus": 5,
+  "retenusJuges": 3,
+  "retenusJustes": 3,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 550,
+  "poses": 312,
+  "posesJuges": 7,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 3,
+    "differes": 127
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 64.1,
+  "retenusJustesIC": [
+   43.8,
+   100
+  ]
+ },
+ "garde-r3-c3-a3-hors-pn-adv": {
+  "retenus": 5,
+  "retenusJuges": 3,
+  "retenusJustes": 3,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 550,
+  "poses": 312,
+  "posesJuges": 7,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 3,
+    "differes": 127
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 64.1,
+  "retenusJustesIC": [
+   43.8,
+   100
+  ]
+ },
+ "garde-r1-c3-hors-pn-adv": {
+  "retenus": 5,
+  "retenusJuges": 3,
+  "retenusJustes": 3,
+  "retenusFaux": 0,
+  "retenus50": 0,
+  "retenusCuts": [
+   "13/542:2.8",
+   "13/543:1.8",
+   "13/2491:nj",
+   "14/4284:nj",
+   "14/5341:2.5"
+  ],
+  "gagnes": 0,
+  "differes": 550,
+  "poses": 312,
+  "posesJuges": 7,
+  "poses50": 2,
+  "posesFaux": 2,
+  "posesJustes": 5,
+  "parPartie": {
+   "10": {
+    "retenus": 0,
+    "differes": 345
+   },
+   "13": {
+    "retenus": 3,
+    "differes": 127
+   },
+   "14": {
+    "retenus": 2,
+    "differes": 48
+   },
+   "15": {
+    "retenus": 0,
+    "differes": 30
+   }
+  },
+  "borne50": 64.1,
+  "retenusJustesIC": [
+   43.8,
+   100
+  ]
+ }
+}

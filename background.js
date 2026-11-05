@@ -1761,7 +1761,8 @@ function rechercheLargeCommande(command,lotObservation,proposal,before,capture){
  * (`actif:false`) : la commande est rendue telle quelle (le même objet), rien n'est écrit. Une panne laisse la commande telle quelle. */
 function gardeApresDiffereCommande(command,lotObservation,proposal){
  const GA=globalThis.BananeGardeApresDiffere,R=GA?.reglage(globalThis.BananeSettings?.lot?.gardeApresDiffere);
- if(!R||R.ok&&!R.actif||!command)return command;
+ if(!R||R.ok&&!R.actif&&!R.ombre||!command)return command;
+ if(R.ok&&!R.actif&&R.ombre)return gardeApresDiffereOmbre(command,lotObservation,R,GA);
  try{const SIDES=['left','right'],b=engine.s.batch,identity=engine.s.before?.identity??null;
   const valide=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
   if(!b||!Number.isInteger(identity?.cut))return command;
@@ -1784,6 +1785,21 @@ function gardeApresDiffereCommande(command,lotObservation,proposal){
    if(passeDiffReglage().mode!=='off'){const z=l1Zone(identity);l1ResteNoter(identity,{identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},zone:z?.zone??'abords',adv:z?.adv??[],regle:false});}}
   return suivant.rendre(d,true);
  }catch(e){journalerSimple('garde-apres-differe',{identity:{part:engine?.s?.before?.identity?.part??null,cut:engine?.s?.before?.identity?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)});return command;}}
+/* D-288 — GARDE « APRÈS UN DIFFÉRÉ » EN OMBRE (`lot.gardeApresDiffere` = { actif:false, ombre:true }) : la commande n'est JAMAIS changée ; sur
+ * un cut que le lot valide et que la garde aurait différé, un événement `garde-apres-differe-ombre` (cut, appuis, différés voisins, commande
+ * gardée) permet de juger ces poses contre l'Écho et la relecture (qui relit déjà ±2 cuts autour de chaque différé). Une panne ne change rien. */
+function gardeApresDiffereOmbre(command,lotObservation,R,GA){
+ try{const SIDES=['left','right'],b=engine.s.batch,identity=engine.s.before?.identity??null;
+  const valide=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
+  if(!valide||!b||!Number.isInteger(identity?.cut))return command;
+  const appuis=Array.isArray(lotObservation?.anchorsUsed)?lotObservation.anchorsUsed.length
+   :Number.isInteger(lotObservation?.l1?.chaine?.appuis)?lotObservation.l1.chaine.appuis:null;
+  const differesLot=(b.deferred||[]).filter(d=>(d?.identity?.part??null)===(identity.part??null)).map(d=>d?.cut??d?.identity?.cut).filter(Number.isInteger);
+  const j=GA.juger({cut:identity.cut,differesLot,appuis},R);
+  if(j.aurait)journalerSimple('garde-apres-differe-ombre',{identity:{part:identity.part??null,cut:identity.cut},version:GA.VERSION,regle:j.regle,coupures:R.coupures,appuisMin:R.appuisMin,
+   appuis:j.appuis,voisinsDifferes:j.voisinsDifferes,etage:lotObservation?.stage??null,commandeGardee:{action:command.action,reason:command.reason??null}});
+ }catch(e){try{journalerSimple('garde-apres-differe-ombre',{identity:{part:engine?.s?.before?.identity?.part??null,cut:engine?.s?.before?.identity?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,200)});}catch{}}
+ return command;}
 /* Racines sans appui créées par la garde (demande de l'intégrateur, 29/10) : sur un cut qui a, dans la fenêtre d'appuis du lot (`gap` cuts avant
  * lui, src/lot-decision.js), au moins un cut DIFFÉRÉ PAR LA GARDE, l'événement `garde-apres-differe-suivant` donne ses appuis AVEC la garde (mesurés :
  * `anchorsUsed`) et SANS elle en borne haute (`appuisSansGardeMax` = min(`anchors`, appuis + cuts de la garde dans la fenêtre) : si chacun avait été

@@ -8,7 +8,7 @@ require('./relecture-reglable.cjs');   /* test 27 : les empreintes de base de ce
 const {SCOPE,production,base,K,S,EsvTrou,attendre,ev,decisions}=require('./lot-profil.cjs');
 async function lotGarde({garde,sansModule=false,profil='actuel',debut=111,fin=116}={}){
  const adapter=new EsvTrou([]),b=production({adapter});
- const lot={...S.lot,...(profil?{profil}:{})};if(garde!==undefined)lot.gardeApresDiffere=garde;
+ const lot={...S.lot,...(profil?{profil}:{})};lot.gardeApresDiffere=garde!==undefined?garde:{actif:true,ombre:false,regle:'R3',coupures:2,appuisMin:2};
  b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},lot};
  if(sansModule)b.ctx.BananeGardeApresDiffere=undefined;
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});

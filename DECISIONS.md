@@ -3405,4 +3405,9 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Effet : manifeste des parties, projet 12 (étiquette de rejeu), parties 8 à 12 en apprentissage. Elles avaient été jugées une fois en examen à paramètres figés (CH-053-M, CH-056) ; ces chiffres d'examen restent valables, mais ces parties ne peuvent plus juger un réglage.
 - Conséquence : aucune partie jugée par l'Écho ne reste réservée. La prochaine partie reçue avec Écho sert d'examen ; d'ici là, les gains se mesurent en validation croisée par partie (chaque partie jugée par un modèle appris sur les autres), PROBABLE au mieux.
 - NON couvert : l'activation de paramètres ou de règles appris (règle de voie b1-écart, garde limitée aux PN/ADV, paramètres GCV2) ; chacune demande sa décision écrite, avec ses chiffres.
-- Le numéro suivant est D-288.
+
+## D-288 — Garde « après un différé » retirée partout, gardée en ombre (opérateur, 05/11)
+- Ordre : à la question « je la retire où ? » (garder PN/aiguillages, retirer partout, ne rien changer), réponse « Retirer partout » ; puis « le but c'est qu'elle apprenne toutes ses erreurs sans diminuer sa prod ».
+- Effet : `lot.gardeApresDiffere` = { actif:false, ombre:true }. Aucun cut n'est plus différé par la garde : les commandes envoyées à ESV sont celles du lot sans la garde (essai `garde-apres-differe-ombre-sw`, empreinte identique). Le cut qu'elle aurait différé est consigné (`garde-apres-differe-ombre`) ; la relecture relit déjà ±2 cuts autour de chaque différé, et l'Écho de l'opérateur juge ces poses : elles alimentent l'apprentissage (CH-057).
+- Coût connu (CH-056, ÉTABLI) : les 4 poses fausses que la garde évitait, toutes en PN ou ADV sur des séries à voie décalée (2 à 60 mm, 2 à 33-35 mm), ne le sont plus. Gain : ~8 cuts de moins à reprendre par lot de 5 parties (sur les données du 05/11). Suivi : les événements d'ombre jugés par l'Écho sur les 2 prochains lots.
+- Le numéro suivant est D-289.
