@@ -1389,6 +1389,7 @@ async function recaptureVide(args,r){const cfg=globalThis.BananeSettings?.lot?.r
  * ici seulement : l'état par lot, l'attente et la recapture, le rechargement de la page quand une Constellation peut reprendre le lot
  * (fileRepriseApresRechargement, CH-043), l'événement `serie-captures-vides`. Aucune pose, aucune validation, aucune écriture : un cut laissé vide
  * suit son sort d'avant (différé). Le rechargement n'a pas été essayé sur un vrai ESV (SUPPOSÉ qu'il relance le chargeur de points). */
+const SERIE_VIDES_RECHARGEMENT_MS=1500;
 let serieVides=null;
 function serieVidesEtat(){const G=globalThis.BananeSerieCapturesVides,b=engine?.s?.batch;if(!G||!b?.id)return null;
  if(!serieVides||serieVides.lotId!==b.id)serieVides={lotId:b.id,etat:G.creer(globalThis.BananeSettings?.lot?.serieCapturesVides),rechargementEnCours:false};
@@ -1413,8 +1414,14 @@ async function gardeSerieVides(args,r){const G=globalThis.BananeSerieCapturesVid
  if(d.action==='recharger'){await dire(d);
   engine.s.notice=`ESV ne charge plus les points (${e.vides} captures vides de suite) : Ariane recharge la page ; la Constellation reprend le lot.`;await engine.save().catch(()=>{});
   sv.rechargementEnCours=true;
-  try{await chrome.tabs.reload(selectedTab);}catch(err){sv.rechargementEnCours=false;await dire({action:'erreur',motif:'rechargement'},{erreur:String(err?.message||err).slice(0,120)});}
-  return best;}
+  /* L'erreur ci-dessous met d'abord le lot en « adaptateur sans réponse » (src/engine.js, état PAUSED_ADAPTER_UNRESPONSIVE) ; la page n'est rechargée
+   * qu'ensuite, le moteur étant au repos (mesuré en maquette : rechargée pendant la commande, la reprise de la Constellation abandonnait « autre
+   * activité en cours »). La Constellation reprend alors seule le lot (fileRepriseApresRechargement, CH-043) et recapture le cut en cours. */
+  const onglet=selectedTab;
+  setTimeout(()=>{Promise.resolve().then(()=>chrome.tabs.reload(onglet)).catch(err=>{sv.rechargementEnCours=false;dire({action:'erreur',motif:'rechargement'},{erreur:String(err?.message||err).slice(0,120)});
+    /* Rechargement impossible : le lot reste en pause reprenable (« adaptateur sans réponse ») ; rien n'est posé ; l'opérateur rafraîchit ESV et clique sur Reprendre. */
+    if(engine?.s?.batch?.id===b.id){engine.s.notice=`ESV ne charge plus les points (${e.vides} captures vides de suite) et Ariane n'a pas pu recharger la page : rafraîchis ESV (F5) puis clique sur Reprendre.`;void engine.save().catch(()=>{});}});},SERIE_VIDES_RECHARGEMENT_MS);
+  throw Object.assign(Error('Adaptateur ESV sans réponse : page ESV rechargée par Ariane (série de captures vides) ; la Constellation reprend le lot.'),{code:'ESV_PAGE_ABSENTE',serieCapturesVides:true});}
  await dire(d);return best;}
 adapter.capture=async(...args)=>{let r0;try{r0=await captureESV(...args);}catch(e){throw (await partieChangeeParEsv(e))||e;}   /* CH-039 */
  const r=await gardeSerieVides(args,await recaptureVide(args,r0)),c=clicHumainDuLot();

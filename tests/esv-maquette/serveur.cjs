@@ -15,7 +15,8 @@
  *   GET  /maquette/ept-data/<part>/<cut>/noeuds.json   nœuds de points d'un cut (chargés par la page AU CHARGEMENT DU CUT, comme
  *        Potree charge ses nœuds ; le chemin `ept-data` est celui que l'observateur 4.9 classe « ressource de points »)
  *   GET/POST /maquette/pannes              pannes simulées (JSON ; POST remplace) : ecritureRefusee {cuts|'toutes', http}, ecritureLenteMs,
- *        listeIllisible, railsAbsents {cuts}, nuageInstable {cuts, dureeMs}, nuageVide {cuts}, changementPartie {apresCut}
+ *        listeIllisible, railsAbsents {cuts}, nuageInstable {cuts, dureeMs}, nuageVide {cuts}, nuageSansPoints {cuts} (CH-051 : les nœuds
+ *        arrivent, mais sans aucun point près des rails, comme pendant le blocage du chargeur d'ESV du 04/11), changementPartie {apresCut}
  *   GET  /maquette/journal              {ecritures:[…], requetes:[…], refus:[…]}
  *   POST /maquette/reset                vide le journal et les statuts modifiés
  */
@@ -53,7 +54,10 @@ function demarrer(options={}){
       let m=/^\/maquette\/ept-data\/(s\d+)\/(\d+)\/(\d+)\/noeuds\.json$/.exec(p);
       if(m){const cle=[...idScenario].find(([,id])=>id===m[1])?.[0],s=cle!==undefined?scenarios.get(cle):null,part=Number(m[2]),cut=Number(m[3]);
         const c=s?.parties.find(x=>x.part===part)?.cuts.find(x=>x.cut===cut);if(!c)return json(res,404,{error:'cut inconnu pour ce scénario'});
-        return json(res,200,{part,cut,noeuds:concerne(pannes.nuageVide,cut)?[]:c.noeuds});}
+        /* nuageSansPoints : chaque nœud ne garde que ses trois points de remplissage loin des rails (ceux qu'un nœud vide a déjà, tests/esv-maquette/scenario.cjs) :
+         * la page a des nœuds, la capture d'Ariane n'a aucun point dans la découpe. */
+        const sansPoints=c.noeuds.map((n,i)=>({source:n.source,positions:[12+i,20,-3, 12.5+i,20.5,-3.2, 13+i,21,-2.8],intensite:[],classe:[]}));
+        return json(res,200,{part,cut,noeuds:concerne(pannes.nuageVide,cut)?[]:concerne(pannes.nuageSansPoints,cut)?sansPoints:c.noeuds});}
       if(p==='/maquette/pannes'){if(req.method==='POST'){let brut;try{brut=JSON.parse(Buffer.concat(corps).toString('utf8')||'{}');}catch(e){return json(res,400,{error:'pannes : JSON invalide'});}
           pannes=normaliser(brut);journal.refus.length=0;lecturesListe=0;}
         return json(res,200,pannes);}
