@@ -3377,4 +3377,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Ordre : « quand je te redemande un zip, tu me donnes le tout dernier mis à jour sans bug ». Cause : deux paquets de numéros identiques (« 5 ») et de même nom ont été envoyés à des moments différents ; l'opérateur ne pouvait pas savoir lequel tournait.
 - Règle : à chaque demande de zip, l'intégrateur le fabrique depuis la tête du tronc après un verify complet vert, le nomme `ariane-v5-<commit>.zip` (la version interne reste « 5 », D-276) et dit en une ligne ce qu'il contient de nouveau, son empreinte et ce qui reste ouvert. « Sans bug » s'entend « sans bug connu, essais verts ».
 - À faire dans le lot suivant : écrire le commit dans le journal et sur le panneau, pour que les exports disent quel paquet a tourné.
-- Le numéro suivant est D-283.
+
+## D-283 — Rechargement de la page ESV par Ariane quand ESV ne charge plus les points (opérateur, 05/11)
+- Ordre : « oui go, je valide la décision a » (rapport CH-051 § 5 a : autoriser Ariane à recharger la page ESV d'elle-même pendant un lot en Constellation quand ESV ne charge plus les points).
+- Constat ÉTABLI (journal du 04/11, CH-051) : deux séries de captures à 0 point, 362 cuts différés, 35 minutes ; les deux séries commencent 10 s et 2 s après une requête de points en échec (502) ; hors blocage, aucune suite de 3 captures vides ou plus sur 7 931 captures.
+- Décision : la garde « série de captures vides » (`lot.serieCapturesVides`, `src/serie-captures-vides.js`) peut être ALLUMÉE par défaut une fois son essai en maquette (panne « nuage sans point » plus 502) vert et le verify complet vert. Conditions inchangées : seuil de 3 captures vides d'affilée alors que la page avait des points et que les requêtes de points se sont arrêtées ; au plus un rechargement par série ; rechargement seulement si une Constellation peut reprendre et que rien n'est posé ; jamais de SKIP ni de validation d'un cut non résolu (D-264).
+- Retour arrière : le réglage `lot.serieCapturesVides.actif` repasse à `false`.
+- Le numéro suivant est D-284.
