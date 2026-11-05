@@ -188,3 +188,12 @@ test('echantillon : l’ordre du tirage permet de juger par tranches (les 125 pr
   assert.equal(t.length, 239);
   assert.deepEqual([...S.echantillonPoses(cuts, 125, 9, { ordreDuTirage: true })], t.slice(0, 125), 'même graine : la tranche A est le début du tirage complet');
 });
+
+test('simuler : avec des taux fixes, rien n’est appris de la partie jugée', () => {
+  const o = jeuFictif().filter(x => x.part === 2);
+  const sansAutre = S.simuler(o, { coutSaut: 0 });
+  assert.equal(sansAutre.file.cuts, 3, 'validation croisée sans autre partie : aucun taux, seuls les différés restent');
+  const fixes = S.simuler(o.concat([ob(2, 60, 'vert-fort', true, 2)]), { coutSaut: 0, tauxFixes: F.TAUX_DEFAUT });
+  assert.equal(fixes.tauxFixes, true);
+  assert.equal(fixes.file.cuts, 4, 'le vert fort entre d’après le taux du 04/11');
+});

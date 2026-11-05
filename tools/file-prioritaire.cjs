@@ -4,13 +4,14 @@
  * file-prioritaire.cjs — CH-053-S (cible T2) : SIMULATION hors ligne de l'ordre de travail de l'opérateur, et FILE PRIORITAIRE des cuts à corriger.
  * Lecture seule, aucune dépendance, aucune écriture hors `--json`.
  *
- *   node tools/file-prioritaire.cjs simuler --table T.json [--table …] --echo DOSSIER [--saut S] [--plancher P] [--json SORTIE.json]
+ *   node tools/file-prioritaire.cjs simuler --table T.json [--table …] --echo DOSSIER [--saut S] [--plancher P] [--taux-defaut] [--json SORTIE.json]
  *   node tools/file-prioritaire.cjs file    --table T.json [--table …] [--echo DOSSIER] [--verts V.json] [--critere informatif|avec-traits] [--ordre rendement|balayage] [--json SORTIE.json]
  *   node tools/file-prioritaire.cjs echantillon --table T.json --partie N --taille 125 --graine G [--json SORTIE.json]
  *
  * simuler : compare, sur les cuts que l'opérateur a visités (seuls à avoir un résultat connu), l'ordre ACTUEL (ordre réel des visites) à la FILE
  *   (src/file-prioritaire.js) : informatifs (paire qualifiée ET correction de plus de 10 mm), temps de visite, informatifs par minute. Les taux de classe
  *   de chaque partie sont appris SANS cette partie (validation croisée par partie). Un saut vers un cut non voisin coûte `--saut` secondes
+ *   `--taux-defaut` : juge la file avec les taux mesurés le 04/11 (src/file-prioritaire.js), sans rien apprendre de la partie jugée (parties réservées).
  *   (6 s par défaut : écart mesuré entre visites après saut et visites voisines, le 04/11). Sorties : comptes, secondes, rapports ; aucun numéro de cut.
  * file : la file d'une partie, d'après les tables de jointure (classe, motif de différé) ; les cuts déjà jugés par l'Écho (`--echo`) sont écartés ;
  *   les verts viennent de `--verts` (liste [{part, cut, score}] de src/verts-a-controler.js). Sortie avec numéros de cut : elle reste hors dépôt.
@@ -46,14 +47,15 @@ function parcours(liste, saut) {
   return { cuts: liste.length, informatifs: inf, tempsS: r1(t), parMin: t > 0 ? r1(inf / t * 60) : 0 };
 }
 
-function simuler(obs, { coutSaut = COUT_SAUT_DEFAUT_S, plancher = F.PLANCHER_PAR_MIN } = {}) {
+function simuler(obs, { coutSaut = COUT_SAUT_DEFAUT_S, plancher = F.PLANCHER_PAR_MIN, tauxFixes = null } = {}) {
   const parties = [...new Set(obs.map(o => o.part))].sort((a, b) => a - b);
   const actuelListe = obs.slice().sort((a, b) => a.premiereVisite - b.premiereVisite);
   const tActuel = actuelListe.reduce((a, o) => a + o.coutS, 0), infActuel = actuelListe.filter(o => o.informatif).length;
   const actuel = { cuts: actuelListe.length, informatifs: infActuel, tempsS: r1(tActuel), parMin: tActuel > 0 ? r1(infActuel / tActuel * 60) : 0 };
   const file = [], tete = [];
   for (const p of parties) {
-    const taux = F.apprendreTaux(obs.filter(o => o.part !== p));
+    /* `tauxFixes` : jugement d'une partie réservée, les taux (appris ailleurs) ne bougent pas ; sinon validation croisée par partie. */
+    const taux = tauxFixes || F.apprendreTaux(obs.filter(o => o.part !== p));
     const deP = obs.filter(o => o.part === p), parCle = new Map(deP.map(o => [o.cut, o]));
     const R = F.ordonner(deP.map(candidatDe), { taux, plancherParMin: plancher });
     for (const e of R.entrees) {
@@ -67,7 +69,7 @@ function simuler(obs, { coutSaut = COUT_SAUT_DEFAUT_S, plancher = F.PLANCHER_PAR
   const borne = { cuts: infos.length, informatifs: infos.length, tempsS: r1(tB), parMin: tB > 0 ? r1(infos.length / tB * 60) : 0 };
   const F1 = avec(file);
   const balayage = tete.slice().sort((a, b) => a.part - b.part || a.cut - b.cut);
-  return { coutSautS: coutSaut, plancherParMin: plancher, actuel, file: F1, tete: avec(tete), teteBalayage: avec(balayage), borne,
+  return { coutSautS: coutSaut, plancherParMin: plancher, tauxFixes: !!tauxFixes, actuel, file: F1, tete: avec(tete), teteBalayage: avec(balayage), borne,
     perdus: { informatifs: infActuel - F1.informatifs, cuts: actuel.cuts - F1.cuts, tempsEconomiseS: r1(tActuel - F1.tempsS) } };
 }
 
@@ -167,12 +169,12 @@ function construireJeu(tables, dossiersEcho) {
 
 /* ------------------------------------------------------------------ CLI */
 function lireArguments(argv) {
-  const a = { cmd: argv[0], tables: [], echo: [], saut: COUT_SAUT_DEFAUT_S, plancher: F.PLANCHER_PAR_MIN, json: null, verts: null, partie: null, taille: 125, graine: null, critere: 'informatif', ordre: 'rendement' };
+  const a = { cmd: argv[0], tables: [], echo: [], saut: COUT_SAUT_DEFAUT_S, plancher: F.PLANCHER_PAR_MIN, json: null, verts: null, tauxDefaut: false, partie: null, taille: 125, graine: null, critere: 'informatif', ordre: 'rendement' };
   for (let i = 1; i < argv.length; i++) {
     const x = argv[i];
     if (x === '--table') a.tables.push(argv[++i]); else if (x === '--echo') a.echo.push(argv[++i]);
     else if (x === '--saut') a.saut = Number(argv[++i]); else if (x === '--plancher') a.plancher = Number(argv[++i]);
-    else if (x === '--json') a.json = argv[++i]; else if (x === '--verts') a.verts = argv[++i]; else if (x === '--critere') a.critere = argv[++i]; else if (x === '--ordre') a.ordre = argv[++i]; else if (x === '--partie') a.partie = Number(argv[++i]); else if (x === '--taille') a.taille = Number(argv[++i]); else if (x === '--graine') a.graine = Number(argv[++i]);
+    else if (x === '--json') a.json = argv[++i]; else if (x === '--verts') a.verts = argv[++i]; else if (x === '--critere') a.critere = argv[++i]; else if (x === '--taux-defaut') a.tauxDefaut = true; else if (x === '--ordre') a.ordre = argv[++i]; else if (x === '--partie') a.partie = Number(argv[++i]); else if (x === '--taille') a.taille = Number(argv[++i]); else if (x === '--graine') a.graine = Number(argv[++i]);
     else throw Error(`option inconnue : ${x}`);
   }
   if (!['simuler', 'file', 'echantillon'].includes(a.cmd)) throw Error('commande : simuler | file | echantillon');
@@ -182,7 +184,7 @@ function lireArguments(argv) {
 }
 const f1 = v => String(v).replace('.', ',');
 function texteSimulation(S, J) {
-  const L = [`Simulation de l'ordre de travail (${J.obs.length} cuts visités, ${J.ignores} hors table ; saut ${S.coutSautS} s ; plancher ${S.plancherParMin}/min ; taux appris sans la partie jugée).`];
+  const L = [`Simulation de l'ordre de travail (${J.obs.length} cuts visités, ${J.ignores} hors table ; saut ${S.coutSautS} s ; plancher ${S.plancherParMin}/min ; ${S.tauxFixes ? 'taux fixes du 04/11, rien appris de ces parties' : 'taux appris sans la partie jugée'}).`];
   for (const [n, k] of [['actuel (ordre réel)', 'actuel'], ['file complète', 'file'], ['tête de file', 'tete'], ['tête en balayage', 'teteBalayage'], ['borne haute', 'borne']]) {
     const x = S[k];
     L.push(`  ${n.padEnd(20)} ${String(x.cuts).padStart(4)} cuts, ${String(x.informatifs).padStart(3)} informatifs, ${String(x.tempsS).padStart(6)} s, ${f1(x.parMin).padStart(5)}/min${x.rapport != null ? `, ×${f1(x.rapport)}, ${Math.round(100 * x.partInformatifs)} % des informatifs gardés` : ''}`);
@@ -197,7 +199,7 @@ function executer(argv) {
   if (a.cmd === 'simuler') {
     const J = construireJeu(tables, a.echo);
     const sorties = {};
-    for (const s of [...new Set([0, 1, 2, 3, 4, a.saut, 2 * a.saut])].sort((x, y) => x - y)) sorties[s] = simuler(J.obs, { coutSaut: s, plancher: a.plancher });
+    for (const s of [...new Set([0, 1, 2, 3, 4, a.saut, 2 * a.saut])].sort((x, y) => x - y)) sorties[s] = simuler(J.obs, { coutSaut: s, plancher: a.plancher, tauxFixes: a.tauxDefaut ? F.TAUX_DEFAUT : null });
     const classes = F.apprendreTaux(J.obs);
     const R = { format: 'ariane-file-prioritaire-simulation-v1', saut: a.saut, simulation: sorties, classes, etiquetage: effetEtiquetage(J.refs),
       sautsReels: J.sautsReels, tempsVisitesS: J.dureeVisitesS, sansEcho: J.sansEcho, d223: { zero: tailleD223(0), un: tailleD223(1), deux: tailleD223(2) } };
