@@ -93,6 +93,8 @@ const L1e=require('../src/gcv2-l1e.js');
 const ListeMemoire=require('../src/liste-memoire.js');
 const Native=require('./native-offline-evaluate.cjs');
 const VB=require('../src/voie-b1-ecart.js');
+const GA=require('../src/garde-apres-differe.js');
+const NativeExport=require('../src/native-export.js');
 
 const SIDES=['left','right'];
 const FR={left:'gauche',right:'droite'};
@@ -130,7 +132,12 @@ function lireJournal(chemin,partie=null){
   }
   for(const e of ev)if(e.type==='b1-ombre'&&Number.isInteger(e.identity?.cut))
     b1[e.identity.cut]={reel:e.reel?.stage??null,hypothese:e.hypothese?.stage??null,gardes:(e.gardes||[]).length};
-  return {ordre,b1};
+  /* CH-056 : cuts différés par la garde « après un différé » dans le lot réel, et zone PN / ADV de chaque cut (ombre des règles métier). */
+  const gardeReel=new Set(),zonesJournal={};
+  for(const e of ev){const c=e.identity?.cut;if(!Number.isInteger(c))continue;
+    if(e.type==='garde-apres-differe'&&e.etat!=='erreur')gardeReel.add(c);
+    if(e.type==='regles-metier-ombre'&&e.portee==='cut'&&e.zone&&!zonesJournal[c])zonesJournal[c]={pn:!!e.zone.pn,adv:!!e.zone.adv};}
+  return {ordre,b1,gardeReel,zonesJournal};
 }
 /* CH-053-M — lignes de B1 depuis l'instantané compact de la liste d'ESV (`ariane-liste-partieN-*.json`, dixième de mm monde) :
  * { cut, statut, left, right } en mètres, lignes aux six bords seulement. Rend aussi la table décompactée (référence d'écartement L1-e). */
@@ -157,7 +164,9 @@ function completerParEcho(captures,fichiers,partie,journal=()=>{}){
    * réunis sur tous les fichiers avant de construire les captures (union par identifiant). */
   const visites=new Map(),chunks=new Map();
   for(const f of fichiers){
-    const s=lireJson(f);
+    let s=lireJson(f);
+    /* CH-056 : segment compacté (références `__ref` vers `dictionaries`) : déplié avant lecture, comme jointure-echo-orbite. */
+    if(s&&s.dictionaries)s={...s,...NativeExport.unfoldRefs({records:s.records||[],clouds:s.clouds||[]},s.dictionaries)};
     for(const r of (s.records||[]))if(dePartie(r.identity,partie)&&Number.isInteger(r.identity?.cut)&&r.visitId&&!visites.has(r.visitId))visites.set(r.visitId,r);
     for(const c of s.clouds||[]){
       if(c?.format!=='banane-native-lidar-chunk-v1'||!SIDES.includes(c.side)||!Array.isArray(c.pointsSceneRelative))continue;
@@ -283,8 +292,18 @@ const BASE={source:'lot',gap:3,appuis:2,b1:false,plafond:false,memoire:'propre',
 const ECART=Object.freeze({accordMm:VB.REGLAGE.accordMm,gRefDefautMm:VB.REGLAGE.gRefDefautMm,solutionPasMm:VB.REGLAGE.solutionPasMm,solutionPorteeMm:VB.REGLAGE.solutionPorteeMm,solutionTolMm:VB.REGLAGE.solutionTolMm});
 const BALAYAGE=Object.freeze({pasMm:50,porteeMm:250,groupeMm:25});
 function variante(id,o){return {id,...BASE,...o};}
+function gardeVariantes(){
+  const out=[variante('garde-livree',{garde:{regle:'R3',coupures:2,appuisMin:2,zone:'tout'}})];
+  for(const zone of ['tout','pn-adv','hors-pn-adv'])for(const coupures of [1,2,3]){
+    for(const appuisMin of [1,2,3])if(!(zone==='tout'&&coupures===2&&appuisMin===2))
+      out.push(variante(`garde-r3-c${coupures}-a${appuisMin}-${zone}`,{garde:{regle:'R3',coupures,appuisMin,zone}}));
+    out.push(variante(`garde-r1-c${coupures}-${zone}`,{garde:{regle:'R1',coupures,zone}}));}
+  return out;
+}
 const VARIANTES=[
   variante('temoin',{}),
+  /* CH-056 : la garde « après un différé » rejouée (livrée : R3, 2 cuts, 2 appuis, toutes zones) et ses variantes, sur le témoin. */
+  ...gardeVariantes(),
   variante('vue-reelle',{memoire:'reelle',vue:'deplacee'}),
   variante('vue-serie',{memoire:'propre',vue:'deplacee'}),
   variante('prol6-reelle',{source:'prolonge',gap:6,memoire:'reelle',vue:'deplacee'}),
@@ -486,6 +505,9 @@ function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
       for(const k of ['devLatMm','devVertMm','deversEcartMm','ecartementMm','ecartVoisinMm'])if(m[k]!==undefined)r[k]=m[k];
       if(m.prediction&&mic)r.predictionEcartMm=Math.max(...SIDES.map(s=>Math.hypot(m.prediction[s][0]-mic[s][1],m.prediction[s][1]-mic[s][2])));
     }
+    /* CH-056 — garde « après un différé » dans la boucle (src/garde-apres-differe.js, comme background.js `gardeApresDiffereCommande`) :
+     * absente du témoin (le lot sans la garde) ; `v.garde` la rejoue avec ses réglages et ses variantes. */
+    if(v.garde)garderApresDiffere(v.garde,ctx,cut,decision,command,positions,r,resultats)&&(positions=null);
     /* Règle prudente : elle ne juge que les poses NOUVELLES (un cut que le lot réel avait différé) ; les autres restent ce qu'elles sont. */
     if(positions&&v.regle&&temoin?.resultats.get(cut)?.posee===false){
       const motif=regleAccepte(v.regle,r,zones?.get(cut)||null,temoin.resultats.get(cut));
@@ -499,6 +521,28 @@ function rejouerLot(ctx,v,{temoin=null,temoinAnchors=null,progression=null}={}){
   return {resultats,ancresParCut,decisions,commandes};
 }
 
+
+/* ------------------------------------------------------------------ garde « après un différé » (CH-056) */
+/* Rejoue la garde de background.js sur un cut que le lot allait VALIDER (commande `lot`, ou `engine` aux deux rails candidats, ici : une pose).
+ * Différés du lot = cuts déjà rejoués non posés, hors cuts différés par la garde (pas de cascade) ; appuis comptés SANS la garde (borne haute
+ * `appuisSansGardeMax` de background.js : + les cuts de la garde dans la fenêtre d'appuis du lot, au plus `anchors`). Variantes (CH-056,
+ * rien de livré) : `zone` = 'tout' (livré) | 'pn-adv' (la garde ne joue qu'en PN ou ADV) | 'hors-pn-adv' ; `etages` = liste d'étages du lot
+ * où elle joue (défaut : tous). La pose évitée reste jugée (`r.ecartSansGarde`) : c'est ce que la garde coûte ou évite. Rend vrai si différé. */
+function garderApresDiffere(g,ctx,cut,decision,command,positions,r,resultats){
+  if(!positions)return false;
+  const R=GA.reglage({actif:true,regle:g.regle??'R3',coupures:g.coupures??2,appuisMin:g.appuisMin??2});
+  const differesLot=[...resultats.values()].filter(x=>!x.posee&&!x.garde).map(x=>x.cut);
+  const gap=L.DEFAULTS?.gap??3,max=L.DEFAULTS?.anchors??2,appuis=(decision.anchorsUsed||[]).length;
+  let gardes=0;for(let c=cut-gap;c<cut;c++)if(resultats.get(c)?.garde)gardes++;
+  const j=GA.juger({cut,differesLot,appuis:gardes?Math.min(max,appuis+gardes):appuis},R);
+  if(!j.differer)return false;
+  const z=ctx.journal?.zonesJournal?.[cut]||null,pnAdv=!!(z&&(z.pn||z.adv));
+  if(g.zone==='pn-adv'&&!pnAdv||g.zone==='hors-pn-adv'&&pnAdv)return false;
+  if(Array.isArray(g.etages)&&!g.etages.includes(decision.stage))return false;
+  r.garde=true;r.gardeAppuis=j.appuis;r.gardeVoisins=j.voisinsDifferes;r.pnAdv=z?pnAdv:null;r.ecartSansGarde=r.ecart||null;
+  r.posee=false;delete r.ecart;r.commandReason='garde-apres-differe';
+  return true;
+}
 
 /* ------------------------------------------------------------------ règle prudente */
 /* Règle de recentrage prudente, évaluée seulement sur les poses nouvelles : celle du module commun (`V.regle`, clés et motifs
@@ -607,6 +651,7 @@ function detail(run,ctx){
   return [...run.resultats.values()].map(r=>({cut:r.cut,classe:ctx.ref.get(r.cut)?.classe||null,stage:r.stage,reason:r.reason,source:r.source,posee:r.posee,action:r.action,commandReason:r.commandReason,profondeur:r.profondeur,refuseVue:r.refuseVue,refuseRegle:r.refuseRegle||null,
     bloqueHorsVue:r.bloqueHorsVue,pire:r.ecart?r1(r.ecart.pire):null,jug:jugement(r),anchorsUsed:r.anchorsUsed,validatedAnchors:r.validatedAnchors,
     fromPredictionMm:r.fromPredictionMm,predictionEcartMm:r1(r.predictionEcartMm),devLatMm:r1(r.devLatMm),devVertMm:r1(r.devVertMm),deversEcartMm:r1(r.deversEcartMm),ecartVoisinMm:r1(r.ecartVoisinMm),ecartementMm:r1(r.ecartementMm),deplacementMm:r.deplacementMm?Object.fromEntries(SIDES.map(s=>[s,r.deplacementMm[s].map(r1)])):null,
+    garde:r.garde||false,gardeAppuis:r.gardeAppuis??null,gardeVoisins:r.gardeVoisins||null,pnAdv:r.pnAdv??null,pireSansGarde:r.ecartSansGarde?r1(r.ecartSansGarde.pire):null,
     vue:r.vue?{dans:r.vue.dans,dezoom:r2(r.vue.dezoom),panPx:r1(r.vue.panPx),panMm:r1(r.vue.panMm)}:null,moteur:r.moteur,choisi:r.choisi,gRef:r.gRef||null}));
 }
 
@@ -791,5 +836,5 @@ function main(argv=process.argv.slice(2)){
   if(o.sortie)fs.writeFileSync(o.sortie,JSON.stringify(sortie,null,1)+'\n');else console.log(JSON.stringify(sortie,null,1));
 }
 if(require.main===module){try{main();}catch(e){console.error(e.stack||e);process.exitCode=1;}}
-module.exports={VARIANTES,variante,chargerCaptures,lireJournal,lireReference,lireZones,estimerT,fenetreListe,lignesDepuisInstantane,completerParEcho,ecartementReference,railTrouve,solutionsEcartement,sourceEcart,sourceBalayage,ECART,BALAYAGE,vueNecessaire,camerasLarges,localMm,ecartAMic,
+module.exports={VARIANTES,variante,garderApresDiffere,gardeVariantes,chargerCaptures,lireJournal,lireReference,lireZones,estimerT,fenetreListe,lignesDepuisInstantane,completerParEcho,ecartementReference,railTrouve,solutionsEcartement,sourceEcart,sourceBalayage,ECART,BALAYAGE,vueNecessaire,camerasLarges,localMm,ecartAMic,
   fixtureSynthetique,regleAccepte,ombreLot,csvVariante,rapportTexte,rejouerLot,executer,synthese,validerTemoin,validerB1,detail,lireCache,ecrireCache,jugement,compter,statsVue,preparer,positionMic,main,FAUX_MM,MAUVAISE_VOIE_MM};

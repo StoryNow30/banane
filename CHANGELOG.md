@@ -1,5 +1,8 @@
 # Banane V4 TEST — journal des versions
 
+## Tronc 5.0 — 05/11 (D-288)
+- **Garde « après un différé » coupée, gardée en ombre** (ordre de l'opérateur) : plus aucun cut différé par elle ; le cut qu'elle aurait différé est consigné (`garde-apres-differe-ombre`) pour l'apprentissage. Commandes à ESV identiques au lot sans garde (essai d'empreinte). Coût connu : 4 poses fausses en PN/ADV qu'elle évitait (CH-056).
+
 ## 5 — Ariane 5 (version officielle)
 
 Manifeste `5`, nom « Ariane 5 » ; base : la test 35 plus CH-043. Moteur (`src/engine.js`), géométrie, GCV2 et décision du lot inchangés. Ordre de l'opérateur : « Lance la 5.0 : l'extension se nommera Ariane 5 avec une fusée qui décolle des rails ».

@@ -6,15 +6,15 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const G=require('../src/garde-apres-differe.js');
 
 test('valeurs livrées : active, règle R3, 2 cuts précédents, moins de 2 appuis',()=>{
- assert.deepEqual({...G.DEFAUT},{actif:true,regle:'R3',coupures:2,appuisMin:2});
+ assert.deepEqual({...G.DEFAUT},{actif:true,ombre:false,regle:'R3',coupures:2,appuisMin:2});
  assert.ok(Object.isFrozen(G.DEFAUT));
 });
 
 test('réglage : absent = valeurs livrées ; false = coupée ; clé par clé ; illisible = {ok:false}',()=>{
- assert.deepEqual(G.reglage(undefined),{ok:true,actif:true,regle:'R3',coupures:2,appuisMin:2});
- assert.deepEqual(G.reglage(false),{ok:true,actif:false,regle:'R3',coupures:2,appuisMin:2});
- assert.deepEqual(G.reglage({actif:false}),{ok:true,actif:false,regle:'R3',coupures:2,appuisMin:2});
- assert.deepEqual(G.reglage({regle:'R1',coupures:3}),{ok:true,actif:true,regle:'R1',coupures:3,appuisMin:2});
+ assert.deepEqual(G.reglage(undefined),{ok:true,actif:true,ombre:false,regle:'R3',coupures:2,appuisMin:2});
+ assert.deepEqual(G.reglage(false),{ok:true,actif:false,ombre:false,regle:'R3',coupures:2,appuisMin:2});
+ assert.deepEqual(G.reglage({actif:false}),{ok:true,actif:false,ombre:false,regle:'R3',coupures:2,appuisMin:2});
+ assert.deepEqual(G.reglage({regle:'R1',coupures:3}),{ok:true,actif:true,ombre:false,regle:'R1',coupures:3,appuisMin:2});
  for(const v of [true,null,7,'R3',[],{actif:'oui'},{regle:'R2'},{coupures:0},{coupures:1.5},{appuisMin:-1},{appuisMin:'2'}])
   assert.equal(G.reglage(v).ok,false,JSON.stringify(v));
 });
