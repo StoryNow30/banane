@@ -12,7 +12,8 @@ const a=process.argv.slice(2),arg=(k,d)=>a.includes(k)?a[a.indexOf(k)+1]:d;
 const REP=Number(arg('--rep',15)),PAR=Number(arg('--par',300)),APPELS=Number(arg('--appels',3000));
 (async()=>{
  const A=require('../ariane-rs/parite/file.cjs'),{construire}=require('./ch064-construire.cjs');
- const w=construire({silencieux:true});if(!w)throw Error('cargo absent');
+ /* CH071_WASM : un cœur déjà construit avec le bras 300..=349 (le patch du cœur n'est pas versionné ici) */
+ const w=process.env.CH071_WASM||construire({silencieux:true});if(!w)throw Error('cargo absent');
  const groupes={};
  for(const c of A.cas()){if(c.id.startsWith('variante-'))break;const f=c.id.replace(/^(releve|reel)-\d+-/,'');const g=groupes[f]=groupes[f]||[];if(g.length<PAR)g.push(c.entree.vba);}
  const {chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
