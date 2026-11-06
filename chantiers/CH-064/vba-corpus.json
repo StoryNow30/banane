@@ -11,30 +11,30 @@
   "refuses": 7,
   "ecarts": []
  },
- "documents": 173,
- "octetsJson": 3983113429,
- "octetsVba": 3157798834,
- "identiquesJs": 173,
- "identiquesRust": 173,
- "trameRustIdentique": 173,
+ "documents": 201,
+ "octetsJson": 4624758253,
+ "octetsVba": 3651767021,
+ "identiquesJs": 201,
+ "identiquesRust": 201,
+ "trameRustIdentique": 201,
  "totaux": {
-  "records": 11774,
-  "clouds": 13972,
-  "events": 831226,
-  "points": 23986456
+  "records": 13169,
+  "clouds": 15866,
+  "events": 933919,
+  "points": 28299052
  },
  "echecs": [],
  "msParMo": {
-  "jsonParse": 10.2,
-  "jsonStringify": 11.9,
-  "encoder": 8,
-  "decoder": 11.5,
-  "coeur": 2.5
+  "jsonParse": 7.3,
+  "jsonStringify": 8.6,
+  "encoder": 7.3,
+  "decoder": 6.6,
+  "coeur": 2
  },
  "memoireCoeur": {
-  "hauteEauMax": 1505755136,
-  "reinstanciations": 9
+  "hauteEauMax": 1509949440,
+  "reinstanciations": 15
  },
- "tranche": "2/3 + 0/6 + 3/6 + 1/6 + 4/6",
+ "tranche": "0/3 + 2/3 + 1/6 + 4/6",
  "verdict": "IDENTIQUE"
 }
