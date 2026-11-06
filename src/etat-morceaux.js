@@ -22,15 +22,20 @@
  const VERSION=1,PREFIXE='banane3Morceau|',REF='__morceaux';
  /* [racine, chemin dans la racine, éléments par morceau]. La racine doit porter un identifiant (`id`) : la clé
   * d'un morceau en dépend, une session ou un lot neufs n'écrasent donc jamais ceux d'avant. Éléments par
-  * morceau : un morceau changé fait quelques dizaines de Ko au plus (visite résumée ≈ 0,4 Ko, identifiant ≈ 45 o). */
+  * morceau : un morceau changé fait une quinzaine de Ko au plus (visite résumée ≈ 0,4 Ko, identifiant ≈ 45 o). */
  const CHEMINS=[
-  ['native',['visits'],64],['native',['observationPeriods'],64],['native',['cloudIds'],512],['native',['incomplete'],512],
+  ['native',['visits'],32],['native',['observationPeriods'],32],['native',['cloudIds'],512,{enLigne:'nonExportes'}],['native',['incomplete'],512],
   ['native',['exportState','exportedCloudIds'],512],['native',['exportState','releasedCloudIds'],512],
-  ['manual',['records'],16],['manual',['cloudIds'],512],['manual',['sequence'],64],['manual',['incomplete'],512],
-  ['batch',['processed'],64],['batch',['sequence'],64],['batch',['deferred'],64],['batch',['skipped'],64],
-  ['batch',['paused'],64],['batch',['interrupted'],64],['batch',['manuallyCompleted'],64],
+  ['manual',['records'],16],['manual',['cloudIds'],512],['manual',['sequence'],32],['manual',['incomplete'],512],
+  ['batch',['processed'],32],['batch',['sequence'],32],['batch',['deferred'],32],['batch',['skipped'],32],
+  ['batch',['paused'],32],['batch',['interrupted'],32],['batch',['manuallyCompleted'],32],
   /* Objet (clé → valeur) : repères vus par la mesure de qualité de l'Écho, plafonnés à 4 000 (≈ 31 o chacun). Coupé par entrées. */
   ['native',['qualityRails'],512]];
+ /* PARADE DU RETOUR ARRIÈRE (mesuré sur 2bc1f56 : sans elle, un ancien paquet relit `cloudIds` vide et son vidage automatique comme
+  * son export final n'emportent AUCUN nuage, sans le dire). Les nuages pas encore exportés restent AUSSI écrits en ligne : l'ancien
+  * paquet les exporte comme la branche l'aurait fait. Leur nombre est borné par le seuil de vidage automatique. Au recollage, la liste
+  * est dédoublonnée (morceaux d'abord, puis les ajouts de l'ancien paquet). */
+ const EN_LIGNE={nonExportes:(racine,liste)=>{const faits=new Set(racine?.exportState?.exportedCloudIds||[]);return liste.filter(id=>!faits.has(id));}};
  /* Une liste, ou un objet simple vu comme la liste de ses entrées [clé, valeur] (ordre d'insertion gardé). */
  const objetSimple=x=>!!x&&typeof x==='object'&&!Array.isArray(x)&&Object.getPrototypeOf(x)===Object.prototype;
  const elementsDe=x=>Array.isArray(x)?x:objetSimple(x)?Object.entries(x):null;
@@ -51,20 +56,20 @@
   /* Une référence présente dans l'état reçu ne compte pas : seule vaut la découpe faite ici. */
   for(const racine of new Set(CHEMINS.map(c=>c[0]))){const r=etat[racine];
    if(r&&typeof r==='object'&&!Array.isArray(r)&&REF in r){const c={...r};delete c[REF];copie[racine]=c;racines.set(racine,c);}}
-  for(const [racine,chemin,taille] of CHEMINS){
+  for(const [racine,chemin,taille,options] of CHEMINS){
    const r=etat[racine];if(!r||typeof r!=='object'||Array.isArray(r)||!idValide(r.id))continue;
    const valeur=lire(r,chemin),liste=elementsDe(valeur);if(!liste||!liste.length)continue;const objet=!Array.isArray(valeur);
    /* Copie superficielle le long du chemin, la liste remplacée par une liste vide. */
    let c=racines.get(racine);if(!c){c={...r};racines.set(racine,c);copie[racine]=c;}
    let porteur=c;for(const k of chemin.slice(0,-1)){porteur[k]={...porteur[k]};porteur=porteur[k];}
-   porteur[chemin.at(-1)]=objet?{}:[];
+   porteur[chemin.at(-1)]=objet?{}:options?.enLigne?EN_LIGNE[options.enLigne](r,liste):[];
    const nb=Math.ceil(liste.length/taille);
    for(let i=0;i<nb;i++){const cle=cleMorceau(racine,chemin,r.id,i),tranche=liste.slice(i*taille,(i+1)*taille);
     /* Tranche de valeurs simples (identifiants) identique à celle déjà sur disque : son texte est repris sans le recalculer. */
     const avant=connus?.get(cle);
     if(avant&&Array.isArray(avant.simples)&&avant.simples.length===tranche.length&&tranche.every((x,j)=>x===avant.simples[j])){morceaux.set(cle,avant.texte);continue;}
     morceaux.set(cle,JSON.stringify(tranche));if(tranche.every(x=>x===null||typeof x!=='object'))(simples??=new Map()).set(cle,tranche);}
-   (c[REF]??={})[chemin.join('.')]={v:VERSION,id:r.id,longueur:liste.length,morceaux:nb,taille,...(objet?{forme:'objet'}:{})};}
+   (c[REF]??={})[chemin.join('.')]={v:VERSION,id:r.id,longueur:liste.length,morceaux:nb,taille,...(objet?{forme:'objet'}:{}),...(options?.enLigne?{enLigne:options.enLigne}:{})};}
   return {etat:clone(copie),morceaux,simples:simples||new Map()};}
 
  /* Clés à lire pour recoller un état écrit. */
@@ -91,6 +96,7 @@
    let porteur=r;for(const k of chemin.slice(0,-1)){if(!porteur[k]||typeof porteur[k]!=='object')porteur[k]={};porteur=porteur[k];}
    const enLigne=porteur[chemin.at(-1)];
    if(ref.forme==='objet')porteur[chemin.at(-1)]={...Object.fromEntries(elements.filter(e=>Array.isArray(e)&&e.length===2&&typeof e[0]==='string')),...(objetSimple(enLigne)?enLigne:{})};
+   else if(ref.enLigne){const vus=new Set(elements);porteur[chemin.at(-1)]=[...elements,...(Array.isArray(enLigne)?enLigne:[]).filter(x=>!vus.has(x)&&vus.add(x))];}
    else porteur[chemin.at(-1)]=[...elements,...(Array.isArray(enLigne)?enLigne:[])];}
   for(const [racine] of CHEMINS){const r=etat[racine];if(r&&typeof r==='object'&&REF in r)delete r[REF];}
   return {etat,manquants,relus};}
