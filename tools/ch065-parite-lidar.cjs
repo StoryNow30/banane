@@ -14,11 +14,13 @@ const {parcourir,PREFIXES}=require('./ch065-nuages.cjs'),{scene,VARIANTES,THREE_
 /* Les classes d'attribut de la scène tiennent lieu de THREE.BufferAttribute de la page (reconnaissance par identité de fonction). */
 globalThis.THREE=THREE_FACTICE;
 /* CH065_SANS_THREE=1 : la page n'expose pas THREE, l'accesseur est inconnu : le patch passe par la preuve complète, tranche par tranche. */
-if(process.env.CH065_SANS_THREE==='1')globalThis.THREE=undefined;
+if(process.env.CH065_SANS_THREE==='1')globalThis.THREE=undefined;   /* avant le chargement : l'instantané est vide */
 function arg(n,d){const i=process.argv.indexOf(n);return i>0?process.argv[i+1]:d;}
 const REF=path.resolve(arg('--reference',path.join(__dirname,'..'))),PAT=arg('--patche',null),MAX=Number(arg('--max',Infinity));
 const PAS=Number(arg('--pas',25)),PAS_PLEIN=Number(arg('--pas-plein',100)),SORTIE=arg('--sortie',null);
 if(!PAT)throw Error('--patche RACINE manquant');
+/* Espion posé AVANT le chargement des modules : le patch prend l'instantané des fonctions de THREE au chargement. */
+const P=THREE_FACTICE.BufferAttribute.prototype,G0=P.getX;let lectures=0;P.getX=function(i){if(this.itemSize===3)lectures++;return G0.call(this,i);};
 const LA=require(path.join(REF,'vendor/lidar.js')),LB=require(path.join(path.resolve(PAT),'vendor/lidar.js'));
 if(LA===LB)throw Error('même module chargé deux fois');
 function canon(v){
@@ -28,7 +30,6 @@ function canon(v){
   if(Array.isArray(v))return '['+v.map(canon).join(',')+']';
   return '{'+Object.keys(v).filter(k=>k!=='capturedAt'&&k!=='durationMs').map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
 }
-const P=THREE_FACTICE.BufferAttribute.prototype,G0=P.getX;let lectures=0;P.getX=function(i){if(this.itemSize===3)lectures++;return G0.call(this,i);};
 async function jouer(L,c,nom,opts){
   const sc=scene(c,opts),appels=[];lectures=0;
   const options={viewer:sc.viewer,rails:sc.rails,origin:sc.origin,enums:sc.enums,guard:()=>appels.push('g'),pause:async()=>{appels.push('p');},meta:{captureId:'ch065'}};

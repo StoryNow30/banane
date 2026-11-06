@@ -44,8 +44,9 @@ async function page(nav,scripts){
   const PARTIES=(process.env.PARTIES||'lidar,geometrie').split(',');
   if(PARTIES.includes('lidar')){
   const v=A.versions(RACINE,'vendor/lidar.js');
-  const pl=await page(nav,[lire('vendor/capture-core.js'),v.origine.replace('root.BananeLidar=api','root.LidarOrigine=api'),
-    v.patche.replace('root.BananeLidar=api','root.LidarPatche=api'),lire('tools/ch065-scene.js')]);
+  /* La scène et son THREE factice d'abord : le patch prend l'instantané des fonctions de THREE au chargement du module. */
+  const pl=await page(nav,[lire('tools/ch065-scene.js'),'globalThis.THREE=CH065Scene.THREE_FACTICE;',lire('vendor/capture-core.js'),
+    v.origine.replace('root.BananeLidar=api','root.LidarOrigine=api'),v.patche.replace('root.BananeLidar=api','root.LidarPatche=api')]);
   /* ACCESSEURS=reconnu,inconnu : « reconnu », THREE factice posé (accesseurs reconnus par identité) ; « inconnu », pas de THREE : preuve complète. */
   for(const acc of (process.env.ACCESSEURS||'reconnu').split(','))for(const mode of ['rapide','reference']){
     const cle=acc==='reconnu'?mode:mode+'-accesseur-inconnu';

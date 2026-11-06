@@ -7,18 +7,20 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const H=require('./helpers/ch065.cjs'),{scene,VARIANTES,THREE_FACTICE}=require('../tools/ch065-scene.js');
 /* Les classes d'attribut de la scène tiennent lieu de THREE.BufferAttribute de la page : le patch les reconnaît par identité de fonction. */
+/* Espion posé UNE fois, avant la compilation du module : le patch prend l'instantané des fonctions de THREE au chargement, et ces
+ * enveloppes en font partie. `ESPION` (null hors mesure) compte les lectures de position ; `ment` décale chaque lecture par accesseur. */
+let ESPION=null;
+for(const P of [THREE_FACTICE.BufferAttribute.prototype,THREE_FACTICE.InterleavedBufferAttribute.prototype]){const g=P.getX;
+  P.getX=function(i){if(ESPION&&this.itemSize===3){ESPION.n++;if(ESPION.ment)return g.call(this,i)+1e-3;}return g.call(this,i);};}
 globalThis.THREE=THREE_FACTICE;
 const LO=H.lidar('origine'),LP=H.lidar('patche');
-/* Espion : compte les lectures par accesseur en enveloppant les méthodes du PROTOTYPE (l'identité avec THREE est gardée). `ment` décale
- * toutes les lectures de position par accesseur : la lecture directe, si elle servait, ne le verrait pas. */
 async function jouer(L,c,opts,espion){
-  const sc=scene(c,opts),appels=[],protos=[THREE_FACTICE.BufferAttribute.prototype,THREE_FACTICE.InterleavedBufferAttribute.prototype],gardes=[];
-  if(espion)for(const p of protos){const g=p.getX;gardes.push([p,g]);p.getX=function(i){if(this.itemSize===3){espion.n++;if(espion.ment)return g.call(this,i)+1e-3;}return g.call(this,i);};}
+  const sc=scene(c,opts),appels=[];ESPION=espion||null;
   const options={viewer:sc.viewer,rails:sc.rails,origin:sc.origin,enums:sc.enums,guard:()=>appels.push('g'),pause:async()=>{appels.push('p');},meta:{captureId:'ch065'}};
   for(const k of ['maxPoints','maxInspected','yieldEvery'])if(opts[k]!==undefined)options[k]=opts[k];
   try{const o=await L.capture(options);return {sortie:H.canon(o,['capturedAt','durationMs']),appels:appels.join(''),statut:o.status};}
   catch(e){return {erreur:(e?.name||'')+': '+e?.message,appels:appels.join('')};}
-  finally{for(const [p,g] of gardes)p.getX=g;}
+  finally{ESPION=null;}
 }
 test('CH-065 : mêmes sorties, mêmes exceptions, mêmes pauses, sur toutes les variantes de scène', async ()=>{
   const statuts=new Set(),erreurs=new Set();
@@ -43,7 +45,7 @@ test('CH-065 : le chemin direct sert sur un tampon flottant non indexé, et pas 
     else assert.ok(e.n>=n,`${nom} : ${e.n} lectures par accesseur pour ${n} points, la boucle d'origine n'a pas servi`);
   }
 });
-test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu : boucle d\'origine, même sortie, chaque point lu par l\'accesseur', async ()=>{
+test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu lu point par point comme l\'origine : même sortie, chaque point lu par l\'accesseur', async ()=>{
   const c=H.captures()[0],n=c.pointsSceneRelative.length;
   try{globalThis.THREE=undefined;
     for(const opts of [{},{entrelace:true},{type:Float64Array},{yieldEvery:7},{drawRange:{start:3.7,count:1000.5}}]){
@@ -91,8 +93,49 @@ test('CH-065 : scénario du chef de CH-064 — maxPoints:3, accesseur inconnu : 
     return {s:H.canon(o,['capturedAt','durationMs']),log:log.join(',')};};
   const a=await run(LO),b=await run(LP);assert.equal(b.log,a.log);assert.equal(b.s,a.s);
 });
+/* Journal des appels d'accesseur, sur la position ET sur les autres attributs lus dans la boucle (intensité, classification), posés
+ * sur les instances : accesseurs inconnus. `piege(attribut,k,i,nième)` peut lever ou modifier le tableau. */
+async function journalAppels(L,c,{opts={},options={},piege}={}){
+  const sc=scene(c,{graine:11,...opts}),log=[];
+  for(const [ni,e] of sc.viewer.scene.pointclouds[0].visibleNodes.entries())for(const [nom,a] of Object.entries(e.sceneNode.geometry.attributes)){
+    const vus=new Map();
+    for(const k of ['getX','getY','getZ']){if(typeof a[k]!=='function')continue;const g=a[k].bind(a);
+      a[k]=i=>{const cle=k+i,n=(vus.get(cle)||0)+1;vus.set(cle,n);log.push(ni+'.'+nom+'.'+k+'('+i+')');if(piege)piege({ni,nom,k,i,n,a});return g(i);};}}
+  try{const o=await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{},...options});
+    return {sortie:H.canon(o,['capturedAt','durationMs']),log:log.join(' ')};}
+  catch(e){return {erreur:e.message,dernier:log.at(-1),log:log.join(' ')};}
+}
+test('CH-065 : accesseurs inconnus sur la position et sur les attributs lus dans la boucle : même suite d\'appels, même entrelacement', async ()=>{
+  const c=H.captures()[3];
+  for(const options of [{},{maxPoints:5},{maxInspected:777},{yieldEvery:13}]){
+    const a=await journalAppels(LO,c,{options}),b=await journalAppels(LP,c,{options});
+    assert.equal(b.log,a.log,JSON.stringify(options));assert.equal(b.sortie,a.sortie);
+    assert.ok(/intensity\.getX/.test(a.log),'l\'intensité doit être lue dans la boucle');}
+});
+test('CH-065 : arrêt au milieu d\'un nœud sur une erreur de l\'accesseur : même dernier appel, même exception', async ()=>{
+  const c=H.captures()[3],base=await journalAppels(LO,c);
+  /* Indice piégé : au milieu du premier nœud, lu par la boucle. */
+  const m=Math.floor(base.log.split(' ').filter(s=>s.startsWith('0.position.getX(')).length/2);
+  const lectures=base.log.split(' ').filter(s=>s==='0.position.getY('+m+')').length;
+  const piege=({ni,nom,k,i,n})=>{if(ni===0&&nom==='position'&&k==='getY'&&i===m&&n===lectures)throw Error('accesseur : panne au point '+i);};
+  const a=await journalAppels(LO,c,{piege}),b=await journalAppels(LP,c,{piege});
+  assert.ok(a.erreur,'le piège doit faire lever l\'origine');assert.deepEqual(b,a);
+});
+test('CH-065 : getX qui lève à la troisième lecture de l\'indice 0 (Codex) : aucun appel en plus de l\'origine', async ()=>{
+  const c=H.captures()[3];
+  const piege=({ni,nom,k,i,n})=>{if(ni===0&&nom==='position'&&k==='getX'&&i===0&&n===3)throw Error('troisième lecture de l\'indice 0');};
+  const a=await journalAppels(LO,c,{piege}),b=await journalAppels(LP,c,{piege});assert.deepEqual(b,a);
+});
+test('CH-065 : prototype de THREE remplacé après le chargement (Codex) : il n\'est pas cru, même sortie que l\'origine', async ()=>{
+  const c=H.captures()[1],P=THREE_FACTICE.BufferAttribute.prototype,av=[P.getX,P.getY,P.getZ];
+  const run=async L=>{const sc=scene(c,{graine:3}),a0=sc.viewer.scene.pointclouds[0].visibleNodes[0].sceneNode.geometry.attributes.position,cible=Math.floor(a0.count/2)+1;
+    P.getX=function(i){return av[0].call(this,i)+(this===a0&&i===cible?.05:0);};P.getY=function(i){return av[1].call(this,i);};P.getZ=function(i){return av[2].call(this,i);};
+    try{return H.canon(await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}}),['capturedAt','durationMs']);}
+    finally{[P.getX,P.getY,P.getZ]=av;}};
+  assert.equal(await run(LP),await run(LO));
+});
 test('CH-065 : l\'essai a des dents — croire un accesseur inconnu est vu', async ()=>{
-  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return null;','if(!a)return null;');
+  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return parAccesseur;','if(!a)return parAccesseur;');
   assert.notEqual(faux,t);const L=H.lidar('patche',faux),c=H.captures()[1];
   const run=async L=>{const sc=scene(c,{graine:3});const e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,cible=Math.floor(a.count/2)+1;
     const g=a.getX.bind(a);a.getX=i=>i===cible?g(i)+.05:g(i);
