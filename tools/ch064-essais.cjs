@@ -27,7 +27,9 @@ etape('construction WASM',()=>{const w=require('./ch064-construire.cjs').constru
 etape('sonde numérique (Node, Chromium)',()=>{const o=JSON.parse(lancer('node',['tools/ch064-sonde-math.cjs','--tirages','50000','--chromium']));
  const mauvais=[];for(const [m,d] of [['node',o.divergences],['chromium',o.chromium.divergences]])for(const k in d)if(k.startsWith('js_')&&d[k]!==0)mauvais.push(m+':'+k+'='+d[k]);
  if(mauvais.length)throw Error('portage divergent : '+mauvais.join(', '));return {node:o.moteur,chromium:o.chromium.moteur};});
-etape('essais de la coquille (audit, PR n° 25)',()=>{const o=lancer('node',['--test','tools/ch064-essais-coquille.cjs']);const m=o.match(/# pass (\d+)/);return (m?m[1]:'?')+' essais';});
+etape('essais de la coquille (audit, PR n° 25 ; plafond de 256 Mio)',()=>{const o=lancer('node',['--test','tools/ch064-essais-coquille.cjs']);const m=o.match(/# pass (\d+)/);return (m?m[1]:'?')+' essais';});
+/* trappe du module LiDAR autonome (fusion de CH-064-L) : reprise et appel suivant identique, vues réelles */
+if(fs.existsSync(path.join(RACINE,'tools/ch064-essais-lidar-trappe.cjs')))etape('trappe LiDAR puis appel identique',()=>{const o=lancer('node',['--max-old-space-size=8000','--test','tools/ch064-essais-lidar-trappe.cjs']);const m=o.match(/# pass (\d+)/),f=o.match(/# fail (\d+)/);if(f&&f[1]!=='0')throw Error(o.slice(-1500));return (m?m[1]:'?')+' essais';});
 etape('banc témoin et contrôle négatif',()=>{const P=require('./ch064-parite.cjs'),C=require('../ariane-rs/coquille/coeur.js'),w=require('./ch064-construire.cjs').construire({silencieux:true});
  const coeur=C.creer(fs.readFileSync(w)),t=require('../ariane-rs/parite/temoin.cjs');
  const bon=P.executer(t,coeur);if(bon.verdict!=='IDENTIQUE')throw Error('témoin : '+JSON.stringify(bon.ecarts));
@@ -42,7 +44,9 @@ for(const m of modules)for(const nav of [false,true])etape('parité '+m+(nav?' (
  const args=['--max-old-space-size=8000','tools/ch064-parite.cjs','--module',m];if(rapide)args.push('--nuages','15');if(nav)args.push('--chromium');
  const o=JSON.parse(lancer('node',args));if(o.verdict!=='IDENTIQUE')throw Error(JSON.stringify(o.ecarts).slice(0,1000));
  return {cas:o.cas,identiques:o.identiques,repli:o.bilanAdaptateur,empreinte:o.empreintes.js.slice(0,16)};});
-const SOUS=[['CH-064-L parité (Node)','tools/ch064-l-parite.cjs',['--moteur','node']],['CH-064-L parité (Chromium)','tools/ch064-l-parite.cjs',['--moteur','chromium']],
- ['CH-064-L banc','tools/ch064-l-banc.cjs',[]],['CH-064-L fusion','tools/ch064-l-fusion.cjs',[]]];
+/* --rapide : parité de L sur 15 captures, sans ses bancs de temps (qui ne sont pas des essais) ; sinon tout. */
+const limiteL=rapide?['--max','15']:[];
+const SOUS=[['CH-064-L parité (Node)','tools/ch064-l-parite.cjs',['--moteur','node',...limiteL]],['CH-064-L parité (Chromium)','tools/ch064-l-parite.cjs',['--moteur','chromium',...limiteL]],
+ ...(rapide?[]:[['CH-064-L banc','tools/ch064-l-banc.cjs',[]],['CH-064-L fusion','tools/ch064-l-fusion.cjs',[]]])];
 for(const [nom,f,args] of SOUS)if(fs.existsSync(path.join(RACINE,f)))etape(nom,()=>{const o=lancer('node',['--max-old-space-size=8000',f,...args]);return o.trim().split('\n').slice(-3).join(' | ').slice(0,400);});
 fin(0);

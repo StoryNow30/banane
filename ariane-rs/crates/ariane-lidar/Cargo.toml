@@ -4,6 +4,11 @@ edition.workspace = true
 version.workspace = true
 publish.workspace = true
 
+# rlib : lié par ariane-coeur, qui exporte les fonctions `lidar_*` ; cdylib : module autonome ariane_lidar.wasm,
+# à mémoire bornée (build.rs), mesuré par tools/ch064-l-banc.cjs.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
