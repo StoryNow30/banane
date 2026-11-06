@@ -3460,4 +3460,13 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
   - mettre du Rust dans le paquet, `manifest.json` et les fichiers gelés restent soumis à l'accord de l'opérateur (D-294) ;
   - audits par « @codex review » (PR n° 25) à chaque fusion d'une équipe ; chantiers Codex CH-066 (fuzz VBA) et CH-067 (audit des correctifs du tronc) ; la clé API OpenAI enregistrée n'est pas utilisée (pas de crédit).
 - Après les 100 % : « on utilisera des gros reviewers de code pour voir si le code rust est bien intégré » — revue d'intégration complète par plusieurs relecteurs forts (Codex et sessions Claude au niveau fort), avant toute proposition d'entrée du Rust dans le paquet.
-- Le numéro suivant est D-296.
+
+## D-296 — Rust dans le paquet : accord ; « 100 % » élargi à tout ce qui peut passer en Rust (opérateur, 06/11)
+- Ordre : « Oui accord pour mettre du rust dans le paquet. Les 100 % visent le calcul et tout ce qui peut passer en rust dans l'ordre du possible. »
+- Effet :
+  - le Rust (cœur WASM, architecture A) peut entrer dans le paquet. Chaque module y entre seulement avec : parité au bit près sur les données réelles, repli JS automatique sur tout refus, verify, parité de la relecture et du lot, maquette, et la revue d'intégration par de gros relecteurs (D-295) ;
+  - ordre d'entrée : la lecture LiDAR d'abord (elle tourne dans la page, où le WASM est permis sans changer `manifest.json`), puis la géométrie et la décision ;
+  - un module qui devrait tourner dans le service worker demande `'wasm-unsafe-eval'` dans `manifest.json` : l'intégrateur le signalera à l'opérateur avant de l'y mettre ;
+  - les fichiers gelés (`src/geometry.js`, `vendor/lidar.js`) ne changent de comportement que par des patchs prouvés identiques au bit près ;
+  - « 100 % » : le calcul, plus tout ce qui peut techniquement passer en Rust dans une extension Chrome.
+- Le numéro suivant est D-297.
