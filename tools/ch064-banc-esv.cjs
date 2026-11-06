@@ -39,7 +39,10 @@ async function jouer(extension,o){let compteurs=null,commandes=null;const pw=N.p
  const r=JSON.parse(fs.readFileSync(f,'utf8'));fs.rmSync(f,{force:true});return {r,compteurs,commandes:commandes||[]};}
 async function main(){const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null;
  const o={};if(arg('--cuts'))o.cuts=Number(arg('--cuts'));else if(!arg('--export'))o.cuts=3;if(arg('--export'))o.export=path.resolve(arg('--export'));if(arg('--part'))o.part=Number(arg('--part'));
- const dist=path.join(RACINE,'ariane-rs','dist');const js=construireExtension({modules:[],sortie:path.join(dist,'extension-js')}),wasm=construireExtension({sortie:path.join(dist,'extension-wasm')});
+ /* --js DOSSIER --autre DOSSIER : deux paquets donnés, dézippés (par exemple le tronc et le tronc avec un patch d'intégration) ;
+  * sinon le paquet officiel contre la copie aux façades WASM, construits ici. */
+ const dist=path.join(RACINE,'ariane-rs','dist');
+ const js=arg('--js')?path.resolve(arg('--js')):construireExtension({modules:[],sortie:path.join(dist,'extension-js')}),wasm=arg('--autre')?path.resolve(arg('--autre')):construireExtension({sortie:path.join(dist,'extension-wasm')});
  const j1=await jouer(js,o),j2=await jouer(js,o),j3=await jouer(js,o),w=await jouer(wasm,o);
  const bruit={...differences(j1.r,j2.r),...differences(j1.r,j3.r)},dw=differences(j1.r,w.r);
  const imputables=Object.fromEntries(Object.entries(dw).filter(([k])=>!(k in bruit)));
