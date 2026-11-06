@@ -15,8 +15,10 @@ function construire({silencieux=false,memoireMax=null}={}){
  const r=spawnSync('cargo',args,{cwd:RACINE,encoding:'utf8',stdio:silencieux?'pipe':'inherit',env});
  if(r.status!==0)throw Error('Construction du cœur WASM en échec :\n'+(r.stderr||''));
  const wasm=path.join(RACINE,'target',...(memoireMax?['max-'+memoireMax]:[]),'wasm32-unknown-unknown','release','ariane_coeur.wasm');
- fs.mkdirSync(DIST,{recursive:true});const sortie=path.join(DIST,memoireMax?'ariane-coeur-max'+memoireMax+'.wasm':'ariane-coeur.wasm'),octets=fs.readFileSync(wasm);fs.writeFileSync(sortie,octets);
- fs.writeFileSync(sortie+'.js','/* Généré par tools/ch064-construire.cjs : ne pas éditer. */\nglobalThis.ARIANE_COEUR_WASM_B64='+JSON.stringify(octets.toString('base64'))+';\n');
+ fs.mkdirSync(DIST,{recursive:true});const sortie=path.join(DIST,memoireMax?'ariane-coeur-max'+memoireMax+'.wasm':'ariane-coeur.wasm'),octets=fs.readFileSync(wasm);// écriture atomique (fichier temporaire puis renommage) : plusieurs bancs lancés en parallèle lisent ce fichier
+ const ecrire=(f,d)=>{const t=f+'.'+process.pid+'.tmp';fs.writeFileSync(t,d);fs.renameSync(t,f);};
+ ecrire(sortie,octets);
+ ecrire(sortie+'.js','/* Généré par tools/ch064-construire.cjs : ne pas éditer. */\nglobalThis.ARIANE_COEUR_WASM_B64='+JSON.stringify(octets.toString('base64'))+';\n');
  return sortie;
 }
 module.exports={construire,cargoPresent,DIST};
