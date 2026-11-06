@@ -258,6 +258,49 @@ impl Valeur {
     }
 }
 
+impl Valeur {
+    /// Forme canonique de la valeur : la trame que l'encodeur de la coquille produirait pour la même valeur JS
+    /// (règles d'encodage de `vba.md`). Une valeur bâtie en Rust doit passer par ici avant d'être donnée à une autre
+    /// crate qui filtre sur les variantes (`Nombres`, `Bloc`, `Booleens`) :
+    /// - tableau dense de n ≥ 1 nombres → `Nombres` ;
+    /// - tableau dense de n ≥ 1 tableaux denses de nombres de même longueur k (1 à 255) → `Bloc` ;
+    /// - tableau dense de n ≥ 1 booléens → `Booleens` ;
+    /// - `Nombres`, `Booleens` ou `Bloc` vides → `Tableau` vide ;
+    /// - objets et tableaux quelconques : canonisés élément par élément, trous et ordre des clés conservés.
+    ///
+    /// Les nombres sont copiés bit pour bit (−0 et charge des NaN comprises).
+    #[must_use]
+    pub fn canonique(&self) -> Valeur {
+        match self {
+            Valeur::Objet(e) => Valeur::Objet(e.iter().map(|(k, x)| (k.clone(), x.canonique())).collect()),
+            Valeur::Nombres(t) if t.is_empty() => Valeur::Tableau(vec![]),
+            Valeur::Booleens(t) if t.is_empty() => Valeur::Tableau(vec![]),
+            Valeur::Bloc { donnees, .. } if donnees.is_empty() => Valeur::Tableau(vec![]),
+            Valeur::Tableau(t) => canoniser_tableau(t),
+            x => x.clone(),
+        }
+    }
+}
+
+/// Canonise un tableau `06` (voir [`Valeur::canonique`]).
+fn canoniser_tableau(t: &[Option<Valeur>]) -> Valeur {
+    if t.is_empty() { return Valeur::Tableau(vec![]); }
+    let nombres: Option<Vec<f64>> = t.iter().map(|e| match e { Some(Valeur::Nombre(x)) => Some(*x), _ => None }).collect();
+    if let Some(n) = nombres { return Valeur::Nombres(n); }
+    let booleens: Option<Vec<bool>> = t.iter().map(|e| match e { Some(Valeur::Booleen(b)) => Some(*b), _ => None }).collect();
+    if let Some(b) = booleens { return Valeur::Booleens(b); }
+    let c: Vec<Option<Valeur>> = t.iter().map(|e| e.as_ref().map(Valeur::canonique)).collect();
+    let k = match c.first() { Some(Some(Valeur::Nombres(x))) => x.len(), _ => 0 };
+    if let Ok(k8) = u8::try_from(k) {
+        if k8 >= 1 && c.iter().all(|e| matches!(e, Some(Valeur::Nombres(x)) if x.len() == k)) {
+            let mut donnees = Vec::with_capacity(c.len() * k);
+            for e in &c { if let Some(Valeur::Nombres(x)) = e { donnees.extend_from_slice(x); } }
+            return Valeur::Bloc { k: k8, donnees };
+        }
+    }
+    Valeur::Tableau(c)
+}
+
 #[cfg(test)]
 #[allow(clippy::float_cmp)] // essais d'identité au bit près : la comparaison exacte est le but
 mod essais {
@@ -308,6 +351,39 @@ mod essais {
 #[cfg(test)]
 mod essais_publics {
     use super::*;
+    #[test]
+    fn canonique_comme_la_coquille() {
+        let n = |x: f64| Some(Valeur::Nombre(x));
+        let t = |v: Vec<Option<Valeur>>| Valeur::Tableau(v);
+        // tableau de nombres, bits conservés
+        let nan = f64::from_bits(0xfff8_0000_0000_0001);
+        match t(vec![n(-0.0), n(nan)]).canonique() {
+            Valeur::Nombres(v) => { assert!(v[0] == 0.0 && v[0].is_sign_negative()); assert_eq!(v[1].to_bits(), nan.to_bits()); }
+            x => panic!("{x:?}"),
+        }
+        // bloc, y compris à partir de Nombres déjà canoniques ; lignes de longueurs différentes : tableau
+        assert_eq!(t(vec![Some(t(vec![n(1.0), n(2.0)])), Some(Valeur::Nombres(vec![3.0, 4.0]))]).canonique(),
+            Valeur::Bloc { k: 2, donnees: vec![1.0, 2.0, 3.0, 4.0] });
+        assert_eq!(t(vec![Some(t(vec![n(1.0)])), Some(t(vec![n(2.0), n(3.0)]))]).canonique(),
+            t(vec![Some(Valeur::Nombres(vec![1.0])), Some(Valeur::Nombres(vec![2.0, 3.0]))]));
+        // k > 255 : pas de bloc
+        let long = Valeur::Nombres(vec![0.0; 256]);
+        assert_eq!(t(vec![Some(long.clone())]).canonique(), t(vec![Some(long)]));
+        // booléens ; mélange ; trou : tableau, éléments canonisés
+        assert_eq!(t(vec![Some(Valeur::Booleen(true)), Some(Valeur::Booleen(false))]).canonique(), Valeur::Booleens(vec![true, false]));
+        assert_eq!(t(vec![n(1.0), None]).canonique(), t(vec![n(1.0), None]));
+        assert_eq!(t(vec![n(1.0), Some(Valeur::Booleen(true))]).canonique(), t(vec![n(1.0), Some(Valeur::Booleen(true))]));
+        // vides
+        for v in [t(vec![]), Valeur::Nombres(vec![]), Valeur::Booleens(vec![]), Valeur::Bloc { k: 3, donnees: vec![] }] {
+            assert_eq!(v.canonique(), t(vec![]));
+        }
+        // objet : ordre des clés conservé, valeurs canonisées
+        let o = Valeur::Objet(vec![("z".into(), t(vec![n(1.0)])), ("a".into(), Valeur::Nul)]);
+        assert_eq!(o.canonique(), Valeur::Objet(vec![("z".into(), Valeur::Nombres(vec![1.0])), ("a".into(), Valeur::Nul)]));
+        // idempotente
+        let c = t(vec![Some(o), Some(t(vec![Some(t(vec![n(1.0)]))]))]).canonique();
+        assert_eq!(c.canonique(), c);
+    }
     #[test]
     fn champ_elements_vrai() {
         let o = Valeur::Objet(vec![("a".into(), Valeur::Nombre(1.0))]);

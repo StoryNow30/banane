@@ -13,13 +13,14 @@
  * --chromium : le même banc dans /opt/pw-browsers/chromium (référence de parité, plan § 1). */
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{performance}=require('node:perf_hooks');
 const Vba=require('../ariane-rs/coquille/vba.js'),Coeur=require('../ariane-rs/coquille/coeur.js');
-const {comparer}=require('./ch064-comparer.cjs'),{construire}=require('./ch064-construire.cjs');
+const {comparer,sansNaN}=require('./ch064-comparer.cjs'),{construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 const quantile=(a,p)=>{if(!a.length)return null;const b=a.slice().sort((x,y)=>x-y);return b[Math.min(b.length-1,Math.floor(p*b.length))];};
 function capter(f){try{return {ok:true,valeur:f()};}catch(e){return {ok:false,valeur:e instanceof Error?e:new Error(String(e))};}}
 /* Sortie canonique pour l'empreinte : une exception devient {erreur:[constructeur, message]}. */
-const canon=r=>r.ok?{valeur:r.valeur}:{erreur:[r.valeur.constructor.name,r.valeur.message]};
+/* Les NaN y sont remplacés par une marque (sansNaN, ch064-comparer.cjs) : l'empreinte ne dépend pas de leur charge. */
+const canon=r=>r.ok?{valeur:sansNaN(r.valeur)}:{erreur:[r.valeur.constructor.name,r.valeur.message]};
 function executer(adaptateur,coeur,opts={}){const {limite=Infinity,echauffement=3}=opts;
  const res={module:adaptateur.nom,cas:0,identiques:0,ecarts:[],ms:{js:[],rs:[]},empreintes:{js:crypto.createHash('sha256'),rs:crypto.createHash('sha256')}};
  let n=0;
@@ -49,7 +50,7 @@ async function executerChromium(adaptateur,octetsWasm,{limite=Infinity,nuages=In
   await p.addScriptTag({content:'(function(){const module={};'+fs.readFileSync(path.join(__dirname,'ch064-comparer.cjs'),'utf8').replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
   const ua=await p.evaluate(async([b64,nav])=>{const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const coeur=ArianeCoeur.creer(o);
    const etat=(0,eval)(nav.preparer)(coeur);const js=(0,eval)(nav.js),rs=(0,eval)(nav.rs);
-   const canon=(ok,v)=>ok?{valeur:v}:{erreur:[v.constructor.name,v.message]};
+   const canon=(ok,v)=>ok?{valeur:Ch064Comparer.sansNaN(v)}:{erreur:[v.constructor.name,v.message]};
    const h={js:[],rs:[]};
    window.__banc={coeur,etat,n:0,cas:0,identiques:0,ecarts:[],ms:{js:[],rs:[]},trames:h,
     passer(lot){for(const c of lot){this.n++;let a,b,t0=performance.now();try{a={ok:true,v:js(c.entree,etat)};}catch(e){a={ok:false,v:e};}const t1=performance.now();
