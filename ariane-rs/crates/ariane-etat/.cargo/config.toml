@@ -1,0 +1,3 @@
+# Mémoire linéaire bornée : 512 Mio, multiple de 64 Kio. Au-delà, l'allocation échoue.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--max-memory=536870912"]
