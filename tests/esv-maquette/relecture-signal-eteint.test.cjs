@@ -20,8 +20,8 @@ function extensionAllumee() {
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   const S = path.join(d, 'src/settings.js');
   let t = fs.readFileSync(S, 'utf8');
-  const a = "const relectureSignalEteint = Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });", b = "modeRapide: 'echantillon',";
-  assert.ok(t.includes(a), 'réglage coupé dans le dépôt');assert.ok(t.includes(b), 'mode rapide « échantillon » dans le dépôt');
+  const a = "const relectureSignalEteint = Object.freeze({ actif: true, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });", b = "modeRapide: 'echantillon',";
+  assert.ok(t.includes(a), 'réglage allumé dans le dépôt (D-290)');assert.ok(t.includes(b), 'mode rapide « échantillon » dans le dépôt');
   t = t.replace(a, "const relectureSignalEteint = Object.freeze({ actif: true, lectures: 2, rechargementsMax: 1, attenteRepriseMs: 120000, attenteSansListeMs: 2000, silenceListeMs: 1500 });")
     .replace(b, "modeRapide: 'toujours',");
   fs.writeFileSync(S, t);

@@ -3417,4 +3417,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Effet : `src/relecture-ombre.js`, `plafondParZone.abords` = null (sans plafond). L'ADV (D-185) et le PN restent sans plafond ; vert-hors-zone et écartement gardent 20. Les cuts de référence restent lus en lecture complète pendant la relecture.
 - Coût : relecture plus longue dans les grosses parties (PROBABLE : environ 1 400 cuts sur 28 relectures, chiffre exact attendu de CH-060). Compensation prévue : rechargement de la page quand le signal de chargement d'ESV est éteint (CH-060, réglage éteint par défaut tant que l'opérateur ne l'a pas essayé).
 - NON couvert : regrouper les grandes grappes en une seule plage (`grappe.trouCuts`), en attente des exports de l'opérateur.
-- Le numéro suivant est D-290.
+
+## D-290 — Relecture : rechargement d'ESV quand son signal de chargement s'éteint, ALLUMÉ ; chantiers pour le lot (opérateur, 06/11)
+- Constat ÉTABLI (lot Constellation du 06/11, parties 13 à 16, paquet 2bc1f56, 3 686 captures) : le signal de fin de chargement d'ESV vit au chargement de chaque partie, meurt en moins de 10 minutes et ne revient qu'au rechargement suivant ; ensuite environ 1 000 à 1 100 ms d'attente par rail. Relecture : 2,8 à 3,3 s par cut signal éteint (parties 13 à 15), 2,0 s signal vivant (partie 16 après sa reprise).
+- Question : « allumer le rechargement pour la relecture, et lancer le chantier pour l'étendre à la pose ? » ; à « quel est le mieux selon toi ? », réponse de l'intégrateur « les deux, dans cet ordre » ; l'opérateur : « go ».
+- Effet : `relectureSignalEteint.actif` = true (CH-060 : un rechargement au plus par relecture, pause au point de reprise, jamais pendant une correction ; si ESV rouvre une autre partie, pause et consigne F5). Le lot n'est pas concerné.
+- Chantiers lancés : CH-062 (le même rechargement pendant le lot, au point sûr entre deux validations prouvées, livré coupé ; d'abord comprendre pourquoi le compteur d'ESV se bloque) ; CH-063 (mesure : lecture directe des points de la zone du rail et niveau de détail suffisant, preuve d'identité exigée).
+- Le numéro suivant est D-291.

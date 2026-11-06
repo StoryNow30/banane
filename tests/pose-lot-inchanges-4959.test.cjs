@@ -82,7 +82,7 @@ const RECONSTRUCTION=['native-reconstruction.js'];
  * quelles clés lire ; chaque appelant refiltre, résultat identique à la lecture complète. Il ne lit ni ne commande la pose. */
 const JOURNAL_INDEX=['journal-index.js'];
 /* CH-060 : le signal de fin de chargement d'ESV éteint pendant la relecture (src/relecture-signal.js) : partie pure, lue par la relecture seule (après le
- * lot) ; elle ne lit ni ne commande la pose. Son réglage `relectureSignalEteint` est COUPÉ par défaut (vérifié plus bas). */
+ * lot) ; elle ne lit ni ne commande la pose. Son réglage `relectureSignalEteint` est ALLUMÉ depuis D-290 (vérifié plus bas). */
 const SIGNAL_RELECTURE=['relecture-signal.js'];
 
 /* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
@@ -150,7 +150,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(file.actif,true,'file de parties : allumée par défaut dans la test 25 (D-268, ordre de l\'opérateur) ; la file ne part que si l\'opérateur la lance');
  /* Test 27 (CH-026, ordre de l'opérateur du 30/10) : clé ajoutée au premier niveau, la relecture « corriger » par défaut, non réglable. */
  assert.deepEqual({...relectureDefaut},{mode:'corriger',modifiable:false},'relecture après le lot : « corriger » par défaut, non réglable');
- assert.equal(relectureSignalEteint.actif,false,'CH-060 : rechargement d\'ESV quand son signal s\'éteint pendant la relecture : COUPÉ par défaut');
+ assert.equal(relectureSignalEteint.actif,true,'CH-060, D-290 : rechargement d\'ESV quand son signal s\'éteint pendant la relecture : ALLUMÉ (la relecture seulement ; le lot n\'est pas concerné)');
  /* CH-035 : clé ajoutée au premier niveau, l'Aurore entre les parties d'une Constellation, ÉTEINTE tant que l'opérateur ne l'a pas éprouvée. */
  assert.equal(correctionEntreParties.actif,true,'Aurore entre les parties : allumée par défaut (CH-037, décision de l’opérateur du 01/11), sans effet sur le lot');
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
