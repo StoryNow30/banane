@@ -1,6 +1,6 @@
 //! `src/garde-apres-differe.js` et `src/garde-passe-appuis.js`, à l'identique.
 use crate::critere::vers_nombre;
-use crate::js::*;
+use crate::js::{R, hd, o, b, s, n, est_simple, fusion2, g, entier, Ou, num, est_tableau, presents, tab_n, Appel, longueur, elems, fini, n_ou_nul, arrondi1, vrai};
 use ariane_vba::Valeur as V;
 
 const SIDES: [&str; 2] = ["left", "right"];
@@ -9,12 +9,12 @@ const SIDES: [&str; 2] = ["left", "right"];
 fn destructure(v: &V) -> R<&V> { match v { V::Nul => hd("déstructuration de null"), x => Ok(x) } }
 
 // ---------------------------------------------------------------- garde après un différé (R1, R3)
-pub mod apres_differe {
-    use super::*;
-    pub fn defaut() -> V { o(vec![("actif", b(true)), ("ombre", b(false)), ("regle", s("R3")), ("coupures", n(2.0)), ("appuisMin", n(2.0))]) }
+pub(crate) mod apres_differe {
+    use super::{V, o, b, s, n, R, est_simple, fusion2, g, entier, Ou, num, est_tableau, presents, vers_nombre, destructure, tab_n, Appel, hd};
+    pub(crate) fn defaut() -> V { o(vec![("actif", b(true)), ("ombre", b(false)), ("regle", s("R3")), ("coupures", n(2.0)), ("appuisMin", n(2.0))]) }
     const CLES: [&str; 5] = ["actif", "ombre", "regle", "coupures", "appuisMin"];
 
-    pub fn reglage(valeur: &V, defaut_: &V) -> R<V> {
+    pub(crate) fn reglage(valeur: &V, defaut_: &V) -> R<V> {
         let d = if est_simple(defaut_) { fusion2(&defaut(), defaut_)? } else { defaut() };
         let livre: Vec<(&str, V)> = CLES.iter().map(|k| (*k, g(&d, k).clone())).collect();
         let illisible = |raison: &str| { let mut t = vec![("ok", b(false)), ("raison", s(raison))]; t.extend(livre.clone()); Ok(o(t)) };
@@ -29,35 +29,35 @@ pub mod apres_differe {
         if !matches!(g(&r, "actif"), V::Booleen(_)) { return illisible("gardeApresDiffere.actif illisible"); }
         if !matches!(g(&r, "ombre"), V::Booleen(_)) { return illisible("gardeApresDiffere.ombre illisible"); }
         if !matches!(g(&r, "regle"), V::Chaine(c) if c == "R1" || c == "R3") { return illisible("gardeApresDiffere.regle illisible"); }
-        if !(entier(g(&r, "coupures")) && num(g(&r, "coupures")).unwrap() >= 1.0) { return illisible("gardeApresDiffere.coupures illisible"); }
-        if !(entier(g(&r, "appuisMin")) && num(g(&r, "appuisMin")).unwrap() >= 0.0) { return illisible("gardeApresDiffere.appuisMin illisible"); }
+        if !(entier(g(&r, "coupures")) && num(g(&r, "coupures")).ou_hd()? >= 1.0) { return illisible("gardeApresDiffere.coupures illisible"); }
+        if !(entier(g(&r, "appuisMin")) && num(g(&r, "appuisMin")).ou_hd()? >= 0.0) { return illisible("gardeApresDiffere.appuisMin illisible"); }
         let mut t = vec![("ok", b(true))];
         for k in CLES { t.push((k, g(&r, k).clone())); }
         Ok(o(t))
     }
 
-    pub fn voisins_differes(cut: &V, differes: &V, coupures: &V) -> R<Vec<f64>> {
+    pub(crate) fn voisins_differes(cut: &V, differes: &V, coupures: &V) -> R<Vec<f64>> {
         if !entier(cut) || !est_tableau(differes) { return Ok(vec![]); }
-        let c = num(cut).unwrap();
+        let c = num(cut).ou_hd()?;
         let mut lim: Option<f64> = None;
         let mut vus: Vec<f64> = vec![];
         for x in presents(differes) {
             if !entier(&x) { continue; }
-            let x = num(&x).unwrap();
+            let x = num(&x).ou_hd()?;
             if !(x < c) { continue; }
-            let l = match lim { Some(l) => l, None => { let l = c - vers_nombre(coupures)?; lim = Some(l); l } };
+            let l = if let Some(l) = lim { l } else { let l = c - vers_nombre(coupures)?; lim = Some(l); l };
             if x >= l && !vus.contains(&x) { vus.push(x + 0.0); } // Set ramène −0 à +0
         }
         ariane_js::trier_nombres(&mut vus);
         Ok(vus)
     }
 
-    pub fn juger(entree: &V, r_: &V) -> R<V> {
+    pub(crate) fn juger(entree: &V, r_: &V) -> R<V> {
         let e = destructure(entree)?;
         let r = if est_simple(r_) { r_.clone() } else { reglage(&V::Indefini, &V::Indefini)? };
         let vd = voisins_differes(g(e, "cut"), g(e, "differesLot"), g(&r, "coupures"))?;
         let ap = g(e, "appuis");
-        let a = if entier(ap) && num(ap).unwrap() >= 0.0 { Some(ap.clone()) } else { None };
+        let a = if entier(ap) && num(ap).ou_hd()? >= 0.0 { Some(ap.clone()) } else { None };
         let mut out = vec![("regle", g(&r, "regle").clone()), ("appuis", a.clone().unwrap_or(V::Nul)), ("voisinsDifferes", tab_n(&vd))];
         let ok_faux = matches!(g(&r, "ok"), V::Booleen(false));
         if ok_faux { out.push(("reglageIllisible", b(true))); }
@@ -70,9 +70,10 @@ pub mod apres_differe {
             Ok(o(t))
         };
         if !ok_faux && actif_faux && !ombre { return rendre(false, "garde-coupee", None); }
-        let aurait = !vd.is_empty() && !(matches!(g(&r, "regle"), V::Chaine(c) if c == "R3") && {
+        let r3 = matches!(g(&r, "regle"), V::Chaine(c) if c == "R3");
+        let aurait = !vd.is_empty() && (!r3 || {
             let av = match &a { Some(V::Nombre(x)) => *x, _ => 0.0 };
-            av >= vers_nombre(g(&r, "appuisMin"))?
+            !(av >= vers_nombre(g(&r, "appuisMin"))?)
         });
         if ombre { return rendre(false, "ombre", Some(aurait)); }
         if vd.is_empty() { return rendre(false, "pas-de-differe", None); }
@@ -80,7 +81,7 @@ pub mod apres_differe {
         rendre(true, "garde-apres-differe", None)
     }
 
-    pub fn appeler(a: &Appel) -> R<V> {
+    pub(crate) fn appeler(a: &Appel) -> R<V> {
         match a.f.as_str() {
             "reglage" => reglage(a.arg(0), a.arg(1)),
             "voisinsDifferes" => Ok(tab_n(&voisins_differes(a.arg(0), a.arg(1), a.arg(2))?)),
@@ -91,11 +92,11 @@ pub mod apres_differe {
 }
 
 // ---------------------------------------------------------------- garde A de la deuxième passe
-pub mod passe_appuis {
-    use super::*;
-    pub fn defaut() -> V { o(vec![("actif", b(true)), ("deplacementMaxMm", n(100.0)), ("appuiNormalMaxCuts", n(4.0))]) }
+pub(crate) mod passe_appuis {
+    use super::{V, o, b, n, R, est_simple, fusion2, g, s, entier, Ou, num, SIDES, est_tableau, longueur, elems, fini, destructure, n_ou_nul, arrondi1, vrai, vers_nombre, Appel, hd};
+    pub(crate) fn defaut() -> V { o(vec![("actif", b(true)), ("deplacementMaxMm", n(100.0)), ("appuiNormalMaxCuts", n(4.0))]) }
 
-    pub fn reglage(valeur: &V, defaut_: &V) -> R<V> {
+    pub(crate) fn reglage(valeur: &V, defaut_: &V) -> R<V> {
         let d = if est_simple(defaut_) { fusion2(&defaut(), defaut_)? } else { defaut() };
         let vide = o(vec![]);
         let valeur = match valeur {
@@ -109,18 +110,18 @@ pub mod passe_appuis {
         let r = fusion2(&d, valeur)?;
         if !matches!(g(&r, "actif"), V::Booleen(_)) { return non("gardeAppuis.actif illisible"); }
         if !matches!(g(&r, "deplacementMaxMm"), V::Nombre(x) if x.is_finite() && *x > 0.0) { return non("gardeAppuis.deplacementMaxMm illisible"); }
-        if !(entier(g(&r, "appuiNormalMaxCuts")) && num(g(&r, "appuiNormalMaxCuts")).unwrap() >= 0.0) { return non("gardeAppuis.appuiNormalMaxCuts illisible"); }
+        if !(entier(g(&r, "appuiNormalMaxCuts")) && num(g(&r, "appuiNormalMaxCuts")).ou_hd()? >= 0.0) { return non("gardeAppuis.appuiNormalMaxCuts illisible"); }
         Ok(o(vec![("ok", b(true)), ("actif", g(&r, "actif").clone()), ("deplacementMaxMm", g(&r, "deplacementMaxMm").clone()),
             ("appuiNormalMaxCuts", g(&r, "appuiNormalMaxCuts").clone())]))
     }
 
-    pub fn deplacement_mm(decal: &V) -> Option<f64> {
+    pub(crate) fn deplacement_mm(decal: &V) -> Option<f64> {
         if !est_simple(decal) { return None; }
         let mut m = f64::NEG_INFINITY;
         for sd in SIDES {
             let v = g(decal, sd);
-            if !est_tableau(v) || longueur(v).unwrap() < 3 { return None; }
-            let t: Vec<Option<V>> = elems(v).unwrap().into_iter().take(3).collect();
+            if !est_tableau(v) || longueur(v)? < 3 { return None; }
+            let t: Vec<Option<V>> = elems(v)?.into_iter().take(3).collect();
             if !t.iter().flatten().all(fini) { return None; }
             let x: Vec<f64> = t.iter().map(|e| e.as_ref().and_then(num).unwrap_or(f64::NAN)).collect();
             m = ariane_js::max(m, ariane_js::hypot(&x));
@@ -128,11 +129,11 @@ pub mod passe_appuis {
         Some(m)
     }
 
-    pub fn appui_normal_cuts(cut: &V, normaux: &V) -> Option<f64> {
+    pub(crate) fn appui_normal_cuts(cut: &V, normaux: &V) -> Option<f64> {
         if !entier(cut) || !est_tableau(normaux) { return None; }
-        let c = num(cut).unwrap();
+        let c = num(cut)?;
         let mut m: Option<f64> = None;
-        for x in elems(normaux).unwrap() {
+        for x in elems(normaux)? {
             let Some(x) = x.filter(entier).and_then(|x| num(&x)) else { continue };
             if x == c { continue; }
             let d = (x - c).abs();
@@ -141,7 +142,7 @@ pub mod passe_appuis {
         m
     }
 
-    pub fn juger(entree: &V, r_: &V, r_passe: bool) -> R<V> {
+    pub(crate) fn juger(entree: &V, r_: &V, r_passe: bool) -> R<V> {
         let e = destructure(entree)?;
         let def;
         let r = if r_passe && !matches!(r_, V::Indefini) { r_ } else { def = reglage(&V::Indefini, &V::Indefini)?; &def };
@@ -156,7 +157,7 @@ pub mod passe_appuis {
         rendre(true, "garde-appuis")
     }
 
-    pub fn appeler(a: &Appel) -> R<V> {
+    pub(crate) fn appeler(a: &Appel) -> R<V> {
         match a.f.as_str() {
             "reglage" => reglage(a.arg(0), a.arg(1)),
             "deplacementMm" => Ok(n_ou_nul(deplacement_mm(a.arg(0)))),

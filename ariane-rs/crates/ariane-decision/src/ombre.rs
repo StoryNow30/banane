@@ -1,6 +1,6 @@
 //! `src/relecture-ombre.js` : sélection des cuts de la relecture, jugement d'un cut visité, SKIP en ombre, à l'identique.
 use crate::critere::vers_nombre;
-use crate::js::*;
+use crate::js::{o, s, n, b, tab_s, nul, tab_n, R, etaler, vrai, entrees, g_brut, est_objet, est_tableau, fusion2, definir, p, nombre_chaine, longueur, elems, g, Ou, hd, INDEF, presents, nullish, tab, point_v, n_ou_nul, fini, num, fini_de, tranche_utf16, chaine, gi, entier, Appel};
 use ariane_vba::Valeur as V;
 use std::collections::HashMap;
 
@@ -10,7 +10,7 @@ const ORDRE_ZONES: [&str; 5] = ["pn", "adv", "abords", "vert-hors-zone", "ecarte
 /// Bornes de sécurité du port : une plage plus longue que ceci ferait tourner le JS des minutes (ou sans fin).
 const PLAGE_MAX: f64 = 2_000_000.0;
 
-pub fn defaults() -> V {
+pub(crate) fn defaults() -> V {
     o(vec![("version", s(VERSION)), ("isole", o(vec![("marge", n(1.0))])), ("differe", o(vec![("marge", n(2.0))])),
         ("grappe", o(vec![("trouCuts", n(5.0)), ("min", n(3.0)), ("marge", n(3.0))])),
         ("aControler", o(vec![("marge", n(1.0))])), ("trouMaxCuts", n(3.0)), ("fusionTrouCuts", n(0.0)), ("relireCutsDuLot", b(false)),
@@ -20,7 +20,7 @@ pub fn defaults() -> V {
         ("tempsParCutS", n(3.0)), ("tempsTraverseS", n(1.0)), ("seuilCorrigerMm", n(5.0)), ("zoneGrise", tab_n(&[3.6, 6.4]))])
 }
 fn zone_de_motif(m: &str) -> &'static str {
-    match m { "pn" => "pn", "adv" => "adv", "grappe" | "differe" | "isole" => "abords", "a-controler" => "vert-hors-zone", "ecartement" => "ecartement", _ => "vert-hors-zone" }
+    match m { "pn" => "pn", "adv" => "adv", "grappe" | "differe" | "isole" => "abords", "ecartement" => "ecartement", _ => "vert-hors-zone" } // « a-controler » compris
 }
 fn libelle(m: &str) -> String {
     match m { "pn" => "PN", "adv" => "ADV", "grappe" => "grappe", "differe" => "autour du différé", "isole" => "cut isolé", "a-controler" => "à contrôler",
@@ -32,7 +32,7 @@ fn r1(x: f64) -> Option<f64> { if x.is_finite() { Some(ariane_js::round(x * 10.0
 fn um(x: f64) -> f64 { ariane_js::round(x * 1e6) / 1e6 }
 
 /// `fusion(a, b)` : un niveau de profondeur pour les objets simples.
-pub fn fusion(a: &V, b_: &V) -> R<V> {
+pub(crate) fn fusion(a: &V, b_: &V) -> R<V> {
     let mut out = vec![];
     etaler(&mut out, a)?;
     let ent = if vrai(b_) { entrees(b_)? } else { vec![] };
@@ -43,17 +43,17 @@ pub fn fusion(a: &V, b_: &V) -> R<V> {
     }
     Ok(V::Objet(out))
 }
-pub fn cfg_de(options: &V) -> R<V> { if vrai(options) { fusion(&defaults(), options) } else { Ok(defaults()) } }
-/// `cfg.a.b` strict (TypeError de V8 sur null/undefined : hors domaine).
+pub(crate) fn cfg_de(options: &V) -> R<V> { if vrai(options) { fusion(&defaults(), options) } else { Ok(defaults()) } }
+/// `cfg.a.b` strict (`TypeError` de V8 sur null/undefined : hors domaine).
 fn pp(cfg: &V, a: &str, b_: &str) -> R<V> { Ok(p(p(cfg, a)?, b_)?.clone()) }
 fn ppn(cfg: &V, a: &str, b_: &str) -> R<f64> { vers_nombre(&pp(cfg, a, b_)?) }
 fn tiret(a: f64, z: f64) -> String { if a == z { nombre_chaine(a) } else { format!("{}–{}", nombre_chaine(a), nombre_chaine(z)) } }
 
 /// `plage(x)`.
-pub fn plage(x: &V) -> Option<(f64, f64)> {
+pub(crate) fn plage(x: &V) -> Option<(f64, f64)> {
     if let Some(c) = entier_pos(x) { return Some((c, c)); }
     if est_tableau(x) && longueur(x) == Some(2) {
-        let t = elems(x).unwrap();
+        let t = elems(x)?;
         if t.iter().flatten().all(|e| entier_pos(e).is_some()) {
             if let (Some(a), Some(z)) = (t[0].as_ref().and_then(entier_pos), t[1].as_ref().and_then(entier_pos)) { if a <= z { return Some((a, z)); } }
             return None;
@@ -64,6 +64,8 @@ pub fn plage(x: &V) -> Option<(f64, f64)> {
     None
 }
 
+/// Plage de cuts consécutifs d'un même type de zone.
+struct Fondue { a: f64, z: f64, cuts: Vec<f64>, zone: String }
 #[derive(Clone)]
 struct Brute { a: f64, z: f64, motif: String, zone: Option<String> }
 #[derive(Clone)]
@@ -72,7 +74,8 @@ struct CutSel { cut: f64, role: &'static str, zone: String }
 struct Plage { debut: f64, fin: f64, motifs: Vec<String>, zone: String, priorite: f64, libelle: String, cuts: Vec<CutSel>, traverses: Vec<f64>, liste: Vec<f64> }
 struct Hors { debut: f64, fin: f64, motifs: Vec<String>, libelle: String }
 
-fn cle(x: f64) -> u64 { (x + 0.0).to_bits() }
+/// Clé de `Map` JS pour un cut (`SameValueZero` : −0 et +0 confondus, tous les NaN confondus).
+fn cle(x: f64) -> u64 { ariane_js::cle_same_value_zero(x) }
 fn ensemble_ajouter(v: &mut Vec<f64>, x: f64) { if !v.contains(&x) { v.push(x + 0.0); } }
 
 fn plages_du_lot(lot: &[(f64, bool)], cfg: &V) -> R<Vec<Brute>> {
@@ -82,13 +85,13 @@ fn plages_du_lot(lot: &[(f64, bool)], cfg: &V) -> R<Vec<Brute>> {
     ariane_js::trier_nombres(&mut cuts);
     let mut groupes: Vec<Vec<f64>> = vec![];
     for c in cuts {
-        let ajoute = match groupes.last() { Some(g_) => c - *g_.last().unwrap() <= ppn(cfg, "grappe", "trouCuts")?, None => false };
-        if ajoute { groupes.last_mut().unwrap().push(c); } else { groupes.push(vec![c]); }
+        let ajoute = match groupes.last() { Some(g_) => c - *g_.last().ou_hd()? <= ppn(cfg, "grappe", "trouCuts")?, None => false };
+        if ajoute { groupes.last_mut().ou_hd()?.push(c); } else { groupes.push(vec![c]); }
     }
     for g_ in &groupes {
         if g_.len() as f64 >= ppn(cfg, "grappe", "min")? {
             let m = ppn(cfg, "grappe", "marge")?;
-            out.push(Brute { a: g_[0] - m, z: g_.last().unwrap() + m, motif: "grappe".into(), zone: None });
+            out.push(Brute { a: g_[0] - m, z: g_.last().ou_hd()? + m, motif: "grappe".into(), zone: None });
         } else {
             for &c in g_ { let m = ppn(cfg, "isole", "marge")?; out.push(Brute { a: c - m, z: c + m, motif: "isole".into(), zone: None }); }
         }
@@ -116,7 +119,7 @@ fn parcourir(p_: &Brute, mut f: impl FnMut(f64)) -> R<()> {
     Ok(())
 }
 
-pub fn selection(entree: &V, options: &V) -> R<V> {
+pub(crate) fn selection(entree: &V, options: &V) -> R<V> {
     let cfg = cfg_de(options)?;
     let e = if vrai(entree) && est_objet(entree) { entree } else { &INDEF };
     let total = entier_pos(g(e, "total")).filter(|t| *t > 0.0);
@@ -169,24 +172,23 @@ pub fn selection(entree: &V, options: &V) -> R<V> {
     let mut motifs_de: HashMap<u64, Vec<String>> = HashMap::new();
     for p_ in &bornees { parcourir(p_, |c| { let m = motifs_de.entry(cle(c)).or_default(); if !m.contains(&p_.motif) { m.push(p_.motif.clone()); } })?; }
     ariane_js::trier_nombres(&mut couverts);
-    struct Fondue { a: f64, z: f64, cuts: Vec<f64>, zone: String }
     let mut fondues: Vec<Fondue> = vec![];
     for c in couverts {
         let zc = zone_de[&cle(c)].clone();
         let joint = match fondues.last() { Some(d) if d.zone == zc => c - d.z - 1.0 <= vers_nombre(g(&cfg, "fusionTrouCuts"))?, _ => false };
-        if joint { let d = fondues.last_mut().unwrap(); d.z = c; d.cuts.push(c); } else { fondues.push(Fondue { a: c, z: c, cuts: vec![c], zone: zc }); }
+        if joint { let d = fondues.last_mut().ou_hd()?; d.z = c; d.cuts.push(c); } else { fondues.push(Fondue { a: c, z: c, cuts: vec![c], zone: zc }); }
     }
     let prio = g(&cfg, "priorites");
     let rang = |m: &str| -> R<f64> {
         if nullish(prio) { return hd("priorites absent"); }
         if !est_tableau(prio) { return hd("priorites non tableau"); }
-        let t = elems(prio).unwrap();
+        let t = elems(prio).ou_hd()?;
         Ok(t.iter().position(|x| matches!(x, Some(V::Chaine(c)) if c == m)).unwrap_or(t.len()) as f64)
     };
     let relire = vrai(g(&cfg, "relireCutsDuLot"));
     let decrire = |a: f64, z: f64, liste: &[f64]| -> R<Plage> {
         let mut motifs: Vec<String> = vec![];
-        for c in liste { for m in motifs_de.get(&cle(*c)).map(|v| v.as_slice()).unwrap_or(&[]) { if !motifs.contains(m) { motifs.push(m.clone()); } } }
+        for c in liste { for m in motifs_de.get(&cle(*c)).map_or(&[][..], std::vec::Vec::as_slice) { if !motifs.contains(m) { motifs.push(m.clone()); } } }
         let zone = zone_de[&cle(liste[0])].clone();
         let mut ms: Vec<(f64, String)> = vec![];
         for m in motifs { ms.push((rang(&m)?, m)); }
@@ -215,8 +217,8 @@ pub fn selection(entree: &V, options: &V) -> R<V> {
             let mut ob: Option<bool> = None;
             let mut rendre = |suite: &mut Vec<f64>, ob: Option<bool>, out: &mut Vec<Plage>| -> R<()> {
                 if suite.is_empty() { return Ok(()); }
-                if ob == Some(true) { out.push(decrire(suite[0], *suite.last().unwrap(), suite)?); }
-                else { hors_plafond.push(Hors { debut: suite[0], fin: *suite.last().unwrap(), motifs: p_.motifs.clone(), libelle: p_.libelle.clone() }); }
+                if ob == Some(true) { out.push(decrire(suite[0], *suite.last().ou_hd()?, suite)?); }
+                else { hors_plafond.push(Hors { debut: suite[0], fin: *suite.last().ou_hd()?, motifs: p_.motifs.clone(), libelle: p_.libelle.clone() }); }
                 suite.clear();
                 Ok(())
             };
@@ -233,7 +235,7 @@ pub fn selection(entree: &V, options: &V) -> R<V> {
         for p_ in triee {
             if p_.cuts.len() as f64 <= reste { reste -= p_.cuts.len() as f64; out.push(p_); dans_budget += 1; continue; }
             if dans_budget == 0 && reste > 0.0 {
-                let coupe = p_.cuts[reste as usize - 1].cut;
+                let coupe = p_.cuts[crate::js::rang(reste) - 1].cut;
                 let l: Vec<f64> = p_.liste.iter().copied().filter(|c| *c <= coupe).collect();
                 out.push(decrire(p_.debut, coupe, &l)?);
                 dans_budget += 1;
@@ -286,7 +288,7 @@ pub fn selection(entree: &V, options: &V) -> R<V> {
             ("raison", s("plafond-cuts"))])).collect()))]))
 }
 
-pub fn options_selection(bloc: &V) -> V {
+pub(crate) fn options_selection(bloc: &V) -> V {
     let b_ = if vrai(bloc) && est_objet(bloc) { bloc } else { &INDEF };
     let nn = |v: &V, d: f64| match v { V::Nombre(x) if x.is_finite() && x.trunc() == *x && *x >= 0.0 && *x <= 100.0 => v.clone(), _ => n(d) };
     let def = |k: &str| !matches!(g(b_, k), V::Indefini);
@@ -302,7 +304,7 @@ pub fn options_selection(bloc: &V) -> V {
 // ---------------------------------------------------------------- jugement
 
 /// `ecartRail(rail, p, {brut})` : écart (mm) dans le repère profil du rail.
-pub fn ecart_rail(rail: &V, pv: &V, brut: bool) -> R<V> {
+pub(crate) fn ecart_rail(rail: &V, pv: &V, brut: bool) -> R<V> {
     let m = p(rail, "sceneRelativeToProfileLocal")?;
     let a = point_v(m, pv)?;
     let o_ = point_v(m, p(rail, "positionSceneRelative")?)?;
@@ -318,8 +320,8 @@ fn ecart_brut(rail: &V, pv: &V) -> R<[f64; 3]> {
 }
 
 /// Positions rendues par `poseCalculee` (tableau d'origine copié, ou point calculé) et corrections.
-pub struct Pose { pub positions: [V; 2], pub hauteur_mm: Option<[f64; 2]> }
-pub fn pose_calculee(decision: &V, rails: &V, hauteur: &V) -> R<Option<Pose>> {
+pub(crate) struct Pose { pub positions: [V; 2], pub hauteur_mm: Option<[f64; 2]> }
+pub(crate) fn pose_calculee(decision: &V, rails: &V, hauteur: &V) -> R<Option<Pose>> {
     let pz = if nullish(decision) { &INDEF } else { g(decision, "positions") };
     if !vrai(pz) { return Ok(None); }
     for sd in SIDES {
@@ -333,7 +335,7 @@ pub fn pose_calculee(decision: &V, rails: &V, hauteur: &V) -> R<Option<Pose>> {
     for (i, sd) in SIDES.iter().enumerate() {
         let hs = if nullish(h) { &INDEF } else { g(h, sd) };
         let cm = if nullish(hs) { &INDEF } else { g(hs, "correctionMm") };
-        let mm = if vrai(hauteur) && fini(cm) { num(cm).unwrap() } else { 0.0 };
+        let mm = if vrai(hauteur) && fini(cm) { num(cm).ou_hd()? } else { 0.0 };
         let r = if nullish(rails) { &INDEF } else { g(rails, sd) };
         let porte = mm != 0.0 && !nullish(r) && vrai(g(r, "sceneRelativeToProfileLocal")) && vrai(g(r, "profileLocalToSceneRelative"));
         if porte {
@@ -342,7 +344,7 @@ pub fn pose_calculee(decision: &V, rails: &V, hauteur: &V) -> R<Option<Pose>> {
             let w = point_v(g(r, "profileLocalToSceneRelative"), &tab_n(&q))?;
             out[i] = tab_n(&w);
         } else {
-            out[i] = V::Tableau(elems(g(pz, sd)).unwrap());
+            out[i] = V::Tableau(elems(g(pz, sd)).ou_hd()?);
         }
         corr[i] = if porte { mm } else { 0.0 };
     }
@@ -353,7 +355,7 @@ fn pose_valeur(p_: &Pose) -> V {
         ("hauteurMm", p_.hauteur_mm.map_or(nul(), |c| o(vec![("left", n(c[0])), ("right", n(c[1]))])))])
 }
 
-pub fn confiance(science: &V) -> V {
+pub(crate) fn confiance(science: &V) -> V {
     let rails = if nullish(science) { &INDEF } else { g(science, "rails") };
     if !vrai(rails) { return nul(); }
     o(SIDES.iter().map(|sd| {
@@ -371,13 +373,13 @@ fn s1_de(science: &V) -> V {
 /// `p.map(um)` : trous conservés, coercition des seuls non-nombres simples.
 fn map_um(t: &V) -> R<V> {
     let mut out = vec![];
-    for e in elems(t).unwrap() { out.push(match e { None => None, Some(x) => Some(n(um(vers_nombre(&x)?))) }); }
+    for e in elems(t).ou_hd()? { out.push(match e { None => None, Some(x) => Some(n(um(vers_nombre(&x)?))) }); }
     Ok(V::Tableau(out))
 }
 fn nombre_virgule(x: f64) -> String { r1(x).map_or("null".into(), |v| nombre_chaine(v).replacen('.', ",", 1)) }
 fn nombre_virgule_v(x: &V) -> String { match fini_de(x) { Some(v) => nombre_virgule(v), None => "null".into() } }
 
-pub fn juger(arg: &V, options: &V) -> R<V> {
+pub(crate) fn juger(arg: &V, options: &V) -> R<V> {
     if nullish(arg) { return hd("déstructuration de null/undefined"); }
     let capture = g(arg, "capture");
     let decision = g(arg, "decision");
@@ -393,7 +395,7 @@ pub fn juger(arg: &V, options: &V) -> R<V> {
     let reason = if nullish(decision) { &INDEF } else { g(decision, "reason") };
     let motif = if nullish(reason) { V::Nul } else { s(&tranche_utf16(&chaine(reason)?, 80)?) };
     let au = if nullish(decision) { &INDEF } else { g(decision, "anchorsUsed") };
-    let appuis = if est_tableau(au) { V::Tableau(elems(au).unwrap().into_iter().take(12).collect()) } else { tab(vec![]) };
+    let appuis = if est_tableau(au) { V::Tableau(elems(au).ou_hd()?.into_iter().take(12).collect()) } else { tab(vec![]) };
     let mut base = vec![("etage", etage.clone()), ("motifDecision", motif.clone()), ("appuis", appuis), ("confiance", confiance(science)), ("s1", s1_de(science)),
         ("poseActuelle", actuelle.clone().unwrap_or(V::Nul))];
     let calc = if actuelle.is_some() { pose_calculee(decision, rails, hauteur)? } else { None };
@@ -444,13 +446,13 @@ pub fn juger(arg: &V, options: &V) -> R<V> {
 fn points_de(capture: &V) -> Option<(V, V, f64)> {
     let q = if nullish(capture) { &INDEF } else { let qq = g(capture, "quality"); if nullish(qq) { &INDEF } else { g(qq, "perRail") } };
     if vrai(q) && SIDES.iter().all(|sd| entier(g(q, sd))) {
-        let (l, r) = (num(g(q, "left")).unwrap(), num(g(q, "right")).unwrap());
+        let (l, r) = (num(g(q, "left"))?, num(g(q, "right"))?);
         return Some((n(l), n(r), l + r));
     }
     let pts = if nullish(capture) { &INDEF } else { g(capture, "pointsSceneRelative") };
     longueur(pts).map(|k| (nul(), nul(), k as f64))
 }
-pub fn skip_ombre(captures: &V, opts: &V) -> R<V> {
+pub(crate) fn skip_ombre(captures: &V, opts: &V) -> R<V> {
     if matches!(opts, V::Nul) { return hd("options null"); }
     let min = match g(opts, "min") { V::Indefini => 2.0, x => vers_nombre(x)? };
     let liste: Vec<V> = if est_tableau(captures) { presents(captures).into_iter().filter(vrai).collect() } else if vrai(captures) { vec![captures.clone()] } else { vec![] };
@@ -460,17 +462,17 @@ pub fn skip_ombre(captures: &V, opts: &V) -> R<V> {
     Ok(o(vec![("raison", if liste.len() as f64 >= min && vides == liste.len() { s("aucun-point") } else { nul() }),
         ("points", p0.map_or(nul(), |(l, r, _)| o(vec![("left", l), ("right", r)]))), ("captures", n(liste.len() as f64)), ("capturesVides", n(vides as f64))]))
 }
-pub fn capture_vide(capture: &V) -> bool { matches!(points_de(capture), Some((_, _, t)) if t == 0.0) }
+pub(crate) fn capture_vide(capture: &V) -> bool { matches!(points_de(capture), Some((_, _, t)) if t == 0.0) }
 
-pub fn duree(x: &V) -> String {
+pub(crate) fn duree(x: &V) -> String {
     let Some(sv) = fini_de(x) else { return String::new() };
     if sv < 0.0 { return String::new(); }
     let m = (sv / 60.0).floor();
     let r = ariane_js::round(sv - 60.0 * m);
-    if m != 0.0 { format!("{} min{}", nombre_chaine(m), if r != 0.0 { format!(" {} s", nombre_chaine(r)) } else { String::new() }) } else { format!("{} s", nombre_chaine(r)) }
+    if m == 0.0 { format!("{} s", nombre_chaine(r)) } else { format!("{} min{}", nombre_chaine(m), if r == 0.0 { String::new() } else { format!(" {} s", nombre_chaine(r)) }) }
 }
 
-pub fn appeler(a: &Appel) -> R<V> {
+pub(crate) fn appeler(a: &Appel) -> R<V> {
     match a.f.as_str() {
         "plage" => Ok(plage(a.arg(0)).map_or(nul(), |(x, y)| tab_n(&[x, y]))),
         "selection" => selection(a.arg(0), a.arg(1)),
@@ -492,5 +494,15 @@ pub fn appeler(a: &Appel) -> R<V> {
         "captureVide" => Ok(b(capture_vide(a.arg(0)))),
         "duree" => Ok(s(&duree(a.arg(0)))),
         _ => hd("relecture-ombre : fonction non portée"),
+    }
+}
+
+#[cfg(test)]
+mod essais {
+    use super::cle;
+    #[test]
+    fn cle_same_value_zero() {
+        assert_eq!(cle(f64::from_bits(0x7ff8_0000_0000_0001)), cle(f64::from_bits(0xfff8_0000_0000_0000)));
+        assert_eq!(cle(-0.0), cle(0.0));
     }
 }

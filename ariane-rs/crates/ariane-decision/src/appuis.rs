@@ -1,7 +1,6 @@
 //! CH-068 (J4) : `src/appuis-liste.js` (B1, appuis lus dans la liste des coupes d'ESV), ligne à ligne.
 //! Portées : `bordsCorps`, `mesurerT`, `noterRepere` (modifie son premier argument), `resumeRepere`, `lireReponse`, `accord`,
 //! `appuis`, `compter`, `regle`, `comparer`, `resumeDecision`. Reste en JS : `politique` (reçoit une fonction).
-#![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::many_single_char_names, clippy::too_many_lines, clippy::cast_precision_loss, clippy::needless_range_loop)]
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::manual_range_contains, clippy::float_cmp)]
 // (a+b)/2 garde l'ordre des opérations du JS (même arrondi) : `midpoint` ne le garantit pas
@@ -26,14 +25,14 @@ fn cfg_de(v: &V) -> V { if matches!(v, V::Indefini) { defaults() } else { v.clon
 ///
 /// # Errors
 /// `HorsDomaine` hors du domaine du port.
-pub fn bords_corps(body: &V) -> R<V> {
-    if !vrai(body) || !est_objet(body) { return Ok(nul()); }
+pub fn bords_corps(body: &V) -> V {
+    if !vrai(body) || !est_objet(body) { return nul(); }
     let mut e = [0.0; 6];
     for (i, k) in EDGES.iter().enumerate() {
         let x = if est_tableau(body) { &INDEF } else { g(body, k) };
-        match x { V::Nombre(v) if v.is_finite() => { if let Some(c) = e.get_mut(i) { *c = *v; } } _ => return Ok(nul()) }
+        match x { V::Nombre(v) if v.is_finite() => { if let Some(c) = e.get_mut(i) { *c = *v; } } _ => return nul() }
     }
-    Ok(o(vec![("left", nombres(&e[..3])), ("right", nombres(&e[3..]))]))
+    o(vec![("left", nombres(&e[..3])), ("right", nombres(&e[3..]))])
 }
 
 fn lire3(bords: &V, side: &str) -> R<Option<[f64; 3]>> { v3(g(bords, side)) }
@@ -111,9 +110,9 @@ pub fn noter_repere(repere: &V, frame_id: &V, mesure: &V, cfg: &V) -> R<(V, V, b
 ///
 /// # Errors
 /// `HorsDomaine` hors du domaine du port.
-pub fn resume_repere(r: &V) -> R<V> {
-    if !vrai(r) { return Ok(nul()); }
-    Ok(o(vec![("etat", g(r, "etat").clone()), ("paires", g(r, "paires").clone()), ("ecartMaxMm", r1(g(r, "ecartMaxMm"))), ("refusees", g(r, "refusees").clone())]))
+pub fn resume_repere(r: &V) -> V {
+    if !vrai(r) { return nul(); }
+    o(vec![("etat", g(r, "etat").clone()), ("paires", g(r, "paires").clone()), ("ecartMaxMm", r1(g(r, "ecartMaxMm"))), ("refusees", g(r, "refusees").clone())])
 }
 
 /// `int(v, max)`.
@@ -255,11 +254,11 @@ pub fn compter(rows: &V, cut: &V) -> R<V> {
 ///
 /// # Errors
 /// `HorsDomaine` hors du domaine du port.
-pub fn regle(d0: &V) -> R<V> {
+pub fn regle(d0: &V) -> V {
     let st = if nullish(d0) { &INDEF } else { g(d0, "stage") };
-    if matches!(st, V::Chaine(c) if c == "deferred") { return Ok(s("dernier-recours")); }
-    if matches!(st, V::Chaine(c) if c == "first-pass") && nullish(g(d0, "guardMm")) { return Ok(s("garde-premier-passage")); }
-    Ok(s("inchange"))
+    if matches!(st, V::Chaine(c) if c == "deferred") { return s("dernier-recours"); }
+    if matches!(st, V::Chaine(c) if c == "first-pass") && nullish(g(d0, "guardMm")) { return s("garde-premier-passage"); }
+    s("inchange")
 }
 
 fn pose(d: &V) -> R<Option<[[f64; 3]; 2]>> {
@@ -316,15 +315,15 @@ pub fn resume_decision(d: &V) -> R<V> {
 /// `Js` ou `HorsDomaine`, comme les fonctions portées.
 pub fn appeler(a: &Appel) -> R<V> {
     match a.f.as_str() {
-        "bordsCorps" => bords_corps(a.arg(0)),
+        "bordsCorps" => Ok(bords_corps(a.arg(0))),
         "mesurerT" => mesurer_t(a.arg(0), a.arg(1), a.arg(2)),
         "noterRepere" => { let (r, e, meme) = noter_repere(a.arg(0), a.arg(1), a.arg(2), a.arg(3))?; Ok(o(vec![("r", r), ("e", e), ("meme", b(meme))])) }
-        "resumeRepere" => resume_repere(a.arg(0)),
+        "resumeRepere" => Ok(resume_repere(a.arg(0))),
         "lireReponse" => lire_reponse(a.arg(0), a.arg(1)),
         "accord" => accord(a.arg(0), a.arg(1), a.arg(2)),
         "appuis" => appuis(a.arg(0), a.arg(1), a.arg(2), a.arg(3)),
         "compter" => compter(a.arg(0), a.arg(1)),
-        "regle" => regle(a.arg(0)),
+        "regle" => Ok(regle(a.arg(0))),
         "comparer" => comparer(a.arg(0), a.arg(1)),
         "resumeDecision" => resume_decision(a.arg(0)),
         _ => hd("appuis-liste : fonction non portée"),

@@ -1,8 +1,8 @@
 //! `src/gcv1-shadow.js` : science du moteur GCV1 (`scientificProposeBoth`, avec ou sans réservoir), à l'identique.
-//! Le moteur V4.6 gelé (`src/geometry.js`), A_STAR (`src/geometry-candidate-v1.js`), le calage de convention et le contrat
+//! Le moteur V4.6 gelé (`src/geometry.js`), `A_STAR` (`src/geometry-candidate-v1.js`), le calage de convention et le contrat
 //! d'écartement sont ceux d'ariane-geometrie. L'état du module JS (drapeaux `partialFlank`, `convention`) et le plafond du calage
 //! (réglage global `BananeSettings.conventionPlafond`) sont résolus par la façade et passés en entrée.
-use crate::js::*;
+use crate::js::{n_ou_nul, b, s, n, o, R, elems, fini, num, hd, nullish, INDEF, g, vrai, longueur, est_tableau, presents, Ou, point_v, est_simple, m16, g_brut, elem, nul, joindre, tab_n, tab, gi, definir_v, canon, etaler, definir, to_fixed, chaine, Appel};
 use ariane_geometrie::{convention, gcv1, jauge, v46};
 use ariane_js::{hypot, Echec};
 use ariane_vba::Valeur as V;
@@ -18,7 +18,7 @@ const FACE_BAND: f64 = 0.01;
 const SEARCH_Y: f64 = 0.08;
 const SEARCH_Z: f64 = 0.04;
 
-pub fn round6(x: f64) -> f64 { ariane_js::round(x * 1e6) / 1e6 }
+pub(crate) fn round6(x: f64) -> f64 { ariane_js::round(x * 1e6) / 1e6 }
 /// Clé `round6(u)+','+round6(z)` (deux nombres égaux ⇔ même chaîne ; −0 et +0 confondus, NaN confondus).
 fn cle(u: f64, z: f64) -> (u64, u64) { (ariane_js::cle_same_value_zero(round6(u)), ariane_js::cle_same_value_zero(round6(z))) }
 fn ordre(a: f64, b: f64) -> std::cmp::Ordering { let d = a - b; if d < 0.0 { std::cmp::Ordering::Less } else if d > 0.0 { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Equal } }
@@ -26,10 +26,10 @@ fn nv(x: Option<f64>) -> V { n_ou_nul(x) }
 
 /// Réglages venus de la façade.
 #[derive(Clone)]
-pub struct Etat { pub partial_flank: bool, pub convention: bool, pub plafond: V, pub avec_reservoir: bool }
+pub(crate) struct Etat { pub partial_flank: bool, pub convention: bool, pub plafond: V, pub avec_reservoir: bool }
 
 // ---------------------------------------------------------------- repère du rail (prepareFrame)
-pub struct Frame { pub sign: f64, pub width: f64, pub points: Vec<[f64; 3]>, pub u_median: f64, pub z_median: f64 }
+pub(crate) struct Frame { pub sign: f64, pub width: f64, pub points: Vec<[f64; 3]>, pub u_median: f64, pub z_median: f64 }
 fn echec_frame(raison: &str, extra: Option<(&str, f64)>) -> Result<Frame, V> {
     let mut t = vec![("ok", b(false)), ("reason", s(raison))];
     if let Some((k, x)) = extra { t.push((k, n(x))); }
@@ -79,7 +79,7 @@ fn prepare_frame(capture: &V, side: &str) -> R<Result<Frame, V>> {
     let verts = g(&contour, "verticesSceneRelative");
     if !est_tableau(verts) { return hd("verticesSceneRelative"); }
     let mut shape = vec![];
-    for p_ in elems(verts).unwrap() { match p_ { Some(p_) => shape.push(point_v(m, &p_)?), None => return hd("trou dans un contour") } }
+    for p_ in elems(verts).ou_hd()? { match p_ { Some(p_) => shape.push(point_v(m, &p_)?), None => return hd("trou dans un contour") } }
     let ys: Vec<f64> = shape.iter().map(|p_| p_[1]).collect();
     let sign = ariane_js::sign(ariane_js::mediane(&ys));
     if sign.is_nan() || sign == 0.0 { return Ok(echec_frame("Sens du profil ambigu.", None)); }
@@ -121,7 +121,7 @@ fn u_seed(f: &Frame) -> f64 {
 fn opt_chain<'a>(v: &'a V, ks: &[&str]) -> &'a V { let mut x = v; for k in ks { if nullish(x) { return &INDEF; } x = g(x, k); } x }
 fn nn(v: &V) -> V { if nullish(v) { nul() } else { v.clone() } }
 fn ou_ou(a: &V, b_: &V) -> V { if nullish(a) { nn(b_) } else { a.clone() } }
-pub fn compact_proposal(p_: &V) -> R<V> {
+pub(crate) fn compact_proposal(p_: &V) -> R<V> {
     let st = g(p_, "status");
     let candidate = matches!(st, V::Chaine(c) if c == "candidate");
     let reason = if candidate { nul() } else { let r = g(p_, "reasons"); if vrai(r) { s(&joindre(r, " ")?) } else { s("") } };
@@ -149,10 +149,10 @@ fn face_tier_v(v: &V) -> R<&'static str> { let x = if vrai(v) { crate::critere::
 
 // ---------------------------------------------------------------- cellules caractérisées
 #[derive(Clone, Debug)]
-pub struct Ch { pub u: f64, pub z: f64, pub loss: Option<f64>, pub top_rows: f64, pub face_count: f64, pub slope: Option<f64>, pub slope_limited: bool,
+pub(crate) struct Ch { pub u: f64, pub z: f64, pub loss: Option<f64>, pub top_rows: f64, pub face_count: f64, pub slope: Option<f64>, pub slope_limited: bool,
     pub window_ok: bool, pub tier: &'static str, pub motif: &'static str, pub dist_u: f64, pub dist_origin: f64, pub seed: Option<[f64; 2]>, pub tags: Option<Vec<String>> }
 impl Ch {
-    pub fn valeur(&self) -> V {
+    pub(crate) fn valeur(&self) -> V {
         let mut t = vec![("u", n(self.u)), ("z", n(self.z)), ("loss", nv(self.loss)), ("topRows", n(self.top_rows)), ("faceCount", n(self.face_count)),
             ("slope", nv(self.slope)), ("slopeLimited", b(self.slope_limited)), ("windowOk", b(self.window_ok)), ("tier", s(self.tier)), ("motif", s(self.motif)),
             ("distU", n(self.dist_u)), ("distOrigin", n(self.dist_origin))];
@@ -222,7 +222,7 @@ fn local_minima(cells: &[Uzl]) -> Vec<usize> {
     mins
 }
 struct Garde { u: f64, z: f64, loss: Option<f64>, tags: Vec<String> }
-pub struct Reduit { pub pool: Vec<Ch>, n_coarse: usize, n_local_min: usize, n_dense: usize, n_strong_dense: usize }
+pub(crate) struct Reduit { pub pool: Vec<Ch>, n_coarse: usize, n_local_min: usize, n_dense: usize, n_strong_dense: usize }
 fn reduce_pool(coarse: &[Uzl], f: &Frame, centres: &[f64], extras: &[(f64, f64, Option<f64>, &str)]) -> Reduit {
     if coarse.is_empty() { return Reduit { pool: vec![], n_coarse: 0, n_local_min: 0, n_dense: 0, n_strong_dense: 0 }; }
     let mins = local_minima(coarse);
@@ -257,19 +257,17 @@ fn reduce_pool(coarse: &[Uzl], f: &Frame, centres: &[f64], extras: &[(f64, f64, 
     }
     let strong: Vec<&Ch> = dense.iter().filter(|c| c.strong()).collect();
     let n_strong_dense = strong.len();
-    let min_par = |l: &[&Ch]| -> Uzl { let m = l.iter().fold(None::<&Ch>, |a, b_| match a { None => Some(b_), Some(a) => if b_.loss.unwrap() < a.loss.unwrap() { Some(b_) } else { Some(a) } }).unwrap(); Uzl { u: m.u, z: m.z, loss: m.loss.unwrap() } };
+    let min_par = |l: &[&Ch]| -> Option<Uzl> { let m = min_perte(l)?; Some(Uzl { u: m.u, z: m.z, loss: perte(m) }) };
     if !strong.is_empty() {
-        let cs: Vec<Uzl> = strong.iter().map(|c| Uzl { u: c.u, z: c.z, loss: c.loss.unwrap() }).collect();
+        let cs: Vec<Uzl> = strong.iter().map(|c| Uzl { u: c.u, z: c.z, loss: perte(c) }).collect();
         for i in local_minima(&cs) { add(cs[i].u, cs[i].z, Some(cs[i].loss), "strong-local-min"); }
-        let m = min_par(&strong);
-        add(m.u, m.z, Some(m.loss), "min-loss-strong");
+        if let Some(m) = min_par(&strong) { add(m.u, m.z, Some(m.loss), "min-loss-strong"); }
     }
     let partial: Vec<&Ch> = dense.iter().filter(|c| c.tier == "PARTIAL_FACE" && c.top_rows >= MIN_TOP && c.window_ok && !c.slope_limited).collect();
     if !partial.is_empty() {
-        let cs: Vec<Uzl> = partial.iter().map(|c| Uzl { u: c.u, z: c.z, loss: c.loss.unwrap() }).collect();
+        let cs: Vec<Uzl> = partial.iter().map(|c| Uzl { u: c.u, z: c.z, loss: perte(c) }).collect();
         for i in local_minima(&cs) { add(cs[i].u, cs[i].z, Some(cs[i].loss), "partial-local-min"); }
-        let m = min_par(&partial);
-        add(m.u, m.z, Some(m.loss), "min-loss-partial");
+        if let Some(m) = min_par(&partial) { add(m.u, m.z, Some(m.loss), "min-loss-partial"); }
     }
     let mut pool = vec![];
     for k in &ordre_k {
@@ -293,11 +291,12 @@ fn loss_ratio(loss: Option<f64>, lmin: Option<f64>) -> f64 {
     l / m
 }
 fn in_competitive(c: &Ch, lmin: Option<f64>) -> bool { c.loss.is_some_and(f64::is_finite) && loss_ratio(c.loss, lmin) <= RATIO }
+/// `find` de l'union-recherche, compression des chemins comme le JS.
+fn find(p_: &mut [usize], i: usize) -> usize { if p_[i] == i { i } else { let r = find(p_, p_[i]); p_[i] = r; r } }
 fn spatial_clusters<T: Clone>(cells: &[T], uz: impl Fn(&T) -> (f64, f64)) -> Vec<Vec<T>> {
     let nb = cells.len();
     if nb == 0 { return vec![]; }
     let mut parent: Vec<usize> = (0..nb).collect();
-    fn find(p_: &mut Vec<usize>, i: usize) -> usize { if p_[i] == i { i } else { let r = find(p_, p_[i]); p_[i] = r; r } }
     for i in 0..nb { for j in i + 1..nb {
         let (a, bz) = (uz(&cells[i]), uz(&cells[j]));
         if hypot(&[a.0 - bz.0, a.1 - bz.1]) < SEP { let ra = find(&mut parent, i); let rb = find(&mut parent, j); if ra != rb { parent[ra] = rb; } }
@@ -305,10 +304,10 @@ fn spatial_clusters<T: Clone>(cells: &[T], uz: impl Fn(&T) -> (f64, f64)) -> Vec
     let mut ordre_r: Vec<usize> = vec![];
     let mut groupes: HashMap<usize, Vec<T>> = HashMap::new();
     for i in 0..nb { let r = find(&mut parent, i); groupes.entry(r).or_insert_with(|| { ordre_r.push(r); vec![] }).push(cells[i].clone()); }
-    ordre_r.into_iter().map(|r| groupes.remove(&r).unwrap()).collect()
+    ordre_r.into_iter().map(|r| groupes.remove(&r).unwrap_or_default()).collect()
 }
 
-/// Cellule publiée (du réservoir, ou celle d'A_STAR) : ce qu'en lisent `next`, `compactCell` et les gardes.
+/// Cellule publiée (du réservoir, ou celle d'`A_STAR`) : ce qu'en lisent `next`, `compactCell` et les gardes.
 #[derive(Clone)]
 struct Pick { u: f64, z: f64, loss: V, top_rows: V, face_count: V, slope_limited: bool, window_ok: bool, tier: V, motif: V, tags: Vec<String> }
 impl Pick {
@@ -349,12 +348,12 @@ struct Pub { status: V, motif: V, reason: V, pick: Option<Pick>, changed: bool, 
 /// Rail scientifique (`scientificRail`). `Err(Js)` : le JS aurait levé (rendu `{ok:false, side, error}` par l'appelant).
 fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
     let v46p = v46::propose(capture, side, &V::Indefini)?;
-    let mut v46c = compact_proposal(&v46p)?;
-    let mo = motif_of(&v46c);
-    definir_v(&mut v46c, "motif", s(mo));
+    let mut v46_compact = compact_proposal(&v46p)?;
+    let mo = motif_of(&v46_compact);
+    definir_v(&mut v46_compact, "motif", s(mo));
     let frame = match prepare_frame(capture, side)? {
         Ok(f) => f,
-        Err(e) => return Ok(o(vec![("ok", b(false)), ("side", s(side)), ("reason", g(&e, "reason").clone()), ("v46", v46c), ("astar", nul()), ("next", nul()),
+        Err(e) => return Ok(o(vec![("ok", b(false)), ("side", s(side)), ("reason", g(&e, "reason").clone()), ("v46", v46_compact), ("astar", nul()), ("next", nul()),
             ("s1Activated", b(false)), ("s1Changed", b(false)), ("publishedWeak", b(false))])),
     };
     let useed = u_seed(&frame);
@@ -375,7 +374,7 @@ fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
     let mut extras: Vec<(f64, f64, Option<f64>, &str)> = vec![];
     if let Some(m) = meilleur { extras.push((m[0], m[1], Some(m[2]), "coarse-best")); }
     let loss_de = |v: &V| -> R<Option<f64>> { match g(v, "loss") { V::Nul | V::Indefini => Ok(None), V::Nombre(x) => Ok(Some(*x)), _ => hd("loss non numérique") } };
-    for (pv, tag) in [(&astar, "astar-published"), (&v46c, "engine-published")] {
+    for (pv, tag) in [(&astar, "astar-published"), (&v46_compact, "engine-published")] {
         let sd = g(pv, "seed");
         if vrai(sd) {
             let a0 = crate::critere::vers_nombre(&gi(sd, 0)?)?;
@@ -398,16 +397,17 @@ fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
             pick: cell_from_astar(&astar, frame.sign)?, changed: false, activated: false, n_strong: n(strong_c.len() as f64), n_clusters: n(n_clusters_view as f64) }
     } else {
         let clusters = spatial_clusters(&strong_c, |c| (c.u, c.z));
-        if clusters.len() == 1 {
-            let pick = clusters[0].iter().fold(None::<&Ch>, |a, b_| match a { None => Some(b_), Some(a) => if b_.loss.unwrap() < a.loss.unwrap() { Some(b_) } else { Some(a) } }).unwrap();
+        match clusters.len() {
+            1 => {
+            let refs: Vec<&Ch> = clusters[0].iter().collect();
+            let pick = min_perte(&refs).ou_hd()?;
             Pub { status: s("candidate"), motif: s("candidate"), reason: nul(), pick: Some(Pick::de_ch(pick)), changed: true, activated: true,
                 n_strong: n(strong_c.len() as f64), n_clusters: n(1.0) }
-        } else if clusters.len() > 1 {
-            Pub { status: s("unresolved"), motif: s("ambiguity"), reason: s("Plusieurs placements STRONG compétitifs spatialement distincts."), pick: None,
-                changed: false, activated: true, n_strong: n(strong_c.len() as f64), n_clusters: n(clusters.len() as f64) }
-        } else {
-            Pub { status: g(&astar, "status").clone(), motif: g(&astar, "motif").clone(), reason: if vrai(g(&astar, "reason")) { g(&astar, "reason").clone() } else { nul() },
-                pick: cell_from_astar(&astar, frame.sign)?, changed: false, activated: true, n_strong: n(0.0), n_clusters: n(0.0) }
+            }
+            k if k > 1 => Pub { status: s("unresolved"), motif: s("ambiguity"), reason: s("Plusieurs placements STRONG compétitifs spatialement distincts."), pick: None,
+                changed: false, activated: true, n_strong: n(strong_c.len() as f64), n_clusters: n(clusters.len() as f64) },
+            _ => Pub { status: g(&astar, "status").clone(), motif: g(&astar, "motif").clone(), reason: if vrai(g(&astar, "reason")) { g(&astar, "reason").clone() } else { nul() },
+                pick: cell_from_astar(&astar, frame.sign)?, changed: false, activated: true, n_strong: n(0.0), n_clusters: n(0.0) },
         }
     };
     let v46_cell = reduit.pool.iter().find(|c| c.tags.as_ref().is_some_and(|t| t.iter().any(|x| x == "engine-published")));
@@ -415,11 +415,11 @@ fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
         let astar_cand = matches!(g(&astar, "status"), V::Chaine(c) if c == "candidate");
         if astar_cand || !matches!(g(&astar, "motif"), V::Chaine(c) if c == "ambiguity") { false }
         else if !s1.changed || !matches!(&s1.status, V::Chaine(c) if c == "candidate") || s1.pick.is_none() { false }
-        else if !matches!(g(&v46c, "status"), V::Chaine(c) if c == "candidate") { false }
-        else if !v46_cell.is_some_and(|c| c.strong()) { false }
+        else if !matches!(g(&v46_compact, "status"), V::Chaine(c) if c == "candidate") { false }
+        else if !v46_cell.is_some_and(Ch::strong) { false }
         else {
-            let a = v46_cell.unwrap();
-            let p_ = s1.pick.as_ref().unwrap();
+            let a = v46_cell.ou_hd()?;
+            let p_ = s1.pick.as_ref().ou_hd()?;
             spatial_clusters(&[(a.u, a.z), (p_.u, p_.z)], |x| *x).len() > 1
         }
     };
@@ -433,13 +433,13 @@ fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
     let mut next = o(vec![("status", pubr.status.clone()), ("motif", pubr.motif.clone()), ("reason", if vrai(&pubr.reason) { pubr.reason.clone() } else { nul() }),
         ("delta", next_delta.map_or(nul(), |d| tab_n(&d))), ("loss", pk.map_or(nul(), |p_| nn(&p_.loss))), ("topRows", pk.map_or(nul(), |p_| nn(&p_.top_rows))),
         ("faceCount", pk.map_or(nul(), |p_| nn(&p_.face_count))), ("slopeLimited", b(pk.is_some_and(|p_| p_.slope_limited))), ("activated", b(pubr.activated)),
-        ("changed", b(pubr.changed)), ("nClusters", nn(&pubr.n_clusters)), ("nStrongCompetitive", nn(&pubr.n_strong)), ("pick", pk.map_or(nul(), |p_| p_.compact()))]);
-    let published_weak = cand && pk.is_some() && !pk.unwrap().strong()?;
+        ("changed", b(pubr.changed)), ("nClusters", nn(&pubr.n_clusters)), ("nStrongCompetitive", nn(&pubr.n_strong)), ("pick", pk.map_or(nul(), Pick::compact))]);
+    let published_weak = cand && pk.is_some() && !pk.ou_hd()?.strong()?;
     let fc_next = crate::critere::vers_nombre(&nn_zero(g(&next, "faceCount")))?;
     let partial_used = et.partial_flank && cand && fc_next < MIN_FACE;
     let mut conv = nul();
     if et.convention && cand && next_delta.is_some() {
-        conv = convention::calibrate(capture, side, &tab_n(&next_delta.unwrap()), &V::Indefini, &et.plafond)?;
+        conv = convention::calibrate(capture, side, &tab_n(&next_delta.ou_hd()?), &V::Indefini, &et.plafond)?;
         if vrai(g(&conv, "applied")) {
             let dd = g(&next, "delta").clone();
             definir_v(&mut next, "rawDelta", dd);
@@ -454,14 +454,14 @@ fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
     t.extend([
         ("frame", o(vec![("sign", n(frame.sign)), ("width", n(round6(frame.width))), ("pointsLocal", n(frame.points.len() as f64)), ("uMedian", n(round6(frame.u_median))),
             ("uSeed", n(useed)), ("zMedian", n(frame.z_median))])),
-        ("v46", v46c.clone()), ("astar", astar), ("next", next),
+        ("v46", v46_compact.clone()), ("astar", astar), ("next", next),
         ("competitive", o(vec![("lmin", nv(lmin)), ("nPool", n(reduit.pool.len() as f64)), ("nCompetitive", n(competitive.len() as f64)),
             ("nStrongPool", n(n_strong_pool as f64)), ("nStrongCompetitive", n(strong_c.len() as f64)), ("nClusters", n(n_clusters_view as f64))])),
         ("poolMeta", o(vec![("nCoarse", n(reduit.n_coarse as f64)), ("nLocalMin", n(reduit.n_local_min as f64)), ("nKept", n(reduit.pool.len() as f64)),
             ("nDense", n(reduit.n_dense as f64)), ("nStrongDense", n(reduit.n_strong_dense as f64))])),
         ("s1Activated", b(pubr.activated)), ("s1Changed", b(pubr.changed)), ("publishedWeak", b(published_weak)), ("partialFlank", b(et.partial_flank)),
         ("partialFlankUsed", b(partial_used)), ("s1AmbiguityPreserved", b(preserve)), ("convention", b(et.convention)), ("conventionCalibration", conv),
-        ("deltaV46Next", hypot_delta(g(&v46c, "delta"), &next_delta.map_or(nul(), |d| tab_n(&d)))?),
+        ("deltaV46Next", hypot_delta(g(&v46_compact, "delta"), &next_delta.map_or(nul(), |d| tab_n(&d)))?),
     ]);
     Ok(o(t))
 }
@@ -496,7 +496,7 @@ fn reject_pair(rail: &mut V, report: &V) -> R<()> {
     Ok(())
 }
 
-pub fn scientific_propose_both(capture: &V, et: &Etat) -> R<V> {
+pub(crate) fn scientific_propose_both(capture: &V, et: &Etat) -> R<V> {
     let mut rails: Vec<V> = vec![];
     for side in ["left", "right"] {
         rails.push(match scientific_rail(capture, side, et) {
@@ -512,7 +512,7 @@ pub fn scientific_propose_both(capture: &V, et: &Etat) -> R<V> {
     } else { None };
     let rejete = pair.as_ref().is_some_and(|p_| vrai(g(p_, "measurable")) && !vrai(g(p_, "admissible")));
     if let Some(p_) = &pair {
-        for r in rails.iter_mut() {
+        for r in &mut rails {
             if rejete { reject_pair(r, p_)?; } else { let mut t = vec![]; etaler(&mut t, p_)?; definir(&mut t, "rejected", b(false)); definir_v(r, "pairGauge", V::Objet(t)); }
         }
     }
@@ -525,11 +525,11 @@ pub fn scientific_propose_both(capture: &V, et: &Etat) -> R<V> {
         ("pairGaugeMm", pair.as_ref().map_or(nul(), |p_| g(p_, "predictedMm").clone())), ("pairGaugeClass", pair.as_ref().map_or(nul(), |p_| g(p_, "gaugeClass").clone())),
     ]);
     let mut rs = rails.into_iter();
-    Ok(o(vec![("rails", o(vec![("left", rs.next().unwrap()), ("right", rs.next().unwrap())])), ("pairGauge", pair.unwrap_or(V::Nul)), ("summary", summary)]))
+    Ok(o(vec![("rails", o(vec![("left", rs.next().ou_hd()?), ("right", rs.next().ou_hd()?)])), ("pairGauge", pair.unwrap_or(V::Nul)), ("summary", summary)]))
 }
 
 /// `{f:'scientificProposeBoth'|'scientificProposeBothAvecReservoir', a:[capture], etat:{partialFlank, convention, plafond}}`.
-pub fn appeler(a: &Appel, etat: &V) -> R<V> {
+pub(crate) fn appeler(a: &Appel, etat: &V) -> R<V> {
     let lire = |k: &str, d: bool| match g(etat, k) { V::Booleen(x) => Ok(*x), V::Indefini => Ok(d), _ => hd("état du module illisible") };
     let mut et = Etat { partial_flank: lire("partialFlank", true)?, convention: lire("convention", true)?, plafond: g(etat, "plafond").clone(), avec_reservoir: false };
     match a.f.as_str() {
@@ -537,4 +537,13 @@ pub fn appeler(a: &Appel, etat: &V) -> R<V> {
         "scientificProposeBothAvecReservoir" => { et.avec_reservoir = true; scientific_propose_both(a.arg(0), &et) }
         _ => hd("gcv1-shadow : fonction non portée"),
     }
+}
+
+/// Perte d'une cellule caractérisée (toujours présente dans le réservoir dense ; NaN sinon, jamais atteint).
+fn perte(c: &Ch) -> f64 { c.loss.unwrap_or(f64::NAN) }
+/// `cells.reduce((a,b)=>b.loss<a.loss?b:a)` : la première des pertes minimales.
+fn min_perte<'a>(l: &[&'a Ch]) -> Option<&'a Ch> {
+    let mut m: Option<&Ch> = None;
+    for c in l { if m.is_none_or(|a| perte(c) < perte(a)) { m = Some(c); } }
+    m
 }

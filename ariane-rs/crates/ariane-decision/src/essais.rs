@@ -76,7 +76,7 @@ fn selection_grappe_differe_pn() {
 fn duree_et_fit_at() {
     assert_eq!(ombre::duree(&n(140.0)), "2 min 20 s");
     assert_eq!(ombre::duree(&n(45.0)), "45 s");
-    assert_eq!(aides::fit_at(&[[1.0, 2.0], [2.0, 4.0], [3.0, 6.5]]), -0.3333333333333333);
+    assert_eq!(aides::fit_at(&[[1.0, 2.0], [2.0, 4.0], [3.0, 6.5]]), -0.333_333_333_333_333_3);
 }
 
 #[test]

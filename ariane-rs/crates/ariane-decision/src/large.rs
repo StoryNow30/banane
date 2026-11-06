@@ -2,7 +2,6 @@
 //! Portées (numéro `RECHERCHE_LARGE`) : `reglage`, `graines`, `grainesUtiles`, `grainesPics`, `decalage`, `relance`, `cellules`, `paires`,
 //! `decider`, `resumer`. Le moteur gelé (`scientificProposeBothAvecReservoir`) est celui du cœur, dans l'état du module GCV1 que la
 //! façade résout ; `ms` de `decider` (une horloge) est posé par la façade, mesuré autour de l'appel (`Date.now()`), comme le JS.
-#![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::many_single_char_names, clippy::too_many_lines, clippy::cast_precision_loss, clippy::needless_range_loop)]
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::manual_range_contains, clippy::float_cmp)]
 // (a+b)/2 garde l'ordre des opérations du JS (même arrondi) : `midpoint` ne le garantit pas

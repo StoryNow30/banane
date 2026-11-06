@@ -1,0 +1,87 @@
+diff --git a/ariane-rs/coquille/coeur.js b/ariane-rs/coquille/coeur.js
+index 8ab0520..94bca49 100644
+--- a/ariane-rs/coquille/coeur.js
++++ b/ariane-rs/coquille/coeur.js
+@@ -34,7 +34,7 @@
+   function appeler(fonction,valeur){
+    const r=appelerOctets(fonction,Vba.encoder(valeur)),v=Vba.decoder(r.octets);
+    apresAppel();
+-   if(v&&v.__erreurVba===true){if(v.nom==='HorsDomaine')throw new HorsDomaine(v.message);const C=CONSTRUCTEURS[v.nom]||Error;throw new C(v.message);}
++   if(v instanceof Vba.ErreurTransportee){if(v.nom==='HorsDomaine')throw new HorsDomaine(v.message);const C=CONSTRUCTEURS[v.nom]||Error;throw new C(v.message);}
+    return v;
+   }
+   return {appeler,appelerOctets,apresAppel,module,memoireOctets:()=>ex.memory.buffer.byteLength,etat:()=>({reinstanciations,hauteEau,memoire:ex.memory.buffer.byteLength})};
+diff --git a/ariane-rs/coquille/vba.js b/ariane-rs/coquille/vba.js
+index 4c8299f..e3d7811 100644
+--- a/ariane-rs/coquille/vba.js
++++ b/ariane-rs/coquille/vba.js
+@@ -6,7 +6,11 @@
+  const ENTETE=[0x56,0x42,0x41,0x01],PROFONDEUR_MAX=512,te=new TextEncoder(),td=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true});
+  const refus=m=>{throw new TypeError('VBA : '+m);};
+  const bienForme=typeof String.prototype.isWellFormed==='function'?s=>s.isWellFormed():s=>!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(s);
+- const PROTO_OBJ=Object.prototype;
++ const PROTO_OBJ=Object.prototype,PROTO_TAB=Array.prototype;
++ /* Erreur rendue par le cœur (étiquette 0C, racine seulement) : une instance de cette classe, jamais un objet simple,
++  * pour qu'une valeur métier { __erreurVba:true, nom, message } reste une valeur (CH-066, J4). */
++ class ErreurTransportee{constructor(nom,message){this.nom=nom;this.message=message;}}
++ ErreurTransportee.prototype.__erreurVba=true;
+  function Ecrivain(taille){this.o=new Uint8Array(taille||1<<16);this.dv=new DataView(this.o.buffer);this.p=0;}
+  Ecrivain.prototype.place=function(n){if(this.p+n<=this.o.length)return;let t=this.o.length*2;while(t<this.p+n)t*=2;const o=new Uint8Array(t);o.set(this.o.subarray(0,this.p));this.o=o;this.dv=new DataView(o.buffer);};
+  Ecrivain.prototype.u8=function(b){this.place(1);this.o[this.p++]=b;};
+@@ -17,14 +21,19 @@
+   const n=s.length;this.place(4+n*3);let ascii=true;for(let i=0;i<n;i++){const c=s.charCodeAt(i);if(c>0x7f){ascii=false;break;}this.o[this.p+4+i]=c;}
+   if(ascii){this.dv.setUint32(this.p,n,true);this.p+=4+n;return;}
+   const r=te.encodeInto(s,this.o.subarray(this.p+4));this.dv.setUint32(this.p,r.written,true);this.p+=4+r.written;};
+- /* Propriétés non indicielles : Object.keys compte les indices présents ET les autres clés. */
+- function clesEnPlus(a,presents){return Object.keys(a).length!==presents;}
++ /* Propriétés non indicielles : Object.keys compte les indices présents ET les autres clés. Compter seul laissait passer
++  * un indice non énumérable compensé par une clé en plus (CH-066, J1) : on vérifie aussi la DERNIÈRE clé, car
++  * Object.keys range les indices d'abord, puis les autres clés chaînes. (Reflect.ownKeys, plus complet, lève une
++  * RangeError au-delà de quelques millions d'éléments : écarté.) */
++ const estIndice=c=>String(c>>>0)===c&&c!=='4294967295';
++ function clesEnPlus(a,presents){const k=Object.keys(a);return k.length!==presents||(k.length>0&&!estIndice(k[k.length-1]));}
++ const tableauSimple=a=>Object.getPrototypeOf(a)===PROTO_TAB;
+  function genre(a){ // 0x0A, 0x09 (avec k), 0x0B ou 0x06
+   const n=a.length;if(!n)return [0x06];const t=a[0];
+   if(typeof t==='number'){for(let i=1;i<n;i++)if(typeof a[i]!=='number')return [0x06];return [0x0A];}
+   if(typeof t==='boolean'){for(let i=1;i<n;i++)if(typeof a[i]!=='boolean')return [0x06];return [0x0B];}
+   if(Array.isArray(t)){const k=t.length;if(k<1||k>255)return [0x06];
+-   for(let i=0;i<n;i++){const r=a[i];if(!Array.isArray(r)||r.length!==k)return [0x06];for(let j=0;j<k;j++)if(typeof r[j]!=='number')return [0x06];}
++   for(let i=0;i<n;i++){const r=a[i];if(!Array.isArray(r)||r.length!==k||!tableauSimple(r))return [0x06];for(let j=0;j<k;j++)if(typeof r[j]!=='number')return [0x06];}
+    // une ligne qui porte une propriété en plus (a[0].extra) perdrait celle-ci dans le bloc : chemin général
+    for(let i=0;i<n;i++)if(clesEnPlus(a[i],k))return [0x06];
+    return [0x09,k];}
+@@ -43,6 +52,8 @@
+   if(v===null)return this.u8(0x01);
+   if(Array.isArray(v)){
+    const n=v.length;
++   // sous-classe de Array, tableau sans prototype : le décodage rendrait un Array simple (CH-066, J2)
++   if(!tableauSimple(v))refus(Object.getPrototypeOf(v)===null?'tableau sans prototype':'tableau non simple : '+(v.constructor&&v.constructor.name||'?'));
+    // Trous et propriétés non indicielles : le chemin rapide (blocs) suppose un tableau dense et nu.
+    const g=genre(v);
+    if(g[0]!==0x06){
+@@ -72,7 +83,8 @@
+   const chaine=()=>{const n=u32();reste(n);let s;
+    if(n<64){let ascii=true;for(let i=0;i<n;i++)if(o[p+i]>0x7f){ascii=false;break;}
+     if(ascii){s='';for(let i=0;i<n;i++)s+=String.fromCharCode(o[p+i]);p+=n;return s;}}
+-   s=td.decode(o.subarray(p,p+n));p+=n;return s;};
++   // UTF-8 invalide : refus préfixé « VBA : » (la façade le reconnaît et rejoue le JS), pas l'erreur nue du décodeur (CH-066, J5)
++   try{s=td.decode(o.subarray(p,p+n));}catch{refus('chaîne UTF-8 invalide');}p+=n;return s;};
+   const bourrage=()=>{while((p-debut)&7){reste(1);if(o[p++]!==0)refus('bourrage non nul');}};
+   const nombres=n=>{reste(n*8);let vue=null;if(((base+p)&7)===0)vue=new Float64Array(o.buffer,base+p,n);const a=new Array(n);
+    if(vue)for(let i=0;i<n;i++)a[i]=vue[i];else for(let i=0;i<n;i++)a[i]=dv.getFloat64(p+i*8,true);p+=n*8;return a;};
+@@ -92,12 +104,12 @@
+      for(let i=0;i<n;i++){const r=new Array(k);for(let j=0;j<k;j++)r[j]=vue?vue[i*k+j]:dv.getFloat64(p+(i*k+j)*8,true);a[i]=r;}p+=n*k*8;return a;}
+     case 0x0A:{const n=u32();if(!n)refus('tableau de nombres vide');bourrage();return nombres(n);}
+     case 0x0B:{const n=u32();if(!n)refus('tableau de booléens vide');reste(n);const a=new Array(n);for(let i=0;i<n;i++){const b=o[p++];if(b>1)refus('booléen invalide');a[i]=b===1;}return a;}
+-    case 0x0C:{const nom=chaine(),message=chaine();return {__erreurVba:true,nom,message};}
++    case 0x0C:{const nom=chaine(),message=chaine();return new ErreurTransportee(nom,message);}
+     default:refus('étiquette inconnue '+t);
+    }
+   }
+   reste(4);for(let i=0;i<4;i++)if(o[p+i]!==ENTETE[i])refus('en-tête absent');p+=4;
+   const v=valeur(0,false);if(p!==fin)refus('octets après la racine');return v;
+  }
+- return {ENTETE,encoder,decoder};
++ return {ENTETE,encoder,decoder,ErreurTransportee};
+ });

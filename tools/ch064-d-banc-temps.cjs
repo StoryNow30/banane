@@ -27,6 +27,15 @@ function*postes({lourds,legers}){
  for(const c of tri){const science=S.scientificProposeBoth(c);lot.push({module:'lotDecision',f:'decideCut',args:b64([{capture:c,science,anchors:structuredClone(anchors),Shadow:'\u0000shadow'}])});
   const d=L.decideCut({capture:c,science,anchors,Shadow:S});if(d.anchor&&d.positions)L.rememberAnchor(anchors,{identity:c.identity,positions:d.positions,stage:d.stage});}
  yield {poste:'lotDecision.decideCut',cas:lot};
+ // décisions qui RELANCENT la science (reprise depuis la voie, choix, différé avec appuis) : chaînes de cuts consécutifs réels
+ {const parPartie=new Map();for(const c of nuages(Number(process.env.CH064D_LOT_MAX||600))){const k=c.identity?.frameId+'|'+c.identity?.part;if(!parPartie.has(k))parPartie.set(k,[]);parPartie.get(k).push(c);}
+  const rep=[],stades={};
+  for(const [,l] of parPartie){l.sort((a,b)=>a.identity.cut-b.identity.cut);const an=[];
+   for(const c of l){const science=S.scientificProposeBoth(c),args={capture:c,science,anchors:structuredClone(an),Shadow:'\u0000shadow'};
+    const d=L.decideCut({capture:c,science,anchors:an,Shadow:S});stades[d.stage]=(stades[d.stage]||0)+1;
+    if((d.stage==='window'||d.stage==='choice'||d.stage==='deferred'&&(d.anchorsUsed||[]).length)&&rep.length<lourds)rep.push({module:'lotDecision',f:'decideCut',args:b64([args])});
+    if(d.anchor&&d.positions)L.rememberAnchor(an,{identity:c.identity,positions:d.positions,stage:d.stage});}}
+  yield {poste:'lotDecision.decideCut (reprise)',cas:rep,stades};}
  const legersN=[...nuages(legers)];
  yield {poste:'crossing.read',cas:legersN.map(c=>{const v=c.visibleByClipBoxes,p=Array.isArray(v)?c.pointsSceneRelative.filter((_,i)=>v[i]===true):c.pointsSceneRelative;return {module:'crossing',f:'read',args:b64([{rails:c.rails,pointsSceneRelative:p}])};})};
  yield {poste:'reglesMetier.surface',cas:legersN.map(c=>({module:'reglesMetier',f:'surface',args:b64([{rails:c.rails,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes}])}))};
@@ -64,13 +73,19 @@ async function main(){
   for(const po of tous){
    const m0=await p.evaluate(()=>{if(window.gc)gc();return {tas:performance.memory.usedJSHeapSize,wasm:coeur.memoireOctets()};});
    const res={js:[],facade:[]};
-   for(const c of po.cas){
+   if(po.cas.length>=100){ /* poste léger : l'horloge de la page ne descend pas sous 0,1 ms ; on chronomètre un passage sur TOUS les cas, R fois,
+     et on rend la moyenne par cas de chaque passage (médiane et P90 des passages). */
+    const r=await p.evaluate(([cs,R])=>{const pas=(f)=>{const as=cs.map(c=>dec(c.args));const t0=performance.now();for(let i=0;i<cs.length;i++)f(cs[i],as[i]);return (performance.now()-t0)/cs.length;};
+     const js=(c,a)=>M[c.module][c.f](...a),fa=(c,a)=>F[c.module][c.f](...a);pas(js);pas(fa);const o={js:[],facade:[]};
+     for(let i=0;i<R;i++){o.js.push(pas(js));o.facade.push(pas(fa));}return o;},[po.cas,R]);
+    res.js=r.js;res.facade=r.facade;res.mode='passages';
+   }else for(const c of po.cas){
     const r=await p.evaluate(([c,R])=>{const med=v=>{const s=v.slice().sort((x,y)=>x-y);return s[s.length>>1];};
      const t=f=>{f(dec(c.args));const v=[];for(let i=0;i<R;i++){const a=dec(c.args);const t0=performance.now();f(a);v.push(performance.now()-t0);}return med(v);};
      return {js:t(a=>M[c.module][c.f](...a)),facade:t(a=>F[c.module][c.f](...a))};},[c,R]);
     res.js.push(r.js);res.facade.push(r.facade);}
    const m1=await p.evaluate(()=>({tas:performance.memory.usedJSHeapSize,wasm:coeur.memoireOctets(),etat:coeur.etat(),compteurs:F.compteurs()}));
-   sortie.postes[po.poste]={cas:po.cas.length,jsMs:{mediane:q(res.js,.5),p90:q(res.js,.9)},facadeMs:{mediane:q(res.facade,.5),p90:q(res.facade,.9)},
+   sortie.postes[po.poste]={cas:po.cas.length,mesure:res.mode||'par-cas',...(po.stades?{stadesDeLaChaine:po.stades}:{}),jsMs:{mediane:q(res.js,.5),p90:q(res.js,.9)},facadeMs:{mediane:q(res.facade,.5),p90:q(res.facade,.9)},
     gainMedian:q(res.js,.5)/q(res.facade,.5),memoire:{tasJsAvant:m0.tas,tasJsApres:m1.tas,wasmAvant:m0.wasm,wasmApres:m1.wasm,wasmHauteEau:m1.etat.hauteEau,reinstanciations:m1.etat.reinstanciations},
     compteursFacade:m1.compteurs};
    console.error(po.poste,JSON.stringify(sortie.postes[po.poste].jsMs),JSON.stringify(sortie.postes[po.poste].facadeMs));}

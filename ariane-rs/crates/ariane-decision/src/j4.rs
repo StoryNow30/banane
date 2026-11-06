@@ -1,6 +1,5 @@
 //! CH-068 (tranche J4) : aides communes aux modules J4 (`appuis`, `l1e`, `recentree`, `b1ecart`, `large`).
 //! Chacune reproduit une expression précise du JS de référence ; ce qu'elle ne reproduit pas rend `HorsDomaine`.
-#![warn(clippy::pedantic, missing_docs)]
 #![allow(clippy::many_single_char_names, clippy::too_many_lines, clippy::cast_precision_loss, clippy::needless_range_loop)]
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::manual_range_contains, clippy::float_cmp)]
 // (a+b)/2 garde l'ordre des opérations du JS (même arrondi) : `midpoint` ne le garantit pas

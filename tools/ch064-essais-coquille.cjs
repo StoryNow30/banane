@@ -31,3 +31,27 @@ test('P2 : la réponse de appelerOctets reste valable après un autre appel (cop
  const c=coeur();const r1=c.appelerOctets(0,V.encoder('premier'));const t1=Array.from(r1.octets);
  const r2=c.appelerOctets(0,V.encoder({autre:[1,2,3],et:'encore plus long, pour recouvrir'}));
  assert.deepStrictEqual(Array.from(r1.octets),t1);assert.strictEqual(V.decoder(r1.octets),'premier');r1.liberer();r2.liberer();});
+/* Plafond de la mémoire linéaire du cœur (--max-memory = 256 Mio, ariane-rs/.cargo/config.toml) : refus PROPRE, mesuré
+ * (fusion de CH-064-L). Le refus est une trappe du cœur (allocation impossible → arrêt), que la coquille change en HorsDomaine
+ * après avoir recréé l'instance ; la façade rejoue alors le JS. L'appel suivant est servi normalement. */
+const PLAFOND=256*1024*1024;
+function refusMesure(t,c,f){const m0=c.memoireOctets(),t0=performance.now();let e=null;try{f();}catch(x){e=x;}const ms=performance.now()-t0;
+ t.diagnostic(JSON.stringify({refusMs:Math.round(ms*10)/10,memoireAvant:m0,memoireApres:c.memoireOctets(),etat:c.etat()}));return e;}
+test('plafond 256 Mio : une réservation au-delà est refusée proprement, l’appel suivant est servi',t=>{
+ const c=coeur(),v={a:[1,-0,NaN],b:'é'};assert.deepStrictEqual(comparer(v,c.appeler(0,v)),[]);
+ const e=refusMesure(t,c,()=>c.appelerOctets(1,new Uint8Array(PLAFOND+(16<<20))));
+ assert.ok(e instanceof C.HorsDomaine,'HorsDomaine attendu, reçu '+e);
+ assert.strictEqual(c.etat().reinstanciations,1);assert.ok(c.memoireOctets()<8*1024*1024,'instance neuve');
+ assert.deepStrictEqual(comparer(v,c.appeler(0,v)),[]);assert.strictEqual(c.etat().reinstanciations,1);});
+test('plafond 256 Mio : un appel qui le franchit en cours de calcul est refusé proprement, l’appel suivant est servi',t=>{
+ // trame de 160 Mio (20 millions de nombres) : la réservation passe, le décodage (une seconde copie) franchit le plafond
+ const c=coeur(),grand=new Float64Array(20e6).fill(0.5),trame=V.encoder(Array.from(grand));
+ assert.ok(trame.length<PLAFOND&&2*trame.length>PLAFOND);
+ const e=refusMesure(t,c,()=>c.appelerOctets(0,trame));
+ assert.ok(e instanceof C.HorsDomaine,'HorsDomaine attendu, reçu '+e);assert.strictEqual(c.etat().reinstanciations,1);
+ const v=[[1,2,3],[4,5,6]];assert.deepStrictEqual(comparer(v,c.appeler(0,v)),[]);assert.ok(c.memoireOctets()<8*1024*1024);});
+test('plafond 256 Mio : la mémoire du cœur grandit jusqu’à 256 Mio exactement, et pas au-delà',()=>{
+ // garde contre un réglage d'édition des liens hérité d'une dépendance (un build.rs de crate lié, constaté à la fusion de CH-064-L)
+ coeur();const m=new WebAssembly.Instance(new WebAssembly.Module(octets),C.IMPORTS).exports.memory,page=65536;
+ m.grow(PLAFOND/page-m.buffer.byteLength/page);assert.strictEqual(m.buffer.byteLength,PLAFOND);
+ assert.throws(()=>m.grow(1),RangeError);});

@@ -1,0 +1,289 @@
+{
+ "date": "2026-11-06T16:52:59.794Z",
+ "captures": 20,
+ "repetitions": 15,
+ "resume": {
+  "points": {
+   "mediane": 6272,
+   "p90": 11040
+  },
+  "fusionnes": {
+   "mediane": 3602,
+   "p90": 10633
+  },
+  "noeuds": {
+   "mediane": 35,
+   "p90": 44
+  },
+  "mergeMs": {
+   "mediane": 13.1,
+   "p90": 21.2
+  },
+  "clesMs": {
+   "mediane": 2.6,
+   "p90": 6.5
+  },
+  "parRailMs": {
+   "mediane": 0.6,
+   "p90": 1.8
+  },
+  "compacterEtMesurerMs": {
+   "mediane": 5.6,
+   "p90": 10.1
+  },
+  "octetsMessage": {
+   "mediane": 692299,
+   "p90": 1145099
+  },
+  "signatureMs": {
+   "mediane": 0.1,
+   "p90": 0.2
+  },
+  "inventaireMs": {
+   "mediane": 0.1,
+   "p90": 0.2
+  }
+ },
+ "parCapture": [
+  {
+   "points": 8887,
+   "fusionnes": 7358,
+   "noeuds": 28,
+   "mergeMs": 24.5,
+   "clesMs": 4,
+   "parRailMs": 1,
+   "compacterEtMesurerMs": 5.799999998882413,
+   "octetsMessage": 832856,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 10359,
+   "fusionnes": 6135,
+   "noeuds": 42,
+   "mergeMs": 21.200000001117587,
+   "clesMs": 6.400000000372529,
+   "parRailMs": 1.699999999254942,
+   "compacterEtMesurerMs": 6.300000000745058,
+   "octetsMessage": 859918,
+   "signatureMs": 0.19999999925494194,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 10675,
+   "fusionnes": 7088,
+   "noeuds": 31,
+   "mergeMs": 16.700000001117587,
+   "clesMs": 4,
+   "parRailMs": 1.099999999627471,
+   "compacterEtMesurerMs": 5.599999999627471,
+   "octetsMessage": 853316,
+   "signatureMs": 0.19999999925494194,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 6385,
+   "fusionnes": 3489,
+   "noeuds": 28,
+   "mergeMs": 13.099999999627471,
+   "clesMs": 2.199999999254942,
+   "parRailMs": 0.5,
+   "compacterEtMesurerMs": 3.800000000745058,
+   "octetsMessage": 524443,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 20,
+   "fusionnes": 17,
+   "noeuds": 25,
+   "mergeMs": 2.700000001117587,
+   "clesMs": 0,
+   "parRailMs": 0,
+   "compacterEtMesurerMs": 1.700000001117587,
+   "octetsMessage": 218721,
+   "signatureMs": 0.10000000149011612,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 5305,
+   "fusionnes": 3505,
+   "noeuds": 35,
+   "mergeMs": 16.59999999962747,
+   "clesMs": 3.599999999627471,
+   "parRailMs": 0.599999999627471,
+   "compacterEtMesurerMs": 6.099999999627471,
+   "octetsMessage": 585355,
+   "signatureMs": 0.2000000011175871,
+   "inventaireMs": 0.19999999925494194
+  },
+  {
+   "points": 3154,
+   "fusionnes": 3143,
+   "noeuds": 42,
+   "mergeMs": 8.300000000745058,
+   "clesMs": 1,
+   "parRailMs": 0.5,
+   "compacterEtMesurerMs": 3.800000000745058,
+   "octetsMessage": 615673,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 0,
+   "fusionnes": 0,
+   "noeuds": 4,
+   "mergeMs": 0.900000000372529,
+   "clesMs": 0,
+   "parRailMs": 0,
+   "compacterEtMesurerMs": 0.19999999925494194,
+   "octetsMessage": 40442,
+   "signatureMs": 0,
+   "inventaireMs": 0
+  },
+  {
+   "points": 10049,
+   "fusionnes": 9959,
+   "noeuds": 39,
+   "mergeMs": 19,
+   "clesMs": 8.099999999627471,
+   "parRailMs": 1.5,
+   "compacterEtMesurerMs": 8.100000001490116,
+   "octetsMessage": 1136160,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 0,
+   "fusionnes": 0,
+   "noeuds": 4,
+   "mergeMs": 0.599999999627471,
+   "clesMs": 0,
+   "parRailMs": 0,
+   "compacterEtMesurerMs": 0.19999999925494194,
+   "octetsMessage": 40303,
+   "signatureMs": 0,
+   "inventaireMs": 0
+  },
+  {
+   "points": 11040,
+   "fusionnes": 10633,
+   "noeuds": 33,
+   "mergeMs": 21.09999999962747,
+   "clesMs": 5,
+   "parRailMs": 1.6000000014901161,
+   "compacterEtMesurerMs": 9.099999999627471,
+   "octetsMessage": 1145099,
+   "signatureMs": 0.10000000149011612,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 8555,
+   "fusionnes": 6638,
+   "noeuds": 42,
+   "mergeMs": 16.800000000745058,
+   "clesMs": 3.5,
+   "parRailMs": 0.900000000372529,
+   "compacterEtMesurerMs": 6.099999999627471,
+   "octetsMessage": 895776,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 14875,
+   "fusionnes": 13428,
+   "noeuds": 37,
+   "mergeMs": 22.199999999254942,
+   "clesMs": 9.5,
+   "parRailMs": 3.600000001490116,
+   "compacterEtMesurerMs": 16,
+   "octetsMessage": 1399315,
+   "signatureMs": 0.19999999925494194,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 9381,
+   "fusionnes": 7038,
+   "noeuds": 54,
+   "mergeMs": 20,
+   "clesMs": 6.5,
+   "parRailMs": 1.800000000745058,
+   "compacterEtMesurerMs": 10.400000000372529,
+   "octetsMessage": 1025847,
+   "signatureMs": 0.2999999988824129,
+   "inventaireMs": 0.19999999925494194
+  },
+  {
+   "points": 6272,
+   "fusionnes": 3479,
+   "noeuds": 26,
+   "mergeMs": 11.099999999627471,
+   "clesMs": 2.399999998509884,
+   "parRailMs": 0.5,
+   "compacterEtMesurerMs": 2.699999999254942,
+   "octetsMessage": 505117,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0
+  },
+  {
+   "points": 4091,
+   "fusionnes": 3373,
+   "noeuds": 39,
+   "mergeMs": 11.900000000372529,
+   "clesMs": 1.400000000372529,
+   "parRailMs": 0.5,
+   "compacterEtMesurerMs": 4.400000000372529,
+   "octetsMessage": 608181,
+   "signatureMs": 0.10000000149011612,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 3826,
+   "fusionnes": 3602,
+   "noeuds": 47,
+   "mergeMs": 9.099999999627471,
+   "clesMs": 1.5,
+   "parRailMs": 0.5,
+   "compacterEtMesurerMs": 4.899999998509884,
+   "octetsMessage": 692299,
+   "signatureMs": 0.10000000149011612,
+   "inventaireMs": 0.09999999962747097
+  },
+  {
+   "points": 4697,
+   "fusionnes": 4080,
+   "noeuds": 44,
+   "mergeMs": 11.200000001117587,
+   "clesMs": 2.600000001490116,
+   "parRailMs": 0.8000000007450581,
+   "compacterEtMesurerMs": 7.299999998882413,
+   "octetsMessage": 705680,
+   "signatureMs": 0.19999999925494194,
+   "inventaireMs": 0.19999999925494194
+  },
+  {
+   "points": 5990,
+   "fusionnes": 3254,
+   "noeuds": 24,
+   "mergeMs": 11.300000000745058,
+   "clesMs": 1.900000000372529,
+   "parRailMs": 0.5,
+   "compacterEtMesurerMs": 2.599999999627471,
+   "octetsMessage": 471053,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0
+  },
+  {
+   "points": 13980,
+   "fusionnes": 13187,
+   "noeuds": 36,
+   "mergeMs": 20.200000001117587,
+   "clesMs": 5.700000001117587,
+   "parRailMs": 1.799999998882413,
+   "compacterEtMesurerMs": 10.099999999627471,
+   "octetsMessage": 1364641,
+   "signatureMs": 0.09999999962747097,
+   "inventaireMs": 0.09999999962747097
+  }
+ ]
+}
