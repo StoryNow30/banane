@@ -11,6 +11,7 @@ const DEFAUTS: [(&str, Option<f64>); 10] = [("version", None), ("topQuantile", S
 const STEP: f64 = 0.0005;
 
 /// `quantile(values, p)` : élément de rang `min(n−1, ⌊p·n⌋)` de la copie triée ; NaN si vide.
+#[must_use]
 pub fn quantile(v: &[f64], p: f64) -> f64 {
     if v.is_empty() { return f64::NAN; }
     let mut b = v.to_vec();
@@ -18,17 +19,37 @@ pub fn quantile(v: &[f64], p: f64) -> f64 {
     let i = (p * b.len() as f64).floor();
     // Math.min(len-1, floor(p*len)) : p fini attendu (réglage numérique) ; un rang négatif rendrait undefined en JS
     if !(i >= 0.0) { return f64::NAN; }
-    b[std::cmp::min(b.len() - 1, i as usize)]
+    // i entier ≥ 0 ; au-delà de usize, la conversion sature et le min ramène au dernier rang, comme le JS
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    let i = i as usize;
+    b[std::cmp::min(b.len() - 1, i)]
 }
 
-pub struct Gabarit { pub sign: f64, pub width: f64, tops: Vec<Option<f64>>, faces: Vec<Option<f64>> }
+/// Gabarit du champignon (`template(rail)` du JS) : sens, largeur, dessus par u et flanc par z au demi-millimètre.
+pub struct Gabarit {
+    /// Sens du profil (±1).
+    pub sign: f64,
+    /// Largeur du champignon (m).
+    pub width: f64,
+    tops: Vec<Option<f64>>,
+    faces: Vec<Option<f64>>,
+}
 impl Gabarit {
+    // `tops[Math.round(x)]` : un rang négatif ou non fini n'existe pas (undefined, puis `?? null`)
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn rang(x: f64) -> Option<usize> { let r = ariane_js::round(x); if r >= 0.0 && r.is_finite() { Some(r as usize) } else { None } }
+    /// `topAt(u)` : hauteur du dessus du gabarit en u, ou None.
+    #[must_use]
     pub fn top_at(&self, u: f64) -> Option<f64> { if u < 0.0 || u > self.width { None } else { Self::rang(u / STEP).and_then(|i| self.tops.get(i).copied().flatten()) } }
+    /// `faceAt(z)` : position du flanc du gabarit en z, ou None.
+    #[must_use]
     pub fn face_at(&self, z: f64) -> Option<f64> { if z > 0.0 || z < -0.04 { None } else { Self::rang(-z / STEP).and_then(|i| self.faces.get(i).copied().flatten()) } }
 }
 
-/// `template(rail)` : None quand le JS rend null ; Err quand il lèverait (ou hors domaine).
+/// `template(rail)` : None quand le JS rend null, avec la matrice scène → profil du rail.
+///
+/// # Errors
+/// Projection non finie d'un sommet ; hors domaine pour un rail, un contour ou une matrice de forme inattendue.
 pub fn gabarit(rail: Option<&Valeur>) -> Result<Option<(Gabarit, M16)>, Echec> {
     let rail = match rail { None | Some(Valeur::Indefini | Valeur::Nul) => return Ok(None), Some(r @ Valeur::Objet(_)) => r, Some(_) => return hd("rail non objet") };
     let contour = match rail.champ("profileContours") {
@@ -42,7 +63,7 @@ pub fn gabarit(rail: Option<&Valeur>) -> Result<Option<(Gabarit, M16)>, Echec> {
                 }
             };
             for b in t {
-                let b = match b { Some(b @ Valeur::Objet(_)) => b, _ => return hd("contour non objet") };
+                let Some(b @ Valeur::Objet(_)) = b else { return hd("contour non objet") };
                 if lg(Some(b))? > lg(a)? { a = Some(b); }
             }
             a
@@ -55,7 +76,7 @@ pub fn gabarit(rail: Option<&Valeur>) -> Result<Option<(Gabarit, M16)>, Echec> {
         _ => return hd("sceneRelativeToProfileLocal"),
     };
     let mut shape = vec![];
-    for p in sommets(contour.champ("verticesSceneRelative").unwrap())? { shape.push(point(&m, p[0], p[1], p[2])?); }
+    for p in sommets(contour.champ("verticesSceneRelative").unwrap_or(&Valeur::Indefini))? { shape.push(point(&m, p[0], p[1], p[2])?); }
     let mut ys: Vec<f64> = shape.iter().map(|p| p[1]).collect();
     trier_nombres(&mut ys);
     let sign = ariane_js::sign(ys[ys.len() >> 1]);
@@ -80,8 +101,13 @@ pub fn gabarit(rail: Option<&Valeur>) -> Result<Option<(Gabarit, M16)>, Echec> {
     Ok(Some((Gabarit { sign, width, tops, faces }, m)))
 }
 
+/// Réglages fusionnés `{...DEFAULTS, ...options}` du calage.
 pub struct Reglages { valeur: Valeur }
 impl Reglages {
+    /// `{...DEFAULTS, ...options}`.
+    ///
+    /// # Errors
+    /// Hors domaine pour des options non objet ou une clé `__proto__`.
     pub fn fusionner(options: &Valeur) -> Result<Self, Echec> {
         let mut t: Vec<(String, Valeur)> = DEFAUTS.iter().map(|(k, v)| (k.to_string(), match v { Some(x) => n(*x), None => s("convention-envelope-v1") })).collect();
         match options {
@@ -98,13 +124,24 @@ impl Reglages {
     fn f(&self, k: &str) -> Result<f64, Echec> { match self.brut(k) { Valeur::Nombre(x) => Ok(*x), _ => hd("réglage non numérique") } }
 }
 
-pub struct Ecarts { pub sign: f64, pub top: Vec<f64>, pub face: Vec<f64> }
+/// Écarts des points au gabarit posé (`bandOffsets` réussi).
+pub struct Ecarts {
+    /// Sens du profil.
+    pub sign: f64,
+    /// Écarts verticaux sur le dessus (mm).
+    pub top: Vec<f64>,
+    /// Écarts latéraux sur le flanc (mm).
+    pub face: Vec<f64>,
+}
 
 fn delta_valide(delta: &Valeur) -> Option<[f64; 3]> {
     match delta { Valeur::Nombres(d) if d.len() == 3 && d.iter().all(|x| x.is_finite()) => Some([d[0], d[1], d[2]]), _ => None }
 }
 
 /// `bandOffsets` : Ok(Err(raison)) quand le JS rend `{ok:false, reason}`.
+///
+/// # Errors
+/// Celles de [`gabarit`] ; hors domaine pour un delta à trous ou des points de forme inattendue.
 pub fn band_offsets(capture: &Valeur, cote: &str, delta: &Valeur, cfg: &Reglages) -> Result<Result<Ecarts, &'static str>, Echec> {
     let rail = match capture {
         Valeur::Indefini | Valeur::Nul => None,
@@ -134,18 +171,22 @@ pub fn band_offsets(capture: &Valeur, cote: &str, delta: &Valeur, cfg: &Reglages
     Ok(Ok(Ecarts { sign: t.sign, top, face }))
 }
 
-fn copie(delta: &Valeur) -> Result<Valeur, Echec> {
+/// `Array.isArray(delta) ? delta.slice() : null`.
+fn copie(delta: &Valeur) -> Valeur {
     match delta {
-        Valeur::Tableau(_) | Valeur::Nombres(_) | Valeur::Booleens(_) | Valeur::Bloc { .. } => Ok(delta.clone()),
-        _ => Ok(Valeur::Nul),
+        Valeur::Tableau(_) | Valeur::Nombres(_) | Valeur::Booleens(_) | Valeur::Bloc { .. } => delta.clone(),
+        _ => Valeur::Nul,
     }
 }
 
 /// `calibrate(capture, side, delta, options)` ; `plafond` : `plafondMode(cfg)` déjà résolu par la façade.
+///
+/// # Errors
+/// Celles de [`band_offsets`] ; hors domaine pour un réglage non numérique ou un quantile négatif.
 pub fn calibrate(capture: &Valeur, cote: &str, delta: &Valeur, options: &Valeur, plafond: &Valeur) -> Result<Valeur, Echec> {
     let cfg = Reglages::fusionner(options)?;
     let offsets = band_offsets(capture, cote, delta, &cfg)?;
-    let base = obj(vec![("version", cfg.brut("version").clone()), ("applied", Valeur::Booleen(false)), ("rawDelta", copie(delta)?), ("delta", copie(delta)?)]);
+    let base = obj(vec![("version", cfg.brut("version").clone()), ("applied", Valeur::Booleen(false)), ("rawDelta", copie(delta)), ("delta", copie(delta))]);
     let o = match offsets { Err(r) => return Ok(avec(base, vec![("reason", s(r))])), Ok(o) => o };
     let (top_n, face_n) = (o.top.len() as f64, o.face.len() as f64);
     if top_n < cfg.f("minTopPoints")? { return Ok(avec(base, vec![("reason", s("top-under-observed")), ("topN", n(top_n)), ("faceN", n(face_n))])); }
@@ -162,7 +203,7 @@ pub fn calibrate(capture: &Valeur, cote: &str, delta: &Valeur, options: &Valeur,
     if !dz.is_finite() || !du.is_finite() { return Ok(avec(base, vec![("reason", s("offset-not-finite")), ("topN", n(top_n)), ("faceN", n(face_n))])); }
     let max_shift = cfg.f("maxShiftMm")?;
     let fq = face_q.map_or(Valeur::Nul, n);
-    let d = delta_valide(delta).expect("validé par bandOffsets");
+    let Some(d) = delta_valide(delta) else { return hd("delta (validé par bandOffsets)") };
     if dz.abs() > max_shift || du.abs() > max_shift {
         let mode = match plafond { Valeur::Booleen(true) => 2, Valeur::Chaine(c) if c == "vertical" => 1, _ => 0 };
         if mode == 0 || (mode == 1 && du.abs() > max_shift) {
@@ -183,6 +224,9 @@ pub fn calibrate(capture: &Valeur, cote: &str, delta: &Valeur, options: &Valeur,
 }
 
 /// `bandOffsets` rendu comme le JS : `{ok:false, reason}` ou `{ok:true, sign, top, face}`.
+///
+/// # Errors
+/// Celles de [`band_offsets`].
 pub fn band_offsets_valeur(capture: &Valeur, cote: &str, delta: &Valeur, options: &Valeur) -> Result<Valeur, Echec> {
     let cfg = Reglages::fusionner(options)?;
     let nb = |v: Vec<f64>| if v.is_empty() { Valeur::Tableau(vec![]) } else { Valeur::Nombres(v) };

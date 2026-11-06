@@ -8,3 +8,6 @@ publish.workspace = true
 ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
 ariane-capture = { path = "../ariane-capture" }
+
+[lints]
+workspace = true

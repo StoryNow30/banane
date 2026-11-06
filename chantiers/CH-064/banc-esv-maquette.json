@@ -1,0 +1,90 @@
+{
+ "format": "ch064-banc-esv-v1",
+ "lot": {
+  "part": 23,
+  "start": 100,
+  "end": 102,
+  "testConfirmed": true,
+  "allowNavigationEvidence": true,
+  "lowConfidence": "attempt",
+  "unresolvedPolicy": "defer",
+  "lotDecision": "apply",
+  "geometryEngine": "geometry-candidate-v1"
+ },
+ "cuts": 3,
+ "cutsPoses": [
+  1,
+  1
+ ],
+ "ecrituresServeur": {
+  "js": [
+   {
+    "rowKey": "23-100",
+    "status": "valid"
+   },
+   {
+    "rowKey": "23-101",
+    "status": "valid"
+   }
+  ],
+  "wasm": [
+   {
+    "rowKey": "23-100",
+    "status": "valid"
+   },
+   {
+    "rowKey": "23-101",
+    "status": "valid"
+   }
+  ]
+ },
+ "vuesComparees": 64,
+ "bruitJsContreJs": [
+  "resume.notice",
+  "evenements.correction-couverture@-",
+  "evenements.correction-liste@-"
+ ],
+ "differencesJsContreWasm": [
+  "evenements.correction-couverture@-",
+  "evenements.correction-liste@-"
+ ],
+ "imputablesAuCoeur": {},
+ "compteursWasm": {
+  "coeur": {
+   "reinstanciations": 0,
+   "hauteEau": 1769472,
+   "memoire": 1769472
+  },
+  "facades": {
+   "geometrie": {
+    "coeur": 21,
+    "repliHorsDomaine": 0,
+    "repliFormat": 0
+   },
+   "gcv1": {
+    "coeur": 24,
+    "repliHorsDomaine": 0,
+    "repliFormat": 0,
+    "rappelsRejoues": 24
+   },
+   "convention": {
+    "coeur": 89,
+    "repliHorsDomaine": 0,
+    "repliFormat": 0
+   }
+  }
+ },
+ "dureeLotMs": {
+  "js": [
+   12539,
+   12688,
+   12326
+  ],
+  "wasm": 12096
+ },
+ "erreurs": {
+  "js": [],
+  "wasm": []
+ },
+ "verdict": "IDENTIQUE"
+}

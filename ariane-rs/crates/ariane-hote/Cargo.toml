@@ -6,3 +6,6 @@ publish.workspace = true
 
 [dependencies]
 ariane-coeur = { path = "../ariane-coeur" }
+
+[lints]
+workspace = true

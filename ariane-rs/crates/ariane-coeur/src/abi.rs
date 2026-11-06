@@ -9,28 +9,68 @@ use std::alloc::{alloc, dealloc, Layout};
 use std::cell::Cell;
 
 const ALIGN: usize = 8;
-thread_local! { static RESULTAT: Cell<(usize, usize)> = const { Cell::new((0, 0)) }; }
+thread_local! {
+    /// Trame de la dernière réponse : (adresse, longueur), (0, 0) si aucune. Le cœur est mono-fil (WASM) : un seul appel
+    /// à la fois, la réponse vit jusqu'au prochain `vba_appel` ou `vba_liberer_resultat`.
+    static RESULTAT: Cell<(usize, usize)> = const { Cell::new((0, 0)) };
+}
 
-fn disposition(n: usize) -> Layout { Layout::from_size_align(n.max(1), ALIGN).expect("disposition") }
+/// Disposition d'un tampon de `n` octets, aligné sur 8 (lecture des blocs de nombres par `Float64Array`).
+fn disposition(n: usize) -> Layout {
+    // ALIGN est une puissance de deux et n + 7 ne déborde pas pour une taille que l'allocateur peut servir
+    Layout::from_size_align(n.max(1), ALIGN).unwrap_or(Layout::new::<u64>())
+}
 
+/// Tampon de `n` octets pour une trame d'entrée, à remplir par la coquille puis à passer à [`vba_appel`].
 #[no_mangle]
-pub extern "C" fn vba_reserver(n: usize) -> *mut u8 { unsafe { alloc(disposition(n)) } }
+pub extern "C" fn vba_reserver(n: usize) -> *mut u8 {
+    // Nouveau cycle d'appel : la coquille a lu et rendu la réponse précédente ; tout ce que l'arène portait est mort.
+    RESULTAT.with(|r| r.set((0, 0)));
+    #[cfg(target_arch = "wasm32")]
+    crate::arene::ARENE.remettre_a_zero();
+    let d = disposition(n);
+    // SÛRETÉ : `d` a une taille non nulle (n.max(1)) ; le pointeur est rendu tel quel à la coquille, qui n'en écrit que
+    // `n` octets et le rend par `vba_appel` ou `vba_liberer` avec le même `n`.
+    let p = unsafe { alloc(d) };
+    if p.is_null() { std::alloc::handle_alloc_error(d); }
+    p
+}
 
+/// Rend un tampon d'entrée non passé à [`vba_appel`].
+///
 /// # Safety
-/// `p` vient de `vba_reserver(n)` et n'a pas encore été libéré.
+/// `p` vient de `vba_reserver(n)`, avec le même `n`, et n'a pas encore été rendu.
 #[no_mangle]
-pub unsafe extern "C" fn vba_liberer(p: *mut u8, n: usize) { dealloc(p, disposition(n)) }
+pub unsafe extern "C" fn vba_liberer(p: *mut u8, n: usize) {
+    // SÛRETÉ : contrat de l'appelant ci-dessus ; même disposition qu'à l'allocation.
+    unsafe { dealloc(p, disposition(n)) }
+}
 
+/// Octets occupés dans l'arène par l'appel en cours ou le dernier appel (haute eau d'un appel ; 0 hors WASM).
+#[no_mangle]
+pub extern "C" fn vba_occupe() -> usize {
+    #[cfg(target_arch = "wasm32")]
+    { crate::arene::ARENE.occupe() }
+    #[cfg(not(target_arch = "wasm32"))]
+    { 0 }
+}
+
+/// Adresse de la trame de la dernière réponse (0 si aucune).
 #[no_mangle]
 pub extern "C" fn vba_resultat() -> *const u8 { RESULTAT.with(|r| r.get().0 as *const u8) }
 
+/// Rend la trame de la dernière réponse.
 #[no_mangle]
 pub extern "C" fn vba_liberer_resultat() {
     RESULTAT.with(|r| {
         let (p, n) = r.get();
-        if p != 0 { unsafe { dealloc(p as *mut u8, disposition(n)) } }
+        if p != 0 {
+            // SÛRETÉ : (p, n) a été posé par `vba_appel` à partir d'une allocation de `disposition(n)`, jamais rendue
+            // depuis (la cellule est remise à zéro juste après).
+            unsafe { dealloc(p as *mut u8, disposition(n)) }
+        }
         r.set((0, 0));
-    })
+    });
 }
 
 /// Table des fonctions du cœur. Une fonction reçoit la valeur décodée et rend une valeur (ou `Valeur::Erreur`).
@@ -111,6 +151,7 @@ fn capture(e: &Valeur) -> Result<Valeur, Echec> {
 }
 
 /// Point d'appel indépendant de la cible : trame VBA en entrée, trame VBA en sortie (WASM et programme natif).
+#[must_use]
 pub fn executer(fonction: u32, entree: &[u8]) -> Vec<u8> {
     let v = match decoder(entree) {
         Ok(v) => aiguiller(fonction, v),
@@ -119,15 +160,25 @@ pub fn executer(fonction: u32, entree: &[u8]) -> Vec<u8> {
     encoder(&v)
 }
 
+/// Exécute la fonction `fonction` du cœur sur la trame d'entrée ; rend la longueur de la trame de réponse, lisible à
+/// [`vba_resultat`] jusqu'au prochain appel. La trame d'entrée est rendue ici.
+///
 /// # Safety
-/// `p` vient de `vba_reserver(n)` et porte `n` octets écrits ; il est libéré ici.
+/// `p` vient de `vba_reserver(n)`, avec le même `n`, porte `n` octets écrits, et n'est plus utilisé par l'appelant.
 #[no_mangle]
 pub unsafe extern "C" fn vba_appel(fonction: u32, p: *mut u8, n: usize) -> usize {
     vba_liberer_resultat();
-    let sortie = executer(fonction, std::slice::from_raw_parts(p, n));
-    vba_liberer(p, n);
-    let q = alloc(disposition(sortie.len()));
-    std::ptr::copy_nonoverlapping(sortie.as_ptr(), q, sortie.len());
+    // SÛRETÉ : `p` désigne `n` octets initialisés (contrat de l'appelant), lus avant d'être rendus.
+    let sortie = executer(fonction, unsafe { std::slice::from_raw_parts(p, n) });
+    // SÛRETÉ : même `p` et même `n` qu'à la réservation ; plus aucune référence vers l'entrée (`executer` a fini).
+    unsafe { vba_liberer(p, n) };
+    let d = disposition(sortie.len());
+    // SÛRETÉ : taille non nulle ; l'allocation reçoit exactement `sortie.len()` octets, puis devient la réponse courante,
+    // rendue par `vba_liberer_resultat`.
+    let q = unsafe { alloc(d) };
+    if q.is_null() { std::alloc::handle_alloc_error(d); }
+    // SÛRETÉ : `q` vaut au moins `sortie.len()` octets, et les deux zones sont distinctes (allocation neuve).
+    unsafe { std::ptr::copy_nonoverlapping(sortie.as_ptr(), q, sortie.len()) };
     RESULTAT.with(|r| r.set((q as usize, sortie.len())));
     sortie.len()
 }

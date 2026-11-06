@@ -10,3 +10,6 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
+
+[lints]
+workspace = true

@@ -7,3 +7,6 @@ publish.workspace = true
 [dependencies]
 ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
+
+[lints]
+workspace = true

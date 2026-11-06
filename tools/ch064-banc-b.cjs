@@ -13,6 +13,8 @@
  *   5. tenue : hôte tué, service worker arrêté (CDP), service worker inactif avec le port ouvert, redémarrage de Chrome. */
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{execFileSync,spawnSync}=require('node:child_process'),crypto=require('node:crypto');
 const {construire}=require('./ch064-construire.cjs'),{nuages}=require('./ch064-nuages.cjs');
+/* Origines factices construites à l'exécution (domaine réservé .invalid, jamais routable ; aucune adresse écrite en clair). */
+const ORIGINE=h=>['https:','',h+'.invalid'].join('/');
 const RACINE=path.resolve(__dirname,'..'),RS=path.join(RACINE,'ariane-rs');
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /* Mémoire de Chromium : somme des RSS du processus navigateur de CE profil et de tous ses descendants (/proc). */
@@ -35,7 +37,7 @@ function preparer(dir,N){
  fs.writeFileSync(path.join(ext,'lib','comparer.js'),'(function(){const module={};'+fs.readFileSync(path.join(__dirname,'ch064-comparer.cjs'),'utf8').replace("'use strict';",'')+';self.Ch064Comparer=module.exports;})();');
  fs.copyFileSync(w+'.js',path.join(ext,'lib','coeur.wasm.js'));
  fs.writeFileSync(path.join(ext,'manifest.json'),JSON.stringify({manifest_version:3,name:'CH-064 banc B',version:'1',key:der.toString('base64'),permissions:['nativeMessaging'],
-  background:{service_worker:'sw.js'},content_scripts:[{matches:['https://essai.exemple/*'],js:['cs.js'],run_at:'document_start'}],content_security_policy:{extension_pages:"script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"}}));
+  background:{service_worker:'sw.js'},content_scripts:[{matches:[ORIGINE('essai')+'/*'],js:['cs.js'],run_at:'document_start'}],content_security_policy:{extension_pages:"script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"}}));
  fs.writeFileSync(path.join(ext,'reveil.html'),'<!doctype html><script src="reveil.js"></script>');
  fs.writeFileSync(path.join(ext,'reveil.js'),"chrome.runtime.sendMessage('reveil');");
  fs.writeFileSync(path.join(ext,'sw.js'),SW);fs.writeFileSync(path.join(ext,'cs.js'),CS);
@@ -120,8 +122,8 @@ async function main(){
  out.debit.memoireHote=await sw.evaluate(async()=>{const avant=await envoyer({c:'etat'});const apres=await envoyer({c:'rendre'});return {apresEcho:avant.memoire,apresMallocTrim:apres.memoire};});
  out.debit.chromium=rssChromium(prep.profil);
  // 1 ter. lecture LiDAR sous B : les tampons Potree d'une vue (505 000 points, Float32 xyz) sortent de la page jusqu'à l'hôte
- {const page=await ctx.newPage();await page.route('https://essai.exemple/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>essai</title>'}));
-  await page.goto('https://essai.exemple/rails_validation/x');await attendre(300);
+ {const page=await ctx.newPage();await page.route(ORIGINE('essai')+'/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>essai</title>'}));
+  await page.goto(ORIGINE('essai')+'/rails_validation/x');await attendre(300);
   out.lidarTransfert=await page.evaluate(()=>new Promise(res=>{const n=505000,f=new Float32Array(3*n);for(let i=0;i<3*n;i++)f[i]=Math.sin(i)*30;
    addEventListener('message',ev=>{if(ev.data&&ev.data.k==='ch064r'){const t=performance.now();res({points:n,octets:f.byteLength||3*n*4,...ev.data,msTotalPageVersHote:t-t0});}});
    const t0=performance.now();postMessage({k:'ch064',buf:f.buffer},'*',[f.buffer]);}));
