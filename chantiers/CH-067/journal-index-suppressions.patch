@@ -1,0 +1,38 @@
+--- a/src/journal-index.js
++++ b/src/journal-index.js
+@@ -58,15 +58,26 @@
+    * cours la demande donc, et IndexedDB ordonne les transactions : comme `getAll` avant, elle voit l'écriture si celle-ci
+    * a commencé avant elle. Une écriture refusée laisse une clé sans objet : sur-ensemble, sans effet sur le résultat.
+    * Une clé qui n'est pas une chaîne (jamais vu : `K.uid`) rendrait l'ordre incertain : l'index se déclare invalide. */
+-  if(orig.putEvent)def('putEvent',e=>{try{if(e&&typeof e==='object'&&typeof e.eventId!=='string')ix.invalide=true;I.noterEvenement(e);ix.totaux.events++;}catch{ix.invalide=true;}return orig.putEvent(e);});
+-  if(orig.putRecord)def('putRecord',r=>{try{if(r&&typeof r==='object'&&cleVisite(r)===null)ix.invalide=true;I.noterVisite(r);ix.totaux.records++;}catch{ix.invalide=true;}return orig.putRecord(r);});
+-  if(orig.deleteEvent)def('deleteEvent',async id=>{const r=await orig.deleteEvent(id);I.retirer([ix.parType,ix.evNatif],[id]);return r;});
+-  if(orig.deleteRecord)def('deleteRecord',async id=>{const r=await orig.deleteRecord(id);I.retirer([ix.recNatif],[id]);return r;});
+-  if(orig.deleteMany)def('deleteMany',async(nom,ids)=>{const r=await orig.deleteMany(nom,ids);
+-   if(nom==='events')I.retirer([ix.parType,ix.evNatif],ids||[]);else if(nom==='records')I.retirer([ix.recNatif],ids||[]);return r;});
+-  if(orig.deleteIfUnchanged)def('deleteIfUnchanged',async(nom,...a)=>{const r=await orig.deleteIfUnchanged(nom,...a);const ids=r?.supprimes||[];
+-   if(nom==='events')I.retirer([ix.parType,ix.evNatif],ids);else if(nom==='records')I.retirer([ix.recNatif],ids);return r;});
+-  if(orig.clearAll)def('clearAll',async()=>{const r=await orig.clearAll();I.vider();ix.totaux={events:0,records:0};return r;});
++  /* CH-067 : écritures comptées par clé. Une suppression ne retire de l'index que les clés qui n'ont pas été RÉÉCRITES pendant
++   * qu'elle tournait : IndexedDB ordonne les transactions, une écriture lancée pendant la suppression peut passer après elle et laisser
++   * l'objet en base. Le retirer de l'index le ferait disparaître des lectures bornées (sur-ensemble rompu, rien ne le détecte).
++   * Les écritures ne sont comptées que pendant une suppression en cours (mémoire bornée), et oubliées quand la dernière finit. */
++  const ecrits={events:new Map(),records:new Map()};let suppressions=0;
++  const compter=(nom,cle)=>{if(suppressions>0&&typeof cle==='string')ecrits[nom].set(cle,(ecrits[nom].get(cle)||0)+1);};
++  const avant=(nom,ids)=>{suppressions++;return new Map((ids||[]).map(k=>[k,ecrits[nom]?.get(k)||0]));};
++  const retirerSiInchange=(nom,cartes,ids,vus)=>I.retirer(cartes,(ids||[]).filter(k=>(ecrits[nom].get(k)||0)===(vus.get(k)??0)));
++  const fini=()=>{if(--suppressions===0){ecrits.events.clear();ecrits.records.clear();}};
++  if(orig.putEvent)def('putEvent',e=>{try{if(e&&typeof e==='object'&&typeof e.eventId!=='string')ix.invalide=true;I.noterEvenement(e);compter('events',e?.eventId);ix.totaux.events++;}catch{ix.invalide=true;}return orig.putEvent(e);});
++  if(orig.putRecord)def('putRecord',r=>{try{if(r&&typeof r==='object'&&cleVisite(r)===null)ix.invalide=true;I.noterVisite(r);compter('records',cleVisite(r));ix.totaux.records++;}catch{ix.invalide=true;}return orig.putRecord(r);});
++  if(orig.deleteEvent)def('deleteEvent',async id=>{const v=avant('events',[id]);try{const r=await orig.deleteEvent(id);retirerSiInchange('events',[ix.parType,ix.evNatif],[id],v);return r;}finally{fini();}});
++  if(orig.deleteRecord)def('deleteRecord',async id=>{const v=avant('records',[id]);try{const r=await orig.deleteRecord(id);retirerSiInchange('records',[ix.recNatif],[id],v);return r;}finally{fini();}});
++  if(orig.deleteMany)def('deleteMany',async(nom,ids)=>{const v=avant(nom,ids);try{const r=await orig.deleteMany(nom,ids);
++   if(nom==='events')retirerSiInchange(nom,[ix.parType,ix.evNatif],ids,v);else if(nom==='records')retirerSiInchange(nom,[ix.recNatif],ids,v);return r;}finally{fini();}});
++  if(orig.deleteIfUnchanged)def('deleteIfUnchanged',async(nom,...a)=>{const v=avant(nom,a[0]);try{const r=await orig.deleteIfUnchanged(nom,...a);const ids=r?.supprimes||[];
++   if(nom==='events')retirerSiInchange(nom,[ix.parType,ix.evNatif],ids,v);else if(nom==='records')retirerSiInchange(nom,[ix.recNatif],ids,v);return r;}finally{fini();}});
++  /* CH-067 : après un vidage complet, l'index est JETÉ (reconstruit au prochain besoin, base presque vide) au lieu d'être vidé en restant
++   * « prêt » : une écriture lancée pendant le vidage et passée après lui serait sinon absente de l'index. */
++  if(orig.clearAll)def('clearAll',async()=>{try{return await orig.clearAll();}finally{I.vider();ix.totaux={events:0,records:0};ix.pret=false;ix.invalide=false;ix.construction=null;}});
+   /* Construction : une lecture complète par magasin, une fois par vie du service worker. */
+   const construire=()=>ix.construction||(ix.construction=(async()=>{const t0=Date.now();
+    try{const cles=await Promise.all(['events','records'].map(n=>store.keys(n)));if(cles.flat().some(k=>typeof k!=='string'))ix.invalide=true;

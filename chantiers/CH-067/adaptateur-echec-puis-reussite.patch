@@ -1,0 +1,22 @@
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -227,11 +227,17 @@
+   * d'aujourd'hui, jamais une lecture plus tôt. */
+  const RSE=window.BananeSettings?.lot?.signalEteint||{},LIGNE_BASE=RSE.ligneDeBaseEchecs===true,TROU_ECHEC=LIGNE_BASE||['trou','signal+trou'].includes(RSE.declencheur);
+  const ZONE_RAIL_M=Number.isFinite(RSE.zoneRailM)&&RSE.zoneRailM>0?RSE.zoneRailM:3,EPT_DATA_PAGE=/\/ept-data\/(\d+-\d+-\d+-\d+)\.[a-z]+$/i;
+- let echecsPoints=0,observateurRessources=false;const clesEchec=new Set(),episodeLigneBase={motif:null};
++ let echecsPoints=0,echecsSansCle=0,observateurRessources=false;const clesEchec=new Set(),echecsActifs=new Set(),episodeLigneBase={motif:null};
+  if(LIGNE_BASE||TROU_ECHEC)try{if(typeof PerformanceObserver==='function'){const po=new PerformanceObserver(l=>{try{for(const e of l.getEntries()){const rs=e.responseStatus;
+    let chemin='';try{chemin=new URL(String(e.name||''),location.href).pathname;}catch{chemin=String(e.name||'');}
+    const m=/\/ept-data\//i.test(chemin)?EPT_DATA_PAGE.exec(chemin):null;
+-   if(/\/ept-data\//i.test(chemin)&&Number.isInteger(rs)&&(rs===0||rs>=400)){echecsPoints++;if(m&&clesEchec.size<64)clesEchec.add(m[1]);}}}catch{}});
++   /* CH-067 : un échec n'est soustrait que tant que son nœud n'a pas réussi ensuite. Une réussite du même nœud (réessai, requête
++    * annulée puis refaite) a rendu son +1 au compteur : la soustraire encore ferait lire « aucun chargement » pendant un vrai
++    * chargement. Échecs sans clé lisible : comptés à part, pour toujours (comme avant). */
++   if(/\/ept-data\//i.test(chemin)&&Number.isInteger(rs)){
++    if(rs===0||rs>=400){if(m){echecsActifs.add(m[1]);if(clesEchec.size<64)clesEchec.add(m[1]);}else echecsSansCle++;}
++    else if(rs>=200&&rs<300&&m)echecsActifs.delete(m[1]);
++    echecsPoints=echecsSansCle+echecsActifs.size;}}}catch{}});
+    po.observe({type:'resource',buffered:true});observateurRessources=true;}}catch{observateurRessources=false;}
+  function repliLigneBase(motif,n){if(episodeLigneBase.motif===motif)return;episodeLigneBase.motif=motif;
+    try{const l=cutLabel();posterObservateur({kind:'ligne-base-repli',motif,compteur:n,echecs:echecsPoints,cut:l?.cut??null,pageMs:heurePage()});}catch{}}

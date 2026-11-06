@@ -1,0 +1,15 @@
+--- a/src/etat-morceaux.js
++++ b/src/etat-morceaux.js
+@@ -97,6 +97,12 @@
+    const enLigne=porteur[chemin.at(-1)];
+    if(ref.forme==='objet')porteur[chemin.at(-1)]={...Object.fromEntries(elements.filter(e=>Array.isArray(e)&&e.length===2&&typeof e[0]==='string')),...(objetSimple(enLigne)?enLigne:{})};
+    else if(ref.enLigne){const vus=new Set(elements);porteur[chemin.at(-1)]=[...elements,...(Array.isArray(enLigne)?enLigne:[]).filter(x=>!vus.has(x)&&vus.add(x))];}
++   else if(racine==='batch'){
++    /* CH-067 : listes du LOT après un retour arrière. Le paquet antérieur ne voit pas les éléments des morceaux (liste écrite vide) :
++     * il peut ajouter de nouveau un élément déjà là (cut différé une seconde fois, même `key`). Au recollage, un élément dont la clé
++     * est déjà vue n'est pas repris ; le premier fait foi, comme le moteur (src/engine.js : `deferred` sans doublon d'opération ni de clé). */
++    const vus=new Set(elements.map(x=>x&&typeof x==='object'&&typeof x.key==='string'?x.key:null).filter(Boolean));
++    porteur[chemin.at(-1)]=[...elements,...(Array.isArray(enLigne)?enLigne:[]).filter(x=>{const k=x&&typeof x==='object'&&typeof x.key==='string'?x.key:null;if(k===null)return true;if(vus.has(k))return false;vus.add(k);return true;})];}
+    else porteur[chemin.at(-1)]=[...elements,...(Array.isArray(enLigne)?enLigne:[])];}
+   for(const [racine] of CHEMINS){const r=etat[racine];if(r&&typeof r==='object'&&REF in r)delete r[REF];}
+   return {etat,manquants,relus};}
