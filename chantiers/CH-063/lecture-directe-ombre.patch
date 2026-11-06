@@ -1,0 +1,90 @@
+diff -ru a/background.js b/background.js
+--- a/background.js
++++ b/background.js
+@@ -33,7 +33,7 @@
+  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
+  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
+ BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
+-const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
++const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/lecture-directe.js','src/adapter-page.js'];
+ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
+ /* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
+  * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
+diff -ru a/src/adapter-page.js b/src/adapter-page.js
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -398,6 +398,17 @@
+    if(!bloque){compteurCuts.episode=false;return;}
+    if(compteurCuts.episode)return;compteurCuts.episode=true;
+    posterObservateur({kind:'diag-compteur-bloque',valeur:n,cuts:N,cut:l.cut,pageMs:heurePage()});}catch{}}
++ /* CH-063 (prototype, coupé par défaut : `BananeSettings.lectureDirecte.actif:false`) — LECTURE DIRECTE EN OMBRE (src/lecture-directe.js).
++  * Après chaque capture, relit les ressources de points qu'ESV a demandées elle-même depuis la capture précédente (au plus une fois
++  * chacune, cache du navigateur d'abord, arrêt à la première erreur ou lenteur) et compare nœud à nœud, au bit près, aux nœuds affichés.
++  * Ne remplace JAMAIS la capture, ne la retarde pas (rien n'est attendu), ne décide rien : un événement `lecture-directe-ombre` de comptes.
++  * Sans décodeur connu (`decodeur` : seul « maquette » existe), aucune requête. Aucune adresse n'est postée. */
++ const LDIR=(()=>{try{const S=window.BananeSettings?.lectureDirecte,M=window.BananeLectureDirecte;if(!M||!S||S.actif!==true)return null;
++   const L=M.creer({fetch:(u,i)=>window.fetch(u,i),maintenant:()=>performance.now(),reglage:{actif:true,maxRequetesParCut:S.maxRequetesParCut??16,lenteurMs:S.lenteurMs??1000,motif:S.motif??'/ept-data/'},
++     decodeur:M.DECODEURS[S.decodeur]||null});
++   const po=new PerformanceObserver(l=>{try{L.observer(l.getEntries());}catch{}});po.observe({type:'resource',buffered:false});return L;}catch{return null;}})();
++ function lectureDirecteOmbre(expected){if(!LDIR)return;try{const vw=context().viewer,cut=expected?.identity?.cut??null;
++   LDIR.lireEnOmbre({viewer:vw}).then(r=>posterObservateur({kind:'lecture-directe-ombre',cut,...r,pageMs:heurePage()}),()=>{});}catch{}}
+  async function capture(expected,progress=()=>{}){noterCompteurDebutCut();try{installerOmbreEsv();}catch{}cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
+    const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs,lecture=lectureDuCut(expected?.identity);
+    const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
+@@ -448,7 +459,7 @@
+     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
+    const nodes=data.nodes.length,compacted=M3.compactNodes(data),bytes=M3.messageBytes(data);
+    if(bytes>M3.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
+-   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture,regleLecture:data.readStrategy.regleLecture});return data;
++   progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture,regleLecture:data.readStrategy.regleLecture});lectureDirecteOmbre(expected);return data;
+  }
+  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE
+   * de « dans la vue » : celle dont dépend le clic, partagée par l'attente de
+diff -ru a/src/esv-observer.js b/src/esv-observer.js
+--- a/src/esv-observer.js
++++ b/src/esv-observer.js
+@@ -71,7 +71,7 @@
+  const OBSERVER_VERSION=1;
+  /* 4.9.5.3 (S6) — champs de liste gardés en plus (lecture seule) et événements relayés depuis l'adaptateur. */
+  const EXTRA_NUM=['RailSpacing','TrajAzimuth'],EXTRA_STR='RailType',EXTRA_PK='PK',SUCCESS=/^Success/;
+- const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null});
++ const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null,'lecture-directe-ombre':null});
+  const EPT_DATA=/\/ept-data\//i;
+  function argsReduits(a){if(!Array.isArray(a))return [];return a.slice(0,6).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='string'&&v.length<=24?v:typeof v==='boolean'?v:null);}
+ 
+@@ -367,7 +367,12 @@
+      record({kind:k,nom:x.nom,args:argsReduits(x.args),pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null,...(Number.isInteger(x.perdus)&&x.perdus>0?{perdus:Math.min(x.perdus,1e6)}:{})});}
+     else if(k==='diag-compteur-bloque'){if(!releveOn('compteurBloque'))return;
+      record({kind:k,valeur:Number.isInteger(x.valeur)&&x.valeur>0&&x.valeur<1e6?x.valeur:null,cuts:Number.isInteger(x.cuts)&&x.cuts>0&&x.cuts<1000?x.cuts:null,
+-      cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}}
++      cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}
++    else if(k==='lecture-directe-ombre'){/* CH-063 : des comptes seulement ; une chaîne courte pour l'état et le motif, jamais une adresse. */
++     const n=v=>Number.isFinite(v)&&v>=0&&v<1e9?Math.round(v*10)/10:null,mot=v=>typeof v==='string'&&/^[a-z-]{1,24}$/.test(v)?v:null;
++     record({kind:k,etat:mot(x.etat),motif:mot(x.motif),cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,identite:x.identite===true?true:x.identite===false?false:null,
++      ...Object.fromEntries(['requetesEsv','ressourcesEsv','requetes','dureeMs','dureeMaxMs','noeudsRelus','noeudsVisibles','identiques','surplus','manquants','pointsRelus'].map(c=>[c,n(x[c])])),
++      plafond:x.plafond===true,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}}
+    else if(d.kind==='banane5:config'){
+     if(Array.isArray(d.relevesOff)){off.clear();for(const n of d.relevesOff)if(typeof n==='string'&&n.length<=24)off.add(n);}
+     if(!Array.isArray(d.relevesOff)&&(!('table' in d)||typeof d.enabled==='boolean'))enabled=d.enabled!==false;
+diff -ru a/src/settings.js b/src/settings.js
+--- a/src/settings.js
++++ b/src/settings.js
+@@ -485,6 +485,11 @@
+    *   revisiteSansSource: revisite d'un différé sans source nouvelle, consignée seulement (rien n'est sauté).
+    *   auditServeur  : au rechargement de la liste, validés côté serveur contre validations d'Ariane (`audit-serveur`).
+    *   enteteMachine : navigateur, plateforme, mémoire, GPU dans l'en-tête de l'export. */
++  /* CH-063 (prototype) — lecture directe EN OMBRE des ressources de points (src/lecture-directe.js) : coupée. Allumée, elle relit après
++   * chaque capture les ressources qu'ESV a demandées (au plus une fois chacune, `maxRequetesParCut` au plus, arrêt à la première erreur
++   * ou au-delà de `lenteurMs`) et compare au bit près aux nœuds affichés ; elle ne remplace jamais la capture. `decodeur` : « maquette »
++   * seulement (le format réel d'ESV n'est pas décodé : sans décodeur, aucune requête). */
++  const lectureDirecte = Object.freeze({ actif: false, decodeur: null, maxRequetesParCut: 16, lenteurMs: 1000, motif: '/ept-data/' });
+   const releves = Object.freeze({
+     ressources: true, flushPct: true, diagCapture: true, champsListe: true,
+     compteurBloque: Object.freeze({ actif: true, cuts: 3 }),
+@@ -597,5 +602,5 @@
+   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
+    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
+    * (`{ ...Settings, x }`) ne sont pas touchés. */
+-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file, correctionEntreParties });
++  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, lectureDirecte, esvEvents, derived, describe, vertsAControler, file, correctionEntreParties });
+ });
