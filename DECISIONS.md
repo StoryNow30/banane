@@ -3476,3 +3476,7 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - `geometrie-elaguee-v46` (`src/geometry.js`, gelé) : non. Gain d'environ 2 s, insuffisant pour toucher un fichier gelé.
 - `lidar-direct` (`vendor/lidar.js`, gelé) : accord, sous condition du relevé de console d'ESV (`tools/ch065-releve-accesseur.js`) avec `three.revision` = « 124 » et une lecture directe possible sur tous les nœuds. Sinon, pas d'intégration.
 - La chaîne `CONTRACT.geometrySha256` n'est pas changée.
+
+## D-298 — Nom du premier paquet en Rust : « Vision » (opérateur, 06/11 soir)
+- Le premier paquet qui embarque le cœur Rust s'appelle « Vision », aussi dans Chrome : la clé `name` de `manifest.json` (aujourd'hui « Ariane 5 ») est changée au moment de fabriquer ce paquet (accord écrit de l'opérateur pour cette modification de `manifest.json`).
+- Vérifié : aucun code de `src/` ni `background.js` ne lit le nom du manifeste, donc la reprise des lots n'en dépend pas.
