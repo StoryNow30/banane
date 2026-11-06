@@ -78,11 +78,9 @@
  /* Accesseurs connus (audit de la PR n° 25, P2). La lecture directe du tableau n'est prise que si l'attribut n'a AUCUN
   * accesseur getX/getY/getZ, ou si ses trois accesseurs sont, par identité de fonction, ceux d'un prototype déclaré connu :
   * ceux de three.js en page (globalThis.THREE.BufferAttribute et InterleavedBufferAttribute, s'ils existent), ou ceux déclarés
-  * par accesseursConnus(prototype). Sinon (accesseur INCONNU), le tableau n'est pas lu du tout : chaque tranche est lue, juste
-  * avant l'appel du noyau et dans le même tour (aucun await entre lecture et calcul), par le lecteur même de la boucle d'origine
-  * (n.attribute.get(i, k), capture-core), dans un tampon Float64 ; une valeur qui n'est pas un nombre y devient NaN, que le noyau
-  * compte comme non finie, comme Number.isFinite dans l'origine. Les valeurs calculées sont donc celles de l'origine par
-  * construction, quel que soit l'accesseur. Compté par parAccesseur(). Refus comptés par raison (refus()). */
+  * par accesseursConnus(prototype). Sinon (accesseur INCONNU), le nœud passe par la boucle d'origine : seule elle reproduit les
+  * appels de l'accesseur à l'identique (mêmes indices, même ordre, entrelacés avec les autres attributs et les arrêts de
+  * budget ou d'erreur ; audit de 01846d1 et de 53c7885, PR n° 25). Refus comptés par raison (refus()). */
  const CONNUS=[],refusParRaison={};
  function accesseursConnus(...protos){for(const p of protos)if(p&&typeof p.getX==='function'&&typeof p.getY==='function'&&typeof p.getZ==='function')
   CONNUS.push([p.getX,p.getY,p.getZ]);return CONNUS.length;}
@@ -94,12 +92,6 @@
   return CONNUS.some(([x,y,z])=>x===fx&&y===fy&&z===fz);
  }
  const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
- /* Lecture d'une tranche par le lecteur d'origine (accesseur inconnu) : tampon partagé (les captures sont sérialisées). Rend un
-  * descripteur où l'indice di+j se lit en 3·j. */
- let noeudsParAccesseur=0,TAMPON=new Float64Array(3*4096);
- function parAccesseur(L,di,nb){if(TAMPON.length<3*nb)TAMPON=new Float64Array(3*nb);const A=L.par,T=TAMPON;
-  for(let j=0;j<nb;j++)for(let k=0;k<3;k++){const v=A.get(di+j,k);T[3*j+k]=typeof v==='number'?v:NaN;}
-  return {src:T,stride:3,offset:-3*di,f64:true,capacite:L.capacite};}
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
  function eligibleAvec(octetsEntree,capaciteMax){
   return function eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,probes){
@@ -117,8 +109,7 @@
    for(const pr of probes||[]){const i=pr.sourceIndex;if(!Number.isInteger(i)||i<0||i>=n.attribute.count)continue;
     for(let k=0;k<3;k++)if(!Object.is(n.attribute.get(i,k),src[i*stride+offset+k]))return null;vues++;}
    if(!vues)return null;
-   if(inconnu){if(typeof n.attribute.get!=='function')return refuser('lecteur absent');noeudsParAccesseur++;
-    return {par:n.attribute,stride:3,offset:0,f64:true,capacite:Math.min(capaciteMax,Math.floor((octetsEntree/8-3)/3)+1)};}
+   if(inconnu)return refuser('accesseur inconnu');
    const largeur=f64?8:4,capacite=Math.min(capaciteMax,Math.floor((octetsEntree/largeur-3)/stride)+1);
    return capacite>=1?{src,stride,offset,f64,capacite}:null;
   };
@@ -160,7 +151,6 @@
   return {nom:'wasm',eligible:eligibleAvec(octets,capacite),
    debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
    tranche(L,di,nb,limite,retour){
-    if(L.par)L=parAccesseur(L,di,nb);
     const debut=di*L.stride+L.offset,lus=nb>0?(nb-1)*L.stride+3:0;
     (L.f64?F64:F32).set(L.src.subarray(debut,debut+lus));copieOctets+=lus*(L.f64?8:4);tranches++;
     E[0]=retour;Msauve.set(M);Esauve.set(E);
@@ -203,7 +193,6 @@
   return {nom:'js-elague',eligible:eligibleAvec(Infinity,cap),
    debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
    tranche(Ld,di,nb,limite,retour){
-    if(Ld.par)Ld=parAccesseur(Ld,di,nb);
     const src=Ld.src,stride=Ld.stride,b0=M[128],b1=M[129],b2=M[130];
     let rt=retour,traites=0,nonFinis=0,g=0,d=0,k=0;err=0;tranches++;
     points:for(let j=0;j<nb;j++){
@@ -235,5 +224,5 @@
    charger(m,e){M.set(m);E.set(e);},etat:()=>E,
    memoireOctets:()=>0,copieOctets:()=>0,tranches:()=>tranches};
  }
- return {variante,noyauWasm,noyauJs,accesseursConnus,refus:()=>({...refusParRaison}),parAccesseur:()=>noeudsParAccesseur,DEBUT,FIN};
+ return {variante,noyauWasm,noyauJs,accesseursConnus,refus:()=>({...refusParRaison}),DEBUT,FIN};
 });

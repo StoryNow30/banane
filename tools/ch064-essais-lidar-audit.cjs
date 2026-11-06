@@ -50,23 +50,62 @@ test('P3 : une tranche dont la taille déborde 32 bits est refusée (code 3), sa
   E[5]=0;assert.strictEqual(X.lidar_parcourir_f32(n,stride,0,Infinity),0);assert.strictEqual(E[5],3);}
 });
 
-test('P2 : un accesseur inconnu mais conforme au tableau sur tout le nœud laisse servir le noyau, sortie identique',async()=>{
+test('P2 : un accesseur inconnu, même conforme au tableau, laisse le nœud à la boucle d\u2019origine, sortie identique',async()=>{
  const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),sc=S.construireScene(d,0,7),nw=L.W.noyauWasm(octets);
  // accesseurs propres à chaque attribut (donc inconnus), mais qui lisent exactement le tableau
  for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const pos=e.sceneNode.geometry.attributes.position,a=pos.array;
   pos.getX=i=>a[3*i];pos.getY=i=>a[3*i+1];pos.getZ=i=>a[3*i+2];}
  const ref=net(await L.origine.capture(opts(sc)));globalThis.ArianeLidarNoyau=nw;
- try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0,'le noyau a servi');}
+ try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.strictEqual(nw.tranches(),0,'aucune tranche au noyau');assert.ok(L.W.refus()['accesseur inconnu']>0);}
  finally{globalThis.ArianeLidarNoyau=undefined;}
 });
 
-test('P2 : un accesseur qui rend autre chose qu\u2019un nombre (chaîne) donne la sortie de l\u2019origine, noyau servi',async()=>{
+test('P2 : un accesseur qui rend autre chose qu\u2019un nombre (chaîne) donne la sortie de l\u2019origine',async()=>{
  const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),sc=S.construireScene(d,0,7),nw=L.W.noyauWasm(octets);
  const ref0=await L.origine.capture(opts(sc)),j=ref0.pointSources[0][1];
  for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const pos=e.sceneNode.geometry.attributes.position,a=pos.array;
   pos.getX=i=>i===j?String(a[3*i]):a[3*i];pos.getY=i=>a[3*i+1];pos.getZ=i=>a[3*i+2];}
  const ref=net(await L.origine.capture(opts(sc)));globalThis.ArianeLidarNoyau=nw;
- try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0);
+ try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);
   assert.ok(ref.quality.nonFinitePositions>0,'la chaîne compte comme non finie dans l\u2019origine');}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
+});
+
+/* Audit de 01846d1 (PR n° 25) : la troisième voie (accesseur inconnu) appelait l'accesseur hors des lectures de l'origine.
+ * Un accesseur inconnu laisse désormais le nœud à la boucle d'origine : mêmes appels, même ordre, mêmes effets. */
+test('audit 01846d1, P2 : accesseur qui lève au-delà de la plage dessinée, sortie et fin de l\u2019origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),nw=L.W.noyauWasm(octets);
+ const fab=()=>{const sc=S.construireScene(d,0,7);
+  for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const g=e.sceneNode.geometry,pos=g.attributes.position,a=pos.array;g.drawRange={start:0,count:100};
+   const lit=(i,k)=>{if(i>99)throw Error('accesseur : indice hors plage '+i);return a[3*i+k];};pos.getX=i=>lit(i,0);pos.getY=i=>lit(i,1);pos.getZ=i=>lit(i,2);}
+  return sc;};
+ const ref=await L.origine.capture(opts(fab()));assert.ok(ref.quality.inspected>0);
+ globalThis.ArianeLidarNoyau=nw;
+ try{const w=await L.variante.capture(opts(fab()));assert.deepStrictEqual(comparer(net(ref),net(w),{max:5}),[]);}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
+});
+test('audit 01846d1, P2 : accesseur à effet de bord (getZ(p+1) change Y du point p, p retenu), sortie de l\u2019origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),nw=L.W.noyauWasm(octets);
+ const p0=(await L.origine.capture(opts(S.construireScene(d,0,7)))).pointSources[0][1];
+ const fab=()=>{const sc=S.construireScene(d,0,7);
+  for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const pos=e.sceneNode.geometry.attributes.position,a=pos.array;
+   pos.getX=i=>a[3*i];pos.getY=i=>a[3*i+1];pos.getZ=i=>{if(i===p0+1)a[3*p0+1]+=0.25;return a[3*i+2];};}
+  return sc;};
+ const ref=net(await L.origine.capture(opts(fab())));
+ globalThis.ArianeLidarNoyau=nw;
+ try{const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
+});
+test('accesseur inconnu et plafond maxPoints : aucun appel au-delà du dernier point que l\u2019origine lit',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),nw=L.W.noyauWasm(octets),plafond={maxPoints:3};
+ const r0=await L.origine.capture({...opts(S.construireScene(d,0,7)),...plafond}),[n3,i3]=r0.pointSources[2];
+ // l'origine relit aussi les sondes du nœud (réparties sur toute la plage) : elles restent lisibles
+ const sondes=new Set((r0.nodes?.[n3]?.probes||[]).map(p=>p.sourceIndex));assert.ok(sondes.size>0);
+ const fab=()=>{const sc=S.construireScene(d,0,7);
+  sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes).forEach((e,k)=>{const pos=e.sceneNode.geometry.attributes.position,a=pos.array;
+   const lit=(i,c)=>{if(k===n3&&i>i3&&!sondes.has(i))throw Error('accesseur : lu au-delà du plafond, indice '+i);return a[3*i+c];};pos.getX=i=>lit(i,0);pos.getY=i=>lit(i,1);pos.getZ=i=>lit(i,2);});
+  return sc;};
+ const ref=net(await L.origine.capture({...opts(fab()),...plafond}));globalThis.ArianeLidarNoyau=nw;
+ try{const w=net(await L.variante.capture({...opts(fab()),...plafond}));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);}
  finally{globalThis.ArianeLidarNoyau=undefined;}
 });
