@@ -26,7 +26,7 @@ fn b64_encoder(o: &[u8]) -> String {
 fn b64_decoder(s: &[u8]) -> Option<Vec<u8>> {
     let mut t = [255u8; 256];
     for (i, &c) in B64.iter().enumerate() { t[c as usize] = i as u8; }
-    if s.len() % 4 != 0 { return None; }
+    if !s.len().is_multiple_of(4) { return None; }
     let mut o = Vec::with_capacity(s.len() / 4 * 3);
     for c in s.chunks(4) {
         let mut n = 0u32;
