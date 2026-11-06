@@ -101,3 +101,57 @@ pub extern "C" fn lidar_parcourir_f32(n: u32, stride: u32, premier: u32, limite:
 /// Tranche d'un tampon `Float64Array` (même contrat que `lidar_parcourir_f32`).
 #[no_mangle]
 pub extern "C" fn lidar_parcourir_f64(n: u32, stride: u32, premier: u32, limite: f64) -> u32 { appel::<f64>(n, stride, premier, limite) }
+
+#[cfg(test)]
+// essais au bit près ; l'entrée est alignée sur 8 (vérifié en tête de l'essai) ; CAPACITE tient dans un u32
+#[allow(clippy::float_cmp, clippy::cast_ptr_alignment, clippy::cast_possible_truncation)]
+mod essais {
+    use super::*;
+    use crate::{E_PAR_RAIL, E_PROCHE, E_TRAITES, M_BORNES};
+
+    /// Un seul essai pour toute l'ABI : l'arène est une statique partagée, les essais parallèles s'y marcheraient dessus.
+    #[test]
+    fn abi_complete() {
+        assert_eq!(lidar_version_arene(), VERSION_ARENE);
+        assert_eq!((lidar_capacite(), lidar_entree_octets()), (CAPACITE, ENTREE_OCTETS));
+        assert_eq!(lidar_entree() as usize % 8, 0);
+        // SÛRETÉ : blocs de l'arène, tailles N_MATS, N_ETAT, ENTREE_OCTETS, CAPACITE ; aucun autre accès pendant l'essai.
+        let (m, e, x32, x64, r, s) = unsafe {
+            (
+                core::slice::from_raw_parts_mut(lidar_matrices(), N_MATS),
+                core::slice::from_raw_parts_mut(lidar_etat(), N_ETAT),
+                core::slice::from_raw_parts_mut(lidar_entree().cast::<f32>(), 6),
+                core::slice::from_raw_parts_mut(lidar_entree().cast::<f64>(), 6),
+                core::slice::from_raw_parts(lidar_retenus(), CAPACITE),
+                core::slice::from_raw_parts(lidar_scene(), 3 * CAPACITE),
+            )
+        };
+        // Toutes les matrices à l'identité, fenêtre de ±0,5 × 0,4 × 0,3.
+        m.fill(0.0);
+        for o in (0..128).step_by(16) {
+            for d in [0, 5, 10, 15] {
+                m[o + d] = 1.0;
+            }
+        }
+        m[M_BORNES..M_BORNES + 3].copy_from_slice(&[0.5, 0.4, 0.3]);
+        let verifier = |e: &[f64], r: &[u32], s: &[f64]| {
+            assert_eq!((e[E_TRAITES], e[E_PAR_RAIL[0]], e[E_PAR_RAIL[1]], e[E_ERREUR]), (2.0, 1.0, 1.0, 0.0));
+            assert_eq!((r[0], s[0], s[1]), (10, 0.25, 0.0));
+            assert_eq!(e[E_PROCHE[0] + 2], 10.0);
+        };
+        x32.copy_from_slice(&[0.25, 0.0, 0.0, 9.0, 9.0, 9.0]);
+        e.fill(0.0);
+        assert_eq!(lidar_parcourir_f32(2, 3, 10, f64::INFINITY), 1);
+        verifier(e, r, s);
+        x64.copy_from_slice(&[0.25, 0.0, 0.0, 9.0, 9.0, 9.0]);
+        e.fill(0.0);
+        assert_eq!(lidar_parcourir_f64(2, 3, 10, f64::INFINITY), 1);
+        verifier(e, r, s);
+        // Tranches refusées : trop longue, pas < 3, débordement de l'entrée.
+        for (n, pas) in [(CAPACITE as u32 + 1, 3), (2, 2), (4096, 9)] {
+            e.fill(0.0);
+            assert_eq!(lidar_parcourir_f64(n, pas, 0, f64::INFINITY), 0);
+            assert_eq!(e[E_ERREUR], 3.0);
+        }
+    }
+}
