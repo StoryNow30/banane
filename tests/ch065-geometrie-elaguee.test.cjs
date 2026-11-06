@@ -26,9 +26,8 @@ const entrees=(M,c,lab)=>({
   decision:['left','right'].map(side=>{let grille=null;const r=H.essayer(()=>M.Cand.propose(c,side,{lab:{...lab,onCoarse(g){grille=g;}}}));return {r,grille};}),
 });
 const LAB={uSeeds:[.02],replaceOrigin:false,recenterWindow:true,partialFaceKeep:true};
-test('CH-065 : l\'arbre est à l\'origine ou entièrement patché, jamais entre les deux', ()=>{
-  const e=['src/geometry.js','src/geometry-candidate-v1.js'].map(f=>H.A.versions(H.RACINE,f).etat);
-  assert.ok(e.every(x=>x===e[0]),'deux fichiers dans des états différents : '+e);
+test('CH-065 : chaque patch est entier ou absent dans l\'arbre, jamais à moitié', ()=>{
+  for(const f of H.A.FICHIERS)assert.doesNotThrow(()=>H.A.versions(H.RACINE,f),f);
 });
 test('CH-065 : mêmes sorties au bit près, quatre entrées, captures réelles et variantes', ()=>{
   let candidats=0;
@@ -38,6 +37,13 @@ test('CH-065 : mêmes sorties au bit près, quatre entrées, captures réelles e
     for(const s of ['left','right'])if(a.v46.ok?.[s]?.status==='candidate')candidats++;
   }
   assert.ok(candidats>=5,'trop peu de rails posés pour que l\'essai dise quelque chose : '+candidats);
+});
+test('CH-065 : chaque sous-ensemble de patchs rend la même chose (l\'opérateur peut choisir patch par patch)', ()=>{
+  const c=H.captures()[3],ref=H.canon(entrees(O,c,LAB));
+  for(const noms of [['geometrie-elaguee-lot'],['geometrie-elaguee-v46'],['mediane-exacte'],['geometrie-elaguee-lot','mediane-exacte']]){
+    const textes={};for(const f of ['src/geometry.js','src/geometry-candidate-v1.js']){const v=H.A.versions(H.RACINE,f);textes[f]=H.A.patcher(f,v.origine,noms);}
+    assert.equal(H.canon(entrees(H.geometrie('patche',textes),c,LAB)),ref,noms.join('+'));
+  }
 });
 test('CH-065 : hors du domaine de l\'élagage (|u| ≥ 1), la boucle d\'origine est gardée et rend la même chose', ()=>{
   const c=H.captures()[0];
