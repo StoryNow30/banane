@@ -11,7 +11,8 @@ const fs=require('node:fs'),path=require('node:path'),v8=require('node:v8'),cryp
 const RACINE=path.resolve(__dirname,'..');
 const MODULES={critere:'src/relecture-critere.js',signal:'src/relecture-signal.js',gardeApresDiffere:'src/garde-apres-differe.js',
  gardePasseAppuis:'src/garde-passe-appuis.js',relectureOmbre:'src/relecture-ombre.js',reglesMetier:'src/regles-metier.js',
- crossing:'src/level-crossing.js',shadow:'src/gcv1-shadow.js',hauteur:'src/hauteur-apprise.js',fauxVert:'src/faux-vert-ombre.js',lotDecision:'src/lot-decision.js',voieB1:'src/voie-b1-ecart.js',gcv2L1:'src/gcv2-l1.js'};
+ crossing:'src/level-crossing.js',shadow:'src/gcv1-shadow.js',hauteur:'src/hauteur-apprise.js',fauxVert:'src/faux-vert-ombre.js',lotDecision:'src/lot-decision.js',voieB1:'src/voie-b1-ecart.js',gcv2L1:'src/gcv2-l1.js',
+ /* CH-068 (J4) */ appuisListe:'src/appuis-liste.js',gcv2L1e:'src/gcv2-l1e.js',voieRecentree:'src/voie-recentree.js',rechercheLarge:'src/recherche-large.js'};
 const CROCHET=process.env.CH064D_FIXTURES;
 if(CROCHET){
  /* Crochet, dans le processus de l'essai. */

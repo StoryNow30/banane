@@ -20,7 +20,7 @@ pub(crate) fn fit_at(p_: &[[f64; 2]]) -> f64 {
     (sy - bb * sx) / nn
 }
 /// Prédiction d'un rail : décalage latéral et translation (le vertical n'entre que dans la translation).
-pub(crate) struct Prediction { pub lateral: f64, pub translation: [f64; 3] }
+pub(crate) struct Prediction { pub lateral: f64, /** décalage vertical de la voie (lu par voie-recentree, CH-068) */ pub vertical: f64, pub translation: [f64; 3] }
 /// Décalages locaux des appuis (`C.point(M, a.positions[side]) − o`).
 pub(crate) fn locaux(initial: &V, anchors: &[V], side: &str) -> R<([f64; 3], Vec<[f64; 3]>)> {
     let m = p(initial, "sceneRelativeToProfileLocal")?;
@@ -45,7 +45,7 @@ pub(crate) fn predict(initial: &V, anchors: &[V], side: &str) -> R<Prediction> {
     let (o_, q) = locaux(initial, anchors, side)?;
     let lateral = fit_at(&q.iter().map(|p_| [p_[0], p_[1]]).collect::<Vec<_>>());
     let vertical = fit_at(&q.iter().map(|p_| [p_[0], p_[2]]).collect::<Vec<_>>());
-    Ok(Prediction { lateral, translation: translation_de(initial, o_, lateral, vertical)? })
+    Ok(Prediction { lateral, vertical, translation: translation_de(initial, o_, lateral, vertical)? })
 }
 /// `O.translated(rail, t)` : copie JSON du rail, repères translatés, inverse recalculé, contours translatés.
 pub(crate) fn translated(rail: &V, t: [f64; 3]) -> R<V> {

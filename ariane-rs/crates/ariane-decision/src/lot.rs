@@ -51,7 +51,8 @@ fn plus_proches(mut l: Vec<V>, identity: &V, k: &V) -> R<Vec<V>> {
     for a in &l { let d = ecart_cut(a, identity)?; if d.is_nan() { return hd("cut non numérique"); } cles.push(d); }
     let mut idx: Vec<usize> = (0..l.len()).collect();
     idx.sort_by(|i, j| cles[*i].partial_cmp(&cles[*j]).unwrap_or(std::cmp::Ordering::Equal));
-    let fin = slice_debut(l.len(), vers_nombre(k)?);
+    // `slice(0, undefined)` garde tout (CH-068)
+    let fin = if matches!(k, V::Indefini) { l.len() } else { slice_debut(l.len(), vers_nombre(k)?) };
     let mut out = vec![];
     for i in idx.into_iter().take(fin) { out.push(std::mem::replace(&mut l[i], V::Indefini)); }
     Ok(out)
@@ -96,9 +97,17 @@ fn predict_de(initial: &V, pred: &Pred, side: &str) -> R<Prediction> {
         let two = q.iter().filter(|p_| p_[0] < 0.0).count() >= 2 && q.iter().filter(|p_| p_[0] > 0.0).count() >= 2;
         let lateral = if two { fit_framed(&q.iter().map(|p_| [p_[0], p_[1]]).collect::<Vec<_>>()) } else { None };
         let vertical = if two { fit_framed(&q.iter().map(|p_| [p_[0], p_[2]]).collect::<Vec<_>>()) } else { None };
-        if let (Some(la), Some(ve)) = (lateral, vertical) { return Ok(Prediction { lateral: la, translation: aides::translation_de(initial, o_, la, ve)? }); }
+        if let (Some(la), Some(ve)) = (lateral, vertical) { return Ok(Prediction { lateral: la, vertical: ve, translation: aides::translation_de(initial, o_, la, ve)? }); }
     }
     aides::predict(initial, &pred.list, side)
+}
+/// CH-068 : `L.predictFramed(initial, anchors, side)`.
+pub(crate) fn predict_framed(initial: &V, anchors: &[V], side: &str) -> R<Prediction> { predict_de(initial, &Pred { list: anchors.to_vec(), framed: true, cuts: vec![] }, side) }
+/// `r.next.status==='candidate'` d'un rail `ok` : `next` absent fait lever le JS (`TypeError` de V8) : hors domaine (CH-068).
+fn statut_candidat(r: &V) -> R<bool> {
+    let nx = g(r, "next");
+    if nullish(nx) { return hd("rail sans next (le JS lève)"); }
+    Ok(matches!(g(nx, "status"), V::Chaine(c) if c == "candidate"))
 }
 fn rail<'a>(rails: &'a V, side: &str) -> R<&'a V> { p(rails, side) }
 fn deviation_mm(rails: &V, pred: &Pred, positions: &V) -> R<f64> {
@@ -113,7 +122,7 @@ fn deviation_mm(rails: &V, pred: &Pred, positions: &V) -> R<f64> {
     }
     Ok(m)
 }
-fn position_of(rail_: &V, delta: &V) -> R<V> {
+pub(crate) fn position_of(rail_: &V, delta: &V) -> R<V> {
     let pm = p(rail_, "profileLocalToSceneRelative")?;
     let w = point_v(pm, delta)?;
     let o_ = point_v(pm, &tab_n(&[0.0, 0.0, 0.0]))?;
@@ -360,7 +369,10 @@ fn crossing_fallback(d: V, rails: &V, positions: &V, pred: &Pred, gref: Option<&
     Ok(V::Objet(rest))
 }
 
-pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, options: &V, et: &Etat, gl: &Globaux) -> R<V> {
+/// CH-068 : `decideCutBase` qui rend aussi, dans `relance`, le résultat de l'unique appel au moteur relancé
+/// (`Shadow.scientificProposeBoth(seeded)`), comme l'enveloppe `moteur` de `voie-recentree.js` (`recentrer`) le capte.
+#[allow(clippy::too_many_arguments)] // signature de `decideCutBase` plus la relance captée
+pub(crate) fn decide_cut_base_r(capture: &V, science: &V, anchors_in: &V, validated: &V, options: &V, et: &Etat, gl: &Globaux, relance: &mut Option<V>) -> R<V> {
     let mut cfg = vec![];
     etaler(&mut cfg, &defaults())?;
     etaler(&mut cfg, options)?;
@@ -457,8 +469,11 @@ pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validate
     let anchors_used = tab(pred.cuts.clone());
     let seeded = minimal_capture(capture, seeded_rails(rails, &pred)?);
     let again = shadow::scientific_propose_both(&seeded, et)?;
+    *relance = Some(again.clone());
     let ar = |s_: &str| science_rail(&again, s_);
-    let again_ok = SIDES.iter().all(|s_| { let r = ar(s_); !nullish(r) && vrai(g(r, "ok")) && matches!(g(g(r, "next"), "status"), V::Chaine(c) if c == "candidate") }) && !vrai(g(g(&again, "summary"), "pairGaugeRejected"));
+    let mut tous = true;
+    for s_ in SIDES { let r = ar(s_); if !(!nullish(r) && vrai(g(r, "ok")) && statut_candidat(r)?) { tous = false; break; } }
+    let again_ok = tous && !vrai(g(g(&again, "summary"), "pairGaugeRejected"));
     let srails = g(&seeded, "rails");
     if again_ok {
         let d1 = |s_: &str| -> R<f64> { Ok(vers_nombre(&gi(g(g(ar(s_), "next"), "delta"), 1)?)?.abs() * 1000.0) };
@@ -480,6 +495,8 @@ pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validate
         let r = ar(side);
         if nullish(r) || !vrai(g(r, "ok")) { why.push(format!("{side}:frame")); continue; }
         let next = g(r, "next");
+        // `next.status` : un rail `ok` sans `next` fait lever le JS (CH-068)
+        if nullish(next) { return hd("rail sans next (le JS lève)"); }
         let pg = g(r, "pairGauge");
         let before = if !nullish(pg) && vrai(g(pg, "rejected")) { let pb = g(pg, "publishedBeforeGate"); if nullish(pb) { V::Indefini } else { g(pb, "delta").clone() } } else { V::Nul };
         let own = if matches!(g(next, "status"), V::Chaine(c) if c == "candidate") { g(next, "delta").clone() } else { before };
@@ -557,11 +574,13 @@ fn ombre_verticale(decision: &V, capture: &V, science: &V, options: &V, gl: &Glo
 fn fini_r1(v: &V) -> V { match v { V::Nombre(x) if x.is_finite() => r1v(*x), _ => nul() } }
 
 /// `decideCut` : la décision de base, puis les trois consignes en ombre (une panne d'une consigne ne change jamais la décision).
-pub(crate) fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> {
+pub(crate) fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> { decide_cut_r(args, et, gl, &mut None) }
+/// CH-068 : `decideCut` avec le résultat du moteur relancé (voir `decide_cut_base_r`).
+pub(crate) fn decide_cut_r(args: &V, et: &Etat, gl: &Globaux, relance: &mut Option<V>) -> R<V> {
     if nullish(args) { return hd("arguments absents"); }
     let (capture, science, anchors, validated, options) = (g(args, "capture"), g(args, "science"), g(args, "anchors"), g(args, "validated"), g(args, "options"));
     let options_def = if matches!(options, V::Indefini) { o(vec![]) } else { options.clone() };
-    let decision = decide_cut_base(capture, science, anchors, validated, &options_def, et, gl)?;
+    let decision = decide_cut_base_r(capture, science, anchors, validated, &options_def, et, gl, relance)?;
     let mut out = decision.clone();
     // try { … } catch {} : une exception du JS est absorbée ; un hors-domaine ne se décide pas ici
     let absorber = |r: R<V>| -> R<Option<V>> { match r { Ok(v) => Ok(if vrai(&v) { Some(v) } else { None }), Err(Echec::Js { .. }) => Ok(None), Err(e) => Err(e) } };
@@ -579,6 +598,15 @@ pub(crate) fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> {
 }
 
 /// `{f:'decideCut', a:[args sans Shadow], etat:{partialFlank, convention, plafond}, globaux:{flushPct, ombreVerticaleRefusee, fauxVertOmbre, hauteurApprise}}`.
+/// CH-068 : état du moteur GCV1 et réglages globaux d'un appel `{etat, globaux}` (ceux que la façade résout pour `decideCut`).
+pub(crate) fn etat_globaux(entree: &V) -> R<(Etat, Globaux)> {
+    let etat = g(entree, "etat");
+    let gv = g(entree, "globaux");
+    let lire = |k: &str, d: bool| match g(etat, k) { V::Booleen(x) => Ok(*x), V::Indefini => Ok(d), _ => hd("état du module illisible") };
+    let et = Etat { partial_flank: lire("partialFlank", true)?, convention: lire("convention", true)?, plafond: g(etat, "plafond").clone(), avec_reservoir: false };
+    let gl = Globaux { flush_pct: g(gv, "flushPct").clone(), ombre_verticale: g(gv, "ombreVerticaleRefusee").clone(), faux_vert: g(gv, "fauxVertOmbre").clone(), hauteur: g(gv, "hauteurApprise").clone() };
+    Ok((et, gl))
+}
 pub(crate) fn appeler(a: &Appel, entree: &V) -> R<V> {
     let etat = g(entree, "etat");
     let gv = g(entree, "globaux");

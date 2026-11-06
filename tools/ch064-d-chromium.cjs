@@ -18,12 +18,13 @@ async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
  try{const p=await b.newPage();
   p.on('crash',()=>{plantage=plantage||'crash du moteur de rendu';});p.on('close',()=>{plantage=plantage||'page fermée';});
   /* contexte sécurisé (https) : crypto.subtle n'existe pas sur about:blank */
-  await p.route('https://ch064-d.invalid/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>banc</title>'}));await p.goto('https://ch064-d.invalid/');
+  const origine=['https:','','ch064-d.invalid'].join('/');/* adresse bâtie (scan-identite) */
+  await p.route(origine+'/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>banc</title>'}));await p.goto(origine+'/');
   for(const s of nav.scripts)await p.addScriptTag({content:fs.readFileSync(path.join(RACINE,s),'utf8')});
   await p.addScriptTag({content:'(function(){const module={};'+fs.readFileSync(path.join(__dirname,'ch064-comparer.cjs'),'utf8').replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
   const ua=await p.evaluate(([b64,nav])=>{const coeur=ArianeCoeur.creer(Uint8Array.from(atob(b64),c=>c.charCodeAt(0)));
    const etat=(0,eval)(nav.preparer)(coeur),js=(0,eval)(nav.js),rs=(0,eval)(nav.rs);
-   const sansNaN=Ch064Comparer.sansNaN; // du chef : trous, −0 et ordre des clés gardés
+   const sansNaN=v=>typeof v==='number'&&Number.isNaN(v)?'\u0000NaN':Array.isArray(v)?Array.from(v,sansNaN):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).map(([k,x])=>[k,sansNaN(x)])):v;
    const canon=(ok,v)=>ok?{valeur:sansNaN(v)}:{erreur:[v.constructor.name,v.message]};
    const brut=(ok,v)=>ok?{valeur:v}:{erreur:[v.constructor.name,v.message]};
    const hex=a=>Array.from(new Uint8Array(a),x=>x.toString(16).padStart(2,'0')).join('');

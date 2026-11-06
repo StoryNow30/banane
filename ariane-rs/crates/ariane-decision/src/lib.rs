@@ -18,8 +18,17 @@ mod metier;
 mod shadow;
 mod aides;
 mod lot;
+// CH-068 (tranche J4)
+mod j4;
+mod appuis;
+mod l1e;
+mod recentree;
+mod b1ecart;
+mod large;
 #[cfg(test)]
 mod essais;
+#[cfg(test)]
+mod essais_j4;
 
 use ariane_vba::Valeur;
 use ariane_js::Echec;
@@ -47,6 +56,16 @@ pub const HAUTEUR: u32 = 58;
 pub const FAUX_VERT: u32 = 59;
 /// `src/lot-decision.js` (`decideCut`).
 pub const LOT_DECISION: u32 = 60;
+/// CH-068 (J4) : `src/appuis-liste.js`.
+pub const APPUIS_LISTE: u32 = 61;
+/// CH-068 (J4) : `src/gcv2-l1e.js`.
+pub const GCV2_L1E: u32 = 62;
+/// CH-068 (J4) : `src/voie-recentree.js`.
+pub const VOIE_RECENTREE: u32 = 63;
+/// CH-068 (J4) : `src/voie-b1-ecart.js`.
+pub const VOIE_B1_ECART: u32 = 64;
+/// CH-068 (J4) : `src/recherche-large.js`.
+pub const RECHERCHE_LARGE: u32 = 65;
 /// Sonde de sémantique (`Number::toString`) : `{f:"nombreChaine", a:[[x…]]}` → chaînes.
 pub const SONDE: u32 = 99;
 
@@ -69,6 +88,11 @@ pub fn appeler(fonction: u32, entree: &Valeur) -> Result<Valeur, Echec> {
         HAUTEUR => aides::appeler("hauteur", &a),
         FAUX_VERT => aides::appeler("fauxVert", &a),
         LOT_DECISION => lot::appeler(&a, entree),
+        APPUIS_LISTE => appuis::appeler(&a),
+        GCV2_L1E => l1e::appeler(&a),
+        VOIE_RECENTREE => recentree::appeler(&a, entree),
+        VOIE_B1_ECART => b1ecart::appeler(&a, entree),
+        RECHERCHE_LARGE => large::appeler(&a, entree),
         SONDE if a.f == "nombreChaine" => Ok(Valeur::Tableau(js::presents(a.arg(0)).iter().map(|x| js::chaine(x).map(|c| Some(js::s(&c)))).collect::<js::R<Vec<_>>>()?)),
         _ => js::hd("ariane-decision : fonction inconnue"),
     }
