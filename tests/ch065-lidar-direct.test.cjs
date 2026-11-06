@@ -43,41 +43,53 @@ test('CH-065 : le chemin direct sert sur un tampon flottant non indexé, et pas 
     else assert.ok(e.n>=n,`${nom} : ${e.n} lectures par accesseur pour ${n} points, la boucle d'origine n'a pas servi`);
   }
 });
-test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu prouvé sur TOUS les points : même sortie, chaque point relu par l\'accesseur', async ()=>{
+test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu lu point par point comme l\'origine : même sortie, chaque point lu par l\'accesseur', async ()=>{
   const c=H.captures()[0],n=c.pointsSceneRelative.length;
   try{globalThis.THREE=undefined;
     for(const opts of [{},{entrelace:true},{type:Float64Array},{yieldEvery:7},{drawRange:{start:3.7,count:1000.5}}]){
       const e={n:0},a=await jouer(LO,c,opts),b=await jouer(LP,c,opts,e);
-      assert.deepEqual(b,a,JSON.stringify(opts));if(!opts.drawRange)assert.ok(e.n>=n,`${e.n} lectures par accesseur pour ${n} points : la preuve n'a pas couvert chaque point`);}}
+      assert.deepEqual(b,a,JSON.stringify(opts));if(!opts.drawRange)assert.ok(e.n>=n,`${e.n} lectures par accesseur pour ${n} points : la lecture n'est pas passée par l'accesseur`);}}
   finally{globalThis.THREE=THREE_FACTICE;}
   /* Attribut sans accesseur : C.attribute lit lui-même le tableau, la lecture directe sert sans preuve. */
   const a=await jouer(LO,c,{sansAccesseur:true}),b=await jouer(LP,c,{sansAccesseur:true});assert.deepEqual(b,a);
 });
-test('CH-065 : l\'essai a des dents — sans la preuve complète, l\'accesseur qui diffère sur un point n\'est pas vu', async ()=>{
-  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!reconnu){trancheProuvee=true;','if(false){trancheProuvee=true;').replace('let trancheProuvee=reconnu;','let trancheProuvee=true;');
+/* Contre-exemples de Codex (PR #25), accesseur inconnu (propre à l'instance) sur le premier nœud :
+ *  1. effet de bord : getZ(k+1) modifie Y du point k, déjà lu par l'origine ;
+ *  2. exception : l'accesseur lève sur un indice que l'origine ne lit jamais (elle s'arrête au plafond de points retenus). */
+async function codex(L,c,cas){
+  const sc=scene(c,{graine:5}),e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,arr=a.array;
+  const gx=a.getX.bind(a),gy=a.getY.bind(a),gz=a.getZ.bind(a);const lus=new Set();
+  a.getX=i=>{lus.add(i);if(cas.leve!==undefined&&i===cas.leve)throw Error('accesseur : indice interdit '+i);return gx(i);};a.getY=i=>gy(i);
+  a.getZ=i=>{if(cas.effet!==undefined&&i===cas.effet+1&&!cas.fait){cas.fait=true;arr[cas.effet*3+1]+=.05;}return gz(i);};
+  const appels=[];
+  try{const o=await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard:()=>appels.push('g'),pause:async()=>{appels.push('p');},meta:{},...(cas.maxPoints?{maxPoints:cas.maxPoints}:{})});
+    return {s:H.canon(o,['capturedAt','durationMs']),appels:appels.join(''),lus:[...lus].sort((x,y)=>x-y).join(',')};}
+  catch(err){return {erreur:err.message,appels:appels.join(''),lus:[...lus].sort((x,y)=>x-y).join(',')};}
+}
+test('CH-065 : contre-exemple 1 de Codex — accesseur à effet de bord : même sortie que l\'origine', async ()=>{
+  const c=H.captures()[1];
+  /* point k : premier point retenu du premier nœud, lu par l'origine avant getZ(k+1). */
+  const sc=scene(c,{graine:5}),o=await LO.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}});
+  const k=o.pointSources.find(([n])=>n===0)[1];
+  const a=await codex(LO,c,{effet:k}),b=await codex(LP,c,{effet:k});
+  /* Rouge sur la tête précédente (preuve exhaustive puis lecture du tableau : la valeur modifiée était relue). */
+  assert.deepEqual(b,a);
+});
+test('CH-065 : contre-exemple 2 de Codex — accesseur qui lève là où l\'origine ne lit pas : même sortie, aucune exception', async ()=>{
+  const c=H.captures()[1],base=await codex(LO,c,{maxPoints:10});assert.ok(!base.erreur);
+  /* L'indice piégé : le premier que l'origine ne lit jamais (ni sonde, ni point parcouru avant le plafond). */
+  const lus=new Set(base.lus.split(',').map(Number));let leve=0;while(lus.has(leve))leve++;
+  const cas={maxPoints:10,leve},a=await codex(LO,c,{...cas}),b=await codex(LP,c,{...cas});
+  assert.ok(!a.erreur,'l\'origine ne doit pas lever');assert.deepEqual(b,a);
+});
+test('CH-065 : l\'essai a des dents — lire le tableau à la place d\'un accesseur inconnu est vu', async ()=>{
+  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(accesseur){x=lire(i,0);y=lire(i,1);z=lire(i,2);}','if(false){x=lire(i,0);y=lire(i,1);z=lire(i,2);}')
+    .replace('parAccesseur={accesseur:true};','parAccesseur={accesseur:true,src,stride:meta.stride,offset:meta.offset};');
   assert.notEqual(faux,t);const L=H.lidar('patche',faux),c=H.captures()[1];
   const run=async L=>{const sc=scene(c,{graine:3});const e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,cible=Math.floor(a.count/2)+1;
     const g=a.getX.bind(a);a.getX=i=>i===cible?g(i)+.05:g(i);
     return H.canon(await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}}),['capturedAt','durationMs']);};
   assert.equal(await run(LP),await run(LO));assert.notEqual(await run(L),await run(LO));
-});
-test('CH-065 : un accesseur reconnu mais qui ne lit pas le tampon tel quel est vu sur les sondes : boucle d\'origine, même sortie', async ()=>{
-  const c=H.captures()[2],ea={n:0,ment:true},eb={n:0,ment:true};
-  const a=await jouer(LO,c,{},ea),b=await jouer(LP,c,{},eb);
-  assert.deepEqual(b,a);assert.ok(eb.n>=c.pointsSceneRelative.length);
-});
-test('CH-065 : un accesseur qui diffère sur UN point hors des sondes est vu : boucle d\'origine, même sortie (défaut relevé par Codex sur le portage Rust)', async ()=>{
-  const c=H.captures()[1];
-  for(const [nom,opts] of [['Float32',{}],['entrelacé',{entrelace:true}]]){
-    const run=async L=>{const sc=scene(c,{...opts,graine:3});const appels=[];
-      /* Un nœud dont l'accesseur rend une autre valeur pour un seul point retenu, ni sonde, ni premier, ni dernier. */
-      const e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,n=a.count,cible=Math.floor(n/2)+1;
-      for(const k of ['getX','getY','getZ']){const g=a[k].bind(a);a[k]=i=>i===cible&&k==='getX'?g(i)+.05:g(i);}
-      const o=await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard:()=>appels.push('g'),pause:async()=>{appels.push('p');},meta:{}});
-      return {s:H.canon(o,['capturedAt','durationMs']),appels:appels.join(''),retenus:o.quality.retained};};
-    const a=await run(LO),b=await run(LP);
-    assert.deepEqual(b,a,nom);
-  }
 });
 test('CH-065 : l\'essai a des dents — la même somme dans un autre ordre (dernier bit) est vue', async ()=>{
   const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche;
