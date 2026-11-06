@@ -7,15 +7,11 @@
  * Comparaison stricte (tools/ch064-comparer.cjs : Object.is sur chaque nombre, ordre des clés, exceptions) de la sortie
  * entière de capture(), horodatages retirés. Code de sortie 1 au premier écart. */
 const fs=require('node:fs'),path=require('node:path');
-const K=require('./ch064-l-commun.cjs'),S=require('./ch064-l-scene.cjs'),{comparer}=require('./ch064-comparer.cjs');
+const K=require('./ch064-l-commun.cjs'),S=require('./ch064-l-scene.cjs'),{threeSynthetique}=S,{comparer}=require('./ch064-comparer.cjs');
 
 /* Cas synthétiques : chaque cas rend {scene, options} ; exécuté par les trois variantes. Texte autonome. */
-/* Prototypes des attributs synthétiques, uniques (gardés sur globalThis), déclarés connus auprès de la coquille. Texte autonome. */
-function protosSynthetiques(){
- return globalThis.__ch064Protos||(globalThis.__ch064Protos={
-  plat:{getX(i){return this.array[i*3];},getY(i){return this.array[i*3+1];},getZ(i){return this.array[i*3+2];}},
-  entrelace:{getX(i){return this.data.array[i*this.data.stride+this.offset];},getY(i){return this.data.array[i*this.data.stride+this.offset+1];},getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}}});
-}
+/* Prototypes des attributs synthétiques : ceux du three.js des scènes (accesseurs r124 authentifiés par la coquille). Texte autonome. */
+function protosSynthetiques(){const T=threeSynthetique();return {plat:T.BufferAttribute.prototype,entrelace:T.InterleavedBufferAttribute.prototype};}
 function casSynthetiques(){
  const id=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],tr=(x,y,z)=>{const m=id();m[12]=x;m[13]=y;m[14]=z;return m;};
  let s=99;const al=()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296-0.5);
@@ -71,7 +67,6 @@ function casSynthetiques(){
 
 async function noeudNode(arg){
  const L=K.chargerNode(),wasm=L.W.noyauWasm(fs.readFileSync(K.construireWasm())),js=L.W.noyauJs();
- L.W.accesseursConnus(protosSynthetiques().plat,protosSynthetiques().entrelace);
  const pause=()=>Promise.resolve();
  return {
   moteur:'node '+process.version,
@@ -94,10 +89,11 @@ async function noeudChromium(){
  async function ouvrir(){
   const nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
   const p=await nav.newPage();
+  await p.addScriptTag({content:'window.threeSynthetique='+S.threeSynthetique.toString()+';window.THREE=threeSynthetique();'});
   for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
   await p.addScriptTag({content:'(function(){const module={};'+K.lire(K.SOURCES.comparer).replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
-  await p.addScriptTag({content:'window.protosSynthetiques='+protosSynthetiques.toString()+';ArianeLidarWasm.accesseursConnus(protosSynthetiques().plat,protosSynthetiques().entrelace);'});
-  await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';(typeof ArianeLidarWasm==="object"&&ArianeLidarWasm.accesseursConnus)&&ArianeLidarWasm.accesseursConnus(classeAttribut().prototype);window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
+  await p.addScriptTag({content:'window.protosSynthetiques='+protosSynthetiques.toString()+';'});
+  await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
   const ua=await p.evaluate(async ({texte,b64})=>{
    (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api'));
    const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));window.NW=ArianeLidarWasm.noyauWasm(o);window.NJ=ArianeLidarWasm.noyauJs();

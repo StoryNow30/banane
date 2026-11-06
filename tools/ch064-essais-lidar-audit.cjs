@@ -10,10 +10,12 @@ const test=require('node:test'),assert=require('node:assert'),fs=require('node:f
 const K=require('./ch064-l-commun.cjs'),S=require('./ch064-l-scene.cjs'),{comparer}=require('./ch064-comparer.cjs');
 const pause=()=>new Promise(r=>setTimeout(r,0));
 const premiere=()=>S.descriptions({max:1}).next().value;
-/* Les accesseurs de la classe d'attribut des scènes reconstruites sont déclarés connus (comme ceux de three.js en page). */
-function noyau(L,octets,sc){const nw=L.W.noyauWasm(octets);
- const pos=sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)[0].sceneNode.geometry.attributes.position;
- if(typeof L.W.accesseursConnus==='function')L.W.accesseursConnus(Object.getPrototypeOf(pos));return nw;}
+/* Les scènes reconstruites portent les accesseurs de three.js r124 (tools/ch064-l-scene.cjs), posé en THREE avant la coquille :
+ * authentifiés, ils laissent servir le noyau, comme en page. */
+function noyau(L,octets){return L.W.noyauWasm(octets);}
+/* Coquille rechargée à neuf avec un THREE donné au chargement (instantané) ; rend {W, finir} (finir rend le THREE d'avant). */
+function coquilleAvec(T){const avant=globalThis.THREE,chemin=require.resolve('../'+K.SOURCES.coquille);globalThis.THREE=T;delete require.cache[chemin];
+ const W=require(chemin);return {W,finir(){globalThis.THREE=avant;delete require.cache[chemin];}};}
 const opts=sc=>({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,enums:sc.enums,guard:()=>{},pause,meta:{captureId:'essai'}});
 const net=o=>K.net({sortie:o});
 
@@ -138,4 +140,37 @@ test('audit 906ec78, P2 B : THREE remplacé après le chargement de la coquille,
   const ref=net(await L.origine.capture(opts(fab())));globalThis.ArianeLidarNoyau=nw;
   const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);
  }finally{globalThis.ArianeLidarNoyau=undefined;globalThis.THREE=avant;delete require.cache[chemin];}
+});
+
+/* Audit de 1f78142 (PR n° 25) : l'identité ne prouve pas la sémantique. Un accesseur n'est reconnu que si son TEXTE est un corps
+ * de three.js de la liste blanche (r124), en plus de l'identité à l'instantané et au THREE courant. */
+const corpsR124=nom=>require('../'+K.SOURCES.coquille).CORPS_THREE.r124.buffer[['getX','getY','getZ'].indexOf(nom)];
+test('audit 1f78142, P2 : prototype THREE modifié AVANT l\u2019injection (getY décalé), non reconnu, sortie de l\u2019origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere();
+ const j=(await L.origine.capture(opts(S.construireScene(d,0,7)))).pointSources[0][1];
+ const BA=function(){};BA.prototype={getX:function(i){return this.array[3*i];},getY:function(i){return this.array[3*i+1]+(i===j?0.5:0);},getZ:function(i){return this.array[3*i+2];}};
+ const T={BufferAttribute:BA,InterleavedBufferAttribute:function(){}},{W,finir}=coquilleAvec(T);
+ try{const nw=W.noyauWasm(octets),fab=()=>{const sc=S.construireScene(d,0,7);for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes))Object.setPrototypeOf(e.sceneNode.geometry.attributes.position,BA.prototype);return sc;};
+  const ref=net(await L.origine.capture(opts(fab())));globalThis.ArianeLidarNoyau=nw;
+  const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.deepStrictEqual(W.threeReconnu(),[false,false]);}
+ finally{globalThis.ArianeLidarNoyau=undefined;finir();}
+});
+test('audit 1f78142, P2 : getX(0) qui lève à sa deuxième invocation, maxPoints 0 : aucun appel de la coquille, sortie de l\u2019origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),plafond={maxPoints:0};
+ const fab=()=>{const n0=new WeakMap();const BA=function(){};BA.prototype={getX:function(i){if(i===0){const c=(n0.get(this)||0)+1;n0.set(this,c);if(c===2)throw Error('getX(0) : deuxième invocation');}return this.array[3*i];},
+   getY:function(i){return this.array[3*i+1];},getZ:function(i){return this.array[3*i+2];}};
+  const sc=S.construireScene(d,0,7);for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes))Object.setPrototypeOf(e.sceneNode.geometry.attributes.position,BA.prototype);return {sc,BA};};
+ const f0=fab(),ref=net(await L.origine.capture({...opts(f0.sc),...plafond}));
+ const f1=fab(),{W,finir}=coquilleAvec({BufferAttribute:f1.BA,InterleavedBufferAttribute:function(){}});
+ try{globalThis.ArianeLidarNoyau=W.noyauWasm(octets);const w=net(await L.variante.capture({...opts(f1.sc),...plafond}));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);}
+ finally{globalThis.ArianeLidarNoyau=undefined;finir();}
+});
+test('three.js authentique (accesseurs r124, THREE au chargement) : lecture directe servie par le noyau, sortie identique',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),nw=L.W.noyauWasm(octets);
+ assert.deepStrictEqual(L.W.threeReconnu(),[true,true]);
+ const sc=()=>S.construireScene(d,0,7),pos=sc().viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)[0].sceneNode.geometry.attributes.position;
+ assert.strictEqual(Function.prototype.toString.call(Object.getPrototypeOf(pos).getX),corpsR124('getX'),'texte exact de three.js r124');
+ const ref=net(await L.origine.capture(opts(sc())));globalThis.ArianeLidarNoyau=nw;
+ try{const w=net(await L.variante.capture(opts(sc())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0,'lecture directe servie');}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
 });

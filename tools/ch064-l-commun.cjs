@@ -13,10 +13,10 @@ const lire=f=>fs.readFileSync(path.join(RACINE,f),'utf8');
 const SOURCES={core:'vendor/capture-core.js',lidar:'vendor/lidar.js',coquille:'ariane-rs/crates/ariane-lidar/js/lidar-wasm.js',comparer:'tools/ch064-comparer.cjs'};
 /* Modules dans Node : lidar.js d'origine, sa variante (même texte + branche), la coquille. */
 function chargerNode(){
+ // three.js des scènes (accesseurs r124) en global AVANT la coquille, qui en prend l'instantané au chargement (comme en page)
+ if(!globalThis.THREE)globalThis.THREE=require('./ch064-l-scene.cjs').threeSynthetique();
  const C=require(path.join(RACINE,SOURCES.core)),origine=require(path.join(RACINE,SOURCES.lidar)),W=require(path.join(RACINE,SOURCES.coquille));
  const module={exports:{}};new Function('module','exports','require',W.variante(lire(SOURCES.lidar)))(module,module.exports,()=>C);
- // accesseurs des scènes reconstruites déclarés connus (sans quoi le noyau ne servirait jamais : audit de la PR n° 25, P2)
- W.accesseursConnus(require('./ch064-l-scene.cjs').classeAttribut().prototype);
  return {C,origine,variante:module.exports,W};
 }
 /* Exécute capture() sur une scène ; rend {ms, sortie} ou {ms, erreur}. Texte autonome (aussi évalué dans Chromium). */

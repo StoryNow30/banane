@@ -75,35 +75,43 @@
  /* ---------- partie commune aux deux noyaux ---------- */
  const MESSAGES=[null,'Projection non finie.','Transformation non finie.'],VERSION_ARENE=1;
  const nombre=x=>typeof x==='number'&&!Number.isNaN(x);
- /* Accesseurs connus (audit de la PR n° 25, P2). La lecture directe du tableau n'est prise que si l'attribut n'a AUCUN
-  * accesseur getX/getY/getZ, ou si ses trois accesseurs sont, par identité de fonction, ceux d'un prototype déclaré connu :
-  * ceux de three.js en page (globalThis.THREE.BufferAttribute et InterleavedBufferAttribute, s'ils existent), ou ceux déclarés
-  * par accesseursConnus(prototype). Sinon (accesseur INCONNU), le nœud passe par la boucle d'origine : seule elle reproduit les
-  * appels de l'accesseur à l'identique (mêmes indices, même ordre, entrelacés avec les autres attributs et les arrêts de
-  * budget ou d'erreur ; audit de 01846d1 et de 53c7885, PR n° 25). Refus comptés par raison (refus()).
-  * Audit de 906ec78 : (1) la décision se prend par la SEULE identité, avant tout appel d'accesseur (un accesseur inconnu ne voit
-  * aucun appel de la coquille, pas même les sondes) ; les clés getX/getY/getZ sont lues par leurs descripteurs, sans rien
-  * invoquer (une propriété à lecture calculée compte pour inconnue). (2) Les accesseurs de three.js sont pris en INSTANTANÉ au
-  * chargement de la coquille dans la page ; ensuite, ils ne sont reconnus que s'ils sont identiques à l'instantané ET que
-  * globalThis.THREE porte encore ces mêmes fonctions (THREE absent au chargement : aucune référence three.js). */
- const CONNUS=[],refusParRaison={};
- /* Fonction de la clé k de o (chaîne des prototypes) par descripteur : rend la fonction, undefined si la clé est absente,
-  * ou null si elle n'est pas une donnée simple (propriété calculée, ou valeur qui n'est pas une fonction). */
- function fonctionDe(o,k){for(let p=o;p!==null&&p!==undefined;p=Object.getPrototypeOf(p)){const d=Object.getOwnPropertyDescriptor(p,k);
+ /* Accesseurs reconnus (audits de la PR n° 25 : 4ceb766, 01846d1, 906ec78, 1f78142). La lecture directe du tableau n'est prise que
+  * si l'attribut n'a AUCUN accesseur getX/getY/getZ, ou si ses trois accesseurs sont AUTHENTIFIÉS comme ceux de three.js. On
+  * authentifie la sémantique, pas seulement l'identité ; les quatre conditions doivent tenir :
+  *  1. chaque accesseur est lu par descripteur (chaîne des prototypes) et c'est une valeur, jamais une propriété calculée ;
+  *  2. son texte (Function.prototype.toString, pris au chargement de la coquille) est EXACTEMENT un corps de la liste blanche
+  *     CORPS_THREE, par genre d'attribut (simple ou entrelacé) ;
+  *  3. il est identique à l'instantané pris au chargement de la coquille dans la page (globalThis.THREE de ce moment-là ; THREE
+  *     absent au chargement : aucune référence) ET aux fonctions que porte encore le THREE courant ;
+  *  4. pour lui seul, les sondes sont relues comme seconde garde (ces accesseurs sont purs).
+  * Tout autre accesseur : AUCUN appel de la coquille, pas même les sondes ; le nœud passe par la boucle d'origine, seule à
+  * reproduire ses appels à l'identique (indices, ordre, entrelacement avec les autres attributs, arrêts de budget ou d'erreur).
+  * Limite assumée : une page qui réécrirait Function.prototype.toString AVANT l'injection de la coquille pour se faire passer pour
+  * three.js sort de ce modèle (ESV n'a aucune raison de le faire). Refus comptés par raison (refus()). */
+ /* Corps de three.js r124 (Potree 1.8.0 à 1.8.2 : libs/three.js/build/three.module.js, BufferAttribute et
+  * InterleavedBufferAttribute ; relevé du source, CH-064 ; ESV charge Potree 1.8.0, relevé de CH-062). Ces accesseurs lisent le
+  * tableau sans branche « normalized » ; les attributs normalisés sont de toute façon exclus plus bas. À compléter avec la
+  * révision relevée chez l'opérateur si elle diffère. */
+ const CORPS_THREE=Object.freeze({r124:Object.freeze({buffer:Object.freeze(["function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"]),entrelace:Object.freeze(["function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"])})});
+ const refusParRaison={},FT=Function.prototype.toString,appliquer=Reflect.apply,proto=Object.getPrototypeOf,descripteur=Object.getOwnPropertyDescriptor;
+ /* Fonction de la clé k de o (chaîne des prototypes) par descripteur : la fonction, undefined si la clé est absente, ou null si ce
+  * n'est pas une donnée simple (propriété calculée, ou valeur qui n'est pas une fonction). */
+ function fonctionDe(o,k){for(let p=o;p!==null&&p!==undefined;p=proto(p)){const d=descripteur(p,k);
   if(d)return 'value' in d&&typeof d.value==='function'?d.value:null;}return undefined;}
  const trio=p=>{if(!p)return null;const x=fonctionDe(p,'getX'),y=fonctionDe(p,'getY'),z=fonctionDe(p,'getZ');return x&&y&&z?[x,y,z]:null;};
- const protosThree=T=>[T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];
- const INSTANTANE_THREE=(()=>{try{return protosThree(globalThis.THREE).map(trio);}catch{return [null,null];}})();
+ const texte=f=>{try{return appliquer(FT,f,[]);}catch{return null;}};
+ const GENRES=['buffer','entrelace'];
+ const authentique=(t,genre)=>Object.keys(CORPS_THREE).some(r=>CORPS_THREE[r][genre].every((c,k)=>texte(t[k])===c));
+ const protosThree=T=>{try{return [T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];}catch{return [null,null];}};
+ const INSTANTANE_THREE=protosThree(globalThis.THREE).map((p,i)=>{const t=trio(p);return t&&authentique(t,GENRES[i])?t:null;});
  const memeTrio=(a,b)=>!!a&&!!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];
- function accesseursConnus(...protos){for(const p of protos)if(p&&typeof p.getX==='function'&&typeof p.getY==='function'&&typeof p.getZ==='function')
-  CONNUS.push([p.getX,p.getY,p.getZ]);return CONNUS.length;}
  function accesseursSurs(pos){
   const x=fonctionDe(pos,'getX'),y=fonctionDe(pos,'getY'),z=fonctionDe(pos,'getZ');
   if(x===undefined&&y===undefined&&z===undefined)return true;
   if(!x||!y||!z)return false;
-  const t=[x,y,z];let courant;try{courant=protosThree(globalThis.THREE).map(trio);}catch{courant=[null,null];}
-  for(let i=0;i<2;i++)if(memeTrio(t,INSTANTANE_THREE[i])&&memeTrio(courant[i],INSTANTANE_THREE[i]))return true;
-  return CONNUS.some(c=>memeTrio(t,c));
+  const t=[x,y,z],courant=protosThree(globalThis.THREE).map(trio);
+  for(let i=0;i<2;i++)if(memeTrio(t,INSTANTANE_THREE[i])&&memeTrio(courant[i],INSTANTANE_THREE[i])&&authentique(t,GENRES[i]))return true;
+  return false;
  }
  const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
@@ -237,5 +245,5 @@
    charger(m,e){M.set(m);E.set(e);},etat:()=>E,
    memoireOctets:()=>0,copieOctets:()=>0,tranches:()=>tranches};
  }
- return {variante,noyauWasm,noyauJs,accesseursConnus,refus:()=>({...refusParRaison}),DEBUT,FIN};
+ return {variante,noyauWasm,noyauJs,refus:()=>({...refusParRaison}),threeReconnu:()=>INSTANTANE_THREE.map(t=>!!t),CORPS_THREE,DEBUT,FIN};
 });

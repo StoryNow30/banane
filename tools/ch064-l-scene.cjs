@@ -64,13 +64,51 @@ function*descriptions({max=Infinity,saut=0,motif=MOTIF}={}){
  }
 }
 
-/* Classe d'attribut des scènes, UNIQUE (gardée sur globalThis) : ses accesseurs getX/getY/getZ sont déclarés connus auprès de
- * la coquille par les bancs (accesseursConnus, audit de la PR n° 25, P2), comme ceux de three.js en page. Texte autonome. */
-function classeAttribut(){
- return globalThis.__ch064BA||(globalThis.__ch064BA=class BA{constructor(a,k){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=false;}
-  getX(i){return this.array[i*this.itemSize];}getY(i){return this.array[i*this.itemSize+1];}getZ(i){return this.array[i*this.itemSize+2];}});
+/* three.js des scènes : BufferAttribute et InterleavedBufferAttribute aux accesseurs de three.js r124, TEXTE EXACT (Potree 1.8,
+ * comme dans la page ESV) ; posé en globalThis.THREE AVANT le chargement de la coquille, qui en prend l'instantané et l'authentifie
+ * (audit de 1f78142, PR n° 25). Unique (gardé sur globalThis). Texte autonome : évalué tel quel dans Chromium. */
+function threeSynthetique(){
+ if(globalThis.__ch064Three)return globalThis.__ch064Three;
+ function BufferAttribute(a,k){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=false;}
+ Object.assign( BufferAttribute.prototype, {
+	getX: function ( index ) {
+
+		return this.array[ index * this.itemSize ];
+
+	},
+	getY: function ( index ) {
+
+		return this.array[ index * this.itemSize + 1 ];
+
+	},
+	getZ: function ( index ) {
+
+		return this.array[ index * this.itemSize + 2 ];
+
+	},
+ } );
+ function InterleavedBufferAttribute(){}
+ Object.assign( InterleavedBufferAttribute.prototype, {
+	getX: function ( index ) {
+
+		return this.data.array[ index * this.data.stride + this.offset ];
+
+	},
+	getY: function ( index ) {
+
+		return this.data.array[ index * this.data.stride + this.offset + 1 ];
+
+	},
+	getZ: function ( index ) {
+
+		return this.data.array[ index * this.data.stride + this.offset + 2 ];
+
+	},
+ } );
+ return (globalThis.__ch064Three={BufferAttribute,InterleavedBufferAttribute});
 }
-/* Fabrique la scène d'une vue. Texte autonome : évalué tel quel dans Chromium (avec classeAttribut). */
+function classeAttribut(){return threeSynthetique().BufferAttribute;}
+/* Fabrique la scène d'une vue. Texte autonome : évalué tel quel dans Chromium (avec threeSynthetique et classeAttribut). */
 function construireScene(d,v,graine){
  let s=graine>>>0;const alea=()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);
  const BA=classeAttribut();
@@ -90,4 +128,4 @@ function construireScene(d,v,graine){
  const rails=d.rails.map(r=>({object:{},profile:{type:'Group',children:[]},railMatrix:r.railMatrix,profileMatrix:r.profileMatrix,rotation:r.rotation,profileRotation:r.profileRotation}));
  return {viewer,rails,origin:[0,0,0],points,enums:{ClipTask:{NONE:0,HIGHLIGHT:1,SHOW_INSIDE:2,SHOW_OUTSIDE:3},ClipMethod:{INSIDE_ANY:0,INSIDE_ALL:1}}};
 }
-module.exports={descriptions,decrire,construireScene,classeAttribut,MOTIF};
+module.exports={descriptions,decrire,construireScene,classeAttribut,threeSynthetique,MOTIF};
