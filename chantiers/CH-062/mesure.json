@@ -1,0 +1,3074 @@
+{
+ "format": "ch062-signal-lot-1",
+ "journaux": [
+  {
+   "version": "5",
+   "pages": [
+    {
+     "parts": [],
+     "chargeA": "08:34",
+     "dureePageMin": 26.3,
+     "capturesLot": 133,
+     "signalLot": 115,
+     "repliLot": 0,
+     "capturesRelecture": 489,
+     "signalRelecture": 441,
+     "dernierSignalS": 1571,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 132,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 112,
+       "mediane": 2501,
+       "q1": 2109,
+       "q3": 3190,
+       "moyenne": 2822
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 18,
+       "mediane": 7410,
+       "q1": 6501,
+       "q3": 8079,
+       "moyenne": 7941
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 43,
+       "mediane": 2727,
+       "q1": 2180,
+       "q3": 3273,
+       "moyenne": 3276
+      },
+      {
+       "n": 43,
+       "mediane": 2983,
+       "q1": 2356,
+       "q3": 4337,
+       "moyenne": 3798
+      },
+      {
+       "n": 44,
+       "mediane": 2368,
+       "q1": 2072,
+       "q3": 4734,
+       "moyenne": 3517
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {},
+      "nlToutes": 39,
+      "compteurBloque": {
+       "episodes": 16,
+       "premierS": 963,
+       "valeurs": [
+        2,
+        1
+       ]
+      },
+      "requetesPoints": 1277,
+      "statuts": {
+       "200": 1277
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      1
+     ],
+     "chargeA": "09:00",
+     "dureePageMin": 4.7,
+     "capturesLot": 27,
+     "signalLot": 24,
+     "repliLot": 1,
+     "capturesRelecture": 49,
+     "signalRelecture": 42,
+     "dernierSignalS": 274,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 26,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 23,
+       "mediane": 2975,
+       "q1": 2619,
+       "q3": 3331,
+       "moyenne": 3457
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 2,
+       "mediane": 9919,
+       "q1": 9002,
+       "q3": 10835,
+       "moyenne": 9919
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 8,
+       "mediane": 2848,
+       "q1": 2499,
+       "q3": 4591,
+       "moyenne": 4478
+      },
+      {
+       "n": 8,
+       "mediane": 3026,
+       "q1": 2769,
+       "q3": 3119,
+       "moyenne": 3453
+      },
+      {
+       "n": 9,
+       "mediane": 3237,
+       "q1": 2851,
+       "q3": 4361,
+       "moyenne": 3990
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 1,
+       "2": 1
+      },
+      "nlToutes": 8,
+      "compteurBloque": {
+       "episodes": 3,
+       "premierS": 158,
+       "valeurs": [
+        1
+       ]
+      },
+      "requetesPoints": 280,
+      "statuts": {
+       "200": 280
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 31,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      2
+     ],
+     "chargeA": "09:04",
+     "dureePageMin": 11.8,
+     "capturesLot": 66,
+     "signalLot": 55,
+     "repliLot": 6,
+     "capturesRelecture": 150,
+     "signalRelecture": 131,
+     "dernierSignalS": 705,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 65,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 49,
+       "mediane": 2786,
+       "q1": 2089,
+       "q3": 3450,
+       "moyenne": 3422
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 4,
+       "mediane": 6852,
+       "q1": 6717,
+       "q3": 7457,
+       "moyenne": 7322
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 17,
+       "mediane": 2786,
+       "q1": 2025,
+       "q3": 5751,
+       "moyenne": 3893
+      },
+      {
+       "n": 18,
+       "mediane": 2558,
+       "q1": 2007,
+       "q3": 3144,
+       "moyenne": 2755
+      },
+      {
+       "n": 18,
+       "mediane": 2998,
+       "q1": 2654,
+       "q3": 4256,
+       "moyenne": 4509
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 6,
+       "2": 6
+      },
+      "nlToutes": 30,
+      "compteurBloque": {
+       "episodes": 7,
+       "premierS": 267,
+       "valeurs": [
+        1,
+        3
+       ]
+      },
+      "requetesPoints": 565,
+      "statuts": {
+       "200": 565
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 80,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 6
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      3
+     ],
+     "chargeA": "09:16",
+     "dureePageMin": 19.1,
+     "capturesLot": 64,
+     "signalLot": 52,
+     "repliLot": 5,
+     "capturesRelecture": 224,
+     "signalRelecture": 0,
+     "dernierSignalS": 329,
+     "premierRepliApresS": 342,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 63,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 49,
+       "mediane": 2725,
+       "q1": 2378,
+       "q3": 4091,
+       "moyenne": 3658
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 3667,
+       "q1": 3667,
+       "q3": 3667,
+       "moyenne": 3667
+      },
+      "neutre": {
+       "n": 6,
+       "mediane": 7646,
+       "q1": 7350,
+       "q3": 8109,
+       "moyenne": 7703
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 18,
+       "mediane": 2658,
+       "q1": 2300,
+       "q3": 4000,
+       "moyenne": 3408
+      },
+      {
+       "n": 19,
+       "mediane": 2725,
+       "q1": 2333,
+       "q3": 4231,
+       "moyenne": 3730
+      },
+      {
+       "n": 19,
+       "mediane": 3851,
+       "q1": 2710,
+       "q3": 7628,
+       "moyenne": 5100
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 8,
+       "2": 1
+      },
+      "nlToutes": 34,
+      "compteurBloque": {
+       "episodes": 23,
+       "premierS": 615,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 580,
+      "statuts": {
+       "200": 579,
+       "502": 1
+      },
+      "sansStatut": 0,
+      "echecsPage": 1,
+      "premierEchecS": 340,
+      "echecsS": [
+       340
+      ],
+      "premierRepliCompteurNonNulS": 78,
+      "dernierSignalAvantEchecS": 11,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 390,
+       "exact": 370,
+       "plus": 20,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 370,
+       "capturesRepliApresEchec": 202,
+       "capturesRecuperables": 185
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 0.9158415841584159
+    },
+    {
+     "parts": [
+      4
+     ],
+     "chargeA": "09:35",
+     "dureePageMin": 10.6,
+     "capturesLot": 68,
+     "signalLot": 57,
+     "repliLot": 3,
+     "capturesRelecture": 104,
+     "signalRelecture": 92,
+     "dernierSignalS": 629,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 67,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 56,
+       "mediane": 2848,
+       "q1": 2365,
+       "q3": 4080,
+       "moyenne": 3625
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 4982,
+       "q1": 4982,
+       "q3": 4982,
+       "moyenne": 4982
+      },
+      "neutre": {
+       "n": 7,
+       "mediane": 7355,
+       "q1": 7013,
+       "q3": 10542,
+       "moyenne": 9137
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 21,
+       "mediane": 3192,
+       "q1": 2438,
+       "q3": 7137,
+       "moyenne": 4711
+      },
+      {
+       "n": 21,
+       "mediane": 2741,
+       "q1": 2357,
+       "q3": 3228,
+       "moyenne": 3609
+      },
+      {
+       "n": 22,
+       "mediane": 4123,
+       "q1": 2597,
+       "q3": 5383,
+       "moyenne": 4419
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 3,
+       "3": 3
+      },
+      "nlToutes": 26,
+      "compteurBloque": {
+       "episodes": 5,
+       "premierS": 147,
+       "valeurs": [
+        1
+       ]
+      },
+      "requetesPoints": 566,
+      "statuts": {
+       "200": 566
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 20,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 3
+     },
+     "_recup": 0
+    }
+   ],
+   "gain": {
+    "coutRechargementS": 20,
+    "vieDuSignalMedianeS": null,
+    "viesS": [],
+    "pagesTouchees": 0,
+    "hautS": 0,
+    "hautIntervalle90": [
+     0,
+     0
+    ],
+    "prudentS": 0,
+    "prudentIntervalle90": [
+     0,
+     0
+    ],
+    "tempsLotS": 1365,
+    "partHaute": 0,
+    "partPrudente": 0,
+    "ligneDeBase": {
+     "pages": 0,
+     "gainS": 0,
+     "intervalle90": [
+      0,
+      0
+     ],
+     "part": 0
+    }
+   }
+  },
+  {
+   "version": "5",
+   "pages": [
+    {
+     "parts": [
+      6
+     ],
+     "chargeA": "11:10",
+     "dureePageMin": 21.4,
+     "capturesLot": 140,
+     "signalLot": 125,
+     "repliLot": 0,
+     "capturesRelecture": 356,
+     "signalRelecture": 315,
+     "dernierSignalS": 1280,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 139,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 121,
+       "mediane": 2266,
+       "q1": 1968,
+       "q3": 2900,
+       "moyenne": 2621
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 14,
+       "mediane": 6555,
+       "q1": 6129,
+       "q3": 7293,
+       "moyenne": 6980
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 45,
+       "mediane": 2618,
+       "q1": 2108,
+       "q3": 3595,
+       "moyenne": 3111
+      },
+      {
+       "n": 45,
+       "mediane": 2309,
+       "q1": 2039,
+       "q3": 3009,
+       "moyenne": 3089
+      },
+      {
+       "n": 45,
+       "mediane": 2178,
+       "q1": 1950,
+       "q3": 3099,
+       "moyenne": 3020
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {},
+      "nlToutes": 31,
+      "compteurBloque": {
+       "episodes": 8,
+       "premierS": 253,
+       "valeurs": [
+        1
+       ]
+      },
+      "requetesPoints": 1211,
+      "statuts": {
+       "200": 1211
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      7
+     ],
+     "chargeA": "11:32",
+     "dureePageMin": 7.8,
+     "capturesLot": 49,
+     "signalLot": 43,
+     "repliLot": 1,
+     "capturesRelecture": 165,
+     "signalRelecture": 146,
+     "dernierSignalS": 462,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 48,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 42,
+       "mediane": 1713,
+       "q1": 1404,
+       "q3": 2677,
+       "moyenne": 2402
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 3321,
+       "q1": 3321,
+       "q3": 3321,
+       "moyenne": 3321
+      },
+      "neutre": {
+       "n": 5,
+       "mediane": 6032,
+       "q1": 5896,
+       "q3": 6736,
+       "moyenne": 6315
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 16,
+       "mediane": 1951,
+       "q1": 1418,
+       "q3": 5431,
+       "moyenne": 3060
+      },
+      {
+       "n": 16,
+       "mediane": 1652,
+       "q1": 1383,
+       "q3": 2584,
+       "moyenne": 2506
+      },
+      {
+       "n": 16,
+       "mediane": 1979,
+       "q1": 1661,
+       "q3": 3106,
+       "moyenne": 2921
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 2
+      },
+      "nlToutes": 12,
+      "compteurBloque": {
+       "episodes": 6,
+       "premierS": 70,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 430,
+      "statuts": {
+       "200": 430
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 61,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      8
+     ],
+     "chargeA": "11:39",
+     "dureePageMin": 46.9,
+     "capturesLot": 143,
+     "signalLot": 124,
+     "repliLot": 2,
+     "capturesRelecture": 776,
+     "signalRelecture": 358,
+     "dernierSignalS": 1298,
+     "premierRepliApresS": 1303,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 142,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 120,
+       "mediane": 2464,
+       "q1": 1859,
+       "q3": 3710,
+       "moyenne": 3024
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 5190,
+       "q1": 5190,
+       "q3": 5190,
+       "moyenne": 5190
+      },
+      "neutre": {
+       "n": 17,
+       "mediane": 7291,
+       "q1": 6756,
+       "q3": 8200,
+       "moyenne": 7398
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 46,
+       "mediane": 2352,
+       "q1": 1413,
+       "q3": 5225,
+       "moyenne": 3259
+      },
+      {
+       "n": 46,
+       "mediane": 2247,
+       "q1": 1967,
+       "q3": 4598,
+       "moyenne": 3363
+      },
+      {
+       "n": 46,
+       "mediane": 3261,
+       "q1": 2629,
+       "q3": 5192,
+       "moyenne": 4114
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 2,
+       "2": 2
+      },
+      "nlToutes": 42,
+      "compteurBloque": {
+       "episodes": 54,
+       "premierS": 2766,
+       "valeurs": [
+        1,
+        2,
+        3
+       ]
+      },
+      "requetesPoints": 2170,
+      "statuts": {
+       "200": 2169,
+       "502": 1
+      },
+      "sansStatut": 0,
+      "echecsPage": 1,
+      "premierEchecS": 1301,
+      "echecsS": [
+       1301
+      ],
+      "premierRepliCompteurNonNulS": 77,
+      "dernierSignalAvantEchecS": 3,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 639,
+       "exact": 620,
+       "plus": 19,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 620,
+       "capturesRepliApresEchec": 340,
+       "capturesRecuperables": 325
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 0.9558823529411765
+    },
+    {
+     "parts": [
+      9
+     ],
+     "chargeA": "12:26",
+     "dureePageMin": 28.6,
+     "capturesLot": 168,
+     "signalLot": 148,
+     "repliLot": 2,
+     "capturesRelecture": 308,
+     "signalRelecture": 8,
+     "dernierSignalS": 624,
+     "premierRepliApresS": 627,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 166,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 129,
+       "mediane": 2300,
+       "q1": 1916,
+       "q3": 3076,
+       "moyenne": 2964
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 3619,
+       "q1": 3619,
+       "q3": 3619,
+       "moyenne": 3619
+      },
+      "neutre": {
+       "n": 15,
+       "mediane": 6949,
+       "q1": 6757,
+       "q3": 7621,
+       "moyenne": 7230
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 48,
+       "mediane": 2335,
+       "q1": 1966,
+       "q3": 3642,
+       "moyenne": 3137
+      },
+      {
+       "n": 48,
+       "mediane": 2317,
+       "q1": 1901,
+       "q3": 3358,
+       "moyenne": 3233
+      },
+      {
+       "n": 49,
+       "mediane": 2605,
+       "q1": 2181,
+       "q3": 4735,
+       "moyenne": 3852
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 2,
+       "2": 2
+      },
+      "nlToutes": 43,
+      "compteurBloque": {
+       "episodes": 36,
+       "premierS": 677,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1248,
+      "statuts": {
+       "200": 1247,
+       "502": 1
+      },
+      "sansStatut": 0,
+      "echecsPage": 1,
+      "premierEchecS": 626,
+      "echecsS": [
+       626
+      ],
+      "premierRepliCompteurNonNulS": 294,
+      "dernierSignalAvantEchecS": 1,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 520,
+       "exact": 520,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 520,
+       "capturesRepliApresEchec": 271,
+       "capturesRecuperables": 271
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 1
+    },
+    {
+     "parts": [
+      10
+     ],
+     "chargeA": "12:55",
+     "dureePageMin": 48.8,
+     "capturesLot": 397,
+     "signalLot": 14,
+     "repliLot": 283,
+     "capturesRelecture": 433,
+     "signalRelecture": 0,
+     "dernierSignalS": 66,
+     "premierRepliApresS": 74,
+     "detectionS": 104,
+     "signalRevientApresDetection": false,
+     "cutsLot": 396,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 13,
+       "mediane": 2317,
+       "q1": 2068,
+       "q3": 2913,
+       "moyenne": 2801
+      },
+      "repli": {
+       "n": 39,
+       "mediane": 6790,
+       "q1": 6538,
+       "q3": 7764,
+       "moyenne": 7177
+      },
+      "neutre": {
+       "n": 7,
+       "mediane": 9992,
+       "q1": 9394,
+       "q3": 11337,
+       "moyenne": 10588
+      }
+     },
+     "posesApresDetection": 44,
+     "tempsApresDetectionS": 1678,
+     "tiers": [
+      {
+       "n": 19,
+       "mediane": 2913,
+       "q1": 2161,
+       "q3": 7324,
+       "moyenne": 4614
+      },
+      {
+       "n": 20,
+       "mediane": 6844,
+       "q1": 6526,
+       "q3": 8740,
+       "moyenne": 7744
+      },
+      {
+       "n": 20,
+       "mediane": 6707,
+       "q1": 6608,
+       "q3": 8138,
+       "moyenne": 7393
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 566
+      },
+      "nlToutes": 766,
+      "compteurBloque": {
+       "episodes": 23,
+       "premierS": 2700,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 722,
+      "statuts": {
+       "200": 721,
+       "502": 1
+      },
+      "sansStatut": 0,
+      "echecsPage": 1,
+      "premierEchecS": 68,
+      "echecsS": [
+       68
+      ],
+      "premierRepliCompteurNonNulS": 74,
+      "dernierSignalAvantEchecS": 2,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 1015,
+       "exact": 1013,
+       "plus": 2,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 1013,
+       "capturesRepliApresEchec": 634,
+       "capturesRecuperables": 632
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 0.9968454258675079
+    },
+    {
+     "parts": [
+      11
+     ],
+     "chargeA": "13:44",
+     "dureePageMin": 25,
+     "capturesLot": 145,
+     "signalLot": 133,
+     "repliLot": 0,
+     "capturesRelecture": 308,
+     "signalRelecture": 275,
+     "dernierSignalS": 1498,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 144,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 129,
+       "mediane": 3295,
+       "q1": 2660,
+       "q3": 4979,
+       "moyenne": 4105
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 12,
+       "mediane": 7441,
+       "q1": 6736,
+       "q3": 8327,
+       "moyenne": 8083
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 47,
+       "mediane": 2991,
+       "q1": 2288,
+       "q3": 4814,
+       "moyenne": 3417
+      },
+      {
+       "n": 47,
+       "mediane": 5731,
+       "q1": 3041,
+       "q3": 8160,
+       "moyenne": 5818
+      },
+      {
+       "n": 47,
+       "mediane": 3392,
+       "q1": 2966,
+       "q3": 4261,
+       "moyenne": 4094
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {},
+      "nlToutes": 26,
+      "compteurBloque": {
+       "episodes": 34,
+       "premierS": 994,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1413,
+      "statuts": {
+       "200": 1413
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      12
+     ],
+     "chargeA": "14:09",
+     "dureePageMin": 0.6,
+     "capturesLot": 2,
+     "signalLot": 2,
+     "repliLot": 0,
+     "capturesRelecture": 5,
+     "signalRelecture": 4,
+     "dernierSignalS": 28,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 0,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 0
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 0
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 0
+      },
+      {
+       "n": 0
+      },
+      {
+       "n": 0
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {},
+      "nlToutes": 0,
+      "compteurBloque": null,
+      "requetesPoints": 33,
+      "statuts": {
+       "200": 33
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      13
+     ],
+     "chargeA": "14:09",
+     "dureePageMin": 73.8,
+     "capturesLot": 153,
+     "signalLot": 114,
+     "repliLot": 21,
+     "capturesRelecture": 417,
+     "signalRelecture": 0,
+     "dernierSignalS": 622,
+     "premierRepliApresS": 625,
+     "detectionS": 650,
+     "signalRevientApresDetection": false,
+     "cutsLot": 152,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 109,
+       "mediane": 3392,
+       "q1": 2649,
+       "q3": 5837,
+       "moyenne": 4445
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 7281,
+       "q1": 7281,
+       "q3": 7281,
+       "moyenne": 7281
+      },
+      "neutre": {
+       "n": 12,
+       "mediane": 7814,
+       "q1": 6732,
+       "q3": 10151,
+       "moyenne": 8536
+      }
+     },
+     "posesApresDetection": 1,
+     "tempsApresDetectionS": 61.7,
+     "tiers": [
+      {
+       "n": 40,
+       "mediane": 3062,
+       "q1": 2504,
+       "q3": 4336,
+       "moyenne": 3986
+      },
+      {
+       "n": 41,
+       "mediane": 6841,
+       "q1": 4186,
+       "q3": 7798,
+       "moyenne": 6835
+      },
+      {
+       "n": 41,
+       "mediane": 2972,
+       "q1": 2470,
+       "q3": 4978,
+       "moyenne": 3770
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 40,
+       "3": 2
+      },
+      "nlToutes": 80,
+      "compteurBloque": {
+       "episodes": 35,
+       "premierS": 1604,
+       "valeurs": [
+        2,
+        1,
+        4,
+        3
+       ]
+      },
+      "requetesPoints": 1303,
+      "statuts": {
+       "200": 1301,
+       "502": 2
+      },
+      "sansStatut": 0,
+      "echecsPage": 2,
+      "premierEchecS": 624,
+      "echecsS": [
+       624,
+       1315
+      ],
+      "premierRepliCompteurNonNulS": 499,
+      "dernierSignalAvantEchecS": 2,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 655,
+       "exact": 649,
+       "plus": 6,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 649,
+       "capturesRepliApresEchec": 373,
+       "capturesRecuperables": 369
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 0.9892761394101877
+    },
+    {
+     "parts": [
+      14
+     ],
+     "chargeA": "15:23",
+     "dureePageMin": 24.4,
+     "capturesLot": 128,
+     "signalLot": 113,
+     "repliLot": 1,
+     "capturesRelecture": 468,
+     "signalRelecture": 423,
+     "dernierSignalS": 1459,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 127,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 100,
+       "mediane": 3089,
+       "q1": 2377,
+       "q3": 3681,
+       "moyenne": 3501
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 11,
+       "mediane": 6875,
+       "q1": 6486,
+       "q3": 7571,
+       "moyenne": 7329
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 37,
+       "mediane": 2821,
+       "q1": 2318,
+       "q3": 4335,
+       "moyenne": 3612
+      },
+      {
+       "n": 37,
+       "mediane": 3293,
+       "q1": 3033,
+       "q3": 3913,
+       "moyenne": 4077
+      },
+      {
+       "n": 37,
+       "mediane": 2950,
+       "q1": 2331,
+       "q3": 3447,
+       "moyenne": 3952
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "2": 2
+      },
+      "nlToutes": 30,
+      "compteurBloque": {
+       "episodes": 19,
+       "premierS": 1368,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1499,
+      "statuts": {
+       "200": 1499
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 351,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      15
+     ],
+     "chargeA": "15:47",
+     "dureePageMin": 19.6,
+     "capturesLot": 70,
+     "signalLot": 62,
+     "repliLot": 1,
+     "capturesRelecture": 301,
+     "signalRelecture": 268,
+     "dernierSignalS": 1102,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 68,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 54,
+       "mediane": 3070,
+       "q1": 2561,
+       "q3": 4588,
+       "moyenne": 3738
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 5850,
+       "q1": 5850,
+       "q3": 5850,
+       "moyenne": 5850
+      },
+      "neutre": {
+       "n": 5,
+       "mediane": 7689,
+       "q1": 6736,
+       "q3": 9960,
+       "moyenne": 8528
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 20,
+       "mediane": 3079,
+       "q1": 2518,
+       "q3": 5053,
+       "moyenne": 4208
+      },
+      {
+       "n": 20,
+       "mediane": 2761,
+       "q1": 2472,
+       "q3": 3231,
+       "moyenne": 3189
+      },
+      {
+       "n": 20,
+       "mediane": 5201,
+       "q1": 3819,
+       "q3": 6132,
+       "moyenne": 5121
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 2
+      },
+      "nlToutes": 16,
+      "compteurBloque": {
+       "episodes": 27,
+       "premierS": 396,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 963,
+      "statuts": {
+       "200": 963
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 238,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    }
+   ],
+   "gain": {
+    "coutRechargementS": 20,
+    "vieDuSignalMedianeS": 377,
+    "viesS": [
+     104,
+     650
+    ],
+    "pagesTouchees": 2,
+    "hautS": 627,
+    "hautIntervalle90": [
+     581,
+     684
+    ],
+    "prudentS": 13,
+    "prudentIntervalle90": [
+     1,
+     28
+    ],
+    "tempsLotS": 5517,
+    "partHaute": 11.4,
+    "partPrudente": 0.2,
+    "ligneDeBase": {
+     "pages": 2,
+     "gainS": 670,
+     "intervalle90": [
+      615,
+      735
+     ],
+     "part": 12.2
+    }
+   }
+  },
+  {
+   "version": "5",
+   "pages": [
+    {
+     "parts": [],
+     "chargeA": "18:12",
+     "dureePageMin": 25.4,
+     "capturesLot": 144,
+     "signalLot": 26,
+     "repliLot": 103,
+     "capturesRelecture": 238,
+     "signalRelecture": 0,
+     "dernierSignalS": 140,
+     "premierRepliApresS": 151,
+     "detectionS": 178,
+     "signalRevientApresDetection": false,
+     "cutsLot": 139,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 16,
+       "mediane": 2565,
+       "q1": 2217,
+       "q3": 3761,
+       "moyenne": 3092
+      },
+      "repli": {
+       "n": 102,
+       "mediane": 3960,
+       "q1": 3344,
+       "q3": 5229,
+       "moyenne": 4448
+      },
+      "neutre": {
+       "n": 14,
+       "mediane": 7076,
+       "q1": 5807,
+       "q3": 7505,
+       "moyenne": 6759
+      }
+     },
+     "posesApresDetection": 106,
+     "tempsApresDetectionS": 507.8,
+     "tiers": [
+      {
+       "n": 44,
+       "mediane": 3594,
+       "q1": 2800,
+       "q3": 5389,
+       "moyenne": 3998
+      },
+      {
+       "n": 44,
+       "mediane": 4587,
+       "q1": 3527,
+       "q3": 5963,
+       "moyenne": 4833
+      },
+      {
+       "n": 44,
+       "mediane": 4400,
+       "q1": 3496,
+       "q3": 5158,
+       "moyenne": 4755
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 206
+      },
+      "nlToutes": 235,
+      "compteurBloque": {
+       "episodes": 25,
+       "premierS": 965,
+       "valeurs": [
+        1,
+        3,
+        2
+       ]
+      },
+      "requetesPoints": 1465,
+      "statuts": {
+       "200": 1464,
+       "502": 1
+      },
+      "sansStatut": 0,
+      "echecsPage": 1,
+      "premierEchecS": 144,
+      "echecsS": [
+       144
+      ],
+      "premierRepliCompteurNonNulS": 151,
+      "dernierSignalAvantEchecS": 4,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 606,
+       "exact": 606,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 606,
+       "capturesRepliApresEchec": 315,
+       "capturesRecuperables": 315
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 1
+    },
+    {
+     "parts": [
+      1
+     ],
+     "chargeA": "18:38",
+     "dureePageMin": 21.3,
+     "capturesLot": 157,
+     "signalLot": 143,
+     "repliLot": 0,
+     "capturesRelecture": 560,
+     "signalRelecture": 503,
+     "dernierSignalS": 1275,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 156,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 134,
+       "mediane": 2504,
+       "q1": 1386,
+       "q3": 3869,
+       "moyenne": 2745
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 13,
+       "mediane": 5749,
+       "q1": 4878,
+       "q3": 7160,
+       "moyenne": 5977
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 49,
+       "mediane": 1640,
+       "q1": 1056,
+       "q3": 3760,
+       "moyenne": 2413
+      },
+      {
+       "n": 49,
+       "mediane": 2196,
+       "q1": 1427,
+       "q3": 3473,
+       "moyenne": 2753
+      },
+      {
+       "n": 49,
+       "mediane": 3958,
+       "q1": 2559,
+       "q3": 4851,
+       "moyenne": 3927
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {},
+      "nlToutes": 29,
+      "compteurBloque": {
+       "episodes": 12,
+       "premierS": 276,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1602,
+      "statuts": {
+       "200": 1602
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      2
+     ],
+     "chargeA": "18:59",
+     "dureePageMin": 12.6,
+     "capturesLot": 86,
+     "signalLot": 71,
+     "repliLot": 1,
+     "capturesRelecture": 278,
+     "signalRelecture": 247,
+     "dernierSignalS": 748,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 84,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 65,
+       "mediane": 2924,
+       "q1": 1830,
+       "q3": 3986,
+       "moyenne": 3065
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 13,
+       "mediane": 7495,
+       "q1": 6439,
+       "q3": 7705,
+       "moyenne": 6989
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 26,
+       "mediane": 4149,
+       "q1": 3690,
+       "q3": 5391,
+       "moyenne": 4627
+      },
+      {
+       "n": 26,
+       "mediane": 3212,
+       "q1": 2661,
+       "q3": 4276,
+       "moyenne": 3647
+      },
+      {
+       "n": 26,
+       "mediane": 1959,
+       "q1": 1444,
+       "q3": 3437,
+       "moyenne": 2883
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "2": 2
+      },
+      "nlToutes": 31,
+      "compteurBloque": {
+       "episodes": 11,
+       "premierS": 162,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1029,
+      "statuts": {
+       "200": 1029
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 308,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      3
+     ],
+     "chargeA": "19:12",
+     "dureePageMin": 7.7,
+     "capturesLot": 59,
+     "signalLot": 50,
+     "repliLot": 2,
+     "capturesRelecture": 91,
+     "signalRelecture": 72,
+     "dernierSignalS": 456,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 58,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 49,
+       "mediane": 3472,
+       "q1": 2303,
+       "q3": 4556,
+       "moyenne": 3464
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 7,
+       "mediane": 6379,
+       "q1": 6297,
+       "q3": 7353,
+       "moyenne": 6964
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 18,
+       "mediane": 3178,
+       "q1": 2307,
+       "q3": 3662,
+       "moyenne": 3186
+      },
+      {
+       "n": 19,
+       "mediane": 4842,
+       "q1": 4190,
+       "q3": 6244,
+       "moyenne": 5068
+      },
+      {
+       "n": 19,
+       "mediane": 3486,
+       "q1": 1828,
+       "q3": 4681,
+       "moyenne": 3414
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "2": 2,
+       "4": 2
+      },
+      "nlToutes": 19,
+      "compteurBloque": {
+       "episodes": 6,
+       "premierS": 440,
+       "valeurs": [
+        4,
+        2
+       ]
+      },
+      "requetesPoints": 898,
+      "statuts": {
+       "200": 898
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 106,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 2
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      4
+     ],
+     "chargeA": "19:19",
+     "dureePageMin": 25.4,
+     "capturesLot": 118,
+     "signalLot": 80,
+     "repliLot": 26,
+     "capturesRelecture": 319,
+     "signalRelecture": 275,
+     "dernierSignalS": 1508,
+     "premierRepliApresS": 1517,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 116,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 62,
+       "mediane": 3022,
+       "q1": 1449,
+       "q3": 5195,
+       "moyenne": 3636
+      },
+      "repli": {
+       "n": 9,
+       "mediane": 5800,
+       "q1": 4878,
+       "q3": 7203,
+       "moyenne": 5586
+      },
+      "neutre": {
+       "n": 7,
+       "mediane": 8046,
+       "q1": 7204,
+       "q3": 8746,
+       "moyenne": 8048
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 26,
+       "mediane": 3456,
+       "q1": 1734,
+       "q3": 5720,
+       "moyenne": 4108
+      },
+      {
+       "n": 26,
+       "mediane": 1723,
+       "q1": 1332,
+       "q3": 4701,
+       "moyenne": 2889
+      },
+      {
+       "n": 26,
+       "mediane": 5187,
+       "q1": 3346,
+       "q3": 7039,
+       "moyenne": 5774
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 24,
+       "2": 18,
+       "3": 8,
+       "4": 2
+      },
+      "nlToutes": 93,
+      "compteurBloque": {
+       "episodes": 5,
+       "premierS": 972,
+       "valeurs": [
+        2,
+        1
+       ]
+      },
+      "requetesPoints": 983,
+      "statuts": {
+       "200": 983
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 536,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 26
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      5
+     ],
+     "chargeA": "19:45",
+     "dureePageMin": 15.6,
+     "capturesLot": 47,
+     "signalLot": 7,
+     "repliLot": 33,
+     "capturesRelecture": 0,
+     "signalRelecture": 0,
+     "dernierSignalS": 885,
+     "premierRepliApresS": 900,
+     "detectionS": 831,
+     "signalRevientApresDetection": true,
+     "cutsLot": 45,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 6,
+       "mediane": 5081,
+       "q1": 4274,
+       "q3": 6343,
+       "moyenne": 5091
+      },
+      "repli": {
+       "n": 1,
+       "mediane": 2647,
+       "q1": 2647,
+       "q3": 2647,
+       "moyenne": 2647
+      },
+      "neutre": {
+       "n": 2,
+       "mediane": 9038,
+       "q1": 8895,
+       "q3": 9182,
+       "moyenne": 9038
+      }
+     },
+     "posesApresDetection": 3,
+     "tempsApresDetectionS": 78.5,
+     "tiers": [
+      {
+       "n": 3,
+       "mediane": 7619,
+       "q1": 4808,
+       "q3": 8185,
+       "moyenne": 6122
+      },
+      {
+       "n": 3,
+       "mediane": 5235,
+       "q1": 5081,
+       "q3": 7280,
+       "moyenne": 6495
+      },
+      {
+       "n": 3,
+       "mediane": 4056,
+       "q1": 3352,
+       "q3": 5384,
+       "moyenne": 4472
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 28,
+       "2": 27,
+       "3": 8,
+       "4": 3
+      },
+      "nlToutes": 85,
+      "compteurBloque": {
+       "episodes": 1,
+       "premierS": 832,
+       "valeurs": [
+        2
+       ]
+      },
+      "requetesPoints": 219,
+      "statuts": {
+       "200": 219
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 738,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 33
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      5
+     ],
+     "chargeA": "20:00",
+     "dureePageMin": 12.1,
+     "capturesLot": 66,
+     "signalLot": 27,
+     "repliLot": 32,
+     "capturesRelecture": 86,
+     "signalRelecture": 0,
+     "dernierSignalS": 267,
+     "premierRepliApresS": 271,
+     "detectionS": 310,
+     "signalRevientApresDetection": false,
+     "cutsLot": 64,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 26,
+       "mediane": 4742,
+       "q1": 4433,
+       "q3": 5119,
+       "moyenne": 4722
+      },
+      "repli": {
+       "n": 13,
+       "mediane": 6359,
+       "q1": 5851,
+       "q3": 6784,
+       "moyenne": 6433
+      },
+      "neutre": {
+       "n": 5,
+       "mediane": 8599,
+       "q1": 8430,
+       "q3": 9523,
+       "moyenne": 8837
+      }
+     },
+     "posesApresDetection": 8,
+     "tempsApresDetectionS": 81.9,
+     "tiers": [
+      {
+       "n": 14,
+       "mediane": 4729,
+       "q1": 4458,
+       "q3": 4908,
+       "moyenne": 4735
+      },
+      {
+       "n": 15,
+       "mediane": 5326,
+       "q1": 4360,
+       "q3": 7433,
+       "moyenne": 5907
+      },
+      {
+       "n": 15,
+       "mediane": 6359,
+       "q1": 5690,
+       "q3": 6793,
+       "moyenne": 6379
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 24,
+       "2": 20,
+       "3": 17,
+       "4": 3
+      },
+      "nlToutes": 86,
+      "compteurBloque": {
+       "episodes": 14,
+       "premierS": 139,
+       "valeurs": [
+        2,
+        4,
+        1
+       ]
+      },
+      "requetesPoints": 953,
+      "statuts": {
+       "200": 952,
+       "502": 1
+      },
+      "sansStatut": 0,
+      "echecsPage": 1,
+      "premierEchecS": 269,
+      "echecsS": [
+       269
+      ],
+      "premierRepliCompteurNonNulS": 109,
+      "dernierSignalAvantEchecS": 2,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 186,
+       "exact": 143,
+       "plus": 43,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 143,
+       "capturesRepliApresEchec": 95,
+       "capturesRecuperables": 68
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 0.7157894736842105
+    },
+    {
+     "parts": [
+      6
+     ],
+     "chargeA": "20:12",
+     "dureePageMin": 34.2,
+     "capturesLot": 191,
+     "signalLot": 166,
+     "repliLot": 3,
+     "capturesRelecture": 394,
+     "signalRelecture": 350,
+     "dernierSignalS": 2049,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 190,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 154,
+       "mediane": 2200,
+       "q1": 1489,
+       "q3": 3286,
+       "moyenne": 2588
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 19,
+       "mediane": 6179,
+       "q1": 5679,
+       "q3": 8152,
+       "moyenne": 7297
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 57,
+       "mediane": 1494,
+       "q1": 1313,
+       "q3": 3059,
+       "moyenne": 2311
+      },
+      {
+       "n": 58,
+       "mediane": 2217,
+       "q1": 1590,
+       "q3": 3933,
+       "moyenne": 3022
+      },
+      {
+       "n": 58,
+       "mediane": 3042,
+       "q1": 2426,
+       "q3": 4888,
+       "moyenne": 3969
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 1,
+       "2": 3,
+       "3": 2
+      },
+      "nlToutes": 52,
+      "compteurBloque": {
+       "episodes": 18,
+       "premierS": 1570,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1462,
+      "statuts": {
+       "200": 1462
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 1220,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 3
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      7
+     ],
+     "chargeA": "20:46",
+     "dureePageMin": 9.7,
+     "capturesLot": 79,
+     "signalLot": 67,
+     "repliLot": 2,
+     "capturesRelecture": 86,
+     "signalRelecture": 73,
+     "dernierSignalS": 581,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 78,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 66,
+       "mediane": 3787,
+       "q1": 3070,
+       "q3": 4851,
+       "moyenne": 3979
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 10,
+       "mediane": 7892,
+       "q1": 6357,
+       "q3": 8735,
+       "moyenne": 7504
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 25,
+       "mediane": 4944,
+       "q1": 4167,
+       "q3": 6149,
+       "moyenne": 5271
+      },
+      {
+       "n": 25,
+       "mediane": 3564,
+       "q1": 2685,
+       "q3": 4349,
+       "moyenne": 3594
+      },
+      {
+       "n": 26,
+       "mediane": 4028,
+       "q1": 3072,
+       "q3": 5409,
+       "moyenne": 4463
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 4
+      },
+      "nlToutes": 27,
+      "compteurBloque": {
+       "episodes": 14,
+       "premierS": 452,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 972,
+      "statuts": {
+       "200": 972
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 33,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 2
+     },
+     "_recup": 0
+    }
+   ],
+   "gain": {
+    "coutRechargementS": 20,
+    "vieDuSignalMedianeS": 310,
+    "viesS": [
+     178,
+     310,
+     831
+    ],
+    "pagesTouchees": 3,
+    "hautS": 167,
+    "hautIntervalle90": [
+     127,
+     213
+    ],
+    "prudentS": 90,
+    "prudentIntervalle90": [
+     64,
+     112
+    ],
+    "tempsLotS": 3510,
+    "partHaute": 4.7,
+    "partPrudente": 2.6,
+    "ligneDeBase": {
+     "pages": 2,
+     "gainS": 222,
+     "intervalle90": [
+      180,
+      265
+     ],
+     "part": 6.3
+    }
+   }
+  },
+  {
+   "version": "5",
+   "pages": [
+    {
+     "parts": [
+      8
+     ],
+     "chargeA": "07:29",
+     "dureePageMin": 24,
+     "capturesLot": 160,
+     "signalLot": 144,
+     "repliLot": 1,
+     "capturesRelecture": 293,
+     "signalRelecture": 264,
+     "dernierSignalS": 1437,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 157,
+     "pauses": 1,
+     "parLecture": {
+      "signal": {
+       "n": 140,
+       "mediane": 2620,
+       "q1": 1847,
+       "q3": 3317,
+       "moyenne": 2646
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 14,
+       "mediane": 6607,
+       "q1": 5973,
+       "q3": 7377,
+       "moyenne": 7654
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 51,
+       "mediane": 2532,
+       "q1": 1197,
+       "q3": 3639,
+       "moyenne": 3073
+      },
+      {
+       "n": 51,
+       "mediane": 2558,
+       "q1": 1870,
+       "q3": 3556,
+       "moyenne": 3038
+      },
+      {
+       "n": 52,
+       "mediane": 3061,
+       "q1": 2404,
+       "q3": 3428,
+       "moyenne": 3191
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "0": 1
+      },
+      "nlToutes": 31,
+      "compteurBloque": {
+       "episodes": 17,
+       "premierS": 799,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1573,
+      "statuts": {
+       "200": 1573
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      9
+     ],
+     "chargeA": "07:53",
+     "dureePageMin": 10.1,
+     "capturesLot": 135,
+     "signalLot": 118,
+     "repliLot": 1,
+     "capturesRelecture": 54,
+     "signalRelecture": 49,
+     "dernierSignalS": 601,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 132,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 117,
+       "mediane": 3006,
+       "q1": 2296,
+       "q3": 3545,
+       "moyenne": 2953
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 14,
+       "mediane": 6438,
+       "q1": 6008,
+       "q3": 6830,
+       "moyenne": 6411
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 43,
+       "mediane": 2976,
+       "q1": 2211,
+       "q3": 3769,
+       "moyenne": 3234
+      },
+      {
+       "n": 44,
+       "mediane": 3087,
+       "q1": 2459,
+       "q3": 3711,
+       "moyenne": 3175
+      },
+      {
+       "n": 44,
+       "mediane": 3160,
+       "q1": 2553,
+       "q3": 3953,
+       "moyenne": 3556
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 2
+      },
+      "nlToutes": 37,
+      "compteurBloque": {
+       "episodes": 16,
+       "premierS": 585,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1341,
+      "statuts": {
+       "200": 1341
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 404,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      10
+     ],
+     "chargeA": "08:03",
+     "dureePageMin": 35.5,
+     "capturesLot": 222,
+     "signalLot": 197,
+     "repliLot": 1,
+     "capturesRelecture": 874,
+     "signalRelecture": 787,
+     "dernierSignalS": 2125,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 221,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 173,
+       "mediane": 2453,
+       "q1": 2081,
+       "q3": 3490,
+       "moyenne": 2960
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 23,
+       "mediane": 6632,
+       "q1": 6238,
+       "q3": 7061,
+       "moyenne": 6860
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 65,
+       "mediane": 2587,
+       "q1": 1996,
+       "q3": 4090,
+       "moyenne": 3444
+      },
+      {
+       "n": 65,
+       "mediane": 2354,
+       "q1": 2081,
+       "q3": 3560,
+       "moyenne": 2956
+      },
+      {
+       "n": 66,
+       "mediane": 3236,
+       "q1": 2293,
+       "q3": 4264,
+       "moyenne": 3846
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 2
+      },
+      "nlToutes": 51,
+      "compteurBloque": {
+       "episodes": 26,
+       "premierS": 1490,
+       "valeurs": [
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 2122,
+      "statuts": {
+       "200": 2122
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": 706,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 1
+     },
+     "_recup": 0
+    },
+    {
+     "parts": [
+      11
+     ],
+     "chargeA": "08:39",
+     "dureePageMin": 74.8,
+     "capturesLot": 226,
+     "signalLot": 144,
+     "repliLot": 61,
+     "capturesRelecture": 508,
+     "signalRelecture": 0,
+     "dernierSignalS": 2647,
+     "premierRepliApresS": 2660,
+     "detectionS": 2696,
+     "signalRevientApresDetection": false,
+     "cutsLot": 224,
+     "pauses": 1,
+     "parLecture": {
+      "signal": {
+       "n": 142,
+       "mediane": 2286,
+       "q1": 1723,
+       "q3": 3261,
+       "moyenne": 2459
+      },
+      "repli": {
+       "n": 59,
+       "mediane": 4169,
+       "q1": 3530,
+       "q3": 5228,
+       "moyenne": 4350
+      },
+      "neutre": {
+       "n": 21,
+       "mediane": 6617,
+       "q1": 5793,
+       "q3": 7672,
+       "moyenne": 6794
+      }
+     },
+     "posesApresDetection": 60,
+     "tempsApresDetectionS": 273.7,
+     "tiers": [
+      {
+       "n": 74,
+       "mediane": 2543,
+       "q1": 1896,
+       "q3": 3342,
+       "moyenne": 2783
+      },
+      {
+       "n": 74,
+       "mediane": 2181,
+       "q1": 1717,
+       "q3": 3383,
+       "moyenne": 2736
+      },
+      {
+       "n": 74,
+       "mediane": 4197,
+       "q1": 3525,
+       "q3": 5333,
+       "moyenne": 4595
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {
+       "1": 121,
+       "3": 1
+      },
+      "nlToutes": 165,
+      "compteurBloque": {
+       "episodes": 67,
+       "premierS": 3547,
+       "valeurs": [
+        1,
+        3,
+        2,
+        4
+       ]
+      },
+      "requetesPoints": 1978,
+      "statuts": {
+       "200": 1976,
+       "502": 2
+      },
+      "sansStatut": 0,
+      "echecsPage": 2,
+      "premierEchecS": 2659,
+      "echecsS": [
+       2659,
+       4306
+      ],
+      "premierRepliCompteurNonNulS": 203,
+      "dernierSignalAvantEchecS": 11,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 1006,
+       "exact": 1000,
+       "plus": 6,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 1000,
+       "capturesRepliApresEchec": 514,
+       "capturesRecuperables": 509
+      },
+      "capturesRepliCompteurNonNulSansEchec": null
+     },
+     "_recup": 0.9902723735408561
+    },
+    {
+     "parts": [
+      12
+     ],
+     "chargeA": "09:53",
+     "dureePageMin": 16.2,
+     "capturesLot": 130,
+     "signalLot": 120,
+     "repliLot": 0,
+     "capturesRelecture": 109,
+     "signalRelecture": 93,
+     "dernierSignalS": 686,
+     "premierRepliApresS": null,
+     "detectionS": null,
+     "signalRevientApresDetection": null,
+     "cutsLot": 129,
+     "pauses": 0,
+     "parLecture": {
+      "signal": {
+       "n": 116,
+       "mediane": 2914,
+       "q1": 2206,
+       "q3": 3487,
+       "moyenne": 2906
+      },
+      "repli": {
+       "n": 0
+      },
+      "neutre": {
+       "n": 10,
+       "mediane": 6894,
+       "q1": 6497,
+       "q3": 7820,
+       "moyenne": 7117
+      }
+     },
+     "posesApresDetection": 0,
+     "tempsApresDetectionS": 0,
+     "tiers": [
+      {
+       "n": 42,
+       "mediane": 2735,
+       "q1": 2147,
+       "q3": 3275,
+       "moyenne": 3053
+      },
+      {
+       "n": 42,
+       "mediane": 3303,
+       "q1": 2726,
+       "q3": 3805,
+       "moyenne": 3429
+      },
+      {
+       "n": 42,
+       "mediane": 3064,
+       "q1": 2104,
+       "q3": 4029,
+       "moyenne": 3239
+      }
+     ],
+     "cause": {
+      "nlAuRepli": {},
+      "nlToutes": 20,
+      "compteurBloque": {
+       "episodes": 11,
+       "premierS": 130,
+       "valeurs": [
+        4,
+        1,
+        2
+       ]
+      },
+      "requetesPoints": 1514,
+      "statuts": {
+       "200": 1514
+      },
+      "sansStatut": 0,
+      "echecsPage": 0,
+      "premierEchecS": null,
+      "echecsS": [],
+      "premierRepliCompteurNonNulS": null,
+      "dernierSignalAvantEchecS": null,
+      "ligneDeBase": {
+       "vuesRepliApresEchec": 0,
+       "exact": 0,
+       "plus": 0,
+       "moins": 0,
+       "exactEtSeulManqueChargements": 0,
+       "capturesRepliApresEchec": 0,
+       "capturesRecuperables": 0
+      },
+      "capturesRepliCompteurNonNulSansEchec": 0
+     },
+     "_recup": 0
+    }
+   ],
+   "gain": {
+    "coutRechargementS": 20,
+    "vieDuSignalMedianeS": 2696,
+    "viesS": [
+     2696
+    ],
+    "pagesTouchees": 1,
+    "hautS": 117,
+    "hautIntervalle90": [
+     99,
+     135
+    ],
+    "prudentS": 117,
+    "prudentIntervalle90": [
+     99,
+     135
+    ],
+    "tempsLotS": 2841,
+    "partHaute": 4.1,
+    "partPrudente": 4.1,
+    "ligneDeBase": {
+     "pages": 1,
+     "gainS": 154,
+     "intervalle90": [
+      134,
+      174
+     ],
+     "part": 5.4
+    }
+   }
+  }
+ ],
+ "gainTotal": {
+  "coutRechargementS": 20,
+  "vieDuSignalMedianeS": 480,
+  "viesS": [
+   104,
+   178,
+   310,
+   650,
+   831,
+   2696
+  ],
+  "pagesTouchees": 6,
+  "hautS": 944,
+  "hautIntervalle90": [
+   886,
+   1003
+  ],
+  "prudentS": 333,
+  "prudentIntervalle90": [
+   300,
+   369
+  ],
+  "tempsLotS": 13233,
+  "partHaute": 7.1,
+  "partPrudente": 2.5,
+  "ligneDeBase": {
+   "pages": 5,
+   "gainS": 1077,
+   "intervalle90": [
+    1013,
+    1148
+   ],
+   "part": 8.1
+  }
+ },
+ "parCutPose": {
+  "signal": {
+   "n": 2372,
+   "mediane": 2733,
+   "q1": 2049,
+   "q3": 3734,
+   "moyenne": 3142
+  },
+  "repli": {
+   "n": 230,
+   "mediane": 4778,
+   "q1": 3593,
+   "q3": 6210,
+   "moyenne": 5047
+  },
+  "ecartMedianMs": 2045,
+  "ecartIntervalle90": [
+   1737,
+   2397
+  ]
+ }
+}

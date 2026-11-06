@@ -199,6 +199,15 @@
      * encore vide : recharger la page ESV une fois par série (seulement si une Constellation peut reprendre le lot et que rien n'est posé), puis
      * différer sans attendre, avec un nouvel essai tous les `reessaiApresCuts` cuts vides. Événement `serie-captures-vides`. Jamais de pose ni d'écriture. */
     serieCapturesVides: Object.freeze({ actif: true, seuil: 3, attenteMs: 20000, attentesParEssai: 1, rechargement: true, rechargementsParSerie: 1, reessaiApresCuts: 10 }),
+    /* CH-062 — SIGNAL DE FIN DE CHARGEMENT D'ESV ÉTEINT PENDANT LE LOT (même détection que la relecture, src/relecture-signal.js ; chantiers/CH-062/rapport.md).
+     * Mesuré (04/11 et 05/11, 29 pages) : le signal meurt dans les 8 pages où une requête de points a reçu un HTTP 502 (Potree 1.8 ne décompte jamais un
+     * nœud en échec), jamais ailleurs ; un cut posé prend alors 4,8 s au lieu de 2,7 s. COUPÉ par défaut : la détection ne fait qu'un événement
+     * `lot-signal-eteint`. Allumé : après la validation PROUVÉE d'un cut (écriture vue par l'observateur dans `preuveMs`), sans pose affichée, écriture,
+     * différé, deuxième passe ni relecture en cours, le lot se met en pause, Ariane recharge la page ESV, attend la liste, vérifie la partie, et reprend
+     * par le chemin de « Reprendre » (au plus `rechargementsMax` fois par partie : 1 ; sans signal après, le lot continue au repli, sans boucle).
+     * ESV rouvre une autre partie ou ne répond pas dans `attenteRepriseMs` : le lot reste en pause, consigne F5. Ariane ne change jamais de partie. */
+    /* `ligneDeBaseEchecs` (lu par la page ; patch chantiers/CH-062/adaptateur-ligne-de-base.patch APPLIQUÉ par l’intégrateur, réglage coupé) : compteur effectif = compteur − requêtes de points en échec. */
+    signalEteint: Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, preuveMs: 5000, delaiAvantMs: 500, sondageMs: 500, attenteRepriseMs: 90000, ligneDeBaseEchecs: false }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
      * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE
