@@ -12,6 +12,7 @@ pub fn appeler(fonction: u32, _entree: &Valeur) -> Result<Valeur, Echec> {
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)] // essais d'identité au bit près : la comparaison exacte est le but
 mod essais {
     use super::*;
     #[test]

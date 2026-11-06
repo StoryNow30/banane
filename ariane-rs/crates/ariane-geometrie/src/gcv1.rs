@@ -10,13 +10,24 @@ use ariane_js::{cle_same_value_zero, hypot, max_de, mediane, min_de, Echec};
 use ariane_vba::Valeur;
 use std::collections::HashSet;
 
+/// Valeur que la façade met à la place de `lab.onCoarse` (une fonction ne traverse pas) : vaut « fonction » ici.
 pub const RAPPEL: &str = "\u{0}ariane:onCoarse";
+const ECHEC_PLAN: &str = "Plan de roulement non estimable.";
 const MIN_TOP_ROWS: usize = 3;
 const DEF_MIN_FACE: f64 = 6.0;
 const DEF_MIN_TOP: f64 = 15.0;
 
 /// Un appel de `lab.onCoarse(cells, meta)` à rejouer par la façade.
-pub struct AppelRappel { pub cellules: Vec<f64>, pub meilleur: [f64; 3], pub centres: Vec<f64>, pub lab: Valeur }
+pub struct AppelRappel {
+    /// Les cases grossières, à plat : u, z, loss.
+    pub cellules: Vec<f64>,
+    /// Le meilleur candidat au moment de l'appel : u, z, loss.
+    pub meilleur: [f64; 3],
+    /// Les centres de fenêtre en u (`uCenters.slice()`).
+    pub centres: Vec<f64>,
+    /// Le `lab` de cet appel (celui des options, ou celui d'une reprise de `pairZTransfer`).
+    pub lab: Valeur,
+}
 
 struct Lab<'a> { v: &'a Valeur }
 impl Lab<'_> {
@@ -33,10 +44,9 @@ fn lab_de(options: &Valeur) -> Result<Option<&Valeur>, Echec> {
     match options {
         Valeur::Indefini => Ok(None),
         Valeur::Objet(_) => match options.champ("lab") {
-            None => Ok(None),
             Some(l @ Valeur::Objet(_)) => Ok(Some(l)),
             Some(Valeur::Tableau(_) | Valeur::Nombres(_) | Valeur::Bloc { .. } | Valeur::Booleens(_)) => hd("lab tableau"),
-            Some(_) => Ok(None),
+            _ => Ok(None),
         },
         _ => hd("options non objet"), // null : le JS lève sur options.lab
     }
@@ -48,19 +58,24 @@ fn non_resolu(cote: &str, raison: &str, cfg: &Reglages, parametres: &Valeur) -> 
         ("parameters", parametres.clone())])
 }
 
+/// `propose(capture, side, options)` de GCV1 ; les appels de `lab.onCoarse` sont ajoutés à `appels`, dans l'ordre.
+///
+/// # Errors
+/// L'exception que lèverait le JS (réglage invalide ou incohérent, profil absent, projection non finie) ; hors domaine
+/// pour une entrée que le port ne reproduit pas (la façade rejoue alors le JS).
 pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<AppelRappel>) -> Result<Valeur, Echec> {
     let lab_v = lab_de(options)?;
     let cfg = Reglages::fusionner_sans(options, true, true)?;
     if !matches!(capture, Valeur::Objet(_)) { return hd("capture non objet"); }
     let rails = capture.champ("rails");
     let rail = match rails {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) => None,
+        None | Some(Valeur::Indefini | Valeur::Nul) => None,
         Some(r @ Valeur::Objet(_)) => r.champ(cote),
         Some(_) => return hd("rails non objet"),
     };
     cfg.valider()?;
     let rail = match rail {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) | Some(Valeur::Booleen(false)) => return Err(Echec::erreur(format!("Profil absent : {cote}"))),
+        None | Some(Valeur::Indefini | Valeur::Nul | Valeur::Booleen(false)) => return Err(Echec::erreur(format!("Profil absent : {cote}"))),
         Some(r @ Valeur::Objet(_)) => r,
         Some(_) => return hd("rail non objet"),
     };
@@ -71,30 +86,30 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
     let nps = match ps { Valeur::Indefini | Valeur::Nul => 0, _ => longueur_tableau(ps).ok_or_else(|| Echec::hors_domaine("pointsSceneRelative"))? };
     if nps == 0 { return Ok(nr("Aucun point LiDAR disponible.")); }
     let contour = match rail.champ("profileContours") {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) => None,
+        None | Some(Valeur::Indefini | Valeur::Nul) => None,
         Some(Valeur::Tableau(t)) => {
             let mut a: Option<&Valeur> = None;
             let lg = |c: Option<&Valeur>| -> Result<usize, Echec> {
                 match c.and_then(|c| c.champ("verticesSceneRelative")) {
-                    None | Some(Valeur::Indefini) | Some(Valeur::Nul) => Ok(0),
+                    None | Some(Valeur::Indefini | Valeur::Nul) => Ok(0),
                     Some(v) => longueur_tableau(v).ok_or_else(|| Echec::hors_domaine("verticesSceneRelative")),
                 }
             };
             for b in t {
-                let b = match b { Some(b @ Valeur::Objet(_)) => b, _ => return hd("contour non objet") };
+                let Some(b @ Valeur::Objet(_)) = b else { return hd("contour non objet") };
                 if lg(Some(b))? > lg(a)? { a = Some(b); }
             }
             a
         }
         Some(_) => return hd("profileContours"),
     };
-    let contour = match contour { Some(c) => c, None => return Ok(nr("Contour du profil absent.")) };
+    let Some(contour) = contour else { return Ok(nr("Contour du profil absent.")) };
     let m: M16 = match rail.champ("sceneRelativeToProfileLocal") {
         Some(Valeur::Nombres(t)) if t.len() >= 16 => { let mut a = [0.0; 16]; a.copy_from_slice(&t[..16]); a }
         _ => return hd("sceneRelativeToProfileLocal"),
     };
     let mut shape = vec![];
-    for p in sommets(contour.champ("verticesSceneRelative").unwrap())? { shape.push(point(&m, p[0], p[1], p[2])?); }
+    for p in sommets(contour.champ("verticesSceneRelative").unwrap_or(&Valeur::Indefini))? { shape.push(point(&m, p[0], p[1], p[2])?); }
     let sign = ariane_js::sign(mediane(&shape.iter().map(|p| p[1]).collect::<Vec<_>>()));
     if sign.is_nan() || sign == 0.0 { return Ok(nr("Sens du profil ambigu.")); }
     let vertices: Vec<[f64; 2]> = shape.iter().map(|p| [sign * p[1], p[2]]).collect();
@@ -160,7 +175,7 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
     if let Some(l) = &lab {
         match l.c("uSeeds") {
             v @ (Valeur::Tableau(_) | Valeur::Nombres(_) | Valeur::Bloc { .. } | Valeur::Booleens(_)) => {
-                let seeds: Vec<f64> = v.elements().unwrap().into_iter().filter_map(|e| match e { Valeur::Nombre(x) if x.is_finite() => Some(x), _ => None }).collect();
+                let seeds: Vec<f64> = v.elements().unwrap_or_default().into_iter().filter_map(|e| match e { Valeur::Nombre(x) if x.is_finite() => Some(x), _ => None }).collect();
                 if !seeds.is_empty() {
                     if l.vrai("replaceOrigin") { u_centers.clear(); }
                     for u in seeds { if !u_centers.iter().any(|c| (c - u).abs() < 1e-9) { u_centers.push(u); } }
@@ -209,7 +224,7 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
             if penalty > 0.0 {
                 let mut pick = 0usize;
                 for i in 0..coarse.len() {
-                    let tr = coarse[i].top_rows.unwrap();
+                    let tr = coarse[i].top_rows.unwrap_or(0); // calculé juste au-dessus pour toutes les cases
                     coarse[i].score = coarse[i].loss + penalty * (if tr < MIN_TOP_ROWS { 1.0 } else { 0.0 });
                     if coarse[i].score < coarse[pick].score { pick = i; }
                 }
@@ -228,12 +243,12 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
                     if local { minima.push(*c); }
                 }
                 minima.sort_by(|a, b| { let d = a.loss - b.loss; if d < 0.0 { std::cmp::Ordering::Less } else if d > 0.0 { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Equal } });
-                let supported: Vec<&Cand> = minima.iter().filter(|c| c.top_rows.unwrap() >= MIN_TOP_ROWS).collect();
+                let supported: Vec<&Cand> = minima.iter().filter(|c| c.top_rows.unwrap_or(0) >= MIN_TOP_ROWS).collect();
                 let pick = if l.vrai("preferSupported") && !supported.is_empty() { Some(*supported[0]) } else { minima.first().copied() };
                 if let Some(c) = pick { best = Cand { loss: c.loss, u: c.u, z: c.z, top_rows: None, score: f64::NAN }; }
             } else if l.vrai("preferSupported") {
                 let mut sup: Option<Cand> = None;
-                for c in &coarse { if c.top_rows.unwrap() >= MIN_TOP_ROWS && sup.is_none_or(|s| c.loss < s.loss) { sup = Some(*c); } }
+                for c in &coarse { if c.top_rows.unwrap_or(0) >= MIN_TOP_ROWS && sup.is_none_or(|s| c.loss < s.loss) { sup = Some(*c); } }
                 if let Some(c) = sup { best = Cand { loss: c.loss, u: c.u, z: c.z, top_rows: None, score: f64::NAN }; }
             }
         }
@@ -260,7 +275,7 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
     }
     let face_band = cfg.f("faceBand")?;
     let top_rows: Vec<[f64; 2]> = points.iter().filter(|p| p[0] > best.u + 0.012 && p[0] < best.u + width - 0.012 && (p[1] - best.z).abs() < top_band).map(|p| [p[0], p[1]]).collect();
-    let top: Droite = match robust_line(&top_rows) { Some(t) => t, None => return Ok(nr("Plan de roulement non estimable.")) };
+    let Some(top) = robust_line(&top_rows) else { return Ok(nr("Plan de roulement non estimable.")) };
     let face_rows: Vec<[f64; 2]> = points.iter().filter(|p| {
         let drop = top.slope * p[0] + top.intercept - p[1];
         drop > 0.009 && drop < 0.034 && (p[0] - best.u).abs() < face_band
@@ -329,7 +344,7 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
         }
         let strong_rs = top.count as f64 >= DEF_MIN_TOP;
         let face_partial = face.is_some() && face_count >= 3.0 && face_count < min_face_req;
-        let skip_face_gate = l.vrai("partialFaceKeep") && strong_rs && face_partial && !top.slope_limited && !face.as_ref().unwrap().slope_limited;
+        let skip_face_gate = l.vrai("partialFaceKeep") && strong_rs && face_partial && !top.slope_limited && face.as_ref().is_some_and(|f| !f.slope_limited); // face existe si face_partial
         if l.vrai("partialFaceKeep") {
             lab_m.push(("partialFaceKeep", obj(vec![("strongRs", Valeur::Booleen(strong_rs)), ("facePartial", Valeur::Booleen(face_partial)),
                 ("skipFaceGate", Valeur::Booleen(skip_face_gate)), ("faceCount", n(face_count)), ("minFaceReq", n(min_face_req))])));
@@ -373,6 +388,9 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
 }
 
 /// `enforcePairSupport` de GCV1 (`delete cfg.lab`, sans forcer `method`), sur un objet `{left, right}` quelconque.
+///
+/// # Errors
+/// Réglages incohérents ; hors domaine pour des options non objet ou des raisons non tabulaires.
 pub fn enforce_pair_support(mut props: Valeur, options: &Valeur) -> Result<Valeur, Echec> {
     let cfg = Reglages::fusionner_sans(options, false, true)?;
     let delta = |p: Option<&Valeur>| -> Option<f64> { match p.and_then(|p| p.champ("delta")) { Some(Valeur::Nombres(d)) if d.len() >= 2 => Some(d[1].abs()), _ => None } };
@@ -384,33 +402,35 @@ pub fn enforce_pair_support(mut props: Valeur, options: &Valeur) -> Result<Valeu
         if let Some(e) = extreme {
             let autre = if e == "left" { ld } else { lg };
             if autre < paired {
-                let courant = props.champ(e).unwrap().clone();
+                let Some(courant) = props.champ(e).cloned() else { return Ok(props) };
                 let mut raisons = match courant.champ("reasons") { Some(Valeur::Tableau(t)) => t.clone(), Some(Valeur::Indefini | Valeur::Nul) | None => vec![], Some(_) => return hd("reasons") };
                 raisons.push(Some(s("Grand déplacement isolé : le second rail ne confirme pas ce placement.")));
                 let nouveau = avec(courant, vec![("status", s("unresolved")), ("delta", Valeur::Nul), ("confidence", n(0.0)), ("source", s("no-estimate")), ("reasons", Valeur::Tableau(raisons))]);
                 props = avec(props, vec![(e, nouveau)]);
             }
         }
-    } else if lg.is_some() != ld.is_some() {
-        // un seul delta : rendu tel quel
     }
     Ok(props)
 }
 
+/// `proposeBoth(capture, options)` de GCV1, `pairZTransfer` compris.
+///
+/// # Errors
+/// L'exception que lèverait le JS (réglage invalide ou incohérent, profil absent, projection non finie) ; hors domaine
+/// pour une entrée que le port ne reproduit pas (la façade rejoue alors le JS).
 pub fn propose_both(capture: &Valeur, options: &Valeur, appels: &mut Vec<AppelRappel>) -> Result<Valeur, Echec> {
     let lab = lab_de(options)?;
     let g = propose(capture, "left", options, appels)?;
     let d = propose(capture, "right", options, appels)?;
     let mut out = enforce_pair_support(obj(vec![("left", g), ("right", d)]), options)?;
     let lab = match lab { Some(l) if l.champ("pairZTransfer").is_some_and(Valeur::vrai) => l, _ => return Ok(out) };
-    const ECHEC: &str = "Plan de roulement non estimable.";
     for (cote, autre) in [("left", "right"), ("right", "left")] {
-        let p = out.champ(cote).unwrap();
+        let Some(p) = out.champ(cote) else { continue };
         let echoue = matches!(p.champ("status"), Some(Valeur::Chaine(st)) if st == "unresolved") && match p.champ("reasons") {
-            Some(Valeur::Tableau(t)) => t.iter().map(|r| match r { Some(Valeur::Chaine(c)) => Ok(c.as_str()), _ => Err(()) }).collect::<Result<Vec<_>, _>>().map_err(|_| Echec::hors_domaine("raisons"))?.join(" ").contains(ECHEC),
+            Some(Valeur::Tableau(t)) => t.iter().map(|r| match r { Some(Valeur::Chaine(c)) => Ok(c.as_str()), _ => Err(()) }).collect::<Result<Vec<_>, _>>().map_err(|()| Echec::hors_domaine("raisons"))?.join(" ").contains(ECHEC_PLAN),
             _ => false,
         };
-        let o = out.champ(autre).unwrap();
+        let Some(o) = out.champ(autre) else { continue };
         let pz = match (o.champ("status"), o.champ("delta")) { (Some(Valeur::Chaine(st)), Some(Valeur::Nombres(d))) if st == "candidate" && d.len() >= 3 => Some(d[2]), _ => None };
         let (true, Some(pz)) = (echoue, pz) else { continue };
         let lab2 = avec(lab.clone(), vec![("cloudZSeed", Valeur::Booleen(true)), ("preferSupported", Valeur::Booleen(true)), ("pairSeedZ", n(pz))]);

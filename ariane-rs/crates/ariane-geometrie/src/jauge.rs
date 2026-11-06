@@ -6,13 +6,20 @@ use ariane_capture::{point, xyz};
 use ariane_js::{hypot, Echec};
 use ariane_vba::Valeur;
 
+/// Sous cette valeur (mm) : hors contrat, trop serré.
 pub const LOW_MM: f64 = 1420.0;
+/// À partir d'ici (mm) : nominal.
 pub const NOMINAL_MM: f64 = 1430.0;
+/// Au-delà (mm) : hors contrat, trop large.
 pub const MAXIMUM_MM: f64 = 1470.0;
 
+#[must_use]
+/// `classifyMm(valueMm)` : classe d'écartement (jamais de SKIP).
 pub fn classify_mm(v: f64) -> &'static str {
     if !v.is_finite() { "INDETERMINATE" } else if v < LOW_MM { "LOW_INVALID" } else if v < NOMINAL_MM { "TOLERANCE" } else if v <= MAXIMUM_MM { "NOMINAL" } else { "HIGH_INVALID" }
 }
+#[must_use]
+/// `admissible(gaugeClass)` : tolérance ou nominal.
 pub fn admissible(c: &str) -> bool { c == "TOLERANCE" || c == "NOMINAL" }
 
 fn nombres(v: Option<&Valeur>) -> Option<&[f64]> { match v { Some(Valeur::Nombres(t)) => Some(t), _ => None } }
@@ -24,7 +31,10 @@ fn distance(a: &[f64], b: &[f64]) -> Result<f64, Echec> {
     Ok(hypot(&a.iter().zip(b).map(|(x, y)| x - y).collect::<Vec<_>>()))
 }
 
-/// `gaugeMmOf(rails, C)`.
+/// `gaugeMmOf(rails, C)` : distance des origines des deux rails, en mm (NaN si l'une manque).
+///
+/// # Errors
+/// Hors domaine pour une position non numérique ou plus courte que l'autre.
 pub fn gauge_mm_of(rails: &Valeur) -> Result<f64, Echec> {
     let pos = |c| rail(rails, c).and_then(|r| match r { Valeur::Objet(_) => r.champ("positionSceneRelative"), _ => None });
     let (a, b) = (pos("left"), pos("right"));
@@ -48,6 +58,10 @@ fn decale(r: Option<&Valeur>, delta: Option<&Valeur>) -> Result<Option<Vec<f64>>
     Ok(Some(p.iter().enumerate().map(|(i, v)| if i < 3 { v + (monde[i] - origine[i]) } else { f64::NAN }).collect()))
 }
 
+/// `predictedGaugeMm(rails, deltas, C)` : écartement après application des deltas, en mm.
+///
+/// # Errors
+/// Projection non finie ; hors domaine pour une forme inattendue.
 pub fn predicted_gauge_mm(rails: &Valeur, deltas: &Valeur) -> Result<f64, Echec> {
     let d = |c| match deltas { Valeur::Objet(_) => deltas.champ(c), _ => None };
     let a = decale(rail(rails, "left"), d("left"))?;
@@ -55,6 +69,10 @@ pub fn predicted_gauge_mm(rails: &Valeur, deltas: &Valeur) -> Result<f64, Echec>
     match (a, b) { (Some(a), Some(b)) => Ok(distance(&a, &b)? * 1000.0), _ => Ok(f64::NAN) }
 }
 
+/// `assessPair(rails, deltas, C)` : rapport complet d'un couple.
+///
+/// # Errors
+/// Celles de [`gauge_mm_of`] et [`predicted_gauge_mm`].
 pub fn assess_pair(rails: &Valeur, deltas: &Valeur) -> Result<Valeur, Echec> {
     let (avant, predit) = (gauge_mm_of(rails)?, predicted_gauge_mm(rails, deltas)?);
     let c = classify_mm(predit);

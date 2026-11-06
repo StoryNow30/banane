@@ -15,3 +15,6 @@ ariane-geometrie = { path = "../ariane-geometrie" }
 ariane-lidar = { path = "../ariane-lidar" }
 ariane-decision = { path = "../ariane-decision" }
 ariane-etat = { path = "../ariane-etat" }
+
+[lints]
+workspace = true

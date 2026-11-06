@@ -1,26 +1,48 @@
 //! VBA : valeurs binaires Ariane, version 1 (spécification : chantiers/CH-064/vba.md).
 //! Codec sans perte entre la coquille JS et le cœur WASM. Encodage canonique : `encoder(decoder(t)) == t`.
 
+/// En-tête de toute trame : « VBA » puis la version du format (1).
 pub const ENTETE: [u8; 4] = [0x56, 0x42, 0x41, 0x01];
 const PROFONDEUR_MAX: usize = 512;
 
+/// Une valeur JS, telle que la transporte une trame (une variante par étiquette de la spécification).
 #[derive(Debug, Clone, PartialEq)]
 pub enum Valeur {
+    /// `undefined` (étiquette 00).
     Indefini,
+    /// `null` (01).
     Nul,
+    /// `false` / `true` (02, 03).
     Booleen(bool),
+    /// Un nombre, bits compris (04).
     Nombre(f64),
+    /// Une chaîne bien formée (05).
     Chaine(String),
-    /// Élément `None` = trou.
+    /// Un tableau quelconque (06) ; un élément `None` est un trou (07).
     Tableau(Vec<Option<Valeur>>),
+    /// Un objet simple, clés dans l'ordre (08).
     Objet(Vec<(String, Valeur)>),
-    /// n lignes de k nombres, à plat (n×k valeurs).
-    Bloc { k: u8, donnees: Vec<f64> },
+    /// Un tableau de n tableaux de k nombres (09), rangé à plat (n×k valeurs).
+    Bloc {
+        /// Longueur de chaque ligne (1 à 255).
+        k: u8,
+        /// Les n×k nombres, ligne après ligne.
+        donnees: Vec<f64>,
+    },
+    /// Un tableau de nombres (0A).
     Nombres(Vec<f64>),
+    /// Un tableau de booléens (0B).
     Booleens(Vec<bool>),
-    Erreur { nom: String, message: String },
+    /// Une exception à relever côté JS (0C), en sortie seulement.
+    Erreur {
+        /// Constructeur : `Error`, `TypeError`, `RangeError` ou `HorsDomaine`.
+        nom: String,
+        /// Message, à l'identique de celui du JS.
+        message: String,
+    },
 }
 
+/// Trame refusée au décodage (message préfixé par « VBA : »).
 #[derive(Debug, PartialEq)]
 pub struct ErreurVba(pub String);
 
@@ -119,22 +141,38 @@ impl<'a> Lecteur<'a> {
 }
 
 /// Décode une trame complète.
+///
+/// # Errors
+/// En-tête absent, trame tronquée, étiquette inconnue, bourrage non nul, chaîne invalide, trou hors tableau,
+/// profondeur excessive, octets après la racine.
 pub fn decoder(o: &[u8]) -> Result<Valeur, ErreurVba> {
     if o.len() < 4 || o[..4] != ENTETE { return err("en-tête absent"); }
     let mut l = Lecteur { o, p: 4 };
-    let v = l.valeur(0, false)?.expect("racine");
+    let Some(v) = l.valeur(0, false)? else { return err("trou hors tableau") };
     if l.p != o.len() { return err("octets après la racine"); }
     Ok(v)
 }
 
-/// Encodeur canonique.
-pub struct Ecrivain { pub o: Vec<u8> }
+/// Encodeur canonique (une valeur n'a qu'une trame).
+pub struct Ecrivain {
+    /// La trame en cours, en-tête compris.
+    pub o: Vec<u8>,
+}
 impl Default for Ecrivain { fn default() -> Self { Self::new() } }
 impl Ecrivain {
+    /// Trame vide (en-tête seul).
+    #[must_use]
     pub fn new() -> Self { Ecrivain { o: ENTETE.to_vec() } }
-    fn u32(&mut self, n: usize) { self.o.extend_from_slice(&(n as u32).to_le_bytes()); }
+    fn u32(&mut self, n: usize) {
+        let n = u32::try_from(n).expect("VBA : longueur de plus de 4 Gio, refusée par la spécification");
+        self.o.extend_from_slice(&n.to_le_bytes());
+    }
     fn chaine(&mut self, s: &str) { self.u32(s.len()); self.o.extend_from_slice(s.as_bytes()); }
     fn bourrage(&mut self) { while !self.o.len().is_multiple_of(8) { self.o.push(0); } }
+    /// Ajoute une valeur à la trame.
+    ///
+    /// # Panics
+    /// Si une longueur dépasse 4 Gio (la spécification la refuse ; impossible en WASM 32 bits).
     pub fn valeur(&mut self, v: &Valeur) {
         match v {
             Valeur::Indefini => self.o.push(0x00),
@@ -168,33 +206,68 @@ impl Ecrivain {
             Valeur::Booleens(t) => {
                 self.o.push(0x0B);
                 self.u32(t.len());
-                for &b in t { self.o.push(b as u8); }
+                for &b in t { self.o.push(u8::from(b)); }
             }
             Valeur::Erreur { nom, message } => { self.o.push(0x0C); self.chaine(nom); self.chaine(message); }
         }
     }
 }
 
+/// Trame canonique d'une valeur.
+///
+/// # Panics
+/// Si une longueur dépasse 4 Gio (voir [`Ecrivain::valeur`]).
+#[must_use]
 pub fn encoder(v: &Valeur) -> Vec<u8> { let mut e = Ecrivain::new(); e.valeur(v); e.o }
 
 impl Valeur {
     /// Champ d'un objet, par clé.
+    #[must_use]
     pub fn champ(&self, cle: &str) -> Option<&Valeur> {
         match self { Valeur::Objet(t) => t.iter().find(|(k, _)| k == cle).map(|(_, v)| v), _ => None }
     }
 }
 
+impl Valeur {
+    /// Éléments d'un tableau, quelle que soit sa forme d'encodage (un trou devient `Indefini`) ; None si ce n'est pas un tableau.
+    #[must_use]
+    pub fn elements(&self) -> Option<Vec<Valeur>> {
+        Some(match self {
+            Valeur::Tableau(t) => t.iter().map(|e| e.clone().unwrap_or(Valeur::Indefini)).collect(),
+            Valeur::Nombres(t) => t.iter().map(|&x| Valeur::Nombre(x)).collect(),
+            Valeur::Booleens(t) => t.iter().map(|&b| Valeur::Booleen(b)).collect(),
+            Valeur::Bloc { k, donnees } => donnees.chunks_exact(*k as usize).map(|c| Valeur::Nombres(c.to_vec())).collect(),
+            _ => return None,
+        })
+    }
+}
+
+impl Valeur {
+    /// Vérité au sens de JS (`if (v)`).
+    #[must_use]
+    pub fn vrai(&self) -> bool {
+        match self {
+            Valeur::Indefini | Valeur::Nul => false,
+            Valeur::Booleen(b) => *b,
+            Valeur::Nombre(x) => !(x.is_nan() || *x == 0.0),
+            Valeur::Chaine(s) => !s.is_empty(),
+            _ => true,
+        }
+    }
+}
+
 #[cfg(test)]
+#[allow(clippy::float_cmp)] // essais d'identité au bit près : la comparaison exacte est le but
 mod essais {
     use super::*;
-    fn aller_retour(v: Valeur) {
-        let t = encoder(&v);
+    fn aller_retour(v: &Valeur) {
+        let t = encoder(v);
         let w = decoder(&t).unwrap();
         assert_eq!(encoder(&w), t);
     }
     #[test]
     fn toutes_les_etiquettes() {
-        aller_retour(Valeur::Objet(vec![
+        aller_retour(&Valeur::Objet(vec![
             ("a".into(), Valeur::Indefini), ("b".into(), Valeur::Nul), ("c".into(), Valeur::Booleen(true)),
             ("d".into(), Valeur::Nombre(-0.0)), ("e".into(), Valeur::Chaine("é💥".into())),
             ("f".into(), Valeur::Tableau(vec![None, Some(Valeur::Nombre(f64::NAN)), Some(Valeur::Tableau(vec![]))])),
@@ -220,31 +293,5 @@ mod essais {
         assert!(decoder(&[0x56, 0x42, 0x41, 0x01, 0x07]).is_err()); // trou hors tableau
         assert!(decoder(&[0x56, 0x42, 0x41, 0x01, 0x00, 0x00]).is_err()); // octets en trop
         assert!(decoder(&[0x56, 0x42, 0x41, 0x01, 0x0B, 1, 0, 0, 0, 2]).is_err());
-    }
-}
-
-impl Valeur {
-    /// Éléments d'un tableau, quelle que soit sa forme d'encodage (un trou devient `Indefini`) ; None si ce n'est pas un tableau.
-    pub fn elements(&self) -> Option<Vec<Valeur>> {
-        Some(match self {
-            Valeur::Tableau(t) => t.iter().map(|e| e.clone().unwrap_or(Valeur::Indefini)).collect(),
-            Valeur::Nombres(t) => t.iter().map(|&x| Valeur::Nombre(x)).collect(),
-            Valeur::Booleens(t) => t.iter().map(|&b| Valeur::Booleen(b)).collect(),
-            Valeur::Bloc { k, donnees } => donnees.chunks_exact(*k as usize).map(|c| Valeur::Nombres(c.to_vec())).collect(),
-            _ => return None,
-        })
-    }
-}
-
-impl Valeur {
-    /// Vérité au sens de JS (`if (v)`).
-    pub fn vrai(&self) -> bool {
-        match self {
-            Valeur::Indefini | Valeur::Nul => false,
-            Valeur::Booleen(b) => *b,
-            Valeur::Nombre(x) => !(x.is_nan() || *x == 0.0),
-            Valeur::Chaine(s) => !s.is_empty(),
-            _ => true,
-        }
     }
 }
