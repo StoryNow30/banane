@@ -20,13 +20,14 @@ async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
    const etat=(0,eval)(nav.preparer)(coeur),js=(0,eval)(nav.js),rs=(0,eval)(nav.rs);
    const canon=(ok,v)=>ok?{valeur:v}:{erreur:[v.constructor.name,v.message]};
    const hex=a=>Array.from(new Uint8Array(a),x=>x.toString(16).padStart(2,'0')).join('');
-   window.__banc={coeur,etat,n:0,cas:0,identiques:0,ecarts:[],ms:{js:[],rs:[]},
+   window.__banc={trames:[],coeur,etat,n:0,cas:0,identiques:0,ecarts:[],ms:{js:[],rs:[]},
     async passer(l){const tr=[];for(const c of l){this.n++;let a,r,t0=performance.now();try{a={ok:true,v:js(c.entree,etat)};}catch(e){a={ok:false,v:e};}
       const t1=performance.now();try{r={ok:true,v:rs(c.entree,etat)};}catch(e){r={ok:false,v:e};}const t2=performance.now();
       if(this.n>3){this.ms.js.push(t1-t0);this.ms.rs.push(t2-t1);}this.cas++;
       const e=a.ok!==r.ok?[{chemin:'(racine)',raison:a.ok?'JS rend, Rust lève : '+r.v.message:'JS lève ('+a.v.message+'), Rust rend'}]:Ch064Comparer.comparer(a.v,r.v);
       if(!e.length)this.identiques++;else if(this.ecarts.length<20)this.ecarts.push({cas:c.id,ecarts:e.slice(0,5)});
-      const t=[a,r].map(x=>{try{return ArianeVba.encoder(canon(x.ok,x.v));}catch(z){return new TextEncoder().encode('non encodable : '+z.message);}});tr.push(t);}
+      const t=[a,r].map(x=>{try{return ArianeVba.encoder(canon(x.ok,x.v));}catch(z){return new TextEncoder().encode('non encodable : '+z.message);}});tr.push(t);
+      if(!e.length&&(t[0].length!==t[1].length||t[0].some((v,i)=>v!==t[1][i]))&&this.trames.length<10)this.trames.push({cas:c.id,js:Array.from(t[0].slice(0,400)),rs:Array.from(t[1].slice(0,400)),nJs:t[0].length,nRs:t[1].length});}
      const out=[];for(const [x,y] of tr)out.push([hex(await crypto.subtle.digest('SHA-256',x)),hex(await crypto.subtle.digest('SHA-256',y))]);return out;}};
    return navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0];},[octets.toString('base64'),nav]);
   const h={js:crypto.createHash('sha256'),rs:crypto.createHash('sha256')};let tampon=[],n=0;
@@ -34,7 +35,7 @@ async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
   for(const c of adaptateur.cas({})){if(n++>=limite)break;tampon.push(c);if(tampon.length>=lot)await vider();}
   await vider();
   const r=await p.evaluate(nav=>{const b=window.__banc,q=(a,x)=>{if(!a.length)return null;const s=a.slice().sort((u,v)=>u-v);return s[Math.min(s.length-1,Math.floor(x*s.length))];};
-   return {cas:b.cas,identiques:b.identiques,ecarts:b.ecarts,temps:{jsMediane:q(b.ms.js,.5),jsP95:q(b.ms.js,.95),rsMediane:q(b.ms.rs,.5),rsP95:q(b.ms.rs,.95)},
+   return {tramesDifferentes:b.trames,cas:b.cas,identiques:b.identiques,ecarts:b.ecarts,temps:{jsMediane:q(b.ms.js,.5),jsP95:q(b.ms.js,.95),rsMediane:q(b.ms.rs,.5),rsP95:q(b.ms.rs,.95)},
     memoireCoeur:b.coeur.etat(),tasJsOctets:performance.memory?performance.memory.usedJSHeapSize:null,bilanAdaptateur:(0,eval)(nav.bilan)(b.etat)};},nav);
   const empreintes={js:h.js.digest('hex'),rs:h.rs.digest('hex')};
   return {format:'ch064-parite-v1',moteur:'chromium',module:adaptateur.nom,navigateur:ua,...r,empreintes,verdict:r.cas>0&&r.identiques===r.cas&&empreintes.js===empreintes.rs?'IDENTIQUE':'ÉCART'};

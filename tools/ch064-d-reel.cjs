@@ -122,6 +122,10 @@ function*cas(modules,{max=Infinity}={}){
    if(c?.rails?.left&&c?.rails?.right&&ev.reel){const ini={left:c.rails.left.positionSceneRelative,right:c.rails.right.positionSceneRelative};
     let fin;try{fin={left:depuisEcart(c.rails.left,{lat:(ev.reel.deplacementMm??0.4),vert:0.3}),right:depuisEcart(c.rails.right,{lat:-(ev.reel.deplacementMm??0.4)/2,vert:-0.2})};}catch{fin=null;}
     yield {id:'reel-rm-resumer-'+(k++),module:'reglesMetier',f:'resumer',args:[{identity:ev.identity,decision:{stage:ev.reel.stage,reason:k%5?null:'no-anchor'},action:ev.reel.action,valide:ev.aurait==='valider'?true:ev.aurait==='deja-differe'?false:undefined,surface:ev.surface,initiale:ini,finale:fin}]};}}}
+ if(veut('shadow')){
+  /* Science GCV1 sur les nuages réels complets ; un sur cinq avec réservoir (H1, H2 de la GCV2). */
+  const {nuages}=require('./ch064-nuages.cjs');let k=0;
+  for(const c of nuages(max)){k++;yield {id:'reel-gcv1-p'+c.identity?.part+'-c'+c.identity?.cut,module:'shadow',f:k%5?'scientificProposeBoth':'scientificProposeBothAvecReservoir',args:[c]};}}
  if(veut('reglesMetier')||veut('crossing')){
   /* Nuages réels complets (points compris) : surface au ras, rails de plus, lecture de l'ornière. */
   const {nuages}=require('./ch064-nuages.cjs');let k=0;

@@ -21,7 +21,25 @@ pub fn nul() -> V { V::Nul }
 pub fn n_ou_nul(x: Option<f64>) -> V { x.map_or(V::Nul, V::Nombre) }
 /// Tableau dense.
 pub fn tab(v: Vec<V>) -> V { V::Tableau(v.into_iter().map(Some).collect()) }
-pub fn tab_n(v: &[f64]) -> V { V::Tableau(v.iter().map(|&x| Some(V::Nombre(x))).collect()) }
+/// Tableau de nombres, sous sa forme canonique VBA (`Nombres` ; vide : `Tableau`) : celle qu'attendent les crates de géométrie.
+pub fn tab_n(v: &[f64]) -> V { if v.is_empty() { V::Tableau(vec![]) } else { V::Nombres(v.to_vec()) } }
+/// Forme canonique VBA d'une valeur (comme l'encodeur de la coquille la produirait) : tableaux denses de nombres → `Nombres`,
+/// de booléens → `Booleens`, de tableaux de k nombres → `Bloc`. À appliquer à toute valeur bâtie ici et passée à ariane-geometrie.
+pub fn canon(v: &V) -> V {
+    match v {
+        V::Objet(e) => V::Objet(e.iter().map(|(k, x)| (k.clone(), canon(x))).collect()),
+        V::Tableau(t) if !t.is_empty() && t.iter().all(|e| matches!(e, Some(V::Nombre(_)))) => V::Nombres(t.iter().map(|e| num(e.as_ref().unwrap()).unwrap()).collect()),
+        V::Tableau(t) if !t.is_empty() && t.iter().all(|e| matches!(e, Some(V::Booleen(_)))) => V::Booleens(t.iter().map(|e| matches!(e, Some(V::Booleen(true)))).collect()),
+        V::Tableau(t) => {
+            let c: Vec<Option<V>> = t.iter().map(|e| e.as_ref().map(canon)).collect();
+            let k = match c.first() { Some(Some(V::Nombres(x))) => x.len(), _ => 0 };
+            if k >= 1 && k <= 255 && c.iter().all(|e| matches!(e, Some(V::Nombres(x)) if x.len() == k)) {
+                V::Bloc { k: k as u8, donnees: c.into_iter().flat_map(|e| if let Some(V::Nombres(x)) = e { x } else { unreachable!() }).collect() }
+            } else { V::Tableau(c) }
+        }
+        x => x.clone(),
+    }
+}
 pub fn tab_s(v: &[&str]) -> V { V::Tableau(v.iter().map(|x| Some(s(x))).collect()) }
 
 /// Objet littéral `{k1:v1, k2:v2…}` : clés posées dans l'ordre, avec la règle des indices.
@@ -359,4 +377,40 @@ pub fn points_xyz(v: &V, sauter: bool) -> R<Vec<Option<[f64; 3]>>> {
         V::Booleens(t) => { if sauter { vec![None; t.len()] } else { return hd("point non tabulaire") } }
         _ => return hd("nuage non tabulaire"),
     })
+}
+
+/// `Number.prototype.toFixed(f)` (0 ≤ f ≤ 20) : n entier le plus proche de x·10^f, à égalité exacte le PLUS GRAND (ECMA-262),
+/// là où Rust arrondit au pair ; x < 0 : « - » puis toFixed(−x) ; |x| ≥ 10²¹ : String(x).
+pub fn to_fixed(x: f64, f: usize) -> String {
+    if x.is_nan() { return "NaN".into(); }
+    if x.abs() >= 1e21 || x.is_infinite() { return nombre_chaine(x); }
+    if x < 0.0 { return format!("-{}", to_fixed(-x, f)); }
+    let x = x + 0.0;
+    let r = format!("{x:.f$}");
+    // égalité exacte : x vaut exactement r ± 0,5·10^−f ; développement exact de x
+    let exact = format!("{x:.1100}");
+    let (ent, frac) = exact.split_once('.').unwrap();
+    let frac = frac.trim_end_matches('0');
+    if frac.len() == f + 1 && frac.ends_with('5') {
+        // milieu exact : prendre le plus grand des deux voisins
+        let bas = format!("{}{}", ent, &frac[..f]);
+        let mut chiffres: Vec<u8> = bas.bytes().map(|c| c - b'0').collect();
+        let mut i = chiffres.len();
+        loop { if i == 0 { chiffres.insert(0, 1); break; } i -= 1; if chiffres[i] == 9 { chiffres[i] = 0; } else { chiffres[i] += 1; break; } }
+        let s_: String = chiffres.iter().map(|c| (c + b'0') as char).collect();
+        let k = s_.len() - f;
+        return if f == 0 { s_ } else { format!("{}.{}", &s_[..k], &s_[k..]) };
+    }
+    r
+}
+#[cfg(test)]
+mod essais_fixed {
+    use super::to_fixed;
+    #[test]
+    fn comme_v8() {
+        for (x, f, t) in [(0.25, 1, "0.3"), (1.45, 1, "1.4"), (1503.5, 0, "1504"), (2.5, 0, "3"), (-2.5, 0, "-3"), (-0.0, 1, "0.0"), (1564.04999, 1, "1564.0"),
+            (9.95, 1, "9.9"), (99.75, 1, "99.8"), (0.0, 1, "0.0"), (-0.04, 1, "-0.0"), (1e21, 1, "1e+21")] {
+            assert_eq!(to_fixed(x, f), t, "{x}");
+        }
+    }
 }
