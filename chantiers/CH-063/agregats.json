@@ -1,0 +1,1283 @@
+{
+ "format": "ariane-ch063-agregats-v1",
+ "outil": "tools/ch063-niveau-detail.cjs (piste 2) ; tools/ch063-attente-reseau.cjs (temps)",
+ "niveauDetail": {
+  "04/11 Constellation 0-4": {
+   "captures": 351,
+   "lisibles": 347,
+   "niveauMax": {
+    "5": 1,
+    "6": 4,
+    "9": 2,
+    "10": 9,
+    "11": 271,
+    "12": 60
+   },
+   "coupes": {
+    "1": {
+     "n": 347,
+     "identiques": 106,
+     "statutChange": 193,
+     "confianceChange": 213,
+     "differentes": 241,
+     "memeStatutSousDemiMm": 110,
+     "memeStatutAu1mmOuPlus": 30,
+     "candidats": 150,
+     "candidatsIdentiques": 2,
+     "mmMemeStatut": {
+      "n": 154,
+      "mediane": 0,
+      "p90": 1.77,
+      "max": 271.9
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.19
+     }
+    },
+    "2": {
+     "n": 347,
+     "identiques": 120,
+     "statutChange": 224,
+     "confianceChange": 203,
+     "differentes": 227,
+     "memeStatutSousDemiMm": 120,
+     "memeStatutAu1mmOuPlus": 3,
+     "candidats": 150,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 123,
+      "mediane": 0,
+      "p90": 0,
+      "max": 2.56
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.04
+     }
+    },
+    "3": {
+     "n": 347,
+     "identiques": 123,
+     "statutChange": 224,
+     "confianceChange": 200,
+     "differentes": 224,
+     "memeStatutSousDemiMm": 123,
+     "memeStatutAu1mmOuPlus": 0,
+     "candidats": 150,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 123,
+      "mediane": 0,
+      "p90": 0,
+      "max": 0
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.01
+     }
+    }
+   }
+  },
+  "04/11 Constellation 0-7 (soir)": {
+   "captures": 919,
+   "lisibles": 909,
+   "niveauMax": {
+    "3": 1,
+    "4": 1,
+    "5": 11,
+    "6": 25,
+    "7": 17,
+    "8": 13,
+    "9": 11,
+    "10": 248,
+    "11": 582
+   },
+   "coupes": {
+    "1": {
+     "n": 909,
+     "identiques": 223,
+     "statutChange": 657,
+     "confianceChange": 657,
+     "differentes": 686,
+     "memeStatutSousDemiMm": 228,
+     "memeStatutAu1mmOuPlus": 14,
+     "candidats": 507,
+     "candidatsIdentiques": 17,
+     "mmMemeStatut": {
+      "n": 252,
+      "mediane": 0,
+      "p90": 0.3,
+      "max": 9.16
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.22
+     }
+    },
+    "2": {
+     "n": 909,
+     "identiques": 198,
+     "statutChange": 709,
+     "confianceChange": 684,
+     "differentes": 711,
+     "memeStatutSousDemiMm": 198,
+     "memeStatutAu1mmOuPlus": 1,
+     "candidats": 507,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 200,
+      "mediane": 0,
+      "p90": 0,
+      "max": 1.64
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.05
+     }
+    },
+    "3": {
+     "n": 909,
+     "identiques": 198,
+     "statutChange": 710,
+     "confianceChange": 684,
+     "differentes": 711,
+     "memeStatutSousDemiMm": 198,
+     "memeStatutAu1mmOuPlus": 1,
+     "candidats": 507,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 199,
+      "mediane": 0,
+      "p90": 0,
+      "max": 1.64
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.01
+     }
+    }
+   }
+  },
+  "04/11 Orbite 6-15": {
+   "captures": 1385,
+   "lisibles": 1020,
+   "niveauMax": {
+    "5": 3,
+    "6": 4,
+    "8": 2,
+    "9": 1,
+    "10": 4,
+    "11": 800,
+    "12": 206
+   },
+   "coupes": {
+    "1": {
+     "n": 1020,
+     "identiques": 182,
+     "statutChange": 676,
+     "confianceChange": 785,
+     "differentes": 838,
+     "memeStatutSousDemiMm": 202,
+     "memeStatutAu1mmOuPlus": 115,
+     "candidats": 616,
+     "candidatsIdentiques": 5,
+     "mmMemeStatut": {
+      "n": 344,
+      "mediane": 0,
+      "p90": 2.5,
+      "max": 78.29
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.2
+     }
+    },
+    "2": {
+     "n": 1020,
+     "identiques": 231,
+     "statutChange": 780,
+     "confianceChange": 750,
+     "differentes": 789,
+     "memeStatutSousDemiMm": 231,
+     "memeStatutAu1mmOuPlus": 9,
+     "candidats": 616,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 240,
+      "mediane": 0,
+      "p90": 0,
+      "max": 3.82
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.05
+     }
+    },
+    "3": {
+     "n": 1020,
+     "identiques": 234,
+     "statutChange": 786,
+     "confianceChange": 747,
+     "differentes": 786,
+     "memeStatutSousDemiMm": 234,
+     "memeStatutAu1mmOuPlus": 0,
+     "candidats": 616,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 234,
+      "mediane": 0,
+      "p90": 0,
+      "max": 0
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.01
+     }
+    }
+   }
+  },
+  "05/11 Constellation 8-12": {
+   "captures": 865,
+   "lisibles": 863,
+   "niveauMax": {
+    "4": 1,
+    "5": 3,
+    "6": 2,
+    "7": 1,
+    "8": 1,
+    "10": 51,
+    "11": 803,
+    "12": 1
+   },
+   "coupes": {
+    "1": {
+     "n": 863,
+     "identiques": 101,
+     "statutChange": 709,
+     "confianceChange": 737,
+     "differentes": 762,
+     "memeStatutSousDemiMm": 110,
+     "memeStatutAu1mmOuPlus": 35,
+     "candidats": 602,
+     "candidatsIdentiques": 23,
+     "mmMemeStatut": {
+      "n": 154,
+      "mediane": 0,
+      "p90": 2.15,
+      "max": 72.33
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.24
+     }
+    },
+    "2": {
+     "n": 863,
+     "identiques": 80,
+     "statutChange": 780,
+     "confianceChange": 764,
+     "differentes": 783,
+     "memeStatutSousDemiMm": 81,
+     "memeStatutAu1mmOuPlus": 2,
+     "candidats": 602,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 83,
+      "mediane": 0,
+      "p90": 0,
+      "max": 2.91
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.06
+     }
+    },
+    "3": {
+     "n": 863,
+     "identiques": 80,
+     "statutChange": 782,
+     "confianceChange": 764,
+     "differentes": 783,
+     "memeStatutSousDemiMm": 81,
+     "memeStatutAu1mmOuPlus": 0,
+     "candidats": 602,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 81,
+      "mediane": 0,
+      "p90": 0,
+      "max": 0
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.01
+     }
+    }
+   }
+  },
+  "total": {
+   "captures": 3520,
+   "lisibles": 3139,
+   "niveauMax": {
+    "3": 1,
+    "4": 2,
+    "5": 18,
+    "6": 35,
+    "7": 18,
+    "8": 16,
+    "9": 14,
+    "10": 312,
+    "11": 2456,
+    "12": 267
+   },
+   "coupes": {
+    "1": {
+     "n": 3139,
+     "identiques": 612,
+     "statutChange": 2235,
+     "confianceChange": 2392,
+     "differentes": 2527,
+     "memeStatutSousDemiMm": 650,
+     "memeStatutAu1mmOuPlus": 194,
+     "candidats": 1875,
+     "candidatsIdentiques": 47,
+     "mmMemeStatut": {
+      "n": 904,
+      "mediane": 0,
+      "p90": 2.04,
+      "max": 271.9
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.23
+     }
+    },
+    "2": {
+     "n": 3139,
+     "identiques": 629,
+     "statutChange": 2493,
+     "confianceChange": 2401,
+     "differentes": 2510,
+     "memeStatutSousDemiMm": 630,
+     "memeStatutAu1mmOuPlus": 15,
+     "candidats": 1875,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 646,
+      "mediane": 0,
+      "p90": 0,
+      "max": 3.82
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.05
+     }
+    },
+    "3": {
+     "n": 3139,
+     "identiques": 635,
+     "statutChange": 2502,
+     "confianceChange": 2395,
+     "differentes": 2504,
+     "memeStatutSousDemiMm": 636,
+     "memeStatutAu1mmOuPlus": 1,
+     "candidats": 1875,
+     "candidatsIdentiques": 0,
+     "mmMemeStatut": {
+      "n": 637,
+      "mediane": 0,
+      "p90": 0,
+      "max": 1.64
+     },
+     "partDesPointsGardes": {
+      "mediane": 0.01
+     }
+    }
+   },
+   "nonLisiblesParStatut": {
+    "partial-multi-view": 381
+   }
+  }
+ },
+ "attente": {
+  "total": {
+   "lot": {
+    "captures": 3570,
+    "captureMs": {
+     "n": 3570,
+     "mediane": 1702,
+     "p90": 4696,
+     "moyenne": 2229,
+     "somme": 7956572
+    },
+    "cutMs": {
+     "n": 3567,
+     "mediane": 3219,
+     "p90": 6608,
+     "moyenne": 3795,
+     "somme": 13537743
+    },
+    "partCaptureDansCut": 58.7,
+    "partsDeLaCapture": {
+     "selection": 5.8,
+     "attente": 85.5,
+     "lecture": 8.3
+    },
+    "partDeLAttenteSansReseau": 43.3,
+    "partDeLAttenteEnVol": 23.8,
+    "enVolSommeS": 1616,
+    "attenteSommeS": 6799,
+    "silenceSommeS": 2944,
+    "captureSommeS": 7957,
+    "parRegle": {
+     "signal": {
+      "rails": 4998,
+      "attenteMs": {
+       "n": 4998,
+       "mediane": 351,
+       "p90": 2276,
+       "moyenne": 823,
+       "somme": 4115212
+      },
+      "silenceApresReseauMs": {
+       "n": 4998,
+       "mediane": 257,
+       "p90": 377,
+       "moyenne": 267,
+       "somme": 1332268
+      },
+      "sansRequete": 2635,
+      "requetes": {
+       "n": 4998,
+       "mediane": 0,
+       "p90": 9,
+       "moyenne": 2,
+       "somme": 11522
+      },
+      "derniereModifNoeudsMs": {
+       "n": 0
+      }
+     },
+     "stabilite": {
+      "rails": 2142,
+      "attenteMs": {
+       "n": 2142,
+       "mediane": 837,
+       "p90": 2334,
+       "moyenne": 1253,
+       "somme": 2683789
+      },
+      "silenceApresReseauMs": {
+       "n": 2142,
+       "mediane": 833,
+       "p90": 1023,
+       "moyenne": 669,
+       "somme": 1432893
+      },
+      "sansRequete": 1318,
+      "requetes": {
+       "n": 2142,
+       "mediane": 0,
+       "p90": 7,
+       "moyenne": 2,
+       "somme": 3729
+      },
+      "derniereModifNoeudsMs": {
+       "n": 0
+      }
+     }
+    },
+    "echecsReseau": 3
+   },
+   "relecture": {
+    "captures": 8443,
+    "captureMs": {
+     "n": 8443,
+     "mediane": 1543,
+     "p90": 4149,
+     "moyenne": 1940,
+     "somme": 16378747
+    },
+    "cutMs": {
+     "n": 8433,
+     "mediane": 1856,
+     "p90": 4804,
+     "moyenne": 2396,
+     "somme": 20202927
+    },
+    "partCaptureDansCut": 80.9,
+    "partsDeLaCapture": {
+     "selection": 5,
+     "attente": 83.9,
+     "lecture": 10.3
+    },
+    "partDeLAttenteSansReseau": 65.2,
+    "partDeLAttenteEnVol": 11.5,
+    "enVolSommeS": 1580,
+    "attenteSommeS": 13736,
+    "silenceSommeS": 8960,
+    "captureSommeS": 16379,
+    "parRegle": {
+     "signal": {
+      "rails": 10366,
+      "attenteMs": {
+       "n": 10366,
+       "mediane": 286,
+       "p90": 1095,
+       "moyenne": 536,
+       "somme": 5554299
+      },
+      "silenceApresReseauMs": {
+       "n": 10366,
+       "mediane": 252,
+       "p90": 370,
+       "moyenne": 264,
+       "somme": 2739435
+      },
+      "sansRequete": 7000,
+      "requetes": {
+       "n": 10366,
+       "mediane": 0,
+       "p90": 3,
+       "moyenne": 1,
+       "somme": 10103
+      },
+      "derniereModifNoeudsMs": {
+       "n": 0
+      }
+     },
+     "stabilite": {
+      "rails": 6520,
+      "attenteMs": {
+       "n": 6520,
+       "mediane": 1026,
+       "p90": 1879,
+       "moyenne": 1255,
+       "somme": 8181526
+      },
+      "silenceApresReseauMs": {
+       "n": 6520,
+       "mediane": 984,
+       "p90": 1139,
+       "moyenne": 946,
+       "somme": 6169182
+      },
+      "sansRequete": 4305,
+      "requetes": {
+       "n": 6520,
+       "mediane": 0,
+       "p90": 3,
+       "moyenne": 1,
+       "somme": 6942
+      },
+      "derniereModifNoeudsMs": {
+       "n": 0
+      }
+     }
+    },
+    "echecsReseau": 5
+   }
+  },
+  "parCollection": {
+   "2026-11-04_v5_constellation-parties-0-4": {
+    "lot": {
+     "captures": 358,
+     "captureMs": {
+      "n": 358,
+      "mediane": 1383,
+      "p90": 5646,
+      "moyenne": 2319,
+      "somme": 830133
+     },
+     "cutMs": {
+      "n": 358,
+      "mediane": 2931,
+      "p90": 7555,
+      "moyenne": 3901,
+      "somme": 1396617
+     },
+     "partCaptureDansCut": 59.4,
+     "partsDeLaCapture": {
+      "selection": 5.1,
+      "attente": 81.4,
+      "lecture": 12.5
+     },
+     "partDeLAttenteSansReseau": 37.3,
+     "partDeLAttenteEnVol": 30.7,
+     "enVolSommeS": 207,
+     "attenteSommeS": 676,
+     "silenceSommeS": 252,
+     "captureSommeS": 830,
+     "parRegle": {
+      "signal": {
+       "rails": 579,
+       "attenteMs": {
+        "n": 579,
+        "mediane": 403,
+        "p90": 1506,
+        "moyenne": 780,
+        "somme": 451899
+       },
+       "silenceApresReseauMs": {
+        "n": 579,
+        "mediane": 299,
+        "p90": 429,
+        "moyenne": 315,
+        "somme": 182565
+       },
+       "sansRequete": 307,
+       "requetes": {
+        "n": 579,
+        "mediane": 0,
+        "p90": 4,
+        "moyenne": 2,
+        "somme": 899
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 137,
+       "attenteMs": {
+        "n": 137,
+        "mediane": 1003,
+        "p90": 3425,
+        "moyenne": 1635,
+        "somme": 223993
+       },
+       "silenceApresReseauMs": {
+        "n": 137,
+        "mediane": 834,
+        "p90": 914,
+        "moyenne": 387,
+        "somme": 53034
+       },
+       "sansRequete": 39,
+       "requetes": {
+        "n": 137,
+        "mediane": 1,
+        "p90": 8,
+        "moyenne": 3,
+        "somme": 399
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 0
+    },
+    "relecture": {
+     "captures": 1016,
+     "captureMs": {
+      "n": 1016,
+      "mediane": 1463,
+      "p90": 4821,
+      "moyenne": 2099,
+      "somme": 2132601
+     },
+     "cutMs": {
+      "n": 1013,
+      "mediane": 2040,
+      "p90": 5555,
+      "moyenne": 2689,
+      "somme": 2723713
+     },
+     "partCaptureDansCut": 78,
+     "partsDeLaCapture": {
+      "selection": 4.5,
+      "attente": 81,
+      "lecture": 13.4
+     },
+     "partDeLAttenteSansReseau": 61.2,
+     "partDeLAttenteEnVol": 10.8,
+     "enVolSommeS": 186,
+     "attenteSommeS": 1728,
+     "silenceSommeS": 1058,
+     "captureSommeS": 2133,
+     "parRegle": {
+      "signal": {
+       "rails": 1401,
+       "attenteMs": {
+        "n": 1401,
+        "mediane": 399,
+        "p90": 1164,
+        "moyenne": 631,
+        "somme": 884277
+       },
+       "silenceApresReseauMs": {
+        "n": 1401,
+        "mediane": 314,
+        "p90": 437,
+        "moyenne": 327,
+        "somme": 457607
+       },
+       "sansRequete": 854,
+       "requetes": {
+        "n": 1401,
+        "mediane": 0,
+        "p90": 3,
+        "moyenne": 1,
+        "somme": 1385
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 631,
+       "attenteMs": {
+        "n": 631,
+        "mediane": 1078,
+        "p90": 2056,
+        "moyenne": 1337,
+        "somme": 843628
+       },
+       "silenceApresReseauMs": {
+        "n": 631,
+        "mediane": 1033,
+        "p90": 1136,
+        "moyenne": 944,
+        "somme": 595973
+       },
+       "sansRequete": 414,
+       "requetes": {
+        "n": 631,
+        "mediane": 0,
+        "p90": 3,
+        "moyenne": 1,
+        "somme": 670
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 1
+    }
+   },
+   "2026-11-04_v5_constellation-parties-0-7-ancien-paquet": {
+    "lot": {
+     "captures": 946,
+     "captureMs": {
+      "n": 946,
+      "mediane": 2579,
+      "p90": 5185,
+      "moyenne": 2709,
+      "somme": 2562288
+     },
+     "cutMs": {
+      "n": 945,
+      "mediane": 3543,
+      "p90": 6357,
+      "moyenne": 3790,
+      "somme": 3581676
+     },
+     "partCaptureDansCut": 71.5,
+     "partsDeLaCapture": {
+      "selection": 4.7,
+      "attente": 89.1,
+      "lecture": 6
+     },
+     "partDeLAttenteSansReseau": 29.2,
+     "partDeLAttenteEnVol": 37,
+     "enVolSommeS": 844,
+     "attenteSommeS": 2282,
+     "silenceSommeS": 667,
+     "captureSommeS": 2562,
+     "parRegle": {
+      "signal": {
+       "rails": 1235,
+       "attenteMs": {
+        "n": 1235,
+        "mediane": 278,
+        "p90": 3087,
+        "moyenne": 1002,
+        "somme": 1237265
+       },
+       "silenceApresReseauMs": {
+        "n": 1235,
+        "mediane": 212,
+        "p90": 294,
+        "moyenne": 219,
+        "somme": 270091
+       },
+       "sansRequete": 679,
+       "requetes": {
+        "n": 1235,
+        "mediane": 0,
+        "p90": 10,
+        "moyenne": 3,
+        "somme": 3381
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 657,
+       "attenteMs": {
+        "n": 657,
+        "mediane": 1040,
+        "p90": 3356,
+        "moyenne": 1591,
+        "somme": 1045062
+       },
+       "silenceApresReseauMs": {
+        "n": 657,
+        "mediane": 836,
+        "p90": 1032,
+        "moyenne": 373,
+        "somme": 245049
+       },
+       "sansRequete": 210,
+       "requetes": {
+        "n": 657,
+        "mediane": 2,
+        "p90": 9,
+        "moyenne": 3,
+        "somme": 2084
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 2
+    },
+    "relecture": {
+     "captures": 2052,
+     "captureMs": {
+      "n": 2052,
+      "mediane": 984,
+      "p90": 4121,
+      "moyenne": 1726,
+      "somme": 3542380
+     },
+     "cutMs": {
+      "n": 2048,
+      "mediane": 1246,
+      "p90": 4370,
+      "moyenne": 2003,
+      "somme": 4101645
+     },
+     "partCaptureDansCut": 86,
+     "partsDeLaCapture": {
+      "selection": 5.6,
+      "attente": 83.6,
+      "lecture": 10.1
+     },
+     "partDeLAttenteSansReseau": 54.1,
+     "partDeLAttenteEnVol": 20.4,
+     "enVolSommeS": 604,
+     "attenteSommeS": 2960,
+     "silenceSommeS": 1602,
+     "captureSommeS": 3542,
+     "parRegle": {
+      "signal": {
+       "rails": 3002,
+       "attenteMs": {
+        "n": 3002,
+        "mediane": 230,
+        "p90": 1058,
+        "moyenne": 486,
+        "somme": 1457685
+       },
+       "silenceApresReseauMs": {
+        "n": 3002,
+        "mediane": 210,
+        "p90": 284,
+        "moyenne": 217,
+        "somme": 652510
+       },
+       "sansRequete": 2211,
+       "requetes": {
+        "n": 3002,
+        "mediane": 0,
+        "p90": 3,
+        "moyenne": 1,
+        "somme": 2648
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 1102,
+       "attenteMs": {
+        "n": 1102,
+        "mediane": 997,
+        "p90": 2406,
+        "moyenne": 1363,
+        "somme": 1502295
+       },
+       "silenceApresReseauMs": {
+        "n": 1102,
+        "mediane": 936,
+        "p90": 1050,
+        "moyenne": 829,
+        "somme": 913012
+       },
+       "sansRequete": 652,
+       "requetes": {
+        "n": 1102,
+        "mediane": 0,
+        "p90": 5,
+        "moyenne": 2,
+        "somme": 1815
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 0
+    }
+   },
+   "2026-11-04_v5_lot-orbite-parties-6-15-et-echo": {
+    "lot": {
+     "captures": 1395,
+     "captureMs": {
+      "n": 1395,
+      "mediane": 1682,
+      "p90": 4360,
+      "moyenne": 1969,
+      "somme": 2746147
+     },
+     "cutMs": {
+      "n": 1395,
+      "mediane": 3409,
+      "p90": 6845,
+      "moyenne": 4056,
+      "somme": 5657587
+     },
+     "partCaptureDansCut": 48.5,
+     "partsDeLaCapture": {
+      "selection": 7.2,
+      "attente": 83.7,
+      "lecture": 8.7
+     },
+     "partDeLAttenteSansReseau": 60.5,
+     "partDeLAttenteEnVol": 14.7,
+     "enVolSommeS": 339,
+     "attenteSommeS": 2299,
+     "silenceSommeS": 1390,
+     "captureSommeS": 2746,
+     "parRegle": {
+      "signal": {
+       "rails": 1744,
+       "attenteMs": {
+        "n": 1744,
+        "mediane": 373,
+        "p90": 1589,
+        "moyenne": 740,
+        "somme": 1290096
+       },
+       "silenceApresReseauMs": {
+        "n": 1744,
+        "mediane": 287,
+        "p90": 429,
+        "moyenne": 300,
+        "somme": 523208
+       },
+       "sansRequete": 927,
+       "requetes": {
+        "n": 1744,
+        "mediane": 0,
+        "p90": 6,
+        "moyenne": 2,
+        "somme": 3252
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 1046,
+       "attenteMs": {
+        "n": 1046,
+        "mediane": 822,
+        "p90": 1104,
+        "moyenne": 964,
+        "somme": 1008820
+       },
+       "silenceApresReseauMs": {
+        "n": 1046,
+        "mediane": 822,
+        "p90": 931,
+        "moyenne": 821,
+        "somme": 858670
+       },
+       "sansRequete": 908,
+       "requetes": {
+        "n": 1046,
+        "mediane": 0,
+        "p90": 1,
+        "moyenne": 1,
+        "somme": 588
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 1
+    },
+    "relecture": {
+     "captures": 3537,
+     "captureMs": {
+      "n": 3537,
+      "mediane": 1698,
+      "p90": 4264,
+      "moyenne": 2128,
+      "somme": 7528151
+     },
+     "cutMs": {
+      "n": 3535,
+      "mediane": 2307,
+      "p90": 5155,
+      "moyenne": 2733,
+      "somme": 9661425
+     },
+     "partCaptureDansCut": 77.9,
+     "partsDeLaCapture": {
+      "selection": 4.8,
+      "attente": 85,
+      "lecture": 9.4
+     },
+     "partDeLAttenteSansReseau": 69.7,
+     "partDeLAttenteEnVol": 9.5,
+     "enVolSommeS": 605,
+     "attenteSommeS": 6398,
+     "silenceSommeS": 4459,
+     "captureSommeS": 7528,
+     "parRegle": {
+      "signal": {
+       "rails": 3583,
+       "attenteMs": {
+        "n": 3583,
+        "mediane": 335,
+        "p90": 1141,
+        "moyenne": 584,
+        "somme": 2093371
+       },
+       "silenceApresReseauMs": {
+        "n": 3583,
+        "mediane": 277,
+        "p90": 405,
+        "moyenne": 291,
+        "somme": 1043799
+       },
+       "sansRequete": 2218,
+       "requetes": {
+        "n": 3583,
+        "mediane": 0,
+        "p90": 3,
+        "moyenne": 1,
+        "somme": 3714
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 3491,
+       "attenteMs": {
+        "n": 3491,
+        "mediane": 1045,
+        "p90": 1823,
+        "moyenne": 1233,
+        "somme": 4304962
+       },
+       "silenceApresReseauMs": {
+        "n": 3491,
+        "mediane": 1006,
+        "p90": 1169,
+        "moyenne": 976,
+        "somme": 3407270
+       },
+       "sansRequete": 2333,
+       "requetes": {
+        "n": 3491,
+        "mediane": 0,
+        "p90": 2,
+        "moyenne": 1,
+        "somme": 3265
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 3
+    }
+   },
+   "2026-11-05_v5_reference-avant-apprentissage": {
+    "lot": {
+     "captures": 871,
+     "captureMs": {
+      "n": 871,
+      "mediane": 1889,
+      "p90": 3977,
+      "moyenne": 2087,
+      "somme": 1818004
+     },
+     "cutMs": {
+      "n": 869,
+      "mediane": 2967,
+      "p90": 5722,
+      "moyenne": 3339,
+      "somme": 2901863
+     },
+     "partCaptureDansCut": 62.6,
+     "partsDeLaCapture": {
+      "selection": 5.6,
+      "attente": 84.8,
+      "lecture": 8.9
+     },
+     "partDeLAttenteSansReseau": 41.2,
+     "partDeLAttenteEnVol": 14.6,
+     "enVolSommeS": 225,
+     "attenteSommeS": 1542,
+     "silenceSommeS": 635,
+     "captureSommeS": 1818,
+     "parRegle": {
+      "signal": {
+       "rails": 1440,
+       "attenteMs": {
+        "n": 1440,
+        "mediane": 329,
+        "p90": 2089,
+        "moyenne": 789,
+        "somme": 1135952
+       },
+       "silenceApresReseauMs": {
+        "n": 1440,
+        "mediane": 244,
+        "p90": 329,
+        "moyenne": 248,
+        "somme": 356404
+       },
+       "sansRequete": 722,
+       "requetes": {
+        "n": 1440,
+        "mediane": 0,
+        "p90": 9,
+        "moyenne": 3,
+        "somme": 3990
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 302,
+       "attenteMs": {
+        "n": 302,
+        "mediane": 999,
+        "p90": 2491,
+        "moyenne": 1344,
+        "somme": 405914
+       },
+       "silenceApresReseauMs": {
+        "n": 302,
+        "mediane": 937,
+        "p90": 1089,
+        "moyenne": 914,
+        "somme": 276139
+       },
+       "sansRequete": 161,
+       "requetes": {
+        "n": 302,
+        "mediane": 0,
+        "p90": 8,
+        "moyenne": 2,
+        "somme": 658
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 0
+    },
+    "relecture": {
+     "captures": 1838,
+     "captureMs": {
+      "n": 1838,
+      "mediane": 1235,
+      "p90": 3899,
+      "moyenne": 1728,
+      "somme": 3175615
+     },
+     "cutMs": {
+      "n": 1837,
+      "mediane": 1546,
+      "p90": 4207,
+      "moyenne": 2023,
+      "somme": 3716144
+     },
+     "partCaptureDansCut": 85.4,
+     "partsDeLaCapture": {
+      "selection": 5.2,
+      "attente": 83.4,
+      "lecture": 10.4
+     },
+     "partDeLAttenteSansReseau": 69.5,
+     "partDeLAttenteEnVol": 7,
+     "enVolSommeS": 185,
+     "attenteSommeS": 2650,
+     "silenceSommeS": 1841,
+     "captureSommeS": 3176,
+     "parRegle": {
+      "signal": {
+       "rails": 2380,
+       "attenteMs": {
+        "n": 2380,
+        "mediane": 259,
+        "p90": 974,
+        "moyenne": 470,
+        "somme": 1118966
+       },
+       "silenceApresReseauMs": {
+        "n": 2380,
+        "mediane": 243,
+        "p90": 315,
+        "moyenne": 246,
+        "somme": 585519
+       },
+       "sansRequete": 1717,
+       "requetes": {
+        "n": 2380,
+        "mediane": 0,
+        "p90": 3,
+        "moyenne": 1,
+        "somme": 2356
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      },
+      "stabilite": {
+       "rails": 1296,
+       "attenteMs": {
+        "n": 1296,
+        "mediane": 991,
+        "p90": 1734,
+        "moyenne": 1181,
+        "somme": 1530641
+       },
+       "silenceApresReseauMs": {
+        "n": 1296,
+        "mediane": 979,
+        "p90": 1085,
+        "moyenne": 967,
+        "somme": 1252928
+       },
+       "sansRequete": 906,
+       "requetes": {
+        "n": 1296,
+        "mediane": 0,
+        "p90": 2,
+        "moyenne": 1,
+        "somme": 1192
+       },
+       "derniereModifNoeudsMs": {
+        "n": 0
+       }
+      }
+     },
+     "echecsReseau": 1
+    }
+   }
+  }
+ }
+}
