@@ -27,6 +27,7 @@ etape('construction WASM',()=>{const w=require('./ch064-construire.cjs').constru
 etape('sonde numérique (Node, Chromium)',()=>{const o=JSON.parse(lancer('node',['tools/ch064-sonde-math.cjs','--tirages','50000','--chromium']));
  const mauvais=[];for(const [m,d] of [['node',o.divergences],['chromium',o.chromium.divergences]])for(const k in d)if(k.startsWith('js_')&&d[k]!==0)mauvais.push(m+':'+k+'='+d[k]);
  if(mauvais.length)throw Error('portage divergent : '+mauvais.join(', '));return {node:o.moteur,chromium:o.chromium.moteur};});
+etape('essais de la coquille (audit, PR n° 25)',()=>{const o=lancer('node',['--test','tools/ch064-essais-coquille.cjs']);const m=o.match(/# pass (\d+)/);return (m?m[1]:'?')+' essais';});
 etape('banc témoin et contrôle négatif',()=>{const P=require('./ch064-parite.cjs'),C=require('../ariane-rs/coquille/coeur.js'),w=require('./ch064-construire.cjs').construire({silencieux:true});
  const coeur=C.creer(fs.readFileSync(w)),t=require('../ariane-rs/parite/temoin.cjs');
  const bon=P.executer(t,coeur);if(bon.verdict!=='IDENTIQUE')throw Error('témoin : '+JSON.stringify(bon.ecarts));

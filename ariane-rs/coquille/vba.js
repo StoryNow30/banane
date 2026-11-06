@@ -3,7 +3,7 @@
  * Refus explicites (TypeError « VBA : … ») plutôt qu'altération silencieuse. */
 (function(root,factory){const api=factory();if(typeof module==='object')module.exports=api;else root.ArianeVba=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const ENTETE=[0x56,0x42,0x41,0x01],PROFONDEUR_MAX=512,te=new TextEncoder(),td=new TextDecoder('utf-8',{fatal:true});
+ const ENTETE=[0x56,0x42,0x41,0x01],PROFONDEUR_MAX=512,te=new TextEncoder(),td=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true});
  const refus=m=>{throw new TypeError('VBA : '+m);};
  const bienForme=typeof String.prototype.isWellFormed==='function'?s=>s.isWellFormed():s=>!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(s);
  const PROTO_OBJ=Object.prototype;
@@ -25,6 +25,8 @@
   if(typeof t==='boolean'){for(let i=1;i<n;i++)if(typeof a[i]!=='boolean')return [0x06];return [0x0B];}
   if(Array.isArray(t)){const k=t.length;if(k<1||k>255)return [0x06];
    for(let i=0;i<n;i++){const r=a[i];if(!Array.isArray(r)||r.length!==k)return [0x06];for(let j=0;j<k;j++)if(typeof r[j]!=='number')return [0x06];}
+   // une ligne qui porte une propriété en plus (a[0].extra) perdrait celle-ci dans le bloc : chemin général
+   for(let i=0;i<n;i++)if(clesEnPlus(a[i],k))return [0x06];
    return [0x09,k];}
   return [0x06];
  }
@@ -82,7 +84,9 @@
     case 0x05:return chaine();
     case 0x06:{const n=u32(),a=new Array(n);for(let i=0;i<n;i++){if(p<fin&&o[p]===0x07){p++;continue;}a[i]=valeur(prof+1,true);}return a;}
     case 0x07:refus(dansTableau?'trou mal placé':'trou hors tableau');
-    case 0x08:{const n=u32(),r={};for(let i=0;i<n;i++){const c=chaine();r[c]=valeur(prof+1,false);}return r;}
+    case 0x08:{const n=u32(),r={};for(let i=0;i<n;i++){const c=chaine(),v=valeur(prof+1,false);
+     // « __proto__ » est une clé propre (JSON.parse en crée) : l'affecter appellerait le setter hérité et changerait le prototype
+     if(c==='__proto__')Object.defineProperty(r,c,{value:v,writable:true,enumerable:true,configurable:true});else r[c]=v;}return r;}
     case 0x09:{const n=u32();reste(1);const k=o[p++];if(!n||!k)refus('bloc vide');bourrage();reste(n*k*8);
      const a=new Array(n);let vue=null;if(((base+p)&7)===0)vue=new Float64Array(o.buffer,base+p,n*k);
      for(let i=0;i<n;i++){const r=new Array(k);for(let j=0;j<k;j++)r[j]=vue?vue[i*k+j]:dv.getFloat64(p+(i*k+j)*8,true);a[i]=r;}p+=n*k*8;return a;}

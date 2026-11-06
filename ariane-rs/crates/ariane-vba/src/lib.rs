@@ -118,7 +118,9 @@ impl<'a> Lecteur<'a> {
                 let k = self.octet()?;
                 if k == 0 || n == 0 { return err("bloc vide"); }
                 self.bourrage()?;
-                Valeur::Bloc { k, donnees: self.nombres(n * k as usize)? }
+                // n × k peut déborder sur 32 bits (WASM) avant tout contrôle de longueur : produit vérifié
+                let Some(total) = n.checked_mul(usize::from(k)) else { return err("longueur invalide") };
+                Valeur::Bloc { k, donnees: self.nombres(total)? }
             }
             0x0A => {
                 let n = self.u32()?;
@@ -286,6 +288,13 @@ mod essais {
         let t = encoder(&Valeur::Tableau(vec![Some(Valeur::Chaine("x".into())), Some(Valeur::Nombres(vec![1.0]))]));
         // en-tête 4, 06, n 4, 05, l 4, 'x', 0A, n 4 → 19 octets, bourrage jusqu'à 24, puis 8 octets
         assert_eq!(t.len(), 32);
+    }
+    #[test]
+    fn bloc_qui_deborde() {
+        // n = 0x8000_0001, k = 2 : le produit dépasse 32 bits ; la trame doit être refusée, jamais lue tronquée
+        let mut t = vec![0x56, 0x42, 0x41, 0x01, 0x09, 0x01, 0x00, 0x00, 0x80, 0x02, 0, 0, 0, 0, 0, 0];
+        t.extend_from_slice(&[0u8; 16]);
+        assert!(decoder(&t).is_err());
     }
     #[test]
     fn refus() {

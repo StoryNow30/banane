@@ -38,7 +38,7 @@
    }
   ]
  },
- "vuesComparees": 62,
+ "vuesComparees": 64,
  "commandes": {
   "js": 13,
   "wasm": 13,
@@ -53,10 +53,7 @@
   "evenements.correction-liste@-",
   "evenements.correction-couverture@-"
  ],
- "differencesJsContreWasm": [
-  "evenements.correction-liste@-",
-  "evenements.correction-couverture@-"
- ],
+ "differencesJsContreWasm": [],
  "imputablesAuCoeur": {},
  "compteursWasm": {
   "coeur": {
@@ -85,11 +82,11 @@
  },
  "dureeLotMs": {
   "js": [
-   12158,
-   14955,
-   12633
+   12656,
+   13201,
+   12245
   ],
-  "wasm": 12442
+  "wasm": 12655
  },
  "erreurs": {
   "js": [],
