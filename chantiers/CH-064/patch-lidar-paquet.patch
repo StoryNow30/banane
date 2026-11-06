@@ -133,10 +133,10 @@ index c77c087..8fce740 100644
 +  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
  });
 diff --git a/tests/pose-lot-inchanges-4959.test.cjs b/tests/pose-lot-inchanges-4959.test.cjs
-index f4d0a35..5184ca4 100644
+index 346b03f..ba8c6ce 100644
 --- a/tests/pose-lot-inchanges-4959.test.cjs
 +++ b/tests/pose-lot-inchanges-4959.test.cjs
-@@ -104,6 +104,16 @@ const sansD284=t=>t
+@@ -108,6 +108,16 @@ const sansD284=t=>t
   .replace(/\n  \/\* D-284 : trou de 1 à[\s\S]*?\}\}\}/,'')
   .replace("(p.zone||ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))","(ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))")
   .replace("'ecartement','trou']),","'ecartement']),");
@@ -153,7 +153,7 @@ index f4d0a35..5184ca4 100644
  test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
   const deplaces=[];
   for(const [f,empreinte] of Object.entries(REF.fichiers)){
-@@ -113,7 +123,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
+@@ -117,7 +127,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
   assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
   assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
   assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
@@ -162,7 +162,7 @@ index f4d0a35..5184ca4 100644
  });
  test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
   const base=require('../audit/v4.6.0-engine-baseline.json');
-@@ -124,7 +134,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
+@@ -128,7 +138,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
   for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
   /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
   /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
@@ -171,7 +171,7 @@ index f4d0a35..5184ca4 100644
    .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
    /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
    .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
-@@ -142,7 +152,9 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
+@@ -146,7 +156,9 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  });
  test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
   const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
