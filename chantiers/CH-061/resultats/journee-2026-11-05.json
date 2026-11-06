@@ -1,0 +1,78 @@
+{
+ "source": "journal de lot du 05/11 (banane-data), 1 volume",
+ "lot": {
+  "cuts": 829,
+  "cutMs": {
+   "mediane": 2815.8,
+   "total": 2609612
+  },
+  "captureMs": {
+   "mediane": 1930.9,
+   "total": 1752658
+  },
+  "analyseMs": {
+   "mediane": 211.7,
+   "total": 253698
+  },
+  "facadeGeometrieMs": {
+   "mediane": 73,
+   "total": 90086
+  },
+  "sciencePubliqueMs": {
+   "total": 36762
+  }
+ },
+ "lecture": {
+  "rapide": {
+   "vues": 4867,
+   "msParVue": {
+    "mediane": 190,
+    "p90": 266
+   },
+   "totalMs": 954109,
+   "pointsVisiblesParVue": {
+    "mediane": 494667
+   },
+   "tasPageEsvMo": {
+    "mediane": 598,
+    "max": 1488
+   }
+  },
+  "reference": {
+   "vues": 552,
+   "msParVue": {
+    "mediane": 819,
+    "p90": 1089
+   },
+   "totalMs": 471154,
+   "pointsVisiblesParVue": {
+    "mediane": 491098
+   },
+   "tasPageEsvMo": {
+    "mediane": 596,
+    "max": 1323
+   }
+  }
+ },
+ "relecture": {
+  "cuts": 1835,
+  "dureesMs": {
+   "navigationMs": {
+    "mediane": 21,
+    "total": 53173
+   },
+   "captureMs": {
+    "mediane": 1241,
+    "total": 3203421
+   },
+   "calculMs": {
+    "mediane": 70,
+    "total": 154151
+   },
+   "totalMs": {
+    "mediane": 1537,
+    "total": 3665757
+   }
+  }
+ }
+}

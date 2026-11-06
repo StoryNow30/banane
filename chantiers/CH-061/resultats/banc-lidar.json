@@ -1,0 +1,101 @@
+{
+ "date": "2026-11-06T12:01:06.209Z",
+ "pointsParVue": 505000,
+ "noeuds": 19,
+ "nuages": 8,
+ "repetitions": 5,
+ "variantes": {
+  "origine": {
+   "msParVue": {
+    "mediane": 196.5,
+    "p90": 254.9,
+    "min": 159.9
+   }
+  },
+  "js-reecrit": {
+   "msParVue": {
+    "mediane": 45.3,
+    "p90": 51.8,
+    "min": 36.1
+   }
+  },
+  "wasm": {
+   "msParVue": {
+    "mediane": 18.3,
+    "p90": 22.8,
+    "min": 14.3
+   }
+  },
+  "copieWasm": {
+   "msParVue": {
+    "mediane": 0.8,
+    "p90": 0.9,
+    "min": 0.2
+   }
+  }
+ },
+ "parite": [
+  {
+   "retenus": 9407,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 4830,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 3835,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 15222,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 4633,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 5801,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 4633,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  },
+  {
+   "retenus": 5391,
+   "lus": 505001,
+   "statut": "complete-loaded-roi",
+   "js-reecrit": true,
+   "wasm": true
+  }
+ ],
+ "memoire": {
+  "sceneOctets": 7591391,
+  "captureTasOctets": 578608,
+  "captureJsonOctets": 578103,
+  "pointsRetenus": 5372
+ }
+}

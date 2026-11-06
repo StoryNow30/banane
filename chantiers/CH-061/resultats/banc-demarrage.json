@@ -1,0 +1,14 @@
+{
+ "date": "2026-11-06T12:05:36.079Z",
+ "scripts": 47,
+ "octetsJs": 1480317,
+ "wasmOctets": 133892,
+ "mediane": {
+  "evalScriptsMs": 24.3,
+  "tasScriptsOctets": 2359358,
+  "wasmCompileMs": 6.3,
+  "wasmInstancieMs": 0.1,
+  "wasmMemoireInitialeOctets": 1114112
+ },
+ "essais": 7
+}

@@ -1,0 +1,139 @@
+{
+ "date": "2026-11-06T11:53:16.949Z",
+ "nuages": 300,
+ "points": {
+  "mediane": 6504
+ },
+ "variantes": {
+  "origine": {
+   "instanciationWasmMs": null,
+   "froidMsParNuage": {
+    "mediane": 35.2,
+    "p90": 57.2,
+    "total": 11086.5
+   },
+   "chaudMsParNuage": {
+    "mediane": 34.9,
+    "p90": 58.6,
+    "max": 197.1
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": null,
+   "tasRetenuOctets": 289604
+  },
+  "origine-chrono": {
+   "instanciationWasmMs": null,
+   "froidMsParNuage": {
+    "mediane": 35.3,
+    "p90": 61.1,
+    "total": 11155.7
+   },
+   "chaudMsParNuage": {
+    "mediane": 35.1,
+    "p90": 55.6,
+    "max": 147.9
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": {
+    "froid": 35.3,
+    "chaud": 34.01
+   },
+   "tasRetenuOctets": 301680
+  },
+  "js-reecrit": {
+   "instanciationWasmMs": null,
+   "froidMsParNuage": {
+    "mediane": 36.6,
+    "p90": 59.1,
+    "total": 11192.9
+   },
+   "chaudMsParNuage": {
+    "mediane": 36.1,
+    "p90": 56.7,
+    "max": 191.5
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": {
+    "froid": 35.67,
+    "chaud": 34.97
+   },
+   "tasRetenuOctets": 309184
+  },
+  "js-elague": {
+   "instanciationWasmMs": null,
+   "froidMsParNuage": {
+    "mediane": 9.4,
+    "p90": 14.8,
+    "total": 2954.6
+   },
+   "chaudMsParNuage": {
+    "mediane": 9.4,
+    "p90": 14.1,
+    "max": 29
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": {
+    "froid": 8.16,
+    "chaud": 8.24
+   },
+   "tasRetenuOctets": 305868
+  },
+  "wasm": {
+   "instanciationWasmMs": 4.9,
+   "froidMsParNuage": {
+    "mediane": 24.4,
+    "p90": 40.4,
+    "total": 7279.3
+   },
+   "chaudMsParNuage": {
+    "mediane": 22.4,
+    "p90": 36,
+    "max": 105.8
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": {
+    "froid": 22.42,
+    "chaud": 21.36
+   },
+   "tasRetenuOctets": 286528
+  },
+  "wasm-simd": {
+   "instanciationWasmMs": 6.1,
+   "froidMsParNuage": {
+    "mediane": 22.5,
+    "p90": 32.8,
+    "total": 6528.8
+   },
+   "chaudMsParNuage": {
+    "mediane": 20.4,
+    "p90": 31.6,
+    "max": 77.9
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": {
+    "froid": 20.02,
+    "chaud": 19.09
+   },
+   "tasRetenuOctets": 275440
+  },
+  "wasm-elague": {
+   "instanciationWasmMs": 7.7,
+   "froidMsParNuage": {
+    "mediane": 9.2,
+    "p90": 13.9,
+    "total": 2857.7
+   },
+   "chaudMsParNuage": {
+    "mediane": 8.4,
+    "p90": 13.2,
+    "max": 24.1
+   },
+   "longueurSorties": 750824,
+   "searchMsParNuage": {
+    "froid": 7.56,
+    "chaud": 7.18
+   },
+   "tasRetenuOctets": 283620
+  }
+ }
+}

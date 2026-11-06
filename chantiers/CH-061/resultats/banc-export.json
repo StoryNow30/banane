@@ -1,0 +1,56 @@
+{
+ "date": "2026-11-06T12:03:23.394Z",
+ "journalOctets": 74982266,
+ "v8": {
+  "jsonParseMs": 318.2,
+  "jsonStringifyMs": 596.6,
+  "encodeUtf8Ms": 378.7
+ },
+ "wasm": {
+  "copieEntreeMs": 14.4,
+  "serdeAllerRetourMs": 717.6,
+  "decodeSortieMs": 244.2,
+  "memoireLineaireOctets": 769261568,
+  "totalAvecTraverseeMs": 976.2,
+  "sortieIdentiqueAuStringifyV8": false
+ },
+ "crc32": {
+  "jsMs": 177.1,
+  "wasmMs": 174,
+  "identique": true
+ },
+ "deflate": {
+  "compressionStreamMs": 1097,
+  "compressionStreamOctets": 13818598,
+  "minizNiveau1Ms": 439.7,
+  "minizNiveau1Octets": 21469037,
+  "minizNiveau6Ms": 1826.6,
+  "minizNiveau6Octets": 14056675
+ },
+ "zipWriterMs": 1224.8,
+ "zipWriterApi": [
+  "createZip",
+  "preparer",
+  "coutEntree",
+  "crc32",
+  "nomValide",
+  "compressionDisponible",
+  "STORED",
+  "DEFLATE",
+  "LIMITE_32",
+  "MAX_ENTREES"
+ ],
+ "etat": {
+  "octetsJson": 2106609,
+  "stringifyMs": 13.4,
+  "structuredCloneMs": 7.6,
+  "parseMs": 5.4
+ },
+ "traversee": {
+  "appelVideNs": 5.6,
+  "appelJsVideNs": 2,
+  "copie8MoMs": 0.8,
+  "conversion3500PointsTableauxVersWasmMs": 0,
+  "controle": true
+ }
+}

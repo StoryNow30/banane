@@ -1,0 +1,38 @@
+{
+ "date": "2026-11-06T12:05:05.930Z",
+ "pages": {
+  "libre": "aucune CSP",
+  "strict": "script-src 'self'",
+  "wasm": "script-src 'self' 'wasm-unsafe-eval'"
+ },
+ "csp_mv3_par_defaut": {
+  "serviceWorker": "refuse CompileError: WebAssembly.instantiate(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because neither 'wasm-eval' nor 'unsafe-eval' is an allowed source of script in the following Content Security Policy directive: \"script-src 'self'\".",
+  "libre": {
+   "main": "ok 5",
+   "isole": "ok 5"
+  },
+  "strict": {
+   "main": "refuse CompileError: WebAssembly.instantiate(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self'\".",
+   "isole": "refuse CompileError: WebAssembly.instantiate(): "
+  },
+  "wasm": {
+   "main": "ok 5",
+   "isole": "ok 5"
+  }
+ },
+ "csp_extension_wasm_unsafe_eval": {
+  "serviceWorker": "ok 5",
+  "libre": {
+   "main": "ok 5",
+   "isole": "ok 5"
+  },
+  "strict": {
+   "main": "refuse CompileError: WebAssembly.instantiate(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self'\".",
+   "isole": "refuse CompileError: WebAssembly.instantiate(): "
+  },
+  "wasm": {
+   "main": "ok 5",
+   "isole": "ok 5"
+  }
+ }
+}

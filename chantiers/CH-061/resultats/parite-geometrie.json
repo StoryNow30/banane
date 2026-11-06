@@ -1,0 +1,36 @@
+{
+ "date": "2026-11-06T12:11:42.654Z",
+ "nuages": 865,
+ "rails": 1730,
+ "statuts": {
+  "candidate": 1082,
+  "unresolved": 648
+ },
+ "variantes": {
+  "origine": {
+   "sha256": "5375b86581c0a01ee33921efac744576e5a5fd7e45d0842d567cbefc50d2c0d5",
+   "ecarts": 0,
+   "msNode": 130942
+  },
+  "js-reecrit": {
+   "sha256": "5375b86581c0a01ee33921efac744576e5a5fd7e45d0842d567cbefc50d2c0d5",
+   "ecarts": 0,
+   "msNode": 39351
+  },
+  "js-elague": {
+   "sha256": "5375b86581c0a01ee33921efac744576e5a5fd7e45d0842d567cbefc50d2c0d5",
+   "ecarts": 0,
+   "msNode": 18184
+  },
+  "wasm": {
+   "sha256": "5375b86581c0a01ee33921efac744576e5a5fd7e45d0842d567cbefc50d2c0d5",
+   "ecarts": 0,
+   "msNode": 25493
+  },
+  "wasm-elague": {
+   "sha256": "5375b86581c0a01ee33921efac744576e5a5fd7e45d0842d567cbefc50d2c0d5",
+   "ecarts": 0,
+   "msNode": 16690
+  }
+ }
+}
