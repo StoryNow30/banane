@@ -3429,4 +3429,9 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Contexte : l'opérateur juge que l'intégrateur sous-estime les gains (vitesse, mémoire). CH-061 (avis mesuré) en cours. Premier banc ÉTABLI : géométrie 34,9 ms (JS) contre 22,4 ms (Rust/WASM), 9,4 ms (JS élagué) et 8,4 ms (Rust élagué), poses identiques bit à bit sur 865 nuages.
 - Effet : programme CH-064, par étapes. Espace `ariane-rs/` hors paquet (`tools/package.py` l'exclut). Cœur en Rust/WASM, coquille JS pour les API de Chrome et la page ESV. Parité octet pour octet exigée module par module. Mesure dans Chromium.
 - Le JavaScript reste la seule production : aucun module Rust n'entre dans le paquet sans une décision écrite de l'opérateur, module par module.
-- Le numéro suivant est D-292.
+
+## D-292 — Mauvaises voies du 06/11 : rien ne change, on attend un ou deux lots (opérateur, 06/11)
+- Constat ÉTABLI (lot Constellation du 06/11, parties 13 à 16, paquet 2bc1f56, jugé par l'Écho de l'opérateur) : 1 078 posés, 108 jugés, écart médian 4,35 mm, 7 fautes de plus de 50 mm, toutes de mauvaise voie (latéral 124 à 315 mm) : 15/7260, 15/7423, et la série 16/9266, 9267, 9270, 9271, 9272, au milieu de différés. La garde « après un différé » (en ombre depuis D-288) en aurait différé 3 (7260, 9270, 9271) ; la règle métier « grappe-differes » (en ombre) en signalait 3. Le 05/11 : 0 mauvaise voie sur 229 jugés.
+- Choix proposé : (1) chiffrer une prudence ciblée (cut entouré de différés) ; (2) ne rien changer et attendre. Réponse : « Ne rien changer et attendre un ou deux lots de plus. 108 cuts revus, c'est peu, et choisis par toi, donc peut-être plus souvent dans les endroits difficiles. »
+- Suivi : sur les prochains lots, mauvaises voies, événements `garde-apres-differe-ombre` et règle `grappe-differes` jugés ; séance Écho tirée au sort recommandée (D-285 point 4).
+- Le numéro suivant est D-293.
