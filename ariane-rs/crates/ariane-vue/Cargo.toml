@@ -1,0 +1,17 @@
+[package]
+name = "ariane-vue"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+# rlib : lié par ariane-coeur (patch chantiers/CH-072/ariane-coeur.patch).
+# cdylib : module autonome ariane_vue.wasm, même ABI VBA que le cœur, pour la parité et le temps.
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ariane-js = { path = "../ariane-js" }
+ariane-vba = { path = "../ariane-vba" }
+
+[lints]
+workspace = true
