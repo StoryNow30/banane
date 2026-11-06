@@ -17,12 +17,16 @@
  * maquette ne prouve donc RIEN pour le vrai ESV ; elle prouve la mécanique et l'instrument de preuve. */
 (function(racine,fabrique){const M=fabrique();if(typeof module==='object'&&module.exports)module.exports=M;else racine.BananeLectureDirecte=M;})(typeof self!=='undefined'?self:this,function(){
 'use strict';
-const REGLAGE_DEFAUT=Object.freeze({actif:false,maxRequetesParCut:16,lenteurMs:1000,motif:'/ept-data/'});
+/* `reseau:false` (défaut) : CACHE SEULEMENT (`cache:'only-if-cached'`) — aucune requête ne part si la ressource n'est pas dans le cache HTTP
+ * du navigateur ; elle est comptée « hors cache » et la vue n'est pas déclarée identique. `reseau:true` : relecture par le réseau
+ * (`force-cache`), qui peut ajouter jusqu'à une requête par requête d'ESV : option distincte, coupée, sur décision de l'opérateur. */
+const REGLAGE_DEFAUT=Object.freeze({actif:false,reseau:false,maxRequetesParCut:16,lenteurMs:1000,motif:'/ept-data/'});
 function reglage(v){
   if(v===undefined||v===null)return {ok:true,...REGLAGE_DEFAUT};
   if(typeof v!=='object')return {ok:false,raison:'réglage non objet',...REGLAGE_DEFAUT,actif:false};
   const r={...REGLAGE_DEFAUT,...v};
   if(typeof r.actif!=='boolean')return {ok:false,raison:'actif doit être vrai ou faux',...REGLAGE_DEFAUT,actif:false};
+  if(typeof r.reseau!=='boolean')return {ok:false,raison:'reseau doit être vrai ou faux',...REGLAGE_DEFAUT,actif:false};
   if(!Number.isInteger(r.maxRequetesParCut)||r.maxRequetesParCut<1||r.maxRequetesParCut>64)return {ok:false,raison:'maxRequetesParCut hors de 1..64',...REGLAGE_DEFAUT,actif:false};
   if(!Number.isFinite(r.lenteurMs)||r.lenteurMs<50||r.lenteurMs>10000)return {ok:false,raison:'lenteurMs hors de 50..10000',...REGLAGE_DEFAUT,actif:false};
   if(typeof r.motif!=='string'||!r.motif)return {ok:false,raison:'motif vide',...REGLAGE_DEFAUT,actif:false};
@@ -67,18 +71,26 @@ function creer({fetch,maintenant=()=>Date.now(),reglage:R0,decodeur=null}={}){
     const visibles=tamponsVisibles(viewer).map(a=>Float32Array.from(a));
     const duCut=vues.filter(v=>v.t>=depuisMs),uniques=[...new Set(duCut.map(v=>v.u))];
     vues.length=0;/* les adresses ne survivent pas au cut */
-    const aLire=uniques.slice(0,R.maxRequetesParCut),relus=[],debut=maintenant();let requetes=0,dureeMax=0;
+    const aLire=uniques.slice(0,R.maxRequetesParCut),relus=[],debut=maintenant();let requetes=0,dureeMax=0,dansLeCache=0,horsCache=0;
+    const init=R.reseau?{cache:'force-cache',credentials:'same-origin',method:'GET'}:{cache:'only-if-cached',mode:'same-origin',credentials:'same-origin',method:'GET'};
     for(const u of aLire){const t0=maintenant();let corps;requetes++;propres.set(u,(propres.get(u)||0)+1);while(propres.size>256)propres.delete(propres.keys().next().value);
-      try{const rep=await fetch(u,{cache:'force-cache',credentials:'same-origin',method:'GET'});
+      try{let rep;
+        if(R.reseau)rep=await fetch(u,init);
+        else{try{rep=await fetch(u,init);}catch{rep=null;}
+          /* Absente du cache (erreur réseau ou 504 de `only-if-cached`) : rien n'est parti vers le serveur ; comptée, pas une erreur. */
+          if(!rep||rep.status===504){horsCache++;const k=(propres.get(u)||1)-1;if(k>0)propres.set(u,k);else propres.delete(u);continue;}
+          dansLeCache++;}
         const d=maintenant()-t0;dureeMax=Math.max(dureeMax,d);
         if(!rep||rep.status!==200){arret='erreur-http';break;}
         if(d>R.lenteurMs){arret='lenteur';break;}
         corps=await rep.json();}
       catch{arret=arret||'erreur-reseau';break;}
       try{relus.push(...decodeur(corps));}catch{arret='reponse-illisible';break;}}
-    const base={requetesEsv:duCut.length,ressourcesEsv:uniques.length,requetes,plafond:uniques.length>aLire.length,dureeMs:maintenant()-debut,dureeMaxMs:dureeMax};
+    const base={mode:R.reseau?'reseau':'cache',requetesEsv:duCut.length,ressourcesEsv:uniques.length,requetes,requetesReseau:R.reseau?requetes:0,
+      ...(R.reseau?{}:{dansLeCache,horsCache}),plafond:uniques.length>aLire.length,dureeMs:maintenant()-debut,dureeMaxMs:dureeMax};
     if(arret)return {etat:'arrete',motif:arret,...base};
-    return {etat:'fini',...base,...comparerNoeuds(relus,visibles)};
+    const c=comparerNoeuds(relus,visibles);if(horsCache>0)c.identite=false;
+    return {etat:'fini',...base,...c};
   }
   return {observer,lireEnOmbre,etat:()=>({actif:R.actif,reglageOk:R.ok,arret,adressesRetenues:vues.length})};
 }

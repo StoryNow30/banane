@@ -5,7 +5,8 @@
  *   (1) allumée avec le décodeur de la maquette : après la capture, les nœuds relus sont, au bit près, ceux qu'ESV affiche ; la capture est
  *       celle d'avant (mêmes points) ; Ariane ne demande pas plus de ressources de points qu'ESV n'en a demandé pour le cut ;
  *   (2) première erreur du serveur : arrêt, plus aucune requête d'Ariane aux cuts suivants ;
- *   (3) coupée (défaut du patch) : aucune requête, aucun événement.
+ *   (3) coupée (défaut du patch) : aucune requête, aucun événement ;
+ *   (4) allumée sans l'option réseau (cache seulement, défaut) : aucune requête d'Ariane au serveur (la maquette répond `no-store`).
  * Ne prouve RIEN sur le vrai ESV (format des nœuds non décodé, cache HTTP inconnu).
  *   CHROMIUM=/opt/pw-browsers/chromium node --test --test-timeout=120000 tests/esv-maquette/lecture-directe-ombre.test.cjs */
 const {test,before,after}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs'),os=require('node:os'),cp=require('node:child_process');
@@ -20,7 +21,8 @@ function fichiersPatches(){const d=fs.mkdtempSync(path.join(os.tmpdir(),'ch063-'
 async function ouvrir(reglage,route){
   const env=await N.ouvrir({maquette:{cuts:6,latence:20}}),P=fichiersPatches();
   const ept=[];/* requêtes de points vues par le navigateur, dans l'ordre : { ariane } = émise après une capture */
-  await env.page.route('**/maquette/ept-data/**',async r=>{ept.push(r.request().url());const k=route?route(ept.length):null;if(k)return r.fulfill(k);return r.continue();});
+  /* `route:false` : pas d'interception (elle fausserait `only-if-cached`) ; les requêtes se comptent alors au journal du serveur de la maquette. */
+  if(route!==false)await env.page.route('**/maquette/ept-data/**',async r=>{ept.push(r.request().url());const k=route?route(ept.length):null;if(k)return r.fulfill(k);return r.continue();});
   await env.page.addScriptTag({content:`window.__ombre=[];addEventListener('message',e=>{if(e.data?.kind==='banane5:evt'&&e.data.event?.kind==='lecture-directe-ombre')window.__ombre.push(e.data.event);});`});
   await env.page.addScriptTag({content:`window.__ARIANE_PROPRIETAIRE={id:'essai',version:'0',versionName:'essai'};window.__messages=[];`});
   for(const f of N.PAGE_FILES){let c=f==='src/adapter-page.js'?P.adapter:f==='src/settings.js'?P.settings:N.lire(f);
@@ -37,12 +39,12 @@ async function cutSuivantEtCapture(env,attendreOmbre=true){
   if(attendreOmbre)await env.page.waitForFunction(n=>window.__ombre.length>n,avant,{timeout:5000});else await env.page.waitForTimeout(300);
   return {capture:c.result,ombre:await env.page.evaluate(n=>window.__ombre.slice(n),avant)};}
 
-let A=null,B=null,C=null,premiereA=null;
+let A=null,B=null,C=null,D=null,premiereA=null;
 before(async()=>{if(raison)return;
-  A=await ouvrir({actif:true,decodeur:'maquette'});
-  B=await ouvrir({actif:true,decodeur:'maquette'},n=>n===2?{status:502,body:'{}',contentType:'application/json'}:null);
-  C=await ouvrir({});});
-after(async()=>{for(const x of [A,B,C])if(x)await x.env.fermer();});
+  A=await ouvrir({actif:true,reseau:true,decodeur:'maquette'});
+  B=await ouvrir({actif:true,reseau:true,decodeur:'maquette'},n=>n===2?{status:502,body:'{}',contentType:'application/json'}:null);
+  C=await ouvrir({});D=await ouvrir({actif:true,decodeur:'maquette'},false);});
+after(async()=>{for(const x of [A,B,C,D])if(x)await x.env.fermer();});
 
 test('(1) allumée : nœuds relus identiques au bit près à ceux affichés, capture inchangée, pas plus de requêtes qu\'ESV',opts,async()=>{
   for(let i=0;i<2;i++){const avant=A.ept.length,{capture,ombre}=await cutSuivantEtCapture(A.env);
@@ -66,4 +68,10 @@ test('(3) coupée : aucune requête d\'Ariane, aucun événement, capture faite'
   assert.equal(ombre.length,0);assert.equal(C.ept.length-n,1,'seule la requête d\'ESV');
   assert.deepEqual(capture.pointsSceneRelative,premiereA,'même cut, mêmes points, allumée ou coupée');
 });
-test('aucune erreur de page (hors le 502 voulu du cas 2)',opts,()=>{for(const x of [A,B,C])assert.deepEqual(x.env.erreurs.filter(e=>!(x===B&&/status of 502/.test(e))),[]);});
+test('(4) cache seulement (défaut) : rien dans le cache, aucune requête d\'Ariane au serveur',opts,async()=>{
+  const serveur=async()=>(await (await fetch(D.env.serveur.url+'/maquette/journal')).json()).requetes.filter(r=>r.chemin.includes('/ept-data/')).length;
+  const n=await serveur(),{ombre}=await cutSuivantEtCapture(D.env);
+  assert.equal(await serveur()-n,1,'le serveur ne reçoit que la requête d\'ESV');
+  const o=ombre[0];assert.deepEqual([o.etat,o.mode,o.requetesReseau,o.dansLeCache,o.horsCache,o.identite],['fini','cache',0,0,1,false]);
+});
+test('aucune erreur de page (hors le 502 voulu du cas 2 et le défaut de cache voulu du cas 4)',opts,()=>{for(const x of [A,B,C,D])assert.deepEqual(x.env.erreurs.filter(e=>!(x===B&&/status of 502/.test(e))&&!(x===D&&/ERR_CACHE_MISS/.test(e))),[]);});

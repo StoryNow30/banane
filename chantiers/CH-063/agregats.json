@@ -1279,5 +1279,35 @@
     }
    }
   }
+ },
+ "piste1": {
+  "note": "borne haute : attente − temps en vol (s) ; (ii) = rails lus au signal seulement (le repli traité par CH-062 levier A exclu)",
+  "lot": {
+   "cutsS": 13538,
+   "captures": 3570,
+   "gainTotalS": 5183,
+   "gainSignalS": 3076,
+   "railsSignal": 4998
+  },
+  "relecture": {
+   "cutsS": 20203,
+   "captures": 8443,
+   "gainTotalS": 12156,
+   "gainSignalS": 4700,
+   "railsSignal": 10366
+  },
+  "requetesEptParPartie": {
+   "04/11 Constellation 0-4": 654,
+   "04/11 Constellation 0-7 (soir)": 1199,
+   "04/11 Orbite 6-15": 1101,
+   "05/11 Constellation 8-12": 1707
+  },
+  "requetesEpt": 32407,
+  "parties": 28,
+  "cacheProbable": {
+   "requetesEptChronometrees": 32371,
+   "dansFenetresDureeMaxAu20ms": 719,
+   "lecture": "borne haute des réponses servies par le cache HTTP du navigateur aux requêtes d’ESV (PROBABLE : une réponse du cache dure moins de 20 ms)"
+  }
  }
 }
