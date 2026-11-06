@@ -37,6 +37,7 @@ pub extern "C" fn vba_liberer_resultat() {
 fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
     let r = match fonction {
         0 => Ok(entree), // écho : preuve d'aller-retour du format
+        1 => Ok(Valeur::Nul), // accusé : mesure de la traversée seule
         10 => capture(&entree),
         20 => ariane_geometrie::v46::propose_both(champ(&entree, "capture"), champ(&entree, "options")),
         21 => match champ(&entree, "side") {
@@ -106,19 +107,21 @@ fn capture(e: &Valeur) -> Result<Valeur, Echec> {
     ariane_capture::appeler(f, &a)
 }
 
+/// Point d'appel indépendant de la cible : trame VBA en entrée, trame VBA en sortie (WASM et programme natif).
+pub fn executer(fonction: u32, entree: &[u8]) -> Vec<u8> {
+    let v = match decoder(entree) {
+        Ok(v) => aiguiller(fonction, v),
+        Err(e) => Valeur::Erreur { nom: "TypeError".into(), message: e.0 },
+    };
+    encoder(&v)
+}
+
 /// # Safety
 /// `p` vient de `vba_reserver(n)` et porte `n` octets écrits ; il est libéré ici.
 #[no_mangle]
 pub unsafe extern "C" fn vba_appel(fonction: u32, p: *mut u8, n: usize) -> usize {
     vba_liberer_resultat();
-    let sortie = {
-        let entree = std::slice::from_raw_parts(p, n);
-        let v = match decoder(entree) {
-            Ok(v) => aiguiller(fonction, v),
-            Err(e) => Valeur::Erreur { nom: "TypeError".into(), message: e.0 },
-        };
-        encoder(&v)
-    };
+    let sortie = executer(fonction, std::slice::from_raw_parts(p, n));
     vba_liberer(p, n);
     let q = alloc(disposition(sortie.len()));
     std::ptr::copy_nonoverlapping(sortie.as_ptr(), q, sortie.len());

@@ -167,3 +167,44 @@ mod essais_mediane {
         assert!(mediane(&[-0.0]).is_sign_negative());
     }
 }
+
+// ---------------------------------------------------------------- exp correctement arrondi (cœur natif, option B)
+// Mesuré (CH-064, étape 1 bis) : Math.exp de Chromium 153 est correctement arrondi sur tous les tirages vérifiés ; la
+// bibliothèque du système (glibc) en diffère sur 151 tirages sur 200 000, ce port sur 0 sur 1 200 000. En WASM, l'import
+// JS reste la règle (identique par construction à TOUT moteur) ; ce port ne sert qu'au programme natif.
+#[inline]
+fn two_sum(a: f64, b: f64) -> (f64, f64) { let s = a + b; let bb = s - a; (s, (a - (s - bb)) + (b - bb)) }
+#[inline]
+fn coupe(a: f64) -> (f64, f64) { let c = 134_217_729.0 * a; let h = c - (c - a); (h, a - h) }
+#[inline]
+fn two_prod(a: f64, b: f64) -> (f64, f64) {
+    let p = a * b;
+    let ((ah, al), (bh, bl)) = (coupe(a), coupe(b));
+    (p, ((ah * bh - p) + ah * bl + al * bh) + al * bl)
+}
+#[derive(Clone, Copy)]
+struct Dd(f64, f64);
+impl Dd {
+    fn plus(self, o: Dd) -> Dd { let (s, e) = two_sum(self.0, o.0); let (h, l) = two_sum(s, e + self.1 + o.1); Dd(h, l) }
+    fn fois(self, o: Dd) -> Dd { let (p, e) = two_prod(self.0, o.0); let (h, l) = two_sum(p, e + (self.0 * o.1 + self.1 * o.0)); Dd(h, l) }
+    fn fois_f(self, d: f64) -> Dd { let (p, e) = two_prod(self.0, d); let (h, l) = two_sum(p, e + self.1 * d); Dd(h, l) }
+}
+/// exp correctement arrondi sur [−708 ; 709] (double-double : réduction par ln 2 puis par 2¹⁰, Taylor à 14 termes,
+/// dix carrés) ; au-delà, la bibliothèque du système.
+#[allow(clippy::disallowed_methods)]
+pub fn exp_correctement_arrondi(x: f64) -> f64 {
+    if x.is_nan() { return x; }
+    if !(-708.0..=709.0).contains(&x) { return x.exp(); }
+    const LN2_HI: f64 = f64::from_bits(0x3FE6_2E42_FEFA_39EF);
+    const LN2_LO: f64 = f64::from_bits(0x3C7A_BC9E_3B39_803F);
+    let k = (x / LN2_HI).round();
+    let (p, pe) = two_prod(k, LN2_HI);
+    let (q, qe) = two_prod(k, LN2_LO);
+    let r = Dd(x, 0.0).plus(Dd(-p, -pe)).plus(Dd(-q, -qe));
+    let t = Dd(r.0 / 1024.0, r.1 / 1024.0);
+    let (mut s, mut terme) = (Dd(1.0, 0.0), Dd(1.0, 0.0));
+    for i in 1..=14 { terme = terme.fois(t).fois_f(1.0 / i as f64); s = s.plus(terme); }
+    for _ in 0..10 { s = s.fois(s); }
+    let e = f64::from_bits(((k as i64 + 1023) as u64) << 52);
+    two_sum(s.0 * e, s.1 * e).0
+}

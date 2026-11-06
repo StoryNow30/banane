@@ -8,7 +8,8 @@ pub mod gcv1;
 pub mod convention;
 pub mod jauge;
 
-/// `Math.exp` du moteur JS qui exécute (import WASM) ; en essai natif, la std (les essais natifs ne comparent pas au JS).
+/// `Math.exp` du moteur JS qui exécute (import WASM) ; en natif (programme de l'option B), l'exp correctement arrondi
+/// d'ariane-js, mesuré identique à celui de Chromium 153 (pas à celui de Node 22).
 #[cfg(target_arch = "wasm32")]
 pub fn exp(x: f64) -> f64 {
     #[link(wasm_import_module = "env")]
@@ -16,5 +17,4 @@ pub fn exp(x: f64) -> f64 {
     unsafe { js_exp(x) }
 }
 #[cfg(not(target_arch = "wasm32"))]
-#[allow(clippy::disallowed_methods)]
-pub fn exp(x: f64) -> f64 { x.exp() }
+pub fn exp(x: f64) -> f64 { ariane_js::exp_correctement_arrondi(x) }

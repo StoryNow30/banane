@@ -30,6 +30,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "ariane-hote"
+version = "0.0.0"
+dependencies = [
+ "ariane-coeur",
+]
+
+[[package]]
 name = "ariane-js"
 version = "0.0.0"
 
