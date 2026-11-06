@@ -31,7 +31,7 @@ Banc `tools/ch064-parite.cjs --module decision` (cœur WASM en Node), avec trois
 | voie-b1-ecart, fixtures + 30 variantes | 310 | 310 | 35 |
 | recherche-large, fixtures + 20 variantes | 1 596 | 1 596 | 296 |
 | voie-recentree + voie-b1-ecart (`evaluer` compris), chaîne réelle (300 nuages) + 2 variantes, après correctifs | 15 276 | 15 276 | 684 |
-| recherche-large, réels | RL_CAS | RL_ID | RL_REPLIS |
+| recherche-large, réels (240 nuages : decider dans les trois modes, grille et pics, avec et sans science à réservoir ; reglage, resumer) + 1 variante | 398 | 398 | 72 |
 | **Régression J3** lotDecision (300 nuages réels + 2 variantes), après les deux correctifs | 1 212 | 1 212 | 125 |
 | Correctifs J3 (`tools/ch068-essai-correctifs-j3.cjs`, 83 cas decideCut mutés) : 58 écarts avant (71e1c12), 0 après | 83 | 83 | 43 |
 
