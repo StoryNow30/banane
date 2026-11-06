@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constantes</title>
+<style>
+/*POLICE:atkinson-next*/
+/*POLICE:atkinson-mono*/
+/* Proposition « Constantes » (famille signalétique et design d'information).
+   Logique : le lot se lit comme un moniteur de constantes : une colonne de cinq chiffres alignés, lisibles de loin,
+   chacun avec sa case de score (aucune case = normal, 1 = à regarder, 3 = à agir), comme un score d'alerte précoce.
+   Couleurs (Radix slate, amber, red, indigo) : les chiffres restent à l'encre ; seule la case de score se colore,
+   et elle porte toujours un chiffre. L'indigo ne sert qu'à l'action principale. */
+:root{
+  --scene:#E8E8EC; --fond:#FCFCFD; --fond2:#F9F9FB; --fond3:#F0F0F3; --trait:#D9D9E0; --trait-fort:#8B8D98;
+  --texte:#1C2024; --texte2:#60646C;
+  --action:#3A5BC7; --sur-action:#FFFFFF;
+  --ambre:#FFC53D; --sur-ambre:#21201C; --ambre-doux:#FFF7C2; --ambre-texte:#4F3422; --ambre-trait:#AB6400;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#FEEBEC; --rouge-texte:#641723; --rouge-trait:#CE2C31;
+  --focus:#3A5BC7;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --scene:#000000; --fond:#111113; --fond2:#18191B; --fond3:#212225; --trait:#363A3F; --trait-fort:#696E77;
+  --texte:#EDEEF0; --texte2:#B0B4BA;
+  --action:#3E63DD; --sur-action:#FFFFFF;
+  --ambre:#FFC53D; --sur-ambre:#21201C; --ambre-doux:#302008; --ambre-texte:#FFE7B3; --ambre-trait:#FFC53D;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9; --rouge-trait:#FF9592;
+  --focus:#9EB1FF;
+}}
+:root[data-theme="dark"]{
+  --scene:#000000; --fond:#111113; --fond2:#18191B; --fond3:#212225; --trait:#363A3F; --trait-fort:#696E77;
+  --texte:#EDEEF0; --texte2:#B0B4BA;
+  --action:#3E63DD; --sur-action:#FFFFFF;
+  --ambre:#FFC53D; --sur-ambre:#21201C; --ambre-doux:#302008; --ambre-texte:#FFE7B3; --ambre-trait:#FFC53D;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9; --rouge-trait:#FF9592;
+  --focus:#9EB1FF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Atkinson Hyperlegible Next',system-ui,sans-serif;font-size:16px;line-height:1.4}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);border:1px solid var(--trait);border-radius:10px;display:flex;flex-direction:column}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;border-radius:10px;font-size:14px}
+.notes h2{font-size:20px;margin:0 0 8px}
+.notes h3{font-size:15px;margin:14px 0 4px}
+.notes p,.notes li{margin:0 0 8px}
+.notes ul{padding-left:18px;margin:0}
+
+/* tailles : 13 / 16 / 20 / chiffre (36 à 56) ; rayons : 6 (commandes) et 10 (panneau) */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.mono{font-family:'Atkinson Hyperlegible Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* Bande d'état : le nom de l'état, en mots. */
+.etat{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 16px 10px;border-bottom:2px solid var(--texte)}
+.etat h1{margin:0;font-size:20px;font-weight:700}
+.etat .lia{margin-left:auto;font-size:13px;color:var(--texte2);display:flex;gap:6px;align-items:center}
+.etat p{flex-basis:100%;margin:0;font-size:16px;color:var(--texte2)}
+
+/* La colonne de constantes. */
+.col{list-style:none;margin:0;padding:0 16px}
+.cst{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:end;gap:0 12px;padding:10px 0 8px;border-bottom:1px solid var(--trait)}
+.cst .lib{font-size:16px;font-weight:700;align-self:center;line-height:1.2}
+.cst .lib small{display:block;font-weight:400;font-size:13px;color:var(--texte2)}
+.cst .v{display:flex;align-items:baseline;justify-content:flex-end;gap:6px;white-space:nowrap}
+.cst .chiffre{font-family:'Atkinson Hyperlegible Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-weight:700;font-size:clamp(36px,11cqi,56px);line-height:1;display:inline-flex}
+.cst .unite{font-size:16px;color:var(--texte2);font-weight:400}
+.cst .mot{font-size:20px;font-weight:700}
+.cst.petit .chiffre{font-size:clamp(28px,8cqi,40px)}
+/* un chiffre = une fente : seuls les chiffres qui changent roulent */
+.fente{display:inline-block;overflow:hidden;height:1.05em;line-height:1.05}
+.fente .d{display:inline-block}
+
+/* Case de score : vide = normal ; 1 = à regarder ; 3 = à agir. Toujours un chiffre dedans. */
+.score{width:30px;height:30px;align-self:center;position:relative;display:block}
+.score svg{position:absolute;inset:0;width:30px;height:30px}
+.score .bord{fill:none;stroke:none;stroke-width:2}
+.score .lettre{position:absolute;inset:2px;border-radius:4px;display:flex;align-items:center;justify-content:center;font:700 16px 'Atkinson Hyperlegible Mono',monospace}
+.score.s1 .lettre{background:var(--ambre);color:var(--sur-ambre)}
+.score.s1 .bord{stroke:var(--ambre-trait)}
+.score.s3 .lettre{background:var(--rouge);color:var(--sur-rouge)}
+.score.s3 .bord{stroke:var(--rouge-trait)}
+.champ input{width:6ch;font-family:'Atkinson Hyperlegible Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-weight:700;font-size:clamp(36px,11cqi,56px);line-height:1;color:var(--texte);background:var(--fond2);border:0;border-bottom:3px solid var(--texte);border-radius:6px 6px 0 0;padding:2px 6px;text-align:right}
+.champ input:disabled{background:var(--fond3);border-bottom-style:dashed;color:var(--texte2)}
+
+.reglage{padding:8px 16px 0}
+.inter{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid var(--trait);padding:10px 0;text-align:left;min-height:48px}
+.inter .q{font-weight:700}
+.inter .r{margin-left:auto;display:inline-flex;border:2px solid var(--trait-fort);border-radius:6px;overflow:hidden;font-size:13px;font-weight:700}
+.inter .r span{padding:4px 10px}
+.inter .r span.on{background:var(--texte);color:var(--fond)}
+.nb{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--trait)}
+.nb .q{font-weight:700;margin-right:auto}
+.nb button{width:40px;height:40px;border:2px solid var(--trait-fort);border-radius:6px;background:var(--fond);font-size:20px;font-weight:700}
+.nb .chiffre{font-family:'Atkinson Hyperlegible Mono',monospace;font-size:28px;font-weight:700;min-width:1.5ch;text-align:center}
+
+.callout{margin:12px 16px 0;border-left:6px solid var(--trait-fort);background:var(--fond2);padding:10px 12px;border-radius:0 6px 6px 0}
+.callout p{padding-left:40px}
+.callout.s1{border-left-color:var(--ambre-trait);background:var(--ambre-doux)}
+.callout.s1 *{color:var(--ambre-texte)}
+.callout.s3{border-left-color:var(--rouge-trait);background:var(--rouge-doux)}
+.callout.s3 *{color:var(--rouge-texte)}
+.callout .score.s3 .lettre,.callout .score.s3 .lettre *{color:var(--sur-rouge)}
+.callout .score.s1 .lettre,.callout .score.s1 .lettre *{color:var(--sur-ambre)}
+.callout h2{font-size:16px;margin:0 0 4px;display:flex;gap:10px;align-items:center}
+.callout p{margin:0}
+.callout .choix{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.callout .choix button{text-align:left;background:var(--fond);border:2px solid var(--trait-fort);border-radius:6px;padding:10px 12px;font-weight:700;min-height:44px}
+.callout.s3 .choix button{color:var(--texte)}
+
+/* Table des parties : colonnes de chiffres alignées à droite. */
+.tparties{width:calc(100% - 32px);margin:12px 16px 0;border-collapse:collapse;font-size:16px}
+.tparties caption{text-align:left;font-weight:700;padding-bottom:4px}
+.tparties th{font-size:13px;font-weight:400;color:var(--texte2);text-align:right;padding:4px 0 4px 8px;border-bottom:2px solid var(--texte)}
+.tparties th:first-child,.tparties td:first-child{text-align:left;padding-left:0}
+.tparties td{text-align:right;padding:8px 0 8px 8px;border-bottom:1px solid var(--trait);font-family:'Atkinson Hyperlegible Mono',monospace;font-variant-numeric:tabular-nums}
+.tparties td:first-child{font-family:'Atkinson Hyperlegible Next',sans-serif;font-weight:700}
+.tparties tr.courante td{background:var(--fond3)}
+.tparties td.mot{font-family:'Atkinson Hyperlegible Next',sans-serif;color:var(--texte2)}
+
+/* Commandes : toujours au même endroit, en bas. */
+.cmd{position:sticky;bottom:0;margin-top:auto;background:var(--fond);border-top:2px solid var(--texte);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px}
+.b{flex:1 1 100%;min-height:48px;border-radius:6px;font-weight:700;font-size:16px;padding:10px 14px;border:2px solid var(--texte);background:var(--fond);color:var(--texte)}
+.b.principal{background:var(--action);border-color:var(--action);color:var(--sur-action)}
+.b.arret{flex:1 1 30%;border-color:var(--trait-fort)}
+.b.arret.confirme{background:var(--rouge);border-color:var(--rouge);color:var(--sur-rouge)}
+.b[aria-disabled="true"]{background:var(--fond3);color:var(--texte2);border:2px dashed var(--trait-fort);cursor:not-allowed}
+.b small{display:block;font-weight:400;font-size:13px}
+.b.principal small{color:var(--sur-action)}
+.b[aria-disabled="true"] small{color:var(--texte)}
+.cmd .pourquoi{flex-basis:100%;margin:0;font-size:13px;color:var(--texte)}
+.lienrow{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;width:calc(100% - 32px);margin:12px 16px 0;background:none;border:0;border-bottom:1px solid var(--trait);padding:8px 0;text-align:left;min-height:48px}
+.lienrow b{text-decoration:underline;text-underline-offset:3px}
+
+.acti{display:flex;gap:0;margin:12px 16px 4px;border:2px solid var(--trait-fort);border-radius:6px;overflow:hidden}
+.acti button{flex:1;background:var(--fond);border:0;padding:8px 10px;text-align:left;min-height:48px}
+.acti button+button{border-left:2px solid var(--trait-fort)}
+.acti button[aria-pressed="true"]{background:var(--texte);color:var(--fond)}
+.acti button span{display:block;font-size:13px}
+.acti button[aria-pressed="true"] span{color:var(--fond)}
+.acti button[aria-pressed="false"] span{color:var(--texte2)}
+.acti-pourquoi{margin:0 16px 8px;font-size:13px;color:var(--texte2)}
+
+.message{margin:0;flex-basis:100%;min-height:0}
+.message span{display:block;border:2px solid var(--texte);border-radius:6px;padding:8px 12px;font-size:16px;background:var(--fond2)}
+
+.tete{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:2px solid var(--texte)}
+.tete h1{margin:0;font-size:20px}
+.tete .b{flex:0 0 auto;margin-left:auto;min-height:40px}
+.groupe{font-size:16px;margin:16px 16px 0;display:flex;gap:8px;align-items:center}
+.reste{list-style:none;margin:4px 0 0;padding:0 16px}
+.reste li{display:grid;grid-template-columns:5ch minmax(0,1fr);gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--trait)}
+.reste .cut{font-family:'Atkinson Hyperlegible Mono',monospace;font-size:20px;font-weight:700;text-align:right}
+.reste .motif{font-size:13px;color:var(--texte2)}
+.reste .bt{grid-column:2;display:flex;gap:8px;flex-wrap:wrap}
+.reste .bt button{border:2px solid var(--trait-fort);border-radius:6px;background:var(--fond);padding:6px 10px;font-weight:700;font-size:13px;min-height:36px}
+.reste .bt button.e{border-color:var(--action);color:var(--texte)}
+.coupe{display:block;width:calc(100% - 32px);height:auto;margin:12px 16px 0;border:1px solid var(--trait);border-radius:6px;background:var(--fond2)}
+.coupe .pt{fill:var(--texte2)}
+.coupe .prop{stroke:var(--action);stroke-width:2}
+.coupe text{font:13px 'Atkinson Hyperlegible Next',sans-serif;fill:var(--texte)}
+
+@container (min-width:520px){ .b{flex:1 1 40%} .b.arret{flex:0 1 30%} }
+
+@media (prefers-reduced-motion: no-preference){
+  html:not([data-mouvement="reduit"]) .d.change{animation:roule 260ms cubic-bezier(.16,1,.3,1)}
+  html:not([data-mouvement="reduit"]) .score.change{animation:bordure 1200ms ease-in-out}
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .col,
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .etat h1{animation:entree 220ms cubic-bezier(.16,1,.3,1)}
+  html:not([data-mouvement="reduit"]) .message.change span{animation:entree 200ms cubic-bezier(.16,1,.3,1)}
+}
+@keyframes roule{from{transform:translateY(70%);opacity:0}to{transform:none;opacity:1}}
+@keyframes bordure{0%,50%,100%{box-shadow:0 0 0 0 transparent}25%,75%{box-shadow:0 0 0 4px var(--trait-fort)}}
+@keyframes entree{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Constantes"></div></div>
+  <aside class="notes">
+    <h2>Constantes</h2>
+    <p><b>Logique.</b> Le lot se lit comme un moniteur de constantes : une colonne de cinq chiffres alignés, lisibles de loin, chacun avec une case de score.</p>
+    <h3>D'où ça vient</h3>
+    <ul>
+      <li>Scores d'alerte précoce à l'hôpital (article « Early warning systems ») : chaque constante reçoit un score selon son écart à la normale ; une observation normale vaut 0 ; on ne garde que les constantes utiles, car les autres diluent.</li>
+      <li>Atkinson Hyperlegible Next et Mono (Braille Institute) : 1, l et I distincts, 0 et O distincts, 8 et B distincts ; la version Mono est faite pour être parcourue en colonne.</li>
+      <li>swiftpieces, catégorie « Data and charts », pièce Odometer (fichier Odometer.mdx et Odometer.swift) : chaque chiffre dans sa fente, seuls les chiffres qui changent bougent, sans rebond ; en mouvement réduit, le chiffre change sur place.</li>
+      <li>beui.dev, Number Animation (Digit Swap) et Motion Guides : entrée ease-out sous 300 ms, mouvement réduit = opacité gardée, course retirée.</li>
+      <li>Laws of UX : mémoire de travail (4 à 7 blocs, d'où cinq constantes au plus) ; loi de Fitts (commandes larges, toujours au même endroit).</li>
+      <li>Radix Colors : slate pour le neutre, amber et red pour les scores, indigo pour l'action principale.</li>
+    </ul>
+    <h3>Ce que ça veut dire ici</h3>
+    <ul>
+      <li><b>Pas de case</b> : constante normale (une case vide se lirait comme une case à cocher). <b>Case ambre « 1 »</b> : à regarder. <b>Case rouge « 3 »</b> : à agir. Le chiffre dans la case suffit sans couleur.</li>
+      <li>Les chiffres restent à l'encre : la couleur ne touche jamais une valeur, seulement sa case.</li>
+      <li>« Total inconnu » et « temps inconnu » s'écrivent en mots : aucun chiffre deviné.</li>
+      <li>Les commandes sont toujours en bas, à la même place, quel que soit l'état.</li>
+      <li><b>Mouvement</b> : un chiffre qui change roule depuis le bas en 0,26 s ; une case qui prend un score fait deux pulsations de bordure ; un changement d'état fait entrer la colonne en 0,22 s. En mouvement réduit : les chiffres changent sur place.</li>
+    </ul>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const MOTS_SCORE = ['normal', 'à regarder', 'à agir'];
+
+  /* Un nombre en fentes : chaque chiffre a sa clé (constante + rang depuis la droite), donc seul celui qui change roule. */
+  function fentes(cle, valeur) {
+    const t = String(valeur);
+    const chars = [...t];
+    return `<span class="sr">${esc(t)}</span><span class="chiffre" aria-hidden="true">` + chars.map((ch, i) => `<span class="fente"><span class="d" data-valeur="${cle}-${chars.length - i}">${esc(ch)}</span></span>`).join('') + '</span>';
+  }
+  function score(s, cle) {
+    const k = s === 2 ? 3 : s;
+    return `<span class="score s${k}"${cle ? ` data-valeur="score-${cle}"` : ''} title="${MOTS_SCORE[s]}"><span class="lettre"><span class="sr">score : </span>${k ? k : ''}<span class="sr"> (${MOTS_SCORE[s]})</span></span><svg viewBox="0 0 30 30" aria-hidden="true"><rect class="bord"${s ? ` data-forme="score ${MOTS_SCORE[s]}"` : ''} x="1" y="1" width="28" height="28" rx="5"/></svg></span>`;
+  }
+  /* Une constante : score, libellé (+ précision), valeur (chiffres ou mot), unité. */
+  function cst(o) {
+    const val = o.num != null ? fentes(o.cle, o.num) : `<span class="mot">${esc(o.mot)}</span>`;
+    return `<li class="cst${o.petit ? ' petit' : ''}">${score(o.s || 0, o.cle)}<span class="lib">${esc(o.lib)}${o.pre ? `<small>${esc(o.pre)}</small>` : ''}</span><span class="v">${val}${o.unite ? `<span class="unite">${esc(o.unite)}</span>` : ''}</span></li>`;
+  }
+
+  function bouton(x) {
+    const cls = 'b ' + (x.rang || 'second') + (x.confirme ? ' confirme' : '');
+    return `<button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>`;
+  }
+
+  function bande(m, titre, phrase) {
+    const l = m.liaison;
+    return `<header class="etat"><h1>${esc(titre)}</h1><span class="lia">${esc(l.texte)}</span>${phrase ? `<p>${esc(phrase)}</p>` : ''}</header>`;
+  }
+
+  function colonne(m) {
+    const c = m.compte, f = m.file, enMarche = m.phase === 'encours' || m.phase === 'pause';
+    const nd = Demo.D.differes().length, nv = Demo.D.verts().length;
+    const L = [];
+    if (m.phase === 'pret') {
+      const fin = m.bornes.finDePartie;
+      return `<ul class="col">
+        <li class="cst">${score(0)}<label class="lib" for="c-debut">Premier cut</label><span class="v champ"><input id="c-debut" data-champ="debut" inputmode="numeric" value="${m.bornes.debut}"></span></li>
+        <li class="cst">${score(0)}<label class="lib" for="c-fin">Dernier cut${fin ? '<small>fin de la partie</small>' : ''}</label><span class="v champ"><input id="c-fin" data-champ="fin" inputmode="numeric" value="${fin ? '' : m.bornes.fin}" ${fin ? 'disabled placeholder="fin" aria-label="Dernier cut : fin de la partie"' : ''}></span></li>
+        ${fin ? cst({ cle: 'taille', lib: 'Taille', mot: 'inconnue', pre: 'comptée à la fin' }) : cst({ cle: 'taille', lib: 'Taille', num: m.bornes.fin - m.bornes.debut + 1, unite: 'cuts' })}
+        ${fin ? cst({ cle: 'duree', lib: 'Durée', mot: 'inconnue' }) : cst({ cle: 'duree', lib: 'Durée', pre: 'estimée', num: Math.max(1, Math.round((m.bornes.fin - m.bornes.debut + 1) * 0.075)), unite: 'min' })}
+      </ul>`;
+    }
+    if (f.relecture) {
+      L.push(cst({ cle: 'partie', lib: 'Partie', pre: 'relue et corrigée', num: f.courante, unite: `sur ${f.nb}` }));
+      L.push(cst({ cle: 'suite', lib: 'Ensuite', mot: `partie ${f.courante + 1}`, pre: 'démarre seule' }));
+    } else {
+      L.push(cst({ cle: 'faits', lib: 'Traités', pre: m.phase === 'fin' ? 'lot complet' : c.total == null ? 'total inconnu' : null, num: c.faits, unite: c.total == null ? '' : `sur ${n(c.total)}` }));
+      if (m.phase === 'fin') L.push(cst({ cle: 'poses', lib: 'Posés', num: c.poses }));
+      else L.push(c.minutes == null ? cst({ cle: 'temps', lib: 'Reste', mot: 'inconnu', pre: 'jusqu’à la fin de la partie' }) : cst({ cle: 'temps', lib: 'Reste', pre: 'environ', num: c.minutes < 1 ? '<1' : c.minutes, unite: 'min' }));
+      if (m.phase !== 'fin') L.push(cst({ cle: 'cut', lib: m.phase === 'encours' ? 'Cut en cours' : 'Arrêté au cut', num: c.cut }));
+    }
+    L.push(cst({ cle: 'differes', lib: 'Différés', pre: nd ? (enMarche ? 'à voir après' : 'à traiter') : null, num: nd, s: nd && !enMarche ? 1 : 0, petit: true }));
+    L.push(cst({ cle: 'verts', lib: 'Posés à examiner', pre: nv ? (enMarche ? 'à voir après' : 'à vérifier') : null, num: nv, s: nv && !enMarche ? 1 : 0, petit: true }));
+    return '<ul class="col">' + L.join('') + '</ul>';
+  }
+
+  function reglages(m) {
+    const f = m.file;
+    const oui = (v) => `<span class="r" aria-hidden="true"><span class="${v ? '' : 'on'}">non</span><span class="${v ? 'on' : ''}">oui</span></span>`;
+    return `<div class="reglage">
+      <button class="inter" data-a="finDePartie" aria-pressed="${m.bornes.finDePartie}"><span class="q">Aller jusqu’à la fin de la partie</span>${oui(m.bornes.finDePartie)}</button>
+      <button class="inter" data-a="fileBascule" aria-pressed="${f.active}"><span class="q">File de parties</span>${oui(f.active)}</button>
+      ${f.active ? `<div class="nb" role="group" aria-label="Nombre de parties"><span class="q">Parties à la suite</span><button data-a="fileMoins" aria-label="Une de moins">−</button><span class="chiffre">${f.nb}</span><button data-a="filePlus" aria-label="Une de plus">+</button></div>` : ''}
+    </div>`;
+  }
+
+  function tableParties(m) {
+    const f = m.file;
+    let h = `<table class="tparties"><caption>File : ${f.finie ? `${f.nb} parties faites` : `partie ${f.courante} sur ${f.nb}`}</caption><thead><tr><th scope="col">Partie</th><th scope="col">posés</th><th scope="col">différés</th><th scope="col">à examiner</th></tr></thead><tbody>`;
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i);
+      const cour = !f.finie && i === f.courante;
+      if (p) h += `<tr class="${cour ? 'courante' : ''}"><td>${i}${cour ? ' (relue)' : ''}</td><td>${n(p.poses)}</td><td>${p.differes}</td><td>${p.aControler}</td></tr>`;
+      else h += `<tr class="${cour ? 'courante' : ''}"><td>${i}</td><td class="mot" colspan="3">${cour ? (f.alerte ? 'arrêtée ici' : 'en cours') : 'à venir'}</td></tr>`;
+    }
+    return h + '</tbody></table>';
+  }
+
+  function callouts(m) {
+    let h = '';
+    const i = m.incident;
+    if (i) {
+      const s = i.type === 'reprise' ? 1 : 2;
+      h += `<section class="callout s${s === 2 ? 3 : 1}"><h2>${score(s)}${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((a) => `<button data-a="${a.a}"${a.id ? ` data-id="${esc(a.id)}"` : ''}>${esc(a.libelle)}</button>`).join('')}</div>` : ''}</section>`;
+    }
+    if (m.file.alerte) h += `<section class="callout s3"><h2>${score(2)}${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></section>`;
+    return h;
+  }
+
+  function activite(m) {
+    const o = m.activite === 'orbite', bl = m.activiteBloquee;
+    return `<div class="acti" role="group" aria-label="Activité d'Ariane"><button data-a="orbite" aria-pressed="${o}"${bl && !o ? ' aria-disabled="true"' : ''}>Orbite<span>Ariane pose</span></button><button data-a="echo" aria-pressed="${!o}"${bl ? ' aria-disabled="true"' : ''}>Écho<span>Ariane observe</span></button></div>${bl ? '<p class="acti-pourquoi">Pour passer en Écho, mettre d’abord le lot en pause.</p>' : ''}`;
+  }
+
+  function commandes(m, liste) {
+    const raison = liste.find((a) => a.raison);
+    return `<div class="cmd">${liste.map(bouton).join('')}${raison ? `<p class="pourquoi">${esc(raison.raison)}</p>` : ''}<p class="message" data-valeur="message" role="status">${m.message ? `<span>${esc(m.message)}</span>` : ''}</p></div>`;
+  }
+
+  function coupe(cut) {
+    const k = Demo.D.coupe(cut, 260), W = 320, H = 150;
+    const X = (x) => 10 + (x + 1) / 2 * (W - 20), Z = (z) => H - 24 - (z + 0.5) * (H - 40) / 0.5;
+    return `<svg class="coupe" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut}">${k.pts.map(([x, z]) => `<rect class="pt" x="${X(x).toFixed(1)}" y="${Z(z).toFixed(1)}" width="2" height="2"/>`).join('')}${k.rails.map((r) => `<line class="prop" x1="${X(r)}" x2="${X(r)}" y1="14" y2="${H - 30}"/>`).join('')}<text x="10" y="${H - 8}">traits : position proposée par Ariane</text></svg>`;
+  }
+
+  function vueReste(m) {
+    const ligne = (x) => `<li><span class="cut">${x.cut}</span><span>${esc(x.motif)}</span>
+      <span class="bt"><button class="e" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = Demo.D.differes(), v = Demo.D.verts();
+    let h = `<header class="tete"><h1>Ce qui reste <span class="mono">${m.restants.length}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</header>`;
+    if (!m.restants.length) h += '<p class="groupe">Plus rien n’attend.</p>';
+    if (d.length) h += `<h2 class="groupe">Différés <span class="mono">${d.length}</span></h2><ul class="reste">${d.map(ligne).join('')}</ul>`;
+    if (v.length) h += `<h2 class="groupe">Posés à examiner <span class="mono">${v.length}</span></h2><ul class="reste">${v.map(ligne).join('')}</ul>`;
+    return h + commandes(m, []);
+  }
+
+  function vueExamen(m) {
+    const x = m.examen;
+    return `<header class="tete"><h1>Cut <span class="mono">${x.cut}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</header>
+      <ul class="col">${cst({ cle: 'ex', lib: x.type === 'differe' ? 'Différé' : 'Posé, à examiner', pre: x.motif, num: x.cut, s: 1 })}</ul>${coupe(x.cut)}`
+      + commandes(m, [{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Marquer comme vu', rang: 'second' }]);
+  }
+
+  function vueEcho(m) {
+    const e = m.echo;
+    return bande(m, 'Écho', m.phrase) + `<ul class="col">
+      ${cst({ cle: 'vus', lib: 'Cuts observés', num: e.vus })}
+      ${cst({ cle: 'dernier', lib: 'Dernier cut vu', num: e.dernier == null ? '–' : e.dernier })}
+      ${cst({ cle: 'accord', lib: 'Même choix qu’Ariane', pre: 'elle aurait posé pareil', num: e.accord, unite: `sur ${e.vus}` })}
+    </ul>` + activite(m) + commandes(m, m.actions);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    if (m.vue === 'reste') return vueReste(m);
+    if (m.vue === 'examen' && m.examen) return vueExamen(m);
+    if (m.vue === 'echo') return vueEcho(m);
+    const sansPhrase = (m.phase === 'pret' && m.liaison.etat === 'relie') || (m.phase === 'encours' && !m.file.relecture);
+    let h = bande(m, m.titre, sansPhrase ? null : m.phrase);
+    h += callouts(m);
+    h += colonne(m);
+    if (m.phase === 'pret') h += reglages(m);
+    if (m.file.active && m.phase !== 'pret') h += tableParties(m);
+    const lien = m.actions.find((a) => a.rang === 'lien');
+    if (lien) h += `<button class="lienrow" data-a="${lien.a}">${score(1)}<b>${esc(lien.libelle)}</b><span aria-hidden="true">›</span></button>`;
+    h += activite(m);
+    return h + commandes(m, m.actions.filter((a) => a.rang !== 'lien'));
+  }
+
+  Demo.monter({ rendre });
+})();
+</script>
+</body>
+</html>

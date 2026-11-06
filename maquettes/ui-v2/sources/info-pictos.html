@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pictogrammes du lot</title>
+<style>
+/*POLICE:public-sans*/
+/* Proposition « Pictogrammes du lot » (famille signalétique et design d'information).
+   Logique : un jeu de pictogrammes dessinés pour ce métier, sur une grille de 24, qui tient en noir et blanc.
+   L'unité est la tranche (un cut) : pleine = posé, en contour + chevron = différé, pleine + signet = à examiner.
+   Les quantités se comptent en tranches identiques répétées (méthode Isotype), jamais en signe agrandi.
+   Contenant (grammaire ISO 7010) : carré = information, triangle = attention, cercle plein = à vous d'agir.
+   Couleurs (Radix gray, amber, red) : le pictogramme est à l'encre ; la couleur ne touche que le contenant. */
+:root{
+  --scene:#E8E8E8; --fond:#FCFCFC; --fond2:#F9F9F9; --fond3:#F0F0F0; --trait:#D9D9D9; --trait-fort:#8D8D8D;
+  --texte:#202020; --texte2:#646464; --encre:#202020; --sur-encre:#FCFCFC;
+  --ambre:#FFC53D; --ambre-trait:#AB6400; --sur-ambre:#21201C; --ambre-doux:#FFF7C2; --ambre-texte:#4F3422;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#FEEBEC; --rouge-texte:#641723;
+  --focus:#3A5BC7;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --scene:#000000; --fond:#111111; --fond2:#191919; --fond3:#222222; --trait:#3A3A3A; --trait-fort:#6E6E6E;
+  --texte:#EEEEEE; --texte2:#B4B4B4; --encre:#EEEEEE; --sur-encre:#111111;
+  --ambre:#FFC53D; --ambre-trait:#FFC53D; --sur-ambre:#21201C; --ambre-doux:#302008; --ambre-texte:#FFE7B3;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9;
+  --focus:#9EB1FF;
+}}
+:root[data-theme="dark"]{
+  --scene:#000000; --fond:#111111; --fond2:#191919; --fond3:#222222; --trait:#3A3A3A; --trait-fort:#6E6E6E;
+  --texte:#EEEEEE; --texte2:#B4B4B4; --encre:#EEEEEE; --sur-encre:#111111;
+  --ambre:#FFC53D; --ambre-trait:#FFC53D; --sur-ambre:#21201C; --ambre-doux:#302008; --ambre-texte:#FFE7B3;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9;
+  --focus:#9EB1FF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Public Sans',system-ui,sans-serif;font-size:16px;line-height:1.4}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);border:1px solid var(--trait);border-radius:8px}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;border-radius:8px;font-size:14px}
+.notes h2{font-size:20px;margin:0 0 8px}
+.notes h3{font-size:15px;margin:14px 0 4px}
+.notes p,.notes li{margin:0 0 8px}
+.notes ul{padding-left:18px;margin:0}
+.notes .legende{display:grid;grid-template-columns:28px 1fr;gap:6px 8px;align-items:center;margin:8px 0}
+.notes .legende svg{width:24px;height:24px}
+
+/* tailles : 13 / 16 / 24 ; rayons : 4 (commandes) et 8 (blocs) ; trait des pictogrammes : 2 sur 24 */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* Le jeu de pictogrammes : plein, contour, trait. */
+.p{display:block;flex:none;fill:var(--encre)}
+.p .pl{fill:var(--encre)}
+.p .ct{fill:none;stroke:var(--encre);stroke-width:2}
+.p .tr{fill:none;stroke:var(--encre);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.p .ha{stroke:var(--encre);stroke-width:1.5}
+.p .cl{fill:none;stroke:var(--trait-fort);stroke-width:1.5;stroke-dasharray:3 2}
+
+/* En-tête : le contenant dit la gravité, le pictogramme dit l'objet, le mot dit tout. */
+.tete{display:grid;grid-template-columns:64px 1fr;gap:4px 14px;align-items:center;padding:16px}
+.cont{width:64px;height:64px;position:relative;display:flex;align-items:center;justify-content:center}
+.cont > svg.forme{position:absolute;inset:0;width:64px;height:64px}
+.cont .p{width:32px;height:32px;position:relative}
+.cont.c-info .forme rect{fill:none;stroke:var(--encre);stroke-width:2.5}
+.cont.c-att .forme path{fill:var(--ambre)}
+.cont.c-att .forme path.bord{fill:none;stroke:var(--ambre-trait);stroke-width:2.5;stroke-linejoin:round}
+.cont.c-att .p{margin-top:14px;width:26px;height:26px}
+.cont.c-att .p .pl{fill:var(--sur-ambre)} .cont.c-att .p .ct,.cont.c-att .p .tr{stroke:var(--sur-ambre)}
+.cont.c-agir .forme circle{fill:var(--rouge)}
+.cont.c-agir .p .pl{fill:var(--sur-rouge)} .cont.c-agir .p .ct,.cont.c-agir .p .tr{stroke:var(--sur-rouge)}
+.tete h1{margin:0;font-size:24px;font-weight:800;line-height:1.15}
+.tete p{margin:0;grid-column:2;color:var(--texte2)}
+
+/* Rangées Isotype : des tranches identiques, comptées. */
+.rang{padding:12px 16px;border-top:1px solid var(--trait)}
+.rang h2{margin:0 0 8px;font-size:16px;font-weight:700;display:flex;align-items:baseline;gap:8px}
+.rang h2 .p{width:24px;height:24px;align-self:center}
+.rang h2 .compte{margin-left:auto;font-size:24px;font-weight:800}
+.rang h2 small{font-weight:400;font-size:13px;color:var(--texte2)}
+.marques{display:flex;flex-wrap:wrap;gap:2px 0;align-items:flex-end}
+.marques{gap:4px 2px}
+.marques .p{width:26px;height:30px}
+.marques .plus{font-weight:800;font-size:16px;margin-left:6px}
+.echelle{font-size:13px;color:var(--texte2);margin:6px 0 0}
+.vide{color:var(--texte2);font-size:16px;margin:0}
+
+/* Lignes pictogramme + mot (liaison, activité, parties). */
+.ligne{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--trait)}
+.ligne .p{width:28px;height:28px}
+.ligne b{font-weight:700}
+.ligne small{display:block;font-size:13px;color:var(--texte2)}
+.ligne .droite{text-align:right;font-size:13px;color:var(--texte2)}
+.ligne.agir{background:var(--rouge-doux)}
+.ligne.agir b,.ligne.agir small,.ligne.agir .droite{color:var(--rouge-texte)}
+.ligne.att{background:var(--ambre-doux)}
+.ligne.att b,.ligne.att small,.ligne.att .droite{color:var(--ambre-texte)}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px;border-top:1px solid var(--trait)}
+.bornes label{display:block;font-size:13px;font-weight:700;margin-bottom:4px}
+.bornes input{width:100%;font:700 24px 'Public Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--texte);background:var(--fond);border:2px solid var(--trait-fort);border-radius:4px;padding:6px 10px}
+.bornes input:disabled{background:var(--fond3);border-style:dashed;color:var(--texte2)}
+.inter{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;width:100%;background:none;border:0;border-top:1px solid var(--trait);padding:10px 16px;text-align:left;min-height:48px}
+.inter .p{width:28px;height:28px}
+.inter .etat{font-size:13px;font-weight:700;border:2px solid var(--trait-fort);border-radius:4px;padding:2px 8px}
+.inter[aria-pressed="true"] .etat{background:var(--encre);color:var(--sur-encre);border-color:var(--encre)}
+.nb{display:flex;align-items:center;gap:10px;padding:0 16px 10px 56px}
+.nb button{width:40px;height:40px;border:2px solid var(--trait-fort);border-radius:4px;background:var(--fond);font-size:20px;font-weight:700}
+.nb .num{font-size:24px;font-weight:800;min-width:1.5ch;text-align:center}
+
+.encadre{margin:0 16px 12px;padding:12px;border-radius:8px;border:2px solid var(--trait-fort)}
+.encadre.agir{border-color:var(--rouge);background:var(--rouge-doux)}
+.encadre.agir *{color:var(--rouge-texte)}
+.encadre.att{border-color:var(--ambre-trait);background:var(--ambre-doux)}
+.encadre.att *{color:var(--ambre-texte)}
+.encadre h2{margin:0 0 4px;font-size:16px}
+.encadre p{margin:0}
+.encadre .choix{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.encadre .choix button{text-align:left;font-weight:700;background:var(--fond);border:2px solid var(--trait-fort);border-radius:4px;padding:10px 12px;min-height:44px;color:var(--texte)}
+
+.actions{display:flex;flex-direction:column;gap:8px;padding:16px;border-top:1px solid var(--trait)}
+.b{min-height:48px;border-radius:4px;font-weight:700;font-size:16px;padding:10px 14px;border:2px solid var(--encre);background:var(--fond);color:var(--texte)}
+.b.principal{background:var(--encre);color:var(--sur-encre)}
+.b.arret{border-color:var(--trait-fort);margin-top:8px}
+.b.arret.confirme{background:var(--rouge);border-color:var(--rouge);color:var(--sur-rouge)}
+.b[aria-disabled="true"]{background:var(--fond3);color:var(--texte2);border:2px dashed var(--trait-fort);cursor:not-allowed}
+.b small{display:block;font-weight:400;font-size:13px}
+.b[aria-disabled="true"] small{color:var(--texte)}
+.raison{margin:0;font-size:13px}
+.lienrang{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:center;width:100%;background:none;border:0;border-top:1px solid var(--trait);padding:12px 16px;text-align:left;min-height:48px}
+.lienrang .p{width:28px;height:28px}
+.lienrang b{text-decoration:underline;text-underline-offset:3px}
+
+.acti{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--trait)}
+.acti button{display:grid;grid-template-columns:28px 1fr;gap:2px 10px;align-items:center;text-align:left;background:var(--fond);border:0;padding:12px 16px;min-height:56px}
+.acti button + button{border-left:1px solid var(--trait)}
+.acti button .p{width:28px;height:28px;grid-row:span 2}
+.acti button small{font-size:13px;color:var(--texte2)}
+.acti button[aria-pressed="true"]{box-shadow:inset 0 -4px 0 var(--encre)}
+.acti button[aria-pressed="false"] .p{opacity:.55}
+.acti .pourquoi{grid-column:1/-1;margin:0;padding:0 16px 10px;font-size:13px;color:var(--texte2)}
+
+.message{position:sticky;bottom:0;margin:0;padding:0 16px 12px}
+.message:empty{padding:0}
+.message span{display:block;background:var(--encre);color:var(--sur-encre);border-radius:4px;padding:10px 14px}
+
+.barre-vue{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--trait)}
+.barre-vue h1{font-size:24px;margin:0}
+.barre-vue .b{margin-left:auto;min-height:40px}
+.restes{list-style:none;margin:0;padding:0}
+.restes li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 16px;border-top:1px solid var(--trait)}
+.restes .p{width:28px;height:36px}
+.restes small{display:block;font-size:13px;color:var(--texte2)}
+.restes .bt{display:flex;flex-direction:column;gap:4px;align-items:stretch}
+.restes .bt button{border:2px solid var(--trait-fort);border-radius:4px;background:var(--fond);padding:4px 10px;font-weight:700;font-size:13px;min-height:34px}
+.restes .bt button:first-child{border-color:var(--encre)}
+.coupe{display:block;width:calc(100% - 32px);height:auto;margin:12px 16px;border:1px solid var(--trait);border-radius:8px;background:var(--fond2)}
+.coupe .pt{fill:var(--texte2)} .coupe .prop{stroke:var(--texte);stroke-width:2} .coupe text{font:13px 'Public Sans',sans-serif;fill:var(--texte)}
+
+@container (min-width:520px){ .actions{flex-direction:row;flex-wrap:wrap} .actions .b{flex:1 1 40%} .actions .raison{flex-basis:100%} .marques .p{width:30px;height:34px} }
+
+@media (prefers-reduced-motion: no-preference){
+  html:not([data-mouvement="reduit"]) .tranche.change{animation:remplit 420ms cubic-bezier(.16,1,.3,1);transform-origin:50% 100%;transform-box:fill-box}
+  html:not([data-mouvement="reduit"]) .marques.change > .p:last-of-type{animation:tampon 240ms cubic-bezier(.16,1,.3,1)}
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .cont .p{animation:glisse 240ms cubic-bezier(.16,1,.3,1)}
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .cont .forme,
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .tete h1{animation:fondu 200ms ease-out}
+  html:not([data-mouvement="reduit"]) .message.change span{animation:glisse 200ms cubic-bezier(.16,1,.3,1)}
+}
+@keyframes remplit{from{transform:scaleY(.15)}to{transform:none}}
+@keyframes tampon{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes glisse{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes fondu{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Pictogrammes du lot"></div></div>
+  <aside class="notes">
+    <h2>Pictogrammes du lot</h2>
+    <p><b>Logique.</b> Un jeu de pictogrammes dessinés pour ce métier, qui tient en noir et blanc ; les quantités se comptent en signes identiques répétés.</p>
+    <div class="legende" id="legende"></div>
+    <h3>D'où ça vient</h3>
+    <ul>
+      <li>Méthode Isotype (article « Isotype (picture language) ») : une quantité plus grande se montre par plus de signes identiques, pas par un signe plus grand ; pas de perspective ; toujours accompagnée de mots.</li>
+      <li>Pictogrammes des Jeux de 1972 : un système cohérent sur une grille, dessiné comme un tout, un seul trait.</li>
+      <li>Norme ISO 7010 : le contenant dit la catégorie (carré = information, triangle = avertissement, cercle = obligation) ; s'il manque un signe, signe général + texte.</li>
+      <li>Carbon, « Status indicators » : forme, symbole, couleur, mot ; trois sur quatre au moins ; ne jamais donner deux couleurs à une même forme.</li>
+      <li>GOV.UK et NHS, composant « Tag » : un état s'écrit en adjectif (« différé », « posé »), pas en verbe ; les actions restent des boutons à verbe.</li>
+      <li>Police Public Sans (système de design public, neutre, chiffres tabulaires) ; Radix gray, amber, red.</li>
+    </ul>
+    <h3>Ce que ça veut dire ici</h3>
+    <ul>
+      <li>Une tranche = un cut. Pleine : posé. Contour + chevron : différé (remis à plus tard). Pleine + signet : posé, à examiner. Hachurée : en cours.</li>
+      <li>Avancement : une tranche = 20 cuts ; tranches pleines = fait. Total inconnu : la rangée s'arrête sur trois points, aucun total dessiné.</li>
+      <li>Contenant carré gris : information. Triangle ambre : à regarder. Cercle rouge plein : à vous d'agir (le cercle d'obligation de la norme).</li>
+      <li><b>Mouvement</b> : une tranche d'avancement qui se remplit monte depuis sa base (0,42 s) ; un nouveau différé s'ajoute en tampon (0,24 s) ; un changement d'état fond le contenant et glisse le pictogramme de 4 px. En mouvement réduit : tout change sur place.</li>
+    </ul>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+
+  /* ---------- le jeu de pictogrammes, grille de 24, trait de 2 ---------- */
+  const T = (x, y, w, h, cls) => `<rect class="${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="1.5"/>`;
+  const P = {
+    pose: T(6, 3, 12, 18, 'pl'),
+    differe: T(2, 4, 12, 16, 'ct') + '<path class="tr" d="M17 8l4 4-4 4"/>',
+    examiner: T(2, 3, 12, 18, 'pl') + '<path class="pl" d="M16 3h6v9l-3-2.4-3 2.4z"/>',
+    cours: T(6, 4, 12, 16, 'ct') + '<path class="ha" d="M6.5 10l11-5M6.5 15l11-5M6.5 20l11-5"/>',
+    vide: T(6, 4, 12, 16, 'cl'),
+    lotPret: T(2, 5, 5, 14, 'ct') + T(9.5, 5, 5, 14, 'ct') + T(17, 5, 5, 14, 'ct'),
+    lotCours: T(2, 5, 5, 14, 'pl') + T(9.5, 5, 5, 14, 'pl') + T(17, 5.5, 5, 13, 'ct') + '<path class="ha" d="M17.5 11l4-3M17.5 16l4-3"/>',
+    lotPause: T(2, 5, 5, 14, 'pl') + T(9.5, 5, 5, 14, 'pl') + '<path class="tr" d="M18 6v12M21.5 6v12"/>',
+    lotArret: T(2, 5, 5, 14, 'pl') + T(9.5, 5, 5, 14, 'pl') + T(16.5, 8, 6, 8, 'pl'),
+    lotFin: T(2, 5, 5, 14, 'pl') + T(9.5, 5, 5, 14, 'pl') + T(17, 5, 5, 14, 'pl'),
+    relu: T(3, 3, 7, 18, 'pl') + '<path class="tr" d="M13 13l3 3 6-7"/>',
+    esv: T(2, 6, 8, 12, 'ct') + T(14, 6, 8, 12, 'ct') + '<path class="tr" d="M10 12h4"/>',
+    esvAbsent: T(2, 6, 8, 12, 'ct') + T(14, 6, 8, 12, 'ct') + '<path class="tr" d="M11 15.5l2-7"/>',
+    onglets: '<path class="ct" d="M2 10h20v10H2z"/><path class="pl" d="M3 10V5.5a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1V10z"/><path class="tr" d="M12 10V5.5a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1V10"/>',
+    reprise: '<path class="tr" d="M19 12a7 7 0 1 1-2-4.9"/><path class="tr" d="M19.5 3.5V8h-4.5"/>' + T(10, 9, 4, 6, 'pl'),
+    orbite: T(8.5, 11, 7, 10, 'pl') + '<path class="tr" d="M12 2v6M9 5.5l3 3 3-3"/>',
+    echo: T(3, 5, 6, 14, 'ct') + '<path class="tr" d="M13 8.5a5 5 0 0 1 0 7M16.5 6a9 9 0 0 1 0 12"/>',
+    file: T(2, 6, 5, 11, 'pl') + T(9.5, 6, 5, 11, 'pl') + T(17, 6, 5, 11, 'ct') + '<path class="tr" d="M2 21h5M9.5 21h5M17 21h5"/>',
+    arretFile: T(2, 6, 5, 11, 'pl') + T(9.5, 6, 5, 11, 'ct') + '<path class="tr" d="M17 7l5 9M22 7l-5 9"/><path class="tr" d="M2 21h5M9.5 21h5M17 21h5"/>',
+  };
+  const NOMS = { pose: 'posé', differe: 'différé', examiner: 'posé, à examiner', cours: 'en cours', vide: 'à faire' };
+  const picto = (k, label, forme) => `<svg class="p" viewBox="0 0 24 24" ${label ? `role="img" aria-label="${esc(label)}"` : 'aria-hidden="true"'}${forme ? ` data-forme="${esc(forme)}"` : ''}>${P[k]}</svg>`;
+
+  /* Contenant : carré (information), triangle (attention), cercle plein (à vous d'agir). */
+  function contenant(type, k) {
+    const forme = type === 'att' ? '<path d="M32 4 61 58H3Z"/><path class="bord" data-forme="contenant attention" d="M32 4 61 58H3Z"/>' : type === 'agir' ? '<circle data-forme="contenant à agir" cx="32" cy="32" r="30"/>' : '<rect data-forme="contenant information" x="4" y="4" width="56" height="56" rx="4"/>';
+    return `<div class="cont c-${type}"><svg class="forme" viewBox="0 0 64 64" aria-hidden="true">${forme}</svg>${picto(k)}</div>`;
+  }
+
+  function bouton(x) {
+    return `<button class="b ${x.rang || 'second'}${x.confirme ? ' confirme' : ''}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>`;
+  }
+
+  function entete(m) {
+    let type = 'info', k = 'lotPret', mot = m.titre, phrase = m.phrase;
+    const f = m.file;
+    if (m.vue === 'echo') { k = 'echo'; }
+    else if (m.incident && m.incident.type === 'absent') { type = 'agir'; k = 'esvAbsent'; mot = 'ESV non relié'; }
+    else if (m.incident && m.incident.type === 'choisir') { type = 'agir'; k = 'onglets'; mot = 'Onglet à choisir'; }
+    else if (f.alerte) { type = 'agir'; k = 'arretFile'; }
+    else if (m.incident && m.incident.type === 'reprise') { type = 'att'; k = 'reprise'; }
+    else if (f.relecture) k = 'relu';
+    else k = { pret: 'lotPret', encours: 'lotCours', pause: 'lotPause', arrete: 'lotArret', fin: 'lotFin' }[m.phase];
+    if (m.phase === 'fin' && m.restants.length && type === 'info') type = 'att';
+    if (m.phase === 'encours' && !f.relecture) phrase = `Ariane pose le cut ${m.compte.cut}.`;
+    return `<header class="tete" role="status">${contenant(type, k)}<h1>${esc(mot)}</h1><p>${esc(phrase)}</p></header>`;
+  }
+
+  /* Avancement en tranches : une tranche = 20 cuts. */
+  function avancement(m) {
+    const c = m.compte, U = 20;
+    let h = '<section class="rang" aria-label="Avancement">';
+    if (c.total == null) {
+      const pleines = Math.floor(c.faits / U);
+      h += `<h2>Avancement <small>total inconnu</small><span class="compte num">${n(c.faits)}</span></h2><div class="marques">`;
+      for (let i = 0; i < pleines; i++) h += tranche(i, 'pose');
+      h += tranche(pleines, 'cours') + '<span class="plus" aria-hidden="true">…</span></div>';
+      h += `<p class="echelle">Une tranche = ${U} cuts. Le lot va jusqu’à la fin de la partie : la rangée n’a pas de fin connue.</p>`;
+    } else {
+      const tot = Math.ceil(c.total / U), pleines = Math.floor(c.faits / U);
+      h += `<h2>Avancement <small>sur ${n(c.total)}</small><span class="compte num">${n(c.faits)}</span></h2><div class="marques">`;
+      for (let i = 0; i < tot; i++) h += tranche(i, i < pleines ? 'pose' : i === pleines && m.phase !== 'fin' && m.phase !== 'pret' ? 'cours' : 'vide');
+      h += `</div><p class="echelle">Une tranche = ${U} cuts · ${m.phase === 'fin' ? 'terminé' : 'reste ' + m.compte.tempsTexte}</p>`;
+    }
+    return h + '</section>';
+  }
+  function tranche(i, k) {
+    return `<svg class="p" viewBox="0 0 24 24" data-forme="tranche ${NOMS[k]}"><g class="tranche" data-valeur="t-${i}"><title>${NOMS[k]}</title>${P[k]}</g></svg>`;
+  }
+
+  /* Compte Isotype : un signe par cut tant qu'il y en a peu, puis le reste en chiffre. */
+  function compte(cle, titre, k, nb, sous) {
+    const max = 12;
+    let h = `<section class="rang"><h2>${picto(k)}${esc(titre)}${sous ? ` <small>${esc(sous)}</small>` : ''}<span class="compte num">${nb}</span></h2>`;
+    if (!nb) return h + '<p class="vide">Aucun.</p></section>';
+    h += `<div class="marques" data-valeur="${cle}" aria-hidden="true">`;
+    for (let i = 0; i < Math.min(nb, max); i++) h += `<svg class="p" viewBox="0 0 24 24" data-forme="${NOMS[k]}">${P[k]}</svg>`;
+    if (nb > max) h += `<span class="plus">+${nb - max}</span>`;
+    return h + '</div></section>';
+  }
+
+  function liaison(m) {
+    const l = m.liaison;
+    const cls = '';
+    return `<div class="ligne${cls}">${picto(l.etat === 'relie' ? 'esv' : l.etat === 'absent' ? 'esvAbsent' : 'onglets', l.texte)}<span><b>${esc(l.texte)}</b><small>${esc(l.detail)}</small></span><span class="droite"></span></div>`;
+  }
+
+  function parties(m) {
+    const f = m.file;
+    let h = '';
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), cour = !f.finie && i === f.courante;
+      const k = p ? (cour ? 'relu' : 'lotFin') : cour ? (f.alerte ? 'arretFile' : 'lotCours') : 'lotPret';
+      const etat = p ? `${n(p.poses)} posés · ${p.differes} différés · ${p.aControler} à examiner` : cour ? (f.alerte ? 'arrêtée ici' : 'en cours') : 'à venir';
+      h += `<div class="ligne">${picto(k)}<span><b>Partie ${i}</b><small>${p && cour ? 'relue et corrigée' : ''}</small></span><span class="droite">${esc(etat)}</span></div>`;
+    }
+    return h;
+  }
+
+  function encadres(m) {
+    let h = '';
+    const i = m.incident;
+    if (i) h += `<section class="encadre ${i.type === 'reprise' ? 'att' : 'agir'}"><h2>${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((a) => `<button data-a="${a.a}"${a.id ? ` data-id="${esc(a.id)}"` : ''}>${esc(a.libelle)}</button>`).join('')}</div>` : ''}</section>`;
+    if (m.file.alerte) h += `<section class="encadre agir"><h2>${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></section>`;
+    return h;
+  }
+
+  function reglages(m) {
+    const f = m.file, b = m.bornes;
+    return `<div class="bornes"><div><label for="p-debut">Premier cut</label><input id="p-debut" class="num" data-champ="debut" inputmode="numeric" value="${b.debut}"></div><div><label for="p-fin">Dernier cut</label><input id="p-fin" class="num" data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin de partie"' : ''}></div></div>
+      <button class="inter" data-a="finDePartie" aria-pressed="${b.finDePartie}">${picto('lotCours')}<span>Aller jusqu’à la fin de la partie</span><span class="etat">${b.finDePartie ? 'oui' : 'non'}</span></button>
+      <button class="inter" data-a="fileBascule" aria-pressed="${f.active}">${picto('file')}<span>File de parties</span><span class="etat">${f.active ? 'allumée' : 'éteinte'}</span></button>
+      ${f.active ? `<div class="nb" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><span class="num">${f.nb}</span><button data-a="filePlus" aria-label="Une partie de plus">+</button><span>parties, chacune relue et corrigée</span></div>` : ''}`;
+  }
+
+  function activite(m) {
+    const o = m.activite === 'orbite', bl = m.activiteBloquee;
+    return `<div class="acti" role="group" aria-label="Activité d'Ariane"><button data-a="orbite" aria-pressed="${o}"${bl && !o ? ' aria-disabled="true"' : ''}>${picto('orbite')}<b>Orbite</b><small>Ariane pose</small></button><button data-a="echo" aria-pressed="${!o}"${bl ? ' aria-disabled="true"' : ''}>${picto('echo')}<b>Écho</b><small>Ariane observe</small></button>${bl ? '<p class="pourquoi">Mettre le lot en pause pour changer d’activité.</p>' : ''}</div>`;
+  }
+
+  function actions(m) {
+    const l = m.actions.filter((a) => a.rang !== 'lien');
+    const r = l.find((a) => a.raison);
+    return l.length ? `<div class="actions">${l.map(bouton).join('')}${r ? `<p class="raison">${esc(r.raison)}</p>` : ''}</div>` : '';
+  }
+  const message = (m) => `<p class="message" data-valeur="message" role="status">${m.message ? `<span>${esc(m.message)}</span>` : ''}</p>`;
+
+  function coupe(cut) {
+    const k = Demo.D.coupe(cut, 260), W = 320, H = 150;
+    const X = (x) => 10 + (x + 1) / 2 * (W - 20), Z = (z) => H - 24 - (z + 0.5) * (H - 40) / 0.5;
+    return `<svg class="coupe" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut}">${k.pts.map(([x, z]) => `<rect class="pt" x="${X(x).toFixed(1)}" y="${Z(z).toFixed(1)}" width="2" height="2"/>`).join('')}${k.rails.map((r) => `<line class="prop" x1="${X(r)}" x2="${X(r)}" y1="14" y2="${H - 30}"/>`).join('')}<text x="10" y="${H - 8}">traits : position proposée par Ariane</text></svg>`;
+  }
+
+  function vueReste(m) {
+    const ligne = (x) => `<li>${picto(x.type === 'differe' ? 'differe' : 'examiner', NOMS[x.type === 'differe' ? 'differe' : 'examiner'])}<span><b>Cut <span class="num">${x.cut}</span></b><small>${esc(x.motif)}</small></span><span class="bt"><button data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = Demo.D.differes(), v = Demo.D.verts();
+    let h = `<div class="barre-vue"><h1>Ce qui reste</h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</div>`;
+    h += compte('differes', 'Différés', 'differe', d.length) + (d.length ? `<ul class="restes">${d.map(ligne).join('')}</ul>` : '');
+    h += compte('verts', 'Posés à examiner', 'examiner', v.length) + (v.length ? `<ul class="restes">${v.map(ligne).join('')}</ul>` : '');
+    return h + message(m);
+  }
+
+  function vueExamen(m) {
+    const x = m.examen, k = x.type === 'differe' ? 'differe' : 'examiner';
+    return `<div class="barre-vue"><h1>Cut <span class="num">${x.cut}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</div>
+      <div class="ligne">${picto(k)}<span><b>${esc(NOMS[k].replace(/^./, (c) => c.toUpperCase()))}</b><small>${esc(x.motif)}</small></span><span class="droite"></span></div>${coupe(x.cut)}
+      <div class="actions">${bouton({ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' })}${bouton({ a: 'traiter', id: x.id, libelle: 'Marquer comme vu' })}</div>` + message(m);
+  }
+
+  function vueEcho(m) {
+    const e = m.echo;
+    return entete(m) + liaison(m) + `<section class="rang"><h2>${picto('echo')}Cuts observés<span class="compte num">${e.vus}</span></h2><p class="vide">Dernier : cut ${e.dernier == null ? '–' : e.dernier}. Même choix qu’Ariane : ${e.accord} sur ${e.vus}.</p></section>` + actions(m) + activite(m) + message(m);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    if (m.vue === 'reste') return vueReste(m);
+    if (m.vue === 'examen' && m.examen) return vueExamen(m);
+    if (m.vue === 'echo') return vueEcho(m);
+    let h = entete(m) + encadres(m);
+    if (m.phase === 'pret') h += liaison(m) + reglages(m);
+    else {
+      h += m.file.relecture ? '' : avancement(m);
+      const nd = Demo.D.differes().length, nv = Demo.D.verts().length, attente = m.phase === 'encours' || m.phase === 'pause';
+      h += compte('differes', 'Différés', 'differe', nd, attente && nd ? 'à voir après le lot' : '');
+      h += compte('verts', 'Posés à examiner', 'examiner', nv, attente && nv ? 'à voir après le lot' : '');
+      const lien = m.actions.find((a) => a.rang === 'lien');
+      if (lien) h += `<button class="lienrang" data-a="${lien.a}">${picto('examiner')}<b>${esc(lien.libelle)}</b><span aria-hidden="true">›</span></button>`;
+      if (m.file.active) h += parties(m);
+      h += liaison(m);
+    }
+    return h + actions(m) + activite(m) + message(m);
+  }
+
+  /* Légende des notes, dessinée avec les mêmes pictogrammes. */
+  document.getElementById('legende').innerHTML = [['pose', 'posé'], ['differe', 'différé'], ['examiner', 'posé, à examiner'], ['cours', 'en cours'], ['vide', 'à faire'], ['orbite', 'Orbite : Ariane pose'], ['echo', 'Écho : Ariane observe'], ['file', 'file de parties'], ['relu', 'partie relue et corrigée'], ['esv', 'ESV relié'], ['esvAbsent', 'ESV non relié'], ['reprise', 'reprise après rechargement']].map(([k, t]) => picto(k) + `<span>${t}</span>`).join('');
+
+  Demo.monter({ rendre });
+})();
+</script>
+</body>
+</html>

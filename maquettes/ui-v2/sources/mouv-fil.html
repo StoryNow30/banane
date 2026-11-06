@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane · Le fil</title>
+<style>
+/*POLICE:instrument-sans*/
+/* Proposition « Le fil » (famille : le mouvement porte l'état).
+ * Logique : le lot s'écrit comme un fil d'événements. La ligne du cut qui vient d'être traité
+ * s'écrit sous une lentille de focus et les lignes passées rapetissent ; tant que des lignes
+ * s'écrivent, le lot tourne. En pause, un curseur clignote seul sur une ligne vide ; à l'arrêt,
+ * une ligne pleine largeur coupe le fil ; quand Ariane attend l'opérateur, sa question devient
+ * la ligne en focus.
+ * Sources : beui.dev (Streaming Response, Agent Activity, Todo List) ; motionin.design (Benchmark :
+ * lentille de focus sans flou ; Pixels : une ligne qui coupe le contenu entre deux états). */
+:root{
+  --fond:#FBFBF9; --texte:#151515; --doux:#5A5A55; --pale:#6B6B65; --ligne:#E1E0DA; --piste:#E9E8E2; --carte:#FFFFFF; --bord:#C9C8C0;
+  --accent:#8E3B00; --accent-fond:#FCEFE4; --danger:#A51D15; --danger-fond:#FBE8E5; --scene:#DDDCD6;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#131313; --texte:#EDEDEA; --doux:#ABABA4; --pale:#97978F; --ligne:#2C2C29; --piste:#262624; --carte:#1C1C1B; --bord:#46463F;
+  --accent:#FFB27A; --accent-fond:#3A2414; --danger:#FF928A; --danger-fond:#3B1714; --scene:#080808;
+}}
+:root[data-theme="dark"]{
+  --fond:#131313; --texte:#EDEDEA; --doux:#ABABA4; --pale:#97978F; --ligne:#2C2C29; --piste:#262624; --carte:#1C1C1B; --bord:#46463F;
+  --accent:#FFB27A; --accent-fond:#3A2414; --danger:#FF928A; --danger-fond:#3B1714; --scene:#080808;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Instrument Sans',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);padding:14px 18px 28px;font-size:15px;line-height:1.45}
+.notes{max-width:380px;background:var(--fond);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font-size:18px;margin:0 0 8px}
+.notes p{margin:0 0 10px}
+/* Échelle : 13 · 15 · 22. Rayon unique 8 px. Peu de boîtes : le fil est du texte. */
+#panneau p,#panneau h1,#panneau h2{margin:0}
+.tete{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.marque{font-weight:600}
+.liaison{display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap}
+.liaison-forme{width:10px;height:10px;border-radius:50%;border:2px solid var(--texte);box-shadow:inset 0 0 0 5px var(--texte);flex:none}
+.liaison-absent .liaison-forme{box-shadow:none}
+.liaison-choisir .liaison-forme{box-shadow:inset 3px 0 0 var(--texte)}
+.liaison-detail{color:var(--doux)}
+.liaison-detail::before{content:"· "}
+.bascule{position:relative;display:flex;gap:18px;margin-top:12px;border-bottom:1px solid var(--ligne)}
+.bascule-curseur{display:none}
+.bascule-b.est-actif{box-shadow:inset 0 -3px 0 var(--texte)}
+.bascule-b{background:transparent;border:0;padding:6px 0 8px;font:inherit;color:var(--texte);cursor:pointer;display:flex;gap:6px;align-items:baseline}
+.bascule-nom{font-weight:600}
+.bascule-sous{font-size:13px;color:var(--doux)}
+.bascule-b[aria-disabled="true"]{cursor:not-allowed}
+.bascule-b[aria-disabled="true"] .bascule-nom{text-decoration:line-through}
+.bascule-raison{font-size:13px;color:var(--doux);margin-top:6px !important}
+.titre{font-size:22px;font-weight:600;line-height:1.2;margin-top:16px !important}
+.phrase{color:var(--doux);margin-top:2px !important}
+
+/* ---------- Le fil ---------- */
+.fil{margin-top:14px;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;border-left:2px solid var(--ligne);padding-left:12px}
+.fil ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.l{display:grid;grid-template-columns:14px 1fr;gap:8px;align-items:baseline;color:var(--pale);font-size:13px;line-height:1.35;transition:font-size .5s cubic-bezier(.77,0,.175,1), color .5s, opacity .4s}
+.l:nth-last-child(2){font-size:15px;color:var(--doux)}
+.l:nth-last-child(1){font-size:22px;color:var(--texte);font-weight:500;line-height:1.25}
+.l .f{width:9px;height:9px;border:2px solid currentColor;align-self:center;border-radius:2px}
+.l-pose .f{box-shadow:inset 0 0 0 5px currentColor}
+.l-differe .f{border-style:solid;box-shadow:none}
+.l-vert .f{box-shadow:inset 0 -4px 0 currentColor}
+.l-etat .f{border:0;width:12px;height:2px;background:currentColor;border-radius:0}
+.l-attente{color:var(--accent) !important}
+.l .x{min-width:0}
+.l .m{color:inherit;font-weight:400}
+.l .m::before{content:" · "}
+.l:nth-last-child(1) .m::before{content:none}
+.fil[data-mode="arrete"] .curseur,.fil[data-mode="fin"] .curseur,.fil[data-mode="relecture"] .curseur{display:none}
+.l:nth-last-child(1) .m{font-size:15px;color:var(--doux);display:block;font-weight:400}
+.curseur{display:inline-block;width:.5em;height:1em;vertical-align:-.12em;margin-left:2px;background:currentColor}
+.fil[data-mode="pause"] .curseur, .fil[data-mode="pret"] .curseur{animation:clignote 1.1s steps(1) infinite}
+.fil[data-mode="demande"] .curseur{animation:clignote .7s steps(1) infinite}
+@keyframes clignote{50%{opacity:0}}
+.coupure{position:relative;height:2px;margin:10px 0 4px;background:var(--danger);transform-origin:left;animation:coupe .6s cubic-bezier(.77,0,.175,1)}
+@keyframes coupe{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.l.sort{opacity:0}
+.fil[data-mode="fin"] .l:not(:last-child){font-size:13px}
+
+.progres{margin-top:12px}
+.piste{position:relative;height:6px;background:var(--piste);border-radius:8px;overflow:hidden}
+.piste i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--p,0) * 100%);background:var(--texte);border-radius:8px;transition:width .9s linear}
+.piste.inconnue{background:repeating-linear-gradient(90deg,var(--piste) 0 8px,transparent 8px 12px)}
+.progres-texte{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--doux);margin-top:6px !important;font-variant-numeric:tabular-nums}
+.progres-texte b{color:var(--texte);font-weight:600}
+[data-valeur].change{display:inline-block;animation:arrive .35s cubic-bezier(.16,1,.3,1)}
+@keyframes arrive{from{transform:translateY(5px);opacity:.3}to{transform:none;opacity:1}}
+
+.incident,.alerte{margin:14px 0 0;padding:12px 14px;border-left:3px solid var(--accent);background:var(--accent-fond);border-radius:0 8px 8px 0}
+.incident-titre,.alerte-titre{font-size:15px;font-weight:600;color:var(--accent)}
+.incident-texte,.alerte-texte{margin-top:2px !important}
+.incident-reprise{border-left-color:var(--texte);background:var(--carte)}
+.incident-reprise .incident-titre{color:var(--texte)}
+#panneau[data-etat-change="1"] .incident,#panneau[data-etat-change="1"] .alerte{animation:arrive .4s cubic-bezier(.16,1,.3,1)}
+.choix{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.borne{display:flex;flex-direction:column;gap:2px}
+.borne-nom{font-size:13px;color:var(--doux)}
+.borne-champ{font:inherit;font-size:22px;font-weight:600;width:100%;padding:4px 0;border:0;border-bottom:2px solid var(--texte);background:transparent;color:var(--texte);border-radius:0}
+.borne-valeur{font-weight:600;padding:8px 0}
+.bornes .inter{grid-column:1 / -1}
+.inter{display:flex;align-items:center;gap:10px;background:transparent;border:0;padding:4px 0;font:inherit;color:var(--texte);cursor:pointer;text-align:left}
+.inter-piste{width:36px;height:20px;border-radius:20px;border:1.5px solid var(--texte);position:relative;flex:none}
+.inter-pouce{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:var(--texte);transition:transform .25s cubic-bezier(.16,1,.3,1)}
+.inter[aria-checked="true"] .inter-pouce{transform:translateX(16px)}
+.file-reglage{margin-top:14px;padding-top:12px;border-top:1px solid var(--ligne)}
+.file-nb{display:flex;align-items:center;gap:10px;margin-top:6px}
+.file-nb-valeur{font-weight:600;min-width:84px;text-align:center}
+.pas{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--bord);background:var(--carte);color:var(--texte);font:inherit;font-size:18px;cursor:pointer}
+.pas[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.file-aide{font-size:13px;color:var(--doux);margin-top:4px !important}
+.parties{margin-top:16px;padding-top:12px;border-top:1px solid var(--ligne)}
+.parties-titre{font-size:15px;font-weight:600}
+.parties-liste{list-style:none;margin:6px 0 0;padding:0}
+.partie{display:grid;grid-template-columns:16px auto 1fr;gap:8px;align-items:baseline;padding:3px 0;font-size:13px}
+.partie-nom{font-weight:600}
+.partie-texte{color:var(--doux)}
+.partie-forme{width:9px;height:9px;border:2px solid var(--texte);border-radius:2px;align-self:center}
+.partie-faite .partie-forme{box-shadow:inset 0 0 0 5px var(--texte)}
+.partie-courante .partie-forme,.partie-relue .partie-forme{box-shadow:inset 0 -4px 0 var(--texte)}
+.partie-arretee .partie-forme{border-color:var(--danger)}
+.partie-avenir .partie-forme{border-style:dotted;border-color:var(--doux)}
+.bilan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.bilan-case{display:flex;flex-direction:column;border-top:2px solid var(--texte);padding-top:6px}
+.bilan-forme{display:none}
+.bilan-nombre{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.bilan-mot{font-size:13px;color:var(--doux)}
+.acts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.act{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.b{font:inherit;font-weight:600;border-radius:8px;padding:10px 16px;cursor:pointer;border:1.5px solid var(--bord);background:var(--carte);color:var(--texte);transition:transform .12s}
+.b:active{transform:scale(.98)}
+.b-principal{background:var(--texte);color:var(--fond);border-color:var(--texte);flex:1 1 auto}
+.act-principal .b,.act-second .b{min-width:58%}
+.b-arret{color:var(--danger);border-color:var(--danger)}
+.b-confirme{background:var(--danger);color:var(--fond);border-color:var(--danger)}
+.act-confirme .b{flex:1 1 100%}
+.b-lien{border:0;background:transparent;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
+.b-petit{padding:5px 10px;font-size:13px}
+.b-onglet{min-width:0}
+.b[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.act-note,.act-raison{font-size:13px;color:var(--doux)}
+.act-raison{flex-basis:100%}
+.message{margin-top:14px !important;padding:8px 12px;border-radius:8px;background:var(--texte);color:var(--fond);font-size:13px}
+#panneau button:focus-visible,#panneau input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.reste-liste{list-style:none;margin:12px 0 0;padding:0 0 0 12px;border-left:2px solid var(--ligne)}
+.reste-ligne{display:grid;grid-template-columns:14px 1fr;gap:2px 8px;padding:8px 0;border-bottom:1px solid var(--ligne)}
+#panneau[data-etat-change="1"] .reste-ligne{animation:arrive .35s cubic-bezier(.16,1,.3,1) both}
+.reste-forme{width:9px;height:9px;border:2px solid var(--texte);border-radius:2px;margin-top:6px}
+.reste-vert .reste-forme{box-shadow:inset 0 -4px 0 var(--texte)}
+.reste-cut{font-weight:600}
+.reste-type{font-weight:400;font-size:13px;color:var(--doux);margin-left:4px}
+.reste-motif{font-size:13px;color:var(--doux)}
+.reste-acts{grid-column:2;display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.coupe{margin:14px 0 0}
+.coupe svg{display:block;width:100%;height:auto;background:var(--carte);border-radius:8px}
+.coupe-pts{fill:var(--doux)}
+.coupe-rails line{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 3}
+.coupe-legende{display:flex;gap:14px;font-size:13px;color:var(--doux);margin-top:6px;flex-wrap:wrap}
+.coupe-l1::before{content:"";display:inline-block;width:5px;height:5px;background:var(--doux);margin-right:6px;vertical-align:middle}
+.coupe-l2::before{content:"";display:inline-block;width:14px;border-top:2px dashed var(--accent);margin-right:6px;vertical-align:middle}
+.examen-type{font-weight:600;color:var(--texte)}
+.echo-chiffres{display:flex;gap:24px;margin-top:12px}
+.echo-case{display:flex;flex-direction:column}
+.echo-nombre{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.echo-mot{font-size:13px;color:var(--doux)}
+.echo-dernier{display:none}
+@container (max-width: 380px){.act-principal .b,.act-second .b{min-width:0;flex:1 1 100%}.l:nth-last-child(1){font-size:20px}}
+@media (prefers-reduced-motion: reduce){#panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important}}
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Le fil"></div></div>
+  <aside class="notes">
+    <h2>Le fil</h2>
+    <p><b>Logique.</b> Le lot s’écrit comme un fil d’événements : la ligne du cut qui vient d’être traité s’écrit lettre à lettre sous une lentille de focus, les lignes passées rapetissent ; tant que des lignes s’écrivent, le lot tourne.</p>
+    <p><b>D’où ça vient.</b> beui.dev : Streaming Response (code lu : le texte avance par un curseur à vitesse fixe, complet d’emblée en mouvement réduit), Agent Activity (un seul journal pour les étapes et les appels d’outil), Todo List (statut par forme : plein, vide, entamé). motionin.design : Benchmark (une lentille de focus : seule la ligne au centre est grande et sombre, la taille décroît avec la distance, sans flou, pas à pas en « expo in-out ») et Pixels (une ligne pleine largeur coupe le contenu entre l’ancien et le nouvel état). 60fps.design : List Fade Up from Down (la liste entre par le bas). Guide de beui.dev : « linear for progress ».</p>
+    <p><b>Ce que ça veut dire ici.</b> Des lignes qui s’écrivent l’une après l’autre : le lot tourne. Un curseur seul qui clignote sur une ligne vide « reprend au cut… » : en pause, rien ne s’écrit. Un trait rouge qui traverse le fil, puis la cause écrite dessous : le lot s’est arrêté. La question d’Ariane en grand, en ocre, avec un curseur rapide : Ariane attend l’opérateur. Les lignes qui se resserrent sous une ligne de bilan : fin du lot. Carré plein : posé ; carré vide : différé ; carré à moitié plein : posé, à examiner. La barre de progression avance à vitesse constante ; en pointillé, elle dit « total inconnu ». En mouvement réduit, les lignes paraissent entières, le curseur ne clignote pas, le trait d’arrêt est déjà tracé.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---------- Socle commun aux maquettes « mouv- » ----------
+   * Balisage sémantique des parties qui ne portent pas la chorégraphie (réglages, listes,
+   * incidents, examen). Chaque maquette l'habille par sa propre feuille de style ; la scène
+   * animée, elle, est propre à chaque maquette. */
+  const { esc, n } = Demo.D;
+  const U = {};
+  U.n = n;
+  U.esc = esc;
+  /* Un bouton du moteur : rang (principal, second, arret, lien, choix), note, raison. */
+  U.bouton = function (x, cls) {
+    const c = ['b', 'b-' + x.rang, x.confirme ? 'b-confirme' : '', cls || ''].join(' ').trim();
+    return `<div class="act act-${x.rang}${x.confirme ? ' act-confirme' : ''}"><button type="button" class="${c}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}</button>${x.note ? `<span class="act-note">${esc(x.note)}</span>` : ''}${x.raison ? `<p class="act-raison">${esc(x.raison)}</p>` : ''}</div>`;
+  };
+  U.actions = function (liste, cls) {
+    if (!liste || !liste.length) return '';
+    return `<div class="acts ${cls || ''}">${liste.map((x) => U.bouton(x)).join('')}</div>`;
+  };
+  /* Liaison avec ESV : une forme (data-forme) et des mots ; jamais la couleur seule. */
+  U.liaison = function (l) {
+    return `<p class="liaison liaison-${l.etat}"><span class="liaison-forme" data-forme="liaison ${l.etat}" aria-hidden="true"></span><span class="liaison-texte">${esc(l.texte)}</span><span class="liaison-detail">${esc(l.detail)}</span></p>`;
+  };
+  /* Bascule Orbite / Écho ; bloquée pendant un lot en cours, avec la raison écrite. */
+  U.bascule = function (m) {
+    const o = m.activite === 'orbite', bloque = m.activiteBloquee;
+    const b = (a, nom, sous, actif) => `<button type="button" class="bascule-b${actif ? ' est-actif' : ''}" data-a="${a}" aria-pressed="${actif}"${bloque && !actif ? ' aria-disabled="true"' : ''}><span class="bascule-nom">${nom}</span><span class="bascule-sous">${sous}</span></button>`;
+    return `<div class="bascule" role="group" aria-label="Activité d’Ariane" data-cote="${o ? 'orbite' : 'echo'}"><span class="bascule-curseur" aria-hidden="true"></span>${b('orbite', 'Orbite', 'Ariane pose', o)}${b('echo', 'Écho', 'Ariane observe', !o)}</div>${bloque ? '<p class="bascule-raison">Pour passer en Écho, mettre le lot en pause.</p>' : ''}`;
+  };
+  U.incident = function (inc) {
+    if (!inc) return '';
+    const choix = inc.actions.filter((x) => x.rang === 'choix');
+    const autres = inc.actions.filter((x) => x.rang !== 'choix');
+    return `<section class="incident incident-${inc.type}" role="${inc.type === 'reprise' ? 'status' : 'alert'}"><h2 class="incident-titre">${esc(inc.titre)}</h2><p class="incident-texte">${esc(inc.texte)}</p>${choix.length ? `<div class="choix" role="group" aria-label="Onglets ESV">${choix.map((x) => U.bouton(x, 'b-onglet')).join('')}</div>` : ''}${U.actions(autres)}</section>`;
+  };
+  /* Bornes du lot neuf (PRÊT). */
+  U.bornes = function (m) {
+    const b = m.bornes;
+    const fin = b.finDePartie
+      ? '<span class="borne-valeur">fin de la partie</span>'
+      : `<input class="borne-champ" data-champ="fin" inputmode="numeric" value="${b.fin}" aria-label="Dernier cut">`;
+    return `<div class="bornes"><label class="borne"><span class="borne-nom">Premier cut</span><input class="borne-champ" data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label><div class="borne"><span class="borne-nom">Dernier cut</span>${fin}</div><button type="button" class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="inter-piste" aria-hidden="true"><span class="inter-pouce"></span></span><span class="inter-texte">Jusqu’à la fin de la partie</span></button></div>`;
+  };
+  /* Réglage de la file (PRÊT) : interrupteur et nombre de parties. */
+  U.fileReglage = function (f) {
+    const nb = f.active
+      ? `<div class="file-nb" role="group" aria-label="Nombre de parties"><button type="button" class="pas" data-a="fileMoins" aria-label="Une partie de moins"${f.nb <= 2 ? ' aria-disabled="true"' : ''}>−</button><span class="file-nb-valeur" data-valeur="file-nb">${f.nb} parties</span><button type="button" class="pas" data-a="filePlus" aria-label="Une partie de plus"${f.nb >= 9 ? ' aria-disabled="true"' : ''}>+</button></div><p class="file-aide">Chaque partie est relue et corrigée, puis la suivante démarre seule.</p>`
+      : '<p class="file-aide">Éteinte : un seul lot, sur les bornes ci-dessus.</p>';
+    return `<section class="file-reglage"><button type="button" class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="inter-piste" aria-hidden="true"><span class="inter-pouce"></span></span><span class="inter-texte">File de parties</span></button>${nb}</section>`;
+  };
+  /* Les parties d'une file en marche : faites (bilan), courante, à venir. */
+  U.parties = function (m) {
+    const f = m.file;
+    if (!f.active || m.phase === 'pret') return '';
+    const lignes = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i);
+      let etat, texte;
+      if (p) { etat = 'faite'; texte = `${n(p.poses)} posés · ${n(p.differes)} différés · ${n(p.aControler)} à examiner`; }
+      else if (i === f.courante && !f.finie) { etat = f.alerte ? 'arretee' : (m.file.relecture ? 'relue' : 'courante'); texte = f.alerte ? 'arrêtée' : 'en cours'; }
+      else { etat = 'avenir'; texte = 'à venir'; }
+      if (p && i === f.courante && f.relecture) { etat = 'relue'; texte = 'relecture et correction'; }
+      lignes.push(`<li class="partie partie-${etat}"><span class="partie-forme" data-forme="partie ${etat}" aria-hidden="true"></span><span class="partie-nom">Partie ${i}</span><span class="partie-texte">${texte}</span></li>`);
+    }
+    return `<section class="parties" aria-label="File de parties"><h2 class="parties-titre">File · partie ${Math.min(f.courante, f.nb)} sur ${f.nb}</h2><ol class="parties-liste">${lignes.join('')}</ol></section>`;
+  };
+  U.alerte = function (f) {
+    if (!f.alerte) return '';
+    return `<section class="alerte" role="alert"><h2 class="alerte-titre">${esc(f.alerte.titre)}</h2><p class="alerte-texte">${esc(f.alerte.detail)}</p></section>`;
+  };
+  U.bilan = function (c) {
+    const t = (k, v, mot) => `<div class="bilan-case bilan-${k}"><span class="bilan-forme" data-forme="bilan ${k}" aria-hidden="true"></span><span class="bilan-nombre">${n(v)}</span><span class="bilan-mot">${mot}</span></div>`;
+    return `<div class="bilan">${t('pose', c.poses, 'posés')}${t('differe', c.differes, 'différés')}${t('vert', c.aExaminer, 'à examiner')}</div>`;
+  };
+  U.typeMot = (t) => (t === 'differe' ? 'Différé' : 'Vert à examiner');
+  /* Ce qui reste : chaque ligne Examiner et Ouvrir dans ESV. */
+  U.reste = function (m, entete) {
+    const r = m.restants;
+    const d = r.filter((x) => x.type === 'differe').length, v = r.length - d;
+    const lignes = r.map((x) => `<li class="reste-ligne reste-${x.type}"><span class="reste-forme" data-forme="reste ${x.type}" aria-hidden="true"></span><div class="reste-corps"><p class="reste-cut">Cut ${x.cut} <span class="reste-type">${U.typeMot(x.type)}</span></p><p class="reste-motif">${esc(x.motif)}</p></div><div class="reste-acts"><button type="button" class="b b-second b-petit" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button type="button" class="b b-lien b-petit" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div></li>`).join('');
+    return `<section class="reste"><div class="reste-tete">${entete || ''}<h1 class="titre">Ce qui reste</h1><p class="phrase">${r.length ? `${d} différés, ${v} verts à examiner.` : 'Rien ne reste à regarder.'}</p></div>${r.length ? `<ol class="reste-liste">${lignes}</ol>` : ''}<div class="acts"><div class="act act-second"><button type="button" class="b b-second" data-a="retour">Retour au lot</button></div></div></section>`;
+  };
+  /* La coupe d'un cut, fonctionnelle : profil mesuré et position proposée des deux rails. */
+  U.coupe = function (cut) {
+    const c = Demo.D.coupe(cut, 220);
+    const X = (x) => (x + 1) * 150, Z = (z) => 100 - (z + 0.35) * 260;
+    const pts = c.pts.map(([x, z]) => `<rect x="${(X(x) - 1).toFixed(1)}" y="${(Z(z) - 1).toFixed(1)}" width="2" height="2"/>`).join('');
+    const rails = c.rails.map((x) => `<line x1="${X(x)}" x2="${X(x)}" y1="20" y2="118"/>`).join('');
+    return `<figure class="coupe"><svg viewBox="0 0 300 130" role="img" aria-label="Coupe du cut ${cut} : profil mesuré et position proposée des deux rails"><g class="coupe-pts">${pts}</g><g class="coupe-rails">${rails}</g></svg><figcaption class="coupe-legende"><span class="coupe-l1">profil mesuré</span><span class="coupe-l2">position proposée</span></figcaption></figure>`;
+  };
+  U.examen = function (m, entete) {
+    const x = m.examen;
+    return `<section class="examen">${entete || ''}<h1 class="titre">Cut ${x.cut}</h1><p class="phrase"><span class="examen-type examen-${x.type}">${U.typeMot(x.type)}</span> · ${esc(x.motif)}</p>${U.coupe(x.cut)}<div class="acts"><div class="act act-principal"><button type="button" class="b b-principal" data-a="traiter" data-id="${esc(x.id)}">Marquer comme vu</button></div><div class="act act-second"><button type="button" class="b b-second" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div><div class="act act-lien"><button type="button" class="b b-lien" data-a="retour">Retour au lot</button></div></div></section>`;
+  };
+  U.message = (t) => (t ? `<p class="message" role="status">${esc(t)}</p>` : '');
+  /* Écho : ce qu'Ariane a vu de l'opérateur. */
+  U.echoChiffres = function (e) {
+    return `<div class="echo-chiffres"><div class="echo-case"><span class="echo-nombre" data-valeur="echo-vus">${n(e.vus)}</span><span class="echo-mot">poses vues</span></div><div class="echo-case"><span class="echo-nombre" data-valeur="echo-accord">${n(e.accord)}</span><span class="echo-mot">où Ariane aurait posé pareil</span></div></div>${e.dernier ? `<p class="echo-dernier">Dernière pose vue : cut <span data-valeur="echo-dernier">${e.dernier}</span></p>` : '<p class="echo-dernier">Aucune pose vue pour l’instant.</p>'}`;
+  };
+  /* Mouvement réduit : préférence système ou attribut sur <html>. */
+  U.reduit = () => Demo.D.mouvementReduit();
+  /* Le texte de progression : jamais un total deviné. */
+  U.progression = (c) => (c.total == null ? `${n(c.faits)} traités · total inconnu` : `${n(c.faits)} traités sur ${n(c.total)}`);
+
+
+  function entete(m) { return `<header class="tete"><p class="marque">Ariane</p>${U.liaison(m.liaison)}</header>`; }
+  function mode(m) {
+    if (m.vue === 'echo') return 'echo';
+    if (m.incident || m.file.alerte) return 'demande';
+    if (m.file.relecture) return 'relecture';
+    return m.phase;
+  }
+  function progres(m) {
+    const c = m.compte;
+    if (m.vue === 'echo' || m.phase === 'pret' || m.file.relecture) return '';
+    if (m.phase === 'fin') return U.bilan(c);
+    const inconnu = c.total == null;
+    return `<div class="progres"><div class="piste${inconnu ? ' inconnue' : ''}"><i style="--p:${inconnu ? 0 : c.part}"></i></div><p class="progres-texte"><span><b data-valeur="faits">${U.n(c.faits)}</b> ${inconnu ? 'traités · total inconnu' : 'sur ' + U.n(c.total)}</span><span>${c.tempsTexte} · <b>${c.differes}</b> différés</span></p></div>`;
+  }
+  function rendre(S, D) {
+    const m = D.modele();
+    if (m.vue === 'reste') return entete(m) + U.reste(m) + U.message(m.message);
+    if (m.vue === 'examen' && m.examen) return entete(m) + U.examen(m) + U.message(m.message);
+    const fil = '<div class="fil" data-garder="fil" aria-hidden="true"></div>';
+    const voir = m.restants.length && m.phase !== 'fin' && m.phase !== 'pret' && m.vue !== 'echo' ? `<div class="acts"><div class="act act-lien"><button type="button" class="b b-lien" data-a="voirReste">Voir ce qui reste (${m.restants.length})</button></div></div>` : '';
+    return entete(m) + U.bascule(m)
+      + `<h1 class="titre">${U.esc(m.titre)}</h1><p class="phrase">${U.esc(m.phrase)}</p>`
+      + fil + progres(m)
+      + U.alerte(m.file) + U.incident(m.incident)
+      + (m.vue === 'echo' ? U.echoChiffres(m.echo) : '')
+      + voir
+      + (m.phase === 'pret' && m.vue !== 'echo' ? U.bornes(m) + U.fileReglage(m.file) : '')
+      + (m.vue !== 'echo' ? U.parties(m) : '')
+      + U.actions(m.actions) + U.message(m.message);
+  }
+
+  /* ---------- Le fil : un élément conservé ; on n'y ajoute que ce qui vient d'arriver ---------- */
+  const F = { lot: null, faits: -1, vus: -1, accord: -1, cle: '', ecriture: 0 };
+  const MAX = 7;
+  function ligneCut(cut, r) {
+    if (!r) return { cls: 'pose', texte: `Cut ${cut} posé`, motif: '' };
+    if (r.type === 'differe') return { cls: 'differe', texte: `Cut ${cut} différé`, motif: r.motif };
+    return { cls: 'vert', texte: `Cut ${cut} posé, à examiner`, motif: r.motif };
+  }
+  function ligneEtat(md, m) {
+    const c = m.compte;
+    switch (md) {
+      case 'pret': return { cls: 'etat', texte: m.bornes.finDePartie ? `Prêt : du cut ${m.bornes.debut} à la fin de la partie` : `Prêt : du cut ${m.bornes.debut} au cut ${m.bornes.fin}`, motif: 'Rien n’est lancé.' };
+      case 'pause': return { cls: 'etat', texte: `En pause, reprend au cut ${c.cut}`, motif: '' };
+      case 'arrete': return { cls: 'etat', texte: `Arrêté au cut ${c.cut}`, motif: 'Le fil reprend au même cut avec « Continuer ce lot ».', coupe: true };
+      case 'demande': {
+        const q = m.incident ? m.incident.titre : m.file.alerte ? m.file.alerte.titre : '';
+        return { cls: 'attente', texte: `À vous : ${q}`, motif: m.incident && m.incident.type === 'reprise' ? 'Rien ne repart sans vous.' : '', coupe: !!(m.file.alerte || (m.incident && m.incident.type === 'reprise')) };
+      }
+      case 'relecture': return { cls: 'etat', texte: `Relecture de la partie ${m.file.courante}`, motif: 'Rien n’est posé pendant la relecture.' };
+      case 'fin': return { cls: 'etat', texte: `Lot terminé : ${U.n(c.poses)} posés, ${U.n(c.differes)} différés, ${U.n(c.aExaminer)} à examiner`, motif: '' };
+      case 'encours': return null;
+      default: return null;
+    }
+  }
+  function ajouter(ol, l, ecrire) {
+    const li = document.createElement('li');
+    li.className = 'l l-' + l.cls;
+    li.innerHTML = `<span class="f"></span><span class="x"><span class="e"></span><span class="curseur"></span>${l.motif ? `<span class="m">${U.esc(l.motif)}</span>` : ''}</span>`;
+    const e = li.querySelector('.e');
+    [...ol.querySelectorAll('.curseur')].forEach((c) => c.remove());
+    if (l.coupe) { const hr = document.createElement('li'); hr.className = 'coupure'; ol.appendChild(hr); }
+    ol.appendChild(li);
+    if (ecrire) {
+      /* Le texte arrive à vitesse fixe (environ 55 signes par seconde), plus vite que le rythme du lot. */
+      const debut = performance.now(), jeton = ++F.ecriture;
+      const pas = (t) => { if (jeton !== F.ecriture && !li.isConnected) return; const k = Math.min(l.texte.length, Math.floor((t - debut) / 18)); e.textContent = l.texte.slice(0, k); if (k < l.texte.length) requestAnimationFrame(pas); };
+      requestAnimationFrame(pas);
+    } else e.textContent = l.texte;
+    while (ol.children.length > MAX) ol.firstChild.remove();
+  }
+  function amorcer(ol, m, S, md) {
+    ol.innerHTML = '';
+    if (md === 'echo') {
+      const e = m.echo;
+      for (let k = Math.max(0, e.vus - 5); k < e.vus; k++) ajouter(ol, { cls: 'pose', texte: `Vous avez posé le cut ${301 + k}`, motif: '' }, false);
+      if (!e.vus) ajouter(ol, { cls: 'etat', texte: 'Ariane regarde, rien n’est encore posé', motif: '' }, false);
+      return;
+    }
+    if (m.phase !== 'pret') {
+      const der = m.phase === 'fin' ? m.compte.debut + m.compte.faits : S.cut;
+      for (let cut = Math.max(m.bornes.debut, der - 6); cut < der; cut++) ajouter(ol, ligneCut(cut, m.restants.find((x) => x.cut === cut)), false);
+    }
+    const le = ligneEtat(md, m);
+    if (le) ajouter(ol, le, false);
+  }
+  function apres(S, D, racine) {
+    const fil = racine.querySelector('.fil');
+    if (!fil) return;
+    const m = D.modele(), md = mode(m), reduit = U.reduit();
+    if (!fil.firstElementChild) { fil.innerHTML = '<ol></ol>'; F.lot = null; }
+    const ol = fil.firstElementChild;
+    fil.dataset.mode = md;
+    const cle = md + '|' + (m.incident ? m.incident.type : '') + (m.file.alerte ? m.file.alerte.cle : '');
+    const memeLot = Demo.etat() === F.lot;
+    if (!memeLot) amorcer(ol, m, S, md);
+    else if (md === 'echo') {
+      const e = m.echo;
+      if (e.vus > F.vus) ajouter(ol, { cls: e.accord > F.accord ? 'pose' : 'differe', texte: `Vous avez posé le cut ${e.dernier}`, motif: e.accord > F.accord ? 'Ariane aurait posé pareil.' : 'Ariane aurait posé autrement.' }, !reduit);
+      else if (cle !== F.cle) amorcer(ol, m, S, md);
+    } else {
+      if (md === 'encours' && m.compte.faits === F.faits + 1) {
+        const cut = S.cut - 1;
+        ajouter(ol, ligneCut(cut, m.restants.find((x) => x.cut === cut)), !reduit);
+      } else if (md === 'encours' && m.compte.faits !== F.faits && F.cle.startsWith('encours')) amorcer(ol, m, S, md);
+      if (cle !== F.cle) {
+        const le = ligneEtat(md, m);
+        if (le) ajouter(ol, le, !reduit);
+        else if (md === 'encours' && !F.cle.startsWith('encours')) ajouter(ol, { cls: 'etat', texte: `Reprise au cut ${m.compte.cut}`, motif: '' }, !reduit);
+      }
+    }
+    F.lot = Demo.etat(); F.faits = m.compte.faits; F.cle = cle;
+    if (m.echo) { F.vus = m.echo.vus; F.accord = m.echo.accord; }
+  }
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minuteur à secteur</title>
+<style>
+/*POLICE:b612*/
+/*POLICE:b612-mono*/
+/* Proposition « Minuteur à secteur » (famille signalétique et design d'information).
+   Logique : le temps qui reste se lit comme sur un minuteur de cuisine à secteur : un cadran de 60 minutes,
+   le secteur plein vaut les minutes restantes, il rétrécit vers midi à mesure que le lot avance.
+   Le disque porte un sens écrit (des minutes), ce n'est pas un décor. Sans total connu, pas de secteur.
+   Couleurs (Radix sage, indigo, amber, red) : l'indigo est réservé au temps ; l'ambre et le rouge aux incidents. */
+:root{
+  --scene:#E6E9E8; --fond:#FBFDFC; --fond2:#F7F9F8; --fond3:#EEF1F0; --trait:#D7DAD9; --trait-fort:#868E8B;
+  --texte:#1A211E; --texte2:#5F6563; --encre:#1A211E; --sur-encre:#FBFDFC;
+  --temps:#3E63DD; --temps-doux:#EDF2FE;
+  --ambre:#FFC53D; --ambre-trait:#AB6400; --ambre-doux:#FFF7C2; --ambre-texte:#4F3422;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#FEEBEC; --rouge-texte:#641723; --rouge-trait:#CE2C31;
+  --focus:#3A5BC7;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --scene:#000000; --fond:#101211; --fond2:#171918; --fond3:#202221; --trait:#373B39; --trait-fort:#717D79;
+  --texte:#ECEEED; --texte2:#ADB5B2; --encre:#ECEEED; --sur-encre:#101211;
+  --temps:#9EB1FF; --temps-doux:#182449;
+  --ambre:#FFC53D; --ambre-trait:#FFC53D; --ambre-doux:#302008; --ambre-texte:#FFE7B3;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9; --rouge-trait:#FF9592;
+  --focus:#9EB1FF;
+}}
+:root[data-theme="dark"]{
+  --scene:#000000; --fond:#101211; --fond2:#171918; --fond3:#202221; --trait:#373B39; --trait-fort:#717D79;
+  --texte:#ECEEED; --texte2:#ADB5B2; --encre:#ECEEED; --sur-encre:#101211;
+  --temps:#9EB1FF; --temps-doux:#182449;
+  --ambre:#FFC53D; --ambre-trait:#FFC53D; --ambre-doux:#302008; --ambre-texte:#FFE7B3;
+  --rouge:#CE2C31; --sur-rouge:#FFFFFF; --rouge-doux:#3B1219; --rouge-texte:#FFD1D9; --rouge-trait:#FF9592;
+  --focus:#9EB1FF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'B612',system-ui,sans-serif;font-size:16px;line-height:1.4}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);border:1px solid var(--trait);border-radius:8px}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;border-radius:8px;font-size:14px}
+.notes h2{font-size:20px;margin:0 0 8px}
+.notes h3{font-size:15px;margin:14px 0 4px}
+.notes p,.notes li{margin:0 0 8px}
+.notes ul{padding-left:18px;margin:0}
+
+/* tailles : 13 / 16 / 20 / 40 ; rayons : 4 et 8 */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.mono{font-family:'B612 Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+.haut{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 16px 0}
+.haut h1{margin:0;font-size:20px;font-weight:700}
+.haut .lia{margin-left:auto;font-size:13px;color:var(--texte2)}
+
+/* Le cadran. */
+.instrument{display:grid;grid-template-columns:1fr;justify-items:center;padding:8px 16px 4px}
+.cadran{position:relative;width:min(240px,64cqi);aspect-ratio:1}
+.cadran svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.c-fond{fill:var(--fond2);stroke:var(--trait-fort);stroke-width:1.5}
+.c-graduation{fill:none;stroke:var(--trait-fort);stroke-width:1.5}
+.c-graduation.maj{stroke:var(--texte);stroke-width:2.5}
+.c-chiffre{font:12px 'B612 Mono',monospace;fill:var(--texte2);text-anchor:middle;dominant-baseline:central}
+.c-secteur{fill:none;stroke:var(--temps)}
+.c-secteur.fige{stroke:url(#c-hach)}
+.c-hach-trait{stroke:var(--temps);stroke-width:3}
+.c-bord-secteur{fill:none;stroke:var(--temps);stroke-width:2}
+.c-vide{fill:none;stroke:var(--trait-fort);stroke-width:1.5;stroke-dasharray:4 4}
+/* Lecture au centre, sur un disque opaque. */
+.centre{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52%;aspect-ratio:1;border-radius:50%;background:var(--fond);border:1.5px solid var(--trait-fort);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px}
+.centre .val{font-family:'B612 Mono',monospace;font-size:clamp(28px,9cqi,40px);font-weight:700;line-height:1}
+.centre .u{font-size:13px;color:var(--texte2)}
+.centre .mot{font-size:16px;font-weight:700;line-height:1.15}
+.sous{font-size:13px;color:var(--texte2);margin:8px 0 0;text-align:center;max-width:32ch}
+.sous b{color:var(--texte)}
+
+/* Petits cadrans de lecture (texte seulement, comme les sous-cadrans d'une montre, sans cercle). */
+.sous-cadrans{display:grid;grid-template-columns:repeat(3,1fr);margin:12px 16px 0;border-top:2px solid var(--texte)}
+.sous-cadrans div{padding:8px 0 6px;text-align:center}
+.sous-cadrans div+div{border-left:1px solid var(--trait)}
+.sous-cadrans b{display:block;font-family:'B612 Mono',monospace;font-size:20px;font-weight:700}
+.sous-cadrans span{font-size:13px;color:var(--texte2)}
+.sous-cadrans .att{background:var(--ambre-doux)}
+.sous-cadrans .att b,.sous-cadrans .att span{color:var(--ambre-texte)}
+.sous-cadrans .att span::before{content:"▲ ";font-size:11px}
+
+.encadre{margin:12px 16px 0;border-radius:8px;border:2px solid var(--trait-fort);padding:10px 12px}
+.encadre.att{border-color:var(--ambre-trait);background:var(--ambre-doux)} .encadre.att *{color:var(--ambre-texte)}
+.encadre.agir{border-color:var(--rouge-trait);background:var(--rouge-doux)} .encadre.agir *{color:var(--rouge-texte)}
+.encadre h2{margin:0 0 2px;font-size:16px}
+.encadre h2::before{content:attr(data-mot);display:inline-block;font-size:11px;letter-spacing:.06em;border:1.5px solid currentColor;border-radius:4px;padding:1px 5px;margin-right:8px;vertical-align:2px}
+.encadre p{margin:0}
+.encadre .choix{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.encadre .choix button{text-align:left;background:var(--fond);border:2px solid var(--trait-fort);border-radius:4px;padding:10px 12px;font-weight:700;min-height:44px;color:var(--texte)}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 0}
+.bornes label{display:block;font-size:13px;margin-bottom:4px;color:var(--texte2)}
+.bornes input{width:100%;font:700 20px 'B612 Mono',monospace;color:var(--texte);background:var(--fond);border:2px solid var(--trait-fort);border-radius:4px;padding:8px 10px}
+.bornes input:disabled{background:var(--fond3);border-style:dashed;color:var(--texte2)}
+.opt{display:flex;align-items:center;gap:10px;width:calc(100% - 32px);margin:8px 16px 0;background:none;border:0;border-bottom:1px solid var(--trait);padding:10px 0;text-align:left;min-height:48px}
+.opt .etat{margin-left:auto;font-size:13px;font-weight:700;border:2px solid var(--trait-fort);border-radius:4px;padding:2px 8px}
+.opt[aria-pressed="true"] .etat{background:var(--encre);border-color:var(--encre);color:var(--sur-encre)}
+.nb{display:flex;align-items:center;gap:10px;margin:8px 16px 0}
+.nb button{width:40px;height:40px;border:2px solid var(--trait-fort);border-radius:4px;background:var(--fond);font-size:20px;font-weight:700}
+.nb b{font-family:'B612 Mono',monospace;font-size:20px;min-width:1.5ch;text-align:center}
+
+.parties{display:grid;grid-template-columns:repeat(var(--nb),1fr);gap:4px;margin:12px 16px 0}
+.parties div{border-top:4px solid var(--trait);padding-top:4px;font-size:13px;color:var(--texte2)}
+.parties div.faite{border-top-color:var(--texte)}
+.parties div.cour{border-top-color:var(--temps)}
+.parties div.arretee{border-top:4px dashed var(--rouge-trait)}
+.parties b{display:block;color:var(--texte);font-size:13px}
+
+.actions{display:flex;flex-direction:column;gap:8px;padding:16px}
+.b{min-height:48px;border-radius:4px;font-weight:700;font-size:16px;padding:10px 14px;border:2px solid var(--encre);background:var(--fond);color:var(--texte)}
+.b.principal{background:var(--encre);color:var(--sur-encre)}
+.b.arret{border-color:var(--trait-fort);margin-top:6px}
+.b.arret.confirme{background:var(--rouge);border-color:var(--rouge);color:var(--sur-rouge)}
+.b[aria-disabled="true"]{background:var(--fond3);color:var(--texte2);border:2px dashed var(--trait-fort);cursor:not-allowed}
+.b small{display:block;font-weight:400;font-size:13px}
+.b[aria-disabled="true"] small{color:var(--texte)}
+.raison{margin:0;font-size:13px}
+.vers{display:flex;justify-content:space-between;align-items:center;width:calc(100% - 32px);margin:12px 16px 0;background:var(--ambre-doux);border:2px solid var(--ambre-trait);border-radius:4px;padding:10px 12px;font-weight:700;min-height:48px;color:var(--ambre-texte)}
+
+.acti{display:grid;grid-template-columns:1fr 1fr;margin:0 16px 12px;border:2px solid var(--trait-fort);border-radius:4px;overflow:hidden}
+.acti button{background:var(--fond);border:0;padding:8px 10px;min-height:48px;text-align:left}
+.acti button+button{border-left:2px solid var(--trait-fort)}
+.acti button small{display:block;font-size:13px;color:var(--texte2)}
+.acti button[aria-pressed="true"]{background:var(--encre);color:var(--sur-encre)}
+.acti button[aria-pressed="true"] small{color:var(--sur-encre)}
+.acti button[aria-disabled="true"]{cursor:not-allowed;background:var(--fond3)}
+.acti p{grid-column:1/-1;margin:0;padding:6px 10px;font-size:13px;border-top:1px solid var(--trait);color:var(--texte2)}
+
+.message{position:sticky;bottom:0;margin:0;padding:0 16px 12px}
+.message:empty{padding:0}
+.message span{display:block;background:var(--encre);color:var(--sur-encre);border-radius:4px;padding:10px 14px}
+
+.barre-vue{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:2px solid var(--texte)}
+.barre-vue h1{margin:0;font-size:20px}
+.barre-vue .b{margin-left:auto;min-height:40px}
+.restes{list-style:none;margin:0;padding:0 16px}
+.restes li{display:grid;grid-template-columns:4.5ch minmax(0,1fr);gap:2px 12px;padding:10px 0;border-bottom:1px solid var(--trait)}
+.restes .cut{font-family:'B612 Mono',monospace;font-weight:700;font-size:20px;text-align:right;grid-row:span 2;line-height:1.2}
+.restes small{display:block;font-size:13px;color:var(--texte2)}
+.restes .bt{display:flex;gap:6px;flex-wrap:wrap}
+.restes .bt button{border:2px solid var(--trait-fort);border-radius:4px;background:var(--fond);padding:4px 10px;font-weight:700;font-size:13px;min-height:36px}
+.restes .bt button:first-child{border-color:var(--encre)}
+.groupe{font-size:16px;margin:16px 16px 4px}
+.coupe{display:block;width:calc(100% - 32px);height:auto;margin:12px 16px 0;border:1px solid var(--trait);border-radius:8px;background:var(--fond2)}
+.coupe .pt{fill:var(--texte2)} .coupe .prop{stroke:var(--temps);stroke-width:2} .coupe text{font:13px 'B612',sans-serif;fill:var(--texte)}
+
+@container (min-width:520px){ .actions{flex-direction:row;flex-wrap:wrap} .actions .b{flex:1 1 40%} .actions .raison{flex-basis:100%} }
+
+@media (prefers-reduced-motion: no-preference){
+  html:not([data-mouvement="reduit"]) .c-secteur{transition:stroke-dasharray 900ms linear}
+  html:not([data-mouvement="reduit"]) .centre .val.change{animation:minute 300ms cubic-bezier(.16,1,.3,1)}
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .centre,
+  html:not([data-mouvement="reduit"]) #panneau[data-etat-change="1"] .haut h1{animation:fondu 220ms ease-out}
+  html:not([data-mouvement="reduit"]) .message.change span{animation:entree 200ms cubic-bezier(.16,1,.3,1)}
+}
+@keyframes minute{from{opacity:0;transform:translateY(-30%)}to{opacity:1;transform:none}}
+@keyframes fondu{from{opacity:.15}to{opacity:1}}
+@keyframes entree{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Minuteur à secteur"></div></div>
+  <aside class="notes">
+    <h2>Minuteur à secteur</h2>
+    <p><b>Logique.</b> Le temps qui reste se lit comme sur un minuteur à secteur : un cadran de 60 minutes dont le secteur plein vaut les minutes restantes et rétrécit vers midi.</p>
+    <h3>D'où ça vient</h3>
+    <ul>
+      <li>Horlogerie et minuteurs (article « Egg timer ») : compte à rebours sur cadran réglable, jusqu'à 60 minutes pour la version mécanique de poche. Une surface qui diminue se juge d'un coup d'œil, de loin, sans lire un chiffre.</li>
+      <li>Écran de vol principal (article « Primary flight display ») : un instrument central lu d'un seul regard, les valeurs secondaires autour ; d'où le cadran au centre et trois sous-lectures en dessous.</li>
+      <li>Police B612 (dépôt public de la police, README) : conçue et testée pour les écrans de cockpit, formes de caractères écartées au maximum.</li>
+      <li>beui.dev, Motion Guides : une progression se montre en linéaire ; mouvement réduit = garder le changement, retirer la course.</li>
+      <li>WCAG 2.2, 1.4.11 : le secteur et les graduations dépassent 3:1 contre le fond ; 1.4.1 : le temps est aussi écrit en chiffres au centre.</li>
+      <li>Radix Colors : sage (neutre), indigo (le temps), amber et red (incidents).</li>
+    </ul>
+    <h3>Ce que ça veut dire ici</h3>
+    <ul>
+      <li><b>Secteur indigo plein</b> : minutes restantes estimées, lot en marche. <b>Secteur hachuré</b> : le temps est figé (pause ou arrêt) ; il ne s'écoule pas.</li>
+      <li><b>Cadran vide, cercle pointillé</b> : temps inconnu (total inconnu), rien n'est dessiné ni deviné. <b>Cadran vide plein</b> : lot terminé.</li>
+      <li>Avant le lancement, le secteur hachuré montre la durée estimée des bornes choisies : « si vous lancez ». Hachuré veut toujours dire « ce temps ne s'écoule pas maintenant ».</li>
+      <li>L'indigo ne sert qu'au temps : il ne dit jamais « bien » ou « mal ».</li>
+      <li><b>Mouvement</b> : le secteur rétrécit à vitesse constante entre deux lectures (0,9 s, linéaire) ; quand la minute affichée change, le chiffre descend de 30 % en 0,3 s ; un changement d'état fond le centre du cadran. En mouvement réduit : le secteur saute d'une lecture à l'autre, le chiffre change sur place.</li>
+    </ul>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const R = 100, RS = 46; /* rayon du cadran ; rayon médian du secteur (dessiné par un cercle à trait épais) */
+  const CIRC = 2 * Math.PI * RS;
+
+  /* Le cadran fixe (graduations) est conservé d'un rendu à l'autre : data-garder. Son secteur est mis à jour dans apres(). */
+  function cadranSVG() {
+    let g = '';
+    for (let i = 0; i < 60; i++) {
+      const a = (i / 60) * 2 * Math.PI, maj = i % 5 === 0, r1 = maj ? 86 : 91;
+      g += `<line class="c-graduation${maj ? ' maj' : ''}" data-forme="graduation" x1="${(R + r1 * Math.sin(a)).toFixed(1)}" y1="${(R - r1 * Math.cos(a)).toFixed(1)}" x2="${(R + 97 * Math.sin(a)).toFixed(1)}" y2="${(R - 97 * Math.cos(a)).toFixed(1)}"/>`;
+    }
+    const chiffres = [0, 15, 30, 45].map((m) => { const a = (m / 60) * 2 * Math.PI; return `<text class="c-chiffre" aria-hidden="true" x="${(R + 76 * Math.sin(a)).toFixed(1)}" y="${(R - 76 * Math.cos(a)).toFixed(1)}">${m}</text>`; }).join('');
+    return `<svg viewBox="0 0 200 200" aria-hidden="true" data-garder="cadran">
+      <defs><pattern id="c-hach" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="c-hach-trait" x1="0" y1="0" x2="0" y2="7"/></pattern></defs>
+      <circle class="c-fond" cx="100" cy="100" r="98"/>
+      <circle class="c-secteur" data-forme="secteur du temps" cx="100" cy="100" r="${RS}" stroke-width="${RS * 2 - 2}" stroke-dasharray="0 ${CIRC.toFixed(1)}" transform="rotate(-90 100 100)"/>
+      <circle class="c-vide" cx="100" cy="100" r="${RS * 2 - 4}" style="display:none"/>
+      ${g}${chiffres}</svg>`;
+  }
+
+  /* État du cadran pour le rendu courant : minutes du secteur et manière de le dessiner. */
+  function etatCadran(m) {
+    const c = m.compte;
+    if (m.vue === 'echo') return { min: 0, mode: 'vide' };
+    if (m.phase === 'pret') return m.bornes.finDePartie ? { min: 0, mode: 'inconnu' } : { min: Math.round((m.bornes.fin - m.bornes.debut + 1) * 0.075), mode: 'estime' };
+    if (m.phase === 'fin' || m.file.relecture) return { min: 0, mode: 'vide' };
+    if (c.minutes == null) return { min: 0, mode: 'inconnu' };
+    return { min: c.minutes, mode: m.phase === 'encours' ? 'marche' : 'fige', exact: c.total ? (c.total - c.faits) * 0.075 : 0 };
+  }
+
+  function centre(m, ec) {
+    const c = m.compte;
+    let val = '', u = '', mot = '';
+    if (m.vue === 'echo') { val = String(m.echo.vus); u = 'cuts observés'; }
+    else if (m.file.relecture) mot = 'Relecture';
+    else if (m.phase === 'fin') { mot = 'Terminé'; u = `${n(c.faits)} cuts`; }
+    else if (ec.mode === 'inconnu') { mot = 'Temps inconnu'; u = 'total inconnu'; }
+    else { val = ec.min < 1 && m.phase !== 'pret' ? '<1' : String(ec.min); u = m.phase === 'pret' ? 'min estimées' : ec.mode === 'fige' ? 'min, figées' : 'min restantes'; }
+    return `<div class="centre">${val ? `<span class="val" data-valeur="minutes">${esc(val)}</span>` : ''}${mot ? `<span class="mot">${esc(mot)}</span>` : ''}${u ? `<span class="u">${esc(u)}</span>` : ''}</div>`;
+  }
+
+  function instrument(m) {
+    const ec = etatCadran(m), c = m.compte;
+    let sous = '';
+    if (m.vue === 'echo') sous = `Ariane regarde ; dernier cut vu : <b class="mono">${m.echo.dernier == null ? '–' : m.echo.dernier}</b>.`;
+    else if (m.phase === 'pret') sous = m.bornes.finDePartie ? 'Jusqu’à la fin de la partie : la durée se saura en route.' : 'Durée estimée des bornes choisies, si vous lancez maintenant.';
+    else if (m.file.relecture) sous = esc(m.phrase);
+    else if (m.phase === 'encours') sous = `Estimation. Ariane pose le cut <b class="mono">${c.cut}</b>.`;
+    else if (m.phase === 'fin') sous = esc(m.phrase);
+    else sous = `Le temps ne s’écoule pas : ${m.phase === 'pause' ? 'en pause' : 'arrêté'} au cut <b class="mono">${c.cut}</b>.`;
+    if (ec.mode === 'inconnu' && m.phase !== 'pret') sous = `Total inconnu : aucun temps n’est deviné. Ariane pose le cut <b class="mono">${c.cut}</b>.`;
+    return `<section class="instrument" role="img" aria-label="${esc(ec.mode === 'inconnu' ? 'Temps restant inconnu' : ec.min + ' minutes')}"><div class="cadran" data-mode="${ec.mode}" data-min="${ec.exact != null ? ec.exact : ec.min}">${cadranSVG()}${centre(m, ec)}</div><p class="sous">${sous}</p></section>`;
+  }
+
+  function sousCadrans(m) {
+    const c = m.compte, nd = Demo.D.differes().length, nv = Demo.D.verts().length, att = m.phase !== 'encours' && m.phase !== 'pause';
+    return `<div class="sous-cadrans"><div><b>${n(c.faits)}</b><span>sur ${c.total == null ? 'total inconnu' : n(c.total)}</span></div><div class="${att && nd ? 'att' : ''}"><b>${nd}</b><span>différés</span></div><div class="${att && nv ? 'att' : ''}"><b>${nv}</b><span>à examiner</span></div></div>`;
+  }
+
+  function bouton(x) { return `<button class="b ${x.rang || 'second'}${x.confirme ? ' confirme' : ''}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}${x.note ? `<small>${esc(x.note)}</small>` : ''}</button>`; }
+  function actions(m, liste) { const l = liste || m.actions.filter((a) => a.rang !== 'lien'); const r = l.find((a) => a.raison); return l.length ? `<div class="actions">${l.map(bouton).join('')}${r ? `<p class="raison">${esc(r.raison)}</p>` : ''}</div>` : ''; }
+  const message = (m) => `<p class="message" data-valeur="message" role="status">${m.message ? `<span>${esc(m.message)}</span>` : ''}</p>`;
+  const haut = (m, t) => `<header class="haut"><h1>${esc(t)}</h1><span class="lia">${esc(m.liaison.texte)}</span></header>`;
+
+  function encadres(m) {
+    let h = '';
+    const i = m.incident;
+    if (i) h += `<section class="encadre ${i.type === 'reprise' ? 'att' : 'agir'}"><h2 data-mot="${i.type === 'reprise' ? 'À REGARDER' : 'À FAIRE'}">${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((a) => `<button data-a="${a.a}"${a.id ? ` data-id="${esc(a.id)}"` : ''}>${esc(a.libelle)}</button>`).join('')}</div>` : ''}</section>`;
+    if (m.file.alerte) h += `<section class="encadre agir"><h2 data-mot="ARRÊT">${esc(m.file.alerte.titre)}</h2><p>${esc(m.file.alerte.detail)}</p></section>`;
+    return h;
+  }
+
+  function parties(m) {
+    const f = m.file;
+    let h = `<div class="parties" style="--nb:${f.nb}" aria-label="Parties de la file">`;
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), cour = !f.finie && i === f.courante;
+      const cls = cour && f.alerte ? 'arretee' : p ? 'faite' : cour ? 'cour' : '';
+      h += `<div class="${cls}"><b>Partie ${i}</b>${p ? `${n(p.poses)} posés · ${p.differes} diff.${cour ? ' · relue' : ''}` : cour ? (f.alerte ? 'arrêtée ici' : 'en cours') : 'à venir'}</div>`;
+    }
+    return h + '</div>';
+  }
+
+  function reglages(m) {
+    const b = m.bornes, f = m.file;
+    return `<div class="bornes"><div><label for="m-debut">Premier cut</label><input id="m-debut" data-champ="debut" inputmode="numeric" value="${b.debut}"></div><div><label for="m-fin">Dernier cut</label><input id="m-fin" data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin"' : ''}></div></div>
+      <button class="opt" data-a="finDePartie" aria-pressed="${b.finDePartie}">Aller jusqu’à la fin de la partie<span class="etat">${b.finDePartie ? 'oui' : 'non'}</span></button>
+      <button class="opt" data-a="fileBascule" aria-pressed="${f.active}">File de parties<span class="etat">${f.active ? 'allumée' : 'éteinte'}</span></button>
+      ${f.active ? `<div class="nb" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une de moins">−</button><b>${f.nb}</b><button data-a="filePlus" aria-label="Une de plus">+</button><span>parties, chacune relue et corrigée</span></div>` : ''}`;
+  }
+
+  function activite(m) {
+    const o = m.activite === 'orbite', bl = m.activiteBloquee;
+    return `<div class="acti" role="group" aria-label="Activité d'Ariane"><button data-a="orbite" aria-pressed="${o}"${bl && !o ? ' aria-disabled="true"' : ''}>Orbite<small>Ariane pose</small></button><button data-a="echo" aria-pressed="${!o}"${bl ? ' aria-disabled="true"' : ''}>Écho<small>Ariane observe</small></button>${bl ? '<p>Mettre le lot en pause pour changer d’activité.</p>' : ''}</div>`;
+  }
+
+  function coupe(cut) {
+    const k = Demo.D.coupe(cut, 260), W = 320, H = 150;
+    const X = (x) => 10 + (x + 1) / 2 * (W - 20), Z = (z) => H - 24 - (z + 0.5) * (H - 40) / 0.5;
+    return `<svg class="coupe" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut}">${k.pts.map(([x, z]) => `<rect class="pt" x="${X(x).toFixed(1)}" y="${Z(z).toFixed(1)}" width="2" height="2"/>`).join('')}${k.rails.map((r) => `<line class="prop" x1="${X(r)}" x2="${X(r)}" y1="14" y2="${H - 30}"/>`).join('')}<text x="10" y="${H - 8}">traits : position proposée par Ariane</text></svg>`;
+  }
+
+  function vueReste(m) {
+    const ligne = (x) => `<li><span class="cut">${x.cut}</span><span>${esc(x.motif)}</span><span class="bt"><button data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = Demo.D.differes(), v = Demo.D.verts();
+    let h = `<div class="barre-vue"><h1>Ce qui reste <span class="mono">${m.restants.length}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</div>`;
+    if (!m.restants.length) h += '<p class="groupe">Plus rien n’attend.</p>';
+    if (d.length) h += `<h2 class="groupe">Différés</h2><ul class="restes">${d.map(ligne).join('')}</ul>`;
+    if (v.length) h += `<h2 class="groupe">Posés à examiner</h2><ul class="restes">${v.map(ligne).join('')}</ul>`;
+    return h + message(m);
+  }
+  function vueExamen(m) {
+    const x = m.examen;
+    return `<div class="barre-vue"><h1>Cut <span class="mono">${x.cut}</span></h1>${bouton({ a: 'retour', libelle: 'Retour au lot' })}</div><header class="haut"><h1>${x.type === 'differe' ? 'Différé' : 'Posé, à examiner'}</h1></header><p class="sous" style="text-align:left;margin:4px 16px 0">${esc(x.motif)}.</p>${coupe(x.cut)}` + actions(m, [{ a: 'ouvrir', id: x.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: x.id, libelle: 'Marquer comme vu' }]) + message(m);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    if (m.vue === 'reste') return vueReste(m);
+    if (m.vue === 'examen' && m.examen) return vueExamen(m);
+    let h = haut(m, m.titre) + encadres(m) + instrument(m);
+    if (m.vue === 'echo') return h + `<div class="sous-cadrans"><div><b>${m.echo.vus}</b><span>observés</span></div><div><b>${m.echo.accord}</b><span>même choix</span></div><div><b>${m.echo.vus ? Math.round(m.echo.accord / m.echo.vus * 100) : 0} %</b><span>d’accord</span></div></div>` + actions(m) + activite(m) + message(m);
+    if (m.phase === 'pret') h += reglages(m);
+    else {
+      h += sousCadrans(m);
+      const lien = m.actions.find((a) => a.rang === 'lien');
+      if (lien) h += `<button class="vers" data-a="${lien.a}"><span>▲ ${esc(lien.libelle)}</span><span aria-hidden="true">→</span></button>`;
+      if (m.file.active) h += parties(m);
+    }
+    return h + actions(m) + activite(m) + message(m);
+  }
+
+  /* Après chaque rendu : régler le secteur du cadran conservé (transition linéaire entre deux lectures). */
+  function apres(S, D, racine) {
+    const cad = racine.querySelector('.cadran'); if (!cad) return;
+    const mode = cad.getAttribute('data-mode'), min = Math.min(60, Number(cad.getAttribute('data-min')) || 0);
+    const s = cad.querySelector('.c-secteur'), v = cad.querySelector('.c-vide');
+    const lg = mode === 'vide' || mode === 'inconnu' ? 0 : (min / 60) * CIRC;
+    s.setAttribute('stroke-dasharray', `${lg.toFixed(2)} ${CIRC.toFixed(2)}`);
+    s.classList.toggle('fige', mode === 'fige' || mode === 'estime');
+    v.style.display = mode === 'inconnu' ? '' : 'none';
+  }
+
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>
