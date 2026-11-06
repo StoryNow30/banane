@@ -1,0 +1,78 @@
+{
+  "repetitions": 15,
+  "lot": 400,
+  "mesures": [
+    {
+      "nom": "reglages",
+      "jsMs": 0.09999999986030161,
+      "wasmMs": 3.8999999999068677,
+      "jsUs": 0.24999999965075403,
+      "wasmUs": 9.74999999976717,
+      "lent": true
+    },
+    {
+      "nom": "detailDeplacement",
+      "jsMs": 0.19999999995343387,
+      "wasmMs": 7.5,
+      "jsUs": 0.4999999998835847,
+      "wasmUs": 18.75,
+      "lent": true
+    },
+    {
+      "nom": "detailRemise",
+      "jsMs": 0.10000000009313226,
+      "wasmMs": 3.5,
+      "jsUs": 0.25000000023283064,
+      "wasmUs": 8.75,
+      "lent": true
+    },
+    {
+      "nom": "juger",
+      "jsMs": 0.19999999995343387,
+      "wasmMs": 4.300000000046566,
+      "jsUs": 0.4999999998835847,
+      "wasmUs": 10.750000000116415,
+      "lent": true
+    },
+    {
+      "nom": "besoin",
+      "jsMs": 0,
+      "wasmMs": 2.699999999953434,
+      "jsUs": 0,
+      "wasmUs": 6.749999999883585,
+      "lent": true
+    },
+    {
+      "nom": "ecartCamera",
+      "jsMs": 0.10000000009313226,
+      "wasmMs": 3.199999999953434,
+      "jsUs": 0.25000000023283064,
+      "wasmUs": 7.999999999883585,
+      "lent": true
+    },
+    {
+      "nom": "pixelMm",
+      "jsMs": 0,
+      "wasmMs": 2,
+      "jsUs": 0,
+      "wasmUs": 5,
+      "lent": true
+    },
+    {
+      "nom": "journal",
+      "jsMs": 0.19999999995343387,
+      "wasmMs": 18.4000000001397,
+      "jsUs": 0.4999999998835847,
+      "wasmUs": 46.000000000349246,
+      "lent": true
+    },
+    {
+      "nom": "releve",
+      "jsMs": 0.6000000000931323,
+      "wasmMs": 191.30000000004657,
+      "jsUs": 1.5000000002328306,
+      "wasmUs": 478.2500000001164,
+      "lent": true
+    }
+  ]
+}

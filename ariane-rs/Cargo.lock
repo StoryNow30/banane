@@ -69,3 +69,11 @@ dependencies = [
 [[package]]
 name = "ariane-vba"
 version = "0.0.0"
+
+[[package]]
+name = "ariane-vue"
+version = "0.0.0"
+dependencies = [
+ "ariane-js",
+ "ariane-vba",
+]
