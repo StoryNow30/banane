@@ -1,6 +1,6 @@
 # CH-070 — Rapport : ariane-session (lot 250–299) — 06/11/2026
 
-Branche `chantier/CH-070`. Crate `ariane-rs/crates/ariane-session` (membre de l'espace, lints de l'espace), façade `ariane-rs/coquille/facade-session.js`, bancs `ariane-rs/parite/session-*.cjs`, lanceur `tools/ch070-essais.cjs`. Aucun fichier de `src/`, `tests/`, `vendor/` ni des crates `ariane-js`, `ariane-vba`, `ariane-coeur` n'est modifié. Deux propositions au chef : `coeur-aiguillage.patch` (bras `250..=299` et dépendance, appliqué hors dépôt par `tools/ch070-construire.cjs` pour les bancs) et `ariane-js-date-json.patch` (modules `date` et `json` ; s'applique, 15 essais verts, clippy propre).
+Branche `chantier/CH-070`. Crate `ariane-rs/crates/ariane-session` (membre de l'espace, lints de l'espace), façade `ariane-rs/coquille/facade-session.js`, bancs `ariane-rs/parite/session-*.cjs`, lanceur `tools/ch070-essais.cjs`. Aucun fichier de `src/`, `tests/`, `vendor/` ni des crates `ariane-js`, `ariane-vba`, `ariane-coeur` n'est modifié. Deux propositions au chef : `coeur-aiguillage.patch` (bras `250..=299` et dépendance, appliqué hors dépôt par `tools/ch070-construire.cjs` pour les bancs) et `ariane-js-extra.patch` (tout `js_extra.rs` comme module `ariane_js::extra` : Date.parse, JSON, localeCompare par locale vérifiée ; s'applique, 19 essais verts, clippy propre).
 
 ## Fonctions portées (numéros du cœur)
 - **part-summary-49, entier** : 250 `projectEvent`, 251 `summarize`, 252 `fromJournal`, 253 `contextOf`, 254 `deferKind`.
@@ -41,6 +41,18 @@ Résolution de l'horloge de la page : 0,1 ms. « < 0,1 » signifie sous la réso
 | classify / chooseGeometry / referenceFromWrite | 0,022 / 0,006 / 0,005 | 2,38 / 1,43 / 2,35 | 108 / 238 / 494 |
 | accountQuality / visitRelation | 0,002 / 0,002 | 0,42 / 0,25 | ≈ 200 / 124 |
 | historique, ficheFin, ajouterFin, health, exportAdvice, mergeMetrics, projectEvent, redactedEvent, poseEqual, referenceParEcriture | < 0,1 | 0,01 à 1,6 | plus lent |
+
+## Mémoire du cœur (ÉTABLI, `haute-eau.json`, instance neuve par mesure, plafond 256 Mio)
+| Appel (plus grosse entrée réelle) | Trame d'entrée | Arène pendant l'appel | Mémoire linéaire |
+|---|---|---|---|
+| summarize, événements projetés (panneau) | 0,5 Mio | 7,0 Mio | 8,5 Mio |
+| historique | 0,2 Mio | 0,8 Mio | 2,1 Mio |
+| classify, plus gros enregistrement | 1,0 Mio | 7,9 Mio | 17,0 Mio |
+| reconstruireCut, même enregistrement | 1,0 Mio | 36,9 Mio | 68,0 Mio |
+| health, session entière | 0,3 Mio | 0,6 Mio | 2,1 Mio |
+| summarize, bilan ENTIER brut (94 000 événements) | 28,6 Mio | — | 256 Mio : **trappe** au plafond, repli JS propre |
+
+`reconstruireCut` copie l'enregistrement pour chaque instantané : l'arène, qui ne rend rien avant la fin de l'appel, monte à 37 fois l'entrée ; la coquille réinstancie au-delà de 64 Mio (18 réinstanciations dans le banc de temps). Le bilan brut tient en 28,6 Mio de trame, mais son décodage en valeurs et les copies du tri dépassent 256 Mio.
 
 ## Ce qui reste en JS, et pourquoi
 - **Toutes les fonctions sauf `reconstruireCut`** : elles sont plus lentes en WASM (chiffres ci-dessus). Leur travail tient en quelques microsecondes en JS, alors que l'entrée (enregistrement de visite, session, historique) traverse en entier à chaque appel. Elles restent en JS ; le port est prêt et identique si la traversée disparaît un jour (état tenu dans le cœur).
