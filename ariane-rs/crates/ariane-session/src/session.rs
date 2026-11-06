@@ -759,7 +759,7 @@ pub fn classify(record: &Valeur, echo: Echo) -> Result<Valeur, Echec> {
                 let (a, b) = (chemin(&start, &["rails", side]), chemin(reference, &["rails", side]));
                 if a.vrai() && b.vrai() {
                     // une exception de C.point ici sortirait de classify après des affectations : hors domaine
-                    let d = rail_delta(a, b, &Valeur::Indefini, echo.mouvement).map_err(|e| match e { Echec::Js { .. } => Echec::hors_domaine("railDelta lève"), x => x })?;
+                    let d = rail_delta(a, b, &Valeur::Indefini, echo.mouvement).map_err(|e| match e { Echec::Js { .. } => Echec::hors_domaine("railDelta lève"), x @ Echec::HorsDomaine(_) => x })?;
                     if let Some(c) = ch_lr.get_mut(i) { *c = ch(&d, "changed").vrai(); }
                     delta.poser(side, d);
                 }

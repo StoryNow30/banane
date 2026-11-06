@@ -113,5 +113,31 @@
   return {...H,finDe(...x){return a(260,x,()=>H.finDe(...x));},ficheFin(...x){return a(261,x,()=>H.ficheFin(...x));},
    ajouterFin(...x){return a(262,x,()=>H.ajouterFin(...x));},historique(...x){return a(263,x,()=>H.historique(...x));},compteurs:()=>({...n,motifs:{...n.motifs}})};
  }
- return {resume,session,historique,appel,compteur,fondre,REPLI};
+ /* core (285–286) : expectedPoses, pairCorpus. */
+ function noyau(coeur,K){
+  const n=compteur(),a=(f,args,js)=>appel(coeur,n,f,{a:args},js);
+  return {expectedPoses(...x){return a(285,x,()=>K.expectedPoses(...x));},pairCorpus(...x){return a(286,x,()=>K.pairCorpus(...x));},compteurs:()=>({...n,motifs:{...n.motifs}})};
+ }
+ /* native-reconstruction (290–294). `nuages` (carte des blocs de points) ne traverse pas : seul « fournis ou non » est
+  * passé ; si la couverture doit être recalculée avec eux (native-lidar, non porté), le cœur refuse et le JS est rejoué. */
+ function reconstruction(coeur,NR){
+  const n=compteur(),a=(f,args,js)=>appel(coeur,n,f,{a:args},js);
+  const opts=o=>o===undefined?undefined:o===null||typeof o!=='object'?REPLI:{nuages:!!o.nuages,tolMm:o.tolMm};
+  return {...NR,
+   etiquette(...x){return a(290,x,()=>NR.etiquette(...x));},
+   memeEtiquette(...x){return a(291,x,()=>NR.memeEtiquette(...x));},
+   distMm(...x){return a(292,x,()=>NR.distMm(...x));},
+   reconstruireRail(record,side,o){const p=opts(o);if(p===REPLI)return NR.reconstruireRail(record,side,o);return a(293,[record,side,p],()=>NR.reconstruireRail(record,side,o));},
+   reconstruireCut(record,o){const p=opts(o);if(p===REPLI)return NR.reconstruireCut(record,o);return a(294,[record,p],()=>NR.reconstruireCut(record,o));},
+   compteurs:()=>({...n,motifs:{...n.motifs}})};
+ }
+ /* esv-observer (296) : voisins, POUR LA MESURE (la table vit dans la page d'ESV, où le cœur n'est pas chargé). La carte
+  * des tables et leurs colonnes parallèles sont mises à plat à chaque appel. */
+ function observateur(coeur,E){
+  const n=compteur();
+  return {voisins(tables,req){if(!(tables instanceof Map))return E.voisins(tables,req);
+   const l=[];for(const [key,t] of tables)l.push({key,n:t.rk.length,ed:t.ed,st:t.st,fl:t.fl,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee});
+   return appel(coeur,n,296,{a:[l,req]},()=>E.voisins(tables,req));},compteurs:()=>({...n,motifs:{...n.motifs}})};
+ }
+ return {resume,session,historique,noyau,reconstruction,observateur,appel,compteur,fondre,REPLI};
 });

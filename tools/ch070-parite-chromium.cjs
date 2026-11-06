@@ -7,9 +7,11 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const RACINE=path.resolve(__dirname,'..');
 async function executerChromium(ad,octetsWasm,{nuages=Infinity,lot=2}={}){
  const nav=ad.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||undefined});
- try{const p=await b.newPage();// contexte sûr (crypto.subtle) : une page locale servie par interception, aucune requête réseau
+ try{const p=await (await b.newContext(process.env.CH070_LOCALE?{locale:process.env.CH070_LOCALE}:{})).newPage();// contexte sûr (crypto.subtle) : une page locale servie par interception, aucune requête réseau
   await p.route('http://localhost/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>banc</title>'}));await p.goto('http://localhost/banc');
-  for(const s of nav.scripts)await p.addScriptTag({content:fs.readFileSync(path.join(RACINE,s),'utf8')});
+  /* un script {chemin, global} est chargé comme module CommonJS (sans s'installer dans la page) et exposé sous `global` */
+  for(const s of nav.scripts){const c=fs.readFileSync(path.join(RACINE,typeof s==='string'?s:s.chemin),'utf8');
+   await p.addScriptTag({content:typeof s==='string'?c:'(function(){const module={exports:{}};'+c+'\n;window['+JSON.stringify(s.global)+']=module.exports;})();'});}
   await p.addScriptTag({content:'(function(){const module={};'+fs.readFileSync(path.join(__dirname,'ch064-comparer.cjs'),'utf8').replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
   const ua=await p.evaluate(([b64,nav])=>{const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const coeur=ArianeCoeur.creer(o);
    const etat=(0,eval)(nav.preparer)(coeur),js=(0,eval)(nav.js),rs=(0,eval)(nav.rs);
@@ -23,7 +25,7 @@ async function executerChromium(ad,octetsWasm,{nuages=Infinity,lot=2}={}){
      const e=a.ok!==b.ok?[{chemin:'(racine)',raison:a.ok?'JS rend, Rust lève : '+b.v.message:'JS lève ('+a.v.message+'), Rust rend'}]:Ch064Comparer.comparer(a.v,b.v);
      if(!e.length)this.identiques++;else if(this.ecarts.length<20)this.ecarts.push({cas:c.id,ecarts:e.slice(0,5)});
      d.js.push(hex(await crypto.subtle.digest('SHA-256',trame(a))));d.rs.push(hex(await crypto.subtle.digest('SHA-256',trame(b))));}return d;}};
-   return navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0];},[octetsWasm.toString('base64'),nav]);
+   return navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0]+' '+new Intl.Collator().resolvedOptions().locale;},[octetsWasm.toString('base64'),nav]);
   const h={js:crypto.createHash('sha256'),rs:crypto.createHash('sha256')};let tampon=[];
   const vider=async()=>{if(!tampon.length)return;const d=await p.evaluate(l=>window.__banc.passer(l),tampon);tampon=[];for(const k of ['js','rs'])for(const x of d[k])h[k].update(x);};
   for(const c of ad.cas({max:nuages,navigateur:true})){tampon.push(c);if(tampon.length>=lot)await vider();}

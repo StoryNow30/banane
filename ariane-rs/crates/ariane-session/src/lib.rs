@@ -6,6 +6,9 @@
 //! (`Valeur::canonique`). Rien ne survit entre deux appels (l'arène du cœur est remise à zéro).
 pub mod historique;
 pub mod js_extra;
+pub mod noyau;
+pub mod observateur;
+pub mod reconstruction;
 pub mod resume;
 pub mod session;
 
@@ -40,6 +43,14 @@ pub fn appeler(fonction: u32, e: &Valeur) -> Result<Valeur, Echec> {
         280 => session::classify(&arg(e, 0), session::Echo::de(e)?),
         281 => session::reference_from_write(&arg(e, 0), &arg(e, 1), &arg(e, 2), session::Echo::de(e)?),
         278 => session::export_advice(js_extra::ch(e, "native"), js_extra::chemin(e, &["reglages", "watermarkBytes"])),
+        285 => noyau::expected_poses(&arg(e, 0), &arg(e, 1)),
+        286 => noyau::pair_corpus(&arg(e, 0)),
+        290 => match arg(e, 1) { Valeur::Chaine(side) => reconstruction::etiquette(&arg(e, 0), &side, &arg(e, 2)), _ => Err(Echec::hors_domaine("côté non chaîne")) },
+        291 => reconstruction::meme_etiquette(&arg(e, 0), &arg(e, 1), &arg(e, 2)).map(Valeur::Booleen),
+        292 => reconstruction::dist_mm(&arg(e, 0), &arg(e, 1)).map(js_extra::n_ou_nul),
+        293 => match arg(e, 1) { Valeur::Chaine(side) => { let (n, t) = reconstruction::options(&arg(e, 2))?; reconstruction::reconstruire_rail(&arg(e, 0), &side, n, t) } _ => Err(Echec::hors_domaine("côté non chaîne")) },
+        294 => { let (n, t) = reconstruction::options(&arg(e, 1))?; reconstruction::reconstruire_cut(&arg(e, 0), n, t) }
+        296 => observateur::voisins(&arg(e, 0), &arg(e, 1)),
         // banc seulement : Date.parse au bit près (js_extra::date), entrée {a:[chaîne]}
         298 => match arg(e, 0) { Valeur::Chaine(c) => js_extra::date::parse(&c).map(Valeur::Nombre), _ => Err(Echec::hors_domaine("Date.parse : non chaîne")) },
         _ => Err(Echec::hors_domaine(format!("ariane-session : fonction {fonction} non portée"))),
