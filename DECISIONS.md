@@ -3434,4 +3434,13 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Constat ÉTABLI (lot Constellation du 06/11, parties 13 à 16, paquet 2bc1f56, jugé par l'Écho de l'opérateur) : 1 078 posés, 108 jugés, écart médian 4,35 mm, 7 fautes de plus de 50 mm, toutes de mauvaise voie (latéral 124 à 315 mm) : 15/7260, 15/7423, et la série 16/9266, 9267, 9270, 9271, 9272, au milieu de différés. La garde « après un différé » (en ombre depuis D-288) en aurait différé 3 (7260, 9270, 9271) ; la règle métier « grappe-differes » (en ombre) en signalait 3. Le 05/11 : 0 mauvaise voie sur 229 jugés.
 - Choix proposé : (1) chiffrer une prudence ciblée (cut entouré de différés) ; (2) ne rien changer et attendre. Réponse : « Ne rien changer et attendre un ou deux lots de plus. 108 cuts revus, c'est peu, et choisis par toi, donc peut-être plus souvent dans les endroits difficiles. »
 - Suivi : sur les prochains lots, mauvaises voies, événements `garde-apres-differe-ombre` et règle `grappe-differes` jugés ; séance Écho tirée au sort recommandée (D-285 point 4).
-- Le numéro suivant est D-293.
+
+## D-293 — Compteur d'ESV : ligne de base par les échecs ALLUMÉE ; gains JS lancés ; pauses de référence gardées ; dépôt du 06/11 (opérateur, 06/11)
+- Questions (reformulées en langage simple après « j'ai pas assez de contexte ni de compréhension ») : (1) solution A (Ariane retire du compteur de Potree les requêtes de points en échec) ou B (rechargement pendant le lot) ; (2) prendre les ≈ 14 % de gain en JS mesurés par CH-061 ; (3) retirer les pauses `setTimeout(0)` de la lecture de référence (≈ 310 s par jour) ; (4) déposer les exports du 06/11. Réponse : « 1. A ; 2. oui go en parallèle ; 3. non ; 4. oui dépose ».
+- Effet :
+  - (1) `lot.signalEteint.ligneDeBaseEchecs` = true (patch CH-062 appliqué à `src/adapter-page.js`) ; `lot.signalEteint.actif` (rechargement pendant le lot) reste false.
+  - (2) chantier CH-065 : lecture LiDAR sans allocation et élagage exact de la recherche de pose, en JS, poses identiques au bit près.
+  - (3) pauses inchangées.
+  - (4) `banane-data` 4ba702e, `collections/2026-11-06_v5_constellation-parties-13-16`.
+- Mesure attendue (CH-062, PROBABLE) : environ 8 % du temps du lot, et la relecture aussi ; à vérifier sur le prochain lot (`diag.lb`, événements `ligne-base-repli`, `readStrategy.trouEchec`).
+- Le numéro suivant est D-294.
