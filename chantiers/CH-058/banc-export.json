@@ -1,0 +1,54 @@
+{
+ "outil": "ch058-banc-etat",
+ "date": "2026-11-06T08:27:23.491Z",
+ "navigateur": "153.0.8010.12",
+ "etatBase": {
+  "mo": 0.000720977783203125
+ },
+ "tailles": [],
+ "panneau": null,
+ "erreurs": [],
+ "export": {
+  "visitesSession": 1000,
+  "evenementsSession": 30000,
+  "lignes": [
+   {
+    "evenementsLot": 0,
+    "exportManifestSwMs": 384.8,
+    "exportAdviceSwMs": 27,
+    "lectureDirectePanneauMs": 329.4,
+    "objetsLus": 31000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 28.2
+   },
+   {
+    "evenementsLot": 50000,
+    "exportManifestSwMs": 1167.2,
+    "exportAdviceSwMs": 25.2,
+    "lectureDirectePanneauMs": 1108.3,
+    "objetsLus": 81000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 90.6
+   },
+   {
+    "evenementsLot": 100000,
+    "exportManifestSwMs": 2122.9,
+    "exportAdviceSwMs": 28.3,
+    "lectureDirectePanneauMs": 2986.8,
+    "objetsLus": 131000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 152.1
+   },
+   {
+    "evenementsLot": 150000,
+    "exportManifestSwMs": 2742.3,
+    "exportAdviceSwMs": 29.1,
+    "lectureDirectePanneauMs": 4095.6,
+    "objetsLus": 181000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 214.4
+   }
+  ],
+  "note": "événements de lot synthétiques de 0,86 Ko ; le service worker (dataset) et le panneau (assembler) lisent TOUT IndexedDB puis filtrent la session"
+ }
+}

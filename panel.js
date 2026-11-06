@@ -1053,10 +1053,11 @@
    try{magasin=typeof BananeStorage3==='function'?new BananeStorage3():false;}catch{magasin=false;}
    return magasin;
  }
- async function lireDirect(nom,sessionId){
+ async function lireDirect(nom,sessionId,cles,total){
    const s=store();if(!s)return null;
    try{
-     const tout=await s.all(nom);
+     const JI=globalThis.BananeJournalIndex;
+     const tout=Array.isArray(cles)&&JI?.lireCles&&typeof s.open==='function'?await JI.lireCles(await s.open(),nom,cles,total):await s.all(nom);
      return tout.filter(x=>x.nativeSessionId===sessionId);
    }catch{return null;}
  }
@@ -1155,8 +1156,11 @@
   * événements lus directement dans le stockage. */
  async function assembler(manifeste){
    const id=manifeste.sessionId;
-   const records=await lireDirect('records',id);
-   const events=await lireDirect('events',id);
+   /* CH-058 : les clés de la session viennent de l'index du service worker ; lecture par clé, même ordre que `getAll`.
+    * Sans index sûr (ancien service worker, index invalide, erreur) : lecture complète puis filtre, comme avant. */
+   const cles=await api('native-export-cles',{sessionId:id}).catch(()=>null);
+   const records=await lireDirect('records',id,cles?.records,cles?.totaux?.records);
+   const events=await lireDirect('events',id,cles?.events,cles?.totaux?.events);
    if(records&&events){
      records.sort((a,b)=>(a.visitIndex??0)-(b.visitIndex??0));
      events.sort((a,b)=>(a.eventSeq||a.event_seq||0)-(b.eventSeq||b.event_seq||0));
