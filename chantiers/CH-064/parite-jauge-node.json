@@ -1,0 +1,31 @@
+{
+ "format": "ch064-parite-v1",
+ "moteur": "node v22.23.4",
+ "module": "jauge",
+ "cas": 8533,
+ "identiques": 8533,
+ "ecarts": [],
+ "empreintes": {
+  "js": "e12c5f72f4dd80381e6402de33dfa0e1c47c5c9d917bf8daba4eab2fdff62c67",
+  "rs": "e12c5f72f4dd80381e6402de33dfa0e1c47c5c9d917bf8daba4eab2fdff62c67"
+ },
+ "temps": {
+  "jsMediane": 0.009239000006346032,
+  "jsP95": 0.031396000000313506,
+  "rsMediane": 0.14849400000821333,
+  "rsP95": 0.2842430000018794
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 1310720,
+  "memoire": 1310720
+ },
+ "bilanAdaptateur": {
+  "horsDomaineRejouesEnJs": 0
+ },
+ "sources": {
+  "src/gauge.js": "e0d97e75abbeb232661c881a28b0e390d19711462644ec638008f96caa9119f9",
+  "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054"
+ },
+ "verdict": "IDENTIQUE"
+}
