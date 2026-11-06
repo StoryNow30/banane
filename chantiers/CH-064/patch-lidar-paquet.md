@@ -1,6 +1,6 @@
-# CH-064, étape 6 a — Lecture LiDAR en Rust dans le paquet : note du patch (D-296)
+# CH-064, étape 6 a — Lecture LiDAR en Rust dans le paquet : note du patch (D-296) — PRÊT
 
-**Patch** : `chantiers/CH-064/patch-lidar-paquet.patch`, base du tronc **c30acbb**, 11 fichiers. `manifest.json` est intact : le WASM tourne dans la page ESV, qui n'a ni en-tête ni balise CSP (relevé de l'opérateur, PROBABLE).
+**Patch** : `chantiers/CH-064/patch-lidar-paquet.patch`, base du tronc **c30acbb** (s'applique aussi sur **b529227**, qui n'ajoute que `DECISIONS.md`), 11 fichiers ; identique à l'arbre essayé. Coquille et module de `chantier/CH-064` à **65036e1**. `manifest.json` est intact : le WASM tourne dans la page ESV, qui n'a ni en-tête ni balise CSP (relevé de l'opérateur, PROBABLE).
 
 ## Ce que fait le patch
 - **Fichiers de page fabriqués**, jamais écrits à la main (`tools/rust-lidar-paquet.cjs --construire`, contrôlé par `--verifier`) :
@@ -32,14 +32,15 @@
 ## Preuves
 | preuve | résultat |
 |---|---|
-| parité de L, corpus entier (4 647 captures réelles du 04 au 06/11, 22 cas synthétiques), sur 65036e1 | Node : *à venir* ; Chromium : *à venir* |
+| parité de L, corpus entier (4 647 captures réelles du 04 au 06/11, 9 294 vues, 4,29 milliards de points, 22 cas synthétiques), sur 65036e1 | **Node : 9 316 / 9 316**, 1 131 019 tranches au noyau (`L/parite-node.json`) ; **Chromium 153 : 4 600 captures identiques** (passe arrêtée par la limite de temps de 2 h : `L/parite-chromium-avancement.txt`), puis les 47 dernières et les 22 cas synthétiques, **116 / 116** (`L/parite-chromium-fin.json`) |
 | essais LiDAR (audits de la PR n° 25 : P1, P2, P3, 01846d1, 53c7885, 906ec78, 1f78142 ; trappe) | 15/15 |
 | `tests/rust-lidar.test.cjs`, `pose-lot-inchanges-4959` sur c30acbb + patch | 6/6 et 6/6 |
 | essais du tronc qui lisent l'adaptateur, le service worker ou les réglages (122 fichiers, base 82a8312) | 796/796 |
 | parité de la relecture (`tools/parite-relecture-sw.cjs`, contre le tronc intact) | identique (relevés SHA-256 9984fe77…) |
 | rejeu de la partie 13, tronc contre tronc patché (base 82a8312, coquille d'avant 65036e1) | 76 commandes identiques octet pour octet, 18 cuts posés de chaque côté, seule différence l'événement `rust` (un par cut) |
-| rejeu de la partie 13 avec le paquet final (c30acbb + patch) | *à venir* |
-| maquette complète au repos, et `correction-signal` 4 fois de chaque côté | *à venir* |
+| rejeu de la partie 13 avec le paquet final (c30acbb + patch) | non refait (consigne d'économie de l'intégrateur). Depuis le rejeu ci-dessus, seule la règle des accesseurs a changé ; les attributs de la maquette n'en ont pas : ils passent par le même chemin direct |
+| maquette complète au repos (c30acbb + patch) | **73 / 74** (2 sautés) ; seul échec : `correction-signal` |
+| `correction-signal` seul, au repos, 4 fois de chaque côté (c30acbb) | avec le patch : 2 échecs sur 4 ; sans le patch : 2 échecs sur 4. Instable sans le patch aussi (ÉTABLI). Sur les deux séries : 3 sur 8 de chaque côté |
 | lot de 3 cuts sur la maquette | 6 lectures servies par le Rust, sans repli |
 
 Parité L1se : non lancée. Elle demande des données de lot précises, et le patch ne touche aucun fichier de décision.
