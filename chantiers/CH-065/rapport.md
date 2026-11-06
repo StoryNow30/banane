@@ -1,16 +1,16 @@
 # CH-065 — Gains en JavaScript : lecture LiDAR sans allocation, recherche élaguée, médiane exacte (rapport, 06/11/2026)
 
-**Résumé.** Quatre patchs séparables, sans aucune sortie changée (au bit près, sur 4 647 nuages réels). Ensemble, ils retirent environ **849 s à la journée du 05/11 (13,5 % des 6 276 s de cuts)**, soit environ 0,32 s par cut (PROBABLE : gains du banc rapportés aux volumes du journal). Presque tout le gain vient de la lecture LiDAR. Aucun fichier gelé ou interdit n'est modifié : patchs, note à l'intégrateur (`NOTE_INTEGRATEUR.md`), outils et essais seulement.
+**Résumé.** Quatre patchs séparables, sans aucune sortie changée (au bit près, sur 4 647 nuages réels). Ensemble, ils retirent environ **851 s à la journée du 05/11 (13,6 % des 6 276 s de cuts)**, soit environ 0,32 s par cut (PROBABLE : gains du banc rapportés aux volumes du journal ; pour le LiDAR, sous réserve du relevé des accesseurs d’ESV, § 3). Presque tout le gain vient de la lecture LiDAR. Aucun fichier gelé ou interdit n'est modifié : patchs, note à l'intégrateur (`NOTE_INTEGRATEUR.md`), outils et essais seulement.
 
 ## 1. Les patchs et leur gain (Chromium 153, machine au repos, 15 répétitions, médiane / P90) — ÉTABLI au banc
 | Patch | Fichier | Avant | Après | Gain par appel | Journée du 05/11 |
 |---|---|--:|--:|--:|--:|
-| `lidar-direct`, mode rapide (8 nuages réels, 505 000 points, 19 nœuds) | `vendor/lidar.js` | 219,9 / 341,9 ms par vue | **73,7 / 117,1** | −146 ms | 4 867 vues : **−712 s** |
-| `lidar-direct`, mode référence (pauses `setTimeout(0)`) | idem | 846,9 / 888,4 | 663,1 / 687,7 | −184 ms | 552 vues : −101 s |
+| `lidar-direct`, mode rapide (8 nuages réels, 505 000 points, 19 nœuds) | `vendor/lidar.js` | 222,2 / 283,3 ms par vue | **74,7 / 112,7** | −148 ms | 4 867 vues : **−718 s** |
+| `lidar-direct`, mode référence (pauses `setTimeout(0)`) | idem | 834,8 / 871,1 | 659,1 / 680,7 | −176 ms | 552 vues : −97 s |
 | `geometrie-elaguee-lot` (composition du lot, 200 nuages) | `src/geometry-candidate-v1.js` | 103,9 / 667,8 ms par nuage | 92,5 / 577,8 | −11 ms | −10 s |
 | + `mediane-exacte` (même fichier) | idem | 103,9 / 667,8 | **70,2 / 372,5** | −34 ms | −29 s |
 | `geometrie-elaguee-v46` (moteur V4.6 gelé seul) | `src/geometry.js` | 13,6 / 64,9 | 8,2 / 16,7 | −5 ms | façade : −2 s dans le lot |
-| **les quatre** | trois fichiers | lot 103,9 / 667,8 | **62,7 / 310,7** | −41 ms | **−849 s au total** |
+| **les quatre** | trois fichiers | lot 103,9 / 667,8 | **62,7 / 310,7** | −41 ms | **−851 s au total** |
 
 - **Journée** : volumes du journal du 05/11 (CH-061, `journee-2026-11-05.json`). La géométrie est rapportée au temps mesuré au terrain (90 s de façade dans le lot), dans le rapport du banc. Calcul de la relecture (154 s) : non compté, sa part de géométrie n'est pas mesurée.
 - **Par cut** : lot 2,82 s en médiane (CH-061), relecture 1,5 à 3,5 s (CH-058, CH-060). La lecture des points pèse 10,5 % de la relecture (CH-060) ; le patch LiDAR en retire les deux tiers en mode rapide.
@@ -20,14 +20,15 @@
 
 ## 2. Preuves de parité — ÉTABLI
 - **Géométrie**, quatre patchs : 4 647 nuages des 04, 05 et 06/11, quatre entrées comparées (V4.6, candidat GCV1, composition du lot `scientificProposeBoth`, grille de `lot-decision`). Sortie entière : poses, statuts, motifs, confiances, métriques, grilles, exceptions. Comparaison par `Object.is`. **0 écart, même SHA-256** (`resultats/parite-geometrie*.json`).
-- **LiDAR** : 4 645 nuages (2 sans matrice de rail), 7 296 jeux de scène. Variantes : Float32/64, entrelacé, indexé, normalisé, non finis, découpe, drawRange fractionnaire, plafonds, pauses, transformation non finie, vue vide, un point, 505 000 points. Comparés : sortie entière, exceptions, suite des appels `guard()`/`pause()`. **0 écart.**
+- **LiDAR** : 4 645 nuages (2 sans matrice de rail), 7 497 jeux de scène (variante sans accesseur comprise). Variantes : Float32/64, entrelacé, indexé, normalisé, non finis, découpe, drawRange fractionnaire, plafonds, pauses, transformation non finie, vue vide, un point, 505 000 points. Comparés : sortie entière, exceptions, suite des appels `guard()`/`pause()`. **0 écart.**
 - **Garde GCV2** (12 lots d'octobre, BANANE_LOTS extrait de `banane-data`) : verte sur le tronc et sur l'arbre patché, mêmes jugements, 12 rejeux identiques (2 374 lignes, hors chronos). Ses 4 signalements sont déjà dans la base.
 - **Parité de la relecture** (`parite-relecture-sw`) : relevés identiques. **L1-se `--passe`** (lots 2:13 et 2:20 : 29 différés, 1 posé par la passe) : sorties du SW identiques au tronc.
 - **Essais** `tests/ch065-*.test.cjs` (14 essais en 3 fichiers, 0,1 à 17,7 s par fichier), chacun avec une mutation qui les fait échouer (rouge) : une somme réordonnée au dernier bit, une fenêtre de 20 mm, un tri natif sans la garde des zéros mêlés. Ils valent avant et après l'application.
 - **Maquette** (extension réelle, paquet de `package.py`, sept variantes) : lot neuf ok ; reprise d'un lot mis en pause sous l'ancien paquet ok. Seul refus : si `CONTRACT.geometrySha256` était changé (refus net, lot gardé en pause). La chaîne n'est pas changée (décision de l'intégrateur).
 
 ## 3. Ce qui reste à décider ou à savoir
-- **Dégel** de `vendor/lidar.js` et `src/geometry.js` (gelés 4.4.0) : décision de l'opérateur. La variante qui garde `src/geometry.js` gelé (lot + médiane + LiDAR) garde 842 des 849 s.
+- **Dégel** de `vendor/lidar.js` et `src/geometry.js` (gelés 4.4.0) : décision de l'opérateur. La variante qui garde `src/geometry.js` gelé (lot + médiane + LiDAR) garde 844 des 851 s.
+- **Lecture directe chez l'opérateur — SUPPOSÉ** : corrigée après le défaut relevé par Codex (un accesseur qui diffère hors des sondes passait), elle n'est prise que si l'attribut n'a pas d'accesseur, ou si ses accesseurs sont ceux de `THREE.BufferAttribute` de la page, reconnus par identité de fonction. Que la page d'ESV expose `window.THREE` et que Potree utilise ces accesseurs n'est **pas mesuré** : sinon, le patch reste exact mais son gain tombe à 0. Relevé en lecture seule à coller dans la console d'ESV : `tools/ch065-releve-accesseur.js`. Au banc, la correction ne change pas le gain (−148 ms par vue, contre −146).
 - **Mise à jour du paquet** : Chrome garde en cache le code du service worker. Remplacer le dossier puis relancer Chrome fait tourner l'ancien code (mesuré en maquette). Il faut cliquer « Recharger » (SUPPOSÉ hors maquette, voir la note).
 - **Banc** : machine d'essai, scène factice autour de points réels aux volumes du terrain. Les rapports avant/après sont solides (PROBABLE) ; les valeurs absolues au poste de l'opérateur ne sont pas mesurées.
 
