@@ -37,13 +37,20 @@ Une relecture se fait donc presque toujours entièrement avec le signal (1,1 à 
 
 **Hypothèses du levier 1 (SUPPOSÉ).**
 - Un rechargement coûte 20 s.
-- Le signal tient après le rechargement. ÉTABLI : il tient au début de chaque page. Mais une page sur trois le reperd, d'où 2 rechargements au plus par passe.
+- Le signal tient après le rechargement. ÉTABLI : il tient au début de chaque page. Mais une page sur trois le reperd. Décision de l'intégrateur (06/11) : **1 rechargement au plus par relecture** ; si le signal ne revient pas, la passe continue au repli, sans boucle (essai `tests/relecture-signal-eteint-sans-retour.test.cjs`).
+- **Coût mesuré d'un rechargement, maquette seulement** : 3,2 s de la détection à la reprise, 5,1 s sans cut relu. Le vrai ESV recharge plus lentement (changement de partie : 9 à 16 s, CH-058), d'où les 20 s retenues (SUPPOSÉ).
+
+**Ce qu'un rechargement risque, et ce qui le borne.**
+- Aucun cut à moitié fait : la pause se prend au point de reprise, après le journal du cut, jamais entre une pose et sa validation. Les « vu » des derniers cuts sont attendus avant la pause.
+- Pas de pose en attente : la reprise passe par les contrôles de « Reprendre » (aucune pose d'Ariane non validée affichée, rien d'incertain, Écho et Correction inactifs).
+- Le cut affiché est perdu : la relecture repart par la carte au cut suivant de sa liste. Un cut corrigeable n'est posé qu'atteint par les boutons d'ESV (règle existante).
+- ESV peut rouvrir une autre partie (après « suivant-dernier », il affiche d'abord la partie 0 ; pour un F5, SUPPOSÉ pareil) : Ariane ne change jamais de partie elle-même. Elle attend que la partie du lot s'affiche ; sinon, au bout de 90 s, la passe reste en pause avec la consigne F5 habituelle.
 
 **Essais du levier 1.**
-- Essais rouges d'abord (4 sur 7 rouges avant le branchement), puis `tests/relecture-signal-eteint.test.cjs` et `tests/relecture-signal-eteint-rechargement.test.cjs` : 7 essais, 13 et 14 s.
+- Essais rouges d'abord (4 sur 7 rouges avant le branchement), puis `tests/relecture-signal-eteint.test.cjs`, `-rechargement` et `-sans-retour` : 8 essais, 13, 14 et 7 s.
 - Les 63 fichiers `relecture-*` restent verts.
 - Parité `tools/parite-relecture-sw.cjs` contre le tronc (5f9572b) : relevés identiques.
-- Maquette (`tests/esv-maquette/relecture-signal-eteint.test.cjs`, 68 s) : compteur bloqué, pause au cut 74, page rechargée, reprise seule 2,1 s plus tard, lectures au signal ensuite, 62 cuts relus une fois chacun, aucun SKIP.
+- Maquette (`tests/esv-maquette/relecture-signal-eteint.test.cjs`, 69 s ; suite maquette complète : 66 réussis, 2 sautés, 0 échec) : compteur bloqué, pause au cut 74, page rechargée, reprise seule 2,1 s plus tard, lectures au signal ensuite, 62 cuts relus une fois chacun, aucun SKIP.
 
 **Réglage coupé** : un seul événement `relecture-signal-eteint` (« detecte / aucune »), rien d'autre.
 
@@ -65,6 +72,13 @@ Verts relus, en pourcentage de corrigés. « Proposé » est identique : toutes 
   - 31 « autour du différé » (86 cuts).
 
   C'est PROBABLEMENT la cause des cuts isolés non vérifiés relevés par l'opérateur. Au taux mesuré des isolés (5,7 %), cela ferait environ 60 corrections non faites (SUPPOSÉ, extrapolé). Les relire coûterait environ 2,1 s par cut, soit 40 min sur ces journaux. Le levier 1 en paierait la plus grande part.
+
+## 4. Lever le plafond des abords (rejeu de la sélection réelle, sans rien activer)
+Outil : `tools/ch060-plafond-abords.cjs`. Il rejoue `selection` sur les cuts du lot et les zones PN et ADV de chaque relecture. Au plafond de 70, il retrouve 69 ou 70 cuts d'abords, contre 70 mesurés (l'écart vient des cuts « À contrôler », absents du journal).
+- **Sans plafond : +1 686 cuts relus sur les 28 relectures.** Ce sont des verts et des abords de différés : les posés sont traversés.
+  - Temps ajouté au rythme mesuré de chaque page : **77 min**. Avec le levier 1 (pages éteintes au rythme d'une page saine) : **48 min**.
+  - Le plus lourd : Orbite p10 du 04/11, +376 cuts, 22,9 min (11,3 min avec le levier 1) ; p11 du 05/11, +270 cuts, 13,5 min (5,7) ; p12 du 05/11, +203 cuts, 7,7 min. Le détail par partie est dans `plafond-abords.json`.
+- **Grappes plus grandes** (`grappe.trouCuts`, 5 aujourd'hui, sans plafond) : cuts relus en plus de 5 : 10 → +261, 20 → +1 119, 40 → +4 483.
 
 ## Limites
 - Le banc et la maquette ne sont pas le poste de l'opérateur.

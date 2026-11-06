@@ -20,9 +20,9 @@
   * Ce que le service worker en fait (background.js `relecturePasse`, `relectureSignalRecharger`) : réglage COUPÉ (`actif:false`, défaut tant que
   * l'opérateur n'a pas essayé), un seul événement `relecture-signal-eteint` (étape « detecte », action « aucune ») ; allumé, et si la pause de la
   * relecture est permise, la passe se met en pause au point de reprise (jamais entre une pose et sa validation), Ariane recharge la page ESV,
-  * la ré-équipe, attend qu'elle affiche la partie du lot, puis reprend la relecture au cut suivant (au plus `rechargementsMax` fois par passe).
+  * la ré-équipe, attend qu'elle affiche la partie du lot, puis reprend la relecture au cut suivant (au plus `rechargementsMax` fois par passe : 1, décision de l'intégrateur du 06/11 ; si le signal ne revient pas, la passe continue au repli).
   * Rien de ce qui est lu ni jugé ne change : après le rechargement, la lecture est la lecture nominale (signal vivant). */
- const DEFAULTS=Object.freeze({actif:false,lectures:8,rechargementsMax:2,delaiAvantMs:500,sondageMs:500,attenteRepriseMs:90000,silenceListeMs:2500,attenteSansListeMs:10000});
+ const DEFAULTS=Object.freeze({actif:false,lectures:8,rechargementsMax:1,delaiAvantMs:500,sondageMs:500,attenteRepriseMs:90000,silenceListeMs:2500,attenteSansListeMs:10000});
  const entierPositif=v=>Number.isInteger(v)&&v>0;
  function reglage(o){const r={...DEFAULTS,...(o&&typeof o==='object'?o:{})};
   for(const k of ['lectures','delaiAvantMs','sondageMs','attenteRepriseMs','silenceListeMs','attenteSansListeMs'])if(!(Number.isFinite(r[k])&&r[k]>=0))r[k]=DEFAULTS[k];

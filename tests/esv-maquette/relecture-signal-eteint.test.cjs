@@ -20,9 +20,9 @@ function extensionAllumee() {
   for (const f of fs.readdirSync(N.racine).filter(f => /\.css$/.test(f))) fs.copyFileSync(path.join(N.racine, f), path.join(d, f));
   const S = path.join(d, 'src/settings.js');
   let t = fs.readFileSync(S, 'utf8');
-  const a = "const relectureSignalEteint = Object.freeze({ actif: false, lectures: 8, rechargementsMax: 2, attenteRepriseMs: 90000 });", b = "modeRapide: 'echantillon',";
+  const a = "const relectureSignalEteint = Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });", b = "modeRapide: 'echantillon',";
   assert.ok(t.includes(a), 'réglage coupé dans le dépôt');assert.ok(t.includes(b), 'mode rapide « échantillon » dans le dépôt');
-  t = t.replace(a, "const relectureSignalEteint = Object.freeze({ actif: true, lectures: 2, rechargementsMax: 2, attenteRepriseMs: 120000, attenteSansListeMs: 2000, silenceListeMs: 1500 });")
+  t = t.replace(a, "const relectureSignalEteint = Object.freeze({ actif: true, lectures: 2, rechargementsMax: 1, attenteRepriseMs: 120000, attenteSansListeMs: 2000, silenceListeMs: 1500 });")
     .replace(b, "modeRapide: 'toujours',");
   fs.writeFileSync(S, t);
   return d;
@@ -90,6 +90,9 @@ test('CH-060 · signal éteint pendant la relecture : pause au point de reprise,
     assert.ok(avant.length && avant.every(e => e.lastDetail?.regle !== 'signal'), 'aucune lecture au signal avant (compteur bloqué)');
     assert.equal(ev.filter(e => /skip/i.test(e.type) && e.type !== 'skip-ombre').filter(e => e.skipCommandSent === true).length, 0, 'aucun SKIP');
     assert.deepEqual(erreurs, []);
-    console.log(`# relus ${relus.length} ; pause au cut ${pauses[0].cut} ; reprise ${Math.round((tReprise - Date.parse(sig[1].timestamp)) / 100) / 10} s après le rechargement`);
+    /* Coût réel d'un rechargement (maquette) : de la fin du cut qui l'a déclenché (détection) à la reprise, et du dernier cut relu avant au premier après. */
+    const ombres = ev.filter(e => e.type === 'relecture-ombre'), avantR = ombres.filter(e => Date.parse(e.timestamp) <= Date.parse(sig[0].timestamp)).at(-1), apresR = ombres.find(e => Date.parse(e.timestamp) > tReprise);
+    const trou = (Date.parse(apresR.timestamp) - apresR.durees.totalMs - Date.parse(avantR.timestamp)) / 1000;
+    console.log(`# relus ${relus.length} ; pause au cut ${pauses[0].cut} ; reprise ${Math.round((tReprise - Date.parse(sig[1].timestamp)) / 100) / 10} s après le rechargement ; détection → reprise ${Math.round((tReprise - Date.parse(sig[0].timestamp)) / 100) / 10} s ; temps sans cut relu ${Math.round(trou * 10) / 10} s`);
   } finally { await ctx.close(); await serveur.fermer?.(); fs.rmSync(ext, { recursive: true, force: true }); }
 });

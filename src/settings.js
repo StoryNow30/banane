@@ -394,8 +394,8 @@
   /* CH-060 : signal de fin de chargement d'ESV éteint pendant la relecture (src/relecture-signal.js). Mesuré (journaux du 04/11 et du 05/11) : 10 chargements de page
    * sur 28 perdent le signal (compteur `numNodesLoading` bloqué) et ne le retrouvent qu'au rechargement ; la relecture passe alors de 1,1-2 s à 3-4 s par cut.
    * COUPÉ tant que l'opérateur n'a pas essayé : la détection ne fait qu'un événement `relecture-signal-eteint`. Allumé (et la pause de la relecture permise) :
-   * pause au point de reprise après `lectures` lectures rapides de suite au repli, rechargement de la page ESV, reprise au cut suivant (`rechargementsMax` par passe). */
-  const relectureSignalEteint = Object.freeze({ actif: false, lectures: 8, rechargementsMax: 2, attenteRepriseMs: 90000 });
+   * pause au point de reprise après `lectures` lectures rapides de suite au repli, rechargement de la page ESV, reprise au cut suivant (`rechargementsMax` par passe : 1 ; sans signal après, la passe continue au repli, sans boucle). */
+  const relectureSignalEteint = Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });
   const deplacerVue = Object.freeze({
     /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
     actif: true,
