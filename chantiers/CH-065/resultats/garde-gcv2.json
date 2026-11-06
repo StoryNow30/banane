@@ -1,0 +1,20 @@
+{
+ "note": "tools/garde-gcv2.cjs comparer --base datasets/garde-gcv2/base-test18.json --rejouer, sur le tronc et sur l’arbre aux quatre patchs ; lots archivés hors dépôt (banane-data, collections du 16 au 23/10).",
+ "retourTronc": 0,
+ "retourPatche": 0,
+ "jugementsIdentiques": true,
+ "rejeux": [
+  "r-0-2310-lot1.jsonl lignes 536 536 écarts 0",
+  "r-0-2310-lot2.jsonl lignes 92 92 écarts 0",
+  "r-2-11.jsonl lignes 132 132 écarts 0",
+  "r-2-13.jsonl lignes 23 23 écarts 0",
+  "r-2-17.jsonl lignes 140 140 écarts 0",
+  "r-2-18.jsonl lignes 215 215 écarts 0",
+  "r-2-19.jsonl lignes 249 249 écarts 0",
+  "r-2-20-f228f6f9.jsonl lignes 282 282 écarts 0",
+  "r-2-20-fd7067f7.jsonl lignes 131 131 écarts 0",
+  "r-2-6.jsonl lignes 84 84 écarts 0",
+  "r-2-7.jsonl lignes 152 152 écarts 0",
+  "r-3-0.jsonl lignes 338 338 écarts 0"
+ ]
+}
