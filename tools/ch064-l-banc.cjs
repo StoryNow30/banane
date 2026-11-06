@@ -18,19 +18,25 @@ async function main(){
  const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null;
  const N=Number(arg('--captures')||30),PAS=Number(arg('--pas')||150),R=Number(arg('--rep')||15),sortie=arg('--json'),PAUSE=arg('--pause')||'yield';
  const b64=fs.readFileSync(K.construireWasm()).toString('base64');
+ // Pour le choix de l'export (module autonome ou lien dans le cœur) : taille et compilation du cœur actuel, sans la lecture.
+ const {spawnSync}=require('node:child_process'),path=require('node:path');
+ spawnSync('cargo',['build','--release','--target','wasm32-unknown-unknown','-p','ariane-coeur'],{cwd:path.join(K.RACINE,'ariane-rs')});
+ const coeur64=fs.readFileSync(path.join(K.RACINE,'ariane-rs/target/wasm32-unknown-unknown/release/ariane_coeur.wasm')).toString('base64');
  const {chromium}=require('playwright'),nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
  const p=await nav.newPage();
  for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
  await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';'});
- const init=await p.evaluate(async ({texte,b64})=>{
+ const init=await p.evaluate(async ({texte,b64,coeur64})=>{
   (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api'));
   const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
   const compil=[],inst=[];let mod;
   for(let k=0;k<11;k++){let t=performance.now();mod=new WebAssembly.Module(o);compil.push(performance.now()-t);t=performance.now();ArianeLidarWasm.noyauWasm(mod);inst.push(performance.now()-t);}
   const med=x=>x.slice(1).sort((u,v)=>u-v)[(x.length-1)>>1];
   window.NW=ArianeLidarWasm.noyauWasm(mod);window.NJ=ArianeLidarWasm.noyauJs();
-  return {ua:navigator.userAgent.match(/Chrome\/[\d.]+/)[0],moduleOctets:o.length,compilationMs:med(compil),instanciationMs:med(inst),memoireWasmInitiale:NW.memoireOctets()};
- },{texte:K.lire(K.SOURCES.lidar),b64});
+  const oc=Uint8Array.from(atob(coeur64),c=>c.charCodeAt(0)),cc=[];
+  for(let k=0;k<11;k++){const t=performance.now();new WebAssembly.Module(oc);cc.push(performance.now()-t);}
+  return {coeurSansLidarOctets:oc.length,coeurCompilationMs:med(cc),ua:navigator.userAgent.match(/Chrome\/[\d.]+/)[0],moduleOctets:o.length,compilationMs:med(compil),instanciationMs:med(inst),memoireWasmInitiale:NW.memoireOctets()};
+ },{texte:K.lire(K.SOURCES.lidar),b64,coeur64});
  console.log(init);
  const vues=[];let k=0;
  for(const d of S.descriptions()){if(k++%PAS)continue;
