@@ -1,3 +1,15 @@
+diff --git a/ariane-rs/Cargo.lock b/ariane-rs/Cargo.lock
+index f9a3f52..8e0ac9d 100644
+--- a/ariane-rs/Cargo.lock
++++ b/ariane-rs/Cargo.lock
+@@ -17,6 +17,7 @@ dependencies = [
+  "ariane-capture",
+  "ariane-decision",
+  "ariane-etat",
++ "ariane-file",
+  "ariane-geometrie",
+  "ariane-js",
+  "ariane-vba",
 diff --git a/ariane-rs/crates/ariane-coeur/Cargo.toml b/ariane-rs/crates/ariane-coeur/Cargo.toml
 index 4a84a2c..65819c0 100644
 --- a/ariane-rs/crates/ariane-coeur/Cargo.toml
