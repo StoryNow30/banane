@@ -31,5 +31,7 @@ Intégrateur `session_01Td4bNnR2Eydn3tQm8A3rz5` · D `session_01Td4bNktXfAF7FeRp
 - `tools/ch064-e-parite.cjs` lit `BANANE_DATA=<…>/collections` ; sans cette variable, il rend IDENTIQUE sur un corpus vide (faux vert, signalé à l'intégrateur).
 - Parités longues : en tâche de fond, deux heures au plus par tâche ; `--saut N` permet de reprendre une parité de L.
 
-## Résultat de la passe de D (`--lot 20`)
-*(complété à l'arrêt)*
+## Résultat de la passe de D (`--lot 20`, tête fcbe8d05 + coquille 42fc997d)
+- Elle a dépassé le point du plantage précédent (297 800 cas avec les lots de 200). Elle s'est arrêtée au **lot 15 012, cas 300 240**, sur « page fermée », **au moment du redémarrage du conteneur** : je ne peux pas distinguer un plantage d'un arrêt dû au conteneur. Aucun écart n'a été signalé jusque-là, mais le verdict final n'existe pas (aucun fichier de résultat).
+- État mesuré juste avant : cœur 2,2 Mio, haute eau 136 Mio, 100 réinstanciations en 300 240 cas ; **tas JS de la page 1,35 Go**, avec des pointes à 1,4 Go aux lots 14 920 et suivants. Le tas reste haut : à surveiller.
+- **À la reprise** : relancer `CHROMIUM=/opt/pw-browsers/chromium node --max-old-space-size=12000 tools/ch064-d-chromium.cjs --lot 20 --json chantiers/CH-064/D-parite-chromium-fusion.json` sur une machine au repos, en tâche de fond de deux heures. S'il plante encore vers 300 000 cas, réduire à `--lot 5`, ou chercher ce qui retient le tas (`ms.js` et `ms.rs`, modules JS). Environ 330 000 cas au total.
