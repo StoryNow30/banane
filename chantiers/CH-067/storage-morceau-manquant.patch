@@ -1,0 +1,14 @@
+--- a/src/storage.js
++++ b/src/storage.js
+@@ -18,7 +18,10 @@
+   this.connus=new Map();this.index=new Set(Array.isArray(lu[INDEX])?lu[INDEX]:[]);if(!M)return etat;
+   const cles=etat?M.clesARelire(etat):[],lus=cles.length?await chrome.storage.local.get(cles):{};
+   if(etat){const {manquants,relus}=M.recoller(etat,lus);for(const [k,texte] of relus)this.connus.set(k,{texte});
+-   if(manquants.length)etat.etatMorceauxManquants=manquants;}
++   if(manquants.length){etat.etatMorceauxManquants=manquants;
++    /* CH-067 : un morceau absent est DIT au journal (rien ne lit `etatMorceauxManquants`) : sinon le lot reprend sur une liste tronquée en silence. */
++    try{if(typeof this.putEvent==='function')await this.putEvent({eventId:'etat-morceaux-manquants-'+Date.now()+'-'+Math.random().toString(36).slice(2,8),
++     timestamp:new Date().toISOString(),type:'etat-morceaux-manquants',schema:1,nombre:manquants.length,manquants:manquants.slice(0,20)});}catch{/* le journal n'est pas critique */}}}
+   /* Nettoyage du démarrage : clés de l'index (et, si le navigateur sait les lister, toutes les clés de morceaux) que l'état ne désigne pas. */
+   const candidats=new Set(this.index);
+   try{if(typeof chrome.storage.local.getKeys==='function')for(const k of await chrome.storage.local.getKeys())if(M.estCle(k))candidats.add(k);}catch{/* facultatif */}
