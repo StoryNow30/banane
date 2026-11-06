@@ -7,7 +7,7 @@ fn main() {
     let mut s = String::new();
     std::io::stdin().read_to_string(&mut s).expect("lecture");
     let v = parse_json(&s).expect("json");
-    let _ = appeler(v);
+    let _ = appeler(100, &v);
     let statut = std::fs::read_to_string("/proc/self/status").unwrap_or_default();
     let champ = |k: &str| {
         statut.lines().find(|l| l.starts_with(k)).and_then(|l| l.split_whitespace().nth(1)).unwrap_or("0").to_string()

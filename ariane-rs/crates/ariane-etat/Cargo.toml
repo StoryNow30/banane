@@ -1,12 +1,8 @@
-# CH-064-E : crate autonome tant que le chef ne l'a pas ajoutée à l'espace.
-# Le chef ajoute le membre et une ligne dans ariane-coeur (fonction 100). Voir chantiers/CH-064/E-rapport.md.
-[workspace]
-
 [package]
 name = "ariane-etat"
-version = "0.0.0"
-edition = "2021"
-publish = false
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
 
 [lib]
 crate-type = ["rlib", "cdylib"]
@@ -14,9 +10,3 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
-
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-panic = "abort"

@@ -1,6 +1,6 @@
 # CH-064-E — État, journal, listes (rapport)
 
-Crate `ariane-rs/crates/ariane-etat`, binaire `wasm32-unknown-unknown`, sans dépendance Cargo (le formatage des nombres reprend Ryū, Apache 2.0 ou Boost, dans `src/ryu/`). La crate est son propre espace tant que le chef ne l'a pas ajoutée au sien. Branchement prévu, une ligne dans `ariane-coeur` : `100 => ariane_etat::appeler(entree)`. Mémoire linéaire plafonnée à 512 Mio (`--max-memory`), et relâchée par réinstanciation de l'instance (la coquille).
+Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` et bras `100..=149` du cœur. Sans dépendance Cargo (le formatage des nombres reprend Ryū, Apache 2.0 ou Boost, dans `src/ryu/`). Mémoire linéaire du binaire propre plafonnée à 512 Mio, et relâchée par réinstanciation de l'instance.
 
 Référence : le JavaScript de cette branche. Chromium du banc : Chrome/156. 15 répétitions après 3 d'échauffement, médiane et P90 (indice `floor(p·n)`).
 

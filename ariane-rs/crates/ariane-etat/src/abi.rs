@@ -29,7 +29,7 @@ pub extern "C" fn vba_liberer_resultat() {
 
 pub fn executer(entree: &[u8]) -> Vec<u8> {
     let v = match decoder(entree) {
-        Ok(v) => match appeler(v) {
+        Ok(v) => match appeler(0, &v) {
             Ok(v) => v,
             Err(Echec::Js { nom, message }) => Valeur::Erreur { nom: nom.into(), message },
             Err(Echec::HorsDomaine(raison)) => Valeur::Erreur { nom: "HorsDomaine".into(), message: raison },

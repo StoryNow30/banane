@@ -131,7 +131,7 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur, appels: &mut Vec<
             for p in &points {
                 let (du, dz) = (p[0] - u - a[0], p[1] - z - a[1]);
                 let d = du * du + dz * dz;
-                if d < best { best = d; }
+                best = ariane_js::min_positif_fini(best, d); // d ≥ +0 et fini : identique à `if (d < best) best = d`
             }
             tampon.push(best);
         }
