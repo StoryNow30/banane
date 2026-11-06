@@ -34,7 +34,7 @@
   function appeler(fonction,valeur){
    const r=appelerOctets(fonction,Vba.encoder(valeur)),v=Vba.decoder(r.octets);
    apresAppel();
-   if(v&&v.__erreurVba===true){if(v.nom==='HorsDomaine')throw new HorsDomaine(v.message);const C=CONSTRUCTEURS[v.nom]||Error;throw new C(v.message);}
+   if(v instanceof Vba.ErreurTransportee){if(v.nom==='HorsDomaine')throw new HorsDomaine(v.message);const C=CONSTRUCTEURS[v.nom]||Error;throw new C(v.message);}
    return v;
   }
   return {appeler,appelerOctets,apresAppel,module,memoireOctets:()=>ex.memory.buffer.byteLength,etat:()=>({reinstanciations,hauteEau,memoire:ex.memory.buffer.byteLength})};
