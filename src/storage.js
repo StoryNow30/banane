@@ -6,8 +6,40 @@ class BananeStorage3{
  async transaction(name,mode,fn){const db=await this.open();return new Promise((resolve,reject)=>{
    const tx=db.transaction(name,mode),req=fn(tx.objectStore(name));let result;
    req.onsuccess=()=>{result=req.result;};tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Stockage annulé.'));});}
- async getState(){return (await chrome.storage.local.get('banane3State')).banane3State||null;}
- async setState(s){await chrome.storage.local.set({banane3State:s});}
+ /* CH-059 : l'état est écrit en morceaux (`src/etat-morceaux.js`) : les listes qui grossissent (visites et nuages de
+  * l'Écho, listes d'export, listes du lot) vont sous leurs propres clés, et seul un morceau CHANGÉ est réécrit, dans
+  * LE MÊME `set` que l'état : un arrêt du service worker entre deux écritures laisse l'état précédent ET ses morceaux.
+  * Aucun morceau n'est retiré en cours de route : les morceaux qui ne servent plus (session ou lot remplacés) sont
+  * retirés au démarrage, dans `getState()`, avant que l'état ne serve. L'index `banane3MorceauxIndex` liste toutes les
+  * clés écrites (il part dans le même `set` quand une clé apparaît). En mémoire, l'état relu est identique à l'état
+  * sauvegardé. `connus` : clé → { texte, simples } du morceau tel qu'il est sur disque. Les écritures passent une à une. */
+ morceauxApi(){return globalThis.BananeEtatMorceaux||(typeof module==='object'?require('./etat-morceaux.js'):null);}
+ async getState(){const M=this.morceauxApi(),INDEX='banane3MorceauxIndex',lu=await chrome.storage.local.get(['banane3State',INDEX]),etat=lu.banane3State||null;
+  this.connus=new Map();this.index=new Set(Array.isArray(lu[INDEX])?lu[INDEX]:[]);if(!M)return etat;
+  const cles=etat?M.clesARelire(etat):[],lus=cles.length?await chrome.storage.local.get(cles):{};
+  if(etat){const {manquants,relus}=M.recoller(etat,lus);for(const [k,texte] of relus)this.connus.set(k,{texte});
+   if(manquants.length)etat.etatMorceauxManquants=manquants;}
+  /* Nettoyage du démarrage : clés de l'index (et, si le navigateur sait les lister, toutes les clés de morceaux) que l'état ne désigne pas. */
+  const candidats=new Set(this.index);
+  try{if(typeof chrome.storage.local.getKeys==='function')for(const k of await chrome.storage.local.getKeys())if(M.estCle(k))candidats.add(k);}catch{/* facultatif */}
+  const orphelins=[...candidats].filter(k=>!this.connus.has(k));
+  if(orphelins.length||this.index.size!==this.connus.size){try{if(orphelins.length)await chrome.storage.local.remove(orphelins);
+    this.index=new Set(this.connus.keys());await chrome.storage.local.set({[INDEX]:[...this.index]});this.nettoyageDemarrage={retires:orphelins.length};}
+   catch{/* réessayé au prochain démarrage */}}
+  return etat;}
+ /* La découpe est faite AVANT toute attente : l'état reçu peut être l'état vivant du moteur (`copieALaSauvegarde`). */
+ copieALaSauvegarde=true;
+ setState(s){const M=this.morceauxApi();
+  if(!M){const copie=JSON.parse(JSON.stringify(s));return this.enFile(()=>chrome.storage.local.set({banane3State:copie}));}
+  const connus=this.connus??=new Map(),{etat,morceaux,simples}=M.decouper(s,connus);
+  return this.enFile(async()=>{const ecrits={},index=this.index??=new Set();
+   for(const [k,texte] of morceaux)if(connus.get(k)?.texte!==texte)ecrits[k]=texte;
+   const nouvelles=Object.keys(ecrits).filter(k=>!index.has(k));
+   await chrome.storage.local.set({banane3State:etat,...ecrits,...(nouvelles.length?{banane3MorceauxIndex:[...index,...nouvelles]}:{})});
+   for(const k of nouvelles)index.add(k);
+   for(const k in ecrits)connus.set(k,{texte:ecrits[k],simples:simples.get(k)});
+   this.derniereEcriture={octetsMorceaux:Object.values(ecrits).reduce((n,t)=>n+t.length,0),morceauxEcrits:Object.keys(ecrits).length};});}
+ enFile(fn){const suite=(this.file||Promise.resolve()).then(fn);this.file=suite.catch(()=>{});return suite;}
  /* V5 (D-089) : visites d'un ancien état absentes d'IndexedDB (vidées après export, ou jamais écrites),
   * mises de côté UNE fois au passage au nouveau format, pour que rien ne soit perdu sans les réécrire
   * à chaque sauvegarde. */
@@ -46,3 +78,4 @@ class BananeStorage3{
  async keys(name){return this.transaction(name,'readonly',s=>s.getAllKeys());}
 }
 globalThis.BananeStorage3=BananeStorage3;
+if(typeof module==='object')module.exports={BananeStorage3};

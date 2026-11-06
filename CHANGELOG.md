@@ -1,5 +1,9 @@
 # Banane V4 TEST — journal des versions
 
+## Tronc 5.0 — 06/11 (CH-059, D-289)
+- **Sauvegarde à taille constante, suite de D-089 (CH-059)** : l'état est écrit en morceaux (`src/etat-morceaux.js`, `src/storage.js`), seuls les morceaux changés sont réécrits ; `save()` du moteur ne copie plus tout l'état (baseline ré-épinglée). Mesuré dans Chromium sur un état de la taille du 05/11 : 1,1 à 1,4 s par cut en fin de journée → environ 0,05 s. Une session Écho fermée ne pèse plus sur le lot suivant ; `exportAdvice` linéaire.
+- **Relecture : plus de plafond pour les abords (D-289)** : tous les voisins des cuts isolés, des grappes et des différés sont relus (avant : 70 par partie).
+
 ## Tronc 5.0 — 05/11 (D-288)
 - **Garde « après un différé » coupée, gardée en ombre** (ordre de l'opérateur) : plus aucun cut différé par elle ; le cut qu'elle aurait différé est consigné (`garde-apres-differe-ombre`) pour l'apprentissage. Commandes à ESV identiques au lot sans garde (essai d'empreinte). Coût connu : 4 poses fausses en PN/ADV qu'elle évitait (CH-056).
 

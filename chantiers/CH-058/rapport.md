@@ -88,13 +88,13 @@ Pour chaque élément : qui l'écrit, qui le lit, et comment le sortir.
   - les vols écrits de la passe.
 - **Restent en lecture complète, par nature** : l'export du journal du lot (`lotSeul`), le vidage du cache, les exports GCV1 manuels, `discard`, et l'index de visites des autres sessions (une fois par session Écho).
 
-| Banc Chromium, avant → après | 10 000 évts | 50 000 | 114 000 | 150 000 |
+| Banc Chromium, avant → après (après fusion de CH-059) | 10 000 évts | 50 000 | 114 000 | 150 000 |
 |---|---|---|---|---|
-| Export Écho, service worker (s) | 0,55 → 0,55 | 1,03 → 0,89 | 2,16 → 0,79 | 2,55 → 0,92 |
-| Lecture du panneau (s) | 0,47 → 0,57 | 1,63 → 1,01 | 1,97 → 0,95 | 3,77 → 0,81 |
-| Tas du panneau pendant la lecture (Mo) | 66 → 70 | 117 → 56 | 195 → 59 | 243 → 56 |
-| Lecture d'un type, début de relecture (s) | 0,43 → 0,0007 | 0,96 → 0,0007 | 2,40 → 0,0007 | 2,48 → 0,0007 |
-| Construction de l'index, une fois par vie du SW (s) | 0,56 | 1,27 | 2,36 | 3,06 |
+| Export Écho, service worker (s) | 0,52 → 0,59 | 1,05 → 0,91 | 2,33 → 0,95 | 2,34 → 1,03 |
+| Lecture du panneau (s) | 0,61 → 0,63 | 1,15 → 0,84 | 2,21 → 0,81 | 2,66 → 0,97 |
+| Tas du panneau pendant la lecture (Mo) | 66 → 75 | 123 → 60 | 200 → 58 | 214 → 60 |
+| Lecture d'un type, début de relecture (s) | 0,51 → 0,001 | 0,98 → 0,0005 | 2,15 → 0,0007 | 2,43 → 0,0007 |
+| Construction de l'index, une fois par vie du SW (s) | 0,65 | 1,39 | 3,81 | 3,41 |
 
 Session de 1 000 visites et 31 000 événements Écho. Ce qui reste après correction, environ 0,8 à 0,9 s, est la lecture de la session elle-même : cela ne croît plus avec la journée. Fichier : `banc-export-avant-apres.json`.
 
@@ -109,4 +109,13 @@ Session de 1 000 visites et 31 000 événements Écho. Ce qui reste après corre
     - des méthodes exécutées avec `this` = l'objet dérivé (`setState` écrivait au mauvais endroit) ;
     - des méthodes figées à l'équipement, alors que les essais les remplacent ensuite.
   - **Garde et parité L1-se** : non lancées. Aucun module de décision n'est touché.
+- **Conditions de l'intégrateur (06/11, 08:40)**
+  1. **Écrivains** : seul le service worker écrit dans `events` et `records`. ÉTABLI à la lecture du code, et gardé par un essai : aucun script du panneau n'écrit, le panneau n'équipe aucun store, aucun script de page ne charge le stockage. Le vidage du cache passe par le store équipé.
+  2. **Redémarrages du service worker**, comptés par `clockId` (une horloge par vie) : 1 vie le 05/11 ; 3 le 04/11 (Orbite, redémarrages à 17:26 et 18:03, autour de l'Écho) ; 1 le matin et 1 le soir pour la Constellation du 04/11. L'index se construit au démarrage, 3 s après `ready`, si aucun lot, aucune relecture et aucune Écho ne tourne ; sinon, au premier besoin.
+  3. **Incohérence** (clé de l'index absente de la base, ou erreur de lecture) : jamais de résultat partiel. Repli sur la lecture complète, événement `journal-index-repli`, index jeté puis reconstruit ; le panneau fait de même et le signale au service worker. Un store sans `open` (harnais d'essai) n'est pas une incohérence : repli sans événement.
+  4. **`getAll` sur une plage de clés** : impossible, les clés sont des UUID aléatoires (`K.uid`). Un `getAll` filtré est fait au-delà de 40 % du magasin.
+- **Après fusion du tronc f25ce84 (CH-059, D-289)** :
+  - les suites du service worker, de la relecture, de la correction, de l'Écho et de l'export sont vertes (236 fichiers, 869 essais) ;
+  - parité de la relecture contre f25ce84 : identique (SHA-256 9984fe77…) ;
+  - `tests/pose-lot-inchanges-4959.test.cjs` échoue sur 2 essais, **sur le tronc aussi** : `src/relecture-ombre.js` a été changé par D-289. Ce n'est pas CH-058 ; c'est à l'intégrateur de mettre la référence à jour.
 - **Coût restant** : la construction de l'index, de 0,6 à 3 s, se paie une fois par vie du service worker, au premier export ou au premier début de relecture. Avant, cette même lecture se payait à chaque étape.

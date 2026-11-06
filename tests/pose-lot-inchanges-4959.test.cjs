@@ -70,6 +70,10 @@ const SERIE_VIDES=['serie-captures-vides.js'];
 /* CH-055 : la règle de voie « b1-ecart » EN OMBRE (src/voie-b1-ecart.js, mesure chantiers/CH-053/M-rapport.md), module pur lu par le service worker après
  * la commande d'un cut différé (réglage `lot.voieB1EcartOmbre`, consigné seulement) ; coupé ou actif, les commandes sont celles d'avant (tests/voie-b1-ecart-ombre-sw.test.cjs). */
 const VOIE_B1_ECART=['voie-b1-ecart.js'];
+/* CH-059 : l'état est ÉCRIT en morceaux (`src/etat-morceaux.js`, lu par `src/storage.js`) ; l'état relu en mémoire est identique à l'état
+ * sauvegardé (tests/ch059-etat-borne.test.cjs) : ni la pose ni le lot ne lisent autre chose qu'avant. */
+const ETAT_MORCEAUX=['etat-morceaux.js'];
+const STOCKAGE={'src/storage.js':'CH-059 : écriture de l\'état en morceaux, relecture identique (tests/ch059-etat-borne.test.cjs, tests/ch059-morceaux.test.cjs)'};
 /* CH-053-S : la file prioritaire des cuts à corriger (src/file-prioritaire.js), module pur NON BRANCHÉ (ni service worker ni panneau) : il range des candidats, ne lit ni ne commande la pose. */
 const FILE_PRIORITAIRE=['file-prioritaire.js'];
 /* CH-053-C : la reconstruction de l'état initial d'Écho (src/native-reconstruction.js), module pur lu HORS LIGNE par tools/taux-apprenables.cjs (définition assouplie) : ni le service worker, ni la page, ni le lot ne le lisent. */
@@ -90,13 +94,13 @@ const sansD284=t=>t
 test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
-  if(ECHO[f]||L1[f])continue;
+  if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
   const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):lire(f);
   if(sha(texte)!==empreinte)deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...JOURNAL_INDEX].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

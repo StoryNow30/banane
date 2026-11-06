@@ -1,0 +1,18 @@
+--- a/src/engine.js	2026-11-06 08:38:08.043002773 +0000
++++ b/src/engine.js	2026-11-06 08:38:08.055749979 +0000
+@@ -121,10 +121,13 @@
+    * recopiée : `recordIds` garde son identifiant, à sa place ; toute autre entrée reste recopiée.
+    * `records` et `incomplete` restent écrits VIDES : une version antérieure (retour arrière) relit
+    * l'état sans planter. Listes encore non relues (IndexedDB illisible au démarrage) : réécrites telles quelles. */
+-  async save(){if(this.visitesRelues===false){await this.store.setState(K.clone(this.s));return;}
++  /* CH-059 : un magasin qui copie lui-même l'état AVANT toute attente (`copieALaSauvegarde`, src/storage.js : découpe en
++   * morceaux, seuls les morceaux changés sont recopiés) reçoit l'état vivant ; sinon (magasins d'essai), la copie d'avant. */
++  async save(){const copie=this.store?.copieALaSauvegarde===true?x=>x:K.clone;
++   if(this.visitesRelues===false){await this.store.setState(copie(this.s));return;}
+    const {records,incomplete,...reste}=this.s,ref=r=>{const id=r?.recordId||r?.id;return typeof id==='string'&&this.enBase.has(id)?id:r;};
+    const liste=(l,brute)=>Array.isArray(l)?l.map(ref):Array.isArray(brute)?brute:[];
+-   await this.store.setState({...K.clone(reste),records:[],incomplete:[],recordIds:K.clone(liste(records,reste.recordIds)),incompleteIds:K.clone(liste(incomplete,reste.incompleteIds))});}
++   await this.store.setState({...copie(reste),records:[],incomplete:[],recordIds:copie(liste(records,reste.recordIds)),incompleteIds:copie(liste(incomplete,reste.incompleteIds))});}
+   /* Au démarrage. Identifiant : la visite est relue dans IndexedDB ; absente, elle a été vidée après
+    * export : elle n'est plus gardée, et le nombre est consigné. Entrée recopiée : gardée telle quelle,
+    * et confirmée seulement si IndexedDB en a la même version. ANCIEN FORMAT (toutes les visites

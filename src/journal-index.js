@@ -77,8 +77,20 @@
   /* `totaux` : approché (une réécriture compte une fois de plus) ; il ne sert qu'à choisir entre `get` et `getAll`, pas au résultat. */
   const lireClesStore=async(nom,cles)=>lireCles(await store.open(),nom,cles,ix.totaux[nom]);
   /* Lecture bornée, ou `null` si l'index n'est pas sûr (l'appelant lit alors tout, comme avant). */
-  const borne=async(nom,cles)=>{await construire();if(!ix.pret||ix.invalide)return null;ix.mesures.lectures++;
-   try{return await lireClesStore(nom,cles());}catch{return null;}};
+  /* Toute incohérence (clé de l'index absente de la base, erreur de lecture) : JAMAIS de résultat partiel. La lecture rend
+   * `null` (l'appelant lit tout, comme avant), un événement `journal-index-repli` est écrit, et l'index est jeté pour être
+   * reconstruit au prochain besoin. Une clé absente ne vient normalement que d'une écriture refusée (clé retenue dès l'appel). */
+  const repli=(nom,raison,detail={})=>{ix.mesures.replis=(ix.mesures.replis||0)+1;
+   try{void Promise.resolve(orig.putEvent?.({eventId:'journal-index-repli-'+Date.now()+'-'+ix.mesures.replis,timestamp:new Date().toISOString(),type:'journal-index-repli',schema:1,
+    magasin:nom,raison,...detail})).catch(()=>{});}catch{/* le journal n'est pas critique */}
+   I.vider();ix.pret=false;ix.invalide=false;ix.construction=null;return null;};
+  const borne=async(nom,cles)=>{await construire();if(!ix.pret||ix.invalide)return null;
+   /* Un store sans `open` (harnais d'essai) ne sait pas lire par clé : ce n'est pas une incohérence, l'index est simplement inutilisable. */
+   if(typeof store.open!=='function'){ix.invalide=true;return null;}
+   ix.mesures.lectures++;
+   let r;try{r=await lireClesStore(nom,cles());}catch(e){return repli(nom,'erreur',{message:String(e?.message||e).slice(0,160)});}
+   if(r.manquants)return repli(nom,'cle-absente',{demandees:r.demandees,manquants:r.manquants});
+   return r.objets;};
   const union=(m,ks)=>{const s=new Set();for(const k of ks)for(const c of m.get(k)||[])s.add(c);return s;};
   /* API : chaque fonction rend la même chose que `store.all(nom)` filtré par l'appelant, pour les objets qui comptent. */
   def('lireParType',async types=>{for(const t of types)if(!TYPES_SET.has(t))throw Error('Type non indexé : '+t);
@@ -103,11 +115,12 @@
  /* `total` : nombre d'objets du magasin, tenu par l'index (pas `count()`, qui parcourt tout le magasin : mesuré, 0,28 s à
   * 181 000 objets). Inconnu : lecture par `get`. */
  async function lireCles(db,nom,cles,total){const liste=trier(cles),voulues=new Set(liste);
+  /* Rend {objets, demandees, manquants} : `manquants` > 0 dit qu'une clé demandée n'est plus en base (l'appelant ne doit pas s'en servir). */
   return new Promise((res,rej)=>{const tx=db.transaction(nom,'readonly'),os=tx.objectStore(nom);let out=null;
     if(Number.isFinite(total)&&liste.length>PART_GETALL*total){const q=os.getAll(),k=os.getAllKeys();let v=null,ks=null;
      const fin=()=>{if(v&&ks)out=v.filter((_,i)=>voulues.has(ks[i]));};q.onsuccess=()=>{v=q.result;fin();};k.onsuccess=()=>{ks=k.result;fin();};}
     else{const tab=new Array(liste.length);out=tab;liste.forEach((x,i)=>{const q=os.get(x);q.onsuccess=()=>{tab[i]=q.result;};});}
-   tx.oncomplete=()=>res((out||[]).filter(x=>x!==undefined));tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error||Error('Lecture annulée.'));});}
+   tx.oncomplete=()=>{const objets=(out||[]).filter(x=>x!==undefined);res({objets,demandees:liste.length,manquants:liste.length-objets.length});};tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error||Error('Lecture annulée.'));});}
 
  return {equiper,lireCles};
 });
