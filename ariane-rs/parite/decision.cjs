@@ -10,13 +10,14 @@ const Vba=require('../coquille/vba.js'),F=require('../coquille/facade-decision.j
 const RACINE=path.resolve(__dirname,'..','..');
 const SRC={critere:'src/relecture-critere.js',signal:'src/relecture-signal.js',gardeApresDiffere:'src/garde-apres-differe.js',
  gardePasseAppuis:'src/garde-passe-appuis.js',relectureOmbre:'src/relecture-ombre.js',reglesMetier:'src/regles-metier.js',crossing:'src/level-crossing.js',
- shadow:'src/gcv1-shadow.js',hauteur:'src/hauteur-apprise.js',fauxVert:'src/faux-vert-ombre.js',lotDecision:'src/lot-decision.js'};
+ shadow:'src/gcv1-shadow.js',hauteur:'src/hauteur-apprise.js',fauxVert:'src/faux-vert-ombre.js',lotDecision:'src/lot-decision.js',
+ /* CH-068 (J4) */ appuisListe:'src/appuis-liste.js'};
 const GLOBALES={critere:'BananeRelectureCritere',signal:'BananeRelectureSignal',gardeApresDiffere:'BananeGardeApresDiffere',
- gardePasseAppuis:'BananeGardePasseAppuis',relectureOmbre:'BananeRelectureOmbre',reglesMetier:'BananeReglesMetier',crossing:'BananeLevelCrossing',shadow:'BananeGCV1Shadow',hauteur:'BananeHauteurApprise',fauxVert:'BananeFauxVertOmbre',lotDecision:'BananeLotDecision'};
+ gardePasseAppuis:'BananeGardePasseAppuis',relectureOmbre:'BananeRelectureOmbre',reglesMetier:'BananeReglesMetier',crossing:'BananeLevelCrossing',shadow:'BananeGCV1Shadow',hauteur:'BananeHauteurApprise',fauxVert:'BananeFauxVertOmbre',lotDecision:'BananeLotDecision',appuisListe:'BananeAppuisListe'};
 /* Ordre de chargement du service worker (background.js, importScripts), restreint aux modules purs dont dépend la décision. */
 const CHAINE=['vendor/capture-core.js','src/gauge.js','src/geometry.js','src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/geometry-candidate-v1.js',
  'src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/regles-metier.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js'];
+ 'src/regles-metier.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/appuis-liste.js'];
 const MODULES=(process.env.CH064D_MODULES||Object.keys(SRC).join(',')).split(',');
 const M=Object.fromEntries(MODULES.map(m=>[m,require(path.join(RACINE,SRC[m]))]));
 const Mfac={...M,convention:require(path.join(RACINE,'src/placement-convention.js')),shadow:require(path.join(RACINE,'src/gcv1-shadow.js'))};

@@ -15,6 +15,8 @@ pub mod metier;
 pub mod shadow;
 pub mod aides;
 pub mod lot;
+pub mod j4;
+pub mod appuis;
 #[cfg(test)]
 mod essais;
 
@@ -33,6 +35,8 @@ pub const GCV1_SHADOW: u32 = 57;
 pub const HAUTEUR: u32 = 58;
 pub const FAUX_VERT: u32 = 59;
 pub const LOT_DECISION: u32 = 60;
+/// CH-068 (J4) : `src/appuis-liste.js`.
+pub const APPUIS_LISTE: u32 = 61;
 /// Sonde de sémantique (Number::toString) : `{f:"nombreChaine", a:[[x…]]}` → chaînes.
 pub const SONDE: u32 = 99;
 
@@ -50,6 +54,7 @@ pub fn appeler(fonction: u32, entree: &Valeur) -> R<Valeur> {
         HAUTEUR => aides::appeler("hauteur", &a),
         FAUX_VERT => aides::appeler("fauxVert", &a),
         LOT_DECISION => lot::appeler(&a, entree),
+        APPUIS_LISTE => appuis::appeler(&a),
         SONDE if a.f == "nombreChaine" => Ok(Valeur::Tableau(js::presents(a.arg(0)).iter().map(|x| js::chaine(x).map(|c| Some(js::s(&c)))).collect::<R<Vec<_>>>()?)),
         _ => js::hd("ariane-decision : fonction inconnue"),
     }

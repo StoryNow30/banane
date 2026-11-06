@@ -8,7 +8,8 @@
  * l'objet d'origine les clés de `e` dont la valeur primitive a changé (les objets imbriqués ne sont jamais modifiés par le JS). */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeFacadeDecision=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56,shadow:57,hauteur:58,fauxVert:59,lotDecision:60};
+ const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56,shadow:57,hauteur:58,fauxVert:59,lotDecision:60,
+  /* CH-068 (J4) */ appuisListe:61};
  const PORTEES={
   critere:['reglages','correctionPermise','juger'],
   signal:['reglage','lectureDe','creer','observer','recharge','bilan'],
@@ -18,8 +19,10 @@
   reglesMetier:['surface','railsDePlus','resumer','doitDifferer','evenement'],
   crossing:['read','detect','edgeOf','positionAt'],
   shadow:['scientificProposeBoth','scientificProposeBothAvecReservoir'],
-  hauteur:['evaluer'],fauxVert:['evaluer'],lotDecision:['decideCut']};
- const MUTANTES={signal:new Set(['observer','recharge'])};
+  hauteur:['evaluer'],fauxVert:['evaluer'],lotDecision:['decideCut'],
+  appuisListe:['bordsCorps','mesurerT','noterRepere','resumeRepere','lireReponse','accord','appuis','compter','regle','comparer','resumeDecision']};
+ const MUTANTES={signal:new Set(['observer','recharge']),appuisListe:new Set(['noterRepere'])};
+ /* Mutantes qui rendent parfois leur premier argument lui-même (noterRepere) : le cœur ajoute `meme`, la façade rend alors l'objet d'origine. */
  const primitif=v=>v===null||(typeof v!=='object'&&typeof v!=='function');
  function recopier(cible,etat){if(!cible||typeof cible!=='object'||!etat||typeof etat!=='object')return;
   for(const k of Object.keys(etat)){const v=etat[k];if(primitif(v)&&!Object.is(cible[k],v))cible[k]=v;}}
@@ -32,6 +35,8 @@
  /* decideCut reçoit le module GCV1 (`Shadow`, des fonctions) : il ne traverse pas ; seul le module chargé (modules.shadow) est accepté,
   * son état part à sa place, avec les réglages globaux que lit lot-decision.js. Tout autre Shadow (doublure d'essai) : repli sur le JS. */
  function envoiSpecial(nom,f,a,modules){
+  /* comparer(d0,d1) teste d0===d1 : l'identité d'un objet ne traverse pas, le même objet passé deux fois reste au JS. */
+  if(nom==='appuisListe'&&f==='comparer')return a[0]!==null&&typeof a[0]==='object'&&a[0]===a[1]?false:null;
   if(nom!=='lotDecision')return null;
   const x=a[0];if(!x||typeof x!=='object'||x.Shadow!==modules.shadow||!modules.shadow)return false;
   const {Shadow,...reste}=x,S=typeof globalThis!=='undefined'?globalThis.BananeSettings:undefined;
@@ -47,7 +52,7 @@
      let v;try{const etat=etatDe(nom,modules);v=coeur.appeler(NUMEROS[nom],sp||(etat===undefined?{f,a}:{f,a,etat}));c.coeur++;}
      catch(e){if(e&&e.name==='HorsDomaine'){c.repliHorsDomaine++;return M[f](...a);}
       if(e instanceof TypeError&&/^VBA : /.test(e.message)){c.repliFormat++;return M[f](...a);}throw e;}
-     if(mutante){recopier(a[0],v.e);return v.r;}
+     if(mutante){recopier(a[0],v.e);return v.meme===true?a[0]:v.r;}
      return v;};}
    out[nom]=F;}
   return out;}
