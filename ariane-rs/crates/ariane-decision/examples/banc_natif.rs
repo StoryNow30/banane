@@ -1,8 +1,10 @@
 //! Banc NATIF (option B) de ariane-decision : rejoue des trames VBA (`tools/ch064-d-banc-temps.cjs --natif`) et mesure le temps
-//! (décodage VBA, calcul, encodage compris : ce que ferait l'hôte natif) et la mémoire (VmHWM, VmRSS de /proc/self/status).
-//!   cargo run --release -p ariane-decision --example banc_natif -- FICHIER [REPETITIONS]
+//! (décodage VBA, calcul, encodage compris : ce que ferait l'hôte natif) et la mémoire (`VmHWM`, `VmRSS` de /proc/self/status).
+//!   cargo run --release -p ariane-decision --example `banc_natif` -- FICHIER [REPETITIONS]
 //! Fichier : suite de [u32 numéro du poste][u32 fonction][u32 longueur][trame VBA], petit-boutiste. Sortie : JSON sur stdout.
-//! En natif, `Math.pow` et `Math.exp` ne sont pas ceux du moteur (voir js::pow) : temps seulement, jamais une parité.
+//! En natif, `Math.pow` et `Math.exp` ne sont pas ceux du moteur (voir `js::pow`) : temps seulement, jamais une parité.
+// Outil de mesure : comptes et rangs de la trame (< 2^32, octets lus), conversions bornées par construction.
+#![allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 use std::time::Instant;
 
 fn statut(cle: &str) -> u64 {
@@ -14,7 +16,7 @@ fn main() {
     let rep: usize = a.get(2).and_then(|x| x.parse().ok()).unwrap_or(15);
     let mut p = 0usize;
     let u32le = |o: &[u8], p: usize| u32::from_le_bytes([o[p], o[p + 1], o[p + 2], o[p + 3]]) as usize;
-    let mut par_poste: std::collections::BTreeMap<usize, Vec<f64>> = Default::default();
+    let mut par_poste: std::collections::BTreeMap<usize, Vec<f64>> = std::collections::BTreeMap::default();
     let rss0 = statut("VmRSS:");
     while p < octets.len() {
         let (poste, f, n) = (u32le(&octets, p), u32le(&octets, p + 4) as u32, u32le(&octets, p + 8));

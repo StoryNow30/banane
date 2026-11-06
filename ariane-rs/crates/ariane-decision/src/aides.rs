@@ -1,16 +1,16 @@
 //! Modules lus par la décision du lot, à l'identique :
 //! `src/continuity-observer.js` (`fitAt`, `predict`, `translated`), `src/hauteur-apprise.js` (`evaluer`), `src/faux-vert-ombre.js` (`evaluer`).
 use crate::critere::vers_nombre;
-use crate::js::*;
+use crate::js::{R, p, point_v, g, tab_n, nullish, hd, est_simple, gi, definir_v, canon, vrai, est_tableau, Ou, elems, etaler, definir, M16, m16, o, presents, num, INDEF, nul, s, fini_de, r1v, n, tab_s, fini, inclut, chaine_de, n_ou_nul, b, um, tab, Appel};
 use crate::metier::json_aller_retour;
 use ariane_geometrie::convention;
 use ariane_vba::Valeur as V;
 
-pub const SIDES: [&str; 2] = ["left", "right"];
+pub(crate) const SIDES: [&str; 2] = ["left", "right"];
 
 // ---------------------------------------------------------------- continuité
 /// `fitAt(points)` : moindres carrés y = a + b·x, évalué en x = 0.
-pub fn fit_at(p_: &[[f64; 2]]) -> f64 {
+pub(crate) fn fit_at(p_: &[[f64; 2]]) -> f64 {
     if p_.len() == 1 { return p_[0][1]; }
     let (mut sx, mut sy, mut sxx, mut sxy) = (0.0, 0.0, 0.0, 0.0);
     for [x, y] in p_ { sx += x; sy += y; sxx += x * x; sxy += x * y; }
@@ -19,9 +19,10 @@ pub fn fit_at(p_: &[[f64; 2]]) -> f64 {
     let bb = if d.abs() > 1e-12 { (nn * sxy - sx * sy) / d } else { 0.0 };
     (sy - bb * sx) / nn
 }
-pub struct Prediction { pub lateral: f64, pub vertical: f64, pub translation: [f64; 3] }
+/// Prédiction d'un rail : décalage latéral et translation (le vertical n'entre que dans la translation).
+pub(crate) struct Prediction { pub lateral: f64, pub translation: [f64; 3] }
 /// Décalages locaux des appuis (`C.point(M, a.positions[side]) − o`).
-pub fn locaux(initial: &V, anchors: &[V], side: &str) -> R<([f64; 3], Vec<[f64; 3]>)> {
+pub(crate) fn locaux(initial: &V, anchors: &[V], side: &str) -> R<([f64; 3], Vec<[f64; 3]>)> {
     let m = p(initial, "sceneRelativeToProfileLocal")?;
     let o_ = point_v(m, g(initial, "positionSceneRelative"))?;
     let mut q = vec![];
@@ -32,22 +33,22 @@ pub fn locaux(initial: &V, anchors: &[V], side: &str) -> R<([f64; 3], Vec<[f64; 
     }
     Ok((o_, q))
 }
-pub fn translation_de(initial: &V, o_: [f64; 3], lateral: f64, vertical: f64) -> R<[f64; 3]> {
+pub(crate) fn translation_de(initial: &V, o_: [f64; 3], lateral: f64, vertical: f64) -> R<[f64; 3]> {
     let pm = g(initial, "profileLocalToSceneRelative");
     let a = point_v(pm, &tab_n(&o_))?;
     let b_ = point_v(pm, &tab_n(&[o_[0], o_[1] + lateral, o_[2] + vertical]))?;
     Ok([b_[0] - a[0], b_[1] - a[1], b_[2] - a[2]])
 }
 /// `O.predict(initial, anchors, side)`.
-pub fn predict(initial: &V, anchors: &[V], side: &str) -> R<Prediction> {
+pub(crate) fn predict(initial: &V, anchors: &[V], side: &str) -> R<Prediction> {
     if nullish(initial) { return hd("rail initial absent"); }
     let (o_, q) = locaux(initial, anchors, side)?;
     let lateral = fit_at(&q.iter().map(|p_| [p_[0], p_[1]]).collect::<Vec<_>>());
     let vertical = fit_at(&q.iter().map(|p_| [p_[0], p_[2]]).collect::<Vec<_>>());
-    Ok(Prediction { lateral, vertical, translation: translation_de(initial, o_, lateral, vertical)? })
+    Ok(Prediction { lateral, translation: translation_de(initial, o_, lateral, vertical)? })
 }
 /// `O.translated(rail, t)` : copie JSON du rail, repères translatés, inverse recalculé, contours translatés.
-pub fn translated(rail: &V, t: [f64; 3]) -> R<V> {
+pub(crate) fn translated(rail: &V, t: [f64; 3]) -> R<V> {
     let mut r = json_aller_retour(rail)?;
     if !est_simple(&r) { return hd("rail non objet"); }
     let add = |p_: &V| -> R<V> {
@@ -71,14 +72,14 @@ pub fn translated(rail: &V, t: [f64; 3]) -> R<V> {
     if vrai(&pc) {
         if !est_tableau(&pc) { return hd("profileContours non tableau"); }
         let mut out = vec![];
-        for k in elems(&pc).unwrap() {
+        for k in elems(&pc).ou_hd()? {
             let Some(k) = k else { out.push(None); continue };
             let mut e = vec![];
             etaler(&mut e, &k)?;
             let vs = g(&k, "verticesSceneRelative");
             if !est_tableau(vs) { return hd("verticesSceneRelative"); }
             let mut nv = vec![];
-            for p_ in elems(vs).unwrap() { nv.push(match p_ { None => None, Some(p_) => Some(add(&p_)?) }); }
+            for p_ in elems(vs).ou_hd()? { nv.push(match p_ { None => None, Some(p_) => Some(add(&p_)?) }); }
             definir(&mut e, "verticesSceneRelative", canon(&V::Tableau(nv)));
             out.push(Some(V::Objet(e)));
         }
@@ -135,7 +136,7 @@ fn modele_de(reglage: &V) -> V {
     if vrai(reglage) {
         if matches!(g(reglage, "plafondMm"), V::Nombre(x) if x.is_finite() && *x >= 0.0) { definir_v(&mut m, "plafondMm", g(reglage, "plafondMm").clone()); }
         if fini(g(reglage, "pointsDessusMin")) { definir_v(&mut m, "pointsDessusMin", g(reglage, "pointsDessusMin").clone()); }
-        if est_tableau(g(reglage, "etages")) { definir_v(&mut m, "etages", V::Tableau(elems(g(reglage, "etages")).unwrap())); }
+        if est_tableau(g(reglage, "etages")) { definir_v(&mut m, "etages", V::Tableau(elems(g(reglage, "etages")).unwrap_or_default())); }
         for k in ["applique", "refuse"] {
             let gg = g(reglage, k);
             if groupe_valide(gg) { definir_v(&mut m, k, o(vec![("a", g(gg, "a").clone()), ("b", g(gg, "b").clone()), ("part", g(gg, "part").clone())])); }
@@ -143,12 +144,12 @@ fn modele_de(reglage: &V) -> V {
     }
     m
 }
-pub fn hauteur_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) -> R<V> {
+pub(crate) fn hauteur_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) -> R<V> {
     if !signaux_ok(capture, decision) { return Ok(nul()); }
     let pz = g(decision, "positions");
     let etage = match g(decision, "stage") { x if nullish(x) => nul(), x => x.clone() };
     let m = modele_de(reglage);
-    let plafond = num(g(&m, "plafondMm")).unwrap();
+    let plafond = num(g(&m, "plafondMm")).ou_hd()?;
     let mut rails = vec![];
     for side in SIDES {
         let cal = cal_de(science, side);
@@ -167,17 +168,17 @@ pub fn hauteur_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) -> R
         // correctionRail
         let (corr, abst, borne): (f64, Option<&str>, bool) = if !inclut(g(&m, "etages"), &etage)? { (0.0, Some("etage"), false) }
             else if !vrai(&groupe) { (0.0, Some("calage"), false) }
-            else if nb.is_none() || nb.unwrap() < num(g(&m, "pointsDessusMin")).unwrap() || !fini(&ep_v) { (0.0, Some("dessus-peu-observe"), false) }
+            else if nb.is_none() || nb.ou_hd()? < num(g(&m, "pointsDessusMin")).ou_hd()? || !fini(&ep_v) { (0.0, Some("dessus-peu-observe"), false) }
             else {
-                let gg = g(&m, chaine_de(&groupe).unwrap());
-                if !groupe_valide(gg) { (0.0, Some("modele"), false) } else {
-                    let (a, bb, part) = (num(g(gg, "a")).unwrap(), num(g(gg, "b")).unwrap(), num(g(gg, "part")).unwrap());
-                    let brut = part * (a + bb * num(&ep_v).unwrap());
+                let gg = g(&m, chaine_de(&groupe).ou_hd()?);
+                if groupe_valide(gg) {
+                    let (a, bb, part) = (num(g(gg, "a")).ou_hd()?, num(g(gg, "b")).ou_hd()?, num(g(gg, "part")).ou_hd()?);
+                    let brut = part * (a + bb * num(&ep_v).ou_hd()?);
                     let bo = ariane_js::sign(brut) * ariane_js::min(brut.abs(), plafond);
                     let mm = ariane_js::round(bo * 10.0) / 10.0;
                     let mm = if bo.is_finite() { mm } else { f64::NAN };
                     (if mm == 0.0 { 0.0 } else { mm }, None, brut.abs() > plafond)
-                }
+                } else { (0.0, Some("modele"), false) }
             };
         let corr_v = if corr.is_nan() { nul() } else { n(corr) };
         let mut t = vec![("groupe", groupe), ("calage", calage_de(cal)), ("dzMm", fini_r1(if vrai(cal) { g(cal, "dzMm") } else { &INDEF })), ("epaisseurDessusMm", ep_v),
@@ -206,7 +207,7 @@ fn presents_nombres(pos: &V) -> R<Vec<f64>> {
 }
 
 // ---------------------------------------------------------------- faux vert en ombre
-pub fn faux_vert_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) -> R<V> {
+pub(crate) fn faux_vert_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) -> R<V> {
     if !signaux_ok(capture, decision) { return Ok(nul()); }
     let pz = g(decision, "positions");
     let mut rails = vec![];
@@ -221,12 +222,12 @@ pub fn faux_vert_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) ->
         if !nullish(rail) && vrai(g(rail, "sceneRelativeToProfileLocal")) && est_tableau(pos) {
             if let Some((top, face)) = bande(capture, side, delta_de(rail, pos)?)? {
                 let nb = top.len() as f64;
-                bnd = Some((nb, face.len() as f64, if nb != 0.0 { Some(convention::quantile(&top, 0.9) - convention::quantile(&top, 0.1)) } else { None }));
+                bnd = Some((nb, face.len() as f64, if nb == 0.0 { None } else { Some(convention::quantile(&top, 0.9) - convention::quantile(&top, 0.1)) }));
             }
         }
         let dz = fini_r1(if vrai(cal) { g(cal, "dzMm") } else { &INDEF });
         let ep = match bnd { Some((_, _, Some(e))) => r1v(e), _ => nul() };
-        if !matches!(dz, V::Nul) && num(&dz).unwrap().abs() >= dzmin && !matches!(ep, V::Nul) && num(&ep).unwrap() >= epmin { suspects.push(s(side)); }
+        if !matches!(dz, V::Nul) && num(&dz).ou_hd()?.abs() >= dzmin && !matches!(ep, V::Nul) && num(&ep).ou_hd()? >= epmin { suspects.push(s(side)); }
         rails.push((side, o(vec![("dzMm", dz), ("calage", calage_de(cal)), ("epaisseurDessusMm", ep), ("pointsDessus", bnd.map_or(nul(), |x| n(x.0))),
             ("pointsFlanc", bnd.map_or(nul(), |x| n(x.1)))])));
     }
@@ -235,7 +236,7 @@ pub fn faux_vert_evaluer(capture: &V, science: &V, decision: &V, reglage: &V) ->
         ("railsSuspects", tab(suspects)), ("rails", o(rails)), ("seuils", o(vec![("dzMinMm", n(dzmin)), ("epaisseurMinMm", n(epmin))]))]))
 }
 
-pub fn appeler(module: &str, a: &Appel) -> R<V> {
+pub(crate) fn appeler(module: &str, a: &Appel) -> R<V> {
     let e = a.arg(0);
     if nullish(e) { return hd("déstructuration de null/undefined"); }
     match (module, a.f.as_str()) {

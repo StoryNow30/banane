@@ -4,104 +4,85 @@
 //! propriété, `?.`, `typeof`, étalement `{...a}`, ordre des clés, conversion en chaîne. Ce module reproduit ce que fait V8,
 //! et rend `HorsDomaine` pour ce qu'il ne reproduit pas (la façade rappelle alors le JS d'origine).
 //!
-//! Ordre des clés (ECMA-262, OrdinaryOwnPropertyKeys) : d'abord les clés d'indice de tableau (« 0 » à « 4294967294 »,
+//! Ordre des clés (ECMA-262, `OrdinaryOwnPropertyKeys`) : d'abord les clés d'indice de tableau (« 0 » à « 4294967294 »,
 //! écriture canonique) par ordre croissant, puis les autres dans l'ordre d'insertion. `definir` le respecte.
 use ariane_js::Echec;
 use ariane_vba::Valeur as V;
 
-pub type R<T> = Result<T, Echec>;
-pub static INDEF: V = V::Indefini;
+pub(crate) type R<T> = Result<T, Echec>;
+pub(crate) static INDEF: V = V::Indefini;
 
-pub fn hd<T>(m: &str) -> R<T> { Err(Echec::hors_domaine(m)) }
-pub fn n(x: f64) -> V { V::Nombre(x) }
-pub fn s(x: &str) -> V { V::Chaine(x.to_owned()) }
-pub fn b(x: bool) -> V { V::Booleen(x) }
-pub fn nul() -> V { V::Nul }
+pub(crate) fn hd<T>(m: &str) -> R<T> { Err(Echec::hors_domaine(m)) }
+pub(crate) fn n(x: f64) -> V { V::Nombre(x) }
+pub(crate) fn s(x: &str) -> V { V::Chaine(x.to_owned()) }
+pub(crate) fn b(x: bool) -> V { V::Booleen(x) }
+pub(crate) fn nul() -> V { V::Nul }
 /// Nombre ou `null` (`Number.isFinite(v)?v:null` déjà décidé par l'appelant).
-pub fn n_ou_nul(x: Option<f64>) -> V { x.map_or(V::Nul, V::Nombre) }
+pub(crate) fn n_ou_nul(x: Option<f64>) -> V { x.map_or(V::Nul, V::Nombre) }
 /// Tableau dense.
-pub fn tab(v: Vec<V>) -> V { V::Tableau(v.into_iter().map(Some).collect()) }
+pub(crate) fn tab(v: Vec<V>) -> V { V::Tableau(v.into_iter().map(Some).collect()) }
 /// Tableau de nombres, sous sa forme canonique VBA (`Nombres` ; vide : `Tableau`) : celle qu'attendent les crates de géométrie.
-pub fn tab_n(v: &[f64]) -> V { if v.is_empty() { V::Tableau(vec![]) } else { V::Nombres(v.to_vec()) } }
-/// Forme canonique VBA d'une valeur (comme l'encodeur de la coquille la produirait) : tableaux denses de nombres → `Nombres`,
-/// de booléens → `Booleens`, de tableaux de k nombres → `Bloc`. À appliquer à toute valeur bâtie ici et passée à ariane-geometrie.
-pub fn canon(v: &V) -> V {
-    match v {
-        V::Objet(e) => V::Objet(e.iter().map(|(k, x)| (k.clone(), canon(x))).collect()),
-        V::Tableau(t) if !t.is_empty() && t.iter().all(|e| matches!(e, Some(V::Nombre(_)))) => V::Nombres(t.iter().map(|e| num(e.as_ref().unwrap()).unwrap()).collect()),
-        V::Tableau(t) if !t.is_empty() && t.iter().all(|e| matches!(e, Some(V::Booleen(_)))) => V::Booleens(t.iter().map(|e| matches!(e, Some(V::Booleen(true)))).collect()),
-        V::Tableau(t) => {
-            let c: Vec<Option<V>> = t.iter().map(|e| e.as_ref().map(canon)).collect();
-            let k = match c.first() { Some(Some(V::Nombres(x))) => x.len(), _ => 0 };
-            if k >= 1 && k <= 255 && c.iter().all(|e| matches!(e, Some(V::Nombres(x)) if x.len() == k)) {
-                V::Bloc { k: k as u8, donnees: c.into_iter().flat_map(|e| if let Some(V::Nombres(x)) = e { x } else { unreachable!() }).collect() }
-            } else { V::Tableau(c) }
-        }
-        x => x.clone(),
-    }
-}
-pub fn tab_s(v: &[&str]) -> V { V::Tableau(v.iter().map(|x| Some(s(x))).collect()) }
+pub(crate) fn tab_n(v: &[f64]) -> V { if v.is_empty() { V::Tableau(vec![]) } else { V::Nombres(v.to_vec()) } }
+/// Forme canonique VBA (`Valeur::canonique` d'ariane-vba) : à appliquer à toute valeur bâtie ici et passée à ariane-geometrie.
+pub(crate) fn canon(v: &V) -> V { v.canonique() }
+pub(crate) fn tab_s(v: &[&str]) -> V { V::Tableau(v.iter().map(|x| Some(s(x))).collect()) }
 
 /// Objet littéral `{k1:v1, k2:v2…}` : clés posées dans l'ordre, avec la règle des indices.
-pub fn o(t: Vec<(&str, V)>) -> V {
+pub(crate) fn o(t: Vec<(&str, V)>) -> V {
     let mut e = Vec::with_capacity(t.len());
     for (k, v) in t { definir(&mut e, k, v); }
     V::Objet(e)
 }
 
 /// Clé d'indice de tableau : écriture décimale canonique d'un entier de 0 à 2³² − 2.
-pub fn est_indice(k: &str) -> bool {
+pub(crate) fn est_indice(k: &str) -> bool {
     if k.is_empty() || k.len() > 10 || !k.bytes().all(|c| c.is_ascii_digit()) { return false; }
     if k.len() > 1 && k.starts_with('0') { return false; }
-    k.parse::<u64>().map(|x| x <= 4_294_967_294).unwrap_or(false)
+    k.parse::<u64>().is_ok_and(|x| x <= 4_294_967_294)
 }
 
 /// `o[k] = v` sur un objet simple (propriété de données, objet extensible).
-pub fn definir(e: &mut Vec<(String, V)>, k: &str, v: V) {
+pub(crate) fn definir(e: &mut Vec<(String, V)>, k: &str, v: V) {
     if let Some(x) = e.iter_mut().find(|(c, _)| c == k) { x.1 = v; return; }
     if est_indice(k) {
-        let kn: u64 = k.parse().unwrap();
-        let pos = e.iter().position(|(c, _)| !est_indice(c) || c.parse::<u64>().unwrap() > kn).unwrap_or(e.len());
+        let kn: u64 = k.parse().unwrap_or(u64::MAX);
+        let pos = e.iter().position(|(c, _)| !est_indice(c) || c.parse::<u64>().unwrap_or(u64::MAX) > kn).unwrap_or(e.len());
         e.insert(pos, (k.to_owned(), v));
     } else {
         e.push((k.to_owned(), v));
     }
 }
-pub fn definir_v(o: &mut V, k: &str, v: V) {
+pub(crate) fn definir_v(o: &mut V, k: &str, v: V) {
     if let V::Objet(e) = o { definir(e, k, v) } else { unreachable!("definir_v sur un non-objet") }
 }
-/// `delete o[k]`.
-pub fn supprimer(o: &mut V, k: &str) { if let V::Objet(e) = o { e.retain(|(c, _)| c != k) } }
 
 /// `typeof v === 'object' && v !== null` (les tableaux compris).
-pub fn est_objet(v: &V) -> bool { matches!(v, V::Objet(_) | V::Tableau(_) | V::Nombres(_) | V::Booleens(_) | V::Bloc { .. }) }
-pub fn est_tableau(v: &V) -> bool { matches!(v, V::Tableau(_) | V::Nombres(_) | V::Booleens(_) | V::Bloc { .. }) }
+pub(crate) fn est_objet(v: &V) -> bool { matches!(v, V::Objet(_) | V::Tableau(_) | V::Nombres(_) | V::Booleens(_) | V::Bloc { .. }) }
+pub(crate) fn est_tableau(v: &V) -> bool { matches!(v, V::Tableau(_) | V::Nombres(_) | V::Booleens(_) | V::Bloc { .. }) }
 /// `!!v && typeof v === 'object' && !Array.isArray(v)`.
-pub fn est_simple(v: &V) -> bool { matches!(v, V::Objet(_)) }
-pub fn nullish(v: &V) -> bool { matches!(v, V::Indefini | V::Nul) }
-pub fn num(v: &V) -> Option<f64> { if let V::Nombre(x) = v { Some(*x) } else { None } }
+pub(crate) fn est_simple(v: &V) -> bool { matches!(v, V::Objet(_)) }
+pub(crate) fn nullish(v: &V) -> bool { matches!(v, V::Indefini | V::Nul) }
+pub(crate) fn num(v: &V) -> Option<f64> { if let V::Nombre(x) = v { Some(*x) } else { None } }
 /// `Number.isFinite(v)`.
-pub fn fini(v: &V) -> bool { matches!(v, V::Nombre(x) if x.is_finite()) }
-pub fn fini_de(v: &V) -> Option<f64> { match v { V::Nombre(x) if x.is_finite() => Some(*x), _ => None } }
+pub(crate) fn fini(v: &V) -> bool { matches!(v, V::Nombre(x) if x.is_finite()) }
+pub(crate) fn fini_de(v: &V) -> Option<f64> { match v { V::Nombre(x) if x.is_finite() => Some(*x), _ => None } }
 /// `Number.isInteger(v)`.
-pub fn entier(v: &V) -> bool { matches!(v, V::Nombre(x) if x.is_finite() && x.trunc() == *x) }
-pub fn chaine_de(v: &V) -> Option<&str> { if let V::Chaine(x) = v { Some(x) } else { None } }
-pub fn vrai(v: &V) -> bool { v.vrai() }
+pub(crate) fn entier(v: &V) -> bool { matches!(v, V::Nombre(x) if x.is_finite() && x.trunc() == *x) }
+pub(crate) fn chaine_de(v: &V) -> Option<&str> { if let V::Chaine(x) = v { Some(x) } else { None } }
+pub(crate) fn vrai(v: &V) -> bool { v.vrai() }
 
 /// Lecture `v.k` (ou `v?.k`) pour une clé NOMMÉE (ni indice, ni `length`, ni nom de `Object.prototype`) : seul un objet simple
 /// en porte une ; tableaux, nombres, chaînes, booléens rendent `undefined`. Sur `null`/`undefined`, `v.k` lève : l'appelant
 /// qui ne passe pas par `?.` doit l'avoir écarté (sinon `p`).
-pub fn g<'a>(v: &'a V, k: &str) -> &'a V {
+pub(crate) fn g<'a>(v: &'a V, k: &str) -> &'a V {
     debug_assert!(k != "length" && !est_indice(k));
-    match v { V::Objet(e) => e.iter().find(|(c, _)| c == k).map(|(_, x)| x).unwrap_or(&INDEF), _ => &INDEF }
+    match v { V::Objet(e) => e.iter().find(|(c, _)| c == k).map_or(&INDEF, |(_, x)| x), _ => &INDEF }
 }
-/// `v.k` strict : `null`/`undefined` lèvent un TypeError de V8 (message non reproduit : hors domaine).
-pub fn p<'a>(v: &'a V, k: &str) -> R<&'a V> { if nullish(v) { hd("lecture d'une propriété de null/undefined") } else { Ok(g(v, k)) } }
-/// `k in v` (propriété propre d'un objet simple ; les clés nommées des modules n'existent pas sur le prototype).
-pub fn a_cle(v: &V, k: &str) -> bool { matches!(v, V::Objet(e) if e.iter().any(|(c, _)| c == k)) }
+/// `v.k` strict : `null`/`undefined` lèvent un `TypeError` de V8 (message non reproduit : hors domaine).
+pub(crate) fn p<'a>(v: &'a V, k: &str) -> R<&'a V> { if nullish(v) { hd("lecture d'une propriété de null/undefined") } else { Ok(g(v, k)) } }
 
 /// Éléments d'un tableau, trous conservés (`None`).
-pub fn elems(v: &V) -> Option<Vec<Option<V>>> {
+pub(crate) fn elems(v: &V) -> Option<Vec<Option<V>>> {
     Some(match v {
         V::Tableau(t) => t.clone(),
         V::Nombres(t) => t.iter().map(|&x| Some(V::Nombre(x))).collect(),
@@ -111,11 +92,11 @@ pub fn elems(v: &V) -> Option<Vec<Option<V>>> {
     })
 }
 /// `v.length` d'un tableau.
-pub fn longueur(v: &V) -> Option<usize> {
+pub(crate) fn longueur(v: &V) -> Option<usize> {
     Some(match v { V::Tableau(t) => t.len(), V::Nombres(t) => t.len(), V::Booleens(t) => t.len(), V::Bloc { k, donnees } => donnees.len() / *k as usize, _ => return None })
 }
 /// `v[i]` d'un tableau (trou ou hors bornes : `undefined`).
-pub fn elem(v: &V, i: usize) -> V {
+pub(crate) fn elem(v: &V, i: usize) -> V {
     match v {
         V::Tableau(t) => t.get(i).cloned().flatten().unwrap_or(V::Indefini),
         V::Nombres(t) => t.get(i).map_or(V::Indefini, |&x| V::Nombre(x)),
@@ -125,10 +106,10 @@ pub fn elem(v: &V, i: usize) -> V {
     }
 }
 /// Éléments présents (trous sautés), comme `every`, `some`, `filter`, `map`, `forEach`.
-pub fn presents(v: &V) -> Vec<V> { elems(v).unwrap_or_default().into_iter().flatten().collect() }
+pub(crate) fn presents(v: &V) -> Vec<V> { elems(v).unwrap_or_default().into_iter().flatten().collect() }
 
 /// `===` (NaN ≠ NaN, +0 = −0 ; objets : identité, jamais vraie entre deux valeurs décodées distinctes : hors domaine).
-pub fn strict_egal(a: &V, b: &V) -> R<bool> {
+pub(crate) fn strict_egal(a: &V, b: &V) -> R<bool> {
     Ok(match (a, b) {
         (V::Indefini, V::Indefini) | (V::Nul, V::Nul) => true,
         (V::Booleen(x), V::Booleen(y)) => x == y,
@@ -138,8 +119,8 @@ pub fn strict_egal(a: &V, b: &V) -> R<bool> {
         _ => false,
     })
 }
-/// `Array.prototype.includes` (SameValueZero ; un trou vaut `undefined`).
-pub fn inclut(liste: &V, x: &V) -> R<bool> {
+/// `Array.prototype.includes` (`SameValueZero` ; un trou vaut `undefined`).
+pub(crate) fn inclut(liste: &V, x: &V) -> R<bool> {
     let Some(t) = elems(liste) else { return hd("includes sur un non-tableau") };
     for e in t {
         let e = e.unwrap_or(V::Indefini);
@@ -150,21 +131,21 @@ pub fn inclut(liste: &V, x: &V) -> R<bool> {
 }
 
 /// Étalement `{...src}` dans `dest`.
-pub fn etaler(dest: &mut Vec<(String, V)>, src: &V) -> R<()> {
+pub(crate) fn etaler(dest: &mut Vec<(String, V)>, src: &V) -> R<()> {
     match src {
         V::Indefini | V::Nul | V::Booleen(_) | V::Nombre(_) => {}
         V::Chaine(c) if c.is_empty() => {}
         V::Chaine(_) => return hd("étalement d'une chaîne"),
         V::Objet(e) => { for (k, v) in e { definir(dest, k, v.clone()); } }
         V::Erreur { .. } => return hd("étalement d'une erreur"),
-        t => { for (i, x) in elems(t).unwrap().into_iter().enumerate() { if let Some(x) = x { definir(dest, &i.to_string(), x); } } }
+        t => { for (i, x) in elems(t).ou_hd()?.into_iter().enumerate() { if let Some(x) = x { definir(dest, &i.to_string(), x); } } }
     }
     Ok(())
 }
 /// `{...a, ...b}`.
-pub fn fusion2(a: &V, b: &V) -> R<V> { let mut e = vec![]; etaler(&mut e, a)?; etaler(&mut e, b)?; Ok(V::Objet(e)) }
+pub(crate) fn fusion2(a: &V, b: &V) -> R<V> { let mut e = vec![]; etaler(&mut e, a)?; etaler(&mut e, b)?; Ok(V::Objet(e)) }
 /// Entrées `Object.entries(v)` d'un objet simple ; tableaux et chaînes : hors domaine ; autres : aucune.
-pub fn entrees(v: &V) -> R<Vec<(String, V)>> {
+pub(crate) fn entrees(v: &V) -> R<Vec<(String, V)>> {
     match v {
         V::Objet(e) => Ok(e.clone()),
         V::Indefini | V::Nul => hd("Object.entries de null/undefined"),
@@ -176,68 +157,11 @@ pub fn entrees(v: &V) -> R<Vec<(String, V)>> {
 
 // ---------------------------------------------------------------- conversion en chaîne
 
-/// `Number.prototype.toString()` (base 10) : chiffres les plus courts qui relisent le même double (ceux de V8 et de Rust
-/// coïncident : mesuré par `tools/ch064-d-sonde-nombres.cjs`), mise en forme d'ECMA-262 Number::toString.
-pub fn nombre_chaine(x: f64) -> String {
-    if x.is_nan() { return "NaN".into(); }
-    if x == 0.0 { return "0".into(); }
-    if x.is_infinite() { return if x > 0.0 { "Infinity".into() } else { "-Infinity".into() }; }
-    if x < 0.0 { return format!("-{}", nombre_chaine(-x)); }
-    let e = format!("{x:e}"); // « d.ddde±x », chiffres les plus courts
-    let (mant, exp) = e.split_once('e').unwrap();
-    let mut chiffres: String = mant.chars().filter(|c| *c != '.').collect();
-    let e10 = exp.parse::<i64>().unwrap();
-    departager_au_pair(x, &mut chiffres, e10);
-    let k = chiffres.len() as i64;
-    let nexp = e10 + 1; // valeur = 0,chiffres × 10^nexp
-    if k <= nexp && nexp <= 21 {
-        let mut s = chiffres; for _ in 0..(nexp - k) { s.push('0'); } s
-    } else if 0 < nexp && nexp <= 21 {
-        format!("{}.{}", &chiffres[..nexp as usize], &chiffres[nexp as usize..])
-    } else if -6 < nexp && nexp <= 0 {
-        format!("0.{}{}", "0".repeat((-nexp) as usize), chiffres)
-    } else {
-        let e1 = nexp - 1;
-        let signe = if e1 < 0 { '-' } else { '+' };
-        if k == 1 { format!("{chiffres}e{signe}{}", e1.abs()) } else { format!("{}.{}e{signe}{}", &chiffres[..1], &chiffres[1..], e1.abs()) }
-    }
-}
-
-/// Départage d'ECMA-262 (Number::toString, étape 5) : si deux écritures de k chiffres relisent x et sont à égale distance
-/// de x, on prend celle dont le dernier chiffre est PAIR. Rust (flt2dec) arrondit alors vers le haut : mesuré, 1 860 313 443 422 875,25
-/// s'écrit « …875.3 » en Rust et « …875.2 » en V8. On teste les deux voisines du dernier chiffre : voisine qui relit x ET x
-/// exactement au milieu (développement décimal exact de x, fini pour un double) ⇒ la voisine paire l'emporte.
-fn departager_au_pair(x: f64, chiffres: &mut String, e10: i64) {
-    let d: Vec<u8> = chiffres.bytes().map(|c| c - b'0').collect();
-    let k = d.len();
-    let der = d[k - 1];
-    if der.is_multiple_of(2) { return; } // déjà pair : rien à départager en sa faveur
-    let relit = |v: &[u8]| -> bool {
-        let s: String = v.iter().map(|c| (c + b'0') as char).collect();
-        let t = if s.len() > 1 { format!("{}.{}e{}", &s[..1], &s[1..], e10) } else { format!("{s}e{e10}") };
-        t.parse::<f64>().map(|y| y == x).unwrap_or(false)
-    };
-    // développement décimal exact de x (au plus ~770 chiffres significatifs), même exposant que les chiffres courts
-    let exact = format!("{x:.1100e}");
-    let (m, ex) = exact.split_once('e').unwrap();
-    if ex.parse::<i64>().unwrap() != e10 { return; }
-    let mut xs: Vec<u8> = m.bytes().filter(|c| *c != b'.').map(|c| c - b'0').collect();
-    while xs.len() > 1 && *xs.last().unwrap() == 0 { xs.pop(); }
-    for delta in [-1i8, 1] {
-        let nd = der as i8 + delta;
-        if !(0..=9).contains(&nd) { continue; }
-        let mut v = d.clone();
-        v[k - 1] = nd as u8;
-        if !relit(&v) { continue; }
-        // milieu de d et v : le plus petit des deux suivi de 5
-        let mut milieu = if delta < 0 { v.clone() } else { d.clone() };
-        milieu.push(5);
-        if xs == milieu { *chiffres = v.iter().map(|c| (c + b'0') as char).collect(); return; }
-    }
-}
+/// `Number.prototype.toString()` (base 10) : une seule implémentation, `ariane_js::nombre::nombre_en_chaine` (départage au pair compris).
+pub(crate) use ariane_js::nombre::nombre_en_chaine as nombre_chaine;
 
 /// `String(v)` / gabarit `${v}` pour les valeurs que porte VBA.
-pub fn chaine(v: &V) -> R<String> {
+pub(crate) fn chaine(v: &V) -> R<String> {
     Ok(match v {
         V::Indefini => "undefined".into(),
         V::Nul => "null".into(),
@@ -250,17 +174,17 @@ pub fn chaine(v: &V) -> R<String> {
     })
 }
 /// `t.join(sep)` : `null`, `undefined` et trous donnent la chaîne vide.
-pub fn joindre(t: &V, sep: &str) -> R<String> {
+pub(crate) fn joindre(t: &V, sep: &str) -> R<String> {
     let Some(e) = elems(t) else { return hd("join sur un non-tableau") };
     let mut out = String::new();
     for (i, x) in e.iter().enumerate() {
         if i > 0 { out.push_str(sep); }
-        match x { None | Some(V::Indefini) | Some(V::Nul) => {}, Some(x) => out.push_str(&chaine(x)?) }
+        match x { None | Some(V::Indefini | V::Nul) => {}, Some(x) => out.push_str(&chaine(x)?) }
     }
     Ok(out)
 }
 /// `s.slice(0, n)` en unités UTF-16 ; une coupe au milieu d'une paire de substitution rendrait une chaîne que VBA refuse.
-pub fn tranche_utf16(c: &str, nmax: usize) -> R<String> {
+pub(crate) fn tranche_utf16(c: &str, nmax: usize) -> R<String> {
     let mut u = 0usize;
     let mut out = String::new();
     for ch in c.chars() {
@@ -271,10 +195,10 @@ pub fn tranche_utf16(c: &str, nmax: usize) -> R<String> {
     Ok(out)
 }
 /// `Math.round(v*10)/10`.
-pub fn arrondi1(x: f64) -> f64 { ariane_js::round(x * 10.0) / 10.0 }
+pub(crate) fn arrondi1(x: f64) -> f64 { ariane_js::round(x * 10.0) / 10.0 }
 
 /// Refuse toute clé `__proto__` dans une entrée : l'affectation JS la traiterait comme le prototype.
-pub fn sans_proto(v: &V) -> R<()> {
+pub(crate) fn sans_proto(v: &V) -> R<()> {
     match v {
         V::Objet(e) => { for (k, x) in e { if k == "__proto__" { return hd("clé __proto__"); } sans_proto(x)?; } Ok(()) }
         V::Tableau(t) => { for x in t.iter().flatten() { sans_proto(x)?; } Ok(()) }
@@ -283,18 +207,18 @@ pub fn sans_proto(v: &V) -> R<()> {
 }
 
 /// Arguments `{f, a}` d'un appel par nom : (nom, arguments ; un argument absent vaut `undefined`).
-pub struct Appel { pub f: String, pub a: Vec<V> }
+pub(crate) struct Appel { pub f: String, pub a: Vec<V> }
 impl Appel {
-    pub fn lire(e: &V) -> R<Appel> {
+    pub(crate) fn lire(e: &V) -> R<Appel> {
         let f = match g(e, "f") { V::Chaine(f) => f.clone(), _ => return hd("appel : f absent") };
         let a = match g(e, "a") { V::Indefini => vec![], x => match elems(x) { Some(t) => t.into_iter().map(|x| x.unwrap_or(V::Indefini)).collect(), None => return hd("appel : a non tableau") } };
         for x in &a { sans_proto(x)?; }
         Ok(Appel { f, a })
     }
     /// Argument i (absent : `undefined`).
-    pub fn arg(&self, i: usize) -> &V { self.a.get(i).unwrap_or(&INDEF) }
+    pub(crate) fn arg(&self, i: usize) -> &V { self.a.get(i).unwrap_or(&INDEF) }
     /// Nombre d'arguments passés (pour les valeurs par défaut : `undefined` passé explicitement vaut absent).
-    pub fn nb(&self) -> usize { self.a.len() }
+    pub(crate) fn nb(&self) -> usize { self.a.len() }
 }
 
 #[cfg(test)]
@@ -304,9 +228,9 @@ mod essais {
     #[test]
     fn nombres_comme_v8() {
         for (x, t) in [(0.1, "0.1"), (1e21, "1e+21"), (1e20, "100000000000000000000"), (123.456, "123.456"), (1e-7, "1e-7"),
-            (1.5e-7, "1.5e-7"), (0.000001, "0.000001"), (-0.0, "0"), (-2.5, "-2.5"), (5e-324, "5e-324"), (1.7976931348623157e308, "1.7976931348623157e+308"),
-            (0.30000000000000004, "0.30000000000000004"), (7.95, "7.95"), (100.0, "100"), (2f64.powi(53), "9007199254740992"),
-            (1860313443422875.25, "1860313443422875.2"), (1409126409351526.25, "1409126409351526.2")] {
+            (1.5e-7, "1.5e-7"), (0.000_001, "0.000001"), (-0.0, "0"), (-2.5, "-2.5"), (5e-324, "5e-324"), (f64::MAX, "1.7976931348623157e+308"),
+            (0.300_000_000_000_000_04, "0.30000000000000004"), (7.95, "7.95"), (100.0, "100"), (2f64.powi(53), "9007199254740992"),
+            (1_860_313_443_422_875.25, "1860313443422875.2"), (1_409_126_409_351_526.25, "1409126409351526.2")] {
             assert_eq!(nombre_chaine(x), t, "{x:e}");
         }
     }
@@ -326,7 +250,7 @@ mod essais {
 }
 
 /// `v[i]` générique (objet simple aux clés d'indice, tableau) ; autre : `undefined` (une chaîne : hors domaine).
-pub fn gi(v: &V, i: usize) -> R<V> {
+pub(crate) fn gi(v: &V, i: usize) -> R<V> {
     match v {
         V::Objet(_) => Ok(g_brut(v, &i.to_string()).clone()),
         V::Chaine(c) if !c.is_empty() => hd("indice d'une chaîne"),
@@ -335,12 +259,12 @@ pub fn gi(v: &V, i: usize) -> R<V> {
     }
 }
 /// Lecture d'une clé quelconque d'un objet simple (indices compris).
-pub fn g_brut<'a>(v: &'a V, k: &str) -> &'a V { match v { V::Objet(e) => e.iter().find(|(c, _)| c == k).map(|(_, x)| x).unwrap_or(&INDEF), _ => &INDEF } }
+pub(crate) fn g_brut<'a>(v: &'a V, k: &str) -> &'a V { match v { V::Objet(e) => e.iter().find(|(c, _)| c == k).map_or(&INDEF, |(_, x)| x), _ => &INDEF } }
 
 // ---------------------------------------------------------------- repères (vendor/capture-core.js)
-pub use ariane_capture::M16;
+pub(crate) use ariane_capture::M16;
 /// Matrice lue par `C.point(m, p)` (`m[0]`…`m[15]` sans contrôle) : 16 nombres au moins, sinon hors domaine.
-pub fn m16(v: &V) -> R<M16> {
+pub(crate) fn m16(v: &V) -> R<M16> {
     let mut a = [0.0; 16];
     match v {
         V::Nombres(t) if t.len() >= 16 => a.copy_from_slice(&t[..16]),
@@ -350,14 +274,14 @@ pub fn m16(v: &V) -> R<M16> {
     Ok(a)
 }
 /// `C.point(m, p)` sur des valeurs.
-pub fn point_v(m: &V, p: &V) -> R<[f64; 3]> { let m = m16(m)?; let [x, y, z] = ariane_capture::xyz(p)?; ariane_capture::point(&m, x, y, z) }
+pub(crate) fn point_v(m: &V, p: &V) -> R<[f64; 3]> { let m = m16(m)?; let [x, y, z] = ariane_capture::xyz(p)?; ariane_capture::point(&m, x, y, z) }
 /// `C.distance(a,b)` : `Math.hypot(...a.map((x,i)=>x-b[i]))` pour deux points de 3 nombres.
-pub fn distance3(a: &[f64; 3], b: &[f64; 3]) -> f64 { ariane_js::hypot(&[a[0] - b[0], a[1] - b[1], a[2] - b[2]]) }
+pub(crate) fn distance3(a: &[f64; 3], b: &[f64; 3]) -> f64 { ariane_js::hypot(&[a[0] - b[0], a[1] - b[1], a[2] - b[2]]) }
 
 /// Points d'un nuage (`pointsSceneRelative`), tels que les lit `const [x,y,z]=p` : bloc n×k (k ≥ 3 : trois premiers ; k < 3 :
 /// NaN pour les absents), ou tableau de tableaux (trou ou `undefined` dans un point : NaN). Un élément qui n'est pas un tableau
 /// (trou du tableau de points compris) : `None` si `sauter` (le JS le saute), sinon hors domaine (le JS lèverait).
-pub fn points_xyz(v: &V, sauter: bool) -> R<Vec<Option<[f64; 3]>>> {
+pub(crate) fn points_xyz(v: &V, sauter: bool) -> R<Vec<Option<[f64; 3]>>> {
     Ok(match v {
         V::Bloc { k, donnees } => {
             let k = *k as usize;
@@ -382,7 +306,7 @@ pub fn points_xyz(v: &V, sauter: bool) -> R<Vec<Option<[f64; 3]>>> {
 
 /// `Number.prototype.toFixed(f)` (0 ≤ f ≤ 20) : n entier le plus proche de x·10^f, à égalité exacte le PLUS GRAND (ECMA-262),
 /// là où Rust arrondit au pair ; x < 0 : « - » puis toFixed(−x) ; |x| ≥ 10²¹ : String(x).
-pub fn to_fixed(x: f64, f: usize) -> String {
+pub(crate) fn to_fixed(x: f64, f: usize) -> String {
     if x.is_nan() { return "NaN".into(); }
     if x.abs() >= 1e21 || x.is_infinite() { return nombre_chaine(x); }
     if x < 0.0 { return format!("-{}", to_fixed(-x, f)); }
@@ -390,7 +314,7 @@ pub fn to_fixed(x: f64, f: usize) -> String {
     let r = format!("{x:.f$}");
     // égalité exacte : x vaut exactement r ± 0,5·10^−f ; développement exact de x
     let exact = format!("{x:.1100}");
-    let (ent, frac) = exact.split_once('.').unwrap();
+    let Some((ent, frac)) = exact.split_once('.') else { return r };
     let frac = frac.trim_end_matches('0');
     if frac.len() == f + 1 && frac.ends_with('5') {
         // milieu exact : prendre le plus grand des deux voisins
@@ -419,31 +343,47 @@ mod essais_fixed {
 /// `x ** y` / `Math.pow` du moteur JS qui exécute (import WASM, comme les transcendantes : les bits de V8 changent d'une version
 /// à l'autre). En natif (essais `cargo test`, programme de l'option B) : `powf` de la bibliothèque, NON garanti identique à V8.
 #[cfg(target_arch = "wasm32")]
-pub fn pow(x: f64, y: f64) -> f64 {
+pub(crate) fn pow(x: f64, y: f64) -> f64 {
     #[link(wasm_import_module = "env")]
     extern "C" { fn js_pow(x: f64, y: f64) -> f64; }
+    // SÛRETÉ : `js_pow` est l'import `env.js_pow` fourni par la coquille (Math.pow) : fonction pure de deux f64 vers un f64,
+    // sans pointeur ni état partagé ; l'appeler ne peut violer aucun invariant mémoire du module.
     unsafe { js_pow(x, y) }
 }
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::disallowed_methods)]
-pub fn pow(x: f64, y: f64) -> f64 { x.powf(y) }
+pub(crate) fn pow(x: f64, y: f64) -> f64 { x.powf(y) }
 
-/// `t.slice(0, k)` (k : ToIntegerOrInfinity ; négatif : depuis la fin).
-pub fn slice_debut(len: usize, k: f64) -> usize {
+/// `t.slice(0, k)` (k : `ToIntegerOrInfinity` ; négatif : depuis la fin).
+pub(crate) fn slice_debut(len: usize, k: f64) -> usize {
     let k = if k.is_nan() { 0.0 } else { k.trunc() };
-    if k < 0.0 { ariane_js::max((len as f64) + k, 0.0) as usize } else { ariane_js::min(k, len as f64) as usize }
+    if k < 0.0 { rang(ariane_js::max((len as f64) + k, 0.0)) } else { rang(ariane_js::min(k, len as f64)) }
 }
+/// Rang (indice de tableau) d'un nombre fini positif ou nul que l'appelant a déjà borné par une longueur : troncature vers zéro,
+/// comme un indice JS. Hors de ce domaine (jamais atteint) : 0.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // x ∈ [0, longueur] vérifié ci-dessous : conversion exacte
+pub(crate) fn rang(x: f64) -> usize { if x.is_finite() && x >= 0.0 && x <= usize::MAX as f64 { x as usize } else { 0 } }
 /// `C.distance(a,b)` générique : `Math.hypot(...a.map((x,i)=>x-b[i]))` (trou ou absent : NaN).
-pub fn distance_v(a: &V, b_: &V) -> R<f64> {
+pub(crate) fn distance_v(a: &V, b_: &V) -> R<f64> {
     let (Some(ta), Some(tb)) = (elems(a), elems(b_)) else { return hd("distance : tableaux attendus") };
     let mut d = vec![];
     for (i, x) in ta.iter().enumerate() {
-        let xa = match x { None => f64::NAN, Some(V::Nombre(v)) => *v, Some(V::Indefini) => f64::NAN, _ => return hd("distance : non numérique") };
-        let xb = match tb.get(i) { None | Some(None) => f64::NAN, Some(Some(V::Nombre(v))) => *v, Some(Some(V::Indefini)) => f64::NAN, _ => return hd("distance : non numérique") };
+        let xa = match x { None | Some(V::Indefini) => f64::NAN, Some(V::Nombre(v)) => *v, _ => return hd("distance : non numérique") };
+        let xb = match tb.get(i) { None | Some(None | Some(V::Indefini)) => f64::NAN, Some(Some(V::Nombre(v))) => *v, _ => return hd("distance : non numérique") };
         d.push(if x.is_none() { f64::NAN } else { xa - xb });
     }
     Ok(ariane_js::hypot(&d))
 }
 /// `r1` sans `+0` : `Number.isFinite(v)?Math.round(v*10)/10:null`.
-pub fn r1v(x: f64) -> V { if x.is_finite() { n(ariane_js::round(x * 10.0) / 10.0) } else { nul() } }
-pub fn um(x: f64) -> f64 { ariane_js::round(x * 1e6) / 1e6 }
+pub(crate) fn r1v(x: f64) -> V { if x.is_finite() { n(ariane_js::round(x * 10.0) / 10.0) } else { nul() } }
+pub(crate) fn um(x: f64) -> f64 { ariane_js::round(x * 1e6) / 1e6 }
+
+/// Invariant du port (une valeur que le JS garantit à cet endroit) : son absence rend hors domaine — la façade rejoue le JS —
+/// au lieu de paniquer. Remplace `unwrap`/`expect` hors des essais.
+pub(crate) trait Ou<T> {
+    /// La valeur, ou `HorsDomaine`.
+    fn ou_hd(self) -> R<T>;
+}
+impl<T> Ou<T> for Option<T> {
+    fn ou_hd(self) -> R<T> { self.ok_or_else(|| Echec::hors_domaine("invariant du port non tenu")) }
+}

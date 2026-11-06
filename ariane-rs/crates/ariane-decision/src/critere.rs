@@ -1,5 +1,5 @@
 //! `src/relecture-critere.js` : règle prudente de correction de la relecture (`reglages`, `correctionPermise`, `juger`), à l'identique.
-use crate::js::*;
+use crate::js::{o, b, n, s, tab_s, R, hd, nombre_chaine, arrondi1, est_tableau, longueur, presents, elems, vrai, est_simple, g, definir, nul, nullish, INDEF, est_objet, Ou, inclut, tranche_utf16, entier, num, tab, joindre, chaine, p, chaine_de, fini_de, Appel};
 use ariane_vba::Valeur as V;
 
 const ZONES: [&str; 4] = ["pn", "adv", "abords", "vert-hors-zone"];
@@ -12,7 +12,7 @@ const FORMAT: &str = "ariane-relecture-reglages-1";
 const SIDES: [&str; 2] = ["left", "right"];
 
 /// `DEFAUT` (objet gelé du module), dans l'ordre de ses clés.
-pub fn defaut() -> V {
+pub(crate) fn defaut() -> V {
     let z = |c: bool, s: f64, m: f64| o(vec![("corriger", b(c)), ("seuilMm", n(s)), ("confianceMin", n(m))]);
     o(vec![("format", s(FORMAT)), ("statut", s("provisoire")), ("etagesPermis", tab_s(&["first-pass", "window"])), ("appuisMin", n(2.0)),
         ("roles", tab_s(&["vert"])), ("jamais", tab_s(&JAMAIS)), ("variante", o(vec![("proposition", s("chaine+h"))])),
@@ -24,21 +24,21 @@ pub fn defaut() -> V {
 
 /// `nombre(v,min,max)`.
 fn nombre(v: &V, min: f64, max: f64) -> bool { matches!(v, V::Nombre(x) if x.is_finite() && *x >= min && *x <= max) }
-/// ToNumber des valeurs que VBA porte ; chaînes et objets : coercition non portée.
-pub fn vers_nombre(v: &V) -> R<f64> {
+/// `ToNumber` des valeurs que VBA porte ; chaînes et objets : coercition non portée.
+pub(crate) fn vers_nombre(v: &V) -> R<f64> {
     match v { V::Nombre(x) => Ok(*x), V::Indefini => Ok(f64::NAN), V::Nul => Ok(0.0), V::Booleen(x) => Ok(if *x { 1.0 } else { 0.0 }), _ => hd("coercition numérique") }
 }
 /// `virgule(v)` : `String(Math.round(v*10)/10).replace('.',',')`.
-pub fn virgule(v: f64) -> String { nombre_chaine(arrondi1(v)).replacen('.', ",", 1) }
+pub(crate) fn virgule(v: f64) -> String { nombre_chaine(arrondi1(v)).replacen('.', ",", 1) }
 fn virgule_v(v: &V) -> R<String> { Ok(virgule(vers_nombre(v)?)) }
 fn tout_chaine(t: &[&str], x: &V) -> bool { matches!(x, V::Chaine(c) if t.contains(&c.as_str())) }
 
 /// `liste(v,d,ok)` : `Array.isArray(v)&&v.length&&v.every(ok)?v.slice():d.slice()`.
 fn liste(v: &V, d: &[&str], ok: impl Fn(&V) -> bool) -> V {
-    if est_tableau(v) && longueur(v).unwrap() > 0 && presents(v).iter().all(ok) { V::Tableau(elems(v).unwrap()) } else { tab_s(d) }
+    if est_tableau(v) && longueur(v).unwrap_or(0) > 0 && presents(v).iter().all(ok) { V::Tableau(elems(v).unwrap_or_default()) } else { tab_s(d) }
 }
 
-pub fn reglages(fichier: &V, source: &V) -> R<V> {
+pub(crate) fn reglages(fichier: &V, source: &V) -> R<V> {
     let f = if vrai(fichier) && est_simple(fichier) { Some(fichier) } else { None };
     let Some(f) = f.filter(|f| matches!(g(f, "format"), V::Chaine(c) if c == FORMAT)) else {
         let V::Objet(mut e) = reglages(&defaut(), &s("defaut"))? else { unreachable!() };
@@ -79,7 +79,7 @@ pub fn reglages(fichier: &V, source: &V) -> R<V> {
     let lateral_ok = nombre(g(v, "lateralMaxMm"), 1.0, LATERAL_MAX_MM);
     if !lateral_ok { invalides.push(s("voie.lateralMaxMm")); }
     let roles = g(f, "roles");
-    let roles_ok = est_tableau(roles) && longueur(roles).unwrap() > 0 && presents(roles).iter().all(|r| matches!(r, V::Chaine(c) if c == "vert"));
+    let roles_ok = est_tableau(roles) && longueur(roles).ou_hd()? > 0 && presents(roles).iter().all(|r| matches!(r, V::Chaine(c) if c == "vert"));
     if !roles_ok { invalides.push(s("roles")); }
     let jamais = g(f, "jamais");
     let jamais_ok = est_tableau(jamais) && { let mut ok = true; for x in JAMAIS { if !inclut(jamais, &s(x))? { ok = false; break; } } ok };
@@ -87,7 +87,7 @@ pub fn reglages(fichier: &V, source: &V) -> R<V> {
     let variante = match g(f, "variante") { V::Chaine(c) => s(c), x if nullish(x) => V::Indefini, x => g(x, "proposition").clone() };
     let statut = match g(f, "statut") { V::Chaine(c) => s(&tranche_utf16(c, 40)?), _ => s("inconnu") };
     let ap = g(f, "appuisMin");
-    let appuis_min = if entier(ap) && num(ap).unwrap() >= 0.0 && num(ap).unwrap() <= 40.0 { ap.clone() } else { n(0.0) };
+    let appuis_min = if entier(ap) && num(ap).ou_hd()? >= 0.0 && num(ap).ou_hd()? <= 40.0 { ap.clone() } else { n(0.0) };
     let jamais_v = if jamais_ok {
         let t: Vec<V> = presents(jamais).into_iter().filter(|x| matches!(x, V::Chaine(_))).take(8).collect();
         tab(t)
@@ -100,22 +100,22 @@ pub fn reglages(fichier: &V, source: &V) -> R<V> {
         ("appuisMin", appuis_min),
         ("variante", if tout_chaine(&VARIANTES, &variante) { variante } else { s("chaine+h") }),
         ("jamais", jamais_v), ("selection", selection),
-        ("roles", if roles_ok { V::Tableau(elems(roles).unwrap()) } else { tab_s(&["vert"]) }),
+        ("roles", if roles_ok { V::Tableau(elems(roles).ou_hd()?) } else { tab_s(&["vert"]) }),
         ("voie", o(vec![("lateralMaxMm", if lateral_ok { g(v, "lateralMaxMm").clone() } else { n(LATERAL_MAX_MM) })])),
         ("coherence", o(vec![("diffLateraleMaxMm", coh("diffLateraleMaxMm", 6.0)), ("diffVerticaleMaxMm", coh("diffVerticaleMaxMm", 6.0)), ("ecartementMaxMm", coh("ecartementMaxMm", 8.0))])),
         ("zones", V::Objet(zones))]))
 }
 
-pub fn correction_permise(r: &V) -> R<V> {
+pub(crate) fn correction_permise(r: &V) -> R<V> {
     let non = |m: &str| Ok(o(vec![("ok", b(false)), ("raison", s(m))]));
     if !vrai(r) || !est_objet(r) { return non("réglages illisibles"); }
     if matches!(g(r, "refus"), V::Chaine(c) if c == "format") { return non("fichier de réglages d’un autre format"); }
     if !matches!(g(r, "source"), V::Chaine(c) if c == "propose") { return non("fichier proposé absent ou illisible (défaut provisoire)"); }
     let inv = g(r, "invalides");
     if !est_tableau(inv) { return non("réglages non vérifiés"); }
-    let l = longueur(inv).unwrap();
+    let l = longueur(inv).ou_hd()?;
     if l > 0 {
-        let t = V::Tableau(elems(inv).unwrap().into_iter().take(6).collect());
+        let t = V::Tableau(elems(inv).ou_hd()?.into_iter().take(6).collect());
         return non(&format!("réglages invalides : {}", joindre(&t, ", ")?));
     }
     Ok(o(vec![("ok", b(true)), ("raison", nul())]))
@@ -124,7 +124,7 @@ pub fn correction_permise(r: &V) -> R<V> {
 fn cote(side: &str) -> &'static str { if side == "left" { "gauche" } else { "droit" } }
 fn ou_inconnu(v: &V) -> R<String> { if nullish(v) { Ok("?".into()) } else { chaine(v) } }
 
-pub fn juger(entree: &V, r: &V) -> R<V> {
+pub(crate) fn juger(entree: &V, r: &V) -> R<V> {
     let non = |regle: &str, raison: String| Ok(o(vec![("corriger", b(false)), ("regle", s(regle)), ("raison", s(&raison))]));
     let def = defaut();
     let r = if matches!(r, V::Indefini) { &def } else { r };
@@ -143,7 +143,7 @@ pub fn juger(entree: &V, r: &V) -> R<V> {
     let etages = if est_tableau(rr("etagesPermis")?) { rr("etagesPermis")?.clone() } else { tab_s(&["first-pass", "window"]) };
     let etage = g(j, "etage");
     if !inclut(&etages, etage)? { return non("etage", format!("étage « {} » non permis ({})", ou_inconnu(etage)?, joindre(&etages, ", ")?)); }
-    let appuis_min = if entier(rr("appuisMin")?) { num(rr("appuisMin")?).unwrap() } else { 2.0 };
+    let appuis_min = if entier(rr("appuisMin")?) { num(rr("appuisMin")?).ou_hd()? } else { 2.0 };
     let n_appuis = longueur(g(j, "appuis")).unwrap_or(0) as f64;
     if n_appuis < appuis_min {
         return non("appuis", format!("{} appui{} du lot, {} au moins", nombre_chaine(n_appuis), if n_appuis > 1.0 { "s" } else { "" }, nombre_chaine(appuis_min)));
@@ -157,7 +157,7 @@ pub fn juger(entree: &V, r: &V) -> R<V> {
         if !matches!(cor, V::Booleen(true)) { return non("zone", "vert hors plage entré pour son écartement : ombre seulement".into()); }
     }
     if !tout_chaine(&["pn", "adv", "abords", "ecartement"], zone) { return non("zone", format!("zone « {} » : jamais corrigée (D-180)", ou_inconnu(zone)?)); }
-    let zn = chaine_de(zone).unwrap();
+    let zn = chaine_de(zone).ou_hd()?;
     let z = if nullish(zones) { &INDEF } else { g(zones, zn) };
     if !vrai(z) { return non("zone", format!("zone « {zn} » inconnue")); }
     if !matches!(g(z, "corriger"), V::Booleen(true)) { return non("zone", format!("zone {zn} : correction coupée")); }
@@ -165,7 +165,7 @@ pub fn juger(entree: &V, r: &V) -> R<V> {
     let ec = if tous(g(e, "ecritBrut")) { g(e, "ecritBrut") } else if tous(g(e, "ecrit")) { g(e, "ecrit") } else if tous(g(j, "ecartBrutMm")) { g(j, "ecartBrutMm") } else { g(j, "ecartMm") };
     let lire = |sd: &str, a: &str| { let x = g(ec, sd); if nullish(x) { None } else { fini_de(g(x, a)) } };
     if !SIDES.iter().all(|sd| ["lat", "vert"].iter().all(|a| lire(sd, a).is_some())) { return non("pose", "écart par rail illisible".into()); }
-    let [ll, lv, rl, rv] = [lire("left", "lat").unwrap(), lire("left", "vert").unwrap(), lire("right", "lat").unwrap(), lire("right", "vert").unwrap()];
+    let [ll, lv, rl, rv] = [lire("left", "lat").ou_hd()?, lire("left", "vert").ou_hd()?, lire("right", "lat").ou_hd()?, lire("right", "vert").ou_hd()?];
     let pire = ariane_js::max_de([ll.abs(), lv.abs(), rl.abs(), rv.abs()]);
     let seuil = vers_nombre(g(z, "seuilMm"))?;
     if !(pire >= seuil) { return non("seuil", format!("écart {} mm sous le seuil de la zone {zn} ({} mm)", virgule(pire), virgule(seuil))); }
@@ -200,13 +200,13 @@ pub fn juger(entree: &V, r: &V) -> R<V> {
             return non("coherence", format!("écartement {} mm, à {} mm de la référence {} mm", virgule(emv), virgule(d), virgule(refv)));
         }
     }
-    let cs: Vec<String> = SIDES.iter().map(|sd| virgule(fini_de(g(conf, sd)).unwrap())).collect();
+    let cs: Vec<String> = SIDES.iter().map(|sd| virgule(fini_de(g(conf, sd)).unwrap_or(f64::NAN))).collect();
     Ok(o(vec![("corriger", b(true)), ("regle", s("ok")),
         ("raison", s(&format!("zone {zn}, écart {} mm (seuil {}), confiance {}, rails cohérents", virgule(pire), virgule(seuil), cs.join(" / "))))]))
 }
 
 /// Appel par nom (`{f, a}`).
-pub fn appeler(a: &Appel) -> R<V> {
+pub(crate) fn appeler(a: &Appel) -> R<V> {
     match a.f.as_str() {
         "reglages" => reglages(a.arg(0), &if matches!(a.arg(1), V::Indefini) { s("defaut") } else { a.arg(1).clone() }),
         "correctionPermise" => correction_permise(a.arg(0)),

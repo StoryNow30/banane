@@ -2,30 +2,30 @@
 //! `observer` et `recharge` modifient leur état `e` : le port rend `{r, e}` (résultat, état après l'appel) et la façade
 //! recopie dans l'objet d'origine les clés qui ont changé.
 use crate::critere::vers_nombre;
-use crate::js::*;
+use crate::js::{o, b, n, R, etaler, vrai, est_objet, g, definir_v, entier, Ou, num, nullish, INDEF, est_tableau, presents, nul, est_simple, hd, s, p, strict_egal, chaine, Appel};
 use ariane_vba::Valeur as V;
 
 const NUMS: [(&str, f64); 6] = [("lectures", 8.0), ("delaiAvantMs", 500.0), ("sondageMs", 500.0), ("attenteRepriseMs", 90000.0), ("silenceListeMs", 2500.0), ("attenteSansListeMs", 10000.0)];
 
-pub fn defaults() -> V {
+pub(crate) fn defaults() -> V {
     o(vec![("actif", b(false)), ("lectures", n(8.0)), ("rechargementsMax", n(1.0)), ("delaiAvantMs", n(500.0)), ("sondageMs", n(500.0)),
         ("attenteRepriseMs", n(90000.0)), ("silenceListeMs", n(2500.0)), ("attenteSansListeMs", n(10000.0))])
 }
 
-pub fn reglage(x: &V) -> R<V> {
+pub(crate) fn reglage(x: &V) -> R<V> {
     let mut r = vec![];
     etaler(&mut r, &defaults())?;
     if vrai(x) && est_objet(x) { etaler(&mut r, x)?; }
     let mut r = V::Objet(r);
     for (k, d) in NUMS { if !matches!(g(&r, k), V::Nombre(v) if v.is_finite() && *v >= 0.0) { definir_v(&mut r, k, n(d)); } }
     if !matches!(g(&r, "lectures"), V::Nombre(v) if v.is_finite() && v.trunc() == *v && *v > 0.0) { definir_v(&mut r, "lectures", n(8.0)); }
-    if !(entier(g(&r, "rechargementsMax")) && num(g(&r, "rechargementsMax")).unwrap() >= 0.0) { definir_v(&mut r, "rechargementsMax", n(1.0)); }
+    if !(entier(g(&r, "rechargementsMax")) && num(g(&r, "rechargementsMax")).ou_hd()? >= 0.0) { definir_v(&mut r, "rechargementsMax", n(1.0)); }
     let actif = matches!(g(&r, "actif"), V::Booleen(true));
     definir_v(&mut r, "actif", b(actif));
     Ok(r)
 }
 
-pub fn lecture_de(capture: &V) -> &'static str {
+pub(crate) fn lecture_de(capture: &V) -> &'static str {
     let rs = if nullish(capture) { &INDEF } else { g(capture, "readStrategy") };
     if !vrai(rs) || !matches!(g(rs, "lecture"), V::Chaine(c) if c == "rapide") || !est_tableau(g(rs, "attempts")) { return "neutre"; }
     let vues: Vec<V> = presents(g(rs, "attempts")).into_iter()
@@ -37,11 +37,11 @@ pub fn lecture_de(capture: &V) -> &'static str {
     if vues.iter().all(|a| regle(a, "stabilite")) { "repli" } else { "neutre" }
 }
 
-pub fn creer(x: &V) -> R<V> { Ok(o(vec![("reglage", reglage(x)?), ("serie", n(0.0)), ("detections", n(0.0)), ("rechargements", n(0.0)), ("dernier", nul())])) }
+pub(crate) fn creer(x: &V) -> R<V> { Ok(o(vec![("reglage", reglage(x)?), ("serie", n(0.0)), ("detections", n(0.0)), ("rechargements", n(0.0)), ("dernier", nul())])) }
 
 fn etat(e: &V) -> R<V> { if est_simple(e) { Ok(e.clone()) } else { hd("état de signal non objet") } }
 
-pub fn observer(e0: &V, capture: &V, opts: &V) -> R<V> {
+pub(crate) fn observer(e0: &V, capture: &V, opts: &V) -> R<V> {
     let mut e = etat(e0)?;
     if matches!(opts, V::Nul) { return hd("options null"); }
     let l = lecture_de(capture);
@@ -67,7 +67,7 @@ pub fn observer(e0: &V, capture: &V, opts: &V) -> R<V> {
         ("raison", raison.map_or(nul(), |r| s(&r)))])), ("e", e)]))
 }
 
-pub fn recharge(e0: &V) -> R<V> {
+pub(crate) fn recharge(e0: &V) -> R<V> {
     let mut e = etat(e0)?;
     let v = vers_nombre(g(&e, "rechargements"))?;
     definir_v(&mut e, "rechargements", n(v + 1.0));
@@ -75,7 +75,7 @@ pub fn recharge(e0: &V) -> R<V> {
     Ok(o(vec![("r", V::Indefini), ("e", e)]))
 }
 
-pub fn bilan(e: &V) -> R<V> {
+pub(crate) fn bilan(e: &V) -> R<V> {
     let e = p(e, "reglage").map(|_| e)?;
     let reg = g(e, "reglage");
     if nullish(reg) { return hd("reglage absent"); }
@@ -83,7 +83,7 @@ pub fn bilan(e: &V) -> R<V> {
         ("lectures", g(reg, "lectures").clone()), ("actif", g(reg, "actif").clone()), ("rechargementsMax", g(reg, "rechargementsMax").clone())]))
 }
 
-pub fn appeler(a: &Appel) -> R<V> {
+pub(crate) fn appeler(a: &Appel) -> R<V> {
     match a.f.as_str() {
         "reglage" => reglage(a.arg(0)),
         "lectureDe" => Ok(s(lecture_de(a.arg(0)))),

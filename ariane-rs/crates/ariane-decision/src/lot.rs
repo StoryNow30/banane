@@ -6,13 +6,13 @@
 use crate::aides::{self, Prediction, SIDES};
 use crate::critere::vers_nombre;
 use crate::crossing;
-use crate::js::*;
+use crate::js::{o, s, n, b, tab_s, g, R, vrai, strict_egal, nullish, nul, p, est_tableau, hd, presents, slice_debut, pow, point_v, tab_n, elems, canon, distance_v, elem, Ou, num, tab, INDEF, r1v, longueur, definir_v, definir, etaler, chaine, fini, g_brut, gi, inclut, um, Appel};
 use crate::shadow::{self, Etat};
 use ariane_geometrie::{convention, gcv1, jauge};
 use ariane_js::Echec;
 use ariane_vba::Valeur as V;
 
-pub fn defaults() -> V {
+pub(crate) fn defaults() -> V {
     o(vec![("version", s("lot-decision-v7")), ("lowGaugeGuardMm", n(1420.0)), ("gap", n(3.0)), ("anchors", n(2.0)), ("guardMm", n(30.0)), ("chooseMm", n(15.0)),
         ("maxDzMm", n(20.0)), ("minTop", n(5.0)), ("minFace", n(3.0)), ("chainMm", n(15.0)), ("pairGuard", b(true)), ("gaugeGuardMm", n(20.0)), ("gaugeGap", n(10.0)),
         ("gaugeCount", n(3.0)), ("gaugeChoice", b(false)), ("gaugeTargetStudy", b(false)), ("anchorRule", s("placed")), ("crossing", b(true)), ("crossingVoieMm", n(10.0)),
@@ -21,7 +21,7 @@ pub fn defaults() -> V {
 }
 
 /// Réglages globaux (`globalThis.BananeSettings`) lus par le module, résolus par la façade.
-pub struct Globaux { pub flush_pct: V, pub ombre_verticale: V, pub faux_vert: V, pub hauteur: V }
+pub(crate) struct Globaux { pub flush_pct: V, pub ombre_verticale: V, pub faux_vert: V, pub hauteur: V }
 
 struct Ctx<'a> { cfg: V, et: &'a Etat }
 impl Ctx<'_> {
@@ -50,7 +50,7 @@ fn plus_proches(mut l: Vec<V>, identity: &V, k: &V) -> R<Vec<V>> {
     let mut cles = vec![];
     for a in &l { let d = ecart_cut(a, identity)?; if d.is_nan() { return hd("cut non numérique"); } cles.push(d); }
     let mut idx: Vec<usize> = (0..l.len()).collect();
-    idx.sort_by(|i, j| cles[*i].partial_cmp(&cles[*j]).unwrap());
+    idx.sort_by(|i, j| cles[*i].partial_cmp(&cles[*j]).unwrap_or(std::cmp::Ordering::Equal));
     let fin = slice_debut(l.len(), vers_nombre(k)?);
     let mut out = vec![];
     for i in idx.into_iter().take(fin) { out.push(std::mem::replace(&mut l[i], V::Indefini)); }
@@ -96,7 +96,7 @@ fn predict_de(initial: &V, pred: &Pred, side: &str) -> R<Prediction> {
         let two = q.iter().filter(|p_| p_[0] < 0.0).count() >= 2 && q.iter().filter(|p_| p_[0] > 0.0).count() >= 2;
         let lateral = if two { fit_framed(&q.iter().map(|p_| [p_[0], p_[1]]).collect::<Vec<_>>()) } else { None };
         let vertical = if two { fit_framed(&q.iter().map(|p_| [p_[0], p_[2]]).collect::<Vec<_>>()) } else { None };
-        if let (Some(la), Some(ve)) = (lateral, vertical) { return Ok(Prediction { lateral: la, vertical: ve, translation: aides::translation_de(initial, o_, la, ve)? }); }
+        if let (Some(la), Some(ve)) = (lateral, vertical) { return Ok(Prediction { lateral: la, translation: aides::translation_de(initial, o_, la, ve)? }); }
     }
     aides::predict(initial, &pred.list, side)
 }
@@ -154,11 +154,11 @@ fn visibles(capture: &V) -> R<V> {
     if !est_tableau(pts) { return hd("points non tableau"); }
     Ok(match pts {
         V::Bloc { k, donnees } => {
-            let k = *k as usize;
-            let d: Vec<f64> = donnees.chunks_exact(k).enumerate().filter(|(i, _)| matches!(elem(vis, *i), V::Booleen(true))).flat_map(|(_, c)| c.iter().copied()).collect();
-            if d.is_empty() { V::Tableau(vec![]) } else { V::Bloc { k: k as u8, donnees: d } }
+            let kk = usize::from(*k);
+            let d: Vec<f64> = donnees.chunks_exact(kk).enumerate().filter(|(i, _)| matches!(elem(vis, *i), V::Booleen(true))).flat_map(|(_, c)| c.iter().copied()).collect();
+            if d.is_empty() { V::Tableau(vec![]) } else { V::Bloc { k: *k, donnees: d } }
         }
-        t => V::Tableau(elems(t).unwrap().into_iter().enumerate().filter(|(i, e)| e.is_some() && matches!(elem(vis, *i), V::Booleen(true))).map(|(_, e)| e).collect()),
+        t => V::Tableau(elems(t).ou_hd()?.into_iter().enumerate().filter(|(i, e)| e.is_some() && matches!(elem(vis, *i), V::Booleen(true))).map(|(_, e)| e).collect()),
     })
 }
 fn crossing_read(capture: &V, cx: &Ctx) -> R<Option<V>> {
@@ -222,7 +222,7 @@ fn calibre(capture: &V, side: &str, delta: &[f64; 3], cx: &Ctx) -> R<V> {
     Ok(if vrai(g(&cal, "applied")) { g(&cal, "delta").clone() } else { tab_n(delta) })
 }
 enum Choix { Non(&'static str), Oui { delta: V, from: f64, rank: f64, top: f64, face: f64, ratio: V } }
-fn choose_rail(capture: &V, side: &str, science: &V, cx: &Ctx, cands: &Option<Vec<Cand>>) -> R<Choix> {
+fn choose_rail(capture: &V, side: &str, science: &V, cx: &Ctx, cands: Option<&Vec<Cand>>) -> R<Choix> {
     let r = science_rail(science, side);
     if !vrai(if nullish(r) { &INDEF } else { g(r, "ok") }) { return Ok(Choix::Non("frame")); }
     let Some(cs) = cands else { return Ok(Choix::Non("grid-unavailable")) };
@@ -234,7 +234,7 @@ fn choose_rail(capture: &V, side: &str, science: &V, cx: &Ctx, cands: &Option<Ve
     let ratio = match cs.first() { Some(c0) if c0.loss != 0.0 && !c0.loss.is_nan() => r1v(pk.loss / c0.loss), _ => nul() };
     Ok(Choix::Oui { delta: calibre(capture, side, &pk.delta, cx)?, from: pk.u().abs(), rank: pk.rank, top: pk.top, face: pk.face, ratio })
 }
-fn journal(cands: &Option<Vec<Cand>>) -> V {
+fn journal(cands: Option<&Vec<Cand>>) -> V {
     let Some(cs) = cands else { return tab(vec![]) };
     tab(cs.iter().take(6).map(|c| { let mut v = c.valeur(false); definir_v(&mut v, "loss", if c.loss.is_finite() { n(ariane_js::round(c.loss * 1e6) / 1e6) } else { nul() }); v }).collect())
 }
@@ -255,15 +255,15 @@ fn gauge_reference(identity: &V, anchors: &[V], cx: &Ctx) -> R<Option<Ref>> {
     for a in &near { let x = gauge_of(g(a, "positions"))?; if x.is_nan() { return hd("écartement NaN"); } gs.push(x); }
     ariane_js::trier_nombres(&mut gs);
     let m = gs.len() >> 1;
-    let mm = if gs.len() % 2 == 1 { gs[m] } else { (gs[m - 1] + gs[m]) / 2.0 };
+    let mm = if gs.len() % 2 == 1 { gs[m] } else { f64::midpoint(gs[m - 1], gs[m]) };
     let mut cuts = vec![];
     for a in &near { cuts.push(cut_de(ident(a)?)?); }
     Ok(Some(Ref { mm, cuts }))
 }
-fn gauge_jump(r: &Option<Ref>, positions: &V) -> R<Option<f64>> { match r { Some(r) => Ok(Some((gauge_of(positions)? - r.mm).abs())), None => Ok(None) } }
-fn suspect(r: &Option<Ref>, positions: &V, cx: &Ctx) -> R<bool> {
+fn gauge_jump(r: Option<&Ref>, positions: &V) -> R<Option<f64>> { match r { Some(r) => Ok(Some((gauge_of(positions)? - r.mm).abs())), None => Ok(None) } }
+fn suspect(r: Option<&Ref>, positions: &V, cx: &Ctx) -> R<bool> {
     if r.is_none() { return Ok(false); }
-    Ok(gauge_jump(r, positions)?.unwrap() > cx.f("gaugeGuardMm")?)
+    Ok(gauge_jump(r, positions)?.ou_hd()? > cx.f("gaugeGuardMm")?)
 }
 fn pair_flagged(science: &V) -> bool {
     let rr = |side: &str| science_rail(science, side);
@@ -323,7 +323,7 @@ fn consistent_validated(identity: &V, rails: &V, validated: &[V], cx: &Ctx) -> R
 fn avec(base: &[(String, V)], t: Vec<(&str, V)>) -> V { let mut e = base.to_vec(); for (k, v) in t { definir(&mut e, k, v); } V::Objet(e) }
 
 #[allow(clippy::too_many_arguments)]
-fn crossing_fallback(d: V, rails: &V, positions: &V, pred: &Pred, gref: &Option<Ref>, cx: &Ctx) -> R<V> {
+fn crossing_fallback(d: V, rails: &V, positions: &V, pred: &Pred, gref: Option<&Ref>, cx: &Ctx) -> R<V> {
     let mut deltas = vec![];
     for side in SIDES {
         let r = rail(rails, side)?;
@@ -360,7 +360,7 @@ fn crossing_fallback(d: V, rails: &V, positions: &V, pred: &Pred, gref: &Option<
     Ok(V::Objet(rest))
 }
 
-pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, options: &V, et: &Etat, gl: &Globaux) -> R<V> {
+pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, options: &V, et: &Etat, gl: &Globaux) -> R<V> {
     let mut cfg = vec![];
     etaler(&mut cfg, &defaults())?;
     etaler(&mut cfg, options)?;
@@ -389,9 +389,9 @@ pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, 
         }
     }
     let applicable = SIDES.iter().all(|s_| { let r = science_rail(science, s_); !nullish(r) && vrai(g(r, "ok")) && matches!(g(g(r, "next"), "status"), V::Chaine(c) if c == "candidate") })
-        && { let sm = if nullish(science) { &INDEF } else { g(science, "summary") }; !(!nullish(sm) && vrai(g(sm, "pairGaugeRejected"))) };
+        && { let sm = if nullish(science) { &INDEF } else { g(science, "summary") }; nullish(sm) || !vrai(g(sm, "pairGaugeRejected")) };
     let nb = neighbours(identity, &anchors, &cx)?;
-    let gref = if !nullish(cx.c("gaugeGuardMm")) { gauge_reference(identity, &anchors, &cx)? } else { None };
+    let gref = if nullish(cx.c("gaugeGuardMm")) { None } else { gauge_reference(identity, &anchors, &cx)? };
     if let Some(r) = &gref { definir(&mut base, "gaugeReference", o(vec![("mm", r1v(r.mm)), ("cuts", tab(r.cuts.clone()))])); }
     let rd = crossing_read(capture, &cx)?;
     let framed = framed_neighbours(identity, &anchors, &cx)?;
@@ -417,7 +417,7 @@ pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, 
         let guard = if pred.list.is_empty() { None } else { Some(r1v(deviation_mm(rails, &pred, &positions)?)) };
         let guard_v = guard.clone().unwrap_or(V::Nul);
         if pn_ok {
-            let e = r1v(pair_gap_mm(rails, &positions, g(pn.as_ref().unwrap(), "positions"))?);
+            let e = r1v(pair_gap_mm(rails, &positions, g(pn.as_ref().ou_hd()?, "positions"))?);
             let mut lc = vec![]; etaler(&mut lc, &g_brut(&V::Objet(base.clone()), "levelCrossing").clone())?; definir(&mut lc, "engineMm", e);
             definir(&mut base, "levelCrossing", V::Objet(lc));
         }
@@ -426,20 +426,20 @@ pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, 
             if vrai(cx.c("pairGuard")) && pair_flagged(science) {
                 return Ok(avec(&base, vec![("stage", s("deferred")), ("reason", s("pair-guard")), ("pairGuarded", b(true)), ("guardMm", guard_v), ("anchorsUsed", nb_cuts()?), ("anchor", b(false))]));
             }
-            if !suspect(&gref, &positions, &cx)? {
+            if !suspect(gref.as_ref(), &positions, &cx)? {
                 let gg = gauge_of(&positions)?;
                 if !nullish(cx.c("lowGaugeGuardMm")) && pred.list.is_empty() && gg < cx.f("lowGaugeGuardMm")? {
                     return Ok(avec(&base, vec![("stage", s("deferred")), ("reason", s("first-pass-low-gauge")), ("gaugeMm", r1v(gg)), ("guardMm", guard_v), ("anchorsUsed", tab(vec![])), ("anchor", b(false))]));
                 }
                 return Ok(avec(&base, vec![("stage", s("first-pass")), ("guardMm", guard_v), ("anchorsUsed", nb_cuts()?), ("positions", positions), ("anchor", b(true))]));
             }
-            definir(&mut base, "gaugeJumpMm", r1v(gauge_jump(&gref, &positions)?.unwrap()));
+            definir(&mut base, "gaugeJumpMm", r1v(gauge_jump(gref.as_ref(), &positions)?.ou_hd()?));
         }
         definir(&mut base, "guardMm", guard_v);
         definir(&mut base, "guardDeferred", b(true));
     }
     let deferred = |d: V| -> R<V> {
-        if pn_ok && !vrai(g(&d, "pairGuarded")) { crossing_fallback(d, rails, g(pn.as_ref().unwrap(), "positions"), &pred, &gref, &cx) } else { Ok(d) }
+        if pn_ok && !vrai(g(&d, "pairGuarded")) { crossing_fallback(d, rails, g(pn.as_ref().ou_hd()?, "positions"), &pred, gref.as_ref(), &cx) } else { Ok(d) }
     };
     if pred.list.is_empty() {
         let raison = if nullish(g_brut(&V::Objet(base.clone()), "gaugeJumpMm")) { "no-anchor" } else { "gauge-guard" };
@@ -456,10 +456,10 @@ pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, 
         let dev = ariane_js::max(d1("left")?, d1("right")?);
         if dev <= cx.f("guardMm")? {
             let positions = positions_de(srails, [g(g(ar("left"), "next"), "delta"), g(g(ar("right"), "next"), "delta")])?;
-            if !suspect(&gref, &positions, &cx)? {
+            if !suspect(gref.as_ref(), &positions, &cx)? {
                 return Ok(avec(&base, vec![("stage", s("window")), ("fromPredictionMm", r1v(dev)), ("anchorsUsed", anchors_used), ("positions", positions), ("anchor", b(dev <= cx.f("chainMm")?))]));
             }
-            definir(&mut base, "windowGaugeJumpMm", r1v(gauge_jump(&gref, &positions)?.unwrap()));
+            definir(&mut base, "windowGaugeJumpMm", r1v(gauge_jump(gref.as_ref(), &positions)?.ou_hd()?));
         }
     }
     let mut deltas: [Option<V>; 2] = [None, None];
@@ -476,13 +476,13 @@ pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, 
         let own = if matches!(g(next, "status"), V::Chaine(c) if c == "candidate") { g(next, "delta").clone() } else { before };
         if vrai(&own) && vers_nombre(&gi(&own, 1)?)?.abs() * 1000.0 <= cx.f("chooseMm")? { deltas[i] = Some(own); continue; }
         let list = candidates_of(&seeded, side, &again)?;
-        candidates.push((side, journal(&list)));
+        candidates.push((side, journal(list.as_ref())));
         let motif = g(next, "motif");
         if !(vrai(&own) || inclut(cx.c("eligibleMotifs"), motif)?) {
             why.push(format!("{side}:{}", chaine(if vrai(motif) { motif } else { g(next, "status") })?));
             continue;
         }
-        let pick = choose_rail(&seeded, side, &again, &cx, &list)?;
+        let pick = choose_rail(&seeded, side, &again, &cx, list.as_ref())?;
         if etude { return hd("gaugeChoice / gaugeTargetStudy : étude non portée"); }
         match pick {
             Choix::Non(r) => { why.push(format!("{side}:{r}")); }
@@ -496,15 +496,15 @@ pub fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validated: &V, 
     if !deltas.iter().all(|d| d.as_ref().is_some_and(vrai)) {
         return deferred(avec(&base, vec![("stage", s("deferred")), ("reason", s(&why.join(" "))), ("anchorsUsed", anchors_used), ("candidates", cand_v)]));
     }
-    let dl = o(vec![("left", deltas[0].clone().unwrap()), ("right", deltas[1].clone().unwrap())]);
+    let dl = o(vec![("left", deltas[0].clone().ou_hd()?), ("right", deltas[1].clone().ou_hd()?)]);
     let pair = jauge::assess_pair(srails, &canon(&dl))?;
     let pm = num(g(&pair, "predictedMm")).unwrap_or(f64::NAN);
     if !vrai(g(&pair, "admissible")) {
         return deferred(avec(&base, vec![("stage", s("deferred")), ("reason", s(&format!("gauge-{}", chaine(g(&pair, "gaugeClass"))?))), ("gaugeMm", r1v(pm)), ("anchorsUsed", anchors_used), ("candidates", cand_v)]));
     }
     let positions = positions_de(srails, [g(&dl, "left"), g(&dl, "right")])?;
-    if suspect(&gref, &positions, &cx)? {
-        return deferred(avec(&base, vec![("stage", s("deferred")), ("reason", s("gauge-guard")), ("gaugeJumpMm", r1v(gauge_jump(&gref, &positions)?.unwrap())), ("gaugeMm", r1v(pm)),
+    if suspect(gref.as_ref(), &positions, &cx)? {
+        return deferred(avec(&base, vec![("stage", s("deferred")), ("reason", s("gauge-guard")), ("gaugeJumpMm", r1v(gauge_jump(gref.as_ref(), &positions)?.ou_hd()?)), ("gaugeMm", r1v(pm)),
             ("anchorsUsed", anchors_used), ("candidates", cand_v)]));
     }
     Ok(avec(&base, vec![("stage", s("choice")), ("chosen", o(chosen)), ("gaugeMm", r1v(pm)), ("anchorsUsed", anchors_used), ("candidates", cand_v), ("positions", positions), ("anchor", b(false))]))
@@ -519,7 +519,7 @@ fn ombre_verticale(decision: &V, capture: &V, science: &V, options: &V, gl: &Glo
     let ok = vrai(&o_) && matches!(g(&o_, "actif"), V::Booleen(true)) && matches!(g(&o_, "mm"), V::Nombre(x) if x.is_finite() && *x != 0.0);
     let pz = if nullish(decision) { &INDEF } else { g(decision, "positions") };
     if !ok || !vrai(pz) { return Ok(nul()); }
-    let mm = num(g(&o_, "mm")).unwrap();
+    let mm = num(g(&o_, "mm")).ou_hd()?;
     let mut rails = vec![];
     for side in SIDES {
         let cal = science_rail(science, side);
@@ -548,7 +548,7 @@ fn ombre_verticale(decision: &V, capture: &V, science: &V, options: &V, gl: &Glo
 fn fini_r1(v: &V) -> V { match v { V::Nombre(x) if x.is_finite() => r1v(*x), _ => nul() } }
 
 /// `decideCut` : la décision de base, puis les trois consignes en ombre (une panne d'une consigne ne change jamais la décision).
-pub fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> {
+pub(crate) fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> {
     if nullish(args) { return hd("arguments absents"); }
     let (capture, science, anchors, validated, options) = (g(args, "capture"), g(args, "science"), g(args, "anchors"), g(args, "validated"), g(args, "options"));
     let options_def = if matches!(options, V::Indefini) { o(vec![]) } else { options.clone() };
@@ -570,7 +570,7 @@ pub fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> {
 }
 
 /// `{f:'decideCut', a:[args sans Shadow], etat:{partialFlank, convention, plafond}, globaux:{flushPct, ombreVerticaleRefusee, fauxVertOmbre, hauteurApprise}}`.
-pub fn appeler(a: &Appel, entree: &V) -> R<V> {
+pub(crate) fn appeler(a: &Appel, entree: &V) -> R<V> {
     let etat = g(entree, "etat");
     let gv = g(entree, "globaux");
     let lire = |k: &str, d: bool| match g(etat, k) { V::Booleen(x) => Ok(*x), V::Indefini => Ok(d), _ => hd("état du module illisible") };
