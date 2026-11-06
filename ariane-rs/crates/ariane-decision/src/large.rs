@@ -384,7 +384,7 @@ pub fn decider(arg: &V, et: &Etat) -> R<V> {
 }
 
 /// `Number(v.toPrecision(4))` : 4 chiffres significatifs, égalité exacte vers le plus grand (ECMA-262), relu en double.
-fn sig4(x: f64) -> V {
+pub(crate) fn sig4(x: f64) -> V {
     if !x.is_finite() { return nul(); }
     if x == 0.0 { return n(0.0); }
     let a = x.abs();

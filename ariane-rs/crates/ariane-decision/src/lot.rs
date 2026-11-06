@@ -248,6 +248,22 @@ fn journal(cands: &Option<Vec<Cand>>) -> V {
     tab(cs.iter().take(6).map(|c| { let mut v = c.valeur(false); definir_v(&mut v, "loss", if c.loss.is_finite() { n(ariane_js::round(c.loss * 1e6) / 1e6) } else { nul() }); v }).collect())
 }
 
+/// CH-074 (J5) : `L.neighbours` puis `L.predictionAnchors` sous `L.DEFAULTS` (gcv2-l1.js `hypothesesDuCut`) : (liste, encadrée, cuts).
+pub(crate) fn l1_voisins(identity: &V, anchors: &[V], et: &Etat) -> R<(Vec<V>, bool, Vec<V>)> {
+    let cx = Ctx { cfg: defaults(), et };
+    let nb = neighbours(identity, anchors, &cx)?;
+    let framed = framed_neighbours(identity, anchors, &cx)?;
+    let encadre = framed.is_some();
+    let src = framed.unwrap_or(nb);
+    let mut cuts = vec![];
+    for a in &src { cuts.push(cut_de(ident(a)?)?); }
+    Ok((src.iter().map(|a| o(vec![("positions", g(a, "positions").clone())])).collect(), encadre, cuts))
+}
+/// CH-074 (J5) : `(pa.list.framed ? L.predictFramed : O.predict)(initial, pa.list, side)`.
+pub(crate) fn l1_predire(initial: &V, liste: &[V], encadre: bool, side: &str) -> R<Prediction> { predict_de(initial, &Pred { list: liste.to_vec(), framed: encadre, cuts: vec![] }, side) }
+/// CH-074 (J5) : `L.gaugeReference(identity, anchors, L.DEFAULTS).mm`.
+pub(crate) fn l1_ecartement(identity: &V, anchors: &[V], et: &Etat) -> R<Option<f64>> { Ok(gauge_reference(identity, anchors, &Ctx { cfg: defaults(), et })?.map(|r| r.mm)) }
+
 // ---------------------------------------------------------------- écartement voisin
 struct Ref { mm: f64, cuts: Vec<V> }
 fn gauge_reference(identity: &V, anchors: &[V], cx: &Ctx) -> R<Option<Ref>> {
@@ -575,6 +591,11 @@ pub fn decide_cut(args: &V, et: &Etat, gl: &Globaux) -> R<V> { decide_cut_r(args
 pub fn decide_cut_r(args: &V, et: &Etat, gl: &Globaux, relance: &mut Option<V>) -> R<V> {
     if nullish(args) { return hd("arguments absents"); }
     let (capture, science, anchors, validated, options) = (g(args, "capture"), g(args, "science"), g(args, "anchors"), g(args, "validated"), g(args, "options"));
+    decide_cut_parts(capture, science, anchors, validated, options, et, gl, relance)
+}
+/// CH-074 (J5) : `decideCut` sur ses champs déjà lus (gcv2-l1.js `variante` : la capture n'est pas recopiée dans un objet d'arguments).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn decide_cut_parts(capture: &V, science: &V, anchors: &V, validated: &V, options: &V, et: &Etat, gl: &Globaux, relance: &mut Option<V>) -> R<V> {
     let options_def = if matches!(options, V::Indefini) { o(vec![]) } else { options.clone() };
     let decision = decide_cut_base_r(capture, science, anchors, validated, &options_def, et, gl, relance)?;
     let mut out = decision.clone();
