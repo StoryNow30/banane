@@ -6,7 +6,8 @@
  * Dans la COPIE seulement (jamais le dépôt, jamais le paquet) :
  *   - background.js et ariane/ : ceux de la construction séparée (tools/ch064-construire-extension.cjs, module gcv2L1 sur demande) ;
  *   - tests/helpers/perf-production.cjs : le contexte vm du service worker reçoit `TextDecoder` et `atob`, que le vrai service worker a
- *     (le cœur décode sa VBA et son WASM avec) ; rien d'autre n'y change.
+ *     (le cœur décode sa VBA et son WASM avec) ; rien d'autre n'y change ;
+ *   - tools/parite-l1se-sw.cjs : les compteurs du cœur écrits à la fin (sortie d'erreur).
  * La copie porte ARIANE_RS (provenance). Le dossier SORTIE est vidé d'abord. */
 const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{execFileSync}=require('node:child_process');
 const {construireExtension}=require('./ch064-construire-extension.cjs');
@@ -24,6 +25,12 @@ function copie(sortie,modules=['gcv2L1']){
  const hp=path.join(sortie,'tests','helpers','perf-production.cjs'),h=fs.readFileSync(hp,'utf8'),ancre='const ctx={console,URL,TextEncoder,';
  if(h.split(ancre).length!==2)throw Error('perf-production.cjs a changé : contexte introuvable');
  fs.writeFileSync(hp,h.replace(ancre,ancre+"TextDecoder,atob:globalThis.atob,"));
+ /* tools/parite-l1se-sw.cjs de la copie : les compteurs du cœur et des façades (ARIANE_RS_COMPTEURS) écrits sur la sortie d'erreur à la fin,
+  * pour prouver que gcv2-l1 a bien été servi par le cœur pendant la parité. */
+ const pp=path.join(sortie,'tools','parite-l1se-sw.cjs'),p=fs.readFileSync(pp,'utf8'),a2="  process.stdout.write(JSON.stringify({ partie: a.partie, lot: a.lot, profil,";
+ if(p.split(a2).length!==2)throw Error('parite-l1se-sw.cjs a changé : sortie introuvable');
+ const trace="  try { process.stderr.write('ARIANE_RS_COMPTEURS ' + JSON.stringify(b.get('ARIANE_RS_COMPTEURS()')) + '\\n'); } catch (e) { process.stderr.write('ARIANE_RS_COMPTEURS absent\\n'); }\n";
+ fs.writeFileSync(pp,p.replace(a2,trace+a2));
  return sortie;
 }
 module.exports={copie};
