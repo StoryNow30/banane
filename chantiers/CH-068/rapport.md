@@ -30,7 +30,17 @@ Banc `tools/ch064-parite.cjs --module decision` (cœur WASM en Node), avec trois
 | voie-recentree, chaîne réelle (200 nuages) | 8 901 | 8 900 → corrigé | 438 |
 | voie-b1-ecart, fixtures + 30 variantes | 310 | 310 | 35 |
 | recherche-large, fixtures + 20 variantes | 1 596 | 1 596 | 296 |
-| RÉSULTATS_FINAUX | | | |
+| voie-recentree + voie-b1-ecart (`evaluer` compris), chaîne réelle (300 nuages) + 2 variantes, après correctifs | 15 276 | 15 276 | 684 |
+| recherche-large, réels | RL_CAS | RL_ID | RL_REPLIS |
+| **Régression J3** lotDecision (300 nuages réels + 2 variantes), après les deux correctifs | 1 212 | 1 212 | 125 |
+| Correctifs J3 (`tools/ch068-essai-correctifs-j3.cjs`, 83 cas decideCut mutés) : 58 écarts avant (71e1c12), 0 après | 83 | 83 | 43 |
+
+Chromium (référence, `/opt/pw-browsers/chromium`, `--chromium`, fixtures + 10 variantes, empreintes égales) :
+
+| Module | Cas | Identiques |
+|---|---|---|
+| appuis-liste | 517 | 517 |
+| CHROMIUM_SUITE | | |
 
 Les replis viennent surtout des variantes (chaînes ou objets glissés dans des matrices, coercitions que le port refuse) : la façade rejoue alors le JS, à l'identique.
 
@@ -45,7 +55,8 @@ Hors correctifs, seule modification de J3 : `decide_cut_r` / `decide_cut_base_r`
 - Pas d'état statique, donc rien sur le tas d'un appel à l'autre : l'arène est remise à zéro par le cœur.
 - Nombres en texte par `ariane_js::nombre::nombre_en_chaine` (`j4::texte`) ; clés de nombres par `cle_same_value_zero`.
 - Aucun `unsafe`. Dans les modules J4, `unwrap`, `panic` et l'indexation sont interdits par `deny`.
-- Clippy `-D warnings` propre sur l'espace et sur la cible wasm32. Mes modules sont au pedantic ; J1 à J3 ne le sont pas (environ 400 avertissements sous `[lints] workspace = true`). Question posée au chef, et `Cargo.toml` de la crate laissé tel quel.
+- Clippy `-D warnings` propre sur l'espace et sur la cible wasm32 ; `-W clippy::pedantic` ne sort rien de mes fichiers. Les `allow` sont ciblés, posés module par module et commentés, comme convenu avec le chef. J1 à J3 ne sont pas au pedantic : CH-064-D les y met. Après sa fusion, la crate reprend `[lints] workspace = true` et je retire mes `#![warn]` par module.
+- Numéros 61 à 65, gardés sur décision de l'intégrateur et du chef. J5 (CH-074) prendra 66 et plus.
 - `cargo test` : 19/19, dont 6 essais J4 dont les attendus viennent du JS du tronc.
 
 ## Ce qui reste
