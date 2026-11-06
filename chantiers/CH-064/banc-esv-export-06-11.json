@@ -206,24 +206,31 @@
    }
   ]
  },
- "vuesComparees": 382,
+ "vuesComparees": 383,
+ "commandes": {
+  "js": 76,
+  "wasm": 76,
+  "bruitJs": 0,
+  "differencesWasm": [],
+  "octets": {
+   "js": 194436,
+   "wasm": 194436
+  }
+ },
  "bruitJsContreJs": [
-  "resume.notice",
-  "evenements.clic-hors-vue-bilan@-",
-  "evenements.clic-hors-vue@9390",
-  "evenements.correction-couverture@-",
-  "evenements.correction-liste@-"
+  "evenements.correction-liste@-",
+  "evenements.correction-couverture@-"
  ],
  "differencesJsContreWasm": [
-  "evenements.clic-hors-vue-bilan@-",
-  "evenements.clic-hors-vue@9390"
+  "evenements.correction-liste@-",
+  "evenements.correction-couverture@-"
  ],
  "imputablesAuCoeur": {},
  "compteursWasm": {
   "coeur": {
    "reinstanciations": 0,
-   "hauteEau": 1703936,
-   "memoire": 1703936
+   "hauteEau": 2228224,
+   "memoire": 2228224
   },
   "facades": {
    "geometrie": {
@@ -246,11 +253,11 @@
  },
  "dureeLotMs": {
   "js": [
-   83001,
-   87759,
-   86480
+   81710,
+   83256,
+   81363
   ],
-  "wasm": 85887
+  "wasm": 81163
  },
  "erreurs": {
   "js": [],

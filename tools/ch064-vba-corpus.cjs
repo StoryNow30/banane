@@ -20,7 +20,8 @@ function compter(v){const c={records:0,clouds:0,events:0,points:0};if(v&&typeof 
 const med=a=>{const b=a.slice().sort((x,y)=>x-y);return b.length?b[b.length>>1]:null;};
 function main(){
  const a=process.argv.slice(2),json=a.includes('--json')?a[a.indexOf('--json')+1]:null,limite=a.includes('--limite')?Number(a[a.indexOf('--limite')+1]):Infinity;
- const w=construire({silencieux:true});if(!w)throw Error('cargo absent');
+ // documents de plus de 100 Mo : plafond relevé à 4 Gio pour ce banc du codec (le cœur de l'extension garde 256 Mio)
+ const w=construire({silencieux:true,memoireMax:4294967296});if(!w)throw Error('cargo absent');
  const coeur=Coeur.creer(fs.readFileSync(w),{seuilReinstanciation:256*1024*1024});
  const res={format:'ch064-vba-corpus-v1',moteur:'node '+process.version,synthetiques:{cas:0,identiques:0,ecarts:[]},refus:{cas:0,refuses:0,ecarts:[]},
   documents:0,octetsJson:0,octetsVba:0,identiquesJs:0,identiquesRust:0,trameRustIdentique:0,totaux:{records:0,clouds:0,events:0,points:0},echecs:[],

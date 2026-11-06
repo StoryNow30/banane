@@ -16,19 +16,25 @@
   let inst=null,ex=null,reinstanciations=0,hauteEau=0;
   const instancier=()=>{inst=new WebAssembly.Instance(module,IMPORTS);ex=inst.exports;};
   instancier();
+  /* Une trappe du cœur (mémoire épuisée sous le plafond, panique) laisse l'instance inutilisable : instance neuve, puis
+   * refus récupérable (HorsDomaine) que les façades rejouent en JS. La réservation, l'appel et la lecture sont couverts. */
+  function trappe(e){instancier();reinstanciations++;if(e instanceof WebAssembly.RuntimeError||e instanceof RangeError)throw new HorsDomaine('cœur : '+e.message);throw e;}
+  /* La réponse est COPIÉE hors de la mémoire du cœur (l'arène la réutilise au prochain appel) : elle reste valable. */
   function appelerOctets(fonction,trame){
-   const n=trame.length,p=ex.vba_reserver(n);
-   new Uint8Array(ex.memory.buffer,p,n).set(trame);
-   let m;
-   try{m=ex.vba_appel(fonction,p,n);}catch(e){instancier();reinstanciations++;throw e;} // trappe (panique) : instance neuve
-   const q=ex.vba_resultat();return {octets:new Uint8Array(ex.memory.buffer,q,m),liberer:()=>ex.vba_liberer_resultat()};
+   let copie;
+   try{
+    const n=trame.length,p=ex.vba_reserver(n);
+    new Uint8Array(ex.memory.buffer,p,n).set(trame);
+    const m=ex.vba_appel(fonction,p,n),q=ex.vba_resultat();
+    copie=new Uint8Array(ex.memory.buffer,q,m).slice();ex.vba_liberer_resultat();
+   }catch(e){trappe(e);}
+   return {octets:copie,liberer:()=>{}};
   }
   function apresAppel(){const t=ex.memory.buffer.byteLength;if(t>hauteEau)hauteEau=t;if(t>seuilReinstanciation){instancier();reinstanciations++;}}
   function appeler(fonction,valeur){
-   const r=appelerOctets(fonction,Vba.encoder(valeur));let v;
-   try{v=Vba.decoder(r.octets);}finally{r.liberer();}
+   const r=appelerOctets(fonction,Vba.encoder(valeur)),v=Vba.decoder(r.octets);
    apresAppel();
-   if(v&&v.__erreurVba===true){if(v.nom==='HorsDomaine')throw new HorsDomaine(v.message);const C=CONSTRUCTEURS[v.nom]||Error;throw new C(v.message);}
+   if(v instanceof Vba.ErreurTransportee){if(v.nom==='HorsDomaine')throw new HorsDomaine(v.message);const C=CONSTRUCTEURS[v.nom]||Error;throw new C(v.message);}
    return v;
   }
   return {appeler,appelerOctets,apresAppel,module,memoireOctets:()=>ex.memory.buffer.byteLength,etat:()=>({reinstanciations,hauteEau,memoire:ex.memory.buffer.byteLength})};
