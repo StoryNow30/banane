@@ -1,5 +1,5 @@
 /* CH-069 : façade des modules d'export sur le cœur WASM (ariane-export, fonctions 200 à 249), MÊME API, mêmes valeurs rendues.
- *   const F=ArianeFacadeExport.creer(coeur,{NativeExport,PhasePli,GCV1Export,ExportCache,Zip})
+ *   const F=ArianeFacadeExport.creer(coeur,{NativeExport,PhasePli,GCV1Export,ExportCache,Zip,Coeur})  (Coeur : ArianeCoeur, pour crc32 direct)
  *   → {nativeExport, phasePli, gcv1Export, exportCache, zip, compteurs()}
  * Chaque fonction portée appelle le cœur ; un refus (HorsDomaine) ou une entrée que la trame VBA refuse (TypeError « VBA : »)
  * rappelle le JS d'origine (compté). Les objets que le JS rend PAR IDENTITÉ (événements gardés, nœuds, entrées d'un
@@ -10,7 +10,7 @@
  'use strict';
  function creer(coeur,M){
   const N=M.NativeExport,P=M.PhasePli,G=M.GCV1Export,C=M.ExportCache,Z=M.Zip;
-  const n={coeur:0,repliHorsDomaine:0,repliFormat:0},raisons={};
+  const n={coeur:0,repliHorsDomaine:0,repliFormat:0},n2={direct:0},raisons={};
   const noter=(f,r)=>{const k=f+' '+r;raisons[k]=(raisons[k]||0)+1;};
   /* Appel du cœur ; null si le JS doit être rejoué (compté). Les exceptions du JS reproduites par le cœur sont relevées. */
   const REPLI={};
@@ -22,9 +22,17 @@
   const choisir=(liste,sources,nouveaux)=>{const out=new Array(sources.length);for(let i=0;i<sources.length;i++){const s=sources[i];out[i]=s>=0?liste[s]:nouveaux[-s-1];}return out;};
 
   /* ---------------------------------------------------------------- zip-writer : crc32 */
+  /* Chemin direct (sans trame) : les octets sont copiés une fois dans la mémoire d'une instance propre du module (même
+   * Module compilé que le cœur), puis `ariane_export_crc32(p, n, crc)` ; le paramètre i32 de WebAssembly fait le même
+   * ToInt32 que `crc ^ 0xFFFFFFFF` du JS. Instance refaite au-delà de 64 Mio de mémoire, ou après une trappe (repli JS). */
+  let direct=null;
+  const instanceDirecte=()=>{if(!direct&&M.Coeur&&coeur.module)direct=new WebAssembly.Instance(coeur.module,M.Coeur.IMPORTS).exports;return direct&&typeof direct.ariane_export_crc32==='function'?direct:null;};
   const zip={...Z,crc32(octets,crc=0){
-   if(!(octets instanceof Uint8Array)&&!Array.isArray(octets))return Z.crc32(octets,crc);
-   return appel(200,{octets:octets instanceof Uint8Array?Array.from(octets):octets,crc},()=>Z.crc32(octets,crc));}};
+   if(octets instanceof Uint8Array){const ex=instanceDirecte();
+    if(ex){try{const n=octets.length,p=ex.vba_reserver(n);new Uint8Array(ex.memory.buffer,p,n).set(octets);const r=ex.ariane_export_crc32(p,n,crc)>>>0;ex.vba_liberer(p,n);
+      if(ex.memory.buffer.byteLength>64*1024*1024)direct=null;n2.direct++;return r;}catch(e){direct=null;n.repliHorsDomaine++;noter(200,'direct : '+(e&&e.message));return Z.crc32(octets,crc);}}}
+   if(!Array.isArray(octets))return Z.crc32(octets,crc);
+   return appel(200,{octets,crc},()=>Z.crc32(octets,crc));}};
 
   /* ---------------------------------------------------------------- export-cache */
   const sansEnsembles=c=>{ // c.timing.pending : Set ou Map en JS, seule sa taille est lue
@@ -104,7 +112,7 @@
     const exportedAt=a.exportedAt===undefined?new Date().toISOString():a.exportedAt;
     return appel(230,{args:a,exportedAt},()=>G.buildDiagnostic({...a,exportedAt}));}};
 
-  return {nativeExport,phasePli,gcv1Export,exportCache,zip,compteurs:()=>({...n}),raisonsDesReplis:()=>({...raisons})};
+  return {nativeExport,phasePli,gcv1Export,exportCache,zip,compteurs:()=>({...n,...n2}),raisonsDesReplis:()=>({...raisons})};
  }
  return {creer};
 });

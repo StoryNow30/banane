@@ -6,7 +6,7 @@ use crate::js::{self, ch, objet, prop};
 use ariane_js::Echec;
 use ariane_vba::Valeur;
 use core::cmp::Ordering;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn hd<T>(m: &str) -> Result<T, Echec> { Err(Echec::hors_domaine(m)) }
 fn nul() -> Valeur { Valeur::Nul }
@@ -45,20 +45,50 @@ fn ensemble<'a>(l: impl IntoIterator<Item = &'a Valeur>) -> Result<Vec<&'a Valeu
     Ok(out)
 }
 
-fn find_batch_id<'a>(events: &'a [Valeur], event: &'a Valeur, pid: &Valeur) -> Result<Valeur, Echec> {
+/// Index des événements, bâti une fois : `proposalIdOf` et `batchIdOf` de chacun, et les rangs par valeur (ordre du
+/// journal). Remplace les balayages complets du JS par observation, sans en changer le résultat : `x === v` pour une
+/// primitive `v` qui n'est pas NaN équivaut à `SameValueZero(x, v)`.
+struct Index<'a> {
+    events: &'a [Valeur],
+    pid: Vec<&'a Valeur>,
+    bid: Vec<&'a Valeur>,
+    rangs_prop: HashMap<CleSet, Vec<usize>>,
+    rangs_lot: HashMap<CleSet, Vec<usize>>,
+}
+impl<'a> Index<'a> {
+    fn new(events: &'a [Valeur]) -> Result<Self, Echec> {
+        let (mut pid, mut bid, mut rangs_prop, mut rangs_lot) = (vec![], vec![], HashMap::<CleSet, Vec<usize>>::new(), HashMap::<CleSet, Vec<usize>>::new());
+        for (i, e) in events.iter().enumerate() {
+            let (p, b) = (proposal_id_of(e), batch_id_of(e));
+            rangs_prop.entry(cle_set(p)?).or_default().push(i);
+            rangs_lot.entry(cle_set(b)?).or_default().push(i);
+            pid.push(p);
+            bid.push(b);
+        }
+        Ok(Index { events, pid, bid, rangs_prop, rangs_lot })
+    }
+    /// Rangs des événements dont la valeur indexée est `=== v` (NaN n'est égal à rien).
+    fn rangs<'m>(m: &'m HashMap<CleSet, Vec<usize>>, v: &Valeur) -> Result<&'m [usize], Echec> {
+        if matches!(v, Valeur::Nombre(x) if x.is_nan()) { return Ok(&[]); }
+        Ok(m.get(&cle_set(v)?).map_or(&[][..], Vec::as_slice))
+    }
+}
+
+fn find_batch_id(ix: &Index, event: &Valeur, pid: &Valeur) -> Result<Valeur, Echec> {
     if prop(event, "batchId").vrai() { return Ok(prop(event, "batchId").clone()); }
     let mut l = vec![];
-    if pid.vrai() { for e in events { if eq(proposal_id_of(e), pid)? { let b = batch_id_of(e); if b.vrai() { l.push(b); } } } }
+    if pid.vrai() { for &i in Index::rangs(&ix.rangs_prop, pid)? { let b = ix.bid[i]; if b.vrai() { l.push(b); } } }
     let ids = ensemble(l)?;
     Ok(if ids.len() == 1 { ids[0].clone() } else { nul() })
 }
 
-fn find_capture(events: &[Valeur], index: usize, pid: &Valeur) -> Result<(Valeur, &'static str), Echec> {
+fn find_capture(ix: &Index, index: usize, pid: &Valeur) -> Result<(Valeur, &'static str), Echec> {
+    let events = ix.events;
     let event = &events[index];
     if prop(event, "lidarCaptureId").vrai() { return Ok((prop(event, "lidarCaptureId").clone(), "persisted-on-observation")); }
     let mut exact = vec![];
     if pid.vrai() {
-        for e in events { if eq(proposal_id_of(e), pid)? { let c = ou(&[prop(e, "lidarCaptureId"), chemin(e, &["paused", "lidarCaptureId"])]); if c.vrai() { exact.push(c); } } }
+        for &i in Index::rangs(&ix.rangs_prop, pid)? { let e = &events[i]; let c = ou(&[prop(e, "lidarCaptureId"), chemin(e, &["paused", "lidarCaptureId"])]); if c.vrai() { exact.push(c); } }
     }
     if ensemble(exact.iter().copied())?.len() == 1 { return Ok((exact[0].clone(), "proposal-id")); }
     for c in events[..index].iter().rev() {
@@ -71,21 +101,21 @@ fn find_capture(events: &[Valeur], index: usize, pid: &Valeur) -> Result<(Valeur
     Ok((nul(), "unavailable"))
 }
 
-fn linked_events<'a>(events: &'a [Valeur], pid: &Valeur, batch: &Valeur, identite: &Valeur) -> Result<Vec<&'a Valeur>, Echec> {
+fn linked_events<'a>(ix: &Index<'a>, pid: &Valeur, batch: &Valeur, identite: &Valeur) -> Result<Vec<&'a Valeur>, Echec> {
+    let events = ix.events;
+    let du_lot: &[usize] = if batch.vrai() { Index::rangs(&ix.rangs_lot, batch)? } else { &[] };
     let mut sc = vec![];
-    if batch.vrai() {
-        for e in events { if eq(batch_id_of(e), batch)? && same_complete_identity(prop(e, "identity"), identite)? { let p = proposal_id_of(e); if p.vrai() { sc.push(p); } } }
-    }
+    for &i in du_lot { if same_complete_identity(prop(&events[i], "identity"), identite)? { let p = ix.pid[i]; if p.vrai() { sc.push(p); } } }
     let sc = ensemble(sc)?;
     let fallback = sc.len() <= 1 && (sc.is_empty() || (pid.vrai() && { let k = cle_set(pid)?; sc.iter().map(|v| cle_set(v)).collect::<Result<Vec<_>, _>>()?.contains(&k) }));
-    let mut out = vec![];
-    for e in events {
-        if est(prop(e, "type"), "gcv1-shadow-observed") { continue; }
-        let ep = proposal_id_of(e);
-        let garde = if ep.vrai() { pid.vrai() && eq(ep, pid)? } else { fallback && batch.vrai() && eq(batch_id_of(e), batch)? && same_complete_identity(prop(e, "identity"), identite)? };
-        if garde { out.push(e); }
+    let ombre = |i: usize| est(prop(&events[i], "type"), "gcv1-shadow-observed");
+    let mut rangs: Vec<usize> = vec![];
+    if pid.vrai() { rangs.extend(Index::rangs(&ix.rangs_prop, pid)?.iter().copied().filter(|&i| !ombre(i))); }
+    if fallback {
+        for &i in du_lot { if !ombre(i) && !ix.pid[i].vrai() && same_complete_identity(prop(&events[i], "identity"), identite)? { rangs.push(i); } }
     }
-    Ok(out)
+    rangs.sort_unstable();
+    Ok(rangs.into_iter().map(|i| &events[i]).collect())
 }
 
 /// `String(x ?? '')` pour le tri des réémissions.
@@ -216,8 +246,8 @@ fn deferral_result(linked: &[&Valeur], obs_batch: &Valeur, state: &Valeur) -> Re
 
 const INTERRUPTIONS: [&str; 4] = ["batch-error", "batch-after-state-missing", "batch-action-interrupted", "batch-validation-not-accepted-on-restart"];
 
-fn runtime_result(events: &[Valeur], pid: &Valeur, batch: &Valeur, identite: &Valeur, shadow: &Valeur, state: &Valeur) -> Result<Valeur, Echec> {
-    let linked = linked_events(events, pid, batch, identite)?;
+fn runtime_result(ix: &Index, pid: &Valeur, batch: &Valeur, identite: &Valeur, shadow: &Valeur, state: &Valeur) -> Result<Valeur, Echec> {
+    let linked = linked_events(ix, pid, batch, identite)?;
     let last = |t: &str| linked.iter().rev().find(|e| est(prop(e, "type"), t)).map_or(nul(), |e| clone(e));
     let apply = last("applied-verified");
     let vi = last("validation-intent");
@@ -293,6 +323,7 @@ pub fn build_diagnostic(e: &Valeur) -> Result<Valeur, Echec> {
         _ => return hd("events non tableau"),
     };
     if source.iter().any(js::est_nul) { return hd("événement nul (TypeError en JS)"); }
+    let ix = Index::new(&source)?;
     let mut observations = vec![];
     for (index, event) in source.iter().enumerate() {
         if !est(prop(event, "type"), "gcv1-shadow-observed") { continue; }
@@ -300,14 +331,14 @@ pub fn build_diagnostic(e: &Valeur) -> Result<Valeur, Echec> {
         let vide = Valeur::Objet(vec![]);
         let shadow = if sh.vrai() { sh } else { &vide };
         let pid = ou(&[prop(event, "proposalId")]);
-        let batch = find_batch_id(&source, event, pid)?;
-        let (cap, assoc) = find_capture(&source, index, pid)?;
+        let batch = find_batch_id(&ix, event, pid)?;
+        let (cap, assoc) = find_capture(&ix, index, pid)?;
         let mut proposed = &Valeur::Nul;
-        for x in source.iter().rev() { if est(prop(x, "type"), "proposed") && eq(proposal_id_of(x), pid)? { proposed = prop(x, "proposal"); break; } }
+        for &i in Index::rangs(&ix.rangs_prop, pid)?.iter().rev() { if est(prop(&source[i], "type"), "proposed") { proposed = prop(&source[i], "proposal"); break; } }
         let proposed = if proposed.vrai() { proposed } else { &Valeur::Nul };
         let identite = clone(ou(&[prop(event, "identity"), prop(proposed, "identity")]));
         let rails_sci = prop(shadow, "rails");
-        let runtime = runtime_result(&source, pid, &batch, &identite, shadow, &state)?;
+        let runtime = runtime_result(&ix, pid, &batch, &identite, shadow, &state)?;
         observations.push(objet(vec![
             ("observationEventId", ou(&[prop(event, "eventId")]).clone()), ("identity", identite),
             ("timestamp", ou(&[prop(shadow, "observedAt"), prop(event, "timestamp")]).clone()),

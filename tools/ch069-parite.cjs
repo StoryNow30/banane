@@ -49,7 +49,7 @@ async function enChromium(w){
    const octets=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;};
    const o=octets(b64);const coeur=ArianeCoeur.creer(o);
    const G=globalThis;const js={nativeExport:G.BananeNativeExport,phasePli:G.BananePhasePli,gcv1Export:G.BananeGCV1Export,exportCache:G.BananeExportCache,zip:G.BananeZip};
-   const f=ArianeFacadeExport.creer(coeur,{NativeExport:G.BananeNativeExport,PhasePli:G.BananePhasePli,GCV1Export:G.BananeGCV1Export,ExportCache:G.BananeExportCache,Zip:G.BananeZip});
+   const f=ArianeFacadeExport.creer(coeur,{NativeExport:G.BananeNativeExport,PhasePli:G.BananePhasePli,GCV1Export:G.BananeGCV1Export,ExportCache:G.BananeExportCache,Zip:G.BananeZip,Coeur:ArianeCoeur});
    const developper=(0,eval)('('+dev+')'),comparable=(0,eval)('('+cmp+')'),j=(0,eval)('('+jouer+')');
    const canon=(ok,v)=>ok?{valeur:Ch064Comparer.sansNaN(v)}:{erreur:[v&&v.constructor&&v.constructor.name,v&&v.message]};
    const hex=async b=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(x=>x.toString(16).padStart(2,'0')).join('');

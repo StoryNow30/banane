@@ -249,8 +249,17 @@ pub fn compact(e: &Valeur) -> Result<Valeur, Echec> {
     let opt = if o.vrai() { o } else { &vide };
     let Valeur::Objet(d) = doc else { return hd("document non objet") };
     let mut it = Interneur::new();
-    let rest = Valeur::Objet(d.iter().filter(|(k, _)| k != "clouds").cloned().collect());
-    let meta = fold(&rest, &mut it)?;
+    // `{clouds, ...rest}` puis foldRefs(rest) : `rest` n'est copié que s'il est lui-même une structure internée.
+    let n_rest = d.iter().filter(|(k, _)| k != "clouds").count();
+    let forme = match forme_de(doc) { Some(3) | None => (["pageId", "part", "cut", "frameId"].iter().all(|k| js::possede(doc, k)) && n_rest <= 8).then_some(3), f => f };
+    let meta = if let Some(f) = forme {
+        let rest = Valeur::Objet(d.iter().filter(|(k, _)| k != "clouds").cloned().collect());
+        let i = it.intern(f, &rest)?;
+        objet(vec![(REF, Valeur::Chaine(format!("{}:{i}", FORMES[f])))])
+    } else {
+        cles_sures(d)?;
+        Valeur::Objet(d.iter().filter(|(k, _)| k != "clouds").map(|(k, x)| Ok((k.clone(), fold(x, &mut it)?))).collect::<Result<_, Echec>>()?)
+    };
     let clouds = prop(doc, "clouds");
     let packed = match clouds {
         x if !x.vrai() => Valeur::Tableau(vec![]),
@@ -323,8 +332,15 @@ pub fn expand(e: &Valeur) -> Result<Valeur, Echec> {
     let vide = Valeur::Objet(vec![]);
     let dico = if dd.vrai() { dd } else { &vide };
     let previous = if options.vrai() { prop(options, "previousDictionaries") } else { options };
-    let rest = Valeur::Objet(d.iter().filter(|(k, _)| !matches!(k.as_str(), "clouds" | "dictionaries" | "compaction" | "compactedFrom")).cloned().collect());
-    let Valeur::Objet(mut meta) = unfold(&rest, dico)? else { return hd("méta non objet") };
+    // `{clouds, dictionaries, compaction, compactedFrom, ...rest}` puis unfoldRefs(rest) : `rest` est un objet neuf, qui
+    // peut lui-même être une référence ; sinon, ses champs sont dépliés un à un (sans copie intermédiaire).
+    let garde = |k: &str| !matches!(k, "clouds" | "dictionaries" | "compaction" | "compactedFrom");
+    let Valeur::Objet(mut meta) = (if d.iter().any(|(k, v)| k == REF && garde(k) && matches!(v, Valeur::Chaine(_))) {
+        unfold(&Valeur::Objet(d.iter().filter(|(k, _)| garde(k)).cloned().collect()), dico)?
+    } else {
+        cles_sures(d)?;
+        Valeur::Objet(d.iter().filter(|(k, _)| garde(k)).map(|(k, x)| Ok((k.clone(), unfold(x, dico)?))).collect::<Result<_, Echec>>()?)
+    }) else { return hd("méta non objet") };
     let cf = prop(doc, "compactedFrom");
     js::poser(&mut meta, "format", if cf.vrai() { cf.clone() } else { ch("banane-native-session-v2") });
     let clouds = prop(doc, "clouds");

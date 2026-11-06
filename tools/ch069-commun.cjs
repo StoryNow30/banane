@@ -12,13 +12,14 @@ const RACINE=path.resolve(__dirname,'..'),RS=path.join(RACINE,'ariane-rs'),PATCH
 function brancheDansLeCoeur(){return fs.readFileSync(path.join(RS,'crates/ariane-coeur/src/abi.rs'),'utf8').includes('ariane_export::appeler');}
 function copier(src,dst){fs.mkdirSync(dst,{recursive:true});for(const n of fs.readdirSync(src)){if(n==='target'||n==='dist')continue;const a=path.join(src,n),b=path.join(dst,n);
  if(fs.statSync(a).isDirectory())copier(a,b);else fs.copyFileSync(a,b);}}
-function construireCoeur({silencieux=true,patchs=[]}={}){
- if(brancheDansLeCoeur()&&!patchs.length)return require('./ch064-construire.cjs').construire({silencieux});
- const copie=path.join(RS,'target',patchs.length?'ch069-p-src':'ch069-src');fs.rmSync(copie,{recursive:true,force:true});copier(RS,copie);
+function construireCoeur({silencieux=true,patchs=[],memoireMax=null}={}){
+ if(brancheDansLeCoeur()&&!patchs.length&&!memoireMax)return require('./ch064-construire.cjs').construire({silencieux});
+ const copie=path.join(RS,'target',(patchs.length?'ch069-p-src':'ch069-src')+(memoireMax?'-max':''));fs.rmSync(copie,{recursive:true,force:true});copier(RS,copie);
  for(const f of [...(brancheDansLeCoeur()?[]:[PATCH]),...patchs]){const p=spawnSync('patch',['-p2','-d',copie,'-i',f],{encoding:'utf8'});if(p.status!==0)throw Error('patch '+f+' : '+p.stdout+p.stderr);}
- const cible=patchs.length?'ch069-p':'ch069';
+ const cible=(patchs.length?'ch069-p':'ch069')+(memoireMax?'-max'+memoireMax:'');const env={...process.env};
+ if(memoireMax)env.CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS='-C link-arg=--max-memory='+memoireMax;
  const r=spawnSync('cargo',['build','--release','--target','wasm32-unknown-unknown','-p','ariane-coeur','--target-dir',path.join(RS,'target',cible)],
-  {cwd:copie,encoding:'utf8',stdio:silencieux?'pipe':'inherit'});
+  {cwd:copie,encoding:'utf8',stdio:silencieux?'pipe':'inherit',env});
  if(r.status!==0)throw Error('construction du cœur (copie patchée) : '+(r.stderr||'').slice(-2000));
  const w=path.join(RS,'target',cible,'wasm32-unknown-unknown','release','ariane_coeur.wasm');
  fs.mkdirSync(path.join(RS,'dist'),{recursive:true});const sortie=path.join(RS,'dist','ariane-coeur-'+cible+'.wasm');fs.copyFileSync(w,sortie);return sortie;
@@ -53,7 +54,7 @@ const SOURCE_COMPARABLE=`function comparable(v){
  return v;}`;
 const comparable=(0,eval)('('+SOURCE_COMPARABLE+')');
 function modules(){return {NativeExport:require('../src/native-export.js'),PhasePli:require('../src/phase-pli.js'),GCV1Export:require('../src/gcv1-export.js'),
- ExportCache:require('../src/export-cache.js'),Zip:require('../src/zip-writer.js')};}
+ ExportCache:require('../src/export-cache.js'),Zip:require('../src/zip-writer.js'),Coeur:require('../ariane-rs/coquille/coeur.js')};}
 const SCRIPTS_NAVIGATEUR=['vendor/capture-core.js','src/core.js','src/native-export.js','src/phase-pli.js','src/gcv1-export.js','src/export-cache.js','src/zip-writer.js',
  'ariane-rs/coquille/vba.js','ariane-rs/coquille/coeur.js','ariane-rs/coquille/facade-export.js'];
 const SOURCES=['src/native-export.js','src/phase-pli.js','src/gcv1-export.js','src/export-cache.js','src/zip-writer.js','vendor/capture-core.js'];

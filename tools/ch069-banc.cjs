@@ -32,7 +32,7 @@ async function principal(){
   const ua=await page.evaluate(async([dev,jouer,b64])=>{
    const octets=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;};
    const o=octets(b64);const coeur=ArianeCoeur.creer(o);const G=globalThis;
-   const M={NativeExport:G.BananeNativeExport,PhasePli:G.BananePhasePli,GCV1Export:G.BananeGCV1Export,ExportCache:G.BananeExportCache,Zip:G.BananeZip};
+   const M={NativeExport:G.BananeNativeExport,PhasePli:G.BananePhasePli,GCV1Export:G.BananeGCV1Export,ExportCache:G.BananeExportCache,Zip:G.BananeZip,Coeur:ArianeCoeur};
    const js={nativeExport:M.NativeExport,phasePli:M.PhasePli,gcv1Export:M.GCV1Export,exportCache:M.ExportCache,zip:M.Zip},f=ArianeFacadeExport.creer(coeur,M);
    const developper=(0,eval)('('+dev+')'),j=(0,eval)('('+jouer+')');
    const direct=new WebAssembly.Instance(coeur.module,ArianeCoeur.IMPORTS).exports;

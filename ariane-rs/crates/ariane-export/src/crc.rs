@@ -18,6 +18,21 @@ const fn table() -> [u32; 256] {
 }
 static TABLE: [u32; 256] = table();
 
+/// Tables du découpage par 8 octets : `T8[j][n]` = CRC de l'octet n suivi de j octets nuls (arithmétique entière exacte :
+/// même résultat, au bit près, que la boucle octet par octet du JS).
+const fn tables8() -> [[u32; 256]; 8] {
+    let mut t = [[0u32; 256]; 8];
+    t[0] = table();
+    let mut j = 1;
+    while j < 8 {
+        let mut n = 0;
+        while n < 256 { let c = t[j - 1][n]; t[j][n] = (c >> 8) ^ t[0][(c & 0xFF) as usize]; n += 1; }
+        j += 1;
+    }
+    t
+}
+static T8: [[u32; 256]; 8] = tables8();
+
 /// `ToInt32` d'ECMA-262 (troncature, modulo 2³², NaN et ±∞ en 0), rendu sur 32 bits.
 #[must_use]
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // modulo 2^32 exact : |r| < 2^32 avant la conversion
@@ -32,7 +47,13 @@ pub fn vers_u32(x: f64) -> u32 {
 #[must_use]
 pub fn crc32_octets(octets: &[u8], crc: u32) -> u32 {
     let mut c = crc ^ 0xFFFF_FFFF;
-    for &o in octets { c = TABLE[((c ^ u32::from(o)) & 0xFF) as usize] ^ (c >> 8); }
+    let mut blocs = octets.chunks_exact(8);
+    for b in &mut blocs {
+        let a = c ^ u32::from_le_bytes([b[0], b[1], b[2], b[3]]);
+        c = T8[7][(a & 0xFF) as usize] ^ T8[6][((a >> 8) & 0xFF) as usize] ^ T8[5][((a >> 16) & 0xFF) as usize] ^ T8[4][(a >> 24) as usize]
+            ^ T8[3][usize::from(b[4])] ^ T8[2][usize::from(b[5])] ^ T8[1][usize::from(b[6])] ^ T8[0][usize::from(b[7])];
+    }
+    for &o in blocs.remainder() { c = TABLE[((c ^ u32::from(o)) & 0xFF) as usize] ^ (c >> 8); }
     c ^ 0xFFFF_FFFF
 }
 
@@ -69,6 +90,13 @@ mod essais {
     fn valeurs_connues() {
         assert_eq!(crc32_octets(b"123456789", 0), 0xCBF4_3926);
         assert_eq!(crc32_octets(b"6789", crc32_octets(b"12345", 0)), 0xCBF4_3926);
+        // découpage par 8 contre la boucle octet par octet, toutes longueurs de 0 à 40
+        let o: Vec<u8> = (0..40u32).map(|i| u8::try_from(i * 37 % 251).unwrap()).collect();
+        for n in 0..=40 {
+            let mut c = 0xFFFF_FFFFu32;
+            for &x in &o[..n] { c = TABLE[((c ^ u32::from(x)) & 0xFF) as usize] ^ (c >> 8); }
+            assert_eq!(crc32_octets(&o[..n], 0), c ^ 0xFFFF_FFFF);
+        }
         let e = js::objet(vec![("octets", Valeur::Nombres(b"123456789".iter().map(|&b| f64::from(b)).collect()))]);
         assert_eq!(crc32(&e).unwrap(), Valeur::Nombre(f64::from(0xCBF4_3926u32)));
         assert_eq!(crc32(&js::objet(vec![("octets", Valeur::Tableau(vec![]))])).unwrap(), Valeur::Nombre(0.0));

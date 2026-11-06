@@ -46,8 +46,11 @@ pub fn appeler(fonction: u32, entree: &Valeur) -> Result<Valeur, Echec> {
         223 => pli::eligible_appel(entree),
         230 => gcv1::build_diagnostic(entree),
         _ => Err(Echec::hors_domaine(format!("ariane-export : fonction {fonction} non portée"))),
-    }?;
-    Ok(r.canonique())
+    };
+    // La sortie ne va qu'à la coquille, qui la décode en valeurs JS : toute forme d'encodage d'un même tableau (06, 09,
+    // 0A, 0B) y donne les mêmes valeurs. Pas de copie canonique ici (une copie entière de la sortie, mesurée : elle
+    // faisait passer un segment Écho réel au-dessus du plafond de 256 Mio).
+    r
 }
 
 #[cfg(test)]
@@ -57,7 +60,7 @@ mod essais {
     fn aiguillage() {
         assert!(matches!(appeler(249, &Valeur::Nul), Err(Echec::HorsDomaine(_))));
         let e = js::objet(vec![("octets", Valeur::Tableau(vec![Some(Valeur::Nombre(1.0))]))]);
-        assert!(appeler(200, &e).is_err()); // forme non canonique (la coquille enverrait Nombres)
+        assert!(appeler(200, &e).is_err()); // forme non canonique en entrée (la coquille enverrait Nombres)
         let e = js::objet(vec![("octets", Valeur::Nombres(vec![1.0]))]);
         assert!(matches!(appeler(200, &e), Ok(Valeur::Nombre(_))));
         assert_eq!(appeler(222, &js::objet(vec![("events", Valeur::Nul)])), Ok(Valeur::Booleen(false)));
