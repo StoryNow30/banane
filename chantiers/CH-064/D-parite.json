@@ -68,51 +68,56 @@
   },
   "parite-j1-node": {
    "moteur": "node v22.23.4",
-   "cas": 228637,
-   "identiques": 228637,
+   "cas": 228737,
+   "identiques": 228737,
    "verdict": "IDENTIQUE",
    "ecarts": 0,
    "casChargeNaN": null,
    "empreintes": {
-    "js": "c09ef1fddc9f791cc980642f849b435c89c189c3d3a41cad9713f6142d9d7e34",
-    "rs": "c09ef1fddc9f791cc980642f849b435c89c189c3d3a41cad9713f6142d9d7e34"
+    "js": "b2f3f6f1f26c3cb7ba6b609a7a1e09ce71a209354c7cf64991bc36b1e73d4a08",
+    "rs": "b2f3f6f1f26c3cb7ba6b609a7a1e09ce71a209354c7cf64991bc36b1e73d4a08"
    },
    "temps": {
-    "jsMediane": 0.011904000002687098,
-    "jsP95": 0.08318899999721907,
-    "rsMediane": 0.03435900000113179,
-    "rsP95": 0.32794599999760976
+    "jsMediane": 0.01394100000106846,
+    "jsP95": 0.09169200000178535,
+    "rsMediane": 0.038998999996692874,
+    "rsP95": 0.4332259999937378
    },
    "memoireCoeur": {
     "reinstanciations": 0,
-    "hauteEau": 6619136,
-    "memoire": 6619136
+    "hauteEau": 17825792,
+    "memoire": 17825792
    },
    "tasJsOctets": null,
    "facade": {
     "critere": {
-     "coeur": 66092,
-     "repliHorsDomaine": 263,
+     "coeur": 66069,
+     "repliHorsDomaine": 286,
      "repliFormat": 0
     },
     "signal": {
-     "coeur": 91626,
-     "repliHorsDomaine": 1519,
+     "coeur": 91620,
+     "repliHorsDomaine": 1525,
      "repliFormat": 0
     },
     "gardeApresDiffere": {
-     "coeur": 1910,
-     "repliHorsDomaine": 75,
+     "coeur": 1911,
+     "repliHorsDomaine": 74,
      "repliFormat": 0
     },
     "gardePasseAppuis": {
-     "coeur": 9312,
-     "repliHorsDomaine": 3,
+     "coeur": 9407,
+     "repliHorsDomaine": 8,
      "repliFormat": 0
     },
     "relectureOmbre": {
-     "coeur": 53394,
-     "repliHorsDomaine": 4141,
+     "coeur": 53386,
+     "repliHorsDomaine": 4170,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
      "repliFormat": 0
     }
    },
@@ -169,36 +174,36 @@
   },
   "parite-j2-node": {
    "moteur": "node v22.23.4",
-   "cas": 88416,
-   "identiques": 88416,
+   "cas": 99507,
+   "identiques": 99507,
    "verdict": "IDENTIQUE",
    "ecarts": 0,
    "casChargeNaN": null,
    "empreintes": {
-    "js": "82fde744c15d2b3d93d041f94860f06bb0f21c18443a125a78ec31a3980a3405",
-    "rs": "82fde744c15d2b3d93d041f94860f06bb0f21c18443a125a78ec31a3980a3405"
+    "js": "fff7e2be7cfb188565574f2a8e6f5276e9385e180141ae7b1846770ef71d96ca",
+    "rs": "fff7e2be7cfb188565574f2a8e6f5276e9385e180141ae7b1846770ef71d96ca"
    },
    "temps": {
-    "jsMediane": 0.010021000000051572,
-    "jsP95": 8.281050999998115,
-    "rsMediane": 0.03821800000150688,
-    "rsP95": 3.722810000006575
+    "jsMediane": 0.012693000000581378,
+    "jsP95": 8.336139999999432,
+    "rsMediane": 0.035547999999835156,
+    "rsP95": 4.5992029999615625
    },
    "memoireCoeur": {
     "reinstanciations": 0,
-    "hauteEau": 6029312,
-    "memoire": 6029312
+    "hauteEau": 8912896,
+    "memoire": 8912896
    },
    "tasJsOctets": null,
    "facade": {
     "reglesMetier": {
-     "coeur": 68040,
-     "repliHorsDomaine": 2761,
+     "coeur": 72173,
+     "repliHorsDomaine": 3537,
      "repliFormat": 0
     },
     "crossing": {
-     "coeur": 13549,
-     "repliHorsDomaine": 3632,
+     "coeur": 18319,
+     "repliHorsDomaine": 4938,
      "repliFormat": 0
     },
     "shadow": {
@@ -275,40 +280,40 @@
    "ecarts": 0,
    "casChargeNaN": null,
    "empreintes": {
-    "js": "00313bca90030706cebd4b6b5eea04dda3e226a15c43926de1e596222c5b199a",
-    "rs": "00313bca90030706cebd4b6b5eea04dda3e226a15c43926de1e596222c5b199a"
+    "js": "2167b909bab33423f1eb7969bce79ba278f7a81daaff1a25472a31e170f8272f",
+    "rs": "2167b909bab33423f1eb7969bce79ba278f7a81daaff1a25472a31e170f8272f"
    },
    "temps": {
-    "jsMediane": 7.200748000002932,
-    "jsP95": 1009.9644930000068,
-    "rsMediane": 4.731511000019964,
-    "rsP95": 228.637985999987
+    "jsMediane": 6.215941000031307,
+    "jsP95": 1012.0145000000484,
+    "rsMediane": 5.425045000039972,
+    "rsP95": 2040.7332099999767
    },
    "memoireCoeur": {
-    "reinstanciations": 0,
-    "hauteEau": 5898240,
-    "memoire": 5898240
+    "reinstanciations": 522,
+    "hauteEau": 142606336,
+    "memoire": 1114112
    },
    "tasJsOctets": null,
    "facade": {
     "lotDecision": {
-     "coeur": 948,
-     "repliHorsDomaine": 148,
+     "coeur": 936,
+     "repliHorsDomaine": 160,
      "repliFormat": 0
     },
     "hauteur": {
-     "coeur": 564,
-     "repliHorsDomaine": 17,
+     "coeur": 557,
+     "repliHorsDomaine": 25,
      "repliFormat": 0
     },
     "fauxVert": {
-     "coeur": 540,
+     "coeur": 536,
      "repliHorsDomaine": 21,
      "repliFormat": 0
     },
     "shadow": {
-     "coeur": 807,
-     "repliHorsDomaine": 140,
+     "coeur": 787,
+     "repliHorsDomaine": 158,
      "repliFormat": 0
     }
    },

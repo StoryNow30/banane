@@ -23,8 +23,8 @@ Banc : `ariane-rs/parite/decision.cjs` (Node : `tools/ch064-parite.cjs --module 
 
 | jalon | modules | Node 22 (cas / identiques) | Chromium 153 (cas / identiques) | mémoire linéaire WASM, haute eau |
 |---|---|--:|--:|--:|
-| J1 | critère, signal, deux gardes, relecture-ombre | 228 637 / 228 637 | 228 737 / 228 737 (dont 32 ne différant que par la charge d'un NaN) | 6,3 Mio |
-| J2 | level-crossing, regles-metier | 88 416 / 88 416 | 87 865 / 87 865 | 6,0 Mio |
+| J1 | critère, signal, deux gardes, relecture-ombre | 228 737 / 228 737 | 228 737 / 228 737 (dont 32 ne différant que par la charge d'un NaN) | 6,3 Mio |
+| J2 | level-crossing, regles-metier | 99 507 / 99 507 | 87 865 / 87 865 | 6,0 Mio |
 | J3 | gcv1-shadow, lot-decision, hauteur-apprise, faux-vert-ombre | 3 192 / 3 192 | 12 159 / 12 159 | 5,6 Mio |
 
 Empreintes SHA-256 des sorties égales des deux côtés pour chaque banc (`D-parite.json`, avec l'empreinte des fichiers JS de référence). J3 : 167 appels de `decideCut` relevés dans les essais du tronc, 200 cuts réels décidés en chaîne (appuis compris), science GCV1 : 9 905 cas dans Chromium (nuages réels, fixtures et variantes). Aucune réinstanciation du cœur.
@@ -38,6 +38,8 @@ Empreintes SHA-256 des sorties égales des deux côtés pour chaque banc (`D-par
 3. **`edgeOf`** exporté lisait aussi l'autre rail (le JS ne lit que le sien) : une exception levée par le port seul, sur une variante.
 4. **Forme canonique VBA** : `ariane-geometrie` lit un tableau de nombres sous la forme `Nombres` ; un `Tableau` bâti en Rust y était un « delta invalide » (calage non appliqué). `js::canon`.
 5. `Math.pow` (voie encadrée, `x**k`) est importé du moteur, comme les transcendantes (sonde du chef : les bits de `pow` diffèrent entre Rust et V8).
+
+Parités Node refaites APRÈS la fusion de la base du chef et le nettoyage pedantic (fixtures relevées à nouveau sur 98 essais du tronc) : tous identiques. Écart trouvé par ce nouveau tirage et corrigé : un rail de la science `ok` sans `next` fait lever le JS (`Cannot read properties of null (reading 'status')`) ; le port rend désormais « hors domaine ». Les chiffres Chromium sont ceux d'avant le nettoyage (même calcul, aucun changement de logique hors ce cas).
 
 ## 3. Temps et mémoire (Chromium 153, machine au repos, 15 répétitions)
 Outil : `tools/ch064-d-banc-temps.cjs --rep 15 --natif`. Postes lourds : médiane par cas sur 15 répétitions, puis médiane et P90 des cas. Postes légers (≥ 100 cas) : l'horloge de la page ne descend pas sous 0,1 ms, on chronomètre 15 passages sur tous les cas (moyenne par cas de chaque passage, médiane et P90 des passages). « WASM » = façade complète : encodage VBA, traversée, calcul Rust, décodage. « Natif » = programme Rust (option B) : décodage VBA, calcul, encodage, même trame. ÉTABLI.
@@ -66,12 +68,12 @@ Distribution des étages sur une chaîne de 600 cuts réels (même banc, ÉTABLI
 
 ## 5. Reste à faire
 - **J4** : `voie-b1-ecart` (orchestration autour de `decideCut`, mémoire à `Map`), `gcv2-l1` (1 028 lignes : hypothèses H0–H6, probabilités figées, règle L1/L1e), `gcv2-l1e`, et leurs dépendances non attribuées `voie-recentree`, `appuis-liste`, `recherche-large`. La partie lourde (science GCV1, décision du lot) est déjà portée ; le reste est surtout de la tenue de listes et de l'arithmétique.
-- **Espace Cargo** : la crate n'est pas encore membre (`ariane-rs/Cargo.toml`) ni branchée dans `ariane-coeur` (bras `50..=99`) : décision du chef. Mes bancs tournent avec ces deux lignes en local, non versionnées.
-- Proposés au chef pour les fondations : `nombre_chaine`, `to_fixed`, `canon`, `pow` importé.
+- **J4** est porté par CH-068, à partir de cette branche.
+- Repris des fondations du chef : `ariane_js::nombre::nombre_en_chaine` (ma version, versée par le chef), `Valeur::canonique` (ariane-vba), `cle_same_value_zero`. Reste proposé : `to_fixed`, `pow` importé.
 
 ## 6. Rejouer
-- `cargo test -p ariane-decision` (13 essais) ; `cargo clippy -p ariane-decision --all-targets` : aucun avertissement.
+- `cargo test -p ariane-decision` (15 essais, dont deux NaN de motifs différents dans une même case) ; `cargo clippy -p ariane-decision --all-targets -- -D warnings` et `--target wasm32-unknown-unknown` : propres (pedantic de l'espace). Aucun `unwrap`/`expect` hors essais ; un seul `unsafe` (import `js_pow`), commenté.
 - Fixtures : `node tools/ch064-d-fixtures.cjs` (≈ 7 min, tous les essais du tronc qui chargent ces modules). Données : clone de banane-data (`BANANE_DATA`), extrait mis en cache dans `ariane-rs/dist/`.
 - Parité : `CH064D_MODULES=<modules> node tools/ch064-parite.cjs --module decision` (Node) et `node tools/ch064-d-chromium.cjs` (Chromium) ; variables `CH064D_VARIANTES`, `CH064D_GRAINE`, `CH064D_LOT_MAX`. Sonde des nombres : `tools/ch064-d-sonde-nombres.cjs [--chromium]`.
 - Temps et mémoire : `node tools/ch064-d-banc-temps.cjs --rep 15 --natif` ; versement des résultats : `node tools/ch064-d-verser.cjs`.
-- Tout suppose la crate membre de l'espace et le bras `50..=99` dans `ariane-coeur` (§ 5).
+- La crate est membre de l'espace et branchée dans `ariane-coeur` (base du chef fusionnée).

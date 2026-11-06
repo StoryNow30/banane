@@ -388,7 +388,16 @@ pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validate
             anchors = nouv;
         }
     }
-    let applicable = SIDES.iter().all(|s_| { let r = science_rail(science, s_); !nullish(r) && vrai(g(r, "ok")) && matches!(g(g(r, "next"), "status"), V::Chaine(c) if c == "candidate") })
+    // `science.rails[side].next.status` : `next` absent sur un rail `ok` ferait lever le JS (TypeError de V8) : hors domaine
+    let mut rails_candidats = true;
+    for s_ in SIDES {
+        let r = science_rail(science, s_);
+        if nullish(r) || !vrai(g(r, "ok")) { rails_candidats = false; break; }
+        let nx = g(r, "next");
+        if nullish(nx) { return hd("science : next absent sur un rail ok"); }
+        if !matches!(g(nx, "status"), V::Chaine(c) if c == "candidate") { rails_candidats = false; break; }
+    }
+    let applicable = rails_candidats
         && { let sm = if nullish(science) { &INDEF } else { g(science, "summary") }; nullish(sm) || !vrai(g(sm, "pairGaugeRejected")) };
     let nb = neighbours(identity, &anchors, &cx)?;
     let gref = if nullish(cx.c("gaugeGuardMm")) { None } else { gauge_reference(identity, &anchors, &cx)? };
