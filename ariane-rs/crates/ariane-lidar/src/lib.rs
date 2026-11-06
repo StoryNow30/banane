@@ -72,16 +72,24 @@ impl Coord for f64 {
     }
 }
 
+type Mat = [f64; 16];
+
 /// `C.point(m, [x,y,z])` de `vendor/capture-core.js`, la matrice commençant à `m[o]`.
 #[inline(always)]
 pub fn point(m: &[f64], o: usize, x: f64, y: f64, z: f64) -> Result<[f64; 3], Erreur> {
-    let w = m[o + 3] * x + m[o + 7] * y + m[o + 11] * z + m[o + 15];
+    pt(m[o..o + 16].try_into().expect("matrice de 16"), x, y, z)
+}
+
+/// `C.point` sur une matrice de taille fixe (indices vérifiés à la compilation).
+#[inline(always)]
+fn pt(m: &Mat, x: f64, y: f64, z: f64) -> Result<[f64; 3], Erreur> {
+    let w = m[3] * x + m[7] * y + m[11] * z + m[15];
     if !w.is_finite() || w.abs() < 1e-15 {
         return Err(Erreur::Projection);
     }
-    let a = m[o] * x + m[o + 4] * y + m[o + 8] * z + m[o + 12];
-    let b = m[o + 1] * x + m[o + 5] * y + m[o + 9] * z + m[o + 13];
-    let c = m[o + 2] * x + m[o + 6] * y + m[o + 10] * z + m[o + 14];
+    let a = m[0] * x + m[4] * y + m[8] * z + m[12];
+    let b = m[1] * x + m[5] * y + m[9] * z + m[13];
+    let c = m[2] * x + m[6] * y + m[10] * z + m[14];
     // x/1 rend x au bit près (IEEE 754) : la division est sautée sans changer la sortie.
     let r = if w == 1.0 { [a, b, c] } else { [a / w, b / w, c / w] };
     if !(r[0].is_finite() && r[1].is_finite() && r[2].is_finite()) {
@@ -98,23 +106,31 @@ fn distance(a: &[f64; 3], b: &[f64; 3]) -> f64 {
 
 /// `inRoi(p, bounds)` = `p.every((x,i)=>Math.abs(x)<=bounds[i])`.
 #[inline(always)]
-fn dans(p: &[f64; 3], b: &[f64]) -> bool {
+fn dans(p: &[f64; 3], b: &[f64; 3]) -> bool {
     p[0].abs() <= b[0] && p[1].abs() <= b[1] && p[2].abs() <= b[2]
 }
 
-/// Doit-on calculer `Math.hypot(...l)` pour le plus proche ? Faux seulement si le point ne peut PAS battre `meilleur`.
-/// Borne sûre : `√(x²+y²+z²)` (somme non compensée) diffère de l'hypot de V8 de quelques ulp au plus ; on exige un écart
-/// relatif de 1e-9, des millions de fois plus large, et une somme ni nulle, ni sous-normale, ni infinie.
+/// Seuil d'élagage du plus proche, au carré : un point dont `x²+y²+z²` (somme non compensée) dépasse ce seuil ne peut PAS
+/// battre `meilleur`. La somme non compensée diffère du carré de l'hypot de V8 de quelques ulp ; la marge relative de 1e-9
+/// en couvre des millions. Un meilleur non fini, ou un carré qui déborde, rend +∞ : tout point est alors calculé.
 #[inline(always)]
-fn plus_proche(l: &[f64; 3], present: bool, meilleur: f64) -> bool {
-    if !present || !meilleur.is_finite() {
+fn seuil_carre(meilleur: f64) -> f64 {
+    if !meilleur.is_finite() {
+        return f64::INFINITY;
+    }
+    let b = meilleur * (1.0 + 1e-9);
+    b * b
+}
+
+/// Faut-il calculer `Math.hypot(...l)` ? Oui si aucun plus proche, si la somme est nulle, sous-normale, infinie ou NaN
+/// (zone où la borne n'est pas garantie), ou si elle ne dépasse pas le seuil.
+#[inline(always)]
+fn a_calculer(l: &[f64; 3], present: bool, seuil2: f64) -> bool {
+    if !present {
         return true;
     }
     let s = l[0] * l[0] + l[1] * l[1] + l[2] * l[2];
-    if !(s.is_finite() && s > 1e-200) {
-        return true;
-    }
-    s.sqrt() <= meilleur * (1.0 + 1e-9)
+    !(s.is_finite() && s > 1e-200) || s <= seuil2
 }
 
 /// Parcourt `n` points consécutifs d'un nœud : le point k est lu en `src[k*stride .. k*stride+3]` et porte l'indice source
@@ -134,66 +150,73 @@ pub fn parcourir<T: Coord>(
     retenus: &mut [u32],
     scene: &mut [f64],
 ) -> usize {
+    let mat = |o: usize| -> Mat { m[o..o + 16].try_into().expect("matrice de 16") };
+    let (modele, inverse) = (mat(M_MODELE), mat(M_INVERSE));
+    let local_m = [mat(M_LOCAL[0]), mat(M_LOCAL[1])];
+    let profil_scene = [mat(M_PROFIL_SCENE[0]), mat(M_PROFIL_SCENE[1])];
+    let scene_profil = [mat(M_SCENE_PROFIL[0]), mat(M_SCENE_PROFIL[1])];
     let b = [m[M_BORNES], m[M_BORNES + 1], m[M_BORNES + 2]];
+    // Plus proche par côté, tenu en variables locales et rendu à la fin.
+    let mut proche = [[0.0f64; 9]; 2];
+    for s in 0..2 {
+        proche[s].copy_from_slice(&etat[E_PROCHE[s]..E_PROCHE[s] + 9]);
+    }
+    let mut present = [proche[0][0] != 0.0, proche[1][0] != 0.0];
+    let mut seuil2 = [seuil_carre(proche[0][1]), seuil_carre(proche[1][1])];
     let mut rt = etat[E_ALLER_RETOUR];
     let (mut traites, mut non_finis, mut par_rail, mut k) = (0usize, 0usize, [0usize; 2], 0usize);
     let mut erreur = None;
+    assert!(stride >= 3, "pas < 3");
+    let n = n.min(if src.len() < 3 { 0 } else { (src.len() - 3) / stride + 1 });
     'points: for j in 0..n {
         if (k as f64) >= limite {
             break;
         }
-        let base = j * stride;
-        let (x, y, z) = (src[base].f64(), src[base + 1].f64(), src[base + 2].f64());
+        let q = &src[j * stride..j * stride + 3];
+        let (x, y, z) = (q[0].f64(), q[1].f64(), q[2].f64());
         let i = premier + j as u32;
         traites += 1;
         if !(x.is_finite() && y.is_finite() && z.is_finite()) {
             non_finis += 1;
             continue;
         }
-        let mut local = [[0.0; 3]; 2];
-        for s in 0..2 {
-            match point(m, M_LOCAL[s], x, y, z) {
-                Ok(l) => local[s] = l,
-                Err(e) => {
-                    erreur = Some(e);
-                    break 'points;
-                }
+        let local = match (pt(&local_m[0], x, y, z), pt(&local_m[1], x, y, z)) {
+            (Ok(g), Ok(d)) => [g, d],
+            (Err(e), _) | (_, Err(e)) => {
+                erreur = Some(e);
+                break;
             }
-        }
+        };
         let dedans = [dans(&local[0], &b), dans(&local[1], &b)];
         for s in 0..2 {
-            let o = E_PROCHE[s];
-            let present = etat[o] != 0.0;
-            if !plus_proche(&local[s], present, etat[o + 1]) {
+            if !a_calculer(&local[s], present[s], seuil2[s]) {
                 continue;
             }
             let d = ariane_js::hypot(&local[s]);
-            if !present || d < etat[o + 1] {
-                let p = match point(m, M_MODELE, x, y, z) {
+            if !present[s] || d < proche[s][1] {
+                let p = match pt(&modele, x, y, z) {
                     Ok(p) => p,
                     Err(e) => {
                         erreur = Some(e);
                         break 'points;
                     }
                 };
-                etat[o] = 1.0;
-                etat[o + 1] = d;
-                etat[o + 2] = i as f64;
-                etat[o + 3..o + 6].copy_from_slice(&local[s]);
-                etat[o + 6..o + 9].copy_from_slice(&p);
+                present[s] = true;
+                seuil2[s] = seuil_carre(d);
+                proche[s] = [1.0, d, i as f64, local[s][0], local[s][1], local[s][2], p[0], p[1], p[2]];
             }
         }
         if !(dedans[0] || dedans[1]) {
             continue;
         }
         let r = (|| -> Result<[f64; 3], Erreur> {
-            let p = point(m, M_MODELE, x, y, z)?;
-            let q = point(m, M_INVERSE, p[0], p[1], p[2])?;
-            let retour = point(m, M_MODELE, q[0], q[1], q[2])?;
+            let p = pt(&modele, x, y, z)?;
+            let q = pt(&inverse, p[0], p[1], p[2])?;
+            let retour = pt(&modele, q[0], q[1], q[2])?;
             rt = ariane_js::max(rt, distance(&retour, &p));
             for s in 0..2 {
-                let l = point(m, M_SCENE_PROFIL[s], p[0], p[1], p[2])?;
-                let tour = point(m, M_PROFIL_SCENE[s], l[0], l[1], l[2])?;
+                let l = pt(&scene_profil[s], p[0], p[1], p[2])?;
+                let tour = pt(&profil_scene[s], l[0], l[1], l[2])?;
                 rt = ariane_js::max(rt, distance(&tour, &p));
                 if dedans[s] {
                     par_rail[s] += 1;
@@ -212,6 +235,9 @@ pub fn parcourir<T: Coord>(
                 break;
             }
         }
+    }
+    for s in 0..2 {
+        etat[E_PROCHE[s]..E_PROCHE[s] + 9].copy_from_slice(&proche[s]);
     }
     etat[E_ALLER_RETOUR] = rt;
     etat[E_TRAITES] = traites as f64;

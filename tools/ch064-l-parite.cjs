@@ -69,7 +69,7 @@ async function noeudNode(arg){
   moteur:'node '+process.version,
   async vue(d,v){const sc=S.construireScene(d,v,7+v);return comparerTrois(L,sc,pause,undefined,sc.points);},
   async synth(fab){const {scene,options}=fab();return comparerTrois(L,scene,pause,options,0);},
-  memoire:()=>wasm.memoireOctets(),fermer(){},
+  memoire:()=>wasm.memoireOctets(),fermer(){},relances:()=>0,
   noyaux:{wasm,js}};
  async function comparerTrois(L,sc,pause,options,points){
   const o=await K.executerCapture(L.origine,sc,undefined,pause,options),w=await K.executerCapture(L.variante,sc,wasm,pause,options),j=await K.executerCapture(L.variante,sc,js,pause,options);
@@ -79,27 +79,40 @@ async function noeudNode(arg){
  }
 }
 
+/* Chromium : une page ; relancée (navigateur neuf) si elle plante, et tous les 150 cas pour borner la mémoire du banc.
+ * Une relance est comptée dans le bilan ; la vue en cours est rejouée une fois sur la page neuve. */
 async function noeudChromium(){
- const {chromium}=require('playwright'),nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
- const p=await nav.newPage();
- for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
- await p.addScriptTag({content:'(function(){const module={};'+K.lire(K.SOURCES.comparer).replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
- await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
- const ua=await p.evaluate(async ({texte,b64})=>{
-  (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api').replace('else root.BananeLidar=api','else root.LidarVariante=api'));
-  const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));window.NW=ArianeLidarWasm.noyauWasm(o);window.NJ=ArianeLidarWasm.noyauJs();
-  window.comparerTrois=async(sc,options,points)=>{const pause=()=>scheduler.yield();
-   const o=await executerCapture(BananeLidar,sc,undefined,pause,options),w=await executerCapture(LidarVariante,sc,NW,pause,options),j=await executerCapture(LidarVariante,sc,NJ,pause,options);
-   const ref=net(o),C=Ch064Comparer.comparer;
-   return {points,statut:o.erreur?'exception: '+o.erreur.message:o.sortie.status,lus:o.sortie?.quality.inspected,retenus:o.sortie?.quality.retained,
-    ms:{origine:o.ms,wasm:w.ms,js:j.ms},ecartsWasm:C(ref,net(w),{max:5}),ecartsJs:C(ref,net(j),{max:5})};};
-  return navigator.userAgent.match(/Chrome\/[\d.]+/)[0];},{texte:K.lire(K.SOURCES.lidar),b64:fs.readFileSync(K.construireWasm()).toString('base64')});
- // Vérifie que la variante a bien remplacé BananeLidar par LidarVariante (et non écrasé l'original).
- const ok=await p.evaluate(()=>typeof LidarVariante?.capture==='function'&&BananeLidar!==LidarVariante);if(!ok)throw Error('variante non chargée');
- return {moteur:ua,
-  vue:(d,v)=>p.evaluate(async ({d,v})=>{const sc=construireScene(d,v,7+v);return comparerTrois(sc,undefined,sc.points);},{d,v}),
-  synth:(nom)=>p.evaluate(async nom=>{const c=casSynthetiques().find(x=>x[0]===nom)[1]();return comparerTrois(c.scene,c.options,0);},nom),
-  memoire:()=>p.evaluate(()=>NW.memoireOctets()),fermer:()=>nav.close()};
+ const {chromium}=require('playwright'),b64=fs.readFileSync(K.construireWasm()).toString('base64');
+ async function ouvrir(){
+  const nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
+  const p=await nav.newPage();
+  for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
+  await p.addScriptTag({content:'(function(){const module={};'+K.lire(K.SOURCES.comparer).replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
+  await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
+  const ua=await p.evaluate(async ({texte,b64})=>{
+   (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api'));
+   const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));window.NW=ArianeLidarWasm.noyauWasm(o);window.NJ=ArianeLidarWasm.noyauJs();
+   window.comparerTrois=async(sc,options,points)=>{const pause=()=>scheduler.yield();
+    const o=await executerCapture(BananeLidar,sc,undefined,pause,options),w=await executerCapture(LidarVariante,sc,NW,pause,options),j=await executerCapture(LidarVariante,sc,NJ,pause,options);
+    const ref=net(o),C=Ch064Comparer.comparer;
+    return {points,statut:o.erreur?'exception: '+o.erreur.message:o.sortie.status,lus:o.sortie?.quality.inspected,retenus:o.sortie?.quality.retained,
+     ms:{origine:o.ms,wasm:w.ms,js:j.ms},ecartsWasm:C(ref,net(w),{max:5}),ecartsJs:C(ref,net(j),{max:5})};};
+   return navigator.userAgent.match(/Chrome\/[\d.]+/)[0];},{texte:K.lire(K.SOURCES.lidar),b64});
+  // La variante est bien LidarVariante, distincte de BananeLidar d'origine.
+  if(!await p.evaluate(()=>typeof LidarVariante?.capture==='function'&&BananeLidar!==LidarVariante))throw Error('variante non chargée');
+  return {nav,p,ua};
+ }
+ let E=await ouvrir(),relances=0,depuis=0;
+ const relancer=async()=>{await E.nav.close().catch(()=>{});E=await ouvrir();depuis=0;};
+ async function appel(f){
+  try{return await f(E.p);}
+  catch(e){if(!/closed|crash/i.test(e.message))throw e;relances++;console.log('relance du navigateur : '+e.message.split('\n')[0]);await relancer();return f(E.p);}
+ }
+ return {moteur:E.ua,relances:()=>relances,
+  vue:async(d,v)=>{if(++depuis>300)await relancer();
+   return appel(p=>p.evaluate(async ({d,v})=>{const sc=construireScene(d,v,7+v);return comparerTrois(sc,undefined,sc.points);},{d,v}));},
+  synth:(nom)=>appel(p=>p.evaluate(async nom=>{const c=casSynthetiques().find(x=>x[0]===nom)[1]();return comparerTrois(c.scene,c.options,0);},nom)),
+  memoire:()=>appel(p=>p.evaluate(()=>NW.memoireOctets())),fermer:()=>E.nav.close()};
 }
 
 async function main(){
@@ -120,7 +133,7 @@ async function main(){
    for(const k in r.ms)bilan.msTotal[k]+=r.ms[k];}
   if(bilan.captures%100===0)console.log(bilan.captures+' captures, '+bilan.vues+' vues, identiques wasm '+bilan.identiquesWasm+' js '+bilan.identiquesJs+', '+((Date.now()-t0)/1000|0)+' s');
  }
- bilan.memoireWasmOctets=await M.memoire();await M.fermer();
+ bilan.memoireWasmOctets=await M.memoire();bilan.relancesNavigateur=M.relances();await M.fermer();
  for(const k in bilan.msTotal)bilan.msTotal[k]=Math.round(bilan.msTotal[k]);
  const total=bilan.synthetiques.length+bilan.vues;bilan.identique=bilan.identiquesWasm===total&&bilan.identiquesJs===total;
  console.log(JSON.stringify({...bilan,synthetiques:undefined},null,1));
