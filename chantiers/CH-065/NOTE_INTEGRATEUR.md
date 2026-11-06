@@ -1,30 +1,44 @@
-# CH-065 — Note à l'intégrateur : appliquer les patchs
+# CH-065 — Note à l'intégrateur : appliquer les patchs, patch par patch
 
-Trois patchs, appliqués ensemble ou pas du tout. Aucun fichier gelé ou interdit n'est modifié par ce chantier : tout est ici.
+Aucun fichier gelé ou interdit n'est modifié par ce chantier. Les quatre patchs sont indépendants : l'opérateur peut en choisir un sous-ensemble. Source unique : `blocs.json` (remplacements exacts), lue par `appliquer.cjs` ; les `.patch` en sont tirés. Chiffres : `rapport.md` § 1 (banc Chromium au repos), parités § 2.
 
-| Patch | Fichiers | Ce qu'il fait |
-|---|---|---|
-| `lidar-direct.patch` | `vendor/lidar.js` (gelé 4.4.0) | Boucle de lecture d'un nœud : lecture directe du tampon, sans allocation par point. Elle n'est prise que si le nœud est non indexé, à attribut Float32 ou Float64 non normalisé, et si les sondes du nœud (17 au plus) plus le premier et le dernier point relus par les deux chemins donnent les mêmes valeurs (`Object.is`). Sinon, la boucle d'origine, inchangée. |
-| `geometrie-elaguee.patch` | `src/geometry.js` (gelé 4.4.0), `src/geometry-candidate-v1.js` (moteur du lot) | `loss` : seuls les points à moins de 26 mm de l'ancre (sur `p[0]`, points triés une fois) sont examinés. Hors de cette fenêtre, aucun point ne peut abaisser le minimum (borné à 0,025²). Hors domaine (`|u| ≥ 1` ou `|a[0]| ≥ 1`), la boucle d'origine. |
-| `garde-empreintes.patch` | `tools/verify.cjs`, `tests/geometry-brain.test.cjs`, `tests/pose-lot-inchanges-4959.test.cjs` | Les gardes d'empreintes comparent le fichier **sans les blocs déclarés de CH-065** à l'empreinte historique. `audit/v4.4.0-frozen-engine-hashes.json` n'est **pas** modifié (règle de passation de `verify.cjs`). Toute autre dérive reste un échec. Un fichier à moitié patché aussi. |
+| Patch | Fichier | Gain mesuré (médiane) | Journée du 05/11 | Empreintes touchées |
+|---|---|--:|--:|---|
+| `lidar-direct` | `vendor/lidar.js` (gelé 4.4.0) | −146 ms par vue rapide, −184 ms en référence | −813 s | gel 4.4.0 (`verify.cjs`, `tests/geometry-brain.test.cjs`), copie dans `audit/v4.6.0-engine-baseline.json` (`unchangedSince440`) |
+| `geometrie-elaguee-lot` | `src/geometry-candidate-v1.js` | −11 ms par nuage (composition du lot) | −10 s | `tests/pose-inchangee-4958.json` ; étiquettes non contrôlées : `CONTRACT.geometrySha256` (gcv1-shadow.js), `audit/gcv1-runtime-shadow.json`, workflow `gcv1-shadow-v1.yml` (déjà périmé) |
+| `mediane-exacte` | `src/geometry-candidate-v1.js` | avec le précédent : −34 ms par nuage | avec le précédent : −29 s | les mêmes que le précédent |
+| `geometrie-elaguee-v46` | `src/geometry.js` (gelé 4.4.0) | −5 ms par nuage (V4.6) | −2 s | gel 4.4.0, baseline v4.6.0, `pose-inchangee-4958` ; étiquette `baselineSha256` de gcv1-shadow.js |
+| **les quatre** | | lot : 103,9 → 62,7 ms ; P90 667,8 → 310,7 | **−849 s (13,5 %)** | |
 
-Source unique des patchs : `blocs.json` (remplacements exacts), lu par `appliquer.cjs` (`etat`, `appliquer RACINE`, `patchs`). Les `.patch` en sont tirés.
+**Variante qui laisse `src/geometry.js` gelé** : `lidar-direct` + `geometrie-elaguee-lot` + `mediane-exacte`, soit −842 s sur 849.
 
-## Ordre
-1. `git apply chantiers/CH-065/lidar-direct.patch chantiers/CH-065/geometrie-elaguee.patch chantiers/CH-065/garde-empreintes.patch`
-   (ou `node chantiers/CH-065/appliquer.cjs appliquer .` pour les deux premiers).
-2. `node chantiers/CH-065/appliquer.cjs etat` : trois fois « patché ».
-3. Essais ciblés : `node --test tests/ch065-*.test.cjs tests/geometry-brain.test.cjs tests/pose-lot-inchanges-4959.test.cjs`. Les essais `ch065-*` valent avant et après l'application (ils reconstruisent l'autre version depuis `blocs.json`).
-4. Garde et parités sur l'arbre patché (rapport § 3) ; puis le `verify` de la version.
+## Ce que fait chaque patch
+- **lidar-direct** : la boucle de lecture d'un nœud lit le tampon directement, sans tableau par point. Conditions : nœud non indexé, attribut Float32 ou Float64 non normalisé, et lecture prouvée sur les sondes du nœud (les 17 sondes de diagnostic, plus le premier et le dernier point) par `Object.is` contre l'accesseur. Sinon, la boucle d'origine. Mêmes opérations flottantes dans le même ordre, mêmes exceptions, budget, pauses et contrôles d'intégrité point par point.
+- **geometrie-elaguee-lot / -v46** : `loss` n'examine que les points à moins de 26 mm de l'ancre (sur `p[0]` trié). Hors de cette fenêtre, aucun point ne peut abaisser le minimum (borné à 0,025²). Hors du domaine où cette borne est prouvée (`|u| ≥ 1` ou `|a[0]| ≥ 1`), la boucle d'origine.
+- **mediane-exacte** : tri natif d'une copie `Float64Array` quand il range les valeurs comme le comparateur d'origine, c'est-à-dire pour un tableau ordinaire de nombres, sans NaN, sans mélange de -0 et +0. Sinon, le code d'origine.
 
-## Mesuré sur l'arbre patché (trois patchs)
-- 111 fichiers d'essai qui touchent ces modules : 740 essais. **Sans** `garde-empreintes.patch`, 3 échouent, comme prévu : `geometry-brain` (gel 4.4.0) et `pose-lot-inchanges-4959` (deux essais, empreintes de la test 8). **Avec** : tous verts. Contrôle négatif : une dérive hors patch (`minFace` 6 → 7 dans `src/geometry.js`) fait échouer `geometry-brain`.
-- `verify.cjs` : seule sa vérification d'empreintes est touchée. Le `verify` complet n'a pas été lancé (règle : une fois par version, par l'intégrateur).
+## Appliquer
+1. Choisir les patchs, puis : `node chantiers/CH-065/appliquer.cjs appliquer . lidar-direct,geometrie-elaguee-lot,mediane-exacte[,geometrie-elaguee-v46]` (ou `git apply` des `.patch` voulus) ; puis `git apply chantiers/CH-065/garde-empreintes.patch`.
+2. `node chantiers/CH-065/appliquer.cjs etat` : chaque patch est « present » ou « absent », jamais à moitié (sinon, erreur).
+3. `node --test tests/ch065-*.test.cjs tests/geometry-brain.test.cjs tests/pose-lot-inchanges-4959.test.cjs`. Les essais `ch065-*` valent pour tout sous-ensemble appliqué.
+4. Garde, parités et `verify` de la version (déjà faits ici sur l'arbre aux quatre patchs : verts, voir le rapport).
 
-## À décider par l'intégrateur (pas par ce chantier)
-- **Étiquettes d'empreinte qui deviennent fausses si on ne les touche pas.** Ce sont des chaînes, pas des contrôles :
-  - `CONTRACT.geometrySha256` (`77f01766…`) et `baselineSha256` (`3343330e…`) de `src/gcv1-shadow.js` ;
-  - `audit/gcv1-runtime-shadow.json`, `audit/v4.2.1-geometry-hashes.json`, `PROJECT_STATE.md`, `GCV1_RUNTIME_*.md`, `RETOUR_ARRIERE.md`, `.github/workflows/gcv1-shadow-v1.yml`.
-- **Recommandation : ne pas changer `CONTRACT.geometrySha256`.** Il entre dans `parameters` de chaque proposition, donc dans les journaux et les parités. Surtout, `background.js:67` refuse de reprendre un lot en pause dont le contrat enregistré diffère du contrat vivant. Le changer rendrait non reprenable tout lot en pause au moment de la mise à jour. Le garder est exact au sens où le patch ne change aucune sortie : l'empreinte nomme le comportement épinglé, et ce comportement est inchangé au bit près (rapport § 2). À écrire dans `DECISIONS.md` si l'intégrateur suit.
-- `.github/workflows/gcv1-shadow-v1.yml` compare par `sha256sum` les empreintes de `src/geometry.js` et `src/geometry-candidate-v1.js`. Il ne se déclenche que sur la branche `integration/gcv1-runtime-shadow-v1`, et il épingle déjà une empreinte de `src/engine.js` (`f7d3ea22…`) qui n'est plus celle du tronc. ÉTABLI : il est déjà périmé et ne touche pas le tronc.
-- `CH-064` (Rust) garde le JS du tronc comme cible de parité : ces patchs ne changent aucune sortie, la cible reste valable.
+## `garde-empreintes.patch` (verify et deux essais)
+Les gardes d'empreintes comparent un fichier gelé **sans les blocs déclarés de CH-065** à l'empreinte historique, qui reste inchangée. `audit/v4.4.0-frozen-engine-hashes.json` n'est pas modifié (règle de passation de `verify.cjs`). Mesuré sur l'arbre aux quatre patchs :
+- sans ce patch, 3 essais échouent comme prévu (`geometry-brain`, `pose-lot-inchanges-4959` × 2) ;
+- avec lui, 750 essais sur 113 fichiers (dont les `ch065-*`) : 749 verts, 1 sauté (corpus natif privé absent, déjà sauté sur le tronc), 0 échec ;
+- une dérive hors patch (`minFace` 6 → 7) fait toujours échouer la garde.
+
+## Chaîne `CONTRACT.geometrySha256` : NON changée (décision de l'intégrateur)
+- Aucun des quatre patchs n'entre dans un hash vérifié à l'exécution. Le seul contrôle à l'exécution compare la chaîne `CONTRACT.geometrySha256` du code chargé à celle enregistrée dans le lot (`background.js:64-68`), et aucune empreinte de fichier n'est recalculée. La baseline v4.6.0, le gel 4.4.0 et `pose-inchangee-4958` ne sont lus que par `verify` et les essais.
+- Mesuré en maquette (`resultats/maquette-reprise.json`), pour les quatre patchs pris un par un puis ensemble : un lot neuf part et finit ; un lot mis en pause sous l'ancien paquet reprend et finit, avec ou sans rechargement.
+- Si la chaîne était changée, la reprise serait refusée net : « Moteur GCV1 du lot indisponible ou incohérent : reprise refusée. », le lot reste en pause, rien n'est écrit. Il faudrait alors finir ou arrêter tout lot avant d'installer le paquet. Avec la chaîne inchangée, aucune contrainte.
+
+## Consigne pour l'opérateur, à chaque paquet
+« Décompresse le zip dans le même dossier, clique sur **Recharger** dans `chrome://extensions`, puis F5 sur ESV. »
+Mesuré en maquette : Chrome garde dans le profil le code du service worker. Remplacer le dossier puis relancer Chrome, même avec un numéro de version neuf, fait encore tourner l'ancien code. L'effet de « Recharger » sur le vrai Chrome de l'opérateur est SUPPOSÉ : non reproductible ici, `chrome.runtime.reload()` décharge sans recharger une extension chargée en ligne de commande. Il a été simulé en vidant le cache des scripts du profil.
+
+## Divers
+- `.github/workflows/gcv1-shadow-v1.yml` compare par `sha256sum` `src/geometry.js` et `src/geometry-candidate-v1.js`. Il ne se déclenche que sur `integration/gcv1-runtime-shadow-v1` et épingle déjà une empreinte périmée de `src/engine.js` : ÉTABLI, sans effet sur le tronc.
+- CH-064 garde le JS du tronc comme cible ; les patchs ne changent aucune sortie.
+- Levier suivant mesuré, hors patch : après les quatre patchs, le P90 de la composition reste à 311 ms. Non profilé ici.
