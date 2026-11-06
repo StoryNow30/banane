@@ -1,0 +1,120 @@
+{
+ "date": "2026-11-06T19:29:48.700Z",
+ "chromium": "153.0.8010.12",
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+ "coeurs": 4,
+ "repetitions": 15,
+ "nuagesReels": 4258,
+ "lidar": {
+  "nuages": 8,
+  "pointsParVue": 505000,
+  "noeuds": 19,
+  "rapide": {
+   "msParVue": {
+    "origine": {
+     "mediane": 246.6,
+     "p90": 305.3,
+     "min": 215.1,
+     "n": 120
+    },
+    "patche": {
+     "mediane": 72.2,
+     "p90": 110.7,
+     "min": 66.1,
+     "n": 120
+    }
+   },
+   "gainMsParVue": 174.4,
+   "tasAlloueOctetsParVue": {
+    "origine": 28412548,
+    "patche": 27387120
+   },
+   "tasRetenuOctets": {
+    "origine": 17204,
+    "patche": 16712
+   },
+   "sortiesIdentiques": 8
+  },
+  "reference": {
+   "msParVue": {
+    "origine": {
+     "mediane": 854.9,
+     "p90": 889.8,
+     "min": 805.4,
+     "n": 120
+    },
+    "patche": {
+     "mediane": 657.2,
+     "p90": 677.6,
+     "min": 639.5,
+     "n": 120
+    }
+   },
+   "gainMsParVue": 197.7,
+   "tasAlloueOctetsParVue": {
+    "origine": 23153236,
+    "patche": 11456980
+   },
+   "tasRetenuOctets": {
+    "origine": 1004,
+    "patche": 6756
+   },
+   "sortiesIdentiques": 8
+  },
+  "rapide-accesseur-inconnu": {
+   "msParVue": {
+    "origine": {
+     "mediane": 245.3,
+     "p90": 286.8,
+     "min": 212.1,
+     "n": 120
+    },
+    "patche": {
+     "mediane": 276.6,
+     "p90": 339.8,
+     "min": 227.4,
+     "n": 120
+    }
+   },
+   "gainMsParVue": -31.3,
+   "tasAlloueOctetsParVue": {
+    "origine": 28417096,
+    "patche": 28455588
+   },
+   "tasRetenuOctets": {
+    "origine": 2420,
+    "patche": 2260
+   },
+   "sortiesIdentiques": 8
+  },
+  "reference-accesseur-inconnu": {
+   "msParVue": {
+    "origine": {
+     "mediane": 835.4,
+     "p90": 868.5,
+     "min": 801.9,
+     "n": 120
+    },
+    "patche": {
+     "mediane": 851.4,
+     "p90": 898.2,
+     "min": 810.1,
+     "n": 120
+    }
+   },
+   "gainMsParVue": -16,
+   "tasAlloueOctetsParVue": {
+    "origine": 23140880,
+    "patche": 20016832
+   },
+   "tasRetenuOctets": {
+    "origine": 36,
+    "patche": 2420
+   },
+   "sortiesIdentiques": 8
+  }
+ },
+ "geometrie": {
+  "nuages": 200
+ }
+}
