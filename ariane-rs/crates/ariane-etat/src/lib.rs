@@ -36,8 +36,6 @@ mod json;
 mod jsval;
 mod liste;
 mod nombre;
-#[allow(unexpected_cfgs, dead_code, unused)]
-mod ryu;
 mod verts;
 
 use ariane_js::Echec;

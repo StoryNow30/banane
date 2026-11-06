@@ -4,7 +4,7 @@
 const fs = require('node:fs'), path = require('node:path'), { spawnSync } = require('node:child_process');
 const RACINE = path.resolve(__dirname, '..', '..');
 const CRATE = path.join(RACINE, 'ariane-rs', 'crates', 'ariane-etat');
-const WASM = path.join(CRATE, 'target', 'wasm32-unknown-unknown', 'release', 'ariane_etat.wasm');
+const WASM = path.join(RACINE, 'ariane-rs', 'target', 'wasm32-unknown-unknown', 'release', 'ariane_etat.wasm');
 const Etat = require('../../src/etat-morceaux.js');
 const Corr = require('../../src/correction-liste.js');
 const Liste = require('../../src/liste-memoire.js');
@@ -12,7 +12,7 @@ const Verts = require('../../src/verts-a-controler.js');
 let coeurEtat = null;
 function assurer() {
   if (!fs.existsSync(WASM)) {
-    const r = spawnSync('cargo', ['build', '--release', '--target', 'wasm32-unknown-unknown', '-q'], { cwd: CRATE, encoding: 'utf8' });
+    const r = spawnSync('cargo', ['build', '--release', '--target', 'wasm32-unknown-unknown', '--features', 'autonome', '-q'], { cwd: CRATE, encoding: 'utf8' });
     if (r.status !== 0) throw Error(r.stderr || r.stdout);
   }
   if (!coeurEtat) coeurEtat = require('../coquille/coeur.js').creer(fs.readFileSync(WASM), { seuilReinstanciation: 32 * 1024 * 1024 });

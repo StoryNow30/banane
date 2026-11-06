@@ -7,7 +7,7 @@
 const fs = require('node:fs'), path = require('node:path'), { execFileSync, spawnSync } = require('node:child_process');
 const RACINE = path.resolve(__dirname, '..');
 const CRATE = path.join(RACINE, 'ariane-rs', 'crates', 'ariane-etat');
-const WASM = path.join(CRATE, 'target', 'wasm32-unknown-unknown', 'release', 'ariane_etat.wasm');
+const WASM = path.join(RACINE, 'ariane-rs', 'target', 'wasm32-unknown-unknown', 'release', 'ariane_etat.wasm');
 const CHROME = process.env.CHROMIUM || '/opt/google/chrome/chrome';
 
 function mince(e) {
@@ -38,7 +38,7 @@ function stats(a) { return { n: a.length, mediane: q(a, 0.5), p90: q(a, 0.9) }; 
 
 function construireWasm() {
   if (fs.existsSync(WASM)) return;
-  const r = spawnSync('cargo', ['build', '--release', '--target', 'wasm32-unknown-unknown', '-q'], { cwd: CRATE, encoding: 'utf8' });
+  const r = spawnSync('cargo', ['build', '--release', '--target', 'wasm32-unknown-unknown', '--features', 'autonome', '-q'], { cwd: CRATE, encoding: 'utf8' });
   if (r.status !== 0) throw Error(r.stderr || r.stdout);
 }
 function rssNatif(entree) {

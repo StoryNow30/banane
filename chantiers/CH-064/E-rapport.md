@@ -1,12 +1,12 @@
 # CH-064-E — État, journal, listes (rapport)
 
-Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` et bras `100..=149` du cœur. Sans dépendance Cargo. Les chiffres décimaux viennent de Ryū 1.0.18 (Ulf Adams, 2018 ; port Rust de David Tolnay), fichiers `common.rs`, `d2s.rs`, `d2s_full_table.rs`, `d2s_intrinsics.rs`. Licence d'amont au choix Apache 2.0 ou Boost 1.0 ; licence choisie pour cette copie : Apache 2.0. Mémoire linéaire du binaire propre plafonnée à 512 Mio, et relâchée par réinstanciation de l'instance.
+Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` (feature `autonome`) et bras `100..=149` du cœur. Le texte des nombres est `ariane_js::nombre::nombre_en_chaine` (`String(x)`), l'implémentation unique du chef. La copie de Ryū a été retirée. Mémoire linéaire du binaire propre plafonnée à 512 Mio, et relâchée par réinstanciation de l'instance. Les symboles `vba_*` n'existent qu'avec `autonome`, désactivée par défaut, pour ne pas doubler l'ABI du cœur.
 
 Référence : le JavaScript de cette branche. Chromium du banc : Chrome/156. 15 répétitions après 3 d'échauffement, médiane et P90 (indice `floor(p·n)`).
 
 ## Parité (ÉTABLI)
 
-`node tools/ch064-e-parite.cjs --corpus` : **IDENTIQUE**, 0 écart.
+`node tools/ch064-e-parite.cjs --corpus`, rejoué après le retrait de Ryū : **IDENTIQUE**, 0 écart. Corpus : 5 journaux, 64 instantanés, 31 segments Écho, 31 sessions.
 
 | Module | Ce qui a été rejoué |
 |---|---|
@@ -36,21 +36,21 @@ Le WASM est plus lent : la traversée coûte plus que le calcul. Sur ce journal,
 | | Avant | Au plus haut | Après |
 |---|---:|---:|---:|
 | Linéaire WASM, banc (36 983 événements) | 1 114 112 o (1,06 Mio) | 70 713 344 o (67,4 Mio) | 1 114 112 o après réinstanciation |
-| Linéaire WASM, corpus entier | — | 460 324 864 o (439 Mio) | 9 568 256 o (9,125 Mio), 15 réinstanciations |
+| Linéaire WASM, corpus entier (rejeu après `nombre_en_chaine`) | — | 482 803 712 o (460,4 Mio) | 9 568 256 o (9,125 Mio), 15 réinstanciations |
 | Tas JS (banc, tas utile) | 83 254 372 o | — | 120 629 200 o (la charge reste en JS) |
 | RSS natif, un appel `construire` | — | HWM 112 728 Kio | RSS 109 384 Kio |
 
-Le plafond 512 Mio n'a pas été atteint. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve : elle ne s'accumule pas d'un appel à l'autre.
+Le plafond 512 Mio n'a pas été atteint. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve : elle ne s'accumule pas d'un appel à l'autre. Le banc Chromium du tableau de temps est celui du binaire précédent ; il n'a pas été refait. Le rejeu du corpus, lui, est celui du binaire qui appelle `nombre_en_chaine`.
 
 ## Qualité (ÉTABLI)
 
 `cargo clippy -p ariane-etat --offline --no-deps --all-targets -- -W clippy::pedantic -D warnings` sort sans avertissement. Les conversions d'une longueur de tableau en `f64`, qui recopient `array.length`, sont nommées en tête de crate.
 
-La surface publique est celle de l'ABI et du binaire de mesure : `appeler`, `parse_json`, `executer`, et les cinq symboles `vba_reserver`, `vba_liberer`, `vba_resultat`, `vba_liberer_resultat`, `vba_appel`. Le reste est `pub(crate)`. `cargo test -p ariane-etat` : 17 essais, dont un essai par fonction encore publique.
+Sans la feature, la surface publique est `appeler`, `parse_json` et `executer`. Avec `autonome`, s'ajoutent `vba_reserver`, `vba_liberer`, `vba_resultat`, `vba_liberer_resultat` et `vba_appel`. Le reste est `pub(crate)`. `cargo test -p ariane-etat` : 12 essais. `cargo test -p ariane-etat --features autonome` : 17 essais, un par fonction alors publique.
 
-Chaque bloc `unsafe` porte un commentaire `// SÛRETÉ :` qui dit l'invariant (pointeur issu de l'allocation, taille, une seule libération ; pour Ryū, écriture dans deux `u64` locaux puis `assume_init`, indice borné avant `get_unchecked`).
+Chaque bloc `unsafe` de l'ABI porte un commentaire `// SÛRETÉ :`. Il n'y en a plus ailleurs : la copie de Ryū a été supprimée. Les nombres passent par `ariane_js::nombre::nombre_en_chaine`. La parité de ce texte est celle du banc du chef (10 000 000 tirages, Node 22 et Chromium 153). `ariane-js` n'est pas modifié.
 
-La copie de Ryū reste locale. Une question est posée au chef pour n'en garder qu'une, dans `ariane-js`, déjà porteur de `Number.prototype.toString`. `ariane-js` n'est pas modifié en attendant.
+Lié au cœur, `ariane-etat` ne garde aucun `Vec`, `String` ni pointeur d'un appel à l'autre : pas de `thread_local`, pas de statique allouée. Le seul tampon qui survit un appel est celui du binaire autonome, libéré au début de l'appel suivant.
 
 ## Lecture
 

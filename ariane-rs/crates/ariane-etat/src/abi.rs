@@ -1,15 +1,23 @@
-//! ABI identique à `ariane-coeur` : la coquille charge ce binaire comme un cœur.
-//! Le cœur unique route déjà les fonctions 100 à 149 vers `appeler`.
+//! ABI du binaire de mesure, identique à celle de `ariane-coeur` pour que la coquille charge ce wasm.
+//! Les symboles `vba_*` ne sont compilés qu'avec la feature `autonome`, désactivée par défaut :
+//! liés au cœur, ils doublonneraient les siens. Le cœur route les fonctions 100 à 149 vers `appeler`.
+//! Rien ici ne survit d'un appel à l'autre hors de cette feature : le tampon du résultat est un
+//! `thread_local` libéré par `vba_liberer_resultat`, et `vba_appel` le libère avant d'en poser un autre.
 use crate::appeler;
 use ariane_js::Echec;
 use ariane_vba::{decoder, encoder, Valeur};
+#[cfg(feature = "autonome")]
 use std::alloc::{alloc, dealloc, Layout};
+#[cfg(feature = "autonome")]
 use std::cell::Cell;
 
+#[cfg(feature = "autonome")]
 const ALIGN: usize = 8;
+#[cfg(feature = "autonome")]
 thread_local! { static RESULTAT: Cell<(usize, usize)> = const { Cell::new((0, 0)) }; }
 
 /// Disposition alignée sur 8 : les blocs de nombres se lisent en `f64` sans copie.
+#[cfg(feature = "autonome")]
 fn disposition(n: usize) -> Layout { Layout::from_size_align(n.max(1), ALIGN).expect("disposition") }
 
 /// Réserve `n` octets alignés sur 8. Le pointeur rendu appartient à l'appelant jusqu'à `vba_liberer` ou `vba_appel`.
@@ -17,6 +25,7 @@ fn disposition(n: usize) -> Layout { Layout::from_size_align(n.max(1), ALIGN).ex
 /// # Safety
 /// `alloc` avec une disposition non nulle (taille au moins 1, alignement 8) rend un pointeur valide pour
 /// `n.max(1)` octets, ou le processus avorte : un pointeur nul passe par `handle_alloc_error`.
+#[cfg(feature = "autonome")]
 #[no_mangle]
 pub extern "C" fn vba_reserver(n: usize) -> *mut u8 {
     let d = disposition(n);
@@ -32,6 +41,7 @@ pub extern "C" fn vba_reserver(n: usize) -> *mut u8 {
 ///
 /// # Safety
 /// `p` est le pointeur rendu par `vba_reserver(n)` pour ce même `n`, et il n'a pas encore été libéré.
+#[cfg(feature = "autonome")]
 #[no_mangle]
 // SÛRETÉ : `p` est le pointeur rendu par `vba_reserver(n)` pour ce même `n`, et il n'a pas encore été libéré.
 pub unsafe extern "C" fn vba_liberer(p: *mut u8, n: usize) {
@@ -40,10 +50,12 @@ pub unsafe extern "C" fn vba_liberer(p: *mut u8, n: usize) {
 }
 
 /// Pointeur du dernier résultat, ou nul si aucun appel n'est en attente de lecture.
+#[cfg(feature = "autonome")]
 #[no_mangle]
 pub extern "C" fn vba_resultat() -> *const u8 { RESULTAT.with(|r| r.get().0 as *const u8) }
 
 /// Libère le dernier résultat. Sans effet s'il n'y en a pas.
+#[cfg(feature = "autonome")]
 #[no_mangle]
 pub extern "C" fn vba_liberer_resultat() {
     RESULTAT.with(|r| {
@@ -75,6 +87,7 @@ pub fn executer(entree: &[u8]) -> Vec<u8> {
 ///
 /// # Safety
 /// `p` vient de `vba_reserver(n)`, les `n` octets sont initialisés, et ce tampon n'est plus utilisé après l'appel.
+#[cfg(feature = "autonome")]
 #[no_mangle]
 // SÛRETÉ : `p` vient de `vba_reserver(n)`, les `n` octets sont initialisés, et ce tampon n'est plus utilisé après l'appel.
 pub unsafe extern "C" fn vba_appel(_fonction: u32, p: *mut u8, n: usize) -> usize {
@@ -105,6 +118,7 @@ mod essais {
         ]))
     }
 
+    #[cfg(feature = "autonome")]
     #[test]
     fn essai_vba_reserver() {
         let p = super::vba_reserver(8);
@@ -114,6 +128,7 @@ mod essais {
         unsafe { super::vba_liberer(p, 8) };
     }
 
+    #[cfg(feature = "autonome")]
     #[test]
     fn essai_vba_liberer() {
         let p = super::vba_reserver(1);
@@ -121,12 +136,14 @@ mod essais {
         unsafe { super::vba_liberer(p, 1) };
     }
 
+    #[cfg(feature = "autonome")]
     #[test]
     fn essai_vba_resultat() {
         super::vba_liberer_resultat();
         assert!(super::vba_resultat().is_null());
     }
 
+    #[cfg(feature = "autonome")]
     #[test]
     fn essai_vba_liberer_resultat() {
         super::vba_liberer_resultat();
@@ -141,6 +158,7 @@ mod essais {
         assert_eq!(v, Valeur::Booleen(true));
     }
 
+    #[cfg(feature = "autonome")]
     #[test]
     fn essai_vba_appel() {
         let entree = entree_actif();
