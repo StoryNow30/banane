@@ -38,7 +38,7 @@ function muter(args,alea){const a=v8.deserialize(v8.serialize(args)),cs=chemins(
  if(alea()<0.15&&!Array.isArray(parent)&&!ArrayBuffer.isView(parent))delete parent[k];
  else{const x=LIMITES[Math.floor(alea()*LIMITES.length)];parent[k]=x&&typeof x==='object'?v8.deserialize(v8.serialize(x)):x;}
  return a;}
-function*cas(modules,{fixtures=true,reel=true,variantes=Number(process.env.CH064D_VARIANTES||4),graine:g=Number(process.env.CH064D_GRAINE||64),max=Infinity}={}){
+function*cas(modules,{fixtures=true,reel=process.env.CH064D_REEL!=="0",variantes=Number(process.env.CH064D_VARIANTES||4),graine:g=Number(process.env.CH064D_GRAINE||64),max=Infinity}={}){
  const alea=graine(g);let i=0;
  function*avec(c){const b=encoder(c.args);if(b===null)return;compte[c.id.startsWith('fixture')?'fixtures':'reel']++;
   yield {id:c.id+'#'+(i++),entree:{module:c.module,f:c.f,args:b}};
