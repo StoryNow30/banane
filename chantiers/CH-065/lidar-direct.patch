@@ -1,6 +1,6 @@
 --- a/vendor/lidar.js
 +++ b/vendor/lidar.js
-@@ -159,6 +159,62 @@
+@@ -159,6 +159,63 @@
      }
      return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
    }
@@ -16,8 +16,9 @@
 +   * une fois, au chargement de ce module, ET au THREE courant. Sans THREE au chargement, aucune référence n'est retenue. À l'instantané,
 +   * le code des fonctions (Function.prototype.toString) doit aussi être un corps canonique de LISTE_BLANCHE_THREE, avec sa révision : un
 +   * prototype modifié AVANT le chargement n'est donc pas cru. Limite assumée : une page qui falsifie Function.prototype.toString.
-+   * La liste ne porte aujourd'hui que les classes de la maquette (tools/ch065-scene.js) : sans le relevé de three.js dans ESV
-+   * (tools/ch065-releve-accesseur.js), aucun accesseur d'ESV n'est reconnu, et la lecture d'ESV reste celle d'origine.
++   * La liste porte les corps de three.js r124 (Potree 1.8.0, que charge ESV : relevé de CH-062 ; corps lus par CH-064 dans le source de
++   * Potree, identiques au caractère près à CORPS_THREE de CH-064) et ceux des classes de la maquette (tools/ch065-scene.js). Le relevé de
++   * la console d'ESV (tools/ch065-releve-accesseur.js) doit confirmer r124 chez l'opérateur.
 +   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, tableau non flottant) : la boucle d'origine, telle quelle ; la décision est prise
 +   * avant tout appel, et le patch n'appelle aucun accesseur (aucune sonde relue). Seule la boucle d'origine reproduit à l'identique les
 +   * appels d'un accesseur inconnu (ordre, entrelacement, effets de bord, exceptions, arrêts sur budget). Règle commune au JS et au Rust
@@ -37,7 +38,7 @@
 +  const TRIO=o=>["getX","getY","getZ"].map(k=>fonctionRangee(o,k));
 +  const protosThree=()=>{const T=globalThis.THREE;return [T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype];};
 +  /* Corps canoniques admis, par classe et révision. À compléter par l'intégrateur avec ceux du relevé de la page réelle. */
-+  const LISTE_BLANCHE_THREE=[["maquette CH-065 (tools/ch065-scene.js)","BufferAttribute","getX(i){const v=this._d(this.array[i*this.itemSize]),e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this._d(this.array[i*this.itemSize+1]);}","getZ(i){return this._d(this.array[i*this.itemSize+2]);}"],["maquette CH-065 (tools/ch065-scene.js)","InterleavedBufferAttribute","getX(i){const v=this.data.array[i*this.data.stride+this.offset],e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this.data.array[i*this.data.stride+this.offset+1];}","getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}"]];
++  const LISTE_BLANCHE_THREE=[["r124 (Potree 1.8.0, libs/three.js/build/three.module.js ; corps identiques à CORPS_THREE de CH-064, 65036e1)","BufferAttribute","function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}","function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}","function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"],["r124 (Potree 1.8.0, libs/three.js/build/three.module.js ; corps identiques à CORPS_THREE de CH-064, 65036e1)","InterleavedBufferAttribute","function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}","function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}","function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"],["maquette CH-065 (tools/ch065-scene.js)","BufferAttribute","getX(i){const v=this._d(this.array[i*this.itemSize]),e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this._d(this.array[i*this.itemSize+1]);}","getZ(i){return this._d(this.array[i*this.itemSize+2]);}"],["maquette CH-065 (tools/ch065-scene.js)","InterleavedBufferAttribute","getX(i){const v=this.data.array[i*this.data.stride+this.offset],e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this.data.array[i*this.data.stride+this.offset+1];}","getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}"]];
 +  const codeDe=f=>{try{return Function.prototype.toString.call(f);}catch{return null;}};
 +  /* Instantané au chargement : les fonctions de référence dont le code est dans la liste blanche, ou rien si THREE est absent. */
 +  const REF_THREE=protosThree().map((p,k)=>({p,classe:["BufferAttribute","InterleavedBufferAttribute"][k]})).filter(r=>!!r.p)
@@ -63,7 +64,7 @@
    async function capture(options) {
      const {viewer:v,rails,origin,guard,meta}=options;
      const bounds=options.bounds||[.5,.4,.3];
-@@ -229,6 +285,58 @@
+@@ -229,6 +286,58 @@
            fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
        }
        integrityChecks.push(unchanged);

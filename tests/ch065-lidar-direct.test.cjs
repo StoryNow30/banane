@@ -151,6 +151,28 @@ test('CH-065 : prototype de THREE modifié AVANT le chargement (Codex) : son cod
     assert.equal(await run(LM),await run(LO));}
   finally{P.getX=av;}
 });
+test('CH-065 : three.js r124 authentique (corps de Potree 1.8.0) → lecture directe, même sortie ; un corps altéré d\'un caractère → boucle d\'origine', async ()=>{
+  const R=require('./fixtures/ch065-three-r124.json'),c=H.captures()[0];
+  /* Classes « r124 » : prototypes portant les fonctions dont le texte est exactement celui de three.js r124. */
+  const fabriquer=(corps)=>{const fn=s=>(0,eval)('('+s+')');function BA(){}function IBA(){}
+    for(const [K,cs] of [[BA,corps.BufferAttribute],[IBA,corps.InterleavedBufferAttribute]]){K.prototype.getX=fn(cs[0]);K.prototype.getY=fn(cs[1]);K.prototype.getZ=fn(cs[2]);}
+    return {BufferAttribute:BA,InterleavedBufferAttribute:IBA};};
+  const run=async(L,T)=>{const sc=scene(c,{graine:2});let lectures=0;
+    /* Chaque position devient une instance « r124 » ; itemSize compté : l'accesseur r124 le lit à chaque appel, la lecture directe non. */
+    for(const e of sc.viewer.scene.pointclouds[0].visibleNodes){const g=e.sceneNode.geometry,a=g.attributes.position,o=Object.create(T.BufferAttribute.prototype);
+      Object.assign(o,{array:a.array,count:a.count,version:0,normalized:false});Object.defineProperty(o,'itemSize',{get(){lectures++;return 3;},enumerable:true});g.attributes.position=o;}
+    const o=await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}});
+    return {s:H.canon(o,['capturedAt','durationMs']),lectures};};
+  const avant=globalThis.THREE;
+  try{
+    const T=fabriquer(R);globalThis.THREE=T;const L124=H.lidar('patche'),LO124=H.lidar('origine');
+    const a=await run(LO124,T),b=await run(L124,T);assert.equal(b.s,a.s);
+    assert.ok(b.lectures<a.lectures/4,`r124 authentique : ${b.lectures} lectures d'itemSize contre ${a.lectures} à l'origine, la lecture directe n'a pas servi`);
+    const alt={BufferAttribute:R.BufferAttribute.map((s,k)=>k?s:s.replace('index * this.itemSize','index*this.itemSize')),InterleavedBufferAttribute:R.InterleavedBufferAttribute};
+    const T2=fabriquer(alt);globalThis.THREE=T2;const L2=H.lidar('patche');
+    const a2=await run(LO124,T2),b2=await run(L2,T2);assert.equal(b2.s,a2.s);assert.equal(b2.lectures,a2.lectures,'corps altéré : boucle d\'origine');
+  }finally{globalThis.THREE=avant;}
+});
 test('CH-065 : l\'essai a des dents — croire un accesseur inconnu est vu', async ()=>{
   const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return null;','if(!a)return null;');
   assert.notEqual(faux,t);const L=H.lidar('patche',faux),c=H.captures()[1];

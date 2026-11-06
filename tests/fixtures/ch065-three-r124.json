@@ -1,0 +1,13 @@
+{
+ "source": "three.js r124 tel qu’embarqué par Potree 1.8.0 (libs/three.js/build/three.module.js), corps de getX/getY/getZ ; repris de CORPS_THREE de CH-064 (65036e1). Code public de bibliothèque, aucune donnée d’ESV.",
+ "BufferAttribute": [
+  "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}",
+  "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}",
+  "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"
+ ],
+ "InterleavedBufferAttribute": [
+  "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}",
+  "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}",
+  "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"
+ ]
+}
