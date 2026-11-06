@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* CH-069 : parité de l'export, JS du tronc contre la façade WASM, dans Node ou dans Chromium (/opt/pw-browsers/chromium).
- *   node tools/ch069-parite.cjs [--moteur node|chromium] [--reels N] [--sans-releve] [--sans-variantes] [--json SORTIE]
+ *   node tools/ch069-parite.cjs [--moteur node|chromium] [--memoire-max OCTETS] [--reels N] [--sans-releve] [--sans-variantes] [--json SORTIE]
  * Cas : tools/ch069-adaptateur.cjs (relevé des essais du tronc, données réelles de banane-data, variantes à graine fixe).
  * Comparaison stricte (tools/ch064-comparer.cjs : types, Object.is, trous, ordre des clés, exceptions). Empreinte : SHA-256
  * de la suite des SHA-256 des sorties canoniques (trame VBA, NaN marqués), une par côté ; égales ⇔ identité.
@@ -52,7 +52,14 @@ async function enChromium(w){
    const f=ArianeFacadeExport.creer(coeur,{NativeExport:G.BananeNativeExport,PhasePli:G.BananePhasePli,GCV1Export:G.BananeGCV1Export,ExportCache:G.BananeExportCache,Zip:G.BananeZip,Coeur:ArianeCoeur});
    const developper=(0,eval)('('+dev+')'),comparable=(0,eval)('('+cmp+')'),j=(0,eval)('('+jouer+')');
    const canon=(ok,v)=>ok?{valeur:Ch064Comparer.sansNaN(v)}:{erreur:[v&&v.constructor&&v.constructor.name,v&&v.message]};
-   const hex=async b=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(x=>x.toString(16).padStart(2,'0')).join('');
+   /* SHA-256 en JS : about:blank n'est pas un contexte sûr, crypto.subtle y est absent. */
+   const K=[];{let n=2,c=0;while(c<64){let p=true;for(let d=2;d*d<=n;d++)if(n%d===0){p=false;break;}if(p){K.push(Math.floor((n**(1/3)%1)*2**32)|0);c++;}n++;}}
+   const hex=async b=>{const l=b.length,n=((l+9+63)>>6)<<6,m=new Uint8Array(n);m.set(b);m[l]=0x80;const dv=new DataView(m.buffer);dv.setUint32(n-4,(l*8)>>>0);dv.setUint32(n-8,Math.floor(l/0x20000000));
+    let h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19].map(x=>x|0);const w=new Int32Array(64),r=(x,k)=>(x>>>k)|(x<<(32-k));
+    for(let o=0;o<n;o+=64){for(let i=0;i<16;i++)w[i]=dv.getInt32(o+4*i);for(let i=16;i<64;i++){const a=w[i-15],b2=w[i-2];w[i]=(w[i-16]+(r(a,7)^r(a,18)^(a>>>3))+w[i-7]+(r(b2,17)^r(b2,19)^(b2>>>10)))|0;}
+     let [A,B,C2,D,E,F2,G2,H]=h;for(let i=0;i<64;i++){const t1=(H+(r(E,6)^r(E,11)^r(E,25))+((E&F2)^(~E&G2))+K[i]+w[i])|0,t2=((r(A,2)^r(A,13)^r(A,22))+((A&B)^(A&C2)^(B&C2)))|0;H=G2;G2=F2;F2=E;E=(D+t1)|0;D=C2;C2=B;B=A;A=(t1+t2)|0;}
+     h=[A,B,C2,D,E,F2,G2,H].map((x,i)=>(x+h[i])|0);}
+    return h.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');};
    const trame=(ok,v)=>{try{return ArianeVba.encoder(canon(ok,v));}catch(x){return new TextEncoder().encode('non encodable : '+x.message);}};
    G.__ch069={async passer(cle,fn){const oct=octets(cle);
     const lire=()=>developper(ArianeVba.decoder(oct));let x,y;
@@ -72,7 +79,7 @@ async function enChromium(w){
 }
 
 async function principal(){
- const w=C.construireCoeur();
+ const mm=arg('--memoire-max');const w=C.construireCoeur(mm?{memoireMax:Number(mm)}:{});
  const r=moteur==='chromium'?await enChromium(w):enNode(w);
  const s=JSON.stringify(r,null,1);if(arg('--json'))fs.writeFileSync(arg('--json'),s+'\n');console.log(s);
  if(r.verdict!=='IDENTIQUE')process.exitCode=1;
