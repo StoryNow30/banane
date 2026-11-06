@@ -16,9 +16,9 @@ const {construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
 /* Chaque module : le script JS qu'il suit dans importScripts et la globale qu'il remplace. */
 const MODULES={
- geometrie:{apres:'src/geometry.js',script:'facade-geometrie.js',corps:"globalThis.BananeGeometry3=ArianeFacadeGeometrie.creer(ArianeCoeurSW,globalThis.BananeGeometry3);"},
- gcv1:{apres:'src/geometry-candidate-v1.js',script:'facade-gcv1.js',corps:"globalThis.BananeGeometry3=ArianeFacadeGcv1.creer(ArianeCoeurSW,globalThis.BananeGeometry3);"},
- convention:{apres:'src/placement-convention.js',script:'facade-convention.js',corps:"globalThis.BananePlacementConvention=ArianeFacadeConvention.creer(ArianeCoeurSW,globalThis.BananePlacementConvention);"},
+ geometrie:{apres:'src/geometry.js',script:'facade-geometrie.js',corps:"globalThis.BananeGeometry3=ARIANE_RS_FACADES.geometrie=ArianeFacadeGeometrie.creer(ArianeCoeurSW,globalThis.BananeGeometry3);"},
+ gcv1:{apres:'src/geometry-candidate-v1.js',script:'facade-gcv1.js',corps:"globalThis.BananeGeometry3=ARIANE_RS_FACADES.gcv1=ArianeFacadeGcv1.creer(ArianeCoeurSW,globalThis.BananeGeometry3);"},
+ convention:{apres:'src/placement-convention.js',script:'facade-convention.js',corps:"globalThis.BananePlacementConvention=ARIANE_RS_FACADES.convention=ArianeFacadeConvention.creer(ArianeCoeurSW,globalThis.BananePlacementConvention);"},
 };
 function construireExtension({modules=Object.keys(MODULES),sortie=path.join(RACINE,'ariane-rs','dist','extension-wasm')}={}){
  const w=construire({silencieux:true});if(!w)throw Error('cargo absent');
@@ -36,7 +36,8 @@ function construireExtension({modules=Object.keys(MODULES),sortie=path.join(RACI
  for(const f of ['vba.js','coeur.js','facade-geometrie.js','facade-gcv1.js','facade-convention.js'])fs.copyFileSync(path.join(RACINE,'ariane-rs','coquille',f),path.join(a,f));
  fs.copyFileSync(w+'.js',path.join(a,'coeur.wasm.js'));
  fs.writeFileSync(path.join(a,'branchement-coeur.js'),"'use strict';\n/* CH-064 : instance du cœur du service worker (mémoire bornée par réinstanciation au-delà de 64 Mio). */\n"+
-  "globalThis.ArianeCoeurSW=ArianeCoeur.creer(ARIANE_COEUR_WASM_B64,{seuilReinstanciation:64*1024*1024});globalThis.ARIANE_RS_MODULES="+JSON.stringify(modules)+";\n");
+  "globalThis.ArianeCoeurSW=ArianeCoeur.creer(ARIANE_COEUR_WASM_B64,{seuilReinstanciation:64*1024*1024});globalThis.ARIANE_RS_MODULES="+JSON.stringify(modules)+";\n"+
+  "globalThis.ARIANE_RS_FACADES={};globalThis.ARIANE_RS_COMPTEURS=()=>({coeur:ArianeCoeurSW.etat(),facades:Object.fromEntries(Object.entries(ARIANE_RS_FACADES).map(([k,f])=>[k,f.compteurs()]))});\n");
  const tete=['ariane/vba.js','ariane/coeur.js','ariane/coeur.wasm.js','ariane/branchement-coeur.js','ariane/facade-geometrie.js','ariane/facade-gcv1.js','ariane/facade-convention.js'];
  const bp=path.join(sortie,'background.js');let b=fs.readFileSync(bp,'utf8');
  const debut="importScripts('vendor/capture-core.js',";if(!b.includes(debut))throw Error('background.js a changé : importScripts introuvable');
