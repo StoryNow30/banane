@@ -12,3 +12,9 @@ ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
 ariane-capture = { path = "../ariane-capture" }
 ariane-geometrie = { path = "../ariane-geometrie" }
+ariane-lidar = { path = "../ariane-lidar" }
+ariane-decision = { path = "../ariane-decision" }
+ariane-etat = { path = "../ariane-etat" }
+
+[lints]
+workspace = true

@@ -1,22 +1,17 @@
-# CH-064-L : lecture LiDAR (boucle par point de vendor/lidar.js, capture()).
-# Racine autonome tant que le chef n'a pas décidé de l'ajouter aux membres de ariane-rs/Cargo.toml :
-# il suffira alors d'ôter la table [workspace] et le [profile.release] ci-dessous (repris de l'espace à l'identique).
-[workspace]
-
 [package]
 name = "ariane-lidar"
-edition = "2021"
-version = "0.0.0"
-publish = false
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
 
+# rlib : lié par ariane-coeur, qui exporte les fonctions `lidar_*` ; cdylib : module autonome ariane_lidar.wasm,
+# à mémoire bornée (build.rs), mesuré par tools/ch064-l-banc.cjs.
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 ariane-js = { path = "../ariane-js" }
+ariane-vba = { path = "../ariane-vba" }
 
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1
-panic = "abort"
+[lints]
+workspace = true

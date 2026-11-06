@@ -1,7 +1,8 @@
+#![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss, clippy::cast_lossless, clippy::float_cmp)]
 //! Plancher matériel : deux produits matrice-vecteur par point, sans contrôle (cargo run --release --example plancher).
 fn main() {
     let mut g = 1u64;
-    let src: Vec<f32> = (0..3 * 810_000).map(|_| { g = g.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407); (((g >> 11) as f64 / (1u64 << 53) as f64 - 0.5) * 100.0) as f32 }).collect();
+    let src: Vec<f32> = (0..3 * 810_000).map(|_| { g = g.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407); (((g >> 11) as f64 / (1u64 << 53) as f64 - 0.5) * 100.0) as f32 }).collect();
     let m: [f64; 32] = std::hint::black_box([1.0; 32]);
     let mut v = vec![];
     for _ in 0..15 {

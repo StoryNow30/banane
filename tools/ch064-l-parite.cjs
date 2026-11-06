@@ -69,7 +69,7 @@ async function noeudNode(arg){
   moteur:'node '+process.version,
   async vue(d,v){const sc=S.construireScene(d,v,7+v);return comparerTrois(L,sc,pause,undefined,sc.points);},
   async synth(fab){const {scene,options}=fab();return comparerTrois(L,scene,pause,options,0);},
-  memoire:()=>wasm.memoireOctets(),fermer(){},relances:()=>0,
+  memoire:()=>wasm.memoireOctets(),fermer(){},relances:()=>0,tranches:()=>({wasm:wasm.tranches(),js:js.tranches()}),
   noyaux:{wasm,js}};
  async function comparerTrois(L,sc,pause,options,points){
   const o=await K.executerCapture(L.origine,sc,undefined,pause,options),w=await K.executerCapture(L.variante,sc,wasm,pause,options),j=await K.executerCapture(L.variante,sc,js,pause,options);
@@ -112,7 +112,9 @@ async function noeudChromium(){
   vue:async(d,v)=>{if(++depuis>300)await relancer();
    return appel(p=>p.evaluate(async ({d,v})=>{const sc=construireScene(d,v,7+v);return comparerTrois(sc,undefined,sc.points);},{d,v}));},
   synth:(nom)=>appel(p=>p.evaluate(async nom=>{const c=casSynthetiques().find(x=>x[0]===nom)[1]();return comparerTrois(c.scene,c.options,0);},nom)),
-  memoire:()=>appel(p=>p.evaluate(()=>NW.memoireOctets())),fermer:()=>E.nav.close()};
+  memoire:()=>appel(p=>p.evaluate(()=>NW.memoireOctets())),fermer:()=>E.nav.close(),
+  // compte de la page courante (remis à zéro à chaque relance du navigateur)
+  tranches:()=>appel(p=>p.evaluate(()=>({wasm:NW.tranches(),js:NJ.tranches()})))};
 }
 
 async function main(){
@@ -133,7 +135,7 @@ async function main(){
    for(const k in r.ms)bilan.msTotal[k]+=r.ms[k];}
   if(bilan.captures%100===0)console.log(bilan.captures+' captures, '+bilan.vues+' vues, identiques wasm '+bilan.identiquesWasm+' js '+bilan.identiquesJs+', '+((Date.now()-t0)/1000|0)+' s');
  }
- bilan.memoireWasmOctets=await M.memoire();bilan.relancesNavigateur=M.relances();await M.fermer();
+ bilan.memoireWasmOctets=await M.memoire();bilan.relancesNavigateur=M.relances();bilan.tranchesNoyau=await M.tranches();await M.fermer();
  for(const k in bilan.msTotal)bilan.msTotal[k]=Math.round(bilan.msTotal[k]);
  const total=bilan.synthetiques.length+bilan.vues;bilan.identique=bilan.identiquesWasm===total&&bilan.identiquesJs===total;
  console.log(JSON.stringify({...bilan,synthetiques:undefined},null,1));

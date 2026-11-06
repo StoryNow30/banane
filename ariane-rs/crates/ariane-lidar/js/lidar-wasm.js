@@ -60,7 +60,7 @@
   return texte.slice(0,a)+BRANCHE+texte.slice(a);
  }
  /* ---------- partie commune aux deux noyaux ---------- */
- const MESSAGES=[null,'Projection non finie.','Transformation non finie.'];
+ const MESSAGES=[null,'Projection non finie.','Transformation non finie.'],VERSION_ARENE=1;
  const nombre=x=>typeof x==='number'&&!Number.isNaN(x);
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
  function eligibleAvec(octetsEntree,capaciteMax){
@@ -100,31 +100,32 @@
  function noyauWasm(source){
   const module=source instanceof WebAssembly.Module?source:new WebAssembly.Module(source);
   const X=new WebAssembly.Instance(module,{}).exports,buf=X.memory.buffer;
+  if(typeof X.lidar_version_arene!=='function'||X.lidar_version_arene()!==VERSION_ARENE)throw Error('CH-064-L : cœur LiDAR désaccordé (version d\u2019arène).');
   // La mémoire ne grandit jamais (initiale = maximale) : ces vues restent valides toute la vie de l'instance.
   const pE=X.lidar_entree(),octets=X.lidar_entree_octets(),cap=X.lidar_capacite();
   const F32=new Float32Array(buf,pE,octets/4),F64=new Float64Array(buf,pE,octets/8);
   const M=new Float64Array(buf,X.lidar_matrices(),131),E=new Float64Array(buf,X.lidar_etat(),24);
   const R=new Uint32Array(buf,X.lidar_retenus(),cap),S=new Float64Array(buf,X.lidar_scene(),3*cap);
-  let copieOctets=0;
+  let copieOctets=0,tranches=0;
   return {nom:'wasm',eligible:eligibleAvec(octets,cap),
    debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
    tranche(L,di,nb,limite,retour){
     const debut=di*L.stride+L.offset,lus=nb>0?(nb-1)*L.stride+3:0;
-    (L.f64?F64:F32).set(L.src.subarray(debut,debut+lus));copieOctets+=lus*(L.f64?8:4);
+    (L.f64?F64:F32).set(L.src.subarray(debut,debut+lus));copieOctets+=lus*(L.f64?8:4);tranches++;
     E[0]=retour;
     const k=(L.f64?X.lidar_parcourir_f64:X.lidar_parcourir_f32)(nb,L.stride,di,limite)>>>0;
     if(E[5]===3)throw Error('CH-064-L : tranche refusée par le noyau (dépassement de l’arène).');
     return resultat(E,k,R,S);
    },
    proches(cible,SIDES){ecrireProches(E,cible,SIDES);},
-   memoireOctets:()=>buf.byteLength,copieOctets:()=>copieOctets};
+   memoireOctets:()=>buf.byteLength,copieOctets:()=>copieOctets,tranches:()=>tranches};
  }
 
  /* ---------- noyau JS sans allocation (même algorithme que la crate) ---------- */
  function noyauJs(){
   const cap=4096,M=new Float64Array(131),E=new Float64Array(24),R=new Uint32Array(cap),S=new Float64Array(3*cap);
   const P=new Float64Array(3),Q=new Float64Array(3),T=new Float64Array(3),L0=new Float64Array(3),L1=new Float64Array(3);
-  let err=0;
+  let err=0,tranches=0;
   /* C.point(M[o..o+16], x,y,z) → sortie ; err = 1 (Projection) ou 2 (Transformation). */
   function pt(o,x,y,z,sortie){
    const w=M[o+3]*x+M[o+7]*y+M[o+11]*z+M[o+15];
@@ -145,7 +146,7 @@
    debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
    tranche(Ld,di,nb,limite,retour){
     const src=Ld.src,stride=Ld.stride,b0=M[128],b1=M[129],b2=M[130];
-    let rt=retour,traites=0,nonFinis=0,g=0,d=0,k=0;err=0;
+    let rt=retour,traites=0,nonFinis=0,g=0,d=0,k=0;err=0;tranches++;
     points:for(let j=0;j<nb;j++){
      if(k>=limite)break;
      const base=(di+j)*stride+Ld.offset,x=src[base],y=src[base+1],z=src[base+2],i=di+j;
@@ -171,7 +172,7 @@
     return resultat(E,k,R,S);
    },
    proches(cible,SIDES){ecrireProches(E,cible,SIDES);},
-   memoireOctets:()=>0,copieOctets:()=>0};
+   memoireOctets:()=>0,copieOctets:()=>0,tranches:()=>tranches};
  }
  return {variante,noyauWasm,noyauJs,DEBUT,FIN};
 });

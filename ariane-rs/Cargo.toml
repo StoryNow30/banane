@@ -1,7 +1,7 @@
 # CH-064 : espace Cargo de la réécriture d'Ariane en Rust. Hors paquet (tools/package.py exclut ariane-rs/).
 [workspace]
 resolver = "2"
-members = ["crates/ariane-js", "crates/ariane-vba", "crates/ariane-capture", "crates/ariane-geometrie", "crates/ariane-coeur", "crates/ariane-hote"]
+members = ["crates/ariane-js", "crates/ariane-vba", "crates/ariane-capture", "crates/ariane-geometrie", "crates/ariane-lidar", "crates/ariane-decision", "crates/ariane-etat", "crates/ariane-coeur", "crates/ariane-hote"]
 
 [workspace.package]
 edition = "2021"
@@ -13,3 +13,23 @@ opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
+
+# Règles d'écriture (D-294, consigne de l'opérateur : qualité d'écriture du Rust). Chaque membre les hérite par
+# `[lints] workspace = true`. Seules exceptions, justifiées par le principe du port (une fonction JS = une fonction Rust,
+# mêmes noms, même ordre des opérations, pour qu'un relecteur compare ligne à ligne) :
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# variables d'une lettre (u, z, p, q, m…) reprises telles quelles du JS de référence
+many_single_char_names = "allow"
+# une fonction du JS de référence reste une seule fonction ici, quelle que soit sa longueur
+too_many_lines = "allow"
+# comptes (longueurs de tableaux) convertis en nombres JS : toujours < 2^53, conversion exacte
+cast_precision_loss = "allow"
+# boucles indexées et comparaisons gardent la forme du JS, y compris leur comportement sur NaN
+needless_range_loop = "allow"
+neg_cmp_op_on_partial_ord = "allow"
+manual_range_contains = "allow"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+missing_docs = "warn"

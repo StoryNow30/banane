@@ -1,11 +1,11 @@
 'use strict';
 /* CH-064-L : outillage commun de la lecture LiDAR (construction du noyau, chargement, exécution d'une vue).
- * Rien de produit n'est versionné : le .wasm est dans ariane-rs/crates/ariane-lidar/target (ignoré). */
+ * Rien de produit n'est versionné : le .wasm autonome (mémoire bornée) est dans ariane-rs/target (ignoré). */
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
-const RACINE=path.resolve(__dirname,'..'),CRATE=path.join(RACINE,'ariane-rs','crates','ariane-lidar');
-const WASM=path.join(CRATE,'target','wasm32-unknown-unknown','release','ariane_lidar.wasm');
+const RACINE=path.resolve(__dirname,'..'),ESPACE=path.join(RACINE,'ariane-rs'),CRATE=path.join(ESPACE,'crates','ariane-lidar');
+const WASM=path.join(ESPACE,'target','wasm32-unknown-unknown','release','ariane_lidar.wasm');
 function construireWasm(){
- const r=spawnSync('cargo',['build','--release','--target','wasm32-unknown-unknown'],{cwd:CRATE,encoding:'utf8'});
+ const r=spawnSync('cargo',['build','--release','--target','wasm32-unknown-unknown','-p','ariane-lidar'],{cwd:ESPACE,encoding:'utf8'});
  if(r.status!==0)throw Error('Construction de ariane_lidar.wasm en échec :\n'+r.stderr);
  return WASM;
 }

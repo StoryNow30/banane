@@ -1,4 +1,4 @@
-//! CH-064-L : lecture du LiDAR en Rust, identique au bit près à la boucle par point de `capture()` dans `vendor/lidar.js`.
+//! CH-064-L : lecture du `LiDAR` en Rust, identique au bit près à la boucle par point de `capture()` dans `vendor/lidar.js`.
 //!
 //! Ce qui est porté : le parcours d'un nœud Potree non indexé, à positions flottantes (Float32 ou Float64), non normalisées,
 //! lues dans le tableau du nœud (`array[i*stride+offset+k]`) — soit la boucle `for(let di=drawStart;di<drawEnd;di++)`.
@@ -15,20 +15,30 @@
 //! - L'horloge (`Date.now()-started>maxMillis`) n'est PAS lue ici : la coquille la lit entre deux tranches (≤ 4 096 points).
 pub mod abi;
 
+/// Version du format de l'arène (disposition de `MATS`, `ETAT`, des sorties et des codes d'erreur) : la coquille refuse
+/// un cœur dont `lidar_version_arene()` diffère de la sienne.
+pub const VERSION_ARENE: u32 = 1;
+
 /// Les deux exceptions que `C.point` peut lever, dans le texte exact de `vendor/capture-core.js`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Erreur {
+    /// `w` non fini ou de valeur absolue < 1e-15 : « Projection non finie. »
     Projection,
+    /// Une coordonnée transformée non finie : « Transformation non finie. »
     Transformation,
 }
 
 impl Erreur {
+    /// Code écrit dans `ETAT[E_ERREUR]` (0 : aucune ; 3 : tranche refusée par l'ABI).
+    #[must_use]
     pub const fn code(self) -> f64 {
         match self {
             Erreur::Projection => 1.0,
             Erreur::Transformation => 2.0,
         }
     }
+    /// Message de l'`Error` levée par la coquille, identique à celui de `vendor/capture-core.js`.
+    #[must_use]
     pub const fn message(self) -> &'static str {
         match self {
             Erreur::Projection => "Projection non finie.",
@@ -38,35 +48,50 @@ impl Erreur {
 }
 
 /// Décalages des matrices dans le bloc `MATS` (16 nombres chacune, colonne majeure, comme Three.js).
-pub const M_MODELE: usize = 0; // model = rebase(n.world, origin)
-pub const M_INVERSE: usize = 16; // invModel = C.inverse(model)
-pub const M_LOCAL: [usize; 2] = [32, 48]; // transforms[s] = sceneRelativeToProfileLocal(s) × model
-pub const M_PROFIL_SCENE: [usize; 2] = [64, 80]; // frames[s].profileLocalToSceneRelative
-pub const M_SCENE_PROFIL: [usize; 2] = [96, 112]; // frames[s].sceneRelativeToProfileLocal
-pub const M_BORNES: usize = 128; // bounds[0..3]
+/// `model` = `C.rebase(n.world, origin)`.
+pub const M_MODELE: usize = 0;
+/// `invModel` = `C.inverse(model)`.
+pub const M_INVERSE: usize = 16;
+/// `transforms[s]` = `C.multiply(frames[s].sceneRelativeToProfileLocal, model)`.
+pub const M_LOCAL: [usize; 2] = [32, 48];
+/// `frames[s].profileLocalToSceneRelative`.
+pub const M_PROFIL_SCENE: [usize; 2] = [64, 80];
+/// `frames[s].sceneRelativeToProfileLocal`.
+pub const M_SCENE_PROFIL: [usize; 2] = [96, 112];
+/// `bounds[0..3]` (demi-étendues de la fenêtre, repère profil).
+pub const M_BORNES: usize = 128;
+/// Taille du bloc `MATS`.
 pub const N_MATS: usize = 131;
 
 /// Disposition du bloc `ETAT` (nombres f64) partagé avec la coquille.
-pub const E_ALLER_RETOUR: usize = 0; // out.quality.roundTripMaxSceneUnits (entrée et sortie)
-pub const E_TRAITES: usize = 1; // points inspectés par l'appel
-pub const E_NON_FINIS: usize = 2; // positions non finies de l'appel
-pub const E_PAR_RAIL: [usize; 2] = [3, 4]; // perRail.left / perRail.right de l'appel
-pub const E_ERREUR: usize = 5; // 0, ou Erreur::code()
-pub const E_PROCHE: [usize; 2] = [6, 15]; // par côté : [présent, distance, indice, local×3, scène×3] (nearestToRailOrigin)
+/// `out.quality.roundTripMaxSceneUnits` (entrée et sortie).
+pub const E_ALLER_RETOUR: usize = 0;
+/// Points inspectés par l'appel.
+pub const E_TRAITES: usize = 1;
+/// Positions non finies rencontrées par l'appel.
+pub const E_NON_FINIS: usize = 2;
+/// `perRail.left` / `perRail.right` ajoutés par l'appel.
+pub const E_PAR_RAIL: [usize; 2] = [3, 4];
+/// 0, ou `Erreur::code()`, ou 3 (tranche refusée).
+pub const E_ERREUR: usize = 5;
+/// Par côté, `nearestToRailOrigin` : `[présent, distance, indice, local×3, scène×3]`.
+pub const E_PROCHE: [usize; 2] = [6, 15];
+/// Taille du bloc `ETAT`.
 pub const N_ETAT: usize = 24;
 
 /// Coordonnée lue dans le tampon du nœud : `Float32Array` (élargi en f64 sans perte) ou `Float64Array`.
 pub trait Coord: Copy {
+    /// La coordonnée en nombre JS.
     fn f64(self) -> f64;
 }
 impl Coord for f32 {
-    #[inline(always)]
+    #[inline]
     fn f64(self) -> f64 {
-        self as f64
+        f64::from(self)
     }
 }
 impl Coord for f64 {
-    #[inline(always)]
+    #[inline]
     fn f64(self) -> f64 {
         self
     }
@@ -75,13 +100,20 @@ impl Coord for f64 {
 type Mat = [f64; 16];
 
 /// `C.point(m, [x,y,z])` de `vendor/capture-core.js`, la matrice commençant à `m[o]`.
-#[inline(always)]
+///
+/// # Errors
+/// `Erreur::Projection` ou `Erreur::Transformation`, aux mêmes conditions que le JS.
+///
+/// # Panics
+/// Si `m` a moins de `o + 16` nombres.
+#[inline]
 pub fn point(m: &[f64], o: usize, x: f64, y: f64, z: f64) -> Result<[f64; 3], Erreur> {
     pt(m[o..o + 16].try_into().expect("matrice de 16"), x, y, z)
 }
 
 /// `C.point` sur une matrice de taille fixe (indices vérifiés à la compilation).
-#[inline(always)]
+#[inline]
+#[allow(clippy::float_cmp)] // w == 1 exactement : seul cas où la division est sautée (x/1 = x au bit près)
 fn pt(m: &Mat, x: f64, y: f64, z: f64) -> Result<[f64; 3], Erreur> {
     let w = m[3] * x + m[7] * y + m[11] * z + m[15];
     if !w.is_finite() || w.abs() < 1e-15 {
@@ -99,13 +131,13 @@ fn pt(m: &Mat, x: f64, y: f64, z: f64) -> Result<[f64; 3], Erreur> {
 }
 
 /// `C.distance(a, b)` = `Math.hypot(...a.map((x,i)=>x-b[i]))`.
-#[inline(always)]
+#[inline]
 fn distance(a: &[f64; 3], b: &[f64; 3]) -> f64 {
     ariane_js::hypot(&[a[0] - b[0], a[1] - b[1], a[2] - b[2]])
 }
 
 /// `inRoi(p, bounds)` = `p.every((x,i)=>Math.abs(x)<=bounds[i])`.
-#[inline(always)]
+#[inline]
 fn dans(p: &[f64; 3], b: &[f64; 3]) -> bool {
     p[0].abs() <= b[0] && p[1].abs() <= b[1] && p[2].abs() <= b[2]
 }
@@ -113,7 +145,7 @@ fn dans(p: &[f64; 3], b: &[f64; 3]) -> bool {
 /// Seuil d'élagage du plus proche, au carré : un point dont `x²+y²+z²` (somme non compensée) dépasse ce seuil ne peut PAS
 /// battre `meilleur`. La somme non compensée diffère du carré de l'hypot de V8 de quelques ulp ; la marge relative de 1e-9
 /// en couvre des millions. Un meilleur non fini, ou un carré qui déborde, rend +∞ : tout point est alors calculé.
-#[inline(always)]
+#[inline]
 fn seuil_carre(meilleur: f64) -> f64 {
     if !meilleur.is_finite() {
         return f64::INFINITY;
@@ -124,7 +156,7 @@ fn seuil_carre(meilleur: f64) -> f64 {
 
 /// Faut-il calculer `Math.hypot(...l)` ? Oui si aucun plus proche, si la somme est nulle, sous-normale, infinie ou NaN
 /// (zone où la borne n'est pas garantie), ou si elle ne dépasse pas le seuil.
-#[inline(always)]
+#[inline]
 fn a_calculer(l: &[f64; 3], present: bool, seuil2: f64) -> bool {
     if !present {
         return true;
@@ -138,7 +170,13 @@ fn a_calculer(l: &[f64; 3], present: bool, seuil2: f64) -> bool {
 /// le maximum des allers-retours (cumulé) et le plus proche par côté (cumulé sur le nœud).
 /// S'arrête AVANT un point si `retenus_avant + retenus_de_l_appel >= limite` (contrôle `pointsSceneRelative.length>=maxPoints`).
 /// Sur exception, `etat[E_ERREUR]` porte son code ; les points retenus AVANT elle sont rendus (la coquille les traite, puis lève).
+///
+/// # Panics
+/// Si `stride < 3`, si `m` a moins de `N_MATS` nombres, `etat` moins de `N_ETAT`, ou si `retenus` / `scene` sont plus courts
+/// que les points retenus (l'ABI leur donne la capacité d'une tranche entière).
 #[allow(clippy::too_many_arguments)]
+// Indices de points : un tampon Potree (Float32Array) a moins de 2^32 éléments, l'indice tient dans un u32.
+#[allow(clippy::cast_possible_truncation)]
 pub fn parcourir<T: Coord>(
     src: &[T],
     stride: usize,
@@ -203,7 +241,7 @@ pub fn parcourir<T: Coord>(
                 };
                 present[s] = true;
                 seuil2[s] = seuil_carre(d);
-                proche[s] = [1.0, d, i as f64, local[s][0], local[s][1], local[s][2], p[0], p[1], p[2]];
+                proche[s] = [1.0, d, f64::from(i), local[s][0], local[s][1], local[s][2], p[0], p[1], p[2]];
             }
         }
         if !(dedans[0] || dedans[1]) {
@@ -249,6 +287,7 @@ pub fn parcourir<T: Coord>(
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp, clippy::unreadable_literal, clippy::cast_possible_truncation, clippy::cast_precision_loss)] // essais au bit près
 mod essais {
     use super::*;
     use std::vec::Vec;
@@ -336,13 +375,13 @@ mod essais {
             g = g.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
             ((g >> 11) as f64 / (1u64 << 53) as f64 - 0.5) * 8.0
         };
-        let src: Vec<f32> = (0..60000).map(|_| al() as f32).collect();
+        let src: Vec<f32> = (0..60_000).map(|_| al() as f32).collect();
         let (mut e, mut r, mut s) = ([0.0; N_ETAT], std::vec![0u32; 20000], std::vec![0.0; 60000]);
         parcourir(&src, 3, 20000, 0, f64::INFINITY, &m, &mut e, &mut r, &mut s);
         // référence sans élagage
         let mut best = [(false, 0.0, 0u32); 2];
         for j in 0..20000 {
-            let (x, y, z) = (src[3 * j] as f64, src[3 * j + 1] as f64, src[3 * j + 2] as f64);
+            let (x, y, z) = (f64::from(src[3 * j]), f64::from(src[3 * j + 1]), f64::from(src[3 * j + 2]));
             for (sd, b) in best.iter_mut().enumerate() {
                 let l = point(&m, M_LOCAL[sd], x, y, z).unwrap();
                 let d = ariane_js::hypot(&l);
@@ -353,7 +392,7 @@ mod essais {
         }
         for sd in 0..2 {
             assert_eq!(e[E_PROCHE[sd] + 1].to_bits(), best[sd].1.to_bits());
-            assert_eq!(e[E_PROCHE[sd] + 2], best[sd].2 as f64);
+            assert_eq!(e[E_PROCHE[sd] + 2], f64::from(best[sd].2));
         }
     }
 }

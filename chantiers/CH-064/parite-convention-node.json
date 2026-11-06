@@ -2,18 +2,18 @@
  "format": "ch064-parite-v1",
  "moteur": "node v22.23.4",
  "module": "convention",
- "cas": 7544,
- "identiques": 7544,
+ "cas": 10230,
+ "identiques": 10230,
  "ecarts": [],
  "empreintes": {
-  "js": "392e92232c5540634c77f6dd54a782f951d4578200d4d8a5572b38d2584c1f26",
-  "rs": "392e92232c5540634c77f6dd54a782f951d4578200d4d8a5572b38d2584c1f26"
+  "js": "cf80977556592b5f6a24c87386f266c06f0c7b0f16fe1a3941d35baf210da5a8",
+  "rs": "cf80977556592b5f6a24c87386f266c06f0c7b0f16fe1a3941d35baf210da5a8"
  },
  "temps": {
-  "jsMediane": 0.487580999993952,
-  "jsP95": 1.6218809999991208,
-  "rsMediane": 0.5918600000004517,
-  "rsP95": 2.025087000001804
+  "jsMediane": 0.4663329999893904,
+  "jsP95": 1.6011640000215266,
+  "rsMediane": 0.5341159999952652,
+  "rsP95": 1.6918250000016997
  },
  "memoireCoeur": {
   "reinstanciations": 0,
@@ -21,8 +21,8 @@
   "memoire": 2686976
  },
  "bilanAdaptateur": {
-  "coeur": 7260,
-  "repliHorsDomaine": 284,
+  "coeur": 9880,
+  "repliHorsDomaine": 350,
   "repliFormat": 0
  },
  "sources": {
