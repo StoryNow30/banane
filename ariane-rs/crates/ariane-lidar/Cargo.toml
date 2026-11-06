@@ -1,0 +1,22 @@
+# CH-064-L : lecture LiDAR (boucle par point de vendor/lidar.js, capture()).
+# Racine autonome tant que le chef n'a pas décidé de l'ajouter aux membres de ariane-rs/Cargo.toml :
+# il suffira alors d'ôter la table [workspace] et le [profile.release] ci-dessous (repris de l'espace à l'identique).
+[workspace]
+
+[package]
+name = "ariane-lidar"
+edition = "2021"
+version = "0.0.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ariane-js = { path = "../ariane-js" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
