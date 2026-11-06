@@ -2,7 +2,7 @@
 /* CH-031 — JOURNAL DE LA REMISE DE LA VUE. Deux étages : (1) les fonctions pures de src/deplacement-vue.js (détail des événements,
  * lecture du texte d'échec, bilan sans numéro de cut) ; (2) le service worker réel en VM (même montage que deplacer-vue-sw-actif) :
  * un `deplacement-vue` par côté amené, un `deplacement-vue-remise` par pose, un `deplacement-vue-bilan` à la clôture du lot, et
- * AUCUN changement des commandes envoyées à la page (comparées au cas sans rapport). Données synthétiques. */
+ * AUCUN changement des commandes envoyées à la page (comparées au cas sans rapport). Données synthétiques. */ /* Remise en échec et réglage coupé : tests/deplacement-vue-journal-echec.test.cjs. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const DV=require('../src/deplacement-vue.js'),S=require('../src/settings.js');
 const {lot,EsvVue}=require('./helpers/deplacer-vue-lot.cjs');
@@ -60,13 +60,3 @@ test('lot : la pose avec déplacement journalise le côté, la remise faite et l
  const bl=ev(b,'deplacement-vue-bilan');assert.equal(bl.length,1,'un bilan');assert.ok(bl[0].deplacements>=1);assert.equal(bl[0].identity,undefined);assert.ok(!/"cut"/.test(JSON.stringify(bl[0])));
 });
 
-test('lot : remise en échec (la page lève) : l\'écart est lu, le résultat est « echec » et l\'erreur d\'origine traverse',async()=>{
- const {b}=await lotRapport({echec:'Vue ESV non restituée après le déplacement de vue (échelle à 3,5 % de la vue habituelle) : les deux rails sont posés.'});
- const r=ev(b,'deplacement-vue-remise').filter(x=>x.phase==='pose');assert.equal(r.length,1);assert.equal(r[0].resultat,'echec');assert.equal(r[0].ecartEchelle,0.035);
- assert.ok(ev(b,'deplacer-vue').some(e=>e.phase==='pose'&&/non restituée/.test(e.erreur)),'l\'événement existant est inchangé');
-});
-
-test('réglage coupé : aucun événement nouveau',async()=>{
- const {b}=await lot({});
- for(const t of ['deplacement-vue','deplacement-vue-remise','deplacement-vue-bilan'])assert.equal(ev(b,t).length,0,t);
-});
