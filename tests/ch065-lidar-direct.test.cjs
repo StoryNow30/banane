@@ -43,7 +43,7 @@ test('CH-065 : le chemin direct sert sur un tampon flottant non indexé, et pas 
     else assert.ok(e.n>=n,`${nom} : ${e.n} lectures par accesseur pour ${n} points, la boucle d'origine n'a pas servi`);
   }
 });
-test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu lu point par point comme l\'origine : même sortie, chaque point lu par l\'accesseur', async ()=>{
+test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu : boucle d\'origine, même sortie, chaque point lu par l\'accesseur', async ()=>{
   const c=H.captures()[0],n=c.pointsSceneRelative.length;
   try{globalThis.THREE=undefined;
     for(const opts of [{},{entrelace:true},{type:Float64Array},{yieldEvery:7},{drawRange:{start:3.7,count:1000.5}}]){
@@ -82,9 +82,17 @@ test('CH-065 : contre-exemple 2 de Codex — accesseur qui lève là où l\'orig
   const cas={maxPoints:10,leve},a=await codex(LO,c,{...cas}),b=await codex(LP,c,{...cas});
   assert.ok(!a.erreur,'l\'origine ne doit pas lever');assert.deepEqual(b,a);
 });
-test('CH-065 : l\'essai a des dents — lire le tableau à la place d\'un accesseur inconnu est vu', async ()=>{
-  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(accesseur){x=lire(i,0);y=lire(i,1);z=lire(i,2);}','if(false){x=lire(i,0);y=lire(i,1);z=lire(i,2);}')
-    .replace('parAccesseur={accesseur:true};','parAccesseur={accesseur:true,src,stride:meta.stride,offset:meta.offset};');
+test('CH-065 : scénario du chef de CH-064 — maxPoints:3, accesseur inconnu : mêmes appels d\'accesseur que l\'origine, dans le même ordre', async ()=>{
+  const c=H.captures()[2];
+  const run=async L=>{const sc=scene(c,{graine:9}),log=[];
+    for(const e of sc.viewer.scene.pointclouds[0].visibleNodes){const a=e.sceneNode.geometry.attributes.position;
+      for(const k of ['getX','getY','getZ']){const g=a[k].bind(a);a[k]=i=>{log.push(k+i);return g(i);};}}
+    const o=await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{},maxPoints:3});
+    return {s:H.canon(o,['capturedAt','durationMs']),log:log.join(',')};};
+  const a=await run(LO),b=await run(LP);assert.equal(b.log,a.log);assert.equal(b.s,a.s);
+});
+test('CH-065 : l\'essai a des dents — croire un accesseur inconnu est vu', async ()=>{
+  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return null;','if(!a)return null;');
   assert.notEqual(faux,t);const L=H.lidar('patche',faux),c=H.captures()[1];
   const run=async L=>{const sc=scene(c,{graine:3});const e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,cible=Math.floor(a.count/2)+1;
     const g=a.getX.bind(a);a.getX=i=>i===cible?g(i)+.05:g(i);

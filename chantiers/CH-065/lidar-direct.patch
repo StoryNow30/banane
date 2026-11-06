@@ -1,6 +1,6 @@
 --- a/vendor/lidar.js
 +++ b/vendor/lidar.js
-@@ -159,6 +159,51 @@
+@@ -159,6 +159,49 @@
      }
      return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
    }
@@ -11,12 +11,10 @@
 +   *  - soit sans accesseur getX/getY/getZ (C.attribute lit alors lui-même le tableau),
 +   *  - soit avec les accesseurs de Three.js de la page, reconnus par IDENTITÉ de fonction (THREE.BufferAttribute ou
 +   *    THREE.InterleavedBufferAttribute) : leur code est la lecture du tableau, la dénormalisation étant exclue.
-+   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, sondes discordantes) : aucune lecture directe, aucune preuve. Chaque point est lu
-+   * par la lecture même de C.attribute (n.attribute.get), composante X, Y puis Z, au même moment et dans le même ordre que la boucle
-+   * d'origine, seulement pour les points qu'elle lit, dans trois variables au lieu d'un tableau. Mêmes appels d'accesseur, donc mêmes
-+   * effets de bord et mêmes exceptions ; le gain qui reste est l'allocation par point évitée.
-+   * Ni des sondes ni une preuve exhaustive ne suffisent pour lire le tableau à la place d'un accesseur inconnu (défauts relevés par Codex
-+   * sur le portage Rust, PR #25 : un écart hors des sondes ; un accesseur à effet de bord ; un accesseur qui lève là où l'origine ne lit pas).
++   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, sondes discordantes) : la boucle d'origine, telle quelle. Seule elle reproduit à
++   * l'identique les appels d'un accesseur inconnu (ordre, effets de bord, exceptions, arrêts sur budget). Ni des sondes, ni une preuve
++   * exhaustive, ni une lecture d'avance par l'accesseur ne suffisent (défauts relevés par Codex et par CH-064 sur le portage Rust, PR #25).
++   * Règle commune au JS et au Rust (décision de l'intégrateur du 06/11).
 +   * Le chemin direct fait les mêmes opérations flottantes, dans le même ordre, que C.point, inRoi, Math.hypot et C.distance, lève les
 +   * mêmes exceptions aux mêmes points, et garde le budget, les pauses et les contrôles d'intégrité de la boucle d'origine, point par point.
 +   * Seuls les points retenus (et les plus proches de l'origine des rails) allouent, comme avant. Parité : tests/ch065-lidar-direct.test.cjs. */
@@ -29,12 +27,12 @@
 +  }
 +  function lectureDirecte(n,indexAttr,transforms,drawStart,drawEnd,probes) {
 +    if(indexAttr||transforms.length!==2)return null;
-+    const a=n.position,meta=n.attribute.metadata||{},src=a?.array||a?.data?.array,parAccesseur={accesseur:true};
-+    if(!a||!accesseursReconnus(a))return parAccesseur;
-+    if(a.normalized||a.isFloat16BufferAttribute||meta.normalized||meta.itemSize<3)return parAccesseur;
-+    if(!(src instanceof Float32Array||src instanceof Float64Array))return parAccesseur;
++    const a=n.position,meta=n.attribute.metadata||{},src=a?.array||a?.data?.array;
++    if(!a||!accesseursReconnus(a))return null;
++    if(a.normalized||a.isFloat16BufferAttribute||meta.normalized||meta.itemSize<3)return null;
++    if(!(src instanceof Float32Array||src instanceof Float64Array))return null;
 +    const stride=meta.stride,offset=meta.offset;
-+    if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0)return parAccesseur;
++    if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0)return null;
 +    const ids=probes.filter(p=>p.finite!==undefined).map(p=>p.sourceIndex);
 +    if(Number.isInteger(drawStart)&&drawStart<n.attribute.count)ids.push(drawStart);
 +    const fin=Math.ceil(drawEnd)-1;if(Number.isInteger(fin)&&fin>=0&&fin<n.attribute.count)ids.push(fin);
@@ -43,23 +41,22 @@
 +      for(const i of ids) {
 +        if(!Number.isInteger(i)||i<0||i>=n.attribute.count)continue;
 +        const ref=n.attribute.point(i),base=i*stride+offset;
-+        for(let k=0;k<3;k++)if(!Object.is(ref[k],src[base+k]))return parAccesseur;
++        for(let k=0;k<3;k++)if(!Object.is(ref[k],src[base+k]))return null;
 +        verifies++;
 +      }
-+    } catch{return parAccesseur;}
-+    return verifies?{src,stride,offset,accesseur:false}:parAccesseur;
++    } catch{return null;}
++    return verifies?{src,stride,offset}:null;
 +  }
    async function capture(options) {
      const {viewer:v,rails,origin,guard,meta}=options;
      const bounds=options.bounds||[.5,.4,.3];
-@@ -229,6 +274,61 @@
+@@ -229,6 +272,58 @@
            fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
        }
        integrityChecks.push(unchanged);
 +      const direct=lectureDirecte(n,indexAttr,transforms,drawStart,drawEnd,report.probes);
 +      if(direct) {
-+        const {src,stride,offset,accesseur}=direct,count=n.attribute.count,t0=transforms[0],t1=transforms[1];
-+        const lire=n.attribute.get;   // la lecture même de C.attribute : n.attribute.point(i) vaut [lire(i,0),lire(i,1),lire(i,2)]
++        const {src,stride,offset}=direct,count=n.attribute.count,t0=transforms[0],t1=transforms[1];
 +        const near=report.nearestToRailOrigin,b0=bounds[0],b1=bounds[1],b2=bounds[2];
 +        for(let di=drawStart;di<drawEnd;di++) {
 +          if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis) {
@@ -69,9 +66,7 @@
 +          const i=di;
 +          if(!Number.isInteger(i)||i<0||i>=count)fail("Indice de point invalide.");
 +          out.quality.inspected++;report.inspected++;
-+          let x,y,z;
-+          if(accesseur){x=lire(i,0);y=lire(i,1);z=lire(i,2);}
-+          else {const base=i*stride+offset;x=src[base];y=src[base+1];z=src[base+2];}
++          const base=i*stride+offset,x=src[base],y=src[base+1],z=src[base+2];
 +          if(!(finite(x)&&finite(y)&&finite(z))){out.quality.nonFinitePositions++;report.nonFinitePositions++;continue;}
 +          // C.point(t0,raw) puis C.point(t1,raw) : mêmes expressions, mêmes contrôles, mêmes messages.
 +          const w0=t0[3]*x+t0[7]*y+t0[11]*z+t0[15];
