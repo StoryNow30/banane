@@ -21,11 +21,13 @@ module.exports={sonder};
 if(require.main===module){
  const a=process.argv.slice(2),N=Number(a[a.indexOf('--tirages')+1])||200000,json=a.includes('--json')?a[a.indexOf('--json')+1]:null;
  const w=construire({silencieux:true});if(!w){console.error('cargo absent');process.exit(2);}
- const exports=new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(w)),{}).exports;
+ /* le cœur importe les transcendantes du moteur (env.js_*) : mêmes imports que la coquille */
+ const {IMPORTS}=require('../ariane-rs/coquille/coeur.js');
+ const exports=new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(w)),IMPORTS).exports;
  const out={format:'ch064-sonde-math-v1',moteur:'node '+process.version+' (V8 '+process.versions.v8+')',tirages:N,divergences:sonder(exports,N)};
  if(a.includes('--chromium')){
   const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage();
-   const v=await p.evaluate(async([b64,src,N])=>{const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const e=new WebAssembly.Instance(new WebAssembly.Module(o),{}).exports;
+   const v=await p.evaluate(async([b64,src,N])=>{const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));const env={js_sin:Math.sin,js_cos:Math.cos,js_tan:Math.tan,js_atan2:Math.atan2,js_exp:Math.exp,js_log:Math.log,js_log10:Math.log10,js_log1p:Math.log1p,js_pow:Math.pow};const e=new WebAssembly.Instance(new WebAssembly.Module(o),{env}).exports;
     const module={};eval(src);return {ua:navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0],div:module.exports.sonder(e,N)};},[fs.readFileSync(w).toString('base64'),
     'module.exports={sonder:'+sonder.toString()+'};',N]);await b.close();
    out.chromium={moteur:v.ua,divergences:v.div};fin(out,json);})().catch(e=>{console.error(e);process.exit(1);});

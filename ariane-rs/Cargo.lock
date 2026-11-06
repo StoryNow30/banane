@@ -19,7 +19,6 @@ dependencies = [
  "ariane-etat",
  "ariane-geometrie",
  "ariane-js",
- "ariane-lidar",
  "ariane-vba",
 ]
 
