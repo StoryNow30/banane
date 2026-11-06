@@ -8,6 +8,11 @@
 //!   « …875.2 » en V8, « …875.3 » en Rust) : corrigé ici ;
 //! - mise en forme : entière jusqu'à 10^21, décimale, ou exponentielle (`e+`, `e-`) comme ECMA-262.
 //!
+//! Chemins rapides (mesure de CH-069 : 1,7 µs par nombre contre 0,19 µs en V8), sans changer un résultat :
+//! - entier exact de valeur absolue < 2^53 : écriture entière directe ;
+//! - le développement exact à 1 100 chiffres (départage) n'est calculé que si le double PEUT être un milieu exact
+//!   (`milieu_possible`, arithmétique entière) ; sinon les chiffres les plus courts sont déjà ceux d'ECMA-262.
+//!
 //! Sonde : `tools/ch064-sonde-nombres.cjs` (Node et Chromium).
 
 /// Chiffres décimaux et exposant d'un double fini strictement positif : valeur = 0,chiffres × 10^(e10 + 1).
@@ -20,12 +25,41 @@ fn chiffres_courts(x: f64) -> (Vec<u8>, i64) {
 
 fn texte(v: &[u8]) -> String { v.iter().map(|c| char::from(c + b'0')).collect() }
 
+/// Le double fini strictement positif `x` peut-il être EXACTEMENT le milieu de deux écritures de `k` chiffres ?
+/// x = m·2^q, m impair. Un milieu a exactement k + 1 chiffres significatifs, le dernier 5.
+/// - q < 0 : la valeur exacte est m·5^(−q) × 10^q ; ses chiffres significatifs sont ceux de m·5^(−q) (impair : sans zéro
+///   final). Pour −q > 26, 5^(−q) seul a déjà plus de 18 chiffres (k ≤ 17) : jamais un milieu. Sinon, calcul exact en u128
+///   (m < 2^53, 5^26 < 1,5·10^18 : produit < 2^114).
+/// - q ≥ 1 (entier pair ≥ 2^53 ; q = 0 donne un entier < 2^53, traité par le chemin entier) : un milieu N·10^e (N de k + 1
+///   chiffres, dernier 5) demande e ≥ 1. Jusqu'à q = 74, x tient en u128 : test exact (zéros finals ôtés, k + 1 chiffres,
+///   dernier 5). Au-delà, x > 2^127 > 10^38 et N < 10^18 imposent e ≥ 20, donc 5^20 divise m (m impair) : sinon, jamais un
+///   milieu ; si oui (rarissime), le calcul exact tranche.
+fn milieu_possible(x: f64, k: usize) -> bool {
+    let b = x.to_bits();
+    let (e, f) = (i64::try_from((b >> 52) & 0x7ff).unwrap_or(0), b & ((1u64 << 52) - 1));
+    let (mut m, mut q) = if e == 0 { (f, -1074) } else { (f | (1u64 << 52), e - 1075) };
+    if m == 0 { return false; }
+    let z = m.trailing_zeros();
+    m >>= z;
+    q += i64::from(z);
+    if q >= 0 {
+        if q > 74 { return m % 5u64.pow(20) == 0; }
+        let mut v = u128::from(m) << q;
+        while v % 10 == 0 { v /= 10; }
+        return v % 10 == 5 && v.ilog10() as usize + 1 == k + 1;
+    }
+    if -q > 26 { return false; }
+    let v = u128::from(m) * 5u128.pow(u32::try_from(-q).unwrap_or(0));
+    v % 10 == 5 && v.ilog10() as usize + 1 == k + 1
+}
+
 /// Départage au pair : si le double est exactement au milieu de deux écritures les plus courtes qui le relisent toutes
 /// deux, garder celle dont le dernier chiffre est pair.
 fn departager_au_pair(x: f64, d: &mut Vec<u8>, e10: i64) {
     let k = d.len();
     let der = d[k - 1];
     if der.is_multiple_of(2) { return; } // déjà pair
+    if !milieu_possible(x, k) { return; } // pas de milieu exact : les chiffres les plus courts sont ceux d'ECMA-262
     let relit = |v: &[u8]| -> bool {
         let s = texte(v);
         let t = if s.len() > 1 { format!("{}.{}e{}", &s[..1], &s[1..], e10) } else { format!("{s}e{e10}") };
@@ -55,6 +89,13 @@ pub fn nombre_en_chaine(x: f64) -> String {
     if x == 0.0 { return "0".into(); }
     if x.is_infinite() { return if x > 0.0 { "Infinity".into() } else { "-Infinity".into() }; }
     if x < 0.0 { return format!("-{}", nombre_en_chaine(-x)); }
+    // entier exact < 2^53 : écriture entière (ECMA-262 l'écrit sans exposant jusqu'à 10^21)
+    #[allow(clippy::float_cmp)] // test d'entier exact : la comparaison au bit près est le but
+    let entier = x < 9_007_199_254_740_992.0 && x.trunc() == x;
+    if entier {
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // 0 < x < 2^53, entier : exact en u64
+        return (x as u64).to_string();
+    }
     let (mut d, e10) = chiffres_courts(x);
     departager_au_pair(x, &mut d, e10);
     let chiffres = texte(&d);
