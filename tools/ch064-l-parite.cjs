@@ -88,7 +88,7 @@ async function noeudChromium(){
   const p=await nav.newPage();
   for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
   await p.addScriptTag({content:'(function(){const module={};'+K.lire(K.SOURCES.comparer).replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
-  await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
+  await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';(typeof ArianeLidarWasm==="object"&&ArianeLidarWasm.accesseursConnus)&&ArianeLidarWasm.accesseursConnus(classeAttribut().prototype);window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
   const ua=await p.evaluate(async ({texte,b64})=>{
    (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api'));
    const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));window.NW=ArianeLidarWasm.noyauWasm(o);window.NJ=ArianeLidarWasm.noyauJs();

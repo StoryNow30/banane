@@ -15,7 +15,7 @@ async function main(){
  const {chromium}=require('playwright'),nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const p=await nav.newPage();
  for(const f of [K.SOURCES.core,K.SOURCES.lidar,'src/core.js','src/merge-clouds.js','src/lod-signature.js'])await p.addScriptTag({content:K.lire(f)});
- await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';'});
+ await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';(typeof ArianeLidarWasm==="object"&&ArianeLidarWasm.accesseursConnus)&&ArianeLidarWasm.accesseursConnus(classeAttribut().prototype);window.construireScene='+S.construireScene.toString()+';'});
  const mes=[];let k=0;
  for(const d of S.descriptions()){if(k++%PAS)continue;if(d.vues.length!==2)continue;
   const r=await p.evaluate(async ({d,R})=>{

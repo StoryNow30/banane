@@ -15,6 +15,8 @@ const SOURCES={core:'vendor/capture-core.js',lidar:'vendor/lidar.js',coquille:'a
 function chargerNode(){
  const C=require(path.join(RACINE,SOURCES.core)),origine=require(path.join(RACINE,SOURCES.lidar)),W=require(path.join(RACINE,SOURCES.coquille));
  const module={exports:{}};new Function('module','exports','require',W.variante(lire(SOURCES.lidar)))(module,module.exports,()=>C);
+ // accesseurs des scènes reconstruites déclarés connus (sans quoi le noyau ne servirait jamais : audit de la PR n° 25, P2)
+ W.accesseursConnus(require('./ch064-l-scene.cjs').classeAttribut().prototype);
  return {C,origine,variante:module.exports,W};
 }
 /* Exécute capture() sur une scène ; rend {ms, sortie} ou {ms, erreur}. Texte autonome (aussi évalué dans Chromium). */

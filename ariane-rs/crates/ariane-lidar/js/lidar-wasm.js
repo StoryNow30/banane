@@ -58,18 +58,44 @@
         }
       } else
 `;
+ /* File des captures (audit de la PR n° 25, P1) : le noyau porte un état (matrices, plus proches, arène) d'un appel de
+  * debutNoeud() à la fin du nœud, à travers les `await pause()`. Deux capture() simultanées se l'écraseraient. La variante
+  * exporte donc un capture() qui attend la fin de la précédente (réussie ou non) avant de commencer : les captures sont
+  * sérialisées sur tout leur parcours. Le journal du 05/11 n'en montre aucune simultanée (2 711 captures) ; l'origine, elle,
+  * est réentrante (état local à chaque appel). */
+ const EXPORT='  return {capture,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};';
+ const FILE='  let __fileCaptures=Promise.resolve();\n  const __captureEnFile=options=>{const p=__fileCaptures.then(()=>capture(options));__fileCaptures=p.then(()=>{},()=>{});return p;};\n'+
+  '  return {capture:__captureEnFile,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};';
  function variante(texte){
-  const a=texte.indexOf(DEBUT),b=texte.indexOf(FIN);
+  const a=texte.indexOf(DEBUT),b=texte.indexOf(FIN),c=texte.indexOf(EXPORT);
   if(a<0||b<0||texte.indexOf(DEBUT,a+1)>=0)throw Error('vendor/lidar.js a changé : boucle par point introuvable ou ambiguë (CH-064-L à mettre à jour).');
-  return texte.slice(0,a)+BRANCHE+texte.slice(a);
+  if(c<0||texte.indexOf(EXPORT,c+1)>=0||c<a)throw Error('vendor/lidar.js a changé : export de capture introuvable ou ambigu (CH-064 à mettre à jour).');
+  return texte.slice(0,a)+BRANCHE+texte.slice(a,c)+FILE+texte.slice(c+EXPORT.length);
  }
  /* ---------- partie commune aux deux noyaux ---------- */
  const MESSAGES=[null,'Projection non finie.','Transformation non finie.'],VERSION_ARENE=1;
  const nombre=x=>typeof x==='number'&&!Number.isNaN(x);
+ /* Accesseurs connus (audit de la PR n° 25, P2). La lecture directe du tableau n'est prise que si l'attribut n'a AUCUN
+  * accesseur getX/getY/getZ, ou si ses trois accesseurs sont, par identité de fonction, ceux d'un prototype déclaré connu :
+  * ceux de three.js en page (globalThis.THREE.BufferAttribute et InterleavedBufferAttribute, s'ils existent), ou ceux déclarés
+  * par accesseursConnus(prototype). Sinon, les lectures d'origine : les sondes seules ne prouvent rien hors de leurs indices.
+  * Chaque refus est compté par raison (refus()). */
+ const CONNUS=[],refusParRaison={};
+ function accesseursConnus(...protos){for(const p of protos)if(p&&typeof p.getX==='function'&&typeof p.getY==='function'&&typeof p.getZ==='function')
+  CONNUS.push([p.getX,p.getY,p.getZ]);return CONNUS.length;}
+ function accesseursSurs(pos){
+  const fx=pos.getX,fy=pos.getY,fz=pos.getZ;
+  if(fx===undefined&&fy===undefined&&fz===undefined)return true;
+  const T=globalThis.THREE,proto=[T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];
+  for(const p of proto)if(p&&p.getX===fx&&p.getY===fy&&p.getZ===fz)return true;
+  return CONNUS.some(([x,y,z])=>x===fx&&y===fy&&z===fz);
+ }
+ const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
  function eligibleAvec(octetsEntree,capaciteMax){
   return function eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,probes){
    if(indexAttr||!n.position||n.position.isFloat16BufferAttribute)return null;
+   if(!accesseursSurs(n.position))return refuser('accesseur inconnu');
    const meta=n.attribute&&n.attribute.metadata,src=n.position.array||(n.position.data&&n.position.data.array);
    if(!meta||meta.normalized||n.position.normalized)return null;
    const f64=src instanceof Float64Array;if(!f64&&!(src instanceof Float32Array))return null;
@@ -193,5 +219,5 @@
    charger(m,e){M.set(m);E.set(e);},etat:()=>E,
    memoireOctets:()=>0,copieOctets:()=>0,tranches:()=>tranches};
  }
- return {variante,noyauWasm,noyauJs,DEBUT,FIN};
+ return {variante,noyauWasm,noyauJs,accesseursConnus,refus:()=>({...refusParRaison}),DEBUT,FIN};
 });

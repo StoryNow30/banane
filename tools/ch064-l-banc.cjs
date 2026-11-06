@@ -25,7 +25,7 @@ async function main(){
  const {chromium}=require('playwright'),nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
  const p=await nav.newPage();
  for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
- await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';'});
+ await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';(typeof ArianeLidarWasm==="object"&&ArianeLidarWasm.accesseursConnus)&&ArianeLidarWasm.accesseursConnus(classeAttribut().prototype);window.construireScene='+S.construireScene.toString()+';'});
  const init=await p.evaluate(async ({texte,b64,coeur64})=>{
   (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api'));
   const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));

@@ -64,11 +64,16 @@ function*descriptions({max=Infinity,saut=0,motif=MOTIF}={}){
  }
 }
 
-/* Fabrique la scène d'une vue. Texte autonome : évalué tel quel dans Chromium. */
+/* Classe d'attribut des scènes, UNIQUE (gardée sur globalThis) : ses accesseurs getX/getY/getZ sont déclarés connus auprès de
+ * la coquille par les bancs (accesseursConnus, audit de la PR n° 25, P2), comme ceux de three.js en page. Texte autonome. */
+function classeAttribut(){
+ return globalThis.__ch064BA||(globalThis.__ch064BA=class BA{constructor(a,k){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=false;}
+  getX(i){return this.array[i*this.itemSize];}getY(i){return this.array[i*this.itemSize+1];}getZ(i){return this.array[i*this.itemSize+2];}});
+}
+/* Fabrique la scène d'une vue. Texte autonome : évalué tel quel dans Chromium (avec classeAttribut). */
 function construireScene(d,v,graine){
  let s=graine>>>0;const alea=()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);
- class BA{constructor(a,k){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=false;}
-  getX(i){return this.array[i*this.itemSize];}getY(i){return this.array[i*this.itemSize+1];}getZ(i){return this.array[i*this.itemSize+2];}}
+ const BA=classeAttribut();
  const vue=d.vues[v],pcs=vue.clouds.map(c=>({visible:true,parent:null,visibleNodes:[],
   material:{clipBoxes:c.boxes.map(b=>({inverse:{elements:b}})),clipPolygons:[],clipTask:c.task===null?undefined:c.task,clipMethod:c.method===null?undefined:c.method}}));
  let points=0;
@@ -85,4 +90,4 @@ function construireScene(d,v,graine){
  const rails=d.rails.map(r=>({object:{},profile:{type:'Group',children:[]},railMatrix:r.railMatrix,profileMatrix:r.profileMatrix,rotation:r.rotation,profileRotation:r.profileRotation}));
  return {viewer,rails,origin:[0,0,0],points,enums:{ClipTask:{NONE:0,HIGHLIGHT:1,SHOW_INSIDE:2,SHOW_OUTSIDE:3},ClipMethod:{INSIDE_ANY:0,INSIDE_ALL:1}}};
 }
-module.exports={descriptions,decrire,construireScene,MOTIF};
+module.exports={descriptions,decrire,construireScene,classeAttribut,MOTIF};
