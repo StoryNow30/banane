@@ -229,10 +229,10 @@ test('plafond par zone : l’ADV ne mange plus le budget des abords ; PN jamais 
  assert.equal(v.cuts.filter(c=>c.zone!=='pn').length<=20,true);assert.equal(v.cuts.filter(c=>c.zone==='pn').length,14);
 });
 
-test('plafond par zone : valeurs par défaut — le PN et l’ADV n’ont aucun budget (D-185), les autres zones un budget fini',()=>{
+test('plafond par zone : valeurs par défaut — le PN, l’ADV (D-185) et les abords (D-289) n’ont aucun budget, les autres zones un budget fini',()=>{
  const d=R.DEFAULTS.plafondParZone;
  assert.ok(d&&!('pn' in d),'le PN n’a pas de budget');
- assert.deepEqual(JSON.parse(JSON.stringify(d)),{adv:null,abords:70,'vert-hors-zone':20,ecartement:20});
+ assert.deepEqual(JSON.parse(JSON.stringify(d)),{adv:null,abords:null,'vert-hors-zone':20,ecartement:20},'D-289 : abords sans plafond');
  assert.equal(R.DEFAULTS.plafondCuts,null,'plus de budget unique par défaut');
  /* Appliqués sans option : une ADV de 434 cuts (PN 401–414 dedans) et une grappe d'abords de 11 cuts. */
  const s=R.selection({partie:1,lot:[{cut:900},{cut:902},{cut:904}],zonesADV:[[256,689]],zonesPN:[[401,414]]});
