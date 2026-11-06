@@ -105,3 +105,28 @@ test('lecture par clés : par get quand peu de clés, par getAll filtré quand b
   assert.deepEqual(await s.lireParType(['validation-accepted']),tous.filter(e=>e.type==='validation-accepted'));assert.equal(s.lus.parGetAll||0,0,'10 % : get');
   assert.deepEqual(await s.lireEvenementsNatif('S'),tous.filter(e=>e.nativeSessionId==='S'));assert.equal(s.lus.parGetAll,1,'80 % : getAll filtré');
 });
+
+test('incohérence (clé de l’index absente de la base) : jamais de résultat partiel, repli complet, événement au journal, index reconstruit',async()=>{
+  const s=JI.equiper(magasin());for(let i=0;i<20;i++)await s.putEvent({eventId:'e'+String(i).padStart(2,'0'),type:'validation-accepted'});
+  await s.indexJournal.construire();
+  s.m.events.delete('e05');   // écrit hors de l'instance : l'index ne le sait pas
+  const r=await s.lireParType(['validation-accepted']);
+  assert.equal(r.filter(e=>e.type==='validation-accepted').length,19,'lecture complète : tout ce qui est en base, rien de moins');
+  const ev=[...s.m.events.values()].filter(e=>e.type==='journal-index-repli');
+  assert.equal(ev.length,1,'un événement au journal');assert.equal(ev[0].raison,'cle-absente');assert.equal(ev[0].manquants,1);
+  assert.equal(s.indexJournal.etat().mesures.replis,1);
+  const avant=s.indexJournal.etat().mesures.constructions;await s.lireParType(['validation-accepted']);
+  assert.equal(s.indexJournal.etat().mesures.constructions,avant+1,'index reconstruit au besoin suivant');
+});
+
+test('seul le service worker écrit dans events et records : ni le panneau ni ses modules n’écrivent (lecture du code)',()=>{
+  const html=lire('panel.html'),scripts=[...html.matchAll(/<script src="([^"]+)"/g)].map(m=>m[1]).filter(f=>f!=='src/storage.js');
+  const ECRITURES=/\b(putEvent|putRecord|deleteEvent|deleteRecord|deleteMany|deleteIfUnchanged|clearAll|archiverVisites)\s*\(|'readwrite'/;
+  for(const f of scripts){const t=lire(f).replace(/\/\*[\s\S]*?\*\//g,'');
+    /* export-cache.js ne fait que recevoir le store qu'on lui passe ; seul le service worker l'appelle pour supprimer (viderCacheExport). */
+    /* journal-index.js : le panneau n'en utilise que `lireCles` (transaction en lecture seule) ; il n'équipe aucun store. */
+    if(f==='src/journal-index.js'){assert.doesNotMatch(lire('panel.js'),/\.equiper\(/,'le panneau n’équipe pas de store');continue;}
+    if(f==='src/export-cache.js'){assert.doesNotMatch(lire('panel.js'),/EC\(\)\.supprimer|ExportCache\.supprimer|\.supprimer\(\s*s\b/,'le panneau n’appelle pas la suppression');continue;}
+    assert.doesNotMatch(t,ECRITURES,f+' n’écrit pas dans IndexedDB');}
+  assert.ok(!/content_scripts[\s\S]*storage\.js/.test(lire('manifest.json')),'aucun script de page ne charge le stockage');
+});

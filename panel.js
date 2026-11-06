@@ -1057,7 +1057,11 @@
    const s=store();if(!s)return null;
    try{
      const JI=globalThis.BananeJournalIndex;
-     const tout=Array.isArray(cles)&&JI?.lireCles&&typeof s.open==='function'?await JI.lireCles(await s.open(),nom,cles,total):await s.all(nom);
+     /* CH-058 : par clés ; une clé absente (incohérence) : lecture complète, et le service worker le note au journal. */
+     let tout=null;
+     if(Array.isArray(cles)&&JI?.lireCles&&typeof s.open==='function'){const r=await JI.lireCles(await s.open(),nom,cles,total);
+       if(r.manquants)void api('journal-index-repli',{magasin:nom,raison:'cle-absente-panneau',demandees:r.demandees,manquants:r.manquants}).catch(()=>{});else tout=r.objets;}
+     if(!tout)tout=await s.all(nom);
      return tout.filter(x=>x.nativeSessionId===sessionId);
    }catch{return null;}
  }

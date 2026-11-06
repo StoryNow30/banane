@@ -1558,6 +1558,12 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
  const sauverEtat=engine.save.bind(engine);engine.save=async(...a)=>{try{lotSuivre();}catch{/* suivi seulement */}return sauverEtat(...a);};
  manual=new BananeManualSession4.Sessions(engine,adapter,store);native=new BananeNativeSession4.Sessions(engine,adapter,store);await manual.init();await native.init();
  await historiqueRelire();if(selectedTab===null)connexionStatut('no-tab','Aucun onglet ESV choisi.',null);})();
+/* CH-058 : l'index du journal se construit (une lecture complète d'IndexedDB) au démarrage du service worker, en arrière-plan, quand rien ne
+ * tourne : ni lot (en cours ou en pause), ni relecture, ni Écho active. Sinon, il se construit au premier besoin, comme avant. Mesuré dans les
+ * journaux (une horloge `clockId` par vie) : 1 vie le 05/11, 3 le 04/11 (Orbite) ; à 114 000 événements, environ 2,4 s au banc. */
+void ready.then(()=>setTimeout(()=>{try{const b=engine?.s?.batch,occupe=['RUNNING','PAUSED','PAUSED_UNRESOLVED_RAIL','PAUSED_AFTER_STATE_MISSING','PAUSED_ADAPTER_UNRESPONSIVE'].includes(b?.state)
+  ||!!native?.active?.()||relecture.passe?.etat==='en-cours';
+ if(!occupe)void store.indexJournal?.construire?.().catch(()=>{});}catch{/* jamais bloquant */}},3000)).catch(()=>{});
 /* T20a (D-243, D-246, D-250) — HISTORIQUE DES PARTIES (src/historique-parties.js). Fiches de départ (`banane3FichesDepart`) et fiches de fin de lot
  * (`banane55FinsLot`) relues en mémoire pour la vue du panneau (`partsHistory`) ; la fiche de fin d'un lot est écrite quand le lot est clos (ou en
  * erreur), complétée par son motif d'arrêt et par les cuts écrits par la deuxième passe. `batch.pausedAt` : heure d'entrée en pause, retirée à la reprise. */
@@ -4319,6 +4325,9 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(action==='native-export-advice')return native.exportAdvice();
  if(action==='native-export-manifest')return native.exportManifest(args?.all===true);
  /* CH-058 : clés (triées) des événements et visites d'une session Écho, pour que le panneau ne relise pas tout IndexedDB ; `null` si l'index n'est pas sûr. */
+ /* CH-058 : le panneau a trouvé une incohérence de l'index (clé absente) et lu tout : le service worker le note au journal. */
+ if(action==='journal-index-repli'){journalerSimple('journal-index-repli',{magasin:String(args?.magasin??'').slice(0,20),raison:String(args?.raison??'').slice(0,40),
+  demandees:Number.isInteger(args?.demandees)?args.demandees:null,manquants:Number.isInteger(args?.manquants)?args.manquants:null});store.indexJournal?.invalider?.();return {note:true};}
  if(action==='native-export-cles')return typeof args?.sessionId==='string'&&typeof store.clesNatif==='function'?store.clesNatif(args.sessionId):null;
  if(action==='native-export-plan')return native.exportPlan();
  if(action==='native-export-ack')return native.ackExported(args?.ids||[],{confirmes:Array.isArray(args?.confirmed)?args.confirmed:[],fichiers:args?.fichiers,final:args?.final===true});
@@ -4359,7 +4368,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   throw Error('Le mode Correction a été retiré en 4.5.4. Utilise Écho.');
  if(action==='manual-end')return manual.end();
  if(action==='manual-download')return manual.dataset();
- if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
+ if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
  if(action==='relecture-lancer')return relectureLancer({auto:false});
