@@ -3443,4 +3443,11 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
   - (3) pauses inchangées.
   - (4) `banane-data` 4ba702e, `collections/2026-11-06_v5_constellation-parties-13-16`.
 - Mesure attendue (CH-062, PROBABLE) : environ 8 % du temps du lot, et la relecture aussi ; à vérifier sur le prochain lot (`diag.lb`, événements `ligne-base-repli`, `readStrategy.trouEchec`).
-- Le numéro suivant est D-294.
+
+## D-294 — Week-end : l'intégrateur pilote tous les chantiers ; architecture A pour le Rust (opérateur, 06/11)
+- Ordre : « Je vais être particulièrement occupé ce week-end. Je te confie tous les chantiers, tu es chargé de l'architecture de leur développement, mets un accent particulier sur les gains et une qualité d'écriture sur la réécriture en Rust. Je te laisse auto gérer chaque session, gérer la communication entre elles et toi, relancer chaque chantier, relancer après chaque réinitialisation de session afin que je n'aie pas à le faire moi-même. Et si une question nécessite mon aval ou intervention tu m'envoies une notification via Telegram. »
+- Architecture du Rust : A (cœur Rust/WASM dans l'extension, coquille JS). Sur le tableau A contre B (`chantiers/CH-064/A-contre-B.md` : A plus rapide, seule A peut prendre la lecture LiDAR, B demande une orchestration asynchrone et une installation Windows), l'opérateur a répondu « Très bien » avant cet ordre. L'intégrateur retient A, sous réserve d'un contre-ordre. B reste documentée.
+- Ce que l'intégrateur fait seul : lancer, relancer et recréer les sessions ; arbitrer les questions techniques ; fusionner les sous-chantiers et intégrer au tronc après verify, parité et maquette ; fabriquer des paquets de test.
+- Ce qui attend l'accord de l'opérateur, demandé par le hub (PR « Hub : canal général », relayée sur Telegram) : allumer un réglage qui change une pose, une validation ou une écriture dans ESV ; mettre du Rust dans le paquet ; modifier `manifest.json` (`'wasm-unsafe-eval'`, permissions) ; merge dans main, étiquette, publication ; toute dépense ; toute suppression de données.
+- Mécanique : contrôle toutes les 2 heures (tâche planifiée « Pilotage du week-end ») dans la session de l'intégrateur ; abonnement aux PR du hub (n° 7) et de Cursor (n° 23).
+- Le numéro suivant est D-295.
