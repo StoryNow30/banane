@@ -3450,4 +3450,14 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Ce que l'intégrateur fait seul : lancer, relancer et recréer les sessions ; arbitrer les questions techniques ; fusionner les sous-chantiers et intégrer au tronc après verify, parité et maquette ; fabriquer des paquets de test.
 - Ce qui attend l'accord de l'opérateur, demandé par le hub (PR « Hub : canal général », relayée sur Telegram) : allumer un réglage qui change une pose, une validation ou une écriture dans ESV ; mettre du Rust dans le paquet ; modifier `manifest.json` (`'wasm-unsafe-eval'`, permissions) ; merge dans main, étiquette, publication ; toute dépense ; toute suppression de données.
 - Mécanique : contrôle toutes les 2 heures (tâche planifiée « Pilotage du week-end ») dans la session de l'intégrateur ; abonnement aux PR du hub (n° 7) et de Cursor (n° 23).
-- Le numéro suivant est D-295.
+
+## D-295 — Rust : porter 100 % du calcul portable ; Codex pour les audits ; chantiers Codex (opérateur, 06/11)
+- Constat présenté (ÉTABLI, `chantiers/CH-064/temps-par-cut.md`, Chromium au repos, 200 nuages) : calcul par cut, lecture LiDAR comprise, 1 141 ms au tronc, 177 ms en JS élagué, 200 ms tout en WASM, 128 ms en JS élagué avec le LiDAR en WASM ; gain propre du Rust ≈ 49 ms par cut. Part réécrite : environ 3 500 lignes sur 24 250 (≈ 14 % du code, ≈ 60 % du calcul portable ; compte de lignes, SUPPOSÉ). Ce qui touche aux API Chrome, au DOM, à la page ESV et à l'orchestration ne peut pas être en Rust dans l'architecture A.
+- Ordres : « Tu peux demander des audits à chatgpt astra et chatgpt 6.1 sol » ; après l'échec de l'API (aucun crédit) : « D'accord restons sur codex » ; « Vu qu'on a énormément de quota sur chatgpt tu peux lancer d'autres multiples chantiers de développement » ; « Continue de bosser c'est bien » ; « Ok continue de bosser jusqu'à 100 % ».
+- Effet :
+  - le gel de l'élargissement du Rust (pris par l'intégrateur le 06/11 en attente de cet avis) est levé : tout le calcul pur portable est porté en Rust (tranche J4 de la décision, puis l'inventaire du chef), toujours au bit près et hors du paquet ;
+  - « 100 % » s'entend du calcul portable ; rien ne change pour le JS qui parle à Chrome, au DOM ou à ESV ;
+  - mettre du Rust dans le paquet, `manifest.json` et les fichiers gelés restent soumis à l'accord de l'opérateur (D-294) ;
+  - audits par « @codex review » (PR n° 25) à chaque fusion d'une équipe ; chantiers Codex CH-066 (fuzz VBA) et CH-067 (audit des correctifs du tronc) ; la clé API OpenAI enregistrée n'est pas utilisée (pas de crédit).
+- Après les 100 % : « on utilisera des gros reviewers de code pour voir si le code rust est bien intégré » — revue d'intégration complète par plusieurs relecteurs forts (Codex et sessions Claude au niveau fort), avant toute proposition d'entrée du Rust dans le paquet.
+- Le numéro suivant est D-296.
