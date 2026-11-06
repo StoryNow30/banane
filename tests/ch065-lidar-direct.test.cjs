@@ -43,13 +43,23 @@ test('CH-065 : le chemin direct sert sur un tampon flottant non indexé, et pas 
     else assert.ok(e.n>=n,`${nom} : ${e.n} lectures par accesseur pour ${n} points, la boucle d'origine n'a pas servi`);
   }
 });
-test('CH-065 : sans THREE reconnu dans la page, aucun accesseur n\'est cru : boucle d\'origine, même sortie', async ()=>{
+test('CH-065 : sans THREE reconnu dans la page, accesseur inconnu prouvé sur TOUS les points : même sortie, chaque point relu par l\'accesseur', async ()=>{
   const c=H.captures()[0],n=c.pointsSceneRelative.length;
-  try{globalThis.THREE=undefined;const e={n:0};const a=await jouer(LO,c,{}),b=await jouer(LP,c,{},e);
-    assert.deepEqual(b,a);assert.ok(e.n>=n,`${e.n} lectures par accesseur pour ${n} points : la lecture directe a servi sans accesseur reconnu`);}
+  try{globalThis.THREE=undefined;
+    for(const opts of [{},{entrelace:true},{type:Float64Array},{yieldEvery:7},{drawRange:{start:3.7,count:1000.5}}]){
+      const e={n:0},a=await jouer(LO,c,opts),b=await jouer(LP,c,opts,e);
+      assert.deepEqual(b,a,JSON.stringify(opts));if(!opts.drawRange)assert.ok(e.n>=n,`${e.n} lectures par accesseur pour ${n} points : la preuve n'a pas couvert chaque point`);}}
   finally{globalThis.THREE=THREE_FACTICE;}
-  /* Attribut sans accesseur : C.attribute lit lui-même le tableau, la lecture directe sert. */
+  /* Attribut sans accesseur : C.attribute lit lui-même le tableau, la lecture directe sert sans preuve. */
   const a=await jouer(LO,c,{sansAccesseur:true}),b=await jouer(LP,c,{sansAccesseur:true});assert.deepEqual(b,a);
+});
+test('CH-065 : l\'essai a des dents — sans la preuve complète, l\'accesseur qui diffère sur un point n\'est pas vu', async ()=>{
+  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!reconnu){trancheProuvee=true;','if(false){trancheProuvee=true;').replace('let trancheProuvee=reconnu;','let trancheProuvee=true;');
+  assert.notEqual(faux,t);const L=H.lidar('patche',faux),c=H.captures()[1];
+  const run=async L=>{const sc=scene(c,{graine:3});const e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,cible=Math.floor(a.count/2)+1;
+    const g=a.getX.bind(a);a.getX=i=>i===cible?g(i)+.05:g(i);
+    return H.canon(await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}}),['capturedAt','durationMs']);};
+  assert.equal(await run(LP),await run(LO));assert.notEqual(await run(L),await run(LO));
 });
 test('CH-065 : un accesseur reconnu mais qui ne lit pas le tampon tel quel est vu sur les sondes : boucle d\'origine, même sortie', async ()=>{
   const c=H.captures()[2],ea={n:0,ment:true},eb={n:0,ment:true};

@@ -46,12 +46,14 @@ async function page(nav,scripts){
   const v=A.versions(RACINE,'vendor/lidar.js');
   const pl=await page(nav,[lire('vendor/capture-core.js'),v.origine.replace('root.BananeLidar=api','root.LidarOrigine=api'),
     v.patche.replace('root.BananeLidar=api','root.LidarPatche=api'),lire('tools/ch065-scene.js')]);
-  for(const mode of ['rapide','reference']){
+  /* ACCESSEURS=reconnu,inconnu : « reconnu », THREE factice posé (accesseurs reconnus par identité) ; « inconnu », pas de THREE : preuve complète. */
+  for(const acc of (process.env.ACCESSEURS||'reconnu').split(','))for(const mode of ['rapide','reference']){
+    const cle=acc==='reconnu'?mode:mode+'-accesseur-inconnu';
     const mes={origine:[],patche:[],allocOrigine:[],allocPatche:[],retenuOrigine:[],retenuPatche:[]};let egal=0;
     for(const [ci,c] of CL.entries()){
       await pl.evaluate(t=>{globalThis.__C=JSON.parse(t);},JSON.stringify({rails:c.rails,pointsSceneRelative:c.pointsSceneRelative}));
-      const r=await pl.evaluate(async ({REP,ci,mode})=>{
-        globalThis.THREE=CH065Scene.THREE_FACTICE;   /* tient lieu de THREE.BufferAttribute de la page */
+      const r=await pl.evaluate(async ({REP,ci,mode,acc})=>{
+        globalThis.THREE=acc==='reconnu'?CH065Scene.THREE_FACTICE:undefined;   /* tient lieu de THREE.BufferAttribute de la page */
         const sc=CH065Scene.scene(__C,{total:505000,noeuds:19,graine:1234+ci});
         const pause=mode==='reference'?()=>new Promise(r=>setTimeout(r,0)):()=>scheduler.yield();
         const net=o=>JSON.stringify(o,(k,v)=>k==='capturedAt'||k==='durationMs'?undefined:v);
@@ -64,13 +66,13 @@ async function page(nav,scripts){
           gc();const h2=performance.memory.usedJSHeapSize;
           if(k>0){res[nom].push(ms);res['alloc'+(nom==='origine'?'Origine':'Patche')].push(h1-h0);res['retenu'+(nom==='origine'?'Origine':'Patche')].push(h2-h0);}
         }
-        return {res,egal};},{REP,ci,mode});
+        return {res,egal};},{REP,ci,mode,acc});
       if(!r.egal)throw Error('LiDAR : sorties différentes, nuage '+ci);egal++;
       for(const k of Object.keys(mes))mes[k].push(...r.res[k]);
-      console.error('lidar',mode,ci,'origine',q(r.res.origine,.5),'patché',q(r.res.patche,.5));
+      console.error('lidar',cle,ci,'origine',q(r.res.origine,.5),'patché',q(r.res.patche,.5));
     }
     const o=resume(mes.origine),p=resume(mes.patche);
-    out.lidar[mode]={msParVue:{origine:o,patche:p},gainMsParVue:+(o.mediane-p.mediane).toFixed(1),
+    out.lidar[cle]={msParVue:{origine:o,patche:p},gainMsParVue:+(o.mediane-p.mediane).toFixed(1),
       tasAlloueOctetsParVue:{origine:q(mes.allocOrigine,.5),patche:q(mes.allocPatche,.5)},tasRetenuOctets:{origine:q(mes.retenuOrigine,.5),patche:q(mes.retenuPatche,.5)},sortiesIdentiques:egal};
   }
   await pl.close();

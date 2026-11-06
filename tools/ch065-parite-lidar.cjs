@@ -13,6 +13,8 @@ const path=require('path'),fs=require('fs'),crypto=require('crypto');
 const {parcourir,PREFIXES}=require('./ch065-nuages.cjs'),{scene,VARIANTES,THREE_FACTICE}=require('./ch065-scene.js');
 /* Les classes d'attribut de la scène tiennent lieu de THREE.BufferAttribute de la page (reconnaissance par identité de fonction). */
 globalThis.THREE=THREE_FACTICE;
+/* CH065_SANS_THREE=1 : la page n'expose pas THREE, l'accesseur est inconnu : le patch passe par la preuve complète, tranche par tranche. */
+if(process.env.CH065_SANS_THREE==='1')globalThis.THREE=undefined;
 function arg(n,d){const i=process.argv.indexOf(n);return i>0?process.argv[i+1]:d;}
 const REF=path.resolve(arg('--reference',path.join(__dirname,'..'))),PAT=arg('--patche',null),MAX=Number(arg('--max',Infinity));
 const PAS=Number(arg('--pas',25)),PAS_PLEIN=Number(arg('--pas-plein',100)),SORTIE=arg('--sortie',null);
@@ -35,7 +37,7 @@ async function jouer(L,c,nom,opts){
   catch(e){return {erreur:(e?.name||'')+': '+(e?.message||String(e)),appels:appels.join('')};}
 }
 (async()=>{
-  const res={date:new Date().toISOString(),collections:PREFIXES,nuages:0,jeux:0,ecarts:0,premiersEcarts:[],parVariante:{},statuts:{},erreurs:{},ms:{reference:0,patche:0}};
+  const res={sansThree:process.env.CH065_SANS_THREE==='1',date:new Date().toISOString(),collections:PREFIXES,nuages:0,jeux:0,ecarts:0,premiersEcarts:[],parVariante:{},statuts:{},erreurs:{},ms:{reference:0,patche:0}};
   const hA=crypto.createHash('sha256'),hB=crypto.createHash('sha256');const file=[];
   parcourir((c,o)=>{if(c.rails?.left?.profileLocalToSceneRelative&&c.rails?.right?.profileLocalToSceneRelative)file.push({c:{rails:c.rails,pointsSceneRelative:c.pointsSceneRelative},o});},MAX);
   for(const [rang,{c,o}] of file.entries()){
