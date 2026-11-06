@@ -206,8 +206,10 @@
      * différé, deuxième passe ni relecture en cours, le lot se met en pause, Ariane recharge la page ESV, attend la liste, vérifie la partie, et reprend
      * par le chemin de « Reprendre » (au plus `rechargementsMax` fois par partie : 1 ; sans signal après, le lot continue au repli, sans boucle).
      * ESV rouvre une autre partie ou ne répond pas dans `attenteRepriseMs` : le lot reste en pause, consigne F5. Ariane ne change jamais de partie. */
-    /* `ligneDeBaseEchecs` (lu par la page ; patch chantiers/CH-062/adaptateur-ligne-de-base.patch APPLIQUÉ par l’intégrateur, réglage coupé) : compteur effectif = compteur − requêtes de points en échec. */
-    signalEteint: Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, preuveMs: 5000, delaiAvantMs: 500, sondageMs: 500, attenteRepriseMs: 90000, ligneDeBaseEchecs: false }),
+    /* `ligneDeBaseEchecs` (lu par la page ; patch chantiers/CH-062/adaptateur-ligne-de-base.patch APPLIQUÉ par l’intégrateur, réglage coupé) : compteur effectif = compteur − requêtes de points en échec.
+     * `declencheur` : 'signal' (série de lectures au repli), 'trou' (nœud de points en échec dans la zone du rail : relevé de la page, sinon capture effondrée après un échec
+     * vu sur la page, sous `trouFraction` de la médiane des 20 captures d'avant) ou 'signal+trou'. */
+    signalEteint: Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, preuveMs: 5000, delaiAvantMs: 500, sondageMs: 500, attenteRepriseMs: 90000, ligneDeBaseEchecs: false, declencheur: 'signal', trouFraction: 0.3 }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
      * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE
