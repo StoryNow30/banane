@@ -132,7 +132,7 @@ async function bancExport(ctx,sw,id,o){
   /* Tas du panneau mesuré dans `tas` (après ramasse-miettes, puis juste après la lecture). */
   const lecturePanneau=cles=>p.evaluate(async([sid,cles])=>{const db=await new Promise((res,rej)=>{const r=indexedDB.open('banane-test-v3');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
    const all=n=>new Promise((res,rej)=>{const r=db.transaction(n).objectStore(n).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
-   const lire=n=>cles?globalThis.BananeJournalIndex.lireCles(db,n,cles[n],cles.totaux?.[n]):all(n);
+   const lire=async n=>cles?(await globalThis.BananeJournalIndex.lireCles(db,n,cles[n],cles.totaux?.[n])).objets:all(n);
    const a=performance.now();const ev=(await lire('events'));const rc=(await lire('records'));const fe=ev.filter(x=>x.nativeSessionId===sid),fr=rc.filter(x=>x.nativeSessionId===sid);
    const ms=performance.now()-a;globalThis.__garde=[ev,rc];db.close();return {ms,f:fe.length+fr.length,lus:ev.length+rc.length,signature:JSON.stringify([fe,fr]).length};},[session.id,cles]);
   const tas=async f=>{await cdp.send('HeapProfiler.collectGarbage');const h0=(await cdp.send('Runtime.getHeapUsage')).usedSize;const r=await f();
