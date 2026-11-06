@@ -1,0 +1,71 @@
+diff --git a/ariane-rs/crates/ariane-js/src/nombre.rs b/ariane-rs/crates/ariane-js/src/nombre.rs
+index f45ae43..255b63f 100644
+--- a/ariane-rs/crates/ariane-js/src/nombre.rs
++++ b/ariane-rs/crates/ariane-js/src/nombre.rs
+@@ -22,6 +22,31 @@ fn texte(v: &[u8]) -> String { v.iter().map(|c| char::from(c + b'0')).collect()
+ 
+ /// Départage au pair : si le double est exactement au milieu de deux écritures les plus courtes qui le relisent toutes
+ /// deux, garder celle dont le dernier chiffre est pair.
++/// `n × 10^q == x` exactement (x fini > 0, n ≥ 1) : arithmétique entière, sans développement décimal. Les puissances de 5 qui
++/// débordent 128 bits rendent faux à bon droit : la partie impaire d'un côté dépasserait alors celle de l'autre (< 2^60).
++fn egal_exact(x: f64, n: u64, q: i64) -> bool {
++    let b = x.to_bits();
++    let (frac, ex) = (b & ((1u64 << 52) - 1), i64::try_from((b >> 52) & 0x7ff).unwrap_or(0));
++    let (m, e) = if ex == 0 { (frac, -1074) } else { (frac | (1u64 << 52), ex - 1075) };
++    if m == 0 { return false; }
++    let puissance5 = |k: i64, base: u128| -> Option<u128> { (0..k).try_fold(base, |a, _| a.checked_mul(5)) };
++    // a·2^ea == b·2^eb, a et b non nuls
++    let meme = |a: u128, ea: i64, b: u128, eb: i64| {
++        let (ta, tb) = (i64::from(a.trailing_zeros()), i64::from(b.trailing_zeros()));
++        a >> ta == b >> tb && ea + ta == eb + tb
++    };
++    if q >= 0 {
++        // n·5^q·2^q == m·2^e
++        puissance5(q, u128::from(n)).is_some_and(|l| meme(l, q, u128::from(m), e))
++    } else {
++        // n·2^q == m·5^(−q)·2^e
++        puissance5(-q, u128::from(m)).is_some_and(|r| meme(u128::from(n), q, r, e))
++    }
++}
++
++/// Départage au pair : si le double est exactement au milieu de deux écritures les plus courtes qui le relisent toutes
++/// deux, garder celle dont le dernier chiffre est pair. Le milieu (k + 1 chiffres, au plus 18) est comparé au double par
++/// arithmétique entière ([`egal_exact`]) ; la relecture n'est essayée que pour un milieu exact (cas rare).
+ fn departager_au_pair(x: f64, d: &mut Vec<u8>, e10: i64) {
+     let k = d.len();
+     let der = d[k - 1];
+@@ -31,20 +56,15 @@ fn departager_au_pair(x: f64, d: &mut Vec<u8>, e10: i64) {
+         let t = if s.len() > 1 { format!("{}.{}e{}", &s[..1], &s[1..], e10) } else { format!("{s}e{e10}") };
+         t.parse::<f64>().is_ok_and(|y| y.to_bits() == x.to_bits())
+     };
+-    // développement décimal exact de x (au plus ~770 chiffres significatifs), au même exposant que les chiffres courts
+-    let exact = format!("{x:.1100e}");
+-    let Some((m, ex)) = exact.split_once('e') else { return };
+-    if ex.parse::<i64>().ok() != Some(e10) { return; }
+-    let mut xs: Vec<u8> = m.bytes().filter(u8::is_ascii_digit).map(|c| c - b'0').collect();
+-    while xs.len() > 1 && xs.last() == Some(&0) { xs.pop(); }
+     for voisin in [der.checked_sub(1), (der < 9).then_some(der + 1)].into_iter().flatten() {
+         let mut v = d.clone();
+         v[k - 1] = voisin;
+-        if !relit(&v) { continue; }
+-        // milieu de d et v : le plus petit des deux suivi de 5
++        // milieu de d et v : le plus petit des deux suivi de 5 ; valeur n × 10^(e10 − k)
+         let mut milieu = if voisin < der { v.clone() } else { d.clone() };
+         milieu.push(5);
+-        if xs == milieu { *d = v; return; }
++        let n = milieu.iter().fold(0u64, |a, &c| a * 10 + u64::from(c));
++        let q = e10 - i64::try_from(k).unwrap_or(0);
++        if egal_exact(x, n, q) && relit(&v) { *d = v; return; }
+     }
+ }
+ 
+@@ -55,6 +75,9 @@ pub fn nombre_en_chaine(x: f64) -> String {
+     if x == 0.0 { return "0".into(); }
+     if x.is_infinite() { return if x > 0.0 { "Infinity".into() } else { "-Infinity".into() }; }
+     if x < 0.0 { return format!("-{}", nombre_en_chaine(-x)); }
++    // entier exact sous 2^53 : écriture décimale directe (même texte qu'ECMA-262, qui l'écrit en entier sous 10^21)
++    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // 0 < x < 2^53 entier : conversion exacte
++    if x < 9_007_199_254_740_992.0 && x.trunc().to_bits() == x.to_bits() { return (x as u64).to_string(); }
+     let (mut d, e10) = chiffres_courts(x);
+     departager_au_pair(x, &mut d, e10);
+     let chiffres = texte(&d);
