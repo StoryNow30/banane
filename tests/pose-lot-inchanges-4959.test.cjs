@@ -30,8 +30,12 @@ const HABILLAGE=['ui5.js','ui5-variante.js','signal-rendu.js'];
 const sansClicDroit=s=>s.replace(/ \/\* Glisser au bouton droit \(CH-018\)[\s\S]*?\n   return seq;\n \}\n/,'').replace('sequenceGlisser,sequenceClicDroit,construire','sequenceGlisser,construire');
 /* CH-062 (A, réglage `lot.signalEteint.ligneDeBaseEchecs`, coupé) : ligne de base du compteur de Potree par les requêtes de points en échec ;
  * sans ces lignes, l'adaptateur est celui d'avant (chargementsEffectifs rend chargementsEsv quand le réglage est coupé). */
-const sansCH062=t=>t.replace(/\n \/\* CH-062 \(PROPOSÉ, réglage `lot\.signalEteint\.ligneDeBaseEchecs`[\s\S]*?const chargementsEffectifs=\(\)=>\{[^\n]*/,'')
- .split('chargementsEffectifs()').join('chargementsEsv()').split(',...(LIGNE_BASE?{ech:echecsPoints}:{})').join('');
+const sansCH062=t=>t.replace(/\n \/\* CH-062 \(PROPOSÉ ; réglages `lot\.signalEteint\.ligneDeBaseEchecs`[\s\S]*?\n   return out;\}/,'')
+ .split('chargementsEffectifs()').join('chargementsEsv()').split(',...releveLigneBase()').join('')
+ .replace(/\n   try\{const t=trouEchec\(expected\);if\(t\)data\.readStrategy\.trouEchec=t;\}catch\{\/\* CH-062 : relevé seulement \*\/\}/,'');
+/* CH-062 : l'observateur relaie l'événement `ligne-base-repli` du patch de la page (lecture seule, aucune pose) ; sans ces lignes, il est celui de la test 8. */
+const sansCH062Obs=t=>t.replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+ .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
 /* Test 25 (CH-017, D-268) : `changerPartie` (clic sur l'entrée « p=N » du sélecteur de parties, jamais de pose ni de validation) ajouté à l'adaptateur et à la liste du pont ; retiré ici avant la comparaison à la test 8. */
@@ -44,7 +48,7 @@ const sansPatchCH018=texte=>{const os=require('node:os'),{spawnSync}=require('no
  const r31=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-031/adapter-page-remise.patch')],{encoding:'utf8'});assert.equal(r31.status,0,'le patch de CH-031 se retire de l\'adaptateur : '+(r31.stderr||r31.stdout));
  const r=spawnSync('patch',['-R','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-018/adapter-deplacement.patch')],{encoding:'utf8'});
  assert.equal(r.status,0,'le patch de CH-018 se retire de l\'adaptateur : '+(r.stderr||r.stdout));return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');};
-const PANNEAU={'src/gestes-vue.js':sansClicDroit,'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
+const PANNEAU={'src/esv-observer.js':t=>sansCH062Obs(t),'src/gestes-vue.js':sansClicDroit,'src/carte-relecture.js':s=>s.replace("enCours||p?.etat==='en-pause'||!!c","enCours||!!c").replace("${c.origine==='passe'?'de la deuxième passe':'de la relecture'}",'de la relecture')};
 /* Test 17 : module du panneau pour la pause de la relecture : il ne parle qu'au service worker (relecture-*), jamais à ESV ni à la pose. */
 const RELECTURE_PAUSE=['relecture-pause.js'];
 /* T20a : l'historique des parties (fiches de départ + fiches de fin de lot, `partsHistory`), module pur lu par le service worker pour la vue du panneau ;

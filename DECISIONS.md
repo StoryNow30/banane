@@ -3429,4 +3429,25 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Contexte : l'opérateur juge que l'intégrateur sous-estime les gains (vitesse, mémoire). CH-061 (avis mesuré) en cours. Premier banc ÉTABLI : géométrie 34,9 ms (JS) contre 22,4 ms (Rust/WASM), 9,4 ms (JS élagué) et 8,4 ms (Rust élagué), poses identiques bit à bit sur 865 nuages.
 - Effet : programme CH-064, par étapes. Espace `ariane-rs/` hors paquet (`tools/package.py` l'exclut). Cœur en Rust/WASM, coquille JS pour les API de Chrome et la page ESV. Parité octet pour octet exigée module par module. Mesure dans Chromium.
 - Le JavaScript reste la seule production : aucun module Rust n'entre dans le paquet sans une décision écrite de l'opérateur, module par module.
-- Le numéro suivant est D-292.
+
+## D-292 — Mauvaises voies du 06/11 : rien ne change, on attend un ou deux lots (opérateur, 06/11)
+- Constat ÉTABLI (lot Constellation du 06/11, parties 13 à 16, paquet 2bc1f56, jugé par l'Écho de l'opérateur) : 1 078 posés, 108 jugés, écart médian 4,35 mm, 7 fautes de plus de 50 mm, toutes de mauvaise voie (latéral 124 à 315 mm) : 15/7260, 15/7423, et la série 16/9266, 9267, 9270, 9271, 9272, au milieu de différés. La garde « après un différé » (en ombre depuis D-288) en aurait différé 3 (7260, 9270, 9271) ; la règle métier « grappe-differes » (en ombre) en signalait 3. Le 05/11 : 0 mauvaise voie sur 229 jugés.
+- Choix proposé : (1) chiffrer une prudence ciblée (cut entouré de différés) ; (2) ne rien changer et attendre. Réponse : « Ne rien changer et attendre un ou deux lots de plus. 108 cuts revus, c'est peu, et choisis par toi, donc peut-être plus souvent dans les endroits difficiles. »
+- Suivi : sur les prochains lots, mauvaises voies, événements `garde-apres-differe-ombre` et règle `grappe-differes` jugés ; séance Écho tirée au sort recommandée (D-285 point 4).
+
+## D-293 — Compteur d'ESV : ligne de base par les échecs ALLUMÉE ; gains JS lancés ; pauses de référence gardées ; dépôt du 06/11 (opérateur, 06/11)
+- Questions (reformulées en langage simple après « j'ai pas assez de contexte ni de compréhension ») : (1) solution A (Ariane retire du compteur de Potree les requêtes de points en échec) ou B (rechargement pendant le lot) ; (2) prendre les ≈ 14 % de gain en JS mesurés par CH-061 ; (3) retirer les pauses `setTimeout(0)` de la lecture de référence (≈ 310 s par jour) ; (4) déposer les exports du 06/11. Réponse : « 1. A ; 2. oui go en parallèle ; 3. non ; 4. oui dépose ».
+- Effet :
+  - (1) `lot.signalEteint.ligneDeBaseEchecs` = true (patch CH-062 appliqué à `src/adapter-page.js`) ; `lot.signalEteint.actif` (rechargement pendant le lot) reste false.
+  - (2) chantier CH-065 : lecture LiDAR sans allocation et élagage exact de la recherche de pose, en JS, poses identiques au bit près.
+  - (3) pauses inchangées.
+  - (4) `banane-data` 4ba702e, `collections/2026-11-06_v5_constellation-parties-13-16`.
+- Mesure attendue (CH-062, PROBABLE) : environ 8 % du temps du lot, et la relecture aussi ; à vérifier sur le prochain lot (`diag.lb`, événements `ligne-base-repli`, `readStrategy.trouEchec`).
+
+## D-294 — Week-end : l'intégrateur pilote tous les chantiers ; architecture A pour le Rust (opérateur, 06/11)
+- Ordre : « Je vais être particulièrement occupé ce week-end. Je te confie tous les chantiers, tu es chargé de l'architecture de leur développement, mets un accent particulier sur les gains et une qualité d'écriture sur la réécriture en Rust. Je te laisse auto gérer chaque session, gérer la communication entre elles et toi, relancer chaque chantier, relancer après chaque réinitialisation de session afin que je n'aie pas à le faire moi-même. Et si une question nécessite mon aval ou intervention tu m'envoies une notification via Telegram. »
+- Architecture du Rust : A (cœur Rust/WASM dans l'extension, coquille JS). Sur le tableau A contre B (`chantiers/CH-064/A-contre-B.md` : A plus rapide, seule A peut prendre la lecture LiDAR, B demande une orchestration asynchrone et une installation Windows), l'opérateur a répondu « Très bien » avant cet ordre. L'intégrateur retient A, sous réserve d'un contre-ordre. B reste documentée.
+- Ce que l'intégrateur fait seul : lancer, relancer et recréer les sessions ; arbitrer les questions techniques ; fusionner les sous-chantiers et intégrer au tronc après verify, parité et maquette ; fabriquer des paquets de test.
+- Ce qui attend l'accord de l'opérateur, demandé par le hub (PR « Hub : canal général », relayée sur Telegram) : allumer un réglage qui change une pose, une validation ou une écriture dans ESV ; mettre du Rust dans le paquet ; modifier `manifest.json` (`'wasm-unsafe-eval'`, permissions) ; merge dans main, étiquette, publication ; toute dépense ; toute suppression de données.
+- Mécanique : contrôle toutes les 2 heures (tâche planifiée « Pilotage du week-end ») dans la session de l'intégrateur ; abonnement aux PR du hub (n° 7) et de Cursor (n° 23).
+- Le numéro suivant est D-295.

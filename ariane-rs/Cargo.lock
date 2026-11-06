@@ -15,7 +15,28 @@ name = "ariane-coeur"
 version = "0.0.0"
 dependencies = [
  "ariane-capture",
+ "ariane-decision",
+ "ariane-etat",
  "ariane-geometrie",
+ "ariane-js",
+ "ariane-lidar",
+ "ariane-vba",
+]
+
+[[package]]
+name = "ariane-decision"
+version = "0.0.0"
+dependencies = [
+ "ariane-capture",
+ "ariane-geometrie",
+ "ariane-js",
+ "ariane-vba",
+]
+
+[[package]]
+name = "ariane-etat"
+version = "0.0.0"
+dependencies = [
  "ariane-js",
  "ariane-vba",
 ]
@@ -39,6 +60,14 @@ dependencies = [
 [[package]]
 name = "ariane-js"
 version = "0.0.0"
+
+[[package]]
+name = "ariane-lidar"
+version = "0.0.0"
+dependencies = [
+ "ariane-js",
+ "ariane-vba",
+]
 
 [[package]]
 name = "ariane-vba"

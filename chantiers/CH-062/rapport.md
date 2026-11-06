@@ -31,6 +31,10 @@ Outil : `tools/ch062-signal-lot.cjs`. Il reprend `capturesParRequete` de CH-060 
 | (A) ligne de base par les échecs, sans rechargement | **1 077 s [1 013 ; 1 148]** | **8,1 %** |
 
 - (A) vaut aussi pour la relecture : CH-060 mesurait 3 495 s au plus en relecture pour le rechargement.
+- **Le nœud perdu est-il dans la zone du rail ? (PROBABLE, mesuré par son effet.)** L'observateur ne garde pas le nom du nœud en échec. On compte donc, après chaque échec, les captures de la même page tombées sous 30 % de la médiane des 20 captures d'avant (`trous` de l'outil).
+  - 5 échecs sur 10 sont suivis de captures trouées, soit **374 cuts** : 4, 337, 25, 2 et 6. Les 337 et les 25 sont les « séries de captures vides » de CH-051 (parties 10 et 13 d'Orbite).
+  - Les 5 autres échecs ne laissent aucun trou visible : le nœud perdu était hors de la zone lue.
+  - Une pose sur ces cuts lit donc un trou ; la plupart deviennent des différés. Le patch relève désormais la clé du nœud en échec et dit s'il coupe la zone du rail (`trouEchec`) : la prochaine séance le mesurera directement.
 
 ## 2. Ce qui est livré
 - **(B), codé** dans `background.js`, réglage `lot.signalEteint` (`actif:false`).
@@ -41,16 +45,26 @@ Outil : `tools/ch062-signal-lot.cjs`. Il reprend `capturesParRequete` de CH-060 
     - cut suivant affiché dans la même partie, dans les bornes.
   - **Ensuite** : pause du moteur, rechargement, ré-équipement, liste attendue, puis `reprendreLot` (page rattachée, partie vérifiée, cut retrouvé). ESV muet, ou sur une autre partie, pendant `attenteRepriseMs` : le lot reste en pause avec la consigne F5. **Ariane ne change jamais de partie.**
   - **Plafond** : 1 rechargement par partie, proposé tel quel. Une seconde mort a eu lieu dans 2 pages sur 8 (10 échecs pour 8 pages). Sans signal après le rechargement, le lot continue au repli, sans boucle.
-- **(A), en patch seulement** : `adaptateur-ligne-de-base.patch` (fichier interdit). La page compte ses requêtes `ept-data` en échec (lecture seule). La condition « libre » devient `numNodesLoading − échecs === 0`. Réglage `lot.signalEteint.ligneDeBaseEchecs` (`false`). Un échec non vu laisse le repli d'aujourd'hui : jamais de lecture plus tôt.
+  - **Variante « trou »** (`declencheur` : `'signal'` livré, `'trou'`, `'signal+trou'`) : la demande de rechargement vient d'un nœud en échec dans la zone du rail.
+    - Avec le patch, c'est le relevé de la page (`trouEchec.touche`).
+    - Sans lui, c'est son effet : un échec vu sur CETTE page, puis une capture du lot sous `trouFraction` (0,3) de la médiane des 20 captures d'avant.
+    - Un événement par chargement de page. Même point sûr et même plafond.
+    - Limite : dans un trou franc, les cuts sont différés, et aucun point sûr ne vient avant la fin du trou. La garde CH-051 (allumée, D-283) recharge déjà dans ce cas.
+- **(A), en patch seulement** : `adaptateur-ligne-de-base.patch` (fichier interdit ; il s'applique sur le tronc ; les essais de l'adaptateur restent verts sur une copie patchée).
+  - La page compte ses requêtes `ept-data` en échec, en lecture seule, et garde leur clé de nœud. La condition « libre » devient `numNodesLoading − échecs === 0`, sous le réglage `lot.signalEteint.ligneDeBaseEchecs` (`false`, à allumer par l'opérateur).
+  - Retour au repli d'aujourd'hui, avec un événement `ligne-base-repli` par épisode, si le compteur passe sous les échecs (« sous ») ou si l'observateur des ressources manque (« absent »). L'événement est relayé par `src/esv-observer.js` (même patch : ce fichier est épinglé comme fichier de lot) et normalisé par le service worker.
+  - Chaque vue lue porte `lb` = [compteur brut, échecs, motif du repli]. Chaque capture porte `trouEchec` = {nœuds en échec, 4 clés au plus, `touche`}. `touche` dit si la boîte du nœud, dans le repère du nuage, coupe une boule de `zoneRailM` (3 m, SUPPOSÉ) autour d'un rail ; `null` si le nœud est introuvable dans l'arbre de Potree.
+  - Aucune écriture dans la page ni dans Potree. La troisième voie (décompter dans Potree) est exclue.
+  - Un échec non vu laisse le repli d'aujourd'hui : jamais de lecture plus tôt.
 - **Recommandation de l'exécutant** : appliquer (A), et garder (B) en filet. Seul (B) remplit le trou de détail que laisse le nœud perdu (PROBABLE : le nœud et sa descendance restent absents jusqu'au rechargement).
 
 ## 3. Preuves
 - **Essais rouges d'abord** : `lot-signal-eteint` et `-rechargement` étaient rouges avant le code (aucun événement, aucun rechargement). L'essai du patch est rouge sur l'adaptateur non patché.
-- **Essais SW**, chacun sous 15 s seul, tous verts : `tests/lot-signal-eteint.test.cjs` (coupé : mêmes commandes qu'un lot au signal), `-rechargement`, `-refus` (règle pure ; écriture jamais vue), `-autre-partie` (partie 0, partie 24), `-sans-retour` (plafond), `tests/lot-signal-ligne-de-base.test.cjs` (patch (A)), `tests/ch062-outils.test.cjs` (outil de mesure, journal synthétique).
+- **Essais SW**, chacun sous 15 s seul, tous verts : `tests/lot-signal-eteint.test.cjs` (coupé : mêmes commandes qu'un lot au signal), `-rechargement`, `-refus` (règle pure ; écriture jamais vue), `-autre-partie` (partie 0, partie 24), `-sans-retour` (plafond), `-trou` et `-trou-signal` (variante « trou » ; témoin livré), `tests/lot-signal-ligne-de-base.test.cjs` (patch (A) : il s'applique, puis 3 essais, rouges sans le patch), `tests/ch062-outils.test.cjs` (outil de mesure, journal synthétique).
 - **Non-régression** : deux passes de 58 et 171 fichiers voisins (les listes se recoupent), toutes vertes après une correction d'une ligne : la garde manquait quand le module du signal n'est pas chargé. Dans `pose-lot-inchanges-4959`, la clé `lot.signalEteint` est déclarée, avec l'assertion « coupé ».
 - **Maquette** : `tests/esv-maquette/lot-signal-eteint.test.cjs`, compteur bloqué. Pause après la validation du cut 103, reprise 2 s après le rechargement, 3,7 s entre deux validations, chaque cut validé une fois, lectures au signal ensuite, aucun SKIP.
 - **Parité** : `parite-relecture-sw` contre le tronc ce98a9a : relevés identiques. `parite-l1se-sw --passe` **non lancée** : il faut un corpus de nuages et un rejeu du banc, absents de cette session. L'essai « coupé » montre des commandes identiques.
-- Aucun fichier de décision touché : `engine`, `adapter-page`, `geometry*`, `gcv2*`, `lot-decision`, `manifest` ont un diff vide.
+- Aucun fichier de décision touché : `engine`, `adapter-page`, `geometry*`, `gcv2*`, `lot-decision`, `manifest` ont un diff vide. `src/esv-observer.js` n'est pas touché (son changement est dans le patch).
 
 ## Risques et limites
 - Le coût d'un rechargement sur le vrai ESV est SUPPOSÉ : 20 s retenues (changement de partie : 9 à 16 s, CH-058). Sur la maquette, la reprise vient 2 s après le rechargement.

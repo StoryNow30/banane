@@ -8,7 +8,9 @@
  *   5. banc témoin + contrôle négatif (un port faussé doit être VU)
  *   6. aller-retour VBA sur le corpus réel (--rapide : 3 documents ; sinon tous)
  *   7. parité de chaque module porté (ariane-rs/parite/*.cjs hors témoin), dans Node puis dans Chromium (référence) ;
- *      --rapide : 15 nuages par module ; sinon tous les nuages réels */
+ *      --rapide : 15 nuages par module ; sinon tous les nuages réels
+ *   8. lanceurs propres des sous-chantiers, s'ils sont présents (CH-064-L : tools/ch064-l-parite.cjs en Node puis dans
+ *      Chromium, code 1 au premier écart ; tools/ch064-l-banc.cjs ; tools/ch064-l-fusion.cjs) */
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const RACINE=path.resolve(__dirname,'..'),RS=path.join(RACINE,'ariane-rs');
 const a=process.argv.slice(2),rapide=a.includes('--rapide'),json=a.includes('--json')?a[a.indexOf('--json')+1]:null;
@@ -25,6 +27,7 @@ etape('construction WASM',()=>{const w=require('./ch064-construire.cjs').constru
 etape('sonde numérique (Node, Chromium)',()=>{const o=JSON.parse(lancer('node',['tools/ch064-sonde-math.cjs','--tirages','50000','--chromium']));
  const mauvais=[];for(const [m,d] of [['node',o.divergences],['chromium',o.chromium.divergences]])for(const k in d)if(k.startsWith('js_')&&d[k]!==0)mauvais.push(m+':'+k+'='+d[k]);
  if(mauvais.length)throw Error('portage divergent : '+mauvais.join(', '));return {node:o.moteur,chromium:o.chromium.moteur};});
+etape('essais de la coquille (audit, PR n° 25)',()=>{const o=lancer('node',['--test','tools/ch064-essais-coquille.cjs']);const m=o.match(/# pass (\d+)/);return (m?m[1]:'?')+' essais';});
 etape('banc témoin et contrôle négatif',()=>{const P=require('./ch064-parite.cjs'),C=require('../ariane-rs/coquille/coeur.js'),w=require('./ch064-construire.cjs').construire({silencieux:true});
  const coeur=C.creer(fs.readFileSync(w)),t=require('../ariane-rs/parite/temoin.cjs');
  const bon=P.executer(t,coeur);if(bon.verdict!=='IDENTIQUE')throw Error('témoin : '+JSON.stringify(bon.ecarts));
@@ -39,4 +42,7 @@ for(const m of modules)for(const nav of [false,true])etape('parité '+m+(nav?' (
  const args=['--max-old-space-size=8000','tools/ch064-parite.cjs','--module',m];if(rapide)args.push('--nuages','15');if(nav)args.push('--chromium');
  const o=JSON.parse(lancer('node',args));if(o.verdict!=='IDENTIQUE')throw Error(JSON.stringify(o.ecarts).slice(0,1000));
  return {cas:o.cas,identiques:o.identiques,repli:o.bilanAdaptateur,empreinte:o.empreintes.js.slice(0,16)};});
+const SOUS=[['CH-064-L parité (Node)','tools/ch064-l-parite.cjs',['--moteur','node']],['CH-064-L parité (Chromium)','tools/ch064-l-parite.cjs',['--moteur','chromium']],
+ ['CH-064-L banc','tools/ch064-l-banc.cjs',[]],['CH-064-L fusion','tools/ch064-l-fusion.cjs',[]]];
+for(const [nom,f,args] of SOUS)if(fs.existsSync(path.join(RACINE,f)))etape(nom,()=>{const o=lancer('node',['--max-old-space-size=8000',f,...args]);return o.trim().split('\n').slice(-3).join(' | ').slice(0,400);});
 fin(0);

@@ -23,10 +23,22 @@ pub(crate) fn obj(t: Vec<(&str, Valeur)>) -> Valeur { Valeur::Objet(t.into_iter(
 pub(crate) fn hd<T>(m: &str) -> Result<T, Echec> { Err(Echec::hors_domaine(m)) }
 
 /// Réglages fusionnés `{...DEFAULTS, ...options, method}` : valeur rendue telle quelle (`parameters`) et lecture numérique.
-pub struct Reglages { pub valeur: Valeur }
+pub struct Reglages {
+    /// L'objet `cfg` du JS, clés dans son ordre : rendu tel quel dans `parameters`.
+    pub valeur: Valeur,
+}
 impl Reglages {
     /// `force_methode` : `propose` force `method` à DEFAULTS.method ; `enforcePairSupport` ne le fait pas.
+    /// `{...DEFAULTS, ...options}`, `method` forcé si demandé (`propose` le force, `enforcePairSupport` non).
+    ///
+    /// # Errors
+    /// Hors domaine pour des options non objet ou une clé `__proto__`.
     pub fn fusionner(options: &Valeur, force_methode: bool) -> Result<Self, Echec> { Self::fusionner_sans(options, force_methode, false) }
+    /// Comme [`Reglages::fusionner`], et sans la clé `lab` si demandé (GCV1 : `delete cfg.lab`).
+    ///
+    /// # Errors
+    /// Hors domaine pour des options non objet ou une clé `__proto__`.
+    ///
     pub fn fusionner_sans(options: &Valeur, force_methode: bool, sans_lab: bool) -> Result<Self, Echec> {
         let mut t: Vec<(String, Valeur)> = DEFAUTS.iter().map(|(k, v)| (k.to_string(), n(*v))).collect();
         t.push(("method".into(), s(METHODE)));
@@ -40,7 +52,7 @@ impl Reglages {
             }
             _ => return hd("options non objet"),
         }
-        if force_methode { t.iter_mut().find(|(c, _)| c == "method").unwrap().1 = s(METHODE); }
+        if force_methode { if let Some(e) = t.iter_mut().find(|(c, _)| c == "method") { e.1 = s(METHODE); } }
         if sans_lab { t.retain(|(c, _)| c != "lab"); }
         Ok(Reglages { valeur: Valeur::Objet(t) })
     }
@@ -65,13 +77,28 @@ impl Reglages {
 
 /// Droite robuste (`robustLine`) : médiane des pentes par paires espacées, bornée à ±0,5.
 #[derive(Clone, Debug)]
-pub struct Droite { pub slope: f64, pub raw_slope: f64, pub slope_limited: bool, pub intercept: f64, pub residual: f64, pub count: usize }
+pub struct Droite {
+    /// Pente retenue (bornée).
+    pub slope: f64,
+    /// Pente médiane avant la borne.
+    pub raw_slope: f64,
+    /// La borne a joué.
+    pub slope_limited: bool,
+    /// Ordonnée à l'origine (médiane).
+    pub intercept: f64,
+    /// Résidu médian absolu.
+    pub residual: f64,
+    /// Nombre de lignes.
+    pub count: usize,
+}
 impl Droite {
     pub(crate) fn valeur(&self) -> Valeur {
         obj(vec![("slope", n(self.slope)), ("rawSlope", n(self.raw_slope)), ("slopeLimited", Valeur::Booleen(self.slope_limited)),
             ("intercept", n(self.intercept)), ("residual", n(self.residual)), ("count", n(self.count as f64))])
     }
 }
+/// `robustLine(rows)` : None sous trois lignes.
+#[must_use]
 pub fn robust_line(rows: &[[f64; 2]]) -> Option<Droite> {
     if rows.len() < 3 { return None; }
     let mut slopes = vec![];
@@ -91,7 +118,9 @@ pub fn robust_line(rows: &[[f64; 2]]) -> Option<Droite> {
     let intercept = mediane(&rows.iter().map(|p| p[1] - slope * p[0]).collect::<Vec<_>>());
     let residual = mediane(&rows.iter().map(|p| (p[1] - slope * p[0] - intercept).abs()).collect::<Vec<_>>());
     // slopeLimited : slope !== rawSlope (NaN impossible : les pentes sont finies)
-    Some(Droite { slope, raw_slope: raw, slope_limited: slope != raw, intercept, residual, count: rows.len() })
+    #[allow(clippy::float_cmp)] // `slope !== rawSlope` du JS : comparaison exacte voulue
+    let slope_limited = slope != raw;
+    Some(Droite { slope, raw_slope: raw, slope_limited, intercept, residual, count: rows.len() })
 }
 
 // ---------------------------------------------------------------- lecture de l'entrée
@@ -114,7 +143,7 @@ impl Vis<'_> {
 }
 pub(crate) fn vis(v: Option<&Valeur>) -> Result<Vis<'_>, Echec> {
     match v {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) => Ok(Vis::Absente),
+        None | Some(Valeur::Indefini | Valeur::Nul) => Ok(Vis::Absente),
         Some(x @ (Valeur::Booleens(_) | Valeur::Tableau(_) | Valeur::Nombres(_) | Valeur::Bloc { .. })) => Ok(Vis::Liste(x)),
         _ => hd("visibleByClipBoxes"),
     }
@@ -141,7 +170,7 @@ pub(crate) fn pour_chaque_point(ps: &Valeur, vis: &Vis, m: &M16, mut f: impl FnM
         Valeur::Tableau(t) => {
             for (i, e) in t.iter().enumerate() {
                 if vis.est_faux(i) { continue; }
-                let p = match e { Some(p) => p, None => continue };
+                let Some(p) = e else { continue };
                 let present_fini = match p {
                     Valeur::Nombres(v) => v.iter().all(|x| x.is_finite()),
                     Valeur::Tableau(v) => v.iter().all(|x| match x { None => true, Some(Valeur::Nombre(y)) => y.is_finite(), _ => false }),
@@ -184,18 +213,27 @@ pub(crate) fn avec(mut v: Valeur, en_plus: Vec<(&str, Valeur)>) -> Valeur {
     v
 }
 
+/// Case de la grille de recherche (`{loss, u, z}` du JS).
+#[derive(Clone, Copy)]
+struct Cand { loss: f64, u: f64, z: f64 }
+
+/// `propose(capture, side, options)` de `src/geometry.js`.
+///
+/// # Errors
+/// L'exception que lèverait le JS (réglage invalide ou incohérent, profil absent, projection non finie) ; hors domaine
+/// pour une entrée que le port ne reproduit pas (la façade rejoue alors le JS).
 pub fn propose(capture: &Valeur, cote: &str, options: &Valeur) -> Result<Valeur, Echec> {
     let cfg = Reglages::fusionner(options, true)?;
     cfg.valider()?;
     if !matches!(capture, Valeur::Objet(_)) { return hd("capture non objet"); }
     let rails = capture.champ("rails");
     let rail = match rails {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) => None,
+        None | Some(Valeur::Indefini | Valeur::Nul) => None,
         Some(r @ Valeur::Objet(_)) => r.champ(cote),
         Some(_) => return hd("rails non objet"),
     };
     let rail = match rail {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) | Some(Valeur::Booleen(false)) => return Err(Echec::erreur(format!("Profil absent : {cote}"))),
+        None | Some(Valeur::Indefini | Valeur::Nul | Valeur::Booleen(false)) => return Err(Echec::erreur(format!("Profil absent : {cote}"))),
         Some(Valeur::Nombre(x)) if x.is_nan() || *x == 0.0 => return Err(Echec::erreur(format!("Profil absent : {cote}"))),
         Some(Valeur::Chaine(c)) if c.is_empty() => return Err(Echec::erreur(format!("Profil absent : {cote}"))),
         Some(r @ Valeur::Objet(_)) => r,
@@ -206,31 +244,31 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur) -> Result<Valeur,
     if nps == 0 { return Ok(non_resolu(cote, "Aucun point LiDAR disponible.", &cfg)); }
     // contour le plus fourni (reduce, première égalité gardée)
     let contour = match rail.champ("profileContours") {
-        None | Some(Valeur::Indefini) | Some(Valeur::Nul) => None,
+        None | Some(Valeur::Indefini | Valeur::Nul) => None,
         Some(Valeur::Tableau(t)) => {
             let mut a: Option<&Valeur> = None;
             let lg = |c: Option<&Valeur>| -> Result<usize, Echec> {
                 match c.and_then(|c| c.champ("verticesSceneRelative")) {
-                    None | Some(Valeur::Indefini) | Some(Valeur::Nul) => Ok(0),
+                    None | Some(Valeur::Indefini | Valeur::Nul) => Ok(0),
                     Some(v) => longueur_tableau(v).ok_or_else(|| Echec::hors_domaine("verticesSceneRelative")),
                 }
             };
             for b in t {
-                let b = match b { Some(b @ Valeur::Objet(_)) => b, _ => return hd("contour non objet") };
+                let Some(b @ Valeur::Objet(_)) = b else { return hd("contour non objet") };
                 if lg(Some(b))? > lg(a)? { a = Some(b); }
             }
             a
         }
-        Some(Valeur::Nombres(_)) | Some(Valeur::Bloc { .. }) | Some(Valeur::Booleens(_)) => return hd("contour non objet"),
+        Some(Valeur::Nombres(_) | Valeur::Bloc { .. } | Valeur::Booleens(_)) => return hd("contour non objet"),
         Some(_) => return hd("profileContours"),
     };
-    let contour = match contour { Some(c) => c, None => return Ok(non_resolu(cote, "Contour du profil absent.", &cfg)) };
+    let Some(contour) = contour else { return Ok(non_resolu(cote, "Contour du profil absent.", &cfg)) };
     let m: M16 = match rail.champ("sceneRelativeToProfileLocal") {
         Some(Valeur::Nombres(t)) if t.len() >= 16 => { let mut a = [0.0; 16]; a.copy_from_slice(&t[..16]); a }
         _ => return hd("sceneRelativeToProfileLocal"),
     };
     let mut shape = vec![];
-    for p in sommets(contour.champ("verticesSceneRelative").unwrap())? { shape.push(point(&m, p[0], p[1], p[2])?); }
+    for p in sommets(contour.champ("verticesSceneRelative").unwrap_or(&Valeur::Indefini))? { shape.push(point(&m, p[0], p[1], p[2])?); }
     let sign = ariane_js::sign(mediane(&shape.iter().map(|p| p[1]).collect::<Vec<_>>()));
     if sign.is_nan() || sign == 0.0 { return Ok(non_resolu(cote, "Sens du profil ambigu.", &cfg)); }
     let vertices: Vec<[f64; 2]> = shape.iter().map(|p| [sign * p[1], p[2]]).collect();
@@ -267,15 +305,13 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur) -> Result<Valeur,
             for p in &points {
                 let (du, dz) = (p[0] - u - a[0], p[1] - z - a[1]);
                 let d = du * du + dz * dz; // ** 2 ≡ x*x au bit près (mesuré, Node et Chromium)
-                if d < best { best = d; }
+                best = ariane_js::min_positif_fini(best, d); // d ≥ +0 et fini : identique à `if (d < best) best = d`
             }
             tampon.push(best);
         }
         mediane(tampon)
     };
     let mut tampon = Vec::with_capacity(top_anchors.len().max(face_anchors.len()));
-    #[derive(Clone, Copy)]
-    struct Cand { loss: f64, u: f64, z: f64 }
     let mut best = Cand { loss: f64::INFINITY, u: 0.0, z: 0.0 };
     let mut coarse: Vec<Cand> = vec![];
     let mut search = |cu: f64, cz: f64, ry: f64, rz: f64, step: f64, retain: bool, best: &mut Cand, coarse: &mut Vec<Cand>| {
@@ -303,7 +339,7 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur) -> Result<Valeur,
     search(best.u, best.z, 0.004, 0.004, 0.001, false, &mut best, &mut coarse);
     let (top_band, face_band) = (cfg.f("topBand")?, cfg.f("faceBand")?);
     let top_rows: Vec<[f64; 2]> = points.iter().filter(|p| p[0] > best.u + 0.012 && p[0] < best.u + width - 0.012 && (p[1] - best.z).abs() < top_band).map(|p| [p[0], p[1]]).collect();
-    let top = match robust_line(&top_rows) { Some(t) => t, None => return Ok(non_resolu(cote, "Plan de roulement non estimable.", &cfg)) };
+    let Some(top) = robust_line(&top_rows) else { return Ok(non_resolu(cote, "Plan de roulement non estimable.", &cfg)) };
     let face_rows: Vec<[f64; 2]> = points.iter().filter(|p| {
         let drop = top.slope * p[0] + top.intercept - p[1];
         drop > 0.009 && drop < 0.034 && (p[0] - best.u).abs() < face_band
@@ -367,6 +403,9 @@ pub fn propose(capture: &Valeur, cote: &str, options: &Valeur) -> Result<Valeur,
 }
 
 /// `enforcePairSupport` sur les deux propositions (déjà calculées par ce port).
+///
+/// # Errors
+/// Réglages incohérents ; hors domaine pour des options non objet.
 pub fn enforce_pair_support(mut gauche: Valeur, mut droite: Valeur, options: &Valeur) -> Result<Valeur, Echec> {
     let cfg = Reglages::fusionner(options, false)?;
     cfg.coherence()?;
@@ -392,6 +431,11 @@ pub fn enforce_pair_support(mut gauche: Valeur, mut droite: Valeur, options: &Va
     Ok(obj(vec![("left", gauche), ("right", droite)]))
 }
 
+/// `proposeBoth(capture, options)` de `src/geometry.js`.
+///
+/// # Errors
+/// L'exception que lèverait le JS (réglage invalide ou incohérent, profil absent, projection non finie) ; hors domaine
+/// pour une entrée que le port ne reproduit pas (la façade rejoue alors le JS).
 pub fn propose_both(capture: &Valeur, options: &Valeur) -> Result<Valeur, Echec> {
     let g = propose(capture, "left", options)?;
     let d = propose(capture, "right", options)?;
@@ -399,18 +443,19 @@ pub fn propose_both(capture: &Valeur, options: &Valeur) -> Result<Valeur, Echec>
 }
 
 #[cfg(test)]
+#[allow(clippy::float_cmp)] // essais d'identité au bit près : la comparaison exacte est le but
 mod essais {
     use super::*;
     #[test]
     fn droite_robuste_exacte_sur_une_droite() {
-        let rows: Vec<[f64; 2]> = (0..40).map(|i| { let x = i as f64 * 0.002; [x, 0.25 * x + 0.1] }).collect();
+        let rows: Vec<[f64; 2]> = (0..40).map(|i| { let x = f64::from(i) * 0.002; [x, 0.25 * x + 0.1] }).collect();
         let d = robust_line(&rows).unwrap();
         assert!((d.slope - 0.25).abs() < 1e-12 && !d.slope_limited && d.count == 40);
         assert!(robust_line(&rows[..2]).is_none());
     }
     #[test]
     fn pente_bornee() {
-        let rows: Vec<[f64; 2]> = (0..20).map(|i| { let x = i as f64 * 0.01; [x, 2.0 * x] }).collect();
+        let rows: Vec<[f64; 2]> = (0..20).map(|i| { let x = f64::from(i) * 0.01; [x, 2.0 * x] }).collect();
         let d = robust_line(&rows).unwrap();
         assert_eq!(d.slope, 0.5);
         assert!(d.slope_limited);
@@ -436,5 +481,29 @@ mod essais {
         let c = Valeur::Objet(vec![("rails".into(), Valeur::Objet(vec![("left".into(), Valeur::Objet(vec![]))]))]);
         let v = propose(&c, "left", &Valeur::Indefini).unwrap();
         assert_eq!(v.champ("reasons"), Some(&Valeur::Tableau(vec![Some(s("Aucun point LiDAR disponible."))])));
+    }
+}
+
+#[cfg(test)]
+mod essais_publics {
+    use super::*;
+    #[test]
+    fn rail_synthetique_candidat_au_delta_nul() {
+        let c = crate::essais_communs::capture(6);
+        let v = propose(&c, "left", &Valeur::Indefini).unwrap();
+        assert_eq!(v.champ("status"), Some(&s("candidate")), "{:?}", v.champ("reasons"));
+        let Some(Valeur::Nombres(d)) = v.champ("delta") else { panic!("delta") };
+        assert!(d[1].abs() < 0.002 && d[2].abs() < 0.002, "{d:?}");
+    }
+    #[test]
+    fn paire_et_appui() {
+        let c = crate::essais_communs::capture(6);
+        let both = propose_both(&c, &Valeur::Indefini).unwrap();
+        assert!(both.champ("left").is_some() && both.champ("right").is_some());
+        // un delta latéral isolé de 80 mm sans appui du second rail est refusé
+        let p = |l: f64| obj(vec![("status", s("candidate")), ("delta", Valeur::Nombres(vec![0.0, l, 0.0])), ("reasons", Valeur::Tableau(vec![]))]);
+        let r = enforce_pair_support(p(0.08), p(0.0), &Valeur::Indefini).unwrap();
+        assert_eq!(r.champ("left").and_then(|g| g.champ("status")), Some(&s("unresolved")));
+        assert_eq!(r.champ("right").and_then(|g| g.champ("status")), Some(&s("candidate")));
     }
 }
