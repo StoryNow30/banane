@@ -51,7 +51,8 @@ fn plus_proches(mut l: Vec<V>, identity: &V, k: &V) -> R<Vec<V>> {
     for a in &l { let d = ecart_cut(a, identity)?; if d.is_nan() { return hd("cut non numérique"); } cles.push(d); }
     let mut idx: Vec<usize> = (0..l.len()).collect();
     idx.sort_by(|i, j| cles[*i].partial_cmp(&cles[*j]).unwrap_or(std::cmp::Ordering::Equal));
-    let fin = slice_debut(l.len(), vers_nombre(k)?);
+    // `slice(0, undefined)` garde tout (ToIntegerOrInfinity ne s'applique qu'à une fin définie)
+    let fin = if matches!(k, V::Indefini) { l.len() } else { slice_debut(l.len(), vers_nombre(k)?) };
     let mut out = vec![];
     for i in idx.into_iter().take(fin) { out.push(std::mem::replace(&mut l[i], V::Indefini)); }
     Ok(out)
@@ -458,7 +459,15 @@ pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validate
     let seeded = minimal_capture(capture, seeded_rails(rails, &pred)?);
     let again = shadow::scientific_propose_both(&seeded, et)?;
     let ar = |s_: &str| science_rail(&again, s_);
-    let again_ok = SIDES.iter().all(|s_| { let r = ar(s_); !nullish(r) && vrai(g(r, "ok")) && matches!(g(g(r, "next"), "status"), V::Chaine(c) if c == "candidate") }) && !vrai(g(g(&again, "summary"), "pairGaugeRejected"));
+    let mut again_cand = true;
+    for s_ in SIDES {
+        let r = ar(s_);
+        if nullish(r) || !vrai(g(r, "ok")) { again_cand = false; break; }
+        let nx = g(r, "next");
+        if nullish(nx) { return hd("science relancée : next absent sur un rail ok"); }
+        if !matches!(g(nx, "status"), V::Chaine(c) if c == "candidate") { again_cand = false; break; }
+    }
+    let again_ok = again_cand && !vrai(g(g(&again, "summary"), "pairGaugeRejected"));
     let srails = g(&seeded, "rails");
     if again_ok {
         let d1 = |s_: &str| -> R<f64> { Ok(vers_nombre(&gi(g(g(ar(s_), "next"), "delta"), 1)?)?.abs() * 1000.0) };
@@ -480,6 +489,7 @@ pub(crate) fn decide_cut_base(capture: &V, science: &V, anchors_in: &V, validate
         let r = ar(side);
         if nullish(r) || !vrai(g(r, "ok")) { why.push(format!("{side}:frame")); continue; }
         let next = g(r, "next");
+        if nullish(next) { return hd("science relancée : next absent sur un rail ok"); }
         let pg = g(r, "pairGauge");
         let before = if !nullish(pg) && vrai(g(pg, "rejected")) { let pb = g(pg, "publishedBeforeGate"); if nullish(pb) { V::Indefini } else { g(pb, "delta").clone() } } else { V::Nul };
         let own = if matches!(g(next, "status"), V::Chaine(c) if c == "candidate") { g(next, "delta").clone() } else { before };
