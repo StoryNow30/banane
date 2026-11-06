@@ -117,5 +117,5 @@ Session de 1 000 visites et 31 000 événements Écho. Ce qui reste après corre
 - **Après fusion du tronc f25ce84 (CH-059, D-289)** :
   - les suites du service worker, de la relecture, de la correction, de l'Écho et de l'export sont vertes (236 fichiers, 869 essais) ;
   - parité de la relecture contre f25ce84 : identique (SHA-256 9984fe77…) ;
-  - `tests/pose-lot-inchanges-4959.test.cjs` échoue sur 2 essais, **sur le tronc aussi** : `src/relecture-ombre.js` a été changé par D-289. Ce n'est pas CH-058 ; c'est à l'intégrateur de mettre la référence à jour.
+  - `tests/pose-lot-inchanges-4959.test.cjs` échouait sur 2 essais, sur le tronc aussi : D-289 avait changé `src/relecture-ombre.js`. L'intégrateur l'a corrigé (`sansD284` retire aussi les lignes de D-289). Elle passe après la fusion de 6ec3723.
 - **Coût restant** : la construction de l'index, de 0,6 à 3 s, se paie une fois par vie du service worker, au premier export ou au premier début de relecture. Avant, cette même lecture se payait à chaque étape.
