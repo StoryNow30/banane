@@ -741,7 +741,7 @@ fn hypotheses_du_cut(cap: &Cap, a: &ArgsHyp, cx: &Cx) -> R<V> {
             t("ecartVoisinsMm", ecart_vois(&mm));
             t("ecartementAutreH0Mm", ar(gauge0, 1));
             t("ecartMedAutreH0Mm", gm.map_or_else(nul, |x| ar(gauge0 - x, 1)));
-            t("chaineEtage", if gd.it.chaine_rail.is_some() { g(&ch_v, "stage").clone() } else { nul() });
+            t("chaineEtage", if gd.it.chaine_rail.is_some() { if nullish(&ch_v) { return hd("chaine.v absente"); } g(&ch_v, "stage").clone() } else { nul() });
             if let Some(h6) = &gd.h6 {
                 let cel = match dc { Some(c) => Some((0.0, c)), None => proche };
                 let dans = cel.is_some_and(|(d, _)| d <= H6_RESERVOIR);
@@ -834,6 +834,7 @@ fn hypotheses_du_cut(cap: &Cap, a: &ArgsHyp, cx: &Cx) -> R<V> {
     };
     let voie_h6 = if base_h6.is_some() { o(vec![("tous", ref_h6(&fam_tous)?), ("lot", ref_h6(&fam_lot)?), ("departLot", b(vrai(depart_esv)))]) } else { nul() };
     let sd = p(seul, "decision")?;
+    if nullish(sd) { return hd("seul.decision absente (le JS lève)"); }
     let raison = { let r = g(sd, "reason"); if nullish(r) { nul() } else { s(&texte_k(r, 60)?) } };
     let ch_info = |k: &str| if vrai(chaine) { g(&ch_dec, k).clone() } else { nul() };
     let appuis_ch = if vrai(chaine) { let au = g(&ch_dec, "anchorsUsed"); long_ou0(au) } else { n(0.0) };
