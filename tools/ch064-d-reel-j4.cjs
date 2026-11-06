@@ -19,7 +19,7 @@ function tables(){
   if(!t||vus.has(t.partie+'|'+t.sig))continue;vus.add(t.partie+'|'+t.sig);TABLES.push({n:t.n,st:t.st,fl:t.fl,ed:t.ed,partie:t.partie});}
  return TABLES;}
 function*cas(modules,{max=Infinity}={}){
- const veut=m=>modules.includes(m);if(veut('voieRecentree')||veut('voieB1'))yield* recentree(max,veut);if(!['gcv2L1e','appuisListe','voieB1'].some(veut))return;
+ const veut=m=>modules.includes(m);if(veut('voieRecentree')||veut('voieB1')||veut('rechercheLarge'))yield* recentree(max,veut);if(!['gcv2L1e','appuisListe','voieB1'].some(veut))return;
  const T=tables();let k=0;
  if(veut('gcv2L1e'))for(const t of T){const pas=Math.max(1,Math.floor(t.n/120));
   for(let c=0;c<t.n;c+=pas){k++;yield {id:'reel-l1e-ref-p'+t.partie+'-c'+c,module:'gcv2L1e',f:'referenceEcartement',args:k%7?[t,c]:[t,c,{voisines:8,voisinesMin:3}]};}}
@@ -64,6 +64,14 @@ function*recentree(max,veut){
     VB1.evaluer({mem,capture:c,science,Shadow:S,table:t,ancresReelles:anchors,decisionReelle:d});
     if(k%7===0)yield {id:'reel-b1-ecartref-'+id,module:'voieB1',f:'ecartementReference',args:[t,c.identity.cut,structuredClone(anchors)]};
     if(k%7===0)for(const s of ['left','right']){const tr=VB1.railTrouve(science.rails[s]);if(tr)yield {id:'reel-b1-solutions-'+s+'-'+id,module:'voieB1',f:'solutionsEcartement',args:[leger,s,tr.delta,1435]};}}
+   /* recherche-large : sur un posé sur quatre, la décision dans les trois modes (graines en grille ou en pics), science à réservoir une fois sur deux. */
+   if(veut('rechercheLarge')&&d.positions&&k%4===0){const RL=require(path.join(RACINE,'src/recherche-large.js'));
+    const R=RL.reglage({actif:true,mode:RL.MODES[(k/4)%3],grainesMode:k%8?'grille':'pics',soutienTop:k%3?0:15,soutienFace:k%3?0:6});
+    const sci=k%8===4?S.scientificProposeBothAvecReservoir(c):undefined;
+    yield {id:'reel-rl-decider-'+id,module:'rechercheLarge',f:'decider',args:[{capture:c,positions:d.positions,R,science:sci}]};
+    yield {id:'reel-rl-reglage-'+id,module:'rechercheLarge',f:'reglage',args:[{actif:true,mode:RL.MODES[k%3],pasMm:k%5?120:80}]};
+    if(k%12===0){const D0=Date.now;Date.now=()=>0;let dd;try{dd=RL.decider({capture:c,positions:d.positions,R,science:sci});}finally{Date.now=D0;}
+     yield {id:'reel-rl-resumer-'+id,module:'rechercheLarge',f:'resumer',args:[dd]};}}
    if(!veut('voieRecentree')){if(d.anchor&&d.positions)L.rememberAnchor(anchors,{identity:c.identity,positions:d.positions,stage:d.stage});continue;}
    if(k%3===0)yield {id:'reel-vr-recentrer-'+id,module:'voieRecentree',f:'recentrer',args:[{capture:c,science,anchors:structuredClone(anchors),Shadow:'\u0000shadow'}]};
    yield {id:'reel-vr-trace-'+id,module:'voieRecentree',f:'traceMoteur',args:[science]};

@@ -23,6 +23,8 @@ pub mod b1ecart;
 pub mod large;
 #[cfg(test)]
 mod essais;
+#[cfg(test)]
+mod essais_j4;
 
 use ariane_vba::Valeur;
 pub use js::R;

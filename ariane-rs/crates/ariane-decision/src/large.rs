@@ -328,7 +328,7 @@ pub fn decider(arg: &V, et: &Etat) -> R<V> {
     if nullish(&arg) { return hd("déstructuration de null"); }
     let (capture, positions, rv, science) = (g(&arg, "capture"), g(&arg, "positions"), g(&arg, "R"), g(&arg, "science"));
     let mode = if vrai(rv) { let m = g(rv, "mode"); if vrai(m) { m.clone() } else { nul() } } else { nul() };
-    let base = vec![("version", s(VERSION)), ("etat", s("garde")), ("motif", nul()), ("mode", mode), ("paireLot", nul()), ("meilleure", nul()), ("concurrente", nul()), ("positions", nul()),
+    let base = [("version", s(VERSION)), ("etat", s("garde")), ("motif", nul()), ("mode", mode), ("paireLot", nul()), ("meilleure", nul()), ("concurrente", nul()), ("positions", nul()),
         ("cellules", o(vec![("left", n(0.0)), ("right", n(0.0)), ("relances", n(0.0))])), ("nPaires", n(0.0))];
     let fin_ = |t: Vec<(&str, V)>| -> V { let mut e: Vec<(String, V)> = base.iter().map(|(k, v)| ((*k).to_owned(), v.clone())).collect(); for (k, v) in t { definir(&mut e, k, v); } V::Objet(e) };
     if !vrai(rv) || matches!(g(rv, "ok"), V::Booleen(false)) || !matches!(g(rv, "actif"), V::Booleen(true)) { return Ok(fin_(vec![("motif", s("reglage-eteint"))])); }
