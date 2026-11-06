@@ -7,7 +7,8 @@
  *   3. construction WASM               4. sonde numérique, Node et Chromium : portages ariane-js à 0 divergence
  *   5. banc témoin + contrôle négatif (un port faussé doit être VU)
  *   6. aller-retour VBA sur le corpus réel (--rapide : 3 documents ; sinon tous)
- *   7. parité de chaque module porté (ariane-rs/parite/*.cjs hors témoin) */
+ *   7. parité de chaque module porté (ariane-rs/parite/*.cjs hors témoin), dans Node puis dans Chromium (référence) ;
+ *      --rapide : 15 nuages par module ; sinon tous les nuages réels */
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const RACINE=path.resolve(__dirname,'..'),RS=path.join(RACINE,'ariane-rs');
 const a=process.argv.slice(2),rapide=a.includes('--rapide'),json=a.includes('--json')?a[a.indexOf('--json')+1]:null;
@@ -34,6 +35,8 @@ etape('aller-retour VBA, corpus réel'+(rapide?' (rapide)':''),()=>{const args=[
  const o=JSON.parse(lancer('node',args));if(o.verdict!=='IDENTIQUE')throw Error(JSON.stringify(o.echecs).slice(0,1000));
  return {documents:o.documents,octetsJson:o.octetsJson,totaux:o.totaux};});
 const modules=fs.readdirSync(path.join(RS,'parite')).filter(n=>n.endsWith('.cjs')&&n!=='temoin.cjs').map(n=>n.slice(0,-4)).sort();
-for(const m of modules)etape('parité '+m,()=>{const args=['--max-old-space-size=8000','tools/ch064-parite.cjs','--module',m];if(rapide)args.push('--limite','50');
- const o=JSON.parse(lancer('node',args));if(o.verdict!=='IDENTIQUE')throw Error(JSON.stringify(o.ecarts).slice(0,1000));return {cas:o.cas,temps:o.temps};});
+for(const m of modules)for(const nav of [false,true])etape('parité '+m+(nav?' (Chromium)':' (Node)'),()=>{
+ const args=['--max-old-space-size=8000','tools/ch064-parite.cjs','--module',m];if(rapide)args.push('--nuages','15');if(nav)args.push('--chromium');
+ const o=JSON.parse(lancer('node',args));if(o.verdict!=='IDENTIQUE')throw Error(JSON.stringify(o.ecarts).slice(0,1000));
+ return {cas:o.cas,identiques:o.identiques,repli:o.bilanAdaptateur,empreinte:o.empreintes.js.slice(0,16)};});
 fin(0);

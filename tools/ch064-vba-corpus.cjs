@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /* CH-064 : preuve d'aller-retour VBA sans perte sur TOUS les documents réels (exports des collections du 04 et du 05/11).
- *   node --max-old-space-size=8000 tools/ch064-vba-corpus.cjs [--json SORTIE] [--limite N]
+ *   node --max-old-space-size=8000 tools/ch064-vba-corpus.cjs [--json SORTIE] [--limite N] [--tranche k/n]
+ *   node tools/ch064-vba-corpus.cjs --fusionner SORTIE T1.json T2.json …   (réunit les tranches : sommes, médianes refaites)
  * Pour chaque document JSON : v = JSON.parse(texte) ;
  *   (1) JS : t = encoder(v), w = decoder(t), comparer(v, w) strict ;
  *   (2) Rust : la trame t traverse le cœur WASM (décodage Rust, réencodage Rust) et doit revenir OCTET POUR OCTET : les deux
@@ -27,8 +28,9 @@ function main(){
  for(const v of SYNTHETIQUES){res.synthetiques.cas++;const e1=comparer(v,Vba.decoder(Vba.encoder(v))),e2=comparer(v,coeur.appeler(0,v));
   if(!e1.length&&!e2.length)res.synthetiques.identiques++;else res.synthetiques.ecarts.push({cas:res.synthetiques.cas,js:e1,rust:e2});}
  for(const [v,motif] of REFUSES){res.refus.cas++;try{Vba.encoder(v);res.refus.ecarts.push('accepté : '+motif);}catch(e){if(e instanceof TypeError&&/^VBA : /.test(e.message))res.refus.refuses++;else res.refus.ecarts.push(motif+' : '+e.message);}}
- let n=0;
- for(const d of documents()){if(n++>=limite)break;
+ const tr=a.includes('--tranche')?a[a.indexOf('--tranche')+1].split('/').map(Number):[0,1];res.tranche=tr.join('/');
+ let n=0,rang=-1;
+ for(const d of documents()){rang++;if(rang%tr[1]!==tr[0])continue;if(n++>=limite)break;
   const t0=performance.now(),v=JSON.parse(d.texte),t1=performance.now();JSON.stringify(v);const t2=performance.now();
   const trame=Vba.encoder(v,d.octets),t3=performance.now(),retour=Vba.decoder(trame),t4=performance.now();
   const r=coeur.appelerOctets(0,trame),t5=performance.now();const memeTrame=r.octets.length===trame.length&&Buffer.compare(Buffer.from(r.octets),Buffer.from(trame))===0;
@@ -41,9 +43,16 @@ function main(){
   process.stderr.write('.');
  }
  process.stderr.write('\n');
- for(const k in res.msParMo)res.msParMo[k]=Math.round(med(res.msParMo[k])*10)/10;
+ res.msParMoBruts=JSON.parse(JSON.stringify(res.msParMo));for(const k in res.msParMo)res.msParMo[k]=Math.round(med(res.msParMo[k])*10)/10;
  res.memoireCoeur=coeur.etat();
  res.verdict=res.synthetiques.identiques===res.synthetiques.cas&&res.refus.refuses===res.refus.cas&&res.documents>0&&res.identiquesJs===res.documents&&res.identiquesRust===res.documents&&res.trameRustIdentique===res.documents?'IDENTIQUE':'ÉCART';
  const s=JSON.stringify(res,null,1);if(json)fs.writeFileSync(json,s+'\n');console.log(s);if(res.verdict!=='IDENTIQUE')process.exitCode=1;
 }
-main();
+function fusionner(sortie,fichiers){const t=fichiers.map(f=>JSON.parse(fs.readFileSync(f,'utf8')));const r={...t[0],tranche:t.map(x=>x.tranche).join(' + ')};
+ for(const k of ['documents','octetsJson','octetsVba','identiquesJs','identiquesRust','trameRustIdentique'])r[k]=t.reduce((s,x)=>s+x[k],0);
+ for(const k in r.totaux)r.totaux[k]=t.reduce((s,x)=>s+x.totaux[k],0);r.echecs=t.flatMap(x=>x.echecs);
+ r.msParMo={};for(const k in t[0].msParMoBruts)r.msParMo[k]=Math.round(med(t.flatMap(x=>x.msParMoBruts[k]))*10)/10;delete r.msParMoBruts;
+ r.memoireCoeur={hauteEauMax:Math.max(...t.map(x=>x.memoireCoeur.hauteEau)),reinstanciations:t.reduce((s,x)=>s+x.memoireCoeur.reinstanciations,0)};
+ r.verdict=t.every(x=>x.verdict==='IDENTIQUE')&&r.identiquesJs===r.documents&&r.identiquesRust===r.documents&&r.trameRustIdentique===r.documents?'IDENTIQUE':'ÉCART';
+ const s=JSON.stringify(r,null,1);fs.writeFileSync(sortie,s+'\n');console.log(s);if(r.verdict!=='IDENTIQUE')process.exitCode=1;}
+if(process.argv[2]==='--fusionner')fusionner(process.argv[3],process.argv.slice(4));else main();

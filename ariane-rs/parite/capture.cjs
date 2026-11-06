@@ -28,4 +28,6 @@ module.exports={nom:'capture',description:'vendor/capture-core.js, partie pure',
    }}},
  js({f,a}){return C[f](...a);},
  rs(e,coeur){try{return coeur.appeler(10,e);}catch(x){if(x.name==='HorsDomaine'){horsDomaine++;return C[e.f](...e.a);}throw x;}},
- bilan:()=>({horsDomaineRejouesEnJs:horsDomaine})};
+ bilan:()=>({horsDomaineRejouesEnJs:horsDomaine}),
+ navigateur:{scripts:['vendor/capture-core.js','ariane-rs/coquille/vba.js','ariane-rs/coquille/coeur.js'],preparer:'coeur=>({coeur,hd:0})',
+  js:'e=>BananeCaptureCore[e.f](...e.a)',rs:'(e,t)=>{try{return t.coeur.appeler(10,e);}catch(x){if(x.name==="HorsDomaine"){t.hd++;return BananeCaptureCore[e.f](...e.a);}throw x;}}',bilan:'t=>({horsDomaineRejouesEnJs:t.hd})'}};

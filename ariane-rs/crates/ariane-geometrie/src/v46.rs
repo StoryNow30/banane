@@ -4,7 +4,7 @@ use ariane_js::{cle_same_value_zero, hypot, max_de, mediane, min_de, Echec};
 use ariane_vba::Valeur;
 use std::collections::HashSet;
 
-const METHODE: &str = "template-surfaces-v3";
+pub(crate) const METHODE: &str = "template-surfaces-v3";
 /// DEFAULTS, dans l'ordre des clés du JS.
 const DEFAUTS: [(&str, f64); 13] = [
     ("searchY", 0.08), ("searchZ", 0.04), ("grid", 0.003), ("minTop", 15.0), ("minFace", 6.0), ("maxResidual", 0.004),
@@ -17,16 +17,17 @@ const BORNES: [(&str, f64, f64); 10] = [
     ("maxSingleRailLateral", 0.01, 0.2), ("pairedSupportLateral", 0.005, 0.2),
 ];
 
-fn n(x: f64) -> Valeur { Valeur::Nombre(x) }
-fn s(x: &str) -> Valeur { Valeur::Chaine(x.into()) }
-fn obj(t: Vec<(&str, Valeur)>) -> Valeur { Valeur::Objet(t.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()) }
-fn hd<T>(m: &str) -> Result<T, Echec> { Err(Echec::hors_domaine(m)) }
+pub(crate) fn n(x: f64) -> Valeur { Valeur::Nombre(x) }
+pub(crate) fn s(x: &str) -> Valeur { Valeur::Chaine(x.into()) }
+pub(crate) fn obj(t: Vec<(&str, Valeur)>) -> Valeur { Valeur::Objet(t.into_iter().map(|(k, v)| (k.to_owned(), v)).collect()) }
+pub(crate) fn hd<T>(m: &str) -> Result<T, Echec> { Err(Echec::hors_domaine(m)) }
 
 /// Réglages fusionnés `{...DEFAULTS, ...options, method}` : valeur rendue telle quelle (`parameters`) et lecture numérique.
 pub struct Reglages { pub valeur: Valeur }
 impl Reglages {
     /// `force_methode` : `propose` force `method` à DEFAULTS.method ; `enforcePairSupport` ne le fait pas.
-    pub fn fusionner(options: &Valeur, force_methode: bool) -> Result<Self, Echec> {
+    pub fn fusionner(options: &Valeur, force_methode: bool) -> Result<Self, Echec> { Self::fusionner_sans(options, force_methode, false) }
+    pub fn fusionner_sans(options: &Valeur, force_methode: bool, sans_lab: bool) -> Result<Self, Echec> {
         let mut t: Vec<(String, Valeur)> = DEFAUTS.iter().map(|(k, v)| (k.to_string(), n(*v))).collect();
         t.push(("method".into(), s(METHODE)));
         match options {
@@ -40,19 +41,20 @@ impl Reglages {
             _ => return hd("options non objet"),
         }
         if force_methode { t.iter_mut().find(|(c, _)| c == "method").unwrap().1 = s(METHODE); }
+        if sans_lab { t.retain(|(c, _)| c != "lab"); }
         Ok(Reglages { valeur: Valeur::Objet(t) })
     }
-    fn brut(&self, k: &str) -> &Valeur { self.valeur.champ(k).unwrap_or(&Valeur::Indefini) }
+    pub(crate) fn brut(&self, k: &str) -> &Valeur { self.valeur.champ(k).unwrap_or(&Valeur::Indefini) }
     /// Valeur numérique d'un réglage ; un réglage non numérique serait converti par le JS : hors domaine.
-    fn f(&self, k: &str) -> Result<f64, Echec> { match self.brut(k) { Valeur::Nombre(x) => Ok(*x), _ => hd("réglage non numérique") } }
-    fn valider(&self) -> Result<(), Echec> {
+    pub(crate) fn f(&self, k: &str) -> Result<f64, Echec> { match self.brut(k) { Valeur::Nombre(x) => Ok(*x), _ => hd("réglage non numérique") } }
+    pub(crate) fn valider(&self) -> Result<(), Echec> {
         for (k, lo, hi) in BORNES {
-            let ok = matches!(self.brut(k), Valeur::Nombre(x) if x.is_finite() && !(*x < lo) && !(*x > hi));
+            let ok = matches!(self.brut(k), Valeur::Nombre(x) if x.is_finite() && (lo..=hi).contains(x));
             if !ok { return Err(Echec::erreur(format!("Paramètre géométrique invalide : {k}"))); }
         }
         self.coherence()
     }
-    fn coherence(&self) -> Result<(), Echec> {
+    pub(crate) fn coherence(&self) -> Result<(), Echec> {
         // pairedSupportLateral >= maxSingleRailLateral (comparaison JS : deux nombres, sinon hors domaine)
         if self.f("pairedSupportLateral")? >= self.f("maxSingleRailLateral")? {
             return Err(Echec::erreur("Paramètres géométriques incohérents : appui pair >= déplacement isolé."));
@@ -65,7 +67,7 @@ impl Reglages {
 #[derive(Clone, Debug)]
 pub struct Droite { pub slope: f64, pub raw_slope: f64, pub slope_limited: bool, pub intercept: f64, pub residual: f64, pub count: usize }
 impl Droite {
-    fn valeur(&self) -> Valeur {
+    pub(crate) fn valeur(&self) -> Valeur {
         obj(vec![("slope", n(self.slope)), ("rawSlope", n(self.raw_slope)), ("slopeLimited", Valeur::Booleen(self.slope_limited)),
             ("intercept", n(self.intercept)), ("residual", n(self.residual)), ("count", n(self.count as f64))])
     }
@@ -94,9 +96,9 @@ pub fn robust_line(rows: &[[f64; 2]]) -> Option<Droite> {
 
 // ---------------------------------------------------------------- lecture de l'entrée
 
-enum Vis<'a> { Absente, Liste(&'a Valeur) }
+pub(crate) enum Vis<'a> { Absente, Liste(&'a Valeur) }
 impl Vis<'_> {
-    fn est_faux(&self, i: usize) -> bool {
+    pub(crate) fn est_faux(&self, i: usize) -> bool {
         match self {
             Vis::Absente => false,
             Vis::Liste(v) => match v {
@@ -106,18 +108,18 @@ impl Vis<'_> {
             },
         }
     }
-    fn contient_nul(&self) -> bool {
+    pub(crate) fn contient_nul(&self) -> bool {
         match self { Vis::Liste(Valeur::Tableau(t)) => t.iter().any(|e| matches!(e, Some(Valeur::Nul))), _ => false }
     }
 }
-fn vis(v: Option<&Valeur>) -> Result<Vis<'_>, Echec> {
+pub(crate) fn vis(v: Option<&Valeur>) -> Result<Vis<'_>, Echec> {
     match v {
         None | Some(Valeur::Indefini) | Some(Valeur::Nul) => Ok(Vis::Absente),
         Some(x @ (Valeur::Booleens(_) | Valeur::Tableau(_) | Valeur::Nombres(_) | Valeur::Bloc { .. })) => Ok(Vis::Liste(x)),
         _ => hd("visibleByClipBoxes"),
     }
 }
-fn longueur_tableau(v: &Valeur) -> Option<usize> {
+pub(crate) fn longueur_tableau(v: &Valeur) -> Option<usize> {
     match v {
         Valeur::Tableau(t) => Some(t.len()), Valeur::Nombres(t) => Some(t.len()), Valeur::Booleens(t) => Some(t.len()),
         Valeur::Bloc { k, donnees } => Some(donnees.len() / *k as usize), _ => None,
@@ -126,7 +128,7 @@ fn longueur_tableau(v: &Valeur) -> Option<usize> {
 
 /// Points de la scène retenus par le filtre de `propose` (visibles, tableaux de nombres finis), projetés.
 /// Rend l'erreur que lèverait `C.point` (point de moins de trois coordonnées).
-fn pour_chaque_point(ps: &Valeur, vis: &Vis, m: &M16, mut f: impl FnMut([f64; 3])) -> Result<(), Echec> {
+pub(crate) fn pour_chaque_point(ps: &Valeur, vis: &Vis, m: &M16, mut f: impl FnMut([f64; 3])) -> Result<(), Echec> {
     match ps {
         Valeur::Bloc { k, donnees } => {
             let k = *k as usize;
@@ -157,7 +159,7 @@ fn pour_chaque_point(ps: &Valeur, vis: &Vis, m: &M16, mut f: impl FnMut([f64; 3]
     Ok(())
 }
 
-fn sommets(v: &Valeur) -> Result<Vec<[f64; 3]>, Echec> {
+pub(crate) fn sommets(v: &Valeur) -> Result<Vec<[f64; 3]>, Echec> {
     match v {
         Valeur::Bloc { k, donnees } => Ok(donnees.chunks_exact(*k as usize).map(|c| {
             let g = |j: usize| if j < c.len() { c[j] } else { f64::NAN };
@@ -175,7 +177,7 @@ fn non_resolu(cote: &str, raison: &str, cfg: &Reglages) -> Valeur {
         ("reasons", Valeur::Tableau(vec![Some(s(raison))])), ("method", cfg.brut("method").clone()), ("source", s("no-estimate")),
         ("parameters", cfg.valeur.clone())])
 }
-fn avec(mut v: Valeur, en_plus: Vec<(&str, Valeur)>) -> Valeur {
+pub(crate) fn avec(mut v: Valeur, en_plus: Vec<(&str, Valeur)>) -> Valeur {
     if let Valeur::Objet(t) = &mut v {
         for (k, x) in en_plus { match t.iter_mut().find(|(c, _)| c == k) { Some(e) => e.1 = x, None => t.push((k.into(), x)) } }
     }
@@ -394,4 +396,45 @@ pub fn propose_both(capture: &Valeur, options: &Valeur) -> Result<Valeur, Echec>
     let g = propose(capture, "left", options)?;
     let d = propose(capture, "right", options)?;
     enforce_pair_support(g, d, options)
+}
+
+#[cfg(test)]
+mod essais {
+    use super::*;
+    #[test]
+    fn droite_robuste_exacte_sur_une_droite() {
+        let rows: Vec<[f64; 2]> = (0..40).map(|i| { let x = i as f64 * 0.002; [x, 0.25 * x + 0.1] }).collect();
+        let d = robust_line(&rows).unwrap();
+        assert!((d.slope - 0.25).abs() < 1e-12 && !d.slope_limited && d.count == 40);
+        assert!(robust_line(&rows[..2]).is_none());
+    }
+    #[test]
+    fn pente_bornee() {
+        let rows: Vec<[f64; 2]> = (0..20).map(|i| { let x = i as f64 * 0.01; [x, 2.0 * x] }).collect();
+        let d = robust_line(&rows).unwrap();
+        assert_eq!(d.slope, 0.5);
+        assert!(d.slope_limited);
+    }
+    #[test]
+    fn reglages_ordre_des_cles_et_validation() {
+        let o = Valeur::Objet(vec![("autre".into(), Valeur::Nombre(1.0)), ("grid".into(), Valeur::Nombre(0.004)), ("method".into(), s("x"))]);
+        let r = Reglages::fusionner(&o, true).unwrap();
+        let Valeur::Objet(t) = &r.valeur else { panic!() };
+        let cles: Vec<&str> = t.iter().map(|(k, _)| k.as_str()).collect();
+        assert_eq!(cles.len(), 15);
+        assert_eq!(cles[2], "grid");
+        assert_eq!(cles[13], "method");
+        assert_eq!(cles[14], "autre");
+        assert_eq!(r.brut("method"), &s(METHODE));
+        let mauvais = Reglages::fusionner(&Valeur::Objet(vec![("grid".into(), Valeur::Nombre(0.0))]), true).unwrap();
+        assert_eq!(mauvais.valider(), Err(Echec::erreur("Paramètre géométrique invalide : grid")));
+    }
+    #[test]
+    fn profil_absent_et_nuage_vide() {
+        let c = Valeur::Objet(vec![("rails".into(), Valeur::Objet(vec![]))]);
+        assert_eq!(propose(&c, "left", &Valeur::Indefini), Err(Echec::erreur("Profil absent : left")));
+        let c = Valeur::Objet(vec![("rails".into(), Valeur::Objet(vec![("left".into(), Valeur::Objet(vec![]))]))]);
+        let v = propose(&c, "left", &Valeur::Indefini).unwrap();
+        assert_eq!(v.champ("reasons"), Some(&Valeur::Tableau(vec![Some(s("Aucun point LiDAR disponible."))])));
+    }
 }

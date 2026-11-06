@@ -235,3 +235,16 @@ impl Valeur {
         })
     }
 }
+
+impl Valeur {
+    /// Vérité au sens de JS (`if (v)`).
+    pub fn vrai(&self) -> bool {
+        match self {
+            Valeur::Indefini | Valeur::Nul => false,
+            Valeur::Booleen(b) => *b,
+            Valeur::Nombre(x) => !(x.is_nan() || *x == 0.0),
+            Valeur::Chaine(s) => !s.is_empty(),
+            _ => true,
+        }
+    }
+}

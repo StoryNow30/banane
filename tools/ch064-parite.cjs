@@ -52,7 +52,7 @@ async function executerChromium(adaptateur,octetsWasm,{limite=Infinity,nuages=In
    const canon=(ok,v)=>ok?{valeur:v}:{erreur:[v.constructor.name,v.message]};
    const h={js:[],rs:[]};
    window.__banc={coeur,etat,n:0,cas:0,identiques:0,ecarts:[],ms:{js:[],rs:[]},trames:h,
-    passer(lot){for(const c of lot){this.n++;let a,b,t0=performance.now();try{a={ok:true,v:js(c.entree)};}catch(e){a={ok:false,v:e};}const t1=performance.now();
+    passer(lot){for(const c of lot){this.n++;let a,b,t0=performance.now();try{a={ok:true,v:js(c.entree,etat)};}catch(e){a={ok:false,v:e};}const t1=performance.now();
      try{b={ok:true,v:rs(c.entree,etat)};}catch(e){b={ok:false,v:e};}const t2=performance.now();if(this.n>3){this.ms.js.push(t1-t0);this.ms.rs.push(t2-t1);}this.cas++;
      const e=a.ok!==b.ok?[{chemin:'(racine)',raison:a.ok?'JS rend, Rust lève : '+b.v.message:'JS lève ('+a.v.message+'), Rust rend'}]:Ch064Comparer.comparer(a.v,b.v);
      if(!e.length)this.identiques++;else if(this.ecarts.length<20)this.ecarts.push({cas:c.id,ecarts:e.slice(0,5)});

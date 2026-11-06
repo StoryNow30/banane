@@ -43,6 +43,16 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
             Valeur::Chaine(c) => ariane_geometrie::v46::propose(champ(&entree, "capture"), c, champ(&entree, "options")),
             _ => Err(Echec::hors_domaine("side non chaîne")),
         },
+        22 | 23 => gcv1(fonction, &entree),
+        30 => match champ(&entree, "side") {
+            Valeur::Chaine(c) => ariane_geometrie::convention::calibrate(champ(&entree, "capture"), c, champ(&entree, "delta"), champ(&entree, "options"), champ(&entree, "plafond")),
+            _ => Err(Echec::hors_domaine("side non chaîne")),
+        },
+        31 => match champ(&entree, "side") {
+            Valeur::Chaine(c) => ariane_geometrie::convention::band_offsets_valeur(champ(&entree, "capture"), c, champ(&entree, "delta"), champ(&entree, "options")),
+            _ => Err(Echec::hors_domaine("side non chaîne")),
+        },
+        32 => jauge(&entree),
         _ => Err(Echec::erreur(format!("Cœur : fonction inconnue {fonction}"))),
     };
     match r {
@@ -54,6 +64,40 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
 }
 
 fn champ<'a>(v: &'a Valeur, k: &str) -> &'a Valeur { v.champ(k).unwrap_or(&Valeur::Indefini) }
+
+/// 22 : GCV1 propose `{capture, side, options}` ; 23 : GCV1 proposeBoth `{capture, options}`.
+/// Rend `{resultat, rappels}` : les appels de `lab.onCoarse` à rejouer par la façade, dans l'ordre.
+fn gcv1(fonction: u32, e: &Valeur) -> Result<Valeur, Echec> {
+    use ariane_geometrie::gcv1;
+    let mut appels = vec![];
+    let r = if fonction == 22 {
+        let Valeur::Chaine(c) = champ(e, "side") else { return Err(Echec::hors_domaine("side non chaîne")) };
+        gcv1::propose(champ(e, "capture"), c, champ(e, "options"), &mut appels)?
+    } else {
+        gcv1::propose_both(champ(e, "capture"), champ(e, "options"), &mut appels)?
+    };
+    let rappels = appels.into_iter().map(|a| Valeur::Objet(vec![
+        ("cellules".into(), if a.cellules.is_empty() { Valeur::Tableau(vec![]) } else { Valeur::Nombres(a.cellules) }),
+        ("meilleur".into(), Valeur::Nombres(a.meilleur.to_vec())),
+        ("centres".into(), Valeur::Nombres(a.centres)),
+        ("lab".into(), a.lab),
+    ])).map(Some).collect();
+    Ok(Valeur::Objet(vec![("resultat".into(), r), ("rappels".into(), Valeur::Tableau(rappels))]))
+}
+
+/// 32 : gauge.js (partie numérique), `{f, a}`.
+fn jauge(e: &Valeur) -> Result<Valeur, Echec> {
+    use ariane_geometrie::jauge as j;
+    let a = e.champ("a").and_then(Valeur::elements).unwrap_or_default();
+    let x = |i: usize| a.get(i).cloned().unwrap_or(Valeur::Indefini);
+    match e.champ("f") {
+        Some(Valeur::Chaine(f)) if f == "assessPair" => j::assess_pair(&x(0), &x(1)),
+        Some(Valeur::Chaine(f)) if f == "gaugeMmOf" => j::gauge_mm_of(&x(0)).map(Valeur::Nombre),
+        Some(Valeur::Chaine(f)) if f == "predictedGaugeMm" => j::predicted_gauge_mm(&x(0), &x(1)).map(Valeur::Nombre),
+        Some(Valeur::Chaine(f)) if f == "classifyMm" => match x(0) { Valeur::Nombre(v) => Ok(Valeur::Chaine(j::classify_mm(v).into())), _ => Ok(Valeur::Chaine("INDETERMINATE".into())) },
+        _ => Err(Echec::hors_domaine("jauge : fonction non portée")),
+    }
+}
 
 /// 10 : capture-core, `{f: nom, a: [arguments]}`.
 fn capture(e: &Valeur) -> Result<Valeur, Echec> {
