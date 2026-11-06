@@ -59,3 +59,14 @@ test('P2 : un accesseur inconnu mais conforme au tableau sur tout le nœud laiss
  try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0,'le noyau a servi');}
  finally{globalThis.ArianeLidarNoyau=undefined;}
 });
+
+test('P2 : un accesseur qui rend autre chose qu\u2019un nombre (chaîne) donne la sortie de l\u2019origine, noyau servi',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),sc=S.construireScene(d,0,7),nw=L.W.noyauWasm(octets);
+ const ref0=await L.origine.capture(opts(sc)),j=ref0.pointSources[0][1];
+ for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const pos=e.sceneNode.geometry.attributes.position,a=pos.array;
+  pos.getX=i=>i===j?String(a[3*i]):a[3*i];pos.getY=i=>a[3*i+1];pos.getZ=i=>a[3*i+2];}
+ const ref=net(await L.origine.capture(opts(sc)));globalThis.ArianeLidarNoyau=nw;
+ try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0);
+  assert.ok(ref.quality.nonFinitePositions>0,'la chaîne compte comme non finie dans l\u2019origine');}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
+});
