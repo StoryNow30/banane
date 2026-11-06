@@ -112,5 +112,26 @@ function*cas(modules,{max=Infinity}={}){
     const L=lots[p]||{poses:new Set(),differes:new Set()};
     const lot=[...[...L.poses].map(cut=>({cut,differe:false})),...[...L.differes].map(cut=>({cut,differe:true}))];
     yield {id:'reel-selection-debut-p'+p+'-'+(r++),module:'relectureOmbre',f:'selection',args:[{partie:p,total:totaux[p]??null,lot,zonesPN:d.zones.pn||[],zonesADV:d.zones.adv||[]},optSel]};}}}
+ if(veut('reglesMetier')){
+  /* Événements regles-metier-ombre (portée « cut ») : l'évaluation consignée, rejouée en entrée d'evenement et de doitDifferer. */
+  let k=0;
+  for(const ev of evs('regles-metier-ombre').filter(e=>e.portee!=='verts')){const e={part:ev.identity?.part,cut:ev.identity?.cut,zone:ev.zone,surface:ev.surface,reel:ev.reel,regles:ev.regles,aurait:ev.aurait};
+   yield {id:'reel-rm-evenement-'+(k++),module:'reglesMetier',f:'evenement',args:[e,{premier:k%40===1,portee:ev.portee,actif:ev.actif??null}]};
+   yield {id:'reel-rm-doit-'+(k++),module:'reglesMetier',f:'doitDifferer',args:[{...e,aurait:k%3?'differer':e.aurait},{actif:true,regles:{'pn-chaque-cut':true,'grappe-differes':k%2===0,'zone-validation-en-place':true}}]};
+   const c=X.nuages[k%X.nuages.length];
+   if(c?.rails?.left&&c?.rails?.right&&ev.reel){const ini={left:c.rails.left.positionSceneRelative,right:c.rails.right.positionSceneRelative};
+    let fin;try{fin={left:depuisEcart(c.rails.left,{lat:(ev.reel.deplacementMm??0.4),vert:0.3}),right:depuisEcart(c.rails.right,{lat:-(ev.reel.deplacementMm??0.4)/2,vert:-0.2})};}catch{fin=null;}
+    yield {id:'reel-rm-resumer-'+(k++),module:'reglesMetier',f:'resumer',args:[{identity:ev.identity,decision:{stage:ev.reel.stage,reason:k%5?null:'no-anchor'},action:ev.reel.action,valide:ev.aurait==='valider'?true:ev.aurait==='deja-differe'?false:undefined,surface:ev.surface,initiale:ini,finale:fin}]};}}}
+ if(veut('reglesMetier')||veut('crossing')){
+  /* Nuages réels complets (points compris) : surface au ras, rails de plus, lecture de l'ornière. */
+  const {nuages}=require('./ch064-nuages.cjs');let k=0;
+  for(const c of nuages(max)){k++;const capture={rails:c.rails,pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes},id='p'+c.identity?.part+'-c'+c.identity?.cut;
+   if(veut('reglesMetier')){yield {id:'reel-rm-surface-'+id,module:'reglesMetier',f:'surface',args:[capture]};
+    if(k%9===0)yield {id:'reel-rm-adv-'+id,module:'reglesMetier',f:'railsDePlus',args:[capture,{adv:{hautM:-0.05,platMax:0.7}}]};}
+   if(veut('crossing')){const vis=c.visibleByClipBoxes,pts=Array.isArray(vis)?c.pointsSceneRelative.filter((_,i)=>vis[i]===true):c.pointsSceneRelative;
+    yield {id:'reel-pn-read-'+id,module:'crossing',f:'read',args:[{rails:c.rails,pointsSceneRelative:pts}]};
+    if(k%6===0)yield {id:'reel-pn-read-tous-'+id,module:'crossing',f:'read',args:[{rails:c.rails,pointsSceneRelative:c.pointsSceneRelative},{flushMinPct:50,sideInM:0.09,sideOutM:0.45,alongM:0.6,flushBelowM:0.08,binMm:3,maxGapBins:2,searchMm:200,dropMm:20,grooveMinMm:25,grooveMaxMm:110,headMm:50,lateralOffsetMm:-3,verticalOffsetMm:4}]};
+    if(k%10===0){yield {id:'reel-pn-edge-'+id,module:'crossing',f:'edgeOf',args:[{rails:c.rails,pointsSceneRelative:pts},k%20?'left':'right']};
+     yield {id:'reel-pn-pos-'+id,module:'crossing',f:'positionAt',args:[{rails:c.rails},'right',-12.5,k%7]};}}}}
 }
 module.exports={cas,extrait,verif,CACHE};

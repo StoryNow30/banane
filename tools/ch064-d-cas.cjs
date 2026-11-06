@@ -18,7 +18,11 @@ const LIMITES=[undefined,null,true,false,0,-0,1,-1,2,3,0.05,0.5,4.4,7.95,8,15,40
  'differe','lot','rapide','reference','captured','signal','stabilite','shift-out-of-domain','s1','chaine','ariane-relecture-reglages-1',[],[1],[0,1,2],[null],{},{a:1}];
 /* Une variante qui ferait tourner le JS sans fin (plages de cuts démesurées dans `selection`) n'est pas un cas : écartée. */
 function borne(v,prof=0){if(typeof v==='number')return Number.isNaN(v)||Math.abs(v)<=1e5;if(!v||typeof v!=='object'||prof>8)return true;return Object.values(v).every(x=>borne(x,prof+1));}
-const SURS={relectureOmbre:{selection:borne}};
+/* regles-metier : profils ADV (pas, tranches) et options démesurés font tourner le JS sans fin. */
+function advBorne(a){const o=a[1];if(o===undefined||o===null)return true;if(typeof o!=='object')return true;const A=o.adv;if(A===undefined)return borne(o);
+ if(!A||typeof A!=='object')return borne(o);const D={pasM:0.01,lateralM:0.4,longM:0.5,trancheM:0.1,...A};
+ const N=Math.round(D.lateralM/D.pasM),T=Math.round(2*D.longM/D.trancheM);return Number.isFinite(N)&&Math.abs(N)<1e5&&Number.isFinite(T)&&borne(o);}
+const SURS={relectureOmbre:{selection:borne},reglesMetier:{surface:advBorne,railsDePlus:advBorne},crossing:{read:a=>borne(a[1]??0),edgeOf:a=>borne(a[2]??0),detect:a=>borne(a[1]??0)}};
 function encoder(args){try{return Buffer.from(Vba.encoder(args)).toString('base64');}catch{compte.nonVba++;return null;}}
 /* Feuilles et clés d'un arbre : chemins [[clé…]]. */
 function chemins(v,p=[],out=[],prof=0){out.push(p);if(prof>6||v===null||typeof v!=='object')return out;
@@ -30,13 +34,12 @@ function muter(args,alea){const a=v8.deserialize(v8.serialize(args)),cs=chemins(
  else{const x=LIMITES[Math.floor(alea()*LIMITES.length)];parent[k]=x&&typeof x==='object'?v8.deserialize(v8.serialize(x)):x;}
  return a;}
 function*cas(modules,{fixtures=true,reel=true,variantes=Number(process.env.CH064D_VARIANTES||4),graine:g=Number(process.env.CH064D_GRAINE||64),max=Infinity}={}){
- const alea=graine(g),base=[];
- if(fixtures&&fs.existsSync(FIXTURES)){for(const e of v8.deserialize(fs.readFileSync(FIXTURES)))if(modules.includes(e.module))base.push({id:'fixture-'+e.module+'.'+e.f+'-'+e.essai,module:e.module,f:e.f,args:v8.deserialize(e.args)});}
- if(reel){const R=require('./ch064-d-reel.cjs');for(const c of R.cas(modules,{max}))base.push(c);}
- let i=0;
- for(const c of base){const b=encoder(c.args);if(b===null)continue;compte[c.id.startsWith('fixture')?'fixtures':'reel']++;
+ const alea=graine(g);let i=0;
+ function*avec(c){const b=encoder(c.args);if(b===null)return;compte[c.id.startsWith('fixture')?'fixtures':'reel']++;
   yield {id:c.id+'#'+(i++),entree:{module:c.module,f:c.f,args:b}};
   for(let k=0;k<variantes;k++){const m=muter(c.args,alea);if(!m)break;const sur=SURS[c.module]?.[c.f];if(sur&&!sur(m))continue;const bm=encoder(m);if(bm===null)continue;compte.variantes++;
    yield {id:c.id+'#'+(i++)+'-variante'+k,entree:{module:c.module,f:c.f,args:bm}};}}
+ if(fixtures&&fs.existsSync(FIXTURES)){for(const e of v8.deserialize(fs.readFileSync(FIXTURES)))if(modules.includes(e.module))yield* avec({id:'fixture-'+e.module+'.'+e.f+'-'+e.essai,module:e.module,f:e.f,args:v8.deserialize(e.args)});}
+ if(reel){const R=require('./ch064-d-reel.cjs');for(const c of R.cas(modules,{max}))yield* avec(c);}
 }
 module.exports={cas,compte,muter,graine};

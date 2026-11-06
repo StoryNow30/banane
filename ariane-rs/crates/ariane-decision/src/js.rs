@@ -334,3 +334,29 @@ pub fn m16(v: &V) -> R<M16> {
 pub fn point_v(m: &V, p: &V) -> R<[f64; 3]> { let m = m16(m)?; let [x, y, z] = ariane_capture::xyz(p)?; ariane_capture::point(&m, x, y, z) }
 /// `C.distance(a,b)` : `Math.hypot(...a.map((x,i)=>x-b[i]))` pour deux points de 3 nombres.
 pub fn distance3(a: &[f64; 3], b: &[f64; 3]) -> f64 { ariane_js::hypot(&[a[0] - b[0], a[1] - b[1], a[2] - b[2]]) }
+
+/// Points d'un nuage (`pointsSceneRelative`), tels que les lit `const [x,y,z]=p` : bloc n×k (k ≥ 3 : trois premiers ; k < 3 :
+/// NaN pour les absents), ou tableau de tableaux (trou ou `undefined` dans un point : NaN). Un élément qui n'est pas un tableau
+/// (trou du tableau de points compris) : `None` si `sauter` (le JS le saute), sinon hors domaine (le JS lèverait).
+pub fn points_xyz(v: &V, sauter: bool) -> R<Vec<Option<[f64; 3]>>> {
+    Ok(match v {
+        V::Bloc { k, donnees } => {
+            let k = *k as usize;
+            donnees.chunks_exact(k).map(|c| Some([c[0], if k > 1 { c[1] } else { f64::NAN }, if k > 2 { c[2] } else { f64::NAN }])).collect()
+        }
+        V::Tableau(t) => {
+            let mut out = Vec::with_capacity(t.len());
+            for e in t {
+                match e {
+                    Some(x) if est_tableau(x) => out.push(Some(ariane_capture::xyz(x)?)),
+                    _ if sauter => out.push(None),
+                    _ => return hd("point non tabulaire"),
+                }
+            }
+            out
+        }
+        V::Nombres(t) => { if sauter { vec![None; t.len()] } else { return hd("point non tabulaire") } }
+        V::Booleens(t) => { if sauter { vec![None; t.len()] } else { return hd("point non tabulaire") } }
+        _ => return hd("nuage non tabulaire"),
+    })
+}

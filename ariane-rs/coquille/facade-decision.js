@@ -8,14 +8,15 @@
  * l'objet d'origine les clés de `e` dont la valeur primitive a changé (les objets imbriqués ne sont jamais modifiés par le JS). */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeFacadeDecision=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
- const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55};
+ const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56};
  const PORTEES={
   critere:['reglages','correctionPermise','juger'],
   signal:['reglage','lectureDe','creer','observer','recharge','bilan'],
   gardeApresDiffere:['reglage','voisinsDifferes','juger'],
   gardePasseAppuis:['reglage','deplacementMm','appuiNormalCuts','juger'],
   relectureOmbre:['plage','selection','optionsSelection','ecartRail','poseCalculee','confiance','juger','skipOmbre','captureVide','duree'],
-  reglesMetier:['surface','railsDePlus','resumer','doitDifferer','evenement']};
+  reglesMetier:['surface','railsDePlus','resumer','doitDifferer','evenement'],
+  crossing:['read','detect','edgeOf','positionAt']};
  const MUTANTES={signal:new Set(['observer','recharge'])};
  const primitif=v=>v===null||(typeof v!=='object'&&typeof v!=='function');
  function recopier(cible,etat){if(!cible||typeof cible!=='object'||!etat||typeof etat!=='object')return;
