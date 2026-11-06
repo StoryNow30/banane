@@ -49,3 +49,13 @@ test('P3 : une tranche dont la taille déborde 32 bits est refusée (code 3), sa
   assert.strictEqual(X.lidar_parcourir_f64(n,stride,0,Infinity),0,'n='+n+' stride='+stride);assert.strictEqual(E[5],3,'refus n='+n+' stride='+stride);
   E[5]=0;assert.strictEqual(X.lidar_parcourir_f32(n,stride,0,Infinity),0);assert.strictEqual(E[5],3);}
 });
+
+test('P2 : un accesseur inconnu mais conforme au tableau sur tout le nœud laisse servir le noyau, sortie identique',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),sc=S.construireScene(d,0,7),nw=L.W.noyauWasm(octets);
+ // accesseurs propres à chaque attribut (donc inconnus), mais qui lisent exactement le tableau
+ for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const pos=e.sceneNode.geometry.attributes.position,a=pos.array;
+  pos.getX=i=>a[3*i];pos.getY=i=>a[3*i+1];pos.getZ=i=>a[3*i+2];}
+ const ref=net(await L.origine.capture(opts(sc)));globalThis.ArianeLidarNoyau=nw;
+ try{const w=net(await L.variante.capture(opts(sc)));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0,'le noyau a servi');}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
+});

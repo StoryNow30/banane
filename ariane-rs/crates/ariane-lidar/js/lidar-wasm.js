@@ -78,8 +78,9 @@
  /* Accesseurs connus (audit de la PR n° 25, P2). La lecture directe du tableau n'est prise que si l'attribut n'a AUCUN
   * accesseur getX/getY/getZ, ou si ses trois accesseurs sont, par identité de fonction, ceux d'un prototype déclaré connu :
   * ceux de three.js en page (globalThis.THREE.BufferAttribute et InterleavedBufferAttribute, s'ils existent), ou ceux déclarés
-  * par accesseursConnus(prototype). Sinon, les lectures d'origine : les sondes seules ne prouvent rien hors de leurs indices.
-  * Chaque refus est compté par raison (refus()). */
+  * par accesseursConnus(prototype). Sinon, les trois accesseurs sont comparés au tableau sur TOUS les points du nœud (Object.is,
+  * trois appels par point, aucune allocation) : la lecture directe n'est prise que si chaque valeur concorde ; au premier écart,
+  * les lectures d'origine (les sondes seules ne prouvent rien hors de leurs indices). Comptés par raison (refus()). */
  const CONNUS=[],refusParRaison={};
  function accesseursConnus(...protos){for(const p of protos)if(p&&typeof p.getX==='function'&&typeof p.getY==='function'&&typeof p.getZ==='function')
   CONNUS.push([p.getX,p.getY,p.getZ]);return CONNUS.length;}
@@ -95,7 +96,7 @@
  function eligibleAvec(octetsEntree,capaciteMax){
   return function eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,probes){
    if(indexAttr||!n.position||n.position.isFloat16BufferAttribute)return null;
-   if(!accesseursSurs(n.position))return refuser('accesseur inconnu');
+   const verifier=!accesseursSurs(n.position);
    const meta=n.attribute&&n.attribute.metadata,src=n.position.array||(n.position.data&&n.position.data.array);
    if(!meta||meta.normalized||n.position.normalized)return null;
    const f64=src instanceof Float64Array;if(!f64&&!(src instanceof Float32Array))return null;
@@ -108,6 +109,10 @@
    for(const pr of probes||[]){const i=pr.sourceIndex;if(!Number.isInteger(i)||i<0||i>=n.attribute.count)continue;
     for(let k=0;k<3;k++)if(!Object.is(n.attribute.get(i,k),src[i*stride+offset+k]))return null;vues++;}
    if(!vues)return null;
+   if(verifier){const p=n.position;
+    if(typeof p.getX!=='function'||typeof p.getY!=='function'||typeof p.getZ!=='function')return refuser('accesseurs incomplets');
+    for(let i=0;i<n.attribute.count;i++){const b=i*stride+offset;
+     if(!Object.is(p.getX(i),src[b])||!Object.is(p.getY(i),src[b+1])||!Object.is(p.getZ(i),src[b+2]))return refuser('accesseur différent du tableau');}}
    const largeur=f64?8:4,capacite=Math.min(capaciteMax,Math.floor((octetsEntree/largeur-3)/stride)+1);
    return capacite>=1?{src,stride,offset,f64,capacite}:null;
   };
@@ -143,6 +148,9 @@
   monter();
   const capacite=cap,secours=noyauJs(capacite),Msauve=new Float64Array(131),Esauve=new Float64Array(24);
   let copieOctets=0,tranches=0,reprises=0;
+  /* Rejoue une tranche par le noyau JS à partir de l'état sauvé avant l'appel, puis rend cet état à l'instance. */
+  function rejouer(L,di,nb,limite,retour){M.set(Msauve);E.set(Esauve);secours.charger(Msauve,Esauve);
+   const t=secours.tranche(L,di,nb,limite,retour);E.set(secours.etat());return t;}
   return {nom:'wasm',eligible:eligibleAvec(octets,capacite),
    debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
    tranche(L,di,nb,limite,retour){
@@ -154,10 +162,10 @@
     catch(e){
      if(!(e instanceof WebAssembly.RuntimeError))throw e;
      // Trappe : instance neuve, état d'avant l'appel rendu, tranche rejouée par le noyau JS (même algorithme), état recopié.
-     reprises++;monter();M.set(Msauve);E.set(Esauve);secours.charger(Msauve,Esauve);
-     const t=secours.tranche(L,di,nb,limite,retour);E.set(secours.etat());return t;
+     reprises++;monter();return rejouer(L,di,nb,limite,retour);
     }
-    if(E[5]===3)throw Error('CH-064-L : tranche refusée par le noyau (dépassement de l’arène).');
+    // Tranche refusée par le noyau (code 3, garde de l'arène : n'arrive pas pour un nœud éligible) : rejouée de même.
+    if(E[5]===3){reprises++;refuser('tranche refusée');return rejouer(L,di,nb,limite,retour);}
     return resultat(E,k,R,S);
    },
    proches(cible,SIDES){ecrireProches(E,cible,SIDES);},
