@@ -1,6 +1,6 @@
 # CH-064 — Équipe de la réécriture en Rust (06/11/2026)
 
-Ordre de l'opérateur (06/11) : « un effort particulier sur la réécriture d'Ariane en Rust, avec un véritable attendu sur ses performances (rapidité, RAM, etc.) ; n'hésite pas à mettre plus d'agents sur le chantier, que ce soit sur Opus ou sur Cursor ».
+Ordre de l'opérateur (06/11) : « un effort particulier sur la réécriture d'Ariane en Rust, avec un véritable attendu sur ses performances (rapidité, RAM, etc.) ; n'hésite pas à mettre plus d'agents sur le chantier, que ce soit sur [modèle de Claude, nom retiré : CLAUDE.md] ou sur Cursor ».
 
 ## Organisation
 - **CH-064 (chef)** porte :
@@ -16,8 +16,8 @@ Ordre de l'opérateur (06/11) : « un effort particulier sur la réécriture d'A
 
 | Sous-chantier | Agent | Crate | Modules JS de référence |
 |---|---|---|---|
-| CH-064-L | Opus | `ariane-lidar` | `vendor/lidar.js`, `src/native-lidar.js`, lecture des tampons de la capture (`src/adapter-page.js`, en lecture), `src/merge-clouds.js`, `src/lod-signature.js` |
-| CH-064-D | Opus | `ariane-decision` | `src/lot-decision.js`, `src/gcv2*.js`, `src/regles-metier.js`, `src/voie-b1-ecart.js`, `src/garde-*.js`, `src/relecture-ombre.js`, `src/relecture-critere.js`, `src/relecture-signal.js` |
+| CH-064-L | session Claude | `ariane-lidar` | `vendor/lidar.js`, `src/native-lidar.js`, lecture des tampons de la capture (`src/adapter-page.js`, en lecture), `src/merge-clouds.js`, `src/lod-signature.js` |
+| CH-064-D | session Claude | `ariane-decision` | `src/lot-decision.js`, `src/gcv2*.js`, `src/regles-metier.js`, `src/voie-b1-ecart.js`, `src/garde-*.js`, `src/relecture-ombre.js`, `src/relecture-critere.js`, `src/relecture-signal.js` |
 | CH-064-E | Cursor | `ariane-etat` | `src/etat-morceaux.js`, `src/journal-index.js`, `src/correction-liste.js`, `src/liste-memoire.js`, `src/verts-a-controler.js`, sérialisation de l'export (`src/native-session.js`, `dataset`) |
 
 ## Ce que chacun doit prouver (non négociable)

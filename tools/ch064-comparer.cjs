@@ -26,4 +26,14 @@ function comparer(a,b,{max=20}={}){
  }
  voir(a,b,'');return ecarts;
 }
-module.exports={comparer,ulp};
+/* Pour l'EMPREINTE seulement : chaque NaN devient une marque, des deux côtés. La charge d'un NaN n'est pas observable en JS
+ * (Object.is les confond) et la VBA la transporte telle quelle sans la garantir (vba.md) ; V8 dans Chromium produit des NaN
+ * non canoniques (relevé par CH-064-D : 0xFFFEFFFF_FFF6FFFF). Les trous, l'ordre des clés et −0 sont conservés. */
+const MARQUE_NAN='\u0000NaN';
+function sansNaN(v){
+ if(typeof v==='number')return Number.isNaN(v)?MARQUE_NAN:v;
+ if(Array.isArray(v)){const r=new Array(v.length);for(let i=0;i<v.length;i++)if(i in v)r[i]=sansNaN(v[i]);return r;}
+ if(v&&typeof v==='object'&&Object.getPrototypeOf(v)===Object.prototype){const r={};for(const k of Object.keys(v))Object.defineProperty(r,k,{value:sansNaN(v[k]),enumerable:true,writable:true,configurable:true});return r;}
+ return v;
+}
+module.exports={comparer,ulp,sansNaN,MARQUE_NAN};

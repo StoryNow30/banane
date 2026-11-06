@@ -9,3 +9,6 @@ ariane-js = { path = "../ariane-js" }
 ariane-vba = { path = "../ariane-vba" }
 ariane-capture = { path = "../ariane-capture" }
 ariane-geometrie = { path = "../ariane-geometrie" }
+
+[lints]
+workspace = true
