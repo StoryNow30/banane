@@ -809,7 +809,96 @@ adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',asyn
  const evidence=await validateInESV(...args);await dvArretApresValidation();
  const next=evidence?.nextIdentity,exit=lotExitOf(next);
  if(exit)await closeAtExit(exit==='part'?'navigation-other-part':'navigation-beyond-end',engine.s.before?.identity?.cut,next);
- return evidence;}finally{if(envoi)envoi.retourMs=Date.now();}});
+ else{if(envoi)envoi.retourMs=Date.now();await lotSignalPointSur(args[0],evidence,envoi);}   /* CH-062 : point sûr (validation prouvée, cut suivant pas commandé) */
+ return evidence;}finally{if(envoi&&envoi.retourMs===null)envoi.retourMs=Date.now();}});
+/* CH-062 — SIGNAL DE FIN DE CHARGEMENT D'ESV ÉTEINT PENDANT LE LOT (réglage `lot.signalEteint`, COUPÉ par défaut ; chantiers/CH-062/rapport.md).
+ * Cause mesurée (04/11 et 05/11) : Potree 1.8 (format EPT) ne décompte jamais un nœud dont la requête de points a échoué (HTTP 502) ; `numNodesLoading`
+ * reste à n > 0 jusqu'au rechargement de la page, la lecture rapide attend le repli de stabilité (≈ 2 s de plus par cut posé).
+ * Détection : la règle de la relecture (src/relecture-signal.js `observer`), RÉUTILISÉE, sur les captures du lot seulement, un état par PARTIE
+ * (plafond `rechargementsMax` par partie). Coupé : un événement `lot-signal-eteint` (étape « detecte », action « aucune ») par série, rien d'autre.
+ * Allumé : le rechargement attend un POINT SÛR, juste après la validation d'un cut et avant toute commande du suivant (`lotSignalPointSur`, appelé
+ * dans l'enveloppe de `validateAndNext`) : lot en cours, cut suivant affiché dans la même partie et dans les bornes, aucune pose à réconcilier, aucun
+ * différé en vol, ni deuxième passe, ni relecture, ni Écho, ni Mes corrections ; et l'écriture de validation d'ESV VUE par l'observateur (2xx, corps
+ * « valid ») dans `preuveMs` (un rechargement pendant la requête la perdrait). Puis : pause du lot (le moteur range le cut validé et s'arrête avant
+ * la capture du suivant), rechargement de l'onglet, ré-équipement, liste d'ESV lue puis silencieuse, reprise par `reprendreLot` (chemin de
+ * « Reprendre » : page rattachée, partie vérifiée, cut du lot retrouvé par « suivant », mêmes refus). ESV rouvre une autre partie ou ne répond pas
+ * dans `attenteRepriseMs` : le lot reste en pause, consigne F5. Ariane ne change jamais de partie. Aucune décision de pose ni de validation ne change. */
+const lotSignal={part:null,etat:null,aRecharger:false,refus:new Set(),rechargement:null};
+function lotSignalReglage(){const SG=globalThis.BananeRelectureSignal,o=globalThis.BananeSettings?.lot?.signalEteint,R=SG.reglage(o);
+ R.preuveMs=Number.isFinite(o?.preuveMs)&&o.preuveMs>=0?o.preuveMs:5000;return R;}
+function lotSignalEtat(b){const SG=globalThis.BananeRelectureSignal,part=b?.scope?.part;if(!SG||!Number.isInteger(part))return null;
+ if(lotSignal.part!==part){lotSignal.part=part;lotSignal.etat=SG.creer(lotSignalReglage());lotSignal.aRecharger=false;lotSignal.refus=new Set();}
+ return lotSignal;}
+const lotSignalDire=(etape,champs)=>journalerSimple('lot-signal-eteint',{etape,lotId:engine?.s?.batch?.id??null,...champs,...(lotSignal.etat?globalThis.BananeRelectureSignal.bilan(lotSignal.etat):{})});
+/* Une capture du LOT (moteur en cours) : la règle de la relecture dit si le signal est éteint. */
+function lotSignalObserver(r){const b=engine?.s?.batch,SG=globalThis.BananeRelectureSignal;
+ if(!SG||!r||typeof r!=='object'||b?.state!=='RUNNING'||!engine.task||relecture.passe?.etat==='en-cours'||passeDiff.cours)return;
+ const L=lotSignalEtat(b);if(!L)return;const o=SG.observer(L.etat,r,{peutRecharger:selectedTab!==null});if(o.action==='rien')return;
+ if(o.action==='recharger')L.aRecharger=true;
+ lotSignalDire('detecte',{action:o.action==='recharger'?'recharger':'aucune',raison:o.raison,identity:{part:b.scope.part,cut:r.identity?.cut??null}});}
+/* Pourquoi CE moment n'est pas un point sûr (null : il l'est). Pure : tout vient de `c`. */
+function lotSignalRefus(c){const n=c.evidence?.nextIdentity;
+ if(c.etat!=='RUNNING')return 'lot pas en cours';
+ if(c.onglet===null||c.onglet===undefined)return 'aucun onglet ESV choisi';
+ if(c.relecture)return 'relecture en cours';
+ if(c.passe)return 'deuxième passe en cours';
+ if(c.echo)return 'Écho actif';
+ if(c.manuel)return 'Mes corrections actif';
+ if(c.differe)return 'différé en cours de navigation';
+ if(c.intent||c.reconcile)return 'pose à réconcilier';
+ if(c.evidence?.commandSent!==true||c.evidence?.navigationObserved!==true)return 'validation non prouvée par la navigation';
+ if(c.evidence.nextReady===false)return 'cut suivant pas prêt';
+ if(!Number.isInteger(n?.cut)||n.part!==c.part)return 'cut suivant hors de la partie';
+ if(Number.isInteger(c.fin)&&n.cut>c.fin)return 'fin du lot';
+ if(c.cut!==undefined&&n.cut===c.cut)return 'cut inchangé';
+ return null;}
+async function lotSignalPointSur(identity,evidence,envoi){if(!lotSignal.aRecharger||!globalThis.BananeRelectureSignal)return;
+ const R=lotSignalReglage(),b=engine?.s?.batch;if(!R.actif||lotSignal.part!==b?.scope?.part)return;
+ const refuser=motif=>{if(lotSignal.refus.has(motif))return;lotSignal.refus.add(motif);lotSignalDire('refus',{motif,identity:{part:b.scope.part,cut:identity?.cut??null}});};
+ const contexte=()=>({etat:b.state,onglet:selectedTab,relecture:relecture.passe?.etat==='en-cours',passe:!!passeDiff.cours,echo:!!native?.active?.(),manuel:!!manual?.active?.(),
+  differe:!!engine.deferPending?.(),intent:!!engine.s.intent&&!(engine.s.intent.kind==='validate'&&engine.s.intent.identity?.cut===identity?.cut),reconcile:!!engine.s.reconcileRequired,evidence,part:b.scope.part,fin:b.scope.end,cut:identity?.cut});
+ let motif=lotSignalRefus(contexte());if(motif)return refuser(motif);
+ /* La preuve : l'écriture de validation d'ESV vue par l'observateur (preuveServeurNoter), pas une écriture refusée en attente. */
+ if(!envoi)return refuser('écriture de validation non suivie (réglage lot.ecritureRefusee)');
+ const t0=Date.now();while(!envoi.preuve&&Date.now()-t0<R.preuveMs)await attendreMs(Math.min(50,R.sondageMs||50));
+ if(!envoi.preuve)return refuser(`écriture de validation du cut non vue dans ${R.preuveMs} ms`);
+ if(ecrituresLot.echecs.has(identity?.cut))return refuser('écriture de validation refusée par ESV');
+ motif=lotSignalRefus(contexte());if(motif)return refuser(motif);
+ lotSignal.aRecharger=false;globalThis.BananeRelectureSignal.recharge(lotSignal.etat);
+ const cut=identity?.cut??null,part=b.scope.part;lotSignal.rechargement={lot:b.id,part,cut};
+ lotSignalDire('pause',{identity:{part,cut},preuve:'ecriture-observee',vers:evidence.nextIdentity?.cut??null});
+ await coordinateurLot.transition('pause',async()=>{await engine.pause();});
+ engine.s.notice=`Signal de chargement d’ESV éteint (lecture lente) : cut ${cut} validé, Ariane recharge la page ESV puis reprend le lot.`;
+ void lotSignalRecharger(b.id,part,cut,R).catch(e=>lotSignalDire('echec',{motif:String(e?.message||e).slice(0,200),identity:{part,cut}}));}
+/* Après la pause : attendre que le moteur ait rangé le cut validé et se soit arrêté, recharger, ré-équiper, attendre la liste, reprendre. */
+async function lotSignalRecharger(lot,part,cut,R){const t0=Date.now(),tab=selectedTab;let derniere=null;
+ const enPause=()=>engine?.s?.batch?.id===lot&&engine.s.batch.state==='PAUSED';
+ const dire=(etape,motif=null)=>lotSignalDire(etape,{motif:motif?String(motif).slice(0,200):null,identity:{part,cut},ms:Date.now()-t0});
+ const echec=m=>{if(enPause()){engine.s.notice=`Signal de chargement d’ESV éteint après le cut ${cut} : ${m}. Recharge ESV (F5) sur la partie ${part}, reconnecte-la, puis clique sur Reprendre.`;void engine.save().catch(()=>{});}
+  lotSignal.rechargement=null;dire('echec',m);};
+ for(let i=0;i<400&&(engine.task||engine.busy);i++)await attendreMs(25);
+ if(!enPause()){lotSignal.rechargement=null;return dire('abandon','lot repris ou arrêté avant le rechargement');}
+ await attendreMs(R.delaiAvantMs);if(!enPause()){lotSignal.rechargement=null;return dire('abandon','lot repris ou arrêté avant le rechargement');}
+ if(tab===null)return echec('aucun onglet ESV choisi');
+ const gen0=chargementEsv.gen;
+ try{await chrome.tabs.reload(tab);}catch(e){return echec(`rechargement impossible (${String(e?.message||e).slice(0,120)})`);}
+ dire('recharge');
+ while(Date.now()-t0<R.attenteRepriseMs){await attendreMs(R.sondageMs);
+  if(!enPause()){lotSignal.rechargement=null;return dire('abandon','lot repris ou arrêté pendant le rechargement');}
+  if(tab!==selectedTab)return echec('onglet ESV changé');
+  if(chargementEsv.gen===gen0)continue;   /* Chrome n'a pas encore dit le rechargement : l'ancienne page pourrait encore répondre */
+  let t=null;try{t=await chrome.tabs.get(tab);}catch{return echec('onglet ESV fermé');}
+  if(t?.url&&!esvURL(t.url))return echec('l’onglet n’affiche plus ESV');
+  if(t?.status&&t.status!=='complete')continue;
+  try{await equiperOnglet(tab);}catch(e){derniere=e?.message;if(e?.definitif)return echec(String(e.message).slice(0,160));continue;}
+  let lu=null;try{lu=(await call('ping'))?.label||null;}catch(e){derniere=e?.message;continue;}
+  if(!chargementEsvPret(lu,R))continue;
+  if(repriseEnCours)continue;
+  try{let repris=false;await coordinateurLot.transition('reprise',async()=>{if(repriseEnCours||!enPause())return;repriseEnCours=true;try{repris=await reprendreLot();}finally{repriseEnCours=false;}});
+   if(repris){lotSignal.rechargement=null;return dire('repris');}
+   if(!enPause()){lotSignal.rechargement=null;return dire('abandon','lot repris ou arrêté pendant la reprise');}}
+  catch(e){derniere=e?.message;if(!enPause()){lotSignal.rechargement=null;return dire('abandon',derniere);}}}
+ echec(`ESV n’est pas prêt ${Math.round(R.attenteRepriseMs/1000)} s après le rechargement${derniere?` (${String(derniere).slice(0,120)})`:''}`);}
 /* CH-038 (ordre de l'opérateur et de l'intégrateur, 02/11 : « il ne doit pas s'arrêter pour cette raison ») — VUE NON RESTITUÉE APRÈS UNE POSE.
  * La page (patch chantiers/CH-038/adaptateur-remise-vue.patch) ne lève plus : les rails sont posés et relus, le cut est validé comme les
  * autres. Ici : un AVERTISSEMENT `vue-non-restituee` (cut, raison, pressions, écarts ; jamais de position) et le compte des remises
@@ -1434,6 +1523,7 @@ async function gardeSerieVides(args,r){const G=globalThis.BananeSerieCapturesVid
  await dire(d);return best;}
 adapter.capture=async(...args)=>{let r0;try{r0=await captureESV(...args);}catch(e){throw (await partieChangeeParEsv(e))||e;}   /* CH-039 */
  const r=await gardeSerieVides(args,await recaptureVide(args,r0)),c=clicHumainDuLot();
+ try{lotSignalObserver(r);}catch{/* CH-062 : instrumentation, jamais bloquante */}
  if(c&&r&&typeof r==='object'&&!r.readStrategy?.clicHumain)r.readStrategy={...(r.readStrategy&&typeof r.readStrategy==='object'?r.readStrategy:{}),clicHumain:c,clicHumainSource:'lot'};
  return r;};
 /* 4.9.5.13 (L1) : une pose « sans valider » en attente pour CE cut est faite juste avant la navigation sans décision ; sinon l'appel d'avant. */
