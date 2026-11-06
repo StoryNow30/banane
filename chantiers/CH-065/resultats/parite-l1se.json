@@ -1,0 +1,145 @@
+{
+ "note": "tools/parite-l1se-sw.cjs --passe, tronc contre arbre aux quatre patchs ; référence du banc : rejeu de la garde sur le tronc. Le temps de passe est sous charge (non retenu).",
+ "lots": {
+  "2:13": {
+   "tronc": {
+    "partie": 13,
+    "lot": "c8d56eab",
+    "profil": "L1-se",
+    "leviers": null,
+    "passe": {
+     "differes": 0,
+     "posees": 0,
+     "ms": 635,
+     "parPasse": [
+      0,
+      0
+     ],
+     "parPasseBanc": [
+      0,
+      0
+     ]
+    },
+    "cuts": 22,
+    "rejoues": 22,
+    "absents": [],
+    "dureeS": 190,
+    "differesSw": 0,
+    "lignesDifferentes": 0,
+    "diffs": []
+   },
+   "patche": {
+    "partie": 13,
+    "lot": "c8d56eab",
+    "profil": "L1-se",
+    "leviers": null,
+    "passe": {
+     "differes": 0,
+     "posees": 0,
+     "ms": 610,
+     "parPasse": [
+      0,
+      0
+     ],
+     "parPasseBanc": [
+      0,
+      0
+     ]
+    },
+    "cuts": 22,
+    "rejoues": 22,
+    "absents": [],
+    "dureeS": 167,
+    "differesSw": 0,
+    "lignesDifferentes": 0,
+    "diffs": []
+   },
+   "sortiesIdentiques": true
+  },
+  "2:20": {
+   "tronc": {
+    "partie": 20,
+    "lot": "fd7067f7",
+    "profil": "L1-se",
+    "leviers": null,
+    "passe": {
+     "differes": 29,
+     "posees": 1,
+     "ms": 34781,
+     "parPasse": [
+      1,
+      0
+     ],
+     "parPasseBanc": [
+      1,
+      0
+     ]
+    },
+    "cuts": 130,
+    "rejoues": 130,
+    "absents": [],
+    "dureeS": 2284,
+    "differesSw": 29,
+    "lignesDifferentes": 1,
+    "diffs": [
+     {
+      "cut": 285,
+      "nuage": true,
+      "banc": {
+       "etat": "pose",
+       "source": "l1s-vue",
+       "motif": null
+      },
+      "sw": {
+       "etat": "pose",
+       "source": "l1s-chaine"
+      },
+      "ecartMm": 0
+     }
+    ]
+   },
+   "patche": {
+    "partie": 20,
+    "lot": "fd7067f7",
+    "profil": "L1-se",
+    "leviers": null,
+    "passe": {
+     "differes": 29,
+     "posees": 1,
+     "ms": 12196,
+     "parPasse": [
+      1,
+      0
+     ],
+     "parPasseBanc": [
+      1,
+      0
+     ]
+    },
+    "cuts": 130,
+    "rejoues": 130,
+    "absents": [],
+    "dureeS": 1395,
+    "differesSw": 29,
+    "lignesDifferentes": 1,
+    "diffs": [
+     {
+      "cut": 285,
+      "nuage": true,
+      "banc": {
+       "etat": "pose",
+       "source": "l1s-vue",
+       "motif": null
+      },
+      "sw": {
+       "etat": "pose",
+       "source": "l1s-chaine"
+      },
+      "ecartMm": 0
+     }
+    ]
+   },
+   "sortiesIdentiques": true
+  }
+ }
+}
