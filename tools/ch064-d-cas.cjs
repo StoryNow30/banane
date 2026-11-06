@@ -22,8 +22,13 @@ function borne(v,prof=0){if(typeof v==='number')return Number.isNaN(v)||Math.abs
 function advBorne(a){const o=a[1];if(o===undefined||o===null)return true;if(typeof o!=='object')return true;const A=o.adv;if(A===undefined)return borne(o);
  if(!A||typeof A!=='object')return borne(o);const D={pasM:0.01,lateralM:0.4,longM:0.5,trancheM:0.1,...A};
  const N=Math.round(D.lateralM/D.pasM),T=Math.round(2*D.longM/D.trancheM);return Number.isFinite(N)&&Math.abs(N)<1e5&&Number.isFinite(T)&&borne(o);}
-const SURS={relectureOmbre:{selection:borne},reglesMetier:{surface:advBorne,railsDePlus:advBorne},crossing:{read:a=>borne(a[1]??0),edgeOf:a=>borne(a[2]??0),detect:a=>borne(a[1]??0)}};
-function encoder(args){try{return Buffer.from(Vba.encoder(args)).toString('base64');}catch{compte.nonVba++;return null;}}
+/* CH-068 : la boucle de referenceEcartement va jusqu'à table.n (borné) */
+const SURS={gcv2L1e:{referenceEcartement:a=>borne(a[0]?.n??0)&&borne(a[2]??0)},relectureOmbre:{selection:borne},reglesMetier:{surface:advBorne,railsDePlus:advBorne},crossing:{read:a=>borne(a[1]??0),edgeOf:a=>borne(a[2]??0),detect:a=>borne(a[1]??0)}};
+/* CH-068 : un Map (mémoire de l'ombre de voie-b1-ecart) voyage en paires sous la marque \u0000map, rétabli par l'adaptateur des deux côtés. */
+const MM='\u0000map';
+function marquerMaps(v,p=0){if(v instanceof Map)return {[MM]:[...v]};if(!v||typeof v!=='object'||p>6)return v;if(Array.isArray(v))return v.map(x=>marquerMaps(x,p+1));
+ const r={};for(const k of Object.keys(v))r[k]=marquerMaps(v[k],p+1);return r;}
+function encoder(args){try{return Buffer.from(Vba.encoder(marquerMaps(args))).toString('base64');}catch{compte.nonVba++;return null;}}
 /* Feuilles et clés d'un arbre : chemins [[clé…]]. */
 function chemins(v,p=[],out=[],prof=0){out.push(p);if(prof>6||v===null||typeof v!=='object')return out;
  if(Array.isArray(v)){for(let i=0;i<Math.min(v.length,12);i++)chemins(v[i],[...p,i],out,prof+1);}
@@ -40,6 +45,7 @@ function*cas(modules,{fixtures=true,reel=true,variantes=Number(process.env.CH064
   for(let k=0;k<variantes;k++){const m=muter(c.args,alea);if(!m)break;const sur=SURS[c.module]?.[c.f];if(sur&&!sur(m))continue;const bm=encoder(m);if(bm===null)continue;compte.variantes++;
    yield {id:c.id+'#'+(i++)+'-variante'+k,entree:{module:c.module,f:c.f,args:bm}};}}
  if(fixtures&&fs.existsSync(FIXTURES)){for(const e of v8.deserialize(fs.readFileSync(FIXTURES)))if(modules.includes(e.module))yield* avec({id:'fixture-'+e.module+'.'+e.f+'-'+e.essai,module:e.module,f:e.f,args:v8.deserialize(e.args)});}
- if(reel){const R=require('./ch064-d-reel.cjs');for(const c of R.cas(modules,{max}))yield* avec(c);}
+ if(reel){const R=require('./ch064-d-reel.cjs');for(const c of R.cas(modules,{max}))yield* avec(c);
+  /* CH-068 (J4) */ for(const c of require('./ch064-d-reel-j4.cjs').cas(modules,{max}))yield* avec(c);}
 }
 module.exports={cas,compte,muter,graine};

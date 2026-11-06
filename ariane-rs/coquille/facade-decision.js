@@ -9,7 +9,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeFacadeDecision=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
  const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56,shadow:57,hauteur:58,fauxVert:59,lotDecision:60,
-  /* CH-068 (J4) */ appuisListe:61};
+  /* CH-068 (J4) */ appuisListe:61,gcv2L1e:62,voieRecentree:63,voieB1:64};
  const PORTEES={
   critere:['reglages','correctionPermise','juger'],
   signal:['reglage','lectureDe','creer','observer','recharge','bilan'],
@@ -20,7 +20,11 @@
   crossing:['read','detect','edgeOf','positionAt'],
   shadow:['scientificProposeBoth','scientificProposeBothAvecReservoir'],
   hauteur:['evaluer'],fauxVert:['evaluer'],lotDecision:['decideCut'],
-  appuisListe:['bordsCorps','mesurerT','noterRepere','resumeRepere','lireReponse','accord','appuis','compter','regle','comparer','resumeDecision']};
+  appuisListe:['bordsCorps','mesurerT','noterRepere','resumeRepere','lireReponse','accord','appuis','compter','regle','comparer','resumeDecision'],
+  gcv2L1e:['referenceEcartement','signe','corriger','decider'],
+  voieRecentree:['localMm','poseMm','vueNecessaire','camerasLarges','geste','traceMoteur','confiances','profondeur','predictionDe','mesures','regle','enRegle',
+   'verdictPrudent','completer','recentrer','appuisDepuisDecalage','choisirDansLePool','ecartPose','juger','memoireSerie'],
+  voieB1:['lignesDeTable','repereDepuisLigne','ecartementReference','railTrouve','solutionsEcartement','poseMmDe','ecartPoses','evaluer']};
  const MUTANTES={signal:new Set(['observer','recharge']),appuisListe:new Set(['noterRepere'])};
  /* Mutantes qui rendent parfois leur premier argument lui-même (noterRepere) : le cœur ajoute `meme`, la façade rend alors l'objet d'origine. */
  const primitif=v=>v===null||(typeof v!=='object'&&typeof v!=='function');
@@ -37,10 +41,19 @@
  function envoiSpecial(nom,f,a,modules){
   /* comparer(d0,d1) teste d0===d1 : l'identité d'un objet ne traverse pas, le même objet passé deux fois reste au JS. */
   if(nom==='appuisListe'&&f==='comparer')return a[0]!==null&&typeof a[0]==='object'&&a[0]===a[1]?false:null;
-  if(nom!=='lotDecision')return null;
+  /* CH-068 : recentrer (voie-recentree) et evaluer (voie-b1-ecart) reçoivent le module GCV1 comme decideCut, et le passent à decideCut. */
+  const b1=nom==='voieB1'&&f==='evaluer';
+  if(!(nom==='lotDecision'||(nom==='voieRecentree'&&f==='recentrer')||b1))return null;
   const x=a[0];if(!x||typeof x!=='object'||x.Shadow!==modules.shadow||!modules.shadow)return false;
   const {Shadow,...reste}=x,S=typeof globalThis!=='undefined'?globalThis.BananeSettings:undefined;
+  /* evaluer : la mémoire de l'ombre (poses, profondeurs en Map) part en paires ; la façade y recopie la mémoire rendue (memoireApres). */
+  if(b1){const m=reste.mem;if(!m||typeof m!=='object'||!Array.isArray(m.poses)||!(m.profondeurs instanceof Map))return false;
+   reste.mem={batchId:m.batchId,poses:m.poses,profondeurs:[...m.profondeurs]};}
   return {f,a:[reste,...a.slice(1)],etat:etatShadow(Shadow,modules),globaux:{flushPct:S?.releves?.flushPct,ombreVerticaleRefusee:S?.ombreVerticaleRefusee,fauxVertOmbre:S?.fauxVertOmbre,hauteurApprise:S?.hauteurApprise}};}
+ /* Ce que la façade fait de la réponse d'un envoi spécial : evaluer (voie-b1-ecart) rend {r, mem} ; la mémoire rendue remplace celle de l'appelant. */
+ function apresSpecial(nom,f,a,v){
+  if(nom==='voieB1'&&f==='evaluer'){const m=a[0].mem;m.poses.splice(0,m.poses.length,...v.mem.poses);m.profondeurs.clear();for(const [k,x] of v.mem.profondeurs)m.profondeurs.set(k,x);return v.r;}
+  return v;}
  function creer(coeur,modules){
   const n={};const out={compteurs:()=>JSON.parse(JSON.stringify(n))};
   for(const [nom,M] of Object.entries(modules)){if(!M||!(nom in NUMEROS))continue;
@@ -53,7 +66,7 @@
      catch(e){if(e&&e.name==='HorsDomaine'){c.repliHorsDomaine++;return M[f](...a);}
       if(e instanceof TypeError&&/^VBA : /.test(e.message)){c.repliFormat++;return M[f](...a);}throw e;}
      if(mutante){recopier(a[0],v.e);return v.meme===true?a[0]:v.r;}
-     return v;};}
+     return sp?apresSpecial(nom,f,a,v):v;};}
    out[nom]=F;}
   return out;}
  return {creer,NUMEROS,PORTEES};

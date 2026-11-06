@@ -105,16 +105,82 @@ pub fn cle_propriete(v: &V) -> R<String> {
 #[must_use]
 pub fn borne_slice(len: usize, k: f64) -> usize { crate::js::slice_debut(len, k) }
 
-/// Médiane du JS (`med`) : tri numérique, moyenne des deux du milieu ; vide : `None`.
-#[must_use]
-pub fn med(a: &[f64]) -> Option<f64> {
-    if a.is_empty() { return None; }
+/// Médiane du JS (`med`) : tri numérique, moyenne des deux du milieu ; vide : `None` (`null`).
+///
+/// # Errors
+/// `HorsDomaine` si une valeur n'est pas finie (comparateur NaN : ordre propre à V8).
+pub fn med(a: &[f64]) -> R<Option<f64>> {
+    if a.is_empty() { return Ok(None); }
     let mut b = a.to_vec();
-    ariane_js::trier_nombres(&mut b);
+    trier_par(&mut b, |x| *x)?;
     let i = b.len() >> 1;
-    if b.len() % 2 == 1 { b.get(i).copied() } else { Some((b.get(i.wrapping_sub(1)).copied()? + b.get(i).copied()?) / 2.0) }
+    Ok(if b.len() % 2 == 1 { b.get(i).copied() } else { match (b.get(i.wrapping_sub(1)), b.get(i)) { (Some(x), Some(y)) => Some((x + y) / 2.0), _ => None } })
 }
-
 /// Distance de deux points à trois composantes (`Math.hypot(a0-b0, a1-b1, a2-b2)`).
 #[must_use]
 pub fn dist3(a: &[f64; 3], b: &[f64; 3]) -> f64 { ariane_js::hypot(&[a[0] - b[0], a[1] - b[1], a[2] - b[2]]) }
+
+/// `String(v)` : nombres par `ariane_js::nombre::nombre_en_chaine`, tableaux joints par « , » (éléments nuls et trous vides).
+///
+/// # Errors
+/// `HorsDomaine` pour une erreur.
+pub fn texte(v: &V) -> R<String> {
+    Ok(match v {
+        V::Indefini => "undefined".to_owned(),
+        V::Nul => "null".to_owned(),
+        V::Booleen(x) => if *x { "true".to_owned() } else { "false".to_owned() },
+        V::Nombre(x) => ariane_js::nombre::nombre_en_chaine(*x),
+        V::Chaine(c) => c.clone(),
+        V::Objet(_) => "[object Object]".to_owned(),
+        V::Erreur { .. } => return hd("String d'une erreur"),
+        t => {
+            let mut out = String::new();
+            for (i, x) in elems(t).unwrap_or_default().iter().enumerate() {
+                if i > 0 { out.push(','); }
+                match x { None | Some(V::Indefini | V::Nul) => {} Some(x) => out.push_str(&texte(x)?) }
+            }
+            out
+        }
+    })
+}
+/// `String(v).slice(0, k)`.
+///
+/// # Errors
+/// `HorsDomaine` (coupe au milieu d'une paire de substitution, erreur).
+pub fn texte_k(v: &V, k: usize) -> R<String> { crate::js::tranche_utf16(&texte(v)?, k) }
+
+/// `v.length` (tableau, chaîne en unités UTF-16, objet simple : sa clé `length`) ; autre primitive : `undefined`.
+#[must_use]
+pub fn longueur_js(v: &V) -> V {
+    match v {
+        V::Chaine(c) => n(c.encode_utf16().count() as f64),
+        V::Objet(_) => crate::js::g_brut(v, "length").clone(),
+        x if est_tableau(x) => n(crate::js::longueur(x).unwrap_or(0) as f64),
+        _ => V::Indefini,
+    }
+}
+/// `a + b` de deux valeurs dont aucune n'est une chaîne ni un objet (sinon : hors domaine).
+///
+/// # Errors
+/// `HorsDomaine` si l'addition concaténerait.
+pub fn plus(a: &V, b: &V) -> R<f64> { Ok(nombre(a)? + nombre(b)?) }
+/// Éléments d'un tableau, trous en `undefined` (itération `for…of`, étalement).
+#[must_use]
+pub fn iter_vals(v: &V) -> Vec<V> { elems(v).unwrap_or_default().into_iter().map(|x| x.unwrap_or(V::Indefini)).collect() }
+/// `SameValueZero(a, b)` (`Set.has`, `includes`) entre primitives ; objets : hors domaine.
+///
+/// # Errors
+/// `HorsDomaine` entre deux objets.
+pub fn svz(a: &V, b: &V) -> R<bool> {
+    match (a, b) { (V::Nombre(x), V::Nombre(y)) => Ok(x == y || (x.is_nan() && y.is_nan())), _ => crate::js::strict_egal(a, b) }
+}
+/// Tri stable d'éléments par une clé numérique, comme `sort((a,b)=>k(a)-k(b))` : clés non finies (comparateur NaN
+/// possible, ordre propre au `TimSort` de V8) : hors domaine dès qu'il y a au moins deux éléments.
+///
+/// # Errors
+/// `HorsDomaine` si une clé n'est pas finie.
+pub fn trier_par<T>(t: &mut [T], cle: impl Fn(&T) -> f64) -> R<()> {
+    if t.len() > 1 && t.iter().any(|x| !cle(x).is_finite()) { return hd("tri : clé non finie"); }
+    t.sort_by(|a, b| { let d = cle(a) - cle(b); if d < 0.0 { core::cmp::Ordering::Less } else if d > 0.0 { core::cmp::Ordering::Greater } else { core::cmp::Ordering::Equal } });
+    Ok(())
+}
