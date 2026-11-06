@@ -58,18 +58,67 @@
         }
       } else
 `;
+ /* File des captures (audit de la PR n° 25, P1) : le noyau porte un état (matrices, plus proches, arène) d'un appel de
+  * debutNoeud() à la fin du nœud, à travers les `await pause()`. Deux capture() simultanées se l'écraseraient. La variante
+  * exporte donc un capture() qui attend la fin de la précédente (réussie ou non) avant de commencer : les captures sont
+  * sérialisées sur tout leur parcours. Le journal du 05/11 n'en montre aucune simultanée (2 711 captures) ; l'origine, elle,
+  * est réentrante (état local à chaque appel). */
+ const EXPORT='  return {capture,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};';
+ const FILE='  let __fileCaptures=Promise.resolve();\n  const __captureEnFile=options=>{const p=__fileCaptures.then(()=>capture(options));__fileCaptures=p.then(()=>{},()=>{});return p;};\n'+
+  '  return {capture:__captureEnFile,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};';
  function variante(texte){
-  const a=texte.indexOf(DEBUT),b=texte.indexOf(FIN);
+  const a=texte.indexOf(DEBUT),b=texte.indexOf(FIN),c=texte.indexOf(EXPORT);
   if(a<0||b<0||texte.indexOf(DEBUT,a+1)>=0)throw Error('vendor/lidar.js a changé : boucle par point introuvable ou ambiguë (CH-064-L à mettre à jour).');
-  return texte.slice(0,a)+BRANCHE+texte.slice(a);
+  if(c<0||texte.indexOf(EXPORT,c+1)>=0||c<a)throw Error('vendor/lidar.js a changé : export de capture introuvable ou ambigu (CH-064 à mettre à jour).');
+  return texte.slice(0,a)+BRANCHE+texte.slice(a,c)+FILE+texte.slice(c+EXPORT.length);
  }
  /* ---------- partie commune aux deux noyaux ---------- */
  const MESSAGES=[null,'Projection non finie.','Transformation non finie.'],VERSION_ARENE=1;
  const nombre=x=>typeof x==='number'&&!Number.isNaN(x);
+ /* Accesseurs reconnus (audits de la PR n° 25 : 4ceb766, 01846d1, 906ec78, 1f78142). La lecture directe du tableau n'est prise que
+  * si l'attribut n'a AUCUN accesseur getX/getY/getZ, ou si ses trois accesseurs sont AUTHENTIFIÉS comme ceux de three.js. On
+  * authentifie la sémantique, pas seulement l'identité ; les quatre conditions doivent tenir :
+  *  1. chaque accesseur est lu par descripteur (chaîne des prototypes) et c'est une valeur, jamais une propriété calculée ;
+  *  2. son texte (Function.prototype.toString, pris au chargement de la coquille) est EXACTEMENT un corps de la liste blanche
+  *     CORPS_THREE, par genre d'attribut (simple ou entrelacé) ;
+  *  3. il est identique à l'instantané pris au chargement de la coquille dans la page (globalThis.THREE de ce moment-là ; THREE
+  *     absent au chargement : aucune référence) ET aux fonctions que porte encore le THREE courant ;
+  *  4. pour lui seul, les sondes sont relues comme seconde garde (ces accesseurs sont purs).
+  * Tout autre accesseur : AUCUN appel de la coquille, pas même les sondes ; le nœud passe par la boucle d'origine, seule à
+  * reproduire ses appels à l'identique (indices, ordre, entrelacement avec les autres attributs, arrêts de budget ou d'erreur).
+  * Limite assumée : une page qui réécrirait Function.prototype.toString AVANT l'injection de la coquille pour se faire passer pour
+  * three.js sort de ce modèle (ESV n'a aucune raison de le faire). Refus comptés par raison (refus()). */
+ /* Corps de three.js r124 (Potree 1.8.0 à 1.8.2 : libs/three.js/build/three.module.js, BufferAttribute et
+  * InterleavedBufferAttribute ; relevé du source, CH-064 ; ESV charge Potree 1.8.0, relevé de CH-062). Ces accesseurs lisent le
+  * tableau sans branche « normalized » ; les attributs normalisés sont de toute façon exclus plus bas. À compléter avec la
+  * révision relevée chez l'opérateur si elle diffère. */
+ const CORPS_THREE=Object.freeze({r124:Object.freeze({buffer:Object.freeze(["function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"]),entrelace:Object.freeze(["function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"])})});
+ const refusParRaison={},FT=Function.prototype.toString,appliquer=Reflect.apply,proto=Object.getPrototypeOf,descripteur=Object.getOwnPropertyDescriptor;
+ /* Fonction de la clé k de o (chaîne des prototypes) par descripteur : la fonction, undefined si la clé est absente, ou null si ce
+  * n'est pas une donnée simple (propriété calculée, ou valeur qui n'est pas une fonction). */
+ function fonctionDe(o,k){for(let p=o;p!==null&&p!==undefined;p=proto(p)){const d=descripteur(p,k);
+  if(d)return 'value' in d&&typeof d.value==='function'?d.value:null;}return undefined;}
+ const trio=p=>{if(!p)return null;const x=fonctionDe(p,'getX'),y=fonctionDe(p,'getY'),z=fonctionDe(p,'getZ');return x&&y&&z?[x,y,z]:null;};
+ const texte=f=>{try{return appliquer(FT,f,[]);}catch{return null;}};
+ const GENRES=['buffer','entrelace'];
+ const authentique=(t,genre)=>Object.keys(CORPS_THREE).some(r=>CORPS_THREE[r][genre].every((c,k)=>texte(t[k])===c));
+ const protosThree=T=>{try{return [T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];}catch{return [null,null];}};
+ const INSTANTANE_THREE=protosThree(globalThis.THREE).map((p,i)=>{const t=trio(p);return t&&authentique(t,GENRES[i])?t:null;});
+ const memeTrio=(a,b)=>!!a&&!!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];
+ function accesseursSurs(pos){
+  const x=fonctionDe(pos,'getX'),y=fonctionDe(pos,'getY'),z=fonctionDe(pos,'getZ');
+  if(x===undefined&&y===undefined&&z===undefined)return true;
+  if(!x||!y||!z)return false;
+  const t=[x,y,z],courant=protosThree(globalThis.THREE).map(trio);
+  for(let i=0;i<2;i++)if(memeTrio(t,INSTANTANE_THREE[i])&&memeTrio(courant[i],INSTANTANE_THREE[i])&&authentique(t,GENRES[i]))return true;
+  return false;
+ }
+ const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
  function eligibleAvec(octetsEntree,capaciteMax){
   return function eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,probes){
    if(indexAttr||!n.position||n.position.isFloat16BufferAttribute)return null;
+   if(!accesseursSurs(n.position))return refuser('accesseur inconnu'); // AVANT toute lecture : les sondes ci-dessous appellent l'accesseur
    const meta=n.attribute&&n.attribute.metadata,src=n.position.array||(n.position.data&&n.position.data.array);
    if(!meta||meta.normalized||n.position.normalized)return null;
    const f64=src instanceof Float64Array;if(!f64&&!(src instanceof Float32Array))return null;
@@ -117,6 +166,9 @@
   monter();
   const capacite=cap,secours=noyauJs(capacite),Msauve=new Float64Array(131),Esauve=new Float64Array(24);
   let copieOctets=0,tranches=0,reprises=0;
+  /* Rejoue une tranche par le noyau JS à partir de l'état sauvé avant l'appel, puis rend cet état à l'instance. */
+  function rejouer(L,di,nb,limite,retour){M.set(Msauve);E.set(Esauve);secours.charger(Msauve,Esauve);
+   const t=secours.tranche(L,di,nb,limite,retour);E.set(secours.etat());return t;}
   return {nom:'wasm',eligible:eligibleAvec(octets,capacite),
    debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
    tranche(L,di,nb,limite,retour){
@@ -128,10 +180,10 @@
     catch(e){
      if(!(e instanceof WebAssembly.RuntimeError))throw e;
      // Trappe : instance neuve, état d'avant l'appel rendu, tranche rejouée par le noyau JS (même algorithme), état recopié.
-     reprises++;monter();M.set(Msauve);E.set(Esauve);secours.charger(Msauve,Esauve);
-     const t=secours.tranche(L,di,nb,limite,retour);E.set(secours.etat());return t;
+     reprises++;monter();return rejouer(L,di,nb,limite,retour);
     }
-    if(E[5]===3)throw Error('CH-064-L : tranche refusée par le noyau (dépassement de l’arène).');
+    // Tranche refusée par le noyau (code 3, garde de l'arène : n'arrive pas pour un nœud éligible) : rejouée de même.
+    if(E[5]===3){reprises++;refuser('tranche refusée');return rejouer(L,di,nb,limite,retour);}
     return resultat(E,k,R,S);
    },
    proches(cible,SIDES){ecrireProches(E,cible,SIDES);},
@@ -193,5 +245,5 @@
    charger(m,e){M.set(m);E.set(e);},etat:()=>E,
    memoireOctets:()=>0,copieOctets:()=>0,tranches:()=>tranches};
  }
- return {variante,noyauWasm,noyauJs,DEBUT,FIN};
+ return {variante,noyauWasm,noyauJs,refus:()=>({...refusParRaison}),threeReconnu:()=>INSTANTANE_THREE.map(t=>!!t),CORPS_THREE,DEBUT,FIN};
 });

@@ -81,12 +81,13 @@ fn appel<T: Coord>(n: u32, stride: u32, premier: u32, limite: f64) -> u32 {
     let largeur = core::mem::size_of::<T>();
     // SÛRETÉ : seul accès à l'arène pendant l'appel (coquille synchrone, pas de fils) ; aucune référence ne survit à l'appel.
     let a = unsafe { &mut *ARENE.0.get() };
-    // Bornes vérifiées : une tranche qui sortirait de l'arène est refusée (code 3), jamais lue.
-    if n > CAPACITE || stride < 3 || (n > 0 && ((n - 1) * stride + 3) * largeur > ENTREE_OCTETS) {
+    // Bornes vérifiées, sans débordement (usize fait 32 bits en WASM : audit de la PR n° 25) : une tranche qui sortirait de
+    // l'arène, ou dont la taille ne se calcule pas, est refusée (code 3), jamais lue.
+    let lus = if n == 0 { Some(0) } else { (n - 1).checked_mul(stride).and_then(|x| x.checked_add(3)) };
+    let Some(lus) = lus.filter(|l| n <= CAPACITE && stride >= 3 && l.checked_mul(largeur).is_some_and(|o| o <= ENTREE_OCTETS)) else {
         a.etat[E_ERREUR] = 3.0;
         return 0;
-    }
-    let lus = if n == 0 { 0 } else { (n - 1) * stride + 3 };
+    };
     // SÛRETÉ : `entree` est alignée sur 8 (repr(C, align(8)), premier champ) ; `lus × largeur ≤ ENTREE_OCTETS` vérifié
     // ci-dessus ; tout motif de bits est un f32 ou un f64 valide.
     let src = unsafe { core::slice::from_raw_parts(a.entree.as_ptr().cast::<T>(), lus) };
@@ -147,8 +148,9 @@ mod essais {
         e.fill(0.0);
         assert_eq!(lidar_parcourir_f64(2, 3, 10, f64::INFINITY), 1);
         verifier(e, r, s);
-        // Tranches refusées : trop longue, pas < 3, débordement de l'entrée.
-        for (n, pas) in [(CAPACITE as u32 + 1, 3), (2, 2), (4096, 9)] {
+        // Tranches refusées : trop longue, pas < 3, débordement de l'entrée, taille qui déborderait 32 bits (audit de la PR n° 25 ;
+        // le débordement lui-même n'existe qu'en WASM : tools/ch064-essais-lidar-audit.cjs le vérifie dans le vrai module).
+        for (n, pas) in [(CAPACITE as u32 + 1, 3), (2, 2), (4096, 9), (2, 0x2000_0000), (2, 0x4000_0000), (3, 0xAAAA_AAAB), (2, u32::MAX)] {
             e.fill(0.0);
             assert_eq!(lidar_parcourir_f64(n, pas, 0, f64::INFINITY), 0);
             assert_eq!(e[E_ERREUR], 3.0);
