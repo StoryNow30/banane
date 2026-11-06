@@ -34,3 +34,15 @@ test('redémarrage du service worker en pleine session Écho : l\'état relu est
  /* La session repart : nouvelle visite à la suite, index continu. */
  await b.sessions.resume();await J.visite(b,500,20);assert.equal(b.engine.s.native.visits.length,81);assert.equal(b.engine.s.native.visits.at(-1).visitIndex,80);
 });
+
+/* CH-058 (relais de l'intégrateur, PROBABLE) : une session Écho fermée reste dans l'état (FINISHED) ; un lot lancé ensuite réécrivait
+ * toute la session à chacune de ses sauvegardes (8,3 par cut). Ici : Écho de 120 visites fermée, puis un lot de 200 cuts. */
+test('lot après une Écho fermée : chaque sauvegarde du lot reste petite, la session fermée n\'est pas réécrite',async()=>{
+ const fc=J.fauxChrome(),{a}=await journee(fc,{parties:2,visitesParPartie:60,vidageToutes:30});await a.sessions.close({dataset:false});assert.equal(a.engine.s.native.status,'FINISHED');
+ a.engine.s.batch={id:'lot-apres-echo',state:'RUNNING',step:'capture',scope:{part:20},processed:[],skipped:[],paused:[],interrupted:[],sequence:[],deferred:[],startedAt:new Date().toISOString()};
+ const octets=[];for(let c=0;c<200;c++){a.engine.s.batch.processed.push({key:`p/20/${c}`,identity:{pageId:'p',part:20,cut:c},cut:c,evidence:{commandSent:true,accepted:true}});
+  a.engine.s.batch.sequence.push({cutId:`p/20/${c}`,sequenceIndex:c});if(c%20===0||c===199)octets.push(await J.octetsSauvegarde(a,fc));}
+ assert.ok(Math.max(...octets)<20_000,`octets écrits par sauvegarde pendant le lot : ${octets.join(', ')}`);
+ const b=await J.ouvrir(fc,a.store.tables);assert.equal(b.engine.s.native.visits.length,120,'la session fermée est relue entière');
+ assert.equal(b.engine.s.batch.processed.length,200);
+});
