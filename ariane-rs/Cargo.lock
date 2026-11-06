@@ -17,6 +17,7 @@ dependencies = [
  "ariane-capture",
  "ariane-decision",
  "ariane-etat",
+ "ariane-export",
  "ariane-geometrie",
  "ariane-js",
  "ariane-vba",
@@ -34,6 +35,15 @@ dependencies = [
 name = "ariane-etat"
 version = "0.0.0"
 dependencies = [
+ "ariane-js",
+ "ariane-vba",
+]
+
+[[package]]
+name = "ariane-export"
+version = "0.0.0"
+dependencies = [
+ "ariane-capture",
  "ariane-js",
  "ariane-vba",
 ]

@@ -1,0 +1,13 @@
+[package]
+name = "ariane-export"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+ariane-js = { path = "../ariane-js" }
+ariane-vba = { path = "../ariane-vba" }
+ariane-capture = { path = "../ariane-capture" }
+
+[lints]
+workspace = true
