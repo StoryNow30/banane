@@ -1,0 +1,934 @@
+diff --git a/background.js b/background.js
+index 0abafd0..4ffb07a 100644
+--- a/background.js
++++ b/background.js
+@@ -33,7 +33,7 @@ let BUILD='inconnu';const BUILD_PRET=(async()=>{try{if(typeof fetch!=='function'
+  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
+  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
+ BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
+-const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
++const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','vendor/ariane-lidar.js','vendor/ariane-lidar-wasm.js','vendor/lidar-rust.js','src/lidar-rust.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
+ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
+ /* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
+  * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
+@@ -4578,6 +4578,9 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
+  }
+  if(m.kind==='adapter-trace'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
+   timing?.progress(m);
++  /* D-296 (CH-064) : l'étape `rust` de la page (lecture LiDAR en Rust : servi, repli, raison) devient un événement `rust`, rien d'autre. */
++  if(m.lastStage==='rust'){ready.then(()=>engine.event('rust',{action:m.action,requestId:m.requestId,...(m.lastDetail&&typeof m.lastDetail==='object'?m.lastDetail:{}),
++    identity:engine.s.before?.identity?{part:engine.s.before.identity.part??null,cut:engine.s.before.identity.cut??null}:null})).then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;}
+   ready.then(()=>{if(m.action==='capture')engine.s.captureProgress={stage:m.lastStage,...m.lastDetail};
+     const progression=()=>engine.event('adapter-progress',{requestId:m.requestId,action:m.action,elapsedMs:m.elapsedMs,acknowledged:m.acknowledged,lastStage:m.lastStage,lastDetail:m.lastDetail});
+     /* 5.0 (D-147) : chaque geste de vue d'Ariane, et la remise de la vue, consignés à part (les autres étapes : comme avant). */
+diff --git a/src/adapter-page.js b/src/adapter-page.js
+index ed97a91..21bcf0e 100644
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -12,6 +12,10 @@
+   * sur la même page. Les modules sont donc lus UNE fois, ici ; le tampon posé
+   * par le service worker juste avant l'injection désigne le propriétaire. */
+  const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
++ /* D-296 (CH-064, étape 6 a) : lecture LiDAR en Rust. Réglage `BananeSettings.rust.lidar` (actif par défaut, coupable) ; sans noyau
++  * chargé (src/lidar-rust.js), ou réglage coupé, la lecture d'origine (vendor/lidar.js). Sortie de capture() identique au bit près. */
++ const LR=window.BananeLidarRustChargeur||null,RUST_LIDAR=window.BananeSettings?.rust?.lidar===true;
++ const lecteurLidar=()=>RUST_LIDAR&&LR&&LR.pret()?LR:L;
+  const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4,GV=window.BananeGestesVue||null;
+  const PROPRIO=typeof window.__ARIANE_PROPRIETAIRE?.id==='string'?window.__ARIANE_PROPRIETAIRE.id:null;
+  const PROPRIO_NOM=typeof window.__ARIANE_PROPRIETAIRE?.versionName==='string'?window.__ARIANE_PROPRIETAIRE.versionName:null;
+@@ -307,11 +311,13 @@
+    document.dispatchEvent(new KeyboardEvent('keyup',init));
+    return {commandSent:true,command:'SKIP'};
+  }
+- async function captureOnce(expected,guard,lecture='reference'){guard();const c=context();
+-   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,...(lecture==='rapide'?{pause:yieldToPage}:{}),
++ async function captureOnce(expected,guard,lecture='reference',progress=null,cote=null){guard();const c=context();const lu=lecteurLidar();
++   const data=await lu.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,...(lecture==='rapide'?{pause:yieldToPage}:{}),
+      meta:{version:K.VERSION,captureId:K.uid(),sessionId:pageId,visitId:`${c.frame.id}:${c.identity.part}:${c.identity.cut}`,
+        identity:c.identity,part:c.identity.part,cut:c.identity.cut,shape:c.identity.shape,railStateProvenance:'observed-before',
+        coordinateBridge:{sceneFrameId:c.frame.id,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
++   /* étape `rust` : servi, repli, raison (journal `rust`, background.js) ; seulement quand la lecture en Rust est en jeu */
++   if(progress&&(LR||RUST_LIDAR))try{progress('rust',{side:cote,...(LR?LR.bilan(lu===LR):{module:'lidar',servi:false,repli:true,raison:'chargeur absent'})});}catch{}
+    guard();return data;}
+  /* SIGNATURE DU NIVEAU DE DÉTAIL CHARGÉ.
+   *
+@@ -472,7 +478,7 @@
+            attente={regle:'stabilite',diag};}
+          guard();progress('capture-read',{side,attempt,lecture,regle:attente.regle,...(attente.diag?{diag:attente.diag}:{})});
+          const avantLecture=attente.regle==='signal'?loadedSignature().value:null;
+-         const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference');guard();
++         const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference',progress,side);guard();
+          /* Lu au signal : rien ne doit avoir changé pendant la lecture (elle rend la main à ESV à
+           * chaque tranche). Sinon la vue était incomplète : relecture, comme toute lecture instable. */
+          if(avantLecture!==null&&(loadedSignature().value!==avantLecture||chargementsEffectifs()!==0))
+diff --git a/src/lidar-rust.js b/src/lidar-rust.js
+new file mode 100644
+index 0000000..4ae755a
+--- /dev/null
++++ b/src/lidar-rust.js
+@@ -0,0 +1,42 @@
++/* D-296 (étape 6 a de CH-064) — LECTURE LiDAR EN RUST DANS LA PAGE ESV : chargeur et bilan, monde MAIN.
++ *
++ * Injecté après vendor/lidar.js, vendor/ariane-lidar.js (coquille), vendor/ariane-lidar-wasm.js (module en base64) et
++ * vendor/lidar-rust.js (variante de vendor/lidar.js, exportée sous BananeLidarRust), tous fabriqués par
++ * tools/rust-lidar-paquet.cjs. Il compile le module une fois, installe le noyau (globalThis.ArianeLidarNoyau, lu par la seule
++ * variante) et expose BananeLidarRustChargeur :
++ *   pret()        vrai si le noyau est installé ;
++ *   raison        pourquoi il ne l'est pas (module absent, taille fausse, compilation refusée par la page, version d'arène…) ;
++ *   capture(o)    la capture de la variante (même contrat que BananeLidar.capture), servie par le noyau ;
++ *   bilan(servi)  ce que la dernière capture a pris au noyau : tranches WASM, tranches rejouées en JS après une trappe,
++ *                 nœuds laissés aux lectures d'origine (par raison).
++ * Repli : rien ici ne lève. Sans noyau, adapter-page.js lit par vendor/lidar.js d'origine ; avec lui, un nœud non éligible
++ * passe par la boucle d'origine et une tranche en trappe ou refusée est rejouée par le noyau JS équivalent (coquille). La sortie
++ * de capture() est identique au bit près à celle de vendor/lidar.js (parité sur les 4 647 captures réelles, CH-064). */
++(function(root){
++ 'use strict';
++ const W=root.ArianeLidarWasm,M=root.ARIANE_LIDAR_WASM,V=root.BananeLidarRust;
++ let noyau=null,raison=null,avant=null;
++ try{
++  if(!W||!V)raison='coquille ou variante absente';
++  else if(!M||typeof M.base64!=='string')raison='module absent';
++  else if(typeof WebAssembly!=='object')raison='WebAssembly indisponible';
++  else{
++   const b=atob(M.base64),o=new Uint8Array(b.length);for(let i=0;i<b.length;i++)o[i]=b.charCodeAt(i);
++   if(o.length!==M.octets)raison='taille du module fausse';
++   else{noyau=W.noyauWasm(new WebAssembly.Module(o));root.ArianeLidarNoyau=noyau;}
++  }
++ }catch(e){noyau=null;raison='chargement refusé : '+String(e&&e.message||e).slice(0,120);}
++ const etat=()=>noyau?{tranches:noyau.tranches(),reprises:noyau.reprises(),refus:W.refus()}:null;
++ const ecart=(a,b)=>{const r={};for(const k of Object.keys(b||{}))if((b[k]||0)-((a&&a[k])||0))r[k]=(b[k]||0)-((a&&a[k])||0);return r;};
++ let dernier=null;
++ async function capture(options){avant=etat();try{return await V.capture(options);}finally{const apres=etat();
++   dernier=avant&&apres?{tranchesWasm:apres.tranches-avant.tranches-(apres.reprises-avant.reprises),tranchesRejouees:apres.reprises-avant.reprises,
++    noeudsOrigine:ecart(avant.refus,apres.refus)}:null;}}
++ function bilan(servi){
++  if(!servi)return {module:'lidar',servi:false,repli:true,raison:raison||'réglage coupé'};
++  const d=dernier||{tranchesWasm:0,tranchesRejouees:0,noeudsOrigine:{}};
++  return {module:'lidar',servi:d.tranchesWasm>0,repli:d.tranchesRejouees>0||Object.keys(d.noeudsOrigine).length>0||d.tranchesWasm===0,
++   raison:d.tranchesRejouees>0?'trappe':Object.keys(d.noeudsOrigine)[0]||(d.tranchesWasm===0?'aucun nœud éligible':null),...d};
++ }
++ root.BananeLidarRustChargeur=Object.freeze({pret:()=>noyau!==null,get raison(){return raison;},capture,bilan});
++})(typeof globalThis!=='undefined'?globalThis:this);
+diff --git a/src/settings.js b/src/settings.js
+index c77c087..8fce740 100644
+--- a/src/settings.js
++++ b/src/settings.js
+@@ -555,6 +555,11 @@
+      * Les mêmes valeurs par défaut sont dans src/raison-correction.js (un essai les compare). */
+     raison: Object.freeze({ actif: false, touches: 'chiffres', graceMs: 500, doubleAppuiMs: 600, sautCuts: 30, rappelCollanteCuts: 40 }),
+   });
++  /* D-296 (06/11/2026, opérateur) : du Rust dans le paquet. `lidar` : boucle par point de la lecture LiDAR par le module
++   * ariane-lidar (WASM, dans la page ESV), sortie identique au bit près ; repli automatique sur la lecture d'origine (module absent ou
++   * refusé, nœud non éligible, trappe). `false` coupe et rend la lecture d'origine. Journal : événements `rust`. */
++  const rust = Object.freeze({ lidar: true });
++
+   const derived = Object.freeze({
+     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
+     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
+@@ -610,5 +615,5 @@
+   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
+    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
+    * (`{ ...Settings, x }`) ne sont pas touchés. */
+-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file, correctionEntreParties });
++  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+ });
+diff --git a/tests/pose-lot-inchanges-4959.test.cjs b/tests/pose-lot-inchanges-4959.test.cjs
+index 346b03f..ba8c6ce 100644
+--- a/tests/pose-lot-inchanges-4959.test.cjs
++++ b/tests/pose-lot-inchanges-4959.test.cjs
+@@ -108,6 +108,16 @@ const sansD284=t=>t
+  .replace(/\n  \/\* D-284 : trou de 1 à[\s\S]*?\}\}\}/,'')
+  .replace("(p.zone||ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))","(ZONE[p.motif]||'vert-hors-zone')===z)for(let c=p.a;c<=p.z;c++)if(!zoneDe.has(c))")
+  .replace("'ecartement','trou']),","'ecartement']),");
++/* D-296 (CH-064, étape 6 a) : lecture LiDAR en Rust dans la page. Un fichier de page en plus (src/lidar-rust.js, le chargeur), et l'adaptateur
++ * qui choisit la variante de la lecture quand le noyau est chargé et le réglage `rust.lidar` allumé. La sortie de capture() est identique au bit près
++ * (parité sur les 4 647 captures réelles du 04 au 06/11, Node et Chromium ; tests/rust-lidar.test.cjs) ; sans ces lignes, l'adaptateur est celui d'avant. */
++const RUST_LIDAR=['lidar-rust.js'];
++const sansRustLidar=t=>t
++ .replace(/\n \/\* D-296 \(CH-064, étape 6 a\) : lecture LiDAR en Rust\.[\s\S]*?\n const lecteurLidar=\(\)=>RUST_LIDAR&&LR&&LR\.pret\(\)\?LR:L;/,'')
++ .replace("async function captureOnce(expected,guard,lecture='reference',progress=null,cote=null){guard();const c=context();const lu=lecteurLidar();\n   const data=await lu.capture({",
++  "async function captureOnce(expected,guard,lecture='reference'){guard();const c=context();\n   const data=await L.capture({")
++ .replace(/\n   \/\* étape `rust` : servi, repli, raison[^\n]*\n   if\(progress&&\(LR\|\|RUST_LIDAR\)\)[^\n]*/,'')
++ .replace("captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference',progress,side)","captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference')");
+ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour octet',()=>{
+  const deplaces=[];
+  for(const [f,empreinte] of Object.entries(REF.fichiers)){
+@@ -117,7 +127,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
+  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
+  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
+  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
+- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE].sort());
++ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR].sort());
+ });
+ test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
+  const base=require('../audit/v4.6.0-engine-baseline.json');
+@@ -128,7 +138,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
+  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
+  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
+  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
+- const ap=sansPatchs(lire('src/adapter-page.js')).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
++ const ap=sansPatchs(sansRustLidar(lire('src/adapter-page.js'))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
+   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
+   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
+@@ -146,7 +156,9 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
+ });
+ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
+  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
+- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,signalEteint,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
++ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,rust,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,signalEteint,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
++ /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
++ assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
+  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
+  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
+  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','signalEteint','voieB1EcartOmbre']);
+diff --git a/tests/rust-lidar.test.cjs b/tests/rust-lidar.test.cjs
+new file mode 100644
+index 0000000..cdf86dd
+--- /dev/null
++++ b/tests/rust-lidar.test.cjs
+@@ -0,0 +1,51 @@
++'use strict';
++/* D-296 (CH-064, étape 6 a) : lecture LiDAR en Rust dans la page. Fichiers fabriqués à jour, chargeur, identité au bit près avec
++ * vendor/lidar.js, repli sur refus, bilan de l'événement `rust`. Les fichiers de page sont chargés dans un contexte vm à part,
++ * dans l'ordre de PAGE_FILES (background.js). */
++const test=require('node:test'),assert=require('node:assert'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
++const RACINE=path.resolve(__dirname,'..');
++const PAGE=['vendor/capture-core.js','vendor/lidar.js','vendor/ariane-lidar.js','vendor/ariane-lidar-wasm.js','vendor/lidar-rust.js','src/lidar-rust.js'];
++function page({WebAssembly:W=WebAssembly,sans=[]}={}){
++ const ctx=vm.createContext({WebAssembly:W,atob,Date,Math,Promise,Error,TypeError,RangeError,Float32Array,Float64Array,Uint32Array,Uint8Array,Uint16Array,Object,Array,Number,JSON,String,Symbol,Set,Map});
++ ctx.globalThis=ctx;for(const f of PAGE)if(!sans.includes(f))vm.runInContext(fs.readFileSync(path.join(RACINE,f),'utf8'),ctx,{filename:f});return ctx;}
++/* Scène Potree minimale (deux nœuds, attributs sans accesseur comme la maquette d'ESV), tirage fixe. */
++function scene(n=30000){let s=7;const al=()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296-0.5);
++ const id=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],tr=(x,y,z)=>{const m=id();m[12]=x;m[13]=y;m[14]=z;return m;};
++ const noeud=()=>{const a=new Float32Array(3*n);for(let i=0;i<n;i++){const p=i%5===0;a[3*i]=p?al()*1.2:al()*30;a[3*i+1]=p?(i%10===0?0:1.5)+al()*0.9:al()*30;a[3*i+2]=p?al()*0.7:al()*6;}
++  return {sceneNode:{visible:true,parent:null,matrixWorld:{elements:tr(10,-3,1)},geometry:{attributes:{position:{array:a,itemSize:3,count:n,version:0,normalized:false},
++   intensity:{array:new Uint16Array(n).map((_,i)=>i%4096),itemSize:1,count:n,version:0,normalized:false}},drawRange:{start:0,count:Infinity},boundingBox:null}},geometryNode:null};};
++ const pc={visible:true,parent:null,visibleNodes:[noeud(),noeud()],material:{clipBoxes:[{inverse:{elements:[0.3,0,0,0,0,0.3,0,0,0,0,0.3,0,-3,0.9,-0.3,1]}}],clipPolygons:[],clipTask:2,clipMethod:0}};
++ const rail=r=>({object:{},profile:{type:'Group',children:[]},railMatrix:r,profileMatrix:r,rotation:[0,0,0,'XYZ'],profileRotation:[0,0,0,'XYZ']});
++ return {viewer:{scene:{pointclouds:[pc],getActiveCamera:()=>null},renderer:null},rails:[rail(tr(10,-3,1)),rail(tr(10,-1.5,1))],origin:[0.5,0.25,0],
++  enums:{ClipTask:{NONE:0,HIGHLIGHT:1,SHOW_INSIDE:2,SHOW_OUTSIDE:3},ClipMethod:{INSIDE_ANY:0,INSIDE_ALL:1}}};}
++const options=sc=>({...sc,guard:()=>{},pause:()=>Promise.resolve(),meta:{captureId:'essai'}});
++const net=o=>{const x=JSON.parse(JSON.stringify(o));delete x.capturedAt;delete x.quality.durationMs;return x;};
++
++test('fichiers fabriqués à jour (module, coquille, variante de vendor/lidar.js)',()=>{
++ const {verifier}=require('../tools/rust-lidar-paquet.cjs');assert.deepStrictEqual(verifier(),[]);});
++
++test('lecture servie par le noyau WASM : sortie identique à vendor/lidar.js, bilan « servi »',async()=>{
++ const p=page(),R=p.BananeLidarRustChargeur;assert.strictEqual(R.pret(),true,String(R.raison));
++ const ref=net(await p.BananeLidar.capture(options(scene()))),w=net(await R.capture(options(scene())));
++ assert.ok(ref.pointsSceneRelative.length>1000);assert.deepStrictEqual(w,ref);
++ // octets comparés aussi (−0, ordre des clés) : JSON de chaque nombre au bit près
++ const bits=o=>Buffer.from(new Float64Array(o.pointsSceneRelative.flat()).buffer).toString('base64');assert.strictEqual(bits(w),bits(ref));
++ const b=R.bilan(true);assert.strictEqual(b.module,'lidar');assert.strictEqual(b.servi,true);assert.strictEqual(b.repli,false);assert.ok(b.tranchesWasm>0);
++});
++
++test('compilation refusée par la page (CSP) : pas de noyau, raison dite, la lecture d’origine reste disponible',async()=>{
++ const W={...WebAssembly,Module:function(){throw new WebAssembly.CompileError('WebAssembly.Module(): refusé par la politique de la page');}};
++ const p=page({WebAssembly:W}),R=p.BananeLidarRustChargeur;
++ assert.strictEqual(R.pret(),false);assert.match(R.raison,/^chargement refusé : /);
++ const b=R.bilan(false);assert.deepStrictEqual({servi:b.servi,repli:b.repli},{servi:false,repli:true});assert.match(b.raison,/chargement refusé/);
++ assert.ok((await p.BananeLidar.capture(options(scene()))).pointsSceneRelative.length>1000);});
++
++test('module absent : pas de noyau, raison « module absent »',()=>{
++ const p=page({sans:['vendor/ariane-lidar-wasm.js']});assert.strictEqual(p.BananeLidarRustChargeur.pret(),false);assert.strictEqual(p.BananeLidarRustChargeur.raison,'module absent');});
++
++test('réglage rust.lidar présent, actif par défaut',()=>{
++ const S=require('../src/settings.js');assert.deepStrictEqual({...S.rust},{lidar:true});assert.ok(Object.isFrozen(S.rust));});
++
++test('background.js injecte les fichiers de page dans l’ordre, après vendor/lidar.js',()=>{
++ const b=fs.readFileSync(path.join(RACINE,'background.js'),'utf8'),m=/const PAGE_FILES=\[([^\]]*)\]/.exec(b),l=m[1].match(/'[^']+'/g).map(x=>x.slice(1,-1));
++ const i=l.indexOf('vendor/lidar.js');assert.deepStrictEqual(l.slice(i,i+5),['vendor/lidar.js','vendor/ariane-lidar.js','vendor/ariane-lidar-wasm.js','vendor/lidar-rust.js','src/lidar-rust.js']);});
+diff --git a/tools/package.py b/tools/package.py
+index ae05452..4fc5236 100644
+--- a/tools/package.py
++++ b/tools/package.py
+@@ -35,6 +35,15 @@ def build(destination, include_tests=False):
+     for name in required:
+         if not (ROOT / name).is_file():
+             raise ValueError(f'Missing required file: {name}')
++    # D-296 (CH-064) : la lecture LiDAR en Rust. Le module (base64), la coquille et la variante de vendor/lidar.js sont des
++    # fichiers fabriqués ; le paquet refuse de se construire s'ils ne sont pas à jour (SHA-256 du module, copie conforme de la
++    # coquille, variante du vendor/lidar.js courant). Sans node, le paquet n'est pas construit.
++    for name in ['vendor/ariane-lidar.js', 'vendor/ariane-lidar-wasm.js', 'vendor/lidar-rust.js', 'src/lidar-rust.js']:
++        if not (ROOT / name).is_file():
++            raise ValueError(f'Missing required file: {name}')
++    check = subprocess.run(['node', str(ROOT / 'tools' / 'rust-lidar-paquet.cjs'), '--verifier'], capture_output=True, text=True)
++    if check.returncode != 0:
++        raise ValueError('Lecture LiDAR en Rust : fichiers de page pas à jour (node tools/rust-lidar-paquet.cjs --construire) :\n' + check.stderr)
+     destination = Path(destination).resolve()
+     destination.parent.mkdir(parents=True, exist_ok=True)
+     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+diff --git a/tools/rust-lidar-paquet.cjs b/tools/rust-lidar-paquet.cjs
+new file mode 100644
+index 0000000..363a448
+--- /dev/null
++++ b/tools/rust-lidar-paquet.cjs
+@@ -0,0 +1,47 @@
++#!/usr/bin/env node
++'use strict';
++/* Lecture LiDAR en Rust dans le paquet (D-296, étape 6 a de CH-064) : fabrique et vérifie les trois fichiers de page.
++ *   node tools/rust-lidar-paquet.cjs --construire   (cargo requis) : reconstruit le module puis écrit les trois fichiers
++ *   node tools/rust-lidar-paquet.cjs --verifier     (sans cargo)    : vérifie qu'ils sont à jour ; code 1 sinon
++ * Fichiers (injectés dans le monde MAIN de la page ESV, après vendor/lidar.js, par background.js : PAGE_FILES) :
++ *   vendor/ariane-lidar.js       copie conforme de la coquille ariane-rs/crates/ariane-lidar/js/lidar-wasm.js ;
++ *   vendor/ariane-lidar-wasm.js  le module ariane_lidar.wasm en base64, avec son SHA-256 (vérifié au chargement) ;
++ *   vendor/lidar-rust.js         la variante de vendor/lidar.js (même texte + une branche + la file des captures), exportée
++ *                                sous BananeLidarRust ; vendor/lidar.js n'est PAS modifié.
++ * Aucun de ces fichiers ne s'écrit à la main : la vérification est faite par tools/package.py et par tests/rust-lidar.test.cjs. */
++const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{spawnSync}=require('node:child_process');
++const RACINE=path.resolve(__dirname,'..'),ESPACE=path.join(RACINE,'ariane-rs');
++const SOURCE_COQUILLE=path.join(ESPACE,'crates','ariane-lidar','js','lidar-wasm.js');
++const WASM=path.join(ESPACE,'target','wasm32-unknown-unknown','release','ariane_lidar.wasm');
++const SORTIES={coquille:'vendor/ariane-lidar.js',wasm:'vendor/ariane-lidar-wasm.js',variante:'vendor/lidar-rust.js'};
++const ENTETE='/* FICHIER FABRIQUÉ par tools/rust-lidar-paquet.cjs : ne pas éditer à la main. */\n';
++const lire=f=>fs.readFileSync(path.join(RACINE,f),'utf8');
++function texteCoquille(){return ENTETE+fs.readFileSync(SOURCE_COQUILLE,'utf8');}
++/* La variante est calculée par la coquille donnée (par défaut : celle du paquet, vendor/ariane-lidar.js), sur le vendor/lidar.js courant. */
++function texteVariante(coquille=path.join(RACINE,SORTIES.coquille)){const W=require(coquille),v=W.variante(lire('vendor/lidar.js'));
++ const a='root.BananeLidar=api';if(v.split(a).length!==2)throw Error('vendor/lidar.js : export BananeLidar introuvable ou multiple');
++ return ENTETE+v.replace(a,'root.BananeLidarRust=api');}
++function texteWasm(octets){const sha=crypto.createHash('sha256').update(octets).digest('hex');
++ return ENTETE+`/* ariane_lidar.wasm (crate ariane-lidar), ${octets.length} octets. */\n(function(root){root.ARIANE_LIDAR_WASM=Object.freeze({sha256:'${sha}',octets:${octets.length},base64:'${octets.toString('base64')}'});})(typeof globalThis!=='undefined'?globalThis:this);\n`;}
++/* Lit le module embarqué dans vendor/ariane-lidar-wasm.js (sans l'exécuter dans ce processus : le texte est analysé). */
++function wasmEmbarque(){const t=lire(SORTIES.wasm),m=/sha256:'([0-9a-f]{64})',octets:(\d+),base64:'([A-Za-z0-9+/=]*)'/.exec(t);
++ if(!m)throw Error(SORTIES.wasm+' : forme inattendue');const o=Buffer.from(m[3],'base64');return {sha:m[1],n:Number(m[2]),octets:o};}
++function verifier(){const e=[];
++ for(const [k,f] of Object.entries(SORTIES))if(!fs.existsSync(path.join(RACINE,f)))e.push(f+' absent');
++ if(e.length)return e;
++ // la source de la coquille (ariane-rs/, hors paquet) n'est comparée que si elle est présente dans l'arbre
++ if(fs.existsSync(SOURCE_COQUILLE)&&lire(SORTIES.coquille)!==texteCoquille())e.push(SORTIES.coquille+' diffère de la coquille de ariane-lidar');
++ if(lire(SORTIES.variante)!==texteVariante())e.push(SORTIES.variante+' diffère de la variante de vendor/lidar.js');
++ const w=wasmEmbarque(),sha=crypto.createHash('sha256').update(w.octets).digest('hex');
++ if(sha!==w.sha||w.octets.length!==w.n)e.push(SORTIES.wasm+' : SHA-256 ou taille faux');
++ try{new WebAssembly.Module(w.octets);}catch(x){e.push(SORTIES.wasm+' : module invalide ('+x.message+')');}
++ if(fs.existsSync(WASM)&&!fs.readFileSync(WASM).equals(w.octets))e.push(SORTIES.wasm+' : diffère du module construit dans ariane-rs/target (relancer --construire)');
++ return e;}
++function construire(){const r=spawnSync('cargo',['build','--release','--target','wasm32-unknown-unknown','-p','ariane-lidar'],{cwd:ESPACE,encoding:'utf8'});
++ if(r.status!==0)throw Error('cargo : '+r.stderr);
++ fs.writeFileSync(path.join(RACINE,SORTIES.coquille),texteCoquille());fs.writeFileSync(path.join(RACINE,SORTIES.variante),texteVariante(SOURCE_COQUILLE));
++ fs.writeFileSync(path.join(RACINE,SORTIES.wasm),texteWasm(fs.readFileSync(WASM)));}
++module.exports={verifier,SORTIES};
++if(require.main===module){const a=process.argv.slice(2);
++ if(a.includes('--construire'))construire();
++ const e=verifier();if(e.length){console.error(e.join('\n'));process.exit(1);}console.log('lecture LiDAR en Rust : fichiers de page à jour ('+Object.values(SORTIES).join(', ')+')');}
+diff --git a/vendor/ariane-lidar-wasm.js b/vendor/ariane-lidar-wasm.js
+new file mode 100644
+index 0000000..9bcc96a
+--- /dev/null
++++ b/vendor/ariane-lidar-wasm.js
+@@ -0,0 +1,3 @@
++/* FICHIER FABRIQUÉ par tools/rust-lidar-paquet.cjs : ne pas éditer à la main. */
++/* ariane_lidar.wasm (crate ariane-lidar), 39325 octets. */
++(function(root){root.ARIANE_LIDAR_WASM=Object.freeze({sha256:'0582d9cfc3af559e4d1ccbab136636c84a3c9e74866b615dbbb8ea8097a600d4',octets:39325,base64:'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bUEAKwPIi4yAACFuQQArA8CLjIAAIW9BACsDuIuMgAAhcEEAKwOwi4yAACFxQQArA6iLjIAAIXJBACsDoIuMgAAhc0EAKwOYi4yAACF0QQArA5CLjIAAIXVBACsDiIuMgAAhdkEAKwOAi4yAACF3QQArA/iKjIAAIXhBACsD8IqMgAAheUEAKwPoioyAACF6QQArA+CKjIAAIXtBACsD2IqMgAAhfEEAKwPQioyAACF9QQArA8iKjIAAIX5BACsDwIqMgAAhf0EAKwO4ioyAACGAAUEAKwOwioyAACGBAUEAKwOoioyAACGCAUEAKwOgioyAACGDAUEAKwOYioyAACGEAUEAKwOQioyAACGFAUEAKwOIioyAACGGAUEAKwOAioyAACGHAUEAKwP4iYyAACGIAUEAKwPwiYyAACGJAUEAKwPoiYyAACGKAUEAKwPgiYyAACGLAUEAKwPYiYyAACGMAUEAKwPQiYyAACGNAUEAKwPIiYyAACGOAUEAKwPAiYyAACGPAUEAKwO4iYyAACGQAUEAKwOwiYyAACGRAUEAKwOoiYyAACGSAUEAKwOgiYyAACGTAUEAKwOYiYyAACGUAUEAKwOQiYyAACGVAUEAKwOIiYyAACGWAUEAKwOAiYyAACGXAUEAKwP4iIyAACGYAUEAKwPwiIyAACGZAUEAKwPoiIyAACGaAUEAKwPgiIyAACGbAUEAKwPYiIyAACGcAUEAKwPQiIyAACGdASAFQQFqIgUgACAFIABJGyGeASAQRDC4RAAAAPA/oiKfASCfAaJEAAAAAAAA8H8gEL1C////////////AINCgICAgICAgPj/AFMbIaABIAZEMLhEAAAA8D+iIp8BIJ8BokQAAAAAAADwfyAGvUL///////////8Ag0KAgICAgICA+P8AUxshoQEgAUECdCGiASARRAAAAAAAAAAAYiGjASAZRAAAAAAAAAAAYiGkAUEAIQVBACGlAUEAIaYBQQAhpwFBACGoAUEAIakBQQAhqgECQAJAA0ACQCADIAW4ZUUNAEECIRogpgEhqwEMBQsgASClAWwhrAEgAiClAWohrQEgogEgpQFsQdCIhIAAaiEAQQAhrgEgEiGvASATIbABIBQhsQEgBiGyASCmASGrASCoASEaA0AgrgEhswECQAJAAkACQAJAAkAgrAFBfEsNACCsAUEDaiAESw0AIKsBQQFqIasBAkAgACoCALsiBr1C////////////AINC//////////f/AFUNACAAQQRqKgIAuyIUvUL///////////8Ag0L/////////9/8AVQ0AIABBCGoqAgC7IhO9Qv///////////wCDQv/////////3/wBVDQBBASGuAUEAIagBAkAgbiB6IAaiIHYgFKKgIHIgE6KgoCKfAb1C////////////AINC//////////f/AFUNACCfAZlEFlbnnq8D0jxjDQAgbyB7IAaiIHcgFKKgIHMgE6KgoCG0ASBwIHwgBqIgeCAUoqAgdCAToqCgIbUBIHEgfSAGoiB5IBSioCB1IBOioKAhtgECQCCfAUQAAAAAAADwP2ENACC0ASCfAaMhtAEgtQEgnwGjIbUBILYBIJ8BoyG2AQtBASGoAQJAILYBvUL///////////8Ag0L/////////9/8AVw0AQQEhrgEMAQsCQCC1Ab1C////////////AINC//////////f/AFcNAEEBIa4BDAELQQEhrgEgtAG9Qv///////////wCDQv/////////3/wBVDQBBACGuASAaIagBILYBIbcBILUBIbgBILQBIbkBCyBeIGogBqIgZiAUoqAgYiAToqCgIrYBvUL///////////8Ag0KAgICAgICA+P8AUyC2AZlEFlbnnq8D0jxjQQFzcSIaQQFHDQIgXyBrIAaiIGcgFKKgIGMgE6KgoCG0ASBgIGwgBqIgaCAUoqAgZCAToqCgIbUBIGEgbSAGoiBpIBSioCBlIBOioKAhnwECQCC2AUQAAAAAAADwP2ENACC0ASC2AaMhtAEgtQEgtgGjIbUBIJ8BILYBoyGfAQsgnwG9Qv///////////wCDQv/////////3/wBVDQIgtQG9Qv///////////wCDQv/////////3/wBVDQIgtAG9Qv///////////wCDQv/////////3/wBVDQIgrgENAyC4AZkhEkEAIa4BAkAgtwGZIroBIB1lRQ0AIBIgHGVFDQAguQGZIBtlIa4BCyCPASCbASAGoiCXASAUoqAgkwEgE6KgoCK7ASCOASCaASAGoiCWASAUoqAgkgEgE6KgoCK2AaMhvAEgkAEgnAEgBqIgmAEgFKKgIJQBIBOioKAivQEgtgGjIb4BIJEBIJ0BIAaiIJkBIBSioCCVASAToqCgIr8BILYBoyHAASC2Ab1C////////////AINC//////////f/AFUgtgGZRBZW556vA9I8Y3IhwQEgrQEgswFquCHCAQJAIKQBQQFxRQ0AILcBILcBoiC4ASC4AaKgILkBILkBoqAiBiChAWUNACAGRKz3ThWSfmgWZEUNACAGvUL///////////8Ag0L/////////9/8AVw0FC0QAAAAAAADwfyEGAkAgugFEAAAAAAAA8H9hDQBEAAAAAAAA8H8hBiC4AZlEAAAAAAAA8H9hDQAgugFEAAAAAAAAAAAgtwFEAAAAAAAAAABkILcBRAAAAAAAAAAAY3IbIRQCQAJAILgBILgBYQ0AQQEhGgwBCyC3ASC3AWIhGiASIBRkRQ0AIBIhFAtEAAAAAAAA8H8hBiC5AZkiE0QAAAAAAADwf2ENAEQAAAAAAAD4fyEGILkBILkBYg0AIBoNAEQAAAAAAAAAACEGIBMgFCATIBRkGyIURAAAAAAAAAAAYQ0AIBQgugEgFKMiBiAGoiIGIBIgFKMiEiASoiAGIAahoCISoCK6ASATIBSjIhMgE6IgEiAGILoBoaCgoJ+iIQYLIKQBIAYgsgFjQQFzcQ0EAkAgwQFFDQBBACEaDAoLQQEhGiC/ASDAASC2AUQAAAAAAADwP2EipAEbIhS9Qv///////////wCDQv/////////3/wBVDQkgvQEgvgEgpAEbIhO9Qv///////////wCDQv/////////3/wBVDQkguwEgvAEgpAEbIhK9Qv///////////wCDQv/////////3/wBVDQkgBkQwuEQAAADwP6IisgEgsgGiRAAAAAAAAPB/IAa9Qv///////////wCDQoCAgICAgID4/wBTGyGhAUQAAAAAAADwPyEZILkBIRUguAEhFiC3ASEXIMIBIRgMBQsgpwFBAWohpwEMBQsgrAEgrAFBA2ogBEHcg4SAABC+gICAAAALIKgBIBogrgEbIagBCyCoAUEBcSEaIKYBILMBakEBaiGrASCvASESILABIRMgsQEhFCCyASEGDAgLIK8BIRIgsAEhEyCxASEUILIBIQYLIJ8BmSKxASAdZSC1AZkirwEgHGVxILQBmSKwASAbZXEhwwECQAJAAkACQAJAAkAgowFBAXFFDQAgtAEgtAGiILUBILUBoiCfASCfAaKgoCKyASCgAWUNACCyAUSs904Vkn5oFmRFDQAgsgG9Qv///////////wCDQv/////////3/wBXDQELRAAAAAAAAAAAIbIBAkAgsAEgrwEgsQFEAAAAAAAAAAAgnwFEAAAAAAAAAABkIJ8BRAAAAAAAAAAAY3IbIroBIK8BILoBZBsiugEgsAEgugFkGyK6AUQAAAAAAAAAAGENACC6ASCxASC6AaMisgEgsgGiIrIBIK8BILoBoyKvASCvAaIgsgEgsgGhoCKvAaAisQEgsAEgugGjIrABILABoiCvASCyASCxAaGgoKCfoiGyAQsgowEgsgEgEGNBAXNxDQACQCDBAUUNAEEAIRoMCgtBASEaIL8BIMABILYBRAAAAAAAAPA/YSKkARsitgG9Qv///////////wCDQv/////////3/wBVDQkgvQEgvgEgpAEbIq8BvUL///////////8Ag0L/////////9/8AVQ0JILsBILwBIKQBGyKwAb1C////////////AINC//////////f/AFUNCSCyAUQwuEQAAADwP6IiECAQokQAAAAAAADwfyCyAb1C////////////AINCgICAgICAgPj/AFMbIaABQQEhpAFEAAAAAAAA8D8hESCuASDDAXJBAXFFDQEgsgEhECDCASEPIJ8BIQ4gtQEhDSC0ASEMILYBIQsgrwEhCiCwASEJDAMLQQEhpAEgrgEgwwFyQQFxDQFBASGjAQwDC0EBIaMBILABIQkgrwEhCiC2ASELILQBIQwgtQEhDSCfASEOIMIBIQ8gsgEhEAwCCwJAIMEBRQ0AIKYBILMBakEBaiGrAUEAIRoMCQtBASEaIL8BIMABILYBRAAAAAAAAPA/YSIAGyK2Ab1C////////////AINC//////////f/AFUNCCC9ASC+ASAAGyKvAb1C////////////AINC//////////f/AFUNCCC7ASC8ASAAGyKwAb1C////////////AINC//////////f/AFUNCAtBACEaIH4gggEgsAGiIIYBIK8BoiCKASC2AaKgoKAisgG9Qv///////////wCDQv/////////3/wBVDQcgsgGZRBZW556vA9I8Yw0HIH8ggwEgsAGiIIcBIK8BoiCLASC2AaKgoKAhtAEggAEghAEgsAGiIIgBIK8BoiCMASC2AaKgoKAhtQEggQEghQEgsAGiIIkBIK8BoiCNASC2AaKgoKAhnwECQCCyAUQAAAAAAADwP2ENACC0ASCyAaMhtAEgtQEgsgGjIbUBIJ8BILIBoyGfAQsCQCCfAb1C////////////AINC//////////f/AFcNAEEBIRoMCAsCQCC1Ab1C////////////AINC//////////f/AFcNAEEBIRoMCAsCQCC0Ab1C////////////AINC//////////f/AFcNAEEBIRoMCAsgjgEgkgEgtAGiIJYBILUBoiCaASCfAaKgoKAisgG9Qv///////////wCDQv/////////3/wBVDQcgsgGZRBZW556vA9I8Yw0HII8BIJMBILQBoiCXASC1AaIgmwEgnwGioKCgIboBIJABIJQBILQBoiCYASC1AaIgnAEgnwGioKCgIbEBIJEBIJUBILQBoiCZASC1AaIgnQEgnwGioKCgIbUBAkAgsgFEAAAAAAAA8D9hDQAgugEgsgGjIboBILEBILIBoyGxASC1ASCyAaMhtQELAkAgtQG9Qv///////////wCDQv/////////3/wBXDQBBASEaDAgLAkAgsQG9Qv///////////wCDQv/////////3/wBXDQBBASEaDAgLAkAgugG9Qv///////////wCDQv/////////3/wBXDQBBASEaDAgLRAAAAAAAAPB/IZ8BAkAgtQEgtgGhIrUBmSK0AUQAAAAAAADwf2ENAEQAAAAAAADwfyGfASCxASCvAaGZIrIBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IZ8BILoBILABoZkisQFEAAAAAAAA8H9hDQBEAAAAAAAAAAAhnwEgsQEgsgEgtAFEAAAAAAAAAAAgtQFEAAAAAAAAAABkILUBRAAAAAAAAAAAY3IbIrUBILIBILUBZBsitQEgsQEgtQFkGyK1AUQAAAAAAAAAAGENACC1ASC0ASC1AaMinwEgnwGiIp8BILIBILUBoyK0ASC0AaIgnwEgnwGhoCK0AaAisgEgsQEgtQGjIrEBILEBoiC0ASCfASCyAaGgoKCfoiGfAQsCQAJAIAggCGIgnwEgnwFickUNAEQAAAAAAAD4fyGfAQwBCwJAAkAgCEQAAAAAAAAAAGINACCfAUQAAAAAAAAAAGENAQsgCCCfAWRFDQEgCCGfAQwBCyAIIJ8BIAi9UBshnwELAkAgLiAyILABoiA2IK8BoiA6ILYBoqCgoCKxAb1C////////////AINC//////////f/AFcNACCfASEIDAgLAkAgsQGZRBZW556vA9I8Y0UNACCfASEIDAgLIC8gMyCwAaIgNyCvAaIgOyC2AaKgoKAhsgEgMCA0ILABoiA4IK8BoiA8ILYBoqCgoCG0ASAxIDUgsAGiIDkgrwGiID0gtgGioKCgIbUBAkAgsQFEAAAAAAAA8D9hDQAgsgEgsQGjIbIBILQBILEBoyG0ASC1ASCxAaMhtQELAkAgtQG9Qv///////////wCDQv/////////3/wBVDQAgtAG9Qv///////////wCDQv/////////3/wBVDQAgsgG9Qv///////////wCDQv/////////3/wBVDQACQCBOIFIgsgGiIFYgtAGiIFogtQGioKCgIrEBvUL///////////8Ag0L/////////9/8AVw0AIJ8BIQgMCQsCQCCxAZlEFlbnnq8D0jxjRQ0AIJ8BIQgMCQsgTyBTILIBoiBXILQBoiBbILUBoqCgoCG/ASBQIFQgsgGiIFggtAGiIFwgtQGioKCgIboBIFEgVSCyAaIgWSC0AaIgXSC1AaKgoKAhtAECQCCxAUQAAAAAAADwP2ENACC/ASCxAaMhvwEgugEgsQGjIboBILQBILEBoyG0AQsgtAG9Qv///////////wCDQv/////////3/wBVDQAgugG9Qv///////////wCDQv/////////3/wBVDQAgvwG9Qv///////////wCDQv/////////3/wBVDQBEAAAAAAAA8H8htQECQCC0ASC2AaEitAGZIrIBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IbUBILoBIK8BoZkisQFEAAAAAAAA8H9hDQBEAAAAAAAA8H8htQEgvwEgsAGhmSK6AUQAAAAAAADwf2ENAEQAAAAAAAAAACG1ASC6ASCxASCyAUQAAAAAAAAAACC0AUQAAAAAAAAAAGQgtAFEAAAAAAAAAABjchsitAEgsQEgtAFkGyK0ASC6ASC0AWQbIrQBRAAAAAAAAAAAYQ0AILQBILIBILQBoyK1ASC1AaIitQEgsQEgtAGjIrIBILIBoiC1ASC1AaGgIrIBoCKxASC6ASC0AaMiugEgugGiILIBILUBILEBoaCgoJ+iIbUBCwJAAkAgnwEgnwFiILUBILUBYnJFDQBEAAAAAAAA+H8htQEMAQsCQAJAIJ8BRAAAAAAAAAAAYg0AILUBRAAAAAAAAAAAYQ0BCyCfASC1AWRFDQEgnwEhtQEMAQsgnwEgtQEgnwG9UBshtQELIKkBIK4BaiGpAQJAIB4gIiCwAaIgJiCvAaIgKiC2AaKgoKAisQG9Qv///////////wCDQv/////////3/wBXDQAgtQEhCAwJCwJAILEBmUQWVueerwPSPGNFDQAgtQEhCAwJCyAfICMgsAGiICcgrwGiICsgtgGioKCgIbIBICAgJCCwAaIgKCCvAaIgLCC2AaKgoKAhtAEgISAlILABoiApIK8BoiAtILYBoqCgoCGfAQJAILEBRAAAAAAAAPA/YQ0AILIBILEBoyGyASC0ASCxAaMhtAEgnwEgsQGjIZ8BCwJAIJ8BvUL///////////8Ag0L/////////9/8AVQ0AILQBvUL///////////8Ag0L/////////9/8AVQ0AILIBvUL///////////8Ag0L/////////9/8AVQ0AAkAgPiBCILIBoiBGILQBoiBKIJ8BoqCgoCKxAb1C////////////AINC//////////f/AFcNACC1ASEIDAoLAkAgsQGZRBZW556vA9I8Y0UNACC1ASEIDAoLID8gQyCyAaIgRyC0AaIgSyCfAaKgoKAhvwEgQCBEILIBoiBIILQBoiBMIJ8BoqCgoCG6ASBBIEUgsgGiIEkgtAGiIE0gnwGioKCgIZ8BAkAgsQFEAAAAAAAA8D9hDQAgvwEgsQGjIb8BILoBILEBoyG6ASCfASCxAaMhnwELIJ8BvUL///////////8Ag0L/////////9/8AVQ0AILoBvUL///////////8Ag0L/////////9/8AVQ0AIL8BvUL///////////8Ag0L/////////9/8AVQ0ARAAAAAAAAPB/IQgCQCCfASC2AaEinwGZIrQBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IQggugEgrwGhmSKyAUQAAAAAAADwf2ENAEQAAAAAAADwfyEIIL8BILABoZkisQFEAAAAAAAA8H9hDQBEAAAAAAAAAAAhCCCxASCyASC0AUQAAAAAAAAAACCfAUQA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iIyAACGYAUEAKwPoiIyAACGZAUEAKwPgiIyAACGaAUEAKwPYiIyAACGbAUEAKwPQiIyAACGcASAFQQFqIgUgACAFIABJGyGdASAQRDC4RAAAAPA/oiKeASCeAaJEAAAAAAAA8H8gEL1C////////////AINCgICAgICAgPj/AFMbIZ8BIAZEMLhEAAAA8D+iIp4BIJ4BokQAAAAAAADwfyAGvUL///////////8Ag0KAgICAgICA+P8AUxshoAEgAUEDdCGhASARRAAAAAAAAAAAYiGiASAZRAAAAAAAAAAAYiGjAUEAIQVBACGkAUEAIaUBQQAhpgFBACGnAUEAIagBQQAhqQECQAJAA0ACQCADIAW4ZUUNAEECIaoBIKUBIasBDAULIAEgpAFsIawBIAIgpAFqIa0BIKEBIKQBbEHQiISAAGohAEEAIa4BIBIhrwEgEyGwASAUIbEBIAYhsgEgpQEhqwEgpwEhqgEDQCCuASGzAQJAAkACQAJAAkACQCCsAUF8Sw0AIKwBQQNqIARLDQAgqwFBAWohqwECQCAAKwMAIga9Qv///////////wCDQv/////////3/wBVDQAgAEEIaisDACIUvUL///////////8Ag0L/////////9/8AVQ0AIABBEGorAwAiE71C////////////AINC//////////f/AFUNAEEBIa4BQQAhpwECQCBtIHkgBqIgdSAUoqAgcSAToqCgIp4BvUL///////////8Ag0L/////////9/8AVQ0AIJ4BmUQWVueerwPSPGMNACBuIHogBqIgdiAUoqAgciAToqCgIbQBIG8geyAGoiB3IBSioCBzIBOioKAhtQEgcCB8IAaiIHggFKKgIHQgE6KgoCG2AQJAIJ4BRAAAAAAAAPA/YQ0AILQBIJ4BoyG0ASC1ASCeAaMhtQEgtgEgngGjIbYBC0EBIacBAkAgtgG9Qv///////////wCDQv/////////3/wBXDQBBASGuAQwBCwJAILUBvUL///////////8Ag0L/////////9/8AVw0AQQEhrgEMAQtBASGuASC0Ab1C////////////AINC//////////f/AFUNAEEAIa4BIKoBIacBILYBIbcBILUBIbgBILQBIbkBCyBdIGkgBqIgZSAUoqAgYSAToqCgIrYBvUL///////////8Ag0KAgICAgICA+P8AUyC2AZlEFlbnnq8D0jxjQQFzcSKqAUEBRw0CIF4gaiAGoiBmIBSioCBiIBOioKAhtAEgXyBrIAaiIGcgFKKgIGMgE6KgoCG1ASBgIGwgBqIgaCAUoqAgZCAToqCgIZ4BAkAgtgFEAAAAAAAA8D9hDQAgtAEgtgGjIbQBILUBILYBoyG1ASCeASC2AaMhngELIJ4BvUL///////////8Ag0L/////////9/8AVQ0CILUBvUL///////////8Ag0L/////////9/8AVQ0CILQBvUL///////////8Ag0L/////////9/8AVQ0CIK4BDQMguAGZIRJBACGuAQJAILcBmSK6ASAcZUUNACASIBtlRQ0AILkBmSAaZSGuAQsgjgEgmgEgBqIglgEgFKKgIJIBIBOioKAiuwEgjQEgmQEgBqIglQEgFKKgIJEBIBOioKAitgGjIbwBII8BIJsBIAaiIJcBIBSioCCTASAToqCgIr0BILYBoyG+ASCQASCcASAGoiCYASAUoqAglAEgE6KgoCK/ASC2AaMhwAEgtgG9Qv///////////wCDQv/////////3/wBVILYBmUQWVueerwPSPGNyIcEBIK0BILMBarghwgECQCCjAUEBcUUNACC3ASC3AaIguAEguAGioCC5ASC5AaKgIgYgoAFlDQAgBkSs904Vkn5oFmRFDQAgBr1C////////////AINC//////////f/AFcNBQtEAAAAAAAA8H8hBgJAILoBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IQYguAGZRAAAAAAAAPB/YQ0AILoBRAAAAAAAAAAAILcBRAAAAAAAAAAAZCC3AUQAAAAAAAAAAGNyGyEUAkACQCC4ASC4AWENAEEBIaoBDAELILcBILcBYiGqASASIBRkRQ0AIBIhFAtEAAAAAAAA8H8hBiC5AZkiE0QAAAAAAADwf2ENAEQAAAAAAAD4fyEGILkBILkBYg0AIKoBDQBEAAAAAAAAAAAhBiATIBQgEyAUZBsiFEQAAAAAAAAAAGENACAUILoBIBSjIgYgBqIiBiASIBSjIhIgEqIgBiAGoaAiEqAiugEgEyAUoyITIBOiIBIgBiC6AaGgoKCfoiEGCyCjASAGILIBY0EBc3ENBAJAIMEBRQ0AQQAhqgEMCgtBASGqASC/ASDAASC2AUQAAAAAAADwP2EiowEbIhS9Qv///////////wCDQv/////////3/wBVDQkgvQEgvgEgowEbIhO9Qv///////////wCDQv/////////3/wBVDQkguwEgvAEgowEbIhK9Qv///////////wCDQv/////////3/wBVDQkgBkQwuEQAAADwP6IisgEgsgGiRAAAAAAAAPB/IAa9Qv///////////wCDQoCAgICAgID4/wBTGyGgAUQAAAAAAADwPyEZILkBIRUguAEhFiC3ASEXIMIBIRgMBQsgpgFBAWohpgEMBQsgrAEgrAFBA2ogBEHcg4SAABC+gICAAAALIKcBIKoBIK4BGyGnAQsgpwFBAXEhqgEgpQEgswFqQQFqIasBIK8BIRIgsAEhEyCxASEUILIBIQYMCAsgrwEhEiCwASETILEBIRQgsgEhBgsgngGZIrEBIBxlILUBmSKvASAbZXEgtAGZIrABIBplcSHDAQJAAkACQAJAAkACQCCiAUEBcUUNACC0ASC0AaIgtQEgtQGiIJ4BIJ4BoqCgIrIBIJ8BZQ0AILIBRKz3ThWSfmgWZEUNACCyAb1C////////////AINC//////////f/AFcNAQtEAAAAAAAAAAAhsgECQCCwASCvASCxAUQAAAAAAAAAACCeAUQAAAAAAAAAAGQgngFEAAAAAAAAAABjchsiugEgrwEgugFkGyK6ASCwASC6AWQbIroBRAAAAAAAAAAAYQ0AILoBILEBILoBoyKyASCyAaIisgEgrwEgugGjIq8BIK8BoiCyASCyAaGgIq8BoCKxASCwASC6AaMisAEgsAGiIK8BILIBILEBoaCgoJ+iIbIBCyCiASCyASAQY0EBc3ENAAJAIMEBRQ0AQQAhqgEMCgtBASGqASC/ASDAASC2AUQAAAAAAADwP2EiowEbIrYBvUL///////////8Ag0L/////////9/8AVQ0JIL0BIL4BIKMBGyKvAb1C////////////AINC//////////f/AFUNCSC7ASC8ASCjARsisAG9Qv///////////wCDQv/////////3/wBVDQkgsgFEMLhEAAAA8D+iIhAgEKJEAAAAAAAA8H8gsgG9Qv///////////wCDQoCAgICAgID4/wBTGyGfAUEBIaMBRAAAAAAAAPA/IREgrgEgwwFyQQFxRQ0BILIBIRAgwgEhDyCeASEOILUBIQ0gtAEhDCC2ASELIK8BIQogsAEhCQwDC0EBIaMBIK4BIMMBckEBcQ0BQQEhogEMAwtBASGiASCwASEJIK8BIQogtgEhCyC0ASEMILUBIQ0gngEhDiDCASEPILIBIRAMAgsCQCDBAUUNACClASCzAWpBAWohqwFBACGqAQwJC0EBIaoBIL8BIMABILYBRAAAAAAAAPA/YSIAGyK2Ab1C////////////AINC//////////f/AFUNCCC9ASC+ASAAGyKvAb1C////////////AINC//////////f/AFUNCCC7ASC8ASAAGyKwAb1C////////////AINC//////////f/AFUNCAtBACGqASB9IIEBILABoiCFASCvAaIgiQEgtgGioKCgIrIBvUL///////////8Ag0L/////////9/8AVQ0HILIBmUQWVueerwPSPGMNByB+IIIBILABoiCGASCvAaIgigEgtgGioKCgIbQBIH8ggwEgsAGiIIcBIK8BoiCLASC2AaKgoKAhtQEggAEghAEgsAGiIIgBIK8BoiCMASC2AaKgoKAhngECQCCyAUQAAAAAAADwP2ENACC0ASCyAaMhtAEgtQEgsgGjIbUBIJ4BILIBoyGeAQsCQCCeAb1C////////////AINC//////////f/AFcNAEEBIaoBDAgLAkAgtQG9Qv///////////wCDQv/////////3/wBXDQBBASGqAQwICwJAILQBvUL///////////8Ag0L/////////9/8AVw0AQQEhqgEMCAsgjQEgkQEgtAGiIJUBILUBoiCZASCeAaKgoKAisgG9Qv///////////wCDQv/////////3/wBVDQcgsgGZRBZW556vA9I8Yw0HII4BIJIBILQBoiCWASC1AaIgmgEgngGioKCgIboBII8BIJMBILQBoiCXASC1AaIgmwEgngGioKCgIbEBIJABIJQBILQBoiCYASC1AaIgnAEgngGioKCgIbUBAkAgsgFEAAAAAAAA8D9hDQAgugEgsgGjIboBILEBILIBoyGxASC1ASCyAaMhtQELAkAgtQG9Qv///////////wCDQv/////////3/wBXDQBBASGqAQwICwJAILEBvUL///////////8Ag0L/////////9/8AVw0AQQEhqgEMCAsCQCC6Ab1C////////////AINC//////////f/AFcNAEEBIaoBDAgLRAAAAAAAAPB/IZ4BAkAgtQEgtgGhIrUBmSK0AUQAAAAAAADwf2ENAEQAAAAAAADwfyGeASCxASCvAaGZIrIBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IZ4BILoBILABoZkisQFEAAAAAAAA8H9hDQBEAAAAAAAAAAAhngEgsQEgsgEgtAFEAAAAAAAAAAAgtQFEAAAAAAAAAABkILUBRAAAAAAAAAAAY3IbIrUBILIBILUBZBsitQEgsQEgtQFkGyK1AUQAAAAAAAAAAGENACC1ASC0ASC1AaMingEgngGiIp4BILIBILUBoyK0ASC0AaIgngEgngGhoCK0AaAisgEgsQEgtQGjIrEBILEBoiC0ASCeASCyAaGgoKCfoiGeAQsCQAJAIAggCGIgngEgngFickUNAEQAAAAAAAD4fyGeAQwBCwJAAkAgCEQAAAAAAAAAAGINACCeAUQAAAAAAAAAAGENAQsgCCCeAWRFDQEgCCGeAQwBCyAIIJ4BIAi9UBshngELAkAgLSAxILABoiA1IK8BoiA5ILYBoqCgoCKxAb1C////////////AINC//////////f/AFcNACCeASEIDAgLAkAgsQGZRBZW556vA9I8Y0UNACCeASEIDAgLIC4gMiCwAaIgNiCvAaIgOiC2AaKgoKAhsgEgLyAzILABoiA3IK8BoiA7ILYBoqCgoCG0ASAwIDQgsAGiIDggrwGiIDwgtgGioKCgIbUBAkAgsQFEAAAAAAAA8D9hDQAgsgEgsQGjIbIBILQBILEBoyG0ASC1ASCxAaMhtQELAkAgtQG9Qv///////////wCDQv/////////3/wBVDQAgtAG9Qv///////////wCDQv/////////3/wBVDQAgsgG9Qv///////////wCDQv/////////3/wBVDQACQCBNIFEgsgGiIFUgtAGiIFkgtQGioKCgIrEBvUL///////////8Ag0L/////////9/8AVw0AIJ4BIQgMCQsCQCCxAZlEFlbnnq8D0jxjRQ0AIJ4BIQgMCQsgTiBSILIBoiBWILQBoiBaILUBoqCgoCG/ASBPIFMgsgGiIFcgtAGiIFsgtQGioKCgIboBIFAgVCCyAaIgWCC0AaIgXCC1AaKgoKAhtAECQCCxAUQAAAAAAADwP2ENACC/ASCxAaMhvwEgugEgsQGjIboBILQBILEBoyG0AQsgtAG9Qv///////////wCDQv/////////3/wBVDQAgugG9Qv///////////wCDQv/////////3/wBVDQAgvwG9Qv///////////wCDQv/////////3/wBVDQBEAAAAAAAA8H8htQECQCC0ASC2AaEitAGZIrIBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IbUBILoBIK8BoZkisQFEAAAAAAAA8H9hDQBEAAAAAAAA8H8htQEgvwEgsAGhmSK6AUQAAAAAAADwf2ENAEQAAAAAAAAAACG1ASC6ASCxASCyAUQAAAAAAAAAACC0AUQAAAAAAAAAAGQgtAFEAAAAAAAAAABjchsitAEgsQEgtAFkGyK0ASC6ASC0AWQbIrQBRAAAAAAAAAAAYQ0AILQBILIBILQBoyK1ASC1AaIitQEgsQEgtAGjIrIBILIBoiC1ASC1AaGgIrIBoCKxASC6ASC0AaMiugEgugGiILIBILUBILEBoaCgoJ+iIbUBCwJAAkAgngEgngFiILUBILUBYnJFDQBEAAAAAAAA+H8htQEMAQsCQAJAIJ4BRAAAAAAAAAAAYg0AILUBRAAAAAAAAAAAYQ0BCyCeASC1AWRFDQEgngEhtQEMAQsgngEgtQEgngG9UBshtQELIKgBIK4BaiGoAQJAIB0gISCwAaIgJSCvAaIgKSC2AaKgoKAisQG9Qv///////////wCDQv/////////3/wBXDQAgtQEhCAwJCwJAILEBmUQWVueerwPSPGNFDQAgtQEhCAwJCyAeICIgsAGiICYgrwGiICogtgGioKCgIbIBIB8gIyCwAaIgJyCvAaIgKyC2AaKgoKAhtAEgICAkILABoiAoIK8BoiAsILYBoqCgoCGeAQJAILEBRAAAAAAAAPA/YQ0AILIBILEBoyGyASC0ASCxAaMhtAEgngEgsQGjIZ4BCwJAIJ4BvUL///////////8Ag0L/////////9/8AVQ0AILQBvUL///////////8Ag0L/////////9/8AVQ0AILIBvUL///////////8Ag0L/////////9/8AVQ0AAkAgPSBBILIBoiBFILQBoiBJIJ4BoqCgoCKxAb1C////////////AINC//////////f/AFcNACC1ASEIDAoLAkAgsQGZRBZW556vA9I8Y0UNACC1ASEIDAoLID4gQiCyAaIgRiC0AaIgSiCeAaKgoKAhvwEgPyBDILIBoiBHILQBoiBLIJ4BoqCgoCG6ASBAIEQgsgGiIEggtAGiIEwgngGioKCgIZ4BAkAgsQFEAAAAAAAA8D9hDQAgvwEgsQGjIb8BILoBILEBoyG6ASCeASCxAaMhngELIJ4BvUL///////////8Ag0L/////////9/8AVQ0AILoBvUL///////////8Ag0L/////////9/8AVQ0AIL8BvUL///////////8Ag0L/////////9/8AVQ0ARAAAAAAAAPB/IQgCQCCeASC2AaEingGZIrQBRAAAAAAAAPB/YQ0ARAAAAAAAAPB/IQggugEgrwGhmSKyAUQAAAAAAADwf2ENAEQAAAAAAADwfyEIIL8BILABoZkisQFEAAAAAAAA8H9hDQBEAAAAAAAAAAAhCCCxASCyASC0AUQAAAAAAAAAACCeAUQAAAAAAAAAAGQgngFEAAAAAAAAAABjchsingEgsgEgngFkGyKeASCxASCeAWQbIp4BRAAAAAAAAAAAYQ0AIJ4BILQBIJ4BoyK0ASC0AaIitAEgsgEgngGjIrIBILIBoiC0ASC0AaGgIrIBoCK6ASCxASCeAaMisQEgsQGiILIBILQBILoBoaCgoJ+iIQgLAkACQCC1ASC1AWIgCCAIYnJFDQBEAAAAAAAA+H8hCAwBCwJAAkAgtQFEAAAAAAAAAABiDQAgCEQAAAAAAAAAAGENAQsgtQEgCGRFDQEgtQEhCAwBCyC1ASAIILUBvVAbIQgLAkAgBUGAIEYNACClASCzAWpBAWohpQEgBUEYbCIAILABOQO4ko2AACAAIK8BOQOwko2AACAAILYBOQOoko2AAEECIaoBIAVBAnQgpAEgswFqIgAgAmo2AqiSjIAAQQEhowEgBUEBaiEFIKkBIMMBaiGpAUEBIaIBIABBAWoipAEgnQFJDQYMCgtBgCBBgCBBzIOEgAAQv4CAgAAACyC1ASEIQQEhqgEMCAsgngEhCEEBIaoBDAcLIBIhrwEgEyGwASAUIbEBIAYhsgEgpwEhqgELIAAgoQFqIQAgrAEgAWohrAEgpAEgswFBAWoirgFqIJ0BSQ0A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CTYCyJOTgABBACAGNgLEk5OAAEEAQdSTk4AANgLgk5OAAEEAQdyTk4AANgLok5OAAEEAQdSTk4AANgLck5OAAEEAQeSTk4AANgLwk5OAAEEAQdyTk4AANgLkk5OAAEEAQeyTk4AANgL4k5OAAEEAQeSTk4AANgLsk5OAAEEAQfSTk4AANgKAlJOAAEEAQeyTk4AANgL0k5OAAEEAQfyTk4AANgKIlJOAAEEAQfSTk4AANgL8k5OAAEEAQYSUk4AANgKQlJOAAEEAQfyTk4AANgKElJOAAEEAQYyUk4AANgKYlJOAAEEAQYSUk4AANgKMlJOAAEEAQZSUk4AANgKglJOAAEEAQYyUk4AANgKUlJOAAEEAQZSUk4AANgKclJOAAEEAQZyUk4AANgKolJOAAEEAQZyUk4AANgKklJOAAEEAQaSUk4AANgKwlJOAAEEAQaSUk4AANgKslJOAAEEAQayUk4AANgK4lJOAAEEAQayUk4AANgK0lJOAAEEAQbSUk4AANgLAlJOAAEEAQbSUk4AANgK8lJOAAEEAQbyUk4AANgLIlJOAAEEAQbyUk4AANgLElJOAAEEAQcSUk4AANgLQlJOAAEEAQcSUk4AANgLMlJOAAEEAQcyUk4AANgLYlJOAAEEAQcyUk4AANgLUlJOAAEEAQdSUk4AANgLglJOAAEEAQdyUk4AANgLolJOAAEEAQdSUk4AANgLclJOAAEEAQeSUk4AANgLwlJOAAEEAQdyUk4AANgLklJOAAEEAQeyUk4AANgL4lJOAAEEAQeSUk4AANgLslJOAAEEAQfSUk4AANgKAlZOAAEEAQeyUk4AANgL0lJOAAEEAQfyUk4AANgKIlZOAAEEAQfSUk4AANgL8lJOAAEEAQYSVk4AANgKQlZOAAEEAQfyUk4AANgKElZOAAEEAQYyVk4AANgKYlZOAAEEAQYSVk4AANgKMlZOAAEEAQZSVk4AANgKglZOAAEEAQYyVk4AANgKUlZOAAEEAQZyVk4AANgKolZOAAEEAQZSVk4AANgKclZOAAEEAQaSVk4AANgKwlZOAAEEAQZyVk4AANgKklZOAAEEAQayVk4AANgK4lZOAAEEAQaSVk4AANgKslZOAAEEAQbSVk4AANgLAlZOAAEEAQayVk4AANgK0lZOAAEEAQbyVk4AANgLIlZOAAEEAQbSVk4AANgK8lZOAAEEAQcSVk4AANgLQlZOAAEEAQbyVk4AANgLElZOAAEEAQcyVk4AANgLYlZOAAEEAQcSVk4AANgLMlZOAAEEAIAZBD2pBeHEiAEF4aiICNgLwlZOAAEEAQcyVk4AANgLUlZOAAEEAIAYgAGsgCUFYaiIAakEIaiIINgLolZOAACACIAhBAXI2AgQgBiAAakEoNgIEQQBBgICAATYC/JWTgAAMCAsgAiAGTw0AIAggAksNACAAKAIMIghBAXENACAIQQF2IAVGDQMLQQBBACgCgJaTgAAiACAGIAAgBkkbNgKAlpOAACAGIAlqIQhBxJOTgAAhAAJAAkACQANAIAAoAgAiByAIRg0BIAAoAggiAA0ADAILCyAAKAIMIghBAXENACAIQQF2IAVGDQELQcSTk4AAIQACQANAAkAgACgCACIIIAJLDQAgAiAIIAAoAgRqIghJDQILIAAoAgghAAwACwtBACAGQQ9qQXhxIgBBeGoiBzYC8JWTgABBACAGIABrIAlBWGoiAGpBCGoiBDYC6JWTgAAgByAEQQFyNgIEIAYgAGpBKDYCBEEAQYCAgAE2AvyVk4AAIAIgCEFgakF4cUF4aiIAIAAgAkEQakkbIgdBGzYCBEEAKQLEk5OAACEKIAdBEGpBACkCzJOTgAA3AgAgB0EIaiIAIAo3AgBBACAFNgLQk5OAAEEAIAk2AsiTk4AAQQAgBjYCxJOTgABBACAANgLMk5OAACAHQRxqIQADQCAAQQc2AgAgAEEEaiIAIAhJDQALIAcgAkYNByAHIAcoAgRBfnE2AgQgAiAHIAJrIgBBAXI2AgQgByAANgIAAkAgAEGAAkkNACACIAAQp4CAgAAMCAsCQAJAQQAoAtyVk4AAIghBASAAQQN2dCIGcQ0AQQAgCCAGcjYC3JWTgAAgAEH4AXFB1JOTgABqIgAhCAwBCyAAQfgBcSIAQdSTk4AAaiEIIABB3JOTgABqKAIAIQALIAggAjYCCCAAIAI2AgwgAiAINgIMIAIgADYCCAwHCyAAIAY2AgAgACAAKAIEIAlqNgIEIAZBD2pBeHFBeGoiCCADQQNyNgIEIAdBD2pBeHFBeGoiAiAIIANqIgBrIQMgAkEAKALwlZOAAEYNAyACQQAoAuyVk4AARg0EAkAgAigCBCIGQQNxQQFHDQAgAiAGQXhxIgYQooCAgAAgBiADaiEDIAIgBmoiAigCBCEGCyACIAZBfnE2AgQgACADQQFyNgIEIAAgA2ogAzYCAAJAIANBgAJJDQAgACADEKeAgIAADAYLAkACQEEAKALclZOAACICQQEgA0EDdnQiBnENAEEAIAIgBnI2AtyVk4AAIANB+AFxQdSTk4AAaiIDIQIMAQsgA0H4AXEiA0HUk5OAAGohAiADQdyTk4AAaigCACEDCyACIAA2AgggAyAANgIMIAAgAjYCDCAAIAM2AggMBQtBACAAIANrIgI2AuiVk4AAQQBBACgC8JWTgAAiACADaiIINgLwlZOAACAIIAJBAXI2AgQgACADQQNyNgIEIABBCGohAAwGC0EAKALslZOAACECAkACQCAAIANrIghBD0sNAEEAQQA2AuyVk4AAQQBBADYC5JWTgAAgAiAAQQNyNgIEIAIgAGoiACAAKAIEQQFyNgIEDAELQQAgCDYC5JWTgABBACACIANqIgY2AuyVk4AAIAYgCEEBcjYCBCACIABqIAg2AgAgAiADQQNyNgIECyACQQhqIQAMBQsgACAHIAlqNgIEQQBBACgC8JWTgAAiAEEPakF4cSICQXhqIgg2AvCVk4AAQQAgACACa0EAKALolZOAACAJaiICakEIaiIGNgLolZOAACAIIAZBAXI2AgQgACACakEoNgIEQQBBgICAATYC/JWTgAAMAwtBACAANgLwlZOAAEEAQQAoAuiVk4AAIANqIgM2AuiVk4AAIAAgA0EBcjYCBAwBC0EAIAA2AuyVk4AAQQBBACgC5JWTgAAgA2oiAzYC5JWTgAAgACADQQFyNgIEIAAgA2ogAzYCAAsgCEEIaiEADAELQQAhAEEAKALolZOAACICIANNDQBBACACIANrIgI2AuiVk4AAQQBBACgC8JWTgAAiACADaiIINgLwlZOAACAIIAJBAXI2AgQgACADQQNyNgIEIABBCGohAAsgAUEQaiSAgICAACAACwMAAAtwAQJ/AkACQCAAQXxqKAIAIgNBeHEiBEEEQQggA0EDcSIDGyABakkNAAJAIANFDQAgBCABQSdqSw0CCyAAEKCAgIAADwtB3ISEgABBLkGMhYSAABC6gICAAAALQZyFhIAAQS5BzIWEgAAQuoCAgAAAC+YGAQR/IABBeGoiASAAQXxqKAIAIgJBeHEiAGohAwJAAkAgAkEBcQ0AIAJBAnFFDQEgASgCACICIABqIQACQCABIAJrIgFBACgC7JWTgABHDQAgAygCBEEDcUEDRw0BQQAgADYC5JWTgAAgAyADKAIEQX5xNgIEIAEgAEEBcjYCBCADIAA2AgAPCyABIAIQooCAgAALAkACQAJAAkACQAJAAkACQCADKAIEIgJBAnENACADQQAoAvCVk4AARg0CIANBACgC7JWTgABGDQMgAyACQXhxIgIQooCAgAAgASACIABqIgBBAXI2AgQgASAAaiAANgIAIAFBACgC7JWTgABHDQFBACAANgLklZOAAA8LIAMgAkF+cTYCBCABIABBAXI2AgQgASAAaiAANgIACyAAQYACSQ0EIAEgABCngICAAEEAQQAoAoSWk4AAQX9qIgE2AoSWk4AAIAENBkEAKALMk5OAACIADQJB/x8hAQwDC0EAIAE2AvCVk4AAQQBBACgC6JWTgAAgAGoiADYC6JWTgAAgASAAQQFyNgIEAkAgAUEAKALslZOAAEcNAEEAQQA2AuSVk4AAQQBBADYC7JWTgAALIABBACgC/JWTgAAiAk0NBUEAKALwlZOAACIARQ0FQQAoAuiVk4AAIgRBKUkNBEHEk5OAACEBA0ACQCABKAIAIgMgAEsNACAAIAMgASgCBGpJDQYLIAEoAgghAQwACwtBACABNgLslZOAAEEAQQAoAuSVk4AAIABqIgA2AuSVk4AAIAEgAEEBcjYCBCABIABqIAA2AgAPC0EAIQEDQCABQQFqIQEgACgCCCIADQALIAFB/x8gAUH/H0sbIQELQQAgATYChJaTgAAPCwJAAkBBACgC3JWTgAAiA0EBIABBA3Z0IgJxDQBBACADIAJyNgLclZOAACAAQfgBcUHUk5OAAGoiACEDDAELIABB+AFxIgBB1JOTgABqIQMgAEHck5OAAGooAgAhAAsgAyABNgIIIAAgATYCDCABIAM2AgwgASAANgIIDwsCQAJAQQAoAsyTk4AAIgANAEH/HyEBDAELQQAhAQNAIAFBAWohASAAKAIIIgANAAsgAUH/HyABQf8fSxshAQtBACABNgKElpOAACAEIAJNDQBBAEF/NgL8lZOAAAsLtQcBBn8CQAJAAkACQAJAAkACQAJAIABBfGoiBCgCACIFQXhxIgZBBEEIIAVBA3EiBxsgAWpJDQAgAUEnaiEIAkAgB0UNACAGIAhLDQILAkACQCACQQlJDQAgAiADEJyAgIAAIgINAUEADwtBACECIANBzP97Sw0IQRAgA0ELakF4cSADQQtJGyEBIABBeGohCAJAIAcNACABQYACSQ0HIAhFDQcgBiABTQ0HIAYgAWtBgIAISw0HIAAPCyAIIAZqIQcCQAJAIAYgAU8NACAHQQAoAvCVk4AARg0BAkAgB0EAKALslZOAAEYNACAHKAIEIgVBAnENCSAFQXhxIgkgBmoiBSABSQ0JIAcgCRCigICAAAJAIAUgAWsiB0EQSQ0AIAQgASAEKAIAQQFxckECcjYCACAIIAFqIgEgB0EDcjYCBCAIIAVqIgUgBSgCBEEBcjYCBCABIAcQo4CAgAAMCQsgBCAFIAQoAgBBAXFyQQJyNgIAIAggBWoiASABKAIEQQFyNgIEDAgLQQAoAuSVk4AAIAZqIgcgAUkNCAJAAkAgByABayIGQQ9LDQAgBCAFQQFxIAdyQQJyNgIAIAggB2oiASABKAIEQQFyNgIEQQAhBkEAIQEMAQsgBCABIAVBAXFyQQJyNgIAIAggAWoiASAGQQFyNgIEIAggB2oiByAGNgIAIAcgBygCBEF+cTYCBAtBACABNgLslZOAAEEAIAY2AuSVk4AADAcLIAYgAWsiBkEPTQ0GIAQgASAFQQFxckECcjYCACAIIAFqIgEgBkEDcjYCBCAHIAcoAgRBAXI2AgQgASAGEKOAgIAADAYLQQAoAuiVk4AAIAZqIgcgAUsNBAwGCwJAIAMgASADIAFJGyIDRQ0AIAIgACAD/AoAAAsgBCgCACIDQXhxIgdBBEEIIANBA3EiAxsgAWpJDQIgA0UNBiAHIAhNDQZBnIWEgABBLkHMhYSAABC6gICAAAALQdyEhIAAQS5BjIWEgAAQuoCAgAAAC0GchYSAAEEuQcyFhIAAELqAgIAAAAtB3ISEgABBLkGMhYSAABC6gICAAAALIAQgASAFQQFxckECcjYCACAIIAFqIgUgByABayIBQQFyNgIEQQAgATYC6JWTgABBACAFNgLwlZOAAAsgCEUNACAADwsgAxCdgICAACIBRQ0BAkAgA0F8QXggBCgCACICQQNxGyACQXhxaiICIAMgAkkbIgNFDQAgASAAIAP8CgAACyABIQILIAAQoICAgAALIAILkgMBBH8gACgCDCECAkACQAJAAkAgAUGAAkkNACAAKAIYIQMCQAJAAkAgAiAARw0AIABBFEEQIAAoAhQiAhtqKAIAIgENAUEAIQIMAgsgACgCCCIBIAI2AgwgAiABNgIIDAELIABBFGogAEEQaiACGyEEA0AgBCEFIAEiAkEUaiACQRBqIAIoAhQiARshBCACQRRBECABG2ooAgAiAQ0ACyAFQQA2AgALIANFDQICQAJAIAAgACgCHEECdEHEkpOAAGoiASgCAEYNACADKAIQIABGDQEgAyACNgIUIAINAwwECyABIAI2AgAgAkUNBAwCCyADIAI2AhAgAg0BDAILAkAgAiAAKAIIIgRGDQAgBCACNgIMIAIgBDYCCA8LQQBBACgC3JWTgABBfiABQQN2d3E2AtyVk4AADwsgAiADNgIYAkAgACgCECIBRQ0AIAIgATYCECABIAI2AhgLIAAoAhQiAUUNACACIAE2AhQgASACNgIYDwsPC0EAQQAoAuCVk4AAQX4gACgCHHdxNgLglZOAAAu0BAECfyAAIAFqIQICQAJAAkAgACgCBCIDQQFxDQAgA0ECcUUNASAAKAIAIgMgAWohAQJAIAAgA2siAEEAKALslZOAAEcNACACKAIEQQNxQQNHDQFBACABNgLklZOAACACIAIoAgRBfnE2AgQgACABQQFyNgIEIAIgATYCAA8LIAAgAxCigICAAAsCQAJAAkAgAigCBCIDQQJxDQAgAkEAKALwlZOAAEYNAiACQQAoAuyVk4AARg0EIAIgA0F4cSIDEKKAgIAAIAAgAyABaiIBQQFyNgIEIAAgAWogATYCACAAQQAoAuyVk4AARw0BQQAgATYC5JWTgAAPCyACIANBfnE2AgQgACABQQFyNgIEIAAgAWogATYCAAsCQCABQYACSQ0AIAAgARCngICAAA8LAkACQEEAKALclZOAACICQQEgAUEDdnQiA3ENAEEAIAIgA3I2AtyVk4AAIAFB+AFxQdSTk4AAaiIBIQIMAQsgAUH4AXEiAUHUk5OAAGohAiABQdyTk4AAaigCACEBCyACIAA2AgggASAANgIMIAAgAjYCDCAAIAE2AggPC0EAIAA2AvCVk4AAQQBBACgC6JWTgAAgAWoiATYC6JWTgAAgACABQQFyNgIEIABBACgC7JWTgABHDQBBAEEANgLklZOAAEEAQQA2AuyVk4AACw8LQQAgADYC7JWTgABBAEEAKALklZOAACABaiIBNgLklZOAACAAIAFBAXI2AgQgACABaiABNgIACzgCAX8BfiOAgICAAEEQayIBJICAgIAAIAApAgAhAiABIAA2AgwgASACNwIEIAFBBGoQlYCAgAAACw0AIAEgABCmgICAAAALLwEBfyOAgICAAEEQayICJICAgIAAIAIgATYCDCACIAA2AgggAkEIahCTgICAAAALzgIBBH9BACECAkAgAUEIdiIDRQ0AQR8hAiABQYCAgAhPDQAgAUEmIANnIgJrdkEBcSACQQF0ckE+cyECCyAAQgA3AhAgACACNgIcIAJBAnRBxJKTgABqIQMCQEEAKALglZOAAEEBIAJ0IgRxDQAgAyAANgIAIAAgAzYCGCAAIAA2AgwgACAANgIIQQBBACgC4JWTgAAgBHI2AuCVk4AADwsCQAJAAkAgAygCACIEKAIEQXhxIAFHDQAgBCECDAELIAFBAEEZIAJBAXZrIAJBH0YbdCEDA0AgBCADQR12QQRxaiIFKAIQIgJFDQIgA0EBdCEDIAIhBCACKAIEQXhxIAFHDQALCyACKAIIIgMgADYCDCACIAA2AgggAEEANgIYIAAgAjYCDCAAIAM2AggPCyAFQRBqIAA2AgAgACAENgIYIAAgADYCDCAAIAA2AggLXgECf0EAIQFBAEEAKALAkpOAACICQQFqNgLAkpOAAAJAIAJBAEgNAEEBIQFBAC0ArJKTgAANAEEAIAA6AKySk4AAQQBBACgCqJKTgABBAWo2AqiSk4AAQQIhAQsgAQseACAAQQApAtSEhIAANwIIIABBACkCzISEgAA3AgALHgAgAEEAKQLEhISAADcCCCAAQQApAryEhIAANwIAC0QAAkAgACgCAEF/Rg0AIAEgACgCBCAAKAIIEMSAgIAADwsgASgCACABKAIEIAAoAgwoAgAiACgCACAAKAIEEL2AgIAACxQAIABBiIaEgAA2AgQgACABNgIACwwAIAAgASkCADcDAAtUAQJ/IAEoAgQhAiABKAIAIQMQjYCAgAACQEEIQQQQioCAgAAiAQ0AQQRBCBC4gICAAAALIAEgAjYCBCABIAM2AgAgAEGIhoSAADYCBCAAIAE2AgALFAAgASAAKAIAIAAoAgQQxICAgAALngIBBn8gACgCCCECAkACQCABQYABTw0A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YXQEDmxpZGFyX21hdHJpY2VzBRNsaWRhcl9wYXJjb3VyaXJfZjMyBhNsaWRhcl9wYXJjb3VyaXJfZjY0Bw1saWRhcl9yZXRlbnVzCAtsaWRhcl9zY2VuZQkTbGlkYXJfdmVyc2lvbl9hcmVuZQoqX1JOdkNzOWhKMDNzNURpcVBfN19fX3J1c3RjMTJfX19ydXN0X2FsbG9jCyxfUk52Q3M5aEowM3M1RGlxUF83X19fcnVzdGMxNF9fX3J1c3RfZGVhbGxvYwwsX1JOdkNzOWhKMDNzNURpcVBfN19fX3J1c3RjMTRfX19ydXN0X3JlYWxsb2MNQV9STnZDczloSjAzczVEaXFQXzdfX19ydXN0YzM1X19fcnVzdF9ub19hbGxvY19zaGltX2lzX3Vuc3RhYmxlX3YyDjBfUk52Q3M5aEowM3M1RGlxUF83X19fcnVzdGMxOF9fX3J1c3Rfc3RhcnRfcGFuaWMPhAFfUklOdk52TXMyX050Q3M2NTdWWlEzMmducF81YWxsb2M3cmF3X3ZlY0lOdEI4XzExUmF3VmVjSW5uZXJwRTdyZXNlcnZlMjFkb19yZXNlcnZlX2FuZF9oYW5kbGVOdE50QmFfNWFsbG9jNkdsb2JhbEVDczdYV1lVeEF1dVZvXzNzdGQQdV9SSU52TnRDc2FMbEF4R0FweHhUXzRjb3JlM3B0cjlkcm9wX2dsdWVJTnROdEI0XzZvcHRpb242T3B0aW9uSU50TnRDczY1N1ZaUTMyZ25wXzVhbGxvYzN2ZWMzVmVjaEVFRUNzN1hXWVV4QXV1Vm9fM3N0ZBFhX1JJTnZOdENzYUxsQXhHQXB4eFRfNGNvcmUzcHRyOWRyb3BfZ2x1ZU50TnRDczY1N1ZaUTMyZ25wXzVhbGxvYzZzdHJpbmc2U3RyaW5nRUNzN1hXWVV4QXV1Vm9fM3N0ZBJyX1JJTnZOdENzYUxsQXhHQXB4eFRfNGNvcmUzcHRyOWRyb3BfZ2x1ZU50TnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxM3BhbmljX2hhbmRsZXIxOUZvcm1hdFN0cmluZ1BheWxvYWRFQkhfE2RfUklOdk50TnRDczdYV1lVeEF1dVZvXzNzdGQzc3lzOWJhY2t0cmFjZTI2X19fcnVzdF9lbmRfc2hvcnRfYmFja3RyYWNlTkNOdk50QjZfNWFsbG9jOHJ1c3Rfb29tMHpFQjZfFC1fUk5DTnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDVhbGxvYzhydXN0X29vbTBCNV8Vbl9SSU52TnROdENzN1hXWVV4QXV1Vm9fM3N0ZDNzeXM5YmFja3RyYWNlMjZfX19ydXN0X2VuZF9zaG9ydF9iYWNrdHJhY2VOQ052TnRCNl85cGFuaWNraW5nMTNwYW5pY19oYW5kbGVyMHpFQjZfFjdfUk5DTnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxM3BhbmljX2hhbmRsZXIwQjVfF1dfUk52TXM0X050Q3M2NTdWWlEzMmducF81YWxsb2M3cmF3X3ZlY050QjVfMTFSYXdWZWNJbm5lcjExZmluaXNoX2dyb3dDczdYV1lVeEF1dVZvXzNzdGQYM19STnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxNXBhbmljX3dpdGhfaG9vaxk4X1JOdk50Q3M3WFdZVXhBdXVWb18zc3RkNWFsbG9jMjRkZWZhdWx0X2FsbG9jX2Vycm9yX2hvb2saJ19STnZDczloSjAzczVEaXFQXzdfX19ydXN0YzEwcnVzdF9wYW5pYxspX1JOdkNzOWhKMDNzNURpcVBfN19fX3J1c3RjMTFfX19yZGxfYWxsb2McZ19STnZNczBfTnRDczR4azlQYjJtWnJyXzhkbG1hbGxvYzhkbG1hbGxvY0lOdEI1XzhEbG1hbGxvY050TnRCN18zc3lzNlN5c3RlbUU4bWVtYWxpZ25DczdYV1lVeEF1dVZvXzNzdGQdZV9STnZNczBfTnRDczR4azlQYjJtWnJyXzhkbG1hbGxvYzhkbG1hbGxvY0lOdEI1XzhEbG1hbGxvY050TnRCN18zc3lzNlN5c3RlbUU2bWFsbG9jQ3M3WFdZVXhBdXVWb18zc3RkHipfUk52Q3M5aEowM3M1RGlxUF83X19fcnVzdGMxMl9fX3J1c3RfYWJvcnQfK19STnZDczloSjAzczVEaXFQXzdfX19ydXN0YzEzX19fcmRsX2RlYWxsb2MgY19STnZNczBfTnRDczR4azlQYjJtWnJyXzhkbG1hbGxvYzhkbG1hbGxvY0lOdEI1XzhEbG1hbGxvY050TnRCN18zc3lzNlN5c3RlbUU0ZnJlZUNzN1hXWVV4QXV1Vm9fM3N0ZCErX1JOdkNzOWhKMDNzNURpcVBfN19fX3J1c3RjMTNfX19yZGxfcmVhbGxvYyJsX1JOdk1zMF9OdENzNHhrOVBiMm1acnJfOGRsbWFsbG9jOGRsbWFsbG9jSU50QjVfOERsbWFsbG9jTnROdEI3XzNzeXM2U3lzdGVtRTEydW5saW5rX2NodW5rQ3M3WFdZVXhBdXVWb18zc3RkI21fUk52TXMwX050Q3M0eGs5UGIybVpycl84ZGxtYWxsb2M4ZGxtYWxsb2NJTnRCNV84RGxtYWxsb2NOdE50QjdfM3N5czZTeXN0ZW1FMTNkaXNwb3NlX2NodW5rQ3M3WFdZVXhBdXVWb18zc3RkJC5fUk52Q3M5aEowM3M1RGlxUF83X19fcnVzdGMxN3J1c3RfYmVnaW5fdW53aW5kJThfUk52Q3M5aEowM3M1RGlxUF83X19fcnVzdGMyNl9fX3J1c3RfYWxsb2NfZXJyb3JfaGFuZGxlciYnX1JOdk50Q3M3WFdZVXhBdXVWb18zc3RkNWFsbG9jOHJ1c3Rfb29tJ3JfUk52TXMwX050Q3M0eGs5UGIybVpycl84ZGxtYWxsb2M4ZGxtYWxsb2NJTnRCNV84RGxtYWxsb2NOdE50QjdfM3N5czZTeXN0ZW1FMThpbnNlcnRfbGFyZ2VfY2h1bmtDczdYV1lVeEF1dVZvXzNzdGQoOl9STnZOdE50Q3M3WFdZVXhBdXVWb18zc3RkOXBhbmlja2luZzExcGFuaWNfY291bnQ4aW5jcmVhc2UpZ19STnZYTnRDc2FMbEF4R0FweHhUXzRjb3JlM2FueU50TnRDczY1N1ZaUTMyZ25wXzVhbGxvYzZzdHJpbmc2U3RyaW5nTnRCMl8zQW55N3R5cGVfaWRDczdYV1lVeEF1dVZvXzNzdGQqQ19STnZYTnRDc2FMbEF4R0FweHhUXzRjb3JlM2FueVJlTnRCMl8zQW55N3R5cGVfaWRDczdYV1lVeEF1dVZvXzNzdGQreF9STnZYczBfTnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxM3BhbmljX2hhbmRsZXJOdEI1XzE5Rm9ybWF0U3RyaW5nUGF5bG9hZE50TnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdDdEaXNwbGF5M2ZtdCx9X1JOdlhzMV9Odk50Q3M3WFdZVXhBdXVWb18zc3RkOXBhbmlja2luZzEzcGFuaWNfaGFuZGxlck50QjVfMTZTdGF0aWNTdHJQYXlsb2FkTnROdENzYUxsQXhHQXB4eFRfNGNvcmU1cGFuaWMxMlBhbmljUGF5bG9hZDNnZXQtgAFfUk52WHMxX052TnRDczdYV1lVeEF1dVZvXzNzdGQ5cGFuaWNraW5nMTNwYW5pY19oYW5kbGVyTnRCNV8xNlN0YXRpY1N0clBheWxvYWROdE50Q3NhTGxBeEdBcHh4VF80Y29yZTVwYW5pYzEyUGFuaWNQYXlsb2FkNmFzX3N0ci6CAV9STnZYczFfTnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxM3BhbmljX2hhbmRsZXJOdEI1XzE2U3RhdGljU3RyUGF5bG9hZE50TnRDc2FMbEF4R0FweHhUXzRjb3JlNXBhbmljMTJQYW5pY1BheWxvYWQ4dGFrZV9ib3gvdV9STnZYczJfTnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxM3BhbmljX2hhbmRsZXJOdEI1XzE2U3RhdGljU3RyUGF5bG9hZE50TnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdDdEaXNwbGF5M2ZtdDBeX1JOdlhzWl9OdENzNjU3VlpRMzJnbnBfNWFsbG9jNnN0cmluZ050QjVfNlN0cmluZ050TnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdDVXcml0ZTEwd3JpdGVfY2hhcjFcX1JOdlhzWl9OdENzNjU3VlpRMzJnbnBfNWFsbG9jNnN0cmluZ050QjVfNlN0cmluZ050TnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdDVXcml0ZTl3cml0ZV9zdHIyf19STnZYc19Odk50Q3M3WFdZVXhBdXVWb18zc3RkOXBhbmlja2luZzEzcGFuaWNfaGFuZGxlck50QjRfMTlGb3JtYXRTdHJpbmdQYXlsb2FkTnROdENzYUxsQXhHQXB4eFRfNGNvcmU1cGFuaWMxMlBhbmljUGF5bG9hZDNnZXQzhAFfUk52WHNfTnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxM3BhbmljX2hhbmRsZXJOdEI0XzE5Rm9ybWF0U3RyaW5nUGF5bG9hZE50TnRDc2FMbEF4R0FweHhUXzRjb3JlNXBhbmljMTJQYW5pY1BheWxvYWQ4dGFrZV9ib3g0dV9STnZZSU50TnZOdENzN1hXWVV4QXV1Vm9fM3N0ZDlwYW5pY2tpbmcxMWJlZ2luX3BhbmljN1BheWxvYWRSZUVOdE50Q3NhTGxBeEdBcHh4VF80Y29yZTVwYW5pYzEyUGFuaWNQYXlsb2FkNmFzX3N0ckI5XzVoX1JOdllOdE50Q3M2NTdWWlEzMmducF81YWxsb2M2c3RyaW5nNlN0cmluZ050TnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdDVXcml0ZTl3cml0ZV9mbXRDczdYV1lVeEF1dVZvXzNzdGQ2RV9STnZYc19OdENzNHhrOVBiMm1acnJfOGRsbWFsbG9jM3N5c050QjRfNlN5c3RlbU50QjZfOUFsbG9jYXRvcjVhbGxvYzcwX1JOdk50Q3M2NTdWWlEzMmducF81YWxsb2M3cmF3X3ZlYzEyaGFuZGxlX2Vycm9yODRfUk52TnRDczY1N1ZaUTMyZ25wXzVhbGxvYzVhbGxvYzE4aGFuZGxlX2FsbG9jX2Vycm9yOTVfUk52TnRDczY1N1ZaUTMyZ25wXzVhbGxvYzdyYXdfdmVjMTdjYXBhY2l0eV9vdmVyZmxvdzopX1JOdk50Q3NhTGxBeEdBcHh4VF80Y29yZTlwYW5pY2tpbmc1cGFuaWM7LV9STnZOdENzYUxsQXhHQXB4eFRfNGNvcmU5cGFuaWNraW5nOXBhbmljX2ZtdDw4X1JOdlhzMWlfTnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdFJlTnRCNl83RGlzcGxheTNmbXRCOF89I19STnZOdENzYUxsQXhHQXB4eFRfNGNvcmUzZm10NXdyaXRlPjlfUk52TnROdENzYUxsQXhHQXB4eFRfNGNvcmU1c2xpY2U1aW5kZXgxNnNsaWNlX2luZGV4X2ZhaWw/N19STnZOdENzYUxsQXhHQXB4eFRfNGNvcmU5cGFuaWNraW5nMThwYW5pY19ib3VuZHNfY2hlY2tAPl9STnZNc2FfTnRDc2FMbEF4R0FweHhUXzRjb3JlM2ZtdE50QjVfOUZvcm1hdHRlcjEycGFkX2ludGVncmFsQTVfUk52TnROdENzYUxsQXhHQXB4eFRfNGNvcmUzc3RyNWNvdW50MTRkb19jb3VudF9jaGFyc0JOX1JOdk52TXNhX050Q3NhTGxBeEdBcHh4VF80Y29yZTNmbXROdEI3XzlGb3JtYXR0ZXIxMnBhZF9pbnRlZ3JhbDEyd3JpdGVfcHJlZml4QzRfUk52TXNhX050Q3NhTGxBeEdBcHh4VF80Y29yZTNmbXROdEI1XzlGb3JtYXR0ZXIzcGFkRDpfUk52TXNhX050Q3NhTGxBeEdBcHh4VF80Y29yZTNmbXROdEI1XzlGb3JtYXR0ZXI5d3JpdGVfc3RyRT9fUk52WHM4X050TnROdENzYUxsQXhHQXB4eFRfNGNvcmUzZm10M251bTNpbXBtTnRCOV83RGlzcGxheTNmbXRGL19STnZOdENzYUxsQXhHQXB4eFRfNGNvcmU2b3B0aW9uMTNleHBlY3RfZmFpbGVkBxIBAA9fX3N0YWNrX3BvaW50ZXIJCgEABy5yb2RhdGEATQlwcm9kdWNlcnMCCGxhbmd1YWdlAQRSdXN0AAxwcm9jZXNzZWQtYnkBBXJ1c3RjHTEuOTcuMCAoMmQ4MTQ0Yjc4IDIwMjYtMDctMDcpAJQBD3RhcmdldF9mZWF0dXJlcwgrC2J1bGstbWVtb3J5Kw9idWxrLW1lbW9yeS1vcHQrFmNhbGwtaW5kaXJlY3Qtb3ZlcmxvbmcrCm11bHRpdmFsdWUrD211dGFibGUtZ2xvYmFscysTbm9udHJhcHBpbmctZnB0b2ludCsPcmVmZXJlbmNlLXR5cGVzKwhzaWduLWV4dA=='});})(typeof globalThis!=='undefined'?globalThis:this);
+diff --git a/vendor/ariane-lidar.js b/vendor/ariane-lidar.js
+new file mode 100644
+index 0000000..4472009
+--- /dev/null
++++ b/vendor/ariane-lidar.js
+@@ -0,0 +1,250 @@
++/* FICHIER FABRIQUÉ par tools/rust-lidar-paquet.cjs : ne pas éditer à la main. */
++/* CH-064-L : coquille de la lecture LiDAR en Rust/WASM.
++ *
++ * variante(texte de vendor/lidar.js) rend le MÊME texte, où une seule branche est insérée devant la boucle par point d'un nœud
++ * (`for(let di=drawStart;di<drawEnd;di++)`) : si le nœud est éligible et qu'un noyau est installé
++ * (`globalThis.ArianeLidarNoyau`), le nœud est parcouru par tranches par le noyau ; sinon la boucle d'origine s'exécute,
++ * inchangée. Tout le reste de capture() est le code d'origine (inventaire, sondes, attributs, boxVisible, statut).
++ * Le texte de vendor/lidar.js est lu à chaque construction : la variante suit le tronc (cible mouvante) et refuse de se
++ * construire si la boucle a changé.
++ *
++ * Deux noyaux de même interface :
++ *   noyauWasm(module)  : ariane_lidar.wasm (crate ariane-lidar), arène statique de 512 Kio qui ne grandit jamais ;
++ *   noyauJs()          : le même algorithme en JS sans allocation (référence « JS élagué » du banc).
++ * Trappe du module (fusion par le chef, CH-064) : une WebAssembly.RuntimeError pendant une tranche ne fait pas échouer capture().
++ * L'instance est recréée (mémoire neuve, vues refaites), puis la MÊME tranche est rejouée par le noyau JS, à partir de l'état
++ * sauvé juste avant l'appel (matrices et état des plus proches) ; l'état rendu est recopié dans l'instance neuve, et les tranches
++ * suivantes repartent dans le WASM. Compté par reprises(). Essai : tools/ch064-essais-lidar-trappe.cjs.
++ *
++ * Éligibilité d'un nœud (sinon : boucle d'origine) : non indexé ; positions Float32Array ou Float64Array, non normalisées,
++ * pas ≥ 3 ; lecture directe `array[i*stride+offset+k]` PROUVÉE égale (Object.is) à l'accesseur sur les sondes du nœud,
++ * comme le chemin rapide de src/native-lidar.js (4.7.2) ; bornes, maxPoints, maxInspected numériques ; yieldEvery entier > 0 ;
++ * drawEnd entier.
++ * Écart connu (documenté, comme CH-061) : l'horloge du budget (Date.now()-started>maxMillis) est lue avant chaque tranche
++ * (≤ 4 096 points) et non avant chaque point. Le résultat est celui que le JS d'origine aurait rendu si l'horloge avait
++ * franchi le budget à cette frontière. Sans franchissement du budget (cas mesuré), aucune différence. */
++(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeLidarWasm=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
++ 'use strict';
++ const DEBUT='      for(let di=drawStart;di<drawEnd;di++) {';
++ const FIN='      unchanged();\n      report.inspection="complete";';
++ const BRANCHE=`      const __N=globalThis.ArianeLidarNoyau,__L=__N&&__N.eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,report.probes);
++      if(__L){
++        __N.debutNoeud(model,invModel,transforms,frames,bounds);
++        let di=drawStart;
++        while(di<drawEnd){
++          if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis){
++            report.inspection="partial-budget";finishedAll=false;break outer;
++          }
++          if((di-drawStart)%yieldEvery===0){guard();unchanged();await pause();guard();unchanged();}
++          const fin=Math.min(drawEnd,di+yieldEvery-((di-drawStart)%yieldEvery),di+Math.ceil(maxInspected-out.quality.inspected),di+__L.capacite);
++          const t=__N.tranche(__L,di,fin-di,maxPoints-out.pointsSceneRelative.length,out.quality.roundTripMaxSceneUnits);
++          out.quality.inspected+=t.traites;report.inspected+=t.traites;
++          out.quality.nonFinitePositions+=t.nonFinis;report.nonFinitePositions+=t.nonFinis;
++          out.quality.roundTripMaxSceneUnits=t.retour;out.quality.perRail.left+=t.gauche;out.quality.perRail.right+=t.droite;
++          const __ret=t.retenus,__sc=t.scene,__cl=out.clouds[n.cloudIndex].clipping;
++          for(let k=0;k<t.n;k++){
++            const i=__ret[k],p=[__sc[3*k],__sc[3*k+1],__sc[3*k+2]];
++            out.pointsSceneRelative.push(p);out.pointSources.push([nodeIndex,i]);
++            out.quality.pointRoundTripsChecked++;
++            out.visibleByClipBoxes.push(boxVisible(__cl,p));
++            for(const key of extras) {
++              const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
++              out.attributes[key].push(finite(value)?value:null);
++            }
++            out.nodes[nodeIndex].retained++;
++          }
++          __N.proches(report.nearestToRailOrigin,SIDES);
++          if(t.erreur)fail(t.erreur);
++          di+=t.traites;
++        }
++      } else
++`;
++ /* File des captures (audit de la PR n° 25, P1) : le noyau porte un état (matrices, plus proches, arène) d'un appel de
++  * debutNoeud() à la fin du nœud, à travers les `await pause()`. Deux capture() simultanées se l'écraseraient. La variante
++  * exporte donc un capture() qui attend la fin de la précédente (réussie ou non) avant de commencer : les captures sont
++  * sérialisées sur tout leur parcours. Le journal du 05/11 n'en montre aucune simultanée (2 711 captures) ; l'origine, elle,
++  * est réentrante (état local à chaque appel). */
++ const EXPORT='  return {capture,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};';
++ const FILE='  let __fileCaptures=Promise.resolve();\n  const __captureEnFile=options=>{const p=__fileCaptures.then(()=>capture(options));__fileCaptures=p.then(()=>{},()=>{});return p;};\n'+
++  '  return {capture:__captureEnFile,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};';
++ function variante(texte){
++  const a=texte.indexOf(DEBUT),b=texte.indexOf(FIN),c=texte.indexOf(EXPORT);
++  if(a<0||b<0||texte.indexOf(DEBUT,a+1)>=0)throw Error('vendor/lidar.js a changé : boucle par point introuvable ou ambiguë (CH-064-L à mettre à jour).');
++  if(c<0||texte.indexOf(EXPORT,c+1)>=0||c<a)throw Error('vendor/lidar.js a changé : export de capture introuvable ou ambigu (CH-064 à mettre à jour).');
++  return texte.slice(0,a)+BRANCHE+texte.slice(a,c)+FILE+texte.slice(c+EXPORT.length);
++ }
++ /* ---------- partie commune aux deux noyaux ---------- */
++ const MESSAGES=[null,'Projection non finie.','Transformation non finie.'],VERSION_ARENE=1;
++ const nombre=x=>typeof x==='number'&&!Number.isNaN(x);
++ /* Accesseurs reconnus (audits de la PR n° 25 : 4ceb766, 01846d1, 906ec78, 1f78142). La lecture directe du tableau n'est prise que
++  * si l'attribut n'a AUCUN accesseur getX/getY/getZ, ou si ses trois accesseurs sont AUTHENTIFIÉS comme ceux de three.js. On
++  * authentifie la sémantique, pas seulement l'identité ; les quatre conditions doivent tenir :
++  *  1. chaque accesseur est lu par descripteur (chaîne des prototypes) et c'est une valeur, jamais une propriété calculée ;
++  *  2. son texte (Function.prototype.toString, pris au chargement de la coquille) est EXACTEMENT un corps de la liste blanche
++  *     CORPS_THREE, par genre d'attribut (simple ou entrelacé) ;
++  *  3. il est identique à l'instantané pris au chargement de la coquille dans la page (globalThis.THREE de ce moment-là ; THREE
++  *     absent au chargement : aucune référence) ET aux fonctions que porte encore le THREE courant ;
++  *  4. pour lui seul, les sondes sont relues comme seconde garde (ces accesseurs sont purs).
++  * Tout autre accesseur : AUCUN appel de la coquille, pas même les sondes ; le nœud passe par la boucle d'origine, seule à
++  * reproduire ses appels à l'identique (indices, ordre, entrelacement avec les autres attributs, arrêts de budget ou d'erreur).
++  * Limite assumée : une page qui réécrirait Function.prototype.toString AVANT l'injection de la coquille pour se faire passer pour
++  * three.js sort de ce modèle (ESV n'a aucune raison de le faire). Refus comptés par raison (refus()). */
++ /* Corps de three.js r124 (Potree 1.8.0 à 1.8.2 : libs/three.js/build/three.module.js, BufferAttribute et
++  * InterleavedBufferAttribute ; relevé du source, CH-064 ; ESV charge Potree 1.8.0, relevé de CH-062). Ces accesseurs lisent le
++  * tableau sans branche « normalized » ; les attributs normalisés sont de toute façon exclus plus bas. À compléter avec la
++  * révision relevée chez l'opérateur si elle diffère. */
++ const CORPS_THREE=Object.freeze({r124:Object.freeze({buffer:Object.freeze(["function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"]),entrelace:Object.freeze(["function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"])})});
++ const refusParRaison={},FT=Function.prototype.toString,appliquer=Reflect.apply,proto=Object.getPrototypeOf,descripteur=Object.getOwnPropertyDescriptor;
++ /* Fonction de la clé k de o (chaîne des prototypes) par descripteur : la fonction, undefined si la clé est absente, ou null si ce
++  * n'est pas une donnée simple (propriété calculée, ou valeur qui n'est pas une fonction). */
++ function fonctionDe(o,k){for(let p=o;p!==null&&p!==undefined;p=proto(p)){const d=descripteur(p,k);
++  if(d)return 'value' in d&&typeof d.value==='function'?d.value:null;}return undefined;}
++ const trio=p=>{if(!p)return null;const x=fonctionDe(p,'getX'),y=fonctionDe(p,'getY'),z=fonctionDe(p,'getZ');return x&&y&&z?[x,y,z]:null;};
++ const texte=f=>{try{return appliquer(FT,f,[]);}catch{return null;}};
++ const GENRES=['buffer','entrelace'];
++ const authentique=(t,genre)=>Object.keys(CORPS_THREE).some(r=>CORPS_THREE[r][genre].every((c,k)=>texte(t[k])===c));
++ const protosThree=T=>{try{return [T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];}catch{return [null,null];}};
++ const INSTANTANE_THREE=protosThree(globalThis.THREE).map((p,i)=>{const t=trio(p);return t&&authentique(t,GENRES[i])?t:null;});
++ const memeTrio=(a,b)=>!!a&&!!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];
++ function accesseursSurs(pos){
++  const x=fonctionDe(pos,'getX'),y=fonctionDe(pos,'getY'),z=fonctionDe(pos,'getZ');
++  if(x===undefined&&y===undefined&&z===undefined)return true;
++  if(!x||!y||!z)return false;
++  const t=[x,y,z],courant=protosThree(globalThis.THREE).map(trio);
++  for(let i=0;i<2;i++)if(memeTrio(t,INSTANTANE_THREE[i])&&memeTrio(courant[i],INSTANTANE_THREE[i])&&authentique(t,GENRES[i]))return true;
++  return false;
++ }
++ const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
++ /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
++ function eligibleAvec(octetsEntree,capaciteMax){
++  return function eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,probes){
++   if(indexAttr||!n.position||n.position.isFloat16BufferAttribute)return null;
++   if(!accesseursSurs(n.position))return refuser('accesseur inconnu'); // AVANT toute lecture : les sondes ci-dessous appellent l'accesseur
++   const meta=n.attribute&&n.attribute.metadata,src=n.position.array||(n.position.data&&n.position.data.array);
++   if(!meta||meta.normalized||n.position.normalized)return null;
++   const f64=src instanceof Float64Array;if(!f64&&!(src instanceof Float32Array))return null;
++   const stride=meta.stride,offset=meta.offset;
++   if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0||meta.itemSize<3)return null;
++   if(!Array.isArray(bounds)||!nombre(bounds[0])||!nombre(bounds[1])||!nombre(bounds[2]))return null;
++   if(!nombre(maxPoints)||!nombre(maxInspected)||!Number.isSafeInteger(yieldEvery)||yieldEvery<1||!Number.isInteger(drawEnd))return null;
++   // Preuve de la lecture directe : chaque sonde relue par l'accesseur et par le tableau, au bit près.
++   let vues=0;
++   for(const pr of probes||[]){const i=pr.sourceIndex;if(!Number.isInteger(i)||i<0||i>=n.attribute.count)continue;
++    for(let k=0;k<3;k++)if(!Object.is(n.attribute.get(i,k),src[i*stride+offset+k]))return null;vues++;}
++   if(!vues)return null;
++   const largeur=f64?8:4,capacite=Math.min(capaciteMax,Math.floor((octetsEntree/largeur-3)/stride)+1);
++   return capacite>=1?{src,stride,offset,f64,capacite}:null;
++  };
++ }
++ /* Matrices : model, invModel, transforms[0..1], frames[s].profileLocalToSceneRelative, frames[s].sceneRelativeToProfileLocal, bounds. */
++ function ecrireMatrices(M,model,invModel,transforms,frames,bounds){
++  M.set(model,0);M.set(invModel,16);M.set(transforms[0],32);M.set(transforms[1],48);
++  M.set(frames[0].profileLocalToSceneRelative,64);M.set(frames[1].profileLocalToSceneRelative,80);
++  M.set(frames[0].sceneRelativeToProfileLocal,96);M.set(frames[1].sceneRelativeToProfileLocal,112);
++  M[128]=bounds[0];M[129]=bounds[1];M[130]=bounds[2];
++ }
++ /* report.nearestToRailOrigin depuis l'état (mêmes clés, même ordre que vendor/lidar.js). */
++ function ecrireProches(E,cible,SIDES){
++  for(let s=0;s<2;s++){const o=s?15:6;if(E[o]!==0)cible[SIDES[s]]={sourceIndex:E[o+2],distanceProfileUnits:E[o+1],
++   pointProfileLocal:[E[o+3],E[o+4],E[o+5]],pointSceneRelative:[E[o+6],E[o+7],E[o+8]]};}
++ }
++ const resultat=(E,n,retenus,scene)=>({n,traites:E[1],nonFinis:E[2],gauche:E[3],droite:E[4],retour:E[0],retenus,scene,erreur:MESSAGES[E[5]]||null});
++
++ /* ---------- noyau Rust/WASM ---------- */
++ /* instancier : seulement pour l'essai de trappe (instance factice) ; défaut : l'instance du module, sans import. */
++ function noyauWasm(source,{instancier=m=>new WebAssembly.Instance(m,{}).exports}={}){
++  const module=source instanceof WebAssembly.Module?source:new WebAssembly.Module(source);
++  let X,buf,pE,octets,cap,F32,F64,M,E,R,S;
++  function monter(){
++   X=instancier(module);buf=X.memory.buffer;
++   if(typeof X.lidar_version_arene!=='function'||X.lidar_version_arene()!==VERSION_ARENE)throw Error('CH-064-L : cœur LiDAR désaccordé (version d\u2019arène).');
++   // La mémoire ne grandit jamais (initiale = maximale) : ces vues restent valides toute la vie de l'instance.
++   pE=X.lidar_entree();octets=X.lidar_entree_octets();cap=X.lidar_capacite();
++   F32=new Float32Array(buf,pE,octets/4);F64=new Float64Array(buf,pE,octets/8);
++   M=new Float64Array(buf,X.lidar_matrices(),131);E=new Float64Array(buf,X.lidar_etat(),24);
++   R=new Uint32Array(buf,X.lidar_retenus(),cap);S=new Float64Array(buf,X.lidar_scene(),3*cap);
++  }
++  monter();
++  const capacite=cap,secours=noyauJs(capacite),Msauve=new Float64Array(131),Esauve=new Float64Array(24);
++  let copieOctets=0,tranches=0,reprises=0;
++  /* Rejoue une tranche par le noyau JS à partir de l'état sauvé avant l'appel, puis rend cet état à l'instance. */
++  function rejouer(L,di,nb,limite,retour){M.set(Msauve);E.set(Esauve);secours.charger(Msauve,Esauve);
++   const t=secours.tranche(L,di,nb,limite,retour);E.set(secours.etat());return t;}
++  return {nom:'wasm',eligible:eligibleAvec(octets,capacite),
++   debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
++   tranche(L,di,nb,limite,retour){
++    const debut=di*L.stride+L.offset,lus=nb>0?(nb-1)*L.stride+3:0;
++    (L.f64?F64:F32).set(L.src.subarray(debut,debut+lus));copieOctets+=lus*(L.f64?8:4);tranches++;
++    E[0]=retour;Msauve.set(M);Esauve.set(E);
++    let k;
++    try{k=(L.f64?X.lidar_parcourir_f64:X.lidar_parcourir_f32)(nb,L.stride,di,limite)>>>0;}
++    catch(e){
++     if(!(e instanceof WebAssembly.RuntimeError))throw e;
++     // Trappe : instance neuve, état d'avant l'appel rendu, tranche rejouée par le noyau JS (même algorithme), état recopié.
++     reprises++;monter();return rejouer(L,di,nb,limite,retour);
++    }
++    // Tranche refusée par le noyau (code 3, garde de l'arène : n'arrive pas pour un nœud éligible) : rejouée de même.
++    if(E[5]===3){reprises++;refuser('tranche refusée');return rejouer(L,di,nb,limite,retour);}
++    return resultat(E,k,R,S);
++   },
++   proches(cible,SIDES){ecrireProches(E,cible,SIDES);},
++   memoireOctets:()=>buf.byteLength,copieOctets:()=>copieOctets,tranches:()=>tranches,reprises:()=>reprises};
++ }
++
++ /* ---------- noyau JS sans allocation (même algorithme que la crate) ---------- */
++ function noyauJs(cap=4096){
++  const M=new Float64Array(131),E=new Float64Array(24),R=new Uint32Array(cap),S=new Float64Array(3*cap);
++  const P=new Float64Array(3),Q=new Float64Array(3),T=new Float64Array(3),L0=new Float64Array(3),L1=new Float64Array(3);
++  let err=0,tranches=0;
++  /* C.point(M[o..o+16], x,y,z) → sortie ; err = 1 (Projection) ou 2 (Transformation). */
++  function pt(o,x,y,z,sortie){
++   const w=M[o+3]*x+M[o+7]*y+M[o+11]*z+M[o+15];
++   if(!Number.isFinite(w)||Math.abs(w)<1e-15){err=1;return false;}
++   let a=M[o]*x+M[o+4]*y+M[o+8]*z+M[o+12],b=M[o+1]*x+M[o+5]*y+M[o+9]*z+M[o+13],c=M[o+2]*x+M[o+6]*y+M[o+10]*z+M[o+14];
++   if(w!==1){a/=w;b/=w;c/=w;}
++   if(!(Number.isFinite(a)&&Number.isFinite(b)&&Number.isFinite(c))){err=2;return false;}
++   sortie[0]=a;sortie[1]=b;sortie[2]=c;return true;
++  }
++  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
++  function plusProche(l,present,meilleur){
++   if(!present||!Number.isFinite(meilleur))return true;
++   const s=l[0]*l[0]+l[1]*l[1]+l[2]*l[2];
++   if(!(Number.isFinite(s)&&s>1e-200))return true;
++   return Math.sqrt(s)<=meilleur*(1+1e-9);
++  }
++  return {nom:'js-elague',eligible:eligibleAvec(Infinity,cap),
++   debutNoeud(model,invModel,transforms,frames,bounds){ecrireMatrices(M,model,invModel,transforms,frames,bounds);E[6]=0;E[15]=0;},
++   tranche(Ld,di,nb,limite,retour){
++    const src=Ld.src,stride=Ld.stride,b0=M[128],b1=M[129],b2=M[130];
++    let rt=retour,traites=0,nonFinis=0,g=0,d=0,k=0;err=0;tranches++;
++    points:for(let j=0;j<nb;j++){
++     if(k>=limite)break;
++     const base=(di+j)*stride+Ld.offset,x=src[base],y=src[base+1],z=src[base+2],i=di+j;
++     traites++;
++     if(!(Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(z))){nonFinis++;continue;}
++     if(!pt(32,x,y,z,L0)||!pt(48,x,y,z,L1))break;
++     const in0=Math.abs(L0[0])<=b0&&Math.abs(L0[1])<=b1&&Math.abs(L0[2])<=b2,in1=Math.abs(L1[0])<=b0&&Math.abs(L1[1])<=b1&&Math.abs(L1[2])<=b2;
++     for(let s=0;s<2;s++){const l=s?L1:L0,o=s?15:6,present=E[o]!==0;
++      if(!plusProche(l,present,E[o+1]))continue;
++      const dd=Math.hypot(l[0],l[1],l[2]);
++      if(!present||dd<E[o+1]){if(!pt(0,x,y,z,P))break points;
++       E[o]=1;E[o+1]=dd;E[o+2]=i;E[o+3]=l[0];E[o+4]=l[1];E[o+5]=l[2];E[o+6]=P[0];E[o+7]=P[1];E[o+8]=P[2];}}
++     if(!(in0||in1))continue;
++     if(!pt(0,x,y,z,P)||!pt(16,P[0],P[1],P[2],Q)||!pt(0,Q[0],Q[1],Q[2],T))break;
++     rt=Math.max(rt,dist(T,P));
++     if(!pt(96,P[0],P[1],P[2],Q)||!pt(64,Q[0],Q[1],Q[2],T))break;
++     rt=Math.max(rt,dist(T,P));if(in0)g++;
++     if(!pt(112,P[0],P[1],P[2],Q)||!pt(80,Q[0],Q[1],Q[2],T))break;
++     rt=Math.max(rt,dist(T,P));if(in1)d++;
++     R[k]=i;S[3*k]=P[0];S[3*k+1]=P[1];S[3*k+2]=P[2];k++;
++    }
++    E[0]=rt;E[1]=traites;E[2]=nonFinis;E[3]=g;E[4]=d;E[5]=err;
++    return resultat(E,k,R,S);
++   },
++   proches(cible,SIDES){ecrireProches(E,cible,SIDES);},
++   /* reprise après trappe du noyau WASM : état complet repris, puis rendu */
++   charger(m,e){M.set(m);E.set(e);},etat:()=>E,
++   memoireOctets:()=>0,copieOctets:()=>0,tranches:()=>tranches};
++ }
++ return {variante,noyauWasm,noyauJs,refus:()=>({...refusParRaison}),threeReconnu:()=>INSTANTANE_THREE.map(t=>!!t),CORPS_THREE,DEBUT,FIN};
++});
+diff --git a/vendor/lidar-rust.js b/vendor/lidar-rust.js
+new file mode 100644
+index 0000000..625c1bd
+--- /dev/null
++++ b/vendor/lidar-rust.js
+@@ -0,0 +1,349 @@
++/* FICHIER FABRIQUÉ par tools/rust-lidar-paquet.cjs : ne pas éditer à la main. */
++/* Banane 2.4.2: loaded Potree geometry only. No requests, picking or scene writes. */
++(function(root,factory) {
++  const api=factory(typeof module==="object"&&module.exports?require("./capture-core.js"):root.BananeCaptureCore);
++  if(typeof module==="object"&&module.exports) module.exports=api; else root.BananeLidarRust=api;
++})(typeof globalThis!=="undefined"?globalThis:this,function(C) {
++  "use strict";
++  const SIDES=["left","right"],finite=Number.isFinite;
++  const fail=s=>{throw new Error(s);};
++  const list=x=>Array.isArray(x)?x:x instanceof Set?[...x]:null;
++  const safeNumber=x=>finite(x)?x:null;
++  const name=(e,x)=>Object.entries(e||{}).find(([,v])=>v===x)?.[0]||null;
++  function visible(o) {
++    const seen=new Set();
++    for(let p=o;p;p=p.parent) {
++      if(p.visible===false||seen.has(p))return false;
++      seen.add(p);
++    }
++    return true;
++  }
++  function inventory(v) {
++    const clouds=[],nodes=[],seen=new Set(),issues=[];
++    for(const [ci,pc] of (v.scene.pointclouds||[]).entries()) {
++      const entries=list(pc.visibleNodes),ciName=`cloud-${ci}`;
++      const info={id:ciName,visible:visible(pc),visibleNodesAvailable:entries!==null,
++        visibleNodeCount:entries?.length??null,acceptedNodes:0,unsupportedNodes:[],source:null};
++      clouds.push(info);
++      if(!info.visible)continue;
++      let candidates;
++      if(entries!==null) {candidates=entries;info.source="pointcloud.visibleNodes";}
++      else {
++        candidates=[];const todo=[pc],walked=new Set();
++        while(todo.length) {
++          const o=todo.pop();if(walked.has(o))continue;walked.add(o);
++          if(walked.size>100000)fail("Arbre de nuage trop volumineux.");
++          if(o.isPoints||o.type==="Points")candidates.push(o);
++          if(visible(o))todo.push(...(o.children||[]));
++        }
++        info.source="visible Points descendants (visibleNodes absent)";
++        issues.push("Liste visibleNodes absente : les descendants Points visibles sont utilisés, sans preuve de leur sélection par le rendu Potree.");
++      }
++      for(const [ni,n] of candidates.entries()) {
++        const obj=n?.sceneNode||n,geometry=obj?.geometry;
++        const nd={index:ni,hasSceneNode:!!n?.sceneNode,hasPosition:!!geometry?.attributes?.position,
++          hasGeometryNodePosition:!!n?.geometryNode?.geometry?.attributes?.position,hasMatrixWorld:!!obj?.matrixWorld};
++        if(!obj||!visible(obj))continue;
++        // Geometry-node data alone have no proven rendered transform. Do not guess offsets.
++        if(!nd.hasPosition||!nd.hasMatrixWorld) {info.unsupportedNodes.push(nd);continue;}
++        if(seen.has(obj))continue;seen.add(obj);
++        try {
++          const a=C.attribute(geometry.attributes.position);
++          if(a.itemSize<3)fail("Position avec moins de trois composantes.");
++          const world=C.affine(obj.matrixWorld);C.inverse(world);
++          nodes.push({id:`${ciName}-node-${ni}`,cloudIndex:ci,obj,geometry,position:geometry.attributes.position,
++            attribute:a,world,source:n?.sceneNode?"visibleNodes[].sceneNode.geometry":"Points.geometry",
++            pc,geometryNode:n?.geometryNode||null,drawRange:geometry.drawRange||{start:0,count:Infinity}});
++          info.acceptedNodes++;
++        } catch(e) {info.unsupportedNodes.push({...nd,reason:e.message});}
++      }
++    }
++    return {clouds,nodes,issues};
++  }
++  function clipSnapshot(pc,origin,enums={}) {
++    const mat=pc.material||{},issues=[];
++    const task=name(enums.ClipTask,mat.clipTask),method=name(enums.ClipMethod,mat.clipMethod);
++    const boxes=[];
++    for(const b of mat.clipBoxes||[]) {
++      try {
++        // Potree clipBoxes[].inverse maps WORLD -> unit box [-.5,.5]^3.
++        boxes.push(C.multiply(C.affine(b.inverse),C.translation(origin)));
++      } catch(e) {issues.push("Matrice de boîte de découpe non reconnue.");}
++    }
++    const polygonCount=mat.clipPolygons?.length||0;
++    if(polygonCount)issues.push("Découpe polygonale non reproduite.");
++    if(mat.clipMode!==undefined&&!task)issues.push("Ancien clipMode non reproduit.");
++    const canClassify=boxes.length===(mat.clipBoxes?.length||0)&&!polygonCount&&
++      ["NONE","HIGHLIGHT","SHOW_INSIDE","SHOW_OUTSIDE"].includes(task)&&
++      (!boxes.length||["INSIDE_ANY","INSIDE_ALL"].includes(method));
++    if(!canClassify)issues.push("Visibilité exacte des points après shader non établie.");
++    return {task,method,rawTask:safeNumber(mat.clipTask),rawMethod:safeNumber(mat.clipMethod),
++      rawClipMode:safeNumber(mat.clipMode),boxesSceneRelativeToUnit:boxes,polygonCount,
++      classificationAvailable:canClassify,issues,
++      filtersReplayed:false,note:"Les points de la fenêtre sont conservés, y compris ceux hors découpe. Seule la visibilité par boîtes est annotée si les enums sont connus. Classification, filtres de retours, GPS, masquage et occlusion ne sont pas reproduits."};
++  }
++  function boxVisible(clip,p) {
++    if(!clip.classificationAvailable)return null;
++    if(!clip.boxesSceneRelativeToUnit.length||["NONE","HIGHLIGHT"].includes(clip.task))return true;
++    const values=clip.boxesSceneRelativeToUnit.map(m=>C.point(m,p).every(x=>x>=-.5&&x<=.5));
++    const inside=clip.method==="INSIDE_ALL"?values.every(Boolean):values.some(Boolean);
++    return clip.task==="SHOW_INSIDE"?inside:!inside;
++  }
++  function cameraSnapshot(v,origin) {
++    const cam=v.scene.getActiveCamera?.();if(!cam)return null;
++    const rect=v.renderer?.domElement?.getBoundingClientRect?.();
++    const world=C.rebase(C.worldMatrix(cam),origin);
++    return {type:cam.type||"Camera",cameraToSceneRelative:world,
++      sceneRelativeToCamera:C.inverse(world),projection:C.matrix(cam.projectionMatrix),
++      viewport:rect?{left:rect.left,top:rect.top,width:rect.width,height:rect.height}:null};
++  }
++  function profileLines(r,origin) {
++    const out=[],todo=[r.profile],seen=new Set();
++    while(todo.length) {
++      const n=todo.pop();if(seen.has(n))continue;seen.add(n);
++      if(seen.size>1000)fail("Profil 3D trop volumineux.");
++      if(["Line","LineLoop","LineSegments"].includes(n.type)&&n.geometry?.attributes?.position) {
++        const a=C.attribute(n.geometry.attributes.position);
++        if(a.count>20000)fail("Contour de profil trop volumineux.");
++        const transform=C.rebase(C.worldMatrix(n),origin),vertices=[];
++        for(let i=0;i<a.count;i++)vertices.push(C.point(transform,a.point(i)));
++        out.push({type:n.type,verticesSceneRelative:vertices});
++      }
++      todo.push(...(n.children||[]));
++    }
++    return out;
++  }
++  function reportedBox(b) {
++    if(!b)return null;
++    try{return {min:C.vector(b.min),max:C.vector(b.max),frame:"as-reported-unverified"};}
++    catch{return {unreadable:true,frame:"as-reported-unverified"};}
++  }
++  const inRoi=(p,bounds)=>p.every((x,i)=>Math.abs(x)<=bounds[i]);
++  function inspectNode(n,origin,frames,bounds,nodeIndex) {
++    const model=C.rebase(n.world,origin),transforms=frames.map(f=>C.multiply(f.sceneRelativeToProfileLocal,model));
++    const indexAttr=n.geometry.index?C.attribute(n.geometry.index):null;
++    const drawStart=Math.max(0,Math.floor(n.drawRange.start||0)),total=indexAttr?indexAttr.count:n.attribute.count;
++    const drawEnd=Math.min(total,finite(n.drawRange.count)?drawStart+n.drawRange.count:total);
++    const report={id:n.id,cloudIndex:n.cloudIndex,source:n.source,nodeToSceneRelative:model,
++      matrixSource:"sceneNode.matrixWorld as observed; renderer use not independently verified",
++      positionAttribute:n.attribute.metadata,drawRange:{start:drawStart,end:drawEnd},indexed:!!indexAttr,
++      inspection:"not-scanned",inspected:0,retained:0,nonFinitePositions:0,
++      reportedGeometryBoundingBox:reportedBox(n.geometry.boundingBox),
++      reportedPotreeGeometryNodeBoundingBox:reportedBox(n.geometryNode?.boundingBox),
++      boundingBoxesUsedForSelection:false,
++      hierarchyNodeToSceneRelative:null,hierarchyMatrixMaxDifference:null,hierarchyMatrixIssue:null,
++      probes:[],probeScope:"Up to 17 uniformly spaced vertices in drawRange, for diagnostics only; ROI collection still scans every vertex until an explicit budget limit.",
++      nearestToRailOrigin:{left:null,right:null}};
++    let hierarchyTransforms=null;
++    try {
++      report.hierarchyNodeToSceneRelative=C.rebase(C.worldMatrix(n.obj),origin);
++      report.hierarchyMatrixMaxDifference=Math.max(...model.map((x,i)=>Math.abs(x-report.hierarchyNodeToSceneRelative[i])));
++      hierarchyTransforms=frames.map(f=>C.multiply(f.sceneRelativeToProfileLocal,report.hierarchyNodeToSceneRelative));
++    }catch(e){report.hierarchyMatrixIssue=e.message;}
++    const count=Math.max(0,drawEnd-drawStart),ids=new Set();
++    for(let j=0;j<Math.min(17,count);j++)ids.add(drawStart+Math.floor(j*(count-1)/Math.max(1,Math.min(17,count)-1)));
++    for(const di of ids) {
++      const i=indexAttr?indexAttr.get(di,0):di;
++      if(!Number.isInteger(i)||i<0||i>=n.attribute.count)fail("Indice de point invalide.");
++      const raw=n.attribute.point(i);
++      if(!raw.every(finite)){report.probes.push({sourceIndex:i,finite:false});continue;}
++      const local=transforms.map(m=>C.point(m,raw)),box=report.reportedGeometryBoundingBox;
++      const probe={sourceIndex:i,finite:true,pointNodeLocal:raw,pointSceneRelative:C.point(model,raw),
++        pointProfileLocal:{left:local[0],right:local[1]},roiHit:{left:inRoi(local[0],bounds),right:inRoi(local[1],bounds)},
++        insideReportedGeometryBox:box?.min?raw.every((x,k)=>x>=box.min[k]&&x<=box.max[k]):null};
++      if(hierarchyTransforms) {
++        const h=hierarchyTransforms.map(m=>C.point(m,raw));
++        probe.hierarchyPointProfileLocal={left:h[0],right:h[1]};
++        probe.hierarchyRoiHit={left:inRoi(h[0],bounds),right:inRoi(h[1],bounds)};
++      }
++      report.probes.push(probe);
++    }
++    return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
++  }
++  async function capture(options) {
++    const {viewer:v,rails,origin,guard,meta}=options;
++    const bounds=options.bounds||[.5,.4,.3];
++    const maxPoints=options.maxPoints??350000,maxInspected=options.maxInspected??8000000;
++    const maxMillis=options.maxMillis??15000,yieldEvery=options.yieldEvery??4096;
++    const pause=options.pause||(()=>new Promise(r=>setTimeout(r,0)));
++    guard();
++    const started=Date.now(),inv=inventory(v),warnings=[...inv.issues];
++    const frames=rails.map(r=>C.serialRail(r,origin));
++    const out={format:"banane-lidar-capture-v1",version:"2.4.2",...meta,
++      capturedAt:new Date().toISOString(),status:"complete-loaded-roi",units:"metres (ESV convention, not independently calibrated)",
++      coordinateSystem:{name:"scene-relative",origin:"Position du rail gauche au premier relevé de cette visite du cut ; translation absolue omise.",
++        axes:"Axes de la scène conservés. Axes des profils exportés sans supposer leur sens métier.",matrixLayout:"column-major; column vectors",
++        equation:"pSceneRelative = nodeToSceneRelative * pNode ; pRailLocal = sceneRelativeToProfileLocal * pSceneRelative"},
++      scope:{kind:"loaded-visible-nodes-and-two-profile-rois",halfExtentsProfileLocal:bounds,
++        completeCloud:false,subsampling:false,boundingBoxPreFilter:false,maximumPoints:maxPoints,maximumInspected:maxInspected,
++        note:"Union des deux fenêtres autour des profils, testées sur les positions lues. Les boîtes englobantes ne sont jamais utilisées pour écarter un nœud. Le LOD chargé dépend de la vue ; aucun nœud supplémentaire n'est demandé au serveur."},
++      rails:Object.fromEntries(SIDES.map((s,i)=>[s,{...frames[i],profileContours:profileLines(rails[i],origin)}])),
++      camera:null,clouds:inv.clouds.map((c,i)=>({...c,clipping:clipSnapshot(v.scene.pointclouds[i],origin,options.enums)})),
++      nodes:[],pointsSceneRelative:[],pointSources:[],visibleByClipBoxes:[],attributes:{},
++      quality:{roundTripMaxSceneUnits:0,worldRoundTripMaxSceneUnits:0,matrixIdentityMaxError:0,nonFinitePositions:0,inspected:0,
++        retained:0,perRail:{left:0,right:0},skippedBoundingBoxes:0,probePointsRead:0,pointRoundTripsChecked:0,
++        hasUnsupportedNodes:inv.clouds.some(c=>c.unsupportedNodes.length>0),
++        visualCorrespondence:"not-verified",accuracyAssessment:"not-performed"},warnings};
++    try{out.camera=cameraSnapshot(v,origin);}catch(e){warnings.push("Caméra non exportable : "+e.message);}
++    for(const rail of rails)for(const m of [rail.railMatrix,rail.profileMatrix]) {
++      const im=C.inverse(m);
++      for(const p of [[0,0,0],[.17,-.12,.09]])
++        out.quality.worldRoundTripMaxSceneUnits=Math.max(out.quality.worldRoundTripMaxSceneUnits,
++          C.distance(C.point(im,C.point(m,p)),p));
++    }
++    if(out.quality.hasUnsupportedNodes)warnings.push("Certains nœuds visibles sont non reconnus ; voir clouds[].unsupportedNodes.");
++    const extras=["intensity","classification","pointSourceID","pointSourceId","returnNumber","numberOfReturns"];
++    // Explicit allowlist only; no URLs, object userData, credentials or source code.
++    for(const key of extras)out.attributes[key]=[];
++    let finishedAll=true;
++    const integrityChecks=[];
++    const prepared=[];
++    // Keep every supported node's metadata, even when its ROI is empty or the
++    // later full scan reaches a limit. V2.4 discarded the decisive evidence.
++    for(const [i,n] of inv.nodes.entries()) {
++      guard();
++      const entry=inspectNode(n,origin,frames,bounds,i);prepared.push(entry);out.nodes.push(entry.report);
++      integrityChecks.push(()=>{
++        if(n.obj.geometry!==n.geometry||n.geometry.attributes.position!==n.position||!n.attribute.unchanged()||
++          n.geometry.index!==entry.indexSource||(entry.indexAttr&&!entry.indexAttr.unchanged())||
++          C.matrix(n.obj.matrixWorld).some((x,j)=>x!==n.world[j]))
++          fail("Le nuage a changé pendant le relevé des échantillons de diagnostic. Recommence sur une vue stable.");
++      });
++      out.quality.probePointsRead+=entry.report.probes.length;
++      if((i+1)%8===0){await pause();guard();}
++    }
++    outer:for(const entry of prepared) {
++      guard();
++      const {n,model,transforms,indexAttr,drawStart,drawEnd,nodeIndex,report}=entry;
++      const attrs={};
++      for(const key of extras)if(n.geometry.attributes[key]) {
++        try{attrs[key]=C.attribute(n.geometry.attributes[key]);}catch{warnings.push(`Attribut ${key} non lisible sur ${n.id}.`);}
++      }
++      report.inspection="scanning";
++      const invModel=C.inverse(model),identity=C.multiply(model,invModel);
++      out.quality.matrixIdentityMaxError=Math.max(out.quality.matrixIdentityMaxError,
++        ...identity.map((x,i)=>Math.abs(x-C.identity()[i])));
++      function unchanged() {
++        if(n.obj.geometry!==n.geometry||n.geometry.attributes.position!==n.position||
++          !n.attribute.unchanged()||Object.values(attrs).some(a=>!a.unchanged())||
++          (indexAttr&&!indexAttr.unchanged())||C.matrix(n.obj.matrixWorld).some((x,i)=>x!==n.world[i]))
++          fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
++      }
++      integrityChecks.push(unchanged);
++      const __N=globalThis.ArianeLidarNoyau,__L=__N&&__N.eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,report.probes);
++      if(__L){
++        __N.debutNoeud(model,invModel,transforms,frames,bounds);
++        let di=drawStart;
++        while(di<drawEnd){
++          if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis){
++            report.inspection="partial-budget";finishedAll=false;break outer;
++          }
++          if((di-drawStart)%yieldEvery===0){guard();unchanged();await pause();guard();unchanged();}
++          const fin=Math.min(drawEnd,di+yieldEvery-((di-drawStart)%yieldEvery),di+Math.ceil(maxInspected-out.quality.inspected),di+__L.capacite);
++          const t=__N.tranche(__L,di,fin-di,maxPoints-out.pointsSceneRelative.length,out.quality.roundTripMaxSceneUnits);
++          out.quality.inspected+=t.traites;report.inspected+=t.traites;
++          out.quality.nonFinitePositions+=t.nonFinis;report.nonFinitePositions+=t.nonFinis;
++          out.quality.roundTripMaxSceneUnits=t.retour;out.quality.perRail.left+=t.gauche;out.quality.perRail.right+=t.droite;
++          const __ret=t.retenus,__sc=t.scene,__cl=out.clouds[n.cloudIndex].clipping;
++          for(let k=0;k<t.n;k++){
++            const i=__ret[k],p=[__sc[3*k],__sc[3*k+1],__sc[3*k+2]];
++            out.pointsSceneRelative.push(p);out.pointSources.push([nodeIndex,i]);
++            out.quality.pointRoundTripsChecked++;
++            out.visibleByClipBoxes.push(boxVisible(__cl,p));
++            for(const key of extras) {
++              const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
++              out.attributes[key].push(finite(value)?value:null);
++            }
++            out.nodes[nodeIndex].retained++;
++          }
++          __N.proches(report.nearestToRailOrigin,SIDES);
++          if(t.erreur)fail(t.erreur);
++          di+=t.traites;
++        }
++      } else
++      for(let di=drawStart;di<drawEnd;di++) {
++        if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis) {
++          report.inspection="partial-budget";finishedAll=false;break outer;
++        }
++        if((di-drawStart)%yieldEvery===0) {guard();unchanged();await pause();guard();unchanged();}
++        const i=indexAttr?indexAttr.get(di,0):di;
++        if(!Number.isInteger(i)||i<0||i>=n.attribute.count)fail("Indice de point invalide.");
++        out.quality.inspected++;report.inspected++;
++        const raw=n.attribute.point(i);
++        if(!raw.every(finite)){out.quality.nonFinitePositions++;report.nonFinitePositions++;continue;}
++        const local=transforms.map(m=>C.point(m,raw)),inside=local.map(p=>inRoi(p,bounds));
++        for(let s=0;s<2;s++) {
++          const dist=Math.hypot(...local[s]),side=SIDES[s],last=report.nearestToRailOrigin[side];
++          if(!last||dist<last.distanceProfileUnits)
++            report.nearestToRailOrigin[side]={sourceIndex:i,distanceProfileUnits:dist,pointProfileLocal:local[s],pointSceneRelative:C.point(model,raw)};
++        }
++        if(!inside.some(Boolean))continue;
++        const p=C.point(model,raw);
++        const back=C.point(model,C.point(invModel,p));
++        out.quality.roundTripMaxSceneUnits=Math.max(out.quality.roundTripMaxSceneUnits,C.distance(back,p));
++        for(let s=0;s<2;s++) {
++          const round=C.point(frames[s].profileLocalToSceneRelative,C.point(frames[s].sceneRelativeToProfileLocal,p));
++          out.quality.roundTripMaxSceneUnits=Math.max(out.quality.roundTripMaxSceneUnits,C.distance(round,p));
++          if(inside[s])out.quality.perRail[SIDES[s]]++;
++        }
++        out.pointsSceneRelative.push(p);out.pointSources.push([nodeIndex,i]);
++        out.quality.pointRoundTripsChecked++;
++        out.visibleByClipBoxes.push(boxVisible(out.clouds[n.cloudIndex].clipping,p));
++        for(const key of extras) {
++          const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
++          out.attributes[key].push(finite(value)?value:null);
++        }
++        out.nodes[nodeIndex].retained++;
++      }
++      unchanged();
++      report.inspection="complete";
++    }
++    guard();
++    integrityChecks.forEach(check=>check());
++    // Reject a snapshot that straddles LOD replacement/loading; do not mix epochs.
++    const last=inventory(v);
++    const originalNodes=new Map(inv.nodes.map(n=>[n.obj,n]));
++    if(last.nodes.length!==inv.nodes.length||last.nodes.some(n=>{
++      const old=originalNodes.get(n.obj);return !old||n.position!==old.position||n.world.some((x,j)=>x!==old.world[j]);
++    }))
++      fail("Les nœuds LiDAR visibles ont changé pendant l'export. Attends la fin du chargement puis réessaie.");
++    if(out.clouds.some((cloud,i)=>JSON.stringify(cloud.clipping)!==JSON.stringify(clipSnapshot(v.scene.pointclouds[i],origin,options.enums))))
++      fail("La découpe du nuage a changé pendant l'export. Recommence lorsque la vue est stable.");
++    if(out.camera&&JSON.stringify(out.camera)!==JSON.stringify(cameraSnapshot(v,origin)))
++      fail("La caméra a changé pendant l'export. Garde la vue immobile et réessaie.");
++    out.quality.retained=out.pointsSceneRelative.length;
++    out.quality.durationMs=Date.now()-started;
++    for(const key of extras)if(!out.attributes[key].some(x=>x!==null))delete out.attributes[key];
++    if(!finishedAll) {out.status="partial-limit";warnings.push("Limite de temps ou de volume atteinte : export partiel, sans sous-échantillonnage caché.");}
++    out.scope.scanComplete=finishedAll&&out.nodes.length>0&&out.nodes.every(n=>n.inspection==="complete");
++    out.scope.completeLoadedRoi=out.scope.scanComplete&&!out.quality.hasUnsupportedNodes&&!out.quality.nonFinitePositions&&
++      out.quality.perRail.left>0&&out.quality.perRail.right>0;
++    if(out.quality.hasUnsupportedNodes)out.status="partial-unsupported";
++    if(out.quality.nonFinitePositions)out.status="partial-invalid-points";
++    if(out.status==="complete-loaded-roi"&&out.quality.retained&&(!out.quality.perRail.left||!out.quality.perRail.right))out.status="one-rail-empty";
++    if(!out.quality.retained){out.status="no-points";out.quality.roundTripMaxSceneUnits=null;}
++    if(!out.nodes.length)out.quality.matrixIdentityMaxError=null;
++    if(out.quality.roundTripMaxSceneUnits>1e-6||out.quality.worldRoundTripMaxSceneUnits>1e-6||out.quality.matrixIdentityMaxError>1e-6) {
++      out.status="transform-check-failed";warnings.push("Le contrôle numérique des matrices dépasse 1e-6 unité scène. Ce seuil est numérique, pas une tolérance métier.");
++    }
++    if(!out.quality.perRail.left||!out.quality.perRail.right)warnings.push("Au moins une fenêtre de rail est vide.");
++    if(!out.quality.retained&&out.quality.inspected)
++      warnings.push("Des points ont été lus mais aucun n'entre dans les fenêtres avec sceneNode.matrixWorld. Les échantillons, boîtes et matrices alternatives sont conservés pour diagnostiquer le repère ; aucune transformation alternative n'est appliquée automatiquement.");
++    if(out.nodes.some(n=>n.hierarchyMatrixMaxDifference>1e-6))
++      warnings.push("Au moins une matrice sceneNode.matrixWorld diffère de la matrice reconstruite depuis sa hiérarchie. Les deux sont exportées pour diagnostic, sans substitution automatique.");
++    warnings.push("La cohérence des matrices ne prouve ni la justesse du pointage ni la concordance avec le nuage affiché.");
++    return out;
++  }
++  function diagnostic(v) {
++    if(!v?.scene)return {viewerAvailable:!!v,sceneAvailable:false};
++    const i=inventory(v);
++    return {viewerAvailable:true,sceneAvailable:true,clouds:i.clouds,issues:i.issues,
++      rootChildTypes:(v.scene.scene?.children||[]).map(o=>o.type||"unknown"),
++      nodes:i.nodes.map(n=>({id:n.id,source:n.source,position:n.attribute.metadata})),
++      nativeControls:["O2N3DCutLRClick","O2N3DCutRRClick","O2N3DCutValidate3DRail"].map(id=>({id,
++        present:!!globalThis.document?.getElementById(id),disabled:globalThis.document?.getElementById(id)?.disabled??null}))};
++  }
++  let __fileCaptures=Promise.resolve();
++  const __captureEnFile=options=>{const p=__fileCaptures.then(()=>capture(options));__fileCaptures=p.then(()=>{},()=>{});return p;};
++  return {capture:__captureEnFile,inventory,diagnostic,cameraSnapshot,boxVisible,clipSnapshot};
++});

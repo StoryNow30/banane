@@ -14,8 +14,9 @@ async function main(){
  const N=Number(arg('--captures')||20),PAS=Number(arg('--pas')||200),R=Number(arg('--rep')||15),sortie=arg('--json');
  const {chromium}=require('playwright'),nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const p=await nav.newPage();
+ await p.addScriptTag({content:'window.threeSynthetique='+S.threeSynthetique.toString()+';window.THREE=threeSynthetique();'});
  for(const f of [K.SOURCES.core,K.SOURCES.lidar,'src/core.js','src/merge-clouds.js','src/lod-signature.js'])await p.addScriptTag({content:K.lire(f)});
- await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';'});
+ await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';window.construireScene='+S.construireScene.toString()+';'});
  const mes=[];let k=0;
  for(const d of S.descriptions()){if(k++%PAS)continue;if(d.vues.length!==2)continue;
   const r=await p.evaluate(async ({d,R})=>{

@@ -9,7 +9,7 @@ const fs=require('node:fs'),path=require('node:path');
 const Coeur=require('../ariane-rs/coquille/coeur.js'),{construire}=require('./ch064-construire.cjs');
 function tirages(n){let a=7>>>0;const r=()=>{a=a+0x6D2B79F5>>>0;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
  const f=new Float64Array(1),u=new Uint32Array(f.buffer),out=[0,-0,NaN,Infinity,-Infinity,5e-324,Number.MAX_VALUE,Number.EPSILON,1e21,1e-7,1e-6,123e-20,2**53,2**53+2];
- for(let i=0;out.length<n;i++){const k=i%8;
+ for(let i=0;out.length<n;i++){const k=i%10;
   if(k===0){u[0]=r()*2**32;u[1]=r()*2**32;if(Number.isFinite(f[0]))out.push(f[0]);}
   else if(k===1)out.push(Math.round((r()-.5)*2e5*10)/10);
   else if(k===2)out.push(Math.round((r()-.5)*2e3*1e6)/1e6);
@@ -17,7 +17,10 @@ function tirages(n){let a=7>>>0;const r=()=>{a=a+0x6D2B79F5>>>0;let t=a;t=Math.i
   else if(k===4)out.push((Math.floor(r()*2**53)+0.5)/(2**Math.floor(r()*4)));
   else if(k===5)out.push(r()*10**(Math.floor(r()*40)-20));
   else if(k===6)out.push(Math.round((r()-.5)*1e18*10)/10);
-  else out.push((r()-.5)*1e-3*10**Math.floor(r()*10));}
+  else if(k===7)out.push((r()-.5)*1e-3*10**Math.floor(r()*10));
+  // chemins rapides de ariane-js (demande de CH-069) : entiers de toute grandeur, autour de 2^53 ; dyadiques m/2^q, q de 1 à 30
+  else if(k===8)out.push((i%20<10?1:-1)*Math.floor(r()*2**(1+Math.floor(r()*60))));
+  else out.push((2*Math.floor(r()*2**(1+Math.floor(r()*52)))+1)/2**(1+Math.floor(r()*30)));}
  return out;}
 if(require.main===module){const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null,n=Number(arg('--n')||10000000);
  const w=construire({silencieux:true}),octets=fs.readFileSync(w),xs=tirages(n);

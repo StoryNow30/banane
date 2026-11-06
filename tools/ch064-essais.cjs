@@ -29,6 +29,8 @@ etape('sonde numérique (Node, Chromium)',()=>{const o=JSON.parse(lancer('node',
  if(mauvais.length)throw Error('portage divergent : '+mauvais.join(', '));return {node:o.moteur,chromium:o.chromium.moteur};});
 etape('essais de la coquille (audit, PR n° 25 ; plafond de 256 Mio)',()=>{const o=lancer('node',['--test','tools/ch064-essais-coquille.cjs']);const m=o.match(/# pass (\d+)/);return (m?m[1]:'?')+' essais';});
 /* trappe du module LiDAR autonome (fusion de CH-064-L) : reprise et appel suivant identique, vues réelles */
+/* constats de l'audit externe sur ariane-lidar (PR n° 25) : captures simultanées, accesseurs, débordement 32 bits */
+etape('audit LiDAR (P1, P2, P3)',()=>{const o=lancer('node',['--max-old-space-size=8000','--test','tools/ch064-essais-lidar-audit.cjs']);const m=o.match(/# pass (\d+)/),f=o.match(/# fail (\d+)/);if(f&&f[1]!=='0')throw Error(o.slice(-1500));return (m?m[1]:'?')+' essais';});
 if(fs.existsSync(path.join(RACINE,'tools/ch064-essais-lidar-trappe.cjs')))etape('trappe LiDAR puis appel identique',()=>{const o=lancer('node',['--max-old-space-size=8000','--test','tools/ch064-essais-lidar-trappe.cjs']);const m=o.match(/# pass (\d+)/),f=o.match(/# fail (\d+)/);if(f&&f[1]!=='0')throw Error(o.slice(-1500));return (m?m[1]:'?')+' essais';});
 etape('banc témoin et contrôle négatif',()=>{const P=require('./ch064-parite.cjs'),C=require('../ariane-rs/coquille/coeur.js'),w=require('./ch064-construire.cjs').construire({silencieux:true});
  const coeur=C.creer(fs.readFileSync(w)),t=require('../ariane-rs/parite/temoin.cjs');

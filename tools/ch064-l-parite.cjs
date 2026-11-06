@@ -7,9 +7,11 @@
  * Comparaison stricte (tools/ch064-comparer.cjs : Object.is sur chaque nombre, ordre des clés, exceptions) de la sortie
  * entière de capture(), horodatages retirés. Code de sortie 1 au premier écart. */
 const fs=require('node:fs'),path=require('node:path');
-const K=require('./ch064-l-commun.cjs'),S=require('./ch064-l-scene.cjs'),{comparer}=require('./ch064-comparer.cjs');
+const K=require('./ch064-l-commun.cjs'),S=require('./ch064-l-scene.cjs'),{threeSynthetique}=S,{comparer}=require('./ch064-comparer.cjs');
 
 /* Cas synthétiques : chaque cas rend {scene, options} ; exécuté par les trois variantes. Texte autonome. */
+/* Prototypes des attributs synthétiques : ceux du three.js des scènes (accesseurs r124 authentifiés par la coquille). Texte autonome. */
+function protosSynthetiques(){const T=threeSynthetique();return {plat:T.BufferAttribute.prototype,entrelace:T.InterleavedBufferAttribute.prototype};}
 function casSynthetiques(){
  const id=()=>[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],tr=(x,y,z)=>{const m=id();m[12]=x;m[13]=y;m[14]=z;return m;};
  let s=99;const al=()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296-0.5);
@@ -21,9 +23,10 @@ function casSynthetiques(){
    for(let k=3;k<stride;k++)a[b+k]=al();}
   for(const i of gros)a[i*stride+offset]=1e9;
   for(let k=0;k<nan;k++)a[(37*k+11)%n*stride+offset+(k%3)]=k%2?NaN:Infinity;
-  const BA=inter?{array:undefined,data:{array:a,stride,version:0},isInterleavedBufferAttribute:true,offset,itemSize:3,count:n,normalized:norm,version:undefined,
-   getX(i){return a[i*stride+offset];},getY(i){return a[i*stride+offset+1];},getZ(i){return a[i*stride+offset+2];}}
-   :{array:a,itemSize:3,count:a.length/3|0,version:0,normalized:norm,getX(i){return a[i*3];},getY(i){return a[i*3+1];},getZ(i){return a[i*3+2];}};
+  // accesseurs sur deux prototypes partagés et déclarés connus (audit de la PR n° 25, P2) ; mêmes lectures qu'avant
+  const PR=protosSynthetiques();
+  const BA=inter?Object.assign(Object.create(PR.entrelace),{array:undefined,data:{array:a,stride,version:0},isInterleavedBufferAttribute:true,offset,itemSize:3,count:n,normalized:norm,version:undefined})
+   :Object.assign(Object.create(PR.plat),{array:a,itemSize:3,count:a.length/3|0,version:0,normalized:norm});
   if(!inter){BA.count=n;}
   const m=model.slice();if(rot){m[0]=Math.cos(.3);m[1]=Math.sin(.3);m[4]=-Math.sin(.3);m[5]=Math.cos(.3);}
   if(w15!==null)m[15]=w15;if(echelle!==null){m[0]=echelle;m[5]=echelle;m[10]=echelle;}
@@ -86,9 +89,11 @@ async function noeudChromium(){
  async function ouvrir(){
   const nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
   const p=await nav.newPage();
+  await p.addScriptTag({content:'window.threeSynthetique='+S.threeSynthetique.toString()+';window.THREE=threeSynthetique();'});
   for(const f of [K.SOURCES.core,K.SOURCES.lidar,K.SOURCES.coquille])await p.addScriptTag({content:K.lire(f)});
   await p.addScriptTag({content:'(function(){const module={};'+K.lire(K.SOURCES.comparer).replace("'use strict';",'')+';window.Ch064Comparer=module.exports;})();'});
-  await p.addScriptTag({content:'window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
+  await p.addScriptTag({content:'window.protosSynthetiques='+protosSynthetiques.toString()+';'});
+  await p.addScriptTag({content:'window.classeAttribut='+S.classeAttribut.toString()+';window.construireScene='+S.construireScene.toString()+';window.executerCapture='+K.executerCapture.toString()+';window.net='+K.net.toString()+';window.casSynthetiques='+casSynthetiques.toString()+';'});
   const ua=await p.evaluate(async ({texte,b64})=>{
    (0,eval)(ArianeLidarWasm.variante(texte).replace('root.BananeLidar=api','root.LidarVariante=api'));
    const o=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));window.NW=ArianeLidarWasm.noyauWasm(o);window.NJ=ArianeLidarWasm.noyauJs();
@@ -143,4 +148,4 @@ async function main(){
  process.exit(bilan.identique?0:1);
 }
 if(require.main===module)main().catch(e=>{console.error(e);process.exit(2);});
-module.exports={casSynthetiques};
+module.exports={casSynthetiques,protosSynthetiques};
