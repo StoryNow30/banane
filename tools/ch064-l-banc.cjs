@@ -7,7 +7,8 @@
  *   origine   : vendor/lidar.js tel quel ;
  *   js-elague : la même variante, boucle par point remplacée par le noyau JS sans allocation (coquille, noyauJs) ;
  *   wasm      : la même variante, noyau Rust/WASM (copie des tranches dans l'arène comprise).
- * Pauses : scheduler.yield() (chemin « rapide » du lot, comme CH-061). Médiane par vue, puis médiane et p90 des vues ;
+ * Pauses : scheduler.yield() (chemin « rapide » du lot, comme CH-061) ; --pause timeout : setTimeout(0), pause par défaut de
+ * capture() (lecture « référence »). Médiane par vue, puis médiane et p90 des vues ;
  * aussi en ms pour 505 000 points (volume de vue de CH-061).
  * Mémoire : tas JS (performance.memory, précis) au plus haut pendant la lecture (relevé à chaque pause) et retenu par la
  * sortie après gc ; mémoire linéaire du WASM avant, au plus haut et après ; coût de compilation et d'instanciation. */
@@ -15,7 +16,7 @@ const fs=require('node:fs');
 const K=require('./ch064-l-commun.cjs'),S=require('./ch064-l-scene.cjs');
 async function main(){
  const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null;
- const N=Number(arg('--captures')||30),PAS=Number(arg('--pas')||150),R=Number(arg('--rep')||15),sortie=arg('--json');
+ const N=Number(arg('--captures')||30),PAS=Number(arg('--pas')||150),R=Number(arg('--rep')||15),sortie=arg('--json'),PAUSE=arg('--pause')||'yield';
  const b64=fs.readFileSync(K.construireWasm()).toString('base64');
  const {chromium}=require('playwright'),nav=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--expose-gc']});
  const p=await nav.newPage();
@@ -34,9 +35,10 @@ async function main(){
  const vues=[];let k=0;
  for(const d of S.descriptions()){if(k++%PAS)continue;
   for(let v=0;v<d.vues.length;v++){
-   const r=await p.evaluate(async ({d,v,R})=>{
+   const r=await p.evaluate(async ({d,v,R,PAUSE})=>{
     const sc=construireScene(d,v,7+v);let pic=0,pausesMs=0,pauses=0,noyauMs=0;
-    const pause=async()=>{const u=performance.memory.usedJSHeapSize;if(u>pic)pic=u;const t=performance.now();await scheduler.yield();pausesMs+=performance.now()-t;pauses++;};
+    const attendre=PAUSE==='timeout'?()=>new Promise(r=>setTimeout(r,0)):()=>scheduler.yield();
+    const pause=async()=>{const u=performance.memory.usedJSHeapSize;if(u>pic)pic=u;const t=performance.now();await attendre();pausesMs+=performance.now()-t;pauses++;};
     // Noyaux chronométrés (tranche entière : copie, appel, vues) ; deux lectures d'horloge par tranche de 4 096 points.
     const chrono=N=>({...N,tranche(...x){const t=performance.now();const r=N.tranche(...x);noyauMs+=performance.now()-t;return r;}});
     const CW=chrono(NW),CJ=chrono(NJ);
@@ -56,14 +58,14 @@ async function main(){
      med:{origine:med(ms.origine),'js-elague':med(ms['js-elague']),wasm:med(ms.wasm)},
      noyau:{'js-elague':med(part['js-elague'].map(x=>x[0])),wasm:med(part.wasm.map(x=>x[0]))},
      pausesMs:{origine:med(part.origine.map(x=>x[1])),'js-elague':med(part['js-elague'].map(x=>x[1])),wasm:med(part.wasm.map(x=>x[1]))},pauses:part.wasm[0][2],tas,memW};
-   },{d,v,R});
+   },{d,v,R,PAUSE});
    vues.push(r);console.log(vues.length,r.points,r.noeuds,JSON.stringify(r.med));
   }
   if(vues.length>=2*N)break;
  }
  await nav.close();
  const q=(x,f)=>{const s=x.slice().sort((u,v)=>u-v);return +s[Math.min(s.length-1,Math.floor(f*(s.length-1)+1e-9))].toFixed(2);};
- const res={date:new Date().toISOString(),...init,repetitions:R,vues:vues.length,captures:N,pas:PAS,
+ const res={date:new Date().toISOString(),...init,pause:PAUSE==='timeout'?'setTimeout(0) (lecture « référence »)':'scheduler.yield() (lecture « rapide »)',repetitions:R,vues:vues.length,captures:N,pas:PAS,
   pointsParVue:{mediane:q(vues.map(v=>v.points),.5),p90:q(vues.map(v=>v.points),.9)},noeudsParVue:{mediane:q(vues.map(v=>v.noeuds),.5)},variantes:{}};
  for(const nom of ['origine','js-elague','wasm']){
   const t=vues.map(v=>v.med[nom]),n=vues.map(v=>v.med[nom]*505000/v.points),pz=vues.map(v=>v.pausesMs[nom]);
