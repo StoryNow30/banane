@@ -9,7 +9,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeFacadeDecision=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
  const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56,shadow:57,hauteur:58,fauxVert:59,lotDecision:60,
-  /* CH-068 (J4) */ appuisListe:61,gcv2L1e:62,voieRecentree:63,voieB1:64,rechercheLarge:65};
+  /* CH-068 (J4) */ appuisListe:61,gcv2L1e:62,voieRecentree:63,voieB1:64,rechercheLarge:65,/* CH-074 (J5) */ gcv2L1:66};
  const PORTEES={
   critere:['reglages','correctionPermise','juger'],
   signal:['reglage','lectureDe','creer','observer','recharge','bilan'],
@@ -25,7 +25,11 @@
   voieRecentree:['localMm','poseMm','vueNecessaire','camerasLarges','geste','traceMoteur','confiances','profondeur','predictionDe','mesures','regle','enRegle',
    'verdictPrudent','completer','recentrer','appuisDepuisDecalage','choisirDansLePool','ecartPose','juger','memoireSerie'],
   voieB1:['lignesDeTable','repereDepuisLigne','ecartementReference','railTrouve','solutionsEcartement','poseMmDe','ecartPoses','evaluer'],
-  rechercheLarge:['reglage','graines','grainesUtiles','grainesPics','decalage','relance','cellules','paires','decider','resumer']};
+  rechercheLarge:['reglage','graines','grainesUtiles','grainesPics','decalage','relance','cellules','paires','decider','resumer'],
+  /* CH-074 (J5) : restent au JS avecRupture (Map), reglerLeviers et leviersActifs (état du module), commander (fonction du moteur). */
+  gcv2L1:['decalage','variante','decalageDepuisDepart','decalagesH6','hypothesesDuCut','transfo','accords','brut','coder','soutienRail','modeleFige','probas',
+   'casDuDiffere','ecartementPaire','meilleurePaire','deciderL1','deciderL1e','positionsDe','ecartementDecal','ramenerRail','corrigerDecal','ordreRails',
+   'corrigerPoseChaine','ecartAVoie','contreChaine','voieDeListe','voieGeometrique','deciderDiffere','resumer','voieAbsolue','rechercheRecentree','pairesRecentrees']};
  const MUTANTES={signal:new Set(['observer','recharge']),appuisListe:new Set(['noterRepere'])};
  /* Mutantes qui rendent parfois leur premier argument lui-même (noterRepere) : le cœur ajoute `meme`, la façade rend alors l'objet d'origine. */
  const primitif=v=>v===null||(typeof v!=='object'&&typeof v!=='function');
@@ -40,7 +44,26 @@
  function etatDe(nom,modules){if(nom==='shadow'||nom==='rechercheLarge')return modules.shadow?etatShadow(modules.shadow,modules):null;return undefined;}
  /* decideCut reçoit le module GCV1 (`Shadow`, des fonctions) : il ne traverse pas ; seul le module chargé (modules.shadow) est accepté,
   * son état part à sa place, avec les réglages globaux que lit lot-decision.js. Tout autre Shadow (doublure d'essai) : repli sur le JS. */
+ /* CH-074 (J5) : les Float64Array de GCV2 L1 (coefficients du modèle figé, probabilités, traits codés `x.n`) ne passent pas en VBA :
+  * la façade les envoie en tableaux, sur leurs chemins connus seulement (un Float64Array ailleurs fait refuser l'entrée : repli),
+  * et les rétablit sur les chemins connus de la sortie. `*` : chaque clé d'un objet ou chaque élément d'un tableau. */
+ function remplacer(v,chemin,f,i=0){if(i===chemin.length)return f(v);if(!v||typeof v!=='object'||ArrayBuffer.isView(v))return v;const k=chemin[i];
+  if(k==='*'){let ch=false;const r=Array.isArray(v)?v.slice():{...v};for(const c of Object.keys(v)){const x=remplacer(v[c],chemin,f,i+1);if(x!==v[c]){r[c]=x;ch=true;}}return ch?r:v;}
+  if(!Object.prototype.hasOwnProperty.call(v,k))return v;const x=remplacer(v[k],chemin,f,i+1);if(x===v[k])return v;const r=Array.isArray(v)?v.slice():{...v};r[k]=x;return r;}
+ const enTab=v=>v instanceof Float64Array?Array.from(v):v,enF64=v=>Array.isArray(v)?Float64Array.from(v):v;
+ const XN=['rails','*','hyps','*','x','n'],COEF=[['m10','coef'],['m5','coef']],PROBAS=['probas','*'];
+ const L1_ENTREE={coder:[[1,'n']],probas:[...COEF.map(c=>[0,...c]),[1,'x','n']],meilleurePaire:[[0,...XN],[1,'*']],
+  deciderL1:[[0,...XN],...COEF.map(c=>[1,...c]),[3,'*']],deciderL1e:[[0,...XN],...COEF.map(c=>[1,...c]),[4,'*']],deciderDiffere:COEF.map(c=>[0,'modele',...c]),
+  resumer:[[0,'decision',...PROBAS],[0,'cas',...XN]],contreChaine:[[0,'decision',...PROBAS],[0,'cas',...XN]]};
+ const L1_SORTIE={coder:[[]],brut:[['n']],modeleFige:COEF,deciderL1:[PROBAS],deciderL1e:[PROBAS],casDuDiffere:[XN],deciderDiffere:[['decision',...PROBAS],['cas',...XN]]};
+ function envoiL1(f,a,modules){
+  if(!modules.shadow||typeof modules.gcv2L1.leviersActifs!=='function')return false;
+  const b=a.slice();for(const [i,...ch] of L1_ENTREE[f]||[])if(i<b.length)b[i]=remplacer(b[i],ch,enTab);
+  const S=typeof globalThis!=='undefined'?globalThis.BananeSettings:undefined;
+  return {f,a:b,etat:etatShadow(modules.shadow,modules),globaux:{flushPct:S?.releves?.flushPct,ombreVerticaleRefusee:S?.ombreVerticaleRefusee,fauxVertOmbre:S?.fauxVertOmbre,hauteurApprise:S?.hauteurApprise},
+   leviers:modules.gcv2L1.leviersActifs()};}
  function envoiSpecial(nom,f,a,modules){
+  if(nom==='gcv2L1')return envoiL1(f,a,modules);
   /* comparer(d0,d1) teste d0===d1 : l'identité d'un objet ne traverse pas, le même objet passé deux fois reste au JS. */
   if(nom==='appuisListe'&&f==='comparer')return a[0]!==null&&typeof a[0]==='object'&&a[0]===a[1]?false:null;
   /* CH-068 : recentrer (voie-recentree) et evaluer (voie-b1-ecart) reçoivent le module GCV1 comme decideCut, et le passent à decideCut. */
@@ -54,6 +77,7 @@
   return {f,a:[reste,...a.slice(1)],etat:etatShadow(Shadow,modules),globaux:{flushPct:S?.releves?.flushPct,ombreVerticaleRefusee:S?.ombreVerticaleRefusee,fauxVertOmbre:S?.fauxVertOmbre,hauteurApprise:S?.hauteurApprise}};}
  /* Ce que la façade fait de la réponse d'un envoi spécial : evaluer (voie-b1-ecart) rend {r, mem} ; la mémoire rendue remplace celle de l'appelant. */
  function apresSpecial(nom,f,a,v){
+  if(nom==='gcv2L1'){for(const ch of L1_SORTIE[f]||[])v=remplacer(v,ch,enF64);return v;}
   if(nom==='voieB1'&&f==='evaluer'){const m=a[0].mem;m.poses.splice(0,m.poses.length,...v.mem.poses);m.profondeurs.clear();for(const [k,x] of v.mem.profondeurs)m.profondeurs.set(k,x);return v.r;}
   return v;}
  function creer(coeur,modules){
