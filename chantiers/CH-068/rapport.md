@@ -40,9 +40,12 @@ Chromium (référence, `/opt/pw-browsers/chromium`, `--chromium`, fixtures + 10 
 | Module | Cas | Identiques |
 |---|---|---|
 | appuis-liste | 517 | 517 |
-| gcv2-l1e, voie-recentree, voie-b1-ecart, recherche-large | non mesuré | — |
+| gcv2-l1e (fixtures + 10 variantes, `CH064D_REEL=0`) | 726 | 726 |
+| voie-recentree (idem) | 2 376 | 2 376 |
+| voie-b1-ecart (idem, `evaluer` compris) | 88 | 88 |
+| recherche-large (idem) | 836 | 836 |
 
-Les quatre autres modules n'ont pas abouti dans Chromium. La série a été arrêtée au bout de 2 h, alors qu'elle était sur gcv2-l1e : chaque cas réel y transporte un instantané entier de la liste d'ESV (9 476 lignes), et le premier lancement groupé a saturé le tas du pilote Node, à 2 Go. Je n'ai donc mesuré dans Chromium que appuis-liste. Pour les quatre autres, la parité est établie en Node, sur le WASM exécuté par V8 ; la relancer dans Chromium avec `CH064D_REEL=0` reste à faire.
+Toutes les empreintes JS et Rust sont égales. Le premier essai des cas réels dans Chromium (un instantané entier de la liste d'ESV par cas) avait saturé le tas du pilote Node, à 2 Go ; la passe ci-dessus porte sur les fixtures et les variantes seulement, en moins d'une heure. Les cas réels restent mesurés en Node.
 
 Après les fusions de chantier/CH-064-D (2ea8708) et du tronc du chef (17f5142, qui contient 5e43626), contrôle sur fixtures et variantes (`CH064D_REEL=0`, 10 variantes) : appuis-liste, gcv2-l1e, voie-recentree, voie-b1-ecart, recherche-large et lotDecision, **5 610/5 610 identiques** ; essai des correctifs de J3 : 0 écart.
 
