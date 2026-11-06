@@ -80,23 +80,37 @@
   * ceux de three.js en page (globalThis.THREE.BufferAttribute et InterleavedBufferAttribute, s'ils existent), ou ceux déclarés
   * par accesseursConnus(prototype). Sinon (accesseur INCONNU), le nœud passe par la boucle d'origine : seule elle reproduit les
   * appels de l'accesseur à l'identique (mêmes indices, même ordre, entrelacés avec les autres attributs et les arrêts de
-  * budget ou d'erreur ; audit de 01846d1 et de 53c7885, PR n° 25). Refus comptés par raison (refus()). */
+  * budget ou d'erreur ; audit de 01846d1 et de 53c7885, PR n° 25). Refus comptés par raison (refus()).
+  * Audit de 906ec78 : (1) la décision se prend par la SEULE identité, avant tout appel d'accesseur (un accesseur inconnu ne voit
+  * aucun appel de la coquille, pas même les sondes) ; les clés getX/getY/getZ sont lues par leurs descripteurs, sans rien
+  * invoquer (une propriété à lecture calculée compte pour inconnue). (2) Les accesseurs de three.js sont pris en INSTANTANÉ au
+  * chargement de la coquille dans la page ; ensuite, ils ne sont reconnus que s'ils sont identiques à l'instantané ET que
+  * globalThis.THREE porte encore ces mêmes fonctions (THREE absent au chargement : aucune référence three.js). */
  const CONNUS=[],refusParRaison={};
+ /* Fonction de la clé k de o (chaîne des prototypes) par descripteur : rend la fonction, undefined si la clé est absente,
+  * ou null si elle n'est pas une donnée simple (propriété calculée, ou valeur qui n'est pas une fonction). */
+ function fonctionDe(o,k){for(let p=o;p!==null&&p!==undefined;p=Object.getPrototypeOf(p)){const d=Object.getOwnPropertyDescriptor(p,k);
+  if(d)return 'value' in d&&typeof d.value==='function'?d.value:null;}return undefined;}
+ const trio=p=>{if(!p)return null;const x=fonctionDe(p,'getX'),y=fonctionDe(p,'getY'),z=fonctionDe(p,'getZ');return x&&y&&z?[x,y,z]:null;};
+ const protosThree=T=>[T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];
+ const INSTANTANE_THREE=(()=>{try{return protosThree(globalThis.THREE).map(trio);}catch{return [null,null];}})();
+ const memeTrio=(a,b)=>!!a&&!!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];
  function accesseursConnus(...protos){for(const p of protos)if(p&&typeof p.getX==='function'&&typeof p.getY==='function'&&typeof p.getZ==='function')
   CONNUS.push([p.getX,p.getY,p.getZ]);return CONNUS.length;}
  function accesseursSurs(pos){
-  const fx=pos.getX,fy=pos.getY,fz=pos.getZ;
-  if(fx===undefined&&fy===undefined&&fz===undefined)return true;
-  const T=globalThis.THREE,proto=[T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];
-  for(const p of proto)if(p&&p.getX===fx&&p.getY===fy&&p.getZ===fz)return true;
-  return CONNUS.some(([x,y,z])=>x===fx&&y===fy&&z===fz);
+  const x=fonctionDe(pos,'getX'),y=fonctionDe(pos,'getY'),z=fonctionDe(pos,'getZ');
+  if(x===undefined&&y===undefined&&z===undefined)return true;
+  if(!x||!y||!z)return false;
+  const t=[x,y,z];let courant;try{courant=protosThree(globalThis.THREE).map(trio);}catch{courant=[null,null];}
+  for(let i=0;i<2;i++)if(memeTrio(t,INSTANTANE_THREE[i])&&memeTrio(courant[i],INSTANTANE_THREE[i]))return true;
+  return CONNUS.some(c=>memeTrio(t,c));
  }
  const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */
  function eligibleAvec(octetsEntree,capaciteMax){
   return function eligible(n,indexAttr,bounds,maxPoints,maxInspected,yieldEvery,drawEnd,probes){
    if(indexAttr||!n.position||n.position.isFloat16BufferAttribute)return null;
-   const inconnu=!accesseursSurs(n.position);
+   if(!accesseursSurs(n.position))return refuser('accesseur inconnu'); // AVANT toute lecture : les sondes ci-dessous appellent l'accesseur
    const meta=n.attribute&&n.attribute.metadata,src=n.position.array||(n.position.data&&n.position.data.array);
    if(!meta||meta.normalized||n.position.normalized)return null;
    const f64=src instanceof Float64Array;if(!f64&&!(src instanceof Float32Array))return null;
@@ -109,7 +123,6 @@
    for(const pr of probes||[]){const i=pr.sourceIndex;if(!Number.isInteger(i)||i<0||i>=n.attribute.count)continue;
     for(let k=0;k<3;k++)if(!Object.is(n.attribute.get(i,k),src[i*stride+offset+k]))return null;vues++;}
    if(!vues)return null;
-   if(inconnu)return refuser('accesseur inconnu');
    const largeur=f64?8:4,capacite=Math.min(capaciteMax,Math.floor((octetsEntree/largeur-3)/stride)+1);
    return capacite>=1?{src,stride,offset,f64,capacite}:null;
   };

@@ -109,3 +109,33 @@ test('accesseur inconnu et plafond maxPoints : aucun appel au-delà du dernier p
  try{const w=net(await L.variante.capture({...opts(fab()),...plafond}));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);}
  finally{globalThis.ArianeLidarNoyau=undefined;}
 });
+
+/* Audit de 906ec78 (PR n° 25). A : aucun appel d'accesseur par la coquille avant de savoir s'il est connu (un accesseur inconnu
+ * ne voit que les appels de l'origine). B : les accesseurs de three.js sont pris en instantané au chargement de la coquille ; un
+ * THREE remplacé ensuite n'est plus reconnu. */
+test('audit 906ec78, P2 A : accesseur inconnu qui lève à la troisième lecture de l\u2019indice 0, sortie de l\u2019origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),nw=L.W.noyauWasm(octets);
+ const fab=()=>{const sc=S.construireScene(d,0,7);
+  for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes)){const pos=e.sceneNode.geometry.attributes.position,a=pos.array;let n0=0;
+   pos.getX=i=>{if(i===0&&++n0===3)throw Error('accesseur : troisième lecture de l\u2019indice 0');return a[3*i];};pos.getY=i=>a[3*i+1];pos.getZ=i=>a[3*i+2];}
+  return sc;};
+ const ref=net(await L.origine.capture(opts(fab())));globalThis.ArianeLidarNoyau=nw;
+ try{const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);}
+ finally{globalThis.ArianeLidarNoyau=undefined;}
+});
+test('audit 906ec78, P2 B : THREE remplacé après le chargement de la coquille, accesseur nouveau non reconnu, sortie de l\u2019origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere();
+ const proto=(dy)=>({getX(i){return this.array[3*i];},getY(i){return this.array[3*i+1]+(dy&&i===dy.j?dy.v:0);},getZ(i){return this.array[3*i+2];}});
+ const avant=globalThis.THREE,chemin=require.resolve('../'+K.SOURCES.coquille);
+ try{
+  // three.js de la page au chargement de la coquille : un prototype ; la coquille est rechargée à neuf pour en prendre l'instantané
+  const T1={BufferAttribute:function(){},InterleavedBufferAttribute:function(){}};T1.BufferAttribute.prototype=proto(null);globalThis.THREE=T1;
+  delete require.cache[chemin];const W=require(chemin),nw=W.noyauWasm(octets);
+  const j=(await L.origine.capture(opts(S.construireScene(d,0,7)))).pointSources[0][1];
+  // puis THREE remplacé : son accesseur getY diffère du tableau en j (hors des sondes)
+  const T2={BufferAttribute:function(){},InterleavedBufferAttribute:function(){}};T2.BufferAttribute.prototype=proto({j,v:0.5});globalThis.THREE=T2;
+  const fab=()=>{const sc=S.construireScene(d,0,7);for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes))Object.setPrototypeOf(e.sceneNode.geometry.attributes.position,T2.BufferAttribute.prototype);return sc;};
+  const ref=net(await L.origine.capture(opts(fab())));globalThis.ArianeLidarNoyau=nw;
+  const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);
+ }finally{globalThis.ArianeLidarNoyau=undefined;globalThis.THREE=avant;delete require.cache[chemin];}
+});
