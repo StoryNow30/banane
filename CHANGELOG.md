@@ -1,6 +1,8 @@
 # Banane V4 TEST — journal des versions
 
-## Tronc 5.0 — 06/11 (CH-059, D-289)
+## Tronc 5.0 — 06/11 (CH-058, CH-059, CH-060, D-289)
+- **Le journal n'est plus relu en entier (CH-058)** : un index en mémoire des clés du journal (`src/journal-index.js`, rien d'écrit en base, aucune montée de version) borne les lectures de l'export Écho (service worker et panneau), du début de relecture, de la liste de corrections, de la fin de lot, de la liste d'ESV et de la deuxième passe. Banc Chromium à 150 000 événements : export 2,3 → 1,0 s (service worker) et 2,7 → 1,0 s (panneau), tas du panneau 214 → 60 Mo, lecture d'un type 2,4 s → 0,7 ms ; export identique octet pour octet. Index construit au démarrage hors activité ; au moindre doute, lecture complète et événement `journal-index-repli`.
+- **Relecture : rechargement de la page quand le signal de chargement d'ESV s'éteint (CH-060)** : réglage `relectureSignalEteint`, COUPÉ par défaut (un événement `relecture-signal-eteint` à la détection, rien d'autre) ; allumé, une pause au point de reprise, un rechargement au plus par relecture, reprise par le chemin de « Reprendre », jamais de changement de partie. Rejeu des 04 et 05/11 : la relecture sans plafond d'abords passerait de ≈ 410 à ≈ 323 min avec ce réglage (333 min mesurées avec le plafond ; PROBABLE).
 - **Sauvegarde à taille constante, suite de D-089 (CH-059)** : l'état est écrit en morceaux (`src/etat-morceaux.js`, `src/storage.js`), seuls les morceaux changés sont réécrits ; `save()` du moteur ne copie plus tout l'état (baseline ré-épinglée). Mesuré dans Chromium sur un état de la taille du 05/11 : 1,1 à 1,4 s par cut en fin de journée → environ 0,05 s. Une session Écho fermée ne pèse plus sur le lot suivant ; `exportAdvice` linéaire.
 - **Relecture : plus de plafond pour les abords (D-289)** : tous les voisins des cuts isolés, des grappes et des différés sont relus (avant : 70 par partie).
 
