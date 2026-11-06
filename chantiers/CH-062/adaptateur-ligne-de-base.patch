@@ -1,0 +1,52 @@
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -211,6 +211,17 @@
+    try{if(typeof requestAnimationFrame==='function')requestAnimationFrame(fin);}catch{}minuterie=setTimeout(fin,100);});}
+  const imageEsv=()=>{const f=window.Potree?.framenumber;return Number.isFinite(f)?f:null;};
+  const chargementsEsv=()=>{const n=window.Potree?.numNodesLoading;return Number.isFinite(n)?n:null;};
++ /* CH-062 (PROPOSÉ, réglage `lot.signalEteint.ligneDeBaseEchecs`, coupé) — LIGNE DE BASE DU COMPTEUR PAR LES ÉCHECS. Potree 1.8 (format EPT, celui
++  * d'ESV) monte `numNodesLoading` à la demande d'un nœud et ne le redescend que dans `doneLoading` : une requête `ept-data` au statut ≠ 200 laisse +1
++  * pour toujours (le nœud reste `loading`, jamais redemandé). Mesuré (04 et 05/11, chantiers/CH-062/rapport.md) : 8 pages sur 29 ont eu un HTTP 502 ;
++  * le signal y meurt à l'échec et ne revient qu'au rechargement ; après l'échec, 97,7 % des vues au repli ont un compteur ÉGAL au nombre d'échecs,
++  * aucune un compteur inférieur. Ici, la page compte ses requêtes `ept-data` en échec (`responseStatus` 0 ou ≥ 400, Chrome ≥ 109 ; absent : rien
++  * compté), en lecture seule, et « aucun chargement en cours » devient `numNodesLoading − échecs === 0`. Un échec non vu (tampon des ressources plein
++  * avant l'installation, navigateur sans `responseStatus`) laisse le compteur effectif > 0 : le repli d'aujourd'hui, jamais une lecture plus tôt. */
++ const LIGNE_BASE=window.BananeSettings?.lot?.signalEteint?.ligneDeBaseEchecs===true,EPT_DATA_PAGE=/\/ept-data\//i;let echecsPoints=0;
++ if(LIGNE_BASE)try{const po=new PerformanceObserver(l=>{try{for(const e of l.getEntries()){const rs=e.responseStatus;
++   if(EPT_DATA_PAGE.test(String(e.name||''))&&Number.isInteger(rs)&&(rs===0||rs>=400))echecsPoints++;}}catch{}});po.observe({type:'resource',buffered:true});}catch{}
++ const chargementsEffectifs=()=>{const n=chargementsEsv();return n===null||!LIGNE_BASE?n:n-echecsPoints;};
+  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
+    const c=nativeContext(),railInputs={},associationByRail={};
+    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
+@@ -361,18 +372,18 @@
+      if(cancelled)throw Error('Action interrompue.');guard();
+      /* Une lecture qui échoue est réessayée à l'image suivante, comme `waitFor` le faisait. */
+      let sig,vue;try{sig=loadedSignature();vue=sceneEsv();}catch(e){derniere=e;precedente=null;await prochaineImage();continue;}
+-     const f=imageEsv(),nl=chargementsEsv(),libre=nl===0;
++     const f=imageEsv(),nl=chargementsEffectifs(),libre=nl===0;
+      if(nl!==null&&(nlMax===null||nl>nlMax))nlMax=nl;
+      if(sig.value!==valeur){const precedent=depuis;valeur=sig.value;depuis=Date.now();if(vu){ch++;gm=Math.max(gm,depuis-precedent);tc=depuis-debut;}vu=true;}
+      if(f!==null&&f!==imagePrecedente){images++;
+        if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
+-         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc,ch,tc,gm,at:Date.now()-debut}};
++         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc,ch,tc,gm,at:Date.now()-debut,...(LIGNE_BASE?{ech:echecsPoints}:{})}};
+        if(precedente){paires++;const charge=!libre||!precedente.libre,noeuds=precedente.valeur!==sig.value,change=precedente.vue!==vue;
+          if(charge)pc++;if(noeuds)nc++;if(change)vc++;
+          manque=f0===null||f-f0<3?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
+        precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
+-     if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEsv();
+-       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut}};}
++     if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEffectifs();
++       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut,...(LIGNE_BASE?{ech:echecsPoints}:{})}};}
+      await prochaineImage();}
+    throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
+  /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
+@@ -426,7 +437,7 @@
+          const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference');guard();
+          /* Lu au signal : rien ne doit avoir changé pendant la lecture (elle rend la main à ESV à
+           * chaque tranche). Sinon la vue était incomplète : relecture, comme toute lecture instable. */
+-         if(avantLecture!==null&&(loadedSignature().value!==avantLecture||chargementsEsv()!==0))
++         if(avantLecture!==null&&(loadedSignature().value!==avantLecture||chargementsEffectifs()!==0))
+            throw Error('Lecture LiDAR instable : niveau de détail changé pendant la lecture.');
+          attempts.push({side,attempt,status:'captured',durationMs:Date.now()-began,vueMs:Date.now()-debutVue,regle:attente.regle,...(attente.images!=null?{images:attente.images}:{})});captures.push(data);
+          progress('capture-view-ready',{side,attempt,points:data.pointsSceneRelative.length});break;

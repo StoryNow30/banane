@@ -134,10 +134,12 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,signalEteint,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','voieB1EcartOmbre']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','signalEteint','voieB1EcartOmbre']);
+ /* CH-062 : rechargement d'ESV quand son signal s'éteint pendant le lot, COUPÉ par défaut (un événement seulement). */
+ assert.equal(signalEteint.actif,false,'CH-062 : signal éteint pendant le lot, coupé par défaut');
  assert.deepEqual({...voieB1EcartOmbre},{actif:true,fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4},'CH-055 : règle b1-ecart en OMBRE (consignée seulement), allumée par défaut');
  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');
  assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est ÉTEINTE par défaut (ordre de l\'opérateur, 02/11 : tant que son temps de calcul n\'est pas supprimé, CH-041)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
