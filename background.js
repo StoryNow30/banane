@@ -311,6 +311,8 @@ function obsFields(x){
   case 'esv-event':return ['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'].includes(x.nom)
    ?{kind:'esv-event',nom:x.nom,args:Array.isArray(x.args)?x.args.slice(0,6).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='boolean'?v:typeof v==='string'&&v.length<=24?v:null):[],pageMs:obsNum(x.pageMs),perdus:obsInt(x.perdus,1e6)}:null;
   case 'diag-compteur-bloque':return {kind:'diag-compteur-bloque',valeur:obsInt(x.valeur,1e6),cuts:obsInt(x.cuts,1000),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
+  /* CH-062 (patch proposé de la page) : la ligne de base du compteur par les échecs est abandonnée pour cette lecture (compteur SOUS les échecs, observateur absent). */
+  case 'ligne-base-repli':return {kind:'ligne-base-repli',motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:obsInt(x.compteur,1e6),echecs:obsInt(x.echecs,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
 /* 4.9.0.18 (KI-068) : événements et visites du lot seulement (ni Écho, ni Correction : `nativeSessionId`, `manualSessionId`,
@@ -477,6 +479,7 @@ function rangerObservations(m){try{
   if(!x||typeof x!=='object'){rejected++;continue;}
   const fields=obsFields(x);if(!fields){rejected++;continue;}
   if(fields.kind==='esv-event')try{esvEvenementNoter(fields);}catch{/* relevé seulement */}
+  if(fields.kind==='resource'&&fields.echecs>0)try{lotSignalEchecVu(fields);}catch{/* CH-062 : relevé seulement */}
   /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
   if(fields.kind==='write')try{ecritureObservee(fields);relectureEcriture(fields);passeDiffEcriture(fields);}catch{}
   try{relevesObservation(fields,m.observer);}catch{}
@@ -823,19 +826,39 @@ adapter.validateAndNext=(...args)=>coordinateurLot.transition('cut-suivant',asyn
  * la capture du suivant), rechargement de l'onglet, ré-équipement, liste d'ESV lue puis silencieuse, reprise par `reprendreLot` (chemin de
  * « Reprendre » : page rattachée, partie vérifiée, cut du lot retrouvé par « suivant », mêmes refus). ESV rouvre une autre partie ou ne répond pas
  * dans `attenteRepriseMs` : le lot reste en pause, consigne F5. Ariane ne change jamais de partie. Aucune décision de pose ni de validation ne change. */
-const lotSignal={part:null,etat:null,aRecharger:false,refus:new Set(),rechargement:null};
+const lotSignal={part:null,etat:null,aRecharger:false,refus:new Set(),rechargement:null,echec:null,points:[],trouDit:null};
+/* Variante « trou » (`declencheur` 'trou' ou 'signal+trou') : un nœud en échec dans la zone du rail laisse la capture presque vide. Preuve directe si la page
+ * la donne (`readStrategy.trouEchec.touche`, patch chantiers/CH-062/adaptateur-ligne-de-base.patch) ; sinon par son effet (PROBABLE) : une requête de points
+ * en échec vue sur CETTE page (même chargement), puis une capture du lot à moins de `trouFraction` de la médiane des 20 captures d'avant (3 au moins). Mesuré (04 et
+ * 05/11) : 5 échecs sur 10 sont suivis de captures trouées (4, 337, 25, 2 et 6 cuts). */
+function lotSignalEchecVu(f){lotSignal.echec={gen:chargementEsv.gen,t:Date.now(),n:(lotSignal.echec?.gen===chargementEsv.gen?lotSignal.echec.n:0)+f.echecs};}
+function lotSignalTrou(r,R){const pts=Array.isArray(r?.pointsSceneRelative)?r.pointsSceneRelative.length:null,h=lotSignal.points;
+ const t=r?.readStrategy?.trouEchec;let trou=null;
+ if(t&&typeof t==='object'&&typeof t.touche==='boolean')trou=t.touche?{par:'page',noeuds:Number.isInteger(t.noeuds)?t.noeuds:null}:null;
+ else if(pts!==null&&lotSignal.echec?.gen===chargementEsv.gen&&h.length>=3){const v=h.slice().sort((a,b)=>a-b),m=v[v.length>>1];
+  if(m>0&&pts<R.trouFraction*m)trou={par:'effet',points:pts,mediane:m};}
+ if(pts!==null&&!trou){h.push(pts);if(h.length>20)h.shift();}
+ return trou;}
 function lotSignalReglage(){const SG=globalThis.BananeRelectureSignal,o=globalThis.BananeSettings?.lot?.signalEteint,R=SG.reglage(o);
- R.preuveMs=Number.isFinite(o?.preuveMs)&&o.preuveMs>=0?o.preuveMs:5000;return R;}
+ R.preuveMs=Number.isFinite(o?.preuveMs)&&o.preuveMs>=0?o.preuveMs:5000;
+ R.declencheur=['signal','trou','signal+trou'].includes(o?.declencheur)?o.declencheur:'signal';R.trouFraction=Number.isFinite(o?.trouFraction)&&o.trouFraction>0&&o.trouFraction<1?o.trouFraction:.3;return R;}
 function lotSignalEtat(b){const SG=globalThis.BananeRelectureSignal,part=b?.scope?.part;if(!SG||!Number.isInteger(part))return null;
- if(lotSignal.part!==part){lotSignal.part=part;lotSignal.etat=SG.creer(lotSignalReglage());lotSignal.aRecharger=false;lotSignal.refus=new Set();}
+ if(lotSignal.part!==part){lotSignal.part=part;lotSignal.etat=SG.creer(lotSignalReglage());lotSignal.aRecharger=false;lotSignal.refus=new Set();lotSignal.points=[];lotSignal.trouDit=null;}
  return lotSignal;}
 const lotSignalDire=(etape,champs)=>journalerSimple('lot-signal-eteint',{etape,lotId:engine?.s?.batch?.id??null,...champs,...(lotSignal.etat?globalThis.BananeRelectureSignal.bilan(lotSignal.etat):{})});
 /* Une capture du LOT (moteur en cours) : la règle de la relecture dit si le signal est éteint. */
 function lotSignalObserver(r){const b=engine?.s?.batch,SG=globalThis.BananeRelectureSignal;
  if(!SG||!r||typeof r!=='object'||b?.state!=='RUNNING'||!engine.task||relecture.passe?.etat==='en-cours'||passeDiff.cours)return;
- const L=lotSignalEtat(b);if(!L)return;const o=SG.observer(L.etat,r,{peutRecharger:selectedTab!==null});if(o.action==='rien')return;
+ const L=lotSignalEtat(b);if(!L)return;const R=L.etat.reglage,D=lotSignalReglage().declencheur,cut=r.identity?.cut??null;
+ /* Variante « trou » : un événement par chargement de page ; recharger seulement si le réglage est allumé et le plafond pas atteint. */
+ const trou=D!=='signal'?lotSignalTrou(r,lotSignalReglage()):null;
+ if(trou&&L.trouDit!==chargementEsv.gen){L.trouDit=chargementEsv.gen;
+  const raison=!R.actif?'réglage coupé':selectedTab===null?'aucun onglet ESV choisi':L.etat.rechargements>=R.rechargementsMax?`${L.etat.rechargements} rechargement${L.etat.rechargements>1?'s':''} déjà faits`:null;
+  if(!raison)L.aRecharger=true;
+  lotSignalDire('detecte',{declencheur:'trou',action:raison?'aucune':'recharger',raison:raison??'nœud de points en échec dans la zone du rail',trou,identity:{part:b.scope.part,cut}});}
+ const o=SG.observer(L.etat,r,{peutRecharger:selectedTab!==null&&D!=='trou'});if(o.action==='rien')return;
  if(o.action==='recharger')L.aRecharger=true;
- lotSignalDire('detecte',{action:o.action==='recharger'?'recharger':'aucune',raison:o.raison,identity:{part:b.scope.part,cut:r.identity?.cut??null}});}
+ lotSignalDire('detecte',{declencheur:'signal',action:o.action==='recharger'?'recharger':'aucune',raison:o.raison==='pause et reprise de la relecture éteintes'?(D==='trou'?'déclencheur « trou » seulement':'aucun onglet ESV choisi'):o.raison,identity:{part:b.scope.part,cut}});}
 /* Pourquoi CE moment n'est pas un point sûr (null : il l'est). Pure : tout vient de `c`. */
 function lotSignalRefus(c){const n=c.evidence?.nextIdentity;
  if(c.etat!=='RUNNING')return 'lot pas en cours';

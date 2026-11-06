@@ -151,16 +151,30 @@ function gain(pages,{coutS=20,tirages=2000,seed=62}={}){const R=alea(seed);
   partHaute:r1(100*pt.haut/total),partPrudente:r1(100*pt.prudent/total),
   ligneDeBase:{pages:E.length,gainS:r0(ptE/1000),intervalle90:[r0(quantile(bsE,.05)/1000),r0(quantile(bsE,.95)/1000)],part:r1(100*ptE/total)}};}
 
+/* Trou après un échec (PROBABLE : mesuré par son effet, l'observateur ne garde pas le nom du nœud perdu) : après chaque requête de points en échec,
+ * les captures de la même page à moins de `fraction` de la médiane des 20 captures d'avant, en série depuis l'échec (deux captures normales isolées
+ * tolérées) ; rend, par échec, le nombre de cuts troués et la durée de la série. */
+function trous(j,{fraction=.3}={}){const ev=Array.isArray(j.events)?j.events:[];
+ const caps=ev.filter(e=>e.type==='adapter-result'&&e.action==='capture'&&!e.error&&e.lastDetail&&Number.isFinite(e.lastDetail.points))
+  .map(e=>({t:ms(e.timestamp),page:e.identity?.pageId,cut:e.identity?.cut,pts:e.lastDetail.points})).sort((a,b)=>a.t-b.t);
+ const ech=ev.filter(e=>e.type==='esv-observation'&&e.kind==='resource'&&e.echecs>0).map(e=>ms(e.timestamp)).sort((a,b)=>a-b),out=[];
+ for(const t of ech){const i=caps.findIndex(c=>c.t>=t);if(i<0)continue;const page=caps[i].page;
+  const avant=tri(caps.slice(Math.max(0,i-20),i).filter(c=>c.page===page).map(c=>c.pts)),m=quantile(avant,.5);if(!m){out.push({mediane:null,cuts:0,dureeS:0});continue;}
+  const cuts=new Set();let normales=0,fin=null;
+  for(let k=i;k<caps.length&&caps[k].page===page;k++){if(caps[k].pts<fraction*m){cuts.add(caps[k].cut);normales=0;fin=caps[k].t;}else if(++normales>2)break;}
+  out.push({mediane:r0(m),cuts:cuts.size,dureeS:fin?Math.round((fin-t)/1000):0});}
+ return out;}
 if(require.main===module){const a=process.argv.slice(2),journaux=[];let sortie=null,cutsF=null,cout=20;
  for(let i=0;i<a.length;i++){if(a[i]==='--journal')journaux.push(a[++i]);else if(a[i]==='--sortie')sortie=a[++i];else if(a[i]==='--cuts')cutsF=a[++i];else if(a[i]==='--cout')cout=Number(a[++i]);}
  const res={format:'ch062-signal-lot-1',journaux:[]},toutes=[];
  for(const f of journaux){const j=JSON.parse(fs.readFileSync(f,'utf8'));const pages=analyser(j).filter(p=>p.cutsLot>0||p.capturesLot>0);toutes.push(...pages);
-  res.journaux.push({version:j.version||null,pages:pages.map(({_cuts,...p})=>p),gain:gain(pages,{coutS:cout})});}
+  res.journaux.push({version:j.version||null,pages:pages.map(({_cuts,_recup,...p})=>p),gain:gain(pages,{coutS:cout}),trous:trous(j)});}
  res.gainTotal=gain(toutes,{coutS:cout});
+ const T=res.journaux.flatMap(x=>x.trous);res.trousTotal={echecs:T.length,avecTrou:T.filter(x=>x.cuts>0).length,cutsTroues:T.reduce((a,x)=>a+x.cuts,0)};
  const P=l=>toutes.flatMap(p=>p._cuts.filter(c=>c.type==='pose'&&c.lecture===l).map(c=>c.dt));
  const R=alea(7),A=P('signal'),B=P('repli'),reech=a=>a.map(()=>a[Math.floor(R()*a.length)]);
  const d=tri(Array.from({length:2000},()=>quantile(tri(reech(B)),.5)-quantile(tri(reech(A)),.5)));
  res.parCutPose={signal:resume(A),repli:resume(B),ecartMedianMs:r0(quantile(tri(B),.5)-quantile(tri(A),.5)),ecartIntervalle90:[r0(quantile(d,.05)),r0(quantile(d,.95))]};
  const txt=JSON.stringify(res,null,1);if(sortie)fs.writeFileSync(sortie,txt);else process.stdout.write(txt+'\n');
  if(cutsF)fs.writeFileSync(cutsF,JSON.stringify(toutes.flatMap(p=>p._cuts.map(c=>({parts:p.parts,...c,t:undefined})))));}
-module.exports={analyser,gain,enCapture};
+module.exports={analyser,gain,enCapture,trous};

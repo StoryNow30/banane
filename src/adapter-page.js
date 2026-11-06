@@ -211,17 +211,55 @@
    try{if(typeof requestAnimationFrame==='function')requestAnimationFrame(fin);}catch{}minuterie=setTimeout(fin,100);});}
  const imageEsv=()=>{const f=window.Potree?.framenumber;return Number.isFinite(f)?f:null;};
  const chargementsEsv=()=>{const n=window.Potree?.numNodesLoading;return Number.isFinite(n)?n:null;};
- /* CH-062 (PROPOSÉ, réglage `lot.signalEteint.ligneDeBaseEchecs`, coupé) — LIGNE DE BASE DU COMPTEUR PAR LES ÉCHECS. Potree 1.8 (format EPT, celui
-  * d'ESV) monte `numNodesLoading` à la demande d'un nœud et ne le redescend que dans `doneLoading` : une requête `ept-data` au statut ≠ 200 laisse +1
-  * pour toujours (le nœud reste `loading`, jamais redemandé). Mesuré (04 et 05/11, chantiers/CH-062/rapport.md) : 8 pages sur 29 ont eu un HTTP 502 ;
-  * le signal y meurt à l'échec et ne revient qu'au rechargement ; après l'échec, 97,7 % des vues au repli ont un compteur ÉGAL au nombre d'échecs,
-  * aucune un compteur inférieur. Ici, la page compte ses requêtes `ept-data` en échec (`responseStatus` 0 ou ≥ 400, Chrome ≥ 109 ; absent : rien
-  * compté), en lecture seule, et « aucun chargement en cours » devient `numNodesLoading − échecs === 0`. Un échec non vu (tampon des ressources plein
-  * avant l'installation, navigateur sans `responseStatus`) laisse le compteur effectif > 0 : le repli d'aujourd'hui, jamais une lecture plus tôt. */
- const LIGNE_BASE=window.BananeSettings?.lot?.signalEteint?.ligneDeBaseEchecs===true,EPT_DATA_PAGE=/\/ept-data\//i;let echecsPoints=0;
- if(LIGNE_BASE)try{const po=new PerformanceObserver(l=>{try{for(const e of l.getEntries()){const rs=e.responseStatus;
-   if(EPT_DATA_PAGE.test(String(e.name||''))&&Number.isInteger(rs)&&(rs===0||rs>=400))echecsPoints++;}}catch{}});po.observe({type:'resource',buffered:true});}catch{}
- const chargementsEffectifs=()=>{const n=chargementsEsv();return n===null||!LIGNE_BASE?n:n-echecsPoints;};
+ /* CH-062 (PROPOSÉ ; réglages `lot.signalEteint.ligneDeBaseEchecs` et `lot.signalEteint.declencheur`, coupés) — LIGNE DE BASE DU COMPTEUR PAR LES
+  * ÉCHECS, et NŒUDS PERDUS DANS LA ZONE DU RAIL. Potree 1.8 (format EPT, celui d'ESV) monte `numNodesLoading` à la demande d'un nœud et ne le redescend
+  * que dans `doneLoading` : une requête `ept-data` au statut ≠ 200 laisse +1 pour toujours, et le nœud reste `loading` (jamais redemandé, ni sa
+  * descendance). Mesuré (04 et 05/11, chantiers/CH-062/rapport.md) : 8 pages sur 29 ont eu un HTTP 502 ; le signal y meurt à l'échec ; ensuite 98,1 % des
+  * vues au repli ont un compteur ÉGAL au nombre d'échecs, aucune un compteur inférieur ; 5 échecs sur 10 sont suivis de captures trouées.
+  * Ici, en LECTURE SEULE (rien n'est écrit dans la page ni dans Potree) :
+  *  - la page compte ses requêtes `ept-data` en échec (`responseStatus` 0 ou ≥ 400, Chrome ≥ 109 ; absent : rien compté) et garde leur clé de nœud EPT
+  *    (« D-X-Y-Z », lue dans le chemin ; jamais l'adresse) ;
+  *  - allumée, « aucun chargement en cours » devient `numNodesLoading − échecs === 0`. Retour au repli d'aujourd'hui, avec un événement
+  *    `ligne-base-repli` par épisode : compteur SOUS les échecs (motif « sous ») ; observateur des ressources absent (motif « absent ») ;
+  *  - chaque vue lue porte `lb` : [compteur brut, échecs, motif du repli ou null] ; la capture porte `readStrategy.trouEchec` : nœuds en échec, clés
+  *    (4 au plus), `touche` (vrai : la boîte d'un nœud en échec coupe la zone de `zoneRailM` mètres autour d'un rail ; faux ; null : nœud introuvable).
+  * Un échec non vu (tampon des ressources plein avant l'installation, navigateur sans `responseStatus`) laisse le compteur effectif > 0 : le repli
+  * d'aujourd'hui, jamais une lecture plus tôt. */
+ const RSE=window.BananeSettings?.lot?.signalEteint||{},LIGNE_BASE=RSE.ligneDeBaseEchecs===true,TROU_ECHEC=LIGNE_BASE||['trou','signal+trou'].includes(RSE.declencheur);
+ const ZONE_RAIL_M=Number.isFinite(RSE.zoneRailM)&&RSE.zoneRailM>0?RSE.zoneRailM:3,EPT_DATA_PAGE=/\/ept-data\/(\d+-\d+-\d+-\d+)\.[a-z]+$/i;
+ let echecsPoints=0,observateurRessources=false;const clesEchec=new Set(),episodeLigneBase={motif:null};
+ if(LIGNE_BASE||TROU_ECHEC)try{if(typeof PerformanceObserver==='function'){const po=new PerformanceObserver(l=>{try{for(const e of l.getEntries()){const rs=e.responseStatus;
+   let chemin='';try{chemin=new URL(String(e.name||''),location.href).pathname;}catch{chemin=String(e.name||'');}
+   const m=/\/ept-data\//i.test(chemin)?EPT_DATA_PAGE.exec(chemin):null;
+   if(/\/ept-data\//i.test(chemin)&&Number.isInteger(rs)&&(rs===0||rs>=400)){echecsPoints++;if(m&&clesEchec.size<64)clesEchec.add(m[1]);}}}catch{}});
+   po.observe({type:'resource',buffered:true});observateurRessources=true;}}catch{observateurRessources=false;}
+ function repliLigneBase(motif,n){if(episodeLigneBase.motif===motif)return;episodeLigneBase.motif=motif;
+   try{const l=cutLabel();posterObservateur({kind:'ligne-base-repli',motif,compteur:n,echecs:echecsPoints,cut:l?.cut??null,pageMs:heurePage()});}catch{}}
+ /* Compteur effectif : brut sans la ligne de base ; brut aussi (repli d'aujourd'hui) si l'observateur manque ou si le compteur passe sous les échecs. */
+ function chargementsEffectifs(){const n=chargementsEsv();if(n===null||!LIGNE_BASE)return n;
+   if(!observateurRessources){repliLigneBase('absent',n);return n;}
+   if(n<echecsPoints){repliLigneBase('sous',n);return n;}
+   if(episodeLigneBase.motif==='sous')episodeLigneBase.motif=null;return n-echecsPoints;}
+ const motifLigneBase=()=>!LIGNE_BASE?null:!observateurRessources?'absent':chargementsEsv()!==null&&chargementsEsv()<echecsPoints?'sous':null;
+ const releveLigneBase=()=>LIGNE_BASE?{lb:[chargementsEsv(),echecsPoints,motifLigneBase()]}:{};
+ /* Nœuds en échec dans la zone du rail : la boîte du nœud (repère du nuage, `matrixWorld`) contre une boule de `ZONE_RAIL_M` autour de chaque rail
+  * (positions attendues, repère de la scène + origine). Lecture seule de l'arbre de Potree, 20 000 nœuds visités au plus. */
+ function trouEchec(expected){if(!TROU_ECHEC||!clesEchec.size)return null;
+   const cles=[...clesEchec],out={noeuds:cles.length,cles:cles.slice(0,4),touche:null};
+   try{const c=context(),o=c.frame?.origin||[0,0,0],rails=['left','right'].map(s=>expected?.rails?.[s]?.positionSceneRelative).filter(p=>Array.isArray(p)&&p.length===3).map(p=>p.map((v,i)=>v+o[i]));
+     if(!rails.length)return out;let trouves=0,touche=false,vus=0;
+     for(const pc of c.viewer?.scene?.pointclouds||[]){const racine=pc?.pcoGeometry?.root,M=pc?.matrixWorld?.elements;if(!racine||!Array.isArray(M)&&!(M&&M.length===16))continue;
+       const pile=[racine];
+       while(pile.length&&vus<20000){const n=pile.pop();vus++;
+         let nom=null;try{nom=typeof n.filename==='function'?n.filename():typeof n.key?.name==='function'?n.key.name():null;}catch{nom=null;}
+         if(nom&&clesEchec.has(nom)&&n.boundingBox?.min&&n.boundingBox?.max){trouves++;
+           const b=n.boundingBox,coins=[];for(const x of [b.min.x,b.max.x])for(const y of [b.min.y,b.max.y])for(const z of [b.min.z,b.max.z])
+             coins.push([M[0]*x+M[4]*y+M[8]*z+M[12],M[1]*x+M[5]*y+M[9]*z+M[13],M[2]*x+M[6]*y+M[10]*z+M[14]]);
+           const lo=[0,1,2].map(i=>Math.min(...coins.map(k=>k[i]))),hi=[0,1,2].map(i=>Math.max(...coins.map(k=>k[i])));
+           for(const r of rails){const d=Math.hypot(...[0,1,2].map(i=>Math.max(lo[i]-r[i],0,r[i]-hi[i])));if(d<=ZONE_RAIL_M)touche=true;}}
+         const ch=n.children;if(ch)for(const k of Object.keys(ch))if(ch[k])pile.push(ch[k]);}}
+     out.touche=trouves?touche:null;out.trouves=trouves;}catch{out.touche=null;}
+   return out;}
  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
    const c=nativeContext(),railInputs={},associationByRail={};
    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
@@ -377,13 +415,13 @@
      if(sig.value!==valeur){const precedent=depuis;valeur=sig.value;depuis=Date.now();if(vu){ch++;gm=Math.max(gm,depuis-precedent);tc=depuis-debut;}vu=true;}
      if(f!==null&&f!==imagePrecedente){images++;
        if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
-         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc,ch,tc,gm,at:Date.now()-debut,...(LIGNE_BASE?{ech:echecsPoints}:{})}};
+         return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc,ch,tc,gm,at:Date.now()-debut,...releveLigneBase()}};
        if(precedente){paires++;const charge=!libre||!precedente.libre,noeuds=precedente.valeur!==sig.value,change=precedente.vue!==vue;
          if(charge)pc++;if(noeuds)nc++;if(change)vc++;
          manque=f0===null||f-f0<3?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
        precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
      if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEffectifs();
-       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut,...(LIGNE_BASE?{ech:echecsPoints}:{})}};}
+       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut,...releveLigneBase()}};}
      await prochaineImage();}
    throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
  /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
@@ -454,6 +492,7 @@
    guard();const data=M3.merge(...captures);guard();
    data.readStrategy={maxAttemptsPerView,stableForMs,budgetMs,durationMs:Date.now()-startedAt,attempts,lecture,regleLecture:P.modeRapide??P.lectureI1??null,
      pieces:lecture==='rapide'?Object.keys(RAPIDE).filter(n=>RAPIDE[n]!==false):[],...(CLIC_CORRIGE?{clicHumain:CLIC_HUMAIN}:{})};
+   try{const t=trouEchec(expected);if(t)data.readStrategy.trouEchec=t;}catch{/* CH-062 : relevé seulement */}
    /* 4.7.19 (KI-059) : la capture doit tenir dans un message Chrome (64 Mio).
     * Nœuds sans point réduits au-delà de 64 ; trop gros malgré tout : erreur
     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */

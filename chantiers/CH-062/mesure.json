@@ -94,8 +94,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -191,8 +190,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -289,8 +287,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 6
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -394,8 +391,7 @@
        "capturesRecuperables": 185
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 0.9158415841584159
+     }
     },
     {
      "parts": [
@@ -495,8 +491,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 3
-     },
-     "_recup": 0
+     }
     }
    ],
    "gain": {
@@ -526,7 +521,14 @@
      ],
      "part": 0
     }
-   }
+   },
+   "trous": [
+    {
+     "mediane": 5600,
+     "cuts": 0,
+     "dureeS": 0
+    }
+   ]
   },
   {
    "version": "5",
@@ -622,8 +624,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -723,8 +724,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -829,8 +829,7 @@
        "capturesRecuperables": 325
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 0.9558823529411765
+     }
     },
     {
      "parts": [
@@ -934,8 +933,7 @@
        "capturesRecuperables": 271
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 1
+     }
     },
     {
      "parts": [
@@ -1038,8 +1036,7 @@
        "capturesRecuperables": 632
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 0.9968454258675079
+     }
     },
     {
      "parts": [
@@ -1133,8 +1130,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -1201,8 +1197,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -1309,8 +1304,7 @@
        "capturesRecuperables": 369
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 0.9892761394101877
+     }
     },
     {
      "parts": [
@@ -1406,8 +1400,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -1507,8 +1500,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     }
    ],
    "gain": {
@@ -1541,7 +1533,34 @@
      ],
      "part": 12.2
     }
-   }
+   },
+   "trous": [
+    {
+     "mediane": 5810,
+     "cuts": 0,
+     "dureeS": 0
+    },
+    {
+     "mediane": 6390,
+     "cuts": 4,
+     "dureeS": 9
+    },
+    {
+     "mediane": 6524,
+     "cuts": 337,
+     "dureeS": 1373
+    },
+    {
+     "mediane": 5397,
+     "cuts": 25,
+     "dureeS": 78
+    },
+    {
+     "mediane": 12156,
+     "cuts": 0,
+     "dureeS": 0
+    }
+   ]
   },
   {
    "version": "5",
@@ -1646,8 +1665,7 @@
        "capturesRecuperables": 315
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 1
+     }
     },
     {
      "parts": [
@@ -1741,8 +1759,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -1838,8 +1855,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -1936,8 +1952,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 2
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2040,8 +2055,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 26
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2143,8 +2157,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 33
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2251,8 +2264,7 @@
        "capturesRecuperables": 68
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 0.7157894736842105
+     }
     },
     {
      "parts": [
@@ -2350,8 +2362,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 3
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2447,8 +2458,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 2
-     },
-     "_recup": 0
+     }
     }
    ],
    "gain": {
@@ -2482,7 +2492,19 @@
      ],
      "part": 6.3
     }
-   }
+   },
+   "trous": [
+    {
+     "mediane": 9907,
+     "cuts": 0,
+     "dureeS": 0
+    },
+    {
+     "mediane": 2757,
+     "cuts": 0,
+     "dureeS": 0
+    }
+   ]
   },
   {
    "version": "5",
@@ -2581,8 +2603,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2678,8 +2699,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2775,8 +2795,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 1
-     },
-     "_recup": 0
+     }
     },
     {
      "parts": [
@@ -2883,8 +2902,7 @@
        "capturesRecuperables": 509
       },
       "capturesRepliCompteurNonNulSansEchec": null
-     },
-     "_recup": 0.9902723735408561
+     }
     },
     {
      "parts": [
@@ -2979,8 +2997,7 @@
        "capturesRecuperables": 0
       },
       "capturesRepliCompteurNonNulSansEchec": 0
-     },
-     "_recup": 0
+     }
     }
    ],
    "gain": {
@@ -3012,7 +3029,19 @@
      ],
      "part": 5.4
     }
-   }
+   },
+   "trous": [
+    {
+     "mediane": 3412,
+     "cuts": 2,
+     "dureeS": 4
+    },
+    {
+     "mediane": 3540,
+     "cuts": 6,
+     "dureeS": 12
+    }
+   ]
   }
  ],
  "gainTotal": {
@@ -3049,6 +3078,11 @@
    ],
    "part": 8.1
   }
+ },
+ "trousTotal": {
+  "echecs": 10,
+  "avecTrou": 5,
+  "cutsTroues": 374
  },
  "parCutPose": {
   "signal": {
