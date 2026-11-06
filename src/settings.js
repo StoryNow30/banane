@@ -206,7 +206,7 @@
      * différé, deuxième passe ni relecture en cours, le lot se met en pause, Ariane recharge la page ESV, attend la liste, vérifie la partie, et reprend
      * par le chemin de « Reprendre » (au plus `rechargementsMax` fois par partie : 1 ; sans signal après, le lot continue au repli, sans boucle).
      * ESV rouvre une autre partie ou ne répond pas dans `attenteRepriseMs` : le lot reste en pause, consigne F5. Ariane ne change jamais de partie. */
-    /* `ligneDeBaseEchecs` (lu par la page, PROPOSÉ : chantiers/CH-062/adaptateur-ligne-de-base.patch, non appliqué) : compteur effectif = compteur − requêtes de points en échec. */
+    /* `ligneDeBaseEchecs` (lu par la page ; patch chantiers/CH-062/adaptateur-ligne-de-base.patch APPLIQUÉ par l’intégrateur, réglage coupé) : compteur effectif = compteur − requêtes de points en échec. */
     signalEteint: Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, preuveMs: 5000, delaiAvantMs: 500, sondageMs: 500, attenteRepriseMs: 90000, ligneDeBaseEchecs: false }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
