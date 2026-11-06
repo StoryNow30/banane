@@ -81,10 +81,15 @@ const RECONSTRUCTION=['native-reconstruction.js'];
 /* CH-058 : l'index du journal en mémoire (lectures bornées d'IndexedDB) : il enveloppe le stockage du service worker et ne fait que choisir
  * quelles clés lire ; chaque appelant refiltre, résultat identique à la lecture complète. Il ne lit ni ne commande la pose. */
 const JOURNAL_INDEX=['journal-index.js'];
+/* CH-060 : le signal de fin de chargement d'ESV éteint pendant la relecture (src/relecture-signal.js) : partie pure, lue par la relecture seule (après le
+ * lot) ; elle ne lit ni ne commande la pose. Son réglage `relectureSignalEteint` est COUPÉ par défaut (vérifié plus bas). */
+const SIGNAL_RELECTURE=['relecture-signal.js'];
 
 /* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
  * plus ; sans ces lignes, src/relecture-ombre.js est celui de la test 8. Toute autre modification du fichier reste détectée. */
+/* D-289 (opérateur, 06/11 : « plafond oui ») : plus de plafond pour les abords ; sans ces lignes, le plafond est celui de la test 8. */
 const sansD284=t=>t
+ .replace(/\n  \/\* D-289 \(opérateur, 06\/11[\s\S]*?\*\/\n  plafondParZone:Object\.freeze\(\{adv:null,abords:null,/,"\n  plafondParZone:Object.freeze({adv:null,abords:70,")
  .replace(/\n  \/\* D-284 \(ordre de l'opérateur du 05\/11[\s\S]*?aControler:Object\.freeze\(\{marge:1\}\),trouMaxCuts:3,/,'')
  .replace(",trou:'trou bouché'};","};")
  .replace(/\n   if\(motif==='a-controler'\)\{const m=[^\n]*/,'')
@@ -100,7 +105,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -129,7 +134,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','voieB1EcartOmbre']);
@@ -145,6 +150,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(file.actif,true,'file de parties : allumée par défaut dans la test 25 (D-268, ordre de l\'opérateur) ; la file ne part que si l\'opérateur la lance');
  /* Test 27 (CH-026, ordre de l'opérateur du 30/10) : clé ajoutée au premier niveau, la relecture « corriger » par défaut, non réglable. */
  assert.deepEqual({...relectureDefaut},{mode:'corriger',modifiable:false},'relecture après le lot : « corriger » par défaut, non réglable');
+ assert.equal(relectureSignalEteint.actif,false,'CH-060 : rechargement d\'ESV quand son signal s\'éteint pendant la relecture : COUPÉ par défaut');
  /* CH-035 : clé ajoutée au premier niveau, l'Aurore entre les parties d'une Constellation, ÉTEINTE tant que l'opérateur ne l'a pas éprouvée. */
  assert.equal(correctionEntreParties.actif,true,'Aurore entre les parties : allumée par défaut (CH-037, décision de l’opérateur du 01/11), sans effet sur le lot');
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
