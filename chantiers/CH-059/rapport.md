@@ -41,7 +41,7 @@
 - Export Écho : `tools/ch059-parite-export.cjs` compare le tronc à la branche, puis à la branche avec le patch. Horloge et identifiants figés, 120 visites, 720 nuages, redémarrage au milieu. Ce que reçoit le zip est identique : `dataset()`, manifeste, plan `-auto`, conseil, et l'état en mémoire.
 - Relecture : `tools/parite-relecture-sw.cjs`, relevés identiques.
 - Redémarrage en pleine Écho : la session reprend, l'index des visites continue.
-- Maquette ESV : verte.
+- Maquette ESV : verte, 65 et 7 essais, machine au repos. Une course lancée en même temps que la parité de la relecture a dépassé un délai (`correction-signal`) ; seul, cet essai passe 2 fois sur 2.
 - `exportAdvice` : même résultat qu'avant à 20 000 identifiants, en temps linéaire.
 
 **ÉTABLI, retour arrière en pleine Écho vers l'arbre `2bc1f56`** (`tools/ch059-retour-arriere.cjs`). Session de 100 visites, 600 nuages, dont 60 en attente.
