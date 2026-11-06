@@ -45,7 +45,7 @@ test('CH-065 : le chemin direct sert sur un tampon flottant non indexé, et pas 
     else assert.ok(e.n>=n,`${nom} : ${e.n} lectures par accesseur pour ${n} points, la boucle d'origine n'a pas servi`);
   }
 });
-test('CH-065 : sans THREE reconnu dans la page, accesseur non reconnu : boucle d\'origine, même sortie, chaque point lu par l\'accesseur', async ()=>{
+test('CH-065 : sans THREE reconnu dans la page, accesseur non reconnu lu point par point comme l\'origine : même sortie, chaque point lu par l\'accesseur', async ()=>{
   const c=H.captures()[0],n=c.pointsSceneRelative.length;
   try{globalThis.THREE=undefined;
     for(const opts of [{},{entrelace:true},{type:Float64Array},{yieldEvery:7},{drawRange:{start:3.7,count:1000.5}}]){
@@ -144,7 +144,7 @@ test('CH-065 : getX défini par un getter (propriété calculée) : inconnu, et 
   const a=await run(LO),b=await run(LP);assert.deepEqual(b,a);
 });
 test('CH-065 : l\'essai a des dents — croire un accesseur inconnu est vu', async ()=>{
-  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return null;','if(!a)return null;');
+  const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return parAccesseur;','if(!a)return parAccesseur;');
   assert.notEqual(faux,t);const L=H.lidar('patche',faux),c=H.captures()[1];
   const run=async L=>{const sc=scene(c,{graine:3});const e=sc.viewer.scene.pointclouds[0].visibleNodes[0],a=e.sceneNode.geometry.attributes.position,cible=Math.floor(a.count/2)+1;
     const g=a.getX.bind(a);a.getX=i=>i===cible?g(i)+.05:g(i);
