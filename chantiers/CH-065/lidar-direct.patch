@@ -1,6 +1,6 @@
 --- a/vendor/lidar.js
 +++ b/vendor/lidar.js
-@@ -159,6 +159,42 @@
+@@ -159,6 +159,53 @@
      }
      return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
    }
@@ -11,46 +11,56 @@
 +   *  - soit sans accesseur getX/getY/getZ (C.attribute lit alors lui-même le tableau),
 +   *  - soit avec les accesseurs de Three.js de la page, reconnus par IDENTITÉ de fonction (THREE.BufferAttribute ou
 +   *    THREE.InterleavedBufferAttribute) : leur code est la lecture du tableau, la dénormalisation étant exclue.
-+   * L'identité est jugée contre un INSTANTANÉ des fonctions de THREE pris une fois, au chargement de ce module : un prototype remplacé
-+   * ensuite n'est jamais cru, et sans THREE à ce moment-là, aucun accesseur n'est cru.
-+   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, tableau non flottant) : la décision est prise par la seule identité, AVANT tout appel
-+   * d'accesseur ; aucune sonde n'est relue. Chaque point est lu par la lecture même de C.attribute (n.attribute.get), X, Y puis Z, au même
-+   * moment et pour les mêmes points que la boucle d'origine, dans trois variables au lieu d'un tableau : même suite d'appels (entrelacement
-+   * avec les autres attributs, effets de bord, exceptions, arrêts sur budget compris). Seule l'allocation par point disparaît.
-+   * Ni des sondes, ni une preuve exhaustive, ni une lecture d'avance par tranche ne suffisent (défauts relevés par Codex et CH-064, PR #25).
++   * L'identité est lue par les DESCRIPTEURS de getX/getY/getZ, le long de la chaîne de prototypes, sans rien invoquer : une propriété
++   * calculée (getter) compte pour inconnue. Un accesseur n'est reconnu que s'il est identique à l'INSTANTANÉ des fonctions de THREE pris
++   * une fois, au chargement de ce module, ET au THREE courant. Sans THREE au chargement, aucune référence n'est retenue.
++   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, tableau non flottant) : la boucle d'origine, telle quelle ; la décision est prise
++   * avant tout appel, et le patch n'appelle aucun accesseur (aucune sonde relue). Seule la boucle d'origine reproduit à l'identique les
++   * appels d'un accesseur inconnu (ordre, entrelacement, effets de bord, exceptions, arrêts sur budget). Règle commune au JS et au Rust
++   * (décision de l'intégrateur du 06/11, défauts relevés par Codex et CH-064 sur PR #25).
 +   * Le chemin direct fait les mêmes opérations flottantes, dans le même ordre, que C.point, inRoi, Math.hypot et C.distance, lève les
 +   * mêmes exceptions aux mêmes points, et garde le budget, les pauses et les contrôles d'intégrité de la boucle d'origine, point par point.
 +   * Seuls les points retenus (et les plus proches de l'origine des rails) allouent, comme avant. Parité : tests/ch065-lidar-direct.test.cjs. */
-+  const REF_THREE=(()=>{const T=globalThis.THREE;
-+    return [T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype].filter(p=>!!p&&typeof p.getX==="function")
-+      .map(p=>({p,f:[p.getX,p.getY,p.getZ]}));})();
++  /* Fonction rangée sous `cle` le long de la chaîne de prototypes, lue par descripteur sans rien invoquer ; INCONNUE si c'est un getter. */
++  const INCONNUE={};
++  function fonctionRangee(o,cle) {
++    for(let p=o,n=0;p&&n<64;p=Object.getPrototypeOf(p),n++) {
++      const d=Object.getOwnPropertyDescriptor(p,cle);
++      if(d)return "value" in d?d.value:INCONNUE;
++    }
++    return undefined;
++  }
++  const TRIO=o=>["getX","getY","getZ"].map(k=>fonctionRangee(o,k));
++  const protosThree=()=>{const T=globalThis.THREE;return [T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype];};
++  /* Instantané au chargement : les fonctions de référence, ou rien si THREE est absent à ce moment-là. */
++  const REF_THREE=protosThree().filter(p=>!!p).map(p=>({p,f:TRIO(p)})).filter(r=>r.f.every(g=>typeof g==="function"));
 +  function accesseursReconnus(a) {
-+    const f=[a.getX,a.getY,a.getZ];
-+    if(f.every(g=>typeof g!=="function"))return true;
-+    const T=globalThis.THREE,courants=[T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype];
-+    return REF_THREE.some(({p,f:r})=>courants.includes(p)&&p.getX===r[0]&&p.getY===r[1]&&p.getZ===r[2]&&f[0]===r[0]&&f[1]===r[1]&&f[2]===r[2]);
++    const f=TRIO(a);
++    if(f.some(g=>g===INCONNUE))return false;
++    if(f.every(g=>typeof g!=="function"))return true;   // aucun accesseur : C.attribute lit lui-même le tableau
++    const courants=protosThree();
++    return REF_THREE.some(r=>courants.includes(r.p)&&TRIO(r.p).every((g,k)=>g===r.f[k])&&f.every((g,k)=>g===r.f[k]));
 +  }
 +  function lectureDirecte(n,indexAttr,transforms) {
 +    if(indexAttr||transforms.length!==2)return null;
-+    const a=n.position,meta=n.attribute.metadata||{},src=a?.array||a?.data?.array,parAccesseur={accesseur:true};
-+    if(!a||!accesseursReconnus(a))return parAccesseur;
-+    if(a.normalized||a.isFloat16BufferAttribute||meta.normalized||meta.itemSize<3)return parAccesseur;
-+    if(!(src instanceof Float32Array||src instanceof Float64Array))return parAccesseur;
-+    const stride=meta.stride,offset=meta.offset;
-+    if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0)return parAccesseur;
-+    return {accesseur:false,src,stride,offset};
++    const a=n.position,meta=n.attribute.metadata||{};
++    if(!a||!accesseursReconnus(a))return null;
++    if(meta.normalized||meta.itemSize<3||!(meta.arrayType==="Float32Array"||meta.arrayType==="Float64Array"))return null;
++    const src=a.array||a.data?.array,stride=meta.stride,offset=meta.offset;
++    if(!(src instanceof Float32Array||src instanceof Float64Array))return null;
++    if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0)return null;
++    return {src,stride,offset};
 +  }
    async function capture(options) {
      const {viewer:v,rails,origin,guard,meta}=options;
      const bounds=options.bounds||[.5,.4,.3];
-@@ -229,6 +265,61 @@
+@@ -229,6 +276,58 @@
            fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
        }
        integrityChecks.push(unchanged);
 +      const direct=lectureDirecte(n,indexAttr,transforms);
 +      if(direct) {
-+        const {src,stride,offset,accesseur}=direct,count=n.attribute.count,t0=transforms[0],t1=transforms[1];
-+        const lire=n.attribute.get;   // la lecture même de C.attribute : n.attribute.point(i) vaut [lire(i,0),lire(i,1),lire(i,2)]
++        const {src,stride,offset}=direct,count=n.attribute.count,t0=transforms[0],t1=transforms[1];
 +        const near=report.nearestToRailOrigin,b0=bounds[0],b1=bounds[1],b2=bounds[2];
 +        for(let di=drawStart;di<drawEnd;di++) {
 +          if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis) {
@@ -60,9 +70,7 @@
 +          const i=di;
 +          if(!Number.isInteger(i)||i<0||i>=count)fail("Indice de point invalide.");
 +          out.quality.inspected++;report.inspected++;
-+          let x,y,z;
-+          if(accesseur){x=lire(i,0);y=lire(i,1);z=lire(i,2);}
-+          else {const base=i*stride+offset;x=src[base];y=src[base+1];z=src[base+2];}
++          const base=i*stride+offset,x=src[base],y=src[base+1],z=src[base+2];
 +          if(!(finite(x)&&finite(y)&&finite(z))){out.quality.nonFinitePositions++;report.nonFinitePositions++;continue;}
 +          // C.point(t0,raw) puis C.point(t1,raw) : mêmes expressions, mêmes contrôles, mêmes messages.
 +          const w0=t0[3]*x+t0[7]*y+t0[11]*z+t0[15];
