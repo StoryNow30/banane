@@ -13,8 +13,10 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
 async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
- const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
+ const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info']});
+ const journal=[];let plantage=null; // CH-064 (chef) : diagnostic du plantage de la page (demande de l'intégrateur)
  try{const p=await b.newPage();
+  p.on('crash',()=>{plantage=plantage||'crash du moteur de rendu';});p.on('close',()=>{plantage=plantage||'page fermée';});
   /* contexte sécurisé (https) : crypto.subtle n'existe pas sur about:blank */
   await p.route('https://ch064-d.invalid/**',r=>r.fulfill({status:200,contentType:'text/html',body:'<!doctype html><title>banc</title>'}));await p.goto('https://ch064-d.invalid/');
   for(const s of nav.scripts)await p.addScriptTag({content:fs.readFileSync(path.join(RACINE,s),'utf8')});
@@ -38,7 +40,18 @@ async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
      const out=[];for(const [x,y] of tr)out.push([hex(await crypto.subtle.digest('SHA-256',x)),hex(await crypto.subtle.digest('SHA-256',y))]);return out;}};
    return navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0];},[octets.toString('base64'),nav]);
   const h={js:crypto.createHash('sha256'),rs:crypto.createHash('sha256')};let tampon=[],n=0;
-  const vider=async()=>{if(!tampon.length)return;const d=await p.evaluate(l=>window.__banc.passer(l),tampon);tampon=[];for(const [x,y] of d){h.js.update(x);h.rs.update(y);}};
+  /* chaque lot : mémoire linéaire du cœur avant et après, réinstanciations, tas JS, taille de la plus grosse entrée (octets VBA) */
+  let lots=0;
+  const vider=async()=>{if(!tampon.length)return;lots++;
+   const avant=await p.evaluate(()=>({...window.__banc.coeur.etat(),tas:performance.memory?performance.memory.usedJSHeapSize:null}));
+   const entreeMax=Math.max(...tampon.map(c=>JSON.stringify(c.entree)?.length||0)),modules=[...new Set(tampon.map(c=>String(c.id).split(/[-:]/)[0]))];
+   let d;try{d=await p.evaluate(l=>window.__banc.passer(l),tampon);}
+   catch(e){const diag={lot:lots,cas:n,modules,entreeMaxCaracteres:entreeMax,avant,derniers:journal.slice(-5),plantage};
+    console.error('PLANTAGE '+JSON.stringify(diag));throw e;}
+   const apres=await p.evaluate(()=>({...window.__banc.coeur.etat(),tas:performance.memory?performance.memory.usedJSHeapSize:null}));
+   journal.push({lot:lots,modules,entreeMax,memoire:[avant.memoire,apres.memoire],reinst:apres.reinstanciations,hauteEau:apres.hauteEau,tas:apres.tas});
+   if(lots%20===0)console.error('lot '+lots+' '+JSON.stringify(journal.at(-1)));
+   tampon=[];for(const [x,y] of d){h.js.update(x);h.rs.update(y);}};
   for(const c of adaptateur.cas({})){if(n++>=limite)break;tampon.push(c);if(tampon.length>=lot)await vider();}
   await vider();
   const r=await p.evaluate(nav=>{const b=window.__banc,q=(a,x)=>{if(!a.length)return null;const s=a.slice().sort((u,v)=>u-v);return s[Math.min(s.length-1,Math.floor(x*s.length))];};
