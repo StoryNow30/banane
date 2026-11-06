@@ -1,5 +1,12 @@
 # Banane V4 TEST — journal des versions
 
+## Vision — 06/11 nuit (D-296, D-297, D-298)
+- Nom « Vision » dans Chrome (le numéro de version reste 5).
+- Lecture LiDAR en Rust dans la page (CH-064, patch a85366e) : réglage `rust.lidar` allumé par défaut ; repli sur `vendor/lidar.js` (inchangé) si le module ne se charge pas ou si l'accesseur n'est pas reconnu. L'événement de journal `rust` dit qui a servi la lecture.
+- Géométrie élaguée du lot et médiane exacte (CH-065, D-297), sorties identiques.
+- Preuves : verify 3 207 essais, 0 échec ; maquette 74 essais, 0 échec (2 sautés).
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Tronc 5.0 — 06/11 soir (CH-067, D-295, D-296)
 - CH-067 (audit des correctifs CH-058, CH-059, CH-060, CH-062 ; aucun P1) : trois correctifs intégrés.
   - `src/etat-morceaux.js` : au recollage, un élément du lot à clé déjà vue n'est pas repris deux fois (retour arrière puis retour).
