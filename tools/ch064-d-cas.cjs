@@ -16,6 +16,9 @@ function graine(n){let a=n>>>0;return ()=>{a=a+0x6D2B79F5>>>0;let t=a;t=Math.imu
 const LIMITES=[undefined,null,true,false,0,-0,1,-1,2,3,0.05,0.5,4.4,7.95,8,15,40,41,45,45.01,100,150,1420,1e21,1e-7,NaN,Infinity,-Infinity,
  '','a','0','1.5','vert','propose','defaut','R1','R3','first-pass','window','choice','crossing','deferred','pn','adv','abords','ecartement','vert-hors-zone',
  'differe','lot','rapide','reference','captured','signal','stabilite','shift-out-of-domain','s1','chaine','ariane-relecture-reglages-1',[],[1],[0,1,2],[null],{},{a:1}];
+/* Une variante qui ferait tourner le JS sans fin (plages de cuts démesurées dans `selection`) n'est pas un cas : écartée. */
+function borne(v,prof=0){if(typeof v==='number')return Number.isNaN(v)||Math.abs(v)<=1e5;if(!v||typeof v!=='object'||prof>8)return true;return Object.values(v).every(x=>borne(x,prof+1));}
+const SURS={relectureOmbre:{selection:borne}};
 function encoder(args){try{return Buffer.from(Vba.encoder(args)).toString('base64');}catch{compte.nonVba++;return null;}}
 /* Feuilles et clés d'un arbre : chemins [[clé…]]. */
 function chemins(v,p=[],out=[],prof=0){out.push(p);if(prof>6||v===null||typeof v!=='object')return out;
@@ -33,7 +36,7 @@ function*cas(modules,{fixtures=true,reel=true,variantes=Number(process.env.CH064
  let i=0;
  for(const c of base){const b=encoder(c.args);if(b===null)continue;compte[c.id.startsWith('fixture')?'fixtures':'reel']++;
   yield {id:c.id+'#'+(i++),entree:{module:c.module,f:c.f,args:b}};
-  for(let k=0;k<variantes;k++){const m=muter(c.args,alea);if(!m)break;const bm=encoder(m);if(bm===null)continue;compte.variantes++;
+  for(let k=0;k<variantes;k++){const m=muter(c.args,alea);if(!m)break;const sur=SURS[c.module]?.[c.f];if(sur&&!sur(m))continue;const bm=encoder(m);if(bm===null)continue;compte.variantes++;
    yield {id:c.id+'#'+(i++)+'-variante'+k,entree:{module:c.module,f:c.f,args:bm}};}}
 }
 module.exports={cas,compte,muter,graine};

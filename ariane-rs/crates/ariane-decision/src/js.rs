@@ -167,9 +167,11 @@ pub fn nombre_chaine(x: f64) -> String {
     if x < 0.0 { return format!("-{}", nombre_chaine(-x)); }
     let e = format!("{x:e}"); // « d.ddde±x », chiffres les plus courts
     let (mant, exp) = e.split_once('e').unwrap();
-    let chiffres: String = mant.chars().filter(|c| *c != '.').collect();
+    let mut chiffres: String = mant.chars().filter(|c| *c != '.').collect();
+    let e10 = exp.parse::<i64>().unwrap();
+    departager_au_pair(x, &mut chiffres, e10);
     let k = chiffres.len() as i64;
-    let nexp = exp.parse::<i64>().unwrap() + 1; // valeur = 0,chiffres × 10^nexp
+    let nexp = e10 + 1; // valeur = 0,chiffres × 10^nexp
     if k <= nexp && nexp <= 21 {
         let mut s = chiffres; for _ in 0..(nexp - k) { s.push('0'); } s
     } else if 0 < nexp && nexp <= 21 {
@@ -180,6 +182,39 @@ pub fn nombre_chaine(x: f64) -> String {
         let e1 = nexp - 1;
         let signe = if e1 < 0 { '-' } else { '+' };
         if k == 1 { format!("{chiffres}e{signe}{}", e1.abs()) } else { format!("{}.{}e{signe}{}", &chiffres[..1], &chiffres[1..], e1.abs()) }
+    }
+}
+
+/// Départage d'ECMA-262 (Number::toString, étape 5) : si deux écritures de k chiffres relisent x et sont à égale distance
+/// de x, on prend celle dont le dernier chiffre est PAIR. Rust (flt2dec) arrondit alors vers le haut : mesuré, 1 860 313 443 422 875,25
+/// s'écrit « …875.3 » en Rust et « …875.2 » en V8. On teste les deux voisines du dernier chiffre : voisine qui relit x ET x
+/// exactement au milieu (développement décimal exact de x, fini pour un double) ⇒ la voisine paire l'emporte.
+fn departager_au_pair(x: f64, chiffres: &mut String, e10: i64) {
+    let d: Vec<u8> = chiffres.bytes().map(|c| c - b'0').collect();
+    let k = d.len();
+    let der = d[k - 1];
+    if der % 2 == 0 { return; } // déjà pair : rien à départager en sa faveur
+    let relit = |v: &[u8]| -> bool {
+        let s: String = v.iter().map(|c| (c + b'0') as char).collect();
+        let t = if s.len() > 1 { format!("{}.{}e{}", &s[..1], &s[1..], e10) } else { format!("{s}e{e10}") };
+        t.parse::<f64>().map(|y| y == x).unwrap_or(false)
+    };
+    // développement décimal exact de x (au plus ~770 chiffres significatifs), même exposant que les chiffres courts
+    let exact = format!("{x:.1100e}");
+    let (m, ex) = exact.split_once('e').unwrap();
+    if ex.parse::<i64>().unwrap() != e10 { return; }
+    let mut xs: Vec<u8> = m.bytes().filter(|c| *c != b'.').map(|c| c - b'0').collect();
+    while xs.len() > 1 && *xs.last().unwrap() == 0 { xs.pop(); }
+    for delta in [-1i8, 1] {
+        let nd = der as i8 + delta;
+        if !(0..=9).contains(&nd) { continue; }
+        let mut v = d.clone();
+        v[k - 1] = nd as u8;
+        if !relit(&v) { continue; }
+        // milieu de d et v : le plus petit des deux suivi de 5
+        let mut milieu = if delta < 0 { v.clone() } else { d.clone() };
+        milieu.push(5);
+        if xs == milieu { *chiffres = v.iter().map(|c| (c + b'0') as char).collect(); return; }
     }
 }
 
@@ -251,7 +286,8 @@ mod essais {
     fn nombres_comme_v8() {
         for (x, t) in [(0.1, "0.1"), (1e21, "1e+21"), (1e20, "100000000000000000000"), (123.456, "123.456"), (1e-7, "1e-7"),
             (1.5e-7, "1.5e-7"), (0.000001, "0.000001"), (-0.0, "0"), (-2.5, "-2.5"), (5e-324, "5e-324"), (1.7976931348623157e308, "1.7976931348623157e+308"),
-            (0.30000000000000004, "0.30000000000000004"), (7.95, "7.95"), (100.0, "100"), (2f64.powi(53), "9007199254740992")] {
+            (0.30000000000000004, "0.30000000000000004"), (7.95, "7.95"), (100.0, "100"), (2f64.powi(53), "9007199254740992"),
+            (1860313443422875.25, "1860313443422875.2"), (1409126409351526.25, "1409126409351526.2")] {
             assert_eq!(nombre_chaine(x), t, "{x:e}");
         }
     }
@@ -269,3 +305,32 @@ mod essais {
         assert_eq!(tranche_utf16("a💥", 3).unwrap(), "a💥");
     }
 }
+
+/// `v[i]` générique (objet simple aux clés d'indice, tableau) ; autre : `undefined` (une chaîne : hors domaine).
+pub fn gi(v: &V, i: usize) -> R<V> {
+    match v {
+        V::Objet(_) => Ok(g_brut(v, &i.to_string()).clone()),
+        V::Chaine(c) if !c.is_empty() => hd("indice d'une chaîne"),
+        x if est_tableau(x) => Ok(elem(x, i)),
+        _ => Ok(V::Indefini),
+    }
+}
+/// Lecture d'une clé quelconque d'un objet simple (indices compris).
+pub fn g_brut<'a>(v: &'a V, k: &str) -> &'a V { match v { V::Objet(e) => e.iter().find(|(c, _)| c == k).map(|(_, x)| x).unwrap_or(&INDEF), _ => &INDEF } }
+
+// ---------------------------------------------------------------- repères (vendor/capture-core.js)
+pub use ariane_capture::M16;
+/// Matrice lue par `C.point(m, p)` (`m[0]`…`m[15]` sans contrôle) : 16 nombres au moins, sinon hors domaine.
+pub fn m16(v: &V) -> R<M16> {
+    let mut a = [0.0; 16];
+    match v {
+        V::Nombres(t) if t.len() >= 16 => a.copy_from_slice(&t[..16]),
+        V::Tableau(t) if t.len() >= 16 => { for i in 0..16 { a[i] = match &t[i] { Some(V::Nombre(x)) => *x, _ => return hd("matrice : élément non numérique") }; } }
+        _ => return hd("matrice : 16 nombres attendus"),
+    }
+    Ok(a)
+}
+/// `C.point(m, p)` sur des valeurs.
+pub fn point_v(m: &V, p: &V) -> R<[f64; 3]> { let m = m16(m)?; let [x, y, z] = ariane_capture::xyz(p)?; ariane_capture::point(&m, x, y, z) }
+/// `C.distance(a,b)` : `Math.hypot(...a.map((x,i)=>x-b[i]))` pour deux points de 3 nombres.
+pub fn distance3(a: &[f64; 3], b: &[f64; 3]) -> f64 { ariane_js::hypot(&[a[0] - b[0], a[1] - b[1], a[2] - b[2]]) }
