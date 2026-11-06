@@ -244,3 +244,58 @@ pub fn min_positif_fini(best: f64, d: f64) -> f64 {
     #[cfg(not(target_arch = "wasm32"))]
     { best.min(d) }
 }
+
+#[cfg(test)]
+#[allow(clippy::float_cmp)] // essais d'identité au bit près : la comparaison exacte est le but
+mod essais_publics {
+    use super::*;
+    #[test]
+    fn sign_comme_math_sign() {
+        assert_eq!(sign(3.5), 1.0);
+        assert_eq!(sign(-0.1), -1.0);
+        assert!(sign(-0.0).is_sign_negative() && sign(-0.0) == 0.0);
+        assert!(sign(f64::NAN).is_nan());
+    }
+    #[test]
+    fn tri_stable_et_zeros() {
+        let mut v = [3.0, -0.0, 1.0, 0.0, -2.0];
+        trier_nombres(&mut v);
+        assert_eq!(v, [-2.0, -0.0, 0.0, 1.0, 3.0]);
+        assert!(v[1].is_sign_negative() && !v[2].is_sign_negative()); // ordre d'origine des zéros conservé
+    }
+    #[test]
+    fn max_min_de_listes() {
+        assert_eq!(max_de([]), f64::NEG_INFINITY);
+        assert_eq!(min_de([]), f64::INFINITY);
+        assert_eq!(max_de([1.0, 5.0, -2.0]), 5.0);
+        assert!(max_de([1.0, f64::NAN]).is_nan());
+        assert!(!max_de([-0.0, 0.0]).is_sign_negative());
+        assert!(min_de([0.0, -0.0]).is_sign_negative());
+    }
+    #[test]
+    fn cle_d_ensemble() {
+        assert_eq!(cle_same_value_zero(0.0), cle_same_value_zero(-0.0));
+        assert_eq!(cle_same_value_zero(f64::NAN), cle_same_value_zero(-f64::NAN));
+        assert_ne!(cle_same_value_zero(1.0), cle_same_value_zero(2.0));
+    }
+    #[test]
+    fn exp_correctement_arrondi_valeurs_connues() {
+        assert_eq!(exp_correctement_arrondi(0.0), 1.0);
+        assert_eq!(exp_correctement_arrondi(1.0), std::f64::consts::E);
+        assert_eq!(exp_correctement_arrondi(-1.0).to_bits(), 0x3FD7_8B56_362C_EF38); // e^-1 correctement arrondi
+        assert!(exp_correctement_arrondi(f64::NAN).is_nan());
+        assert_eq!(exp_correctement_arrondi(f64::NEG_INFINITY), 0.0);
+        assert_eq!(exp_correctement_arrondi(800.0), f64::INFINITY);
+    }
+    #[test]
+    fn minimum_positif() {
+        assert_eq!(min_positif_fini(0.000_625, 0.0001), 0.0001);
+        assert_eq!(min_positif_fini(0.0001, 0.000_625), 0.0001);
+        assert_eq!(min_positif_fini(0.5, 0.5), 0.5);
+    }
+    #[test]
+    fn echecs() {
+        assert_eq!(Echec::erreur("x"), Echec::Js { nom: "Error", message: "x".into() });
+        assert_eq!(Echec::hors_domaine("y"), Echec::HorsDomaine("y".into()));
+    }
+}

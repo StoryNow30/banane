@@ -24,7 +24,7 @@ class EsvSignalLot extends EsvVue{
 }
 const REGLAGE={actif:true,lectures:3,rechargementsMax:1,preuveMs:400,delaiAvantMs:0,sondageMs:20,attenteRepriseMs:3000,silenceListeMs:0,attenteSansListeMs:0};
 /* Lot de `start` à `end` (partie 23). `reglage` : `lot.signalEteint` (undefined : le livré). */
-async function lotSignal({reglage,esv={},start=111,end=115}={}){
+async function lotSignal({reglage,esv={},start=111,end=115,avant=null}={}){
  const adapter=new EsvSignalLot(esv),b=production({adapter});
  b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false},
   lot:{...S.lot,gardeApresDiffere:false,rechercheLarge:{...S.lot.rechercheLarge,actif:false},...(reglage!==undefined?{signalEteint:reglage}:{})}};
@@ -32,6 +32,7 @@ async function lotSignal({reglage,esv={},start=111,end=115}={}){
  b.ctx.chrome.tabs.reload=async()=>{adapter.rechargements++;adapter.muet=true;b.get('chargementEsvReset')();
   if(!adapter.jamaisPret)setTimeout(()=>{adapter.muet=false;adapter.rechargee=true;adapter.identity.pageId='page-rechargee-'+adapter.rechargements;
    if(Number.isInteger(adapter.partieApres))adapter.identity.part=adapter.partieApres;},adapter.muetMs);};
+ if(avant)avant(adapter,b);
  await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
  adapter.identity.cut=start;adapter.rails=K.clone(base.rails);
  await b.api('start',{part:23,start,end,...SCOPE});

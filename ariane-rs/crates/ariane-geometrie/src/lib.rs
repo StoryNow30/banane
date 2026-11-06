@@ -5,10 +5,13 @@ pub mod v46;
 pub mod gcv1;
 pub mod convention;
 pub mod jauge;
+#[cfg(test)]
+mod essais_communs;
 
 /// `Math.exp` du moteur JS qui exécute (import WASM) ; en natif (programme de l'option B), l'exp correctement arrondi
 /// d'ariane-js, mesuré identique à celui de Chromium 153 (pas à celui de Node 22).
 #[cfg(target_arch = "wasm32")]
+#[must_use]
 pub fn exp(x: f64) -> f64 {
     #[link(wasm_import_module = "env")]
     extern "C" { fn js_exp(x: f64) -> f64; }

@@ -295,3 +295,31 @@ mod essais {
         assert!(decoder(&[0x56, 0x42, 0x41, 0x01, 0x0B, 1, 0, 0, 0, 2]).is_err());
     }
 }
+
+#[cfg(test)]
+mod essais_publics {
+    use super::*;
+    #[test]
+    fn champ_elements_vrai() {
+        let o = Valeur::Objet(vec![("a".into(), Valeur::Nombre(1.0))]);
+        assert_eq!(o.champ("a"), Some(&Valeur::Nombre(1.0)));
+        assert_eq!(o.champ("b"), None);
+        assert_eq!(Valeur::Nul.champ("a"), None);
+        let b = Valeur::Bloc { k: 2, donnees: vec![1.0, 2.0, 3.0, 4.0] };
+        assert_eq!(b.elements(), Some(vec![Valeur::Nombres(vec![1.0, 2.0]), Valeur::Nombres(vec![3.0, 4.0])]));
+        assert_eq!(Valeur::Tableau(vec![None]).elements(), Some(vec![Valeur::Indefini]));
+        assert_eq!(Valeur::Nul.elements(), None);
+        for (v, attendu) in [(Valeur::Indefini, false), (Valeur::Nombre(-0.0), false), (Valeur::Nombre(f64::NAN), false), (Valeur::Chaine(String::new()), false),
+            (Valeur::Chaine("0".into()), true), (Valeur::Tableau(vec![]), true), (Valeur::Objet(vec![]), true), (Valeur::Booleen(true), true)] {
+            assert_eq!(v.vrai(), attendu, "{v:?}");
+        }
+    }
+    #[test]
+    fn ecrivain_et_encoder_concordent() {
+        let v = Valeur::Chaine("é".into());
+        let mut e = Ecrivain::new();
+        e.valeur(&v);
+        assert_eq!(e.o, encoder(&v));
+        assert_eq!(Ecrivain::default().o, ENTETE.to_vec());
+    }
+}

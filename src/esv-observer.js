@@ -71,7 +71,7 @@
  const OBSERVER_VERSION=1;
  /* 4.9.5.3 (S6) — champs de liste gardés en plus (lecture seule) et événements relayés depuis l'adaptateur. */
  const EXTRA_NUM=['RailSpacing','TrajAzimuth'],EXTRA_STR='RailType',EXTRA_PK='PK',SUCCESS=/^Success/;
- const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null});
+ const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */
  const EPT_DATA=/\/ept-data\//i;
  function argsReduits(a){if(!Array.isArray(a))return [];return a.slice(0,6).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='string'&&v.length<=24?v:typeof v==='boolean'?v:null);}
 
@@ -367,7 +367,10 @@
      record({kind:k,nom:x.nom,args:argsReduits(x.args),pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null,...(Number.isInteger(x.perdus)&&x.perdus>0?{perdus:Math.min(x.perdus,1e6)}:{})});}
     else if(k==='diag-compteur-bloque'){if(!releveOn('compteurBloque'))return;
      record({kind:k,valeur:Number.isInteger(x.valeur)&&x.valeur>0&&x.valeur<1e6?x.valeur:null,cuts:Number.isInteger(x.cuts)&&x.cuts>0&&x.cuts<1000?x.cuts:null,
-      cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}}
+      cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}
+    /* CH-062 : ligne de base du compteur abandonnée pour une lecture (compteur sous les échecs, observateur des ressources absent). */
+    else if(k==='ligne-base-repli')record({kind:k,motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:Number.isInteger(x.compteur)&&x.compteur>=0&&x.compteur<1e6?x.compteur:null,
+     echecs:Number.isInteger(x.echecs)&&x.echecs>=0&&x.echecs<1e6?x.echecs:null,cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}
    else if(d.kind==='banane5:config'){
     if(Array.isArray(d.relevesOff)){off.clear();for(const n of d.relevesOff)if(typeof n==='string'&&n.length<=24)off.add(n);}
     if(!Array.isArray(d.relevesOff)&&(!('table' in d)||typeof d.enabled==='boolean'))enabled=d.enabled!==false;

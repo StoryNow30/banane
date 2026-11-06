@@ -26,3 +26,10 @@ test('outil CH-062 : mort du signal à l’échec, pas de détection sous 8 repl
  assert.equal(p.parLecture.signal.mediane,4000);assert.ok(p.parLecture.repli.mediane>p.parLecture.signal.mediane);
  const g=gain([p],{tirages:50});assert.equal(g.pagesTouchees,0);assert.ok(g.ligneDeBase.gainS>0,'la ligne de base gagne sans rechargement');
 });
+test('outil CH-062 : trou après un échec = captures de la même page sous 30 % de la médiane des 20 d’avant, en série',()=>{
+ const {trous}=require('../tools/ch062-signal-lot.cjs');const ev=[];
+ const pts=[5000,5100,4900,5000,5050,/* échec */ 0,200,4000,10,0,5000,5000,5000,5000];
+ pts.forEach((p,i)=>ev.push({type:'adapter-result',action:'capture',identity:{pageId:'p',cut:100+i},timestamp:iso(i*1000),lastDetail:{points:p}}));
+ ev.push({type:'esv-observation',kind:'resource',echecs:1,timestamp:iso(4500)});
+ assert.deepEqual(trous({events:ev}),[{mediane:5000,cuts:4,dureeS:5}],'105, 106, 108, 109 troués ; 107 (4 000 points) toléré ; série close par trois captures normales');
+});
