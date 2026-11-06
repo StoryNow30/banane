@@ -51,7 +51,8 @@ fn plus_proches(mut l: Vec<V>, identity: &V, k: &V) -> R<Vec<V>> {
     for a in &l { let d = ecart_cut(a, identity)?; if d.is_nan() { return hd("cut non numérique"); } cles.push(d); }
     let mut idx: Vec<usize> = (0..l.len()).collect();
     idx.sort_by(|i, j| cles[*i].partial_cmp(&cles[*j]).unwrap());
-    let fin = slice_debut(l.len(), vers_nombre(k)?);
+    // `slice(0, undefined)` garde tout (CH-068)
+    let fin = if matches!(k, V::Indefini) { l.len() } else { slice_debut(l.len(), vers_nombre(k)?) };
     let mut out = vec![];
     for i in idx.into_iter().take(fin) { out.push(std::mem::replace(&mut l[i], V::Indefini)); }
     Ok(out)

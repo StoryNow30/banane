@@ -11,13 +11,13 @@ const RACINE=path.resolve(__dirname,'..','..');
 const SRC={critere:'src/relecture-critere.js',signal:'src/relecture-signal.js',gardeApresDiffere:'src/garde-apres-differe.js',
  gardePasseAppuis:'src/garde-passe-appuis.js',relectureOmbre:'src/relecture-ombre.js',reglesMetier:'src/regles-metier.js',crossing:'src/level-crossing.js',
  shadow:'src/gcv1-shadow.js',hauteur:'src/hauteur-apprise.js',fauxVert:'src/faux-vert-ombre.js',lotDecision:'src/lot-decision.js',
- /* CH-068 (J4) */ appuisListe:'src/appuis-liste.js',gcv2L1e:'src/gcv2-l1e.js',voieRecentree:'src/voie-recentree.js',voieB1:'src/voie-b1-ecart.js'};
+ /* CH-068 (J4) */ appuisListe:'src/appuis-liste.js',gcv2L1e:'src/gcv2-l1e.js',voieRecentree:'src/voie-recentree.js',voieB1:'src/voie-b1-ecart.js',rechercheLarge:'src/recherche-large.js'};
 const GLOBALES={critere:'BananeRelectureCritere',signal:'BananeRelectureSignal',gardeApresDiffere:'BananeGardeApresDiffere',
- gardePasseAppuis:'BananeGardePasseAppuis',relectureOmbre:'BananeRelectureOmbre',reglesMetier:'BananeReglesMetier',crossing:'BananeLevelCrossing',shadow:'BananeGCV1Shadow',hauteur:'BananeHauteurApprise',fauxVert:'BananeFauxVertOmbre',lotDecision:'BananeLotDecision',appuisListe:'BananeAppuisListe',gcv2L1e:'BananeGcv2L1e',voieRecentree:'BananeVoieRecentree',voieB1:'BananeVoieB1Ecart'};
+ gardePasseAppuis:'BananeGardePasseAppuis',relectureOmbre:'BananeRelectureOmbre',reglesMetier:'BananeReglesMetier',crossing:'BananeLevelCrossing',shadow:'BananeGCV1Shadow',hauteur:'BananeHauteurApprise',fauxVert:'BananeFauxVertOmbre',lotDecision:'BananeLotDecision',appuisListe:'BananeAppuisListe',gcv2L1e:'BananeGcv2L1e',voieRecentree:'BananeVoieRecentree',voieB1:'BananeVoieB1Ecart',rechercheLarge:'BananeRechercheLarge'};
 /* Ordre de chargement du service worker (background.js, importScripts), restreint aux modules purs dont dépend la décision. */
 const CHAINE=['vendor/capture-core.js','src/gauge.js','src/geometry.js','src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/geometry-candidate-v1.js',
  'src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/regles-metier.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/appuis-liste.js','src/gcv2-l1e.js','src/voie-recentree.js','src/voie-b1-ecart.js'];
+ 'src/regles-metier.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/appuis-liste.js','src/gcv2-l1e.js','src/voie-recentree.js','src/voie-b1-ecart.js','src/recherche-large.js'];
 const MODULES=(process.env.CH064D_MODULES||Object.keys(SRC).join(',')).split(',');
 const M=Object.fromEntries(MODULES.map(m=>[m,require(path.join(RACINE,SRC[m]))]));
 const Mfac={...M,convention:require(path.join(RACINE,'src/placement-convention.js')),shadow:require(path.join(RACINE,'src/gcv1-shadow.js'))};
@@ -32,7 +32,9 @@ function jouer(Mods,e,dec,S){
  const marquer=(v,p=0)=>{if(v instanceof Map)return {[MM]:[...v].map(x=>marquer(x,p+1))};if(!v||typeof v!=='object'||p>6||typeof v==='function')return v;
   if(Array.isArray(v)){let ch=false;const r=v.map(x=>{const y=marquer(x,p+1);if(y!==x)ch=true;return y;});return ch?r:v;}
   let ch=false;const r={};for(const k of Object.keys(v)){const y=marquer(v[k],p+1);if(y!==v[k])ch=true;r[k]=y;}return ch?r:v;};
- const a=dec(e.args).map(x=>retablir(x));for(const x of a)if(x&&typeof x==='object'&&x.Shadow==='\u0000shadow')x.Shadow=S;const r=Mods[e.module][e.f](...a);
+ const a=dec(e.args).map(x=>retablir(x));for(const x of a)if(x&&typeof x==='object'&&x.Shadow==='\u0000shadow')x.Shadow=S;
+ /* recherche-large.decider rend `ms` (horloge) : la même horloge figée des deux côtés pendant l'appel. */
+ const D=Date.now,fige=e.module==='rechercheLarge';if(fige)Date.now=()=>0;let r;try{r=Mods[e.module][e.f](...a);}finally{if(fige)Date.now=D;}
  if(r&&typeof r==='object')for(const x of a)if(x&&typeof x==='object'&&x.Shadow===S)x.Shadow='\u0000shadow';return {r:marquer(r),apres:a.map(x=>marquer(x))};}
 module.exports={nom:'decision',description:'ariane-decision : '+MODULES.join(', '),sources:[...MODULES.map(m=>SRC[m]),'vendor/capture-core.js','src/level-crossing.js'],
  /* Seules les fonctions portées (F.PORTEES) : le reste (frameOf, qui rend une fermeture ; evaluer, noter…) reste du JS des deux côtés. */

@@ -20,6 +20,7 @@ pub mod appuis;
 pub mod l1e;
 pub mod recentree;
 pub mod b1ecart;
+pub mod large;
 #[cfg(test)]
 mod essais;
 
@@ -46,6 +47,8 @@ pub const GCV2_L1E: u32 = 62;
 pub const VOIE_RECENTREE: u32 = 63;
 /// CH-068 (J4) : `src/voie-b1-ecart.js`.
 pub const VOIE_B1_ECART: u32 = 64;
+/// CH-068 (J4) : `src/recherche-large.js`.
+pub const RECHERCHE_LARGE: u32 = 65;
 /// Sonde de sémantique (Number::toString) : `{f:"nombreChaine", a:[[x…]]}` → chaînes.
 pub const SONDE: u32 = 99;
 
@@ -67,6 +70,7 @@ pub fn appeler(fonction: u32, entree: &Valeur) -> R<Valeur> {
         GCV2_L1E => l1e::appeler(&a),
         VOIE_RECENTREE => recentree::appeler(&a, entree),
         VOIE_B1_ECART => b1ecart::appeler(&a, entree),
+        RECHERCHE_LARGE => large::appeler(&a, entree),
         SONDE if a.f == "nombreChaine" => Ok(Valeur::Tableau(js::presents(a.arg(0)).iter().map(|x| js::chaine(x).map(|c| Some(js::s(&c)))).collect::<R<Vec<_>>>()?)),
         _ => js::hd("ariane-decision : fonction inconnue"),
     }

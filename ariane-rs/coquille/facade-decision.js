@@ -9,7 +9,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeFacadeDecision=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
  'use strict';
  const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56,shadow:57,hauteur:58,fauxVert:59,lotDecision:60,
-  /* CH-068 (J4) */ appuisListe:61,gcv2L1e:62,voieRecentree:63,voieB1:64};
+  /* CH-068 (J4) */ appuisListe:61,gcv2L1e:62,voieRecentree:63,voieB1:64,rechercheLarge:65};
  const PORTEES={
   critere:['reglages','correctionPermise','juger'],
   signal:['reglage','lectureDe','creer','observer','recharge','bilan'],
@@ -24,7 +24,8 @@
   gcv2L1e:['referenceEcartement','signe','corriger','decider'],
   voieRecentree:['localMm','poseMm','vueNecessaire','camerasLarges','geste','traceMoteur','confiances','profondeur','predictionDe','mesures','regle','enRegle',
    'verdictPrudent','completer','recentrer','appuisDepuisDecalage','choisirDansLePool','ecartPose','juger','memoireSerie'],
-  voieB1:['lignesDeTable','repereDepuisLigne','ecartementReference','railTrouve','solutionsEcartement','poseMmDe','ecartPoses','evaluer']};
+  voieB1:['lignesDeTable','repereDepuisLigne','ecartementReference','railTrouve','solutionsEcartement','poseMmDe','ecartPoses','evaluer'],
+  rechercheLarge:['reglage','graines','grainesUtiles','grainesPics','decalage','relance','cellules','paires','decider','resumer']};
  const MUTANTES={signal:new Set(['observer','recharge']),appuisListe:new Set(['noterRepere'])};
  /* Mutantes qui rendent parfois leur premier argument lui-même (noterRepere) : le cœur ajoute `meme`, la façade rend alors l'objet d'origine. */
  const primitif=v=>v===null||(typeof v!=='object'&&typeof v!=='function');
@@ -35,7 +36,8 @@
  function plafondMode(P){const cfg={...(P&&P.DEFAULTS)};const v=cfg.plafond!==undefined&&cfg.plafond!==null?cfg.plafond:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.conventionPlafond:undefined);
   return v===true?true:v==='vertical'?'vertical':false;}
  const etatShadow=(S,modules)=>{const st=S.state();return {partialFlank:st.partialFlank,convention:st.convention,plafond:plafondMode(modules.convention)};};
- function etatDe(nom,modules){if(nom==='shadow')return etatShadow(modules.shadow,modules);return undefined;}
+ /* recherche-large (CH-068) relance le moteur gelé du module GCV1 chargé : son état part avec chaque appel (sans module chargé : repli). */
+ function etatDe(nom,modules){if(nom==='shadow'||nom==='rechercheLarge')return modules.shadow?etatShadow(modules.shadow,modules):null;return undefined;}
  /* decideCut reçoit le module GCV1 (`Shadow`, des fonctions) : il ne traverse pas ; seul le module chargé (modules.shadow) est accepté,
   * son état part à sa place, avec les réglages globaux que lit lot-decision.js. Tout autre Shadow (doublure d'essai) : repli sur le JS. */
  function envoiSpecial(nom,f,a,modules){
@@ -62,9 +64,13 @@
     const mutante=MUTANTES[nom]?.has(f);
     F[f]=function(...a){
      const sp=envoiSpecial(nom,f,a,modules);if(sp===false){c.repliHorsDomaine++;return M[f](...a);}
-     let v;try{const etat=etatDe(nom,modules);v=coeur.appeler(NUMEROS[nom],sp||(etat===undefined?{f,a}:{f,a,etat}));c.coeur++;}
+     const etat=sp?undefined:etatDe(nom,modules);if(etat===null){c.repliHorsDomaine++;return M[f](...a);}
+     /* decider (recherche-large) : `ms` est une horloge ; la façade la lit autour de l'appel, comme le JS autour de son calcul. */
+     const t0=nom==='rechercheLarge'&&f==='decider'?Date.now():null;
+     let v;try{v=coeur.appeler(NUMEROS[nom],sp||(etat===undefined?{f,a}:{f,a,etat}));c.coeur++;}
      catch(e){if(e&&e.name==='HorsDomaine'){c.repliHorsDomaine++;return M[f](...a);}
       if(e instanceof TypeError&&/^VBA : /.test(e.message)){c.repliFormat++;return M[f](...a);}throw e;}
+     if(t0!==null&&v&&typeof v==='object')v.ms=Date.now()-t0;
      if(mutante){recopier(a[0],v.e);return v.meme===true?a[0]:v.r;}
      return sp?apresSpecial(nom,f,a,v):v;};}
    out[nom]=F;}

@@ -184,3 +184,8 @@ pub fn trier_par<T>(t: &mut [T], cle: impl Fn(&T) -> f64) -> R<()> {
     t.sort_by(|a, b| { let d = cle(a) - cle(b); if d < 0.0 { core::cmp::Ordering::Less } else if d > 0.0 { core::cmp::Ordering::Greater } else { core::cmp::Ordering::Equal } });
     Ok(())
 }
+/// Borne de fin de `t.slice(0, fin)` : `undefined` vaut la longueur, sinon `ToIntegerOrInfinity(ToNumber(fin))`.
+///
+/// # Errors
+/// `HorsDomaine` si `fin` ne se convertit pas.
+pub fn fin_slice(len: usize, fin: &V) -> R<usize> { if matches!(fin, V::Indefini) { Ok(len) } else { Ok(crate::js::slice_debut(len, nombre(fin)?)) } }

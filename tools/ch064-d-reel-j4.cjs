@@ -19,7 +19,7 @@ function tables(){
   if(!t||vus.has(t.partie+'|'+t.sig))continue;vus.add(t.partie+'|'+t.sig);TABLES.push({n:t.n,st:t.st,fl:t.fl,ed:t.ed,partie:t.partie});}
  return TABLES;}
 function*cas(modules,{max=Infinity}={}){
- const veut=m=>modules.includes(m);if(veut('voieRecentree'))yield* recentree(max);if(!['gcv2L1e','appuisListe','voieB1'].some(veut))return;
+ const veut=m=>modules.includes(m);if(veut('voieRecentree')||veut('voieB1'))yield* recentree(max,veut);if(!['gcv2L1e','appuisListe','voieB1'].some(veut))return;
  const T=tables();let k=0;
  if(veut('gcv2L1e'))for(const t of T){const pas=Math.max(1,Math.floor(t.n/120));
   for(let c=0;c<t.n;c+=pas){k++;yield {id:'reel-l1e-ref-p'+t.partie+'-c'+c,module:'gcv2L1e',f:'referenceEcartement',args:k%7?[t,c]:[t,c,{voisines:8,voisinesMin:3}]};}}
@@ -49,14 +49,22 @@ function*cas(modules,{max=Infinity}={}){
 }
 /* voie-recentree : la décision du lot EN CHAÎNE sur les nuages réels d'une partie (comme tools/ch064-d-reel.cjs pour decideCut) ;
  * à chaque cut, les fonctions du module sur la capture, la science GCV1 du cut, la décision et les appuis du moment. */
-function*recentree(max){
+function*recentree(max,veut){
  const L=require(path.join(RACINE,'src/lot-decision.js')),S=require(path.join(RACINE,'src/gcv1-shadow.js')),V=require(path.join(RACINE,'src/voie-recentree.js'));
  const {nuages}=require('./ch064-nuages.cjs'),lim=Math.min(max,Number(process.env.CH068_RECENTREE_MAX||300)),parPartie=new Map();
  for(const c of nuages(lim)){const k=c.identity?.frameId+'|'+c.identity?.part;if(!parPartie.has(k))parPartie.set(k,[]);parPartie.get(k).push(c);}
- let k=0;
- for(const [,cs] of parPartie){cs.sort((a,b)=>a.identity.cut-b.identity.cut);const anchors=[],differes=[],validees=[];
+ let k=0;const VB1=require(path.join(RACINE,'src/voie-b1-ecart.js')),parTable=new Map(tables().map(t=>[t.partie,t]));
+ for(const [,cs] of parPartie){cs.sort((a,b)=>a.identity.cut-b.identity.cut);const anchors=[],differes=[],validees=[],mem=VB1.creerMemoire('lot');
   for(const c of cs){k++;const id='p'+c.identity.part+'-c'+c.identity.cut,leger={identity:c.identity,rails:c.rails,camera:c.camera,viewCaptures:c.viewCaptures};
    const science=S.scientificProposeBoth(c),d=L.decideCut({capture:c,science,anchors,Shadow:S});
+   /* voie-b1-ecart : l'ombre d'un cut que le lot diffère (et d'un posé sur cinq), mémoire de l'ombre portée d'un cut à l'autre. */
+   if(veut('voieB1')&&(d.stage==='deferred'||k%5===0)){const t=k%4?parTable.get(c.identity.part)??null:null;
+    const args={mem:structuredClone(mem),capture:c,science,Shadow:'\u0000shadow',table:t,ancresReelles:structuredClone(anchors),decisionReelle:d,commandeReelle:k%3?{action:'defer',reason:'lot'}:null};
+    yield {id:'reel-b1-evaluer-'+id,module:'voieB1',f:'evaluer',args:[args]};
+    VB1.evaluer({mem,capture:c,science,Shadow:S,table:t,ancresReelles:anchors,decisionReelle:d});
+    if(k%7===0)yield {id:'reel-b1-ecartref-'+id,module:'voieB1',f:'ecartementReference',args:[t,c.identity.cut,structuredClone(anchors)]};
+    if(k%7===0)for(const s of ['left','right']){const tr=VB1.railTrouve(science.rails[s]);if(tr)yield {id:'reel-b1-solutions-'+s+'-'+id,module:'voieB1',f:'solutionsEcartement',args:[leger,s,tr.delta,1435]};}}
+   if(!veut('voieRecentree')){if(d.anchor&&d.positions)L.rememberAnchor(anchors,{identity:c.identity,positions:d.positions,stage:d.stage});continue;}
    if(k%3===0)yield {id:'reel-vr-recentrer-'+id,module:'voieRecentree',f:'recentrer',args:[{capture:c,science,anchors:structuredClone(anchors),Shadow:'\u0000shadow'}]};
    yield {id:'reel-vr-trace-'+id,module:'voieRecentree',f:'traceMoteur',args:[science]};
    yield {id:'reel-vr-completer-'+id,module:'voieRecentree',f:'completer',args:[{capture:leger,decision:d,relance:k%2?science:null,appuis:structuredClone(anchors)}]};

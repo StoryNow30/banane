@@ -670,7 +670,7 @@ pub fn memoire_serie(arg: &V) -> R<V> {
         let d = if d == 0.0 { c.1 - a.1 } else { d };
         if d < 0.0 { core::cmp::Ordering::Less } else if d > 0.0 { core::cmp::Ordering::Greater } else { core::cmp::Ordering::Equal }
     });
-    let k = crate::js::slice_debut(mem.len(), nombre(g(&sv, "K"))?);
+    let k = crate::j4::fin_slice(mem.len(), g(&sv, "K"))?;
     mem.truncate(k);
     let porte = g(&sv, "porteDispersionMm").clone();
     if mem.is_empty() {
@@ -679,7 +679,7 @@ pub fn memoire_serie(arg: &V) -> R<V> {
     let disp = ariane_js::max_de(mem.iter().map(|x| x.0)) * nombre(g(&sv, "mmParCut"))?;
     let memoire = o(vec![("cuts", tab(mem.iter().map(|x| g(g(&x.2, "identity"), "cut").clone()).collect())), ("n", n(mem.len() as f64)), ("dispersionMm", n(disp)), ("porteMm", porte.clone())]);
     if disp > nombre(&porte)? { return Ok(o(vec![("etat", s("serie-instable")), ("serie", serie_v(serie)), ("memoire", memoire), ("appuis", tab(vec![]))])); }
-    let ka = crate::js::slice_debut(mem.len(), nombre(g(&sv, "appuis"))?);
+    let ka = crate::j4::fin_slice(mem.len(), g(&sv, "appuis"))?;
     let appuis: Vec<V> = mem.iter().take(ka).map(|x| {
         let id = g(&x.2, "identity");
         o(vec![("identity", o(vec![("part", g(id, "part").clone()), ("cut", g(id, "cut").clone()), ("frameId", ou_nul(g(id, "frameId")))])), ("positions", g(&x.2, "positions").clone()), ("stage", s("operateur"))])
