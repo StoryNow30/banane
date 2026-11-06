@@ -1,0 +1,260 @@
+{
+ "format": "ch064-banc-esv-v1",
+ "lot": {
+  "part": 13,
+  "start": 1165,
+  "end": 9390,
+  "testConfirmed": true,
+  "allowNavigationEvidence": true,
+  "lowConfidence": "attempt",
+  "unresolvedPolicy": "defer",
+  "lotDecision": "apply",
+  "geometryEngine": "geometry-candidate-v1"
+ },
+ "cuts": 24,
+ "cutsPoses": [
+  18,
+  18
+ ],
+ "ecrituresServeur": {
+  "js": [
+   {
+    "rowKey": "13-1165",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1510",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1612",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1922",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1955",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2021",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2130",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2168",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2397",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2456",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2514",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2623",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2679",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2709",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2922",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2958",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-4601",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-6876",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-6877",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-7640",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-7824",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-7899",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-8019",
+    "status": "valid"
+   }
+  ],
+  "wasm": [
+   {
+    "rowKey": "13-1165",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1510",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1612",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1922",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-1955",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2021",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2130",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2168",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2397",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2456",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2514",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2623",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2679",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2709",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2922",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-2958",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-4601",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-6876",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-6877",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-7640",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-7824",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-7899",
+    "status": "valid"
+   },
+   {
+    "rowKey": "13-8019",
+    "status": "valid"
+   }
+  ]
+ },
+ "vuesComparees": 382,
+ "bruitJsContreJs": [
+  "resume.notice",
+  "evenements.clic-hors-vue-bilan@-",
+  "evenements.clic-hors-vue@9390",
+  "evenements.correction-couverture@-",
+  "evenements.correction-liste@-"
+ ],
+ "differencesJsContreWasm": [
+  "evenements.clic-hors-vue-bilan@-",
+  "evenements.clic-hors-vue@9390"
+ ],
+ "imputablesAuCoeur": {},
+ "compteursWasm": {
+  "coeur": {
+   "reinstanciations": 0,
+   "hauteEau": 1703936,
+   "memoire": 1703936
+  },
+  "facades": {
+   "geometrie": {
+    "coeur": 82,
+    "repliHorsDomaine": 0,
+    "repliFormat": 0
+   },
+   "gcv1": {
+    "coeur": 59,
+    "repliHorsDomaine": 0,
+    "repliFormat": 0,
+    "rappelsRejoues": 59
+   },
+   "convention": {
+    "coeur": 211,
+    "repliHorsDomaine": 0,
+    "repliFormat": 0
+   }
+  }
+ },
+ "dureeLotMs": {
+  "js": [
+   83001,
+   87759,
+   86480
+  ],
+  "wasm": 85887
+ },
+ "erreurs": {
+  "js": [],
+  "wasm": []
+ },
+ "verdict": "IDENTIQUE"
+}

@@ -24,6 +24,10 @@ fn disposition(n: usize) -> Layout {
 /// Tampon de `n` octets pour une trame d'entrée, à remplir par la coquille puis à passer à [`vba_appel`].
 #[no_mangle]
 pub extern "C" fn vba_reserver(n: usize) -> *mut u8 {
+    // Nouveau cycle d'appel : la coquille a lu et rendu la réponse précédente ; tout ce que l'arène portait est mort.
+    RESULTAT.with(|r| r.set((0, 0)));
+    #[cfg(target_arch = "wasm32")]
+    crate::arene::ARENE.remettre_a_zero();
     let d = disposition(n);
     // SÛRETÉ : `d` a une taille non nulle (n.max(1)) ; le pointeur est rendu tel quel à la coquille, qui n'en écrit que
     // `n` octets et le rend par `vba_appel` ou `vba_liberer` avec le même `n`.
@@ -40,6 +44,15 @@ pub extern "C" fn vba_reserver(n: usize) -> *mut u8 {
 pub unsafe extern "C" fn vba_liberer(p: *mut u8, n: usize) {
     // SÛRETÉ : contrat de l'appelant ci-dessus ; même disposition qu'à l'allocation.
     unsafe { dealloc(p, disposition(n)) }
+}
+
+/// Octets occupés dans l'arène par l'appel en cours ou le dernier appel (haute eau d'un appel ; 0 hors WASM).
+#[no_mangle]
+pub extern "C" fn vba_occupe() -> usize {
+    #[cfg(target_arch = "wasm32")]
+    { crate::arene::ARENE.occupe() }
+    #[cfg(not(target_arch = "wasm32"))]
+    { 0 }
 }
 
 /// Adresse de la trame de la dernière réponse (0 si aucune).

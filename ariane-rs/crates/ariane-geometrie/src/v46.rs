@@ -483,3 +483,27 @@ mod essais {
         assert_eq!(v.champ("reasons"), Some(&Valeur::Tableau(vec![Some(s("Aucun point LiDAR disponible."))])));
     }
 }
+
+#[cfg(test)]
+mod essais_publics {
+    use super::*;
+    #[test]
+    fn rail_synthetique_candidat_au_delta_nul() {
+        let c = crate::essais_communs::capture(6);
+        let v = propose(&c, "left", &Valeur::Indefini).unwrap();
+        assert_eq!(v.champ("status"), Some(&s("candidate")), "{:?}", v.champ("reasons"));
+        let Some(Valeur::Nombres(d)) = v.champ("delta") else { panic!("delta") };
+        assert!(d[1].abs() < 0.002 && d[2].abs() < 0.002, "{d:?}");
+    }
+    #[test]
+    fn paire_et_appui() {
+        let c = crate::essais_communs::capture(6);
+        let both = propose_both(&c, &Valeur::Indefini).unwrap();
+        assert!(both.champ("left").is_some() && both.champ("right").is_some());
+        // un delta latéral isolé de 80 mm sans appui du second rail est refusé
+        let p = |l: f64| obj(vec![("status", s("candidate")), ("delta", Valeur::Nombres(vec![0.0, l, 0.0])), ("reasons", Valeur::Tableau(vec![]))]);
+        let r = enforce_pair_support(p(0.08), p(0.0), &Valeur::Indefini).unwrap();
+        assert_eq!(r.champ("left").and_then(|g| g.champ("status")), Some(&s("unresolved")));
+        assert_eq!(r.champ("right").and_then(|g| g.champ("status")), Some(&s("candidate")));
+    }
+}

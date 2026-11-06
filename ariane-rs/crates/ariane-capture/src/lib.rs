@@ -267,3 +267,42 @@ mod essais {
         assert!(matches!(matrice(&Valeur::Nombres(vec![1.0; 15])), Err(Echec::Js { .. })));
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::float_cmp)] // essais d'identité au bit près : la comparaison exacte est le but
+mod essais_publics {
+    use super::*;
+    fn n(v: &[f64]) -> Valeur { Valeur::Nombres(v.to_vec()) }
+    #[test]
+    fn affine_multiply_rebase() {
+        let mut m = IDENTITE;
+        m[12] = 2.0;
+        assert_eq!(affine(&m).unwrap(), m);
+        let mut p = IDENTITE;
+        p[3] = 0.5;
+        assert!(affine(&p).is_err());
+        assert_eq!(multiply(&IDENTITE, &m), m);
+        assert_eq!(rebase(&m, &[1.0, 0.0, 0.0]).unwrap()[12], 1.0);
+    }
+    #[test]
+    fn xyz_et_vecteur() {
+        assert_eq!(xyz(&n(&[1.0, 2.0, 3.0, 4.0])).unwrap(), [1.0, 2.0, 3.0]);
+        assert!(xyz(&n(&[1.0])).unwrap()[2].is_nan());
+        assert!(matches!(xyz(&Valeur::Nul), Err(Echec::HorsDomaine(_))));
+        assert_eq!(vecteur(&n(&[1.0, 2.0, 3.0, 9.0])).unwrap(), n(&[1.0, 2.0, 3.0]));
+        assert!(vecteur(&n(&[1.0, 2.0])).is_err());
+        let o = Valeur::Objet(vec![("x".into(), Valeur::Nombre(1.0)), ("y".into(), Valeur::Nombre(2.0)), ("z".into(), Valeur::Nombre(3.0))]);
+        assert_eq!(vecteur(&o).unwrap(), n(&[1.0, 2.0, 3.0]));
+    }
+    #[test]
+    fn appeler_par_nom() {
+        assert_eq!(appeler("distance", &[n(&[0.0, 0.0, 0.0]), n(&[3.0, 4.0, 0.0])]).unwrap(), Valeur::Nombre(5.0));
+        let t = appeler("translation", &[n(&[1.0, 2.0, 3.0])]).unwrap();
+        assert_eq!(t.elements().unwrap()[12..15], [Valeur::Nombre(1.0), Valeur::Nombre(2.0), Valeur::Nombre(3.0)]);
+        let r = Valeur::Objet(vec![("railMatrix".into(), n(&IDENTITE)), ("profileMatrix".into(), n(&IDENTITE))]);
+        let s = appeler("serialRail", &[r, n(&[0.0, 0.0, 0.0])]).unwrap();
+        assert_eq!(s.champ("profileAxisLengthsSceneUnits"), Some(&n(&[1.0, 1.0, 1.0])));
+        assert_eq!(s.champ("rotation"), Some(&Valeur::Indefini));
+        assert!(matches!(appeler("inconnue", &[]), Err(Echec::HorsDomaine(_))));
+    }
+}
