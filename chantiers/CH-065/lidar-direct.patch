@@ -1,22 +1,33 @@
 --- a/vendor/lidar.js
 +++ b/vendor/lidar.js
-@@ -159,6 +159,36 @@
+@@ -159,6 +159,47 @@
      }
      return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
    }
 +  /* CH-065 : LECTURE DIRECTE DU TAMPON, SANS ALLOCATION PAR POINT.
 +   * `C.attribute` (gelé) lit chaque point par getX/getY/getZ et alloue trois tableaux par point (raw, local, inside) : c'est l'essentiel
-+   * du temps de lecture d'une vue (CH-061 : 196 ms pour 505 000 points). Sur un attribut flottant (Float32 ou Float64), non normalisé,
-+   * non indexé, ces accesseurs ne font que lire array[i*stride+offset+k]. Le tampon est alors lu directement, mais seulement après
-+   * l'avoir PROUVÉ sur ce nœud : chaque sonde de diagnostic, plus le premier et le dernier point du drawRange, sont relus par les deux
-+   * chemins et doivent donner les mêmes valeurs (Object.is). Au moindre écart ou si une condition manque, la boucle d'origine est gardée.
++   * du temps de lecture d'une vue (CH-061 : 196 ms pour 505 000 points). Le tampon n'est lu directement que si la lecture par l'accesseur
++   * EST, par construction, array[i*stride+offset+k] : attribut flottant (Float32 ou Float64), non normalisé, non indexé, ET
++   *  - soit sans accesseur getX/getY/getZ (C.attribute lit alors lui-même le tableau),
++   *  - soit avec les accesseurs de Three.js de la page, reconnus par IDENTITÉ de fonction (THREE.BufferAttribute ou
++   *    THREE.InterleavedBufferAttribute) : leur code est la lecture du tableau, la dénormalisation étant exclue.
++   * Des sondes qui concordent ne suffisent pas : un accesseur qui diffère sur un seul point hors des sondes passerait (défaut relevé par
++   * Codex sur le portage Rust, PR #25). Les sondes restent une seconde garde. Dans tous les autres cas, la boucle d'origine est gardée.
 +   * Le chemin direct fait les mêmes opérations flottantes, dans le même ordre, que C.point, inRoi, Math.hypot et C.distance, lève les
 +   * mêmes exceptions aux mêmes points, et garde le budget, les pauses et les contrôles d'intégrité de la boucle d'origine, point par point.
 +   * Seuls les points retenus (et les plus proches de l'origine des rails) allouent, comme avant. Parité : tests/ch065-lidar-direct.test.cjs. */
++  function accesseursReconnus(a) {
++    const f=[a.getX,a.getY,a.getZ];
++    if(f.every(g=>typeof g!=="function"))return true;
++    const T=globalThis.THREE;
++    return [T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype].some(p=>!!p&&typeof p.getX==="function"&&
++      f[0]===p.getX&&f[1]===p.getY&&f[2]===p.getZ);
++  }
 +  function lectureDirecte(n,indexAttr,transforms,drawStart,drawEnd,probes) {
 +    if(indexAttr||transforms.length!==2)return null;
 +    const a=n.position,meta=n.attribute.metadata||{},src=a?.array||a?.data?.array;
 +    if(!a||a.normalized||a.isFloat16BufferAttribute||meta.normalized||meta.itemSize<3)return null;
++    if(!accesseursReconnus(a))return null;
 +    if(!(src instanceof Float32Array||src instanceof Float64Array))return null;
 +    const stride=meta.stride,offset=meta.offset;
 +    if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0)return null;
@@ -37,7 +48,7 @@
    async function capture(options) {
      const {viewer:v,rails,origin,guard,meta}=options;
      const bounds=options.bounds||[.5,.4,.3];
-@@ -229,6 +259,58 @@
+@@ -229,6 +270,58 @@
            fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
        }
        integrityChecks.push(unchanged);

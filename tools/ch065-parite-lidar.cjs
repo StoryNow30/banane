@@ -10,7 +10,9 @@
  * Usage : node tools/ch065-parite-lidar.cjs --reference RACINE --patche RACINE [--max N] [--sortie F.json]   Sortie 0 si tout est identique. */
 'use strict';
 const path=require('path'),fs=require('fs'),crypto=require('crypto');
-const {parcourir,PREFIXES}=require('./ch065-nuages.cjs'),{scene,VARIANTES}=require('./ch065-scene.js');
+const {parcourir,PREFIXES}=require('./ch065-nuages.cjs'),{scene,VARIANTES,THREE_FACTICE}=require('./ch065-scene.js');
+/* Les classes d'attribut de la scène tiennent lieu de THREE.BufferAttribute de la page (reconnaissance par identité de fonction). */
+globalThis.THREE=THREE_FACTICE;
 function arg(n,d){const i=process.argv.indexOf(n);return i>0?process.argv[i+1]:d;}
 const REF=path.resolve(arg('--reference',path.join(__dirname,'..'))),PAT=arg('--patche',null),MAX=Number(arg('--max',Infinity));
 const PAS=Number(arg('--pas',25)),PAS_PLEIN=Number(arg('--pas-plein',100)),SORTIE=arg('--sortie',null);
@@ -24,11 +26,12 @@ function canon(v){
   if(Array.isArray(v))return '['+v.map(canon).join(',')+']';
   return '{'+Object.keys(v).filter(k=>k!=='capturedAt'&&k!=='durationMs').map(k=>JSON.stringify(k)+':'+canon(v[k])).join(',')+'}';
 }
+const P=THREE_FACTICE.BufferAttribute.prototype,G0=P.getX;let lectures=0;P.getX=function(i){if(this.itemSize===3)lectures++;return G0.call(this,i);};
 async function jouer(L,c,nom,opts){
-  const sc=scene(c,opts),appels=[];
+  const sc=scene(c,opts),appels=[];lectures=0;
   const options={viewer:sc.viewer,rails:sc.rails,origin:sc.origin,enums:sc.enums,guard:()=>appels.push('g'),pause:async()=>{appels.push('p');},meta:{captureId:'ch065'}};
   for(const k of ['maxPoints','maxInspected','yieldEvery'])if(opts[k]!==undefined)options[k]=opts[k];
-  try{const o=await L.capture(options);return {sortie:canon(o),appels:appels.join(''),statut:o.status,retenus:o.quality.retained,lus:o.quality.inspected};}
+  try{const o=await L.capture(options);return {sortie:canon(o),appels:appels.join(''),statut:o.status,retenus:o.quality.retained,lus:o.quality.inspected,accesseur:lectures};}
   catch(e){return {erreur:(e?.name||'')+': '+(e?.message||String(e)),appels:appels.join('')};}
 }
 (async()=>{
@@ -42,6 +45,8 @@ async function jouer(L,c,nom,opts){
     for(const [nom,opts] of jeux){
       let t=performance.now();const a=await jouer(LA,c,nom,{graine:1234+rang,...opts});res.ms.reference+=performance.now()-t;
       t=performance.now();const b=await jouer(LB,c,nom,{graine:1234+rang,...opts});res.ms.patche+=performance.now()-t;
+      const direct=b.accesseur!==undefined&&a.lus>0&&b.accesseur<a.lus/4;const pd=res.lectureDirecte=res.lectureDirecte||{};pd[nom]=(pd[nom]||0)+(direct?1:0);
+      delete a.accesseur;delete b.accesseur;
       const ka=JSON.stringify(a),kb=JSON.stringify(b);hA.update(ka);hB.update(kb);res.jeux++;
       const pv=res.parVariante[nom]=res.parVariante[nom]||{jeux:0,ecarts:0};pv.jeux++;
       if(ka!==kb){res.ecarts++;pv.ecarts++;if(res.premiersEcarts.length<5)res.premiersEcarts.push({variante:nom,collection:o.collection,fichier:o.fichier,rang:o.rang,

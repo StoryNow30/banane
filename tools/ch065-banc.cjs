@@ -51,6 +51,7 @@ async function page(nav,scripts){
     for(const [ci,c] of CL.entries()){
       await pl.evaluate(t=>{globalThis.__C=JSON.parse(t);},JSON.stringify({rails:c.rails,pointsSceneRelative:c.pointsSceneRelative}));
       const r=await pl.evaluate(async ({REP,ci,mode})=>{
+        globalThis.THREE=CH065Scene.THREE_FACTICE;   /* tient lieu de THREE.BufferAttribute de la page */
         const sc=CH065Scene.scene(__C,{total:505000,noeuds:19,graine:1234+ci});
         const pause=mode==='reference'?()=>new Promise(r=>setTimeout(r,0)):()=>scheduler.yield();
         const net=o=>JSON.stringify(o,(k,v)=>k==='capturedAt'||k==='durationMs'?undefined:v);

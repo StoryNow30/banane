@@ -5,14 +5,17 @@
  * jusqu'à `total` points. Les accesseurs getX/getY/getZ imitent ceux de Three.js (lecture du tableau, dénormalisation si normalisé). */
 (function(root){
  'use strict';
+/* Classes d'attribut à la manière de Three.js. Exportées sous la forme `THREE` (THREE_FACTICE) : un essai ou un banc les pose sur
+ * globalThis.THREE pour que vendor/lidar.js patché les reconnaisse par identité de fonction, comme il reconnaîtrait celles de la page. */
+ class BA{constructor(a,k,norm){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=!!norm;}
+  _d(v){if(!this.normalized)return v;const m={Uint8Array:255,Uint16Array:65535,Int16Array:32767}[this.array.constructor.name];return m?Math.max(-1,v/m):v;}
+  getX(i){return this._d(this.array[i*this.itemSize]);}getY(i){return this._d(this.array[i*this.itemSize+1]);}getZ(i){return this._d(this.array[i*this.itemSize+2]);}}
+ class IBA{constructor(data,k,off){this.data=data;this.itemSize=k;this.offset=off;this.count=data.count;this.isInterleavedBufferAttribute=true;this.normalized=false;}
+  getX(i){return this.data.array[i*this.data.stride+this.offset];}getY(i){return this.data.array[i*this.data.stride+this.offset+1];}getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}}
+ const THREE_FACTICE={BufferAttribute:BA,InterleavedBufferAttribute:IBA};
  function scene(c,o={}){
   const total=o.total??c.pointsSceneRelative.length,noeuds=Math.max(1,o.noeuds??19),Type=o.type||Float32Array;
   let s=(o.graine??1234)>>>0;const alea=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);
-  class BA{constructor(a,k,norm){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=!!norm;}
-   _d(v){if(!this.normalized)return v;const m={Uint8Array:255,Uint16Array:65535,Int16Array:32767}[this.array.constructor.name];return m?Math.max(-1,v/m):v;}
-   getX(i){return this._d(this.array[i*this.itemSize]);}getY(i){return this._d(this.array[i*this.itemSize+1]);}getZ(i){return this._d(this.array[i*this.itemSize+2]);}}
-  class IBA{constructor(data,k,off){this.data=data;this.itemSize=k;this.offset=off;this.count=data.count;this.isInterleavedBufferAttribute=true;this.normalized=false;}
-   getX(i){return this.data.array[i*this.data.stride+this.offset];}getY(i){return this.data.array[i*this.data.stride+this.offset+1];}getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}}
   const reels=c.pointsSceneRelative,parNoeud=Math.ceil(Math.max(total,1)/noeuds),visibleNodes=[];
   for(let k=0;k<noeuds;k++){
    const T=o.sansTranslation?[0,0,0]:[(alea()-.5)*40,(alea()-.5)*40,(alea()-.5)*2];
@@ -27,6 +30,7 @@
    if(o.entrelace){const st=4,arr=new Type(nb*st);for(let i=0;i<nb;i++){arr[i*st]=brut[3*i];arr[i*st+1]=brut[3*i+1];arr[i*st+2]=brut[3*i+2];arr[i*st+3]=1;}
     position=new IBA({array:arr,stride:st,count:nb,version:0},3,0);}
    else if(o.normalise){const arr=new Int16Array(nb*3);for(let i=0;i<3*nb;i++)arr[i]=Math.max(-32767,Math.min(32767,Math.round(brut[i])));position=new BA(arr,3,true);}
+   else if(o.sansAccesseur){const arr=Type.from(brut);position={array:arr,itemSize:3,count:nb,version:0,normalized:false};}
    else position=new BA(Type.from(brut),3);
    const geometry={attributes:{position,intensity:new BA(inten,1),classification:new BA(cls,1)},
     drawRange:o.drawRange?{...o.drawRange}:{start:0,count:Infinity},boundingBox:null};
@@ -52,6 +56,7 @@
   'reel-entrelace':{entrelace:true},
   'reel-entrelace-float64':{entrelace:true,type:Float64Array},
   'reel-indexe':{indexe:true},
+  'reel-sans-accesseur':{sansAccesseur:true},
   'reel-normalise':{normalise:true},
   'reel-non-finis':{nonFinis:true},
   'reel-decoupe':{decoupe:true},
@@ -63,6 +68,6 @@
   'vue-vide':{vide:true},
   'un-point':{total:1,noeuds:1},
  };
- const api={scene,VARIANTES};
+ const api={scene,VARIANTES,THREE_FACTICE};
  if(typeof module==='object'&&module.exports)module.exports=api;else root.CH065Scene=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
