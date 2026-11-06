@@ -3,6 +3,8 @@
 //! Point d'entrée unique : `appeler(fonction, entree)`, `entree = {f: nom, a: [arguments]}` (numéros 50 à 99 du cœur).
 // Les comparaisons gardent la forme du JS (comportement sur NaN compris) :
 #![allow(clippy::neg_cmp_op_on_partial_ord, clippy::manual_range_contains, clippy::needless_range_loop)]
+// Forme calquée sur le JS (un `if` par ligne du JS, branches identiques gardées pour suivre les règles) :
+#![allow(clippy::suspicious_else_formatting, clippy::if_same_then_else, clippy::type_complexity, clippy::needless_lifetimes, clippy::unnecessary_unwrap)]
 pub mod js;
 pub mod critere;
 pub mod gardes;

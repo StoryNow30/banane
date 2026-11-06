@@ -211,7 +211,7 @@ fn departager_au_pair(x: f64, chiffres: &mut String, e10: i64) {
     let d: Vec<u8> = chiffres.bytes().map(|c| c - b'0').collect();
     let k = d.len();
     let der = d[k - 1];
-    if der % 2 == 0 { return; } // déjà pair : rien à départager en sa faveur
+    if der.is_multiple_of(2) { return; } // déjà pair : rien à départager en sa faveur
     let relit = |v: &[u8]| -> bool {
         let s: String = v.iter().map(|c| (c + b'0') as char).collect();
         let t = if s.len() > 1 { format!("{}.{}e{}", &s[..1], &s[1..], e10) } else { format!("{s}e{e10}") };
@@ -298,6 +298,7 @@ impl Appel {
 }
 
 #[cfg(test)]
+#[allow(clippy::disallowed_methods, clippy::excessive_precision)]
 mod essais {
     use super::*;
     #[test]
@@ -430,7 +431,7 @@ pub fn pow(x: f64, y: f64) -> f64 { x.powf(y) }
 /// `t.slice(0, k)` (k : ToIntegerOrInfinity ; négatif : depuis la fin).
 pub fn slice_debut(len: usize, k: f64) -> usize {
     let k = if k.is_nan() { 0.0 } else { k.trunc() };
-    if k < 0.0 { ((len as f64) + k).max(0.0) as usize } else { (k.min(len as f64)) as usize }
+    if k < 0.0 { ariane_js::max((len as f64) + k, 0.0) as usize } else { ariane_js::min(k, len as f64) as usize }
 }
 /// `C.distance(a,b)` générique : `Math.hypot(...a.map((x,i)=>x-b[i]))` (trou ou absent : NaN).
 pub fn distance_v(a: &V, b_: &V) -> R<f64> {

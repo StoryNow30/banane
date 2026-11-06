@@ -40,7 +40,11 @@ fn same_track(a: &V, b_: &V) -> R<bool> {
 fn ident<'a>(a: &'a V) -> R<&'a V> { p(a, "identity") }
 fn cut_de(id: &V) -> R<V> { Ok(p(id, "cut")?.clone()) }
 fn ecart_cut(a: &V, identity: &V) -> R<f64> { Ok((vers_nombre(&cut_de(ident(a)?)?)? - vers_nombre(&cut_de(identity)?)?).abs()) }
-fn liste(v: &V) -> R<Vec<V>> { if !vrai(v) { return Ok(vec![]); } if !est_tableau(v) { return hd("liste non tableau"); } Ok(presents(v)) }
+fn liste(v: &V) -> R<Vec<V>> {
+    if !vrai(v) { return Ok(vec![]); }
+    if !est_tableau(v) { return hd("liste non tableau"); }
+    Ok(presents(v))
+}
 /// Tri stable par |Δcut| puis `slice(0, k)`.
 fn plus_proches(mut l: Vec<V>, identity: &V, k: &V) -> R<Vec<V>> {
     let mut cles = vec![];

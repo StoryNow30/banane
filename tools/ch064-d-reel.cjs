@@ -42,7 +42,7 @@ const DEFAUT_F=JSON.parse(fs.readFileSync(path.join(RACINE,'datasets','relecture
 function depuisEcart(rail,mm){const M=rail.sceneRelativeToProfileLocal,P=rail.profileLocalToSceneRelative,o=C.point(M,rail.positionSceneRelative);
  return C.point(P,[o[0]+(mm.long||0)/1000,o[1]+mm.lat/1000,o[2]+mm.vert/1000]);}
 const verif={critere:{compares:0,identiquesAuJournal:0}};
-function*cas(modules,{max=Infinity}={}){
+function*cas(modules,{max=Number(process.env.CH064D_NUAGES_MAX||Infinity)}={}){
  const X=extrait(),veut=m=>modules.includes(m);let n=0;
  const evs=t=>X.journaux.flatMap(j=>j.ev.filter(e=>e.type===t));
  const RO=evs('relecture-ombre');

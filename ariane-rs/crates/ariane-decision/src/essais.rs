@@ -61,3 +61,27 @@ fn appel_par_numero() {
     assert_eq!(appeler(SIGNAL, &e).unwrap(), s("neutre"));
     assert!(matches!(appeler(SIGNAL, &o(vec![("f", s("inconnue"))])), Err(ariane_js::Echec::HorsDomaine(_))));
 }
+
+#[test]
+fn selection_grappe_differe_pn() {
+    let lot = tab(vec![o(vec![("cut", n(10.0))]), o(vec![("cut", n(12.0))]), o(vec![("cut", n(14.0))]), o(vec![("cut", n(40.0)), ("differe", b(true))])]);
+    let e = o(vec![("total", n(100.0)), ("lot", lot), ("zonesPN", tab(vec![tab_n(&[60.0, 62.0])]))]);
+    let r = ombre::selection(&e, &V::Indefini).unwrap();
+    let libs: Vec<String> = presents(g(&r, "plages")).iter().map(|p_| chaine_de(g(p_, "libelle")).unwrap().to_owned()).collect();
+    assert_eq!(libs, ["grappe 7–17", "autour du différé 38–42", "PN 60–62"]);
+    assert_eq!((num(g(&r, "total")), num(g(&r, "traverses")), num(g(&r, "tempsEstimeS"))), (Some(16.0), Some(3.0), Some(51.0)));
+}
+
+#[test]
+fn duree_et_fit_at() {
+    assert_eq!(ombre::duree(&n(140.0)), "2 min 20 s");
+    assert_eq!(ombre::duree(&n(45.0)), "45 s");
+    assert_eq!(aides::fit_at(&[[1.0, 2.0], [2.0, 4.0], [3.0, 6.5]]), -0.3333333333333333);
+}
+
+#[test]
+fn regles_metier_activation() {
+    let e = o(vec![("aurait", s("differer")), ("regles", tab_s(&["pn-chaque-cut"]))]);
+    assert!(metier::doit_differer(&e, &o(vec![("actif", b(true)), ("regles", o(vec![("pn-chaque-cut", b(true))]))])).unwrap());
+    assert!(!metier::doit_differer(&e, &o(vec![("actif", b(false)), ("regles", o(vec![("pn-chaque-cut", b(true))]))])).unwrap());
+}
