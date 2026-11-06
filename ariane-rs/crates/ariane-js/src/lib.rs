@@ -4,7 +4,9 @@
 //! `Math.round` de V8 sur 35 % et 51 % des tirages ; les portages ci-dessous, 0 sur 1 000 000.
 //! `sqrt`, `ceil`, `floor`, `trunc`, `abs` de std sont exacts (opérations IEEE, instructions WASM natives) : permis.
 //! `hypot`, `round`, `min`, `max`, `sin`, `cos`, `ln`, `log10`, `ln_1p`, `powf`, `exp` de std : INTERDITS dans les crates
-//! métier (clippy.toml), remplacés par ce module.
+//! métier (clippy.toml), remplacés par ce module. `nombre` : `Number.prototype.toString` au bit près de V8.
+
+pub mod nombre;
 
 /// `Math.hypot` de V8 (builtins math.tq) : ∞ l'emporte sur NaN, mise à l'échelle par le maximum, somme compensée.
 #[must_use]

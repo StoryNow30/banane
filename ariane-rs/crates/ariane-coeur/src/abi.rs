@@ -78,6 +78,7 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
     let r = match fonction {
         0 => Ok(entree), // écho : preuve d'aller-retour du format
         1 => Ok(Valeur::Nul), // accusé : mesure de la traversée seule
+        2 => nombres_en_chaines(&entree), // String(x) au bit près de V8 (sonde tools/ch064-sonde-nombres.cjs)
         10 => capture(&entree),
         20 => ariane_geometrie::v46::propose_both(champ(&entree, "capture"), champ(&entree, "options")),
         21 => match champ(&entree, "side") {
@@ -105,6 +106,15 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
         // La coquille lève alors ArianeCoeur.HorsDomaine ; la façade rappelle le JS d'origine.
         Err(Echec::HorsDomaine(raison)) => Valeur::Erreur { nom: "HorsDomaine".into(), message: raison },
     }
+}
+
+/// 2 : `{a: [nombres]}` → `[String(x), …]` (`ariane_js::nombre`).
+fn nombres_en_chaines(e: &Valeur) -> Result<Valeur, Echec> {
+    let Some(l) = e.champ("a").and_then(Valeur::elements) else { return Err(Echec::hors_domaine("a absent")) };
+    Ok(Valeur::Tableau(l.into_iter().map(|v| match v {
+        Valeur::Nombre(x) => Some(Valeur::Chaine(ariane_js::nombre::nombre_en_chaine(x))),
+        _ => Some(Valeur::Indefini),
+    }).collect()))
 }
 
 fn champ<'a>(v: &'a Valeur, k: &str) -> &'a Valeur { v.champ(k).unwrap_or(&Valeur::Indefini) }
