@@ -17,7 +17,6 @@ dependencies = [
  "ariane-capture",
  "ariane-decision",
  "ariane-etat",
- "ariane-export",
  "ariane-geometrie",
  "ariane-js",
  "ariane-vba",

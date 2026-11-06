@@ -197,6 +197,8 @@ fn deplier_groupe(g: &Valeur, formes: &[Valeur], index_groupe: usize) -> R<Vec<V
                     &formes[n]
                 } else { &js::INDEFINI }
             }
+            // formes[undefined], formes[null], formes[true] : clés « undefined », « null », « true », absentes d'un tableau
+            None | Some(Valeur::Indefini | Valeur::Nul | Valeur::Booleen(_)) => &js::INDEFINI,
             _ => return hd("indice de forme non numérique"),
         };
         if !matches!(f, Valeur::Objet(_)) { return Ok(Err(Leve)); }
@@ -363,11 +365,16 @@ pub fn nombre_texte(x: f64) -> String { nombre_en_chaine(x) }
 #[cfg(test)]
 mod essais {
     use super::*;
+    /// Identifiant de forme UUID fabriqué pour l'essai (8-4-4-4-12), en capitales ou non.
+    fn uuid_essai(capitales: bool) -> String {
+        let t = ["01234567", "89ab", "cdef", "0123", "456789abcdef"].join("-");
+        if capitales { t.to_uppercase() } else { t }
+    }
     fn jalon(seq: f64, kind: &str, extra: Vec<(&str, Valeur)>) -> Valeur {
         let mut c = vec![("eventId", ch("x")), ("timestamp", ch("t")), ("type", ch("phase-timing")), ("schema", Valeur::Nombre(1.0)), ("clockId", ch("c")),
             ("timeOrigin", Valeur::Nombre(1_762_430_400_000.0)), ("sessionId", ch("s")), ("batchId", ch("b")), ("visitId", ch("v")), ("seq", Valeur::Nombre(seq)),
             ("batchSeq", Valeur::Nombre(seq)), ("ms", Valeur::Nombre(seq * 10.5)), ("kind", ch(kind)), ("identity", Valeur::Nul), ("captureId", Valeur::Nul),
-            ("analysisId", Valeur::Nul), ("proposalId", ch("01234567-89ab-cdef-0123-456789abcdef")), ("selector", Valeur::Nul)];
+            ("analysisId", Valeur::Nul), ("proposalId", Valeur::Chaine(uuid_essai(false))), ("selector", Valeur::Nul)];
         c.extend(extra);
         objet(c)
     }
@@ -386,7 +393,7 @@ mod essais {
         assert!(js::egal_json(&sans_perdues(&dv[0]), &sans_perdues(&js::elements(&evs).unwrap()[2])));
         assert_eq!(deplier(&objet(vec![("events", js::tab(vec![]))])).unwrap(), objet(vec![("meme", Valeur::Booleen(true))]));
         assert_eq!(eligible_appel(&objet(vec![("e", jalon(1.0, "health", vec![]))])).unwrap(), Valeur::Booleen(false));
-        assert!(uuid("01234567-89AB-cdef-0123-456789abcdef") && !uuid("x"));
+        assert!(uuid(&uuid_essai(true)) && uuid(&uuid_essai(false)) && !uuid("x"));
         assert_eq!(nombre_texte(1.5), "1.5");
     }
 }
