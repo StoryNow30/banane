@@ -14,8 +14,11 @@
   n.coeur++;return r;
  }
  /* part-summary-49 (250–254). Un événement déjà projeté est rendu tel quel par le JS (identité de l'objet) : pas de cœur. */
+ /* Locale de l'opérateur : `localeCompare` sans argument suit la locale par défaut du moteur ; le cœur ne sert que les
+  * locales dont l'ordre ASCII est vérifié (js_extra.rs), les autres rejouent le JS. */
+ const localeMoteur=()=>{try{return new Intl.Collator().resolvedOptions().locale;}catch{return null;}};
  function resume(coeur,P){
-  const n=compteur(),a=(f,args,js)=>appel(coeur,n,f,{a:args},js);
+  const n=compteur(),locale=localeMoteur(),a=(f,args,js)=>appel(coeur,n,f,{a:args,locale},js);
   return {FORMAT:P.FORMAT,
    projectEvent(e){if(e&&typeof e==='object'&&e.projection===P.FORMAT)return P.projectEvent(e);return a(250,[e],()=>P.projectEvent(e));},
    summarize(...x){return a(251,x,()=>P.summarize(...x));},
@@ -24,5 +27,91 @@
    deferKind(...x){return a(254,x,()=>P.deferKind(...x));},
    compteurs:()=>({...n,motifs:{...n.motifs}})};
  }
- return {resume,appel,compteur};
+ /* Appel sans repli intégré : rend REPLI si le cœur refuse (compté), à l'appelant de rejouer le JS. */
+ const REPLI=Object.freeze({repli:true});
+ function tenter(coeur,n,fonction,entree){return appel(coeur,n,fonction,entree,()=>REPLI);}
+ const simple=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
+ function egal(a,b){if(Object.is(a,b))return true;if(Array.isArray(a)&&Array.isArray(b))return a.length===b.length&&a.every((x,i)=>egal(x,b[i]))&&Object.keys(a).length===Object.keys(b).length;
+  if(simple(a)&&simple(b)){const ka=Object.keys(a),kb=Object.keys(b);return ka.length===kb.length&&ka.every((k,i)=>k===kb[i]&&egal(a[k],b[k]));}return false;}
+ /* Recopie EN PLACE de `source` (rendu par le cœur) dans `cible` : les objets simples présents des deux côtés gardent leur
+  * identité (fusion récursive), une valeur égale n'est pas remplacée (identité des tableaux et objets inchangés gardée),
+  * une clé nouvelle est ajoutée dans l'ordre où le JS l'aurait créée (celui de `source`). */
+ function fondre(cible,source){for(const k of Object.keys(source)){const a=cible[k],b=source[k];
+  if(simple(a)&&simple(b)&&Object.prototype.hasOwnProperty.call(cible,k))fondre(a,b);else if(!Object.prototype.hasOwnProperty.call(cible,k)||!egal(a,b))cible[k]=b;}}
+ /* native-session (270–281). Méthodes à `this` : écrites pour être posées sur Sessions.prototype (même `this`).
+  * `NS` : module native-session ; `S` : réglages (src/settings.js) ; `K` : core (cutKey, pour la carte inter-session). */
+ function session(coeur,NS,S,K){
+  const n=compteur(),P=NS.Sessions.prototype,Ss=NS.Sessions,t=(f,e)=>tenter(coeur,n,f,e);
+  const reglages=()=>({movementThresholdM:S.echo?.movementThresholdM??0.001,ecritureReferenceSeuilM:S.echo?.ecritureReferenceSeuilM??0.001,
+   freshnessSkewMs:S.echo?.freshnessSkewMs??50,watermarkBytes:Ss.EXPORT_WATERMARK_BYTES,qualityRailLimit:Ss.QUALITY_RAIL_LIMIT});
+  const ou=(r,js)=>r===REPLI?js():r;
+  const methodes={
+   visitRelation(nat,identity,periodId,cross){
+    if(nat===null||typeof nat!=='object'||!(cross===undefined||cross===null||cross instanceof Map))return P.visitRelation.call(this,nat,identity,periodId,cross);
+    let autre;try{autre=cross?.get(K.cutKey(identity));}catch{return P.visitRelation.call(this,nat,identity,periodId,cross);}
+    return ou(t(273,{a:[{id:nat.id,visits:nat.visits},identity,periodId],autre}),()=>P.visitRelation.call(this,nat,identity,periodId,cross));},
+   redactedEvent(type,data){
+    if(type!=='capture-ready'&&type!=='capture-checkpoint'&&type!=='operator-gesture')return P.redactedEvent.call(this,type,data);
+    return ou(t(274,{a:[type,data]}),()=>P.redactedEvent.call(this,type,data));},
+   mergeMetrics(metrics){
+    if(!metrics)return P.mergeMetrics.call(this,metrics);
+    let m;try{m=this.e.s.native.metrics;}catch{return P.mergeMetrics.call(this,metrics);}
+    const r=t(275,{a:[metrics],m});if(r===REPLI)return P.mergeMetrics.call(this,metrics);
+    const x=r.m,poser=k=>{m[k]=x[k];};
+    for(const k of ['queueDepthMax','dropped','sendFailures','captureCompleted','captureFailed','captureCheckpoints'])poser(k);
+    if(metrics.inputHandlerMs)poser('inputHandlerMs');
+    if(metrics.degradationLevel){const l=m.degradationLevels;for(let i=l.length;i<x.degradationLevels.length;i++)l.push(x.degradationLevels[i]);poser('degradationLevel');}
+    if(metrics.degradationPeak)poser('degradationPeak');
+    if(Number.isFinite(metrics.queueDepth))poser('queueDepth');
+    for(const k of ['degradationEvents','recoveries','setAside','refused','captureBudgeted','captureRefused','captureSkippedAfterOperatorRailChange'])if(Number.isFinite(metrics[k]))poser(k);
+    if(r.setAside)m.setAsideItems=metrics.setAsideItems.slice(0,32);
+    return undefined;},
+   accountQuality(nat,cloud){
+    if(!simple(nat))return P.accountQuality.call(this,nat,cloud);
+    const me=nat.metrics,r=t(276,{a:[{quality:nat.quality,qualityRails:nat.qualityRails,metrics:me===null||me===undefined||typeof me!=='object'?me:{}},cloud],reglages:reglages()});
+    if(r===REPLI)return P.accountQuality.call(this,nat,cloud);
+    if(nat.quality===null||nat.quality===undefined)nat.quality=r.quality;else fondre(nat.quality,r.quality);
+    if(nat.qualityRails===null||nat.qualityRails===undefined)nat.qualityRails=r.qualityRails;else fondre(nat.qualityRails,r.qualityRails);
+    if(r.metricsQuality){nat.metrics??={};nat.metrics.quality=nat.quality;}
+    return undefined;},
+   health(){const nat=this.e.s.native;if(!nat)return null;
+    if(typeof nat!=='object')return P.health.call(this);
+    const {status,visits,cloudIds,metrics,exportState,quality}=nat;
+    return ou(t(277,{native:{status,visits,cloudIds,metrics,exportState,quality},reglages:reglages()}),()=>P.health.call(this));},
+   chooseGeometry(record,side){return ou(t(279,{a:[record,side]}),()=>P.chooseGeometry.call(this,record,side));},
+   /* classify : le cœur rend l'enregistrement et les clés affectées ; recopie en place (geometryEligibility et
+    * usableForOfflineEvaluationByRail existants gardent leur identité, comme dans le JS). Méthodes surchargées : JS. */
+   classify(record){
+    const propres=(this.chooseGeometry===P.chooseGeometry||this.chooseGeometry===methodes.chooseGeometry)&&this.partialReason===P.partialReason;
+    if(!propres||!simple(record))return P.classify.call(this,record);
+    const r=t(280,{a:[record],reglages:reglages()});if(r===REPLI)return P.classify.call(this,record);
+    const x=r.record;
+    for(const k of r.assignes){
+     if(k==='geometryEligibility'&&simple(record.geometryEligibility)){const g=record.geometryEligibility;g.left=x.geometryEligibility.left;g.right=x.geometryEligibility.right;g.pair=x.geometryEligibility.pair;}
+     else if(k==='usableForOfflineEvaluationByRail'&&simple(record.usableForOfflineEvaluationByRail)){const u=record.usableForOfflineEvaluationByRail;u.left=x[k].left;u.right=x[k].right;}
+     else record[k]=x[k];}
+    return undefined;},
+   referenceFromWrite(record,entry,writeAt){
+    if(!simple(record))return P.referenceFromWrite.call(this,record,entry,writeAt);
+    const r=t(281,{a:[record,entry,writeAt],reglages:reglages()});if(r===REPLI)return P.referenceFromWrite.call(this,record,entry,writeAt);
+    if(!r.retour)return false;
+    const list=record.humanFinalReferences??=[];
+    if(r.index>=0)list[r.index].supersededBy='validation-write';else list.push(r.ajout);
+    list.push(r.next);record.humanFinalReference=r.next;record.humanFinalReferenceSource='validation-write';return true;},
+   exportAdvice(){const nat=this.e.s.native;if(!nat)return null;
+    if(typeof nat!=='object'||!nat.exportState)return P.exportAdvice.call(this);
+    return ou(t(278,{native:{exportState:nat.exportState,cloudIds:nat.cloudIds},reglages:reglages()}),()=>P.exportAdvice.call(this));},
+  };
+  return {methodes,
+   poseEqual(...x){return ou(t(270,{a:x}),()=>NS.poseEqual(...x));},
+   referenceParEcriture(...x){return ou(t(271,{a:x,reglages:reglages()}),()=>NS.referenceParEcriture(...x));},
+   compteurs:()=>({...n,motifs:{...n.motifs}})};
+ }
+ /* historique-parties (260–263) : finDe, ficheFin, ajouterFin, historique ; lireFins et noterFin (stockage) : JS. */
+ function historique(coeur,H){
+  const n=compteur(),locale=localeMoteur(),a=(f,args,js)=>appel(coeur,n,f,{a:args,locale},js);
+  return {...H,finDe(...x){return a(260,x,()=>H.finDe(...x));},ficheFin(...x){return a(261,x,()=>H.ficheFin(...x));},
+   ajouterFin(...x){return a(262,x,()=>H.ajouterFin(...x));},historique(...x){return a(263,x,()=>H.historique(...x));},compteurs:()=>({...n,motifs:{...n.motifs}})};
+ }
+ return {resume,session,historique,appel,compteur,fondre,REPLI};
 });

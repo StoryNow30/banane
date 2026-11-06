@@ -2,7 +2,7 @@
 //! `deferKind`. Même ordre des opérations que le JS ; un événement est tenu sous sa forme projetée, typée.
 //! Un événement DÉJÀ projeté reçu en entrée doit avoir la forme exacte que `projectEvent` produit (types, clés) :
 //! sinon hors domaine, et la façade rejoue le JS.
-use crate::js::{self, ch, chemin, cmp_utf16, entier, est, hd, locale_compare, s, s_ou_nul, tab, Carte, Obj};
+use crate::js_extra::{self as js, ch, chemin, cmp_utf16, entier, est, hd, locale_compare, s, s_ou_nul, tab, Carte, Locale, Obj};
 use ariane_js::{cle_same_value_zero, Echec};
 use ariane_vba::Valeur;
 use core::cmp::Ordering;
@@ -238,10 +238,10 @@ pub fn project_event_valeur(e: &Valeur) -> Result<Valeur, Echec> {
     }
 }
 
-fn chrono(a: &Ev, b: &Ev) -> Result<Ordering, Echec> {
-    let o = locale_compare(a.timestamp.as_deref().unwrap_or(""), b.timestamp.as_deref().unwrap_or(""))?;
+fn chrono(a: &Ev, b: &Ev, loc: Locale) -> Result<Ordering, Echec> {
+    let o = locale_compare(a.timestamp.as_deref().unwrap_or(""), b.timestamp.as_deref().unwrap_or(""), loc)?;
     if o != Ordering::Equal { return Ok(o); }
-    locale_compare(a.event_id.as_deref().unwrap_or(""), b.event_id.as_deref().unwrap_or(""))
+    locale_compare(a.event_id.as_deref().unwrap_or(""), b.event_id.as_deref().unwrap_or(""), loc)
 }
 
 /// Tri stable par un comparateur faillible (`TimSort` de V8 : stable ; le comparateur est un préordre total, le résultat
@@ -253,7 +253,7 @@ fn trier<T>(v: &mut [T], f: impl Fn(&T, &T) -> Result<Ordering, Echec>) -> Resul
 }
 
 /// `readEvents(events)`.
-fn read_events(events: &Valeur) -> Result<Vec<Ev>, Echec> {
+fn read_events(events: &Valeur, loc: Locale) -> Result<Vec<Ev>, Echec> {
     let mut seen = std::collections::HashSet::new();
     let mut out = vec![];
     if js::est_tableau(events) {
@@ -263,7 +263,7 @@ fn read_events(events: &Valeur) -> Result<Vec<Ev>, Echec> {
             out.push(e);
         }
     }
-    trier(&mut out, chrono)?;
+    trier(&mut out, |a, b| chrono(a, b, loc))?;
     Ok(out)
 }
 
@@ -292,7 +292,7 @@ struct Lot {
 }
 
 /// `buildLots(all, session, cur)`.
-fn build_lots(all: &[Ev], session: &str, cur: Option<&Valeur>) -> Result<Carte<String, Lot>, Echec> {
+fn build_lots(all: &[Ev], session: &str, cur: Option<&Valeur>, loc: Locale) -> Result<Carte<String, Lot>, Echec> {
     let cur_id = match cur { Some(c) => Some(js::en_chaine(ch(c, "id"))?), None => None };
     let mut lots: Carte<String, Lot> = Carte::default();
     let lot_of = |lots: &mut Carte<String, Lot>, id: &str| {
@@ -332,7 +332,7 @@ fn build_lots(all: &[Ev], session: &str, cur: Option<&Valeur>) -> Result<Carte<S
     }
     // timeline : lots datés, courant en dernier, puis par heure (localeCompare)
     let mut timeline: Vec<(bool, String, String)> = lots.valeurs().filter_map(|l| l.started_at.as_ref().map(|sa| (l.current, sa.clone(), l.id.clone()))).collect();
-    trier(&mut timeline, |a, b| { let o = a.0.cmp(&b.0); if o != Ordering::Equal { return Ok(o); } locale_compare(&a.1, &b.1) })?;
+    trier(&mut timeline, |a, b| { let o = a.0.cmp(&b.0); if o != Ordering::Equal { return Ok(o); } locale_compare(&a.1, &b.1, loc) })?;
     let running = |t: Option<&String>| -> Option<String> {
         let t = t?;
         let mut found = None;
@@ -490,7 +490,7 @@ fn trier_lignes(v: &mut [&Ligne]) { v.sort_by(|a, b| { let d = a.cut - b.cut; if
 ///
 /// # Errors
 /// Hors domaine (voir le module).
-pub fn summarize(o: &Valeur) -> Result<Valeur, Echec> {
+pub fn summarize(o: &Valeur, loc: Locale) -> Result<Valeur, Echec> {
     let o = match o { Valeur::Indefini => &Valeur::Objet(vec![]), Valeur::Objet(_) => o, _ => return hd("summarize : options non objet") };
     let defaut = |k: &str, d: Valeur| -> Valeur { match ch(o, k) { Valeur::Indefini => d, v => v.clone() } };
     let session_id = defaut("sessionId", Valeur::Nul);
@@ -507,8 +507,8 @@ pub fn summarize(o: &Valeur) -> Result<Valeur, Echec> {
         .et("unlinked", Valeur::Nombre(0.0)).et("otherPageLots", Valeur::Nombre(0.0)).et("excludedLots", Valeur::Nombre(0.0));
     let Some(session) = session else { return Ok(r.v()) };
     let cur = if batch.vrai() && present(ch(&batch, "id")) { Some(&batch) } else { None };
-    let all = read_events(&events)?;
-    let lots = build_lots(&all, &session, cur)?;
+    let all = read_events(&events, loc)?;
+    let lots = build_lots(&all, &session, cur, loc)?;
     let mut u = link_contexts(&lots, &all, cur)?;
     r.poser("excludedLots", Valeur::Nombre(lots.valeurs().filter(|l| l.excluded).count() as f64));
 
@@ -548,9 +548,9 @@ pub fn summarize(o: &Valeur) -> Result<Valeur, Echec> {
     trier(&mut part_lots, |a, b| {
         let o = a.0.current.cmp(&b.0.current);
         if o != Ordering::Equal { return Ok(o); }
-        let o = locale_compare(a.0.started_at.as_deref().unwrap_or(""), b.0.started_at.as_deref().unwrap_or(""))?;
+        let o = locale_compare(a.0.started_at.as_deref().unwrap_or(""), b.0.started_at.as_deref().unwrap_or(""), loc)?;
         if o != Ordering::Equal { return Ok(o); }
-        locale_compare(&a.0.id, &b.0.id)
+        locale_compare(&a.0.id, &b.0.id, loc)
     })?;
 
     let (mut in_progress, mut active_cut) = (0.0, None);
@@ -677,7 +677,7 @@ mod essais {
         let st = Obj::new().et("type", s("batch-started")).et("eventId", s("e0")).et("timestamp", s("2026-01-01T00:00:00Z"))
             .et("batch", Obj::new().et("id", s("b1")).v()).et("identity", ch(&e, "identity").clone()).v();
         let o = Obj::new().et("sessionId", s("S")).et("events", tab(vec![e, st])).et("historyStatus", s("available")).et("identity", ch(&p, "identity").clone()).v();
-        let r = summarize(&o).unwrap_or(Valeur::Nul);
+        let r = summarize(&o, Locale::verifiee()).unwrap_or(Valeur::Nul);
         assert_eq!(chemin(&r, &["counts", "distinct"]), &Valeur::Nombre(1.0));
         assert_eq!(chemin(&r, &["counts", "unknown"]), &Valeur::Nombre(1.0));
         assert_eq!(ch(&r, "historyComplete"), &Valeur::Booleen(true));
