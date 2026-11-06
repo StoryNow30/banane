@@ -1,0 +1,88 @@
+diff --git a/ariane-rs/crates/ariane-vba/src/lib.rs b/ariane-rs/crates/ariane-vba/src/lib.rs
+index ba959f8..2ad28d4 100644
+--- a/ariane-rs/crates/ariane-vba/src/lib.rs
++++ b/ariane-rs/crates/ariane-vba/src/lib.rs
+@@ -83,6 +83,8 @@ impl<'a> Lecteur<'a> {
+         }
+         Ok(())
+     }
++    /// Octets non encore lus.
++    fn reste(&self) -> usize { self.o.len() - self.p }
+     fn nombres(&mut self, n: usize) -> Result<Vec<f64>, ErreurVba> {
+         let t = self.tranche(n.checked_mul(8).ok_or_else(|| ErreurVba("VBA : longueur invalide".into()))?)?;
+         Ok(t.chunks_exact(8).map(|c| f64::from_le_bytes([c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]])).collect())
+@@ -98,14 +100,19 @@ impl<'a> Lecteur<'a> {
+             0x05 => Valeur::Chaine(self.chaine()?),
+             0x06 => {
+                 let n = self.u32()?;
+-                let mut v = Vec::with_capacity(n.min(1 << 16));
++                // chaque élément occupe au moins un octet : une longueur annoncée au-delà du reste est fausse, refusée
++                // AVANT toute réservation (CH-066, R1 : 512 niveaux de n = 2^32-1 réservaient 1,6 Go pour 2,5 Ko lus)
++                if n > self.reste() { return err("trame tronquée"); }
++                let mut v = Vec::new();
+                 for _ in 0..n { v.push(self.valeur(prof + 1, true)?); }
+                 Valeur::Tableau(v)
+             }
+             0x07 if dans_tableau => return Ok(None),
+             0x08 => {
+                 let n = self.u32()?;
+-                let mut v = Vec::with_capacity(n.min(1 << 16));
++                // chaque entrée occupe au moins 5 octets (longueur de la clé, étiquette de la valeur) : même garde que 06
++                if n > self.reste() / 5 { return err("trame tronquée"); }
++                let mut v = Vec::new();
+                 for _ in 0..n {
+                     let k = self.chaine()?;
+                     let x = self.valeur(prof + 1, false)?.expect("hors tableau, jamais un trou");
+@@ -192,6 +199,15 @@ impl Ecrivain {
+                 self.u32(t.len());
+                 for (k, x) in t { self.chaine(k); self.valeur(x); }
+             }
++            // valeurs bâties en Rust que la spécification n'admet pas (CH-066, R2 et R3) : écrites comme le JS les écrirait,
++            // jamais une trame refusée ni une panique. Vides : tableau vide (comme `canonique()`).
++            Valeur::Nombres(t) if t.is_empty() => self.valeur(&Valeur::Tableau(vec![])),
++            Valeur::Booleens(t) if t.is_empty() => self.valeur(&Valeur::Tableau(vec![])),
++            // bloc vide, de k = 0 ou de longueur non multiple de k : tableau de lignes de k nombres (la dernière plus courte)
++            Valeur::Bloc { k, donnees } if *k == 0 || donnees.is_empty() || donnees.len() % usize::from(*k) != 0 => {
++                let lignes = donnees.chunks(usize::from(*k).max(1)).map(|l| Some(Valeur::Nombres(l.to_vec()))).collect();
++                self.valeur(&Valeur::Tableau(lignes));
++            }
+             Valeur::Bloc { k, donnees } => {
+                 self.o.push(0x09);
+                 self.u32(donnees.len() / *k as usize);
+@@ -272,7 +288,7 @@ impl Valeur {
+     #[must_use]
+     pub fn canonique(&self) -> Valeur {
+         match self {
+-            Valeur::Objet(e) => Valeur::Objet(e.iter().map(|(k, x)| (k.clone(), x.canonique())).collect()),
++            Valeur::Objet(e) => canoniser_objet(e),
+             Valeur::Nombres(t) if t.is_empty() => Valeur::Tableau(vec![]),
+             Valeur::Booleens(t) if t.is_empty() => Valeur::Tableau(vec![]),
+             Valeur::Bloc { donnees, .. } if donnees.is_empty() => Valeur::Tableau(vec![]),
+@@ -282,6 +298,27 @@ impl Valeur {
+     }
+ }
+ 
++/// Clé d'index de tableau au sens de JS (« 0 » à « 4294967294 », écriture décimale canonique) : un objet JS les range
++/// d'abord, dans l'ordre croissant, quel que soit l'ordre d'affectation.
++fn indice(c: &str) -> Option<u32> {
++    let n: u32 = c.parse().ok()?;
++    (n != u32::MAX && n.to_string() == c).then_some(n)
++}
++
++/// Canonise un objet comme le ferait le décodeur JS (CH-066, R4) : une clé en double garde sa PREMIÈRE place et sa
++/// DERNIÈRE valeur (affectations successives) ; les clés d'index viennent d'abord, en ordre croissant ; les autres
++/// gardent leur ordre.
++fn canoniser_objet(e: &[(String, Valeur)]) -> Valeur {
++    let mut t: Vec<(String, Valeur)> = Vec::with_capacity(e.len());
++    for (k, x) in e {
++        match t.iter_mut().find(|(c, _)| c == k) { Some(p) => p.1 = x.canonique(), None => t.push((k.clone(), x.canonique())) }
++    }
++    let (mut indices, autres): (Vec<_>, Vec<_>) = t.into_iter().partition(|(k, _)| indice(k).is_some());
++    indices.sort_by_key(|(k, _)| indice(k));
++    indices.extend(autres);
++    Valeur::Objet(indices)
++}
++
+ /// Canonise un tableau `06` (voir [`Valeur::canonique`]).
+ fn canoniser_tableau(t: &[Option<Valeur>]) -> Valeur {
+     if t.is_empty() { return Valeur::Tableau(vec![]); }
