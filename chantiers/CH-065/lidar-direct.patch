@@ -1,6 +1,6 @@
 --- a/vendor/lidar.js
 +++ b/vendor/lidar.js
-@@ -159,6 +159,53 @@
+@@ -159,6 +159,62 @@
      }
      return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
    }
@@ -13,7 +13,11 @@
 +   *    THREE.InterleavedBufferAttribute) : leur code est la lecture du tableau, la dénormalisation étant exclue.
 +   * L'identité est lue par les DESCRIPTEURS de getX/getY/getZ, le long de la chaîne de prototypes, sans rien invoquer : une propriété
 +   * calculée (getter) compte pour inconnue. Un accesseur n'est reconnu que s'il est identique à l'INSTANTANÉ des fonctions de THREE pris
-+   * une fois, au chargement de ce module, ET au THREE courant. Sans THREE au chargement, aucune référence n'est retenue.
++   * une fois, au chargement de ce module, ET au THREE courant. Sans THREE au chargement, aucune référence n'est retenue. À l'instantané,
++   * le code des fonctions (Function.prototype.toString) doit aussi être un corps canonique de LISTE_BLANCHE_THREE, avec sa révision : un
++   * prototype modifié AVANT le chargement n'est donc pas cru. Limite assumée : une page qui falsifie Function.prototype.toString.
++   * La liste ne porte aujourd'hui que les classes de la maquette (tools/ch065-scene.js) : sans le relevé de three.js dans ESV
++   * (tools/ch065-releve-accesseur.js), aucun accesseur d'ESV n'est reconnu, et la lecture d'ESV reste celle d'origine.
 +   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, tableau non flottant) : la boucle d'origine, telle quelle ; la décision est prise
 +   * avant tout appel, et le patch n'appelle aucun accesseur (aucune sonde relue). Seule la boucle d'origine reproduit à l'identique les
 +   * appels d'un accesseur inconnu (ordre, entrelacement, effets de bord, exceptions, arrêts sur budget). Règle commune au JS et au Rust
@@ -32,8 +36,13 @@
 +  }
 +  const TRIO=o=>["getX","getY","getZ"].map(k=>fonctionRangee(o,k));
 +  const protosThree=()=>{const T=globalThis.THREE;return [T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype];};
-+  /* Instantané au chargement : les fonctions de référence, ou rien si THREE est absent à ce moment-là. */
-+  const REF_THREE=protosThree().filter(p=>!!p).map(p=>({p,f:TRIO(p)})).filter(r=>r.f.every(g=>typeof g==="function"));
++  /* Corps canoniques admis, par classe et révision. À compléter par l'intégrateur avec ceux du relevé de la page réelle. */
++  const LISTE_BLANCHE_THREE=[["maquette CH-065 (tools/ch065-scene.js)","BufferAttribute","getX(i){const v=this._d(this.array[i*this.itemSize]),e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this._d(this.array[i*this.itemSize+1]);}","getZ(i){return this._d(this.array[i*this.itemSize+2]);}"],["maquette CH-065 (tools/ch065-scene.js)","InterleavedBufferAttribute","getX(i){const v=this.data.array[i*this.data.stride+this.offset],e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this.data.array[i*this.data.stride+this.offset+1];}","getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}"]];
++  const codeDe=f=>{try{return Function.prototype.toString.call(f);}catch{return null;}};
++  /* Instantané au chargement : les fonctions de référence dont le code est dans la liste blanche, ou rien si THREE est absent. */
++  const REF_THREE=protosThree().map((p,k)=>({p,classe:["BufferAttribute","InterleavedBufferAttribute"][k]})).filter(r=>!!r.p)
++    .map(r=>({...r,f:TRIO(r.p)})).filter(r=>r.f.every(g=>typeof g==="function")&&
++      LISTE_BLANCHE_THREE.some(([,classe,x,y,z])=>classe===r.classe&&codeDe(r.f[0])===x&&codeDe(r.f[1])===y&&codeDe(r.f[2])===z));
 +  function accesseursReconnus(a) {
 +    const f=TRIO(a);
 +    if(f.some(g=>g===INCONNUE))return false;
@@ -54,7 +63,7 @@
    async function capture(options) {
      const {viewer:v,rails,origin,guard,meta}=options;
      const bounds=options.bounds||[.5,.4,.3];
-@@ -229,6 +276,58 @@
+@@ -229,6 +285,58 @@
            fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
        }
        integrityChecks.push(unchanged);

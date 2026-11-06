@@ -7,11 +7,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const H=require('./helpers/ch065.cjs'),{scene,VARIANTES,THREE_FACTICE}=require('../tools/ch065-scene.js');
 /* Les classes d'attribut de la scène tiennent lieu de THREE.BufferAttribute de la page : le patch les reconnaît par identité de fonction. */
-/* Espion posé UNE fois, avant la compilation du module : le patch prend l'instantané des fonctions de THREE au chargement, et ces
- * enveloppes en font partie. `ESPION` (null hors mesure) compte les lectures de position ; `ment` décale chaque lecture par accesseur. */
+/* Espion par le crochet des classes de la scène (leurs méthodes restent celles de la liste blanche du patch). `ESPION` (null hors mesure) compte les lectures de position ; `ment` décale chaque lecture par accesseur. */
 let ESPION=null;
-for(const P of [THREE_FACTICE.BufferAttribute.prototype,THREE_FACTICE.InterleavedBufferAttribute.prototype]){const g=P.getX;
-  P.getX=function(i){if(ESPION&&this.itemSize===3){ESPION.n++;if(ESPION.ment)return g.call(this,i)+1e-3;}return g.call(this,i);};}
+globalThis.CH065_ESPION=(a,i,v)=>{if(ESPION&&a.itemSize===3){ESPION.n++;if(ESPION.ment)return v+1e-3;}return v;};
 globalThis.THREE=THREE_FACTICE;
 const LO=H.lidar('origine'),LP=H.lidar('patche');
 async function jouer(L,c,opts,espion){
@@ -142,6 +140,16 @@ test('CH-065 : getX défini par un getter (propriété calculée) : inconnu, et 
     const o=await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}});
     return {s:H.canon(o,['capturedAt','durationMs']),invocations};};
   const a=await run(LO),b=await run(LP);assert.deepEqual(b,a);
+});
+test('CH-065 : prototype de THREE modifié AVANT le chargement (Codex) : son code n\'est pas celui de la liste blanche, il n\'est pas cru', async ()=>{
+  const P=THREE_FACTICE.BufferAttribute.prototype,av=P.getX,c=H.captures()[1];let cible=-1,visee=null;
+  const falsifiee=function(i){return av.call(this,i)+(this===visee&&i===cible?.05:0);};
+  P.getX=falsifiee;   // AVANT le chargement : l'instantané d'identité la prend pour référence
+  try{const LM=H.lidar('patche');
+    const run=async L=>{const sc=scene(c,{graine:3});visee=sc.viewer.scene.pointclouds[0].visibleNodes[0].sceneNode.geometry.attributes.position;cible=Math.floor(visee.count/2)+1;
+      return H.canon(await L.capture({viewer:sc.viewer,rails:sc.rails,origin:sc.origin,guard(){},pause:async()=>{},meta:{}}),['capturedAt','durationMs']);};
+    assert.equal(await run(LM),await run(LO));}
+  finally{P.getX=av;}
 });
 test('CH-065 : l\'essai a des dents — croire un accesseur inconnu est vu', async ()=>{
   const t=H.A.versions(H.RACINE,'vendor/lidar.js').patche,faux=t.replace('if(!a||!accesseursReconnus(a))return null;','if(!a)return null;');

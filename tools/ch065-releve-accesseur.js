@@ -3,6 +3,8 @@
  * pas d'accesseur, ou si ses accesseurs SONT, par identité de fonction, ceux de THREE.BufferAttribute (ou InterleavedBufferAttribute)
  * de la page. Ce relevé dit lequel des deux cas est celui d'ESV, donc si le gain du patch existe chez l'opérateur.
  * LECTURE SEULE : n'appelle aucune fonction d'ESV ni de Potree, ne clique rien, ne modifie rien, ne lit ni adresse ni jeton ni coordonnée.
+ * Il rend aussi le code des accesseurs de three.js (`listeBlanche`), à verser dans LISTE_BLANCHE_THREE du patch : sans cette entrée, aucun
+ * accesseur d'ESV n'est reconnu et la lecture reste celle d'origine.
  * Résultat : un petit JSON copié dans le presse-papiers (sinon : copy(JSON.stringify(__releveAccesseur))), à remettre en privé. */
 (() => {
   const out = { format: 'ariane-ch065-releve-accesseur-v1', quand: new Date().toISOString() };
@@ -11,6 +13,9 @@
     bufferAttribute: typeof T?.BufferAttribute?.prototype?.getX === 'function',
     interleaved: typeof T?.InterleavedBufferAttribute?.prototype?.getX === 'function' };
   const protos = [['BufferAttribute', T?.BufferAttribute?.prototype], ['InterleavedBufferAttribute', T?.InterleavedBufferAttribute?.prototype]];
+  /* Corps des accesseurs de three.js (bibliothèque publique, pas du code d'ESV) : à verser dans LISTE_BLANCHE_THREE du patch lidar-direct. */
+  const code = f => { try { return typeof f === 'function' ? Function.prototype.toString.call(f).slice(0, 600) : null; } catch { return null; } };
+  out.listeBlanche = protos.filter(([, p]) => p).map(([classe, p]) => [String(T?.REVISION ?? '?'), classe, code(p.getX), code(p.getY), code(p.getZ)]);
   const noeuds = [];
   try {
     for (const pc of (window.viewer?.scene?.pointclouds || [])) {

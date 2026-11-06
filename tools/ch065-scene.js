@@ -5,13 +5,20 @@
  * jusqu'à `total` points. Les accesseurs getX/getY/getZ imitent ceux de Three.js (lecture du tableau, dénormalisation si normalisé). */
 (function(root){
  'use strict';
-/* Classes d'attribut à la manière de Three.js. Exportées sous la forme `THREE` (THREE_FACTICE) : un essai ou un banc les pose sur
+/* Classes d'attribut à la manière de Three.js. Leurs méthodes getX/getY/getZ sont dans la liste blanche du patch lidar-direct (corps
+ * canonique de la « maquette », faute de relevé de three.js dans ESV) : NE PAS LES MODIFIER sans régénérer cette liste. Les espions des essais
+ * et des bancs passent par le crochet globalThis.CH065_ESPION, jamais en remplaçant ces méthodes.
+ * Classes d'attribut à la manière de Three.js. Exportées sous la forme `THREE` (THREE_FACTICE) : un essai ou un banc les pose sur
  * globalThis.THREE pour que vendor/lidar.js patché les reconnaisse par identité de fonction, comme il reconnaîtrait celles de la page. */
  class BA{constructor(a,k,norm){this.array=a;this.itemSize=k;this.count=a.length/k;this.version=0;this.normalized=!!norm;}
   _d(v){if(!this.normalized)return v;const m={Uint8Array:255,Uint16Array:65535,Int16Array:32767}[this.array.constructor.name];return m?Math.max(-1,v/m):v;}
-  getX(i){return this._d(this.array[i*this.itemSize]);}getY(i){return this._d(this.array[i*this.itemSize+1]);}getZ(i){return this._d(this.array[i*this.itemSize+2]);}}
+  getX(i){const v=this._d(this.array[i*this.itemSize]),e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}
+  getY(i){return this._d(this.array[i*this.itemSize+1]);}
+  getZ(i){return this._d(this.array[i*this.itemSize+2]);}}
  class IBA{constructor(data,k,off){this.data=data;this.itemSize=k;this.offset=off;this.count=data.count;this.isInterleavedBufferAttribute=true;this.normalized=false;}
-  getX(i){return this.data.array[i*this.data.stride+this.offset];}getY(i){return this.data.array[i*this.data.stride+this.offset+1];}getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}}
+  getX(i){const v=this.data.array[i*this.data.stride+this.offset],e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}
+  getY(i){return this.data.array[i*this.data.stride+this.offset+1];}
+  getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}}
  const THREE_FACTICE={BufferAttribute:BA,InterleavedBufferAttribute:IBA};
  function scene(c,o={}){
   const total=o.total??c.pointsSceneRelative.length,noeuds=Math.max(1,o.noeuds??19),Type=o.type||Float32Array;

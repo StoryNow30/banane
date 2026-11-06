@@ -19,8 +19,8 @@ function arg(n,d){const i=process.argv.indexOf(n);return i>0?process.argv[i+1]:d
 const REF=path.resolve(arg('--reference',path.join(__dirname,'..'))),PAT=arg('--patche',null),MAX=Number(arg('--max',Infinity));
 const PAS=Number(arg('--pas',25)),PAS_PLEIN=Number(arg('--pas-plein',100)),SORTIE=arg('--sortie',null);
 if(!PAT)throw Error('--patche RACINE manquant');
-/* Espion posé AVANT le chargement des modules : le patch prend l'instantané des fonctions de THREE au chargement. */
-const P=THREE_FACTICE.BufferAttribute.prototype,G0=P.getX;let lectures=0;P.getX=function(i){if(this.itemSize===3)lectures++;return G0.call(this,i);};
+/* Espion par le crochet des classes de la scène (leurs méthodes restent celles de la liste blanche du patch). */
+let lectures=0;globalThis.CH065_ESPION=(a,i,v)=>{if(a.itemSize===3)lectures++;return v;};
 const LA=require(path.join(REF,'vendor/lidar.js')),LB=require(path.join(path.resolve(PAT),'vendor/lidar.js'));
 if(LA===LB)throw Error('même module chargé deux fois');
 function canon(v){
