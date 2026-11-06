@@ -44,9 +44,12 @@ use ariane_js::Echec;
 use ariane_vba::Valeur;
 use jsval::{a, chaine};
 
-pub use date::{parse_iso, vers_iso};
-pub use json::parse as parse_json;
-pub use nombre::json_nombre;
+pub(crate) use date::{parse_iso, vers_iso};
+pub(crate) use nombre::json_nombre;
+
+/// Lit un texte JSON. Seul le binaire de mesure s'en sert : le cœur reçoit du VBA.
+#[must_use]
+pub fn parse_json(texte: &str) -> Option<Valeur> { json::parse(texte) }
 
 /// Point d'entrée du cœur (fonctions 100 à 149). `entree.f` choisit la fonction.
 ///
@@ -266,7 +269,12 @@ mod essais_publics {
         let trame = ariane_vba::encoder(&Valeur::Objet(vec![("f".into(), s("listeEmpreinte")), ("s".into(), s("abc"))]));
         let retour = abi::executer(&trame);
         assert!(ariane_vba::decoder(&retour).is_ok());
-        assert!(parse_json(r#"{"a":1}"#).is_some());
         assert_eq!(json_nombre(1.0), "1");
+    }
+
+    #[test]
+    fn essai_parse_json() {
+        let v = super::parse_json(r#"{"f":"listeActif","reglage":null}"#).expect("json");
+        assert_eq!(appeler(100, &v).expect("appel"), Valeur::Booleen(true));
     }
 }

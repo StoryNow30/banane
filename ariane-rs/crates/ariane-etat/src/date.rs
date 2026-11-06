@@ -44,7 +44,7 @@ fn civil(mut jours: i64) -> (i32, u32, u32) {
 
 /// Millisecondes UTC, ou `None` si la chaîne n'est pas un instant ISO que le port sait lire.
 #[must_use]
-pub fn parse_iso(s: &str) -> Option<f64> {
+pub(crate) fn parse_iso(s: &str) -> Option<f64> {
     let b = s.as_bytes();
     if b.len() < 10 { return None; }
     let an = std::str::from_utf8(b.get(0..4)?).ok()?.parse::<i32>().ok()?;
@@ -97,7 +97,7 @@ pub fn parse_iso(s: &str) -> Option<f64> {
 
 /// `new Date(ms).toISOString()`.
 #[must_use]
-pub fn vers_iso(ms: f64) -> Option<String> {
+pub(crate) fn vers_iso(ms: f64) -> Option<String> {
     if !ms.is_finite() { return None; }
     let arr = ms.trunc();
     if (ms - arr).abs() >= 0.5 && ms.is_sign_positive() { /* round half? toISOString uses the exact time value, already an integer for Date.parse */ }

@@ -5,7 +5,7 @@ use ariane_js::Echec;
 use ariane_vba::Valeur;
 use std::collections::{HashMap, HashSet};
 
-pub const VERSION: f64 = 1.0;
+pub(crate) const VERSION: f64 = 1.0;
 const PREFIXE: &str = "banane3Morceau|";
 const REF: &str = "__morceaux";
 
@@ -36,7 +36,7 @@ fn chemins() -> &'static [Chemin] {
 
 fn chemin_texte(c: &[&str]) -> String { c.join(".") }
 
-pub fn cle_morceau(racine: &str, segments: &str, id: &str, i: usize) -> String {
+pub(crate) fn cle_morceau(racine: &str, segments: &str, id: &str, i: usize) -> String {
     format!("{PREFIXE}{racine}|{segments}|{id}|{i}")
 }
 fn id_valide(id: &str) -> bool { !id.is_empty() && id.len() <= 128 && !id.contains('|') }
@@ -125,7 +125,7 @@ fn paires_map(m: &[(String, Valeur)]) -> Valeur {
     jsval::tab(m.iter().map(|(k, v)| jsval::tab(vec![jsval::s(k.clone()), v.clone()])).collect())
 }
 
-pub fn decouper(etat: &Valeur, connus: &Valeur) -> Result<Valeur, Echec> {
+pub(crate) fn decouper(etat: &Valeur, connus: &Valeur) -> Result<Valeur, Echec> {
     if !vrai_objet_ou_tableau(etat) {
         return Ok(jsval::o(vec![
             ("etat", clone_json(etat)),
@@ -227,7 +227,7 @@ fn vrai_objet_ou_tableau(v: &Valeur) -> bool {
     matches!(v, Valeur::Objet(_) | Valeur::Tableau(_))
 }
 
-pub fn cles_a_relire(etat: &Valeur) -> Valeur {
+pub(crate) fn cles_a_relire(etat: &Valeur) -> Valeur {
     let mut cles = vec![];
     for spec in chemins() {
         let r = a(etat, spec.racine);
@@ -270,7 +270,7 @@ fn lus_de(v: &Valeur) -> HashMap<String, String> {
     m
 }
 
-pub fn recoller(etat: &Valeur, lus: &Valeur) -> Valeur {
+pub(crate) fn recoller(etat: &Valeur, lus: &Valeur) -> Valeur {
     if !est_objet(etat) && !est_tableau(etat) {
         return jsval::o(vec![("etat", etat.clone()), ("manquants", jsval::tab(vec![])), ("relus", jsval::tab(vec![]))]);
     }

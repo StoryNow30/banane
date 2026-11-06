@@ -321,7 +321,7 @@ fn sig_val(s: &Sig, avec_score: bool) -> Valeur {
     Valeur::Objet(p)
 }
 
-pub fn classer(entree: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn classer(entree: &Valeur, options: &Valeur) -> Valeur {
     let (cfg, rec, nl, cuts, differes, zones, adv, mut sig) = signaux(entree, options);
     for s in &mut sig {
         let (sc, r) = noter(s, &cfg);
@@ -342,13 +342,13 @@ fn enveloppe(_e: &Valeur, _c: &Cfg, rec: f64, nl: f64, cuts: &[f64], differes: &
     ])
 }
 
-pub fn signaux_valeur(entree: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn signaux_valeur(entree: &Valeur, options: &Valeur) -> Valeur {
     let (cfg, rec, nl, cuts, differes, zones, adv, sig) = signaux(entree, options);
     let _ = cfg;
     enveloppe(entree, &cfg, rec, nl, &cuts, &differes, &zones, &adv, &sig, false)
 }
 
-pub fn compacter_cuts(cuts: &[f64]) -> String {
+pub(crate) fn compacter_cuts(cuts: &[f64]) -> String {
     let mut u = vec![];
     let mut vus = HashSet::new();
     for c in cuts { if vus.insert(c.to_bits()) { u.push(*c); } }
@@ -370,7 +370,7 @@ struct Plage { debut: f64, fin: f64, cuts: Vec<f64>, motif: String, libelle: Str
 
 /// Liste de fin de lot (`liste` de `src/verts-a-controler.js`).
 #[allow(clippy::too_many_lines)]
-pub fn liste(entree: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn liste(entree: &Valeur, options: &Valeur) -> Valeur {
     let (cfg, rec, nl, cuts, differes, zones, adv, mut sig) = signaux(entree, options);
     for s in &mut sig { let (sc, r) = noter(s, &cfg); s.score = sc; s.raisons = r; }
     sig.sort_by(|a, b| cmp_nombre(b.score, a.score).then_with(|| cmp_nombre(a.i, b.i)));
@@ -467,7 +467,7 @@ impl Clone for Sig {
     fn clone(&self) -> Self { Sig { raisons: self.raisons.clone(), ..*self } }
 }
 
-pub fn duree(s: &Valeur) -> String {
+pub(crate) fn duree(s: &Valeur) -> String {
     let Some(s) = nombre(s) else { return String::new() };
     if !s.is_finite() || s < 0.0 { return String::new(); }
     let m = (s / 60.0).floor();
@@ -477,7 +477,7 @@ pub fn duree(s: &Valeur) -> String {
     } else if r == 0.0 { format!("{} min", m as i64) } else { format!("{} min {} s", m as i64, r as i64) }
 }
 
-pub fn lignes_instantane(dec: &Valeur) -> Valeur {
+pub(crate) fn lignes_instantane(dec: &Valeur) -> Valeur {
     let d = if chaine(a(dec, "format")).is_some() { decompacter(dec) } else { dec.clone() };
     if !est_objet(&d) || !est_entier(a(&d, "n")) && nombre(a(&d, "n")).is_none() { return jsval::tab(vec![]); }
     let n = nombre(a(&d, "n")).unwrap_or(0.0) as usize;

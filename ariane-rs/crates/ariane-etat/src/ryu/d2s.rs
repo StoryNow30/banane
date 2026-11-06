@@ -20,22 +20,22 @@
 
 use crate::ryu::common::{log10_pow2, log10_pow5, pow5bits};
 #[cfg(not(feature = "small"))]
-pub use crate::ryu::d2s_full_table::{DOUBLE_POW5_INV_SPLIT, DOUBLE_POW5_SPLIT};
+pub(crate) use crate::ryu::d2s_full_table::{DOUBLE_POW5_INV_SPLIT, DOUBLE_POW5_SPLIT};
 use crate::ryu::d2s_intrinsics::{
     div10, div100, div5, mul_shift_all_64, multiple_of_power_of_2, multiple_of_power_of_5,
 };
 #[cfg(feature = "small")]
-pub use crate::ryu::d2s_small_table::{compute_inv_pow5, compute_pow5};
+pub(crate) use crate::ryu::d2s_small_table::{compute_inv_pow5, compute_pow5};
 use core::mem::MaybeUninit;
 
-pub const DOUBLE_MANTISSA_BITS: u32 = 52;
-pub const DOUBLE_EXPONENT_BITS: u32 = 11;
-pub const DOUBLE_BIAS: i32 = 1023;
-pub const DOUBLE_POW5_INV_BITCOUNT: i32 = 125;
-pub const DOUBLE_POW5_BITCOUNT: i32 = 125;
+pub(crate) const DOUBLE_MANTISSA_BITS: u32 = 52;
+pub(crate) const DOUBLE_EXPONENT_BITS: u32 = 11;
+pub(crate) const DOUBLE_BIAS: i32 = 1023;
+pub(crate) const DOUBLE_POW5_INV_BITCOUNT: i32 = 125;
+pub(crate) const DOUBLE_POW5_BITCOUNT: i32 = 125;
 
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn decimal_length17(v: u64) -> u32 {
+pub(crate) fn decimal_length17(v: u64) -> u32 {
     // This is slightly faster than a loop.
     // The average output length is 16.38 digits, so we check high-to-low.
     // Function precondition: v is not an 18, 19, or 20-digit number.
@@ -80,7 +80,7 @@ pub fn decimal_length17(v: u64) -> u32 {
 }
 
 // A floating decimal representing m * 10^e.
-pub struct FloatingDecimal64 {
+pub(crate) struct FloatingDecimal64 {
     pub mantissa: u64,
     // Decimal exponent's range is -324 to 308
     // inclusive, and can fit in i16 if needed.
@@ -88,7 +88,7 @@ pub struct FloatingDecimal64 {
 }
 
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
+pub(crate) fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
     let (e2, m2) = if ieee_exponent == 0 {
         (
             // We subtract 2 so that the bounds computation has 2 additional bits.
@@ -128,6 +128,8 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
         e10 = q as i32;
         let k = DOUBLE_POW5_INV_BITCOUNT + pow5bits(q as i32) - 1;
         let i = -e2 + q as i32 + k;
+        // SÛRETÉ : `q` est un indice de `DOUBLE_POW5_INV_SPLIT` (assert de débogage) ; `vp_uninit`
+        // et `vm_uninit` sont des locaux encore vides, que `mul_shift_all_64` initialise.
         vr = unsafe {
             mul_shift_all_64(
                 m2,
@@ -144,7 +146,9 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
                 mm_shift,
             )
         };
+        // SÛRETÉ : `vp_uninit` vient d'être écrit par `mul_shift_all_64`.
         vp = unsafe { vp_uninit.assume_init() };
+        // SÛRETÉ : `vm_uninit` vient d'être écrit par `mul_shift_all_64`.
         vm = unsafe { vm_uninit.assume_init() };
         if q <= 21 {
             // This should use q <= 22, but I think 21 is also safe. Smaller values
@@ -170,6 +174,8 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
         let i = -e2 - q as i32;
         let k = pow5bits(i) - DOUBLE_POW5_BITCOUNT;
         let j = q as i32 - k;
+        // SÛRETÉ : `i` est un indice de `DOUBLE_POW5_SPLIT` (assert de débogage) ; `vp_uninit`
+        // et `vm_uninit` sont des locaux encore vides, que `mul_shift_all_64` initialise.
         vr = unsafe {
             mul_shift_all_64(
                 m2,
@@ -186,7 +192,9 @@ pub fn d2d(ieee_mantissa: u64, ieee_exponent: u32) -> FloatingDecimal64 {
                 mm_shift,
             )
         };
+        // SÛRETÉ : `vp_uninit` vient d'être écrit par `mul_shift_all_64`.
         vp = unsafe { vp_uninit.assume_init() };
+        // SÛRETÉ : `vm_uninit` vient d'être écrit par `mul_shift_all_64`.
         vm = unsafe { vm_uninit.assume_init() };
         if q <= 1 {
             // {vr,vp,vm} is trailing zeros if {mv,mp,mm} has at least q trailing 0 bits.

@@ -4,7 +4,7 @@ use crate::ryu::d2s::{d2d, decimal_length17, DOUBLE_EXPONENT_BITS, DOUBLE_MANTIS
 /// Texte JSON d'un nombre fini. `NaN` et les infinis ne sont pas du ressort de cette fonction.
 /// −0 et +0 donnent `"0"`.
 #[must_use]
-pub fn json_nombre(x: f64) -> String {
+pub(crate) fn json_nombre(x: f64) -> String {
     if x == 0.0 {
         return "0".into();
     }
@@ -77,7 +77,7 @@ pub fn json_nombre(x: f64) -> String {
 }
 
 /// `String(nombre)` pour un nombre fini, et « NaN » / « Infinity » / « -Infinity » sinon.
-pub fn vers_chaine(x: f64) -> String {
+pub(crate) fn vers_chaine(x: f64) -> String {
     if x.is_nan() {
         "NaN".into()
     } else if x.is_infinite() {

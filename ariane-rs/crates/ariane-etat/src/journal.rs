@@ -88,7 +88,7 @@ fn rendu(ix: &Index, types: &[String]) -> Valeur {
 }
 
 /// Construction : une passe sur `events` et `records`, comme `construire`.
-pub fn indexer(entree: &Valeur) -> Valeur {
+pub(crate) fn indexer(entree: &Valeur) -> Valeur {
     let (types, set) = types_de(a(entree, "types"));
     let ev = jsval::elements(a(entree, "events"));
     let rec = jsval::elements(a(entree, "records"));
@@ -147,7 +147,7 @@ fn appliquer_op(ix: &mut Index, op: &Valeur, types: &HashSet<String>) {
 }
 
 /// Rejoue des écritures et suppressions sur un index construit, ou à vide si `base` est absent.
-pub fn appliquer(entree: &Valeur) -> Valeur {
+pub(crate) fn appliquer(entree: &Valeur) -> Valeur {
     let (types, set) = types_de(a(entree, "types"));
     let mut ix = if est_objet(a(entree, "events")) || jsval::est_tableau(a(entree, "events")) || jsval::est_tableau(a(entree, "records")) {
         // Reconstruit depuis le corpus puis applique. Le résultat de `indexer` n'est pas réinjecté : on refait la passe.
@@ -170,7 +170,7 @@ pub fn appliquer(entree: &Valeur) -> Valeur {
 }
 
 /// Clés triées d'une session, comme `clesNatif` quand l'index est sûr.
-pub fn cles_natif(entree: &Valeur) -> Result<Valeur, ariane_js::Echec> {
+pub(crate) fn cles_natif(entree: &Valeur) -> Result<Valeur, ariane_js::Echec> {
     let sid = chaine(a(entree, "sid")).ok_or_else(|| ariane_js::Echec::hors_domaine("sid absent"))?;
     let ix = indexer(entree);
     // indexer a déjà trié. On extrait.
@@ -194,7 +194,7 @@ pub fn cles_natif(entree: &Valeur) -> Result<Valeur, ariane_js::Echec> {
 }
 
 /// Union triée des clés de plusieurs types. Erreur si un type n'est pas indexé (même message que le JS).
-pub fn cles_par_type(entree: &Valeur) -> Result<Valeur, ariane_js::Echec> {
+pub(crate) fn cles_par_type(entree: &Valeur) -> Result<Valeur, ariane_js::Echec> {
     let (types, set) = types_de(a(entree, "types"));
     for t in jsval::elements(a(entree, "demandes")) {
         let nom = chaine(t).unwrap_or("");

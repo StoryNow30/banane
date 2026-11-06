@@ -14,7 +14,7 @@ const STATUTS: [&str; 4] = ["valid", "invalid", "skipped", "autre"];
 const EDGES: [&str; 6] = ["XLeftEdge", "YLeftEdge", "ZLeftEdge", "XRightEdge", "YRightEdge", "ZRightEdge"];
 const LECTURE: &str = "r[i] = ligne du cut i : [statut + 4 × drapeaux, six bords]. Statut 0 valid, 1 invalid, 2 skipped, 3 autre ; drapeaux 1 TreatedByOperator, 2 SeenByOperator. Pour chaque bord, la première valeur connue est absolue, les suivantes sont l’écart à la précédente valeur connue de la même colonne ; null = absent.";
 
-pub fn empreinte(s: &str) -> String {
+pub(crate) fn empreinte(s: &str) -> String {
     let mut h: u32 = 0x811c_9dc5;
     for c in s.encode_utf16() {
         h ^= c as u32;
@@ -34,7 +34,7 @@ fn nombres_ou_trous(v: &Valeur) -> Vec<Option<f64>> {
 }
 fn f64s(v: &Valeur) -> Vec<f64> { nombres_ou_trous(v).into_iter().map(|x| x.unwrap_or(f64::NAN)).collect() }
 
-pub fn compacter(t: &Valeur, meta: &Valeur) -> Valeur {
+pub(crate) fn compacter(t: &Valeur, meta: &Valeur) -> Valeur {
     let st = f64s(a(t, "st"));
     let fl = f64s(a(t, "fl"));
     let ed = nombres_ou_trous(a(t, "ed"));
@@ -91,7 +91,7 @@ fn lignes_r(v: &Valeur) -> Option<Vec<Vec<Option<f64>>>> {
     }
 }
 
-pub fn decompacter(snap: &Valeur) -> Valeur {
+pub(crate) fn decompacter(snap: &Valeur) -> Valeur {
     if chaine(a(snap, "format")) != Some(FORMAT) { return jsval::nul(); }
     let Some(rows) = lignes_r(a(snap, "r")) else { return jsval::nul() };
     let n = rows.len();
@@ -127,7 +127,7 @@ pub fn decompacter(snap: &Valeur) -> Valeur {
     ])
 }
 
-pub fn nom_fichier(partie: &Valeur, at: &Valeur) -> String {
+pub(crate) fn nom_fichier(partie: &Valeur, at: &Valeur) -> String {
     let p = if est_entier(partie) { nombre(partie).unwrap().to_string().trim_end_matches(".0").to_string() } else { "X".into() };
     // to_string of 7.0 via format of the integer
     let p = if est_entier(partie) { format!("{}", nombre(partie).unwrap() as i64) } else { "X".into() };
@@ -142,7 +142,7 @@ fn heure_compacte(iso: &str) -> String {
     sans.replacen('T', "-", 1)
 }
 
-pub fn bords_corps(body: &Valeur) -> Valeur {
+pub(crate) fn bords_corps(body: &Valeur) -> Valeur {
     if !est_objet(body) || chaine(a(body, "ExtractionStatus")) != Some("valid") { return jsval::nul(); }
     let mut e = vec![];
     for k in EDGES {
@@ -166,7 +166,7 @@ fn poser(o: &mut Vec<(String, Valeur)>, k: String, v: Valeur) {
 }
 fn obj_mut(v: &mut Valeur) -> &mut Vec<(String, Valeur)> { if let Valeur::Objet(t) = v { t } else { unreachable!() } }
 
-pub fn ajouter(mem: &Valeur, partie: &Valeur, cle: &Valeur, cut: &Valeur, bords: &Valeur, at_iso: &Valeur, version: &Valeur) -> Valeur {
+pub(crate) fn ajouter(mem: &Valeur, partie: &Valeur, cle: &Valeur, cut: &Valeur, bords: &Valeur, at_iso: &Valeur, version: &Valeur) -> Valeur {
     if !est_entier(partie) || !est_entier(cut) || nombre(cut).unwrap() < 0.0 { return mem.clone(); }
     let Some(b) = jsval::comme_liste(bords) else { return mem.clone() };
     if b.len() != 6 { return mem.clone(); }
@@ -230,7 +230,7 @@ fn prendre<'a>(o: &'a mut Valeur, k: &str) -> &'a mut Valeur {
 fn hypot3(a: f64, b: f64, c: f64) -> f64 { ariane_js::hypot(&[a, b, c]) }
 fn arr1(v: f64) -> f64 { ariane_js::round(v * 10.0) / 10.0 }
 
-pub fn comparer(p: &Valeur, dec: &Valeur, at_iso: &Valeur) -> Valeur {
+pub(crate) fn comparer(p: &Valeur, dec: &Valeur, at_iso: &Valeur) -> Valeur {
     let p_ok = est_objet(p);
     let dec_ok = est_objet(dec);
     let cle_diff = p_ok && dec_ok && chaine(a(p, "cle")) != chaine(a(dec, "cle"));
@@ -300,7 +300,7 @@ pub fn comparer(p: &Valeur, dec: &Valeur, at_iso: &Valeur) -> Valeur {
     ])
 }
 
-pub fn choisir_table(tables: &Valeur, obs: &Valeur) -> Valeur {
+pub(crate) fn choisir_table(tables: &Valeur, obs: &Valeur) -> Valeur {
     let rows = nombre(a(obs, "rows"));
     let mut l = vec![];
     for t in jsval::elements(tables) {
@@ -315,7 +315,7 @@ pub fn choisir_table(tables: &Valeur, obs: &Valeur) -> Valeur {
     if l.len() == 1 { l.pop().unwrap() } else { jsval::nul() }
 }
 
-pub fn texte_resume(r: &Valeur, snap: &Valeur, heure: &Valeur) -> String {
+pub(crate) fn texte_resume(r: &Valeur, snap: &Valeur, heure: &Valeur) -> String {
     let h = |iso: &Valeur| -> String {
         if est_objet(heure) || matches!(heure, Valeur::Chaine(_)) {
             // L'adaptateur passe le texte déjà formaté dans `heureTexte`, sinon l'ISO tel quel.
@@ -339,7 +339,7 @@ pub fn texte_resume(r: &Valeur, snap: &Valeur, heure: &Valeur) -> String {
 fn fmt_num(x: f64) -> String { if x.fract() == 0.0 && x.abs() < 1e15 { format!("{}", x as i64) } else { crate::nombre::json_nombre(x) } }
 fn texte_num_ou(v: &Valeur) -> String { nombre(v).map_or_else(|| match v { Valeur::Chaine(s) => s.clone(), Valeur::Nul => "null".into(), _ => "undefined".into() }, fmt_num) }
 
-pub fn actif(reglage: &Valeur) -> bool {
+pub(crate) fn actif(reglage: &Valeur) -> bool {
     if matches!(reglage, Valeur::Indefini) { return true; }
     !matches!(a(a(reglage, "listeMemoire"), "actif"), Valeur::Booleen(false))
 }

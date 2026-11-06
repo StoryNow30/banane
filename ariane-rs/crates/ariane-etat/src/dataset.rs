@@ -70,7 +70,7 @@ fn mediane_basse(mut a: Vec<f64>) -> Valeur {
 
 /// Assemble l'objet `dataset` de `src/native-session.js`. La fonction JS est gardée d'un bloc : c'est elle que la parité relit.
 #[allow(clippy::too_many_lines)]
-pub fn assembler(entree: &Valeur) -> Result<Valeur, Echec> {
+pub(crate) fn assembler(entree: &Valeur) -> Result<Valeur, Echec> {
     let n = a(entree, "session");
     if !est_objet(n) { return Err(Echec::erreur("Aucune session Natif conservée.")); }
     let id = chaine(a(n, "id")).unwrap_or("");

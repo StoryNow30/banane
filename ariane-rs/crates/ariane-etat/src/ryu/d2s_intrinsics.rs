@@ -21,17 +21,17 @@
 use core::ptr;
 
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn div5(x: u64) -> u64 {
+pub(crate) fn div5(x: u64) -> u64 {
     x / 5
 }
 
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn div10(x: u64) -> u64 {
+pub(crate) fn div10(x: u64) -> u64 {
     x / 10
 }
 
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn div100(x: u64) -> u64 {
+pub(crate) fn div100(x: u64) -> u64 {
     x / 100
 }
 
@@ -53,14 +53,14 @@ pub(crate) fn pow5_factor(mut value: u64) -> u32 {
 
 // Returns true if value is divisible by 5^p.
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn multiple_of_power_of_5(value: u64, p: u32) -> bool {
+pub(crate) fn multiple_of_power_of_5(value: u64, p: u32) -> bool {
     // I tried a case distinction on p, but there was no performance difference.
     pow5_factor(value) >= p
 }
 
 // Returns true if value is divisible by 2^p.
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn multiple_of_power_of_2(value: u64, p: u32) -> bool {
+pub(crate) fn multiple_of_power_of_2(value: u64, p: u32) -> bool {
     debug_assert!(value != 0);
     debug_assert!(p < 64);
     // __builtin_ctzll doesn't appear to be faster here.
@@ -68,14 +68,18 @@ pub fn multiple_of_power_of_2(value: u64, p: u32) -> bool {
 }
 
 #[cfg_attr(feature = "no-panic", inline)]
-pub fn mul_shift_64(m: u64, mul: &(u64, u64), j: u32) -> u64 {
+pub(crate) fn mul_shift_64(m: u64, mul: &(u64, u64), j: u32) -> u64 {
     let b0 = m as u128 * mul.0 as u128;
     let b2 = m as u128 * mul.1 as u128;
     (((b0 >> 64) + b2) >> (j - 64)) as u64
 }
 
+/// # Safety
+/// `vp` et `vm` sont non nuls, alignés pour un `u64`, et désignent deux emplacements distincts
+/// et inscriptibles. Les deux écritures les initialisent.
 #[cfg_attr(feature = "no-panic", inline)]
-pub unsafe fn mul_shift_all_64(
+// SÛRETÉ : `vp` et `vm` sont non nuls, alignés pour un `u64`, et désignent deux emplacements distincts et inscriptibles.
+pub(crate) unsafe fn mul_shift_all_64(
     m: u64,
     mul: &(u64, u64),
     j: u32,
@@ -83,7 +87,9 @@ pub unsafe fn mul_shift_all_64(
     vm: *mut u64,
     mm_shift: u32,
 ) -> u64 {
-    ptr::write(vp, mul_shift_64(4 * m + 2, mul, j));
-    ptr::write(vm, mul_shift_64(4 * m - 1 - mm_shift as u64, mul, j));
+    // SÛRETÉ : `vp` est aligné et exclusive ; l'écriture initialise ce `u64`.
+    unsafe { ptr::write(vp, mul_shift_64(4 * m + 2, mul, j)); }
+    // SÛRETÉ : `vm` est aligné, distinct de `vp` ; l'écriture initialise ce `u64`.
+    unsafe { ptr::write(vm, mul_shift_64(4 * m - 1 - mm_shift as u64, mul, j)); }
     mul_shift_64(4 * m, mul, j)
 }

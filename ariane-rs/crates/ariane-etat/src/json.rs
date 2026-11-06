@@ -3,7 +3,7 @@ use crate::jsval::{est_objet, est_tableau};
 use crate::nombre::json_nombre;
 use ariane_vba::Valeur;
 
-pub fn stringify(v: &Valeur) -> Option<String> {
+pub(crate) fn stringify(v: &Valeur) -> Option<String> {
     let mut s = String::new();
     ecrire(v, &mut s)?;
     Some(s)
@@ -74,7 +74,7 @@ impl Lec<'_> {
 }
 
 #[must_use]
-pub fn parse(texte: &str) -> Option<Valeur> {
+pub(crate) fn parse(texte: &str) -> Option<Valeur> {
     let mut l = Lec { b: texte.as_bytes(), i: 0 };
     let v = valeur(&mut l)?;
     l.blanc();
@@ -234,7 +234,7 @@ fn nombre(l: &mut Lec) -> Option<Valeur> {
 }
 
 /// `JSON.parse(JSON.stringify(x))` : −0 devient +0, non fini devient null, indéfini d'objet disparaît, trou et indéfini de tableau deviennent null.
-pub fn clone_json(v: &Valeur) -> Valeur {
+pub(crate) fn clone_json(v: &Valeur) -> Valeur {
     match v {
         Valeur::Indefini => Valeur::Indefini,
         Valeur::Nul => Valeur::Nul,
@@ -253,7 +253,7 @@ pub fn clone_json(v: &Valeur) -> Valeur {
     }
 }
 
-pub fn est_simple(v: &Valeur) -> bool {
+pub(crate) fn est_simple(v: &Valeur) -> bool {
     match v { Valeur::Nul | Valeur::Indefini | Valeur::Booleen(_) | Valeur::Nombre(_) | Valeur::Chaine(_) => true, _ => !est_objet(v) && !est_tableau(v) }
 }
 

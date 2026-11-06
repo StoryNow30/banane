@@ -1,6 +1,6 @@
 # CH-064-E — État, journal, listes (rapport)
 
-Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` et bras `100..=149` du cœur. Sans dépendance Cargo (le formatage des nombres reprend Ryū, Apache 2.0 ou Boost, dans `src/ryu/`). Mémoire linéaire du binaire propre plafonnée à 512 Mio, et relâchée par réinstanciation de l'instance.
+Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` et bras `100..=149` du cœur. Sans dépendance Cargo. Les chiffres décimaux viennent de Ryū 1.0.18 (Ulf Adams, 2018 ; port Rust de David Tolnay), fichiers `common.rs`, `d2s.rs`, `d2s_full_table.rs`, `d2s_intrinsics.rs`. Licence d'amont au choix Apache 2.0 ou Boost 1.0 ; licence choisie pour cette copie : Apache 2.0. Mémoire linéaire du binaire propre plafonnée à 512 Mio, et relâchée par réinstanciation de l'instance.
 
 Référence : le JavaScript de cette branche. Chromium du banc : Chrome/156. 15 répétitions après 3 d'échauffement, médiane et P90 (indice `floor(p·n)`).
 
@@ -43,7 +43,14 @@ Le WASM est plus lent : la traversée coûte plus que le calcul. Sur ce journal,
 Le plafond 512 Mio n'a pas été atteint. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve : elle ne s'accumule pas d'un appel à l'autre.
 
 ## Qualité (ÉTABLI)
-`cargo clippy -p ariane-etat --no-deps --all-targets -- -W clippy::pedantic -D warnings` sort sans avertissement. Les conversions d'une longueur de tableau en `f64`, qui recopient `array.length`, sont nommées en tête de crate. `cargo test -p ariane-etat` : 10 essais, un appel de chaque fonction publique. Chaque `unsafe` de l'ABI dit quel tampon il reçoit, sa taille, et qu'il n'est libéré qu'une fois. Le code Ryū vendu porte le même invariant sur ses pointeurs locaux.
+
+`cargo clippy -p ariane-etat --offline --no-deps --all-targets -- -W clippy::pedantic -D warnings` sort sans avertissement. Les conversions d'une longueur de tableau en `f64`, qui recopient `array.length`, sont nommées en tête de crate.
+
+La surface publique est celle de l'ABI et du binaire de mesure : `appeler`, `parse_json`, `executer`, et les cinq symboles `vba_reserver`, `vba_liberer`, `vba_resultat`, `vba_liberer_resultat`, `vba_appel`. Le reste est `pub(crate)`. `cargo test -p ariane-etat` : 17 essais, dont un essai par fonction encore publique.
+
+Chaque bloc `unsafe` porte un commentaire `// SÛRETÉ :` qui dit l'invariant (pointeur issu de l'allocation, taille, une seule libération ; pour Ryū, écriture dans deux `u64` locaux puis `assume_init`, indice borné avant `get_unchecked`).
+
+La copie de Ryū reste locale. Une question est posée au chef pour n'en garder qu'une, dans `ariane-js`, déjà porteur de `Number.prototype.toString`. `ariane-js` n'est pas modifié en attendant.
 
 ## Lecture
 

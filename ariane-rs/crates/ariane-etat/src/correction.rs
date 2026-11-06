@@ -116,7 +116,7 @@ fn bit_cut(c: f64) -> u64 { c.to_bits() }
 
 /// Liste de cuts à corriger (`construire` de `src/correction-liste.js`), gardée d'un bloc face au source.
 #[allow(clippy::too_many_lines)]
-pub fn construire(events: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     let ev = evenements(events);
     let owned: Vec<Valeur> = ev.into_iter().cloned().collect();
     let partie = a(options, "partie");
@@ -332,7 +332,7 @@ pub fn construire(events: &Valeur, options: &Valeur) -> Valeur {
 fn poses_cut(bits: u64) -> f64 { f64::from_bits(bits) }
 fn est_tableau(v: &Valeur) -> bool { matches!(v, Valeur::Tableau(_)) }
 
-pub fn statut_de(entree: &Valeur, visites: &Valeur) -> Valeur {
+pub(crate) fn statut_de(entree: &Valeur, visites: &Valeur) -> Valeur {
     let part = a(entree, "part");
     let cut = a(entree, "cut");
     let v: Vec<&Valeur> = jsval::elements(visites).into_iter().filter(|x| {
@@ -367,7 +367,7 @@ pub fn statut_de(entree: &Valeur, visites: &Valeur) -> Valeur {
     ])
 }
 
-pub fn visites_fusionnees(visites: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn visites_fusionnees(visites: &Valeur, options: &Valeur) -> Valeur {
     let v: Vec<&Valeur> = jsval::elements(visites).into_iter().filter(|x| vrai(a(x, "identity"))).collect();
     let issues = a(options, "issues");
     let echo = vrai(a(options, "echoOuvert"));
@@ -394,7 +394,7 @@ pub fn visites_fusionnees(visites: &Valeur, options: &Valeur) -> Valeur {
     }).collect())
 }
 
-pub fn apprenabilite(rec: &Valeur) -> Valeur {
+pub(crate) fn apprenabilite(rec: &Valeur) -> Valeur {
     if !est_objet(rec) { return jsval::o(vec![("apprenable", jsval::b(false)), ("pertes", jsval::tab(vec![jsval::s("enregistrement-absent")]))]); }
     let intents: Vec<&Valeur> = jsval::elements(a(rec, "operatorIntents")).into_iter().filter(|x| chaine(a(x, "intent")) == Some("VALIDATE")).collect();
     if intents.is_empty() { return jsval::o(vec![("apprenable", jsval::b(false)), ("pertes", jsval::tab(vec![jsval::s("sans-validation")]))]); }
@@ -419,7 +419,7 @@ pub fn apprenabilite(rec: &Valeur) -> Valeur {
     ])
 }
 
-pub fn bilan(entrees: &Valeur, visites: &Valeur, enregistrements: &Valeur) -> Valeur {
+pub(crate) fn bilan(entrees: &Valeur, visites: &Valeur, enregistrements: &Valeur) -> Valeur {
     let mut c = [("a-faire", 0.0), ("en-cours", 0.0), ("corrige", 0.0), ("valide", 0.0), ("vu", 0.0)];
     let avec = est_objet(enregistrements);
     let mut apprenables = 0.0;
@@ -456,7 +456,7 @@ pub fn bilan(entrees: &Valeur, visites: &Valeur, enregistrements: &Valeur) -> Va
     jsval::o(vec![("lignes", jsval::tab(lignes)), ("comptes", Valeur::Objet(comptes))])
 }
 
-pub fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
     let mut parts: Vec<f64> = vec![];
     let mut par: HashMap<u64, Vec<(f64, String)>> = HashMap::new();
     for l in jsval::elements(listes) {
@@ -513,7 +513,7 @@ pub fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
 
 /// Couverture de l'Aurore (`couverture` de `src/correction-liste.js`), gardée d'un bloc face au source.
 #[allow(clippy::too_many_lines)]
-pub fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
+pub(crate) fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
     let owned: Vec<Valeur> = jsval::elements(events).into_iter().cloned().collect();
     let mut idx: Vec<usize> = (0..owned.len()).filter(|&i| instant(&owned[i]).is_some()).collect();
     idx.sort_by(|&i, &j| cmp_nombre(instant(&owned[i]).unwrap(), instant(&owned[j]).unwrap()));
