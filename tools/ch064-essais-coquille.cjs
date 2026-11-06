@@ -55,3 +55,14 @@ test('plafond 256 Mio : la mémoire du cœur grandit jusqu’à 256 Mio exacteme
  coeur();const m=new WebAssembly.Instance(new WebAssembly.Module(octets),C.IMPORTS).exports.memory,page=65536;
  m.grow(PLAFOND/page-m.buffer.byteLength/page);assert.strictEqual(m.buffer.byteLength,PLAFOND);
  assert.throws(()=>m.grow(1),RangeError);});
+/* Réinstanciation (plantage de la parité Chromium de la décision, `shadow` : 1 086 réinstanciations en 4 000 appels qui
+ * dépassaient tous le seuil). Une instance n'est recréée que si la mémoire dépasse le seuil ET que le dernier appel en a
+ * occupé moins du quart (mémoire gardée après un gros appel isolé) ; des appels qui en ont tous besoin gardent l'instance. */
+test('réinstanciation : pas à chaque appel quand chaque appel a besoin de la mémoire ; oui après un gros appel isolé',()=>{
+ const c=coeur({seuilReinstanciation:8*1024*1024}),grand=Array.from({length:1500000},(_,i)=>i*0.5),petit={a:1};
+ for(let i=0;i<6;i++)assert.strictEqual(c.appeler(0,grand).length,grand.length);
+ const apresGrands=c.etat().reinstanciations;
+ assert.ok(apresGrands<=1,'des appels qui ont tous besoin de la mémoire ne recréent pas l’instance à chaque fois ('+apresGrands+')');
+ assert.deepStrictEqual(c.appeler(0,petit),petit);
+ assert.strictEqual(c.etat().reinstanciations,apresGrands+1,'après un petit appel, la mémoire gardée est rendue');
+ assert.ok(c.memoireOctets()<8*1024*1024);});

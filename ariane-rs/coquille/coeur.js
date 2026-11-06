@@ -1,8 +1,8 @@
 /* CH-064 : coquille du cœur WASM. Charge le module (octets ou base64), appelle une fonction du cœur avec une valeur JS
  * et rend une valeur JS, par le format VBA. Synchrone (utilisable dans un service worker après importScripts).
  *   const coeur=ArianeCoeur.creer(octets,{seuilReinstanciation}) ; coeur.appeler(n°, valeur) ; coeur.memoireOctets()
- * Mémoire (plan § D) : le Module compilé est gardé ; l'Instance est recréée dès que sa mémoire linéaire dépasse le seuil
- * après un appel (l'ancienne mémoire n'est plus référencée). Une erreur rendue par le cœur est relevée à l'identique. */
+ * Mémoire (plan § D) : le Module compilé est gardé ; l'Instance est recréée quand sa mémoire linéaire dépasse le seuil après un
+ * appel qui en a occupé moins du quart (l'ancienne mémoire n'est plus référencée). Une erreur rendue par le cœur est relevée à l'identique. */
 (function(root,factory){const api=factory(typeof module==='object'?require('./vba.js'):root.ArianeVba);if(typeof module==='object')module.exports=api;else root.ArianeCoeur=api;})(typeof globalThis!=='undefined'?globalThis:this,function(Vba){
  'use strict';
  const CONSTRUCTEURS={Error,TypeError,RangeError};
@@ -30,7 +30,13 @@
    }catch(e){trappe(e);}
    return {octets:copie,liberer:()=>{}};
   }
-  function apresAppel(){const t=ex.memory.buffer.byteLength;if(t>hauteEau)hauteEau=t;if(t>seuilReinstanciation){instancier();reinstanciations++;}}
+  /* Réinstancier rend la mémoire au système ; l'arène, elle, est déjà remise à zéro à chaque appel. On ne recrée donc l'instance
+   * que si la mémoire dépasse le seuil ET que le dernier appel en a occupé moins du quart (mémoire gardée après un gros appel
+   * isolé). Des appels qui en ont tous besoin gardent l'instance (bornée par le plafond de 256 Mio) : recréer à chaque appel
+   * accumulait les anciennes instances jusqu'au plantage de la page (parité Chromium de la décision, `shadow`). */
+  function apresAppel(){const t=ex.memory.buffer.byteLength;if(t>hauteEau)hauteEau=t;
+   const occupe=typeof ex.vba_occupe==='function'?ex.vba_occupe():0;
+   if(t>seuilReinstanciation&&occupe*4<t){instancier();reinstanciations++;}}
   function appeler(fonction,valeur){
    const r=appelerOctets(fonction,Vba.encoder(valeur)),v=Vba.decoder(r.octets);
    apresAppel();
