@@ -1,0 +1,48 @@
+{
+ "format": "ch064-sonde-math-v1",
+ "moteur": "node v22.23.4 (V8 12.4.254.21-node.57)",
+ "tirages": 200000,
+ "divergences": {
+  "std_sin": 1508,
+  "std_cos": 1775,
+  "std_exp": 0,
+  "std_ln": 1452,
+  "std_ln_1p": 114,
+  "std_log10": 29831,
+  "std_powf": 8599,
+  "std_hypot": 70072,
+  "js_hypot": 0,
+  "std_hypot3": 78841,
+  "js_hypot3": 0,
+  "std_round": 52320,
+  "js_round": 0,
+  "std_max": 71491,
+  "js_max": 0,
+  "std_min": 71317,
+  "js_min": 0,
+  "js_sign": 0
+ },
+ "chromium": {
+  "moteur": "Chrome/153.0.8010.12",
+  "divergences": {
+   "std_sin": 5593,
+   "std_cos": 5392,
+   "std_exp": 18686,
+   "std_ln": 12517,
+   "std_ln_1p": 13067,
+   "std_log10": 534,
+   "std_powf": 20453,
+   "std_hypot": 70072,
+   "js_hypot": 0,
+   "std_hypot3": 78841,
+   "js_hypot3": 0,
+   "std_round": 52320,
+   "js_round": 0,
+   "std_max": 71491,
+   "js_max": 0,
+   "std_min": 71317,
+   "js_min": 0,
+   "js_sign": 0
+  }
+ }
+}

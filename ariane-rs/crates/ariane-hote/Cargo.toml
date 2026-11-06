@@ -1,0 +1,11 @@
+[package]
+name = "ariane-hote"
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+ariane-coeur = { path = "../ariane-coeur" }
+
+[lints]
+workspace = true
