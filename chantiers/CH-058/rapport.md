@@ -1,5 +1,7 @@
 # CH-058 — Où part le temps au fil de la journée (rapport, 06/11/2026)
 
+**Ticket étendu par l'intégrateur (06/11, après le premier rapport)** : CH-058 corrige aussi la cause principale, les lectures complètes d'IndexedDB. Ces lectures avaient lieu à l'export Écho (automatique et final, côté service worker et côté panneau), dans `vertsAControler`, la liste de corrections, la fin de lot, `validationsAriane` et les vols écrits de la passe. Trois conditions : chaque export reste identique octet pour octet, le retour arrière vers 2bc1f56 reste possible, la parité de la relecture tient. La correction est décrite en fin de rapport (§ Correction).
+
 Données : journaux des lots du 04/11 (Constellation 0-4, Orbite 6-15, Constellation 0-7) et du 05/11 (8-12), segments Écho du 04/11 (8) et du 05/11 (17). Agrégats : `agregats-2026-11-04.json` et `agregats-2026-11-05.json` (`tools/ch058-temps-journee.cjs`). Banc : `banc-etat.json` et `banc-export.json` (`tools/ch058-banc-etat.cjs`, Chromium 153, extension du dépôt chargée, état synthétique). Essais : `tests/ch058-outils.test.cjs` (4, 0,4 s).
 
 ## Verdict
@@ -65,3 +67,46 @@ Pour chaque élément : qui l'écrit, qui le lit, et comment le sortir.
   - L'état au fil de la journée n'est pas journalisé. La taille de l'état Écho est lue dans chaque segment exporté. Le nombre d'événements dans IndexedDB est estimé par le rang au journal, multiplié par le rapport avant/après pli.
   - Aucun lot n'a tourné après une Écho dans ces données : la cause 3 côté lot est un calcul.
 - **Essais.** Les essais ont été écrits après les outils : ils couvrent les fonctions pures (statistiques, agrégation, état synthétique). Le banc navigateur n'est pas un essai (2 à 4 min).
+
+## Correction : lectures bornées d'IndexedDB (extension du ticket)
+- **Pas de montée de version.** ÉTABLI dans Chromium : face à une base en version 2, l'ancien paquet reçoit `VersionError` à l'ouverture. Il n'aurait plus ni journal, ni nuages, ni visites.
+- **Index en mémoire** (`src/journal-index.js`).
+  - Le `store` du service worker est enveloppé par un Proxy. Le magasin d'origine n'est jamais modifié, et ses méthodes s'exécutent sur lui.
+  - L'index retient les clés par session Écho et par type (`TYPES_INDEXES`, dans background.js).
+  - Il est construit une fois par vie du service worker, au premier besoin, par une lecture complète.
+  - Une lecture va ensuite chercher les clés triées par `get`, ou par `getAll` filtré quand les clés dépassent 40 % du magasin, dans une seule transaction. Les objets sortent dans le même ordre que `getAll`.
+  - L'appelant réapplique son filtre d'origine.
+  - Sans index sûr (clé non textuelle, erreur, harnais sans `open`), chaque lecture revient à la lecture complète.
+  - Rien n'est écrit en base.
+- **Branchés sur l'index** :
+  - `dataset()` et la reprise de session (native-session.js) ;
+  - `assembler` du panneau, qui demande les clés au service worker (action `native-export-cles`) ;
+  - `vertsAControler` ;
+  - la liste de corrections ;
+  - la fin de lot (zones et registre de la file) ;
+  - `validationsAriane` ;
+  - les vols écrits de la passe.
+- **Restent en lecture complète, par nature** : l'export du journal du lot (`lotSeul`), le vidage du cache, les exports GCV1 manuels, `discard`, et l'index de visites des autres sessions (une fois par session Écho).
+
+| Banc Chromium, avant → après | 10 000 évts | 50 000 | 114 000 | 150 000 |
+|---|---|---|---|---|
+| Export Écho, service worker (s) | 0,55 → 0,55 | 1,03 → 0,89 | 2,16 → 0,79 | 2,55 → 0,92 |
+| Lecture du panneau (s) | 0,47 → 0,57 | 1,63 → 1,01 | 1,97 → 0,95 | 3,77 → 0,81 |
+| Tas du panneau pendant la lecture (Mo) | 66 → 70 | 117 → 56 | 195 → 59 | 243 → 56 |
+| Lecture d'un type, début de relecture (s) | 0,43 → 0,0007 | 0,96 → 0,0007 | 2,40 → 0,0007 | 2,48 → 0,0007 |
+| Construction de l'index, une fois par vie du SW (s) | 0,56 | 1,27 | 2,36 | 3,06 |
+
+Session de 1 000 visites et 31 000 événements Écho. Ce qui reste après correction, environ 0,8 à 0,9 s, est la lecture de la session elle-même : cela ne croît plus avec la journée. Fichier : `banc-export-avant-apres.json`.
+
+- **Preuves**
+  - **Export identique** : ÉTABLI octet pour octet au banc (28 631 101 octets, même `dataset()` avec et sans index, aux quatre tailles). La lecture du panneau est identique elle aussi.
+  - **Liste de corrections et filtres par type** : identiques sur les quatre vrais journaux du 04/11 et du 05/11, 64 contrôles dont 32 lots (`tools/ch058-parite-index.cjs`).
+  - **Parité de la relecture** contre le tronc e5b7684 : relevés identiques (SHA-256 0e5df9d7…). Le harnais n'a pas d'`open()` : il passe par le chemin de repli, et prouve donc l'absence de changement de comportement, pas le chemin indexé.
+  - **Retour arrière** : ÉTABLI dans Chromium (`tools/ch058-retour-arriere.cjs`), même profil, nouveau → 2bc1f56 → nouveau. La base reste en version 1 avec les mêmes trois magasins, et chaque paquet relit les écritures de l'autre.
+  - **Essais** : `tests/ch058-journal-index.test.cjs` (7, rouges avant le branchement). Tous les essais du dépôt : 611 fichiers, 3 110 essais, verts. La garde `pose-lot-inchanges-4959` reçoit `journal-index.js` dans sa liste de modules hors pose, avec sa raison. Maquette ESV : 7 sur 7. Ce n'est pas le `verify` complet de l'intégrateur.
+  - **Trois défauts trouvés en route par les essais existants, corrigés avant livraison** :
+    - un store modifié en place, partagé entre deux vies du service worker ;
+    - des méthodes exécutées avec `this` = l'objet dérivé (`setState` écrivait au mauvais endroit) ;
+    - des méthodes figées à l'équipement, alors que les essais les remplacent ensuite.
+  - **Garde et parité L1-se** : non lancées. Aucun module de décision n'est touché.
+- **Coût restant** : la construction de l'index, de 0,6 à 3 s, se paie une fois par vie du service worker, au premier export ou au premier début de relecture. Avant, cette même lecture se payait à chaque étape.

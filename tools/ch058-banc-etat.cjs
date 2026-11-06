@@ -118,18 +118,33 @@ async function bancExport(ctx,sw,id,o){
   for(let a=deja;a<total;a+=10000){const lot=Array.from({length:Math.min(10000,total-a)},(_,k)=>evenementLot(a+k));
    await sw.evaluate(async lot=>{const db=await store.open();await new Promise((res,rej)=>{const tx=db.transaction('events','readwrite'),os=tx.objectStore('events');for(const e of lot)os.put(e,e.eventId);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});},lot);}
   deja=total;
-  const sw1=await sw.evaluate(async rep=>{const t=async f=>{const a=performance.now();await f();return performance.now()-a;};const m=[],c=[];
-   for(let i=0;i<rep;i++){m.push(await t(()=>native.exportManifest()));c.push(await t(()=>native.exportAdvice()));}return {m,c};},3);
+  /* Avant/après dans le même navigateur : sans index (méthodes bornées retirées le temps de la mesure), puis avec. */
+  const sw1=await sw.evaluate(async([rep,sid])=>{const t=async f=>{const a=performance.now();await f();return performance.now()-a;};const m=[],c=[],mi=[],rl=[],ri=[];
+   const ix=store.indexJournal,cache={};const sans=()=>{for(const k of ['lireEvenementsNatif','lireVisitesNatif','lireParType']){cache[k]=store[k];store[k]=undefined;}},avec=()=>Object.assign(store,cache);
+   const egal=x=>JSON.stringify({...x,exportedAt:null});
+   sans();let ref;try{for(let i=0;i<rep;i++){m.push(await t(()=>native.exportManifest()));c.push(await t(()=>native.exportAdvice()));
+     rl.push(await t(async()=>(await store.all('events')).filter(e=>e?.type==='regles-metier-ombre')));}ref=egal(await native.dataset());}finally{avec();}
+   const tc=ix?await t(async()=>{ix.invalider();await ix.construire();}):null;
+   for(let i=0;i<rep;i++){mi.push(await t(()=>native.exportManifest()));ri.push(await t(async()=>(await store.lireParType(['regles-metier-ombre'])).filter(e=>e?.type==='regles-metier-ombre')));}
+   const identique=ix?egal(await native.dataset())===ref:null;
+   return {m,c,mi,rl,ri,tc,identique,octets:ref.length,cles:ix?await store.clesNatif(sid):null};},[3,session.id]);
   /* Côté panneau : la lecture directe que fait `assembler` (tout `events`, tout `records`, puis filtre), et le tas JS juste après (sans ramasse-miettes). */
-  await cdp.send('HeapProfiler.collectGarbage');const h0=(await cdp.send('Runtime.getHeapUsage')).usedSize;
-  const pan=await p.evaluate(async sid=>{const db=await new Promise((res,rej)=>{const r=indexedDB.open('banane-test-v3');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+  /* Tas du panneau mesuré dans `tas` (après ramasse-miettes, puis juste après la lecture). */
+  const lecturePanneau=cles=>p.evaluate(async([sid,cles])=>{const db=await new Promise((res,rej)=>{const r=indexedDB.open('banane-test-v3');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
    const all=n=>new Promise((res,rej)=>{const r=db.transaction(n).objectStore(n).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
-   const a=performance.now();const ev=(await all('events'));const rc=(await all('records'));const f=ev.filter(x=>x.nativeSessionId===sid).length+rc.filter(x=>x.nativeSessionId===sid).length;
-   const ms=performance.now()-a;globalThis.__garde=[ev,rc];db.close();return {ms,f,lus:ev.length+rc.length};},session.id);
-  const hPic=(await cdp.send('Runtime.getHeapUsage')).usedSize;await p.evaluate(()=>{delete globalThis.__garde;});
+   const lire=n=>cles?globalThis.BananeJournalIndex.lireCles(db,n,cles[n],cles.totaux?.[n]):all(n);
+   const a=performance.now();const ev=(await lire('events'));const rc=(await lire('records'));const fe=ev.filter(x=>x.nativeSessionId===sid),fr=rc.filter(x=>x.nativeSessionId===sid);
+   const ms=performance.now()-a;globalThis.__garde=[ev,rc];db.close();return {ms,f:fe.length+fr.length,lus:ev.length+rc.length,signature:JSON.stringify([fe,fr]).length};},[session.id,cles]);
+  const tas=async f=>{await cdp.send('HeapProfiler.collectGarbage');const h0=(await cdp.send('Runtime.getHeapUsage')).usedSize;const r=await f();
+   const h=(await cdp.send('Runtime.getHeapUsage')).usedSize;await p.evaluate(()=>{delete globalThis.__garde;});return {...r,tasMo:r1((h-h0)/1048576)};};
+  const pan=await tas(()=>lecturePanneau(null)),panI=sw1.cles?await tas(()=>lecturePanneau(sw1.cles)):null;
+  const h0=0,hPic=pan.tasMo*1048576;
   const med=a=>r1(mediane(a));
   lignes.push({evenementsLot:total,exportManifestSwMs:med(sw1.m),exportAdviceSwMs:med(sw1.c),lectureDirectePanneauMs:r1(pan.ms),objetsLus:pan.lus,objetsGardes:pan.f,
-   tasPanneauPendantLectureMo:r1((hPic-h0)/1048576)});
+   tasPanneauPendantLectureMo:r1((hPic-h0)/1048576),lectureCompleteTypeSwMs:med(sw1.rl),
+   apres:sw1.cles?{constructionIndexMs:r1(sw1.tc),exportManifestSwMs:med(sw1.mi),lectureParTypeSwMs:med(sw1.ri),lectureDirectePanneauMs:r1(panI.ms),objetsLus:panI.lus,
+    objetsGardes:panI.f,tasPanneauPendantLectureMo:panI.tasMo,exportIdentiqueOctetPourOctet:sw1.identique,octetsExport:sw1.octets,
+    lecturePanneauIdentique:panI.f===pan.f&&panI.signature===pan.signature}:null});
   process.stderr.write(`# export ${total} : ${JSON.stringify(lignes.at(-1))}\n`);}
  await p.close();
  await sw.evaluate(async()=>{const db=await store.open();await new Promise((res,rej)=>{const tx=db.transaction(['events','records'],'readwrite');

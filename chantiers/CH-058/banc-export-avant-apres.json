@@ -1,0 +1,106 @@
+{
+ "outil": "ch058-banc-etat",
+ "date": "2026-11-06T09:27:05.112Z",
+ "navigateur": "153.0.8010.12",
+ "etatBase": {
+  "mo": 0.000720977783203125
+ },
+ "tailles": [],
+ "panneau": null,
+ "erreurs": [],
+ "export": {
+  "visitesSession": 1000,
+  "evenementsSession": 30000,
+  "lignes": [
+   {
+    "evenementsLot": 10000,
+    "exportManifestSwMs": 547.8,
+    "exportAdviceSwMs": 30.5,
+    "lectureDirectePanneauMs": 469.9,
+    "objetsLus": 41000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 66.4,
+    "lectureCompleteTypeSwMs": 434.6,
+    "apres": {
+     "constructionIndexMs": 561.9,
+     "exportManifestSwMs": 546,
+     "lectureParTypeSwMs": 0.7,
+     "lectureDirectePanneauMs": 574,
+     "objetsLus": 31000,
+     "objetsGardes": 31000,
+     "tasPanneauPendantLectureMo": 70.4,
+     "exportIdentiqueOctetPourOctet": true,
+     "octetsExport": 28631101,
+     "lecturePanneauIdentique": true
+    }
+   },
+   {
+    "evenementsLot": 50000,
+    "exportManifestSwMs": 1033.2,
+    "exportAdviceSwMs": 27.8,
+    "lectureDirectePanneauMs": 1627.8,
+    "objetsLus": 81000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 117.2,
+    "lectureCompleteTypeSwMs": 962,
+    "apres": {
+     "constructionIndexMs": 1272.6,
+     "exportManifestSwMs": 893.6,
+     "lectureParTypeSwMs": 0.7,
+     "lectureDirectePanneauMs": 1010,
+     "objetsLus": 31000,
+     "objetsGardes": 31000,
+     "tasPanneauPendantLectureMo": 55.7,
+     "exportIdentiqueOctetPourOctet": true,
+     "octetsExport": 28631101,
+     "lecturePanneauIdentique": true
+    }
+   },
+   {
+    "evenementsLot": 114000,
+    "exportManifestSwMs": 2157.1,
+    "exportAdviceSwMs": 29.1,
+    "lectureDirectePanneauMs": 1968.2,
+    "objetsLus": 145000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 194.5,
+    "lectureCompleteTypeSwMs": 2399.4,
+    "apres": {
+     "constructionIndexMs": 2360.9,
+     "exportManifestSwMs": 786.6,
+     "lectureParTypeSwMs": 0.7,
+     "lectureDirectePanneauMs": 946.3,
+     "objetsLus": 31000,
+     "objetsGardes": 31000,
+     "tasPanneauPendantLectureMo": 58.5,
+     "exportIdentiqueOctetPourOctet": true,
+     "octetsExport": 28631101,
+     "lecturePanneauIdentique": true
+    }
+   },
+   {
+    "evenementsLot": 150000,
+    "exportManifestSwMs": 2552.3,
+    "exportAdviceSwMs": 27.5,
+    "lectureDirectePanneauMs": 3765.2,
+    "objetsLus": 181000,
+    "objetsGardes": 31000,
+    "tasPanneauPendantLectureMo": 243.3,
+    "lectureCompleteTypeSwMs": 2480.3,
+    "apres": {
+     "constructionIndexMs": 3058.6,
+     "exportManifestSwMs": 918.8,
+     "lectureParTypeSwMs": 0.7,
+     "lectureDirectePanneauMs": 814.4,
+     "objetsLus": 31000,
+     "objetsGardes": 31000,
+     "tasPanneauPendantLectureMo": 55.5,
+     "exportIdentiqueOctetPourOctet": true,
+     "octetsExport": 28631101,
+     "lecturePanneauIdentique": true
+    }
+   }
+  ],
+  "note": "événements de lot synthétiques de 0,86 Ko ; le service worker (dataset) et le panneau (assembler) lisent TOUT IndexedDB puis filtrent la session"
+ }
+}
