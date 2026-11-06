@@ -49,6 +49,12 @@ function*cas(modules,{fixtures=true,reel=process.env.CH064D_REEL!=='0',variantes
  if(fixtures&&fs.existsSync(FIXTURES)){for(const e of v8.deserialize(fs.readFileSync(FIXTURES)))if(modules.includes(e.module))yield* avec({id:'fixture-'+e.module+'.'+e.f+'-'+e.essai,module:e.module,f:e.f,args:v8.deserialize(e.args),...(e.leviers?{leviers:v8.deserialize(e.leviers)}:{})});}
  /* CH-074 (J5) : appels directs des fonctions internes de gcv2-l1, aux entrées rejouées depuis les fixtures (tools/ch074-cas-l1.cjs). */
  if(fixtures&&modules.includes('gcv2L1')){for(const c of require('./ch074-cas-l1.cjs').cas())yield* avec(c);}
+ /* CH-074 (J5) : appels RÉELS de gcv2-l1 relevés par le crochet des fixtures pendant un rejeu du banc (tools/banc-differes.cjs) sur un
+  * lot archivé de banane-data (ariane-rs/dist/ch074-reel-l1-*.v8, non versionnés) ; les cas dérivés en sont tirés de même. */
+ if(reel&&modules.includes('gcv2L1')){const d=path.join(RACINE,'ariane-rs','dist');for(const f of (fs.existsSync(d)?fs.readdirSync(d):[]).filter(x=>/^ch074-reel-l1-.*\.v8$/.test(x)).sort()){
+  const o=v8.deserialize(fs.readFileSync(path.join(d,f)));
+  for(const e of o.enr)if(e.module==='gcv2L1')yield* avec({id:'reel-'+f.slice(14,-3)+'-'+e.f,module:e.module,f:e.f,args:v8.deserialize(e.args),...(e.leviers?{leviers:v8.deserialize(e.leviers)}:{})});
+  for(const c of require('./ch074-cas-l1.cjs').cas(o.enr))yield* avec({...c,id:'reel-'+c.id});}}
  if(reel){const R=require('./ch064-d-reel.cjs');for(const c of R.cas(modules,{max}))yield* avec(c);
   /* CH-068 (J4) */ for(const c of require('./ch064-d-reel-j4.cjs').cas(modules,{max}))yield* avec(c);}
 }

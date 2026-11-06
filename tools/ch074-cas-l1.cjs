@@ -10,11 +10,11 @@ const RACINE=path.resolve(__dirname,'..');
 const FIXTURES=path.join(RACINE,'ariane-rs','dist','ch064-d-fixtures.v8');
 const SIDES=['left','right'];
 const clone=v=>v8.deserialize(v8.serialize(v));
-function*cas(){
- if(!fs.existsSync(FIXTURES))return;
+function*cas(enr=null){
+ if(!enr&&!fs.existsSync(FIXTURES))return;
  const L1=require(path.join(RACINE,'src/gcv2-l1.js'));
  let i=0;
- for(const e of v8.deserialize(fs.readFileSync(FIXTURES))){
+ for(const e of enr||v8.deserialize(fs.readFileSync(FIXTURES))){
   if(e.module!=='gcv2L1'||e.f!=='deciderDiffere')continue;
   const leviers=e.leviers?v8.deserialize(e.leviers):null;
   const x=v8.deserialize(e.args)[0];
