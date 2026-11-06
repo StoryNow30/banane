@@ -54,6 +54,9 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
             _ => Err(Echec::hors_domaine("side non chaîne")),
         },
         32 => jauge(&entree),
+        // Blocs réservés aux sous-chantiers (fiche chantiers/CH-064-equipe.md) : un seul bras chacun.
+        50..=99 => ariane_decision::appeler(fonction, &entree),
+        100..=149 => ariane_etat::appeler(fonction, &entree),
         _ => Err(Echec::erreur(format!("Cœur : fonction inconnue {fonction}"))),
     };
     match r {
