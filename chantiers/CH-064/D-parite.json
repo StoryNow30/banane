@@ -1,0 +1,325 @@
+{
+ "format": "ch064-d-parite-v1",
+ "bancs": {
+  "parite-j1-chromium": {
+   "moteur": "chromium",
+   "cas": 228737,
+   "identiques": 228737,
+   "verdict": "IDENTIQUE",
+   "ecarts": 0,
+   "casChargeNaN": 32,
+   "empreintes": {
+    "js": "1dfb0783dfadf83ab7041f8068ef0e1f12c0a82947c4b30726d38faaf2e2f59e",
+    "rs": "1dfb0783dfadf83ab7041f8068ef0e1f12c0a82947c4b30726d38faaf2e2f59e"
+   },
+   "temps": {
+    "jsMediane": 0.09999999962747097,
+    "jsP95": 1.900000000372529,
+    "rsMediane": 0.09999999962747097,
+    "rsP95": 2.099999999627471
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 6619136,
+    "memoire": 6619136
+   },
+   "tasJsOctets": 1755421884,
+   "facade": {
+    "critere": {
+     "coeur": 66069,
+     "repliHorsDomaine": 286,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 91620,
+     "repliHorsDomaine": 1525,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 1911,
+     "repliHorsDomaine": 74,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 9407,
+     "repliHorsDomaine": 8,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 53386,
+     "repliHorsDomaine": 4170,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "sources": {
+    "src/relecture-critere.js": "0c58e025356e3d332e670043dad83600934d7bec03b52204b550191b4d85c44c",
+    "src/relecture-signal.js": "7bacc9123bbf18d72cc35f876201437b7548a1cb53b003a9424a163461ee0633",
+    "src/garde-apres-differe.js": "909fcb8da7fef2195f3b33f5199834fb1206dc3b1ba40474eb9d6771d0e22461",
+    "src/garde-passe-appuis.js": "afab42ad24ba39ff83c5c8ebecbf1fd970645ed9214c03d5115b98771f4b6956",
+    "src/relecture-ombre.js": "097b13c1daf8378e187f2979b0447d2b6d584e92913f4f9ca2c1cb37ef2d6215",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "src/level-crossing.js": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0"
+   }
+  },
+  "parite-j1-node": {
+   "moteur": "node v22.23.4",
+   "cas": 228637,
+   "identiques": 228637,
+   "verdict": "IDENTIQUE",
+   "ecarts": 0,
+   "casChargeNaN": null,
+   "empreintes": {
+    "js": "c09ef1fddc9f791cc980642f849b435c89c189c3d3a41cad9713f6142d9d7e34",
+    "rs": "c09ef1fddc9f791cc980642f849b435c89c189c3d3a41cad9713f6142d9d7e34"
+   },
+   "temps": {
+    "jsMediane": 0.011904000002687098,
+    "jsP95": 0.08318899999721907,
+    "rsMediane": 0.03435900000113179,
+    "rsP95": 0.32794599999760976
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 6619136,
+    "memoire": 6619136
+   },
+   "tasJsOctets": null,
+   "facade": {
+    "critere": {
+     "coeur": 66092,
+     "repliHorsDomaine": 263,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 91626,
+     "repliHorsDomaine": 1519,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 1910,
+     "repliHorsDomaine": 75,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 9312,
+     "repliHorsDomaine": 3,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 53394,
+     "repliHorsDomaine": 4141,
+     "repliFormat": 0
+    }
+   },
+   "sources": {
+    "src/relecture-critere.js": "0c58e025356e3d332e670043dad83600934d7bec03b52204b550191b4d85c44c",
+    "src/relecture-signal.js": "7bacc9123bbf18d72cc35f876201437b7548a1cb53b003a9424a163461ee0633",
+    "src/garde-apres-differe.js": "909fcb8da7fef2195f3b33f5199834fb1206dc3b1ba40474eb9d6771d0e22461",
+    "src/garde-passe-appuis.js": "afab42ad24ba39ff83c5c8ebecbf1fd970645ed9214c03d5115b98771f4b6956",
+    "src/relecture-ombre.js": "097b13c1daf8378e187f2979b0447d2b6d584e92913f4f9ca2c1cb37ef2d6215",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "src/level-crossing.js": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0"
+   }
+  },
+  "parite-j2-chromium": {
+   "moteur": "chromium",
+   "cas": 87865,
+   "identiques": 87865,
+   "verdict": "IDENTIQUE",
+   "ecarts": 0,
+   "casChargeNaN": null,
+   "empreintes": {
+    "js": "3a1a234aabd522a06d7e2e795a5263b74e8566703e72483150929734aa7b0bd4",
+    "rs": "3a1a234aabd522a06d7e2e795a5263b74e8566703e72483150929734aa7b0bd4"
+   },
+   "temps": {
+    "jsMediane": 0.09999999962747097,
+    "jsP95": 17,
+    "rsMediane": 0.10000000055879354,
+    "rsP95": 14.699999999254942
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 6291456,
+    "memoire": 6291456
+   },
+   "tasJsOctets": 2144541148,
+   "facade": {
+    "reglesMetier": {
+     "coeur": 67758,
+     "repliHorsDomaine": 2707,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 13383,
+     "repliHorsDomaine": 3563,
+     "repliFormat": 0
+    }
+   },
+   "sources": {
+    "src/regles-metier.js": "3f989563cfe6f8737553ade5d9cbe68e3575b14298821d4937432ed5ee02e1ce",
+    "src/level-crossing.js": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054"
+   }
+  },
+  "parite-j2-node": {
+   "moteur": "node v22.23.4",
+   "cas": 88416,
+   "identiques": 88416,
+   "verdict": "IDENTIQUE",
+   "ecarts": 0,
+   "casChargeNaN": null,
+   "empreintes": {
+    "js": "82fde744c15d2b3d93d041f94860f06bb0f21c18443a125a78ec31a3980a3405",
+    "rs": "82fde744c15d2b3d93d041f94860f06bb0f21c18443a125a78ec31a3980a3405"
+   },
+   "temps": {
+    "jsMediane": 0.010021000000051572,
+    "jsP95": 8.281050999998115,
+    "rsMediane": 0.03821800000150688,
+    "rsP95": 3.722810000006575
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 6029312,
+    "memoire": 6029312
+   },
+   "tasJsOctets": null,
+   "facade": {
+    "reglesMetier": {
+     "coeur": 68040,
+     "repliHorsDomaine": 2761,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 13549,
+     "repliHorsDomaine": 3632,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "sources": {
+    "src/regles-metier.js": "3f989563cfe6f8737553ade5d9cbe68e3575b14298821d4937432ed5ee02e1ce",
+    "src/level-crossing.js": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054"
+   }
+  },
+  "parite-j3-chromium": {
+   "moteur": "chromium",
+   "cas": 12159,
+   "identiques": 12159,
+   "verdict": "IDENTIQUE",
+   "ecarts": 0,
+   "casChargeNaN": 0,
+   "empreintes": {
+    "js": "7c4863bd1f24168bc041f2362a2217c509d86b7ddaa687938c3dfe7b7075784d",
+    "rs": "7c4863bd1f24168bc041f2362a2217c509d86b7ddaa687938c3dfe7b7075784d"
+   },
+   "temps": {
+    "jsMediane": 108.80000000074506,
+    "jsP95": 871.5999999996275,
+    "rsMediane": 46.899999998509884,
+    "rsP95": 296.2000000011176
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 5898240,
+    "memoire": 5898240
+   },
+   "tasJsOctets": 513185887,
+   "facade": {
+    "lotDecision": {
+     "coeur": 948,
+     "repliHorsDomaine": 148,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 564,
+     "repliHorsDomaine": 17,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 540,
+     "repliHorsDomaine": 21,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 8732,
+     "repliHorsDomaine": 1173,
+     "repliFormat": 0
+    }
+   },
+   "sources": {
+    "src/lot-decision.js": "bf846fb448b5f2fba1ef558f96efbcad97df6ca8dfe678d594879c04dde40054",
+    "src/hauteur-apprise.js": "c7fa1998004144684ce32a0cf4e74155db3022c4eb3e93cf3e8481411c953f37",
+    "src/faux-vert-ombre.js": "ab2b2af4b7a2160b8260546c349caebcf889723a291de157fd7ba8f67a0ecea6",
+    "src/gcv1-shadow.js": "9aea6d0b8e36d7dc1e138e03101e28713f403af55c9c01f9997b15121c7c08e4",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "src/level-crossing.js": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0"
+   }
+  },
+  "parite-j3-node": {
+   "moteur": "node v22.23.4",
+   "cas": 3192,
+   "identiques": 3192,
+   "verdict": "IDENTIQUE",
+   "ecarts": 0,
+   "casChargeNaN": null,
+   "empreintes": {
+    "js": "00313bca90030706cebd4b6b5eea04dda3e226a15c43926de1e596222c5b199a",
+    "rs": "00313bca90030706cebd4b6b5eea04dda3e226a15c43926de1e596222c5b199a"
+   },
+   "temps": {
+    "jsMediane": 7.200748000002932,
+    "jsP95": 1009.9644930000068,
+    "rsMediane": 4.731511000019964,
+    "rsP95": 228.637985999987
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 5898240,
+    "memoire": 5898240
+   },
+   "tasJsOctets": null,
+   "facade": {
+    "lotDecision": {
+     "coeur": 948,
+     "repliHorsDomaine": 148,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 564,
+     "repliHorsDomaine": 17,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 540,
+     "repliHorsDomaine": 21,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 807,
+     "repliHorsDomaine": 140,
+     "repliFormat": 0
+    }
+   },
+   "sources": {
+    "src/lot-decision.js": "bf846fb448b5f2fba1ef558f96efbcad97df6ca8dfe678d594879c04dde40054",
+    "src/hauteur-apprise.js": "c7fa1998004144684ce32a0cf4e74155db3022c4eb3e93cf3e8481411c953f37",
+    "src/faux-vert-ombre.js": "ab2b2af4b7a2160b8260546c349caebcf889723a291de157fd7ba8f67a0ecea6",
+    "src/gcv1-shadow.js": "9aea6d0b8e36d7dc1e138e03101e28713f403af55c9c01f9997b15121c7c08e4",
+    "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
+    "src/level-crossing.js": "3bce5f001d3d313fecc4a7b094816cb28e6a0adbad7d91066ff3efae021cbff0"
+   }
+  }
+ }
+}
