@@ -58,7 +58,10 @@
   /* Plafond par zone (D-180), en cuts relus ; mesuré sur les parties d'apprentissage (fiches/RELECTURE_OMBRE.md § 11). PN : aucun. À 3,5 s
    * par cut relu, la passe d'une partie avec lot reste autour de 10 minutes au plus (PN compris). Les abords ont le meilleur rendement
    * (aucune erreur sur les corrections de l'étude), l'ADV le plus faible (peu de corrections à faire, 18 % d'erreurs). */
-  plafondParZone:Object.freeze({adv:null,abords:70,'vert-hors-zone':20,ecartement:20}),
+  /* D-289 (opérateur, 06/11 : « plafond oui ») : plus de plafond pour les abords (voisins des cuts isolés, des grappes et des différés) ;
+   * avant : 70 cuts par partie, au-delà rien n'était relu (CH-060 : environ 1 100 verts isolés, 274 cuts de grappe et 31 différés sautés
+   * sur 28 relectures des 04 et 05/11). */
+  plafondParZone:Object.freeze({adv:null,abords:null,'vert-hors-zone':20,ecartement:20}),
   plafondCuts:null,
   /* D-185 (Écho de Mic sur la partie 11) : deux zones d'ADV séparées de `fusionTrouCuts` cuts au plus sont enchaînées (Mic les contrôle
    * d'un trait : trou de 37 cuts entre 7350 et 7388) ; un cut « écartement » est relu avec `marge` cut(s) de part et d'autre (le cut

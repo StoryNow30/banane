@@ -1,0 +1,442 @@
+{
+ "outil": "ch058-banc-etat",
+ "date": "2026-11-06T08:24:14.438Z",
+ "navigateur": "153.0.8010.12",
+ "etatBase": {
+  "mo": 0.000720977783203125
+ },
+ "tailles": [
+  {
+   "cibleMo": 0.4,
+   "etatMo": 0.402,
+   "visites": 327,
+   "repetitions": 15,
+   "cloneMs": 0.9,
+   "saveMs": 18.4,
+   "stockageSeulMs": 18.5,
+   "vuePanneauSwMs": 1,
+   "vuePanneauAllerRetourMs": 8.8,
+   "cycleVisiteEchoMs": 59.9,
+   "cycleVisiteEchoErreur": null,
+   "brut": {
+    "save": [
+     20.9,
+     17.8,
+     23.3,
+     25.4,
+     23.7,
+     21,
+     17.8,
+     16.4,
+     18,
+     19,
+     18,
+     17.1,
+     17,
+     18.4,
+     19.7
+    ],
+    "stockage": [
+     19.3,
+     21.6,
+     23.2,
+     22.4,
+     20.1,
+     15.9,
+     16.2,
+     16.2,
+     17.6,
+     15.3,
+     17.5,
+     16.2,
+     18.9,
+     18.6,
+     18.5
+    ],
+    "clone": [
+     5.5,
+     0.9,
+     0.9,
+     1.5,
+     1.3,
+     1,
+     0.9,
+     0.9,
+     1,
+     0.8,
+     0.8,
+     0.7,
+     0.8,
+     0.8,
+     0.9
+    ],
+    "cycle": [
+     62.4,
+     55.1,
+     56.9,
+     64.9,
+     59.9,
+     61.7,
+     62.6,
+     60.4,
+     56.5,
+     50.1
+    ]
+   }
+  },
+  {
+   "cibleMo": 1,
+   "etatMo": 1.006,
+   "visites": 820,
+   "repetitions": 15,
+   "cloneMs": 3.9,
+   "saveMs": 50.2,
+   "stockageSeulMs": 47,
+   "vuePanneauSwMs": 4.5,
+   "vuePanneauAllerRetourMs": 31,
+   "cycleVisiteEchoMs": 144.7,
+   "cycleVisiteEchoErreur": null,
+   "brut": {
+    "save": [
+     52.9,
+     41.8,
+     53.4,
+     36.3,
+     41.7,
+     46.2,
+     56.1,
+     48.1,
+     52.5,
+     50.2,
+     50.7,
+     54.3,
+     47.5,
+     49.2,
+     61.7
+    ],
+    "stockage": [
+     42.9,
+     41,
+     45,
+     37.3,
+     38.8,
+     58.1,
+     51,
+     52,
+     53.2,
+     45.9,
+     49.8,
+     47,
+     47.5,
+     42.3,
+     52.1
+    ],
+    "clone": [
+     3.9,
+     3.1,
+     4,
+     3.9,
+     3.6,
+     4.9,
+     3.7,
+     3.8,
+     4.3,
+     4.9,
+     3.8,
+     4.1,
+     3.9,
+     3.8,
+     5.5
+    ],
+    "cycle": [
+     137.6,
+     127.4,
+     144.7,
+     148,
+     133.9,
+     180.2,
+     170.5,
+     155.2,
+     206.2,
+     135
+    ]
+   }
+  },
+  {
+   "cibleMo": 2,
+   "etatMo": 2.005,
+   "visites": 1635,
+   "repetitions": 15,
+   "cloneMs": 9.8,
+   "saveMs": 120,
+   "stockageSeulMs": 111,
+   "vuePanneauSwMs": 10.1,
+   "vuePanneauAllerRetourMs": 58.8,
+   "cycleVisiteEchoMs": 325.8,
+   "cycleVisiteEchoErreur": null,
+   "brut": {
+    "save": [
+     119.4,
+     107.6,
+     153.9,
+     129.3,
+     234,
+     110.7,
+     122.3,
+     111.5,
+     114.1,
+     122.8,
+     111.9,
+     120,
+     121,
+     105.3,
+     185.9
+    ],
+    "stockage": [
+     108.8,
+     97.8,
+     169.5,
+     111.2,
+     136.1,
+     111,
+     99.2,
+     99,
+     91.9,
+     116.6,
+     104.6,
+     118.5,
+     138.7,
+     83.7,
+     158.5
+    ],
+    "clone": [
+     9.2,
+     7.9,
+     9.8,
+     10,
+     11.4,
+     14.3,
+     9.5,
+     9.1,
+     9.1,
+     9.1,
+     9.3,
+     11.2,
+     13.3,
+     11.7,
+     14.7
+    ],
+    "cycle": [
+     296.4,
+     325.8,
+     361.3,
+     270.6,
+     296.8,
+     396,
+     291.4,
+     436.8,
+     482.4,
+     449.9
+    ]
+   }
+  },
+  {
+   "cibleMo": 4,
+   "etatMo": 4.004,
+   "visites": 3266,
+   "repetitions": 15,
+   "cloneMs": 18.6,
+   "saveMs": 205,
+   "stockageSeulMs": 185.4,
+   "vuePanneauSwMs": 20.2,
+   "vuePanneauAllerRetourMs": 116.7,
+   "cycleVisiteEchoMs": 589.1,
+   "cycleVisiteEchoErreur": null,
+   "brut": {
+    "save": [
+     201.5,
+     206.5,
+     199.9,
+     212.1,
+     204.5,
+     211.8,
+     213.2,
+     205,
+     196.7,
+     195.2,
+     198.2,
+     261.5,
+     194.7,
+     228.1,
+     208.9
+    ],
+    "stockage": [
+     205.7,
+     185.4,
+     231.9,
+     152.6,
+     184.4,
+     200.7,
+     165.3,
+     191.5,
+     184.8,
+     154.8,
+     241.9,
+     182.3,
+     169.8,
+     197.6,
+     250.6
+    ],
+    "clone": [
+     14.6,
+     23.8,
+     18.6,
+     17.1,
+     33.7,
+     20.2,
+     23.6,
+     30.6,
+     17.1,
+     18.4,
+     18.3,
+     19.7,
+     15.7,
+     17.5,
+     27.5
+    ],
+    "cycle": [
+     599.3,
+     607.3,
+     573.4,
+     658,
+     612.9,
+     637.2,
+     559.5,
+     589.1,
+     576.1,
+     552.9
+    ]
+   }
+  }
+ ],
+ "panneau": {
+  "croissance": [
+   {
+    "visites": 0,
+    "etatMo": 0.002,
+    "tasMo": 1.4,
+    "noeuds": 1706,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "visites": 500,
+    "etatMo": 0.613,
+    "tasMo": 2.3,
+    "noeuds": 2215,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "visites": 1000,
+    "etatMo": 1.225,
+    "tasMo": 3.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "visites": 1500,
+    "etatMo": 1.838,
+    "tasMo": 3.9,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "visites": 2000,
+    "etatMo": 2.451,
+    "tasMo": 4.7,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "visites": 2500,
+    "etatMo": 3.0639999999999996,
+    "tasMo": 5.5,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "visites": 3000,
+    "etatMo": 3.677,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   }
+  ],
+  "constant": [
+   {
+    "s": 15,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 30,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 45,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 60,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 75,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 90,
+    "tasMo": 6.2,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 105,
+    "tasMo": 19.3,
+    "noeuds": 2366,
+    "ecouteurs": 95,
+    "documents": 2
+   },
+   {
+    "s": 120,
+    "tasMo": 6.3,
+    "noeuds": 2297,
+    "ecouteurs": 95,
+    "documents": 2
+   }
+  ],
+  "note": "tas JS mesuré APRÈS ramasse-miettes forcé (HeapProfiler.collectGarbage) : une croissance ici est une rétention, pas du brassage"
+ },
+ "erreurs": []
+}

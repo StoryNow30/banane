@@ -17,13 +17,18 @@ if(etape==='--etape'){
  const ecrire=(fc,tables)=>fs.writeFileSync(fichier,JSON.stringify({disque:Object.fromEntries(fc.disque),tables:Object.fromEntries(Object.entries(tables).map(([n,m])=>[n,[...m]]))}));
  (async()=>{
   if(quoi==='1'){const fc=J.fauxChrome(),a=await J.ouvrir(fc);await a.sessions.start();for(let i=0;i<90;i++){await J.visite(a,i,8);if((i+1)%30===0)await J.vidage(a);}
-   await a.engine.save();ecrire(fc,a.store.tables);
-   console.log(JSON.stringify({visites:a.engine.s.native.visits.length,nuages:a.engine.s.native.cloudIds.length,cles:fc.disque.size}));}
+   for(let i=90;i<100;i++)await J.visite(a,i,8);await a.engine.save();ecrire(fc,a.store.tables);
+   const m=await a.sessions.exportManifest(),p=await a.sessions.exportPlan(),f=await a.sessions.exportManifest(true);
+   console.log(JSON.stringify({visites:a.engine.s.native.visits.length,nuages:a.engine.s.native.cloudIds.length,cles:fc.disque.size,
+    export:{planNuages:p.cloudIds.length,manifesteNuages:m.cloudIds.length,declares:m.declaredCloudIds.length,finalNuages:f.cloudIds.length,visitesSession:m.session.visits.length,enregistrements:m.recordCount}}));}
   if(quoi==='2'){const {fc,tables}=lireDisque(),a=await J.ouvrir(fc,tables),n=a.engine.s.native;const lu={statut:n.status,visitesLues:n.visits.length,nuagesLus:n.cloudIds.length};
+   /* Ce que l'ancien paquet exporterait à cet instant : vidage automatique (plan), manifeste, export final (tous). */
+   {const m=await a.sessions.exportManifest(),p=await a.sessions.exportPlan(),f=await a.sessions.exportManifest(true);
+    lu.export={planNuages:p.cloudIds.length,manifesteNuages:m.cloudIds.length,declares:m.declaredCloudIds.length,finalNuages:f.cloudIds.length,visitesSession:m.session.visits.length,enregistrements:m.recordCount};}
    await a.sessions.resume();for(let i=0;i<5;i++)await J.visite(a,i,9);await a.engine.save();ecrire(fc,a.store.tables);
    console.log(JSON.stringify({...lu,visitesApres:a.engine.s.native.visits.length,conseil:!!a.sessions.exportAdvice()}));}
   if(quoi==='3'){const {fc,tables}=lireDisque(),a=await J.ouvrir(fc,tables),n=a.engine.s.native;
-   const ids=n.visits.map(v=>v.visitId),attendu=[...Array.from({length:90},(_,i)=>`v-8-${i}`),...Array.from({length:5},(_,i)=>`v-9-${i}`)];
+   const ids=n.visits.map(v=>v.visitId),attendu=[...Array.from({length:100},(_,i)=>`v-8-${i}`),...Array.from({length:5},(_,i)=>`v-9-${i}`)];
    await a.sessions.resume();await J.visite(a,0,10);const ds=await a.sessions.dataset();
    console.log(JSON.stringify({visites:ids.length,ordreExact:JSON.stringify(ids)===JSON.stringify(attendu),nuages:n.cloudIds.length,nuagesUniques:new Set(n.cloudIds).size,
     visitesExportees:ds.records.length,manquants:n.etatMorceauxManquants??a.engine.s.etatMorceauxManquants??null}));}
@@ -35,4 +40,4 @@ if(etape==='--etape'){
  const fichier=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'ch059-')),'disque.json');
  const run=(q,r)=>JSON.parse(execFileSync(process.execPath,[__filename,'--etape',q,r,fichier],{encoding:'utf8',maxBuffer:1<<28}).trim().split('\n').at(-1));
  const r={branche:run('1',branche),ancien:run('2',ancien),remiseAJour:run('3',branche)};console.log(JSON.stringify(r,null,1));
- const ok=r.remiseAJour.ordreExact&&r.remiseAJour.visites===95&&r.remiseAJour.nuages===r.remiseAJour.nuagesUniques&&r.remiseAJour.visitesExportees===96;process.exit(ok?0:1);}
+ const ok=r.remiseAJour.ordreExact&&r.remiseAJour.visites===105&&r.remiseAJour.nuages===r.remiseAJour.nuagesUniques&&r.remiseAJour.visitesExportees===106;process.exit(ok?0:1);}

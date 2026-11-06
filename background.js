@@ -12,8 +12,17 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js');
-const store=new BananeStorage3();let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js');
+/* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
+ * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
+/* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
+ * réels : tools/ch058-parite-index.cjs). Un type absent d'ici ne peut pas être lu par `lireTypes` (erreur explicite). */
+const TYPES_INDEXES=Object.freeze(['regles-metier-ombre','validation-accepted','correction-liste','correction-couverture','batch-started',
+ 'gcv1-shadow-observed','batch-stopped-at-end','relecture-debut','capture-abandoned','esv-observation','passe-differes-ecriture',
+ 'garde-apres-differe','garde-apres-differe-suivant','relecture-ombre','correction-debut','correction-fin']);
+const store=globalThis.BananeJournalIndex?.equiper?BananeJournalIndex.equiper(new BananeStorage3(),{types:TYPES_INDEXES}):new BananeStorage3();
+/* Lecture par types : par l'index si le store en a un, sinon tout le magasin (l'appelant filtre toujours). */
+const lireTypes=types=>typeof store.lireParType==='function'?store.lireParType(types):store.all('events');let selectedTab=null,engine,manual,native,pollPromise=null,timing=null;
 const VERSION=globalThis.BananeCore3?.VERSION||'5',VERSION_NAME=globalThis.BananeCore3?.VERSION_NAME||'5';
 /* D-282 : identifiant du commit d'où vient le paquet (fichier BUILD écrit par tools/package.py), lu une fois ; « inconnu » hors paquet. Écrit dans le journal (`build`) pour que les exports disent quel paquet a tourné. */
 let BUILD='inconnu';const BUILD_PRET=(async()=>{try{if(typeof fetch!=='function'||!chrome?.runtime?.getURL)return;const r=await fetch(chrome.runtime.getURL('BUILD'));const t=r.ok?String(await r.text()).trim():'';if(/^[0-9a-f]{4,40}(\+modifie)?$/.test(t))BUILD=t;}catch{/* sans fichier BUILD */}})();
@@ -381,7 +390,7 @@ const CLE_LECTURES='banane53Lectures',lectures={pend:new Map(),memoire:null};
 async function lecturesLire(){if(lectures.memoire)return lectures.memoire;
  try{const v=(await chrome.storage.local.get(CLE_LECTURES))?.[CLE_LECTURES];lectures.memoire=v&&typeof v==='object'?v:{};}catch{lectures.memoire={};}return lectures.memoire;}
 async function validationsAriane(partie,deMs,aMs){
- const evs=await store.all('events');let n=0;
+ const evs=await lireTypes(['validation-accepted']);let n=0;
  for(const e of evs){if(e?.type!=='validation-accepted')continue;const t=Date.parse(e.timestamp);
   if(Number.isFinite(t)&&t>deMs&&t<=aMs&&(partie===null||e.identity?.part===partie))n++;}return n;}
 async function auditLecture(p){
@@ -2232,7 +2241,7 @@ async function passeDiffApresRedemarrage(){let st;try{st=await chrome.storage.lo
   if(vol&&Number.isInteger(vol.cut)){const intention=(await relectureIntentions()).find(x=>x.cut===vol.cut&&(x.lotId==null||x.lotId===E.lotId));
    const prouve=(E.ecriture.prouves||[]).includes(vol.cut);
    if(prouve){if(intention)await relectureEffacerIntention(vol.cut,E.lotId);
-    const p=posees.find(x=>x.cut===vol.cut);let deja=false;try{deja=(await store.all('events')||[]).some(e=>e?.type==='validation-accepted'&&e.passeDifferes===true&&e.identity?.cut===vol.cut&&e.batchId===E.lotId&&String(e.timestamp)>=String(E.debut));}catch{deja=false;}
+    const p=posees.find(x=>x.cut===vol.cut);let deja=false;try{deja=(await lireTypes(['validation-accepted'])||[]).some(e=>e?.type==='validation-accepted'&&e.passeDifferes===true&&e.identity?.cut===vol.cut&&e.batchId===E.lotId&&String(e.timestamp)>=String(E.debut));}catch{deja=false;}
     if(!deja)journalerSimple('validation-accepted',{identity:{part:E.part??null,cut:vol.cut,frameId:p?.identity?.frameId??null},action:'VALIDATE',passeDifferes:true,recupere:'sw-redemarre'});
     journalerSimple('passe-differes-ecriture',{identity:{part:E.part??null,cut:vol.cut},passe:p?.passe??null,decal:p?.decal??null,resultat:'ecrit',recupere:'sw-redemarre'});
     E.ecriture.faits++;E.ecriture.enVol=null;vue.ecrites++;E.vue={...E.vue,ecrites:vue.ecrites};}
@@ -2523,7 +2532,7 @@ async function vertsAControler(args){
  const partie=Number.isInteger(args?.partie)?args.partie:b?.scope?.part??null;
  if(!Number.isInteger(partie))return {actif:true,partie:null,raison:'partie-inconnue'};
  const lot=new Map(),zones=[],zonesA=[],cutDe=x=>x?.cut??x?.identity?.cut;
- let events=[];try{events=await store.all('events')||[];}catch{/* journal illisible : repli sur le lot courant */}
+ let events=[];try{events=await lireTypes(['regles-metier-ombre'])||[];}catch{/* journal illisible : repli sur le lot courant */}
  /* Un cut peut figurer dans plusieurs lots de la partie (lot interrompu puis repris) et IndexedDB rend les événements par clé
   * aléatoire : on les ordonne (instant, puis identifiant) pour que le DERNIER lot fasse foi du drapeau `differe`, toujours le même. */
  const rang=e=>[String(e.timestamp??''),String(e.eventId??'')];
@@ -3073,7 +3082,8 @@ function refusCorrection(quoi){const b=engine.s.batch;
 async function correctionListe(args){
  const r=refusCorrection('Liste à corriger refusée');if(r)throw Error(r);
  const C=engine.s.correction;if(C?.etat==='ouverte')return vuePanneau();
- const demandes=lotsDemandes(args),events=await store.all('events');
+ /* CH-058 : la liste de corrections ne lit que des types indexés (parité sur les journaux réels : tools/ch058-parite-index.cjs). */
+ const demandes=lotsDemandes(args),events=await lireTypes(TYPES_INDEXES);
  /* Une fois par lot ET par contenu : une liste qui change (un événement du lot arrivé après une première demande) est inscrite de nouveau ; la dernière fait foi. */
  const signature=E=>JSON.stringify((E||[]).map(e=>[e.part,e.cut,e.signaux]));
  const deja=new Set(events.filter(e=>e?.type==='correction-liste').map(e=>e.batchId+'|'+signature(e.entrees)));
@@ -3368,7 +3378,7 @@ async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.
  const a=engine.s.applied?.identity;if(a&&a.part===partie)noter(a.cut,poses,'poseEnAttente');
  for(const k of engine.s.blockedTargets||[]){const [,p,c]=String(k).split('|');if(Number(p)===partie)noter(Number(c),poses,'bloques');}
  const lot=[...poses].map(c=>({cut:c,differe:false})).concat([...differes].filter(c=>!poses.has(c)).map(c=>({cut:c,differe:true})));
- const zonesPN=[],zonesADV=[];let events=[];try{events=await store.all('events')||[];}catch{/* journal illisible */}
+ const zonesPN=[],zonesADV=[];let events=[];try{events=await lireTypes(['regles-metier-ombre'])||[];}catch{/* journal illisible */}
  for(const e of events){if(e?.type!=='regles-metier-ombre'||e.portee!=='cut'||e.batchId!==b.id||e.identity?.part!==partie)continue;
   const c=e.zone?.pnControle,z=e.zone?.advControle;
   if(Array.isArray(c)&&c.length===2&&c.every(Number.isInteger))zonesPN.push(c);if(Array.isArray(z)&&z.length===2&&z.every(Number.isInteger))zonesADV.push(z);}
@@ -4068,7 +4078,7 @@ async function fileArreterActivite(){if(passeDiff.ecriture)passeDiff.ecriture.ar
  const b=engine?.s?.batch;if(b&&!OBS_CLOS.includes(b.state))await coordinateurLot.transition('arret',async()=>{const fin=engine.stop();marquerFinLot(b,'arret-manuel');await fin;}).catch(()=>{});}
 async function fileRegistreLire(){try{const v=(await chrome.storage.local.get(FPm().CLE_REGISTRE))?.[FPm().CLE_REGISTRE];return Array.isArray(v)?v:[];}catch{return [];}}
 async function fileRegistreNoter(rang){const e=fileP.etat,p=e?.bilan?.find(x=>x.rang===rang);if(!p?.lotId)return;
- let events=[];try{events=await store.all('events')||[];}catch{events=[];}
+ let events=[];try{events=await lireTypes(['passe-differes-ecriture','relecture-ombre'])||[];}catch{events=[];}
  const du=events.filter(x=>x?.batchId===p.lotId||x?.lotId===p.lotId),b=engine?.s?.batch,cutDe=x=>x?.cut??x?.identity?.cut;
  const poses=b?.id===p.lotId?(b.processed||[]).map(cutDe):[];
  const passe=du.filter(x=>x.type==='passe-differes-ecriture'&&x.resultat==='ecrit'&&x.identity?.part===p.part).map(x=>x.identity.cut);
@@ -4308,6 +4318,8 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(action==='native-health')return native.health();
  if(action==='native-export-advice')return native.exportAdvice();
  if(action==='native-export-manifest')return native.exportManifest(args?.all===true);
+ /* CH-058 : clés (triées) des événements et visites d'une session Écho, pour que le panneau ne relise pas tout IndexedDB ; `null` si l'index n'est pas sûr. */
+ if(action==='native-export-cles')return typeof args?.sessionId==='string'&&typeof store.clesNatif==='function'?store.clesNatif(args.sessionId):null;
  if(action==='native-export-plan')return native.exportPlan();
  if(action==='native-export-ack')return native.ackExported(args?.ids||[],{confirmes:Array.isArray(args?.confirmed)?args.confirmed:[],fichiers:args?.fichiers,final:args?.final===true});
  // Abandon : irréversible, sans export. La confirmation est demandée côté panneau.
@@ -4347,7 +4359,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   throw Error('Le mode Correction a été retiré en 4.5.4. Utilise Écho.');
  if(action==='manual-end')return manual.end();
  if(action==='manual-download')return manual.dataset();
- if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
+ if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
  if(action==='relecture-lancer')return relectureLancer({auto:false});
