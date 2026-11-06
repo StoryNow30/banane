@@ -29,7 +29,8 @@ function enNode(w){
  const coeur=Coeur.creer(fs.readFileSync(w)),b=nouveauBilan();
  const capter=f=>{try{return {ok:true,v:f()};}catch(e){return {ok:false,v:e};}};
  for(const c of lesCas()){
-  const x=capter(()=>A.js(c.entree)),y=capter(()=>A.rs(c.entree,coeur));
+  const t0=Date.now(),x=capter(()=>A.js(c.entree)),t1=Date.now(),y=capter(()=>A.rs(c.entree,coeur));
+  if(a.includes('--suivi'))console.error(c.id,c.entree.f,'js',t1-t0,'ms rs',Date.now()-t1,'ms');
   const e=x.ok!==y.ok?[{chemin:'(racine)',raison:x.ok?'JS rend, Rust lève : '+y.v.message:'JS lève ('+x.v.message+'), Rust rend'}]:comparer(x.v,y.v);
   noter(b,c,e,Buffer.from(sha(trame(x.ok,x.v)),'hex'),Buffer.from(sha(trame(y.ok,y.v)),'hex'));
  }
@@ -64,7 +65,7 @@ async function enChromium(w){
   const b=nouveauBilan();
   for(const c of lesCas()){const o=c.entree.octets;
    const r=await page.evaluate(([k,fn])=>globalThis.__ch069.passer(k,fn),[Buffer.from(o.buffer,o.byteOffset,o.byteLength).toString('base64'),c.entree.f]);
-   noter(b,c,r.e,Buffer.from(r.hjs,'hex'),Buffer.from(r.hrs,'hex'));}
+   noter(b,c,r.e,Buffer.from(r.hjs,'hex'),Buffer.from(r.hrs,'hex'));if(a.includes('--suivi'))console.error(c.id,c.entree.f,r.e.length?'ÉCART':'ok');}
   const fin=await page.evaluate(()=>globalThis.__ch069.bilan());
   return clore(b,{moteur:'chromium',navigateur:ua,bilanFacade:fin.facade,memoireCoeur:fin.coeur});
  }finally{await nav.close();}
