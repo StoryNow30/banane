@@ -16,7 +16,7 @@ function rejouer(j){const ev=j.events||[],out=[];
   const lot=[...[...poses].map(cut=>({cut,differe:false})),...[...diff].map(cut=>({cut,differe:true}))];
   const entree={partie:part,total:null,lot,zonesPN:d.zones?.pn||[],zonesADV:d.zones?.adv||[],aControler:[],ecartement:[]};
   const sel=(o)=>R.selection(entree,o);
-  const base=sel({}),libre=sel({plafondParZone:{abords:null}});
+  const base=sel({plafondParZone:{abords:70}}),libre=sel({plafondParZone:{abords:null}});   /* base : le plafond de la test (70, D-180), levé par D-289 */
   const trous={};for(const t of [5,10,20,40]){const s=sel({plafondParZone:{abords:null},grappe:{trouCuts:t}});trous[t]={relus:s.total,abords:s.parZone.abords};}
   /* temps par cut relu de cette relecture, et état du signal (lectures rapides au repli / toutes) */
   const lecturesRapides=ev.filter(e=>e.lastStage==='capture-read'&&e.lastDetail?.lecture==='rapide'&&Date.parse(e.timestamp)>=Date.parse(d.timestamp)&&Date.parse(e.timestamp)<=Date.parse(ro.at(-1).timestamp));

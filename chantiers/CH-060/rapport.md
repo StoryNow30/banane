@@ -78,6 +78,7 @@ Outil : `tools/ch060-plafond-abords.cjs`. Il rejoue `selection` sur les cuts du 
 - **Sans plafond : +1 686 cuts relus sur les 28 relectures.** Ce sont des verts et des abords de différés : les posés sont traversés.
   - Temps ajouté au rythme mesuré de chaque page : **77 min**. Avec le levier 1 (pages éteintes au rythme d'une page saine) : **48 min**.
   - Le plus lourd : Orbite p10 du 04/11, +376 cuts, 22,9 min (11,3 min avec le levier 1) ; p11 du 05/11, +270 cuts, 13,5 min (5,7) ; p12 du 05/11, +203 cuts, 7,7 min. Le détail par partie est dans `plafond-abords.json`.
+- **Temps total de relecture des 4 journaux, sans plafond d'abords (D-289, sur le tronc depuis f25ce84)** : mesuré avec plafond 333 min ; sans plafond **≈ 410 min** sans le levier 1, **≈ 323 min** avec (333 − 58 min gagnées sur les cuts déjà relus + 48 min de cuts ajoutés). Le levier 1 paie donc la levée du plafond, à 10 min près (PROBABLE : mêmes hypothèses que § 2).
 - **Grappes plus grandes** (`grappe.trouCuts`, 5 aujourd'hui, sans plafond) : cuts relus en plus de 5 : 10 → +261, 20 → +1 119, 40 → +4 483.
 
 ## Limites
