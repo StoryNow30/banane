@@ -1,0 +1,33 @@
+{
+ "format": "ch064-parite-v1",
+ "moteur": "node v22.23.4",
+ "module": "geometrie",
+ "cas": 3178,
+ "identiques": 3178,
+ "ecarts": [],
+ "empreintes": {
+  "js": "5734cafa1b48d07da931e3323487f35eb705d206869452a4168a0bf14c5f46a5",
+  "rs": "5734cafa1b48d07da931e3323487f35eb705d206869452a4168a0bf14c5f46a5"
+ },
+ "temps": {
+  "jsMediane": 23.47218400001293,
+  "jsP95": 78.61172500000248,
+  "rsMediane": 10.84748799999943,
+  "rsP95": 38.080096000001504
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 3342336,
+  "memoire": 3342336
+ },
+ "bilanAdaptateur": {
+  "coeur": 3161,
+  "repliHorsDomaine": 3,
+  "repliFormat": 0
+ },
+ "sources": {
+  "src/geometry.js": "3343330ee03fab4a20d3d2940fcb32e04ab1d4b912e3acd5f1e6cf8d7f854a53",
+  "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054"
+ },
+ "verdict": "IDENTIQUE"
+}

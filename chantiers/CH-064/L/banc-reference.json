@@ -1,0 +1,477 @@
+{
+ "date": "2026-11-06T16:50:40.124Z",
+ "coeurSansLidarOctets": 225888,
+ "coeurCompilationMs": 0.599999999627471,
+ "ua": "Chrome/153.0.0.0",
+ "moduleOctets": 39463,
+ "compilationMs": 0.2000000011175871,
+ "instanciationMs": 0,
+ "memoireWasmInitiale": 524288,
+ "pause": "setTimeout(0) (lecture « référence »)",
+ "repetitions": 15,
+ "vues": 20,
+ "captures": 10,
+ "pas": 450,
+ "pointsParVue": {
+  "mediane": 512216,
+  "p90": 638425
+ },
+ "noeudsParVue": {
+  "mediane": 14
+ },
+ "variantes": {
+  "origine": {
+   "msParVue": {
+    "mediane": 865.7,
+    "p90": 1074.8
+   },
+   "msPour505000Points": {
+    "mediane": 891.78,
+    "p90": 1582.4
+   },
+   "pausesMsParVue": {
+    "mediane": 554,
+    "p90": 684.9
+   },
+   "horsPausesMsParVue": {
+    "mediane": 311.7,
+    "p90": 395
+   },
+   "tasPicPendantLectureMo": {
+    "mediane": 27.95,
+    "max": 29.33
+   },
+   "tasRetenuParLaSortieMo": {
+    "mediane": 0.33
+   }
+  },
+  "js-elague": {
+   "msParVue": {
+    "mediane": 605.8,
+    "p90": 743.8
+   },
+   "msPour505000Points": {
+    "mediane": 607.73,
+    "p90": 1178.66
+   },
+   "pausesMsParVue": {
+    "mediane": 554.5,
+    "p90": 683.8
+   },
+   "horsPausesMsParVue": {
+    "mediane": 46.6,
+    "p90": 55.3
+   },
+   "noyauMsParVue": {
+    "mediane": 34.9,
+    "p90": 43.5
+   },
+   "tasPicPendantLectureMo": {
+    "mediane": 17.26,
+    "max": 26.56
+   },
+   "tasRetenuParLaSortieMo": {
+    "mediane": 0.32
+   }
+  },
+  "wasm": {
+   "msParVue": {
+    "mediane": 579.9,
+    "p90": 718.6
+   },
+   "msPour505000Points": {
+    "mediane": 590,
+    "p90": 1159.12
+   },
+   "pausesMsParVue": {
+    "mediane": 554.3,
+    "p90": 685.3
+   },
+   "horsPausesMsParVue": {
+    "mediane": 25.6,
+    "p90": 33.6
+   },
+   "noyauMsParVue": {
+    "mediane": 15.6,
+    "p90": 20.2
+   },
+   "tasPicPendantLectureMo": {
+    "mediane": 2.02,
+    "max": 4.33
+   },
+   "tasRetenuParLaSortieMo": {
+    "mediane": 0.32
+   }
+  }
+ },
+ "memoireWasm": {
+  "avant": 524288,
+  "hauteEau": 524288,
+  "apres": 524288
+ },
+ "pausesParVue": {
+  "mediane": 133
+ },
+ "parVue": [
+  {
+   "points": 640396,
+   "noeuds": 14,
+   "ms": {
+    "origine": 1115.5,
+    "js-elague": 743.7999999988824,
+    "wasm": 723.3000000007451
+   },
+   "noyau": {
+    "js-elague": 44.69999999552965,
+    "wasm": 21.700000001117587
+   },
+   "pausesMs": {
+    "origine": 684.9000000152737,
+    "js-elague": 683.8000000026077,
+    "wasm": 685.3000000044703
+   }
+  },
+  {
+   "points": 640396,
+   "noeuds": 14,
+   "ms": {
+    "origine": 1077.6000000014901,
+    "js-elague": 744.1999999992549,
+    "wasm": 717.0999999996275
+   },
+   "noyau": {
+    "js-elague": 47.4999999795109,
+    "wasm": 20.19999999180436
+   },
+   "pausesMs": {
+    "origine": 682.9000000078231,
+    "js-elague": 682.3999999985099,
+    "wasm": 683.4000000040978
+   }
+  },
+  {
+   "points": 638425,
+   "noeuds": 15,
+   "ms": {
+    "origine": 1074.7999999988824,
+    "js-elague": 743.8000000007451,
+    "wasm": 718.5999999996275
+   },
+   "noyau": {
+    "js-elague": 43.50000000372529,
+    "wasm": 19.99999999627471
+   },
+   "pausesMs": {
+    "origine": 688.3999999891967,
+    "js-elague": 688.5000000130385,
+    "wasm": 687.0999999996275
+   }
+  },
+  {
+   "points": 638425,
+   "noeuds": 15,
+   "ms": {
+    "origine": 1068.0999999996275,
+    "js-elague": 739.5999999996275,
+    "wasm": 718.9000000003725
+   },
+   "noyau": {
+    "js-elague": 40.999999998137355,
+    "wasm": 19.999999998137355
+   },
+   "pausesMs": {
+    "origine": 686.600000007078,
+    "js-elague": 687.2999999839813,
+    "wasm": 687.100000007078
+   }
+  },
+  {
+   "points": 512216,
+   "noeuds": 15,
+   "ms": {
+    "origine": 865.6999999992549,
+    "js-elague": 605.8000000007451,
+    "wasm": 579.9000000003725
+   },
+   "noyau": {
+    "js-elague": 38.10000001452863,
+    "wasm": 15.40000000782311
+   },
+   "pausesMs": {
+    "origine": 553.9999999795109,
+    "js-elague": 554.9999999981374,
+    "wasm": 554.3000000081956
+   }
+  },
+  {
+   "points": 512216,
+   "noeuds": 15,
+   "ms": {
+    "origine": 878.1999999992549,
+    "js-elague": 607,
+    "wasm": 582.4000000003725
+   },
+   "noyau": {
+    "js-elague": 41.70000000856817,
+    "wasm": 16.30000000447035
+   },
+   "pausesMs": {
+    "origine": 554.7999999970198,
+    "js-elague": 554.4999999869615,
+    "wasm": 555.6999999899417
+   }
+  },
+  {
+   "points": 7755,
+   "noeuds": 4,
+   "ms": {
+    "origine": 24.299999998882413,
+    "js-elague": 17.899999998509884,
+    "wasm": 17.600000001490116
+   },
+   "noyau": {
+    "js-elague": 0.5000000037252903,
+    "wasm": 0.30000000074505806
+   },
+   "pausesMs": {
+    "origine": 16.60000000335276,
+    "js-elague": 16.600000001490116,
+    "wasm": 16.699999999254942
+   }
+  },
+  {
+   "points": 7755,
+   "noeuds": 4,
+   "ms": {
+    "origine": 22.300000000745058,
+    "js-elague": 18,
+    "wasm": 17.699999999254942
+   },
+   "noyau": {
+    "js-elague": 0.5000000018626451,
+    "wasm": 0.2999999988824129
+   },
+   "pausesMs": {
+    "origine": 16.699999999254942,
+    "js-elague": 16.59999999962747,
+    "wasm": 16.700000001117587
+   }
+  },
+  {
+   "points": 2229,
+   "noeuds": 2,
+   "ms": {
+    "origine": 10.400000000372529,
+    "js-elague": 9,
+    "wasm": 8.900000000372529
+   },
+   "noyau": {
+    "js-elague": 0.19999999925494194,
+    "wasm": 0
+   },
+   "pausesMs": {
+    "origine": 8.300000000745058,
+    "js-elague": 8.399999998509884,
+    "wasm": 8.300000000745058
+   }
+  },
+  {
+   "points": 2229,
+   "noeuds": 2,
+   "ms": {
+    "origine": 10.400000000372529,
+    "js-elague": 9.099999999627471,
+    "wasm": 9.099999999627471
+   },
+   "noyau": {
+    "js-elague": 0.2000000011175871,
+    "wasm": 0
+   },
+   "pausesMs": {
+    "origine": 8.399999998509884,
+    "js-elague": 8.399999998509884,
+    "wasm": 8.400000002235174
+   }
+  },
+  {
+   "points": 7755,
+   "noeuds": 4,
+   "ms": {
+    "origine": 23.90000000037253,
+    "js-elague": 18.09999999962747,
+    "wasm": 17.800000000745058
+   },
+   "noyau": {
+    "js-elague": 0.5,
+    "wasm": 0.2000000011175871
+   },
+   "pausesMs": {
+    "origine": 16.700000001117587,
+    "js-elague": 16.699999999254942,
+    "wasm": 16.799999998882413
+   }
+  },
+  {
+   "points": 7755,
+   "noeuds": 4,
+   "ms": {
+    "origine": 23.5,
+    "js-elague": 18.100000001490116,
+    "wasm": 17.800000000745058
+   },
+   "noyau": {
+    "js-elague": 0.6000000033527613,
+    "wasm": 0.30000000074505806
+   },
+   "pausesMs": {
+    "origine": 16.700000001117587,
+    "js-elague": 16.699999997392297,
+    "wasm": 16.59999999962747
+   }
+  },
+  {
+   "points": 592420,
+   "noeuds": 18,
+   "ms": {
+    "origine": 1035.5,
+    "js-elague": 706,
+    "wasm": 682.5999999996275
+   },
+   "noyau": {
+    "js-elague": 41.70000002346933,
+    "wasm": 20.49999998509884
+   },
+   "pausesMs": {
+    "origine": 651.0999999940395,
+    "js-elague": 651.899999992922,
+    "wasm": 649.7000000011176
+   }
+  },
+  {
+   "points": 592420,
+   "noeuds": 18,
+   "ms": {
+    "origine": 1046.2000000011176,
+    "js-elague": 704.0999999996275,
+    "wasm": 681
+   },
+   "noyau": {
+    "js-elague": 39.900000024586916,
+    "wasm": 19.99999998509884
+   },
+   "pausesMs": {
+    "origine": 651.2000000234693,
+    "js-elague": 650.4000000059605,
+    "wasm": 650.7999999895692
+   }
+  },
+  {
+   "points": 455931,
+   "noeuds": 21,
+   "ms": {
+    "origine": 803.7000000011176,
+    "js-elague": 567.9000000003725,
+    "wasm": 550.7000000011176
+   },
+   "noyau": {
+    "js-elague": 30.699999997392297,
+    "wasm": 15.59999999590218
+   },
+   "pausesMs": {
+    "origine": 524.7999999988824,
+    "js-elague": 526.2000000011176,
+    "wasm": 525.5999999977648
+   }
+  },
+  {
+   "points": 531040,
+   "noeuds": 23,
+   "ms": {
+    "origine": 920.1000000014901,
+    "js-elague": 650.8999999985099,
+    "wasm": 631.6999999992549
+   },
+   "noyau": {
+    "js-elague": 34.90000000037253,
+    "wasm": 16.200000004842877
+   },
+   "pausesMs": {
+    "origine": 603.7000000085682,
+    "js-elague": 604.2999999932945,
+    "wasm": 603.6999999973923
+   }
+  },
+  {
+   "points": 242820,
+   "noeuds": 12,
+   "ms": {
+    "origine": 437.2999999988824,
+    "js-elague": 304.2999999988824,
+    "wasm": 295.40000000037253
+   },
+   "noyau": {
+    "js-elague": 17.69999998807907,
+    "wasm": 9
+   },
+   "pausesMs": {
+    "origine": 279.4000000022352,
+    "js-elague": 279.19999999552965,
+    "wasm": 279.4000000115484
+   }
+  },
+  {
+   "points": 242820,
+   "noeuds": 12,
+   "ms": {
+    "origine": 452.59999999962747,
+    "js-elague": 308.30000000074506,
+    "wasm": 295.7999999988824
+   },
+   "noyau": {
+    "js-elague": 19.300000000745058,
+    "wasm": 9.099999990314245
+   },
+   "pausesMs": {
+    "origine": 280.09999999403954,
+    "js-elague": 280.5000000093132,
+    "wasm": 280.2999999988824
+   }
+  },
+  {
+   "points": 586656,
+   "noeuds": 19,
+   "ms": {
+    "origine": 1054.199999999255,
+    "js-elague": 706,
+    "wasm": 685.4000000003725
+   },
+   "noyau": {
+    "js-elague": 41.89999997615814,
+    "wasm": 20.199999999254942
+   },
+   "pausesMs": {
+    "origine": 652.1000000163913,
+    "js-elague": 651.4000000115484,
+    "wasm": 651.7999999970198
+   }
+  },
+  {
+   "points": 573872,
+   "noeuds": 19,
+   "ms": {
+    "origine": 1013.4000000003725,
+    "js-elague": 687.1999999992549,
+    "wasm": 665.5999999996275
+   },
+   "noyau": {
+    "js-elague": 41.29999998211861,
+    "wasm": 19.699999986216426
+   },
+   "pausesMs": {
+    "origine": 634.8000000081956,
+    "js-elague": 635.2999999970198,
+    "wasm": 634.3999999947846
+   }
+  }
+ ]
+}

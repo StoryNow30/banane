@@ -1,0 +1,79 @@
+/* CH-064-D : façades des modules de décision sur le cœur WASM, MÊME API que les modules JS du tronc.
+ *   const F=ArianeFacadeDecision.creer(coeur, {critere:BananeRelectureCritere, signal:BananeRelectureSignal, …})
+ *   F.critere.juger(entree, R)   // comme BananeRelectureCritere.juger
+ * Chaque fonction portée part au cœur sous la forme {f: nom, a: [arguments]} (numéros 50 et suivants, ariane-decision) ;
+ * les constantes (DEFAUT, ZONES…) et ce qui n'est pas porté restent ceux du module JS. Repli sur le JS d'origine quand le cœur
+ * rend « hors domaine » ou quand l'entrée ne passe pas en VBA (objet non simple, fonction…) ; compteurs par module.
+ * Fonctions qui modifient leur premier argument (signal : observer, recharge) : le cœur rend {r, e} ; la façade recopie dans
+ * l'objet d'origine les clés de `e` dont la valeur primitive a changé (les objets imbriqués ne sont jamais modifiés par le JS). */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.ArianeFacadeDecision=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+ 'use strict';
+ const NUMEROS={critere:50,signal:51,gardeApresDiffere:52,gardePasseAppuis:53,relectureOmbre:54,reglesMetier:55,crossing:56,shadow:57,hauteur:58,fauxVert:59,lotDecision:60,
+  /* CH-068 (J4) */ appuisListe:61,gcv2L1e:62,voieRecentree:63,voieB1:64,rechercheLarge:65};
+ const PORTEES={
+  critere:['reglages','correctionPermise','juger'],
+  signal:['reglage','lectureDe','creer','observer','recharge','bilan'],
+  gardeApresDiffere:['reglage','voisinsDifferes','juger'],
+  gardePasseAppuis:['reglage','deplacementMm','appuiNormalCuts','juger'],
+  relectureOmbre:['plage','selection','optionsSelection','ecartRail','poseCalculee','confiance','juger','skipOmbre','captureVide','duree'],
+  reglesMetier:['surface','railsDePlus','resumer','doitDifferer','evenement'],
+  crossing:['read','detect','edgeOf','positionAt'],
+  shadow:['scientificProposeBoth','scientificProposeBothAvecReservoir'],
+  hauteur:['evaluer'],fauxVert:['evaluer'],lotDecision:['decideCut'],
+  appuisListe:['bordsCorps','mesurerT','noterRepere','resumeRepere','lireReponse','accord','appuis','compter','regle','comparer','resumeDecision'],
+  gcv2L1e:['referenceEcartement','signe','corriger','decider'],
+  voieRecentree:['localMm','poseMm','vueNecessaire','camerasLarges','geste','traceMoteur','confiances','profondeur','predictionDe','mesures','regle','enRegle',
+   'verdictPrudent','completer','recentrer','appuisDepuisDecalage','choisirDansLePool','ecartPose','juger','memoireSerie'],
+  voieB1:['lignesDeTable','repereDepuisLigne','ecartementReference','railTrouve','solutionsEcartement','poseMmDe','ecartPoses','evaluer'],
+  rechercheLarge:['reglage','graines','grainesUtiles','grainesPics','decalage','relance','cellules','paires','decider','resumer']};
+ const MUTANTES={signal:new Set(['observer','recharge']),appuisListe:new Set(['noterRepere'])};
+ /* Mutantes qui rendent parfois leur premier argument lui-même (noterRepere) : le cœur ajoute `meme`, la façade rend alors l'objet d'origine. */
+ const primitif=v=>v===null||(typeof v!=='object'&&typeof v!=='function');
+ function recopier(cible,etat){if(!cible||typeof cible!=='object'||!etat||typeof etat!=='object')return;
+  for(const k of Object.keys(etat)){const v=etat[k];if(primitif(v)&&!Object.is(cible[k],v))cible[k]=v;}}
+ /* État que le JS lit hors de ses arguments, résolu ici au moment de l'appel : drapeaux du module GCV1 (`configure`), plafond du
+  * calage de convention (`BananeSettings.conventionPlafond`, comme `plafondMode` de placement-convention.js). */
+ function plafondMode(P){const cfg={...(P&&P.DEFAULTS)};const v=cfg.plafond!==undefined&&cfg.plafond!==null?cfg.plafond:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.conventionPlafond:undefined);
+  return v===true?true:v==='vertical'?'vertical':false;}
+ const etatShadow=(S,modules)=>{const st=S.state();return {partialFlank:st.partialFlank,convention:st.convention,plafond:plafondMode(modules.convention)};};
+ /* recherche-large (CH-068) relance le moteur gelé du module GCV1 chargé : son état part avec chaque appel (sans module chargé : repli). */
+ function etatDe(nom,modules){if(nom==='shadow'||nom==='rechercheLarge')return modules.shadow?etatShadow(modules.shadow,modules):null;return undefined;}
+ /* decideCut reçoit le module GCV1 (`Shadow`, des fonctions) : il ne traverse pas ; seul le module chargé (modules.shadow) est accepté,
+  * son état part à sa place, avec les réglages globaux que lit lot-decision.js. Tout autre Shadow (doublure d'essai) : repli sur le JS. */
+ function envoiSpecial(nom,f,a,modules){
+  /* comparer(d0,d1) teste d0===d1 : l'identité d'un objet ne traverse pas, le même objet passé deux fois reste au JS. */
+  if(nom==='appuisListe'&&f==='comparer')return a[0]!==null&&typeof a[0]==='object'&&a[0]===a[1]?false:null;
+  /* CH-068 : recentrer (voie-recentree) et evaluer (voie-b1-ecart) reçoivent le module GCV1 comme decideCut, et le passent à decideCut. */
+  const b1=nom==='voieB1'&&f==='evaluer';
+  if(!(nom==='lotDecision'||(nom==='voieRecentree'&&f==='recentrer')||b1))return null;
+  const x=a[0];if(!x||typeof x!=='object'||x.Shadow!==modules.shadow||!modules.shadow)return false;
+  const {Shadow,...reste}=x,S=typeof globalThis!=='undefined'?globalThis.BananeSettings:undefined;
+  /* evaluer : la mémoire de l'ombre (poses, profondeurs en Map) part en paires ; la façade y recopie la mémoire rendue (memoireApres). */
+  if(b1){const m=reste.mem;if(!m||typeof m!=='object'||!Array.isArray(m.poses)||!(m.profondeurs instanceof Map))return false;
+   reste.mem={batchId:m.batchId,poses:m.poses,profondeurs:[...m.profondeurs]};}
+  return {f,a:[reste,...a.slice(1)],etat:etatShadow(Shadow,modules),globaux:{flushPct:S?.releves?.flushPct,ombreVerticaleRefusee:S?.ombreVerticaleRefusee,fauxVertOmbre:S?.fauxVertOmbre,hauteurApprise:S?.hauteurApprise}};}
+ /* Ce que la façade fait de la réponse d'un envoi spécial : evaluer (voie-b1-ecart) rend {r, mem} ; la mémoire rendue remplace celle de l'appelant. */
+ function apresSpecial(nom,f,a,v){
+  if(nom==='voieB1'&&f==='evaluer'){const m=a[0].mem;m.poses.splice(0,m.poses.length,...v.mem.poses);m.profondeurs.clear();for(const [k,x] of v.mem.profondeurs)m.profondeurs.set(k,x);return v.r;}
+  return v;}
+ function creer(coeur,modules){
+  const n={};const out={compteurs:()=>JSON.parse(JSON.stringify(n))};
+  for(const [nom,M] of Object.entries(modules)){if(!M||!(nom in NUMEROS))continue;
+   const c=n[nom]={coeur:0,repliHorsDomaine:0,repliFormat:0};const F={...M};
+   for(const f of PORTEES[nom]){if(typeof M[f]!=='function')continue;
+    const mutante=MUTANTES[nom]?.has(f);
+    F[f]=function(...a){
+     const sp=envoiSpecial(nom,f,a,modules);if(sp===false){c.repliHorsDomaine++;return M[f](...a);}
+     const etat=sp?undefined:etatDe(nom,modules);if(etat===null){c.repliHorsDomaine++;return M[f](...a);}
+     /* decider (recherche-large) : `ms` est une horloge ; la façade la lit autour de l'appel, comme le JS autour de son calcul. */
+     const t0=nom==='rechercheLarge'&&f==='decider'?Date.now():null;
+     let v;try{v=coeur.appeler(NUMEROS[nom],sp||(etat===undefined?{f,a}:{f,a,etat}));c.coeur++;}
+     catch(e){if(e&&e.name==='HorsDomaine'){c.repliHorsDomaine++;return M[f](...a);}
+      if(e instanceof TypeError&&/^VBA : /.test(e.message)){c.repliFormat++;return M[f](...a);}throw e;}
+     if(t0!==null&&v&&typeof v==='object')v.ms=Date.now()-t0;
+     if(mutante){recopier(a[0],v.e);return v.meme===true?a[0]:v.r;}
+     return sp?apresSpecial(nom,f,a,v):v;};}
+   out[nom]=F;}
+  return out;}
+ return {creer,NUMEROS,PORTEES};
+});
