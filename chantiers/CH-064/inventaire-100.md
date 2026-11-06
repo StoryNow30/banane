@@ -125,7 +125,7 @@ Calcul pur identifié (porté + en cours + portable non porté) : 809068 o ; par
   - `file-prioritaire.js` et `native-reconstruction.js` ne sont chargés ni par le manifeste ni par le service worker : seulement par les outils et les essais (ÉTABLI par grep).
 
 ## Lots proposés (portable non porté), numéros de fonction du cœur sans chevauchement
-Blocs déjà pris : 0–49 chef, 50–99 D, 100–149 E, 150–199 réservés à J4 (CH-068). Tailles ESTIMÉES ; la somme des lots égale le total « portable non porté ».
+Blocs déjà pris : 0–49 chef, 50–99 D (dont J4, CH-068 : 61–65), 100–149 E ; 150–199 libre. Tailles ESTIMÉES ; la somme des lots égale le total « portable non porté ».
 
 | bloc | crate proposée | contenu | lignes | octets | remarques |
 |---|---|---|---:|---:|---|
@@ -136,5 +136,7 @@ Blocs déjà pris : 0–49 chef, 50–99 D, 100–149 E, 150–199 réservés à
 | 400–449 | ariane-lot (dépend d'ariane-decision) | restes de `lot-decision`, `regles-metier`, `gcv1-shadow` et `continuity-observer` listés ci-dessus, `brain.js` (entier), et `relectureCalculer` (`background.js` 3730–3763, seule pièce de décision du lot 500–549) | 562 + ≈ 34 | 40 066 + ≈ 3 500 | Modules de décision : garde GCV2, parités de la relecture et de L1se obligatoires ; de préférence à D après sa fusion |
 | 450–499 | ariane-nuage (suite d'ariane-lidar et d'ariane-capture) | pures de `native-lidar`, `lod-signature`, `merge-clouds`, `profileLines`, `reportedBox` et `inRoi` de `vendor/lidar.js`, reste de `capture-core` | 285 | 18 401 | Périmètre nominal de L et du chef |
 | 500–549 | ariane-rendu (optionnel) | modèles de vue de `signal-rendu` et `ui5`, pures de `panel.js`, `background.js` et `adapter-page.js` | 804 − ≈ 34 | 86 719 − ≈ 3 500 | Présentation et colle ; `background.js` et `adapter-page.js` sont interdits aux exécutants : la façade y serait posée par l'intégrateur |
+
+Inventaire élargi à D-296 (tout ce qui peut passer en Rust, pas seulement le calcul pur) : `inventaire-d296.md`.
 
 Hors lots : `gcv2-parametres-l1.js` (données, 36,5 Ko), à lire par J4. Ce n'est pas du calcul.

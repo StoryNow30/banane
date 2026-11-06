@@ -10,6 +10,15 @@ const fs=require('fs'),path=require('path'),RACINE=path.resolve(__dirname,'..');
 const fichiers=['background.js','panel.js','panel-lancement.js',...fs.readdirSync(path.join(RACINE,'vendor')).filter(f=>f.endsWith('.js')).map(f=>'vendor/'+f),
  ...fs.readdirSync(path.join(RACINE,'src')).filter(f=>f.endsWith('.js')).map(f=>'src/'+f)].sort((a,b)=>a.includes('/')-b.includes('/')||(a<b?-1:1));
 const T=Object.fromEntries(fichiers.map(f=>{const t=fs.readFileSync(path.join(RACINE,f));let n=0;for(const c of t)if(c===10)n++;return [f,[n,t.length]];}));
+/* --d296 : totaux de l'inventaire élargi (D-296) depuis chantiers/CH-064/inventaire-d296.json ; écart de taille signalé. */
+if(process.argv.includes('--d296')){const J=require(path.join(RACINE,'chantiers/CH-064/inventaire-d296.json')),tot={},ecarts=[];
+ for(const [f,[L,O]] of Object.entries(T)){const e=J[f];if(!e){ecarts.push(f+' : absent du relevé');continue;}let l=0,o=0;
+  for(const [k,[a,b]] of Object.entries(e.a)){tot[k]=tot[k]||[0,0];tot[k][0]+=a;tot[k][1]+=b;l+=a;o+=b;}
+  if(l!==L||o!==O)ecarts.push(f+' : '+L+' l / '+O+' o, relevé '+l+' l / '+o+' o');}
+ const O=Object.values(T).reduce((s,v)=>s+v[1],0),nom={P:'porté',C:'en cours',X:'portable D-296 non porté',D:'données',chrome:'non portable : API Chrome',dom:'non portable : DOM',esv:'non portable : page ESV',orch:'non portable : orchestration',trav:'non portable : coût de traversée'};
+ console.log(Object.entries(nom).map(([k,n])=>n+' : '+(tot[k]||[0,0])[0]+' l / '+(tot[k]||[0,0])[1]+' o ('+(100*(tot[k]||[0,0])[1]/O).toFixed(1)+' %)').join('\n'));
+ if(ecarts.length){console.error('fichiers changés depuis le relevé :\n'+ecarts.join('\n'));process.exitCode=1;}
+ return;}
 // m = statut principal (P porté, C en cours, X portable non porté, N non portable, D données) ; carve-outs explicites
 const S={
 'background.js':{m:'N',X:[212,24010],eq:'—',r:"Service worker : chrome.*, files, horloge, état de session (25 variables de module). ~30 fonctions pures ≥ 300 o, surtout de la colle : obsFields 291–317, relectureCalculer 3730–3763 (assemble relecture-ombre + critère + lot, globalThis.Banane* à passer en entrée), avisDepartSurVert 1338–1344, repriseAnchors 2781–2791, lotSignalRefus 863–877, lotSignalTrou 835–841, translationRails 1102–1108, passeDiffReglage 2109–2115, reglesResume 2599–2605. ESTIMÉ."},
