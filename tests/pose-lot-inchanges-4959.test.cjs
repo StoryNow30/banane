@@ -74,6 +74,9 @@ const VOIE_B1_ECART=['voie-b1-ecart.js'];
 const FILE_PRIORITAIRE=['file-prioritaire.js'];
 /* CH-053-C : la reconstruction de l'état initial d'Écho (src/native-reconstruction.js), module pur lu HORS LIGNE par tools/taux-apprenables.cjs (définition assouplie) : ni le service worker, ni la page, ni le lot ne le lisent. */
 const RECONSTRUCTION=['native-reconstruction.js'];
+/* CH-058 : l'index du journal en mémoire (lectures bornées d'IndexedDB) : il enveloppe le stockage du service worker et ne fait que choisir
+ * quelles clés lire ; chaque appelant refiltre, résultat identique à la lecture complète. Il ne lit ni ne commande la pose. */
+const JOURNAL_INDEX=['journal-index.js'];
 
 /* D-284 (ordre de l'opérateur du 05/11) : la sélection de la relecture relit les voisins d'un cut « À contrôler » et bouche les trous de 3 cuts au
  * plus ; sans ces lignes, src/relecture-ombre.js est celui de la test 8. Toute autre modification du fichier reste détectée. */
@@ -93,7 +96,7 @@ test('la pose et le lot lisent les mêmes fichiers que la test 8, octet pour oct
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...JOURNAL_INDEX].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

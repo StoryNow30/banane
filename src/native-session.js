@@ -80,7 +80,7 @@
   running(){return ['STARTING','RUNNING'].includes(this.e.s.native?.status);}
   async init(){const n=this.e.s.native;if(!this.running())return;
    n.metrics=n.metrics||{};n.metrics.pointsSavedByRail=n.metrics.pointsSavedByRail||{left:0,right:0};n.metrics.captureCheckpoints=n.metrics.captureCheckpoints||0;
-   const recoveredAt=iso(),events=(await this.store.all('events')).filter(event=>event.nativeSessionId===n.id);
+   const recoveredAt=iso(),events=(await this.evenementsSession(n.id)).filter(event=>event.nativeSessionId===n.id);
    n.nextEventSeq=Math.max(n.nextEventSeq||0,...events.map(event=>event.eventSeq||event.event_seq||0));
    const period=n.observationPeriods?.find(item=>item.observationPeriodId===n.currentPeriodId);
    if(period&&!period.endedAt){period.status='INTERRUPTED_RECOVERED';period.endTimeStatus='unknown';period.recoveredAt=recoveredAt;
@@ -135,6 +135,10 @@
    * tardif d'une visite close (capture achevée après le changement de cut,
    * fréquent au rythme réel) relisait TOUS les enregistrements de la base,
    * sessions passées comprises. Le coût croissait avec l'historique. */
+  /* CH-058 : événements et visites de la session, par l'index du journal (src/journal-index.js) quand le store en a un ;
+   * sinon tout le magasin, comme avant. L'appelant filtre toujours : même résultat, même ordre. */
+  async evenementsSession(id){return typeof this.store.lireEvenementsNatif==='function'?this.store.lireEvenementsNatif(id):this.store.all('events');}
+  async visitesSession(id){return typeof this.store.lireVisitesNatif==='function'?this.store.lireVisitesNatif(id):this.store.all('records');}
   async recordById(id){if(typeof this.store.getRecord==='function')return this.store.getRecord(id);
    return (await this.store.all('records')).find(item=>(item.recordId||item.id)===id);}
   async record(data){const n=this.e.s.native,current=n?.current;if(current?.visitId===data.visitId)return current;
@@ -941,7 +945,7 @@
     alreadyExported:done.length,exportAdvice:this.exportAdvice()};
   }
   async dataset(){const n=this.e.s.native;if(!n)throw Error('Aucune session Natif conservée.');
-   const records=(await this.store.all('records')).filter(record=>record.nativeSessionId===n.id).sort((a,b)=>(a.visitIndex??0)-(b.visitIndex??0));
+   const records=(await this.visitesSession(n.id)).filter(record=>record.nativeSessionId===n.id).sort((a,b)=>(a.visitIndex??0)-(b.visitIndex??0));
    const counts=new Map();for(const record of records){const key=K.cutId(record.identity);counts.set(key,(counts.get(key)||0)+1);}
    const lossCauses={};for(const record of records)for(const side of SIDES)for(const reason of record.geometryEligibility?.[side]?.reasons||[])lossCauses[reason]=(lossCauses[reason]||0)+1;
    const firstStored=Object.fromEntries(SIDES.map(side=>[side,records.map(record=>{const snapshot=record.railSnapshots?.[side]?.find(item=>
@@ -974,7 +978,7 @@
      /* Compte ajouté seulement s'il y a des visites confirmées : sans écriture jointe, le résumé reste celui d'avant, octet pour octet. */
      ...(records.some(record=>record.serverConfirmed===true)?{serverConfirmedVisits:records.filter(record=>record.serverConfirmed===true).length}:{}),
      serverConfirmationNotAnError:true,passiveContract:{commandsByBanane:0,cameraChangesByBanane:0,railSelectionsByBanane:0,navigationByBanane:0}};
-   const events=(await this.store.all('events')).filter(event=>event.nativeSessionId===n.id).sort((a,b)=>(a.eventSeq||a.event_seq||0)-(b.eventSeq||b.event_seq||0));
+   const events=(await this.evenementsSession(n.id)).filter(event=>event.nativeSessionId===n.id).sort((a,b)=>(a.eventSeq||a.event_seq||0)-(b.eventSeq||b.event_seq||0));
    /* RM-11 : les séries collantes, une fois dans l'en-tête (seulement s'il y en a : sans raison tapée, l'export est celui d'avant). */
    const raisonSeries=n.raison?R.resumeSeries(n.raison):[];
    return {format:'banane-native-session-v2',version:K.VERSION,exportedAt:iso(),session:K.clone(n),records,events,closureSummary,cloudIds:n.cloudIds.slice(),...(raisonSeries.length?{raisonSeries}:{})};
