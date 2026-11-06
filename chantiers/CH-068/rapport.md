@@ -40,7 +40,11 @@ Chromium (référence, `/opt/pw-browsers/chromium`, `--chromium`, fixtures + 10 
 | Module | Cas | Identiques |
 |---|---|---|
 | appuis-liste | 517 | 517 |
-| CHROMIUM_SUITE | | |
+| gcv2-l1e, voie-recentree, voie-b1-ecart, recherche-large | non mesuré | — |
+
+Les quatre autres modules n'ont pas abouti dans Chromium. La série a été arrêtée au bout de 2 h, alors qu'elle était sur gcv2-l1e : chaque cas réel y transporte un instantané entier de la liste d'ESV (9 476 lignes), et le premier lancement groupé a saturé le tas du pilote Node, à 2 Go. Je n'ai donc mesuré dans Chromium que appuis-liste. Pour les quatre autres, la parité est établie en Node, sur le WASM exécuté par V8 ; la relancer dans Chromium avec `CH064D_REEL=0` reste à faire.
+
+Après les fusions de chantier/CH-064-D (2ea8708) et du tronc du chef (17f5142, qui contient 5e43626), contrôle sur fixtures et variantes (`CH064D_REEL=0`, 10 variantes) : appuis-liste, gcv2-l1e, voie-recentree, voie-b1-ecart, recherche-large et lotDecision, **5 610/5 610 identiques** ; essai des correctifs de J3 : 0 écart.
 
 Les replis viennent surtout des variantes (chaînes ou objets glissés dans des matrices, coercitions que le port refuse) : la façade rejoue alors le JS, à l'identique.
 
