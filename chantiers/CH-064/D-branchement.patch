@@ -1,0 +1,34 @@
+diff --git a/ariane-rs/Cargo.toml b/ariane-rs/Cargo.toml
+index cf4fa24..21ba1c3 100644
+--- a/ariane-rs/Cargo.toml
++++ b/ariane-rs/Cargo.toml
+@@ -1,7 +1,7 @@
+ # CH-064 : espace Cargo de la réécriture d'Ariane en Rust. Hors paquet (tools/package.py exclut ariane-rs/).
+ [workspace]
+ resolver = "2"
+-members = ["crates/ariane-js", "crates/ariane-vba", "crates/ariane-capture", "crates/ariane-geometrie", "crates/ariane-coeur", "crates/ariane-hote"]
++members = ["crates/ariane-js", "crates/ariane-vba", "crates/ariane-capture", "crates/ariane-geometrie", "crates/ariane-coeur", "crates/ariane-hote", "crates/ariane-decision"]
+ 
+ [workspace.package]
+ edition = "2021"
+diff --git a/ariane-rs/crates/ariane-coeur/Cargo.toml b/ariane-rs/crates/ariane-coeur/Cargo.toml
+index 1e212d5..9753dd9 100644
+--- a/ariane-rs/crates/ariane-coeur/Cargo.toml
++++ b/ariane-rs/crates/ariane-coeur/Cargo.toml
+@@ -12,3 +12,4 @@ ariane-js = { path = "../ariane-js" }
+ ariane-vba = { path = "../ariane-vba" }
+ ariane-capture = { path = "../ariane-capture" }
+ ariane-geometrie = { path = "../ariane-geometrie" }
++ariane-decision = { path = "../ariane-decision" }
+diff --git a/ariane-rs/crates/ariane-coeur/src/abi.rs b/ariane-rs/crates/ariane-coeur/src/abi.rs
+index 95a28f7..0899d98 100644
+--- a/ariane-rs/crates/ariane-coeur/src/abi.rs
++++ b/ariane-rs/crates/ariane-coeur/src/abi.rs
+@@ -54,6 +54,7 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
+             _ => Err(Echec::hors_domaine("side non chaîne")),
+         },
+         32 => jauge(&entree),
++        50..=99 => ariane_decision::appeler(fonction, &entree),
+         _ => Err(Echec::erreur(format!("Cœur : fonction inconnue {fonction}"))),
+     };
+     match r {
