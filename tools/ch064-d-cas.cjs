@@ -35,7 +35,7 @@ function chemins(v,p=[],out=[],prof=0){out.push(p);if(prof>6||v===null||typeof v
  else for(const k of Object.keys(v).slice(0,40))chemins(v[k],[...p,k],out,prof+1);return out;}
 function muter(args,alea){const a=v8.deserialize(v8.serialize(args)),cs=chemins(a).filter(c=>c.length>0);if(!cs.length)return null;
  const c=cs[Math.floor(alea()*cs.length)],parent=c.slice(0,-1).reduce((o,k)=>o[k],a),k=c[c.length-1];
- if(alea()<0.15&&!Array.isArray(parent))delete parent[k];
+ if(alea()<0.15&&!Array.isArray(parent)&&!ArrayBuffer.isView(parent))delete parent[k];
  else{const x=LIMITES[Math.floor(alea()*LIMITES.length)];parent[k]=x&&typeof x==='object'?v8.deserialize(v8.serialize(x)):x;}
  return a;}
 function*cas(modules,{fixtures=true,reel=true,variantes=Number(process.env.CH064D_VARIANTES||4),graine:g=Number(process.env.CH064D_GRAINE||64),max=Infinity}={}){
