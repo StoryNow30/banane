@@ -2,7 +2,7 @@
 'use strict';
 /* CH-064-E : parité de la crate ariane-etat contre les modules JS de cette branche.
  *   node tools/ch064-e-parite.cjs [--rapide] [--corpus] [--json SORTIE]
- * Construit le binaire si besoin (cible wasm32-unknown-unknown, mémoire bornée à 512 Mio). */
+ * Construit le binaire si besoin (cible wasm32-unknown-unknown, mémoire bornée à 256 Mio, le plafond du paquet). */
 const fs = require('node:fs'), path = require('node:path'), { spawnSync } = require('node:child_process');
 const { comparer } = require('./ch064-comparer.cjs');
 const RACINE = path.resolve(__dirname, '..');
@@ -23,13 +23,41 @@ function construire() {
 function coeur() {
   construire();
   const Coeur = require('../ariane-rs/coquille/coeur.js');
-  return Coeur.creer(fs.readFileSync(WASM), { seuilReinstanciation: 32 * 1024 * 1024 });
+  const brut = Coeur.creer(fs.readFileSync(WASM), { seuilReinstanciation: 32 * 1024 * 1024 });
+  const orig = brut.appeler.bind(brut);
+  const pics = [];
+  brut.pics = pics;
+  brut.appeler = (fonction, valeur) => {
+    const avant = brut.etat().hauteEau;
+    let sortie, erreur;
+    try { sortie = orig(fonction, valeur); }
+    catch (e) { erreur = e; }
+    const apres = brut.etat();
+    if (apres.hauteEau > avant) {
+      const v = valeur || {};
+      pics.push({
+        f: v.f, hauteEau: apres.hauteEau,
+        events: Array.isArray(v.events) ? v.events.length : undefined,
+        records: Array.isArray(v.records) ? v.records.length : undefined,
+        session: v.session && typeof v.session === 'object' ? Object.keys(v.session).length : undefined,
+        etat: v.etat && typeof v.etat === 'object' ? Object.keys(v.etat).length : undefined,
+      });
+      if (process.env.CH064_E_SONDE) process.stderr.write('pic ' + v.f + ' ' + apres.hauteEau + '\n');
+    }
+    if (erreur) throw erreur;
+    return sortie;
+  };
+  return brut;
 }
 function capter(f) { try { return { ok: true, v: f() }; } catch (e) { return { ok: false, v: e }; } }
 
 const ecarts = [];
+const rejeux = [];
+let appels = 0;
 function voir(nom, js, rs) {
+  appels++;
   const a = capter(js), b = capter(rs);
+  if (!b.ok && b.v && b.v.name === 'HorsDomaine') { rejeux.push(nom); return; }
   let e = [];
   if (a.ok !== b.ok) e = [{ chemin: '(racine)', raison: a.ok ? 'JS rend, Rust lève : ' + b.v.message : 'JS lève (' + a.v.message + '), Rust rend' }];
   else if (a.ok) e = comparer(a.v, b.v);
@@ -261,7 +289,7 @@ async function main() {
     bilan = await corpus(c);
   }
   const ok = ecarts.length === 0;
-  const res = { format: 'ch064-e-parite-v1', cas: 'synthese', ecarts: ecarts.slice(0, 12), memoire: c.etat(), corpus: bilan, verdict: ok ? 'IDENTIQUE' : 'ÉCART' };
+  const res = { format: 'ch064-e-parite-v1', cas: 'synthese', ecarts: ecarts.slice(0, 12), memoire: c.etat(), pics: c.pics, appels, rejeux: rejeux.length, rejeuxNoms: rejeux.slice(0, 12), corpus: bilan, verdict: ok ? 'IDENTIQUE' : 'ÉCART' };
   console.log(JSON.stringify(res, null, 1));
   if (!ok) process.exitCode = 1;
 }

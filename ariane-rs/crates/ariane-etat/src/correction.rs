@@ -43,15 +43,15 @@ fn max_decal(d: &Valeur) -> Option<f64> {
     m
 }
 
-struct Lot<'a> { ev: Vec<usize>, b: String, t0: f64, fin: f64, part: Valeur, src: &'a [Valeur] }
+struct Lot { ev: Vec<usize>, b: String, t0: f64, fin: f64, part: Valeur }
 
 fn evenements(v: &Valeur) -> Vec<&Valeur> { jsval::elements(v) }
 
-fn lot_de<'a>(events: &'a [Valeur], partie: &Valeur, batch_id: Option<&str>) -> Option<Lot<'a>> {
-    let mut idx: Vec<usize> = (0..events.len()).filter(|&i| instant(&events[i]).is_some()).collect();
-    idx.sort_by(|&i, &j| cmp_nombre(instant(&events[i]).unwrap(), instant(&events[j]).unwrap()));
+fn lot_de(events: &[&Valeur], partie: &Valeur, batch_id: Option<&str>) -> Option<Lot> {
+    let mut idx: Vec<usize> = (0..events.len()).filter(|&i| instant(events[i]).is_some()).collect();
+    idx.sort_by(|&i, &j| cmp_nombre(instant(events[i]).unwrap(), instant(events[j]).unwrap()));
     let departs: Vec<usize> = idx.iter().copied().filter(|&i| {
-        let e = &events[i];
+        let e = events[i];
         chaine(a(e, "type")) == Some("batch-started") && est_objet(a(e, "batch")) && chaine(a(a(e, "batch"), "id")).is_some()
     }).collect();
     let mut decisions: HashMap<String, f64> = HashMap::new();
@@ -62,17 +62,17 @@ fn lot_de<'a>(events: &'a [Valeur], partie: &Valeur, batch_id: Option<&str>) -> 
         }
     }
     let mien = if let Some(bid) = batch_id {
-        departs.iter().copied().filter(|&i| chaine(a(a(&events[i], "batch"), "id")) == Some(bid)).last()
+        departs.iter().copied().filter(|&i| chaine(a(a(events[i], "batch"), "id")) == Some(bid)).last()
     } else {
-        let de_part: Vec<usize> = departs.iter().copied().filter(|&i| jsval::strict_eq(a(a(&events[i], "identity"), "part"), partie)).collect();
+        let de_part: Vec<usize> = departs.iter().copied().filter(|&i| jsval::strict_eq(a(a(events[i], "identity"), "part"), partie)).collect();
         let mut m: Option<usize> = None;
         for i in de_part {
-            let id = chaine(a(a(&events[i], "batch"), "id")).unwrap();
+            let id = chaine(a(a(events[i], "batch"), "id")).unwrap();
             let d = *decisions.get(id).unwrap_or(&0.0);
             let mieux = match m {
                 None => true,
                 Some(j) => {
-                    let jd = *decisions.get(chaine(a(a(&events[j], "batch"), "id")).unwrap()).unwrap_or(&0.0);
+                    let jd = *decisions.get(chaine(a(a(events[j], "batch"), "id")).unwrap()).unwrap_or(&0.0);
                     d >= jd
                 }
             };
@@ -80,7 +80,7 @@ fn lot_de<'a>(events: &'a [Valeur], partie: &Valeur, batch_id: Option<&str>) -> 
         }
         m
     }?;
-    let e = &events[mien];
+    let e = events[mien];
     let b = chaine(a(a(e, "batch"), "id")).unwrap().to_string();
     let t0 = instant(e)?;
     let part = if est_entier(partie) { partie.clone() } else {
@@ -88,18 +88,18 @@ fn lot_de<'a>(events: &'a [Valeur], partie: &Valeur, batch_id: Option<&str>) -> 
         if vrai(id) { a(id, "part").clone() } else if matches!(id, Valeur::Nul) { Valeur::Nul } else { Valeur::Indefini }
     };
     let mut fin = f64::INFINITY;
-    if let Some(&s) = departs.iter().find(|&&i| instant(&events[i]).unwrap() > t0 && chaine(a(a(&events[i], "batch"), "id")) != Some(b.as_str())) {
-        fin = instant(&events[s]).unwrap();
+    if let Some(&s) = departs.iter().find(|&&i| instant(events[i]).unwrap() > t0 && chaine(a(a(events[i], "batch"), "id")) != Some(b.as_str())) {
+        fin = instant(events[s]).unwrap();
     }
     if let Some(&ar) = idx.iter().find(|&&i| {
-        let ev = &events[i];
+        let ev = events[i];
         chaine(a(ev, "type")) == Some("batch-stopped-at-end") && instant(ev).unwrap() > t0 && instant(ev).unwrap() < fin
     }) {
-        fin = ariane_js::min(fin, instant(&events[ar]).unwrap() + FIN_APRES_ARRET_S * 1000.0);
-    } else if let Some(&rel) = idx.iter().find(|&&i| chaine(a(&events[i], "type")) == Some("relecture-debut") && chaine(a(&events[i], "batchId")) == Some(b.as_str())) {
-        fin = ariane_js::min(fin, instant(&events[rel]).unwrap());
+        fin = ariane_js::min(fin, instant(events[ar]).unwrap() + FIN_APRES_ARRET_S * 1000.0);
+    } else if let Some(&rel) = idx.iter().find(|&&i| chaine(a(events[i], "type")) == Some("relecture-debut") && chaine(a(events[i], "batchId")) == Some(b.as_str())) {
+        fin = ariane_js::min(fin, instant(events[rel]).unwrap());
     }
-    Some(Lot { ev: idx, b, t0, fin, part, src: events })
+    Some(Lot { ev: idx, b, t0, fin, part })
 }
 
 struct Acc { signaux: Vec<&'static str>, details: Vec<(String, Valeur)> }
@@ -118,10 +118,9 @@ fn bit_cut(c: f64) -> u64 { c.to_bits() }
 #[allow(clippy::too_many_lines)]
 pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     let ev = evenements(events);
-    let owned: Vec<Valeur> = ev.into_iter().cloned().collect();
     let partie = a(options, "partie");
     let batch = chaine(a(options, "batchId"));
-    let Some(lot) = lot_de(&owned, partie, batch) else {
+    let Some(lot) = lot_de(&ev, partie, batch) else {
         return jsval::o(vec![
             ("version", jsval::s("correction-liste-1")),
             ("trouve", jsval::b(false)),
@@ -136,7 +135,7 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     let mut cibles_ordre: Vec<f64> = vec![];
     let mut cibles: HashMap<u64, f64> = HashMap::new();
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("gcv1-shadow-observed") && chaine(a(e, "batchId")) == Some(lot.b.as_str()) && de_partie(e, part) {
             let c = cut_de(e).unwrap();
             let k = bit_cut(c);
@@ -146,7 +145,7 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
         }
     }
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("capture-abandoned") && chaine(a(e, "reason")) == Some("depart-sur-vert") && de_partie(e, part) {
             let t = instant(e).unwrap();
             if t >= lot.t0 && t <= lot.t0 + DEPART_VERT_S * 1000.0 {
@@ -156,7 +155,7 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     }
     let mut poses: HashMap<u64, f64> = HashMap::new();
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         let t = instant(e).unwrap();
         if chaine(a(e, "type")) == Some("esv-observation") && chaine(a(e, "kind")) == Some("write") && t >= lot.t0 && t < lot.fin {
             if let Some(st) = nombre(a(e, "status")) {
@@ -173,7 +172,7 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     }
     let mut passe: HashMap<u64, usize> = HashMap::new();
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("passe-differes-ecriture") && chaine(a(e, "resultat")) == Some("ecrit")
             && (chaine(a(e, "batchId")) == Some(lot.b.as_str()) || chaine(a(e, "lotId")) == Some(lot.b.as_str()))
             && de_partie(e, part) && instant(e).unwrap() >= lot.t0
@@ -194,13 +193,13 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     };
     let mut garde: HashMap<u64, usize> = HashMap::new();
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("garde-apres-differe") && chaine(a(e, "batchId")) == Some(lot.b.as_str()) && de_partie(e, part) {
             if let Some(c) = cut_de(e) { garde.insert(bit_cut(c), i); }
         }
     }
     for c in differes.iter().copied() {
-        let sh = shadow.get(&bit_cut(c)).map(|&i| &owned[i]);
+        let sh = shadow.get(&bit_cut(c)).map(|&i| ev[i]);
         let l = sh.map_or(&Valeur::Indefini, |e| a(e, "lotObservation"));
         let cmd = a(l, "command");
         let motif = if garde.contains_key(&bit_cut(c)) {
@@ -215,12 +214,12 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
         touche(c, &mut sig, &mut ordre_sig, "differe", Some(jsval::o(vec![("motif", motif)])));
     }
     for (&k, &i) in &passe {
-        let e = &owned[i];
+        let e = ev[i];
         let c = poses_cut(k);
         touche(c, &mut sig, &mut ordre_sig, "passe-ecrite", Some(jsval::o(vec![("decalMm", arr1(max_decal(a(e, "decal"))))])));
     }
     for c in poses.values().copied() {
-        let sh = shadow.get(&bit_cut(c)).map(|&i| &owned[i]);
+        let sh = shadow.get(&bit_cut(c)).map(|&i| ev[i]);
         let l = sh.map_or(&Valeur::Indefini, |e| a(e, "lotObservation"));
         let cmd = a(l, "command");
         let appuis = if let Some(t) = jsval::comme_liste(a(l, "anchorsUsed")) {
@@ -244,7 +243,7 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
         }
     }
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("garde-apres-differe-suivant") && chaine(a(e, "batchId")) == Some(lot.b.as_str()) && de_partie(e, part) {
             if let Some(c) = cut_de(e) {
                 if poses.contains_key(&bit_cut(c)) {
@@ -259,7 +258,7 @@ pub(crate) fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     }
     let hors = vrai(a(options, "relectureHorsLot"));
     for &i in &lot.ev {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("relecture-ombre")
             && (chaine(a(e, "batchId")) == Some(lot.b.as_str()) || chaine(a(e, "lotId")) == Some(lot.b.as_str()))
             && de_partie(e, part) && chaine(a(e, "verdict")) == Some("je corrigerais") && chaine(a(e, "action")) != Some("corrige")
@@ -514,13 +513,13 @@ pub(crate) fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
 /// Couverture de l'Aurore (`couverture` de `src/correction-liste.js`), gardée d'un bloc face au source.
 #[allow(clippy::too_many_lines)]
 pub(crate) fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
-    let owned: Vec<Valeur> = jsval::elements(events).into_iter().cloned().collect();
-    let mut idx: Vec<usize> = (0..owned.len()).filter(|&i| instant(&owned[i]).is_some()).collect();
-    idx.sort_by(|&i, &j| cmp_nombre(instant(&owned[i]).unwrap(), instant(&owned[j]).unwrap()));
+    let ev = jsval::elements(events);
+    let mut idx: Vec<usize> = (0..ev.len()).filter(|&i| instant(ev[i]).is_some()).collect();
+    idx.sort_by(|&i, &j| cmp_nombre(instant(ev[i]).unwrap(), instant(ev[j]).unwrap()));
     let max = nombre(a(options, "max")).filter(|m| est_entier(&jsval::n(*m)) && *m > 0.0).unwrap_or(16.0) as usize;
     let mut vus: Vec<(String, f64, String)> = vec![];
     for &i in &idx {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("batch-started") {
             let id = chaine(a(a(e, "batch"), "id"));
             let part = a(a(e, "identity"), "part");
@@ -535,7 +534,7 @@ pub(crate) fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
     let mut debuts: HashMap<String, (Vec<String>, f64)> = HashMap::new();
     let mut fins: HashMap<String, usize> = HashMap::new();
     for &i in &idx {
-        let e = &owned[i];
+        let e = ev[i];
         if chaine(a(e, "type")) == Some("correction-debut") {
             if let Some(id) = chaine(a(e, "correctionId")) {
                 if est_tableau(a(e, "batchIds")) {
@@ -552,7 +551,7 @@ pub(crate) fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
     let mut traites: HashMap<String, (String, String, Option<String>, Vec<String>, f64)> = HashMap::new();
     for (id, &i) in &fins {
         let Some((bids, _)) = debuts.get(id) else { continue };
-        let f = &owned[i];
+        let f = ev[i];
         let raison = chaine(a(f, "raison")).unwrap_or("");
         if raison == "liste-finie" {
             for b in bids { exclus.insert(b.clone(), (id.clone(), raison.to_string(), instant(f).unwrap_or(0.0))); }
@@ -574,7 +573,7 @@ pub(crate) fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
     let mut ordre_parts: Vec<f64> = vec![];
     for (bid, partie, debut) in &vus {
         let mut opt = vec![("batchId".into(), jsval::s(bid.clone())), ("population".into(), jsval::b(true))];
-        let l = construire(&jsval::tab(owned.clone()), &Valeur::Objet(opt.clone()));
+        let l = construire(events, &Valeur::Objet(opt.clone()));
         if !matches!(a(&l, "trouve"), Valeur::Booleen(true)) { continue; }
         let part = nombre(a(&l, "partie")).unwrap_or(*partie);
         let mut liste = l.clone();

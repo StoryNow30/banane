@@ -1,6 +1,6 @@
 # CH-064-E — État, journal, listes (rapport)
 
-Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` (feature `autonome`) et bras `100..=149` du cœur. Le texte des nombres est `ariane_js::nombre::nombre_en_chaine` (`String(x)`), l'implémentation unique du chef. La copie de Ryū a été retirée. Mémoire linéaire du binaire propre plafonnée à 512 Mio, et relâchée par réinstanciation de l'instance. Les symboles `vba_*` n'existent qu'avec `autonome`, désactivée par défaut, pour ne pas doubler l'ABI du cœur.
+Crate `ariane-rs/crates/ariane-etat`, membre de l'espace, binaire propre `wasm32-unknown-unknown` (feature `autonome`) et bras `100..=149` du cœur. Le texte des nombres est `ariane_js::nombre::nombre_en_chaine` (`String(x)`), l'implémentation unique du chef. La copie de Ryū a été retirée. Mémoire linéaire du binaire propre plafonnée à 256 Mio, comme le cœur du paquet, et relâchée par réinstanciation de l'instance. Les symboles `vba_*` n'existent qu'avec `autonome`, désactivée par défaut, pour ne pas doubler l'ABI du cœur.
 
 Référence : le JavaScript de cette branche. Chromium du banc : Chrome/156. 15 répétitions après 3 d'échauffement, médiane et P90 (indice `floor(p·n)`).
 
@@ -36,11 +36,13 @@ Le WASM est plus lent : la traversée coûte plus que le calcul. Sur ce journal,
 | | Avant | Au plus haut | Après |
 |---|---:|---:|---:|
 | Linéaire WASM, banc (36 983 événements) | 1 114 112 o (1,06 Mio) | 70 713 344 o (67,4 Mio) | 1 114 112 o après réinstanciation |
-| Linéaire WASM, corpus entier (rejeu après `nombre_en_chaine`) | — | 482 803 712 o (460,4 Mio) | 9 568 256 o (9,125 Mio), 15 réinstanciations |
+| Linéaire WASM, corpus entier (plafond 256 Mio) | — | 179 306 496 o (171 Mio) | 9 568 256 o (9,125 Mio), 15 réinstanciations |
 | Tas JS (banc, tas utile) | 83 254 372 o | — | 120 629 200 o (la charge reste en JS) |
 | RSS natif, un appel `construire` | — | HWM 112 728 Kio | RSS 109 384 Kio |
 
-Le plafond 512 Mio n'a pas été atteint. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve : elle ne s'accumule pas d'un appel à l'autre. Le banc Chromium du tableau de temps est celui du binaire précédent ; il n'a pas été refait. Le rejeu du corpus, lui, est celui du binaire qui appelle `nombre_en_chaine`.
+Le pic de 482 803 712 octets venait de `couverture` sur le journal de 131 377 événements : chaque lot recopait le journal entier, et `construire` le recopiait encore. Ces recopies sont retirées. Les sorties ne changent pas. Le pic est maintenant `journal` sur ce même journal (131 377 événements, 1 809 enregistrements) : 179 306 496 octets, sous le plafond de 256 Mio.
+
+Rejeu au plafond du paquet (268 435 456 octets) : 227 appels, 0 rejeu JS, 0 écart. Rien n'est « sans gain » par dépassement. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve. Le banc Chromium du tableau de temps est celui du binaire précédent ; il n'a pas été refait.
 
 ## Qualité (ÉTABLI)
 
