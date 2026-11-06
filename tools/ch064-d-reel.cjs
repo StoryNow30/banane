@@ -122,6 +122,22 @@ function*cas(modules,{max=Infinity}={}){
    if(c?.rails?.left&&c?.rails?.right&&ev.reel){const ini={left:c.rails.left.positionSceneRelative,right:c.rails.right.positionSceneRelative};
     let fin;try{fin={left:depuisEcart(c.rails.left,{lat:(ev.reel.deplacementMm??0.4),vert:0.3}),right:depuisEcart(c.rails.right,{lat:-(ev.reel.deplacementMm??0.4)/2,vert:-0.2})};}catch{fin=null;}
     yield {id:'reel-rm-resumer-'+(k++),module:'reglesMetier',f:'resumer',args:[{identity:ev.identity,decision:{stage:ev.reel.stage,reason:k%5?null:'no-anchor'},action:ev.reel.action,valide:ev.aurait==='valider'?true:ev.aurait==='deja-differe'?false:undefined,surface:ev.surface,initiale:ini,finale:fin}]};}}}
+ if(veut('lotDecision')||veut('hauteur')||veut('fauxVert')){
+  /* Décision du lot EN CHAÎNE, comme le service worker : nuages réels d'une session, par partie et par cut ; science GCV1 du cut
+   * (entrée), appuis = décisions précédentes qui posent (rememberAnchor). Le JS du tronc fait avancer la chaîne ; chaque appel est un cas. */
+  const L=require('../src/lot-decision.js'),S=require('../src/gcv1-shadow.js'),H=require('../src/hauteur-apprise.js'),FV=require('../src/faux-vert-ombre.js');
+  const {nuages}=require('./ch064-nuages.cjs'),lim=Number(process.env.CH064D_LOT_MAX||400),parPartie=new Map();
+  for(const c of nuages(lim)){const k=c.identity?.frameId+'|'+c.identity?.part;if(!parPartie.has(k))parPartie.set(k,[]);parPartie.get(k).push(c);}
+  const OPTS=[undefined,{hauteurApprise:{actif:true},fauxVertOmbre:{actif:true},ombreVerticale:{actif:true,mm:3.6}},{framed:false,gap:6},{crossing:false,lowGaugeGuardMm:null}];
+  let k=0;
+  for(const [,cs] of parPartie){cs.sort((a,b)=>a.identity.cut-b.identity.cut);const anchors=[];
+   for(const c of cs){k++;const science=S.scientificProposeBoth(c),options=OPTS[k%OPTS.length];
+    const args={capture:c,science,anchors:structuredClone(anchors),Shadow:'\u0000shadow',...(options?{options}:{})};
+    if(veut('lotDecision'))yield {id:'reel-lot-p'+c.identity.part+'-c'+c.identity.cut,module:'lotDecision',f:'decideCut',args:[args]};
+    const d=L.decideCut({capture:c,science,anchors,Shadow:S,...(options?{options}:{})});
+    if(d.positions){if(veut('hauteur'))yield {id:'reel-hauteur-'+k,module:'hauteur',f:'evaluer',args:[{capture:c,science,decision:d,reglage:k%3?undefined:{plafondMm:3,etages:['first-pass','window','choice','crossing']}}]};
+     if(veut('fauxVert'))yield {id:'reel-fv-'+k,module:'fauxVert',f:'evaluer',args:[{capture:c,science,decision:d,reglage:k%4?undefined:{dzMinMm:2,epaisseurMinMm:5}}]};}
+    if(d.anchor&&d.positions)L.rememberAnchor(anchors,{identity:c.identity,positions:d.positions,stage:d.stage});}}}
  if(veut('shadow')){
   /* Science GCV1 sur les nuages réels complets ; un sur cinq avec réservoir (H1, H2 de la GCV2). */
   const {nuages}=require('./ch064-nuages.cjs');let k=0;

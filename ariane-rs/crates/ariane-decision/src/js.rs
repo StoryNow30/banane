@@ -414,3 +414,35 @@ mod essais_fixed {
         }
     }
 }
+
+/// `x ** y` / `Math.pow` du moteur JS qui exécute (import WASM, comme les transcendantes : les bits de V8 changent d'une version
+/// à l'autre). En natif (essais `cargo test`, programme de l'option B) : `powf` de la bibliothèque, NON garanti identique à V8.
+#[cfg(target_arch = "wasm32")]
+pub fn pow(x: f64, y: f64) -> f64 {
+    #[link(wasm_import_module = "env")]
+    extern "C" { fn js_pow(x: f64, y: f64) -> f64; }
+    unsafe { js_pow(x, y) }
+}
+#[cfg(not(target_arch = "wasm32"))]
+#[allow(clippy::disallowed_methods)]
+pub fn pow(x: f64, y: f64) -> f64 { x.powf(y) }
+
+/// `t.slice(0, k)` (k : ToIntegerOrInfinity ; négatif : depuis la fin).
+pub fn slice_debut(len: usize, k: f64) -> usize {
+    let k = if k.is_nan() { 0.0 } else { k.trunc() };
+    if k < 0.0 { ((len as f64) + k).max(0.0) as usize } else { (k.min(len as f64)) as usize }
+}
+/// `C.distance(a,b)` générique : `Math.hypot(...a.map((x,i)=>x-b[i]))` (trou ou absent : NaN).
+pub fn distance_v(a: &V, b_: &V) -> R<f64> {
+    let (Some(ta), Some(tb)) = (elems(a), elems(b_)) else { return hd("distance : tableaux attendus") };
+    let mut d = vec![];
+    for (i, x) in ta.iter().enumerate() {
+        let xa = match x { None => f64::NAN, Some(V::Nombre(v)) => *v, Some(V::Indefini) => f64::NAN, _ => return hd("distance : non numérique") };
+        let xb = match tb.get(i) { None | Some(None) => f64::NAN, Some(Some(V::Nombre(v))) => *v, Some(Some(V::Indefini)) => f64::NAN, _ => return hd("distance : non numérique") };
+        d.push(if x.is_none() { f64::NAN } else { xa - xb });
+    }
+    Ok(ariane_js::hypot(&d))
+}
+/// `r1` sans `+0` : `Number.isFinite(v)?Math.round(v*10)/10:null`.
+pub fn r1v(x: f64) -> V { if x.is_finite() { n(ariane_js::round(x * 10.0) / 10.0) } else { nul() } }
+pub fn um(x: f64) -> f64 { ariane_js::round(x * 1e6) / 1e6 }

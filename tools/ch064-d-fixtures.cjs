@@ -11,14 +11,15 @@ const fs=require('node:fs'),path=require('node:path'),v8=require('node:v8'),cryp
 const RACINE=path.resolve(__dirname,'..');
 const MODULES={critere:'src/relecture-critere.js',signal:'src/relecture-signal.js',gardeApresDiffere:'src/garde-apres-differe.js',
  gardePasseAppuis:'src/garde-passe-appuis.js',relectureOmbre:'src/relecture-ombre.js',reglesMetier:'src/regles-metier.js',
- crossing:'src/level-crossing.js',shadow:'src/gcv1-shadow.js',lotDecision:'src/lot-decision.js',voieB1:'src/voie-b1-ecart.js',gcv2L1:'src/gcv2-l1.js'};
+ crossing:'src/level-crossing.js',shadow:'src/gcv1-shadow.js',hauteur:'src/hauteur-apprise.js',fauxVert:'src/faux-vert-ombre.js',lotDecision:'src/lot-decision.js',voieB1:'src/voie-b1-ecart.js',gcv2L1:'src/gcv2-l1.js'};
 const CROCHET=process.env.CH064D_FIXTURES;
 if(CROCHET){
  /* Crochet, dans le processus de l'essai. */
- const enr=[],vus=new Set();let refus=0;
+ const enr=[],vus=new Set();let refus=0;const SH=require(path.join(RACINE,'src/gcv1-shadow.js'));
+ const marquer=args=>args.map(x=>x&&typeof x==='object'&&!Array.isArray(x)&&x.Shadow===SH?{...x,Shadow:'\u0000shadow'}:x);
  for(const [nom,rel] of Object.entries(MODULES)){let M;try{M=require(path.join(RACINE,rel));}catch{continue;}
   for(const [f,fn] of Object.entries(M)){if(typeof fn!=='function')continue;
-   M[f]=function(...args){let b=null;try{b=v8.serialize(args);}catch{refus++;}
+   M[f]=function(...args){let b=null;try{b=v8.serialize(marquer(args));}catch{refus++;}
     if(b){const h=crypto.createHash('sha1').update(nom+'\0'+f+'\0').update(b).digest('hex');if(!vus.has(h)){vus.add(h);enr.push({module:nom,f,args:b});}}
     return fn.apply(this,args);};}}
  process.on('exit',()=>{fs.writeFileSync(CROCHET,v8.serialize({enr,refus}));});

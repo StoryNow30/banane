@@ -11,6 +11,8 @@ pub mod ombre;
 pub mod crossing;
 pub mod metier;
 pub mod shadow;
+pub mod aides;
+pub mod lot;
 #[cfg(test)]
 mod essais;
 
@@ -26,6 +28,9 @@ pub const RELECTURE_OMBRE: u32 = 54;
 pub const REGLES_METIER: u32 = 55;
 pub const LEVEL_CROSSING: u32 = 56;
 pub const GCV1_SHADOW: u32 = 57;
+pub const HAUTEUR: u32 = 58;
+pub const FAUX_VERT: u32 = 59;
+pub const LOT_DECISION: u32 = 60;
 /// Sonde de sémantique (Number::toString) : `{f:"nombreChaine", a:[[x…]]}` → chaînes.
 pub const SONDE: u32 = 99;
 
@@ -40,6 +45,9 @@ pub fn appeler(fonction: u32, entree: &Valeur) -> R<Valeur> {
         REGLES_METIER => metier::appeler(&a),
         LEVEL_CROSSING => crossing::appeler(&a),
         GCV1_SHADOW => shadow::appeler(&a, js::g(entree, "etat")),
+        HAUTEUR => aides::appeler("hauteur", &a),
+        FAUX_VERT => aides::appeler("fauxVert", &a),
+        LOT_DECISION => lot::appeler(&a, entree),
         SONDE if a.f == "nombreChaine" => Ok(Valeur::Tableau(js::presents(a.arg(0)).iter().map(|x| js::chaine(x).map(|c| Some(js::s(&c)))).collect::<R<Vec<_>>>()?)),
         _ => js::hd("ariane-decision : fonction inconnue"),
     }
