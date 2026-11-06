@@ -3470,3 +3470,9 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
   - les fichiers gelés (`src/geometry.js`, `vendor/lidar.js`) ne changent de comportement que par des patchs prouvés identiques au bit près ;
   - « 100 % » : le calcul, plus tout ce qui peut techniquement passer en Rust dans une extension Chrome.
 - Le numéro suivant est D-297.
+
+## D-297 — CH-065 : géométrie élaguée du lot oui, geometry.js et lidar-direct en attente (opérateur, 06/11 soir)
+- Intégrés au tronc : `geometrie-elaguee-lot` et `mediane-exacte` (`src/geometry-candidate-v1.js`, non gelé), environ −29 s par journée (mesuré par CH-065, sorties identiques). Avec eux, `garde-empreintes.patch` (gardes d'empreintes sans les blocs déclarés de CH-065).
+- `geometrie-elaguee-v46` (`src/geometry.js`, gelé) : non. Gain d'environ 2 s, insuffisant pour toucher un fichier gelé.
+- `lidar-direct` (`vendor/lidar.js`, gelé) : accord, sous condition du relevé de console d'ESV (`tools/ch065-releve-accesseur.js`) avec `three.revision` = « 124 » et une lecture directe possible sur tous les nœuds. Sinon, pas d'intégration.
+- La chaîne `CONTRACT.geometrySha256` n'est pas changée.

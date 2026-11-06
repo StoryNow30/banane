@@ -1,0 +1,68 @@
+{
+ "date": "2026-11-06T18:43:35.357Z",
+ "chromium": "153.0.8010.12",
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+ "coeurs": 4,
+ "repetitions": 15,
+ "nuagesReels": 4258,
+ "lidar": {
+  "nuages": 8,
+  "pointsParVue": 505000,
+  "noeuds": 19,
+  "rapide": {
+   "msParVue": {
+    "origine": {
+     "mediane": 222.2,
+     "p90": 283.3,
+     "min": 191.1,
+     "n": 120
+    },
+    "patche": {
+     "mediane": 74.7,
+     "p90": 112.7,
+     "min": 65.9,
+     "n": 120
+    }
+   },
+   "gainMsParVue": 147.5,
+   "tasAlloueOctetsParVue": {
+    "origine": 28412080,
+    "patche": 27385504
+   },
+   "tasRetenuOctets": {
+    "origine": 7316,
+    "patche": 10340
+   },
+   "sortiesIdentiques": 8
+  },
+  "reference": {
+   "msParVue": {
+    "origine": {
+     "mediane": 834.8,
+     "p90": 871.1,
+     "min": 789.1,
+     "n": 120
+    },
+    "patche": {
+     "mediane": 659.1,
+     "p90": 680.7,
+     "min": 641,
+     "n": 120
+    }
+   },
+   "gainMsParVue": 175.7,
+   "tasAlloueOctetsParVue": {
+    "origine": 19762156,
+    "patche": 11151696
+   },
+   "tasRetenuOctets": {
+    "origine": 1448,
+    "patche": 1900
+   },
+   "sortiesIdentiques": 8
+  }
+ },
+ "geometrie": {
+  "nuages": 200
+ }
+}

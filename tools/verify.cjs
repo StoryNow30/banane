@@ -54,8 +54,13 @@ for(const file of runtime)run(['--check',file]);
 const previousHashes=JSON.parse(fs.readFileSync(path.join(audit,'v4.4.0-frozen-engine-hashes.json')));
 const engineBaseline=JSON.parse(fs.readFileSync(path.join(audit,'v4.6.0-engine-baseline.json')));
 const sha=f=>crypto.createHash('sha256').update(fs.readFileSync(path.join(root,f))).digest('hex');
+/* CH-065 (D-293) : un fichier gelé peut porter les patchs DÉCLARÉS de CH-065 (lecture directe du LiDAR, recherche élaguée ; parité au bit,
+ * chantiers/CH-065/rapport.md). Ces blocs retirés, il doit redonner l'empreinte 4.4.0 octet pour octet : le fichier historique n'est pas modifié,
+ * toute autre dérive reste un échec, et un fichier à moitié patché aussi (`versions` lève). */
+const CH065=require(path.join(root,'chantiers/CH-065/appliquer.cjs'));
+const shaGele=f=>CH065.BLOCS[f]?crypto.createHash('sha256').update(CH065.versions(root,f).origine).digest('hex'):sha(f);
 const frozenFiles=Object.keys(previousHashes).filter(f=>f!=='src/engine.js');
-const geometryUnchanged=frozenFiles.every(f=>sha(f)===previousHashes[f]);
+const geometryUnchanged=frozenFiles.every(f=>shaGele(f)===previousHashes[f]);
 if(!geometryUnchanged){fs.writeFileSync(path.join(audit,'verification.txt'),log.join(''));throw Error('Le placement, les transformations de coordonnées ou le lecteur LiDAR partagé ont changé : ils restent gelés à la référence 4.4.0.');}
 const baselineKeepsHistory=frozenFiles.every(f=>engineBaseline.unchangedSince440?.[f]===previousHashes[f])
   &&engineBaseline.engine?.previousHash440===previousHashes['src/engine.js'];

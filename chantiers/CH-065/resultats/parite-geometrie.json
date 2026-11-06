@@ -1,0 +1,154 @@
+{
+ "total": {
+  "nuages": 4647,
+  "ecarts": 0,
+  "exceptions": 0
+ },
+ "parties": [
+  {
+   "date": "2026-11-06T13:54:00.862Z",
+   "collections": [
+    "2026-11-04_v5_lot-orbite"
+   ],
+   "nuages": 1385,
+   "ecarts": 0,
+   "premiersEcarts": [],
+   "statuts": {
+    "candidate / undefined": 1247,
+    "unresolved / Plusieurs placements concurrents du champignon sont géométriquement plausibles.": 277,
+    "unresolved / Aucun point LiDAR disponible.": 730,
+    "unresolved / Flanc interne insuffisamment observé.": 183,
+    "unresolved / Grand déplacement isolé : le second rail ne confirme pas ce placement.": 77,
+    "unresolved / Plan de roulement non estimable.": 106,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé.": 32,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 4,
+    "unresolved / Intersection hors de la fenêtre expérimentale.": 19,
+    "candidate / Nappes dispersées.": 24,
+    "candidate / Confiance heuristique faible.": 21,
+    "unresolved / Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 23,
+    "unresolved / Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 6,
+    "unresolved / Trop peu de points autour du champignon.": 9,
+    "unresolved / Plan de roulement insuffisamment observé.": 7,
+    "unresolved / Plan de roulement insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 3,
+    "unresolved / Confiance heuristique faible.": 2
+   },
+   "exceptions": 0,
+   "sha": {
+    "reference": "df268153e2e907a2b3a5cb635d5814ad4e158c5559b3b0fd7a2f739bf3aeb1fb",
+    "patche": "df268153e2e907a2b3a5cb635d5814ad4e158c5559b3b0fd7a2f739bf3aeb1fb"
+   },
+   "ms": {
+    "reference": 1643922,
+    "patche": 708381
+   }
+  },
+  {
+   "date": "2026-11-06T13:54:00.872Z",
+   "collections": [
+    "2026-11-04_v5_constellation"
+   ],
+   "nuages": 1272,
+   "ecarts": 0,
+   "premiersEcarts": [],
+   "statuts": {
+    "unresolved / Flanc interne insuffisamment observé.": 979,
+    "candidate / undefined": 956,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé.": 40,
+    "unresolved / Plusieurs placements concurrents du champignon sont géométriquement plausibles.": 239,
+    "unresolved / Grand déplacement isolé : le second rail ne confirme pas ce placement.": 27,
+    "unresolved / Plan de roulement non estimable.": 31,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 2,
+    "unresolved / Intersection hors de la fenêtre expérimentale.": 4,
+    "unresolved / Aucun point LiDAR disponible.": 30,
+    "unresolved / Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 17,
+    "unresolved / Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 13,
+    "candidate / Confiance heuristique faible.": 40,
+    "unresolved / Plan de roulement insuffisamment observé.": 7,
+    "unresolved / Trop peu de points autour du champignon.": 153,
+    "candidate / Nappes dispersées.": 1,
+    "unresolved / Confiance heuristique faible.": 2,
+    "unresolved / Contour du profil absent.": 2,
+    "unresolved / Plan de roulement insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 1
+   },
+   "exceptions": 0,
+   "sha": {
+    "reference": "5707009825186013937eec8b18cc3ae0dcaf3806f19fa38f92b652b5b84e67ec",
+    "patche": "5707009825186013937eec8b18cc3ae0dcaf3806f19fa38f92b652b5b84e67ec"
+   },
+   "ms": {
+    "reference": 1186383,
+    "patche": 464225
+   }
+  },
+  {
+   "date": "2026-11-06T13:54:00.874Z",
+   "collections": [
+    "2026-11-05"
+   ],
+   "nuages": 865,
+   "ecarts": 0,
+   "premiersEcarts": [],
+   "statuts": {
+    "unresolved / Flanc interne insuffisamment observé.": 875,
+    "candidate / undefined": 664,
+    "unresolved / Grand déplacement isolé : le second rail ne confirme pas ce placement.": 33,
+    "unresolved / Plusieurs placements concurrents du champignon sont géométriquement plausibles.": 39,
+    "candidate / Confiance heuristique faible.": 45,
+    "unresolved / Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 17,
+    "candidate / Nappes dispersées.": 1,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé.": 19,
+    "unresolved / Confiance heuristique faible.": 2,
+    "unresolved / Intersection hors de la fenêtre expérimentale.": 9,
+    "unresolved / Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 15,
+    "unresolved / Trop peu de points autour du champignon.": 4,
+    "unresolved / Aucun point LiDAR disponible.": 4,
+    "unresolved / Plan de roulement insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 3
+   },
+   "exceptions": 0,
+   "sha": {
+    "reference": "ab0233831925970fac90899cf5b9c01c4ec5c49520de42145cf9abcfc4cd20d1",
+    "patche": "ab0233831925970fac90899cf5b9c01c4ec5c49520de42145cf9abcfc4cd20d1"
+   },
+   "ms": {
+    "reference": 344275,
+    "patche": 164376
+   }
+  },
+  {
+   "date": "2026-11-06T13:54:00.863Z",
+   "collections": [
+    "2026-11-06"
+   ],
+   "nuages": 1125,
+   "ecarts": 0,
+   "premiersEcarts": [],
+   "statuts": {
+    "candidate / undefined": 544,
+    "unresolved / Flanc interne insuffisamment observé.": 1200,
+    "unresolved / Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 26,
+    "unresolved / Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 43,
+    "unresolved / Plan de roulement non estimable.": 169,
+    "unresolved / Plusieurs placements concurrents du champignon sont géométriquement plausibles.": 88,
+    "unresolved / Trop peu de points autour du champignon.": 6,
+    "unresolved / Intersection hors de la fenêtre expérimentale.": 17,
+    "unresolved / Grand déplacement isolé : le second rail ne confirme pas ce placement.": 23,
+    "candidate / Confiance heuristique faible.": 41,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé.": 47,
+    "candidate / Nappes dispersées.": 15,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 4,
+    "unresolved / Aucun point LiDAR disponible.": 12,
+    "unresolved / Plan de roulement insuffisamment observé.": 14,
+    "unresolved / Plan de roulement insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 1
+   },
+   "exceptions": 0,
+   "sha": {
+    "reference": "043826f6bfd58a3fcb43f94109c5ba84984da9be31189a7accbad9bdb7465568",
+    "patche": "043826f6bfd58a3fcb43f94109c5ba84984da9be31189a7accbad9bdb7465568"
+   },
+   "ms": {
+    "reference": 723217,
+    "patche": 332342
+   }
+  }
+ ]
+}

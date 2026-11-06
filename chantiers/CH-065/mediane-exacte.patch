@@ -1,0 +1,20 @@
+--- a/src/geometry-candidate-v1.js
++++ b/src/geometry-candidate-v1.js
+@@ -2,7 +2,16 @@
+  if(typeof module==='object')module.exports=api;else root.BananeGeometry3=api;
+ })(typeof globalThis!=='undefined'?globalThis:this,function(C){
+  'use strict';
+- const median=a=>{if(!a.length)return NaN;const b=a.slice().sort((a,b)=>a-b),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
++ /* CH-065 : médiane exacte plus rapide (même valeur au bit près). Le tri d'origine, slice().sort((a,b)=>a-b), est remplacé par le tri
++  * numérique natif d'une copie Float64Array quand il range les valeurs dans le même ordre : tableau ordinaire de nombres, sans NaN (le
++  * comparateur rend NaN, l'ordre d'origine dépend alors de l'algorithme), et sans mélange de -0 et +0 (égaux pour le comparateur, le tri
++  * stable garde leur ordre d'entrée, le tri natif met -0 d'abord). Dans ces conditions, deux valeurs égales pour le comparateur sont le même
++  * nombre : les éléments du milieu sont identiques au bit. Sinon, le code d'origine. Parité : tests/ch065-mediane.test.cjs. */
++ const median=a=>{if(!a.length)return NaN;
++   if(Array.isArray(a)){let ok=true,pz=false,nz=false;
++     for(let k=0;k<a.length;k++){const x=a[k];if(typeof x!=="number"||x!==x){ok=false;break;}if(x===0){if(1/x<0)nz=true;else pz=true;}}
++     if(ok&&!(pz&&nz)){const b=Float64Array.from(a).sort(),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;}}
++   const b=a.slice().sort((a,b)=>a-b),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const DEFAULTS=Object.freeze({searchY:.08,searchZ:.04,grid:.003,minTop:15,minFace:6,
+    maxResidual:.004,minConfidence:55,topBand:.012,faceBand:.01,

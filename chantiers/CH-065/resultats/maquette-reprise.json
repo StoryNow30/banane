@@ -1,0 +1,619 @@
+{
+ "date": "2026-11-06T16:03:18.260Z",
+ "paquet": "ancien.zip",
+ "variantes": {
+  "ancien": {
+   "patchs": [],
+   "contratChange": false,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   }
+  },
+  "lidar": {
+   "patchs": [
+    "lidar-direct"
+   ],
+   "contratChange": false,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   }
+  },
+  "geometrie-lot": {
+   "patchs": [
+    "geometrie-elaguee-lot"
+   ],
+   "contratChange": false,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   }
+  },
+  "geometrie-v46": {
+   "patchs": [
+    "geometrie-elaguee-v46"
+   ],
+   "contratChange": false,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   }
+  },
+  "mediane": {
+   "patchs": [
+    "mediane-exacte"
+   ],
+   "contratChange": false,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   }
+  },
+  "tous": {
+   "patchs": [
+    "lidar-direct",
+    "geometrie-elaguee-lot",
+    "geometrie-elaguee-v46",
+    "mediane-exacte"
+   ],
+   "contratChange": false,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   }
+  },
+  "tous+contrat": {
+   "patchs": [
+    "lidar-direct",
+    "geometrie-elaguee-lot",
+    "geometrie-elaguee-v46",
+    "mediane-exacte"
+   ],
+   "contratChange": true,
+   "lotNeuf": {
+    "contrats": {
+     "vivant": "0000000000000000000000000000000000000000000000000000000000000000",
+     "lot": null,
+     "mode": "automatic-test"
+    },
+    "demarrage": "ok",
+    "etat": "STOPPED",
+    "poses": 1,
+    "traites": 3,
+    "differes": 0,
+    "notice": "Correction appliquée et relue dans la scène.",
+    "ecrituresServeur": 3,
+    "erreurs": []
+   },
+   "repriseSansRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Capture avant conservée, cible différente : pageId, cut, frameId",
+     "contrats": {
+      "vivant": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "ok",
+    "fin": {
+     "etat": "STOPPED",
+     "poses": 4,
+     "traites": 6,
+     "differes": 0,
+     "notice": "Correction appliquée et relue dans la scène."
+    },
+    "ecrituresApresReprise": 4,
+    "erreurs": []
+   },
+   "repriseApresRecharger": {
+    "avantMiseAJour": {
+     "pause": "ok",
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "ecrituresServeur": 2
+    },
+    "apresRelance": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Pause demandée, après l’action en cours.",
+     "contrats": {
+      "vivant": "0000000000000000000000000000000000000000000000000000000000000000",
+      "lot": "77f017669112a38b998a010f100ae681e7624ca864150bd592122a22422e7503",
+      "mode": "automatic-test"
+     }
+    },
+    "reprise": "Moteur GCV1 du lot indisponible ou incohérent : reprise refusée.",
+    "fin": {
+     "etat": "PAUSED",
+     "poses": 1,
+     "traites": 2,
+     "differes": 0,
+     "notice": "Moteur GCV1 du lot indisponible ou incohérent : reprise refusée."
+    },
+    "ecrituresApresReprise": 0,
+    "erreurs": []
+   }
+  }
+ }
+}
