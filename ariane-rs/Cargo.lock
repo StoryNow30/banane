@@ -3,12 +3,36 @@
 version = 4
 
 [[package]]
-name = "ariane-coeur"
+name = "ariane-capture"
 version = "0.0.0"
 dependencies = [
  "ariane-js",
+ "ariane-vba",
+]
+
+[[package]]
+name = "ariane-coeur"
+version = "0.0.0"
+dependencies = [
+ "ariane-capture",
+ "ariane-geometrie",
+ "ariane-js",
+ "ariane-vba",
+]
+
+[[package]]
+name = "ariane-geometrie"
+version = "0.0.0"
+dependencies = [
+ "ariane-capture",
+ "ariane-js",
+ "ariane-vba",
 ]
 
 [[package]]
 name = "ariane-js"
+version = "0.0.0"
+
+[[package]]
+name = "ariane-vba"
 version = "0.0.0"

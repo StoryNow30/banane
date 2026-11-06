@@ -54,7 +54,7 @@ tools/ch064-construire.cjs       cargo build --release --target wasm32-unknown-u
 tools/ch064-parite.cjs           banc de parité générique (§ 6)
 tools/ch064-sonde-math.cjs       sonde du § 1
 tools/ch064-suivi.cjs            cible mouvante : empreinte du fichier JS de référence de chaque port ; signale tout port dont le JS a bougé
-tests/ch064-*.test.cjs           essais Node (< 20 s) : codec, coquille, parité sur les fixtures ; « ignoré : cargo absent » si pas de chaîne Rust
+tools/ch064-essais.cjs           lanceur unique (cargo test, construction, sonde, VBA, parités) ; RIEN dans tests/ (décision de l'intégrateur, § E)
 ```
 Rien de généré n'est versionné (binaire et base64 refaits par l'outil). Dépendances Rust : aucune (si un crate devient nécessaire, ex. formatage `ryu-js`, je le dis avant de l'ajouter).
 
@@ -85,9 +85,37 @@ Mesuré sur le tronc (lignes ; « impur » = appels `chrome`, DOM, horloge, hasa
 - un module n'est déclaré « identique » que si le banc rend 100 % sur tout le corpus des collections du 04/11 et du 05/11 et sur les fixtures, en Node et dans Chromium, et si les essais JS du module passent contre la façade WASM.
 
 ## 7. Ce que je fais pendant ta relecture (outillage seulement, aucun module porté)
-`ariane-js` (hypot, round, max/min de V8 avec essais), `ariane-vba` + `coquille/vba.js` (aller-retour identique sur les enregistrements réels, coût mesuré), `ariane-coeur` minimal, `tools/ch064-construire.cjs`, `tools/ch064-parite.cjs` éprouvé sur une fonction témoin (aller-retour identité), essais `tests/ch064-*.test.cjs`. Données : clone sparse de `banane-data` hors dépôt (5 collections du 04 et du 05/11, 66 zips, 750 Mo). Puis jalon « ÉTAPE 1 CH-064 <sha> ».
+`ariane-js` (hypot, round, max/min de V8 avec essais), `ariane-vba` + `coquille/vba.js` (aller-retour identique sur les enregistrements réels, coût mesuré), `ariane-coeur` minimal, `tools/ch064-construire.cjs`, `tools/ch064-parite.cjs` éprouvé sur une fonction témoin (aller-retour identité), lanceur `tools/ch064-essais.cjs`. Données : clone sparse de `banane-data` hors dépôt (5 collections du 04 et du 05/11, 66 zips, 750 Mo). Puis jalon « ÉTAPE 1 CH-064 <sha> ».
 
-## Questions à l'intégrateur
-1. Valides-tu l'ordre du § 5 (capture puis géométrie en étape 2) et le format VBA plutôt que JSON ?
-2. Transcendantes appelées en JS par import (§ 1 : elles varient d'une version de V8 à l'autre, un portage figerait une version) et référence de parité = Chromium, Node en plus : d'accord ?
-3. Le binaire n'est pas versionné et les essais `ch064` s'ignorent sans `cargo` : convient-il au `verify` ?
+## Réponses de l'intégrateur (06/11) et compléments au plan
+Validé : ordre du § 5, VBA (sous condition : spécification écrite, `chantiers/CH-064/vba.md`, et aller-retour sans perte prouvé sur TOUS les enregistrements réels), transcendantes importées du JS, Chromium comme référence et Node contrôlé en plus. **Changement** : rien dans `tests/` (le verify de production ne dépend ni de cargo ni du binaire). Les essais Rust sont dans `ariane-rs/` (`cargo test`), les bancs dans `tools/ch064-*`, et un lanceur `tools/ch064-essais.cjs` que l'intégrateur lance à part, à chaque étape. Le § 4 est corrigé en ce sens.
+
+### A. Ce qu'apporte CH-061 (ca08c48) et ce que j'en reprends
+- Ses mesures (Chromium 153) : le seul gain net propre au langage est la **lecture LiDAR** (196 → 18 ms par vue ; 45 ms en JS réécrit) ; géométrie 34,9 → 22,4 ms, mais 9,4 ms en JS élagué contre 8,4 en Rust élagué ; JSON, deflate, CRC, IndexedDB : Rust **perd ou fait jeu égal** ; traversée d'une chaîne UTF-8 de 75 Mo : 379 ms à l'encodage. Je les tiens pour la base de comparaison et je refais chaque mesure sur mes ports, dans les trois variantes (JS d'origine, même algorithme en JS, Rust).
+- Je réutilise ses outils, cités par leur chemin sur sa branche : `bancs/nuages.cjs` (lecture des nuages réels dans les zips), `bancs/charger-sw.cjs` (chaîne de modules du SW en vm), `bancs/banc-csp.cjs` (vraie extension MV3), `bancs/parite-geometrie.cjs` (865 nuages). Je les copie dans `tools/ch064-*` quand j'en ai besoin, avec leur origine en tête de fichier.
+- **Conséquence sur le périmètre** : les postes JSON, deflate, IndexedDB, `chrome.storage` et la sérialisation de l'état **sortent du portage** (restent en JS), sauf preuve contraire par banc. Les crates `ariane-export` et `ariane-etat` du § 5 se limitent à la logique pure ; chaque port doit montrer que sa traversée ne mange pas son gain, sinon il n'est pas branché.
+
+### B. Où tourne chaque module, sous quelle CSP
+| lieu | modules (crates) | CSP qui s'applique | état |
+|---|---|---|---|
+| service worker | capture, géométrie, lot, GCV, relecture, logique de l'état et du journal | celle de l'extension (`manifest.json`) | refusé sous la CSP MV3 par défaut (CH-061, ÉTABLI) ; passe avec `'wasm-unsafe-eval'` : **décision de l'opérateur**, à l'étape 4 seulement |
+| page ESV, monde MAIN et monde isolé | lecture LiDAR (`ariane-lidar`) | **celle d'ESV** (les deux mondes, CH-061, ÉTABLI) | inconnue (SUPPOSÉ) ; refusé sous `script-src 'self'`, accepté sans CSP ou avec `'wasm-unsafe-eval'` |
+| panneau | aucun (DOM) | celle de l'extension | sans objet |
+Repli si ESV refuse : la lecture des tampons Potree reste en JS dans la page (version en tableaux typés, CH-061 : 45 ms), et rien d'autre ne change ; le gain Rust de la lecture est alors perdu (≈ 27 ms par vue).
+
+### C. Mesurer la CSP réelle d'ESV sans rien écrire (étape 1 bis, à faire tôt)
+Par ordre de préférence :
+1. **Relevé manuel par l'opérateur, aucun code** : outils de développement de Chrome sur une page `rails_validation`, onglet Réseau, document principal, en-têtes de réponse `Content-Security-Policy` et `Content-Security-Policy-Report-Only`, plus une éventuelle balise `<meta http-equiv="Content-Security-Policy">`. Il recopie le texte. Il n'y a aucune requête de plus et aucune donnée du projet dans le texte (vérifier qu'aucune adresse interne n'y figure avant de le verser dans le dépôt).
+2. **Patch en lecture seule de l'observateur, à proposer à l'intégrateur** (`chantiers/CH-064/patch-releve-csp.patch`, jamais appliqué par moi) : dans `src/esv-observer.js` (monde MAIN, `document_start`), (a) lire la balise `meta` CSP si elle existe ; (b) écouter passivement `securitypolicyviolation` (l'événement porte `originalPolicy`, la politique entière, et `disposition`) ; (c) consigner dans le journal un événement `csp-releve` (texte de la politique, `wasm-unsafe-eval` présent ou non, `report-uri` ou `report-to` présents ou non). Aucun essai de compilation : c'est un essai refusé qui pourrait déclencher l'envoi d'un rapport de violation à ESV, donc une requête. Il est exclu sans décision.
+3. **Essai actif** (compiler un module vide de 8 octets dans la page) : seulement si 1 et 2 ne disent rien et si la politique relevée n'a ni `report-uri` ni `report-to` ; décision de l'opérateur.
+
+### D. Borner la mémoire linéaire
+Fait établi (CH-061) : une instance WASM ne rend jamais sa mémoire (769 Mo réservés après un JSON de 75 Mo). La parade, à **mesurer** à l'étape 2 avant d'être retenue :
+- **Plafond dur** : mémoire maximale déclarée à l'édition des liens (`-C link-arg=--max-memory=…`, valeur fixée par la mesure de l'étape 2). Une allocation au-delà échoue proprement, la coquille rend une erreur et la façade se replie sur le JS, avec un événement de journal.
+- **Réinstanciation** : le `WebAssembly.Module` compilé est gardé, et l'`Instance` est recréée quand `memory.buffer.byteLength` dépasse un seuil après un appel. L'ancienne mémoire n'est alors plus référencée et redevient collectable (PROBABLE, à mesurer : tas du SW avant, pendant et après, par CDP). Le coût de l'instanciation est à mesurer (la compilation, 6,3 ms chez CH-061, n'est pas refaite).
+- **Pas d'état durable dans le WASM** : chaque appel est une fonction pure, entrée et sortie ; l'état de la session reste en JS. La réinstanciation ne perd donc rien.
+- **Postes exclus** : tout ce qui manipule le journal entier ou l'export (dizaines de Mo) reste en JS (§ A).
+- Mesure par module : mémoire linéaire avant et après, haute eau, et tas JS (encodage VBA compris).
+
+### E. Essais et lanceur
+`cargo test` dans `ariane-rs/` (essais unitaires et de parité sur fixtures embarquées) ; `tools/ch064-essais.cjs` lance, dans l'ordre : `cargo test`, la construction WASM, la sonde numérique (Node et Chromium), l'aller-retour VBA sur le corpus réel, et la parité de chaque module porté. Il rend un JSON de synthèse et sort en échec à la première divergence.

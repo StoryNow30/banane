@@ -110,3 +110,60 @@ mod essais {
         assert_eq!(hypot(&[3.0, 4.0]), 5.0);
     }
 }
+
+/// Échec d'un calcul porté : soit l'exception que le JS lèverait (même constructeur, même message), soit « hors domaine » :
+/// l'entrée sort de ce que le port sait reproduire à l'identique (types inattendus…), et la façade rappelle le JS d'origine.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Echec {
+    Js { nom: &'static str, message: String },
+    HorsDomaine(String),
+}
+impl Echec {
+    pub fn erreur(message: impl Into<String>) -> Self { Echec::Js { nom: "Error", message: message.into() } }
+    pub fn hors_domaine(raison: impl Into<String>) -> Self { Echec::HorsDomaine(raison.into()) }
+}
+
+/// Médiane de `src/geometry.js` (`median`) : copie triée par `(a,b)=>a-b`, NaN si vide, moyenne des deux milieux si pair.
+/// Tri stable (comme TimSort de V8) ; avec des nombres sans NaN, le comparateur est un préordre total cohérent et le
+/// résultat est unique. Les appelants garantissent l'absence de NaN (sinon : hors domaine).
+pub fn mediane(a: &[f64]) -> f64 {
+    if a.is_empty() {
+        return f64::NAN;
+    }
+    let mut b = a.to_vec();
+    trier_nombres(&mut b);
+    let i = b.len() >> 1;
+    if b.len() % 2 == 1 { b[i] } else { (b[i - 1] + b[i]) / 2.0 }
+}
+
+/// `tableau.sort((a,b)=>a-b)` sur des nombres sans NaN : tri stable, −0 et +0 égaux (ordre d'origine conservé).
+pub fn trier_nombres(b: &mut [f64]) {
+    b.sort_by(|x, y| {
+        let d = x - y;
+        if d < 0.0 { core::cmp::Ordering::Less } else if d > 0.0 { core::cmp::Ordering::Greater } else { core::cmp::Ordering::Equal }
+    });
+}
+
+/// `Math.max(...a)` : −∞ si vide.
+pub fn max_de(a: impl IntoIterator<Item = f64>) -> f64 { a.into_iter().fold(f64::NEG_INFINITY, max) }
+/// `Math.min(...a)` : +∞ si vide.
+pub fn min_de(a: impl IntoIterator<Item = f64>) -> f64 { a.into_iter().fold(f64::INFINITY, min) }
+
+/// Clé d'ensemble JS (`Set`, SameValueZero) pour un nombre : −0 et +0 confondus, tous les NaN confondus.
+pub fn cle_same_value_zero(x: f64) -> u64 {
+    if x.is_nan() { 0x7ff8_0000_0000_0000 } else if x == 0.0 { 0 } else { x.to_bits() }
+}
+
+#[cfg(test)]
+mod essais_mediane {
+    use super::*;
+    #[test]
+    fn mediane_comme_js() {
+        assert!(mediane(&[]).is_nan());
+        assert_eq!(mediane(&[3.0, 1.0, 2.0]), 2.0);
+        assert_eq!(mediane(&[4.0, 1.0, 3.0, 2.0]), 2.5);
+        // stabilité : [-0, 0] reste dans l'ordre, la moyenne vaut (−0 + 0)/2 = +0
+        assert!(!mediane(&[-0.0, 0.0]).is_sign_negative());
+        assert!(mediane(&[-0.0]).is_sign_negative());
+    }
+}

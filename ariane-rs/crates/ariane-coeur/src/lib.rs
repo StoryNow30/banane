@@ -1,6 +1,7 @@
 //! Cœur WASM d'Ariane (CH-064). Étape 1 : seules les sondes de sémantique numérique sont exportées
 //! (`tools/ch064-sonde-math.cjs`) ; aucun module d'Ariane n'est encore porté.
 #![allow(clippy::disallowed_methods)] // sondes : comparent volontairement std à V8
+pub mod abi;
 
 macro_rules! sonde1 { ($($nom:ident => $f:expr),* $(,)?) => { $( #[no_mangle] pub extern "C" fn $nom(x: f64) -> f64 { ($f)(x) } )* }; }
 macro_rules! sonde2 { ($($nom:ident => $f:expr),* $(,)?) => { $( #[no_mangle] pub extern "C" fn $nom(x: f64, y: f64) -> f64 { ($f)(x, y) } )* }; }

@@ -1,7 +1,7 @@
 # CH-064 : espace Cargo de la réécriture d'Ariane en Rust. Hors paquet (tools/package.py exclut ariane-rs/).
 [workspace]
 resolver = "2"
-members = ["crates/ariane-js", "crates/ariane-coeur"]
+members = ["crates/ariane-js", "crates/ariane-vba", "crates/ariane-capture", "crates/ariane-geometrie", "crates/ariane-coeur"]
 
 [workspace.package]
 edition = "2021"
