@@ -208,3 +208,17 @@ pub fn exp_correctement_arrondi(x: f64) -> f64 {
     let e = f64::from_bits(((k as i64 + 1023) as u64) << 52);
     two_sum(s.0 * e, s.1 * e).0
 }
+
+/// `if (d < best) best = d` sans branchement, pour les boucles chaudes : `f64::min` (minnum, `minsd` sur x86).
+/// Identique au bit près SEULEMENT si ni `d` ni `best` n'est NaN et s'ils ne sont pas deux zéros de signes opposés :
+/// l'appelant le garantit (sommes de carrés de nombres finis, toujours ≥ +0). Mesuré : en natif, la forme à
+/// branchement de la perte de V4.6 coûtait 36 ms par nuage contre 23 ms en WASM (profil : 97 % dans cette boucle).
+/// En WASM, la forme à comparaison reste la plus rapide (`f64.min` propage NaN : LLVM devrait émuler minnum).
+#[inline(always)]
+#[allow(clippy::disallowed_methods)]
+pub fn min_positif_fini(best: f64, d: f64) -> f64 {
+    #[cfg(target_arch = "wasm32")]
+    { if d < best { d } else { best } }
+    #[cfg(not(target_arch = "wasm32"))]
+    { best.min(d) }
+}
