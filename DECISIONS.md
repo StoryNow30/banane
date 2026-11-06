@@ -3423,4 +3423,10 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Question : « allumer le rechargement pour la relecture, et lancer le chantier pour l'étendre à la pose ? » ; à « quel est le mieux selon toi ? », réponse de l'intégrateur « les deux, dans cet ordre » ; l'opérateur : « go ».
 - Effet : `relectureSignalEteint.actif` = true (CH-060 : un rechargement au plus par relecture, pause au point de reprise, jamais pendant une correction ; si ESV rouvre une autre partie, pause et consigne F5). Le lot n'est pas concerné.
 - Chantiers lancés : CH-062 (le même rechargement pendant le lot, au point sûr entre deux validations prouvées, livré coupé ; d'abord comprendre pourquoi le compteur d'ESV se bloque) ; CH-063 (mesure : lecture directe des points de la zone du rail et niveau de détail suffisant, preuve d'identité exigée).
-- Le numéro suivant est D-291.
+
+## D-291 — Réécriture d'Ariane en Rust : programme ouvert, JavaScript en production d'ici là (opérateur, 06/11)
+- Ordre : « Je vais te demander donc d'ouvrir et piloter le chantier de la réécriture de Ariane (basé sur les dernières versions) en Rust. Nous continuons avec nos versions en JavaScript en attendant l'avancement de ce chantier. »
+- Contexte : l'opérateur juge que l'intégrateur sous-estime les gains (vitesse, mémoire). CH-061 (avis mesuré) en cours. Premier banc ÉTABLI : géométrie 34,9 ms (JS) contre 22,4 ms (Rust/WASM), 9,4 ms (JS élagué) et 8,4 ms (Rust élagué), poses identiques bit à bit sur 865 nuages.
+- Effet : programme CH-064, par étapes. Espace `ariane-rs/` hors paquet (`tools/package.py` l'exclut). Cœur en Rust/WASM, coquille JS pour les API de Chrome et la page ESV. Parité octet pour octet exigée module par module. Mesure dans Chromium.
+- Le JavaScript reste la seule production : aucun module Rust n'entre dans le paquet sans une décision écrite de l'opérateur, module par module.
+- Le numéro suivant est D-292.
