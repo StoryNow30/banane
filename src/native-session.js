@@ -23,6 +23,13 @@
   const distance=Math.hypot(...b.map((v,i)=>v-a[i])),mm=v=>Math.round(v*1e4)/10;
   let local=null;if(Array.isArray(inv)&&inv.length===16){const f=K.C.point(inv,a),t=K.C.point(inv,b);local=t.map((v,i)=>mm(v-f[i]));}
   return {status:'measured',changed:distance>thresholdM,identical:poseEqual(from,to),distanceMm:mm(distance),localMm:local,thresholdMm:thresholdM*1000};};
+ /* CH-059 : `n.cloudIds` (7 340 identifiants le 05/11), `exportedCloudIds` et `releasedCloudIds` étaient parcourus par `includes` à chaque
+  * ajout, et `exportAdvice` (lu à chaque rafraîchissement du panneau) croisait les deux listes : un coût quadratique. Un ensemble est tenu
+  * à côté de chaque liste (hors de l'état : rien n'est sauvegardé ni exporté de plus) ; il est reconstruit si la liste a changé de
+  * longueur sans lui. Les listes, leur ordre et leur contenu sont inchangés. */
+ const ENSEMBLES=new WeakMap();
+ const ensemble=liste=>{let e=ENSEMBLES.get(liste);if(!e||e.n!==liste.length){e={s:new Set(liste),n:liste.length};ENSEMBLES.set(liste,e);}return e.s;};
+ const ajouterUnique=(liste,id)=>{const s=ensemble(liste);if(s.has(id))return false;liste.push(id);s.add(id);ENSEMBLES.get(liste).n=liste.length;return true;};
  const sameCutKey=(a,b)=>K.cutKey(a)===K.cutKey(b);
  /* D-143 : la référence humaine corrigée par l'écriture serveur de validation. ESV écrit la pose finale des deux rails (corps
   * `XLeftEdge`…`ZRightEdge`, même repère que `positionSceneRelative`). Si cette écriture diffère de plus de
@@ -397,7 +404,7 @@
     if(chunk.visitId&&chunk.visitId!==record.visitId)throw Error('Checkpoint LiDAR associé à une autre visite.');
     if(record.lidarChunkIds.includes(chunk.chunkId)||await this.store.getCloud(chunk.chunkId))throw Error('Identifiant de bloc LiDAR déjà utilisé : copie immuable non remplacée.');
     chunk.nativeSessionId=n.id;chunk.visitId=record.visitId;chunk.source='native-passive-observation';chunk.storageTrace={pointsSaved:chunk.pointsSceneRelative?.length||0,pointsExported:0};
-    await this.store.putCloud(chunk.chunkId,chunk);const storedAt=iso();if(!record.lidarChunkIds.includes(chunk.chunkId))record.lidarChunkIds.push(chunk.chunkId);if(!n.cloudIds.includes(chunk.chunkId))n.cloudIds.push(chunk.chunkId);
+    await this.store.putCloud(chunk.chunkId,chunk);const storedAt=iso();if(!record.lidarChunkIds.includes(chunk.chunkId))record.lidarChunkIds.push(chunk.chunkId);ajouterUnique(n.cloudIds,chunk.chunkId);
     this.accountStored(n,chunk);this.accountQuality(n,chunk);
     const capture=record.geometryCaptures[chunk.captureId]||(record.geometryCaptures[chunk.captureId]={captureId:chunk.captureId,visitId:record.visitId,status:'reading',sides:{}});
     const side=capture.sides[chunk.side]||(capture.sides[chunk.side]={side:chunk.side,chunkIds:[],pointsSaved:0,rail:K.clone(chunk.rail),viewObservation:K.clone(chunk.viewObservation),capturedAt:chunk.capturedAt});
@@ -442,7 +449,7 @@
     else{capture.status=cloud.status;capture.legacy=true;record.lidarQuality={points:cloud.pointsSceneRelative?.length||0,perRail:K.clone(cloud.quality?.perRail||{}),
        completeLoadedRoi:cloud.scope?.completeLoadedRoi===true};}
     this.accountQuality(n,cloud);
-    await this.store.putCloud(cloud.captureId,cloud);if(!record.lidarCaptureIds.includes(cloud.captureId))record.lidarCaptureIds.push(cloud.captureId);if(!n.cloudIds.includes(cloud.captureId))n.cloudIds.push(cloud.captureId);
+    await this.store.putCloud(cloud.captureId,cloud);if(!record.lidarCaptureIds.includes(cloud.captureId))record.lidarCaptureIds.push(cloud.captureId);ajouterUnique(n.cloudIds,cloud.captureId);
     this.accountStored(n,cloud);
     record.lidarStatus=cloud.status;if(record.endedAt!==null||record.endTimeStatus==='unknown')this.classify(record);await this.saveRecord(record);await this.e.save();
     return {saved:true,eventSeq:logged.eventSeq,captureId:cloud.captureId};
@@ -751,7 +758,7 @@
   exportAdvice(){
    const n=this.e.s.native;if(!n)return null;
    const x=n.exportState;if(!x)return null;
-   const pending=n.cloudIds.filter(id=>!x.exportedCloudIds.includes(id));
+   const exportes=ensemble(x.exportedCloudIds||[]),pending=n.cloudIds.filter(id=>!exportes.has(id));
    const due=x.bytesPending>=Sessions.EXPORT_WATERMARK_BYTES&&pending.length>0;
    return {due,reason:due?'watermark-reached':null,bytesStored:x.bytesStored,bytesPending:x.bytesPending,
     watermark:Sessions.EXPORT_WATERMARK_BYTES,pendingClouds:pending.length,segments:x.segments,
@@ -879,7 +886,7 @@
    if(final){n.exportState.finalExportAt=iso();n.exportState.finalExportFiles=Number.isInteger(fichiers)?fichiers:null;
     if(!(ids||[]).length){await this.e.save();return {acknowledged:0,final:true,finalExportAt:n.exportState.finalExportAt};}}
    const x=n.exportState;x.releasedCloudIds??=[];const added=[];
-   for(const id of ids||[])if(!x.exportedCloudIds.includes(id)){x.exportedCloudIds.push(id);added.push(id);}
+   for(const id of ids||[])if(ajouterUnique(x.exportedCloudIds,id))added.push(id);
    x.segments+=Math.max(1,Number.isInteger(fichiers)?fichiers:1);x.bytesPending=0;x.lastAdviceAt=iso();
    let libere=0,octets=0;
    const purgeables=new Set(confirmes||[]);let gardes=0;
@@ -890,7 +897,7 @@
       const cloud=await this.store.getCloud(id);
       if(cloud)octets+=this.cloudBytes(cloud);
       await this.store.deleteCloud(id);
-      if(!x.releasedCloudIds.includes(id))x.releasedCloudIds.push(id);
+      ajouterUnique(x.releasedCloudIds,id);
       libere++;
      }catch{/* un objet non purgeable reste lisible : jamais bloquant */}
     }
@@ -937,7 +944,7 @@
   async exportPlan(){
    const data=await this.dataset();const n=this.e.s.native;
    const done=n.exportState?.exportedCloudIds||[];
-   return {...data,cloudIds:data.cloudIds.filter(id=>!done.includes(id)),
+   const faits=ensemble(done);return {...data,cloudIds:data.cloudIds.filter(id=>!faits.has(id)),
     alreadyExported:done.length,exportAdvice:this.exportAdvice()};
   }
   async dataset(){const n=this.e.s.native;if(!n)throw Error('Aucune session Natif conservée.');
