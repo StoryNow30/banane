@@ -38,22 +38,31 @@
    }
   ]
  },
- "vuesComparees": 64,
+ "vuesComparees": 62,
+ "commandes": {
+  "js": 13,
+  "wasm": 13,
+  "bruitJs": 0,
+  "differencesWasm": [],
+  "octets": {
+   "js": 23524,
+   "wasm": 23524
+  }
+ },
  "bruitJsContreJs": [
-  "resume.notice",
-  "evenements.correction-couverture@-",
-  "evenements.correction-liste@-"
+  "evenements.correction-liste@-",
+  "evenements.correction-couverture@-"
  ],
  "differencesJsContreWasm": [
-  "evenements.correction-couverture@-",
-  "evenements.correction-liste@-"
+  "evenements.correction-liste@-",
+  "evenements.correction-couverture@-"
  ],
  "imputablesAuCoeur": {},
  "compteursWasm": {
   "coeur": {
    "reinstanciations": 0,
-   "hauteEau": 1769472,
-   "memoire": 1769472
+   "hauteEau": 2228224,
+   "memoire": 2228224
   },
   "facades": {
    "geometrie": {
@@ -76,11 +85,11 @@
  },
  "dureeLotMs": {
   "js": [
-   12539,
-   12688,
-   12326
+   12158,
+   14955,
+   12633
   ],
-  "wasm": 12096
+  "wasm": 12442
  },
  "erreurs": {
   "js": [],

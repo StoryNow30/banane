@@ -1,0 +1,40 @@
+{
+ "format": "ch064-vba-corpus-v1",
+ "moteur": "node v22.23.4",
+ "synthetiques": {
+  "cas": 25,
+  "identiques": 25,
+  "ecarts": []
+ },
+ "refus": {
+  "cas": 7,
+  "refuses": 7,
+  "ecarts": []
+ },
+ "documents": 173,
+ "octetsJson": 3983113429,
+ "octetsVba": 3157798834,
+ "identiquesJs": 173,
+ "identiquesRust": 173,
+ "trameRustIdentique": 173,
+ "totaux": {
+  "records": 11774,
+  "clouds": 13972,
+  "events": 831226,
+  "points": 23986456
+ },
+ "echecs": [],
+ "msParMo": {
+  "jsonParse": 10.2,
+  "jsonStringify": 11.9,
+  "encoder": 8,
+  "decoder": 11.5,
+  "coeur": 2.5
+ },
+ "memoireCoeur": {
+  "hauteEauMax": 1505755136,
+  "reinstanciations": 9
+ },
+ "tranche": "2/3 + 0/6 + 3/6 + 1/6 + 4/6",
+ "verdict": "IDENTIQUE"
+}
