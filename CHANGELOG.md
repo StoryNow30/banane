@@ -1,5 +1,14 @@
 # Banane V4 TEST — journal des versions
 
+## Tronc 5.0 — 06/11 soir (CH-067, D-295, D-296)
+- CH-067 (audit des correctifs CH-058, CH-059, CH-060, CH-062 ; aucun P1) : trois correctifs intégrés.
+  - `src/etat-morceaux.js` : au recollage, un élément du lot à clé déjà vue n'est pas repris deux fois (retour arrière puis retour).
+  - `src/storage.js` : un morceau d'état absent produit l'événement `etat-morceaux-manquants` au journal.
+  - `src/journal-index.js` : une écriture faite pendant une suppression reste dans l'index.
+- Limite connue (CH-067, P2) : un paquet antérieur à `dac2db6` relit un lot en pause sans ses cuts posés ni différés. Consigne : clore le lot avant tout retour arrière. Les essais rouges restent sur `chantier/CH-067`.
+- Non intégré : le correctif CH-067 de `src/adapter-page.js` (échec puis réussite du même nœud), sans effet avec Potree 1.8 (PROBABLE).
+- D-295 et D-296 : Rust, 100 % de ce qui peut l'être ; entrée dans le paquet autorisée après preuves et revue.
+
 ## Tronc 5.0 — 06/11 (CH-058, CH-059, CH-060, CH-062, D-289, D-290, D-293)
 - **Signal de chargement d'ESV réparé par Ariane (CH-062, D-293)** : une requête de points en échec (HTTP 502) bloquait pour toujours le compteur de chargement de Potree, et Ariane attendait environ 1 s de plus par rail jusqu'au rechargement. La page compte ces échecs (lecture seule) et lit « aucun chargement » sur le compteur moins les échecs. Le rechargement pendant le lot (CH-062, B) est livré COUPÉ.
 - **Rechargement d'ESV pendant la relecture ALLUMÉ (D-290)** : quand le signal de fin de chargement s'éteint, la relecture se met en pause entre deux cuts, recharge la page une fois et reprend au cut suivant.
