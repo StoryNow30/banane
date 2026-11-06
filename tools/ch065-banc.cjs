@@ -8,6 +8,7 @@
  *          BananeGeometry3.proposeBoth (façade du SW), moteur V4.6 gelé seul (BananeGeometryFrozen) et composition du lot
  *          (BananeGCV1Shadow.scientificProposeBoth : V4.6 + A_STAR, convention, écartement) ; REP passes.
  * Les sorties des deux versions sont comparées dans le navigateur (JSON, hors horodatages) : un écart arrête le banc.
+ * PARTIES=lidar,geometrie (défaut : les deux) ; VARIANTES_GEO=origine,lot,lot+mediane,v46,tous (défaut : toutes).
  * Usage : REP=15 NUAGES_LIDAR=8 NUAGES_GEO=200 node --max-old-space-size=6000 tools/ch065-banc.cjs SORTIE.json
  * Machine au repos : rien d'autre ne doit tourner. Aucune coordonnée n'est écrite dans la sortie. */
 'use strict';
@@ -19,10 +20,14 @@ const EXEC=process.env.CHROMIUM||'/opt/pw-browsers/chromium';
 const q=(a,x)=>{a=[...a].sort((u,v)=>u-v);return a.length?+a[Math.floor(x*(a.length-1))].toFixed(2):null;};
 const resume=a=>({mediane:q(a,.5),p90:q(a,.9),min:q(a,0),n:a.length});
 const lire=f=>fs.readFileSync(path.join(RACINE,f),'utf8');
-function scriptsSW(sens){
+/* Scripts du SW, avec les patchs `noms` seulement (les autres blocs de CH-065 retirés). */
+function scriptsSW(noms){
   const bg=lire('background.js'),m=bg.match(/importScripts\(([\s\S]*?)\);/);
-  return [...m[1].matchAll(/'([^']+)'/g)].map(x=>x[1]).map(f=>A.BLOCS[f]?A.versions(RACINE,f)[sens]:lire(f));
+  return [...m[1].matchAll(/'([^']+)'/g)].map(x=>x[1]).map(f=>A.BLOCS[f]?A.patcher(f,A.versions(RACINE,f).origine,noms):lire(f));
 }
+/* Variantes de la géométrie mesurées (choix patch par patch de l'opérateur). */
+const VARIANTES_GEO={origine:[],'lot':['geometrie-elaguee-lot'],'lot+mediane':['geometrie-elaguee-lot','mediane-exacte'],
+  'v46':['geometrie-elaguee-v46'],'tous':['geometrie-elaguee-lot','mediane-exacte','geometrie-elaguee-v46']};
 async function page(nav,scripts){
   const p=await nav.newPage();await p.goto('about:blank');
   for(const s of scripts){try{await p.addScriptTag({content:s});}catch(e){/* module du SW qui exige chrome.* : sans effet sur la géométrie */}}
@@ -36,6 +41,8 @@ async function page(nav,scripts){
   const out={date:new Date().toISOString(),chromium:nav.version(),cpu:os.cpus()[0].model,coeurs:os.cpus().length,repetitions:REP,
     nuagesReels:tous.length,lidar:{nuages:CL.length,pointsParVue:505000,noeuds:19},geometrie:{nuages:CG.length}};
   /* ---------- LIDAR ---------- */
+  const PARTIES=(process.env.PARTIES||'lidar,geometrie').split(',');
+  if(PARTIES.includes('lidar')){
   const v=A.versions(RACINE,'vendor/lidar.js');
   const pl=await page(nav,[lire('vendor/capture-core.js'),v.origine.replace('root.BananeLidar=api','root.LidarOrigine=api'),
     v.patche.replace('root.BananeLidar=api','root.LidarPatche=api'),lire('tools/ch065-scene.js')]);
@@ -66,29 +73,35 @@ async function page(nav,scripts){
       tasAlloueOctetsParVue:{origine:q(mes.allocOrigine,.5),patche:q(mes.allocPatche,.5)},tasRetenuOctets:{origine:q(mes.retenuOrigine,.5),patche:q(mes.retenuPatche,.5)},sortiesIdentiques:egal};
   }
   await pl.close();
+  }
+  if(PARTIES.includes('geometrie')){
   /* ---------- GÉOMÉTRIE ---------- */
-  const pages={origine:await page(nav,scriptsSW('origine')),patche:await page(nav,scriptsSW('patche'))};
+  const noms=(process.env.VARIANTES_GEO||Object.keys(VARIANTES_GEO).join(',')).split(',');
+  const pages={};for(const n of noms)pages[n]=await page(nav,scriptsSW(VARIANTES_GEO[n]));
   for(const p of Object.values(pages)){await p.evaluate(()=>{globalThis.__N=[];});
     for(let i=0;i<CG.length;i+=10)await p.evaluate(t=>{__N.push(...JSON.parse(t));},JSON.stringify(CG.slice(i,i+10).map(c=>({captureId:c.captureId,identity:c.identity,rails:c.rails,
       pointsSceneRelative:c.pointsSceneRelative,visibleByClipBoxes:c.visibleByClipBoxes,camera:c.camera,viewCaptures:c.viewCaptures}))));}
-  const geo={};const sorties={};
-  for(let k=0;k<=REP;k++)for(const nom of (k%2?['patche','origine']:['origine','patche'])){
-    const r=await pages[nom].evaluate(k=>{const F=globalThis.BananeGeometry3,V=globalThis.BananeGeometryFrozen,S=globalThis.BananeGCV1Shadow,tf=[],tv=[],ts=[];let s='';
-      gc();const h0=performance.memory.usedJSHeapSize;
-      for(const c of __N){let a=performance.now();const o=F.proposeBoth(c);tf.push(performance.now()-a);a=performance.now();const w=V.proposeBoth(c);tv.push(performance.now()-a);
-        a=performance.now();const x=S.scientificProposeBoth(c);ts.push(performance.now()-a);
-        if(k===0)s+=JSON.stringify([o,w,x],(kk,vv)=>/At$|Ms$|^at$|observedAt/.test(kk)?undefined:vv);}
-      const h1=performance.memory.usedJSHeapSize;return {tf,tv,ts,s,alloc:h1-h0};},k);
-    if(k===0){sorties[nom]=r.s;continue;}
-    const g=geo[nom]=geo[nom]||{facade:[],v46:[],lot:[],alloc:[]};g.facade.push(...r.tf);g.v46.push(...r.tv);g.lot.push(...r.ts);g.alloc.push(r.alloc/CG.length);
-    console.error('géométrie',k,nom,'façade',q(r.tf,.5),'v46',q(r.tv,.5));
+  const geo={},sorties={};
+  for(let k=0;k<=REP;k++){const ordre=k%2?[...noms].reverse():noms;
+    for(const nom of ordre){
+      const r=await pages[nom].evaluate(k=>{const F=globalThis.BananeGeometry3,V=globalThis.BananeGeometryFrozen,S=globalThis.BananeGCV1Shadow,tf=[],tv=[],ts=[];let s='';
+        gc();const h0=performance.memory.usedJSHeapSize;
+        for(const c of __N){let a=performance.now();const o=F.proposeBoth(c);tf.push(performance.now()-a);a=performance.now();const w=V.proposeBoth(c);tv.push(performance.now()-a);
+          a=performance.now();const x=S.scientificProposeBoth(c);ts.push(performance.now()-a);
+          if(k===0)s+=JSON.stringify([o,w,x],(kk,vv)=>/At$|Ms$|^at$|observedAt/.test(kk)?undefined:vv);}
+        const h1=performance.memory.usedJSHeapSize;return {tf,tv,ts,s,alloc:h1-h0};},k);
+      if(k===0){sorties[nom]=r.s;continue;}
+      const g=geo[nom]=geo[nom]||{facade:[],v46:[],lot:[],alloc:[]};g.facade.push(...r.tf);g.v46.push(...r.tv);g.lot.push(...r.ts);g.alloc.push(r.alloc/CG.length);
+      console.error('géométrie',k,nom,'façade',q(r.tf,.5),'v46',q(r.tv,.5),'lot',q(r.ts,.5));
+    }}
+  for(const nom of noms)if(sorties[nom]!==sorties[noms[0]])throw Error('Géométrie : sorties différentes dans Chromium, variante '+nom);
+  out.geometrie.sortiesIdentiques=true;out.geometrie.variantes={};
+  const m=(nom,k)=>resume(geo[nom][k]);
+  for(const nom of noms)out.geometrie.variantes[nom]={patchs:VARIANTES_GEO[nom],facadeMsParNuage:m(nom,'facade'),v46MsParNuage:m(nom,'v46'),lotMsParNuage:m(nom,'lot'),
+    tasAlloueOctetsParNuage:q(geo[nom].alloc,.5),
+    gainMsParNuage:nom==='origine'?null:{facade:+(m('origine','facade').mediane-m(nom,'facade').mediane).toFixed(1),v46:+(m('origine','v46').mediane-m(nom,'v46').mediane).toFixed(1),
+      lot:+(m('origine','lot').mediane-m(nom,'lot').mediane).toFixed(1)}};
   }
-  if(sorties.origine!==sorties.patche)throw Error('Géométrie : sorties différentes dans Chromium');
-  out.geometrie.sortiesIdentiques=true;
-  for(const nom of ['origine','patche'])out.geometrie[nom]={facadeMsParNuage:resume(geo[nom].facade),v46MsParNuage:resume(geo[nom].v46),lotMsParNuage:resume(geo[nom].lot),tasAlloueOctetsParNuage:q(geo[nom].alloc,.5)};
-  out.geometrie.gainMsParNuage={facade:+(out.geometrie.origine.facadeMsParNuage.mediane-out.geometrie.patche.facadeMsParNuage.mediane).toFixed(1),
-    v46:+(out.geometrie.origine.v46MsParNuage.mediane-out.geometrie.patche.v46MsParNuage.mediane).toFixed(1),
-    lot:+(out.geometrie.origine.lotMsParNuage.mediane-out.geometrie.patche.lotMsParNuage.mediane).toFixed(1)};
   await nav.close();
   console.log(JSON.stringify(out,null,1));if(SORTIE)fs.writeFileSync(SORTIE,JSON.stringify(out,null,1)+'\n');
 })().catch(e=>{console.error(e);process.exit(1);});
