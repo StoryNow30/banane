@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "CH-061 essai WASM",
+  "version": "0.0.1",
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "essai.js"
+      ],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "essai-isole.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ]
+}
