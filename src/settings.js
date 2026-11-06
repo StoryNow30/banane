@@ -555,6 +555,11 @@
      * Les mêmes valeurs par défaut sont dans src/raison-correction.js (un essai les compare). */
     raison: Object.freeze({ actif: false, touches: 'chiffres', graceMs: 500, doubleAppuiMs: 600, sautCuts: 30, rappelCollanteCuts: 40 }),
   });
+  /* D-296 (06/11/2026, opérateur) : du Rust dans le paquet. `lidar` : boucle par point de la lecture LiDAR par le module
+   * ariane-lidar (WASM, dans la page ESV), sortie identique au bit près ; repli automatique sur la lecture d'origine (module absent ou
+   * refusé, nœud non éligible, trappe). `false` coupe et rend la lecture d'origine. Journal : événements `rust`. */
+  const rust = Object.freeze({ lidar: true });
+
   const derived = Object.freeze({
     highWater: Math.max(8, Math.floor(collector.maxQueue * collector.highWaterRatio)),
     lowWater: Math.max(4, Math.floor(collector.maxQueue * collector.lowWaterRatio)),
@@ -610,5 +615,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, derived, describe, vertsAControler, file, correctionEntreParties });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
 });
