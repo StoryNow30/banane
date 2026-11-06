@@ -40,14 +40,13 @@ pub fn vers_int32(v: &Valeur) -> i32 {
     let x = match v {
         Valeur::Nombre(x) => *x,
         Valeur::Booleen(b) => { if *b { 1.0 } else { 0.0 } }
-        Valeur::Nul | Valeur::Indefini => return 0,
         Valeur::Chaine(s) => parse_nombre_js(s).unwrap_or(f64::NAN),
         _ => return 0,
     };
     if !x.is_finite() || x == 0.0 { return 0; }
     let t = x.trunc();
-    let mut m = t % 4294967296.0;
-    if m < 0.0 { m += 4294967296.0; }
+    let mut m = t % 4_294_967_296.0;
+    if m < 0.0 { m += 4_294_967_296.0; }
     (m as u32) as i32
 }
 
@@ -57,7 +56,6 @@ pub fn vers_f64(v: &Valeur) -> f64 {
         Valeur::Nombre(x) => *x,
         Valeur::Booleen(b) => { if *b { 1.0 } else { 0.0 } }
         Valeur::Nul => 0.0,
-        Valeur::Indefini => f64::NAN,
         Valeur::Chaine(s) => parse_nombre_js(s).unwrap_or(f64::NAN),
         _ => f64::NAN,
     }
@@ -121,7 +119,7 @@ pub fn strict_eq(a: &Valeur, b: &Valeur) -> bool {
     }
 }
 
-/// Clé SameValueZero pour un primitif. Les objets n'ont pas de clé (égalité de référence).
+/// Clé `SameValueZero` pour un primitif. Les objets n'ont pas de clé (égalité de référence).
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Svz { U, Z, B(bool), N(u64), S(String) }
 pub fn svz(v: &Valeur) -> Option<Svz> {

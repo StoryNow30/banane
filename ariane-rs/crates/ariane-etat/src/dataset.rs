@@ -1,5 +1,5 @@
 //! Assemblage pur de `Sessions.dataset` (`src/native-session.js`). L'horloge (`exportedAt`) et les lectures
-//! IndexedDB sont fournies par l'appelant. `K.clone` est le clone JSON.
+//! `IndexedDB` sont fournies par l'appelant. `K.clone` est le clone JSON.
 use crate::date::parse_iso;
 use crate::jsval::{self, a, chaine, cmp_nombre, est_objet, nombre, vrai};
 use crate::json::clone_json;
@@ -18,13 +18,12 @@ fn cut_id(identity: &Valeur) -> String {
     for k in ["pageId", "part", "cut", "shape", "frameId", "projectId"] {
         let v = if k == "projectId" {
             let direct = a(identity, "projectId");
-            if !matches!(direct, Valeur::Indefini) { direct.clone() } else {
+            if matches!(direct, Valeur::Indefini) {
                 let p = a(identity, "project");
                 if vrai(p) && chaine(&p) != Some("not-observed") { p.clone() } else { Valeur::Nul }
-            }
+            } else { direct.clone() }
         } else { a(identity, k).clone() };
         morceaux.push(match &v {
-            Valeur::Indefini | Valeur::Nul => "not-observed".into(),
             Valeur::Chaine(s) => s.clone(),
             Valeur::Nombre(x) => crate::nombre::vers_chaine(*x),
             Valeur::Booleen(b) => { if *b { "true".into() } else { "false".into() } }
@@ -69,6 +68,8 @@ fn mediane_basse(mut a: Vec<f64>) -> Valeur {
     jsval::n(a[(a.len() - 1) / 2])
 }
 
+/// Assemble l'objet `dataset` de `src/native-session.js`. La fonction JS est gardée d'un bloc : c'est elle que la parité relit.
+#[allow(clippy::too_many_lines)]
 pub fn assembler(entree: &Valeur) -> Result<Valeur, Echec> {
     let n = a(entree, "session");
     if !est_objet(n) { return Err(Echec::erreur("Aucune session Natif conservée.")); }
@@ -156,9 +157,9 @@ pub fn assembler(entree: &Valeur) -> Result<Valeur, Echec> {
     let mut terminaisons: Vec<(String, f64)> = vec![];
     for (i, k) in &caps {
         let c = a(a(&records[*i], "geometryCaptures"), k);
-        let key = chaine(a(a(c, "termination"), "code")).map(|s| s.to_string()).unwrap_or_else(|| {
+        let key = chaine(a(a(c, "termination"), "code")).map_or_else(|| {
             if chaine(a(c, "status")) == Some("reading") { "NOT_REPORTED".into() } else { "NONE".into() }
-        });
+        }, std::string::ToString::to_string);
         if let Some(p) = terminaisons.iter_mut().find(|(c, _)| c == &key) { p.1 += 1.0; } else { terminaisons.push((key, 1.0)); }
     }
     let mut par_rail = vec![];

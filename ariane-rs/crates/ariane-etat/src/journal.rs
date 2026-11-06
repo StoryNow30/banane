@@ -1,5 +1,5 @@
 //! Partie pure de `src/journal-index.js` : l'index en mémoire (clés par type et par session).
-//! La lecture IndexedDB, le Proxy et l'horloge restent en JavaScript.
+//! La lecture `IndexedDB`, le Proxy et l'horloge restent en JavaScript.
 use crate::jsval::{self, a, chaine, cmp_utf16, est_objet};
 use ariane_vba::Valeur;
 use std::collections::{HashMap, HashSet};
@@ -32,11 +32,11 @@ fn retirer_une(m: &mut Vec<(String, HashSet<String>)>, cles: &[String]) {
     for (_, s) in m.iter_mut() { for k in cles { s.remove(k); } }
 }
 
-fn cle_evenement(e: &Valeur) -> Option<String> { chaine(a(e, "eventId")).map(|s| s.to_string()) }
+fn cle_evenement(e: &Valeur) -> Option<String> { chaine(a(e, "eventId")).map(std::string::ToString::to_string) }
 fn cle_visite(r: &Valeur) -> Option<String> {
     let id = a(r, "recordId");
-    if jsval::vrai(id) { return chaine(id).map(|s| s.to_string()); }
-    chaine(a(r, "id")).filter(|s| !s.is_empty()).map(|s| s.to_string())
+    if jsval::vrai(id) { return chaine(id).map(std::string::ToString::to_string); }
+    chaine(a(r, "id")).filter(|s| !s.is_empty()).map(std::string::ToString::to_string)
 }
 
 fn noter_evenement(ix: &mut Index, e: &Valeur, types: &HashSet<String>) {
@@ -65,7 +65,7 @@ fn types_de(v: &Valeur) -> (Vec<String>, HashSet<String>) {
 }
 
 fn liste_chaines(v: &Valeur) -> Vec<String> {
-    jsval::elements(v).into_iter().filter_map(|e| chaine(e).map(|s| s.to_string())).collect()
+    jsval::elements(v).into_iter().filter_map(|e| chaine(e).map(std::string::ToString::to_string)).collect()
 }
 
 fn paires(m: &[(String, HashSet<String>)]) -> Valeur {
@@ -178,7 +178,7 @@ pub fn cles_natif(entree: &Valeur) -> Result<Valeur, ariane_js::Echec> {
         for e in jsval::elements(a(&ix, nom)) {
             let Valeur::Tableau(p) = e else { continue };
             if chaine(p.first().and_then(|x| x.as_ref()).unwrap_or(&Valeur::Indefini)) == Some(sid) {
-                return match p.get(1).and_then(|x| x.as_ref()) { Some(Valeur::Tableau(t)) => t.iter().filter_map(|e| e.clone()).collect(), _ => vec![] };
+                return match p.get(1).and_then(|x| x.as_ref()) { Some(Valeur::Tableau(t)) => t.iter().filter_map(std::clone::Clone::clone).collect(), _ => vec![] };
             }
         }
         vec![]

@@ -15,10 +15,10 @@ const EDGES: [&str; 6] = ["XLeftEdge", "YLeftEdge", "ZLeftEdge", "XRightEdge", "
 const LECTURE: &str = "r[i] = ligne du cut i : [statut + 4 × drapeaux, six bords]. Statut 0 valid, 1 invalid, 2 skipped, 3 autre ; drapeaux 1 TreatedByOperator, 2 SeenByOperator. Pour chaque bord, la première valeur connue est absolue, les suivantes sont l’écart à la précédente valeur connue de la même colonne ; null = absent.";
 
 pub fn empreinte(s: &str) -> String {
-    let mut h: u32 = 0x811c9dc5;
+    let mut h: u32 = 0x811c_9dc5;
     for c in s.encode_utf16() {
         h ^= c as u32;
-        h = (h as i32).wrapping_mul(0x01000193u32 as i32) as u32;
+        h = (h as i32).wrapping_mul(0x0100_0193u32 as i32) as u32;
     }
     format!("{h:08x}")
 }
@@ -100,7 +100,7 @@ pub fn decompacter(snap: &Valeur) -> Valeur {
     let mut ed: Vec<Valeur> = Vec::with_capacity(6 * n);
     let mut last = [None; 6];
     for cellules in rows {
-        let sf = cellules.first().copied().flatten().map(|x| vers_int32(&jsval::n(x))).unwrap_or(3);
+        let sf = cellules.first().copied().flatten().map_or(3, |x| vers_int32(&jsval::n(x)));
         st.push(jsval::n((sf & 3) as f64));
         fl.push(jsval::n(((sf >> 2) & 3) as f64));
         for j in 0..6 {
@@ -177,22 +177,22 @@ pub fn ajouter(mem: &Valeur, partie: &Valeur, cle: &Valeur, cut: &Valeur, bords:
     let mut p = match m.iter().find(|(k, _)| k == &pk).map(|(_, v)| v.clone()) {
         Some(ex) if chaine(a(&ex, "cle")) == Some(cle_s) => {
             let mut t = jsval::obj(&ex).unwrap().to_vec();
-            if let Some(c) = t.iter_mut().find(|(k, _)| k == "cuts") { *c = ("cuts".into(), Valeur::Objet(jsval::obj(&c.1).map(|x| x.to_vec()).unwrap_or_default())); }
+            if let Some(c) = t.iter_mut().find(|(k, _)| k == "cuts") { *c = ("cuts".into(), Valeur::Objet(jsval::obj(&c.1).map(<[(std::string::String, ariane_vba::Valeur)]>::to_vec).unwrap_or_default())); }
             // re-copy cuts and vus
             let mut t = jsval::obj(&ex).unwrap().to_vec();
             for nom in ["cuts", "vus"] {
                 if let Some(c) = t.iter_mut().find(|(k, _)| k == nom) {
-                    c.1 = Valeur::Objet(jsval::obj(&c.1).map(|x| x.to_vec()).unwrap_or_default());
+                    c.1 = Valeur::Objet(jsval::obj(&c.1).map(<[(std::string::String, ariane_vba::Valeur)]>::to_vec).unwrap_or_default());
                 }
             }
             Valeur::Objet(t)
         }
         _ => jsval::o(vec![("cle", jsval::s(cle_s)), ("cuts", Valeur::Objet(vec![])), ("vus", Valeur::Objet(vec![])), ("passage", jsval::nul())]),
     };
-    let n_cuts = jsval::obj(a(&p, "cuts")).map(|t| t.len()).unwrap_or(0);
-    let deja = jsval::obj(a(&p, "cuts")).map(|t| t.iter().any(|(k, _)| k == &ck)).unwrap_or(false);
+    let n_cuts = jsval::obj(a(&p, "cuts")).map_or(0, <[(std::string::String, ariane_vba::Valeur)]>::len);
+    let deja = jsval::obj(a(&p, "cuts")).is_some_and(|t| t.iter().any(|(k, _)| k == &ck));
     if !deja && n_cuts >= MAX_CUTS { return mem.clone(); }
-    let t = parse_iso(chaine(at_iso).unwrap_or("")).map(|ms| (ms / 1000.0).floor()).unwrap_or(0.0);
+    let t = parse_iso(chaine(at_iso).unwrap_or("")).map_or(0.0, |ms| (ms / 1000.0).floor());
     let version = match version { Valeur::Chaine(s) => jsval::s(s.chars().take(20).collect::<String>()), _ => jsval::nul() };
     let mut ligne = b;
     ligne.push(jsval::n(t));
@@ -202,7 +202,7 @@ pub fn ajouter(mem: &Valeur, partie: &Valeur, cle: &Valeur, cut: &Valeur, bords:
         poser(cuts, ck.clone(), jsval::tab(ligne));
     }
     if let Valeur::Objet(v) = prendre(&mut p, "vus") { v.retain(|(k, _)| k != &ck); }
-    let maj = if let Valeur::Chaine(s) = at_iso { if !s.is_empty() { jsval::s(s.clone()) } else { jsval::s("") } } else { jsval::s("") };
+    let maj = if let Valeur::Chaine(s) = at_iso { if s.is_empty() { jsval::s("") } else { jsval::s(s.clone()) } } else { jsval::s("") };
     if let Valeur::Objet(t) = &mut p {
         if let Some(c) = t.iter_mut().find(|(k, _)| k == "maj") { c.1 = maj; } else { t.push(("maj".into(), maj)); }
     }
@@ -219,7 +219,7 @@ pub fn ajouter(mem: &Valeur, partie: &Valeur, cle: &Valeur, cut: &Valeur, bords:
     Valeur::Objet(m)
 }
 fn a_de<'a>(m: &'a [(String, Valeur)], k: &str, champ: &str) -> &'a Valeur {
-    m.iter().find(|(c, _)| c == k).map(|(_, v)| a(v, champ)).unwrap_or(&Valeur::Indefini)
+    m.iter().find(|(c, _)| c == k).map_or(&Valeur::Indefini, |(_, v)| a(v, champ))
 }
 fn prendre<'a>(o: &'a mut Valeur, k: &str) -> &'a mut Valeur {
     let Valeur::Objet(t) = o else { unreachable!() };
@@ -244,21 +244,21 @@ pub fn comparer(p: &Valeur, dec: &Valeur, at_iso: &Valeur) -> Valeur {
     let n = nombre(a(dec, "n")).unwrap_or(0.0);
     let ed = nombres_ou_trous(a(dec, "ed"));
     let st = f64s(a(dec, "st"));
-    let cuts = jsval::obj(a(p, "cuts")).map(|t| t.to_vec()).unwrap_or_default();
-    let vus_av = jsval::obj(a(p, "vus")).map(|t| t.to_vec()).unwrap_or_default();
+    let cuts = jsval::obj(a(p, "cuts")).map(<[(std::string::String, ariane_vba::Valeur)]>::to_vec).unwrap_or_default();
+    let vus_av = jsval::obj(a(p, "vus")).map(<[(std::string::String, ariane_vba::Valeur)]>::to_vec).unwrap_or_default();
     let mut comparees = 0.0;
     let mut nouvelles = 0.0;
     let mut vus = vec![];
     let mut ecarts = vec![];
     for (k, e) in &cuts {
         let Ok(i) = k.parse::<f64>() else { continue };
-        if !i.is_finite() || i.fract() != 0.0 || i >= n { continue };
+        if !i.is_finite() || i.fract() != 0.0 || i >= n { continue }
         let ii = i as usize;
         if !matches!(e, Valeur::Tableau(_) | Valeur::Nombres(_)) { continue; }
         let bords_e: Vec<f64> = nombres_ou_trous(e).into_iter().map(|x| x.unwrap_or(f64::NAN)).collect();
         if bords_e.len() < 6 { continue; }
         let r: Vec<Option<f64>> = (0..6).map(|j| ed.get(6 * ii + j).copied().flatten()).collect();
-        if r.iter().any(|v| v.is_none()) { continue; }
+        if r.iter().any(std::option::Option::is_none) { continue; }
         let r: Vec<f64> = r.into_iter().map(|v| v.unwrap()).collect();
         comparees += 1.0;
         let g = hypot3(bords_e[0] - r[0], bords_e[1] - r[1], bords_e[2] - r[2]) / 10.0;
@@ -266,17 +266,16 @@ pub fn comparer(p: &Valeur, dec: &Valeur, at_iso: &Valeur) -> Valeur {
         if !(g > SEUIL_MM || d > SEUIL_MM) { continue; }
         let prev = vus_av.iter().find(|(c, _)| c == k).map(|(_, v)| v);
         let nouveau = match prev {
-            None => true,
             Some(Valeur::Tableau(t)) => {
                 let p0 = t.first().and_then(|e| e.as_ref()).and_then(nombre).unwrap_or(f64::NAN);
                 let p1 = t.get(1).and_then(|e| e.as_ref()).and_then(nombre).unwrap_or(f64::NAN);
                 (p0 - g).abs() > SEUIL_NOUVEAU_MM || (p1 - d).abs() > SEUIL_NOUVEAU_MM
             }
-            Some(_) => true,
+            _ => true,
         };
         if nouveau { nouvelles += 1.0; }
         vus.push((k.clone(), jsval::tab(vec![jsval::n(arr1(g)), jsval::n(arr1(d))])));
-        let statut = st.get(ii).copied().filter(|s| s.fract() == 0.0 && (0.0..4.0).contains(s)).map(|s| STATUTS[s as usize]).unwrap_or("autre");
+        let statut = st.get(ii).copied().filter(|s| s.fract() == 0.0 && (0.0..4.0).contains(s)).map_or("autre", |s| STATUTS[s as usize]);
         ecarts.push((i, jsval::o(vec![
             ("cut", jsval::n(i)), ("gaucheMm", jsval::n(arr1(g))), ("droiteMm", jsval::n(arr1(d))),
             ("statut", jsval::s(statut)), ("nouveau", jsval::b(nouveau)),
@@ -309,7 +308,7 @@ pub fn choisir_table(tables: &Valeur, obs: &Valeur) -> Valeur {
         let n = match st { Valeur::Tableau(a) => a.len(), Valeur::Nombres(a) => a.len(), _ => continue };
         let ok = est_objet(t) && matches!(a(t, "fl"), Valeur::Tableau(_) | Valeur::Nombres(_)) && matches!(a(t, "ed"), Valeur::Tableau(_) | Valeur::Nombres(_))
             && !matches!(a(t, "rompue"), Valeur::Booleen(true)) && !matches!(a(t, "tronquee"), Valeur::Booleen(true))
-            && matches!(a(t, "debut"), Valeur::Booleen(true)) && rows.map(|r| est_entier(&jsval::n(r)) && n == r as usize).unwrap_or(false);
+            && matches!(a(t, "debut"), Valeur::Booleen(true)) && rows.is_some_and(|r| est_entier(&jsval::n(r)) && n == r as usize);
         if ok { l.push(t.clone()); }
     }
     if let Some(t) = l.iter().find(|t| chaine(a(t, "key")) == chaine(a(obs, "listKey")) && chaine(a(obs, "listKey")).is_some()) { return t.clone(); }
@@ -324,7 +323,7 @@ pub fn texte_resume(r: &Valeur, snap: &Valeur, heure: &Valeur) -> String {
         }
         chaine(iso).filter(|s| !s.is_empty()).unwrap_or("heure inconnue").to_string()
     };
-    let at = if !matches!(a(snap, "at"), Valeur::Indefini | Valeur::Nul) { a(snap, "at") } else { a(r, "instantaneAt") };
+    let at = if matches!(a(snap, "at"), Valeur::Indefini | Valeur::Nul) { a(r, "instantaneAt") } else { a(snap, "at") };
     let lignes = match nombre(a(snap, "lignes")) { Some(n) => format!("{}", n as i64), None => "?".into() };
     let base = format!("Liste d’ESV relue, partie {} · instantané du {} ({lignes} lignes)", texte_num_ou(a(r, "partie")), h(at));
     let mem = nombre(a(r, "memorises")).unwrap_or(0.0);
@@ -338,7 +337,7 @@ pub fn texte_resume(r: &Valeur, snap: &Valeur, heure: &Valeur) -> String {
     }
 }
 fn fmt_num(x: f64) -> String { if x.fract() == 0.0 && x.abs() < 1e15 { format!("{}", x as i64) } else { crate::nombre::json_nombre(x) } }
-fn texte_num_ou(v: &Valeur) -> String { nombre(v).map(fmt_num).unwrap_or_else(|| match v { Valeur::Chaine(s) => s.clone(), Valeur::Nul => "null".into(), _ => "undefined".into() }) }
+fn texte_num_ou(v: &Valeur) -> String { nombre(v).map_or_else(|| match v { Valeur::Chaine(s) => s.clone(), Valeur::Nul => "null".into(), _ => "undefined".into() }, fmt_num) }
 
 pub fn actif(reglage: &Valeur) -> bool {
     if matches!(reglage, Valeur::Indefini) { return true; }

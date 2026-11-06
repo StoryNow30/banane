@@ -3,12 +3,13 @@ use crate::ryu::d2s::{d2d, decimal_length17, DOUBLE_EXPONENT_BITS, DOUBLE_MANTIS
 
 /// Texte JSON d'un nombre fini. `NaN` et les infinis ne sont pas du ressort de cette fonction.
 /// −0 et +0 donnent `"0"`.
+#[must_use]
 pub fn json_nombre(x: f64) -> String {
     if x == 0.0 {
         return "0".into();
     }
     // Entiers exactement représentés : le texte décimal est celui de l'entier (pas d'exposant sous 2⁵³).
-    if x.is_finite() && x.fract() == 0.0 && x.abs() <= 9007199254740992.0 {
+    if x.is_finite() && x.fract() == 0.0 && x.abs() <= 9_007_199_254_740_992.0 {
         return format!("{}", x as i64);
     }
     let bits = x.to_bits();
@@ -70,7 +71,7 @@ pub fn json_nombre(x: f64) -> String {
         } else {
             s.push('-');
         }
-        s.push_str(&format!("{}", e.abs()));
+        { use std::fmt::Write; let _ = write!(s, "{}", e.abs()); }
     }
     s
 }
@@ -103,6 +104,6 @@ mod essais {
         assert_eq!(json_nombre(1e-6), "0.000001");
         assert_eq!(json_nombre(1e-7), "1e-7");
         assert_eq!(json_nombre(-1.23e21), "-1.23e+21");
-        assert_eq!(json_nombre(9007199254740992.0), "9007199254740992");
+        assert_eq!(json_nombre(9_007_199_254_740_992.0), "9007199254740992");
     }
 }

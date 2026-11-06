@@ -11,7 +11,6 @@ pub fn stringify(v: &Valeur) -> Option<String> {
 
 fn ecrire(v: &Valeur, s: &mut String) -> Option<()> {
     match v {
-        Valeur::Indefini => return None,
         Valeur::Nul => s.push_str("null"),
         Valeur::Booleen(true) => s.push_str("true"),
         Valeur::Booleen(false) => s.push_str("false"),
@@ -44,7 +43,7 @@ fn ecrire(v: &Valeur, s: &mut String) -> Option<()> {
             s.push('}');
         }
         // Ces formes ne sortent pas de JSON.parse. On les refuse plutôt que d'inventer un texte.
-        Valeur::Bloc { .. } | Valeur::Nombres(_) | Valeur::Booleens(_) | Valeur::Erreur { .. } => return None,
+        Valeur::Indefini | Valeur::Bloc { .. } | Valeur::Nombres(_) | Valeur::Booleens(_) | Valeur::Erreur { .. } => return None,
     }
     Some(())
 }
@@ -60,7 +59,7 @@ fn ecrire_chaine(t: &str, s: &mut String) {
             '\n' => s.push_str("\\n"),
             '\r' => s.push_str("\\r"),
             '\t' => s.push_str("\\t"),
-            c if (c as u32) < 0x20 => s.push_str(&format!("\\u{:04x}", c as u32)),
+            c if (c as u32) < 0x20 => { use std::fmt::Write; let _ = write!(s, "\\u{:04x}", c as u32); }
             c => s.push(c),
         }
     }
@@ -68,12 +67,13 @@ fn ecrire_chaine(t: &str, s: &mut String) {
 }
 
 struct Lec<'a> { b: &'a [u8], i: usize }
-impl<'a> Lec<'a> {
+impl Lec<'_> {
     fn blanc(&mut self) { while matches!(self.b.get(self.i), Some(b' ' | b'\n' | b'\r' | b'\t')) { self.i += 1; } }
     fn car(&mut self) -> Option<u8> { let c = *self.b.get(self.i)?; self.i += 1; Some(c) }
     fn att(&mut self, c: u8) -> bool { self.blanc(); if self.b.get(self.i) == Some(&c) { self.i += 1; true } else { false } }
 }
 
+#[must_use]
 pub fn parse(texte: &str) -> Option<Valeur> {
     let mut l = Lec { b: texte.as_bytes(), i: 0 };
     let v = valeur(&mut l)?;
@@ -143,7 +143,7 @@ fn indice_canonique(k: &str) -> Option<u32> {
     if k.is_empty() || k.len() > 10 { return None; }
     let b = k.as_bytes();
     if b[0] == b'0' { return if k == "0" { Some(0) } else { None }; }
-    if !b.iter().all(|c| c.is_ascii_digit()) { return None; }
+    if !b.iter().all(u8::is_ascii_digit) { return None; }
     let n: u64 = k.parse().ok()?;
     if n > u32::MAX as u64 { return None; }
     Some(n as u32)
@@ -178,7 +178,7 @@ fn chaine(l: &mut Lec) -> Option<String> {
                                 let mut v = 0u32;
                                 let mut ok = true;
                                 for _ in 0..4 {
-                                    match l.car().and_then(hex) { Some(h) => v = v << 4 | h as u32, None => { ok = false; break; } }
+                                    if let Some(h) = l.car().and_then(hex) { v = v << 4 | h as u32 } else { ok = false; break; }
                                 }
                                 if ok && (0xDC00..=0xDFFF).contains(&v) {
                                     let cp = 0x10000 + ((u - 0xD800) << 10) + (v - 0xDC00);
@@ -213,19 +213,19 @@ fn nombre(l: &mut Lec) -> Option<Valeur> {
     if l.b.get(l.i) == Some(&b'-') { l.i += 1; }
     let d0 = *l.b.get(l.i)?;
     if d0 == b'0' { l.i += 1; }
-    else if d0.is_ascii_digit() { while l.b.get(l.i).map(|c| c.is_ascii_digit()).unwrap_or(false) { l.i += 1; } }
+    else if d0.is_ascii_digit() { while l.b.get(l.i).is_some_and(u8::is_ascii_digit) { l.i += 1; } }
     else { return None; }
     if l.b.get(l.i) == Some(&b'.') {
         l.i += 1;
         let a = l.i;
-        while l.b.get(l.i).map(|c| c.is_ascii_digit()).unwrap_or(false) { l.i += 1; }
+        while l.b.get(l.i).is_some_and(u8::is_ascii_digit) { l.i += 1; }
         if l.i == a { return None; }
     }
     if matches!(l.b.get(l.i), Some(b'e' | b'E')) {
         l.i += 1;
         if matches!(l.b.get(l.i), Some(b'+' | b'-')) { l.i += 1; }
         let a = l.i;
-        while l.b.get(l.i).map(|c| c.is_ascii_digit()).unwrap_or(false) { l.i += 1; }
+        while l.b.get(l.i).is_some_and(u8::is_ascii_digit) { l.i += 1; }
         if l.i == a { return None; }
     }
     let t = std::str::from_utf8(&l.b[deb..l.i]).ok()?;

@@ -42,6 +42,9 @@ Le WASM est plus lent : la traversée coûte plus que le calcul. Sur ce journal,
 
 Le plafond 512 Mio n'a pas été atteint. Après réinstanciation, la mémoire linéaire revient à la taille d'une instance neuve : elle ne s'accumule pas d'un appel à l'autre.
 
+## Qualité (ÉTABLI)
+`cargo clippy -p ariane-etat --no-deps --all-targets -- -W clippy::pedantic -D warnings` sort sans avertissement. Les conversions d'une longueur de tableau en `f64`, qui recopient `array.length`, sont nommées en tête de crate. `cargo test -p ariane-etat` : 10 essais, un appel de chaque fonction publique. Chaque `unsafe` de l'ABI dit quel tampon il reçoit, sa taille, et qu'il n'est libéré qu'une fois. Le code Ryū vendu porte le même invariant sur ses pointeurs locaux.
+
 ## Lecture
 
 Ces modules sont des lectures et des assemblages. Une fois les données en JavaScript, les porter en WASM les ralentit. Ils ne sont pas à brancher dans le chemin d'un cut. La parité est tenue, la mémoire est bornée.

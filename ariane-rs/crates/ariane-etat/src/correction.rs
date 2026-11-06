@@ -85,7 +85,7 @@ fn lot_de<'a>(events: &'a [Valeur], partie: &Valeur, batch_id: Option<&str>) -> 
     let t0 = instant(e)?;
     let part = if est_entier(partie) { partie.clone() } else {
         let id = a(e, "identity");
-        if !vrai(id) { if matches!(id, Valeur::Nul) { Valeur::Nul } else { Valeur::Indefini } } else { a(id, "part").clone() }
+        if vrai(id) { a(id, "part").clone() } else if matches!(id, Valeur::Nul) { Valeur::Nul } else { Valeur::Indefini }
     };
     let mut fin = f64::INFINITY;
     if let Some(&s) = departs.iter().find(|&&i| instant(&events[i]).unwrap() > t0 && chaine(a(a(&events[i], "batch"), "id")) != Some(b.as_str())) {
@@ -114,6 +114,8 @@ impl Acc {
 
 fn bit_cut(c: f64) -> u64 { c.to_bits() }
 
+/// Liste de cuts à corriger (`construire` de `src/correction-liste.js`), gardée d'un bloc face au source.
+#[allow(clippy::too_many_lines)]
 pub fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     let ev = evenements(events);
     let owned: Vec<Valeur> = ev.into_iter().cloned().collect();
@@ -199,7 +201,7 @@ pub fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     }
     for c in differes.iter().copied() {
         let sh = shadow.get(&bit_cut(c)).map(|&i| &owned[i]);
-        let l = sh.map(|e| a(e, "lotObservation")).unwrap_or(&Valeur::Indefini);
+        let l = sh.map_or(&Valeur::Indefini, |e| a(e, "lotObservation"));
         let cmd = a(l, "command");
         let motif = if garde.contains_key(&bit_cut(c)) {
             jsval::s("garde-apres-differe")
@@ -219,7 +221,7 @@ pub fn construire(events: &Valeur, options: &Valeur) -> Valeur {
     }
     for c in poses.values().copied() {
         let sh = shadow.get(&bit_cut(c)).map(|&i| &owned[i]);
-        let l = sh.map(|e| a(e, "lotObservation")).unwrap_or(&Valeur::Indefini);
+        let l = sh.map_or(&Valeur::Indefini, |e| a(e, "lotObservation"));
         let cmd = a(l, "command");
         let appuis = if let Some(t) = jsval::comme_liste(a(l, "anchorsUsed")) {
             Some(t.len() as f64)
@@ -237,7 +239,7 @@ pub fn construire(events: &Valeur, options: &Valeur) -> Valeur {
             touche(c, &mut sig, &mut ordre_sig, "apres-differe", Some(jsval::o(vec![("differes", jsval::tab(r1.iter().copied().map(jsval::n).collect()))])));
         }
         if appuis == Some(0.0) && (!r1.is_empty() || par_le_lot) {
-            let raison = chaine(a(cmd, "reason")).map(jsval::s).unwrap_or(jsval::nul());
+            let raison = chaine(a(cmd, "reason")).map_or(jsval::nul(), jsval::s);
             touche(c, &mut sig, &mut ordre_sig, "sans-appui", Some(jsval::o(vec![("commande", raison)])));
         }
     }
@@ -373,13 +375,13 @@ pub fn visites_fusionnees(visites: &Valeur, options: &Valeur) -> Valeur {
     jsval::tab(v.iter().enumerate().map(|(i, x)| {
         let vid = a(x, "visitId");
         let p = if chaine(a(x, "label")).unwrap_or("").is_empty() {
-            chaine(vid).and_then(|id| chaine(a(issues, id))).map(|s| s.to_string())
+            chaine(vid).and_then(|id| chaine(a(issues, id))).map(std::string::ToString::to_string)
         } else { None };
-        let label = if let Some(l) = chaine(a(x, "label")) { if !l.is_empty() { Some(l.to_string()) } else { p.clone() } } else { p.clone() };
+        let label = if let Some(l) = chaine(a(x, "label")) { if l.is_empty() { p.clone() } else { Some(l.to_string()) } } else { p.clone() };
         // `v.label || p || null`
         let label = match a(x, "label") {
             Valeur::Chaine(s) if !s.is_empty() => jsval::s(s.clone()),
-            _ => p.clone().map(jsval::s).unwrap_or(jsval::nul()),
+            _ => p.clone().map_or(jsval::nul(), jsval::s),
         };
         let encours = !vrai(a(x, "endedAt")) && i + 1 == n && echo;
         jsval::o(vec![
@@ -486,7 +488,7 @@ pub fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
     let mut suivant = jsval::nul();
     for p in &tour {
         let mut cuts: Vec<(f64, String)> = ordre.iter().filter(|x| x.0.to_bits() == p.to_bits() && x.2 == "a-faire" && !ouvert(x.0, x.1)).map(|x| (x.1, x.2.clone())).collect();
-        let apres: Vec<(f64, String)> = if cp.map(|d| d.to_bits() == p.to_bits()).unwrap_or(false) && c_ok {
+        let apres: Vec<(f64, String)> = if cp.is_some_and(|d| d.to_bits() == p.to_bits()) && c_ok {
             cuts.iter().filter(|(c, _)| *c > cc.unwrap()).cloned().collect()
         } else { vec![] };
         let x = apres.first().cloned().or_else(|| cuts.first().cloned());
@@ -497,7 +499,7 @@ pub fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
         let l: Vec<_> = ordre.iter().filter(|x| x.0.to_bits() == p.to_bits()).collect();
         let faits = l.iter().filter(|x| x.2 == "corrige" || x.2 == "valide").count() as f64;
         let reste = l.iter().any(|x| x.2 == "a-faire" || x.2 == "en-cours");
-        let entamee = l.iter().any(|x| x.2 != "a-faire") || cp.map(|d| d.to_bits() == p.to_bits()).unwrap_or(false);
+        let entamee = l.iter().any(|x| x.2 != "a-faire") || cp.is_some_and(|d| d.to_bits() == p.to_bits());
         let etat = if !reste { "faite" } else if entamee { "en-cours" } else { "a-faire" };
         jsval::o(vec![("partie", jsval::n(*p)), ("etat", jsval::s(etat)), ("faits", jsval::n(faits)), ("total", jsval::n(l.len() as f64))])
     }).collect();
@@ -509,6 +511,8 @@ pub fn parcours(listes: &Valeur, options: &Valeur) -> Valeur {
     ])
 }
 
+/// Couverture de l'Aurore (`couverture` de `src/correction-liste.js`), gardée d'un bloc face au source.
+#[allow(clippy::too_many_lines)]
 pub fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
     let owned: Vec<Valeur> = jsval::elements(events).into_iter().cloned().collect();
     let mut idx: Vec<usize> = (0..owned.len()).filter(|&i| instant(&owned[i]).is_some()).collect();
@@ -535,7 +539,7 @@ pub fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
         if chaine(a(e, "type")) == Some("correction-debut") {
             if let Some(id) = chaine(a(e, "correctionId")) {
                 if est_tableau(a(e, "batchIds")) {
-                    let ids = jsval::elements(a(e, "batchIds")).into_iter().filter_map(chaine).map(|s| s.to_string()).collect();
+                    let ids = jsval::elements(a(e, "batchIds")).into_iter().filter_map(chaine).map(std::string::ToString::to_string).collect();
                     debuts.insert(id.to_string(), (ids, instant(e).unwrap_or(0.0)));
                 }
             }
@@ -559,7 +563,7 @@ pub fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
                 let st = chaine(a(l, "statut")).unwrap_or("");
                 if st == "corrige" || st == "valide" {
                     let cle = format!("{}|{}", nombre(a(l, "part")).unwrap(), nombre(a(l, "cut")).unwrap());
-                    traites.insert(cle, (id.clone(), st.to_string(), chaine(a(f, "raison")).map(|s| s.to_string()), bids.clone(), instant(f).unwrap_or(0.0)));
+                    traites.insert(cle, (id.clone(), st.to_string(), chaine(a(f, "raison")).map(std::string::ToString::to_string), bids.clone(), instant(f).unwrap_or(0.0)));
                 }
             }
         }
@@ -607,7 +611,7 @@ pub fn couverture(events: &Valeur, options: &Valeur) -> Valeur {
                     retires.push(jsval::o(vec![
                         ("part", jsval::n(*p)), ("cut", jsval::n(cut)), ("batchId", jsval::s(&bid)),
                         ("correctionId", jsval::s(cid.clone())), ("statut", jsval::s(st.clone())),
-                        ("fin", fin.clone().map(jsval::s).unwrap_or(jsval::nul())),
+                        ("fin", fin.clone().map_or(jsval::nul(), jsval::s)),
                     ]));
                     continue;
                 }

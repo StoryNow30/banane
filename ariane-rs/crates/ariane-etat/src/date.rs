@@ -43,6 +43,7 @@ fn civil(mut jours: i64) -> (i32, u32, u32) {
 }
 
 /// Millisecondes UTC, ou `None` si la chaîne n'est pas un instant ISO que le port sait lire.
+#[must_use]
 pub fn parse_iso(s: &str) -> Option<f64> {
     let b = s.as_bytes();
     if b.len() < 10 { return None; }
@@ -80,7 +81,7 @@ pub fn parse_iso(s: &str) -> Option<f64> {
         0i64
     } else if b.get(i) == Some(&b'Z') && i + 1 == b.len() {
         0
-    } else if matches!(b.get(i), Some(b'+') | Some(b'-')) && i + 6 == b.len() && b.get(i + 3) == Some(&b':') {
+    } else if matches!(b.get(i), Some(b'+' | b'-')) && i + 6 == b.len() && b.get(i + 3) == Some(&b':') {
         let signe = if b[i] == b'+' { 1i64 } else { -1 };
         let oh = std::str::from_utf8(b.get(i + 1..i + 3)?).ok()?.parse::<i64>().ok()?;
         let om = std::str::from_utf8(b.get(i + 4..i + 6)?).ok()?.parse::<i64>().ok()?;
@@ -95,6 +96,7 @@ pub fn parse_iso(s: &str) -> Option<f64> {
 }
 
 /// `new Date(ms).toISOString()`.
+#[must_use]
 pub fn vers_iso(ms: f64) -> Option<String> {
     if !ms.is_finite() { return None; }
     let arr = ms.trunc();
@@ -119,8 +121,7 @@ mod essais {
         for s in ["2026-10-31T11:00:00.000Z", "2026-10-31T11:00:00Z", "2026-11-06T12:55:30.123Z", "1970-01-01T00:00:00.000Z"] {
             let ms = parse_iso(s).unwrap();
             let iso = vers_iso(ms).unwrap();
-            let attendu = if s.ends_with(".000Z") || !s.contains('.') { s.replace('Z', ".000Z").replace("..000", ".") } else { s.into() };
-            let attendu = if s.contains('.') { s.to_string() } else { s.trim_end_matches('Z').to_string() + ".000Z" };
+            let attendu = if s.contains('.') { s.to_string() } else { format!("{}.000Z", s.trim_end_matches('Z')) };
             assert_eq!(iso, attendu, "{s} → {ms}");
         }
         assert_eq!(parse_iso("2026-11-06T12:00:00+02:00"), parse_iso("2026-11-06T10:00:00Z"));
