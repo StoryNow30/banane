@@ -3500,3 +3500,8 @@ Complète D-299 sans la modifier.
 - On confie au Rust des **traitements complets** (recevoir les points, préparer les structures de recherche, calculer les candidats, renvoyer les résultats), pas une multitude de petits appels.
 - Le Rust déjà bénéfique reste en place (lecture LiDAR de « Vision ») ; une fonction plus lente une fois les échanges comptés reste en JavaScript. Si le Worker est retenu, le moteur Rust/WASM peut y tourner.
 - La part du Rust grandit avec les besoins et les preuves de performance, sans objectif de « tout passer en Rust » : D-299 et D-300 remplacent sur ce point la cible « 100 % » de D-295 et D-296.
+
+## D-301 — Le développement passe à l'agent Codex (opérateur, 07/11)
+- L'agent Codex (ChatGPT) reprend tout le développement et devient l'intégrateur : il pousse sur le tronc `claude/50-test17` et fabrique les paquets, avec les mêmes règles de preuve (`CLAUDE.md`, `fiches/PASSATION_CODEX.md`).
+- Codex peut lire et analyser les données terrain de `banane-data`, comme Cursor (extension de D-253). Rien de ces données n'entre jamais dans `banane`.
+- Inchangé : les accords écrits de l'opérateur (`manifest.json`, fichiers gelés, réglages de pose ou de validation, dépenses, suppressions, merge dans `main`, étiquettes), D-293, D-299 et D-300.
