@@ -38,7 +38,7 @@ function main(){
  if(process.argv.includes('--origine'))console.log(JSON.stringify(origine()));
  const erreurs=verifier(['tests/typage-ch075/positif.js']);
  if(erreurs.length){process.stderr.write(ts.formatDiagnosticsWithColorAndContext(erreurs,{getCanonicalFileName:x=>x,getCurrentDirectory:()=>process.cwd(),getNewLine:()=> '\n'}));process.exitCode=1;return;}
- for(const nom of ['unites','reperes','coupe-partie','operation']){const fichier=`tests/typage-ch075/${nom}.js`,d=verifier([fichier]).filter(x=>x.file?.fileName.endsWith(fichier));const lignes=fs.readFileSync(fichier,'utf8').split('\n');assert.ok(lignes.some(x=>x.includes('// rejet')),`${nom} : aucun rejet attendu`);for(const [ligne,texte] of lignes.entries()){if(!texte.includes('// rejet'))continue;assert.ok(d.some(x=>(x.code===2322||x.code===2345)&&x.file.getLineAndCharacterOfPosition(x.start).line===ligne),`${nom}:${ligne+1} : confusion non rejetée`);}}
+ for(const nom of ['unites','reperes','coupe-partie','operation','file-partie-coupe','file-coupe-operation']){const fichier=`tests/typage-ch075/${nom}.js`,d=verifier([fichier]).filter(x=>x.file?.fileName.endsWith(fichier));const lignes=fs.readFileSync(fichier,'utf8').split('\n');assert.ok(lignes.some(x=>x.includes('// rejet')),`${nom} : aucun rejet attendu`);for(const [ligne,texte] of lignes.entries()){if(!texte.includes('// rejet'))continue;assert.ok(d.some(x=>(x.code===2322||x.code===2345)&&x.file.getLineAndCharacterOfPosition(x.start).line===ligne),`${nom}:${ligne+1} : confusion non rejetée`);}}
  console.log(JSON.stringify({perimetre:PERIMETRE,erreurs:erreurs.length,identite:identite()},null,2));
 }
 module.exports={verifier,jetons,identite,origine,PERIMETRE,REFERENCES,ORIGINE,EMPREINTE};if(require.main===module)main();

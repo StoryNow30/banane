@@ -18,7 +18,8 @@
  * 5 par minute de visite) ; (3) un cut déjà jugé (`jugesDeja`, clés « partie:cut ») n'est pas reproposé ; (4) à rendement égal, l'ordre des cuts,
  * pour que l'opérateur parcoure des plages et non des sauts (un saut coûte ~6 s de plus qu'un cut voisin, mesuré le 04/11).
  * Aucun chiffre n'est deviné : une classe sans observation n'a pas de taux et ses candidats sont écartés (différés exceptés). */
-(function (/** @type {unknown} */ root, /** @type {() => unknown} */ factory) {
+/** @template T @param {unknown} root @param {() => T} factory */
+(function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api; else /** @type {{ArianeFilePrioritaire?:unknown}} */ (root).ArianeFilePrioritaire = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {

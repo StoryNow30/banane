@@ -28,7 +28,8 @@
  * REGISTRE DES ÉCRITURES par partie (`CLE_REGISTRE`, chrome.storage.local, jamais vidé par « vider le cache ») : cuts posés et validés par
  * le lot, écrits par la deuxième passe, corrigés par la relecture (écart en mm), bornés aux `MAX_REGISTRE` dernières parties.
  * ALERTE NON BLOQUANTE par partie (`alertes`) : seuils proposés par la troisième relecture, NON décidés par l'opérateur (`SEUILS`). */
-(function (/** @type {unknown} */ root, /** @type {() => unknown} */ factory) {
+/** @template T @param {unknown} root @param {() => T} factory */
+(function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api; else /** @type {{BananeFileParties?:unknown}} */ (root).BananeFileParties = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {

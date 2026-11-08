@@ -29,3 +29,13 @@ test('CH-075 : références d\'identité gelées pour chaque fichier du module 2
  for(const f of ['src/appuis-liste.js','src/file-parties.js','src/file-prioritaire.js']){const r=T.REFERENCES[f];assert.ok(r&&r.base&&r.source&&r.ast,f);}
  assert.deepEqual(T.origine().map(x=>x.fichier),T.PERIMETRE);assert.ok(T.PERIMETRE.length>=2);
 });
+const fs=require('node:fs');
+test('CH-075 module 2 : cas négatifs partie/coupe et coupe/opération sur les vraies fonctions de la file',()=>{
+ for(const [nom,min] of [['file-partie-coupe',4],['file-coupe-operation',4]]){
+  const texte=fs.readFileSync(`tests/typage-ch075/${nom}.js`,'utf8');
+  assert.ok(texte.split('\n').filter(x=>x.includes('// rejet')).length>=min,`${nom} : au moins ${min} rejets attendus`);
+  assert.match(texte,/file-parties\.js/);assert.match(texte,/file-prioritaire\.js/);
+ }
+ const t=fs.readFileSync('tools/typage-ch075.cjs','utf8');
+ assert.match(t,/'file-partie-coupe'/);assert.match(t,/'file-coupe-operation'/);
+});
