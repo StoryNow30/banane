@@ -92,7 +92,10 @@
   * InterleavedBufferAttribute ; relevé du source, CH-064 ; ESV charge Potree 1.8.0, relevé de CH-062). Ces accesseurs lisent le
   * tableau sans branche « normalized » ; les attributs normalisés sont de toute façon exclus plus bas. À compléter avec la
   * révision relevée chez l'opérateur si elle diffère. */
- const CORPS_THREE=Object.freeze({r124:Object.freeze({buffer:Object.freeze(["function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"]),entrelace:Object.freeze(["function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"])})});
+ const CORPS_THREE=Object.freeze({r124:Object.freeze({buffer:Object.freeze(["function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"]),entrelace:Object.freeze(["function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}", "function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"])}),
+  /* D-303 : copie de three.js r124 propre à Potree 1.8.0 (relevé de l'opérateur sur ESV, 08/11) : même code, un cran
+   * d'indentation de plus. Seuls les attributs simples ont été relevés : pas de corps entrelacé pour cette copie. */
+  'r124-potree':Object.freeze({buffer:Object.freeze(["function ( index ) {\n\n\t\t\treturn this.array[ index * this.itemSize ];\n\n\t\t}", "function ( index ) {\n\n\t\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t\t}", "function ( index ) {\n\n\t\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t\t}"]),entrelace:null})});
  const refusParRaison={},FT=Function.prototype.toString,appliquer=Reflect.apply,proto=Object.getPrototypeOf,descripteur=Object.getOwnPropertyDescriptor;
  /* Fonction de la clé k de o (chaîne des prototypes) par descripteur : la fonction, undefined si la clé est absente, ou null si ce
   * n'est pas une donnée simple (propriété calculée, ou valeur qui n'est pas une fonction). */
@@ -101,17 +104,23 @@
  const trio=p=>{if(!p)return null;const x=fonctionDe(p,'getX'),y=fonctionDe(p,'getY'),z=fonctionDe(p,'getZ');return x&&y&&z?[x,y,z]:null;};
  const texte=f=>{try{return appliquer(FT,f,[]);}catch{return null;}};
  const GENRES=['buffer','entrelace'];
- const authentique=(t,genre)=>Object.keys(CORPS_THREE).some(r=>CORPS_THREE[r][genre].every((c,k)=>texte(t[k])===c));
+ const authentique=(t,genre)=>Object.keys(CORPS_THREE).some(r=>!!CORPS_THREE[r][genre]&&CORPS_THREE[r][genre].every((c,k)=>texte(t[k])===c));
  const protosThree=T=>{try{return [T&&T.BufferAttribute&&T.BufferAttribute.prototype,T&&T.InterleavedBufferAttribute&&T.InterleavedBufferAttribute.prototype];}catch{return [null,null];}};
  const INSTANTANE_THREE=protosThree(globalThis.THREE).map((p,i)=>{const t=trio(p);return t&&authentique(t,GENRES[i])?t:null;});
  const memeTrio=(a,b)=>!!a&&!!b&&a[0]===b[0]&&a[1]===b[1]&&a[2]===b[2];
+ let COPIE_EPINGLEE=null;
  function accesseursSurs(pos){
   const x=fonctionDe(pos,'getX'),y=fonctionDe(pos,'getY'),z=fonctionDe(pos,'getZ');
   if(x===undefined&&y===undefined&&z===undefined)return true;
   if(!x||!y||!z)return false;
   const t=[x,y,z],courant=protosThree(globalThis.THREE).map(trio);
   for(let i=0;i<2;i++)if(memeTrio(t,INSTANTANE_THREE[i])&&memeTrio(courant[i],INSTANTANE_THREE[i])&&authentique(t,GENRES[i]))return true;
-  return false;
+  /* D-303 : copie de three.js propre à Potree (absente de globalThis.THREE). Le texte authentifie la sémantique (corps sans
+   * variable libre : `this.array`, `this.itemSize`) ; l'identité est tenue par ÉPINGLAGE : le premier trio authentique d'attribut
+   * simple vu par cette coquille est retenu, et seul ce trio-là est reconnu ensuite (une autre copie, même au même texte, ne
+   * l'est pas). L'épinglage se fait avant toute lecture et n'appelle aucun accesseur. */
+  if(COPIE_EPINGLEE===null&&authentique(t,'buffer'))COPIE_EPINGLEE=t;
+  return memeTrio(t,COPIE_EPINGLEE)&&authentique(t,'buffer');
  }
  const refuser=raison=>{refusParRaison[raison]=(refusParRaison[raison]||0)+1;return null;};
  /* Éligibilité ; rend le descripteur du nœud ({src, stride, offset, capacite, f64}) ou null. */

@@ -174,3 +174,45 @@ test('three.js authentique (accesseurs r124, THREE au chargement) : lecture dire
  try{const w=net(await L.variante.capture(opts(sc())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);assert.ok(nw.tranches()>0,'lecture directe servie');}
  finally{globalThis.ArianeLidarNoyau=undefined;}
 });
+
+/* D-303 (relevé de l'opérateur sur ESV, 08/11) : Potree 1.8.0 garde sa PROPRE copie de three.js r124. Les attributs des nœuds sont
+ * des BufferAttribute de cette copie : fonctions distinctes de celles de window.THREE, et texte indenté d'un cran de plus
+ * (trois tabulations). Relevé : 1 363 lectures sur 1 363 refusées (« accesseur inconnu »), 0 / 24 nœuds lisibles en direct.
+ * Ces essais sont écrits ROUGES avant le correctif. */
+const POTREE_R124=['function ( index ) {\n\n\t\t\treturn this.array[ index * this.itemSize ];\n\n\t\t}',
+ 'function ( index ) {\n\n\t\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t\t}',
+ 'function ( index ) {\n\n\t\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t\t}'];
+/* Une classe dont les accesseurs ont EXACTEMENT ce texte (une fonction évaluée rend son texte source tel quel). */
+function copiePotree(textes=POTREE_R124){const BA=function(){};const f=textes.map(t=>(0,eval)('('+t+')'));
+ BA.prototype={getX:f[0],getY:f[1],getZ:f[2]};return BA;}
+const avecClasse=(d,BA)=>()=>{const sc=S.construireScene(d,0,7);for(const e of sc.viewer.scene.pointclouds.flatMap(p=>p.visibleNodes))Object.setPrototypeOf(e.sceneNode.geometry.attributes.position,BA.prototype);return sc;};
+test('D-303 : copie de three.js r124 propre à Potree (texte relevé sur ESV) : lecture directe servie, sortie identique',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),BA=copiePotree();
+ assert.strictEqual(Function.prototype.toString.call(BA.prototype.getX),POTREE_R124[0],'texte exact du relevé');
+ const {W,finir}=coquilleAvec(require('./ch064-l-scene.cjs').threeSynthetique());
+ try{const nw=W.noyauWasm(octets),fab=avecClasse(d,BA);
+  const ref=net(await L.origine.capture(opts(fab())));globalThis.ArianeLidarNoyau=nw;
+  const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);
+  assert.ok(nw.tranches()>0,'lecture directe servie');}
+ finally{globalThis.ArianeLidarNoyau=undefined;finir();}
+});
+test('D-303 : copie au texte de Potree mais getY décalé (une tabulation de moins) : non reconnue, sortie de l’origine',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere();
+ const BA=copiePotree([POTREE_R124[0],'function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ] + 0;\n\n\t\t}',POTREE_R124[2]]);
+ const {W,finir}=coquilleAvec(require('./ch064-l-scene.cjs').threeSynthetique());
+ try{const nw=W.noyauWasm(octets),fab=avecClasse(d,BA);
+  const ref=net(await L.origine.capture(opts(fab())));globalThis.ArianeLidarNoyau=nw;
+  const w=net(await L.variante.capture(opts(fab())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);
+  assert.strictEqual(nw.tranches(),0,'aucune tranche au noyau');}
+ finally{globalThis.ArianeLidarNoyau=undefined;finir();}
+});
+test('D-303 : une seconde copie au même texte, vue après la première, n’est pas reconnue (une seule copie épinglée)',async()=>{
+ const L=K.chargerNode(),octets=fs.readFileSync(K.construireWasm()),d=premiere(),A=copiePotree(),B=copiePotree();
+ const {W,finir}=coquilleAvec(require('./ch064-l-scene.cjs').threeSynthetique());
+ try{const nw=W.noyauWasm(octets);globalThis.ArianeLidarNoyau=nw;
+  await L.variante.capture(opts(avecClasse(d,A)()));const t1=nw.tranches();assert.ok(t1>0,'première copie servie');
+  const ref=net(await L.origine.capture(opts(avecClasse(d,B)())));
+  const w=net(await L.variante.capture(opts(avecClasse(d,B)())));assert.deepStrictEqual(comparer(ref,w,{max:5}),[]);
+  assert.strictEqual(nw.tranches(),t1,'seconde copie : aucune tranche de plus');}
+ finally{globalThis.ArianeLidarNoyau=undefined;finir();}
+});
