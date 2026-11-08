@@ -1,0 +1,268 @@
+{
+ "format": "ch066-fuzz-vba-v1",
+ "moteur": "node v22.23.4",
+ "graine": 67,
+ "coeur": true,
+ "valeurs": {
+  "generees": 20021,
+  "acceptees": 16094,
+  "refusees": 3927,
+  "identiques": 14772,
+  "croisees": 16094
+ },
+ "trames": {
+  "generees": 20019,
+  "refusJs": 14592,
+  "refusRust": 14590,
+  "accepteesDesDeux": 5427
+ },
+ "ecarts": {
+  "JS : valeur acceptée rendue modifiée — prototype": {
+   "n": 153,
+   "exemples": [
+    {
+     "cas": "ciblé : sous-classe de Array",
+     "chemin": "(racine)",
+     "quoi": "prototype",
+     "attendu": "[1,2]",
+     "obtenu": "[1,2]"
+    },
+    {
+     "cas": "ciblé : ligne de bloc sous-classe",
+     "chemin": "[0]",
+     "quoi": "prototype",
+     "attendu": "[1,2]",
+     "obtenu": "[1,2]"
+    },
+    {
+     "cas": "ciblé : tableau sans prototype",
+     "chemin": "(racine)",
+     "quoi": "prototype",
+     "attendu": "[1,2]",
+     "obtenu": "[1,2]"
+    }
+   ]
+  },
+  "JS : valeur acceptée rendue modifiée — clé perdue": {
+   "n": 142,
+   "exemples": [
+    {
+     "cas": "ciblé : indice non énumérable + clé en plus",
+     "chemin": ".extra",
+     "quoi": "clé perdue",
+     "attendu": "9",
+     "obtenu": "undefined"
+    },
+    {
+     "cas": "aléatoire n° 23 (graine 67)",
+     "chemin": ".k0💥i kya.extra",
+     "quoi": "clé perdue",
+     "attendu": "2",
+     "obtenu": "undefined"
+    },
+    {
+     "cas": "aléatoire n° 188 (graine 67)",
+     "chemin": ".extra",
+     "quoi": "clé perdue",
+     "attendu": "2",
+     "obtenu": "undefined"
+    }
+   ]
+  },
+  "JS : valeur acceptée rendue modifiée — propriété non énumérable perdue": {
+   "n": 211,
+   "exemples": [
+    {
+     "cas": "ciblé : tableau à propriété non énumérable",
+     "chemin": ".x",
+     "quoi": "propriété non énumérable perdue",
+     "attendu": "3",
+     "obtenu": "undefined"
+    },
+    {
+     "cas": "ciblé : objet à propriété non énumérable",
+     "chemin": ".b",
+     "quoi": "propriété non énumérable perdue",
+     "attendu": "2",
+     "obtenu": "undefined"
+    },
+    {
+     "cas": "aléatoire n° 49 (graine 67)",
+     "chemin": "[2].cachee",
+     "quoi": "propriété non énumérable perdue",
+     "attendu": "1",
+     "obtenu": "undefined"
+    }
+   ]
+  },
+  "JS : valeur acceptée rendue modifiée — clé symbole perdue": {
+   "n": 207,
+   "exemples": [
+    {
+     "cas": "ciblé : tableau à clé symbole",
+     "chemin": ".Symbol(s)",
+     "quoi": "clé symbole perdue",
+     "attendu": "3",
+     "obtenu": "undefined"
+    },
+    {
+     "cas": "ciblé : objet à clé symbole",
+     "chemin": ".Symbol(s)",
+     "quoi": "clé symbole perdue",
+     "attendu": "2",
+     "obtenu": "undefined"
+    },
+    {
+     "cas": "aléatoire n° 63 (graine 67)",
+     "chemin": ".Symbol(s)",
+     "quoi": "clé symbole perdue",
+     "attendu": "1",
+     "obtenu": "undefined"
+    }
+   ]
+  },
+  "JS : valeur acceptée rendue modifiée — accesseur devenu donnée": {
+   "n": 193,
+   "exemples": [
+    {
+     "cas": "ciblé : objet à accesseur",
+     "chemin": ".a",
+     "quoi": "accesseur devenu donnée",
+     "attendu": "undefined",
+     "obtenu": "1"
+    },
+    {
+     "cas": "aléatoire n° 41 (graine 67)",
+     "chemin": "[3].0",
+     "quoi": "accesseur devenu donnée",
+     "attendu": "undefined",
+     "obtenu": "7"
+    },
+    {
+     "cas": "aléatoire n° 131 (graine 67)",
+     "chemin": "[0].g",
+     "quoi": "accesseur devenu donnée",
+     "attendu": "undefined",
+     "obtenu": "7"
+    }
+   ]
+  },
+  "JS : valeur acceptée rendue modifiée — gel ou extensibilité": {
+   "n": 415,
+   "exemples": [
+    {
+     "cas": "ciblé : objet gelé",
+     "chemin": "(racine)",
+     "quoi": "gel ou extensibilité",
+     "attendu": "{\"a\":1}",
+     "obtenu": "{\"a\":1}"
+    },
+    {
+     "cas": "aléatoire n° 47 (graine 67)",
+     "chemin": "(racine)",
+     "quoi": "gel ou extensibilité",
+     "attendu": "[893,-2.4409494817780466,0,0.5614513392577568,-136985238033.71062,-3.15880819439…",
+     "obtenu": "[893,-2.4409494817780466,0,0.5614513392577568,-136985238033.71062,-3.15880819439…"
+    },
+    {
+     "cas": "aléatoire n° 71 (graine 67)",
+     "chemin": "(racine)",
+     "quoi": "gel ou extensibilité",
+     "attendu": "[[-0.24661213571762808]]",
+     "obtenu": "[[-0.24661213571762808]]"
+    }
+   ]
+  },
+  "JS : valeur acceptée rendue modifiée — référence partagée dédoublée": {
+   "n": 1,
+   "exemples": [
+    {
+     "cas": "ciblé : références partagées",
+     "chemin": ".y",
+     "quoi": "référence partagée dédoublée",
+     "attendu": "[1,2]",
+     "obtenu": "[1,2]"
+    }
+   ]
+  },
+  "Croisé : écho levé en exception": {
+   "n": 3,
+   "exemples": [
+    {
+     "cas": "ciblé : objet {__erreurVba:true,nom,message}",
+     "exception": "Error : valeur métier"
+    },
+    {
+     "cas": "aléatoire n° 9370 (graine 67)",
+     "exception": "Error : "
+    },
+    {
+     "cas": "aléatoire n° 9971 (graine 67)",
+     "exception": "Error : "
+    }
+   ]
+  },
+  "JS : trame lisible mais non canonique (decoder puis encoder ≠ trame)": {
+   "n": 41,
+   "exemples": [
+    {
+     "cas": "forgée : 06 de nombres (au lieu de 0A)",
+     "trame": "56 42 41 01 06 02 00 00 00 04 00 00 00 00 00 00 f0 3f 04 00 00 00 00 00 00 00 40",
+     "reencodee": "56 42 41 01 0a 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 f0 3f 00 00 00 00 00 00 00 40"
+    },
+    {
+     "cas": "forgée : 06 de booléens (au lieu de 0B)",
+     "trame": "56 42 41 01 06 01 00 00 00 03",
+     "reencodee": "56 42 41 01 0b 01 00 00 00 01"
+    },
+    {
+     "cas": "forgée : objet à clé en double",
+     "trame": "56 42 41 01 08 02 00 00 00 01 00 00 00 61 02 01 00 00 00 61 03",
+     "reencodee": "56 42 41 01 08 01 00 00 00 01 00 00 00 61 03"
+    }
+   ]
+  },
+  "JS décodeur : exception hors « VBA : » (TypeError)": {
+   "n": 503,
+   "exemples": [
+    {
+     "cas": "forgée : chaîne UTF-8 trop longue (C0 80)",
+     "message": "The encoded data was not valid for encoding utf-8",
+     "trame": "56 42 41 01 05 02 00 00 00 c0 80"
+    },
+    {
+     "cas": "forgée : chaîne surrogat encodé (ED A0 80)",
+     "message": "The encoded data was not valid for encoding utf-8",
+     "trame": "56 42 41 01 05 03 00 00 00 ed a0 80"
+    },
+    {
+     "cas": "mutation n° 5 (graine 67)",
+     "message": "The encoded data was not valid for encoding utf-8",
+     "trame": "56 42 41 01 05 01 00 00 00 80"
+    }
+   ]
+  },
+  "Rust : trappe du cœur (refus récupérable HorsDomaine)": {
+   "n": 2,
+   "exemples": [
+    {
+     "cas": "forgée : 512 tableaux n = 2^32-1 imbriqués puis tronqués",
+     "message": "cœur : unreachable",
+     "trame": "56 42 41 01 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff ff 06 ff ff ff …",
+     "hauteEauOctets": 8912896
+    },
+    {
+     "cas": "forgée : 512 objets n = 2^32-1 imbriqués puis tronqués",
+     "message": "cœur : unreachable",
+     "trame": "56 42 41 01 08 ff ff ff ff 01 00 00 00 61 08 ff ff ff ff 01 00 00 00 61 08 ff ff ff ff 01 00 00 00 61 08 ff ff ff ff 01 00 00 00 61 08 ff ff ff …",
+     "hauteEauOctets": 8912896
+    }
+   ]
+  }
+ },
+ "coeurEtat": {
+  "reinstanciations": 2,
+  "hauteEau": 8912896,
+  "memoire": 4456448
+ }
+}
