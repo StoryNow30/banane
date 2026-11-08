@@ -1,0 +1,95 @@
+{
+  "benchmarkBytes": 1397245,
+  "benchmarkFile": "benchmark.json",
+  "benchmarkSha256": "3a700609dc264e2df8eae515ff9289a834c402023b4d80f222f32f60d0326ecf",
+  "candidateNames": [
+    "graine",
+    "surface",
+    "alternative"
+  ],
+  "counts": {
+    "categories": {
+      "CURRENT_ENGINE_ABSTAINED_BUT_RECOVERABLE": 36,
+      "CURRENT_ENGINE_CORRECT": 30,
+      "CURRENT_ENGINE_WRONG_CHOICE": 38,
+      "NOT_RECOVERABLE_WITH_CURRENT_CANDIDATES": 6
+    },
+    "develop": 93,
+    "engineAbstention": 42,
+    "engineSuccess": 68,
+    "holdout": 17,
+    "holdoutCuts": [
+      9031,
+      9032,
+      9033,
+      9034,
+      9035,
+      9036,
+      9037,
+      9038,
+      9039,
+      9040,
+      9041,
+      9042,
+      9043,
+      9044,
+      9045,
+      9046,
+      9047
+    ],
+    "n": 110,
+    "sensitivity": {
+      "oracleWithin_10e-3": 104,
+      "oracleWithin_20e-3": 106,
+      "oracleWithin_5e-3": 41
+    }
+  },
+  "format": "banane-pair-arbitration-benchmark-manifest-v1",
+  "frozen": true,
+  "holdoutCuts": [
+    9031,
+    9032,
+    9033,
+    9034,
+    9035,
+    9036,
+    9037,
+    9038,
+    9039,
+    9040,
+    9041,
+    9042,
+    9043,
+    9044,
+    9045,
+    9046,
+    9047
+  ],
+  "sources": {
+    "part17Controls": {
+      "bytes": 99455,
+      "path": "pair-lab-part17-controls.json",
+      "sha256": "bc5fc6fcc3048bf96c91c222be55ec6faefe35570d8119c0d7e3952749b4204e"
+    },
+    "part17Session": {
+      "bytes": 38832437,
+      "path": "banane-corrections-v4-1789033646631.json",
+      "sha256": "d06e4f01b8660ef1eae8158750009b63d4ee32feea8533e7659e85eecd55e3a5"
+    },
+    "part20Controls": {
+      "bytes": 662186,
+      "path": "pair-lab-part20-controls.json",
+      "sha256": "2cea107e03c021bd60f1b2bd76e74603a96b84c13b55e79f6f8141107b21ef83"
+    },
+    "part20JsonUnchangedExtract": {
+      "bytes": 131787942,
+      "path": "banane-corrections-v4-1789042324894.json",
+      "sha256": "d6c69a8b43ae2c65b3bc3fa05f52586aaf76f7cac9fa2151e1a1b0aeb42a55af"
+    },
+    "part20Zip": {
+      "bytes": 32317279,
+      "path": "banane-corrections-v4-1789042324894.zip",
+      "sha256": "350e4bf341b4ecbccffab1245b877a4c5e9c184bb07e8531229b451015bd7a09"
+    }
+  }
+}
