@@ -14,7 +14,17 @@ for(const f of ['adapter-page.js','esv-observer.js'])fs.copyFileSync(path.join(r
 const DEJA=fs.readFileSync(SRC,'utf8').includes('chargementsEffectifs')||undefined;
 const r=DEJA?{status:0}:spawnSync('patch',['-s','-p1','-d',dir,'-i',PATCH],{encoding:'utf8'}),raison=r.error?.code==='ENOENT'?'outil patch absent':null;
 const opts=raison?{skip:raison}:{};
-test('le patch est appliqué au tronc (ou s’y applique)',opts,()=>{assert.equal(r.status,0,'patch : '+(r.stderr||r.stdout));if(DEJA)assert.equal(spawnSync('patch',['-s','-p1','-R','--dry-run','-d',racine,'-i',PATCH],{encoding:'utf8'}).status,0,'le tronc porte exactement ce patch');});
+test('le patch est appliqué au tronc (ou s’y applique)',opts,()=>{assert.equal(r.status,0,'patch : '+(r.stderr||r.stdout));if(DEJA){
+  /* D-307 (Vision 5) : le branchement du préchauffage CH-077 s'insère juste après le premier morceau de ce patch et en masque le contexte de fin ;
+   * on le retire d'une copie (mêmes lignes que la garde tests/pose-lot-inchanges-4959.test.cjs) avant de vérifier que le tronc porte ce patch. */
+  const verif=fs.mkdtempSync(path.join(os.tmpdir(),'ch062-r-'));fs.mkdirSync(path.join(verif,'src'));
+  fs.copyFileSync(path.join(racine,'src/esv-observer.js'),path.join(verif,'src/esv-observer.js'));
+  fs.writeFileSync(path.join(verif,'src/adapter-page.js'),fs.readFileSync(SRC,'utf8')
+   .replace(/\n \/\* CH-077 \(réglage `lot\.chargement\.prechauffer`[\s\S]*?\n function prechaufferApres\(expected\)[^\n]*\n[^\n]*\n[^\n]*catch\{\}\}/,'')
+   .replace("{try{PRECH?.annuler('capture');}catch{}noterCompteurDebutCut();","{noterCompteurDebutCut();")
+   .replace(/\n   prechaufferApres\(expected\);   \/\* CH-077[^\n]*/,''));
+  const rv=spawnSync('patch',['-s','-p1','-R','--dry-run','-d',verif,'-i',PATCH],{encoding:'utf8'});
+  assert.equal(rv.status,0,'le tronc porte exactement ce patch : '+(rv.stderr||rv.stdout));}});
 /* La page simulée lit src/adapter-page.js : on lui sert la copie patchée, avec un PerformanceObserver qui rend les ressources données (ou aucun). */
 let ressources=[],reglage={},sansObservateur=false;
 const lire=fs.readFileSync;fs.readFileSync=function(f,...a){if(!raison&&path.resolve(String(f))===SRC)return lire.call(fs,copie,...a);return lire.call(fs,f,...a);};
