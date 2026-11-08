@@ -92,7 +92,9 @@ function esvClic({adapter=path.join(RACINE,'src/adapter-page.js'),pilote={},regl
   for(const [id,side,classe] of [['O2N3DCutLRClick','left','leftRailSClass'],['O2N3DCutRRClick','right','rightRailSClass']])
     nodes.set(id,{classList:{contains:c=>!classeFigee[side]&&c===classe&&cote===side},
       click(){journal.push({quoi:'bouton',id});cote=side;const s=side;enAttente.push(()=>{if(vues[s])camera.matrix={elements:vueDe(s)};});H.aImage(suivre);}});
-  const pil={...S.pilote,...pilote,rapide:{...S.pilote.rapide,...(pilote.rapide||{})}};
+  /* D-304 : les scénarios choisissent leur cut par la règle « un sur dix » (cutDuMode) et l'empreinte de la base a été prise avec elle :
+   * la règle est fixée ici, le défaut livré (un sur cinquante) ne change pas ce que ces essais comparent (les clics de pose). */
+  const pil={...S.pilote,modeRapide:'echantillon',...pilote,rapide:{...S.pilote.rapide,...(pilote.rapide||{})}};
   const ctx={console,window:null,location:{origin:ORIGINE},innerWidth:fenetre?.largeur,innerHeight:fenetre?.hauteur,
     document:{getElementById:id=>nodes.get(id),dispatchEvent:()=>true},
     BananeCaptureCore:C,BananeCore3:K,BananeSettings:{...S,pilote:pil},BananeLodSignature:require('../../src/lod-signature.js'),BananeLidar:{...require('../../vendor/lidar.js')},

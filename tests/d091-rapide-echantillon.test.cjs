@@ -21,10 +21,11 @@ function lidarPage(cut){const f=page(),pc=F.object([0,0,0],'PointCloudOctree'),n
   f.ctx.viewer.scene.pointclouds=[pc];f.ctx.Potree=F.enums;f.nodes.get('O2N3DCutDescription').textContent=`Cut ${cut} of part 23`;f.ctx.BananeLidar.capture=opts=>L.capture(opts);return f;}
 
 test('réglage livré : la page suit la même règle que l’outil, la consigne, et date chaque étape',async()=>{
-  assert.equal(S.pilote.modeRapide,'echantillon');
+  /* D-304 : le réglage livré est « echantillon50 » (un sur cinquante) ; même mécanique que D-091. */
+  assert.equal(S.pilote.modeRapide,'echantillon50');const ref=T.REGLES.echantillon50;
   for(let cut=0;cut<30;cut++){const f=lidarPage(cut),out=await f.call('capture',await f.call('state'));
-    assert.equal(out.readStrategy.lecture,ref(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,'echantillon');
-    const fin=f.progress.find(p=>p.stage==='capture-ready');assert.equal(fin.detail.regleLecture,'echantillon');assert.equal(fin.detail.lecture,ref(cut));
+    assert.equal(out.readStrategy.lecture,ref(cut),`cut ${cut}`);assert.equal(out.readStrategy.regleLecture,'echantillon50');
+    const fin=f.progress.find(p=>p.stage==='capture-ready');assert.equal(fin.detail.regleLecture,'echantillon50');assert.equal(fin.detail.lecture,ref(cut));
     const heures=f.progress.map(p=>p.detail.pageMs);assert.ok(heures.length>=5&&heures.every(Number.isInteger),'chaque étape a son heure : '+heures);
     assert.deepEqual(heures,[...heures].sort((a,b)=>a-b),'heures croissantes');}
 });

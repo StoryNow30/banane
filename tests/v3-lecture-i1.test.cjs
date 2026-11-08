@@ -24,9 +24,9 @@ function lidarPage({modeRapide,cut=100}={}){
 const tirage=cut=>Math.imul(cut>>>0,2654435761)>>>31?'rapide':'reference';
 
 test('réglage de la version de test : tirage cut par cut (« echantillon » depuis la 4.9.0.9, D-091), affiché dans les réglages',()=>{
- assert.equal(S.pilote.modeRapide,'echantillon');
+ assert.equal(S.pilote.modeRapide,'echantillon50');/* D-304 : un sur cinquante depuis le 08/11 */
  const ligne=S.describe().find(l=>l.nom==='Mode rapide (V3)');
- assert.ok(ligne,'ligne de réglage affichée');assert.equal(ligne.valeur,'neuf cuts sur dix (un sur dix en référence, tiré au sort)');
+ assert.ok(ligne,'ligne de réglage affichée');assert.equal(ligne.valeur,'quarante-neuf cuts sur cinquante (un sur cinquante en référence, tiré au sort)');
 });
 
 test('le tirage est fixe, équilibré et se refait à partir du seul numéro de cut',()=>{
@@ -53,7 +53,7 @@ test('cut tiré « référence » : lecture identique à la 4.9.0.5, sans option
 });
 
 test('réglage « reference » : aucun cut rapide ; « toujours » : tous rapides ; valeur inconnue : référence',async()=>{
- for(const [regle,cut,attendu] of [['reference',100,'reference'],['toujours',101,'rapide'],['n-importe',100,'reference'],[undefined,100,'rapide'],[undefined,102,'reference'],['echantillon',101,'rapide']]){
+ for(const [regle,cut,attendu] of [['reference',100,'reference'],['toujours',101,'rapide'],['n-importe',100,'reference'],['echantillon',100,'rapide'],['echantillon',102,'reference'],['echantillon',101,'rapide'],[undefined,102,'rapide']/* D-304 : défaut echantillon50 */]){
    const f=lidarPage({modeRapide:regle,cut}),before=await f.call('state');const out=await f.call('capture',before);
    assert.equal(out.readStrategy.lecture,attendu,`${regle} / cut ${cut}`);
    assert.equal(f.pauses.every(p=>attendu==='rapide'?typeof p==='function':p===undefined),true,`${regle} / cut ${cut}`);
