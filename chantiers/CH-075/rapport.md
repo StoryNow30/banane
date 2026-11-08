@@ -17,3 +17,24 @@ Les recettes du panneau utilisent son vrai HTML et ses scripts par HTTP local, a
 Le blocage externe reste établi : la politique administrée `ExtensionInstallBlocklist: ["*"]` interdit le chargement de l'extension. Elle n'est ni modifiée ni contournée. Le chantier est sauvegardé sur sa branche ; **pas d'intégration au tronc ni de paquet** avant les preuves requises.
 
 **SUPPOSÉ.** Le prochain module devra être choisi après inventaire de ses frontières ; aucune estimation de couverture globale ou de gain métier n'est déduite de ce premier périmètre.
+
+## Module 2 : `src/file-parties.js` et `src/file-prioritaire.js`
+
+### Inventaire des frontières (avant toute annotation)
+
+**ÉTABLI** (lecture du code du tronc fusionné, rien n'est encore annoté ni mesuré à l'exécution).
+
+**`src/file-parties.js`** (301 lignes, machine à états pure, enveloppe UMD ; exporte `BananeFileParties` gelé). Frontières :
+- **Entrées non fiables, relues champ par champ** : l'état gardé dans `chrome.storage.local` (`relire`), le registre gardé (`registreAjouter`, `entreeRegistre`), le sélecteur de parties d'ESV (`planifier` : `status`, `parts[].part`), le constat de redémarrage (`reprise`), l'état du lot lu au moteur (`classerLot`). Ce sont les points où une valeur brute devient un numéro de partie ou de coupe : `entier(v)` rend `number|null`, c'est là qu'une marque devra être posée, une fois, par assertion locale.
+- **Événements** (`transition(etat, ev)`, `ev.type` ouvert) : portent `part`, `vers` (partie), `lotId`, `issue`, `motif`, `detail`. Le plan (`plan`, `changement.vers`) est une liste de numéros de partie ; `k` et `rang` sont des indices dans le plan : ni partie ni coupe, ils resteront `number` simple.
+- **Coupes** : seules `cuts()` et le registre (`poses`, `passe`, `valides`, `corriges[].cut`) manipulent des numéros de coupe.
+- **Identifiant d'opération** : la machine ne porte que `lotId` (identifiant du lot, texte), pas d'identifiant d'opération au sens de la règle 4.2. Décision proposée : `lotId` reste `string` simple, le type `Operation` n'est pas appliqué à un identifiant de lot (SUPPOSÉ : deux notions distinctes ; à confirmer par l'intégrateur).
+- **Appelants** (non modifiables, hors périmètre) : `background.js` (pilote `file*`, lignes ~4026 à ~4280, via `FPm()`), `src/ui5.js` et `panel.js` (lecture de `vue()`), `src/settings.js` (commentaire seul). `background.js` n'est pas un fichier interdit aux exécutants par `CLAUDE.md`, mais il n'est pas dans le périmètre du ticket : il n'est ni typé ni modifié ; la frontière avec lui reste de forme libre (états et événements `object`).
+- **Sorties** : `{etat, actions, ignore?, refus?}`, `vue(e)` (forme lue par le panneau), registre persistant.
+
+**`src/file-prioritaire.js`** (100 lignes, pur, exporte `ArianeFilePrioritaire` ; l'en-tête dit qu'il « n'est branché nulle part » : aucun appelant dans `src/` ni `background.js`, ÉTABLI par recherche). Appelants : `tools/file-prioritaire.cjs` (outil de simulation), `tests/file-prioritaire.test.cjs`. Frontières :
+- **Entrée** : candidats `{part, cut, source, motif?, score?}` (partie et coupe) ; observations d'apprentissage `{classe, informatif, avecTraits?, coutS}` ; options (`taux`, `jugesDeja`, `ordre`, `critere`, `plancherParMin`).
+- **Sortie** : entrées `{part, cut, groupe, signaux, details, rang}`, même forme que `src/correction-liste.js` (non typé ici).
+- Pas d'unités métriques, pas de repères, pas d'identifiant d'opération : seuls `Partie` et `Coupe` s'appliquent. `coutS` est en secondes : pas de type marqué, il n'existe pas dans `types/ch075.d.ts` (à n'ajouter que si un mélange secondes/millisecondes apparaît).
+
+**Types** : `Partie`, `Coupe` existants réutilisés ; aucun ajout prévu à ce stade. **Plan** : `tsconfig.ch075.json` et `tools/typage-ch075.cjs` passent d'un fichier à trois (empreintes d'origine par fichier, le tronc `5699f68` n'étant plus la base pour les nouveaux fichiers : base à fixer au tronc fusionné), puis annotations en un commit par fichier, puis cas négatifs partie/coupe et coupe/opération.
