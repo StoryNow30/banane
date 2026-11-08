@@ -1,6 +1,6 @@
 {
-  "startedAt": "2026-11-06T22:03:22.950Z",
-  "finishedAt": "2026-11-06T22:16:20.423Z",
+  "startedAt": "2026-11-08T18:40:07.175Z",
+  "finishedAt": "2026-11-08T18:52:43.378Z",
   "node": "v22.22.0",
   "platform": "linux",
   "counts": {
@@ -731,7 +731,7 @@
     "src/voie-recentree.js": "45c29f551855f9701f561e3015b85273799083d27ee47f96041413078dc60cd0",
     "src/zip-writer.js": "a11904bf2ca7b2653d62dc51e1ed0547dd39d2c043e2f6a055e60dfb3078623c",
     "vendor/ariane-lidar-wasm.js": "5bf5d8e744887affdc69a06c7b952e973a4ef6075987d72fb820bf58151b3bd6",
-    "vendor/ariane-lidar.js": "2c0ce7770bef3fc052be197b2482142ae0d22423503372f127190e06224f0f65",
+    "vendor/ariane-lidar.js": "8ee63d9343e4aabe147d2cd3f6ae39d9516e63271787dfab9b8048a3fdd7b16b",
     "vendor/capture-core.js": "2bc4a70b7ce5d08990875804edea0a2097c0503a3d433a40b4eaeeb4ffd77054",
     "vendor/lidar-rust.js": "e31b0225e011476601b65d278459912b8d77aab464f3f81d0491f3af2ba329cd",
     "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"

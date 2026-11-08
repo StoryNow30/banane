@@ -1,5 +1,10 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 2 — 08/11 soir (D-303)
+- Lecture LiDAR en Rust : reconnaît la copie de three.js r124 propre à Potree (relevé de console de l'opérateur, 08/11). Le 08/11, « Vision » avait refusé 1 363 lectures sur 1 363 (« accesseur inconnu ») : la copie de Potree a des fonctions distinctes de `window.THREE` et un texte indenté d'un cran de plus. Module WASM inchangé (même SHA-256).
+- Preuves : parité dans la configuration d'ESV (copie de Potree), 4 296 captures réelles et 8 592 vues, 0 écart, 1 025 971 tranches servies par le noyau ; essais de la lecture 16/16, dont 3 écrits rouges d'abord ; verify 3 207 essais, 0 échec ; maquette 74 essais, 0 échec (2 sautés).
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision — 06/11 nuit (D-296, D-297, D-298)
 - Nom « Vision » dans Chrome (le numéro de version reste 5).
 - Lecture LiDAR en Rust dans la page (CH-064, patch a85366e) : réglage `rust.lidar` allumé par défaut ; repli sur `vendor/lidar.js` (inchangé) si le module ne se charge pas ou si l'accesseur n'est pas reconnu. L'événement de journal `rust` dit qui a servi la lecture.
