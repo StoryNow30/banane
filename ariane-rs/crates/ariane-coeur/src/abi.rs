@@ -98,6 +98,8 @@ fn aiguiller(fonction: u32, entree: Valeur) -> Valeur {
         // Blocs réservés aux sous-chantiers (fiche chantiers/CH-064-equipe.md) : un seul bras chacun.
         50..=99 => ariane_decision::appeler(fonction, &entree),
         100..=149 => ariane_etat::appeler(fonction, &entree),
+        250..=299 => ariane_session::appeler(fonction, &entree),
+        300..=349 => ariane_file::appeler(fonction, &entree),
         _ => Err(Echec::erreur(format!("Cœur : fonction inconnue {fonction}"))),
     };
     match r {

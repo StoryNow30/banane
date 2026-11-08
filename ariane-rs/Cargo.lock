@@ -17,8 +17,10 @@ dependencies = [
  "ariane-capture",
  "ariane-decision",
  "ariane-etat",
+ "ariane-file",
  "ariane-geometrie",
  "ariane-js",
+ "ariane-session",
  "ariane-vba",
 ]
 
@@ -67,6 +69,9 @@ dependencies = [
 [[package]]
 name = "ariane-js"
 version = "0.0.0"
+dependencies = [
+ "ariane-vba",
+]
 
 [[package]]
 name = "ariane-lidar"

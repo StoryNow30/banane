@@ -14,6 +14,8 @@ ariane-capture = { path = "../ariane-capture" }
 ariane-geometrie = { path = "../ariane-geometrie" }
 ariane-decision = { path = "../ariane-decision" }
 ariane-etat = { path = "../ariane-etat" }
+ariane-session = { path = "../ariane-session" }
+ariane-file = { path = "../ariane-file" }
 
 [lints]
 workspace = true
