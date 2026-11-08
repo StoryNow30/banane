@@ -1,5 +1,12 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 4 — 08/11 nuit (D-305, CH-075)
+- Piste 0 : les relevés de cache, d'attente du serveur et de transfert des morceaux de points arrivent enfin au journal (filtrés par le service worker dans « Vision 3 »).
+- Typage limité (CH-075) : module des appuis et file des parties vérifiés par TypeScript, annotations en commentaires seulement, code exécuté prouvé identique.
+- Essais navigateur : Chromium retrouvé sous son nouveau dossier (35 essais étaient sautés).
+- Preuves : verify 3 218 essais, 3 216 réussis, 0 échec, 2 sautés (corpus privé absent) ; maquette 74 essais, 2 instables au minutage (correction-signal, file-signal-clics) verts relancés seuls deux fois.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 3 — 08/11 nuit (D-304, D-305)
 - Témoin de qualité (lecture « référence ») : un cut sur cinquante au lieu d'un sur dix (D-304). Le 08/11, les témoins à un sur dix prenaient 36 % du temps de capture.
 - Piste 0 (D-305), lecture seule : pour chaque morceau de points téléchargé par ESV, l'observateur relève s'il vient du cache du navigateur, l'attente du serveur et la durée du transfert. Aucune adresse gardée.
