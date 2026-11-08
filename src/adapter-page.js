@@ -187,11 +187,15 @@
   * le premier dixième (même hachage, lu comme une fraction). Le hachage de Fibonacci répartit
   * ces cuts régulièrement (un tous les 8 à 13 cuts consécutifs), sans paquets. */
  const DIXIEME=429496730; // ⌈2^32 / 10⌉
+ /* D-304 (opérateur, 08/11) : « echantillon50 », un cut sur cinquante en référence (premier cinquantième du même hachage ; un
+  * témoin à 1/50 l'est aussi à 1/10). Mesuré le 08/11 : les témoins à 1/10 prenaient 36 % du temps de capture. */
+ const CINQUANTIEME=85899346; // ⌈2^32 / 50⌉
  function lectureDuCut(identity){const regle=P.modeRapide??P.lectureI1;
-   if(regle==='toujours')return 'rapide';if(regle!=='tirage'&&regle!=='echantillon')return 'reference';
+   if(regle==='toujours')return 'rapide';if(regle!=='tirage'&&regle!=='echantillon'&&regle!=='echantillon50')return 'reference';
    const cut=identity?.cut;if(!Number.isInteger(cut))return 'reference';
    const h=Math.imul(cut>>>0,2654435761)>>>0;
    if(regle==='echantillon')return h<DIXIEME?'reference':'rapide';
+   if(regle==='echantillon50')return h<CINQUANTIEME?'reference':'rapide';
    return h>>>31?'rapide':'reference';}
  /* D-088 (4.9.0.7, version de test) : ce que le mode « rapide » change, pièce par pièce, d'après les
   * mesures du banc ESV local (13 octobre, code d'origine d'ESV) :
