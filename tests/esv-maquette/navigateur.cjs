@@ -6,8 +6,9 @@ const path=require('node:path'),fs=require('node:fs');
 const racine=path.resolve(__dirname,'../..');
 const lire=f=>fs.readFileSync(path.join(racine,f),'utf8');
 const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/adapter-page.js'];
-function playwright(){for(const p of [process.env.PLAYWRIGHT_MODULE,'playwright','/opt/node22/lib/node_modules/playwright'].filter(Boolean)){try{return require(p);}catch{/* suivant */}}return null;}
-function executable(){if(process.env.CHROMIUM)return process.env.CHROMIUM;const base=process.env.PLAYWRIGHT_BROWSERS_PATH||'/opt/pw-browsers';
+function modulePlaywright(){for(const p of [process.env.PLAYWRIGHT_MODULE,process.env.PLAYWRIGHT_PATH,'playwright','/opt/node22/lib/node_modules/playwright'].filter(Boolean)){try{return require.resolve(p);}catch{/* suivant */}}return null;}
+function playwright(){const p=modulePlaywright();return p?require(p):null;}
+function executable(){if(process.env.CHROMIUM||process.env.CHROMIUM_PATH)return process.env.CHROMIUM||process.env.CHROMIUM_PATH;const base=process.env.PLAYWRIGHT_BROWSERS_PATH||'/opt/pw-browsers';
   const d=fs.existsSync(base)?fs.readdirSync(base).find(x=>/^chromium-\d+$/.test(x)):null;return d?path.join(base,d,'chrome-linux','chrome'):undefined;}
 /* Raison d'indisponibilité (chaîne) ou null si le navigateur peut tourner. */
 function indisponible(){const pw=playwright();if(!pw)return 'Playwright absent (PLAYWRIGHT_MODULE=/chemin/vers/playwright)';
@@ -34,4 +35,4 @@ async function ouvrir(options={}){
   const fermer=async()=>{await navigateur.close();await serveur.fermer();};
   return {serveur,navigateur,page,erreurs,injecter,appel,etat,messages,fermer,PAGE_FILES};
 }
-module.exports={ouvrir,indisponible,playwright,executable,PAGE_FILES,racine,lire};
+module.exports={ouvrir,indisponible,playwright,modulePlaywright,executable,PAGE_FILES,racine,lire};

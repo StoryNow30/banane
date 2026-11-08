@@ -6,9 +6,9 @@
 const { test } = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const N = require('./esv-maquette/navigateur.cjs');
 const raison = N.indisponible(), opts = raison ? { skip: raison } : {};
-const racine = path.resolve(__dirname, '..'), url = 'file://' + path.join(racine, 'panel.html');
+const racine = path.resolve(__dirname, '..'), {ouvrirPanneau}=require('./helpers/panneau-local.cjs');
 async function ouvrir(contexte = {}) {
-  const pw = require('playwright'), exe = process.env.CHROMIUM || undefined;
+  const pw = N.playwright(), exe = N.executable();
   const nav = await pw.chromium.launch({ executablePath: exe, headless: true }), page = await (await nav.newContext({ viewport: { width: 420, height: 640 }, ...contexte })).newPage();
   await page.addInitScript(() => { window.__lancementForce = true; });
   return { nav, page };
@@ -20,7 +20,7 @@ const opacite = (page, sel) => page.evaluate(s => Number(getComputedStyle(docume
 test('la fusée est au sol au début, monte, quitte l\'écran par le haut ; le nom apparaît ensuite', opts, async () => {
   const { nav, page } = await ouvrir();
   try {
-    await page.goto(url);
+    await ouvrirPanneau(page);
     await a(page, 0.6); const sol = await rect(page, '.lanc-fusee');
     assert.ok(sol.bottom > sol.h * 0.5 && sol.top > sol.h * 0.4, 'la fusée est dans la moitié basse au départ : ' + JSON.stringify(sol));
     await a(page, 1.9); const vol = await rect(page, '.lanc-fusee');
@@ -36,7 +36,7 @@ test('la fusée est au sol au début, monte, quitte l\'écran par le haut ; le n
 test('un clic retire l\'écran aussitôt ; une touche aussi', opts, async () => {
   for (const geste of ['click', 'key']) {
     const { nav, page } = await ouvrir();
-    try { await page.goto(url); assert.equal(await page.evaluate(() => document.getElementById('lancement').hidden), false);
+    try { await ouvrirPanneau(page); assert.equal(await page.evaluate(() => document.getElementById('lancement').hidden), false);
       if (geste === 'click') await page.mouse.click(200, 300); else await page.keyboard.press('Space');
       await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 1500 });
     } finally { await nav.close(); }
@@ -44,11 +44,11 @@ test('un clic retire l\'écran aussitôt ; une touche aussi', opts, async () => 
 });
 test('sans geste, l\'écran part tout seul en moins de 6 s', opts, async () => {
   const { nav, page } = await ouvrir();
-  try { await page.goto(url); await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 6000 }); } finally { await nav.close(); }
+  try { await ouvrirPanneau(page); await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 6000 }); } finally { await nav.close(); }
 });
 test('« réduire les animations » : le nom seul, sans dessin, puis l\'écran part', opts, async () => {
   const { nav, page } = await ouvrir({ reducedMotion: 'reduce' });
-  try { await page.goto(url);
+  try { await ouvrirPanneau(page);
     assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('#lancement svg')).display), 'none');
     await page.waitForFunction(() => Number(getComputedStyle(document.querySelector('.lanc-nom h2')).opacity) > 0.98, null, { timeout: 1500 });
     await page.waitForFunction(() => document.getElementById('lancement').hidden, null, { timeout: 3500 });

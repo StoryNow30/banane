@@ -4,7 +4,7 @@
  * ignoré, sans Chromium. Le même défaut avec l'extension réelle sur la maquette : tests/esv-maquette/connexion-t21.test.cjs. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path');
 const {CHROMIUM,PW,absent}=require('./helpers/signal-navigateur.cjs');
-const racine=path.resolve(__dirname,'..');
+const racine=path.resolve(__dirname,'..'),{ouvrirPanneau}=require('./helpers/panneau-local.cjs');
 
 async function ouvrir(nav,{onglets,refus=null,connecte=null,lot=null,native={status:'IDLE',visits:[],incomplete:[]},hash='#home'}){
  const page=await nav.newPage({viewport:{width:600,height:760}}),erreurs=[];
@@ -16,7 +16,7 @@ async function ouvrir(nav,{onglets,refus=null,connecte=null,lot=null,native={sta
   const fixes={'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},'relecture-choix-etat':{mode:'corriger'},
    'relecture-etat':{choix:'corriger',lot:null,passe:null},'bandeau-etat':{on:false},'fiches-depart':{fiches:[]}};
   window.fetch=async()=>({json:async()=>({})});
-  window.chrome={runtime:{id:'essai',getURL:p=>'file://'+racine+'/'+p,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
+  window.chrome={runtime:{id:'essai',getURL:p=>new URL(p,location.href).href,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
    sendMessage:async m=>{const a=m.action||m.kind;window.__appels.push(a);
     if(a==='view')return {result:vue()};
     if(a==='list-tabs')return {result:onglets.map((t,i)=>({id:t,title:'ESV '+t,windowId:1,index:i,active:i===0,pret:true,utilise:t===E.connecte}))};
@@ -25,7 +25,7 @@ async function ouvrir(nav,{onglets,refus=null,connecte=null,lot=null,native={sta
    storage:{local:{get:async()=>({}),set:async()=>{}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
  },{onglets,refus,racine,connecte,lot,native});
  const t0=Date.now();
- await page.goto('file://'+path.join(racine,'panel.html')+hash);
+ await ouvrirPanneau(page,hash);
  const lire=()=>page.evaluate(()=>({mot:document.querySelector('#ui5 .sg-mot')?.textContent||'',texte:document.getElementById('ui5')?.textContent||'',connects:[...window.__E.connects]}));
  return {page,erreurs,t0,lire};
 }

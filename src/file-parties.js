@@ -28,15 +28,17 @@
  * REGISTRE DES ÉCRITURES par partie (`CLE_REGISTRE`, chrome.storage.local, jamais vidé par « vider le cache ») : cuts posés et validés par
  * le lot, écrits par la deuxième passe, corrigés par la relecture (écart en mm), bornés aux `MAX_REGISTRE` dernières parties.
  * ALERTE NON BLOQUANTE par partie (`alertes`) : seuils proposés par la troisième relecture, NON décidés par l'opérateur (`SEUILS`). */
+/** @template T @param {unknown} root @param {() => T} factory */
 (function (root, factory) {
   const api = factory();
-  if (typeof module === 'object' && module.exports) module.exports = api; else root.BananeFileParties = api;
+  if (typeof module === 'object' && module.exports) module.exports = api; else /** @type {{BananeFileParties?:unknown}} */ (root).BananeFileParties = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const CLE_ETAT = 'banane60FileParties', CLE_REGISTRE = 'banane60RegistreFile', MAX_REGISTRE = 50, MAX_PARTIES = 20, MAX_LISTE = 2000;
   const ACTIFS = ['lot', 'passe', 'relecture', 'changement'], TERMINAUX = ['fin', 'arret'];
   /* Tentatives d'un changement de partie : la première, et une seule de plus après un redémarrage du service worker en plein changement. */
   const TENTATIVES_MAX = 2;
+  /** @type {Readonly<Record<string,CH075.MotifFile>>} */
   const MOTIFS = Object.freeze({
     'fin-normale': { file: 'continue', texte: 'fin normale du lot' },
     'partie-sans-rouge': { file: 'continue', texte: 'partie sans cut rouge : comptée comme faite' },
@@ -57,64 +59,77 @@
     'retour-impossible': { file: 'arret', alerte: true, texte: 'ESV a changé de partie seul ; retour impossible' },
   });
   /* Seuils de l'alerte : valeurs initiales proposées (architecture 5.0, module P), non décidées, révisables. */
+  /** @type {Readonly<CH075.Seuils>} */
   const SEUILS = Object.freeze({ differesFoisMediane: 2, corrigesPart: 0.05, refus: 1 });
 
-  const entier = (v, max = 1e8) => (Number.isInteger(v) && v >= 0 && v < max ? v : null);
+  /** @param {unknown} v @param {number} [max] @returns {number|null} */
+  const entier = (v, max = 1e8) => (Number.isInteger(v) && /** @type {number} */ (v) >= 0 && /** @type {number} */ (v) < max ? /** @type {number} */ (v) : null);
+  /** @param {unknown} v @param {number} [n] @returns {string|null} */
   const texte = (v, n = 200) => (typeof v === 'string' && v ? v.slice(0, n) : null);
-  const cuts = l => (Array.isArray(l) ? [...new Set(l.filter(c => entier(c) !== null))].sort((a, b) => a - b).slice(0, MAX_LISTE) : []);
+  /** @param {unknown} l @returns {CH075.Coupe[]} */
+  const cuts = l => (Array.isArray(l) ? /** @type {CH075.Coupe[]} */ ([...new Set(l.filter(c => entier(c) !== null))].sort((a, b) => a - b).slice(0, MAX_LISTE)) : []);
+  /** @template T @param {T} e @returns {T} */
   const copie = e => JSON.parse(JSON.stringify(e));
+  /** @param {CH075.EtatFile|null|undefined} e @returns {e is CH075.EtatFile} */
   const actif = e => !!e && ACTIFS.includes(e.etat);
+  /** @param {CH075.EtatFile|null|undefined} e @returns {boolean} */
   const terminal = e => !!e && TERMINAUX.includes(e.etat);
 
   /* Les N parties de la file : la partie affichée, puis les suivantes dans l'ordre du sélecteur d'ESV (SUPPOSÉ : « les N parties suivantes
    * de la liste d'ESV, dans son ordre », la partie affichée comptant pour la première). Refus en clair, jamais une file plus courte. */
+  /** @param {CH075.Selecteur|null|undefined} selecteur @param {CH075.Partie} courante @param {number} n @returns {{plan?:CH075.Partie[],refus?:string}} */
   function planifier(selecteur, courante, n) {
     if (!Number.isInteger(n) || n < 1 || n > MAX_PARTIES) return { refus: `nombre de parties : un entier de 1 à ${MAX_PARTIES}` };
     if (!selecteur || selecteur.status !== 'ok' || !Array.isArray(selecteur.parts) || !selecteur.parts.length)
       return { refus: `sélecteur de parties d’ESV ${selecteur?.status === 'absent' ? 'absent' : 'illisible ou pas encore relevé'} : clique sur « Reconnecter »` };
     if (!Number.isInteger(courante)) return { refus: 'partie affichée par ESV illisible' };
-    const liste = selecteur.parts.map(x => x?.part).filter(p => entier(p, 1e7) !== null), i = liste.indexOf(courante);
+    const liste = /** @type {CH075.Partie[]} */ (selecteur.parts.map(x => x?.part).filter(p => entier(p, 1e7) !== null)), i = liste.indexOf(courante);
     if (i < 0) return { refus: `la partie affichée (${courante}) n’est pas dans le sélecteur d’ESV` };
     const plan = liste.slice(i, i + n);
     if (plan.length < n) return { refus: `le sélecteur d’ESV n’offre que ${plan.length} partie${plan.length > 1 ? 's' : ''} à partir de la partie ${courante}, pas ${n}` };
     return { plan };
   }
 
+  /** @param {CH075.Partie} part @param {number} rang @param {string|null} at @returns {CH075.PartieFile} */
   function partieNeuve(part, rang, at) {
     return { part, rang, lotId: null, debut: at, fin: null, motifs: [], issueLot: null, passe: null, relecture: null, resume: null, alertes: [] };
   }
+  /** @param {CH075.EtatFile} e @param {string} motif @param {string|null} at @param {string|null} [detail] @returns {CH075.EtatFile} */
   function arreter(e, motif, at, detail = null) {
     const m = MOTIFS[motif] || MOTIFS['refus-lot'];
     e.etat = m.file === 'fin' ? 'fin' : 'arret';
     e.motifFin = { code: MOTIFS[motif] ? motif : 'refus-lot', texte: m.texte, detail: texte(detail, 400), at };
     e.alerte = m.alerte ? { code: e.motifFin.code, texte: m.texte, detail: e.motifFin.detail, at, part: e.partie?.part ?? null } : null;
     /* CH-026 : la partie en cours à l'arrêt n'est pas finie (ni relecture ni registre) : marquée `interrompue`, c'est d'elle que repart la reprise. */
-    if (e.partie) { e.partie.fin = e.partie.fin || at; e.partie.interrompue = true; e.bilan.push(e.partie); e.partie = null; }
-    e.changement = null; e.depuis = at;
+    if (e.partie) { e.partie.fin = e.partie.fin || at; e.partie.interrompue = true; e.bilan.push(e.partie); e.partie = /** @type {CH075.PartieFile} */ (/** @type {unknown} */ (null)); }
+    e.changement = /** @type {{vers:CH075.Partie,tentatives:number,envoyeA:string|null}} */ (/** @type {unknown} */ (null)); e.depuis = at;
     return e;
   }
+  /** @param {CH075.EtatFile} e @param {string} motif @param {string|null|undefined} [detail] */
   function noter(e, motif, detail) { if (e.partie) e.partie.motifs.push({ code: motif, texte: MOTIFS[motif]?.texte ?? null, detail: texte(detail, 300) }); }
 
   /* L'état gardé, relu (chrome.storage.local, source non fiable : relu champ par champ ; illisible = aucune file). */
+  /** @param {CH075.Brut|null|undefined} v @returns {CH075.EtatFile|null} */
   function relire(v) {
-    if (!v || typeof v !== 'object' || v.v !== 1 || typeof v.id !== 'string' || ![...ACTIFS, ...TERMINAUX].includes(v.etat)) return null;
-    if (!Array.isArray(v.plan) || !v.plan.length || v.plan.some(p => entier(p, 1e7) === null) || entier(v.k, MAX_PARTIES) === null || v.k >= v.plan.length) return null;
+    if (!v || typeof v !== 'object' || v.v !== 1 || typeof v.id !== 'string' || ![...ACTIFS, ...TERMINAUX].includes(/** @type {string} */ (v.etat))) return null;
+    if (!Array.isArray(v.plan) || !v.plan.length || v.plan.some(p => entier(p, 1e7) === null) || entier(v.k, MAX_PARTIES) === null || /** @type {number} */ (v.k) >= v.plan.length) return null;
     if (!Array.isArray(v.bilan)) return null;
-    return copie(v);
+    return /** @type {CH075.EtatFile} */ (/** @type {unknown} */ (copie(v)));
   }
 
   /* Corps de la machine. `ev.at` : l'heure (ISO), donnée par l'appelant (la machine ne lit jamais l'horloge). */
+  /** @param {CH075.EtatFile|null} etat @param {CH075.EvenementFile} ev @returns {CH075.ResultatFile} */
   function transition(etat, ev) {
-    const at = typeof ev?.at === 'string' ? ev.at : null, ignore = raison => ({ etat, actions: [], ignore: raison });
+    const at = typeof ev?.at === 'string' ? ev.at : null, ignore = /** @param {string} raison */ raison => ({ etat, actions: [], ignore: raison });
     const type = ev?.type;
     if (type === 'demarrer') {
       if (actif(etat)) return ignore('file déjà en cours');
-      const p = planifier(ev.selecteur, ev.courante, ev.n);
+      const p = planifier(ev.selecteur, /** @type {CH075.Partie} */ (ev.courante), /** @type {number} */ (ev.n));
       if (p.refus) return { etat, actions: [], refus: p.refus };
       if (typeof ev.id !== 'string' || !ev.id) return { etat, actions: [], refus: 'identifiant de file absent' };
-      const e = { v: 1, id: ev.id, etat: 'lot', n: ev.n, plan: p.plan, k: 0, debut: at, depuis: at, partie: partieNeuve(p.plan[0], 0, at), bilan: [],
-        changement: null, motifFin: null, alerte: null, reprises: 0, lotArgs: ev.lotArgs && typeof ev.lotArgs === 'object' ? copie(ev.lotArgs) : null };
-      return { etat: e, actions: [{ type: 'demarrer-lot', part: p.plan[0], rang: 0 }] };
+      const e = { v: 1, id: ev.id, etat: 'lot', n: /** @type {number} */ (ev.n), plan: /** @type {CH075.Partie[]} */ (p.plan), k: 0, debut: at, depuis: at, partie: partieNeuve(/** @type {CH075.Partie[]} */ (p.plan)[0], 0, at), bilan: [],
+        changement: /** @type {{vers:CH075.Partie,tentatives:number,envoyeA:string|null}} */ (/** @type {unknown} */ (null)), motifFin: null, alerte: null, reprises: 0, lotArgs: ev.lotArgs && typeof ev.lotArgs === 'object' ? copie(ev.lotArgs) : null };
+      return { etat: e, actions: [{ type: 'demarrer-lot', part: /** @type {CH075.Partie[]} */ (p.plan)[0], rang: 0 }] };
     }
     if (type === 'oublier') return terminal(etat) || !etat ? { etat: null, actions: [] } : ignore('file en cours : arrête-la d’abord');
     if (!actif(etat)) return ignore('aucune file en cours');
@@ -134,10 +149,10 @@
         if (type === 'lot-fin') {
           if (!e.partie.lotId || ev.lotId !== e.partie.lotId) return ignore('fin d’un autre lot');
           e.partie.issueLot = texte(ev.issue, 60); e.partie.resume = ev.resume && typeof ev.resume === 'object' ? copie(ev.resume) : null;
-          const m = MOTIFS[ev.motif];
+          const m = MOTIFS[/** @type {string} */ (ev.motif)];
           if (!m || ev.motif === 'nombre-atteint' || ev.motif === 'passe-arretee' || ev.motif === 'relecture-arretee') { arreter(e, 'refus-lot', at, `motif de fin de lot inconnu : ${ev.motif}`); return { etat: e, actions: [] }; }
-          if (m.file === 'arret') { arreter(e, ev.motif, at, ev.detail); return { etat: e, actions: [] }; }
-          noter(e, ev.motif, ev.detail); e.etat = 'passe'; e.depuis = at;
+          if (m.file === 'arret') { arreter(e, /** @type {string} */ (ev.motif), at, ev.detail); return { etat: e, actions: [] }; }
+          noter(e, /** @type {string} */ (ev.motif), ev.detail); e.etat = 'passe'; e.depuis = at;
           /* CH-039 : ESV est sur une autre partie (ouverte seule, avec ou sans rechargement) ; la passe et la relecture (lancées par le service
            * worker) attendent le retour. */
           if (ev.motif === 'partie-changee-par-esv' || ev.horsPartie === true) { e.partie.retourLot = { at, fait: false }; return { etat: e, actions: [{ type: 'retour-lot', vers: e.partie.part }] }; }
@@ -170,7 +185,7 @@
           return { etat: e, actions: [{ type: 'retour-partie', vers: e.partie.part }] };
         }
         if (ev.issue !== 'finie') noter(e, 'relecture-arretee', ev.detail || `relecture ${ev.issue}`);
-        e.partie.fin = at; e.partie.alertes = alertes(e.partie, e.bilan); e.bilan.push(e.partie); e.partie = null;
+        e.partie.fin = at; e.partie.alertes = alertes(e.partie, e.bilan); e.bilan.push(e.partie); e.partie = /** @type {CH075.PartieFile} */ (/** @type {unknown} */ (null));
         if (e.k + 1 >= e.plan.length) { arreter(e, 'nombre-atteint', at); return { etat: e, actions: [{ type: 'registre', rang: e.k }] }; }
         e.etat = 'changement'; e.changement = { vers: e.plan[e.k + 1], tentatives: 0, envoyeA: null }; e.depuis = at;
         return { etat: e, actions: [{ type: 'registre', rang: e.k }, { type: 'changer-partie', vers: e.plan[e.k + 1] }] };
@@ -179,10 +194,10 @@
         if (type === 'changement-envoye') { if (ev.vers !== e.changement.vers) return ignore('autre partie'); e.changement.tentatives++; e.changement.envoyeA = at; return { etat: e, actions: [] }; }
         if (type === 'changement-ok') {
           if (ev.part !== e.changement.vers) return ignore('partie atteinte différente de la partie demandée');
-          e.k++; e.etat = 'lot'; e.changement = null; e.partie = partieNeuve(e.plan[e.k], e.k, at); e.depuis = at;
+          e.k++; e.etat = 'lot'; e.changement = /** @type {{vers:CH075.Partie,tentatives:number,envoyeA:string|null}} */ (/** @type {unknown} */ (null)); e.partie = partieNeuve(e.plan[e.k], e.k, at); e.depuis = at;
           return { etat: e, actions: [{ type: 'demarrer-lot', part: e.plan[e.k], rang: e.k }] };
         }
-        if (type === 'changement-echec') { arreter(e, ['commande-absente', 'esv-muet', 'onglet-ferme', 'selecteur-illisible'].includes(ev.motif) ? ev.motif : 'changement-impossible', at, ev.detail); return { etat: e, actions: [] }; }
+        if (type === 'changement-echec') { arreter(e, ['commande-absente', 'esv-muet', 'onglet-ferme', 'selecteur-illisible'].includes(/** @type {string} */ (ev.motif)) ? /** @type {string} */ (ev.motif) : 'changement-impossible', at, ev.detail); return { etat: e, actions: [] }; }
         return ignore(`événement ${type} hors de l’état changement`);
     }
     return ignore('état inconnu');
@@ -195,6 +210,7 @@
    * la passe et la relecture se reprennent d'eux-mêmes (leur propre reprise) : la file reprend seulement l'observation. Les deux actions qui ont
    * pu se perdre sont rejouées : le départ d'un lot (si le moteur n'a aucun lot de cette file à ce rang) et le changement de partie (si ESV
    * n'affiche pas déjà la partie demandée ; une tentative de plus au plus). */
+  /** @param {CH075.EtatFile|null} etat @param {CH075.ConstatFile} [constat] @returns {CH075.ResultatFile} */
   function reprise(etat, constat = {}) {
     const at = constat.at ?? null;
     if (!actif(etat)) return { etat, actions: [] };
@@ -221,8 +237,9 @@
    * Rend un motif de `MOTIFS` (ou null : lot encore ouvert, la file attend, une pause comprise : rien n'arrête la file que l'opérateur).
    * ERROR ne se reprend pas (src/historique-parties.js : « interrompue ») : lot clos en anomalie. */
   const CLOS = ['STOPPED', 'COMPLETED', 'FINISHED_WITH_UNCONFIRMED_ACTIONS', 'ERROR'];
+  /** @param {CH075.LotClos|null|undefined} l @returns {string|null} */
   function classerLot(l) {
-    if (!l || !CLOS.includes(l.etat)) return null;
+    if (!l || !CLOS.includes(/** @type {string} */ (l.etat))) return null;
     if (l.ecritureEnSuspens || l.etat === 'FINISHED_WITH_UNCONFIRMED_ACTIONS') return 'ecriture-incertaine';
     if (l.etat === 'COMPLETED') return 'fin-normale';
     if (l.etat === 'ERROR') return 'refus-lot';
@@ -235,12 +252,14 @@
   }
 
   /* ---- Registre des écritures (persistant, borné). Une entrée par partie de file. */
+  /** @param {CH075.Brut|null|undefined} x @returns {CH075.EntreeRegistre} */
   function entreeRegistre(x) {
     const corr = Array.isArray(x?.corriges) ? x.corriges.filter(c => entier(c?.cut) !== null).slice(0, MAX_LISTE)
       .map(c => ({ cut: c.cut, ecartMm: Number.isFinite(c.ecartMm) ? Math.round(c.ecartMm * 10) / 10 : null })) : [];
-    return { fileId: texte(x?.fileId, 80), part: entier(x?.part, 1e7), rang: entier(x?.rang, MAX_PARTIES), lotId: texte(x?.lotId, 80), at: texte(x?.at, 40),
+    return { fileId: texte(x?.fileId, 80), part: /** @type {CH075.Partie|null} */ (entier(x?.part, 1e7)), rang: entier(x?.rang, MAX_PARTIES), lotId: texte(x?.lotId, 80), at: texte(x?.at, 40),
       poses: cuts(x?.poses), passe: cuts(x?.passe), corriges: corr, valides: cuts(x?.valides) };
   }
+  /** @param {unknown} registre @param {CH075.Brut|null|undefined} x @returns {CH075.EntreeRegistre[]} */
   function registreAjouter(registre, x) {
     const l = Array.isArray(registre) ? registre.filter(r => r && typeof r === 'object') : [], n = entreeRegistre(x);
     const i = l.findIndex(r => r.fileId === n.fileId && r.rang === n.rang && r.lotId === n.lotId);
@@ -250,26 +269,29 @@
 
   /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes, ecritsPasse, refus} ; `partie.relecture` : {corriges, faits}.
    * Différés hors cuts écrits par la passe (D-238 : l'état du lot les garde « différés ») ; médiane des parties précédentes de la file. */
+  /** @param {CH075.PartieFile|null|undefined} partie @param {CH075.PartieFile[]} [precedents] @param {CH075.Seuils} [seuils] @returns {CH075.Alerte[]} */
   function alertes(partie, precedents = [], seuils = SEUILS) {
-    const out = [], r = partie?.resume || {}, traites = entier(r.traites);
+    const out = /** @type {CH075.Alerte[]} */ ([]), r = partie?.resume || /** @type {CH075.Resume} */ ({}), traites = entier(r.traites);
+    /** @param {number} q */
     const part = q => (traites ? q / traites : null);
-    const dif = entier(r.differes) !== null ? Math.max(0, r.differes - (entier(r.ecritsPasse) || 0)) : null;
-    const ratios = precedents.map(p => { const s = p?.resume || {}, t = entier(s.traites); return t && entier(s.differes) !== null ? Math.max(0, s.differes - (entier(s.ecritsPasse) || 0)) / t : null; })
+    const dif = entier(r.differes) !== null ? Math.max(0, /** @type {number} */ (r.differes) - (entier(r.ecritsPasse) || 0)) : null;
+    const ratios = precedents.map(p => { const s = p?.resume || /** @type {CH075.Resume} */ ({}), t = entier(s.traites); return t && entier(s.differes) !== null ? Math.max(0, /** @type {number} */ (s.differes) - (entier(s.ecritsPasse) || 0)) / t : null; })
       .filter(v => v !== null).sort((a, b) => a - b);
     const med = ratios.length ? (ratios.length % 2 ? ratios[(ratios.length - 1) / 2] : (ratios[ratios.length / 2 - 1] + ratios[ratios.length / 2]) / 2) : null;
-    if (dif !== null && med !== null && med > 0 && part(dif) > seuils.differesFoisMediane * med)
+    if (dif !== null && med !== null && med > 0 && /** @type {number} */ (part(dif)) > seuils.differesFoisMediane * med)
       out.push({ code: 'differes', texte: `différés : ${dif} sur ${traites}, plus de ${seuils.differesFoisMediane} fois la médiane des parties précédentes` });
     /* CH-026-c (décision de l'intégrateur, 30/10) : les corrigés sont rapportés aux cuts RELUS par la relecture (`relecture.faits`), leur population ;
      * avant, aux cuts traités par le lot (une autre population : « 14 sur 23 » pour 220 relus). Seuil inchangé, proposé et non décidé par l'opérateur. */
     const corr = entier(partie?.relecture?.corriges), relus = entier(partie?.relecture?.faits);
     if (corr !== null && relus && corr / relus > seuils.corrigesPart) out.push({ code: 'corriges', texte: `cuts corrigés par la relecture : ${corr} sur ${relus} relus, plus de ${Math.round(seuils.corrigesPart * 100)} %` });
-    if (entier(r.refus) !== null && r.refus >= seuils.refus) out.push({ code: 'refus', texte: `${r.refus} refus de la page` });
+    if (entier(r.refus) !== null && /** @type {number} */ (r.refus) >= seuils.refus) out.push({ code: 'refus', texte: `${r.refus} refus de la page` });
     return out;
   }
 
   /* CH-026-c : une file arrêtée pendant qu'une activité de sa dernière partie tournait encore (la passe, la relecture : le service worker les lance
    * de lui-même) : quand cette activité finit, son issue est portée au bilan de la partie, au lieu de « relecture — » pour toujours. Rien d'autre
    * ne change (la file reste arrêtée, le motif aussi). Rend le nouvel état, ou null si rien n'est à compléter. */
+  /** @param {CH075.EtatFile|null|undefined} e @param {{lotId?:string,passe?:CH075.Activite|null,relecture?:CH075.Activite|null}} [options] @returns {CH075.EtatFile|null} */
   function completerBilan(e, { lotId, passe = null, relecture = null } = {}) {
     if (!e || e.etat !== 'arret' || !e.bilan.length || typeof lotId !== 'string') return null;
     const p = e.bilan[e.bilan.length - 1]; if (p.lotId !== lotId) return null;
@@ -281,6 +303,7 @@
   }
   /* CH-026 : d'où repart une file ARRÊTÉE : le premier rang non fini (la partie interrompue, ou la suivante si l'arrêt est venu entre deux parties),
    * sa partie dans le plan, le nombre de parties restantes. null si la file n'est pas arrêtée ou si tout est fait. */
+  /** @param {CH075.EtatFile|null|undefined} e @returns {{rang:number,part:CH075.Partie,reste:number}|null} */
   function repriseDe(e) {
     if (!e || e.etat !== 'arret') return null;
     const faites = e.bilan.filter(p => !p.interrompue).length, rang = faites;
@@ -288,6 +311,7 @@
     return { rang, part: e.plan[rang], reste: e.plan.length - rang };
   }
   /* Vue du panneau (variante A) : quelques champs, jamais d'adresse ni d'identifiant de page. */
+  /** @param {CH075.EtatFile|null|undefined} e @returns {CH075.Brut|null} */
   function vue(e) {
     if (!e) return null;
     return { id: e.id, etat: e.etat, n: e.n, plan: e.plan.slice(), rang: e.k, enCours: e.partie ? { part: e.partie.part, rang: e.partie.rang, lot: !!e.partie.lotId, ...(e.partie.retourLot && !e.partie.retourLot.fait ? { retour: true } : {}) } : null,

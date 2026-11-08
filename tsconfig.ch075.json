@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "types": [],
+    "lib": ["ES2022"]
+  },
+  "files": ["types/ch075.d.ts", "src/appuis-liste.js", "src/file-prioritaire.js", "src/file-parties.js"]
+}

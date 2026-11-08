@@ -1,0 +1,16 @@
+/** @type {CH075.Metres} */ const m=/** @type {CH075.Metres} */(1);
+/** @type {CH075.Millimetres} */ const mm=/** @type {CH075.Millimetres} */(20);
+/** @type {CH075.Coupe} */ const cut=/** @type {CH075.Coupe} */(7);
+/** @type {CH075.Partie} */ const part=/** @type {CH075.Partie} */(2);
+/** @type {CH075.Operation} */ const op=/** @type {CH075.Operation} */('o');
+/** @type {CH075.Scene} */ const scene=/** @type {CH075.Scene} */([m,m,m]);
+/** @type {CH075.Monde} */ const monde=/** @type {CH075.Monde} */([m,m,m]);
+/** @type {CH075.Echange} */ const echange={identity:{part,cut},operationId:op};
+const B=require('../../src/appuis-liste.js');
+B.mesurerT({left:monde,right:monde},{left:scene,right:scene},{...B.DEFAULTS,rigideMm:mm});
+B.appuis([],/** @type {CH075.Translation} */([m,m,m]),echange.identity);
+const FP=require('../../src/file-parties.js'),FPR=require('../../src/file-prioritaire.js');
+FP.planifier({status:'ok',parts:[{part:2}]},part,1);
+FPR.plages([cut]);
+FPR.ordonner([{part,cut,source:'differe'}]);
+module.exports={};

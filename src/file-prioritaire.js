@@ -18,9 +18,10 @@
  * 5 par minute de visite) ; (3) un cut déjà jugé (`jugesDeja`, clés « partie:cut ») n'est pas reproposé ; (4) à rendement égal, l'ordre des cuts,
  * pour que l'opérateur parcoure des plages et non des sauts (un saut coûte ~6 s de plus qu'un cut voisin, mesuré le 04/11).
  * Aucun chiffre n'est deviné : une classe sans observation n'a pas de taux et ses candidats sont écartés (différés exceptés). */
+/** @template T @param {unknown} root @param {() => T} factory */
 (function (root, factory) {
   const api = factory();
-  if (typeof module === 'object' && module.exports) module.exports = api; else root.ArianeFilePrioritaire = api;
+  if (typeof module === 'object' && module.exports) module.exports = api; else /** @type {{ArianeFilePrioritaire?:unknown}} */ (root).ArianeFilePrioritaire = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   const VERSION = 'file-prioritaire-1';
@@ -29,7 +30,8 @@
   const PLANCHER_PAR_MIN = 5;
   const HORS_CONTRAT = 'gauge-out-of-contract/gauge-out-of-contract', SANS_POINTS = 'input/input';
   const fini = Number.isFinite;
-  const r1 = v => (fini(v) ? Math.round(v * 10) / 10 : null);
+  /** @param {unknown} v @returns {number|null} */
+  const r1 = v => (fini(v) ? Math.round(/** @type {number} */ (v) * 10) / 10 : null);
 
   /* Taux mesurés le 04/11 (parties 10, 13, 14, 15 ; 250 cuts visités ; coût = temps de visite cumulé du cut). Voir chantiers/CH-053/S-rapport.md
    * et `tools/file-prioritaire.cjs simuler`. Ils servent de défaut ; la preuve du gain est la validation croisée par partie de la simulation. */
@@ -38,50 +40,56 @@
     'vert-fort': [10, 5, 0, 21.1], 'vert-moyen': [22, 2, 0, 36.3], 'vert-faible': [68, 1, 0, 88], 'vert-inconnu': [70, 5, 0, 129.5], 'posee-ariane': [14, 1, 0, 23.8],
   }).map(([k, [n, informatifs, avecTraits, coutS]]) => [k, Object.freeze(taux(n, informatifs, avecTraits, coutS))])));
 
+  /** @param {number} n @param {number} informatifs @param {number} avecTraits @param {number} coutS @returns {CH075.Taux} */
   function taux(n, informatifs, avecTraits, coutS) {
-    return { n, informatifs, avecTraits, coutS: r1(coutS), p: n ? r1(informatifs / n * 100) / 100 : 0, parMin: coutS > 0 ? r1(informatifs / coutS * 60) : 0 };
+    return { n, informatifs, avecTraits, coutS: /** @type {number} */ (r1(coutS)), p: n ? /** @type {number} */ (r1(informatifs / n * 100)) / 100 : 0, parMin: coutS > 0 ? /** @type {number} */ (r1(informatifs / coutS * 60)) : 0 };
   }
 
   /* Classe d'un candidat : { part, cut, source: 'differe'|'vert'|'posee', motif?: 'gauche/droite', score?: number }. */
+  /** @param {CH075.Candidat|null|undefined} c @returns {string} */
   function classe(c) {
     if (c && c.source === 'differe') return c.motif === HORS_CONTRAT ? 'D-contrat' : c.motif === SANS_POINTS ? 'D-sanspoints' : 'D-points';
     if (c && c.source === 'vert') {
       if (!fini(c.score)) return 'vert-inconnu';
-      return c.score >= SEUIL_VERT_FORT ? 'vert-fort' : c.score >= SEUIL_VERT_MOYEN ? 'vert-moyen' : 'vert-faible';
+      return /** @type {number} */ (c.score) >= SEUIL_VERT_FORT ? 'vert-fort' : /** @type {number} */ (c.score) >= SEUIL_VERT_MOYEN ? 'vert-moyen' : 'vert-faible';
     }
     return 'posee-ariane';
   }
 
   /* Observations : [{ classe, informatif: bool, avecTraits?: bool, coutS }] (un cut visité par observation). */
+  /** @param {CH075.Observation[]|null|undefined} observations @returns {Record<string,CH075.Taux>} */
   function apprendreTaux(observations) {
+    /** @type {Record<string,{n:number,inf:number,tr:number,t:number}>} */
     const acc = {};
     for (const o of observations || []) {
       if (!o || !o.classe || !fini(o.coutS)) continue;
       const a = acc[o.classe] = acc[o.classe] || { n: 0, inf: 0, tr: 0, t: 0 };
-      a.n++; a.t += o.coutS; if (o.informatif) a.inf++; if (o.informatif && o.avecTraits) a.tr++;
+      a.n++; a.t += /** @type {number} */ (o.coutS); if (o.informatif) a.inf++; if (o.informatif && o.avecTraits) a.tr++;
     }
     return Object.fromEntries(Object.entries(acc).map(([k, a]) => [k, taux(a.n, a.inf, a.tr, a.t)]));
   }
 
+  /** @type {Record<string,string>} */
   const GROUPE = { differe: 'poser', vert: 'controler', posee: 'corriger' };
 
   /* La file. `candidats` : voir `classe`. Options : taux (défaut TAUX_DEFAUT), plancherParMin, jugesDeja (Set « partie:cut »), critere ('informatif' |
    * 'avec-traits' : dans ce cas le rendement est celui des informatifs où Ariane avait pris une décision, utile à l'apprentissage de L1). */
+  /** @param {CH075.Candidat[]|null|undefined} candidats @param {CH075.OptionsFile} [options] */
   function ordonner(candidats, options = {}) {
     const T = options.taux || TAUX_DEFAUT, plancher = fini(options.plancherParMin) ? options.plancherParMin : PLANCHER_PAR_MIN;
     const juges = options.jugesDeja instanceof Set ? options.jugesDeja : new Set(), traits = options.critere === 'avec-traits';
-    const entrees = [], ecartes = [];
+    const entrees = /** @type {(Omit<CH075.EntreeFile,"rang"> & {_r:number})[]} */ ([]), ecartes = [];
     let dejaJuges = 0;
     for (const c of candidats || []) {
       if (!c || !Number.isInteger(c.cut)) continue;
       if (juges.has(`${c.part}:${c.cut}`)) { dejaJuges++; continue; }
       const cl = classe(c), t = T[cl];
       const parMin = t && t.coutS > 0 ? r1((traits ? t.avecTraits : t.informatifs) / t.coutS * 60) : null;
-      const e = { part: c.part, cut: c.cut, groupe: GROUPE[c.source] || 'corriger', signaux: [cl],
+      const e = { part: c.part, cut: c.cut, groupe: GROUPE[/** @type {string} */ (c.source)] || 'corriger', signaux: [cl],
         details: { classe: cl, pInfo: t ? t.p : null, coutS: t && t.n ? r1(t.coutS / t.n) : null, attenduParMin: parMin, ...(fini(c.score) ? { score: c.score } : {}), ...(c.motif ? { motif: c.motif } : {}) } };
       const du = c.source === 'differe';
-      if (!du && !(fini(parMin) && parMin >= plancher)) { ecartes.push({ part: c.part, cut: c.cut, classe: cl, attenduParMin: parMin }); continue; }
-      entrees.push({ ...e, _r: fini(parMin) ? parMin : -1 });
+      if (!du && !(fini(parMin) && /** @type {number} */ (parMin) >= /** @type {number} */ (plancher))) { ecartes.push({ part: c.part, cut: c.cut, classe: cl, attenduParMin: parMin }); continue; }
+      entrees.push({ ...e, _r: fini(parMin) ? /** @type {number} */ (parMin) : -1 });
     }
     /* `ordre: 'balayage'` : la même file, parcourue partie par partie dans l'ordre des cuts (moins de sauts ; la simulation du 04/11 la mesure meilleure). */
     if (options.ordre === 'balayage') entrees.sort((a, b) => a.part - b.part || a.cut - b.cut); else entrees.sort((a, b) => b._r - a._r || a.part - b.part || a.cut - b.cut);
@@ -90,8 +98,9 @@
   }
 
   /* « 4213–4215, 4220 » : les cuts d'une file, suites consécutives réunies, dans l'ordre des cuts. */
+  /** @param {CH075.Coupe[]} cuts @returns {string} */
   function plages(cuts) {
-    const t = [...new Set(cuts)].sort((a, b) => a - b), out = [];
+    const t = [...new Set(cuts)].sort((a, b) => a - b), out = /** @type {CH075.Coupe[][]} */ ([]);
     for (const c of t) { const d = out.at(-1); if (d && c === d[1] + 1) d[1] = c; else out.push([c, c]); }
     return out.map(([a, b]) => (a === b ? String(a) : b === a + 1 ? `${a}, ${b}` : `${a}–${b}`)).join(', ');
   }

@@ -1,5 +1,6 @@
 {
   "listeBlancheWeb": [
+    {"hote": "registry.npmjs.org", "chemin": "/typescript/-/", "raison": "archive publique de la dépendance TypeScript de développement verrouillée, hors extension"},
     {"hote": "w3.org", "sousDomaines": true, "raison": "espaces de noms et documents du W3C, dont le SVG des maquettes"},
     {"hote": "json-schema.org", "sousDomaines": true, "raison": "schémas JSON"},
     {"hote": "scripts.sil.org", "raison": "licences de polices SIL OFL"},

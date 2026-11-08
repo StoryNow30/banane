@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "description": "Vérification de développement, hors extension",
+  "scripts": {"typage": "node tools/typage-ch075.cjs"},
+  "devDependencies": {"typescript": "5.9.3"}
+}
