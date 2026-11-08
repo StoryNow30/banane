@@ -6,7 +6,7 @@
  * différent redessine des graduations justes. Ignoré, et dit ignoré, sans Chromium. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),path=require('node:path');
 const {CHROMIUM,PW,absent}=require('./helpers/signal-navigateur.cjs'),LM=require('../src/liste-memoire.js');
-const racine=path.resolve(__dirname,'..');
+const racine=path.resolve(__dirname,'..'),{ouvrirPanneau}=require('./helpers/panneau-local.cjs');
 const N=10000;
 const instDe=(inv,partie)=>{const st=new Array(N).fill(0);for(const c of inv)st[c]=1;return LM.compacter({st,fl:new Array(N).fill(0),ed:new Array(6*N).fill(null)},{partie,at:'2026-10-26T09:00:00.000Z',cle:'k'});};
 const ficheDe=(id,n)=>({batchId:id,partie:23,valides:N-n,invalides:n,ignores:0,total:N,at:'2026-10-26T09:00:00.000Z'});
@@ -22,7 +22,7 @@ async function ouvrir(nav,lot){
   const fixes={'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},'relecture-choix-etat':{mode:'corriger'},'relecture-etat':{choix:'corriger',lot:null,passe:null},'bandeau-etat':{on:false}};
   const stockage={};window.__stockage=stockage;
   window.fetch=async()=>({json:async()=>({})});
-  window.chrome={runtime:{id:'essai',getURL:p=>'file://'+racine+'/'+p,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
+  window.chrome={runtime:{id:'essai',getURL:p=>new URL(p,location.href).href,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
    sendMessage:async m=>{const a=m.action||m.kind;
     if(a==='view')return {result:vue()};
     if(a==='list-tabs')return {result:[{id:7,title:'ESV 7',windowId:1,index:0,active:true,pret:true,utilise:true}]};
@@ -31,7 +31,7 @@ async function ouvrir(nav,lot){
     return {result:a in fixes?fixes[a]:{}};}},
    storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
  },{racine,lot});
- await page.goto('file://'+path.join(racine,'panel.html')+'#home');
+ await ouvrirPanneau(page,'#home');
  await page.waitForTimeout(1200);
  return {page,erreurs};
 }
