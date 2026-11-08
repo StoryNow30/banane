@@ -3509,3 +3509,7 @@ Complète D-299 sans la modifier.
 ## D-302 — Maquette ESV dans l'environnement de Codex : contournement autorisé (opérateur, 08/11)
 - L'opérateur autorise Codex à contourner, **dans son propre environnement de test seulement**, la politique du navigateur qui interdit de charger une extension (`ExtensionInstallBlocklist`), pour faire tourner la maquette ESV et les essais navigateur. Voie à essayer d'abord : un autre Chromium (celui de Playwright, ou une construction de test) désigné par `CHROMIUM`, installé par le script de préparation de l'environnement.
 - Ne s'applique ni au poste de l'opérateur, ni à ESV, ni à aucun autre système. Si la politique vient du fournisseur de l'environnement et que ses conditions l'interdisent, on s'arrête et la maquette passe par Cursor ou par Claude.
+
+## D-303 — Claude redevient l'intégrateur (opérateur, 08/11)
+- L'opérateur rend la main à Claude : intégration du tronc `claude/50-test17`, paquets, pilotage des chantiers (D-299, D-300). Codex ne pousse plus sur le tronc ; il peut rester exécutant sur une branche `chantier/…` si l'intégrateur le lui confie. D-301 (lecture de `banane-data` par Codex) et D-302 restent valables pour ce rôle d'exécutant.
+- Premier travail : faire servir la lecture Rust sur le vrai ESV. Relevé de console de l'opérateur (08/11) : three.js 124 présent, mais les nœuds de Potree utilisent une seconde copie de `BufferAttribute` (même code, indentation différente, fonctions distinctes) : 0 lecture servie sur 1 363 le 08/11 (« accesseur inconnu »).
