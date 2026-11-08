@@ -213,6 +213,13 @@
      * vu sur la page, sous `trouFraction` de la médiane des 20 captures d'avant) ou 'signal+trou'. */
     /* D-293 (opérateur, 06/11 : « 1. A ») : ligne de base par les échecs ALLUMÉE ; le rechargement pendant le lot (`actif`) reste COUPÉ. */
     signalEteint: Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, preuveMs: 5000, delaiAvantMs: 500, sondageMs: 500, attenteRepriseMs: 90000, ligneDeBaseEchecs: true, declencheur: 'signal', trouFraction: 0.3 }),
+    /* CH-077 (D-305, piste 3) — PRÉCHAUFFER LE CACHE DU NAVIGATEUR POUR LA COUPE SUIVANTE (src/prechauffage.js, lu par la page ; patch chantiers/CH-077/adapter-page.patch).
+     * ÉTEINT par défaut : il ajoute des requêtes au serveur d'ESV (accord écrit de l'opérateur au moment de livrer, D-305). Allumé : à la fin de la capture d'un cut,
+     * réseau libre seulement, demande au navigateur (priorité basse, `enVolMax` à la fois) les nœuds connus de Potree qui coupent la zone (`rayonM`) des rails de la
+     * prochaine coupe non validée, au plus `noeudsMax` nœuds et `octetsMax` octets par cut, jusqu'au niveau le plus profond chargé au cut courant (`profondeurMax`
+     * le borne en plus ; null : sans borne de plus) ; rien n'est appliqué à la scène, aucune adresse gardée. `apresNavigation` : 'annuler' (les demandes en vol
+     * s'arrêtent quand ESV change de coupe) ou 'finir' ; s'éteint seul pour la page après `coupesSansCache` coupes sans un nœud servi par le cache. */
+    chargement: Object.freeze({ prechauffer: Object.freeze({ actif: false, profondeurMax: null, noeudsMax: 24, octetsMax: 8388608, enVolMax: 2, rayonM: 1.5, apresNavigation: 'annuler', coupesSansCache: 5 }) }),
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
      * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE

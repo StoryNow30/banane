@@ -41,7 +41,9 @@ const sansCH062=t=>t.replace(/\n \/\* CH-062 \(PROPOSÉ ; réglages `lot\.signal
 /* D-305, piste 0 : relevé en lecture seule du cache, de l'attente du serveur et du transfert des nœuds ept-data, retiré pour comparer. */
 const sansD305Obs=t=>t.replace(/\n      \/\* D-305, piste 0 \(mesure en lecture seule\)[\s\S]*?x\.trf=\(x\.trf\|\|0\)\+\(end-rq\);\}/,'')
   .replace(",\n      ...(a.ept.cache?{depuisCache:a.ept.cache}:{}),...(Number.isFinite(a.ept.srv)?{attenteServeurMs:Math.round(a.ept.srv),transfertMs:Math.round(a.ept.trf)}:{})}:{})});","}:{})});");
-const sansCH062Obs=t=>sansD305Obs(t).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+/* CH-077 : l'observateur relaie les événements du préchauffage (comptes et classes seulement), retirés pour comparer. */
+const sansCH077Obs=t=>t.replace("'ligne-base-repli':null,'prechauffage':null,'prechauffage-bilan':null,'prechauffage-entetes':null});   /* CH-062 : posté par le patch proposé de la page ; CH-077 : préchauffage */","'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */").replace(/\n    \/\* CH-077 : préchauffage[\s\S]*?\/\* fin CH-077 \*\//,'').replace(/\/\* CH-077 : champs gardés[\s\S]*?  return out;\}\n /,'');
+const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(t)).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
  .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
@@ -115,6 +117,9 @@ const sansD284=t=>t
  * qui choisit la variante de la lecture quand le noyau est chargé et le réglage `rust.lidar` allumé. La sortie de capture() est identique au bit près
  * (parité sur les 4 647 captures réelles du 04 au 06/11, Node et Chromium ; tests/rust-lidar.test.cjs) ; sans ces lignes, l'adaptateur est celui d'avant. */
 const RUST_LIDAR=['lidar-rust.js'];
+/* CH-077 (D-305, piste 3) : le préchauffage du cache du navigateur pour la coupe suivante (src/prechauffage.js), module de la page branché par le patch
+ * chantiers/CH-077/adapter-page.patch (non appliqué au tronc) ; ÉTEINT par défaut (`lot.chargement.prechauffer.actif:false`) : il ne lit ni ne commande la pose. */
+const PRECHAUFFAGE=['prechauffage.js'];
 const sansRustLidar=t=>t
  .replace(/\n \/\* D-296 \(CH-064, étape 6 a\) : lecture LiDAR en Rust\.[\s\S]*?\n const lecteurLidar=\(\)=>RUST_LIDAR&&LR&&LR\.pret\(\)\?LR:L;/,'')
  .replace("async function captureOnce(expected,guard,lecture='reference',progress=null,cote=null){guard();const c=context();const lu=lecteurLidar();\n   const data=await lu.capture({",
@@ -133,7 +138,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -165,12 +170,14 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,rust,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,signalEteint,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,rust,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','signalEteint','voieB1EcartOmbre']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','signalEteint','voieB1EcartOmbre']);
+ /* CH-077 : préchauffage du cache pour la coupe suivante, ÉTEINT par défaut (D-305 : accord écrit de l'opérateur au moment de livrer). */
+ assert.deepEqual(Object.keys(chargement),['prechauffer']);assert.equal(chargement.prechauffer.actif,false,'CH-077 : préchauffage éteint par défaut');
  /* CH-062 : rechargement d'ESV quand son signal s'éteint pendant le lot, COUPÉ par défaut (un événement seulement). */
  assert.equal(signalEteint.actif,false,'CH-062 : signal éteint pendant le lot, coupé par défaut');
  assert.deepEqual({...voieB1EcartOmbre},{actif:true,fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4},'CH-055 : règle b1-ecart en OMBRE (consignée seulement), allumée par défaut');
