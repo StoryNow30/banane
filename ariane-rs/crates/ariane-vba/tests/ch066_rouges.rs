@@ -1,5 +1,5 @@
-//! CH-066 : essais ROUGES des défauts trouvés côté Rust (marqués `ignore` pour que `cargo test` reste vert tant que le
-//! chef de CH-064 n'a pas corrigé ; les lancer : `cargo test -p ariane-vba --test ch066_rouges -- --ignored`).
+//! CH-066 : régressions des défauts trouvés côté Rust. Les quatre anciens essais rouges ont été rejoués avec succès
+//! après correction du décodeur et de l'encodeur ; ils participent désormais à `cargo test` sans omission.
 //! Chacun est minimal et porte la référence du défaut dans chantiers/CH-066/rapport.md.
 use ariane_vba::{decoder, encoder, Valeur, ENTETE};
 use std::alloc::{GlobalAlloc, Layout, System};
@@ -44,7 +44,6 @@ fn trame(corps: &[u8]) -> Vec<u8> { let mut t = ENTETE.to_vec(); t.extend_from_s
 /// `min(n, 65 536)` places à chaque niveau AVANT de lire un seul élément. En WASM (plafond 256 Mio) : trappe du cœur.
 /// Attendu : la mémoire réservée reste proportionnelle à la trame lue (ici : moins de 1 Mio).
 #[test]
-#[ignore = "CH-066 rouge R1 : amplification mémoire du décodeur (Vec::with_capacity sur une longueur annoncée)"]
 fn r1_reservation_proportionnelle_a_la_trame() {
     for e in [0x06u8, 0x08] {
         let mut corps = vec![];
@@ -59,7 +58,6 @@ fn r1_reservation_proportionnelle_a_la_trame() {
 /// R2 (P3) : l'encodeur panique sur un bloc de k = 0 (division par zéro) bâti en Rust. En WASM : trappe, repli JS.
 /// Attendu : jamais de panique ; une trame que la coquille sait lire.
 #[test]
-#[ignore = "CH-066 rouge R2 : encoder panique sur Valeur::Bloc { k: 0 }"]
 fn r2_encoder_bloc_k_nul_sans_panique() {
     let v = Valeur::Bloc { k: 0, donnees: vec![] };
     let t = catch_unwind(AssertUnwindSafe(|| encoder(&v))).expect("panique de l'encodeur");
@@ -71,7 +69,6 @@ fn r2_encoder_bloc_k_nul_sans_panique() {
 /// « VBA : … » et la façade rejoue le JS (repli de format).
 /// Attendu : la trame se relit (vide → tableau vide, comme `canonique()`).
 #[test]
-#[ignore = "CH-066 rouge R3 : encoder écrit des trames refusées pour des tableaux typés vides ou un bloc incomplet"]
 fn r3_encoder_ne_produit_que_des_trames_lisibles() {
     for v in [Valeur::Nombres(vec![]), Valeur::Booleens(vec![]), Valeur::Bloc { k: 3, donnees: vec![] }, Valeur::Bloc { k: 2, donnees: vec![1.0, 2.0, 3.0] }] {
         let t = encoder(&v);
@@ -84,7 +81,6 @@ fn r3_encoder_ne_produit_que_des_trames_lisibles() {
 /// première place, la dernière valeur). La trame Rust se relit donc en JS autrement qu'elle ne s'écrit, et
 /// `champ("a")` (première occurrence) ne lit pas la même valeur que le JS (dernière).
 #[test]
-#[ignore = "CH-066 rouge R4 : canonique() ne range pas les clés entières et ne fusionne pas les clés en double"]
 fn r4_canonique_range_les_cles_comme_le_js() {
     let o = Valeur::Objet(vec![("b".into(), Valeur::Nul), ("1".into(), Valeur::Nul), ("0".into(), Valeur::Nul)]);
     let cles: Vec<String> = match o.canonique() { Valeur::Objet(t) => t.into_iter().map(|(k, _)| k).collect(), _ => vec![] };
