@@ -334,7 +334,8 @@
   function flushResources(){windowTimer=null;const a=agg,f=aggFetch;agg=null;aggFetch=null;
    if(a)record({kind:'resource',class:'point-resource',n:a.n,bytes:a.bytes,startedEpochMs:epoch(a.start),endedEpochMs:epoch(a.end),windowMs:LIMITS.resourceWindowMs,
     /* 4.9.5.3 (S6) : nœuds ept-data seulement ; absent si le relevé est coupé ou si la fenêtre n'en compte aucun. */
-    ...(a.ept?{ept:a.ept.n,statuts:a.ept.statuts,sansStatut:a.ept.sansStatut,echecs:a.ept.echecs,echecsCumules,dureeTotMs:Math.round(a.ept.dur*10)/10,dureeMaxMs:Math.round(a.ept.max*10)/10}:{})});
+    ...(a.ept?{ept:a.ept.n,statuts:a.ept.statuts,sansStatut:a.ept.sansStatut,echecs:a.ept.echecs,echecsCumules,dureeTotMs:Math.round(a.ept.dur*10)/10,dureeMaxMs:Math.round(a.ept.max*10)/10,
+      ...(a.ept.cache?{depuisCache:a.ept.cache}:{}),...(Number.isFinite(a.ept.srv)?{attenteServeurMs:Math.round(a.ept.srv),transfertMs:Math.round(a.ept.trf)}:{})}:{})});
    if(f)record({kind:'fetch-rails',n:f.n,startedEpochMs:epoch(f.start),endedEpochMs:epoch(f.end),windowMs:LIMITS.resourceWindowMs});}
   /* Filet passif pour `fetch` (non enveloppé) : l'API de mesure des ressources voit aussi les requêtes
    * `fetch`. On COMPTE celles dont le chemin est de classe « rails » (jamais l'URL, jamais le contenu) :
@@ -347,6 +348,11 @@
       /* `responseStatus` (Chrome ≥ 109) : absent = non disponible (jamais compté comme échec) ; 0 ou ≥ 400 = échec. Durée = fin − début. */
       const x=agg.ept||(agg.ept={n:0,statuts:{},sansStatut:0,echecs:0,dur:0,max:0});x.n++;
       const rs=e.responseStatus,d=Number(e.duration);if(Number.isFinite(d)&&d>=0){x.dur+=d;x.max=Math.max(x.max,d);}
+      /* D-305, piste 0 (mesure en lecture seule) : réponse servie par le cache du navigateur (rien transféré, corps non vide), attente
+       * du serveur (début → premier octet) et transfert (premier → dernier octet), en ms. Jamais d'adresse. */
+      const tz=Number(e.transferSize),db=Number(e.decodedBodySize),rq=Number(e.responseStart);
+      if(tz===0&&db>0)x.cache=(x.cache||0)+1;
+      if(Number.isFinite(rq)&&rq>=start&&rq<=end){x.srv=(x.srv||0)+(rq-start);x.trf=(x.trf||0)+(end-rq);}
       if(Number.isInteger(rs)&&rs>=0&&rs<=999){const k=String(rs);if(k in x.statuts||Object.keys(x.statuts).length<8)x.statuts[k]=(x.statuts[k]||0)+1;if(rs===0||rs>=400){x.echecs++;echecsCumules++;}}
       else x.sansStatut++;}
     }else if(e.initiatorType==='fetch'&&isRailsPath(e.name,base())){

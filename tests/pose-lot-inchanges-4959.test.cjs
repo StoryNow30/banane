@@ -38,7 +38,10 @@ const sansCH062=t=>t.replace(/\n \/\* CH-062 \(PROPOSÉ ; réglages `lot\.signal
  .split('chargementsEffectifs()').join('chargementsEsv()').split(',...releveLigneBase()').join('')
  .replace(/\n   try\{const t=trouEchec\(expected\);if\(t\)data\.readStrategy\.trouEchec=t;\}catch\{\/\* CH-062 : relevé seulement \*\/\}/,'');
 /* CH-062 : l'observateur relaie l'événement `ligne-base-repli` du patch de la page (lecture seule, aucune pose) ; sans ces lignes, il est celui de la test 8. */
-const sansCH062Obs=t=>t.replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+/* D-305, piste 0 : relevé en lecture seule du cache, de l'attente du serveur et du transfert des nœuds ept-data, retiré pour comparer. */
+const sansD305Obs=t=>t.replace(/\n      \/\* D-305, piste 0 \(mesure en lecture seule\)[\s\S]*?x\.trf=\(x\.trf\|\|0\)\+\(end-rq\);\}/,'')
+  .replace(",\n      ...(a.ept.cache?{depuisCache:a.ept.cache}:{}),...(Number.isFinite(a.ept.srv)?{attenteServeurMs:Math.round(a.ept.srv),transfertMs:Math.round(a.ept.trf)}:{})}:{})});","}:{})});");
+const sansCH062Obs=t=>sansD305Obs(t).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
  .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
@@ -146,7 +149,10 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
   /* CH-050 (D-283) : diagnostic du repli de stabilité (CH-049-A), quatre entiers ajoutés à la sortie de `attendreChargement`, jamais lus par la décision : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/\n   \/\* CH-049-A — DIAGNOSTIC DU REPLI[\s\S]*?   let vu=false,ch=0,tc=0,gm=0;/,'')
   .replace("if(sig.value!==valeur){const precedent=depuis;valeur=sig.value;depuis=Date.now();if(vu){ch++;gm=Math.max(gm,depuis-precedent);tc=depuis-debut;}vu=true;}","if(sig.value!==valeur){valeur=sig.value;depuis=Date.now();}")
-  .replace(',pc,nc,vc,ch,tc,gm,at:Date.now()-debut}}',',pc,nc,vc}}').replace(',pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut}}',',pc,nc,vc,m:manque}}');
+  .replace(',pc,nc,vc,ch,tc,gm,at:Date.now()-debut}}',',pc,nc,vc}}').replace(',pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut}}',',pc,nc,vc,m:manque}}')
+  /* D-304 : règle « echantillon50 » (témoin à un cut sur cinquante), sans ces lignes l'adaptateur est le même. */
+  .replace(/\n \/\* D-304 \(opérateur, 08\/11\)[\s\S]*?const CINQUANTIEME=85899346; \/\/ ⌈2\^32 \/ 50⌉/,'')
+  .replace("&&regle!=='echantillon50')return 'reference';",")return 'reference';").replace("\n   if(regle==='echantillon50')return h<CINQUANTIEME?'reference':'rapide';",'');
  assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
  for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
@@ -180,7 +186,9 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* CH-035 : clé ajoutée au premier niveau, l'Aurore entre les parties d'une Constellation, ÉTEINTE tant que l'opérateur ne l'a pas éprouvée. */
  assert.equal(correctionEntreParties.actif,true,'Aurore entre les parties : allumée par défaut (CH-037, décision de l’opérateur du 01/11), sans effet sur le lot');
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
- assert.equal(sha(canon(reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
+ /* D-304 (opérateur, 08/11) : seule valeur changée, le témoin de qualité à un cut sur cinquante ; le reste est l'empreinte d'avant. */
+ assert.equal(S.pilote.modeRapide,'echantillon50','D-304 : témoin à un cut sur cinquante');
+ assert.equal(sha(canon(reste.pilote?{...reste,pilote:{...reste.pilote,modeRapide:'echantillon'}}:reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
 });

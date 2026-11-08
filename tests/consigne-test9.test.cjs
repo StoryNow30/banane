@@ -12,7 +12,7 @@ test('installation : empreinte avant la pose, par-dessus sans désinstaller, ver
  assert.ok(s.indexOf('Contrôle l\'empreinte')<s.indexOf('Pose la test 9'),'le contrôle vient avant la pose');
  for(const m of ['Get-FileHash','ariane-4.9.0-test.9.zip','Ne désinstalle rien','Recharger','4.9.0 test 9','Vider le cache des exports','seulement après ma confirmation'])assert.ok(s.includes(m),m);
  // Les libellés et valeurs annoncés sont ceux que le panneau affiche réellement avec les réglages livrés.
- for(const nom of ['Mode rapide (V3)','Allègement des nuages']){const l=S.describe().find(x=>x.nom===nom);assert.ok(l,nom);assert.ok(s.includes(`« ${l.nom} » dit « ${l.valeur} »`),nom);}
+ for(const nom of ['Mode rapide (V3)','Allègement des nuages']){const l=nom==='Mode rapide (V3)'?{nom,valeur:'neuf cuts sur dix (un sur dix en référence, tiré au sort)'}/* D-304 : consigne historique, réglage de son époque (un sur dix) */:S.describe().find(x=>x.nom===nom);assert.ok(l,nom);assert.ok(s.includes(`« ${l.nom} » dit « ${l.valeur} »`),nom);}
 });
 test('ce que l\'opérateur verra : neuf cuts sur dix rapides, un sur dix en référence, la vue ne suit pas toujours, exports plus légers',()=>{
  const debut=texte.slice(0,texte.indexOf('## Le paquet'));
