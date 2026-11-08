@@ -305,7 +305,10 @@ function obsFields(x){
    afterDenial:typeof x.afterDenial==='boolean'?x.afterDenial:null,dropped:obsInt(x.dropped,1e9),ignored:obsInt(x.ignored,1e12)};
   case 'resource':return {kind:'resource',class:'point-resource',n:obsInt(x.n,1e7),bytes:obsInt(x.bytes,1e12),startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),windowMs:obsInt(x.windowMs,1e5),
    /* 4.9.5.3 (S6) : statut et durée des nœuds ept-data (champs absents si le relevé est coupé). */
-   ...(x.ept!==undefined?{ept:obsInt(x.ept,1e7),statuts:obsStatuts(x.statuts),sansStatut:obsInt(x.sansStatut,1e7),echecs:obsInt(x.echecs,1e7),echecsCumules:obsInt(x.echecsCumules,1e9),dureeTotMs:obsNum(x.dureeTotMs),dureeMaxMs:obsNum(x.dureeMaxMs)}:{})};
+   ...(x.ept!==undefined?{ept:obsInt(x.ept,1e7),statuts:obsStatuts(x.statuts),sansStatut:obsInt(x.sansStatut,1e7),echecs:obsInt(x.echecs,1e7),echecsCumules:obsInt(x.echecsCumules,1e9),dureeTotMs:obsNum(x.dureeTotMs),dureeMaxMs:obsNum(x.dureeMaxMs),
+    /* D-305, piste 0 (lecture seule) : réponses servies par le cache du navigateur, attente du serveur et transfert (ms) ; absents si non mesurés. */
+    ...(Number.isInteger(x.depuisCache)&&x.depuisCache>=0?{depuisCache:obsInt(x.depuisCache,1e7)}:{}),
+    ...(Number.isFinite(x.attenteServeurMs)&&x.attenteServeurMs>=0&&Number.isFinite(x.transfertMs)&&x.transfertMs>=0?{attenteServeurMs:obsNum(x.attenteServeurMs),transfertMs:obsNum(x.transfertMs)}:{})}:{})};
   case 'list-fields':return {kind:'list-fields',listKey:obsKey(x.listKey),rows:obsInt(x.rows,1e7),champs:obsInt(x.champs,1e4),
    noms:Array.isArray(x.noms)?x.noms.slice(0,64).filter(n=>typeof n==='string'&&n.length<=40&&/^[\w.\-]+$/.test(n)):[],gardes:obsGardes(x.gardes)};
   case 'esv-event':return ['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'].includes(x.nom)
