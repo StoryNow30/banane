@@ -3505,3 +3505,7 @@ Complète D-299 sans la modifier.
 - L'agent Codex (ChatGPT) reprend tout le développement et devient l'intégrateur : il pousse sur le tronc `claude/50-test17` et fabrique les paquets, avec les mêmes règles de preuve (`CLAUDE.md`, `fiches/PASSATION_CODEX.md`).
 - Codex peut lire et analyser les données terrain de `banane-data`, comme Cursor (extension de D-253). Rien de ces données n'entre jamais dans `banane`.
 - Inchangé : les accords écrits de l'opérateur (`manifest.json`, fichiers gelés, réglages de pose ou de validation, dépenses, suppressions, merge dans `main`, étiquettes), D-293, D-299 et D-300.
+
+## D-302 — Maquette ESV dans l'environnement de Codex : contournement autorisé (opérateur, 08/11)
+- L'opérateur autorise Codex à contourner, **dans son propre environnement de test seulement**, la politique du navigateur qui interdit de charger une extension (`ExtensionInstallBlocklist`), pour faire tourner la maquette ESV et les essais navigateur. Voie à essayer d'abord : un autre Chromium (celui de Playwright, ou une construction de test) désigné par `CHROMIUM`, installé par le script de préparation de l'environnement.
+- Ne s'applique ni au poste de l'opérateur, ni à ESV, ni à aucun autre système. Si la politique vient du fournisseur de l'environnement et que ses conditions l'interdisent, on s'arrête et la maquette passe par Cursor ou par Claude.
