@@ -1,10 +1,14 @@
 'use strict';
 // Vérification sans émission et identité structurelle hors commentaires et parenthèses neutres.
 const ts=require('typescript'),fs=require('node:fs'),cp=require('node:child_process'),crypto=require('node:crypto'),assert=require('node:assert/strict');
+// Références gelées par fichier : texte (source) et arbre syntaxique (ast) du fichier non annoté, à la base indiquée.
+const REFERENCES={
+ 'src/appuis-liste.js':{base:'5699f68',source:'966d52431947b3c8710ede1c866f141a32620c3e969308a480a878f072d60d02',ast:'f1c7c1cbd7a52009c8662abb0b42b59a47cbc28dcc0dd81338c55d164a5d2b0e'},
+ 'src/file-parties.js':{base:'32c4783',source:'5af9df74758609d914f6243621faf81ddfeb936e4849f5c54b44fcd50706a1c0',ast:'9d59d93bce4efa2a6c4005c53188de5ed7956b61597ff39a1a40d787e0379b27'},
+ 'src/file-prioritaire.js':{base:'32c4783',source:'c43494abd24fd2ff21ac410021c6e66e2ed6dea1eb172b8ef8633cb147f6bab1',ast:'ed5fc7e67e598d1098b8332bb3f0a5674e022086f585884e24cbfc68e236c566'},
+};
 const PERIMETRE=['src/appuis-liste.js'];
-const BASE='5699f68';
-const ORIGINE='966d52431947b3c8710ede1c866f141a32620c3e969308a480a878f072d60d02';
-const EMPREINTE='f1c7c1cbd7a52009c8662abb0b42b59a47cbc28dcc0dd81338c55d164a5d2b0e';
+const ORIGINE=REFERENCES[PERIMETRE[0]].source,EMPREINTE=REFERENCES[PERIMETRE[0]].ast;
 const sha=texte=>crypto.createHash('sha256').update(texte).digest('hex');
 function configuration(){
  const config=ts.readConfigFile('tsconfig.ch075.json',ts.sys.readFile);
@@ -28,8 +32,8 @@ function jetons(source){
  }
  return JSON.stringify(structure(arbre));
 }
-function identite(){return PERIMETRE.map(f=>{const empreinte=sha(jetons(fs.readFileSync(f,'utf8')));assert.equal(empreinte,EMPREINTE,`${f} : code exécuté modifié`);return {fichier:f,sha256:empreinte};});}
-function origine(){const avant=cp.execFileSync('git',['show',`${BASE}:${PERIMETRE[0]}`],{encoding:'utf8'});assert.equal(sha(avant),ORIGINE);assert.equal(sha(jetons(avant)),EMPREINTE);return {base:BASE,sha256Source:ORIGINE,sha256Ast:EMPREINTE};}
+function identite(){return PERIMETRE.map(f=>{const empreinte=sha(jetons(fs.readFileSync(f,'utf8')));assert.equal(empreinte,REFERENCES[f].ast,`${f} : code exécuté modifié`);return {fichier:f,sha256:empreinte};});}
+function origine(){return PERIMETRE.map(f=>{const r=REFERENCES[f],avant=cp.execFileSync('git',['show',`${r.base}:${f}`],{encoding:'utf8'});assert.equal(sha(avant),r.source,`${f} : texte de base`);assert.equal(sha(jetons(avant)),r.ast,`${f} : arbre de base`);return {fichier:f,base:r.base,sha256Source:r.source,sha256Ast:r.ast};});}
 function main(){
  if(process.argv.includes('--origine'))console.log(JSON.stringify(origine()));
  const erreurs=verifier(['tests/typage-ch075/positif.js']);
@@ -37,4 +41,4 @@ function main(){
  for(const nom of ['unites','reperes','coupe-partie','operation']){const fichier=`tests/typage-ch075/${nom}.js`,d=verifier([fichier]).filter(x=>x.file?.fileName.endsWith(fichier));const lignes=fs.readFileSync(fichier,'utf8').split('\n');assert.ok(lignes.some(x=>x.includes('// rejet')),`${nom} : aucun rejet attendu`);for(const [ligne,texte] of lignes.entries()){if(!texte.includes('// rejet'))continue;assert.ok(d.some(x=>(x.code===2322||x.code===2345)&&x.file.getLineAndCharacterOfPosition(x.start).line===ligne),`${nom}:${ligne+1} : confusion non rejetée`);}}
  console.log(JSON.stringify({perimetre:PERIMETRE,erreurs:erreurs.length,identite:identite()},null,2));
 }
-module.exports={verifier,jetons,identite,origine,PERIMETRE,ORIGINE,EMPREINTE};if(require.main===module)main();
+module.exports={verifier,jetons,identite,origine,PERIMETRE,REFERENCES,ORIGINE,EMPREINTE};if(require.main===module)main();

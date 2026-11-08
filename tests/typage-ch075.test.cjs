@@ -24,3 +24,8 @@ test('CH-075 : la preuve refuse les mutations de comportement',()=>{
   ['function* f(){yield x;}','function f(){yield x;}'],['x=`a${b}`','x=`a${c}`']
  ])assert.notEqual(jetons(a),jetons(b),a+' / '+b);
 });
+test('CH-075 : références d\'identité gelées pour chaque fichier du module 2',()=>{
+ const T=require('../tools/typage-ch075.cjs');
+ for(const f of ['src/appuis-liste.js','src/file-parties.js','src/file-prioritaire.js']){const r=T.REFERENCES[f];assert.ok(r&&r.base&&r.source&&r.ast,f);}
+ assert.deepEqual(T.origine().map(x=>x.fichier),T.PERIMETRE);
+});
