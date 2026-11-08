@@ -1,0 +1,17 @@
+# CH-075 — typage limité, reprise du 08/11/2026
+
+**ÉTABLI.** Le seul module annoté est `src/appuis-liste.js`, qui relit les échanges de la page et ramène les appuis du monde à la scène. Types distincts dans `types/ch075.d.ts` : mètres, millimètres, scène, monde, coupe, partie et opération. Les frontières non fiables sont relues ; aucune erreur résiduelle du vérificateur strict, aucune correction fonctionnelle. Le vérificateur n'établit pas la justesse des règles métier.
+
+`npm ci --ignore-scripts && npm run typage` vérifie le périmètre sans émettre de code. Les cas négatifs doivent être rejetés à chaque ligne attendue, y compris un mélange d'unités transmis à la fonction réelle. TypeScript 5.9.3 est une dépendance de développement ; le paquet installable exclut ses recettes et `node_modules`, l'archive source garde les recettes. Les annotations seules sont dans le commit `3675893f`, après l'infrastructure `58ad81dc`.
+
+**Identité du calcul.** `node tools/typage-ch075.cjs --origine` contrôle le texte historique au tronc `5699f68` (SHA-256 `966d52431947b3c8710ede1c866f141a32620c3e969308a480a878f072d60d02`) et l'arbre syntaxique avant/après (SHA-256 `f1c7c1cbd7a52009c8662abb0b42b59a47cbc28dcc0dd81338c55d164a5d2b0e`). Seules les annotations et leurs parenthèses neutres sont écartées. Les essais refusent notamment une précédence changée, une directive stricte modifiée, une chaîne optionnelle regroupée autrement, une déclaration ou un opérateur changé. Les empreintes gelées historiques ne sont pas réécrites.
+
+**Contrôles de cette reconstruction.** Les 17 essais ciblés (typage, appuis, gel pose/moteur et paquet) réussissent, sans échec ni omission. Les 13 essais des gardes d'identité et de noms réussissent. Le scan public passe ; les deux variables de motifs confidentiels sont absentes, leur contrôle reste donc non effectué. Les essais rouges du vérificateur absent et de l'exclusion du paquet absente ont été conservés localement avant correction.
+
+Les recettes du panneau utilisent son vrai HTML et ses scripts par HTTP local, avec une API Chrome simulée : elles n'attestent pas un chargement réel de l'extension. La découverte de Playwright et de `CHROMIUM` est partagée. Ces changements de recettes sont séparés (`6deee823`). Les cinq fichiers navigateur modifiés ont été exécutés avec `CHROMIUM=/usr/bin/chromium` : 17 essais réussis, aucun échec, annulation ou omission (29,84 s).
+
+**Limite de preuve.** Les changements non poussés de la première session et ses journaux ont disparu lors du renouvellement de l'environnement. La trace conversationnelle rapporte un verify partiel à 3 209 réussites sur 3 211, deux omissions de corpus privé, sans échec ; ce résultat n'est pas attribué à cette reconstruction. Elle rapporte aussi une maquette interrompue : 35 réussites, 13 échecs de montage, 10 annulations dans le premier groupe, trois fichiers suivants non lancés. Aucune maquette complète réussie ni validation sur ESV réel n'est revendiquée.
+
+Le blocage externe reste établi : la politique administrée `ExtensionInstallBlocklist: ["*"]` interdit le chargement de l'extension. Elle n'est ni modifiée ni contournée. Le chantier est sauvegardé sur sa branche ; **pas d'intégration au tronc ni de paquet** avant les preuves requises.
+
+**SUPPOSÉ.** Le prochain module devra être choisi après inventaire de ses frontières ; aucune estimation de couverture globale ou de gain métier n'est déduite de ce premier périmètre.
