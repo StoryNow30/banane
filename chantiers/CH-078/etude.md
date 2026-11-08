@@ -33,4 +33,4 @@
 
 **Recommandation : ne pas ouvrir comme anticipation.** D-299 tient : le signal de changement existe, mais il n'y a rien à anticiper (≤ 0,4 s). Ce qui vaut un chantier est ailleurs : garder vivant le signal « complet » (D-293, à vérifier sur le prochain lot) et, en option, lire dès l'annonce d'ESV (0,12 à 0,19 s), sous accord écrit sur `src/adapter-page.js`.
 
-PRÊT CH-078 SHA
+PRÊT CH-078 6b48a6d
