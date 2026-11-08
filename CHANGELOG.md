@@ -1,5 +1,11 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 3 — 08/11 nuit (D-304, D-305)
+- Témoin de qualité (lecture « référence ») : un cut sur cinquante au lieu d'un sur dix (D-304). Le 08/11, les témoins à un sur dix prenaient 36 % du temps de capture.
+- Piste 0 (D-305), lecture seule : pour chaque morceau de points téléchargé par ESV, l'observateur relève s'il vient du cache du navigateur, l'attente du serveur et la durée du transfert. Aucune adresse gardée.
+- Preuves : verify 3 211 essais, 0 échec ; maquette 74 essais, 0 échec (2 sautés), après mise à jour des deux essais qui lisaient l'ancien réglage.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 2 — 08/11 soir (D-303)
 - Lecture LiDAR en Rust : reconnaît la copie de three.js r124 propre à Potree (relevé de console de l'opérateur, 08/11). Le 08/11, « Vision » avait refusé 1 363 lectures sur 1 363 (« accesseur inconnu ») : la copie de Potree a des fonctions distinctes de `window.THREE` et un texte indenté d'un cran de plus. Module WASM inchangé (même SHA-256).
 - Preuves : parité dans la configuration d'ESV (copie de Potree), 4 296 captures réelles et 8 592 vues, 0 écart, 1 025 971 tranches servies par le noyau ; essais de la lecture 16/16, dont 3 écrits rouges d'abord ; verify 3 207 essais, 0 échec ; maquette 74 essais, 0 échec (2 sautés).
