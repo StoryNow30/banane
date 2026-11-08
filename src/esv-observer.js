@@ -71,21 +71,8 @@
  const OBSERVER_VERSION=1;
  /* 4.9.5.3 (S6) — champs de liste gardés en plus (lecture seule) et événements relayés depuis l'adaptateur. */
  const EXTRA_NUM=['RailSpacing','TrajAzimuth'],EXTRA_STR='RailType',EXTRA_PK='PK',SUCCESS=/^Success/;
- const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null,'ligne-base-repli':null,'prechauffage':null,'prechauffage-bilan':null,'prechauffage-entetes':null});   /* CH-062 : posté par le patch proposé de la page ; CH-077 : préchauffage */
+ const EVT_KINDS=Object.freeze({'esv-event':['railPairSelected','railPairUpdated','railPairSeen','loading','newPart'],'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */
  const EPT_DATA=/\/ept-data\//i;
- /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
- const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs'],
-  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],'prechauffage-entetes':['maxAgeS','statut']};
- const PRECH_BOOLEENS={'prechauffage':['annule'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
- const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
-  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
- const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1};
- function reduirePrechauffage(k,x){const out={kind:k};
-  for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;
-  for(const c of PRECH_BOOLEENS[k])out[c]=typeof x[c]==='boolean'?x[c]:null;
-  if(k==='prechauffage')out.motif=PRECH_MOTIFS.includes(x.motif)?x.motif:null;
-  if(k==='prechauffage-entetes')out.classe=PRECH_CLASSES.includes(x.classe)?x.classe:null;
-  return out;}
  function argsReduits(a){if(!Array.isArray(a))return [];return a.slice(0,6).map(v=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='string'&&v.length<=24?v:typeof v==='boolean'?v:null);}
 
  function pathOf(url,base){try{const u=new URL(String(url),base);return {host:u.hostname,path:u.pathname};}catch{return null;}}
@@ -214,6 +201,19 @@
    geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows};
  }
 
+ /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
+ const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs'],
+  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],'prechauffage-entetes':['maxAgeS','statut']};
+ const PRECH_BOOLEENS={'prechauffage':['annule'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
+ const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+ const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1};
+ function reduirePrechauffage(k,x){const out={kind:k};
+  for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;
+  for(const c of PRECH_BOOLEENS[k])out[c]=typeof x[c]==='boolean'?x[c]:null;
+  if(k==='prechauffage')out.motif=PRECH_MOTIFS.includes(x.motif)?x.motif:null;
+  if(k==='prechauffage-entetes')out.classe=PRECH_CLASSES.includes(x.classe)?x.classe:null;
+  return out;}
  function install(win){
   if(!win||win.__banane5ObserverInstalled)return null;
   /* Dans le monde ISOLÉ (navigateur trop ancien pour `world:'MAIN'` en manifeste, qui
@@ -381,7 +381,7 @@
    else if(d.kind==='banane5:snapshot')snapshot(d.afterDenial===true);
    /* 4.9.5.3 (S6) : l'adaptateur de la page (même monde) poste ses relevés (écouteurs jQuery en ombre, compteur bloqué) ; réduits ici. */
    else if(d.kind==='banane5:evt'&&d.event&&typeof d.event==='object'){
-    const x=d.event,k=typeof x.kind==='string'?x.kind:'';if(!Object.hasOwn(EVT_KINDS,k)||!enabled)return;
+    const x=d.event,k=typeof x.kind==='string'?x.kind:'';if(Object.hasOwn(PRECH_CHAMPS,k)){if(enabled)record(reduirePrechauffage(k,x));return;}/* CH-077 */if(!Object.hasOwn(EVT_KINDS,k)||!enabled)return;
     if(k==='esv-event'){if(!releveOn('esvEvents')||!EVT_KINDS[k].includes(x.nom))return;
      record({kind:k,nom:x.nom,args:argsReduits(x.args),pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null,...(Number.isInteger(x.perdus)&&x.perdus>0?{perdus:Math.min(x.perdus,1e6)}:{})});}
     else if(k==='diag-compteur-bloque'){if(!releveOn('compteurBloque'))return;
@@ -389,9 +389,7 @@
       cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}
     /* CH-062 : ligne de base du compteur abandonnée pour une lecture (compteur sous les échecs, observateur des ressources absent). */
     else if(k==='ligne-base-repli')record({kind:k,motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:Number.isInteger(x.compteur)&&x.compteur>=0&&x.compteur<1e6?x.compteur:null,
-     echecs:Number.isInteger(x.echecs)&&x.echecs>=0&&x.echecs<1e6?x.echecs:null,cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});
-    /* CH-077 : préchauffage du cache pour la coupe suivante (patch de la page) : entiers bornés, booléens et classes de liste seulement ; jamais une adresse. */
-    else if(Object.hasOwn(PRECH_CHAMPS,k))record(reduirePrechauffage(k,x));/* fin CH-077 */}
+     echecs:Number.isInteger(x.echecs)&&x.echecs>=0&&x.echecs<1e6?x.echecs:null,cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}
    else if(d.kind==='banane5:config'){
     if(Array.isArray(d.relevesOff)){off.clear();for(const n of d.relevesOff)if(typeof n==='string'&&n.length<=24)off.add(n);}
     if(!Array.isArray(d.relevesOff)&&(!('table' in d)||typeof d.enabled==='boolean'))enabled=d.enabled!==false;
