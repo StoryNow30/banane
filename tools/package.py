@@ -9,6 +9,16 @@ import zipfile
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def developpement_seul(relative, include_tests=False):
+    """CH-075 : sans dépendances ; les recettes de vérification restent dans l'archive source."""
+    if 'node_modules' in relative.parts:
+        return True
+    return not include_tests and (relative.parts[0] == 'types'
+            or relative.as_posix() in {
+                'package.json', 'package-lock.json', 'tsconfig.ch075.json',
+                'tools/typage-ch075.cjs'})
+
+
 def build_stamp():
     """D-282 : identifiant court du commit d'où vient le paquet (« +modifie » si l'arbre de travail n'est pas propre), écrit dans `BUILD` à la racine du zip, lu par le panneau et par le journal pour que les exports disent quel paquet a tourné."""
     try:
@@ -49,6 +59,8 @@ def build(destination, include_tests=False):
     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for file in sorted(ROOT.rglob('*')):
             relative = file.relative_to(ROOT)
+            if developpement_seul(relative, include_tests):
+                continue
             if any(p.startswith('.') or p == '__pycache__' for p in relative.parts):
                 continue
             if relative.parts[0] in {'archive', 'releases', 'design', 'ariane-rs'} or relative.parts[0] == 'tests' and not include_tests or relative.parts[:2] == ('datasets', 'manual'):
