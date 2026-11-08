@@ -281,7 +281,7 @@ fn reduce_pool(coarse: &[Uzl], f: &Frame, centres: &[f64], extras: &[(f64, f64, 
         });
         pool.push(ch);
     }
-    pool.sort_by(|a, b_| ordre(a.loss.map_or(0.0, |x| x), b_.loss.map_or(0.0, |x| x)));
+    pool.sort_by(|a, b_| ordre(a.loss.unwrap_or(0.0), b_.loss.unwrap_or(0.0)));
     Reduit { pool, n_coarse: coarse.len(), n_local_min: mins.len(), n_dense: dense.len(), n_strong_dense }
 }
 
@@ -363,7 +363,7 @@ fn scientific_rail(capture: &V, side: &str, et: &Etat) -> R<V> {
     let mut appels = vec![];
     let astar_p = gcv1::propose(capture, side, &o(vec![("lab", o(lab))]), &mut appels)?;
     let (coarse, meilleur, centres): (Vec<Uzl>, Option<[f64; 3]>, Vec<f64>) = match appels.last() {
-        Some(a) => (a.cellules.chunks_exact(3).map(|c| Uzl { u: c[0], z: c[1], loss: c[2] }).collect(), Some(a.meilleur), a.centres.clone()),
+        Some(a) => (a.cellules.as_chunks::<3>().0.iter().map(|c| Uzl { u: c[0], z: c[1], loss: c[2] }).collect(), Some(a.meilleur), a.centres.clone()),
         None => (vec![], None, vec![0.0]),
     };
     let mut astar = compact_proposal(&astar_p)?;

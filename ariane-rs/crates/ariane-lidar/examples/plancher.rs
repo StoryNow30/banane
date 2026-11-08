@@ -8,7 +8,7 @@ fn main() {
     for _ in 0..15 {
         let t = std::time::Instant::now();
         let mut c = 0u32;
-        for q in src.chunks_exact(3) {
+        for q in src.as_chunks::<3>().0 {
             let (x, y, z) = (q[0] as f64, q[1] as f64, q[2] as f64);
             for o in [0, 16] {
                 let a = m[o] * x + m[o + 4] * y + m[o + 8] * z + m[o + 12];

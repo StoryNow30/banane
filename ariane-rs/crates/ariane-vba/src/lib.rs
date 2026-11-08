@@ -87,7 +87,7 @@ impl<'a> Lecteur<'a> {
     fn reste(&self) -> usize { self.o.len() - self.p }
     fn nombres(&mut self, n: usize) -> Result<Vec<f64>, ErreurVba> {
         let t = self.tranche(n.checked_mul(8).ok_or_else(|| ErreurVba("VBA : longueur invalide".into()))?)?;
-        Ok(t.chunks_exact(8).map(|c| f64::from_le_bytes([c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]])).collect())
+        Ok(t.as_chunks::<8>().0.iter().map(|c| f64::from_le_bytes(*c)).collect())
     }
     fn valeur(&mut self, prof: usize, dans_tableau: bool) -> Result<Option<Valeur>, ErreurVba> {
         if prof > PROFONDEUR_MAX { return err("profondeur excessive"); }

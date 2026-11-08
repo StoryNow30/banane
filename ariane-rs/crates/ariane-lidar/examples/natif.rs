@@ -13,10 +13,10 @@ fn main() {
         let n = u32_(&octets, &mut i);
         let mut noeuds = vec![];
         for _ in 0..n {
-            let m: Vec<f64> = octets[i..i + 8 * N_MATS].chunks_exact(8).map(|c| f64::from_le_bytes(c.try_into().unwrap())).collect();
+            let m: Vec<f64> = octets[i..i + 8 * N_MATS].as_chunks::<8>().0.iter().map(|c| f64::from_le_bytes(*c)).collect();
             i += 8 * N_MATS;
             let c = u32_(&octets, &mut i);
-            let s: Vec<f32> = octets[i..i + 12 * c].chunks_exact(4).map(|c| f32::from_le_bytes(c.try_into().unwrap())).collect();
+            let s: Vec<f32> = octets[i..i + 12 * c].as_chunks::<4>().0.iter().map(|c| f32::from_le_bytes(*c)).collect();
             i += 12 * c;
             noeuds.push((m, s));
         }

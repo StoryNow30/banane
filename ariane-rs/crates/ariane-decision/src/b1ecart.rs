@@ -351,7 +351,7 @@ fn source_ecart(cx: &Contexte, args: &V, cap: &V, science: &V, gref: &V, opts: &
 /// `HorsDomaine` (la façade rejoue le JS) ; une exception reproduite du JS est rendue comme le JS : événement `erreur`.
 pub fn evaluer(arg: &V, et: &Etat, gl: &lot::Globaux) -> R<(V, V)> {
     if nullish(arg) { return hd("déstructuration de null/undefined"); }
-    for k in ["Shadow"] { if !matches!(g(arg, k), V::Indefini) { return hd("moteur non résolu"); } }
+    if !matches!(g(arg, "Shadow"), V::Indefini) { return hd("moteur non résolu"); }
     let mut mem = Memoire::lire(g(arg, "mem"))?;
     let capture = g(arg, "capture");
     let science = g(arg, "science");

@@ -191,7 +191,7 @@ fn grid_of(capture: &V, side: &str, u_seed: &V) -> R<Option<Vec<[f64; 3]>>> {
     let lab = o(vec![("uSeeds", tab(vec![u_seed.clone()])), ("replaceOrigin", b(false)), ("recenterWindow", b(true)), ("partialFaceKeep", b(true)), ("onCoarse", s(gcv1::RAPPEL))]);
     let mut appels = vec![];
     gcv1::propose(capture, side, &canon(&o(vec![("lab", lab)])), &mut appels)?;
-    Ok(appels.last().map(|a| a.cellules.chunks_exact(3).map(|c| [c[0], c[1], c[2]]).collect()))
+    Ok(appels.last().map(|a| a.cellules.as_chunks::<3>().0.iter().map(|c| [c[0], c[1], c[2]]).collect()))
 }
 fn local_minima(grid: &[[f64; 3]], sep: f64) -> Vec<[f64; 3]> {
     let mut m = vec![];
