@@ -1,0 +1,92 @@
+{
+ "patchs": [
+  "geometrie-elaguee-lot",
+  "geometrie-elaguee-v46",
+  "mediane-exacte",
+  "lidar-direct"
+ ],
+ "total": {
+  "nuages": 4647,
+  "ecarts": 0,
+  "exceptions": 0
+ },
+ "parties": [
+  {
+   "date": "2026-11-06T15:20:16.874Z",
+   "collections": [
+    "2026-11-04_v5_lot-orbite",
+    "2026-11-05"
+   ],
+   "nuages": 2250,
+   "ecarts": 0,
+   "premiersEcarts": [],
+   "statuts": {
+    "candidate / undefined": 1911,
+    "unresolved / Plusieurs placements concurrents du champignon sont géométriquement plausibles.": 316,
+    "unresolved / Aucun point LiDAR disponible.": 734,
+    "unresolved / Flanc interne insuffisamment observé.": 1058,
+    "unresolved / Grand déplacement isolé : le second rail ne confirme pas ce placement.": 110,
+    "unresolved / Plan de roulement non estimable.": 106,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé.": 51,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 4,
+    "unresolved / Intersection hors de la fenêtre expérimentale.": 28,
+    "candidate / Nappes dispersées.": 25,
+    "candidate / Confiance heuristique faible.": 66,
+    "unresolved / Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 40,
+    "unresolved / Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 21,
+    "unresolved / Trop peu de points autour du champignon.": 13,
+    "unresolved / Plan de roulement insuffisamment observé.": 7,
+    "unresolved / Plan de roulement insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 6,
+    "unresolved / Confiance heuristique faible.": 4
+   },
+   "exceptions": 0,
+   "sha": {
+    "reference": "95eee07d3fd0a3fb7edb7f78e1de844a3b4b3b291bb986c77c3295d170a4a4ba",
+    "patche": "95eee07d3fd0a3fb7edb7f78e1de844a3b4b3b291bb986c77c3295d170a4a4ba"
+   },
+   "ms": {
+    "reference": 2376885,
+    "patche": 691209
+   }
+  },
+  {
+   "date": "2026-11-06T15:20:23.573Z",
+   "collections": [
+    "2026-11-04_v5_constellation",
+    "2026-11-06"
+   ],
+   "nuages": 2397,
+   "ecarts": 0,
+   "premiersEcarts": [],
+   "statuts": {
+    "unresolved / Flanc interne insuffisamment observé.": 2179,
+    "candidate / undefined": 1500,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé.": 87,
+    "unresolved / Plusieurs placements concurrents du champignon sont géométriquement plausibles.": 327,
+    "unresolved / Grand déplacement isolé : le second rail ne confirme pas ce placement.": 50,
+    "unresolved / Plan de roulement non estimable.": 200,
+    "unresolved / Plan de roulement insuffisamment observé. Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 6,
+    "unresolved / Intersection hors de la fenêtre expérimentale.": 21,
+    "unresolved / Aucun point LiDAR disponible.": 42,
+    "unresolved / Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 60,
+    "unresolved / Flanc interne insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 39,
+    "candidate / Confiance heuristique faible.": 81,
+    "unresolved / Plan de roulement insuffisamment observé.": 21,
+    "unresolved / Trop peu de points autour du champignon.": 159,
+    "candidate / Nappes dispersées.": 16,
+    "unresolved / Confiance heuristique faible.": 2,
+    "unresolved / Contour du profil absent.": 2,
+    "unresolved / Plan de roulement insuffisamment observé. Inclinaison estimée hors du domaine du modèle ; la pente ne sera pas forcée.": 2
+   },
+   "exceptions": 0,
+   "sha": {
+    "reference": "2bbb3cd400700234dd0f4e6f89433af22211b4c98c2dc47dbafec47178838dd4",
+    "patche": "2bbb3cd400700234dd0f4e6f89433af22211b4c98c2dc47dbafec47178838dd4"
+   },
+   "ms": {
+    "reference": 2094941,
+    "patche": 653946
+   }
+  }
+ ]
+}

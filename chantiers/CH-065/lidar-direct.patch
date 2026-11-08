@@ -1,0 +1,125 @@
+--- a/vendor/lidar.js
++++ b/vendor/lidar.js
+@@ -159,6 +159,63 @@
+     }
+     return {n,model,transforms,indexAttr,indexSource:n.geometry.index,drawStart,drawEnd,nodeIndex,report};
+   }
++  /* CH-065 : LECTURE DIRECTE DU TAMPON, SANS ALLOCATION PAR POINT.
++   * `C.attribute` (gelé) lit chaque point par getX/getY/getZ et alloue trois tableaux par point (raw, local, inside) : c'est l'essentiel
++   * du temps de lecture d'une vue (CH-061 : 196 ms pour 505 000 points). Le tampon n'est lu directement que si la lecture par l'accesseur
++   * EST, par construction, array[i*stride+offset+k] : attribut flottant (Float32 ou Float64), non normalisé, non indexé, ET
++   *  - soit sans accesseur getX/getY/getZ (C.attribute lit alors lui-même le tableau),
++   *  - soit avec les accesseurs de Three.js de la page, reconnus par IDENTITÉ de fonction (THREE.BufferAttribute ou
++   *    THREE.InterleavedBufferAttribute) : leur code est la lecture du tableau, la dénormalisation étant exclue.
++   * L'identité est lue par les DESCRIPTEURS de getX/getY/getZ, le long de la chaîne de prototypes, sans rien invoquer : une propriété
++   * calculée (getter) compte pour inconnue. Un accesseur n'est reconnu que s'il est identique à l'INSTANTANÉ des fonctions de THREE pris
++   * une fois, au chargement de ce module, ET au THREE courant. Sans THREE au chargement, aucune référence n'est retenue. À l'instantané,
++   * le code des fonctions (Function.prototype.toString) doit aussi être un corps canonique de LISTE_BLANCHE_THREE, avec sa révision : un
++   * prototype modifié AVANT le chargement n'est donc pas cru. Limite assumée : une page qui falsifie Function.prototype.toString.
++   * La liste porte les corps de three.js r124 (Potree 1.8.0, que charge ESV : relevé de CH-062 ; corps lus par CH-064 dans le source de
++   * Potree, identiques au caractère près à CORPS_THREE de CH-064) et ceux des classes de la maquette (tools/ch065-scene.js). Le relevé de
++   * la console d'ESV (tools/ch065-releve-accesseur.js) doit confirmer r124 chez l'opérateur.
++   * ACCESSEUR INCONNU (ou attribut normalisé, Float16, tableau non flottant) : la boucle d'origine, telle quelle ; la décision est prise
++   * avant tout appel, et le patch n'appelle aucun accesseur (aucune sonde relue). Seule la boucle d'origine reproduit à l'identique les
++   * appels d'un accesseur inconnu (ordre, entrelacement, effets de bord, exceptions, arrêts sur budget). Règle commune au JS et au Rust
++   * (décision de l'intégrateur du 06/11, défauts relevés par Codex et CH-064 sur PR #25).
++   * Le chemin direct fait les mêmes opérations flottantes, dans le même ordre, que C.point, inRoi, Math.hypot et C.distance, lève les
++   * mêmes exceptions aux mêmes points, et garde le budget, les pauses et les contrôles d'intégrité de la boucle d'origine, point par point.
++   * Seuls les points retenus (et les plus proches de l'origine des rails) allouent, comme avant. Parité : tests/ch065-lidar-direct.test.cjs. */
++  /* Fonction rangée sous `cle` le long de la chaîne de prototypes, lue par descripteur sans rien invoquer ; INCONNUE si c'est un getter. */
++  const INCONNUE={};
++  function fonctionRangee(o,cle) {
++    for(let p=o,n=0;p&&n<64;p=Object.getPrototypeOf(p),n++) {
++      const d=Object.getOwnPropertyDescriptor(p,cle);
++      if(d)return "value" in d?d.value:INCONNUE;
++    }
++    return undefined;
++  }
++  const TRIO=o=>["getX","getY","getZ"].map(k=>fonctionRangee(o,k));
++  const protosThree=()=>{const T=globalThis.THREE;return [T?.BufferAttribute?.prototype,T?.InterleavedBufferAttribute?.prototype];};
++  /* Corps canoniques admis, par classe et révision. À compléter par l'intégrateur avec ceux du relevé de la page réelle. */
++  const LISTE_BLANCHE_THREE=[["r124 (Potree 1.8.0, libs/three.js/build/three.module.js ; corps identiques à CORPS_THREE de CH-064, 65036e1)","BufferAttribute","function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize ];\n\n\t}","function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 1 ];\n\n\t}","function ( index ) {\n\n\t\treturn this.array[ index * this.itemSize + 2 ];\n\n\t}"],["r124 (Potree 1.8.0, libs/three.js/build/three.module.js ; corps identiques à CORPS_THREE de CH-064, 65036e1)","InterleavedBufferAttribute","function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset ];\n\n\t}","function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 1 ];\n\n\t}","function ( index ) {\n\n\t\treturn this.data.array[ index * this.data.stride + this.offset + 2 ];\n\n\t}"],["maquette CH-065 (tools/ch065-scene.js)","BufferAttribute","getX(i){const v=this._d(this.array[i*this.itemSize]),e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this._d(this.array[i*this.itemSize+1]);}","getZ(i){return this._d(this.array[i*this.itemSize+2]);}"],["maquette CH-065 (tools/ch065-scene.js)","InterleavedBufferAttribute","getX(i){const v=this.data.array[i*this.data.stride+this.offset],e=globalThis.CH065_ESPION;return e?e(this,i,v):v;}","getY(i){return this.data.array[i*this.data.stride+this.offset+1];}","getZ(i){return this.data.array[i*this.data.stride+this.offset+2];}"]];
++  const codeDe=f=>{try{return Function.prototype.toString.call(f);}catch{return null;}};
++  /* Instantané au chargement : les fonctions de référence dont le code est dans la liste blanche, ou rien si THREE est absent. */
++  const REF_THREE=protosThree().map((p,k)=>({p,classe:["BufferAttribute","InterleavedBufferAttribute"][k]})).filter(r=>!!r.p)
++    .map(r=>({...r,f:TRIO(r.p)})).filter(r=>r.f.every(g=>typeof g==="function")&&
++      LISTE_BLANCHE_THREE.some(([,classe,x,y,z])=>classe===r.classe&&codeDe(r.f[0])===x&&codeDe(r.f[1])===y&&codeDe(r.f[2])===z));
++  function accesseursReconnus(a) {
++    const f=TRIO(a);
++    if(f.some(g=>g===INCONNUE))return false;
++    if(f.every(g=>typeof g!=="function"))return true;   // aucun accesseur : C.attribute lit lui-même le tableau
++    const courants=protosThree();
++    return REF_THREE.some(r=>courants.includes(r.p)&&TRIO(r.p).every((g,k)=>g===r.f[k])&&f.every((g,k)=>g===r.f[k]));
++  }
++  function lectureDirecte(n,indexAttr,transforms) {
++    if(indexAttr||transforms.length!==2)return null;
++    const a=n.position,meta=n.attribute.metadata||{};
++    if(!a||!accesseursReconnus(a))return null;
++    if(meta.normalized||meta.itemSize<3||!(meta.arrayType==="Float32Array"||meta.arrayType==="Float64Array"))return null;
++    const src=a.array||a.data?.array,stride=meta.stride,offset=meta.offset;
++    if(!(src instanceof Float32Array||src instanceof Float64Array))return null;
++    if(!Number.isInteger(stride)||!Number.isInteger(offset)||stride<3||offset<0)return null;
++    return {src,stride,offset};
++  }
+   async function capture(options) {
+     const {viewer:v,rails,origin,guard,meta}=options;
+     const bounds=options.bounds||[.5,.4,.3];
+@@ -229,6 +286,58 @@
+           fail("Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.");
+       }
+       integrityChecks.push(unchanged);
++      const direct=lectureDirecte(n,indexAttr,transforms);
++      if(direct) {
++        const {src,stride,offset}=direct,count=n.attribute.count,t0=transforms[0],t1=transforms[1];
++        const near=report.nearestToRailOrigin,b0=bounds[0],b1=bounds[1],b2=bounds[2];
++        for(let di=drawStart;di<drawEnd;di++) {
++          if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis) {
++            report.inspection="partial-budget";finishedAll=false;break outer;
++          }
++          if((di-drawStart)%yieldEvery===0) {guard();unchanged();await pause();guard();unchanged();}
++          const i=di;
++          if(!Number.isInteger(i)||i<0||i>=count)fail("Indice de point invalide.");
++          out.quality.inspected++;report.inspected++;
++          const base=i*stride+offset,x=src[base],y=src[base+1],z=src[base+2];
++          if(!(finite(x)&&finite(y)&&finite(z))){out.quality.nonFinitePositions++;report.nonFinitePositions++;continue;}
++          // C.point(t0,raw) puis C.point(t1,raw) : mêmes expressions, mêmes contrôles, mêmes messages.
++          const w0=t0[3]*x+t0[7]*y+t0[11]*z+t0[15];
++          if(!finite(w0)||Math.abs(w0)<1e-15)fail("Projection non finie.");
++          const l0x=(t0[0]*x+t0[4]*y+t0[8]*z+t0[12])/w0,l0y=(t0[1]*x+t0[5]*y+t0[9]*z+t0[13])/w0,l0z=(t0[2]*x+t0[6]*y+t0[10]*z+t0[14])/w0;
++          if(!(finite(l0x)&&finite(l0y)&&finite(l0z)))fail("Transformation non finie.");
++          const w1=t1[3]*x+t1[7]*y+t1[11]*z+t1[15];
++          if(!finite(w1)||Math.abs(w1)<1e-15)fail("Projection non finie.");
++          const l1x=(t1[0]*x+t1[4]*y+t1[8]*z+t1[12])/w1,l1y=(t1[1]*x+t1[5]*y+t1[9]*z+t1[13])/w1,l1z=(t1[2]*x+t1[6]*y+t1[10]*z+t1[14])/w1;
++          if(!(finite(l1x)&&finite(l1y)&&finite(l1z)))fail("Transformation non finie.");
++          // inRoi(local[s],bounds) : même ordre de comparaison que p.every.
++          const in0=Math.abs(l0x)<=b0&&Math.abs(l0y)<=b1&&Math.abs(l0z)<=b2,in1=Math.abs(l1x)<=b0&&Math.abs(l1y)<=b1&&Math.abs(l1z)<=b2;
++          const d0=Math.hypot(l0x,l0y,l0z),n0=near.left;
++          if(!n0||d0<n0.distanceProfileUnits)
++            near.left={sourceIndex:i,distanceProfileUnits:d0,pointProfileLocal:[l0x,l0y,l0z],pointSceneRelative:C.point(model,[x,y,z])};
++          const d1=Math.hypot(l1x,l1y,l1z),n1=near.right;
++          if(!n1||d1<n1.distanceProfileUnits)
++            near.right={sourceIndex:i,distanceProfileUnits:d1,pointProfileLocal:[l1x,l1y,l1z],pointSceneRelative:C.point(model,[x,y,z])};
++          if(!(in0||in1))continue;
++          // Point retenu : le texte d'origine, à l'identique.
++          const raw=[x,y,z],inside=[in0,in1];
++          const p=C.point(model,raw);
++          const back=C.point(model,C.point(invModel,p));
++          out.quality.roundTripMaxSceneUnits=Math.max(out.quality.roundTripMaxSceneUnits,C.distance(back,p));
++          for(let s=0;s<2;s++) {
++            const round=C.point(frames[s].profileLocalToSceneRelative,C.point(frames[s].sceneRelativeToProfileLocal,p));
++            out.quality.roundTripMaxSceneUnits=Math.max(out.quality.roundTripMaxSceneUnits,C.distance(round,p));
++            if(inside[s])out.quality.perRail[SIDES[s]]++;
++          }
++          out.pointsSceneRelative.push(p);out.pointSources.push([nodeIndex,i]);
++          out.quality.pointRoundTripsChecked++;
++          out.visibleByClipBoxes.push(boxVisible(out.clouds[n.cloudIndex].clipping,p));
++          for(const key of extras) {
++            const a=attrs[key],value=a&&i<a.count?a.get(i,0):null;
++            out.attributes[key].push(finite(value)?value:null);
++          }
++          out.nodes[nodeIndex].retained++;
++        }
++      } else
+       for(let di=drawStart;di<drawEnd;di++) {
+         if(out.quality.inspected>=maxInspected||out.pointsSceneRelative.length>=maxPoints||Date.now()-started>maxMillis) {
+           report.inspection="partial-budget";finishedAll=false;break outer;

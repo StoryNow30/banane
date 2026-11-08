@@ -33,7 +33,7 @@ let BUILD='inconnu';const BUILD_PRET=(async()=>{try{if(typeof fetch!=='function'
  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
 BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
-const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
+const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','vendor/ariane-lidar.js','vendor/ariane-lidar-wasm.js','vendor/lidar-rust.js','src/lidar-rust.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 /* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
  * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
@@ -4578,6 +4578,9 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  }
  if(m.kind==='adapter-trace'&&sender.tab?.id===selectedTab&&esvURL(sender.url)){
   timing?.progress(m);
+  /* D-296 (CH-064) : l'étape `rust` de la page (lecture LiDAR en Rust : servi, repli, raison) devient un événement `rust`, rien d'autre. */
+  if(m.lastStage==='rust'){ready.then(()=>engine.event('rust',{action:m.action,requestId:m.requestId,...(m.lastDetail&&typeof m.lastDetail==='object'?m.lastDetail:{}),
+    identity:engine.s.before?.identity?{part:engine.s.before.identity.part??null,cut:engine.s.before.identity.cut??null}:null})).then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;}
   ready.then(()=>{if(m.action==='capture')engine.s.captureProgress={stage:m.lastStage,...m.lastDetail};
     const progression=()=>engine.event('adapter-progress',{requestId:m.requestId,action:m.action,elapsedMs:m.elapsedMs,acknowledged:m.acknowledged,lastStage:m.lastStage,lastDetail:m.lastDetail});
     /* 5.0 (D-147) : chaque geste de vue d'Ariane, et la remise de la vue, consignés à part (les autres étapes : comme avant). */

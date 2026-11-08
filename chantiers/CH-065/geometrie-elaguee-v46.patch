@@ -1,0 +1,24 @@
+--- a/src/geometry.js
++++ b/src/geometry.js
+@@ -52,9 +52,20 @@
+      const near=head.filter(p=>Math.abs(p[1]-z)<.004);if(near.length)faceAnchors.push([Math.min(...near.map(p=>p[0])),z]);
+    }
+    if(topAnchors.length<3||faceAnchors.length<3)return unresolved('Surfaces du profil non identifiées.');
++   /* CH-065 : élagage exact de la recherche (même résultat au bit près, plus rapide).
++    * Les points sont triés une fois sur p[0] (PX, PY). Pour une ancre a et un décalage u, seul un point dont
++    * |p[0]-u-a[0]| < 26 mm peut abaisser le minimum : hors de cette fenêtre, sa distance dépasse .025² (valeur de départ),
++    * et le test d < best est faux. Avec |u| < 1, |a[0]| < 1 et |p[0]| < .18 (filtre des points ci-dessus), l'erreur
++    * d'arrondi des bornes est inférieure à 1e-15 m, très loin de la marge de 1 mm. Les points de la fenêtre sont évalués
++    * avec la même expression que l'original ; le minimum d'un ensemble ne dépend pas de l'ordre. Hors de ce domaine, la
++    * boucle d'origine est gardée telle quelle. Parité au bit : tests/ch065-geometrie-elaguee.test.cjs. */
++   const __tries=points.slice().sort((p,q)=>p[0]-q[0]),PX=new Float64Array(__tries.length),PY=new Float64Array(__tries.length);
++   for(let i=0;i<__tries.length;i++){PX[i]=__tries[i][0];PY[i]=__tries[i][1];}
++   const borne=v=>{let lo=0,hi=PX.length;while(lo<hi){const m=(lo+hi)>>1;if(PX[m]<v)lo=m+1;else hi=m;}return lo;};
+    function loss(anchors,u,z){
+      return median(anchors.map(a=>{let best=.025*.025;
+-       for(const p of points){const d=(p[0]-u-a[0])**2+(p[1]-z-a[1])**2;if(d<best)best=d;}return best;}));
++       if(!(Math.abs(u)<1&&Math.abs(a[0])<1)){for(const p of points){const d=(p[0]-u-a[0])**2+(p[1]-z-a[1])**2;if(d<best)best=d;}return best;}
++       for(let i=borne(u+a[0]-.026),fin=borne(u+a[0]+.026);i<fin;i++){const d=(PX[i]-u-a[0])**2+(PY[i]-z-a[1])**2;if(d<best)best=d;}return best;}));
+    }
+    let best={loss:Infinity,u:0,z:0};const coarse=[];
+    function search(cu,cz,ry,rz,step,retain=false){

@@ -10,7 +10,7 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 - Ne rapporter que du mesuré, qualifié ÉTABLI / PROBABLE / SUPPOSÉ. Jamais un chiffre non mesuré.
 
 ## Interdits absolus (aucune exception, aucun ticket ne les lève)
-- **Jamais de nom d'opérateur, de code projet ESV, d'adresse ESV, d'UUID ni de capture d'écran** dans un fichier du dépôt ou un commit. Les exports terrain (zips, journaux, nuages) ne sont jamais versés ici : ils vivent dans le dépôt `banane-data`. Cursor peut les lire et les analyser dans `banane-data` (D-253) ; aucun autre service externe.
+- **Jamais de nom d'opérateur, de code projet ESV, d'adresse ESV, d'UUID ni de capture d'écran** dans un fichier du dépôt ou un commit. Les exports terrain (zips, journaux, nuages) ne sont jamais versés ici : ils vivent dans le dépôt `banane-data`. Cursor et Codex peuvent les lire et les analyser dans `banane-data` (D-253, D-301) ; aucun autre service externe.
 - **Ariane n'envoie jamais SKIP** et ne valide jamais un cut non résolu. Sens (D-264, opérateur) : « non résolu » = ni le moteur ni le lot n'ont de décision ; un cut décidé par le lot (décision sur le lot, GCV2 L1) est résolu.
 - **La deuxième passe est en ombre** (`passeDifferesDefaut.ecriture:false`) dans la test 23 ; **D-259 (opérateur, 28/10) l'allume en écriture dès la 4.9.5.24, plafonnée à 10 cuts par lot** : tant que cette version n'est pas fabriquée, le défaut du dépôt reste `false`. La rallumer ou lever le plafond ailleurs demande une décision écrite de l'opérateur.
 - **Pas de réécriture d'historique** (rebase, amend d'un commit poussé, force-push) sans ordre explicite de l'opérateur. Pas de pull request sans demande.
@@ -18,7 +18,7 @@ Ariane est une extension Chrome qui place des rails dans ESV (LiDAR). Ce fichier
 - Un exécutant (ticket `chantier/…`) ne touche **jamais** `src/engine.js`, `src/adapter-page.js`, `src/geometry*.js`, `src/gcv2*.js`, `src/lot-decision.js`, l'écriture dans ESV, `manifest.json`, la version, le paquet, ni le tronc.
 
 ## Branches
-- Tronc de la 5.0 : `claude/50-test17`. Seul l'intégrateur y pousse, en avance simple.
+- Tronc de la 5.0 : `claude/50-test17`. Seul l'intégrateur y pousse, en avance simple. Depuis D-301, l'intégrateur est l'agent Codex : `fiches/PASSATION_CODEX.md`.
 - Un chantier = une branche `chantier/<ticket>` partie du tronc, un ticket `chantiers/<ticket>.md` lu en entier avant de commencer.
 - Documents de pilotage et données : dépôt `banane-data` (branche `claude/execute-prompt-00-18ra5a`).
 

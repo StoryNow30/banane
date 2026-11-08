@@ -27,8 +27,12 @@ const captures = () => JSON.parse(fs.readFileSync(CAPTURES, 'utf8')).captures;
  * d'AUDIT_PILOTE.md), mais ré-épinglé sur une baseline déclarée. Les trois
  * autres fichiers restent gelés à 4.4.0, et le fichier d'empreintes historique
  * n'est pas modifié. */
+/* CH-065 (D-293) : la lecture directe du LiDAR et la recherche élaguée sont des patchs DÉCLARÉS (chantiers/CH-065/blocs.json, parité au bit
+ * prouvée sur 4 647 nuages réels). Le gel tient toujours : un fichier gelé, ces blocs retirés, doit redonner l'empreinte 4.4.0 octet pour
+ * octet ; toute autre modification reste détectée, et un fichier à moitié patché fait échouer `versions`. */
+const CH065 = require('../chantiers/CH-065/appliquer.cjs');
 const empreinte = (root, fichier) =>
-  crypto.createHash('sha256').update(fs.readFileSync(path.join(root, fichier))).digest('hex');
+  crypto.createHash('sha256').update(CH065.BLOCS[fichier] ? CH065.versions(root, fichier).origine : fs.readFileSync(path.join(root, fichier))).digest('hex');
 
 test('le placement, les transformations et le lecteur LiDAR restent identiques à la référence 4.4.0', () => {
   const root = path.resolve(__dirname, '..');

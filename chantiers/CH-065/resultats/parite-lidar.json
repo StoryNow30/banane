@@ -1,0 +1,629 @@
+{
+ "note": "lidar-direct, forme finale (06454e1 + liste blanche r124 et maquette, 25d3dfb). « avecThree » : classes de la scène reconnues (liste blanche) ; « sansThree » : pas de THREE au chargement, boucle d’origine.",
+ "avecThree": {
+  "total": {
+   "nuages": 4645,
+   "jeux": 7497,
+   "ecarts": 0,
+   "lectureDirecteReel": 4156
+  },
+  "parties": [
+   {
+    "sansThree": false,
+    "date": "2026-11-06T19:17:45.444Z",
+    "collections": [
+     "2026-11-04"
+    ],
+    "nuages": 2655,
+    "jeux": 4287,
+    "ecarts": 0,
+    "premiersEcarts": [],
+    "parVariante": {
+     "reel": {
+      "jeux": 2655,
+      "ecarts": 0
+     },
+     "reel-float64": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-entrelace": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-entrelace-float64": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-indexe": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-sans-accesseur": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-normalise": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-non-finis": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-decoupe": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-drawrange": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-plafond-points": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-plafond-lus": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-pause-chaque-7": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-transformation-non-finie": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "vue-vide": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "un-point": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "plein-505000": {
+      "jeux": 27,
+      "ecarts": 0
+     }
+    },
+    "statuts": {
+     "reel → complete-loaded-roi": 2258,
+     "reel-float64 → complete-loaded-roi": 91,
+     "reel-entrelace → complete-loaded-roi": 91,
+     "reel-entrelace-float64 → complete-loaded-roi": 91,
+     "reel-indexe → complete-loaded-roi": 91,
+     "reel-sans-accesseur → complete-loaded-roi": 91,
+     "reel-normalise → no-points": 107,
+     "reel-non-finis → partial-invalid-points": 90,
+     "reel-decoupe → complete-loaded-roi": 91,
+     "reel-drawrange → complete-loaded-roi": 90,
+     "reel-plafond-points → partial-limit": 90,
+     "reel-plafond-lus → partial-limit": 60,
+     "reel-pause-chaque-7 → complete-loaded-roi": 91,
+     "vue-vide → no-points": 107,
+     "un-point → one-rail-empty": 80,
+     "plein-505000 → complete-loaded-roi": 23,
+     "reel → no-points": 379,
+     "un-point → no-points": 27,
+     "reel → one-rail-empty": 18,
+     "reel-non-finis → complete-loaded-roi": 1,
+     "reel-drawrange → no-points": 17,
+     "reel-plafond-points → complete-loaded-roi": 1,
+     "reel-plafond-lus → complete-loaded-roi": 31,
+     "reel-float64 → one-rail-empty": 1,
+     "reel-entrelace → one-rail-empty": 1,
+     "reel-entrelace-float64 → one-rail-empty": 1,
+     "reel-indexe → one-rail-empty": 1,
+     "reel-sans-accesseur → one-rail-empty": 1,
+     "reel-non-finis → one-rail-empty": 1,
+     "reel-decoupe → one-rail-empty": 1,
+     "reel-plafond-points → one-rail-empty": 1,
+     "reel-plafond-lus → one-rail-empty": 1,
+     "reel-pause-chaque-7 → one-rail-empty": 1,
+     "reel-float64 → no-points": 15,
+     "reel-entrelace → no-points": 15,
+     "reel-entrelace-float64 → no-points": 15,
+     "reel-indexe → no-points": 15,
+     "reel-sans-accesseur → no-points": 15,
+     "reel-non-finis → no-points": 15,
+     "reel-decoupe → no-points": 15,
+     "reel-plafond-points → no-points": 15,
+     "reel-plafond-lus → no-points": 15,
+     "reel-pause-chaque-7 → no-points": 15,
+     "reel-transformation-non-finie → transform-check-failed": 15,
+     "plein-505000 → no-points": 4
+    },
+    "erreurs": {
+     "Error: Transformation non finie.": 92
+    },
+    "ms": {
+     "reference": 182033,
+     "patche": 141833
+    },
+    "lectureDirecte": {
+     "reel": 2182,
+     "reel-float64": 89,
+     "reel-entrelace": 89,
+     "reel-entrelace-float64": 89,
+     "reel-indexe": 0,
+     "reel-sans-accesseur": 92,
+     "reel-normalise": 0,
+     "reel-non-finis": 89,
+     "reel-decoupe": 89,
+     "reel-drawrange": 89,
+     "reel-plafond-points": 0,
+     "reel-plafond-lus": 89,
+     "reel-pause-chaque-7": 89,
+     "reel-transformation-non-finie": 0,
+     "vue-vide": 0,
+     "un-point": 0,
+     "plein-505000": 27
+    },
+    "sha": {
+     "reference": "c9da2f6dd82776760531ff8fb5206486dc666134bdf932a6d5208ba129312919",
+     "patche": "c9da2f6dd82776760531ff8fb5206486dc666134bdf932a6d5208ba129312919"
+    }
+   },
+   {
+    "sansThree": false,
+    "date": "2026-11-06T19:17:45.470Z",
+    "collections": [
+     "2026-11-05",
+     "2026-11-06"
+    ],
+    "nuages": 1990,
+    "jeux": 3210,
+    "ecarts": 0,
+    "premiersEcarts": [],
+    "parVariante": {
+     "reel": {
+      "jeux": 1990,
+      "ecarts": 0
+     },
+     "reel-float64": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-entrelace": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-entrelace-float64": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-indexe": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-sans-accesseur": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-normalise": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-non-finis": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-decoupe": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-drawrange": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-plafond-points": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-plafond-lus": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-pause-chaque-7": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-transformation-non-finie": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "vue-vide": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "un-point": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "plein-505000": {
+      "jeux": 20,
+      "ecarts": 0
+     }
+    },
+    "statuts": {
+     "reel → complete-loaded-roi": 1982,
+     "reel-float64 → complete-loaded-roi": 78,
+     "reel-entrelace → complete-loaded-roi": 78,
+     "reel-entrelace-float64 → complete-loaded-roi": 78,
+     "reel-indexe → complete-loaded-roi": 78,
+     "reel-sans-accesseur → complete-loaded-roi": 78,
+     "reel-normalise → no-points": 80,
+     "reel-non-finis → partial-invalid-points": 78,
+     "reel-decoupe → complete-loaded-roi": 78,
+     "reel-drawrange → complete-loaded-roi": 78,
+     "reel-plafond-points → partial-limit": 78,
+     "reel-plafond-lus → complete-loaded-roi": 65,
+     "reel-pause-chaque-7 → complete-loaded-roi": 78,
+     "vue-vide → no-points": 80,
+     "un-point → one-rail-empty": 70,
+     "plein-505000 → complete-loaded-roi": 20,
+     "reel-plafond-lus → partial-limit": 13,
+     "reel → no-points": 8,
+     "reel-float64 → no-points": 2,
+     "reel-entrelace → no-points": 2,
+     "reel-entrelace-float64 → no-points": 2,
+     "reel-indexe → no-points": 2,
+     "reel-sans-accesseur → no-points": 2,
+     "reel-non-finis → no-points": 2,
+     "reel-decoupe → no-points": 2,
+     "reel-drawrange → no-points": 2,
+     "reel-plafond-points → no-points": 2,
+     "reel-plafond-lus → no-points": 2,
+     "reel-pause-chaque-7 → no-points": 2,
+     "reel-transformation-non-finie → transform-check-failed": 2,
+     "un-point → no-points": 10
+    },
+    "erreurs": {
+     "Error: Transformation non finie.": 78
+    },
+    "ms": {
+     "reference": 98041,
+     "patche": 79185
+    },
+    "lectureDirecte": {
+     "reel": 1974,
+     "reel-float64": 78,
+     "reel-entrelace": 78,
+     "reel-entrelace-float64": 78,
+     "reel-indexe": 0,
+     "reel-sans-accesseur": 78,
+     "reel-normalise": 0,
+     "reel-non-finis": 78,
+     "reel-decoupe": 78,
+     "reel-drawrange": 78,
+     "reel-plafond-points": 0,
+     "reel-plafond-lus": 78,
+     "reel-pause-chaque-7": 78,
+     "reel-transformation-non-finie": 0,
+     "vue-vide": 0,
+     "un-point": 0,
+     "plein-505000": 20
+    },
+    "sha": {
+     "reference": "f8dfe508926f50c2d9e4e88f6e8501dbeb34f94bd539047d4961fe8a01cca0a3",
+     "patche": "f8dfe508926f50c2d9e4e88f6e8501dbeb34f94bd539047d4961fe8a01cca0a3"
+    }
+   }
+  ]
+ },
+ "sansThree": {
+  "total": {
+   "nuages": 4645,
+   "jeux": 7497,
+   "ecarts": 0,
+   "lectureDirecteReel": 0
+  },
+  "parties": [
+   {
+    "sansThree": true,
+    "date": "2026-11-06T19:17:45.466Z",
+    "collections": [
+     "2026-11-04"
+    ],
+    "nuages": 2655,
+    "jeux": 4287,
+    "ecarts": 0,
+    "premiersEcarts": [],
+    "parVariante": {
+     "reel": {
+      "jeux": 2655,
+      "ecarts": 0
+     },
+     "reel-float64": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-entrelace": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-entrelace-float64": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-indexe": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-sans-accesseur": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-normalise": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-non-finis": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-decoupe": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-drawrange": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-plafond-points": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-plafond-lus": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-pause-chaque-7": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "reel-transformation-non-finie": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "vue-vide": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "un-point": {
+      "jeux": 107,
+      "ecarts": 0
+     },
+     "plein-505000": {
+      "jeux": 27,
+      "ecarts": 0
+     }
+    },
+    "statuts": {
+     "reel → complete-loaded-roi": 2258,
+     "reel-float64 → complete-loaded-roi": 91,
+     "reel-entrelace → complete-loaded-roi": 91,
+     "reel-entrelace-float64 → complete-loaded-roi": 91,
+     "reel-indexe → complete-loaded-roi": 91,
+     "reel-sans-accesseur → complete-loaded-roi": 91,
+     "reel-normalise → no-points": 107,
+     "reel-non-finis → partial-invalid-points": 90,
+     "reel-decoupe → complete-loaded-roi": 91,
+     "reel-drawrange → complete-loaded-roi": 90,
+     "reel-plafond-points → partial-limit": 90,
+     "reel-plafond-lus → partial-limit": 60,
+     "reel-pause-chaque-7 → complete-loaded-roi": 91,
+     "vue-vide → no-points": 107,
+     "un-point → one-rail-empty": 80,
+     "plein-505000 → complete-loaded-roi": 23,
+     "reel → no-points": 379,
+     "un-point → no-points": 27,
+     "reel → one-rail-empty": 18,
+     "reel-non-finis → complete-loaded-roi": 1,
+     "reel-drawrange → no-points": 17,
+     "reel-plafond-points → complete-loaded-roi": 1,
+     "reel-plafond-lus → complete-loaded-roi": 31,
+     "reel-float64 → one-rail-empty": 1,
+     "reel-entrelace → one-rail-empty": 1,
+     "reel-entrelace-float64 → one-rail-empty": 1,
+     "reel-indexe → one-rail-empty": 1,
+     "reel-sans-accesseur → one-rail-empty": 1,
+     "reel-non-finis → one-rail-empty": 1,
+     "reel-decoupe → one-rail-empty": 1,
+     "reel-plafond-points → one-rail-empty": 1,
+     "reel-plafond-lus → one-rail-empty": 1,
+     "reel-pause-chaque-7 → one-rail-empty": 1,
+     "reel-float64 → no-points": 15,
+     "reel-entrelace → no-points": 15,
+     "reel-entrelace-float64 → no-points": 15,
+     "reel-indexe → no-points": 15,
+     "reel-sans-accesseur → no-points": 15,
+     "reel-non-finis → no-points": 15,
+     "reel-decoupe → no-points": 15,
+     "reel-plafond-points → no-points": 15,
+     "reel-plafond-lus → no-points": 15,
+     "reel-pause-chaque-7 → no-points": 15,
+     "reel-transformation-non-finie → transform-check-failed": 15,
+     "plein-505000 → no-points": 4
+    },
+    "erreurs": {
+     "Error: Transformation non finie.": 92
+    },
+    "ms": {
+     "reference": 183795,
+     "patche": 169722
+    },
+    "lectureDirecte": {
+     "reel": 0,
+     "reel-float64": 0,
+     "reel-entrelace": 0,
+     "reel-entrelace-float64": 0,
+     "reel-indexe": 0,
+     "reel-sans-accesseur": 92,
+     "reel-normalise": 0,
+     "reel-non-finis": 0,
+     "reel-decoupe": 0,
+     "reel-drawrange": 0,
+     "reel-plafond-points": 0,
+     "reel-plafond-lus": 0,
+     "reel-pause-chaque-7": 0,
+     "reel-transformation-non-finie": 0,
+     "vue-vide": 0,
+     "un-point": 0,
+     "plein-505000": 0
+    },
+    "sha": {
+     "reference": "c9da2f6dd82776760531ff8fb5206486dc666134bdf932a6d5208ba129312919",
+     "patche": "c9da2f6dd82776760531ff8fb5206486dc666134bdf932a6d5208ba129312919"
+    }
+   },
+   {
+    "sansThree": true,
+    "date": "2026-11-06T19:17:45.451Z",
+    "collections": [
+     "2026-11-05",
+     "2026-11-06"
+    ],
+    "nuages": 1990,
+    "jeux": 3210,
+    "ecarts": 0,
+    "premiersEcarts": [],
+    "parVariante": {
+     "reel": {
+      "jeux": 1990,
+      "ecarts": 0
+     },
+     "reel-float64": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-entrelace": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-entrelace-float64": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-indexe": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-sans-accesseur": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-normalise": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-non-finis": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-decoupe": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-drawrange": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-plafond-points": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-plafond-lus": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-pause-chaque-7": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "reel-transformation-non-finie": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "vue-vide": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "un-point": {
+      "jeux": 80,
+      "ecarts": 0
+     },
+     "plein-505000": {
+      "jeux": 20,
+      "ecarts": 0
+     }
+    },
+    "statuts": {
+     "reel → complete-loaded-roi": 1982,
+     "reel-float64 → complete-loaded-roi": 78,
+     "reel-entrelace → complete-loaded-roi": 78,
+     "reel-entrelace-float64 → complete-loaded-roi": 78,
+     "reel-indexe → complete-loaded-roi": 78,
+     "reel-sans-accesseur → complete-loaded-roi": 78,
+     "reel-normalise → no-points": 80,
+     "reel-non-finis → partial-invalid-points": 78,
+     "reel-decoupe → complete-loaded-roi": 78,
+     "reel-drawrange → complete-loaded-roi": 78,
+     "reel-plafond-points → partial-limit": 78,
+     "reel-plafond-lus → complete-loaded-roi": 65,
+     "reel-pause-chaque-7 → complete-loaded-roi": 78,
+     "vue-vide → no-points": 80,
+     "un-point → one-rail-empty": 70,
+     "plein-505000 → complete-loaded-roi": 20,
+     "reel-plafond-lus → partial-limit": 13,
+     "reel → no-points": 8,
+     "reel-float64 → no-points": 2,
+     "reel-entrelace → no-points": 2,
+     "reel-entrelace-float64 → no-points": 2,
+     "reel-indexe → no-points": 2,
+     "reel-sans-accesseur → no-points": 2,
+     "reel-non-finis → no-points": 2,
+     "reel-decoupe → no-points": 2,
+     "reel-drawrange → no-points": 2,
+     "reel-plafond-points → no-points": 2,
+     "reel-plafond-lus → no-points": 2,
+     "reel-pause-chaque-7 → no-points": 2,
+     "reel-transformation-non-finie → transform-check-failed": 2,
+     "un-point → no-points": 10
+    },
+    "erreurs": {
+     "Error: Transformation non finie.": 78
+    },
+    "ms": {
+     "reference": 99492,
+     "patche": 93660
+    },
+    "lectureDirecte": {
+     "reel": 0,
+     "reel-float64": 0,
+     "reel-entrelace": 0,
+     "reel-entrelace-float64": 0,
+     "reel-indexe": 0,
+     "reel-sans-accesseur": 78,
+     "reel-normalise": 0,
+     "reel-non-finis": 0,
+     "reel-decoupe": 0,
+     "reel-drawrange": 0,
+     "reel-plafond-points": 0,
+     "reel-plafond-lus": 0,
+     "reel-pause-chaque-7": 0,
+     "reel-transformation-non-finie": 0,
+     "vue-vide": 0,
+     "un-point": 0,
+     "plein-505000": 0
+    },
+    "sha": {
+     "reference": "f8dfe508926f50c2d9e4e88f6e8501dbeb34f94bd539047d4961fe8a01cca0a3",
+     "patche": "f8dfe508926f50c2d9e4e88f6e8501dbeb34f94bd539047d4961fe8a01cca0a3"
+    }
+   }
+  ]
+ }
+}

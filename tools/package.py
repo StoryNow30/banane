@@ -35,6 +35,15 @@ def build(destination, include_tests=False):
     for name in required:
         if not (ROOT / name).is_file():
             raise ValueError(f'Missing required file: {name}')
+    # D-296 (CH-064) : la lecture LiDAR en Rust. Le module (base64), la coquille et la variante de vendor/lidar.js sont des
+    # fichiers fabriqués ; le paquet refuse de se construire s'ils ne sont pas à jour (SHA-256 du module, copie conforme de la
+    # coquille, variante du vendor/lidar.js courant). Sans node, le paquet n'est pas construit.
+    for name in ['vendor/ariane-lidar.js', 'vendor/ariane-lidar-wasm.js', 'vendor/lidar-rust.js', 'src/lidar-rust.js']:
+        if not (ROOT / name).is_file():
+            raise ValueError(f'Missing required file: {name}')
+    check = subprocess.run(['node', str(ROOT / 'tools' / 'rust-lidar-paquet.cjs'), '--verifier'], capture_output=True, text=True)
+    if check.returncode != 0:
+        raise ValueError('Lecture LiDAR en Rust : fichiers de page pas à jour (node tools/rust-lidar-paquet.cjs --construire) :\n' + check.stderr)
     destination = Path(destination).resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:

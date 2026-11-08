@@ -3450,4 +3450,58 @@ Les libellés visibles de la file de parties deviennent « Constellation » et c
 - Ce que l'intégrateur fait seul : lancer, relancer et recréer les sessions ; arbitrer les questions techniques ; fusionner les sous-chantiers et intégrer au tronc après verify, parité et maquette ; fabriquer des paquets de test.
 - Ce qui attend l'accord de l'opérateur, demandé par le hub (PR « Hub : canal général », relayée sur Telegram) : allumer un réglage qui change une pose, une validation ou une écriture dans ESV ; mettre du Rust dans le paquet ; modifier `manifest.json` (`'wasm-unsafe-eval'`, permissions) ; merge dans main, étiquette, publication ; toute dépense ; toute suppression de données.
 - Mécanique : contrôle toutes les 2 heures (tâche planifiée « Pilotage du week-end ») dans la session de l'intégrateur ; abonnement aux PR du hub (n° 7) et de Cursor (n° 23).
-- Le numéro suivant est D-295.
+
+## D-295 — Rust : porter 100 % du calcul portable ; Codex pour les audits ; chantiers Codex (opérateur, 06/11)
+- Constat présenté (ÉTABLI, `chantiers/CH-064/temps-par-cut.md`, Chromium au repos, 200 nuages) : calcul par cut, lecture LiDAR comprise, 1 141 ms au tronc, 177 ms en JS élagué, 200 ms tout en WASM, 128 ms en JS élagué avec le LiDAR en WASM ; gain propre du Rust ≈ 49 ms par cut. Part réécrite : environ 3 500 lignes sur 24 250 (≈ 14 % du code, ≈ 60 % du calcul portable ; compte de lignes, SUPPOSÉ). Ce qui touche aux API Chrome, au DOM, à la page ESV et à l'orchestration ne peut pas être en Rust dans l'architecture A.
+- Ordres : « Tu peux demander des audits à chatgpt astra et chatgpt 6.1 sol » ; après l'échec de l'API (aucun crédit) : « D'accord restons sur codex » ; « Vu qu'on a énormément de quota sur chatgpt tu peux lancer d'autres multiples chantiers de développement » ; « Continue de bosser c'est bien » ; « Ok continue de bosser jusqu'à 100 % ».
+- Effet :
+  - le gel de l'élargissement du Rust (pris par l'intégrateur le 06/11 en attente de cet avis) est levé : tout le calcul pur portable est porté en Rust (tranche J4 de la décision, puis l'inventaire du chef), toujours au bit près et hors du paquet ;
+  - « 100 % » s'entend du calcul portable ; rien ne change pour le JS qui parle à Chrome, au DOM ou à ESV ;
+  - mettre du Rust dans le paquet, `manifest.json` et les fichiers gelés restent soumis à l'accord de l'opérateur (D-294) ;
+  - audits par « @codex review » (PR n° 25) à chaque fusion d'une équipe ; chantiers Codex CH-066 (fuzz VBA) et CH-067 (audit des correctifs du tronc) ; la clé API OpenAI enregistrée n'est pas utilisée (pas de crédit).
+- Après les 100 % : « on utilisera des gros reviewers de code pour voir si le code rust est bien intégré » — revue d'intégration complète par plusieurs relecteurs forts (Codex et sessions Claude au niveau fort), avant toute proposition d'entrée du Rust dans le paquet.
+
+## D-296 — Rust dans le paquet : accord ; « 100 % » élargi à tout ce qui peut passer en Rust (opérateur, 06/11)
+- Ordre : « Oui accord pour mettre du rust dans le paquet. Les 100 % visent le calcul et tout ce qui peut passer en rust dans l'ordre du possible. »
+- Effet :
+  - le Rust (cœur WASM, architecture A) peut entrer dans le paquet. Chaque module y entre seulement avec : parité au bit près sur les données réelles, repli JS automatique sur tout refus, verify, parité de la relecture et du lot, maquette, et la revue d'intégration par de gros relecteurs (D-295) ;
+  - ordre d'entrée : la lecture LiDAR d'abord (elle tourne dans la page, où le WASM est permis sans changer `manifest.json`), puis la géométrie et la décision ;
+  - un module qui devrait tourner dans le service worker demande `'wasm-unsafe-eval'` dans `manifest.json` : l'intégrateur le signalera à l'opérateur avant de l'y mettre ;
+  - les fichiers gelés (`src/geometry.js`, `vendor/lidar.js`) ne changent de comportement que par des patchs prouvés identiques au bit près ;
+  - « 100 % » : le calcul, plus tout ce qui peut techniquement passer en Rust dans une extension Chrome.
+- Le numéro suivant est D-297.
+
+## D-297 — CH-065 : géométrie élaguée du lot oui, geometry.js et lidar-direct en attente (opérateur, 06/11 soir)
+- Intégrés au tronc : `geometrie-elaguee-lot` et `mediane-exacte` (`src/geometry-candidate-v1.js`, non gelé), environ −29 s par journée (mesuré par CH-065, sorties identiques). Avec eux, `garde-empreintes.patch` (gardes d'empreintes sans les blocs déclarés de CH-065).
+- `geometrie-elaguee-v46` (`src/geometry.js`, gelé) : non. Gain d'environ 2 s, insuffisant pour toucher un fichier gelé.
+- `lidar-direct` (`vendor/lidar.js`, gelé) : accord, sous condition du relevé de console d'ESV (`tools/ch065-releve-accesseur.js`) avec `three.revision` = « 124 » et une lecture directe possible sur tous les nœuds. Sinon, pas d'intégration.
+- La chaîne `CONTRACT.geometrySha256` n'est pas changée.
+
+## D-298 — Nom du premier paquet en Rust : « Vision » (opérateur, 06/11 soir)
+- Le premier paquet qui embarque le cœur Rust s'appelle « Vision », aussi dans Chrome : la clé `name` de `manifest.json` (aujourd'hui « Ariane 5 ») est changée au moment de fabriquer ce paquet (accord écrit de l'opérateur pour cette modification de `manifest.json`).
+- Vérifié : aucun code de `src/` ni `background.js` ne lit le nom du manifeste, donc la reprise des lots n'en dépend pas.
+
+## D-299 — Cap d'architecture après « Vision » : améliorer ce qui est mesuré, pas de refonte (opérateur, 07/11)
+Acte la méthode et les priorités issues de trois avis externes et des mesures de CH-064 à CH-074. Ne dégèle PAS D-293 : toute modification des fichiers gelés reste soumise à une décision écrite séparée.
+- **Constat (mesuré)** : le gain propre du Rust est d'environ −49 ms par cut (banc) et d'environ 3 % d'une lecture sur des coupes réelles en maquette ; le nettoyage du JS a donné environ −970 ms par cut. Plusieurs fonctions portées perdent en WASM à cause des échanges JS ↔ WASM (CH-069, CH-070). La lecture d'une coupe (~1,8 s) est surtout de l'attente, pas du calcul.
+- **Architecture cible** : extension modulaire (panneau, pilote, adaptateur ESV, moteur de calcul, sessions et mesures), pilotée par des états observés d'ESV, moteur interchangeable (JS ou Rust/WASM selon la mesure), Rust uniquement là où il apporte un gain mesuré sur le parcours complet. Une grande partie existe déjà : on fait évoluer, on ne réécrit pas.
+- **Principes** : un seul responsable de l'enchaînement (le pilote) ; identifiants de coupe et d'opération dans chaque échange, pour rejeter les résultats périmés ; états observés plutôt que pauses fixes, avec délai maximal et arrêt explicite si la confirmation n'arrive pas ; conventions communes (unités, repères, identifiants, erreurs, annulation) sans imposer une interface identique à tous les calculs ; comparaison sur le parcours complet, résultats identiques au bit près.
+- **Ordre** :
+  1. Typage limité (CH-075) : vérification TypeScript sans génération de code, annotations en commentaires, types distincts pour unités, repères et identifiants, un premier module (coordonnées et ses échanges) réellement vérifié, contrôle automatique du périmètre couvert. Commits d'annotations (code exécuté identique, prouvé) séparés des commits de corrections fonctionnelles (comparaison des résultats).
+  2. Mesure d'une journée réelle avec « Vision », étape par étape, avec un profil de performance de Chrome ciblé.
+  3. Remplacement des attentes fixes justifiées par ces mesures, après décision écrite sur les fichiers gelés. Pour chaque étape : définir ce qui prouve qu'elle est finie (bonne coupe, bonne opération), le délai maximal et l'arrêt explicite.
+  4. Worker pour le moteur, seulement si un bénéfice identifiable subsiste (fluidité, réutilisation des données, débit du lot). Un Worker ne corrige pas à lui seul les échanges coûteux : garder les données près du calcul et regrouper les opérations.
+- **Portage Rust** : on termine les chantiers déjà faits sans perdre leur travail ; on n'en ouvre pas de nouveaux par fonction ; rien n'entre dans un paquet sans gain mesuré (règle « gain seulement »).
+- **Pistes écartées dans les contraintes actuelles** (pas des impossibilités définitives) : réécriture générale (TypeScript ou Rust), moteur Rust natif hors du navigateur, calcul sur carte graphique (WebGPU : pas de double précision, résultats non identiques au bit près), serveur distant (données terrain interdites hors du dépôt `banane-data`), anticipation de la coupe suivante tant qu'ESV ne donne pas un signal fiable de changement de coupe. L'API officielle d'ESV est une question à poser au fournisseur par l'opérateur. Les scripts d'analyse restent en Node.
+
+## D-300 — Place du Rust dans le cap de D-299 (opérateur, 07/11)
+Complète D-299 sans la modifier.
+- Ariane est une architecture hybride : TypeScript/JavaScript orchestre (interface et réglages, pilotage des coupes et interactions avec ESV, attente des états, pause et reprise, coordination des traitements) ; Rust → WebAssembly calcule là où il gagne (traitements LiDAR au gain démontré, calculs géométriques intensifs, recherche et évaluation des candidats rails si les bancs le justifient, réutilisation des structures de calcul en mémoire).
+- On confie au Rust des **traitements complets** (recevoir les points, préparer les structures de recherche, calculer les candidats, renvoyer les résultats), pas une multitude de petits appels.
+- Le Rust déjà bénéfique reste en place (lecture LiDAR de « Vision ») ; une fonction plus lente une fois les échanges comptés reste en JavaScript. Si le Worker est retenu, le moteur Rust/WASM peut y tourner.
+- La part du Rust grandit avec les besoins et les preuves de performance, sans objectif de « tout passer en Rust » : D-299 et D-300 remplacent sur ce point la cible « 100 % » de D-295 et D-296.
+
+## D-301 — Le développement passe à l'agent Codex (opérateur, 07/11)
+- L'agent Codex (ChatGPT) reprend tout le développement et devient l'intégrateur : il pousse sur le tronc `claude/50-test17` et fabrique les paquets, avec les mêmes règles de preuve (`CLAUDE.md`, `fiches/PASSATION_CODEX.md`).
+- Codex peut lire et analyser les données terrain de `banane-data`, comme Cursor (extension de D-253). Rien de ces données n'entre jamais dans `banane`.
+- Inchangé : les accords écrits de l'opérateur (`manifest.json`, fichiers gelés, réglages de pose ou de validation, dépenses, suppressions, merge dans `main`, étiquettes), D-293, D-299 et D-300.

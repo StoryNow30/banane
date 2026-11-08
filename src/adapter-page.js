@@ -12,6 +12,10 @@
   * sur la même page. Les modules sont donc lus UNE fois, ici ; le tampon posé
   * par le service worker juste avant l'injection désigne le propriétaire. */
  const C=window.BananeCaptureCore,L=window.BananeLidar,N=window.BananeNativeLidar4,K=window.BananeCore3;
+ /* D-296 (CH-064, étape 6 a) : lecture LiDAR en Rust. Réglage `BananeSettings.rust.lidar` (actif par défaut, coupable) ; sans noyau
+  * chargé (src/lidar-rust.js), ou réglage coupé, la lecture d'origine (vendor/lidar.js). Sortie de capture() identique au bit près. */
+ const LR=window.BananeLidarRustChargeur||null,RUST_LIDAR=window.BananeSettings?.rust?.lidar===true;
+ const lecteurLidar=()=>RUST_LIDAR&&LR&&LR.pret()?LR:L;
  const M3=window.BananeMerge3,MP4=window.BananeManualPage4,NP4=window.BananeNativePage4,GV=window.BananeGestesVue||null;
  const PROPRIO=typeof window.__ARIANE_PROPRIETAIRE?.id==='string'?window.__ARIANE_PROPRIETAIRE.id:null;
  const PROPRIO_NOM=typeof window.__ARIANE_PROPRIETAIRE?.versionName==='string'?window.__ARIANE_PROPRIETAIRE.versionName:null;
@@ -307,11 +311,13 @@
    document.dispatchEvent(new KeyboardEvent('keyup',init));
    return {commandSent:true,command:'SKIP'};
  }
- async function captureOnce(expected,guard,lecture='reference'){guard();const c=context();
-   const data=await L.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,...(lecture==='rapide'?{pause:yieldToPage}:{}),
+ async function captureOnce(expected,guard,lecture='reference',progress=null,cote=null){guard();const c=context();const lu=lecteurLidar();
+   const data=await lu.capture({viewer:c.viewer,rails:['left','right'].map(s=>railState(c.pair[s])),origin:c.frame.origin,enums:window.Potree||{},guard,...(lecture==='rapide'?{pause:yieldToPage}:{}),
      meta:{version:K.VERSION,captureId:K.uid(),sessionId:pageId,visitId:`${c.frame.id}:${c.identity.part}:${c.identity.cut}`,
        identity:c.identity,part:c.identity.part,cut:c.identity.cut,shape:c.identity.shape,railStateProvenance:'observed-before',
        coordinateBridge:{sceneFrameId:c.frame.id,captureSceneRelativeToSessionSceneRelative:C.identity()},datasetIdentity:'not-observed'}});
+   /* étape `rust` : servi, repli, raison (journal `rust`, background.js) ; seulement quand la lecture en Rust est en jeu */
+   if(progress&&(LR||RUST_LIDAR))try{progress('rust',{side:cote,...(LR?LR.bilan(lu===LR):{module:'lidar',servi:false,repli:true,raison:'chargeur absent'})});}catch{}
    guard();return data;}
  /* SIGNATURE DU NIVEAU DE DÉTAIL CHARGÉ.
   *
@@ -472,7 +478,7 @@
            attente={regle:'stabilite',diag};}
          guard();progress('capture-read',{side,attempt,lecture,regle:attente.regle,...(attente.diag?{diag:attente.diag}:{})});
          const avantLecture=attente.regle==='signal'?loadedSignature().value:null;
-         const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference');guard();
+         const data=await captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference',progress,side);guard();
          /* Lu au signal : rien ne doit avoir changé pendant la lecture (elle rend la main à ESV à
           * chaque tranche). Sinon la vue était incomplète : relecture, comme toute lecture instable. */
          if(avantLecture!==null&&(loadedSignature().value!==avantLecture||chargementsEffectifs()!==0))

@@ -2,7 +2,16 @@
  if(typeof module==='object')module.exports=api;else root.BananeGeometry3=api;
 })(typeof globalThis!=='undefined'?globalThis:this,function(C){
  'use strict';
- const median=a=>{if(!a.length)return NaN;const b=a.slice().sort((a,b)=>a-b),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
+ /* CH-065 : médiane exacte plus rapide (même valeur au bit près). Le tri d'origine, slice().sort((a,b)=>a-b), est remplacé par le tri
+  * numérique natif d'une copie Float64Array quand il range les valeurs dans le même ordre : tableau ordinaire de nombres, sans NaN (le
+  * comparateur rend NaN, l'ordre d'origine dépend alors de l'algorithme), et sans mélange de -0 et +0 (égaux pour le comparateur, le tri
+  * stable garde leur ordre d'entrée, le tri natif met -0 d'abord). Dans ces conditions, deux valeurs égales pour le comparateur sont le même
+  * nombre : les éléments du milieu sont identiques au bit. Sinon, le code d'origine. Parité : tests/ch065-mediane.test.cjs. */
+ const median=a=>{if(!a.length)return NaN;
+   if(Array.isArray(a)){let ok=true,pz=false,nz=false;
+     for(let k=0;k<a.length;k++){const x=a[k];if(typeof x!=="number"||x!==x){ok=false;break;}if(x===0){if(1/x<0)nz=true;else pz=true;}}
+     if(ok&&!(pz&&nz)){const b=Float64Array.from(a).sort(),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;}}
+   const b=a.slice().sort((a,b)=>a-b),i=b.length>>1;return b.length%2?b[i]:(b[i-1]+b[i])/2;};
  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
  const DEFAULTS=Object.freeze({searchY:.08,searchZ:.04,grid:.003,minTop:15,minFace:6,
    maxResidual:.004,minConfidence:55,topBand:.012,faceBand:.01,
@@ -56,9 +65,20 @@
      const near=head.filter(p=>Math.abs(p[1]-z)<.004);if(near.length)faceAnchors.push([Math.min(...near.map(p=>p[0])),z]);
    }
    if(topAnchors.length<3||faceAnchors.length<3)return unresolved('Surfaces du profil non identifiées.');
+   /* CH-065 : élagage exact de la recherche (même résultat au bit près, plus rapide).
+    * Les points sont triés une fois sur p[0] (PX, PY). Pour une ancre a et un décalage u, seul un point dont
+    * |p[0]-u-a[0]| < 26 mm peut abaisser le minimum : hors de cette fenêtre, sa distance dépasse .025² (valeur de départ),
+    * et le test d < best est faux. Avec |u| < 1, |a[0]| < 1 et |p[0]| < .18 (filtre des points ci-dessus), l'erreur
+    * d'arrondi des bornes est inférieure à 1e-15 m, très loin de la marge de 1 mm. Les points de la fenêtre sont évalués
+    * avec la même expression que l'original ; le minimum d'un ensemble ne dépend pas de l'ordre. Hors de ce domaine, la
+    * boucle d'origine est gardée telle quelle. Parité au bit : tests/ch065-geometrie-elaguee.test.cjs. */
+   const __tries=points.slice().sort((p,q)=>p[0]-q[0]),PX=new Float64Array(__tries.length),PY=new Float64Array(__tries.length);
+   for(let i=0;i<__tries.length;i++){PX[i]=__tries[i][0];PY[i]=__tries[i][1];}
+   const borne=v=>{let lo=0,hi=PX.length;while(lo<hi){const m=(lo+hi)>>1;if(PX[m]<v)lo=m+1;else hi=m;}return lo;};
    function loss(anchors,u,z){
      return median(anchors.map(a=>{let best=.025*.025;
-       for(const p of points){const d=(p[0]-u-a[0])**2+(p[1]-z-a[1])**2;if(d<best)best=d;}return best;}));
+       if(!(Math.abs(u)<1&&Math.abs(a[0])<1)){for(const p of points){const d=(p[0]-u-a[0])**2+(p[1]-z-a[1])**2;if(d<best)best=d;}return best;}
+       for(let i=borne(u+a[0]-.026),fin=borne(u+a[0]+.026);i<fin;i++){const d=(PX[i]-u-a[0])**2+(PY[i]-z-a[1])**2;if(d<best)best=d;}return best;}));
    }
    let best={loss:Infinity,u:0,z:0};const coarse=[];
    function search(cu,cz,ry,rz,step,retain=false){
