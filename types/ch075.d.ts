@@ -24,6 +24,12 @@ declare namespace CH075 {
  interface Decision {stage?:string|null;positions?:Paire<Scene>|null;reason?:string|null;anchorsUsed?:unknown[];validatedAnchors?:unknown[]|null;guardMm?:Millimetres|null;fromPredictionMm?:Millimetres|null;gaugeMm?:Millimetres|null}
  type Compte = Record<'lignes'|'valid'|'invalid'|'skipped'|'autre'|'operateur'|'fraiches'|'sansBords',number>;
  interface Brut {[cle:string]:unknown}
+ interface Taux {n:number;informatifs:number;avecTraits:number;coutS:number;p:number;parMin:number}
+ interface Candidat {part:Partie;cut:Coupe;source?:string;motif?:string;score?:number}
+ interface Observation {classe?:string;informatif?:boolean;avecTraits?:boolean;coutS?:number}
+ interface OptionsFile {taux?:Record<string,Taux>;plancherParMin?:number;jugesDeja?:Set<string>;critere?:string;ordre?:string}
+ interface EntreeFile {part:Partie;cut:Coupe;groupe:string;signaux:string[];details:Record<string,unknown>;rang:number}
  interface LigneBrute {i?:unknown;e?:unknown;s:string;t?:unknown;v?:unknown;f?:unknown}
 }
 declare var BananeAppuisListe:typeof import('../src/appuis-liste.js');
+declare var ArianeFilePrioritaire:typeof import('../src/file-prioritaire.js');

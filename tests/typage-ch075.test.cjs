@@ -8,7 +8,7 @@ test('CH-075 : périmètre strict et preuves de types',()=>{
 const {jetons,identite}=require('../tools/typage-ch075.cjs');
 test('CH-075 : commentaires et parenthèses seules sont neutres',()=>{
  assert.equal(jetons('const x=a+b;'),jetons('const x=/** @type {number} */ (a+b);'));
- assert.deepEqual(identite().map(x=>x.fichier),['src/appuis-liste.js']);
+ assert.deepEqual(identite().map(x=>x.fichier),require('../tools/typage-ch075.cjs').PERIMETRE);
 });
 test('CH-075 : la preuve refuse les mutations de comportement',()=>{
  for(const [a,b] of [
@@ -27,5 +27,5 @@ test('CH-075 : la preuve refuse les mutations de comportement',()=>{
 test('CH-075 : références d\'identité gelées pour chaque fichier du module 2',()=>{
  const T=require('../tools/typage-ch075.cjs');
  for(const f of ['src/appuis-liste.js','src/file-parties.js','src/file-prioritaire.js']){const r=T.REFERENCES[f];assert.ok(r&&r.base&&r.source&&r.ast,f);}
- assert.deepEqual(T.origine().map(x=>x.fichier),T.PERIMETRE);
+ assert.deepEqual(T.origine().map(x=>x.fichier),T.PERIMETRE);assert.ok(T.PERIMETRE.length>=2);
 });

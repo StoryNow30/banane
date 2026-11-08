@@ -7,7 +7,7 @@ const REFERENCES={
  'src/file-parties.js':{base:'32c4783',source:'5af9df74758609d914f6243621faf81ddfeb936e4849f5c54b44fcd50706a1c0',ast:'9d59d93bce4efa2a6c4005c53188de5ed7956b61597ff39a1a40d787e0379b27'},
  'src/file-prioritaire.js':{base:'32c4783',source:'c43494abd24fd2ff21ac410021c6e66e2ed6dea1eb172b8ef8633cb147f6bab1',ast:'ed5fc7e67e598d1098b8332bb3f0a5674e022086f585884e24cbfc68e236c566'},
 };
-const PERIMETRE=['src/appuis-liste.js'];
+const PERIMETRE=['src/appuis-liste.js','src/file-prioritaire.js'];
 const ORIGINE=REFERENCES[PERIMETRE[0]].source,EMPREINTE=REFERENCES[PERIMETRE[0]].ast;
 const sha=texte=>crypto.createHash('sha256').update(texte).digest('hex');
 function configuration(){
