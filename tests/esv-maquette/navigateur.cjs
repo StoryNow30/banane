@@ -9,7 +9,10 @@ const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','src/core.js','src/
 function modulePlaywright(){for(const p of [process.env.PLAYWRIGHT_MODULE,process.env.PLAYWRIGHT_PATH,'playwright','/opt/node22/lib/node_modules/playwright'].filter(Boolean)){try{return require.resolve(p);}catch{/* suivant */}}return null;}
 function playwright(){const p=modulePlaywright();return p?require(p):null;}
 function executable(){if(process.env.CHROMIUM||process.env.CHROMIUM_PATH)return process.env.CHROMIUM||process.env.CHROMIUM_PATH;const base=process.env.PLAYWRIGHT_BROWSERS_PATH||'/opt/pw-browsers';
-  const d=fs.existsSync(base)?fs.readdirSync(base).find(x=>/^chromium-\d+$/.test(x)):null;return d?path.join(base,d,'chrome-linux','chrome'):undefined;}
+  /* Le lien `chromium` du dossier des navigateurs d'abord ; puis chromium-NNNN/chrome-linux64 (Playwright récent) ou chrome-linux (ancien). */
+  const lien=path.join(base,'chromium');if(fs.existsSync(lien))return lien;
+  const d=fs.existsSync(base)?fs.readdirSync(base).find(x=>/^chromium-\d+$/.test(x)):null;if(!d)return undefined;
+  for(const s of ['chrome-linux64','chrome-linux']){const e=path.join(base,d,s,'chrome');if(fs.existsSync(e))return e;}return path.join(base,d,'chrome-linux','chrome');}
 /* Raison d'indisponibilité (chaîne) ou null si le navigateur peut tourner. */
 function indisponible(){const pw=playwright();if(!pw)return 'Playwright absent (PLAYWRIGHT_MODULE=/chemin/vers/playwright)';
   const exe=executable();if(exe&&!fs.existsSync(exe))return 'Chromium absent : '+exe;return null;}
