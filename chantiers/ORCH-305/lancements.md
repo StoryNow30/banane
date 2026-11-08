@@ -1,6 +1,6 @@
-# ORCH-305 — Lancements : textes exacts (08/11/2026)
+# ORCH-305 — Lancements : textes exacts (08/11/2026, mis à jour après D-306)
 
-Ordre : L0 (intégrateur, préalable), puis L1, L2, L3 (Codex, en parallèle : trois conteneurs distincts), L4 (intégrateur), L5 puis L6 (sessions Claude, après la piste 0). Rien n'est lancé par l'orchestratrice.
+D-306 (opérateur, 08/11 soir) : plus de Codex ni de Cursor ; tous les exécutants sont des sessions Claude créées par l'intégrateur (`create_session`, mode `auto`, niveau économique sauf mention), qui lui parlent par `send_message` à `@parent`. Ordre : L0 (intégrateur, fait), L1, L2, L3 (sessions Claude, **lancées le 08/11**), L4 (intégrateur), L5 puis L6 (après la piste 0). Rien n'est lancé par l'orchestratrice.
 
 ## L0 — Préalable de l'intégrateur
 1. Intégrer `chantier/ORCH-305` au tronc en avance simple (fichiers : `chantiers/ORCH-305/*`, `chantiers/CH-076.md`, `CH-077.md`, `CH-078.md`, compléments de `CH-064.md` et `CH-075.md`). Les tickets doivent être sur le tronc avant toute session.
@@ -15,18 +15,18 @@ node tools/hub.cjs dire --chantier CH-073 --de integrateur --type verdict "Chant
 node tools/hub.cjs dire --chantier CH-067 --de integrateur --type info "Audit rendu, trois correctifs intégrés au tronc (82a8312). PR fermée ; les essais rouges restent sur la branche."
 ```
 
-## L1 — Codex A : CH-064, clôture du programme Rust
-Dépôt `banane`, **branche de départ `chantier/CH-064`**. Texte à coller dans ChatGPT Codex :
+## L1 — Session Claude, économique : CH-064, clôture du programme Rust (lancée)
+`create_session` mode `auto`, dépôt `banane`, **branche `chantier/CH-064`**, titre « CH-064 : clôture du programme Rust ». Message (le texte ci-dessous, avec en plus la règle de communication commune : `send_message` à `@parent`, priorité `next`, après la lecture, à chaque étape finie, à chaque question bloquante ; le texte de fin de tour ne m'arrive pas ; fin par « PRÊT CH-064 <sha> » à `@parent`) :
 ```
-Tu travailles dans le dépôt banane, sur la branche chantier/CH-064 (ne crée pas d'autre branche, ne touche jamais au tronc claude/50-test17). Tout en français. Commence par fusionner origin/claude/50-test17 dans ta branche (commit de fusion, jamais de rebase ni de force-push), puis lis en entier CLAUDE.md, DECISIONS.md de D-293 à D-305, fiches/PASSATION_CODEX.md (section « Vérifier un PRÊT »), chantiers/CH-064.md (section « Reprise D-305 : clôture du programme ») et chantiers/CH-064/reprise-integration.md. Tu es exécutant (D-303) : tu ne pousses que sur chantier/CH-064.
+Tu travailles dans le dépôt banane, sur la branche chantier/CH-064 (ne crée pas d'autre branche, ne touche jamais au tronc claude/50-test17). Tout en français. Commence par fusionner origin/claude/50-test17 dans ta branche (commit de fusion, jamais de rebase ni de force-push), puis lis en entier CLAUDE.md, DECISIONS.md de D-293 à D-305, fiches/PASSATION_CODEX.md (section « Vérifier un PRÊT »), chantiers/CH-064.md (section « Reprise D-305 : clôture du programme ») et chantiers/CH-064/reprise-integration.md. Tu es une session exécutante (D-306) : tu ne pousses que sur chantier/CH-064.
 
 Ta tâche est la liste numérotée de la section « Reprise D-305 » de chantiers/CH-064.md, dans l'ordre, un travail lourd à la fois : (1) appliquer les patchs CH-070 et CH-071, clippy natif et wasm32 avec -D warnings, cargo test ; (2) parité D dans Chromium, lots de 20, tâche de fond de deux heures, machine au repos, avec le corpus réel (clone sparse de banane-data, branche claude/execute-prompt-00-18ra5a, collections du 04 au 06/11, HORS du dépôt, variable BANANE_DATA) ; un arrêt sans fichier de résultat n'est pas un verdict ; (3) CH-071 : relevé, essai du plafond, banc au repos, section « Temps » du rapport ; (4) CH-074 : fusion de la branche, rejeu de référence, copie, parité L1se de la copie, seul sur la machine ; (5) chantiers/CH-064/cloture.md, une page, dernière ligne « PRÊT CH-064 <sha> ».
 
 Règles : pousse après chaque étape (git push origin chantier/CH-064), avec un commit « CH-064 : … » par étape ; avant chaque commit, node tools/scan-identite.cjs et node --test tests/noms-modeles.test.cjs tests/scan-identite.test.cjs doivent passer ; aucune adresse web, aucun UUID, aucun code projet ESV, aucune donnée terrain, aucun nom de modèle d'IA dans un fichier ou un commit ; rien dans src/, tests/, vendor/, manifest.json ni le paquet ; n'ajoute pas -W clippy::pedantic en ligne de commande (les lints de l'espace font foi). Ne rapporte que du mesuré, qualifié ÉTABLI / PROBABLE / SUPPOSÉ ; un chiffre de temps vient d'une machine au repos, 15 répétitions, échanges JS-WASM compris. Si une étape échoue deux fois pour une cause d'environnement (mémoire, conteneur), écris-le dans cloture.md avec la commande exacte et passe à l'étape suivante : ne reste pas bloqué, ne devine pas de résultat. Quand tout est poussé, arrête-toi.
 ```
 
-## L2 — Codex B : CH-075, module 2 du typage
-Dépôt `banane`, **branche de départ `chantier/CH-075`**. Texte à coller :
+## L2 — Session Claude, économique : CH-075, module 2 du typage (lancée)
+`create_session` mode `auto`, dépôt `banane`, **branche `chantier/CH-075`**, titre « CH-075 : typage, module 2 ». Message (même règle de communication que L1 ; fin par « PRÊT CH-075 <sha> » à `@parent`) :
 ```
 Tu travailles dans le dépôt banane, sur la branche chantier/CH-075 (pas d'autre branche, jamais le tronc). Tout en français. Fusionne d'abord origin/claude/50-test17 dans ta branche (commit de fusion, jamais de rebase ni de force-push). Lis en entier CLAUDE.md, DECISIONS.md D-299 et D-305, fiches/ARCHITECTURE_CIBLE.md, chantiers/CH-075.md (toute la fiche, dont la section « Suite D-305 : module 2 ») et chantiers/CH-075/rapport.md.
 
@@ -35,12 +35,12 @@ Ta tâche : le module 2 du typage limité, src/file-parties.js et src/file-prior
 Règles : pousse après chaque étape (git push origin chantier/CH-075), commits « CH-075 : … » ; avant chaque commit node tools/scan-identite.cjs et node --test tests/noms-modeles.test.cjs tests/scan-identite.test.cjs ; aucune adresse, UUID, code projet, donnée terrain ni nom de modèle d'IA ; aucune dépendance ajoutée au paquet. Rapport : section « module 2 » dans chantiers/CH-075/rapport.md (périmètre, types, erreurs trouvées et leur sort, preuves d'identité, ce que le vérificateur ne prouve pas), mesuré et qualifié ÉTABLI / PROBABLE / SUPPOSÉ, dernière ligne « PRÊT CH-075 <sha> ». Puis arrête-toi.
 ```
 
-## L3 — Codex C : CH-078, étude des pistes 4 et 5
-Dépôt `banane`, **branche de départ `claude/50-test17`**, crée `chantier/CH-078`. Texte à coller :
+## L3 — Session Claude, économique : CH-078, étude des pistes 4 et 5 (lancée)
+`create_session` mode `auto`, dépôt `banane`, **branche `chantier/CH-078`** créée depuis le tronc, titre « CH-078 : étude des pistes 4 et 5 ». Message (même règle de communication que L1 ; fin par « PRÊT CH-078 <sha> » à `@parent`) :
 ```
 Tu travailles dans le dépôt banane. Pars du tronc claude/50-test17, crée la branche chantier/CH-078 et ne pousses que sur elle (jamais sur le tronc). Tout en français. Lis en entier CLAUDE.md, DECISIONS.md (D-091, D-293, D-299, D-300, D-304, D-305), fiches/ARCHITECTURE_CIBLE.md, chantiers/ORCH-305/plan.md, chantiers/CH-078.md, puis les fichiers de src/ que le ticket nomme.
 
-Ta tâche : l'étude chantiers/CH-078/etude.md décrite par le ticket (deux pages au plus : piste 4 « charger moins de détail », piste 5 « anticiper la navigation »), chiffres tirés des journaux de banane-data (dépôt storynow30/banane-data, branche claude/execute-prompt-00-18ra5a, clone sparse HORS du dépôt banane ; tu as le droit de les lire, D-301 ; rien de ces données n'entre dans banane). Chaque chiffre vient d'un script reproductible que tu écris dans banane-data/outils/analyse-lots/ (pousse-le sur la branche de banane-data si tu as l'écriture ; sinon joins-le dans chantiers/CH-078/outils/ et dis-le), et l'étude nomme le script et la collection, jamais une adresse, un code projet ni un UUID. Termine chaque piste par une recommandation : ouvrir, ouvrir sous condition, ne pas ouvrir, avec ce qu'il faudrait prouver (garde GCV2, jugement contre l'Écho, règle « jamais un résultat appliqué à la mauvaise coupe »).
+Ta tâche : l'étude chantiers/CH-078/etude.md décrite par le ticket (deux pages au plus : piste 4 « charger moins de détail », piste 5 « anticiper la navigation »), chiffres tirés des journaux de banane-data (dépôt storynow30/banane-data, branche claude/execute-prompt-00-18ra5a, clone sparse HORS du dépôt banane ; une session Claude a le droit de les lire ; rien de ces données n'entre dans banane). Chaque chiffre vient d'un script reproductible que tu écris dans banane-data/outils/analyse-lots/ (pousse-le sur la branche de banane-data si tu as l'écriture ; sinon joins-le dans chantiers/CH-078/outils/ et dis-le), et l'étude nomme le script et la collection, jamais une adresse, un code projet ni un UUID. Termine chaque piste par une recommandation : ouvrir, ouvrir sous condition, ne pas ouvrir, avec ce qu'il faudrait prouver (garde GCV2, jugement contre l'Écho, règle « jamais un résultat appliqué à la mauvaise coupe »).
 
 Règles : aucun code dans src/, tests/, vendor/, manifest.json ni le paquet ; pousse à chaque étape (git push origin chantier/CH-078), commits « CH-078 : … » ; avant chaque commit node tools/scan-identite.cjs et node --test tests/noms-modeles.test.cjs tests/scan-identite.test.cjs ; aucun nom de modèle d'IA ; mesuré seulement, qualifié ÉTABLI / PROBABLE / SUPPOSÉ ; langage simple pour l'opérateur. Dernière ligne de l'étude : « PRÊT CH-078 <sha> ». Puis arrête-toi.
 ```
@@ -65,5 +65,5 @@ Lis en entier, dans cet ordre : CLAUDE.md, AGENTS.md, hub/PROTOCOLE.md, DECISION
 Deux temps. D'abord l'étude d'une demi-page du ticket (§ Périmètre 1), envoyée par send_message à @parent ; tu attends son aval avant d'écrire du code. Puis le prototype, la maquette et le banc. Tu parles à ta mère UNIQUEMENT par send_message à @parent (priorité next) : lecture faite, étude, chaque jalon, chaque question bloquante (tu attends, tu ne devines pas) ; le texte de fin de tour ne m'arrive pas. Essai rouge d'abord ; node tools/scan-identite.cjs et node --test tests/noms-modeles.test.cjs tests/scan-identite.test.cjs avant chaque commit ; commits « CH-077 : … », poussés à chaque étape. Aucune adresse gardée nulle part (fichier, journal, export, hub) ; aucun point appliqué à la scène ; un préchauffage périmé est ignoré (identifiant de coupe et d'opération). Banc au repos (Chromium /opt/pw-browsers/chromium, 15 répétitions, médiane et P90). Rapport d'une page chantiers/CH-077/rapport.md, qualifié ÉTABLI / PROBABLE / SUPPOSÉ, posté sur le hub (node tools/hub.cjs dire --chantier CH-077 --de agent --type rapport --fichier chantiers/CH-077/rapport.md) ET envoyé par send_message. Fin : « PRÊT CH-077 <sha> » à @parent, puis arrête-toi. Aucune demande à l'opérateur, pas de pull request.
 ```
 
-## Cursor
-Aucun lancement : CH-072 et CH-073 sont arrêtés (L0). Le crédit Cursor de l'opérateur n'est pas dépensé.
+## Codex et Cursor
+Plus aucun lancement (D-306). PR #28 et #29 fermées sans fusion, branches gardées.
