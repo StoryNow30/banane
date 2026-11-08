@@ -35,7 +35,7 @@ const BRUIT_AA_PCT=7,MODES=['reference','rapide'];
 const hache=cut=>Math.imul(cut>>>0,2654435761)>>>0;
 const tirage=cut=>hache(cut)>>>31?'rapide':'reference';
 /* Règles de la page (src/adapter-page.js, lectureDuCut). */
-const REGLES={tirage,echantillon:cut=>hache(cut)<429496730?'reference':'rapide',toujours:()=>'rapide',reference:()=>'reference'};
+const REGLES={tirage,echantillon:cut=>hache(cut)<429496730?'reference':'rapide',echantillon50:cut=>hache(cut)<85899346?'reference':'rapide',toujours:()=>'rapide',reference:()=>'reference'};
 /* Règle d'une capture : celle que la page consigne (4.9.0.9) ; mode consigné sans règle (4.9.0.6 à
  * 4.9.0.8) : « tirage », la seule que ces versions ont connue ; rien de consigné : aucune. */
 const regleDe=c=>c.regleLecture??(c.lecture?'tirage':null);

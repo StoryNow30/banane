@@ -108,8 +108,10 @@
      * `modeRapide` remplace `lectureI1` (gardé pour lire les réglages de la 4.9.0.6).
      * D-091 (4.9.0.9) : « echantillon », mode rapide sur neuf cuts sur dix ; un cut sur dix, tiré au
      * sort d'après son numéro, reste en référence pour surveiller la qualité (validé le 13 octobre :
-     * −64 % par cut sur le lot de 112 cuts de la 4.9.0.8, qualité identique). « tirage » reste lisible. */
-    modeRapide: 'echantillon',
+     * −64 % par cut sur le lot de 112 cuts de la 4.9.0.8, qualité identique). « tirage » reste lisible.
+     * D-304 (opérateur, 08/11) : « echantillon50 », un cut sur cinquante en référence (témoin de qualité gardé, à moindre coût :
+     * les témoins à un sur dix prenaient 36 % du temps de capture le 08/11). « echantillon » reste lisible. */
+    modeRapide: 'echantillon50',
     /* D-157 (5.0) : `clicHumain`, le clic de pose du mode rapide (src/adapter-page.js, fiches/RAPIDE_HUMAIN.md).
      * La pose directe clique le rail gauche depuis la vue du rail droit : vers NDC −7, hors de la fenêtre, un clic
      * qu'aucun humain ne peut faire. 'tel-quel' (défaut) : comme avant, à l'octet près. 'gauche-recentre' : rail
@@ -578,7 +580,7 @@
       { groupe: 'Pilote', nom: 'Tentatives par vue', valeur: String(pilote.tentativesParVue), pourquoi: 'Relectures d’un rail avant abandon.' },
       { groupe: 'Pilote', nom: 'Budget de capture', valeur: Math.round(pilote.budgetCaptureMs / 1000) + ' s', pourquoi: 'Plafond total pour les deux rails.' },
       { groupe: 'Pilote', nom: 'Cadence de sondage', valeur: pilote.sondageMs + ' ms', pourquoi: 'Intervalle entre deux vérifications pendant une attente.' },
-      { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { echantillon: 'neuf cuts sur dix (un sur dix en référence, tiré au sort)', tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Les cuts de référence surveillent la qualité. Le mode de chaque cut est consigné dans l’export.' },
+      { groupe: 'Pilote', nom: 'Mode rapide (V3)', valeur: { echantillon50: 'quarante-neuf cuts sur cinquante (un sur cinquante en référence, tiré au sort)', echantillon: 'neuf cuts sur dix (un sur dix en référence, tiré au sort)', tirage: 'un cut sur deux, tiré au sort', toujours: 'tous les cuts', reference: 'aucun cut' }[pilote.modeRapide ?? pilote.lectureI1] || 'aucun cut', pourquoi: 'Sur les cuts rapides, Ariane lit, change de vue et pose sans les attentes de prudence ; mêmes contrôles, mêmes points. Les cuts de référence surveillent la qualité. Le mode de chaque cut est consigné dans l’export.' },
       { groupe: 'Continuité', nom: 'Observation en Natif', valeur: continuity.observe ? 'active' : 'coupée', pourquoi: 'Calcule et consigne la pose partie des cuts voisins validés, sans l’appliquer ni l’afficher (amendement n°7).' },
       { groupe: 'Continuité', nom: 'Voisins de la liste d’ESV (B1)', valeur: { ombre: 'en ombre (calculés et consignés, sans effet sur la pose)', actif: 'actifs (dernier recours et garde du premier passage)', off: 'coupés' }[appuisListe] || 'coupés', pourquoi: 'Lit en mémoire de la page ESV le statut et les bords des cuts voisins, pour appuyer la voie d’un cut différé ou contrôler un premier passage sans appui (D-095). Aucune requête ajoutée.' },
       { groupe: 'Continuité', nom: 'Plafond du calage de convention (P1)', valeur: conventionPlafond === 'vertical' ? 'actif sur le vertical seulement (8 mm au plus)' : conventionPlafond ? 'actif (8 mm au plus par axe)' : 'coupé (rail hors domaine posé brut)', pourquoi: 'Un rail dont le décalage de convention dépasse 8 mm est posé avec 8 mm au plus au lieu d’être refusé ; le reste est consigné (D-129). Garde de paire inchangée.' },
