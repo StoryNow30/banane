@@ -14,6 +14,7 @@
  *   PUT  /rails/<table>/<RowKey>        écriture de validation : corps JSON, réponse 204, journalisée
  *   GET  /maquette/ept-data/<part>/<cut>/noeuds.json   nœuds de points d'un cut (chargés par la page AU CHARGEMENT DU CUT, comme
  *        Potree charge ses nœuds ; le chemin `ept-data` est celui que l'observateur 4.9 classe « ressource de points »)
+ *   GET  /maquette/ept/ept-data/<D-X-Y-Z>.bin   CH-077 : nœud EPT par adresse, en-tête de cache réglable (pannes eptCache, eptLatenceMs, eptOctets)
  *   GET/POST /maquette/pannes              pannes simulées (JSON ; POST remplace) : ecritureRefusee {cuts|'toutes', http}, ecritureLenteMs,
  *        listeIllisible, railsAbsents {cuts}, nuageInstable {cuts, dureeMs}, nuageVide {cuts}, nuageSansPoints {cuts} (CH-051 : les nœuds
  *        arrivent, mais sans aucun point près des rails, comme pendant le blocage du chargeur d'ESV du 04/11), changementPartie {apresCut}
@@ -26,12 +27,13 @@ const racine=path.resolve(__dirname,'../..');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.cjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.css':'text/css; charset=utf-8','.png':'image/png','.svg':'image/svg+xml','.woff2':'font/woff2'};
 const PAGE=1000;
 function demarrer(options={}){
-  const journal={ecritures:[],requetes:[],refus:[]};const scenarios=new Map(),idScenario=new Map();const statuts=new Map();let pannes={},lecturesListe=0;
+  const journal={ecritures:[],requetes:[],refus:[],ept:{}};const scenarios=new Map(),idScenario=new Map();const statuts=new Map();let pannes={},lecturesListe=0;
   const concerne=(regle,cut)=>!!regle&&(regle.cuts==='toutes'||Array.isArray(regle.cuts)&&regle.cuts.includes(cut));
   /* Règles de panne normalisées une fois (numéros de cut en nombres, http en nombre, listeIllisible → {apres}) : la page reçoit la forme normalisée. */
   const normaliser=p=>{const out={};for(const [k,v] of Object.entries(p||{})){if(v===null||v===undefined||v===false)continue;
     if(k==='listeIllisible'){out[k]=v===true?{apres:1}:{apres:Number(v.apres??1)};continue;}
-    if(k==='ecritureLenteMs'){out[k]=Number(v)||0;continue;}
+    if(k==='ecritureLenteMs'||k==='eptLatenceMs'||k==='eptOctets'){out[k]=Number(v)||0;continue;}
+    if(k==='eptCache'){out[k]=String(v);continue;}
     const r=typeof v==='object'?{...v}:{};if(r.cuts!=='toutes'&&r.cuts!==undefined)r.cuts=[].concat(r.cuts).map(Number).filter(Number.isFinite);
     if('http' in r)r.http=Number(r.http);if('apresCut' in r)r.apresCut=Number(r.apresCut);if('dureeMs' in r)r.dureeMs=Number(r.dureeMs)||0;out[k]=r;}
     return out;};
@@ -58,11 +60,16 @@ function demarrer(options={}){
          * la page a des nœuds, la capture d'Ariane n'a aucun point dans la découpe. */
         const sansPoints=c.noeuds.map((n,i)=>({source:n.source,positions:[12+i,20,-3, 12.5+i,20.5,-3.2, 13+i,21,-2.8],intensite:[],classe:[]}));
         return json(res,200,{part,cut,noeuds:concerne(pannes.nuageVide,cut)?[]:concerne(pannes.nuageSansPoints,cut)?sansPoints:c.noeuds});}
+      /* CH-077 : nœud EPT par adresse (comme les `ept-data` de Potree) : corps fixe de `eptOctets` (64 Kio), après `eptLatenceMs` (60 ms), avec l'en-tête
+       * de cache `eptCache` (défaut « public, max-age=3600 » ; « no-store » pour l'essai négatif). Le journal compte les requêtes par nœud (`ept`). */
+      m=/^\/maquette\/ept\/ept-data\/(\d+-\d+-\d+-\d+)\.bin$/.exec(p);
+      if(m&&req.method==='GET'){journal.ept[m[1]]=(journal.ept[m[1]]||0)+1;const n=Number(pannes.eptOctets)||65536,lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
+        return setTimeout(()=>{res.writeHead(200,{'content-type':'application/octet-stream','content-length':n,'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(Buffer.alloc(n,7));},lat);}
       if(p==='/maquette/pannes'){if(req.method==='POST'){let brut;try{brut=JSON.parse(Buffer.concat(corps).toString('utf8')||'{}');}catch(e){return json(res,400,{error:'pannes : JSON invalide'});}
           pannes=normaliser(brut);journal.refus.length=0;lecturesListe=0;}
         return json(res,200,pannes);}
       if(p==='/maquette/journal')return json(res,200,journal);
-      if(p==='/maquette/reset'){journal.ecritures.length=0;journal.requetes.length=0;journal.refus.length=0;statuts.clear();pannes={};lecturesListe=0;return json(res,200,{ok:true});}
+      if(p==='/maquette/reset'){journal.ecritures.length=0;journal.requetes.length=0;journal.refus.length=0;journal.ept={};statuts.clear();pannes={};lecturesListe=0;return json(res,200,{ok:true});}
       m=/^\/rails\/([^/]+)$/.exec(p);
       if(m&&req.method==='GET'){const t=tables().find(x=>x.table===m[1]);if(!t)return json(res,404,{error:'table inconnue'});
         /* listeIllisible {apres:N} : les N premières lectures de liste réussissent (le démarrage de la page), les suivantes rendent du texte illisible. */

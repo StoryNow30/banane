@@ -18,6 +18,8 @@ async function ouvrir(options={}){
   const pw=playwright();const navigateur=await pw.chromium.launch({executablePath:executable(),headless:true});
   const page=await navigateur.newPage({viewport:{width:1200,height:800}});const erreurs=[];
   page.on('pageerror',e=>erreurs.push(e.message));page.on('console',m=>{if(m.type()==='error')erreurs.push('console: '+m.text());});
+  /* CH-077 : scripts posés avant ceux de la page (l'observateur d'Ariane, comme le manifeste à document_start). */
+  for(const contenu of options.avantPage||[])await page.addInitScript({content:contenu});
   const q=new URLSearchParams(Object.entries(options.maquette||{}).map(([k,v])=>[k,String(v)]));
   await page.goto(`${serveur.url}/tests/esv-maquette/esv.html?${q}`);
   await page.evaluate(()=>window.__maquette.pret);
@@ -26,7 +28,8 @@ async function ouvrir(options={}){
   async function injecter(proprietaire='essai'){
     await page.addScriptTag({content:`window.__ARIANE_PROPRIETAIRE={id:${JSON.stringify(proprietaire)},version:${JSON.stringify(version)},versionName:'essai'};
       window.__messages=[];addEventListener('message',e=>{if(['banane3:releve','banane3:progress','banane4:native-event'].includes(e.data?.kind))window.__messages.push(e.data);});`});
-    for(const f of PAGE_FILES)await page.addScriptTag({content:lire(f)});}
+    /* CH-077 : liste de fichiers et contenus remplacés (copie patchée de l'adaptateur, réglages) au choix de l'essai. */
+    for(const f of options.fichiersPage||PAGE_FILES)await page.addScriptTag({content:options.contenus?.[f]??lire(f)});}
   const appel=(action,args=[],proprietaire='essai')=>page.evaluate(([action,args,proprietaire])=>new Promise(res=>{const id='i'+Math.random();
     const f=e=>{if(e.data?.kind==='banane3:result'&&e.data.id===id){removeEventListener('message',f);res(e.data);}};addEventListener('message',f);
     postMessage({kind:'banane3:command',id,channel:'essai',proprietaire,action,args,sentAt:Date.now()},location.origin);}),[action,args,proprietaire]);

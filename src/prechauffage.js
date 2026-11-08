@@ -7,7 +7,7 @@
  * coupe suivante, pour qu'ils soient servis par le cache HTTP du navigateur quand Potree les demandera.
  *
  * Ce que fait le module, et rien d'autre :
- *  - coupe suivante : la prochaine ligne NON VALIDÉE après le cut courant dans la table B1 que l'observateur tient déjà dans la page (« Load next non
+ *  - coupe suivante : la prochaine ligne NON VALIDÉE (ni « valid » : invalide ou passée) après le cut courant dans la table B1 que l'observateur tient déjà dans la page (« Load next non
  *    validated cut », le suivant d'ESV après une validation ; aucune requête) ; repère de la table → scène pris sur le cut courant (rails non encore
  *    posés), rigidité vérifiée (écart des deux rails < 5 cm), sinon rien ;
  *  - nœuds : ceux de l'arbre de Potree DÉJÀ CONNUS, ni chargés ni en cours, dont la boîte (repère monde, `matrixWorld`) coupe un cube de `rayonM`
@@ -80,7 +80,7 @@
     const Tl = [0, 1, 2].map(i => ec[i] - L[i]), Tr = [0, 1, 2].map(i => ec[3 + i] - R[i]);
     if (Math.hypot(...[0, 1, 2].map(i => Tl[i] - Tr[i])) > RIGIDITE_M) return { motif: 'repere' };
     const T = [0, 1, 2].map(i => (Tl[i] + Tr[i]) / 2);
-    const suiv = rep.rows.filter(r => Number.isInteger(r?.i) && r.i > coupe && r.s === 'invalid' && bords(r)).sort((a, b) => a.i - b.i)[0];
+    const suiv = rep.rows.filter(r => Number.isInteger(r?.i) && r.i > coupe && r.s !== 'valid' && bords(r)).sort((a, b) => a.i - b.i)[0];
     if (!suiv) return { motif: 'sans-suivante' };
     const e = suiv.e;
     return { predite: suiv.i, left: [0, 1, 2].map(i => e[i] - T[i] + O[i]), right: [0, 1, 2].map(i => e[3 + i] - T[i] + O[i]) };
