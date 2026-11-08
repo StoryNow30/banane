@@ -41,6 +41,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ariane-file"
+version = "0.0.0"
+dependencies = [
+ "ariane-js",
+ "ariane-vba",
+]
+
+[[package]]
 name = "ariane-geometrie"
 version = "0.0.0"
 dependencies = [
