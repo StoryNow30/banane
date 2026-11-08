@@ -33,7 +33,7 @@ let BUILD='inconnu';const BUILD_PRET=(async()=>{try{if(typeof fetch!=='function'
  * de GCV1) : il agit sur la proposition V4.6 consignée pour comparaison. Les
  * sélections sont autorisées en mode « Tenter », que le lot GCV1 force déjà. */
 BananeGeometryBrain.configure({actif:true,autoriserSelectionSansPause:true});
-const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','vendor/ariane-lidar.js','vendor/ariane-lidar-wasm.js','vendor/lidar-rust.js','src/lidar-rust.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/adapter-page.js'];
+const PAGE_FILES=['vendor/capture-core.js','vendor/lidar.js','vendor/ariane-lidar.js','vendor/ariane-lidar-wasm.js','vendor/lidar-rust.js','src/lidar-rust.js','src/core.js','src/settings.js','src/lod-signature.js','src/merge-clouds.js','src/native-lidar.js','src/native-page.js','src/gestes-vue.js','src/deplacement-vue.js','src/prechauffage.js','src/adapter-page.js'];
 const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
 /* B3 (C01, D-102) — COORDINATEUR DU LOT. Les transitions du lot ont un nom et
  * un seul point d'entrée chacune, autour du moteur épinglé (`src/engine.js`,
@@ -288,6 +288,13 @@ function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;con
  for(const k of Object.keys(b)){const v=b[k];if(n>=24||k.length>40||!/^[\w.\-]+$/.test(k))continue;
   if(typeof v==='number'&&Number.isFinite(v)||typeof v==='boolean'||typeof v==='string'&&v.length<=32){out[k]=v;n++;}}
  return out;}
+/* CH-077 (préchauffage du cache pour la coupe suivante, src/prechauffage.js) : entiers bornés, booléens, motif et classe d'une liste fermée ; jamais d'adresse. */
+const OBS_PRECH={prechauffage:{n:['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs'],b:['annule']},
+ 'prechauffage-bilan':{n:['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],b:['juste']},'prechauffage-entetes':{n:['maxAgeS','statut'],b:['etag','lastModified','expires','pragma']}};
+const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide'];
+const OBS_PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+function obsPrechauffage(x){const d=OBS_PRECH[x.kind],out={kind:x.kind};for(const k of d.n)out[k]=obsInt(x[k]);for(const k of d.b)out[k]=typeof x[k]==='boolean'?x[k]:null;
+ if(x.kind==='prechauffage')out.motif=OBS_PRECH_MOTIFS.includes(x.motif)?x.motif:null;if(x.kind==='prechauffage-entetes')out.classe=OBS_PRECH_CLASSES.includes(x.classe)?x.classe:null;return out;}
 function obsFields(x){
  const time={startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),durationMs:obsNum(x.durationMs)};
  switch(x.kind){
@@ -316,6 +323,7 @@ function obsFields(x){
   case 'diag-compteur-bloque':return {kind:'diag-compteur-bloque',valeur:obsInt(x.valeur,1e6),cuts:obsInt(x.cuts,1000),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
   /* CH-062 (patch proposé de la page) : la ligne de base du compteur par les échecs est abandonnée pour cette lecture (compteur SOUS les échecs, observateur absent). */
   case 'ligne-base-repli':return {kind:'ligne-base-repli',motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:obsInt(x.compteur,1e6),echecs:obsInt(x.echecs,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
+  case 'prechauffage':case 'prechauffage-bilan':case 'prechauffage-entetes':return obsPrechauffage(x);
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
 /* 4.9.0.18 (KI-068) : événements et visites du lot seulement (ni Écho, ni Correction : `nativeSessionId`, `manualSessionId`,

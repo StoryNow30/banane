@@ -1,0 +1,46 @@
+--- a/src/adapter-page.js	2026-11-08 21:55:42.258099989 +0000
++++ b/src/adapter-page.js	2026-11-08 21:55:42.274526765 +0000
+@@ -268,6 +268,26 @@
+          const ch=n.children;if(ch)for(const k of Object.keys(ch))if(ch[k])pile.push(ch[k]);}}
+      out.touche=trouves?touche:null;out.trouves=trouves;}catch{out.touche=null;}
+    return out;}
++ /* CH-077 (PROPOSÉ ; réglage `lot.chargement.prechauffer`, ÉTEINT ; D-305 : accord écrit de l'opérateur au moment de livrer) — PRÉCHAUFFER LE CACHE DU
++  * NAVIGATEUR POUR LA COUPE SUIVANTE. Toute la logique est dans src/prechauffage.js (page, pur, essais tests/ch077-*.test.cjs) ; ici, seulement le branchement :
++  *  - à la fin d'une capture réussie (`capture-ready`), `apresCapture` part SANS être attendu : la pose et la validation ne dépendent jamais de lui ;
++  *  - au début de toute capture, le préchauffage en cours est annulé ;
++  *  - il lit le compteur effectif (ligne de base CH-062), l'étiquette de coupe, l'arbre de Potree (lecture seule) et la table B1 de l'observateur
++  *    (`banane5:voisins`, mémoire de la page, aucune requête) ; il ne demande que les nœuds que Potree demanderait, à l'adresse que Potree construit ;
++  *  - ses événements (`prechauffage`, `prechauffage-bilan`, `prechauffage-entetes`) ne portent que des comptes : l'observateur et le service worker
++  *    les réduisent encore (tests/ch077-relais.test.cjs). Réglage éteint ou module absent : `PRECH` vaut null et rien ne change. */
++ function voisinsB1(cut,world){return new Promise(res=>{let fini=false;const id='ch077-'+Math.random().toString(36).slice(2,12);
++   const f=e=>{if(fini||e.source!==window||e.data?.kind!=='banane5:voisins-reponse'||e.data.id!==id)return;fini=true;try{window.removeEventListener('message',f);}catch{}res(e.data);};
++   try{window.addEventListener('message',f);window.postMessage({kind:'banane5:voisins',id,cut,fenetre:10,world},location.origin);}catch{fini=true;res(null);return;}
++   setTimeout(()=>{if(fini)return;fini=true;try{window.removeEventListener('message',f);}catch{}res(null);},400);});}
++ const PRECH=(()=>{try{const M=window.BananePrechauffage,R=window.BananeSettings?.lot?.chargement?.prechauffer;if(!M||typeof M.creer!=='function'||!M.reglage(R))return null;
++   let po=null;const p=M.creer({reglage:R,chargements:()=>chargementsEffectifs(),etiquette:()=>cutLabel(),poster:posterObservateur,image:prochaineImage,maintenant:()=>heurePage()??Date.now(),
++     AbortController:window.AbortController,fetch:(u,i)=>window.fetch(u,i),voisins:voisinsB1,relever:()=>{try{return po?po.takeRecords():[];}catch{return [];}}});
++   try{if(typeof PerformanceObserver==='function'){po=new PerformanceObserver(l=>{try{p.ressources(l.getEntries());}catch{}});po.observe({type:'resource',buffered:false});}}catch{}
++   return p;}catch{return null;}})();
++ function prechaufferApres(expected){if(!PRECH)return;try{const c=context(),R=expected?.rails;
++   const rails={left:R?.left?.positionSceneRelative,right:R?.right?.positionSceneRelative};
++   Promise.resolve(PRECH.apresCapture({partie:expected?.identity?.part??null,coupe:expected?.identity?.cut??null,rails,origine:c.frame?.origin,pointclouds:c.viewer?.scene?.pointclouds||[]})).catch(()=>{});}catch{}}
+  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
+    const c=nativeContext(),railInputs={},associationByRail={};
+    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
+@@ -457,7 +477,7 @@
+    if(!bloque){compteurCuts.episode=false;return;}
+    if(compteurCuts.episode)return;compteurCuts.episode=true;
+    posterObservateur({kind:'diag-compteur-bloque',valeur:n,cuts:N,cut:l.cut,pageMs:heurePage()});}catch{}}
+- async function capture(expected,progress=()=>{}){noterCompteurDebutCut();try{installerOmbreEsv();}catch{}cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
++ async function capture(expected,progress=()=>{}){try{PRECH?.annuler('capture');}catch{}noterCompteurDebutCut();try{installerOmbreEsv();}catch{}cancelled=false;const captures=[],attempts=[],startedAt=Date.now();
+    const maxAttemptsPerView=P.tentativesParVue,stableForMs=P.stabiliteMs,budgetMs=P.budgetCaptureMs,lecture=lectureDuCut(expected?.identity);
+    const guard=()=>{if(cancelled)throw Error('Lecture LiDAR annulée (arrêt demandé ou délai dépassé).');const now=assertExpected(expected);
+      if(!K.equalPoses(now.rails,expected.rails))throw Error('Rails modifiés pendant la lecture.');
+@@ -508,6 +528,7 @@
+     * « Lecture LiDAR instable », que le lot traite en pause reprenable. */
+    const nodes=data.nodes.length,compacted=M3.compactNodes(data),bytes=M3.messageBytes(data);
+    if(bytes>M3.MESSAGE_BUDGET)throw Error(`Lecture LiDAR instable : capture de ${Number.isFinite(bytes)?Math.round(bytes/1048576)+' Mo':'taille illisible'}, trop grosse pour un message Chrome (64 Mo) — ${data.pointsSceneRelative.length} points, ${nodes} nœuds LiDAR chargés dans la vue${compacted?`, dont ${compacted} réduits`:''}. Attends la fin du chargement ou rapproche la vue du cut, puis clique sur Reprendre.`);
++   prechaufferApres(expected);   /* CH-077 : non attendu, réglage éteint = rien */
+    progress('capture-ready',{attempts:attempts.length,points:data.pointsSceneRelative.length,nodes,compacted,bytes,lecture,regleLecture:data.readStrategy.regleLecture});return data;
+  }
+  /* Projection d'un point scene-relative dans la vue courante. Définition UNIQUE

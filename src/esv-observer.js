@@ -201,6 +201,19 @@
    geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows};
  }
 
+ /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
+ const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs'],
+  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],'prechauffage-entetes':['maxAgeS','statut']};
+ const PRECH_BOOLEENS={'prechauffage':['annule'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
+ const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+ const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1};
+ function reduirePrechauffage(k,x){const out={kind:k};
+  for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;
+  for(const c of PRECH_BOOLEENS[k])out[c]=typeof x[c]==='boolean'?x[c]:null;
+  if(k==='prechauffage')out.motif=PRECH_MOTIFS.includes(x.motif)?x.motif:null;
+  if(k==='prechauffage-entetes')out.classe=PRECH_CLASSES.includes(x.classe)?x.classe:null;
+  return out;}
  function install(win){
   if(!win||win.__banane5ObserverInstalled)return null;
   /* Dans le monde ISOLÉ (navigateur trop ancien pour `world:'MAIN'` en manifeste, qui
@@ -368,7 +381,7 @@
    else if(d.kind==='banane5:snapshot')snapshot(d.afterDenial===true);
    /* 4.9.5.3 (S6) : l'adaptateur de la page (même monde) poste ses relevés (écouteurs jQuery en ombre, compteur bloqué) ; réduits ici. */
    else if(d.kind==='banane5:evt'&&d.event&&typeof d.event==='object'){
-    const x=d.event,k=typeof x.kind==='string'?x.kind:'';if(!Object.hasOwn(EVT_KINDS,k)||!enabled)return;
+    const x=d.event,k=typeof x.kind==='string'?x.kind:'';if(Object.hasOwn(PRECH_CHAMPS,k)){if(enabled)record(reduirePrechauffage(k,x));return;}/* CH-077 */if(!Object.hasOwn(EVT_KINDS,k)||!enabled)return;
     if(k==='esv-event'){if(!releveOn('esvEvents')||!EVT_KINDS[k].includes(x.nom))return;
      record({kind:k,nom:x.nom,args:argsReduits(x.args),pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null,...(Number.isInteger(x.perdus)&&x.perdus>0?{perdus:Math.min(x.perdus,1e6)}:{})});}
     else if(k==='diag-compteur-bloque'){if(!releveOn('compteurBloque'))return;

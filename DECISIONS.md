@@ -3527,3 +3527,9 @@ Complète D-299 sans la modifier.
 ## D-306 — Plus de Codex ni de Cursor (opérateur, 08/11)
 - Codex et Cursor ne travaillent plus sur Ariane. Tous les exécutants sont des sessions Claude lancées par l'intégrateur (`send_message` à `@parent`). Le droit de lecture de `banane-data` accordé à Codex et Cursor (D-253, D-301) tombe avec eux.
 - Le plan ORCH-305 garde ses chantiers ; les tâches prévues pour Codex (clôture CH-064, module 2 de CH-075, étude CH-078) passent à des sessions Claude ; CH-072 et CH-073 (Cursor) sont fermés sans fusion, branches gardées.
+
+## D-307 — Piste 1 abandonnée ; préchauffage allumé pour un lot d'essai (opérateur, 08/11)
+- Piste 1 abandonnée (« je suis d'accord ») : la mesure de « Vision 3 » montre que Potree n'a qu'un ou deux nœuds en vol au plus ; plus de téléchargements en parallèle ne gagnerait rien.
+- Piste 3 (CH-077, préchauffer le cache du navigateur pour la coupe suivante) : l'opérateur a répondu « go » à la proposition de l'intégrer et de l'ALLUMER dans « Vision 5 » pour un lot d'essai, avec le réglage sobre (rayon 0,75 m : environ 6 nœuds, 0,4 Mo par coupe au banc). C'est l'accord écrit demandé par D-305 pour des requêtes ajoutées au serveur d'ESV : elles visent les nœuds que Potree demanderait, à l'adresse qu'il construit.
+- Mesures qui fondent la décision (banc de la maquette CH-077, ÉTABLI) : −45 % sur la chaîne d'étages, 6 nœuds sur 14 de la coupe suivante servis par le cache, prédiction de la coupe suivante juste 45/45, 0 requête de plus au rayon 0,75. « Vision 4 » (partie 7, ÉTABLI) : 72 nœuds servis par le cache pendant la relecture, donc le serveur autorise la mise en cache.
+- Le préchauffage ne lit ni ne commande la pose ; il part sans être attendu et s'annule au début de chaque capture. `lot.chargement.prechauffer.actif:false` le coupe entièrement. Le garder allumé après le lot d'essai demandera une nouvelle décision, au vu de ses chiffres.
