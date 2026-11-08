@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* CH-064-D : banc de parité de la décision DANS CHROMIUM (référence, plan § 1), rapide sur un gros corpus.
- *   CH064D_MODULES=critere,signal node tools/ch064-d-chromium.cjs [--json SORTIE] [--lot 20]
+ *   CH064D_MODULES=critere,signal node tools/ch064-d-chromium.cjs [--json SORTIE] [--lot 20] [--tranche 3000] [--saut N]
  * Même adaptateur (ariane-rs/parite/decision.cjs), mêmes cas, même comparateur (tools/ch064-comparer.cjs) que
  * tools/ch064-parite.cjs --chromium ; seule différence : les trames canoniques des sorties sont hachées DANS la page
  * (SHA-256 par cas, crypto.subtle), seuls les condensés reviennent ; l'empreinte d'un côté est le SHA-256 de la suite de
@@ -12,7 +12,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
-async function executer(adaptateur,octets,{lot=20,limite=Infinity}={}){
+async function unePage(adaptateur,octets,{lot=20,limite=Infinity,saut=0,lotsMax=Infinity}={}){
  const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info']});
  const journal=[];let plantage=null; // CH-064 (chef) : diagnostic du plantage de la page (demande de l'intégrateur)
  try{const p=await b.newPage();
@@ -51,19 +51,44 @@ async function executer(adaptateur,octets,{lot=20,limite=Infinity}={}){
     console.error('PLANTAGE '+JSON.stringify(diag));throw e;}
    const apres=await p.evaluate(()=>({...window.__banc.coeur.etat(),tas:performance.memory?performance.memory.usedJSHeapSize:null}));
    journal.push({lot:lots,modules,entreeMax,memoire:[avant.memoire,apres.memoire],reinst:apres.reinstanciations,hauteEau:apres.hauteEau,tas:apres.tas});
-   if(lots%20===0)console.error('lot '+lots+' '+JSON.stringify(journal.at(-1)));
+   if((saut+lots)%20===0)console.error('lot '+(saut+lots)+' '+JSON.stringify(journal.at(-1)));
    tampon=[];for(const [x,y] of d){h.js.update(x);h.rs.update(y);}};
-  for(const c of adaptateur.cas({})){if(n++>=limite)break;tampon.push(c);if(tampon.length>=lot)await vider();}
+  /* tranche (D-305, demande de l'intégrateur) : on saute les `saut` premiers lots, on s'arrête après `lotsMax` lots (page neuve à la tranche suivante) */
+  let aSauter=saut*lot,fini=true;
+  for(const c of adaptateur.cas({})){if(aSauter>0){aSauter--;continue;}if(n++>=limite)break;tampon.push(c);if(tampon.length>=lot){await vider();if(lots>=lotsMax){fini=false;break;}}}
   await vider();
   const r=await p.evaluate(nav=>{const b=window.__banc,q=(a,x)=>{if(!a.length)return null;const s=a.slice().sort((u,v)=>u-v);return s[Math.min(s.length-1,Math.floor(x*s.length))];};
    return {casChargeNaN:b.chargeNaN,tramesDifferentes:b.trames,cas:b.cas,identiques:b.identiques,ecarts:b.ecarts,temps:{jsMediane:q(b.ms.js,.5),jsP95:q(b.ms.js,.95),rsMediane:q(b.ms.rs,.5),rsP95:q(b.ms.rs,.95)},
     memoireCoeur:b.coeur.etat(),tasJsOctets:performance.memory?performance.memory.usedJSHeapSize:null,bilanAdaptateur:(0,eval)(nav.bilan)(b.etat)};},nav);
   const empreintes={js:h.js.digest('hex'),rs:h.rs.digest('hex')};
-  return {format:'ch064-parite-v1',moteur:'chromium',module:adaptateur.nom,navigateur:ua,...r,empreintes,verdict:r.cas>0&&r.identiques===r.cas&&empreintes.js===empreintes.rs?'IDENTIQUE':'ÉCART'};
+  const tas=journal.map(j=>j.tas).filter(Number.isFinite);
+  return {format:'ch064-parite-v1',moteur:'chromium',module:adaptateur.nom,navigateur:ua,lotDebut:saut,lotsFaits:lots,fini,tasMax:tas.length?Math.max(...tas):null,tasFin:tas.at(-1)??null,hauteEauMax:journal.length?Math.max(...journal.map(j=>j.hauteEau||0)):null,...r,empreintes,verdict:r.cas>0&&r.identiques===r.cas&&empreintes.js===empreintes.rs?'IDENTIQUE':'ÉCART'};
  }finally{await b.close();}}
-module.exports={executer};
+/* Exécute par tranches de `tranche` lots, une page neuve chacune ; le fichier `json` est réécrit après chaque tranche (verdict PARTIEL tant que le corpus n'est pas fini).
+ * Reprise : `--saut N` (N = lots déjà faits) relit les tranches du fichier. Le tas par tranche (tasMax, tasFin) dit si la fuite suit la page (façade) ou l'outil. */
+async function executer(adaptateur,octets,{lot=20,limite=Infinity,saut=0,tranche=3000,json=null}={}){
+ let tranches=[];
+ if(saut>0){if(!json||!fs.existsSync(json))throw new Error('--saut demande le fichier de sortie (--json) des tranches déjà faites');
+  const t=JSON.parse(fs.readFileSync(json,'utf8')).tranches||[];tranches=t.filter(x=>x.lotDebut+x.lotsFaits<=saut);
+  if(tranches.reduce((a,x)=>a+x.lotsFaits,0)!==saut)throw new Error('les tranches du fichier ne couvrent pas exactement '+saut+' lots');}
+ const agreger=(termine)=>{const T=tranches,cas=T.reduce((a,x)=>a+x.cas,0),identiques=T.reduce((a,x)=>a+x.identiques,0),med=k=>{const v=T.map(x=>x.temps[k]).filter(Number.isFinite).sort((a,b)=>a-b);return v.length?v[v.length>>1]:null;};
+  const emp=k=>crypto.createHash('sha256').update(T.map(x=>x.empreintes[k]).join('')).digest('hex'),empreintes={js:emp('js'),rs:emp('rs')},egales=T.every(x=>x.empreintes.js===x.empreintes.rs);
+  return {format:'ch064-parite-v2-tranches',moteur:'chromium',module:adaptateur.nom,navigateur:T[0]?.navigateur,lot,tranche,termine,lotsFaits:T.reduce((a,x)=>a+x.lotsFaits,0),cas,identiques,
+   casChargeNaN:T.reduce((a,x)=>a+x.casChargeNaN,0),ecarts:T.flatMap(x=>x.ecarts).slice(0,20),tramesDifferentes:T.flatMap(x=>x.tramesDifferentes).slice(0,10),
+   temps:{jsMediane:med('jsMediane'),jsP95:med('jsP95'),rsMediane:med('rsMediane'),rsP95:med('rsP95'),note:'médiane des médianes de tranche'},
+   tasMaxOctets:Math.max(...T.map(x=>x.tasMax||0)),hauteEauMax:Math.max(...T.map(x=>x.hauteEauMax||0)),empreintes,
+   verdict:!termine?'PARTIEL':cas>0&&identiques===cas&&egales?'IDENTIQUE':'ÉCART',tranches:T};};
+ const ecrire=termine=>{const r=agreger(termine);if(json)fs.writeFileSync(json,JSON.stringify(r,null,1)+'\n');return r;};
+ let s=saut;
+ for(;;){let r;
+  try{r=await unePage(adaptateur,octets,{lot,limite:limite-tranches.reduce((a,x)=>a+x.cas,0),saut:s,lotsMax:tranche});}
+  catch(e){console.error('Arrêt dans la tranche commençant au lot '+s+' : reprendre avec --saut '+s+' (tranches faites gardées dans le fichier)');ecrire(false);throw e;}
+  if(r.cas>0)tranches.push(r);s+=r.lotsFaits;console.error('tranche finie : lots '+r.lotDebut+'..'+s+', cas '+r.cas+', tas max '+r.tasMax+', tas fin '+r.tasFin+', haute eau '+r.hauteEauMax);
+  if(r.fini||r.cas===0)break;ecrire(false);}
+ return ecrire(true);}
+module.exports={executer,unePage};
 if(require.main===module){const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null;
  const ad=require(path.join(RACINE,'ariane-rs','parite','decision.cjs')),w=construire({silencieux:true});
- executer(ad,fs.readFileSync(w),{lot:Number(arg('--lot')||20),limite:arg('--limite')?Number(arg('--limite')):Infinity}).then(r=>{
+ executer(ad,fs.readFileSync(w),{lot:Number(arg('--lot')||20),limite:arg('--limite')?Number(arg('--limite')):Infinity,saut:Number(arg('--saut')||0),tranche:Number(arg('--tranche')||3000),json:arg('--json')}).then(r=>{
   r.sources=Object.fromEntries(ad.sources.map(s=>[s,crypto.createHash('sha256').update(fs.readFileSync(path.join(RACINE,s))).digest('hex')]));
   const s=JSON.stringify(r,null,1);if(arg('--json'))fs.writeFileSync(arg('--json'),s+'\n');console.log(s);if(r.verdict!=='IDENTIQUE')process.exitCode=1;}).catch(e=>{console.error(e);process.exit(1);});}
