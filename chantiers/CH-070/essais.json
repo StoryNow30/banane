@@ -1,0 +1,218 @@
+{
+ "format": "ch070-essais-v1",
+ "debut": "2026-11-06T19:29:21.616Z",
+ "etapes": [
+  {
+   "nom": "cargo test",
+   "ok": true,
+   "secondes": 0.2,
+   "detail": "19 passed"
+  },
+  {
+   "nom": "cargo clippy (natif)",
+   "ok": true,
+   "secondes": 0.2,
+   "detail": "aucun avertissement"
+  },
+  {
+   "nom": "cargo clippy (wasm32)",
+   "ok": true,
+   "secondes": 0.1,
+   "detail": "aucun avertissement"
+  },
+  {
+   "nom": "parité session-date (node)",
+   "ok": true,
+   "secondes": 11.4,
+   "detail": {
+    "cas": 290008,
+    "identiques": 290008,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 124246,
+    "replis": 165762
+   }
+  },
+  {
+   "nom": "parité session-date (chromium)",
+   "ok": true,
+   "secondes": 42.4,
+   "detail": {
+    "cas": 290008,
+    "identiques": 290008,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 124246,
+    "replis": 165762
+   }
+  },
+  {
+   "nom": "parité session-historique (node)",
+   "ok": true,
+   "secondes": 8.5,
+   "detail": {
+    "cas": 1158,
+    "identiques": 1158,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 1149,
+    "replis": 9
+   }
+  },
+  {
+   "nom": "parité session-historique (chromium)",
+   "ok": true,
+   "secondes": 13.6,
+   "detail": {
+    "cas": 1158,
+    "identiques": 1158,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 1149,
+    "replis": 9
+   }
+  },
+  {
+   "nom": "parité session-historique (chromium fr-FR)",
+   "ok": true,
+   "secondes": 14,
+   "detail": {
+    "cas": 1158,
+    "identiques": 1158,
+    "navigateur": "Chrome/153.0.0.0 fr-FR",
+    "servisParLeCoeur": 1149,
+    "replis": 9
+   }
+  },
+  {
+   "nom": "parité session-native (node)",
+   "ok": true,
+   "secondes": 420.3,
+   "detail": {
+    "cas": 65547,
+    "identiques": 65547,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 51551,
+    "replis": 1354
+   }
+  },
+  {
+   "nom": "parité session-native (chromium)",
+   "ok": true,
+   "secondes": 2978.3,
+   "detail": {
+    "cas": 65547,
+    "identiques": 65547,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 49014,
+    "replis": 1354
+   }
+  },
+  {
+   "nom": "parité session-noyau (node)",
+   "ok": true,
+   "secondes": 45.9,
+   "detail": {
+    "cas": 4081,
+    "identiques": 4081,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 3038,
+    "replis": 399
+   }
+  },
+  {
+   "nom": "parité session-noyau (chromium)",
+   "ok": true,
+   "secondes": 73,
+   "detail": {
+    "cas": 4081,
+    "identiques": 4081,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 3038,
+    "replis": 399
+   }
+  },
+  {
+   "nom": "parité session-observateur (node)",
+   "ok": true,
+   "secondes": 11.2,
+   "detail": {
+    "cas": 2461,
+    "identiques": 2461,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 2461,
+    "replis": 0
+   }
+  },
+  {
+   "nom": "parité session-observateur (chromium)",
+   "ok": true,
+   "secondes": 15.3,
+   "detail": {
+    "cas": 2461,
+    "identiques": 2461,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 2461,
+    "replis": 0
+   }
+  },
+  {
+   "nom": "parité session-reconstruction (node)",
+   "ok": true,
+   "secondes": 310.2,
+   "detail": {
+    "cas": 18455,
+    "identiques": 18455,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 18078,
+    "replis": 377
+   }
+  },
+  {
+   "nom": "parité session-reconstruction (chromium)",
+   "ok": true,
+   "secondes": 1063.2,
+   "detail": {
+    "cas": 18455,
+    "identiques": 18455,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 18078,
+    "replis": 377
+   }
+  },
+  {
+   "nom": "parité session-resume (node)",
+   "ok": true,
+   "secondes": 283.2,
+   "detail": {
+    "cas": 1652,
+    "identiques": 1652,
+    "navigateur": "node v22.23.4",
+    "servisParLeCoeur": 1553,
+    "replis": 99
+   }
+  },
+  {
+   "nom": "parité session-resume (chromium)",
+   "ok": true,
+   "secondes": 58.8,
+   "detail": {
+    "cas": 1624,
+    "identiques": 1624,
+    "navigateur": "Chrome/153.0.0.0 en-US",
+    "servisParLeCoeur": 1545,
+    "replis": 79
+   }
+  },
+  {
+   "nom": "parité session-resume (chromium fr-FR)",
+   "ok": true,
+   "secondes": 59.2,
+   "detail": {
+    "cas": 1624,
+    "identiques": 1624,
+    "navigateur": "Chrome/153.0.0.0 fr-FR",
+    "servisParLeCoeur": 1545,
+    "replis": 79
+   }
+  }
+ ],
+ "fin": "2026-11-06T20:59:30.512Z",
+ "verdict": "VERT"
+}

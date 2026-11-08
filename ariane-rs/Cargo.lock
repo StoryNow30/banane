@@ -69,5 +69,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ariane-session"
+version = "0.0.0"
+dependencies = [
+ "ariane-capture",
+ "ariane-js",
+ "ariane-vba",
+]
+
+[[package]]
 name = "ariane-vba"
 version = "0.0.0"
