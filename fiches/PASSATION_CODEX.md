@@ -9,7 +9,7 @@
   - Ariane n'envoie jamais SKIP et ne valide jamais un cut non résolu ;
   - pas de nom de modèle d'IA dans les fichiers ni les commits ;
   - `manifest.json`, les fichiers gelés (`src/geometry.js`, `vendor/lidar.js`), un réglage qui change une pose ou une validation, toute dépense, toute suppression de données, un merge dans `main` ou une étiquette : seulement sur accord écrit de l'opérateur, consigné en D-xxx.
-- Le prochain numéro de décision est **D-302**.
+- Le prochain numéro de décision est **D-303**. Maquette bloquée par la politique du navigateur : voir D-302.
 
 ## Avant chaque paquet (preuves obligatoires)
 1. `node tools/verify.cjs`, seul sur la machine (environ 15 min) ; commiter `audit/verification.*` qu'il produit, jamais à la main.

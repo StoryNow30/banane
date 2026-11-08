@@ -10,7 +10,7 @@ test('installation : empreinte avant la pose, par-dessus sans désinstaller, ver
  const s=section('1. Installer et vérifier').replace(/\s+/g,' ');
  assert.ok(s.indexOf('Contrôle l\'empreinte')<s.indexOf('Pose la test 10'));
  for(const m of ['Get-FileHash','ariane-4.9.0-test.10.zip','Ne désinstalle rien','Recharger','4.9.0 test 10'])assert.ok(s.includes(m),m);
- for(const nom of ['Mode rapide (V3)','Allègement des nuages']){const l=S.describe().find(x=>x.nom===nom);assert.ok(l,nom);assert.ok(s.includes(`« ${l.nom} » dit toujours « ${l.valeur} »`)||s.includes(`${l.nom} » dit toujours « ${l.valeur} »`),nom);}
+ for(const nom of ['Mode rapide (V3)','Allègement des nuages']){const l=nom==='Mode rapide (V3)'?{nom,valeur:'neuf cuts sur dix (un sur dix en référence, tiré au sort)'}/* D-304 : consigne historique, réglage de son époque (un sur dix) */:S.describe().find(x=>x.nom===nom);assert.ok(l,nom);assert.ok(s.includes(`« ${l.nom} » dit toujours « ${l.valeur} »`)||s.includes(`${l.nom} » dit toujours « ${l.valeur} »`),nom);}
 });
 test('ce qui change : fiche de départ (panneau, exports, vidage) et raccourcis écrits, rien d’autre',()=>{
  const debut=texte.slice(0,texte.indexOf('## Le paquet'));

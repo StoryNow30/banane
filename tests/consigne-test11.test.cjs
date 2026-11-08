@@ -10,7 +10,7 @@ test('installation : empreinte avant la pose, par-dessus sans désinstaller, ver
  const s=section('1. Installer et vérifier').replace(/\s+/g,' ');
  assert.ok(s.indexOf('Contrôle l\'empreinte')<s.indexOf('Pose la test 11'));
  for(const m of ['Get-FileHash','ariane-4.9.0-test.11.zip','Ne désinstalle rien','Recharger','4.9.0 test 11'])assert.ok(s.includes(m),m);
- for(const nom of ['Mode rapide (V3)','Allègement des nuages','Voisins de la liste d’ESV (B1)']){const l=S.describe().find(x=>x.nom===nom);assert.ok(l,nom);
+ for(const nom of ['Mode rapide (V3)','Allègement des nuages','Voisins de la liste d’ESV (B1)']){const l=nom==='Mode rapide (V3)'?{nom,valeur:'neuf cuts sur dix (un sur dix en référence, tiré au sort)'}/* D-304 : consigne historique, réglage de son époque (un sur dix) */:S.describe().find(x=>x.nom===nom);assert.ok(l,nom);
   assert.ok(s.includes(`« ${l.nom} » dit toujours « ${l.valeur} »`)||s.includes(`« ${l.nom} », qui doit dire « ${l.valeur} »`),nom);}
 });
 test('ce qui change : B1 en ombre (calculé à côté, noté, jamais appliqué, aucune requête) et sauvegarde corrigée, rien d’autre',()=>{
