@@ -1,7 +1,7 @@
 'use strict';
 /* CH-064-D : entrées RÉELLES des modules de décision, reconstruites des exports de banane-data (collections des 04, 05, 06/11).
  *   cas(modules, {max}) : itérable de {id, module, f, args} (id sans donnée identifiante : rang, partie, cut).
- * Sources lues dans les zips, jamais copiées dans le dépôt (extrait réduit mis en cache dans ariane-rs/dist/, non versionné) :
+ * Sources lues dans les zips, jamais copiées dans le dépôt (extrait réduit mis en cache dans BANANE_DATA/.cache/ch064/) :
  *   - journaux (`ariane-journal-*.json`) : événements relecture-ombre (entrée et sortie du critère de la relecture),
  *     garde-apres-differe(-suivant), passe-differes-ombre / -ecriture (décalages de la passe), relecture-debut (zones),
  *     proposed / defer-finalized (cuts posés et différés du lot, par partie) ;
@@ -12,17 +12,18 @@
  * relecture-ombre (écart local du repère profil, hauteur apprise, étage, appuis, confiance) : c'est une entrée du module
  * (positions de la décision), pas une sortie comparée. */
 const fs=require('node:fs'),path=require('node:path'),v8=require('node:v8'),{execFileSync}=require('node:child_process');
-const {zips,entrees}=require('./ch064-corpus.cjs');
-const RACINE=path.resolve(__dirname,'..'),CACHE=path.join(RACINE,'ariane-rs','dist','ch064-d-reel.v8');
+const {zips,entrees,RACINE:DONNEES}=require('./ch064-corpus.cjs');
+const RACINE=path.resolve(__dirname,'..'),CACHE=path.join(DONNEES,'.cache','ch064','ch064-d-reel.v8');
 const MOTIF=/^2026-11-0[456]_/;
 const C=require('../vendor/capture-core.js'),Critere=require('../src/relecture-critere.js'),Signal=require('../src/relecture-signal.js');
 const lireJson=(z,e)=>JSON.parse(execFileSync('unzip',['-p',z,e],{maxBuffer:2**31-1}).toString('utf8'));
 const TYPES=new Set(['relecture-ombre','relecture-debut','garde-apres-differe','garde-apres-differe-suivant','passe-differes-ombre','passe-differes-ecriture','regles-metier-ombre','b1-ombre']);
 /* Extrait réduit (une fois, mis en cache). */
 function extrait(){
+ const archives=zips(MOTIF);
  if(fs.existsSync(CACHE))return v8.deserialize(fs.readFileSync(CACHE));
  const X={journaux:[],listes:[],verts:[],nuages:[]};const vusN=new Set();
- for(const z of zips(MOTIF))for(const e of entrees(z)){
+ for(const z of archives)for(const e of entrees(z)){
   if(/journal/.test(e)){const j=lireJson(z,e),ev=[],lot={};
    for(const x of j.events||[]){if(TYPES.has(x.type))ev.push(x);
     if((x.type==='proposed'||x.type==='defer-finalized')&&Number.isInteger(x.identity?.part)){const p=x.identity.part,L=lot[p]||(lot[p]={poses:new Set(),differes:new Set()});
@@ -34,6 +35,7 @@ function extrait(){
    for(const c of j.clouds||[]){if(c.format!=='banane-lidar-capture-v1'||vusN.has(c.captureId))continue;vusN.add(c.captureId);
     X.nuages.push({session:c.sessionId,at:c.capturedAt,identity:{part:c.identity?.part,cut:c.identity?.cut},rails:c.rails,readStrategy:c.readStrategy,
      quality:c.quality?{perRail:c.quality.perRail}:undefined,points:Array.isArray(c.pointsSceneRelative)?c.pointsSceneRelative.length:null});}}}
+ if(!Object.values(X).some(v=>v.length))throw Error('Corpus vide : aucun document de décision exploitable');
  fs.mkdirSync(path.dirname(CACHE),{recursive:true});fs.writeFileSync(CACHE,v8.serialize(X));return X;}
 const garder=(o,ks)=>Object.fromEntries(ks.filter(k=>o[k]!==undefined).map(k=>[k,o[k]]));
 const PROPOSES=JSON.parse(fs.readFileSync(path.join(RACINE,'datasets','relecture-reglages-proposes.json'),'utf8'));

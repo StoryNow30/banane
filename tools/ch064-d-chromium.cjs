@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* CH-064-D : banc de parité de la décision DANS CHROMIUM (référence, plan § 1), rapide sur un gros corpus.
- *   CH064D_MODULES=critere,signal node tools/ch064-d-chromium.cjs [--json SORTIE] [--lot 200]
+ *   CH064D_MODULES=critere,signal node tools/ch064-d-chromium.cjs [--json SORTIE] [--lot 20]
  * Même adaptateur (ariane-rs/parite/decision.cjs), mêmes cas, même comparateur (tools/ch064-comparer.cjs) que
  * tools/ch064-parite.cjs --chromium ; seule différence : les trames canoniques des sorties sont hachées DANS la page
  * (SHA-256 par cas, crypto.subtle), seuls les condensés reviennent ; l'empreinte d'un côté est le SHA-256 de la suite de
@@ -12,7 +12,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
-async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
+async function executer(adaptateur,octets,{lot=20,limite=Infinity}={}){
  const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info']});
  const journal=[];let plantage=null; // CH-064 (chef) : diagnostic du plantage de la page (demande de l'intégrateur)
  try{const p=await b.newPage();
@@ -64,6 +64,6 @@ async function executer(adaptateur,octets,{lot=200,limite=Infinity}={}){
 module.exports={executer};
 if(require.main===module){const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null;
  const ad=require(path.join(RACINE,'ariane-rs','parite','decision.cjs')),w=construire({silencieux:true});
- executer(ad,fs.readFileSync(w),{lot:Number(arg('--lot')||200),limite:arg('--limite')?Number(arg('--limite')):Infinity}).then(r=>{
+ executer(ad,fs.readFileSync(w),{lot:Number(arg('--lot')||20),limite:arg('--limite')?Number(arg('--limite')):Infinity}).then(r=>{
   r.sources=Object.fromEntries(ad.sources.map(s=>[s,crypto.createHash('sha256').update(fs.readFileSync(path.join(RACINE,s))).digest('hex')]));
   const s=JSON.stringify(r,null,1);if(arg('--json'))fs.writeFileSync(arg('--json'),s+'\n');console.log(s);if(r.verdict!=='IDENTIQUE')process.exitCode=1;}).catch(e=>{console.error(e);process.exit(1);});}

@@ -210,22 +210,11 @@ function mince(e) {
   }
   return o;
 }
-function* zips(root) {
-  const { readdirSync, statSync } = fs;
-  for (const d of readdirSync(root)) {
-    const p = path.join(root, d);
-    if (!statSync(p).isDirectory()) continue;
-    const raw = path.join(p, 'raw');
-    const dir = fs.existsSync(raw) ? raw : p;
-    for (const f of readdirSync(dir)) if (f.endsWith('.zip')) yield path.join(dir, f);
-  }
-}
 async function corpus(c) {
   const { execFileSync } = require('node:child_process');
-  const root = process.env.BANANE_DATA || '/tmp/banane-data/collections';
   const bilan = { journaux: 0, listes: 0, echos: 0, etats: 0 };
   let n = 0;
-  for (const z of zips(root)) {
+  for (const z of require('./ch064-corpus.cjs').zips(/./)) {
     const noms = execFileSync('unzip', ['-Z1', z], { encoding: 'utf8' }).split('\n');
     for (const e of noms) {
       const b = path.basename(e);
@@ -279,6 +268,7 @@ async function corpus(c) {
       if (ecarts.length > 30) return bilan;
     }
   }
+  if (!Object.values(bilan).some(x => x > 0)) throw Error('Corpus vide : aucun document d’état exploitable');
   return bilan;
 }
 async function main() {
@@ -293,4 +283,5 @@ async function main() {
   console.log(JSON.stringify(res, null, 1));
   if (!ok) process.exitCode = 1;
 }
-main();
+module.exports={corpus};
+if(require.main===module)main().catch(e=>{console.error(e.message);process.exitCode=1;});
