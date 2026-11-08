@@ -1,0 +1,1163 @@
+{
+ "banc": "ch077",
+ "date": "2026-11-08",
+ "repetitions": 15,
+ "latenceMs": 60,
+ "mortMs": 900,
+ "chargeDepart": 0.22,
+ "coeurs": 4,
+ "resume": {
+  "sans": {
+   "captureMs": {
+    "mediane": 2001,
+    "p90": 2062,
+    "n": 15
+   },
+   "poseMs": {
+    "mediane": 15,
+    "p90": 20,
+    "n": 15
+   },
+   "validationMs": {
+    "mediane": 88,
+    "p90": 89,
+    "n": 15
+   },
+   "chaineMs": {
+    "mediane": 267,
+    "p90": 275,
+    "n": 15
+   },
+   "noeuds": {
+    "mediane": 14,
+    "p90": 14,
+    "n": 15
+   },
+   "cache": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "requetes": {
+    "mediane": 14,
+    "p90": 14,
+    "n": 15
+   },
+   "prechauffes": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "octets": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "frontiere": {
+    "mediane": null,
+    "p90": null,
+    "n": 0
+   },
+   "candidats": {
+    "mediane": null,
+    "p90": null,
+    "n": 0
+   }
+  },
+  "avec": {
+   "captureMs": {
+    "mediane": 2031,
+    "p90": 2092,
+    "n": 15
+   },
+   "poseMs": {
+    "mediane": 17,
+    "p90": 29,
+    "n": 15
+   },
+   "validationMs": {
+    "mediane": 88,
+    "p90": 91,
+    "n": 15
+   },
+   "chaineMs": {
+    "mediane": 146,
+    "p90": 157,
+    "n": 15
+   },
+   "noeuds": {
+    "mediane": 14,
+    "p90": 14,
+    "n": 15
+   },
+   "cache": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "requetes": {
+    "mediane": 20,
+    "p90": 20,
+    "n": 15
+   },
+   "prechauffes": {
+    "mediane": 24,
+    "p90": 24,
+    "n": 15
+   },
+   "octets": {
+    "mediane": 1572864,
+    "p90": 1572864,
+    "n": 15
+   },
+   "frontiere": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "candidats": {
+    "mediane": 38,
+    "p90": 38,
+    "n": 15
+   }
+  },
+  "finir": {
+   "captureMs": {
+    "mediane": 2068,
+    "p90": 2121,
+    "n": 15
+   },
+   "poseMs": {
+    "mediane": 18,
+    "p90": 24,
+    "n": 15
+   },
+   "validationMs": {
+    "mediane": 89,
+    "p90": 92,
+    "n": 15
+   },
+   "chaineMs": {
+    "mediane": 147,
+    "p90": 150,
+    "n": 15
+   },
+   "noeuds": {
+    "mediane": 14,
+    "p90": 14,
+    "n": 15
+   },
+   "cache": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "requetes": {
+    "mediane": 20,
+    "p90": 20,
+    "n": 15
+   },
+   "prechauffes": {
+    "mediane": 24,
+    "p90": 24,
+    "n": 15
+   },
+   "octets": {
+    "mediane": 1572864,
+    "p90": 1572864,
+    "n": 15
+   },
+   "frontiere": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "candidats": {
+    "mediane": 38,
+    "p90": 38,
+    "n": 15
+   }
+  },
+  "r075": {
+   "captureMs": {
+    "mediane": 2020,
+    "p90": 2070,
+    "n": 15
+   },
+   "poseMs": {
+    "mediane": 13,
+    "p90": 18,
+    "n": 15
+   },
+   "validationMs": {
+    "mediane": 88,
+    "p90": 95,
+    "n": 15
+   },
+   "chaineMs": {
+    "mediane": 146,
+    "p90": 151,
+    "n": 15
+   },
+   "noeuds": {
+    "mediane": 14,
+    "p90": 14,
+    "n": 15
+   },
+   "cache": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "requetes": {
+    "mediane": 14,
+    "p90": 14,
+    "n": 15
+   },
+   "prechauffes": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "octets": {
+    "mediane": 393216,
+    "p90": 393216,
+    "n": 15
+   },
+   "frontiere": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   },
+   "candidats": {
+    "mediane": 6,
+    "p90": 6,
+    "n": 15
+   }
+  }
+ },
+ "motifs": {
+  "sans": {
+   "aucun": 15
+  },
+  "avec": {
+   "plafond-noeuds": 15
+  },
+  "finir": {
+   "plafond-noeuds": 15
+  },
+  "r075": {
+   "fini": 15
+  }
+ },
+ "mesures": {
+  "sans": [
+   {
+    "captureMs": 2018,
+    "poseMs": 14,
+    "validationMs": 88,
+    "chaineMs": 275,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2030,
+    "poseMs": 19,
+    "validationMs": 88,
+    "chaineMs": 267,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1987,
+    "poseMs": 14,
+    "validationMs": 87,
+    "chaineMs": 265,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1960,
+    "poseMs": 14,
+    "validationMs": 88,
+    "chaineMs": 270,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1983,
+    "poseMs": 13,
+    "validationMs": 87,
+    "chaineMs": 268,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1997,
+    "poseMs": 17,
+    "validationMs": 88,
+    "chaineMs": 269,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2062,
+    "poseMs": 17,
+    "validationMs": 87,
+    "chaineMs": 267,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1959,
+    "poseMs": 22,
+    "validationMs": 88,
+    "chaineMs": 267,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2065,
+    "poseMs": 20,
+    "validationMs": 91,
+    "chaineMs": 276,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2012,
+    "poseMs": 17,
+    "validationMs": 88,
+    "chaineMs": 267,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2045,
+    "poseMs": 15,
+    "validationMs": 87,
+    "chaineMs": 265,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1967,
+    "poseMs": 15,
+    "validationMs": 87,
+    "chaineMs": 266,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2014,
+    "poseMs": 13,
+    "validationMs": 88,
+    "chaineMs": 267,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 1985,
+    "poseMs": 14,
+    "validationMs": 89,
+    "chaineMs": 270,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   },
+   {
+    "captureMs": 2001,
+    "poseMs": 15,
+    "validationMs": 86,
+    "chaineMs": 268,
+    "noeuds": 14,
+    "cache": 0,
+    "requetes": 14,
+    "prechauffes": 0,
+    "octets": 0,
+    "frontiere": null,
+    "candidats": null,
+    "motif": null,
+    "juste": null
+   }
+  ],
+  "avec": [
+   {
+    "captureMs": 2020,
+    "poseMs": 16,
+    "validationMs": 87,
+    "chaineMs": 142,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2012,
+    "poseMs": 16,
+    "validationMs": 87,
+    "chaineMs": 141,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2028,
+    "poseMs": 29,
+    "validationMs": 91,
+    "chaineMs": 163,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2031,
+    "poseMs": 15,
+    "validationMs": 90,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2113,
+    "poseMs": 19,
+    "validationMs": 87,
+    "chaineMs": 145,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2020,
+    "poseMs": 16,
+    "validationMs": 91,
+    "chaineMs": 151,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2050,
+    "poseMs": 18,
+    "validationMs": 87,
+    "chaineMs": 142,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2085,
+    "poseMs": 17,
+    "validationMs": 88,
+    "chaineMs": 157,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2064,
+    "poseMs": 44,
+    "validationMs": 92,
+    "chaineMs": 149,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2073,
+    "poseMs": 16,
+    "validationMs": 91,
+    "chaineMs": 151,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2092,
+    "poseMs": 17,
+    "validationMs": 88,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2049,
+    "poseMs": 25,
+    "validationMs": 89,
+    "chaineMs": 145,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2013,
+    "poseMs": 18,
+    "validationMs": 89,
+    "chaineMs": 147,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 1988,
+    "poseMs": 16,
+    "validationMs": 87,
+    "chaineMs": 144,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 1994,
+    "poseMs": 17,
+    "validationMs": 86,
+    "chaineMs": 143,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   }
+  ],
+  "finir": [
+   {
+    "captureMs": 2019,
+    "poseMs": 17,
+    "validationMs": 92,
+    "chaineMs": 155,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2022,
+    "poseMs": 19,
+    "validationMs": 89,
+    "chaineMs": 147,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2068,
+    "poseMs": 22,
+    "validationMs": 89,
+    "chaineMs": 147,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2121,
+    "poseMs": 34,
+    "validationMs": 86,
+    "chaineMs": 143,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2020,
+    "poseMs": 18,
+    "validationMs": 94,
+    "chaineMs": 150,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2137,
+    "poseMs": 17,
+    "validationMs": 89,
+    "chaineMs": 150,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 1979,
+    "poseMs": 13,
+    "validationMs": 88,
+    "chaineMs": 143,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2070,
+    "poseMs": 16,
+    "validationMs": 87,
+    "chaineMs": 144,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2071,
+    "poseMs": 18,
+    "validationMs": 92,
+    "chaineMs": 148,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2079,
+    "poseMs": 24,
+    "validationMs": 92,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2027,
+    "poseMs": 17,
+    "validationMs": 89,
+    "chaineMs": 148,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2076,
+    "poseMs": 23,
+    "validationMs": 88,
+    "chaineMs": 143,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2106,
+    "poseMs": 19,
+    "validationMs": 91,
+    "chaineMs": 147,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2044,
+    "poseMs": 11,
+    "validationMs": 87,
+    "chaineMs": 147,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   },
+   {
+    "captureMs": 2018,
+    "poseMs": 12,
+    "validationMs": 87,
+    "chaineMs": 143,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 20,
+    "prechauffes": 24,
+    "octets": 1572864,
+    "frontiere": 6,
+    "candidats": 38,
+    "motif": "plafond-noeuds",
+    "juste": true
+   }
+  ],
+  "r075": [
+   {
+    "captureMs": 1999,
+    "poseMs": 9,
+    "validationMs": 87,
+    "chaineMs": 144,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2028,
+    "poseMs": 13,
+    "validationMs": 87,
+    "chaineMs": 144,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2050,
+    "poseMs": 13,
+    "validationMs": 90,
+    "chaineMs": 150,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 1996,
+    "poseMs": 11,
+    "validationMs": 89,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2016,
+    "poseMs": 26,
+    "validationMs": 86,
+    "chaineMs": 145,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2070,
+    "poseMs": 12,
+    "validationMs": 95,
+    "chaineMs": 148,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2095,
+    "poseMs": 15,
+    "validationMs": 95,
+    "chaineMs": 161,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2040,
+    "poseMs": 18,
+    "validationMs": 88,
+    "chaineMs": 148,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 1994,
+    "poseMs": 14,
+    "validationMs": 87,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2020,
+    "poseMs": 14,
+    "validationMs": 90,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2013,
+    "poseMs": 13,
+    "validationMs": 90,
+    "chaineMs": 151,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2006,
+    "poseMs": 12,
+    "validationMs": 88,
+    "chaineMs": 144,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2033,
+    "poseMs": 9,
+    "validationMs": 89,
+    "chaineMs": 145,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 1986,
+    "poseMs": 13,
+    "validationMs": 88,
+    "chaineMs": 146,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   },
+   {
+    "captureMs": 2030,
+    "poseMs": 13,
+    "validationMs": 88,
+    "chaineMs": 144,
+    "noeuds": 14,
+    "cache": 6,
+    "requetes": 14,
+    "prechauffes": 6,
+    "octets": 393216,
+    "frontiere": 6,
+    "candidats": 6,
+    "motif": "fini",
+    "juste": true
+   }
+  ]
+ }
+}
