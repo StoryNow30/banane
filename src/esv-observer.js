@@ -221,9 +221,9 @@
   'prechauffage-loin':['coupe','cible','avant','captures','msAvant','lances','charges','chargesFin','echecs','hierarchies','octets','enVolArrivee','boite','prets','nousPrets','nousEnVol','boiteFin','potreeLui','nousApres','pauses','dureeMs']};
  const PRECH_BOOLEENS={'prechauffage':['annule','calibree'],'prechauffage-vue':['fetchNatif','credXhr'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma'],'prechauffage-loin':['plafond']};
  const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
-  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur','loin'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur','pause-serveur','loin'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
  const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1,'prechauffage-vue':1,'prechauffage-loin':1};
- const PRECH_MOTIFS_LOIN=['arrivee','remplace','refus-serveur','eteint'];   /* CH-088 */
+ const PRECH_MOTIFS_LOIN=['arrivee','remplace','refus-serveur','pause-serveur','eteint'];   /* CH-089 : pause-serveur */   /* CH-088 */
  const PRECH_ZONES=['cube','boite'],PRECH_TYPES_VUE=['orthographique','perspective','autre','absente'];   /* CH-081 */
  function reduirePrechauffage(k,x){const out={kind:k};
   for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;

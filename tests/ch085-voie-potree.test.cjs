@@ -93,8 +93,9 @@ test('refus : 401 vu par l\'observateur pendant l\'opération → refus-serveur,
  assert.equal(r2.motif,'refus-serveur');assert.equal(journal.appels.length,avant,'arrêté pour le lot');assert.equal(p.actif(),false);
 });
 
-test('refus : un chargement à nous encore en cours au-delà de delaiMs → refus-serveur',async()=>{
- const {pc,e,journal,potree,p}=monter({...POTREE,delaiMs:500});
+/* CH-089 : un chargement trop long est une erreur passagère : pause (`pause-serveur`), plus l'arrêt pour le lot ; arrêt seulement avec refusMax:1. */
+test('refus : un chargement à nous encore en cours au-delà de delaiMs → refus-serveur (refusMax 1)',async()=>{
+ const {pc,e,journal,potree,p}=monter({...POTREE,delaiMs:500,refusMax:1});
  /* le premier load() ne finit jamais (réponse en échec : Potree le garde « en cours » et le compteur à +1) */
  let premier=true;const orig=potree.attentes;potree.attentes={push:a=>{if(premier){premier=false;return;}orig.push(a);},splice:(...x)=>orig.splice(...x),indexOf:x=>orig.indexOf(x),[Symbol.iterator]:()=>orig[Symbol.iterator]()};
  const r=p.apresCapture(contexte(pc));await e.tourner();await r;

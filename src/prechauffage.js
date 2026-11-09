@@ -83,6 +83,10 @@
      * l'authentification d'ESV. `delaiMs` : un de nos chargements encore en cours au-delà arrête le préchauffage pour le lot (`refus-serveur`). */
     out.voie = r.voie === 'potree' ? 'potree' : 'fetch';
     out.delaiMs = fini(r.delaiMs) && r.delaiMs >= 500 && r.delaiMs <= 60000 ? Math.floor(r.delaiMs) : 5000;
+    /* CH-089 (lot « Vision 9 », ÉTABLI : un seul 502 arrêtait le préchauffage pour le lot) : une erreur passagère (5xx, échec d'un load() ou d'une page
+     * de hiérarchie, chargement au-delà de `delaiMs`) met en pause `pauseMs` ; `refusMax` erreurs passagères ou un vrai refus (401, 403) : arrêt pour le lot. */
+    out.pauseMs = fini(r.pauseMs) && r.pauseMs >= 1000 && r.pauseMs <= 120000 ? Math.floor(r.pauseMs) : 10000;
+    out.refusMax = Number.isInteger(r.refusMax) && r.refusMax >= 1 && r.refusMax <= 10 ? r.refusMax : 3;
     out.loin = reglageLoin(r.loin);   /* CH-088 */
     return Object.freeze(out);
   }
@@ -389,7 +393,13 @@
     /* CH-088 : opération lointaine en cours (une au plus), capture en cours (aucun lancement), nœuds sur lesquels nous avons appelé load() (bilan à
      * l'arrivée) et nos load() encore en vol, toutes opérations confondues (`enVolMax` vaut pour tous nos chargements à la fois). */
     let loin = null, enCapture = false; const nosNoeuds = new WeakSet(), volNous = new Set();
-    const refuser = () => { if (refus) return; refus = true; actif = false; annuler('refus-serveur'); if (loin) finirLoin(loin, 'refus-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
+    /* CH-089 : `refuser(definitif)` : vrai refus (401, 403) ou `refusMax`-ième erreur passagère : arrêt pour le lot ; sinon pause de `pauseMs`.
+     * Une erreur vue pendant la pause n'est pas comptée (même panne). */
+    let pauseJusqua = null, erreursPassageres = 0;
+    const enPause = () => pauseJusqua !== null && maintenant() < pauseJusqua;
+    const refuser = (definitif = false) => { if (refus) return; if (!definitif && enPause()) return;
+      if (definitif || ++erreursPassageres >= R.refusMax) { refus = true; actif = false; annuler('refus-serveur'); if (loin) finirLoin(loin, 'refus-serveur'); return; }
+      pauseJusqua = maintenant() + R.pauseMs; annuler('pause-serveur'); if (loin) finirLoin(loin, 'pause-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
     const tas = () => { try { const v = typeof env.tas === 'function' ? env.tas() : globalThis.performance?.memory?.usedJSHeapSize; return fini(v) && v >= 0 ? v : null; } catch { return null; } };
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
     const poster = e => { try { env.poster(e); } catch { /* relevé seulement */ } };
@@ -411,7 +421,7 @@
          * serveur, le préchauffage s'arrête pour le lot (un échec bloque le compteur de Potree, CH-062 ; aucune boucle de refus vers le serveur). */
         try { const rs = e?.responseStatus; if (Number.isInteger(rs) && rs !== 200 && rs !== 304) { let ch = ''; try { ch = new URL(String(e.name || ''), 'http://x.invalid/').pathname; } catch { ch = ''; }
           const kd = cleChemin(e.name)?.cle ?? EPT_HIER.exec(ch)?.[1] ?? null, actifOp = !!courant && !courant.fini;
-          if (kd && ((rs >= 400 && (actifOp || nosCles.has(kd))) || (rs === 0 && nosCles.has(kd)))) refuser(); } } catch { /* relevé seulement */ }
+          if (kd && ((rs >= 400 && (actifOp || nosCles.has(kd))) || (rs === 0 && nosCles.has(kd)))) refuser(rs === 401 || rs === 403); } } catch { /* relevé seulement */ }
         const k = cleChemin(e?.name); if (!k) continue; if (!extApprise) extApprise = k.ext;
         const p = e.initiatorType === 'fetch' ? propres.get(k.cle) : 0; if (p) { if (p > 1) propres.set(k.cle, p - 1); else propres.delete(k.cle); continue; }
         if (attente.has(k.cle)) { attente.delete(k.cle); utiles++; }   /* CH-081 : redemandé par Potree, donc utile */
@@ -555,7 +565,7 @@
       try {
         while (loin === L && !L.fini && !L.arrivee) {
           releverLoin(L); if (L.fini || loin !== L) break;
-          if (!actif) { finirLoin(L, refus ? 'refus-serveur' : 'eteint'); break; }
+          if (!actif || enPause()) { finirLoin(L, refus ? 'refus-serveur' : actif ? 'pause-serveur' : 'eteint'); break; }
           const l = etiquette();
           if (l && l.part === L.partie && l.cut === L.cible) { arriverLoin(L); break; }   /* arrivée : Potree charge lui-même ; bilan à la capture suivante */
           const n0 = chargements(), libre = !enCapture && n0 !== null && n0 === nosEnVol();
@@ -626,6 +636,7 @@
         noeuds: 0, termines: 0, octets: 0, hierarchies: 0, deduits: 0, enVolEst: 0, enVol: 0, annule: false, arret: false, motif: null, fini: false };
       if (coupure) { c.motif = coupure; courant = c; return terminer(c); }
       if (!actif) return { motif: refus ? 'refus-serveur' : 'eteint', noeuds: 0, octets: 0, annule: false };
+      if (enPause()) return { motif: 'pause-serveur', noeuds: 0, octets: 0, annule: false };   /* CH-089 */
       courant = c;
       /* CH-081 : caméra et réglages de Potree (lecture seule, entiers et liste fermée) : au premier passage, puis à chaque changement. */
       if (Anticipation && typeof ctx?.vue === 'function') {
@@ -651,7 +662,7 @@
       const demander = async (cut, monde, quoi) => { try { return await Promise.race([Promise.resolve(env.voisins(cut, monde, quoi)), new Promise(r => { try { setTimeout(() => r(null), VOISINS_MS); } catch { r(null); } })]); } catch { return null; } };
       /* CH-088 : cible lointaine (opération persistante, voie potree) ; elle sort de la liste de l'opération proche. */
       let tl = null;
-      if (R.loin?.actif && R.voie === 'potree' && actif) {
+      if (R.loin?.actif && R.voie === 'potree' && actif && !enPause()) {
         const t = await cibleLoin(ctx, c, demande.cible !== undefined ? h : null, rep, demander, courants);
         if (t) tl = suivreLoin(c, t, ctx); else if (t === false && loin) finirLoin(loin, 'remplace');
         if (c.arret) return terminer(c);

@@ -240,6 +240,9 @@
       /* CH-085 (lot « Vision 7 », ÉTABLI : nos fetch reçoivent 401, ceux de Potree 200) : plus aucune requête à nous ; nœuds et pages de hiérarchie par node.load() et
        * node.loadHierarchy() de Potree (authentification d'ESV comprise). Refus du serveur ou chargement à nous en cours plus de 5 s : arrêt pour le lot (`refus-serveur`). */
       voie: 'potree', delaiMs: 5000,
+      /* CH-089 (lot « Vision 9 », ÉTABLI : un seul 502 d'ESV a arrêté le préchauffage pour les 75 dernières validations du lot) : erreur passagère = pause de 10 s ;
+       * arrêt pour le lot au 3e épisode ou sur un vrai refus (401, 403). */
+      pauseMs: 10000, refusMax: 3,
       /* CH-088 (lot « Vision 8 », ÉTABLI : la cible lointaine n'était prise que 1 à 2 coupes avant, chaque opération coupée au changement de coupe, 0 à 4 load()
        * finis à l'arrivée) : la prochaine cible lointaine (écart ≥ 11 coupes à la précédente de la chaîne) est préchargée dès qu'elle est connue, jusqu'à 40 coupes
        * à l'avance, en pause pendant chaque capture et quand Potree charge ; mêmes plafonds. ALLUMÉ pour le lot d'essai ; `loin.actif:false` la coupe seule. */
