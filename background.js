@@ -290,16 +290,21 @@ function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;con
  return out;}
 /* CH-077 (préchauffage du cache pour la coupe suivante, src/prechauffage.js) : entiers bornés, booléens, motif et classe d'une liste fermée ; jamais d'adresse. */
 const OBS_PRECH={prechauffage:{n:['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits','sansNom','sansAdresse','formeNoeud','cibles','memLances','memCharges','memOctets','memEchecs','memRefuses','memEnVolFin','tasAvantKo','tasApresKo'],b:['annule','calibree']},   /* CH-080 : hierarchies, deduits ; CH-080b : sansNom, sansAdresse, formeNoeud (bits) */
- 'prechauffage-bilan':{n:['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal','utiles','inutiles'],b:['juste']},'prechauffage-entetes':{n:['maxAgeS','statut'],b:['etag','lastModified','expires','pragma']},
- 'prechauffage-vue':{n:['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints','enTetesXhr'],b:['fetchNatif','credXhr']}};   /* CH-081 : cibles, calibree ; utiles, inutiles ; vue de Potree */
-const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur'];
+ 'prechauffage-bilan':{n:['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal','utiles','inutiles','boite','prets','nousPrets','nousEnVol','boiteFin','potreeLui','nousApres'],b:['juste']},'prechauffage-entetes':{n:['maxAgeS','statut'],b:['etag','lastModified','expires','pragma']},
+ 'prechauffage-vue':{n:['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints','enTetesXhr'],b:['fetchNatif','credXhr']},
+ /* CH-088 : bilan de l'arrivée par l'arbre (voie potree) ; opération lointaine. */
+ 'prechauffage-loin':{n:['coupe','cible','avant','captures','msAvant','lances','charges','chargesFin','echecs','hierarchies','octets','enVolArrivee','boite','prets','nousPrets','nousEnVol','boiteFin','potreeLui','nousApres','pauses','dureeMs'],b:['plafond']}};   /* CH-081 : cibles, calibree ; utiles, inutiles ; vue de Potree */
+const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur','loin'];
+const OBS_PRECH_MOTIFS_LOIN=['arrivee','remplace','refus-serveur','eteint'];   /* CH-088 */
 /* CH-080 : saut (entier signé, en coupes) et source de la coupe suivante (liste fermée de src/prechauffage.js). */
 const OBS_PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'];
 const OBS_PRECH_ZONES=['cube','boite'],OBS_PRECH_TYPES_VUE=['orthographique','perspective','autre','absente'];   /* CH-081 */
 const OBS_PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
 function obsPrechauffage(x){const d=OBS_PRECH[x.kind],out={kind:x.kind};for(const k of d.n)out[k]=obsInt(x[k]);for(const k of d.b)out[k]=typeof x[k]==='boolean'?x[k]:null;
  if(x.kind==='prechauffage'){out.motif=OBS_PRECH_MOTIFS.includes(x.motif)?x.motif:null;out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=OBS_PRECH_SOURCES.includes(x.source)?x.source:null;out.zone=OBS_PRECH_ZONES.includes(x.zone)?x.zone:null;}
- if(x.kind==='prechauffage-vue'){out.type=OBS_PRECH_TYPES_VUE.includes(x.type)?x.type:null;out.maxLevel=Number.isInteger(x.maxLevel)&&x.maxLevel>=-1&&x.maxLevel<=64?x.maxLevel:null;}if(x.kind==='prechauffage-entetes')out.classe=OBS_PRECH_CLASSES.includes(x.classe)?x.classe:null;return out;}
+ /* CH-088 : `camera`, jamais `type` (le type de l'enveloppe du journal, `esv-observation`, serait écrasé) ; l'ancienne forme est relue. */
+ if(x.kind==='prechauffage-vue'){const cam=x.camera!==undefined?x.camera:x.type;out.camera=OBS_PRECH_TYPES_VUE.includes(cam)?cam:null;out.maxLevel=Number.isInteger(x.maxLevel)&&x.maxLevel>=-1&&x.maxLevel<=64?x.maxLevel:null;}if(x.kind==='prechauffage-entetes')out.classe=OBS_PRECH_CLASSES.includes(x.classe)?x.classe:null;
+ if(x.kind==='prechauffage-loin'){out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=OBS_PRECH_SOURCES.includes(x.source)?x.source:null;out.motif=OBS_PRECH_MOTIFS_LOIN.includes(x.motif)?x.motif:null;}return out;}
 function obsFields(x){
  const time={startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),durationMs:obsNum(x.durationMs)};
  switch(x.kind){
@@ -328,7 +333,7 @@ function obsFields(x){
   case 'diag-compteur-bloque':return {kind:'diag-compteur-bloque',valeur:obsInt(x.valeur,1e6),cuts:obsInt(x.cuts,1000),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
   /* CH-062 (patch proposé de la page) : la ligne de base du compteur par les échecs est abandonnée pour cette lecture (compteur SOUS les échecs, observateur absent). */
   case 'ligne-base-repli':return {kind:'ligne-base-repli',motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:obsInt(x.compteur,1e6),echecs:obsInt(x.echecs,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
-  case 'prechauffage':case 'prechauffage-bilan':case 'prechauffage-entetes':case 'prechauffage-vue':return obsPrechauffage(x);
+  case 'prechauffage':case 'prechauffage-bilan':case 'prechauffage-entetes':case 'prechauffage-vue':case 'prechauffage-loin':return obsPrechauffage(x);
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
 /* 4.9.0.18 (KI-068) : événements et visites du lot seulement (ni Écho, ni Correction : `nativeSessionId`, `manualSessionId`,
@@ -2264,6 +2269,7 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
   try{
    for(const [ip,p] of aEcrire.entries()){
     EC.suivante=aEcrire[ip+1]?.cut;EC.apres=aEcrire[ip+2]?.cut;   /* CH-080 : cut suivant de la passe, pour le préchauffage ; CH-081 : celui d'après */
+    EC.loin=cibleLoinListe(p.cut,aEcrire.slice(ip+1).map(x=>x.cut));   /* CH-088 : cible lointaine de la passe */
     if(EC.arret||!await passeDiffAllumee()){issue='arret';break;}
     if(engine?.s?.batch?.id!==b.id){issue='lot-change';break;}
     vue.cut=p.cut;let r;
@@ -2290,9 +2296,17 @@ async function passeDiffEcrireDemande(){
  * à l'argument de LEUR capture (`prechauffage` : partie, cut de la capture `de`, cut suivant, source, identifiant d'opération), lu par la page
  * (src/prechauffage.js) qui ne l'accepte que pour cette capture. Le lot n'en porte jamais : ses commandes restent identiques à l'octet
  * (tests/choix-lot-clic-sw.test.cjs) ; sa coupe suivante (« cut non validé suivant » d'ESV) est trouvée par la page dans la liste d'ESV. */
-function avecPrechauffage(etat,cut,source,apres){const id=etat?.identity;if(!Number.isInteger(cut)||cut<0||!id||!Number.isInteger(id.cut))return etat;
- /* CH-081 (horizon 2) : `apres`, le cut que la même liste visitera après `cut`, s'il existe. */
- return {...etat,prechauffage:{part:id.part,de:id.cut,cut,source,op:globalThis.BananeCore3.uid(),...(Number.isInteger(apres)&&apres>=0?{apres}:{})}};}
+function avecPrechauffage(etat,cut,source,apres,loin){const id=etat?.identity;if(!Number.isInteger(cut)||cut<0||!id||!Number.isInteger(id.cut))return etat;
+ /* CH-081 (horizon 2) : `apres`, le cut que la même liste visitera après `cut`, s'il existe. CH-088 : `loin` ({cut, avant, saut}), la prochaine cible
+  * lointaine de la même liste (src/prechauffage.js, opération lointaine), ou null : aucune dans la portée. */
+ return {...etat,prechauffage:{part:id.part,de:id.cut,cut,source,op:globalThis.BananeCore3.uid(),...(Number.isInteger(apres)&&apres>=0?{apres}:{}),...(loin!==undefined?{loin}:{})}};}
+/* CH-088 : prochaine cible lointaine d'une liste ordonnée de cuts, vue du cut `de` : le premier cut dont l'écart au précédent de la liste (`de` pour le
+ * premier) est ≥ `loin.sautMin`, à au plus `loin.coupesMax` cuts ; null sinon ; undefined si le réglage est éteint (rien n'est joint). */
+function cibleLoinListe(de,cuts){const L=globalThis.BananeSettings?.lot?.chargement?.prechauffer,RL=L?.loin;
+ if(!L||L.actif!==true||!RL||RL.actif!==true||!Number.isInteger(de))return undefined;
+ const S=Number.isInteger(RL.sautMin)&&RL.sautMin>=2?RL.sautMin:11,M=Number.isInteger(RL.coupesMax)&&RL.coupesMax>=0?RL.coupesMax:40;let prec=de;
+ for(let j=0;j<cuts.length&&j<=M;j++){const c=cuts[j];if(!Number.isInteger(c))return null;if(Math.abs(c-prec)>=S)return {cut:c,avant:j,saut:c-prec};prec=c;}
+ return null;}
 async function passeDiffPoser(b,p,E){
  const K=globalThis.BananeCore3,G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,S=globalThis.BananeSettings?.lot||{},r=p.r,cut=r.identity.cut,part=b.scope.part,t0=Date.now();
  const refuse=raison=>({resultat:'refuse',raison});
@@ -2308,7 +2322,7 @@ async function passeDiffPoser(b,p,E){
   if(nav.chemin!=='pas-a-pas')return refuse(`cut ${cut} atteint par ${nav.chemin==='evenement'?'la carte (saut)':nav.chemin||'un chemin inconnu'} : pas de pose juste après un saut`);
   const etat=await readState();if(etat?.identity?.part!==part||etat.identity.cut!==cut)return refuse(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${cut}`);
   try{engine.writable(etat.identity);}catch{return refuse('cible bloquée par un résultat incertain archivé');}
-  const capture=await call('capture',avecPrechauffage(etat,E?.suivante,'passe-differes',E?.apres));K.assertTarget(etat.identity,capture.identity);
+  const capture=await call('capture',avecPrechauffage(etat,E?.suivante,'passe-differes',E?.apres,E?.loin));K.assertTarget(etat.identity,capture.identity);
   now=await readState();
   if(K.key(now.identity)!==K.key(etat.identity)||!K.equalPoses(etat.rails,now.rails))return refuse('le cut affiché ou ses rails ont changé pendant la capture');
   if(!K.equalPoses(r.capture.rails,now.rails,.001))return refuse('pose d’ESV du cut changée depuis la visite du lot');
@@ -3985,12 +3999,13 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    par=r.par;
   precedent=c;const tNav=Date.now();derniereArrivee=tNav;
   /* CH-080 : prochain cut que la passe relira (plages sautées exclues), pour le préchauffage de la page. */
-  const relues=sel.cuts.slice(ci+1).filter(x=>!plagesSautees.has(x.plage)).slice(0,2),suivanteRelue=relues[0]?.cut,apresRelue=relues[1]?.cut;   /* CH-081 : et celui d'après */
+  const restantes=sel.cuts.slice(ci+1).filter(x=>!plagesSautees.has(x.plage)),relues=restantes.slice(0,2),suivanteRelue=relues[0]?.cut,apresRelue=relues[1]?.cut;   /* CH-081 : et celui d'après */
+  const loinRelue=cibleLoinListe(c.cut,restantes.map(x=>x.cut));   /* CH-088 : cible lointaine de la relecture */
   let etat,capture,erreurCapture=null,ligne=null;
   try{etat=await readState();if(etat?.identity?.part!==partie||etat.identity.cut!==c.cut)throw Error(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${c.cut}`);
    /* Statut du cut dans la liste d'ESV (mémoire de la page, dès l'arrivée) : la preuve du vert, et « vu » ou non à l'arrivée. */
    try{ligne=await relectureLigneListe(c.cut,etat);}catch{ligne=null;}
-   capture=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu',apresRelue));K.assertTarget(etat.identity,capture.identity);}
+   capture=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu',apresRelue,loinRelue));K.assertTarget(etat.identity,capture.identity);}
   catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane|ESV affiche/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}
    erreurCapture=String(e?.message||e).slice(0,200);}
   if(ligne&&ligne.vu===false)p.cutsNeufs++;
@@ -4001,7 +4016,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    if(o.action!=='rien'){signalAction=o.action;relectureJournal('relecture-signal-eteint',{etape:'detecte',action:o.action==='recharger'?'recharger':'aucune',raison:o.raison,identity:{part:partie,cut:c.cut},...SG.bilan(p.signalEsv)},p);}}
   /* D-172 : une capture vide est relue une fois ; deux captures complètes vides de suite : « aucun-point » (consigné, jamais envoyé). */
   let seconde=null;
-  if(capture&&R.captureVide(capture))try{seconde=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu',apresRelue));}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
+  if(capture&&R.captureVide(capture))try{seconde=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu',apresRelue,loinRelue));}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
   const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?R.skipOmbre(seconde?[capture,seconde]:[capture]):null;
   if(c.role==='vert'&&capture?.rails&&!R.captureVide(capture))try{const g=globalThis.BananeLotDecision.gaugeOf({left:capture.rails.left.positionSceneRelative,right:capture.rails.right.positionSceneRelative});
    if(Number.isFinite(g)&&Math.abs(g-ECARTEMENT_ORIGINE_ESV_MM)>.05)ecartementsVerts.push(g);}catch{/* écartement illisible */}

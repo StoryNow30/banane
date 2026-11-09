@@ -278,7 +278,7 @@
   *  - ses événements (`prechauffage`, `prechauffage-bilan`, `prechauffage-entetes`) ne portent que des comptes : l'observateur et le service worker
   *    les réduisent encore (tests/ch077-relais.test.cjs). Réglage éteint ou module absent : `PRECH` vaut null et rien ne change. */
  /* CH-080 (D-309) : `quoi` ajoute à la demande UNE ligne au plus (`cible` entière, ou `suivante:true`) ; voir src/esv-observer.js `voisins`. */
- function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:quoi?.premiere===true?{premiere:true}:{};   /* CH-081 : premiere */return new Promise(res=>{let fini=false;const id='ch077-'+Math.random().toString(36).slice(2,12);
+ function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:quoi?.premiere===true?{premiere:true}:Number.isInteger(quoi?.loin)?{loin:quoi.loin,...(Number.isInteger(quoi.max)?{max:quoi.max}:{})}:{};   /* CH-081 : premiere ; CH-088 : loin (cible lointaine de la liste du lot) */return new Promise(res=>{let fini=false;const id='ch077-'+Math.random().toString(36).slice(2,12);
    const f=e=>{if(fini||e.source!==window||e.data?.kind!=='banane5:voisins-reponse'||e.data.id!==id)return;fini=true;try{window.removeEventListener('message',f);}catch{}res(e.data);};
    try{window.addEventListener('message',f);window.postMessage({kind:'banane5:voisins',id,cut,fenetre:10,world,...plus},location.origin);}catch{fini=true;res(null);return;}
    setTimeout(()=>{if(fini)return;fini=true;try{window.removeEventListener('message',f);}catch{}res(null);},400);});}

@@ -51,12 +51,12 @@ test('relevé de la vue : orthographique d\'ESV en entiers, aucune adresse ni po
  const cam={isOrthographicCamera:true,type:'OrthographicCamera',projectionMatrix:{elements:[5,0,0,0,0,4.3873704,0,0,0,0,-0.0000999983,0,0,0,0,1]},position:{x:844565.7,y:6519774,z:172.78}};
  const pc={maxLevel:Infinity,minimumNodePixelSize:30,material:{clipBoxes:[{}]},url:'https://x.invalid/ept.json'};
  const r=A.releveVue({camera:cam,pointBudget:1000000,pointcloud:pc});
- assert.deepEqual({...r},{type:'orthographique',demiLargeurMm:200,demiHauteurMm:228,profondeurM:20000,champDeg:null,pointBudget:1000000,maxLevel:-1,minNodeSize:30,boites:1,limitePoints:null});   /* CH-083 : limitePoints (Potree.pointLoadLimit), absent ici */
+ assert.deepEqual({...r},{camera:'orthographique',demiLargeurMm:200,demiHauteurMm:228,profondeurM:20000,champDeg:null,pointBudget:1000000,maxLevel:-1,minNodeSize:30,boites:1,limitePoints:null});   /* CH-083 : limitePoints (Potree.pointLoadLimit), absent ici */
  assert.ok(!/x\.invalid|844565|6519774|ept/.test(JSON.stringify(r)),'ni adresse ni position');
- assert.ok(A.TYPES_VUE.includes(r.type));
+ assert.ok(A.TYPES_VUE.includes(r.camera));   /* CH-088 : `camera` (le champ `type` écrasait celui de l'enveloppe du journal) */
  const r2=A.releveVue({camera:cam,pointBudget:2000000,pointcloud:pc});assert.notEqual(A.signatureVue(r),A.signatureVue(r2));
  assert.equal(A.signatureVue(r),A.signatureVue(A.releveVue({camera:cam,pointBudget:1000000,pointcloud:pc})));
  assert.equal(A.releveVue({camera:{isPerspectiveCamera:true,fov:55}}).champDeg,55);
- assert.equal(A.releveVue({}).type,'absente');
- const piege={get isOrthographicCamera(){throw Error('x');}};assert.equal(A.releveVue({camera:piege}).type,'autre','une propriété qui lève ne casse rien');
+ assert.equal(A.releveVue({}).camera,'absente');
+ const piege={get isOrthographicCamera(){throw Error('x');}};assert.equal(A.releveVue({camera:piege}).camera,'autre','une propriété qui lève ne casse rien');
 });

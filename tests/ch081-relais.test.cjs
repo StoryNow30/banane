@@ -31,7 +31,7 @@ test('observateur puis service worker : nouveaux champs réduits, aucune adresse
  assert.deepEqual([ring[0].motif,ring[0].source,ring[0].saut,ring[0].zone,ring[0].cibles,ring[0].calibree],['plafond-lot','changement-mode',-185,'boite',2,true]);
  assert.deepEqual([ring[1].motif,ring[1].zone,ring[1].cibles,ring[1].calibree],['deja-prechauffe',null,null,null],'hors liste : null');
  assert.deepEqual([ring[2].utiles,ring[2].inutiles],[6,4]);
- assert.deepEqual([ring[3].type,ring[3].demiLargeurMm,ring[3].pointBudget,ring[3].maxLevel,ring[3].boites],['orthographique',200,1000000,-1,1]);
+ assert.deepEqual([ring[3].camera/* CH-088 : l'ancien `type` relu en `camera` */,ring[3].demiLargeurMm,ring[3].pointBudget,ring[3].maxLevel,ring[3].boites],['orthographique',200,1000000,-1,1]);
  const src=fs.readFileSync(path.join(__dirname,'../background.js'),'utf8'),debut=src.indexOf('const obsInt='),fin=src.indexOf('}return null;}',src.indexOf('function obsFields('))+'}return null;}'.length;
  const ctx={OBS_REASONS:new Set()};vm.createContext(ctx);vm.runInContext(src.slice(debut,fin)+';this.obsFields=obsFields;',ctx);
  const lus=ring.map(x=>ctx.obsFields(JSON.parse(JSON.stringify(x))));assert.ok(lus.every(Boolean),'les quatre sortes sont connues du service worker');
@@ -46,5 +46,5 @@ test('service worker : la cible de la relecture et de la passe porte `apres` (ho
  const e={identity:{part:23,cut:20}};
  assert.deepEqual(JSON.parse(JSON.stringify(ctx.f(e,30,'relu',31).prechauffage)),{part:23,de:20,cut:30,source:'relu',op:'u',apres:31});
  assert.equal('apres' in ctx.f(e,30,'relu',undefined).prechauffage,false,'sans cut d’après : champ absent');
- assert.ok(/avecPrechauffage\(etat,suivanteRelue,'relu',apresRelue\)/.test(src)&&/avecPrechauffage\(etat,E\?\.suivante,'passe-differes',E\?\.apres\)/.test(src));
+ assert.ok(/avecPrechauffage\(etat,suivanteRelue,'relu',apresRelue(,loinRelue)?\)/.test(src)&&/avecPrechauffage\(etat,E\?\.suivante,'passe-differes',E\?\.apres(,E\?\.loin)?\)/.test(src));   /* CH-088 : `loin` en plus */
 });

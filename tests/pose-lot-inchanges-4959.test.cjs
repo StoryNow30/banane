@@ -46,9 +46,12 @@ const sansD305Obs=t=>t.replace(/\n      \/\* D-305, piste 0 \(mesure en lecture 
 const sansCH080Obs=t=>t.replace(/\n  \/\* CH-080 \(D-309\) : UNE ligne de plus au plus[\s\S]*?if\(t\.st\[i\]!==STATUS_CODE\.valid\)\{loin=ligne\(i\);break;\}\}/,'').replace(',rows,...(loin!==undefined?{loin}:{})};',',rows};');
 /* CH-081 (D-311) : `voisins` rend aussi, à la demande, la première ligne non validée de toute la table (`premiere`), pour le préchauffage seulement. Retiré pour comparer. */
 const sansCH081Obs=t=>t.replace(/\n  \/\* CH-081 : `premiere:true`[^\n]*\n[^\n]*premiere===true[^\n]*/,'');
+/* CH-088 : `voisins` rend aussi, à la demande, la prochaine cible lointaine de la chaîne des non validés (`loin`), pour le préchauffage seulement. Retiré pour comparer.
+ * Les champs relayés de CH-088 (bilan à l'arrivée, `prechauffage-loin`, `camera`) sont dans le bloc de CH-077, retiré avec lui. */
+const sansCH088Obs=t=>t.replace(/\n  \/\* CH-088 : `loin:S`[\s\S]*?prec=i;\}\}/,'');
 /* CH-077 : l'observateur relaie les événements du préchauffage (comptes et classes seulement), retirés pour comparer. */
 const sansCH077Obs=t=>t.replace("if(Object.hasOwn(PRECH_CHAMPS,k)){if(enabled)record(reduirePrechauffage(k,x));return;}/* CH-077 */",'').replace(/ \/\* CH-077 : champs gardés[\s\S]*?  return out;\}\n/,'');
-const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(t)))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(sansCH088Obs(t))))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
  .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
@@ -134,7 +137,9 @@ const PRECHAUFFAGE=['prechauffage.js','prechauffage-boite.js','prechauffage-anti
 /* CH-081 (D-311, Vision 8) : le branchement passe `premiere` à l'observateur et la vue de Potree (lecture seule) à `apresCapture` ; ni pose ni validation. Retiré avant CH-080. */
 /* CH-083 (D-314) : chantiers/CH-083/adapter-page.patch ajoute `pointLoadLimit` (lecture seule de Potree) à cette même vue, sur la même ligne : retiré avec elle.
  * La phase mémoire vit dans src/prechauffage.js (liste PRECHAUFFAGE) ; ses champs relayés sont dans les blocs de CH-077 de l'observateur et du service worker. */
-const sansCH080=t=>t.replace(":quoi?.premiere===true?{premiere:true}:{};   /* CH-081 : premiere */return new Promise(",":{};return new Promise(")
+/* CH-088 : chantiers/CH-088/adapter-page.patch fait passer `loin` (et `max`) à l'observateur dans la même ligne : retiré avec `premiere`. */
+const sansCH080=t=>t.replace(":quoi?.premiere===true?{premiere:true}:Number.isInteger(quoi?.loin)?{loin:quoi.loin,...(Number.isInteger(quoi.max)?{max:quoi.max}:{})}:{};   /* CH-081 : premiere ; CH-088 : loin (cible lointaine de la liste du lot) */return new Promise(",":{};return new Promise(")
+ .replace(":quoi?.premiere===true?{premiere:true}:{};   /* CH-081 : premiere */return new Promise(",":{};return new Promise(")
  .replace(/suivante:expected\?\.prechauffage\?\?null,\n     \/\* CH-081 : caméra active[^\n]*\n     vue:\(\)=>\(\{[^\n]*?\}\)\}\)\)\.catch/,"suivante:expected?.prechauffage??null})).catch")
  .replace(/\n \/\* CH-080 \(D-309\) : `quoi` ajoute[^\n]*/,'')
  .replace("function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:{};return new Promise(","function voisinsB1(cut,world){return new Promise(")
