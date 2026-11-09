@@ -113,7 +113,34 @@
 
   /* ------------------------------------------------ arbre de Potree (lecture seule) */
   const niveau = n => { for (const f of [() => n.level, () => n.key?.d, () => typeof n.getLevel === 'function' ? n.getLevel() : undefined]) { try { const v = f(); if (Number.isInteger(v) && v >= 0 && v <= 64) return v; } catch { /* suivant */ } } return null; };
-  const nomNoeud = n => { try { const v = typeof n.filename === 'function' ? n.filename() : typeof n.key?.name === 'function' ? n.key.name() : null; return typeof v === 'string' && /^\d+-\d+-\d+-\d+$/.test(v) ? v : null; } catch { return null; } };
+  /* CH-080b : sur le vrai ESV (lots du 09/11, ÉTABLI par les comptes), aucun nœud non chargé n'avait de nom lu par `filename()` puis `key.name()` (la
+   * première chaîne qui ne collait pas rendait null). Chaque source est désormais essayée, sans court-circuit : `filename()`, `key.name()`, `key.{d,x,y,z}`
+   * entiers, puis le nom de Potree « r » + chiffres 0-7 (toPotreeName : un chiffre par niveau, bits x·4 + y·2 + z) décodé en D-X-Y-Z. */
+  const D_X_Y_Z = /^\d+-\d+-\d+-\d+$/;
+  function depuisNomPotree(v) {
+    if (typeof v !== 'string' || !/^r[0-7]{0,30}$/.test(v)) return null;
+    let x = 0, y = 0, z = 0; for (const ch of v.slice(1)) { const s = Number(ch); x = x * 2 + (s >> 2 & 1); y = y * 2 + (s >> 1 & 1); z = z * 2 + (s & 1); }
+    return `${v.length - 1}-${x}-${y}-${z}`;
+  }
+  const SOURCES_NOM = [n => n.filename(), n => n.key.name(), n => { const k = n.key; return [k.d, k.x, k.y, k.z].every(v => Number.isInteger(v) && v >= 0) ? `${k.d}-${k.x}-${k.y}-${k.z}` : null; },
+    n => depuisNomPotree(n.filename()), n => depuisNomPotree(n.name)];
+  const nomNoeud = n => { for (const f of SOURCES_NOM) { try { const v = f(n); if (typeof v === 'string' && D_X_Y_Z.test(v)) return v; } catch { /* source suivante */ } } return null; };
+  /** CH-080b : forme d'un nœud de Potree, en bits (jamais une valeur) : 1 filename(), 2 filename D-X-Y-Z, 4 key entière, 8 key.name() D-X-Y-Z, 16 name « r »,
+   * 32 url(), 64 url() finit par le nom D-X-Y-Z, 128 ept.url, 256 numPoints −1, 512 url() contient « ? », 1024 url() contient « ept-data/ ». */
+  function formeNoeud(n) {
+    const t = f => { try { return !!f(); } catch { return false; } }, D = v => typeof v === 'string' && D_X_Y_Z.test(v), nom = nomNoeud(n);
+    const u = (() => { try { return typeof n.url === 'function' ? n.url() : null; } catch { return null; } })(), us = typeof u === 'string';
+    return (t(() => typeof n.filename === 'function') ? 1 : 0) | (t(() => D(n.filename())) ? 2 : 0) | (t(() => [n.key.d, n.key.x, n.key.y, n.key.z].every(Number.isInteger)) ? 4 : 0)
+      | (t(() => D(n.key.name())) ? 8 : 0) | (t(() => /^r[0-7]*$/.test(n.name)) ? 16 : 0) | (typeof n.url === 'function' ? 32 : 0) | (us && nom && u.endsWith(nom) ? 64 : 0)
+      | (t(() => typeof n.ept.url === 'string') ? 128 : 0) | (n.numPoints === -1 ? 256 : 0) | (us && u.includes('?') ? 512 : 0) | (us && u.includes('ept-data/') ? 1024 : 0);
+  }
+  /** CH-080b : préfixe SÛR des adresses de données (celui que Potree construit : `<ept.url>ept-data/`), ou null. Sûr = `ept.url` du nœud ; sinon `url()` sans
+   * « ? », qui contient « ept-data/ » et finit par le nom D-X-Y-Z ; sinon celui du plus proche ancêtre (hérité) qui finit par « ept-data/ ». Aucun autre. */
+  function prefixeDonnees(n, nom, herite) {
+    try { const b = n.ept?.url; if (typeof b === 'string' && b.length && !b.includes('?')) return b + 'ept-data/'; } catch { /* suivant */ }
+    try { const u = typeof n.url === 'function' ? n.url() : null; if (nom && typeof u === 'string' && !u.includes('?') && u.endsWith('ept-data/' + nom)) return u.slice(0, -nom.length); } catch { /* suivant */ }
+    return typeof herite === 'string' && herite.endsWith('ept-data/') && !herite.includes('?') ? herite : null;
+  }
   const enfants = n => { const c = n?.children; if (!c) return []; return (Array.isArray(c) ? c : Object.values(c)).filter(Boolean); };
   function boiteMonde(n, M) {
     const b = n?.boundingBox; if (!b?.min || !b?.max) return null;
@@ -126,15 +153,15 @@
   }
   const coupe = (bm, centres, r) => centres.some(c => [0, 1, 2].every(i => bm[0][i] <= c[i] + r && bm[1][i] >= c[i] - r));
   const distance = (bm, centres) => Math.min(...centres.map(c => Math.hypot(...[0, 1, 2].map(i => Math.max(bm[0][i] - c[i], 0, c[i] - bm[1][i])))));
-  /** Parcours borné de l'arbre : `visite(noeud, niveau, boîte monde, nuage)` pour chaque nœud qui coupe la zone ; on ne descend que dans ceux-là. */
+  /** Parcours borné de l'arbre : `visite(noeud, niveau, boîte monde, nuage, parent)` pour chaque nœud qui coupe la zone ; on ne descend que dans ceux-là. */
   function parcourir(pointclouds, centres, r, visite) {
     let vus = 0;
     for (const pc of pointclouds || []) {
       const racine = pc?.pcoGeometry?.root, M = pc?.matrixWorld?.elements; if (!racine || !M || M.length !== 16) continue;
-      const pile = [racine];
+      const pile = [[racine, null]];
       while (pile.length && vus < VISITES_MAX) {
-        const n = pile.pop(); vus++; const bm = boiteMonde(n, M); if (!bm || !coupe(bm, centres, r)) continue;
-        if (visite(n, niveau(n), bm, pc) !== false) for (const c of enfants(n)) pile.push(c);
+        const [n, parent] = pile.pop(); vus++; const bm = boiteMonde(n, M); if (!bm || !coupe(bm, centres, r)) continue;
+        if (visite(n, niveau(n), bm, pc, parent) !== false) for (const c of enfants(n)) pile.push([c, n]);
       }
     }
     return vus;
@@ -147,32 +174,37 @@
   }
   /** Nœuds à demander pour la coupe suivante, et comptes : intersectants (connus dans la zone, niveau borné), chargés, en cours, frontière. */
   function candidats(pointclouds, rails, { niveauMax = null, rayonM = DEFAUT.rayonM } = {}) {
-    const c = [point(rails?.left), point(rails?.right)].filter(Boolean), out = { intersectants: 0, charges: 0, enCours: 0, frontiere: 0, candidats: [], frontieres: [] };
+    const c = [point(rails?.left), point(rails?.right)].filter(Boolean), out = { intersectants: 0, charges: 0, enCours: 0, frontiere: 0, candidats: [], frontieres: [], sansNom: 0, sansAdresse: 0, formeNoeud: null };
     if (!c.length) return out;
-    parcourir(pointclouds, c, rayonM, (n, d, bm, pc) => {
+    const prefixes = new Map();   /* nœud → préfixe sûr (hérité des ancêtres), le temps du parcours */
+    parcourir(pointclouds, c, rayonM, (n, d, bm, pc, parent) => {
+      const nom = nomNoeud(n), prefixe = prefixeDonnees(n, nom, parent ? prefixes.get(parent) : null); if (prefixe) prefixes.set(n, prefixe);
       if (d === null || (niveauMax !== null && d > niveauMax)) return false;
       out.intersectants++;
       if (n.loaded === true) out.charges++; else if (n.loading === true) out.enCours++;
-      else { const cle = nomNoeud(n); if (cle) out.candidats.push({ noeud: n, pc, cle, niveau: d, points: fini(n.numPoints) && n.numPoints > 0 ? n.numPoints : null, distance: distance(bm, c) }); else out.intersectants--; }
+      else {
+        if (out.formeNoeud === null) out.formeNoeud = formeNoeud(n);   /* CH-080b : forme du premier nœud non chargé de la zone */
+        if (!nom) { out.intersectants--; out.sansNom++; }
+        else if (!prefixe) out.sansAdresse++;   /* CH-080b : aucune adresse sûre : rien n'est demandé, l'événement le dit */
+        else out.candidats.push({ noeud: n, pc, cle: nom, prefixe, niveau: d, points: fini(n.numPoints) && n.numPoints > 0 ? n.numPoints : null, distance: distance(bm, c) });
+      }
       if (n.numPoints === -1 || (n.hasChildren === true && !enfants(n).length)) out.frontiere++;
       /* CH-080 : frontière EPT (sous-hiérarchie non lue, enfants inconnus) : candidate à la lecture de son fichier de hiérarchie. */
-      if (n.numPoints === -1 && !enfants(n).length) { const f = frontiereDe(n, pc, d, bm, c); if (f) out.frontieres.push(f); }
+      if (n.numPoints === -1 && !enfants(n).length && nom && prefixe) { const f = frontiereDe(n, pc, d, bm, c, nom, prefixe); if (f) out.frontieres.push(f); }
       return true;
     });
     out.candidats.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
     out.frontieres.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
     return out;
   }
-  /** Adresse que Potree construit pour ce nœud (`url()` + extension de son chargeur, ou celle apprise de ses propres requêtes). Jamais gardée.
-   * CH-080 : nœud déduit d'un fichier de hiérarchie (`prefixe`) : le même préfixe que l'adresse de son ancêtre connu, suivi de sa clé. */
+  /** Adresse que Potree construit pour ce nœud : `<ept.url>ept-data/<clé>` + extension de son chargeur (ou celle apprise de ses propres requêtes). Jamais
+   * gardée. CH-080b : seulement à partir d'un préfixe SÛR (`prefixeDonnees`) ; sans lui, null et rien n'est demandé. */
   function adresse(c, extApprise) {
     try {
-      const n = c.noeud, l = c.pc?.pcoGeometry?.loader;
+      const l = c.pc?.pcoGeometry?.loader;
       const ext = typeof l?.extension === 'function' ? l.extension() : extApprise;
       if (typeof ext !== 'string' || !/^\.[a-z0-9]{1,8}$/i.test(ext)) return null;
-      if (typeof c.prefixe === 'string') return c.prefixe + c.cle + ext;
-      if (typeof n?.url !== 'function') return null;
-      const u = n.url(); return typeof u === 'string' && u.length ? u + ext : null;
+      return typeof c.prefixe === 'string' && c.prefixe.endsWith('ept-data/') && D_X_Y_Z.test(c.cle) ? c.prefixe + c.cle + ext : null;
     } catch { return null; }
   }
 
@@ -184,13 +216,11 @@
   const CLES_MAX = 20000;
   const cleDe = s => { const m = /^(\d+)-(\d+)-(\d+)-(\d+)$/.exec(String(s)); return m ? m.slice(1).map(Number) : null; };
   /** Frontière : clé, boîte (repère du nuage), préfixes des adresses de données et de hiérarchie, ou null. */
-  function frontiereDe(n, pc, niv, bm, c) {
+  function frontiereDe(n, pc, niv, bm, c, nom, prefixe) {
     try {
-      const nom = nomNoeud(n), k = cleDe(nom), b = n.boundingBox; if (!k || niv === null || !b?.min || !b?.max || typeof n.url !== 'function') return null;
-      const u = n.url(); if (typeof u !== 'string' || !u.endsWith(nom)) return null;
-      const prefixe = u.slice(0, -nom.length), base = typeof n.ept?.url === 'string' && n.ept.url.length ? n.ept.url : null;
-      const prefixeHier = base ? base + 'ept-hierarchy/' : /ept-data\/$/.test(prefixe) ? prefixe.replace(/ept-data\/$/, 'ept-hierarchy/') : null;
-      if (!prefixeHier) return null;
+      const k = cleDe(nom), b = n.boundingBox; if (!k || niv === null || !b?.min || !b?.max || typeof prefixe !== 'string' || !prefixe.endsWith('ept-data/')) return null;
+      /* CH-080b : même préfixe sûr que les données (`<ept.url>ept-data/` → `<ept.url>ept-hierarchy/`, la construction de loadHierarchy). */
+      const prefixeHier = prefixe.slice(0, -'ept-data/'.length) + 'ept-hierarchy/';
       return { cle: nom, k, niveau: niv, boite: { min: { x: b.min.x, y: b.min.y, z: b.min.z }, max: { x: b.max.x, y: b.max.y, z: b.max.z } }, pc, prefixe, prefixeHier, distance: distance(bm, c) };
     } catch { return null; }
   }
@@ -249,7 +279,7 @@
     }
     const resume = (c, extra = {}) => ({ kind: 'prechauffage', coupe: c.coupe, predite: c.predite ?? null, op: c.op, saut: c.saut ?? null, source: c.source ?? null, niveauMax: c.niveauMax ?? null,
       intersectants: c.sel?.intersectants ?? 0, charges: c.sel?.charges ?? 0, enCours: c.sel?.enCours ?? 0, frontiere: c.sel?.frontiere ?? 0, candidats: c.sel?.candidats.length ?? 0,
-      noeuds: c.noeuds, termines: c.termines, octets: c.octets, hierarchies: c.hierarchies, deduits: c.deduits, dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
+      noeuds: c.noeuds, termines: c.termines, octets: c.octets, hierarchies: c.hierarchies, deduits: c.deduits, sansNom: c.sel?.sansNom ?? 0, sansAdresse: (c.sel?.sansAdresse ?? 0) + (c.sansAdresse ?? 0), formeNoeud: c.sel?.formeNoeud ?? null, dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
     function terminer(c) {
       if (c.fini) return c.resultat; c.fini = true;
       if (c.op === op && c.predite !== undefined && c.cles.size) suivi = { op: c.op, partie: c.partie, predite: c.predite, cles: c.cles, potree: 0, couverts: 0, servisCache: 0, cacheTotal: 0 };
@@ -264,7 +294,7 @@
       if (coupure) { c.motif = coupure; courant = c; return terminer(c); }
       if (!actif) return { motif: 'eteint', noeuds: 0, octets: 0, annule: false };
       courant = c;
-      if (chargements() !== 0) { c.motif = 'reseau-occupe'; return terminer(c); }
+      /* CH-080b : la prédiction passe AVANT le contrôle « réseau occupé » (mémoire de la page, aucune requête) : l'événement porte alors saut et source. */
       /* CH-080 : la coupe suivante est demandée à sa source. Cible du service worker (relecture, passe des différés) : acceptée seulement si elle porte
        * l'identité de CETTE capture (partie, coupe) ; sinon périmée, rien n'est demandé (règle 4.2). Sans cible : la suivante non validée de la liste. */
       const h = ctx?.suivante;
@@ -282,13 +312,14 @@
       c.predite = cible.predite; c.source = cible.source; c.saut = cible.saut;
       /* CH-080 : coupe proche (|saut| < sautMin) : ses nœuds sont déjà chargés (mesure du 09/11), rien n'est demandé. */
       if (Math.abs(cible.saut) < R.sautMin) { c.motif = 'saut-court'; return terminer(c); }
+      if (chargements() !== 0) { c.motif = 'reseau-occupe'; return terminer(c); }
       const courants = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) };
       let nm = niveauLocal(ctx.pointclouds, courants, R.rayonM);
       if (R.profondeurMax !== null) nm = nm === null ? R.profondeurMax : Math.min(nm, R.profondeurMax);
       c.niveauMax = nm;
       c.sel = candidats(ctx.pointclouds, cible, { niveauMax: nm, rayonM: R.rayonM });
       const lireHier = R.hierarchie && c.sel.frontieres.length > 0;
-      if (!c.sel.candidats.length && !lireHier) { c.motif = 'aucun-noeud'; return terminer(c); }
+      if (!c.sel.candidats.length && !lireHier) { c.motif = c.sel.sansAdresse ? 'sans-adresse' : 'aucun-noeud'; return terminer(c); }
       const depart = etiquette();
       /* Veille, une image sur deux au plus : premier chargement de Potree, étiquette de coupe changée. */
       (async () => {
@@ -338,7 +369,7 @@
           const x = file[i], e = estime(x);
           if (c.octets + c.enVolEst + e > R.octetsMax) { c.motif = c.motif || 'plafond-octets'; return; }
           i++;
-          const url = adresse(x, extApprise); if (!url) { c.motif = c.motif || 'sans-adresse'; continue; }
+          const url = adresse(x, extApprise); if (!url) { c.motif = c.motif || 'sans-adresse'; c.sansAdresse = (c.sansAdresse || 0) + 1; continue; }
           const ctl = new env.AbortController(); c.controleurs.add(ctl); c.noeuds++; c.cles.add(x.cle); c.enVolEst += e;
           try {
             const r = await env.fetch(url, { method: 'GET', cache: 'default', credentials: 'same-origin', mode: 'cors', priority: 'low', signal: ctl.signal });

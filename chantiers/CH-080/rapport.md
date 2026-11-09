@@ -84,3 +84,42 @@ Détail dans `etude.md`.
    - `hierarchies`, `deduits`, `noeuds` et `frontiere` pour les sauts de 11 coupes ou plus.
 3. Comparer à « Vision 5 » la capture médiane des sauts de 11 coupes ou plus. Dans `prechauffage-bilan`, lire `juste` et `servisCache`.
 4. Si `hierarchies` vaut 0 alors que `frontiere` est positif, l'adresse de la hiérarchie n'a pas été trouvée. `hierarchie:false` coupe cette étape seule.
+
+## CH-080b — Pourquoi rien n'est parti sur le vrai ESV (lot « Vision 6 », 09/11)
+**Cause (ÉTABLI par le code et les comptes des événements)** : la page ne lisait le nom D-X-Y-Z d'AUCUN nœud non chargé du Potree d'ESV.
+- Dans la sélection, un nœud non chargé sans nom lisible était retiré du compte des nœuds de la zone. Il n'était ni demandé, ni lu comme frontière, mais restait compté dans `frontiere`.
+- Vision 6, sauts de 11 coupes ou plus : dans 12 cas sur 16, `frontiere` (10 à 15) dépasse le nombre de nœuds comptés (1 à 9). Ces nœuds en plus sont donc des nœuds non chargés sans nom.
+- Vision 5 et Vision 6 ensemble : 733 préchauffages, 0 candidat dans 733 cas sur 733, 0 nœud jamais demandé. Le défaut existe donc depuis CH-077 ; la maquette ne le voyait pas.
+- L'ancien `nomNoeud` essayait `filename()` puis `key.name()`, et s'arrêtait à la première chaîne qui ne collait pas. La forme exacte des nœuds d'ESV reste INCONNUE : le relevé de console `chantiers/CH-080/releve-console.js` (lecture seule, types, booléens, comptes et noms de propriétés) est remis à l'opérateur par l'intégrateur.
+
+**Correction** :
+- **(a) Nom** : chaque source est essayée sans s'arrêter à la première, dans cet ordre :
+  - `filename()`, `key.name()` ;
+  - `key.{d,x,y,z}` entiers ;
+  - le nom de Potree « r » suivi de chiffres 0 à 7, décodé en D-X-Y-Z (toPotreeName : un chiffre par niveau, x·4 + y·2 + z).
+- **(b) Adresse, seulement si elle est sûre** :
+  - `ept.url` + `ept-data/` + clé (la construction de Potree) ;
+  - sinon `url()` sans « ? », qui finit par `ept-data/<clé>` ;
+  - sinon le préfixe hérité du plus proche ancêtre sûr.
+
+  Sans adresse sûre, rien n'est demandé : motif `sans-adresse`, compté dans `sansAdresse`. La hiérarchie prend le même préfixe (`ept-hierarchy/`).
+- **(c) Diagnostic dans l'événement** : `sansNom` (nœuds non chargés sans nom) et `formeNoeud`, les bits de forme du premier nœud non chargé de la zone, jamais une valeur. Bits : 1 filename(), 2 filename D-X-Y-Z, 4 key entière, 8 key.name() D-X-Y-Z, 16 name « r », 32 url(), 64 url finit par la clé, 128 ept.url, 256 numPoints −1, 512 « ? », 1024 « ept-data/ ». Le prochain lot dira la forme, même sans console.
+- **Proposition mineure** : la prédiction passe avant le contrôle « réseau occupé » ; l'événement porte alors `predite`, `saut` et `source`.
+- **(d) Forme de la maquette** : la forme « r » (`eptForme=r`, `filename()` rend le nom de Potree) est **SUPPOSÉE**. La forme réelle sera reproduite à réception du relevé.
+
+**Les 44 `reseau-occupe` à `predite` nulle : BÉNINS (ÉTABLI)**.
+- Le compteur de Potree n'était pas à 0 à la fin de la capture. Le contrôle passait avant la prédiction, d'où `predite` nulle.
+- 43 sont en relecture, dont 10 sur la seconde capture d'un même cut, et 1 dans le lot.
+- La coupe suivante réelle était la voisine dans 42 cas (rien à préchauffer de toute façon) ; 2 sauts lointains (12 et 54) sont perdus.
+
+**Preuves** :
+- `ch080b-forme` 6/6, tous rouges sur le module d'avant ;
+- `ch080-*` et `ch077-*` verts ;
+- régression 210/210 (`choix-lot-clic-sw`, `pose-lot-inchanges-4959`, relecture, passe des différés, scans) ;
+- parité de la relecture contre le tronc (858295a) identique ;
+- maquette `ch080b-forme` 1/1 (rouge sur le module d'avant) : forme « r », saut de 50, 8 hiérarchies et 16 nœuds demandés, 10/32 nœuds et 6/10 hiérarchies servis par le cache, repos en 532 ms ;
+- maquette complète : 73 réussis, 3 sautés (export réel absent, et le cas « sans le correctif » sauté depuis l’intégration), 0 échec, puis 7/7.
+
+**Reste SUPPOSÉ** : la forme réelle des nœuds d'ESV (relevé attendu), et que l'adresse sûre soit celle que Potree demande vraiment.
+
+**Consigne terrain** : lire `formeNoeud`, `sansNom` et `sansAdresse` des sauts de 11 coupes ou plus. Si `sansNom > 0`, la forme n'est pas couverte ; si `sansAdresse > 0`, l'adresse n'est pas sûre. Dans les deux cas, rien n'est demandé.
