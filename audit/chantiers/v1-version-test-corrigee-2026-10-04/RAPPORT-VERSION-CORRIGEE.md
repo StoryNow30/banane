@@ -42,7 +42,7 @@ VERSION est utilisé pour étiqueter état/export/enregistrements (src/engine.js
 
 Le moteur, décision de lot, adaptateur, stockage, cerveau, géométrie et outils de mesure restent octet pour octet identiques. Les contrôles de version de l'analyste utilisent des seuils antérieurs à la 4.8.6 ; les deux versions choisissent les mêmes règles (tools/acceptance-report.cjs:342-375). Aucun effet métier différent trouvé dans ces lectures/probes Node ; aucune nouvelle décision de pose revendiquée. Les études terrain restent nécessaires pour les temps réels.
 
-Le vrai candidat corrigé baa548d81a0bf7059ae1711163527a918cf2257d, arbre 69aad6bcd0d8e63116c8491339ff7d46b43bd3d3, parent 042aee649bc25b89c46a26def481f87f46d047ac a été réutilisé. Le delta initial était identique au retour intact d664ea7c… ; il n'a pas été appliqué deux fois. Branche locale sol/v1-preparation-test-2026-10-04, main documentaire 18a355eb02a00b20b2adaeb1d84648854664972e distinct du code ; aucun changement de main. Aucun numéro de décision Mic nouveau créé.
+Le vrai candidat corrigé baa548d81a0bf7059ae1711163527a918cf2257d, arbre 69aad6bcd0d8e63116c8491339ff7d46b43bd3d3, parent 042aee649bc25b89c46a26def481f87f46d047ac a été réutilisé. Le delta initial était identique au retour intact d664ea7c… ; il n'a pas été appliqué deux fois. Branche locale sol/v1-preparation-test-2026-10-04, main documentaire 18a355eb02a00b20b2adaeb1d84648854664972e distinct du code ; aucun changement de main. Aucun numéro de décision l'opérateur nouveau créé.
 
 ## Anciennes preuves J1 réutilisées
 
@@ -62,4 +62,4 @@ Proposition **50/50/150** inchangée, pas programme adopté. Aucun projet/partie
 
 ## Arrêt et limites
 
-Paquet de test local pour contrôle de l'orchestrateur et relecture indépendante du diff limité ; **terrain non mesuré/non accepté**. Réservation globale à confirmer avant installation ; lots/accès/séance et éventuels critères de porte à adopter distinctement. Aucun navigateur, ESV/PC Mic, push, merge, tag, publication, écriture banane-data, intégration U1/U2/V4, chantier V2/V3/V5 ou apprentissage exécuté. P2 reste accepté. Après remise du ZIP vérifié, arrêt de cette mission.
+Paquet de test local pour contrôle de l'orchestrateur et relecture indépendante du diff limité ; **terrain non mesuré/non accepté**. Réservation globale à confirmer avant installation ; lots/accès/séance et éventuels critères de porte à adopter distinctement. Aucun navigateur, ESV/PC l'opérateur, push, merge, tag, publication, écriture banane-data, intégration U1/U2/V4, chantier V2/V3/V5 ou apprentissage exécuté. P2 reste accepté. Après remise du ZIP vérifié, arrêt de cette mission.

@@ -5,7 +5,7 @@
  'use strict';
  /* RAISON DE LA CORRECTION (RM-11, 4.9.5 test 9 ; fiches/RM11_RAISON_CORRECTION.md). MODULE PUR : ni DOM, ni session, ni horloge, ni stockage.
   *
-  * Écho est passif. Quand Mic le décide, il tape un chiffre pour dire POURQUOI il corrige un cut : 1 rail voisin, 2 ADV, 3 PN, 4 nuage diffus
+  * Écho est passif. Quand l'opérateur le décide, il tape un chiffre pour dire POURQUOI il corrige un cut : 1 rail voisin, 2 ADV, 3 PN, 4 nuage diffus
   * ou pauvre, 5 hauteur seulement, 6 autre ; 0 efface. La touche est lue par son code physique (rangée du haut ou pavé numérique). Rien n'est
   * retenu, rien n'est envoyé à ESV : ce module ne fait que LIRE une frappe déjà observée et tenir un petit état (la raison « collante »).
   *
@@ -25,7 +25,7 @@
   Object.freeze({touche:'6',code:'autre',libelle:'Autre'})]);
  const CODES=Object.freeze(CATALOGUE.map(c=>c.code));
  const LIBELLES=Object.freeze(Object.fromEntries(CATALOGUE.map(c=>[c.code,c.libelle])));
- /* Tables de touches. `chiffres` (défaut) : rangée du haut ou pavé, sans Ctrl, Alt ni Meta (Maj toléré, Mic le tient déjà pour Maj+Espace).
+ /* Tables de touches. `chiffres` (défaut) : rangée du haut ou pavé, sans Ctrl, Alt ni Meta (Maj toléré, l'opérateur le tient déjà pour Maj+Espace).
   * Replis, si ESV réagit à un chiffre seul : `alt-chiffres` (Alt tenue, rangée du haut ou pavé) puis `pave` (pavé numérique seul). */
  const TABLES=Object.freeze(['chiffres','alt-chiffres','pave']);
  const REGLAGE_DEFAUT=Object.freeze({actif:false,touches:'chiffres',graceMs:500,doubleAppuiMs:600,sautCuts:30,rappelCollanteCuts:40});

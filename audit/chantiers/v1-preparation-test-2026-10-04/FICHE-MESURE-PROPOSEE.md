@@ -36,7 +36,7 @@ Utiliser les outils inchangés du commit baa548d81a0bf7059ae1711163527a918cf2257
 2. Conserver **toutes** les visites et tous les jalons attendus, y compris différés, reprises et chevauchements. Contrôler santé finale, export, pertes, batchSeq, trous, conflits d'identifiants, séquence attendue/absente. Publier coverage.complete tel que calculé aujourd'hui, sans correction documentaire au vert.
 3. Par phase et par lot : attendues, mesurées, inapplicables (motif justifié), chevauchées (overlapMs positif, ms null), manquantes (motif), effectif n, médiane/p90/maximum sur les seules durées calculables ; aucune durée manquante transformée en zéro. Les catégories de phase forment une partition par visite ; un contexte incomplet reste visible.
 4. Publier durée totale murale début-fin avec pauses, durée totale issue du même clockId lorsqu'elle est calculable, temps de pause/arrêt et leurs limites de mesure. Ne pas soustraire une interruption déclarée d'une horloge incompatible. Publier chaque cause d'arrêt et arrêts/100 coupes **distinctes**, plus revisites séparées. Arrêt sans dénominateur connu = ratio non mesuré.
-5. Publier nombre et durée de silences, chaque intervalle, cycles actifs et cycles >60 s séparés. La règle existante est >60000 ms ; sa confirmation reste à Mic, aucune nouvelle valeur fixée. Publier la distribution des écarts, sans supprimer des visites pour améliorer une médiane.
+5. Publier nombre et durée de silences, chaque intervalle, cycles actifs et cycles >60 s séparés. La règle existante est >60000 ms ; sa confirmation reste à l'opérateur, aucune nouvelle valeur fixée. Publier la distribution des écarts, sans supprimer des visites pour améliorer une médiane.
 6. Montrer les spans V4.6 imbriqués et leur union temporelle, à l'intérieur et hors analyse ; ne pas ajouter ce temps une seconde fois au cycle. Un chevauchement réel reste publié ; ne pas sommer les médianes pour reconstruire une durée totale. Si une somme et son résidu sont montrés par l'outil, signaler la cohorte commune et que cette décomposition n'est pas une identité CPU.
 7. Publier coût d'instrumentation : événements/octets UTF-8, maxEventBytes, coût local relevé, pertes, attente d'export plafonnée V1 à 250 ms. Le stockage asynchrone non isolé demeure inconnu/null ; ni zéro ni chiffre déduit par soustraction de médianes. Débit disque, IndexedDB réel et service worker suspendu restent non mesurés par les preuves Node.
 
@@ -44,7 +44,7 @@ Quantiles de l'outil : index floor(p×(n−1)+0,5), pas une autre convention sil
 
 **D5 vs V1.** Les 48 %/63 % historiques ne sont ni confirmés ni infirmés par des bornes différentes. D5 utilise événements durables/heure murale et sélection historique ; V1 suit des jalons reçus dans une horloge SW monotone, toutes les visites visibles. Après pose, adapter.state est une lecture d'état, pas une nouvelle capture LiDAR. Joindre les deux méthodes sans compléter une borne V1 manquante par D5. Sources : FICHE-METHODE_INTACTE.md:3-25 ; tools/perf-lot.cjs:101-128 ; tools/perf-phases.cjs:14-46 ; src/engine.js:153-161,255-256,809-812.
 
-**Observation V1 puis comparaison future.** Ces lots mesurent seulement la référence 4.8.6+V1. Ils n'annoncent aucun gain et ne remplacent pas l'A/A de référence puis les blocs alternés de V3. Les tolérances durée totale/arrêts/C1 viennent du bruit A/A et doivent être adoptées par Mic ; aucune tolérance arbitraire ici. Le coût local de la mesure est publié, sa charge asynchrone reste non isolée. Sources : cahier signé:126-145,175-228 ; mission originale:228-234.
+**Observation V1 puis comparaison future.** Ces lots mesurent seulement la référence 4.8.6+V1. Ils n'annoncent aucun gain et ne remplacent pas l'A/A de référence puis les blocs alternés de V3. Les tolérances durée totale/arrêts/C1 viennent du bruit A/A et doivent être adoptées par l'opérateur ; aucune tolérance arbitraire ici. Le coût local de la mesure est publié, sa charge asynchrone reste non isolée. Sources : cahier signé:126-145,175-228 ; mission originale:228-234.
 
 ## Collecte existante vérifiée par lecture
 
@@ -56,7 +56,7 @@ Conserver Journal + Bilan complet et manifeste externe de **tous** les fichiers/
 
 ## Proposition de critères pour une décision ultérieure
 
-D-073 adopte la présentation seulement. L'analyseur et coverage.complete sont strictement inchangés. Les catégories ci-dessous restent incomplètes aujourd'hui ; elles ne peuvent être admises à la porte finale sans décision distincte de Mic et mission appropriée.
+D-073 adopte la présentation seulement. L'analyseur et coverage.complete sont strictement inchangés. Les catégories ci-dessous restent incomplètes aujourd'hui ; elles ne peuvent être admises à la porte finale sans décision distincte de l'opérateur et mission appropriée.
 
 | Catégorie envisagée | Critères proposés, tous exigés ; aucune admission actuelle |
 |---|---|

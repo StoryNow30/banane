@@ -13,7 +13,7 @@
   *   4. l'étage de la décision est permis (`etagesPermis` : par défaut « first-pass », la pose du moteur confirmée par la voie des
   *      appuis, et « window », la reprise depuis la voie ; le fichier proposé ajoute « choice » et « crossing ») et la décision
   *      s'appuie sur `appuisMin` appuis au moins (défaut provisoire : 2 ; fichier sans ce champ : aucun minimum, comme l'étude) ;
-  *   5. la zone (pn, adv, abords, vert-hors-zone) permet la correction (`zones[z].corriger`, un interrupteur par zone : D-180, Mic
+  *   5. la zone (pn, adv, abords, vert-hors-zone) permet la correction (`zones[z].corriger`, un interrupteur par zone : D-180, l'opérateur
   *      accepte les chiffres de l'étude pour l'ADV et les abords, qui corrigent comme le PN ; les verts hors zone restent en ombre) ;
   *   6. l'écart le plus grand (latéral ou vertical, des deux rails) atteint le seuil de la zone (`seuilMm`) ;
   *   7. la confiance du moteur (A*), sur les deux rails, atteint le minimum de la zone (`confianceMin`) ; absente : refus (comme

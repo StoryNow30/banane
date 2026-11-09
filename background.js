@@ -574,7 +574,7 @@ function lotExitOf(next,dernier=null){const b=engine.s.batch,sc=b?.scope;
  if(Number.isInteger(next.cut)&&next.cut>sc.end)return 'beyond-end';
  return null;}
 function closeAtExit(...args){return coordinateurLot.transition('fin-de-lot',()=>clore(...args));}
-/* Test 7 (Mic : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE SANS ROUGE : le dernier relevé
+/* Test 7 (l'opérateur : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE SANS ROUGE : le dernier relevé
  * du compteur d'ESV pendant le lot (« N on M treated », même partie, source « compteur ») a N ≥ M. Lecture seule : l'avis de
  * fin de lot le dit d'abord ; ni la clôture, ni la navigation d'ESV, ni ce qui est envoyé à ESV ne changent. */
 function partieSansRouge(b){const t=b?.totalReleve,p=b?.scope?.part;
@@ -1310,7 +1310,7 @@ async function cloreSansRouge(p){const b=engine.s.batch;if(b?.state!=='RUNNING')
 /* Test 7, suite 2 (coordination, D-169, audit P-5 C1 et C2) — DÉPART SUR UN CUT VERT : AUCUNE ÉCRITURE SUR LUI.
  * Constaté au banc et sur le terrain (test 6) : un lot qui part d'un cut déjà validé (vert) le pose et le valide
  * (`apply` + `validateAndNext`) pour passer au rouge suivant : cut 0 de la partie 9 (écartement 1 434,0 → 1 429,7 mm),
- * cut 1 reposé, cut 5948 de la partie 8 reposé et revalidé puis sortie d'ESV vers la partie 9 et lot en erreur. Mic,
+ * cut 1 reposé, cut 5948 de la partie 8 reposé et revalidé puis sortie d'ESV vers la partie 9 et lot en erreur. L'opérateur,
  * lui, passe au cut suivant à traiter sans rien écrire.
  * Au PREMIER cut du lot (rien de traité, un seul cut dans la séquence), après l'analyse et AVANT toute commande, quand la
  * règle « partie complète » n'a pas joué :
@@ -1321,7 +1321,7 @@ async function cloreSansRouge(p){const b=engine.s.batch;if(b?.state!=='RUNNING')
  * Sinon (cut rouge, information absente, illisible ou ambiguë) : rien ne change, à l'octet près. Si le cut est vert :
  *  - le nombre de rouges de la table (`invalid` ou statut inconnu) doit être M − N, sinon arrêt sans rien envoyer ;
  *  - le premier cut non validé APRÈS lui est rouge et dans les bornes du lot : Ariane y va par « cut non validé suivant »
- *    (`nextWithoutDecision`, bouton `O2N3DCutNextInvalid3DRail`, Maj+Z : le geste de Mic, déjà celui des différés du lot,
+ *    (`nextWithoutDecision`, bouton `O2N3DCutNextInvalid3DRail`, Maj+Z : le geste de l'opérateur, déjà celui des différés du lot,
  *    sans écriture), puis le lot repart normalement sur ce cut, dans le même lot ;
  *  - sinon (aucun rouge devant, rouges seulement derrière comme le lot de 10 h 02, suivant non rouge, hors des bornes) :
  *    le lot s'arrête sans rien envoyer et dit lesquels restent. Ariane ne revient pas en arrière d'elle-même : les
@@ -1447,7 +1447,7 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  const fin=b?.stoppedAtEnd;if(b)b.stoppedAtEnd=null;
  try{await engine.resume();}catch(e){if(engine.s.batch===b){if(bloque&&b.state==='PAUSED')b.state='PAUSED_ADAPTER_UNRESPONSIVE';b.stoppedAtEnd=fin;}throw e;}
  return true;}
-/* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX DU PANNEAU POUR LE LOT. Deux choix, gardés dans
+/* 4.9.5 test 6 (D-157, D-164 ; l'opérateur : « essayer les 2 méthodes ») — CHOIX DU PANNEAU POUR LE LOT. Deux choix, gardés dans
  * storage.local par le panneau (actions `choix-lot-etat`, `choix-lot`), lus au démarrage de chaque lot et figés dans son scope :
  *  - `clicHumain` : le clic de pose du mode rapide ('tel-quel' par défaut, 'gauche-recentre', 'tout-recentre'), envoyé à la page
  *    avec chaque `apply` du lot en cours quand il est corrigé (src/adapter-page.js, `options.clicHumain`) ;
@@ -1652,7 +1652,7 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if(lotObservation&&pilotScope)b1EcartPlanifier(lotObservation,proposal);
    /* CH-079 : garde de voie et serrage du lot, EN OMBRE, APRÈS la décision et la commande ; calcul court et synchrone sur des copies, rien n'est rendu au lot. */
    if(lotObservation&&pilotScope)gardeSerrageOmbre(lotObservation,proposal);
-   /* 5.0 : règles métier de Mic, consignées APRÈS la décision et la commande (src/regles-metier.js) ; rien n'est rendu au lot. */
+   /* 5.0 : règles métier de l'opérateur, consignées APRÈS la décision et la commande (src/regles-metier.js) ; rien n'est rendu au lot. */
    if(lotObservation&&pilotScope)reglesMetierNoter(lotObservation,proposal);
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
      sessionId:engine.s.sessionId,batchId:engine.s.batch?.id||null,lidarCaptureId:engine.s.lidarId||null,
@@ -2089,7 +2089,7 @@ async function l1CommandeCoeur({command,lotObservation,proposal,before,capture})
   lotObservation.l1=l1;
   if(d.etat==='rien')return command;
   /* D-220 : chaque changement de pose est définitif dans ESV ; le journal garde, pour chaque cut que L1 touche, la pose d'ESV AVANT la commande
-   * et la pose envoyée (repère scène de la capture, comme les visites `records`) : la jointure juge le gain (pose d'avant → Mic contre pose L1 → Mic). */
+   * et la pose envoyée (repère scène de la capture, comme les visites `records`) : la jointure juge le gain (pose d'avant → l'opérateur contre pose L1 → l'opérateur). */
   const p3=v=>Array.isArray(v)?v.slice(0,3):null;
   l1.poseAvant=Object.fromEntries(SIDES.map(s=>[s,p3(before?.[s]?.positionSceneRelative)]));l1.poseEnvoyee=Object.fromEntries(SIDES.map(s=>[s,p3(g.positions?.[s])]));
   const valider=d.etat==='valider';
@@ -2603,11 +2603,11 @@ async function observeLot(shadow){
  return {...decision,...(reprise?{reprise}:{}),applied:false,displayed:false,engineMs:Date.now()-t0};
 }
 /* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, réglage `reglesMetier`, fiches/REGLES_METIER.md). À chaque cut du lot,
- * l'événement `regles-metier-ombre` consigne la zone reconnue (PN confirmé et ses marges, grappe de différés), les règles de Mic
+ * l'événement `regles-metier-ombre` consigne la zone reconnue (PN confirmé et ses marges, grappe de différés), les règles de l'opérateur
  * déclenchées et ce qu'Ariane AURAIT fait ; à chaque fenêtre de la liste d'ESV lue par B1, les verts à contrôler (`portee:'verts'`).
  * OMBRE (réglage livré) : la surface est lue sur la capture (copie du stockage), l'évaluation part après la décision et la commande ;
  * rien n'est rendu au lot, ni à `batch`, ni aux appuis ; aucune commande n'est envoyée. Une panne ne laisse qu'un événement « erreur ».
- * ACTIVATION (coupée : `actif:false`, toutes les règles à false ; seul Mic l'ouvre) : `reglesMetierCommande` remplace la commande
+ * ACTIVATION (coupée : `actif:false`, toutes les règles à false ; seul l'opérateur l'ouvre) : `reglesMetierCommande` remplace la commande
  * d'un cut que le lot allait VALIDER par deux abstentions GCV1 (`deferRails`, motif `regles-metier`) : le cut est différé. Jamais une
  * position nouvelle, jamais un différé changé en pose. Mémoire volatile, par lot : un redémarrage du service worker la vide. */
 const reglesOmbre={mem:null,premier:true,capture:null,eval:null};
@@ -3442,7 +3442,7 @@ async function demarrerEcho(extra){engine.assertBatchContextFree('démarrer Éch
  * retour à un cut ; « Arrêter » (du lot) y vaut « Arrêter la relecture » (W11). ESV et le lot sont contrôlés avant ET après les
  * attentes de la préparation. Elle ne part pas si ESV n'est pas propre : pose appliquée non validée, intention ou réconciliation en
  * cours, correction de relecture interrompue non contrôlée, autre activité, ESV dans une autre partie, partie sans rouge (R3).
- * Pour chaque cut choisi par la sélection (méthode de Mic, PN jamais coupé par le plafond) :
+ * Pour chaque cut choisi par la sélection (méthode de l'opérateur, PN jamais coupé par le plafond) :
  *   1. aller au cut : les boutons « cut suivant » d'ESV dans une plage (pas), la carte entre deux plages (saut) ;
  *   2. capture (`capture`, la même que le lot), statut du cut dans la liste d'ESV (mémoire de la page, aucune requête), calcul : moteur,
  *      décision du lot avec pour appuis la CHAÎNE DE LA PASSE, partie VIDE comme l'étude, où n'entrent que les poses données aux verts
@@ -3452,7 +3452,7 @@ async function demarrerEcho(extra){engine.assertBatchContextFree('démarrer Éch
  *      d'ESV, sans drapeau opérateur ; cible permise par le moteur, `engine.writable`), cut atteint par les boutons d'ESV ou par le
  *      pas (jamais juste après un saut par la carte : la passe saute au cut d'avant puis fait un pas), cut qui n'est pas le dernier de
  *      la partie. Alors : la commande du lot (`commandRails`), la pose par la MÊME commande `apply` que le lot (clic 'tout-recentre',
- *      jamais en direct : T-5), relue à 1 mm, puis Maj+Espace (le geste de Mic, `validerMajEspace`), qui VALIDE SUR PLACE (D-179 : sur
+ *      jamais en direct : T-5), relue à 1 mm, puis Maj+Espace (le geste de l'opérateur, `validerMajEspace`), qui VALIDE SUR PLACE (D-179 : sur
  *      un vert valide, ESV reste sur le même cut), prouvé par l'écriture « valid » de la ligne vue par l'observateur passif ET par ce
  *      même cut toujours affiché. La passe avance ensuite d'UN PAS vers le cut suivant (le geste de navigation qu'elle emploie déjà).
  *      Une pose refusée ou non conforme est remise (`restore`) et le cut quitté sans action ; une validation non prouvée, ou ESV
@@ -3468,7 +3468,7 @@ async function demarrerEcho(extra){engine.assertBatchContextFree('démarrer Éch
  * un cut jusqu'à « J'ai contrôlé le cut N » (`relecture-acquitter`). */
 const CLE_RELECTURE='banane50Relecture',CLE_RELECTURE_INTENTION='banane50RelectureIntention',CLE_RELECTURE_PASSE='banane50RelecturePasse',CLE_RELECTURE_REPRISE='banane51RelectureReprise',CLE_RELECTURE_REGLAGE_PAUSE='banane51RelecturePauseReglage',MODES_RELECTURE=['coupee','ombre','corriger'];
 const RELECTURE_BLOQUE=new Set([...PENDANT_RETOUR,'goto-cut','export-cache-clear','settings','reject','references','relecture-lancer','relecture-reprendre','passe-differes-ecrire']);
-/* Actions refusées tant qu'une correction de relecture interrompue n'est pas contrôlée par Mic. */
+/* Actions refusées tant qu'une correction de relecture interrompue n'est pas contrôlée par l'opérateur. */
 const RELECTURE_INTENTION_BLOQUE=new Set(['start','goto-cut','relecture-lancer','relecture-reprendre','passe-differes-ecrire']);
 /* Écartement d'une pose d'ESV jamais posée (valeur d'origine d'ESV, 1 500 mm) : écarté de la médiane des verts relus. */
 const ECARTEMENT_ORIGINE_ESV_MM=1500;
@@ -3501,7 +3501,7 @@ async function relectureNoterIntention(x){const l=await relectureIntentions();l.
 /* N'efface QUE l'intention du cut prouvé (revue, W5). */
 async function relectureEffacerIntention(cut,lotId=null){const l=(await relectureIntentions()).filter(x=>!(x.cut===cut&&(lotId===null||x.lotId===lotId)));
  try{if(l.length)await chrome.storage.local.set({[CLE_RELECTURE_INTENTION]:l});else await chrome.storage.local.remove?.(CLE_RELECTURE_INTENTION);}catch{/* rien */}}
-/* « J'ai contrôlé le cut N » : Mic a contrôlé dans ESV le cut d'une correction interrompue. */
+/* « J'ai contrôlé le cut N » : l'opérateur a contrôlé dans ESV le cut d'une correction interrompue. */
 async function relectureAcquitter(args){const cut=args?.cut;if(!Number.isInteger(cut))throw Error('Relecture : cut à acquitter inconnu.');
  const avant=await relectureIntentions(),x=avant.find(y=>y.cut===cut);if(!x)return relectureEtat();
  await relectureEffacerIntention(cut,x.lotId??null);journalerSimple('relecture-acquittee',{lotId:x.lotId??null,identity:{part:x.part??null,cut}});return relectureEtat();}
@@ -3536,7 +3536,7 @@ async function relectureReglages(){const Q=globalThis.BananeRelectureCritere;
 /* Issues de fin de lot où le dernier cut reste rouge (il est relu comme un différé) ; ailleurs, il est un cut du lot (traversé). */
 const SANS_ROUGE=new Set(['partie-sans-rouge','depart-sur-vert']);
 /* Entrée de la sélection : cuts du lot et leur rôle, PN et ADV du journal du lot (figés), liste « À contrôler » si elle est active.
- * Revue (correction 1) : tout cut que le lot ou Mic a traité est un cut du lot (traversé, jamais corrigé) : posés et validés, SKIP,
+ * Revue (correction 1) : tout cut que le lot ou l'opérateur a traité est un cut du lot (traversé, jamais corrigé) : posés et validés, SKIP,
  * repris à la main, toutes les identités interrompues, le dernier cut d'un lot clos (pose appliquée ou non), la pose en attente, les
  * cibles bloquées. Le rôle « vert » des autres n'est qu'une présomption : la garde exige ensuite le statut lu dans ESV. */
 async function relectureEntree(b){const partie=b.scope.part,cutDe=x=>x?.cut??x?.identity?.cut,poses=new Set(),differes=new Set(),sources={};
@@ -3632,7 +3632,7 @@ async function lotCloRefus(b,auto,repartir){
  if(!partCut(lu))return '« Cut N of part P » illisible dans ESV';
  if(lu.part!==b.scope.part)return `ESV affiche la partie ${lu.part}, pas celle du lot (${b.scope.part}) : reviens dans la partie ${b.scope.part}${repartir?`, puis « ${repartir} »`:''}`;
  /* Pose d'Ariane appliquée et non validée (dernier cut d'un lot borné) : tant qu'ESV l'affiche, la passe ne part pas (elle quitterait
-  * ce cut). Mic la valide (ESV passe alors à un autre cut) ou la quitte lui-même ; ensuite « Lancer la relecture ». */
+  * ce cut). L'opérateur la valide (ESV passe alors à un autre cut) ou la quitte lui-même ; ensuite « Lancer la relecture ». */
  const a=engine.s.applied?.identity;
  if(a&&a.part===lu.part&&a.cut===lu.cut)return `une pose d’Ariane attend ta validation au cut ${a.cut} : valide-la (ou corrige-la) dans ESV${repartir?`, puis « ${repartir} »`:''}`;
  return null;}
