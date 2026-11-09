@@ -38,6 +38,6 @@ async function lot(reglage,{panne=false,fin=115,avant=null,profil='actuel',garde
  return {b,adapter};
 }
 const ombres=b=>b.store.events.filter(e=>e.type==='regles-metier-ombre');
-const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','deplacer-vue','deplacer-vue-geste','faux-vert-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','deplacer-vue','deplacer-vue-geste','faux-vert-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
 const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);
 module.exports={lot,neutre,decisions,metier,ombres,deq,rec,S};

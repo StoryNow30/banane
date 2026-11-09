@@ -33,5 +33,5 @@ async function lot(reglage,{panne=false}={}){
 }
 const ombres=b=>b.store.events.filter(e=>e.type==='voie-predite-ombre');
 const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
-const metier=b=>b.store.events.filter(e=>!['voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+const metier=b=>b.store.events.filter(e=>!['voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
 module.exports={lot,neutre,decisions,metier,ombres,deq,SCOPE};

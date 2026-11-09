@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -1645,6 +1645,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
    if(lotObservation&&pilotScope)voieOmbrePlanifier(lotObservation,propositionMoteur,proposal);
    /* CH-055 : ombre « b1-ecart », APRÈS la décision et la commande, sur des copies, calcul différé ; elle ne rend rien. */
    if(lotObservation&&pilotScope)b1EcartPlanifier(lotObservation,proposal);
+   /* CH-079 : garde de voie et serrage du lot, EN OMBRE, APRÈS la décision et la commande ; calcul court et synchrone sur des copies, rien n'est rendu au lot. */
+   if(lotObservation&&pilotScope)gardeSerrageOmbre(lotObservation,proposal);
    /* 5.0 : règles métier de Mic, consignées APRÈS la décision et la commande (src/regles-metier.js) ; rien n'est rendu au lot. */
    if(lotObservation&&pilotScope)reglesMetierNoter(lotObservation,proposal);
    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
@@ -2773,6 +2775,34 @@ async function b1EcartPasse(r,b,passe,anchors){try{
   capture:{identity:copie(r.capture.identity),rails:copie(r.capture.rails),pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes}};
  await b1EcartEvaluer({ctx,commande:null,reglage,part:r.identity.part,ctxEv:{batchId:b.id,sessionId:engine.s.sessionId??null},mem:b1Ecart.mem,passe});
 }catch{/* jamais bloquant */}}
+/* CH-079 (D-308) — GARDE DE VOIE ET SERRAGE DU LOT, EN OMBRE (src/garde-voie-ombre.js, src/serrage-lot-ombre.js ; réglages `lot.gardeVoieOmbre`, `lot.serrageLotOmbre`).
+ * Après la décision et la commande d'un cut : s'il est VALIDÉ par le lot (commande « lot », ou premier passage du moteur), la garde compare son écartement à celui des
+ * cuts que CE lot a validés avant lui (mémoire volatile du lot : cut → écartement, 40 au plus ; la liste d'ESV lue au départ ne les contient pas) ; si la pose vient de la
+ * décision L1-e, le serrage consigne la pose desserrée. CONSIGNÉ SEULEMENT : aucune écriture dans `batch`, ses appuis ni la proposition, aucune commande ; une panne ne laisse
+ * qu'un événement « erreur ». Événements : numéros de cut et millimètres seulement. */
+const gsOmbre={batchId:null,ecartements:new Map()};
+const gardeVoieReglage=()=>{const r=globalThis.BananeSettings?.lot?.gardeVoieOmbre;return r&&r.actif===true&&globalThis.BananeGardeVoieOmbre?r:null;};
+const serrageLotReglage=()=>{const r=globalThis.BananeSettings?.lot?.serrageLotOmbre;return r&&r.actif===true&&globalThis.BananeSerrageLotOmbre?r:null;};
+function gardeSerrageOmbre(lotObservation,proposal){try{
+ const rg=gardeVoieReglage(),rs=serrageLotReglage(),b=engine.s.batch;if((!rg&&!rs)||!b?.id)return;
+ const identity=proposal?.identity||engine.s.before?.identity||null,cut=identity?.cut,part=identity?.part;if(!Number.isInteger(cut)||!Number.isInteger(part))return;
+ if(gsOmbre.batchId!==b.id){gsOmbre.batchId=b.id;gsOmbre.ecartements=new Map();}
+ /* Pose validée par le lot : la chaîne ou la décision L1 (`l1.poseEnvoyee`) quand la commande est « lot » avec L1 ; la décision du lot (`positions`) pour une commande « lot »
+  * (reprise depuis la voie, choix, passage à niveau) ; la paire du moteur d'un premier passage (commande « engine », étage first-pass). Tout autre cut est différé : rien. */
+ const cmd=lotObservation.command,l1=lotObservation.l1,viaL1=!!(l1&&cmd?.action==='lot'),decisionL1e=viaL1&&l1.etat==='valider'&&l1.commande?.action==='lot';
+ const valide=cmd?.action==='lot'||(cmd?.action==='engine'&&lotObservation.stage==='first-pass');if(!valide)return;
+ const pose=viaL1?l1.poseEnvoyee:lotObservation.positions,G=globalThis.BananeGardeVoieOmbre,K=globalThis.BananeCore3,t0=Date.now();
+ const positions=pose&&{left:pose.left,right:pose.right};if(!positions?.left||!positions?.right)return;
+ const gMm=G.ecartementMm(positions),ctxEv={batchId:b.id,sessionId:engine.s.sessionId??null,identity:{part,cut}};
+ /* Table des voisins : les écartements des cuts validés par ce lot dans la même partie (au dixième de millimètre, comme la liste d'ESV), seuls les cuts avant celui-ci. */
+ const voisins=[...gsOmbre.ecartements].filter(([k]) => k.startsWith(part+'|')).map(([k,g])=>[+k.split('|')[1],g]).filter(([c])=>c<cut&&c>=cut-60);
+ const n=cut+1,st=new Array(n).fill(1),fl=new Array(n).fill(0),ed=new Array(6*n).fill(null);
+ for(const [c,g] of voisins){st[c]=0;ed[6*c+1]=-g*5;ed[6*c+4]=g*5;ed[6*c]=ed[6*c+2]=ed[6*c+3]=ed[6*c+5]=0;}
+ const table={n,st,fl,ed},poste=(type,ev)=>{try{void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type,schema:1,...ctxEv,...ev,ms:Date.now()-t0})).catch(()=>{});}catch{/* le journal n'est pas critique */}};
+ if(rg){const ev=G.evaluer({cut,positions,table,valide:true,reglage:{...rg,avantSeulement:true}});delete ev.cut;poste('garde-voie-ombre',ev);}
+ if(rs&&decisionL1e){const S=globalThis.BananeSerrageLotOmbre,ev=S.evaluer({cut,positions,table,reglage:{...rs,avantSeulement:true}});delete ev.cut;poste('serrage-lot-ombre',ev);}
+ if(Number.isFinite(gMm)){gsOmbre.ecartements.set(part+'|'+cut,Math.round(gMm*100)/100);while(gsOmbre.ecartements.size>40)gsOmbre.ecartements.delete(gsOmbre.ecartements.keys().next().value);}
+}catch{/* ombre : jamais bloquant */}}
 /* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
  * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
 function promouvoirAppuis(batch,state,processed,max){const L=globalThis.BananeLotDecision,waiting=(state.pending||[]).map(p=>p.identity.cut);

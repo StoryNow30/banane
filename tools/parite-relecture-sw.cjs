@@ -23,7 +23,8 @@ const PAUSE = ['pauseDemandee', 'pauseRaison', 'reprise', 'expire'];
 const CLES_NOUVELLES = ['banane55FinsLot', 'banane56PasseDiff', 'banane56PasseDiffEntree'];
 /* T21d : `applied-verified` et `validation-intent` portent `serverConfirmed: null` (inconnu avant la requête) au lieu de `false` : ramené à `false` des
  * deux côtés ; l'événement nouveau `validation-ecriture-observee` (preuve serveur rattachée après coup) est écarté ; clés de l'état persistant de la
- * deuxième passe (`banane56PasseDiff*`, effacées à la fin de la passe) écartées du relevé du stockage. Rien d'autre n'est neutralisé. */
+ * deuxième passe (`banane56PasseDiff*`, effacées à la fin de la passe) écartées du relevé du stockage. CH-079 (D-308) : les événements nouveaux
+ * `garde-voie-ombre` et `serrage-lot-ombre` (ombre consignée seulement) sont écartés. Rien d'autre n'est neutralisé. */
 const T21D_AVANT_REQUETE = ['applied-verified', 'validation-intent'];
 const t21d = e => T21D_AVANT_REQUETE.includes(e?.type) && e.serverConfirmed === null ? { ...e, serverConfirmed: false } : e;
 
@@ -47,7 +48,7 @@ async function jouer(racine, sortie) {
     await H.attendre(200);
     const etat = sansPause(await x.b.api('relecture-etat')), vue = await x.b.api('view');
     releves[nom] = { commandes: nettoyer(x.b.commands), allees: nettoyer(x.adapter.allees), majEspace: nettoyer(x.adapter.majEspace), applyArgs: nettoyer(x.adapter.applyArgs),
-      evenements: nettoyer(x.b.store.events.filter(e => !['esv-observation', 'phase-timing', 'validation-ecriture-observee'].includes(e.type)).map(t21d)),
+      evenements: nettoyer(x.b.store.events.filter(e => !['esv-observation', 'phase-timing', 'validation-ecriture-observee', 'garde-voie-ombre', 'serrage-lot-ombre'].includes(e.type)).map(t21d)),
       passe: nettoyer({ etat: passe.etat, faits: passe.faits, corriges: passe.corriges, message: passe.message, vus: passe.vus }),
       etat: nettoyer(etat), vueRelecture: nettoyer(vue.relecture ?? null), stockage: Object.keys(local.m).filter(k => !CLES_NOUVELLES.includes(k)).sort() };
   }

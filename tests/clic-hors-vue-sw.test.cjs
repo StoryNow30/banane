@@ -72,7 +72,7 @@ test('un lot avec relevés : mêmes décisions, mêmes commandes, mêmes événe
  const a=await petitLot(false),b=await petitLot(true);
  assert.deepEqual(neutre(b.commands),neutre(a.commands),'commandes à ESV');
  assert.deepEqual(b.adapter.calls,a.adapter.calls);
- const metier=x=>x.store.events.filter(e=>!['clic-hors-vue','clic-hors-vue-bilan','phase-timing','phase-timing-pli','adapter-progress','b1-ombre','regles-metier-ombre','voie-predite-ombre'].includes(e.type)).map(e=>e.type);
+ const metier=x=>x.store.events.filter(e=>!['clic-hors-vue','clic-hors-vue-bilan','phase-timing','phase-timing-pli','adapter-progress','b1-ombre','garde-voie-ombre','serrage-lot-ombre','regles-metier-ombre','voie-predite-ombre'].includes(e.type)).map(e=>e.type);
  assert.deepEqual(metier(b),metier(a),'événements du moteur');
  const decisions=x=>neutre(x.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>e.lotObservation?.command??null));
  assert.deepEqual(decisions(b),decisions(a));

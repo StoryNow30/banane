@@ -45,7 +45,7 @@ async function lot(reglage,{panne=false,loin=[112],liste=null,mm=230}={}){
 }
 const ombres=b=>b.store.events.filter(e=>e.type==='voie-b1-ecart-ombre');
 const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
-const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
 let coupe,active,enPanne;
 before(async()=>{coupe=await lot({...S.lot.voieB1EcartOmbre,actif:false});active=await lot(undefined);enPanne=await lot(undefined,{panne:true});});
 

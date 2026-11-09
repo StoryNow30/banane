@@ -248,6 +248,13 @@
      * aucune vue n'est déplacée, aucune commande n'est envoyée ; décision, pose et appuis du lot sont identiques avec et sans. Activer une POSE est une
      * décision de l'opérateur, après deux lots en ombre jugés contre l'Écho des différés. `actif:false` : rien n'est calculé ni consigné. */
     voieB1EcartOmbre: Object.freeze({ actif: true, fenetreListe: 5, fenetreMm: 30, choixMm: 15, accordMm: 20, gRefDefautMm: 1435, essaisMax: 4 }),
+    /* CH-079 (D-308) — GARDE DE VOIE ET SERRAGE DU LOT, EN OMBRE (src/garde-voie-ombre.js, src/serrage-lot-ombre.js ; mesure : chantiers/CH-079/rapport.md). Après la
+     * décision et la commande de chaque cut, le service worker consigne (`garde-voie-ombre`, `serrage-lot-ombre`) : si l'écartement posé sur un cut que le lot VALIDE
+     * s'écarte de plus de `seuilMm` de celui des voisins validés (fenêtre de `fenetre` cuts, au moins `voisinesMin` voisins) ; et la pose que donnerait un desserrage de
+     * la moitié de l'écart à la référence, sur les seules poses de la décision L1-e (jusqu'à `plafondMm`). CONSIGNÉ SEULEMENT : rien n'est posé ni différé, aucune
+     * commande ne change. Passer la garde à la pause, ou le serrage à l'écriture, demande un nouvel accord écrit de l'opérateur (D-308). `actif:false` : rien n'est calculé. */
+    gardeVoieOmbre: Object.freeze({ actif: true, seuilMm: 15, fenetre: 20, voisinesMin: 5 }),
+    serrageLotOmbre: Object.freeze({ actif: true, plafondMm: 20, fenetre: 20, voisinesMin: 5 }),
     /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, chantiers/CH-034/JOURNAL.md § 2), ÉTEINTE par défaut. Allumée, sur un cut que la commande allait
      * poser et valider, le moteur gelé est relancé sur le nuage capturé à des graines espacées de `pasMm` jusqu'à ±`porteeMm` en travers (la ROI de capture),
      * et la pose du lot est confrontée aux paires fortes trouvées : mode 'differer' (livré) : différé si une paire au moins aussi bonne (produit des pertes

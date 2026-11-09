@@ -46,7 +46,7 @@ async function lot(reglage,{panne=false,loin=[112],liste=null,mm=230}={}){
 }
 const ombres=b=>b.store.events.filter(e=>e.type==='voie-b1-ecart-ombre');
 const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
-const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
 let avecListe;
 before(async()=>{
  /* 290 mm : au-delà de ce que le moteur seul retrouve sur ce nuage (mesuré : à 270 mm il pose encore seul, en premier passage). */

@@ -1,0 +1,284 @@
+diff --git a/background.js b/background.js
+index 0fe0b3b..d86a6b2 100644
+--- a/background.js
++++ b/background.js
+@@ -12,7 +12,7 @@
+ importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
+  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
+  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
+- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js');
++ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js');
+ /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
+  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
+ /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
+@@ -1645,6 +1645,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
+    if(lotObservation&&pilotScope)voieOmbrePlanifier(lotObservation,propositionMoteur,proposal);
+    /* CH-055 : ombre « b1-ecart », APRÈS la décision et la commande, sur des copies, calcul différé ; elle ne rend rien. */
+    if(lotObservation&&pilotScope)b1EcartPlanifier(lotObservation,proposal);
++   /* CH-079 : garde de voie et serrage du lot, EN OMBRE, APRÈS la décision et la commande ; calcul court et synchrone sur des copies, rien n'est rendu au lot. */
++   if(lotObservation&&pilotScope)gardeSerrageOmbre(lotObservation,proposal);
+    /* 5.0 : règles métier de Mic, consignées APRÈS la décision et la commande (src/regles-metier.js) ; rien n'est rendu au lot. */
+    if(lotObservation&&pilotScope)reglesMetierNoter(lotObservation,proposal);
+    if(shadow)await engine.event('gcv1-shadow-observed',{identity:proposal?.identity||engine.s.before?.identity||null,
+@@ -2773,6 +2775,34 @@ async function b1EcartPasse(r,b,passe,anchors){try{
+   capture:{identity:copie(r.capture.identity),rails:copie(r.capture.rails),pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes}};
+  await b1EcartEvaluer({ctx,commande:null,reglage,part:r.identity.part,ctxEv:{batchId:b.id,sessionId:engine.s.sessionId??null},mem:b1Ecart.mem,passe});
+ }catch{/* jamais bloquant */}}
++/* CH-079 (D-308) — GARDE DE VOIE ET SERRAGE DU LOT, EN OMBRE (src/garde-voie-ombre.js, src/serrage-lot-ombre.js ; réglages `lot.gardeVoieOmbre`, `lot.serrageLotOmbre`).
++ * Après la décision et la commande d'un cut : s'il est VALIDÉ par le lot (commande « lot », ou premier passage du moteur), la garde compare son écartement à celui des
++ * cuts que CE lot a validés avant lui (mémoire volatile du lot : cut → écartement, 40 au plus ; la liste d'ESV lue au départ ne les contient pas) ; si la pose vient de la
++ * décision L1-e, le serrage consigne la pose desserrée. CONSIGNÉ SEULEMENT : aucune écriture dans `batch`, ses appuis ni la proposition, aucune commande ; une panne ne laisse
++ * qu'un événement « erreur ». Événements : numéros de cut et millimètres seulement. */
++const gsOmbre={batchId:null,ecartements:new Map()};
++const gardeVoieReglage=()=>{const r=globalThis.BananeSettings?.lot?.gardeVoieOmbre;return r&&r.actif===true&&globalThis.BananeGardeVoieOmbre?r:null;};
++const serrageLotReglage=()=>{const r=globalThis.BananeSettings?.lot?.serrageLotOmbre;return r&&r.actif===true&&globalThis.BananeSerrageLotOmbre?r:null;};
++function gardeSerrageOmbre(lotObservation,proposal){try{
++ const rg=gardeVoieReglage(),rs=serrageLotReglage(),b=engine.s.batch;if((!rg&&!rs)||!b?.id)return;
++ const identity=proposal?.identity||engine.s.before?.identity||null,cut=identity?.cut,part=identity?.part;if(!Number.isInteger(cut)||!Number.isInteger(part))return;
++ if(gsOmbre.batchId!==b.id){gsOmbre.batchId=b.id;gsOmbre.ecartements=new Map();}
++ /* Pose validée par le lot : la chaîne ou la décision L1 (`l1.poseEnvoyee`) quand la commande est « lot » avec L1 ; la décision du lot (`positions`) pour une commande « lot »
++  * (reprise depuis la voie, choix, passage à niveau) ; la paire du moteur d'un premier passage (commande « engine », étage first-pass). Tout autre cut est différé : rien. */
++ const cmd=lotObservation.command,l1=lotObservation.l1,viaL1=!!(l1&&cmd?.action==='lot'),decisionL1e=viaL1&&l1.etat==='valider'&&l1.commande?.action==='lot';
++ const valide=cmd?.action==='lot'||(cmd?.action==='engine'&&lotObservation.stage==='first-pass');if(!valide)return;
++ const pose=viaL1?l1.poseEnvoyee:lotObservation.positions,G=globalThis.BananeGardeVoieOmbre,K=globalThis.BananeCore3,t0=Date.now();
++ const positions=pose&&{left:pose.left,right:pose.right};if(!positions?.left||!positions?.right)return;
++ const gMm=G.ecartementMm(positions),ctxEv={batchId:b.id,sessionId:engine.s.sessionId??null,identity:{part,cut}};
++ /* Table des voisins : les écartements des cuts validés par ce lot dans la même partie (au dixième de millimètre, comme la liste d'ESV), seuls les cuts avant celui-ci. */
++ const voisins=[...gsOmbre.ecartements].filter(([k]) => k.startsWith(part+'|')).map(([k,g])=>[+k.split('|')[1],g]).filter(([c])=>c<cut&&c>=cut-60);
++ const n=cut+1,st=new Array(n).fill(1),fl=new Array(n).fill(0),ed=new Array(6*n).fill(null);
++ for(const [c,g] of voisins){st[c]=0;ed[6*c+1]=-g*5;ed[6*c+4]=g*5;ed[6*c]=ed[6*c+2]=ed[6*c+3]=ed[6*c+5]=0;}
++ const table={n,st,fl,ed},poste=(type,ev)=>{try{void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type,schema:1,...ctxEv,...ev,ms:Date.now()-t0})).catch(()=>{});}catch{/* le journal n'est pas critique */}};
++ if(rg){const ev=G.evaluer({cut,positions,table,valide:true,reglage:{...rg,avantSeulement:true}});delete ev.cut;poste('garde-voie-ombre',ev);}
++ if(rs&&decisionL1e){const S=globalThis.BananeSerrageLotOmbre,ev=S.evaluer({cut,positions,table,reglage:{...rs,avantSeulement:true}});delete ev.cut;poste('serrage-lot-ombre',ev);}
++ if(Number.isFinite(gMm)){gsOmbre.ecartements.set(part+'|'+cut,Math.round(gMm*100)/100);while(gsOmbre.ecartements.size>40)gsOmbre.ecartements.delete(gsOmbre.ecartements.keys().next().value);}
++}catch{/* ombre : jamais bloquant */}}
+ /* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
+  * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
+ function promouvoirAppuis(batch,state,processed,max){const L=globalThis.BananeLotDecision,waiting=(state.pending||[]).map(p=>p.identity.cut);
+diff --git a/src/settings.js b/src/settings.js
+index 2cf0078..5b35503 100644
+--- a/src/settings.js
++++ b/src/settings.js
+@@ -248,6 +248,13 @@
+      * aucune vue n'est déplacée, aucune commande n'est envoyée ; décision, pose et appuis du lot sont identiques avec et sans. Activer une POSE est une
+      * décision de l'opérateur, après deux lots en ombre jugés contre l'Écho des différés. `actif:false` : rien n'est calculé ni consigné. */
+     voieB1EcartOmbre: Object.freeze({ actif: true, fenetreListe: 5, fenetreMm: 30, choixMm: 15, accordMm: 20, gRefDefautMm: 1435, essaisMax: 4 }),
++    /* CH-079 (D-308) — GARDE DE VOIE ET SERRAGE DU LOT, EN OMBRE (src/garde-voie-ombre.js, src/serrage-lot-ombre.js ; mesure : chantiers/CH-079/rapport.md). Après la
++     * décision et la commande de chaque cut, le service worker consigne (`garde-voie-ombre`, `serrage-lot-ombre`) : si l'écartement posé sur un cut que le lot VALIDE
++     * s'écarte de plus de `seuilMm` de celui des voisins validés (fenêtre de `fenetre` cuts, au moins `voisinesMin` voisins) ; et la pose que donnerait un desserrage de
++     * la moitié de l'écart à la référence, sur les seules poses de la décision L1-e (jusqu'à `plafondMm`). CONSIGNÉ SEULEMENT : rien n'est posé ni différé, aucune
++     * commande ne change. Passer la garde à la pause, ou le serrage à l'écriture, demande un nouvel accord écrit de l'opérateur (D-308). `actif:false` : rien n'est calculé. */
++    gardeVoieOmbre: Object.freeze({ actif: true, seuilMm: 15, fenetre: 20, voisinesMin: 5 }),
++    serrageLotOmbre: Object.freeze({ actif: true, plafondMm: 20, fenetre: 20, voisinesMin: 5 }),
+     /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, chantiers/CH-034/JOURNAL.md § 2), ÉTEINTE par défaut. Allumée, sur un cut que la commande allait
+      * poser et valider, le moteur gelé est relancé sur le nuage capturé à des graines espacées de `pasMm` jusqu'à ±`porteeMm` en travers (la ROI de capture),
+      * et la pose du lot est confrontée aux paires fortes trouvées : mode 'differer' (livré) : différé si une paire au moins aussi bonne (produit des pertes
+diff --git a/tests/b1-sw-ombre.test.cjs b/tests/b1-sw-ombre.test.cjs
+index fa378b5..881f780 100644
+--- a/tests/b1-sw-ombre.test.cjs
++++ b/tests/b1-sw-ombre.test.cjs
+@@ -15,7 +15,7 @@ test('ombre : mêmes commandes, mêmes poses, mêmes enregistrements qu’avec l
+   const a=await un('off',100),c=await un('ombre',100,false);
+   deq(normalize(c.b.commands),normalize(a.b.commands),'mêmes commandes ESV, même ordre');deq(normalize(c.adapter.rails),normalize(a.adapter.rails));deq(c.adapter.calls,a.adapter.calls);
+   const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);deq(rec(c.b),rec(a.b));
+-  const metier=b=>b.store.events.filter(e=>!['b1-ombre','regles-metier-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);deq(metier(c.b),metier(a.b),'mêmes événements métier');
++  const metier=b=>b.store.events.filter(e=>!['b1-ombre','garde-voie-ombre','serrage-lot-ombre','regles-metier-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);deq(metier(c.b),metier(a.b),'mêmes événements métier');
+   assert.equal(evts(a.b).length,0,'réglage coupé : aucun calcul, aucune demande');assert.equal(a.demandes.length,0);
+   deq([decision(c,110).stage,decision(c,110).anchorsUsed,decision(c,110).appuisListe],['first-pass',[],undefined],'décision réelle : premier passage sans appui, inchangée');
+   /* L'hypothèse lourde (reprise depuis la voie) attend que la page travaille : capture suivante, ou 4 s. */
+diff --git a/tests/ch079-ombre-sw.test.cjs b/tests/ch079-ombre-sw.test.cjs
+new file mode 100644
+index 0000000..d77e1b0
+--- /dev/null
++++ b/tests/ch079-ombre-sw.test.cjs
+@@ -0,0 +1,91 @@
++'use strict';
++/* CH-079 (D-308) — GARDE DE VOIE ET SERRAGE DU LOT EN OMBRE, SERVICE WORKER RÉEL EN VM (moteur et GCV1 réels, ESV simulé ; montage de tests/helpers/perf-production.cjs).
++ * Les deux ombres NE POSENT RIEN : mêmes commandes à ESV, mêmes poses, mêmes enregistrements, mêmes décisions (octet pour octet) avec et sans elles, et en panne.
++ * Un événement `garde-voie-ombre` par cut VALIDÉ par le lot, rien pour un différé ; `serrage-lot-ombre` seulement pour une pose de la décision L1-e (absente d'un profil « actuel »). */
++const {test,before}=require('node:test'),assert=require('node:assert/strict');
++const {production,normalize}=require('./helpers/perf-production.cjs'),{SimulatedESV,base,K}=require('./fixtures.cjs');
++const S=require('../src/settings.js');
++const SCOPE={testConfirmed:true,allowNavigationEvidence:true,lowConfidence:'attempt',geometryEngine:'geometry-candidate-v1',lotDecision:'apply'};
++const plat=x=>JSON.parse(JSON.stringify(x===undefined?null:x)),deq=(a,b,m)=>assert.deepEqual(plat(a),plat(b),m);
++const neutre=x=>JSON.parse(JSON.stringify(normalize(x)).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>'));
++async function lot({garde,serrage,panne=false}={}){
++ const adapter=new SimulatedESV(),b=production({adapter});
++ const lotReglage={...S.lot,profil:'actuel',...(garde!==undefined?{gardeVoieOmbre:garde}:{}),...(serrage!==undefined?{serrageLotOmbre:serrage}:{})};
++ b.ctx.BananeSettings={...b.ctx.BananeSettings,lot:lotReglage};
++ if(panne)b.ctx.BananeGardeVoieOmbre={...b.ctx.BananeGardeVoieOmbre,evaluer:()=>{throw Error('panne simulée de la garde');}};
++ await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
++ adapter.identity.cut=111;adapter.rails=K.clone(base.rails);
++ await b.api('start',{part:23,start:111,end:114,...SCOPE});await b.settle();
++ return {b,adapter};
++}
++const evs=(b,type)=>b.store.events.filter(e=>e.type===type);
++const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
++const metier=b=>b.store.events.filter(e=>!['garde-voie-ombre','serrage-lot-ombre','voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
++let coupe,active,enPanne;
++before(async()=>{
++ const eteint={actif:false};
++ coupe=await lot({garde:{...S.lot.gardeVoieOmbre,actif:false},serrage:{...S.lot.serrageLotOmbre,actif:false}});
++ active=await lot({garde:{...S.lot.gardeVoieOmbre,voisinesMin:1}});
++ enPanne=await lot({garde:{...S.lot.gardeVoieOmbre,voisinesMin:1},panne:true});
++});
++test('les réglages existent, figés, allumés en OMBRE ; seuil 15 mm, fenêtre 20 cuts',()=>{
++ for(const k of ['gardeVoieOmbre','serrageLotOmbre'])assert.ok(Object.isFrozen(S.lot[k]),k);
++ deq({...S.lot.gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5});deq({...S.lot.serrageLotOmbre},{actif:true,plafondMm:20,fenetre:20,voisinesMin:5});
++});
++test('LA POSE NE CHANGE PAS : mêmes commandes ESV, mêmes rails, mêmes enregistrements, décisions identiques octet pour octet, avec, sans et en panne',()=>{
++ for(const [nom,x] of [['ombres actives',active],['garde en panne',enPanne]]){
++  deq(neutre(x.b.commands),neutre(coupe.b.commands),nom+' : mêmes commandes ESV');deq(neutre(x.adapter.rails),neutre(coupe.adapter.rails),nom);deq(x.adapter.calls,coupe.adapter.calls,nom);
++  const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);deq(rec(x.b),rec(coupe.b),nom);
++  deq(metier(x.b),metier(coupe.b),nom+' : mêmes événements métier');
++  assert.equal(JSON.stringify(neutre(decisions(x.b))),JSON.stringify(neutre(decisions(coupe.b))),nom+' : décisions du lot identiques, octet pour octet');
++ }
++ assert.ok(coupe.adapter.calls.filter(c=>c==='validate').length>=2,'le lot pose et valide plusieurs cuts');
++});
++test('un événement compact par cut validé, rien réglage coupé ; aucune position de scène ; en panne, aucun événement et le lot continue',()=>{
++ assert.equal(evs(coupe.b,'garde-voie-ombre').length,0);assert.equal(evs(coupe.b,'serrage-lot-ombre').length,0);
++ const g=evs(active.b,'garde-voie-ombre');assert.ok(g.length>=2,'un événement par cut validé : '+g.length);
++ for(const x of g){assert.equal(x.version,'garde-voie-ombre-v1');assert.ok(x.batchId&&Number.isInteger(x.identity.cut));
++  for(const k of ['ecartMm','referenceMm','ecartAuVoisinageMm','auraitPause','motif','ms'])assert.ok(k in x,'champ '+k);
++  assert.ok(!/positionSceneRelative|"positions"/.test(JSON.stringify(x)));assert.ok(JSON.stringify(x).length<600);}
++ /* Les cuts suivants se comparent à ceux que le lot a déjà validés (mémoire du lot), le premier n'a aucun voisin. */
++ assert.match(g[0].motif,/sans-voisins/);assert.equal(g[0].auraitPause,false);assert.ok(g.slice(1).every(x=>x.referenceMm>1000&&x.motif!=='sans-voisins'));
++ assert.equal(evs(active.b,'serrage-lot-ombre').length,0,'profil « actuel » : aucune pose de L1-e, aucun serrage');
++ assert.equal(evs(enPanne.b,'garde-voie-ombre').length,0);
++});
++test('seul le service worker appelle les modules, après la commande ; ils ne sont lus par aucun chemin de pose',()=>{
++ const fs=require('node:fs'),path=require('node:path'),racine=path.resolve(__dirname,'..');
++ const bg=fs.readFileSync(path.join(racine,'background.js'),'utf8');
++ assert.match(bg,/'src\/garde-voie-ombre\.js','src\/serrage-lot-ombre\.js'/);assert.match(bg,/gardeSerrageOmbre\(lotObservation,proposal\)/);
++ assert.ok(bg.indexOf('b1EcartPlanifier(lotObservation,proposal)')<bg.indexOf('gardeSerrageOmbre(lotObservation,proposal)'),'après la décision et la commande');
++ for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith(".js")&&!/^(garde-voie-ombre|serrage-lot-ombre|settings)\.js$/.test(x))){
++  assert.doesNotMatch(fs.readFileSync(path.join(racine,'src',f),'utf8'),/BananeGardeVoieOmbre|BananeSerrageLotOmbre|garde-voie-ombre|serrage-lot-ombre/,f+' ne lit pas les ombres');}
++});
++
++/* Chemin L1-e : le cut 112 est différé par le lot puis posé et validé par la décision de la GCV2 (forcée : le modèle réel est essayé ailleurs) ; le serrage consigne alors la pose desserrée. */
++const H=require('./helpers/lot-profil.cjs');
++async function lotL1e(ombres){
++ const adapter=new H.EsvTrou([]),b=H.production({adapter});
++ const lotR={...S.lot,profil:'L1-se',gardeApresDiffere:undefined,...(ombres?{gardeVoieOmbre:{...S.lot.gardeVoieOmbre,voisinesMin:1},serrageLotOmbre:{...S.lot.serrageLotOmbre,voisinesMin:1}}:{gardeVoieOmbre:{...S.lot.gardeVoieOmbre,actif:false},serrageLotOmbre:{...S.lot.serrageLotOmbre,actif:false}})};
++ b.ctx.BananeSettings={...b.ctx.BananeSettings,voiePrediteOmbre:{...S.voiePrediteOmbre,actif:false},deplacerVue:{...S.deplacerVue,actif:false},lot:lotR};
++ const G=b.ctx.BananeGcv2L1;
++ b.ctx.BananeGcv2L1={...G,deciderDiffere:a=>{const r=G.deciderDiffere(a);if(a.capture.identity.cut!==112)return r;
++  const p0=b.store.events.find(e=>e.type==='gcv1-shadow-observed'&&e.identity?.cut===111)?.lotObservation?.positions;
++  const paire={left:{decal:G.decalage(a.capture.rails.left,p0.left)},right:{decal:G.decalage(a.capture.rails.right,p0.right)}};
++  return {...r,decision:{...r.decision,etat:'valider',motif:null,p:0.9,paire,hypothese:'H1',ecartDepartMm:0},positions:G.positionsDe(a.capture,paire)};}};
++ await b.api('connect',{tabId:1});await b.api('settings',{mode:'automatic-test'});
++ adapter.identity.cut=111;adapter.rails=K.clone(base.rails);adapter.ajuster();
++ await b.api('start',{part:23,start:111,end:113,...SCOPE});await b.settle();await new Promise(r=>setTimeout(r,30));
++ return {b,adapter};
++}
++test('L1-e : la pose du 112 par la GCV2 est validée ; le serrage est consigné, la pose et les commandes sont celles du lot sans ombre',async()=>{
++ const sans=await lotL1e(false),avec=await lotL1e(true);
++ const d=decisions(avec.b).find(([c])=>c===112)[1];assert.equal(d.command.reason,'gcv2-l1','le 112 est posé par L1-e');
++ deq(neutre(avec.b.commands),neutre(sans.b.commands));deq(avec.adapter.calls,sans.adapter.calls);deq(neutre(avec.adapter.rails),neutre(sans.adapter.rails));
++ const sansMs=x=>JSON.parse(JSON.stringify(neutre(decisions(x)),(k,v)=>k==='ms'?undefined:v));
++ deq(sansMs(avec.b),sansMs(sans.b),'décisions identiques (hors la durée `l1.ms`, mesurée à l\'horloge)');
++ assert.equal(evs(sans.b,'serrage-lot-ombre').length,0);
++ const s=evs(avec.b,'serrage-lot-ombre');deq(s.map(x=>x.identity.cut),[112],'un événement, pour la seule pose de L1-e');
++ const x=s[0];assert.equal(x.version,'serrage-lot-ombre-v1');for(const k of ['referenceMm','ecartAvantMm','ecartApresMm','deltaGaucheMm','deltaDroiteMm'])assert.ok(Number.isFinite(x[k]),k);
++ assert.ok(!/positionSceneRelative|"positions"/.test(JSON.stringify(x)));
++ assert.ok(evs(avec.b,'garde-voie-ombre').some(g=>g.identity.cut===112),'la garde juge aussi la pose de L1-e');
++});
+diff --git a/tests/clic-hors-vue-sw.test.cjs b/tests/clic-hors-vue-sw.test.cjs
+index 7bad8c5..e1a30b7 100644
+--- a/tests/clic-hors-vue-sw.test.cjs
++++ b/tests/clic-hors-vue-sw.test.cjs
+@@ -72,7 +72,7 @@ test('un lot avec relevés : mêmes décisions, mêmes commandes, mêmes événe
+  const a=await petitLot(false),b=await petitLot(true);
+  assert.deepEqual(neutre(b.commands),neutre(a.commands),'commandes à ESV');
+  assert.deepEqual(b.adapter.calls,a.adapter.calls);
+- const metier=x=>x.store.events.filter(e=>!['clic-hors-vue','clic-hors-vue-bilan','phase-timing','phase-timing-pli','adapter-progress','b1-ombre','regles-metier-ombre','voie-predite-ombre'].includes(e.type)).map(e=>e.type);
++ const metier=x=>x.store.events.filter(e=>!['clic-hors-vue','clic-hors-vue-bilan','phase-timing','phase-timing-pli','adapter-progress','b1-ombre','garde-voie-ombre','serrage-lot-ombre','regles-metier-ombre','voie-predite-ombre'].includes(e.type)).map(e=>e.type);
+  assert.deepEqual(metier(b),metier(a),'événements du moteur');
+  const decisions=x=>neutre(x.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>e.lotObservation?.command??null));
+  assert.deepEqual(decisions(b),decisions(a));
+diff --git a/tests/helpers/deplacer-vue-lot.cjs b/tests/helpers/deplacer-vue-lot.cjs
+index 71e1719..4877a51 100644
+--- a/tests/helpers/deplacer-vue-lot.cjs
++++ b/tests/helpers/deplacer-vue-lot.cjs
+@@ -48,5 +48,5 @@ async function lot({reglage,amener,ombre=false,seuilsVoie=null,profil='actuel',l
+ /* Identifiants (opérations, captures) et horloges neutralisés, rien d'autre. */
+ const neutre=x=>JSON.parse(JSON.stringify(normalize(x)).replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g,'<id>').replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z/g,'<heure>'));
+ const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,fauxVertOmbre,hauteurApprise,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
+-const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing','adapter-progress'].includes(e.type)).map(e=>e.type);
++const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing','adapter-progress'].includes(e.type)).map(e=>e.type);
+ module.exports={lot,neutre,decisions,metier,SCOPE,EsvVue,camerasParRail,decale};
+diff --git a/tests/helpers/regles-metier-lot.cjs b/tests/helpers/regles-metier-lot.cjs
+index c39a7a6..425be9b 100644
+--- a/tests/helpers/regles-metier-lot.cjs
++++ b/tests/helpers/regles-metier-lot.cjs
+@@ -38,6 +38,6 @@ async function lot(reglage,{panne=false,fin=115,avant=null,profil='actuel',garde
+  return {b,adapter};
+ }
+ const ombres=b=>b.store.events.filter(e=>e.type==='regles-metier-ombre');
+-const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','deplacer-vue','deplacer-vue-geste','faux-vert-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
++const metier=b=>b.store.events.filter(e=>!['regles-metier-ombre','deplacer-vue','deplacer-vue-geste','faux-vert-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+ const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);
+ module.exports={lot,neutre,decisions,metier,ombres,deq,rec,S};
+diff --git a/tests/helpers/voie-ombre-lot.cjs b/tests/helpers/voie-ombre-lot.cjs
+index a9534e2..b7b6a75 100644
+--- a/tests/helpers/voie-ombre-lot.cjs
++++ b/tests/helpers/voie-ombre-lot.cjs
+@@ -33,5 +33,5 @@ async function lot(reglage,{panne=false}={}){
+ }
+ const ombres=b=>b.store.events.filter(e=>e.type==='voie-predite-ombre');
+ const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
+-const metier=b=>b.store.events.filter(e=>!['voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
++const metier=b=>b.store.events.filter(e=>!['voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+ module.exports={lot,neutre,decisions,metier,ombres,deq,SCOPE};
+diff --git a/tests/pose-lot-inchanges-4959.test.cjs b/tests/pose-lot-inchanges-4959.test.cjs
+index a7a115d..8b6ee73 100644
+--- a/tests/pose-lot-inchanges-4959.test.cjs
++++ b/tests/pose-lot-inchanges-4959.test.cjs
+@@ -177,17 +177,19 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
+ });
+ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
+  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
+- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,rust,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
++ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,rust,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
+  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
+  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
+  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
+- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','signalEteint','voieB1EcartOmbre']);
++ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
+  /* CH-077 : préchauffage du cache pour la coupe suivante, ÉTEINT par défaut (D-305 : accord écrit de l'opérateur au moment de livrer). */
+  assert.deepEqual(Object.keys(chargement),['prechauffer']);assert.equal(chargement.prechauffer.actif,true,'D-307 : préchauffage allumé (lot d\'essai, accord de l\'opérateur)');assert.equal(chargement.prechauffer.rayonM,0.75,'D-307 : réglage sobre');
+  /* CH-062 : rechargement d'ESV quand son signal s'éteint pendant le lot, COUPÉ par défaut (un événement seulement). */
+  assert.equal(signalEteint.actif,false,'CH-062 : signal éteint pendant le lot, coupé par défaut');
+  assert.deepEqual({...voieB1EcartOmbre},{actif:true,fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4},'CH-055 : règle b1-ecart en OMBRE (consignée seulement), allumée par défaut');
++ /* CH-079 (D-308) : garde de voie et serrage du lot en OMBRE (consignés seulement), mesurés dans chantiers/CH-079/rapport.md. */
++ assert.deepEqual({...gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5},'CH-079 : garde de voie en ombre');assert.deepEqual({...serrageLotOmbre},{actif:true,plafondMm:20,fenetre:20,voisinesMin:5},'CH-079 : serrage du lot en ombre');
+  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');
+  assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est ÉTEINTE par défaut (ordre de l\'opérateur, 02/11 : tant que son temps de calcul n\'est pas supprimé, CH-041)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
+  /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */
+diff --git a/tests/voie-b1-ecart-ombre-liste-sw.test.cjs b/tests/voie-b1-ecart-ombre-liste-sw.test.cjs
+index 491d696..ea11c3d 100644
+--- a/tests/voie-b1-ecart-ombre-liste-sw.test.cjs
++++ b/tests/voie-b1-ecart-ombre-liste-sw.test.cjs
+@@ -46,7 +46,7 @@ async function lot(reglage,{panne=false,loin=[112],liste=null,mm=230}={}){
+ }
+ const ombres=b=>b.store.events.filter(e=>e.type==='voie-b1-ecart-ombre');
+ const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
+-const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
++const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+ let avecListe;
+ before(async()=>{
+  /* 290 mm : au-delà de ce que le moteur seul retrouve sur ce nuage (mesuré : à 270 mm il pose encore seul, en premier passage). */
+diff --git a/tests/voie-b1-ecart-ombre-sw.test.cjs b/tests/voie-b1-ecart-ombre-sw.test.cjs
+index 95ad285..733e7e8 100644
+--- a/tests/voie-b1-ecart-ombre-sw.test.cjs
++++ b/tests/voie-b1-ecart-ombre-sw.test.cjs
+@@ -45,7 +45,7 @@ async function lot(reglage,{panne=false,loin=[112],liste=null,mm=230}={}){
+ }
+ const ombres=b=>b.store.events.filter(e=>e.type==='voie-b1-ecart-ombre');
+ const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
+-const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
++const metier=b=>b.store.events.filter(e=>!['voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','garde-voie-ombre','serrage-lot-ombre','esv-observation','phase-timing'].includes(e.type)).map(e=>e.type);
+ let coupe,active,enPanne;
+ before(async()=>{coupe=await lot({...S.lot.voieB1EcartOmbre,actif:false});active=await lot(undefined);enPanne=await lot(undefined,{panne:true});});
+ 
