@@ -47,11 +47,11 @@ async function jouer(e,ctx){const p=P.creer(e.env),r=p.apresCapture(ctx);await e
 const ADRESSE=/\/|https?:|ept-data|\.bin|\d+-\d+-\d+-\d+/;
 const sansAdresse=evts=>assert.ok(!ADRESSE.test(JSON.stringify(evts).replace(/"kind":"[^"]*"/g,'')),'aucune adresse ni clé : '+JSON.stringify(evts));
 
-test('réglage : `sautMin` livré à 2 (D-311) ; clé absente ou hors bornes : 1 (comportement de CH-077) ; sources en liste fermée',()=>{
+test('réglage : `sautMin` livré à 1 (D-311, CH-084) ; clé absente ou hors bornes : 1 (comportement de CH-077) ; sources en liste fermée',()=>{
  assert.equal(P.DEFAUT.sautMin,1);assert.equal(P.reglage({actif:true}).sautMin,1);
  assert.equal(P.reglage({actif:true,sautMin:0}).sautMin,1,'hors bornes : défaut');assert.equal(P.reglage({actif:true,sautMin:3}).sautMin,3);
  assert.deepEqual([...P.SOURCES],['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],'CH-081 : source changement-mode ajoutée');
- const S=require('../src/settings.js');assert.equal(S.lot.chargement.prechauffer.sautMin,2,'réglage livré : D-311, dès un saut de 2 coupes');
+ const S=require('../src/settings.js');assert.equal(S.lot.chargement.prechauffer.sautMin,1,'réglage livré : D-311, dès la coupe voisine');
  /* CH-081 (aval de l'intégrateur, Vision 8) : plafonds par candidat relevés à 32 nœuds et 10 Mo ; enVolMax inchangé. */
  assert.equal(S.lot.chargement.prechauffer.noeudsMax,32);assert.equal(S.lot.chargement.prechauffer.octetsMax,10485760);assert.equal(S.lot.chargement.prechauffer.enVolMax,2,'enVolMax inchangé');
 });
