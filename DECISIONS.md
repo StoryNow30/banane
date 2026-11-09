@@ -3554,3 +3554,11 @@ Complète D-299 sans la modifier.
 - Mots de l'opérateur : « je veux que le prochain lot en orbite soit parfaitement fluide, tous les points doivent être préchargés avec l'avance, donc une exigence sur la justesse de l'anticipation de l'outil ».
 - Traduction en cibles mesurables par l'intégrateur, à lire sur le lot d'essai de « Vision 7 » : coupe suivante prédite juste ≥ 99 % ; nœuds chargés par Potree à l'arrivée déjà préchauffés ≥ 90 % sur les sauts de 2 coupes ou plus ; capture médiane après un saut proche de celle de la coupe voisine ; aucun retard de la coupe en cours. Préchauffage dès un saut de 2 coupes (`sautMin` 2), dans les plafonds existants.
 - Un 100 % ne peut pas être garanti : Potree choisit une partie des nœuds à l'arrivée selon la caméra, et une coupe peut ne pas être prédite (reprise, retour en arrière). Ce qui manque sera chiffré.
+
+## D-312 — Aller cinq fois plus vite (opérateur, 09/11)
+- Mots de l'opérateur : « je veux que tu multiplies la vitesse de nos chantiers par 5. Par 5. Et sans exagération, nous avons besoin d'avancer plus vite. »
+- Mesures de l'intégrateur, qui ne lèvent aucun interdit de CLAUDE.md ni aucun accord écrit :
+  1. Chaque exécutant lance lui-même, dans sa propre machine, le verify complet et la maquette avant son PRÊT, et joint les chiffres ; l'intégrateur refait les essais ciblés et la parité, puis un seul verify par paquet. La machine de l'intégrateur n'est plus le goulot.
+  2. De l'étude au code sans attendre l'aval, sauf si le chantier touche un fichier gelé, un module de décision, l'écriture dans ESV, `manifest.json`, ou ajoute des requêtes vers ESV au-delà de ce que l'opérateur a accordé : là, l'étude est envoyée et l'exécutant attend.
+  3. Plus de chantiers en parallèle, chacun sur sa machine, pris dans le cap de D-299 et D-300 ; un outil d'analyse automatique des exports remplace l'analyse à la main de chaque lot.
+  4. Contrôle des exécutants toutes les 30 minutes au lieu de toutes les heures.
