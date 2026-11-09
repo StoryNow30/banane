@@ -47,11 +47,11 @@ async function jouer(e,ctx){const p=P.creer(e.env),r=p.apresCapture(ctx);await e
 const ADRESSE=/\/|https?:|ept-data|\.bin|\d+-\d+-\d+-\d+/;
 const sansAdresse=evts=>assert.ok(!ADRESSE.test(JSON.stringify(evts).replace(/"kind":"[^"]*"/g,'')),'aucune adresse ni clé : '+JSON.stringify(evts));
 
-test('réglage : `sautMin` livré à 11 ; clé absente ou hors bornes : 1 (comportement de CH-077) ; sources en liste fermée',()=>{
+test('réglage : `sautMin` livré à 2 (D-311) ; clé absente ou hors bornes : 1 (comportement de CH-077) ; sources en liste fermée',()=>{
  assert.equal(P.DEFAUT.sautMin,1);assert.equal(P.reglage({actif:true}).sautMin,1);
  assert.equal(P.reglage({actif:true,sautMin:0}).sautMin,1,'hors bornes : défaut');assert.equal(P.reglage({actif:true,sautMin:3}).sautMin,3);
  assert.deepEqual([...P.SOURCES],['liste-esv','relu','passe-differes','b1-fenetre']);
- const S=require('../src/settings.js');assert.equal(S.lot.chargement.prechauffer.sautMin,11,'réglage livré : seuil de la mesure');
+ const S=require('../src/settings.js');assert.equal(S.lot.chargement.prechauffer.sautMin,2,'réglage livré : D-311, dès un saut de 2 coupes');
  assert.equal(S.lot.chargement.prechauffer.noeudsMax,24);assert.equal(S.lot.chargement.prechauffer.octetsMax,8388608);assert.equal(S.lot.chargement.prechauffer.enVolMax,2,'plafonds inchangés');
 });
 

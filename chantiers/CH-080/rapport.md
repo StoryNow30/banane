@@ -123,3 +123,46 @@ Détail dans `etude.md`.
 **Reste SUPPOSÉ** : la forme réelle des nœuds d'ESV (relevé attendu), et que l'adresse sûre soit celle que Potree demande vraiment.
 
 **Consigne terrain** : lire `formeNoeud`, `sansNom` et `sansAdresse` des sauts de 11 coupes ou plus. Si `sansNom > 0`, la forme n'est pas couverte ; si `sansAdresse > 0`, l'adresse n'est pas sûre. Dans les deux cas, rien n'est demandé.
+
+## CH-080c — Forme réelle (relevé de console de l'opérateur, 09/11) : EPT laszip chargé par le nœud commun de Potree
+**Ce n'est pas du COPC (ÉTABLI par le code de Potree, le relevé et le journal)** :
+- Le relevé donne une géométrie qui a `base`, `ept`, `loadHierarchyPage()`, et ni `getter`, ni `pages`, ni `copc`. Dans Potree (≥ 1.8.2, `src/PointCloudEptGeometry.js` ; `Potree.version` y vaut encore 1.8), c'est `PointCloudEptGeometry`. La géométrie COPC porte `getter` et `pages`.
+- Toutes deux utilisent la même classe de nœud, `PointCloudCopcGeometryNode` : d'où le nom trompeur.
+- Le journal « Vision 6 » le confirme : 1 325 requêtes de points sur 1 325 sont des fichiers `ept-data/`, et aucune requête de hiérarchie pendant le lot.
+
+**Comment Potree demande** :
+- Données : `EptLaszipLoader.load` fait `fetch(`${owner.base}/ept-data/${d-x-y-z}.laz`)`, un GET simple, sans Range.
+- Hiérarchie : `loadHierarchyPage` fait `fetch(`${base}/ept-hierarchy/${clé}.json`)`.
+- Le nœud porte `key` [d,x,y,z], `name` « r… » et `nodeinfo` {pointCount}. `nodeinfo` absent signifie une page non lue ; `numPoints` vaut −1 tant que le nœud n'est pas chargé. Il n'a ni `url()` ni `filename()`.
+- Les chargeurs binaire et zstandard passent par `node.url()`, absent sur ce nœud : ESV ne peut être qu'en laszip. C'est vérifié par `ept.dataType` avant toute requête.
+
+**Préchauffage** :
+- **Nom** : `key` tableau.
+- **Adresse** : seulement si `owner.type` vaut 'ept', `ept.dataType` 'laszip' et `base` est une chaîne sans « ? ». Elle vaut alors `${base}/ept-data/<clé>.laz`. Toute autre forme (COPC, binaire, zstandard) donne `sans-adresse`, sans requête. Une extension apprise des requêtes de Potree qui ne concorde pas : rien n'est demandé.
+- **Candidats** : `nodeinfo.pointCount` > 0.
+- **Frontière** : `nodeinfo` absent et aucun enfant. Après lecture de sa page, ses propres données sont demandées aussi, comme Potree le fait.
+- **Requête** : la même que Potree (GET, `credentials` same-origin, cache par défaut), plus une priorité basse et l'annulation.
+- **Bilan** : Potree charge maintenant par `fetch`. La première entrée `fetch` de chacune de nos clés est la nôtre, les suivantes sont celles de Potree.
+- **Événement** : bits de forme 2048 owner.base, 4096 key tableau, 8192 nœud commun, 16384 adresse EPT laszip sûre.
+
+**Mesures (maquette `eptForme=commun`, saut de 50 coupes, latence 60 ms, ÉTABLI sur la maquette)**, une transition :
+
+| Hiérarchie | Module d'avant (CH-080b) | CH-080c |
+|---|---|---|
+| lue d'avance (comme ESV) | `sans-adresse`, 0/32 en cache, repos 798 ms | 24 nœuds demandés, **16/32 servis par le cache**, repos **423 à 430 ms** |
+| pages de 2 niveaux | `sans-adresse`, 0 en cache, 1 074 ms | 8 pages et 16 nœuds, 10/32 nœuds et 6/10 pages servis par le cache, 672 à 691 ms |
+
+- Le cache de Chromium sert les mêmes GET à la même adresse : c'est le point critique, ÉTABLI sur la maquette. Sur ESV, le cache sert déjà les nœuds que Potree redemande : 72 en « Vision 4 », 26 en « Vision 6 » (`depuisCache`).
+- Banc (`banc-commun.json`, forme commune, hiérarchie d'avance, 15 répétitions, charge de départ faible ; médiane / P90), de la validation à « aucun chargement » : éteint **811 / 827 ms**, livré **427 / 437 ms (−47 %)**. Chaîne de la coupe suivante : 680 → 303 ms. Nœuds servis par le cache : 0/32 → 16/32. Requêtes au serveur : 32 → 40 (+8 par saut : 24 demandées, dont 8 que Potree ne redemande pas). Capture du cut en cours inchangée (2 179 contre 2 170 ms).
+
+**Preuves** :
+- `ch080c-commun` 6/6, dont 4 rouges sur le module d'avant ; les 2 autres (0 point, extension discordante) gardent un comportement déjà sûr.
+- Maquette `ch080c-commun` 2/2, rouge (0/2) sur le module d'avant.
+- `ch080b-forme`, `ch080-*` et `ch077-*` verts. Régression : 216 réussis, 1 sauté (le patch de l'adaptateur, déjà intégré), 0 échec. Parité de la relecture contre le tronc identique. Maquette complète : 75 réussis, 3 sautés, 0 échec, puis 7/7.
+
+**Reste SUPPOSÉ** :
+- que le `base` d'ESV n'ait pas de jeton ; sinon `sans-adresse`, et l'événement le dira ;
+- même clé de cache entre le `fetch` de Potree et le nôtre (même adresse, même mode) ;
+- le gain réel.
+
+Si un jour la géométrie est COPC (`getter`, `pages`), la voie propre serait d'appeler `owner.getter(début, fin)`, la fonction même de Potree. Elle n'est pas codée : il faut l'accord de l'intégrateur.
