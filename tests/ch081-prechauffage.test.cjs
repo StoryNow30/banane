@@ -107,6 +107,6 @@ test('prechauffage-vue : au premier passage puis à chaque changement ; entiers 
  await jouer(e,ctx(),p);await jouer(e,ctx(),p);budget=2000000;await jouer(e,ctx(),p);
  const v=e.evts.filter(x=>x.kind==='prechauffage-vue');
  assert.equal(v.length,2,'départ, puis changement de pointBudget');
- assert.deepEqual(v[0],{kind:'prechauffage-vue',type:'orthographique',demiLargeurMm:200,demiHauteurMm:228,profondeurM:20000,champDeg:null,pointBudget:1000000,maxLevel:-1,minNodeSize:null,boites:1});
+ assert.deepEqual(v[0],{kind:'prechauffage-vue',type:'orthographique',demiLargeurMm:200,demiHauteurMm:228,profondeurM:20000,champDeg:null,pointBudget:1000000,maxLevel:-1,minNodeSize:null,boites:1,limitePoints:null});   /* CH-083 */
  assert.ok(!/844565|6519774/.test(JSON.stringify(v)),'aucune position');
 });

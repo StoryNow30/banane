@@ -1,0 +1,25 @@
+# CH-083 — Étude : charger dans la mémoire d'ESV les nœuds de la coupe suivante (D-314)
+
+Sources : code de Potree aux étiquettes 1.8, 1.8.2 et `develop` (dépôt officiel), lu le 09/11 : `LRU.js`, `Potree.js`, `Potree_update_visibility.js`, `PointCloudEptGeometry.js` (classe `PointCloudCopcGeometryNode`, identique en 1.8.2 et `develop`), `loader/ept/LaszipLoader.js`, `PointCloudOctree.js`. Forme d'ESV : nœud commun, EPT laszip, hiérarchie lue d'avance (CH-080c, ÉTABLI).
+
+## Comment Potree charge, garde et libère un nœud (ÉTABLI par le code)
+- **Chargement** : `load()` sort tout de suite si le nœud est `loaded` ou `loading`, ou si `Potree.numNodesLoading >= Potree.maxNodesLoading` (4). Sinon `loading = true`, `++numNodesLoading`, lecture de la page de hiérarchie si `nodeinfo` manque, puis `EptLaszipLoader.load` : `fetch(${base}/ept-data/<clé>.laz)` (GET, cache par défaut), décompression dans un travailleur, puis `doneLoading` : `geometry` posée, `loaded = true`, `--numNodesLoading`.
+- **Affichage** : `updateVisibility` parcourt l'arbre par priorité. La visibilité d'un nœud (frustum, boîte de découpe, `pointBudget`, `maxLevel`) se calcule avec `getNumPoints()` = `nodeinfo.pointCount`, **chargé ou non**. Un nœud visible et chargé devient un nœud d'arbre (`toTreeNode`, `THREE.Points`, montée au GPU au premier rendu), **2 par image au plus**. Ses enfants entrent dans la file la même image. Un nœud visible non chargé va dans `unloadedGeometry`, et Potree en lance 4 au plus par image.
+- **Libération** : la seule voie est `lru.freeMemory()`, après chaque mise à jour : `while (lru.numPoints > Potree.pointLoadLimit)` → libère le plus ancien. Or `pointLoadLimit` **n'est pas défini** dans `Potree.js` (1.8, 1.8.2, `develop`) : la comparaison avec `undefined` est fausse, **rien n'est jamais libéré**. Seul `lru.touch()` (nœud d'arbre visible) met un nœud dans la liste et ajoute ses points à `lru.numPoints`. Ni `load()` ni `doneLoading` n'y touchent. Un nœud caché n'est pas libéré non plus : il est seulement masqué.
+
+## `node.load()` hors de la boucle de visibilité : sûr, avec trois règles
+- C'est la fonction même que Potree appelle. Elle respecte `maxNodesLoading` et monte puis descend `numNodesLoading`. Le compteur effectif de CH-062 voit nos chargements comme ceux de Potree.
+- **Risque 1, compteur bloqué** : une réponse en échec laisse `loading = true` et `+1` pour toujours, comme pour Potree (CH-062). Règle : on n'appelle `load()` que sur un nœud dont **notre préchauffage HTTP vient d'obtenir une réponse 200** (servie ensuite par le cache), et seulement si `nodeinfo` est présent. Une frontière demanderait une page de hiérarchie : on n'appelle pas `load()` sur elle.
+- **Risque 2, places de Potree** : au plus 2 chargements à nous à la fois (Potree garde au moins 2 places sur 4). Départ seulement si le compteur vaut 0. Arrêt des lancements dès que le compteur dépasse nos chargements en vol (Potree repart), que l'étiquette de coupe change ou qu'une capture commence. Un `load()` lancé ne s'annule pas : il finit en ≤ 1 nœud servi par le cache (de l'ordre de 0,1 s).
+- **Risque 3, coupe en cours** : visibilité et budget ne dépendent pas de `loaded`. Un nœud de la coupe suivante hors de la boîte de la coupe en cours n'est pas visible et ne prend rien du budget. Un nœud dans les deux boîtes, Potree le chargeait déjà. Il n'entre pas dans la LRU, donc il ne peut faire libérer personne. Même si ESV posait un `pointLoadLimit`, les nœuds visibles sont touchés à chaque image : ce sont les derniers libérés. **Un nœud préchargé ne peut pas faire sortir un nœud visible** (ÉTABLI par le code ; maquette à l'étape 3).
+
+## Un nœud chargé hors de la vue reste-t-il jusqu'à l'arrivée ? Oui (ÉTABLI par le code)
+- Aucune libération sans `pointLoadLimit`. Le nœud reste `loaded`, sa géométrie décodée reste dans le tas JS. À l'arrivée, Potree saute le téléchargement et la décompression. Il ne reste que `toTreeNode`, 2 par image : 14 nœuds ≈ 7 images ≈ 0,12 s à 60 images/s (PROBABLE).
+- **Coût mémoire** : tas JS = octets des attributs de la géométrie (environ 20 à 30 octets par point, SUPPOSÉ ; mesuré par la somme des `byteLength`, plus `performance.memory` sous Chromium). GPU : rien avant l'affichage ; ensuite, les mêmes octets que si Potree avait chargé le nœud lui-même. Sur une prédiction fausse, le nœud reste chargé sans être affiché, comme tout nœud que Potree a chargé puis quitté : la mémoire croît comme un lot plus long. Le relevé `prechauffage-vue` lira `pointLoadLimit`.
+
+## Ce que je code
+Le préchauffage HTTP de CH-081 ne change pas. Le réglage `memoire` (`actif`, `noeudsMax` 32, `enVolMax` 2, `octetsMax` 64 Mo décodés par lot de page) ajoute une phase qui tourne en même temps :
+- chaque nœud de la boîte servi en 200, et que Potree connaît (`nodeinfo`, `load` présent), reçoit `load()`, en parent d'abord ;
+- les chargements terminés sont comptés : nœuds, octets décodés et tas avant/après, dans l'événement `prechauffage` ;
+- `memoire.actif:false` coupe cette phase seule ; `actif:false` coupe tout.
+- Pas de patch de l'adaptateur nécessaire, sauf pour lire le tas (facultatif).
