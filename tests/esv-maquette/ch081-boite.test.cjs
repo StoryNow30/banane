@@ -12,7 +12,7 @@ const LIVRE=require('../../src/settings.js').lot.chargement.prechauffer;
 
 test('réglage livré (boîte, horizon 2) contre CH-080c (cube) : zone boîte, nœuds de la coupe lointaine servis par le cache',opts,async()=>{
  const res={};
- for(const [nom,reglage] of [['cube',{}],['boite',{...LIVRE}]]){
+ for(const [nom,reglage] of [['cube',{}],['boite',{...LIVRE,voie:'fetch'}]   /* CH-085 : ce cas mesure le cache HTTP de la voie fetch ; la voie potree (livrée) a ses propres essais */]){
   const s=await O.ouvrir({forme:'commun',pas:7,reglage});ouverts.push(s);
   const t=await s.transition();const p=t.evts.find(e=>e.kind==='prechauffage');
   assert.equal(p.zone,nom);assert.equal(p.saut,50);assert.ok(p.noeuds>0,'nœuds demandés : '+p.noeuds);sansAdresse(t.evts);
