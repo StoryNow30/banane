@@ -55,7 +55,7 @@
  /* CH-077 : nœuds EPT servis PAR ADRESSE (`/maquette/ept/ept-data/D-X-Y-Z.bin`, en-têtes de cache réglables côté serveur), chargés par la page
   * ÉTAGE PAR ÉTAGE en XMLHttpRequest comme Potree 1.8 (un étage attend le précédent, `eptParallele` à la fois), hiérarchie connue au fur et à mesure
   * (enfants d'un nœud chargé), arbre `pc.pcoGeometry` lisible par Ariane. ept=0 (défaut) : rien ne change pour les autres essais. */
- options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;options.eptForme=q.get('eptForme')==='r'?'r':'d';   /* CH-080b : forme SUPPOSÉE des nœuds d'ESV ('r' : filename() rend le nom de Potree « r0-7… ») */   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
+ options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;options.eptForme=['r','commun'].includes(q.get('eptForme'))?q.get('eptForme'):'d';   /* CH-080c : 'commun' = forme RELEVÉE dans ESV (nœud commun de Potree ≥ 1.8.2, géométrie EPT laszip) */   /* CH-080b : forme SUPPOSÉE des nœuds d'ESV ('r' : filename() rend le nom de Potree « r0-7… ») */   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
  options.eptProfondeur=num('eptProfondeur',7);options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
  options.finPartie=q.get('finPartie')==='rechargement'?'rechargement':'sur-place';
  options.delaiRechargement=num('delaiRechargement',150);
@@ -107,8 +107,27 @@
  /* CH-080b : forme SUPPOSÉE « r » (en attendant le relevé de console d'ESV) : filename() et `name` rendent le nom de Potree (toPotreeName), l'adresse reste celle d'EPT. */
  function formeR(d,x,y,z){let r='r';for(let i=0;i<d;i++){const m=1<<(d-i-1);r+=(x&m?4:0)+(y&m?2:0)+(z&m?1:0);}return {filename:()=>r,name:r};}
  const cleEpt=n=>`${n.key.d}-${n.key.x}-${n.key.y}-${n.key.z}`;
+ /* CH-080c : forme RELEVÉE dans ESV (relevé de console du 09/11, code de Potree : src/PointCloudEptGeometry.js, src/loader/ept/LaszipLoader.js). Géométrie
+  * `type` 'ept', `base`, `ept.dataType` 'laszip', loadHierarchyPage(key) : fetch(`${base}/ept-hierarchy/<clé>.json`) → {nodes, pages} ; nœud commun : `key`
+  * [d,x,y,z], `name` « r… », `owner`, `nodeinfo` {pointCount} (absent : page non lue), `numPoints` −1 jusqu'au chargement, ni url() ni filename() ; données
+  * par fetch(`${base}/ept-data/<clé>.laz`) (EptLaszipLoader). */
+ const proprietaire={type:'ept',base:'/maquette/ept'+(Number(q.get('eptPas'))>0?'/p'+Number(q.get('eptPas')):''),ept:{dataType:'laszip'},loader:{},root:null,
+  loadHierarchyPage(key){return fetch(`${this.base}/ept-hierarchy/${key.join('-')}.json`).then(r=>r.json()).then(h=>{const nodes={},pages={};for(const [k,v] of Object.entries(h)){if(v===-1)pages[k]={};else nodes[k]={pointCount:v};}return {nodes,pages};});}};
+ function noeudCommun(d,x,y,z){const s=ept.T/2**d,m=ept.min,f=formeR(d,x,y,z),n={key:[d,x,y,z],name:f.name,level:d,owner:proprietaire,
+  boundingBox:{min:{x:m[0]+x*s,y:m[1]+y*s,z:m[2]+z*s},max:{x:m[0]+(x+1)*s,y:m[1]+(y+1)*s,z:m[2]+(z+1)*s}},children:{},hasChildren:false,nodeinfo:undefined,numPoints:-1,loaded:false,loading:false};
+  n.index=Number(f.name.slice(-1))||0;return n;}
+ /* Potree, PointCloudCopcGeometryNode.loadHierarchy : toute la page d'un coup, du haut vers le bas ; la clé propre reçoit son nodeinfo. */
+ function lireHierarchieCommun(n){const nom=n.key.join('-'),url=`${proprietaire.base}/ept-hierarchy/${nom}.json`;
+  return proprietaire.loadHierarchyPage(n.key).then(({nodes,pages})=>{const carte={[nom]:n};
+   const cles=Object.keys({...nodes,...pages}).map(k=>k.split('-').map(Number)).sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]||a[3]-b[3]);
+   for(const k of cles){const kn=k.join('-');if(kn===nom){n.nodeinfo=nodes[kn];continue;}
+    const parent=carte[`${k[0]-1}-${k[1]>>1}-${k[2]>>1}-${k[3]>>1}`];if(!parent)continue;parent.hasChildren=true;
+    const e=noeudCommun(...k);parent.children[(k[1]&1)*4+(k[2]&1)*2+(k[3]&1)]=e;e.parent=parent;carte[kn]=e;if(nodes[kn])e.nodeinfo=nodes[kn];}
+   ept.hierVus++;try{const pe=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(pe&&pe.transferSize===0&&pe.decodedBodySize>0)ept.hierCache++;}catch{}
+  }).catch(()=>{});}
  function construireEpt(s){const pts=s.parties.flatMap(p=>p.cuts.flatMap(c=>[c.rails.left.position,c.rails.right.position]));
   ept.min=s.monde.origine.map(v=>v-ept.T/2);ept.couloir=[[0,1,2].map(i=>Math.min(...pts.map(p=>p[i]))-2),[0,1,2].map(i=>Math.max(...pts.map(p=>p[i]))+2)];
+  if(options.eptForme==='commun'){ept.racine=noeudCommun(0,0,0,0);proprietaire.root=ept.racine;pc.pcoGeometry=proprietaire;return;}
   ept.racine=noeudEpt(0,0,0,0);if(options.eptHier)ept.racine.numPoints=-1;pc.pcoGeometry={root:ept.racine,loader:{extension:()=>'.bin'}};}
  /* CH-080 : Potree 1.8 `loadHierarchy` : fichier de la clé (fetch), nœuds créés du haut vers le bas sous leur parent, `numPoints` du fichier (−1 : sous-hiérarchie). */
  function lireHierarchie(n){const nom=cleEpt(n);
@@ -120,10 +139,17 @@
    ept.hierVus++;try{const pe=performance.getEntriesByName(new URL(n.url().replace(/ept-data\/[^/]*$/,'ept-hierarchy/'+nom+'.json'),location.href).href).at(-1);if(pe&&pe.transferSize===0&&pe.decodedBodySize>0)ept.hierCache++;}catch{}
   }).catch(()=>{});}
  /* Hiérarchie lue au chargement du nœud : ses enfants deviennent connus (seulement ceux du couloir des cuts, pour borner la mémoire). */
- function hierarchieEpt(n){if(options.eptHier||!n.hasChildren||Object.keys(n.children).length)return;const {d,x,y,z}=n.key;let i=0;
+ function hierarchieEpt(n){if(options.eptHier||options.eptForme==='commun'||!n.hasChildren||Object.keys(n.children).length)return;const {d,x,y,z}=n.key;let i=0;
   for(const a of [0,1])for(const b of [0,1])for(const c of [0,1]){const e=noeudEpt(d+1,2*x+a,2*y+b,2*z+c);if(coupeBoite(e.boundingBox,ept.couloir[0],ept.couloir[1]))n.children[i]=e;i++;}}
  const xhrBinaire=url=>new Promise(res=>{const x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='arraybuffer';x.onload=()=>res(x.status);x.onerror=()=>res(0);x.send(null);});
  function chargerNoeudEpt(n,generation){if(n.loaded)return Promise.resolve();if(n.promesse)return n.promesse;
+  if(options.eptForme==='commun'){n.loading=true;window.Potree.numNodesLoading++;   /* CH-080c : PointCloudCopcGeometryNode.load + EptLaszipLoader.load */
+   const url=`${proprietaire.base}/ept-data/${n.key.join('-')}.laz`;
+   n.promesse=(async()=>{if(!n.nodeinfo)await lireHierarchieCommun(n);let ok=true;
+    if(n.nodeinfo&&n.nodeinfo.pointCount>0){ok=await fetch(url).then(r=>r.arrayBuffer().then(()=>r.ok)).catch(()=>false);
+     try{const e=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(e&&etat.generation===generation){ept.vus++;if(e.transferSize===0&&e.decodedBodySize>0)ept.cache++;}}catch{}}
+    n.loading=false;n.loaded=ok;n.numPoints=ok?(n.nodeinfo?.pointCount??0):-1;n.promesse=null;if(etat.generation===generation)window.Potree.numNodesLoading--;})();
+   return n.promesse;}
   n.loading=true;window.Potree.numNodesLoading++;const url=n.url()+'.bin';
   const hier=options.eptHier&&n.numPoints===-1&&!Object.keys(n.children).length?lireHierarchie(n):null;   /* CH-080 : comme Potree, hiérarchie et points ensemble */
   n.promesse=Promise.all([xhrBinaire(url),hier]).then(([st])=>{n.loading=false;n.loaded=st===200;n.promesse=null;if(etat.generation===generation)window.Potree.numNodesLoading--;

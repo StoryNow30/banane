@@ -64,16 +64,24 @@ function demarrer(options={}){
         return json(res,200,{part,cut,noeuds:concerne(pannes.nuageVide,cut)?[]:concerne(pannes.nuageSansPoints,cut)?sansPoints:c.noeuds});}
       /* CH-077 : nœud EPT par adresse (comme les `ept-data` de Potree) : corps fixe de `eptOctets` (64 Kio), après `eptLatenceMs` (60 ms), avec l'en-tête
        * de cache `eptCache` (défaut « public, max-age=3600 » ; « no-store » pour l'essai négatif). Le journal compte les requêtes par nœud (`ept`). */
-      m=/^\/maquette\/ept\/ept-data\/(\d+-\d+-\d+-\d+)\.bin$/.exec(p);
+      m=/^\/maquette\/ept(?:\/p\d+)?\/ept-data\/(\d+-\d+-\d+-\d+)\.(?:bin|laz)$/.exec(p);   /* CH-080c : .laz (EptLaszipLoader) */
       if(m&&req.method==='GET'){journal.ept[m[1]]=(journal.ept[m[1]]||0)+1;const n=Number(pannes.eptOctets)||65536,lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
         return setTimeout(()=>{res.writeHead(200,{'content-type':'application/octet-stream','content-length':n,'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(Buffer.alloc(n,7));},lat);}
       /* CH-080 : fichier de hiérarchie EPT (comme `ept-hierarchy/<clé>.json` de Potree 1.8) : la clé et ses descendants sur `eptPas` niveaux (2), jusqu'à
        * `eptProfondeur` (7) ; les clés du dernier niveau valent −1 (sous-hiérarchie dans un autre fichier) sauf au fond de l'arbre. Mêmes latence et cache que les
        * nœuds ; journal `eptHier`. */
-      m=/^\/maquette\/ept\/ept-hierarchy\/(\d+)-(\d+)-(\d+)-(\d+)\.json$/.exec(p);
-      if(m&&req.method==='GET'){const [d,x,y,z]=m.slice(1).map(Number),pas=Number(pannes.eptPas)||2,prof=Number(pannes.eptProfondeur)||7,h={};
+      /* CH-080c : `…/ept/p<N>/…` : pas de N niveaux par fichier (p7 : toute la hiérarchie dans la page racine, comme ESV pendant le lot du 09/11). */
+      m=/^\/maquette\/ept(?:\/p(\d+))?\/ept-hierarchy\/(\d+)-(\d+)-(\d+)-(\d+)\.json$/.exec(p);
+      if(m&&req.method==='GET'){const pasUrl=m[1];m=[m[0],...m.slice(2)];const [d,x,y,z]=m.slice(1).map(Number),pas=Number(pasUrl)||Number(pannes.eptPas)||2,prof=Number(pannes.eptProfondeur)||7,h={};
         journal.eptHier=journal.eptHier||{};journal.eptHier[m.slice(1).join('-')]=(journal.eptHier[m.slice(1).join('-')]||0)+1;
-        for(let r=0;r<=pas&&d+r<=prof;r++){const k=2**r;for(let a=0;a<k;a++)for(let b=0;b<k;b++)for(let c=0;c<k;c++)h[`${d+r}-${x*k+a}-${y*k+b}-${z*k+c}`]=r===pas&&d+r<prof?-1:1000;}
+        /* Clés du COULOIR des coupes seulement (à 4 m de la ligne des cuts, cube de 128 m autour de l'origine du monde, comme la hiérarchie synthétique de la page) :
+         * un pas de 7 niveaux reste petit. Hors couloir, Potree ne les visite jamais. */
+        const sc=[...scenarios.values()][0],O=sc?.monde?.origine,Dir=sc?.monde?.direction,m0=O?O.map(v=>v-64):null;
+        const dansCouloir=(dd,xx,yy,zz)=>{if(!O)return true;const t=128/2**dd,c=[m0[0]+(xx+.5)*t,m0[1]+(yy+.5)*t,m0[2]+(zz+.5)*t].map((v,i)=>v-O[i]),u=c[0]*Dir[0]+c[1]*Dir[1]+c[2]*Dir[2];
+          return Math.hypot(c[0]-u*Dir[0],c[1]-u*Dir[1],c[2]-u*Dir[2])<=4+t*0.87;};
+        const ajouter=(dd,xx,yy,zz,r)=>{if(!dansCouloir(dd,xx,yy,zz))return;h[`${dd}-${xx}-${yy}-${zz}`]=r===pas&&dd<prof?-1:1000;
+          if(r<pas&&dd<prof)for(const a of [0,1])for(const b of [0,1])for(const c of [0,1])ajouter(dd+1,2*xx+a,2*yy+b,2*zz+c,r+1);};
+        ajouter(d,x,y,z,0);
         const corpsH=JSON.stringify(h),lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
         return setTimeout(()=>{res.writeHead(200,{'content-type':'application/json','content-length':Buffer.byteLength(corpsH),'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(corpsH);},lat);}
       if(p==='/maquette/pannes'){if(req.method==='POST'){let brut;try{brut=JSON.parse(Buffer.concat(corps).toString('utf8')||'{}');}catch(e){return json(res,400,{error:'pannes : JSON invalide'});}

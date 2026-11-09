@@ -12,16 +12,17 @@
 const os=require('node:os'),fs=require('node:fs'),path=require('node:path');
 const O=require('../tests/esv-maquette/ch080-outils.cjs'),N=require('../tests/esv-maquette/navigateur.cjs');
 const arg=(n,d)=>{const i=process.argv.indexOf('--'+n);return i>=0?process.argv[i+1]:d;};
+const FORME=arg('forme',null),PAS=arg('pas',null)?Number(arg('pas')):null;   /* CH-080c : --forme commun --pas 7 : forme relevée dans ESV, hiérarchie lue d'avance */
 const REP=Number(arg('repetitions',15)),SAUT=Number(arg('saut',50)),LAT=Number(arg('latence',60)),MORT=Number(arg('mort',900)),SORTIE=arg('sortie',null);
-const MODES=[{nom:'sans',correctif:false},{nom:'avecSansHier',correctif:true,reglage:{hierarchie:false}},{nom:'avec',correctif:true}];
+const MODES=FORME?[{nom:'eteint',correctif:true,prechauffer:false},{nom:'avecSansHier',correctif:true,reglage:{hierarchie:false}},{nom:'avec',correctif:true}]:[{nom:'sans',correctif:false},{nom:'avecSansHier',correctif:true,reglage:{hierarchie:false}},{nom:'avec',correctif:true}];
 const q=(xs,p)=>{const v=xs.filter(Number.isFinite).sort((a,b)=>a-b);if(!v.length)return null;return v[Math.min(v.length-1,Math.ceil(p*v.length)-1)];};
 const stats=xs=>({mediane:q(xs,.5),p90:q(xs,.9),n:xs.filter(Number.isFinite).length});
 (async()=>{
  const r=N.indisponible()||(O.adaptateurCH080()===null?'outil patch absent':null);if(r){console.error('banc impossible : '+r);process.exit(2);}
- const charge=os.loadavg()[0];console.log(`banc CH-080 : ${REP} répétitions, saut ${SAUT} coupes, latence serveur ${LAT} ms par nœud, temps mort ${MORT} ms, charge au départ ${charge.toFixed(2)}`);
+ const charge=os.loadavg()[0];console.log(`banc CH-080${FORME?' (forme '+FORME+(PAS?', pas '+PAS:'')+')':''} : ${REP} répétitions, saut ${SAUT} coupes, latence serveur ${LAT} ms par nœud, temps mort ${MORT} ms, charge au départ ${charge.toFixed(2)}`);
  const mesures=Object.fromEntries(MODES.map(m=>[m.nom,[]]));
  for(let i=0;i<REP;i++){const ordre=i%2?[...MODES].reverse():MODES;
-  for(const m of ordre){const s=await O.ouvrir({correctif:m.correctif,saut:SAUT,reglage:m.reglage||{}});
+  for(const m of ordre){const s=await O.ouvrir({correctif:m.correctif,prechauffer:m.prechauffer!==false,saut:SAUT,reglage:m.reglage||{},...(FORME?{forme:FORME}:{}),...(PAS?{pas:PAS}:{})});
    try{s.env.serveur.pannes({eptLatenceMs:LAT});const t=await s.transition({mortMs:MORT});
     if(t.suivant-t.cut!==SAUT)throw Error(`saut inattendu : ${t.cut} → ${t.suivant}`);
     const p=t.evts.filter(e=>e.kind==='prechauffage').at(0)||null;
@@ -35,6 +36,6 @@ const stats=xs=>({mediane:q(xs,.5),p90:q(xs,.9),n:xs.filter(Number.isFinite).len
  for(const [k,s] of Object.entries(resume))console.log(k.padEnd(5),Object.entries(s).map(([c,v])=>`${c} ${v.mediane}/${v.p90}`).join(' · '));
  const motifs=Object.fromEntries(Object.entries(mesures).map(([k,l])=>[k,l.reduce((a,x)=>(a[`${x.motif??'aucun'}|${x.source??'-'}`]=(a[`${x.motif??'aucun'}|${x.source??'-'}`]||0)+1,a),{})]));
  console.log('motifs | sources :',JSON.stringify(motifs));
- const sortie={banc:'ch080',date:new Date().toISOString().slice(0,10),repetitions:REP,saut:SAUT,latenceMs:LAT,mortMs:MORT,chargeDepart:Math.round(charge*100)/100,coeurs:os.cpus().length,resume,motifs,mesures};
+ const sortie={banc:'ch080',forme:FORME,pas:PAS,date:new Date().toISOString().slice(0,10),repetitions:REP,saut:SAUT,latenceMs:LAT,mortMs:MORT,chargeDepart:Math.round(charge*100)/100,coeurs:os.cpus().length,resume,motifs,mesures};
  if(SORTIE){fs.writeFileSync(path.resolve(SORTIE),JSON.stringify(sortie,null,1)+'\n');console.log('écrit : '+SORTIE);}
 })().catch(e=>{console.error(e.stack||e.message);process.exit(1);});
