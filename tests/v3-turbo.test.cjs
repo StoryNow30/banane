@@ -106,7 +106,8 @@ test('I3 : référence, la règle des 800 ms reste celle de la 4.9.0.5',async()=
 });
 
 test('I3 : chargement d\'ESV pendu (un bloc en échec) : le signal ne conclut jamais, repli sur la règle des 800 ms',async()=>{
- const f=esv({cut:100,chargements:1});nuage(f);const before=await f.call('state'),t0=f.clock();
+ /* CH-084 (D-315) : repli court allumé par défaut ; ici le repli à 800 ms, réglage éteint (le court : tests/ch084-attentes-capture.test.cjs). */
+ const f=esv({cut:100,chargements:1,pilote:{repliCourt:{actif:false,silenceMs:600}}});nuage(f);const before=await f.call('state'),t0=f.clock();
  const out=await f.call('capture',before);
  assert.deepEqual(J(out.readStrategy.attempts.map(a=>a.regle)),['stabilite','stabilite']);
  assert.ok(f.clock()-t0>=2*S.pilote.stabiliteMs);
