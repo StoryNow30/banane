@@ -1,0 +1,641 @@
+{
+ "banc": "ch083",
+ "date": "2026-11-09",
+ "repetitions": 15,
+ "saut": 50,
+ "latenceMs": 60,
+ "decodeMs": 40,
+ "mortMs": 900,
+ "chargeDepart": 0.06,
+ "coeurs": 4,
+ "resume": {
+  "sans": {
+   "afficheMs": {
+    "mediane": 1173,
+    "p90": 1191,
+    "n": 15
+   },
+   "chaineMs": {
+    "mediane": 1169,
+    "p90": 1185,
+    "n": 15
+   },
+   "connus": {
+    "mediane": 56,
+    "p90": 56,
+    "n": 15
+   },
+   "chargesArrivee": {
+    "mediane": 5,
+    "p90": 5,
+    "n": 15
+   },
+   "captureMs": {
+    "mediane": 2152,
+    "p90": 2214,
+    "n": 15
+   },
+   "perdusCoupeEnCours": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "liberes": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "prechauffes": {
+    "mediane": 30,
+    "p90": 32,
+    "n": 15
+   },
+   "memLances": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "memCharges": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "memOctets": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "tasAvantKo": {
+    "mediane": null,
+    "p90": null,
+    "n": 0
+   },
+   "tasApresKo": {
+    "mediane": null,
+    "p90": null,
+    "n": 0
+   }
+  },
+  "avec": {
+   "afficheMs": {
+    "mediane": 830,
+    "p90": 862,
+    "n": 15
+   },
+   "chaineMs": {
+    "mediane": 824,
+    "p90": 856,
+    "n": 15
+   },
+   "connus": {
+    "mediane": 56,
+    "p90": 56,
+    "n": 15
+   },
+   "chargesArrivee": {
+    "mediane": 33,
+    "p90": 33,
+    "n": 15
+   },
+   "captureMs": {
+    "mediane": 2179,
+    "p90": 2198,
+    "n": 15
+   },
+   "perdusCoupeEnCours": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "liberes": {
+    "mediane": 0,
+    "p90": 0,
+    "n": 15
+   },
+   "prechauffes": {
+    "mediane": 32,
+    "p90": 32,
+    "n": 15
+   },
+   "memLances": {
+    "mediane": 28,
+    "p90": 28,
+    "n": 15
+   },
+   "memCharges": {
+    "mediane": 28,
+    "p90": 28,
+    "n": 15
+   },
+   "memOctets": {
+    "mediane": 448000,
+    "p90": 448000,
+    "n": 15
+   },
+   "tasAvantKo": {
+    "mediane": 29223,
+    "p90": 33928,
+    "n": 15
+   },
+   "tasApresKo": {
+    "mediane": 34088,
+    "p90": 38988,
+    "n": 15
+   }
+  }
+ },
+ "motifs": {
+  "sans": {
+   "coupe": 15
+  },
+  "avec": {
+   "coupe": 15
+  }
+ },
+ "mesures": {
+  "sans": [
+   {
+    "afficheMs": 1171,
+    "chaineMs": 1165,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2152,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1168,
+    "chaineMs": 1163,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2159,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1180,
+    "chaineMs": 1174,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2146,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1178,
+    "chaineMs": 1171,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2224,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1177,
+    "chaineMs": 1171,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2142,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1191,
+    "chaineMs": 1185,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2160,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1177,
+    "chaineMs": 1172,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2148,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1172,
+    "chaineMs": 1167,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2123,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1172,
+    "chaineMs": 1167,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2092,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1218,
+    "chaineMs": 1213,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2168,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1173,
+    "chaineMs": 1168,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2149,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1187,
+    "chaineMs": 1182,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2140,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1173,
+    "chaineMs": 1169,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2214,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1173,
+    "chaineMs": 1167,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2170,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 1164,
+    "chaineMs": 1160,
+    "connus": 56,
+    "chargesArrivee": 5,
+    "captureMs": 2156,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 0,
+    "memCharges": 0,
+    "memOctets": 0,
+    "tasAvantKo": null,
+    "tasApresKo": null,
+    "motif": "coupe"
+   }
+  ],
+  "avec": [
+   {
+    "afficheMs": 862,
+    "chaineMs": 855,
+    "connus": 56,
+    "chargesArrivee": 31,
+    "captureMs": 2198,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 32193,
+    "tasApresKo": 38879,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 824,
+    "chaineMs": 820,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2111,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 29019,
+    "tasApresKo": 34088,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 834,
+    "chaineMs": 828,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2179,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 31499,
+    "tasApresKo": 38743,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 827,
+    "chaineMs": 820,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2148,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 25662,
+    "tasApresKo": 30584,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 858,
+    "chaineMs": 852,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2121,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 23374,
+    "tasApresKo": 23600,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 832,
+    "chaineMs": 822,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2196,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 29745,
+    "tasApresKo": 35148,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 849,
+    "chaineMs": 840,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2181,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 33920,
+    "tasApresKo": 29425,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 826,
+    "chaineMs": 819,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2183,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 31778,
+    "tasApresKo": 38988,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 826,
+    "chaineMs": 821,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2116,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 33928,
+    "tasApresKo": 40799,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 862,
+    "chaineMs": 858,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2195,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 29223,
+    "tasApresKo": 34332,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 827,
+    "chaineMs": 821,
+    "connus": 56,
+    "chargesArrivee": 31,
+    "captureMs": 2071,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 30,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 28922,
+    "tasApresKo": 33807,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 827,
+    "chaineMs": 820,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2112,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 28684,
+    "tasApresKo": 23822,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 830,
+    "chaineMs": 825,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2179,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 28941,
+    "tasApresKo": 34625,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 862,
+    "chaineMs": 856,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2203,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 38840,
+    "tasApresKo": 31006,
+    "motif": "coupe"
+   },
+   {
+    "afficheMs": 829,
+    "chaineMs": 824,
+    "connus": 56,
+    "chargesArrivee": 33,
+    "captureMs": 2131,
+    "perdusCoupeEnCours": 0,
+    "liberes": 0,
+    "prechauffes": 32,
+    "memLances": 28,
+    "memCharges": 28,
+    "memOctets": 448000,
+    "tasAvantKo": 27959,
+    "tasApresKo": 31237,
+    "motif": "coupe"
+   }
+  ]
+ }
+}

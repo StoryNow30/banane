@@ -56,7 +56,8 @@
   * ÉTAGE PAR ÉTAGE en XMLHttpRequest comme Potree 1.8 (un étage attend le précédent, `eptParallele` à la fois), hiérarchie connue au fur et à mesure
   * (enfants d'un nœud chargé), arbre `pc.pcoGeometry` lisible par Ariane. ept=0 (défaut) : rien ne change pour les autres essais. */
  options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;options.eptForme=['r','commun'].includes(q.get('eptForme'))?q.get('eptForme'):'d';   /* CH-080c : 'commun' = forme RELEVÉE dans ESV (nœud commun de Potree ≥ 1.8.2, géométrie EPT laszip) */   /* CH-080b : forme SUPPOSÉE des nœuds d'ESV ('r' : filename() rend le nom de Potree « r0-7… ») */   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
- options.eptProfondeur=num('eptProfondeur',7);options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
+ options.eptProfondeur=num('eptProfondeur',7);options.eptMemoire=num('eptMemoire',0)===1;options.eptDecode=num('eptDecode',40);   /* CH-083 : modèle mémoire de Potree 1.8.2 (forme commune seulement) */
+ options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
  options.finPartie=q.get('finPartie')==='rechargement'?'rechargement':'sur-place';
  options.delaiRechargement=num('delaiRechargement',150);
  options.traversee=num('traversee',1);   /* CH-026 : témoignage de l'opérateur (30/10) : au dernier cut, « Next cut » (Z) ouvre la partie suivante ; plus rien à valider, « Next non validated cut » aussi. 0 : ESV reste dans la partie */
@@ -74,7 +75,7 @@
  for(const [i,p] of [[0,[0,0,0]],[1,[1.5,0,0]],[2,[.75,0,.5]]].entries()){const m=objet('Mesh',{position:p});m.geometry={type:'SphereGeometry',parameters:{radius:.0015}};m.material={color:{getHex:()=>[16302520,10606282,8947848][i]}};ajouter(root,m);}
  majMonde(root);
  const canvas=$('maquette-vue');
- window.Potree={ClipTask:{NONE:0,HIGHLIGHT:1,SHOW_INSIDE:2,SHOW_OUTSIDE:3},ClipMethod:{INSIDE_ANY:0,INSIDE_ALL:1},numNodesLoading:0};
+ window.Potree={ClipTask:{NONE:0,HIGHLIGHT:1,SHOW_INSIDE:2,SHOW_OUTSIDE:3},ClipMethod:{INSIDE_ANY:0,INSIDE_ALL:1},numNodesLoading:0,maxNodesLoading:4};   /* CH-083 : maxNodesLoading de Potree 1.8.2 ; pointLoadLimit absent, comme dans Potree */
  window.viewer={scene:{scene:root,pointclouds:[pc],getActiveCamera:()=>camera},renderer:{domElement:canvas}};
  const rails={left:null,right:null};
  const cutCourant=()=>etat.partie?.cuts[etat.index]||null;
@@ -115,7 +116,48 @@
   loadHierarchyPage(key){return fetch(`${this.base}/ept-hierarchy/${key.join('-')}.json`).then(r=>r.json()).then(h=>{const nodes={},pages={};for(const [k,v] of Object.entries(h)){if(v===-1)pages[k]={};else nodes[k]={pointCount:v};}return {nodes,pages};});}};
  function noeudCommun(d,x,y,z){const s=ept.T/2**d,m=ept.min,f=formeR(d,x,y,z),n={key:[d,x,y,z],name:f.name,level:d,owner:proprietaire,
   boundingBox:{min:{x:m[0]+x*s,y:m[1]+y*s,z:m[2]+z*s},max:{x:m[0]+(x+1)*s,y:m[1]+(y+1)*s,z:m[2]+(z+1)*s}},children:{},hasChildren:false,nodeinfo:undefined,numPoints:-1,loaded:false,loading:false};
-  n.index=Number(f.name.slice(-1))||0;return n;}
+  n.index=Number(f.name.slice(-1))||0;if(options.eptMemoire){n.load=function(){return chargerPotree(this);};n.dispose=function(){disposer(this);};}return n;}
+ /* ---------- CH-083 : modèle MÉMOIRE de Potree 1.8.2 (lu dans son code : PointCloudCopcGeometryNode.load/doneLoading/dispose, EptLaszipLoader, LRU.js,
+  * Potree_update_visibility.js). `load()` : sort si chargé, en cours, ou numNodesLoading >= maxNodesLoading ; sinon loading, ++compteur, page de hiérarchie
+  * si nodeinfo manque, fetch du .laz, décompression (`eptDecode` ms, le travailleur de Potree), géométrie posée, loaded, --compteur. Visibilité, à chaque
+  * image (16 ms) : nœuds connus qui coupent la boîte de découpe d'ESV de la coupe affichée (4 × 0,5 × 2 m), du moins profond au plus profond ; un nœud
+  * chargé devient nœud d'arbre (« monté au GPU ») 2 par image au plus ; ses enfants entrent dans la file la même image ; 4 load() au plus par image ; les
+  * nœuds d'arbre visibles sont « touchés » dans la LRU ; freeMemory libère le plus ancien de la LRU tant que ses points dépassent Potree.pointLoadLimit
+  * (absent : rien n'est libéré). Journal : `ept-arrivee` (à l'affichage du cut : nœuds connus de sa boîte, chargés, nœuds d'arbre), `ept-fin` (tout
+  * chargé), `ept-affiche` (tout monté : « points affichés »), `ept-libere` (nœud libéré par la LRU, `courant` : dans la boîte du cut affiché). */
+ const lru={m:new Map(),points:0};
+ function lruToucher(n){if(!n.loaded)return;if(lru.m.has(n)){lru.m.delete(n);lru.m.set(n,true);return;}lru.m.set(n,true);lru.points+=n.numPoints>0?n.numPoints:0;}
+ function lruRetirer(n){if(lru.m.delete(n))lru.points-=n.numPoints>0?n.numPoints:0;}
+ function disposer(n){if(!n.geometry||!n.parent)return;const courant=!!etat.boite&&dansBoite(etat.boite,n.boundingBox);n.geometry=null;n.loaded=false;n.arbre=false;log('ept-libere',{cut:etat.partie?.cuts[etat.index]?.cut??null,courant});}
+ function libererMemoire(){const lim=window.Potree.pointLoadLimit;if(lru.m.size<=1)return;
+  while(lru.points>lim){const n=lru.m.keys().next().value;if(!n)break;const pile=[n];while(pile.length){const c=pile.pop();c.dispose?.();lruRetirer(c);for(const e of Object.values(c.children||{}))if(e.loaded)pile.push(e);}}}
+ function chargerPotree(n){if(n.loaded||n.loading)return;if(window.Potree.numNodesLoading>=window.Potree.maxNodesLoading)return;
+  n.loading=true;window.Potree.numNodesLoading++;
+  return (async()=>{if(!n.nodeinfo)await lireHierarchieCommun(n);const pts=n.nodeinfo?.pointCount??0;let ok=true;
+   if(pts>0){const url=`${proprietaire.base}/ept-data/${n.key.join('-')}.laz`;ok=await fetch(url).then(r=>r.arrayBuffer().then(()=>r.ok)).catch(()=>false);
+    try{const e=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(e){ept.vus++;if(e.transferSize===0&&e.decodedBodySize>0)ept.cache++;}}catch{}
+    await new Promise(r=>setTimeout(r,options.eptDecode));}
+   if(!ok)return;   /* Potree : un échec laisse loading et le compteur à +1 (CH-062) */
+   const k=Math.min(pts,200000);n.geometry={attributes:{position:{array:new Float32Array(3*k)},color:{array:new Uint8Array(4*k)}}};
+   n.numPoints=pts;n.loaded=true;n.loading=false;window.Potree.numNodesLoading=Math.max(0,window.Potree.numNodesLoading-1);})();}
+ const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+ function boiteCut(c){const L=c.rails.left.position,R=c.rails.right.position,dx=R[0]-L[0],dy=R[1]-L[1],l=Math.hypot(dx,dy)||1,u=[dx/l,dy/l,0],t=[-u[1],u[0],0],z=[0,0,1];
+  const ce=[(L[0]+R[0])/2,(L[1]+R[1])/2,(L[2]+R[2])/2],demi=[2,.25,1],plans=[];[u,t,z].forEach((a,i)=>{const ac=dot3(a,ce);plans.push([-a[0],-a[1],-a[2],ac+demi[i]],[a[0],a[1],a[2],-ac+demi[i]]);});return plans;}
+ function dansBoite(plans,b){const lo=[b.min.x,b.min.y,b.min.z],hi=[b.max.x,b.max.y,b.max.z];for(const [x,y,z,w] of plans)if((x>0?hi[0]:lo[0])*x+(y>0?hi[1]:lo[1])*y+(z>0?hi[2]:lo[2])*z+w<0)return false;return true;}
+ /* Une image de Potree pour la boîte `plans` : rend {visibles, total, nonCharges, enCours}. */
+ function imagePotree(plans){let monte=0,visibles=0,total=0,enCours=0;const file=[ept.racine],nonCharges=[];
+  while(file.length){file.sort((a,b)=>a.level-b.level);const n=file.shift();if(!dansBoite(plans,n.boundingBox))continue;total++;
+   if(!n.arbre){if(n.loaded&&monte<2){n.arbre=true;monte++;}else{if(n.loading)enCours++;else if(!n.loaded)nonCharges.push(n);continue;}}
+   lruToucher(n);visibles++;for(const e of Object.values(n.children))file.push(e);}
+  for(const n of nonCharges.slice(0,window.Potree.maxNodesLoading))n.load();
+  libererMemoire();return {visibles,total,nonCharges:nonCharges.length,enCours};}
+ function connusBoite(plans){let connus=0,charges=0,arbre=0;const pile=[ept.racine];while(pile.length){const n=pile.pop();if(!dansBoite(plans,n.boundingBox))continue;connus++;if(n.loaded)charges++;if(n.arbre)arbre++;pile.push(...Object.values(n.children));}return {connus,charges,arbre};}
+ async function chaineEptMemoire(c,generation){const plans=boiteCut(c),t0=performance.now();etat.boite=plans;ept.vus=0;ept.cache=0;ept.hierVus=0;ept.hierCache=0;
+  log('ept-arrivee',{cut:c.cut,...connusBoite(plans)});let fin=false;
+  for(;;){if(etat.generation!==generation)return false;const r=imagePotree(plans);
+   if(!fin&&!r.nonCharges&&!r.enCours&&r.visibles===r.total){fin=true;const ms=Math.round(performance.now()-t0);log('ept-fin',{cut:c.cut,ms,noeuds:ept.vus,cache:ept.cache});log('ept-affiche',{cut:c.cut,ms,noeuds:r.visibles});
+    (async()=>{while(etat.generation===generation){await new Promise(x=>setTimeout(x,16));if(etat.generation!==generation)break;imagePotree(plans);}})();return true;}
+   await new Promise(x=>setTimeout(x,16));}}
  /* Potree, PointCloudCopcGeometryNode.loadHierarchy : toute la page d'un coup, du haut vers le bas ; la clé propre reçoit son nodeinfo. */
  function lireHierarchieCommun(n){const nom=n.key.join('-'),url=`${proprietaire.base}/ept-hierarchy/${nom}.json`;
   return proprietaire.loadHierarchyPage(n.key).then(({nodes,pages})=>{const carte={[nom]:n};
@@ -182,11 +224,11 @@
   else etat.minuteries.push(setTimeout(()=>{for(const s of ['left','right']){rails[s]=ajouter(root,construireRail(s,c.rails[s]));}majMonde(root);for(const s of ['left','right'])origines[s]=pt(rails[s].matrixWorld.elements,[0,0,0]);etat.posee={};decoupe(etat.scenario.decoupe.dimensions[2]);recentrer('left');etat.side=null;log('rails-prets',{cut:c.cut});},options.latenceRails));
   /* Nœuds de points : demandés au serveur AU CHARGEMENT DU CUT (comme Potree), gardés en cache (comme Potree), puis
    * rendus visibles par lots avec latence ; Potree.numNodesLoading pendant le chargement. */
-  window.Potree.numNodesLoading=c.points?.noeuds??c.noeuds?.length??0;
+  window.Potree.numNodesLoading=options.eptMemoire?0:c.points?.noeuds??c.noeuds?.length??0;   /* CH-083 : en mode mémoire, le compteur est celui des load() du modèle de Potree */
   const servir=noeuds=>{if(etat.generation!==generation)return;const lots=Math.max(1,options.lots),parLot=Math.ceil(noeuds.length/lots);
    if(!noeuds.length){window.Potree.numNodesLoading=0;log('noeuds-aucun',{cut:c.cut});}
    for(let i=0;i<lots;i++){const tranche=noeuds.slice(i*parLot,(i+1)*parLot);if(!tranche.length)continue;
-    etat.minuteries.push(setTimeout(()=>{for(const n of tranche)pc.visibleNodes.push(noeud(n,c));window.Potree.numNodesLoading-=tranche.length;dessiner();log('noeuds-charges',{cut:c.cut,lot:i+1,noeuds:pc.visibleNodes.length});},options.latence*(i+1)+options.latenceRails));}
+    etat.minuteries.push(setTimeout(()=>{for(const n of tranche)pc.visibleNodes.push(noeud(n,c));if(!options.eptMemoire)window.Potree.numNodesLoading-=tranche.length;dessiner();log('noeuds-charges',{cut:c.cut,lot:i+1,noeuds:pc.visibleNodes.length});},options.latence*(i+1)+options.latenceRails));}
    /* Panne nuageInstable : pendant dureeMs, les nœuds sont remplacés toutes les 250 ms (nouveaux objets, mêmes points) : niveau de détail jamais stable. */
    const inst=etat.pannes.nuageInstable;if(concerne(inst,c.cut)){const fin=Date.now()+(Number(inst.dureeMs)||5000);
     const remplacer=()=>{if(etat.generation!==generation||Date.now()>fin)return;pc.visibleNodes=noeuds.map(n=>noeud(n,c));log('panne',{cut:c.cut,panne:'nuageInstable'});etat.minuteries.push(setTimeout(remplacer,250));};
@@ -199,7 +241,7 @@
   else xhr('GET',c.noeudsUrl).then(r=>{let n=[];try{if(r.status===200){const j=JSON.parse(r.texte);n=Array.isArray(j?.noeuds)?j.noeuds:[];}else log('noeuds-echec',{cut:c.cut,http:r.status});}
      catch(e){log('noeuds-echec',{cut:c.cut,message:'réponse illisible'});}etat.cacheNoeuds.set(cleCache,n);servir(n);}).catch(e=>{log('noeuds-echec',{cut:c.cut,message:e.message});servir([]);});
   };
-  if(options.ept&&ept.racine)chaineEpt(c,generation).then(ok=>{if(ok)suite();});else suite();
+  if(options.ept&&ept.racine)(options.eptMemoire&&options.eptForme==='commun'?chaineEptMemoire:chaineEpt)(c,generation).then(ok=>{if(ok)suite();});else suite();   /* CH-083 : modèle mémoire */
   if(options.decoupeTardive&&!c.decoupe)etat.minuteries.push(setTimeout(()=>{if(cutCourant()===c){decoupe(etat.scenario.decoupe.dimensions[2]+.1);log('decoupe-deplacee',{cut:c.cut});}},options.latenceRails+150));
   majEtat();return true;}
  /* Comme Potree : les positions Float32 d'un nœud sont relatives au coin de sa boîte (petites valeurs, précision ~1e-7 m) et
@@ -336,6 +378,8 @@
   for(const n of [...nums].sort((a,b)=>a-b)){const li=document.createElement('li'),a=document.createElement('a'),u=new URLSearchParams(location.search);u.set('p',String(n));
    li.className='list-group-item'+(n===courante?' active':'');a.href='?'+u.toString();a.textContent=String(n);if(n===courante)a.className='active';li.appendChild(a);ul.appendChild(li);}
   log('selecteur-parties',{parties:[...nums],courante,suppose:true});}
+ /* CH-083 : état mémoire de la boîte du cut affiché (comptes seulement) et points de la LRU. */
+ window.__memoireEpt=()=>({...(etat.boite?connusBoite(etat.boite):{connus:0,charges:0,arbre:0}),lruPoints:lru.points,lruNoeuds:lru.m.size});
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
    compteur:$('maquette-compteur').textContent.replace(/\s+/g,' ').trim(),traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
    statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),
