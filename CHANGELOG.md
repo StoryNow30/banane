@@ -1,5 +1,12 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 7 — 09/11 après-midi (D-309 à D-312 ; CH-080b, CH-080c, CH-082)
+- Préchauffage sur la forme réelle d'ESV (relevé de console de l'opérateur) : EPT laszip chargé par le nœud commun de Potree 1.8. Les nœuds sont nommés par leur clé, l'adresse est celle de Potree, et rien n'est demandé sans adresse sûre (motif `sans-adresse`). Depuis « Vision 5 », le préchauffage n'avait jamais rien demandé (0 nœud sur 733 préchauffages, ÉTABLI).
+- Dès un saut de 2 coupes (D-311), avec la lecture de la hiérarchie de la zone lointaine. Maquette, forme d'ESV, saut de 50 coupes (ÉTABLI) : 811 → 427 ms jusqu'à « aucun chargement » (−47 %), 16 nœuds sur 32 servis par le cache. Sur le terrain, le bilan à l'arrivée (`prechauffage-bilan` : juste, potree, couverts, servisCache) le dira.
+- Outil `tools/bilan-lot.cjs` : bilan d'un export en une commande (CH-082).
+- Preuves : verify 3 294 essais, 3 287 réussis, 0 échec, 7 sautés ; maquette 85 essais, 0 échec, 3 sautés ; parité de la relecture identique.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 6 — 09/11 (D-308, D-309, D-310 ; CH-079, CH-080)
 - Préchauffage des coupes éloignées (CH-080) : la coupe suivante est prise dans l'ordre de travail d'Ariane et la liste d'ESV (plus devinée) ; le préchauffage ne part que si elle est à 11 coupes ou plus ; il lit d'abord le sommaire (hiérarchie) de la zone lointaine, puis les morceaux de points qu'il désigne. Maquette, saut de 50 coupes (ÉTABLI) : 798 → 551 ms jusqu'à « aucun chargement » (−31 %). Coût réel à lire sur le lot d'essai (D-310).
 - Coupes apprises (CH-079), EN OMBRE (calculées et consignées, rien n'est posé ni différé) : garde contre la mauvaise voie sur les cuts validés (écartement à plus de 15 mm de celui des voisins) et desserrage de la décision sur le lot dans les aiguillages ; les 9 cuts validés faux du 08/11 deviennent des cas de contrôle.
