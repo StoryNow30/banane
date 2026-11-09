@@ -50,9 +50,10 @@ const sansAdresse=evts=>assert.ok(!ADRESSE.test(JSON.stringify(evts).replace(/"k
 test('réglage : `sautMin` livré à 2 (D-311) ; clé absente ou hors bornes : 1 (comportement de CH-077) ; sources en liste fermée',()=>{
  assert.equal(P.DEFAUT.sautMin,1);assert.equal(P.reglage({actif:true}).sautMin,1);
  assert.equal(P.reglage({actif:true,sautMin:0}).sautMin,1,'hors bornes : défaut');assert.equal(P.reglage({actif:true,sautMin:3}).sautMin,3);
- assert.deepEqual([...P.SOURCES],['liste-esv','relu','passe-differes','b1-fenetre']);
+ assert.deepEqual([...P.SOURCES],['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],'CH-081 : source changement-mode ajoutée');
  const S=require('../src/settings.js');assert.equal(S.lot.chargement.prechauffer.sautMin,2,'réglage livré : D-311, dès un saut de 2 coupes');
- assert.equal(S.lot.chargement.prechauffer.noeudsMax,24);assert.equal(S.lot.chargement.prechauffer.octetsMax,8388608);assert.equal(S.lot.chargement.prechauffer.enVolMax,2,'plafonds inchangés');
+ /* CH-081 (aval de l'intégrateur, Vision 8) : plafonds par candidat relevés à 32 nœuds et 10 Mo ; enVolMax inchangé. */
+ assert.equal(S.lot.chargement.prechauffer.noeudsMax,32);assert.equal(S.lot.chargement.prechauffer.octetsMax,10485760);assert.equal(S.lot.chargement.prechauffer.enVolMax,2,'enVolMax inchangé');
 });
 
 test('lot, saut de 50 coupes : la suivante non validée de TOUTE la liste (source liste-esv) ; nœuds de sa zone demandés',async()=>{

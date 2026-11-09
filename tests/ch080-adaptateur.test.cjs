@@ -39,7 +39,9 @@ async function jouer(expectedPlus={}){
  return {demandes,evts:evts.filter(e=>e.kind==='prechauffage')};}
 
 test('lot (sans cible) : la page demande la suivante de toute la liste ; source liste-esv, saut 50',opts,async()=>{
- const j=await jouer(()=>({}));assert.equal(j.demandes.length,1);assert.equal(j.demandes[0].suivante,true);assert.equal('cible' in j.demandes[0],false);
+ const j=await jouer(()=>({}));assert.equal(j.demandes[0].suivante,true);assert.equal('cible' in j.demandes[0],false);
+ /* CH-081 (Vision 8, horizon 2) : une seconde demande, la suivante de la coupe prédite (k+2). */
+ assert.equal(j.demandes.length,2);assert.equal(j.demandes[1].suivante,true);assert.equal(j.demandes[1].cut,150);
  assert.equal(j.evts[0].source,'liste-esv');assert.equal(j.evts[0].saut,50);assert.equal(j.evts[0].predite,150);
 });
 

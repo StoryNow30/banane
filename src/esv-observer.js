@@ -203,23 +203,30 @@
   let loin;
   if(Number.isInteger(req.cible))loin=req.cible>=0&&req.cible<t.rk.length?ligne(req.cible):null;
   else if(req.suivante===true){loin=null;for(let i=cut+1;i<t.rk.length;i++)if(t.st[i]!==STATUS_CODE.valid){loin=ligne(i);break;}}
+  /* CH-081 : `premiere:true` : la première ligne non validée de TOUTE la table, hors le cut courant (départ de la passe des différés, en fin de lot). */
+  else if(req.premiere===true){loin=null;for(let i=0;i<t.rk.length;i++)if(i!==cut&&t.st[i]!==STATUS_CODE.valid){loin=ligne(i);break;}}
   return {ok:true,table:{lignes:t.rk.length,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee,tables:tables.size},
    geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows,...(loin!==undefined?{loin}:{})};
  }
 
  /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
- const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits','sansNom','sansAdresse','formeNoeud'],
-  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],'prechauffage-entetes':['maxAgeS','statut']};
- const PRECH_BOOLEENS={'prechauffage':['annule'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
+ const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits','sansNom','sansAdresse','formeNoeud','cibles'],
+  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal','utiles','inutiles'],'prechauffage-entetes':['maxAgeS','statut'],
+  'prechauffage-vue':['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites']};   /* CH-081 : cibles ; utiles, inutiles ; vue */
+ const PRECH_BOOLEENS={'prechauffage':['annule','calibree'],'prechauffage-vue':[],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
  const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
-  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
- const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1};
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+ const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1,'prechauffage-vue':1};
+ const PRECH_ZONES=['cube','boite'],PRECH_TYPES_VUE=['orthographique','perspective','autre','absente'];   /* CH-081 */
  function reduirePrechauffage(k,x){const out={kind:k};
   for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;
   for(const c of PRECH_BOOLEENS[k])out[c]=typeof x[c]==='boolean'?x[c]:null;
   if(k==='prechauffage'){out.motif=PRECH_MOTIFS.includes(x.motif)?x.motif:null;
    /* CH-080 : saut en coupes (entier SIGNÉ, borné) et source de la coupe suivante (liste fermée). */
-   out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=PRECH_SOURCES.includes(x.source)?x.source:null;}
+   out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=PRECH_SOURCES.includes(x.source)?x.source:null;
+   out.zone=PRECH_ZONES.includes(x.zone)?x.zone:null;}
+  /* CH-081 : vue de Potree : type en liste fermée, maxLevel entier signé (−1 : sans plafond). */
+  if(k==='prechauffage-vue'){out.type=PRECH_TYPES_VUE.includes(x.type)?x.type:null;out.maxLevel=Number.isInteger(x.maxLevel)&&x.maxLevel>=-1&&x.maxLevel<=64?x.maxLevel:null;}
   if(k==='prechauffage-entetes')out.classe=PRECH_CLASSES.includes(x.classe)?x.classe:null;
   return out;}
  function install(win){

@@ -20,7 +20,8 @@ test('le patch est appliqué au tronc (ou s’y applique)',opts,()=>{assert.equa
   const verif=fs.mkdtempSync(path.join(os.tmpdir(),'ch062-r-'));fs.mkdirSync(path.join(verif,'src'));
   fs.copyFileSync(path.join(racine,'src/esv-observer.js'),path.join(verif,'src/esv-observer.js'));
   fs.writeFileSync(path.join(verif,'src/adapter-page.js'),fs.readFileSync(SRC,'utf8')
-   /* D-309 (Vision 6) : retirer d'abord les lignes du branchement CH-080, puis celles de CH-077. */
+   /* D-309 et D-311 : retirer d'abord les lignes des branchements CH-081 et CH-080, puis celles de CH-077. */.replace(":quoi?.premiere===true?{premiere:true}:{};   /* CH-081 : premiere */return new Promise(",":{};return new Promise(")
+   .replace(/suivante:expected\?\.prechauffage\?\?null,\n     \/\* CH-081 : caméra active[^\n]*\n     vue:\(\)=>\(\{[^\n]*?\}\)\}\)\)\.catch/,"suivante:expected?.prechauffage??null})).catch")
    .replace(/\n \/\* CH-080 \(D-309\) : `quoi` ajoute[^\n]*/,'')
    .replace("function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:{};return new Promise(","function voisinsB1(cut,world){return new Promise(")
    .replace("fenetre:10,world,...plus},location.origin)","fenetre:10,world},location.origin)")
