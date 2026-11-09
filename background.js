@@ -289,7 +289,7 @@ function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;con
   if(typeof v==='number'&&Number.isFinite(v)||typeof v==='boolean'||typeof v==='string'&&v.length<=32){out[k]=v;n++;}}
  return out;}
 /* CH-077 (préchauffage du cache pour la coupe suivante, src/prechauffage.js) : entiers bornés, booléens, motif et classe d'une liste fermée ; jamais d'adresse. */
-const OBS_PRECH={prechauffage:{n:['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs'],b:['annule']},
+const OBS_PRECH={prechauffage:{n:['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits'],b:['annule']},   /* CH-080 : hierarchies, deduits */
  'prechauffage-bilan':{n:['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],b:['juste']},'prechauffage-entetes':{n:['maxAgeS','statut'],b:['etag','lastModified','expires','pragma']}};
 const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime'];
 /* CH-080 : saut (entier signé, en coupes) et source de la coupe suivante (liste fermée de src/prechauffage.js). */

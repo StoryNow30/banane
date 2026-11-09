@@ -11,8 +11,8 @@ function adaptateurCH080(){if(copie!==null)return copie;const tronc=O77.adaptate
  const r=spawnSync('patch',['-s','-p1','-d',dir,'-i',path.join(N.racine,'chantiers/CH-080/adapter-page.patch')],{encoding:'utf8'});
  if(r.error?.code==='ENOENT')return null;if(r.status!==0)throw Error('le patch CH-080 ne s’applique plus : '+(r.stderr||r.stdout));
  return copie=fs.readFileSync(path.join(dir,'src/adapter-page.js'),'utf8');}
-/* `correctif` : adaptateur patché (true) ou celui du tronc (false) ; `saut` : coupes entre deux coupes à faire ; réglage livré (sautMin 11) par défaut. */
-function ouvrir({correctif=true,prechauffer=true,saut=50,reglage={}}={}){
- return O77.ouvrir({prechauffer,reglage:{sautMin:require('../../src/settings.js').lot.chargement.prechauffer.sautMin,...reglage},maquette:{cuts:2*saut+1,saut},
+/* `correctif` : adaptateur patché (true) ou celui du tronc (false) ; hiérarchie EPT en fichiers (CH-080, étape « hiérarchie ») par défaut ; `saut` : coupes entre deux coupes à faire ; réglage livré (sautMin 11) par défaut. */
+function ouvrir({correctif=true,prechauffer=true,saut=50,reglage={},hierarchieFichiers=true}={}){   /* `hierarchieFichiers` : hiérarchie EPT lue dans des fichiers, comme Potree 1.8 */
+ return O77.ouvrir({prechauffer,reglage:{sautMin:require('../../src/settings.js').lot.chargement.prechauffer.sautMin,...reglage},maquette:{cuts:2*saut+1,saut,eptHier:hierarchieFichiers?1:0},
   adaptateur:correctif?adaptateurCH080():O77.adaptateurPatche()});}
 module.exports={ouvrir,adaptateurCH080};

@@ -102,3 +102,40 @@ test('identité d’opération et annulation : une nouvelle capture annule le pr
  assert.ok(e.demandes.length>=1&&e.demandes.length<=2,'deux en vol au plus');p.annuler('capture');await e.tourner(5);await r;
  const ev=e.evts.find(x=>x.kind==='prechauffage');assert.equal(ev.motif,'capture');assert.equal(ev.annule,true);assert.equal(ev.termines,0);assert.equal(ev.saut,50);
 });
+
+/* ---- CH-080, étape « hiérarchie » (demande de l'intégrateur) : la zone lointaine n'a que des frontières (hiérarchie non lue). */
+/* Fichier de hiérarchie EPT de la clé : descendants sur 2 niveaux, −1 au dernier (sauf au fond, 7). */
+function fichierHier(cle){const [d,x,y,z]=cle.split('-').map(Number),h={};
+ for(let r=0;r<=2&&d+r<=7;r++){const k=2**r;for(let a=0;a<k;a++)for(let b=0;b<k;b++)for(let c=0;c<k;c++)h[`${d+r}-${x*k+a}-${y*k+b}-${z*k+c}`]=r===2&&d+r<7?-1:1000;}return h;}
+function avecHier(e){const lus=[];e.hier=lus;e.env.fetch=(url,init)=>new Promise((res,rej)=>{e.demandes.push(url);init.signal.addEventListener('abort',()=>rej(Object.assign(Error('abandon'),{name:'AbortError'})));
+ const m=/ept-hierarchy\/(\d+-\d+-\d+-\d+)\.json$/.exec(url);if(m)lus.push(m[1]);
+ const corps=m?new TextEncoder().encode(JSON.stringify(fichierHier(m[1]))).buffer:new ArrayBuffer(50000);
+ queueMicrotask(()=>res({ok:true,status:200,headers:{get:()=>null},arrayBuffer:async()=>corps}));});return e;}
+/* Arbre connu comme sur le terrain : hiérarchie lue jusqu'au niveau 2 (frontières −1 sans enfants), chargé autour du cut courant. */
+const arbreFrontiere=()=>{const pc=arbre({charges:pres(20)}),elaguer=n=>{if(n.level===2&&!(n.boundingBox.min.x<=20&&n.boundingBox.max.x>=20)){n.numPoints=-1;n.children={};return;}for(const e of Object.values(n.children))elaguer(e);};
+ elaguer(pc.pcoGeometry.root);return pc;};   /* hiérarchie lue en profondeur autour du cut courant (x = 20) seulement, frontières −1 au niveau 2 ailleurs */
+
+test('hiérarchie éteinte (défaut du module) : seules les frontières sont comptées, aucun fichier de hiérarchie demandé',async()=>{
+ const e=avecHier(environnement({voisins:observateur(200,{20:'invalid',70:'invalid'})})),ev=await jouer(e,contexte(arbreFrontiere(),20));
+ assert.equal(P.DEFAUT.hierarchie,false);assert.equal(e.hier.length,0);assert.ok(ev.frontiere>0);assert.equal(ev.hierarchies,0);
+});
+
+test('hiérarchie allumée : fichiers des frontières de la zone lus, nœuds de la zone déduits et demandés, plafonds tenus',async()=>{
+ const e=avecHier(environnement({voisins:observateur(200,{20:'invalid',70:'invalid'}),reglage:{hierarchie:true}})),ev=await jouer(e,contexte(arbreFrontiere(),20));
+ assert.ok(ev.hierarchies>=1&&ev.hierarchies<=8,'fichiers de hiérarchie : '+ev.hierarchies);assert.equal(e.hier.length,ev.hierarchies);
+ assert.ok(ev.deduits>0,'nœuds déduits : '+ev.deduits);assert.ok(ev.noeuds>0);assert.ok(ev.noeuds+ev.hierarchies<=24,'plafond de nœuds : fichiers compris');
+ const donnees=e.demandes.filter(u=>/ept-data/.test(u));assert.equal(donnees.length,ev.noeuds);
+ for(const u of donnees){const [d,x]=/(\d+)-(\d+)-\d+-\d+\.bin$/.exec(u).slice(1).map(Number),s=128/2**d;assert.ok(x*s<=70.75&&(x+1)*s>=69.25,'nœud dans la zone de la coupe 70 : '+u);assert.match(u,/^\/nuage\/ept-data\/\d+-\d+-\d+-\d+\.bin$/,'adresse de Potree');}
+ for(const k of e.hier){const [d,x]=k.split('-').map(Number),s=128/2**d;assert.ok(x*s<=70.75&&(x+1)*s>=69.25,'hiérarchie de la zone seulement : '+k);}
+ assert.ok(Math.max(...donnees.map(u=>Number(/(\d+)-\d+-\d+-\d+\.bin$/.exec(u)[1])))>2,'des nœuds plus profonds que la hiérarchie connue');
+ sansAdresse(e.evts);
+});
+
+test('hiérarchie : une nouvelle capture annule la lecture en cours ; rien n’est déduit ni demandé ensuite',async()=>{
+ const e=environnement({voisins:observateur(200,{20:'invalid',70:'invalid'}),reglage:{hierarchie:true}});
+ e.env.fetch=(url,init)=>new Promise((res,rej)=>{e.demandes.push(url);init.signal.addEventListener('abort',()=>rej(Object.assign(Error('abandon'),{name:'AbortError'})));});
+ const p=P.creer(e.env),r=p.apresCapture(contexte(arbreFrontiere(),20));await e.tourner(5);
+ assert.ok(e.demandes.length>=1&&e.demandes.every(u=>/ept-hierarchy/.test(u)),'d’abord la hiérarchie');const n=e.demandes.length;
+ p.annuler('capture');await e.tourner(10);await r;
+ assert.equal(e.demandes.length,n,'rien ne repart');const ev=e.evts.find(x=>x.kind==='prechauffage');assert.equal(ev.motif,'capture');assert.equal(ev.noeuds,0);assert.equal(ev.deduits,0);
+});

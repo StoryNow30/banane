@@ -40,6 +40,6 @@ async function ouvrir({prechauffer=false,reglage={},maquette={},adaptateur=null}
   const suivant=v.result.nextIdentity?.cut;const fin=await attendre(()=>finCut(suivant));await repos();const reposMs=Date.now()-t;   /* CH-080 : de la validation à « aucun chargement » */
   const requetes=Object.values(env.serveur.journal.ept).reduce((a,b)=>a+b,0)-requetesAvant;
   const evts=await env.page.evaluate(()=>window.__evts.splice(0));
-  return {cut,suivant,captureMs,poseMs,validationMs,reposMs,chaineMs:fin.ms,noeuds:fin.noeuds,cache:fin.cache,requetes,evts};}
+  return {cut,suivant,captureMs,poseMs,validationMs,reposMs,hierarchies:fin.hierarchies??null,hierCache:fin.hierCache??null,chaineMs:fin.ms,noeuds:fin.noeuds,cache:fin.cache,requetes,evts};}
  return {env,transition,fermer:()=>env.fermer()};}
 module.exports={ouvrir,adaptateurPatche,FICHIERS,attendre};

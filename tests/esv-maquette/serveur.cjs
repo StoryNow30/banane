@@ -67,6 +67,15 @@ function demarrer(options={}){
       m=/^\/maquette\/ept\/ept-data\/(\d+-\d+-\d+-\d+)\.bin$/.exec(p);
       if(m&&req.method==='GET'){journal.ept[m[1]]=(journal.ept[m[1]]||0)+1;const n=Number(pannes.eptOctets)||65536,lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
         return setTimeout(()=>{res.writeHead(200,{'content-type':'application/octet-stream','content-length':n,'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(Buffer.alloc(n,7));},lat);}
+      /* CH-080 : fichier de hiérarchie EPT (comme `ept-hierarchy/<clé>.json` de Potree 1.8) : la clé et ses descendants sur `eptPas` niveaux (2), jusqu'à
+       * `eptProfondeur` (7) ; les clés du dernier niveau valent −1 (sous-hiérarchie dans un autre fichier) sauf au fond de l'arbre. Mêmes latence et cache que les
+       * nœuds ; journal `eptHier`. */
+      m=/^\/maquette\/ept\/ept-hierarchy\/(\d+)-(\d+)-(\d+)-(\d+)\.json$/.exec(p);
+      if(m&&req.method==='GET'){const [d,x,y,z]=m.slice(1).map(Number),pas=Number(pannes.eptPas)||2,prof=Number(pannes.eptProfondeur)||7,h={};
+        journal.eptHier=journal.eptHier||{};journal.eptHier[m.slice(1).join('-')]=(journal.eptHier[m.slice(1).join('-')]||0)+1;
+        for(let r=0;r<=pas&&d+r<=prof;r++){const k=2**r;for(let a=0;a<k;a++)for(let b=0;b<k;b++)for(let c=0;c<k;c++)h[`${d+r}-${x*k+a}-${y*k+b}-${z*k+c}`]=r===pas&&d+r<prof?-1:1000;}
+        const corpsH=JSON.stringify(h),lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
+        return setTimeout(()=>{res.writeHead(200,{'content-type':'application/json','content-length':Buffer.byteLength(corpsH),'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(corpsH);},lat);}
       if(p==='/maquette/pannes'){if(req.method==='POST'){let brut;try{brut=JSON.parse(Buffer.concat(corps).toString('utf8')||'{}');}catch(e){return json(res,400,{error:'pannes : JSON invalide'});}
           pannes=normaliser(brut);journal.refus.length=0;lecturesListe=0;}
         return json(res,200,pannes);}
