@@ -90,7 +90,7 @@ Médiane / P90 (ÉTABLI sur la maquette) :
 - Lire dans `prechauffage-bilan` : `prets`, `nousPrets`, `potreeLui`.
 - Comparer la capture médiane des sauts de plus de 200 coupes à 3,4 s.
 
-## verify et maquette complets (dans ma machine, sur 1bfe1b2)
+## verify et maquette complets (dans ma machine, code de 0052817)
 - **verify complet** (`node tools/verify.cjs`) : **3 357 essais, 3 349 réussis, 1 échec, 7 sautés**.
   - L'échec est `typage-ch075` (« références d'identité gelées ») : `git show 5699f68` est introuvable dans mon clone superficiel. Il ne vient pas du chantier.
   - Après `git fetch --depth=1000`, `typage-ch075` passe seul : 5/5.
