@@ -79,10 +79,12 @@
   /** Caméra active et réglages de Potree, lus sans rien toucher. Entiers bornés et types d'une liste fermée seulement. */
   function releveVue({ camera, pointBudget, pointcloud, pointLoadLimit } = {}) {
     const lire = f => { try { return f(); } catch { return undefined; } };
-    const out = { type: 'absente', demiLargeurMm: null, demiHauteurMm: null, profondeurM: null, champDeg: null, pointBudget: null, maxLevel: null, minNodeSize: null, boites: null, limitePoints: null };
+    /* CH-088 : `camera` (et non plus `type`) : le champ `type` de l'événement écrasait le type de l'enveloppe du journal (`esv-observation`), et les
+     * outils ne voyaient plus aucun `prechauffage-vue` (lot « Vision 8 » du 09/11, ÉTABLI : 3 événements, tous lus « orthographique »). */
+    const out = { camera: 'absente', demiLargeurMm: null, demiHauteurMm: null, profondeurM: null, champDeg: null, pointBudget: null, maxLevel: null, minNodeSize: null, boites: null, limitePoints: null };
     if (camera && typeof camera === 'object') {
       const ortho = lire(() => camera.isOrthographicCamera === true || camera.type === 'OrthographicCamera'), persp = lire(() => camera.isPerspectiveCamera === true || camera.type === 'PerspectiveCamera');
-      out.type = ortho ? 'orthographique' : persp ? 'perspective' : 'autre';
+      out.camera = ortho ? 'orthographique' : persp ? 'perspective' : 'autre';
       const P = lire(() => camera.projectionMatrix?.elements);
       if (ortho && P && P.length === 16) {
         out.demiLargeurMm = fini(P[0]) && P[0] !== 0 ? entier(1000 / Math.abs(P[0]), 0, 1e9) : null;
@@ -102,7 +104,7 @@
     }
     return Object.freeze(out);
   }
-  const CHAMPS_VUE = ['type', 'demiLargeurMm', 'demiHauteurMm', 'profondeurM', 'champDeg', 'pointBudget', 'maxLevel', 'minNodeSize', 'boites', 'limitePoints'];
+  const CHAMPS_VUE = ['camera', 'demiLargeurMm', 'demiHauteurMm', 'profondeurM', 'champDeg', 'pointBudget', 'maxLevel', 'minNodeSize', 'boites', 'limitePoints'];
   /** Signature d'un relevé : deux relevés égaux ⇔ même signature (l'événement `prechauffage-vue` part au départ du lot puis à chaque changement). */
   const signatureVue = r => r ? CHAMPS_VUE.map(k => String(r[k])).join('|') : '';
 

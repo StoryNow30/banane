@@ -36,6 +36,13 @@
  * source `changement-mode`) ; plafonds par CANDIDAT (`noeudsMax`, `octetsMax`, `hierarchiesMax`) et par LOT (`lotRequetesMax`, `lotOctetsMax`), repli à
  * un candidat au-delà de `repliInutiles` ; bilan `utiles` / `inutiles` (nœud préchauffé redemandé ou non par Potree avant d'expirer) ; événement
  * `prechauffage-vue` (caméra et réglages de Potree, lecture seule, au départ puis à chaque changement). Réglage absent : comportement de CH-080c.
+ * CH-088 (lot « Vision 8 » du 09/11 ; étude envoyée à l'intégrateur) : OPÉRATION LOINTAINE (`loin`, voie potree) : la prochaine coupe lointaine (écart ≥
+ * `loin.sautMin` à la coupe précédente de la chaîne) est prise dès qu'elle est connue, jusqu'à `loin.coupesMax` coupes à l'avance (liste du lot :
+ * demande `{loin}` à l'observateur ; relecture et passe : `loin` joint par le service worker). Elle survit aux changements de coupe ; elle se met en
+ * pause pendant chaque capture (les load() lancés finissent, aucun nouveau) et quand Potree charge ; elle finit à l'arrivée. Mêmes plafonds (`noeudsMax`,
+ * `hierarchiesMax` par cible, `enVolMax` à nous en tout, budget du lot, octets décodés). Bilan à l'arrivée par l'ARBRE (la voie potree n'a plus de
+ * requête à nous) : nœuds de la boîte avec points, chargés à l'arrivée, chargés par nous, encore en vol, puis chargés par Potree lui-même après
+ * l'arrivée (`prechauffage-bilan` et `prechauffage-loin`). `prechauffage-vue` porte `camera` (et non plus `type`, qui écrasait le type du journal).
  * Pur : tout ce qui touche la page (horloge, images, compteur, étiquette, fetch, observateur des ressources, table B1) est passé par `env`. */
 /** @template T @param {unknown} root @param {() => T} factory */
 (function (root, factory) {
@@ -76,9 +83,19 @@
      * l'authentification d'ESV. `delaiMs` : un de nos chargements encore en cours au-delà arrête le préchauffage pour le lot (`refus-serveur`). */
     out.voie = r.voie === 'potree' ? 'potree' : 'fetch';
     out.delaiMs = fini(r.delaiMs) && r.delaiMs >= 500 && r.delaiMs <= 60000 ? Math.floor(r.delaiMs) : 5000;
+    out.loin = reglageLoin(r.loin);   /* CH-088 */
     return Object.freeze(out);
   }
 
+  /* CH-088 : opération lointaine. Défaut du MODULE : éteinte. `sautMin` : écart minimal (en coupes) à la coupe précédente de la chaîne ; `coupesMax` :
+   * coupes au plus entre la coupe courante et la cible. Seulement en voie potree. */
+  const DEFAUT_LOIN = Object.freeze({ actif: false, sautMin: 11, coupesMax: 40 });
+  const BORNES_LOIN = { sautMin: [2, 100000], coupesMax: [0, 500] };
+  function reglageLoin(m) {
+    const out = { ...DEFAUT_LOIN };
+    if (m && typeof m === 'object') { out.actif = m.actif === true; for (const [k, [a, b]] of Object.entries(BORNES_LOIN)) { const v = m[k]; if (fini(v) && v >= a && v <= b) out[k] = Math.floor(v); } }
+    return Object.freeze(out);
+  }
   /* CH-083 (D-314) : phase « mémoire » : `node.load()` de Potree sur les nœuds de la coupe suivante que le préchauffage HTTP vient de recevoir en 200.
    * Défaut du MODULE : éteinte. `noeudsMax` par opération, `enVolMax` chargements à nous à la fois (Potree garde au moins 4 − enVolMax places), `octetsMax`
    * octets DÉCODÉS (géométrie) par vie de la page. Étude : chantiers/CH-083/etude.md. */
@@ -110,6 +127,31 @@
       return true;
     });
     return { donnees: donnees.sort(tri), hier: hier.sort(tri) };
+  }
+  /** CH-088 : instantané de la boîte d'une coupe dans l'arbre de Potree (lecture seule) : nœuds connus avec points (`boite`), chargés (`prets`), chargés
+   * par nous (`nous`, d'après `nos`), à nous encore en cours (`enVol`) ; `charges` : les nœuds chargés (mémoire de la page, le temps du bilan). */
+  function instantane(pointclouds, Z, nos) {
+    const out = { boite: 0, prets: 0, nous: 0, enVol: 0, charges: new Set() };
+    if (!Z) return out;
+    try {
+      parcourir(pointclouds, Z, (n, d) => {
+        if (d === null) return false;
+        let pts = null, ok = false, en = false; try { pts = commun(n) ? n.nodeinfo?.pointCount : n.numPoints; ok = n.loaded === true; en = n.loading === true; } catch { /* rien */ }
+        if (!ok && !(fini(pts) && pts > 0)) return true;
+        out.boite++;
+        if (ok) { out.prets++; out.charges.add(n); if (nos && nos.has(n)) out.nous++; } else if (en && nos && nos.has(n)) out.enVol++;
+        return true;
+      });
+    } catch { /* relevé seulement */ }
+    return out;
+  }
+  /** CH-088 : bilan de l'arrivée : instantané à l'arrivée `a`, instantané au bilan `f` (après la capture de la coupe d'arrivée). `potreeLui` : nœuds de la
+   * boîte chargés après l'arrivée par Potree seul ; `nousApres` : chargés après l'arrivée par un load() à nous lancé avant. Entiers seulement. */
+  function bilanArrivee(a, f, nos) {
+    if (!a || !f) return { boite: null, prets: null, nousPrets: null, nousEnVol: null, boiteFin: null, potreeLui: null, nousApres: null };
+    let potreeLui = 0, nousApres = 0;
+    for (const n of f.charges) if (!a.charges.has(n)) { if (nos && nos.has(n)) nousApres++; else potreeLui++; }
+    return { boite: a.boite, prets: a.prets, nousPrets: a.nous, nousEnVol: a.enVol, boiteFin: f.boite, potreeLui, nousApres };
   }
   /** CH-085 : diagnostic de la voie d'authentification d'ESV, booléens et compte seulement : `fetch` de la page natif ou enveloppé, en-têtes et
    * accréditations de XHRFactory de Potree (ne servent qu'aux chargeurs XHR ; l'EPT de Potree 1.8.2 fait un fetch(url) nu). */
@@ -344,7 +386,10 @@
     const budget = Anticipation && R ? Anticipation.creerBudget(R.lot) : null, attente = new Map();
     let utiles = 0, vueSig = null, dernierAge = null, memOctetsLot = 0, refus = false;   /* CH-085 : refus du serveur vu : préchauffage arrêté pour le lot */
     const EPT_HIER = /\/ept-hierarchy\/(\d+-\d+-\d+-\d+)\.json$/i, nosCles = new Set();   /* CH-085 : clés chargées par nous (mémoire de la page) */
-    const refuser = () => { if (refus) return; refus = true; actif = false; annuler('refus-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
+    /* CH-088 : opération lointaine en cours (une au plus), capture en cours (aucun lancement), nœuds sur lesquels nous avons appelé load() (bilan à
+     * l'arrivée) et nos load() encore en vol, toutes opérations confondues (`enVolMax` vaut pour tous nos chargements à la fois). */
+    let loin = null, enCapture = false; const nosNoeuds = new WeakSet(), volNous = new Set();
+    const refuser = () => { if (refus) return; refus = true; actif = false; annuler('refus-serveur'); if (loin) finirLoin(loin, 'refus-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
     const tas = () => { try { const v = typeof env.tas === 'function' ? env.tas() : globalThis.performance?.memory?.usedJSHeapSize; return fini(v) && v >= 0 ? v : null; } catch { return null; } };
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
     const poster = e => { try { env.poster(e); } catch { /* relevé seulement */ } };
@@ -352,6 +397,9 @@
     const chargements = () => { try { const n = env.chargements(); return fini(n) ? n : null; } catch { return null; } };
     /** CH-083 : nos `load()` encore en cours (ils comptent dans `numNodesLoading` comme ceux de Potree). */
     const memEnVol = c => { let k = 0; for (const n of c?.memVol || []) { try { if (n.loading === true) k++; } catch { /* rien */ } } return k; };
+    /** CH-088 : tous nos load() encore en cours (opération proche, opération lointaine, opérations finies dont un load() vole encore). */
+    const nosEnVol = () => { let k = 0; for (const n of [...volNous]) { let en = false; try { en = n.loading === true; } catch { en = false; } if (en) k++; else volNous.delete(n); } return k; };
+    const noterNous = n => { try { nosNoeuds.add(n); } catch { /* rien */ } if (volNous.size > 64) nosEnVol(); volNous.add(n); };
     const etiquette = () => { try { const l = env.etiquette(); return l && Number.isInteger(l.cut) ? l : null; } catch { return null; } };
 
     /** Ressources vues par l'observateur de la page : seules les requêtes ept-data de Potree (pas les nôtres) comptent au bilan.
@@ -379,9 +427,12 @@
       let inutiles = 0; const la = etiquette(), ici = la ? la.part + ':' + la.cut : null;
       if (ici !== null && ici !== dernierAge) { dernierAge = ici; for (const [k, n] of attente) { if (n <= 1) { attente.delete(k); inutiles++; } else attente.set(k, n - 1); } }   /* une seconde capture du même cut ne compte pas pour une arrivée */
       const u = utiles; utiles = 0; if (budget && u + inutiles > 0) budget.bilanter(u + inutiles, u);
+      const lz = loin; if (lz && lz.arrivee && !lz.fini) finirLoin(lz, 'arrivee');   /* CH-088 : bilan de l'opération lointaine arrivée */
       const s = suivi; suivi = null; if (!s) return null;
       const l = etiquette(), juste = !!l && l.part === s.partie && (l.cut === s.predite || !!s.predites?.has(l.cut));
-      poster({ kind: 'prechauffage-bilan', coupe: l?.cut ?? null, predite: s.predite, op: s.op, juste, demandes: s.demandes ?? s.cles.size, potree: s.potree, couverts: s.couverts, servisCache: s.servisCache, cacheTotal: s.cacheTotal, utiles: u, inutiles });
+      /* CH-088 : voie potree : bilan par l'arbre, dans la boîte de la coupe d'arrivée (instantané pris au début de sa capture). */
+      const ba = bilanArrivee(s.arrivee, s.arrivee ? instantane(s.pcs, s.zones?.get(s.arriveeCut), nosNoeuds) : null, nosNoeuds);
+      poster({ kind: 'prechauffage-bilan', coupe: l?.cut ?? null, predite: s.predite, op: s.op, juste, demandes: s.demandes ?? s.cles.size, potree: s.potree, couverts: s.couverts, servisCache: s.servisCache, cacheTotal: s.cacheTotal, utiles: u, inutiles, ...ba });
       if (juste && (s.demandes ?? s.cles.size) > 0 && s.couverts > 0) { sansCache = s.servisCache > 0 ? 0 : sansCache + 1; if (actif && sansCache >= R.coupesSansCache) { actif = false; return 'cache-inutile'; } }
       return null;
     }
@@ -401,7 +452,10 @@
     function terminer(c) {
       if (c.fini) return c.resultat; c.fini = true;
       const couv = c.couvertes && c.couvertes.size ? new Set([...c.cles, ...c.couvertes]) : c.cles;   /* CH-081 : clés préchauffées par une opération d'avant */
-      if (c.op === op && c.predite !== undefined && couv.size) suivi = { op: c.op, partie: c.partie, predite: c.predite, predites: c.predites || null, cles: couv, demandes: c.cles.size, potree: 0, couverts: 0, servisCache: 0, cacheTotal: 0 };
+      if (c.op === op && c.predite !== undefined && (couv.size || (R.voie === 'potree' && c.zones?.size))) {   /* CH-088 : voie potree : bilan par l'arbre même sans load() */
+        suivi = { op: c.op, partie: c.partie, predite: c.predite, predites: c.predites || null, cles: couv, demandes: c.cles.size, potree: 0, couverts: 0, servisCache: 0, cacheTotal: 0, zones: c.zones || null, pcs: c.pcs || null, arrivee: null, arriveeCut: null };
+        if (enCapture) noterArrivee(false);   /* la capture d'arrivée a commencé avant la fin de l'opération */
+      }
       const r = resume(c); const { kind, ...sans } = r; c.resultat = sans; poster(r); if (courant === c) courant = null; return sans;
     }
 
@@ -429,13 +483,13 @@
           for (;;) {
             relever(); if (!vivant()) break;
             const n0 = chargements();
-            if (n0 !== null && n0 === memEnVol(c)) {
+            if (n0 !== null && n0 === nosEnVol()) {   /* CH-088 : tous nos load() (opération lointaine comprise) */
               const s = selectionPotree(pointclouds, Z);
               const file = [...s.hier.map(x => ({ ...x, h: true })), ...s.donnees].filter(x => !lances.has(x.noeud)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
               if (!file.length && !c.memVol.size && !hierVol.size) break;   /* cible finie */
               let plafond = false;
               for (const x of file) {
-                if (c.memVol.size + hierVol.size >= enVolMax) break;
+                if (nosEnVol() + hierVol.size >= enVolMax) break;   /* CH-088 : `enVolMax` pour tous nos chargements à la fois */
                 if (nT >= R.noeudsMax || memOctetsLot >= MM.octetsMax) { plafond = true; c.resteNoeuds = true; break; }
                 if (x.h && hT >= R.hierarchiesMax) continue;
                 if (budget && !budget.autorise(1, 0)) { c.motif = c.motif || 'plafond-lot'; plafond = true; break; }
@@ -449,7 +503,7 @@
                 try { Promise.resolve(n.load()).catch(() => { /* Potree le garde « en cours » : relevé par relever() */ }); } catch { continue; }
                 let pris = false; try { pris = n.loading === true || n.loaded === true; } catch { pris = false; }
                 if (!pris) { m.refuses++; lances.delete(n); if (x.cle) { const p = propres.get(x.cle); if (p > 1) propres.set(x.cle, p - 1); else propres.delete(x.cle); } break; }   /* places de Potree prises : au tour suivant */
-                c.memVol.add(n); depuis.set(n, maintenant()); m.lances++; c.noeuds++; nT++; if (x.cle) c.cles.add(x.cle); budget?.compter(1, 0);
+                c.memVol.add(n); noterNous(n); depuis.set(n, maintenant()); m.lances++; c.noeuds++; nT++; if (x.cle) c.cles.add(x.cle); budget?.compter(1, 0);
               }
               if (plafond && !c.memVol.size && !hierVol.size) break;
             }
@@ -466,7 +520,106 @@
       return terminer(c);
     }
 
+    /* ------------------------------------------------ CH-088 : OPÉRATION LOINTAINE (voie potree)
+     * Une cible lointaine à la fois, prise dès qu'elle est connue (jusqu'à `loin.coupesMax` coupes à l'avance). Tours d'une image : quand aucune capture
+     * n'est en cours, que la coupe affichée n'est pas la cible et que Potree ne charge rien d'autre (compteur effectif = nos chargements), on lance
+     * loadHierarchy() (frontière) puis load() (données) dans la boîte de la cible, du moins profond au plus profond, `enVolMax` à nous en tout. Les
+     * changements de coupe ne l'arrêtent pas ; elle finit à l'arrivée (bilan à la capture suivante), quand la cible change, au refus du serveur. */
+    function noterArrivee(capture = true) {
+      if (capture) enCapture = true;
+      const l = etiquette(); if (!l) return;
+      const s = suivi; if (s && !s.arrivee && s.zones && l.part === s.partie && s.zones.has(l.cut)) { s.arrivee = instantane(s.pcs, s.zones.get(l.cut), nosNoeuds); s.arriveeCut = l.cut; }
+      const L = loin; if (L && !L.fini && !L.arrivee && l.part === L.partie && l.cut === L.cible) arriverLoin(L);
+    }
+    function releverLoin(L) {
+      for (const n of [...L.memVol]) { let en = true; try { en = n.loading === true; } catch { en = false; }
+        if (en) { if (maintenant() - (L.depuis.get(n) ?? maintenant()) > R.delaiMs) refuser(); continue; }
+        L.memVol.delete(n); let ok = false; try { ok = n.loaded === true; } catch { ok = false; }
+        if (ok) { const o = octetsGeometrie(n); L.charges++; L.octets += o; memOctetsLot += o; budget?.compter(0, o); } else { L.echecs++; refuser(); } }
+    }
+    function arriverLoin(L) {
+      if (L.arrivee) return; releverLoin(L);
+      L.arrivee = instantane(L.pcs, L.Z, nosNoeuds); L.tArrivee = maintenant(); L.chargesArrivee = L.charges;
+    }
+    function finirLoin(L, motif) {
+      if (!L || L.fini) return; L.fini = true; releverLoin(L);
+      const ba = bilanArrivee(L.arrivee, L.arrivee ? instantane(L.pcs, L.Z, nosNoeuds) : null, nosNoeuds);
+      if (loin === L) loin = null;
+      poster({ kind: 'prechauffage-loin', coupe: L.depart, cible: L.cible, saut: L.saut, avant: L.avant, source: L.source, captures: L.captures, msAvant: L.tArrivee !== null ? Math.max(0, Math.round(L.tArrivee - L.t0)) : null,
+        lances: L.lances, charges: L.chargesArrivee ?? L.charges, chargesFin: L.charges, echecs: L.echecs, hierarchies: L.hierarchies, octets: L.octets, enVolArrivee: L.arrivee ? L.arrivee.enVol : null, ...ba,
+        plafond: L.plafond, pauses: L.pauses, dureeMs: Math.max(0, Math.round(maintenant() - L.t0)), motif });
+    }
+    async function boucleLoin(L) {
+      const MM = R.memoire, enVolMax = Math.max(1, Math.min(R.enVolMax, MM.enVolMax));
+      let pause = false;
+      try {
+        while (loin === L && !L.fini && !L.arrivee) {
+          releverLoin(L); if (L.fini || loin !== L) break;
+          if (!actif) { finirLoin(L, refus ? 'refus-serveur' : 'eteint'); break; }
+          const l = etiquette();
+          if (l && l.part === L.partie && l.cut === L.cible) { arriverLoin(L); break; }   /* arrivée : Potree charge lui-même ; bilan à la capture suivante */
+          const n0 = chargements(), libre = !enCapture && n0 !== null && n0 === nosEnVol();
+          if (!libre) { if (!pause) { pause = true; L.pauses++; } }
+          else if (nosEnVol() + L.hierVol.size < enVolMax) {   /* le parcours de l'arbre seulement quand une place est libre */
+            pause = false;
+            const sel = selectionPotree(L.pcs, L.Z);
+            const file = [...sel.hier.map(x => ({ ...x, h: true })), ...sel.donnees].filter(x => !L.deja.has(x.noeud)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+            /* Rien à lancer et rien en vol (boîte chargée, ou plafond atteint) : la boucle s'arrête ; l'arrivée est notée au début de la capture. */
+            if ((!file.length || L.plafond) && !L.memVol.size && !L.hierVol.size) { L.complet = true; break; }
+            for (const x of file) {
+              if (nosEnVol() + L.hierVol.size >= enVolMax) break;
+              if (L.nT >= R.noeudsMax || memOctetsLot >= MM.octetsMax) { L.plafond = true; break; }
+              if (x.h && L.hT >= R.hierarchiesMax) continue;
+              if (budget && !budget.autorise(1, 0)) { L.plafond = true; break; }
+              const n = x.noeud; L.deja.add(n);
+              if (x.h) {
+                L.hierVol.add(n); L.hT++; L.nT++; L.hierarchies++; budget?.compter(1, 0);
+                Promise.resolve().then(() => n.loadHierarchy()).then(() => { /* enfants greffés par Potree : pris au tour suivant */ }, () => refuser()).finally(() => L.hierVol.delete(n));
+                continue;
+              }
+              if (x.cle) { if (propres.size > 2000) propres.clear(); propres.set(x.cle, (propres.get(x.cle) || 0) + 1); if (nosCles.size > 4000) nosCles.clear(); nosCles.add(x.cle); }
+              try { Promise.resolve(n.load()).catch(() => { /* gardé « en cours » par Potree : relevé par releverLoin() */ }); } catch { continue; }
+              let pris = false; try { pris = n.loading === true || n.loaded === true; } catch { pris = false; }
+              if (!pris) { L.deja.delete(n); if (x.cle) { const p = propres.get(x.cle); if (p > 1) propres.set(x.cle, p - 1); else propres.delete(x.cle); } break; }   /* places de Potree prises */
+              L.memVol.add(n); noterNous(n); L.depuis.set(n, maintenant()); L.lances++; L.nT++; budget?.compter(1, 0);
+            }
+          }
+          await new Promise(r => { Promise.resolve(env.image()).then(r, r); });
+        }
+      } catch { /* relevé seulement */ }
+    }
+    /** Cible lointaine de ce passage : { i, avant, source, rails } ou null (rien de connu), ou `false` (réponse sûre : aucune cible lointaine). */
+    async function cibleLoin(ctx, c, h, rep, demander, courants) {
+      const RL = R.loin; if (!RL || !RL.actif || R.voie !== 'potree') return null;
+      const D = decalDe(rep, c.coupe, ctx.rails, ctx.origine); if (!D) return null;
+      if (h) {
+        const lo = h.loin; if (lo === undefined || lo === null) return false;
+        if (!lo || !Number.isInteger(lo.cut) || lo.cut < 0 || !Number.isInteger(lo.avant) || lo.avant < 0 || lo.avant > RL.coupesMax) return false;
+        const l = ligneLoin(await demander(c.coupe, courants, { cible: lo.cut })); if (!l || l.i !== lo.cut) return null;
+        return { i: l.i, avant: lo.avant, saut: Number.isInteger(lo.saut) ? lo.saut : null, source: h.source, rails: railsDe(l, D) };
+      }
+      const r = await demander(c.coupe, courants, { loin: RL.sautMin, max: RL.coupesMax });
+      if (!r || r.ok !== true || r.loin === undefined) return null;   /* observateur ou adaptateur sans CH-088 : rien */
+      const l = ligneLoin(r); if (!l) return false;
+      const avant = Number.isInteger(r.loin.avant) && r.loin.avant >= 0 ? r.loin.avant : null; if (avant === null || avant > RL.coupesMax || l.s === 'valid') return false;
+      return { i: l.i, avant, saut: Number.isInteger(r.loin.saut) ? r.loin.saut : null, source: 'liste-esv', rails: railsDe(l, D) };
+    }
+    function suivreLoin(c, t, ctx) {
+      const L0 = loin;
+      if (L0 && !L0.fini && L0.partie === c.partie && L0.cible === t.i) {   /* même cible : elle continue (relancée si sa boucle s'était arrêtée, boîte chargée) */
+        L0.captures++; L0.pcs = ctx.pointclouds || L0.pcs; if (L0.complet && !L0.arrivee) { L0.complet = false; boucleLoin(L0); } return L0; }
+      if (L0) finirLoin(L0, 'remplace');
+      let dims = null;
+      if (Boite) { try { const el = ctx.pointclouds?.[0]?.material?.clipBoxes?.[0]?.box?.matrixWorld?.elements; const cour = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) }; dims = el ? Boite.calibrer(Array.from(el), cour.left, cour.right) : null; } catch { dims = null; } }
+      const Z = (Boite ? zoneBoite(t.rails, dims) : null) || zoneCube([t.rails.left, t.rails.right], R.rayonM);
+      const L = loin = { partie: c.partie, depart: c.coupe, cible: t.i, saut: t.saut ?? null, avant: t.avant, source: t.source, t0: maintenant(), tArrivee: null, captures: 0, pcs: ctx.pointclouds || [], Z,
+        lances: 0, charges: 0, chargesArrivee: null, echecs: 0, hierarchies: 0, octets: 0, nT: 0, hT: 0, pauses: 0, plafond: false, memVol: new Set(), hierVol: new Set(), deja: new Set(), depuis: new Map(), arrivee: null, fini: false };
+      boucleLoin(L);
+      return L;
+    }
+
     async function apresCapture(ctx) {
+      enCapture = false;   /* CH-088 : la capture est finie, l'opération lointaine reprend */
       if (courant) annuler('remplace');
       const coupure = bilan();
       const c = { op: ++op, partie: ctx?.partie ?? null, coupe: Number.isInteger(ctx?.coupe) ? ctx.coupe : null, t0: maintenant(), controleurs: new Set(), cles: new Set(),
@@ -496,6 +649,13 @@
       /* CH-081 : plusieurs coupes par passage (horizon, changement de mode) seulement si le module d'anticipation est là et le réglage le demande. */
       const multi = !!Anticipation && (R.horizon > 1 || R.candidatsMax > 1), D = multi ? decalDe(rep, c.coupe, ctx.rails, ctx.origine) : null;
       const demander = async (cut, monde, quoi) => { try { return await Promise.race([Promise.resolve(env.voisins(cut, monde, quoi)), new Promise(r => { try { setTimeout(() => r(null), VOISINS_MS); } catch { r(null); } })]); } catch { return null; } };
+      /* CH-088 : cible lointaine (opération persistante, voie potree) ; elle sort de la liste de l'opération proche. */
+      let tl = null;
+      if (R.loin?.actif && R.voie === 'potree' && actif) {
+        const t = await cibleLoin(ctx, c, demande.cible !== undefined ? h : null, rep, demander, courants);
+        if (t) tl = suivreLoin(c, t, ctx); else if (t === false && loin) finirLoin(loin, 'remplace');
+        if (c.arret) return terminer(c);
+      }
       const modes = [];
       if (multi && D && demande.suivante && cible.motif === 'sans-suivante') {
         /* Fin de la liste du lot : la passe des différés part de la première ligne non validée de TOUTE la table (règle de la passe). */
@@ -516,12 +676,13 @@
       if (cible.left) { c.predite = cible.predite; c.source = cible.source; c.saut = cible.saut; }
       else { c.predite = modes[0].i; c.source = 'changement-mode'; c.saut = modes[0].i - c.coupe; }
       c.predites = new Set([c.predite, ...modes.map(m => m.i)]);
-      const liste = multi ? Anticipation.cibles({ coupe: c.coupe, suite, modes, horizon: R.horizon, candidatsMax: budget ? budget.candidatsMax(R.candidatsMax) : 1, sautMin: R.sautMin }).map(x => ({ ...x.ligne, rang: x.rang }))
+      let liste = multi ? Anticipation.cibles({ coupe: c.coupe, suite, modes, horizon: R.horizon, candidatsMax: budget ? budget.candidatsMax(R.candidatsMax) : 1, sautMin: R.sautMin }).map(x => ({ ...x.ligne, rang: x.rang }))
         : Math.abs(cible.saut) >= R.sautMin ? [{ ...suite[0], rang: 1 }] : [];
+      if (tl) liste = liste.filter(x => x.i !== tl.cible);   /* CH-088 : la cible lointaine est à l'opération lointaine */
       c.nCibles = liste.length;
       /* CH-080 : coupe proche (|saut| < sautMin) : ses nœuds sont déjà chargés (mesure du 09/11), rien n'est demandé. */
-      if (!liste.length) { c.motif = 'saut-court'; return terminer(c); }
-      if (chargements() !== 0) { c.motif = 'reseau-occupe'; return terminer(c); }
+      if (!liste.length) { c.motif = tl ? 'loin' : 'saut-court'; return terminer(c); }
+      if (chargements() !== nosEnVol()) { c.motif = 'reseau-occupe'; return terminer(c); }   /* CH-088 : nos load() en vol ne sont pas un réseau occupé */
       /* CH-081 : zone. Boîte : dimensions lues sur la boîte de découpe de Potree pour la coupe COURANTE si elle est centrée et alignée (lecture seule), sinon
        * celles mesurées ; jusqu'aux feuilles (Potree en orthographique n'a pas de critère de taille). Cube : CH-077, niveau borné au plus profond chargé. */
       let dims = null;
@@ -544,6 +705,7 @@
         plans.push({ t, Z, sel });
       }
       c.sel = agr;
+      c.zones = new Map(plans.map(x => [x.t.i, x.Z])); c.pcs = ctx.pointclouds || [];   /* CH-088 : boîtes des cibles, pour le bilan à l'arrivée */
       const lireHier = R.hierarchie && plans.some(x => x.sel.frontieres.length > 0);
       if (R.voie !== 'potree' && !agr.candidats.length && !lireHier) { c.motif = agr.sansAdresse ? 'sans-adresse' : 'aucun-noeud'; return terminer(c); }
       const depart = etiquette();
@@ -557,7 +719,7 @@
             if (R.apresNavigation === 'finir' && l && l.part === c.partie && c.predites.has(l.cut)) { c.navigue = true; c.motif = c.motif || 'navigation'; }
             else { annuler('coupe'); break; }
           }
-          if (!c.navigue && (n === null || n > memEnVol(c))) { annuler('chargement'); break; }   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » */
+          if (!c.navigue && (n === null || n > Math.max(memEnVol(c), nosEnVol()))) { annuler('chargement'); break; }   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » ; CH-088 : ceux de l'opération lointaine non plus */
         }
       })();
       if (R.voie === 'potree') return operationPotree(c, plans, ctx.pointclouds);   /* CH-085 : aucune requête à nous */
@@ -577,13 +739,13 @@
           if (c.arret || c.fini || courant !== c || c.navigue) break;
           if (c.httpFini && !fileMem.length && !c.memVol.size) break;
           const n0 = chargements();
-          if (n0 !== null && n0 === memEnVol(c)) {
+          if (n0 !== null && n0 === Math.max(memEnVol(c), nosEnVol())) {
             fileMem.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
             while (fileMem.length && c.memVol.size < MM.enVolMax && m.lances < MM.noeudsMax && memOctetsLot < MM.octetsMax) {
               const x = fileMem.shift(), n = x.noeud; if (!chargeable(n)) continue;
               try { Promise.resolve(n.load()).catch(() => { /* Potree le garde « en cours » : compté en échec par relever() s'il retombe */ }); } catch { continue; }
               let pris = false; try { pris = n.loading === true || n.loaded === true; } catch { pris = false; }
-              if (pris) { c.memVol.add(n); m.lances++; } else { m.refuses++; fileMem.unshift(x); break; }   /* refusé (places de Potree prises) : on réessaie à l'image suivante */
+              if (pris) { c.memVol.add(n); noterNous(n); m.lances++; } else { m.refuses++; fileMem.unshift(x); break; }   /* refusé (places de Potree prises) : on réessaie à l'image suivante */
             }
             if (fileMem.length && (m.lances >= MM.noeudsMax || memOctetsLot >= MM.octetsMax) && !c.memVol.size) break;
           }
@@ -668,11 +830,13 @@
       return terminer(c);
     }
     return {
-      apresCapture, annuler, ressources, actif: () => actif,
-      etat: () => ({ op, enCours: !!courant && !courant.fini, octets: courant ? courant.octets : 0, actif, sansCache, lot: budget ? budget.etat() : null, attente: attente.size }),
+      apresCapture, ressources, actif: () => actif,
+      /* CH-088 : début d'une capture : instantané d'arrivée et pause de l'opération lointaine (ses load() lancés finissent, aucun nouveau). */
+      annuler: motif => { if (motif === 'capture') { try { noterArrivee(true); } catch { /* relevé seulement */ } } annuler(motif); },
+      etat: () => ({ op, enCours: !!courant && !courant.fini, octets: courant ? courant.octets : 0, actif, sansCache, lot: budget ? budget.etat() : null, attente: attente.size, loin: loin ? { cible: loin.cible, lances: loin.lances, charges: loin.charges, enCapture } : null }),
       /* Essais seulement : clés de la dernière opération finie (jamais postées). */
       _clesPourEssai: () => suivi ? [...suivi.cles] : []
     };
   }
-  return { VERSION: 'prechauffage-2', DEFAUT, SOURCES, reglage, cleChemin, classerEntetes, centresSuivante, candidats, niveauLocal, adresse, creer };
+  return { VERSION: 'prechauffage-3', DEFAUT, SOURCES, reglage, instantane, bilanArrivee, cleChemin, classerEntetes, centresSuivante, candidats, niveauLocal, adresse, creer };
 });

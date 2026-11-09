@@ -73,16 +73,18 @@ function construire(options={}){
   const statut=i=>i%5===4?'valid':i%7===6?'skipped':'invalid';
   /* CH-080 : `saut` = N : une coupe à faire toutes les N, les autres validées (« cut non validé suivant » saute de N coupes). Ligne à part : la ligne
    * précédente est une ancre de tools/relecture-maquette.cjs. */
-  const saut=Number(options.saut??0),statutSaut=saut>=2?(i=>i%saut===0?'invalid':'valid'):null;
+  /* CH-088 : `grappe` = G (avec `saut`) : G coupes à faire d'affilée toutes les N (« cut non validé suivant » : +1 G − 1 fois, puis un saut de N − G + 1). */
+  const pasM=Number(options.pas)>0&&Number(options.pas)<=PAS_M?Number(options.pas):PAS_M;   /* CH-088 : `pas` (m entre deux cuts, ≤ 1) : un grand saut tient dans le cube EPT de 128 m */
+  const saut=Number(options.saut??0),grappe=Math.max(1,Math.floor(Number(options.grappe??1))||1),statutSaut=saut>=2?(i=>i%saut<grappe?'invalid':'valid'):null;
   const partie=(numero,premier,n,decalageIndex)=>{
     const cuts=[];
     for(let i=0;i<n;i++){const src=base[(decalageIndex+i)%base.length],k=decalageIndex+i;
-      const origine=ORIGINE_MONDE.map((v,j)=>arrondi(v+direction[j]*PAS_M*k,6));
+      const origine=ORIGINE_MONDE.map((v,j)=>arrondi(v+direction[j]*pasM*k,6));
       cuts.push({cut:premier+i,index:i,status:(numero===part&&statut1)||(statutSaut||statut)(k),origine,source:src.nom,shape:src.capture.shape||'U50',
         rails:{left:rail(src.capture,'left',origine),right:rail(src.capture,'right',origine)},noeuds:noeuds(src.capture),decoupe:decoupe(src.capture)});}
     return {part:numero,table:`maquette-${numero}`,cuts};
   };
-  return {format:'banane-esv-maquette-scenario-v1',monde:{origine:ORIGINE_MONDE,pas:PAS_M,direction},
+  return {format:'banane-esv-maquette-scenario-v1',monde:{origine:ORIGINE_MONDE,pas:pasM,direction},
     camera:{echelle:5,profondeur:1e-4},decoupe:{dimensions:[7,5,.6]},
     /* CH-017 : `parties` (défaut 2) : parties de plus, de `partie2` cuts chacune, numérotées à la suite (file de parties). */
     parties:[partie(part,debut,nb,0),...Array.from({length:Math.max(1,Number(nbParties))-1},(_,i)=>partie(part+1+i,1,partie2,nb+i*partie2))]};

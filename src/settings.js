@@ -239,7 +239,11 @@
       memoire: Object.freeze({ actif: true, noeudsMax: 32, enVolMax: 2, octetsMax: 268435456 }),
       /* CH-085 (lot « Vision 7 », ÉTABLI : nos fetch reçoivent 401, ceux de Potree 200) : plus aucune requête à nous ; nœuds et pages de hiérarchie par node.load() et
        * node.loadHierarchy() de Potree (authentification d'ESV comprise). Refus du serveur ou chargement à nous en cours plus de 5 s : arrêt pour le lot (`refus-serveur`). */
-      voie: 'potree', delaiMs: 5000 }) }),   /* D-311 : préchauffer dès la coupe voisine (CH-084, ÉTABLI : 64 % des +1 n'étaient pas déjà chargés, 650 à 750 ms d'attente d'ESV). */   /* CH-080 (D-309) : préchauffer seulement à 11 coupes ou plus ; lire la hiérarchie EPT de la zone (fichiers que Potree lirait), 8 au plus, dans le plafond de nœuds */
+      voie: 'potree', delaiMs: 5000,
+      /* CH-088 (lot « Vision 8 », ÉTABLI : la cible lointaine n'était prise que 1 à 2 coupes avant, chaque opération coupée au changement de coupe, 0 à 4 load()
+       * finis à l'arrivée) : la prochaine cible lointaine (écart ≥ 11 coupes à la précédente de la chaîne) est préchargée dès qu'elle est connue, jusqu'à 40 coupes
+       * à l'avance, en pause pendant chaque capture et quand Potree charge ; mêmes plafonds. ALLUMÉ pour le lot d'essai ; `loin.actif:false` la coupe seule. */
+      loin: Object.freeze({ actif: true, sautMin: 11, coupesMax: 40 }) }) }),   /* D-311 : préchauffer dès la coupe voisine (CH-084, ÉTABLI : 64 % des +1 n'étaient pas déjà chargés, 650 à 750 ms d'attente d'ESV). */   /* CH-080 (D-309) : préchauffer seulement à 11 coupes ou plus ; lire la hiérarchie EPT de la zone (fichiers que Potree lirait), 8 au plus, dans le plafond de nœuds */
     /* Test 17 (fiches/PASSATION_T17_PASSE2.md) — DEUXIÈME PASSE DES DIFFÉRÉS, en fin de lot, profil « L1-se » seulement. Les cuts restés sans pose sont redécidés
      * par la GCV2 avec les poses d'avant ET d'après (la recette du banc : `passes` passes au plus, leviers `leviers`), puis posés et validés sur place dans ESV.
      * DÉCISION DE L'OPÉRATEUR (test 17) : ALLUMÉE en écriture dès l'installation, sans plafond de poses. DÉCISION DE L'OPÉRATEUR DU 26/10 (test 21, D-251) : elle est livrée EN OMBRE

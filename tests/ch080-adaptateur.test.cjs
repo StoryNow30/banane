@@ -19,7 +19,7 @@ fs.readFileSync=function(f,...a){if(!raison&&path.resolve(String(f))===SRC)retur
 const P=require('./helpers/page.cjs'),pageOrig=P.page,S=require('../src/settings.js');
 P.page=({globals={},...o}={})=>pageOrig({...o,globals:{...globals,BananePrechauffage:require('../src/prechauffage.js'),AbortController,
  PerformanceObserver:class{constructor(f){this.f=f;}observe(){}takeRecords(){return [];}},fetch:()=>new Promise(()=>{}),
- BananeSettings:{...globals.BananeSettings,lot:{...S.lot,chargement:{prechauffer:{...S.lot.chargement.prechauffer,actif:true}}}}}});
+ BananeSettings:{...globals.BananeSettings,lot:{...S.lot,chargement:{prechauffer:{...S.lot.chargement.prechauffer,actif:true,loin:{actif:false}/* CH-088 : l'opération lointaine (demande `loin` de plus) a ses propres essais (tests/ch088-*.test.cjs) */}}}}}});
 const {esv,nuage}=require('./helpers/esv-images.cjs');
 const J=x=>JSON.parse(JSON.stringify(x??null));
 

@@ -205,18 +205,25 @@
   else if(req.suivante===true){loin=null;for(let i=cut+1;i<t.rk.length;i++)if(t.st[i]!==STATUS_CODE.valid){loin=ligne(i);break;}}
   /* CH-081 : `premiere:true` : la première ligne non validée de TOUTE la table, hors le cut courant (départ de la passe des différés, en fin de lot). */
   else if(req.premiere===true){loin=null;for(let i=0;i<t.rk.length;i++)if(i!==cut&&t.st[i]!==STATUS_CODE.valid){loin=ligne(i);break;}}
+  /* CH-088 : `loin:S` (entier ≥ 2) : en suivant la chaîne « cut non validé suivant » depuis le cut, la première ligne non validée dont l'écart à la
+   * précédente de la chaîne est ≥ S ; `avant` : lignes de la chaîne entre le cut et elle, `saut` : son écart ; null au-delà de `max` lignes (défaut 40). */
+  else if(Number.isInteger(req.loin)&&req.loin>=2){loin=null;const max=Number.isInteger(req.max)&&req.max>=0&&req.max<=500?req.max:40;let prec=cut,avant=0;
+   for(let i=cut+1;i<t.rk.length;i++){if(t.st[i]===STATUS_CODE.valid)continue;if(i-prec>=req.loin){loin={...ligne(i),avant,saut:i-prec};break;}if(++avant>max)break;prec=i;}}
   return {ok:true,table:{lignes:t.rk.length,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee,tables:tables.size},
    geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows,...(loin!==undefined?{loin}:{})};
  }
 
  /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
  const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits','sansNom','sansAdresse','formeNoeud','cibles','memLances','memCharges','memOctets','memEchecs','memRefuses','memEnVolFin','tasAvantKo','tasApresKo'],
-  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal','utiles','inutiles'],'prechauffage-entetes':['maxAgeS','statut'],
-  'prechauffage-vue':['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints','enTetesXhr']};   /* CH-081 : cibles ; utiles, inutiles ; vue */
- const PRECH_BOOLEENS={'prechauffage':['annule','calibree'],'prechauffage-vue':['fetchNatif','credXhr'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
+  'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal','utiles','inutiles','boite','prets','nousPrets','nousEnVol','boiteFin','potreeLui','nousApres'],'prechauffage-entetes':['maxAgeS','statut'],
+  'prechauffage-vue':['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints','enTetesXhr'],   /* CH-081 : cibles ; utiles, inutiles ; vue */
+  /* CH-088 : bilan de l'arrivée par l'arbre (voie potree) ; opération lointaine. */
+  'prechauffage-loin':['coupe','cible','avant','captures','msAvant','lances','charges','chargesFin','echecs','hierarchies','octets','enVolArrivee','boite','prets','nousPrets','nousEnVol','boiteFin','potreeLui','nousApres','pauses','dureeMs']};
+ const PRECH_BOOLEENS={'prechauffage':['annule','calibree'],'prechauffage-vue':['fetchNatif','credXhr'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma'],'prechauffage-loin':['plafond']};
  const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
-  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
- const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1,'prechauffage-vue':1};
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur','loin'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+ const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1,'prechauffage-vue':1,'prechauffage-loin':1};
+ const PRECH_MOTIFS_LOIN=['arrivee','remplace','refus-serveur','eteint'];   /* CH-088 */
  const PRECH_ZONES=['cube','boite'],PRECH_TYPES_VUE=['orthographique','perspective','autre','absente'];   /* CH-081 */
  function reduirePrechauffage(k,x){const out={kind:k};
   for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;
@@ -226,8 +233,10 @@
    out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=PRECH_SOURCES.includes(x.source)?x.source:null;
    out.zone=PRECH_ZONES.includes(x.zone)?x.zone:null;}
   /* CH-081 : vue de Potree : type en liste fermée, maxLevel entier signé (−1 : sans plafond). */
-  if(k==='prechauffage-vue'){out.type=PRECH_TYPES_VUE.includes(x.type)?x.type:null;out.maxLevel=Number.isInteger(x.maxLevel)&&x.maxLevel>=-1&&x.maxLevel<=64?x.maxLevel:null;}
+  /* CH-088 : `camera`, jamais `type` (il écraserait le type de l'enveloppe du journal) ; un ancien module qui envoie `type` est relu en `camera`. */
+  if(k==='prechauffage-vue'){const cam=x.camera!==undefined?x.camera:x.type;out.camera=PRECH_TYPES_VUE.includes(cam)?cam:null;out.maxLevel=Number.isInteger(x.maxLevel)&&x.maxLevel>=-1&&x.maxLevel<=64?x.maxLevel:null;}
   if(k==='prechauffage-entetes')out.classe=PRECH_CLASSES.includes(x.classe)?x.classe:null;
+  if(k==='prechauffage-loin'){out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=PRECH_SOURCES.includes(x.source)?x.source:null;out.motif=PRECH_MOTIFS_LOIN.includes(x.motif)?x.motif:null;}
   return out;}
  function install(win){
   if(!win||win.__banane5ObserverInstalled)return null;

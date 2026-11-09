@@ -98,6 +98,20 @@ const tri = a => [...new Set(a.filter(v => v !== null))].sort((x, y) => x - y);
 const classe = d => (d === 1 ? '+1' : d === 0 || d === -1 ? 'autre' : Math.abs(d) <= 10 ? '2-10' : Math.abs(d) <= 50 ? '11-50' : Math.abs(d) <= 200 ? '51-200' : '>200');
 const hhmm = ms => new Date(ms).toISOString().slice(11, 16);
 
+/* CH-088 : bilan à l'arrivée (voie potree) : sommes sur les bilans qui le portent. `parPrete` : part des nœuds qu'il a fallu (chargés à l'arrivée plus
+ * chargés ensuite par Potree seul) déjà chargés à l'arrivée. */
+const TYPES_VUE = ['orthographique', 'perspective', 'autre', 'absente'];
+function arriveeDe(a) {
+  const s = k => somme(a, k), prets = s('prets'), potreeLui = s('potreeLui');
+  return { n: a.length, boite: s('boite'), prets, nousPrets: s('nousPrets'), nousEnVol: s('nousEnVol'), boiteFin: s('boiteFin'), potreeLui, nousApres: s('nousApres'), partPrete: prets + potreeLui ? arrondi(prets / (prets + potreeLui), 3) : null };
+}
+function loinDe(a) {
+  const med = k => stats(a.map(e => num(e[k])).filter(v => v !== null)).medianMs;
+  const arrives = a.filter(e => e.motif === 'arrivee');
+  return { n: a.length, parMotif: compter(a, e => cle(e.motif)), lances: somme(a, 'lances'), charges: somme(a, 'charges'), echecs: somme(a, 'echecs'),
+    capturesMediane: med('captures'), msAvantMediane: med('msAvant'), arrivee: arriveeDe(arrives.filter(e => num(e.boite) !== null)) };
+}
+
 /* ---------- le bilan ---------- */
 function bilan(evs) {
   const par = t => evs.filter(e => e.type === t);
@@ -179,6 +193,14 @@ function bilan(evs) {
     noeuds: somme(pre, 'noeuds'), hierarchies: somme(pre, 'hierarchies'), octets: somme(pre, 'octets'),
     sansNom: somme(pre, 'sansNom'), sansAdresse: somme(pre, 'sansAdresse'), formeNoeud: formes,
     bilans: { n: bil.length, justes: bil.filter(e => e.juste === true).length, demandes: somme(bil, 'demandes'), potree: somme(bil, 'potree'), couverts: somme(bil, 'couverts'), servisCache: somme(bil, 'servisCache') },
+    /* CH-088 : voie potree (plus aucune requête à nous) : load() lancés et chargés ; bilan à l'arrivée par l'arbre, dans la boîte de la coupe d'arrivée. */
+    memoire: { lances: somme(pre, 'memLances'), charges: somme(pre, 'memCharges'), echecs: somme(pre, 'memEchecs') },
+    arrivee: arriveeDe(bil.filter(e => num(e.boite) !== null)),
+    loin: loinDe(obs('prechauffage-loin')),
+    /* CH-088 : `prechauffage-vue` : jusqu'à CH-088, son champ `type` écrasait celui de l'enveloppe ; on le reconnaît aussi par son type de caméra. */
+    vue: evs.filter(e => e.kind === 'prechauffage-vue' && (e.type === 'esv-observation' || TYPES_VUE.includes(e.type))).map(e => ({
+      camera: TYPES_VUE.includes(e.camera) ? e.camera : TYPES_VUE.includes(e.type) ? e.type : null, pointBudget: num(e.pointBudget), limitePoints: num(e.limitePoints), maxLevel: num(e.maxLevel),
+      fetchNatif: typeof e.fetchNatif === 'boolean' ? e.fetchNatif : null, enTetesXhr: num(e.enTetesXhr), credXhr: typeof e.credXhr === 'boolean' ? e.credXhr : null })),
   };
 
   /* (5) ombres de D-308 */
@@ -252,6 +274,17 @@ function markdown(b) {
   L.push(`- sansNom : ${nb(p.sansNom)} ; sansAdresse : ${nb(p.sansAdresse)} ; formeNoeud (masque de bits → nombre) : ${dico(p.formeNoeud)}.`);
   const bl = p.bilans;
   L.push(bl.n ? `- Bilans : ${nb(bl.n)} ; prédiction juste ${nb(bl.justes)} (${pct(bl.justes, bl.n)}) ; demandés par Potree ${nb(bl.potree)}, couverts ${nb(bl.couverts)} (${pct(bl.couverts, bl.potree)}), servis par le cache ${nb(bl.servisCache)}.` : '- Bilans : aucun (pas d\'événement prechauffage-bilan dans ce lot).');
+  /* CH-088 : voie potree */
+  const ar = p.arrivee, lo = p.loin, mm = p.memoire;
+  L.push(`- load() de Potree lancés par nous : ${nb(mm.lances)} ; chargés : ${nb(mm.charges)} ; en échec : ${nb(mm.echecs)}.`);
+  L.push(ar.n ? `- Arrivée (voie potree, ${nb(ar.n)} bilans) : nœuds de la boîte ${nb(ar.boite)} à l'arrivée (${nb(ar.boiteFin)} après la capture) ; chargés à l'arrivée ${nb(ar.prets)}, dont par nous ${nb(ar.nousPrets)} (${nb(ar.nousEnVol)} encore en vol) ; chargés ensuite par Potree lui-même ${nb(ar.potreeLui)} ; part déjà chargée ${ar.partPrete === null ? '—' : pct(ar.partPrete, 1)}.` : '- Arrivée (voie potree) : aucun bilan par l\'arbre.');
+  if (lo.n) {
+    const la = lo.arrivee;
+    L.push(`- Opérations lointaines : ${nb(lo.n)} (${dico(lo.parMotif)}) ; load() lancés ${nb(lo.lances)}, chargés avant l'arrivée ${nb(lo.charges)}, en échec ${nb(lo.echecs)} ; départ médian ${nb(lo.capturesMediane)} capture(s) et ${dur(lo.msAvantMediane)} avant l'arrivée.`);
+    if (la.n) L.push(`  - À l'arrivée (${nb(la.n)}) : chargés ${nb(la.prets)} sur ${nb(la.boite)}, dont par nous ${nb(la.nousPrets)} ; Potree lui-même ensuite ${nb(la.potreeLui)} ; part déjà chargée ${la.partPrete === null ? '—' : pct(la.partPrete, 1)}.`);
+  }
+  for (const v of p.vue.slice(-1)) L.push(`- Vue de Potree (${nb(p.vue.length)} relevé(s), dernier) : caméra ${v.camera ?? '—'}, pointBudget ${nb(v.pointBudget)}, pointLoadLimit ${nb(v.limitePoints)}, maxLevel ${nb(v.maxLevel)} ; fetch natif ${v.fetchNatif ?? '—'}, en-têtes XHR ${nb(v.enTetesXhr)}, accréditations XHR ${v.credXhr ?? '—'}.`);
+  if (!p.vue.length) L.push('- Vue de Potree : aucun relevé prechauffage-vue.');
   L.push('', '## 5. Ombres de D-308', '');
   L.push(`- Garde de voie : ${nb(ombres.garde.n)} évaluations, ${nb(ombres.garde.auraitPause)} pause(s) qu'elle aurait demandée(s).`);
   for (const x of ombres.garde.pauses) L.push(`  - partie ${x.partie}, cut ${x.cut} : écartement ${dec(x.ecartMm)} mm, référence ${dec(x.referenceMm)} mm, écart au voisinage ${dec(x.ecartAuVoisinageMm)} mm.`);

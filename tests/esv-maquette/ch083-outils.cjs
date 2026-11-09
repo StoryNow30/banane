@@ -6,9 +6,9 @@
  * préchauffage), validation, puis « points affichés » de la coupe suivante (`ept-affiche` : tous les nœuds de sa boîte montés). */
 const N=require('./navigateur.cjs'),O77=require('./ch077-outils.cjs'),O80=require('./ch080-outils.cjs');
 const LIVRE=require('../../src/settings.js').lot.chargement.prechauffer;
-async function ouvrir({memoire=true,prechauffer=true,saut=50,limite=null,decode=40,voie='fetch',auth=false}={}){   /* CH-085 : `voie` ('fetch' ou 'potree'), `auth` : le serveur exige l'en-tête du Potree simulé */
- const reglage={...LIVRE,voie/* CH-083 : phase mémoire de la voie fetch ; CH-085 : voie potree */,memoire:{...LIVRE.memoire,actif:memoire}};
- const s=await O77.ouvrir({prechauffer,reglage,maquette:{cuts:2*saut+1,saut,eptHier:1,eptForme:'commun',eptPas:7,eptMemoire:1,eptDecode:decode,...(auth?{eptAuth:1}:{})},adaptateur:O80.adaptateurCH080()});
+async function ouvrir({memoire=true,prechauffer=true,saut=50,limite=null,decode=40,voie='fetch',auth=false,grappe=1,loin=false,adaptateur=null,cuts=null,pas=null}={}){   /* CH-088 : `grappe` (coupes d'affilée avant le saut), `loin` (opération lointaine), `adaptateur` (copie patchée) */   /* CH-085 : `voie` ('fetch' ou 'potree'), `auth` : le serveur exige l'en-tête du Potree simulé */
+ const reglage={...LIVRE,voie/* CH-083 : phase mémoire de la voie fetch ; CH-085 : voie potree */,memoire:{...LIVRE.memoire,actif:memoire},loin:{...LIVRE.loin,actif:loin}};
+ const s=await O77.ouvrir({prechauffer,reglage,maquette:{cuts:cuts??2*saut+1,saut,...(grappe>1?{grappe}:{}),...(pas?{pas}:{}),eptHier:1,eptForme:'commun',eptPas:7,eptMemoire:1,eptDecode:decode,...(auth?{eptAuth:1}:{})},adaptateur:adaptateur??O80.adaptateurCH080()});
  const page=s.env.page;if(auth)s.env.serveur.pannes({eptAuth:true});
  if(limite!==null)await page.evaluate(l=>{window.Potree.pointLoadLimit=l;},limite);
  const journal=(type,cut)=>page.evaluate(([t,c])=>window.__maquette.journal.filter(e=>e.type===t&&(c===undefined||e.cut===c)),[type,cut]);
