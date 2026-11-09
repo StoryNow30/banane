@@ -3572,3 +3572,7 @@ Complète D-299 sans la modifier.
 - Contexte : l'intégrateur venait de lister CH-081 (anticipation complète, intégrée), CH-084 (attentes observées, D-313) et CH-083 (faire charger par Potree, dans la mémoire d'ESV, les nœuds de la coupe suivante pour les grands sauts ; agit sur l'affichage d'ESV, jamais sur son serveur ni sur les validations ; accord écrit demandé). Réponse de l'opérateur : « je veux que tout ça soit intégré dans vision 8 ».
 - L'intégrateur lit cette réponse comme l'accord écrit pour CH-083, dans ces limites : rien vers le serveur au-delà des requêtes que Potree ferait pour ces nœuds (D-310) ; aucune pose ni validation touchée ; la coupe en cours n'est jamais privée de ses points (budget de points de Potree respecté, preuve en maquette) ; mémoire mesurée ; un réglage pour couper ; livré pour un lot d'essai.
 - « Vision 8 » attend donc CH-083 et CH-084 ; sa livraison est décalée.
+
+## D-315 — Attentes de la lecture des points raccourcies pour le lot d'essai (opérateur, 09/11)
+- Question de l'intégrateur : ramener le repli de stabilité de 800 à 600 ms quand rien ne bouge (environ 4 % des vues, 2 à 4 s par lot, PROBABLE) et le minimum d'images stables de 3 à 2 (environ 10 s par lot, SUPPOSÉ) ; deux attentes de la capture, hors de D-313, dans un fichier gelé. Réponse de l'opérateur : « oui j'accepte ».
+- Livré par CH-084, sous réglage, allumé pour le lot d'essai de « Vision 8 », avec les preuves : mêmes poses et mêmes validations sur le faux ESV, et lectures identiques là où les points sont stables.
