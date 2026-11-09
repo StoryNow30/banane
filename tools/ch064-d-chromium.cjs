@@ -12,7 +12,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
-async function unePage(adaptateur,octets,{lot=20,limite=Infinity,saut=0,lotsMax=Infinity}={}){
+async function unePage(adaptateur,octets,{lot=20,limite=Infinity,saut=0,lotsMax=Infinity,it=null}={}){
  const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info']});
  const journal=[];let plantage=null; // CH-064 (chef) : diagnostic du plantage de la page (demande de l'intégrateur)
  try{const p=await b.newPage();
@@ -54,8 +54,9 @@ async function unePage(adaptateur,octets,{lot=20,limite=Infinity,saut=0,lotsMax=
    if((saut+lots)%20===0)console.error('lot '+(saut+lots)+' '+JSON.stringify(journal.at(-1)));
    tampon=[];for(const [x,y] of d){h.js.update(x);h.rs.update(y);}};
   /* tranche (D-305, demande de l'intégrateur) : on saute les `saut` premiers lots, on s'arrête après `lotsMax` lots (page neuve à la tranche suivante) */
-  let aSauter=saut*lot,fini=true;
-  for(const c of adaptateur.cas({})){if(aSauter>0){aSauter--;continue;}if(n++>=limite)break;tampon.push(c);if(tampon.length>=lot){await vider();if(lots>=lotsMax){fini=false;break;}}}
+  /* `it` : itérateur de cas partagé par toutes les tranches d'un processus (sauter 300 000 cas coûte environ une heure : une seule fois) */
+  let fini=true;it=it||adaptateur.cas({})[Symbol.iterator]();
+  for(let x=it.next();!x.done;x=it.next()){const c=x.value;if(n++>=limite)break;tampon.push(c);if(tampon.length>=lot){await vider();if(lots>=lotsMax){fini=false;break;}}}
   await vider();
   const r=await p.evaluate(nav=>{const b=window.__banc,q=(a,x)=>{if(!a.length)return null;const s=a.slice().sort((u,v)=>u-v);return s[Math.min(s.length-1,Math.floor(x*s.length))];};
    return {casChargeNaN:b.chargeNaN,tramesDifferentes:b.trames,cas:b.cas,identiques:b.identiques,ecarts:b.ecarts,temps:{jsMediane:q(b.ms.js,.5),jsP95:q(b.ms.js,.95),rsMediane:q(b.ms.rs,.5),rsP95:q(b.ms.rs,.95)},
@@ -79,9 +80,10 @@ async function executer(adaptateur,octets,{lot=20,limite=Infinity,saut=0,tranche
    tasMaxOctets:Math.max(...T.map(x=>x.tasMax||0)),hauteEauMax:Math.max(...T.map(x=>x.hauteEauMax||0)),empreintes,
    verdict:!termine?'PARTIEL':cas>0&&identiques===cas&&egales?'IDENTIQUE':'ÉCART',tranches:T};};
  const ecrire=termine=>{const r=agreger(termine);if(json)fs.writeFileSync(json,JSON.stringify(r,null,1)+'\n');return r;};
- let s=saut;
+ let s=saut;const it=adaptateur.cas({})[Symbol.iterator]();
+ for(let k=0;k<saut*lot;k++)if(it.next().done)break;/* reprise : un seul saut par processus */
  for(;;){let r;
-  try{r=await unePage(adaptateur,octets,{lot,limite:limite-tranches.reduce((a,x)=>a+x.cas,0),saut:s,lotsMax:tranche});}
+  try{r=await unePage(adaptateur,octets,{lot,limite:limite-tranches.reduce((a,x)=>a+x.cas,0),saut:s,lotsMax:tranche,it});}
   catch(e){console.error('Arrêt dans la tranche commençant au lot '+s+' : reprendre avec --saut '+s+' (tranches faites gardées dans le fichier)');ecrire(false);throw e;}
   if(r.cas>0)tranches.push(r);s+=r.lotsFaits;console.error('tranche finie : lots '+r.lotDebut+'..'+s+', cas '+r.cas+', tas max '+r.tasMax+', tas fin '+r.tasFin+', haute eau '+r.hauteEauMax);
   if(r.fini||r.cas===0)break;ecrire(false);}
