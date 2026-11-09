@@ -1,5 +1,13 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 8 — 09/11 soir (D-311 à D-315 ; CH-081, CH-083, CH-084, CH-085)
+- Préchauffage par les voies de Potree (CH-085) : plus aucune requête d'Ariane vers le serveur ; c'est Potree qui charge (`node.load`, `loadHierarchy`), avec l'authentification d'ESV. Constat de « Vision 7 » (ÉTABLI) : nos 72 requêtes avaient reçu 401. Au premier refus du serveur, le préchauffage s'arrête pour le lot (`refus-serveur`).
+- Anticipation complète (CH-081) : zone = boîte de découpe d'ESV, jusqu'aux feuilles ; 2 coupes à l'avance ; changement de mode lot → passe ; dès la coupe voisine (sautMin 1) ; plafonds par lot (4 000 requêtes, 1,2 Go) et repli à 1 candidat au-delà de 30 % d'inutiles.
+- Points déjà en mémoire d'ESV à l'arrivée (CH-083) ; la coupe en cours garde tous ses nœuds (maquette). Maquette avec authentification, saut de 50 (ÉTABLI) : 21/56 nœuds chargés à l'arrivée contre 5, points affichés 1,13 s contre 1,65 s.
+- Pose et validation (CH-084, D-313, D-315) : Maj+Espace sort dès l'écriture « valid » vue et le libellé stable 300 ms (au lieu de 1 500 ms fixes) ; repli de stabilité 600 ms au lieu de 800 ; 2 images stables au lieu de 3. Banc maquette (30 lots) : commandes, écritures et poses identiques ; lot −4,6 %.
+- Preuves : verify et maquette (chiffres au relevé audit/verification.txt et au message de livraison) ; parité de la relecture identique.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 7 — 09/11 après-midi (D-309 à D-312 ; CH-080b, CH-080c, CH-082)
 - Préchauffage sur la forme réelle d'ESV (relevé de console de l'opérateur) : EPT laszip chargé par le nœud commun de Potree 1.8. Les nœuds sont nommés par leur clé, l'adresse est celle de Potree, et rien n'est demandé sans adresse sûre (motif `sans-adresse`). Depuis « Vision 5 », le préchauffage n'avait jamais rien demandé (0 nœud sur 733 préchauffages, ÉTABLI).
 - Dès un saut de 2 coupes (D-311), avec la lecture de la hiérarchie de la zone lointaine. Maquette, forme d'ESV, saut de 50 coupes (ÉTABLI) : 811 → 427 ms jusqu'à « aucun chargement » (−47 %), 16 nœuds sur 32 servis par le cache. Sur le terrain, le bilan à l'arrivée (`prechauffage-bilan` : juste, potree, couverts, servisCache) le dira.
