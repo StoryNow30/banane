@@ -1,5 +1,12 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 9 — 09/11 soir (D-311 à D-315 ; CH-086, CH-087, CH-088)
+- Grands sauts (CH-088) : la coupe éloignée (11 coupes ou plus) est préchauffée dès qu'elle est connue, jusqu'à 40 coupes à l'avance ; l'opération survit aux changements de coupe, ne lance rien pendant une capture. Maquette, saut de 247 coupes (ÉTABLI) : boîte chargée à l'arrivée 41 % → 70 %, points affichés 793 → 721 ms (P90 1 141 → 736 ms). Bilan à l'arrivée par l'arbre (prets, nousPrets, potreeLui) ; prechauffage-vue réparé.
+- Écritures d'après la validation laissées courir pendant la capture suivante (CH-086), porte « stocké » avant l'intention suivante ; 120 arrêts simulés sans perte ni doublon. Gain maquette ≈ 1 s par lot de 10 cuts (PROBABLE).
+- Prénom de l'opérateur retiré des commentaires, des fichiers injectés et du panneau (CH-087) ; copie parasite de l'adaptateur retirée du paquet.
+- Preuves : verify 3 372 essais, 3 364 réussis, 0 échec, 8 sautés ; maquette 90 essais, 0 échec, 3 sautés ; parité de la relecture identique.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 8 — 09/11 soir (D-311 à D-315 ; CH-081, CH-083, CH-084, CH-085)
 - Préchauffage par les voies de Potree (CH-085) : plus aucune requête d'Ariane vers le serveur ; c'est Potree qui charge (`node.load`, `loadHierarchy`), avec l'authentification d'ESV. Constat de « Vision 7 » (ÉTABLI) : nos 72 requêtes avaient reçu 401. Au premier refus du serveur, le préchauffage s'arrête pour le lot (`refus-serveur`).
 - Anticipation complète (CH-081) : zone = boîte de découpe d'ESV, jusqu'aux feuilles ; 2 coupes à l'avance ; changement de mode lot → passe ; dès la coupe voisine (sautMin 1) ; plafonds par lot (4 000 requêtes, 1,2 Go) et repli à 1 candidat au-delà de 30 % d'inutiles.
