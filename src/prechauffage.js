@@ -31,6 +31,11 @@
  *    ETag sont lus, jamais leur valeur rapportée (nombre `maxAgeS` et booléens seulement).
  * ADRESSES : construites au moment de la demande, gardées dans la fermeture de l'opération, oubliées avec elle. Les clés de nœud (D-X-Y-Z) restent en
  * mémoire de la page pour le bilan ; aucun événement ne contient d'adresse ni de clé (essai tests/ch077-prechauffage.test.cjs qui lit tous les événements).
+ * CH-081 (D-311, aval de l'intégrateur sur D-310 et D-311 ; étude chantiers/CH-081/etude.md) : zone `zone:'boite'` = la boîte de découpe d'ESV de la coupe
+ * prédite (src/prechauffage-boite.js), jusqu'aux feuilles ; plusieurs coupes par passage (src/prechauffage-anticipation.js : `horizon`, `candidatsMax`,
+ * source `changement-mode`) ; plafonds par CANDIDAT (`noeudsMax`, `octetsMax`, `hierarchiesMax`) et par LOT (`lotRequetesMax`, `lotOctetsMax`), repli à
+ * un candidat au-delà de `repliInutiles` ; bilan `utiles` / `inutiles` (nœud préchauffé redemandé ou non par Potree avant d'expirer) ; événement
+ * `prechauffage-vue` (caméra et réglages de Potree, lecture seule, au départ puis à chaque changement). Réglage absent : comportement de CH-080c.
  * Pur : tout ce qui touche la page (horloge, images, compteur, étiquette, fetch, observateur des ressources, table B1) est passé par `env`. */
 /** @template T @param {unknown} root @param {() => T} factory */
 (function (root, factory) {
@@ -41,16 +46,19 @@
   /* CH-080 (D-309) : `sautMin` — écart minimal, en coupes, entre la coupe courante et la suivante pour préchauffer. Clé absente : 1 (comportement de CH-077).
    * Réglage livré (src/settings.js) : 11, mesuré sur le lot du 09/11 : sous 11 coupes la sélection n'a trouvé aucun nœud à demander (447 cas sur 447) ;
    * au-delà, la zone de la coupe n'est pas chargée (chantiers/CH-080/etude.md). */
-  const DEFAUT = Object.freeze({ actif: false, profondeurMax: null, noeudsMax: 24, octetsMax: 8 * 1048576, enVolMax: 2, rayonM: 1.5, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1, hierarchie: false, hierarchiesMax: 8 });
-  const BORNES = { noeudsMax: [1, 200], octetsMax: [65536, 64 * 1048576], enVolMax: [1, 4], rayonM: [0.1, 10], coupesSansCache: [1, 100], profondeurMax: [0, 30], sautMin: [1, 100000], hierarchiesMax: [1, 24] };
+  const DEFAUT = Object.freeze({ actif: false, profondeurMax: null, noeudsMax: 24, octetsMax: 8 * 1048576, enVolMax: 2, rayonM: 1.5, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1, hierarchie: false, hierarchiesMax: 8, zone: 'cube', horizon: 1, candidatsMax: 1 });
+  const BORNES = { noeudsMax: [1, 200], octetsMax: [65536, 64 * 1048576], enVolMax: [1, 4], rayonM: [0.1, 10], coupesSansCache: [1, 100], profondeurMax: [0, 30], sautMin: [1, 100000], hierarchiesMax: [1, 24], horizon: [1, 3], candidatsMax: [1, 3] };
   /* CH-080 : d'où vient la coupe suivante (liste fermée). `liste-esv` : première ligne non validée après la coupe courante dans toute la table de
    * l'observateur (règle d'ESV « cut non validé suivant », celle du lot) ; `relu` (relecture), `passe-differes` : cible donnée par le service worker avec la
    * capture ; `b1-fenetre` : dernier recours, fenêtre de ±10 lignes (CH-077). */
-  const SOURCES = Object.freeze(['liste-esv', 'relu', 'passe-differes', 'b1-fenetre']);
+  const SOURCES = Object.freeze(['liste-esv', 'relu', 'passe-differes', 'b1-fenetre', 'changement-mode']);   /* CH-081 : changement-mode */
   const SOURCES_SW = ['relu', 'passe-differes'];
   const VISITES_MAX = 20000, RIGIDITE_M = 0.05, VOISINS_MS = 400, OCTETS_PAR_POINT = 32, OCTETS_NOEUD = 256 * 1024;
   const EPT_DATA = /\/ept-data\/(\d+-\d+-\d+-\d+)(\.[a-z0-9]{1,8})$/i;
   const fini = v => typeof v === 'number' && Number.isFinite(v);
+  /* CH-081 : modules de la page (globaux) ou de Node (essais). Absents : zone cube et une seule coupe, comme CH-080c. */
+  const module_ = (g, f) => { try { if (globalThis[g]) return globalThis[g]; } catch { /* suivant */ } try { if (typeof module === 'object' && module.exports && typeof require === 'function') return require(f); } catch { /* absent */ } return null; };
+  const Boite = module_('BananePrechauffageBoite', './prechauffage-boite.js'), Anticipation = module_('BananePrechauffageAnticipation', './prechauffage-anticipation.js');
 
   /** Réglage lu : null si éteint (seul `actif === true` allume) ; chaque valeur hors bornes reprend le défaut. */
   function reglage(r) {
@@ -60,6 +68,9 @@
     if (r.profondeurMax === null || r.profondeurMax === undefined) out.profondeurMax = null;
     out.apresNavigation = r.apresNavigation === 'finir' ? 'finir' : 'annuler';
     out.hierarchie = r.hierarchie === true;
+    /* CH-081 : zone (liste fermée) ; plafonds du lot lus par src/prechauffage-anticipation.js (bornes et défauts là-bas). */
+    out.zone = r.zone === 'boite' ? 'boite' : 'cube';
+    out.lot = Object.freeze({ lotRequetesMax: r.lotRequetesMax, lotOctetsMax: r.lotOctetsMax, repliInutiles: r.repliInutiles, repliFenetre: r.repliFenetre });
     return Object.freeze(out);
   }
 
@@ -85,6 +96,18 @@
   const point = v => Array.isArray(v) && v.length === 3 && v.every(fini) ? v : null;
   /** Rails de la coupe suivante en repère scène (absolu, celui de `matrixWorld`), d'après la réponse B1. `rails` : positions scène relatives au repère
    * d'Ariane du cut courant, `origine` : ce repère. Rend {predite, left, right} ou {motif}. */
+  /** CH-081 : décalage table → scène (O − T) tiré de la ligne du cut courant, ou null (mêmes refus que `centresSuivante`). */
+  function decalDe(rep, coupe, rails, origine) {
+    if (!rep || rep.ok !== true || !Array.isArray(rep.rows)) return null;
+    const L = point(rails?.left), R = point(rails?.right), O = point(origine); if (!L || !R || !O) return null;
+    const cur = rep.rows.find(r => r?.i === coupe), ec = Array.isArray(cur?.e) && cur.e.length === 6 && cur.e.every(fini) ? cur.e : null; if (!ec) return null;
+    const Tl = [0, 1, 2].map(i => ec[i] - L[i]), Tr = [0, 1, 2].map(i => ec[3 + i] - R[i]);
+    if (Math.hypot(...[0, 1, 2].map(i => Tl[i] - Tr[i])) > RIGIDITE_M) return null;
+    return [0, 1, 2].map(i => O[i] - (Tl[i] + Tr[i]) / 2);
+  }
+  /** CH-081 : ligne `loin` d'une réponse de l'observateur (indice, statut, bords finis), ou null. */
+  const ligneLoin = rep => { const l = rep?.ok === true ? rep.loin : null; return l && Number.isInteger(l.i) && l.i >= 0 && Array.isArray(l.e) && l.e.length === 6 && l.e.every(fini) ? l : null; };
+  const railsDe = (l, D) => ({ left: [0, 1, 2].map(i => l.e[i] + D[i]), right: [0, 1, 2].map(i => l.e[3 + i] + D[i]) });
   function centresSuivante(rep, coupe, rails, origine, demande = null) {
     if (!rep || rep.ok !== true || !Array.isArray(rep.rows)) return { motif: typeof rep?.reason === 'string' && /^[a-z-]{1,24}$/.test(rep.reason) ? rep.reason : 'sans-table' };
     const L = point(rails?.left), R = point(rails?.right), O = point(origine); if (!L || !R || !O) return { motif: 'sans-rails' };
@@ -165,14 +188,17 @@
   }
   const coupe = (bm, centres, r) => centres.some(c => [0, 1, 2].every(i => bm[0][i] <= c[i] + r && bm[1][i] >= c[i] - r));
   const distance = (bm, centres) => Math.min(...centres.map(c => Math.hypot(...[0, 1, 2].map(i => Math.max(bm[0][i] - c[i], 0, c[i] - bm[1][i])))));
+  /** CH-081 : zone = { type, coupe(bm), distance(bm) } ; le cube de CH-077 (rayon autour de chaque rail) ou la boîte de découpe d'ESV. */
+  const zoneCube = (centres, r) => ({ type: 'cube', coupe: bm => coupe(bm, centres, r), distance: bm => distance(bm, centres) });
+  function zoneBoite(rails, dims) { const z = Boite ? Boite.zone(point(rails?.left), point(rails?.right), dims) : null; return z ? { type: 'boite', coupe: z.coupe, distance: z.distance } : null; }
   /** Parcours borné de l'arbre : `visite(noeud, niveau, boîte monde, nuage, parent)` pour chaque nœud qui coupe la zone ; on ne descend que dans ceux-là. */
-  function parcourir(pointclouds, centres, r, visite) {
+  function parcourir(pointclouds, Z, visite) {
     let vus = 0;
     for (const pc of pointclouds || []) {
       const racine = pc?.pcoGeometry?.root, M = pc?.matrixWorld?.elements; if (!racine || !M || M.length !== 16) continue;
       const pile = [[racine, null]];
       while (pile.length && vus < VISITES_MAX) {
-        const [n, parent] = pile.pop(); vus++; const bm = boiteMonde(n, M); if (!bm || !coupe(bm, centres, r)) continue;
+        const [n, parent] = pile.pop(); vus++; const bm = boiteMonde(n, M); if (!bm || !Z.coupe(bm)) continue;
         if (visite(n, niveau(n), bm, pc, parent) !== false) for (const c of enfants(n)) pile.push([c, n]);
       }
     }
@@ -181,15 +207,16 @@
   /** Niveau le plus profond déjà chargé autour du cut courant (null si aucun). */
   function niveauLocal(pointclouds, rails, r) {
     const c = [point(rails?.left), point(rails?.right)].filter(Boolean); if (!c.length) return null;
-    let max = null; parcourir(pointclouds, c, r, (n, d) => { if (n.loaded === true && d !== null && (max === null || d > max)) max = d; });
+    let max = null; parcourir(pointclouds, zoneCube(c, r), (n, d) => { if (n.loaded === true && d !== null && (max === null || d > max)) max = d; });
     return max;
   }
   /** Nœuds à demander pour la coupe suivante, et comptes : intersectants (connus dans la zone, niveau borné), chargés, en cours, frontière. */
-  function candidats(pointclouds, rails, { niveauMax = null, rayonM = DEFAUT.rayonM } = {}) {
+  function candidats(pointclouds, rails, { niveauMax = null, rayonM = DEFAUT.rayonM, zone = null } = {}) {
     const c = [point(rails?.left), point(rails?.right)].filter(Boolean), out = { intersectants: 0, charges: 0, enCours: 0, frontiere: 0, candidats: [], frontieres: [], sansNom: 0, sansAdresse: 0, formeNoeud: null };
     if (!c.length) return out;
+    const Z = zone || zoneCube(c, rayonM);
     const prefixes = new Map();   /* nœud → préfixe sûr (hérité des ancêtres), le temps du parcours */
-    parcourir(pointclouds, c, rayonM, (n, d, bm, pc, parent) => {
+    parcourir(pointclouds, Z, (n, d, bm, pc, parent) => {
       const nom = nomNoeud(n), prefixe = prefixeDonnees(n, nom, parent ? prefixes.get(parent) : null); if (prefixe) prefixes.set(n, prefixe);
       if (d === null || (niveauMax !== null && d > niveauMax)) return false;
       out.intersectants++;
@@ -201,12 +228,12 @@
         if (!nom) { out.intersectants--; out.sansNom++; }
         else if (nc && !(fini(pts) && pts > 0)) { /* rien à demander pour ce nœud */ }
         else if (!prefixe) out.sansAdresse++;   /* CH-080b : aucune adresse sûre : rien n'est demandé, l'événement le dit */
-        else out.candidats.push({ noeud: n, pc, cle: nom, prefixe, ext: nc ? '.laz' : null, niveau: d, points: fini(pts) && pts > 0 ? pts : null, distance: distance(bm, c) });
+        else out.candidats.push({ noeud: n, pc, cle: nom, prefixe, ext: nc ? '.laz' : null, niveau: d, points: fini(pts) && pts > 0 ? pts : null, distance: Z.distance(bm) });
       }
       /* Frontière : sous-hiérarchie non lue, enfants inconnus. CH-080c : nœud commun, `nodeinfo` absent (numPoints vaut −1 jusqu'au chargement). */
       const front = commun(n) ? n.nodeinfo === undefined && !enfants(n).length : n.numPoints === -1 && !enfants(n).length;
       if (front || (!commun(n) && (n.numPoints === -1 || (n.hasChildren === true && !enfants(n).length)))) out.frontiere++;
-      if (front && nom && prefixe) { const f = frontiereDe(n, pc, d, bm, c, nom, prefixe, commun(n) ? '.laz' : null); if (f) out.frontieres.push(f); }
+      if (front && nom && prefixe) { const f = frontiereDe(n, pc, d, bm, Z, nom, prefixe, commun(n) ? '.laz' : null); if (f) out.frontieres.push(f); }
       return true;
     });
     out.candidats.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
@@ -233,16 +260,16 @@
   const CLES_MAX = 20000;
   const cleDe = s => { const m = /^(\d+)-(\d+)-(\d+)-(\d+)$/.exec(String(s)); return m ? m.slice(1).map(Number) : null; };
   /** Frontière : clé, boîte (repère du nuage), préfixes des adresses de données et de hiérarchie, ou null. */
-  function frontiereDe(n, pc, niv, bm, c, nom, prefixe, ext = null) {
+  function frontiereDe(n, pc, niv, bm, Z, nom, prefixe, ext = null) {
     try {
       const k = cleDe(nom), b = n.boundingBox; if (!k || niv === null || !b?.min || !b?.max || typeof prefixe !== 'string' || !prefixe.endsWith('ept-data/')) return null;
       /* CH-080b : même préfixe sûr que les données (`<ept.url>ept-data/` → `<ept.url>ept-hierarchy/`, la construction de loadHierarchy). */
       const prefixeHier = prefixe.slice(0, -'ept-data/'.length) + 'ept-hierarchy/';
-      return { cle: nom, k, niveau: niv, boite: { min: { x: b.min.x, y: b.min.y, z: b.min.z }, max: { x: b.max.x, y: b.max.y, z: b.max.z } }, pc, prefixe, prefixeHier, ext, distance: distance(bm, c) };
+      return { cle: nom, k, niveau: niv, boite: { min: { x: b.min.x, y: b.min.y, z: b.min.z }, max: { x: b.max.x, y: b.max.y, z: b.max.z } }, pc, prefixe, prefixeHier, ext, distance: Z.distance(bm) };
     } catch { return null; }
   }
   /** Clés d'un fichier de hiérarchie qui coupent la zone (niveau ≤ niveauMax) ; sous-hiérarchies de la zone rendues à part. */
-  function deduire(hier, f, centres, r, niveauMax) {
+  function deduire(hier, f, Z, niveauMax) {
     const out = { noeuds: [], sous: [] }; if (!hier || typeof hier !== 'object' || Array.isArray(hier)) return out;
     const M = f.pc?.matrixWorld?.elements; if (!M || M.length !== 16) return out;
     const b = f.boite, t = [b.max.x - b.min.x, b.max.y - b.min.y, b.max.z - b.min.z], [d0, x0, y0, z0] = f.k;
@@ -254,8 +281,8 @@
       /* CH-080c : nœud commun : la page donne aussi le nombre de points de la frontière elle-même (Potree le charge ensuite) : ses données sont demandées. */
       const p = 2 ** r0, ix = k[1] - x0 * p, iy = k[2] - y0 * p, iz = k[3] - z0 * p; if (ix < 0 || iy < 0 || iz < 0 || ix >= p || iy >= p || iz >= p) continue;
       const s = t.map(v2 => v2 / p), boite = { min: { x: b.min.x + ix * s[0], y: b.min.y + iy * s[1], z: b.min.z + iz * s[2] }, max: { x: b.min.x + (ix + 1) * s[0], y: b.min.y + (iy + 1) * s[1], z: b.min.z + (iz + 1) * s[2] } };
-      const bm = boiteMonde({ boundingBox: boite }, M); if (!bm || !coupe(bm, centres, r)) continue;
-      const dist = distance(bm, centres);
+      const bm = boiteMonde({ boundingBox: boite }, M); if (!bm || !Z.coupe(bm)) continue;
+      const dist = Z.distance(bm);
       if (v > 0 || !f.ext) out.noeuds.push({ cle, niveau: k[0], points: v > 0 ? v : null, distance: dist, pc: f.pc, prefixe: f.prefixe, ext: f.ext });   /* CH-080c : commun, −1 = page sans données connues */
       if (v === -1 && r0 > 0) out.sous.push({ cle, k, niveau: k[0], boite, pc: f.pc, prefixe: f.prefixe, prefixeHier: f.prefixeHier, ext: f.ext, distance: dist });
     }
@@ -266,6 +293,10 @@
   function creer(env) {
     const R = reglage(env?.reglage);
     const propres = new Map();   /* CH-080c */
+    /* CH-081 : budget du LOT (vie de la page) et repli ; nœuds préchauffés en attente d'être redemandés par Potree (clé → arrivées restantes) ;
+     * signature du dernier relevé de la vue. Clés en mémoire de la page seulement, jamais postées. */
+    const budget = Anticipation && R ? Anticipation.creerBudget(R.lot) : null, attente = new Map();
+    let utiles = 0, vueSig = null, dernierAge = null;
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
     const poster = e => { try { env.poster(e); } catch { /* relevé seulement */ } };
     const maintenant = () => { try { const t = env.maintenant(); return fini(t) ? t : 0; } catch { return 0; } };
@@ -279,6 +310,7 @@
       for (const e of entries || []) {
         const k = cleChemin(e?.name); if (!k) continue; if (!extApprise) extApprise = k.ext;
         const p = e.initiatorType === 'fetch' ? propres.get(k.cle) : 0; if (p) { if (p > 1) propres.set(k.cle, p - 1); else propres.delete(k.cle); continue; }
+        if (attente.has(k.cle)) { attente.delete(k.cle); utiles++; }   /* CH-081 : redemandé par Potree, donc utile */
         if (!suivi) continue;
         const tz = Number(e.transferSize), db = Number(e.decodedBodySize), cache = tz === 0 && db > 0;
         suivi.potree++; if (cache) suivi.cacheTotal++;
@@ -287,10 +319,14 @@
     }
     function bilan() {
       try { ressources(typeof env.relever === 'function' ? env.relever() : []); } catch { /* rien */ }
+      /* CH-081 : une arrivée de plus : chaque nœud préchauffé non redemandé perd une arrivée ; à 0, il est inutile. */
+      let inutiles = 0; const la = etiquette(), ici = la ? la.part + ':' + la.cut : null;
+      if (ici !== null && ici !== dernierAge) { dernierAge = ici; for (const [k, n] of attente) { if (n <= 1) { attente.delete(k); inutiles++; } else attente.set(k, n - 1); } }   /* une seconde capture du même cut ne compte pas pour une arrivée */
+      const u = utiles; utiles = 0; if (budget && u + inutiles > 0) budget.bilanter(u + inutiles, u);
       const s = suivi; suivi = null; if (!s) return null;
-      const l = etiquette(), juste = !!l && l.part === s.partie && l.cut === s.predite;
-      poster({ kind: 'prechauffage-bilan', coupe: l?.cut ?? null, predite: s.predite, op: s.op, juste, demandes: s.cles.size, potree: s.potree, couverts: s.couverts, servisCache: s.servisCache, cacheTotal: s.cacheTotal });
-      if (juste && s.cles.size > 0 && s.couverts > 0) { sansCache = s.servisCache > 0 ? 0 : sansCache + 1; if (actif && sansCache >= R.coupesSansCache) { actif = false; return 'cache-inutile'; } }
+      const l = etiquette(), juste = !!l && l.part === s.partie && (l.cut === s.predite || !!s.predites?.has(l.cut));
+      poster({ kind: 'prechauffage-bilan', coupe: l?.cut ?? null, predite: s.predite, op: s.op, juste, demandes: s.demandes ?? s.cles.size, potree: s.potree, couverts: s.couverts, servisCache: s.servisCache, cacheTotal: s.cacheTotal, utiles: u, inutiles });
+      if (juste && (s.demandes ?? s.cles.size) > 0 && s.couverts > 0) { sansCache = s.servisCache > 0 ? 0 : sansCache + 1; if (actif && sansCache >= R.coupesSansCache) { actif = false; return 'cache-inutile'; } }
       return null;
     }
     function annuler(motif) {
@@ -301,10 +337,11 @@
     }
     const resume = (c, extra = {}) => ({ kind: 'prechauffage', coupe: c.coupe, predite: c.predite ?? null, op: c.op, saut: c.saut ?? null, source: c.source ?? null, niveauMax: c.niveauMax ?? null,
       intersectants: c.sel?.intersectants ?? 0, charges: c.sel?.charges ?? 0, enCours: c.sel?.enCours ?? 0, frontiere: c.sel?.frontiere ?? 0, candidats: c.sel?.candidats.length ?? 0,
-      noeuds: c.noeuds, termines: c.termines, octets: c.octets, hierarchies: c.hierarchies, deduits: c.deduits, sansNom: c.sel?.sansNom ?? 0, sansAdresse: (c.sel?.sansAdresse ?? 0) + (c.sansAdresse ?? 0), formeNoeud: c.sel?.formeNoeud ?? null, dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
+      noeuds: c.noeuds, termines: c.termines, octets: c.octets, hierarchies: c.hierarchies, deduits: c.deduits, sansNom: c.sel?.sansNom ?? 0, sansAdresse: (c.sel?.sansAdresse ?? 0) + (c.sansAdresse ?? 0), formeNoeud: c.sel?.formeNoeud ?? null, zone: c.zone ?? null, cibles: c.nCibles ?? null, calibree: c.calibree ?? null, dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
     function terminer(c) {
       if (c.fini) return c.resultat; c.fini = true;
-      if (c.op === op && c.predite !== undefined && c.cles.size) suivi = { op: c.op, partie: c.partie, predite: c.predite, cles: c.cles, potree: 0, couverts: 0, servisCache: 0, cacheTotal: 0 };
+      const couv = c.couvertes && c.couvertes.size ? new Set([...c.cles, ...c.couvertes]) : c.cles;   /* CH-081 : clés préchauffées par une opération d'avant */
+      if (c.op === op && c.predite !== undefined && couv.size) suivi = { op: c.op, partie: c.partie, predite: c.predite, predites: c.predites || null, cles: couv, demandes: c.cles.size, potree: 0, couverts: 0, servisCache: 0, cacheTotal: 0 };
       const r = resume(c); const { kind, ...sans } = r; c.resultat = sans; poster(r); if (courant === c) courant = null; return sans;
     }
 
@@ -316,6 +353,10 @@
       if (coupure) { c.motif = coupure; courant = c; return terminer(c); }
       if (!actif) return { motif: 'eteint', noeuds: 0, octets: 0, annule: false };
       courant = c;
+      /* CH-081 : caméra et réglages de Potree (lecture seule, entiers et liste fermée) : au premier passage, puis à chaque changement. */
+      if (Anticipation && typeof ctx?.vue === 'function') {
+        try { const r = Anticipation.releveVue(ctx.vue() || {}), sig = Anticipation.signatureVue(r); if (sig !== vueSig) { vueSig = sig; poster({ kind: 'prechauffage-vue', ...r }); } } catch { /* relevé seulement */ }
+      }
       /* CH-080b : la prédiction passe AVANT le contrôle « réseau occupé » (mémoire de la page, aucune requête) : l'événement porte alors saut et source. */
       /* CH-080 : la coupe suivante est demandée à sa source. Cible du service worker (relecture, passe des différés) : acceptée seulement si elle porte
        * l'identité de CETTE capture (partie, coupe) ; sinon périmée, rien n'est demandé (règle 4.2). Sans cible : la suivante non validée de la liste. */
@@ -330,18 +371,60 @@
         new Promise(r => { try { setTimeout(() => r({ ok: false, reason: 'page-sans-reponse' }), VOISINS_MS); } catch { r(null); } })]); } catch { rep = null; }
       if (c.arret) return terminer(c);
       const cible = centresSuivante(rep, c.coupe, ctx.rails, ctx.origine, demande);
-      if (!cible.left) { c.motif = cible.motif; return terminer(c); }
-      c.predite = cible.predite; c.source = cible.source; c.saut = cible.saut;
-      /* CH-080 : coupe proche (|saut| < sautMin) : ses nœuds sont déjà chargés (mesure du 09/11), rien n'est demandé. */
-      if (Math.abs(cible.saut) < R.sautMin) { c.motif = 'saut-court'; return terminer(c); }
-      if (chargements() !== 0) { c.motif = 'reseau-occupe'; return terminer(c); }
       const courants = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) };
-      let nm = niveauLocal(ctx.pointclouds, courants, R.rayonM);
+      /* CH-081 : plusieurs coupes par passage (horizon, changement de mode) seulement si le module d'anticipation est là et le réglage le demande. */
+      const multi = !!Anticipation && (R.horizon > 1 || R.candidatsMax > 1), D = multi ? decalDe(rep, c.coupe, ctx.rails, ctx.origine) : null;
+      const demander = async (cut, monde, quoi) => { try { return await Promise.race([Promise.resolve(env.voisins(cut, monde, quoi)), new Promise(r => { try { setTimeout(() => r(null), VOISINS_MS); } catch { r(null); } })]); } catch { return null; } };
+      const modes = [];
+      if (multi && D && demande.suivante && cible.motif === 'sans-suivante') {
+        /* Fin de la liste du lot : la passe des différés part de la première ligne non validée de TOUTE la table (règle de la passe). */
+        const l = ligneLoin(await demander(c.coupe, courants, { premiere: true })); if (c.arret) return terminer(c);
+        if (l && l.i !== c.coupe && l.s !== 'valid') modes.push({ i: l.i, source: 'changement-mode', rails: railsDe(l, D) });
+      }
+      if (!cible.left && !modes.length) { c.motif = cible.motif; return terminer(c); }
+      const suite = cible.left ? [{ i: cible.predite, source: cible.source, rails: { left: cible.left, right: cible.right } }] : [];
+      if (multi && D && cible.left && R.horizon >= 2) {
+        /* k+2 : la suivante de k+1 par la même règle (liste d'ESV) ; ou celle que le service worker joint (`apres`, relecture et passe). */
+        const ap = h && Number.isInteger(h.apres) && h.apres >= 0 ? h.apres : null;
+        const r2 = demande.suivante ? await demander(cible.predite, { left: cible.left.map((v, i) => v - D[i]), right: cible.right.map((v, i) => v - D[i]) }, { suivante: true })
+          : ap !== null ? await demander(c.coupe, courants, { cible: ap }) : null;
+        if (c.arret) return terminer(c);
+        const l = ligneLoin(r2);
+        if (l && (demande.suivante ? l.i > cible.predite && l.s !== 'valid' : l.i === ap)) suite.push({ i: l.i, source: cible.source, rails: railsDe(l, D) });
+      }
+      if (cible.left) { c.predite = cible.predite; c.source = cible.source; c.saut = cible.saut; }
+      else { c.predite = modes[0].i; c.source = 'changement-mode'; c.saut = modes[0].i - c.coupe; }
+      c.predites = new Set([c.predite, ...modes.map(m => m.i)]);
+      const liste = multi ? Anticipation.cibles({ coupe: c.coupe, suite, modes, horizon: R.horizon, candidatsMax: budget ? budget.candidatsMax(R.candidatsMax) : 1, sautMin: R.sautMin }).map(x => ({ ...x.ligne, rang: x.rang }))
+        : Math.abs(cible.saut) >= R.sautMin ? [{ ...suite[0], rang: 1 }] : [];
+      c.nCibles = liste.length;
+      /* CH-080 : coupe proche (|saut| < sautMin) : ses nœuds sont déjà chargés (mesure du 09/11), rien n'est demandé. */
+      if (!liste.length) { c.motif = 'saut-court'; return terminer(c); }
+      if (chargements() !== 0) { c.motif = 'reseau-occupe'; return terminer(c); }
+      /* CH-081 : zone. Boîte : dimensions lues sur la boîte de découpe de Potree pour la coupe COURANTE si elle est centrée et alignée (lecture seule), sinon
+       * celles mesurées ; jusqu'aux feuilles (Potree en orthographique n'a pas de critère de taille). Cube : CH-077, niveau borné au plus profond chargé. */
+      let dims = null;
+      if (R.zone === 'boite' && Boite) {
+        try { const el = ctx.pointclouds?.[0]?.material?.clipBoxes?.[0]?.box?.matrixWorld?.elements; dims = el ? Boite.calibrer(Array.from(el), courants.left, courants.right) : null; } catch { dims = null; }
+        c.calibree = !!dims;
+      }
+      const boite = R.zone === 'boite' && !!Boite;
+      c.zone = boite ? 'boite' : 'cube';
+      let nm = boite ? null : niveauLocal(ctx.pointclouds, courants, R.rayonM);
       if (R.profondeurMax !== null) nm = nm === null ? R.profondeurMax : Math.min(nm, R.profondeurMax);
       c.niveauMax = nm;
-      c.sel = candidats(ctx.pointclouds, cible, { niveauMax: nm, rayonM: R.rayonM });
-      const lireHier = R.hierarchie && c.sel.frontieres.length > 0;
-      if (!c.sel.candidats.length && !lireHier) { c.motif = c.sel.sansAdresse ? 'sans-adresse' : 'aucun-noeud'; return terminer(c); }
+      const plans = [];
+      const agr = { intersectants: 0, charges: 0, enCours: 0, frontiere: 0, candidats: [], frontieres: [], sansNom: 0, sansAdresse: 0, formeNoeud: null };
+      for (const t of liste) {
+        const Z = (boite ? zoneBoite(t.rails, dims) : null) || zoneCube([t.rails.left, t.rails.right], R.rayonM);
+        const sel = candidats(ctx.pointclouds, t.rails, { niveauMax: nm, rayonM: R.rayonM, zone: Z });
+        for (const k of ['intersectants', 'charges', 'enCours', 'frontiere', 'sansNom', 'sansAdresse']) agr[k] += sel[k];
+        agr.candidats.push(...sel.candidats); if (agr.formeNoeud === null) agr.formeNoeud = sel.formeNoeud;
+        plans.push({ t, Z, sel });
+      }
+      c.sel = agr;
+      const lireHier = R.hierarchie && plans.some(x => x.sel.frontieres.length > 0);
+      if (!agr.candidats.length && !lireHier) { c.motif = agr.sansAdresse ? 'sans-adresse' : 'aucun-noeud'; return terminer(c); }
       const depart = etiquette();
       /* Veille, une image sur deux au plus : premier chargement de Potree, étiquette de coupe changée. */
       (async () => {
@@ -350,72 +433,90 @@
           if (c.fini || c.arret) break;
           const l = etiquette(), n = chargements();
           if (!l || !depart || l.part !== depart.part || l.cut !== depart.cut) {
-            if (R.apresNavigation === 'finir' && l && l.part === c.partie && l.cut === c.predite) { c.navigue = true; c.motif = c.motif || 'navigation'; }
+            if (R.apresNavigation === 'finir' && l && l.part === c.partie && c.predites.has(l.cut)) { c.navigue = true; c.motif = c.motif || 'navigation'; }
             else { annuler('coupe'); break; }
           }
           if (!c.navigue && (n === null || n > 0)) { annuler('chargement'); break; }
         }
       })();
-      /* CH-080 : fichiers de hiérarchie des frontières de la zone, par tours (`enVolMax` à la fois), du moins profond au plus profond ; ils comptent dans
-       * `noeudsMax` et `octetsMax` ; leurs sous-hiérarchies de la zone sont lues au tour suivant ; au plus `hierarchiesMax` fichiers. */
-      const deduits = [];
-      if (lireHier) {
-        const pile = c.sel.frontieres.slice(), vues = new Set(), centres = [cible.left, cible.right];
-        while (pile.length && c.hierarchies < Math.min(R.hierarchiesMax, R.noeudsMax - 1) && !c.arret && !c.fini && courant === c && !c.navigue) {
-          const lot = pile.splice(0, Math.min(R.enVolMax, Math.min(R.hierarchiesMax, R.noeudsMax - 1) - c.hierarchies)).filter(f => !vues.has(f.cle));
-          await Promise.all(lot.map(async f => {
-            vues.add(f.cle); if (c.octets >= R.octetsMax) { c.motif = c.motif || 'plafond-octets'; return; }
-            const ctl = new env.AbortController(); c.controleurs.add(ctl); c.hierarchies++;
+      c.couvertes = new Set();
+      const vivant = () => !c.arret && !c.fini && courant === c && !c.navigue;
+      const plafondLot = (rq, oc) => { if (!budget || budget.autorise(rq, oc)) return false; c.motif = c.motif || 'plafond-lot'; c.arret = true; return true; };
+      /* Une coupe après l'autre, dans l'ordre des cibles ; plafonds `noeudsMax`, `octetsMax`, `hierarchiesMax` PAR CIBLE, plafonds du lot en plus. */
+      for (const { t, Z, sel } of plans) {
+        if (!vivant()) break;
+        const o0 = c.octets; let hT = 0;
+        /* CH-080 : fichiers de hiérarchie des frontières de la zone, par tours (`enVolMax` à la fois), du moins profond au plus profond ; ils comptent dans
+         * `noeudsMax` et `octetsMax` ; leurs sous-hiérarchies de la zone sont lues au tour suivant ; au plus `hierarchiesMax` fichiers. */
+        const deduits = [];
+        if (R.hierarchie && sel.frontieres.length) {
+          const pile = sel.frontieres.slice(), vues = new Set(), maxH = Math.min(R.hierarchiesMax, R.noeudsMax - 1);
+          while (pile.length && hT < maxH && vivant()) {
+            const lot = pile.splice(0, Math.min(R.enVolMax, maxH - hT)).filter(f => !vues.has(f.cle));
+            await Promise.all(lot.map(async f => {
+              vues.add(f.cle); if (c.octets - o0 >= R.octetsMax) { c.motif = c.motif || 'plafond-octets'; return; }
+              if (plafondLot(1, 0)) return;
+              budget?.compter(1, 0);   /* réservée au départ : deux demandes en vol ne passent pas ensemble sous le plafond */
+              const ctl = new env.AbortController(); c.controleurs.add(ctl); c.hierarchies++; hT++;
+              try {
+                const r = await env.fetch(f.prefixeHier + f.cle + '.json', { method: 'GET', cache: 'default', credentials: 'same-origin', mode: 'cors', priority: 'low', signal: ctl.signal });
+                if (courant !== c || c.arret) return;
+                const buf = r?.ok ? await r.arrayBuffer() : null; if (!buf || courant !== c || c.arret) return;
+                c.octets += buf.byteLength; budget?.compter(0, buf.byteLength); if (buf.byteLength > R.octetsMax) return;
+                let hier = null; try { hier = JSON.parse(new TextDecoder().decode(buf)); } catch { hier = null; }
+                const d = deduire(hier, f, Z, nm); deduits.push(...d.noeuds); pile.push(...d.sous);
+              } catch { /* annulée ou en échec : rien n'est déduit */ } finally { c.controleurs.delete(ctl); }
+            }));
+            pile.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+          }
+          c.deduits += deduits.length;
+          if (c.arret || c.fini || courant !== c) break;
+        }
+        /* CH-081 : un nœud déjà préchauffé (opération d'avant, en attente d'être redemandé) ou déjà demandé dans cette opération n'est pas redemandé. */
+        const vusIci = new Set();
+        const tous = [...sel.candidats, ...deduits].filter(x => { if (vusIci.has(x.cle)) return false; vusIci.add(x.cle); if (c.cles.has(x.cle)) { if (attente.has(x.cle)) attente.set(x.cle, Math.max(attente.get(x.cle), t.rang)); return false; } if (attente.has(x.cle)) { c.couvertes.add(x.cle); attente.set(x.cle, Math.max(attente.get(x.cle), t.rang)); return false; } return true; })
+          .sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+        const place = Math.max(0, R.noeudsMax - hT), file = tous.slice(0, place);
+        if (tous.length > place) c.resteNoeuds = true;
+        if (!file.length) continue;
+        const estime = x => x.points !== null ? x.points * (octetsParPoint ?? OCTETS_PAR_POINT) : (octetsTot && pointsTot ? octetsTot / Math.max(1, c.termines) : OCTETS_NOEUD);
+        let i = 0;
+        const travailleur = async () => {
+          while (i < file.length) {
+            if (c.arret || c.fini || courant !== c || c.navigue) return;
+            const x = file[i], e = estime(x);
+            if ((c.octets - o0) + c.enVolEst + e > R.octetsMax) { c.motif = c.motif || 'plafond-octets'; return; }
+            if (plafondLot(1, e)) return;
+            i++;
+            const url = adresse(x, extApprise); if (!url) { c.motif = c.motif || 'sans-adresse'; c.sansAdresse = (c.sansAdresse || 0) + 1; continue; }
+            budget?.compter(1, 0);   /* réservée au départ (deux en vol) ; les octets sont comptés à l'arrivée */
+            const ctl = new env.AbortController(); c.controleurs.add(ctl); c.noeuds++; c.cles.add(x.cle); c.enVolEst += e;
             try {
-              const r = await env.fetch(f.prefixeHier + f.cle + '.json', { method: 'GET', cache: 'default', credentials: 'same-origin', mode: 'cors', priority: 'low', signal: ctl.signal });
-              if (courant !== c || c.arret) return;
-              const buf = r?.ok ? await r.arrayBuffer() : null; if (!buf || courant !== c || c.arret) return;
-              c.octets += buf.byteLength; if (buf.byteLength > R.octetsMax) return;
-              let hier = null; try { hier = JSON.parse(new TextDecoder().decode(buf)); } catch { hier = null; }
-              const d = deduire(hier, f, centres, R.rayonM, nm); deduits.push(...d.noeuds); pile.push(...d.sous);
-            } catch { /* annulée ou en échec : rien n'est déduit */ } finally { c.controleurs.delete(ctl); }
-          }));
-          pile.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
-        }
-        c.deduits = deduits.length;
-        if (c.arret || c.fini || courant !== c) { c.arret = true; c.reveil?.(); return terminer(c); }
+              const r = await env.fetch(url, { method: 'GET', cache: 'default', credentials: 'same-origin', mode: 'cors', priority: 'low', signal: ctl.signal });
+              if (courant !== c || c.arret && !c.navigue) { try { ctl.abort(); } catch { /* fini */ } continue; }
+              if (!entetesFaits && r?.headers && typeof r.headers.get === 'function') { entetesFaits = true; poster({ kind: 'prechauffage-entetes', ...classerEntetes(k => r.headers.get(k)), statut: Number.isInteger(r.status) ? r.status : null }); }
+              const buf = r?.ok ? await r.arrayBuffer() : null;
+              if (buf) { if (propres.size > 2000) propres.clear(); propres.set(x.cle, (propres.get(x.cle) || 0) + 1); }   /* CH-080c : son entrée de ressource sera la nôtre */
+              /* Périmé (autre opération, annulation) : rien n'est compté. Le corps est jeté dans tous les cas. */
+              if (courant === c && !(c.arret && !c.navigue) && buf) {
+                const n = buf.byteLength; c.octets += n; c.termines++; budget?.compter(0, n);
+                if (attente.size > 4000) attente.clear(); attente.set(x.cle, t.rang);   /* CH-081 : redemandé par Potree avant `rang` arrivées, ou inutile */
+                if (x.points) { octetsTot += n; pointsTot += x.points; octetsParPoint = octetsTot / pointsTot; }
+              }
+            } catch { /* annulée ou en échec : rien n'est compté */ }
+            finally { c.controleurs.delete(ctl); c.enVolEst -= e; }
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(R.enVolMax, file.length) }, travailleur));
       }
-      const tous = [...c.sel.candidats, ...deduits].sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
-      const place = Math.max(0, R.noeudsMax - c.hierarchies), file = tous.slice(0, place), resteNoeuds = tous.length > place;
-      if (!file.length) { c.motif = c.motif || 'aucun-noeud'; c.arret = true; c.reveil?.(); return terminer(c); }
-      const estime = x => x.points !== null ? x.points * (octetsParPoint ?? OCTETS_PAR_POINT) : (octetsTot && pointsTot ? octetsTot / Math.max(1, c.termines) : OCTETS_NOEUD);
-      let i = 0;
-      const travailleur = async () => {
-        while (i < file.length) {
-          if (c.arret || c.fini || courant !== c || c.navigue) return;
-          const x = file[i], e = estime(x);
-          if (c.octets + c.enVolEst + e > R.octetsMax) { c.motif = c.motif || 'plafond-octets'; return; }
-          i++;
-          const url = adresse(x, extApprise); if (!url) { c.motif = c.motif || 'sans-adresse'; c.sansAdresse = (c.sansAdresse || 0) + 1; continue; }
-          const ctl = new env.AbortController(); c.controleurs.add(ctl); c.noeuds++; c.cles.add(x.cle); c.enVolEst += e;
-          try {
-            const r = await env.fetch(url, { method: 'GET', cache: 'default', credentials: 'same-origin', mode: 'cors', priority: 'low', signal: ctl.signal });
-            if (courant !== c || c.arret && !c.navigue) { try { ctl.abort(); } catch { /* fini */ } continue; }
-            if (!entetesFaits && r?.headers && typeof r.headers.get === 'function') { entetesFaits = true; poster({ kind: 'prechauffage-entetes', ...classerEntetes(k => r.headers.get(k)), statut: Number.isInteger(r.status) ? r.status : null }); }
-            const buf = r?.ok ? await r.arrayBuffer() : null;
-            if (buf) { if (propres.size > 2000) propres.clear(); propres.set(x.cle, (propres.get(x.cle) || 0) + 1); }   /* CH-080c : son entrée de ressource sera la nôtre */
-            /* Périmé (autre opération, annulation) : rien n'est compté. Le corps est jeté dans tous les cas. */
-            if (courant === c && !(c.arret && !c.navigue) && buf) {
-              const n = buf.byteLength; c.octets += n; c.termines++;
-              if (x.points) { octetsTot += n; pointsTot += x.points; octetsParPoint = octetsTot / pointsTot; }
-            }
-          } catch { /* annulée ou en échec : rien n'est compté */ }
-          finally { c.controleurs.delete(ctl); c.enVolEst -= e; }
-        }
-      };
-      await Promise.all(Array.from({ length: Math.min(R.enVolMax, file.length) }, travailleur));
-      if (!c.motif && resteNoeuds) c.motif = 'plafond-noeuds';
+      if (!c.motif && c.resteNoeuds) c.motif = 'plafond-noeuds';
+      if (!c.motif && !c.noeuds && !c.hierarchies) c.motif = c.couvertes.size ? 'deja-prechauffe' : c.sel.sansAdresse ? 'sans-adresse' : 'aucun-noeud';
       c.arret = true; c.reveil?.();
       return terminer(c);
     }
     return {
       apresCapture, annuler, ressources, actif: () => actif,
-      etat: () => ({ op, enCours: !!courant && !courant.fini, octets: courant ? courant.octets : 0, actif, sansCache }),
+      etat: () => ({ op, enCours: !!courant && !courant.fini, octets: courant ? courant.octets : 0, actif, sansCache, lot: budget ? budget.etat() : null, attente: attente.size }),
       /* Essais seulement : clés de la dernière opération finie (jamais postées). */
       _clesPourEssai: () => suivi ? [...suivi.cles] : []
     };

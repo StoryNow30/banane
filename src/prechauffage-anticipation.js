@@ -64,7 +64,7 @@
     let requetes = 0, octets = 0, repli = false; const fen = [];
     return Object.freeze({
       autorise: (rq = 1, oc = 0) => requetes + rq <= R.lotRequetesMax && octets + oc <= R.lotOctetsMax,
-      compter: (rq = 1, oc = 0) => { if (fini(rq) && rq > 0) requetes += Math.round(rq); if (fini(oc) && oc > 0) octets += Math.round(oc); },
+      compter: (rq = 0, oc = 0) => { if (fini(rq) && rq > 0) requetes += Math.round(rq); if (fini(oc) && oc > 0) octets += Math.round(oc); },
       bilanter: (demandes, redemandes) => {
         if (!(Number.isInteger(demandes) && demandes > 0 && Number.isInteger(redemandes) && redemandes >= 0)) return;
         fen.push([demandes, Math.min(redemandes, demandes)]); while (fen.length > R.repliFenetre) fen.shift();
