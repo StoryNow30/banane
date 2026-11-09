@@ -24,7 +24,8 @@
   * anciennes valeurs codées en dur si le module n'est pas chargé, pour ne
   * jamais empêcher l'adaptateur de fonctionner. */
  const P=window.BananeSettings?.pilote||{tentativesParVue:3,stabiliteMs:800,budgetCaptureMs:60000,
-   sondageMs:80,lecturesStables:3,attenteMs:12000,recentrages:3,attenteNavigationMs:15000,attenteClicMs:5000};
+   sondageMs:80,lecturesStables:3,attenteMs:12000,recentrages:3,attenteNavigationMs:15000,attenteClicMs:5000,
+   repliCourt:{actif:false,silenceMs:600},imagesMin:3};   /* CH-084 : les deux attentes de la capture, éteintes par défaut */
  const pageId=K.uid(),objects=new WeakMap(),frames=new WeakMap(),nativeFrames=new WeakMap(),nativeViews=new WeakMap();let frame=null,cancelled=false;
  /* D1. Annulations et invocations CORRÉLÉES À UNE OPÉRATION, par opposition au
   * drapeau `cancelled` que chaque entrée de l'adaptateur remet à faux. Ces deux
@@ -440,6 +441,10 @@
     * nœuds pendant l'attente, tc = ms (depuis le début de l'attente) du dernier, gm = plus long silence (ms) qui a précédé un changement
     * (un silence Q < gm aurait fermé l'attente avant ce changement), at = durée d'attente (ms). Quatre entiers par lecture. */
    let vu=false,ch=0,tc=0,gm=0;
+   /* CH-084 (réglages `pilote.imagesMin` et `pilote.repliCourt`, éteints par défaut : comportement inchangé). imagesMin : images exigées après
+    * le début de l'attente avant le signal, 2 ou 3 (toute autre valeur : 3). repliCourt actif : le repli sort après `silenceMs` (< stableForMs)
+    * si la signature des nœuds n'a JAMAIS changé depuis le début de l'attente (ch===0) ; sinon `stableForMs` comme avant. Diag : rc:1. */
+   const IMIN=P.imagesMin===2?2:3,RC=P.repliCourt,RCMS=RC?.actif===true&&Number.isFinite(RC.silenceMs)&&RC.silenceMs>0&&RC.silenceMs<stableForMs?RC.silenceMs:null;
    while(Date.now()-debut<12000){
      if(cancelled)throw Error('Action interrompue.');guard();
      /* Une lecture qui échoue est réessayée à l'image suivante, comme `waitFor` le faisait. */
@@ -448,14 +453,15 @@
      if(nl!==null&&(nlMax===null||nl>nlMax))nlMax=nl;
      if(sig.value!==valeur){const precedent=depuis;valeur=sig.value;depuis=Date.now();if(vu){ch++;gm=Math.max(gm,depuis-precedent);tc=depuis-debut;}vu=true;}
      if(f!==null&&f!==imagePrecedente){images++;
-       if(f0!==null&&f-f0>=3&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
+       if(f0!==null&&f-f0>=IMIN&&libre&&precedente&&precedente.libre&&precedente.valeur===sig.value&&precedente.vue===vue&&sig.count>0)
          return {regle:'signal',images,diag:{...compteursEsv(sig),img:images,nl:[nl,nlMax],paires:paires+1,pc,nc,vc,ch,tc,gm,at:Date.now()-debut,...releveLigneBase()}};
        if(precedente){paires++;const charge=!libre||!precedente.libre,noeuds=precedente.valeur!==sig.value,change=precedente.vue!==vue;
          if(charge)pc++;if(noeuds)nc++;if(change)vc++;
-         manque=f0===null||f-f0<3?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
+         manque=f0===null||f-f0<IMIN?'images':charge?'chargements':noeuds?'noeuds':change?'vue':'aucune';}
        precedente={valeur:sig.value,libre,vue};imagePrecedente=f;}
-     if(sig.count>0&&Date.now()-depuis>=stableForMs){const fin=chargementsEffectifs();
-       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut,...releveLigneBase()}};}
+     const silence=Date.now()-depuis,court=RCMS!==null&&ch===0&&silence>=RCMS&&silence<stableForMs;
+     if(sig.count>0&&(silence>=stableForMs||court)){const fin=chargementsEffectifs();
+       return {regle:'stabilite',images,chargementsEnCours:fin,diag:{...compteursEsv(sig),img:images,nl:[fin,nlMax],paires,pc,nc,vc,m:manque,ch,tc,gm,at:Date.now()-debut,...releveLigneBase(),...(court?{rc:1}:{})}};}
      await prochaineImage();}
    throw Error('Niveau de détail non stabilisé.'+(derniere?' '+derniere.message:''));}
  /* I2 : le rail demandé dans la vue, sur deux images de suite à caméra identique. Mêmes garanties
@@ -1165,6 +1171,30 @@
   * envoyé à ESV » ; après l'envoi, plus jamais : le résultat est rendu, sans renvoi de la touche. */
  /* Temps laissé à ESV pour changer de cut après Maj+Espace (il le fait en 180 ms environ sur un cut rouge) : au-delà, il valide sur place. */
  const FENETRE_SUR_PLACE_MS=1500;
+ /* CH-084 (D-313) — fin de la fenêtre sur place par un état observé. L'observateur passif (src/esv-observer.js, même monde) poste chaque
+  * écriture d'ESV (`banane5:esv-observation`, `kind:'write'`) ; on garde seulement les écritures réussies « valid » + TreatedByOperator,
+  * avec l'indice de leur ligne (= numéro de cut affiché) et l'heure de leur envoi. Lecture seule ; jamais une commande. */
+ const VSP=(()=>{const v=window.BananeSettings?.validationSurPlace||{};
+   return {actif:v.actif===true,libelleStableMs:Number.isFinite(v.libelleStableMs)&&v.libelleStableMs>=300?v.libelleStableMs:300,
+     imagesMin:Number.isInteger(v.imagesMin)&&v.imagesMin>=3?v.imagesMin:3};})();
+ const ecrituresValides=[];
+ function noterEcritureObservee(entry){try{if(!VSP.actif||!entry||entry.kind!=='write')return;
+   const st=entry.status,b=entry.body;if(!Number.isInteger(st)||st<200||st>=300||!b||b.ExtractionStatus!=='valid'||b.TreatedByOperator!==true)return;
+   if(!Number.isInteger(entry.rowIndex))return;
+   ecrituresValides.push({cut:entry.rowIndex,envoi:Number.isFinite(entry.startedEpochMs)?entry.startedEpochMs:null,vueA:Date.now()});
+   while(ecrituresValides.length>16)ecrituresValides.shift();}catch{}}
+ /* Attente sur place : un AUTRE cut affiché (comme `attendreAutreCut`), ou, si le réglage est allumé, l'écriture « valid » de CE cut,
+  * envoyée après la frappe, puis le libellé de CE cut pendant `libelleStableMs` et `imagesMin` images. Délai `delai` (1 500 ms). */
+ async function attendreSurPlace(depuis,envoiEpoch,delai){const debut=Date.now();let vue=null,images=0;
+   for(;;){const l=cutLabel();if(l&&K.key(l)!==K.key(depuis))return {apres:l,sortie:'navigation'};
+     if(Date.now()-debut>=delai)return {apres:null,sortie:'delai'};
+     if(VSP.actif){
+       if(vue===null){const w=ecrituresValides.find(x=>x.cut===depuis.cut&&x.vueA>=debut&&(x.envoi===null||envoiEpoch===null||x.envoi>=envoiEpoch));
+         if(w){vue=Date.now();images=0;}}
+       else if(!l||K.key(l)!==K.key(depuis))vue=null;
+       else if(images>=VSP.imagesMin&&Date.now()-vue>=VSP.libelleStableMs)return {apres:null,sortie:'ecriture-vue',ecritureApresMs:vue-debut};
+       await prochaineImage();if(vue!==null)images++;}
+     else await sleep(P.sondageMs);}}
  const TOUCHES_MAJ_ESPACE=[['keydown','Shift','ShiftLeft',16,true],['keydown',' ','Space',32,true],['keyup',' ','Space',32,true],['keyup','Shift','ShiftLeft',16,false]];
  async function validerMajEspace(identity,scope={},options={},progress=()=>{}){
    cancelled=false;const startedAt=new Date().toISOString(),sc=scope&&typeof scope==='object'?scope:{};
@@ -1178,6 +1208,7 @@
    if(cancelled)throw avantEnvoi('Maj+Espace : action interrompue avant l’envoi');
    let cible=null;try{cible=window.viewer?.renderer?.domElement||null;}catch{cible=null;}
    const ou=cible&&typeof cible.dispatchEvent==='function'?cible:document;
+   let envoiEpoch=null;try{const t=performance.timeOrigin+performance.now();envoiEpoch=Number.isFinite(t)?t:null;}catch{envoiEpoch=null;}
    for(const [type,key,code,num,maj] of TOUCHES_MAJ_ESPACE){
      const e=new KeyboardEvent(type,{key,code,keyCode:num,which:num,shiftKey:maj,ctrlKey:false,altKey:false,metaKey:false,bubbles:true,cancelable:true,composed:true});
      for(const [k,v] of [['which',num],['keyCode',num]])if(e[k]!==v)try{Object.defineProperty(e,k,{value:v});}catch{}
@@ -1186,7 +1217,9 @@
      decisionCommand:{id:'Shift+Space',exists:true,disabled:false,cible:ou===document?'document':'canevas'},commandSent:true,serverConfirmed:false,
      beforeNavigationIdentity:K.completeIdentity(before.identity),navigationObserved:false,nextIdentity:null,nextReady:null,observedAt:null,meaning:null};
    progress('maj-espace-command-returned',{label:cutLabel()});
-   const apres=await attendreAutreCut(identity,Math.min(P.attenteNavigationMs,FENETRE_SUR_PLACE_MS));
+   const fenetre=VSP.actif?await attendreSurPlace(identity,envoiEpoch,Math.min(P.attenteNavigationMs,FENETRE_SUR_PLACE_MS)):null;
+   const apres=VSP.actif?fenetre.apres:await attendreAutreCut(identity,Math.min(P.attenteNavigationMs,FENETRE_SUR_PLACE_MS));
+   if(VSP.actif)evidence.finFenetre={sortie:fenetre.sortie,...(fenetre.ecritureApresMs!=null?{ecritureApresMs:fenetre.ecritureApresMs}:{})};
    if(!apres){evidence.meaning='Maj+Espace transmis une fois, cut inchangé après le délai : ESV valide sur place, sans changer de cut. Validation non affirmée ici (la preuve est l’écriture vue par le service worker). Aucune touche renvoyée.';return evidence;}
    evidence.navigationObserved=true;evidence.observedAt=new Date().toISOString();evidence.nextIdentity=K.completeIdentity(apres);
    progress('maj-espace-navigation-observed',{nextIdentity:apres});
@@ -1595,7 +1628,8 @@
    +(SUITE[action]||'Désactive l’autre Ariane dans edge://extensions, puis F5 sur ESV, puis Reprendre.');
  // The isolated content script supplies a fresh per-document channel. It is a
  // routing nonce, not a claim that a hostile page is a security boundary.
- window.addEventListener('message',async e=>{if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
+ window.addEventListener('message',async e=>{if(e.source===window&&e.origin===location.origin&&e.data?.kind==='banane5:esv-observation'){noterEcritureObservee(e.data.entry);return;}
+   if(e.source!==window||e.origin!==location.origin||e.data?.kind!=='banane3:command')return;
    const {id,channel,action,args=[],sentAt,proprietaire}=e.data;if(typeof id!=='string'||typeof channel!=='string'||!Object.hasOwn(methods,action))return;
    if(PROPRIO===null||proprietaire!==PROPRIO){if(PROPRIO!==null&&!EN_SECURITE.has(action)&&!intrusion)intrusion={action,at:new Date().toISOString()};
      window.postMessage({kind:'banane3:result',id,channel,error:refusEtranger()},location.origin);return;}

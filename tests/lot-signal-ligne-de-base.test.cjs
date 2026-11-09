@@ -28,7 +28,14 @@ test('le patch est appliqué au tronc (ou s’y applique)',opts,()=>{assert.equa
    .replace(/pointclouds:c\.viewer\?\.scene\?\.pointclouds\|\|\[\],\n     suivante:expected\?\.prechauffage\?\?null\}\)\)\.catch\(\(\)=>\{\}\);\}catch\{\}\}[^\n]*/,"pointclouds:c.viewer?.scene?.pointclouds||[]})).catch(()=>{});}catch{}}")
    .replace(/\n \/\* CH-077 \(réglage `lot\.chargement\.prechauffer`[\s\S]*?\n function prechaufferApres\(expected\)[^\n]*\n[^\n]*\n[^\n]*catch\{\}\}/,'')
    .replace("{try{PRECH?.annuler('capture');}catch{}noterCompteurDebutCut();","{noterCompteurDebutCut();")
-   .replace(/\n   prechaufferApres\(expected\);   \/\* CH-077[^\n]*/,''));
+   .replace(/\n   prechaufferApres\(expected\);   \/\* CH-077[^\n]*/,'')
+   /* CH-084 (réglages `pilote.repliCourt` et `pilote.imagesMin`) : ses lignes recouvrent le deuxième morceau de ce patch ; on les retire aussi
+    * (sans effet tant que le tronc ne porte pas CH-084). */
+   .replace("attenteClicMs:5000,\n   repliCourt:{actif:false,silenceMs:600},imagesMin:3};   /* CH-084 : les deux attentes de la capture, éteintes par défaut */","attenteClicMs:5000};")
+   .replace(/\n   \/\* CH-084 \(réglages `pilote\.imagesMin`[^\n]*\n[^\n]*\n[^\n]*\n   const IMIN=[^\n]*/,'')
+   .replace("f-f0>=IMIN&&libre","f-f0>=3&&libre").replace("f-f0<IMIN?'images'","f-f0<3?'images'")
+   .replace("     const silence=Date.now()-depuis,court=RCMS!==null&&ch===0&&silence>=RCMS&&silence<stableForMs;\n     if(sig.count>0&&(silence>=stableForMs||court)){","     if(sig.count>0&&Date.now()-depuis>=stableForMs){")
+   .replace(",...releveLigneBase(),...(court?{rc:1}:{})}};}",",...releveLigneBase()}};}"));
   const rv=spawnSync('patch',['-s','-p1','-R','--dry-run','-d',verif,'-i',PATCH],{encoding:'utf8'});
   assert.equal(rv.status,0,'le tronc porte exactement ce patch : '+(rv.stderr||rv.stdout));}});
 /* La page simulée lit src/adapter-page.js : on lui sert la copie patchée, avec un PerformanceObserver qui rend les ressources données (ou aucun). */

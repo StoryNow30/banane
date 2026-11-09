@@ -23,7 +23,8 @@ test('lecture au signal : diagnostic sans condition manquante, compteurs de Potr
 });
 
 test('chargement pendu : repli 800 ms, condition manquante « chargements », valeur finale et maximum',async()=>{
- const f=esv({cut:100,chargements:2});nuage(f);const before=await f.call('state'),t0=f.clock();
+ /* CH-084 (D-315) : repli court allumé par défaut ; ici le repli à 800 ms, réglage éteint (le court : tests/ch084-attentes-capture.test.cjs). */
+ const f=esv({cut:100,chargements:2,pilote:{repliCourt:{actif:false,silenceMs:600}}});nuage(f);const before=await f.call('state'),t0=f.clock();
  await f.call('capture',before);assert.ok(f.clock()-t0>=2*S.pilote.stabiliteMs,'repli inchangé');
  for(const x of lus(f)){assert.equal(x.regle,'stabilite');assert.equal(x.diag.m,'chargements');assert.deepEqual(x.diag.nl,[2,2]);
   assert.ok(x.diag.pc>0&&x.diag.pc===x.diag.paires,'chaque paire d’images avait un chargement en cours');}

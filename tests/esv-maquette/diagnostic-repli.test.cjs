@@ -28,7 +28,9 @@ test('(2) chaque lecture au signal ou au repli porte ch, tc, gm, at, entiers et 
     assert.ok(d.tc<=d.at,'le dernier changement précède la fin de l\'attente');
     assert.ok(d.gm<=d.tc||d.ch===0,'un silence qui précède un changement tient dans le temps écoulé jusqu\'au dernier');
     assert.equal(d.ch===0,d.tc===0&&d.gm===0,'sans changement, ni instant ni silence');
-    if(m.detail.regle==='stabilite')assert.ok(d.at-d.tc>=Number(process.env.STABILITE_MS||800)-50,'au repli, 800 ms sans changement après le dernier');}
+    /* CH-084 (D-315) : repli court allumé, sortie à 600 ms (rc:1) seulement si aucun nœud n'a changé ; sinon 800 ms comme avant. */
+    if(m.detail.regle==='stabilite'&&d.rc===1){assert.equal(d.ch,0,'repli court : aucun changement');assert.ok(d.at>=600-50,'repli court : 600 ms sans changement');}
+    else if(m.detail.regle==='stabilite')assert.ok(d.at-d.tc>=Number(process.env.STABILITE_MS||800)-50,'au repli, 800 ms sans changement après le dernier');}
 });
 test('(3) coût négligeable : quatre entiers, moins de 40 octets par lecture',opts,()=>{
   const avec=lectures.filter(x=>x.detail?.diag?.at!==undefined);assert.ok(avec.length>=2,'les lectures portent le diagnostic');

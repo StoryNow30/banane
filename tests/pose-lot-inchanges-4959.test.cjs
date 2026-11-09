@@ -140,10 +140,24 @@ const sansCH080=t=>t.replace(":quoi?.premiere===true?{premiere:true}:{};   /* CH
  .replace("function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:{};return new Promise(","function voisinsB1(cut,world){return new Promise(")
  .replace("fenetre:10,world,...plus},location.origin)","fenetre:10,world},location.origin)")
  .replace(/pointclouds:c\.viewer\?\.scene\?\.pointclouds\|\|\[\],\n     suivante:expected\?\.prechauffage\?\?null\}\)\)\.catch\(\(\)=>\{\}\);\}catch\{\}\}[^\n]*/,"pointclouds:c.viewer?.scene?.pointclouds||[]})).catch(()=>{});}catch{}}");
-const sansCH077=t=>sansCH080(t)
+/* CH-084 (réglages `pilote.repliCourt` et `pilote.imagesMin`, éteints par défaut) : deux attentes de `attendreChargement`, sorties identiques éteintes
+ * (tests/ch084-attentes-capture.test.cjs) ; sans ces lignes, l'adaptateur est celui d'avant CH-084. Sans effet tant que le tronc ne porte pas CH-084. */
+const sansCH084=t=>t.replace("attenteClicMs:5000,\n   repliCourt:{actif:false,silenceMs:600},imagesMin:3};   /* CH-084 : les deux attentes de la capture, éteintes par défaut */","attenteClicMs:5000};")
+ .replace(/\n   \/\* CH-084 \(réglages `pilote\.imagesMin`[^\n]*\n[^\n]*\n[^\n]*\n   const IMIN=[^\n]*/,'')
+ .replace("f-f0>=IMIN&&libre","f-f0>=3&&libre").replace("f-f0<IMIN?'images'","f-f0<3?'images'")
+ .replace("     const silence=Date.now()-depuis,court=RCMS!==null&&ch===0&&silence>=RCMS&&silence<stableForMs;\n     if(sig.count>0&&(silence>=stableForMs||court)){","     if(sig.count>0&&Date.now()-depuis>=stableForMs){")
+ .replace(",...releveLigneBase(),...(court?{rc:1}:{})}};}",",...releveLigneBase()}};}");
+const sansCH077=t=>sansCH080(sansCH084(t))
  .replace(/\n \/\* CH-077 \(réglage `lot\.chargement\.prechauffer`[\s\S]*?\n function prechaufferApres\(expected\)[^\n]*\n[^\n]*\n[^\n]*catch\{\}\}/,'')
  .replace("{try{PRECH?.annuler('capture');}catch{}noterCompteurDebutCut();","{noterCompteurDebutCut();")
  .replace(/\n   prechaufferApres\(expected\);   \/\* CH-077[^\n]*/,'');
+/* CH-084 (D-313) : fin de la fenêtre de la validation sur place (Maj+Espace, relecture « corriger ») par l'écriture « valid » vue, réglage
+ * `validationSurPlace` ; le lot ne l'appelle pas (tests/u3-raccourcis.test.cjs). Retiré pour comparer : l'adaptateur est celui d'avant. */
+const sansCH084v=t=>t
+ .replace(/\n \/\* CH-084 \(D-313\) — fin de la fenêtre sur place[\s\S]*?\n     else await sleep\(P\.sondageMs\);\}\}/,'')
+ .replace(/\n   let envoiEpoch=null;try\{const t=performance\.timeOrigin\+performance\.now\(\);envoiEpoch=Number\.isFinite\(t\)\?t:null;\}catch\{envoiEpoch=null;\}/,'')
+ .replace(/\n   const fenetre=VSP\.actif\?[^\n]*\n   const apres=VSP\.actif\?fenetre\.apres:(await attendreAutreCut\(identity,Math\.min\(P\.attenteNavigationMs,FENETRE_SUR_PLACE_MS\)\));\n   if\(VSP\.actif\)evidence\.finFenetre=[^\n]*/,'\n   const apres=$1;')
+ .replace("window.addEventListener('message',async e=>{if(e.source===window&&e.origin===location.origin&&e.data?.kind==='banane5:esv-observation'){noterEcritureObservee(e.data.entry);return;}\n   if(e.source!==window","window.addEventListener('message',async e=>{if(e.source!==window");
 const sansRustLidar=t=>t
  .replace(/\n \/\* D-296 \(CH-064, étape 6 a\) : lecture LiDAR en Rust\.[\s\S]*?\n const lecteurLidar=\(\)=>RUST_LIDAR&&LR&&LR\.pret\(\)\?LR:L;/,'')
  .replace("async function captureOnce(expected,guard,lecture='reference',progress=null,cote=null){guard();const c=context();const lu=lecteurLidar();\n   const data=await lu.capture({",
@@ -173,7 +187,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=sansPatchs(sansRustLidar(sansCH077(lire('src/adapter-page.js')))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(lire('src/adapter-page.js'))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
@@ -194,9 +208,11 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,eveil,correctionEntreParties,rust,...reste00}=S,{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,validationSurPlace,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
+ /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */
+ assert.deepEqual({...validationSurPlace},{actif:true,libelleStableMs:300,imagesMin:3},'CH-084 : validation sur place, fin sur l’écriture vue');
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
@@ -224,6 +240,8 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(passeDifferesDefaut,passeDifferes,'les valeurs livrées de la passe (seule clé ajoutée au premier niveau) sont celles du lot');
  /* D-304 (opérateur, 08/11) : seule valeur changée, le témoin de qualité à un cut sur cinquante ; le reste est l'empreinte d'avant. */
  assert.equal(S.pilote.modeRapide,'echantillon50','D-304 : témoin à un cut sur cinquante');
+ /* CH-084 : deux réglages ajoutés au pilote, ALLUMÉS par D-315 (opérateur) : repli court à 600 ms, deux images ; le reste est l'empreinte d'avant. */
+ assert.deepEqual({...repliCourt},{actif:true,silenceMs:600},'CH-084, D-315 : repli court allumé');assert.equal(imagesMin,2,'CH-084, D-315 : deux images');
  assert.equal(sha(canon(reste.pilote?{...reste,pilote:{...reste.pilote,modeRapide:'echantillon'}}:reste)),REF.reglages.reste,'réglages de la pose, du lot, de l\'export, de la relecture : inchangés');
  assert.equal(sha(canon(echoSans)),REF.reglages.echo,'réglages d\'Écho hors la raison : inchangés');
  assert.equal(raison.actif,false,'coupée par défaut');
