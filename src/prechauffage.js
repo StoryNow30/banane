@@ -122,22 +122,34 @@
     let x = 0, y = 0, z = 0; for (const ch of v.slice(1)) { const s = Number(ch); x = x * 2 + (s >> 2 & 1); y = y * 2 + (s >> 1 & 1); z = z * 2 + (s & 1); }
     return `${v.length - 1}-${x}-${y}-${z}`;
   }
+  /* CH-080c : relevé de console d'ESV (09/11) : nœud commun de Potree (PointCloudCopcGeometryNode, géométrie EPT) : `key` = tableau [d, x, y, z], `name` « r… ». */
   const SOURCES_NOM = [n => n.filename(), n => n.key.name(), n => { const k = n.key; return [k.d, k.x, k.y, k.z].every(v => Number.isInteger(v) && v >= 0) ? `${k.d}-${k.x}-${k.y}-${k.z}` : null; },
+    n => Array.isArray(n.key) && n.key.length === 4 && n.key.every(v => Number.isInteger(v) && v >= 0) ? n.key.join('-') : null,
     n => depuisNomPotree(n.filename()), n => depuisNomPotree(n.name)];
+  /** CH-080c : nœud de la classe commune de Potree (≥ 1.8.2 : PointCloudCopcGeometryNode, pour EPT et COPC) : `nodeinfo` propre au nœud, `owner` = géométrie. */
+  const commun = n => { try { return Object.prototype.hasOwnProperty.call(n, 'nodeinfo') && !!n.owner && typeof n.owner === 'object'; } catch { return false; } };
+  /** CH-080c : géométrie EPT laszip de la classe commune : `${base}/ept-data/<clé>.laz` (EptLaszipLoader), `${base}/ept-hierarchy/<clé>.json`
+   * (loadHierarchyPage). Rien d'autre (COPC, binaire, zstandard, base avec « ? ») : null. */
+  function baseCommune(n) {
+    try { const o = n.owner; return o && o.type === 'ept' && o.ept?.dataType === 'laszip' && typeof o.base === 'string' && o.base.length && !o.base.includes('?') ? o.base : null; } catch { return null; }
+  }
   const nomNoeud = n => { for (const f of SOURCES_NOM) { try { const v = f(n); if (typeof v === 'string' && D_X_Y_Z.test(v)) return v; } catch { /* source suivante */ } } return null; };
   /** CH-080b : forme d'un nœud de Potree, en bits (jamais une valeur) : 1 filename(), 2 filename D-X-Y-Z, 4 key entière, 8 key.name() D-X-Y-Z, 16 name « r »,
-   * 32 url(), 64 url() finit par le nom D-X-Y-Z, 128 ept.url, 256 numPoints −1, 512 url() contient « ? », 1024 url() contient « ept-data/ ». */
+   * 32 url(), 64 url() finit par le nom D-X-Y-Z, 128 ept.url, 256 numPoints −1, 512 url() contient « ? », 1024 url() contient « ept-data/ » ;
+   * CH-080c : 2048 owner.base, 4096 key tableau, 8192 nœud commun (nodeinfo, owner), 16384 géométrie EPT laszip à adresse sûre. */
   function formeNoeud(n) {
     const t = f => { try { return !!f(); } catch { return false; } }, D = v => typeof v === 'string' && D_X_Y_Z.test(v), nom = nomNoeud(n);
     const u = (() => { try { return typeof n.url === 'function' ? n.url() : null; } catch { return null; } })(), us = typeof u === 'string';
     return (t(() => typeof n.filename === 'function') ? 1 : 0) | (t(() => D(n.filename())) ? 2 : 0) | (t(() => [n.key.d, n.key.x, n.key.y, n.key.z].every(Number.isInteger)) ? 4 : 0)
       | (t(() => D(n.key.name())) ? 8 : 0) | (t(() => /^r[0-7]*$/.test(n.name)) ? 16 : 0) | (typeof n.url === 'function' ? 32 : 0) | (us && nom && u.endsWith(nom) ? 64 : 0)
-      | (t(() => typeof n.ept.url === 'string') ? 128 : 0) | (n.numPoints === -1 ? 256 : 0) | (us && u.includes('?') ? 512 : 0) | (us && u.includes('ept-data/') ? 1024 : 0);
+      | (t(() => typeof n.ept.url === 'string') ? 128 : 0) | (n.numPoints === -1 ? 256 : 0) | (us && u.includes('?') ? 512 : 0) | (us && u.includes('ept-data/') ? 1024 : 0)
+      | (t(() => typeof n.owner.base === 'string') ? 2048 : 0) | (t(() => Array.isArray(n.key)) ? 4096 : 0) | (commun(n) ? 8192 : 0) | (baseCommune(n) ? 16384 : 0);
   }
   /** CH-080b : préfixe SÛR des adresses de données (celui que Potree construit : `<ept.url>ept-data/`), ou null. Sûr = `ept.url` du nœud ; sinon `url()` sans
    * « ? », qui contient « ept-data/ » et finit par le nom D-X-Y-Z ; sinon celui du plus proche ancêtre (hérité) qui finit par « ept-data/ ». Aucun autre. */
   function prefixeDonnees(n, nom, herite) {
     try { const b = n.ept?.url; if (typeof b === 'string' && b.length && !b.includes('?')) return b + 'ept-data/'; } catch { /* suivant */ }
+    const bc = baseCommune(n); if (bc) return bc + '/ept-data/';   /* CH-080c : construction d'EptLaszipLoader */
     try { const u = typeof n.url === 'function' ? n.url() : null; if (nom && typeof u === 'string' && !u.includes('?') && u.endsWith('ept-data/' + nom)) return u.slice(0, -nom.length); } catch { /* suivant */ }
     return typeof herite === 'string' && herite.endsWith('ept-data/') && !herite.includes('?') ? herite : null;
   }
@@ -184,13 +196,17 @@
       if (n.loaded === true) out.charges++; else if (n.loading === true) out.enCours++;
       else {
         if (out.formeNoeud === null) out.formeNoeud = formeNoeud(n);   /* CH-080b : forme du premier nœud non chargé de la zone */
+        /* CH-080c : nœud commun : données seulement si `nodeinfo.pointCount` > 0 (EptLaszipLoader ne charge rien à 0 ; sans nodeinfo, page non lue). */
+        const nc = commun(n), pts = nc ? n.nodeinfo?.pointCount : n.numPoints;
         if (!nom) { out.intersectants--; out.sansNom++; }
+        else if (nc && !(fini(pts) && pts > 0)) { /* rien à demander pour ce nœud */ }
         else if (!prefixe) out.sansAdresse++;   /* CH-080b : aucune adresse sûre : rien n'est demandé, l'événement le dit */
-        else out.candidats.push({ noeud: n, pc, cle: nom, prefixe, niveau: d, points: fini(n.numPoints) && n.numPoints > 0 ? n.numPoints : null, distance: distance(bm, c) });
+        else out.candidats.push({ noeud: n, pc, cle: nom, prefixe, ext: nc ? '.laz' : null, niveau: d, points: fini(pts) && pts > 0 ? pts : null, distance: distance(bm, c) });
       }
-      if (n.numPoints === -1 || (n.hasChildren === true && !enfants(n).length)) out.frontiere++;
-      /* CH-080 : frontière EPT (sous-hiérarchie non lue, enfants inconnus) : candidate à la lecture de son fichier de hiérarchie. */
-      if (n.numPoints === -1 && !enfants(n).length && nom && prefixe) { const f = frontiereDe(n, pc, d, bm, c, nom, prefixe); if (f) out.frontieres.push(f); }
+      /* Frontière : sous-hiérarchie non lue, enfants inconnus. CH-080c : nœud commun, `nodeinfo` absent (numPoints vaut −1 jusqu'au chargement). */
+      const front = commun(n) ? n.nodeinfo === undefined && !enfants(n).length : n.numPoints === -1 && !enfants(n).length;
+      if (front || (!commun(n) && (n.numPoints === -1 || (n.hasChildren === true && !enfants(n).length)))) out.frontiere++;
+      if (front && nom && prefixe) { const f = frontiereDe(n, pc, d, bm, c, nom, prefixe, commun(n) ? '.laz' : null); if (f) out.frontieres.push(f); }
       return true;
     });
     out.candidats.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
@@ -202,8 +218,9 @@
   function adresse(c, extApprise) {
     try {
       const l = c.pc?.pcoGeometry?.loader;
-      const ext = typeof l?.extension === 'function' ? l.extension() : extApprise;
-      if (typeof ext !== 'string' || !/^\.[a-z0-9]{1,8}$/i.test(ext)) return null;
+      /* CH-080c : extension imposée par le chargeur commun (`.laz`) ; celle apprise des requêtes de Potree doit concorder, sinon rien. */
+      const ext = typeof l?.extension === 'function' ? l.extension() : (extApprise ?? c.ext ?? null);
+      if (typeof ext !== 'string' || !/^\.[a-z0-9]{1,8}$/i.test(ext) || (c.ext && ext !== c.ext)) return null;
       return typeof c.prefixe === 'string' && c.prefixe.endsWith('ept-data/') && D_X_Y_Z.test(c.cle) ? c.prefixe + c.cle + ext : null;
     } catch { return null; }
   }
@@ -216,12 +233,12 @@
   const CLES_MAX = 20000;
   const cleDe = s => { const m = /^(\d+)-(\d+)-(\d+)-(\d+)$/.exec(String(s)); return m ? m.slice(1).map(Number) : null; };
   /** Frontière : clé, boîte (repère du nuage), préfixes des adresses de données et de hiérarchie, ou null. */
-  function frontiereDe(n, pc, niv, bm, c, nom, prefixe) {
+  function frontiereDe(n, pc, niv, bm, c, nom, prefixe, ext = null) {
     try {
       const k = cleDe(nom), b = n.boundingBox; if (!k || niv === null || !b?.min || !b?.max || typeof prefixe !== 'string' || !prefixe.endsWith('ept-data/')) return null;
       /* CH-080b : même préfixe sûr que les données (`<ept.url>ept-data/` → `<ept.url>ept-hierarchy/`, la construction de loadHierarchy). */
       const prefixeHier = prefixe.slice(0, -'ept-data/'.length) + 'ept-hierarchy/';
-      return { cle: nom, k, niveau: niv, boite: { min: { x: b.min.x, y: b.min.y, z: b.min.z }, max: { x: b.max.x, y: b.max.y, z: b.max.z } }, pc, prefixe, prefixeHier, distance: distance(bm, c) };
+      return { cle: nom, k, niveau: niv, boite: { min: { x: b.min.x, y: b.min.y, z: b.min.z }, max: { x: b.max.x, y: b.max.y, z: b.max.z } }, pc, prefixe, prefixeHier, ext, distance: distance(bm, c) };
     } catch { return null; }
   }
   /** Clés d'un fichier de hiérarchie qui coupent la zone (niveau ≤ niveauMax) ; sous-hiérarchies de la zone rendues à part. */
@@ -233,13 +250,14 @@
     for (const cle of Object.keys(hier)) {
       if (++vus > CLES_MAX) break;
       const k = cleDe(cle), v = hier[cle]; if (!k || !(Number.isInteger(v) && (v > 0 || v === -1))) continue;
-      const r0 = k[0] - d0; if (r0 <= 0 || r0 > 30 || (niveauMax !== null && k[0] > niveauMax)) continue;
+      const r0 = k[0] - d0; if (r0 < 0 || r0 > 30 || (r0 === 0 && !(f.ext && v > 0 && cle === f.cle)) || (niveauMax !== null && k[0] > niveauMax)) continue;
+      /* CH-080c : nœud commun : la page donne aussi le nombre de points de la frontière elle-même (Potree le charge ensuite) : ses données sont demandées. */
       const p = 2 ** r0, ix = k[1] - x0 * p, iy = k[2] - y0 * p, iz = k[3] - z0 * p; if (ix < 0 || iy < 0 || iz < 0 || ix >= p || iy >= p || iz >= p) continue;
       const s = t.map(v2 => v2 / p), boite = { min: { x: b.min.x + ix * s[0], y: b.min.y + iy * s[1], z: b.min.z + iz * s[2] }, max: { x: b.min.x + (ix + 1) * s[0], y: b.min.y + (iy + 1) * s[1], z: b.min.z + (iz + 1) * s[2] } };
       const bm = boiteMonde({ boundingBox: boite }, M); if (!bm || !coupe(bm, centres, r)) continue;
       const dist = distance(bm, centres);
-      out.noeuds.push({ cle, niveau: k[0], points: v > 0 ? v : null, distance: dist, pc: f.pc, prefixe: f.prefixe });
-      if (v === -1) out.sous.push({ cle, k, niveau: k[0], boite, pc: f.pc, prefixe: f.prefixe, prefixeHier: f.prefixeHier, distance: dist });
+      if (v > 0 || !f.ext) out.noeuds.push({ cle, niveau: k[0], points: v > 0 ? v : null, distance: dist, pc: f.pc, prefixe: f.prefixe, ext: f.ext });   /* CH-080c : commun, −1 = page sans données connues */
+      if (v === -1 && r0 > 0) out.sous.push({ cle, k, niveau: k[0], boite, pc: f.pc, prefixe: f.prefixe, prefixeHier: f.prefixeHier, ext: f.ext, distance: dist });
     }
     return out;
   }
@@ -247,17 +265,21 @@
   /* ------------------------------------------------ préchauffeur */
   function creer(env) {
     const R = reglage(env?.reglage);
+    const propres = new Map();   /* CH-080c */
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
     const poster = e => { try { env.poster(e); } catch { /* relevé seulement */ } };
     const maintenant = () => { try { const t = env.maintenant(); return fini(t) ? t : 0; } catch { return 0; } };
     const chargements = () => { try { const n = env.chargements(); return fini(n) ? n : null; } catch { return null; } };
     const etiquette = () => { try { const l = env.etiquette(); return l && Number.isInteger(l.cut) ? l : null; } catch { return null; } };
 
-    /** Ressources vues par l'observateur de la page : seules les requêtes ept-data de Potree (pas les nôtres, `fetch`) comptent au bilan. */
+    /** Ressources vues par l'observateur de la page : seules les requêtes ept-data de Potree (pas les nôtres) comptent au bilan.
+     * CH-080c : le Potree d'ESV charge lui aussi par `fetch` (EptLaszipLoader) : l'entrée d'une de NOS demandes abouties est reconnue par sa clé
+     * (`propres` : clé → demandes abouties pas encore vues), une fois ; toutes les autres sont celles de Potree. Clés en mémoire de la page seulement. */
     function ressources(entries) {
       for (const e of entries || []) {
         const k = cleChemin(e?.name); if (!k) continue; if (!extApprise) extApprise = k.ext;
-        if (!suivi || e.initiatorType === 'fetch') continue;
+        const p = e.initiatorType === 'fetch' ? propres.get(k.cle) : 0; if (p) { if (p > 1) propres.set(k.cle, p - 1); else propres.delete(k.cle); continue; }
+        if (!suivi) continue;
         const tz = Number(e.transferSize), db = Number(e.decodedBodySize), cache = tz === 0 && db > 0;
         suivi.potree++; if (cache) suivi.cacheTotal++;
         if (suivi.cles.has(k.cle)) { suivi.couverts++; if (cache) suivi.servisCache++; }
@@ -376,6 +398,7 @@
             if (courant !== c || c.arret && !c.navigue) { try { ctl.abort(); } catch { /* fini */ } continue; }
             if (!entetesFaits && r?.headers && typeof r.headers.get === 'function') { entetesFaits = true; poster({ kind: 'prechauffage-entetes', ...classerEntetes(k => r.headers.get(k)), statut: Number.isInteger(r.status) ? r.status : null }); }
             const buf = r?.ok ? await r.arrayBuffer() : null;
+            if (buf) { if (propres.size > 2000) propres.clear(); propres.set(x.cle, (propres.get(x.cle) || 0) + 1); }   /* CH-080c : son entrée de ressource sera la nôtre */
             /* Périmé (autre opération, annulation) : rien n'est compté. Le corps est jeté dans tous les cas. */
             if (courant === c && !(c.arret && !c.navigue) && buf) {
               const n = buf.byteLength; c.octets += n; c.termines++;

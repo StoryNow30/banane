@@ -12,7 +12,7 @@ function adaptateurCH080(){if(copie!==null)return copie;const tronc=O77.adaptate
  if(r.error?.code==='ENOENT')return null;if(r.status!==0)throw Error('le patch CH-080 ne s’applique plus : '+(r.stderr||r.stdout));
  return copie=fs.readFileSync(path.join(dir,'src/adapter-page.js'),'utf8');}
 /* `correctif` : adaptateur patché (true) ou celui du tronc (false) ; hiérarchie EPT en fichiers (CH-080, étape « hiérarchie ») par défaut ; `saut` : coupes entre deux coupes à faire ; réglage livré (sautMin 11) par défaut. */
-function ouvrir({correctif=true,prechauffer=true,saut=50,reglage={},hierarchieFichiers=true,forme=null}={}){   /* `forme` : 'r', forme SUPPOSÉE des nœuds d'ESV (CH-080b) */   /* `hierarchieFichiers` : hiérarchie EPT lue dans des fichiers, comme Potree 1.8 */
- return O77.ouvrir({prechauffer,reglage:{sautMin:require('../../src/settings.js').lot.chargement.prechauffer.sautMin,...reglage},maquette:{cuts:2*saut+1,saut,eptHier:hierarchieFichiers?1:0,...(forme?{eptForme:forme}:{})},
+function ouvrir({correctif=true,prechauffer=true,saut=50,reglage={},hierarchieFichiers=true,forme=null,pas=null}={}){   /* CH-080c : `forme` 'commun' (RELEVÉE), `pas` : niveaux par page de hiérarchie */   /* `forme` : 'r', forme SUPPOSÉE des nœuds d'ESV (CH-080b) */   /* `hierarchieFichiers` : hiérarchie EPT lue dans des fichiers, comme Potree 1.8 */
+ return O77.ouvrir({prechauffer,reglage:{sautMin:require('../../src/settings.js').lot.chargement.prechauffer.sautMin,...reglage},maquette:{cuts:2*saut+1,saut,eptHier:hierarchieFichiers?1:0,...(forme?{eptForme:forme}:{}),...(pas?{eptPas:pas}:{})},
   adaptateur:correctif?adaptateurCH080():O77.adaptateurPatche()});}
 module.exports={ouvrir,adaptateurCH080};
