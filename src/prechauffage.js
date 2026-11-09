@@ -72,6 +72,10 @@
     out.zone = r.zone === 'boite' ? 'boite' : 'cube';
     out.lot = Object.freeze({ lotRequetesMax: r.lotRequetesMax, lotOctetsMax: r.lotOctetsMax, repliInutiles: r.repliInutiles, repliFenetre: r.repliFenetre });
     out.memoire = reglageMemoire(r.memoire);   /* CH-083 */
+    /* CH-085 : `voie:'potree'` : plus aucune requête à nous ; les nœuds passent par node.load() et node.loadHierarchy() de Potree, qui portent
+     * l'authentification d'ESV. `delaiMs` : un de nos chargements encore en cours au-delà arrête le préchauffage pour le lot (`refus-serveur`). */
+    out.voie = r.voie === 'potree' ? 'potree' : 'fetch';
+    out.delaiMs = fini(r.delaiMs) && r.delaiMs >= 500 && r.delaiMs <= 60000 ? Math.floor(r.delaiMs) : 5000;
     return Object.freeze(out);
   }
 
@@ -92,6 +96,28 @@
   /** CH-083 : nœud que la phase mémoire peut charger : forme commune (ou `load` présent), `nodeinfo.pointCount` > 0 (aucune page de hiérarchie à lire), ni chargé ni en cours. */
   function chargeable(n) {
     try { return !!n && typeof n.load === 'function' && n.loaded !== true && n.loading !== true && !!n.nodeinfo && fini(n.nodeinfo.pointCount) && n.nodeinfo.pointCount > 0; } catch { return false; }
+  }
+
+  /** CH-085 : nœuds de la zone pour la voie Potree : `donnees` (chargeables : load()) et `hier` (frontière du nœud commun : page de hiérarchie non
+   * lue, `loadHierarchy` présent), du moins profond au plus profond puis du plus proche au plus loin. Aucune adresse. */
+  function selectionPotree(pointclouds, Z) {
+    const donnees = [], hier = [], tri = (a, b) => a.niveau - b.niveau || a.distance - b.distance;
+    parcourir(pointclouds, Z, (n, d, bm) => {
+      if (d === null) return false;
+      if (chargeable(n)) donnees.push({ noeud: n, niveau: d, distance: Z.distance(bm), cle: nomNoeud(n) });
+      else { let f = false; try { f = commun(n) && n.nodeinfo === undefined && !enfants(n).length && typeof n.loadHierarchy === 'function' && n.loading !== true && n.loaded !== true; } catch { f = false; }
+        if (f) hier.push({ noeud: n, niveau: d, distance: Z.distance(bm), cle: nomNoeud(n) }); }
+      return true;
+    });
+    return { donnees: donnees.sort(tri), hier: hier.sort(tri) };
+  }
+  /** CH-085 : diagnostic de la voie d'authentification d'ESV, booléens et compte seulement : `fetch` de la page natif ou enveloppé, en-têtes et
+   * accréditations de XHRFactory de Potree (ne servent qu'aux chargeurs XHR ; l'EPT de Potree 1.8.2 fait un fetch(url) nu). */
+  function diagAuth() {
+    const out = { fetchNatif: null, enTetesXhr: null, credXhr: null };
+    try { const f = globalThis.fetch; out.fetchNatif = typeof f === 'function' ? /\[native code\]/.test(Function.prototype.toString.call(f)) : null; } catch { out.fetchNatif = null; }
+    try { const cfg = globalThis.Potree?.XHRFactory?.config; if (cfg) { out.credXhr = cfg.withCredentials === true; out.enTetesXhr = Array.isArray(cfg.customHeaders) ? Math.min(99, cfg.customHeaders.filter(h => h && h.header && h.value).length) : 0; } } catch { /* rien */ }
+    return out;
   }
 
   /** Clé de nœud et extension lues dans le CHEMIN d'une ressource ept-data (jamais gardé : seule la clé sert, en mémoire). */
@@ -316,7 +342,9 @@
     /* CH-081 : budget du LOT (vie de la page) et repli ; nœuds préchauffés en attente d'être redemandés par Potree (clé → arrivées restantes) ;
      * signature du dernier relevé de la vue. Clés en mémoire de la page seulement, jamais postées. */
     const budget = Anticipation && R ? Anticipation.creerBudget(R.lot) : null, attente = new Map();
-    let utiles = 0, vueSig = null, dernierAge = null, memOctetsLot = 0; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
+    let utiles = 0, vueSig = null, dernierAge = null, memOctetsLot = 0, refus = false;   /* CH-085 : refus du serveur vu : préchauffage arrêté pour le lot */
+    const EPT_HIER = /\/ept-hierarchy\/(\d+-\d+-\d+-\d+)\.json$/i, nosCles = new Set();   /* CH-085 : clés chargées par nous (mémoire de la page) */
+    const refuser = () => { if (refus) return; refus = true; actif = false; annuler('refus-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
     const tas = () => { try { const v = typeof env.tas === 'function' ? env.tas() : globalThis.performance?.memory?.usedJSHeapSize; return fini(v) && v >= 0 ? v : null; } catch { return null; } };
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
     const poster = e => { try { env.poster(e); } catch { /* relevé seulement */ } };
@@ -331,6 +359,11 @@
      * (`propres` : clé → demandes abouties pas encore vues), une fois ; toutes les autres sont celles de Potree. Clés en mémoire de la page seulement. */
     function ressources(entries) {
       for (const e of entries || []) {
+        /* CH-085 : réponse ≥ 400 (ou 0, sur une de nos clés) d'un nœud ou d'une page de hiérarchie, pendant une opération ou sur une de nos clés : refus du
+         * serveur, le préchauffage s'arrête pour le lot (un échec bloque le compteur de Potree, CH-062 ; aucune boucle de refus vers le serveur). */
+        try { const rs = e?.responseStatus; if (Number.isInteger(rs) && rs !== 200 && rs !== 304) { let ch = ''; try { ch = new URL(String(e.name || ''), 'http://x.invalid/').pathname; } catch { ch = ''; }
+          const kd = cleChemin(e.name)?.cle ?? EPT_HIER.exec(ch)?.[1] ?? null, actifOp = !!courant && !courant.fini;
+          if (kd && ((rs >= 400 && (actifOp || nosCles.has(kd))) || (rs === 0 && nosCles.has(kd)))) refuser(); } } catch { /* relevé seulement */ }
         const k = cleChemin(e?.name); if (!k) continue; if (!extApprise) extApprise = k.ext;
         const p = e.initiatorType === 'fetch' ? propres.get(k.cle) : 0; if (p) { if (p > 1) propres.set(k.cle, p - 1); else propres.delete(k.cle); continue; }
         if (attente.has(k.cle)) { attente.delete(k.cle); utiles++; }   /* CH-081 : redemandé par Potree, donc utile */
@@ -372,17 +405,78 @@
       const r = resume(c); const { kind, ...sans } = r; c.resultat = sans; poster(r); if (courant === c) courant = null; return sans;
     }
 
+    /* CH-085 (lot « Vision 7 » du 09/11, ÉTABLI : nos fetch reçoivent 401, ceux de Potree 200 ; ESV authentifie ses propres requêtes) — VOIE POTREE.
+     * Une cible après l'autre, par tours d'une image : quand Potree ne charge rien d'autre (compteur effectif = nos chargements), on lance, du moins
+     * profond au plus profond, `node.loadHierarchy()` (frontière : page de hiérarchie, greffée par Potree lui-même, sans toucher au compteur) et
+     * `node.load()` (données : décompression, géométrie, cache rempli), `enVolMax` à la fois. Les nœuds devenus connus sont pris au tour suivant.
+     * Plafonds : `noeudsMax` et `hierarchiesMax` par cible, octets décodés par vie de la page (`memoire.octetsMax`), plafonds du lot. Arrêt : capture,
+     * coupe changée, Potree qui repart. Refus du serveur (réponse ≥ 400, page de hiérarchie en échec, chargement à nous en cours au-delà de `delaiMs`) :
+     * arrêt pour le lot (`refus-serveur`). Un load() lancé ne s'annule pas (≤ enVolMax nœuds). */
+    async function operationPotree(c, plans, pointclouds) {
+      const MM = R.memoire, enVolMax = Math.max(1, Math.min(R.enVolMax, MM.enVolMax));
+      const m = c.mem = { lances: 0, charges: 0, octets: 0, echecs: 0, refuses: 0, enVolFin: 0, tas0: tas(), tas1: null };
+      c.memVol = new Set(); const hierVol = new Set(), depuis = new Map(), lances = new Set();
+      const relever = () => {
+        for (const n of [...c.memVol]) { let en = true; try { en = n.loading === true; } catch { en = false; }
+          if (en) { if (maintenant() - (depuis.get(n) ?? maintenant()) > R.delaiMs) refuser(); continue; }
+          c.memVol.delete(n); let ok = false; try { ok = n.loaded === true; } catch { ok = false; }
+          if (ok) { const o = octetsGeometrie(n); m.charges++; m.octets += o; memOctetsLot += o; c.termines++; c.octets += o; budget?.compter(0, o); } else { m.echecs++; refuser(); } }
+      };
+      const vivant = () => !refus && !c.arret && !c.fini && courant === c && !c.navigue;
+      try {
+        for (const { t, Z } of plans) {
+          let nT = 0, hT = 0;
+          for (;;) {
+            relever(); if (!vivant()) break;
+            const n0 = chargements();
+            if (n0 !== null && n0 === memEnVol(c)) {
+              const s = selectionPotree(pointclouds, Z);
+              const file = [...s.hier.map(x => ({ ...x, h: true })), ...s.donnees].filter(x => !lances.has(x.noeud)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+              if (!file.length && !c.memVol.size && !hierVol.size) break;   /* cible finie */
+              let plafond = false;
+              for (const x of file) {
+                if (c.memVol.size + hierVol.size >= enVolMax) break;
+                if (nT >= R.noeudsMax || memOctetsLot >= MM.octetsMax) { plafond = true; c.resteNoeuds = true; break; }
+                if (x.h && hT >= R.hierarchiesMax) continue;
+                if (budget && !budget.autorise(1, 0)) { c.motif = c.motif || 'plafond-lot'; plafond = true; break; }
+                const n = x.noeud; lances.add(n);
+                if (x.h) {
+                  hierVol.add(n); hT++; nT++; c.hierarchies++; budget?.compter(1, 0);
+                  Promise.resolve().then(() => n.loadHierarchy()).then(() => { if (courant === c) c.deduits++; }, () => refuser()).finally(() => hierVol.delete(n));
+                  continue;
+                }
+                if (x.cle) { if (propres.size > 2000) propres.clear(); propres.set(x.cle, (propres.get(x.cle) || 0) + 1); if (nosCles.size > 4000) nosCles.clear(); nosCles.add(x.cle); }   /* sa requête est la nôtre, pas celle de Potree */
+                try { Promise.resolve(n.load()).catch(() => { /* Potree le garde « en cours » : relevé par relever() */ }); } catch { continue; }
+                let pris = false; try { pris = n.loading === true || n.loaded === true; } catch { pris = false; }
+                if (!pris) { m.refuses++; lances.delete(n); if (x.cle) { const p = propres.get(x.cle); if (p > 1) propres.set(x.cle, p - 1); else propres.delete(x.cle); } break; }   /* places de Potree prises : au tour suivant */
+                c.memVol.add(n); depuis.set(n, maintenant()); m.lances++; c.noeuds++; nT++; if (x.cle) c.cles.add(x.cle); budget?.compter(1, 0);
+              }
+              if (plafond && !c.memVol.size && !hierVol.size) break;
+            }
+            await new Promise(r => { Promise.resolve(env.image()).then(r, r); });
+          }
+          if (!vivant()) break;
+        }
+      } catch { /* relevé seulement */ }
+      relever(); m.enVolFin = c.memVol.size; m.tas1 = tas();
+      if (refus) c.motif = 'refus-serveur';
+      if (!c.motif && c.resteNoeuds) c.motif = 'plafond-noeuds';
+      if (!c.motif && !c.noeuds && !c.hierarchies) c.motif = 'aucun-noeud';
+      c.arret = true; c.reveil?.();
+      return terminer(c);
+    }
+
     async function apresCapture(ctx) {
       if (courant) annuler('remplace');
       const coupure = bilan();
       const c = { op: ++op, partie: ctx?.partie ?? null, coupe: Number.isInteger(ctx?.coupe) ? ctx.coupe : null, t0: maintenant(), controleurs: new Set(), cles: new Set(),
         noeuds: 0, termines: 0, octets: 0, hierarchies: 0, deduits: 0, enVolEst: 0, enVol: 0, annule: false, arret: false, motif: null, fini: false };
       if (coupure) { c.motif = coupure; courant = c; return terminer(c); }
-      if (!actif) return { motif: 'eteint', noeuds: 0, octets: 0, annule: false };
+      if (!actif) return { motif: refus ? 'refus-serveur' : 'eteint', noeuds: 0, octets: 0, annule: false };
       courant = c;
       /* CH-081 : caméra et réglages de Potree (lecture seule, entiers et liste fermée) : au premier passage, puis à chaque changement. */
       if (Anticipation && typeof ctx?.vue === 'function') {
-        try { const r = Anticipation.releveVue(ctx.vue() || {}), sig = Anticipation.signatureVue(r); if (sig !== vueSig) { vueSig = sig; poster({ kind: 'prechauffage-vue', ...r }); } } catch { /* relevé seulement */ }
+        try { const r = { ...Anticipation.releveVue(ctx.vue() || {}), ...diagAuth() }, sig = Anticipation.signatureVue(r) + '|' + [r.fetchNatif, r.enTetesXhr, r.credXhr].join('|'); if (sig !== vueSig) { vueSig = sig; poster({ kind: 'prechauffage-vue', ...r }); } } catch { /* relevé seulement */ }   /* CH-085 : diagnostic d'authentification */
       }
       /* CH-080b : la prédiction passe AVANT le contrôle « réseau occupé » (mémoire de la page, aucune requête) : l'événement porte alors saut et source. */
       /* CH-080 : la coupe suivante est demandée à sa source. Cible du service worker (relecture, passe des différés) : acceptée seulement si elle porte
@@ -451,7 +545,7 @@
       }
       c.sel = agr;
       const lireHier = R.hierarchie && plans.some(x => x.sel.frontieres.length > 0);
-      if (!agr.candidats.length && !lireHier) { c.motif = agr.sansAdresse ? 'sans-adresse' : 'aucun-noeud'; return terminer(c); }
+      if (R.voie !== 'potree' && !agr.candidats.length && !lireHier) { c.motif = agr.sansAdresse ? 'sans-adresse' : 'aucun-noeud'; return terminer(c); }
       const depart = etiquette();
       /* Veille, une image sur deux au plus : premier chargement de Potree, étiquette de coupe changée. */
       (async () => {
@@ -466,6 +560,7 @@
           if (!c.navigue && (n === null || n > memEnVol(c))) { annuler('chargement'); break; }   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » */
         }
       })();
+      if (R.voie === 'potree') return operationPotree(c, plans, ctx.pointclouds);   /* CH-085 : aucune requête à nous */
       c.couvertes = new Set();
       /* CH-083 (D-314) : phase mémoire, en même temps que le préchauffage HTTP. Elle reçoit les nœuds connus de Potree que le HTTP vient d'obtenir en 200
        * (servis ensuite par le cache : aucune requête de plus au serveur, aucun échec qui bloquerait le compteur) et leur applique `load()`, la fonction

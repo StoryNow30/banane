@@ -6,15 +6,15 @@
  * préchauffage), validation, puis « points affichés » de la coupe suivante (`ept-affiche` : tous les nœuds de sa boîte montés). */
 const N=require('./navigateur.cjs'),O77=require('./ch077-outils.cjs'),O80=require('./ch080-outils.cjs');
 const LIVRE=require('../../src/settings.js').lot.chargement.prechauffer;
-async function ouvrir({memoire=true,prechauffer=true,saut=50,limite=null,decode=40}={}){
- const reglage={...LIVRE,memoire:{...LIVRE.memoire,actif:memoire}};
- const s=await O77.ouvrir({prechauffer,reglage,maquette:{cuts:2*saut+1,saut,eptHier:1,eptForme:'commun',eptPas:7,eptMemoire:1,eptDecode:decode},adaptateur:O80.adaptateurCH080()});
- const page=s.env.page;
+async function ouvrir({memoire=true,prechauffer=true,saut=50,limite=null,decode=40,voie='fetch',auth=false}={}){   /* CH-085 : `voie` ('fetch' ou 'potree'), `auth` : le serveur exige l'en-tête du Potree simulé */
+ const reglage={...LIVRE,voie/* CH-083 : phase mémoire de la voie fetch ; CH-085 : voie potree */,memoire:{...LIVRE.memoire,actif:memoire}};
+ const s=await O77.ouvrir({prechauffer,reglage,maquette:{cuts:2*saut+1,saut,eptHier:1,eptForme:'commun',eptPas:7,eptMemoire:1,eptDecode:decode,...(auth?{eptAuth:1}:{})},adaptateur:O80.adaptateurCH080()});
+ const page=s.env.page;if(auth)s.env.serveur.pannes({eptAuth:true});
  if(limite!==null)await page.evaluate(l=>{window.Potree.pointLoadLimit=l;},limite);
  const journal=(type,cut)=>page.evaluate(([t,c])=>window.__maquette.journal.filter(e=>e.type===t&&(c===undefined||e.cut===c)),[type,cut]);
  const memoireEpt=()=>page.evaluate(()=>window.__memoireEpt());
  async function transition({mortMs=900}={}){
-  const env=s.env,st=(await env.appel('state')).result,cut=st.identity.cut;
+  const env=s.env,st=(await env.appel('state')).result,cut=st.identity.cut,refus0=env.serveur.journal.refusEpt||0;
   const t0=Date.now(),c=await env.appel('capture',[st]);if(c.error)throw Error('capture : '+c.error);const captureMs=Date.now()-t0;
   const avant=await memoireEpt(),finCapture=Date.now();
   const a=await env.appel('apply',[st,{left:{delta:[0,-.002,.001]},right:{delta:[0,.002,-.001]}}]);if(a.error)throw Error('pose : '+a.error);
@@ -26,6 +26,6 @@ async function ouvrir({memoire=true,prechauffer=true,saut=50,limite=null,decode=
   const aff=await O77.attendre(async()=>(await journal('ept-affiche',suivant)).at(-1)||null,20000);
   const arrivee=(await journal('ept-arrivee',suivant)).at(-1)||null,liberes=await journal('ept-libere');
   const evts=await page.evaluate(()=>window.__evts.splice(0));
-  return {cut,suivant,afficheMs:Date.parse(aff.at)-t,chaineMs:aff.ms,noeudsAffiches:aff.noeuds,arrivee,avant,apres,liberes:liberes.length,liberesCourant:liberes.filter(x=>x.courant).length,captureMs,evts};}
+  return {cut,suivant,afficheMs:Date.parse(aff.at)-t,chaineMs:aff.ms,noeudsAffiches:aff.noeuds,arrivee,avant,apres,liberes:liberes.length,liberesCourant:liberes.filter(x=>x.courant).length,captureMs,refus:(env.serveur.journal.refusEpt||0)-refus0,evts};}
  return {...s,transition,memoireEpt,page};}
 module.exports={ouvrir};

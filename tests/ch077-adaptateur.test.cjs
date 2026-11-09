@@ -42,7 +42,7 @@ function arbre(){const faire=(d,x,y,z)=>{const s=64/2**d,nom=`${d}-${x}-${y}-${z
   if(d<6){let i=0;for(const a of [0,1])for(const c of [0,1])for(const e of [0,1])n.children[i++]=faire(d+1,2*x+a,2*y+c,2*z+e);}return n;};
  return {root:faire(0,0,0,0),loader:{extension:()=>'.bin'}};}
 
-async function jouer({allume}){reglage=allume?{...S.lot.chargement.prechauffer,actif:true,rayonM:.5,sautMin:1/* CH-080 : le réglage livré (11) ne préchauffe plus la voisine ; ici, la voisine */}:{...S.lot.chargement.prechauffer,actif:false};demandes=[];
+async function jouer({allume}){reglage=allume?{...S.lot.chargement.prechauffer,voie:'fetch'/* CH-085 : cet essai vise la voie fetch (adresse de Potree) */,actif:true,rayonM:.5,sautMin:1/* CH-080 : le réglage livré (11) ne préchauffe plus la voisine ; ici, la voisine */}:{...S.lot.chargement.prechauffer,actif:false};demandes=[];
  const f=esv({cut:100,chargements:0}),pc=nuage(f),evts=[];pc.pcoGeometry=arbre();pc.matrixWorld={elements:[1,0,0,0,0,1,0,0,0,0,1,0,-32,-32,-32,1]};
  /* Messages de la page : l'observateur simulé répond à `banane5:voisins` (cut suivant à 1 m en y) ; les événements sont gardés. */
  const ecoutes=[],orig=f.ctx.postMessage;

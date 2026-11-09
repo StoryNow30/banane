@@ -64,6 +64,9 @@ function demarrer(options={}){
         return json(res,200,{part,cut,noeuds:concerne(pannes.nuageVide,cut)?[]:concerne(pannes.nuageSansPoints,cut)?sansPoints:c.noeuds});}
       /* CH-077 : nœud EPT par adresse (comme les `ept-data` de Potree) : corps fixe de `eptOctets` (64 Kio), après `eptLatenceMs` (60 ms), avec l'en-tête
        * de cache `eptCache` (défaut « public, max-age=3600 » ; « no-store » pour l'essai négatif). Le journal compte les requêtes par nœud (`ept`). */
+      /* CH-085 (lot « Vision 7 », ÉTABLI : nos fetch reçoivent 401, ceux de Potree 200) : panne `eptAuth` : nœuds et pages de hiérarchie exigent l'en-tête
+       * `x-esv-jeton` que seul le Potree simulé de la page envoie (comme ESV authentifie ses propres requêtes) ; sans lui, 401, compté (`refusEpt`). */
+      if(pannes.eptAuth&&/^\/maquette\/ept(?:\/p\d+)?\/ept-(?:data|hierarchy)\//.test(p)&&req.headers['x-esv-jeton']!=='1'){journal.refusEpt=(journal.refusEpt||0)+1;res.writeHead(401,{'content-type':'text/plain','cache-control':'no-store'});return res.end('non autorisé');}
       m=/^\/maquette\/ept(?:\/p\d+)?\/ept-data\/(\d+-\d+-\d+-\d+)\.(?:bin|laz)$/.exec(p);   /* CH-080c : .laz (EptLaszipLoader) */
       if(m&&req.method==='GET'){journal.ept[m[1]]=(journal.ept[m[1]]||0)+1;const n=Number(pannes.eptOctets)||65536,lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
         return setTimeout(()=>{res.writeHead(200,{'content-type':'application/octet-stream','content-length':n,'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(Buffer.alloc(n,7));},lat);}

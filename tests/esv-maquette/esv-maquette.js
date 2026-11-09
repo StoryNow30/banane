@@ -56,7 +56,7 @@
   * ÉTAGE PAR ÉTAGE en XMLHttpRequest comme Potree 1.8 (un étage attend le précédent, `eptParallele` à la fois), hiérarchie connue au fur et à mesure
   * (enfants d'un nœud chargé), arbre `pc.pcoGeometry` lisible par Ariane. ept=0 (défaut) : rien ne change pour les autres essais. */
  options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;options.eptForme=['r','commun'].includes(q.get('eptForme'))?q.get('eptForme'):'d';   /* CH-080c : 'commun' = forme RELEVÉE dans ESV (nœud commun de Potree ≥ 1.8.2, géométrie EPT laszip) */   /* CH-080b : forme SUPPOSÉE des nœuds d'ESV ('r' : filename() rend le nom de Potree « r0-7… ») */   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
- options.eptProfondeur=num('eptProfondeur',7);options.eptMemoire=num('eptMemoire',0)===1;options.eptDecode=num('eptDecode',40);   /* CH-083 : modèle mémoire de Potree 1.8.2 (forme commune seulement) */
+ options.eptProfondeur=num('eptProfondeur',7);options.eptMemoire=num('eptMemoire',0)===1;options.eptAuth=num('eptAuth',0)===1;   /* CH-085 : le Potree simulé envoie l'en-tête d'authentification d'ESV */options.eptDecode=num('eptDecode',40);   /* CH-083 : modèle mémoire de Potree 1.8.2 (forme commune seulement) */
  options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
  options.finPartie=q.get('finPartie')==='rechargement'?'rechargement':'sur-place';
  options.delaiRechargement=num('delaiRechargement',150);
@@ -113,10 +113,10 @@
   * [d,x,y,z], `name` « r… », `owner`, `nodeinfo` {pointCount} (absent : page non lue), `numPoints` −1 jusqu'au chargement, ni url() ni filename() ; données
   * par fetch(`${base}/ept-data/<clé>.laz`) (EptLaszipLoader). */
  const proprietaire={type:'ept',base:'/maquette/ept'+(Number(q.get('eptPas'))>0?'/p'+Number(q.get('eptPas')):''),ept:{dataType:'laszip'},loader:{},root:null,
-  loadHierarchyPage(key){return fetch(`${this.base}/ept-hierarchy/${key.join('-')}.json`).then(r=>r.json()).then(h=>{const nodes={},pages={};for(const [k,v] of Object.entries(h)){if(v===-1)pages[k]={};else nodes[k]={pointCount:v};}return {nodes,pages};});}};
+  loadHierarchyPage(key){return fetch(`${this.base}/ept-hierarchy/${key.join('-')}.json`,options.eptAuth?{headers:{'x-esv-jeton':'1'}}:undefined).then(r=>r.json()).then(h=>{const nodes={},pages={};for(const [k,v] of Object.entries(h)){if(v===-1)pages[k]={};else nodes[k]={pointCount:v};}return {nodes,pages};});}};
  function noeudCommun(d,x,y,z){const s=ept.T/2**d,m=ept.min,f=formeR(d,x,y,z),n={key:[d,x,y,z],name:f.name,level:d,owner:proprietaire,
   boundingBox:{min:{x:m[0]+x*s,y:m[1]+y*s,z:m[2]+z*s},max:{x:m[0]+(x+1)*s,y:m[1]+(y+1)*s,z:m[2]+(z+1)*s}},children:{},hasChildren:false,nodeinfo:undefined,numPoints:-1,loaded:false,loading:false};
-  n.index=Number(f.name.slice(-1))||0;if(options.eptMemoire){n.load=function(){return chargerPotree(this);};n.dispose=function(){disposer(this);};}return n;}
+  n.index=Number(f.name.slice(-1))||0;if(options.eptMemoire){n.load=function(){return chargerPotree(this);};n.loadHierarchy=function(){return lireHierarchieCommun(this);};n.dispose=function(){disposer(this);};}return n;}
  /* ---------- CH-083 : modèle MÉMOIRE de Potree 1.8.2 (lu dans son code : PointCloudCopcGeometryNode.load/doneLoading/dispose, EptLaszipLoader, LRU.js,
   * Potree_update_visibility.js). `load()` : sort si chargé, en cours, ou numNodesLoading >= maxNodesLoading ; sinon loading, ++compteur, page de hiérarchie
   * si nodeinfo manque, fetch du .laz, décompression (`eptDecode` ms, le travailleur de Potree), géométrie posée, loaded, --compteur. Visibilité, à chaque
@@ -134,7 +134,7 @@
  function chargerPotree(n){if(n.loaded||n.loading)return;if(window.Potree.numNodesLoading>=window.Potree.maxNodesLoading)return;
   n.loading=true;window.Potree.numNodesLoading++;
   return (async()=>{if(!n.nodeinfo)await lireHierarchieCommun(n);const pts=n.nodeinfo?.pointCount??0;let ok=true;
-   if(pts>0){const url=`${proprietaire.base}/ept-data/${n.key.join('-')}.laz`;ok=await fetch(url).then(r=>r.arrayBuffer().then(()=>r.ok)).catch(()=>false);
+   if(pts>0){const url=`${proprietaire.base}/ept-data/${n.key.join('-')}.laz`;ok=await fetch(url,options.eptAuth?{headers:{'x-esv-jeton':'1'}}:undefined).then(r=>r.arrayBuffer().then(()=>r.ok)).catch(()=>false);
     try{const e=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(e){ept.vus++;if(e.transferSize===0&&e.decodedBodySize>0)ept.cache++;}}catch{}
     await new Promise(r=>setTimeout(r,options.eptDecode));}
    if(!ok)return;   /* Potree : un échec laisse loading et le compteur à +1 (CH-062) */
