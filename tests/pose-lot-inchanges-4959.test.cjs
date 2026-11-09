@@ -72,7 +72,14 @@ const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(sansCH0
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
 /* Test 25 (CH-017, D-268) : `changerPartie` (clic sur l'entrée « p=N » du sélecteur de parties, jamais de pose ni de validation) ajouté à l'adaptateur et à la liste du pont ; retiré ici avant la comparaison à la test 8. */
-const sansChangerPartiePont=s=>s.replace("'changerPartie',",'');
+/* CH-093 : commande `prechauffer` (lecture seule : la première coupe relue donnée au préchauffage de la page, jamais de pose, de validation ni de navigation) ajoutée à la liste du pont, et à
+ * l'adaptateur par chantiers/CH-093/adapter-page.patch (retiré ici s'il est appliqué) ; retirés avant la comparaison à la test 8. */
+const sansCH093Pont=s=>s.replace(",'prechauffer'/* CH-093 : première coupe relue donnée au préchauffage, lecture seule */",'');
+const sansCH093=texte=>{if(!texte.includes('PRECH_ANTICIPE'))return texte;const os=require('node:os'),{spawnSync}=require('node:child_process'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch093-g-'));
+ fs.mkdirSync(path.join(tmp,'src'),{recursive:true});fs.writeFileSync(path.join(tmp,'src/adapter-page.js'),texte);
+ const r=spawnSync('patch',['-R','-s','-p1','-d',tmp,'-i',path.join(racine,'chantiers/CH-093/adapter-page.patch')],{encoding:'utf8'});assert.equal(r.status,0,'le patch de CH-093 se retire de l\'adaptateur : '+(r.stderr||r.stdout));
+ return fs.readFileSync(path.join(tmp,'src/adapter-page.js'),'utf8');};
+const sansChangerPartiePont=s=>sansCH093Pont(s).replace("'changerPartie',",'');
 const sansPatchCH018=texte=>{const os=require('node:os'),{spawnSync}=require('node:child_process'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ch018-'));
  fs.mkdirSync(path.join(tmp,'src'),{recursive:true});fs.writeFileSync(path.join(tmp,'src/adapter-page.js'),texte);
  /* Test 34 (CH-038) : la remise de la vue ne lève plus (`vueNonRestituee`), retirée la première (chantiers/CH-038/adaptateur-remise-vue.patch). */
@@ -217,7 +224,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(lire('src/adapter-page.js'))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH093(lire('src/adapter-page.js')))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')

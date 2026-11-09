@@ -46,6 +46,17 @@ test('avec le patch : `ping` annonce `prechauffer` ; la commande répond tout de
  assert.equal(m.demandes.length,1,JSON.stringify(m.demandes));assert.equal(m.demandes[0].cible,20);assert.equal(m.demandes[0].cut,100,'depuis la coupe affichée');
  assert.deepEqual(m.evts().filter(e=>e.kind==='prechauffage'),[],'cible prise : aucun refus posté');
 });
+test('avec le patch : `prechauffer` est en lecture seule : aucune touche, aucun clic, coupe et rails d\'ESV inchangés',opts,async()=>{
+ const m=await monter(),f=m.f,sansHeure=({capturedAt,...x})=>x,avant=J(await f.call('state')),label=f.nodes.get('O2N3DCutDescription').textContent;
+ const clics=f.clics.length,touches=f.keyboard.length,pose=n=>J([n.position.x,n.position.y,n.position.z]),rails=[pose(f.left),pose(f.right)];
+ for(const n of ['O2N3DCutValidate3DRail','O2N3DCutNextInvalid3DRail']){const el=f.nodes.get(n),clic=el.click;el.click=function(){throw Error('bouton d\'ESV cliqué : '+n);};el._clic=clic;}
+ for(const c of [{part:avant.identity.part,cut:20,source:'changement-mode'},{part:avant.identity.part,cut:105,source:'changement-mode'},null])await f.call('prechauffer',c);
+ await m.attendre();
+ assert.equal(f.keyboard.length,touches,'aucune touche envoyée à ESV');assert.equal(f.clics.length,clics,'aucun clic sur un rail');
+ assert.equal(f.nodes.get('O2N3DCutDescription').textContent,label,'même coupe affichée');assert.deepEqual([pose(f.left),pose(f.right)],rails,'rails d\'ESV inchangés');
+ assert.deepEqual(sansHeure(J(await f.call('state'))),sansHeure(avant),'état lu identique avant et après');
+ assert.deepEqual(f.progress.filter(x=>!['received'].includes(x.stage)).map(x=>x.stage),[],'aucune étape de commande');
+});
 test('avec le patch : cible proche, autre partie ou cible illisible : refus posté ou rien, jamais d\'opération',opts,async()=>{
  const m=await monter(),part=(await m.f.call('state')).identity.part;
  assert.deepEqual(J(await m.f.call('prechauffer',{part,cut:105,source:'changement-mode'})),{lance:true});await m.attendre();
