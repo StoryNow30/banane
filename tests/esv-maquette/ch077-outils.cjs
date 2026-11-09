@@ -15,13 +15,13 @@ function adaptateurPatche(){if(adaptateur!==null)return adaptateur;
  const r=spawnSync('patch',['-s','-p1','-d',dir,'-i',path.join(N.racine,'chantiers/CH-077/adapter-page.patch')],{encoding:'utf8'});
  if(r.error?.code==='ENOENT')return null;if(r.status!==0)throw Error('le patch CH-077 ne s’applique plus : '+(r.stderr||r.stdout));
  return adaptateur=fs.readFileSync(path.join(dir,'src/adapter-page.js'),'utf8');}
-const FICHIERS=[...N.PAGE_FILES.slice(0,-1),'src/prechauffage.js','src/adapter-page.js'];
+const FICHIERS=[...N.PAGE_FILES.slice(0,-1),'src/prechauffage-boite.js','src/prechauffage-anticipation.js','src/prechauffage.js','src/adapter-page.js'];   /* CH-081 : les deux modules lus par le préchauffage, comme PAGE_FILES */
 const ECOUTE="window.__evts=[];addEventListener('message',e=>{if(e.source===window&&e.data&&e.data.kind==='banane5:evt')window.__evts.push(JSON.parse(JSON.stringify(e.data.event)));});";
 const attendre=async(f,ms=15000,pas=20)=>{const t=Date.now();for(;;){const v=await f();if(v)return v;if(Date.now()-t>ms)throw Error('délai dépassé');await new Promise(r=>setTimeout(r,pas));}};
 
 async function ouvrir({prechauffer=false,reglage={},maquette={},adaptateur=null}={}){   /* CH-080 : `adaptateur`, contenu remplaçant (copie patchée) */
  /* CH-080 : le réglage livré (`sautMin` 11) ne préchauffe plus la voisine ; les essais de CH-077 la préchauffent (sautMin 1) sauf réglage contraire. */
- const R={...S.lot.chargement.prechauffer,sautMin:1,...reglage,actif:prechauffer};
+ const R={...S.lot.chargement.prechauffer,sautMin:1,zone:'cube',horizon:1,candidatsMax:1,noeudsMax:24,octetsMax:8388608,...reglage,actif:prechauffer};   /* CH-081 : réglage de CH-077/CH-080c par défaut ; les cas de CH-081 passent le leur */
  const reglages=N.lire('src/settings.js')+`;window.BananeSettings={...window.BananeSettings,lot:{...window.BananeSettings.lot,chargement:{prechauffer:${JSON.stringify(R)}}}};`;
  const env=await N.ouvrir({maquette:{cuts:10,latence:20,lots:2,ept:1,...maquette},avantPage:[N.lire('src/esv-observer.js'),ECOUTE],fichiersPage:FICHIERS,
   contenus:{'src/adapter-page.js':adaptateur??adaptateurPatche(),'src/settings.js':reglages}});

@@ -48,8 +48,21 @@
   - `ch080-prechauffage` : liste des sources plus `changement-mode`, et plafonds de Vision 8 ;
   - `ch080-adaptateur` : une seconde demande à l'observateur (k+2) ;
   - `pose-lot-inchanges-4959` : les deux modules sont déclarés, et le bloc `premiere` de l'observateur est retiré pour comparer.
-- **Régression ciblée** (ch077, ch080, relecture, passe des différés, choix-lot-clic-sw, scans, pose-lot-inchanges) : voir les chiffres ci-dessous.
-- **verify complet et maquette complète** : voir ci-dessous.
+- **Régression ciblée** (ch077, ch080, relecture, passe des différés, choix-lot-clic-sw, scans, pose-lot-inchanges ; 95 fichiers) : 259 essais, 0 échec après la déclaration du bloc `premiere`, 5 sautés.
+- **verify complet** (`node tools/verify.cjs`, dans ma machine, sur f77bd57) : **3 314 essais, 3 307 réussis, 0 échec, 7 sautés** ; corpus natif absent (mode partiel) ; géométrie inchangée, moteur égal à la baseline V4.6.0. Les fichiers `audit/verification.*` produits ne sont pas versés (fichiers de l'intégrateur).
+- **Maquette complète** (`tests/esv-maquette/essais.cjs`) : 79 essais, **75 réussis, 1 échec, 3 sautés**, puis 7/7.
+  - L'échec est `correction-signal` (CH-028), un délai dépassé. Ce cas ne charge pas le préchauffage. Il est instable aussi sur le tronc : seul, il passe 4 fois sur 5 sur le tronc et 2 fois sur 4 sur la branche (PROBABLE : préexistant, déjà noté au rapport de CH-077).
+  - Le premier passage complet (avant l'ajustement ci-dessous) avait 2 échecs : `ch080-prechauffage` et `ch080c-commun`. Ils lisaient le réglage livré, devenu celui de Vision 8, et vérifiaient l'ancien plafond de 24 nœuds.
+- **Ajustement déclaré de la maquette** : `ch077-outils` et `ch080-outils` gardent par défaut le réglage de CH-077 et CH-080c (cube, une coupe, 24 nœuds, 8 Mo). `ch077-outils` charge les deux modules, comme `PAGE_FILES`.
+- **Maquette `ch081-boite`** (nouveau ; forme relevée, hiérarchie d'avance, saut de 50 coupes, une transition, ÉTABLI sur la maquette seulement) :
+
+| Réglage | Nœuds demandés (cibles) | Servis par le cache | Requêtes au serveur | Validation → aucun chargement |
+|---|---|---|---|---|
+| CH-080c (cube, une coupe) | 24 (1) | 16 / 32 | 40 | 436 ms |
+| livré (boîte, horizon 2) | 30 (2) | **20 / 32** | 42 | **365 ms** |
+
+  La géométrie de la maquette est synthétique : le gain sur ESV reste SUPPOSÉ.
+- **Non lancé** : `parite-relecture-sw`. Le champ `prechauffage` des captures de la relecture porte maintenant `apres` ; l'outil neutralise déjà ce champ (CH-080). `garde-gcv2` et `parite-l1se-sw` ne sont pas lancés non plus : aucun module de décision n'est touché.
 
 ## Ce qui reste SUPPOSÉ ou PROBABLE
 - Le Potree d'ESV est 1.8.2 ou plus récent (CH-080c). Le branchement orthographique de `updateVisibility`, lu sur l'étiquette 1.8, y est supposé identique (PROBABLE ; `prechauffage-vue` donnera `type`, `pointBudget` et `maxLevel`).
