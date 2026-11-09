@@ -16,14 +16,16 @@ const sha=t=>crypto.createHash('sha256').update(t).digest('hex');
  * src/geometry.js et src/geometry-candidate-v1.js sont ceux de la test 8. Toute autre modification reste détectée. */
 const CH065=require('../chantiers/CH-065/appliquer.cjs');
 const sansCH065=(f,t)=>CH065.BLOCS[f]?CH065.versions(racine,f).origine:t;
-/* CH-086 : écritures après la validation en fond, patch déclaré (chantiers/CH-086/engine.patch). Quand src/engine.js le porte (marque
- * `porteEcritures`), le patch est retiré à l'envers sur une copie : le reste doit être, octet pour octet, le moteur de la test 8. Un patch
+/* CH-086 : écritures après la validation en fond, patchs déclarés (chantiers/CH-086/engine.patch, et engine-baseline.patch qui ré-épingle
+ * audit/v4.6.0-engine-baseline.json). Quand un fichier porte le sien (marque), il est retiré à l'envers sur une copie : le reste doit être,
+ * octet pour octet, celui de la test 8. Un patch
  * qui ne se retire plus net échoue (texte rendu inchangé, donc empreinte différente). Toute autre modification reste détectée. */
-const sansCH086=(f,t)=>{if(f!=='src/engine.js'||!t.includes('porteEcritures'))return t;
+const CH086={'src/engine.js':['engine.patch','porteEcritures'],'audit/v4.6.0-engine-baseline.json':['engine-baseline.patch','previousHashCH086']};
+const sansCH086=(f,t)=>{const c=CH086[f];if(!c||!t.includes(c[1]))return t;
  const os=require('node:os'),{spawnSync}=require('node:child_process'),d=fs.mkdtempSync(path.join(os.tmpdir(),'ch086g-'));
- fs.mkdirSync(path.join(d,'src'));fs.writeFileSync(path.join(d,'src/engine.js'),t);
- const r=spawnSync('patch',['-s','-R','-p1','-d',d,'-i',path.join(racine,'chantiers/CH-086/engine.patch')],{encoding:'utf8'});
- const sortie=r.status===0?fs.readFileSync(path.join(d,'src/engine.js'),'utf8'):t;fs.rmSync(d,{recursive:true,force:true});return sortie;};
+ fs.mkdirSync(path.join(d,path.dirname(f)),{recursive:true});fs.writeFileSync(path.join(d,f),t);
+ const r=spawnSync('patch',['-s','-R','-p1','-d',d,'-i',path.join(racine,'chantiers/CH-086',c[0])],{encoding:'utf8'});
+ const sortie=r.status===0?fs.readFileSync(path.join(d,f),'utf8'):t;fs.rmSync(d,{recursive:true,force:true});return sortie;};
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
@@ -258,7 +260,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
 });
 test('les réglages proposés et par défaut de la relecture, et les empreintes gelées de la géométrie, sont inchangés',()=>{
  for(const f of ['datasets/relecture-reglages-defaut.json','datasets/relecture-reglages-proposes.json'])assert.equal(sha(lire(f)),REF.fichiers[f],f);
- for(const [f,e] of Object.entries(REF.fichiers))if(f.startsWith('audit/v4.'))assert.equal(sha(lire(f)),e,f);
+ for(const [f,e] of Object.entries(REF.fichiers))if(f.startsWith('audit/v4.'))assert.equal(sha(sansCH086(f,lire(f))),e,f);
 });
 
 test('lot : avec la raison allumée au panneau, les commandes envoyées à ESV sont celles de la base, octet pour octet, et le scope du lot est le même',async()=>{
