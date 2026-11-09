@@ -120,6 +120,15 @@
      * hors de la partie visible du canevas (marge de 0,99). Ce n'est pas une pièce : il ne figure pas dans `pieces`.
      * Décision à Mic. */
     rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true, clicHumain: 'tel-quel' }),
+    /* CH-084 : deux attentes de la capture au signal (`attendreChargement`, src/adapter-page.js). D-315 (opérateur) : livrées ALLUMÉES
+     * (repli court à 600 ms, deux images) ; `repliCourt.actif:false` et `imagesMin:3` rendent le comportement d'avant, au bit près.
+     * `repliCourt` : actif, le repli « stabilité » sort après `silenceMs` (au lieu de `stabiliteMs`) si et seulement si la signature des
+     * nœuds n'a pas changé une seule fois depuis le début de l'attente ; sinon `stabiliteMs` comme avant. Plafond (12 s) et erreur inchangés ;
+     * la sortie courte porte `rc:1` dans le diagnostic. Paramètre de QUALITÉ, comme `stabiliteMs` (allumé par D-315).
+     * `imagesMin` : images exigées après le début de l'attente avant la règle du signal ; 2 (D-315) ou 3 (comportement d'avant), toute autre
+     * valeur vaut 3. Aucune autre condition du signal ne change. */
+    repliCourt: Object.freeze({ actif: true, silenceMs: 600 }),
+    imagesMin: 2,
   });
 
   /* --- Export : vidage automatique et segmentation --- */
@@ -430,6 +439,13 @@
    * pause au point de reprise après `lectures` lectures rapides de suite au repli, rechargement de la page ESV, reprise au cut suivant (`rechargementsMax` par passe : 1 ; sans signal après, la passe continue au repli, sans boucle). */
   /* D-290 (opérateur, 06/11 : « go ») : ALLUMÉ. Relecture du 06/11 (paquet 2bc1f56) : signal éteint pendant toute la relecture des parties 13 à 15. */
   const relectureSignalEteint = Object.freeze({ actif: true, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });
+  /* CH-084 (D-313) — VALIDATION SUR PLACE (Maj+Espace, relecture « corriger ») : fin de la fenêtre d'observation par un ÉTAT OBSERVÉ.
+   * Aujourd'hui l'adaptateur attend 1 500 ms un changement de cut qui n'arrive pas (147 appels sur 147 ≥ 1 501 ms, lots du 09/11).
+   * `actif` : la fenêtre se ferme plus tôt seulement si l'écriture « valid » (TreatedByOperator) de CE cut est vue par l'observateur
+   * passif après l'envoi ET si le libellé « Cut N of part P » reste celui du cut pendant `libelleStableMs` et au moins `imagesMin`
+   * images après cette écriture. Délai maximal inchangé (1 500 ms) : à l'échéance, même résultat qu'aujourd'hui. `actif:false` :
+   * comportement d'avant au bit près. Allumé pour le lot d'essai de Vision 8 (accord de l'opérateur, D-313). */
+  const validationSurPlace = Object.freeze({ actif: true, libelleStableMs: 300, imagesMin: 3 });
   const deplacerVue = Object.freeze({
     /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
     actif: true,
@@ -636,5 +652,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, validationSurPlace, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
 });
