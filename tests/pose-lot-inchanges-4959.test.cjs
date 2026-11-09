@@ -16,6 +16,14 @@ const sha=t=>crypto.createHash('sha256').update(t).digest('hex');
  * src/geometry.js et src/geometry-candidate-v1.js sont ceux de la test 8. Toute autre modification reste détectée. */
 const CH065=require('../chantiers/CH-065/appliquer.cjs');
 const sansCH065=(f,t)=>CH065.BLOCS[f]?CH065.versions(racine,f).origine:t;
+/* CH-086 : écritures après la validation en fond, patch déclaré (chantiers/CH-086/engine.patch). Quand src/engine.js le porte (marque
+ * `porteEcritures`), le patch est retiré à l'envers sur une copie : le reste doit être, octet pour octet, le moteur de la test 8. Un patch
+ * qui ne se retire plus net échoue (texte rendu inchangé, donc empreinte différente). Toute autre modification reste détectée. */
+const sansCH086=(f,t)=>{if(f!=='src/engine.js'||!t.includes('porteEcritures'))return t;
+ const os=require('node:os'),{spawnSync}=require('node:child_process'),d=fs.mkdtempSync(path.join(os.tmpdir(),'ch086g-'));
+ fs.mkdirSync(path.join(d,'src'));fs.writeFileSync(path.join(d,'src/engine.js'),t);
+ const r=spawnSync('patch',['-s','-R','-p1','-d',d,'-i',path.join(racine,'chantiers/CH-086/engine.patch')],{encoding:'utf8'});
+ const sortie=r.status===0?fs.readFileSync(path.join(d,'src/engine.js'),'utf8'):t;fs.rmSync(d,{recursive:true,force:true});return sortie;};
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
@@ -168,7 +176,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
-  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH065(f,lire(f));
+  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();
@@ -180,7 +188,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
- assert.equal(sha(lire('src/engine.js')),REF.fichiers['src/engine.js']);
+ assert.equal(sha(sansCH086('src/engine.js',lire('src/engine.js'))),REF.fichiers['src/engine.js']);
  assert.ok(JSON.stringify(base).includes(REF.fichiers['src/engine.js']),'l\'empreinte du moteur est celle de la baseline déclarée');
 });
 test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur de page, ni la garde d\'entrée, ni le lot ne les lisent pour poser',()=>{
@@ -202,17 +210,19 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
  for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
-  assert.equal(sha(f==='src/relecture-ombre.js'?sansD284(lire(f)):sansCH065(f,lire(f))),REF.fichiers[f],f);
+  assert.equal(sha(f==='src/relecture-ombre.js'?sansD284(lire(f)):sansCH086(f,sansCH065(f,lire(f)))),REF.fichiers[f],f);
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
  const diff=lire('src/native-session.js');assert.ok(!/batch\.scope|startBatch|lotCommands|applyInESV/.test(diff.slice(diff.indexOf('RM-11 (fiches/RM11'),diff.indexOf('summariseGesture(record,observed){'))));
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,validationSurPlace,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */
  assert.deepEqual({...validationSurPlace},{actif:true,libelleStableMs:300,imagesMin:3},'CH-084 : validation sur place, fin sur l’écriture vue');
+ /* CH-086 : clé ajoutée au premier niveau, les écritures après la validation en fond, ALLUMÉES pour le lot d'essai ; `enFond:false` : chemin d'avant. */
+ assert.deepEqual({...ecrituresApresValidation},{enFond:true,delaiMs:2000},'CH-086 : écritures après la validation en fond');
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
