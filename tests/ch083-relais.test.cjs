@@ -19,3 +19,14 @@ test('nouveaux champs : gardés en entiers, une adresse glissée devient null ; 
  const lus=ring.map(x=>ctx.obsFields(JSON.parse(JSON.stringify(x))));
  assert.deepEqual(JSON.parse(JSON.stringify(lus)),JSON.parse(JSON.stringify(ring.map(({seq,...x})=>x))),'ce que l’observateur garde passe tel quel');
 });
+
+test('CH-085 : motif refus-serveur et diagnostic d\'authentification de la vue (booléens, compte) relayés',()=>{
+ const w=world();
+ w.deliver({kind:'banane5:evt',event:{kind:'prechauffage',coupe:20,predite:70,op:1,motif:'refus-serveur'}});
+ w.deliver({kind:'banane5:evt',event:{kind:'prechauffage-vue',type:'orthographique',fetchNatif:false,credXhr:true,enTetesXhr:1}});
+ const ring=w.observed().filter(x=>/^prechauffage/.test(x.kind));
+ assert.equal(ring[0].motif,'refus-serveur');assert.deepEqual([ring[1].fetchNatif,ring[1].credXhr,ring[1].enTetesXhr],[false,true,1]);
+ const src=fs.readFileSync(path.join(__dirname,'../background.js'),'utf8'),debut=src.indexOf('const obsInt='),fin=src.indexOf('}return null;}',src.indexOf('function obsFields('))+'}return null;}'.length;
+ const ctx={OBS_REASONS:new Set()};vm.createContext(ctx);vm.runInContext(src.slice(debut,fin)+';this.obsFields=obsFields;',ctx);
+ assert.deepEqual(JSON.parse(JSON.stringify(ring.map(x=>ctx.obsFields(JSON.parse(JSON.stringify(x)))))),JSON.parse(JSON.stringify(ring.map(({seq,...x})=>x))));
+});

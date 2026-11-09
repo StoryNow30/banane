@@ -212,10 +212,10 @@
  /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
  const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits','sansNom','sansAdresse','formeNoeud','cibles','memLances','memCharges','memOctets','memEchecs','memRefuses','memEnVolFin','tasAvantKo','tasApresKo'],
   'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal','utiles','inutiles'],'prechauffage-entetes':['maxAgeS','statut'],
-  'prechauffage-vue':['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints']};   /* CH-081 : cibles ; utiles, inutiles ; vue */
- const PRECH_BOOLEENS={'prechauffage':['annule','calibree'],'prechauffage-vue':[],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
+  'prechauffage-vue':['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints','enTetesXhr']};   /* CH-081 : cibles ; utiles, inutiles ; vue */
+ const PRECH_BOOLEENS={'prechauffage':['annule','calibree'],'prechauffage-vue':['fetchNatif','credXhr'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
  const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
-  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
  const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1,'prechauffage-vue':1};
  const PRECH_ZONES=['cube','boite'],PRECH_TYPES_VUE=['orthographique','perspective','autre','absente'];   /* CH-081 */
  function reduirePrechauffage(k,x){const out={kind:k};
