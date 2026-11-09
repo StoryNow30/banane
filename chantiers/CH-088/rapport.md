@@ -89,3 +89,11 @@ Médiane / P90 (ÉTABLI sur la maquette) :
 - Lire dans `prechauffage-loin` : `captures`, `msAvant`, `charges`, `prets/boite`, `potreeLui`.
 - Lire dans `prechauffage-bilan` : `prets`, `nousPrets`, `potreeLui`.
 - Comparer la capture médiane des sauts de plus de 200 coupes à 3,4 s.
+
+## verify et maquette complets (dans ma machine, sur 1bfe1b2)
+- **verify complet** (`node tools/verify.cjs`) : **3 357 essais, 3 349 réussis, 1 échec, 7 sautés**.
+  - L'échec est `typage-ch075` (« références d'identité gelées ») : `git show 5699f68` est introuvable dans mon clone superficiel. Il ne vient pas du chantier.
+  - Après `git fetch --depth=1000`, `typage-ch075` passe seul : 5/5.
+  - Le verify s'arrête sur ce premier lot d'essais : les étapes suivantes (géométrie, moteur) n'ont pas tourné dans ma machine.
+  - `audit/verification.*` n'est pas versé.
+- **Maquette complète** (`tests/esv-maquette/essais.cjs`) : **83 essais, 80 réussis, 0 échec, 3 sautés** (export réel absent), puis 7/7.
