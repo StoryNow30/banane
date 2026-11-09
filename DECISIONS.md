@@ -3540,3 +3540,8 @@ Complète D-299 sans la modifier.
 - 2. Une **garde contre la mauvaise voie** sur les cuts que le lot valide (écartement nettement différent de celui des voisins) : d'abord **en ombre** (calculée et consignée, sans effet).
 - 3. Une **correction du serrage** de la décision sur le lot, **en ombre** (pose corrigée consignée à côté de la pose réelle).
 - Passer la 2 de l'ombre à la pause motivée, ou la 3 de l'ombre à l'écriture, demandera un nouvel accord écrit, au vu des chiffres. Jamais de SKIP ; aucun cut non résolu validé.
+
+## D-309 — Préchauffage des coupes éloignées ; « Vision 6 » (opérateur, 09/11)
+- Lot « Vision 5 » du 09/11 (partie 8, préchauffage allumé, ÉTABLI) : le préchauffage est parti 1 735 fois sans demander un seul nœud. 717 fois, les nœuds de la coupe suivante étaient déjà chargés (coupe voisine) ; 990 fois, la coupe suivante n'a pas été prédite par la table B1, même quand c'était la voisine. Capture médiane selon le saut vers la coupe suivante (PROBABLE) : coupe voisine 0,09 s (407 cuts) ; 2 à 10 coupes 1,4 s (46) ; 11 à 50 coupes 1,6 s (32) ; plus de 200 coupes 4,6 s (14).
+- Proposition de l'intégrateur, réponse de l'opérateur : « je valide tout ». CH-080 : prendre la coupe suivante dans l'ordre de travail d'Ariane et la liste d'ESV (positions de toutes les coupes), et préchauffer seulement les coupes éloignées. C'est l'accord écrit de D-305 pour les requêtes ajoutées au serveur d'ESV, limitées aux nœuds que Potree demanderait pour cette coupe.
+- « Vision 6 » livrera CH-080 et les mesures de D-308 (garde de voie et serrage du lot en ombre, cas de contrôle).
