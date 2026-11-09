@@ -291,10 +291,12 @@ function obsBody(b){if(!b||typeof b!=='object'||Array.isArray(b))return null;con
 /* CH-077 (préchauffage du cache pour la coupe suivante, src/prechauffage.js) : entiers bornés, booléens, motif et classe d'une liste fermée ; jamais d'adresse. */
 const OBS_PRECH={prechauffage:{n:['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs'],b:['annule']},
  'prechauffage-bilan':{n:['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],b:['juste']},'prechauffage-entetes':{n:['maxAgeS','statut'],b:['etag','lastModified','expires','pragma']}};
-const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide'];
+const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime'];
+/* CH-080 : saut (entier signé, en coupes) et source de la coupe suivante (liste fermée de src/prechauffage.js). */
+const OBS_PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre'];
 const OBS_PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
 function obsPrechauffage(x){const d=OBS_PRECH[x.kind],out={kind:x.kind};for(const k of d.n)out[k]=obsInt(x[k]);for(const k of d.b)out[k]=typeof x[k]==='boolean'?x[k]:null;
- if(x.kind==='prechauffage')out.motif=OBS_PRECH_MOTIFS.includes(x.motif)?x.motif:null;if(x.kind==='prechauffage-entetes')out.classe=OBS_PRECH_CLASSES.includes(x.classe)?x.classe:null;return out;}
+ if(x.kind==='prechauffage'){out.motif=OBS_PRECH_MOTIFS.includes(x.motif)?x.motif:null;out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=OBS_PRECH_SOURCES.includes(x.source)?x.source:null;}if(x.kind==='prechauffage-entetes')out.classe=OBS_PRECH_CLASSES.includes(x.classe)?x.classe:null;return out;}
 function obsFields(x){
  const time={startedEpochMs:obsNum(x.startedEpochMs),endedEpochMs:obsNum(x.endedEpochMs),durationMs:obsNum(x.durationMs)};
  switch(x.kind){
@@ -2257,7 +2259,8 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
  const raison0=!aEcrire.length?null:['en-cours','en-pause'].includes(relecture.passe?.etat)?'une relecture est en cours ou en pause':await lotCloRefus(b,true,null);let issue=raison0?'refus-depart':'fin',raison=raison0;
  if(!raison0){const EC=passeDiff.ecriture={arret:false,attente:null,etat:E};
   try{
-   for(const p of aEcrire){
+   for(const [ip,p] of aEcrire.entries()){
+    EC.suivante=aEcrire[ip+1]?.cut;   /* CH-080 : cut suivant de la passe, pour le préchauffage */
     if(EC.arret||!await passeDiffAllumee()){issue='arret';break;}
     if(engine?.s?.batch?.id!==b.id){issue='lot-change';break;}
     vue.cut=p.cut;let r;
@@ -2280,6 +2283,12 @@ async function passeDiffEcrireDemande(){
  if(!P||P.b.id!==engine?.s?.batch?.id||passeDiff.cours||passeDiff.ecriture)throw Error('Deuxième passe : aucune écriture à relancer pour ce lot, ou une passe est déjà en cours.');
  Object.assign(P.vue,{etat:'calcul',message:null,cut:null});
  passeDiffSuivre(P.vue,passeDiffOmbre(P.b,P.rg,P.vue).then(poses=>poses&&passeDiffEcrire(P.b,poses,P.rg,P.vue)));return {...P.vue};}
+/* CH-080 (D-309) — PRÉCHAUFFAGE DE LA COUPE SUIVANTE CONNUE. La relecture et la passe des différés choisissent elles-mêmes leur cut suivant : il est joint
+ * à l'argument de LEUR capture (`prechauffage` : partie, cut de la capture `de`, cut suivant, source, identifiant d'opération), lu par la page
+ * (src/prechauffage.js) qui ne l'accepte que pour cette capture. Le lot n'en porte jamais : ses commandes restent identiques à l'octet
+ * (tests/choix-lot-clic-sw.test.cjs) ; sa coupe suivante (« cut non validé suivant » d'ESV) est trouvée par la page dans la liste d'ESV. */
+function avecPrechauffage(etat,cut,source){const id=etat?.identity;if(!Number.isInteger(cut)||cut<0||!id||!Number.isInteger(id.cut))return etat;
+ return {...etat,prechauffage:{part:id.part,de:id.cut,cut,source,op:globalThis.BananeCore3.uid()}};}
 async function passeDiffPoser(b,p,E){
  const K=globalThis.BananeCore3,G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,S=globalThis.BananeSettings?.lot||{},r=p.r,cut=r.identity.cut,part=b.scope.part,t0=Date.now();
  const refuse=raison=>({resultat:'refuse',raison});
@@ -2295,7 +2304,7 @@ async function passeDiffPoser(b,p,E){
   if(nav.chemin!=='pas-a-pas')return refuse(`cut ${cut} atteint par ${nav.chemin==='evenement'?'la carte (saut)':nav.chemin||'un chemin inconnu'} : pas de pose juste après un saut`);
   const etat=await readState();if(etat?.identity?.part!==part||etat.identity.cut!==cut)return refuse(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${cut}`);
   try{engine.writable(etat.identity);}catch{return refuse('cible bloquée par un résultat incertain archivé');}
-  const capture=await call('capture',etat);K.assertTarget(etat.identity,capture.identity);
+  const capture=await call('capture',avecPrechauffage(etat,E?.suivante,'passe-differes'));K.assertTarget(etat.identity,capture.identity);
   now=await readState();
   if(K.key(now.identity)!==K.key(etat.identity)||!K.equalPoses(etat.rails,now.rails))return refuse('le cut affiché ou ses rails ont changé pendant la capture');
   if(!K.equalPoses(r.capture.rails,now.rails,.001))return refuse('pose d’ESV du cut changée depuis la visite du lot');
@@ -3971,11 +3980,13 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
     plagesSautees.add(c.plage);precedent=null;ici=null;continue;}
    par=r.par;
   precedent=c;const tNav=Date.now();derniereArrivee=tNav;
+  /* CH-080 : prochain cut que la passe relira (plages sautées exclues), pour le préchauffage de la page. */
+  const suivanteRelue=sel.cuts.slice(ci+1).find(x=>!plagesSautees.has(x.plage))?.cut;
   let etat,capture,erreurCapture=null,ligne=null;
   try{etat=await readState();if(etat?.identity?.part!==partie||etat.identity.cut!==c.cut)throw Error(`ESV affiche le cut ${etat?.identity?.cut}, pas le cut ${c.cut}`);
    /* Statut du cut dans la liste d'ESV (mémoire de la page, dès l'arrivée) : la preuve du vert, et « vu » ou non à l'arrivée. */
    try{ligne=await relectureLigneListe(c.cut,etat);}catch{ligne=null;}
-   capture=await call('capture',etat);K.assertTarget(etat.identity,capture.identity);}
+   capture=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu'));K.assertTarget(etat.identity,capture.identity);}
   catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane|ESV affiche/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}
    erreurCapture=String(e?.message||e).slice(0,200);}
   if(ligne&&ligne.vu===false)p.cutsNeufs++;
@@ -3986,7 +3997,7 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    if(o.action!=='rien'){signalAction=o.action;relectureJournal('relecture-signal-eteint',{etape:'detecte',action:o.action==='recharger'?'recharger':'aucune',raison:o.raison,identity:{part:partie,cut:c.cut},...SG.bilan(p.signalEsv)},p);}}
   /* D-172 : une capture vide est relue une fois ; deux captures complètes vides de suite : « aucun-point » (consigné, jamais envoyé). */
   let seconde=null;
-  if(capture&&R.captureVide(capture))try{seconde=await call('capture',etat);}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
+  if(capture&&R.captureVide(capture))try{seconde=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu'));}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
   const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?R.skipOmbre(seconde?[capture,seconde]:[capture]):null;
   if(c.role==='vert'&&capture?.rails&&!R.captureVide(capture))try{const g=globalThis.BananeLotDecision.gaugeOf({left:capture.rails.left.positionSceneRelative,right:capture.rails.right.positionSceneRelative});
    if(Number.isFinite(g)&&Math.abs(g-ECARTEMENT_ORIGINE_ESV_MM)>.05)ecartementsVerts.push(g);}catch{/* écartement illisible */}

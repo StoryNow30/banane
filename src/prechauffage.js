@@ -7,7 +7,11 @@
  * coupe suivante, pour qu'ils soient servis par le cache HTTP du navigateur quand Potree les demandera.
  *
  * Ce que fait le module, et rien d'autre :
- *  - coupe suivante : la prochaine ligne NON VALIDÉE (ni « valid » : invalide ou passée) après le cut courant dans la table B1 que l'observateur tient déjà dans la page (« Load next non
+ *  - CH-080 (D-309) : la coupe suivante vient de sa SOURCE (`SOURCES`) : cible donnée par le service worker avec la capture (relecture, passe des
+ *    différés), sinon première ligne non validée de TOUTE la table de l'observateur (règle d'ESV, celle du lot) ; la fenêtre de ±10 lignes ci-dessous
+ *    n'est plus que le dernier recours (adaptateur ou observateur sans CH-080). Rien n'est demandé si |saut| < `sautMin` (motif `saut-court`) ;
+ *    l'événement `prechauffage` porte `saut` (entier signé, en coupes) et `source` ;
+ *  - coupe suivante (CH-077, dernier recours) : la prochaine ligne NON VALIDÉE (ni « valid » : invalide ou passée) après le cut courant dans la table B1 que l'observateur tient déjà dans la page (« Load next non
  *    validated cut », le suivant d'ESV après une validation ; aucune requête) ; repère de la table → scène pris sur le cut courant (rails non encore
  *    posés), rigidité vérifiée (écart des deux rails < 5 cm), sinon rien ;
  *  - nœuds : ceux de l'arbre de Potree DÉJÀ CONNUS, ni chargés ni en cours, dont la boîte (repère monde, `matrixWorld`) coupe un cube de `rayonM`
@@ -34,8 +38,16 @@
   if (typeof module === 'object' && module.exports) module.exports = api; else /** @type {{BananePrechauffage?:unknown}} */ (root).BananePrechauffage = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const DEFAUT = Object.freeze({ actif: false, profondeurMax: null, noeudsMax: 24, octetsMax: 8 * 1048576, enVolMax: 2, rayonM: 1.5, apresNavigation: 'annuler', coupesSansCache: 5 });
-  const BORNES = { noeudsMax: [1, 200], octetsMax: [65536, 64 * 1048576], enVolMax: [1, 4], rayonM: [0.1, 10], coupesSansCache: [1, 100], profondeurMax: [0, 30] };
+  /* CH-080 (D-309) : `sautMin` — écart minimal, en coupes, entre la coupe courante et la suivante pour préchauffer. Clé absente : 1 (comportement de CH-077).
+   * Réglage livré (src/settings.js) : 11, mesuré sur le lot du 09/11 : sous 11 coupes la sélection n'a trouvé aucun nœud à demander (447 cas sur 447) ;
+   * au-delà, la zone de la coupe n'est pas chargée (chantiers/CH-080/etude.md). */
+  const DEFAUT = Object.freeze({ actif: false, profondeurMax: null, noeudsMax: 24, octetsMax: 8 * 1048576, enVolMax: 2, rayonM: 1.5, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1 });
+  const BORNES = { noeudsMax: [1, 200], octetsMax: [65536, 64 * 1048576], enVolMax: [1, 4], rayonM: [0.1, 10], coupesSansCache: [1, 100], profondeurMax: [0, 30], sautMin: [1, 100000] };
+  /* CH-080 : d'où vient la coupe suivante (liste fermée). `liste-esv` : première ligne non validée après la coupe courante dans toute la table de
+   * l'observateur (règle d'ESV « cut non validé suivant », celle du lot) ; `relu` (relecture), `passe-differes` : cible donnée par le service worker avec la
+   * capture ; `b1-fenetre` : dernier recours, fenêtre de ±10 lignes (CH-077). */
+  const SOURCES = Object.freeze(['liste-esv', 'relu', 'passe-differes', 'b1-fenetre']);
+  const SOURCES_SW = ['relu', 'passe-differes'];
   const VISITES_MAX = 20000, RIGIDITE_M = 0.05, VOISINS_MS = 400, OCTETS_PAR_POINT = 32, OCTETS_NOEUD = 256 * 1024;
   const EPT_DATA = /\/ept-data\/(\d+-\d+-\d+-\d+)(\.[a-z0-9]{1,8})$/i;
   const fini = v => typeof v === 'number' && Number.isFinite(v);
@@ -72,7 +84,7 @@
   const point = v => Array.isArray(v) && v.length === 3 && v.every(fini) ? v : null;
   /** Rails de la coupe suivante en repère scène (absolu, celui de `matrixWorld`), d'après la réponse B1. `rails` : positions scène relatives au repère
    * d'Ariane du cut courant, `origine` : ce repère. Rend {predite, left, right} ou {motif}. */
-  function centresSuivante(rep, coupe, rails, origine) {
+  function centresSuivante(rep, coupe, rails, origine, demande = null) {
     if (!rep || rep.ok !== true || !Array.isArray(rep.rows)) return { motif: typeof rep?.reason === 'string' && /^[a-z-]{1,24}$/.test(rep.reason) ? rep.reason : 'sans-table' };
     const L = point(rails?.left), R = point(rails?.right), O = point(origine); if (!L || !R || !O) return { motif: 'sans-rails' };
     const bords = r => Array.isArray(r?.e) && r.e.length === 6 && r.e.every(fini) ? r.e : null;
@@ -80,10 +92,22 @@
     const Tl = [0, 1, 2].map(i => ec[i] - L[i]), Tr = [0, 1, 2].map(i => ec[3 + i] - R[i]);
     if (Math.hypot(...[0, 1, 2].map(i => Tl[i] - Tr[i])) > RIGIDITE_M) return { motif: 'repere' };
     const T = [0, 1, 2].map(i => (Tl[i] + Tr[i]) / 2);
-    const suiv = rep.rows.filter(r => Number.isInteger(r?.i) && r.i > coupe && r.s !== 'valid' && bords(r)).sort((a, b) => a.i - b.i)[0];
-    if (!suiv) return { motif: 'sans-suivante' };
+    /* CH-080 : la ligne demandée à l'observateur (`loin` : la cible du service worker, ou la suivante non validée de toute la table) passe avant la
+     * fenêtre ; une cible du service worker absente de la table ne retombe JAMAIS sur la fenêtre (ce ne serait plus sa coupe). */
+    let suiv = null, source = 'b1-fenetre';
+    const loin = rep.loin && Number.isInteger(rep.loin.i) && rep.loin.i >= 0 && bords(rep.loin) ? rep.loin : null;
+    if (demande?.cible !== undefined) {
+      if (!loin || loin.i !== demande.cible) return { motif: 'sans-cible' };
+      suiv = loin; source = demande.source;
+    } else if (demande?.suivante && rep.loin !== undefined) {
+      if (!loin || loin.i <= coupe || loin.s === 'valid') return { motif: 'sans-suivante' };
+      suiv = loin; source = 'liste-esv';
+    } else {
+      suiv = rep.rows.filter(r => Number.isInteger(r?.i) && r.i > coupe && r.s !== 'valid' && bords(r)).sort((a, b) => a.i - b.i)[0];
+      if (!suiv) return { motif: 'sans-suivante' };
+    }
     const e = suiv.e;
-    return { predite: suiv.i, left: [0, 1, 2].map(i => e[i] - T[i] + O[i]), right: [0, 1, 2].map(i => e[3 + i] - T[i] + O[i]) };
+    return { predite: suiv.i, source, saut: suiv.i - coupe, left: [0, 1, 2].map(i => e[i] - T[i] + O[i]), right: [0, 1, 2].map(i => e[3 + i] - T[i] + O[i]) };
   }
 
   /* ------------------------------------------------ arbre de Potree (lecture seule) */
@@ -178,7 +202,7 @@
       for (const ctl of c.controleurs) { try { ctl.abort(); } catch { /* déjà fini */ } }
       c.controleurs.clear(); c.reveil?.();
     }
-    const resume = (c, extra = {}) => ({ kind: 'prechauffage', coupe: c.coupe, predite: c.predite ?? null, op: c.op, niveauMax: c.niveauMax ?? null,
+    const resume = (c, extra = {}) => ({ kind: 'prechauffage', coupe: c.coupe, predite: c.predite ?? null, op: c.op, saut: c.saut ?? null, source: c.source ?? null, niveauMax: c.niveauMax ?? null,
       intersectants: c.sel?.intersectants ?? 0, charges: c.sel?.charges ?? 0, enCours: c.sel?.enCours ?? 0, frontiere: c.sel?.frontiere ?? 0, candidats: c.sel?.candidats.length ?? 0,
       noeuds: c.noeuds, termines: c.termines, octets: c.octets, dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
     function terminer(c) {
@@ -196,13 +220,23 @@
       if (!actif) return { motif: 'eteint', noeuds: 0, octets: 0, annule: false };
       courant = c;
       if (chargements() !== 0) { c.motif = 'reseau-occupe'; return terminer(c); }
+      /* CH-080 : la coupe suivante est demandée à sa source. Cible du service worker (relecture, passe des différés) : acceptée seulement si elle porte
+       * l'identité de CETTE capture (partie, coupe) ; sinon périmée, rien n'est demandé (règle 4.2). Sans cible : la suivante non validée de la liste. */
+      const h = ctx?.suivante;
+      let demande = { suivante: true };
+      if (h !== undefined && h !== null) {
+        if (!h || typeof h !== 'object' || !SOURCES_SW.includes(h.source) || !Number.isInteger(h.cut) || h.cut < 0 || h.part !== c.partie || h.de !== c.coupe) { c.motif = 'indice-perime'; return terminer(c); }
+        demande = { cible: h.cut, source: h.source };
+      }
       let rep = null;
-      try { rep = await Promise.race([Promise.resolve(env.voisins(c.coupe, { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) })),
+      try { rep = await Promise.race([Promise.resolve(env.voisins(c.coupe, { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) }, demande.cible !== undefined ? { cible: demande.cible } : { suivante: true })),
         new Promise(r => { try { setTimeout(() => r({ ok: false, reason: 'page-sans-reponse' }), VOISINS_MS); } catch { r(null); } })]); } catch { rep = null; }
       if (c.arret) return terminer(c);
-      const cible = centresSuivante(rep, c.coupe, ctx.rails, ctx.origine);
+      const cible = centresSuivante(rep, c.coupe, ctx.rails, ctx.origine, demande);
       if (!cible.left) { c.motif = cible.motif; return terminer(c); }
-      c.predite = cible.predite;
+      c.predite = cible.predite; c.source = cible.source; c.saut = cible.saut;
+      /* CH-080 : coupe proche (|saut| < sautMin) : ses nœuds sont déjà chargés (mesure du 09/11), rien n'est demandé. */
+      if (Math.abs(cible.saut) < R.sautMin) { c.motif = 'saut-court'; return terminer(c); }
       const courants = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) };
       let nm = niveauLocal(ctx.pointclouds, courants, R.rayonM);
       if (R.profondeurMax !== null) nm = nm === null ? R.profondeurMax : Math.min(nm, R.profondeurMax);
@@ -260,5 +294,5 @@
       _clesPourEssai: () => suivi ? [...suivi.cles] : []
     };
   }
-  return { VERSION: 'prechauffage-1', DEFAUT, reglage, cleChemin, classerEntetes, centresSuivante, candidats, niveauLocal, adresse, creer };
+  return { VERSION: 'prechauffage-2', DEFAUT, SOURCES, reglage, cleChemin, classerEntetes, centresSuivante, candidats, niveauLocal, adresse, creer };
 });

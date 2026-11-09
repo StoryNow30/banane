@@ -41,9 +41,12 @@ const sansCH062=t=>t.replace(/\n \/\* CH-062 \(PROPOSÉ ; réglages `lot\.signal
 /* D-305, piste 0 : relevé en lecture seule du cache, de l'attente du serveur et du transfert des nœuds ept-data, retiré pour comparer. */
 const sansD305Obs=t=>t.replace(/\n      \/\* D-305, piste 0 \(mesure en lecture seule\)[\s\S]*?x\.trf=\(x\.trf\|\|0\)\+\(end-rq\);\}/,'')
   .replace(",\n      ...(a.ept.cache?{depuisCache:a.ept.cache}:{}),...(Number.isFinite(a.ept.srv)?{attenteServeurMs:Math.round(a.ept.srv),transfertMs:Math.round(a.ept.trf)}:{})}:{})});","}:{})});");
+/* CH-080 (D-309) : `voisins` rend à la demande UNE ligne de plus (`loin` : cible ou suivante non validée de la table), pour le préchauffage seulement ;
+ * le relais garde `saut` et `source` (dans le bloc de CH-077, retiré avec lui). Retiré pour comparer. */
+const sansCH080Obs=t=>t.replace(/\n  \/\* CH-080 \(D-309\) : UNE ligne de plus au plus[\s\S]*?if\(t\.st\[i\]!==STATUS_CODE\.valid\)\{loin=ligne\(i\);break;\}\}/,'').replace(',rows,...(loin!==undefined?{loin}:{})};',',rows};');
 /* CH-077 : l'observateur relaie les événements du préchauffage (comptes et classes seulement), retirés pour comparer. */
 const sansCH077Obs=t=>t.replace("if(Object.hasOwn(PRECH_CHAMPS,k)){if(enabled)record(reduirePrechauffage(k,x));return;}/* CH-077 */",'').replace(/ \/\* CH-077 : champs gardés[\s\S]*?  return out;\}\n/,'');
-const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(t)).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(t))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
  .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.

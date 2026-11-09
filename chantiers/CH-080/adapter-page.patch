@@ -1,0 +1,25 @@
+--- a/src/adapter-page.js	2026-11-09 10:15:13.911111033 +0000
++++ b/src/adapter-page.js	2026-11-09 10:15:13.932138527 +0000
+@@ -276,9 +276,10 @@
+   *    (`banane5:voisins`, mémoire de la page, aucune requête) ; il ne demande que les nœuds que Potree demanderait, à l'adresse que Potree construit ;
+   *  - ses événements (`prechauffage`, `prechauffage-bilan`, `prechauffage-entetes`) ne portent que des comptes : l'observateur et le service worker
+   *    les réduisent encore (tests/ch077-relais.test.cjs). Réglage éteint ou module absent : `PRECH` vaut null et rien ne change. */
+- function voisinsB1(cut,world){return new Promise(res=>{let fini=false;const id='ch077-'+Math.random().toString(36).slice(2,12);
++ /* CH-080 (D-309) : `quoi` ajoute à la demande UNE ligne au plus (`cible` entière, ou `suivante:true`) ; voir src/esv-observer.js `voisins`. */
++ function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:{};return new Promise(res=>{let fini=false;const id='ch077-'+Math.random().toString(36).slice(2,12);
+    const f=e=>{if(fini||e.source!==window||e.data?.kind!=='banane5:voisins-reponse'||e.data.id!==id)return;fini=true;try{window.removeEventListener('message',f);}catch{}res(e.data);};
+-   try{window.addEventListener('message',f);window.postMessage({kind:'banane5:voisins',id,cut,fenetre:10,world},location.origin);}catch{fini=true;res(null);return;}
++   try{window.addEventListener('message',f);window.postMessage({kind:'banane5:voisins',id,cut,fenetre:10,world,...plus},location.origin);}catch{fini=true;res(null);return;}
+    setTimeout(()=>{if(fini)return;fini=true;try{window.removeEventListener('message',f);}catch{}res(null);},400);});}
+  const PRECH=(()=>{try{const M=window.BananePrechauffage,R=window.BananeSettings?.lot?.chargement?.prechauffer;if(!M||typeof M.creer!=='function'||!M.reglage(R))return null;
+    let po=null;const p=M.creer({reglage:R,chargements:()=>chargementsEffectifs(),etiquette:()=>cutLabel(),poster:posterObservateur,image:prochaineImage,maintenant:()=>heurePage()??Date.now(),
+@@ -287,7 +288,8 @@
+    return p;}catch{return null;}})();
+  function prechaufferApres(expected){if(!PRECH)return;try{const c=context(),R=expected?.rails;
+    const rails={left:R?.left?.positionSceneRelative,right:R?.right?.positionSceneRelative};
+-   Promise.resolve(PRECH.apresCapture({partie:expected?.identity?.part??null,coupe:expected?.identity?.cut??null,rails,origine:c.frame?.origin,pointclouds:c.viewer?.scene?.pointclouds||[]})).catch(()=>{});}catch{}}
++   Promise.resolve(PRECH.apresCapture({partie:expected?.identity?.part??null,coupe:expected?.identity?.cut??null,rails,origine:c.frame?.origin,pointclouds:c.viewer?.scene?.pointclouds||[],
++     suivante:expected?.prechauffage??null})).catch(()=>{});}catch{}}   /* CH-080 : cible du service worker (relecture, passe des différés), null dans le lot */
+  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
+    const c=nativeContext(),railInputs={},associationByRail={};
+    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){

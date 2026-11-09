@@ -71,11 +71,14 @@ function construire(options={}){
   const [nbParties,statut1]=String(options.parties??2).split(':');
   const base=corpus(),direction=base[0].capture.rails.left.railLocalToSceneRelative.slice(0,3);
   const statut=i=>i%5===4?'valid':i%7===6?'skipped':'invalid';
+  /* CH-080 : `saut` = N : une coupe à faire toutes les N, les autres validées (« cut non validé suivant » saute de N coupes). Ligne à part : la ligne
+   * précédente est une ancre de tools/relecture-maquette.cjs. */
+  const saut=Number(options.saut??0),statutSaut=saut>=2?(i=>i%saut===0?'invalid':'valid'):null;
   const partie=(numero,premier,n,decalageIndex)=>{
     const cuts=[];
     for(let i=0;i<n;i++){const src=base[(decalageIndex+i)%base.length],k=decalageIndex+i;
       const origine=ORIGINE_MONDE.map((v,j)=>arrondi(v+direction[j]*PAS_M*k,6));
-      cuts.push({cut:premier+i,index:i,status:(numero===part&&statut1)||statut(k),origine,source:src.nom,shape:src.capture.shape||'U50',
+      cuts.push({cut:premier+i,index:i,status:(numero===part&&statut1)||(statutSaut||statut)(k),origine,source:src.nom,shape:src.capture.shape||'U50',
         rails:{left:rail(src.capture,'left',origine),right:rail(src.capture,'right',origine)},noeuds:noeuds(src.capture),decoupe:decoupe(src.capture)});}
     return {part:numero,table:`maquette-${numero}`,cuts};
   };

@@ -197,8 +197,14 @@
   const t=tables.get(geo.key),rows=[];
   for(let i=Math.max(0,cut-w);i<=Math.min(t.rk.length-1,cut+w);i++){const o=6*i,e=t.ed.slice(o,o+6);
    rows.push({i,s:STATUS_NAME[t.st[i]]??'autre',t:!!(t.fl[i]&1),v:!!(t.fl[i]&2),f:!!(t.fl[i]&4),e:e.every(finite)?e:null});}
+  /* CH-080 (D-309) : UNE ligne de plus au plus, `loin` : la cible donnée (`cible`, entier) ou la première ligne non validée après le cut dans toute la
+   * table (`suivante:true`, règle d'ESV « cut non validé suivant ») ; null si aucune. Champ absent si rien n'est demandé (réponse de CH-077 inchangée). */
+  const ligne=i=>{const o=6*i,e=t.ed.slice(o,o+6);return {i,s:STATUS_NAME[t.st[i]]??'autre',t:!!(t.fl[i]&1),v:!!(t.fl[i]&2),f:!!(t.fl[i]&4),e:e.every(finite)?e:null};};
+  let loin;
+  if(Number.isInteger(req.cible))loin=req.cible>=0&&req.cible<t.rk.length?ligne(req.cible):null;
+  else if(req.suivante===true){loin=null;for(let i=cut+1;i<t.rk.length;i++)if(t.st[i]!==STATUS_CODE.valid){loin=ligne(i);break;}}
   return {ok:true,table:{lignes:t.rk.length,pages:t.pages,fraiches:t.fraiches,debut:t.debut,rompue:t.rompue,tronquee:t.tronquee,tables:tables.size},
-   geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows};
+   geo:{index:geo.index,mm:geo.mm,secondMm:geo.secondMm},rows,...(loin!==undefined?{loin}:{})};
  }
 
  /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
@@ -206,12 +212,14 @@
   'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],'prechauffage-entetes':['maxAgeS','statut']};
  const PRECH_BOOLEENS={'prechauffage':['annule'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
  const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
-  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
+  'sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime'],PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre'],PRECH_CLASSES=['no-store','no-cache','revalidation','max-age','expires','heuristique','aucun'];
  const PRECH_CHAMPS={'prechauffage':1,'prechauffage-bilan':1,'prechauffage-entetes':1};
  function reduirePrechauffage(k,x){const out={kind:k};
   for(const c of PRECH_ENTIERS[k])out[c]=Number.isInteger(x[c])&&x[c]>=0&&x[c]<1e12?x[c]:null;
   for(const c of PRECH_BOOLEENS[k])out[c]=typeof x[c]==='boolean'?x[c]:null;
-  if(k==='prechauffage')out.motif=PRECH_MOTIFS.includes(x.motif)?x.motif:null;
+  if(k==='prechauffage'){out.motif=PRECH_MOTIFS.includes(x.motif)?x.motif:null;
+   /* CH-080 : saut en coupes (entier SIGNÉ, borné) et source de la coupe suivante (liste fermée). */
+   out.saut=Number.isInteger(x.saut)&&Math.abs(x.saut)<1e6?x.saut:null;out.source=PRECH_SOURCES.includes(x.source)?x.source:null;}
   if(k==='prechauffage-entetes')out.classe=PRECH_CLASSES.includes(x.classe)?x.classe:null;
   return out;}
  function install(win){

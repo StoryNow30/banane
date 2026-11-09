@@ -31,7 +31,9 @@ const t21d = e => T21D_AVANT_REQUETE.includes(e?.type) && e.serverConfirmed === 
 async function jouer(racine, sortie) {
   const H = require(path.join(racine, 'tests/helpers/relecture-lot.cjs')), { PERMISSIF } = require(path.join(racine, 'tests/helpers/relecture-essais.cjs'));
   const { memoire } = require(path.join(racine, 'tests/helpers/perf-production.cjs'));
-  const nettoyer = x => JSON.parse(JSON.stringify(H.neutre(x), (k, v) => BRUIT.test(k) ? undefined : v));
+  /* CH-080 (D-309) : la relecture joint à SA capture la cible du préchauffage (`prechauffage` : partie, cut de la capture, cut suivant, source, opération),
+   * lue par la page seulement ; ce seul champ est écarté des arguments des commandes. Rien d'autre n'est neutralisé. */
+  const nettoyer = x => JSON.parse(JSON.stringify(H.neutre(x), (k, v) => BRUIT.test(k) || k === 'prechauffage' ? undefined : v));
   const sansPause = e => { const c = JSON.parse(JSON.stringify(e)); delete c.repriseReglage; if (c.passe) for (const k of PAUSE) delete c.passe[k]; return c; };
   const SCENARIOS = {
     'ombre': {},
