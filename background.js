@@ -1576,6 +1576,8 @@ adapter.nextWithoutDecision=async(identity,...rest)=>{const p=l1PoseEnAttente;l1
  if(p&&identity&&p.batchId===(engine?.s?.batch?.id??null)&&p.cutId===globalThis.BananeCore3.cutId(identity))await l1PoserSansValider(p);
  return nextSansDecisionESV(identity,...rest);};
 const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storage.local.get('banane3Tab')).banane3Tab??null;engine=new BananeEngine3.Engine(adapter,store);rangerErreursDeLot(engine);
+ /* CH-086 : écritures après la validation en fond (réglage `ecrituresApresValidation`) ; absent : chemin d'avant. */
+ engine.ecrituresApresValidation=globalThis.BananeSettings?.ecrituresApresValidation??null;
  /* 4.8.0 (D-058, option 1 de la direction) : une lecture instable met le lot en
   * pause (moteur épinglé). Le remède est de rafraîchir ESV : on le dit ; après
   * F5, « Reprendre » revient seul au cut du lot (retablirApresRechargement). */

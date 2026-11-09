@@ -1,0 +1,28 @@
+diff --git a/audit/v4.6.0-engine-baseline.json b/audit/v4.6.0-engine-baseline.json
+index 5ef85e1..c790123 100644
+--- a/audit/v4.6.0-engine-baseline.json
++++ b/audit/v4.6.0-engine-baseline.json
+@@ -8,10 +8,11 @@
+     "vendor/lidar.js": "375f7dfb932143027e2c814f78bf3d66d5fbda5eb97f323735e3fd4932de6311"
+   },
+   "engine": {
+-    "src/engine.js": "24fddb61ce0005bc671f120ee16916a2ced4c71607e4e02fdbd498dc20f6742c",
++    "src/engine.js": "815b953c9be71fac70750c7b9d567cebe57af7abe2a87b0e6a3d2216e5149a8f",
++    "previousHashCH086": "24fddb61ce0005bc671f120ee16916a2ced4c71607e4e02fdbd498dc20f6742c",
+     "previousHash440": "2bf19ce7ecc800afccaf9b710bdce0745d4ed379e71e0b8457fca0cd5c5069f6",
+     "previousHashG8": "7e0faf584cd627d1e20efe49097cc6a212dd53138f948f945a2564b30a434698",
+-    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision ; 4.7 correctif Astra — D1 autorisation de dispatch, D2 borne contre STOP/PAUSE, D3 finalisation réparable ; 4.7 garde d'ecartement : refus de commander une paire hors du contrat metier ; 4.9 V5 (D-089, version de test 4.9.0.8) — sauvegarde de l'état à taille constante ; validé par la direction le 13 octobre 2026 (D-091) : peut aller au-delà des versions de test, l'audit indépendant avant toute version stable restant dû ; 5.0 CH-059 (06/11) — save() passe l’état vivant au magasin qui le découpe lui-même en morceaux, de façon synchrone, avant toute attente (constat de l’opérateur du 06/11 : Ariane ralentit au fil de la journée)",
++    "unfrozenBy": "V4.6.0 — contrat validation/navigation et reprise manuelle ; G8.1 — VALIDATE charge le prochain cut non validé ; 4.7 — report des unresolved GCV1 par navigation sans décision ; 4.7 correctif Astra — D1 autorisation de dispatch, D2 borne contre STOP/PAUSE, D3 finalisation réparable ; 4.7 garde d'ecartement : refus de commander une paire hors du contrat metier ; 4.9 V5 (D-089, version de test 4.9.0.8) — sauvegarde de l'état à taille constante ; validé par la direction le 13 octobre 2026 (D-091) : peut aller au-delà des versions de test, l'audit indépendant avant toute version stable restant dû ; 5.0 CH-059 (06/11) — save() passe l’état vivant au magasin qui le découpe lui-même en morceaux, de façon synchrone, avant toute attente (constat de l’opérateur du 06/11 : Ariane ralentit au fil de la journée) ; 5.0 CH-086 (09/11, D-312, D-313) — écritures après la validation en fond : visite, événements et sauvegardes lancés sans être attendus jusqu’à la porte « stocké » avant l’intention suivante ; réglage ecrituresApresValidation, éteint = chemin d’avant",
+     "scope": [
+       "validateAndNext : la politique allowNavigationEvidence est consultée avant le refus sur relecture manquée",
+       "expectedTransition : même onglet, même part et mouvement avant ; un saut exige la provenance déterministe VALIDATE_NEXT_NON_VALIDATED_CUT du bouton ESV observé",
+@@ -33,7 +34,8 @@
+       "4.9 V5 relireVisites : rien n'est retiré de l'état avant la lecture d'IndexedDB ; identifiants relus (absents : vidés après export, retirés et comptés) ; entrée recopiée confirmée seulement si IndexedDB en a la même version (comparaison sans l'ordre des clés) ; ancien format : visites absentes d'IndexedDB archivées une fois hors de l'état (archiverVisites, sans doublon), sinon gardées ; ajouts d'une version antérieure repris",
+       "4.9 V5 event : adapter-progress et adapter-result (déjà dans IndexedDB) ne déclenchent plus de sauvegarde ; les décisions, intentions, observations et acceptations sauvegardent toujours",
+       "4.9.0.11 KI-070 : tant que la relecture des visites au démarrage n'a pas réussi (IndexedDB illisible), save() réécrit l'état tel que chargé (recordIds et incompleteIds gardés) au lieu de les vider ; aucune autre branche modifiée",
+-      "5.0 CH-059 save : si le magasin déclare copieALaSauvegarde (BananeStorage3, src/storage.js + src/etat-morceaux.js), l’état vivant lui est passé sans K.clone complet ; sinon (magasins d’essai), la copie d’avant ; aucune décision, aucun événement, aucun ordre d’écriture changé ; relecture au démarrage inchangée"
++      "5.0 CH-059 save : si le magasin déclare copieALaSauvegarde (BananeStorage3, src/storage.js + src/etat-morceaux.js), l’état vivant lui est passé sans K.clone complet ; sinon (magasins d’essai), la copie d’avant ; aucune décision, aucun événement, aucun ordre d’écriture changé ; relecture au démarrage inchangée",
++      "5.0 CH-086 ouvrirFenetre/porteEcritures/reprendreFenetre : après le retour de la validation, écritures non attendues, même ordre et même contenu ; preuve stocké exigée avant l’intention de pose, de différé ou de validation et à la sortie du lot (délai, une reprise, puis pause ECRITURE_NON_CONFIRMEE sans commande) ; init() réécrit dans IndexedDB les événements et visites de la fenêtre portés par l’état"
+     ],
+     "previousHash47Defer": "09aecd679635905433b63a20ddcf58a535acafe7e93103ee1c901131feae3314",
+     "previousHash47Gauge": "94374fa7dd35de26597399ab9d154052ea599fc99fb68718d41b72e0d775a0ea",

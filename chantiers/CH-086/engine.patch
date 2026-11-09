@@ -1,0 +1,163 @@
+diff --git a/src/engine.js b/src/engine.js
+index 9ee29cd..fb402d6 100644
+--- a/src/engine.js
++++ b/src/engine.js
+@@ -11,6 +11,8 @@
+  const canonique=x=>JSON.stringify(x,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(c=>[c,v[c]])):v);
+  class Engine{
+   constructor(adapter,store){this.adapter=adapter;this.store=store;this.busy=false;this.task=null;
++   /* CH-086 : réglage `ecrituresApresValidation` ({enFond, delaiMs}), posé par background.js ; absent ou éteint : chemin d'avant. */
++   this.ecrituresApresValidation=null;this.fenetre=null;
+    /* V5 : identifiants des visites dont l'écriture dans IndexedDB a réussi (toute écriture, d'où qu'elle vienne). */
+    this.enBase=new Set();const ecrire=typeof store?.putRecord==='function'?store.putRecord.bind(store):null;
+    if(ecrire)store.putRecord=async r=>{const id=r?.recordId||r?.id;
+@@ -22,6 +24,7 @@
+   async init(){const old=await this.store.getState();if(old){this.s=old;this.s.version=K.VERSION;this.s.schemaVersion=4;
+     /* KI-070 : tant que la relecture des visites n'a pas réussi, `save()` réécrit l'état tel que chargé (identifiants gardés). */
+     this.visitesRelues=false;await this.relireVisites();this.visitesRelues=true;
++    if(this.s.fenetreEcritures)await this.reprendreFenetre();
+     this.s.settings={...G.DEFAULTS,...this.s.settings,method:G.DEFAULTS.method};
+     /* `deferred` rejoint les collections du lot. Un lot ancien se relit donc
+      * avec une liste vide — et, faute de `scope.unresolvedPolicy`, conserve la
+@@ -113,6 +116,43 @@
+     }
+     await this.save();}return this.s;}
+   view(){return {...K.clone(this.s),busy:this.busy};}
++  /* CH-086 — ÉCRITURES APRÈS LA VALIDATION EN FOND (piste 1 de CH-084).
++   * FENÊTRE : du retour de la commande de validation (navigation observée, `outcomeObserved`) à la PORTE. Dans la fenêtre, les
++   * écritures (visite, événements, état) partent dans le même ordre et avec le même contenu qu'avant (l'état est copié à l'appel ;
++   * `src/storage.js` les passe une à une ; IndexedDB ordonne ses transactions), mais le lot ne les attend pas : il ouvre la capture
++   * suivante. PORTE : avant l'intention de pose, l'intention de différé, l'intention de validation et à la sortie du lot, toutes les
++   * écritures de la fenêtre doivent être confirmées dans `delaiMs` ; sinon une sauvegarde complète est retentée une fois, puis pause
++   * motivée (`ECRITURE_NON_CONFIRMEE`), sans commande. Arrêt du service worker dans la fenêtre : l'état durable est l'un de ceux que le
++   * chemin d'avant pouvait laisser (intention de validation, observation sans acceptation, acceptation, cut compté) ; init() relit
++   * `fenetreEcritures` et réécrit dans IndexedDB les événements et visites de la fenêtre que l'état porte (même clé : idempotent). */
++  ouvrirFenetre(){const r=this.ecrituresApresValidation;if(this.fenetre||!r||r.enFond!==true)return false;
++   this.fenetre={promesses:[],echecs:[],ouverteMs:Date.now()};
++   this.s.fenetreEcritures={ouverteA:new Date().toISOString(),evenements:[],visites:[]};return true;}
++  enVol(p){const f=this.fenetre;const suivi=Promise.resolve(p).then(()=>true,e=>{f.echecs.push(String(e?.message||e));return false;});
++   f.promesses.push(suivi);return suivi;}
++  async porteEcritures(motif){const f=this.fenetre;if(!f)return null;
++   this.fenetre=null;const r=this.ecrituresApresValidation||{},delai=Number.isFinite(r.delaiMs)&&r.delaiMs>0?r.delaiMs:2000;
++   const borne=async p=>{let minuterie;const echeance=new Promise(ok=>{minuterie=setTimeout(()=>ok('delai'),delai);});
++     try{return await Promise.race([p,echeance]);}finally{clearTimeout(minuterie);}};
++   const issue=await borne(Promise.all(f.promesses).then(()=>'ok'));
++   const mesure={motif,ecritures:f.promesses.length,attenteMs:Date.now()-f.ouverteMs,issue:issue==='ok'&&!f.echecs.length?'confirme':issue==='ok'?'echec':'delai'};
++   this.dernierePorte=mesure;
++   if(mesure.issue==='confirme'){delete this.s.fenetreEcritures;return mesure;}
++   /* Une seule reprise : visites et événements de la fenêtre réécrits, puis l'état complet. */
++   const fe=this.s.fenetreEcritures,reprise=(async()=>{await this.reecrireFenetre(fe);delete this.s.fenetreEcritures;await this.ecrireEtat();return 'ok';})();
++   let issue2;try{issue2=await borne(reprise);}catch(e){issue2='echec';f.echecs.push(String(e?.message||e));}
++   void reprise.catch(()=>{});
++   if(issue2==='ok'){mesure.reprise='confirme';return mesure;}
++   this.s.fenetreEcritures=fe;
++   const e=Error(`Écritures du cut précédent non confirmées (${mesure.issue}, ${motif}) : lot en pause, aucune commande envoyée. Reprendre quand le stockage répond.`);
++   e.code='ECRITURE_NON_CONFIRMEE';e.motif=motif;e.echecs=f.echecs.slice(0,5);throw e;}
++  async reecrireFenetre(fe){const ev=new Set(fe?.evenements||[]),vi=new Set(fe?.visites||[]);let evenements=0,visites=0;
++   for(const e of this.s.events)if(ev.has(e.eventId)){await this.store.putEvent(e);evenements++;}
++   for(const r of this.s.records){const id=r?.recordId||r?.id;if(vi.has(id)&&!this.enBase.has(id)){await this.store.putRecord(r);visites++;}}
++   return {evenements,visites};}
++  async reprendreFenetre(){const fe=this.s.fenetreEcritures;let n={evenements:0,visites:0},erreur=null;
++   try{n=await this.reecrireFenetre(fe);delete this.s.fenetreEcritures;}catch(e){erreur=String(e?.message||e);}
++   await this.event('ecritures-fond-reprises',{identity:null,ouverteA:fe?.ouverteA??null,evenementsReecrits:n.evenements,visitesReecrites:n.visites,erreur});}
+   /* V5 (D-089) — SAUVEGARDE À TAILLE CONSTANTE. Mesuré dans un vrai Chromium : `chrome.storage.local.set`
+    * coûte environ 50 ms par Mo, et l'état était réécrit en entier à chaque événement (une vingtaine par
+    * cut), visites comprises, depuis le début de la session et même après un vidage du cache : plusieurs
+@@ -123,7 +163,8 @@
+    * l'état sans planter. Listes encore non relues (IndexedDB illisible au démarrage) : réécrites telles quelles. */
+   /* CH-059 : un magasin qui copie lui-même l'état AVANT toute attente (`copieALaSauvegarde`, src/storage.js : découpe en
+    * morceaux, seuls les morceaux changés sont recopiés) reçoit l'état vivant ; sinon (magasins d'essai), la copie d'avant. */
+-  async save(){const copie=this.store?.copieALaSauvegarde===true?x=>x:K.clone;
++  async save(){if(this.fenetre){this.enVol(this.ecrireEtat());return;}return this.ecrireEtat();}
++  async ecrireEtat(){const copie=this.store?.copieALaSauvegarde===true?x=>x:K.clone;
+    if(this.visitesRelues===false){await this.store.setState(copie(this.s));return;}
+    const {records,incomplete,...reste}=this.s,ref=r=>{const id=r?.recordId||r?.id;return typeof id==='string'&&this.enBase.has(id)?id:r;};
+    const liste=(l,brute)=>Array.isArray(l)?l.map(ref):Array.isArray(brute)?brute:[];
+@@ -163,7 +204,10 @@
+     * opération, pour qu'une réémission après interruption reste UN seul
+     * événement logique. Le stockage le déduplique déjà par clé ; le journal en
+     * mémoire doit en faire autant, sans quoi une reprise en afficherait deux. */
+-   await this.store.putEvent(e);
++   /* CH-086 : dans la fenêtre, l'écriture part tout de suite, sans être attendue ; l'événement entre dans le journal en mémoire
++    * avant la sauvegarde qui le suit, comme hors fenêtre. Son identifiant est noté dans l'état (`fenetreEcritures`) pour init(). */
++   if(this.fenetre){this.s.fenetreEcritures?.evenements.push(e.eventId);this.enVol(this.store.putEvent(e));}
++   else await this.store.putEvent(e);
+    const existant=this.s.events.findIndex(x=>x.eventId===e.eventId);
+    if(existant>=0)this.s.events[existant]=e;else this.s.events.push(e);
+    if(this.s.events.length>150)this.s.events.shift();
+@@ -301,6 +345,7 @@
+       ', admissible '+Gauge.CONTRACT.lowMm+'–'+Gauge.CONTRACT.maximumMm+' mm). Aucune commande envoyée.');
+     error.code='GAUGE_OUT_OF_CONTRACT';throw error;
+    }
++   await this.porteEcritures('intention-de-pose'); // CH-086 : preuve « stocké » du cut précédent avant toute nouvelle intention.
+    this.s.snapshot=K.clone(now);this.s.validationStarted=false;
+    this.s.expected=expected;this.s.intent={kind:'apply',proposalId:this.s.proposal.id,identity:now.identity};await this.save();
+    try{const result=await this.adapter.apply(now,proposals);K.assertTarget(now.identity,result.identity);
+@@ -493,6 +538,7 @@
+       * est encore révocable de ce qui ne l'est plus. */
+      revoked:null,revocationAfterDispatch:null,dispatchedAt:null,
+      finalEventId:'defer-finalized-'+operationId,finalEventEmitted:false};
++   await this.porteEcritures('intention-de-differe'); // CH-086 : avant toute mutation de l'intention.
+    this.s.deferIntent=intent;await this.save(); // 1. Préparé : écriture confirmée avant toute émission possible.
+    await this.event('defer-intent',{identity,operationId,batchId:intent.batchId,proposalId:intent.proposalId,
+      lidarCaptureId:intent.lidarCaptureId,sequenceIndex:intent.sequenceIndex,previousCutId:intent.previousCutId,
+@@ -803,7 +849,8 @@
+      batchId:intent.batchId,commandInvoked:intent.commandInvoked??'unknown',phase:intent.phase,
+      resent:false,deferredConfirmed:false,counted:false});
+   }
+-  async validateAndNext(scope){
++  async validateAndNext(scope,{fenetreEcritures=false}={}){
++   await this.porteEcritures('intention-de-validation');
+    this.gate();const now=await this.adapter.state();
+    if(!this.s.applied)throw Error('Aucune application vérifiée.');K.assertTarget(this.s.applied.identity,now.identity);
+    this.writable(now.identity);
+@@ -826,6 +873,7 @@
+     if(evidence.commandSent!==true)throw Error('La commande native n’est pas journalisée comme transmise.');
+     if(!evidence.navigationObserved&&!evidence.serverConfirmed)throw Error('Résultat de validation/navigation ambigu.');
+     outcomeObserved=true;this.s.intent=null;
++    if(fenetreEcritures)this.ouvrirFenetre(); // CH-086 : la commande est revenue ; les écritures qui suivent courent en fond.
+     /* V4.6.0, défaut 4 d'AUDIT_PILOTE.md. `startBatch` EXIGE déjà
+      * `allowNavigationEvidence` pour seulement démarrer, faute de confirmation
+      * serveur sur cet ESV. Mais sur le chemin où la navigation EST observée et
+@@ -850,7 +898,11 @@
+       nextCutId:evidence.nextIdentity?K.cutId(evidence.nextIdentity):null,navigationMatchedExpectedTransition:transition.expected,
+       expectedTransition:transition.reason,acceptedOnNavigationEvidence:acceptedOnNavigation,validationProof:evidence.validationProof});
+       if(!record.afterObserved){record.status='AFTER_STATE_MISSING_BECAUSE_TARGET_CHANGED';record.usableForTraining=false;}
+-      await this.store.putRecord(record);}
++      if(this.fenetre){const id=record.recordId||record.id;
++        /* La version en base n'est plus la bonne : la visite reste recopiée dans l'état tant qu'IndexedDB n'a pas confirmé. */
++        if(typeof id==='string'){this.enBase.delete(id);this.s.fenetreEcritures?.visites.push(id);}
++        this.enVol(this.store.putRecord(record));}
++      else await this.store.putRecord(record);}
+     await this.event('validation-observation',{identity:now.identity,...attempt,commandSent:true,afterObserved:evidence.afterObserved===true,
+       afterStateStatus:evidence.afterStateStatus,serverConfirmed:evidence.serverConfirmed===true,navigationObserved:evidence.navigationObserved===true,
+       navigationMatchedExpectedTransition:transition.expected,expectedTransition:transition.reason,validationProof:evidence.validationProof,evidence});
+@@ -976,7 +1028,7 @@
+      if(b.step==='apply'){await this.apply(true);b.step='validate';await this.save();}
+      if(!await this.boundary())break;
+      if(b.step==='validate'){
+-       const evidence=await this.validateAndNext(scope);if(evidence.nextIdentity)b.currentSequence.nextCutId=K.cutId(evidence.nextIdentity);
++       const evidence=await this.validateAndNext(scope,{fenetreEcritures:true});if(evidence.nextIdentity)b.currentSequence.nextCutId=K.cutId(evidence.nextIdentity);
+        b.processed.push({key:fullKey,identity:K.completeIdentity(now.identity),cut:now.identity.cut,sequenceIndex:b.currentSequence.sequenceIndex,
+          previousCutId:b.currentSequence.previousCutId,nextCutId:b.currentSequence.nextCutId,evidence,durationMs:Date.now()-Date.parse(b.cutStartedAt)});
+        b.lastCompletedIdentity=K.completeIdentity(now.identity);b.step='capture';
+@@ -995,10 +1047,18 @@
+        b.interrupted.push({identity:K.completeIdentity(this.s.applied?.identity||b.activeIdentity),status:e.code,evidence:this.s.lastActionEvidence});
+        this.s.notice='Commande envoyée, mais le cut a changé avant la relecture de l’état final. Avancement automatique suspendu.';
+        await this.event('batch-after-state-missing',{identity:this.s.applied?.identity||b.activeIdentity,evidence:this.s.lastActionEvidence});
++     }else if(e.code==='ECRITURE_NON_CONFIRMEE'){
++       /* CH-086 : écritures du cut précédent non confirmées à la porte. Rien n'a été muté pour la commande suivante. */
++       b.state='PAUSED';b.error={code:e.code,message:e.message,step:b.step,timestamp:new Date().toISOString(),motif:e.motif??null};
++       this.s.notice=e.message;await this.event('batch-ecriture-non-confirmee',{identity:b.activeIdentity,message:e.message,step:b.step,
++         motif:e.motif??null,echecs:e.echecs??[],commandSent:false,skipSent:false});
+      }else{b.state=e.message.includes('Adaptateur ESV sans réponse')?'PAUSED_ADAPTER_UNRESPONSIVE':'ERROR';
+        b.error={message:e.message,step:b.step,timestamp:new Date().toISOString()};this.s.notice=e.message;await this.event('batch-error',{message:e.message,step:b.step});}
+    }
+-   finally{await this.event('batch-state',{identity:b.activeIdentity,state:b.state,step:b.step,processed:b.processed.length,skipped:b.skipped.length});}}
++   finally{try{await this.porteEcritures('sortie-du-lot');}catch(e){
++       b.error={code:e.code||'ECRITURE_NON_CONFIRMEE',message:e.message,step:b.step,timestamp:new Date().toISOString(),motif:e.motif??null};
++       if(b.state==='RUNNING')b.state='PAUSED';this.s.notice=e.message;}
++     await this.event('batch-state',{identity:b.activeIdentity,state:b.state,step:b.step,processed:b.processed.length,skipped:b.skipped.length});}}
+   /* D1. L'état du lot et la révocation sont posés SYNCHRONEMENT, avant le
+    * moindre `await` : le moteur est mono-tâche, donc `deferUnresolved` ne peut
+    * pas reprendre la main entre les deux et verra toujours la révocation. */

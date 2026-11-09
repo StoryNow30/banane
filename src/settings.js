@@ -456,6 +456,12 @@
    * images après cette écriture. Délai maximal inchangé (1 500 ms) : à l'échéance, même résultat qu'aujourd'hui. `actif:false` :
    * comportement d'avant au bit près. Allumé pour le lot d'essai de Vision 8 (accord de l'opérateur, D-313). */
   const validationSurPlace = Object.freeze({ actif: true, libelleStableMs: 300, imagesMin: 3 });
+  /* CH-086 (piste 1 de CH-084) — ÉCRITURES APRÈS LA VALIDATION EN FOND. Après le retour de la commande de validation, la visite, les
+   * événements `validation-observation` et `validation-accepted` et les sauvegardes de l'état qui suivent (jusqu'à la capture suivante
+   * comprise) partent sans être attendus, dans le même ordre et avec le même contenu ; la preuve « stocké » est exigée avant
+   * l'intention de pose (ou de différé) suivante, dans `delaiMs`, sinon pause motivée, sans commande. `enFond:false` : chemin d'avant,
+   * au bit près. Allumé pour le lot d'essai (src/engine.js : `ouvrirFenetre`, `porteEcritures`). */
+  const ecrituresApresValidation = Object.freeze({ enFond: true, delaiMs: 2000 });
   const deplacerVue = Object.freeze({
     /* Test 25 (ordre de l'opérateur du 29/10, D-268) : ALLUMÉ. Quand la cible d'un rail tombe hors de la vue, Ariane déplace la vue (geste `deplacement.geste`), pose, puis remet la vue ; la preuve est le mouvement mesuré de la caméra, sinon le cut reste différé comme avant. */
     actif: true,
@@ -662,5 +668,5 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, validationSurPlace, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
 });
