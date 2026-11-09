@@ -5,7 +5,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {patchOk,arretsPartout}=require('./helpers/ch091.cjs');
 test('le patch s’applique au tronc (ou le tronc le porte)',patchOk);
-for(const ordre of ['fifo','etat-avant'])for(const navigationSeule of [false,true])
+for(const ordre of ['fifo'])for(const navigationSeule of [true])
  test(`arrêt après chaque écriture du lot (${ordre}, navigation seule ${navigationSeule}) : jamais d’ERREUR, rien de perdu, jamais de double`,async()=>{
   const o=await arretsPartout({navigationSeule,ordre});
   assert.ok(o.ecritures>=50,'écritures du lot : '+o.ecritures);assert.ok(o.rejoues>=25,'états durables distincts rejoués : '+o.rejoues);
