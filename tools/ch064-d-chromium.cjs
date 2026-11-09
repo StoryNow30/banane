@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* CH-064-D : banc de parité de la décision DANS CHROMIUM (référence, plan § 1), rapide sur un gros corpus.
- *   CH064D_MODULES=critere,signal node tools/ch064-d-chromium.cjs [--json SORTIE] [--lot 20] [--tranche 3000] [--saut N]
+ *   CH064D_MODULES=critere,signal node tools/ch064-d-chromium.cjs [--json SORTIE] [--lot 20] [--tranche 3000] [--saut N | --reprendre]
  * Même adaptateur (ariane-rs/parite/decision.cjs), mêmes cas, même comparateur (tools/ch064-comparer.cjs) que
  * tools/ch064-parite.cjs --chromium ; seule différence : les trames canoniques des sorties sont hachées DANS la page
  * (SHA-256 par cas, crypto.subtle), seuls les condensés reviennent ; l'empreinte d'un côté est le SHA-256 de la suite de
@@ -13,7 +13,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {construire}=require('./ch064-construire.cjs');
 const RACINE=path.resolve(__dirname,'..');
 async function unePage(adaptateur,octets,{lot=20,limite=Infinity,saut=0,lotsMax=Infinity,it=null}={}){
- const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info']});
+ const nav=adaptateur.navigateur,{chromium}=require('playwright'),b=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium',args:['--enable-precise-memory-info','--js-flags=--max-old-space-size=8192']});
  const journal=[];let plantage=null; // CH-064 (chef) : diagnostic du plantage de la page (demande de l'intégrateur)
  try{const p=await b.newPage();
   p.on('crash',()=>{plantage=plantage||'crash du moteur de rendu';});p.on('close',()=>{plantage=plantage||'page fermée';});
@@ -63,13 +63,15 @@ async function unePage(adaptateur,octets,{lot=20,limite=Infinity,saut=0,lotsMax=
     memoireCoeur:b.coeur.etat(),tasJsOctets:performance.memory?performance.memory.usedJSHeapSize:null,bilanAdaptateur:(0,eval)(nav.bilan)(b.etat)};},nav);
   const empreintes={js:h.js.digest('hex'),rs:h.rs.digest('hex')};
   const tas=journal.map(j=>j.tas).filter(Number.isFinite);
-  return {format:'ch064-parite-v1',moteur:'chromium',module:adaptateur.nom,navigateur:ua,lotDebut:saut,lotsFaits:lots,fini,tasMax:tas.length?Math.max(...tas):null,tasFin:tas.at(-1)??null,hauteEauMax:journal.length?Math.max(...journal.map(j=>j.hauteEau||0)):null,...r,empreintes,verdict:r.cas>0&&r.identiques===r.cas&&empreintes.js===empreintes.rs?'IDENTIQUE':'ÉCART'};
+  return {format:'ch064-parite-v1',moteur:'chromium',module:adaptateur.nom,navigateur:ua,lotDebut:saut,lotTaille:lot,lotsFaits:lots,fini,tasMax:tas.length?Math.max(...tas):null,tasFin:tas.at(-1)??null,hauteEauMax:journal.length?Math.max(...journal.map(j=>j.hauteEau||0)):null,...r,empreintes,verdict:r.cas>0&&r.identiques===r.cas&&empreintes.js===empreintes.rs?'IDENTIQUE':'ÉCART'};
  }finally{await b.close();}}
 /* Exécute par tranches de `tranche` lots, une page neuve chacune ; le fichier `json` est réécrit après chaque tranche (verdict PARTIEL tant que le corpus n'est pas fini).
  * Reprise : `--saut N` (N = lots déjà faits) relit les tranches du fichier. Le tas par tranche (tasMax, tasFin) dit si la fuite suit la page (façade) ou l'outil. */
-async function executer(adaptateur,octets,{lot=20,limite=Infinity,saut=0,tranche=3000,json=null}={}){
- let tranches=[];
- if(saut>0){if(!json||!fs.existsSync(json))throw new Error('--saut demande le fichier de sortie (--json) des tranches déjà faites');
+async function executer(adaptateur,octets,{lot=20,limite=Infinity,saut=0,tranche=3000,json=null,reprendre=false}={}){
+ let tranches=[],casSaut=saut*lot;
+ /* --reprendre : on saute les cas déjà faits (somme des tranches du fichier), même si la taille de lot a changé ; saut ne sert plus alors qu'à numéroter */
+ if(reprendre){if(!json||!fs.existsSync(json))throw new Error('--reprendre demande le fichier de sortie (--json)');tranches=JSON.parse(fs.readFileSync(json,'utf8')).tranches||[];saut=tranches.reduce((a,x)=>a+x.lotsFaits,0);casSaut=tranches.reduce((a,x)=>a+x.cas,0);}
+ if(saut>0&&!reprendre){if(!json||!fs.existsSync(json))throw new Error('--saut demande le fichier de sortie (--json) des tranches déjà faites');
   const t=JSON.parse(fs.readFileSync(json,'utf8')).tranches||[];tranches=t.filter(x=>x.lotDebut+x.lotsFaits<=saut);
   if(tranches.reduce((a,x)=>a+x.lotsFaits,0)!==saut)throw new Error('les tranches du fichier ne couvrent pas exactement '+saut+' lots');}
  const agreger=(termine)=>{const T=tranches,cas=T.reduce((a,x)=>a+x.cas,0),identiques=T.reduce((a,x)=>a+x.identiques,0),med=k=>{const v=T.map(x=>x.temps[k]).filter(Number.isFinite).sort((a,b)=>a-b);return v.length?v[v.length>>1]:null;};
@@ -81,7 +83,7 @@ async function executer(adaptateur,octets,{lot=20,limite=Infinity,saut=0,tranche
    verdict:!termine?'PARTIEL':cas>0&&identiques===cas&&egales?'IDENTIQUE':'ÉCART',tranches:T};};
  const ecrire=termine=>{const r=agreger(termine);if(json)fs.writeFileSync(json,JSON.stringify(r,null,1)+'\n');return r;};
  let s=saut;const it=adaptateur.cas({})[Symbol.iterator]();
- for(let k=0;k<saut*lot;k++)if(it.next().done)break;/* reprise : un seul saut par processus */
+ for(let k=0;k<casSaut;k++)if(it.next().done)break;/* reprise : un seul saut par processus */
  for(;;){let r;
   try{r=await unePage(adaptateur,octets,{lot,limite:limite-tranches.reduce((a,x)=>a+x.cas,0),saut:s,lotsMax:tranche,it});}
   catch(e){console.error('Arrêt dans la tranche commençant au lot '+s+' : reprendre avec --saut '+s+' (tranches faites gardées dans le fichier)');ecrire(false);throw e;}
@@ -91,6 +93,6 @@ async function executer(adaptateur,octets,{lot=20,limite=Infinity,saut=0,tranche
 module.exports={executer,unePage};
 if(require.main===module){const a=process.argv.slice(2),arg=k=>a.includes(k)?a[a.indexOf(k)+1]:null;
  const ad=require(path.join(RACINE,'ariane-rs','parite','decision.cjs')),w=construire({silencieux:true});
- executer(ad,fs.readFileSync(w),{lot:Number(arg('--lot')||20),limite:arg('--limite')?Number(arg('--limite')):Infinity,saut:Number(arg('--saut')||0),tranche:Number(arg('--tranche')||3000),json:arg('--json')}).then(r=>{
+ executer(ad,fs.readFileSync(w),{lot:Number(arg('--lot')||20),limite:arg('--limite')?Number(arg('--limite')):Infinity,saut:Number(arg('--saut')||0),tranche:Number(arg('--tranche')||3000),json:arg('--json'),reprendre:a.includes('--reprendre')}).then(r=>{
   r.sources=Object.fromEntries(ad.sources.map(s=>[s,crypto.createHash('sha256').update(fs.readFileSync(path.join(RACINE,s))).digest('hex')]));
   const s=JSON.stringify(r,null,1);if(arg('--json'))fs.writeFileSync(arg('--json'),s+'\n');console.log(s);if(r.verdict!=='IDENTIQUE')process.exitCode=1;}).catch(e=>{console.error(e);process.exit(1);});}
