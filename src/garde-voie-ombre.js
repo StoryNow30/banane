@@ -40,9 +40,9 @@
      const g=ecartementMm(positions);
      if(g===null)return {version:VERSION,cut,ecartMm:null,referenceMm:null,ecartAuVoisinageMm:null,auraitPause:false,motif:'pose-illisible'};
      const ref=referenceVoisins(table,cut,o),ecart=g-ref.mm;
-     const pause=!!valide&&Math.abs(ecart)>o.seuilMm;
+     const pause=!!valide&&ref.source==='voisins'&&Math.abs(ecart)>o.seuilMm;
      return {version:VERSION,cut,ecartMm:r2(g),referenceMm:ref.mm,ecartAuVoisinageMm:r2(ecart),auraitPause:pause,
-       motif:pause?`voie:${r2(ecart)}mm>${o.seuilMm}mm(${ref.source})`:(valide?'ok':'non-valide-par-le-lot')};
+       motif:pause?`voie:${r2(ecart)}mm>${o.seuilMm}mm`:(!valide?'non-valide-par-le-lot':ref.source==='voisins'?'ok':'sans-voisins')};
    }catch(e){return {version:VERSION,cut,ecartMm:null,referenceMm:null,ecartAuVoisinageMm:null,auraitPause:false,motif:'erreur:'+String(e?.message||e).slice(0,60)};}
  }
  return {VERSION,REGLAGE,ecartementMm,referenceVoisins,evaluer};

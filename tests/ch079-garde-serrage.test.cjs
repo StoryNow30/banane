@@ -34,6 +34,10 @@ test('garde : les lignes validées par le lot (drapeaux non nuls) sont des voisi
   assert.equal(G.referenceVoisins(u,50,{...R5,avantSeulement:true}).mm,1435);
   assert.ok(G.referenceVoisins(u,50,R5).mm>1435);
 });
+test('garde : sans assez de voisins, jamais de pause (la référence par défaut n\'est pas une mesure)',()=>{
+  const e=G.evaluer({cut:50,positions:pose(1470),table:table(100,1435,{invalides:Array.from({length:100},(_,i)=>i)}),valide:true});
+  assert.equal(e.auraitPause,false);assert.match(e.motif,/sans-voisins/);assert.equal(e.referenceMm,1435);
+});
 test('garde : événement sans adresse ni identifiant, sans effet sur ses entrées',()=>{
   const entree={cut:50,positions:pose(1460),table:table(100,1435),valide:true},avant=JSON.stringify(entree);
   const e=G.evaluer(entree);assert.equal(JSON.stringify(entree),avant);assert.doesNotMatch(JSON.stringify(e),interdits);
