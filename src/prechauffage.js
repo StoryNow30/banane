@@ -43,6 +43,9 @@
  * `hierarchiesMax` par cible, `enVolMax` à nous en tout, budget du lot, octets décodés). Bilan à l'arrivée par l'ARBRE (la voie potree n'a plus de
  * requête à nous) : nœuds de la boîte avec points, chargés à l'arrivée, chargés par nous, encore en vol, puis chargés par Potree lui-même après
  * l'arrivée (`prechauffage-bilan` et `prechauffage-loin`). `prechauffage-vue` porte `camera` (et non plus `type`, qui écrasait le type du journal).
+ * CH-093 : PASSAGE À LA RELECTURE : la première coupe relue, connue du seul service worker à la clôture du lot, part dans l'opération lointaine (source
+ * `changement-mode`) : `anticiper()` à la fin du lot (commande `prechauffer` de l'adaptateur), `loin.mode` joint aux captures de la passe des différés.
+ * Réglage `relecture` ({actif, sautMin}), éteint dans le module.
  * Pur : tout ce qui touche la page (horloge, images, compteur, étiquette, fetch, observateur des ressources, table B1) est passé par `env`. */
 /** @template T @param {unknown} root @param {() => T} factory */
 (function (root, factory) {
@@ -88,6 +91,7 @@
     out.pauseMs = fini(r.pauseMs) && r.pauseMs >= 1000 && r.pauseMs <= 120000 ? Math.floor(r.pauseMs) : 10000;
     out.refusMax = Number.isInteger(r.refusMax) && r.refusMax >= 1 && r.refusMax <= 10 ? r.refusMax : 3;
     out.loin = reglageLoin(r.loin);   /* CH-088 */
+    out.relecture = reglageRelecture(r.relecture);   /* CH-093 */
     return Object.freeze(out);
   }
 
@@ -98,6 +102,14 @@
   function reglageLoin(m) {
     const out = { ...DEFAUT_LOIN };
     if (m && typeof m === 'object') { out.actif = m.actif === true; for (const [k, [a, b]] of Object.entries(BORNES_LOIN)) { const v = m[k]; if (fini(v) && v >= a && v <= b) out[k] = Math.floor(v); } }
+    return Object.freeze(out);
+  }
+  /* CH-093 : passage à la relecture (fin du lot ou de la passe des différés → première coupe relue, donnée par le service worker). Défaut du MODULE :
+   * éteint. `sautMin` : écart minimal (en coupes) entre la coupe affichée et la première coupe relue. Seulement en voie potree (opération lointaine). */
+  const DEFAUT_RELECTURE = Object.freeze({ actif: false, sautMin: 11 });
+  function reglageRelecture(m) {
+    const out = { ...DEFAUT_RELECTURE };
+    if (m && typeof m === 'object') { out.actif = m.actif === true; if (fini(m.sautMin) && m.sautMin >= 2 && m.sautMin <= 100000) out.sautMin = Math.floor(m.sautMin); }
     return Object.freeze(out);
   }
   /* CH-083 (D-314) : phase « mémoire » : `node.load()` de Potree sur les nœuds de la coupe suivante que le préchauffage HTTP vient de recevoir en 200.
@@ -600,13 +612,16 @@
     }
     /** Cible lointaine de ce passage : { i, avant, source, rails } ou null (rien de connu), ou `false` (réponse sûre : aucune cible lointaine). */
     async function cibleLoin(ctx, c, h, rep, demander, courants) {
-      const RL = R.loin; if (!RL || !RL.actif || R.voie !== 'potree') return null;
+      const RL = R.loin, RR = R.relecture; if (R.voie !== 'potree') return null;
+      /* CH-093 : `loin.mode` (première coupe du mode suivant, la relecture) dépend du réglage `relecture`, le reste du réglage `loin`. */
+      const mode = !!h && !!h.loin && h.loin.mode === true;
+      if (mode ? !(RR && RR.actif) : !(RL && RL.actif)) return mode ? false : null;
       const D = decalDe(rep, c.coupe, ctx.rails, ctx.origine); if (!D) return null;
       if (h) {
         const lo = h.loin; if (lo === undefined || lo === null) return false;
         if (!lo || !Number.isInteger(lo.cut) || lo.cut < 0 || !Number.isInteger(lo.avant) || lo.avant < 0 || lo.avant > RL.coupesMax) return false;
         const l = ligneLoin(await demander(c.coupe, courants, { cible: lo.cut })); if (!l || l.i !== lo.cut) return null;
-        return { i: l.i, avant: lo.avant, saut: Number.isInteger(lo.saut) ? lo.saut : null, source: h.source, rails: railsDe(l, D) };
+        return { i: l.i, avant: lo.avant, saut: Number.isInteger(lo.saut) ? lo.saut : null, source: mode ? 'changement-mode' : h.source, rails: railsDe(l, D) };
       }
       const r = await demander(c.coupe, courants, { loin: RL.sautMin, max: RL.coupesMax });
       if (!r || r.ok !== true || r.loin === undefined) return null;   /* observateur ou adaptateur sans CH-088 : rien */
@@ -614,10 +629,10 @@
       const avant = Number.isInteger(r.loin.avant) && r.loin.avant >= 0 ? r.loin.avant : null; if (avant === null || avant > RL.coupesMax || l.s === 'valid') return false;
       return { i: l.i, avant, saut: Number.isInteger(r.loin.saut) ? r.loin.saut : null, source: 'liste-esv', rails: railsDe(l, D) };
     }
-    function suivreLoin(c, t, ctx) {
+    function suivreLoin(c, t, ctx, capture = true) {
       const L0 = loin;
       if (L0 && !L0.fini && L0.partie === c.partie && L0.cible === t.i) {   /* même cible : elle continue (relancée si sa boucle s'était arrêtée, boîte chargée) */
-        L0.captures++; L0.pcs = ctx.pointclouds || L0.pcs; if (L0.complet && !L0.arrivee) { L0.complet = false; boucleLoin(L0); } return L0; }
+        if (capture) L0.captures++; L0.pcs = ctx.pointclouds || L0.pcs; if (L0.complet && !L0.arrivee) { L0.complet = false; boucleLoin(L0); } return L0; }
       if (L0) finirLoin(L0, 'remplace');
       let dims = null;
       if (Boite) { try { const el = ctx.pointclouds?.[0]?.material?.clipBoxes?.[0]?.box?.matrixWorld?.elements; const cour = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) }; dims = el ? Boite.calibrer(Array.from(el), cour.left, cour.right) : null; } catch { dims = null; } }
@@ -626,6 +641,34 @@
         lances: 0, charges: 0, chargesArrivee: null, echecs: 0, hierarchies: 0, octets: 0, nT: 0, hT: 0, pauses: 0, plafond: false, memVol: new Set(), hierVol: new Set(), deja: new Set(), depuis: new Map(), arrivee: null, fini: false };
       boucleLoin(L);
       return L;
+    }
+
+    /* ------------------------------------------------ CH-093 : PASSAGE À LA RELECTURE (fin du lot → première coupe relue)
+     * La première coupe relue n'est connue que du service worker, à la clôture du lot ; aucune capture du lot ne peut la porter. La commande `prechauffer`
+     * de l'adaptateur la donne ici, hors de toute capture : `ctx` = coupe affichée (partie, coupe, rails, origine, nuages) et `cible` = { part, cut,
+     * source:'changement-mode' }. La cible part dans l'opération lointaine de CH-088 (mêmes plafonds, pause pendant chaque capture et quand Potree
+     * charge, fin à l'arrivée, règle de pause de CH-089). Rend { motif } : `loin` (prise), sinon le refus ; un refus autre qu'« éteint » est posté. */
+    async function anticiper(ctx) {
+      const rien = (motif, extra = null) => { if (extra) poster({ kind: 'prechauffage', op: null, noeuds: 0, termines: 0, octets: 0, annule: false, ...extra, motif }); return { motif, noeuds: 0, octets: 0, annule: false }; };
+      const RR = R ? R.relecture : null;
+      if (!RR || !RR.actif || R.voie !== 'potree') return rien('eteint');
+      const h = ctx?.cible, coupe = ctx?.coupe;
+      if (!h || typeof h !== 'object' || h.source !== 'changement-mode' || !Number.isInteger(h.cut) || h.cut < 0 || !Number.isInteger(coupe) || h.part !== (ctx.partie ?? null)) return rien('indice-perime');
+      const ev = { coupe, predite: h.cut, saut: h.cut - coupe, source: 'changement-mode' };
+      if (!actif) return rien(refus ? 'refus-serveur' : 'eteint', refus ? ev : null);
+      if (enPause()) return rien('pause-serveur', ev);
+      if (Math.abs(h.cut - coupe) < RR.sautMin) return rien('saut-court', ev);
+      let cs = null;
+      try {
+        const courants = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) };
+        const rep = await Promise.race([Promise.resolve(env.voisins(coupe, courants, { cible: h.cut })), new Promise(r => { try { setTimeout(() => r({ ok: false, reason: 'page-sans-reponse' }), VOISINS_MS); } catch { r(null); } })]);
+        cs = centresSuivante(rep, coupe, ctx.rails, ctx.origine, { cible: h.cut, source: 'changement-mode' });
+      } catch { cs = { motif: 'sans-rails' }; }
+      if (!cs.left) return rien(cs.motif, ev);
+      if (!actif) return rien(refus ? 'refus-serveur' : 'eteint', refus ? ev : null);
+      if (enPause()) return rien('pause-serveur', ev);
+      suivreLoin({ partie: ctx.partie ?? null, coupe }, { i: cs.predite, avant: 0, saut: cs.saut, source: 'changement-mode', rails: { left: cs.left, right: cs.right } }, ctx, false);
+      return { motif: 'loin', cible: cs.predite, noeuds: 0, octets: 0, annule: false };
     }
 
     async function apresCapture(ctx) {
@@ -647,33 +690,39 @@
        * l'identité de CETTE capture (partie, coupe) ; sinon périmée, rien n'est demandé (règle 4.2). Sans cible : la suivante non validée de la liste. */
       const h = ctx?.suivante;
       let demande = { suivante: true };
+      let modeSeul = false;
       if (h !== undefined && h !== null) {
-        if (!h || typeof h !== 'object' || !SOURCES_SW.includes(h.source) || !Number.isInteger(h.cut) || h.cut < 0 || h.part !== c.partie || h.de !== c.coupe) { c.motif = 'indice-perime'; return terminer(c); }
-        demande = { cible: h.cut, source: h.source };
+        const idOk = !!h && typeof h === 'object' && SOURCES_SW.includes(h.source) && h.part === c.partie && h.de === c.coupe;
+        /* CH-093 : dernière capture de la passe des différés : plus de cut suivant dans la passe, l'indice ne porte que la première coupe relue
+         * (`loin.mode`). Rien n'est prédit pour l'opération proche ; la cible lointaine suit. */
+        modeSeul = idOk && h.cut === undefined && !!h.loin && h.loin.mode === true;
+        if (!idOk || (!modeSeul && !(Number.isInteger(h.cut) && h.cut >= 0))) { c.motif = 'indice-perime'; return terminer(c); }
+        if (!modeSeul) demande = { cible: h.cut, source: h.source };
       }
       let rep = null;
       try { rep = await Promise.race([Promise.resolve(env.voisins(c.coupe, { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) }, demande.cible !== undefined ? { cible: demande.cible } : { suivante: true })),
         new Promise(r => { try { setTimeout(() => r({ ok: false, reason: 'page-sans-reponse' }), VOISINS_MS); } catch { r(null); } })]); } catch { rep = null; }
       if (c.arret) return terminer(c);
-      const cible = centresSuivante(rep, c.coupe, ctx.rails, ctx.origine, demande);
+      const cible = modeSeul ? { motif: 'sans-suivante' } : centresSuivante(rep, c.coupe, ctx.rails, ctx.origine, demande);
       const courants = { left: ctx.rails.left.map((v, i) => v + ctx.origine[i]), right: ctx.rails.right.map((v, i) => v + ctx.origine[i]) };
       /* CH-081 : plusieurs coupes par passage (horizon, changement de mode) seulement si le module d'anticipation est là et le réglage le demande. */
       const multi = !!Anticipation && (R.horizon > 1 || R.candidatsMax > 1), D = multi ? decalDe(rep, c.coupe, ctx.rails, ctx.origine) : null;
       const demander = async (cut, monde, quoi) => { try { return await Promise.race([Promise.resolve(env.voisins(cut, monde, quoi)), new Promise(r => { try { setTimeout(() => r(null), VOISINS_MS); } catch { r(null); } })]); } catch { return null; } };
       /* CH-088 : cible lointaine (opération persistante, voie potree) ; elle sort de la liste de l'opération proche. */
       let tl = null;
-      if (R.loin?.actif && R.voie === 'potree' && actif && !enPause()) {
-        const t = await cibleLoin(ctx, c, demande.cible !== undefined ? h : null, rep, demander, courants);
-        if (t) tl = suivreLoin(c, t, ctx); else if (t === false && loin) finirLoin(loin, 'remplace');
+      if ((R.loin?.actif || R.relecture?.actif) && R.voie === 'potree' && actif && !enPause()) {
+        const hl = demande.cible !== undefined || modeSeul ? h : null, t = await cibleLoin(ctx, c, hl, rep, demander, courants);
+        /* CH-093 : une cible de changement de mode prise à la fin du lot n'est pas remplacée par la capture de la même coupe du lot, qui ne la connaît pas. */
+        if (t) tl = suivreLoin(c, t, ctx); else if (t === false && loin && !(loin.source === 'changement-mode' && !hl && c.coupe === loin.depart && c.partie === loin.partie)) finirLoin(loin, 'remplace');
         if (c.arret) return terminer(c);
       }
       const modes = [];
-      if (multi && D && demande.suivante && cible.motif === 'sans-suivante') {
+      if (multi && D && demande.suivante && !modeSeul && cible.motif === 'sans-suivante') {
         /* Fin de la liste du lot : la passe des différés part de la première ligne non validée de TOUTE la table (règle de la passe). */
         const l = ligneLoin(await demander(c.coupe, courants, { premiere: true })); if (c.arret) return terminer(c);
         if (l && l.i !== c.coupe && l.s !== 'valid') modes.push({ i: l.i, source: 'changement-mode', rails: railsDe(l, D) });
       }
-      if (!cible.left && !modes.length) { c.motif = cible.motif; return terminer(c); }
+      if (!cible.left && !modes.length) { c.motif = modeSeul && tl ? 'loin' : cible.motif; return terminer(c); }
       const suite = cible.left ? [{ i: cible.predite, source: cible.source, rails: { left: cible.left, right: cible.right } }] : [];
       if (multi && D && cible.left && R.horizon >= 2) {
         /* k+2 : la suivante de k+1 par la même règle (liste d'ESV) ; ou celle que le service worker joint (`apres`, relecture et passe). */
@@ -841,7 +890,7 @@
       return terminer(c);
     }
     return {
-      apresCapture, ressources, actif: () => actif,
+      apresCapture, anticiper, ressources, actif: () => actif,
       /* CH-088 : début d'une capture : instantané d'arrivée et pause de l'opération lointaine (ses load() lancés finissent, aucun nouveau). */
       annuler: motif => { if (motif === 'capture') { try { noterArrivee(true); } catch { /* relevé seulement */ } } annuler(motif); },
       etat: () => ({ op, enCours: !!courant && !courant.fini, octets: courant ? courant.octets : 0, actif, sansCache, lot: budget ? budget.etat() : null, attente: attente.size, loin: loin ? { cible: loin.cible, lances: loin.lances, charges: loin.charges, enCapture } : null }),
