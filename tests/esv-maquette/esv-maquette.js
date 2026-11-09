@@ -55,7 +55,7 @@
  /* CH-077 : nœuds EPT servis PAR ADRESSE (`/maquette/ept/ept-data/D-X-Y-Z.bin`, en-têtes de cache réglables côté serveur), chargés par la page
   * ÉTAGE PAR ÉTAGE en XMLHttpRequest comme Potree 1.8 (un étage attend le précédent, `eptParallele` à la fois), hiérarchie connue au fur et à mesure
   * (enfants d'un nœud chargé), arbre `pc.pcoGeometry` lisible par Ariane. ept=0 (défaut) : rien ne change pour les autres essais. */
- options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
+ options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;options.eptForme=q.get('eptForme')==='r'?'r':'d';   /* CH-080b : forme SUPPOSÉE des nœuds d'ESV ('r' : filename() rend le nom de Potree « r0-7… ») */   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
  options.eptProfondeur=num('eptProfondeur',7);options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
  options.finPartie=q.get('finPartie')==='rechargement'?'rechargement':'sur-place';
  options.delaiRechargement=num('delaiRechargement',150);
@@ -103,12 +103,15 @@
  const coupeBoite=(b,lo,hi)=>b.min.x<=hi[0]&&b.max.x>=lo[0]&&b.min.y<=hi[1]&&b.max.y>=lo[1]&&b.min.z<=hi[2]&&b.max.z>=lo[2];
  function noeudEpt(d,x,y,z){const s=ept.T/2**d,m=ept.min,nom=`${d}-${x}-${y}-${z}`;
   return {key:{d,x,y,z},level:d,numPoints:1000,boundingBox:{min:{x:m[0]+x*s,y:m[1]+y*s,z:m[2]+z*s},max:{x:m[0]+(x+1)*s,y:m[1]+(y+1)*s,z:m[2]+(z+1)*s}},
-   children:{},hasChildren:d<options.eptProfondeur,loaded:false,loading:false,filename:()=>nom,url:()=>'/maquette/ept/ept-data/'+nom};}
+   children:{},hasChildren:d<options.eptProfondeur,loaded:false,loading:false,filename:()=>nom,url:()=>'/maquette/ept/ept-data/'+nom,...(options.eptForme==='r'?formeR(d,x,y,z):{})};}
+ /* CH-080b : forme SUPPOSÉE « r » (en attendant le relevé de console d'ESV) : filename() et `name` rendent le nom de Potree (toPotreeName), l'adresse reste celle d'EPT. */
+ function formeR(d,x,y,z){let r='r';for(let i=0;i<d;i++){const m=1<<(d-i-1);r+=(x&m?4:0)+(y&m?2:0)+(z&m?1:0);}return {filename:()=>r,name:r};}
+ const cleEpt=n=>`${n.key.d}-${n.key.x}-${n.key.y}-${n.key.z}`;
  function construireEpt(s){const pts=s.parties.flatMap(p=>p.cuts.flatMap(c=>[c.rails.left.position,c.rails.right.position]));
   ept.min=s.monde.origine.map(v=>v-ept.T/2);ept.couloir=[[0,1,2].map(i=>Math.min(...pts.map(p=>p[i]))-2),[0,1,2].map(i=>Math.max(...pts.map(p=>p[i]))+2)];
   ept.racine=noeudEpt(0,0,0,0);if(options.eptHier)ept.racine.numPoints=-1;pc.pcoGeometry={root:ept.racine,loader:{extension:()=>'.bin'}};}
  /* CH-080 : Potree 1.8 `loadHierarchy` : fichier de la clé (fetch), nœuds créés du haut vers le bas sous leur parent, `numPoints` du fichier (−1 : sous-hiérarchie). */
- function lireHierarchie(n){const nom=n.filename();
+ function lireHierarchie(n){const nom=cleEpt(n);
   return fetch(n.url().replace(/ept-data\/[^/]*$/,'ept-hierarchy/'+nom+'.json')).then(r=>r.json()).then(h=>{const noeuds={[nom]:n};
    const cles=Object.keys(h).map(k=>k.split('-').map(Number)).sort((a,b)=>a[0]-b[0]);
    for(const [d,x,y,z] of cles){const parent=noeuds[`${d-1}-${x>>1}-${y>>1}-${z>>1}`];if(!parent)continue;

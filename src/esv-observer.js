@@ -208,7 +208,7 @@
  }
 
  /* CH-077 : champs gardés des événements du préchauffage (src/prechauffage.js) : entiers ≥ 0 bornés, booléens, motifs et classes d'une liste fermée. */
- const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits'],
+ const PRECH_ENTIERS={'prechauffage':['coupe','predite','op','niveauMax','intersectants','charges','enCours','frontiere','candidats','noeuds','termines','octets','dureeMs','hierarchies','deduits','sansNom','sansAdresse','formeNoeud'],
   'prechauffage-bilan':['coupe','predite','op','demandes','potree','couverts','servisCache','cacheTotal'],'prechauffage-entetes':['maxAgeS','statut']};
  const PRECH_BOOLEENS={'prechauffage':['annule'],'prechauffage-bilan':['juste'],'prechauffage-entetes':['etag','lastModified','expires','pragma']};
  const PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile',
