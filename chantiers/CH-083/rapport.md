@@ -107,3 +107,10 @@ Côté GPU, rien n'est monté avant l'affichage. Ensuite, la charge est celle qu
 3. Dans `prechauffage-vue`, lire `limitePoints` : null attendu.
 4. Comparer la capture médiane des sauts de 2 coupes ou plus à celle de Vision 7 et à celle de la coupe voisine.
 5. Au moindre doute, `memoire.actif:false`.
+
+## Après la fusion du tronc (13cfd0f et 0cf109a, `sautMin` 1 ; sha cee990a)
+- Conflit dans `src/settings.js`, résolu : `sautMin:1` vient du tronc, la clé `memoire` de CH-083.
+- Essais ciblés : 99 essais, 98 réussis, 0 échec, 1 sauté.
+- **verify complet** : 3 322 essais, 3 315 réussis, 0 échec, 7 sautés ; géométrie et moteur inchangés.
+- **Maquette complète** : 81 essais, 77 réussis, 1 échec, 3 sautés, puis 7/7. L'échec est `correction-signal` (CH-028), instable avant CH-083 (rapports de CH-077 et CH-081). Ce cas ne charge pas le préchauffage. Rejoué seul trois fois : 1 échec puis 2 réussites.
+- Le banc a été mesuré à un saut de 50 coupes. La clé `sautMin` n'y joue aucun rôle (supérieure ou égale à 1 et à 2).
