@@ -6,7 +6,7 @@ Mission du 4 octobre 2026. **Le paquet installable n'est pas préparé : verify 
 |---|---|
 | Développement V1 | Recevable pour préparation selon relecture indépendante et D-073 ; deux réserves techniques closes sur les chemins examinés. |
 | Paquet de test | **Non préparé**. Version proposée 4.9.0.1 / « 4.9.0 test 1 », locale/provisoire ; 5 échecs verify interdisent le commit puis la génération depuis ce commit. |
-| Terrain V1 | **Non mesuré / non accepté**. Aucun navigateur, ESV ou essai sur le PC de Mic lancé. |
+| Terrain V1 | **Non mesuré / non accepté**. Aucun navigateur, ESV ou essai sur le PC de l'opérateur lancé. |
 
 ## Blocage concret et limite de périmètre
 

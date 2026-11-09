@@ -342,7 +342,7 @@ footer{margin:22px 0 0;padding:12px 0 20px;border-top:1px solid var(--hair)}
  .actions{margin:24px -16px 0;padding:14px 16px 16px}.range{grid-template-columns:1fr}}
 
 /* ======================================================================
-   4.9 — chantier UX (13–14/10, variante A « Accueil » retenue par Mic).
+   4.9 — chantier UX (13–14/10, variante A « Accueil » retenue par l'opérateur).
    Inspirée de l'application de recharge d'un constructeur (aucune marque
    reprise) : fond à dégradé vert très profond, tuiles arrondies, une idée
    par tuile, gros chiffres légers, un objet héros. Quatre rôles de couleur :
@@ -559,7 +559,7 @@ body[data-window=automatic] .context{display:none}
 .orbite .batch{display:block;margin:0;font-size:13px;color:var(--text-2)}
 .orbite #lot-activite-bloc:not([hidden])+.batch{margin-top:10px;padding-top:12px;border-top:1px solid var(--hair)}
 /* Bornes, reprise, résumé de la partie */
-/* Test 16 (retour de Mic) : les deux libellés au même niveau ; avant, seul le premier perdait sa marge haute. */
+/* Test 16 (retour de l'opérateur) : les deux libellés au même niveau ; avant, seul le premier perdait sa marge haute. */
 .orbite #lot-bornes .range label{margin-top:0}
 .orbite .resume-partie{margin-top:30px}
 .orbite .resume-partie details{border-top-color:var(--hair)}
@@ -596,7 +596,7 @@ footer{border-top:0;margin-top:26px}
 .verts-plages li{display:flex;justify-content:space-between;gap:.75rem;font-size:.9rem}
 .verts-plages li span{font-variant-numeric:tabular-nums;color:var(--text-2);white-space:nowrap}
 
-/* Test 7 — le panneau en cinq groupes (Mic : « remettre de l'ordre ») : (a) Lot, (b) Règles et choix du prochain lot,
+/* Test 7 — le panneau en cinq groupes (l'opérateur : « remettre de l'ordre ») : (a) Lot, (b) Règles et choix du prochain lot,
    (c) Résultats du dernier lot, (d) Relecture (place réservée), (e) Export, archive et réglages avancés, repliés.
    Un titre sobre par groupe ; les choix dans UNE carte ; chaque choix dit « Dernier lot » et « Prochain lot ». */
 .orbite .groupe{display:block;margin:0}

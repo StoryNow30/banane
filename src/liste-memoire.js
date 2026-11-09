@@ -2,7 +2,7 @@
  *
  * ESV réécrit la ligne de sa liste à chaque validation (statut, drapeaux, six bords monde). Quand l'opérateur relit une
  * partie après Orbite, chaque cut qu'il corrige change ses bords : liste relue − bords écrits par Ariane = correction
- * humaine, sans séance Écho. Accord de Mic (D-122, question 1) : garder localement, par partie, les bords qu'Ariane a
+ * humaine, sans séance Écho. Accord de l'opérateur (D-122, question 1) : garder localement, par partie, les bords qu'Ariane a
  * écrits, et exporter un instantané compact de la liste.
  *
  * Ce module ne fait AUCUNE requête vers ESV et n'envoie aucune commande : il range, compare et exporte.

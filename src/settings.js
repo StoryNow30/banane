@@ -118,7 +118,7 @@
      * droit en direct, rail gauche avec recentrage (environ +0,32 s par cut rapide). 'tout-recentre' : les deux rails
      * avec recentrage, le chemin des cuts de référence (environ +0,65 s). Les deux modes corrigés ne cliquent jamais
      * hors de la partie visible du canevas (marge de 0,99). Ce n'est pas une pièce : il ne figure pas dans `pieces`.
-     * Décision à Mic. */
+     * Décision à l'opérateur. */
     rapide: Object.freeze({ lecture: true, selection: true, signal: true, pose: true, clicHumain: 'tel-quel' }),
     /* CH-084 : deux attentes de la capture au signal (`attendreChargement`, src/adapter-page.js). D-315 (opérateur) : livrées ALLUMÉES
      * (repli court à 600 ms, deux images) ; `repliCourt.actif:false` et `imagesMin:3` rendent le comportement d'avant, au bit près.
@@ -334,12 +334,12 @@
      * l'analyse (tools/perf-phases.cjs et perf-v3.cjs lisent les deux formats, mêmes chiffres). Mesuré sur un export réel
      * (partie 27, 606 visites) : jalons −84 %, journal −36 %. `false` : un événement par jalon, comme avant. */
     phaseTimingReplie: true,
-    /* V2 : DÉFAUT FAUX (décision de Mic en attente pour l'activer). Le vidage manuel avec confirmation
+    /* V2 : DÉFAUT FAUX (décision de l'opérateur en attente pour l'activer). Le vidage manuel avec confirmation
      * reste disponible. Si activé : après un « Tout télécharger » dont TOUS les fichiers sont confirmés complets,
      * le cache d'export (src/export-cache.js) est vidé ; jamais pendant un lot. */
     viderApresExport: false,
     /* V2 : volume maximal d'une archive « Tout télécharger » ; au-delà, une archive suivante est ouverte.
-     * 4.9.0.16 (test 15, Mic : limite d'envoi d'environ 18 Mo par fichier) : 17 Mo (17 × 1 048 576 octets,
+     * 4.9.0.16 (test 15, l'opérateur : limite d'envoi d'environ 18 Mo par fichier) : 17 Mo (17 × 1 048 576 octets,
      * 17,8 millions d'octets), taille COMPRESSÉE réelle, CONTENU.txt compris : sous 18 Mo quelle que soit la
      * façon de compter les mégaoctets. Un fichier JSON n'est jamais coupé (s'il dépasse seul, il fait un
      * volume à lui). Le zip simple s'arrête à 4 Gio. */
@@ -397,10 +397,10 @@
    *   true : les deux axes sont plafonnés à 8 mm.
    * Le reste est consigné (`conventionCalibration.restDuMm` / `restDzMm`, `capped`). La garde de paire (D-044), le domaine et la
    * borne de pente ne changent pas. Mesures hors ligne : fiches/P1_CONVENTION.md.
-   * NE PAS ACTIVER sans l'accord de Mic : il change la pose de terrain. */
+   * NE PAS ACTIVER sans l'accord de l'opérateur : il change la pose de terrain. */
   const conventionPlafond = false;
   /* P8 (5.0, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE (src/lot-decision.js). Sur un rail dont le calage de convention est REFUSÉ (décalage hors
-   * des 8 mm), Mic remonte la pose dans les trois parties relues (+6,1 ; +1,8 ; +3,6 mm). La décision consigne, À CÔTÉ de la pose réelle, celle qu'aurait
+   * des 8 mm), l'opérateur remonte la pose dans les trois parties relues (+6,1 ; +1,8 ; +3,6 mm). La décision consigne, À CÔTÉ de la pose réelle, celle qu'aurait
    * donnée une correction verticale de `mm` (3,6 par défaut : médiane de la partie 29, entre les deux autres), dans le repère profil du rail.
    * ACTIF PAR DÉFAUT, MAIS POUR CONSIGNER SEULEMENT : cette pose-là n'est JAMAIS posée, ni commandée, ni validée, ni lue par une garde, une reprise ou un
    * appui ; la pose réelle est identique, octet pour octet, avec et sans ce réglage. `actif:false` : rien n'est consigné. Étude : fiches/G0_APPRENTISSAGE_V1.md § 6.
@@ -420,7 +420,7 @@
    * l'observation « continuité » : pose de départ et points capturés avant le premier geste, jamais la référence humaine du cut. Écho passif :
    * rien n'est posé ni commandé. `actif:false` : rien. */
   /* 4.9.5 test 5 (relecture, I-1 ; D-155) : COUPÉE au terrain. Deux relances du moteur par différé pendant l'Écho, non mesurées au banc,
-   * pour une mesure que Mic ne veut pas comme mode de travail ; les données de l'Écho passent avant. Le calcul reste jouable hors ligne. */
+   * pour une mesure que l'opérateur ne veut pas comme mode de travail ; les données de l'Écho passent avant. Le calcul reste jouable hors ligne. */
   const memoireDifferesOmbre = Object.freeze({ actif: false, ecartSerieMax: 10, K: 3, appuis: 2, mmParCut: 3, porteDispersionMm: 10, etages: Object.freeze(['first-pass', 'window', 'choice']) });
   /* 5.0 (D-147) — DÉPLACER LA VUE D'ESV POUR POSER UN RAIL HORS DE SA VUE (src/adapter-page.js `amenerDansLaVue`, src/gestes-vue.js,
    * fiches/DEPLACER_VUE.md). COUPÉ PAR DÉFAUT : seule la direction l'active, après les vérifications de la fiche sur le vrai ESV. Coupé, rien ne
@@ -467,7 +467,7 @@
    * plus de 15 mm de la médiane de la partie, intérieur et marges d'une grappe, voisins d'un isolé, plage d'un PN).
    * `ombre` (livré : true) : à chaque cut du lot, l'événement `regles-metier-ombre` consigne la zone détectée, les règles
    * déclenchées et ce qu'Ariane AURAIT fait ; la décision, la commande, la pose et les appuis sont identiques avec et sans.
-   * `actif` (livré : false) et `regles` (toutes à false) : chemin d'activation, COUPÉ. Seul Mic l'ouvre. Une règle activée ne
+   * `actif` (livré : false) et `regles` (toutes à false) : chemin d'activation, COUPÉ. Seul l'opérateur l'ouvre. Une règle activée ne
    * peut que transformer en différé un cut que le lot allait valider ; elle ne pose jamais à un nouvel endroit. Seuils figés :
    * datasets/reglages-figes.json, `reglesMetier`. */
   const reglesMetier = Object.freeze({ ombre: true, actif: false,
@@ -586,7 +586,7 @@
      * direction, durée, bouton, clic final, caméra avant et après) et par série de crans (nombre, sens, deltaY, durée, caméra). Sert
      * à copier le geste de l'opérateur avant d'activer `deplacerVue`. `false` : aucun écouteur posé. */
     gestesVue: true,
-    /* RM-11 (4.9.5 test 9, fiches/RM11_RAISON_CORRECTION.md) : la RAISON DE LA CORRECTION. Mic tape un chiffre (1 rail voisin, 2 ADV, 3 PN, 4 nuage
+    /* RM-11 (4.9.5 test 9, fiches/RM11_RAISON_CORRECTION.md) : la RAISON DE LA CORRECTION. L'opérateur tape un chiffre (1 rail voisin, 2 ADV, 3 PN, 4 nuage
      * diffus ou pauvre, 5 hauteur seulement, 6 autre ; 0 efface) pour dire pourquoi il corrige un cut ; elle est consignée dans la visite
      * (`raisonCorrection`), du côté de l'étiquette, jamais dans les traits. COUPÉE par défaut ; le panneau l'allume avant la séance (lue au
      * démarrage d'Écho, gardée jusqu'à sa fin). Rien n'est retenu ni envoyé à ESV, jamais bloquant.

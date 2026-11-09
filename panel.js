@@ -22,7 +22,7 @@
    el.textContent='';const n=texte.length;
    [...texte].forEach((ch,i)=>{const sp=document.createElement('span');sp.className='ch';sp.textContent=ch;el.append(sp);
      if(avant[avant.length-(n-i)]!==ch)animer(sp,[{transform:'translateY(.55em)',opacity:0,filter:'blur(3px)'},{transform:'none',opacity:1,filter:'none'}],{duration:520,delay:(n-1-i)*55,easing:REBOND});});}
- /* 4.9.0.16 (test 15, Mic : la tuile du lot « plus vivante ») — LE POURCENTAGE DÉFILE : de l'ancienne
+ /* 4.9.0.16 (test 15, l'opérateur : la tuile du lot « plus vivante ») — LE POURCENTAGE DÉFILE : de l'ancienne
   * valeur à la nouvelle, au rythme du vert qui avance (1,1 s, même courbe), image par image
   * (requestAnimationFrame : rien ne tourne quand le panneau est caché, ni une fois arrivé). Figé
   * (valeur posée d'un coup) si le système réduit les animations ou sans requestAnimationFrame. */
@@ -79,7 +79,7 @@
  const sg=v=>(v>=0?'+':'−')+fr1(Math.abs(v));
  /* Quantile d'une liste triée, interpolé (médiane : 0,5 ; p90 : 0,9). */
  const quantile=(t,f)=>{if(!t.length)return null;const p=f*(t.length-1),a=Math.floor(p),b=Math.ceil(p);return t[a]+(t[b]-t[a])*(p-a);};
- /* 4.9.0.17 (Mic : « l'heure de Paris partout ») — toute heure affichée est celle de Paris
+ /* 4.9.0.17 (l'opérateur : « l'heure de Paris partout ») — toute heure affichée est celle de Paris
   * (Europe/Paris : heure d'été et d'hiver gérées par Intl), jamais l'UTC ni l'heure de la machine.
   * Les JSON exportés gardent leurs horodatages ISO en UTC (outils d'analyse). `paris(t)` rend
   * {jour, mois, an, h, min, s} (texte sur deux chiffres) ou null si l'heure est illisible. */
@@ -497,14 +497,14 @@
  function bornesDe(part){if(!Number.isInteger(part)||bornesDemandees===part)return;bornesDemandees=part;
    void api('bornes-partie',{part}).then(r=>{bornesPartie={part,last:Number.isInteger(r?.last)?r.last:null,source:r?.source??null};if(state)render(state);}).catch(()=>{bornesDemandees=null;});}
  /* 4.7.21 : détails ouverts par défaut (exports GCV1, journal, réglages).
-  * 4.9 (chantier UX, Mic, 13/10) : dans Orbite, le tiroir du lot est fermé par
+  * 4.9 (chantier UX, l'opérateur, 13/10) : dans Orbite, le tiroir du lot est fermé par
   * défaut ; son état se lit dans aria-expanded. Test 7 : il s'appelle « Export,
   * archive et réglages avancés » et porte « Détails » (lignes techniques). */
  let nouveauLot=false,departsPartie=null,progresLot={cle:null,max:0};
  /* 4.9.0.17 : fiches de départ (D-092) gardées pour la tuile du lot ; relues avec la liste des départs. */
  let fichesDepart=[];
  /* La fiche de départ qui donne le travail d'un lot : seulement pour un lot sur TOUTE la partie
-  * (premier cut 0 ou 1 : les lots de Mic partent du cut 1 ; jusqu'à la fin de partie), la
+  * (premier cut 0 ou 1 : les lots de l'opérateur partent du cut 1 ; jusqu'à la fin de partie), la
   * première fiche de CE lot (même batchId : les invalides au démarrage), avec des invalides
   * lisibles et non nuls. Sinon null : la tuile garde la position. */
  const PREMIER_CUT_MAX=1;
@@ -512,7 +512,7 @@
    if(!b?.id||!sc||!finDePartie(sc)||!Number.isInteger(a)||a<0||a>PREMIER_CUT_MAX)return null;
    const f=fichesDepart.find(x=>x&&x.batchId===b.id);
    return f&&Number.isInteger(f.invalides)&&f.invalides>0&&(!Number.isInteger(f.partie)||f.partie===sc.part)?f:null;}
- /* Test 7 (Mic : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE TERMINÉE. Constaté au banc
+ /* Test 7 (l'opérateur : « sur une partie sans rouge, Ariane passe à la suite sans rien dire ») — PARTIE TERMINÉE. Constaté au banc
   * (service worker réel, ESV simulé) : un lot lancé sur une partie dont le compteur d'ESV dit « N on M treated » avec N = M
   * pose et valide le cut affiché, puis ESV charge la partie suivante et le lot se clôt sur « ESV est passé dans la partie
   * P+1 » ; rien ne disait que la partie était finie. Ici, lecture seule, pour un lot CLOS : la partie de son scope n'a plus
@@ -529,7 +529,7 @@
  function tiroir(nom){const t=$(nom+'-details'),bouton=$(nom+'-details-toggle');if(!t||!bouton)return;
    t.hidden=!tiroirs[nom];bouton.setAttribute('aria-expanded',String(!!tiroirs[nom]));
    bouton.textContent=nom==='lot'?'Export, archive et réglages avancés':tiroirs[nom]?'Masquer les détails':'Afficher les détails';}
- /* 4.9.5 test 6 (D-157, D-164 ; Mic : « essayer les 2 méthodes ») — CHOIX POUR LE LOT. Le clic du mode rapide et la règle métier
+ /* 4.9.5 test 6 (D-157, D-164 ; l'opérateur : « essayer les 2 méthodes ») — CHOIX POUR LE LOT. Le clic du mode rapide et la règle métier
   * « grappe de différés » sont gardés par le service worker (storage.local : `choix-lot-etat`, `choix-lot`), lus au démarrage de
   * chaque lot et figés dans son scope. Un lot ouvert garde les siens : le panneau le dit quand ils diffèrent du choix, qui servira
   * au lot suivant. Un champ absent du scope vaut le défaut (« Comme avant », règle coupée). */
@@ -538,7 +538,7 @@
  let choixLot=null;
  const clicDuScope=sc=>NOMS_CLIC[sc?.clicHumain]?sc.clicHumain:'tel-quel',grappeDuScope=sc=>sc?.regleGrappeDifferes===true;
  const nomGrappe=on=>on?'activée':'coupée';
- /* Test 7 (Mic : « après un lot, le panneau disait “Activée pour le prochain lot” alors que le lot venait de l'utiliser ») — chaque
+ /* Test 7 (l'opérateur : « après un lot, le panneau disait “Activée pour le prochain lot” alors que le lot venait de l'utiliser ») — chaque
   * choix dit DEUX choses, séparées : ce que le dernier lot a utilisé (« Lot en cours » pendant un lot), lu dans son scope (figé au
   * démarrage, consigné par `batch-started`), et ce que le prochain lot utilisera (le choix gardé). Sans lot : « aucun lot ».
   * Sans réponse du service worker aux choix (ancienne version) : « Prochain lot » reste « — » et rien n'est coché. */
@@ -731,7 +731,7 @@
      /* 4.9 (chantier UX) : la partie est dans le titre de la vue ; la tuile du lot ne porte que la plage. */
      if($('lot-plage'))$('lot-plage').textContent=b?.scope?`${entier(b.scope.start)} → ${finDePartie(b.scope)?'fin de partie':entier(b.scope.end)}`:'';
      /* Progression dans la plage du lot : du premier au dernier cut. */
-     /* 4.9.0.14 (retour de Mic sur la test 13 : « le vert ne se remplit pas ») — la
+     /* 4.9.0.14 (retour de l'opérateur sur la test 13 : « le vert ne se remplit pas ») — la
       * part de la plage parcourue. Plage fixe : son dernier cut. « Fin de partie » :
       * la fin retenue pour la partie si elle est connue, sinon M−1, M lu au compteur
       * d'ESV « cut N sur M » pendant ce lot (b.totalReleve, même partie, source
@@ -739,7 +739,7 @@
       * indéterminée et « fin de partie inconnue », jamais un faux pourcentage. Le
       * vert ne recule pas sur un retour à un cut : il garde le plus loin atteint
       * dans ce lot. */
-     /* 4.9.0.17 (retour de Mic sur la test 16 : « le pourcentage des invalides traités, pas de la
+     /* 4.9.0.17 (retour de l'opérateur sur la test 16 : « le pourcentage des invalides traités, pas de la
       * position ») — DEUX MESURES, jamais un faux chiffre :
       * - lot sur TOUTE la partie (premier cut 0 ou 1, jusqu'à la fin de partie) et fiche de départ
       *   de CE lot connue (D-092, même batchId ; la première du lot = invalides au démarrage) :
@@ -973,7 +973,7 @@
  if($('correction-ouvrir'))$('correction-ouvrir').onclick=()=>correctionOuvrirSignal();
  on('correction-liste',()=>api('correction-liste'));on('correction-demarrer',()=>api('correction-demarrer'));on('correction-terminer',()=>api('correction-terminer'));on('correction-fermer',()=>api('correction-fermer'));
  async function connect(){const value=$('tabs')?.value;if(!value)throw Error('Choisis ton onglet ESV dans Connexion à ESV.');await api('connect',{tabId:Number(value)});$('connection').open=false;}
- /* 4.9.0.16 (test 15, capture de Mic) : deux onglets au même titre ne se distinguaient pas. Chaque
+ /* 4.9.0.16 (test 15, capture de l'opérateur) : deux onglets au même titre ne se distinguaient pas. Chaque
   * libellé dit maintenant, si besoin, la fenêtre, le rang de l'onglet, s'il est au premier plan et
   * s'il est prêt ; l'onglet qu'Ariane utilise déjà est marqué et choisi. Si un seul onglet ESV est
   * prêt, il est choisi d'avance. Le choix reste celui d'avant : rien ne se connecte tant que tu ne
@@ -1621,7 +1621,7 @@ on('native-discard',async()=>{
    if(!confirm(`Vider le cache des exports ?\n\nSera supprimé : ${nb(r.lots)} lot(s), ${nb(r.coupes)} coupe(s) — ${aVider.records.length} visites, ${aVider.events.length} événements, ${aVider.clouds.length} nuages LiDAR, soit environ ${r.octets===null?'une taille inconnue':mo(r.octets)} (estimation).${alerteCapture}\n\nCette action est IRRÉVERSIBLE : si tu veux garder ces données, annule et lance d’abord « Tout télécharger pour l’analyse ». L’état du lot, les réglages et la reprise ne sont pas touchés.${alerteLot}`))return;
    const out=await demandeVidage(snap,{exportAt:null,manuel:true});
    statutExport(`Cache des exports vidé : ${out.events} événements, ${out.records} visites, ${out.clouds} nuages LiDAR.${phraseGardes(out)}${phraseCapture(out)}${out.marqueurEcrit===false?' Le marqueur de vidage n’a pas pu être écrit.':''}`);});
- /* 4.9.0.16 — EXPORT DÉCOUPÉ TOUT SEUL (test 15, Mic : « l'envoyer sans script », limite d'envoi
+ /* 4.9.0.16 — EXPORT DÉCOUPÉ TOUT SEUL (test 15, l'opérateur : « l'envoyer sans script », limite d'envoi
   * d'environ 18 Mo par fichier). Chaque volume est un zip AUTONOME de 17 Mo au plus (réglage), taille
   * COMPRESSÉE réelle : chaque fichier JSON est compressé une fois (BananeZip.preparer), puis rangé
   * dans le volume courant s'il y tient, sinon dans un volume neuf. Un fichier JSON n'est jamais
@@ -1800,7 +1800,7 @@ on('native-discard',async()=>{
  appliquerVue();entree();
  discover().then(refresh).catch(e=>{uiError=e.message;note(e.message,true);$('connection')?.setAttribute('open','');});
  /* 4.9.0.10 : liste des départs de parties, relue toutes les 5 s (hors action en cours). */
- /* D-092, 4.9 (chantier UX) : la carte de la partie en cours, en grand. 4.9.0.16 (test 15, Mic :
+ /* D-092, 4.9 (chantier UX) : la carte de la partie en cours, en grand. 4.9.0.16 (test 15, l'opérateur :
   * « voir aussi les parties précédentes ») : en dessous, l'historique, compact, de la plus récente à
   * la plus ancienne (partie, heure du dernier départ, validés / invalides / total, nombre de
   * départs) ; chaque partie se déplie sur le détail de ses départs. Données : les fiches de

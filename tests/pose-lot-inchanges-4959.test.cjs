@@ -164,6 +164,15 @@ const sansRustLidar=t=>t
   "async function captureOnce(expected,guard,lecture='reference'){guard();const c=context();\n   const data=await L.capture({")
  .replace(/\n   \/\* étape `rust` : servi, repli, raison[^\n]*\n   if\(progress&&\(LR\|\|RUST_LIDAR\)\)[^\n]*/,'')
  .replace("captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference',progress,side)","captureOnce(expected,guard,piece(lecture,'lecture')?'rapide':'reference')");
+/* CH-087 : retrait du prénom de l'opérateur dans les COMMENTAIRES de ces fichiers (aucune ligne de code ne change : `git diff -w` ne montre que des
+ * lignes de commentaire). L'empreinte de référence est remplacée, fichier par fichier, par celle du texte après ce retrait ; tout autre changement
+ * redevient rouge. Retrait déclaré, comme les autres retraits de cette garde. */
+const CH087={
+ 'src/export-cache.js':'ec75c86fc041d0c6b21aa23072baff8e5cb8ab613d1030eb6f86dd0636fc8441',
+ 'src/liste-memoire.js':'0adb19635ddc562389f20592e7d23caa68c62ac9be38e77bea56beabdd750956',
+ 'src/regles-metier.js':'43a4e6015a68fcfb94de9cccfdf5ed0781a285fb91dad66bca8c68ca287e8ab4',
+ 'src/relecture-critere.js':'c6e24713e40d96a0ca320df914d9e682b7a8005e5ce3fe43d679893e0e9195ad',
+ 'src/relecture-ombre.js':'d0739ce530bf5489f4b167d55ea91c7609120a6b7c23db333b0383e338d919e2'};
 test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique pour CH-075',()=>{
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
@@ -172,7 +181,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();
-  }else if(sha(texte)!==empreinte)deplaces.push(f);}
+  }else if(sha(texte)!==(CH087[f]||empreinte))deplaces.push(f);}
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
@@ -202,7 +211,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  assert.equal(sha(ap),REF.fichiers['src/adapter-page.js'],'src/adapter-page.js hors vueFin');
  for(const f of ['src/early-input.js','src/engine.js','src/geometry.js','src/geometry-brain.js','src/geometry-candidate-v1.js','src/placement-convention.js','src/lot-decision.js',
   'src/regles-metier.js','src/hauteur-apprise.js','src/faux-vert-ombre.js','src/relecture-ombre.js','src/relecture-critere.js','src/verts-a-controler.js','src/voie-recentree.js'])
-  assert.equal(sha(f==='src/relecture-ombre.js'?sansD284(lire(f)):sansCH065(f,lire(f))),REF.fichiers[f],f);
+  {const h=sha(f==='src/relecture-ombre.js'?sansD284(lire(f)):sansCH065(f,lire(f)));assert.equal(h,CH087[f]||REF.fichiers[f],f);}
  /* La session Écho ne touche pas au lot : elle ne lit rien du lot en plus (`differesDuLot`, mémoire des différés, existaient). */
  const diff=lire('src/native-session.js');assert.ok(!/batch\.scope|startBatch|lotCommands|applyInESV/.test(diff.slice(diff.indexOf('RM-11 (fiches/RM11'),diff.indexOf('summariseGesture(record,observed){'))));
 });

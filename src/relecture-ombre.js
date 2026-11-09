@@ -5,8 +5,8 @@
  'use strict';
  /* 5.0 (D-170, D-171, D-172) — RELECTURE APRÈS LE LOT, EN OMBRE (fiches/RELECTURE_OMBRE.md).
   *
-  * Mic relit en Écho, après un lot Orbite, les cuts qu'il juge à risque, verts compris (fiches/METHODE_MIC_P29.md). La 5.0 doit
-  * savoir le faire elle-même (D-170). Accord de Mic (D-171) : d'abord SANS RIEN MODIFIER. Ce module est la partie PURE de cette
+  * L'opérateur relit en Écho, après un lot Orbite, les cuts qu'il juge à risque, verts compris (fiches/METHODE_MIC_P29.md). La 5.0 doit
+  * savoir le faire elle-même (D-170). Accord de l'opérateur (D-171) : d'abord SANS RIEN MODIFIER. Ce module est la partie PURE de cette
   * passe : il choisit les cuts et juge ce qu'Ariane donnerait. Il ne commande rien, ne lit rien d'ESV, n'écrit rien : tout lui est
   * passé. La visite elle-même (navigation par les boutons d'ESV, capture) est dans background.js et src/adapter-page.js.
   *
@@ -14,8 +14,8 @@
   * `selection` de datasets/relecture-reglages-proposes.json) : même ensemble de cuts, même type de zone pour chaque cut :
   *   - PN et ADV : les plages À CONTRÔLER des règles métier, déjà marginées (PN : 4 avant, 6 après ; ADV : 30 de chaque côté) ;
   *   - grappe (au moins `grappe.min` cuts du lot, trous de `grappe.trouCuts` au plus) : toute la plage, `grappe.marge` cuts de marge
-  *     de chaque côté (Mic : 456–468, 495–504) ;
-  *   - cuts du lot hors grappe (isolés, paires) : CHAQUE cut avec `isole.marge` cut(s) de part et d'autre (Mic, cuts 323, 335, 411) ;
+  *     de chaque côté (l'opérateur : 456–468, 495–504) ;
+  *   - cuts du lot hors grappe (isolés, paires) : CHAQUE cut avec `isole.marge` cut(s) de part et d'autre (l'opérateur, cuts 323, 335, 411) ;
   *   - différé : `differe.marge` cuts de chaque côté, et le différé lui-même (il reste invalide dans ESV) ;
   *   - « À contrôler » : les verts de la liste (src/verts-a-controler.js) ;
   *   - en plus de l'étude (H5 de l'audit P-5), en OMBRE SEULEMENT : les verts de la liste d'ESV à plus de 15 mm de la médiane
@@ -28,7 +28,7 @@
   *   Rôle de chaque cut : `vert` (hors du lot, laissé valide par ESV), `differe` (cut du lot différé : encore invalide), `lot` (cut
   *   posé et validé par le lot, ou SKIP, reprise à la main, cible bloquée, dernier cut posé : traversé, pas relu, sauf `relireCutsDuLot`).
   *   Le rôle `vert` n'est qu'une présomption : avant toute correction, le service worker exige le statut lu dans ESV (src : background.js).
-  *   ORDRE : par plages, dans l'ordre des cuts, comme Mic parcourt. PLAFOND (propre à la passe, absent de l'étude : budget de temps),
+  *   ORDRE : par plages, dans l'ordre des cuts, comme l'opérateur parcourt. PLAFOND (propre à la passe, absent de l'étude : budget de temps),
   *   revue de la relecture (correction 7) : les PN sont HORS DU BUDGET et toujours gardés entiers (un PN à moitié contrôlé laisse des
   *   erreurs de 30 à 40 mm). D-180 : le plafond est PAR ZONE (`plafondParZone` : adv, abords, vert-hors-zone, ecartement ; null = sans
   *   plafond) : un budget unique laissait l'ADV manger presque tout et les abords presque rien, alors que les deux agissent maintenant.
@@ -43,7 +43,7 @@
   * `seuilCorrigerMm`, sinon « je laisserais ») et sa raison. Le seuil de 5 mm vient du bruit de la référence (D-158 : 5 mm a un sens
   * comme taux sur une partie, la zone grise va de 3,6 à 6,4 mm ; `zoneGrise` le dit).
   *
-  * SKIP EN OMBRE (`skipOmbre`, règle métier de Mic, D-172) : « aucun-point » seulement quand deux captures complètes de suite sont vides ;
+  * SKIP EN OMBRE (`skipOmbre`, règle métier de l'opérateur, D-172) : « aucun-point » seulement quand deux captures complètes de suite sont vides ;
   * jamais « un seul scanner », qui ne se mesure pas (un seul nuage d'ESV pour tous les scanners). Consigné seulement. */
  const VERSION='relecture-ombre-v1';
  const DEFAULTS=Object.freeze({version:VERSION,
@@ -63,7 +63,7 @@
    * sur 28 relectures des 04 et 05/11). */
   plafondParZone:Object.freeze({adv:null,abords:null,'vert-hors-zone':20,ecartement:20}),
   plafondCuts:null,
-  /* D-185 (Écho de Mic sur la partie 11) : deux zones d'ADV séparées de `fusionTrouCuts` cuts au plus sont enchaînées (Mic les contrôle
+  /* D-185 (Écho de l'opérateur sur la partie 11) : deux zones d'ADV séparées de `fusionTrouCuts` cuts au plus sont enchaînées (l'opérateur les contrôle
    * d'un trait : trou de 37 cuts entre 7350 et 7388) ; un cut « écartement » est relu avec `marge` cut(s) de part et d'autre (le cut
    * isolé 7177 : son cut d'avant et son cut d'après). */
   adv:Object.freeze({fusionTrouCuts:40}),ecartement:Object.freeze({marge:1}),
@@ -91,7 +91,7 @@
   if(x&&entier(x.debut)&&entier(x.fin)&&x.debut<=x.fin)return [x.debut,x.fin];
   return null;}
 
- /* Plages de la méthode de Mic autour des cuts du lot : grappes entières ; hors grappe, chaque cut et ses voisins ; différés. */
+ /* Plages de la méthode de l'opérateur autour des cuts du lot : grappes entières ; hors grappe, chaque cut et ses voisins ; différés. */
  function plagesDuLot(lot,cfg){const out=[],cuts=[...new Set(lot.map(x=>x.cut))].sort((a,b)=>a-b);
   const groupes=[];for(const c of cuts){const g=groupes.at(-1);if(g&&c-g.at(-1)<=cfg.grappe.trouCuts)g.push(c);else groupes.push([c]);}
   for(const g of groupes){
@@ -213,7 +213,7 @@
    verdict:corrige?'je corrigerais':'je laisserais',
    raison:corrige?`${lieu} (seuil ${nombre(cfg.seuilCorrigerMm)} mm, étage ${base.etage})${h}`:`écart le plus grand : ${lieu}, sous le seuil de ${nombre(cfg.seuilCorrigerMm)} mm${h}`};}
 
- /* SKIP en ombre (D-172), règle de Mic réduite à ce qui se mesure (fiches/RELECTURE_AUTONOME.md § 6) : « aucun-point » seulement
+ /* SKIP en ombre (D-172), règle de l'opérateur réduite à ce qui se mesure (fiches/RELECTURE_AUTONOME.md § 6) : « aucun-point » seulement
   * quand la capture est VRAIMENT vide après chargement complet, c'est-à-dire quand `min` captures complètes de suite (2 par défaut)
   * n'ont aucun point près des deux rails (`quality.perRail`, sinon les points de la capture) ; une seule capture vide ne suffit pas
   * (l'étude : 3 fausses alertes sur des visites brèves). Jamais « un seul scanner » : tous les scanners arrivent dans un seul nuage

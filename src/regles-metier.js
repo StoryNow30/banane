@@ -9,14 +9,14 @@
   * (tools/regles-metier.cjs), pour que l'ombre de terrain et le rejeu ne puissent pas diverger. Il ne commande rien, ne lit
   * aucune pose humaine et ne rend jamais de position : des numéros de cut, des millimètres, des pourcentages.
   *
-  * Ce qu'il traduit de la méthode de Mic :
+  * Ce qu'il traduit de la méthode de l'opérateur :
   *   - PN avec ses marges, « contrôler chaque cut » : un cut du lot dont la chaussée affleure sur les QUATRE quarts autour des
   *     rails (intérieur et extérieur de chaque rail) est un cœur de PN. Deux cœurs CONSÉCUTIFS parmi les cuts vus (aucun cut vu
   *     non-cœur entre eux) et à 3 cuts au plus confirment le PN ; la plage à contrôler va de 4 cuts avant le premier cœur à 6 après
-  *     le dernier (marges de Mic, 4 PN de la partie 29). « Consécutifs » (`pn.consecutifs`, fiches/PN_ROBUSTE.md, H6) : dès qu'on
+  *     le dernier (marges de l'opérateur, 4 PN de la partie 29). « Consécutifs » (`pn.consecutifs`, fiches/PN_ROBUSTE.md, H6) : dès qu'on
   *     capture des verts, deux faux cœurs isolés finissent à 3 cuts l'un de l'autre (partie 1 du second projet : 447 au lot, 450 à
   *     l'Écho, 448 et 449 vus sans chaussée entre eux) ; une vraie chaussée, elle, ne s'interrompt pas. Règle
-  *     `pn-chaque-cut` : un cut que le lot validerait dans un PN confirmé ou sa marge d'après est un cut que Mic contrôle de
+  *     `pn-chaque-cut` : un cut que le lot validerait dans un PN confirmé ou sa marge d'après est un cut que l'opérateur contrôle de
   *     toute façon ; Ariane le lui laisse. Les 4 cuts d'avant sont déjà passés quand le PN est reconnu : ils ne sont que
   *     signalés (plage à contrôler).
   *     Pourquoi les quarts et pas `flushPct` seul : sur le second projet, la part globale « au ras » monte à côté d'un quai ou
@@ -39,7 +39,7 @@
   *
   * Activation (`src/settings.js`, `reglesMetier`) : coupée. Une règle activée ne peut que transformer en DIFFÉRÉ un cut que le
   * lot allait valider (`doitDifferer`) ; elle ne pose jamais, ne choisit jamais une position, ne touche ni un différé ni un
-  * appui (l'appui d'un cut différé n'existe pas). Seul Mic active. */
+  * appui (l'appui d'un cut différé n'existe pas). Seul l'opérateur active. */
  const DEFAULTS=Object.freeze({version:'regles-metier-v1',
   surface:Object.freeze({sidePointsMin:200,quadPointsMin:30,quadNombreMin:3,quadMinPct:50,flushMinPct:50}),
   pn:Object.freeze({confirmation:2,confirmationEcartCuts:3,consecutifs:true,margeAvant:4,margeApres:6}),
@@ -153,7 +153,7 @@
   return {etat:null,zone:null};}
  /* Zone d'ADV du cut : un cut du lot où la capture montre un rail de plus est une ALERTE ; deux alertes à 3 cuts au plus ouvrent la
   * zone, qui s'étend tant que les alertes se suivent à 10 cuts au plus. Plage à contrôler : 30 cuts avant la première alerte, 30
-  * après la dernière (marges de Mic : « environ 20 à 40 cuts autour » de l'aiguille). En ombre : une zone, aucune règle. */
+  * après la dernière (marges de l'opérateur : « environ 20 à 40 cuts autour » de l'aiguille). En ombre : une zone, aucune règle. */
  function zoneADV(mem,r,cfg){const c=r.cut,A=cfg.adv,derniere=(mem.zonesADV||[]).at(-1);
   const alerte=Number.isInteger(r.advRails)&&r.advRails>0,dansMarge=derniere&&c>derniere.fin&&c-derniere.fin<=A.margeApres;
   if(alerte){
@@ -226,7 +226,7 @@
    for(const k of neuves)deja.add(k);mem.signales.set(x.i,deja);verts.push({i:x.i,raisons:neuves,ecartMm:ecart==null?null:r1(ecart),vu:x.vu===true});}
   return {cut:cut??null,reference,verts};}
 
- /* Activation : seule une règle déclenchée ET activée par Mic transforme une validation en différé. */
+ /* Activation : seule une règle déclenchée ET activée par l'opérateur transforme une validation en différé. */
  function doitDifferer(e,reglage){
   if(!e||e.aurait!=='differer'||!reglage||reglage.actif!==true||!reglage.regles)return false;
   return (e.regles||[]).some(id=>REGLES.includes(id)&&reglage.regles[id]===true);}

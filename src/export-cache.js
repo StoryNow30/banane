@@ -214,7 +214,7 @@
     return [...l, fiche].slice(-MAX_DEPARTS);
   }
   const milliers = n => (Number.isInteger(n) ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : '?');
-  /* 4.9.0.17 (Mic : « l'heure de Paris partout ») : l'heure d'un départ, dans CONTENU.txt, est celle
+  /* 4.9.0.17 (l'opérateur : « l'heure de Paris partout ») : l'heure d'un départ, dans CONTENU.txt, est celle
    * de Paris (Europe/Paris, heure d'été et d'hiver par Intl) : « 15/10/2026 10:12:03 ». Le titre de la
    * liste dit « heure de Paris ». Sans Intl, l'ISO tel quel (UTC, dit par son « Z »). Le JSON exporté
    * (`fichesDepart`) garde `at` en ISO UTC. */
