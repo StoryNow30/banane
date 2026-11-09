@@ -27,11 +27,15 @@ const sansCH065=(f,t)=>CH065.BLOCS[f]?CH065.versions(racine,f).origine:t;
  * octet pour octet, celui de la test 8. Un patch
  * qui ne se retire plus net échoue (texte rendu inchangé, donc empreinte différente). Toute autre modification reste détectée. */
 const CH086={'src/engine.js':['engine.patch','porteEcritures'],'audit/v4.6.0-engine-baseline.json':['engine-baseline.patch','previousHashCH086']};
-const sansCH086=(f,t)=>{const c=CH086[f];if(!c||!t.includes(c[1]))return t;
+/* CH-091 : reprise d'un lot arrêté entre la capture avant et l'analyse, patchs déclarés de la même façon (chantiers/CH-091/engine.patch et
+ * engine-baseline.patch, posés PAR-DESSUS ceux de CH-086) : ils sont retirés d'abord, puis ceux de CH-086. */
+const CH091={'src/engine.js':['engine.patch','captureAvantDejaFaite'],'audit/v4.6.0-engine-baseline.json':['engine-baseline.patch','previousHashCH091']};
+const sansPatch=(dossier,table)=>(f,t)=>{const c=table[f];if(!c||!t.includes(c[1]))return t;
  const os=require('node:os'),{spawnSync}=require('node:child_process'),d=fs.mkdtempSync(path.join(os.tmpdir(),'ch086g-'));
  fs.mkdirSync(path.join(d,path.dirname(f)),{recursive:true});fs.writeFileSync(path.join(d,f),t);
- const r=spawnSync('patch',['-s','-R','-p1','-d',d,'-i',path.join(racine,'chantiers/CH-086',c[0])],{encoding:'utf8'});
+ const r=spawnSync('patch',['-s','-R','-p1','-d',d,'-i',path.join(racine,'chantiers',dossier,c[0])],{encoding:'utf8'});
  const sortie=r.status===0?fs.readFileSync(path.join(d,f),'utf8'):t;fs.rmSync(d,{recursive:true,force:true});return sortie;};
+const sansCH091=sansPatch('CH-091',CH091),sansCH086=(f,t)=>sansPatch('CH-086',CH086)(f,sansCH091(f,t));
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
