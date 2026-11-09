@@ -10,7 +10,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {monter,contexte}=require('./ch092-prechauffage-monture.cjs');
 const entree=c=>({name:'https://x.invalid/nuage/ept-data/'+c+'.laz',initiatorType:'fetch',responseStatus:200,transferSize:9000,decodedBodySize:9000});
 
-test('voie potree : un nœud à nous redemandé par Potree hors cache, sur 6 coupes justes, n\'éteint pas le préchauffage',{todo:'CH-092 : défaut préchauffage 4'},async()=>{
+test('voie potree : un nœud à nous redemandé par Potree hors cache, sur 6 coupes justes, n\'éteint pas le préchauffage',async()=>{
  const m=monter({horizon:1,candidatsMax:1},{statuts:Object.fromEntries([20,30,40,50,60,70,80,90].map(i=>[i,'invalid']))});const {pc,e,p}=m;
  let cut=20;const motifs=[];
  for(let k=0;k<7;k++){

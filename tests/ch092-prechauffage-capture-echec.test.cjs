@@ -8,7 +8,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {monter,contexte}=require('./ch092-prechauffage-monture.cjs');
 
-test('capture qui échoue (aucun apresCapture) : l\'opération lointaine reprend quand Potree ne charge plus',{todo:'CH-092 : défaut préchauffage 5'},async()=>{
+test('capture qui échoue (aucun apresCapture) : l\'opération lointaine reprend quand Potree ne charge plus',async()=>{
  const m=monter({loin:{actif:true,sautMin:11,coupesMax:40}},{statuts:{20:'invalid',21:'invalid',22:'invalid',70:'invalid'}});const {pc,e,journal,p}=m;
  p.apresCapture(contexte(pc));await e.tourner(6);const avant=journal.appels.length;assert.ok(avant>0,'opération lointaine partie');
  e.etiquette={part:23,cut:21};p.annuler('capture');   /* la capture de la coupe 21 commence, puis lève : apresCapture n'est jamais appelé */

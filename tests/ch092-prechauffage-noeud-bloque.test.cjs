@@ -11,7 +11,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {monter,contexte}=require('./ch092-prechauffage-monture.cjs');
 const borne=r=>Promise.race([r,new Promise(f=>setTimeout(()=>f({motif:'jamais-fini'}),50))]);
 
-test('un load() en échec (nœud gardé « en cours »), ligne de base allumée : après la pause, l\'opération suivante charge',{todo:'CH-092 : défaut préchauffage 1'},async()=>{
+test('un load() en échec (nœud gardé « en cours »), ligne de base allumée : après la pause, l\'opération suivante charge',async()=>{
  const m=monter({},{bloque:(nom,j)=>j.bloques.length<1&&j.appels.length>=2,ligneBase:true});const {pc,e,journal,p}=m;
  let r=p.apresCapture(contexte(pc));await e.tourner(300);assert.equal((await r).motif,'pause-serveur');assert.equal(journal.bloques.length,1);
  e.horloge+=10001;const avant=journal.appels.length;
@@ -21,7 +21,7 @@ test('un load() en échec (nœud gardé « en cours »), ligne de base allumée 
  assert.ok(journal.appels.length>avant,'des load() après la pause');
 });
 
-test('deux load() en échec dans le même épisode, sans ligne de base : après la pause, l\'opération suivante charge et finit',{todo:'CH-092 : défaut préchauffage 1'},async()=>{
+test('deux load() en échec dans le même épisode, sans ligne de base : après la pause, l\'opération suivante charge et finit',async()=>{
  const m=monter({},{bloque:(nom,j)=>j.bloques.length<2&&j.appels.length>=2});const {pc,e,journal,p}=m;
  let r=p.apresCapture(contexte(pc));await e.tourner(300);assert.equal((await r).motif,'pause-serveur');assert.equal(journal.bloques.length,2);
  e.horloge+=10001;const avant=journal.appels.length;

@@ -13,7 +13,7 @@ const {monter,contexte,tous}=require('./ch092-prechauffage-monture.cjs');
 function frontieres(pc){let n9=0;for(const n of tous(pc))if(n.level===7&&n.boundingBox.min.x<=72&&n.boundingBox.max.x>=69){n9++;n.owner={};n.nodeinfo=undefined;n.loadHierarchy=async()=>{n.nodeinfo={pointCount:1000};};}return n9;}
 function compterParcours(pc){const c={n:0},racine=pc.pcoGeometry.root,bb=racine.boundingBox;Object.defineProperty(racine,'boundingBox',{get(){c.n++;return bb;}});return c;}
 
-test('opération proche, plus de 8 frontières dans la boîte : l\'opération finit quand plus rien n\'est lançable',{todo:'CH-092 : défaut préchauffage 2'},async()=>{
+test('opération proche, plus de 8 frontières dans la boîte : l\'opération finit quand plus rien n\'est lançable',async()=>{
  const m=monter({horizon:1,candidatsMax:1});const {pc,e,journal,p}=m;assert.ok(frontieres(pc)>8);
  let fini=null;p.apresCapture(contexte(pc)).then(x=>{fini=x;});
  await e.tourner(400);const appels=journal.appels.length;await e.tourner(400);
@@ -21,7 +21,7 @@ test('opération proche, plus de 8 frontières dans la boîte : l\'opération fi
  assert.ok(fini,'événement `prechauffage` posté (opération finie)');
 });
 
-test('opération lointaine, plus de 8 frontières dans la boîte : plus de parcours de l\'arbre quand plus rien n\'est lançable',{todo:'CH-092 : défaut préchauffage 2'},async()=>{
+test('opération lointaine, plus de 8 frontières dans la boîte : plus de parcours de l\'arbre quand plus rien n\'est lançable',async()=>{
  const m=monter({horizon:1,candidatsMax:1,loin:{actif:true,sautMin:11,coupesMax:40}});const {pc,e,journal,p}=m;assert.ok(frontieres(pc)>8);
  const c=compterParcours(pc);p.apresCapture(contexte(pc));
  await e.tourner(400);const appels=journal.appels.length,n0=c.n;await e.tourner(400);
@@ -29,7 +29,7 @@ test('opération lointaine, plus de 8 frontières dans la boîte : plus de parco
  assert.ok(c.n-n0<=1,`parcours de l'arbre pendant 400 images sans rien à lancer : ${c.n-n0}`);
 });
 
-test('opération proche, les 2 places prises : pas de parcours de l\'arbre à chaque image',{todo:'CH-092 : défaut préchauffage 3'},async()=>{
+test('opération proche, les 2 places prises : pas de parcours de l\'arbre à chaque image',async()=>{
  const m=monter({horizon:1,candidatsMax:1},{dureeImages:50});const {pc,e,p}=m;const c=compterParcours(pc);
  p.apresCapture(contexte(pc));await e.tourner(10);assert.equal(m.potree.numNodesLoading,2);const n0=c.n;await e.tourner(30);
  assert.equal(m.potree.numNodesLoading,2,'toujours 2 load() en vol, aucune place');
