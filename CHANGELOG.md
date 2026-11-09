@@ -1,5 +1,10 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 10 — 09/11 nuit (D-316 ; CH-089)
+- Préchauffage : une erreur passagère d'ESV (réponse 5xx, chargement en échec ou trop long) le met en pause 10 s, puis il repart ; il ne s'arrête pour le lot qu'au 3e épisode ou sur un vrai refus (401, 403). Constat de « Vision 9 » (ÉTABLI) : un seul 502 l'avait arrêté pour les 75 dernières validations, grands sauts compris. Nouveau motif dans le journal : `pause-serveur`.
+- Preuves : verify 3 379 essais, 3 371 réussis, 0 échec, 8 sautés ; maquette 80 essais, 0 échec ; parité de la relecture identique.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 9 — 09/11 soir (D-311 à D-315 ; CH-086, CH-087, CH-088)
 - Grands sauts (CH-088) : la coupe éloignée (11 coupes ou plus) est préchauffée dès qu'elle est connue, jusqu'à 40 coupes à l'avance ; l'opération survit aux changements de coupe, ne lance rien pendant une capture. Maquette, saut de 247 coupes (ÉTABLI) : boîte chargée à l'arrivée 41 % → 70 %, points affichés 793 → 721 ms (P90 1 141 → 736 ms). Bilan à l'arrivée par l'arbre (prets, nousPrets, potreeLui) ; prechauffage-vue réparé.
 - Écritures d'après la validation laissées courir pendant la capture suivante (CH-086), porte « stocké » avant l'intention suivante ; 120 arrêts simulés sans perte ni doublon. Gain maquette ≈ 1 s par lot de 10 cuts (PROBABLE).

@@ -3576,3 +3576,8 @@ Complète D-299 sans la modifier.
 ## D-315 — Attentes de la lecture des points raccourcies pour le lot d'essai (opérateur, 09/11)
 - Question de l'intégrateur : ramener le repli de stabilité de 800 à 600 ms quand rien ne bouge (environ 4 % des vues, 2 à 4 s par lot, PROBABLE) et le minimum d'images stables de 3 à 2 (environ 10 s par lot, SUPPOSÉ) ; deux attentes de la capture, hors de D-313, dans un fichier gelé. Réponse de l'opérateur : « oui j'accepte ».
 - Livré par CH-084, sous réglage, allumé pour le lot d'essai de « Vision 8 », avec les preuves : mêmes poses et mêmes validations sur le faux ESV, et lectures identiques là où les points sont stables.
+
+## D-316 — « Vision 10 » : une erreur passagère d'ESV met le préchauffage en pause au lieu de l'arrêter pour le lot (opérateur, 09/11)
+- Constat du lot « Vision 9 » (partie 14, ÉTABLI) : une seule réponse 502 d'ESV, à 20:34:18 (Paris), a déclenché la règle « refus-serveur » de CH-085 ; le préchauffage s'est arrêté pour les 75 dernières validations du lot, et les 5 sauts de plus de 200 coupes n'ont pas été préparés (4,6 s médian).
+- Proposition de l'intégrateur : une erreur passagère (5xx, load() en échec, chargement à nous au-delà de `delaiMs`) met le préchauffage en pause 10 s ; arrêt pour le lot au 3e épisode, ou dès un vrai refus (401, 403). Réponse de l'opérateur : « go vision 10 ».
+- Exécuté par CH-089 (`src/prechauffage.js`, réglages `pauseMs` 10 000 et `refusMax` 3) ; aucune pose, validation ni écriture dans ESV touchée.
