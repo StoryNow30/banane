@@ -132,6 +132,8 @@ const PRECHAUFFAGE=['prechauffage.js','prechauffage-boite.js','prechauffage-anti
 /* CH-080 (D-309, Vision 6) : le branchement du préchauffage passe à l'observateur UNE ligne de plus (`cible` ou `suivante`) et la cible du service worker
  * (`expected.prechauffage`) à `apresCapture` ; ni pose ni validation. Retiré avant CH-077. */
 /* CH-081 (D-311, Vision 8) : le branchement passe `premiere` à l'observateur et la vue de Potree (lecture seule) à `apresCapture` ; ni pose ni validation. Retiré avant CH-080. */
+/* CH-083 (D-314) : chantiers/CH-083/adapter-page.patch ajoute `pointLoadLimit` (lecture seule de Potree) à cette même vue, sur la même ligne : retiré avec elle.
+ * La phase mémoire vit dans src/prechauffage.js (liste PRECHAUFFAGE) ; ses champs relayés sont dans les blocs de CH-077 de l'observateur et du service worker. */
 const sansCH080=t=>t.replace(":quoi?.premiere===true?{premiere:true}:{};   /* CH-081 : premiere */return new Promise(",":{};return new Promise(")
  .replace(/suivante:expected\?\.prechauffage\?\?null,\n     \/\* CH-081 : caméra active[^\n]*\n     vue:\(\)=>\(\{[^\n]*?\}\)\}\)\)\.catch/,"suivante:expected?.prechauffage??null})).catch")
  .replace(/\n \/\* CH-080 \(D-309\) : `quoi` ajoute[^\n]*/,'')

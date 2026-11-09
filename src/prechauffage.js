@@ -71,7 +71,27 @@
     /* CH-081 : zone (liste fermée) ; plafonds du lot lus par src/prechauffage-anticipation.js (bornes et défauts là-bas). */
     out.zone = r.zone === 'boite' ? 'boite' : 'cube';
     out.lot = Object.freeze({ lotRequetesMax: r.lotRequetesMax, lotOctetsMax: r.lotOctetsMax, repliInutiles: r.repliInutiles, repliFenetre: r.repliFenetre });
+    out.memoire = reglageMemoire(r.memoire);   /* CH-083 */
     return Object.freeze(out);
+  }
+
+  /* CH-083 (D-314) : phase « mémoire » : `node.load()` de Potree sur les nœuds de la coupe suivante que le préchauffage HTTP vient de recevoir en 200.
+   * Défaut du MODULE : éteinte. `noeudsMax` par opération, `enVolMax` chargements à nous à la fois (Potree garde au moins 4 − enVolMax places), `octetsMax`
+   * octets DÉCODÉS (géométrie) par vie de la page. Étude : chantiers/CH-083/etude.md. */
+  const DEFAUT_MEMOIRE = Object.freeze({ actif: false, noeudsMax: 32, enVolMax: 2, octetsMax: 256 * 1048576 });
+  const BORNES_MEMOIRE = { noeudsMax: [1, 200], enVolMax: [1, 2], octetsMax: [1048576, 4 * 1073741824] };
+  function reglageMemoire(m) {
+    const out = { ...DEFAUT_MEMOIRE };
+    if (m && typeof m === 'object') { out.actif = m.actif === true; for (const [k, [a, b]] of Object.entries(BORNES_MEMOIRE)) { const v = m[k]; if (fini(v) && v >= a && v <= b) out[k] = Math.floor(v); } }
+    return Object.freeze(out);
+  }
+  /** CH-083 : octets de la géométrie décodée d'un nœud chargé (somme des tableaux de ses attributs), ou 0. Lecture seule. */
+  function octetsGeometrie(n) {
+    try { const a = n?.geometry?.attributes; if (!a || typeof a !== 'object') return 0; let s = 0; for (const k of Object.keys(a)) { const b = a[k]?.array?.byteLength; if (fini(b) && b > 0) s += b; } return s; } catch { return 0; }
+  }
+  /** CH-083 : nœud que la phase mémoire peut charger : forme commune (ou `load` présent), `nodeinfo.pointCount` > 0 (aucune page de hiérarchie à lire), ni chargé ni en cours. */
+  function chargeable(n) {
+    try { return !!n && typeof n.load === 'function' && n.loaded !== true && n.loading !== true && !!n.nodeinfo && fini(n.nodeinfo.pointCount) && n.nodeinfo.pointCount > 0; } catch { return false; }
   }
 
   /** Clé de nœud et extension lues dans le CHEMIN d'une ressource ept-data (jamais gardé : seule la clé sert, en mémoire). */
@@ -296,11 +316,14 @@
     /* CH-081 : budget du LOT (vie de la page) et repli ; nœuds préchauffés en attente d'être redemandés par Potree (clé → arrivées restantes) ;
      * signature du dernier relevé de la vue. Clés en mémoire de la page seulement, jamais postées. */
     const budget = Anticipation && R ? Anticipation.creerBudget(R.lot) : null, attente = new Map();
-    let utiles = 0, vueSig = null, dernierAge = null;
+    let utiles = 0, vueSig = null, dernierAge = null, memOctetsLot = 0; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
+    const tas = () => { try { const v = typeof env.tas === 'function' ? env.tas() : globalThis.performance?.memory?.usedJSHeapSize; return fini(v) && v >= 0 ? v : null; } catch { return null; } };
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
     const poster = e => { try { env.poster(e); } catch { /* relevé seulement */ } };
     const maintenant = () => { try { const t = env.maintenant(); return fini(t) ? t : 0; } catch { return 0; } };
     const chargements = () => { try { const n = env.chargements(); return fini(n) ? n : null; } catch { return null; } };
+    /** CH-083 : nos `load()` encore en cours (ils comptent dans `numNodesLoading` comme ceux de Potree). */
+    const memEnVol = c => { let k = 0; for (const n of c?.memVol || []) { try { if (n.loading === true) k++; } catch { /* rien */ } } return k; };
     const etiquette = () => { try { const l = env.etiquette(); return l && Number.isInteger(l.cut) ? l : null; } catch { return null; } };
 
     /** Ressources vues par l'observateur de la page : seules les requêtes ept-data de Potree (pas les nôtres) comptent au bilan.
@@ -337,7 +360,11 @@
     }
     const resume = (c, extra = {}) => ({ kind: 'prechauffage', coupe: c.coupe, predite: c.predite ?? null, op: c.op, saut: c.saut ?? null, source: c.source ?? null, niveauMax: c.niveauMax ?? null,
       intersectants: c.sel?.intersectants ?? 0, charges: c.sel?.charges ?? 0, enCours: c.sel?.enCours ?? 0, frontiere: c.sel?.frontiere ?? 0, candidats: c.sel?.candidats.length ?? 0,
-      noeuds: c.noeuds, termines: c.termines, octets: c.octets, hierarchies: c.hierarchies, deduits: c.deduits, sansNom: c.sel?.sansNom ?? 0, sansAdresse: (c.sel?.sansAdresse ?? 0) + (c.sansAdresse ?? 0), formeNoeud: c.sel?.formeNoeud ?? null, zone: c.zone ?? null, cibles: c.nCibles ?? null, calibree: c.calibree ?? null, dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
+      noeuds: c.noeuds, termines: c.termines, octets: c.octets, hierarchies: c.hierarchies, deduits: c.deduits, sansNom: c.sel?.sansNom ?? 0, sansAdresse: (c.sel?.sansAdresse ?? 0) + (c.sansAdresse ?? 0), formeNoeud: c.sel?.formeNoeud ?? null, zone: c.zone ?? null, cibles: c.nCibles ?? null, calibree: c.calibree ?? null, ...resumeMemoire(c), dureeMs: Math.round(maintenant() - c.t0), annule: c.annule, motif: c.motif || 'fini', ...extra });
+    /** CH-083 : champs de la phase mémoire (entiers, null si la phase n'a pas tourné). Tas en Ko (lecture de `performance.memory`, Chromium). */
+    const resumeMemoire = c => { const m = c.mem; if (!m) return { memLances: null, memCharges: null, memOctets: null, memEchecs: null, memRefuses: null, memEnVolFin: null, tasAvantKo: null, tasApresKo: null };
+      const ko = v => fini(v) ? Math.round(v / 1024) : null;
+      return { memLances: m.lances, memCharges: m.charges, memOctets: m.octets, memEchecs: m.echecs, memRefuses: m.refuses, memEnVolFin: m.enVolFin, tasAvantKo: ko(m.tas0), tasApresKo: ko(m.tas1) }; };
     function terminer(c) {
       if (c.fini) return c.resultat; c.fini = true;
       const couv = c.couvertes && c.couvertes.size ? new Set([...c.cles, ...c.couvertes]) : c.cles;   /* CH-081 : clés préchauffées par une opération d'avant */
@@ -436,10 +463,39 @@
             if (R.apresNavigation === 'finir' && l && l.part === c.partie && c.predites.has(l.cut)) { c.navigue = true; c.motif = c.motif || 'navigation'; }
             else { annuler('coupe'); break; }
           }
-          if (!c.navigue && (n === null || n > 0)) { annuler('chargement'); break; }
+          if (!c.navigue && (n === null || n > memEnVol(c))) { annuler('chargement'); break; }   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » */
         }
       })();
       c.couvertes = new Set();
+      /* CH-083 (D-314) : phase mémoire, en même temps que le préchauffage HTTP. Elle reçoit les nœuds connus de Potree que le HTTP vient d'obtenir en 200
+       * (servis ensuite par le cache : aucune requête de plus au serveur, aucun échec qui bloquerait le compteur) et leur applique `load()`, la fonction
+       * même de Potree, du moins profond au plus profond, `enVolMax` à la fois, seulement quand Potree ne charge rien d'autre. Aucun lancement après
+       * l'arrêt (capture, coupe changée, Potree qui repart) ; un `load()` lancé finit seul (≤ enVolMax nœuds servis par le cache). */
+      const MM = R.memoire, fileMem = [];
+      c.memVol = new Set();
+      const phaseMemoire = MM && MM.actif ? (async () => {
+        const m = c.mem = { lances: 0, charges: 0, octets: 0, echecs: 0, refuses: 0, enVolFin: 0, tas0: tas(), tas1: null };
+        const relever = () => { for (const n of [...c.memVol]) { let en = true; try { en = n.loading === true; } catch { en = false; } if (en) continue; c.memVol.delete(n);
+          let ok = false; try { ok = n.loaded === true; } catch { ok = false; } if (ok) { const o = octetsGeometrie(n); m.charges++; m.octets += o; memOctetsLot += o; } else m.echecs++; } };
+        for (;;) {
+          relever();
+          if (c.arret || c.fini || courant !== c || c.navigue) break;
+          if (c.httpFini && !fileMem.length && !c.memVol.size) break;
+          const n0 = chargements();
+          if (n0 !== null && n0 === memEnVol(c)) {
+            fileMem.sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+            while (fileMem.length && c.memVol.size < MM.enVolMax && m.lances < MM.noeudsMax && memOctetsLot < MM.octetsMax) {
+              const x = fileMem.shift(), n = x.noeud; if (!chargeable(n)) continue;
+              try { Promise.resolve(n.load()).catch(() => { /* Potree le garde « en cours » : compté en échec par relever() s'il retombe */ }); } catch { continue; }
+              let pris = false; try { pris = n.loading === true || n.loaded === true; } catch { pris = false; }
+              if (pris) { c.memVol.add(n); m.lances++; } else { m.refuses++; fileMem.unshift(x); break; }   /* refusé (places de Potree prises) : on réessaie à l'image suivante */
+            }
+            if (fileMem.length && (m.lances >= MM.noeudsMax || memOctetsLot >= MM.octetsMax) && !c.memVol.size) break;
+          }
+          await new Promise(r => { Promise.resolve(env.image()).then(r, r); });
+        }
+        relever(); m.enVolFin = c.memVol.size; m.tas1 = tas();
+      })().catch(() => { /* relevé seulement */ }) : null;
       const vivant = () => !c.arret && !c.fini && courant === c && !c.navigue;
       const plafondLot = (rq, oc) => { if (!budget || budget.autorise(rq, oc)) return false; c.motif = c.motif || 'plafond-lot'; c.arret = true; return true; };
       /* Une coupe après l'autre, dans l'ordre des cibles ; plafonds `noeudsMax`, `octetsMax`, `hierarchiesMax` PAR CIBLE, plafonds du lot en plus. */
@@ -474,7 +530,7 @@
         }
         /* CH-081 : un nœud déjà préchauffé (opération d'avant, en attente d'être redemandé) ou déjà demandé dans cette opération n'est pas redemandé. */
         const vusIci = new Set();
-        const tous = [...sel.candidats, ...deduits].filter(x => { if (vusIci.has(x.cle)) return false; vusIci.add(x.cle); if (c.cles.has(x.cle)) { if (attente.has(x.cle)) attente.set(x.cle, Math.max(attente.get(x.cle), t.rang)); return false; } if (attente.has(x.cle)) { c.couvertes.add(x.cle); attente.set(x.cle, Math.max(attente.get(x.cle), t.rang)); return false; } return true; })
+        const tous = [...sel.candidats, ...deduits].filter(x => { if (vusIci.has(x.cle)) return false; vusIci.add(x.cle); if (c.cles.has(x.cle)) { if (attente.has(x.cle)) attente.set(x.cle, Math.max(attente.get(x.cle), t.rang)); return false; } if (attente.has(x.cle)) { c.couvertes.add(x.cle); attente.set(x.cle, Math.max(attente.get(x.cle), t.rang)); if (phaseMemoire && x.noeud && ok200.has(x.cle)) fileMem.push(x); return false; } return true; })
           .sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
         const place = Math.max(0, R.noeudsMax - hT), file = tous.slice(0, place);
         if (tous.length > place) c.resteNoeuds = true;
@@ -502,6 +558,7 @@
                 const n = buf.byteLength; c.octets += n; c.termines++; budget?.compter(0, n);
                 if (attente.size > 4000) attente.clear(); attente.set(x.cle, t.rang);   /* CH-081 : redemandé par Potree avant `rang` arrivées, ou inutile */
                 if (x.points) { octetsTot += n; pointsTot += x.points; octetsParPoint = octetsTot / pointsTot; }
+                if (r.status === 200) { if (ok200.size > 4000) ok200.clear(); ok200.add(x.cle); if (phaseMemoire && x.noeud) fileMem.push(x); }   /* CH-083 : servi en 200, le cache le rendra à `load()` */
               }
             } catch { /* annulée ou en échec : rien n'est compté */ }
             finally { c.controleurs.delete(ctl); c.enVolEst -= e; }
@@ -509,6 +566,7 @@
         };
         await Promise.all(Array.from({ length: Math.min(R.enVolMax, file.length) }, travailleur));
       }
+      c.httpFini = true; if (phaseMemoire) await phaseMemoire;   /* CH-083 : la phase mémoire finit sa file (ou s'arrête avec l'opération) */
       if (!c.motif && c.resteNoeuds) c.motif = 'plafond-noeuds';
       if (!c.motif && !c.noeuds && !c.hierarchies) c.motif = c.couvertes.size ? 'deja-prechauffe' : c.sel.sansAdresse ? 'sans-adresse' : 'aucun-noeud';
       c.arret = true; c.reveil?.();

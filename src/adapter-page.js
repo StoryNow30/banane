@@ -291,7 +291,7 @@
    Promise.resolve(PRECH.apresCapture({partie:expected?.identity?.part??null,coupe:expected?.identity?.cut??null,rails,origine:c.frame?.origin,pointclouds:c.viewer?.scene?.pointclouds||[],
      suivante:expected?.prechauffage??null,
      /* CH-081 : caméra active et réglages de Potree, lus par src/prechauffage-anticipation.js (lecture seule, entiers et liste fermée). */
-     vue:()=>({camera:c.viewer?.scene?.getActiveCamera?.(),pointBudget:window.Potree?.pointBudget,pointcloud:(c.viewer?.scene?.pointclouds||[])[0]})})).catch(()=>{});}catch{}}   /* CH-080 : cible du service worker (relecture, passe des différés), null dans le lot */
+     vue:()=>({camera:c.viewer?.scene?.getActiveCamera?.(),pointBudget:window.Potree?.pointBudget,pointLoadLimit:window.Potree?.pointLoadLimit,pointcloud:(c.viewer?.scene?.pointclouds||[])[0]})})).catch(()=>{});}catch{}}   /* CH-080 : cible du service worker (relecture, passe des différés), null dans le lot */
  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
    const c=nativeContext(),railInputs={},associationByRail={};
    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){

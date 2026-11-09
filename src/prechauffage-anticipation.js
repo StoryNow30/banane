@@ -77,9 +77,9 @@
   }
 
   /** Caméra active et réglages de Potree, lus sans rien toucher. Entiers bornés et types d'une liste fermée seulement. */
-  function releveVue({ camera, pointBudget, pointcloud } = {}) {
+  function releveVue({ camera, pointBudget, pointcloud, pointLoadLimit } = {}) {
     const lire = f => { try { return f(); } catch { return undefined; } };
-    const out = { type: 'absente', demiLargeurMm: null, demiHauteurMm: null, profondeurM: null, champDeg: null, pointBudget: null, maxLevel: null, minNodeSize: null, boites: null };
+    const out = { type: 'absente', demiLargeurMm: null, demiHauteurMm: null, profondeurM: null, champDeg: null, pointBudget: null, maxLevel: null, minNodeSize: null, boites: null, limitePoints: null };
     if (camera && typeof camera === 'object') {
       const ortho = lire(() => camera.isOrthographicCamera === true || camera.type === 'OrthographicCamera'), persp = lire(() => camera.isPerspectiveCamera === true || camera.type === 'PerspectiveCamera');
       out.type = ortho ? 'orthographique' : persp ? 'perspective' : 'autre';
@@ -92,6 +92,8 @@
       if (persp) out.champDeg = entier(lire(() => camera.fov), 0, 180);
     }
     out.pointBudget = entier(pointBudget, 0, 1e10);
+    /* CH-083 : `Potree.pointLoadLimit` (seuil de libération de la LRU ; absent de Potree 1.8 à develop : rien n'est jamais libéré). Absent : null. */
+    out.limitePoints = entier(pointLoadLimit, 0, 1e15);
     if (pointcloud && typeof pointcloud === 'object') {
       const ml = lire(() => pointcloud.maxLevel);
       out.maxLevel = ml === Infinity || ml === undefined || ml === null ? -1 : entier(ml, 0, 64);   /* −1 : sans plafond (Potree : `maxLevel || Infinity`) */
@@ -100,7 +102,7 @@
     }
     return Object.freeze(out);
   }
-  const CHAMPS_VUE = ['type', 'demiLargeurMm', 'demiHauteurMm', 'profondeurM', 'champDeg', 'pointBudget', 'maxLevel', 'minNodeSize', 'boites'];
+  const CHAMPS_VUE = ['type', 'demiLargeurMm', 'demiHauteurMm', 'profondeurM', 'champDeg', 'pointBudget', 'maxLevel', 'minNodeSize', 'boites', 'limitePoints'];
   /** Signature d'un relevé : deux relevés égaux ⇔ même signature (l'événement `prechauffage-vue` part au départ du lot puis à chaque changement). */
   const signatureVue = r => r ? CHAMPS_VUE.map(k => String(r[k])).join('|') : '';
 
