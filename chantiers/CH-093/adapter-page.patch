@@ -1,0 +1,28 @@
+--- a/src/adapter-page.js	2026-11-09 23:51:04.270552463 +0000
++++ b/src/adapter-page.js	2026-11-09 23:51:04.291247280 +0000
+@@ -293,6 +293,16 @@
+      suivante:expected?.prechauffage??null,
+      /* CH-081 : caméra active et réglages de Potree, lus par src/prechauffage-anticipation.js (lecture seule, entiers et liste fermée). */
+      vue:()=>({camera:c.viewer?.scene?.getActiveCamera?.(),pointBudget:window.Potree?.pointBudget,pointLoadLimit:window.Potree?.pointLoadLimit,pointcloud:(c.viewer?.scene?.pointclouds||[])[0]})})).catch(()=>{});}catch{}}   /* CH-080 : cible du service worker (relecture, passe des différés), null dans le lot */
++ /* CH-093 : commande `prechauffer` (LECTURE SEULE, hors de toute capture) : le service worker donne la première coupe que la relecture visitera
++  * (`cible` : { part, cut, source:'changement-mode' }), connue de lui seul à la clôture du lot. Elle est passée telle quelle à src/prechauffage.js
++  * (`anticiper`) avec la coupe affichée (identité et rails lus à l'instant, comme pour une capture) ; rien n'est attendu, rien n'est écrit dans ESV ni
++  * dans Potree. Module absent, éteint ou d'avant CH-093 : `lance:false`, rien d'autre. */
++ const PRECH_ANTICIPE=!!PRECH&&typeof PRECH.anticiper==='function';
++ function prechauffer(cible){if(!PRECH_ANTICIPE)return {lance:false,motif:'eteint'};
++   try{const s=snapshot(),c=context(),R=s?.rails;
++     Promise.resolve(PRECH.anticiper({partie:s?.identity?.part??null,coupe:s?.identity?.cut??null,rails:{left:R?.left?.positionSceneRelative,right:R?.right?.positionSceneRelative},origine:c.frame?.origin,
++       pointclouds:c.viewer?.scene?.pointclouds||[],cible:cible&&typeof cible==='object'?{part:cible.part,cut:cible.cut,source:cible.source}:null})).catch(()=>{});
++     return {lance:true};}catch{return {lance:false,motif:'etat-illisible'};}}
+  async function nativeCapture(expected,isActive=()=>true,request={}){const initial=nativeSnapshot();K.assertTarget(expected.identity,initial.identity);
+    const c=nativeContext(),railInputs={},associationByRail={};
+    for(const side of ['left','right'])if(initial.rails[side]&&expected.rails?.[side]&&c.pair[side]&&sameRailPose(initial.rails[side],expected.rails[side])){
+@@ -1546,7 +1556,7 @@
+  const methods={ping:(options)=>{try{installerOmbreEsv();}catch{}
+    const contrat=options&&typeof options==='object'&&options.contrat===true&&relOn('empreinte')?(()=>{try{return empreinteContrat();}catch{return null;}})():null;
+    const selecteur=options&&typeof options==='object'&&options.contrat===true&&relOn('selecteurParties')?(()=>{try{return selecteurParties();}catch{return {status:'illisible',current:null,parts:[]};}})():null;
+-   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,changerPartie,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,
++   return {version:K.VERSION,versionName:K.VERSION_NAME??null,pageId,label:cutLabel(),proprietaire:PROPRIO,intrusion,capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m),...(PRECH_ANTICIPE?['prechauffer']:[])/* CH-093 */],...(contrat?{contrat}:{}),...(selecteur?{selecteurParties:selecteur}:{})};},state:snapshot,nativeSnapshot,changerPartie,capture,apply,restore,next,nextWithoutDecision,validateAndNext,validateInPlace,skipAndNext,goToCut,validerMajEspace,prechauffer,
+    amenerDansLaVue,manualStart,manualPause:async()=>manual?manual.pause():{active:false},manualResume:async()=>manual?manual.resume():{active:false},
+    manualFinish:async()=>manual?manual.finish():{active:false},nativeStart,nativePause:async()=>native?native.pause():{active:false},
+    nativeResume,nativeFinish:async()=>native?native.finish():{active:false},

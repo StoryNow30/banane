@@ -2271,7 +2271,7 @@ async function passeDiffEcrire(b,poses,rg,vue,aReprendre=null){
   try{
    for(const [ip,p] of aEcrire.entries()){
     EC.suivante=aEcrire[ip+1]?.cut;EC.apres=aEcrire[ip+2]?.cut;   /* CH-080 : cut suivant de la passe, pour le préchauffage ; CH-081 : celui d'après */
-    EC.loin=cibleLoinListe(p.cut,aEcrire.slice(ip+1).map(x=>x.cut));   /* CH-088 : cible lointaine de la passe */
+    EC.loin=cibleLoinListe(p.cut,aEcrire.slice(ip+1).map(x=>x.cut),relecturePremiere(b));   /* CH-088 : cible lointaine de la passe ; CH-093 : puis la première coupe relue */
     if(EC.arret||!await passeDiffAllumee()){issue='arret';break;}
     if(engine?.s?.batch?.id!==b.id){issue='lot-change';break;}
     vue.cut=p.cut;let r;
@@ -2298,17 +2298,56 @@ async function passeDiffEcrireDemande(){
  * à l'argument de LEUR capture (`prechauffage` : partie, cut de la capture `de`, cut suivant, source, identifiant d'opération), lu par la page
  * (src/prechauffage.js) qui ne l'accepte que pour cette capture. Le lot n'en porte jamais : ses commandes restent identiques à l'octet
  * (tests/choix-lot-clic-sw.test.cjs) ; sa coupe suivante (« cut non validé suivant » d'ESV) est trouvée par la page dans la liste d'ESV. */
-function avecPrechauffage(etat,cut,source,apres,loin){const id=etat?.identity;if(!Number.isInteger(cut)||cut<0||!id||!Number.isInteger(id.cut))return etat;
+function avecPrechauffage(etat,cut,source,apres,loin){const id=etat?.identity,seul=(cut===undefined||cut===null)&&loin?.mode===true;   /* CH-093 : dernière capture de la passe, indice sans `cut` */
+ if(!(Number.isInteger(cut)&&cut>=0)&&!seul||!id||!Number.isInteger(id.cut))return etat;
  /* CH-081 (horizon 2) : `apres`, le cut que la même liste visitera après `cut`, s'il existe. CH-088 : `loin` ({cut, avant, saut}), la prochaine cible
-  * lointaine de la même liste (src/prechauffage.js, opération lointaine), ou null : aucune dans la portée. */
- return {...etat,prechauffage:{part:id.part,de:id.cut,cut,source,op:globalThis.BananeCore3.uid(),...(Number.isInteger(apres)&&apres>=0?{apres}:{}),...(loin!==undefined?{loin}:{})}};}
+  * lointaine de la même liste (src/prechauffage.js, opération lointaine), ou null : aucune dans la portée. CH-093 : `loin.mode` : cette cible est la
+  * première coupe du mode suivant (la relecture, après la passe des différés) ; elle seule peut partir sans `cut` (la passe n'a plus de cut suivant). */
+ return {...etat,prechauffage:{part:id.part,de:id.cut,...(seul?{}:{cut}),source,op:globalThis.BananeCore3.uid(),...(Number.isInteger(apres)&&apres>=0?{apres}:{}),...(loin!==undefined?{loin}:{})}};}
 /* CH-088 : prochaine cible lointaine d'une liste ordonnée de cuts, vue du cut `de` : le premier cut dont l'écart au précédent de la liste (`de` pour le
  * premier) est ≥ `loin.sautMin`, à au plus `loin.coupesMax` cuts ; null sinon ; undefined si le réglage est éteint (rien n'est joint). */
-function cibleLoinListe(de,cuts){const L=globalThis.BananeSettings?.lot?.chargement?.prechauffer,RL=L?.loin;
- if(!L||L.actif!==true||!RL||RL.actif!==true||!Number.isInteger(de))return undefined;
- const S=Number.isInteger(RL.sautMin)&&RL.sautMin>=2?RL.sautMin:11,M=Number.isInteger(RL.coupesMax)&&RL.coupesMax>=0?RL.coupesMax:40;let prec=de;
- for(let j=0;j<cuts.length&&j<=M;j++){const c=cuts[j];if(!Number.isInteger(c))return null;if(Math.abs(c-prec)>=S)return {cut:c,avant:j,saut:c-prec};prec=c;}
+function cibleLoinListe(de,cuts,mode){const L=globalThis.BananeSettings?.lot?.chargement?.prechauffer,RL=L?.loin,RR=L?.relecture;
+ /* CH-093 : `mode`, la première coupe du mode suivant (la relecture), ferme la chaîne : si aucun cut de la liste n'est lointain avant elle et qu'elle
+  * l'est (écart ≥ `relecture.sautMin` au dernier cut de la liste), elle est rendue, marquée `mode:true`. Réglage `relecture` éteint : comme CH-088. */
+ const loinOn=!!L&&L.actif===true&&!!RL&&RL.actif===true,modeOn=Number.isInteger(mode)&&mode>=0&&!!L&&L.actif===true&&L.voie==='potree'&&!!RR&&RR.actif===true;
+ if(!loinOn&&!modeOn||!Number.isInteger(de))return undefined;
+ const S=Number.isInteger(RL?.sautMin)&&RL.sautMin>=2?RL.sautMin:11,M=Number.isInteger(RL?.coupesMax)&&RL.coupesMax>=0?RL.coupesMax:40,SR=Number.isInteger(RR?.sautMin)&&RR.sautMin>=2?RR.sautMin:11;let prec=de,j=0;
+ for(;j<cuts.length&&j<=M;j++){const c=cuts[j];if(!Number.isInteger(c))return null;if(loinOn&&Math.abs(c-prec)>=S)return {cut:c,avant:j,saut:c-prec};prec=c;}
+ if(modeOn&&j===cuts.length&&j<=M&&Math.abs(mode-prec)>=SR)return {cut:mode,avant:j,saut:mode-prec,mode:true};
  return null;}
+/* CH-093 — LE PRÉCHAUFFAGE ANTICIPE LE PASSAGE À LA RELECTURE. La liste des coupes à relire (`relectureEntree` puis la sélection, triée par coupe
+ * croissante) n'existe qu'ici, et seulement à la clôture du lot : la page ne peut pas la déduire de la liste d'ESV. Sa PREMIÈRE coupe est donnée à la
+ * page, qui la précharge par l'opération lointaine (src/prechauffage.js, source `changement-mode`) :
+ *  - à la clôture du lot, si la passe des différés écrit (la relecture l'attend) : sélection PROVISOIRE, calculée une fois (`cloture`) ;
+ *  - pendant la passe : jointe aux captures de la passe (`cibleLoinListe`, `mode`) ;
+ *  - dès que la relecture a sa vraie sélection, lancement automatique ou à la main (`selection`).
+ * Envoi : commande `prechauffer` de l'adaptateur (lecture seule, hors de toute capture ; chantiers/CH-093/adapter-page.patch), seulement si la page
+ * l'annonce dans ses capacités et affiche la partie du lot. Ce n'est qu'un indice : aucune décision n'en dépend, rien n'est attendu, une erreur
+ * ne sort jamais. Réglage `lot.chargement.prechauffer.relecture.actif` (voie potree) ; éteint : pas même un ping. */
+const relectureAnticipee={lotId:null,cut:null,envoyee:null};
+const relectureAnticipationAllumee=()=>{const L=globalThis.BananeSettings?.lot?.chargement?.prechauffer;return !!L&&L.actif===true&&L.voie==='potree'&&L.relecture?.actif===true;};
+/* Première coupe relue connue pour ce lot (provisoire ou vraie), sinon undefined. */
+function relecturePremiere(b){const A=relectureAnticipee;return !!b?.id&&A.lotId===b.id&&Number.isInteger(A.cut)?A.cut:undefined;}
+/* Options de la sélection : les mêmes pour la relecture et pour la sélection provisoire. */
+const relectureOptionsSelection=(R,reglages,cfg)=>({...R.optionsSelection(reglages.selection),...(Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:{}),
+ ...(cfg.plafondParZone&&typeof cfg.plafondParZone==='object'?{plafondParZone:cfg.plafondParZone}:{})});
+async function relectureAnticiperEnvoyer(b,cut,quand){
+ if(!relectureAnticipationAllumee()||!b?.id||!Number.isInteger(cut)||cut<0||selectedTab===null)return null;
+ const A=relectureAnticipee,deja=A.lotId===b.id&&A.envoyee===cut;
+ if(A.lotId!==b.id)A.envoyee=null;A.lotId=b.id;A.cut=cut;if(deja)return 'deja-envoyee';
+ let issue='erreur',de=null;
+ try{const ping=await call('ping'),lu=ping?.label;de=Number.isInteger(lu?.cut)?lu.cut:null;
+  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('prechauffer'))issue='page-sans-commande';
+  else if(!Number.isInteger(lu?.part)||lu.part!==b.scope?.part)issue='autre-partie';
+  else{const r=await call('prechauffer',{part:b.scope.part,cut,source:'changement-mode'});issue=r?.lance===true?'envoyee':'refusee';if(issue==='envoyee')A.envoyee=cut;}}
+ catch{issue='erreur';}
+ journalerSimple('relecture-anticipee',{lotId:b.id,quand,issue,cut,de});return issue;}
+async function relectureAnticiperProvisoire(b,p){
+ try{if(!relectureAnticipationAllumee()||!b?.id||selectedTab===null||passeDiffReglage().mode!=='ecriture')return null;
+  const R=globalThis.BananeRelectureOmbre,entree=await relectureEntree(b),sel=R.selection(entree,relectureOptionsSelection(R,await relectureReglages(),reglageRelecture()));
+  if(relecture.passe!==p||p.etat!=='preparation'||engine?.s?.batch?.id!==b.id)return null;
+  return await relectureAnticiperEnvoyer(b,sel.cuts[0]?.cut,'cloture');}
+ catch{return null;}}
 async function passeDiffPoser(b,p,E){
  const K=globalThis.BananeCore3,G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,S=globalThis.BananeSettings?.lot||{},r=p.r,cut=r.identity.cut,part=b.scope.part,t0=Date.now();
  const refuse=raison=>({resultat:'refuse',raison});
@@ -3541,7 +3580,7 @@ function relectureNouvelle(b,auto){const debut=new Date().toISOString();
 /* Fin naturelle d'un lot créé avec la relecture : la passe est planifiée une fois par lot, et existe dès maintenant (« preparation »). */
 function relecturePlanifier(){const b=engine?.s?.batch;if(!b?.id||relecture.planifie.has(b.id)||!relectureDuLot(b)||passeActive()||attendRetourPartie(b))return;
  if(!(b.state==='COMPLETED'||b.state==='STOPPED'&&b.stoppedAtEnd))return;
- relecture.planifie.add(b.id);const p=relectureNouvelle(b,true);
+ relecture.planifie.add(b.id);const p=relectureNouvelle(b,true);void relectureAnticiperProvisoire(b,p);   /* CH-093 : indice de préchauffage, jamais attendu */
  setTimeout(()=>{void relectureLancer({auto:true,passe:p}).catch(()=>{});},Math.max(0,reglageRelecture().departMs||0));}
 /* Seuils de la règle prudente : le fichier proposé (chantier claude/50-zones-autonomes) s'il existe et se lit, sinon le défaut provisoire
  * (la passe reste alors en ombre : correction 5). */
@@ -3682,8 +3721,8 @@ async function relectureLancer({auto=false,passe=null}={}){
   else if(modeEffectif==='corriger'&&!observe){modeEffectif='ombre';motif='l’observateur passif est coupé, aucune écriture ne pourrait être prouvée';}
   else if(modeEffectif==='corriger'&&!permis.ok){modeEffectif='ombre';motif=`réglages non sûrs (${permis.raison})`;}
   const entree=await relectureEntree(engine.s.batch);
-  const sel=R.selection(entree,{...R.optionsSelection(reglages.selection),...(Number.isInteger(cfg.plafondCuts)?{plafondCuts:cfg.plafondCuts}:{}),
-   ...(cfg.plafondParZone&&typeof cfg.plafondParZone==='object'?{plafondParZone:cfg.plafondParZone}:{})});
+  const sel=R.selection(entree,relectureOptionsSelection(R,reglages,cfg));
+  void relectureAnticiperEnvoyer(engine.s.batch,sel.cuts[0]?.cut,'selection');   /* CH-093 : première coupe relue donnée au préchauffage de la page, jamais attendue */
   s=suite();if(s==='remplacee')return relectureEtat();if(s)return nonLancee('arrêtée à ta demande avant le départ','arret');
   /* Revue (correction 2) : ESV et le lot sont recontrôlés APRÈS les attentes, juste avant le départ. */
   refus=await relectureRefus(engine.s.batch,auto);if(refus)return nonLancee(refus);

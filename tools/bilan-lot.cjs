@@ -197,6 +197,8 @@ function bilan(evs) {
     memoire: { lances: somme(pre, 'memLances'), charges: somme(pre, 'memCharges'), echecs: somme(pre, 'memEchecs') },
     arrivee: arriveeDe(bil.filter(e => num(e.boite) !== null)),
     loin: loinDe(obs('prechauffage-loin')),
+    /* CH-093 : passage à la relecture : opérations lointaines de source `changement-mode` (la première coupe relue) et envois du service worker. */
+    relecture: { ...loinDe(obs('prechauffage-loin').filter(e => e.source === 'changement-mode')), envois: compter(par('relecture-anticipee'), e => cle(e.issue)) },
     /* CH-088 : `prechauffage-vue` : jusqu'à CH-088, son champ `type` écrasait celui de l'enveloppe ; on le reconnaît aussi par son type de caméra. */
     vue: evs.filter(e => e.kind === 'prechauffage-vue' && (e.type === 'esv-observation' || TYPES_VUE.includes(e.type))).map(e => ({
       camera: TYPES_VUE.includes(e.camera) ? e.camera : TYPES_VUE.includes(e.type) ? e.type : null, pointBudget: num(e.pointBudget), limitePoints: num(e.limitePoints), maxLevel: num(e.maxLevel),
@@ -282,6 +284,12 @@ function markdown(b) {
     const la = lo.arrivee;
     L.push(`- Opérations lointaines : ${nb(lo.n)} (${dico(lo.parMotif)}) ; load() lancés ${nb(lo.lances)}, chargés avant l'arrivée ${nb(lo.charges)}, en échec ${nb(lo.echecs)} ; départ médian ${nb(lo.capturesMediane)} capture(s) et ${dur(lo.msAvantMediane)} avant l'arrivée.`);
     if (la.n) L.push(`  - À l'arrivée (${nb(la.n)}) : chargés ${nb(la.prets)} sur ${nb(la.boite)}, dont par nous ${nb(la.nousPrets)} ; Potree lui-même ensuite ${nb(la.potreeLui)} ; part déjà chargée ${la.partPrete === null ? '—' : pct(la.partPrete, 1)}.`);
+  }
+  /* CH-093 */
+  const rl = p.relecture;
+  if (rl && (rl.n || Object.keys(rl.envois).length)) {
+    L.push(`- Passage à la relecture : envois du service worker ${dico(rl.envois) || '—'} ; opérations ${nb(rl.n)} (${dico(rl.parMotif) || '—'}) ; load() lancés ${nb(rl.lances)}, chargés avant l'arrivée ${nb(rl.charges)} ; départ médian ${dur(rl.msAvantMediane)} avant l'arrivée.`);
+    if (rl.arrivee.n) L.push(`  - À l'arrivée sur la première coupe relue (${nb(rl.arrivee.n)}) : chargés ${nb(rl.arrivee.prets)} sur ${nb(rl.arrivee.boite)}, dont par nous ${nb(rl.arrivee.nousPrets)} ; Potree lui-même ensuite ${nb(rl.arrivee.potreeLui)} ; part déjà chargée ${rl.arrivee.partPrete === null ? '—' : pct(rl.arrivee.partPrete, 1)}.`);
   }
   for (const v of p.vue.slice(-1)) L.push(`- Vue de Potree (${nb(p.vue.length)} relevé(s), dernier) : caméra ${v.camera ?? '—'}, pointBudget ${nb(v.pointBudget)}, pointLoadLimit ${nb(v.limitePoints)}, maxLevel ${nb(v.maxLevel)} ; fetch natif ${v.fetchNatif ?? '—'}, en-têtes XHR ${nb(v.enTetesXhr)}, accréditations XHR ${v.credXhr ?? '—'}.`);
   if (!p.vue.length) L.push('- Vue de Potree : aucun relevé prechauffage-vue.');

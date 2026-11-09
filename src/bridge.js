@@ -1,5 +1,5 @@
 (()=>{'use strict';if(window.__banane3Bridge)return;window.__banane3Bridge=true;
- const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','goToCut','validerMajEspace','amenerDansLaVue','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','changerPartie','cancel']);
+ const channel=crypto.randomUUID(),pending=new Map(),allowed=new Set(['ping','state','nativeSnapshot','capture','apply','restore','next','nextWithoutDecision','validateAndNext','validateInPlace','skipAndNext','goToCut','validerMajEspace','amenerDansLaVue','manualStart','manualPause','manualResume','manualFinish','nativeStart','nativePause','nativeResume','nativeFinish','changerPartie','cancel','prechauffer'/* CH-093 : première coupe relue donnée au préchauffage, lecture seule */]);
  let pill=null,strip=null,launcherGeneration=0;
  /* 4.7.20 (piste H) — bandeau d'état en bas de la page ESV, activé depuis le
   * panneau. Il ne capte aucun clic (pointer-events: none) : le Pilote clique
