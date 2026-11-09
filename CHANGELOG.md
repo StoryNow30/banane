@@ -1,5 +1,11 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 6 — 09/11 (D-308, D-309, D-310 ; CH-079, CH-080)
+- Préchauffage des coupes éloignées (CH-080) : la coupe suivante est prise dans l'ordre de travail d'Ariane et la liste d'ESV (plus devinée) ; le préchauffage ne part que si elle est à 11 coupes ou plus ; il lit d'abord le sommaire (hiérarchie) de la zone lointaine, puis les morceaux de points qu'il désigne. Maquette, saut de 50 coupes (ÉTABLI) : 798 → 551 ms jusqu'à « aucun chargement » (−31 %). Coût réel à lire sur le lot d'essai (D-310).
+- Coupes apprises (CH-079), EN OMBRE (calculées et consignées, rien n'est posé ni différé) : garde contre la mauvaise voie sur les cuts validés (écartement à plus de 15 mm de celui des voisins) et desserrage de la décision sur le lot dans les aiguillages ; les 9 cuts validés faux du 08/11 deviennent des cas de contrôle.
+- Preuves : verify 3 278 essais, 3 271 réussis, 0 échec, 7 sautés (corpus privés absents, cas « sans le patch » devenus sans objet) ; maquette 82 essais, 0 échec, 3 sautés ; parité de la relecture identique au tronc.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 5 — 08/11 nuit (D-307, CH-077)
 - Préchauffage (piste 3) ALLUMÉ pour un lot d'essai : à la fin de chaque lecture, Ariane demande au navigateur, sans l'attendre, les morceaux de points de la coupe suivante (rayon 0,75 m, environ 6 morceaux et 0,4 Mo par coupe au banc), pour qu'ESV les trouve déjà dans le cache. Il s'annule au début de chaque lecture et ne touche jamais la pose ni la validation. `lot.chargement.prechauffer.actif:false` le coupe.
 - Banc de la maquette (ÉTABLI) : −45 % sur l'attente de chargement, coupe suivante prédite juste 45/45.

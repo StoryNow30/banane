@@ -14,7 +14,9 @@ const raison=N.indisponible()||(O.adaptateurCH080()===null?'outil patch absent':
 const ouverts=[];after(async()=>{for(const s of ouverts)await s.fermer().catch(()=>{});});
 const sansAdresse=evts=>{const t=JSON.stringify(evts).replace(/"kind":"[^"]*"/g,'');assert.ok(!/\/|ept-data|\.bin|\d+-\d+-\d+-\d+/.test(t),'aucune adresse ni clé : '+t);};
 
-test('sans le correctif : saut de 50 coupes, sans-suivante, 0 nœud servi par le cache',opts,async()=>{
+/* Vision 6 (D-309) : une fois le patch intégré au tronc, l'adaptateur « sans le correctif » n'existe plus ; le cas se saute (il reste prouvé par l'historique du chantier). */
+const integre=require('node:fs').readFileSync(require('node:path').join(N.racine,'src/adapter-page.js'),'utf8').includes('CH-080');
+test('sans le correctif : saut de 50 coupes, sans-suivante, 0 nœud servi par le cache',integre?{skip:'patch CH-080 intégré au tronc'}:opts,async()=>{
  const s=await O.ouvrir({correctif:false});ouverts.push(s);
  const t=await s.transition();assert.equal(t.suivant-t.cut,50,'la maquette saute de 50 coupes');assert.ok(t.noeuds>0);assert.equal(t.cache,0);
  const p=t.evts.filter(e=>e.kind==='prechauffage');assert.ok(p.length>=1);assert.equal(p[0].motif,'sans-suivante');assert.equal(p[0].noeuds,0);
