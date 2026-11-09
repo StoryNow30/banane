@@ -19,11 +19,12 @@ const FICHIERS=[...N.PAGE_FILES.slice(0,-1),'src/prechauffage.js','src/adapter-p
 const ECOUTE="window.__evts=[];addEventListener('message',e=>{if(e.source===window&&e.data&&e.data.kind==='banane5:evt')window.__evts.push(JSON.parse(JSON.stringify(e.data.event)));});";
 const attendre=async(f,ms=15000,pas=20)=>{const t=Date.now();for(;;){const v=await f();if(v)return v;if(Date.now()-t>ms)throw Error('délai dépassé');await new Promise(r=>setTimeout(r,pas));}};
 
-async function ouvrir({prechauffer=false,reglage={},maquette={}}={}){
- const R={...S.lot.chargement.prechauffer,...reglage,actif:prechauffer};
+async function ouvrir({prechauffer=false,reglage={},maquette={},adaptateur=null}={}){   /* CH-080 : `adaptateur`, contenu remplaçant (copie patchée) */
+ /* CH-080 : le réglage livré (`sautMin` 11) ne préchauffe plus la voisine ; les essais de CH-077 la préchauffent (sautMin 1) sauf réglage contraire. */
+ const R={...S.lot.chargement.prechauffer,sautMin:1,...reglage,actif:prechauffer};
  const reglages=N.lire('src/settings.js')+`;window.BananeSettings={...window.BananeSettings,lot:{...window.BananeSettings.lot,chargement:{prechauffer:${JSON.stringify(R)}}}};`;
  const env=await N.ouvrir({maquette:{cuts:10,latence:20,lots:2,ept:1,...maquette},avantPage:[N.lire('src/esv-observer.js'),ECOUTE],fichiersPage:FICHIERS,
-  contenus:{'src/adapter-page.js':adaptateurPatche(),'src/settings.js':reglages}});
+  contenus:{'src/adapter-page.js':adaptateur??adaptateurPatche(),'src/settings.js':reglages}});
  await env.injecter();
  const finCut=cut=>env.page.evaluate(c=>window.__maquette.journal.filter(e=>e.type==='ept-fin'&&e.cut===c).at(-1)||null,cut);
  const repos=()=>attendre(()=>env.page.evaluate(()=>window.Potree.numNodesLoading===0&&window.__maquette.etat().railsPrets));
@@ -36,9 +37,9 @@ async function ouvrir({prechauffer=false,reglage={},maquette={}}={}){
   const reste=mortMs-(Date.now()-finCapture);if(reste>0)await new Promise(r=>setTimeout(r,reste));
   const s2=(await env.appel('state')).result;
   t=Date.now();const v=await env.appel('validateAndNext',[s2.identity,{part:s.identity.part,end:s.identity.cut+100}]);if(v.error)throw Error('validation : '+v.error);const validationMs=Date.now()-t;
-  const suivant=v.result.nextIdentity?.cut;const fin=await attendre(()=>finCut(suivant));await repos();
+  const suivant=v.result.nextIdentity?.cut;const fin=await attendre(()=>finCut(suivant));await repos();const reposMs=Date.now()-t;   /* CH-080 : de la validation à « aucun chargement » */
   const requetes=Object.values(env.serveur.journal.ept).reduce((a,b)=>a+b,0)-requetesAvant;
   const evts=await env.page.evaluate(()=>window.__evts.splice(0));
-  return {cut,suivant,captureMs,poseMs,validationMs,chaineMs:fin.ms,noeuds:fin.noeuds,cache:fin.cache,requetes,evts};}
+  return {cut,suivant,captureMs,poseMs,validationMs,reposMs,hierarchies:fin.hierarchies??null,hierCache:fin.hierCache??null,chaineMs:fin.ms,noeuds:fin.noeuds,cache:fin.cache,requetes,evts};}
  return {env,transition,fermer:()=>env.fermer()};}
 module.exports={ouvrir,adaptateurPatche,FICHIERS,attendre};

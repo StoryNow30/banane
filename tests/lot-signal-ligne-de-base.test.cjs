@@ -20,6 +20,11 @@ test('le patch est appliqué au tronc (ou s’y applique)',opts,()=>{assert.equa
   const verif=fs.mkdtempSync(path.join(os.tmpdir(),'ch062-r-'));fs.mkdirSync(path.join(verif,'src'));
   fs.copyFileSync(path.join(racine,'src/esv-observer.js'),path.join(verif,'src/esv-observer.js'));
   fs.writeFileSync(path.join(verif,'src/adapter-page.js'),fs.readFileSync(SRC,'utf8')
+   /* D-309 (Vision 6) : retirer d'abord les lignes du branchement CH-080, puis celles de CH-077. */
+   .replace(/\n \/\* CH-080 \(D-309\) : `quoi` ajoute[^\n]*/,'')
+   .replace("function voisinsB1(cut,world,quoi){const plus=Number.isInteger(quoi?.cible)?{cible:quoi.cible}:quoi?.suivante===true?{suivante:true}:{};return new Promise(","function voisinsB1(cut,world){return new Promise(")
+   .replace("fenetre:10,world,...plus},location.origin)","fenetre:10,world},location.origin)")
+   .replace(/pointclouds:c\.viewer\?\.scene\?\.pointclouds\|\|\[\],\n     suivante:expected\?\.prechauffage\?\?null\}\)\)\.catch\(\(\)=>\{\}\);\}catch\{\}\}[^\n]*/,"pointclouds:c.viewer?.scene?.pointclouds||[]})).catch(()=>{});}catch{}}")
    .replace(/\n \/\* CH-077 \(réglage `lot\.chargement\.prechauffer`[\s\S]*?\n function prechaufferApres\(expected\)[^\n]*\n[^\n]*\n[^\n]*catch\{\}\}/,'')
    .replace("{try{PRECH?.annuler('capture');}catch{}noterCompteurDebutCut();","{noterCompteurDebutCut();")
    .replace(/\n   prechaufferApres\(expected\);   \/\* CH-077[^\n]*/,''));

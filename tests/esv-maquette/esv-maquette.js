@@ -55,7 +55,8 @@
  /* CH-077 : nœuds EPT servis PAR ADRESSE (`/maquette/ept/ept-data/D-X-Y-Z.bin`, en-têtes de cache réglables côté serveur), chargés par la page
   * ÉTAGE PAR ÉTAGE en XMLHttpRequest comme Potree 1.8 (un étage attend le précédent, `eptParallele` à la fois), hiérarchie connue au fur et à mesure
   * (enfants d'un nœud chargé), arbre `pc.pcoGeometry` lisible par Ariane. ept=0 (défaut) : rien ne change pour les autres essais. */
- options.ept=num('ept',0)===1;options.eptProfondeur=num('eptProfondeur',7);options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
+ options.ept=num('ept',0)===1;options.eptHier=num('eptHier',0)===1;   /* CH-080 : hiérarchie lue dans des fichiers `ept-hierarchy` (Potree 1.8) */
+ options.eptProfondeur=num('eptProfondeur',7);options.eptMarge=num('eptMarge',.5);options.eptParallele=num('eptParallele',4);
  options.finPartie=q.get('finPartie')==='rechargement'?'rechargement':'sur-place';
  options.delaiRechargement=num('delaiRechargement',150);
  options.traversee=num('traversee',1);   /* CH-026 : témoignage de l'opérateur (30/10) : au dernier cut, « Next cut » (Z) ouvre la partie suivante ; plus rien à valider, « Next non validated cut » aussi. 0 : ESV reste dans la partie */
@@ -98,32 +99,42 @@
   const boite=objet('Box',{position:centre,quaternion:(({x,y,z,w})=>[x,y,z,w])(quatColonnes(X,Y,Z)),scale:[larg,haut,profondeur]});majMonde(boite);
   pc.material.clipBoxes=[{inverse:{elements:inv(boite.matrixWorld.elements)}}];}
  /* ---------- CH-077 : arbre EPT (cube de 128 m autour de l'origine du monde factice, feuilles de 1 m à la profondeur 7) ---------- */
- const ept={racine:null,couloir:null,min:null,T:128};
+ const ept={racine:null,couloir:null,min:null,T:128,hierVus:0,hierCache:0};
  const coupeBoite=(b,lo,hi)=>b.min.x<=hi[0]&&b.max.x>=lo[0]&&b.min.y<=hi[1]&&b.max.y>=lo[1]&&b.min.z<=hi[2]&&b.max.z>=lo[2];
  function noeudEpt(d,x,y,z){const s=ept.T/2**d,m=ept.min,nom=`${d}-${x}-${y}-${z}`;
   return {key:{d,x,y,z},level:d,numPoints:1000,boundingBox:{min:{x:m[0]+x*s,y:m[1]+y*s,z:m[2]+z*s},max:{x:m[0]+(x+1)*s,y:m[1]+(y+1)*s,z:m[2]+(z+1)*s}},
    children:{},hasChildren:d<options.eptProfondeur,loaded:false,loading:false,filename:()=>nom,url:()=>'/maquette/ept/ept-data/'+nom};}
  function construireEpt(s){const pts=s.parties.flatMap(p=>p.cuts.flatMap(c=>[c.rails.left.position,c.rails.right.position]));
   ept.min=s.monde.origine.map(v=>v-ept.T/2);ept.couloir=[[0,1,2].map(i=>Math.min(...pts.map(p=>p[i]))-2),[0,1,2].map(i=>Math.max(...pts.map(p=>p[i]))+2)];
-  ept.racine=noeudEpt(0,0,0,0);pc.pcoGeometry={root:ept.racine,loader:{extension:()=>'.bin'}};}
+  ept.racine=noeudEpt(0,0,0,0);if(options.eptHier)ept.racine.numPoints=-1;pc.pcoGeometry={root:ept.racine,loader:{extension:()=>'.bin'}};}
+ /* CH-080 : Potree 1.8 `loadHierarchy` : fichier de la clé (fetch), nœuds créés du haut vers le bas sous leur parent, `numPoints` du fichier (−1 : sous-hiérarchie). */
+ function lireHierarchie(n){const nom=n.filename();
+  return fetch(n.url().replace(/ept-data\/[^/]*$/,'ept-hierarchy/'+nom+'.json')).then(r=>r.json()).then(h=>{const noeuds={[nom]:n};
+   const cles=Object.keys(h).map(k=>k.split('-').map(Number)).sort((a,b)=>a[0]-b[0]);
+   for(const [d,x,y,z] of cles){const parent=noeuds[`${d-1}-${x>>1}-${y>>1}-${z>>1}`];if(!parent)continue;
+    const e=noeudEpt(d,x,y,z);e.numPoints=h[`${d}-${x}-${y}-${z}`];e.hasChildren=e.numPoints===-1||d<options.eptProfondeur&&cles.some(c=>c[0]===d+1&&c[1]>>1===x&&c[2]>>1===y&&c[3]>>1===z);
+    parent.children[(x&1)*4+(y&1)*2+(z&1)]=e;noeuds[`${d}-${x}-${y}-${z}`]=e;}
+   ept.hierVus++;try{const pe=performance.getEntriesByName(new URL(n.url().replace(/ept-data\/[^/]*$/,'ept-hierarchy/'+nom+'.json'),location.href).href).at(-1);if(pe&&pe.transferSize===0&&pe.decodedBodySize>0)ept.hierCache++;}catch{}
+  }).catch(()=>{});}
  /* Hiérarchie lue au chargement du nœud : ses enfants deviennent connus (seulement ceux du couloir des cuts, pour borner la mémoire). */
- function hierarchieEpt(n){if(!n.hasChildren||Object.keys(n.children).length)return;const {d,x,y,z}=n.key;let i=0;
+ function hierarchieEpt(n){if(options.eptHier||!n.hasChildren||Object.keys(n.children).length)return;const {d,x,y,z}=n.key;let i=0;
   for(const a of [0,1])for(const b of [0,1])for(const c of [0,1]){const e=noeudEpt(d+1,2*x+a,2*y+b,2*z+c);if(coupeBoite(e.boundingBox,ept.couloir[0],ept.couloir[1]))n.children[i]=e;i++;}}
  const xhrBinaire=url=>new Promise(res=>{const x=new XMLHttpRequest();x.open('GET',url,true);x.responseType='arraybuffer';x.onload=()=>res(x.status);x.onerror=()=>res(0);x.send(null);});
  function chargerNoeudEpt(n,generation){if(n.loaded)return Promise.resolve();if(n.promesse)return n.promesse;
   n.loading=true;window.Potree.numNodesLoading++;const url=n.url()+'.bin';
-  n.promesse=xhrBinaire(url).then(st=>{n.loading=false;n.loaded=st===200;n.promesse=null;if(etat.generation===generation)window.Potree.numNodesLoading--;
+  const hier=options.eptHier&&n.numPoints===-1&&!Object.keys(n.children).length?lireHierarchie(n):null;   /* CH-080 : comme Potree, hiérarchie et points ensemble */
+  n.promesse=Promise.all([xhrBinaire(url),hier]).then(([st])=>{n.loading=false;n.loaded=st===200;n.promesse=null;if(etat.generation===generation)window.Potree.numNodesLoading--;
    try{const e=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(e&&etat.generation===generation){ept.vus++;if(e.transferSize===0&&e.decodedBodySize>0)ept.cache++;}}catch{}});
   return n.promesse;}
  async function enParallele(liste,k,f){let i=0;await Promise.all(Array.from({length:Math.min(k,liste.length)},async()=>{while(i<liste.length)await f(liste[i++]);}));}
  /* Chaîne d'étages pour un cut : nœuds qui coupent la zone des rails (± eptMarge), un étage après l'autre ; journal `ept-fin` {cut, ms, noeuds, cache}. */
- async function chaineEpt(c,generation){const L=c.rails.left.position,R=c.rails.right.position,m=options.eptMarge,t0=performance.now();ept.vus=0;ept.cache=0;
+ async function chaineEpt(c,generation){const L=c.rails.left.position,R=c.rails.right.position,m=options.eptMarge,t0=performance.now();ept.vus=0;ept.cache=0;ept.hierVus=0;ept.hierCache=0;
   const lo=[0,1,2].map(i=>Math.min(L[i],R[i])-m),hi=[0,1,2].map(i=>Math.max(L[i],R[i])+m);let etage=[ept.racine];
   for(let d=0;d<=options.eptProfondeur&&etage.length;d++){if(etat.generation!==generation)return false;
    await enParallele(etage.filter(n=>!n.loaded),options.eptParallele,n=>chargerNoeudEpt(n,generation));
    if(etat.generation!==generation)return false;
    const suivant=[];for(const n of etage){if(!n.loaded)continue;hierarchieEpt(n);for(const e of Object.values(n.children))if(coupeBoite(e.boundingBox,lo,hi))suivant.push(e);}etage=suivant;}
-  log('ept-fin',{cut:c.cut,ms:Math.round(performance.now()-t0),noeuds:ept.vus,cache:ept.cache});return true;}
+  log('ept-fin',{cut:c.cut,ms:Math.round(performance.now()-t0),noeuds:ept.vus,cache:ept.cache,...(options.eptHier?{hierarchies:ept.hierVus,hierCache:ept.hierCache}:{})});return true;}
  /* ---------- chargement d'un cut ---------- */
  function viderCut(){for(const t of etat.minuteries)clearTimeout(t);etat.minuteries.length=0;
   for(const s of ['left','right'])if(rails[s]){root.children.splice(root.children.indexOf(rails[s]),1);rails[s]=null;}
@@ -273,7 +284,7 @@
  function majEtat(){const c=cutCourant();$('maquette-etat').textContent=c?`${etat.scenario.provenance?`rejeu de ${etat.scenario.provenance.entree} (${etat.scenario.provenance.nature}) · `:''}partie ${etat.partie.part}, cut ${c.cut} (${c.status}), ${etat.partie.cuts.length} coupes, latence ${options.latence} ms × ${options.lots} lots`:'—';}
  /* ---------- démarrage : scénario puis liste des coupes (GET paginé) ---------- */
  async function demarrer(){
-  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}&debut=${options.debut}&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}`);
+  const r0=await fetch(options.source==='export'?`/maquette/scenario.json?source=export${q.has('part')?'&part='+options.part:''}`:`/maquette/scenario.json?cuts=${options.cuts}${q.has('saut')?'&saut='+q.get('saut'):''}&debut=${options.debut}&part=${options.part}${q.has('partie2')?'&partie2='+q.get('partie2'):''}${q.has('parties')?'&parties='+q.get('parties'):''}`);
   if(!r0.ok)throw Error((await r0.json().catch(()=>({}))).error||('scénario : HTTP '+r0.status));const s=await r0.json();etat.scenario=s;if(options.ept)construireEpt(s);
   for(const p of s.parties){const lignes=[];let url=`/rails/${p.table}`;for(;;){const r=JSON.parse((await xhr('GET',url)).texte);lignes.push(...r.value);if(!r.suite)break;url=`/rails/${p.table}?npk=${encodeURIComponent(r.suite.npk)}&nrk=${r.suite.nrk}`;}
    etat.listes.set(p.part,lignes);for(const c of p.cuts){const l=lignes[c.cut];if(l&&l.ExtractionStatus)c.status=l.ExtractionStatus;}}

@@ -43,6 +43,8 @@ function demarrer(options={}){
   const garder=(cle,fabrique)=>{if(!scenarios.has(cle)){scenarios.set(cle,fabrique());idScenario.set(cle,'s'+idScenario.size);}return {scenario:scenarios.get(cle),id:idScenario.get(cle)};};
   const scenario=q=>{if(q.source==='export'){if(!exportation)throw Error('aucun export chargé (option --export ou BANANE_MAQUETTE_EXPORT)');
       return garder('export|'+(q.part??'')+'|'+(q.valides??''),()=>require('./lecteur-export.cjs').construire(exportation,{part:q.part!==undefined?Number(q.part):undefined,valides:q.valides!==undefined?Number(q.valides):0}));}
+    /* CH-080 : scénario « saut » (une coupe à faire toutes les N), gardé à part (ligne suivante inchangée : ancre de tools/relecture-maquette.cjs). */
+    if(q.saut!==undefined)return garder('saut|'+JSON.stringify([q.cuts,q.debut,q.part,q.partie2,q.parties,q.saut]),()=>S.construire(q));
     return garder(JSON.stringify([q.cuts,q.debut,q.part,q.partie2,...(q.parties!==undefined?[q.parties]:[])]),()=>S.construire(q));};
   const tables=()=>[...scenarios.values()].flatMap(s=>s.parties);
   const json=(res,status,body)=>{res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store'});res.end(JSON.stringify(body));};
@@ -65,6 +67,15 @@ function demarrer(options={}){
       m=/^\/maquette\/ept\/ept-data\/(\d+-\d+-\d+-\d+)\.bin$/.exec(p);
       if(m&&req.method==='GET'){journal.ept[m[1]]=(journal.ept[m[1]]||0)+1;const n=Number(pannes.eptOctets)||65536,lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
         return setTimeout(()=>{res.writeHead(200,{'content-type':'application/octet-stream','content-length':n,'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(Buffer.alloc(n,7));},lat);}
+      /* CH-080 : fichier de hiérarchie EPT (comme `ept-hierarchy/<clé>.json` de Potree 1.8) : la clé et ses descendants sur `eptPas` niveaux (2), jusqu'à
+       * `eptProfondeur` (7) ; les clés du dernier niveau valent −1 (sous-hiérarchie dans un autre fichier) sauf au fond de l'arbre. Mêmes latence et cache que les
+       * nœuds ; journal `eptHier`. */
+      m=/^\/maquette\/ept\/ept-hierarchy\/(\d+)-(\d+)-(\d+)-(\d+)\.json$/.exec(p);
+      if(m&&req.method==='GET'){const [d,x,y,z]=m.slice(1).map(Number),pas=Number(pannes.eptPas)||2,prof=Number(pannes.eptProfondeur)||7,h={};
+        journal.eptHier=journal.eptHier||{};journal.eptHier[m.slice(1).join('-')]=(journal.eptHier[m.slice(1).join('-')]||0)+1;
+        for(let r=0;r<=pas&&d+r<=prof;r++){const k=2**r;for(let a=0;a<k;a++)for(let b=0;b<k;b++)for(let c=0;c<k;c++)h[`${d+r}-${x*k+a}-${y*k+b}-${z*k+c}`]=r===pas&&d+r<prof?-1:1000;}
+        const corpsH=JSON.stringify(h),lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
+        return setTimeout(()=>{res.writeHead(200,{'content-type':'application/json','content-length':Buffer.byteLength(corpsH),'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(corpsH);},lat);}
       if(p==='/maquette/pannes'){if(req.method==='POST'){let brut;try{brut=JSON.parse(Buffer.concat(corps).toString('utf8')||'{}');}catch(e){return json(res,400,{error:'pannes : JSON invalide'});}
           pannes=normaliser(brut);journal.refus.length=0;lecturesListe=0;}
         return json(res,200,pannes);}
