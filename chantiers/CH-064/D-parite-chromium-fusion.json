@@ -1,0 +1,611 @@
+{
+ "format": "ch064-parite-v2-tranches",
+ "moteur": "chromium",
+ "module": "decision",
+ "navigateur": "Chrome/153.0.0.0",
+ "lot": 20,
+ "tranche": 3000,
+ "termine": false,
+ "lotsFaits": 15000,
+ "cas": 300000,
+ "identiques": 300000,
+ "casChargeNaN": 14,
+ "ecarts": [],
+ "tramesDifferentes": [],
+ "temps": {
+  "jsMediane": 0.09999999962747097,
+  "jsP95": 0.2999999998137355,
+  "rsMediane": 0.09999999962747097,
+  "rsP95": 0.2999999998137355,
+  "note": "médiane des médianes de tranche"
+ },
+ "tasMaxOctets": 3310499422,
+ "hauteEauMax": 150994944,
+ "empreintes": {
+  "js": "d0c0c7d51f5b867156435b2366c33772caad30d96961f5a83f6012cbcaa611e7",
+  "rs": "d0c0c7d51f5b867156435b2366c33772caad30d96961f5a83f6012cbcaa611e7"
+ },
+ "verdict": "PARTIEL",
+ "tranches": [
+  {
+   "format": "ch064-parite-v1",
+   "moteur": "chromium",
+   "module": "decision",
+   "navigateur": "Chrome/153.0.0.0",
+   "lotDebut": 0,
+   "lotsFaits": 3000,
+   "fini": false,
+   "tasMax": 576270437,
+   "tasFin": 482500765,
+   "hauteEauMax": 2359296,
+   "casChargeNaN": 0,
+   "tramesDifferentes": [],
+   "cas": 60000,
+   "identiques": 60000,
+   "ecarts": [],
+   "temps": {
+    "jsMediane": 0.10000000055879354,
+    "jsP95": 0.2999999998137355,
+    "rsMediane": 0.19999999925494194,
+    "rsP95": 0.2999999998137355
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "tasJsOctets": 469960558,
+   "bilanAdaptateur": {
+    "critere": {
+     "coeur": 59715,
+     "repliHorsDomaine": 285,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "reglesMetier": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "lotDecision": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "appuisListe": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gcv2L1e": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieRecentree": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieB1": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "rechercheLarge": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "empreintes": {
+    "js": "f26fcbc0c762a06763965462702437075376c2b4e82ccd02d047bacef8dac3b3",
+    "rs": "f26fcbc0c762a06763965462702437075376c2b4e82ccd02d047bacef8dac3b3"
+   },
+   "verdict": "IDENTIQUE"
+  },
+  {
+   "format": "ch064-parite-v1",
+   "moteur": "chromium",
+   "module": "decision",
+   "navigateur": "Chrome/153.0.0.0",
+   "lotDebut": 3000,
+   "lotsFaits": 3000,
+   "fini": false,
+   "tasMax": 327162839,
+   "tasFin": 256600451,
+   "hauteEauMax": 2359296,
+   "casChargeNaN": 5,
+   "tramesDifferentes": [],
+   "cas": 60000,
+   "identiques": 60000,
+   "ecarts": [],
+   "temps": {
+    "jsMediane": 0.09999999962747097,
+    "jsP95": 0.20000000018626451,
+    "rsMediane": 0.09999999962747097,
+    "rsP95": 0.2999999998137355
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "tasJsOctets": 272935319,
+   "bilanAdaptateur": {
+    "critere": {
+     "coeur": 5637,
+     "repliHorsDomaine": 13,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 42894,
+     "repliHorsDomaine": 626,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 1712,
+     "repliHorsDomaine": 88,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 9029,
+     "repliHorsDomaine": 1,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "reglesMetier": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "lotDecision": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "appuisListe": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gcv2L1e": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieRecentree": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieB1": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "rechercheLarge": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "empreintes": {
+    "js": "a535af09df5b524b9b6577a9ea0aab02681e6edd9dd83196e9fba0f5d4f6e582",
+    "rs": "a535af09df5b524b9b6577a9ea0aab02681e6edd9dd83196e9fba0f5d4f6e582"
+   },
+   "verdict": "IDENTIQUE"
+  },
+  {
+   "format": "ch064-parite-v1",
+   "moteur": "chromium",
+   "module": "decision",
+   "navigateur": "Chrome/153.0.0.0",
+   "lotDebut": 6000,
+   "lotsFaits": 3000,
+   "fini": false,
+   "tasMax": 243294038,
+   "tasFin": 181504063,
+   "hauteEauMax": 2359296,
+   "casChargeNaN": 9,
+   "tramesDifferentes": [],
+   "cas": 60000,
+   "identiques": 60000,
+   "ecarts": [],
+   "temps": {
+    "jsMediane": 0,
+    "jsP95": 0.20000000018626451,
+    "rsMediane": 0.09999999962747097,
+    "rsP95": 0.20000000018626451
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "tasJsOctets": 197511483,
+   "bilanAdaptateur": {
+    "critere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 48626,
+     "repliHorsDomaine": 874,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 10500,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "reglesMetier": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "lotDecision": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "appuisListe": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gcv2L1e": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieRecentree": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieB1": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "rechercheLarge": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "empreintes": {
+    "js": "e58be2f4ae34a6a41204da8bf63903f4ce83baf705af5e11383213e110d535cb",
+    "rs": "e58be2f4ae34a6a41204da8bf63903f4ce83baf705af5e11383213e110d535cb"
+   },
+   "verdict": "IDENTIQUE"
+  },
+  {
+   "format": "ch064-parite-v1",
+   "moteur": "chromium",
+   "module": "decision",
+   "navigateur": "Chrome/153.0.0.0",
+   "lotDebut": 9000,
+   "lotsFaits": 3000,
+   "fini": false,
+   "tasMax": 3310499422,
+   "tasFin": 2207801000,
+   "hauteEauMax": 18874368,
+   "casChargeNaN": 0,
+   "tramesDifferentes": [],
+   "cas": 60000,
+   "identiques": 60000,
+   "ecarts": [],
+   "temps": {
+    "jsMediane": 0.10000000055879354,
+    "jsP95": 2.2999999998137355,
+    "rsMediane": 0.20000000018626451,
+    "rsP95": 2.3999999994412065
+   },
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 18874368,
+    "memoire": 18874368
+   },
+   "tasJsOctets": 2226268464,
+   "bilanAdaptateur": {
+    "critere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 42626,
+     "repliHorsDomaine": 4180,
+     "repliFormat": 0
+    },
+    "reglesMetier": {
+     "coeur": 12816,
+     "repliHorsDomaine": 102,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "lotDecision": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "appuisListe": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gcv2L1e": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieRecentree": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieB1": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "rechercheLarge": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "empreintes": {
+    "js": "03f8b310caedf611ed9fd393665a6ec8d1fbfbd966a69b1052bbb78c3348506b",
+    "rs": "03f8b310caedf611ed9fd393665a6ec8d1fbfbd966a69b1052bbb78c3348506b"
+   },
+   "verdict": "IDENTIQUE"
+  },
+  {
+   "format": "ch064-parite-v1",
+   "moteur": "chromium",
+   "module": "decision",
+   "navigateur": "Chrome/153.0.0.0",
+   "lotDebut": 12000,
+   "lotsFaits": 3000,
+   "fini": false,
+   "tasMax": 2020138215,
+   "tasFin": 819967481,
+   "hauteEauMax": 150994944,
+   "casChargeNaN": 0,
+   "tramesDifferentes": [],
+   "cas": 60000,
+   "identiques": 60000,
+   "ecarts": [],
+   "temps": {
+    "jsMediane": 0,
+    "jsP95": 10.5,
+    "rsMediane": 0.09999999962747097,
+    "rsP95": 10.399999999441206
+   },
+   "memoireCoeur": {
+    "reinstanciations": 67,
+    "hauteEau": 150994944,
+    "memoire": 37748736
+   },
+   "tasJsOctets": 836612449,
+   "bilanAdaptateur": {
+    "critere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "signal": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardeApresDiffere": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gardePasseAppuis": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "relectureOmbre": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "reglesMetier": {
+     "coeur": 56367,
+     "repliHorsDomaine": 390,
+     "repliFormat": 0
+    },
+    "crossing": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "shadow": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "hauteur": {
+     "coeur": 974,
+     "repliHorsDomaine": 59,
+     "repliFormat": 0
+    },
+    "fauxVert": {
+     "coeur": 992,
+     "repliHorsDomaine": 45,
+     "repliFormat": 0
+    },
+    "lotDecision": {
+     "coeur": 1060,
+     "repliHorsDomaine": 97,
+     "repliFormat": 0
+    },
+    "appuisListe": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "gcv2L1e": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieRecentree": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "voieB1": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    },
+    "rechercheLarge": {
+     "coeur": 0,
+     "repliHorsDomaine": 0,
+     "repliFormat": 0
+    }
+   },
+   "empreintes": {
+    "js": "30258784c749789ffe4e997789fb6f5071ed7adbfc23fc686c67e0d09a399b32",
+    "rs": "30258784c749789ffe4e997789fb6f5071ed7adbfc23fc686c67e0d09a399b32"
+   },
+   "verdict": "IDENTIQUE"
+  }
+ ]
+}
