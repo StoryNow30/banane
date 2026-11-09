@@ -26,7 +26,8 @@ function advBorne(a){const o=a[1];if(o===undefined||o===null)return true;if(type
 const SURS={gcv2L1e:{referenceEcartement:a=>borne(a[0]?.n??0)&&borne(a[2]??0)},relectureOmbre:{selection:borne},reglesMetier:{surface:advBorne,railsDePlus:advBorne},crossing:{read:a=>borne(a[1]??0),edgeOf:a=>borne(a[2]??0),detect:a=>borne(a[1]??0)}};
 /* CH-068 : un Map (mémoire de l'ombre de voie-b1-ecart) voyage en paires sous la marque \u0000map, rétabli par l'adaptateur des deux côtés. */
 const MM='\u0000map';
-function marquerMaps(v,p=0){if(v instanceof Map)return {[MM]:[...v]};if(!v||typeof v!=='object'||p>6)return v;if(Array.isArray(v))return v.map(x=>marquerMaps(x,p+1));
+/* CH-074 : un Float64Array (modèle figé et probabilités de gcv2-l1) voyage en tableau sous la marque \u0000f64. */
+function marquerMaps(v,p=0){if(v instanceof Map)return {[MM]:[...v]};if(v instanceof Float64Array)return {'\u0000f64':Array.from(v)};if(!v||typeof v!=='object'||p>9)return v;if(Array.isArray(v))return v.map(x=>marquerMaps(x,p+1));
  const r={};for(const k of Object.keys(v))r[k]=marquerMaps(v[k],p+1);return r;}
 function encoder(args){try{return Buffer.from(Vba.encoder(marquerMaps(args))).toString('base64');}catch{compte.nonVba++;return null;}}
 /* Feuilles et clés d'un arbre : chemins [[clé…]]. */
@@ -41,10 +42,19 @@ function muter(args,alea){const a=v8.deserialize(v8.serialize(args)),cs=chemins(
 function*cas(modules,{fixtures=true,reel=process.env.CH064D_REEL!=="0",variantes=Number(process.env.CH064D_VARIANTES||4),graine:g=Number(process.env.CH064D_GRAINE||64),max=Infinity}={}){
  const alea=graine(g);let i=0;
  function*avec(c){const b=encoder(c.args);if(b===null)return;compte[c.id.startsWith('fixture')?'fixtures':'reel']++;
-  yield {id:c.id+'#'+(i++),entree:{module:c.module,f:c.f,args:b}};
+  const lev=c.leviers?{leviers:c.leviers}:{};
+  yield {id:c.id+'#'+(i++),entree:{module:c.module,f:c.f,args:b,...lev}};
   for(let k=0;k<variantes;k++){const m=muter(c.args,alea);if(!m)break;const sur=SURS[c.module]?.[c.f];if(sur&&!sur(m))continue;const bm=encoder(m);if(bm===null)continue;compte.variantes++;
-   yield {id:c.id+'#'+(i++)+'-variante'+k,entree:{module:c.module,f:c.f,args:bm}};}}
- if(fixtures&&fs.existsSync(FIXTURES)){for(const e of v8.deserialize(fs.readFileSync(FIXTURES)))if(modules.includes(e.module))yield* avec({id:'fixture-'+e.module+'.'+e.f+'-'+e.essai,module:e.module,f:e.f,args:v8.deserialize(e.args)});}
+   yield {id:c.id+'#'+(i++)+'-variante'+k,entree:{module:c.module,f:c.f,args:bm,...lev}};}}
+ if(fixtures&&fs.existsSync(FIXTURES)){for(const e of v8.deserialize(fs.readFileSync(FIXTURES)))if(modules.includes(e.module))yield* avec({id:'fixture-'+e.module+'.'+e.f+'-'+e.essai,module:e.module,f:e.f,args:v8.deserialize(e.args),...(e.leviers?{leviers:v8.deserialize(e.leviers)}:{})});}
+ /* CH-074 (J5) : appels directs des fonctions internes de gcv2-l1, aux entrées rejouées depuis les fixtures (tools/ch074-cas-l1.cjs). */
+ if(fixtures&&modules.includes('gcv2L1')){for(const c of require('./ch074-cas-l1.cjs').cas())yield* avec(c);}
+ /* CH-074 (J5) : appels RÉELS de gcv2-l1 relevés par le crochet des fixtures pendant un rejeu du banc (tools/banc-differes.cjs) sur un
+  * lot archivé de banane-data (ariane-rs/dist/ch074-reel-l1-*.v8, non versionnés) ; les cas dérivés en sont tirés de même. */
+ if(reel&&modules.includes('gcv2L1')){const d=path.join(RACINE,'ariane-rs','dist');for(const f of (fs.existsSync(d)?fs.readdirSync(d):[]).filter(x=>/^ch074-reel-l1-.*\.v8$/.test(x)).sort()){
+  const o=v8.deserialize(fs.readFileSync(path.join(d,f)));
+  for(const e of o.enr)if(e.module==='gcv2L1')yield* avec({id:'reel-'+f.slice(14,-3)+'-'+e.f,module:e.module,f:e.f,args:v8.deserialize(e.args),...(e.leviers?{leviers:v8.deserialize(e.leviers)}:{})});
+  for(const c of require('./ch074-cas-l1.cjs').cas(o.enr))yield* avec({...c,id:'reel-'+c.id});}}
  if(reel){const R=require('./ch064-d-reel.cjs');for(const c of R.cas(modules,{max}))yield* avec(c);
   /* CH-068 (J4) */ for(const c of require('./ch064-d-reel-j4.cjs').cas(modules,{max}))yield* avec(c);}
 }

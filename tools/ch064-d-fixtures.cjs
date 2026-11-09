@@ -16,12 +16,17 @@ const MODULES={critere:'src/relecture-critere.js',signal:'src/relecture-signal.j
 const CROCHET=process.env.CH064D_FIXTURES;
 if(CROCHET){
  /* Crochet, dans le processus de l'essai. */
- const enr=[],vus=new Set();let refus=0;const SH=require(path.join(RACINE,'src/gcv1-shadow.js'));
+ const enr=[],vus=new Set();let refus=0;
+ /* CH-074 : CH064D_FIXTURES_MAX plafonne les appels relevés par fonction (rejeu d'un lot réel : les captures pèsent). */
+ const MAXF=Number(process.env.CH064D_FIXTURES_MAX||Infinity),parF={};const SH=require(path.join(RACINE,'src/gcv1-shadow.js'));
  const marquer=args=>args.map(x=>x&&typeof x==='object'&&!Array.isArray(x)&&x.Shadow===SH?{...x,Shadow:'\u0000shadow'}:x);
  for(const [nom,rel] of Object.entries(MODULES)){let M;try{M=require(path.join(RACINE,rel));}catch{continue;}
+  /* CH-074 : gcv2-l1 lit ses leviers dans l'état du module (`reglerLeviers`) : ceux en vigueur à l'appel sont relevés avec lui. */
+  const leviersActifs=nom==='gcv2L1'&&typeof M.leviersActifs==='function'?M.leviersActifs:null;
   for(const [f,fn] of Object.entries(M)){if(typeof fn!=='function')continue;
-   M[f]=function(...args){let b=null;try{b=v8.serialize(marquer(args));}catch{refus++;}
-    if(b){const h=crypto.createHash('sha1').update(nom+'\0'+f+'\0').update(b).digest('hex');if(!vus.has(h)){vus.add(h);enr.push({module:nom,f,args:b});}}
+   M[f]=function(...args){let b=null;const k=nom+'.'+f;parF[k]=(parF[k]||0)+1;if(parF[k]<=MAXF)try{b=v8.serialize(marquer(args));}catch{refus++;}
+    const lv=leviersActifs?v8.serialize(leviersActifs()):null;
+    if(b){const h=crypto.createHash('sha1').update(nom+'\0'+f+'\0').update(b).update(lv||'').digest('hex');if(!vus.has(h)){vus.add(h);enr.push({module:nom,f,args:b,...(lv?{leviers:lv}:{})});}}
     return fn.apply(this,args);};}}
  process.on('exit',()=>{fs.writeFileSync(CROCHET,v8.serialize({enr,refus}));});
 }else if(require.main===module){
@@ -37,7 +42,7 @@ if(CROCHET){
   const r=spawnSync(process.execPath,['--require',__filename,path.join('tests',f)],{cwd:RACINE,env:{...process.env,CH064D_FIXTURES:tmp},encoding:'utf8',timeout:120000});
   if(r.status!==0)echecs.push(f);
   if(!fs.existsSync(tmp))continue;const o=v8.deserialize(fs.readFileSync(tmp));fs.unlinkSync(tmp);refus+=o.refus;
-  for(const e of o.enr){const h=crypto.createHash('sha1').update(e.module+'\0'+e.f+'\0').update(e.args).digest('hex');if(!vus.has(h)){vus.add(h);tout.push({...e,essai:f});}}}
+  for(const e of o.enr){const h=crypto.createHash('sha1').update(e.module+'\0'+e.f+'\0').update(e.args).update(e.leviers||'').digest('hex');if(!vus.has(h)){vus.add(h);tout.push({...e,essai:f});}}}
  fs.mkdirSync(path.dirname(sortie),{recursive:true});fs.writeFileSync(sortie,v8.serialize(tout));
  const parModule={};for(const e of tout){const k=e.module+'.'+e.f;parModule[k]=(parModule[k]||0)+1;}
  console.log(JSON.stringify({essais:essais.length,essaisEnEchec:echecs,appels:tout.length,nonClonables:refus,parFonction:parModule,sortie:path.relative(RACINE,sortie)},null,1));

@@ -5,7 +5,7 @@ use crate::js::{elems, Appel};
 use ariane_vba::Valeur as V;
 
 /// JSON minimal (objets, tableaux, nombres, chaînes sans échappement, true/false/null) → `Valeur`, clés dans l'ordre.
-fn lire(t: &str) -> V {
+pub(crate) fn lire(t: &str) -> V {
     fn val(b: &[u8], i: &mut usize) -> V {
         while b[*i].is_ascii_whitespace() { *i += 1; }
         match b[*i] {
@@ -42,7 +42,7 @@ fn lire(t: &str) -> V {
     val(t.as_bytes(), &mut i)
 }
 /// `JSON.stringify` (nombres par `ariane_js::nombre::nombre_en_chaine`, non finis : `null`).
-fn ecrire(v: &V) -> String {
+pub(crate) fn ecrire(v: &V) -> String {
     match v {
         V::Indefini | V::Nul => "null".into(),
         V::Booleen(x) => x.to_string(),
@@ -52,7 +52,7 @@ fn ecrire(v: &V) -> String {
         t => format!("[{}]", elems(t).unwrap().iter().map(|x| x.as_ref().map_or("null".into(), ecrire)).collect::<Vec<_>>().join(",")),
     }
 }
-fn appel(f: &str, args: &str) -> Appel {
+pub(crate) fn appel(f: &str, args: &str) -> Appel {
     let V::Tableau(a) = lire(args) else { panic!() };
     Appel { f: f.into(), a: a.into_iter().map(|x| x.unwrap_or(V::Indefini)).collect() }
 }

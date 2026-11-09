@@ -25,10 +25,13 @@ mod l1e;
 mod recentree;
 mod b1ecart;
 mod large;
+mod l1;
 #[cfg(test)]
 mod essais;
 #[cfg(test)]
 mod essais_j4;
+#[cfg(test)]
+mod essais_l1;
 
 use ariane_vba::Valeur;
 use ariane_js::Echec;
@@ -66,6 +69,8 @@ pub const VOIE_RECENTREE: u32 = 63;
 pub const VOIE_B1_ECART: u32 = 64;
 /// CH-068 (J4) : `src/recherche-large.js`.
 pub const RECHERCHE_LARGE: u32 = 65;
+/// CH-074 (J5) : `src/gcv2-l1.js`.
+pub const GCV2_L1: u32 = 66;
 /// Sonde de sémantique (`Number::toString`) : `{f:"nombreChaine", a:[[x…]]}` → chaînes.
 pub const SONDE: u32 = 99;
 
@@ -93,6 +98,7 @@ pub fn appeler(fonction: u32, entree: &Valeur) -> Result<Valeur, Echec> {
         VOIE_RECENTREE => recentree::appeler(&a, entree),
         VOIE_B1_ECART => b1ecart::appeler(&a, entree),
         RECHERCHE_LARGE => large::appeler(&a, entree),
+        GCV2_L1 => l1::appeler(&a, entree),
         SONDE if a.f == "nombreChaine" => Ok(Valeur::Tableau(js::presents(a.arg(0)).iter().map(|x| js::chaine(x).map(|c| Some(js::s(&c)))).collect::<js::R<Vec<_>>>()?)),
         _ => js::hd("ariane-decision : fonction inconnue"),
     }
