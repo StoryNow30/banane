@@ -26,6 +26,14 @@ test('garde : la référence ne lit que les lignes valides à ±fenêtre ; sans 
   assert.equal(G.evaluer({cut:50,positions:pose(1435),table:null,valide:true}).referenceMm,1435);
   assert.equal(G.evaluer({cut:50,positions:pose(1435),table:table(100,1435,{invalides:Array.from({length:100},(_,i)=>i)}),valide:true}).referenceMm,1435);
 });
+test('garde : les lignes validées par le lot (drapeaux non nuls) sont des voisins ; « avantSeulement » ignore les cuts suivants',()=>{
+  const t=table(100,1435);for(let i=0;i<100;i++)t.fl[i]=3;                 // toutes validées par le lot
+  assert.equal(G.referenceVoisins(t,50).source,'voisins');
+  const u=table(100,1435);for(let i=51;i<=55;i++){u.ed[6*i+1]=-9000;u.ed[6*i+4]=9000;}   // les suivantes sont à 1800
+  const R5={...G.REGLAGE,fenetre:5};
+  assert.equal(G.referenceVoisins(u,50,{...R5,avantSeulement:true}).mm,1435);
+  assert.ok(G.referenceVoisins(u,50,R5).mm>1435);
+});
 test('garde : événement sans adresse ni identifiant, sans effet sur ses entrées',()=>{
   const entree={cut:50,positions:pose(1460),table:table(100,1435),valide:true},avant=JSON.stringify(entree);
   const e=G.evaluer(entree);assert.equal(JSON.stringify(entree),avant);assert.doesNotMatch(JSON.stringify(e),interdits);
