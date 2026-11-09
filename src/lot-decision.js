@@ -368,7 +368,7 @@
  /* 4.9.5.4 (P8, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE. Pour un rail dont le calage de convention est REFUSÉ (`applied:false`, motif
   * `shift-out-of-domain`, lu dans la science du cut), la décision consigne `ombreVerticale` : à côté de la pose réelle (`reelle`, celle de
   * `positions`), la pose qu'aurait donnée une correction verticale de `mm` (3,6 par défaut, réglage `ombreVerticaleRefusee`), remontée dans le
-  * repère PROFIL du rail (G0 : correction = pose de Mic − pose d'Ariane, « + » = Mic remonte). Positions en repère scène, arrondies au micromètre.
+  * repère PROFIL du rail (G0 : correction = pose de l'opérateur − pose d'Ariane, « + » = l'opérateur remonte). Positions en repère scène, arrondies au micromètre.
   * CONSIGNÉE SEULEMENT : `positions`, `stage`, la garde, l'appui, la commande n'en dépendent jamais (`commandRails` ne lit que des champs nommés), la
   * décision de base est calculée AVANT et rendue telle quelle, la consigne est une copie ajoutée. Réglage coupé, absent (outils hors ligne),
   * valeur nulle ou non finie, aucun rail refusé, cut sans pose : aucune clé ajoutée, la décision est celle de la base 5.0 à l'octet près.

@@ -10,7 +10,13 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const REF=require('./pose-inchangee-4958.json');
-const racine=path.resolve(__dirname,'..'),lire=f=>fs.readFileSync(path.join(racine,f),'utf8');
+const racine=path.resolve(__dirname,'..');
+/* Vision 9 (CH-087, accord de l'opérateur) : le prénom de l'opérateur est retiré des COMMENTAIRES de l'adaptateur et de lot-decision.js ; pour comparer à
+ * l'empreinte de référence, ces seules tournures sont remises telles qu'elles étaient. Toute autre modification de ces fichiers reste détectée. */
+const PRENOM_RETIRE=[["D-164, l'opérateur : «","D-164, Mic : «"],["le geste de l'opérateur.","le geste de Mic."],["l'opérateur valide TOUJOURS","Mic valide TOUJOURS"],
+ ["(l'opérateur, deux fois, D-179)","(Mic, deux fois, D-179)"],["comme l'opérateur la fait","comme Mic la fait"],
+ ["pose de l'opérateur − pose d'Ariane, « + » = l'opérateur remonte","pose de Mic − pose d'Ariane, « + » = Mic remonte"]];
+const lire=f=>{let t=fs.readFileSync(path.join(racine,f),'utf8');if(f==='src/adapter-page.js'||f==='src/lot-decision.js')for(const [a,b] of PRENOM_RETIRE)t=t.split(a).join(b);return t;};
 const sha=t=>crypto.createHash('sha256').update(t).digest('hex');
 /* CH-065 (D-293) : lecture directe du LiDAR et recherche élaguée, patchs déclarés à parité au bit (chantiers/CH-065/blocs.json) ; ces blocs retirés,
  * src/geometry.js et src/geometry-candidate-v1.js sont ceux de la test 8. Toute autre modification reste détectée. */

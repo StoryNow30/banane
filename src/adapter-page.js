@@ -622,7 +622,7 @@
   * Garde-fou, quel que soit le mode : chaque clic de pose calculé hors de la partie visible est relevé (`clicsHorsVue`), sans
   * rien changer au clic, et part au service worker APRÈS la réponse (message `banane3:clic-hors-vue`, comme le relevé D4). */
  const CLIC_HUMAIN=['gauche-recentre','tout-recentre'].includes(REGLE_CLIC_HUMAIN)?REGLE_CLIC_HUMAIN:'tel-quel',CLIC_CORRIGE=CLIC_HUMAIN!=='tel-quel';
- /* 4.9.5 test 6 (D-164, Mic : « essayer les 2 méthodes ») : le mode peut venir du LOT. Le service worker lit le choix du panneau
+ /* 4.9.5 test 6 (D-164, l'opérateur : « essayer les 2 méthodes ») : le mode peut venir du LOT. Le service worker lit le choix du panneau
   * au démarrage du lot, le fige dans le lot et l'envoie avec chaque `apply` (`options.clicHumain`), seulement s'il est corrigé.
   * Sans lui (ou valeur inconnue), le réglage de la page, comme avant : 'tel-quel' par défaut, la même trace à l'octet près. */
  const MODES_CLIC=['tel-quel','gauche-recentre','tout-recentre'];
@@ -1156,13 +1156,13 @@
      nextIdentity:null,nextReady:null,compteurAvant:avant,compteurApres:compteur,
      meaning:'Validation sans navigation : identité inchangée, compteur « N on M treated » passé de N à N+1 ; ESV est resté sur ce cut.'};
  }
- /* 5.0, RELECTURE APRÈS LE LOT (D-175, revue de la relecture, corrections 4 et 6 ; D-179) — VALIDER PAR MAJ+ESPACE, le geste de Mic.
-  * Faits (Échos du projet 2, revue « trace ») : Mic valide TOUJOURS par Maj+Espace (1 377 validations sur 1 377, aucune par
+ /* 5.0, RELECTURE APRÈS LE LOT (D-175, revue de la relecture, corrections 4 et 6 ; D-179) — VALIDER PAR MAJ+ESPACE, le geste de l'opérateur.
+  * Faits (Échos du projet 2, revue « trace ») : l'opérateur valide TOUJOURS par Maj+Espace (1 377 validations sur 1 377, aucune par
   * Ctrl+Entrée) ; il frappe Maj (ShiftLeft) puis Espace, le canevas d'ESV ayant le focus. SUR UN VERT VALIDE, ESV valide SUR PLACE et
-  * RESTE SUR LE MÊME CUT (Mic, deux fois, D-179) ; sur un cut rouge, il passe à un autre cut (cut + 1 dans 93 à 96 % des cas relevés).
+  * RESTE SUR LE MÊME CUT (l'opérateur, deux fois, D-179) ; sur un cut rouge, il passe à un autre cut (cut + 1 dans 93 à 96 % des cas relevés).
   * Ce geste n'est employé que par la passe de relecture en mode « corriger », jamais par le lot (qui garde le bouton « valider et
   * suivant », D-092).
-  * La frappe est relayée UNE fois, comme Mic la fait : keydown Maj, keydown Espace (Maj tenue), keyup Espace, keyup Maj, sur le
+  * La frappe est relayée UNE fois, comme l'opérateur la fait : keydown Maj, keydown Espace (Maj tenue), keyup Espace, keyup Maj, sur le
   * canevas d'ESV (elle remonte au document, où ESV lit `e.which`), `which`/`keyCode` réglés comme pour Maj+Retour arrière.
   * PREUVE : la page ne prouve PAS la validation ; elle rend le cut atteint après la touche, ou aucun changement observé (le cas normal
   * d'un vert : on n'attend qu'un court instant un autre cut, jamais les 15 s d'une navigation). La preuve est l'écriture « valid » de la
