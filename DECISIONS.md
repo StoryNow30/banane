@@ -3562,3 +3562,8 @@ Complète D-299 sans la modifier.
   2. De l'étude au code sans attendre l'aval, sauf si le chantier touche un fichier gelé, un module de décision, l'écriture dans ESV, `manifest.json`, ou ajoute des requêtes vers ESV au-delà de ce que l'opérateur a accordé : là, l'étude est envoyée et l'exécutant attend.
   3. Plus de chantiers en parallèle, chacun sur sa machine, pris dans le cap de D-299 et D-300 ; un outil d'analyse automatique des exports remplace l'analyse à la main de chaque lot.
   4. Contrôle des exécutants toutes les 30 minutes au lieu de toutes les heures.
+
+## D-313 — Attentes fixes de la pose et de la validation remplacées par des états observés (opérateur, 09/11)
+- Accord écrit de l'opérateur, mot pour mot : « J'autorise le remplacement des attentes fixes de la pose et de la validation par des états observés, fichiers protégés compris, livré d'abord pour un lot d'essai, avec les mêmes poses et validations prouvées sur le faux ESV. »
+- Exécuté par CH-084 (étude puis code). Règle 4.3 : pour chaque étape, une preuve de fin (bonne coupe ET bonne opération), un délai maximal, une pause motivée si la preuve n'arrive pas. Jamais de SKIP ; aucun cut non résolu validé. Preuves avant livraison : poses, validations et commandes à ESV identiques sur le faux ESV, garde GCV2 et parités, verify et maquette.
+- D-293 est levée pour ce seul objet (attentes fixes de la pose et de la validation) ; les autres fichiers gelés et réglages restent soumis à accord.
