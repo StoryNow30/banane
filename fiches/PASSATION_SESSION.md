@@ -17,14 +17,14 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 ## 3. Où en est le projet (10/11/2026)
 - **Dernier paquet livré : « Vision 11 »** (build `30bb2cd`, tronc `claude/50-test17`), version sans nouveauté (D-317) : préchauffage à 4 chargements à la fois, plafond de 256 Mo par opération, corrections de la relecture CH-092 et de la maquette CH-095. La deuxième passe **écrit** dans le réglage livré (`passeDifferesDefaut` : `ecriture:true`, `ecritureMax:10`, D-259). État détaillé : `LIRE_EN_PREMIER.md` (section du haut) et `CHANGELOG.md`.
 - **Organisation** : l'intégrateur est une session Claude (D-303) ; tous les exécutants sont des sessions Claude filles (D-306), une par ticket `chantiers/CH-NNN.md`, sur une branche `chantier/CH-NNN`. Elles livrent les changements des fichiers protégés sous forme de `.patch` dans `chantiers/CH-NNN/` ; l'intégrateur les applique, refait les preuves (essais ciblés, garde de pose, parité de la relecture), puis lance une fois par version le verify et la maquette.
-- **Chantiers** : intégrés depuis le 08/11 : CH-077 à CH-090, CH-092, CH-095. Prêts, à appliquer pour « Vision 12 » (accord écrit D-318) : CH-091 puis CH-094 (deux patchs de `src/engine.js`). En cours : CH-093 (préchauffage au passage à la relecture, nouveauté reportée).
+- **Chantiers** : intégrés depuis le 08/11 : CH-077 à CH-092, CH-094, CH-095 (« Vision 12 » = Vision 11 plus les deux patchs du moteur de CH-091 et CH-094, accord écrit D-318). PRÊT sur sa branche, non intégré : CH-093 (préchauffage au passage à la relecture ; bilan de temps nul ou négatif en maquette, décision de l'opérateur avant de l'allumer).
 - **Leçon des 08 au 10/11** : cinq versions du préchauffage ont été corrigées par le lot de terrain suivant. Depuis CH-095 la maquette joue deux pannes réelles de Potree ; un défaut du préchauffage se cherche d'abord là (`tests/esv-maquette/ch095-*.test.cjs`). La suite de la maquette tourne à deux fichiers à la fois (charge).
 - **Analyses de lots** : exports et bilans dans `banane-data` (`collections/`, `outils/analyse-lots/`), par `node tools/bilan-lot.cjs`.
 - **Limite d'usage** : plusieurs sessions sur le modèle le plus fort épuisent la fenêtre de 5 heures en un peu plus d'une heure (mesuré le 10/11 : cinq filles et trois relecteurs). Garder le modèle économique pour les balayages, le plus fort pour concevoir ou relire.
 
 ## 4. Ce qui est en attente
 - **De l'opérateur** : un lot de terrain avec « Vision 11 » et les deux relevés de console (lecture seule) ; sa revue de la liste de `fiches/AUDIT_PROJET_2026-11-10.md` (points non corrigés d'office : fichiers protégés, suppressions, règles de `CLAUDE.md` périmées).
-- **De l'intégrateur** : appliquer CH-091 puis CH-094, preuves, « Vision 12 » ; intégrer CH-093 quand il est PRÊT ; analyser le lot « Vision 11 » (le préchauffage tient-il jusqu'au bout, attente des coupes voisines) ; tenir `DECISIONS.md`.
+- **De l'intégrateur** : après la revue de l'opérateur, les chantiers de `fiches/AUDIT_PROJET_2026-11-10.md` § 8 ; CH-093 selon sa décision ; analyser le lot « Vision 11 » (le préchauffage tient-il jusqu'au bout, attente des coupes voisines) ; tenir `DECISIONS.md`.
 
 ## 5. Règles de session
 - Modèle économique par défaut ; le plus fort seulement pour concevoir ou relire, en le disant.

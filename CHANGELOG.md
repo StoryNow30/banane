@@ -1,5 +1,12 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 12 — 10/11 (D-318 ; CH-091, CH-094) — deux corrections du moteur
+- Reprise après un arrêt du service worker entre la capture « avant » et l'analyse (CH-091) : le lot ne finit plus en ERREUR « Capture avant déjà ouverte ». Même coupe, mêmes rails et nuage relisible : la capture est réutilisée ; sinon la lecture est refaite. Arrêts simulés après chacune des 60 écritures d'un lot, 4 variantes : 0 erreur, 0 doublon, 0 SKIP (mesuré par le chantier).
+- Reprise après une pause « écriture non confirmée » (CH-094, défaut 1 de la relecture CH-092) : « Reprendre » repasse la porte ; les événements restés en attente sont réécrits dans le journal, ou le lot se remet en pause sans aucune commande si le stockage ne répond toujours pas. Une reprise abandonnée n'efface plus la liste de la fenêtre suivante (défaut voisin, reproduit puis corrigé).
+- Preuves refaites par l'intégrateur : essais rouges sur le moteur sans les patchs (5, 3 et 6 échecs), verts avec ; essais des écritures en fond (CH-086) et garde de pose verts ; verify 3 423 essais, 3 417 réussis, 0 échec, 6 sautés ; maquette 96 essais, 93 réussis, 0 échec, 3 sautés ; parité de la relecture identique. Seul `src/engine.js` change par rapport à Vision 11 ; son empreinte est ré-épinglée, les anciennes gardées.
+- Non couvert, à savoir : arrêts simulés en machine seulement (pas d'arrêt réel du service worker dans un navigateur) ; un lot déjà tombé en ERREUR sur ce défaut n'est pas réparé au redémarrage.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 11 — 10/11 (D-317 ; CH-090, corrections de CH-092 et CH-095) — version sans nouveauté
 - Capacité du préchauffage (CH-090) : 4 chargements à la fois au lieu de 2 (constat des lots « Vision 8 » et « Vision 9 », ÉTABLI : 7 nœuds candidats par coupe en partie dense, 2 lancés ; toute l'attente d'une coupe voisine est du chargement de nœuds par Potree). Gain attendu sur le terrain : SUPPOSÉ tant que non mesuré.
 - Plafond de 256 Mo compté par opération et plus par vie de la page (il éteignait le préchauffage après environ 330 coupes, sans message) ; garde ajoutée : aucun lancement au-delà de 1 536 Mo de tas JS. Opération lointaine : plafond de nœuds propre (96).
