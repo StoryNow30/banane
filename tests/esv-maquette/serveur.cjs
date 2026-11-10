@@ -15,6 +15,7 @@
  *   GET  /maquette/ept-data/<part>/<cut>/noeuds.json   nœuds de points d'un cut (chargés par la page AU CHARGEMENT DU CUT, comme
  *        Potree charge ses nœuds ; le chemin `ept-data` est celui que l'observateur 4.9 classe « ressource de points »)
  *   GET  /maquette/ept/ept-data/<D-X-Y-Z>.bin   CH-077 : nœud EPT par adresse, en-tête de cache réglable (pannes eptCache, eptLatenceMs, eptOctets)
+ *        CH-095 : panne `eptEchec {http, fois, cles}` : réponse 5xx à un nœud (le Potree simulé le garde « en cours », compteur non rendu)
  *   GET/POST /maquette/pannes              pannes simulées (JSON ; POST remplace) : ecritureRefusee {cuts|'toutes', http}, ecritureLenteMs,
  *        listeIllisible, railsAbsents {cuts}, nuageInstable {cuts, dureeMs}, nuageVide {cuts}, nuageSansPoints {cuts} (CH-051 : les nœuds
  *        arrivent, mais sans aucun point près des rails, comme pendant le blocage du chargeur d'ESV du 04/11), changementPartie {apresCut}
@@ -35,7 +36,7 @@ function demarrer(options={}){
     if(k==='ecritureLenteMs'||k==='eptLatenceMs'||k==='eptOctets'){out[k]=Number(v)||0;continue;}
     if(k==='eptCache'){out[k]=String(v);continue;}
     const r=typeof v==='object'?{...v}:{};if(r.cuts!=='toutes'&&r.cuts!==undefined)r.cuts=[].concat(r.cuts).map(Number).filter(Number.isFinite);
-    if('http' in r)r.http=Number(r.http);if('apresCut' in r)r.apresCut=Number(r.apresCut);if('dureeMs' in r)r.dureeMs=Number(r.dureeMs)||0;out[k]=r;}
+    if('http' in r)r.http=Number(r.http);if('fois' in r)r.fois=Math.max(0,Math.floor(Number(r.fois))||0);if(Array.isArray(r.cles))r.cles=r.cles.map(String);if('apresCut' in r)r.apresCut=Number(r.apresCut);if('dureeMs' in r)r.dureeMs=Number(r.dureeMs)||0;out[k]=r;}
     return out;};
   /* Le scénario servi à la page ne porte pas les nœuds (chargés par cut) : squelette + comptes. */
   const squelette=(s,id)=>({...s,parties:s.parties.map(p=>({...p,cuts:p.cuts.map(({noeuds,...c})=>({...c,points:{noeuds:noeuds.length,n:noeuds.reduce((a,x)=>a+x.positions.length/3,0)},noeudsUrl:`/maquette/ept-data/${id}/${p.part}/${c.cut}/noeuds.json`}))}))});
@@ -69,6 +70,11 @@ function demarrer(options={}){
       if(pannes.eptAuth&&/^\/maquette\/ept(?:\/p\d+)?\/ept-(?:data|hierarchy)\//.test(p)&&req.headers['x-esv-jeton']!=='1'){journal.refusEpt=(journal.refusEpt||0)+1;res.writeHead(401,{'content-type':'text/plain','cache-control':'no-store'});return res.end('non autorisé');}
       m=/^\/maquette\/ept(?:\/p\d+)?\/ept-data\/(\d+-\d+-\d+-\d+)\.(?:bin|laz)$/.exec(p);   /* CH-080c : .laz (EptLaszipLoader) */
       if(m&&req.method==='GET'){journal.ept[m[1]]=(journal.ept[m[1]]||0)+1;const n=Number(pannes.eptOctets)||65536,lat=pannes.eptLatenceMs!==undefined?Number(pannes.eptLatenceMs):60;
+        /* CH-095 : panne `eptEchec {http, fois, cles}` : les `fois` prochaines requêtes de nœud (toutes si absent ; seulement les clés `cles` si données)
+         * reçoivent `http` (502 par défaut), sans cache. Journal `echecsEpt` : clés refusées, dans l'ordre. Éteinte par défaut. */
+        const ee=pannes.eptEchec;
+        if(ee&&(ee.fois===undefined||ee.fois>0)&&(!Array.isArray(ee.cles)||ee.cles.includes(m[1]))){if(ee.fois!==undefined)ee.fois--;(journal.echecsEpt=journal.echecsEpt||[]).push(m[1]);
+          return setTimeout(()=>{res.writeHead(ee.http||502,{'content-type':'text/plain','cache-control':'no-store'});res.end('panne simulée');},lat);}
         return setTimeout(()=>{res.writeHead(200,{'content-type':'application/octet-stream','content-length':n,'cache-control':pannes.eptCache||'public, max-age=3600'});res.end(Buffer.alloc(n,7));},lat);}
       /* CH-080 : fichier de hiérarchie EPT (comme `ept-hierarchy/<clé>.json` de Potree 1.8) : la clé et ses descendants sur `eptPas` niveaux (2), jusqu'à
        * `eptProfondeur` (7) ; les clés du dernier niveau valent −1 (sous-hiérarchie dans un autre fichier) sauf au fond de l'arbre. Mêmes latence et cache que les

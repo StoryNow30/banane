@@ -42,4 +42,4 @@ async function ouvrir({prechauffer=false,reglage={},maquette={},adaptateur=null}
   const evts=await env.page.evaluate(()=>window.__evts.splice(0));
   return {cut,suivant,captureMs,poseMs,validationMs,reposMs,hierarchies:fin.hierarchies??null,hierCache:fin.hierCache??null,chaineMs:fin.ms,noeuds:fin.noeuds,cache:fin.cache,requetes,evts};}
  return {env,transition,fermer:()=>env.fermer()};}
-module.exports={ouvrir,adaptateurPatche,FICHIERS,attendre};
+module.exports={ouvrir,adaptateurPatche,FICHIERS,attendre,ECOUTE};   /* CH-095 : ECOUTE */

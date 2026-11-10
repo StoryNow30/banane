@@ -65,7 +65,7 @@ test('allumé : demandes après la capture, non attendues, à l’adresse de Pot
  const eteint=await jouer({allume:false}),j=await jouer({allume:true});
  assert.deepEqual(j.capture.pointsSceneRelative,eteint.capture.pointsSceneRelative,'mêmes points capturés');
  assert.equal(j.demandesALaFin,0,'aucune demande avant la fin de la capture');
- assert.ok(demandes.length>=1&&demandes.length<=2,'des demandes partent ensuite, deux en vol au plus : '+demandes.length);
+ assert.ok(demandes.length>=1&&demandes.length<=4,'des demandes partent ensuite, quatre en vol au plus (enVolMax livré à 4 depuis CH-090) : '+demandes.length);
  for(const d of demandes){assert.match(d.url,/^\/nuage\/ept-data\/\d+-\d+-\d+-\d+\.bin$/);assert.equal(d.init.priority,'low');assert.equal(d.init.cache,'default');}
  /* Les fetch ne répondent jamais : la capture est pourtant rendue (rien n'est attendu). Une nouvelle capture annule le préchauffage. */
  const signaux=demandes.map(d=>d.init.signal);await j.f.call('capture',j.before);

@@ -87,4 +87,8 @@ test('réglage : pauseMs 10 000 et refusMax 3 par défaut, bornés ; livré ains
  const s=require('../src/settings.js').lot.chargement.prechauffer;assert.equal(s.pauseMs,10000);assert.equal(s.refusMax,3);
  const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'../src/esv-observer.js'),'utf8');
  assert.match(src,/'refus-serveur','pause-serveur'/,'motif connu de l\'observateur (opération et opération lointaine)');
+ /* Trouvé par la relecture CH-092 : le service worker filtrait le motif (liste fermée à lui) et le journal recevait null. */
+ const sw=require('node:fs').readFileSync(require('node:path').join(__dirname,'../background.js'),'utf8');
+ const listes=sw.split('\n').filter(l=>/^const OBS_PRECH_MOTIFS(_LOIN)?=/.test(l));assert.equal(listes.length,2);
+ for(const l of listes)assert.ok(l.includes("'pause-serveur'"),'motif gardé par le service worker : '+l.slice(0,40));
 });

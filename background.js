@@ -294,8 +294,8 @@ const OBS_PRECH={prechauffage:{n:['coupe','predite','op','niveauMax','intersecta
  'prechauffage-vue':{n:['demiLargeurMm','demiHauteurMm','profondeurM','champDeg','pointBudget','minNodeSize','boites','limitePoints','enTetesXhr'],b:['fetchNatif','credXhr']},
  /* CH-088 : bilan de l'arrivée par l'arbre (voie potree) ; opération lointaine. */
  'prechauffage-loin':{n:['coupe','cible','avant','captures','msAvant','lances','charges','chargesFin','echecs','hierarchies','octets','enVolArrivee','boite','prets','nousPrets','nousEnVol','boiteFin','potreeLui','nousApres','pauses','dureeMs'],b:['plafond']}};   /* CH-081 : cibles, calibree ; utiles, inutiles ; vue de Potree */
-const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur','loin'];
-const OBS_PRECH_MOTIFS_LOIN=['arrivee','remplace','refus-serveur','eteint'];   /* CH-088 */
+const OBS_PRECH_MOTIFS=['fini','remplace','chargement','coupe','capture','navigation','reseau-occupe','plafond-noeuds','plafond-octets','sans-adresse','aucun-noeud','cache-inutile','sans-table','sans-rails','sans-ligne','repere','sans-suivante','page-sans-reponse','demande-invalide','saut-court','sans-cible','indice-perime','plafond-lot','deja-prechauffe','refus-serveur','pause-serveur','loin'];
+const OBS_PRECH_MOTIFS_LOIN=['arrivee','remplace','refus-serveur','pause-serveur','eteint'];   /* CH-088 */
 /* CH-080 : saut (entier signé, en coupes) et source de la coupe suivante (liste fermée de src/prechauffage.js). */
 const OBS_PRECH_SOURCES=['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'];
 const OBS_PRECH_ZONES=['cube','boite'],OBS_PRECH_TYPES_VUE=['orthographique','perspective','autre','absente'];   /* CH-081 */

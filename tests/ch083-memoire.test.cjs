@@ -104,9 +104,9 @@ test('Potree qui repart : arrêt (`chargement`), plus aucun lancement ; capture 
   assert.equal(ev.motif,'capture');assert.equal(journal.appels.length,n,'aucun lancement après la capture');}
 });
 
-test('réglage : bornes de memoire (enVolMax au plus 2), défaut éteint',()=>{
+test('réglage : bornes de memoire (enVolMax au plus 4 depuis CH-090), défaut éteint',()=>{
  assert.equal(P.reglage({actif:true}).memoire.actif,false);
- const m=P.reglage({actif:true,memoire:{actif:true,enVolMax:4,noeudsMax:5}}).memoire;assert.equal(m.enVolMax,2);assert.equal(m.noeudsMax,5);
+ const m=P.reglage({actif:true,memoire:{actif:true,enVolMax:9,noeudsMax:5}}).memoire;assert.equal(m.enVolMax,2,'hors bornes : défaut du module');assert.equal(m.noeudsMax,5);assert.equal(P.reglage({actif:true,memoire:{actif:true,enVolMax:4}}).memoire.enVolMax,4);
  assert.equal(require('../src/settings.js').lot.chargement.prechauffer.memoire.actif,true,'allumé pour le lot d\'essai (D-314)');
 });
 

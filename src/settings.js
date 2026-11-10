@@ -232,11 +232,13 @@
     /* CH-081 (D-311, aval de l'intégrateur pour Vision 8 sur D-310 et D-311) : zone = boîte de découpe d'ESV de la coupe prédite, jusqu'aux feuilles ; deux coupes à
      * l'avance ; au plus 3 cibles par passage (dont le changement de mode) ; par cible 32 nœuds, 10 Mo, 8 hiérarchies ; par lot (vie de la page) 4 000 requêtes et
      * 1 200 Mo ; repli à 1 cible au-delà de 30 % de nœuds préchauffés jamais redemandés sur 50 opérations. `zone:'cube'`, `horizon:1`, `candidatsMax:1` : CH-080c. */
-    chargement: Object.freeze({ prechauffer: Object.freeze({ actif: true, profondeurMax: null, noeudsMax: 32, octetsMax: 10485760, enVolMax: 2, rayonM: 0.75, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1, hierarchie: true, hierarchiesMax: 8,
+    chargement: Object.freeze({ prechauffer: Object.freeze({ actif: true, profondeurMax: null, noeudsMax: 32, octetsMax: 10485760, enVolMax: 4, rayonM: 0.75, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1, hierarchie: true, hierarchiesMax: 8,
       zone: 'boite', horizon: 2, candidatsMax: 3, lotRequetesMax: 4000, lotOctetsMax: 1258291200, repliInutiles: 0.3, repliFenetre: 50,
       /* CH-083 (D-314, accord écrit de l'opérateur lu par l'intégrateur) : nœuds de la coupe suivante chargés DANS LA MÉMOIRE d'ESV par `node.load()` de Potree, seulement ceux que
        * le préchauffage HTTP vient de recevoir en 200 ; 32 par opération, 2 à la fois, 256 Mo décodés par vie de la page. ALLUMÉ pour le lot d'essai ; `memoire.actif:false` coupe cette phase seule. */
-      memoire: Object.freeze({ actif: true, noeudsMax: 32, enVolMax: 2, octetsMax: 268435456 }),
+      /* CH-090 (D-317, lots « Vision 8 » et « Vision 9 », ÉTABLI : 7 nœuds candidats par coupe en partie dense, 2 lancés) : 4 chargements à la fois (la limite de Potree) ;
+       * 256 Mo PAR OPÉRATION (et plus par vie de la page) ; aucun lancement si le tas JS dépasse 1 536 Mo. */
+      memoire: Object.freeze({ actif: true, noeudsMax: 32, enVolMax: 4, octetsMax: 268435456, tasMaxMo: 1536 }),
       /* CH-085 (lot « Vision 7 », ÉTABLI : nos fetch reçoivent 401, ceux de Potree 200) : plus aucune requête à nous ; nœuds et pages de hiérarchie par node.load() et
        * node.loadHierarchy() de Potree (authentification d'ESV comprise). Refus du serveur ou chargement à nous en cours plus de 5 s : arrêt pour le lot (`refus-serveur`). */
       voie: 'potree', delaiMs: 5000,
@@ -246,7 +248,9 @@
       /* CH-088 (lot « Vision 8 », ÉTABLI : la cible lointaine n'était prise que 1 à 2 coupes avant, chaque opération coupée au changement de coupe, 0 à 4 load()
        * finis à l'arrivée) : la prochaine cible lointaine (écart ≥ 11 coupes à la précédente de la chaîne) est préchargée dès qu'elle est connue, jusqu'à 40 coupes
        * à l'avance, en pause pendant chaque capture et quand Potree charge ; mêmes plafonds. ALLUMÉ pour le lot d'essai ; `loin.actif:false` la coupe seule. */
-      loin: Object.freeze({ actif: true, sautMin: 11, coupesMax: 40 }),
+      /* CH-090 (maquette, ÉTABLI : à 4 chargements à la fois, l'opération proche charge 56 nœuds sur 56 à l'arrivée d'un saut de 247 coupes, l'opération lointaine plafonnée à 32
+       * n'en avait que 45) : plafond de nœuds propre à l'opération lointaine, 96 ; les octets (256 Mo par opération), la garde du tas et le plafond du lot restent. */
+      loin: Object.freeze({ actif: true, sautMin: 11, coupesMax: 40, noeudsMax: 96 }),
       /* CH-093 : passage à la relecture. La première coupe relue (connue du service worker à la clôture du lot) est préchargée par l'opération lointaine,
        * dès la fin du lot et pendant la passe des différés, si elle est à 11 coupes ou plus de la coupe affichée ; mêmes plafonds, rien pendant une capture.
        * ALLUMÉ pour le lot d'essai ; `relecture.actif:false` la coupe seule (la commande `prechauffer` ne part plus). */

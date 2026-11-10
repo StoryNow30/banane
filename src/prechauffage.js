@@ -90,6 +90,8 @@
      * de hiérarchie, chargement au-delà de `delaiMs`) met en pause `pauseMs` ; `refusMax` erreurs passagères ou un vrai refus (401, 403) : arrêt pour le lot. */
     out.pauseMs = fini(r.pauseMs) && r.pauseMs >= 1000 && r.pauseMs <= 120000 ? Math.floor(r.pauseMs) : 10000;
     out.refusMax = Number.isInteger(r.refusMax) && r.refusMax >= 1 && r.refusMax <= 10 ? r.refusMax : 3;
+    /* CH-092 : les erreurs passagères s'oublient après `oubliMs` sans erreur (sinon la 3e arrêtait tout, même à des heures d'écart). */
+    out.oubliMs = fini(r.oubliMs) && r.oubliMs >= 10000 && r.oubliMs <= 86400000 ? Math.floor(r.oubliMs) : 600000;
     out.loin = reglageLoin(r.loin);   /* CH-088 */
     out.relecture = reglageRelecture(r.relecture);   /* CH-093 */
     return Object.freeze(out);
@@ -97,8 +99,8 @@
 
   /* CH-088 : opération lointaine. Défaut du MODULE : éteinte. `sautMin` : écart minimal (en coupes) à la coupe précédente de la chaîne ; `coupesMax` :
    * coupes au plus entre la coupe courante et la cible. Seulement en voie potree. */
-  const DEFAUT_LOIN = Object.freeze({ actif: false, sautMin: 11, coupesMax: 40 });
-  const BORNES_LOIN = { sautMin: [2, 100000], coupesMax: [0, 500] };
+  const DEFAUT_LOIN = Object.freeze({ actif: false, sautMin: 11, coupesMax: 40, captureMaxMs: 3000, noeudsMax: null });   /* CH-092 : une capture sans fin connue (elle a levé) ne tient plus la pause au-delà */
+  const BORNES_LOIN = { sautMin: [2, 100000], coupesMax: [0, 500], captureMaxMs: [500, 60000], noeudsMax: [1, 400] };   /* CH-090 : plafond de nœuds propre à l'opération lointaine (absent : celui de l'opération proche) */
   function reglageLoin(m) {
     const out = { ...DEFAUT_LOIN };
     if (m && typeof m === 'object') { out.actif = m.actif === true; for (const [k, [a, b]] of Object.entries(BORNES_LOIN)) { const v = m[k]; if (fini(v) && v >= a && v <= b) out[k] = Math.floor(v); } }
@@ -115,8 +117,11 @@
   /* CH-083 (D-314) : phase « mémoire » : `node.load()` de Potree sur les nœuds de la coupe suivante que le préchauffage HTTP vient de recevoir en 200.
    * Défaut du MODULE : éteinte. `noeudsMax` par opération, `enVolMax` chargements à nous à la fois (Potree garde au moins 4 − enVolMax places), `octetsMax`
    * octets DÉCODÉS (géométrie) par vie de la page. Étude : chantiers/CH-083/etude.md. */
-  const DEFAUT_MEMOIRE = Object.freeze({ actif: false, noeudsMax: 32, enVolMax: 2, octetsMax: 256 * 1048576 });
-  const BORNES_MEMOIRE = { noeudsMax: [1, 200], enVolMax: [1, 2], octetsMax: [1048576, 4 * 1073741824] };
+  /* CH-090 (lots « Vision 8 » et « Vision 9 », ÉTABLI) : `octetsMax` vaut PAR OPÉRATION (compté pour la vie de la page, il éteignait le préchauffage après
+   * environ 330 coupes : 212 Mo sur 256 consommés par un lot de 53 cuts et 218 relus) ; `tasMaxMo` : aucun lancement au-delà de ce tas JS (la mémoire
+   * d'ESV est tenue par le LRU de Potree, mesurée à 340-900 Mo). `enVolMax` jusqu'à 4 (la limite de Potree). */
+  const DEFAUT_MEMOIRE = Object.freeze({ actif: false, noeudsMax: 32, enVolMax: 2, octetsMax: 256 * 1048576, tasMaxMo: 1536 });
+  const BORNES_MEMOIRE = { noeudsMax: [1, 200], enVolMax: [1, 4], octetsMax: [1048576, 4 * 1073741824], tasMaxMo: [256, 16384] };
   function reglageMemoire(m) {
     const out = { ...DEFAUT_MEMOIRE };
     if (m && typeof m === 'object') { out.actif = m.actif === true; for (const [k, [a, b]] of Object.entries(BORNES_MEMOIRE)) { const v = m[k]; if (fini(v) && v >= a && v <= b) out[k] = Math.floor(v); } }
@@ -404,13 +409,17 @@
     const EPT_HIER = /\/ept-hierarchy\/(\d+-\d+-\d+-\d+)\.json$/i, nosCles = new Set();   /* CH-085 : clés chargées par nous (mémoire de la page) */
     /* CH-088 : opération lointaine en cours (une au plus), capture en cours (aucun lancement), nœuds sur lesquels nous avons appelé load() (bilan à
      * l'arrivée) et nos load() encore en vol, toutes opérations confondues (`enVolMax` vaut pour tous nos chargements à la fois). */
-    let loin = null, enCapture = false; const nosNoeuds = new WeakSet(), volNous = new Set();
+    let loin = null, enCapture = false, enCaptureDepuis = 0; const nosNoeuds = new WeakSet(), volNous = new Set();
     /* CH-089 : `refuser(definitif)` : vrai refus (401, 403) ou `refusMax`-ième erreur passagère : arrêt pour le lot ; sinon pause de `pauseMs`.
      * Une erreur vue pendant la pause n'est pas comptée (même panne). */
-    let pauseJusqua = null, erreursPassageres = 0;
+    let pauseJusqua = null, erreursPassageres = 0, dernierRefus = null;
     const enPause = () => pauseJusqua !== null && maintenant() < pauseJusqua;
     const refuser = (definitif = false) => { if (refus) return; if (!definitif && enPause()) return;
+      const t = maintenant(); if (dernierRefus !== null && t - dernierRefus > R.oubliMs) erreursPassageres = 0; dernierRefus = t;
       if (definitif || ++erreursPassageres >= R.refusMax) { refus = true; actif = false; annuler('refus-serveur'); if (loin) finirLoin(loin, 'refus-serveur'); return; }
+      /* CH-095 (maquette, ÉTABLI) : l'erreur vue par l'observateur de ressources arrive AVANT `delaiMs` ; nos chargements encore en vol à cet instant sont
+       * mis à part (celui qui a échoué reste « en cours » chez Potree pour toujours ; ceux qui finissent sortent d'eux-mêmes de la liste). */
+      for (const n of [...volNous]) { let en = false; try { en = n.loading === true; } catch { en = false; } if (en) bloquer(n); }
       pauseJusqua = maintenant() + R.pauseMs; annuler('pause-serveur'); if (loin) finirLoin(loin, 'pause-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
     const tas = () => { try { const v = typeof env.tas === 'function' ? env.tas() : globalThis.performance?.memory?.usedJSHeapSize; return fini(v) && v >= 0 ? v : null; } catch { return null; } };
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
@@ -421,6 +430,14 @@
     const memEnVol = c => { let k = 0; for (const n of c?.memVol || []) { try { if (n.loading === true) k++; } catch { /* rien */ } } return k; };
     /** CH-088 : tous nos load() encore en cours (opération proche, opération lointaine, opérations finies dont un load() vole encore). */
     const nosEnVol = () => { let k = 0; for (const n of [...volNous]) { let en = false; try { en = n.loading === true; } catch { en = false; } if (en) k++; else volNous.delete(n); } return k; };
+    /* CH-092 : nœud à nous en échec ou trop long, que Potree garde « en cours » (CH-062) : sorti de nos chargements en vol (il ne prend plus une de nos
+     * places), compté à part tant qu'il reste « en cours ». Le réseau est libre si le compteur vaut nos chargements en vol, avec ou sans ces nœuds
+     * (la ligne de base de l'adaptateur les retire du compteur, pas le compteur brut). */
+    const bloques = new Set();
+    const bloquer = n => { volNous.delete(n); if (bloques.size > 64) bloquesVivants(); bloques.add(n); };
+    const bloquesVivants = () => { let k = 0; for (const n of [...bloques]) { let en = false; try { en = n.loading === true; } catch { en = false; } if (en) k++; else bloques.delete(n); } return k; };
+    const reseauLibre = n0 => { if (n0 === null) return false; const v = nosEnVol(); return n0 >= v && n0 <= v + bloquesVivants(); };
+    const tasPlein = () => { const t = tas(), M = R.memoire?.tasMaxMo; return t !== null && fini(M) && t > M * 1048576; };
     const noterNous = n => { try { nosNoeuds.add(n); } catch { /* rien */ } if (volNous.size > 64) nosEnVol(); volNous.add(n); };
     const etiquette = () => { try { const l = env.etiquette(); return l && Number.isInteger(l.cut) ? l : null; } catch { return null; } };
 
@@ -455,7 +472,7 @@
       /* CH-088 : voie potree : bilan par l'arbre, dans la boîte de la coupe d'arrivée (instantané pris au début de sa capture). */
       const ba = bilanArrivee(s.arrivee, s.arrivee ? instantane(s.pcs, s.zones?.get(s.arriveeCut), nosNoeuds) : null, nosNoeuds);
       poster({ kind: 'prechauffage-bilan', coupe: l?.cut ?? null, predite: s.predite, op: s.op, juste, demandes: s.demandes ?? s.cles.size, potree: s.potree, couverts: s.couverts, servisCache: s.servisCache, cacheTotal: s.cacheTotal, utiles: u, inutiles, ...ba });
-      if (juste && (s.demandes ?? s.cles.size) > 0 && s.couverts > 0) { sansCache = s.servisCache > 0 ? 0 : sansCache + 1; if (actif && sansCache >= R.coupesSansCache) { actif = false; return 'cache-inutile'; } }
+      if (juste && (s.demandes ?? s.cles.size) > 0 && s.couverts > 0) { sansCache = s.servisCache > 0 ? 0 : sansCache + 1; if (actif && R.voie !== 'potree' && sansCache >= R.coupesSansCache) { actif = false; return 'cache-inutile'; } }   /* CH-092 : en voie potree le cache HTTP ne joue pas */
       return null;
     }
     function annuler(motif) {
@@ -494,7 +511,7 @@
       c.memVol = new Set(); const hierVol = new Set(), depuis = new Map(), lances = new Set();
       const relever = () => {
         for (const n of [...c.memVol]) { let en = true; try { en = n.loading === true; } catch { en = false; }
-          if (en) { if (maintenant() - (depuis.get(n) ?? maintenant()) > R.delaiMs) refuser(); continue; }
+          if (en) { if (maintenant() - (depuis.get(n) ?? maintenant()) > R.delaiMs) { c.memVol.delete(n); bloquer(n); m.echecs++; refuser(); } continue; }
           c.memVol.delete(n); let ok = false; try { ok = n.loaded === true; } catch { ok = false; }
           if (ok) { const o = octetsGeometrie(n); m.charges++; m.octets += o; memOctetsLot += o; c.termines++; c.octets += o; budget?.compter(0, o); } else { m.echecs++; refuser(); } }
       };
@@ -505,14 +522,17 @@
           for (;;) {
             relever(); if (!vivant()) break;
             const n0 = chargements();
-            if (n0 !== null && n0 === nosEnVol()) {   /* CH-088 : tous nos load() (opération lointaine comprise) */
+            /* CH-092 : le parcours de l'arbre seulement quand une place est libre (comme l'opération lointaine). */
+            if (reseauLibre(n0) && (nosEnVol() + hierVol.size < enVolMax || (!c.memVol.size && !hierVol.size))) {   /* CH-088 : tous nos load() (opération lointaine comprise) */
               const s = selectionPotree(pointclouds, Z);
-              const file = [...s.hier.map(x => ({ ...x, h: true })), ...s.donnees].filter(x => !lances.has(x.noeud)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+              /* CH-092 : une frontière au-delà de `hierarchiesMax` n'est plus lançable : elle ne retient plus la cible. */
+              const file = [...s.hier.map(x => ({ ...x, h: true })), ...s.donnees].filter(x => !lances.has(x.noeud) && !(x.h && hT >= R.hierarchiesMax)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
               if (!file.length && !c.memVol.size && !hierVol.size) break;   /* cible finie */
               let plafond = false;
               for (const x of file) {
                 if (nosEnVol() + hierVol.size >= enVolMax) break;   /* CH-088 : `enVolMax` pour tous nos chargements à la fois */
-                if (nT >= R.noeudsMax || memOctetsLot >= MM.octetsMax) { plafond = true; c.resteNoeuds = true; break; }
+                if (nT >= R.noeudsMax) { plafond = true; c.resteNoeuds = true; break; }
+                if (m.octets >= MM.octetsMax || tasPlein()) { plafond = true; c.resteOctets = true; break; }   /* CH-090 : par opération ; garde du tas */
                 if (x.h && hT >= R.hierarchiesMax) continue;
                 if (budget && !budget.autorise(1, 0)) { c.motif = c.motif || 'plafond-lot'; plafond = true; break; }
                 const n = x.noeud; lances.add(n);
@@ -536,6 +556,7 @@
       } catch { /* relevé seulement */ }
       relever(); m.enVolFin = c.memVol.size; m.tas1 = tas();
       if (refus) c.motif = 'refus-serveur';
+      if (!c.motif && c.resteOctets) c.motif = 'plafond-octets';   /* CH-092 : le plafond d'octets n'est plus dit « plafond-noeuds » */
       if (!c.motif && c.resteNoeuds) c.motif = 'plafond-noeuds';
       if (!c.motif && !c.noeuds && !c.hierarchies) c.motif = 'aucun-noeud';
       c.arret = true; c.reveil?.();
@@ -548,14 +569,14 @@
      * loadHierarchy() (frontière) puis load() (données) dans la boîte de la cible, du moins profond au plus profond, `enVolMax` à nous en tout. Les
      * changements de coupe ne l'arrêtent pas ; elle finit à l'arrivée (bilan à la capture suivante), quand la cible change, au refus du serveur. */
     function noterArrivee(capture = true) {
-      if (capture) enCapture = true;
+      if (capture) { enCapture = true; enCaptureDepuis = maintenant(); }
       const l = etiquette(); if (!l) return;
       const s = suivi; if (s && !s.arrivee && s.zones && l.part === s.partie && s.zones.has(l.cut)) { s.arrivee = instantane(s.pcs, s.zones.get(l.cut), nosNoeuds); s.arriveeCut = l.cut; }
       const L = loin; if (L && !L.fini && !L.arrivee && l.part === L.partie && l.cut === L.cible) arriverLoin(L);
     }
     function releverLoin(L) {
       for (const n of [...L.memVol]) { let en = true; try { en = n.loading === true; } catch { en = false; }
-        if (en) { if (maintenant() - (L.depuis.get(n) ?? maintenant()) > R.delaiMs) refuser(); continue; }
+        if (en) { if (maintenant() - (L.depuis.get(n) ?? maintenant()) > R.delaiMs) { L.memVol.delete(n); bloquer(n); L.echecs++; refuser(); } continue; }
         L.memVol.delete(n); let ok = false; try { ok = n.loaded === true; } catch { ok = false; }
         if (ok) { const o = octetsGeometrie(n); L.charges++; L.octets += o; memOctetsLot += o; budget?.compter(0, o); } else { L.echecs++; refuser(); } }
     }
@@ -580,17 +601,19 @@
           if (!actif || enPause()) { finirLoin(L, refus ? 'refus-serveur' : actif ? 'pause-serveur' : 'eteint'); break; }
           const l = etiquette();
           if (l && l.part === L.partie && l.cut === L.cible) { arriverLoin(L); break; }   /* arrivée : Potree charge lui-même ; bilan à la capture suivante */
-          const n0 = chargements(), libre = !enCapture && n0 !== null && n0 === nosEnVol();
+          /* CH-092 : une capture qui a levé n'appelle jamais apresCapture : au-delà de `captureMaxMs`, elle ne tient plus la pause. */
+          const capture = enCapture && maintenant() - enCaptureDepuis < R.loin.captureMaxMs;
+          const n0 = chargements(), libre = !capture && reseauLibre(n0);
           if (!libre) { if (!pause) { pause = true; L.pauses++; } }
           else if (nosEnVol() + L.hierVol.size < enVolMax) {   /* le parcours de l'arbre seulement quand une place est libre */
             pause = false;
             const sel = selectionPotree(L.pcs, L.Z);
-            const file = [...sel.hier.map(x => ({ ...x, h: true })), ...sel.donnees].filter(x => !L.deja.has(x.noeud)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);
+            const file = [...sel.hier.map(x => ({ ...x, h: true })), ...sel.donnees].filter(x => !L.deja.has(x.noeud) && !(x.h && L.hT >= R.hierarchiesMax)).sort((a, b) => a.niveau - b.niveau || a.distance - b.distance);   /* CH-092 : frontière au-delà du plafond : plus lançable */
             /* Rien à lancer et rien en vol (boîte chargée, ou plafond atteint) : la boucle s'arrête ; l'arrivée est notée au début de la capture. */
             if ((!file.length || L.plafond) && !L.memVol.size && !L.hierVol.size) { L.complet = true; break; }
             for (const x of file) {
               if (nosEnVol() + L.hierVol.size >= enVolMax) break;
-              if (L.nT >= R.noeudsMax || memOctetsLot >= MM.octetsMax) { L.plafond = true; break; }
+              if (L.nT >= (R.loin.noeudsMax ?? R.noeudsMax) || L.octets >= MM.octetsMax || tasPlein()) { L.plafond = true; break; }   /* CH-090 : octets par opération ; garde du tas */
               if (x.h && L.hT >= R.hierarchiesMax) continue;
               if (budget && !budget.autorise(1, 0)) { L.plafond = true; break; }
               const n = x.noeud; L.deja.add(n);
@@ -742,7 +765,7 @@
       c.nCibles = liste.length;
       /* CH-080 : coupe proche (|saut| < sautMin) : ses nœuds sont déjà chargés (mesure du 09/11), rien n'est demandé. */
       if (!liste.length) { c.motif = tl ? 'loin' : 'saut-court'; return terminer(c); }
-      if (chargements() !== nosEnVol()) { c.motif = 'reseau-occupe'; return terminer(c); }   /* CH-088 : nos load() en vol ne sont pas un réseau occupé */
+      if (!reseauLibre(chargements())) { c.motif = 'reseau-occupe'; return terminer(c); }   /* CH-088 : nos load() en vol ne sont pas un réseau occupé */
       /* CH-081 : zone. Boîte : dimensions lues sur la boîte de découpe de Potree pour la coupe COURANTE si elle est centrée et alignée (lecture seule), sinon
        * celles mesurées ; jusqu'aux feuilles (Potree en orthographique n'a pas de critère de taille). Cube : CH-077, niveau borné au plus profond chargé. */
       let dims = null;
@@ -779,7 +802,7 @@
             if (R.apresNavigation === 'finir' && l && l.part === c.partie && c.predites.has(l.cut)) { c.navigue = true; c.motif = c.motif || 'navigation'; }
             else { annuler('coupe'); break; }
           }
-          if (!c.navigue && (n === null || n > Math.max(memEnVol(c), nosEnVol()))) { annuler('chargement'); break; }   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » ; CH-088 : ceux de l'opération lointaine non plus */
+          if (!c.navigue && (n === null || n > Math.max(memEnVol(c), nosEnVol()) + bloquesVivants())) { annuler('chargement'); break; }   /* CH-095 : un nœud à nous resté « en cours » après un échec n'est pas Potree qui repart */   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » ; CH-088 : ceux de l'opération lointaine non plus */
         }
       })();
       if (R.voie === 'potree') return operationPotree(c, plans, ctx.pointclouds);   /* CH-085 : aucune requête à nous */

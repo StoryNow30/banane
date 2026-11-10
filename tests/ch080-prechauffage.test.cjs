@@ -53,7 +53,7 @@ test('réglage : `sautMin` livré à 1 (D-311, CH-084) ; clé absente ou hors bo
  assert.deepEqual([...P.SOURCES],['liste-esv','relu','passe-differes','b1-fenetre','changement-mode'],'CH-081 : source changement-mode ajoutée');
  const S=require('../src/settings.js');assert.equal(S.lot.chargement.prechauffer.sautMin,1,'réglage livré : D-311, dès la coupe voisine');
  /* CH-081 (aval de l'intégrateur, Vision 8) : plafonds par candidat relevés à 32 nœuds et 10 Mo ; enVolMax inchangé. */
- assert.equal(S.lot.chargement.prechauffer.noeudsMax,32);assert.equal(S.lot.chargement.prechauffer.octetsMax,10485760);assert.equal(S.lot.chargement.prechauffer.enVolMax,2,'enVolMax inchangé');
+ assert.equal(S.lot.chargement.prechauffer.noeudsMax,32);assert.equal(S.lot.chargement.prechauffer.octetsMax,10485760);assert.equal(S.lot.chargement.prechauffer.enVolMax,4,'enVolMax à 4 depuis CH-090 (D-317)');
 });
 
 test('lot, saut de 50 coupes : la suivante non validée de TOUTE la liste (source liste-esv) ; nœuds de sa zone demandés',async()=>{

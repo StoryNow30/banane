@@ -9,6 +9,8 @@ const fichiers=fs.readdirSync(ici).filter(f=>f.endsWith('.test.cjs')&&!(sans&&/a
 /* CH-017 : l'essai de la file de parties (deux Chromium, des lots réels de plusieurs parties) tourne APRÈS les autres, seul : lancé en parallèle,
  * sa charge faisait manquer ses délais à « Connexion T21 » (mesuré : 1 échec dans la suite complète, 0 sans lui). */
 const SEUL=/file-(parties|changement-gestes|partie-changee-par-esv)\.test\.cjs$/  /* CH-039 : idem */,ensemble=fichiers.filter(f=>!SEUL.test(f)),apres=fichiers.filter(f=>SEUL.test(f));
-const r=spawnSync(process.execPath,['--test','--test-timeout=180000',...ensemble],{stdio:'inherit'});
+/* Vision 11 : deux fichiers à la fois au plus. À la concurrence par défaut (3 sur 4 cœurs, un ou deux Chromium par fichier), des essais d'interface manquaient
+ * leurs délais selon l'ordre de passage (mesuré le 10/11 : `correction-signal` puis `file-signal-clics` rouges dans la suite, verts seuls). */
+const r=spawnSync(process.execPath,['--test','--test-concurrency=2','--test-timeout=180000',...ensemble],{stdio:'inherit'});
 const r2=apres.length&&!sans?spawnSync(process.execPath,['--test','--test-timeout=600000',...apres],{stdio:'inherit'}):{status:0};
 process.exit((r.status??1)||(r2.status??1));
