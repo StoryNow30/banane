@@ -58,7 +58,7 @@ test('commande `prechauffer` : ping (capacité, partie), envoi, une seule fois p
  for(const cut of [undefined,null,-1,1.5])assert.equal(await f.relectureAnticiperEnvoyer(LOT,cut,'selection'),null);
 });
 test('page sans la commande (adaptateur sans le patch), autre partie, refus de la page, réglage éteint : rien n\'est commandé',async()=>{
- let b=bac({capacites:['changerPartie']});assert.equal(await b.f.relectureAnticiperEnvoyer(LOT,20,'cloture'),'page-sans-commande');assert.deepEqual(b.appels,[['ping']]);
+ let b=bac({capacites:['changerPartie']});assert.equal(await b.f.relectureAnticiperEnvoyer(LOT,20,'cloture'),'page-sans-commande');assert.deepEqual(b.appels,[['ping']]);assert.deepEqual(b.journal,[],'rien au journal : le journal du lot reste celui d\'avant');
  assert.equal(b.f.relecturePremiere(LOT),20,'la passe la joindra quand même à ses captures');
  b=bac({label:{part:24,cut:3}});assert.equal(await b.f.relectureAnticiperEnvoyer(LOT,20,'cloture'),'autre-partie');assert.deepEqual(b.appels,[['ping']]);
  b=bac({reponse:{lance:false,motif:'eteint'}});assert.equal(await b.f.relectureAnticiperEnvoyer(LOT,20,'cloture'),'refusee');

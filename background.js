@@ -2341,7 +2341,8 @@ async function relectureAnticiperEnvoyer(b,cut,quand){
   else if(!Number.isInteger(lu?.part)||lu.part!==b.scope?.part)issue='autre-partie';
   else{const r=await call('prechauffer',{part:b.scope.part,cut,source:'changement-mode'});issue=r?.lance===true?'envoyee':'refusee';if(issue==='envoyee')A.envoyee=cut;}}
  catch{issue='erreur';}
- journalerSimple('relecture-anticipee',{lotId:b.id,quand,issue,cut,de});return issue;}
+ /* Journal seulement si la commande est partie (page sans la commande, autre partie, erreur : rien, le journal du lot reste celui d'avant). */
+ if(issue==='envoyee'||issue==='refusee')journalerSimple('relecture-anticipee',{lotId:b.id,quand,issue,cut,de});return issue;}
 async function relectureAnticiperProvisoire(b,p){
  try{if(!relectureAnticipationAllumee()||!b?.id||selectedTab===null||passeDiffReglage().mode!=='ecriture')return null;
   const R=globalThis.BananeRelectureOmbre,entree=await relectureEntree(b),sel=R.selection(entree,relectureOptionsSelection(R,await relectureReglages(),reglageRelecture()));
