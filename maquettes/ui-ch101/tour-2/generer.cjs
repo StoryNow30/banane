@@ -48,7 +48,7 @@ const rond = e => sv(ROND[e.id === 'toi' ? 'toi' : e.ton]);
 
 /* ───────────────────────────── morceaux communs (même contenu, trois habillages) */
 const esv = e => e.esv || 'Utilisé par Ariane — ESV';
-const rail = (e, c) => e.compte ? `<div class="${c}-rail" data-ton="${e.ton}" role="img" aria-label="18 traités, total inconnu, 3 à poser"><b style="width:${e.compte.fait}%"></b>${e.compte.marques.map(x => `<u style="left:${x}%"></u>`).join('')}<s style="left:${e.compte.fait}%"></s></div>` : '';
+const rail = (e, c) => e.compte ? `<div class="rail ${c}-rail" data-ton="${e.ton}" role="img" aria-label="18 traités, total inconnu, 3 à poser"><b style="width:${e.compte.fait}%"></b>${e.compte.marques.map(x => `<u style="left:${x}%"></u>`).join('')}<s style="left:${e.compte.fait}%"></s></div>` : '';
 const champs = c => `<div class="${c}-champs"><label>Premier cut<span>4790</span></label><label>Dernier cut<span class="vide">fin de partie</span></label></div>`;
 const boutons = (e, c) => e.actions.length ? `<div class="${c}-actions${e.actions.length > 2 ? ' n3' : ''}">${e.actions.map((t, i) => `<button type="button"${i || e.sansPrincipal ? '' : ' class="pr"'}>${t}</button>`).join('')}</div>` : '';
 const poignee = e => `<span class="x600">${e.poignee[0]}</span><span class="x360">${e.poignee[1]}</span>${e.reste ? `<em>${e.reste}</em>` : ''}`;
@@ -80,12 +80,12 @@ function rendre2(e) {
 <div class="p2-corps"><section class="p2-carte p2-etat">${c}</section><section class="p2-carte p2-rangs"><div class="p2-rang">${poignee(e)}${IC.droite}</div><div class="p2-rang"><div class="cache-lib">Cache des exports${e.cache ? `<span><i class="pt">· </i>${e.cache}</span>` : ''}</div><button type="button"${e.cache ? ' disabled' : ''}>Vider le cache</button></div></section></div></div>`;
 }
 function rendre3(e) {
-  let c = `<div class="p3-mot" data-ton="${e.ton}">${rond(e)}<h3>${e.mot}</h3></div><p class="p3-phrase">${e.phrase}</p>`;
+  let c = `<div class="p3-mot" data-ton="${e.ton}"><i></i><h3>${e.mot}</h3></div><p class="p3-phrase">${e.phrase}</p>`;
   if (e.champs) c += champs('p3') + `<p class="p3-note">${e.note}</p>`;
-  if (e.compte) c += rail(e, 'p3');
+  if (e.compte) c += `<div class="p3-compte"><strong>${e.compte.n}</strong><span>${e.compte.lib}</span></div>` + rail(e, 'p3');
   const props = [];
   if (e.lot) props.push(['Lot', 'du cut <b>4790</b> au cut <b>4900</b>']);
-  if (e.compte) props.push(['Traités', '<b>18</b> <span>· total inconnu</span>'], ['Posés', '<b>15</b>'], ['À poser', '<b>3</b>']);
+  if (e.compte) props.push(['Posés', '<b>15</b>'], ['À poser', '<b>3</b>']);
   if (e.allure) props.push([e.id === 'pause' ? 'En pause' : 'Allure', e.id === 'pause' ? 'depuis <b>1 min 45</b> <span class="apres"><i>· </i>médiane 7,6 s par cut avant la pause</span>' : '<b>7,9</b> cuts par minute <span class="apres"><i>· </i>médiane 7,6 s par cut</span>']);
   if (e.fin) props.push(...e.fin);
   if (props.length) c += `<dl class="p3-props">${props.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
