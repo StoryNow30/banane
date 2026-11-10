@@ -298,7 +298,8 @@ function ajuster(){var L=p.classList.contains('g600')?600:360,z=Math.min(1,(docu
 function choisir(g){p.classList.toggle('g600',g);a.setAttribute('aria-pressed',String(!g));b.setAttribute('aria-pressed',String(g));ajuster();}
 a.addEventListener('click',function(){choisir(false);});b.addEventListener('click',function(){choisir(true);});window.addEventListener('resize',ajuster);ajuster();})();
 </script>`;
-  const tete = `<title>Panneau Ariane CH-101</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>\n${polices()}\n${PAGE_CSS}\n${fs.readFileSync(path.join(ICI, 'style.css'), 'utf8')}\n</style>`;
+  /* la balise de marge latérale n'est utile qu'à la page publiée */
+  const tete = `<title>Panneau Ariane CH-101</title>\n${PUBLIER ? '<meta name="' + ['c', 'laude:viewport-fit-sides'].join('') + '" content="cover">\n' : ''}<style>\n${polices()}\n${PAGE_CSS}\n${fs.readFileSync(path.join(ICI, 'style.css'), 'utf8')}\n</style>`;
   return PUBLIER ? `${tete}\n${corps}\n` : `<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n${tete}\n</head>\n<body>\n${corps}\n</body>\n</html>\n`;
 }
 fs.writeFileSync(SORTIE, page());
