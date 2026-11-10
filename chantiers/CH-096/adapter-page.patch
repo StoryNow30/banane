@@ -1,0 +1,13 @@
+--- a/src/adapter-page.js
++++ b/src/adapter-page.js
+@@ -674,7 +674,9 @@
+        const cle=JSON.stringify(p);stable=cle===precedent?stable+1:0;precedent=cle;
+        return C.distance(p,avant)>1e-6&&stable>=P.lecturesStables?{s,ok:false}:false;},
+        'Le clic n’a pas produit le déplacement demandé pour '+side+'. État à réconcilier.',P.attenteClicMs)
+-       .catch(e=>{if(dernier)return {s:dernier,ok:false};throw e;});
++       /* CH-096 (défaut 2) : un arrêt demandé pendant l'attente n'est jamais rattrapé (il l'était dès le deuxième essai, et un clic
++        * de pose de plus partait) ; seul le délai de l'attente passe à l'essai suivant. */
++       .catch(e=>{if(dernier&&!cancelled&&e?.message!=='Action interrompue.')return {s:dernier,ok:false};throw e;});
+      if(pose.ok)return pose.s;dernier=pose.s;}
+    const ecart=C.distance(dernier.rails[side].positionSceneRelative,target)*1000;
+    throw Error(`Le clic n’a pas produit le déplacement demandé pour ${side} : rail posé à ${ecart.toFixed(1).replace('.',',')} mm de la cible`
