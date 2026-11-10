@@ -52,15 +52,16 @@ function rendre1(e) {
 <div class="r1-geant"><strong>${e.geant[0]}</strong><span>${e.geant[1]}</span></div><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>${texte(e)}${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
 }
 function rendre2(e) {
-  return `<div class="p r2" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r2-corps"><section class="r2-carte"><div class="r2-tete"><span class="puce"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
-<div class="r2-bornes"><strong>${e.bornes[0]}</strong><div class="r2-piste" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div><strong${/^\d/.test(e.bornes[1]) ? '' : ' class="mot"'}>${e.bornes[1]}</strong></div>
-<div class="r2-legende"><span>${e.leg[0]}</span><span>${e.leg[1]}</span></div></section>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${e.court || e.ligne}</p>`}${trio(e)}<div class="pousse"></div>${e.champs ? '' : rangs(e)}${actions(e)}</div></div>`;
+  const fin = e.id === 'pret' ? '<strong class="mot">fin</strong>' : '<strong>4900</strong>';
+  const leg = { pret: ['premier cut', 'dernier cut : fin de partie'], rattrapage: ['<b>1</b> posé sur <b>3</b> au rattrapage', 'cut <b>4803</b>'], relecture: ['<b>12</b> cuts relus sur <b>85</b>', '<b>3</b> corrigés'], fin: ['<b>93</b> cuts traités', '<b>6</b> à poser'] }[e.id] || ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'];
+  return `<div class="p r2" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r2-corps"><section class="r2-carte"><div class="r2-tete"><span class="etat"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
+<div class="r2-bornes"><strong>4790</strong><em>${e.geant[0]} %</em>${fin}</div><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>
+<div class="r2-legende"><span>${leg[0]}</span><span>${leg[1]}</span></div></section>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${e.court || e.ligne}</p>`}${trio(e)}<div class="pousse"></div>${e.champs ? '' : rangs(e)}${actions(e)}</div></div>`;
 }
 function rendre3(e) {
-  const n = { pret: '0 %', rattrapage: '1 sur 3', fin: '93 cuts traités' }[e.id] || e.pct + ' %';
-  const l = { pret: e.ligne, cours: 'Pose du cut <b>4812</b> · <b>18</b> cuts traités, fin au cut <b>4900</b>', pause: 'Depuis <b>1 min 45</b>, après le cut <b>4811</b> · <b>18</b> cuts traités', rattrapage: 'Ariane travaille dans ESV : ne touche à rien. Cut <b>4803</b>.', relecture: '<b>12</b> cuts relus sur <b>85</b>, <b>3</b> corrigés · cut <b>4801</b>', fin: 'Il reste <b>6</b> à poser · verts pas encore calculés' }[e.id];
-  return `<div class="p r3" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r3-corps"><div class="r3-tete"><h3 class="r3-mot${e.long ? ' long' : ''}">${e.mot}</h3></div>
-<div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div><p class="r3-pct">${n}</p>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${l}</p>`}${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
+  const R = 52, C = 2 * Math.PI * R;
+  return `<div class="p r3" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r3-corps"><div class="r3-anneau" role="img" aria-label="Avancement ${e.pct} %"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="${R}"/>${e.pct ? `<circle class="fait" cx="60" cy="60" r="${R}" stroke-dasharray="${(C * e.pct / 100).toFixed(2)} ${C.toFixed(2)}"/>` : ''}</svg><strong>${e.geant[0]}<span>%</span></strong></div>
+<div class="r3-centre"><div class="etat"><i></i><h3>${e.mot}</h3></div>${texte(e)}</div>${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
 }
 
 /* ───────────────────────────── la page */
@@ -71,7 +72,7 @@ function existant(e) {
   return ['clair', 'sombre'].map(th => [360, 600].map(t => `<img class="v-${th} v-${t}" src="${image(th, t, e.id)}" alt="Panneau actuel, ${e.nom}, thème ${th}, ${t === 360 ? '360 × 480' : '600 × 760'}" width="${t}" height="${t === 360 ? 480 : 760}" loading="lazy">`).join('')).join('');
 }
 const col = (n, titre, html, cls = '') => `<figure class="col ${cls}"><figcaption>${n ? `<b>${n}</b>` : ''}<span>${titre}</span></figcaption><div class="cadre">${html}</div></figure>`;
-const rang = e => `<section class="etat" id="etat-${e.id}"><h2>${e.nom}</h2><div class="rang-p">${col('', 'Aujourd’hui', existant(e), 'ex')}${col('1', 'Le chiffre', rendre1(e))}${col('2', 'Le trajet', rendre2(e))}${col('3', 'Le mot', rendre3(e))}</div></section>`;
+const rang = e => `<section class="etat" id="etat-${e.id}"><h2>${e.nom}</h2><div class="rang-p">${col('', 'Aujourd’hui', existant(e), 'ex')}${col('1', 'Le chiffre', rendre1(e))}${col('2', 'Le trajet', rendre2(e))}${col('3', 'L’anneau', rendre3(e))}</div></section>`;
 
 const PAGE_CSS = `
 /* la page : trois phrases, puis par état un rang de quatre panneaux à taille réelle ; rien d'autre à lire */
@@ -117,8 +118,8 @@ function page() {
 <p class="chapo">D’un coup d’œil : est-ce que tout va bien, et où en est le lot. Le reste est à un clic. À gauche de chaque rang, le panneau d’aujourd’hui.</p>
 <ol class="trois">
 <li><b>1</b><strong>Le chiffre</strong><span>L’avancement en un très grand chiffre, l’état au-dessus. Inspiré des widgets d’iOS (Bourse, Calendrier).</span></li>
-<li><b>2</b><strong>Le trajet</strong><span>Une carte : le premier cut, le dernier, un point qui avance. Inspiré des activités en direct d’iOS (suivi d’un vol, d’une livraison).</span></li>
-<li><b>3</b><strong>Le mot</strong><span>L’état écrit en très grand, centré, l’avancement juste dessous. Inspiré de l’écran de veille et de l’écran verrouillé d’iOS.</span></li>
+<li><b>2</b><strong>Le trajet</strong><span>Une carte : le premier cut du lot, le dernier, une barre entre les deux. Inspiré des activités en direct d’iOS (suivi d’un vol, d’une livraison).</span></li>
+<li><b>3</b><strong>L’anneau</strong><span>Un anneau au centre qui se referme avec le lot, le pourcentage dedans, l’état dessous. Inspiré du minuteur et du widget de batterie d’iOS.</span></li>
 </ol>
 <p class="chapo" style="margin-top:16px">Bleu : Ariane travaille. Gris : à l’arrêt. Orange : à toi. Rouge : en panne.</p></header>
 <div class="reglages" role="group" aria-label="Affichage des panneaux"><div>Thème <span class="choix"><button type="button" id="th-clair" aria-pressed="true">Clair</button><button type="button" id="th-sombre" aria-pressed="false">Sombre</button></span></div><div>Taille <span class="choix"><button type="button" id="ta-360" aria-pressed="true">360 × 480</button><button type="button" id="ta-600" aria-pressed="false">600 × 760</button></span></div><div>Faire défiler chaque rang de côté.</div></div>
