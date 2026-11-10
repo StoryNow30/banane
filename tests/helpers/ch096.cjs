@@ -24,4 +24,8 @@ function fichier(rel){if(cache[rel])return cache[rel];
 function core(){const f=fichier('src/core.js');if(f.chemin===path.join(racine,'src/core.js'))return require(f.chemin);
  const Module=require('node:module'),m=new Module(f.chemin,module);m.filename=path.join(racine,'src/core.js');m.paths=Module._nodeModulePaths(path.join(racine,'src'));
  m._compile(f.texte,m.filename);return m.exports;}
-module.exports={racine,SANS,fichier,core};
+/* Met ce module à la place de `src/core.js` dans le cache de `require` : à appeler AVANT de charger le moteur, les fixtures ou la page. */
+function installerCore(){const f=fichier('src/core.js'),source=path.join(racine,'src/core.js');if(f.chemin===source)return require(source);
+ const Module=require('node:module'),m=new Module(source,module);m.filename=source;m.paths=Module._nodeModulePaths(path.dirname(source));
+ m._compile(f.texte,source);m.loaded=true;require.cache[source]=m;return m.exports;}
+module.exports={racine,SANS,fichier,core,installerCore};

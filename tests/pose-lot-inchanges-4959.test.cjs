@@ -39,6 +39,12 @@ const sansPatch=(dossier,table)=>(f,t)=>{const c=table[f];if(!c||!t.includes(c[1
  * et engine-baseline.patch, posés PAR-DESSUS ceux de CH-091) : ils sont retirés d'abord, puis ceux de CH-091, puis ceux de CH-086. */
 const CH094={'src/engine.js':['engine.patch','fenetreRestee'],'audit/v4.6.0-engine-baseline.json':['engine-baseline.patch','previousHashCH094']};
 const sansCH094=sansPatch('CH-094',CH094),sansCH091=(f,t)=>sansPatch('CH-091',CH091)(f,sansCH094(f,t)),sansCH086=(f,t)=>sansPatch('CH-086',CH086)(f,sansCH091(f,t));
+/* CH-096 (D-319) : trois défauts de l'adaptateur et du noyau corrigés par patchs déclarés de la même façon (chantiers/CH-096/adapter-page.patch :
+ * l'arrêt pendant une pose recliquée n'est plus rattrapé, `validerMajEspace` reçoit son suivi ; chantiers/CH-096/core.patch : « Niveau de détail non
+ * stabilisé. » suivi d'une erreur de lecture reste passager). Posés en DERNIER : retirés d'abord, avant tout autre retrait. Aucun ne change une pose,
+ * une validation ni une commande d'un lot sans panne (tests/ch096-*.test.cjs). Toute autre modification de ces fichiers reste détectée. */
+const CH096={'src/adapter-page.js':['adapter-page.patch','CH-096'],'src/core.js':['core.patch','CH-096']};
+const sansCH096=sansPatch('CH-096',CH096);
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
@@ -205,7 +211,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
-  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(lire(f)).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
+  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,lire(f))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();
@@ -224,7 +230,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(lire('src/adapter-page.js'))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',lire('src/adapter-page.js')))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')
