@@ -20,7 +20,8 @@
  *   - mode de la passe : champ `mode` de `passe-differes-ombre-fin` (« ombre » ou « ecriture », D-259) ; absent = « inconnu ».
  *   - UNE DÉCISION PAR CUT : la PREMIÈRE décision `passe-differes-ombre` du cut dans le lot, dans l'ordre du temps (c'est la passe 1 ;
  *     les décisions suivantes, passe 2 ou relance, sont comptées mais ne changent pas la décision retenue). Un cut déjà décidé dans un
- *     lot antérieur du même jour et de la même partie est « revu » : écarté des taux et compté.
+ *     lot antérieur du même jour et de la même partie est « revu » : écarté des taux et compté (sauf s'il est ÉCRIT : une écriture
+ *     réelle compte toujours, une seule fois).
  *   - ÉCRITURE : cut porteur d'un `passe-differes-ecriture` de résultat « ecrit » dans le lot (que la décision qui l'a fait écrire soit
  *     de la passe 1 ou de la passe 2 : la passe est notée). Écart = correction de l'opérateur depuis la pose écrite : pire rail, 3D,
  *     base = première visite de l'Écho (elle voit la pose écrite ; CH-034 § 8 : ajouter le décalage une seconde fois est faux).
@@ -37,7 +38,7 @@
  *   - classes : juste = 10 mm ou moins ; « 10-50 » ; faute = plus de 50 mm (arrondi au micromètre). Intervalles de Wilson à 95 %.
  *   - seuil du ticket : moins de 20 écritures jugées = « non concluable ».
  * SORTIES (aucun identifiant : ni UUID, ni page, ni coordonnée, ni extrait de journal) : `inventaire.csv` (un lot par ligne),
- * `cuts.csv` (un cut par ligne), `resume.json`, `resume.txt`.
+ * `cuts.csv` (un cut écrit, « poserait » ou refusé par la garde par ligne), `resume.json`, `resume.txt`.
  */
 const fs = require('node:fs'), path = require('node:path'), { spawnSync } = require('node:child_process');
 const L = require('./juger-lot.cjs');
@@ -186,7 +187,7 @@ function mesurer({ collections, travail, extraits, sansCache }) {
   for (const c of cuts) {
     if (c.aPart) continue;
     const cle = `${c.date}|${c.partie}|${c.cut}`;
-    if (dejaVus.has(cle)) { c.revu = true; const i = inventaire.find(v => v.t0 === c.t0 && v.partie === c.partie); if (i) i.revus++; } else dejaVus.add(cle);
+    if (dejaVus.has(cle)) { if (c.type === 'ecriture') continue; c.revu = true; const i = inventaire.find(v => v.t0 === c.t0 && v.partie === c.partie); if (i) i.revus++; } else dejaVus.add(cle);
   }
   return { prep, exportsLus, exportsIllisibles, anterieurs, inventaire, cuts };
 }
@@ -201,13 +202,22 @@ function enfant({ x, ids, travail, echos }) {
     if (!cacheLignes.has(partie)) cacheLignes.set(partie, echo ? L.indexLignes(journal, echo, partie) : null);
     return cacheLignes.get(partie);
   };
+  /* Première visite de l'Écho par (partie, cut) : une écriture ne se juge que si l'Écho l'a vue APRÈS qu'elle a été écrite. */
+  const premieres = new Map();
+  if (echo) for (const r of echo.records) {
+    const id = r && (r.identity || r), t = r && Date.parse(r.startedAt || '');
+    if (!id || !Number.isInteger(id.cut) || !fini(t)) continue;
+    const k = `${id.part}|${id.cut}`;
+    if (!premieres.has(k) || t < premieres.get(k)) premieres.set(k, t);
+  }
+  const premiereVisite = (partie, cut) => premieres.get(`${partie}|${cut}`) ?? null;
   const inventaire = [], cuts = [], voulus = new Set(ids);
-  for (const lot of lotsDuJournal(journal, source)) if (voulus.has(lot.id)) traiterLot(lot, lignesDe, inventaire, cuts);
+  for (const lot of lotsDuJournal(journal, source)) if (voulus.has(lot.id)) traiterLot(lot, lignesDe, inventaire, cuts, premiereVisite);
   return { inventaire, cuts };
 }
 
 /* Un lot → sa ligne d'inventaire et ses cuts. */
-function traiterLot(lot, lignesDe, inventaire, cuts) {
+function traiterLot(lot, lignesDe, inventaire, cuts, premiereVisite) {
   {
   /* 3. Par lot : inventaire et cuts. */
     const jour = new Date(lot.t0).toISOString().slice(0, 10), aPart = lot.source.collection === A_PART;
@@ -224,7 +234,7 @@ function traiterLot(lot, lignesDe, inventaire, cuts) {
     const ecrits = new Map(), refusEcriture = new Map();
     for (const e of lot.ecritures) { if (e.identity.part !== lot.partie) continue; (e.resultat === 'ecrit' ? ecrits : refusEcriture).set(e.identity.cut, e); }
     const inv = { t0: lot.t0, date: jour, heureUTC: new Date(lot.t0).toISOString().slice(11, 16), collection: lot.source.collection, partie: lot.partie, aPart,
-      version: lot.source.version, build: lot.source.build, mode, echo: !!(ECHOS[lot.source.collection] || []).length && !!lignes,
+      version: lot.source.version, build: lot.source.build, mode, echoCollection: !!lignes, echoCutsPartie: lignes ? [...lignes.values()].filter(l => l.dansEcho).length : 0,
       differes: lot.fins.length && fini(lot.fins[0].differes) ? lot.fins[0].differes : lot.differesFinalises.size, differesFinalises: lot.differesFinalises.size,
       decisions: lot.ombres.length, decisionsPasse1: lot.ombres.filter(e => e.passe === 1).length, decisionsPasse2: lot.ombres.filter(e => e.passe === 2).length,
       cutsDecides: premiere.size, poserait: 0, rien: 0, refusGarde: 0, ecrits: ecrits.size, ecritsDecidesPasse2: 0, refusEcriture: refusEcriture.size,
@@ -242,13 +252,17 @@ function traiterLot(lot, lignesDe, inventaire, cuts) {
       const ligne = lignes ? lignes.get(cut) : null;
       let et = { etat: lignes ? 'sans-echo' : 'pas-d-echo' };
       if (lignes) {
-        if (type === 'ecriture') et = Juge.etatDe(ligne, true);
+        if (type === 'ecriture') {
+          et = Juge.etatDe(ligne, true);
+          const tv = premiereVisite(lot.partie, cut), te = instant(ecrit);
+          if (et.etat !== 'sans-echo' && fini(tv) && fini(te) && tv <= te) et = { etat: 'non-juge', duree: et.duree, raison: 'echo-avant-ecriture' };
+        }
         else if (type === 'ombre-poserait' || type === 'refus-garde') et = etatOmbre(ligne, e.decal);
         else et = { etat: ligne && ligne.dansEcho ? 'non-concerne' : 'sans-echo' };
       }
       if (ligne && ligne.dansEcho) inv.echoVus++;
       const mm = fini(et.mm) ? et.mm : null;
-      cuts.push({ t0: lot.t0, date: jour, collection: lot.source.collection, partie: lot.partie, cut, aPart, revu, mode, type,
+      cuts.push({ t0: lot.t0, date: jour, heureUTC: new Date(lot.t0).toISOString().slice(11, 16), collection: lot.source.collection, partie: lot.partie, cut, aPart, revu, mode, type,
         premiereDecision: e.decision, premierePasse: e.passe ?? null, motif: e.decision === 'rien' ? (e.motif || null) : null,
         gardeBloque: e.garde ? e.garde.bloque === true : null, gardeMotif: e.garde ? e.garde.motif || null : null,
         gardeDeplacementMm: e.garde && fini(e.garde.deplacementMm) ? e.garde.deplacementMm : null, gardeAppuiCuts: e.garde && Number.isInteger(e.garde.appuiNormalCuts) ? e.garde.appuiNormalCuts : null,
@@ -274,12 +288,13 @@ function bilan(liste) {
 }
 function resumer(m) {
   const P = m.cuts.filter(c => !c.aPart && !c.revu), A = m.cuts.filter(c => c.aPart);
-  const parLot = (liste) => { const g = new Map(); for (const c of liste) { const k = `${c.date} partie ${c.partie}`; if (!g.has(k)) g.set(k, []); g.get(k).push(c); } return [...g.entries()].map(([lot, l]) => ({ lot, ...bilan(l) })); };
+  const parLot = (liste) => { const g = new Map(); for (const c of liste) { const k = `${c.date} ${c.heureUTC} partie ${c.partie}`; if (!g.has(k)) g.set(k, []); g.get(k).push(c); } return [...g.entries()].map(([lot, l]) => ({ lot, ...bilan(l) })); };
   const bloc = (liste) => {
     const ecr = liste.filter(c => c.type === 'ecriture'), omb = liste.filter(c => c.type === 'ombre-poserait'), gar = liste.filter(c => c.type === 'refus-garde');
     return { cutsDecides: liste.length, ecriture: { total: bilan(ecr), parLot: parLot(ecr), deciseesPasse2: ecr.filter(c => c.premiereDecision !== 'poserait').length },
       ombre: { total: bilan(omb), parLot: parLot(omb), parMode: Object.fromEntries([...new Set(omb.map(c => c.mode))].map(k => [k, bilan(omb.filter(c => c.mode === k))])),
         parGarde: Object.fromEntries([...new Set(omb.map(c => c.gardeMotif || 'sans-garde'))].map(k => [k, bilan(omb.filter(c => (c.gardeMotif || 'sans-garde') === k))])) },
+      ombreGardeConsignee: bilan(omb.filter(c => c.gardeMotif)), riensParMotif: Object.fromEntries([...new Set(liste.filter(c => c.type === 'rien').map(c => c.motif || '?'))].sort().map(k => [k, liste.filter(c => c.type === 'rien' && (c.motif || '?') === k).length])),
       gardeA: { refus: gar.length, total: bilan(gar), parLot: parLot(gar), poseraitEnsuite: gar.filter(c => c.poseraitEnsuite).length },
       rien: liste.filter(c => c.type === 'rien').length };
   };
@@ -292,7 +307,7 @@ function resumer(m) {
     inventaire: { lots: inv.length, lotsAvecPasse: inv.filter(i => i.decisions || i.ecrits).length, parMode: Object.fromEntries([...new Set(inv.map(i => i.mode))].map(k => [k, inv.filter(i => i.mode === k).length])),
       differes: som('differes'), decisions: som('decisions'), cutsDecides: som('cutsDecides'), poserait: som('poserait'), rien: som('rien'), refusGarde: som('refusGarde'),
       ecrits: som('ecrits'), ecritsDecidesPasse2: som('ecritsDecidesPasse2'), refusEcriture: som('refusEcriture'), poseraitNonEcrits: som('poseraitNonEcrits'), revus: som('revus'), ecritsSansDecision: som('ecritsSansDecision') },
-    resultat: periode, aPart2310: bloc(A),
+    resultat: periode, aPart2310: bloc(A), ecrituresMaxParLot: Math.max(0, ...inv.map(i => i.ecrits)),
     seuil: { ecrituresJugees: jug, seuil: SEUIL_ECRITURES, concluable: jug >= SEUIL_ECRITURES, fautes,
       borneHauteFautes: Poses.wilson(fautes, jug).haut, pour5pcSansFaute: 73, pour3pcSansFaute: 125, manquePour5pc: Math.max(0, 73 - jug), manquePour3pc: Math.max(0, 125 - jug),
       ecritsSansEchoOuNonJuges: periode.ecriture.total.n - jug } };
@@ -312,16 +327,18 @@ function texte(r, m) {
     'INVENTAIRE (lots porteurs d\'au moins une décision de passe ; les autres sont dans inventaire.csv)',
     'date heure | partie | version/paquet | mode | différés | décisions (p1+p2) | cuts décidés : poserait / rien / dont refus garde A | écrits (dont décidés en passe 2) | refus à l\'écriture | Écho'];
   for (const i of m.inventaire) if (i.decisions || i.ecrits)
-    o.push(`${i.aPart ? '[À PART] ' : ''}${i.date} ${i.heureUTC} | ${i.partie} | ${i.version || '?'}${i.build ? '/' + i.build : ''} | ${i.mode} | ${i.differes} | ${i.decisions} (${i.decisionsPasse1}+${i.decisionsPasse2}) | ${i.cutsDecides} : ${i.poserait} / ${i.rien} / ${i.refusGarde} | ${i.ecrits} (${i.ecritsDecidesPasse2}) | ${i.refusEcriture} | ${i.echo ? `oui (${i.echoVus} cuts décidés vus)` : 'non'}${i.revus ? ` | revus ${i.revus}` : ''}`);
+    o.push(`${i.aPart ? '[À PART] ' : ''}${i.date} ${i.heureUTC} | ${i.partie} | ${i.version || '?'}${i.build ? '/' + i.build : ''} | ${i.mode} | ${i.differes} | ${i.decisions} (${i.decisionsPasse1}+${i.decisionsPasse2}) | ${i.cutsDecides} : ${i.poserait} / ${i.rien} / ${i.refusGarde} | ${i.ecrits} (${i.ecritsDecidesPasse2}) | ${i.refusEcriture} | ${i.echoCutsPartie ? `oui (${i.echoCutsPartie} cuts de la partie, dont ${i.echoVus} décidés par la passe)` : 'non'}${i.revus ? ` | revus ${i.revus}` : ''}`);
   const I = r.inventaire;
-  o.push('', `Total période : ${I.lots} lots, ${I.lotsAvecPasse} avec passe (${Object.entries(I.parMode).map(([k, v]) => `${k} ${v}`).join(', ')}) ; différés ${I.differes} ; décisions ${I.decisions} ; cuts décidés ${I.cutsDecides} (revus ${I.revus}) : poserait ${I.poserait}, rien ${I.rien} dont refus de la garde A ${I.refusGarde} ; écrits ${I.ecrits} (dont décidés en passe 2 : ${I.ecritsDecidesPasse2}) ; « poserait » non écrits ${I.poseraitNonEcrits} ; refus à l'écriture ${I.refusEcriture}.`, '');
+  o.push('', `Total période : ${I.lots} lots, ${I.lotsAvecPasse} avec passe (${Object.entries(I.parMode).map(([k, v]) => `${k} ${v}`).join(', ')}) ; différés ${I.differes} ; décisions ${I.decisions} ; cuts décidés ${I.cutsDecides} (revus ${I.revus}) : poserait ${I.poserait}, rien ${I.rien} dont refus de la garde A ${I.refusGarde} ; écrits ${I.ecrits} (dont décidés en passe 2 : ${I.ecritsDecidesPasse2} ; au plus ${r.ecrituresMaxParLot} par lot) ; « poserait » non écrits ${I.poseraitNonEcrits} ; refus à l'écriture ${I.refusEcriture}.`, '');
   const sec = (nom, R) => {
     o.push(`== ${nom} ==`, ...blocTexte('ÉCRITURES RÉELLES (« ecrit »), correction de l\'opérateur depuis la pose écrite', R.ecriture.total));
     for (const p of R.ecriture.parLot) o.push(`    ${p.lot} : ${p.n} écrits, sans Écho ${p.sansEcho}, non jugés ${p.nonJuges}, D-285 ${p.ecartesD285}, visités sans action ${p.visitesSansAction}, validés ${p.valides.n} (justes ${p.valides.justes}, 10-50 ${p.valides.de10a50}, >50 ${p.valides.fautes})`);
     o.push(...blocTexte('OMBRE (« poserait » non écrit, première décision), pose de l\'ombre contre la pose finale de l\'opérateur', R.ombre.total));
+    o.push(...blocTexte('  dont « poserait » que la garde A a laissé passer (garde consignée au journal)', R.ombreGardeConsignee));
     for (const [k, b] of Object.entries(R.ombre.parGarde)) o.push(`    garde « ${k} » : ${b.n} cuts, jugés ${b.valides.n} (justes ${b.valides.justes}, 10-50 ${b.valides.de10a50}, >50 ${b.valides.fautes})`);
     for (const p of R.ombre.parLot) o.push(`    ${p.lot} : ${p.n} poserait, sans Écho ${p.sansEcho}, non jugés ${p.nonJuges}, D-285 ${p.ecartesD285}, jugés ${p.valides.n} (justes ${p.valides.justes}, 10-50 ${p.valides.de10a50}, >50 ${p.valides.fautes})`);
     o.push(...blocTexte(`GARDE A : ${R.gardeA.refus} refus à la première décision (dont « poserait » ensuite dans le lot : ${R.gardeA.poseraitEnsuite}), pose refusée contre la pose finale`, R.gardeA.total));
+    for (const p of R.gardeA.parLot) o.push(`    ${p.lot} : ${p.n} refus, sans Écho ${p.sansEcho}, non jugés ${p.nonJuges}, jugés ${p.valides.n} (justes ${p.valides.justes}, 10-50 ${p.valides.de10a50}, >50 ${p.valides.fautes})`);
     o.push(`    bonnes poses retirées (10 mm ou moins) : ${R.gardeA.total.valides.justes} ; fautes retirées (plus de 50 mm) : ${R.gardeA.total.valides.fautes} ; 10 à 50 mm : ${R.gardeA.total.valides.de10a50} ; non mesurables (sans Écho, non jugés, D-285) : ${R.gardeA.total.n - R.gardeA.total.valides.n}`, '');
   };
   sec('PÉRIODE (depuis le 26/10, hors partie 0 du 23/10)', r.resultat);
@@ -331,8 +348,8 @@ function texte(r, m) {
     `Écho à demander : zéro faute prouve 5 % avec 73 poses jugées (il en manque ${s.manquePour5pc}), 3 % avec 125 (il en manque ${s.manquePour3pc}). Écrits de la période sans Écho ou non jugés : ${s.ecritsSansEchoOuNonJuges}.`);
   return o.join('\n');
 }
-const COL_INV = ['date', 'heureUTC', 'collection', 'partie', 'aPart', 'version', 'build', 'mode', 'echo', 'differes', 'differesFinalises', 'decisions', 'decisionsPasse1', 'decisionsPasse2', 'cutsDecides', 'poserait', 'rien', 'refusGarde', 'ecrits', 'ecritsDecidesPasse2', 'refusEcriture', 'poseraitNonEcrits', 'revus', 'echoVus', 'ecritsSansDecision'];
-const COL_CUT = ['date', 'collection', 'partie', 'cut', 'aPart', 'revu', 'mode', 'type', 'premiereDecision', 'premierePasse', 'motif', 'gardeBloque', 'gardeMotif', 'gardeDeplacementMm', 'gardeAppuiCuts', 'deplacementPoseMm', 'decisions', 'poseraitEnsuite', 'ecrit', 'passeEcriture', 'refusEcriture', 'etat', 'mm', 'classe', 'dureeVisiteS', 'base'];
+const COL_INV = ['date', 'heureUTC', 'collection', 'partie', 'aPart', 'version', 'build', 'mode', 'echoCutsPartie', 'differes', 'differesFinalises', 'decisions', 'decisionsPasse1', 'decisionsPasse2', 'cutsDecides', 'poserait', 'rien', 'refusGarde', 'ecrits', 'ecritsDecidesPasse2', 'refusEcriture', 'poseraitNonEcrits', 'revus', 'echoVus', 'ecritsSansDecision'];
+const COL_CUT = ['date', 'heureUTC', 'collection', 'partie', 'cut', 'aPart', 'revu', 'mode', 'type', 'premiereDecision', 'premierePasse', 'motif', 'gardeBloque', 'gardeMotif', 'gardeDeplacementMm', 'gardeAppuiCuts', 'deplacementPoseMm', 'decisions', 'poseraitEnsuite', 'ecrit', 'passeEcriture', 'refusEcriture', 'etat', 'mm', 'classe', 'dureeVisiteS', 'base'];
 const csv = (cols, lignes) => { const v = x => x === null || x === undefined ? '' : x === true ? 'oui' : x === false ? 'non' : String(x); return [cols.join(';'), ...lignes.map(l => cols.map(k => v(l[k])).join(';'))].join('\n') + '\n'; };
 
 function executer(argv, sortie = console.log) {
@@ -344,8 +361,8 @@ function executer(argv, sortie = console.log) {
   const m = mesurer({ collections: path.resolve(a.collections), travail: path.resolve(a.travail), extraits: a.extraits ? path.resolve(a.extraits) : null, sansCache: !!a.sansCache });
   const r = resumer(m), t = texte(r, m);
   fs.writeFileSync(path.join(a.sortie, 'inventaire.csv'), csv(COL_INV, m.inventaire));
-  /* cuts.csv : les cuts écrits, « poserait » et refusés par la garde, en entier ; les « rien » hors garde, sans millimètre, y sont aussi. */
-  fs.writeFileSync(path.join(a.sortie, 'cuts.csv'), csv(COL_CUT, m.cuts));
+  /* cuts.csv : les cuts écrits, « poserait » et refusés par la garde ; les « rien » hors garde sont comptés par motif dans resume.json. */
+  fs.writeFileSync(path.join(a.sortie, 'cuts.csv'), csv(COL_CUT, m.cuts.filter(c => c.type !== 'rien')));
   fs.writeFileSync(path.join(a.sortie, 'resume.json'), JSON.stringify(r, null, 1));
   fs.writeFileSync(path.join(a.sortie, 'resume.txt'), t + '\n');
   sortie(t);
