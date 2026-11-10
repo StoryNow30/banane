@@ -372,4 +372,4 @@ if (require.main === module) {
   try { executer(process.argv.slice(2)); }
   catch (e) { console.error(e.stack || e.message); process.exitCode = 1; }
 }
-module.exports = { mesurer, resumer, texte, etatOmbre, executer, ECHOS };
+module.exports = { mesurer, resumer, texte, etatOmbre, lotsDuJournal, traiterLot, bilan, executer, ECHOS };
