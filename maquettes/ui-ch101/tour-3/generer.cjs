@@ -16,22 +16,22 @@ const IC = { bas: sv('<path d="M4 6l4 4 4-4"/>'), droite: sv('<path d="M6 4l4 4-
 /* ───────────────────────────── les huit états */
 const AP3 = [[4809, '10 h 09'], [4803, '10 h 03'], [4796, '10 h 06']], AP6 = [[4877, '10 h 07'], [4861, '10 h 01'], [4838, '10 h 08'], ...AP3];
 const ETATS = [
-  { id: 'pret', nom: 'Prêt', ton: 'repos', mot: 'Prêt', pct: 0, geant: ['4790', 'premier cut'], bornes: ['4790', 'fin'], leg: ['Premier cut', 'Dernier cut : fin de partie'],
+  { id: 'pret', nom: 'Prêt', ton: 'repos', mot: 'Prêt', pct: 0, geant: ['0', '%'], bornes: ['4790', 'fin'], leg: ['premier cut', 'dernier cut : fin de partie'],
     ligne: 'Partie 13 · jusqu’à la fin de la partie, puis le lot se clôt seul.', champs: true, actions: ['Démarrer le lot'], aposer: null },
   { id: 'cours', nom: 'Lot en cours', ton: 'marche', mot: 'En cours', pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4812', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
-    ligne: 'Pose du cut <b>4812</b> · <b>18</b> cuts traités · fin au cut <b>4900</b>', trio: [['18', 'cuts traités'], ['3', 'à poser'], ['7,9', 'cuts par minute']], actions: ['Pause', 'Arrêter le lot'], aposer: AP3 },
+    ligne: 'Pose du cut <b>4812</b> · <b>18</b> cuts traités, fin au cut <b>4900</b>', court: 'Pose du cut <b>4812</b>', trio: [['15', 'posés'], ['3', 'à poser'], ['7,9', 'cuts par minute']], actions: ['Pause', 'Arrêter le lot'], aposer: AP3 },
   { id: 'pause', nom: 'En pause', ton: 'repos', mot: 'En pause', pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4811', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
-    ligne: 'En pause depuis <b>1 min 45</b>, après le cut <b>4811</b>', trio: [['18', 'cuts traités'], ['3', 'à poser'], ['1 min 45', 'en pause']], actions: ['Reprendre', 'Arrêter le lot'], aposer: AP3 },
-  { id: 'toi', nom: 'Rail non résolu', ton: 'toi', mot: 'À toi', pct: 20, geant: ['4812', 'cut'], bornes: ['4790', '4900'], pos: '4812', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
-    avis: 'Ariane ne sait pas poser un rail du cut 4812. Réessaie, ou reprends-le à la main.', trio: [['18', 'cuts traités'], ['3', 'à poser'], ['4811', 'dernier cut posé']], actions: ['Réessayer ce cut', 'Reprise manuelle', 'Arrêter le lot'], aposer: AP3 },
+    ligne: 'En pause depuis <b>1 min 45</b>, après le cut <b>4811</b> · <b>18</b> cuts traités', court: 'En pause depuis <b>1 min 45</b>, après le cut <b>4811</b>', trio: [['15', 'posés'], ['3', 'à poser'], ['7,6 s', 'médiane par cut']], actions: ['Reprendre', 'Arrêter le lot'], aposer: AP3 },
+  { id: 'toi', nom: 'Rail non résolu', ton: 'toi', mot: 'À toi', pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4812', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
+    avis: 'Ariane ne sait pas poser un rail du cut 4812. Réessaie, ou <span class="nb">reprends-le</span> à la main.', trio: [['15', 'posés'], ['3', 'à poser'], ['4811', 'dernier cut posé']], actions: ['Réessayer ce cut', 'Reprise manuelle', 'Arrêter le lot'], aposer: AP3 },
   { id: 'panne', nom: 'ESV muet', ton: 'panne', mot: 'ESV ne répond plus', long: true, pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4811', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
-    avis: 'Recharge la page ESV (F5), attends qu’elle réponde, puis clique sur Reprendre.', trio: [['18', 'cuts traités'], ['3', 'à poser'], ['4811', 'dernier cut posé']], actions: ['Reprendre', 'Arrêter le lot'], aposer: AP3 },
-  { id: 'rattrapage', nom: 'Rattrapage', ton: 'marche', mot: 'Rattrapage', pct: 33, geant: ['1', 'sur 3'], bornes: ['0', '3'], pos: '1', leg: ['<b>1</b> posé sur <b>3</b>', 'cut <b>4803</b>'],
-    ligne: 'Ariane travaille dans ESV : ne touche à rien. Cut <b>4803</b>.', trio: [['1', 'posé au rattrapage'], ['3', 'décidés'], ['6', 'à poser']], verrou: 'Aucune action jusqu’à la fin du rattrapage', actions: [], aposer: AP6 },
-  { id: 'relecture', nom: 'Relecture', ton: 'marche', mot: 'Relecture', pct: 14, geant: ['14', '%'], bornes: ['0', '85'], pos: '12', leg: ['<b>12</b> cuts relus', '<b>3</b> corrigés'],
-    ligne: '<b>12</b> cuts relus sur <b>85</b> · <b>3</b> corrigés · cut <b>4801</b>', trio: [['12', 'relus sur 85'], ['3', 'corrigés'], ['6', 'à poser']], actions: ['Arrêter la relecture', 'Nouveau lot'], sansPrincipal: true, aposer: AP6 },
-  { id: 'fin', nom: 'Fin de lot', ton: 'repos', mot: 'Terminé', pct: 100, geant: ['93', 'cuts traités'], bornes: ['4790', '4900'], leg: ['<b>93</b> cuts traités', '<b>6</b> à poser'],
-    ligne: 'Il reste <b>6</b> à poser · verts pas encore calculés · export prêt', trio: [['93', 'cuts traités'], ['6', 'à poser'], ['prêt', 'export']], actions: ['Voir ce qui reste', 'Exporter le dossier', 'Nouveau lot'], aposer: AP6 },
+    avis: 'Recharge la page ESV (F5), attends qu’elle réponde, puis clique sur Reprendre.', trio: [['15', 'posés'], ['3', 'à poser'], ['4811', 'dernier cut posé']], actions: ['Reprendre', 'Arrêter le lot'], aposer: AP3 },
+  { id: 'rattrapage', nom: 'Rattrapage', ton: 'marche', mot: 'Rattrapage', pct: 33, geant: ['33', '%'], bornes: ['1', '3'], leg: ['posé au rattrapage', 'décidés'], court: 'Ariane travaille dans ESV : ne touche à rien. Cut <b>4803</b>.',
+    ligne: 'Ariane travaille dans ESV : ne touche à rien. Cut <b>4803</b>.', trio: [['1', 'posé au rattrapage'], ['3', 'décidés'], ['4803', 'cut en cours']], verrou: 'Aucune action jusqu’à la fin du rattrapage', actions: [], aposer: AP6 },
+  { id: 'relecture', nom: 'Relecture', ton: 'marche', mot: 'Relecture', pct: 14, geant: ['14', '%'], bornes: ['12', '85'], leg: ['cuts relus · <b>3</b> corrigés', 'à relire'], court: 'Relecture du cut <b>4801</b>',
+    ligne: '<b>12</b> cuts relus sur <b>85</b>, <b>3</b> corrigés · cut <b>4801</b>', trio: [['12', 'relus'], ['85', 'à relire'], ['3', 'corrigés']], actions: ['Arrêter la relecture', 'Nouveau lot'], sansPrincipal: true, aposer: AP6 },
+  { id: 'fin', nom: 'Fin de lot', ton: 'repos', mot: 'Terminé', pct: 100, geant: ['100', '%'], bornes: ['4790', '4900'], leg: ['<b>93</b> cuts traités', '<b>6</b> à poser'],
+    ligne: '<b>93</b> cuts traités · il reste <b>6</b> à poser · verts pas encore calculés', court: 'Verts pas encore calculés · export prêt', trio: [['87', 'posés'], ['6', 'à poser'], ['prêt', 'export']], actions: ['Voir ce qui reste', 'Exporter le dossier', 'Nouveau lot'], aposer: AP6 },
 ];
 
 /* ───────────────────────────── morceaux communs */
@@ -49,16 +49,18 @@ const texte = e => e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">
 
 function rendre1(e) {
   return `<div class="p r1" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r1-corps"><div class="r1-haut"><span class="etat"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
-<div class="r1-geant${e.geant[0].length > 3 ? ' quatre' : ''}"><strong>${e.geant[0]}</strong><span>${e.geant[1]}</span></div><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>${texte(e)}${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
+<div class="r1-geant"><strong>${e.geant[0]}</strong><span>${e.geant[1]}</span></div><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>${texte(e)}${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
 }
 function rendre2(e) {
   return `<div class="p r2" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r2-corps"><section class="r2-carte"><div class="r2-tete"><span class="puce"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
-<div class="r2-bornes"><strong>${e.bornes[0]}</strong><div class="r2-piste" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b>${e.pct < 100 ? `<i style="left:${e.pct}%"></i>` : ''}</div><strong>${e.bornes[1]}</strong></div>
-<div class="r2-legende"><span>${e.leg[0]}</span><span>${e.leg[1]}</span></div></section>${texte(e)}${trio(e)}<div class="pousse"></div>${e.champs ? '' : rangs(e)}${actions(e)}</div></div>`;
+<div class="r2-bornes"><strong>${e.bornes[0]}</strong><div class="r2-piste" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div><strong${/^\d/.test(e.bornes[1]) ? '' : ' class="mot"'}>${e.bornes[1]}</strong></div>
+<div class="r2-legende"><span>${e.leg[0]}</span><span>${e.leg[1]}</span></div></section>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${e.court || e.ligne}</p>`}${trio(e)}<div class="pousse"></div>${e.champs ? '' : rangs(e)}${actions(e)}</div></div>`;
 }
 function rendre3(e) {
-  const pct = e.id === 'pret' ? '' : `<div class="r3-pct"><strong class="nb">${e.id === 'fin' ? '93' : e.id === 'rattrapage' ? '1 sur 3' : e.pct + ' %'}</strong><span class="ligne">${{ cours: '18 cuts traités · fin au cut 4900', pause: 'depuis 1 min 45 · 18 cuts traités', toi: 'cut 4812 · 18 cuts traités', panne: 'arrêté après le cut 4811', rattrapage: 'posé · cut 4803 · ne touche à rien', relecture: '12 cuts relus sur 85 · 3 corrigés', fin: 'cuts traités · 6 à poser · export prêt' }[e.id]}</span></div>`;
-  return `<div class="p r3" data-etat="${e.id}" data-ton="${e.ton}"><div class="r3-fond" style="width:${e.pct}%"></div>${barre(e)}<div class="r3-corps"><div class="pousse"></div><h3 class="r3-mot${e.long ? ' long' : ''}">${e.mot}<i></i></h3>${pct}${e.avis ? `<p class="avis">${e.avis}</p>` : e.id === 'pret' ? `<p class="ligne" style="margin-top:12px">${e.ligne}</p>` : ''}${trio(e)}${rangs(e)}${actions(e)}</div></div>`;
+  const n = { pret: '0 %', rattrapage: '1 sur 3', fin: '93 cuts traités' }[e.id] || e.pct + ' %';
+  const l = { pret: e.ligne, cours: 'Pose du cut <b>4812</b> · <b>18</b> cuts traités, fin au cut <b>4900</b>', pause: 'Depuis <b>1 min 45</b>, après le cut <b>4811</b> · <b>18</b> cuts traités', rattrapage: 'Ariane travaille dans ESV : ne touche à rien. Cut <b>4803</b>.', relecture: '<b>12</b> cuts relus sur <b>85</b>, <b>3</b> corrigés · cut <b>4801</b>', fin: 'Il reste <b>6</b> à poser · verts pas encore calculés' }[e.id];
+  return `<div class="p r3" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r3-corps"><div class="r3-tete"><h3 class="r3-mot${e.long ? ' long' : ''}">${e.mot}</h3></div>
+<div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div><p class="r3-pct">${n}</p>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${l}</p>`}${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
 }
 
 /* ───────────────────────────── la page */
@@ -116,7 +118,7 @@ function page() {
 <ol class="trois">
 <li><b>1</b><strong>Le chiffre</strong><span>L’avancement en un très grand chiffre, l’état au-dessus. Inspiré des widgets d’iOS (Bourse, Calendrier).</span></li>
 <li><b>2</b><strong>Le trajet</strong><span>Une carte : le premier cut, le dernier, un point qui avance. Inspiré des activités en direct d’iOS (suivi d’un vol, d’une livraison).</span></li>
-<li><b>3</b><strong>Le mot</strong><span>L’état écrit en très grand ; le fond du panneau se remplit avec le lot. Inspiré de l’écran de veille d’iOS et de la barre de téléchargement d’un navigateur.</span></li>
+<li><b>3</b><strong>Le mot</strong><span>L’état écrit en très grand, centré, l’avancement juste dessous. Inspiré de l’écran de veille et de l’écran verrouillé d’iOS.</span></li>
 </ol>
 <p class="chapo" style="margin-top:16px">Bleu : Ariane travaille. Gris : à l’arrêt. Orange : à toi. Rouge : en panne.</p></header>
 <div class="reglages" role="group" aria-label="Affichage des panneaux"><div>Thème <span class="choix"><button type="button" id="th-clair" aria-pressed="true">Clair</button><button type="button" id="th-sombre" aria-pressed="false">Sombre</button></span></div><div>Taille <span class="choix"><button type="button" id="ta-360" aria-pressed="true">360 × 480</button><button type="button" id="ta-600" aria-pressed="false">600 × 760</button></span></div><div>Faire défiler chaque rang de côté.</div></div>
