@@ -40,7 +40,8 @@ async function monter(vue) {
   const fermer = async () => { await ctx.close().catch(() => {}); await serveur.fermer(); };
   return { pan, api, erreurs, fermer, messages: () => pan.evaluate(() => window.__m.slice()) };
 }
-const centre = async (pan, sel) => { const b = await pan.locator(sel).first().boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
+/* Le bouton est attendu visible avant d'en lire le rectangle : sous charge, `boundingBox()` rendait null (maquette de Vision 13, 1 échec sur 96, vert seul). */
+const centre = async (pan, sel) => { const l = pan.locator(sel).first(); await l.waitFor({ state: 'visible', timeout: 10000 }); const b = await l.boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
 /* Préparer puis lancer une file de 2 parties par la boîte de Signal ; rend le rectangle du bouton « Lancer » cliqué. */
 async function lancerParLaBoite(m) {
   await m.pan.click('#ui5 [data-act="sg:file"]'); await m.pan.waitForSelector('#ui5 .sg-boite');
