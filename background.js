@@ -4640,6 +4640,10 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   // Onglet choisi : en plus, l'état de séance de l'observateur passif (le pont en tire sa demande de marque).
   respond(sender.tab.id===selectedTab?{...launcherState(),observation:{seance:globalThis.BananeSettings?.observateurPassif?.actif!==false&&!!seanceObservateur()}}:launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
+ /* CH-097 : comme OBS-3 pour `esv-observation` : le message qui RÉVEILLE le service worker arrive avant `ready` (`selectedTab` encore nul) ; le relevé
+  * était ignoré sans trace. Il est rangé une fois `ready` résolu, seulement s'il vient de l'onglet choisi. Service worker prêt : rien ne change. */
+ if((m.kind==='esv-releve'||m.kind==='clic-hors-vue')&&!swPret&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
+  ready.then(()=>{if(sender.tab.id!==selectedTab)return;if(m.kind==='esv-releve')rangerReleve(m.releve);else rangerClicHorsVue(m.releve);},()=>{});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
  if(m.kind==='clic-hors-vue'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerClicHorsVue(m.releve);return;}
  /* OBS-3 (relecture du test 3) : le message qui réveille le service worker arrive avant `ready` (onglet choisi et fins
