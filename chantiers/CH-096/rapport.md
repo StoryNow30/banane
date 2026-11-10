@@ -16,7 +16,7 @@
 - **Lot sans panne identique à l'octet, avec et sans** : moteur en vm, 4 combinaisons de CH-086 (`chantiers/CH-094/identite.cjs`, 7,3 Mo) ; service worker en vm, lot direct et arrêt puis reprise (`chantiers/CH-096/identite.cjs`) : 3 poses, 3 validations, aucun SKIP, mêmes événements.
 - **Verify complet** : 3 442 essais, 3 436 réussis, 0 échec, 6 sautés ; « Geometry unchanged: true », « Engine matches V4.6.0 baseline: true » (essais de CH-084, CH-086, CH-091, CH-094 et garde de pose compris). Rien de `audit/*` n'est commité. L'essai du chemin F5, ajouté après, est passé à part (6 sur 6).
 - **Parité de la relecture** (`tools/parite-relecture-sw.cjs`, tronc contre arbre patché) : relevés identiques, code 0.
-- **Maquette ESV** : en cours au moment de ce commit (résultat ajouté au commit suivant).
+- **Maquette ESV** : sur l'arbre patché, 88 essais, 85 réussis, 0 échec, 3 sautés ; puis 8 sur 8 ; code 0.
 
 **Non fait, non couvert** :
 - `tools/garde-gcv2.cjs`, `tools/parite-l1se-sw.cjs` : non lancés (corpus de `banane-data` absent ; aucun module de décision touché).
