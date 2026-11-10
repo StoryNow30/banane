@@ -106,6 +106,38 @@
       "date": "2026-11-05",
       "motif": "Lot Constellation du 05/11 (version 5, 9 volumes) et Écho de l'opérateur (15 envois « -auto », session = leur union). Jugées une fois en examen à paramètres figés (CH-053-M, CH-056 : 229 posés jugés, 227 à 10 mm ou moins). Passées en apprentissage sur ordre de l'opérateur (« je veux que les cuts des exports d'aujourd'hui soient appris »). Étiquette 12 = étiquette de rejeu, le projet réel n'est pas établi. Après ce passage, aucune partie jugée par l'Écho ne reste réservée : la prochaine partie reçue avec Écho sert d'examen.",
       "decision": "D-287"
+    },
+    {
+      "projet": 13,
+      "parties": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "date": "2026-11-10",
+      "motif": "Lot Constellation du 06/11 (version 5, 14 volumes) et Écho de l'opérateur : 364 visites, 209 validations (parties 13, 15, 16 ; la partie 14 n'a que 2 visites, sans validation). Déjà lues cut par cut (D-292 : 7 mauvaises voies sur 108 posés jugés) : ce n'était plus un examen vierge. Passées en apprentissage par l'accord de l'opérateur pour l'étude « coupes non résolues » (« Oui, en apprentissage »). Étiquette 13 = étiquette de rejeu, le projet réel n'est pas établi.",
+      "decision": "D-322"
+    },
+    {
+      "projet": 14,
+      "parties": [
+        3,
+        4,
+        6
+      ],
+      "date": "2026-11-10",
+      "motif": "Lots « Vision » du 08/11 (version 5) et Écho de l'opérateur : parties 3 et 4 (31 visites, 19 validations) et partie 6 (78 visites, 55 validations). Déjà lues cut par cut (D-308, CH-079 : cuts validés faux à 156-174 mm, cas de contrôle). Passées en apprentissage par l'accord de l'opérateur pour l'étude « coupes non résolues ». Étiquette 14 = étiquette de rejeu, le projet réel n'est pas établi.",
+      "decision": "D-322"
+    },
+    {
+      "projet": 15,
+      "parties": [
+        1
+      ],
+      "date": "2026-11-10",
+      "motif": "Séance Écho du 10/11 sur la partie 1, sans lot Ariane (770 visites, 62 validations ; 21 coupes à pose finale au-delà de 50 mm, auteur des poses de départ non établi). Déjà lue cut par cut (note du 10/11). Relecture d'un Écho seul : ne se mêle jamais aux tables d'un lot. Passée en apprentissage par l'accord de l'opérateur pour l'étude « coupes non résolues ». Étiquette 15 = étiquette de rejeu, le projet réel n'est pas établi.",
+      "decision": "D-322"
     }
   ],
   "temoins": [
@@ -121,6 +153,6 @@
   "reservees": {
     "depuis": "2026-10-19",
     "parties": [],
-    "note": "Une partie absente de la liste d'apprentissage est réservée, nommée ou non. Reçues le 04/11 sans Écho (aucune vérité humaine, rien à apprendre) : parties 0 à 4, 6 à 9, 11, 12 du lot de la version 5 ; elles restent réservées."
+    "note": "Une partie absente de la liste d'apprentissage est réservée, nommée ou non. Reçues le 04/11 sans Écho (aucune vérité humaine, rien à apprendre) : parties 0 à 4, 6 à 9, 11, 12 du lot de la version 5 ; elles restent réservées. Après D-322 (10/11), il n'y a plus de partie d'examen vierge : la prochaine relecture Écho de l'opérateur (séance tirée au sort sur la partie 9 du lot du 10/11) servira d'examen ; cette partie 9 reste réservée."
   }
 }
