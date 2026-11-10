@@ -88,7 +88,8 @@
   async init(){const n=this.e.s.native;if(!this.running())return;
    n.metrics=n.metrics||{};n.metrics.pointsSavedByRail=n.metrics.pointsSavedByRail||{left:0,right:0};n.metrics.captureCheckpoints=n.metrics.captureCheckpoints||0;
    const recoveredAt=iso(),events=(await this.evenementsSession(n.id)).filter(event=>event.nativeSessionId===n.id);
-   n.nextEventSeq=Math.max(n.nextEventSeq||0,...events.map(event=>event.eventSeq||event.event_seq||0));
+   /* CH-097 : une boucle, pas `Math.max(...events)` : un argument par événement dépassait la limite du moteur sur une très longue séance (init, donc ready, rejetait). */
+   {let seq=n.nextEventSeq||0;for(const event of events){const v=event.eventSeq||event.event_seq||0;if(v>seq)seq=v;}n.nextEventSeq=seq;}
    const period=n.observationPeriods?.find(item=>item.observationPeriodId===n.currentPeriodId);
    if(period&&!period.endedAt){period.status='INTERRUPTED_RECOVERED';period.endTimeStatus='unknown';period.recoveredAt=recoveredAt;
     period.reason='worker-restarted-before-period-closure';}
