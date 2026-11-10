@@ -1,0 +1,8225 @@
+{
+ "format": "ariane-ch100-b1-ecart-v1",
+ "definition": "écart = pire rail, 3D, pose de l'ombre contre la pose finale de l'opérateur ramenée au départ du lot ; juste = 10 mm ou moins ; mauvaise voie = plus de 50 mm ; validation sans mouvement de moins de 1.5 s écartée (D-285) ; séries à 10 cuts au plus ; seules les ombres des différés du lot sont jugées",
+ "reference": {
+  "source": "CH-057 § 2 (rejeu, 9 parties des 04 et 05/11)",
+  "differesCorrectionPlus10": 67,
+  "poses": 49,
+  "justes": 44,
+  "faux10a50": 5,
+  "plus50": 0
+ },
+ "apres": "2026-11-05",
+ "seuilConcluable": 30,
+ "lots": [
+  {
+   "lot": "2026-11-04T09-49",
+   "date": "2026-11-04",
+   "paquet": null,
+   "version": "5",
+   "debut": "2026-11-04T08:34",
+   "fin": "2026-11-04T09:49",
+   "parties": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "evenements": 0,
+   "echo": false,
+   "apres": false,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-04T21-02",
+   "date": "2026-11-04",
+   "paquet": null,
+   "version": "5",
+   "debut": "2026-11-04T18:13",
+   "fin": "2026-11-04T21:02",
+   "parties": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "evenements": 0,
+   "echo": false,
+   "apres": false,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-04T18-04",
+   "date": "2026-11-04",
+   "paquet": null,
+   "version": "5",
+   "debut": "2026-11-04T11:11",
+   "fin": "2026-11-04T18:04",
+   "parties": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "evenements": 0,
+   "echo": false,
+   "apres": false,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-05T11-23",
+   "date": "2026-11-05",
+   "paquet": "6291571",
+   "version": "5",
+   "debut": "2026-11-05T07:23",
+   "fin": "2026-11-05T11:23",
+   "parties": [
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "evenements": 0,
+   "echo": false,
+   "apres": false,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-06T12-55",
+   "date": "2026-11-06",
+   "paquet": "2bc1f56",
+   "version": "5",
+   "debut": "2026-11-06T07:19",
+   "fin": "2026-11-06T12:55",
+   "parties": [
+    13,
+    14,
+    15,
+    16
+   ],
+   "evenements": 88,
+   "echo": true,
+   "apres": true,
+   "partiesEcho": [
+    13,
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "lot": "2026-11-08T16-13",
+   "date": "2026-11-08",
+   "paquet": "ba67380",
+   "version": "5",
+   "debut": "2026-11-08T15:37",
+   "fin": "2026-11-08T16:13",
+   "parties": [
+    3,
+    4
+   ],
+   "evenements": 13,
+   "echo": true,
+   "apres": true,
+   "partiesEcho": [
+    3,
+    4,
+    6
+   ]
+  },
+  {
+   "lot": "2026-11-08T20-16",
+   "date": "2026-11-08",
+   "paquet": "16c60f1",
+   "version": "5",
+   "debut": "2026-11-08T20:03",
+   "fin": "2026-11-08T20:16",
+   "parties": [
+    5
+   ],
+   "evenements": 6,
+   "echo": true,
+   "apres": true,
+   "partiesEcho": [
+    3,
+    4,
+    6
+   ]
+  },
+  {
+   "lot": "2026-11-08T21-30",
+   "date": "2026-11-08",
+   "paquet": "c596cdd",
+   "version": "5",
+   "debut": "2026-11-08T21:12",
+   "fin": "2026-11-08T21:30",
+   "parties": [
+    6
+   ],
+   "evenements": 46,
+   "echo": true,
+   "apres": true,
+   "partiesEcho": [
+    3,
+    4,
+    6
+   ]
+  },
+  {
+   "lot": "2026-11-08T22-28",
+   "date": "2026-11-08",
+   "paquet": "daa2736",
+   "version": "5",
+   "debut": "2026-11-08T22:13",
+   "fin": "2026-11-08T22:28",
+   "parties": [
+    7
+   ],
+   "evenements": 10,
+   "echo": true,
+   "apres": true,
+   "partiesEcho": [
+    3,
+    4,
+    6
+   ]
+  },
+  {
+   "lot": "2026-11-09T09-59",
+   "date": "2026-11-09",
+   "paquet": "27eb961",
+   "version": "5",
+   "debut": "2026-11-09T09:16",
+   "fin": "2026-11-09T09:59",
+   "parties": [
+    8
+   ],
+   "evenements": 515,
+   "echo": false,
+   "apres": true,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-09T12-14",
+   "date": "2026-11-09",
+   "paquet": "858295a",
+   "version": "5",
+   "debut": "2026-11-09T12:00",
+   "fin": "2026-11-09T12:14",
+   "parties": [
+    11
+   ],
+   "evenements": 12,
+   "echo": false,
+   "apres": true,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-09T16-50",
+   "date": "2026-11-09",
+   "paquet": "d4238bf",
+   "version": "5",
+   "debut": "2026-11-09T14:53",
+   "fin": "2026-11-09T16:50",
+   "parties": [
+    12
+   ],
+   "evenements": 21,
+   "echo": false,
+   "apres": true,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-09T17-51",
+   "date": "2026-11-09",
+   "paquet": "0fb3777",
+   "version": "5",
+   "debut": "2026-11-09T17:45",
+   "fin": "2026-11-09T17:51",
+   "parties": [
+    13
+   ],
+   "evenements": 1,
+   "echo": false,
+   "apres": true,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-09T19-43",
+   "date": "2026-11-09",
+   "paquet": "33e593d",
+   "version": "5",
+   "debut": "2026-11-09T19:33",
+   "fin": "2026-11-09T19:43",
+   "parties": [
+    14
+   ],
+   "evenements": 4,
+   "echo": false,
+   "apres": true,
+   "partiesEcho": []
+  },
+  {
+   "lot": "2026-11-10T07-55",
+   "date": "2026-11-10",
+   "paquet": "286f541",
+   "version": "5",
+   "debut": "2026-11-10T07:17",
+   "fin": "2026-11-10T07:55",
+   "parties": [
+    9
+   ],
+   "evenements": 16,
+   "echo": false,
+   "apres": true,
+   "partiesEcho": []
+  }
+ ],
+ "inventaire": [
+  {
+   "lot": "2026-11-06T12-55",
+   "partie": 13,
+   "lotTrouve": true,
+   "evenements": 14,
+   "evenementsDuLot": 7,
+   "evenementsDeLaPasse": 7,
+   "cuts": 7,
+   "cibles": 353,
+   "posesDuLot": 346,
+   "differesDuLot": 7,
+   "evenementsHorsExecution": 0,
+   "echo": 119,
+   "cutsDifferesDuLot": 7,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 0,
+   "date": "2026-11-06",
+   "paquet": "2bc1f56",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 6,
+    "pose-changee": 1
+   },
+   "dernier": {
+    "evenementsRetenus": 7,
+    "posables": 1,
+    "abstenus": 6,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "valide": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 2.6,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "avecVisites": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 2.6,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 2.6,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 1,
+     "parSource": {
+      "b1": 1
+     },
+     "juges": 1,
+     "juste10": 1,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 4
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 2.6,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 2.6,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 7,
+      "poses": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 7,
+       "k": 1,
+       "part": 0.1429,
+       "bas": 0.0257,
+       "haut": 0.5131
+      },
+      "wilsonPlus50": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 7,
+      "poses": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 7,
+       "k": 1,
+       "part": 0.1429,
+       "bas": 0.0257,
+       "haut": 0.5131
+      },
+      "wilsonPlus50": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 7,
+    "posables": 1,
+    "abstenus": 6,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "valide": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 3.2,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "avecVisites": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 3.2,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 3.2,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 1,
+     "parSource": {
+      "b1": 1
+     },
+     "juges": 1,
+     "juste10": 1,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 4
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.2,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.2,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 7,
+      "poses": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 7,
+       "k": 1,
+       "part": 0.1429,
+       "bas": 0.0257,
+       "haut": 0.5131
+      },
+      "wilsonPlus50": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 7,
+      "poses": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 7,
+       "k": 1,
+       "part": 0.1429,
+       "bas": 0.0257,
+       "haut": 0.5131
+      },
+      "wilsonPlus50": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-06T12-55",
+   "partie": 15,
+   "lotTrouve": true,
+   "evenements": 37,
+   "evenementsDuLot": 19,
+   "evenementsDeLaPasse": 18,
+   "cuts": 19,
+   "cibles": 161,
+   "posesDuLot": 142,
+   "differesDuLot": 19,
+   "evenementsHorsExecution": 0,
+   "echo": 67,
+   "cutsDifferesDuLot": 19,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 1,
+   "date": "2026-11-06",
+   "paquet": "2bc1f56",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 5,
+    "pose-changee": 10,
+    "devient-posable": 1,
+    "lot-seul": 1,
+    "identique": 2
+   },
+   "dernier": {
+    "evenementsRetenus": 19,
+    "posables": 14,
+    "abstenus": 5,
+    "parSource": {
+     "serie": 13,
+     "b1": 1
+    },
+    "etatsEcho": {
+     "valide": 14
+    },
+    "ecritsParLaPasse": 1,
+    "valides": {
+     "n": 14,
+     "justes": 14,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 8.1,
+     "wilsonJustes": {
+      "n": 14,
+      "k": 14,
+      "part": 1,
+      "bas": 0.7847,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 14,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2153
+     }
+    },
+    "avecVisites": {
+     "n": 14,
+     "justes": 14,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 8.1,
+     "wilsonJustes": {
+      "n": 14,
+      "k": 14,
+      "part": 1,
+      "bas": 0.7847,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 14,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2153
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 1,
+    "methodeJugerLotSansCorrection": {
+     "n": 14,
+     "justes": 13,
+     "de10a50": 0,
+     "plus50": 1,
+     "maxMm": 113.6,
+     "wilsonJustes": {
+      "n": 14,
+      "k": 13,
+      "part": 0.9286,
+      "bas": 0.6853,
+      "haut": 0.9873
+     },
+     "wilsonPlus50": {
+      "n": 14,
+      "k": 1,
+      "part": 0.0714,
+      "bas": 0.0127,
+      "haut": 0.3147
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 13,
+     "parSource": {
+      "b1": 2,
+      "serie": 10,
+      "ecart": 1
+     },
+     "juges": 13,
+     "juste10": 12,
+     "plusDe10": 1,
+     "plusDe50": 1,
+     "evenementDuLotRetenu": 7
+    },
+    "sources": {
+     "serie": {
+      "posables": 13,
+      "valides": {
+       "n": 13,
+       "justes": 13,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 8.1,
+       "wilsonJustes": {
+        "n": 13,
+        "k": 13,
+        "part": 1,
+        "bas": 0.7719,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 13,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2281
+       }
+      },
+      "avecVisites": {
+       "n": 13,
+       "justes": 13,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 8.1,
+       "wilsonJustes": {
+        "n": 13,
+        "k": 13,
+        "part": 1,
+        "bas": 0.7719,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 13,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2281
+       }
+      }
+     },
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 19,
+      "poses": 14,
+      "justes": 14,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 19,
+       "k": 14,
+       "part": 0.7368,
+       "bas": 0.5121,
+       "haut": 0.8819
+      },
+      "wilsonPlus50": {
+       "n": 14,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2153
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 19,
+      "poses": 14,
+      "justes": 14,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 19,
+       "k": 14,
+       "part": 0.7368,
+       "bas": 0.5121,
+       "haut": 0.8819
+      },
+      "wilsonPlus50": {
+       "n": 14,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2153
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 19,
+    "posables": 13,
+    "abstenus": 6,
+    "parSource": {
+     "b1": 3,
+     "ecart": 3,
+     "serie": 7
+    },
+    "etatsEcho": {
+     "valide": 13
+    },
+    "ecritsParLaPasse": 1,
+    "valides": {
+     "n": 13,
+     "justes": 13,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 9.2,
+     "wilsonJustes": {
+      "n": 13,
+      "k": 13,
+      "part": 1,
+      "bas": 0.7719,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 13,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     }
+    },
+    "avecVisites": {
+     "n": 13,
+     "justes": 13,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 9.2,
+     "wilsonJustes": {
+      "n": 13,
+      "k": 13,
+      "part": 1,
+      "bas": 0.7719,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 13,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 1,
+    "methodeJugerLotSansCorrection": {
+     "n": 13,
+     "justes": 12,
+     "de10a50": 0,
+     "plus50": 1,
+     "maxMm": 113.6,
+     "wilsonJustes": {
+      "n": 13,
+      "k": 12,
+      "part": 0.9231,
+      "bas": 0.6669,
+      "haut": 0.9863
+     },
+     "wilsonPlus50": {
+      "n": 13,
+      "k": 1,
+      "part": 0.0769,
+      "bas": 0.0137,
+      "haut": 0.3331
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 13,
+     "parSource": {
+      "b1": 2,
+      "serie": 10,
+      "ecart": 1
+     },
+     "juges": 13,
+     "juste10": 12,
+     "plusDe10": 1,
+     "plusDe50": 1,
+     "evenementDuLotRetenu": 7
+    },
+    "sources": {
+     "b1": {
+      "posables": 3,
+      "valides": {
+       "n": 3,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.9,
+       "wilsonJustes": {
+        "n": 3,
+        "k": 3,
+        "part": 1,
+        "bas": 0.4385,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 3,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.5615
+       }
+      },
+      "avecVisites": {
+       "n": 3,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.9,
+       "wilsonJustes": {
+        "n": 3,
+        "k": 3,
+        "part": 1,
+        "bas": 0.4385,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 3,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.5615
+       }
+      }
+     },
+     "ecart": {
+      "posables": 3,
+      "valides": {
+       "n": 3,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.1,
+       "wilsonJustes": {
+        "n": 3,
+        "k": 3,
+        "part": 1,
+        "bas": 0.4385,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 3,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.5615
+       }
+      },
+      "avecVisites": {
+       "n": 3,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.1,
+       "wilsonJustes": {
+        "n": 3,
+        "k": 3,
+        "part": 1,
+        "bas": 0.4385,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 3,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.5615
+       }
+      }
+     },
+     "serie": {
+      "posables": 7,
+      "valides": {
+       "n": 7,
+       "justes": 7,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 9.2,
+       "wilsonJustes": {
+        "n": 7,
+        "k": 7,
+        "part": 1,
+        "bas": 0.6457,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 7,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3543
+       }
+      },
+      "avecVisites": {
+       "n": 7,
+       "justes": 7,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 9.2,
+       "wilsonJustes": {
+        "n": 7,
+        "k": 7,
+        "part": 1,
+        "bas": 0.6457,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 7,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3543
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 19,
+      "poses": 13,
+      "justes": 13,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 19,
+       "k": 13,
+       "part": 0.6842,
+       "bas": 0.4601,
+       "haut": 0.8464
+      },
+      "wilsonPlus50": {
+       "n": 13,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2281
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 19,
+      "poses": 13,
+      "justes": 13,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 19,
+       "k": 13,
+       "part": 0.6842,
+       "bas": 0.4601,
+       "haut": 0.8464
+      },
+      "wilsonPlus50": {
+       "n": 13,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2281
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-06T12-55",
+   "partie": 16,
+   "lotTrouve": true,
+   "evenements": 37,
+   "evenementsDuLot": 21,
+   "evenementsDeLaPasse": 16,
+   "cuts": 21,
+   "cibles": 431,
+   "posesDuLot": 410,
+   "differesDuLot": 21,
+   "evenementsHorsExecution": 0,
+   "echo": 94,
+   "cutsDifferesDuLot": 21,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 4,
+   "date": "2026-11-06",
+   "paquet": "2bc1f56",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 10,
+    "lot-seul": 5,
+    "identique": 5,
+    "devient-posable": 1
+   },
+   "dernier": {
+    "evenementsRetenus": 21,
+    "posables": 10,
+    "abstenus": 11,
+    "parSource": {
+     "b1": 3,
+     "ecart": 5,
+     "serie": 2
+    },
+    "etatsEcho": {
+     "sans-echo": 2,
+     "valide": 8
+    },
+    "ecritsParLaPasse": 4,
+    "valides": {
+     "n": 8,
+     "justes": 6,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 8,
+      "k": 6,
+      "part": 0.75,
+      "bas": 0.4093,
+      "haut": 0.9285
+     },
+     "wilsonPlus50": {
+      "n": 8,
+      "k": 2,
+      "part": 0.25,
+      "bas": 0.0715,
+      "haut": 0.5907
+     }
+    },
+    "avecVisites": {
+     "n": 8,
+     "justes": 6,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 8,
+      "k": 6,
+      "part": 0.75,
+      "bas": 0.4093,
+      "haut": 0.9285
+     },
+     "wilsonPlus50": {
+      "n": 8,
+      "k": 2,
+      "part": 0.25,
+      "bas": 0.0715,
+      "haut": 0.5907
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 2,
+    "methodeJugerLotSansCorrection": {
+     "n": 8,
+     "justes": 4,
+     "de10a50": 0,
+     "plus50": 4,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 8,
+      "k": 4,
+      "part": 0.5,
+      "bas": 0.2152,
+      "haut": 0.7848
+     },
+     "wilsonPlus50": {
+      "n": 8,
+      "k": 4,
+      "part": 0.5,
+      "bas": 0.2152,
+      "haut": 0.7848
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 10,
+     "parSource": {
+      "b1": 3,
+      "ecart": 5,
+      "serie": 2
+     },
+     "juges": 8,
+     "juste10": 4,
+     "plusDe10": 4,
+     "plusDe50": 4,
+     "evenementDuLotRetenu": 10
+    },
+    "sources": {
+     "b1": {
+      "posables": 3,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 1.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 1.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     },
+     "ecart": {
+      "posables": 5,
+      "valides": {
+       "n": 5,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 5,
+        "k": 3,
+        "part": 0.6,
+        "bas": 0.2307,
+        "haut": 0.8824
+       },
+       "wilsonPlus50": {
+        "n": 5,
+        "k": 2,
+        "part": 0.4,
+        "bas": 0.1176,
+        "haut": 0.7693
+       }
+      },
+      "avecVisites": {
+       "n": 5,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 5,
+        "k": 3,
+        "part": 0.6,
+        "bas": 0.2307,
+        "haut": 0.8824
+       },
+       "wilsonPlus50": {
+        "n": 5,
+        "k": 2,
+        "part": 0.4,
+        "bas": 0.1176,
+        "haut": 0.7693
+       }
+      }
+     },
+     "serie": {
+      "posables": 2,
+      "valides": {
+       "n": 2,
+       "justes": 2,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.6,
+       "wilsonJustes": {
+        "n": 2,
+        "k": 2,
+        "part": 1,
+        "bas": 0.3424,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 2,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.6576
+       }
+      },
+      "avecVisites": {
+       "n": 2,
+       "justes": 2,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 3.6,
+       "wilsonJustes": {
+        "n": 2,
+        "k": 2,
+        "part": 1,
+        "bas": 0.3424,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 2,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.6576
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 4,
+      "plagesFautives50": 2
+     },
+     "avec": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 4,
+      "plagesFautives50": 2
+     },
+     "liste": [
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 13,
+      "poses": 8,
+      "justes": 6,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 13,
+       "k": 6,
+       "part": 0.4615,
+       "bas": 0.2321,
+       "haut": 0.7086
+      },
+      "wilsonPlus50": {
+       "n": 8,
+       "k": 2,
+       "part": 0.25,
+       "bas": 0.0715,
+       "haut": 0.5907
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 13,
+      "poses": 8,
+      "justes": 6,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 13,
+       "k": 6,
+       "part": 0.4615,
+       "bas": 0.2321,
+       "haut": 0.7086
+      },
+      "wilsonPlus50": {
+       "n": 8,
+       "k": 2,
+       "part": 0.25,
+       "bas": 0.0715,
+       "haut": 0.5907
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 21,
+    "posables": 9,
+    "abstenus": 12,
+    "parSource": {
+     "b1": 3,
+     "ecart": 5,
+     "serie": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 2,
+     "valide": 7
+    },
+    "ecritsParLaPasse": 4,
+    "valides": {
+     "n": 7,
+     "justes": 5,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 7,
+      "k": 5,
+      "part": 0.7143,
+      "bas": 0.3589,
+      "haut": 0.9178
+     },
+     "wilsonPlus50": {
+      "n": 7,
+      "k": 2,
+      "part": 0.2857,
+      "bas": 0.0822,
+      "haut": 0.6411
+     }
+    },
+    "avecVisites": {
+     "n": 7,
+     "justes": 5,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 7,
+      "k": 5,
+      "part": 0.7143,
+      "bas": 0.3589,
+      "haut": 0.9178
+     },
+     "wilsonPlus50": {
+      "n": 7,
+      "k": 2,
+      "part": 0.2857,
+      "bas": 0.0822,
+      "haut": 0.6411
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 2,
+    "methodeJugerLotSansCorrection": {
+     "n": 7,
+     "justes": 3,
+     "de10a50": 0,
+     "plus50": 4,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 7,
+      "k": 3,
+      "part": 0.4286,
+      "bas": 0.1582,
+      "haut": 0.7495
+     },
+     "wilsonPlus50": {
+      "n": 7,
+      "k": 4,
+      "part": 0.5714,
+      "bas": 0.2505,
+      "haut": 0.8418
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 10,
+     "parSource": {
+      "b1": 3,
+      "ecart": 5,
+      "serie": 2
+     },
+     "juges": 8,
+     "juste10": 4,
+     "plusDe10": 4,
+     "plusDe50": 4,
+     "evenementDuLotRetenu": 10
+    },
+    "sources": {
+     "b1": {
+      "posables": 3,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 1.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 1.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     },
+     "ecart": {
+      "posables": 5,
+      "valides": {
+       "n": 5,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 5,
+        "k": 3,
+        "part": 0.6,
+        "bas": 0.2307,
+        "haut": 0.8824
+       },
+       "wilsonPlus50": {
+        "n": 5,
+        "k": 2,
+        "part": 0.4,
+        "bas": 0.1176,
+        "haut": 0.7693
+       }
+      },
+      "avecVisites": {
+       "n": 5,
+       "justes": 3,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 5,
+        "k": 3,
+        "part": 0.6,
+        "bas": 0.2307,
+        "haut": 0.8824
+       },
+       "wilsonPlus50": {
+        "n": 5,
+        "k": 2,
+        "part": 0.4,
+        "bas": 0.1176,
+        "haut": 0.7693
+       }
+      }
+     },
+     "serie": {
+      "posables": 1,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 0.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 0.9,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 4,
+      "plagesFautives50": 2
+     },
+     "avec": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 4,
+      "plagesFautives50": 2
+     },
+     "liste": [
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 13,
+      "poses": 7,
+      "justes": 5,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 13,
+       "k": 5,
+       "part": 0.3846,
+       "bas": 0.1771,
+       "haut": 0.6448
+      },
+      "wilsonPlus50": {
+       "n": 7,
+       "k": 2,
+       "part": 0.2857,
+       "bas": 0.0822,
+       "haut": 0.6411
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 13,
+      "poses": 7,
+      "justes": 5,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 13,
+       "k": 5,
+       "part": 0.3846,
+       "bas": 0.1771,
+       "haut": 0.6448
+      },
+      "wilsonPlus50": {
+       "n": 7,
+       "k": 2,
+       "part": 0.2857,
+       "bas": 0.0822,
+       "haut": 0.6411
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-08T16-13",
+   "partie": 3,
+   "lotTrouve": true,
+   "evenements": 2,
+   "evenementsDuLot": 1,
+   "evenementsDeLaPasse": 1,
+   "cuts": 1,
+   "cibles": 21,
+   "posesDuLot": 20,
+   "differesDuLot": 1,
+   "evenementsHorsExecution": 0,
+   "echo": 2,
+   "cutsDifferesDuLot": 1,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 0,
+   "date": "2026-11-08",
+   "paquet": "ba67380",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 1
+   },
+   "dernier": {
+    "evenementsRetenus": 1,
+    "posables": 0,
+    "abstenus": 1,
+    "parSource": {},
+    "etatsEcho": {},
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {},
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 1,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 1,
+    "posables": 0,
+    "abstenus": 1,
+    "parSource": {},
+    "etatsEcho": {},
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {},
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 1,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-08T16-13",
+   "partie": 4,
+   "lotTrouve": true,
+   "evenements": 11,
+   "evenementsDuLot": 6,
+   "evenementsDeLaPasse": 5,
+   "cuts": 6,
+   "cibles": 95,
+   "posesDuLot": 89,
+   "differesDuLot": 6,
+   "evenementsHorsExecution": 0,
+   "echo": 29,
+   "cutsDifferesDuLot": 6,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 1,
+   "date": "2026-11-08",
+   "paquet": "ba67380",
+   "apres": true,
+   "changements": {
+    "identique": 1,
+    "abstenu-identique": 4,
+    "lot-seul": 1
+   },
+   "dernier": {
+    "evenementsRetenus": 6,
+    "posables": 1,
+    "abstenus": 5,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "valide": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 7.8,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "avecVisites": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 7.8,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 7.8,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 1,
+     "parSource": {
+      "b1": 1
+     },
+     "juges": 1,
+     "juste10": 1,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 4
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 6,
+      "poses": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 6,
+       "k": 1,
+       "part": 0.1667,
+       "bas": 0.0301,
+       "haut": 0.5635
+      },
+      "wilsonPlus50": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 5,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 5,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4345
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 6,
+    "posables": 1,
+    "abstenus": 5,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "valide": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 7.8,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "avecVisites": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 7.8,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 1,
+     "justes": 1,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 7.8,
+     "wilsonJustes": {
+      "n": 1,
+      "k": 1,
+      "part": 1,
+      "bas": 0.2065,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 1,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 1,
+     "parSource": {
+      "b1": 1
+     },
+     "juges": 1,
+     "juste10": 1,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 4
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      },
+      "avecVisites": {
+       "n": 1,
+       "justes": 1,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 1,
+        "k": 1,
+        "part": 1,
+        "bas": 0.2065,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 1,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.7935
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 1,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 6,
+      "poses": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 6,
+       "k": 1,
+       "part": 0.1667,
+       "bas": 0.0301,
+       "haut": 0.5635
+      },
+      "wilsonPlus50": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 5,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 5,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4345
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-08T20-16",
+   "partie": 5,
+   "lotTrouve": true,
+   "evenements": 6,
+   "evenementsDuLot": 5,
+   "evenementsDeLaPasse": 1,
+   "cuts": 5,
+   "cibles": 59,
+   "posesDuLot": 54,
+   "differesDuLot": 5,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 5,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 3,
+   "date": "2026-11-08",
+   "paquet": "16c60f1",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 1,
+    "lot-seul": 4
+   },
+   "dernier": {
+    "evenementsRetenus": 5,
+    "posables": 3,
+    "abstenus": 2,
+    "parSource": {
+     "ecart": 1,
+     "serie": 2
+    },
+    "etatsEcho": {
+     "sans-echo": 3
+    },
+    "ecritsParLaPasse": 3,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 3,
+     "parSource": {
+      "ecart": 1,
+      "serie": 2
+     },
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 1
+    },
+    "sources": {
+     "ecart": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "serie": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 5,
+    "posables": 3,
+    "abstenus": 2,
+    "parSource": {
+     "ecart": 1,
+     "serie": 2
+    },
+    "etatsEcho": {
+     "sans-echo": 3
+    },
+    "ecritsParLaPasse": 3,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 3,
+     "parSource": {
+      "ecart": 1,
+      "serie": 2
+     },
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 1
+    },
+    "sources": {
+     "ecart": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "serie": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-08T21-30",
+   "partie": 6,
+   "lotTrouve": true,
+   "evenements": 46,
+   "evenementsDuLot": 29,
+   "evenementsDeLaPasse": 17,
+   "cuts": 29,
+   "cibles": 223,
+   "posesDuLot": 193,
+   "differesDuLot": 30,
+   "evenementsHorsExecution": 0,
+   "echo": 72,
+   "cutsDifferesDuLot": 29,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 0,
+   "date": "2026-11-08",
+   "paquet": "c596cdd",
+   "apres": true,
+   "changements": {
+    "lot-seul": 12,
+    "devient-posable": 3,
+    "abstenu-identique": 5,
+    "identique": 4,
+    "pose-changee": 5
+   },
+   "dernier": {
+    "evenementsRetenus": 29,
+    "posables": 16,
+    "abstenus": 13,
+    "parSource": {
+     "b1": 2,
+     "serie": 9,
+     "ecart": 5
+    },
+    "etatsEcho": {
+     "valide": 16
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 16,
+     "justes": 15,
+     "de10a50": 1,
+     "plus50": 0,
+     "maxMm": 14.9,
+     "wilsonJustes": {
+      "n": 16,
+      "k": 15,
+      "part": 0.9375,
+      "bas": 0.7167,
+      "haut": 0.9889
+     },
+     "wilsonPlus50": {
+      "n": 16,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1936
+     }
+    },
+    "avecVisites": {
+     "n": 16,
+     "justes": 15,
+     "de10a50": 1,
+     "plus50": 0,
+     "maxMm": 14.9,
+     "wilsonJustes": {
+      "n": 16,
+      "k": 15,
+      "part": 0.9375,
+      "bas": 0.7167,
+      "haut": 0.9889
+     },
+     "wilsonPlus50": {
+      "n": 16,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1936
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 16,
+     "justes": 15,
+     "de10a50": 1,
+     "plus50": 0,
+     "maxMm": 14.9,
+     "wilsonJustes": {
+      "n": 16,
+      "k": 15,
+      "part": 0.9375,
+      "bas": 0.7167,
+      "haut": 0.9889
+     },
+     "wilsonPlus50": {
+      "n": 16,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1936
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 14,
+     "parSource": {
+      "ecart": 3,
+      "serie": 9,
+      "b1": 2
+     },
+     "juges": 14,
+     "juste10": 13,
+     "plusDe10": 1,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 14
+    },
+    "sources": {
+     "b1": {
+      "posables": 2,
+      "valides": {
+       "n": 2,
+       "justes": 2,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.3,
+       "wilsonJustes": {
+        "n": 2,
+        "k": 2,
+        "part": 1,
+        "bas": 0.3424,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 2,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.6576
+       }
+      },
+      "avecVisites": {
+       "n": 2,
+       "justes": 2,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.3,
+       "wilsonJustes": {
+        "n": 2,
+        "k": 2,
+        "part": 1,
+        "bas": 0.3424,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 2,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.6576
+       }
+      }
+     },
+     "serie": {
+      "posables": 9,
+      "valides": {
+       "n": 9,
+       "justes": 8,
+       "de10a50": 1,
+       "plus50": 0,
+       "maxMm": 14.9,
+       "wilsonJustes": {
+        "n": 9,
+        "k": 8,
+        "part": 0.8889,
+        "bas": 0.565,
+        "haut": 0.9801
+       },
+       "wilsonPlus50": {
+        "n": 9,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2992
+       }
+      },
+      "avecVisites": {
+       "n": 9,
+       "justes": 8,
+       "de10a50": 1,
+       "plus50": 0,
+       "maxMm": 14.9,
+       "wilsonJustes": {
+        "n": 9,
+        "k": 8,
+        "part": 0.8889,
+        "bas": 0.565,
+        "haut": 0.9801
+       },
+       "wilsonPlus50": {
+        "n": 9,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2992
+       }
+      }
+     },
+     "ecart": {
+      "posables": 5,
+      "valides": {
+       "n": 5,
+       "justes": 5,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 6.1,
+       "wilsonJustes": {
+        "n": 5,
+        "k": 5,
+        "part": 1,
+        "bas": 0.5655,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 5,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.4345
+       }
+      },
+      "avecVisites": {
+       "n": 5,
+       "justes": 5,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 6.1,
+       "wilsonJustes": {
+        "n": 5,
+        "k": 5,
+        "part": 1,
+        "bas": 0.5655,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 5,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.4345
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 1,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 1,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "liste": [
+      {
+       "lot": "2026-11-08T21-30",
+       "partie": 6,
+       "seuilMm": 10,
+       "debut": 219,
+       "fin": 219,
+       "fautes": 1,
+       "maxMm": 14.9
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 28,
+      "poses": 16,
+      "justes": 15,
+      "de10a50": 1,
+      "plus50": 0,
+      "rappel": {
+       "n": 28,
+       "k": 15,
+       "part": 0.5357,
+       "bas": 0.3581,
+       "haut": 0.7047
+      },
+      "wilsonPlus50": {
+       "n": 16,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.1936
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 26,
+      "poses": 16,
+      "justes": 15,
+      "de10a50": 1,
+      "plus50": 0,
+      "rappel": {
+       "n": 26,
+       "k": 15,
+       "part": 0.5769,
+       "bas": 0.3895,
+       "haut": 0.7446
+      },
+      "wilsonPlus50": {
+       "n": 16,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.1936
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 29,
+    "posables": 13,
+    "abstenus": 16,
+    "parSource": {
+     "ecart": 4,
+     "serie": 7,
+     "b1": 2
+    },
+    "etatsEcho": {
+     "valide": 13
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 13,
+     "justes": 13,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 8.3,
+     "wilsonJustes": {
+      "n": 13,
+      "k": 13,
+      "part": 1,
+      "bas": 0.7719,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 13,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     }
+    },
+    "avecVisites": {
+     "n": 13,
+     "justes": 13,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 8.3,
+     "wilsonJustes": {
+      "n": 13,
+      "k": 13,
+      "part": 1,
+      "bas": 0.7719,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 13,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 13,
+     "justes": 13,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": 8.3,
+     "wilsonJustes": {
+      "n": 13,
+      "k": 13,
+      "part": 1,
+      "bas": 0.7719,
+      "haut": 1
+     },
+     "wilsonPlus50": {
+      "n": 13,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 14,
+     "parSource": {
+      "ecart": 3,
+      "serie": 9,
+      "b1": 2
+     },
+     "juges": 14,
+     "juste10": 13,
+     "plusDe10": 1,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 14
+    },
+    "sources": {
+     "ecart": {
+      "posables": 4,
+      "valides": {
+       "n": 4,
+       "justes": 4,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 8.3,
+       "wilsonJustes": {
+        "n": 4,
+        "k": 4,
+        "part": 1,
+        "bas": 0.5101,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 4,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.4899
+       }
+      },
+      "avecVisites": {
+       "n": 4,
+       "justes": 4,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 8.3,
+       "wilsonJustes": {
+        "n": 4,
+        "k": 4,
+        "part": 1,
+        "bas": 0.5101,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 4,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.4899
+       }
+      }
+     },
+     "serie": {
+      "posables": 7,
+      "valides": {
+       "n": 7,
+       "justes": 7,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 4.4,
+       "wilsonJustes": {
+        "n": 7,
+        "k": 7,
+        "part": 1,
+        "bas": 0.6457,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 7,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3543
+       }
+      },
+      "avecVisites": {
+       "n": 7,
+       "justes": 7,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 4.4,
+       "wilsonJustes": {
+        "n": 7,
+        "k": 7,
+        "part": 1,
+        "bas": 0.6457,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 7,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3543
+       }
+      }
+     },
+     "b1": {
+      "posables": 2,
+      "valides": {
+       "n": 2,
+       "justes": 2,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 2.1,
+       "wilsonJustes": {
+        "n": 2,
+        "k": 2,
+        "part": 1,
+        "bas": 0.3424,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 2,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.6576
+       }
+      },
+      "avecVisites": {
+       "n": 2,
+       "justes": 2,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 2.1,
+       "wilsonJustes": {
+        "n": 2,
+        "k": 2,
+        "part": 1,
+        "bas": 0.3424,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 2,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.6576
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 3,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 28,
+      "poses": 13,
+      "justes": 13,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 28,
+       "k": 13,
+       "part": 0.4643,
+       "bas": 0.2953,
+       "haut": 0.6419
+      },
+      "wilsonPlus50": {
+       "n": 13,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2281
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 26,
+      "poses": 13,
+      "justes": 13,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 26,
+       "k": 13,
+       "part": 0.5,
+       "bas": 0.3206,
+       "haut": 0.6794
+      },
+      "wilsonPlus50": {
+       "n": 13,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2281
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-08T22-28",
+   "partie": 7,
+   "lotTrouve": true,
+   "evenements": 10,
+   "evenementsDuLot": 6,
+   "evenementsDeLaPasse": 4,
+   "cuts": 6,
+   "cibles": 93,
+   "posesDuLot": 87,
+   "differesDuLot": 6,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 6,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 2,
+   "date": "2026-11-08",
+   "paquet": "daa2736",
+   "apres": true,
+   "changements": {
+    "lot-seul": 2,
+    "abstenu-identique": 4
+   },
+   "dernier": {
+    "evenementsRetenus": 6,
+    "posables": 0,
+    "abstenus": 6,
+    "parSource": {},
+    "etatsEcho": {},
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 1
+    },
+    "sources": {},
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 6,
+    "posables": 0,
+    "abstenus": 6,
+    "parSource": {},
+    "etatsEcho": {},
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 1
+    },
+    "sources": {},
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-09T09-59",
+   "partie": 8,
+   "lotTrouve": true,
+   "evenements": 515,
+   "evenementsDuLot": 176,
+   "evenementsDeLaPasse": 339,
+   "cuts": 167,
+   "cibles": 342,
+   "posesDuLot": 333,
+   "differesDuLot": 9,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 9,
+   "cutsHorsDifferes": 158,
+   "ecritsParLaPasse": 2,
+   "date": "2026-11-09",
+   "paquet": "27eb961",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 6,
+    "pose-changee": 1,
+    "devient-posable": 2
+   },
+   "dernier": {
+    "evenementsRetenus": 9,
+    "posables": 3,
+    "abstenus": 6,
+    "parSource": {
+     "b1": 1,
+     "ecart": 2
+    },
+    "etatsEcho": {
+     "sans-echo": 3
+    },
+    "ecritsParLaPasse": 1,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "ecart": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 9,
+    "posables": 1,
+    "abstenus": 8,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-09T12-14",
+   "partie": 11,
+   "lotTrouve": true,
+   "evenements": 12,
+   "evenementsDuLot": 9,
+   "evenementsDeLaPasse": 3,
+   "cuts": 9,
+   "cibles": 136,
+   "posesDuLot": 127,
+   "differesDuLot": 9,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 9,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 7,
+   "date": "2026-11-09",
+   "paquet": "858295a",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 2,
+    "pose-changee": 1,
+    "lot-seul": 6
+   },
+   "dernier": {
+    "evenementsRetenus": 9,
+    "posables": 7,
+    "abstenus": 2,
+    "parSource": {
+     "serie": 7
+    },
+    "etatsEcho": {
+     "sans-echo": 7
+    },
+    "ecritsParLaPasse": 7,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "serie": {
+      "posables": 7,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 9,
+    "posables": 7,
+    "abstenus": 2,
+    "parSource": {
+     "b1": 1,
+     "serie": 6
+    },
+    "etatsEcho": {
+     "sans-echo": 7
+    },
+    "ecritsParLaPasse": 7,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "serie": {
+      "posables": 6,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-09T16-50",
+   "partie": 12,
+   "lotTrouve": true,
+   "evenements": 21,
+   "evenementsDuLot": 12,
+   "evenementsDeLaPasse": 9,
+   "cuts": 12,
+   "cibles": 296,
+   "posesDuLot": 284,
+   "differesDuLot": 12,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 12,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 2,
+   "date": "2026-11-09",
+   "paquet": "d4238bf",
+   "apres": true,
+   "changements": {
+    "lot-seul": 3,
+    "abstenu-identique": 5,
+    "identique": 2,
+    "pose-changee": 2
+   },
+   "dernier": {
+    "evenementsRetenus": 12,
+    "posables": 6,
+    "abstenus": 6,
+    "parSource": {
+     "b1": 3,
+     "ecart": 1,
+     "serie": 2
+    },
+    "etatsEcho": {
+     "sans-echo": 6
+    },
+    "ecritsParLaPasse": 1,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 3,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "ecart": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "serie": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 12,
+    "posables": 6,
+    "abstenus": 6,
+    "parSource": {
+     "b1": 2,
+     "ecart": 3,
+     "serie": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 6
+    },
+    "ecritsParLaPasse": 1,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "ecart": {
+      "posables": 3,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "serie": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-09T17-51",
+   "partie": 13,
+   "lotTrouve": true,
+   "evenements": 1,
+   "evenementsDuLot": 1,
+   "evenementsDeLaPasse": 0,
+   "cuts": 1,
+   "cibles": 54,
+   "posesDuLot": 53,
+   "differesDuLot": 1,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 1,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 0,
+   "date": "2026-11-09",
+   "paquet": "0fb3777",
+   "apres": true,
+   "changements": {
+    "lot-seul": 1
+   },
+   "dernier": {
+    "evenementsRetenus": 1,
+    "posables": 0,
+    "abstenus": 1,
+    "parSource": {},
+    "etatsEcho": {},
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {},
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 1,
+    "posables": 0,
+    "abstenus": 1,
+    "parSource": {},
+    "etatsEcho": {},
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {},
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-09T19-43",
+   "partie": 14,
+   "lotTrouve": true,
+   "evenements": 4,
+   "evenementsDuLot": 2,
+   "evenementsDeLaPasse": 2,
+   "cuts": 2,
+   "cibles": 98,
+   "posesDuLot": 96,
+   "differesDuLot": 2,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 2,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 0,
+   "date": "2026-11-09",
+   "paquet": "33e593d",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 1,
+    "identique": 1
+   },
+   "dernier": {
+    "evenementsRetenus": 2,
+    "posables": 1,
+    "abstenus": 1,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 2,
+    "posables": 1,
+    "abstenus": 1,
+    "parSource": {
+     "b1": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 1
+    },
+    "ecritsParLaPasse": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  },
+  {
+   "lot": "2026-11-10T07-55",
+   "partie": 9,
+   "lotTrouve": true,
+   "evenements": 16,
+   "evenementsDuLot": 9,
+   "evenementsDeLaPasse": 7,
+   "cuts": 9,
+   "cibles": 378,
+   "posesDuLot": 369,
+   "differesDuLot": 9,
+   "evenementsHorsExecution": 0,
+   "echo": 0,
+   "cutsDifferesDuLot": 9,
+   "cutsHorsDifferes": 0,
+   "ecritsParLaPasse": 2,
+   "date": "2026-11-10",
+   "paquet": "286f541",
+   "apres": true,
+   "changements": {
+    "abstenu-identique": 3,
+    "devient-abstenu": 1,
+    "pose-changee": 3,
+    "lot-seul": 2
+   },
+   "dernier": {
+    "evenementsRetenus": 9,
+    "posables": 4,
+    "abstenus": 5,
+    "parSource": {
+     "serie": 3,
+     "ecart": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 4
+    },
+    "ecritsParLaPasse": 2,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "serie": {
+      "posables": 3,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "ecart": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 9,
+    "posables": 5,
+    "abstenus": 4,
+    "parSource": {
+     "b1": 2,
+     "serie": 2,
+     "ecart": 1
+    },
+    "etatsEcho": {
+     "sans-echo": 5
+    },
+    "ecritsParLaPasse": 2,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 0,
+    "methodeJugerLotSansCorrection": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "plus50": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonPlus50": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 0,
+     "parSource": {},
+     "juges": 0,
+     "juste10": 0,
+     "plusDe10": 0,
+     "plusDe50": 0,
+     "evenementDuLotRetenu": 0
+    },
+    "sources": {
+     "b1": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "serie": {
+      "posables": 2,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     },
+     "ecart": {
+      "posables": 1,
+      "valides": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      },
+      "avecVisites": {
+       "n": 0,
+       "justes": 0,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": null,
+       "wilsonJustes": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       },
+       "wilsonPlus50": {
+        "n": 0,
+        "k": 0,
+        "part": null,
+        "bas": null,
+        "haut": null
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "avec": {
+      "plus50": 0,
+      "plus10": 0,
+      "plages": 0,
+      "plagesFautives50": 0
+     },
+     "liste": []
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 0,
+      "poses": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "plus50": 0,
+      "rappel": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonPlus50": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   }
+  }
+ ],
+ "total": {
+  "apres": {
+   "dernier": {
+    "evenementsRetenus": 136,
+    "posables": 66,
+    "abstenus": 70,
+    "parSource": {
+     "b1": 13,
+     "serie": 38,
+     "ecart": 15
+    },
+    "etatsEcho": {
+     "valide": 40,
+     "sans-echo": 26
+    },
+    "ecritsParLaPasse": 19,
+    "valides": {
+     "n": 40,
+     "justes": 37,
+     "de10a50": 1,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 40,
+      "k": 37,
+      "part": 0.925,
+      "bas": 0.8014,
+      "haut": 0.9742
+     },
+     "wilsonPlus50": {
+      "n": 40,
+      "k": 2,
+      "part": 0.05,
+      "bas": 0.0138,
+      "haut": 0.165
+     }
+    },
+    "avecVisites": {
+     "n": 40,
+     "justes": 37,
+     "de10a50": 1,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 40,
+      "k": 37,
+      "part": 0.925,
+      "bas": 0.8014,
+      "haut": 0.9742
+     },
+     "wilsonPlus50": {
+      "n": 40,
+      "k": 2,
+      "part": 0.05,
+      "bas": 0.0138,
+      "haut": 0.165
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 3,
+    "methodeJugerLotSansCorrection": {
+     "n": 40,
+     "justes": 34,
+     "de10a50": 1,
+     "plus50": 5,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 40,
+      "k": 34,
+      "part": 0.85,
+      "bas": 0.7093,
+      "haut": 0.9294
+     },
+     "wilsonPlus50": {
+      "n": 40,
+      "k": 5,
+      "part": 0.125,
+      "bas": 0.0546,
+      "haut": 0.2611
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 42,
+     "parSource": {
+      "b1": 9,
+      "serie": 23,
+      "ecart": 10
+     },
+     "juges": 37,
+     "juste10": 31,
+     "plusDe10": 6,
+     "plusDe50": 5,
+     "evenementDuLotRetenu": 41
+    },
+    "sources": {
+     "b1": {
+      "posables": 13,
+      "valides": {
+       "n": 6,
+       "justes": 6,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 6,
+        "k": 6,
+        "part": 1,
+        "bas": 0.6097,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 6,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3903
+       }
+      },
+      "avecVisites": {
+       "n": 6,
+       "justes": 6,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 6,
+        "k": 6,
+        "part": 1,
+        "bas": 0.6097,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 6,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3903
+       }
+      }
+     },
+     "serie": {
+      "posables": 38,
+      "valides": {
+       "n": 24,
+       "justes": 23,
+       "de10a50": 1,
+       "plus50": 0,
+       "maxMm": 14.9,
+       "wilsonJustes": {
+        "n": 24,
+        "k": 23,
+        "part": 0.9583,
+        "bas": 0.7976,
+        "haut": 0.9926
+       },
+       "wilsonPlus50": {
+        "n": 24,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.138
+       }
+      },
+      "avecVisites": {
+       "n": 24,
+       "justes": 23,
+       "de10a50": 1,
+       "plus50": 0,
+       "maxMm": 14.9,
+       "wilsonJustes": {
+        "n": 24,
+        "k": 23,
+        "part": 0.9583,
+        "bas": 0.7976,
+        "haut": 0.9926
+       },
+       "wilsonPlus50": {
+        "n": 24,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.138
+       }
+      }
+     },
+     "ecart": {
+      "posables": 15,
+      "valides": {
+       "n": 10,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 10,
+        "k": 8,
+        "part": 0.8,
+        "bas": 0.4902,
+        "haut": 0.9433
+       },
+       "wilsonPlus50": {
+        "n": 10,
+        "k": 2,
+        "part": 0.2,
+        "bas": 0.0567,
+        "haut": 0.5098
+       }
+      },
+      "avecVisites": {
+       "n": 10,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 10,
+        "k": 8,
+        "part": 0.8,
+        "bas": 0.4902,
+        "haut": 0.9433
+       },
+       "wilsonPlus50": {
+        "n": 10,
+        "k": 2,
+        "part": 0.2,
+        "bas": 0.0567,
+        "haut": 0.5098
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 2,
+      "plus10": 3,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "avec": {
+      "plus50": 2,
+      "plus10": 3,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "liste": [
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-08T21-30",
+       "partie": 6,
+       "seuilMm": 10,
+       "debut": 219,
+       "fin": 219,
+       "fautes": 1,
+       "maxMm": 14.9
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 74,
+      "poses": 40,
+      "justes": 37,
+      "de10a50": 1,
+      "plus50": 2,
+      "rappel": {
+       "n": 74,
+       "k": 37,
+       "part": 0.5,
+       "bas": 0.3889,
+       "haut": 0.6111
+      },
+      "wilsonPlus50": {
+       "n": 40,
+       "k": 2,
+       "part": 0.05,
+       "bas": 0.0138,
+       "haut": 0.165
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 70,
+      "poses": 39,
+      "justes": 36,
+      "de10a50": 1,
+      "plus50": 2,
+      "rappel": {
+       "n": 70,
+       "k": 36,
+       "part": 0.5143,
+       "bas": 0.3995,
+       "haut": 0.6275
+      },
+      "wilsonPlus50": {
+       "n": 39,
+       "k": 2,
+       "part": 0.0513,
+       "bas": 0.0142,
+       "haut": 0.1689
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 136,
+    "posables": 60,
+    "abstenus": 76,
+    "parSource": {
+     "b1": 17,
+     "ecart": 17,
+     "serie": 26
+    },
+    "etatsEcho": {
+     "valide": 35,
+     "sans-echo": 25
+    },
+    "ecritsParLaPasse": 18,
+    "valides": {
+     "n": 35,
+     "justes": 33,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 35,
+      "k": 33,
+      "part": 0.9429,
+      "bas": 0.8139,
+      "haut": 0.9842
+     },
+     "wilsonPlus50": {
+      "n": 35,
+      "k": 2,
+      "part": 0.0571,
+      "bas": 0.0158,
+      "haut": 0.1861
+     }
+    },
+    "avecVisites": {
+     "n": 35,
+     "justes": 33,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 35,
+      "k": 33,
+      "part": 0.9429,
+      "bas": 0.8139,
+      "haut": 0.9842
+     },
+     "wilsonPlus50": {
+      "n": 35,
+      "k": 2,
+      "part": 0.0571,
+      "bas": 0.0158,
+      "haut": 0.1861
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 3,
+    "methodeJugerLotSansCorrection": {
+     "n": 35,
+     "justes": 30,
+     "de10a50": 0,
+     "plus50": 5,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 35,
+      "k": 30,
+      "part": 0.8571,
+      "bas": 0.7062,
+      "haut": 0.9374
+     },
+     "wilsonPlus50": {
+      "n": 35,
+      "k": 5,
+      "part": 0.1429,
+      "bas": 0.0626,
+      "haut": 0.2938
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 42,
+     "parSource": {
+      "b1": 9,
+      "serie": 23,
+      "ecart": 10
+     },
+     "juges": 37,
+     "juste10": 31,
+     "plusDe10": 6,
+     "plusDe50": 5,
+     "evenementDuLotRetenu": 41
+    },
+    "sources": {
+     "b1": {
+      "posables": 17,
+      "valides": {
+       "n": 8,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 8,
+        "k": 8,
+        "part": 1,
+        "bas": 0.6756,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 8,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3244
+       }
+      },
+      "avecVisites": {
+       "n": 8,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 8,
+        "k": 8,
+        "part": 1,
+        "bas": 0.6756,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 8,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3244
+       }
+      }
+     },
+     "ecart": {
+      "posables": 17,
+      "valides": {
+       "n": 12,
+       "justes": 10,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 12,
+        "k": 10,
+        "part": 0.8333,
+        "bas": 0.552,
+        "haut": 0.953
+       },
+       "wilsonPlus50": {
+        "n": 12,
+        "k": 2,
+        "part": 0.1667,
+        "bas": 0.047,
+        "haut": 0.448
+       }
+      },
+      "avecVisites": {
+       "n": 12,
+       "justes": 10,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 12,
+        "k": 10,
+        "part": 0.8333,
+        "bas": 0.552,
+        "haut": 0.953
+       },
+       "wilsonPlus50": {
+        "n": 12,
+        "k": 2,
+        "part": 0.1667,
+        "bas": 0.047,
+        "haut": 0.448
+       }
+      }
+     },
+     "serie": {
+      "posables": 26,
+      "valides": {
+       "n": 15,
+       "justes": 15,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 9.2,
+       "wilsonJustes": {
+        "n": 15,
+        "k": 15,
+        "part": 1,
+        "bas": 0.7961,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 15,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2039
+       }
+      },
+      "avecVisites": {
+       "n": 15,
+       "justes": 15,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 9.2,
+       "wilsonJustes": {
+        "n": 15,
+        "k": 15,
+        "part": 1,
+        "bas": 0.7961,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 15,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2039
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "avec": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "liste": [
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 74,
+      "poses": 35,
+      "justes": 33,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 74,
+       "k": 33,
+       "part": 0.4459,
+       "bas": 0.3382,
+       "haut": 0.5591
+      },
+      "wilsonPlus50": {
+       "n": 35,
+       "k": 2,
+       "part": 0.0571,
+       "bas": 0.0158,
+       "haut": 0.1861
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 70,
+      "poses": 34,
+      "justes": 32,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 70,
+       "k": 32,
+       "part": 0.4571,
+       "bas": 0.3457,
+       "haut": 0.573
+      },
+      "wilsonPlus50": {
+       "n": 34,
+       "k": 2,
+       "part": 0.0588,
+       "bas": 0.0163,
+       "haut": 0.1909
+      }
+     }
+    }
+   }
+  },
+  "tout": {
+   "dernier": {
+    "evenementsRetenus": 136,
+    "posables": 66,
+    "abstenus": 70,
+    "parSource": {
+     "b1": 13,
+     "serie": 38,
+     "ecart": 15
+    },
+    "etatsEcho": {
+     "valide": 40,
+     "sans-echo": 26
+    },
+    "ecritsParLaPasse": 19,
+    "valides": {
+     "n": 40,
+     "justes": 37,
+     "de10a50": 1,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 40,
+      "k": 37,
+      "part": 0.925,
+      "bas": 0.8014,
+      "haut": 0.9742
+     },
+     "wilsonPlus50": {
+      "n": 40,
+      "k": 2,
+      "part": 0.05,
+      "bas": 0.0138,
+      "haut": 0.165
+     }
+    },
+    "avecVisites": {
+     "n": 40,
+     "justes": 37,
+     "de10a50": 1,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 40,
+      "k": 37,
+      "part": 0.925,
+      "bas": 0.8014,
+      "haut": 0.9742
+     },
+     "wilsonPlus50": {
+      "n": 40,
+      "k": 2,
+      "part": 0.05,
+      "bas": 0.0138,
+      "haut": 0.165
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 3,
+    "methodeJugerLotSansCorrection": {
+     "n": 40,
+     "justes": 34,
+     "de10a50": 1,
+     "plus50": 5,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 40,
+      "k": 34,
+      "part": 0.85,
+      "bas": 0.7093,
+      "haut": 0.9294
+     },
+     "wilsonPlus50": {
+      "n": 40,
+      "k": 5,
+      "part": 0.125,
+      "bas": 0.0546,
+      "haut": 0.2611
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 42,
+     "parSource": {
+      "b1": 9,
+      "serie": 23,
+      "ecart": 10
+     },
+     "juges": 37,
+     "juste10": 31,
+     "plusDe10": 6,
+     "plusDe50": 5,
+     "evenementDuLotRetenu": 41
+    },
+    "sources": {
+     "b1": {
+      "posables": 13,
+      "valides": {
+       "n": 6,
+       "justes": 6,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 6,
+        "k": 6,
+        "part": 1,
+        "bas": 0.6097,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 6,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3903
+       }
+      },
+      "avecVisites": {
+       "n": 6,
+       "justes": 6,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 6,
+        "k": 6,
+        "part": 1,
+        "bas": 0.6097,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 6,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3903
+       }
+      }
+     },
+     "serie": {
+      "posables": 38,
+      "valides": {
+       "n": 24,
+       "justes": 23,
+       "de10a50": 1,
+       "plus50": 0,
+       "maxMm": 14.9,
+       "wilsonJustes": {
+        "n": 24,
+        "k": 23,
+        "part": 0.9583,
+        "bas": 0.7976,
+        "haut": 0.9926
+       },
+       "wilsonPlus50": {
+        "n": 24,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.138
+       }
+      },
+      "avecVisites": {
+       "n": 24,
+       "justes": 23,
+       "de10a50": 1,
+       "plus50": 0,
+       "maxMm": 14.9,
+       "wilsonJustes": {
+        "n": 24,
+        "k": 23,
+        "part": 0.9583,
+        "bas": 0.7976,
+        "haut": 0.9926
+       },
+       "wilsonPlus50": {
+        "n": 24,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.138
+       }
+      }
+     },
+     "ecart": {
+      "posables": 15,
+      "valides": {
+       "n": 10,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 10,
+        "k": 8,
+        "part": 0.8,
+        "bas": 0.4902,
+        "haut": 0.9433
+       },
+       "wilsonPlus50": {
+        "n": 10,
+        "k": 2,
+        "part": 0.2,
+        "bas": 0.0567,
+        "haut": 0.5098
+       }
+      },
+      "avecVisites": {
+       "n": 10,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 10,
+        "k": 8,
+        "part": 0.8,
+        "bas": 0.4902,
+        "haut": 0.9433
+       },
+       "wilsonPlus50": {
+        "n": 10,
+        "k": 2,
+        "part": 0.2,
+        "bas": 0.0567,
+        "haut": 0.5098
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 2,
+      "plus10": 3,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "avec": {
+      "plus50": 2,
+      "plus10": 3,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "liste": [
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-08T21-30",
+       "partie": 6,
+       "seuilMm": 10,
+       "debut": 219,
+       "fin": 219,
+       "fautes": 1,
+       "maxMm": 14.9
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 74,
+      "poses": 40,
+      "justes": 37,
+      "de10a50": 1,
+      "plus50": 2,
+      "rappel": {
+       "n": 74,
+       "k": 37,
+       "part": 0.5,
+       "bas": 0.3889,
+       "haut": 0.6111
+      },
+      "wilsonPlus50": {
+       "n": 40,
+       "k": 2,
+       "part": 0.05,
+       "bas": 0.0138,
+       "haut": 0.165
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 70,
+      "poses": 39,
+      "justes": 36,
+      "de10a50": 1,
+      "plus50": 2,
+      "rappel": {
+       "n": 70,
+       "k": 36,
+       "part": 0.5143,
+       "bas": 0.3995,
+       "haut": 0.6275
+      },
+      "wilsonPlus50": {
+       "n": 39,
+       "k": 2,
+       "part": 0.0513,
+       "bas": 0.0142,
+       "haut": 0.1689
+      }
+     }
+    }
+   },
+   "duLot": {
+    "evenementsRetenus": 136,
+    "posables": 60,
+    "abstenus": 76,
+    "parSource": {
+     "b1": 17,
+     "ecart": 17,
+     "serie": 26
+    },
+    "etatsEcho": {
+     "valide": 35,
+     "sans-echo": 25
+    },
+    "ecritsParLaPasse": 18,
+    "valides": {
+     "n": 35,
+     "justes": 33,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 35,
+      "k": 33,
+      "part": 0.9429,
+      "bas": 0.8139,
+      "haut": 0.9842
+     },
+     "wilsonPlus50": {
+      "n": 35,
+      "k": 2,
+      "part": 0.0571,
+      "bas": 0.0158,
+      "haut": 0.1861
+     }
+    },
+    "avecVisites": {
+     "n": 35,
+     "justes": 33,
+     "de10a50": 0,
+     "plus50": 2,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 35,
+      "k": 33,
+      "part": 0.9429,
+      "bas": 0.8139,
+      "haut": 0.9842
+     },
+     "wilsonPlus50": {
+      "n": 35,
+      "k": 2,
+      "part": 0.0571,
+      "bas": 0.0158,
+      "haut": 0.1861
+     }
+    },
+    "visitesSansAction": 0,
+    "visitesDepartNonValide": 0,
+    "reconstituees": 3,
+    "methodeJugerLotSansCorrection": {
+     "n": 35,
+     "justes": 30,
+     "de10a50": 0,
+     "plus50": 5,
+     "maxMm": 291.7,
+     "wilsonJustes": {
+      "n": 35,
+      "k": 30,
+      "part": 0.8571,
+      "bas": 0.7062,
+      "haut": 0.9374
+     },
+     "wilsonPlus50": {
+      "n": 35,
+      "k": 5,
+      "part": 0.1429,
+      "bas": 0.0626,
+      "haut": 0.2938
+     }
+    },
+    "lectureReelleDeJugerLot": {
+     "posables": 42,
+     "parSource": {
+      "b1": 9,
+      "serie": 23,
+      "ecart": 10
+     },
+     "juges": 37,
+     "juste10": 31,
+     "plusDe10": 6,
+     "plusDe50": 5,
+     "evenementDuLotRetenu": 41
+    },
+    "sources": {
+     "b1": {
+      "posables": 17,
+      "valides": {
+       "n": 8,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 8,
+        "k": 8,
+        "part": 1,
+        "bas": 0.6756,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 8,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3244
+       }
+      },
+      "avecVisites": {
+       "n": 8,
+       "justes": 8,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 7.8,
+       "wilsonJustes": {
+        "n": 8,
+        "k": 8,
+        "part": 1,
+        "bas": 0.6756,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 8,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.3244
+       }
+      }
+     },
+     "ecart": {
+      "posables": 17,
+      "valides": {
+       "n": 12,
+       "justes": 10,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 12,
+        "k": 10,
+        "part": 0.8333,
+        "bas": 0.552,
+        "haut": 0.953
+       },
+       "wilsonPlus50": {
+        "n": 12,
+        "k": 2,
+        "part": 0.1667,
+        "bas": 0.047,
+        "haut": 0.448
+       }
+      },
+      "avecVisites": {
+       "n": 12,
+       "justes": 10,
+       "de10a50": 0,
+       "plus50": 2,
+       "maxMm": 291.7,
+       "wilsonJustes": {
+        "n": 12,
+        "k": 10,
+        "part": 0.8333,
+        "bas": 0.552,
+        "haut": 0.953
+       },
+       "wilsonPlus50": {
+        "n": 12,
+        "k": 2,
+        "part": 0.1667,
+        "bas": 0.047,
+        "haut": 0.448
+       }
+      }
+     },
+     "serie": {
+      "posables": 26,
+      "valides": {
+       "n": 15,
+       "justes": 15,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 9.2,
+       "wilsonJustes": {
+        "n": 15,
+        "k": 15,
+        "part": 1,
+        "bas": 0.7961,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 15,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2039
+       }
+      },
+      "avecVisites": {
+       "n": 15,
+       "justes": 15,
+       "de10a50": 0,
+       "plus50": 0,
+       "maxMm": 9.2,
+       "wilsonJustes": {
+        "n": 15,
+        "k": 15,
+        "part": 1,
+        "bas": 0.7961,
+        "haut": 1
+       },
+       "wilsonPlus50": {
+        "n": 15,
+        "k": 0,
+        "part": 0,
+        "bas": 0,
+        "haut": 0.2039
+       }
+      }
+     }
+    },
+    "series": {
+     "sans": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "avec": {
+      "plus50": 2,
+      "plus10": 2,
+      "plages": 12,
+      "plagesFautives50": 2
+     },
+     "liste": [
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 10,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9119,
+       "fin": 9119,
+       "fautes": 1,
+       "maxMm": 179.7
+      },
+      {
+       "lot": "2026-11-06T12-55",
+       "partie": 16,
+       "seuilMm": 50,
+       "debut": 9269,
+       "fin": 9269,
+       "fautes": 1,
+       "maxMm": 291.7
+      }
+     ]
+    },
+    "commeLaReference": {
+     "tous": {
+      "differesJuges": 74,
+      "poses": 35,
+      "justes": 33,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 74,
+       "k": 33,
+       "part": 0.4459,
+       "bas": 0.3382,
+       "haut": 0.5591
+      },
+      "wilsonPlus50": {
+       "n": 35,
+       "k": 2,
+       "part": 0.0571,
+       "bas": 0.0158,
+       "haut": 0.1861
+      }
+     },
+     "correctionPlus10": {
+      "differesJuges": 70,
+      "poses": 34,
+      "justes": 32,
+      "de10a50": 0,
+      "plus50": 2,
+      "rappel": {
+       "n": 70,
+       "k": 32,
+       "part": 0.4571,
+       "bas": 0.3457,
+       "haut": 0.573
+      },
+      "wilsonPlus50": {
+       "n": 34,
+       "k": 2,
+       "part": 0.0588,
+       "bas": 0.0163,
+       "haut": 0.1909
+      }
+     }
+    }
+   }
+  }
+ },
+ "conclusion": {
+  "posesJugeesApres": 40,
+  "seuil": 30,
+  "concluable": true,
+  "manquent": 0,
+  "premierPaquet": {
+   "paquet": "2bc1f56",
+   "lot": "2026-11-06T12-55",
+   "date": "2026-11-06"
+  }
+ },
+ "cutsDansLeCsv": 294
+}

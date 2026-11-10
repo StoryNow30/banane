@@ -1,0 +1,295 @@
+date;lot;partie;cut;evenements;evenementsDuLot;evenementsDeLaPasse;differeDuLot;changement;changementPoseMm;echo;methode;dureeVisiteS;visites;correctionOperateurMm;zonePn;zoneAdv;dernier.passe;dernier.posable;dernier.source;dernier.etage;dernier.confiance;dernier.ecartMm;dernier.classe;dernier.ecartBrutMm;dernier.classeBrute;dernier.serie10;dernier.serie50;duLot.posable;duLot.source;duLot.etage;duLot.ecartMm;duLot.classe;duLot.ecartBrutMm;duLot.classeBrute;jugerLot.passe;jugerLot.posable;jugerLot.source;jugerLot.ecartMm;jugerLot.classe;drapeaux
+2026-11-06;2026-11-06T12-55;13;2705;2;1;1;oui;abstenu-identique;;valide;directe;8.3;2;92.5;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;13;2744;2;1;1;oui;abstenu-identique;;valide;directe;3.4;2;88.8;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;13;2746;2;1;1;oui;abstenu-identique;;valide;directe;3.3;1;90.7;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;13;2747;2;1;1;oui;abstenu-identique;;valide;directe;2.9;1;87.7;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;13;5646;2;1;1;oui;abstenu-identique;;valide;directe;7;3;37.9;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;13;6080;2;1;1;oui;abstenu-identique;;valide;directe;11.2;1;65.2;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;13;9403;2;1;1;oui;pose-changee;0.7;valide;directe;9.2;1;38.6;;;oui;oui;b1;choice;0;2.6;juste;2.6;juste;;;oui;b1;choice;3.2;juste;3.2;juste;non;oui;b1;3.2;juste;
+2026-11-06;2026-11-06T12-55;15;7201;2;1;1;oui;abstenu-identique;;valide;directe;44.9;2;110.9;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;15;7258;2;1;1;oui;pose-changee;4.3;valide;directe;28.2;1;103.3;;marge-apres;oui;oui;serie;window;33;4.6;juste;4.6;juste;;;oui;b1;window;3.4;juste;3.4;juste;non;oui;b1;3.4;juste;
+2026-11-06;2026-11-06T12-55;15;7259;2;1;1;oui;devient-posable;;valide;directe;5;1;101.3;;marge-apres;oui;oui;serie;window;52;5.3;juste;5.3;juste;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;15;7261;2;1;1;oui;pose-changee;0.4;valide;directe;6.3;1;67.1;;marge-apres;oui;oui;serie;window;68;1.2;juste;1.2;juste;;;oui;ecart;window;1.2;juste;1.2;juste;oui;oui;serie;1.2;juste;
+2026-11-06;2026-11-06T12-55;15;7262;2;1;1;oui;pose-changee;9.3;valide;directe;101.9;1;68.6;;marge-apres;oui;oui;serie;choice;0;5.4;juste;5.4;juste;;;oui;serie;choice;9.2;juste;9.2;juste;non;oui;serie;9.2;juste;
+2026-11-06;2026-11-06T12-55;15;7263;2;1;1;oui;pose-changee;0.2;valide;directe;4.2;1;72.9;;marge-apres;oui;oui;serie;choice;0;4.1;juste;4.1;juste;;;oui;serie;choice;4.1;juste;4.1;juste;oui;oui;serie;4.1;juste;
+2026-11-06;2026-11-06T12-55;15;7264;2;1;1;oui;abstenu-identique;;valide;directe;16.5;1;106.2;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;15;7265;2;1;1;oui;pose-changee;0.5;valide;directe;3.7;1;59.7;;marge-apres;oui;oui;serie;window;52;7.2;juste;7.2;juste;;;oui;ecart;choice;7.1;juste;7.1;juste;non;oui;ecart;7.1;juste;
+2026-11-06;2026-11-06T12-55;15;7266;2;1;1;oui;pose-changee;2.1;valide;directe;3.4;1;112.5;;;oui;oui;serie;window;59;5.9;juste;5.9;juste;;;oui;ecart;window;5.9;juste;5.9;juste;oui;oui;serie;5.9;juste;
+2026-11-06;2026-11-06T12-55;15;7267;1;1;0;oui;lot-seul;0;valide;reconstituee;3.1;1;117.2;;;non;oui;serie;choice;0;4.5;juste;113.6;faute;;;oui;serie;choice;4.5;juste;113.6;faute;non;oui;serie;113.6;faute;ecrit-par-la-passe
+2026-11-06;2026-11-06T12-55;15;7401;2;1;1;oui;abstenu-identique;;valide;directe;7.7;1;83;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;15;7405;2;1;1;oui;abstenu-identique;;valide;directe;5.4;2;57.2;;alerte;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;15;7424;2;1;1;oui;pose-changee;1.3;valide;directe;3.2;2;88.2;;marge-apres;oui;oui;serie;window;70;5.1;juste;5.1;juste;;;oui;b1;window;3.9;juste;3.9;juste;oui;oui;serie;5.1;juste;
+2026-11-06;2026-11-06T12-55;15;7426;2;1;1;oui;pose-changee;3.5;valide;directe;3.5;1;65.8;;marge-apres;oui;oui;serie;choice;73;3.3;juste;3.3;juste;;;oui;serie;choice;6.6;juste;6.6;juste;non;oui;serie;6.6;juste;
+2026-11-06;2026-11-06T12-55;15;7427;2;1;1;oui;pose-changee;2.1;valide;directe;2.9;1;70;;marge-apres;oui;oui;serie;window;68;2.7;juste;2.7;juste;;;oui;serie;window;2;juste;2;juste;non;oui;serie;2;juste;
+2026-11-06;2026-11-06T12-55;15;7428;2;1;1;oui;identique;0.1;valide;directe;3.4;1;99.1;;marge-apres;oui;oui;serie;choice;0;5.2;juste;5.2;juste;;;oui;serie;choice;5.2;juste;5.2;juste;oui;oui;serie;5.2;juste;
+2026-11-06;2026-11-06T12-55;15;7429;2;1;1;oui;pose-changee;8.6;valide;directe;3.1;1;101;;marge-apres;oui;oui;serie;choice;0;8.1;juste;8.1;juste;;;oui;serie;choice;8;juste;8;juste;oui;oui;serie;8.1;juste;
+2026-11-06;2026-11-06T12-55;15;7634;2;1;1;oui;identique;0;valide;directe;2.7;2;53;;alerte;oui;oui;b1;choice;0;3.9;juste;3.9;juste;;;oui;b1;choice;3.9;juste;3.9;juste;oui;oui;b1;3.9;juste;
+2026-11-06;2026-11-06T12-55;15;8407;2;1;1;oui;abstenu-identique;;valide;directe;2.4;2;36.9;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;16;3407;2;1;1;oui;abstenu-identique;;valide;directe;81.4;1;40.9;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;4163;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;alerte-non-confirmee;non;oui;b1;choice;0;;;;;;;oui;b1;choice;;;;;non;oui;b1;;;ecrit-par-la-passe
+2026-11-06;2026-11-06T12-55;16;7045;2;1;1;oui;identique;0;valide;directe;10.3;2;40.9;;alerte-non-confirmee;oui;oui;b1;choice;0;1.9;juste;1.9;juste;;;oui;b1;choice;1.9;juste;1.9;juste;oui;oui;b1;1.9;juste;
+2026-11-06;2026-11-06T12-55;16;9002;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;alerte;non;oui;b1;window;66;;;;;;;oui;b1;window;;;;;non;oui;b1;;;ecrit-par-la-passe
+2026-11-06;2026-11-06T12-55;16;9119;2;1;1;oui;identique;0;valide;directe;6;2;215.4;coeur;marge-apres;oui;oui;ecart;choice;0;179.7;faute;179.7;faute;1;1;oui;ecart;choice;179.7;faute;179.7;faute;non;oui;ecart;179.7;faute;
+2026-11-06;2026-11-06T12-55;16;9123;2;1;1;oui;devient-posable;;valide;directe;4.5;1;224.1;marge-apres;marge-apres;oui;oui;serie;window;74;3.6;juste;3.6;juste;;;non;;;;;;;oui;oui;serie;3.6;juste;
+2026-11-06;2026-11-06T12-55;16;9124;1;1;0;oui;lot-seul;0;valide;reconstituee;4;1;184.8;marge-apres;alerte;non;oui;ecart;window;75;1.7;juste;179.2;faute;;;oui;ecart;window;1.7;juste;179.2;faute;non;oui;ecart;179.2;faute;ecrit-par-la-passe
+2026-11-06;2026-11-06T12-55;16;9125;1;1;0;oui;lot-seul;0;valide;reconstituee;2.6;1;183.2;marge-apres;alerte;non;oui;serie;window;77;0.9;juste;172.9;faute;;;oui;serie;window;0.9;juste;172.9;faute;non;oui;serie;172.9;faute;ecrit-par-la-passe
+2026-11-06;2026-11-06T12-55;16;9167;2;1;1;oui;identique;0;valide;directe;5.2;2;197.6;marge-apres;alerte;oui;oui;ecart;window;72;2.8;juste;2.8;juste;;;oui;ecart;window;2.8;juste;2.8;juste;non;oui;ecart;2.8;juste;
+2026-11-06;2026-11-06T12-55;16;9173;2;1;1;oui;abstenu-identique;;valide;directe;4.8;1;203.8;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;16;9175;2;1;1;oui;abstenu-identique;;valide;directe;5.3;1;202.4;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9263;2;1;1;oui;abstenu-identique;;valide;directe;5;2;159.1;;alerte;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9268;2;1;1;oui;identique;0;valide;directe;4.5;1;163;;alerte;oui;oui;ecart;window;75;3.3;juste;3.3;juste;;;oui;ecart;window;3.3;juste;3.3;juste;oui;oui;ecart;3.3;juste;
+2026-11-06;2026-11-06T12-55;16;9269;2;1;1;oui;identique;0;valide;directe;5.1;1;160.1;;alerte;oui;oui;ecart;choice;0;291.7;faute;291.7;faute;2;2;oui;ecart;choice;291.7;faute;291.7;faute;oui;oui;ecart;291.7;faute;
+2026-11-06;2026-11-06T12-55;16;9273;2;1;1;oui;abstenu-identique;;valide;directe;7.2;1;126.6;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9501;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9502;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9503;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9504;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-06;2026-11-06T12-55;16;9505;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-06;2026-11-06T12-55;16;9506;1;1;0;oui;lot-seul;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T16-13;3;1;2;1;1;oui;abstenu-identique;;valide;directe;11.4;1;0;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-08;2026-11-08T16-13;4;1;2;1;1;oui;identique;0;valide;directe;27.1;1;6.4;;;oui;oui;b1;choice;0;7.8;juste;7.8;juste;;;oui;b1;choice;7.8;juste;7.8;juste;non;oui;b1;7.8;juste;
+2026-11-08;2026-11-08T16-13;4;855;2;1;1;oui;abstenu-identique;;valide;directe;16.4;1;20.1;;alerte;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T16-13;4;1115;2;1;1;oui;abstenu-identique;;valide;directe;9.1;1;54.5;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T16-13;4;1116;2;1;1;oui;abstenu-identique;;valide;directe;9.7;1;56;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T16-13;4;2614;2;1;1;oui;abstenu-identique;;valide;directe;8.2;1;115.4;;alerte;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-08;2026-11-08T16-13;4;3970;1;1;0;oui;lot-seul;;valide;reconstituee;9.5;1;38.4;coeur-non-confirme;;non;non;;;;;;;;;;non;;;;;;;non;non;;;;ecrit-par-la-passe
+2026-11-08;2026-11-08T20-16;5;6246;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T20-16;5;6247;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;;non;oui;ecart;window;;;;;;;;oui;ecart;window;;;;;non;oui;ecart;;;ecrit-par-la-passe
+2026-11-08;2026-11-08T20-16;5;6248;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;;non;oui;serie;window;73;;;;;;;oui;serie;window;;;;;non;oui;serie;;;ecrit-par-la-passe
+2026-11-08;2026-11-08T20-16;5;6249;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;;non;oui;serie;window;67;;;;;;;oui;serie;window;;;;;non;oui;serie;;;ecrit-par-la-passe
+2026-11-08;2026-11-08T20-16;5;6697;1;1;0;oui;lot-seul;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;0;1;1;0;oui;lot-seul;;non-juge;;;2;;;;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;134;1;1;0;oui;lot-seul;;valide;directe;13;1;254.5;;alerte;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;135;1;1;0;oui;lot-seul;;valide;directe;6.7;1;253.8;;alerte;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;138;1;1;0;oui;lot-seul;;valide;directe;6.4;1;246.1;;alerte;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;139;1;1;0;oui;lot-seul;;valide;directe;6.2;1;238.6;;alerte;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;141;1;1;0;oui;lot-seul;;valide;directe;7.8;1;231.9;;alerte;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;174;2;1;1;oui;devient-posable;;valide;directe;7.7;1;221.5;;;oui;oui;b1;window;72;7.3;juste;7.3;juste;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;176;2;1;1;oui;devient-posable;;valide;directe;10.3;2;229.3;;;oui;oui;serie;choice;0;3.4;juste;3.4;juste;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;177;1;1;0;oui;lot-seul;;valide;directe;29.8;1;246.7;;alerte-non-confirmee;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;178;1;1;0;oui;lot-seul;;valide;directe;7.4;1;247.1;;alerte;non;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;179;1;1;0;oui;lot-seul;0;valide;directe;7.8;1;233;;alerte;non;oui;ecart;window;71;6.1;juste;6.1;juste;;;oui;ecart;window;6.1;juste;6.1;juste;non;oui;ecart;6.1;juste;
+2026-11-08;2026-11-08T21-30;6;180;1;1;0;oui;lot-seul;0;valide;directe;6.1;1;213.5;;alerte;non;oui;serie;window;;2.3;juste;2.3;juste;;;oui;serie;window;2.3;juste;2.3;juste;non;oui;serie;2.3;juste;
+2026-11-08;2026-11-08T21-30;6;202;2;1;1;oui;abstenu-identique;;valide;directe;31;1;96.6;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-08;2026-11-08T21-30;6;203;2;1;1;oui;abstenu-identique;;valide;directe;79;1;124.6;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;212;1;1;0;oui;lot-seul;0;valide;directe;6.9;1;219.7;;alerte;non;oui;ecart;window;69;2.5;juste;2.5;juste;;;oui;ecart;window;2.5;juste;2.5;juste;non;oui;ecart;2.5;juste;
+2026-11-08;2026-11-08T21-30;6;214;2;1;1;oui;identique;0.1;valide;directe;7.3;1;225.7;;alerte;oui;oui;serie;window;74;4.5;juste;4.5;juste;;;oui;serie;window;4.4;juste;4.4;juste;non;oui;serie;4.4;juste;
+2026-11-08;2026-11-08T21-30;6;215;2;1;1;oui;identique;0;valide;directe;81.6;1;228.9;;alerte;oui;oui;serie;window;78;1.9;juste;1.9;juste;;;oui;serie;window;1.9;juste;1.9;juste;non;oui;serie;1.9;juste;
+2026-11-08;2026-11-08T21-30;6;219;2;1;1;oui;devient-posable;;valide;directe;18.7;1;197.3;;alerte;oui;oui;serie;window;;14.9;10-50;14.9;10-50;1;;non;;;;;;;oui;oui;serie;14.9;10-50;
+2026-11-08;2026-11-08T21-30;6;225;2;1;1;oui;pose-changee;0.4;valide;directe;7;1;217.9;;alerte;oui;oui;serie;window;69;7.9;juste;7.9;juste;;;oui;ecart;window;8.3;juste;8.3;juste;oui;oui;serie;7.9;juste;
+2026-11-08;2026-11-08T21-30;6;226;2;1;1;oui;identique;0;valide;directe;9.4;1;226;;alerte;oui;oui;serie;window;69;1.1;juste;1.1;juste;;;oui;serie;window;1.1;juste;1.1;juste;non;oui;serie;1.1;juste;
+2026-11-08;2026-11-08T21-30;6;353;1;1;0;oui;lot-seul;0;valide;directe;5.7;3;122;;alerte-non-confirmee;non;oui;b1;window;79;1.2;juste;1.2;juste;;;oui;b1;window;1.2;juste;1.2;juste;non;oui;b1;1.2;juste;
+2026-11-08;2026-11-08T21-30;6;354;2;1;1;oui;pose-changee;0.1;valide;directe;5.3;2;119.5;;marge-apres;oui;oui;serie;window;76;2.1;juste;2.1;juste;;;oui;b1;window;2.1;juste;2.1;juste;non;oui;b1;2.1;juste;
+2026-11-08;2026-11-08T21-30;6;355;2;1;1;oui;pose-changee;0.2;valide;directe;3.9;1;119.3;;marge-apres;oui;oui;serie;window;78;3.1;juste;3.1;juste;;;oui;serie;window;3;juste;3;juste;non;oui;serie;3;juste;
+2026-11-08;2026-11-08T21-30;6;356;2;1;1;oui;pose-changee;0.1;valide;directe;4.1;1;120.8;;marge-apres;oui;oui;ecart;window;78;1.3;juste;1.3;juste;;;oui;serie;window;1.3;juste;1.3;juste;non;oui;serie;1.3;juste;
+2026-11-08;2026-11-08T21-30;6;357;2;1;1;oui;pose-changee;0.2;valide;directe;5.5;1;120.6;;marge-apres;oui;oui;ecart;window;;0.9;juste;0.9;juste;;;oui;serie;window;0.9;juste;0.9;juste;non;oui;serie;0.9;juste;
+2026-11-08;2026-11-08T21-30;6;362;2;1;1;oui;abstenu-identique;;valide;directe;7.7;1;122;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;363;2;1;1;oui;identique;0;valide;directe;4.4;1;117.4;;marge-apres;oui;oui;ecart;window;76;5.1;juste;5.1;juste;;;oui;ecart;window;5.1;juste;5.1;juste;non;oui;ecart;5.1;juste;
+2026-11-08;2026-11-08T21-30;6;364;2;1;1;oui;abstenu-identique;;valide;directe;4;1;6.4;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T21-30;6;365;2;1;1;oui;abstenu-identique;;valide;directe;3.1;1;3.7;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T22-28;7;2016;1;1;0;oui;lot-seul;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;non;non;;;;ecrit-par-la-passe
+2026-11-08;2026-11-08T22-28;7;2278;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-08;2026-11-08T22-28;7;3664;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-08;2026-11-08T22-28;7;4239;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;oui;non;;;;
+2026-11-08;2026-11-08T22-28;7;4240;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;non;non;;;;
+2026-11-08;2026-11-08T22-28;7;6357;1;1;0;oui;lot-seul;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;non;non;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T09-59;8;2430;5;2;3;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;3288;3;1;2;non;abstenu-identique;;sans-echo;;;0;;coeur-non-confirme;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;3289;3;1;2;non;abstenu-identique;;sans-echo;;;0;;coeur;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;3290;3;1;2;non;abstenu-identique;;sans-echo;;;0;;marge-apres;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;3291;3;1;2;non;abstenu-identique;;sans-echo;;;0;;marge-apres;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;6901;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;6902;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;6915;3;2;1;oui;pose-changee;1;sans-echo;;;0;;;;oui;oui;b1;choice;0;;;;;;;oui;b1;window;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;6938;5;2;3;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;6963;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;7138;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;7171;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;7172;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;7173;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;7174;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8047;4;2;2;oui;abstenu-identique;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T09-59;8;8048;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8049;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8050;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8051;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8052;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8053;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8054;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8056;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8094;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8095;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8096;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8097;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8098;5;2;3;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;8099;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8100;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8101;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8102;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8103;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8104;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8105;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8154;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8155;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;8156;5;2;3;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;9076;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9109;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9110;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9111;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9112;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9113;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9114;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9115;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9116;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9117;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9118;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9119;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9120;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9121;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9122;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9123;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9124;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9125;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9126;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9127;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9128;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9129;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9130;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9131;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9132;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9133;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9134;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9135;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9136;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9137;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9138;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9139;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9140;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9141;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9142;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9143;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9144;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9145;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9146;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9147;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9148;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9149;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9150;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9151;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9152;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9153;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9154;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9155;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9156;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9157;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9158;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9159;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9160;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9161;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9162;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9163;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9164;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9165;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9166;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9167;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9168;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9169;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9170;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9171;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9172;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9173;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9174;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9175;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9176;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9177;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9178;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9179;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9180;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9181;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9350;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9351;5;2;3;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;9352;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9353;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9514;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9683;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9684;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9685;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9686;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9687;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9688;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9689;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9690;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9691;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9692;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9713;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9714;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9715;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9716;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9717;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9718;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9719;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9728;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9729;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9730;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9731;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9732;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9733;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9755;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9756;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9757;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9758;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9759;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9760;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9761;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9762;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9763;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9764;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9765;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9766;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;marge-apres;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9773;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9774;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9775;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9811;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9846;4;2;2;oui;devient-posable;;sans-echo;;;0;;;alerte-non-confirmee;non;oui;ecart;choice;0;;;;;;;non;;;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T09-59;8;9847;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9887;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte-non-confirmee;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9888;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9889;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9890;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9891;5;2;3;oui;devient-posable;;sans-echo;;;0;;;alerte;oui;oui;ecart;choice;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T09-59;8;9892;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9893;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T09-59;8;9894;3;1;2;non;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;pose-par-le-lot ecriture-entre-deux
+2026-11-09;2026-11-09T12-14;11;0;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T12-14;11;159;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T12-14;11;199;2;1;1;oui;pose-changee;1.5;sans-echo;;;0;;;alerte-non-confirmee;oui;oui;serie;window;75;;;;;;;oui;b1;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T12-14;11;200;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;alerte;non;oui;serie;window;77;;;;;;;oui;serie;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T12-14;11;201;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;alerte;non;oui;serie;window;;;;;;;;oui;serie;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T12-14;11;202;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;marge-apres;non;oui;serie;window;73;;;;;;;oui;serie;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T12-14;11;203;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;marge-apres;non;oui;serie;window;;;;;;;;oui;serie;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T12-14;11;204;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;marge-apres;non;oui;serie;window;72;;;;;;;oui;serie;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T12-14;11;205;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;marge-apres;non;oui;serie;window;74;;;;;;;oui;serie;window;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T16-50;12;632;1;1;0;oui;lot-seul;;sans-echo;;;0;;;alerte;non;non;;;;;;;;;;non;;;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T16-50;12;2200;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;2294;2;1;1;oui;identique;0;sans-echo;;;0;;;alerte-non-confirmee;oui;oui;b1;choice;63;;;;;;;oui;b1;choice;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;7193;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;7579;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;alerte-non-confirmee;non;oui;ecart;choice;0;;;;;;;oui;ecart;choice;;;;;;;;;;ecrit-par-la-passe
+2026-11-09;2026-11-09T16-50;12;7583;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;7779;2;1;1;oui;identique;0;sans-echo;;;0;;;;oui;oui;b1;window;55;;;;;;;oui;b1;window;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;7789;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;8049;2;1;1;oui;pose-changee;0.4;sans-echo;;;0;;;alerte-non-confirmee;oui;oui;b1;choice;0;;;;;;;oui;ecart;choice;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;8056;2;1;1;oui;pose-changee;0.6;sans-echo;;;0;;;;oui;oui;serie;window;52;;;;;;;oui;ecart;window;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;8058;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;;non;oui;serie;window;;;;;;;;oui;serie;window;;;;;;;;;;
+2026-11-09;2026-11-09T16-50;12;8120;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T17-51;13;8582;1;1;0;oui;lot-seul;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T19-43;14;0;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-09;2026-11-09T19-43;14;2095;2;1;1;oui;identique;0;sans-echo;;;0;;;;oui;oui;b1;window;53;;;;;;;oui;b1;window;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;241;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;1700;2;1;1;oui;devient-abstenu;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;oui;b1;choice;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;2288;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;alerte;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;3090;2;1;1;oui;abstenu-identique;;sans-echo;;;0;;;;oui;non;;;;;;;;;;non;;;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;7817;2;1;1;oui;pose-changee;0;sans-echo;;;0;;;alerte;oui;oui;serie;window;61;;;;;;;oui;b1;window;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;7818;2;1;1;oui;pose-changee;8;sans-echo;;;0;;;alerte;oui;oui;serie;window;;;;;;;;oui;serie;window;;;;;;;;;;
+2026-11-10;2026-11-10T07-55;9;7819;2;1;1;oui;pose-changee;2.1;sans-echo;;;0;;;alerte;oui;oui;serie;window;;;;;;;;oui;serie;choice;;;;;;;;;;ecrit-par-la-passe
+2026-11-10;2026-11-10T07-55;9;7820;1;1;0;oui;lot-seul;0;sans-echo;;;0;;;alerte;non;oui;ecart;choice;0;;;;;;;oui;ecart;choice;;;;;;;;;;ecrit-par-la-passe
+2026-11-10;2026-11-10T07-55;9;8326;1;1;0;oui;lot-seul;;sans-echo;;;0;;;;non;non;;;;;;;;;;non;;;;;;;;;;;;

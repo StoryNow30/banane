@@ -1,0 +1,357 @@
+CH-100, mesure 1 : B1-écart, base à battre (ombre consignée au journal).
+Définition : écart = pire rail, 3D, pose de l'ombre contre la pose finale de l'opérateur ramenée au départ du lot ; juste = 10 mm ou moins ; mauvaise voie = plus de 50 mm ; validation sans mouvement de moins de 1.5 s écartée (D-285) ; séries à 10 cuts au plus ; seules les ombres des différés du lot sont jugées.
+
+LOTS LUS
+  2026-11-04T09-49 · paquet ? · 2026-11-04T08:34 → 2026-11-04T09:49 · parties 0, 1, 2, 3, 4 · événements 0 · Écho non lu (aucun événement à juger)
+  2026-11-04T21-02 · paquet ? · 2026-11-04T18:13 → 2026-11-04T21:02 · parties 0, 1, 2, 3, 4, 5, 6, 7 · événements 0 · Écho non lu (aucun événement à juger)
+  2026-11-04T18-04 · paquet ? · 2026-11-04T11:11 → 2026-11-04T18:04 · parties 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 · événements 0 · Écho non lu (aucun événement à juger)
+  2026-11-05T11-23 · paquet 6291571 · 2026-11-05T07:23 → 2026-11-05T11:23 · parties 8, 9, 10, 11, 12 · événements 0 · Écho non lu (aucun événement à juger)
+  2026-11-06T12-55 · paquet 2bc1f56 · 2026-11-06T07:19 → 2026-11-06T12:55 · parties 13, 14, 15, 16 · événements 88 · Écho parties 13, 14, 15, 16
+  2026-11-08T16-13 · paquet ba67380 · 2026-11-08T15:37 → 2026-11-08T16:13 · parties 3, 4 · événements 13 · Écho parties 3, 4, 6
+  2026-11-08T20-16 · paquet 16c60f1 · 2026-11-08T20:03 → 2026-11-08T20:16 · parties 5 · événements 6 · Écho parties 3, 4, 6
+  2026-11-08T21-30 · paquet c596cdd · 2026-11-08T21:12 → 2026-11-08T21:30 · parties 6 · événements 46 · Écho parties 3, 4, 6
+  2026-11-08T22-28 · paquet daa2736 · 2026-11-08T22:13 → 2026-11-08T22:28 · parties 7 · événements 10 · Écho parties 3, 4, 6
+  2026-11-09T09-59 · paquet 27eb961 · 2026-11-09T09:16 → 2026-11-09T09:59 · parties 8 · événements 515 · Écho aucun
+  2026-11-09T12-14 · paquet 858295a · 2026-11-09T12:00 → 2026-11-09T12:14 · parties 11 · événements 12 · Écho aucun
+  2026-11-09T16-50 · paquet d4238bf · 2026-11-09T14:53 → 2026-11-09T16:50 · parties 12 · événements 21 · Écho aucun
+  2026-11-09T17-51 · paquet 0fb3777 · 2026-11-09T17:45 → 2026-11-09T17:51 · parties 13 · événements 1 · Écho aucun
+  2026-11-09T19-43 · paquet 33e593d · 2026-11-09T19:33 → 2026-11-09T19:43 · parties 14 · événements 4 · Écho aucun
+  2026-11-10T07-55 · paquet 286f541 · 2026-11-10T07:17 → 2026-11-10T07:55 · parties 9 · événements 16 · Écho aucun
+
+Premier lot qui consigne l'événement : 2026-11-06T12-55 (paquet 2bc1f56).
+
+INVENTAIRE ET JUGEMENT PAR LOT ET PAR PARTIE
+2026-11-06T12-55 · partie 13 · paquet 2bc1f56
+  événements 14 (du lot 7, de la passe 7), cuts distincts 7 : différés du lot 7, autres 0 ; écrits par la passe 0 ; lot : 353 cibles, 7 différés
+  dernier contre événement du lot (différés) : abstenu-identique 6, pose-changee 1
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 1 (b1 1), jugés 1 : à 10 mm 1, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 4
+  lecture « dernier » (jointure) : 7 différés du lot avec événement, posables 1 (b1 1), abstenus 6
+    posables, état Écho : valide 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 2,6 mm ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 2,6 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 2,6 mm
+    source b1 (1 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 1 / 1, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 7, posés 1, justes 1/7 (14,3 % [2,6 ; 51,3]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 7, posés 1, justes 1/7 (14,3 % [2,6 ; 51,3]), 10 à 50 0, plus de 50 0/1 (0 % [0 ; 79,4])
+  lecture « événement du lot » : 7 différés du lot avec événement, posables 1 (b1 1), abstenus 6
+    posables, état Écho : valide 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 3,2 mm ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 3,2 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 3,2 mm
+    source b1 (1 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 1 / 1, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 7, posés 1, justes 1/7 (14,3 % [2,6 ; 51,3]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 7, posés 1, justes 1/7 (14,3 % [2,6 ; 51,3]), 10 à 50 0, plus de 50 0/1 (0 % [0 ; 79,4])
+
+2026-11-06T12-55 · partie 15 · paquet 2bc1f56
+  événements 37 (du lot 19, de la passe 18), cuts distincts 19 : différés du lot 19, autres 0 ; écrits par la passe 1 ; lot : 161 cibles, 19 différés
+  dernier contre événement du lot (différés) : abstenu-identique 5, pose-changee 10, devient-posable 1, lot-seul 1, identique 2
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 13 (b1 2, serie 10, ecart 1), jugés 13 : à 10 mm 12, > 10 mm 1, > 50 mm 1 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 7
+  lecture « dernier » (jointure) : 19 différés du lot avec événement, posables 14 (serie 13, b1 1), abstenus 5
+    posables, état Écho : valide 14 ; écrits par la passe 1
+    SANS les « visité sans action » (validation observée) : 14 jugés ; justes (10 mm ou moins) 14/14 (100 % [78,5 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/14 (0 % [0 ; 21,5]) ; max 8,1 mm ; dont 1 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 14 jugés ; justes (10 mm ou moins) 14/14 (100 % [78,5 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/14 (0 % [0 ; 21,5]) ; max 8,1 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 14 jugés ; justes (10 mm ou moins) 13/14 (92,9 % [68,5 ; 98,7]) ; 10 à 50 mm 0 ; plus de 50 mm 1/14 (7,1 % [1,3 ; 31,5]) ; max 113,6 mm
+    source serie (13 posables) : validés 13, justes 13, 10 à 50 0, plus de 50 0 ; avec visites 13, justes 13, 10 à 50 0, plus de 50 0
+    source b1 (1 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 3 / 3, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 19, posés 14, justes 14/19 (73,7 % [51,2 ; 88,2]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 19, posés 14, justes 14/19 (73,7 % [51,2 ; 88,2]), 10 à 50 0, plus de 50 0/14 (0 % [0 ; 21,5])
+  lecture « événement du lot » : 19 différés du lot avec événement, posables 13 (b1 3, ecart 3, serie 7), abstenus 6
+    posables, état Écho : valide 13 ; écrits par la passe 1
+    SANS les « visité sans action » (validation observée) : 13 jugés ; justes (10 mm ou moins) 13/13 (100 % [77,2 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/13 (0 % [0 ; 22,8]) ; max 9,2 mm ; dont 1 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 13 jugés ; justes (10 mm ou moins) 13/13 (100 % [77,2 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/13 (0 % [0 ; 22,8]) ; max 9,2 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 13 jugés ; justes (10 mm ou moins) 12/13 (92,3 % [66,7 ; 98,6]) ; 10 à 50 mm 0 ; plus de 50 mm 1/13 (7,7 % [1,4 ; 33,3]) ; max 113,6 mm
+    source b1 (3 posables) : validés 3, justes 3, 10 à 50 0, plus de 50 0 ; avec visites 3, justes 3, 10 à 50 0, plus de 50 0
+    source ecart (3 posables) : validés 3, justes 3, 10 à 50 0, plus de 50 0 ; avec visites 3, justes 3, 10 à 50 0, plus de 50 0
+    source serie (7 posables) : validés 7, justes 7, 10 à 50 0, plus de 50 0 ; avec visites 7, justes 7, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 3 / 3, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 19, posés 13, justes 13/19 (68,4 % [46 ; 84,6]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 19, posés 13, justes 13/19 (68,4 % [46 ; 84,6]), 10 à 50 0, plus de 50 0/13 (0 % [0 ; 22,8])
+
+2026-11-06T12-55 · partie 16 · paquet 2bc1f56
+  événements 37 (du lot 21, de la passe 16), cuts distincts 21 : différés du lot 21, autres 0 ; écrits par la passe 4 ; lot : 431 cibles, 21 différés
+  dernier contre événement du lot (différés) : abstenu-identique 10, lot-seul 5, identique 5, devient-posable 1
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 10 (b1 3, ecart 5, serie 2), jugés 8 : à 10 mm 4, > 10 mm 4, > 50 mm 4 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 10
+  lecture « dernier » (jointure) : 21 différés du lot avec événement, posables 10 (b1 3, ecart 5, serie 2), abstenus 11
+    posables, état Écho : sans-echo 2, valide 8 ; écrits par la passe 4
+    SANS les « visité sans action » (validation observée) : 8 jugés ; justes (10 mm ou moins) 6/8 (75 % [40,9 ; 92,9]) ; 10 à 50 mm 0 ; plus de 50 mm 2/8 (25 % [7,2 ; 59,1]) ; max 291,7 mm ; dont 2 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 8 jugés ; justes (10 mm ou moins) 6/8 (75 % [40,9 ; 92,9]) ; 10 à 50 mm 0 ; plus de 50 mm 2/8 (25 % [7,2 ; 59,1]) ; max 291,7 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 8 jugés ; justes (10 mm ou moins) 4/8 (50 % [21,5 ; 78,5]) ; 10 à 50 mm 0 ; plus de 50 mm 4/8 (50 % [21,5 ; 78,5]) ; max 291,7 mm
+    source b1 (3 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    source ecart (5 posables) : validés 5, justes 3, 10 à 50 0, plus de 50 2 ; avec visites 5, justes 3, 10 à 50 0, plus de 50 2
+    source serie (2 posables) : validés 2, justes 2, 10 à 50 0, plus de 50 0 ; avec visites 2, justes 2, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 2 / 2 ; plus de 10 mm 2 / 2 ; plages jugées 4 / 4, fautives (plus de 50 mm) 2 / 2
+    comme la référence : différés jugés 13, posés 8, justes 6/13 (46,2 % [23,2 ; 70,9]), 10 à 50 0, plus de 50 2 ; correction de plus de 10 mm : 13, posés 8, justes 6/13 (46,2 % [23,2 ; 70,9]), 10 à 50 0, plus de 50 2/8 (25 % [7,2 ; 59,1])
+  lecture « événement du lot » : 21 différés du lot avec événement, posables 9 (b1 3, ecart 5, serie 1), abstenus 12
+    posables, état Écho : sans-echo 2, valide 7 ; écrits par la passe 4
+    SANS les « visité sans action » (validation observée) : 7 jugés ; justes (10 mm ou moins) 5/7 (71,4 % [35,9 ; 91,8]) ; 10 à 50 mm 0 ; plus de 50 mm 2/7 (28,6 % [8,2 ; 64,1]) ; max 291,7 mm ; dont 2 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 7 jugés ; justes (10 mm ou moins) 5/7 (71,4 % [35,9 ; 91,8]) ; 10 à 50 mm 0 ; plus de 50 mm 2/7 (28,6 % [8,2 ; 64,1]) ; max 291,7 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 7 jugés ; justes (10 mm ou moins) 3/7 (42,9 % [15,8 ; 75]) ; 10 à 50 mm 0 ; plus de 50 mm 4/7 (57,1 % [25,1 ; 84,2]) ; max 291,7 mm
+    source b1 (3 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    source ecart (5 posables) : validés 5, justes 3, 10 à 50 0, plus de 50 2 ; avec visites 5, justes 3, 10 à 50 0, plus de 50 2
+    source serie (1 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 2 / 2 ; plus de 10 mm 2 / 2 ; plages jugées 4 / 4, fautives (plus de 50 mm) 2 / 2
+    comme la référence : différés jugés 13, posés 7, justes 5/13 (38,5 % [17,7 ; 64,5]), 10 à 50 0, plus de 50 2 ; correction de plus de 10 mm : 13, posés 7, justes 5/13 (38,5 % [17,7 ; 64,5]), 10 à 50 0, plus de 50 2/7 (28,6 % [8,2 ; 64,1])
+
+2026-11-08T16-13 · partie 3 · paquet ba67380
+  événements 2 (du lot 1, de la passe 1), cuts distincts 1 : différés du lot 1, autres 0 ; écrits par la passe 0 ; lot : 21 cibles, 1 différés
+  dernier contre événement du lot (différés) : abstenu-identique 1
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 1 différés du lot avec événement, posables 0 (aucune), abstenus 1
+    posables, état Écho : aucune ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 1, posés 0, justes 0/1 (0 % [0 ; 79,4]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 1 différés du lot avec événement, posables 0 (aucune), abstenus 1
+    posables, état Écho : aucune ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 1, posés 0, justes 0/1 (0 % [0 ; 79,4]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-08T16-13 · partie 4 · paquet ba67380
+  événements 11 (du lot 6, de la passe 5), cuts distincts 6 : différés du lot 6, autres 0 ; écrits par la passe 1 ; lot : 95 cibles, 6 différés
+  dernier contre événement du lot (différés) : identique 1, abstenu-identique 4, lot-seul 1
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 1 (b1 1), jugés 1 : à 10 mm 1, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 4
+  lecture « dernier » (jointure) : 6 différés du lot avec événement, posables 1 (b1 1), abstenus 5
+    posables, état Écho : valide 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 7,8 mm ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 7,8 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 7,8 mm
+    source b1 (1 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 1 / 1, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 6, posés 1, justes 1/6 (16,7 % [3 ; 56,4]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 5, posés 0, justes 0/5 (0 % [0 ; 43,5]), 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 6 différés du lot avec événement, posables 1 (b1 1), abstenus 5
+    posables, état Écho : valide 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 7,8 mm ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 7,8 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 1 jugés ; justes (10 mm ou moins) 1/1 (100 % [20,7 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/1 (0 % [0 ; 79,4]) ; max 7,8 mm
+    source b1 (1 posables) : validés 1, justes 1, 10 à 50 0, plus de 50 0 ; avec visites 1, justes 1, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 1 / 1, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 6, posés 1, justes 1/6 (16,7 % [3 ; 56,4]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 5, posés 0, justes 0/5 (0 % [0 ; 43,5]), 10 à 50 0, plus de 50 0/0
+
+2026-11-08T20-16 · partie 5 · paquet 16c60f1
+  événements 6 (du lot 5, de la passe 1), cuts distincts 5 : différés du lot 5, autres 0 ; écrits par la passe 3 ; lot : 59 cibles, 5 différés
+  dernier contre événement du lot (différés) : abstenu-identique 1, lot-seul 4
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 3 (ecart 1, serie 2), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 1
+  lecture « dernier » (jointure) : 5 différés du lot avec événement, posables 3 (ecart 1, serie 2), abstenus 2
+    posables, état Écho : sans-echo 3 ; écrits par la passe 3
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source ecart (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source serie (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 5 différés du lot avec événement, posables 3 (ecart 1, serie 2), abstenus 2
+    posables, état Écho : sans-echo 3 ; écrits par la passe 3
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source ecart (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source serie (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-08T21-30 · partie 6 · paquet c596cdd
+  événements 46 (du lot 29, de la passe 17), cuts distincts 29 : différés du lot 29, autres 0 ; écrits par la passe 0 ; lot : 223 cibles, 30 différés
+  dernier contre événement du lot (différés) : lot-seul 12, devient-posable 3, abstenu-identique 5, identique 4, pose-changee 5
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 14 (ecart 3, serie 9, b1 2), jugés 14 : à 10 mm 13, > 10 mm 1, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 14
+  lecture « dernier » (jointure) : 29 différés du lot avec événement, posables 16 (b1 2, serie 9, ecart 5), abstenus 13
+    posables, état Écho : valide 16 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 16 jugés ; justes (10 mm ou moins) 15/16 (93,8 % [71,7 ; 98,9]) ; 10 à 50 mm 1 ; plus de 50 mm 0/16 (0 % [0 ; 19,4]) ; max 14,9 mm ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 16 jugés ; justes (10 mm ou moins) 15/16 (93,8 % [71,7 ; 98,9]) ; 10 à 50 mm 1 ; plus de 50 mm 0/16 (0 % [0 ; 19,4]) ; max 14,9 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 16 jugés ; justes (10 mm ou moins) 15/16 (93,8 % [71,7 ; 98,9]) ; 10 à 50 mm 1 ; plus de 50 mm 0/16 (0 % [0 ; 19,4]) ; max 14,9 mm
+    source b1 (2 posables) : validés 2, justes 2, 10 à 50 0, plus de 50 0 ; avec visites 2, justes 2, 10 à 50 0, plus de 50 0
+    source serie (9 posables) : validés 9, justes 8, 10 à 50 1, plus de 50 0 ; avec visites 9, justes 8, 10 à 50 1, plus de 50 0
+    source ecart (5 posables) : validés 5, justes 5, 10 à 50 0, plus de 50 0 ; avec visites 5, justes 5, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 1 / 1 ; plages jugées 3 / 3, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 28, posés 16, justes 15/28 (53,6 % [35,8 ; 70,5]), 10 à 50 1, plus de 50 0 ; correction de plus de 10 mm : 26, posés 16, justes 15/26 (57,7 % [39 ; 74,5]), 10 à 50 1, plus de 50 0/16 (0 % [0 ; 19,4])
+  lecture « événement du lot » : 29 différés du lot avec événement, posables 13 (ecart 4, serie 7, b1 2), abstenus 16
+    posables, état Écho : valide 13 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 13 jugés ; justes (10 mm ou moins) 13/13 (100 % [77,2 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/13 (0 % [0 ; 22,8]) ; max 8,3 mm ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 13 jugés ; justes (10 mm ou moins) 13/13 (100 % [77,2 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/13 (0 % [0 ; 22,8]) ; max 8,3 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 13 jugés ; justes (10 mm ou moins) 13/13 (100 % [77,2 ; 100]) ; 10 à 50 mm 0 ; plus de 50 mm 0/13 (0 % [0 ; 22,8]) ; max 8,3 mm
+    source ecart (4 posables) : validés 4, justes 4, 10 à 50 0, plus de 50 0 ; avec visites 4, justes 4, 10 à 50 0, plus de 50 0
+    source serie (7 posables) : validés 7, justes 7, 10 à 50 0, plus de 50 0 ; avec visites 7, justes 7, 10 à 50 0, plus de 50 0
+    source b1 (2 posables) : validés 2, justes 2, 10 à 50 0, plus de 50 0 ; avec visites 2, justes 2, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 3 / 3, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 28, posés 13, justes 13/28 (46,4 % [29,5 ; 64,2]), 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 26, posés 13, justes 13/26 (50 % [32,1 ; 67,9]), 10 à 50 0, plus de 50 0/13 (0 % [0 ; 22,8])
+
+2026-11-08T22-28 · partie 7 · paquet daa2736
+  événements 10 (du lot 6, de la passe 4), cuts distincts 6 : différés du lot 6, autres 0 ; écrits par la passe 2 ; lot : 93 cibles, 6 différés
+  dernier contre événement du lot (différés) : lot-seul 2, abstenu-identique 4
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 1
+  lecture « dernier » (jointure) : 6 différés du lot avec événement, posables 0 (aucune), abstenus 6
+    posables, état Écho : aucune ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 6 différés du lot avec événement, posables 0 (aucune), abstenus 6
+    posables, état Écho : aucune ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-09T09-59 · partie 8 · paquet 27eb961
+  événements 515 (du lot 176, de la passe 339), cuts distincts 167 : différés du lot 9, autres 158 ; écrits par la passe 2 ; lot : 342 cibles, 9 différés
+  dernier contre événement du lot (différés) : abstenu-identique 6, pose-changee 1, devient-posable 2
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 9 différés du lot avec événement, posables 3 (b1 1, ecart 2), abstenus 6
+    posables, état Écho : sans-echo 3 ; écrits par la passe 1
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source ecart (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 9 différés du lot avec événement, posables 1 (b1 1), abstenus 8
+    posables, état Écho : sans-echo 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-09T12-14 · partie 11 · paquet 858295a
+  événements 12 (du lot 9, de la passe 3), cuts distincts 9 : différés du lot 9, autres 0 ; écrits par la passe 7 ; lot : 136 cibles, 9 différés
+  dernier contre événement du lot (différés) : abstenu-identique 2, pose-changee 1, lot-seul 6
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 9 différés du lot avec événement, posables 7 (serie 7), abstenus 2
+    posables, état Écho : sans-echo 7 ; écrits par la passe 7
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source serie (7 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 9 différés du lot avec événement, posables 7 (b1 1, serie 6), abstenus 2
+    posables, état Écho : sans-echo 7 ; écrits par la passe 7
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source serie (6 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-09T16-50 · partie 12 · paquet d4238bf
+  événements 21 (du lot 12, de la passe 9), cuts distincts 12 : différés du lot 12, autres 0 ; écrits par la passe 2 ; lot : 296 cibles, 12 différés
+  dernier contre événement du lot (différés) : lot-seul 3, abstenu-identique 5, identique 2, pose-changee 2
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 12 différés du lot avec événement, posables 6 (b1 3, ecart 1, serie 2), abstenus 6
+    posables, état Écho : sans-echo 6 ; écrits par la passe 1
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (3 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source ecart (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source serie (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 12 différés du lot avec événement, posables 6 (b1 2, ecart 3, serie 1), abstenus 6
+    posables, état Écho : sans-echo 6 ; écrits par la passe 1
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source ecart (3 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source serie (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-09T17-51 · partie 13 · paquet 0fb3777
+  événements 1 (du lot 1, de la passe 0), cuts distincts 1 : différés du lot 1, autres 0 ; écrits par la passe 0 ; lot : 54 cibles, 1 différés
+  dernier contre événement du lot (différés) : lot-seul 1
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 1 différés du lot avec événement, posables 0 (aucune), abstenus 1
+    posables, état Écho : aucune ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 1 différés du lot avec événement, posables 0 (aucune), abstenus 1
+    posables, état Écho : aucune ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-09T19-43 · partie 14 · paquet 33e593d
+  événements 4 (du lot 2, de la passe 2), cuts distincts 2 : différés du lot 2, autres 0 ; écrits par la passe 0 ; lot : 98 cibles, 2 différés
+  dernier contre événement du lot (différés) : abstenu-identique 1, identique 1
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 2 différés du lot avec événement, posables 1 (b1 1), abstenus 1
+    posables, état Écho : sans-echo 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 2 différés du lot avec événement, posables 1 (b1 1), abstenus 1
+    posables, état Écho : sans-echo 1 ; écrits par la passe 0
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+2026-11-10T07-55 · partie 9 · paquet 286f541
+  événements 16 (du lot 9, de la passe 7), cuts distincts 9 : différés du lot 9, autres 0 ; écrits par la passe 2 ; lot : 378 cibles, 9 différés
+  dernier contre événement du lot (différés) : abstenu-identique 3, devient-abstenu 1, pose-changee 3, lot-seul 2
+  bloc de juger-lot refait à l'identique (dernier dans l'ordre du FICHIER, méthode directe) : posables 0 (aucune), jugés 0 : à 10 mm 0, > 10 mm 0, > 50 mm 0 ; cuts où il retient l'événement du lot alors qu'un événement de la passe existe : 0
+  lecture « dernier » (jointure) : 9 différés du lot avec événement, posables 4 (serie 3, ecart 1), abstenus 5
+    posables, état Écho : sans-echo 4 ; écrits par la passe 2
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source serie (3 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source ecart (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+  lecture « événement du lot » : 9 différés du lot avec événement, posables 5 (b1 2, serie 2, ecart 1), abstenus 4
+    posables, état Écho : sans-echo 5 ; écrits par la passe 2
+    SANS les « visité sans action » (validation observée) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0 ; dont 0 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 0 jugés ; justes (10 mm ou moins) 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    source b1 (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source serie (2 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    source ecart (1 posables) : validés 0, justes 0, 10 à 50 0, plus de 50 0 ; avec visites 0, justes 0, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 0 / 0 ; plus de 10 mm 0 / 0 ; plages jugées 0 / 0, fautives (plus de 50 mm) 0 / 0
+    comme la référence : différés jugés 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0 ; correction de plus de 10 mm : 0, posés 0, justes 0/0, 10 à 50 0, plus de 50 0/0
+
+TOTAL DES LOTS D'APRÈS LE 2026-11-05
+  lecture « dernier » (jointure) : 136 différés du lot avec événement, posables 66 (b1 13, serie 38, ecart 15), abstenus 70
+    posables, état Écho : valide 40, sans-echo 26 ; écrits par la passe 19
+    SANS les « visité sans action » (validation observée) : 40 jugés ; justes (10 mm ou moins) 37/40 (92,5 % [80,1 ; 97,4]) ; 10 à 50 mm 1 ; plus de 50 mm 2/40 (5 % [1,4 ; 16,5]) ; max 291,7 mm ; dont 3 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 40 jugés ; justes (10 mm ou moins) 37/40 (92,5 % [80,1 ; 97,4]) ; 10 à 50 mm 1 ; plus de 50 mm 2/40 (5 % [1,4 ; 16,5]) ; max 291,7 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 40 jugés ; justes (10 mm ou moins) 34/40 (85 % [70,9 ; 92,9]) ; 10 à 50 mm 1 ; plus de 50 mm 5/40 (12,5 % [5,5 ; 26,1]) ; max 291,7 mm
+    source b1 (13 posables) : validés 6, justes 6, 10 à 50 0, plus de 50 0 ; avec visites 6, justes 6, 10 à 50 0, plus de 50 0
+    source serie (38 posables) : validés 24, justes 23, 10 à 50 1, plus de 50 0 ; avec visites 24, justes 23, 10 à 50 1, plus de 50 0
+    source ecart (15 posables) : validés 10, justes 8, 10 à 50 0, plus de 50 2 ; avec visites 10, justes 8, 10 à 50 0, plus de 50 2
+    séries (sans / avec visites) : plus de 50 mm 2 / 2 ; plus de 10 mm 3 / 3 ; plages jugées 12 / 12, fautives (plus de 50 mm) 2 / 2
+    comme la référence : différés jugés 74, posés 40, justes 37/74 (50 % [38,9 ; 61,1]), 10 à 50 1, plus de 50 2 ; correction de plus de 10 mm : 70, posés 39, justes 36/70 (51,4 % [40 ; 62,7]), 10 à 50 1, plus de 50 2/39 (5,1 % [1,4 ; 16,9])
+  lecture « événement du lot » : 136 différés du lot avec événement, posables 60 (b1 17, ecart 17, serie 26), abstenus 76
+    posables, état Écho : valide 35, sans-echo 25 ; écrits par la passe 18
+    SANS les « visité sans action » (validation observée) : 35 jugés ; justes (10 mm ou moins) 33/35 (94,3 % [81,4 ; 98,4]) ; 10 à 50 mm 0 ; plus de 50 mm 2/35 (5,7 % [1,6 ; 18,6]) ; max 291,7 mm ; dont 3 reconstituée(s)
+    AVEC les 0 « visité sans action » (dont 0 sur un départ non validé) : 35 jugés ; justes (10 mm ou moins) 33/35 (94,3 % [81,4 ; 98,4]) ; 10 à 50 mm 0 ; plus de 50 mm 2/35 (5,7 % [1,6 ; 18,6]) ; max 291,7 mm
+    méthode directe partout, sans reconstitution (validés, pour comparaison) : 35 jugés ; justes (10 mm ou moins) 30/35 (85,7 % [70,6 ; 93,7]) ; 10 à 50 mm 0 ; plus de 50 mm 5/35 (14,3 % [6,3 ; 29,4]) ; max 291,7 mm
+    source b1 (17 posables) : validés 8, justes 8, 10 à 50 0, plus de 50 0 ; avec visites 8, justes 8, 10 à 50 0, plus de 50 0
+    source ecart (17 posables) : validés 12, justes 10, 10 à 50 0, plus de 50 2 ; avec visites 12, justes 10, 10 à 50 0, plus de 50 2
+    source serie (26 posables) : validés 15, justes 15, 10 à 50 0, plus de 50 0 ; avec visites 15, justes 15, 10 à 50 0, plus de 50 0
+    séries (sans / avec visites) : plus de 50 mm 2 / 2 ; plus de 10 mm 2 / 2 ; plages jugées 12 / 12, fautives (plus de 50 mm) 2 / 2
+    comme la référence : différés jugés 74, posés 35, justes 33/74 (44,6 % [33,8 ; 55,9]), 10 à 50 0, plus de 50 2 ; correction de plus de 10 mm : 70, posés 34, justes 32/70 (45,7 % [34,6 ; 57,3]), 10 à 50 0, plus de 50 2/34 (5,9 % [1,6 ; 19,1])
+
+Référence à égaler (CH-057 § 2 (rejeu, 9 parties des 04 et 05/11)) : 44 justes sur 67 différés à correction de plus de 10 mm, 5 faux de 10 à 50 mm, 0 sur 49 posés à plus de 50 mm.
+CONCLUABLE : 40 poses d'ombre jugées (validation observée) sur les lots d'après le 2026-11-05 (seuil 30).

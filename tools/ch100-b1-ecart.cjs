@@ -7,7 +7,7 @@
  * (ce n'est pas un rejeu : la référence de CH-057 § 2, 44 justes sur 67, vient du rejeu `tools/rejeu-voie-predite.cjs`).
  *
  *   node tools/ch100-b1-ecart.cjs --collections <banane-data/collections> [--depuis 2026-11-04] [--jusqu 2026-11-10]
- *        [--apres 2026-11-05] [--ecart-serie 10] [--json sortie.json] [--csv sortie.csv]
+ *        [--apres 2026-11-05] [--ecart-serie 10] [--json sortie.json [--json-cuts]] [--csv sortie.csv]
  *   node tools/ch100-b1-ecart.cjs --lot <dossier-d-un-lot> [--echo <dossier>]... [--nom étiquette] [--json …] [--csv …]
  *
  * `--collections` : chaque collection `AAAA-MM-JJ_*` de la plage est lue dans son `raw/` ; les archives `ariane-lot-<horodatage>` y sont
@@ -135,7 +135,15 @@ function mesurerPartie({ journal, echo, partie, lotNom }) {
     if (e.type === 'passe-differes-ecriture' && e.resultat === 'ecrit' && e.identity && e.identity.part === partie && (e.batchId ? batchs.has(e.batchId) : instant(e) >= run.t0)) {
       const d = decalDe(e.decal); ecrits.set(e.identity.cut, { t: instant(e), decal: d });
     }
-    if (e.type === 'esv-observation' && e.kind === 'write' && Number.isInteger(e.rowIndex) && e.body && e.body.ExtractionStatus === 'valid' && Number.isInteger(e.status) && e.status >= 200 && e.status < 300
+  }
+  /* Les écritures ne portent pas la partie, seulement le numéro de ligne (le même numéro existe dans plusieurs parties) : la liste de la partie est
+   * reconnue par la clé de liste la plus fréquente des écritures faites pendant ses lots (clé lue, jamais sortie). */
+  const cleListe = e => String(e.railPairId || '').split('/')[0] || null, estEcriture = e => e.type === 'esv-observation' && e.kind === 'write' && Number.isInteger(e.rowIndex);
+  const votes = new Map();
+  for (const e of run.ev) if (estEcriture(e) && cleListe(e) && run.lots.some(l => instant(e) >= l.t0 && instant(e) < l.fin)) votes.set(cleListe(e), (votes.get(cleListe(e)) || 0) + 1);
+  const liste = [...votes].sort((a, b) => b[1] - a[1])[0];
+  for (const e of run.ev) {
+    if (estEcriture(e) && liste && cleListe(e) === liste[0] && e.body && e.body.ExtractionStatus === 'valid' && Number.isInteger(e.status) && e.status >= 200 && e.status < 300
       && instant(e) >= run.t0) { if (!ecritures.has(e.rowIndex)) ecritures.set(e.rowIndex, []); ecritures.get(e.rowIndex).push(instant(e)); }
   }
   /* Zone métier du cut (`regles-metier-ombre`, portée cut) : passage à niveau et appareil de voie, libellés seulement. */
@@ -342,7 +350,7 @@ function decouvrir(racine, { depuis, jusqu }, travail) {
   return out;
 }
 
-const USAGE = 'Usage : node tools/ch100-b1-ecart.cjs (--collections <racine> [--depuis AAAA-MM-JJ] [--jusqu AAAA-MM-JJ] | --lot <dossier> [--echo <dossier>]... [--nom x]) [--apres AAAA-MM-JJ] [--ecart-serie 10] [--json f] [--csv f]';
+const USAGE = 'Usage : node tools/ch100-b1-ecart.cjs (--collections <racine> [--depuis AAAA-MM-JJ] [--jusqu AAAA-MM-JJ] | --lot <dossier> [--echo <dossier>]... [--nom x]) [--apres AAAA-MM-JJ] [--ecart-serie 10] [--json f [--json-cuts]] [--csv f]';
 function lireArguments(argv) {
   const a = { collections: null, depuis: '2026-11-04', jusqu: null, lot: null, echo: [], nom: null, apres: '2026-11-05', ecartSerie: ECART_SERIE, json: null, csv: null };
   for (let i = 0; i < argv.length; i++) {
@@ -356,6 +364,7 @@ function lireArguments(argv) {
     else if (k === '--apres') a.apres = argv[++i];
     else if (k === '--ecart-serie') a.ecartSerie = Number(argv[++i]);
     else if (k === '--json') a.json = argv[++i];
+    else if (k === '--json-cuts') a.jsonCuts = true;
     else if (k === '--csv') a.csv = argv[++i];
     else throw Error(`Argument inconnu : ${k}. ${USAGE}`);
   }
@@ -380,7 +389,8 @@ function executer(argv, sortie = console.log) {
     }
     const r = mesurer(charges, { ecartSerie: a.ecartSerie, apres: a.apres });
     const ecrire = (f, t) => { const abs = path.resolve(f); fs.mkdirSync(path.dirname(abs), { recursive: true }); fs.writeFileSync(abs, t); };
-    if (a.json) ecrire(a.json, JSON.stringify(r, null, 1));
+    /* Le JSON porte le résumé (lots, inventaire et bilans par partie, totaux) ; les lignes par cut sont dans le CSV, ou dans le JSON avec `--json-cuts`. */
+    if (a.json) ecrire(a.json, JSON.stringify(a.jsonCuts ? r : { ...r, cuts: undefined, cutsDansLeCsv: r.cuts.length }, null, 1));
     if (a.csv) ecrire(a.csv, enCsv(r));
     sortie(texte(r));
     return r;
