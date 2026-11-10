@@ -33,10 +33,10 @@ declare namespace CH075 {
  interface Selecteur {status?:string;parts?:{part?:unknown}[]|null}
  interface Alerte {code:string;texte:string;detail?:string|null;at?:string|null;part?:Partie|null}
  interface Resume {traites?:number;differes?:number;ecritsPasse?:number;refus?:number}
- interface Activite {issue:string|null;ecrits?:number|null;corriges?:number|null;faits?:number|null;mode?:string|null;apresArret?:boolean}
+ interface Activite {issue:string|null;ecrits?:number|null;corriges?:number|null;refusees?:number|null;faits?:number|null;mode?:string|null;apresArret?:boolean}
  interface PartieFile {part:Partie;rang:number;lotId:string|null;debut:string|null;fin:string|null;motifs:{code:string;texte:string|null;detail:string|null}[];issueLot:string|null;passe:Activite|null;relecture:Activite|null;resume:Resume|null;alertes:Alerte[];interrompue?:boolean;retourLot?:{at:string|null;fait:boolean;revenuA?:string|null};retourRelecture?:{at:string|null;vers:Partie}}
  interface EtatFile {v:number;id:string;etat:string;n:number;plan:Partie[];k:number;debut:string|null;depuis:string|null;partie:PartieFile;bilan:PartieFile[];changement:{vers:Partie;tentatives:number;envoyeA:string|null};motifFin:{code:string;texte:string;detail:string|null;at:string|null}|null;alerte:Alerte|null;reprises:number;lotArgs:Brut|null}
- interface EvenementFile {type?:string;at?:string|null;selecteur?:Selecteur;courante?:Partie;n?:number;id?:string;lotArgs?:Brut;lotId?:string;part?:Partie;vers?:Partie;motif?:string;detail?:string|null;issue?:string;resume?:Resume;horsPartie?:boolean;ecritureEnSuspens?:boolean;ecrits?:number;corriges?:number;faits?:number;mode?:string}
+ interface EvenementFile {type?:string;at?:string|null;selecteur?:Selecteur;courante?:Partie;n?:number;id?:string;lotArgs?:Brut;lotId?:string;part?:Partie;vers?:Partie;motif?:string;detail?:string|null;issue?:string;resume?:Resume;horsPartie?:boolean;ecritureEnSuspens?:boolean;ecrits?:number;corriges?:number;refusees?:number;faits?:number;mode?:string}
  interface ActionFile {type:string;part?:Partie;rang?:number;vers?:Partie}
  interface ResultatFile {etat:EtatFile|null;actions:ActionFile[];ignore?:string;refus?:string}
  interface ConstatFile {ongletPresent?:boolean;ecritureEnSuspens?:boolean;detailSuspens?:string|null;lotFile?:{id?:string;rang?:number;part?:Partie}|null;partieAffichee?:Partie|null;at?:string|null}
