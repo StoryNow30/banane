@@ -53,3 +53,18 @@ test('validation non confirmée, NON archivée : « Reprendre » reste refusé (
  const vue=await b.api('view');assert.equal(vue.batch.step,'validate');assert.equal(vue.batch.state,'ERROR');
  assert.deepEqual(b.adapter.calls.slice(avant),['next'],'aucune commande d\'Ariane');
 });
+/* Chemin F5 (`retablirApresRechargement`, lot pilote) : MESURÉ, non modifié par CH-096. Après l'archivage d'une validation non confirmée puis un
+ * rechargement d'ESV, « Reprendre » est REFUSÉ (« ESV a été rechargé pendant une pose ») : l'étape « validate » n'est pas dans les étapes
+ * « libres » du rattachement (`capture`, `analyze`, `apply` sans proposition). Aucune commande, lot STOPPED (pas ERROR), étape laissée : le défaut 1
+ * (lot en ERROR) ne touche donc pas ce chemin ; l'opérateur doit lancer un nouveau lot. L'essai fixe ce comportement, avec ou sans la correction. */
+test('chemin F5 : validation non confirmée archivée, ESV rechargé, « Reprendre » → refus net, aucune commande, lot STOPPED (pas ERROR)',async()=>{
+ const {pilote,esvLent,reglages,L}=require('./helpers/esv-lent.cjs');
+ const monter=(esv,o)=>{esvLent(esv,{lecturesInstables:false,...o});const valider=esv.validateAndNext.bind(esv);let fail=true;
+  esv.validateAndNext=async(...a)=>{if(fail){fail=false;esv.calls.push('validate');throw Error('VALIDATE transmis, résultat non confirmé : le cut n’a pas changé');}return valider(...a);};};
+ const r=await pilote(L,{start:100,end:103,settings:reglages(),esv:monter});
+ let vue=await r.b.settle();assert.equal(vue.batch.state,'ERROR');assert.equal(vue.batch.step,'validate');
+ await r.b.api('close-uncertain');const avant=r.b.adapter.calls.length;r.b.adapter.onReload();
+ await assert.rejects(r.b.api('resume'),/ESV a été rechargé pendant une pose : contrôle le cut dans ESV, puis lance un nouveau lot\./);
+ vue=await r.b.api('view');assert.equal(vue.batch.state,'STOPPED');assert.equal(vue.batch.step,'validate');
+ assert.deepEqual(r.b.adapter.calls.slice(avant),[],'aucune commande après le rechargement');
+});
