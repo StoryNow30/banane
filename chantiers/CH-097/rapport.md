@@ -35,4 +35,7 @@ Branche `chantier/CH-097`, un commit par défaut. Chaque essai `tests/ch097-N-*.
 - Parité de la relecture et garde de pose : aucun module de décision n'est dans le diff (`git diff claude/50-test17 --stat` : `background.js`, `panel.js`, `panel.html`, `src/native-session.js`, `src/file-parties.js`, `src/ui5.js`, `src/signal-rendu.js`, `src/relecture-pause.js`, `types/ch075.d.ts`, `tools/typage-ch075.cjs`, essais).
 
 ## Verify et maquette
-En cours au moment de ce commit : les chiffres sont ajoutés au commit suivant.
+Mesurés dans la machine de l'exécutant, seul, sur l'arbre final (branche fusionnée avec le tronc `c8affcb`, donc avec D-320 et CH-096 ; aucun conflit), ÉTABLI :
+- **Verify complet** : 3 479 essais, 3 473 réussis, 0 échec, 6 sautés (corpus natif absent, mode partiel) ; « Geometry unchanged: true », « Engine matches V4.6.0 baseline: true ». Un premier passage avait 1 échec : la garde de pose (`tests/pose-lot-inchanges-4959.test.cjs`) épingle les clés de `choix-lot`, que le défaut 8 élargissait ; corrigé sans toucher la garde (lecture à part), puis verify relancé en entier.
+- **Maquette ESV** (`tests/esv-maquette/essais.cjs`) : 96 essais, 93 réussis, 0 échec, 3 sautés (sautés par leurs propres conditions : patch CH-080 déjà au tronc, export réel absent).
+- Les fichiers `audit/verification.*` produits par ce verify ne sont pas commités (ils reviennent au verify de la version, par l'intégrateur).
