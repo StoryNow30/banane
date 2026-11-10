@@ -16,6 +16,7 @@
 .p .pousse{flex:1}
 .p1-corps > *,.p2-etat > *,.p3-corps > *{flex:none}
 .p .x600{display:none}.g600 .p .x600{display:revert}.g600 .p .x360{display:none}
+.g600 .p .p1-ic.x600,.g600 .p .p2-ic.x600{display:grid}
 
 /* ═══════════════════════════════════════════════ 1 · Signal, fini */
 .p1{--fond:#FFFFFF;--fond2:#F6F6F7;--creux:#EFEFF1;--trait:rgba(0,0,0,.09);--trait2:rgba(0,0,0,.16);--tx:#1B1B1F;--tx2:#5C5C66;--tx3:#6E6E78;
@@ -100,12 +101,12 @@
 /* ═══════════════════════════════════════════════ 2 · Système (Chrome) */
 .p2{--fond:#F0F4F9;--carte:#FFFFFF;--trait:#E1E3E1;--tx:#1F1F1F;--tx2:#444746;--prim:#0B57D0;--prim-tx:#FFFFFF;--tonal:#D3E3FD;--tonal-tx:#041E49;--piste:#E0E5EE;
   --ok:#146C2E;--attn:#8F5300;--attn-fond:#FFEFD6;--attn-tx:#3D2400;--crit:#B3261E;--crit-fond:#F9DEDC;--crit-tx:#410E0B;
-  --m:12px;--pc:16px;--t:13.5px;--l:20px;--t-mot:20px;--t-n:28px;--t-meta:12.5px;--h-rang:44px;--h-btn:36px;
+  --m:12px;--pc:14px;--t:13.5px;--l:20px;--t-mot:20px;--t-n:28px;--t-meta:12.5px;--h-rang:40px;--h-btn:36px;
   background:var(--fond);color:var(--tx);font-size:var(--t);line-height:var(--l)}
 .t-sombre .p2{--fond:#1B1B1B;--carte:#282A2C;--trait:#3C4043;--tx:#E3E3E3;--tx2:#C4C7C5;--prim:#A8C7FA;--prim-tx:#062E6F;--tonal:#004A77;--tonal-tx:#C2E7FF;--piste:#3C4043;
   --ok:#6DD58C;--attn:#F5BD5C;--attn-fond:#4A3608;--attn-tx:#FFE2A8;--crit:#F2B8B5;--crit-fond:#601410;--crit-tx:#F9DEDC}
 .g600 .p2{--m:16px;--pc:24px;--t:14px;--l:20px;--t-mot:24px;--t-n:36px;--t-meta:13px;--h-rang:56px;--h-btn:40px}
-.p2-tete{flex:none;display:flex;align-items:center;gap:8px;height:48px;padding:0 8px 0 calc(var(--m) + 4px)}
+.p2-tete{flex:none;display:flex;align-items:center;gap:8px;height:44px;padding:0 8px 0 calc(var(--m) + 4px)}
 .g600 .p2-tete{height:56px}
 .p2-titre{font-size:16px;font-weight:500;margin-right:auto}
 .g600 .p2-titre{font-size:18px}
@@ -116,7 +117,7 @@
 .p2-ic{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--tx2)}
 .p2-ic svg{width:20px;height:20px}
 .p2-onglets{flex:none;display:flex;padding:0 var(--m);border-bottom:1px solid var(--trait)}
-.p2-onglets span{position:relative;flex:1;height:40px;display:grid;place-items:center;font-size:var(--t);font-weight:500;color:var(--tx2)}
+.p2-onglets span{position:relative;flex:1;height:36px;display:grid;place-items:center;font-size:var(--t);font-weight:500;color:var(--tx2)}
 .g600 .p2-onglets span{height:44px}
 .p2-onglets .ici{color:var(--prim)}
 .p2-onglets .ici::after{content:"";position:absolute;left:50%;bottom:0;width:48px;height:3px;margin-left:-24px;border-radius:3px 3px 0 0;background:var(--prim)}
@@ -124,7 +125,7 @@
 .g600 .p2-corps{gap:12px}
 .p2-carte{background:var(--carte);border-radius:12px}
 .g600 .p2-carte{border-radius:16px}
-.p2-etat{flex:1;min-height:0;display:flex;flex-direction:column;padding:var(--pc)}
+.p2-etat{flex:none;display:flex;flex-direction:column;padding:var(--pc)}
 .p2-mot{display:flex;align-items:center;gap:10px;font-size:var(--t-mot);line-height:1.3;font-weight:400}
 .p2-mot i{width:10px;height:10px;border-radius:50%;flex:none;background:var(--tx2)}
 .p2-mot[data-ton="creux"] i{background:none;box-shadow:inset 0 0 0 2px var(--tx2)}
@@ -158,7 +159,8 @@
 .p2-fin dt{color:var(--tx2)}
 .p2-verrou{display:flex;align-items:center;gap:8px;margin-top:16px;color:var(--tx2)}
 .p2-verrou svg{width:16px;height:16px}
-.p2-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:12px}
+.p2-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.g600 .p2-actions{margin-top:24px}
 .p2-actions button{height:var(--h-btn);padding:0 20px;border-radius:20px;font-weight:500;color:var(--prim);border:1px solid var(--trait);white-space:nowrap}
 .p2-actions .pr{background:var(--prim);color:var(--prim-tx);border-color:var(--prim);padding:0 24px}
 .cadre:not(.g600 *) .p2-actions button{padding:0 14px}
@@ -217,8 +219,8 @@
 .g600 .p3-props div{padding:6px 0}
 .p3-props dt{color:var(--tx2)}
 .p3-props dd span{color:var(--tx2)}
-.cadre:not(.g600 *) .p3-props dd span.suite{display:block}
-.cadre:not(.g600 *) .p3-props dd span.suite i{display:none}
+.cadre:not(.g600 *) .p3-props dd span.apres{display:block}
+.cadre:not(.g600 *) .p3-props dd span.apres i{display:none}
 .p3-props dd span i{font-style:normal}
 .p3-avis{margin-top:16px;padding:10px 12px;border-radius:8px;background:var(--attn-fond);max-width:58ch}
 .p3-avis[data-ton="crit"]{background:var(--crit-fond)}

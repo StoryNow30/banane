@@ -86,7 +86,7 @@ function rendre3(e) {
   const props = [];
   if (e.lot) props.push(['Lot', 'du cut <b>4790</b> au cut <b>4900</b>']);
   if (e.compte) props.push(['Traités', '<b>18</b> <span>· total inconnu</span>'], ['Posés', '<b>15</b>'], ['À poser', '<b>3</b>']);
-  if (e.allure) props.push([e.id === 'pause' ? 'En pause' : 'Allure', e.id === 'pause' ? 'depuis <b>1 min 45</b> <span class="suite"><i>· </i>médiane 7,6 s par cut avant la pause</span>' : '<b>7,9</b> cuts par minute <span class="suite"><i>· </i>médiane 7,6 s par cut</span>']);
+  if (e.allure) props.push([e.id === 'pause' ? 'En pause' : 'Allure', e.id === 'pause' ? 'depuis <b>1 min 45</b> <span class="apres"><i>· </i>médiane 7,6 s par cut avant la pause</span>' : '<b>7,9</b> cuts par minute <span class="apres"><i>· </i>médiane 7,6 s par cut</span>']);
   if (e.fin) props.push(...e.fin);
   if (props.length) c += `<dl class="p3-props">${props.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
   if (e.avis) c += `<p class="p3-avis" data-ton="${e.ton}">${e.avis}</p>`;
@@ -138,10 +138,10 @@ body{background:var(--pg);color:var(--pg-tx);font:400 16px/1.5 system-ui,-apple-
 .col img{display:none;max-width:none}
 .t-clair:not(.g600) img.v-clair.v-360,.t-sombre:not(.g600) img.v-sombre.v-360,.t-clair.g600 img.v-clair.v-600,.t-sombre.g600 img.v-sombre.v-600{display:block}
 .absent{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;color:var(--pg-tx2);font-size:14px;line-height:1.5}
-.suite{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px 48px;margin-top:48px;padding-top:24px;border-top:1px solid var(--pg-trait)}
-.suite ul{margin:0;padding-left:18px}
-.suite li{margin-bottom:6px;color:var(--pg-tx2);max-width:64ch}
-.suite li b{color:var(--pg-tx);font-weight:600}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px 48px;margin-top:48px;padding-top:24px;border-top:1px solid var(--pg-trait)}
+.notes ul{margin:0;padding-left:18px}
+.notes li{margin-bottom:6px;color:var(--pg-tx2);max-width:64ch}
+.notes li b{color:var(--pg-tx);font-weight:600}
 `;
 function page() {
   const corps = `<div class="page t-clair" id="page">
@@ -154,7 +154,7 @@ function page() {
 </ol></header>
 <div class="reglages" role="group" aria-label="Affichage des panneaux"><div>Thème <span class="choix"><button type="button" id="th-clair" aria-pressed="true">Clair</button><button type="button" id="th-sombre" aria-pressed="false">Sombre</button></span></div><div>Taille <span class="choix"><button type="button" id="ta-360" aria-pressed="true">360 × 480</button><button type="button" id="ta-600" aria-pressed="false">600 × 760</button></span></div><div>Faire défiler chaque rang de côté.</div></div>
 ${ETATS.map(rang).join('\n')}
-<section class="suite"><div><h2>À savoir</h2><ul>
+<section class="notes"><div><h2>À savoir</h2><ul>
 <li><b>Police.</b> Les trois propositions sont affichées avec la police de l’appareil qui ouvre cette page (Segoe UI sous Windows, San Francisco sous macOS, Roboto sous Android). Le panneau d’aujourd’hui est une photographie : sa police est IBM Plex.</li>
 <li><b>Thème.</b> Dans l’extension, le clair ou le sombre suivrait le réglage du système ; ici les deux boutons servent à comparer.</li>
 <li><b>Rien n’est installé.</b> Ce sont des maquettes ; l’extension n’a pas changé.</li></ul></div>
