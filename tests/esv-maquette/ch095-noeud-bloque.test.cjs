@@ -8,7 +8,7 @@
  *  3. APRÈS LA PAUSE, le préchauffage repart et charge. Rouge sur le tronc d'avant le commit 278c957 (toutes les opérations sortaient en
  *     `reseau-occupe` : chantiers/CH-095/rapport.md), vert depuis ;
  *  4. témoin, ligne de base coupée : la capture retombe au repli « stabilité » (la panne de CH-062) ;
- *  5. ligne de base coupée, après la pause : le préchauffage repart et charge — ROUGE sur le tronc (278c957), essai marqué `todo` : l'opération s'arrête
+ *  5. ligne de base coupée, après la pause : le préchauffage repart et charge — rouge sur le tronc à 278c957, corrigé par db9c78c : l'opération s'arrête
  *     en `chargement` après 3 load() (src/prechauffage.js:756 compare le compteur brut à nos chargements en vol, sans les nœuds bloqués).
  * Rien ici n'est mesuré sur ESV : le comportement du vrai Potree sur un 5xx est celui décrit par CH-062, repris tel quel par la maquette. */
 const {test,after}=require('node:test'),assert=require('node:assert/strict');
@@ -67,7 +67,7 @@ test('témoin, ligne de base coupée : la capture retombe au repli « stabilité
  console.log(`# témoin sans ligne de base : capture ${t3.captureMs} ms au repli (saine ${t1.captureMs} ms au signal)`);
 });
 
-test('ligne de base coupée : après la pause, le préchauffage repart et charge — rouge sur le tronc (278c957) : arrêt « chargement » après 3 load()',{...opts,todo:raison?undefined:'défaut du tronc : src/prechauffage.js:756 ne retire pas les nœuds bloqués du compteur brut (chantiers/CH-095/rapport.md)'},async()=>{
+test('ligne de base coupée : après la pause, le préchauffage repart et charge (rouge avant le commit db9c78c du tronc : arrêt « chargement » après 3 load())',opts,async()=>{
  const s=temoin.s;assert.ok(s&&temoin.t0,'séance de l\'essai précédent');
  const reste=temoin.pauseMs+500-(Date.now()-temoin.t0);if(reste>0)await new Promise(r=>setTimeout(r,reste));
  const ops=[];for(let i=0;i<3;i++)ops.push(...prech((await s.transition()).evts));
