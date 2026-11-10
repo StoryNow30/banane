@@ -3,9 +3,11 @@
 ## Vision 11 — 10/11 (D-317 ; CH-090, corrections de CH-092 et CH-095) — version sans nouveauté
 - Capacité du préchauffage (CH-090) : 4 chargements à la fois au lieu de 2 (constat des lots « Vision 8 » et « Vision 9 », ÉTABLI : 7 nœuds candidats par coupe en partie dense, 2 lancés ; toute l'attente d'une coupe voisine est du chargement de nœuds par Potree). Gain attendu sur le terrain : SUPPOSÉ tant que non mesuré.
 - Plafond de 256 Mo compté par opération et plus par vie de la page (il éteignait le préchauffage après environ 330 coupes, sans message) ; garde ajoutée : aucun lancement au-delà de 1 536 Mo de tas JS. Opération lointaine : plafond de nœuds propre (96).
+- Plafond « du lot » (4 000 requêtes, 1,2 Go) compté sur 10 minutes glissantes et plus par vie de la page (trouvé par l'audit du 10/11 : il se serait épuisé vers 800 nœuds, puis plus rien jusqu'au rechargement).
 - Défauts trouvés par la relecture CH-092 et par la maquette de CH-095, corrigés : un chargement en échec ne fige plus le préchauffage (avec ou sans ligne de base) ; une cible ne reste plus bloquée au-delà de 8 pages de hiérarchie ; la règle « cache inutile » n'éteint plus la voie potree ; plus de parcours de l'arbre sans place libre ; une capture en échec ne laisse plus l'opération lointaine en pause ; les erreurs passagères s'oublient après 10 min ; le journal garde le motif `pause-serveur`.
 - Maquette : elle joue deux pannes de Potree (nœud en échec gardé « en cours », plus de 8 pages non lues) ; suite lancée à deux fichiers à la fois.
-- Preuves : verify 3 399 essais, 3 388 réussis, 0 échec, 8 sautés, 3 en attente (moteur, Vision 12) ; maquette 96 essais, 93 réussis, 0 échec, 3 sautés ; parité de la relecture identique ; moteur, adaptateur et modules de décision inchangés depuis Vision 10.
+- Audit du projet entier (10/11) : `fiches/AUDIT_PROJET_2026-11-10.md` (corrigé d'office, et la liste à trancher par l'opérateur). Diminutif de l'opérateur retiré d'un commentaire de `src/settings.js` (fichier injecté dans la page).
+- Preuves : verify 3 399 essais, 3 390 réussis, 0 échec, 6 sautés, 3 en attente (moteur, Vision 12) ; maquette 96 essais, 93 réussis, 0 échec, 3 sautés ; parité de la relecture identique ; moteur, adaptateur et modules de décision inchangés depuis Vision 10.
 - Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
 
 ## Vision 10 — 09/11 nuit (D-316 ; CH-089)
