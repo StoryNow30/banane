@@ -1,0 +1,168 @@
+CH-100, mesure 2 : deuxième passe, écritures réelles et « poserait », depuis le 26/10 (hors ligne).
+Exports lus 42 ; collections en 7z non lues : aucune ; en 7z lues par extraction : 2026-10-28_v4.9.5.23_partie-20-lot, 2026-10-29_v4.9.5.23_echo-partie-20 ; lots antérieurs au 26/10 écartés : 5.
+
+INVENTAIRE (lots porteurs d'au moins une décision de passe ; les autres sont dans inventaire.csv)
+date heure | partie | version/paquet | mode | différés | décisions (p1+p2) | cuts décidés : poserait / rien / dont refus garde A | écrits (dont décidés en passe 2) | refus à l'écriture | Écho
+[À PART] 2026-10-23 12:41 | 0 | 4.9.5.19 | inconnu | 78 | 24 (24+0) | 24 : 2 / 22 / 0 | 0 (0) | 0 | oui (997 cuts de la partie, dont 24 décidés par la passe)
+2026-10-26 07:43 | 15 | 4.9.5.21 | ombre | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | oui (183 cuts de la partie, dont 1 décidés par la passe)
+2026-10-26 08:22 | 17 | 4.9.5.21 | ombre | 2 | 3 (2+1) | 2 : 1 / 1 / 0 | 0 (0) | 0 | oui (200 cuts de la partie, dont 2 décidés par la passe)
+2026-10-26 10:19 | 18 | 4.9.5.21 | ombre | 5 | 8 (5+3) | 5 : 2 / 3 / 0 | 0 (0) | 0 | oui (460 cuts de la partie, dont 5 décidés par la passe)
+2026-10-26 10:51 | 20 | 4.9.5.21 | ombre | 4 | 4 (4+0) | 4 : 4 / 0 / 0 | 0 (0) | 0 | oui (450 cuts de la partie, dont 4 décidés par la passe)
+2026-10-26 12:22 | 0 | 4.9.5.22 | ombre | 39 | 66 (39+27) | 39 : 12 / 27 / 0 | 0 (0) | 0 | oui (127 cuts de la partie, dont 39 décidés par la passe)
+2026-10-26 13:56 | 1 | 4.9.5.23 | ombre | 28 | 47 (28+19) | 28 : 9 / 19 / 0 | 0 (0) | 0 | oui (153 cuts de la partie, dont 28 décidés par la passe)
+2026-10-28 08:31 | 17 | 4.9.5.23 | ombre | 14 | 24 (14+10) | 14 : 4 / 10 / 0 | 0 (0) | 0 | oui (535 cuts de la partie, dont 14 décidés par la passe)
+2026-10-28 12:13 | 20 | 4.9.5.23 | ombre | 168 | 256 (168+88) | 168 : 80 / 88 / 0 | 0 (0) | 0 | oui (393 cuts de la partie, dont 168 décidés par la passe)
+2026-10-29 07:45 | 0 | 4.9.5.24 | ecriture | 19 | 36 (19+17) | 19 : 2 / 17 / 0 | 2 (0) | 0 | non
+2026-10-29 20:42 | 10 | 4.9.5.25 | ecriture | 6 | 11 (6+5) | 6 : 1 / 5 / 1 | 1 (0) | 0 | non
+2026-10-30 18:52 | 2 | 4.9.5.27 | ecriture | 3 | 5 (3+2) | 3 : 1 / 2 / 0 | 1 (0) | 0 | non
+2026-10-30 18:58 | 4 | 4.9.5.27 | ecriture | 3 | 4 (3+1) | 3 : 2 / 1 / 0 | 2 (0) | 0 | non
+2026-10-31 18:37 | 6 | 4.9.5.28 | ecriture | 10 | 18 (10+8) | 10 : 2 / 8 / 3 | 2 (0) | 0 | non
+2026-11-01 15:28 | 10 | 4.9.5.30 | ecriture | 13 | 20 (13+7) | 13 : 6 / 7 / 0 | 6 (0) | 0 | oui (29 cuts de la partie, dont 13 décidés par la passe)
+2026-11-02 08:06 | 0 | 4.9.5.31 | ecriture | 28 | 48 (28+20) | 28 : 8 / 20 / 0 | 10 (2) | 0 | oui (345 cuts de la partie, dont 28 décidés par la passe)
+2026-11-02 12:39 | 12 | 4.9.5.35 | ecriture | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | oui (16 cuts de la partie, dont 1 décidés par la passe)
+2026-11-02 14:43 | 15 | 4.9.5.35 | ecriture | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | non
+2026-11-02 14:50 | 16 | 4.9.5.35 | ecriture | 13 | 21 (13+8) | 13 : 5 / 8 / 1 | 5 (0) | 0 | non
+2026-11-03 10:45 | 17 | 5.0.0 | ecriture | 9 | 15 (9+6) | 9 : 3 / 6 / 0 | 5 (2) | 0 | non
+2026-11-03 11:27 | 18 | 5.0.0 | ecriture | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | non
+2026-11-03 11:34 | 19 | 5.0.0 | ecriture | 3 | 5 (3+2) | 3 : 1 / 2 / 0 | 1 (0) | 0 | non
+2026-11-03 11:42 | 20 | 5.0.0 | ecriture | 2 | 2 (2+0) | 2 : 0 / 2 / 0 | 0 (0) | 0 | non
+2026-11-03 12:18 | 21 | 5.0.0 | ecriture | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | non
+2026-11-03 12:30 | 23 | 5.0.0 | ecriture | 4 | 7 (4+3) | 4 : 1 / 3 / 1 | 2 (1) | 0 | non
+2026-11-03 12:47 | 24 | 5.0.0 | ecriture | 10 | 12 (10+2) | 10 : 8 / 2 / 0 | 8 (0) | 0 | non
+2026-11-03 15:47 | 25 | 5 | ecriture | 15 | 27 (15+12) | 15 : 3 / 12 / 0 | 3 (0) | 0 | non
+2026-11-03 16:11 | 26 | 5 | ecriture | 68 | 113 (68+45) | 68 : 23 / 45 / 0 | 8 (0) | 1 | non
+2026-11-04 08:35 | 0 | 5 | ecriture | 2 | 2 (2+0) | 2 : 0 / 2 / 0 | 0 (0) | 0 | non
+2026-11-04 09:00 | 1 | 5 | ecriture | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | non
+2026-11-04 09:06 | 2 | 5 | ecriture | 12 | 21 (12+9) | 12 : 3 / 9 / 0 | 3 (0) | 0 | non
+2026-11-04 09:17 | 3 | 5 | ecriture | 7 | 13 (7+6) | 7 : 1 / 6 / 0 | 1 (0) | 0 | non
+2026-11-04 09:35 | 4 | 5 | ecriture | 4 | 6 (4+2) | 4 : 2 / 2 / 0 | 3 (1) | 0 | non
+2026-11-04 11:11 | 6 | 5 | ecriture | 5 | 5 (5+0) | 5 : 0 / 5 / 0 | 0 (0) | 0 | non
+2026-11-04 11:40 | 8 | 5 | ecriture | 4 | 6 (4+2) | 4 : 2 / 2 / 0 | 2 (0) | 0 | non
+2026-11-04 12:27 | 9 | 5 | ecriture | 22 | 42 (22+20) | 22 : 2 / 20 / 0 | 2 (0) | 0 | non
+2026-11-04 12:55 | 10 | 5 | ecriture | 337 | 337 (337+0) | 337 : 0 / 337 / 0 | 0 (0) | 0 | oui (23 cuts de la partie, dont 19 décidés par la passe)
+2026-11-04 13:44 | 11 | 5 | ecriture | 3 | 3 (3+0) | 3 : 0 / 3 / 0 | 0 (0) | 0 | non
+2026-11-04 14:09 | 13 | 5 | ecriture | 30 | 30 (30+0) | 30 : 0 / 30 / 0 | 0 (0) | 0 | oui (124 cuts de la partie, dont 28 décidés par la passe)
+2026-11-04 15:23 | 14 | 5 | ecriture | 16 | 27 (16+11) | 16 : 5 / 11 / 1 | 6 (1) | 0 | oui (67 cuts de la partie, dont 13 décidés par la passe)
+2026-11-04 15:47 | 15 | 5 | ecriture | 8 | 8 (8+0) | 8 : 0 / 8 / 0 | 0 (0) | 0 | oui (35 cuts de la partie, dont 8 décidés par la passe)
+2026-11-04 18:13 | 0 | 5 | ecriture | 7 | 10 (7+3) | 7 : 4 / 3 / 0 | 4 (0) | 0 | non
+2026-11-04 18:38 | 1 | 5 | ecriture | 9 | 13 (9+4) | 9 : 5 / 4 / 0 | 5 (0) | 0 | non
+2026-11-04 18:59 | 2 | 5 | ecriture | 6 | 8 (6+2) | 6 : 4 / 2 / 0 | 4 (0) | 0 | non
+2026-11-04 19:12 | 3 | 5 | ecriture | 2 | 2 (2+0) | 2 : 0 / 2 / 0 | 0 (0) | 0 | non
+2026-11-04 19:28 | 4 | 5 | ecriture | 38 | 65 (38+27) | 38 : 11 / 27 / 1 | 10 (0) | 0 | non
+2026-11-04 20:01 | 5 | 5 | ecriture | 20 | 20 (20+0) | 20 : 0 / 20 / 0 | 0 (0) | 0 | non
+2026-11-04 20:24 | 6 | 5 | ecriture | 17 | 32 (17+15) | 17 : 2 / 15 / 0 | 2 (0) | 0 | non
+2026-11-04 20:47 | 7 | 5 | ecriture | 2 | 2 (2+0) | 2 : 0 / 2 / 0 | 0 (0) | 0 | non
+2026-11-05 07:30 | 8 | 5/6291571 | ecriture | 3 | 4 (3+1) | 3 : 2 / 1 / 0 | 2 (0) | 0 | oui (42 cuts de la partie, dont 3 décidés par la passe)
+2026-11-05 08:03 | 10 | 5/6291571 | ecriture | 25 | 47 (25+22) | 25 : 3 / 22 / 2 | 4 (1) | 0 | oui (259 cuts de la partie, dont 25 décidés par la passe)
+2026-11-05 08:39 | 11 | 5/6291571 | ecriture | 2 | 2 (2+0) | 2 : 0 / 2 / 0 | 0 (0) | 0 | oui (230 cuts de la partie, dont 2 décidés par la passe)
+2026-11-05 09:54 | 12 | 5/6291571 | ecriture | 3 | 3 (3+0) | 3 : 0 / 3 / 0 | 0 (0) | 0 | oui (71 cuts de la partie, dont 3 décidés par la passe)
+2026-11-06 07:21 | 13 | 5/2bc1f56 | ecriture | 7 | 7 (7+0) | 7 : 0 / 7 / 0 | 0 (0) | 0 | oui (119 cuts de la partie, dont 7 décidés par la passe)
+2026-11-06 09:23 | 15 | 5/2bc1f56 | ecriture | 19 | 37 (19+18) | 19 : 1 / 18 / 0 | 1 (0) | 0 | oui (67 cuts de la partie, dont 19 décidés par la passe)
+2026-11-06 09:57 | 16 | 5/2bc1f56 | ecriture | 20 | 36 (20+16) | 20 : 4 / 16 / 0 | 4 (0) | 0 | oui (94 cuts de la partie, dont 13 décidés par la passe)
+2026-11-08 15:37 | 3 | 5/ba67380 | ecriture | 1 | 1 (1+0) | 1 : 0 / 1 / 0 | 0 (0) | 0 | oui (2 cuts de la partie, dont 1 décidés par la passe)
+2026-11-08 15:43 | 4 | 5/ba67380 | ecriture | 6 | 11 (6+5) | 6 : 1 / 5 / 0 | 1 (0) | 0 | oui (29 cuts de la partie, dont 6 décidés par la passe)
+2026-11-08 20:03 | 5 | 5/16c60f1 | ecriture | 4 | 5 (4+1) | 4 : 3 / 1 / 0 | 3 (0) | 0 | non
+2026-11-08 21:17 | 6 | 5/c596cdd | ecriture | 23 | 40 (23+17) | 23 : 6 / 17 / 0 | 0 (0) | 1 | oui (72 cuts de la partie, dont 23 décidés par la passe)
+2026-11-08 22:13 | 7 | 5/daa2736 | ecriture | 6 | 10 (6+4) | 6 : 2 / 4 / 0 | 2 (0) | 0 | non
+2026-11-09 09:18 | 8 | 5/27eb961 | ecriture | 167 | 666 (334+332) | 167 : 1 / 166 / 0 | 0 (0) | 1 | non
+2026-11-09 09:53 | 8 | 5/27eb961 | ecriture | 9 | 16 (9+7) | 9 : 2 / 7 / 0 | 2 (0) | 0 | non | revus 7
+2026-11-09 12:00 | 11 | 5/858295a | ecriture | 9 | 12 (9+3) | 9 : 6 / 3 / 0 | 7 (1) | 0 | non
+2026-11-09 14:53 | 12 | 5/d4238bf | ecriture | 12 | 22 (12+10) | 12 : 2 / 10 / 1 | 2 (0) | 0 | non
+2026-11-09 19:33 | 14 | 5/33e593d | ecriture | 2 | 2 (2+0) | 2 : 0 / 2 / 0 | 0 (0) | 0 | non
+2026-11-10 07:32 | 9 | 5/286f541 | ecriture | 8 | 15 (8+7) | 8 : 1 / 7 / 0 | 2 (1) | 0 | non
+
+Total période : 93 lots, 66 avec passe (aucune-passe 10, ombre 10, ecriture 73) ; différés 1401 ; décisions 2346 ; cuts décidés 1349 (revus 7) : poserait 253, rien 1096 dont refus de la garde A 11 ; écrits 128 (dont décidés en passe 2 : 10 ; au plus 10 par lot) ; « poserait » non écrits 135 ; refus à l'écriture 3.
+
+== PÉRIODE (depuis le 26/10, hors partie 0 du 23/10) ==
+ÉCRITURES RÉELLES (« ecrit »), correction de l'opérateur depuis la pose écrite
+  128 cuts : sans Écho 99, non jugés 0, écartés D-285 0, visités sans action 4, validés 25
+    sans les « visité sans action » : 25 jugés ; justes 17/25 (68,0 % [48,4 ; 82,8]) ; 10 à 50 mm 8 ; plus de 50 mm 0/25 (0,0 % [0,0 ; 13,3]) ; max 20,35 mm
+    avec les « visité sans action » : 29 jugés ; justes 21/29 (72,4 % [54,3 ; 85,3]) ; 10 à 50 mm 8 ; plus de 50 mm 0/29 (0,0 % [0,0 ; 11,7]) ; max 20,35 mm
+    2026-10-29 07:45 partie 0 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-10-29 20:42 partie 10 : 1 écrits, sans Écho 1, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-10-30 18:52 partie 2 : 1 écrits, sans Écho 1, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-10-30 18:58 partie 4 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-10-31 18:37 partie 6 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-01 15:28 partie 10 : 6 écrits, sans Écho 0, non jugés 0, D-285 0, visités sans action 0, validés 6 (justes 6, 10-50 0, >50 0)
+    2026-11-02 08:06 partie 0 : 10 écrits, sans Écho 0, non jugés 0, D-285 0, visités sans action 2, validés 8 (justes 4, 10-50 4, >50 0)
+    2026-11-02 14:50 partie 16 : 5 écrits, sans Écho 5, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 10:45 partie 17 : 5 écrits, sans Écho 5, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 11:34 partie 19 : 1 écrits, sans Écho 1, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 12:30 partie 23 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 12:47 partie 24 : 8 écrits, sans Écho 8, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 15:47 partie 25 : 3 écrits, sans Écho 3, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 16:11 partie 26 : 8 écrits, sans Écho 8, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 09:06 partie 2 : 3 écrits, sans Écho 3, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 09:17 partie 3 : 1 écrits, sans Écho 1, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 09:35 partie 4 : 3 écrits, sans Écho 3, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 11:40 partie 8 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 12:27 partie 9 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 15:23 partie 14 : 6 écrits, sans Écho 3, non jugés 0, D-285 0, visités sans action 1, validés 2 (justes 1, 10-50 1, >50 0)
+    2026-11-04 18:13 partie 0 : 4 écrits, sans Écho 4, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 18:38 partie 1 : 5 écrits, sans Écho 5, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 18:59 partie 2 : 4 écrits, sans Écho 4, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 19:28 partie 4 : 10 écrits, sans Écho 10, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 20:24 partie 6 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-05 07:30 partie 8 : 2 écrits, sans Écho 0, non jugés 0, D-285 0, visités sans action 0, validés 2 (justes 2, 10-50 0, >50 0)
+    2026-11-05 08:03 partie 10 : 4 écrits, sans Écho 0, non jugés 0, D-285 0, visités sans action 1, validés 3 (justes 1, 10-50 2, >50 0)
+    2026-11-06 09:23 partie 15 : 1 écrits, sans Écho 0, non jugés 0, D-285 0, visités sans action 0, validés 1 (justes 1, 10-50 0, >50 0)
+    2026-11-06 09:57 partie 16 : 4 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 2 (justes 1, 10-50 1, >50 0)
+    2026-11-08 15:43 partie 4 : 1 écrits, sans Écho 0, non jugés 0, D-285 0, visités sans action 0, validés 1 (justes 1, 10-50 0, >50 0)
+    2026-11-08 20:03 partie 5 : 3 écrits, sans Écho 3, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-08 22:13 partie 7 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-09 09:53 partie 8 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-09 12:00 partie 11 : 7 écrits, sans Écho 7, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-09 14:53 partie 12 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-10 07:32 partie 9 : 2 écrits, sans Écho 2, non jugés 0, D-285 0, visités sans action 0, validés 0 (justes 0, 10-50 0, >50 0)
+OMBRE (« poserait » non écrit, première décision), pose de l'ombre contre la pose finale de l'opérateur
+  135 cuts : sans Écho 17, non jugés 0, écartés D-285 0, visités sans action 0, validés 118
+    sans les « visité sans action » : 118 jugés ; justes 90/118 (76,3 % [67,8 ; 83,0]) ; 10 à 50 mm 26 ; plus de 50 mm 2/118 (1,7 % [0,5 ; 6,0]) ; max 171,72 mm
+  dont « poserait » que la garde A a laissé passer (garde consignée au journal)
+  116 cuts : sans Écho 17, non jugés 0, écartés D-285 0, visités sans action 0, validés 99
+    sans les « visité sans action » : 99 jugés ; justes 78/99 (78,8 % [69,7 ; 85,7]) ; 10 à 50 mm 19 ; plus de 50 mm 2/99 (2,0 % [0,6 ; 7,1]) ; max 171,72 mm
+    garde « sans-garde » : 19 cuts, jugés 19 (justes 12, 10-50 7, >50 0)
+    garde « appui-normal » : 9 cuts, jugés 6 (justes 3, 10-50 2, >50 1)
+    garde « loin-du-depart » : 107 cuts, jugés 93 (justes 75, 10-50 17, >50 1)
+    2026-10-26 08:22 partie 17 : 1 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 1 (justes 0, 10-50 1, >50 0)
+    2026-10-26 10:19 partie 18 : 2 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 2 (justes 1, 10-50 1, >50 0)
+    2026-10-26 10:51 partie 20 : 4 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 4 (justes 4, 10-50 0, >50 0)
+    2026-10-26 12:22 partie 0 : 12 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 12 (justes 7, 10-50 5, >50 0)
+    2026-10-26 13:56 partie 1 : 9 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 9 (justes 3, 10-50 6, >50 0)
+    2026-10-28 08:31 partie 17 : 4 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 4 (justes 2, 10-50 2, >50 0)
+    2026-10-28 12:13 partie 20 : 80 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 80 (justes 68, 10-50 10, >50 2)
+    2026-11-03 16:11 partie 26 : 15 poserait, sans Écho 15, non jugés 0, D-285 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 19:28 partie 4 : 1 poserait, sans Écho 1, non jugés 0, D-285 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-08 21:17 partie 6 : 6 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 6 (justes 5, 10-50 1, >50 0)
+    2026-11-09 09:18 partie 8 : 1 poserait, sans Écho 1, non jugés 0, D-285 0, jugés 0 (justes 0, 10-50 0, >50 0)
+GARDE A : 11 refus à la première décision (dont « poserait » ensuite dans le lot : 0), pose refusée contre la pose finale
+  11 cuts : sans Écho 8, non jugés 0, écartés D-285 0, visités sans action 0, validés 3
+    sans les « visité sans action » : 3 jugés ; justes 3/3 (100,0 % [43,9 ; 100,0]) ; 10 à 50 mm 0 ; plus de 50 mm 0/3 (0,0 % [0,0 ; 56,1]) ; max 9,32 mm
+    2026-10-29 20:42 partie 10 : 1 refus, sans Écho 1, non jugés 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-10-31 18:37 partie 6 : 3 refus, sans Écho 3, non jugés 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-02 14:50 partie 16 : 1 refus, sans Écho 1, non jugés 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-03 12:30 partie 23 : 1 refus, sans Écho 1, non jugés 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-04 15:23 partie 14 : 1 refus, sans Écho 0, non jugés 0, jugés 1 (justes 1, 10-50 0, >50 0)
+    2026-11-04 19:28 partie 4 : 1 refus, sans Écho 1, non jugés 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    2026-11-05 08:03 partie 10 : 2 refus, sans Écho 0, non jugés 0, jugés 2 (justes 2, 10-50 0, >50 0)
+    2026-11-09 14:53 partie 12 : 1 refus, sans Écho 1, non jugés 0, jugés 0 (justes 0, 10-50 0, >50 0)
+    bonnes poses retirées (10 mm ou moins) : 3 ; fautes retirées (plus de 50 mm) : 0 ; 10 à 50 mm : 0 ; non mesurables (sans Écho, non jugés, D-285) : 8
+
+== À PART : partie 0 du 23/10, lot 2 (réglage de la garde A) ==
+ÉCRITURES RÉELLES (« ecrit »), correction de l'opérateur depuis la pose écrite
+  0 cuts : sans Écho 0, non jugés 0, écartés D-285 0, visités sans action 0, validés 0
+    sans les « visité sans action » : 0 jugés ; justes 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+OMBRE (« poserait » non écrit, première décision), pose de l'ombre contre la pose finale de l'opérateur
+  2 cuts : sans Écho 0, non jugés 0, écartés D-285 0, visités sans action 0, validés 2
+    sans les « visité sans action » : 2 jugés ; justes 2/2 (100,0 % [34,2 ; 100,0]) ; 10 à 50 mm 0 ; plus de 50 mm 0/2 (0,0 % [0,0 ; 65,8]) ; max 2,89 mm
+  dont « poserait » que la garde A a laissé passer (garde consignée au journal)
+  0 cuts : sans Écho 0, non jugés 0, écartés D-285 0, visités sans action 0, validés 0
+    sans les « visité sans action » : 0 jugés ; justes 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    garde « sans-garde » : 2 cuts, jugés 2 (justes 2, 10-50 0, >50 0)
+    2026-10-23 12:41 partie 0 : 2 poserait, sans Écho 0, non jugés 0, D-285 0, jugés 2 (justes 2, 10-50 0, >50 0)
+GARDE A : 0 refus à la première décision (dont « poserait » ensuite dans le lot : 0), pose refusée contre la pose finale
+  0 cuts : sans Écho 0, non jugés 0, écartés D-285 0, visités sans action 0, validés 0
+    sans les « visité sans action » : 0 jugés ; justes 0/0 ; 10 à 50 mm 0 ; plus de 50 mm 0/0
+    bonnes poses retirées (10 mm ou moins) : 0 ; fautes retirées (plus de 50 mm) : 0 ; 10 à 50 mm : 0 ; non mesurables (sans Écho, non jugés, D-285) : 0
+
+SEUIL DU TICKET : 29 écritures jugées (validées ou visitées sans action) ; seuil 20 : CONCLUABLE. Fautes 0 ; borne haute de Wilson 11,7 %.
+Écho à demander : zéro faute prouve 5 % avec 73 poses jugées (il en manque 44), 3 % avec 125 (il en manque 96). Écrits de la période sans Écho ou non jugés : 99.

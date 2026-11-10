@@ -1,0 +1,3676 @@
+{
+ "format": "ariane-ch100-passe-v1",
+ "periode": "lots partis le 26/10/2026 ou après ; partie 0 du 23/10 (lot 2) à part",
+ "exportsLus": 42,
+ "exportsIllisibles": [],
+ "collections7zNonLues": [],
+ "collections7zExtraites": [
+  "2026-10-28_v4.9.5.23_partie-20-lot",
+  "2026-10-29_v4.9.5.23_echo-partie-20"
+ ],
+ "lotsAnterieursEcartes": [
+  {
+   "date": "2026-10-22",
+   "partie": 26,
+   "collection": "2026-10-26_v4.9.5.18_partie-14-lot",
+   "ecrits": 3
+  },
+  {
+   "date": "2026-10-23",
+   "partie": 33,
+   "collection": "2026-10-23_cache-tests-18-19_export-18-volumes",
+   "ecrits": 1
+  },
+  {
+   "date": "2026-10-23",
+   "partie": 32,
+   "collection": "2026-10-23_cache-tests-18-19_export-18-volumes",
+   "ecrits": 0
+  },
+  {
+   "date": "2026-10-23",
+   "partie": 0,
+   "collection": "2026-10-23_cache-tests-18-19_export-18-volumes",
+   "ecrits": 0
+  },
+  {
+   "date": "2026-10-23",
+   "partie": 5,
+   "collection": "2026-10-23_cache-tests-18-19_export-18-volumes",
+   "ecrits": 0
+  }
+ ],
+ "inventaire": {
+  "lots": 93,
+  "lotsAvecPasse": 66,
+  "parMode": {
+   "aucune-passe": 10,
+   "ombre": 10,
+   "ecriture": 73
+  },
+  "differes": 1401,
+  "decisions": 2346,
+  "cutsDecides": 1349,
+  "poserait": 253,
+  "rien": 1096,
+  "refusGarde": 11,
+  "ecrits": 128,
+  "ecritsDecidesPasse2": 10,
+  "refusEcriture": 3,
+  "poseraitNonEcrits": 135,
+  "revus": 7,
+  "ecritsSansDecision": 0
+ },
+ "resultat": {
+  "cutsDecides": 1342,
+  "ecriture": {
+   "total": {
+    "n": 128,
+    "sansEcho": 99,
+    "nonJuges": 0,
+    "ecartesD285": 0,
+    "visitesSansAction": 4,
+    "valides": {
+     "n": 25,
+     "justes": 17,
+     "de10a50": 8,
+     "fautes": 0,
+     "maxMm": 20.35,
+     "wilsonJustes": {
+      "n": 25,
+      "k": 17,
+      "part": 0.68,
+      "bas": 0.4841,
+      "haut": 0.828
+     },
+     "wilsonFautes": {
+      "n": 25,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1332
+     }
+    },
+    "avecVisites": {
+     "n": 29,
+     "justes": 21,
+     "de10a50": 8,
+     "fautes": 0,
+     "maxMm": 20.35,
+     "wilsonJustes": {
+      "n": 29,
+      "k": 21,
+      "part": 0.7241,
+      "bas": 0.5428,
+      "haut": 0.853
+     },
+     "wilsonFautes": {
+      "n": 29,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.117
+     }
+    }
+   },
+   "parLot": [
+    {
+     "lot": "2026-10-29 07:45 partie 0",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-10-29 20:42 partie 10",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-10-30 18:52 partie 2",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-10-30 18:58 partie 4",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-10-31 18:37 partie 6",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-01 15:28 partie 10",
+     "n": 6,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 6,
+      "justes": 6,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 8.19,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 6,
+       "part": 1,
+       "bas": 0.6097,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3903
+      }
+     },
+     "avecVisites": {
+      "n": 6,
+      "justes": 6,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 8.19,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 6,
+       "part": 1,
+       "bas": 0.6097,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3903
+      }
+     }
+    },
+    {
+     "lot": "2026-11-02 08:06 partie 0",
+     "n": 10,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 2,
+     "valides": {
+      "n": 8,
+      "justes": 4,
+      "de10a50": 4,
+      "fautes": 0,
+      "maxMm": 16.4,
+      "wilsonJustes": {
+       "n": 8,
+       "k": 4,
+       "part": 0.5,
+       "bas": 0.2152,
+       "haut": 0.7848
+      },
+      "wilsonFautes": {
+       "n": 8,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3244
+      }
+     },
+     "avecVisites": {
+      "n": 10,
+      "justes": 6,
+      "de10a50": 4,
+      "fautes": 0,
+      "maxMm": 16.4,
+      "wilsonJustes": {
+       "n": 10,
+       "k": 6,
+       "part": 0.6,
+       "bas": 0.3127,
+       "haut": 0.8318
+      },
+      "wilsonFautes": {
+       "n": 10,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2775
+      }
+     }
+    },
+    {
+     "lot": "2026-11-02 14:50 partie 16",
+     "n": 5,
+     "sansEcho": 5,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 10:45 partie 17",
+     "n": 5,
+     "sansEcho": 5,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 11:34 partie 19",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 12:30 partie 23",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 12:47 partie 24",
+     "n": 8,
+     "sansEcho": 8,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 15:47 partie 25",
+     "n": 3,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 16:11 partie 26",
+     "n": 8,
+     "sansEcho": 8,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 09:06 partie 2",
+     "n": 3,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 09:17 partie 3",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 09:35 partie 4",
+     "n": 3,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 11:40 partie 8",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 12:27 partie 9",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 15:23 partie 14",
+     "n": 6,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 1,
+     "valides": {
+      "n": 2,
+      "justes": 1,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 10.25,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 1,
+       "part": 0.5,
+       "bas": 0.0945,
+       "haut": 0.9055
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 3,
+      "justes": 2,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 10.25,
+      "wilsonJustes": {
+       "n": 3,
+       "k": 2,
+       "part": 0.6667,
+       "bas": 0.2077,
+       "haut": 0.9385
+      },
+      "wilsonFautes": {
+       "n": 3,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.5615
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 18:13 partie 0",
+     "n": 4,
+     "sansEcho": 4,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 18:38 partie 1",
+     "n": 5,
+     "sansEcho": 5,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 18:59 partie 2",
+     "n": 4,
+     "sansEcho": 4,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 19:28 partie 4",
+     "n": 10,
+     "sansEcho": 10,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 20:24 partie 6",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-05 07:30 partie 8",
+     "n": 2,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 0,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 0,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    },
+    {
+     "lot": "2026-11-05 08:03 partie 10",
+     "n": 4,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 1,
+     "valides": {
+      "n": 3,
+      "justes": 1,
+      "de10a50": 2,
+      "fautes": 0,
+      "maxMm": 20.35,
+      "wilsonJustes": {
+       "n": 3,
+       "k": 1,
+       "part": 0.3333,
+       "bas": 0.0615,
+       "haut": 0.7923
+      },
+      "wilsonFautes": {
+       "n": 3,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.5615
+      }
+     },
+     "avecVisites": {
+      "n": 4,
+      "justes": 2,
+      "de10a50": 2,
+      "fautes": 0,
+      "maxMm": 20.35,
+      "wilsonJustes": {
+       "n": 4,
+       "k": 2,
+       "part": 0.5,
+       "bas": 0.15,
+       "haut": 0.85
+      },
+      "wilsonFautes": {
+       "n": 4,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4899
+      }
+     }
+    },
+    {
+     "lot": "2026-11-06 09:23 partie 15",
+     "n": 1,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 8.16,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 1,
+       "part": 1,
+       "bas": 0.2065,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "avecVisites": {
+      "n": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 8.16,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 1,
+       "part": 1,
+       "bas": 0.2065,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     }
+    },
+    {
+     "lot": "2026-11-06 09:57 partie 16",
+     "n": 4,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 1,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 11.97,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 1,
+       "part": 0.5,
+       "bas": 0.0945,
+       "haut": 0.9055
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 1,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 11.97,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 1,
+       "part": 0.5,
+       "bas": 0.0945,
+       "haut": 0.9055
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    },
+    {
+     "lot": "2026-11-08 15:43 partie 4",
+     "n": 1,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 6.38,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 1,
+       "part": 1,
+       "bas": 0.2065,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "avecVisites": {
+      "n": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 6.38,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 1,
+       "part": 1,
+       "bas": 0.2065,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     }
+    },
+    {
+     "lot": "2026-11-08 20:03 partie 5",
+     "n": 3,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-08 22:13 partie 7",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-09 09:53 partie 8",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-09 12:00 partie 11",
+     "n": 7,
+     "sansEcho": 7,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-09 14:53 partie 12",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-10 07:32 partie 9",
+     "n": 2,
+     "sansEcho": 2,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   ],
+   "deciseesPasse2": 10
+  },
+  "ombre": {
+   "total": {
+    "n": 135,
+    "sansEcho": 17,
+    "nonJuges": 0,
+    "ecartesD285": 0,
+    "visitesSansAction": 0,
+    "valides": {
+     "n": 118,
+     "justes": 90,
+     "de10a50": 26,
+     "fautes": 2,
+     "maxMm": 171.72,
+     "wilsonJustes": {
+      "n": 118,
+      "k": 90,
+      "part": 0.7627,
+      "bas": 0.6784,
+      "haut": 0.8304
+     },
+     "wilsonFautes": {
+      "n": 118,
+      "k": 2,
+      "part": 0.0169,
+      "bas": 0.0047,
+      "haut": 0.0597
+     }
+    },
+    "avecVisites": {
+     "n": 118,
+     "justes": 90,
+     "de10a50": 26,
+     "fautes": 2,
+     "maxMm": 171.72,
+     "wilsonJustes": {
+      "n": 118,
+      "k": 90,
+      "part": 0.7627,
+      "bas": 0.6784,
+      "haut": 0.8304
+     },
+     "wilsonFautes": {
+      "n": 118,
+      "k": 2,
+      "part": 0.0169,
+      "bas": 0.0047,
+      "haut": 0.0597
+     }
+    }
+   },
+   "parLot": [
+    {
+     "lot": "2026-10-26 08:22 partie 17",
+     "n": 1,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 1,
+      "justes": 0,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 17.68,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "avecVisites": {
+      "n": 1,
+      "justes": 0,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 17.68,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     }
+    },
+    {
+     "lot": "2026-10-26 10:19 partie 18",
+     "n": 2,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 1,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 21.04,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 1,
+       "part": 0.5,
+       "bas": 0.0945,
+       "haut": 0.9055
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 1,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 21.04,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 1,
+       "part": 0.5,
+       "bas": 0.0945,
+       "haut": 0.9055
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    },
+    {
+     "lot": "2026-10-26 10:51 partie 20",
+     "n": 4,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 4,
+      "justes": 4,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 9.12,
+      "wilsonJustes": {
+       "n": 4,
+       "k": 4,
+       "part": 1,
+       "bas": 0.5101,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 4,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4899
+      }
+     },
+     "avecVisites": {
+      "n": 4,
+      "justes": 4,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 9.12,
+      "wilsonJustes": {
+       "n": 4,
+       "k": 4,
+       "part": 1,
+       "bas": 0.5101,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 4,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4899
+      }
+     }
+    },
+    {
+     "lot": "2026-10-26 12:22 partie 0",
+     "n": 12,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 12,
+      "justes": 7,
+      "de10a50": 5,
+      "fautes": 0,
+      "maxMm": 21.41,
+      "wilsonJustes": {
+       "n": 12,
+       "k": 7,
+       "part": 0.5833,
+       "bas": 0.3195,
+       "haut": 0.8067
+      },
+      "wilsonFautes": {
+       "n": 12,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2425
+      }
+     },
+     "avecVisites": {
+      "n": 12,
+      "justes": 7,
+      "de10a50": 5,
+      "fautes": 0,
+      "maxMm": 21.41,
+      "wilsonJustes": {
+       "n": 12,
+       "k": 7,
+       "part": 0.5833,
+       "bas": 0.3195,
+       "haut": 0.8067
+      },
+      "wilsonFautes": {
+       "n": 12,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2425
+      }
+     }
+    },
+    {
+     "lot": "2026-10-26 13:56 partie 1",
+     "n": 9,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 9,
+      "justes": 3,
+      "de10a50": 6,
+      "fautes": 0,
+      "maxMm": 22.49,
+      "wilsonJustes": {
+       "n": 9,
+       "k": 3,
+       "part": 0.3333,
+       "bas": 0.1206,
+       "haut": 0.6458
+      },
+      "wilsonFautes": {
+       "n": 9,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2992
+      }
+     },
+     "avecVisites": {
+      "n": 9,
+      "justes": 3,
+      "de10a50": 6,
+      "fautes": 0,
+      "maxMm": 22.49,
+      "wilsonJustes": {
+       "n": 9,
+       "k": 3,
+       "part": 0.3333,
+       "bas": 0.1206,
+       "haut": 0.6458
+      },
+      "wilsonFautes": {
+       "n": 9,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.2992
+      }
+     }
+    },
+    {
+     "lot": "2026-10-28 08:31 partie 17",
+     "n": 4,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 4,
+      "justes": 2,
+      "de10a50": 2,
+      "fautes": 0,
+      "maxMm": 29.52,
+      "wilsonJustes": {
+       "n": 4,
+       "k": 2,
+       "part": 0.5,
+       "bas": 0.15,
+       "haut": 0.85
+      },
+      "wilsonFautes": {
+       "n": 4,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4899
+      }
+     },
+     "avecVisites": {
+      "n": 4,
+      "justes": 2,
+      "de10a50": 2,
+      "fautes": 0,
+      "maxMm": 29.52,
+      "wilsonJustes": {
+       "n": 4,
+       "k": 2,
+       "part": 0.5,
+       "bas": 0.15,
+       "haut": 0.85
+      },
+      "wilsonFautes": {
+       "n": 4,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.4899
+      }
+     }
+    },
+    {
+     "lot": "2026-10-28 12:13 partie 20",
+     "n": 80,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 80,
+      "justes": 68,
+      "de10a50": 10,
+      "fautes": 2,
+      "maxMm": 171.72,
+      "wilsonJustes": {
+       "n": 80,
+       "k": 68,
+       "part": 0.85,
+       "bas": 0.7559,
+       "haut": 0.9121
+      },
+      "wilsonFautes": {
+       "n": 80,
+       "k": 2,
+       "part": 0.025,
+       "bas": 0.0069,
+       "haut": 0.0866
+      }
+     },
+     "avecVisites": {
+      "n": 80,
+      "justes": 68,
+      "de10a50": 10,
+      "fautes": 2,
+      "maxMm": 171.72,
+      "wilsonJustes": {
+       "n": 80,
+       "k": 68,
+       "part": 0.85,
+       "bas": 0.7559,
+       "haut": 0.9121
+      },
+      "wilsonFautes": {
+       "n": 80,
+       "k": 2,
+       "part": 0.025,
+       "bas": 0.0069,
+       "haut": 0.0866
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 16:11 partie 26",
+     "n": 15,
+     "sansEcho": 15,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 19:28 partie 4",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-08 21:17 partie 6",
+     "n": 6,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 6,
+      "justes": 5,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 10.22,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 5,
+       "part": 0.8333,
+       "bas": 0.4365,
+       "haut": 0.9699
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3903
+      }
+     },
+     "avecVisites": {
+      "n": 6,
+      "justes": 5,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 10.22,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 5,
+       "part": 0.8333,
+       "bas": 0.4365,
+       "haut": 0.9699
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3903
+      }
+     }
+    },
+    {
+     "lot": "2026-11-09 09:18 partie 8",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   ],
+   "parMode": {
+    "ombre": {
+     "n": 112,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 112,
+      "justes": 85,
+      "de10a50": 25,
+      "fautes": 2,
+      "maxMm": 171.72,
+      "wilsonJustes": {
+       "n": 112,
+       "k": 85,
+       "part": 0.7589,
+       "bas": 0.672,
+       "haut": 0.8287
+      },
+      "wilsonFautes": {
+       "n": 112,
+       "k": 2,
+       "part": 0.0179,
+       "bas": 0.0049,
+       "haut": 0.0628
+      }
+     },
+     "avecVisites": {
+      "n": 112,
+      "justes": 85,
+      "de10a50": 25,
+      "fautes": 2,
+      "maxMm": 171.72,
+      "wilsonJustes": {
+       "n": 112,
+       "k": 85,
+       "part": 0.7589,
+       "bas": 0.672,
+       "haut": 0.8287
+      },
+      "wilsonFautes": {
+       "n": 112,
+       "k": 2,
+       "part": 0.0179,
+       "bas": 0.0049,
+       "haut": 0.0628
+      }
+     }
+    },
+    "ecriture": {
+     "n": 23,
+     "sansEcho": 17,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 6,
+      "justes": 5,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 10.22,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 5,
+       "part": 0.8333,
+       "bas": 0.4365,
+       "haut": 0.9699
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3903
+      }
+     },
+     "avecVisites": {
+      "n": 6,
+      "justes": 5,
+      "de10a50": 1,
+      "fautes": 0,
+      "maxMm": 10.22,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 5,
+       "part": 0.8333,
+       "bas": 0.4365,
+       "haut": 0.9699
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.3903
+      }
+     }
+    }
+   },
+   "parGarde": {
+    "sans-garde": {
+     "n": 19,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 19,
+      "justes": 12,
+      "de10a50": 7,
+      "fautes": 0,
+      "maxMm": 21.41,
+      "wilsonJustes": {
+       "n": 19,
+       "k": 12,
+       "part": 0.6316,
+       "bas": 0.4104,
+       "haut": 0.8085
+      },
+      "wilsonFautes": {
+       "n": 19,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.1682
+      }
+     },
+     "avecVisites": {
+      "n": 19,
+      "justes": 12,
+      "de10a50": 7,
+      "fautes": 0,
+      "maxMm": 21.41,
+      "wilsonJustes": {
+       "n": 19,
+       "k": 12,
+       "part": 0.6316,
+       "bas": 0.4104,
+       "haut": 0.8085
+      },
+      "wilsonFautes": {
+       "n": 19,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.1682
+      }
+     }
+    },
+    "appui-normal": {
+     "n": 9,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 6,
+      "justes": 3,
+      "de10a50": 2,
+      "fautes": 1,
+      "maxMm": 171.72,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 3,
+       "part": 0.5,
+       "bas": 0.1876,
+       "haut": 0.8124
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 1,
+       "part": 0.1667,
+       "bas": 0.0301,
+       "haut": 0.5635
+      }
+     },
+     "avecVisites": {
+      "n": 6,
+      "justes": 3,
+      "de10a50": 2,
+      "fautes": 1,
+      "maxMm": 171.72,
+      "wilsonJustes": {
+       "n": 6,
+       "k": 3,
+       "part": 0.5,
+       "bas": 0.1876,
+       "haut": 0.8124
+      },
+      "wilsonFautes": {
+       "n": 6,
+       "k": 1,
+       "part": 0.1667,
+       "bas": 0.0301,
+       "haut": 0.5635
+      }
+     }
+    },
+    "loin-du-depart": {
+     "n": 107,
+     "sansEcho": 14,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 93,
+      "justes": 75,
+      "de10a50": 17,
+      "fautes": 1,
+      "maxMm": 142.43,
+      "wilsonJustes": {
+       "n": 93,
+       "k": 75,
+       "part": 0.8065,
+       "bas": 0.7147,
+       "haut": 0.8739
+      },
+      "wilsonFautes": {
+       "n": 93,
+       "k": 1,
+       "part": 0.0108,
+       "bas": 0.0019,
+       "haut": 0.0584
+      }
+     },
+     "avecVisites": {
+      "n": 93,
+      "justes": 75,
+      "de10a50": 17,
+      "fautes": 1,
+      "maxMm": 142.43,
+      "wilsonJustes": {
+       "n": 93,
+       "k": 75,
+       "part": 0.8065,
+       "bas": 0.7147,
+       "haut": 0.8739
+      },
+      "wilsonFautes": {
+       "n": 93,
+       "k": 1,
+       "part": 0.0108,
+       "bas": 0.0019,
+       "haut": 0.0584
+      }
+     }
+    }
+   }
+  },
+  "ombreGardeConsignee": {
+   "n": 116,
+   "sansEcho": 17,
+   "nonJuges": 0,
+   "ecartesD285": 0,
+   "visitesSansAction": 0,
+   "valides": {
+    "n": 99,
+    "justes": 78,
+    "de10a50": 19,
+    "fautes": 2,
+    "maxMm": 171.72,
+    "wilsonJustes": {
+     "n": 99,
+     "k": 78,
+     "part": 0.7879,
+     "bas": 0.6974,
+     "haut": 0.8569
+    },
+    "wilsonFautes": {
+     "n": 99,
+     "k": 2,
+     "part": 0.0202,
+     "bas": 0.0056,
+     "haut": 0.0707
+    }
+   },
+   "avecVisites": {
+    "n": 99,
+    "justes": 78,
+    "de10a50": 19,
+    "fautes": 2,
+    "maxMm": 171.72,
+    "wilsonJustes": {
+     "n": 99,
+     "k": 78,
+     "part": 0.7879,
+     "bas": 0.6974,
+     "haut": 0.8569
+    },
+    "wilsonFautes": {
+     "n": 99,
+     "k": 2,
+     "part": 0.0202,
+     "bas": 0.0056,
+     "haut": 0.0707
+    }
+   }
+  },
+  "riensParMotif": {
+   "anomalie-non-corrigee": 37,
+   "commande:gauge-HIGH_INVALID": 1,
+   "commande:gauge-LOW_INVALID": 5,
+   "depart-le-plus-probable": 704,
+   "plus-de-150-mm": 37,
+   "recherche-adv-contredite-rien": 5,
+   "sans-approche": 138,
+   "sans-voie": 103,
+   "sous-delta": 17,
+   "veto-voie": 3,
+   "veto-voie-absolue": 4,
+   "voie-incoherente": 14
+  },
+  "gardeA": {
+   "refus": 11,
+   "total": {
+    "n": 11,
+    "sansEcho": 8,
+    "nonJuges": 0,
+    "ecartesD285": 0,
+    "visitesSansAction": 0,
+    "valides": {
+     "n": 3,
+     "justes": 3,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": 9.32,
+     "wilsonJustes": {
+      "n": 3,
+      "k": 3,
+      "part": 1,
+      "bas": 0.4385,
+      "haut": 1
+     },
+     "wilsonFautes": {
+      "n": 3,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.5615
+     }
+    },
+    "avecVisites": {
+     "n": 3,
+     "justes": 3,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": 9.32,
+     "wilsonJustes": {
+      "n": 3,
+      "k": 3,
+      "part": 1,
+      "bas": 0.4385,
+      "haut": 1
+     },
+     "wilsonFautes": {
+      "n": 3,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.5615
+     }
+    }
+   },
+   "parLot": [
+    {
+     "lot": "2026-10-29 20:42 partie 10",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-10-31 18:37 partie 6",
+     "n": 3,
+     "sansEcho": 3,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-02 14:50 partie 16",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-03 12:30 partie 23",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 15:23 partie 14",
+     "n": 1,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 3.78,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 1,
+       "part": 1,
+       "bas": 0.2065,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     },
+     "avecVisites": {
+      "n": 1,
+      "justes": 1,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 3.78,
+      "wilsonJustes": {
+       "n": 1,
+       "k": 1,
+       "part": 1,
+       "bas": 0.2065,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 1,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.7935
+      }
+     }
+    },
+    {
+     "lot": "2026-11-04 19:28 partie 4",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    },
+    {
+     "lot": "2026-11-05 08:03 partie 10",
+     "n": 2,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 9.32,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 9.32,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    },
+    {
+     "lot": "2026-11-09 14:53 partie 12",
+     "n": 1,
+     "sansEcho": 1,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     },
+     "avecVisites": {
+      "n": 0,
+      "justes": 0,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": null,
+      "wilsonJustes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      },
+      "wilsonFautes": {
+       "n": 0,
+       "k": 0,
+       "part": null,
+       "bas": null,
+       "haut": null
+      }
+     }
+    }
+   ],
+   "poseraitEnsuite": 0
+  },
+  "rien": 1068
+ },
+ "aPart2310": {
+  "cutsDecides": 24,
+  "ecriture": {
+   "total": {
+    "n": 0,
+    "sansEcho": 0,
+    "nonJuges": 0,
+    "ecartesD285": 0,
+    "visitesSansAction": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonFautes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonFautes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    }
+   },
+   "parLot": [],
+   "deciseesPasse2": 0
+  },
+  "ombre": {
+   "total": {
+    "n": 2,
+    "sansEcho": 0,
+    "nonJuges": 0,
+    "ecartesD285": 0,
+    "visitesSansAction": 0,
+    "valides": {
+     "n": 2,
+     "justes": 2,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": 2.89,
+     "wilsonJustes": {
+      "n": 2,
+      "k": 2,
+      "part": 1,
+      "bas": 0.3424,
+      "haut": 1
+     },
+     "wilsonFautes": {
+      "n": 2,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.6576
+     }
+    },
+    "avecVisites": {
+     "n": 2,
+     "justes": 2,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": 2.89,
+     "wilsonJustes": {
+      "n": 2,
+      "k": 2,
+      "part": 1,
+      "bas": 0.3424,
+      "haut": 1
+     },
+     "wilsonFautes": {
+      "n": 2,
+      "k": 0,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.6576
+     }
+    }
+   },
+   "parLot": [
+    {
+     "lot": "2026-10-23 12:41 partie 0",
+     "n": 2,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 2.89,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 2.89,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    }
+   ],
+   "parMode": {
+    "inconnu": {
+     "n": 2,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 2.89,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 2.89,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    }
+   },
+   "parGarde": {
+    "sans-garde": {
+     "n": 2,
+     "sansEcho": 0,
+     "nonJuges": 0,
+     "ecartesD285": 0,
+     "visitesSansAction": 0,
+     "valides": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 2.89,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     },
+     "avecVisites": {
+      "n": 2,
+      "justes": 2,
+      "de10a50": 0,
+      "fautes": 0,
+      "maxMm": 2.89,
+      "wilsonJustes": {
+       "n": 2,
+       "k": 2,
+       "part": 1,
+       "bas": 0.3424,
+       "haut": 1
+      },
+      "wilsonFautes": {
+       "n": 2,
+       "k": 0,
+       "part": 0,
+       "bas": 0,
+       "haut": 0.6576
+      }
+     }
+    }
+   }
+  },
+  "ombreGardeConsignee": {
+   "n": 0,
+   "sansEcho": 0,
+   "nonJuges": 0,
+   "ecartesD285": 0,
+   "visitesSansAction": 0,
+   "valides": {
+    "n": 0,
+    "justes": 0,
+    "de10a50": 0,
+    "fautes": 0,
+    "maxMm": null,
+    "wilsonJustes": {
+     "n": 0,
+     "k": 0,
+     "part": null,
+     "bas": null,
+     "haut": null
+    },
+    "wilsonFautes": {
+     "n": 0,
+     "k": 0,
+     "part": null,
+     "bas": null,
+     "haut": null
+    }
+   },
+   "avecVisites": {
+    "n": 0,
+    "justes": 0,
+    "de10a50": 0,
+    "fautes": 0,
+    "maxMm": null,
+    "wilsonJustes": {
+     "n": 0,
+     "k": 0,
+     "part": null,
+     "bas": null,
+     "haut": null
+    },
+    "wilsonFautes": {
+     "n": 0,
+     "k": 0,
+     "part": null,
+     "bas": null,
+     "haut": null
+    }
+   }
+  },
+  "riensParMotif": {
+   "depart-le-plus-probable": 12,
+   "plus-de-150-mm": 2,
+   "sans-approche": 5,
+   "sans-voie": 3
+  },
+  "gardeA": {
+   "refus": 0,
+   "total": {
+    "n": 0,
+    "sansEcho": 0,
+    "nonJuges": 0,
+    "ecartesD285": 0,
+    "visitesSansAction": 0,
+    "valides": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonFautes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    },
+    "avecVisites": {
+     "n": 0,
+     "justes": 0,
+     "de10a50": 0,
+     "fautes": 0,
+     "maxMm": null,
+     "wilsonJustes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "wilsonFautes": {
+      "n": 0,
+      "k": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     }
+    }
+   },
+   "parLot": [],
+   "poseraitEnsuite": 0
+  },
+  "rien": 22
+ },
+ "ecrituresMaxParLot": 10,
+ "seuil": {
+  "ecrituresJugees": 29,
+  "seuil": 20,
+  "concluable": true,
+  "fautes": 0,
+  "borneHauteFautes": 0.117,
+  "pour5pcSansFaute": 73,
+  "pour3pcSansFaute": 125,
+  "manquePour5pc": 44,
+  "manquePour3pc": 96,
+  "ecritsSansEchoOuNonJuges": 99
+ }
+}
