@@ -131,8 +131,13 @@
       const r = Array.isArray(d.unresolvedRails) ? d.unresolvedRails : [];
       return { cut: cutDe(d), motif: r.length ? 'Rail non résolu' : 'À poser', precision: r.length === 2 ? 'les deux rails' : r.length ? (RAILS[r[0]] || '') : '', heure: heure(d.deferredAt) };
     }).filter(d => d.cut !== null).reverse();
-    const plages = [...($('verts-plages')?.querySelectorAll?.('li') || [])].map(li => ({ libelle: String(li.querySelector('b')?.textContent || '').trim(), detail: String(li.querySelector('span')?.textContent || '').trim() }));
-    const vertsNombre = plages.reduce((n, p) => n + (Number((p.detail.match(/·\s*(\d+)/) || [])[1]) || 0), 0);
+    /* CH-097 : au-delà de 12 plages le panneau ajoute une ligne de renvoi (`class="muted"`, « … et N autres plages ») : ce n'est pas une plage. Le nombre
+     * de verts vient de la liste du panneau (`aControler`), pas de la somme des 12 lignes affichées ; sans elle, repli sur cette somme. */
+    const plages = [...($('verts-plages')?.querySelectorAll?.('li') || [])].filter(li => !/(^|\s)muted(\s|$)/.test(String(li.className || '')))
+      .map(li => ({ libelle: String(li.querySelector('b')?.textContent || '').trim(), detail: String(li.querySelector('span')?.textContent || '').trim() }));
+    let vertsListe = null; try { vertsListe = root.ArianePanel.vertsListe?.() || null; } catch { vertsListe = null; }
+    const vertsNombre = Number.isInteger(vertsListe?.aControler) && vertsListe.aControler >= 0 ? vertsListe.aControler
+      : plages.reduce((n, p) => n + (Number((p.detail.match(/·\s*(\d+)/) || [])[1]) || 0), 0);
     const dernierP = (b?.processed || []).at?.(-1);
     /* Ciblage T22 : lot clos parce qu'ESV est passé au-delà de son dernier cut, dans la même partie (background.js `lotExitOf`, `clore`). */
     const E = b?.stoppedAtEnd, horsLot = E?.reason === 'navigation-beyond-end' && E.target?.part === b.scope?.part && Number.isInteger(E.target?.cut)

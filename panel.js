@@ -905,7 +905,7 @@
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
- globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),   /* CH-026 : les départs des parties, pour l'onglet « File » */
+ globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),vertsListe:()=>verts.liste,   /* CH-026 : les départs des parties, pour l'onglet « File » ; CH-097 : la liste des verts (nombre réel au-delà de 12 plages) */
    apres:f=>{if(typeof f!=='function')return;hooksRendu.push(f);if(state)try{f(state);}catch{/* idem */}}});
  /* T20a (D-243, D-250) — « RECONNECTER » : ré-équipe l'onglet ESV choisi (action `reconnect` du service worker, aucune commande ESV). Caché sans onglet
   * (statut `no-tab`, ou jamais connecté), grisé pendant la reconnexion (`reconnecting`). */
