@@ -7,7 +7,7 @@
  "latenceMs": 60,
  "decodeMs": 40,
  "mortMs": 400,
- "chargeDepart": 0.55,
+ "chargeDepart": 0.47,
  "coeurs": 4,
  "resume": {
   "sans-passe-300ms": {
@@ -28,12 +28,12 @@
      "n": 10
     },
     "afficheMs": {
-     "mediane": 1676,
-     "p90": 1699,
+     "mediane": 1696,
+     "p90": 1735,
      "n": 10
     },
     "avanceMs": {
-     "mediane": 300,
+     "mediane": 301,
      "p90": 301,
      "n": 10
     },
@@ -70,23 +70,23 @@
      "n": 10
     },
     "chargesArrivee": {
-     "mediane": 13,
-     "p90": 13,
+     "mediane": 17,
+     "p90": 17,
      "n": 10
     },
     "partArrivee": {
-     "mediane": 0.21,
-     "p90": 0.21,
+     "mediane": 0.274,
+     "p90": 0.274,
      "n": 10
     },
     "afficheMs": {
-     "mediane": 986,
-     "p90": 1002,
+     "mediane": 1363,
+     "p90": 1420,
      "n": 10
     },
     "avanceMs": {
      "mediane": 307,
-     "p90": 307,
+     "p90": 308,
      "n": 10
     },
     "liberes": {
@@ -100,13 +100,13 @@
      "n": 10
     },
     "loinLances": {
-     "mediane": 6,
-     "p90": 6,
+     "mediane": 12,
+     "p90": 12,
      "n": 10
     },
     "loinCharges": {
-     "mediane": 4,
-     "p90": 4,
+     "mediane": 8,
+     "p90": 8,
      "n": 10
     },
     "loinCaptures": {
@@ -134,119 +134,13 @@
      "n": 10
     },
     "afficheMs": {
-     "mediane": 1669,
-     "p90": 1693,
+     "mediane": 1686,
+     "p90": 1719,
      "n": 10
     },
     "avanceMs": {
-     "mediane": 1000,
-     "p90": 1001,
-     "n": 10
-    },
-    "liberes": {
-     "mediane": 0,
-     "p90": 0,
-     "n": 10
-    },
-    "refus": {
-     "mediane": 0,
-     "p90": 0,
-     "n": 10
-    },
-    "loinLances": {
-     "mediane": null,
-     "p90": null,
-     "n": 0
-    },
-    "loinCharges": {
-     "mediane": null,
-     "p90": null,
-     "n": 0
-    },
-    "loinCaptures": {
-     "mediane": null,
-     "p90": null,
-     "n": 0
-    }
-   },
-   "apres": {
-    "connus": {
-     "mediane": 62,
-     "p90": 62,
-     "n": 10
-    },
-    "chargesArrivee": {
-     "mediane": 25,
-     "p90": 25,
-     "n": 10
-    },
-    "partArrivee": {
-     "mediane": 0.403,
-     "p90": 0.403,
-     "n": 10
-    },
-    "afficheMs": {
-     "mediane": 1131,
-     "p90": 1133,
-     "n": 10
-    },
-    "avanceMs": {
-     "mediane": 1007,
-     "p90": 1008,
-     "n": 10
-    },
-    "liberes": {
-     "mediane": 0,
-     "p90": 0,
-     "n": 10
-    },
-    "refus": {
-     "mediane": 0,
-     "p90": 0,
-     "n": 10
-    },
-    "loinLances": {
-     "mediane": 18,
-     "p90": 18,
-     "n": 10
-    },
-    "loinCharges": {
-     "mediane": 16,
-     "p90": 16,
-     "n": 10
-    },
-    "loinCaptures": {
-     "mediane": 0,
-     "p90": 0,
-     "n": 10
-    }
-   }
-  },
-  "passe-3-cuts": {
-   "avant": {
-    "connus": {
-     "mediane": 62,
-     "p90": 62,
-     "n": 10
-    },
-    "chargesArrivee": {
-     "mediane": 9,
-     "p90": 9,
-     "n": 10
-    },
-    "partArrivee": {
-     "mediane": 0.145,
-     "p90": 0.145,
-     "n": 10
-    },
-    "afficheMs": {
-     "mediane": 1638,
-     "p90": 1672,
-     "n": 10
-    },
-    "avanceMs": {
-     "mediane": 8180,
-     "p90": 8319,
+     "mediane": 1001,
+     "p90": 1002,
      "n": 10
     },
     "liberes": {
@@ -292,13 +186,13 @@
      "n": 10
     },
     "afficheMs": {
-     "mediane": 834,
-     "p90": 846,
+     "mediane": 724,
+     "p90": 738,
      "n": 10
     },
     "avanceMs": {
-     "mediane": 8552,
-     "p90": 8860,
+     "mediane": 1007,
+     "p90": 1008,
      "n": 10
     },
     "liberes": {
@@ -312,13 +206,119 @@
      "n": 10
     },
     "loinLances": {
-     "mediane": 32,
-     "p90": 32,
+     "mediane": 36,
+     "p90": 36,
      "n": 10
     },
     "loinCharges": {
      "mediane": 32,
      "p90": 32,
+     "n": 10
+    },
+    "loinCaptures": {
+     "mediane": 0,
+     "p90": 0,
+     "n": 10
+    }
+   }
+  },
+  "passe-3-cuts": {
+   "avant": {
+    "connus": {
+     "mediane": 62,
+     "p90": 62,
+     "n": 10
+    },
+    "chargesArrivee": {
+     "mediane": 9,
+     "p90": 9,
+     "n": 10
+    },
+    "partArrivee": {
+     "mediane": 0.145,
+     "p90": 0.145,
+     "n": 10
+    },
+    "afficheMs": {
+     "mediane": 1669,
+     "p90": 1719,
+     "n": 10
+    },
+    "avanceMs": {
+     "mediane": 7972,
+     "p90": 8001,
+     "n": 10
+    },
+    "liberes": {
+     "mediane": 0,
+     "p90": 0,
+     "n": 10
+    },
+    "refus": {
+     "mediane": 0,
+     "p90": 0,
+     "n": 10
+    },
+    "loinLances": {
+     "mediane": null,
+     "p90": null,
+     "n": 0
+    },
+    "loinCharges": {
+     "mediane": null,
+     "p90": null,
+     "n": 0
+    },
+    "loinCaptures": {
+     "mediane": null,
+     "p90": null,
+     "n": 0
+    }
+   },
+   "apres": {
+    "connus": {
+     "mediane": 62,
+     "p90": 62,
+     "n": 10
+    },
+    "chargesArrivee": {
+     "mediane": 62,
+     "p90": 62,
+     "n": 10
+    },
+    "partArrivee": {
+     "mediane": 1,
+     "p90": 1,
+     "n": 10
+    },
+    "afficheMs": {
+     "mediane": 429,
+     "p90": 430,
+     "n": 10
+    },
+    "avanceMs": {
+     "mediane": 9398,
+     "p90": 9487,
+     "n": 10
+    },
+    "liberes": {
+     "mediane": 0,
+     "p90": 0,
+     "n": 10
+    },
+    "refus": {
+     "mediane": 0,
+     "p90": 0,
+     "n": 10
+    },
+    "loinLances": {
+     "mediane": 53,
+     "p90": 53,
+     "n": 10
+    },
+    "loinCharges": {
+     "mediane": 53,
+     "p90": 53,
      "n": 10
     },
     "loinCaptures": {
@@ -336,7 +336,119 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1649,
+     "afficheMs": 1709,
+     "avanceMs": 301,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1705,
+     "avanceMs": 300,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1695,
+     "avanceMs": 301,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1722,
+     "avanceMs": 301,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1664,
+     "avanceMs": 301,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1696,
+     "avanceMs": 300,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1740,
+     "avanceMs": 301,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1735,
+     "avanceMs": 301,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1678,
      "avanceMs": 300,
      "liberes": 0,
      "refus": 0,
@@ -359,13 +471,187 @@
      "loinCaptures": null,
      "motif": null,
      "source": null
+    }
+   ],
+   "apres": [
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1427,
+     "avanceMs": 308,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1397,
+     "avanceMs": 307,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1420,
+     "avanceMs": 306,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1350,
+     "avanceMs": 307,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1343,
+     "avanceMs": 307,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1357,
+     "avanceMs": 310,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1370,
+     "avanceMs": 306,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1399,
+     "avanceMs": 308,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1337,
+     "avanceMs": 306,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 17,
+     "partArrivee": 0.274,
+     "afficheMs": 1363,
+     "avanceMs": 306,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 12,
+     "loinCharges": 8,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    }
+   ]
+  },
+  "sans-passe-1000ms": {
+   "avant": [
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1686,
+     "avanceMs": 1001,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
     },
     {
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1725,
-     "avanceMs": 301,
+     "afficheMs": 1778,
+     "avanceMs": 1000,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1719,
+     "avanceMs": 1001,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -379,7 +665,7 @@
      "chargesArrivee": 9,
      "partArrivee": 0.145,
      "afficheMs": 1682,
-     "avanceMs": 300,
+     "avanceMs": 1001,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -392,8 +678,8 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1686,
-     "avanceMs": 300,
+     "afficheMs": 1658,
+     "avanceMs": 1001,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -402,255 +688,11 @@
      "motif": null,
      "source": null
     },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1641,
-     "avanceMs": 301,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1649,
-     "avanceMs": 301,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1680,
-     "avanceMs": 300,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1699,
-     "avanceMs": 300,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1674,
-     "avanceMs": 301,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    }
-   ],
-   "apres": [
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 996,
-     "avanceMs": 307,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 984,
-     "avanceMs": 309,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 999,
-     "avanceMs": 306,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 986,
-     "avanceMs": 307,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 996,
-     "avanceMs": 306,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 985,
-     "avanceMs": 307,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 979,
-     "avanceMs": 306,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 1004,
-     "avanceMs": 307,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 982,
-     "avanceMs": 306,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 13,
-     "partArrivee": 0.21,
-     "afficheMs": 1002,
-     "avanceMs": 307,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 6,
-     "loinCharges": 4,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    }
-   ]
-  },
-  "sans-passe-1000ms": {
-   "avant": [
     {
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
      "afficheMs": 1667,
-     "avanceMs": 1001,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1696,
-     "avanceMs": 1001,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1665,
      "avanceMs": 1002,
      "liberes": 0,
      "refus": 0,
@@ -664,8 +706,8 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1659,
-     "avanceMs": 1000,
+     "afficheMs": 1693,
+     "avanceMs": 1002,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -678,7 +720,7 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1685,
+     "afficheMs": 1700,
      "avanceMs": 1001,
      "liberes": 0,
      "refus": 0,
@@ -692,7 +734,7 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1642,
+     "afficheMs": 1712,
      "avanceMs": 1000,
      "liberes": 0,
      "refus": 0,
@@ -706,8 +748,168 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1670,
-     "avanceMs": 1000,
+     "afficheMs": 1673,
+     "avanceMs": 1001,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    }
+   ],
+   "apres": [
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 750,
+     "avanceMs": 1008,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 737,
+     "avanceMs": 1007,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 717,
+     "avanceMs": 1008,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 738,
+     "avanceMs": 1008,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 733,
+     "avanceMs": 1007,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 727,
+     "avanceMs": 1007,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 720,
+     "avanceMs": 1006,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 721,
+     "avanceMs": 1006,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 724,
+     "avanceMs": 1008,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 41,
+     "partArrivee": 0.661,
+     "afficheMs": 712,
+     "avanceMs": 1008,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": 36,
+     "loinCharges": 32,
+     "loinCaptures": 0,
+     "motif": "arrivee",
+     "source": "changement-mode"
+    }
+   ]
+  },
+  "passe-3-cuts": {
+   "avant": [
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1737,
+     "avanceMs": 8001,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -720,8 +922,8 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1684,
-     "avanceMs": 1000,
+     "afficheMs": 1671,
+     "avanceMs": 7978,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -734,8 +936,22 @@
      "connus": 62,
      "chargesArrivee": 9,
      "partArrivee": 0.145,
-     "afficheMs": 1693,
-     "avanceMs": 1000,
+     "afficheMs": 1719,
+     "avanceMs": 7914,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1645,
+     "avanceMs": 7972,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -749,7 +965,77 @@
      "chargesArrivee": 9,
      "partArrivee": 0.145,
      "afficheMs": 1669,
-     "avanceMs": 1001,
+     "avanceMs": 7867,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1655,
+     "avanceMs": 7893,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1667,
+     "avanceMs": 7915,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1707,
+     "avanceMs": 8028,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1704,
+     "avanceMs": 7992,
+     "liberes": 0,
+     "refus": 0,
+     "loinLances": null,
+     "loinCharges": null,
+     "loinCaptures": null,
+     "motif": null,
+     "source": null
+    },
+    {
+     "connus": 62,
+     "chargesArrivee": 9,
+     "partArrivee": 0.145,
+     "afficheMs": 1636,
+     "avanceMs": 7976,
      "liberes": 0,
      "refus": 0,
      "loinLances": null,
@@ -762,426 +1048,140 @@
    "apres": [
     {
      "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1131,
-     "avanceMs": 1007,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 430,
+     "avanceMs": 9128,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1128,
-     "avanceMs": 1006,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1133,
-     "avanceMs": 1009,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1134,
-     "avanceMs": 1007,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1133,
-     "avanceMs": 1006,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1131,
-     "avanceMs": 1006,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1129,
-     "avanceMs": 1007,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1131,
-     "avanceMs": 1007,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1131,
-     "avanceMs": 1006,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 25,
-     "partArrivee": 0.403,
-     "afficheMs": 1129,
-     "avanceMs": 1008,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 18,
-     "loinCharges": 16,
-     "loinCaptures": 0,
-     "motif": "arrivee",
-     "source": "changement-mode"
-    }
-   ]
-  },
-  "passe-3-cuts": {
-   "avant": [
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1680,
-     "avanceMs": 8088,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1637,
-     "avanceMs": 8210,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1636,
-     "avanceMs": 8128,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1636,
-     "avanceMs": 8319,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1651,
-     "avanceMs": 8146,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1638,
-     "avanceMs": 8164,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1672,
-     "avanceMs": 8353,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1663,
-     "avanceMs": 8245,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1660,
-     "avanceMs": 8180,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    },
-    {
-     "connus": 62,
-     "chargesArrivee": 9,
-     "partArrivee": 0.145,
-     "afficheMs": 1636,
-     "avanceMs": 8225,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": null,
-     "loinCharges": null,
-     "loinCaptures": null,
-     "motif": null,
-     "source": null
-    }
-   ],
-   "apres": [
-    {
-     "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 834,
-     "avanceMs": 8532,
-     "liberes": 0,
-     "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 835,
-     "avanceMs": 8552,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 429,
+     "avanceMs": 9497,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 833,
-     "avanceMs": 8921,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 429,
+     "avanceMs": 8932,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 833,
-     "avanceMs": 8860,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 430,
+     "avanceMs": 9398,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 847,
-     "avanceMs": 8624,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 428,
+     "avanceMs": 8731,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 832,
-     "avanceMs": 8549,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 429,
+     "avanceMs": 8881,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 834,
-     "avanceMs": 8561,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 434,
+     "avanceMs": 9411,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 834,
-     "avanceMs": 8534,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 429,
+     "avanceMs": 9481,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 832,
-     "avanceMs": 8522,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 429,
+     "avanceMs": 9415,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
     },
     {
      "connus": 62,
-     "chargesArrivee": 41,
-     "partArrivee": 0.661,
-     "afficheMs": 846,
-     "avanceMs": 8721,
+     "chargesArrivee": 62,
+     "partArrivee": 1,
+     "afficheMs": 428,
+     "avanceMs": 9487,
      "liberes": 0,
      "refus": 0,
-     "loinLances": 32,
-     "loinCharges": 32,
+     "loinLances": 53,
+     "loinCharges": 53,
      "loinCaptures": 3,
      "motif": "arrivee",
      "source": "changement-mode"
