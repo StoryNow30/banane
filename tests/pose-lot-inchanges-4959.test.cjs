@@ -35,7 +35,10 @@ const sansPatch=(dossier,table)=>(f,t)=>{const c=table[f];if(!c||!t.includes(c[1
  fs.mkdirSync(path.join(d,path.dirname(f)),{recursive:true});fs.writeFileSync(path.join(d,f),t);
  const r=spawnSync('patch',['-s','-R','-p1','-d',d,'-i',path.join(racine,'chantiers',dossier,c[0])],{encoding:'utf8'});
  const sortie=r.status===0?fs.readFileSync(path.join(d,f),'utf8'):t;fs.rmSync(d,{recursive:true,force:true});return sortie;};
-const sansCH091=sansPatch('CH-091',CH091),sansCH086=(f,t)=>sansPatch('CH-086',CH086)(f,sansCH091(f,t));
+/* CH-094 : après une pause « écriture non confirmée », la reprise repasse la porte ; patchs déclarés de la même façon (chantiers/CH-094/engine.patch
+ * et engine-baseline.patch, posés PAR-DESSUS ceux de CH-091) : ils sont retirés d'abord, puis ceux de CH-091, puis ceux de CH-086. */
+const CH094={'src/engine.js':['engine.patch','fenetreRestee'],'audit/v4.6.0-engine-baseline.json':['engine-baseline.patch','previousHashCH094']};
+const sansCH094=sansPatch('CH-094',CH094),sansCH091=(f,t)=>sansPatch('CH-091',CH091)(f,sansCH094(f,t)),sansCH086=(f,t)=>sansPatch('CH-086',CH086)(f,sansCH091(f,t));
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};

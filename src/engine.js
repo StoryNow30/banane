@@ -124,25 +124,35 @@
    * écritures de la fenêtre doivent être confirmées dans `delaiMs` ; sinon une sauvegarde complète est retentée une fois, puis pause
    * motivée (`ECRITURE_NON_CONFIRMEE`), sans commande. Arrêt du service worker dans la fenêtre : l'état durable est l'un de ceux que le
    * chemin d'avant pouvait laisser (intention de validation, observation sans acceptation, acceptation, cut compté) ; init() relit
-   * `fenetreEcritures` et réécrit dans IndexedDB les événements et visites de la fenêtre que l'état porte (même clé : idempotent). */
+   * `fenetreEcritures` et réécrit dans IndexedDB les événements et visites de la fenêtre que l'état porte (même clé : idempotent).
+   * CH-094 — FENÊTRE RESTÉE EN ATTENTE (`fenetreRestee`). Après une pause `ECRITURE_NON_CONFIRMEE` (ou un init() qui n'a pas pu réécrire),
+   * l'état garde `fenetreEcritures` alors qu'aucune fenêtre n'est ouverte. La porte tient encore : avant l'intention de pose, de différé
+   * ou de validation, la liste est réécrite dans `delaiMs` (événements, visites, puis l'état sans la liste), `ecritures-fond-reprises`
+   * le consigne ; sinon la même pause motivée, sans commande. « Reprendre » repasse donc la porte, à l'étape où le lot s'était arrêté.
+   * À la sortie du lot, la liste restée n'est pas retentée (la pause vient d'être motivée). Une reprise abandonnée sur délai qui finit
+   * plus tard ne touche plus l'état (elle effaçait la liste de la fenêtre suivante) : ses écritures restent, à la même clé. */
   ouvrirFenetre(){const r=this.ecrituresApresValidation;if(this.fenetre||!r||r.enFond!==true)return false;
    this.fenetre={promesses:[],echecs:[],ouverteMs:Date.now()};
    this.s.fenetreEcritures={ouverteA:new Date().toISOString(),evenements:[],visites:[]};return true;}
   enVol(p){const f=this.fenetre;const suivi=Promise.resolve(p).then(()=>true,e=>{f.echecs.push(String(e?.message||e));return false;});
    f.promesses.push(suivi);return suivi;}
-  async porteEcritures(motif){const f=this.fenetre;if(!f)return null;
+  fenetreRestee(motif){return !this.fenetre&&motif!=='sortie-du-lot'&&this.s.fenetreEcritures?{promesses:[],echecs:[],ouverteMs:Date.now(),restee:true}:null;}
+  async porteEcritures(motif){const f=this.fenetre||this.fenetreRestee(motif);if(!f)return null;
    this.fenetre=null;const r=this.ecrituresApresValidation||{},delai=Number.isFinite(r.delaiMs)&&r.delaiMs>0?r.delaiMs:2000;
    const borne=async p=>{let minuterie;const echeance=new Promise(ok=>{minuterie=setTimeout(()=>ok('delai'),delai);});
      try{return await Promise.race([p,echeance]);}finally{clearTimeout(minuterie);}};
-   const issue=await borne(Promise.all(f.promesses).then(()=>'ok'));
-   const mesure={motif,ecritures:f.promesses.length,attenteMs:Date.now()-f.ouverteMs,issue:issue==='ok'&&!f.echecs.length?'confirme':issue==='ok'?'echec':'delai'};
+   const issue=f.restee?'restee':await borne(Promise.all(f.promesses).then(()=>'ok'));
+   const mesure={motif,ecritures:f.promesses.length,attenteMs:Date.now()-f.ouverteMs,issue:issue==='restee'?issue:issue==='ok'&&!f.echecs.length?'confirme':issue==='ok'?'echec':'delai'};
    this.dernierePorte=mesure;
    if(mesure.issue==='confirme'){delete this.s.fenetreEcritures;return mesure;}
    /* Une seule reprise : visites et événements de la fenêtre réécrits, puis l'état complet. */
-   const fe=this.s.fenetreEcritures,reprise=(async()=>{await this.reecrireFenetre(fe);delete this.s.fenetreEcritures;await this.ecrireEtat();return 'ok';})();
+   let abandon=false,n=null;
+   const fe=this.s.fenetreEcritures,reprise=(async()=>{n=await this.reecrireFenetre(fe);if(abandon)return 'abandon';delete this.s.fenetreEcritures;await this.ecrireEtat();return 'ok';})();
    let issue2;try{issue2=await borne(reprise);}catch(e){issue2='echec';f.echecs.push(String(e?.message||e));}
-   void reprise.catch(()=>{});
-   if(issue2==='ok'){mesure.reprise='confirme';return mesure;}
+   abandon=issue2!=='ok';void reprise.catch(()=>{});
+   if(issue2==='ok'){mesure.reprise='confirme';
+     if(f.restee)await this.event('ecritures-fond-reprises',{identity:null,ouverteA:fe?.ouverteA??null,evenementsReecrits:n.evenements,visitesReecrites:n.visites,erreur:null,motif});
+     return mesure;}
    this.s.fenetreEcritures=fe;
    const e=Error(`Écritures du cut précédent non confirmées (${mesure.issue}, ${motif}) : lot en pause, aucune commande envoyée. Reprendre quand le stockage répond.`);
    e.code='ECRITURE_NON_CONFIRMEE';e.motif=motif;e.echecs=f.echecs.slice(0,5);throw e;}
