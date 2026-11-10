@@ -1,0 +1,249 @@
+{
+ "fidelite": {
+  "evaluationsReellesComparees": 50,
+  "verdictsIdentiques": 50,
+  "sourcesIdentiques": 50
+ },
+ "hypotheses": "V1 : appuis du lot sans les cuts différés par le levier ; V2 : appuis réels tels quels. Le reste du lot est celui du lot réel (statique).",
+ "contrefactuels": [
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 182,
+   "poseDuLotClasse": "juste",
+   "poseDuLotEcartMm": 0,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 220,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 173.89,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 277,
+   "poseDuLotClasse": null,
+   "poseDuLotEcartMm": null,
+   "V1": {
+    "posable": true,
+    "source": "lot",
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": true,
+    "source": "lot",
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 360,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 156.09,
+   "V1": {
+    "posable": true,
+    "source": "serie",
+    "erreurMm": 2.87
+   },
+   "V2": {
+    "posable": true,
+    "source": "serie",
+    "erreurMm": 2.87
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 361,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 156.46,
+   "V1": {
+    "posable": true,
+    "source": "serie",
+    "erreurMm": 2.33
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 8997,
+   "poseDuLotClasse": null,
+   "poseDuLotEcartMm": null,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9001,
+   "poseDuLotClasse": null,
+   "poseDuLotEcartMm": null,
+   "V1": {
+    "posable": true,
+    "source": "b1",
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": true,
+    "source": "b1",
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9160,
+   "poseDuLotClasse": "juste",
+   "poseDuLotEcartMm": 7.17,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9161,
+   "poseDuLotClasse": null,
+   "poseDuLotEcartMm": null,
+   "V1": {
+    "posable": true,
+    "source": "ecart",
+    "erreurMm": 230.9
+   },
+   "V2": {
+    "posable": true,
+    "source": "lot",
+    "erreurMm": 0.41
+   },
+   "note": "validation sans mouvement de moins de 1,5 s : écartée (D-285), erreurs données contre la pose du lot, non jugées"
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9162,
+   "poseDuLotClasse": "juste",
+   "poseDuLotEcartMm": 5.06,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": true,
+    "source": "serie",
+    "erreurMm": 4.77
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9266,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 262.65,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9267,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 315.14,
+   "V1": {
+    "posable": true,
+    "source": "ecart",
+    "erreurMm": 0.92
+   },
+   "V2": {
+    "posable": true,
+    "source": "ecart",
+    "erreurMm": 0.92
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9270,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 238.3,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9271,
+   "poseDuLotClasse": "faute",
+   "poseDuLotEcartMm": 185.36,
+   "V1": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   },
+   "V2": {
+    "posable": false,
+    "source": null,
+    "erreurMm": null
+   }
+  }
+ ]
+}
