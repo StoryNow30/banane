@@ -21,7 +21,7 @@ const ETATS = [
   { id: 'cours', nom: 'Lot en cours', ton: 'marche', mot: 'En cours', pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4812', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
     ligne: 'Pose du cut <b>4812</b> · <b>18</b> cuts traités, fin au cut <b>4900</b>', court: 'Pose du cut <b>4812</b>', trio: [['15', 'posés'], ['3', 'à poser'], ['7,9', 'cuts par minute']], actions: ['Pause', 'Arrêter le lot'], aposer: AP3 },
   { id: 'pause', nom: 'En pause', ton: 'repos', mot: 'En pause', pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4811', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
-    ligne: 'En pause depuis <b>1 min 45</b>, après le cut <b>4811</b> · <b>18</b> cuts traités', court: 'En pause depuis <b>1 min 45</b>, après le cut <b>4811</b>', trio: [['15', 'posés'], ['3', 'à poser'], ['7,6 s', 'médiane par cut']], actions: ['Reprendre', 'Arrêter le lot'], aposer: AP3 },
+    ligne: '<span class="nb">En pause depuis <b>1 min 45</b>,</span> <span class="nb">après le cut <b>4811</b> ·</span> <span class="nb"><b>18</b> cuts traités</span>', court: 'En pause depuis <b>1 min 45</b>, après le cut <b>4811</b>', trio: [['15', 'posés'], ['3', 'à poser'], ['7,6 s', 'médiane par cut']], actions: ['Reprendre', 'Arrêter le lot'], aposer: AP3 },
   { id: 'toi', nom: 'Rail non résolu', ton: 'toi', mot: 'À toi', pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4812', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
     avis: 'Ariane ne sait pas poser un rail du cut 4812. Réessaie, ou <span class="nb">reprends-le</span> à la main.', trio: [['15', 'posés'], ['3', 'à poser'], ['4811', 'dernier cut posé']], actions: ['Réessayer ce cut', 'Reprise manuelle', 'Arrêter le lot'], aposer: AP3 },
   { id: 'panne', nom: 'ESV muet', ton: 'panne', mot: 'ESV ne répond plus', long: true, pct: 20, geant: ['20', '%'], bornes: ['4790', '4900'], pos: '4811', leg: ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'],
@@ -31,7 +31,7 @@ const ETATS = [
   { id: 'relecture', nom: 'Relecture', ton: 'marche', mot: 'Relecture', pct: 14, geant: ['14', '%'], bornes: ['12', '85'], leg: ['cuts relus · <b>3</b> corrigés', 'à relire'], court: 'Relecture du cut <b>4801</b>',
     ligne: '<b>12</b> cuts relus sur <b>85</b>, <b>3</b> corrigés · cut <b>4801</b>', trio: [['12', 'relus'], ['85', 'à relire'], ['3', 'corrigés']], actions: ['Arrêter la relecture', 'Nouveau lot'], sansPrincipal: true, aposer: AP6 },
   { id: 'fin', nom: 'Fin de lot', ton: 'repos', mot: 'Terminé', pct: 100, geant: ['100', '%'], bornes: ['4790', '4900'], leg: ['<b>93</b> cuts traités', '<b>6</b> à poser'],
-    ligne: '<b>93</b> cuts traités · il reste <b>6</b> à poser · verts pas encore calculés', court: 'Verts pas encore calculés · export prêt', trio: [['87', 'posés'], ['6', 'à poser'], ['prêt', 'export']], actions: ['Voir ce qui reste', 'Exporter le dossier', 'Nouveau lot'], aposer: AP6 },
+    ligne: '<span class="nb"><b>93</b> cuts traités, il reste <b>6</b> à poser ·</span> <span class="nb">verts pas encore calculés</span>', court: 'Verts pas encore calculés · export prêt', trio: [['87', 'posés'], ['6', 'à poser'], ['prêt', 'export']], actions: ['Voir ce qui reste', 'Exporter le dossier', 'Nouveau lot'], aposer: AP6 },
 ];
 
 /* ───────────────────────────── morceaux communs */
@@ -51,16 +51,20 @@ function rendre1(e) {
   return `<div class="p r1" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r1-corps"><div class="r1-haut"><span class="etat"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
 <div class="r1-geant"><strong>${e.geant[0]}</strong><span>${e.geant[1]}</span></div><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>${texte(e)}${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
 }
+const COCHE = sv('<path d="M3.5 8.4l3 3 6-6.6" stroke-width="2"/>');
 function rendre2(e) {
-  const fin = e.id === 'pret' ? '<strong class="mot">fin</strong>' : '<strong>4900</strong>';
-  const leg = { pret: ['premier cut', 'dernier cut : fin de partie'], rattrapage: ['<b>1</b> posé sur <b>3</b> au rattrapage', 'cut <b>4803</b>'], relecture: ['<b>12</b> cuts relus sur <b>85</b>', '<b>3</b> corrigés'], fin: ['<b>93</b> cuts traités', '<b>6</b> à poser'] }[e.id] || ['<b>18</b> cuts traités', '<b>89</b> au plus à venir'];
-  return `<div class="p r2" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r2-corps"><section class="r2-carte"><div class="r2-tete"><span class="etat"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
-<div class="r2-bornes"><strong>4790</strong><em>${e.geant[0]} %</em>${fin}</div><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>
-<div class="r2-legende"><span>${leg[0]}</span><span>${leg[1]}</span></div></section>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${e.court || e.ligne}</p>`}${trio(e)}<div class="pousse"></div>${e.champs ? '' : rangs(e)}${actions(e)}</div></div>`;
+  /* les trois étapes d'un lot ; celle qui tourne porte la barre, le pourcentage et la phrase */
+  const ici = { pret: -1, rattrapage: 1, relecture: 2, fin: 3 }[e.id] ?? 0;
+  const noms = ['Pose', 'Rattrapage', 'Relecture'], faits = ['93 cuts traités', 'fait', 'faite'];
+  const etapes = noms.map((n, k) => k < ici ? `<div class="r2-etape fait"><i>${COCHE}</i><h4>${n}</h4><em>${faits[k]}</em></div>`
+    : k === ici ? `<div class="r2-etape ici"><i></i><h4>${n}</h4><em>${e.geant[0]} %</em><div class="jauge" role="img" aria-label="Avancement ${e.pct} %"><b style="width:${e.pct}%"></b></div>${e.avis ? `<p class="avis">${e.avis}</p>` : `<p class="ligne">${e.ligne}</p>`}</div>`
+    : `<div class="r2-etape"><i></i><h4>${n}</h4><em>${e.id === 'pret' && k === 0 ? 'du cut 4790 à la fin de partie' : 'à venir'}</em></div>`).join('');
+  return `<div class="p r2" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r2-corps"><div class="r2-haut"><span class="etat"><i></i><h3>${e.mot}</h3></span><span>Partie 13</span></div>
+<div class="r2-etapes">${etapes}</div>${e.id === 'fin' ? `<p class="ligne" style="margin-top:12px">${e.court}</p>` : ''}${trio(e)}<div class="pousse"></div>${e.champs ? '' : rangs(e)}${actions(e)}</div></div>`;
 }
 function rendre3(e) {
   const R = 52, C = 2 * Math.PI * R;
-  return `<div class="p r3" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r3-corps"><div class="r3-anneau" role="img" aria-label="Avancement ${e.pct} %"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="${R}"/>${e.pct ? `<circle class="fait" cx="60" cy="60" r="${R}" stroke-dasharray="${(C * e.pct / 100).toFixed(2)} ${C.toFixed(2)}"/>` : ''}</svg><strong>${e.geant[0]}<span>%</span></strong></div>
+  return `<div class="p r3" data-etat="${e.id}" data-ton="${e.ton}">${barre(e)}<div class="r3-corps"><div class="r3-anneau" role="img" aria-label="Avancement ${e.pct} %"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="${R}"/>${e.pct ? `<circle class="fait" cx="60" cy="60" r="${R}" stroke-dasharray="${(C * e.pct / 100).toFixed(2)} ${C.toFixed(2)}"/>` : ''}</svg><strong${e.geant[0].length > 2 ? ' class="trois"' : ''}>${e.geant[0]}<span>%</span></strong></div>
 <div class="r3-centre"><div class="etat"><i></i><h3>${e.mot}</h3></div>${texte(e)}</div>${trio(e)}<div class="pousse"></div>${rangs(e)}${actions(e)}</div></div>`;
 }
 
@@ -72,7 +76,7 @@ function existant(e) {
   return ['clair', 'sombre'].map(th => [360, 600].map(t => `<img class="v-${th} v-${t}" src="${image(th, t, e.id)}" alt="Panneau actuel, ${e.nom}, thème ${th}, ${t === 360 ? '360 × 480' : '600 × 760'}" width="${t}" height="${t === 360 ? 480 : 760}" loading="lazy">`).join('')).join('');
 }
 const col = (n, titre, html, cls = '') => `<figure class="col ${cls}"><figcaption>${n ? `<b>${n}</b>` : ''}<span>${titre}</span></figcaption><div class="cadre">${html}</div></figure>`;
-const rang = e => `<section class="etat" id="etat-${e.id}"><h2>${e.nom}</h2><div class="rang-p">${col('', 'Aujourd’hui', existant(e), 'ex')}${col('1', 'Le chiffre', rendre1(e))}${col('2', 'Le trajet', rendre2(e))}${col('3', 'L’anneau', rendre3(e))}</div></section>`;
+const rang = e => `<section class="sec" id="etat-${e.id}"><h2>${e.nom}</h2><div class="rang-p">${col('', 'Aujourd’hui', existant(e), 'ex')}${col('1', 'Le chiffre', rendre1(e))}${col('2', 'Les étapes', rendre2(e))}${col('3', 'L’anneau', rendre3(e))}</div></section>`;
 
 const PAGE_CSS = `
 /* la page : trois phrases, puis par état un rang de quatre panneaux à taille réelle ; rien d'autre à lire */
@@ -97,7 +101,7 @@ body{background:var(--pg);color:var(--pg-tx);font:400 16px/1.5 system-ui,-apple-
 .choix button{font:500 14px/1 inherit;font-family:inherit;height:30px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--pg-tx2);cursor:pointer}
 .choix button[aria-pressed="true"]{background:var(--pg-carte);color:var(--pg-tx)}
 .choix button:focus-visible{outline:2px solid var(--pg-tx);outline-offset:1px}
-.etat{margin-top:36px}
+.sec{margin-top:36px}
 .rang-p{display:flex;gap:16px;overflow-x:auto;padding:4px 16px 16px;margin:0 -16px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
 .col{margin:0;flex:none;scroll-snap-align:center}
 .col figcaption{display:flex;gap:8px;align-items:center;height:24px;margin-bottom:8px;font-size:14px;color:var(--pg-tx2)}
@@ -118,7 +122,7 @@ function page() {
 <p class="chapo">D’un coup d’œil : est-ce que tout va bien, et où en est le lot. Le reste est à un clic. À gauche de chaque rang, le panneau d’aujourd’hui.</p>
 <ol class="trois">
 <li><b>1</b><strong>Le chiffre</strong><span>L’avancement en un très grand chiffre, l’état au-dessus. Inspiré des widgets d’iOS (Bourse, Calendrier).</span></li>
-<li><b>2</b><strong>Le trajet</strong><span>Une carte : le premier cut du lot, le dernier, une barre entre les deux. Inspiré des activités en direct d’iOS (suivi d’un vol, d’une livraison).</span></li>
+<li><b>2</b><strong>Les étapes</strong><span>La pose, le rattrapage, la relecture en trois lignes ; celle qui tourne porte la barre et le pourcentage. Inspiré des statuts de Linear et du suivi de commande d’Apple.</span></li>
 <li><b>3</b><strong>L’anneau</strong><span>Un anneau au centre qui se referme avec le lot, le pourcentage dedans, l’état dessous. Inspiré du minuteur et du widget de batterie d’iOS.</span></li>
 </ol>
 <p class="chapo" style="margin-top:16px">Bleu : Ariane travaille. Gris : à l’arrêt. Orange : à toi. Rouge : en panne.</p></header>
@@ -137,7 +141,7 @@ ${ETATS.map(rang).join('\n')}
 <li><b>Rattrapage</b> : « Ariane travaille dans ESV : ne touche à rien. »</li></ul></div>
 <div><h2>À savoir</h2><ul>
 <li><b>Police.</b> Les propositions s’affichent avec la police de l’appareil qui ouvre cette page. Le panneau d’aujourd’hui est une photographie.</li>
-<li><b>À vérifier avant de construire.</b> Pour un lot « jusqu’à la fin de la partie », le pourcentage demande le numéro du dernier cut de la partie.</li>
+<li><b>À vérifier avant de construire.</b> Pour un lot « jusqu’à la fin de la partie », le pourcentage demande le numéro du dernier cut de la partie. Dans la 2, une étape coupée dans les réglages (rattrapage, relecture) ne serait pas affichée.</li>
 <li><b>Rien n’est installé.</b> Ce sont des maquettes ; l’extension n’a pas changé.</li></ul></div></section>
 </div>
 <script>

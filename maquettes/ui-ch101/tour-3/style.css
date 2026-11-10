@@ -1,7 +1,7 @@
 /* CH-101, tour 3 (D-325) — trois refontes du panneau (maquettes, rien n'est intégré).
  * Une chose dominante par écran, à grande échelle ; l'état et l'avancement se lisent de loin ; le reste est à un clic.
  *   .r1 « Le chiffre » : l'avancement en un très grand chiffre ;
- *   .r2 « Le trajet »  : une carte, du premier au dernier cut, avec un point qui avance ;
+ *   .r2 « Les étapes » : la pose, le rattrapage, la relecture en trois lignes ; l'étape en cours porte la barre et le pourcentage.
  *   .r3 « L'anneau »   : un anneau centré qui se referme avec le lot, le pourcentage dedans, l'état dessous.
  * Couleur : une seule à la fois, celle de l'état. Bleu : Ariane travaille. Gris : à l'arrêt. Orange : à toi. Rouge : en panne.
  * Police du système. Grille de 4 px. Thème : .t-clair ou .t-sombre sur un parent. */
@@ -22,7 +22,7 @@
 .p *{box-sizing:border-box;margin:0;padding:0}
 .p > *{flex:none}
 .p button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-.p h3{font-size:inherit;font-weight:inherit}
+.p h3,.p h4{font-size:inherit;font-weight:inherit}
 .p svg{display:block;flex:none}
 .p .pousse{flex:1;min-height:0}
 .p .nb{white-space:nowrap}
@@ -75,7 +75,7 @@
 .verrou svg{width:15px;height:15px}
 .cadre:not(.g600 *) .verrou{font-size:var(--t-meta)}
 /* le texte sous l'avancement occupe toujours deux lignes : rien ne bouge d'un état à l'autre */
-.r1 :is(.ligne,.avis),.r2 :is(.ligne,.avis){min-height:calc(var(--l) * 2)}
+.r1 :is(.ligne,.avis){min-height:calc(var(--l) * 2)}
 .cadre:not(.g600 *) .ligne,.cadre:not(.g600 *) .avis{font-size:14px}
 
 /* ═══════════════════════════════════════════════ 1 · Le chiffre */
@@ -86,52 +86,58 @@
 .r1-haut .etat{font-size:20px;line-height:24px;letter-spacing:-.01em}
 .g600 .r1-haut .etat{font-size:26px;line-height:32px}
 .r1-haut .etat i{width:11px;height:11px}
-.r1-geant{display:flex;align-items:baseline;gap:6px;margin-top:4px;margin-left:-4px;color:var(--etat-enc)}
+.r1-geant{display:flex;align-items:flex-start;gap:4px;margin-top:4px;margin-left:-4px;color:var(--etat-enc)}
 .r1[data-ton="repos"] .r1-geant{color:var(--tx)}
 .g600 .r1-geant{margin-top:12px;margin-left:-8px}
-.r1-geant strong{font-size:116px;line-height:1;font-weight:650;letter-spacing:-.055em}
-.g600 .r1-geant strong{font-size:164px}
-.r1-geant span{font-size:40px;line-height:1;font-weight:650;letter-spacing:-.03em}
-.g600 .r1-geant span{font-size:60px}
+.r1-geant strong{font-size:104px;line-height:1;font-weight:600;letter-spacing:-.05em}
+.g600 .r1-geant strong{font-size:152px}
+.r1-geant span{font-size:34px;line-height:1;font-weight:600;letter-spacing:-.02em;margin-top:16px}
+.g600 .r1-geant span{font-size:48px;margin-top:24px}
 
-.r1 .jauge{margin-top:8px;height:10px;border-radius:5px}
+.r1 .jauge{margin-top:8px;height:8px;border-radius:4px}
 .r1[data-ton="toi"] .jauge b,.r1[data-ton="panne"] .jauge b{background:var(--etat-enc)}
 .r1 .jauge b{border-radius:5px}
-.g600 .r1 .jauge{margin-top:16px;height:12px;border-radius:6px}
+.g600 .r1 .jauge{margin-top:16px;height:10px;border-radius:5px}
 .r1 .ligne,.r1 .avis{margin-top:12px}
 .g600 .r1 .ligne,.g600 .r1 .avis{margin-top:16px}
 .r1 .trio{margin-top:32px}
 .r1 .rangs{margin-bottom:12px}
 .g600 .r1 .rangs{margin-bottom:16px}
 
-/* ═══════════════════════════════════════════════ 2 · Le trajet */
-.r2-corps{flex:1;min-height:0;display:flex;flex-direction:column;padding:4px var(--m) var(--m)}
+/* ═══════════════════════════════════════════════ 2 · Les étapes */
+.r2-corps{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px var(--m) var(--m)}
 .r2-corps > *{flex:none}
-.r2-carte{border-radius:18px;padding:16px 18px 18px;background:var(--fond2)}
-.g600 .r2-carte{border-radius:22px;padding:24px 28px 28px}
-.r2-tete{display:flex;justify-content:space-between;align-items:center;font-size:var(--t-meta);color:var(--tx2)}
-.r2-tete .etat{font-size:17px;line-height:24px}
-.g600 .r2-tete .etat{font-size:22px;line-height:28px}
-.r2[data-ton="toi"] .r2-tete .etat,.r2[data-ton="panne"] .r2-tete .etat{padding:2px 10px 2px 9px;margin-left:-9px;border-radius:14px;background:var(--etat);color:var(--etat-sur)}
-.r2[data-ton="toi"] .r2-tete .etat i,.r2[data-ton="panne"] .r2-tete .etat i{background:var(--etat-sur)}
-.r2-bornes{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px}
-.g600 .r2-bornes{margin-top:36px}
-.r2-bornes strong{font-size:40px;line-height:1;font-weight:650;letter-spacing:-.04em}
-.g600 .r2-bornes strong{font-size:68px}
-.r2-bornes strong.mot{color:var(--tx2)}
-.r2-bornes em{font-style:normal;font-size:17px;font-weight:600;color:var(--etat-enc)}
-.g600 .r2-bornes em{font-size:24px}
-.r2[data-ton="repos"] .r2-bornes em{color:var(--tx2)}
-.r2 .jauge{margin-top:12px;height:10px;border-radius:5px;background:color-mix(in srgb,var(--tx) 12%,transparent)}
-.r2 .jauge b{border-radius:5px}
-.g600 .r2 .jauge{margin-top:18px;height:12px;border-radius:6px}
+.r2-haut{display:flex;justify-content:space-between;align-items:center}
+.r2-haut span:last-child{color:var(--tx2);font-size:var(--t-meta)}
+.r2-haut .etat{font-size:20px;line-height:24px;letter-spacing:-.01em}
+.g600 .r2-haut .etat{font-size:26px;line-height:32px}
+.r2-haut .etat i{width:11px;height:11px}
+.r2-etapes{margin-top:12px}
+.g600 .r2-etapes{margin-top:24px}
+.r2-etape{display:grid;grid-template-columns:22px 1fr auto;column-gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--trait)}
+.g600 .r2-etape{grid-template-columns:28px 1fr auto;column-gap:16px;padding:18px 0}
+.r2-etape:last-child{border-bottom:1px solid var(--trait)}
+.r2-etape > i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--trait);display:grid;place-items:center}
+.g600 .r2-etape > i{width:28px;height:28px}
+.r2-etape > i svg{width:12px;height:12px}
+.g600 .r2-etape > i svg{width:15px;height:15px}
+.r2-etape h4{font-size:17px;line-height:22px;font-weight:600;color:var(--tx2)}
+.g600 .r2-etape h4{font-size:21px;line-height:28px}
+.r2-etape em{font-style:normal;font-size:var(--t-meta);color:var(--tx2)}
+.r2-etape.fait > i{background:var(--tx);box-shadow:none;color:var(--fond)}
+.r2-etape.fait h4{color:var(--tx)}
+.r2-etape.ici > i{background:var(--etat);box-shadow:none}
+.r2[data-ton="repos"] .r2-etape.ici > i{background:var(--tx2)}
+.r2-etape.ici > i::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--fond)}
+.r2-etape.ici h4{color:var(--tx)}
+.r2-etape.ici em{font-size:28px;line-height:28px;font-weight:600;letter-spacing:-.03em;color:var(--etat-enc)}
+.g600 .r2-etape.ici em{font-size:44px;line-height:44px}
+.r2[data-ton="repos"] .r2-etape.ici em{color:var(--tx)}
+.r2-etape .jauge{grid-column:2 / -1;margin-top:10px;height:8px;border-radius:4px}
+.g600 .r2-etape .jauge{margin-top:14px;height:10px;border-radius:5px}
 .r2[data-ton="toi"] .jauge b,.r2[data-ton="panne"] .jauge b{background:var(--etat-enc)}
-.r2-legende{display:flex;justify-content:space-between;margin-top:10px;font-size:var(--t-meta);line-height:18px;color:var(--tx2)}
-.g600 .r2-legende{margin-top:14px}
-.r2-legende b{font-weight:600;color:var(--tx)}
-.r2 .ligne,.r2 .avis{margin-top:16px}
-.g600 .r2 .ligne,.g600 .r2 .avis{margin-top:24px}
-.r2 .trio{margin-top:20px}
+.r2-etape p{grid-column:2 / -1;margin-top:8px;min-height:calc(var(--l) * 2)}
+.r2 .trio{margin-top:24px}
 .r2 .rangs{margin-bottom:12px}
 .g600 .r2 .rangs{margin-bottom:16px}
 
@@ -147,6 +153,8 @@
 .r3[data-etat="fin"] .r3-anneau circle.fait{stroke:var(--tx)}
 .r3-anneau strong{position:absolute;inset:0;display:flex;align-items:baseline;justify-content:center;gap:2px;padding-top:calc(50% - .56em);font-size:48px;line-height:1;font-weight:650;letter-spacing:-.04em}
 .g600 .r3-anneau strong{font-size:84px}
+.r3-anneau strong.trois{font-size:40px}
+.g600 .r3-anneau strong.trois{font-size:70px}
 .r3-anneau strong span{font-size:.42em;letter-spacing:-.02em;color:var(--tx2)}
 .r3-centre{text-align:center}
 .r3-centre .etat{justify-content:center;margin-top:10px;font-size:20px;line-height:26px;letter-spacing:-.01em}
