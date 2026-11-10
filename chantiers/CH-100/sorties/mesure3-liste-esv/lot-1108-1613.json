@@ -1,0 +1,229 @@
+{
+ "format": "ariane-ch100-liste-esv-v1",
+ "nom": "lot-1108-1613",
+ "build": "ba67380",
+ "margeS": 10,
+ "portees": [
+  15,
+  27
+ ],
+ "parties": [
+  {
+   "partie": 3,
+   "controles": {
+    "fiche": {
+     "validesFiche": 5276,
+     "sainsD2": 5276,
+     "egal": true
+    },
+    "fenetre": {
+     "releves": 18,
+     "depassements": 0,
+     "egalites": 18
+    },
+    "ecartD1D2": {
+     "lignes": 90,
+     "vuSeul": 85,
+     "avecStatutOuBords": 5
+    }
+   },
+   "lots": 1,
+   "debut": "2026-11-08T15:37:46Z",
+   "fin": "2026-11-08T15:39:04Z",
+   "cibles": 21,
+   "poses": 20,
+   "differes": 1,
+   "ecritsPasse": 0,
+   "instantanes": [
+    {
+     "at": "2026-11-08T15:37:47Z",
+     "archives": 2,
+     "lignes": 5297,
+     "valid": 5276,
+     "invalid": 21,
+     "skipped": 0,
+     "autre": 0,
+     "traites": 0,
+     "vus": 0,
+     "sansBords": 0,
+     "sainsD1": 5186,
+     "sainsD2": 5276,
+     "position": "au-depart",
+     "resumeAuJournal": true
+    }
+   ],
+   "cuts": [
+    {
+     "partie": 3,
+     "cut": 1,
+     "population": "differe",
+     "mm": 0,
+     "ecritPasse": false,
+     "exclu": true,
+     "motif": "instantane-posterieur",
+     "instantane": null,
+     "avanceS": 1,
+     "etatDansInstantane": null,
+     "d1Avant": null,
+     "d1Apres": null,
+     "d2Avant": null,
+     "d2Apres": null,
+     "n2Instantane": "2026-11-08T15:37:47Z",
+     "n2d1Avant": null,
+     "n2d1Apres": 3,
+     "n2d2Avant": 1,
+     "n2d2Apres": 1
+    }
+   ],
+   "fichesDepart": [
+    {
+     "partie": 3,
+     "at": "2026-11-08T15:37:47Z",
+     "valides": 5276,
+     "invalides": 21,
+     "total": 5297
+    }
+   ]
+  },
+  {
+   "partie": 4,
+   "controles": {
+    "fiche": {
+     "validesFiche": 6537,
+     "sainsD2": 6537,
+     "egal": true
+    },
+    "fenetre": {
+     "releves": 93,
+     "depassements": 0,
+     "egalites": 93
+    },
+    "ecartD1D2": {
+     "lignes": 467,
+     "vuSeul": 414,
+     "avecStatutOuBords": 53
+    }
+   },
+   "lots": 1,
+   "debut": "2026-11-08T15:43:17Z",
+   "fin": "2026-11-08T15:50:44Z",
+   "cibles": 95,
+   "poses": 89,
+   "differes": 6,
+   "ecritsPasse": 1,
+   "instantanes": [
+    {
+     "at": "2026-11-08T15:43:17Z",
+     "archives": 2,
+     "lignes": 6632,
+     "valid": 6537,
+     "invalid": 95,
+     "skipped": 0,
+     "autre": 0,
+     "traites": 0,
+     "vus": 0,
+     "sansBords": 0,
+     "sainsD1": 6070,
+     "sainsD2": 6537,
+     "position": "au-depart",
+     "resumeAuJournal": true
+    }
+   ],
+   "cuts": [
+    {
+     "partie": 4,
+     "cut": 1,
+     "population": "differe",
+     "mm": 6.39,
+     "ecritPasse": false,
+     "exclu": true,
+     "motif": "instantane-posterieur",
+     "instantane": null,
+     "avanceS": 8,
+     "etatDansInstantane": null,
+     "d1Avant": null,
+     "d1Apres": null,
+     "d2Avant": null,
+     "d2Apres": null,
+     "n2Instantane": "2026-11-08T15:43:17Z",
+     "n2d1Avant": null,
+     "n2d1Apres": 3,
+     "n2d2Avant": 1,
+     "n2d2Apres": 1
+    },
+    {
+     "partie": 4,
+     "cut": 1115,
+     "population": "differe",
+     "mm": 54.49,
+     "ecritPasse": false,
+     "exclu": false,
+     "motif": null,
+     "instantane": "2026-11-08T15:43:17Z",
+     "avanceS": 116,
+     "etatDansInstantane": "invalid",
+     "d1Avant": 28,
+     "d1Apres": 41,
+     "d2Avant": 1,
+     "d2Apres": 2,
+     "n2Instantane": null,
+     "n2d1Avant": null,
+     "n2d1Apres": null,
+     "n2d2Avant": null,
+     "n2d2Apres": null
+    },
+    {
+     "partie": 4,
+     "cut": 1116,
+     "population": "differe",
+     "mm": 56.04,
+     "ecritPasse": false,
+     "exclu": false,
+     "motif": null,
+     "instantane": "2026-11-08T15:43:17Z",
+     "avanceS": 118,
+     "etatDansInstantane": "invalid",
+     "d1Avant": 29,
+     "d1Apres": 40,
+     "d2Avant": 2,
+     "d2Apres": 1,
+     "n2Instantane": null,
+     "n2d1Avant": null,
+     "n2d1Apres": null,
+     "n2d2Avant": null,
+     "n2d2Apres": null
+    },
+    {
+     "partie": 4,
+     "cut": 3970,
+     "population": "differe",
+     "mm": 6.38,
+     "ecritPasse": true,
+     "exclu": false,
+     "motif": null,
+     "instantane": "2026-11-08T15:43:17Z",
+     "avanceS": 402,
+     "etatDansInstantane": "invalid",
+     "d1Avant": 5,
+     "d1Apres": 17,
+     "d2Avant": 1,
+     "d2Apres": 11,
+     "n2Instantane": null,
+     "n2d1Avant": null,
+     "n2d1Apres": null,
+     "n2d2Avant": null,
+     "n2d2Apres": null
+    }
+   ],
+   "fichesDepart": [
+    {
+     "partie": 4,
+     "at": "2026-11-08T15:43:17Z",
+     "valides": 6537,
+     "invalides": 95,
+     "total": 6632
+    }
+   ]
+  }
+ ]
+}

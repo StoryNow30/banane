@@ -1,0 +1,6 @@
+lot;partie;cut;population;mm;exclu;motif;instantane;avanceS;etatDansInstantane;d1Avant;d1Apres;d2Avant;d2Apres;n2Instantane;n2d1Avant;n2d1Apres;n2d2Avant;n2d2Apres
+lot-1108-1613;3;1;differe;0;oui;instantane-posterieur;;1;;;;;;2026-11-08T15:37:47Z;;3;1;1
+lot-1108-1613;4;1;differe;6.39;oui;instantane-posterieur;;8;;;;;;2026-11-08T15:43:17Z;;3;1;1
+lot-1108-1613;4;1115;differe;54.49;non;;2026-11-08T15:43:17Z;116;invalid;28;41;1;2;;;;;
+lot-1108-1613;4;1116;differe;56.04;non;;2026-11-08T15:43:17Z;118;invalid;29;40;2;1;;;;;
+lot-1108-1613;4;3970;differe;6.38;non;;2026-11-08T15:43:17Z;402;invalid;5;17;1;11;;;;;
