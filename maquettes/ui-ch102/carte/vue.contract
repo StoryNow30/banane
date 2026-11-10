@@ -51,7 +51,7 @@ component App
                     if seconde(etat) != ""
                       button buttonStyle="bordered" flex="1 1 8rem" testId="seconde"
                         text seconde(etat)
-                    if etat == "fin"
+                    if etat == "fin" or etat == "relecture"
                       button press=nouveau buttonStyle="bordered" flex="1 1 8rem" testId="nouveau"
                         text "Nouveau lot"
                     if arret(etat) != ""

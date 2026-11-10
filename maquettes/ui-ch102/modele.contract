@@ -1,5 +1,6 @@
 // CH-102 : le lot fabriqué, commun aux trois propositions (assembler.cjs le place en tête de chaque app.contract).
-// Partie 13, lot du cut 4790 au cut 4900 (111 numéros), cut 4811 atteint : 22 cuts traités, 19 posés, 3 à poser.
+// Partie 13, lot du cut 4790 au cut 4900 (111 numéros), cut 4811 atteint : 18 cuts traités (15 posés, 3 à poser), 4 verts passés.
+// Fin de lot : 93 cuts traités (87 posés, 6 à poser). Mêmes chiffres que la photographie du panneau du tronc (outil de CH-101).
 // Huit états : pret, cours, pause, toi (rail non résolu), panne (ESV muet), rattrapage, relecture, fin.
 // Aucune action ajoutée ni supprimée par rapport au panneau du tronc ; « SKIP explicite » reste masqué (D-320).
 
@@ -11,15 +12,15 @@ fn teinte(e: string): option<string> = e == "toi" ? some("-exact-system-orange")
 fn phrase(e: string): string = e == "pret" ? "Partie 13, du cut 4790 jusqu’à la fin de la partie." : e == "cours" ? "Pose du cut 4812." : e == "pause" ? "En pause après le cut 4811." : e == "toi" ? "Le cut 4812 a un rail qu’Ariane ne sait pas poser. Réessaie, ou reprends-le à la main." : e == "panne" ? "Recharge la page ESV (F5), attends qu’elle réponde, puis clique sur Reprendre." : e == "rattrapage" ? "Ariane travaille dans ESV : ne touche à rien. Cut 4803." : e == "relecture" ? "Relecture du cut 4801, 3 cuts corrigés." : "Il reste 6 cuts à poser. Export prêt."
 
 // L'avancement : une fraction, sa lecture en chiffres, et ce que le chiffre compte.
-fn fraction(e: string): number = e == "pret" ? 0 : e == "rattrapage" ? 1 / 3 : e == "relecture" ? 12 / 85 : e == "fin" ? 1 : 22 / 111
-fn fait(e: string): string = e == "pret" ? "0" : e == "rattrapage" ? "1" : e == "relecture" ? "12" : e == "fin" ? "111" : "22"
-fn total(e: string): string = e == "rattrapage" ? "3" : e == "relecture" ? "85" : "111"
+fn fraction(e: string): number = e == "pret" ? 0 : e == "rattrapage" ? 1 / 3 : e == "relecture" ? 12 / 85 : e == "fin" ? 1 : 22 / 111   // 22 numéros parcourus sur 111
+fn fait(e: string): string = e == "pret" ? "0" : e == "rattrapage" ? "1" : e == "relecture" ? "12" : e == "fin" ? "93" : "18"
+fn total(e: string): string = e == "rattrapage" ? "3" : e == "relecture" ? "85" : e == "fin" ? "93" : "107"   // 107 = 18 traités + 89 au plus à venir
 fn unite(e: string): string = e == "rattrapage" ? "cuts rattrapés" : e == "relecture" ? "cuts relus" : "cuts traités"
-fn poses(e: string): string = e == "pret" ? "0" : e == "fin" or e == "relecture" ? "105" : e == "rattrapage" ? "103" : "19"
-fn aPoser(e: string): number = e == "pret" ? 0 : e == "fin" or e == "relecture" ? 6 : e == "rattrapage" ? 8 : 3
+fn poses(e: string): string = e == "pret" ? "0" : e == "fin" or e == "relecture" ? "87" : e == "rattrapage" ? "88" : "15"
+fn aPoser(e: string): number = e == "pret" ? 0 : e == "cours" or e == "pause" or e == "toi" or e == "panne" ? 3 : 6
 
 // Les actions du panneau du tronc, par état. `principale` est l'action attendue ; "" quand il n'y en a pas (rattrapage : rien à faire).
-fn principale(e: string): string = e == "pret" ? "Démarrer le lot" : e == "cours" ? "Pause" : e == "pause" or e == "panne" ? "Reprendre" : e == "toi" ? "Réessayer ce cut" : e == "relecture" ? "Pause" : e == "fin" ? "Voir ce qui reste" : ""
+fn principale(e: string): string = e == "pret" ? "Démarrer le lot" : e == "cours" ? "Pause" : e == "pause" or e == "panne" ? "Reprendre" : e == "toi" ? "Réessayer ce cut" : e == "fin" ? "Voir ce qui reste" : ""
 fn seconde(e: string): string = e == "toi" ? "Reprise manuelle" : e == "fin" ? "Exporter le dossier" : ""
 fn arret(e: string): string = e == "cours" or e == "pause" or e == "toi" or e == "panne" ? "Arrêter le lot" : e == "relecture" ? "Arrêter la relecture" : e == "rattrapage" ? "Arrêter le rattrapage" : ""
 // Où mène l'action principale dans la maquette (les données sont fabriquées : seul l'état change).
@@ -67,7 +68,7 @@ component Plus
           text "Lot"
         row
           text "Nouveau lot" flex=1
-          button press=nouveau disabled=(etat == "cours" or etat == "rattrapage" or etat == "relecture") testId="plus-nouveau"
+          button press=nouveau disabled=(etat == "cours" or etat == "rattrapage") testId="plus-nouveau"
             text "Nouveau lot"
         row
           text "Export pour l’analyse" flex=1

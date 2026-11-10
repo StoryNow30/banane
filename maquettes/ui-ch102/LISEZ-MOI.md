@@ -4,15 +4,14 @@ Rien n'est intégré dans l'extension. Rien d'Exact n'est dans ce dépôt : seul
 
 ## État au 10/11/2026 (à lire avant tout)
 
-- **ÉTABLI** : `aujourdhui.cjs` photographie le panneau du tronc dans les huit états, aux deux tailles (360 × 480, 600 × 760) et dans les deux thèmes : 32 images, 0 erreur de page. Les images restent hors dépôt.
+- **ÉTABLI** : la colonne « aujourd'hui » vient de l'outil de CH-101, `maquettes/ui-ch101/outils/capturer2.cjs` (branche `chantier/CH-101`, commit 280e2b7), relancé dans la session de ce chantier : 32 images (huit états, 360 × 480 et 600 × 760, clair et sombre), hors dépôt.
 - **NON FAIT** : les trois applications ci-dessous **n'ont jamais été compilées ni lancées**. L'installation d'Exact (`bun scripts/exact.mjs setup`) est refusée dans la session du chantier par une règle de permission (exécution de code d'un dépôt tiers) ; l'accord de l'opérateur est attendu. Les sources sont écrites d'après `docs/start-here.md`, la carte Contract et les patrons d'Exact : elles contiennent certainement des erreurs que le compilateur dira. Aucun chiffre de rendu, aucune image de proposition n'existe.
 
 ## Fichiers
 
-- `modele.contract` : le lot fabriqué (partie 13, cuts 4790 à 4900, 22 cuts traités, 19 posés, 3 à poser), les huit états, les actions par état, et l'écran « Plus » commun.
+- `modele.contract` : le lot fabriqué (partie 13, cuts 4790 à 4900 ; en cours : 18 cuts traités, 15 posés, 3 à poser ; fin : 93 traités, 87 posés, 6 à poser ; les chiffres de la photographie du panneau du tronc), les huit états, les actions par état, et l'écran « Plus » commun.
 - `fiche/`, `carte/`, `bandeau/` : `vue.contract` (la vue de la proposition) et `app.test.contract` (le parcours des huit états).
 - `assembler.cjs` : fabrique `app.contract` = en-tête de la vue + modèle + vue. À lancer vers le dossier de l'application Exact, hors dépôt.
-- `aujourdhui.cjs` : la colonne « aujourd'hui ».
 
 ## Les trois propositions (une phrase chacune)
 
