@@ -46,9 +46,9 @@
  *   - « correction de plus de 10 mm » : la pose finale de l'opérateur est à plus de 10 mm de la pose de départ (pire rail, 3D) : c'est la
  *     population de la référence (n = 67 dans CH-057). « rappel » = justes / différés jugés de cette population (abstentions comprises).
  *   - seuil du ticket : jugement « concluable » à partir de 30 poses d'ombre jugées (validées) sur les lots d'après `--apres`.
- * Limite dite : le journal ne porte pas la pose de départ d'un différé en coordonnées de scène ; que la première visite de l'Écho voie la même
- * pose de départ que le lot n'est donc pas vérifié cut par cut (PROBABLE quand aucune écriture de validation de la ligne n'est au journal entre
- * les deux ; drapeau `ecriture-entre-deux` sinon).
+ * Limite dite : cet outil ne vérifie pas cut par cut que la première visite de l'Écho voit la même pose de départ que le lot (drapeau
+ * `ecriture-entre-deux` si une écriture de validation de la ligne est au journal entre les deux). La relecture adverse l'a vérifié à part
+ * avec la pose lue par la relecture (`relecture-ombre`, `poseEsv`) : 0 résidu de plus de 1 mm sur les 40 cuts jugés des 06 et 08/11.
  * Sorties : numéros de partie et de cut, sources, millimètres, classes, drapeaux. Aucun identifiant, aucune coordonnée.
  */
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os');

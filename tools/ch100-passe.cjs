@@ -5,9 +5,12 @@
  * Hors ligne, lecture seule des collections de banane-data. Aucun réglage, aucune règle nouvelle.
  *
  *   node tools/ch100-passe.cjs --collections <banane-data/collections> --travail <dossier de travail> --sortie <dossier de sortie>
+ *        [--extraits <dossier>] [--sans-cache]
  *
  * Le dossier de travail reçoit des LIENS SYMBOLIQUES (un dossier par export de lot, un par collection d'Écho) : rien n'est copié ni
- * modifié dans les collections. Les archives 7z ne sont pas lues (aucun décompresseur) : elles sont listées « illisibles ».
+ * modifié dans les collections. Les archives 7z ne sont pas lues ici : une collection en 7z est listée « non lue », sauf si ses zips ont
+ * été extraits hors dépôt dans `--extraits/<nom de la collection>/` (tools/ch100-un7z.py, SHA-256 à comparer au manifeste de la collection).
+ * Chaque export est joint dans un processus fils (mémoire) ; son résultat est gardé dans `travail/cache/` (`--sans-cache` le refait).
  *
  * DÉFINITIONS (chaque chiffre dit sa population)
  *   - lot : un `batch-started` du journal, daté par son départ (UTC). Un lot présent dans plusieurs exports (journal cumulé) n'est
@@ -56,6 +59,7 @@ const ECHOS = {
   '2026-10-26_v4.9.5.21_parties-18-19-20-lots': ['2026-10-26_v4.9.5.21_echo-partie-18', '2026-10-26_v4.9.5.21_echo-partie-20'],
   '2026-10-26_v4.9.5.22_partie-0-lot': ['2026-10-26_v4.9.5.23_echo-partie-0'],
   '2026-10-26_v4.9.5.23_partie-1-lot': ['2026-10-26_v4.9.5.23_echo-partie-1'],
+  '2026-10-28_v4.9.5.23_partie-20-lot': ['2026-10-29_v4.9.5.23_echo-partie-20'],
   '2026-10-29_CH-012_poses-reference-strictes-partie17': ['2026-10-29_CH-012_poses-reference-strictes-partie17'],
   '2026-11-01_v4.9.5.30_aurore-parties-10-11': ['2026-11-01_v4.9.5.30_aurore-parties-10-11'],
   '2026-11-02_v4.9.5.31_aurore-une-seule-partie': ['2026-11-02_v4.9.5.31_partie0-echo-complet'],
@@ -80,14 +84,15 @@ function fichiers(dir) {
   return out;
 }
 /* Liens symboliques : travail/lots/<collection>/<horodatage>/ et travail/echos/<collection>/. */
-function preparer(collections, travail) {
-  const lots = [], echos = new Set(), illisibles = [];
+function preparer(collections, travail, extraits) {
+  const lots = [], echos = new Set(), illisibles = [], extraites = [];
   for (const col of fs.readdirSync(collections).filter(n => /^2026-1[01]-/.test(n)).sort()) {
     const racine = path.join(collections, col);
     if (!fs.statSync(racine).isDirectory()) continue;
     const vus = new Set();
     let n7z = 0;
-    for (const f of fichiers(racine)) {
+    const ext = extraits && fs.existsSync(path.join(extraits, col)) ? fichiers(path.join(extraits, col)) : [];
+    for (const f of [...fichiers(racine), ...ext]) {
       const nom = path.basename(f);
       if (/\.7z(\.\d{3})?$/i.test(nom)) { n7z++; continue; }
       if (!/\.zip$/i.test(nom)) continue;
@@ -100,9 +105,10 @@ function preparer(collections, travail) {
       const lien = path.join(cible, nom);
       try { fs.lstatSync(lien); } catch { fs.symlinkSync(f, lien); }
     }
-    if (n7z) illisibles.push({ collection: col, archives7z: n7z });
+    if (n7z && !ext.length) illisibles.push({ collection: col, archives7z: n7z });
+    else if (n7z) extraites.push(col);
   }
-  return { lots, echos, illisibles };
+  return { lots, echos, illisibles, extraites };
 }
 
 /* État d'un « poserait » non écrit ou d'une pose refusée : la pose de l'ombre contre la pose finale de l'opérateur. */
@@ -138,8 +144,8 @@ function lotsDuJournal(journal, source) {
   return [...out.values()];
 }
 
-function mesurer({ collections, travail }) {
-  const prep = preparer(collections, travail);
+function mesurer({ collections, travail, extraits, sansCache }) {
+  const prep = preparer(collections, travail, extraits);
   /* 1. Tous les lots, dédoublonnés par identifiant de lot (jamais écrit en sortie). Les journaux ne sont pas gardés en mémoire. */
   const parId = new Map();
   let exportsLus = 0;
@@ -164,11 +170,14 @@ function mesurer({ collections, travail }) {
   for (const x of prep.lots) {
     const ids = [...parId.values()].filter(v => v.lot.source === x && choisis.has(v.lot.id)).map(v => v.lot.id);
     if (!ids.length) continue;
+    const cache = path.join(travail, 'cache', `${x.collection}__${x.export}.json`);
+    if (!sansCache && fs.existsSync(cache)) { const d = JSON.parse(fs.readFileSync(cache, 'utf8')); inventaire.push(...d.inventaire); cuts.push(...d.cuts); continue; }
     process.stderr.write(`export ${x.collection} ${x.export} (${ids.length} lot(s))\n`);
     const r = spawnSync(process.execPath, ['--max-old-space-size=9000', __filename, '--enfant', JSON.stringify({ x, ids, travail, echos: (ECHOS[x.collection] || []).filter(c => prep.echos.has(c)) })],
       { encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'inherit'] });
     if (r.status !== 0) { exportsIllisibles.push({ collection: x.collection, export: x.export, raison: 'jointure en échec (mémoire ou lecture)' }); continue; }
     const d = JSON.parse(r.stdout);
+    fs.mkdirSync(path.dirname(cache), { recursive: true }); fs.writeFileSync(cache, r.stdout);
     inventaire.push(...d.inventaire); cuts.push(...d.cuts);
   }
   /* Cuts « revus » : déjà décidés dans un lot antérieur du même jour et de la même partie. */
@@ -278,7 +287,7 @@ function resumer(m) {
   const inv = m.inventaire.filter(i => !i.aPart), som = k => inv.reduce((s, i) => s + (i[k] || 0), 0);
   const fautes = periode.ecriture.total.avecVisites.fautes;
   return { format: 'ariane-ch100-passe-v1', periode: 'lots partis le 26/10/2026 ou après ; partie 0 du 23/10 (lot 2) à part',
-    exportsLus: m.exportsLus, exportsIllisibles: m.exportsIllisibles, collections7zNonLues: m.prep.illisibles,
+    exportsLus: m.exportsLus, exportsIllisibles: m.exportsIllisibles, collections7zNonLues: m.prep.illisibles, collections7zExtraites: m.prep.extraites,
     lotsAnterieursEcartes: m.anterieurs.map(l => ({ date: new Date(l.t0).toISOString().slice(0, 10), partie: l.partie, collection: l.source.collection, ecrits: l.ecrits })),
     inventaire: { lots: inv.length, lotsAvecPasse: inv.filter(i => i.decisions || i.ecrits).length, parMode: Object.fromEntries([...new Set(inv.map(i => i.mode))].map(k => [k, inv.filter(i => i.mode === k).length])),
       differes: som('differes'), decisions: som('decisions'), cutsDecides: som('cutsDecides'), poserait: som('poserait'), rien: som('rien'), refusGarde: som('refusGarde'),
@@ -299,7 +308,7 @@ function blocTexte(titre, b) {
 }
 function texte(r, m) {
   const o = ['CH-100, mesure 2 : deuxième passe, écritures réelles et « poserait », depuis le 26/10 (hors ligne).',
-    `Exports lus ${r.exportsLus} ; collections en 7z non lues : ${r.collections7zNonLues.map(x => x.collection).join(', ') || 'aucune'} ; lots antérieurs au 26/10 écartés : ${r.lotsAnterieursEcartes.length}.`, '',
+    `Exports lus ${r.exportsLus} ; collections en 7z non lues : ${r.collections7zNonLues.map(x => x.collection).join(', ') || 'aucune'} ; en 7z lues par extraction : ${r.collections7zExtraites.join(', ') || 'aucune'} ; lots antérieurs au 26/10 écartés : ${r.lotsAnterieursEcartes.length}.`, '',
     'INVENTAIRE (lots porteurs d\'au moins une décision de passe ; les autres sont dans inventaire.csv)',
     'date heure | partie | version/paquet | mode | différés | décisions (p1+p2) | cuts décidés : poserait / rien / dont refus garde A | écrits (dont décidés en passe 2) | refus à l\'écriture | Écho'];
   for (const i of m.inventaire) if (i.decisions || i.ecrits)
@@ -329,10 +338,10 @@ const csv = (cols, lignes) => { const v = x => x === null || x === undefined ? '
 function executer(argv, sortie = console.log) {
   if (argv[0] === '--enfant') { process.stdout.write(JSON.stringify(enfant(JSON.parse(argv[1])))); return null; }
   const a = {};
-  for (let i = 0; i < argv.length; i++) { const k = argv[i]; if (['--collections', '--travail', '--sortie'].includes(k)) a[k.slice(2)] = argv[++i]; else throw Error(`Argument inconnu : ${k}`); }
+  for (let i = 0; i < argv.length; i++) { const k = argv[i]; if (['--collections', '--travail', '--sortie', '--extraits'].includes(k)) a[k.slice(2)] = argv[++i]; else if (k === '--sans-cache') a.sansCache = true; else throw Error(`Argument inconnu : ${k}`); }
   if (!a.collections || !a.travail || !a.sortie) throw Error('Usage : node tools/ch100-passe.cjs --collections <dossier> --travail <dossier> --sortie <dossier>');
   fs.mkdirSync(a.travail, { recursive: true }); fs.mkdirSync(a.sortie, { recursive: true });
-  const m = mesurer({ collections: path.resolve(a.collections), travail: path.resolve(a.travail) });
+  const m = mesurer({ collections: path.resolve(a.collections), travail: path.resolve(a.travail), extraits: a.extraits ? path.resolve(a.extraits) : null, sansCache: !!a.sansCache });
   const r = resumer(m), t = texte(r, m);
   fs.writeFileSync(path.join(a.sortie, 'inventaire.csv'), csv(COL_INV, m.inventaire));
   /* cuts.csv : les cuts écrits, « poserait » et refusés par la garde, en entier ; les « rien » hors garde, sans millimètre, y sont aussi. */
