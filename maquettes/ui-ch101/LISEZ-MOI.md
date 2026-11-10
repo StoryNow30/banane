@@ -29,3 +29,19 @@ Les trois propositions du premier tour (fichiers à la racine de ce dossier) son
 Mesuré par script sur les 96 cadres (3 propositions × 8 états × 2 tailles × 2 thèmes) : aucun élément ne sort ni ne se tronque, tout texte actif à 4,5:1 au moins. Deux relectures par un agent neuf, sur images seules ; leurs défauts majeurs sont corrigés, sauf le vide de la fenêtre 600 × 760, qui vient de l'organisation actuelle.
 
 Non vérifié : le rendu des caractères sur le poste de l'opérateur (les images de contrôle ont été faites avec Inter, police du système de la machine de travail).
+
+# Tour 3 (D-325) : `tour-3/`
+
+Le tour 2 a été jugé trop proche de l'existant. Le tour 3 est une refonte : une chose dominante par écran, l'état et l'avancement lisibles de loin, le reste à un clic. Aucune action ajoutée ni supprimée ; aucun dessin de voie, de rail ou de cut.
+
+- `.r1` « Le chiffre » : l'avancement en un très grand chiffre (référence : widgets d'iOS).
+- `.r2` « Les étapes » : pose, rattrapage, relecture en trois lignes ; celle qui tourne porte la barre et le pourcentage (référence : statuts de Linear, suivi de commande d'Apple).
+- `.r3` « L'anneau » : un anneau centré, le pourcentage dedans, l'état dessous (référence : minuteur et widget de batterie d'iOS).
+
+Couleur : une seule à la fois, celle de l'état (bleu : Ariane travaille ; gris : à l'arrêt ; orange : à toi ; rouge : en panne).
+
+Passé derrière un clic : Écho et Aurore (« Orbite ⌄ ») ; réglages, palette, cache des exports, choix de l'onglet ESV (« ··· ») ; la liste des cuts à poser et des verts (ligne « à poser »). Les actions du lot restent à l'écran.
+
+Mesuré par script sur les 96 cadres : aucun débordement, aucune troncature, tout texte actif à 4,5:1 au moins ; aucune ressource extérieure. Cinq relectures par un agent neuf, sur images seules ; deux propositions ont été jetées et refaites en route (« Le trajet », « Le mot »). Dernière relecture, après les dernières corrections : oui aux deux questions pour les trois (différentes de l'existant et entre elles ; sobriété et finition, défauts restants classés « détails »).
+
+À vérifier avant l'étape 2 (SUPPOSÉ) : le numéro du dernier cut de la partie, nécessaire au pourcentage d'un lot « jusqu'à la fin de la partie » ; l'affichage d'une étape coupée dans les réglages. Non vérifié : le rendu des caractères sur le poste de l'opérateur.
