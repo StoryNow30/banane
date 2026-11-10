@@ -31,7 +31,7 @@ test('montage : événements refusés dans la fenêtre du cut 101 : pause motiv�
  assert.ok(e.s.fenetreEcritures?.evenements.length>0,'l’état garde la liste des écritures à refaire');
 });
 
-test('défaut 1a : après la pause, stockage réparé puis Reprendre : les événements de la fenêtre refusés sont dans IndexedDB à la fin du lot',,async()=>{
+test('défaut 1a : après la pause, stockage réparé puis Reprendre : les événements de la fenêtre refusés sont dans IndexedDB à la fin du lot',async()=>{
  const {e,esv,store,reparer}=await lotEnPanne();
  const attendus=e.s.fenetreEcritures.evenements.slice();
  reparer();await e.resume();await e.task;await store.fileEtat;await store.fileIdb;
@@ -40,14 +40,14 @@ test('défaut 1a : après la pause, stockage réparé puis Reprendre : les évé
  assert.deepEqual(manquants,[],'événements de la fenêtre absents d’IndexedDB après la reprise : '+manquants.join(', '));
 });
 
-test('défaut 1b : après la reprise, la preuve de validation du cut 101 (`validation-accepted`) est dans le journal durable',,async()=>{
+test('défaut 1b : après la reprise, la preuve de validation du cut 101 (`validation-accepted`) est dans le journal durable',async()=>{
  const {e,store,reparer}=await lotEnPanne();
  reparer();await e.resume();await e.task;await store.fileEtat;await store.fileIdb;
  const acceptes=[...store.events.values()].filter(x=>x.type==='validation-accepted').map(x=>x.identity?.cut).sort();
  assert.deepEqual(acceptes,[100,101,102]);
 });
 
-test('défaut 1c : Reprendre alors que le stockage refuse toujours : aucune nouvelle pose tant que les écritures du cut précédent ne sont pas confirmées',,async()=>{
+test('défaut 1c : Reprendre alors que le stockage refuse toujours : aucune nouvelle pose tant que les écritures du cut précédent ne sont pas confirmées',async()=>{
  const {e,esv,store}=await lotEnPanne();
  try{await e.resume();await e.task;}catch{/* refus de reprise accepté */}
  await store.fileEtat;await store.fileIdb;

@@ -8,7 +8,7 @@
  *  6. lot sans panne de stockage : mêmes commandes, événements, visites et état, à l'octet, avec et sans le patch. */
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const path=require('node:path'),{spawnSync}=require('node:child_process');
-const {patchOk,Engine,ESV,lotPannes,reprendre,attendre,sansPerteNiDoublon}=require('./helpers/ch094.cjs');
+const {patchOk,Engine,lot,lotPannes,reprendre,attendre,sansPerteNiDoublon}=require('./helpers/ch094.cjs');
 const pause=ms=>new Promise(ok=>setTimeout(ok,ms));
 const QUATRE=['apply:100','validate:100','apply:101','validate:101'];
 /* Panne des événements (hors `batch-…`) du retour de la validation du cut 101 jusqu'à `reparer()` : le montage de CH-092. */
@@ -48,7 +48,7 @@ test('3. après la pause, stockage réparé puis Reprendre : six commandes, aucu
  assert.equal(e.s.batch.error?.code,'ECRITURE_NON_CONFIRMEE');const attendus=e.s.fenetreEcritures.evenements.slice();
  o.reparer();assert.equal(await reprendre(o),null);
  assert.deepEqual(esv.cmd,[...QUATRE,'apply:102','validate:102']);sansPerteNiDoublon(o);
- assert.equal(e.s.batch.state,'COMPLETED');assert.equal(e.s.batch.processed.length,3);assert.equal(e.s.batch.error,null);
+ assert.equal(e.s.batch.state,(await lot()).e.s.batch.state,'même état de fin qu’un lot sans panne');assert.equal(e.s.batch.processed.length,3);assert.equal(e.s.batch.error,null);
  assert.equal('fenetreEcritures' in e.s,false);assert.equal('fenetreEcritures' in store.state,false,'l’état durable ne porte plus la liste');
  const reprises=[...store.events.values()].filter(x=>x.type==='ecritures-fond-reprises');
  assert.equal(reprises.length,1);assert.equal(reprises[0].evenementsReecrits,attendus.length);assert.equal(reprises[0].erreur,null);assert.equal(reprises[0].motif,'intention-de-pose');
