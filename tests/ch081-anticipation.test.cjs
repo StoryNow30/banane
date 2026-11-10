@@ -10,7 +10,7 @@ const A=require('../src/prechauffage-anticipation.js');
 const l=(i,source='liste-esv')=>({i,source,e:[i,0,0,i,1.435,0]});
 
 test('réglage : défaut prudent, bornes',()=>{
- assert.deepEqual({...A.reglage()},{horizon:1,candidatsMax:1,lotRequetesMax:4000,lotOctetsMax:1258291200,repliInutiles:.3,repliFenetre:50});
+ assert.deepEqual({...A.reglage()},{horizon:1,candidatsMax:1,lotRequetesMax:4000,lotOctetsMax:1258291200,lotFenetreMs:0,repliInutiles:.3,repliFenetre:50});
  assert.equal(A.reglage({horizon:2}).horizon,2);assert.equal(A.reglage({horizon:9}).horizon,1);assert.equal(A.reglage({candidatsMax:3}).candidatsMax,3);
  assert.equal(A.reglage({repliInutiles:.25}).repliInutiles,.25);assert.equal(A.reglage({repliInutiles:2}).repliInutiles,.3);
  assert.deepEqual([...A.SOURCES_CIBLE],['liste-esv','relu','passe-differes','b1-fenetre','changement-mode']);
