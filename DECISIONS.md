@@ -3614,5 +3614,5 @@ Complète D-299 sans la modifier.
 - Fait : chantiers CH-099 (recherche large hors ligne) et CH-100 (trois mesures, manifeste, juge des posés faux) ; tirage par plages entières, graine 20261110, sur le lot « Vision 12 » de la partie 9 (31 plages, 150 coupes, plus 8 différés ; script et liste dans `banane-data/outils/analyse-lots/tirage-echo/` et la collection du lot).
 
 ## D-323 — Interface du panneau : nouvelle tentative, sur le modèle le plus fort (opérateur, 10/11)
-- Demande de l'opérateur, mot pour mot : « Améliorer l'UI/UX, les visuels & le design parce qu'Opus 5.5 ne faisait pas du bon boulot ».
+- Demande de l'opérateur : « Améliorer l'UI/UX, les visuels & le design parce qu'[le modèle utilisé jusque-là] ne faisait pas du bon boulot » (nom du modèle retiré : interdit de `CLAUDE.md`).
 - Lecture de l'intégrateur : le design de Signal, en pause depuis D-257 et figé par D-271, est rouvert. Chantier CH-101 : l'existant photographié dans ses états réels, une critique, trois propositions montrées sur ces mêmes états ; aucune intégration avant le choix écrit de l'opérateur. Les reproches de D-256 et D-257 sont le cahier des charges ; la simplicité et la clarté des boutons restent acquises ; le bouton « SKIP explicite » reste masqué (D-320).
