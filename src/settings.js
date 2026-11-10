@@ -233,7 +233,7 @@
      * l'avance ; au plus 3 cibles par passage (dont le changement de mode) ; par cible 32 nœuds, 10 Mo, 8 hiérarchies ; par lot (vie de la page) 4 000 requêtes et
      * 1 200 Mo ; repli à 1 cible au-delà de 30 % de nœuds préchauffés jamais redemandés sur 50 opérations. `zone:'cube'`, `horizon:1`, `candidatsMax:1` : CH-080c. */
     chargement: Object.freeze({ prechauffer: Object.freeze({ actif: true, profondeurMax: null, noeudsMax: 32, octetsMax: 10485760, enVolMax: 4, rayonM: 0.75, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1, hierarchie: true, hierarchiesMax: 8,
-      zone: 'boite', horizon: 2, candidatsMax: 3, lotRequetesMax: 4000, lotOctetsMax: 1258291200, repliInutiles: 0.3, repliFenetre: 50,
+      zone: 'boite', horizon: 2, candidatsMax: 3, lotRequetesMax: 4000, lotOctetsMax: 1258291200, lotFenetreMs: 600000 /* audit du 10/11 : plafonds comptés sur 10 min glissantes, et plus pour la vie de la page */, repliInutiles: 0.3, repliFenetre: 50,
       /* CH-083 (D-314, accord écrit de l'opérateur lu par l'intégrateur) : nœuds de la coupe suivante chargés DANS LA MÉMOIRE d'ESV par `node.load()` de Potree, seulement ceux que
        * le préchauffage HTTP vient de recevoir en 200 ; 32 par opération, 2 à la fois, 256 Mo décodés par vie de la page. ALLUMÉ pour le lot d'essai ; `memoire.actif:false` coupe cette phase seule. */
       /* CH-090 (D-317, lots « Vision 8 » et « Vision 9 », ÉTABLI : 7 nœuds candidats par coupe en partie dense, 2 lancés) : 4 chargements à la fois (la limite de Potree) ;
@@ -259,7 +259,7 @@
      * de défaut) : une clé ABSENTE vaut la valeur livrée ; `false` COUPE ; toute autre valeur que `true`/`false` (ou un nombre illisible) COUPE.
      *   `ombre` : la passe calcule et journalise (`passe-differes-ombre`) ce qu'elle poserait. `ombre:false` : plus de passe du tout, la test 16 à l'identique.
      *   `ecriture` (avec `ombre`) : elle pose réellement, un cut après l'autre, validé sur place (Ctrl+Entrée). `ecriture:false` : ombre seule, rien n'est écrit.
-     *   `ecritureMax` : cuts écrits au plus par lot ; `null` : sans plafond (livré) ; un entier ≥ 1 ; toute autre valeur coupe l'écriture.
+     *   `ecritureMax` : cuts écrits au plus par lot ; `null` : sans plafond ; un entier ≥ 1 (livré : 10, D-259) ; toute autre valeur coupe l'écriture.
      *   `gardeAppuis` : garde A des appuis faux (`actif`, `deplacementMaxMm`, `appuiNormalMaxCuts`), clé par clé ; `false` ou `actif:false` la coupe ; une valeur illisible coupe la passe.
      * Garde de livraison (valable une fois l'écriture rallumée) : la preuve de terrain (Ctrl+Entrée sur un cut rouge atteint hors ordre) n'est pas faite ; chaque garde d'écriture reste (cut rouge, relecture à 1 mm,
      * validation prouvée, arrêt au premier refus). */

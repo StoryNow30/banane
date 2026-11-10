@@ -57,3 +57,29 @@ test('opération lointaine : plafond de nœuds propre (`loin.noeudsMax`), sinon 
  assert.equal(P.reglage({actif:true,loin:{actif:true,noeudsMax:9999}}).loin.noeudsMax,null,'hors bornes : défaut');
  assert.equal(require('../src/settings.js').lot.chargement.prechauffer.loin.noeudsMax,96);
 });
+
+/* Audit du 10/11 (ÉTABLI dans le code) : le plafond « du lot » (requêtes et octets) était compté pour la vie de la page, et reçoit en voie potree des
+ * octets DÉCODÉS (1,5 Mo par nœud mesuré) : 1 200 Mo s'épuisaient vers 800 nœuds, puis `plafond-lot` jusqu'au F5. Il vaut maintenant par fenêtre glissante. */
+test('plafond du lot en fenêtre glissante : épuisé, il se rouvre quand la fenêtre a glissé',()=>{
+ const A=require('../src/prechauffage-anticipation.js');let t=0;
+ const b=A.creerBudget({lotRequetesMax:10,lotOctetsMax:2*1048576,lotFenetreMs:60000},()=>t);
+ b.compter(10,0);assert.equal(b.autorise(1,0),false,'plafond de requêtes atteint');assert.equal(b.etat().plafondRequetes,true);
+ t=30000;b.compter(0,2*1048576);assert.equal(b.autorise(0,1),false,'plafond d\'octets atteint');
+ t=60001;assert.equal(b.autorise(1,0),true,'les 10 requêtes de t=0 sont sorties de la fenêtre');assert.equal(b.autorise(0,1),false,'les octets de t=30 s y sont encore');
+ t=90001;assert.equal(b.autorise(1,1),true);assert.deepEqual([b.etat().requetes,b.etat().octets],[0,0]);
+ /* sans fenêtre (défaut du module) : comportement d'avant, compté sans fin */
+ const c=A.creerBudget({lotRequetesMax:10});c.compter(10,0);t=1e9;assert.equal(c.autorise(1,0),false);
+ assert.equal(A.reglage({lotFenetreMs:600000}).lotFenetreMs,600000);assert.equal(A.reglage({}).lotFenetreMs,0);assert.equal(A.reglage({lotFenetreMs:-5}).lotFenetreMs,0);
+});
+
+test('séance longue : le plafond du lot atteint, le préchauffage repart quand la fenêtre a glissé (livré : 10 min)',async()=>{
+ const st=Object.fromEntries(Array.from({length:13},(_,i)=>[20+i*8,'invalid']));
+ const m=monter({horizon:1,candidatsMax:1,lotOctetsMax:1048576,lotFenetreMs:60000,memoire:{actif:true,noeudsMax:200,enVolMax:2}},{statuts:st});const {pc,e,p}=m;
+ let cut=20;const motifs=[],charges=[];
+ const une=async()=>{e.etiquette={part:23,cut};const r=p.apresCapture(contexte(pc,cut));await e.tourner(300);motifs.push((await r).motif);charges.push(dernier(e).memCharges);cut+=8;p.annuler('capture');};
+ for(let k=0;k<5;k++)await une();
+ assert.ok(motifs.includes('plafond-lot'),'plafond du lot atteint : '+motifs.join(', '));assert.equal(charges.at(-1),0,'plus rien de chargé au plafond');
+ e.horloge+=61000;await une();
+ assert.notEqual(motifs.at(-1),'plafond-lot','fenêtre glissée : '+motifs.join(', '));assert.ok(charges.at(-1)>0,'le préchauffage charge de nouveau : '+charges.at(-1));
+ assert.equal(require('../src/settings.js').lot.chargement.prechauffer.lotFenetreMs,600000,'livré : fenêtre de 10 min');
+});

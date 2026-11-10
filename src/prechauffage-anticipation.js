@@ -22,8 +22,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   /* Défaut du MODULE : prudent (comportement de CH-080 : une coupe, un candidat). Le réglage livré (src/settings.js) dit ce qui est allumé. */
-  const DEFAUT = Object.freeze({ horizon: 1, candidatsMax: 1, lotRequetesMax: 4000, lotOctetsMax: 1200 * 1048576, repliInutiles: 0.3, repliFenetre: 50 });
-  const BORNES = { horizon: [1, 3], candidatsMax: [1, 3], lotRequetesMax: [1, 100000], lotOctetsMax: [1048576, 8 * 1073741824], repliInutiles: [0, 1], repliFenetre: [1, 1000] };
+  const DEFAUT = Object.freeze({ horizon: 1, candidatsMax: 1, lotRequetesMax: 4000, lotOctetsMax: 1200 * 1048576, lotFenetreMs: 0, repliInutiles: 0.3, repliFenetre: 50 });
+  const BORNES = { horizon: [1, 3], candidatsMax: [1, 3], lotRequetesMax: [1, 100000], lotOctetsMax: [1048576, 8 * 1073741824], lotFenetreMs: [0, 86400000], repliInutiles: [0, 1], repliFenetre: [1, 1000] };
   const SOURCES_CIBLE = Object.freeze(['liste-esv', 'relu', 'passe-differes', 'b1-fenetre', 'changement-mode']);
   const TYPES_VUE = Object.freeze(['orthographique', 'perspective', 'autre', 'absente']);
   const fini = v => typeof v === 'number' && Number.isFinite(v);
@@ -59,12 +59,17 @@
 
   /** Plafonds du lot et repli. `autorise(requetes, octets)` : la demande tient-elle encore ? `compter` après coup ; `bilanter(demandes, redemandes)`
    * à chaque bilan d'opération ; `candidatsMax(n)` : n, ou 1 pendant le repli. `etat()` : comptes (entiers), jamais une adresse. */
-  function creerBudget(R0) {
-    const R = reglage(R0);
-    let requetes = 0, octets = 0, repli = false; const fen = [];
+  /* Audit du 10/11 : `lotFenetreMs` > 0 et une horloge fournie : requêtes et octets sont comptés sur une fenêtre GLISSANTE de cette durée (le plafond
+   * « du lot », compté pour la vie de la page, éteignait le préchauffage jusqu'au rechargement). 0, ou sans horloge : compte sans fin, comme avant. */
+  function creerBudget(R0, maintenant) {
+    const R = reglage(R0), glissant = R.lotFenetreMs > 0 && typeof maintenant === 'function';
+    let requetes = 0, octets = 0, repli = false; const fen = [], faits = [];
+    const heure = () => { try { const t = maintenant(); return fini(t) ? t : 0; } catch { return 0; } };
+    const glisser = () => { if (!glissant) return; const lim = heure() - R.lotFenetreMs; while (faits.length && faits[0][0] <= lim) { const f = faits.shift(); requetes -= f[1]; octets -= f[2]; } };
     return Object.freeze({
-      autorise: (rq = 1, oc = 0) => requetes + rq <= R.lotRequetesMax && octets + oc <= R.lotOctetsMax,
-      compter: (rq = 0, oc = 0) => { if (fini(rq) && rq > 0) requetes += Math.round(rq); if (fini(oc) && oc > 0) octets += Math.round(oc); },
+      autorise: (rq = 1, oc = 0) => { glisser(); return requetes + rq <= R.lotRequetesMax && octets + oc <= R.lotOctetsMax; },
+      compter: (rq = 0, oc = 0) => { const a = fini(rq) && rq > 0 ? Math.round(rq) : 0, b = fini(oc) && oc > 0 ? Math.round(oc) : 0; if (!a && !b) return; requetes += a; octets += b;
+        if (glissant) { const t = heure(), d = faits[faits.length - 1]; if (d && d[0] === t) { d[1] += a; d[2] += b; } else faits.push([t, a, b]); } },
       bilanter: (demandes, redemandes) => {
         if (!(Number.isInteger(demandes) && demandes > 0 && Number.isInteger(redemandes) && redemandes >= 0)) return;
         fen.push([demandes, Math.min(redemandes, demandes)]); while (fen.length > R.repliFenetre) fen.shift();
@@ -72,7 +77,7 @@
         repli = d > 0 && u / d > R.repliInutiles;
       },
       candidatsMax: n => repli ? 1 : (entier(n, 1, 3) ?? 1),
-      etat: () => ({ requetes, octets, repli, operations: fen.length, plafondRequetes: requetes >= R.lotRequetesMax, plafondOctets: octets >= R.lotOctetsMax }),
+      etat: () => { glisser(); return ({ requetes, octets, repli, operations: fen.length, plafondRequetes: requetes >= R.lotRequetesMax, plafondOctets: octets >= R.lotOctetsMax }); },
     });
   }
 

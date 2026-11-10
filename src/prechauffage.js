@@ -51,7 +51,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
   /* CH-080 (D-309) : `sautMin` — écart minimal, en coupes, entre la coupe courante et la suivante pour préchauffer. Clé absente : 1 (comportement de CH-077).
-   * Réglage livré (src/settings.js) : 11, mesuré sur le lot du 09/11 : sous 11 coupes la sélection n'a trouvé aucun nœud à demander (447 cas sur 447) ;
+   * Réglage livré (src/settings.js) : 1 depuis D-311 (Vision 8). Il valait 11, mesuré sur le lot du 09/11 : sous 11 coupes la sélection n'a trouvé aucun nœud à demander (447 cas sur 447) ;
    * au-delà, la zone de la coupe n'est pas chargée (chantiers/CH-080/etude.md). */
   const DEFAUT = Object.freeze({ actif: false, profondeurMax: null, noeudsMax: 24, octetsMax: 8 * 1048576, enVolMax: 2, rayonM: 1.5, apresNavigation: 'annuler', coupesSansCache: 5, sautMin: 1, hierarchie: false, hierarchiesMax: 8, zone: 'cube', horizon: 1, candidatsMax: 1 });
   const BORNES = { noeudsMax: [1, 200], octetsMax: [65536, 64 * 1048576], enVolMax: [1, 4], rayonM: [0.1, 10], coupesSansCache: [1, 100], profondeurMax: [0, 30], sautMin: [1, 100000], hierarchiesMax: [1, 24], horizon: [1, 3], candidatsMax: [1, 3] };
@@ -77,7 +77,7 @@
     out.hierarchie = r.hierarchie === true;
     /* CH-081 : zone (liste fermée) ; plafonds du lot lus par src/prechauffage-anticipation.js (bornes et défauts là-bas). */
     out.zone = r.zone === 'boite' ? 'boite' : 'cube';
-    out.lot = Object.freeze({ lotRequetesMax: r.lotRequetesMax, lotOctetsMax: r.lotOctetsMax, repliInutiles: r.repliInutiles, repliFenetre: r.repliFenetre });
+    out.lot = Object.freeze({ lotRequetesMax: r.lotRequetesMax, lotOctetsMax: r.lotOctetsMax, lotFenetreMs: r.lotFenetreMs, repliInutiles: r.repliInutiles, repliFenetre: r.repliFenetre });   /* audit du 10/11 : lotFenetreMs */
     out.memoire = reglageMemoire(r.memoire);   /* CH-083 */
     /* CH-085 : `voie:'potree'` : plus aucune requête à nous ; les nœuds passent par node.load() et node.loadHierarchy() de Potree, qui portent
      * l'authentification d'ESV. `delaiMs` : un de nos chargements encore en cours au-delà arrête le préchauffage pour le lot (`refus-serveur`). */
@@ -392,7 +392,7 @@
     const propres = new Map();   /* CH-080c */
     /* CH-081 : budget du LOT (vie de la page) et repli ; nœuds préchauffés en attente d'être redemandés par Potree (clé → arrivées restantes) ;
      * signature du dernier relevé de la vue. Clés en mémoire de la page seulement, jamais postées. */
-    const budget = Anticipation && R ? Anticipation.creerBudget(R.lot) : null, attente = new Map();
+    const budget = Anticipation && R ? Anticipation.creerBudget(R.lot, () => maintenant()) : null, attente = new Map();
     let utiles = 0, vueSig = null, dernierAge = null, memOctetsLot = 0, refus = false;   /* CH-085 : refus du serveur vu : préchauffage arrêté pour le lot */
     const EPT_HIER = /\/ept-hierarchy\/(\d+-\d+-\d+-\d+)\.json$/i, nosCles = new Set();   /* CH-085 : clés chargées par nous (mémoire de la page) */
     /* CH-088 : opération lointaine en cours (une au plus), capture en cours (aucun lancement), nœuds sur lesquels nous avons appelé load() (bilan à
