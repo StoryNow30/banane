@@ -2,7 +2,7 @@
 /* CH-097, défaut 8 (accord de l'opérateur, D-319) — LE LIBELLÉ DE LA DEUXIÈME PASSE DIT CE QUE FAIT LE RÉGLAGE EFFECTIF. Avant : le panneau, la
  * feuille de réglages de Signal et l'avis après le clic disaient « en ombre : n'écrit rien dans ESV », écrit en dur, alors que le réglage livré pose et
  * valide jusqu'à 10 cuts par lot. Maintenant le service worker rend le mode effectif (`passeDiffReglage`, la fonction même qu'il lit avant d'écrire)
- * avec les choix du lot, et un seul module en tire les textes : « en ombre » seulement si la passe n'écrit pas, « pose et valide … jusqu'à N cuts »
+ * par une lecture à part (`passe-differes-reglage` ; les clés des choix du lot, gardées par la garde de pose, ne changent pas), et un seul module en tire les textes : « en ombre » seulement si la passe n'écrit pas, « pose et valide … jusqu'à N cuts »
  * sinon. Aucun réglage ne change. Service worker, panneau et Signal réels en vm. Données fabriquées. */
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {production,memoire}=require('./helpers/perf-production.cjs');
@@ -11,19 +11,21 @@ const Settings=require('../src/settings.js'),S=require('../src/signal-rendu.js')
 const lire=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const ECRIT={mode:'ecriture',max:10},OMBRE={mode:'ombre',max:10};
 
-test('service worker : `choix-lot-etat` et `choix-lot` rendent le mode effectif du réglage livré (écriture, 10 cuts au plus)',async()=>{
+test('service worker : `passe-differes-reglage` rend le mode effectif du réglage livré (écriture, 10 cuts au plus) ; les choix du lot gardent leurs clés',async()=>{
  const b=production({local:memoire()});
  const attendu={mode:b.get('passeDiffReglage()').mode,max:b.get('passeDiffReglage()').max};
  assert.deepEqual(attendu,{mode:'ecriture',max:Settings.passeDifferesDefaut.ecritureMax},'réglage livré : la passe écrit, plafonnée (D-259)');
- assert.deepEqual({...(await b.api('choix-lot-etat')).passeDifferesReglage},attendu);
- const r=await b.api('choix-lot',{passeDifferes:false});assert.equal(r.passeDifferes,false);assert.deepEqual({...r.passeDifferesReglage},attendu,'l’interrupteur ne change pas le réglage');});
+ assert.deepEqual({...(await b.api('passe-differes-reglage'))},attendu);
+ const r=await b.api('choix-lot',{passeDifferes:false});assert.equal(r.passeDifferes,false);
+ assert.deepEqual(Object.keys(r).sort(),['aurorePassage','clicHumain','passeDifferes','regleGrappeDifferes'],'clés des choix du lot inchangées');
+ assert.deepEqual({...(await b.api('passe-differes-reglage'))},attendu,'l’interrupteur ne change pas le réglage');});
 
 test('service worker : réglage en ombre seule (`ecriture:false`) → mode « ombre » ; plafond levé → `max:null` (jamais Infinity dans un message)',async()=>{
  const b=production({local:memoire()});await b.api('view');
  const regler=p=>b.get(`globalThis.BananeSettings=Object.freeze({...globalThis.BananeSettings,lot:Object.freeze({...globalThis.BananeSettings.lot,passeDifferes:Object.freeze({...globalThis.BananeSettings.passeDifferesDefaut,...${JSON.stringify(p)}})})})`);
- regler({ecriture:false});assert.equal((await b.api('choix-lot-etat')).passeDifferesReglage.mode,'ombre');
- regler({ecriture:true,ecritureMax:null});assert.deepEqual({...(await b.api('choix-lot-etat')).passeDifferesReglage},{mode:'ecriture',max:null});
- regler({ombre:false});assert.equal((await b.api('choix-lot-etat')).passeDifferesReglage.mode,'off');});
+ regler({ecriture:false});assert.equal((await b.api('passe-differes-reglage')).mode,'ombre');
+ regler({ecriture:true,ecritureMax:null});assert.deepEqual({...(await b.api('passe-differes-reglage'))},{mode:'ecriture',max:null});
+ regler({ombre:false});assert.equal((await b.api('passe-differes-reglage')).mode,'off');});
 
 test('textes (un seul module, `passe2Textes`) : « en ombre » seulement quand la passe n’écrit pas',()=>{
  const e=S.passe2Textes(ECRIT),o=S.passe2Textes(OMBRE),sansPlafond=S.passe2Textes({mode:'ecriture',max:null}),off=S.passe2Textes({mode:'off',max:0}),inconnu=S.passe2Textes(null);
@@ -52,8 +54,8 @@ test('panneau : le libellé de la case et l’avis après le clic suivent le mod
  assert.doesNotMatch(lire('panel.js'),/Deuxième passe allumée, en ombre/,'panel.js : plus d’avis écrit en dur');
  const etat={current:{identity:{part:23,cut:1}},batch:null};
  for(const [reglage,libelle,avis] of [[ECRIT,/^\(pose et valide jusqu’à 10 cuts en fin de lot\)$/,/pose et valide.*jusqu’à 10 cuts/],[OMBRE,/^\(en ombre : n’écrit rien dans ESV\)$/,/en ombre.*sans rien écrire dans ESV/]]){
-  const choix={clicHumain:'tel-quel',regleGrappeDifferes:false,passeDifferes:true,aurorePassage:true,passeDifferesReglage:reglage};
-  const p=await panneau(etat,{globals:{BananeSettings:Settings,ArianeSignalRendu:S},reponses:{'choix-lot-etat':choix,'choix-lot':choix}});
+  const choix={clicHumain:'tel-quel',regleGrappeDifferes:false,passeDifferes:true,aurorePassage:true};
+  const p=await panneau(etat,{globals:{BananeSettings:Settings,ArianeSignalRendu:S},reponses:{'choix-lot-etat':choix,'choix-lot':choix,'passe-differes-reglage':reglage}});
   await p.attendre();assert.match(p.$('passe-differes-mode').textContent,libelle);
   p.$('passe-differes').checked=true;p.$('passe-differes').onclick();await p.attendre();
   assert.match(p.notes.at(-1),avis);}});

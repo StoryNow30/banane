@@ -536,7 +536,8 @@
  const NOMS_CLIC={'tel-quel':'Comme avant','gauche-recentre':'Variante : rail gauche recentré','tout-recentre':'Tout recentré, comme un humain'};
  const IDS_CLIC={'tel-quel':'clic-tel-quel','gauche-recentre':'clic-gauche-recentre','tout-recentre':'clic-tout-recentre'};
  let choixLot=null;
- const textesPasse2=()=>globalThis.ArianeSignalRendu?.passe2Textes?.(choixLot?.passeDifferesReglage)||{mode:'',avisAllumee:'Deuxième passe allumée.'};
+ let reglagePasse=null;   /* CH-097 : mode effectif de la deuxième passe, lu au service worker (`passe-differes-reglage`) */
+ const textesPasse2=()=>globalThis.ArianeSignalRendu?.passe2Textes?.(reglagePasse)||{mode:'',avisAllumee:'Deuxième passe allumée.'};
  const clicDuScope=sc=>NOMS_CLIC[sc?.clicHumain]?sc.clicHumain:'tel-quel',grappeDuScope=sc=>sc?.regleGrappeDifferes===true;
  const nomGrappe=on=>on?'activée':'coupée';
  /* Test 7 (l'opérateur : « après un lot, le panneau disait “Activée pour le prochain lot” alors que le lot venait de l'utiliser ») — chaque
@@ -909,7 +910,7 @@
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
- globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),vertsListe:()=>verts.liste,choixLot:()=>choixLot,   /* CH-026 : les départs des parties, pour l'onglet « File » ; CH-097 : la liste des verts (nombre réel au-delà de 12 plages) */
+ globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),vertsListe:()=>verts.liste,passeReglage:()=>reglagePasse,   /* CH-026 : les départs des parties, pour l'onglet « File » ; CH-097 : la liste des verts (nombre réel au-delà de 12 plages) */
    apres:f=>{if(typeof f!=='function')return;hooksRendu.push(f);if(state)try{f(state);}catch{/* idem */}}});
  /* T20a (D-243, D-250) — « RECONNECTER » : ré-équipe l'onglet ESV choisi (action `reconnect` du service worker, aucune commande ESV). Caché sans onglet
   * (statut `no-tab`, ou jamais connecté), grisé pendant la reconnexion (`reconnecting`). */
@@ -1783,6 +1784,7 @@ on('native-discard',async()=>{
  if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
  if($('aurore-passage'))$('aurore-passage').onclick=()=>changerChoixLot({aurorePassage:$('aurore-passage').checked===true});
  if($('passe-differes')){$('passe-differes').indeterminate=true;$('passe-differes').onclick=()=>changerChoixLot({passeDifferes:$('passe-differes').checked===true});}
+ api('passe-differes-reglage').then(r=>{if(r&&typeof r.mode==='string'){reglagePasse=r;const e=$('passe-differes-mode');if(e)e.textContent=textesPasse2().mode;}}).catch(()=>{});
  api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});
  /* RM-11 : choix de la raison de la correction, relu au service worker à l'ouverture ; pastilles et touches du panneau. */
  api('raison-choix-etat').then(r=>{if(r&&typeof r.actif==='boolean'){choixRaison=r;majRaison(state);}}).catch(()=>{});

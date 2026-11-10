@@ -266,7 +266,7 @@
     const rg = {
       relecture: coche([['coupee', 'relecture-coupee'], ['ombre', 'relecture-ombre'], ['corriger', 'relecture-corriger']]),
       clic: coche([['tel-quel', 'clic-tel-quel'], ['gauche-recentre', 'clic-gauche-recentre'], ['tout-recentre', 'clic-tout-recentre']]),
-      grappe: !!$('grappe-differes')?.checked, passage: $('aurore-passage') ? !!$('aurore-passage').checked : null, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, passe2Reglage: (() => { try { return root.ArianePanel.choixLot?.()?.passeDifferesReglage ?? null; } catch { return null; } })() /* CH-097 : mode effectif, pour le libellé */, raison: !!$('raison-actif')?.checked,
+      grappe: !!$('grappe-differes')?.checked, passage: $('aurore-passage') ? !!$('aurore-passage').checked : null, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, passe2Reglage: (() => { try { return root.ArianePanel.passeReglage?.() ?? null; } catch { return null; } })() /* CH-097 : mode effectif, pour le libellé */, raison: !!$('raison-actif')?.checked,
       touches: coche([['chiffres', 'raison-touches-chiffres'], ['alt-chiffres', 'raison-touches-alt-chiffres'], ['pave', 'raison-touches-pave']]),
       bandeau: $('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true',
     };

@@ -52,7 +52,7 @@ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
  * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
  * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
 const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
-const LECTURES_PANNEAU=['view','build','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
+const LECTURES_PANNEAU=['view','build','passe-differes-reglage','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
 const coordinateurLot={journal:[],
  transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
   const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
@@ -1474,11 +1474,8 @@ async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC
  const p=r?.[CLE_PASSE_DIFFERES];
  /* CH-037 : `aurorePassage`, l'interrupteur de l'opérateur pour le passage entre parties de l'Aurore (réglages de Signal). Absent : allumé (suit
   * `correctionEntreParties.actif`) ; `false` : éteint. Lu à chaque « Ouvrir » ; ne vaut que si le réglage du dépôt est allumé. */
- /* CH-097 (D-319) : `passeDifferesReglage`, le mode EFFECTIF de la deuxième passe ({mode:'off'|'ombre'|'ecriture', max}), lu par `passeDiffReglage`, la fonction
-  * même que la passe lit avant d'écrire : le panneau et Signal en tirent leur libellé au lieu d'un texte en dur. Lecture seule ; `max:null` = sans plafond. */
- let reglagePasse=null;try{const g=passeDiffReglage();reglagePasse={mode:g.mode,max:Number.isFinite(g.max)?g.max:null};}catch{reglagePasse=null;}
  return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true),
-  aurorePassage:r?.[CLE_AURORE_PASSAGE]!==false,passeDifferesReglage:reglagePasse};}
+  aurorePassage:r?.[CLE_AURORE_PASSAGE]!==false};}
 async function choixLot(args){
  if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
  if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}
@@ -4473,6 +4470,10 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
  /* 4.9.5 test 6 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
  if(action==='choix-lot-etat')return choixDuLot();
+ /* CH-097 (D-319) : le mode EFFECTIF de la deuxième passe ({mode:'off'|'ombre'|'ecriture', max}), lu par `passeDiffReglage`, la fonction même que la passe lit
+  * avant d'écrire : le panneau et Signal en tirent leur libellé au lieu d'un texte en dur. Lecture seule, à part des choix du lot (leurs clés sont gardées par
+  * la garde de pose) ; `max:null` = sans plafond. */
+ if(action==='passe-differes-reglage'){const g=passeDiffReglage();return {mode:g.mode,max:Number.isFinite(g.max)?g.max:null};}
  if(action==='choix-lot')return choixLot(args);
  if(action==='lot-profil-etat')return {profil:await profilDuLot()};
  if(action==='lot-profil')return profilChoisir(args);
