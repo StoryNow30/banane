@@ -4,7 +4,7 @@ Diff relu : `d4238bf..40df88a` (CH-081, 083, 084, 085, 086, 087, 088, 089), fich
 
 ## Défauts, du plus grave au moins grave
 
-**1. MOYEN, ÉTABLI — après une pause `ECRITURE_NON_CONFIRMEE`, « Reprendre » ne repasse aucune porte (CH-086).** `src/engine.js:132-146` (`porteEcritures`), `:1050-1054` (pause), `:1206` (`resume`).
+**1. MOYEN, ÉTABLI — après une pause `ECRITURE_NON_CONFIRMEE`, « Reprendre » ne repasse aucune porte (CH-086).** `src/engine.js:133-148` (`porteEcritures`), `:1050-1054` (pause), `:1206` (`resume`).
 - Chemin exact : la validation du cut N revient (fenêtre ouverte) ; IndexedDB refuse `putEvent` à partir de cet instant. À la porte « intention-de-pose » du cut N+1, les écritures en vol ont échoué, la reprise unique (`reecrireFenetre`) échoue aussi : pause motivée, `fenetreEcritures` remis dans l'état. Mais `this.fenetre` vaut déjà `null` (mis à null à l'entrée de la porte) et `resume()` ne relit pas `fenetreEcritures`.
 - Conséquence 1 (stockage réparé, puis Reprendre) : le lot finit, mais les événements de la fenêtre ne sont jamais réécrits dans IndexedDB. Perdus du journal dans l'essai : `validation-observation`, `validation-accepted` du cut N, `cut-target-changed`, `before-captured`, `proposed` du cut N+1. La fenêtre suivante écrase la liste `fenetreEcritures`. Seul un redémarrage du service worker (`init()`) les rattrape, tant qu'ils sont dans les 150 derniers événements de l'état.
 - Conséquence 2 (stockage toujours en panne, Reprendre) : la pose du cut N+1 part quand même (`apply:102` dans l'essai), puis l'écriture attendue échoue et le lot passe en rapprochement. Le message de pause dit « Reprendre quand le stockage répond » ; rien ne le vérifie.
@@ -49,3 +49,8 @@ Diff relu : `d4238bf..40df88a` (CH-081, 083, 084, 085, 086, 087, 088, 089), fich
 ## Non relu, non fait
 - `tools/*`, `tests/esv-maquette/*`, `design/`, documents : lus en diagonale seulement. Aucun essai navigateur écrit (maquette non relancée : aucun chemin navigateur changé).
 - Le comportement réel de Potree et d'ESV (nœud en échec, nombre de frontières par boîte) n'est pas mesuré : il faut un lot.
+
+## Verify (machine de l'exécutant, seul, une fois)
+- 3 390 essais : 3 371 verts, 0 rouge, 8 sautés, 10 `todo` (ceux de CH-092), **1 fichier annulé par le délai de 20 s** : `tests/ch084-validation-sur-place.test.cjs` (fichier livré par CH-084, non modifié ; ses 9 essais sont verts). Le verify sort donc en échec.
+- Relancé seul : 9 sur 9 verts en 18,4 s. Ce fichier tient à 1,6 s du délai du verify (un de ses essais dure 7,2 s) : il peut faire tomber le verify sur une machine un peu chargée. À raccourcir ou à découper ; ÉTABLI (une mesure).
+- `audit/verification.*` non commité.
