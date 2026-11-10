@@ -52,6 +52,7 @@ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
  * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
  * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
 const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
+const LECTURES_PANNEAU=['view','build','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
 const coordinateurLot={journal:[],
  transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
   const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
@@ -4559,7 +4560,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   throw Error('Le mode Correction a été retiré en 4.5.4. Utilise Écho.');
  if(action==='manual-end')return manual.end();
  if(action==='manual-download')return manual.dataset();
- if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
+ if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard','build'/* CH-097 : lecture du nom du paquet, demandée à chaque ouverture du panneau */].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
  if(action==='relecture-lancer')return relectureLancer({auto:false});
@@ -4673,5 +4674,8 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
  dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
    catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
-  e=>coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});}));return true;
+  /* CH-097 : une LECTURE qui échoue (liste `LECTURES_PANNEAU` : demandes sans effet, la plupart lancées seules par le panneau) rend son erreur au panneau
+   * sans remplacer l'avis du lot, sans sauvegarde et sans prendre une des 64 entrées du journal des transitions. Un geste refusé reste noté comme avant. */
+  e=>{if(LECTURES_PANNEAU.includes(m.action))return respond({error:vocabulaire(e.message)});
+   return coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});});return true;
 });
