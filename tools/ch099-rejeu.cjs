@@ -331,7 +331,7 @@ function secondeChance(a) {
   for (const nom of ['temoin', 'rl']) { const Lp = lignes.filter(l => l[nom].etat === 'pose' && l[nom].passe).sort((x, y) => x[nom].passe - y[nom].passe || x.cut - y.cut); Lp.forEach((l, i) => { l[nom].rangPasse = i + 1; }); B[nom].passeAuDelaDuPlafond = Math.max(0, B[nom].parPasse - 10); }
   fid.sort((x, y) => x - y);
   const q = p => fid.length ? Math.round(100 * fid[Math.min(fid.length - 1, Math.floor(p * fid.length))]) / 100 : null;
-  const res = { etiquette: a.etiquette, partie, lot: T.entete.lot, profil: P, verites: V.size, temoin: B.temoin, rl: B.rl, levier, collateral, fidelite: { n: fid.length, medianeMm: q(0.5), p95Mm: q(0.95), maxMm: fid.length ? Math.round(100 * fid[fid.length - 1]) / 100 : null, plusDe2mm: fid.filter(x => x > 2).length } };
+  const res = { etiquette: a.etiquette, partie, cutsDuLot: T.cuts.size, profil: P, verites: V.size, temoin: B.temoin, rl: B.rl, levier, collateral, fidelite: { n: fid.length, medianeMm: q(0.5), p95Mm: q(0.95), maxMm: fid.length ? Math.round(100 * fid[fid.length - 1]) / 100 : null, plusDe2mm: fid.filter(x => x > 2).length } };
   if (a.sortie) fs.writeFileSync(a.sortie, lignes.map(o => JSON.stringify(o)).join('\n') + '\n');
   console.log(JSON.stringify(res));
   return res;

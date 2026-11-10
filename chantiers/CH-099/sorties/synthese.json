@@ -1,0 +1,1795 @@
+{
+ "format": "ch099-synthese-v1",
+ "variantes": [
+  "S0",
+  "S60",
+  "S90"
+ ],
+ "lots": {
+  "04-11": {
+   "poses": 957,
+   "erreurs": 0,
+   "juges": 6,
+   "controles": 1,
+   "ecartees": 0,
+   "fautes": 0,
+   "moyennes": 0,
+   "justes": 6,
+   "couvre400": 956,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 26,
+      "n": 957,
+      "part": 0.0272,
+      "bas": 0.0186,
+      "haut": 0.0395
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 6,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.3903
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 5,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.4345
+     },
+     "motifs": {
+      "garde:pose-unique": 918,
+      "differer:concurrence": 22,
+      "garde:aucune-paire-forte": 6,
+      "garde:pose-sans-paire-forte-proche": 7,
+      "differer:pose-sans-paire-forte": 4
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 17,
+      "n": 957,
+      "part": 0.0178,
+      "bas": 0.0111,
+      "haut": 0.0283
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 6,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.3903
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 5,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.4345
+     },
+     "motifs": {
+      "garde:pose-unique": 923,
+      "differer:concurrence": 17,
+      "garde:aucune-paire-forte": 6,
+      "garde:pose-sans-paire-forte-proche": 7,
+      "garde:pose-sans-paire-forte-pauvre": 4
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 13,
+      "n": 957,
+      "part": 0.0136,
+      "bas": 0.008,
+      "haut": 0.0231
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 6,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.3903
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 5,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.4345
+     },
+     "motifs": {
+      "garde:pose-unique": 927,
+      "differer:concurrence": 13,
+      "garde:aucune-paire-forte": 6,
+      "garde:pose-sans-paire-forte-proche": 7,
+      "garde:pose-sans-paire-forte-pauvre": 4
+     }
+    }
+   }
+  },
+  "05-11": {
+   "poses": 831,
+   "erreurs": 0,
+   "juges": 211,
+   "controles": 45,
+   "ecartees": 18,
+   "fautes": 0,
+   "moyennes": 2,
+   "justes": 209,
+   "couvre400": 831,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 25,
+      "n": 831,
+      "part": 0.0301,
+      "bas": 0.0205,
+      "haut": 0.044
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 2,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.6576
+     },
+     "justesDifferees": {
+      "k": 9,
+      "n": 209,
+      "part": 0.0431,
+      "bas": 0.0228,
+      "haut": 0.0798
+     },
+     "justesDiffereesSansControle": {
+      "k": 5,
+      "n": 164,
+      "part": 0.0305,
+      "bas": 0.0131,
+      "haut": 0.0694
+     },
+     "motifs": {
+      "garde:pose-unique": 587,
+      "garde:aucune-paire-forte": 169,
+      "garde:pose-sans-paire-forte-proche": 50,
+      "differer:pose-sans-paire-forte": 17,
+      "differer:concurrence": 8
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 1,
+      "n": 831,
+      "part": 0.0012,
+      "bas": 0.0002,
+      "haut": 0.0068
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 2,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.6576
+     },
+     "justesDifferees": {
+      "k": 1,
+      "n": 209,
+      "part": 0.0048,
+      "bas": 0.0008,
+      "haut": 0.0266
+     },
+     "justesDiffereesSansControle": {
+      "k": 1,
+      "n": 164,
+      "part": 0.0061,
+      "bas": 0.0011,
+      "haut": 0.0337
+     },
+     "motifs": {
+      "garde:pose-unique": 594,
+      "garde:aucune-paire-forte": 169,
+      "garde:pose-sans-paire-forte-proche": 50,
+      "garde:pose-sans-paire-forte-pauvre": 17,
+      "differer:concurrence": 1
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 0,
+      "n": 831,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.0046
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 2,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.6576
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 209,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.018
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 164,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.0229
+     },
+     "motifs": {
+      "garde:pose-unique": 595,
+      "garde:aucune-paire-forte": 169,
+      "garde:pose-sans-paire-forte-proche": 50,
+      "garde:pose-sans-paire-forte-pauvre": 17
+     }
+    }
+   }
+  },
+  "06-11": {
+   "poses": 1078,
+   "erreurs": 0,
+   "juges": 100,
+   "controles": 16,
+   "ecartees": 8,
+   "fautes": 7,
+   "moyennes": 13,
+   "justes": 80,
+   "couvre400": 1077,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 30,
+      "n": 1078,
+      "part": 0.0278,
+      "bas": 0.0196,
+      "haut": 0.0394
+     },
+     "fautesDifferees": {
+      "k": 5,
+      "n": 7,
+      "part": 0.7143,
+      "bas": 0.3589,
+      "haut": 0.9178
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 13,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     },
+     "justesDifferees": {
+      "k": 3,
+      "n": 80,
+      "part": 0.0375,
+      "bas": 0.0128,
+      "haut": 0.1045
+     },
+     "justesDiffereesSansControle": {
+      "k": 2,
+      "n": 64,
+      "part": 0.0313,
+      "bas": 0.0086,
+      "haut": 0.107
+     },
+     "motifs": {
+      "garde:pose-unique": 551,
+      "garde:aucune-paire-forte": 408,
+      "garde:pose-sans-paire-forte-proche": 89,
+      "differer:pose-sans-paire-forte": 15,
+      "differer:concurrence": 15
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 9,
+      "n": 1078,
+      "part": 0.0083,
+      "bas": 0.0044,
+      "haut": 0.0158
+     },
+     "fautesDifferees": {
+      "k": 4,
+      "n": 7,
+      "part": 0.5714,
+      "bas": 0.2505,
+      "haut": 0.8418
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 13,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     },
+     "justesDifferees": {
+      "k": 2,
+      "n": 80,
+      "part": 0.025,
+      "bas": 0.0069,
+      "haut": 0.0866
+     },
+     "justesDiffereesSansControle": {
+      "k": 2,
+      "n": 64,
+      "part": 0.0313,
+      "bas": 0.0086,
+      "haut": 0.107
+     },
+     "motifs": {
+      "garde:pose-unique": 557,
+      "garde:aucune-paire-forte": 408,
+      "garde:pose-sans-paire-forte-proche": 89,
+      "garde:pose-sans-paire-forte-pauvre": 15,
+      "differer:concurrence": 9
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 9,
+      "n": 1078,
+      "part": 0.0083,
+      "bas": 0.0044,
+      "haut": 0.0158
+     },
+     "fautesDifferees": {
+      "k": 4,
+      "n": 7,
+      "part": 0.5714,
+      "bas": 0.2505,
+      "haut": 0.8418
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 13,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2281
+     },
+     "justesDifferees": {
+      "k": 2,
+      "n": 80,
+      "part": 0.025,
+      "bas": 0.0069,
+      "haut": 0.0866
+     },
+     "justesDiffereesSansControle": {
+      "k": 2,
+      "n": 64,
+      "part": 0.0313,
+      "bas": 0.0086,
+      "haut": 0.107
+     },
+     "motifs": {
+      "garde:pose-unique": 557,
+      "garde:aucune-paire-forte": 408,
+      "garde:pose-sans-paire-forte-proche": 89,
+      "garde:pose-sans-paire-forte-pauvre": 15,
+      "differer:concurrence": 9
+     }
+    }
+   }
+  },
+  "08-11-1613": {
+   "poses": 109,
+   "erreurs": 0,
+   "juges": 16,
+   "controles": 4,
+   "ecartees": 0,
+   "fautes": 0,
+   "moyennes": 1,
+   "justes": 15,
+   "couvre400": 109,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 6,
+      "n": 109,
+      "part": 0.055,
+      "bas": 0.0255,
+      "haut": 0.1149
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 1,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     },
+     "justesDifferees": {
+      "k": 1,
+      "n": 15,
+      "part": 0.0667,
+      "bas": 0.0119,
+      "haut": 0.2982
+     },
+     "justesDiffereesSansControle": {
+      "k": 1,
+      "n": 11,
+      "part": 0.0909,
+      "bas": 0.0162,
+      "haut": 0.3774
+     },
+     "motifs": {
+      "garde:pose-unique": 99,
+      "garde:aucune-paire-forte": 2,
+      "garde:pose-sans-paire-forte-proche": 2,
+      "differer:concurrence": 5,
+      "differer:pose-sans-paire-forte": 1
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 3,
+      "n": 109,
+      "part": 0.0275,
+      "bas": 0.0094,
+      "haut": 0.0778
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 1,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 15,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2039
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 11,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2588
+     },
+     "motifs": {
+      "garde:pose-unique": 101,
+      "garde:aucune-paire-forte": 2,
+      "garde:pose-sans-paire-forte-proche": 2,
+      "differer:concurrence": 3,
+      "garde:pose-sans-paire-forte-pauvre": 1
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 0,
+      "n": 109,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.034
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 1,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.7935
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 15,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2039
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 11,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.2588
+     },
+     "motifs": {
+      "garde:pose-unique": 104,
+      "garde:aucune-paire-forte": 2,
+      "garde:pose-sans-paire-forte-proche": 2,
+      "garde:pose-sans-paire-forte-pauvre": 1
+     }
+    }
+   }
+  },
+  "08-11-2016": {
+   "poses": 54,
+   "erreurs": 0,
+   "juges": 0,
+   "controles": 0,
+   "ecartees": 0,
+   "fautes": 0,
+   "moyennes": 0,
+   "justes": 0,
+   "couvre400": 54,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 0,
+      "n": 54,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.0664
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "motifs": {
+      "garde:pose-unique": 54
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 0,
+      "n": 54,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.0664
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "motifs": {
+      "garde:pose-unique": 54
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 0,
+      "n": 54,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.0664
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "motifs": {
+      "garde:pose-unique": 54
+     }
+    }
+   }
+  },
+  "08-11-2130": {
+   "poses": 193,
+   "erreurs": 0,
+   "juges": 27,
+   "controles": 8,
+   "ecartees": 0,
+   "fautes": 3,
+   "moyennes": 3,
+   "justes": 21,
+   "couvre400": 193,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 6,
+      "n": 193,
+      "part": 0.0311,
+      "bas": 0.0143,
+      "haut": 0.0662
+     },
+     "fautesDifferees": {
+      "k": 3,
+      "n": 3,
+      "part": 1,
+      "bas": 0.4385,
+      "haut": 1
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 3,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.5615
+     },
+     "justesDifferees": {
+      "k": 1,
+      "n": 21,
+      "part": 0.0476,
+      "bas": 0.0085,
+      "haut": 0.2267
+     },
+     "justesDiffereesSansControle": {
+      "k": 1,
+      "n": 13,
+      "part": 0.0769,
+      "bas": 0.0137,
+      "haut": 0.3331
+     },
+     "motifs": {
+      "garde:pose-unique": 185,
+      "differer:concurrence": 4,
+      "differer:pose-sans-paire-forte": 2,
+      "garde:aucune-paire-forte": 1,
+      "garde:pose-sans-paire-forte-proche": 1
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 5,
+      "n": 193,
+      "part": 0.0259,
+      "bas": 0.0111,
+      "haut": 0.0592
+     },
+     "fautesDifferees": {
+      "k": 3,
+      "n": 3,
+      "part": 1,
+      "bas": 0.4385,
+      "haut": 1
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 3,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.5615
+     },
+     "justesDifferees": {
+      "k": 1,
+      "n": 21,
+      "part": 0.0476,
+      "bas": 0.0085,
+      "haut": 0.2267
+     },
+     "justesDiffereesSansControle": {
+      "k": 1,
+      "n": 13,
+      "part": 0.0769,
+      "bas": 0.0137,
+      "haut": 0.3331
+     },
+     "motifs": {
+      "garde:pose-unique": 185,
+      "differer:concurrence": 4,
+      "differer:pose-sans-paire-forte": 1,
+      "garde:aucune-paire-forte": 1,
+      "garde:pose-sans-paire-forte-pauvre": 1,
+      "garde:pose-sans-paire-forte-proche": 1
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 5,
+      "n": 193,
+      "part": 0.0259,
+      "bas": 0.0111,
+      "haut": 0.0592
+     },
+     "fautesDifferees": {
+      "k": 3,
+      "n": 3,
+      "part": 1,
+      "bas": 0.4385,
+      "haut": 1
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 3,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.5615
+     },
+     "justesDifferees": {
+      "k": 1,
+      "n": 21,
+      "part": 0.0476,
+      "bas": 0.0085,
+      "haut": 0.2267
+     },
+     "justesDiffereesSansControle": {
+      "k": 1,
+      "n": 13,
+      "part": 0.0769,
+      "bas": 0.0137,
+      "haut": 0.3331
+     },
+     "motifs": {
+      "garde:pose-unique": 185,
+      "differer:concurrence": 4,
+      "differer:pose-sans-paire-forte": 1,
+      "garde:aucune-paire-forte": 1,
+      "garde:pose-sans-paire-forte-pauvre": 1,
+      "garde:pose-sans-paire-forte-proche": 1
+     }
+    }
+   }
+  },
+  "08-11-2228": {
+   "poses": 87,
+   "erreurs": 0,
+   "juges": 0,
+   "controles": 0,
+   "ecartees": 0,
+   "fautes": 0,
+   "moyennes": 0,
+   "justes": 0,
+   "couvre400": 87,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 5,
+      "n": 87,
+      "part": 0.0575,
+      "bas": 0.0248,
+      "haut": 0.1276
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "motifs": {
+      "garde:pose-unique": 73,
+      "garde:pose-sans-paire-forte-proche": 5,
+      "garde:aucune-paire-forte": 4,
+      "differer:concurrence": 3,
+      "differer:pose-sans-paire-forte": 2
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 2,
+      "n": 87,
+      "part": 0.023,
+      "bas": 0.0063,
+      "haut": 0.08
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "motifs": {
+      "garde:pose-unique": 74,
+      "garde:pose-sans-paire-forte-proche": 5,
+      "garde:aucune-paire-forte": 4,
+      "differer:concurrence": 2,
+      "garde:pose-sans-paire-forte-pauvre": 2
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 0,
+      "n": 87,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.0423
+     },
+     "fautesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDifferees": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "justesDiffereesSansControle": {
+      "k": 0,
+      "n": 0,
+      "part": null,
+      "bas": null,
+      "haut": null
+     },
+     "motifs": {
+      "garde:pose-unique": 76,
+      "garde:pose-sans-paire-forte-proche": 5,
+      "garde:aucune-paire-forte": 4,
+      "garde:pose-sans-paire-forte-pauvre": 2
+     }
+    }
+   }
+  },
+  "TOUS": {
+   "poses": 3309,
+   "erreurs": 0,
+   "juges": 360,
+   "controles": 74,
+   "ecartees": 26,
+   "fautes": 10,
+   "moyennes": 19,
+   "justes": 331,
+   "couvre400": 3307,
+   "parVariante": {
+    "S0": {
+     "posesDifferes": {
+      "k": 98,
+      "n": 3309,
+      "part": 0.0296,
+      "bas": 0.0244,
+      "haut": 0.036
+     },
+     "fautesDifferees": {
+      "k": 8,
+      "n": 10,
+      "part": 0.8,
+      "bas": 0.4902,
+      "haut": 0.9433
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 19,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1682
+     },
+     "justesDifferees": {
+      "k": 14,
+      "n": 331,
+      "part": 0.0423,
+      "bas": 0.0254,
+      "haut": 0.0697
+     },
+     "justesDiffereesSansControle": {
+      "k": 9,
+      "n": 257,
+      "part": 0.035,
+      "bas": 0.0185,
+      "haut": 0.0652
+     },
+     "motifs": {
+      "garde:pose-unique": 2467,
+      "differer:concurrence": 57,
+      "garde:aucune-paire-forte": 590,
+      "garde:pose-sans-paire-forte-proche": 154,
+      "differer:pose-sans-paire-forte": 41
+     }
+    },
+    "S60": {
+     "posesDifferes": {
+      "k": 37,
+      "n": 3309,
+      "part": 0.0112,
+      "bas": 0.0081,
+      "haut": 0.0154
+     },
+     "fautesDifferees": {
+      "k": 7,
+      "n": 10,
+      "part": 0.7,
+      "bas": 0.3968,
+      "haut": 0.8922
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 19,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1682
+     },
+     "justesDifferees": {
+      "k": 4,
+      "n": 331,
+      "part": 0.0121,
+      "bas": 0.0047,
+      "haut": 0.0307
+     },
+     "justesDiffereesSansControle": {
+      "k": 4,
+      "n": 257,
+      "part": 0.0156,
+      "bas": 0.0061,
+      "haut": 0.0393
+     },
+     "motifs": {
+      "garde:pose-unique": 2488,
+      "differer:concurrence": 36,
+      "garde:aucune-paire-forte": 590,
+      "garde:pose-sans-paire-forte-proche": 154,
+      "garde:pose-sans-paire-forte-pauvre": 40,
+      "differer:pose-sans-paire-forte": 1
+     }
+    },
+    "S90": {
+     "posesDifferes": {
+      "k": 27,
+      "n": 3309,
+      "part": 0.0082,
+      "bas": 0.0056,
+      "haut": 0.0118
+     },
+     "fautesDifferees": {
+      "k": 7,
+      "n": 10,
+      "part": 0.7,
+      "bas": 0.3968,
+      "haut": 0.8922
+     },
+     "moyennesDifferees": {
+      "k": 0,
+      "n": 19,
+      "part": 0,
+      "bas": 0,
+      "haut": 0.1682
+     },
+     "justesDifferees": {
+      "k": 3,
+      "n": 331,
+      "part": 0.0091,
+      "bas": 0.0031,
+      "haut": 0.0263
+     },
+     "justesDiffereesSansControle": {
+      "k": 3,
+      "n": 257,
+      "part": 0.0117,
+      "bas": 0.004,
+      "haut": 0.0338
+     },
+     "motifs": {
+      "garde:pose-unique": 2498,
+      "differer:concurrence": 26,
+      "garde:aucune-paire-forte": 590,
+      "garde:pose-sans-paire-forte-proche": 154,
+      "garde:pose-sans-paire-forte-pauvre": 40,
+      "differer:pose-sans-paire-forte": 1
+     }
+    }
+   }
+  }
+ },
+ "fautes": [
+  {
+   "lot": "06-11",
+   "partie": 15,
+   "cut": 7260,
+   "mm": 125.67,
+   "etage": "deferred",
+   "l1": "valider",
+   "couvre400": true,
+   "rl": {
+    "S0": "garde:pose-unique",
+    "S60": "garde:pose-unique",
+    "S90": "garde:pose-unique"
+   },
+   "meilleureAVeriteMm": 130,
+   "paireVerite": {
+    "ecartMm": 130,
+    "rang": 1,
+    "top": [
+     41,
+     45
+    ],
+    "prod": 1.624e-10
+   },
+   "nPaires": 6,
+   "gardes": {
+    "r3": true,
+    "grappe": true,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 15,
+   "cut": 7423,
+   "mm": 173.95,
+   "etage": "deferred",
+   "l1": "valider",
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:pose-sans-paire-forte",
+    "S60": "garde:pose-sans-paire-forte-pauvre",
+    "S90": "garde:pose-sans-paire-forte-pauvre"
+   },
+   "meilleureAVeriteMm": 15.9,
+   "paireVerite": {
+    "ecartMm": 15.6,
+    "rang": 2,
+    "top": [
+     36,
+     39
+    ],
+    "prod": 5.101e-10
+   },
+   "nPaires": 21,
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9272,
+   "mm": 163.86,
+   "etage": "deferred",
+   "l1": "valider",
+   "couvre400": true,
+   "rl": {
+    "S0": "garde:pose-unique",
+    "S60": "garde:pose-unique",
+    "S90": "garde:pose-unique"
+   },
+   "meilleureAVeriteMm": 160.8,
+   "paireVerite": {
+    "ecartMm": 3.7,
+    "rang": 9,
+    "top": [
+     156,
+     152
+    ],
+    "prod": 4.888e-12
+   },
+   "nPaires": 43,
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9266,
+   "mm": 262.65,
+   "etage": "first-pass",
+   "l1": null,
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:concurrence",
+    "S60": "differer:concurrence",
+    "S90": "differer:concurrence"
+   },
+   "meilleureAVeriteMm": 5.7,
+   "paireVerite": {
+    "ecartMm": 5.7,
+    "rang": 1,
+    "top": [
+     152,
+     149
+    ],
+    "prod": 6.439e-13
+   },
+   "nPaires": 48,
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9271,
+   "mm": 185.36,
+   "etage": "deferred",
+   "l1": "valider",
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:concurrence",
+    "S60": "differer:concurrence",
+    "S90": "differer:concurrence"
+   },
+   "meilleureAVeriteMm": 12.7,
+   "paireVerite": {
+    "ecartMm": 6,
+    "rang": 37,
+    "top": [
+     155,
+     130
+    ],
+    "prod": 4.193e-11
+   },
+   "nPaires": 41,
+   "gardes": {
+    "r3": true,
+    "grappe": true,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9270,
+   "mm": 238.3,
+   "etage": "first-pass",
+   "l1": null,
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:concurrence",
+    "S60": "differer:concurrence",
+    "S90": "differer:concurrence"
+   },
+   "meilleureAVeriteMm": 6,
+   "paireVerite": {
+    "ecartMm": 4,
+    "rang": 3,
+    "top": [
+     153,
+     143
+    ],
+    "prod": 1.013e-12
+   },
+   "nPaires": 37,
+   "gardes": {
+    "r3": true,
+    "grappe": true,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cut": 9267,
+   "mm": 315.14,
+   "etage": "deferred",
+   "l1": "chaine-l1",
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:concurrence",
+    "S60": "differer:concurrence",
+    "S90": "differer:concurrence"
+   },
+   "meilleureAVeriteMm": 306.1,
+   "paireVerite": {
+    "ecartMm": 6.3,
+    "rang": 2,
+    "top": [
+     159,
+     149
+    ],
+    "prod": 8.157e-13
+   },
+   "nPaires": 29,
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": false
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 360,
+   "mm": 156.09,
+   "etage": "first-pass",
+   "l1": null,
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:concurrence",
+    "S60": "differer:concurrence",
+    "S90": "differer:concurrence"
+   },
+   "meilleureAVeriteMm": 6.8,
+   "paireVerite": {
+    "ecartMm": 6.1,
+    "rang": 3,
+    "top": [
+     179,
+     220
+    ],
+    "prod": 1.659e-12
+   },
+   "nPaires": 14,
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": true
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 361,
+   "mm": 156.46,
+   "etage": "choice",
+   "l1": null,
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:pose-sans-paire-forte",
+    "S60": "differer:pose-sans-paire-forte",
+    "S90": "differer:pose-sans-paire-forte"
+   },
+   "meilleureAVeriteMm": 5.1,
+   "paireVerite": {
+    "ecartMm": 3.1,
+    "rang": 2,
+    "top": [
+     212,
+     216
+    ],
+    "prod": 9.334e-13
+   },
+   "nPaires": 10,
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": true
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cut": 220,
+   "mm": 173.89,
+   "etage": "first-pass",
+   "l1": null,
+   "couvre400": true,
+   "rl": {
+    "S0": "differer:concurrence",
+    "S60": "differer:concurrence",
+    "S90": "differer:concurrence"
+   },
+   "meilleureAVeriteMm": 6.3,
+   "paireVerite": {
+    "ecartMm": 6.3,
+    "rang": 1,
+    "top": [
+     211,
+     217
+    ],
+    "prod": 2.532e-13
+   },
+   "nPaires": 31,
+   "gardes": {
+    "r3": true,
+    "grappe": true,
+    "voie": true
+   },
+   "sources": {
+    "r3": "journal",
+    "grappe": "journal",
+    "voie": "rejouee"
+   }
+  }
+ ],
+ "series": [
+  {
+   "lot": "06-11",
+   "partie": 15,
+   "cuts": [
+    7260
+   ],
+   "rejouable": true,
+   "differee": {
+    "S0": false,
+    "S60": false,
+    "S90": false
+   },
+   "gardes": {
+    "r3": true,
+    "grappe": true,
+    "voie": false
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 15,
+   "cuts": [
+    7423
+   ],
+   "rejouable": true,
+   "differee": {
+    "S0": true,
+    "S60": false,
+    "S90": false
+   },
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": false
+   }
+  },
+  {
+   "lot": "06-11",
+   "partie": 16,
+   "cuts": [
+    9266,
+    9267,
+    9270,
+    9271,
+    9272
+   ],
+   "rejouable": true,
+   "differee": {
+    "S0": false,
+    "S60": false,
+    "S90": false
+   },
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": false
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cuts": [
+    220
+   ],
+   "rejouable": true,
+   "differee": {
+    "S0": true,
+    "S60": true,
+    "S90": true
+   },
+   "gardes": {
+    "r3": true,
+    "grappe": true,
+    "voie": true
+   }
+  },
+  {
+   "lot": "08-11-2130",
+   "partie": 6,
+   "cuts": [
+    360,
+    361
+   ],
+   "rejouable": true,
+   "differee": {
+    "S0": true,
+    "S60": true,
+    "S90": true
+   },
+   "gardes": {
+    "r3": false,
+    "grappe": false,
+    "voie": true
+   }
+  }
+ ],
+ "verdict": {
+  "S0": {
+   "series": 5,
+   "fautes": {
+    "k": 8,
+    "n": 10,
+    "part": 0.8,
+    "bas": 0.4902,
+    "haut": 0.9433
+   },
+   "cout": {
+    "k": 98,
+    "n": 3309,
+    "part": 0.0296,
+    "bas": 0.0244,
+    "haut": 0.036
+   },
+   "sansPaire": 0,
+   "verdict": "candidat pour l'ombre",
+   "raison": null
+  },
+  "S60": {
+   "series": 5,
+   "fautes": {
+    "k": 7,
+    "n": 10,
+    "part": 0.7,
+    "bas": 0.3968,
+    "haut": 0.8922
+   },
+   "cout": {
+    "k": 37,
+    "n": 3309,
+    "part": 0.0112,
+    "bas": 0.0081,
+    "haut": 0.0154
+   },
+   "sansPaire": 0,
+   "verdict": "candidat pour l'ombre",
+   "raison": null
+  },
+  "S90": {
+   "series": 5,
+   "fautes": {
+    "k": 7,
+    "n": 10,
+    "part": 0.7,
+    "bas": 0.3968,
+    "haut": 0.8922
+   },
+   "cout": {
+    "k": 27,
+    "n": 3309,
+    "part": 0.0082,
+    "bas": 0.0056,
+    "haut": 0.0118
+   },
+   "sansPaire": 0,
+   "verdict": "candidat pour l'ombre",
+   "raison": null
+  }
+ },
+ "gardes": {
+  "fautes": {
+   "n": 10,
+   "r3": 4,
+   "grappe": 4,
+   "voie": 3,
+   "troisGardes": 6,
+   "parVariante": {
+    "S0": {
+     "rl": 8,
+     "union": 9,
+     "rlSeule": 3
+    },
+    "S60": {
+     "rl": 7,
+     "union": 8,
+     "rlSeule": 2
+    },
+    "S90": {
+     "rl": 7,
+     "union": 8,
+     "rlSeule": 2
+    }
+   }
+  },
+  "justes": {
+   "n": 331,
+   "r3": 33,
+   "grappe": 31,
+   "voie": 4,
+   "troisGardes": 44,
+   "parVariante": {
+    "S0": {
+     "rl": 14,
+     "union": 56,
+     "rlSeule": 12
+    },
+    "S60": {
+     "rl": 4,
+     "union": 46,
+     "rlSeule": 2
+    },
+    "S90": {
+     "rl": 3,
+     "union": 46,
+     "rlSeule": 2
+    }
+   }
+  },
+  "poses": {
+   "n": 3309,
+   "r3": 59,
+   "grappe": 47,
+   "voie": 41,
+   "troisGardes": 109,
+   "parVariante": {
+    "S0": {
+     "rl": 98,
+     "union": 197,
+     "rlSeule": 88
+    },
+    "S60": {
+     "rl": 37,
+     "union": 137,
+     "rlSeule": 28
+    },
+    "S90": {
+     "rl": 27,
+     "union": 129,
+     "rlSeule": 20
+    }
+   }
+  }
+ },
+ "contrefactuels": {
+  "n": 35,
+  "juges": 19,
+  "parClasse": {
+   "faute": {
+    "n": 0,
+    "S0": 0,
+    "S60": 0,
+    "S90": 0
+   },
+   "moyenne": {
+    "n": 1,
+    "S0": 1,
+    "S60": 0,
+    "S90": 0
+   },
+   "juste": {
+    "n": 18,
+    "S0": 0,
+    "S60": 0,
+    "S90": 0
+   }
+  },
+  "cuts": [
+   {
+    "lot": "05-11",
+    "partie": 10,
+    "cut": 6425,
+    "mm": 10.85,
+    "classe": "moyenne",
+    "base": "pose-de-la-passe",
+    "etage": "choice",
+    "rl": {
+     "S0": "differer:pose-sans-paire-forte",
+     "S60": "garde:pose-sans-paire-forte-pauvre",
+     "S90": "garde:pose-sans-paire-forte-pauvre"
+    },
+    "meilleureAVeriteMm": 124.1,
+    "paireVerite": {
+     "ecartMm": 112.9,
+     "rang": 4,
+     "top": [
+      28,
+      37
+     ],
+     "prod": 3.625e-11
+    }
+   }
+  ]
+ },
+ "varianteDuVerdict": "S60"
+}

@@ -1,0 +1,458 @@
+[
+ {
+  "etiquette": "04-11",
+  "partie": 14,
+  "profil": "L1-se",
+  "verites": 19,
+  "temoin": {
+   "cuts": 122,
+   "poses": 116,
+   "differes": 6,
+   "parPasse": 4,
+   "juges": 13,
+   "justes": 12,
+   "moyennes": 1,
+   "fautes": 0,
+   "jugesDifferes": 6,
+   "sansControle": {
+    "juges": 12,
+    "justes": 11,
+    "moyennes": 1,
+    "fautes": 0,
+    "jugesDifferes": 6
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "rl": {
+   "cuts": 122,
+   "poses": 115,
+   "differes": 7,
+   "parPasse": 3,
+   "juges": 12,
+   "justes": 11,
+   "moyennes": 1,
+   "fautes": 0,
+   "jugesDifferes": 7,
+   "sansControle": {
+    "juges": 11,
+    "justes": 10,
+    "moyennes": 1,
+    "fautes": 0,
+    "jugesDifferes": 7
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "levier": {
+   "differesParLevier": 1,
+   "reposesPasse": 0,
+   "reposesAutre": 0,
+   "restes": 1,
+   "juges": 0,
+   "justes": 0,
+   "moyennes": 0,
+   "fautes": 0,
+   "restesJuges": 1,
+   "sansControle": {
+    "juges": 0,
+    "justes": 0,
+    "moyennes": 0,
+    "fautes": 0
+   }
+  },
+  "collateral": {
+   "changes": 0,
+   "juges": 0,
+   "mieux": 0,
+   "pire": 0,
+   "nouvellesFautes": 0
+  },
+  "fidelite": {
+   "n": 99,
+   "medianeMm": 0.41,
+   "p95Mm": 0.56,
+   "maxMm": 9.09,
+   "plusDe2mm": 3
+  },
+  "cutsDuLot": 122
+ },
+ {
+  "etiquette": "05-11",
+  "partie": 8,
+  "profil": "L1-se",
+  "verites": 25,
+  "temoin": {
+   "cuts": 157,
+   "poses": 156,
+   "differes": 1,
+   "parPasse": 0,
+   "juges": 24,
+   "justes": 24,
+   "moyennes": 0,
+   "fautes": 0,
+   "jugesDifferes": 1,
+   "sansControle": {
+    "juges": 21,
+    "justes": 21,
+    "moyennes": 0,
+    "fautes": 0,
+    "jugesDifferes": 1
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "rl": {
+   "cuts": 157,
+   "poses": 156,
+   "differes": 1,
+   "parPasse": 0,
+   "juges": 24,
+   "justes": 24,
+   "moyennes": 0,
+   "fautes": 0,
+   "jugesDifferes": 1,
+   "sansControle": {
+    "juges": 21,
+    "justes": 21,
+    "moyennes": 0,
+    "fautes": 0,
+    "jugesDifferes": 1
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "levier": {
+   "differesParLevier": 0,
+   "reposesPasse": 0,
+   "reposesAutre": 0,
+   "restes": 0,
+   "juges": 0,
+   "justes": 0,
+   "moyennes": 0,
+   "fautes": 0,
+   "restesJuges": 0,
+   "sansControle": {
+    "juges": 0,
+    "justes": 0,
+    "moyennes": 0,
+    "fautes": 0
+   }
+  },
+  "collateral": {
+   "changes": 0,
+   "juges": 0,
+   "mieux": 0,
+   "pire": 0,
+   "nouvellesFautes": 0
+  },
+  "fidelite": {
+   "n": 130,
+   "medianeMm": 0.49,
+   "p95Mm": 0.67,
+   "maxMm": 0.72,
+   "plusDe2mm": 0
+  },
+  "cutsDuLot": 157
+ },
+ {
+  "etiquette": "06-11",
+  "partie": 15,
+  "profil": "L1-se",
+  "verites": 32,
+  "temoin": {
+   "cuts": 161,
+   "poses": 143,
+   "differes": 18,
+   "parPasse": 1,
+   "juges": 14,
+   "justes": 12,
+   "moyennes": 0,
+   "fautes": 2,
+   "jugesDifferes": 18,
+   "sansControle": {
+    "juges": 12,
+    "justes": 10,
+    "moyennes": 0,
+    "fautes": 2,
+    "jugesDifferes": 18
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "rl": {
+   "cuts": 161,
+   "poses": 143,
+   "differes": 18,
+   "parPasse": 1,
+   "juges": 14,
+   "justes": 12,
+   "moyennes": 0,
+   "fautes": 2,
+   "jugesDifferes": 18,
+   "sansControle": {
+    "juges": 12,
+    "justes": 10,
+    "moyennes": 0,
+    "fautes": 2,
+    "jugesDifferes": 18
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "levier": {
+   "differesParLevier": 0,
+   "reposesPasse": 0,
+   "reposesAutre": 0,
+   "restes": 0,
+   "juges": 0,
+   "justes": 0,
+   "moyennes": 0,
+   "fautes": 0,
+   "restesJuges": 0,
+   "sansControle": {
+    "juges": 0,
+    "justes": 0,
+    "moyennes": 0,
+    "fautes": 0
+   }
+  },
+  "collateral": {
+   "changes": 0,
+   "juges": 0,
+   "mieux": 0,
+   "pire": 0,
+   "nouvellesFautes": 0
+  },
+  "fidelite": {
+   "n": 94,
+   "medianeMm": 0.46,
+   "p95Mm": 0.59,
+   "maxMm": 0.63,
+   "plusDe2mm": 0
+  },
+  "cutsDuLot": 161
+ },
+ {
+  "etiquette": "06-11",
+  "partie": 16,
+  "profil": "L1-se",
+  "verites": 65,
+  "temoin": {
+   "cuts": 431,
+   "poses": 413,
+   "differes": 18,
+   "parPasse": 5,
+   "juges": 54,
+   "justes": 39,
+   "moyennes": 10,
+   "fautes": 5,
+   "jugesDifferes": 11,
+   "sansControle": {
+    "juges": 41,
+    "justes": 26,
+    "moyennes": 10,
+    "fautes": 5,
+    "jugesDifferes": 11
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "rl": {
+   "cuts": 431,
+   "poses": 407,
+   "differes": 24,
+   "parPasse": 5,
+   "juges": 49,
+   "justes": 37,
+   "moyennes": 11,
+   "fautes": 1,
+   "jugesDifferes": 16,
+   "sansControle": {
+    "juges": 36,
+    "justes": 24,
+    "moyennes": 11,
+    "fautes": 1,
+    "jugesDifferes": 16
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "levier": {
+   "differesParLevier": 8,
+   "reposesPasse": 2,
+   "reposesAutre": 0,
+   "restes": 6,
+   "juges": 1,
+   "justes": 1,
+   "moyennes": 0,
+   "fautes": 0,
+   "restesJuges": 5,
+   "sansControle": {
+    "juges": 1,
+    "justes": 1,
+    "moyennes": 0,
+    "fautes": 0
+   }
+  },
+  "collateral": {
+   "changes": 25,
+   "juges": 16,
+   "mieux": 5,
+   "pire": 3,
+   "nouvellesFautes": 0
+  },
+  "fidelite": {
+   "n": 254,
+   "medianeMm": 0.44,
+   "p95Mm": 0.58,
+   "maxMm": 9.03,
+   "plusDe2mm": 1
+  },
+  "cutsDuLot": 431
+ },
+ {
+  "etiquette": "08-11-2130",
+  "partie": 6,
+  "profil": "L1-se",
+  "verites": 56,
+  "temoin": {
+   "cuts": 73,
+   "poses": 67,
+   "differes": 6,
+   "parPasse": 0,
+   "juges": 7,
+   "justes": 6,
+   "moyennes": 1,
+   "fautes": 0,
+   "jugesDifferes": 4,
+   "sansControle": {
+    "juges": 6,
+    "justes": 5,
+    "moyennes": 1,
+    "fautes": 0,
+    "jugesDifferes": 4
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "rl": {
+   "cuts": 73,
+   "poses": 67,
+   "differes": 6,
+   "parPasse": 0,
+   "juges": 7,
+   "justes": 6,
+   "moyennes": 1,
+   "fautes": 0,
+   "jugesDifferes": 4,
+   "sansControle": {
+    "juges": 6,
+    "justes": 5,
+    "moyennes": 1,
+    "fautes": 0,
+    "jugesDifferes": 4
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "levier": {
+   "differesParLevier": 0,
+   "reposesPasse": 0,
+   "reposesAutre": 0,
+   "restes": 0,
+   "juges": 0,
+   "justes": 0,
+   "moyennes": 0,
+   "fautes": 0,
+   "restesJuges": 0,
+   "sansControle": {
+    "juges": 0,
+    "justes": 0,
+    "moyennes": 0,
+    "fautes": 0
+   }
+  },
+  "collateral": {
+   "changes": 0,
+   "juges": 0,
+   "mieux": 0,
+   "pire": 0,
+   "nouvellesFautes": 0
+  },
+  "fidelite": {
+   "n": 49,
+   "medianeMm": 0.41,
+   "p95Mm": 0.55,
+   "maxMm": 0.58,
+   "plusDe2mm": 0
+  },
+  "cutsDuLot": 73
+ },
+ {
+  "etiquette": "08-11-2130",
+  "partie": 6,
+  "profil": "L1-se",
+  "verites": 56,
+  "temoin": {
+   "cuts": 150,
+   "poses": 131,
+   "differes": 19,
+   "parPasse": 7,
+   "juges": 28,
+   "justes": 21,
+   "moyennes": 4,
+   "fautes": 3,
+   "jugesDifferes": 17,
+   "sansControle": {
+    "juges": 21,
+    "justes": 14,
+    "moyennes": 4,
+    "fautes": 3,
+    "jugesDifferes": 17
+   },
+   "passeAuDelaDuPlafond": 0
+  },
+  "rl": {
+   "cuts": 150,
+   "poses": 139,
+   "differes": 11,
+   "parPasse": 15,
+   "juges": 36,
+   "justes": 34,
+   "moyennes": 2,
+   "fautes": 0,
+   "jugesDifferes": 9,
+   "sansControle": {
+    "juges": 29,
+    "justes": 27,
+    "moyennes": 2,
+    "fautes": 0,
+    "jugesDifferes": 9
+   },
+   "passeAuDelaDuPlafond": 5
+  },
+  "levier": {
+   "differesParLevier": 5,
+   "reposesPasse": 3,
+   "reposesAutre": 0,
+   "restes": 2,
+   "juges": 2,
+   "justes": 2,
+   "moyennes": 0,
+   "fautes": 0,
+   "restesJuges": 1,
+   "sansControle": {
+    "juges": 2,
+    "justes": 2,
+    "moyennes": 0,
+    "fautes": 0
+   }
+  },
+  "collateral": {
+   "changes": 34,
+   "juges": 18,
+   "mieux": 3,
+   "pire": 0,
+   "nouvellesFautes": 0
+  },
+  "fidelite": {
+   "n": 74,
+   "medianeMm": 0.43,
+   "p95Mm": 0.55,
+   "maxMm": 159.91,
+   "plusDe2mm": 1
+  },
+  "cutsDuLot": 150
+ }
+]

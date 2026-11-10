@@ -1,0 +1,193 @@
+{
+ "titre": "Poses que le lot allait valider sur les cuts retenus par la garde alors active (CH-056 § 2, CH-057 § 3) : repère = mm (latéral, vertical) depuis la pose de départ",
+ "cuts": [
+  {
+   "lot": "04-11",
+   "partie": 14,
+   "cut": 4135,
+   "poseQueLeLotAllaitValiderMm": {
+    "left": [
+     -1,
+     -0.9
+    ],
+    "right": [
+     53,
+     -6.8
+    ]
+   },
+   "poseDuBancTemoinSansGardeMm": {
+    "left": [
+     -1,
+     -0.9
+    ],
+    "right": [
+     53,
+     -6.8
+    ]
+   },
+   "poseFinaleOperateurMm": {
+    "left": [
+     -2.2,
+     -0.6
+    ],
+    "right": [
+     54.5,
+     -9
+    ]
+   },
+   "correctionOperateurDepuisLaPoseVueMm": 10.25,
+   "ecartementVuParEchoEnArrivantMm": 1453.2,
+   "ecartementEcritParLaPasseMm": 1453.1,
+   "erreurPoseDuLotMm": 2.67,
+   "erreurPoseDuBancMm": 2.66,
+   "deplacementDepuisLeDepartMm": 53.4,
+   "rechercheLarge": {
+    "S0": "garde:pose-unique",
+    "S60": "garde:pose-unique",
+    "S90": "garde:pose-unique"
+   }
+  },
+  {
+   "lot": "04-11",
+   "partie": 14,
+   "cut": 4136,
+   "poseQueLeLotAllaitValiderMm": {
+    "left": [
+     -6.8,
+     -1.4
+    ],
+    "right": [
+     60,
+     -10.6
+    ]
+   },
+   "poseDuBancTemoinSansGardeMm": {
+    "left": [
+     -6.81,
+     -1.4
+    ],
+    "right": [
+     60.03,
+     -10.63
+    ]
+   },
+   "poseFinaleOperateurMm": {
+    "left": [
+     -3.5,
+     -0.3
+    ],
+    "right": [
+     60.4,
+     -13.7
+    ]
+   },
+   "correctionOperateurDepuisLaPoseVueMm": 3.55,
+   "ecartementVuParEchoEnArrivantMm": 1442.8,
+   "ecartementEcritParLaPasseMm": 1442.7,
+   "erreurPoseDuLotMm": 3.51,
+   "erreurPoseDuBancMm": 3.49,
+   "deplacementDepuisLeDepartMm": 60.9,
+   "rechercheLarge": {
+    "S0": "garde:pose-unique",
+    "S60": "garde:pose-unique",
+    "S90": "garde:pose-unique"
+   }
+  },
+  {
+   "lot": "05-11",
+   "partie": 8,
+   "cut": 2734,
+   "poseQueLeLotAllaitValiderMm": {
+    "left": [
+     -32,
+     -4.3
+    ],
+    "right": [
+     33,
+     -3.6
+    ]
+   },
+   "poseDuBancTemoinSansGardeMm": {
+    "left": [
+     -32,
+     -4.3
+    ],
+    "right": [
+     33,
+     -3.58
+    ]
+   },
+   "poseFinaleOperateurMm": {
+    "left": [
+     -32,
+     -4.1
+    ],
+    "right": [
+     33,
+     -3.1
+    ]
+   },
+   "correctionOperateurDepuisLaPoseVueMm": 0,
+   "ecartementVuParEchoEnArrivantMm": 1435.0,
+   "ecartementEcritParLaPasseMm": 1435.4,
+   "erreurPoseDuLotMm": 0.5,
+   "erreurPoseDuBancMm": 0.48,
+   "deplacementDepuisLeDepartMm": 33.2,
+   "rechercheLarge": {
+    "S0": "garde:pose-unique",
+    "S60": "garde:pose-unique",
+    "S90": "garde:pose-unique"
+   }
+  },
+  {
+   "lot": "05-11",
+   "partie": 8,
+   "cut": 2735,
+   "poseQueLeLotAllaitValiderMm": {
+    "left": [
+     -31.7,
+     -2.9
+    ],
+    "right": [
+     35.3,
+     -2.8
+    ]
+   },
+   "poseDuBancTemoinSansGardeMm": {
+    "left": [
+     -31.71,
+     -2.93
+    ],
+    "right": [
+     35.33,
+     -2.78
+    ]
+   },
+   "poseFinaleOperateurMm": {
+    "left": [
+     -29,
+     -3.2
+    ],
+    "right": [
+     35.3,
+     -2.3
+    ]
+   },
+   "correctionOperateurDepuisLaPoseVueMm": 0,
+   "ecartementVuParEchoEnArrivantMm": 1436.0,
+   "ecartementEcritParLaPasseMm": 1436.0,
+   "erreurPoseDuLotMm": 2.72,
+   "erreurPoseDuBancMm": 2.72,
+   "deplacementDepuisLeDepartMm": 35.4,
+   "rechercheLarge": {
+    "S0": "garde:pose-unique",
+    "S60": "garde:pose-unique",
+    "S90": "garde:pose-unique"
+   }
+  }
+ ],
+ "temoinsDifferes": {
+  "04-11 partie 14 cut 4131": 1500,
+  "05-11 partie 8 cut 2733": 1500
+ }
+}
