@@ -245,7 +245,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */
@@ -253,6 +253,8 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* CH-086 : clé ajoutée au premier niveau, les écritures après la validation en fond, ALLUMÉES pour le lot d'essai ; `enFond:false` : chemin d'avant. */
  assert.deepEqual({...ecrituresApresValidation},{enFond:true,delaiMs:2000},'CH-086 : écritures après la validation en fond');
  assert.equal(profil,'L1-se','test 14 : profil du lot « L1-se » par défaut (L1-s, D-221, avec la décision L1-e des différés)');
+ /* D-320 (opérateur, 10/11) : seul réglage ajouté, le bouton « SKIP explicite » du panneau, MASQUÉ ; il ne touche ni la pose ni le lot ; le reste est l'empreinte d'avant. */
+ assert.deepEqual({...skipExplicite},{bouton:false},'D-320 : bouton SKIP explicite masqué');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
  assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
  /* CH-077 : préchauffage du cache pour la coupe suivante, ÉTEINT par défaut (D-305 : accord écrit de l'opérateur au moment de livrer). */
