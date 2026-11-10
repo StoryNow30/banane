@@ -675,5 +675,8 @@
   /* L'objet rendu est gelé au premier niveau (chaque réglage l'est déjà en profondeur, un essai le vérifie) : une affectation
    * `BananeSettings.x = …` ne peut pas ouvrir un chemin d'activation. Les essais qui remplacent l'objet entier ou en font une copie
    * (`{ ...Settings, x }`) ne sont pas touchés. */
-  return Object.freeze({ Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+  /* D-320 (opérateur, 10/11) : le bouton « SKIP explicite » du panneau est MASQUÉ jusqu'à Ariane 6.0 (le SKIP y deviendra une règle à part entière). Audit du 10/11 : il existait
+   * malgré la règle « Ariane n'envoie jamais SKIP », et sa frappe n'arrivait probablement pas dans ESV. Le chemin du moteur reste en place ; `bouton: true` le remontre. */
+  const skipExplicite = Object.freeze({ bouton: false });
+  return Object.freeze({ skipExplicite, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
 });

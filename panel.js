@@ -887,7 +887,8 @@
      if(b?.state==='MANUAL_TAKEOVER')
        note('Ce cut t’est rendu : Ariane n’a envoyé aucune commande dessus. Corrige-le dans ESV, ouvre le cut suivant, '
          +'puis clique sur « Repris manuellement » — le lot repartira, et ce cut sera journalisé comme repris à la main, jamais comme validé par Ariane.');
-     button('explicit-skip',{hidden:!actionable,disabled:busy||active(s)});
+     /* D-320 (opérateur, 10/11) : bouton masqué jusqu'à Ariane 6.0 ; seul `skipExplicite.bouton: true` (src/settings.js) le remontre. */
+     button('explicit-skip',{hidden:!actionable||globalThis.BananeSettings?.skipExplicite?.bouton!==true,disabled:busy||active(s)});
      button('close-uncertain',{hidden:!s.reconcileRequired&&!differe,disabled:busy});
      /* Règle 4 : un verbe, son objet, et le cut quand l'action le vise. */
      const cutIncertain=differe?.identity?.cut??s.intent?.identity?.cut??b?.activeIdentity?.cut;
