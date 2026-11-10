@@ -1,5 +1,13 @@
 # Banane V4 TEST — journal des versions
 
+## Vision 11 — 10/11 (D-317 ; CH-090, corrections de CH-092 et CH-095) — version sans nouveauté
+- Capacité du préchauffage (CH-090) : 4 chargements à la fois au lieu de 2 (constat des lots « Vision 8 » et « Vision 9 », ÉTABLI : 7 nœuds candidats par coupe en partie dense, 2 lancés ; toute l'attente d'une coupe voisine est du chargement de nœuds par Potree). Gain attendu sur le terrain : SUPPOSÉ tant que non mesuré.
+- Plafond de 256 Mo compté par opération et plus par vie de la page (il éteignait le préchauffage après environ 330 coupes, sans message) ; garde ajoutée : aucun lancement au-delà de 1 536 Mo de tas JS. Opération lointaine : plafond de nœuds propre (96).
+- Défauts trouvés par la relecture CH-092 et par la maquette de CH-095, corrigés : un chargement en échec ne fige plus le préchauffage (avec ou sans ligne de base) ; une cible ne reste plus bloquée au-delà de 8 pages de hiérarchie ; la règle « cache inutile » n'éteint plus la voie potree ; plus de parcours de l'arbre sans place libre ; une capture en échec ne laisse plus l'opération lointaine en pause ; les erreurs passagères s'oublient après 10 min ; le journal garde le motif `pause-serveur`.
+- Maquette : elle joue deux pannes de Potree (nœud en échec gardé « en cours », plus de 8 pages non lues) ; suite lancée à deux fichiers à la fois.
+- Preuves : verify 3 399 essais, 3 388 réussis, 0 échec, 8 sautés, 3 en attente (moteur, Vision 12) ; maquette 96 essais, 93 réussis, 0 échec, 3 sautés ; parité de la relecture identique ; moteur, adaptateur et modules de décision inchangés depuis Vision 10.
+- Installation : décompresser le zip dans le même dossier, Recharger dans chrome://extensions, puis F5 sur ESV.
+
 ## Vision 10 — 09/11 nuit (D-316 ; CH-089)
 - Préchauffage : une erreur passagère d'ESV (réponse 5xx, chargement en échec ou trop long) le met en pause 10 s, puis il repart ; il ne s'arrête pour le lot qu'au 3e épisode ou sur un vrai refus (401, 403). Constat de « Vision 9 » (ÉTABLI) : un seul 502 l'avait arrêté pour les 75 dernières validations, grands sauts compris. Nouveau motif dans le journal : `pause-serveur`.
 - Preuves : verify 3 379 essais, 3 371 réussis, 0 échec, 8 sautés ; maquette 80 essais, 0 échec ; parité de la relecture identique.
