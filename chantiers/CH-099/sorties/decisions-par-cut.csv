@@ -751,7 +751,7 @@ lot,partie,cut,ligne,chemin,etage,zone,juge,ecart_mm,classe,ecartee_d285,S0,S60,
 04-11,13,393,pose,L1-e,deferred,voie-courante,sans-echo,,,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,24,3.4,,,0,0,0,rejouee,1,4596
 04-11,13,394,pose,chaine,first-pass,pn,sans-echo,,,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,38,8.2,,,0,0,0,rejouee,1,10492
 04-11,13,542,contrefactuel-garde,chaine,first-pass,,contrefactuel,2.84,juste,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,19,7.6,8.3,2.1,1,0,,non-evaluee,1,3510
-04-11,13,543,contrefactuel-garde,chaine,first-pass,,contrefactuel,1.82,juste,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,4,3.4,3.9,3.9,1,1,,non-evaluee,1,3427
+04-11,13,543,contrefactuel-garde,chaine,first-pass,,ecartee-d285,,,1,garde:pose-unique,garde:pose-unique,garde:pose-unique,4,3.4,3.9,3.9,1,1,,non-evaluee,1,3427
 04-11,13,778,pose,chaine,first-pass,pn,sans-echo,,,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,12,5.2,,,0,0,0,rejouee,1,6982
 04-11,13,779,pose,chaine,first-pass,pn,sans-echo,,,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,26,9.5,,,0,0,0,rejouee,1,8621
 04-11,13,780,pose,chaine,first-pass,pn,sans-echo,,,0,garde:pose-unique,garde:pose-unique,garde:pose-unique,5,5.6,,,0,0,0,rejouee,1,8569

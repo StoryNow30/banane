@@ -233,7 +233,7 @@ function decisions(a) {
           grappe: { signale: !!(rm && Array.isArray(rm.regles) && rm.regles.includes('grappe-differes')), source: rm ? 'journal' : 'absente', regles: rm ? rm.regles || [] : null, zonePn: rm && rm.zone ? rm.zone.pn ?? null : null, zoneAdv: rm && rm.zone ? !!rm.zone.adv : null },
           voie: gv ? { signale: !!gv.auraitPause, source: 'journal', ecartAuVoisinageMm: gv.ecartAuVoisinageMm ?? null } : { signale: !!gvr.auraitPause, source: 'rejouee', ecartAuVoisinageMm: gvr.ecartAuVoisinageMm, motif: gvr.motif } } } });
     }
-    bilan.push({ partie, cibles: cibles.size, poses: poses.size, sansCapture, sansPose, r3reel: r3reel.size, garde: gardeReglee });
+    bilan.push({ partie, cibles: cibles.size, poses: poses.size, sansCapture, sansPose, r3reel: r3reel.size, r3reelAvecDecision: obsGarde.size, garde: gardeReglee });
   }
   /* Les nuages : un segment de corpus à la fois (mémoire), une tranche de segments par processus. */
   const segs = fs.readdirSync(a.lot).filter(n => /gcv1-corpus/.test(n)).sort(), out = fs.createWriteStream(a.sortie), vus = new Set();
@@ -251,7 +251,9 @@ function decisions(a) {
           const k = w.contrefactuel;
           if (k.eh) { verite = {}; for (const s of SIDES) { const b = k.passe ? k.passe[s] : [0, 0, 0]; verite[s] = { lat: b[1] + k.eh[FR[s]].lateralMm, vert: b[2] + k.eh[FR[s]].verticalMm }; }
             const mm = Math.max(...SIDES.map(s => { const p = RL.decalage(capture.rails[s], w.positions[s]); return Math.hypot(p[1] - verite[s].lat, p[2] - verite[s].vert); }));
-            w.sortie.juge = { etat: 'contrefactuel', mm: Math.round(mm * 100) / 100, classe: classe(mm), base: k.passe ? 'pose-de-la-passe' : 'pose-de-depart', ecartee: false }; }
+            /* D-285 : une validation sans mouvement d'une visite de moins de 1,5 s n'est pas une vérité. */
+            const sansMouv = fini(k.eh.maxDist3dMm) && k.eh.maxDist3dMm < SANS_MOUVEMENT_MM && fini(w.sortie.dureeS) && w.sortie.dureeS < VISITE_COURTE_S;
+            w.sortie.juge = sansMouv ? { etat: 'ecartee-d285', mm: null, classe: null, ecartee: true } : { etat: 'contrefactuel', mm: Math.round(mm * 100) / 100, classe: classe(mm), base: k.passe ? 'pose-de-la-passe' : 'pose-de-depart', ecartee: false }; }
           else w.sortie.juge = { etat: 'sans-verite', mm: null, classe: null, ecartee: false };
         }
         else if (j.etat === 'corrige' && eh && SIDES.every(s => eh[FR[s]] && eh[FR[s]].repere === 'profil')) { verite = {}; for (const s of SIDES) { const p = RL.decalage(capture.rails[s], w.positions[s]); verite[s] = { lat: p[1] + eh[FR[s]].lateralMm, vert: p[2] + eh[FR[s]].verticalMm }; } }
