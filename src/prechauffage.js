@@ -753,7 +753,7 @@
             if (R.apresNavigation === 'finir' && l && l.part === c.partie && c.predites.has(l.cut)) { c.navigue = true; c.motif = c.motif || 'navigation'; }
             else { annuler('coupe'); break; }
           }
-          if (!c.navigue && (n === null || n > Math.max(memEnVol(c), nosEnVol()))) { annuler('chargement'); break; }   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » ; CH-088 : ceux de l'opération lointaine non plus */
+          if (!c.navigue && (n === null || n > Math.max(memEnVol(c), nosEnVol()) + bloquesVivants())) { annuler('chargement'); break; }   /* CH-095 : un nœud à nous resté « en cours » après un échec n'est pas Potree qui repart */   /* CH-083 : nos `load()` en vol ne sont pas « Potree qui repart » ; CH-088 : ceux de l'opération lointaine non plus */
         }
       })();
       if (R.voie === 'potree') return operationPotree(c, plans, ctx.pointclouds);   /* CH-085 : aucune requête à nous */

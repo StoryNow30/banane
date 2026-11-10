@@ -42,3 +42,15 @@ test('502 vu par l\'observateur avant delaiMs, nœud gardé « en cours », lign
  r=p.apresCapture(contexte(pc));await e.tourner(300);const ev=await borne(r);
  assert.notEqual(ev.motif,'reseau-occupe','réseau libre : pas « réseau occupé »');assert.ok(journal.appels.length>avant,'des load() après la pause');assert.equal(p.actif(),true);
 });
+
+/* CH-095 (navigateur, ÉTABLI) : même panne SANS ligne de base (compteur brut : le nœud en échec y reste compté). La veille de l'opération prenait ce +1
+ * pour « Potree qui repart » et annulait en `chargement` dès que nos places étaient prises. */
+test('502 vu par l\'observateur avant delaiMs, sans ligne de base : après la pause, l\'opération suivante charge (pas « chargement »)',async()=>{
+ const m=monter({},{bloque:(nom,j)=>j.bloques.length<1&&j.appels.length>=2});const {pc,e,journal,p}=m;
+ let vu=false;let r=p.apresCapture(contexte(pc));
+ await e.tourner(60,()=>{if(!vu&&journal.bloques.length===1){vu=true;p.ressources([{name:'https://x.invalid/nuage/ept-data/'+journal.bloques[0]+'.laz',initiatorType:'fetch',responseStatus:502}]);}});
+ assert.equal((await r).motif,'pause-serveur');
+ e.horloge+=10001;const charges=journal.charges.length;
+ r=p.apresCapture(contexte(pc));await e.tourner(300);const ev=await borne(r);
+ assert.notEqual(ev.motif,'chargement','le nœud bloqué n\'est pas « Potree qui repart »');assert.ok(journal.charges.length>charges+3,'des nœuds chargés après la pause : '+(journal.charges.length-charges));
+});
