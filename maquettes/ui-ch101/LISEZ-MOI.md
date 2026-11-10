@@ -18,3 +18,14 @@ La couleur répond à une seule question : « dois-je faire quelque chose ? ». 
 - Textes proposés : « ESV connecté » ; la phrase de la pause sans « ou le passer » (bouton masqué, D-320).
 
 L'étape 2 attend le choix écrit de l'opérateur.
+
+# Tour 2 (D-324) : `tour-2/`
+
+Les trois propositions du premier tour (fichiers à la racine de ce dossier) sont **rejetées** par l'opérateur. Le tour 2 ne touche qu'à l'apparence : mêmes textes, mêmes boutons, mêmes informations que le panneau du tronc.
+
+- `tour-2/style.css` : `.p1` « Signal, fini » (l'organisation actuelle, soignée), `.p2` « Système » (cartes et boutons arrondis, à la manière des panneaux de Chrome), `.p3` « Sobre » (titre, liste de lignes, presque sans couleur). Police du système, aucune ressource extérieure, thèmes clair et sombre.
+- `tour-2/generer.cjs` : les huit états, relevés sur les photographies du panneau du tronc, et la page. `tour-2/index.html` est fabriquée par ce script, sans photographie.
+
+Mesuré par script sur les 96 cadres (3 propositions × 8 états × 2 tailles × 2 thèmes) : aucun élément ne sort ni ne se tronque, tout texte actif à 4,5:1 au moins. Deux relectures par un agent neuf, sur images seules ; leurs défauts majeurs sont corrigés, sauf le vide de la fenêtre 600 × 760, qui vient de l'organisation actuelle.
+
+Non vérifié : le rendu des caractères sur le poste de l'opérateur (les images de contrôle ont été faites avec Inter, police du système de la machine de travail).

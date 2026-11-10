@@ -23,7 +23,7 @@ const ETATS = [
     avis: 'Le cut 4812 a un rail qu’Ariane ne sait pas poser. Choisis : réessayer, le reprendre à la main, ou le passer.', actions: ['Réessayer ce cut', 'Reprise manuelle', 'Arrêter le lot'], poignee: P3, cache: 'après le lot' },
   { id: 'panne', nom: 'ESV muet', ton: 'crit', mot: 'ESV ne répond plus', phrase: 'Partie 13 · après le cut <b>4811</b>', lot: LOT, esv: 'ESV ne répond plus',
     avis: 'ESV ne répond plus. Si la page ESV reste figée, recharge-la (F5), attends qu’elle réponde, puis clique sur Reprendre.', actions: ['Reprendre', 'Arrêter le lot'], poignee: P3, cache: 'après le lot' },
-  { id: 'rattrapage', nom: 'Rattrapage', ton: 'neutre', mot: 'Rattrapage', phrase: 'Ariane travaille dans ESV · ne touche à rien · cut <b>4803</b> · 1 posé sur 3',
+  { id: 'rattrapage', nom: 'Rattrapage', ton: 'neutre', mot: 'Rattrapage', phrase: '<span class="nb">Ariane travaille dans ESV ·</span> <span class="nb">ne touche à rien ·</span> <span class="nb">cut <b>4803</b> ·</span> <span class="nb">1 posé sur 3</span>',
     verrou: 'Aucune action jusqu’à la fin du rattrapage', actions: [], poignee: P6, cache: 'après le rattrapage' },
   { id: 'relecture', nom: 'Relecture', ton: 'vif', mot: 'Relecture', phrase: 'Relecture 12 sur 85, 3 corrigés · cut 4801', actions: ['Arrêter la relecture', 'Nouveau lot'], sansPrincipal: true, poignee: P6, cache: 'après la relecture' },
   { id: 'fin', nom: 'Fin de lot', ton: 'fait', mot: 'Terminé', phrase: 'Partie 13',
@@ -84,7 +84,8 @@ function rendre3(e) {
   if (e.champs) c += champs('p3') + `<p class="p3-note">${e.note}</p>`;
   if (e.compte) c += `<div class="p3-compte"><strong>${e.compte.n}</strong><span>${e.compte.lib}</span></div>` + rail(e, 'p3');
   const props = [];
-  if (e.lot) props.push(['Lot', 'du cut <b>4790</b> au cut <b>4900</b>']);
+  if (e.lot && e.avis) c += `<p class="p3-lot">${e.lot}</p>`;
+  if (e.lot && !e.avis) props.push(['Lot', 'du cut <b>4790</b> au cut <b>4900</b>']);
   if (e.compte) props.push(['Posés', '<b>15</b>'], ['À poser', '<b>3</b>']);
   if (e.allure) props.push([e.id === 'pause' ? 'En pause' : 'Allure', e.id === 'pause' ? 'depuis <b>1 min 45</b> <span class="apres"><i>· </i>médiane 7,6 s par cut avant la pause</span>' : '<b>7,9</b> cuts par minute <span class="apres"><i>· </i>médiane 7,6 s par cut</span>']);
   if (e.fin) props.push(...e.fin);
@@ -134,7 +135,7 @@ body{background:var(--pg);color:var(--pg-tx);font:400 16px/1.5 system-ui,-apple-
 .col{margin:0;flex:none;scroll-snap-align:center}
 .col figcaption{display:flex;gap:8px;align-items:center;height:24px;margin-bottom:8px;font-size:14px;color:var(--pg-tx2)}
 .col figcaption b{font-size:12px;font-weight:600;width:20px;height:20px;display:grid;place-items:center;border-radius:5px;background:var(--pg-tx);color:var(--pg)}
-.col .cadre{border-radius:10px;box-shadow:0 0 0 1px var(--pg-trait)}
+.col .cadre{box-shadow:0 0 0 1px var(--pg-trait)}
 .col img{display:none;max-width:none}
 .t-clair:not(.g600) img.v-clair.v-360,.t-sombre:not(.g600) img.v-sombre.v-360,.t-clair.g600 img.v-clair.v-600,.t-sombre.g600 img.v-sombre.v-600{display:block}
 .absent{position:absolute;inset:0;display:grid;place-items:center;padding:28px;text-align:center;color:var(--pg-tx2);font-size:14px;line-height:1.5}
