@@ -73,6 +73,7 @@ Tout nombre vient de `tools/ch099-rejeu.cjs` et des fichiers de `sorties/` (num�
 
 ## 9. Non vérifié
 - Le temps dans le navigateur ; l'ordre réel d'écriture de la deuxième passe sous plafond ; la garde de voie sur les cuts retenus par la garde active.
+- Limite commune aux deux rejeux statiques (le mien et l'indépendant) : la pose donnée à la règle est celle relue après l'écriture, alors que le service worker lui donnerait la pose attendue de la commande, avant écriture ; l'écart entre les deux n'est pas mesuré. Le banc conjoint, qui part de la pose commandée, rend les mêmes décisions sur les 10 fautes.
 - Le rejeu conjoint sur les lots sans faute, où tombent 23 des 37 différés statiques (17 le 04/11) : le prix de bout en bout n'y est pas mesuré.
 - Les motifs confidentiels d'identité (variable absente de cette session) : seuls les motifs publics ont été cherchés dans les fichiers versés.
 
