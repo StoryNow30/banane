@@ -407,4 +407,4 @@ if (require.main === module) {
   try { executer(process.argv.slice(2)); }
   catch (e) { console.error(e.message); process.exitCode = 1; }
 }
-module.exports = { analyser, juger, partiesDuJournal, lireEcho: Poses.lireEcho, lireArguments, dossiersEcho, executer, texte, geste, gestesDe, budgetDe, FORMAT };
+module.exports = { analyser, juger, partiesDuJournal, lotsDe, ciblesPosesDe, indexLignes, lireEcho: Poses.lireEcho, lireArguments, dossiersEcho, executer, texte, geste, gestesDe, budgetDe, FORMAT };
