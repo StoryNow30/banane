@@ -1,0 +1,55 @@
+// CH-102 : le même parcours pour les trois propositions. Les huit états du lot, par les boutons quand ils y mènent,
+// sinon par le sélecteur de la maquette (écran « Plus »). Non encore exécuté : voir LISEZ-MOI.md.
+size 360x480
+
+test "les huit états : prêt, en cours, pause, rail non résolu, ESV muet, rattrapage, relecture, fin"
+  expect text "mot" == "Prêt"
+  tap "principale"
+  expect text "mot" == "En cours"
+  expect text "principale" == "Pause"
+  tap "principale"
+  expect text "mot" == "En pause"
+  expect text "principale" == "Reprendre"
+  tap "plus"
+  clock settle
+  type "etat" "toi"
+  tap "retour"
+  clock settle
+  expect text "mot" == "À toi"
+  expect text "principale" == "Réessayer ce cut"
+  expect text "seconde" == "Reprise manuelle"
+  expect text "arret" == "Arrêter le lot"
+  tap "plus"
+  clock settle
+  type "etat" "panne"
+  tap "retour"
+  clock settle
+  expect text "mot" == "ESV ne répond plus"
+  expect text "principale" == "Reprendre"
+  tap "plus"
+  clock settle
+  type "etat" "rattrapage"
+  tap "retour"
+  clock settle
+  expect text "mot" == "Rattrapage"
+  expect tree missing "principale"
+  expect tree has "verrou"
+  tap "plus"
+  clock settle
+  type "etat" "relecture"
+  tap "retour"
+  clock settle
+  expect text "mot" == "Relecture"
+  expect text "arret" == "Arrêter la relecture"
+  tap "arret"
+  expect text "mot" == "Terminé"
+  expect text "principale" == "Voir ce qui reste"
+  expect text "seconde" == "Exporter le dossier"
+  tap "nouveau"
+  expect text "mot" == "Prêt"
+
+test "Arrêter le lot arrête ; SKIP n’existe nulle part"
+  tap "principale"
+  tap "arret"
+  expect text "mot" == "Terminé"
+  expect tree missing "skip"

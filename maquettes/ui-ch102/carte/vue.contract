@@ -1,0 +1,70 @@
+// CH-102, proposition 2 « La carte » : une seule carte, celle du système, porte l'avancement en grand ; l'état est le titre de la page,
+// l'action attendue est le seul bouton plein. Une colonne centrée, large comme un téléphone au plus : la fenêtre large ne s'étale pas.
+use SummaryCard, Badge from "exact:content"
+// ---
+routes nav
+  home "/"
+    plus "/plus"
+
+component App
+  state etat = "pret"
+  action agir
+    etat = suite(etat)
+  action arreter
+    etat = "fin"
+  action nouveau
+    etat = "pret"
+  action choisir(v: string)
+    etat = v
+  action ouvrirPlus
+    nav = push(nav, "/plus")
+  action retour
+    nav = back(nav)
+  action suivre(url: string)
+    nav = go(nav, url)
+  view
+    main testId="racine" navigationKey=`${top(nav).id}` navigationBack="retour" navigate=suivre width="100%" height="100%"
+      for e in stack(nav) key=e.id
+        if e.name == "home"
+          column navigationKey=`${e.id}` navigationScroll="lot" position="absolute" inset=0
+            header display="flex" align-items="center" padding="8px 16px"
+              text "Ariane" role="heading" aria-level=1 flex=1
+              button press=ouvrirPlus aria-label="Plus" testId="plus"
+                image "symbol:more"
+            scroll id="lot" flex=1 min-height=0
+              column gap=20 padding=16 max-width="26.25rem" margin-left="auto" margin-right="auto"
+                column gap=6
+                  row align-items="center" gap=8
+                    text mot(etat) font="-exact-large-title" font-weight=700 flex=1 min-width=0 testId="mot"
+                    if etat == "toi"
+                      Badge(label="Action requise", tint=some("-exact-system-orange"))
+                    if etat == "panne"
+                      Badge(label="Panne", tint=some("-exact-system-red"))
+                  text phrase(etat) color="-exact-secondary-label" testId="phrase"
+                column accent-color=match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" }
+                  SummaryCard(label=unite(etat), value=fait(etat), detail=`sur ${total(etat)}`, progress=some(fraction(etat)), symbol=none)
+                column gap=10
+                  if principale(etat) != ""
+                    button press=agir buttonStyle="filled" -exact-control-size="large" testId="principale"
+                      text principale(etat)
+                  row gap=10 flex-wrap="wrap"
+                    if seconde(etat) != ""
+                      button buttonStyle="bordered" flex="1 1 8rem" testId="seconde"
+                        text seconde(etat)
+                    if etat == "fin"
+                      button press=nouveau buttonStyle="bordered" flex="1 1 8rem" testId="nouveau"
+                        text "Nouveau lot"
+                    if arret(etat) != ""
+                      button press=arreter destructive=true flex="1 1 8rem" testId="arret"
+                        text arret(etat)
+                  if etat == "rattrapage"
+                    text "Aucune autre action jusqu’à la fin du rattrapage." font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="verrou"
+                if etat != "pret"
+                  text `${poses(etat)} posés · ${aPoser(etat)} à poser · partie 13, cuts 4790 à 4900` font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="compte"
+        if e.name == "plus"
+          column navigationKey=`${e.id}` navigationScroll="plus-liste" position="absolute" inset=0
+            header display="flex" align-items="center" padding="8px 16px"
+              button id="retour" press=retour aria-label="Retour" testId="retour"
+                image "symbol:back"
+              text "Plus" role="heading" flex=1
+            Plus(etat=etat, choisir=choisir, nouveau=nouveau)

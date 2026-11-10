@@ -1,0 +1,111 @@
+// CH-102 : le lot fabriqué, commun aux trois propositions (assembler.cjs le place en tête de chaque app.contract).
+// Partie 13, lot du cut 4790 au cut 4900 (111 numéros), cut 4811 atteint : 22 cuts traités, 19 posés, 3 à poser.
+// Huit états : pret, cours, pause, toi (rail non résolu), panne (ESV muet), rattrapage, relecture, fin.
+// Aucune action ajoutée ni supprimée par rapport au panneau du tronc ; « SKIP explicite » reste masqué (D-320).
+
+fn mot(e: string): string = e == "pret" ? "Prêt" : e == "cours" ? "En cours" : e == "pause" ? "En pause" : e == "toi" ? "À toi" : e == "panne" ? "ESV ne répond plus" : e == "rattrapage" ? "Rattrapage" : e == "relecture" ? "Relecture" : "Terminé"
+
+// Une seule couleur de sens à la fois : rien quand Ariane travaille ou se repose, orange quand elle attend l'opérateur, rouge en panne, vert à la fin.
+fn teinte(e: string): option<string> = e == "toi" ? some("-exact-system-orange") : e == "panne" ? some("-exact-system-red") : e == "fin" ? some("-exact-system-green") : e == "pause" or e == "pret" ? none : some("AccentColor")
+
+fn phrase(e: string): string = e == "pret" ? "Partie 13, du cut 4790 jusqu’à la fin de la partie." : e == "cours" ? "Pose du cut 4812." : e == "pause" ? "En pause après le cut 4811." : e == "toi" ? "Le cut 4812 a un rail qu’Ariane ne sait pas poser. Réessaie, ou reprends-le à la main." : e == "panne" ? "Recharge la page ESV (F5), attends qu’elle réponde, puis clique sur Reprendre." : e == "rattrapage" ? "Ariane travaille dans ESV : ne touche à rien. Cut 4803." : e == "relecture" ? "Relecture du cut 4801, 3 cuts corrigés." : "Il reste 6 cuts à poser. Export prêt."
+
+// L'avancement : une fraction, sa lecture en chiffres, et ce que le chiffre compte.
+fn fraction(e: string): number = e == "pret" ? 0 : e == "rattrapage" ? 1 / 3 : e == "relecture" ? 12 / 85 : e == "fin" ? 1 : 22 / 111
+fn fait(e: string): string = e == "pret" ? "0" : e == "rattrapage" ? "1" : e == "relecture" ? "12" : e == "fin" ? "111" : "22"
+fn total(e: string): string = e == "rattrapage" ? "3" : e == "relecture" ? "85" : "111"
+fn unite(e: string): string = e == "rattrapage" ? "cuts rattrapés" : e == "relecture" ? "cuts relus" : "cuts traités"
+fn poses(e: string): string = e == "pret" ? "0" : e == "fin" or e == "relecture" ? "105" : e == "rattrapage" ? "103" : "19"
+fn aPoser(e: string): number = e == "pret" ? 0 : e == "fin" or e == "relecture" ? 6 : e == "rattrapage" ? 8 : 3
+
+// Les actions du panneau du tronc, par état. `principale` est l'action attendue ; "" quand il n'y en a pas (rattrapage : rien à faire).
+fn principale(e: string): string = e == "pret" ? "Démarrer le lot" : e == "cours" ? "Pause" : e == "pause" or e == "panne" ? "Reprendre" : e == "toi" ? "Réessayer ce cut" : e == "relecture" ? "Pause" : e == "fin" ? "Voir ce qui reste" : ""
+fn seconde(e: string): string = e == "toi" ? "Reprise manuelle" : e == "fin" ? "Exporter le dossier" : ""
+fn arret(e: string): string = e == "cours" or e == "pause" or e == "toi" or e == "panne" ? "Arrêter le lot" : e == "relecture" ? "Arrêter la relecture" : e == "rattrapage" ? "Arrêter le rattrapage" : ""
+// Où mène l'action principale dans la maquette (les données sont fabriquées : seul l'état change).
+fn suite(e: string): string = e == "pret" or e == "pause" or e == "panne" or e == "toi" ? "cours" : e == "cours" ? "pause" : e
+
+// L'écran « Plus », commun aux trois propositions : tout ce qui n'est pas le lot en cours passe ici, à un clic.
+// La dernière section n'existe que dans la maquette : elle fait passer l'application par les huit états.
+component Plus
+  props
+    etat: string
+    choisir: action
+    nouveau: action
+  view
+    list id="plus-liste" appearance="auto" listStyle="inset-grouped" flex=1 min-height=0
+      section
+        header
+          text "À poser"
+        if aPoser(etat) == 0
+          row
+            text "Aucun cut à poser" color="-exact-secondary-label" testId="plus-aucun"
+        else
+          row
+            text `${aPoser(etat)} cuts à poser` flex=1 testId="plus-a-poser"
+            button testId="plus-ouvrir"
+              text "Ouvrir"
+          row
+            text "Verts à contrôler" flex=1
+            button testId="plus-recalculer"
+              text "Recalculer"
+      section
+        header
+          text "Autres activités"
+        row
+          text "Écho" flex=1
+          text "Observer une séance" color="-exact-secondary-label"
+        row
+          text "Aurore" flex=1
+          text "Bilan" color="-exact-secondary-label"
+        row
+          text "Constellation" flex=1
+          button testId="plus-file"
+            text "Préparer la file"
+      section
+        header
+          text "Lot"
+        row
+          text "Nouveau lot" flex=1
+          button press=nouveau disabled=(etat == "cours" or etat == "rattrapage" or etat == "relecture") testId="plus-nouveau"
+            text "Nouveau lot"
+        row
+          text "Export pour l’analyse" flex=1
+          button testId="plus-export"
+            text "Tout télécharger"
+        row
+          text "Cache des exports" flex=1
+          button disabled=(etat != "pret" and etat != "fin") testId="plus-cache"
+            text "Vider le cache"
+        footer
+          text (etat == "pret" or etat == "fin" ? "" : "Le cache se vide après le lot.")
+      section
+        header
+          text "ESV"
+        row
+          text "Onglet ESV" flex=1
+          text (etat == "panne" ? "Ne répond plus" : "Connecté") color=(etat == "panne" ? "-exact-system-red" : "-exact-secondary-label") testId="plus-esv"
+        row
+          text "Connexion" flex=1
+          button testId="plus-reconnecter"
+            text "Reconnecter ESV"
+        row
+          text "Réglages et journal" flex=1
+          button testId="plus-reglages"
+            text "Ouvrir"
+      section
+        header
+          text "Maquette"
+        row
+          text "État montré" flex=1
+          select value=etat change=choisir aria-label="État montré" testId="etat"
+            option "Prêt" value="pret"
+            option "Lot en cours" value="cours"
+            option "Pause" value="pause"
+            option "Rail non résolu" value="toi"
+            option "ESV muet" value="panne"
+            option "Rattrapage" value="rattrapage"
+            option "Relecture" value="relecture"
+            option "Fin de lot" value="fin"
+        footer
+          text "Données fabriquées. Cette section n’existe que dans la maquette."
