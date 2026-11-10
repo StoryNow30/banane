@@ -208,6 +208,10 @@ const obsState={lost:0,perSeance:new Map()};
  * `debutMoinsFinLotMs` (début de la requête, horloge de la page − fin du lot, horloge du service worker ; écart d'horloge
  * non corrigé ; null sans date de début) : l'analyse les sépare. */
 const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
+/* CH-097 : UNE liste « clos proprement » (`OBS_CLOS` : grâce, passe, relecture, liste à corriger) et, pour les seuls usages sans décision (éveil de
+ * l'écran, reconnexion après F5), `LOT_TERMINE` qui y ajoute ERROR : le moteur ne reprend jamais un lot en erreur, plus rien ne tourne. La séance de
+ * l'observateur et le vidage du cache gardent `OBS_CLOS` (ce qu'on garde ou jette après une erreur : décision de l'opérateur). */
+const LOT_TERMINE=[...OBS_CLOS,'ERROR'];
 /* OBS-4 (relecture du test 3) : « Arrêter » pendant une action prolonge la grâce tant que la boucle finit l'action de ce
  * lot, mais 120 s au plus après l'arrêt (sans plafond : mesuré accepté 10 min après) ; ensuite, seuls les 5 s après la
  * sortie de la boucle (jalon `batch-state`) comptent. */
@@ -2996,7 +3000,7 @@ function refusReconnexionAuto(){const b=engine?.s?.batch;
  if(selectedTab===null)return 'aucun onglet ESV choisi';
  if(native?.active())return 'Écho actif';
  if(manual?.active())return 'Correction active';
- if(b&&!OBS_CLOS.includes(b.state))return b.state==='RUNNING'?'lot en cours : il se reconnecte seul ou s’arrête en pause':'lot ouvert : clique sur « Reprendre », il se reconnecte seul';
+ if(b&&!LOT_TERMINE.includes(b.state))return b.state==='RUNNING'?'lot en cours : il se reconnecte seul ou s’arrête en pause':'lot ouvert : clique sur « Reprendre », il se reconnecte seul';
  if(engine?.busy||engine?.task)return 'action d’Ariane en cours';
  if(passeDiff.cours||passeDiff.ecriture)return 'deuxième passe en cours';
  if(passeActive())return 'relecture en cours ou en pause';
@@ -3256,13 +3260,12 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  * (nouvelle période, sans continuité supposée), et seulement pour un cut de la liste. État : `engine.s.correction` (gardé, donc dans la vue du panneau).
  * Journal (export Orbite) : `correction-liste` (une fois par lot), `correction-debut`, `correction-ouvrir`, `correction-fin` (bilan par cut). */
 const CL=()=>globalThis.ArianeCorrectionListe;
-const LOT_CLOS=new Set(['COMPLETED','STOPPED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
 /* CH-040 : seuls les lots DEMANDÉS passent encore par ici (`batchIds`, une liste par lot, comme en CH-028). Sans demande, la liste couvre tous les lots
  * clos du journal (`couverture`, src/correction-liste.js) : le bilan de la dernière file n'en est plus la source (02/11 : une file relancée sur la partie 1
  * avait masqué la partie 0 et le premier lot de la partie 1). */
 function lotsDemandes(args){const d=Array.isArray(args?.batchIds)?args.batchIds.filter(x=>typeof x==='string').slice(0,16):null;return d?.length?d:null;}
 function refusCorrection(quoi){const b=engine.s.batch;
- if(b&&!LOT_CLOS.has(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
+ if(b&&!OBS_CLOS.includes(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
  if(engine.busy||engine.task)return `${quoi} : une action d’Ariane est en cours.`;
  if(['preparation','en-cours','en-pause'].includes(relecture.passe?.etat))return `${quoi} : la relecture du lot tourne encore.`;
  if(passeDiff.vue&&['calcul','ecriture'].includes(passeDiff.vue.etat))return `${quoi} : la deuxième passe tourne encore.`;
@@ -3281,7 +3284,7 @@ async function correctionListe(args){
  const listes=[];
  if(demandes){for(const id of demandes){const l=CL().construire(events,{batchId:id});if(!l.trouve)continue;
    listes.push({batchId:id,batchIds:[id],partie:l.partie,entrees:l.entrees,comptes:l.comptes});await inscrire(id,l);}}
- else{const b=engine.s.batch,K=CL().couverture(events,{lotOuvert:b?.id&&!LOT_CLOS.has(b.state)?b.id:null});
+ else{const b=engine.s.batch,K=CL().couverture(events,{lotOuvert:b?.id&&!OBS_CLOS.includes(b.state)?b.id:null});
   for(const x of K.parLot)if(!K.exclus.some(e=>e.batchId===x.batchId))await inscrire(x.batchId,x.liste);
   listes.push(...K.listes);
   if(!listes.length&&K.exclus.length)throw Error(`Liste à corriger : les ${K.exclus.length>1?`${K.exclus.length} lots du journal ont`:'lot du journal a'} déjà été repris par une Aurore terminée.`);
@@ -4071,6 +4074,8 @@ const eveil={tenu:false,raison:null,minuteur:null,dernier:0};
 function eveilBesoin(){const R=globalThis.BananeSettings?.eveil;if(!R||R.actif!==true)return null;
  try{if(typeof fileActive==='function'&&fileActive())return 'file';}catch{/* pas de file */}
  const seance=seanceObservateur({grace:true});
+ /* CH-097 : un lot en ERROR garde sa séance d'observateur mais ne tourne plus : il ne tient pas l'écran allumé. */
+ if(seance&&seance.startsWith('lot:')&&engine?.s?.batch?.state==='ERROR')return null;
  return seance&&/^(lot|relecture|passe-differes):/.test(seance)?seance.split(':')[0]:null;}
 function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='system'?'system':'display';
  try{
