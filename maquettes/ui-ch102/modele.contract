@@ -17,7 +17,7 @@ fn fait(e: string): string = e == "pret" ? "0" : e == "rattrapage" ? "1" : e == 
 fn total(e: string): string = e == "rattrapage" ? "3" : e == "relecture" ? "85" : e == "fin" ? "93" : "107"   // 107 = 18 traités + 89 au plus à venir
 fn unite(e: string): string = e == "rattrapage" ? "cuts rattrapés" : e == "relecture" ? "cuts relus" : "cuts traités"
 fn poses(e: string): string = e == "pret" ? "0" : e == "fin" or e == "relecture" ? "87" : e == "rattrapage" ? "88" : "15"
-fn aPoser(e: string): number = e == "pret" ? 0 : e == "cours" or e == "pause" or e == "toi" or e == "panne" ? 3 : 6
+fn aPoser(e: string): number = e == "pret" ? 0 : e == "cours" or e == "pause" or e == "toi" or e == "panne" ? 3 : e == "rattrapage" ? 5 : 6
 
 // Les actions du panneau du tronc, par état. `principale` est l'action attendue ; "" quand il n'y en a pas (rattrapage : rien à faire).
 fn principale(e: string): string = e == "pret" ? "Démarrer le lot" : e == "cours" ? "Pause" : e == "pause" or e == "panne" ? "Reprendre" : e == "toi" ? "Réessayer ce cut" : e == "fin" ? "Voir ce qui reste" : ""
