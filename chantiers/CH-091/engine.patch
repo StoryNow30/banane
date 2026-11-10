@@ -1,0 +1,38 @@
+--- a/src/engine.js
++++ b/src/engine.js
+@@ -249,6 +249,25 @@
+    data.coordinateBridge={sceneFrameId:data.identity.frameId,captureSceneRelativeToSessionSceneRelative:K.C.identity()};
+    this.s.lidarId=data.captureId;await this.store.putCloud(data.captureId,data);this.s.collection='READY_FOR_AFTER';
+    this.s.notice='Avant + LiDAR enregistrés. Corrige les deux rails, puis enregistre l’après.';await this.event('before-captured',{identity:this.s.before.identity,lidarId:data.captureId});return data;}
++  /* CH-091 — REPRISE D'UN LOT ARRÊTÉ ENTRE LA CAPTURE « AVANT » ET L'ANALYSE. Un arrêt du service worker après la sauvegarde de
++   * `before-captured` et avant celle de `step=analyze` laisse un état durable à l'étape `capture` avec un avant DÉJÀ enregistré ; begin()
++   * le refusait (« Capture avant déjà ouverte ») et le lot finissait en ERREUR. Dans un lot, à l'étape `capture`, sans intention, sans
++   * pose et sans proposition, rien n'a été commandé à ESV pour cette coupe : la lecture est soit réutilisée, soit refaite.
++   *  - même cible, mêmes rails, avant fini (`READY_FOR_AFTER`) et nuage relu du stockage pour cette cible : la capture est gardée,
++   *    `capture-avant-reprise` le consigne, la boucle passe à l'analyse (true) ;
++   *  - nuage absent, ou enregistrement de l'avant resté inachevé : la référence au nuage est retirée, l'avant est gardé, begin() refait la
++   *    lecture par son chemin `capture-restarted` (false) ;
++   *  - cible différente : rien n'est touché, begin() l'archive comme avant (false) ; rails modifiés : même refus que begin().
++   * Hors lot (capture manuelle), begin() garde son refus : cette méthode n'est appelée que par run(). Aucune commande, aucun SKIP. */
++  async captureAvantDejaFaite(now){const b=this.s.batch;
++   if(!b||b.step!=='capture'||!this.s.before||!this.s.lidarId||this.s.intent||this.s.applied||this.s.proposal)return false;
++   if(!['READY_FOR_AFTER','BEFORE_CAPTURED'].includes(this.s.collection))return false;
++   if(K.differences(this.s.before.identity,K.completeIdentity(now.identity)).length)return false;
++   if(!K.equalPoses(this.s.before.rails,now.rails))throw Error('Rails modifiés depuis la lecture interrompue : capture initiale conservée.');
++   const lidarId=this.s.lidarId,data=this.s.collection==='READY_FOR_AFTER'?await this.store.getCloud(lidarId):null;
++   if(data&&!K.differences(this.s.before.identity,data.identity).length){this.s.captureFailure=null;
++     await this.event('capture-avant-reprise',{identity:this.s.before.identity,lidarId});return true;}
++   this.s.lidarId=null;this.s.collection='BEFORE_CAPTURED';return false;}
+   async finish(source='explicit-before-after',sequence=null){
+    if(this.s.collection!=='READY_FOR_AFTER')throw Error('Aucun avant exploitable : '+this.s.collection);
+    const after=await this.adapter.state();K.assertTarget(this.s.before.identity,after.identity);
+@@ -980,7 +999,8 @@
+      if(b.step==='capture'){
+        b.cutStartedAt=new Date().toISOString();
+        if(this.s.collection==='STALE')await this.archivePending('batch-new-target');
+-       await this.begin();b.step='analyze';await this.save();}
++       if(!await this.captureAvantDejaFaite(now))await this.begin();
++       b.step='analyze';await this.save();}
+      if(!await this.boundary())break;
+      if(b.step==='analyze'){await this.analyze();b.step='apply';await this.save();}
+      if(!await this.boundary())break;
