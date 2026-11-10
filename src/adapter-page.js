@@ -674,7 +674,9 @@
        const cle=JSON.stringify(p);stable=cle===precedent?stable+1:0;precedent=cle;
        return C.distance(p,avant)>1e-6&&stable>=P.lecturesStables?{s,ok:false}:false;},
        'Le clic n’a pas produit le déplacement demandé pour '+side+'. État à réconcilier.',P.attenteClicMs)
-       .catch(e=>{if(dernier)return {s:dernier,ok:false};throw e;});
+       /* CH-096 (défaut 2) : un arrêt demandé pendant l'attente n'est jamais rattrapé (il l'était dès le deuxième essai, et un clic
+        * de pose de plus partait) ; seul le délai de l'attente passe à l'essai suivant. */
+       .catch(e=>{if(dernier&&!cancelled&&e?.message!=='Action interrompue.')return {s:dernier,ok:false};throw e;});
      if(pose.ok)return pose.s;dernier=pose.s;}
    const ecart=C.distance(dernier.rails[side].positionSceneRelative,target)*1000;
    throw Error(`Le clic n’a pas produit le déplacement demandé pour ${side} : rail posé à ${ecart.toFixed(1).replace('.',',')} mm de la cible`
@@ -1196,7 +1198,11 @@
        await prochaineImage();if(vue!==null)images++;}
      else await sleep(P.sondageMs);}}
  const TOUCHES_MAJ_ESPACE=[['keydown','Shift','ShiftLeft',16,true],['keydown',' ','Space',32,true],['keyup',' ','Space',32,true],['keyup','Shift','ShiftLeft',16,false]];
- async function validerMajEspace(identity,scope={},options={},progress=()=>{}){
+ /* CH-096 (défaut 3) : la page ajoute `progress` en DERNIER argument (`methods[action](...args,progress)`) et le service worker n'envoie
+  * que (identité, scope) : `progress` arrivait dans `options`, et les étapes `maj-espace-*` n'étaient jamais postées. Même dépaquetage
+  * que `apply` et `amenerDansLaVue` : la fonction reçue est le suivi, où qu'elle soit. */
+ async function validerMajEspace(identity,a2,a3,a4){
+   const [scope,options,progress]=typeof a2==='function'?[{},{},a2]:typeof a3==='function'?[a2===undefined?{}:a2,{},a3]:[a2===undefined?{}:a2,a3===undefined?{}:a3,typeof a4==='function'?a4:()=>{}];
    cancelled=false;const startedAt=new Date().toISOString(),sc=scope&&typeof scope==='object'?scope:{};
    const avantEnvoi=m=>Error(`${m} ; rien n’a été envoyé à ESV.`);
    if(options&&typeof options==='object'&&Object.keys(options).length)throw avantEnvoi(`Maj+Espace : option inconnue (${Object.keys(options).slice(0,3).join(', ')})`);

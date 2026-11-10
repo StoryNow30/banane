@@ -26,7 +26,9 @@
    'Niveau de détail non stabilisé.'
  ]);
  function transientCaptureError(error){const message=typeof error==='string'?error:error?.message;
-   return TRANSIENT_CAPTURE_ERRORS.has(message)||typeof message==='string'&&message.startsWith('Lecture LiDAR instable :');}
+   /* CH-096 (défaut 4) : les attentes de la capture rendent « Niveau de détail non stabilisé. » SUIVI du message de la dernière
+    * lecture en échec ; reconnu par son début, il reste passager (la vue est relue, le lot se met en pause reprenable). */
+   return TRANSIENT_CAPTURE_ERRORS.has(message)||typeof message==='string'&&(message.startsWith('Lecture LiDAR instable :')||message.startsWith('Niveau de détail non stabilisé. '));}
  function equalPoses(a,b,tolerance=1e-7){return ['left','right'].every(s=>['railLocalToSceneRelative','profileLocalToSceneRelative'].every(k=>
    Array.isArray(a?.[s]?.[k])&&Array.isArray(b?.[s]?.[k])&&a[s][k].length===16&&b[s][k].length===16&&
    a[s][k].every((v,i)=>Number.isFinite(v)&&Number.isFinite(b[s][k][i])&&Math.abs(v-b[s][k][i])<=tolerance)));}
