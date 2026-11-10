@@ -51,3 +51,9 @@ test('erreurs passagères : trois épisodes espacés de plus de oubliMs n\'arrê
  const b=monter({oubliMs:60000});for(let k=0;k<3;k++){await une(b);b.e.horloge+=10001;}
  assert.equal(b.p.actif(),false,'trois erreurs rapprochées : arrêt pour le lot');
 });
+
+test('opération lointaine : plafond de nœuds propre (`loin.noeudsMax`), sinon celui de l\'opération proche',()=>{
+ assert.equal(P.reglage({actif:true,loin:{actif:true}}).loin.noeudsMax,null);assert.equal(P.reglage({actif:true,loin:{actif:true,noeudsMax:96}}).loin.noeudsMax,96);
+ assert.equal(P.reglage({actif:true,loin:{actif:true,noeudsMax:9999}}).loin.noeudsMax,null,'hors bornes : défaut');
+ assert.equal(require('../src/settings.js').lot.chargement.prechauffer.loin.noeudsMax,96);
+});

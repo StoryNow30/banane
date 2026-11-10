@@ -95,8 +95,8 @@
 
   /* CH-088 : opération lointaine. Défaut du MODULE : éteinte. `sautMin` : écart minimal (en coupes) à la coupe précédente de la chaîne ; `coupesMax` :
    * coupes au plus entre la coupe courante et la cible. Seulement en voie potree. */
-  const DEFAUT_LOIN = Object.freeze({ actif: false, sautMin: 11, coupesMax: 40, captureMaxMs: 3000 });   /* CH-092 : une capture sans fin connue (elle a levé) ne tient plus la pause au-delà */
-  const BORNES_LOIN = { sautMin: [2, 100000], coupesMax: [0, 500], captureMaxMs: [500, 60000] };
+  const DEFAUT_LOIN = Object.freeze({ actif: false, sautMin: 11, coupesMax: 40, captureMaxMs: 3000, noeudsMax: null });   /* CH-092 : une capture sans fin connue (elle a levé) ne tient plus la pause au-delà */
+  const BORNES_LOIN = { sautMin: [2, 100000], coupesMax: [0, 500], captureMaxMs: [500, 60000], noeudsMax: [1, 400] };   /* CH-090 : plafond de nœuds propre à l'opération lointaine (absent : celui de l'opération proche) */
   function reglageLoin(m) {
     const out = { ...DEFAUT_LOIN };
     if (m && typeof m === 'object') { out.actif = m.actif === true; for (const [k, [a, b]] of Object.entries(BORNES_LOIN)) { const v = m[k]; if (fini(v) && v >= a && v <= b) out[k] = Math.floor(v); } }
@@ -405,6 +405,9 @@
     const refuser = (definitif = false) => { if (refus) return; if (!definitif && enPause()) return;
       const t = maintenant(); if (dernierRefus !== null && t - dernierRefus > R.oubliMs) erreursPassageres = 0; dernierRefus = t;
       if (definitif || ++erreursPassageres >= R.refusMax) { refus = true; actif = false; annuler('refus-serveur'); if (loin) finirLoin(loin, 'refus-serveur'); return; }
+      /* CH-095 (maquette, ÉTABLI) : l'erreur vue par l'observateur de ressources arrive AVANT `delaiMs` ; nos chargements encore en vol à cet instant sont
+       * mis à part (celui qui a échoué reste « en cours » chez Potree pour toujours ; ceux qui finissent sortent d'eux-mêmes de la liste). */
+      for (const n of [...volNous]) { let en = false; try { en = n.loading === true; } catch { en = false; } if (en) bloquer(n); }
       pauseJusqua = maintenant() + R.pauseMs; annuler('pause-serveur'); if (loin) finirLoin(loin, 'pause-serveur'); }; const ok200 = new Set();   /* CH-083 : clés servies en 200 (mémoire de la page) */   /* CH-083 : octets décodés chargés par la phase mémoire, vie de la page */
     const tas = () => { try { const v = typeof env.tas === 'function' ? env.tas() : globalThis.performance?.memory?.usedJSHeapSize; return fini(v) && v >= 0 ? v : null; } catch { return null; } };
     let actif = !!R, op = 0, courant = null, suivi = null, sansCache = 0, entetesFaits = false, extApprise = null, octetsParPoint = null, octetsTot = 0, pointsTot = 0;
@@ -421,7 +424,7 @@
     const bloques = new Set();
     const bloquer = n => { volNous.delete(n); if (bloques.size > 64) bloquesVivants(); bloques.add(n); };
     const bloquesVivants = () => { let k = 0; for (const n of [...bloques]) { let en = false; try { en = n.loading === true; } catch { en = false; } if (en) k++; else bloques.delete(n); } return k; };
-    const reseauLibre = n0 => { if (n0 === null) return false; const v = nosEnVol(); return n0 === v || n0 === v + bloquesVivants(); };
+    const reseauLibre = n0 => { if (n0 === null) return false; const v = nosEnVol(); return n0 >= v && n0 <= v + bloquesVivants(); };
     const tasPlein = () => { const t = tas(), M = R.memoire?.tasMaxMo; return t !== null && fini(M) && t > M * 1048576; };
     const noterNous = n => { try { nosNoeuds.add(n); } catch { /* rien */ } if (volNous.size > 64) nosEnVol(); volNous.add(n); };
     const etiquette = () => { try { const l = env.etiquette(); return l && Number.isInteger(l.cut) ? l : null; } catch { return null; } };
@@ -598,7 +601,7 @@
             if ((!file.length || L.plafond) && !L.memVol.size && !L.hierVol.size) { L.complet = true; break; }
             for (const x of file) {
               if (nosEnVol() + L.hierVol.size >= enVolMax) break;
-              if (L.nT >= R.noeudsMax || L.octets >= MM.octetsMax || tasPlein()) { L.plafond = true; break; }   /* CH-090 : octets par opération ; garde du tas */
+              if (L.nT >= (R.loin.noeudsMax ?? R.noeudsMax) || L.octets >= MM.octetsMax || tasPlein()) { L.plafond = true; break; }   /* CH-090 : octets par opération ; garde du tas */
               if (x.h && L.hT >= R.hierarchiesMax) continue;
               if (budget && !budget.autorise(1, 0)) { L.plafond = true; break; }
               const n = x.noeud; L.deja.add(n);

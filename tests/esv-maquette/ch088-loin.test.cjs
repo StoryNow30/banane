@@ -11,7 +11,9 @@ const raison=N.indisponible()||(O88.adaptateurCH088()===null?'outil patch absent
 const sansAdresse=evts=>assert.ok(!/\/|ept-data|\.laz|\d+-\d+-\d+-\d+/.test(JSON.stringify(evts).replace(/"kind":"[^"]*"/g,'')),'aucune adresse');
 
 test('grand saut (247 coupes) : la cible est préchargée 3 coupes avant ; plus de nœuds chargés à l\'arrivée, points affichés plus tôt',opts,async()=>{
- const sans=await O88.grandSaut({loin:false}),avec=await O88.grandSaut({loin:true});
+ /* CH-090 : à 4 chargements à la fois, l'opération proche suffit quand elle dispose de 900 ms par coupe (56 nœuds sur 56 des deux côtés, mesuré).
+  * Le banc est donc serré à 300 ms par coupe, où l'avance de l'opération lointaine compte (mesuré : 33 sur 56 et 728 ms sans, 56 sur 56 et 412 ms avec). */
+ const sans=await O88.grandSaut({loin:false,mortMs:300}),avec=await O88.grandSaut({loin:true,mortMs:300});
  for(const [n,r] of [['sans',sans],['avec',avec]])console.log(`# ${n} : arrivée ${r.t.arrivee.charges}/${r.t.arrivee.connus} chargés, points affichés ${r.t.afficheMs} ms ; loin ${JSON.stringify(r.loin.map(l=>[l.motif,l.captures,l.charges,l.prets,l.boite,l.potreeLui]))}`);
  assert.equal(sans.loin.length,0,'sans : aucune opération lointaine');
  const l=avec.loin.at(-1);assert.ok(l,'avec : une opération lointaine');assert.equal(l.motif,'arrivee');assert.equal(l.captures,3,'prise 3 coupes avant');assert.ok(l.charges>0);assert.equal(l.echecs,0);

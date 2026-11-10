@@ -106,7 +106,7 @@ test('cible changée : l\'opération lointaine finit en « remplace » ; réglag
  const L=de(e,'prechauffage-loin');assert.equal(L.length,1);assert.equal(L[0].motif,'remplace');assert.equal(L[0].cible,90);
  assert.equal(p.etat().loin.cible,110,'nouvelle cible : celle du service worker');
  assert.equal(P.reglage({actif:true}).loin.actif,false,'module : éteinte');
- const S=require('../src/settings.js').lot.chargement.prechauffer.loin;assert.deepEqual({...S},{actif:true,sautMin:11,coupesMax:40},'livré : allumée, 11 coupes, 40 à l\'avance');
+ const S=require('../src/settings.js').lot.chargement.prechauffer.loin;assert.deepEqual({...S},{actif:true,sautMin:11,coupesMax:40,noeudsMax:96},'livré : allumée, 11 coupes, 40 à l\'avance, 96 nœuds au plus (CH-090)');
 });
 
 test('bilan à l\'arrivée par l\'arbre (voie potree) : boîte, chargés à l\'arrivée, par nous, puis par Potree lui-même',async()=>{

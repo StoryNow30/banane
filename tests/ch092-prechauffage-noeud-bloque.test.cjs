@@ -30,3 +30,15 @@ test('deux load() en échec dans le même épisode, sans ligne de base : après 
  assert.ok(journal.appels.length>avant,'des load() après la pause');
  assert.notEqual(ev.motif,'jamais-fini','l\'opération finit');
 });
+
+/* CH-095 (maquette, navigateur, ÉTABLI) : le 502 est vu par l'observateur de ressources quelques ms après le load(), donc AVANT `delaiMs` ; la pause
+ * part alors sans que le nœud bloqué soit sorti de nos chargements en vol : avec la ligne de base, le réseau n'était plus jamais « libre ». */
+test('502 vu par l\'observateur avant delaiMs, nœud gardé « en cours », ligne de base allumée : après la pause, l\'opération suivante charge',async()=>{
+ const m=monter({},{bloque:(nom,j)=>j.bloques.length<1&&j.appels.length>=2,ligneBase:true});const {pc,e,journal,p}=m;
+ let vu=false;let r=p.apresCapture(contexte(pc));
+ await e.tourner(60,()=>{if(!vu&&journal.bloques.length===1){vu=true;p.ressources([{name:'https://x.invalid/nuage/ept-data/'+journal.bloques[0]+'.laz',initiatorType:'fetch',responseStatus:502}]);}});
+ assert.equal((await r).motif,'pause-serveur');assert.ok(e.horloge<2000,'pause partie avant delaiMs : '+e.horloge);
+ e.horloge+=10001;const avant=journal.appels.length;
+ r=p.apresCapture(contexte(pc));await e.tourner(300);const ev=await borne(r);
+ assert.notEqual(ev.motif,'reseau-occupe','réseau libre : pas « réseau occupé »');assert.ok(journal.appels.length>avant,'des load() après la pause');assert.equal(p.actif(),true);
+});
