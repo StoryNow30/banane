@@ -137,7 +137,7 @@
    if(pts>0){const url=`${proprietaire.base}/ept-data/${n.key.join('-')}.laz`;ok=await fetch(url,options.eptAuth?{headers:{'x-esv-jeton':'1'}}:undefined).then(r=>r.arrayBuffer().then(()=>r.ok)).catch(()=>false);
     try{const e=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(e){ept.vus++;if(e.transferSize===0&&e.decodedBodySize>0)ept.cache++;}}catch{}
     await new Promise(r=>setTimeout(r,options.eptDecode));}
-   if(!ok)return;   /* Potree : un échec laisse loading et le compteur à +1 (CH-062) */
+   if(!ok){n.echec=true;log('ept-echec',{cle:n.key.join('-'),cut:etat.partie?.cuts[etat.index]?.cut??null});return;}   /* Potree : un échec laisse loading et le compteur à +1 (CH-062) ; CH-095 : journal `ept-echec` */
    const k=Math.min(pts,200000);n.geometry={attributes:{position:{array:new Float32Array(3*k)},color:{array:new Uint8Array(4*k)}}};
    n.numPoints=pts;n.loaded=true;n.loading=false;window.Potree.numNodesLoading=Math.max(0,window.Potree.numNodesLoading-1);})();}
  const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -145,17 +145,18 @@
   const ce=[(L[0]+R[0])/2,(L[1]+R[1])/2,(L[2]+R[2])/2],demi=[2,.25,1],plans=[];[u,t,z].forEach((a,i)=>{const ac=dot3(a,ce);plans.push([-a[0],-a[1],-a[2],ac+demi[i]],[a[0],a[1],a[2],-ac+demi[i]]);});return plans;}
  function dansBoite(plans,b){const lo=[b.min.x,b.min.y,b.min.z],hi=[b.max.x,b.max.y,b.max.z];for(const [x,y,z,w] of plans)if((x>0?hi[0]:lo[0])*x+(y>0?hi[1]:lo[1])*y+(z>0?hi[2]:lo[2])*z+w<0)return false;return true;}
  /* Une image de Potree pour la boîte `plans` : rend {visibles, total, nonCharges, enCours}. */
- function imagePotree(plans){let monte=0,visibles=0,total=0,enCours=0;const file=[ept.racine],nonCharges=[];
+ function imagePotree(plans){let monte=0,visibles=0,total=0,enCours=0,bloques=0;const file=[ept.racine],nonCharges=[];
   while(file.length){file.sort((a,b)=>a.level-b.level);const n=file.shift();if(!dansBoite(plans,n.boundingBox))continue;total++;
-   if(!n.arbre){if(n.loaded&&monte<2){n.arbre=true;monte++;}else{if(n.loading)enCours++;else if(!n.loaded)nonCharges.push(n);continue;}}
+   if(!n.arbre){if(n.loaded&&monte<2){n.arbre=true;monte++;}else{if(n.loading){if(n.echec)bloques++;else enCours++;}else if(!n.loaded)nonCharges.push(n);continue;}}   /* CH-095 : nœud en échec, gardé « en cours » : compté à part */
    lruToucher(n);visibles++;for(const e of Object.values(n.children))file.push(e);}
   for(const n of nonCharges.slice(0,window.Potree.maxNodesLoading))n.load();
-  libererMemoire();return {visibles,total,nonCharges:nonCharges.length,enCours};}
+  libererMemoire();return {visibles,total,nonCharges:nonCharges.length,enCours,bloques};}
  function connusBoite(plans){let connus=0,charges=0,arbre=0;const pile=[ept.racine];while(pile.length){const n=pile.pop();if(!dansBoite(plans,n.boundingBox))continue;connus++;if(n.loaded)charges++;if(n.arbre)arbre++;pile.push(...Object.values(n.children));}return {connus,charges,arbre};}
  async function chaineEptMemoire(c,generation){const plans=boiteCut(c),t0=performance.now();etat.boite=plans;ept.vus=0;ept.cache=0;ept.hierVus=0;ept.hierCache=0;
   log('ept-arrivee',{cut:c.cut,...connusBoite(plans)});let fin=false;
   for(;;){if(etat.generation!==generation)return false;const r=imagePotree(plans);
-   if(!fin&&!r.nonCharges&&!r.enCours&&r.visibles===r.total){fin=true;const ms=Math.round(performance.now()-t0);log('ept-fin',{cut:c.cut,ms,noeuds:ept.vus,cache:ept.cache});log('ept-affiche',{cut:c.cut,ms,noeuds:r.visibles});
+   /* CH-095 : un nœud en échec ne s'affiche jamais (ni sa descendance) ; le reste de la boîte s'affiche quand même, comme dans Potree (trou, CH-062). */
+   if(!fin&&!r.nonCharges&&!r.enCours&&r.visibles===r.total-r.bloques){fin=true;const ms=Math.round(performance.now()-t0);log('ept-fin',{cut:c.cut,ms,noeuds:ept.vus,cache:ept.cache,...(r.bloques?{bloques:r.bloques}:{})});log('ept-affiche',{cut:c.cut,ms,noeuds:r.visibles,...(r.bloques?{bloques:r.bloques}:{})});
     (async()=>{while(etat.generation===generation){await new Promise(x=>setTimeout(x,16));if(etat.generation!==generation)break;imagePotree(plans);}})();return true;}
    await new Promise(x=>setTimeout(x,16));}}
  /* Potree, PointCloudCopcGeometryNode.loadHierarchy : toute la page d'un coup, du haut vers le bas ; la clé propre reçoit son nodeinfo. */
@@ -209,7 +210,8 @@
  /* ---------- chargement d'un cut ---------- */
  function viderCut(){for(const t of etat.minuteries)clearTimeout(t);etat.minuteries.length=0;
   for(const s of ['left','right'])if(rails[s]){root.children.splice(root.children.indexOf(rails[s]),1);rails[s]=null;}
-  pc.visibleNodes=[];window.Potree.numNodesLoading=0;etat.side=null;classesCote(null);}
+  pc.visibleNodes=[];if(!options.eptMemoire)window.Potree.numNodesLoading=0;   /* CH-095 : en mode mémoire le compteur est celui des load() : Potree ne le remet jamais à zéro (un nœud en échec le laisse à +1) */
+  etat.side=null;classesCote(null);}
  /* Classes des boutons de rail, relevées sur ESV : `leftRailSClass` (sélectionné) / `leftRailUSClass` (non), idem à droite. */
  function classesCote(side){for(const [s,id,pre] of [['left','O2N3DCutLRClick','leftRail'],['right','O2N3DCutRRClick','rightRail']]){const el=$(id);el.classList.toggle(pre+'SClass',side===s);el.classList.toggle(pre+'USClass',side!==s);}}
  function construireRail(side,desc){const r=objet('Object3D',{position:desc.position,quaternion:desc.quaternion,scale:desc.scale,rotation:desc.rotation});
@@ -224,7 +226,7 @@
   else etat.minuteries.push(setTimeout(()=>{for(const s of ['left','right']){rails[s]=ajouter(root,construireRail(s,c.rails[s]));}majMonde(root);for(const s of ['left','right'])origines[s]=pt(rails[s].matrixWorld.elements,[0,0,0]);etat.posee={};decoupe(etat.scenario.decoupe.dimensions[2]);recentrer('left');etat.side=null;log('rails-prets',{cut:c.cut});},options.latenceRails));
   /* Nœuds de points : demandés au serveur AU CHARGEMENT DU CUT (comme Potree), gardés en cache (comme Potree), puis
    * rendus visibles par lots avec latence ; Potree.numNodesLoading pendant le chargement. */
-  window.Potree.numNodesLoading=options.eptMemoire?0:c.points?.noeuds??c.noeuds?.length??0;   /* CH-083 : en mode mémoire, le compteur est celui des load() du modèle de Potree */
+  if(!options.eptMemoire)window.Potree.numNodesLoading=c.points?.noeuds??c.noeuds?.length??0;   /* CH-083 : en mode mémoire, le compteur est celui des load() du modèle de Potree */
   const servir=noeuds=>{if(etat.generation!==generation)return;const lots=Math.max(1,options.lots),parLot=Math.ceil(noeuds.length/lots);
    if(!noeuds.length){window.Potree.numNodesLoading=0;log('noeuds-aucun',{cut:c.cut});}
    for(let i=0;i<lots;i++){const tranche=noeuds.slice(i*parLot,(i+1)*parLot);if(!tranche.length)continue;
@@ -380,6 +382,10 @@
   log('selecteur-parties',{parties:[...nums],courante,suppose:true});}
  /* CH-083 : état mémoire de la boîte du cut affiché (comptes seulement) et points de la LRU. */
  window.__memoireEpt=()=>({...(etat.boite?connusBoite(etat.boite):{connus:0,charges:0,arbre:0}),lruPoints:lru.points,lruNoeuds:lru.m.size});
+ /* CH-095 : état de la boîte d'un cut QUELCONQUE de la partie (comptes seulement) : nœuds connus, chargés, « en cours », sans page de hiérarchie lue
+  * (`sansInfo` : frontière connue), et clés des nœuds « en cours » (clés de la maquette, factices). null hors mode mémoire ou cut inconnu. */
+ window.__eptBoite=cut=>{const c=etat.partie?.cuts.find(x=>x.cut===cut);if(!c||!options.eptMemoire||!ept.racine)return null;const plans=boiteCut(c),o={connus:0,charges:0,enCours:0,sansInfo:0,clesEnCours:[]};
+  const pile=[ept.racine];while(pile.length){const n=pile.pop();if(!dansBoite(plans,n.boundingBox))continue;o.connus++;if(n.loaded)o.charges++;if(n.loading){o.enCours++;o.clesEnCours.push(n.key.join('-'));}if(!n.nodeinfo)o.sansInfo++;pile.push(...Object.values(n.children));}return o;};
  window.__maquette={options,journal,etat:()=>{const c=cutCourant();return {part:etat.partie?.part??null,cut:c?.cut??null,index:etat.index,status:c?.status??null,side:etat.side,
    compteur:$('maquette-compteur').textContent.replace(/\s+/g,' ').trim(),traites:etat.partie?traites():null,total:liste().length,noeudsVisibles:pc.visibleNodes.length,chargements:etat.chargements,ecritures:etat.ecritures,railsPrets:!!rails.left,
    statuts:etat.partie?.cuts.map(x=>x.status[0]).join('')||'',rails:['left','right'].map(s=>rails[s]?pt(rails[s].matrixWorld.elements,[0,0,0]):null),
