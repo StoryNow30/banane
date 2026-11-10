@@ -508,7 +508,7 @@
  ${ligne('Clic du mode rapide', 'gardé pour le prochain lot', sel('clic', [['tel-quel', 'Comme avant'], ['gauche-recentre', 'Rail gauche recentré'], ['tout-recentre', 'Tout recentré']], r.clic, 'Clic du mode rapide'))}
  ${r.passage === null || r.passage === undefined ? '' : ligne('Aurore · passage entre parties', 'Ouvrir un cut d’une autre partie : Ariane change de partie dans ESV, sans rien valider', seg('passage', [['non', 'Éteint'], ['oui', 'Allumé']], r.passage ? 'oui' : 'non', 'Aurore · passage entre parties'))}
  ${ligne('Série de cuts à poser', 'Mettre en attente les cuts voisins', seg('grappe', [['non', 'Non'], ['oui', 'Oui']], r.grappe ? 'oui' : 'non', 'Série de cuts à poser'))}
- ${ligne('Rattrapage (en ombre)', 'En fin de lot, note ce qu’elle poserait pour les cuts restés sans pose, sans rien écrire dans ESV', sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non', 'Rattrapage'))}
+ ${ligne(passe2Textes(r.passe2Reglage).titre, passe2Textes(r.passe2Reglage).detail, sel('passe2', [...(r.passe2 === null ? [['', 'État inconnu']] : []), ['oui', 'Allumée'], ['non', 'Coupée']], r.passe2 === null ? '' : r.passe2 ? 'oui' : 'non', 'Rattrapage'))}
  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho', sel('raison', [['non', 'Non'], ['chiffres', 'Oui · chiffres du haut'], ['alt-chiffres', 'Oui · Alt + chiffre'], ['pave', 'Oui · pavé numérique']], r.raison ? r.touches || 'chiffres' : 'non', 'Raison de la correction'))}
  ${g.f5 ? ligne('Si ESV est rechargé pendant la relecture', '', sel('f5', [['pause', 'Attendre, puis reprendre'], ['arret', 'Arrêter la relecture']], g.f5, 'Si ESV est rechargé')) : ''}
  ${ligne('Bandeau dans ESV', 'Une ligne d’état au bas de la page ESV', seg('bandeau', [['non', 'Éteint'], ['oui', 'Allumé']], r.bandeau ? 'oui' : 'non', 'Bandeau dans ESV'))}
@@ -772,5 +772,19 @@
     return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
   }
 
-  return { esc, quantile, allureLot, ciblesBornes, modele, commandes, paletteListe, lignesRevue, rendre, duree };
+  /* CH-097 (D-319) — LES TEXTES DE LA DEUXIÈME PASSE, selon le mode EFFECTIF que le service worker rend avec les choix du lot (`passeDifferesReglage` :
+   * {mode:'off'|'ombre'|'ecriture', max}). Un seul endroit pour la case du panneau (`mode`), l'avis après le clic (`avisAllumee`) et la feuille de réglages
+   * de Signal (`titre`, `detail`) : « en ombre » seulement si la passe n'écrit pas. Mode pas encore lu (null) : aucun des deux n'est affirmé. */
+  function passe2Textes(g) {
+    const n = Number.isInteger(g?.max) && g.max > 0 ? g.max : null, jusqua = n ? ` jusqu’à ${n} cut${n > 1 ? 's' : ''}` : '';
+    if (g?.mode === 'ecriture') return { mode: `(pose et valide${jusqua} en fin de lot)`, titre: 'Rattrapage', detail: `En fin de lot, pose et valide dans ESV${jusqua}${n ? '' : ' les cuts'} restés sans pose`,
+      avisAllumee: `Deuxième passe allumée : à la fin du lot, elle pose et valide dans ESV${jusqua}${n ? '' : ' les cuts'} restés sans pose.` };
+    if (g?.mode === 'ombre') return { mode: '(en ombre : n’écrit rien dans ESV)', titre: 'Rattrapage (en ombre)', detail: 'En fin de lot, note ce qu’elle poserait pour les cuts restés sans pose, sans rien écrire dans ESV',
+      avisAllumee: 'Deuxième passe allumée, en ombre : à la fin du lot, elle notera ce qu’elle poserait, sans rien écrire dans ESV.' };
+    if (g?.mode === 'off') return { mode: '(coupée par le réglage : ne fait rien)', titre: 'Rattrapage (coupé par le réglage)', detail: 'Le réglage d’Ariane coupe le rattrapage : rien en fin de lot',
+      avisAllumee: 'Deuxième passe allumée, mais coupée par le réglage d’Ariane : rien ne se fera en fin de lot.' };
+    return { mode: '', titre: 'Rattrapage', detail: 'En fin de lot, reprend les cuts restés sans pose', avisAllumee: 'Deuxième passe allumée.' };
+  }
+
+  return { esc, quantile, allureLot, ciblesBornes, modele, commandes, paletteListe, lignesRevue, rendre, duree, passe2Textes };
 });

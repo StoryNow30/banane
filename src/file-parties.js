@@ -176,7 +176,7 @@
       case 'relecture': {
         if (type !== 'relecture-fin') return ignore(`événement ${type} hors de l’état relecture`);
         if (ev.lotId !== e.partie.lotId) return ignore('fin de relecture d’un autre lot');
-        e.partie.relecture = { issue: texte(ev.issue, 40), corriges: entier(ev.corriges), faits: entier(ev.faits), mode: texte(ev.mode, 20) };
+        e.partie.relecture = { issue: texte(ev.issue, 40), corriges: entier(ev.corriges), faits: entier(ev.faits), mode: texte(ev.mode, 20), ...(entier(ev.refusees) !== null ? { refusees: entier(ev.refusees) } : {}) };
         if (ev.ecritureEnSuspens) { arreter(e, 'ecriture-incertaine', at, ev.detail); return { etat: e, actions: [] }; }
         /* D-261 : la relecture passe toujours. Non lancée parce qu'ESV affiche une autre partie (au dernier cut, ESV charge la partie suivante) :
          * la file ramène ESV sur la partie du lot (même commande que le changement de partie) et relance la relecture, une fois. */
@@ -267,15 +267,19 @@
     return l.slice(-MAX_REGISTRE);
   }
 
-  /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes, ecritsPasse, refus} ; `partie.relecture` : {corriges, faits}.
-   * Différés hors cuts écrits par la passe (D-238 : l'état du lot les garde « différés ») ; médiane des parties précédentes de la file. */
+  /* ---- Alerte NON BLOQUANTE d'une partie : elle n'arrête rien. `partie.resume` : {traites, differes} ; `partie.passe` : {ecrits} ; `partie.relecture` : {corriges, refusees, faits}.
+   * Différés hors cuts écrits par la passe (D-238 : l'état du lot les garde « différés ») ; médiane des parties précédentes de la file.
+   * CH-097 : les cuts écrits par la passe se lisent dans `partie.passe.ecrits` et les refus de la page dans `partie.relecture.refusees` (le résumé du
+   * service worker ne les a jamais portés : l'alerte « refus » ne sortait pas, les différés n'étaient pas retranchés). Un résumé qui les porte garde la priorité. */
   /** @param {CH075.PartieFile|null|undefined} partie @param {CH075.PartieFile[]} [precedents] @param {CH075.Seuils} [seuils] @returns {CH075.Alerte[]} */
   function alertes(partie, precedents = [], seuils = SEUILS) {
     const out = /** @type {CH075.Alerte[]} */ ([]), r = partie?.resume || /** @type {CH075.Resume} */ ({}), traites = entier(r.traites);
     /** @param {number} q */
     const part = q => (traites ? q / traites : null);
-    const dif = entier(r.differes) !== null ? Math.max(0, /** @type {number} */ (r.differes) - (entier(r.ecritsPasse) || 0)) : null;
-    const ratios = precedents.map(p => { const s = p?.resume || /** @type {CH075.Resume} */ ({}), t = entier(s.traites); return t && entier(s.differes) !== null ? Math.max(0, /** @type {number} */ (s.differes) - (entier(s.ecritsPasse) || 0)) / t : null; })
+    /** @param {CH075.PartieFile|null|undefined} p */
+    const ecrits = p => entier(p?.resume?.ecritsPasse) ?? entier(p?.passe?.ecrits) ?? 0;
+    const dif = entier(r.differes) !== null ? Math.max(0, /** @type {number} */ (r.differes) - ecrits(partie)) : null;
+    const ratios = precedents.map(p => { const s = p?.resume || /** @type {CH075.Resume} */ ({}), t = entier(s.traites); return t && entier(s.differes) !== null ? Math.max(0, /** @type {number} */ (s.differes) - ecrits(p)) / t : null; })
       .filter(v => v !== null).sort((a, b) => a - b);
     const med = ratios.length ? (ratios.length % 2 ? ratios[(ratios.length - 1) / 2] : (ratios[ratios.length / 2 - 1] + ratios[ratios.length / 2]) / 2) : null;
     if (dif !== null && med !== null && med > 0 && /** @type {number} */ (part(dif)) > seuils.differesFoisMediane * med)
@@ -284,7 +288,8 @@
      * avant, aux cuts traités par le lot (une autre population : « 14 sur 23 » pour 220 relus). Seuil inchangé, proposé et non décidé par l'opérateur. */
     const corr = entier(partie?.relecture?.corriges), relus = entier(partie?.relecture?.faits);
     if (corr !== null && relus && corr / relus > seuils.corrigesPart) out.push({ code: 'corriges', texte: `cuts corrigés par la relecture : ${corr} sur ${relus} relus, plus de ${Math.round(seuils.corrigesPart * 100)} %` });
-    if (entier(r.refus) !== null && /** @type {number} */ (r.refus) >= seuils.refus) out.push({ code: 'refus', texte: `${r.refus} refus de la page` });
+    const refus = entier(r.refus) ?? entier(partie?.relecture?.refusees);
+    if (refus !== null && refus >= seuils.refus) out.push({ code: 'refus', texte: `${refus} refus de la page` });
     return out;
   }
 
@@ -298,7 +303,7 @@
     let change = false; const n = copie(e), q = n.bilan[n.bilan.length - 1];
     if (!q.passe && passe && typeof passe.issue === 'string') { q.passe = { issue: texte(passe.issue, 40), ecrits: entier(passe.ecrits) }; change = true; }
     if (!q.relecture && relecture && typeof relecture.issue === 'string') {
-      q.relecture = { issue: texte(relecture.issue, 40), corriges: entier(relecture.corriges), faits: entier(relecture.faits), mode: texte(relecture.mode, 20), apresArret: true }; change = true; }
+      q.relecture = { issue: texte(relecture.issue, 40), corriges: entier(relecture.corriges), faits: entier(relecture.faits), mode: texte(relecture.mode, 20), apresArret: true, ...(entier(relecture.refusees) !== null ? { refusees: entier(relecture.refusees) } : {}) }; change = true; }
     return change ? n : null;
   }
   /* CH-026 : d'où repart une file ARRÊTÉE : le premier rang non fini (la partie interrompue, ou la suivante si l'arrêt est venu entre deux parties),

@@ -13,8 +13,9 @@ const vue=(p2,etat='COMPLETED')=>({current:{identity:{part:23,cut:120}},batch:{i
 const ouvrir=(state,choix={clicHumain:'tel-quel',regleGrappeDifferes:false,passeDifferes:true},enr=[])=>panneau(state,{globals:{BananeSettings:Settings},
  reponses:{'choix-lot-etat':choix,'choix-lot':args=>{enr.push(args);return {...choix,...args};}}});
 
-test('Réglages : la case dit qu’elle est en ombre et n’écrit rien dans ESV, cochée d’après le choix gardé ; un clic la garde et la note le dit',async()=>{
- assert.match(HTML,/<input id="passe-differes" type="checkbox"> Deuxième passe des différés en fin de lot \(en ombre : n’écrit rien dans ESV\)<\/label>/);
+/* CH-097 (D-319) : le mode n'est plus écrit en dur dans la page ; il vient du service worker (tests/ch097-8-libelle-deuxieme-passe.test.cjs). */
+test('Réglages : la case porte le mode de la passe dans un emplacement rempli par le panneau, cochée d’après le choix gardé ; un clic la garde et la note le dit',async()=>{
+ assert.match(HTML,/<input id="passe-differes" type="checkbox"> Deuxième passe des différés en fin de lot <span id="passe-differes-mode"><\/span><\/label>/);
  assert.match(HTML,/<div id="carte-choix"[\s\S]*<div id="passe-differes-row"[\s\S]*<\/section>/);
  const enr=[],p=await ouvrir(vue(null),undefined,enr);
  assert.equal(p.$('passe-differes').checked,true);assert.equal(p.$('passe-differes').indeterminate,false);

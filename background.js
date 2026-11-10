@@ -52,6 +52,7 @@ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
  * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
  * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
 const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
+const LECTURES_PANNEAU=['view','build','passe-differes-reglage','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
 const coordinateurLot={journal:[],
  transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
   const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
@@ -208,6 +209,10 @@ const obsState={lost:0,perSeance:new Map()};
  * `debutMoinsFinLotMs` (début de la requête, horloge de la page − fin du lot, horloge du service worker ; écart d'horloge
  * non corrigé ; null sans date de début) : l'analyse les sépare. */
 const OBS_GRACE_MS=5000,OBS_CLOS=['STOPPED','COMPLETED','FINISHED_WITH_UNCONFIRMED_ACTIONS'];
+/* CH-097 : UNE liste « clos proprement » (`OBS_CLOS` : grâce, passe, relecture, liste à corriger) et, pour les seuls usages sans décision (éveil de
+ * l'écran, reconnexion après F5), `LOT_TERMINE` qui y ajoute ERROR : le moteur ne reprend jamais un lot en erreur, plus rien ne tourne. La séance de
+ * l'observateur et le vidage du cache gardent `OBS_CLOS` (ce qu'on garde ou jette après une erreur : décision de l'opérateur). */
+const LOT_TERMINE=[...OBS_CLOS,'ERROR'];
 /* OBS-4 (relecture du test 3) : « Arrêter » pendant une action prolonge la grâce tant que la boucle finit l'action de ce
  * lot, mais 120 s au plus après l'arrêt (sans plafond : mesuré accepté 10 min après) ; ensuite, seuls les 5 s après la
  * sortie de la boucle (jalon `batch-state`) comptent. */
@@ -2999,7 +3004,7 @@ function refusReconnexionAuto(){const b=engine?.s?.batch;
  if(selectedTab===null)return 'aucun onglet ESV choisi';
  if(native?.active())return 'Écho actif';
  if(manual?.active())return 'Correction active';
- if(b&&!OBS_CLOS.includes(b.state))return b.state==='RUNNING'?'lot en cours : il se reconnecte seul ou s’arrête en pause':'lot ouvert : clique sur « Reprendre », il se reconnecte seul';
+ if(b&&!LOT_TERMINE.includes(b.state))return b.state==='RUNNING'?'lot en cours : il se reconnecte seul ou s’arrête en pause':'lot ouvert : clique sur « Reprendre », il se reconnecte seul';
  if(engine?.busy||engine?.task)return 'action d’Ariane en cours';
  if(passeDiff.cours||passeDiff.ecriture)return 'deuxième passe en cours';
  if(passeActive())return 'relecture en cours ou en pause';
@@ -3259,13 +3264,12 @@ async function gardeRetourCut(quoi,affiche=undefined,{rattache=false}={}){const 
  * (nouvelle période, sans continuité supposée), et seulement pour un cut de la liste. État : `engine.s.correction` (gardé, donc dans la vue du panneau).
  * Journal (export Orbite) : `correction-liste` (une fois par lot), `correction-debut`, `correction-ouvrir`, `correction-fin` (bilan par cut). */
 const CL=()=>globalThis.ArianeCorrectionListe;
-const LOT_CLOS=new Set(['COMPLETED','STOPPED','FINISHED_WITH_UNCONFIRMED_ACTIONS']);
 /* CH-040 : seuls les lots DEMANDÉS passent encore par ici (`batchIds`, une liste par lot, comme en CH-028). Sans demande, la liste couvre tous les lots
  * clos du journal (`couverture`, src/correction-liste.js) : le bilan de la dernière file n'en est plus la source (02/11 : une file relancée sur la partie 1
  * avait masqué la partie 0 et le premier lot de la partie 1). */
 function lotsDemandes(args){const d=Array.isArray(args?.batchIds)?args.batchIds.filter(x=>typeof x==='string').slice(0,16):null;return d?.length?d:null;}
 function refusCorrection(quoi){const b=engine.s.batch;
- if(b&&!LOT_CLOS.has(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
+ if(b&&!OBS_CLOS.includes(b.state))return `${quoi} : le lot est encore ouvert (${b.state}) ; la liste naît d’un lot clos.`;
  if(engine.busy||engine.task)return `${quoi} : une action d’Ariane est en cours.`;
  if(['preparation','en-cours','en-pause'].includes(relecture.passe?.etat))return `${quoi} : la relecture du lot tourne encore.`;
  if(passeDiff.vue&&['calcul','ecriture'].includes(passeDiff.vue.etat))return `${quoi} : la deuxième passe tourne encore.`;
@@ -3284,7 +3288,7 @@ async function correctionListe(args){
  const listes=[];
  if(demandes){for(const id of demandes){const l=CL().construire(events,{batchId:id});if(!l.trouve)continue;
    listes.push({batchId:id,batchIds:[id],partie:l.partie,entrees:l.entrees,comptes:l.comptes});await inscrire(id,l);}}
- else{const b=engine.s.batch,K=CL().couverture(events,{lotOuvert:b?.id&&!LOT_CLOS.has(b.state)?b.id:null});
+ else{const b=engine.s.batch,K=CL().couverture(events,{lotOuvert:b?.id&&!OBS_CLOS.includes(b.state)?b.id:null});
   for(const x of K.parLot)if(!K.exclus.some(e=>e.batchId===x.batchId))await inscrire(x.batchId,x.liste);
   listes.push(...K.listes);
   if(!listes.length&&K.exclus.length)throw Error(`Liste à corriger : les ${K.exclus.length>1?`${K.exclus.length} lots du journal ont`:'lot du journal a'} déjà été repris par une Aurore terminée.`);
@@ -4074,6 +4078,8 @@ const eveil={tenu:false,raison:null,minuteur:null,dernier:0};
 function eveilBesoin(){const R=globalThis.BananeSettings?.eveil;if(!R||R.actif!==true)return null;
  try{if(typeof fileActive==='function'&&fileActive())return 'file';}catch{/* pas de file */}
  const seance=seanceObservateur({grace:true});
+ /* CH-097 : un lot en ERROR garde sa séance d'observateur mais ne tourne plus : il ne tient pas l'écran allumé. */
+ if(seance&&seance.startsWith('lot:')&&engine?.s?.batch?.state==='ERROR')return null;
  return seance&&/^(lot|relecture|passe-differes):/.test(seance)?seance.split(':')[0]:null;}
 function eveilMaj(){const besoin=eveilBesoin(),niveau=globalThis.BananeSettings?.eveil?.niveau==='system'?'system':'display';
  try{
@@ -4325,7 +4331,7 @@ const fileReveil=ready.then(()=>fileReprendre()).catch(()=>{});
 async function fileCompleterBilan(){const e=fileP.etat;if(!e||e.etat!=='arret'||!FPm().completerBilan)return;const lotId=e.bilan?.at(-1)?.lotId;if(!lotId)return;
  const p=relecture.passe,v=passeDiff.vue,fini=x=>['finie','arretee','erreur','non-lancee'].includes(x);
  const n=FPm().completerBilan(e,{lotId,passe:v?.lotId===lotId&&!passeDiff.cours&&!passeDiff.ecriture&&v.etat?{issue:v.etat,ecrits:v.ecrites??0}:null,
-  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.etat,corriges:p.corriges,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
+  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
  if(!n)return;await fileSauver(n);journalerSimple('file-parties-bilan-complete',{fileId:n.id,part:n.bilan.at(-1).part,passe:n.bilan.at(-1).passe?.issue??null,relecture:n.bilan.at(-1).relecture?.issue??null});}
 async function fileVue(){await fileCompleterBilan();return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
 async function fileDispatch(action,args){await fileReveil;
@@ -4464,6 +4470,10 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  if(action==='bornes-partie'){const t=await finsParties(),f=t[Number(args?.part)];return f?{part:Number(args.part),last:f.last,source:f.source,at:f.at}:null;}
  /* 4.9.5 test 6 (D-164) : choix du panneau pour le PROCHAIN lot ; permis à tout moment, le lot en cours garde les siens. */
  if(action==='choix-lot-etat')return choixDuLot();
+ /* CH-097 (D-319) : le mode EFFECTIF de la deuxième passe ({mode:'off'|'ombre'|'ecriture', max}), lu par `passeDiffReglage`, la fonction même que la passe lit
+  * avant d'écrire : le panneau et Signal en tirent leur libellé au lieu d'un texte en dur. Lecture seule, à part des choix du lot (leurs clés sont gardées par
+  * la garde de pose) ; `max:null` = sans plafond. */
+ if(action==='passe-differes-reglage'){const g=passeDiffReglage();return {mode:g.mode,max:Number.isFinite(g.max)?g.max:null};}
  if(action==='choix-lot')return choixLot(args);
  if(action==='lot-profil-etat')return {profil:await profilDuLot()};
  if(action==='lot-profil')return profilChoisir(args);
@@ -4557,7 +4567,7 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   throw Error('Le mode Correction a été retiré en 4.5.4. Utilise Écho.');
  if(action==='manual-end')return manual.end();
  if(action==='manual-download')return manual.dataset();
- if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard'].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
+ if(native.active()&&!['cloud','native-download','native-health','native-export-advice','native-export-manifest','native-export-cles','journal-index-repli','native-export-plan','native-export-ack','native-discard','build'/* CH-097 : lecture du nom du paquet, demandée à chaque ouverture du panneau */].includes(action))throw Error('Écho est actif. Termine-le avant d’utiliser Mes corrections, l’assisté ou le pilote.');
  if(manual.active()&&!['cloud','journal','dataset'].includes(action))throw Error('Une session est active dans Mes corrections. Termine-la avant de piloter un lot ou d’utiliser l’assisté.');
  if(action==='goto-cut')return allerAuCut(args);
  if(action==='relecture-lancer')return relectureLancer({auto:false});
@@ -4637,6 +4647,10 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   // Onglet choisi : en plus, l'état de séance de l'observateur passif (le pont en tire sa demande de marque).
   respond(sender.tab.id===selectedTab?{...launcherState(),observation:{seance:globalThis.BananeSettings?.observateurPassif?.actif!==false&&!!seanceObservateur()}}:launcherState());return;}
  if(m.kind==='heartbeat'){respond({ok:true});return;}
+ /* CH-097 : comme OBS-3 pour `esv-observation` : le message qui RÉVEILLE le service worker arrive avant `ready` (`selectedTab` encore nul) ; le relevé
+  * était ignoré sans trace. Il est rangé une fois `ready` résolu, seulement s'il vient de l'onglet choisi. Service worker prêt : rien ne change. */
+ if((m.kind==='esv-releve'||m.kind==='clic-hors-vue')&&!swPret&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
+  ready.then(()=>{if(sender.tab.id!==selectedTab)return;if(m.kind==='esv-releve')rangerReleve(m.releve);else rangerClicHorsVue(m.releve);},()=>{});return;}
  if(m.kind==='esv-releve'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerReleve(m.releve);return;}
  if(m.kind==='clic-hors-vue'&&sender.tab?.id===selectedTab&&esvURL(sender.url||sender.tab?.url)){rangerClicHorsVue(m.releve);return;}
  /* OBS-3 (relecture du test 3) : le message qui réveille le service worker arrive avant `ready` (onglet choisi et fins
@@ -4671,5 +4685,8 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
   * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
  dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
    catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
-  e=>coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});}));return true;
+  /* CH-097 : une LECTURE qui échoue (liste `LECTURES_PANNEAU` : demandes sans effet, la plupart lancées seules par le panneau) rend son erreur au panneau
+   * sans remplacer l'avis du lot, sans sauvegarde et sans prendre une des 64 entrées du journal des transitions. Un geste refusé reste noté comme avant. */
+  e=>{if(LECTURES_PANNEAU.includes(m.action))return respond({error:vocabulaire(e.message)});
+   return coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});});return true;
 });

@@ -88,7 +88,8 @@
   async init(){const n=this.e.s.native;if(!this.running())return;
    n.metrics=n.metrics||{};n.metrics.pointsSavedByRail=n.metrics.pointsSavedByRail||{left:0,right:0};n.metrics.captureCheckpoints=n.metrics.captureCheckpoints||0;
    const recoveredAt=iso(),events=(await this.evenementsSession(n.id)).filter(event=>event.nativeSessionId===n.id);
-   n.nextEventSeq=Math.max(n.nextEventSeq||0,...events.map(event=>event.eventSeq||event.event_seq||0));
+   /* CH-097 : une boucle, pas `Math.max(...events)` : un argument par événement dépassait la limite du moteur sur une très longue séance (init, donc ready, rejetait). */
+   {let seq=n.nextEventSeq||0;for(const event of events){const v=event.eventSeq||event.event_seq||0;if(v>seq)seq=v;}n.nextEventSeq=seq;}
    const period=n.observationPeriods?.find(item=>item.observationPeriodId===n.currentPeriodId);
    if(period&&!period.endedAt){period.status='INTERRUPTED_RECOVERED';period.endTimeStatus='unknown';period.recoveredAt=recoveredAt;
     period.reason='worker-restarted-before-period-closure';}
@@ -632,7 +633,12 @@
     record.serverConfirmationStatus='observed-validation-write-'+entry.status;record.serverConfirmedAt=entry.at;
     /* D-143 : l'écriture de validation fait foi sur la référence humaine (rattachement par numéro de ligne seulement). */
     if(method==='row-index')this.referenceFromWrite(record,entry,at);}
-   if(record.endedAt!==null)this.classify(record);await this.saveRecord(record);return entry;}
+   if(record.endedAt!==null){this.classify(record);
+    /* CH-097 : l'écriture de validation arrive souvent APRÈS la clôture ; si elle change l'étiquette (référence remplacée, D-143), le résumé `n.visits`
+     * (panneau, bilan de la correction) la reçoit aussi, comme à `visit-ended`. État gardé seulement si l'étiquette a changé. */
+    const resume=(n.visits||[]).find(v=>v.visitId===record.visitId),label=record.observedLabelCandidate||null;
+    if(resume&&resume.label!==label){resume.label=label;await this.saveRecord(record);await this.e.save();return entry;}}
+   await this.saveRecord(record);return entry;}
   /* D-143 : la référence lue à la touche est périmée si ESV a appliqué le déplacement après la touche (clic sur un rail
    * quelques ms avant). Si les rails de l'écriture de validation diffèrent de plus de 1 mm de `humanFinalReference`, celle-ci
    * est remplacée (dernier état observé s'il concorde avec l'écriture, sinon positions de l'écriture) ; l'ancienne reste dans
