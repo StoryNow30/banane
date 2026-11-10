@@ -1,0 +1,242 @@
+/* CH-101 — trois propositions pour le panneau d'Ariane (étape 1 : maquettes, rien n'est intégré).
+ * Une règle commune aux trois : la couleur répond à une seule question, « dois-je faire quelque chose ? ».
+ *   sûr      = acquis, rien à faire (posé et validé, ESV connecté, lot clos sans reste) ;
+ *   à toi    = Ariane attend l'opérateur ; PLEIN = maintenant (le lot est bloqué), CONTOUR = plus tard (à poser après le lot, pause voulue) ;
+ *   en panne = ni Ariane ni l'opérateur n'avancent tant qu'ESV ne répond pas.
+ * Ariane qui travaille n'a pas de couleur : c'est le mouvement qui le dit. Un bouton ne prend jamais une couleur de sens.
+ * Chaque proposition vit sous sa classe (.pa, .pb, .pc) dans un cadre à la taille de la fenêtre du panneau (360 × 480 compact, 600 × 760). */
+
+.cadre{width:360px;height:480px;overflow:hidden;position:relative;flex:none}
+.g600 .cadre{width:600px;height:760px}
+.p{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;font-feature-settings:"tnum" 1;-webkit-font-smoothing:antialiased;text-align:left}
+.p *{box-sizing:border-box;margin:0;padding:0}
+.p button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.p h3{font-size:inherit;font-weight:inherit}
+.p h4{text-transform:none;letter-spacing:0}
+.p ul{list-style:none}
+/* listes : seules des lignes entières sont montrées (la hauteur s'arrondit à la ligne) */
+.p .liste{flex:1;min-height:0;container-type:size}
+.p .liste ul{height:round(down,100cqb,var(--h-li));overflow:hidden}
+/* trois actions : la principale sur toute la largeur, les deux autres dessous */
+.p button.large{flex:1}
+.p .n3{flex-wrap:wrap}.p .n3 .pr{flex:1 0 100%}.p .n3 button:not(.pr){flex:1;height:34px;font-weight:500}
+.p svg{display:block;flex:none}
+.p b{font-weight:600}
+
+/* ═════════════════════════════════════════════════════════════ A · Plan de voie
+ * Le lot dessiné comme la voie vue de dessus : deux files de rail, un trait par cut à sa vraie place. */
+.pa{--fond:#0F1A24;--surface:#17242F;--filet:#2B3B4A;--encre:#E8EEF3;--encre2:#A3B4C2;--encre3:#7F93A3;
+  --sur:#8CCBEA;--toi:#FF9B2E;--panne:#FF6A5E;--sur-tx:#0F1A24;
+  --m:16px;--t:13px;--l:18px;--t-mot:24px;--t-meta:11.5px;--h-barre:40px;--h-btn:40px;--h-plan:50px;--e:10px;--h-li:25px;
+  background:var(--fond);color:var(--encre);font:400 var(--t)/var(--l) "Hanken Grotesk",system-ui,sans-serif}
+.g600 .pa{--m:32px;--t:15px;--l:22px;--t-mot:34px;--t-meta:13px;--h-barre:48px;--h-btn:46px;--h-plan:84px;--e:20px;--h-li:34px}
+.pa .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:500;letter-spacing:-.01em}
+.pa-barre{height:var(--h-barre);flex:none;display:flex;align-items:center;gap:12px;padding:0 var(--m);border-bottom:1px solid var(--filet);font-size:var(--t-meta);line-height:1;color:var(--encre2)}
+.pa-logo{display:flex;align-items:center;gap:8px;color:var(--encre);font-weight:600}
+.pa-logo svg{width:16px;height:16px}
+.pa-logo span{display:none}.g600 .pa-logo span{display:inline}
+.pa-nav{display:flex;gap:12px;align-self:stretch}
+.pa-nav span{display:flex;align-items:center;border-bottom:2px solid transparent;border-top:2px solid transparent}
+.pa-nav .ici{color:var(--encre);font-weight:600;border-bottom-color:var(--encre)}
+.pa-esv{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--encre);white-space:nowrap}
+.pa-esv i{width:7px;height:7px;background:var(--sur)}
+.pa-esv[data-ton="panne"] i{background:var(--panne)}
+.pa-esv[data-ton="panne"]{color:var(--panne)}
+.pa-corps{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--e);padding:var(--e) var(--m) 0}
+.pa-ou{font-size:var(--t-meta);line-height:16px;color:var(--encre2)}
+.pa-mot{display:flex;align-items:center;gap:10px;margin-top:4px;font-size:var(--t-mot);line-height:1.15;font-weight:600;letter-spacing:-.015em}
+.pa-mot svg{width:36px;height:22px}
+.g600 .pa-mot svg{width:48px;height:30px}
+.pa-phrase{color:var(--encre2);margin-top:2px}
+.pa-phrase b{color:var(--encre)}
+/* à toi, maintenant : la plaque pleine ; en panne : la plaque pleine rouge */
+.pa[data-ton="toi"] .pa-mot,.pa[data-ton="panne"] .pa-mot{background:var(--toi);color:var(--sur-tx);padding:6px 10px;margin:6px calc(var(--m) * -1 + 8px) 0;padding-left:calc(var(--m) - 8px)}
+.pa[data-ton="panne"] .pa-mot{background:var(--panne)}
+.pa[data-ton="attente"] .pa-mot{color:var(--toi)}
+.pa[data-ton="sur"] .pa-mot{color:var(--sur)}
+.pa-avis{border:1px solid var(--toi);padding:8px 10px;color:var(--encre)}
+.pa[data-ton="panne"] .pa-avis{border-color:var(--panne)}
+/* le plan : deux files (G en haut, D en bas), un trait par cut */
+.pa-voie{flex:none;padding-top:10px}
+.pa-plan{position:relative;height:var(--h-plan);margin-left:14px}
+.pa-file{position:absolute;left:0;right:0;height:3px;margin-top:-1px;background:var(--filet);z-index:1}
+.pa-file.g{top:34%}.pa-file.d{top:78%}
+.pa-file b{position:absolute;left:0;top:0;bottom:0;background:var(--encre)}
+.pa-nomfile{position:absolute;left:-14px;font:500 10px/10px "JetBrains Mono",monospace;color:var(--encre3)}
+.pa-nomfile.g{top:calc(34% - 4px)}.pa-nomfile.d{top:calc(78% - 4px)}
+.pa-plan i{position:absolute;top:calc(34% - 5px);bottom:calc(22% - 6px);width:2px;margin-left:-1px;background:var(--sur)}
+.g600 .pa-plan i{width:3px;margin-left:-1.5px}
+.pa-plan i.m{background:none;border-left:1px dashed var(--toi);width:0;margin-left:0}
+.pa-plan i.m::before,.pa-plan i.m::after{content:"";position:absolute;left:-3.5px;width:6px;height:6px;background:var(--toi);z-index:2}
+.pa-plan i.m::before{top:2px}.pa-plan i.m::after{bottom:3px}
+.pa-plan i.m.g::after,.pa-plan i.m.d::before{display:none}
+.pa-plan i.v{background:var(--filet);width:1px;margin-left:0}
+.pa-cur{position:absolute;top:12%;bottom:0;width:2px;margin-left:-1px;background:var(--encre);z-index:3}
+.pa-cur span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font:500 11px/14px "JetBrains Mono",monospace;color:var(--encre);white-space:nowrap}
+.pa-cur[data-ton="toi"]{background:var(--toi)}.pa-cur[data-ton="toi"] span{color:var(--toi)}
+.pa-cur[data-ton="panne"]{background:var(--panne)}.pa-cur[data-ton="panne"] span{color:var(--panne)}
+.pa-cur[data-bord="g"] span{left:0;transform:none}.pa-cur[data-bord="d"] span{left:auto;right:0;transform:none}
+@keyframes pa-bat{50%{opacity:.35}}
+.pa[data-ton="travail"] .pa-cur{animation:pa-bat 1.6s ease-in-out infinite}
+.pa-regle{display:flex;justify-content:space-between;margin:4px 0 0 14px;font:500 10.5px/14px "JetBrains Mono",monospace;color:var(--encre3)}
+.pa-lot{position:relative;height:3px;margin:6px 0 0 14px;background:var(--filet)}
+.pa-lot b{position:absolute;top:-2px;bottom:-2px;border:1px solid var(--encre2)}
+.pa-chiffres{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--filet);border-bottom:1px solid var(--filet)}
+.pa-chiffres div{padding:7px 0 7px 10px;border-left:1px solid var(--filet)}
+.pa-chiffres div:first-child{padding-left:0;border-left:0}
+.pa-chiffres dt{font-size:var(--t-meta);line-height:14px;color:var(--encre2)}
+.pa-chiffres dd{font:500 20px/24px "JetBrains Mono",monospace;letter-spacing:-.02em}
+.g600 .pa-chiffres dd{font-size:28px;line-height:34px}
+.pa-chiffres .s dd{color:var(--sur)}.pa-chiffres .t dd{color:var(--toi)}
+.pa-allure{font-size:var(--t-meta);line-height:16px;color:var(--encre2)}
+.pa-fin{display:grid;grid-template-columns:auto 1fr;column-gap:14px;row-gap:3px}
+.pa-fin dt{color:var(--encre2)}
+.pa-fin .t{color:var(--toi);font-weight:600}
+.pa-reste{flex:1;min-height:0;display:flex;flex-direction:column}
+.pa-reste h4{display:flex;justify-content:space-between;font-size:var(--t-meta);line-height:16px;font-weight:600;color:var(--toi);padding-bottom:4px;border-bottom:1px solid var(--filet)}
+.pa-reste h4 span{font-weight:400;color:var(--encre2)}
+.pa-reste li{display:grid;grid-template-columns:22px 48px 1fr auto;align-items:center;gap:8px;height:var(--h-li);border-bottom:1px solid var(--filet)}
+.g600 .pa-reste li{grid-template-columns:26px 56px 1fr auto}
+.pa-reste li svg{width:22px;height:14px}
+.pa-reste li em{font-style:normal;color:var(--encre2)}
+.pa-reste li u{text-decoration:none;font-size:var(--t-meta);color:var(--encre2);border-bottom:1px solid var(--filet)}
+.pa-pied{flex:none;padding:10px var(--m) 0}
+.pa-actions{display:flex;gap:8px}
+.pa-actions button{height:var(--h-btn);padding:0 14px;border:1px solid var(--encre3);font-weight:600;white-space:nowrap}
+.pa-actions .pr{flex:1;background:var(--encre);color:var(--fond);border-color:var(--encre)}
+.pa-verrou{height:var(--h-btn);display:flex;align-items:center;justify-content:center;border:1px dashed var(--encre3);color:var(--encre2)}
+.pa-cache{display:flex;justify-content:space-between;height:30px;align-items:center;font-size:var(--t-meta);color:var(--encre3)}
+.pa-cache span{color:var(--encre2)}
+
+/* ═════════════════════════════════════════════════════════════ B · La coupe
+ * Le cut lui-même au centre : son numéro, et la paire de rails vue en coupe, chaque rail avec son état. */
+.pb{--fond:#E6EAED;--surface:#F3F5F6;--filet:#BFC8CF;--encre:#13202B;--encre2:#43525F;--encre3:#5F6E7A;
+  --sur:#0A6847;--toi:#A84300;--toi-plein:#FF9B2E;--panne:#B3261E;
+  --m:16px;--t:13px;--l:18px;--t-num:60px;--t-mot:17px;--t-meta:11.5px;--h-barre:40px;--h-btn:40px;--e:10px;--h-prof:54px;--h-li:27px;
+  background:var(--fond);color:var(--encre);font:400 var(--t)/var(--l) "Hanken Grotesk",system-ui,sans-serif}
+.g600 .pb{--m:32px;--t:15px;--l:22px;--t-num:104px;--t-mot:22px;--t-meta:13px;--h-barre:48px;--h-btn:46px;--e:20px;--h-prof:96px;--h-li:36px}
+.pb .mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:500;letter-spacing:-.01em}
+.pb-barre{height:var(--h-barre);flex:none;display:flex;align-items:center;gap:10px;padding:0 var(--m);background:var(--surface);border-bottom:1px solid var(--filet);font-size:var(--t-meta);line-height:1;color:var(--encre2)}
+.pb-logo{display:flex;align-items:center;gap:8px;color:var(--encre);font-weight:700}
+.pb-logo svg{width:16px;height:16px}
+.pb-logo span{display:none}.g600 .pb-logo span{display:inline}
+.pb-nav{display:flex;gap:2px}
+.pb-nav span{padding:6px 7px}
+.pb-nav .ici{background:var(--encre);color:var(--surface);font-weight:600}
+.pb-esv{margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--sur);font-weight:600;white-space:nowrap}
+.pb-esv[data-ton="panne"]{color:var(--panne)}
+.pb-corps{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--e);padding:var(--e) var(--m) 0}
+.pb-tete{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.pb-cut small{display:block;font-size:var(--t-meta);line-height:14px;color:var(--encre2)}
+.pb-cut strong{display:block;font:700 var(--t-num)/.86 "Bricolage Grotesque","Hanken Grotesk",sans-serif;letter-spacing:-.045em;margin:4px 0 0 -3px;font-variation-settings:"opsz" 96}
+.pb-prof{display:flex;gap:10px;align-items:flex-end}
+.pb-prof figure{display:flex;flex-direction:column;align-items:center;gap:3px}
+.pb-prof svg{height:var(--h-prof);width:auto}
+.pb-prof figcaption{font:500 10.5px/12px "JetBrains Mono",monospace;color:var(--encre2);white-space:nowrap}
+.pb-etat{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:6px 0;border-top:2px solid var(--encre);border-bottom:1px solid var(--filet)}
+.pb-etat h3{font:700 var(--t-mot)/1.2 "Bricolage Grotesque","Hanken Grotesk",sans-serif;letter-spacing:-.01em}
+.pb-etat p{color:var(--encre2)}
+.pb[data-ton="toi"] .pb-etat,.pb[data-ton="panne"] .pb-etat{background:var(--toi-plein);border-color:var(--encre);padding:7px 10px;margin:0 -10px}
+.pb[data-ton="toi"] .pb-etat p,.pb[data-ton="panne"] .pb-etat p{color:var(--encre)}
+.pb[data-ton="panne"] .pb-etat{background:var(--panne);color:#FFF}
+.pb[data-ton="panne"] .pb-etat p{color:#FFF}
+.pb[data-ton="attente"] .pb-etat h3{color:var(--toi)}
+.pb[data-ton="sur"] .pb-etat h3{color:var(--sur)}
+.pb-avis{color:var(--encre)}
+/* la cote : du premier cut au cut atteint, puis ce qui reste jusqu'à la borne */
+.pb-cote{position:relative;height:38px;flex:none}
+.pb-cote .l{position:absolute;left:0;right:0;top:9px;border-top:1px dashed var(--encre3)}
+.pb-cote .f{position:absolute;left:0;top:8px;height:3px;background:var(--encre)}
+.pb-cote .b{position:absolute;top:2px;width:1px;height:16px;background:var(--encre)}
+.pb-cote .n{position:absolute;top:22px;font:500 10.5px/14px "JetBrains Mono",monospace;color:var(--encre2);white-space:nowrap}
+.pb-cote .n.c{transform:translateX(-50%);color:var(--encre);font-weight:700}
+.pb-cote .n.d{right:0}
+.pb-cote .m{position:absolute;top:4px;width:9px;height:9px;margin-left:-4.5px;border:2px solid var(--toi);background:var(--fond);transform:rotate(45deg)}
+.pb-tab{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;gap:4px 12px}
+.pb-tab dt{font-size:var(--t-meta);line-height:14px;color:var(--encre2)}
+.pb-tab dd{font:700 19px/24px "Bricolage Grotesque",sans-serif;letter-spacing:-.02em}
+.g600 .pb-tab dd{font-size:28px;line-height:34px}
+.pb-tab .s dd{color:var(--sur)}.pb-tab .t dd{color:var(--toi)}
+.pb-tab dd small{font:400 var(--t-meta)/1 "Hanken Grotesk",sans-serif;letter-spacing:0;color:var(--encre2)}
+.pb-fin{display:grid;grid-template-columns:auto 1fr;column-gap:14px;row-gap:3px}
+.pb-fin dt{color:var(--encre2)}
+.pb-fin .t{color:var(--toi);font-weight:700}
+.pb-reste{flex:1;min-height:0;display:flex;flex-direction:column}
+.pb-reste h4{display:flex;justify-content:space-between;font-size:var(--t-meta);line-height:16px;font-weight:700;color:var(--toi);padding-bottom:4px;border-bottom:1px solid var(--encre)}
+.pb-reste h4 span{font-weight:400;color:var(--encre2)}
+.pb-reste li{display:grid;grid-template-columns:36px 44px 1fr auto;align-items:center;gap:8px;height:var(--h-li);border-bottom:1px solid var(--filet)}
+.g600 .pb-reste li{grid-template-columns:44px 56px 1fr auto}
+.pb-reste li svg{height:17px;width:auto}
+.g600 .pb-reste li svg{height:22px}
+.pb-reste li em{font-style:normal;color:var(--encre2)}
+.pb-reste li u{text-decoration:none;font-size:var(--t-meta);color:var(--encre);border-bottom:1px solid var(--encre3)}
+.pb-pied{flex:none;padding:10px var(--m) 0;background:var(--surface);border-top:1px solid var(--filet)}
+.pb-actions{display:flex;gap:8px}
+.pb-actions button{height:var(--h-btn);padding:0 14px;border:1.5px solid var(--encre);font-weight:700;white-space:nowrap}
+.pb-actions .pr{flex:1;background:var(--encre);color:var(--surface)}
+.pb-verrou{height:var(--h-btn);display:flex;align-items:center;justify-content:center;border:1.5px dashed var(--encre3);color:var(--encre2)}
+.pb-cache{display:flex;justify-content:space-between;height:30px;align-items:center;font-size:var(--t-meta);color:var(--encre3)}
+.pb-cache span{color:var(--encre2)}
+@keyframes pb-pose{50%{fill-opacity:.38}}
+.pb[data-ton="travail"] .pb-prof .enc{animation:pb-pose 1.6s ease-in-out infinite}
+
+/* ═════════════════════════════════════════════════════════════ C · Main courante
+ * Un bandeau d'état qui se lit du coin de l'œil, puis le journal du lot : une ligne par cut, la dernière en haut. Aucun pictogramme. */
+.pc{--fond:#191715;--surface:#23201D;--filet:#3B3632;--encre:#F2EEE7;--encre2:#B9B1A6;--encre3:#968E83;
+  --sur:#63D3A0;--sur-plein:#1C7A55;--toi:#FFC61A;--panne:#FF7566;--panne-plein:#C0281C;
+  --m:16px;--t:12.5px;--l:18px;--t-mot:28px;--t-meta:11.5px;--h-barre:36px;--h-btn:40px;--h-ligne:24px;--h-li:24px;--e:10px;
+  background:var(--fond);color:var(--encre);font:400 var(--t)/var(--l) "IBM Plex Sans",system-ui,sans-serif}
+.g600 .pc{--m:32px;--t:14.5px;--l:22px;--t-mot:44px;--t-meta:13px;--h-barre:44px;--h-btn:48px;--h-ligne:32px;--h-li:32px;--e:16px}
+.pc .mono,.pc-main li b,.pc-main li span:last-child{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.pc-barre{height:var(--h-barre);flex:none;display:flex;align-items:center;gap:12px;padding:0 var(--m);font:500 var(--t-meta)/1 "IBM Plex Sans",sans-serif;color:var(--encre2)}
+.pc-logo{color:var(--encre);font-weight:600;letter-spacing:.12em}
+.pc-logo span{display:none}.g600 .pc-logo span{display:inline}
+.pc-nav{display:flex;gap:12px}
+.pc-nav .ici{color:var(--encre);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:2px}
+.pc-esv{margin-left:auto;white-space:nowrap}
+.pc-esv[data-ton="sur"]{color:var(--sur)}.pc-esv[data-ton="panne"]{color:var(--panne)}
+.pc-bandeau{flex:none;padding:12px var(--m) 12px;background:var(--surface);border-top:1px solid var(--filet);border-bottom:1px solid var(--filet)}
+.g600 .pc-bandeau{padding:22px var(--m)}
+.pc-bandeau h3{font:600 var(--t-mot)/1.05 "IBM Plex Sans",sans-serif;letter-spacing:-.025em}
+.pc-bandeau p{margin-top:5px;color:var(--encre2)}
+.pc-bandeau p b{color:var(--encre)}
+.pc[data-ton="toi"] .pc-bandeau{background:var(--toi);color:#191715;border-color:var(--toi)}
+.pc[data-ton="toi"] .pc-bandeau p,.pc[data-ton="toi"] .pc-bandeau p b{color:#191715}
+.pc[data-ton="panne"] .pc-bandeau{background:var(--panne-plein);color:#FFF;border-color:var(--panne-plein)}
+.pc[data-ton="panne"] .pc-bandeau p,.pc[data-ton="panne"] .pc-bandeau p b{color:#FFF}
+.pc[data-ton="sur"] .pc-bandeau{background:var(--sur-plein);color:#FFF;border-color:var(--sur-plein)}
+.pc[data-ton="sur"] .pc-bandeau p,.pc[data-ton="sur"] .pc-bandeau p b{color:#FFF}
+.pc[data-ton="attente"] .pc-bandeau{box-shadow:inset 0 0 0 2px var(--toi);border-color:transparent}
+.pc[data-ton="attente"] .pc-bandeau h3{color:var(--toi)}
+.pc-jauge{height:4px;margin-top:10px;background:var(--filet)}
+.pc-jauge b{display:block;height:100%;background:var(--encre)}
+@keyframes pc-file{to{background-position:-16px 100%}}
+.pc[data-ton="travail"] .pc-bandeau{background-image:repeating-linear-gradient(90deg,var(--filet) 0 8px,transparent 8px 16px);background-size:16px 2px;background-repeat:repeat-x;background-position:0 100%;animation:pc-file .8s linear infinite}
+.pc-corps{flex:1;min-height:0;display:flex;flex-direction:column;padding:var(--e) var(--m) 0;gap:var(--e)}
+.pc-total + .pc-total{margin-top:calc(var(--e) * -1 + 2px)}
+.pc-total{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:var(--t-meta);line-height:16px;color:var(--encre2)}
+.pc-total b{font:500 var(--t)/16px "IBM Plex Mono",monospace;color:var(--encre)}
+.pc-total .s b{color:var(--sur)}.pc-total .t b{color:var(--toi)}
+.pc-main{flex:1;min-height:0;display:flex;flex-direction:column;font-size:var(--t);font-weight:400}
+.pc-main h4{display:grid;grid-template-columns:5ch 1fr auto;gap:10px;padding:0 0 4px 10px;font:500 10.5px/14px "IBM Plex Mono",monospace;color:var(--encre3);border-bottom:1px solid var(--filet)}
+.pc-main li{display:grid;grid-template-columns:5ch 1fr auto;gap:10px;align-items:center;height:var(--h-ligne);padding-left:10px;border-bottom:1px solid var(--filet);list-style:none;color:var(--encre2);position:relative;white-space:nowrap}
+.pc-main li b{font-weight:500;color:var(--encre)}
+.pc-main li.vif{color:var(--encre)}
+.pc-main li.t{color:var(--toi)}.pc-main li.t b{color:var(--toi)}
+.pc-main li.t::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:4px;background:var(--toi)}
+.pc-main li.vif::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:4px;background:var(--encre)}
+.pc-main li.s b{color:var(--sur)}
+.pc-main li u{text-decoration:none;border-bottom:1px solid var(--encre3);color:var(--encre)}
+.pc-main li.k{grid-template-columns:11ch 1fr}
+.pc-main li.k span:last-child{font-family:inherit;color:var(--encre)}
+.pc-main li.k b{font-family:"IBM Plex Mono",monospace}
+.pc-avis{color:var(--encre)}
+.pc-pied{flex:none;padding:10px var(--m) 0}
+.pc-actions{display:flex;gap:8px}
+.pc-actions button{height:var(--h-btn);padding:0 14px;border:1px solid var(--encre3);font-weight:600;white-space:nowrap}
+.pc-actions .pr{flex:1;background:var(--encre);color:var(--fond);border-color:var(--encre)}
+.pc-verrou{height:var(--h-btn);display:flex;align-items:center;justify-content:center;border:1px dashed var(--encre3);color:var(--encre2)}
+.pc-cache{display:flex;justify-content:space-between;height:30px;align-items:center;font-size:var(--t-meta);color:var(--encre3)}
+.pc-cache span{color:var(--encre2)}
+
+@media (prefers-reduced-motion:reduce){.p *,.p{animation:none!important}}
