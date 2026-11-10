@@ -633,7 +633,12 @@
     record.serverConfirmationStatus='observed-validation-write-'+entry.status;record.serverConfirmedAt=entry.at;
     /* D-143 : l'écriture de validation fait foi sur la référence humaine (rattachement par numéro de ligne seulement). */
     if(method==='row-index')this.referenceFromWrite(record,entry,at);}
-   if(record.endedAt!==null)this.classify(record);await this.saveRecord(record);return entry;}
+   if(record.endedAt!==null){this.classify(record);
+    /* CH-097 : l'écriture de validation arrive souvent APRÈS la clôture ; si elle change l'étiquette (référence remplacée, D-143), le résumé `n.visits`
+     * (panneau, bilan de la correction) la reçoit aussi, comme à `visit-ended`. État gardé seulement si l'étiquette a changé. */
+    const resume=(n.visits||[]).find(v=>v.visitId===record.visitId),label=record.observedLabelCandidate||null;
+    if(resume&&resume.label!==label){resume.label=label;await this.saveRecord(record);await this.e.save();return entry;}}
+   await this.saveRecord(record);return entry;}
   /* D-143 : la référence lue à la touche est périmée si ESV a appliqué le déplacement après la touche (clic sur un rail
    * quelques ms avant). Si les rails de l'écriture de validation diffèrent de plus de 1 mm de `humanFinalReference`, celle-ci
    * est remplacée (dernier état observé s'il concorde avec l'écriture, sinon positions de l'écriture) ; l'ancienne reste dans
