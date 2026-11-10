@@ -16,7 +16,7 @@
 - **Lot sans panne de stockage** : commandes vers ESV, appels, événements, visites, état final et lot identiques à l'octet, avec et sans le patch, dans les 4 combinaisons de CH-086 (ESV qui relit ou navigation seule ; FIFO ou état en avance).
 - **Sur tronc + CH-091 + CH-094** : essais de CH-086 (15), de CH-091, de CH-092, garde de pose et `geometry-brain` verts (73 essais ciblés, 0 rouge) ; garde de pose verte aussi sans les patchs (branche telle quelle).
 - **Parité de la relecture** (`tools/parite-relecture-sw.cjs`, tronc contre tronc + CH-091 + CH-094) : relevés identiques, code 0.
-- **Verify complet** (même arbre, machine de l'exécutant) : en cours au moment de ce commit ; résultat ajouté au commit suivant.
+- **Verify complet** (même arbre, machine de l'exécutant) : 3 420 essais, 3 412 verts, 0 rouge, 8 sautés ; « Engine matches V4.6.0 baseline: true », « Geometry unchanged: true ». Un premier passage donnait 1 rouge, `typage-ch075`, faute de l'objet git 5699f68 dans le clone peu profond (même constat que CH-086) ; historique approfondi, second passage sans rouge. Rien de `audit/*` n'est commité.
 
 **Non fait, et pourquoi** :
 - `tools/garde-gcv2.cjs` et `tools/parite-l1se-sw.cjs` : ils demandent le corpus de `banane-data`, absent de cette session ; aucun module de décision n'est touché (diff vide hors `src/engine.js`).
