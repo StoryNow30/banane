@@ -1471,8 +1471,11 @@ async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC
  const p=r?.[CLE_PASSE_DIFFERES];
  /* CH-037 : `aurorePassage`, l'interrupteur de l'opérateur pour le passage entre parties de l'Aurore (réglages de Signal). Absent : allumé (suit
   * `correctionEntreParties.actif`) ; `false` : éteint. Lu à chaque « Ouvrir » ; ne vaut que si le réglage du dépôt est allumé. */
+ /* CH-097 (D-319) : `passeDifferesReglage`, le mode EFFECTIF de la deuxième passe ({mode:'off'|'ombre'|'ecriture', max}), lu par `passeDiffReglage`, la fonction
+  * même que la passe lit avant d'écrire : le panneau et Signal en tirent leur libellé au lieu d'un texte en dur. Lecture seule ; `max:null` = sans plafond. */
+ let reglagePasse=null;try{const g=passeDiffReglage();reglagePasse={mode:g.mode,max:Number.isFinite(g.max)?g.max:null};}catch{reglagePasse=null;}
  return {clicHumain:MODES_CLIC_HUMAIN.includes(r?.[CLE_CLIC_HUMAIN])?r[CLE_CLIC_HUMAIN]:'tel-quel',regleGrappeDifferes:r?.[CLE_GRAPPE_DIFFERES]===true,passeDifferes:!!r&&(p===undefined||p===true),
-  aurorePassage:r?.[CLE_AURORE_PASSAGE]!==false};}
+  aurorePassage:r?.[CLE_AURORE_PASSAGE]!==false,passeDifferesReglage:reglagePasse};}
 async function choixLot(args){
  if(args&&'clicHumain' in args){if(!MODES_CLIC_HUMAIN.includes(args.clicHumain))throw Error('Clic du mode rapide inconnu.');await chrome.storage.local.set({[CLE_CLIC_HUMAIN]:args.clicHumain});}
  if(args&&'regleGrappeDifferes' in args){if(typeof args.regleGrappeDifferes!=='boolean')throw Error('Règle « grappe de différés » : oui ou non.');await chrome.storage.local.set({[CLE_GRAPPE_DIFFERES]:args.regleGrappeDifferes});}

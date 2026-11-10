@@ -536,6 +536,7 @@
  const NOMS_CLIC={'tel-quel':'Comme avant','gauche-recentre':'Variante : rail gauche recentré','tout-recentre':'Tout recentré, comme un humain'};
  const IDS_CLIC={'tel-quel':'clic-tel-quel','gauche-recentre':'clic-gauche-recentre','tout-recentre':'clic-tout-recentre'};
  let choixLot=null;
+ const textesPasse2=()=>globalThis.ArianeSignalRendu?.passe2Textes?.(choixLot?.passeDifferesReglage)||{mode:'',avisAllumee:'Deuxième passe allumée.'};
  const clicDuScope=sc=>NOMS_CLIC[sc?.clicHumain]?sc.clicHumain:'tel-quel',grappeDuScope=sc=>sc?.regleGrappeDifferes===true;
  const nomGrappe=on=>on?'activée':'coupée';
  /* Test 7 (l'opérateur : « après un lot, le panneau disait “Activée pour le prochain lot” alors que le lot venait de l'utiliser ») — chaque
@@ -554,6 +555,8 @@
    if($('aurore-passage')&&document.activeElement!==$('aurore-passage'))$('aurore-passage').checked=choixLot.aurorePassage!==false;
    /* Test 18 : l'interrupteur de la deuxième passe reste « inconnu » (indéterminé) tant que le service worker ne l'a pas dit : jamais « coupée » par défaut d'affichage. */
    if($('passe-differes')&&document.activeElement!==$('passe-differes')&&typeof choixLot.passeDifferes==='boolean'){$('passe-differes').indeterminate=false;$('passe-differes').checked=choixLot.passeDifferes;}
+   /* CH-097 (D-319) : le libellé dit le mode EFFECTIF rendu par le service worker (ombre seule, ou pose et valide jusqu'à N cuts), jamais un texte en dur. */
+   ecrire('passe-differes-mode',textesPasse2().mode);
    ecrire('clic-prochain',`« ${NOMS_CLIC[choixLot.clicHumain]} »`);
    ecrire('grappe-prochain',`règle ${nomGrappe(choixLot.regleGrappeDifferes===true)}`);
    /* Pendant un lot, un choix différent du sien attend le lot suivant : la note le dit. */
@@ -561,7 +564,7 @@
    ecrire('grappe-note',ouvert&&grappeDuScope(sc)!==(choixLot.regleGrappeDifferes===true)?'Le lot en cours garde la sienne jusqu’à sa fin ; la case servira au prochain lot.':'Coupée par défaut. Lue au démarrage de chaque lot, gardée jusqu’à sa fin.');}
  async function changerChoixLot(args){try{choixLot=await api('choix-lot',args);
      const ouvert=OUVERT.includes(state?.batch?.state);
-     note('passeDifferes' in args?(args.passeDifferes?'Deuxième passe allumée, en ombre : à la fin du lot, elle notera ce qu’elle poserait, sans rien écrire dans ESV.':'Deuxième passe coupée : plus aucun calcul en fin de lot.')
+     note('passeDifferes' in args?(args.passeDifferes?textesPasse2().avisAllumee:'Deuxième passe coupée : plus aucun calcul en fin de lot.')
        :ouvert?'Choix gardé. Le lot en cours garde le sien jusqu’à sa fin ; ce choix servira au prochain lot.':'Choix gardé pour le prochain lot.');}
    catch(e){note(e.message,true);}
    majChoixLot(state);}
@@ -905,7 +908,7 @@
    for(const h of hooksRendu)try{h(s);}catch{/* l'habillage ne doit jamais gêner le panneau */}
  }
  async function refresh(){if(refreshing)return;refreshing=true;try{const s=await api('view');render(s);if(which==='automatic')void lireHistoire(s);}catch(e){note(e.message,true);}finally{refreshing=false;}}
- globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),vertsListe:()=>verts.liste,   /* CH-026 : les départs des parties, pour l'onglet « File » ; CH-097 : la liste des verts (nombre réel au-delà de 12 plages) */
+ globalThis.ArianePanel=Object.freeze({state:()=>state,voieDuLot,travailDuLot,visitesNatif,fichesDepart:()=>fichesDepart.slice(),vertsListe:()=>verts.liste,choixLot:()=>choixLot,   /* CH-026 : les départs des parties, pour l'onglet « File » ; CH-097 : la liste des verts (nombre réel au-delà de 12 plages) */
    apres:f=>{if(typeof f!=='function')return;hooksRendu.push(f);if(state)try{f(state);}catch{/* idem */}}});
  /* T20a (D-243, D-250) — « RECONNECTER » : ré-équipe l'onglet ESV choisi (action `reconnect` du service worker, aucune commande ESV). Caché sans onglet
   * (statut `no-tab`, ou jamais connecté), grisé pendant la reconnexion (`reconnecting`). */

@@ -23,13 +23,13 @@ test('hors d\'un lot en cours, rien n\'est envoyé ; actions du panneau : lectur
  assert.notEqual(engine.s.batch.state,'RUNNING');
  assert.equal(b.get('clicHumainDuLot')(),null,'lot clos : aucune option');
  engine.s.batch.state='RUNNING';assert.equal(b.get('clicHumainDuLot')(),'tout-recentre');engine.s.batch.state='STOPPED';
- assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:false,passeDifferes:true,aurorePassage:true});
- assert.deepEqual(j(await b.api('choix-lot',{regleGrappeDifferes:true})),{clicHumain:'tout-recentre',regleGrappeDifferes:true,passeDifferes:true,aurorePassage:true});
+ assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:false,passeDifferes:true,aurorePassage:true,passeDifferesReglage:{mode:'ecriture',max:10}/* CH-097 : mode effectif de la deuxième passe, pour le libellé */});
+ assert.deepEqual(j(await b.api('choix-lot',{regleGrappeDifferes:true})),{clicHumain:'tout-recentre',regleGrappeDifferes:true,passeDifferes:true,aurorePassage:true,passeDifferesReglage:{mode:'ecriture',max:10}/* CH-097 : mode effectif de la deuxième passe, pour le libellé */});
  await assert.rejects(b.api('choix-lot',{clicHumain:'vite'}),/Clic du mode rapide inconnu/);
  await assert.rejects(b.api('choix-lot',{regleGrappeDifferes:'oui'}),/oui ou non/);
- assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:true,passeDifferes:true,aurorePassage:true},'un refus ne change rien');
+ assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tout-recentre',regleGrappeDifferes:true,passeDifferes:true,aurorePassage:true,passeDifferesReglage:{mode:'ecriture',max:10}/* CH-097 : mode effectif de la deuxième passe, pour le libellé */},'un refus ne change rien');
  /* Valeur inconnue déjà gardée, ou stockage illisible : le défaut. */
- b.local.m[CLE_CLIC]='vite';assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:true,passeDifferes:true,aurorePassage:true});
+ b.local.m[CLE_CLIC]='vite';assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:true,passeDifferes:true,aurorePassage:true,passeDifferesReglage:{mode:'ecriture',max:10}/* CH-097 : mode effectif de la deuxième passe, pour le libellé */});
  b.ctx.chrome.storage.local.get=async()=>{throw Error('stockage illisible');};
- assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:false,passeDifferes:false,aurorePassage:true},'stockage illisible : deuxième passe coupée');
+ assert.deepEqual(j(await b.api('choix-lot-etat')),{clicHumain:'tel-quel',regleGrappeDifferes:false,passeDifferes:false,aurorePassage:true,passeDifferesReglage:{mode:'ecriture',max:10}/* CH-097 : mode effectif de la deuxième passe, pour le libellé */},'stockage illisible : deuxième passe coupée');
 });

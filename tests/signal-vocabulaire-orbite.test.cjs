@@ -34,8 +34,11 @@ test('tiroir « Ce qui reste » : la section « À poser », jamais « Différé
 });
 test('réglages : « Rattrapage (en ombre) », « Série de cuts à poser » ; historique : « à poser », « sautés »',()=>{
  const H=[{part:13,fin:'complete',cibles:120,poses:112,differes:6,sautes:2,depart:{ignores:3},debut:'2026-10-30T14:21:56Z'}];
- const h=S.rendre(snap({sig:sig({historique:H})}),ui({couche:'reglages'}));
+ /* CH-097 (D-319) : « (en ombre) » seulement quand le réglage effectif n'écrit pas ; sinon le libellé dit ce que le rattrapage pose et valide. */
+ const R=snap().reglages,avec=g=>S.rendre(snap({reglages:{...R,passe2Reglage:g},sig:sig({historique:H})}),ui({couche:'reglages'}));
+ const h=avec({mode:'ombre',max:10});
  assert.match(texte(h),/Rattrapage \(en ombre\)/);assert.match(texte(h),/Série de cuts à poser/);
+ for(const g of [{mode:'ecriture',max:10},{mode:'ecriture',max:null},{mode:'off',max:0},null]){const t=texte(avec(g));assert.match(t,/Rattrapage/);assert.doesNotMatch(t,/en ombre|[Dd]euxième passe|différés?\b/);}
  assert.match(texte(h),/6 à poser · 2 sautés · 3 sautés au départ/);
  assert.doesNotMatch(texte(h),/[Dd]euxième passe|différés?\b|skipp|ignorés/);
 });
