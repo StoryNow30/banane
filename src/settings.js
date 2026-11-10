@@ -479,7 +479,7 @@
     /* Test 25 (CH-018) : geste réglable du déplacement de la vue (src/deplacement-vue.js). ALLUMÉ au clic droit (la molette n'a jamais déplacé la caméra : 45 coups sur 45 sans effet sur la partie 20, 28/10) ; `glisse-synthetique` et `molette` restent réglables. Le journal par geste (`journalGestes`) dira quel geste marche. */
     deplacement: Object.freeze({ actif: true, geste: 'clic-droit', tentativesMax: 2 }),
   });
-  /* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, fiches/REGLES_METIER.md). PN avec ses marges (« contrôler chaque cut »),
+  /* 5.0 — RÈGLES MÉTIER DE L'OPÉRATEUR (src/regles-metier.js, fiches/REGLES_METIER.md). PN avec ses marges (« contrôler chaque cut »),
    * grappe de différés (noyau d'aiguille, grappe d'invalides), validation en place dans une zone, verts à contrôler (écartement à
    * plus de 15 mm de la médiane de la partie, intérieur et marges d'une grappe, voisins d'un isolé, plage d'un PN).
    * `ombre` (livré : true) : à chaque cut du lot, l'événement `regles-metier-ombre` consigne la zone détectée, les règles

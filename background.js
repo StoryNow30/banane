@@ -2618,7 +2618,7 @@ async function observeLot(shadow){
  if(reprise)state.repriseLogged=true;
  return {...decision,...(reprise?{reprise}:{}),applied:false,displayed:false,engineMs:Date.now()-t0};
 }
-/* 5.0 — RÈGLES MÉTIER DE MIC (src/regles-metier.js, réglage `reglesMetier`, fiches/REGLES_METIER.md). À chaque cut du lot,
+/* 5.0 — RÈGLES MÉTIER DE L'OPÉRATEUR (src/regles-metier.js, réglage `reglesMetier`, fiches/REGLES_METIER.md). À chaque cut du lot,
  * l'événement `regles-metier-ombre` consigne la zone reconnue (PN confirmé et ses marges, grappe de différés), les règles de l'opérateur
  * déclenchées et ce qu'Ariane AURAIT fait ; à chaque fenêtre de la liste d'ESV lue par B1, les verts à contrôler (`portee:'verts'`).
  * OMBRE (réglage livré) : la surface est lue sur la capture (copie du stockage), l'évaluation part après la décision et la commande ;
