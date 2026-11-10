@@ -5,6 +5,14 @@ cours, où en sont les mesures. Le plan est dans `PLAN_SUITE.md`, les règles
 dans `PASSATION_4.8.0.md`, les problèmes dans `KNOWN_ISSUES.md` (trié le
 29/09). `PROJECT_STATE.md` n'est plus que l'historique.
 
+## État au 10 novembre 2026 — « Vision 11 »
+
+- **Nom et version** : l'extension s'appelle « Vision » (manifeste `5`) ; les paquets d'essai sont nommés « Vision N » et fabriqués par `python3 tools/package.py --output <fichier>.zip` ; le fichier `BUILD` du paquet porte le commit. Dernier paquet : **Vision 11** (build `30bb2cd`, 10/11), version sans nouveauté : capacité du préchauffage et corrections (D-317). Entrées détaillées : `CHANGELOG.md` (Vision 5 à 11).
+- **Cap** : D-299 et D-300 (JavaScript orchestre, Rust seulement là où il gagne : la lecture LiDAR) ; D-306 (tous les exécutants sont des sessions Claude, plus de Cursor ni de Codex) ; D-311 (lot en orbite fluide : tout préchargé à l'avance) ; D-312 (chantiers en parallèle, verify et maquette dans la machine de l'exécutant).
+- **En cours** : « Vision 12 » = deux corrections du moteur avec l'accord écrit de l'opérateur (D-318) : reprise après un arrêt du service worker (CH-091, patch prêt) et reprise après une écriture refusée (CH-094, patch prêt, à appliquer après CH-091). CH-093 (préchauffage au passage à la relecture) est une nouveauté, reportée après Vision 11.
+- **Mesures de terrain** : les exports de lots et leurs bilans sont dans `banane-data` (`collections/2026-11-0x_v5_vision*-essai`), lus par `node tools/bilan-lot.cjs <zips>`. Étude de l'attente des coupes voisines : `chantiers/CH-090/etude.md`. Relecture en adversaire de Vision 8 à 10 : `chantiers/CH-092/rapport.md`. Audit du projet entier (10/11) : `fiches/AUDIT_PROJET_2026-11-10.md`.
+- Les sections ci-dessous sont l'historique (3 novembre : Ariane 5 ; 29 septembre : 4.8.5).
+
 ## État au 3 novembre 2026 — Ariane 5
 
 **Version officielle : Ariane 5** (manifeste `5`), étiquette `v5` sur le tronc `claude/50-test17` (`ae65426`), paquet `ariane-v5.zip` (SHA-256 `81e30bc27151215181db4a85e2080171595b2030182359ccce2914ae8061b9b1`), notice : `NOTICE_UTILISATION.md`. Décisions D-276 à D-278. Terrain : Constellation 25-26 sans veille (voir D-278). Le tableau ci-dessous (29 septembre) est l'état historique de la 4.8.5.

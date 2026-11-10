@@ -51,9 +51,4 @@ test('relecture : la cible jointe à la capture est demandée telle quelle ; sou
  assert.equal(j.evts[0].source,'relu');assert.equal(j.evts[0].saut,-60);assert.equal(j.evts[0].predite,40);
 });
 
-/* Vision 6 (D-309) : une fois le patch intégré au tronc, il n'y a plus d'adaptateur « sans le patch » à jouer : le cas se saute. */
-test('sans le patch (tronc) : fenêtre seule, la coupe à 50 coupes n’est pas trouvée',integre?{skip:'patch CH-080 intégré au tronc'}:opts,async()=>{
- fichier=SRC;for(const k of Object.keys(require.cache))if(/helpers\/(page|esv-images)\.cjs$/.test(k))delete require.cache[k];
- const j=await jouer(()=>({}));assert.equal('suivante' in j.demandes[0],false);assert.equal(j.evts[0].motif,'sans-suivante');assert.equal(j.evts[0].source,null);
- fs.readFileSync=lire;P.page=pageOrig;
-});
+/* Audit du 10/11 : le cas « sans le patch (tronc) » est retiré : le patch CH-080 est dans le tronc depuis Vision 6, le cas était sauté à chaque passage. */

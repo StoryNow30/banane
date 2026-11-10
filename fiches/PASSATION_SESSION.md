@@ -1,42 +1,36 @@
 # Passation de session : démarrer ou reprendre une session Claude de zéro
 
-Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet Ariane. Elle remplace le résumé d'une session précédente : tout ce qu'il faut est dans le dépôt. Écrit le 27/10/2026 ; mets-le à jour à chaque fin de version.
+Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet Ariane. Elle remplace le résumé d'une session précédente : tout ce qu'il faut est dans le dépôt. Écrit le 27/10/2026, état mis à jour le 10/11/2026 (« Vision 11 ») ; mets-le à jour à chaque fin de version.
 
 ## 1. Lire, dans cet ordre (15 minutes)
 1. `CLAUDE.md` (règles non négociables), `AGENTS.md`.
 2. `fiches/RESEAU_IA.md` (rôles, circuit d'un chantier, budget) puis `hub/PROTOCOLE.md` (le hub : messagerie des agents).
-3. `LIRE_EN_PREMIER.md`, puis `BANANE_5.0_CAHIER_V2.md` § 1, 5, 6 (le but et les chantiers), puis `DECISIONS.md` de D-250 à la fin (décisions récentes de l'opérateur : ne jamais les réécrire).
-4. Le dernier `CHANGELOG.md` (entrée la plus haute) et `consignes/seance-terrain-test-23-2026-10-26.md`.
+3. `LIRE_EN_PREMIER.md` (section du haut seulement : l'état courant), puis `DECISIONS.md` de D-299 à la fin (décisions récentes de l'opérateur : ne jamais les réécrire). `BANANE_5.0_CAHIER_V2.md` § 1, 5, 6 pour le but d'ensemble.
+4. Les trois entrées les plus hautes de `CHANGELOG.md`, puis `chantiers/CH-090/etude.md` et `chantiers/CH-092/rapport.md` (où part le temps ; ce qui a cassé et pourquoi).
 
 ## 2. S'abonner au hub avant de répondre à quiconque
 - Canal général : la PR « Hub : canal général » (branche `hub/journal`, numéro 7). L'opérateur y écrit par Telegram, sans préfixe.
 - Un chantier = sa PR (`chantier/CH-NNN`). Abonne-toi (`subscribe_pr_activity`) à chaque PR ouverte, lis ses derniers messages (`node tools/hub.cjs lire --chantier CH-NNN`), et réponds uniquement par `node tools/hub.cjs dire …`.
-- Émetteurs : `integrateur` (la session principale), `chercheur` (session dédiée à la GCV2), `relecteur` (revue froide), `cursor`, `glm`, `actions`, `operateur`, `agent`. **Une seule session tient le rôle « intégrateur »** : c'est elle qui fusionne dans le tronc, fabrique les paquets et tient `DECISIONS.md`. Une session qui en rejoint une autre prend un autre rôle (`chercheur`, `relecteur`) et le dit à l'opérateur sur le canal général.
+- Émetteurs : `integrateur` (la session principale), `chercheur`, `relecteur` (revue froide), `actions`, `operateur`, `agent`. Depuis D-306, `cursor` et `glm` ne sont plus utilisés (tous les exécutants sont des sessions Claude). Entre sessions Claude, le canal de travail est `send_message` (voir `CLAUDE.md`, § Hub) ; le hub reste le journal public. **Une seule session tient le rôle « intégrateur »** : c'est elle qui fusionne dans le tronc, fabrique les paquets et tient `DECISIONS.md`. Une session qui en rejoint une autre prend un autre rôle (`chercheur`, `relecteur`) et le dit à l'opérateur sur le canal général.
 - Le relais Telegram est décrit dans `hub/telegram/INSTALLATION.md` (déjà installé).
 
-## 3. Où en est le projet (28/10/2026, fin de journée)
-- **Version de test en terrain : 4.9.5.23** (tronc `claude/50-test17`). La deuxième passe reste **en ombre** (`passeDifferesDefaut.ecriture:false`). Décisions récentes : D-250 à D-252, **D-253** (Cursor reçoit la même confiance que Claude, données comprises).
-- **Réseau d'IA** : hub opérationnel (canal général : PR n° 7, branche `hub/journal`). Chantiers de Cursor **fusionnés** : CH-001, CH-003 (vitesse de relecture : la lecture du nuage porte 81 % du temps, aucun gain sans changer une décision), CH-004, CH-005, CH-006, CH-007 (différés : 79 sur 1 344 cibles, 5,9 % ; 28 « poserait » de la passe ramèneraient à 3,8 %), CH-008 (les trois tas restants : aucun levier dans le budget D-223), CH-009 (précision de la v6 : 9 poses du lot jugées contre l'Écho seulement, 6 sur 9 à 10 mm ou moins). **Cursor a atteint sa limite d'usage** : ses chantiers sont suspendus jusqu'au renouvellement.
-- **Chantiers ouverts** : **CH-002** (interface de Signal, PR n° 8) : audit et maquette HTML livrés, **maquette Figma en cours** (fichier de clé `ZrK16dO2MGOQp9lufe7lwF` : Fondations, Composants, 22 écrans sombre et clair déjà dessinés ; manquent la correction « Fil d'Ariane » et le prototype de mouvement) ; **CH-010** (PR n° 16) : recherche UX/UI et trois directions de maquettes dans Figma, ticket à jour pour une **session Claude dédiée** (la première, `session_01Td4bNoirpbBaTgb8wNkB7i`, a été interrompue au démarrage faute de pouvoir fonctionner sans demande d'autorisation : à relancer depuis une session en mode « auto »).
-- **Objectifs** (`fiches/RESEAU_IA.md` § 6) : (1) différés sous 5 % puis 3 % ; (2) interface ; (3) vitesse de la relecture ; (4) écriture de la deuxième passe : aucun développement, réouverture par l'opérateur à 125 « poserait » jugés (27 au 27/10). **Budget** : 30 % du quota hebdomadaire.
-- **Analyses de lots** : tous les exports et les détails par cut sont dans `banane-data` (`collections/`, `outils/analyse-lots/`, y compris `cursor-CH-003` et `cursor-CH-009`).
-
-## 3 bis. Reprise du 28/10 (session principale n° 2)
-- Rôle d'intégrateur pris (annonce sur le canal général), abonnée aux PR 7, 8, 16. Sessions filles en mode auto : CH-010 (`session_01Td4bNpScYTtA2v5YNNUUje`) et CH-002 phase 1c (`session_01Td4bNkMBVxeJsb1y4DjCRh`).
-- CH-011 fusionné (6faca8a) : `tools/juger-lot.cjs` (tableau standard d'un lot contre l'Écho, `fiches/JUGER_LOT.md`). Mesuré : sur les parties 0 et 1, 539 et 319 posés sur 558 et 352 sont « sans Écho » (16 et 24 jugés) : la séance Écho des cuts posés lève ce goulet.
-- Design en pause (D-257) : maquettes CH-010 et CH-002 phase 1c rejetées, rien de fusionné, aucun code de Signal.
-- Consigne de séance Écho des cuts posés : `consignes/seance-terrain-echo-cuts-poses-2026-10-28.md`.
-- Retrait du prénom de l'opérateur : abandonné par l'opérateur (D-254), plus rien à faire.
+## 3. Où en est le projet (10/11/2026)
+- **Dernier paquet livré : « Vision 11 »** (build `30bb2cd`, tronc `claude/50-test17`), version sans nouveauté (D-317) : préchauffage à 4 chargements à la fois, plafond de 256 Mo par opération, corrections de la relecture CH-092 et de la maquette CH-095. La deuxième passe **écrit** dans le réglage livré (`passeDifferesDefaut` : `ecriture:true`, `ecritureMax:10`, D-259). État détaillé : `LIRE_EN_PREMIER.md` (section du haut) et `CHANGELOG.md`.
+- **Organisation** : l'intégrateur est une session Claude (D-303) ; tous les exécutants sont des sessions Claude filles (D-306), une par ticket `chantiers/CH-NNN.md`, sur une branche `chantier/CH-NNN`. Elles livrent les changements des fichiers protégés sous forme de `.patch` dans `chantiers/CH-NNN/` ; l'intégrateur les applique, refait les preuves (essais ciblés, garde de pose, parité de la relecture), puis lance une fois par version le verify et la maquette.
+- **Chantiers** : intégrés depuis le 08/11 : CH-077 à CH-090, CH-092, CH-095. Prêts, à appliquer pour « Vision 12 » (accord écrit D-318) : CH-091 puis CH-094 (deux patchs de `src/engine.js`). En cours : CH-093 (préchauffage au passage à la relecture, nouveauté reportée).
+- **Leçon des 08 au 10/11** : cinq versions du préchauffage ont été corrigées par le lot de terrain suivant. Depuis CH-095 la maquette joue deux pannes réelles de Potree ; un défaut du préchauffage se cherche d'abord là (`tests/esv-maquette/ch095-*.test.cjs`). La suite de la maquette tourne à deux fichiers à la fois (charge).
+- **Analyses de lots** : exports et bilans dans `banane-data` (`collections/`, `outils/analyse-lots/`), par `node tools/bilan-lot.cjs`.
+- **Limite d'usage** : plusieurs sessions sur le modèle le plus fort épuisent la fenêtre de 5 heures en un peu plus d'une heure (mesuré le 10/11 : cinq filles et trois relecteurs). Garder le modèle économique pour les balayages, le plus fort pour concevoir ou relire.
 
 ## 4. Ce qui est en attente
-- **De l'opérateur** : (a) choisir le bouton plein après un arrêt au milieu d'un lot (recommandation de l'intégrateur : « Continuer ce lot ») et le caractère de mouvement (Sobre, Vivant, Signature) avant la phase 2 de CH-002 (le code de Signal) ; (b) décider de la **deuxième passe** : c'est le seul levier connu vers 5 % (28 « poserait », 25 à 20 mm ou moins, aucun à plus de 50 mm), mais son écriture est coupée tant que 125 « poserait » ne sont pas jugés ; (c) vouloir ou non le repointage de 60 cuts (`fiches/PROTOCOLE_REPOINTAGE.md`, étape B ; l'étape A est faite : base de la v6 à 5 et 10 mm, d'un échantillon trop petit) ; (d) installer l'application GitHub de Cursor avec écriture sur `banane-data` (facultatif : l'intégrateur dépose les données lui-même) ; (e) poser les secrets `ARIANE_MOTIFS_INTERDITS` et `ARIANE_MOTIFS_INTERDITS_CASSE` (réglages du dépôt et du relais), remplacer la valeur provisoire du secret du webhook, donner une échéance au jeton d'accès ; (f) essai Edge du glisser de la molette (`chantiers/CH-007/propositions/deplacement-vue.patch`, non appliqué).
-- **De l'intégrateur** : relancer la session UX/UI de CH-010 (ou reprendre CH-002 phase 1c) depuis une session en mode « auto » ; rédiger la consigne de séance qui demande une observation Écho des **cuts posés par le lot** (le goulet de la mesure de précision) ; tenir `DECISIONS.md` à jour (D-259 en cas de cible de précision chiffrée).
+- **De l'opérateur** : un lot de terrain avec « Vision 11 » et les deux relevés de console (lecture seule) ; sa revue de la liste de `fiches/AUDIT_PROJET_2026-11-10.md` (points non corrigés d'office : fichiers protégés, suppressions, règles de `CLAUDE.md` périmées).
+- **De l'intégrateur** : appliquer CH-091 puis CH-094, preuves, « Vision 12 » ; intégrer CH-093 quand il est PRÊT ; analyser le lot « Vision 11 » (le préchauffage tient-il jusqu'au bout, attente des coupes voisines) ; tenir `DECISIONS.md`.
 
 ## 5. Règles de session
 - Modèle économique par défaut ; le plus fort seulement pour concevoir ou relire, en le disant.
 - Pas d'agent pour lire un journal : un script. Un rapport fait une page.
-- Jamais de nom d'opérateur, de code projet ESV, d'UUID ni de capture dans le dépôt de code ; les exports restent dans `banane-data` ; Cursor peut les lire et les analyser (D-253), aucun autre service externe.
-- Pas de réécriture d'historique, pas de SKIP, pas de passe en écriture sans décision écrite de l'opérateur.
+- Jamais de nom d'opérateur, de code projet ESV, d'UUID ni de capture dans le dépôt de code ; les exports restent dans `banane-data`, lus par les seules sessions Claude du projet ; depuis D-306, aucun service externe.
+- Pas de réécriture d'historique, pas de SKIP ; aucun fichier protégé, réglage de pose ou de validation, ni écriture dans ESV ne change sans accord écrit de l'opérateur (la passe écrit, plafonnée à 10 cuts par lot : lever ce plafond demande sa décision).
 - Les dossiers de travail d'une session précédente (`scratchpad`, `wt/`) n'existent pas : tout ce qui compte est dans le dépôt.
 
 ## 6. Lancer une nouvelle session principale : quand, comment, avec quoi
@@ -66,7 +60,7 @@ Les sessions filles ne peuvent pas être plus permissives que leur parent : une 
 - **Dépôts** : `banane` (branche de travail `claude/50-test17`) et `banane-data` (branche `claude/execute-prompt-00-18ra5a`), accès en écriture sur les deux.
 - **Connecteurs** : GitHub (les deux dépôts), **Figma** (équipe de l'opérateur), et les outils de sessions (abonnement aux PR, rappels, création de sessions filles).
 - **Skills** : conception avant code, essai rouge puis vert, diagnostic, preuve avant d'affirmer, relecture de diff, les skills Figma (`figma-use`, `figma-generate-design`, `figma-generate-library`), `artifact-design` pour les pages privées.
-- **Premier message à coller** : le contenu de `fiches/DEMARRAGE_SESSION_PRINCIPALE.md` (sous la ligne de séparation), tel quel.
+- **Premier message à coller** : « lis `fiches/PASSATION_SESSION.md` puis reprends le rôle d'intégrateur ». (`fiches/DEMARRAGE_SESSION_PRINCIPALE.md` date du 28/10 : il cite des fichiers disparus et un chantier de design arrêté par D-257 ; ne plus le coller.)
 - L'ancienne session principale se désabonne des PR et ne pousse plus rien dès que la nouvelle a annoncé qu'elle prend le rôle.
 
 

@@ -41,6 +41,4 @@ test('avec le patch : demande `loin` (11, 40) à l\'observateur, depuis le cut c
  const j=await jouer(()=>({}));const d=j.demandes.find(x=>'loin' in x);
  assert.ok(d,'une demande loin : '+JSON.stringify(j.demandes));assert.equal(d.loin,11);assert.equal(d.max,40);assert.equal(d.cut,100);
 });
-test('sans le patch (tronc) : la demande part sans `loin`, aucune opération lointaine',integre?{skip:'patch CH-088 intégré au tronc'}:opts,async()=>{
- fichier=SRC;try{const j=await jouer(()=>({}));assert.equal(j.demandes.filter(x=>'loin' in x).length,0);assert.equal(j.evts.filter(e=>e.kind==='prechauffage-loin').length,0);}finally{fichier=copie;}
-});
+/* Audit du 10/11 : le cas « sans le patch (tronc) » est retiré : le patch CH-088 est dans le tronc depuis Vision 9, le cas était sauté à chaque passage. */
