@@ -21,7 +21,7 @@ const path=require('node:path'),fs=require('node:fs'),http=require('node:http');
 const N=require('../tests/esv-maquette/navigateur.cjs');
 const racine=N.racine;
 const MAQUETTE_EPT='ept=1&eptHier=1&eptForme=commun&eptPas=7&eptMemoire=1&eptDecode=40';
-function args(argv){const o={cuts:330,pas:50,debut:100,latence:30,'sans-extension':0,relecture:1,instantanes:0,json:null,maquette:MAQUETTE_EPT,extension:racine,delai:3600000,port:9338,marge:60,limite:'300000'};
+function args(argv){const o={cuts:330,pas:50,debut:100,latence:30,'sans-extension':0,relecture:1,instantanes:0,json:null,maquette:MAQUETTE_EPT,extension:racine,delai:3600000,port:9338,marge:60,brut:null,limite:'300000'};
  for(let i=0;i<argv.length;i++){const a=argv[i];if(a.startsWith('--'))o[a.slice(2)]=argv[++i];}
  for(const k of ['marge','cuts','pas','debut','latence','sans-extension','relecture','instantanes','delai','port'])o[k]=Number(o[k]);
  o.sansExtension=o['sans-extension']===1;o.extension=path.resolve(o.extension);return o;}
@@ -41,9 +41,9 @@ async function cible(port,filtre){for(let i=0;i<40;i++){const l=await jsonHttp(p
 /* Tas après deux ramasse-miettes forcés (le second ramasse ce que le premier a rendu ramassable : finaliseurs, WeakRef). */
 async function tasApresGC(c){await c.envoyer('HeapProfiler.collectGarbage');await dormir(100);await c.envoyer('HeapProfiler.collectGarbage');const h=await c.envoyer('Runtime.getHeapUsage');return {utiliseMo:Mo(h.usedSize),totalMo:Mo(h.totalSize)};}
 /* Instantané du tas résumé par constructeur : {nom: {n, octets}} (taille propre). */
-async function resumeInstantane(c){let morceaux=[];const f=p=>morceaux.push(p.chunk);c.sur('HeapProfiler.addHeapSnapshotChunk',f);
+async function resumeInstantane(c,fichier=null){let morceaux=[];const f=p=>morceaux.push(p.chunk);c.sur('HeapProfiler.addHeapSnapshotChunk',f);
  await c.envoyer('HeapProfiler.enable');await c.envoyer('HeapProfiler.collectGarbage');await c.envoyer('HeapProfiler.takeHeapSnapshot',{reportProgress:false});
- const s=JSON.parse(morceaux.join(''));morceaux=[];const m=s.snapshot.meta,F=m.node_fields.length,iT=m.node_fields.indexOf('type'),iN=m.node_fields.indexOf('name'),iS=m.node_fields.indexOf('self_size');
+ const brut=morceaux.join('');if(fichier)fs.writeFileSync(fichier,brut);const s=JSON.parse(brut);morceaux=[];const m=s.snapshot.meta,F=m.node_fields.length,iT=m.node_fields.indexOf('type'),iN=m.node_fields.indexOf('name'),iS=m.node_fields.indexOf('self_size');
  const types=m.node_types[0],r={};for(let i=0;i<s.nodes.length;i+=F){const t=types[s.nodes[i+iT]],nom=t==='object'||t==='native'||t==='closure'?s.strings[s.nodes[i+iN]]:'('+t+')';
   const k=t==='closure'?'(closure) '+nom:nom;const e=r[k]||(r[k]={n:0,octets:0});e.n++;e.octets+=s.nodes[i+iS];}
  return r;}
@@ -94,7 +94,7 @@ async function banc(options={}){
    /* Référence : la même maquette, navigation par « valider et suivant » (bouton d'ESV imité), une coupe affichée jusqu'à ses nœuds montés. */
    let fait=0;const c0=(await etatMaquette()).chargements;
    while(fait<o.cuts){const avant=(await etatMaquette()).chargements;await esv.evaluate(()=>document.getElementById('O2N3DCutValidate3DRail').click());
-    await esv.waitForFunction(a=>window.__maquette.etat().chargements>a&&window.__maquette.etat().railsPrets,avant,{timeout:30000});
+    try{await esv.waitForFunction(a=>window.__maquette.etat().chargements>a&&window.__maquette.etat().railsPrets,avant,{timeout:30000});}catch{erreurs.push('navigation bloquée après '+fait+' coupes');break;}
     await esv.waitForFunction(()=>window.Potree.numNodesLoading===0,null,{timeout:30000}).catch(()=>{});await dormir(150);
     fait=(await etatMaquette()).chargements-c0;if(fait%o.pas===0)await relever('navigation',fait);}
   }else{
@@ -123,7 +123,7 @@ async function banc(options={}){
    releves.find(r=>r.etiquette==='fin-lot').lot={etat:vue?.batch?.state??null,notice:vue?.notice??null,poses:vue?.batch?.lotPosedCount??null,differes:(vue?.batch?.deferred||[]).length};
   }
   await dormir(3000);await relever('repos',null);
-  if(o.instantanes){instB=await resumeInstantane(cPage);}
+  if(o.instantanes){instB=await resumeInstantane(cPage,o.brut||null);}
   const res={version:manifeste.version,avecExtension:!o.sansExtension,cuts:o.cuts,maquette:o.maquette,limite:o.limiteAppliquee??null,releves,erreurs:erreurs.slice(0,20),nErreurs:erreurs.length,
    instantanes:instA&&instB?diffInstantanes(instA,instB):null,dureeS:Math.round((Date.now()-t0)/1000)};
   if(o.json)fs.writeFileSync(o.json,JSON.stringify(res,null,1));
