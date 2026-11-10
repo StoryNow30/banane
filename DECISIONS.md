@@ -3624,3 +3624,10 @@ Complète D-299 sans la modifier.
 - Fait : demande du deuxième tour écrite avec la compétence de rédaction de prompt (`chantiers/CH-101/tour-2.md`) et envoyée à la session du chantier ; trois propositions (l'actuel fini, deux en rupture), sur les mêmes états, page publiée ; aucune intégration avant le choix écrit de l'opérateur (D-323 tient).
 - À ressortir à la livraison des nouvelles maquettes (demande de l'opérateur) : le dépôt public `https://github.com/expo/exact`.
 - Précision de l'opérateur (même jour), mot pour mot : « Tu n'utilisera pas le repo sans mon autorisation et ne le consultera pas avant, ce sera pour une autre demande. » Le rappel se limite donc à lui redonner l'adresse ; aucune session ne lit ni n'utilise ce dépôt avant son accord.
+
+## D-325 — Deuxième tour de CH-101 jugé trop proche de l'existant ; refonte complète demandée (opérateur, 10/11)
+- Constat de l'opérateur, mot pour mot : « Je trouve que ça ressemble déjà trop à ce qui existe déjà. Quel est l'intérêt de faire un prompt pour me faire des propositions à ceux qui existe déjà ».
+- Cause (intégrateur) : la demande du deuxième tour imposait la même organisation, aucune information retirée et un travail d'apparence seulement ; la rupture y était impossible. Erreur de l'intégrateur, qui avait trop tiré de la réponse « rien, c'est surtout laid ».
+- Ses réponses aux deux questions posées ensuite : liberté : « Refonte complète » (tout peut bouger : disposition, tailles, forme de l'avancement, textes ; l'information secondaire peut passer derrière un clic ; les propositions ne doivent plus ressembler au panneau actuel) ; ce qui doit se voir en premier pendant un lot : « Tout va bien ou non » et « Où en est le lot ».
+- Ce qui tient : D-324 (style « sobre et net » et « système », plus de dessin « métier », pas d'écran chargé), le rôle des boutons, aucune action ajoutée ni supprimée, bouton « SKIP explicite » masqué (D-320), aucune intégration avant son choix écrit (D-323).
+- Fait : demande du troisième tour dans `chantiers/CH-101/tour-3.md`, envoyée à la session du chantier.
