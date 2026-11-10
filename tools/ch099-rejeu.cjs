@@ -304,14 +304,16 @@ function secondeChance(a) {
   const V = new Map();
   for (const l of lireDecisions(a.decisions)) if (l.lot === a.etiquette && l.partie === partie && !l.contrefactuel && l.veriteMm && (l.juge.etat === 'corrige' || l.juge.etat === 'controle') && !l.juge.ecartee) V.set(l.cut, { v: l.veriteMm, controle: l.juge.etat === 'controle', source: 'pose' });
   for (const l of lireDecisions(a.verites)) if (l.lot === a.etiquette && l.partie === partie && !V.has(l.cut)) V.set(l.cut, { v: l.veriteMm, controle: false, source: l.base });
-  const lignes = [], fid = [], bilan = p => ({ cuts: 0, poses: 0, differes: 0, parPasse: 0, juges: 0, justes: 0, moyennes: 0, fautes: 0, jugesDifferes: 0 });
+  const lignes = [], fid = [], bilan = p => ({ cuts: 0, poses: 0, differes: 0, parPasse: 0, juges: 0, justes: 0, moyennes: 0, fautes: 0, jugesDifferes: 0, sansControle: { juges: 0, justes: 0, moyennes: 0, fautes: 0, jugesDifferes: 0 } });
   const B = { temoin: bilan(), rl: bilan() }, levier = { differesParLevier: 0, reposesPasse: 0, reposesAutre: 0, restes: 0, juges: 0, justes: 0, moyennes: 0, fautes: 0, restesJuges: 0, sansControle: { juges: 0, justes: 0, moyennes: 0, fautes: 0 } }, collateral = { changes: 0, juges: 0, mieux: 0, pire: 0, nouvellesFautes: 0 };
   for (const [cut, t] of [...T.cuts].sort((x, y) => x[0] - y[0])) {
     const r = R.cuts.get(cut); if (!r) continue;
     const pt = t.profils[P] || {}, pr = r.profils[P] || {}, v = V.get(cut), et = pt.etat === 'pose' ? erreurMm(pt.decal, v && v.v) : null, er = pr.etat === 'pose' ? erreurMm(pr.decal, v && v.v) : null;
-    const parLevier = contient(pr, o => o.rechercheLarge && o.rechercheLarge.etat === 'differer');
+    /* Différé par le levier à un moment du rejeu : à l'étage de la chaîne (le profil « base » a la même chaîne et en garde la trace quand la passe a reposé le cut
+     * ensuite), à la pose de la GCV2 ou à celle de la passe. Un cut qui change sans cela est un effet INDIRECT (ses appuis ou ses voisins ont changé). */
+    const parLevier = contient(pr, o => o.rechercheLarge && o.rechercheLarge.etat === 'differer') || contient(r.profils.base || {}, o => o.rechercheLarge && o.rechercheLarge.etat === 'differer');
     for (const [nom, p, e] of [['temoin', pt, et], ['rl', pr, er]]) { const b = B[nom]; b.cuts++; if (p.etat === 'pose') { b.poses++; if (p.passe2) b.parPasse++; } else b.differes++;
-      if (v) { if (p.etat === 'pose' && e !== null) { b.juges++; b[classe(e) === 'juste' ? 'justes' : classe(e) === 'moyenne' ? 'moyennes' : 'fautes']++; } else b.jugesDifferes++; } }
+      if (v) for (const x of v.controle ? [b] : [b, b.sansControle]) { if (p.etat === 'pose' && e !== null) { x.juges++; x[classe(e) === 'juste' ? 'justes' : classe(e) === 'moyenne' ? 'moyennes' : 'fautes']++; } else x.jugesDifferes++; } }
     /* Fidélité (M5) : le profil « base » du témoin contre la pose réelle du lot, quand les deux posent. */
     const pb = t.profils.base || {};
     if (t.reel && t.reel.pose && t.reel.decal && pb.etat === 'pose' && pb.decal) fid.push(Math.max(...SIDES.map(s => Math.hypot(pb.decal[s][1] - t.reel.decal[s][1], pb.decal[s][2] - t.reel.decal[s][2]))));
@@ -320,11 +322,13 @@ function secondeChance(a) {
       if (pr.etat === 'pose') { if (pr.passe2) levier.reposesPasse++; else levier.reposesAutre++;
         if (er !== null) { const c = classe(er) === 'juste' ? 'justes' : classe(er) === 'moyenne' ? 'moyennes' : 'fautes'; levier.juges++; levier[c]++; if (!v.controle) { levier.sansControle.juges++; levier.sansControle[c]++; } } }
       else { levier.restes++; if (v) levier.restesJuges++; } }
-    else if (JSON.stringify([pt.etat, pt.decal || null]) !== JSON.stringify([pr.etat, pr.decal || null])) { role = 'collateral'; collateral.changes++;
+    else if (JSON.stringify([pt.etat, pt.decal || null]) !== JSON.stringify([pr.etat, pr.decal || null])) { role = 'indirect'; collateral.changes++;
       if (v && (et !== null || er !== null)) { collateral.juges++; if (et !== null && er !== null) { if (er < et - 2) collateral.mieux++; else if (er > et + 2) collateral.pire++; } if (er !== null && er > FAUTE_MM && !(et !== null && et > FAUTE_MM)) collateral.nouvellesFautes++; } }
-    if (role || v) lignes.push({ lot: a.etiquette, partie, cut, role, reelPose: !!(t.reel && t.reel.pose), verite: v ? v.source : null, controle: v ? v.controle : null,
-      temoin: { etat: pt.etat, source: pt.source ?? null, passe: pt.passe2 ? pt.passe2.passe ?? true : null, erreurMm: et }, rl: { etat: pr.etat, source: pr.source ?? null, passe: pr.passe2 ? pr.passe2.passe ?? true : null, motifPasse: pr.passe2 && pr.etat !== 'pose' ? pr.passe2.motif ?? null : null, erreurMm: er } });
+    if (role || v || (pt.passe2 && pt.etat === 'pose') || (pr.passe2 && pr.etat === 'pose')) lignes.push({ lot: a.etiquette, partie, cut, role, reelPose: !!(t.reel && t.reel.pose), verite: v ? v.source : null, controle: v ? v.controle : null,
+      temoin: { etat: pt.etat, source: pt.source ?? null, passe: pt.passe2 && pt.etat === 'pose' ? pt.passe2.passe ?? true : null, erreurMm: et }, rl: { etat: pr.etat, source: pr.source ?? null, passe: pr.passe2 && pr.etat === 'pose' ? pr.passe2.passe ?? true : null, motifPasse: pr.passe2 && pr.etat !== 'pose' ? pr.passe2.motif ?? null : null, erreurMm: er } });
   }
+  /* Plafond d'écriture de la deuxième passe (D-259 : 10 cuts par lot) : rang de chaque pose de la passe, passe 1 puis passe 2, dans l'ordre des cuts. */
+  for (const nom of ['temoin', 'rl']) { const Lp = lignes.filter(l => l[nom].etat === 'pose' && l[nom].passe).sort((x, y) => x[nom].passe - y[nom].passe || x.cut - y.cut); Lp.forEach((l, i) => { l[nom].rangPasse = i + 1; }); B[nom].passeAuDelaDuPlafond = Math.max(0, B[nom].parPasse - 10); }
   fid.sort((x, y) => x - y);
   const q = p => fid.length ? Math.round(100 * fid[Math.min(fid.length - 1, Math.floor(p * fid.length))]) / 100 : null;
   const res = { etiquette: a.etiquette, partie, lot: T.entete.lot, profil: P, verites: V.size, temoin: B.temoin, rl: B.rl, levier, collateral, fidelite: { n: fid.length, medianeMm: q(0.5), p95Mm: q(0.95), maxMm: fid.length ? Math.round(100 * fid[fid.length - 1]) / 100 : null, plusDe2mm: fid.filter(x => x > 2).length } };
