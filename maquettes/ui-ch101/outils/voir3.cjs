@@ -23,6 +23,7 @@ for(const th of ['clair','sombre'])for(const ta of [360,600]){await p.click('#th
     if(k<4.5)out.push(nom+' CONTRASTE '+(e.className||e.tagName)+' '+k.toFixed(2));}
    /* chevauchements verticaux entre frères du corps */
    const corps=P.querySelector('[class$="-corps"]');if(corps&&corps.scrollHeight>corps.clientHeight+1)out.push(nom+' CORPS TROP HAUT de '+(corps.scrollHeight-corps.clientHeight));
+   }
   return [...new Set(out)];});
  bilan.push(`== ${th} ${ta} : ${r.length?'\n  '+r.join('\n  '):'rien'}`);}
 console.log('erreurs',err);console.log(bilan.join('\n'));await b.close();})();
