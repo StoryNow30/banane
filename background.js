@@ -1446,7 +1446,10 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
   * l'étape « apply » et efface la proposition ; reprendre relançait la boucle
   * sur une proposition absente. Sans proposition, la reprise recommence le
   * cut par sa capture. */
- if(engine.s.batch?.step==='apply'&&!engine.s.proposal&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
+ /* CH-096 (défaut 1) : même remise pour l'étape « validate ». Une validation transmise sans résultat, puis archivée, laisse
+  * l'étape « validate » sans proposition ni pose appliquée ; la boucle y lisait une proposition absente (lot en ERROR). Le cut
+  * archivé reste bloqué en écriture (refus ci-dessus s'il est encore affiché) : seul le cut suivant est repris, par sa capture. */
+ if(/*CH-096-1*/['apply','validate'].includes(engine.s.batch?.step)&&!engine.s.proposal&&(engine.s.batch.step==='apply'||!engine.s.applied)&&!engine.s.intent&&!engine.s.reconcileRequired)engine.s.batch.step='capture';
  if(!garde())return false;
  await gardeRailsCapture(affiche);
  if(!garde())return false;
