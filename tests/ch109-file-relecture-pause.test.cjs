@@ -55,3 +55,22 @@ test('réglé : une pause demandée par l’opérateur (« Pause ») n’est jam
   const p = enPause(M); p.pauseRaison = 'mic'; await attendre(500);
   assert.equal(M.etat().etat, 'relecture'); assert.equal(p.etat, 'en-pause');
 });
+
+/* CH-109 (C) — LE CHANGEMENT DE PARTIE APRÈS UN F5 ATTEND QU'ESV REVIENNE, dans la borne `changementBorneMs`, au lieu de s'arrêter « esv-muet ». */
+test('C : ESV muet au moment du changement de partie (page en rechargement), revenu dans la borne : la file change de partie et lance le lot suivant', async () => {
+  const M = montage(); await M.vie(); await M.demarrer(2);
+  await M.jusqua(() => M.etat()?.partie?.lotId, 2000, 'lot'); M.clore(); await M.jusqua(() => M.etat()?.etat === 'relecture', 3000, 'relecture');
+  M.adapter.muet = true; setTimeout(() => { M.adapter.muet = false; }, 250);
+  M.relire();
+  await M.jusqua(() => M.etat()?.etat === 'lot' && M.etat()?.k === 1 && M.etat()?.partie?.lotId, 4000, 'lot de la partie 24');
+  assert.equal(M.lots.at(-1).scope.part, 24);
+  const a = M.journal('file-parties-esv-attente'); assert.equal(a.length, 1); assert.equal(a[0].issue, 'revenu');
+});
+test('C : ESV muet tout au long de la borne : arrêt « esv-muet » comme avant, après la borne', async () => {
+  const M = montage(); await M.vie(); await M.demarrer(2);
+  await M.jusqua(() => M.etat()?.partie?.lotId, 2000, 'lot'); M.clore(); await M.jusqua(() => M.etat()?.etat === 'relecture', 3000, 'relecture');
+  M.adapter.muet = true; const t = Date.now(); M.relire();
+  await M.jusqua(() => M.etat()?.etat === 'arret', 4000, 'arrêt');
+  assert.equal(M.etat().motifFin.code, 'esv-muet'); assert.ok(Date.now() - t >= FICHE.changementBorneMs - 50, 'après la borne : ' + (Date.now() - t));
+  assert.equal(M.journal('file-parties-esv-attente')[0]?.issue, 'muet');
+});

@@ -4234,7 +4234,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
  const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
  if(!retour)await fileEvenement({type:'changement-envoye',vers});
- const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour});
+ const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour,attendreEsv:true});   /* CH-109 (C) : après un F5, ESV revient dans la borne */
  if(X.quitte)return;
  if(X.ok)return retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:X.r.identity.cut});
  if(X.journalEchec)journalerSimple('file-parties-changement-echec',{vers,retour,motif:X.motif,detail:String(X.detail||'').slice(0,300),tentatives:X.tentatives,selecteurAvant:X.selecteurAvant,selecteurApres:X.selecteurApres,dureeMs:Date.now()-X.t0});
@@ -4246,7 +4246,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  * la preuve (partie lue dans la page, rails présents, onglet ré-équipé), les bornes, un événement par tentative (`typeTentative`), l'arrêt prudent si ESV
  * ouvre une autre partie. `attendu()` faux : on quitte sans rien conclure. Rend {ok, r} ou {ok:false, motif, detail, journalEchec, selecteurApres},
  * avec toujours {tentatives, selecteurAvant, t0} ; ne touche à aucun état de la file ni de la correction. */
-async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement'}){
+async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement',attendreEsv=false}){
  const t0=Date.now(),tentatives=[];let selecteurAvant=null;
  const sel=x=>x?{status:x.status??null,current:entierOuNul(x.current),n:Array.isArray(x.parts)?x.parts.length:null,vers:Array.isArray(x.parts)?x.parts.some(p=>p?.part===vers):null}:null;
  const relever=async()=>{try{return sel((await call('ping',{contrat:true}))?.selecteurParties);}catch{return null;}};
@@ -4256,7 +4256,22 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  const pret=r=>r?.identity?.part===vers&&!!r?.rails?.left&&!!r?.rails?.right;
  let lu=null;try{lu=await readState();}catch{/* lu plus bas */}
  if(pret(lu))return ok(lu);
- let ping=null;try{ping=await call('ping',{contrat:true});}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
+ let ping=null;try{ping=await call('ping',{contrat:true});}catch(x){
+  /* CH-109 (C) : terrain du 11/11 (partie 16) : un F5 pendant la relecture, puis le changement de partie trouve la page en rechargement et la file
+   * s'arrêtait « esv-muet » 13 s plus tard. Avec `attendreEsv` (changement de la file) : ESV muet ou en rechargement, Ariane attend l'onglet chargé, le
+   * ré-équipe (aucune commande ESV) et relit, dans la borne `changementBorneMs` ; au-delà, l'arrêt « esv-muet » d'avant. Journal `file-parties-esv-attente`. */
+  if(!attendreEsv)return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);
+  const tA=Date.now(),finA=tA+R.changementBorneMs;let derniere=x,essais=0;
+  while(!ping&&Date.now()<finA){if(!attendu())return fin({quitte:true});await attendre(R.pollMs);
+   let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+   if(!tab)break;
+   if(tab.status&&tab.status!=='complete')continue;
+   essais++;try{await equiperOnglet(selectedTab);}catch(y){derniere=y;if(y?.definitif)break;continue;}
+   try{ping=await call('ping',{contrat:true});}catch(y){derniere=y;}}
+  journalerSimple('file-parties-esv-attente',{vers,issue:ping?'revenu':'muet',ms:Date.now()-tA,essais,motif:ping?null:String(derniere?.message||derniere).slice(0,160)});
+  if(!ping)return echec('esv-muet',`ESV ne répond pas (${String(derniere?.message||derniere).slice(0,160)})`);
+  try{lu=await readState();}catch{lu=null;}
+  if(pret(lu))return ok(lu);}
  selecteurAvant=sel(ping?.selecteurParties);
  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
  const de0=lu?.identity?.part??null;
