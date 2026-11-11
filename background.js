@@ -4077,7 +4077,9 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    if(sv){const debut=sel.cuts[sv.debut]?.cut??c.cut,ligneDe=`${pluriel(sv.vides,'cut')} de suite sans point, dès le cut ${debut}`;
     relectureJournal('relecture-points-vides',{etape:'detecte',action:!p.reprise?'arret':sv.recharger?'recharger':'pause',identity:{part:partie,cut:debut},vides:sv.vides,seuil:sv.seuil,
      cuts:sel.cuts.slice(sv.debut,ci+1).map(x=>x.cut),rechargements:sv.rechargements},p);
-    if(!p.reprise){stop(`Relecture arrêtée au cut ${c.cut} : ESV n’affiche plus les points (${ligneDe}). Rien n’a été écrit sur ces cuts. Recharge ESV (F5) puis relance la relecture.`);break;}
+    /* Sans pause permise : arrêt au premier cut vide ; les cuts de la série ne comptent pas comme relus, le message dit ce qui reste à relire. */
+    if(!p.reprise){const reste=sel.cuts.slice(sv.debut).filter(x=>!plagesSautees.has(x.plage));p.faits=sv.faitsAvant;
+     stop(`Relecture arrêtée au cut ${debut} : ESV n’affiche plus les points (${ligneDe}). ${pluriel(reste.length,'cut')} non relu${reste.length>1?'s':''}, du cut ${debut} au cut ${reste.at(-1)?.cut??debut} ; rien n’a été écrit sur ces cuts. Recharge ESV (F5) puis relance la relecture.`);break;}
     p.faits=sv.faitsAvant;p.pointsVidesMessage=sv.recharger?`ESV n’affiche plus les points (${ligneDe}) : Ariane recharge la page ESV, puis reprend la relecture au cut ${debut}`
      :`ESV n’affiche plus les points (${ligneDe}${sv.rechargements?', même après le rechargement':''}) : relecture gardée en pause au cut ${debut}. Recharge ESV (F5) puis reprends la relecture`;
     p.pointsVidesRecharger=sv.recharger;issue='pause-points';indexPause=sv.debut;break;}}

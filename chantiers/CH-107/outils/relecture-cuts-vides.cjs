@@ -4,7 +4,7 @@
  * relecture-cuts-vides.cjs — CH-107 : LA RELECTURE CUT PAR CUT, CAPTURES VIDES COMPRISES. Lecture seule, sur un export de lot (zips, dossier ou
  * journaux ariane-journal-v4-*.json ; lecture et fusion des volumes par tools/bilan-lot.cjs).
  *
- *   node chantiers/CH-107/outils/relecture-cuts-vides.cjs <dossier ou zips d'un export> [...] [--min 3] [--json] [--cuts]
+ *   node chantiers/CH-107/outils/relecture-cuts-vides.cjs <dossier ou zips d'un export> [...] [--min 3] [--peu 100] [--json] [--cuts]
  *
  * Pour chaque partie relue (événements `relecture-ombre`, rangés dans le temps) :
  *  - par cut : capture vide ou non, points de la première capture (près des deux rails), durée du cut, action (`visite`, `corrige`,
@@ -12,6 +12,8 @@
  *    la correction a été écartée ; avec `--cuts`, le tableau de tous les cuts (sinon seulement ceux des séries et les cuts corrigés) ;
  *  - les SÉRIES de cuts vides consécutifs (au moins `--min`, 3 par défaut = le seuil de `lot.serieCapturesVides`), avec leur durée (du début
  *    du premier cut à la fin du dernier) et leur cadence ;
+ *  - les cuts PEU DENSES (première capture avec au moins 1 point et moins de `--peu` points, 100 par défaut = `minPoints` de `lot.recaptureVide`),
+ *    à part, avec leurs points par rail et l'action prise : une correction écrite sur une capture à moitié chargée s'y voit ;
  *  - les comptes qui répondent à la question de l'opérateur : corrections écrites sur un cut à capture vide (doit être 0), corrections écrites
  *    sur un cut peu dense (points de la première capture, le plus petit), pauses et rechargements de la garde CH-107 s'ils existent.
  * Définitions : un cut est « vide » quand toutes ses captures sont vides (`skipOmbre.capturesVides === skipOmbre.captures`, au moins une) ;
@@ -34,14 +36,15 @@ function ligneCut(e) {
   const s = e.skipOmbre && typeof e.skipOmbre === 'object' ? e.skipOmbre : null;
   const captures = s ? ent(s.captures) : null, capturesVides = s ? ent(s.capturesVides) : null;
   const p = s && s.points && typeof s.points === 'object' ? s.points : null;
-  const points = p && num(p.left) !== null && num(p.right) !== null ? p.left + p.right : null;
+  const gauche = p ? num(p.left) : null, droit = p ? num(p.right) : null;
+  const points = gauche !== null && droit !== null ? gauche + droit : null;
   const totalMs = e.durees ? num(e.durees.totalMs) : null;
   const fin = num(e._ms) !== null && e._ms !== Infinity ? e._ms : null;
   return {
     partie: ent(e.identity && e.identity.part), cut: ent(e.identity && e.identity.cut),
     vide: captures !== null && captures > 0 && capturesVides === captures,
     premiereVide: points === 0 || (captures !== null && captures > 0 && capturesVides !== null && capturesVides > 0 && points === null),
-    captures, capturesVides, points,
+    captures, capturesVides, points, gauche, droit,
     totalMs, captureMs: e.durees ? num(e.durees.captureMs) : null,
     debutMs: fin !== null && totalMs !== null ? fin - totalMs : fin, finMs: fin,
     action: propre(e.action, 30), regleAurait: e.critere && typeof e.critere === 'object' ? e.critere.corriger === true : null,
@@ -50,7 +53,7 @@ function ligneCut(e) {
   };
 }
 
-function analyser(evenements, { min = 3 } = {}) {
+function analyser(evenements, { min = 3, peu = 100 } = {}) {
   const ev = evenements.filter(e => e && typeof e === 'object');
   const parties = new Map();
   const partieDe = n => { if (!parties.has(n)) parties.set(n, { partie: n, cuts: [], pauses: [], pointsVides: [] }); return parties.get(n); };
@@ -75,25 +78,28 @@ function analyser(evenements, { min = 3 } = {}) {
     });
     const corriges = P.cuts.filter(c => c.action === 'corrige');
     const pts = corriges.map(c => c.points).filter(v => v !== null);
+    const peuDenses = P.cuts.filter(c => c.points !== null && c.points > 0 && c.points < peu);
     sortie.push({
       partie: P.partie, cutsRelus: P.cuts.length,
       cutsVides: P.cuts.filter(c => c.vide).length, premiereVide: P.cuts.filter(c => c.premiereVide).length,
       corriges: corriges.length, corrigesSurVide: corriges.filter(c => c.vide || c.premiereVide).length,
       pointsMinCorrige: pts.length ? Math.min(...pts) : null,
       refus: P.cuts.filter(c => c.action === 'correction-refusee' || c.action === 'correction-incertaine').length,
+      peuDenses: peuDenses.length, corrigesPeuDenses: peuDenses.filter(c => c.action === 'corrige').length,
+      listePeuDenses: peuDenses.map(c => ({ cut: c.cut, points: c.points, gauche: c.gauche, droit: c.droit, action: c.action, regleAurait: c.regleAurait, raisonAction: c.raisonAction })),
       regleAuraitSurVide: P.cuts.filter(c => (c.vide || c.premiereVide) && c.regleAurait).length,
       series: longues, pauses: P.pauses, pointsVides: P.pointsVides, cuts: P.cuts,
     });
   }
-  return { min, parties: sortie };
+  return { min, peu, parties: sortie };
 }
 
 function markdown(r, { tousLesCuts = false } = {}) {
   const L = ['# Relecture cut par cut : captures vides (CH-107)', '',
-    `Série : au moins ${r.min} cuts vides de suite. « Vide » : toutes les captures du cut sans point ; « 1re vide » : la première l'est.`, ''];
+    `Série : au moins ${r.min} cuts vides de suite. « Vide » : toutes les captures du cut sans point ; « 1re vide » : la première l'est. « Peu dense » : 1 à ${r.peu - 1} points à la première capture.`, ''];
   if (!r.parties.length) { L.push('Aucun cut relu dans ce journal.'); return L.join('\n') + '\n'; }
-  L.push('| Partie | Cuts relus | Vides | 1re vide | Corrigés | Corrigés sur un cut vide | Points min. d’un cut corrigé | Refus | Séries |', '|---|---|---|---|---|---|---|---|---|');
-  for (const p of r.parties) L.push(`| ${p.partie ?? '?'} | ${p.cutsRelus} | ${p.cutsVides} | ${p.premiereVide} | ${p.corriges} | ${p.corrigesSurVide} | ${p.pointsMinCorrige ?? '–'} | ${p.refus} | ${p.series.length} |`);
+  L.push('| Partie | Cuts relus | Vides | 1re vide | Peu denses | Corrigés | Corrigés sur un cut vide | Corrigés peu denses | Points min. d’un cut corrigé | Refus | Séries |', '|---|---|---|---|---|---|---|---|---|---|---|');
+  for (const p of r.parties) L.push(`| ${p.partie ?? '?'} | ${p.cutsRelus} | ${p.cutsVides} | ${p.premiereVide} | ${p.peuDenses} | ${p.corriges} | ${p.corrigesSurVide} | ${p.corrigesPeuDenses} | ${p.pointsMinCorrige ?? '–'} | ${p.refus} | ${p.series.length} |`);
   for (const p of r.parties) {
     L.push('', `## Partie ${p.partie ?? '?'}`);
     if (p.series.length) {
@@ -102,26 +108,31 @@ function markdown(r, { tousLesCuts = false } = {}) {
     } else L.push('', 'Aucune série.');
     if (p.pauses.length) L.push('', 'Pauses : ' + p.pauses.map(x => `${x.raison} au cut ${x.cut}`).join(' ; ') + '.');
     if (p.pointsVides.length) L.push('', 'Garde des points (CH-107) : ' + p.pointsVides.map(x => `${x.etape}${x.action ? ` (${x.action})` : ''} au cut ${x.cut}`).join(' ; ') + '.');
+    if (p.listePeuDenses.length) {
+      L.push('', `Cuts peu denses (moins de ${r.peu} points) :`, '', '| Cut | Points | Gauche | Droit | Action | Règle | Raison |', '|---|---|---|---|---|---|---|');
+      for (const c of p.listePeuDenses) L.push(`| ${c.cut} | ${c.points} | ${c.gauche ?? '?'} | ${c.droit ?? '?'} | ${c.action ?? '?'} | ${c.regleAurait === null ? '?' : c.regleAurait ? 'aurait corrigé' : 'non'} | ${(c.raisonAction || '').replace(/\|/g, '/')} |`);
+    }
     const dansSerie = new Set(p.series.flatMap(s => s.listeCuts));
     const montres = tousLesCuts ? p.cuts : p.cuts.filter(c => c.action === 'corrige' || dansSerie.has(c.cut) || (c.premiereVide && !c.vide));
     if (montres.length) {
-      L.push('', '| Cut | Vide | Points | Captures (vides) | Durée | Action | Règle | Raison |', '|---|---|---|---|---|---|---|---|');
-      for (const c of montres) L.push(`| ${c.cut} | ${c.vide ? 'oui' : c.premiereVide ? '1re' : 'non'} | ${c.points ?? '?'} | ${c.captures ?? '?'} (${c.capturesVides ?? '?'}) | ${secondes(c.totalMs)} | ${c.action ?? '?'} | ${c.regleAurait === null ? '?' : c.regleAurait ? 'aurait corrigé' : (c.regle ?? 'non')} | ${(c.raisonAction || c.erreurCapture || '').replace(/\|/g, '/')} |`);
+      L.push('', '| Cut | Vide | Points (g / d) | Captures (vides) | Durée | Action | Règle | Raison |', '|---|---|---|---|---|---|---|---|');
+      for (const c of montres) L.push(`| ${c.cut} | ${c.vide ? 'oui' : c.premiereVide ? '1re' : 'non'} | ${c.points ?? '?'} (${c.gauche ?? '?'} / ${c.droit ?? '?'}) | ${c.captures ?? '?'} (${c.capturesVides ?? '?'}) | ${secondes(c.totalMs)} | ${c.action ?? '?'} | ${c.regleAurait === null ? '?' : c.regleAurait ? 'aurait corrigé' : (c.regle ?? 'non')} | ${(c.raisonAction || c.erreurCapture || '').replace(/\|/g, '/')} |`);
     }
   }
   return L.join('\n') + '\n';
 }
 
 function main(argv) {
-  const json = argv.includes('--json'), tous = argv.includes('--cuts'); let min = 3; const chemins = [];
+  const json = argv.includes('--json'), tous = argv.includes('--cuts'); let min = 3, peu = 100; const chemins = [];
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--min') { min = Number(argv[++i]); if (!Number.isInteger(min) || min < 1) throw new Error('--min : entier ≥ 1'); }
+    else if (argv[i] === '--peu') { peu = Number(argv[++i]); if (!Number.isInteger(peu) || peu < 1) throw new Error('--peu : entier ≥ 1'); }
     else if (!argv[i].startsWith('--')) chemins.push(argv[i]);
   }
-  if (!chemins.length) throw new Error('usage : relecture-cuts-vides.cjs <dossier ou zips d’un export> [...] [--min 3] [--json] [--cuts]');
+  if (!chemins.length) throw new Error('usage : relecture-cuts-vides.cjs <dossier ou zips d’un export> [...] [--min 3] [--peu 100] [--json] [--cuts]');
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ch107-'));
   try {
-    const r = analyser(B.lireEvenements(B.collecter(chemins, tmp)), { min });
+    const r = analyser(B.lireEvenements(B.collecter(chemins, tmp)), { min, peu });
     process.stdout.write(json ? JSON.stringify(r, null, 1) + '\n' : markdown(r, { tousLesCuts: tous }));
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 }

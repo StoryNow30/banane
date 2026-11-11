@@ -38,7 +38,8 @@ test('la série recommence après le rechargement : la relecture reste en pause 
 test('pause et reprise éteintes : la relecture s’arrête à la série, avec la consigne ; aucune correction sur un cut vide, aucun rechargement',async()=>{
  const {b,adapter}=await lotVide({vides:[113,114,115],actif:false});
  const fin=await H.finPasse(b,60000);
- assert.equal(fin.etat,'erreur');assert.match(fin.message,/^Relecture arrêtée au cut 115 : ESV n’affiche plus les points \(3 cuts de suite sans point, dès le cut 113\)/);
+ assert.equal(fin.etat,'erreur');assert.ok(fin.message.startsWith('Relecture arrêtée au cut 113 : ESV n’affiche plus les points (3 cuts de suite sans point, dès le cut 113). 4 cuts non relus, du cut 113 au cut 116 ; rien n’a été écrit sur ces cuts. Recharge ESV (F5) puis relance la relecture'),fin.message);
+ assert.equal(fin.faits,3,'les cuts de la série ne comptent pas comme relus');
  assert.equal(adapter.rechargements,0);assert.deepEqual(adapter.majEspace.map(x=>x.cut),[109]);
  assert.deepEqual(H.evenements(b,'relecture-points-vides').map(e=>[e.etape,e.action]),[['detecte','arret']]);
  assert.deepEqual(H.evenements(b,'relecture-ombre').map(e=>e.identity.cut),[108,109,110,113,114,115]);
