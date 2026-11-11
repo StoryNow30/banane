@@ -18,6 +18,7 @@ const FILE={
 };
 /* Mesure d'un écran de Signal : mot d'état, débordement horizontal (la fenêtre, et tout élément visible qui sort à droite), contraste du texte de la file
  * (bandeau, bilan, boîte, incident, mot, phrase, boutons), calculé contre le premier fond opaque des parents, en WCAG 2.1.
+ * CH-105 : la bande de la molette est coupée par sa fenêtre (`.sg-mol-fen`, overflow:hidden) : ses nombres hors fenêtre ne sortent pas de l'écran, la fenêtre si.
  * Les séparateurs « · » (`.sg-sep`, décoratifs, couleur de tout Signal) ne portent aucune information : ils ne sont pas mesurés. */
 /* CH-026 : `extra` : des sélecteurs de plus dont le texte est mesuré (l'onglet « File » : titres, notes, tableau des départs). */
 function mesurer(page,extra=''){return page.evaluate(extra=>{
@@ -29,7 +30,7 @@ function mesurer(page,extra=''){return page.evaluate(extra=>{
  const contraste=e=>{const c=rgb(getComputedStyle(e).color),b=fond(e);if(!c)return 21;const k={r:c.r*c.a+b.r*(1-c.a),g:c.g*c.a+b.g*(1-c.a),b:c.b*c.a+b.b*(1-c.a)};const [l1,l2]=[lum(k),lum(b)].sort((a,b)=>b-a);return (l1+.05)/(l2+.05);};
  const vus=[...h.querySelectorAll('.sg-file,.sg-file *,.sg-file-bilan,.sg-file-bilan *,.sg-boite,.sg-boite *,.sg-incident p,.sg-mot,.sg-phrase,.sg-actions button'+(extra?','+extra:''))].filter(e=>e.getClientRects().length&&[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&!e.disabled&&!e.closest('[disabled]')&&!e.classList.contains('sg-sep'));
  const faibles=vus.map(e=>({t:e.textContent.trim().slice(0,40),c:Math.round(contraste(e)*100)/100})).filter(x=>x.c<4.5);
- const sortants=[...h.querySelectorAll('.sg-instrument *,.sg-zone *,.sg-actions *,.sg-boite *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>W+1;}).map(e=>e.className||e.tagName);
+ const sortants=[...h.querySelectorAll('.sg-instrument *,.sg-zone *,.sg-actions *,.sg-boite *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>W+1&&!e.parentElement?.closest('.sg-mol-fen');}).map(e=>e.className||e.tagName);
  return {mot:f.querySelector('.sg-mot')?.textContent,deborde:f.scrollWidth>f.clientWidth+1,sortants,faibles,file:!!h.querySelector('.sg-file'),boite:!!h.querySelector('.sg-boite'),
   arreter:!!h.querySelector('[data-act="legacy:file-secondaire"]'),principal:h.querySelector('.sg-principal')?.textContent?.trim()||'',bilan:h.querySelectorAll('.sg-file-bilan li').length,
   depart:!!h.querySelector('[data-act="legacy:start-batch"],[data-act="legacy:new-batch"]'),alerte:h.querySelector('[role="alert"]')?.textContent?.trim()||''};},extra);}

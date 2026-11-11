@@ -208,7 +208,7 @@
  <div id="file-parties" class="carte rise d4" hidden>
   <p class="lot-t"><b>File de parties</b><span id="file-etat" class="mono"></span></p>
   <p id="file-phrase" class="muted"></p>
-  <div id="file-reglage"><span class="muted">Nombre de parties</span> <span id="file-n" class="seg" role="group" aria-label="Nombre de parties"></span></div>
+  <div id="file-reglage"><label class="muted" for="file-n">Nombre de parties</label> <input type="number" id="file-n" min="1" max="20" step="1" value="2" inputmode="numeric"></div>
   <p class="muted">Après chaque partie : <b>relecture et correction</b>, toujours · aucun export automatique · seul « Arrêter la file » l’arrête.</p>
   <p id="file-alerte" class="fin-partie" role="alert" hidden></p>
   <ol id="file-bilan" class="muted" hidden></ol>

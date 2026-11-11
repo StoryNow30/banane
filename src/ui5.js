@@ -204,13 +204,19 @@
    * la carte). L'état vient de la vue ; « préparée », le nombre choisi (gardés dans panel.js, `fileUI`), les phrases, l'alerte, le bilan et les libellés des
    * boutons viennent de ce que `afficherFile` vient d'écrire. Lecture seule. */
   const FILE_ACTIFS = ['lot', 'passe', 'relecture', 'changement'];
+  /* CH-105 : le nombre de parties choisi et ses bornes, lus sur le champ d'origine `#file-n` (panel.js : `fileUI.n`, de 1 à FILE_N_MAX). */
+  function nombreDuChamp() {
+    const c = $('file-n'); if (!c) return null;
+    const n = Number(c.value), min = Number(c.min) || 1, max = Number(c.max) || min;
+    return Number.isInteger(n) && max >= min ? { n: Math.max(min, Math.min(max, n)), min, max, actif: !c.disabled } : null;
+  }
   function fileDuPanneau(s) {
     if (!Object.hasOwn(s || {}, 'fileParties') || !visible('file-parties')) return null;
     const f = s.fileParties || null, bouton = id => { const e = $(id); return e && !e.hidden ? { texte: String(e.textContent || '').trim(), actif: !e.disabled } : null; };
-    const choix = visible('file-reglage') ? [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)) : [];
+    const nombreTous = nombreDuChamp(), nombre = visible('file-reglage') ? nombreTous : null;
     return {
       etat: f ? String(f.etat || '') : 'repos', actif: !!f && FILE_ACTIFS.includes(f.etat), n: Number.isInteger(f?.n) ? f.n : null, vers: f?.changement?.vers ?? null,
-      etatTexte: txt('file-etat'), phrase: txt('file-phrase'), prete: !f && txt('file-etat') === 'préparée', choix,
+      etatTexte: txt('file-etat'), phrase: txt('file-phrase'), prete: !f && txt('file-etat') === 'préparée', nombre,
       alerte: visible('file-alerte') ? txt('file-alerte') : '',
       bilan: visible('file-bilan') ? [...($('file-bilan')?.querySelectorAll?.('li') || [])].map(li => String(li.textContent || '').trim()).filter(Boolean) : [],
       principal: bouton('file-principal'), secondaire: bouton('file-secondaire'),
@@ -219,7 +225,7 @@
       rang: Number.isInteger(f?.rang) ? f.rang : null, part: f?.enCours?.part ?? null, plan: Array.isArray(f?.plan) ? f.plan.slice() : [],
       faites: (f?.bilan || []).filter(p => !p.interrompue).length, reprise: f?.reprise || null,
       lancer: bouton('file-lancer'), reprendre: bouton('file-reprendre'),
-      choixTous: [...($('file-n')?.children || [])].map(b => ({ n: Number(b.dataset?.n), choisi: b.getAttribute?.('aria-pressed') === 'true' })).filter(x => Number.isInteger(x.n)),
+      nombreTous,
       partieAffichee: Number.isInteger(s?.current?.identity?.part) ? s.current.identity.part : null,
       departs: departsFile(),
       /* CH-036 : le bilan par partie, structuré (la vue `fileParties.bilan`, src/file-parties.js), pour la Constellation : posés, à poser, écrits au
@@ -460,7 +466,9 @@
     const [, quoi, ...reste] = act.split(':'), v = reste.join(':');
     if (quoi === 'tiroir') { ui.tiroir = !ui.tiroir; ui.sel = null; }
     /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
-    else if (quoi === 'file-n') { const b = [...($('file-n')?.children || [])].find(x => x.dataset?.n === v); if (b && !b.disabled) b.click(); }
+    /* CH-105 : la molette écrit le champ d'origine `#file-n` et déclenche `change` (panel.js : `fileUI.n`, `fileUI.prete=false`, même rendu). Hors bornes : rien. */
+    else if (quoi === 'file-n') { const c = $('file-n'), N = nombreDuChamp(), k = Number(v);
+      if (c && N && N.actif && Number.isInteger(k) && k >= N.min && k <= N.max && k !== N.n) { c.value = String(k); c.dispatchEvent(typeof root.Event === 'function' ? new root.Event('change', { bubbles: true }) : { type: 'change' }); } }
     /* CH-026 : le troisième onglet « File de parties » : une vue de Signal (rien n'est envoyé au service worker) ; Orbite ou Écho le referme. */
     else if (quoi === 'onglet-file') { ui.onglet = 'file'; ui.couche = null; ui.tiroir = false; ui.sel = null; }
     /* CH-028 : l'onglet « Correction » (une vue de Signal) ; « Ouvrir » recopie « partie:cut » dans `#correction-cible` et clique `#correction-ouvrir`. */
@@ -548,11 +556,13 @@
        * met un autre bouton sous le pointeur : le second clic d'un double-clic partirait comme un ordre (« Pause »). Pendant GARDE_PIED_MS après un
        * tel clic, le pied n'accepte aucun clic (la feuille « Ce qui reste », elle, répond tout de suite : « Ouvrir » y est attendu aussitôt). Leur aspect et leurs ordres ne changent pas ; les changements venus du lot non plus. */
       const t = Date.now(), act = a.dataset.act;
+      if (molette.sansClic > t && a.closest?.('.sg-molette')) return;   /* CH-105 : la fin d'un glisser n'est pas un clic sur un voisin */
       if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions')) return;
       if (/^(mode:|sg:onglet-|sg:tiroir$)/.test(act)) ui.gardePied = t + GARDE_PIED_MS;
       agir(act, a);
     });
     hote.addEventListener('change', e => { const s = e.target.closest?.('[data-sel]'); if (s) choisir(s.dataset.sel, s.value); });
+    brancherMolette();
     /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */
     hote.addEventListener('input', e => {
       if (e.target.id === 'ui5-q') { ui.q = e.target.value; ui.pi = 0; maj(true); return; }
@@ -567,6 +577,57 @@
     root.addEventListener?.('resize', () => { maj(true); pouces(); });
     try { D.fonts?.ready?.then?.(pouces); } catch { /* sans police à attendre */ }
     if (typeof root.setInterval === 'function') root.setInterval(vivant, 500);
+  }
+  /* CH-105 : LA MOLETTE DU NOMBRE DE PARTIES (src/signal-rendu.js `moletteHtml`). Tous les gestes finissent en `sg:file-n:N` (le champ d'origine
+   * `#file-n` est écrit, panel.js fait le reste), borné à [aria-valuemin, aria-valuemax] : molette de la souris au-dessus (un cran = un pas, la zone
+   * derrière ne défile pas), glisser à l'horizontale (la bande suit le doigt, puis s'accroche au nombre le plus proche), flèches, Début, Fin, Page. */
+  const molette = { cumul: 0, t: 0, g: null, sansClic: 0 };
+  function moletteRegler(fen, k) {
+    const min = Number(fen.getAttribute('aria-valuemin')), max = Number(fen.getAttribute('aria-valuemax')), n = Number(fen.getAttribute('aria-valuenow'));
+    if (fen.getAttribute('aria-disabled') === 'true' || !Number.isInteger(n)) return;
+    const v = Math.max(min, Math.min(max, Math.round(k)));
+    if (v !== n) agir(`sg:file-n:${v}`);
+  }
+  function brancherMolette() {
+    hote.addEventListener('wheel', e => {
+      const m = e.target.closest?.('.sg-molette'), fen = m?.querySelector?.('.sg-mol-fen'); if (!fen) return;
+      e.preventDefault();
+      const t = Date.now(); if (t - molette.t > 250) molette.cumul = 0; molette.t = t;
+      const d = (Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+      molette.cumul += d;
+      /* Un cran de souris (environ 100) fait un pas ; un pavé tactile (petits pas) cumule jusqu'à 40 avant d'en faire un. Jamais plus d'un pas par événement. */
+      if (Math.abs(molette.cumul) >= 40) { const pas = Math.sign(molette.cumul); molette.cumul = 0; moletteRegler(fen, Number(fen.getAttribute('aria-valuenow')) + pas); }
+    }, { passive: false });
+    hote.addEventListener('keydown', e => {
+      const fen = e.target.closest?.('.sg-mol-fen'); if (!fen || e.altKey || e.ctrlKey || e.metaKey) return;
+      const n = Number(fen.getAttribute('aria-valuenow')), min = Number(fen.getAttribute('aria-valuemin')), max = Number(fen.getAttribute('aria-valuemax'));
+      const k = { ArrowLeft: n - 1, ArrowDown: n - 1, ArrowRight: n + 1, ArrowUp: n + 1, Home: min, End: max, PageDown: n - 5, PageUp: n + 5 }[e.key];
+      if (k === undefined) return;
+      e.preventDefault(); e.stopPropagation(); moletteRegler(fen, k);
+    });
+    hote.addEventListener('pointerdown', e => {
+      const fen = e.target.closest?.('.sg-mol-fen'), bande = fen?.querySelector?.('.sg-mol-bande'), case1 = bande?.querySelector?.('.sg-mol-n');
+      if (!fen || !case1 || e.button !== 0 || fen.getAttribute('aria-disabled') === 'true') return;
+      molette.g = { fen, bande, x0: e.clientX, c: case1.getBoundingClientRect().width || 1, n0: Number(fen.getAttribute('aria-valuenow')), bouge: false, id: e.pointerId };
+    });
+    D.addEventListener('pointermove', e => {
+      const g = molette.g; if (!g || e.pointerId !== g.id) return;
+      const dx = e.clientX - g.x0;
+      if (!g.bouge && Math.abs(dx) > 4) { g.bouge = true; g.bande.classList.add('sg-glisse'); try { g.fen.setPointerCapture?.(e.pointerId); } catch { /* sans capture */ } }
+      if (!g.bouge) return;
+      /* La bande suit le pointeur, sans dépasser les bornes d'une demi-case. */
+      const min = Number(g.fen.getAttribute('aria-valuemin')), max = Number(g.fen.getAttribute('aria-valuemax'));
+      const lim = Math.max(-(max - g.n0 + 0.5) * g.c, Math.min((g.n0 - min + 0.5) * g.c, dx));
+      g.bande.style.setProperty('--dx', `${lim}px`);
+    });
+    const fin = e => {
+      const g = molette.g; if (!g || (e.pointerId !== undefined && e.pointerId !== g.id)) return;
+      molette.g = null; if (!g.bouge) return;
+      g.bande.classList.remove('sg-glisse'); g.bande.style.removeProperty('--dx');
+      molette.sansClic = Date.now() + 300;
+      if (e.type === 'pointerup') moletteRegler(g.fen, g.n0 - (e.clientX - g.x0) / g.c);
+    };
+    D.addEventListener('pointerup', fin); D.addEventListener('pointercancel', fin);
   }
   /* Clavier de Signal : Ctrl K ouvre ou ferme la palette, Échap ferme ce qui est ouvert (couche, détails, tiroir) ; dans la palette, ↑ ↓ et Entrée ;
    * tiroir ouvert, ↑ ↓ parcourent les lignes et E marque « examiné ». Une commande grisée n'est jamais lancée. */

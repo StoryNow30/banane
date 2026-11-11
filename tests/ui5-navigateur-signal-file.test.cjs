@@ -17,7 +17,7 @@ test('préparer puis lancer une file de 3 parties : Signal envoie la même chose
   await sig.page.click('#ui5 [data-act="sg:file"]');await sig.page.waitForTimeout(200);
   assert.equal(await sig.page.isVisible('#ui5 .sg-boite'),true,'la boîte s’ouvre');
   await sig.page.click('#ui5 .sg-boite [data-act="sg:file-n:3"]');await sig.page.waitForTimeout(150);
-  assert.equal(await sig.page.getAttribute('#ui5 .sg-boite [data-act="sg:file-n:3"]','aria-pressed'),'true');
+  assert.equal(await sig.page.getAttribute('#ui5 .sg-boite [role="slider"]','aria-valuenow'),'3','CH-105 : la molette est sur 3');
   await sig.page.click('#ui5 .sg-boite [data-act="legacy:file-principal"]');await sig.page.waitForTimeout(400);
   assert.match(await sig.page.textContent('#ui5 .sg-boite [data-act="legacy:file-principal"]'),/Lancer la Constellation · 3 parties/);
   assert.deepEqual(await messages(sig.page),[],'« Préparer » ne lance rien');
@@ -27,7 +27,7 @@ test('préparer puis lancer une file de 3 parties : Signal envoie la même chose
   const parSignal=await messages(sig.page);
 
   const ori=await ouvrir(nav,FILE.prete,{width:600,height:760});await espion(ori.page);
-  await ori.page.evaluate(()=>document.querySelector('#file-n [data-n="3"]').click());
+  await ori.page.evaluate(()=>{const c=document.getElementById('file-n');c.value='3';c.dispatchEvent(new Event('change',{bubbles:true}));});
   await ori.page.evaluate(()=>document.getElementById('file-principal').click());await ori.page.waitForTimeout(400);
   await ori.page.evaluate(()=>document.getElementById('file-principal').click());await ori.page.waitForTimeout(500);
   const parOrigine=await messages(ori.page);

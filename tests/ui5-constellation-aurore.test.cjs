@@ -17,7 +17,8 @@ const etat = (batch, extra = {}) => ({ batch, current: { identity: { part: 13, c
 function poser(p, { etatTexte = 'prête', phrase = '', reglage = true, choisi = 2, alerte = '', bilan = [], principal = null, secondaire = null, reprendre = null, lancer = null } = {}) {
   const E = p.els; E['file-parties'].hidden = false;
   E['file-etat'].textContent = etatTexte; E['file-phrase'].textContent = phrase; E['file-reglage'].hidden = !reglage;
-  E['file-n'].children = [1, 2, 3, 4, 5, 8].map(n => ({ dataset: { n: String(n) }, disabled: false, clics: 0, click() { this.clics++; }, getAttribute: a => a === 'aria-pressed' ? String(n === choisi) : null }));
+  /* CH-105 : `#file-n` est un champ numérique borné (1 à 20). */
+  E['file-n'].value=String(choisi);E['file-n'].min='1';E['file-n'].max='20';E['file-n'].disabled=false;E['file-n'].changes=[];E['file-n'].dispatchEvent=function(e){this.changes.push([e.type,this.value]);};
   E['file-alerte'].hidden = !alerte; E['file-alerte'].textContent = alerte;
   E['file-bilan'].hidden = !bilan.length; E['file-bilan'].querySelectorAll = s => s === 'li' ? bilan.map(t => ({ textContent: t })) : [];
   for (const [id, t] of [['file-principal', principal], ['file-secondaire', secondaire], ['file-reprendre', reprendre], ['file-lancer', lancer]]) { E[id].hidden = t === null; E[id].textContent = t || ''; E[id].disabled = false; }

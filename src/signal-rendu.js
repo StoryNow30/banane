@@ -380,12 +380,25 @@
     return `<section class="sg-tu sg-file${cls ? ' ' + cls : ''}" data-k="file"><h4 class="sg-file-t"><span><b>Constellation</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</span></h4>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}<p class="sg-meta">${NOTE_FILE}</p></section>`;
   }
   /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer » (ne lance rien), puis « Lancer » (qui referme la boîte). */
-  const segN = L => `<span class="sg-seg" role="group" aria-label="Nombre de parties"><i class="sg-pouce" aria-hidden="true"></i>${L.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span>`;
+  /* CH-105 (D-335) : LA MOLETTE du nombre de parties, à la place des six boutons : une fenêtre où défile la bande des nombres (de `min` à `max`, la
+   * borne de la file), le nombre choisi au centre, ses voisins plus petits qui s'effacent vers les bords, « − » et « + » aux extrémités (éteints aux
+   * bornes). La bande est placée par son rang (`--i`, lu en transform par panel-signal.css) : rendue en place (src/ui5.js `morpher`), elle glisse.
+   * Chaque nombre est un clic `sg:file-n:N` ; molette de la souris, glisser, flèches, Début et Fin : src/ui5.js. Un lecteur d'écran lit un « slider ». */
+  function moletteHtml(N) {
+    const min = Number.isInteger(N?.min) ? N.min : 1, max = Number.isInteger(N?.max) && N.max >= min ? N.max : min;
+    const n = Math.max(min, Math.min(max, Number.isInteger(N?.n) ? N.n : min)), off = N?.actif === false ? ' disabled' : '';
+    let bande = '';
+    for (let k = min; k <= max; k++) bande += `<span class="sg-mol-n" data-act="sg:file-n:${k}" data-d="${Math.min(3, Math.abs(k - n))}">${k}</span>`;
+    return `<div class="sg-molette" data-k="molette"><button type="button" class="sg-mol-moins" data-act="sg:file-n:${n - 1}" aria-label="Une partie de moins"${n <= min ? ' disabled' : off}>−</button>`
+      + `<div class="sg-mol-fen" role="slider" tabindex="0" aria-label="Nombre de parties" aria-valuemin="${min}" aria-valuemax="${max}" aria-valuenow="${n}" aria-valuetext="${nP(n)}"${off ? ' aria-disabled="true"' : ''}>`
+      + `<div class="sg-mol-bande" style="--i:${n - min}" aria-hidden="true">${bande}</div></div>`
+      + `<button type="button" class="sg-mol-plus" data-act="sg:file-n:${n + 1}" aria-label="Une partie de plus"${n >= max ? ' disabled' : off}>+</button></div>`;
+  }
   function boiteFileHtml(snap) {
     const F = snap.file; if (!F || F.etat !== 'repos') return '';
     const P = F.principal;
     return `<div class="sg-voile" data-k="voile-file" data-act="sg:fermer"></div><div class="sg-boite" data-k="file" role="dialog" aria-labelledby="sg-file-t"><span class="sg-t" id="sg-file-t">Constellation</span>
-<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${F.choix.length ? segN(F.choix) : ''}</div>${F.phrase ? `<p class="sg-meta">${esc(vf(F.phrase))}</p>` : ''}
+<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${F.nombre ? moletteHtml(F.nombre) : ''}</div>${F.phrase ? `<p class="sg-meta">${esc(vf(F.phrase))}</p>` : ''}
 <p class="sg-meta">La relecture suit chaque partie, toujours. Pas d’export automatique. Rien n’arrête la Constellation que « Arrêter », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p>
 <div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}><span>${esc(vf(P.texte))}</span></button>` : ''}</div></div>`;
   }
@@ -589,20 +602,25 @@
       .filter(t => t !== 'relecture arrêtée' || !rl.includes('arrêtée'));
     return { ch, motifs: [...motifs, ps, rl, ...(b.alertes || [])].filter(Boolean).join(' · '), etat: b.interrompue ? 'interrompue' : b.alertes?.length ? 'alerte' : 'faite' };
   }
+  const MAX_CHAINE = 20;
   function etoilesFile(s, F) {
-    const plan = F.plan?.length ? F.plan : null, choisi = (F.choixTous || []).find(c => c.choisi)?.n, N = plan ? plan.length : F.n || choisi || 1, B = F.parties || [], R = F.reprise;
+    const plan = F.plan?.length ? F.plan : null, choisi = F.nombreTous?.n, N = plan ? plan.length : F.n || choisi || 1, B = F.parties || [], R = F.reprise;
     const L = [];
     /* D-334 : pendant le passage, la partie quittée est faite et la partie visée est la courante (maquette : « Vers la partie 15 », 13 et 14 cochées). */
     const passage = F.actif && F.etat === 'changement', vise = passage ? (k => k >= 0 ? k : (F.rang ?? -1) + 1)(plan && F.vers != null ? plan.indexOf(F.vers) : -1) : -1;
-    for (let i = 0; i < Math.min(N, 8); i++) {
+    /* CH-105 : jusqu'à 20 parties (la borne de la file) ; au-delà de 8, la chaîne est serrée (panel-signal.css) et seuls le premier, le courant et le
+     * dernier gardent leur numéro (`garde`). */
+    for (let i = 0; i < Math.min(N, MAX_CHAINE); i++) {
       const part = plan ? plan[i] : i === 0 ? F.partieAffichee : null, b = B.find(x => x.rang === i);
       let e = 'a-venir', sous = plan ? 'à venir' : i === 0 ? 'affichée' : 'suivante';
       if (passage ? vise === i : F.actif && F.rang === i) { e = 'en-cours'; sous = passage ? 'passage' : 'en cours'; }
       else if (passage && i < vise && !(b && b.interrompue)) { e = b ? partieFile(b).etat : 'faite'; sous = b && Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : 'faite'; }
       else if (b && !b.interrompue) { const p = partieFile(b); e = p.etat; sous = Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : 'faite'; }
       else if ((b && b.interrompue) || (F.etat === 'arret' && R && R.rang === i)) { e = 'interrompue'; sous = 'à reprendre'; }
-      L.push({ e, num: part ?? (i ? `+${i}` : '?'), sous });
+      L.push({ e, num: part ?? (i ? `+${i}` : '?'), sous, courant: e === 'en-cours' || (e === 'interrompue' && R?.rang === i) });
     }
+    const courant = L.findIndex(x => x.courant), c = courant >= 0 ? courant : 0;
+    L.forEach((x, i) => { x.garde = i === 0 || i === c || i === L.length - 1; });
     return L;
   }
   function ongletFileModele(s, u) {
@@ -610,12 +628,12 @@
     const m = { glyphe: 'pret', ton: 'encre2', mot: 'Prête', phrase: '', bandeau: null, alerte: '', lancer: null, temps: null, note: '' };
     const bt = (b, act, cls, texte) => b ? { texte: texte || vf(b.texte), act, inactif: !b.actif, cls } : null;
     const ex = (s.boutonsOrbite || []).find(b => b.id === 'export-tout'), exB = ex ? { texte: 'Exporter le dossier', act: 'legacy:export-tout', inactif: !ex.actif, cls: 'second' } : null;
-    const lancer = bt(F.lancer, 'legacy:file-lancer', 'plein'), seg = F.choixTous || [];
+    const lancer = bt(F.lancer, 'legacy:file-lancer', 'plein'), seg = F.nombreTous || null;
     if (actif) {
       const conf = !!u.confirmeFile, k = TEMPS.findIndex(t => t[0] === etat), part = F.part ?? F.vers ?? '?';
       Object.assign(m, { glyphe: 'cours', ton: 'vivant', mot: etat === 'changement' ? 'Passage' : 'En cours', temps: k,
         phrase: etat === 'changement' ? `Vers la partie ${mono(F.vers ?? '…')} · Ariane travaille dans ESV · ne touche à rien` : `Partie ${mono(part)}, la ${ORDINAL[F.rang ?? 0] || `${(F.rang ?? 0) + 1}ᵉ`} sur ${esc(F.n ?? '?')}`,
-        lancer: { seg: [], note: etat === 'lot' && s.ar?.cibles ? `Pose : ${esc(s.ar.traites ?? 0)} cuts sur ${esc(s.ar.cibles)} · le détail du lot est dans Orbite.` : '',
+        lancer: { seg: null, note: etat === 'lot' && s.ar?.cibles ? `Pose : ${esc(s.ar.traites ?? 0)} cuts sur ${esc(s.ar.cibles)} · le détail du lot est dans Orbite.` : '',
           boutons: [{ texte: 'Suivre dans Orbite', act: 'mode:automatic', cls: 'second' }, F.secondaire ? { texte: conf ? 'Confirmer l’arrêt de la Constellation' : vf(F.secondaire.texte), act: 'legacy:file-secondaire', danger: true, inactif: !F.secondaire.actif, cls: 'second', droite: true } : null].filter(Boolean) } });
       return m;
     }
@@ -624,7 +642,7 @@
       /* CH-026-c : arrêtée pendant que l'activité de la partie tourne : la dire, et rien à reprendre ni à relancer avant sa fin. */
       const off = b => b && { ...b, inactif: true };
       Object.assign(m, { glyphe: 'pause', ton: 'attention', mot: `Attend la fin ${finDe(enCours)}`, phrase: esc(vf(F.phrase)), alerte: F.alerte,
-        lancer: { seg: [], note: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la Constellation s’est arrêtée et ne repartira pas seule. Reprise et nouvelle Constellation : à sa fin.`,
+        lancer: { seg: null, note: `${enCours[0].toUpperCase()}${enCours.slice(1)} de la partie continue : la Constellation s’est arrêtée et ne repartira pas seule. Reprise et nouvelle Constellation : à sa fin.`,
           boutons: [off(bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F))), off(lancer && { ...lancer, cls: F.reprendre ? 'second' : 'plein' })].filter(Boolean) } });
     } else if (etat === 'arret') {
       const rep = bt(F.reprendre, 'legacy:file-reprendre', 'plein', texteReprise(F));
@@ -646,7 +664,7 @@
     const titre = (t, d) => `<h4 class="sg-of-t"><span>${esc(t)}</span>${d ? `<em class="sg-of-d">${esc(d)}</em>` : ''}</h4>`;
     const faites = B.filter(b => !b.interrompue).length, n = F.n ?? E.length;
     const cours = k !== null && k >= 0 ? (k + (k === 0 && s.ar?.cibles ? Math.min(1, (s.ar.traites || 0) / s.ar.cibles) : 0.5)) / 4 : 0.5;
-    const L = m.lancer || { seg: [], note: '', boutons: [] };
+    const L = m.lancer || { seg: null, note: '', boutons: [] };
     /* D-334 (maquette du 11/11) : la Constellation se distingue d'Orbite : sa couleur, et dans sa tuile d'état le nom de la partie en grand, le rang à
      * droite, la phrase, puis la chaîne : un point par partie, reliés (faite, en cours, arrêtée, à venir), le numéro dessous, et les quatre temps. */
     const R = F.reprise, nf = `${faites} ${faites > 1 ? 'faites' : 'faite'} sur ${n}`, part = F.part ?? F.vers ?? '?';
@@ -656,13 +674,13 @@
     else if (F.etat === 'repos') { titreT = nP(E.length); rangT = 'à lancer'; }
     else if (F.etat === 'arret' && R && R.part != null) { titreT = `Partie ${R.part}`; rangT = nf; }
     else { titreT = `${nP(faites)} ${faites > 1 ? 'faites' : 'faite'}`; rangT = `${faites} sur ${n}`; }
-    const chaine = `<ol class="sg-chaine" aria-label="Parties de la Constellation">${E.map(x => `<li data-etat="${esc(x.e)}" data-partie="${esc(x.num)}" title="${esc(x.sous)}"><i aria-hidden="true"></i><span class="sg-mono">${esc(x.num)}</span></li>`).join('')}</ol>`;
+    const dense = E.length > 8, chaine = `<ol class="sg-chaine${dense ? ' sg-chaine-dense' : ''}" aria-label="Parties de la Constellation">${E.map(x => `<li data-etat="${esc(x.e)}" data-partie="${esc(x.num)}"${dense && x.garde ? ' data-num="1"' : ''} title="${esc(x.sous)}"><i aria-hidden="true"></i><span class="sg-mono">${esc(x.num)}</span></li>`).join('')}</ol>`;
     const temps = k !== null && k >= 0 ? `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < k ? 'fait' : i === k ? 'courant' : 'a-venir'}"${i === k ? ' aria-current="step"' : ''}>${t[1]}</li>`).join('')}</ol>` : '';
     let z = '', reg = '';
     if (m.alerte) z += tuileAvis('alerte', '!', `<p>${esc(m.alerte)}</p>`, 'sg-alerte', 'alert');
     /* Le registre : une ligne par partie commencée (faite, en cours, interrompue), chiffres alignés puis motifs en clair (décision du 01/11 : visibles d'emblée). */
     const rangs = E.map((x, i) => ({ x, b: B.find(y => y.rang === i) })).filter(({ x }) => x.e !== 'a-venir' && !(x.e === 'en-cours' && F.etat === 'changement'));
-    const note = L.note && !L.seg.length ? `<p class="sg-meta sg-of-note">${L.note}</p>` : '';
+    const note = L.note && !L.seg ? `<p class="sg-meta sg-of-note">${L.note}</p>` : '';
     if (rangs.length) {
       const tiret = '<span class="sg-mono sg-vide-n">—</span>', nb = v => Number.isInteger(v) ? `<span class="sg-mono">${esc(v)}</span>` : tiret;
       reg = `<section class="sg-tu sg-of-sec" data-k="bilan" aria-label="Bilan par partie">${titre('Bilan par partie', `${faites} sur ${n}`)}${note}<div class="sg-registre" role="table" aria-label="Bilan par partie"><div class="sg-reg-tete" role="row"><span>Partie</span><span>posés</span><span>à poser</span><span><span class="sg-long">corrigés</span><span class="sg-court">corr.</span></span></div>${rangs.map(({ x, b }) => {
@@ -673,7 +691,7 @@
     const D = F.departs || [];
     const departs = `<section class="sg-tu sg-of-sec" data-k="departs" aria-label="Départs des parties">${titre('Départs des parties', D.length ? 'chiffres d’ESV au départ' : '')}${D.length ? `<div class="sg-of-departs" role="table" aria-label="Départs des parties">${D.map(d => `<div class="sg-of-depart" role="row"><span role="cell"><b class="sg-mono">${esc(d.partie ?? '?')}</b> <span class="sg-sep">·</span> ${esc(d.heure)}</span><span role="cell"><b>${milliers(d.invalides)}</b> invalides</span><span class="sg-of-ch" role="cell">${milliers(d.valides)} validés <span class="sg-sep">·</span> ${milliers(d.skippes)} sautés <span class="sg-sep">·</span> ${milliers(d.total)} au total</span></div>`).join('')}</div><p class="sg-meta">Sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
     /* Le choix du nombre de parties (au repos, arrêtée, terminée) : la tuile « Nouvelle Constellation » de la maquette. */
-    const choix = L.seg.length ? `<section class="sg-tu sg-large sg-tu-choix" data-k="choix"><h4>Nouvelle Constellation</h4><div class="sg-of-ligne"><span>Nombre de parties</span>${segN(L.seg)}</div>${L.note ? `<p class="sg-meta sg-of-note">${L.note}</p>` : ''}</section>` : '';
+    const choix = L.seg ? `<section class="sg-tu sg-large sg-tu-choix" data-k="choix"><h4>Nouvelle Constellation</h4><div class="sg-of-ligne"><span>Nombre de parties</span>${moletteHtml(L.seg)}</div>${L.note ? `<p class="sg-meta sg-of-note">${L.note}</p>` : ''}</section>` : '';
     z = reg ? `${z}<div class="sg-duo" data-k="duo">${reg}${departs}</div>${choix}` : choix + z + departs;
     const tete = `<section class="sg-instrument sg-tu sg-tu-etat sg-constel" aria-live="polite" aria-label="Constellation"><div class="sg-haut">${pastille(m)}<span class="sg-partie">Constellation</span></div><div class="sg-constel-t"><h3 class="sg-chiffre">${esc(titreT)}</h3><span class="sg-suite">${esc(rangT)}</span></div><p class="sg-phrase">${phrase}</p>${chaine}${temps}</section>`;
     return { m, corps: `${tete}<div class="sg-zone sg-onglet-file" data-z="file-${esc(F.etat)}">${z}</div>`, pied: piedHtml(L.boutons.map(b => ({ ...b, plein: b.cls === 'plein' }))) };
@@ -869,5 +887,5 @@
     return { mode: '', titre: 'Rattrapage', detail: 'En fin de lot, reprend les cuts restés sans pose', avisAllumee: 'Deuxième passe allumée.' };
   }
 
-  return { esc, quantile, allureLot, ciblesBornes, modele, commandes, paletteListe, lignesRevue, rendre, duree, passe2Textes };
+  return { esc, moletteHtml, ongletFileHtml, quantile, allureLot, ciblesBornes, modele, commandes, paletteListe, lignesRevue, rendre, duree, passe2Textes };
 });

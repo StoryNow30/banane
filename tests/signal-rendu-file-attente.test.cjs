@@ -21,7 +21,7 @@ const legacy=h=>[...h.matchAll(/data-act="legacy:([a-z0-9-]+)"/g)].map(m=>m[1]);
 
 const F=x=>({etat:'arret',actif:false,n:3,rang:2,etatTexte:'arrêtée',phrase:'pose écrite non validée : contrôle le cut dans ESV · 2 parties faites sur 3 · rien exporté.',alerte:'pose écrite non validée : contrôle le cut dans ESV (pose d’Ariane au cut 5346 non validée).',
  bilan:['Partie 2 · 23 posés','Partie 3 · 31 posés','Partie 4 · interrompue · 48 posés, 3 différés · relecture —'],principal:{texte:'Préparer la reprise · 1 partie restante',actif:true},secondaire:null,
- reprendre:{texte:'Reprendre la file · 1 partie restante',actif:true},lancer:{texte:'Nouvelle file · 3 parties',actif:true},reprise:{rang:2,part:4,reste:1},choixTous:[{n:1,choisi:false},{n:3,choisi:true}],partieAffichee:4,departs:[],faites:2,...x});
+ reprendre:{texte:'Reprendre la file · 1 partie restante',actif:true},lancer:{texte:'Nouvelle file · 3 parties',actif:true},reprise:{rang:2,part:4,reste:1},nombreTous:{n:3,min:1,max:20},partieAffichee:4,departs:[],faites:2,...x});
 /* CH-036 : mots de l'opérateur (« Constellation », « rattrapage » pour la deuxième passe, décision du 01/11) ; les mêmes garanties. */
 for(const [etat,mot] of [['rel','de la relecture'],['p2','du rattrapage']]){
  test(`orbite, activité ${mot} de la partie, file arrêtée : bandeau « attend la fin ${mot} », aucune reprise offerte`,()=>{

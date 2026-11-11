@@ -190,6 +190,20 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal[data-taille="compact"] .sg-chaine li i::before,#ui5.u-signal[data-taille="compact"] .sg-chaine li[data-etat="en-cours"] i::after{inset:5px}
 #ui5.u-signal .sg-chaine li:not([data-etat="a-venir"]){color:var(--tx)}
 #ui5.u-signal .sg-constel .sg-temps{margin-top:6px}
+/* CH-105 : au-delà de 8 parties (jusqu'à 20), la chaîne se serre : points plus petits, seuls le premier, le courant et le dernier gardent leur numéro. */
+#ui5.u-signal .sg-chaine-dense li{gap:8px}
+#ui5.u-signal .sg-chaine-dense i{width:14px;height:14px}
+#ui5.u-signal .sg-chaine-dense li::before,#ui5.u-signal .sg-chaine-dense li::after{top:6px}
+#ui5.u-signal .sg-chaine-dense li i::before,#ui5.u-signal .sg-chaine-dense li[data-etat="en-cours"] i::after{inset:4px}
+#ui5.u-signal .sg-chaine-dense li[data-etat="faite"] i::after{width:5px;height:2.5px;margin:-2.5px 0 0 -2.5px;border-width:1.5px}
+#ui5.u-signal .sg-chaine-dense li:not([data-num]) .sg-mono{display:none}
+#ui5.u-signal .sg-chaine-dense .sg-mono{white-space:nowrap}
+/* le premier numéro part du bord gauche, le dernier finit au bord droit : à 20 points, une colonne est plus étroite qu'un numéro */
+#ui5.u-signal .sg-chaine-dense li:first-child .sg-mono{align-self:flex-start}
+#ui5.u-signal .sg-chaine-dense li:last-child .sg-mono{align-self:flex-end}
+#ui5.u-signal[data-taille="compact"] .sg-chaine-dense i{width:12px;height:12px}
+#ui5.u-signal[data-taille="compact"] .sg-chaine-dense li::before,#ui5.u-signal[data-taille="compact"] .sg-chaine-dense li::after{top:5px}
+#ui5.u-signal[data-taille="compact"] .sg-chaine-dense li i::before,#ui5.u-signal[data-taille="compact"] .sg-chaine-dense li[data-etat="en-cours"] i::after{inset:3px}
 #ui5.u-signal .sg-texte{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
 #ui5.u-signal .sg-phrase{font:650 20px/1.25 var(--f);letter-spacing:-.01em;overflow-wrap:anywhere}
 #ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:15.5px}
@@ -446,6 +460,35 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-of-depart b{color:var(--tx)}
 #ui5.u-signal .sg-of-ch{grid-column:1/-1;font-size:11.5px;line-height:1.35}
 #ui5.u-signal .sg-of-ligne{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
+/* CH-105 (D-335) : LA MOLETTE du nombre de parties (src/signal-rendu.js `moletteHtml`). Un creux, « − » et « + » en tuile aux bouts, au milieu une
+ * fenêtre où glisse la bande des nombres ; le choisi sous une loupe (le pouce des choix), grand, dans le bleu de la Constellation ; ses voisins rapetissent
+ * et s'effacent vers les bords. Seuls transform et opacity bougent (courbe ressort, 0,26 s) ; « réduire les animations » coupe tout (fin du fichier). */
+#ui5.u-signal .sg-molette{--c:40px;--mol-h:44px;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:12px;background:var(--creux);flex:0 1 300px;max-width:100%;touch-action:pan-y}
+#ui5.u-signal[data-taille="compact"] .sg-molette{--c:34px;--mol-h:38px;flex-basis:260px}
+/* en compact (360, 320), la molette prend toute la largeur de la tuile : plus de nombres visibles, de la place pour glisser */
+#ui5.u-signal[data-taille="compact"] .sg-of-ligne>.sg-molette,#ui5.u-signal[data-taille="compact"] .sg-boite .sg-reg>.sg-molette{flex:1 1 100%}
+#ui5.u-signal .sg-mol-moins,#ui5.u-signal .sg-mol-plus{flex:none;width:34px;height:var(--mol-h);border-radius:9px;background:linear-gradient(180deg,var(--tuile-a),var(--tuile-b));box-shadow:inset 0 0 0 1px var(--trait),inset 0 1px 0 var(--reflet);font:500 18px/1 var(--f);color:var(--tx);display:inline-flex;align-items:center;justify-content:center;transition:transform .2s var(--ressort),opacity .2s}
+#ui5.u-signal[data-taille="compact"] .sg-mol-moins,#ui5.u-signal[data-taille="compact"] .sg-mol-plus{width:30px}
+#ui5.u-signal .sg-mol-moins:active:not(:disabled),#ui5.u-signal .sg-mol-plus:active:not(:disabled){transform:scale(.92)}
+#ui5.u-signal .sg-mol-moins:disabled,#ui5.u-signal .sg-mol-plus:disabled{opacity:.3}
+#ui5.u-signal .sg-mol-fen{position:relative;flex:1 1 auto;min-width:calc(var(--c) * 3);height:var(--mol-h);overflow:hidden;border-radius:9px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;
+ -webkit-mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent);mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent)}
+#ui5.u-signal .sg-mol-fen:active{cursor:grabbing}
+#ui5.u-signal .sg-mol-fen:focus-visible{outline-offset:-2px}
+#ui5.u-signal .sg-mol-fen::before{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:var(--c);margin-left:calc(var(--c) / -2);border-radius:8px;background:var(--pouce);box-shadow:inset 0 1px 0 var(--reflet)}
+#ui5.u-signal[data-theme="clair"] .sg-mol-fen::before{box-shadow:0 1px 2px rgba(10,14,25,.18)}
+#ui5.u-signal .sg-mol-bande{position:absolute;top:0;bottom:0;left:50%;display:flex;transform:translateX(calc(var(--c) * -1 * (var(--i, 0) + .5) + var(--dx, 0px)));transition:transform .26s var(--ressort)}
+#ui5.u-signal .sg-mol-bande.sg-glisse{transition:none}
+#ui5.u-signal .sg-mol-n{flex:none;width:var(--c);display:flex;align-items:center;justify-content:center;font:700 22px/1 var(--f);font-variant-numeric:tabular-nums;color:var(--tx2);cursor:pointer;
+ transform:scale(.55);opacity:.35;transition:transform .26s var(--ressort),opacity .26s var(--doux)}
+#ui5.u-signal[data-taille="compact"] .sg-mol-n{font-size:19px}
+#ui5.u-signal .sg-mol-n[data-d="0"]{transform:scale(1);opacity:1;color:var(--accent-tx);cursor:inherit}
+#ui5.u-signal .sg-mol-n[data-d="1"]{transform:scale(.66);opacity:1}
+#ui5.u-signal .sg-mol-n[data-d="2"]{transform:scale(.6);opacity:.7}
+/* dans la boîte : le libellé garde sa largeur, la molette passe dessous quand la place manque (360 de large) */
+#ui5.u-signal .sg-boite .sg-reg{flex-wrap:wrap;row-gap:10px}
+#ui5.u-signal .sg-boite .sg-reg>.sg-lib{flex:1 1 170px}
+#ui5.u-signal .sg-boite .sg-reg>.sg-molette{flex:1 1 240px}
 #ui5.u-signal .sg-corr-liste{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
 #ui5.u-signal .sg-zone>.sg-tu-liste{flex:1 1 0;min-height:150px}
 #ui5.u-signal .sg-corr-partie{display:flex;align-items:baseline;gap:10px;padding:10px 0 2px;font-size:13px}
