@@ -2,7 +2,7 @@
 /* CH-036 — LA CONSTELLATION ET L'AURORE DANS UN VRAI NAVIGATEUR (ignoré s'il n'y a pas de Chromium, et dit ignoré). Maquette : Figma, page
  * « CH-036 · Constellation et Aurore », validée par l'opérateur le 01/11 (départs et motifs visibles d'emblée ; en 360 px, les quatre onglets gardent leur
  * libellé, sur leur propre rang sous la barre). Montage : tests/helpers/signal-navigateur.cjs (service worker simulé). Mesures, de 360 à 600 px puis en
- * clair : 0 erreur de console, rien qui déborde (barre comprise), contraste ≥ 4,5:1 sur les textes nouveaux ; en compact, la bascule est sous la barre et
+ * clair : 0 erreur de console, rien qui déborde (barre comprise), contraste ≥ 4,5:1 sur les textes nouveaux ; en compact, la bascule ne chevauche pas la puce (CH-104 : à sa gauche dans la barre, plus de rang à part) et
  * aucun libellé d'onglet n'est coupé. Direction B « Cadran » (02/11) : l'anneau, le registre, les temps numérotés. La barre est mesurée par ses enfants directs et ses onglets : le nom de l'onglet ESV dans la puce se rogne (points
  * de suspension), c'est voulu. Données fabriquées. */
 const { test } = require('node:test'), assert = require('node:assert/strict');
@@ -28,7 +28,7 @@ const AURORE = {
   ouverte: { ...SC.fin, current: { identity: { part: 13, cut: 15 } }, correction: corr('ouverte', { entreParties: true, courant: { part: 13, cut: 15 } }),
     native: { id: 'n1', status: 'RUNNING', correction: { id: 'C1' }, visits: [visite(13, 14, 'VALIDATE_NO_MOVEMENT'), visite(13, 15, null, false)] } },
 };
-const TEXTES = '.sg-chiffre,.sg-suite,.sg-reg-tete span,.sg-reg-partie .sg-mono,.sg-reg-motifs,.sg-cadran-d,.sg-alerte p,.sg-trois span,.sg-mot,.sg-phrase,.sg-actions button,.sg-etoile small,.sg-etoile .sg-mono,.sg-temps li,.sg-of-t span,.sg-of-l span,.sg-of-l b,.sg-of-motifs,.sg-of-departs th,.sg-of-departs td,.sg-meta,.sg-corr-partie span,.sg-corr-partie b,.sg-aube small,.sg-suite,.sg-statut,.sg-sig,.sg-bascule button,.sg-incident p';
+const TEXTES = '.sg-chiffre,.sg-suite,.sg-reg-tete span,.sg-reg-partie .sg-mono,.sg-reg-motifs,.sg-cadran-d,.sg-alerte p,.sg-tu-avis p,.sg-trio dt,.sg-trio dd,.sg-partie,.sg-mot,.sg-phrase,.sg-actions button,.sg-temps li,.sg-of-t span,.sg-of-ligne span,.sg-of-motifs,.sg-of-depart [role="cell"],.sg-of-depart b,.sg-meta,.sg-corr-partie span,.sg-corr-partie b,.sg-aube small,.sg-suite,.sg-statut,.sg-sig,.sg-bascule button,.sg-incident p';
 const LARGEURS = [600, 560, 520, 480, 440, 400, 360];
 
 function mesurer(page) {
@@ -41,17 +41,18 @@ function mesurer(page) {
     const contraste = e => { const c = rgb(getComputedStyle(e).color), b = fond(e); if (!c) return 21; const k = { r: c.r * c.a + b.r * (1 - c.a), g: c.g * c.a + b.g * (1 - c.a), b: c.b * c.a + b.b * (1 - c.a) }; const [l1, l2] = [lum(k), lum(b)].sort((a, b) => b - a); return (l1 + .05) / (l2 + .05); };
     const vus = [...h.querySelectorAll(sel)].filter(e => e.getClientRects().length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && !e.disabled && !e.closest('[disabled]'));
     const faibles = vus.map(e => ({ t: e.textContent.trim().slice(0, 40), c: Math.round(contraste(e) * 100) / 100 })).filter(x => x.c < 4.5);
-    const sortants = [...h.querySelectorAll('.sg-barre > *,.sg-bascule button,.sg-instrument *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > W + 1; }).map(e => e.className?.baseVal ?? e.className ?? e.tagName);
+    const sortants = [...h.querySelectorAll('.sg-barre > *,.sg-bascule button,.sg-instrument *,.sg-zone *,.sg-actions *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > W + 1; }).map(e => e.className?.baseVal ?? e.className ?? e.tagName);
     const ba = h.querySelector('.sg-bascule'), pu = h.querySelector('.sg-puce');
     const coupes = [...ba.querySelectorAll('button')].filter(b => b.scrollWidth > b.clientWidth + 1 || !b.textContent.trim()).map(b => b.textContent);
     return { W, mot: f.querySelector('.sg-mot')?.textContent, deborde: f.scrollWidth > f.clientWidth + 1, sortants, faibles, coupes, onglets: [...ba.querySelectorAll('button')].map(b => b.textContent),
-      basculeSous: ba.getBoundingClientRect().top >= pu.getBoundingClientRect().bottom - 1, compact: h.dataset.taille === 'compact' };
+      basculeSous: ba.getBoundingClientRect().top >= pu.getBoundingClientRect().bottom - 1 || ba.getBoundingClientRect().right <= pu.getBoundingClientRect().left + 1, compact: h.dataset.taille === 'compact' };
   }, TEXTES);
 }
 async function balayer(page, nom, res) {
   for (const w of LARGEURS) { await page.setViewportSize({ width: w, height: 640 }); await page.waitForTimeout(120); res[`${nom} ${w}`] = await mesurer(page); }
   await page.setViewportSize({ width: 600, height: 760 }); await page.evaluate(() => window.ArianeUi5.agir('sg:choix:theme:clair'));
   await page.waitForFunction(() => document.getElementById('ui5').dataset.theme === 'clair', null, { timeout: 2500 }); await page.waitForTimeout(100);
+  await page.waitForFunction(() => !document.getAnimations().some(a => a instanceof CSSTransition && a.playState === 'running'), null, { timeout: 2500 }); /* CH-104 : pas de mesure au milieu du fondu des couleurs */
   res[`${nom} clair 600`] = await mesurer(page);
   await page.setViewportSize({ width: 360, height: 640 }); await page.waitForTimeout(120); res[`${nom} clair 360`] = await mesurer(page);
   await page.evaluate(() => window.ArianeUi5.agir('sg:choix:theme:sombre')); await page.waitForFunction(() => document.getElementById('ui5').dataset.theme === 'sombre', null, { timeout: 2500 });
@@ -61,7 +62,7 @@ function verifier(res) {
   for (const [k, r] of Object.entries(res)) {
     assert.equal(r.deborde, false, `${k} : rien ne déborde`); assert.deepEqual(r.sortants, [], `${k} : aucun élément ne sort à droite (barre comprise)`);
     assert.deepEqual(r.faibles, [], `${k} : contraste d’au moins 4,5:1`); assert.deepEqual(r.coupes, [], `${k} : aucun libellé d’onglet coupé`);
-    if (r.compact) assert.equal(r.basculeSous, true, `${k} : en compact, la bascule a son propre rang sous la barre`);
+    if (r.compact) assert.equal(r.basculeSous, true, `${k} : en compact, la bascule ne chevauche pas la puce (CH-104 : elle tient à sa gauche dans la barre, ou garde son propre rang dessous)`);
   }
 }
 

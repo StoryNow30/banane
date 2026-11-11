@@ -629,12 +629,18 @@
     const titre = (t, d) => `<h4 class="sg-of-t"><span>${esc(t)}</span>${d ? `<em class="sg-of-d">${esc(d)}</em>` : ''}</h4>`;
     const faites = B.filter(b => !b.interrompue).length, n = F.n ?? E.length;
     const cours = k !== null && k >= 0 ? (k + (k === 0 && s.ar?.cibles ? Math.min(1, (s.ar.traites || 0) / s.ar.cibles) : 0.5)) / 4 : 0.5;
-    const segs = E.map(x => ({ poids: 1, etat: x.e, partie: x.num, fait: x.e === 'a-venir' ? 0 : x.e === 'en-cours' ? cours : 1 }));
-    const [chiffre, suite] = F.actif ? [`${(F.rang ?? 0) + 1}/${n}`, `partie ${F.part ?? F.vers ?? '?'}`] : F.etat === 'repos' ? [String(E.length), E.length > 1 ? 'parties' : 'partie'] : [`${faites}/${n}`, faites > 1 ? 'faites' : 'faite'];
     const L = m.lancer || { seg: [], note: '', boutons: [] };
-    /* Sous la phrase : les quatre temps de la partie en cours ; sinon, les parties faites et restantes. */
-    const sous = k !== null && k >= 0 ? `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < k ? 'fait' : i === k ? 'courant' : 'a-venir'}"${i === k ? ' aria-current="step"' : ''}>${t[1]}</li>`).join('')}</ol>`
-      : trioHtml([[faites, faites > 1 ? 'Faites' : 'Faite'], [Math.max(0, n - faites), n - faites > 1 ? 'Restantes' : 'Restante']]);
+    /* D-334 (maquette du 11/11) : la Constellation se distingue d'Orbite : sa couleur, et dans sa tuile d'état le nom de la partie en grand, le rang à
+     * droite, la phrase, puis la chaîne : un point par partie, reliés (faite, en cours, arrêtée, à venir), le numéro dessous, et les quatre temps. */
+    const R = F.reprise, nf = `${faites} ${faites > 1 ? 'faites' : 'faite'} sur ${n}`, part = F.part ?? F.vers ?? '?';
+    let titreT, rangT, phrase = maj1(m.phrase);
+    if (F.actif && F.etat === 'changement') { titreT = `Vers la partie ${part}`; rangT = nf; phrase = maj1(m.phrase.split(' · ').slice(1).join(' · ')) || phrase; }
+    else if (F.actif) { titreT = `Partie ${part}`; rangT = `${(F.rang ?? 0) + 1} sur ${n}`; phrase = maj1(m.phrase.replace(/^Partie .*?, /, '')); }
+    else if (F.etat === 'repos') { titreT = nP(E.length); rangT = 'à lancer'; }
+    else if (F.etat === 'arret' && R && R.part != null) { titreT = `Partie ${R.part}`; rangT = nf; }
+    else { titreT = `${nP(faites)} ${faites > 1 ? 'faites' : 'faite'}`; rangT = `${faites} sur ${n}`; }
+    const chaine = `<ol class="sg-chaine" aria-label="Parties de la Constellation">${E.map(x => `<li data-etat="${esc(x.e)}" data-partie="${esc(x.num)}" title="${esc(x.sous)}"><i aria-hidden="true"></i><span class="sg-mono">${esc(x.num)}</span></li>`).join('')}</ol>`;
+    const temps = k !== null && k >= 0 ? `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < k ? 'fait' : i === k ? 'courant' : 'a-venir'}"${i === k ? ' aria-current="step"' : ''}>${t[1]}</li>`).join('')}</ol>` : '';
     let z = '', reg = '';
     if (m.alerte) z += tuileAvis('alerte', '!', `<p>${esc(m.alerte)}</p>`, 'sg-alerte', 'alert');
     /* Le registre : une ligne par partie commencée (faite, en cours, interrompue), chiffres alignés puis motifs en clair (décision du 01/11 : visibles d'emblée). */
@@ -652,7 +658,7 @@
     /* Le choix du nombre de parties (au repos, arrêtée, terminée) : la tuile « Nouvelle Constellation » de la maquette. */
     const choix = L.seg.length ? `<section class="sg-tu sg-large sg-tu-choix" data-k="choix"><h4>Nouvelle Constellation</h4><div class="sg-of-ligne"><span>Nombre de parties</span>${segN(L.seg)}</div>${L.note ? `<p class="sg-meta sg-of-note">${L.note}</p>` : ''}</section>` : '';
     z = reg ? `${z}<div class="sg-duo" data-k="duo">${reg}${departs}</div>${choix}` : choix + z + departs;
-    const tete = tuileEtat(m, anneauHtml(segs, chiffre, suite, `Constellation : ${chiffre} ${suite}`), 'Constellation', maj1(m.phrase), sous, 'Constellation');
+    const tete = `<section class="sg-instrument sg-tu sg-tu-etat sg-constel" aria-live="polite" aria-label="Constellation"><div class="sg-haut">${pastille(m)}<span class="sg-partie">Constellation</span></div><div class="sg-constel-t"><h3 class="sg-chiffre">${esc(titreT)}</h3><span class="sg-suite">${esc(rangT)}</span></div><p class="sg-phrase">${phrase}</p>${chaine}${temps}</section>`;
     return { m, corps: `${tete}<div class="sg-zone sg-onglet-file" data-z="file-${esc(F.etat)}">${z}</div>`, pied: piedHtml(L.boutons.map(b => ({ ...b, plein: b.cls === 'plein' }))) };
   }
   /* CH-028, puis CH-036 : L'ONGLET « Aurore » (Figma, page « CH-036 · Constellation et Aurore ») : l'horizon (revus sur total, une portion par partie),

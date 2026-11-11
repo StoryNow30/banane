@@ -20,7 +20,7 @@ const ETATS = {
   enregistre: { ...SC.fin, current: courant, correction: corr('ouverte', { courant: { part: 13, cut: 15 } }), native: { id: 'n1', status: 'RUNNING', correction: { id: 'C1' }, visits: [visite(14, 'VALIDATE_NO_MOVEMENT'), visite(15, 'VALIDATE_CORRECTED_BOTH'), visite(16, null, false)] } },
   terminee: { ...SC.fin, current: courant, correction: corr('terminee'), native: { id: 'n1', status: 'FINISHED', correction: { id: 'C1' }, visits: [visite(14, 'VALIDATE_NO_MOVEMENT'), visite(15, 'VALIDATE_CORRECTED_BOTH'), visite(17, 'PASS_NO_DECISION')] } },
 };
-const EXTRA = '.sg-onglet-corr .sg-statut,.sg-onglet-corr .sg-motif,.sg-onglet-corr .sg-cut,.sg-onglet-corr .sg-meta,.sg-onglet-corr .sg-section span,.sg-onglet-corr .sg-suite,.sg-onglet-corr .sg-droite,.sg-onglet-corr .sg-outils button,.sg-bascule button';
+const EXTRA = '.sg-onglet-corr .sg-statut,.sg-onglet-corr .sg-motif,.sg-onglet-corr .sg-cut,.sg-onglet-corr .sg-meta,.sg-onglet-corr .sg-section span,.sg-onglet-corr .sg-suite,.sg-cadran-d,.sg-onglet-corr .sg-corr-note,.sg-onglet-corr .sg-outils button,.sg-bascule button';
 
 async function monter(nav, state) {
   const sig = await ouvrir(nav, state, { width: 600, height: 760 });
@@ -42,7 +42,7 @@ test('onglet « Correction » : liste proposée, cut ouvert, correction enregist
       vus[nom] = await page.evaluate(() => { const h = document.getElementById('ui5');
         return { onglet: h.querySelector('.sg-fen')?.dataset.activite, choisi: h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
           lignes: h.querySelectorAll('.sg-corr').length, statuts: [...h.querySelectorAll('.sg-statut')].map(e => e.dataset.statut),
-          boutons: [...h.querySelectorAll('.sg-onglet-corr .sg-actions button[data-act]')].map(b => b.textContent.trim() + '|' + b.dataset.act),
+          boutons: [...h.querySelectorAll('.sg-actions button[data-act]')].map(b => b.textContent.trim() + '|' + b.dataset.act),
           defile: (e => e && e.scrollHeight > e.clientHeight)(h.querySelector('.sg-corr-liste')) }; });
     }
     assert.deepEqual(erreurs, []);

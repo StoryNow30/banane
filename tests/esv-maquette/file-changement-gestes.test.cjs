@@ -47,14 +47,14 @@ async function file({ maquette, sansSelecteurApres = false }) {
     /* Comme l'opérateur : l'onglet « File », 2 parties, « Lancer la file ». */
     await pan.click('#ui5 .sg-bascule [data-act="sg:onglet-file"]'); await pan.waitForSelector('#ui5 .sg-onglet-file');
     await pan.click('#ui5 .sg-onglet-file [data-act="sg:file-n:2"]'); await dormir(200);
-    await pan.click('#ui5 .sg-onglet-file [data-act="legacy:file-lancer"]');
+    await pan.click('#ui5 .sg-actions [data-act="legacy:file-lancer"]');
     const t0 = Date.now(); let v = null;
     /* Comme le terrain du 30/10 : le sélecteur était là au départ (relevé de 14:21) et absent ensuite (relevé de 14:38). */
     if (sansSelecteurApres) { for (let i = 0; i < 60 && (await api('file-etat')).file?.etat !== 'lot'; i++) await dormir(250);
       await esv.evaluate(() => { window.__maquette.options.selecteur = 0; document.getElementById('maquette-parties').textContent = ''; }); }
     for (let i = 0; i < 600; i++) { await dormir(500); try { v = (await api('file-etat')).file; } catch { continue; } if (['fin', 'arret'].includes(v?.etat)) break; }
-    await pan.waitForFunction(() => /^(Terminée|Arrêtée)$/.test(document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
-    const signal = await pan.evaluate(() => ({ mot: document.querySelector('#ui5 .sg-onglet-file .sg-mot')?.textContent || '', alerte: document.querySelector('#ui5 .sg-onglet-file [role="alert"]')?.textContent?.trim() || '' }));
+    await pan.waitForFunction(() => /^(Terminée|Arrêtée)$/.test(document.querySelector('#ui5 .sg-instrument .sg-mot')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
+    const signal = await pan.evaluate(() => ({ mot: document.querySelector('#ui5 .sg-instrument .sg-mot')?.textContent || '', alerte: document.querySelector('#ui5 .sg-onglet-file [role="alert"]')?.textContent?.trim() || '' }));
     const ev = (await api('journal')).events || [], adapt = ev.filter(e => e.type === 'adapter-result').map(e => e.action);
     return { v, signal, dureeMs: Date.now() - t0, chargements, erreurs, adapt, maquette: await esv.evaluate(() => window.__maquette.journal.filter(x => x.type === 'cut-charge').map(x => x.raison)),
       tentatives: ev.filter(e => e.type === 'file-parties-changement' && !e.retour), echecs: ev.filter(e => e.type === 'file-parties-changement-echec') };

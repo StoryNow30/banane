@@ -41,7 +41,9 @@ async function parLargeurs(page,{boite=false,extra=''}={}){
  for(const v of LARGEURS){await page.setViewportSize(v);await page.waitForTimeout(200);await ouvrirBoite();res[`${v.width}`]=await mesurer(page,extra);}
  /* Le choix de thème de Signal (réglages, `sg:choix:theme:…`) : il clique le bouton d'origine autant qu'il faut. */
  await page.setViewportSize(LARGEURS[0]);await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:clair'));
- await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='clair',null,{timeout:2500});await page.waitForTimeout(100);await ouvrirBoite();
+ await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='clair',null,{timeout:2500});await page.waitForTimeout(100);
+ /* CH-104 : les couleurs des onglets et des choix se fondent (`transition:color .2s`) : on ne mesure pas un contraste au milieu du fondu. */
+ await page.waitForFunction(()=>!document.getAnimations().some(a=>a instanceof CSSTransition&&a.playState==='running'),null,{timeout:2500});await ouvrirBoite();
  res.clair={...await mesurer(page,extra),theme:await page.evaluate(()=>document.getElementById('ui5').dataset.theme)};
  await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:sombre'));await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='sombre',null,{timeout:2500});
  return res;

@@ -57,7 +57,7 @@ test('CH-028 · correction de bout en bout par Signal : liste, séance Écho mar
     await pan.waitForSelector('#ui5 .sg-bascule [data-act="sg:onglet-correction"]', { timeout: 10000 });
     await pan.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]');
     await pan.waitForSelector(`#ui5 .sg-corr[data-k="c:${part}:${cible}"]`);
-    await pan.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-demarrer"]');
+    await pan.click('#ui5 .sg-actions [data-act="legacy:correction-demarrer"]');
     try { await attendre(async () => (await api('view')).native?.status === 'RUNNING', 'séance Écho démarrée', 40); }
     catch (e) { const v = await api('view'); console.log('# demarrer', JSON.stringify({ c: v.correction?.etat, n: v.native?.status, nm: v.native?.message, notice: await pan.evaluate(() => [document.getElementById('notice')?.textContent, document.getElementById('correction-demarrer')?.disabled, window.__m]) })); throw e; }
     const v1 = await api('view');
@@ -79,7 +79,7 @@ test('CH-028 · correction de bout en bout par Signal : liste, séance Écho mar
      * (étiquette provisoire du service worker, même classification qu'Écho), avant « Terminer ». */
     assert.equal(await esv.evaluate(() => window.__maquette.etat().cut), cible, 'aucune navigation après la validation sur place');
     await pan.waitForSelector(`#ui5 .sg-corr[data-k="c:${part}:${cible}"] .sg-statut[data-statut="valide"]`, { timeout: 10000 });
-    await pan.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-terminer"]');
+    await pan.click('#ui5 .sg-actions [data-act="legacy:correction-terminer"]');
     await attendre(async () => (await api('view')).correction?.etat === 'terminee', 'correction terminée');
     const j = ((await api('journal')).events || []).slice().sort((a, b) => a.timestamp < b.timestamp ? -1 : 1), de = t => j.filter(e => e.type === t);
     const listes = de('correction-liste').filter(e => e.batchId === lot.id);

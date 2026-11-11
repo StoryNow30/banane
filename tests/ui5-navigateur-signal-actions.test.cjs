@@ -15,7 +15,7 @@ test('détails techniques : ouverts depuis les réglages, ce sont les éléments
  try{
   const {page,erreurs}=await ouvrir(nav,SC.fin,{width:600,height:760});
   const avant=await page.evaluate(()=>({parent:document.getElementById('lot-details').parentElement.id,cache:document.getElementById('lot-details').hidden}));
-  await page.click('#ui5 [data-act="sg:reglages"]');await page.waitForTimeout(300);
+  await page.click('#ui5 [data-act="sg:menu"]');await page.waitForTimeout(200);await page.click('#ui5 .sg-menu [data-act="sg:reglages"]');await page.waitForTimeout(300);
   assert.equal(await page.evaluate(()=>!!document.querySelector('#ui5 .sg-feuille')),true);
   await page.click('#ui5 .sg-feuille [data-act="sg:tech"]');await page.waitForTimeout(300);
   const ouvert=await page.evaluate(()=>({dans:document.getElementById('lot-details').closest('#ui5-tech')!==null,visible:!document.getElementById('lot-details').hidden,journal:!!document.querySelector('#ui5-tech #journal'),diag:!!document.querySelector('#ui5-tech #gcv1-diagnostic-export')}));

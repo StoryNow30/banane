@@ -205,6 +205,38 @@ button{font:inherit;color:inherit}
 .tu small.note{color:var(--tx2);font-size:12px;line-height:1.45}
 .btn.danger{color:#F29A96}.btn.danger:hover{color:#FFB4B0;background:rgba(var(--crit-rgb),.12)}
 .commandes[hidden]{display:none}
+.pan[data-vue="file"]{--accent:#62C6F2;--accent-rgb:98,198,242}
+.pan[data-vue="file"] .milieu,.pan:not([data-vue="file"]) .constel{display:none}
+.pan[data-vue="file"] .tu-etat{background:radial-gradient(120% 110% at 100% 0%,rgba(var(--c1-rgb),.22),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
+.constel{display:flex;flex-direction:column;gap:6px}
+.constel-t{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.constel-t h3{margin:0;font:700 22px/1.1 var(--f);letter-spacing:-.02em}
+.pan[data-taille="600"] .constel-t h3{font-size:32px}
+.constel-t span{font:600 12.5px/1 var(--f);color:var(--tx2);white-space:nowrap}
+.pan[data-taille="600"] .constel-t span{font-size:15px}
+.constel p{margin:0;color:var(--tx2);font-size:12.5px}
+.pan[data-taille="600"] .constel p{font-size:14px}
+.chaine{list-style:none;margin:10px 0 2px;padding:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.pan[data-taille="600"] .chaine{margin:18px 0 6px}
+.chaine li{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;font:600 11px/1 var(--f);color:var(--tx3);transition:color .3s}
+.pan[data-taille="600"] .chaine li{font-size:13px;gap:9px}
+.chaine li::before{content:"";position:absolute;top:8px;right:50%;width:100%;height:2px;background:var(--piste);transition:background .4s}
+.pan[data-taille="600"] .chaine li::before{top:11px}
+.chaine li:first-child::before{display:none}
+.chaine li.fait::before,.chaine li.courant::before,.chaine li.arret::before{background:var(--accent)}
+.chaine i{position:relative;z-index:1;width:18px;height:18px;border-radius:50%;background:#131418;box-shadow:inset 0 0 0 2px #2A2C32;transition:background .4s,box-shadow .4s}
+.pan[data-taille="600"] .chaine i{width:24px;height:24px}
+.chaine li.fait i{background:var(--accent);box-shadow:none}
+.chaine li.fait i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:4px;margin:-4px 0 0 -4px;border:2px solid var(--encre);border-top:0;border-right:0;transform:rotate(-45deg)}
+.chaine li.courant i{box-shadow:inset 0 0 0 2px var(--c1)}
+.chaine li.courant i::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--c1)}
+.chaine li.courant i::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--c1);animation:pouls 2s ease-out infinite}
+.pan[data-taille="600"] .chaine li.courant i::before,.pan[data-taille="600"] .chaine li.courant i::after{inset:7px}
+.chaine li.arret i{box-shadow:inset 0 0 0 2px var(--attn)}
+.chaine li.arret i::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--attn)}
+.chaine li.fait,.chaine li.courant,.chaine li.arret{color:var(--tx)}
+.constel .temps{margin-top:6px}
+.pan[data-vue="file"] .reg-l[data-e="faite"] .p i,.pan[data-vue="file"] .reg-l[data-e="en-cours"] .p i{background:var(--accent)}
 .registre{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
 .tu h4 em{font-style:normal;color:var(--tx)}
 .pan[data-taille="360"] .barre-h{gap:4px;padding:0 6px 0 10px}
@@ -269,11 +301,11 @@ button{font:inherit;color:inherit}
   var BILAN = [[13, 87, 6, 3, 'fin normale'], [14, 92, 4, 2, 'fin normale'], [15, 78, 9, 5, 'fin normale'], [16, 101, 3, 1, 'fin normale'], [17, 64, 5, 3, 'dernière partie']];
   var DEPARTS = [[13, '09 h 12', 96], [14, '09 h 41', 96], [15, '10 h 08', 87], [16, '10 h 37', 104], [17, '11 h 02', 69]];
   var F = {
-    repos:   { ton: 'repos',  mot: 'Prête',    rang: -1, faites: 0, centre: ['5', 'parties'], phrase: 'Partie 13 affichée dans ESV · rien n’est lancé', temps: -1, corps: 'choix', actions: [['pr', 'Lancer la Constellation · 5 parties'], ['se', 'Préparer la Constellation']] },
-    cours:   { ton: 'marche', mot: 'En cours', rang: 1, faites: 1, part: .42, centre: ['2/5', 'partie 14'], phrase: 'Partie 14, la deuxième sur 5', temps: 0, note: 'Pose : 41 cuts sur 96 · le détail du lot est dans Orbite.', corps: 'registre', actions: [['se', 'Suivre dans Orbite', 'orbite'], ['fa danger', 'Arrêter la Constellation']] },
-    passage: { ton: 'marche', mot: 'Passage',  rang: 2, faites: 2, part: .05, centre: ['3/5', 'partie 15'], phrase: 'Vers la partie 15 · Ariane travaille dans ESV, ne touche à rien', temps: 3, corps: 'registre', actions: [['se', 'Suivre dans Orbite', 'orbite'], ['fa danger', 'Arrêter la Constellation']] },
-    arret:   { ton: 'toi',    mot: 'Arrêtée',  rang: 2, faites: 2, part: .35, arret: true, centre: ['2/5', 'faites'], phrase: 'Arrêtée par l’opérateur pendant la partie 15', temps: -1, note: 'ESV doit afficher la partie 15 : ouvre-la, puis reprends.', corps: 'registre', actions: [['pr', 'Reprendre à la partie 15 · 3 restantes'], ['se', 'Nouvelle Constellation']] },
-    fin:     { ton: 'fait',   mot: 'Terminée', rang: 5, faites: 5, centre: ['5/5', 'faites'], phrase: 'Les 5 parties sont faites', temps: -1, corps: 'registre', actions: [['pr', 'Ouvrir l’Aurore · 14 cuts'], ['se', 'Nouvelle Constellation'], ['fa', 'Exporter le dossier']] }
+    repos:   { ton: 'repos',  mot: 'Prête',    rang: -1, faites: 0, centre: ['5', 'parties'], titre: '5 parties', rangTxt: 'à lancer', phrase: 'Partie 13 affichée dans ESV · rien n’est lancé', temps: -1, corps: 'choix', actions: [['pr', 'Lancer la Constellation · 5 parties'], ['se', 'Préparer la Constellation']] },
+    cours:   { ton: 'marche', mot: 'En cours', rang: 1, faites: 1, part: .42, centre: ['2/5', 'partie 14'], titre: 'Partie 14', rangTxt: '2 sur 5', phrase: 'La deuxième des cinq parties', temps: 0, note: 'Pose : 41 cuts sur 96 · le détail du lot est dans Orbite.', corps: 'registre', actions: [['se', 'Suivre dans Orbite', 'orbite'], ['fa danger', 'Arrêter la Constellation']] },
+    passage: { ton: 'marche', mot: 'Passage',  rang: 2, faites: 2, part: .05, centre: ['3/5', 'partie 15'], titre: 'Vers la partie 15', rangTxt: '2 faites sur 5', phrase: 'Ariane travaille dans ESV, ne touche à rien', temps: 3, corps: 'registre', actions: [['se', 'Suivre dans Orbite', 'orbite'], ['fa danger', 'Arrêter la Constellation']] },
+    arret:   { ton: 'toi',    mot: 'Arrêtée',  rang: 2, faites: 2, part: .35, arret: true, centre: ['2/5', 'faites'], titre: 'Partie 15', rangTxt: '2 faites sur 5', phrase: 'Arrêtée par l’opérateur pendant cette partie', temps: -1, note: 'ESV doit afficher la partie 15 : ouvre-la, puis reprends.', corps: 'registre', actions: [['pr', 'Reprendre à la partie 15 · 3 restantes'], ['se', 'Nouvelle Constellation']] },
+    fin:     { ton: 'fait',   mot: 'Terminée', rang: 5, faites: 5, centre: ['5/5', 'faites'], titre: '5 parties faites', rangTxt: '5 sur 5', phrase: 'Toutes les parties sont passées, relecture comprise', temps: -1, corps: 'registre', actions: [['pr', 'Ouvrir l’Aurore · 14 cuts'], ['se', 'Nouvelle Constellation'], ['fa', 'Exporter le dossier']] }
   };
   var S = { vue: 'orbite', etat: 'cours', fetat: 'cours', onglet: 0, cut: 4812, traites: 18, poses: 15, aposer: 3, fil: [[4811, 1, 7.2], [4810, 1, 6.9], [4809, 0, 0], [4808, 1, 8.1], [4807, 1, 7.9], [4806, 1, 6.8], [4805, 1, 7.4]] };
   var pans = [].slice.call(document.querySelectorAll('.pan')), C = 2 * Math.PI * 44, N = PARTIES.length, LSEG = C / N - 5;
@@ -284,7 +316,8 @@ button{font:inherit;color:inherit}
     pan.innerHTML = '<header class="barre-h"><div class="seg" data-onglets><i class="pouce"></i>' + ONGLETS.map(function(o, i){ return '<button type="button"' + (i ? '' : ' class="on"') + '>' + o[0] + '</button>'; }).join('') + '</div><button type="button" class="esv"><i></i>ESV</button><button type="button" class="menu" aria-label="Réglages, cache des exports, commandes">···</button></header>'
       + '<div class="corps"><section class="tu tu-etat"><div class="haut"><span class="pastille"><i></i><span class="roule" data-r="mot"></span></span><span class="partie" data-r="partie"></span></div>'
       + '<div class="milieu"><div class="anneau"><b><span class="roule" data-r="pct"></span><small>%</small></b></div><div class="anneau-seg"><svg viewBox="0 0 100 100" aria-hidden="true">' + segs + '</svg><b data-r="centre"></b></div>'
-      + '<div class="texte"><h3 data-r="phrase"></h3><div data-r="sous"></div></div></div></section>'
+      + '<div class="texte"><h3 data-r="phrase"></h3><div data-r="sous"></div></div></div>'
+      + '<div class="constel"><div class="constel-t"><h3 data-r="ctitre"></h3><span data-r="crang"></span></div><p data-r="cphrase"></p><ol class="chaine" data-r="chaine"></ol><div data-r="csous"></div></div></section>'
       + '<div class="zone"></div><button type="button" class="aposer"><b data-r="ap"></b> à poser<em data-r="apq"></em>' + IC.droite + '</button></div>'
       + '<footer class="actions"></footer>';
   });
@@ -350,10 +383,11 @@ button{font:inherit;color:inherit}
     } else if (S.vue === 'file') {
       var f = F[S.fetat];
       pan.dataset.ton = f.ton; roule(q('mot'), f.mot); q('partie').textContent = 'Constellation';
-      q('phrase').textContent = f.phrase; q('centre').innerHTML = f.centre[0] + '<small>' + f.centre[1] + '</small>';
-      q('sous').innerHTML = f.temps >= 0 ? '<ol class="temps">' + TEMPS.map(function(t, i){ return '<li class="' + (i < f.temps ? 'fait' : i === f.temps ? 'courant' : '') + '">' + t + '</li>'; }).join('') + '</ol>'
-        : trioHtml([[f.faites, f.faites > 1 ? 'Faites' : 'Faite'], [N - f.faites, 'Restantes']]);
-      [].forEach.call(pan.querySelectorAll('.anneau-seg .plein'), function(c, i){ var part = i < f.faites ? 1 : i === f.rang ? (f.part || 0) : 0; c.style.strokeDasharray = (LSEG * part) + ' ' + C; c.style.stroke = f.arret && i === f.rang ? 'var(--attn)' : i < f.faites && f.ton !== 'fait' ? 'var(--accent)' : ''; });
+      var n = S.fetat === 'repos' ? Number(f.centre[0]) : N;
+      q('ctitre').textContent = f.titre; q('crang').textContent = f.rangTxt; q('cphrase').textContent = f.phrase;
+      var ch = ''; for (var i = 0; i < n; i++) ch += '<li class="' + (i < f.faites ? 'fait' : i === f.rang && f.temps !== 3 ? (f.arret ? 'arret' : 'courant') : i === f.rang ? 'courant' : '') + '"><i></i><span>' + (13 + i) + '</span></li>';
+      q('chaine').innerHTML = ch;
+      q('csous').innerHTML = f.temps >= 0 ? '<ol class="temps">' + TEMPS.map(function(t, i){ return '<li class="' + (i < f.temps ? 'fait' : i === f.temps ? 'courant' : '') + '">' + t + '</li>'; }).join('') + '</ol>' : '';
     } else pan.dataset.ton = 'repos';
   }
   function rendre(){
@@ -412,8 +446,8 @@ button{font:inherit;color:inherit}
     var seg = s.parentNode, i = [].indexOf.call(seg.querySelectorAll('button'), s);
     if (seg.hasAttribute('data-onglets')) { onglet(i); return; }
     [].forEach.call(seg.querySelectorAll('button'), function(x){ x.classList.toggle('on', x === s); }); placerPouce(seg, s);
-    if (seg.hasAttribute('data-n')) { var n = s.textContent; F.repos.centre[0] = n; F.repos.actions[0][1] = 'Lancer la Constellation · ' + n + ' parties';
-      pans.forEach(function(pan){ pan.querySelector('[data-r="centre"]').innerHTML = n + '<small>parties</small>'; var b = pan.querySelector('.actions .pr'); if (b) b.textContent = F.repos.actions[0][1]; [].forEach.call(pan.querySelectorAll('[data-n] button'), function(x){ x.classList.toggle('on', x.textContent === n); }); pouces(pan.querySelector('.zone')); }); }
+    if (seg.hasAttribute('data-n')) { var n = s.textContent; F.repos.centre[0] = n; F.repos.titre = n + ' parties'; F.repos.actions[0][1] = 'Lancer la Constellation · ' + n + ' parties';
+      pans.forEach(function(pan){ tete(pan); var b = pan.querySelector('.actions .pr'); if (b) b.textContent = F.repos.actions[0][1]; [].forEach.call(pan.querySelectorAll('[data-n] button'), function(x){ x.classList.toggle('on', x.textContent === n); }); pouces(pan.querySelector('.zone')); }); }
   });
 
   rendre();

@@ -58,6 +58,9 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-fen[data-teinte="toi"]{--c1:var(--attn);--c1-rgb:var(--attn-rgb);--c1-tx:var(--attn-tx)}
 #ui5.u-signal .sg-fen[data-teinte="panne"]{--c1:var(--crit);--c1-rgb:var(--crit-rgb);--c1-tx:var(--crit-tx)}
 #ui5.u-signal .sg-fen[data-teinte="fait"]{--c1:var(--ok);--c1-rgb:var(--ok-rgb);--c1-tx:var(--ok-tx)}
+/* D-334 : la Constellation a sa couleur (bleu ciel) ; Orbite reste violet ; les couleurs d'état ne changent pas. */
+#ui5.u-signal .sg-fen[data-activite="file"]{--accent:#62C6F2;--accent-rgb:98,198,242;--accent-tx:#8AD6F6}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="file"]{--accent:#0B79AD;--accent-rgb:11,121,173;--accent-tx:#096690}
 #ui5.u-signal .sg-barre{flex:none;display:flex;align-items:center;gap:8px;height:46px;padding:0 10px 0 12px;border-bottom:1px solid var(--trait)}
 #ui5.u-signal[data-taille="compact"] .sg-barre{gap:4px;padding:0 6px 0 10px}
 #ui5.u-signal .sg-bascule,#ui5.u-signal .sg-seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:auto;padding:3px;border-radius:9px;background:var(--creux);flex:none}
@@ -128,6 +131,40 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-anneau-seg .sg-arc[data-etat="interrompue"]{stroke:var(--attn)}
 #ui5.u-signal .sg-anneau-seg .sg-arc[data-etat="alerte"]{stroke:var(--crit)}
 #ui5.u-signal .sg-fen[data-teinte="fait"] .sg-anneau-seg .sg-arc{stroke:var(--ok)}
+/* la tuile d'état de la Constellation : la partie en grand, le rang, la phrase, la chaîne des parties */
+#ui5.u-signal .sg-constel{gap:6px;background-image:radial-gradient(120% 110% at 100% 0%,rgba(var(--c1-rgb),.22),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
+#ui5.u-signal[data-theme="clair"] .sg-constel{background-image:radial-gradient(120% 110% at 100% 0%,rgba(var(--c1-rgb),.14),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
+#ui5.u-signal .sg-constel .sg-haut{margin-bottom:6px}
+#ui5.u-signal .sg-constel-t{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:2px 10px}
+#ui5.u-signal .sg-constel-t .sg-chiffre{font:700 32px/1.1 var(--f);letter-spacing:-.02em;display:inline-block}
+#ui5.u-signal .sg-constel-t .sg-suite{font:600 15px/1 var(--f);color:var(--tx2);white-space:nowrap}
+#ui5.u-signal .sg-constel .sg-phrase{font:400 14px/1.45 var(--f);letter-spacing:0;color:var(--tx2)}
+#ui5.u-signal[data-taille="compact"] .sg-constel-t .sg-chiffre{font-size:22px}
+#ui5.u-signal[data-taille="compact"] .sg-constel-t .sg-suite{font-size:12.5px}
+#ui5.u-signal[data-taille="compact"] .sg-constel .sg-phrase{font-size:12.5px}
+#ui5.u-signal .sg-chaine{list-style:none;margin:18px 0 6px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+#ui5.u-signal[data-taille="compact"] .sg-chaine{margin:10px 0 2px}
+#ui5.u-signal .sg-chaine li{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;font:600 13px/1 var(--f);color:var(--tx2)}
+#ui5.u-signal[data-taille="compact"] .sg-chaine li{font-size:11px;gap:6px}
+#ui5.u-signal .sg-chaine li .sg-mono{color:inherit}
+#ui5.u-signal .sg-chaine li::before{content:"";position:absolute;top:11px;right:50%;width:100%;height:2px;background:var(--piste)}
+#ui5.u-signal[data-taille="compact"] .sg-chaine li::before{top:8px}
+#ui5.u-signal .sg-chaine li:first-child::before{display:none}
+#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::before{background:var(--accent)}
+#ui5.u-signal .sg-chaine i{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;background:var(--tuile-b);box-shadow:inset 0 0 0 2px var(--trait-fort)}
+#ui5.u-signal[data-taille="compact"] .sg-chaine i{width:18px;height:18px}
+#ui5.u-signal .sg-chaine li[data-etat="faite"] i{background:var(--accent);box-shadow:none}
+#ui5.u-signal .sg-chaine li[data-etat="faite"] i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:4px;margin:-4px 0 0 -4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg)}
+#ui5.u-signal[data-theme="clair"] .sg-chaine li[data-etat="faite"] i::after{border-color:#FFFFFF}
+#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i{box-shadow:inset 0 0 0 2px var(--c1)}
+#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::before,#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--c1)}
+#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::after{animation:sg-pouls 2s ease-out infinite}
+#ui5.u-signal .sg-chaine li[data-etat="interrompue"] i{box-shadow:inset 0 0 0 2px var(--attn)}
+#ui5.u-signal .sg-chaine li[data-etat="interrompue"] i::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--attn)}
+#ui5.u-signal .sg-chaine li[data-etat="alerte"] i{background:var(--crit);box-shadow:none}
+#ui5.u-signal[data-taille="compact"] .sg-chaine li i::before,#ui5.u-signal[data-taille="compact"] .sg-chaine li[data-etat="en-cours"] i::after{inset:5px}
+#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"]){color:var(--tx)}
+#ui5.u-signal .sg-constel .sg-temps{margin-top:6px}
 #ui5.u-signal .sg-texte{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
 #ui5.u-signal .sg-phrase{font:650 20px/1.25 var(--f);letter-spacing:-.01em;overflow-wrap:anywhere}
 #ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:15.5px}

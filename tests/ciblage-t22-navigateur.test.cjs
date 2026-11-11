@@ -38,7 +38,7 @@ async function ouvrir(nav,{memo,lot=null}){
 const enCours=start=>({id:'LNEW',state:'RUNNING',scope:{part:start.part,start:start.start,end:start.end,...(start.endMode?{endMode:start.endMode}:{})},activeIdentity:{part:23,cut:418},cutStartedAt:new Date(Date.now()-1000).toISOString(),
  processed:Array.from({length:13},(_,i)=>({identity:{part:23,cut:10+i*30},cut:10+i*30,durationMs:2800})),deferred:[],skipped:[],manuallyCompleted:[],paused:[],interrupted:[],sequence:Array.from({length:13},(_,i)=>({identity:{part:23,cut:10+i*30}})),lotCommands:{}});
 
-test('Ciblage T22 · fin retenue pour la partie, rien touché : le lot part avec cette fin, et l’écran En cours dit « sur 74 ciblés », graduations, temps restant, bornes',{skip:absent,timeout:30000},async()=>{
+test('Ciblage T22 · fin retenue pour la partie, rien touché : le lot part avec cette fin, et l’écran En cours dit « sur 74 ciblés », pourcentage et trait, temps restant, bornes',{skip:absent,timeout:30000},async()=>{
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,{memo:{last:8770,source:'fin constatée'}});
@@ -47,11 +47,13 @@ test('Ciblage T22 · fin retenue pour la partie, rien touché : le lot part avec
   const start=await page.evaluate(()=>window.__E.start);
   assert.equal(start.start,0);assert.equal(start.end,8770,'bornes envoyées : celles de la test 22, inchangées');assert.equal(start.endMode,undefined);
   await page.evaluate(l=>{window.__E.lot=l;},enCours(start));
-  await page.waitForFunction(()=>/sur 74 ciblés/.test(document.querySelector('#ui5 .sg-compte')?.textContent||''),null,{timeout:8000});
-  const e=await page.evaluate(()=>({compte:document.querySelector('#ui5 .sg-compte').textContent,grads:[...document.querySelectorAll('#ui5 .sg-rail-num')].map(x=>x.textContent),
-   rail:document.querySelector('#ui5 .sg-rail').dataset.total,allure:document.querySelector('#ui5 .sg-allure').textContent,bornes:document.querySelector('#ui5 .sg-lot-bornes')?.textContent,
-   actions:[...document.querySelectorAll('#ui5 .sg-actions button')].map(b=>b.textContent.trim())}));
-  assert.match(e.compte,/13traités sur 74 ciblés13 posés · 0 à poser/);assert.deepEqual(e.grads,['0','37','74']);assert.equal(e.rail,'connu');
+  await page.waitForFunction(()=>/sur 74 ciblés/.test(document.querySelector('#ui5 .sg-anneau')?.getAttribute('aria-label')||''),null,{timeout:8000});
+  /* CH-104 : le compte et le rail sont dans l'anneau (libellé, pourcentage, trait plein) et le trio « Traités · Posés · À poser » */
+  const e=await page.evaluate(()=>{const a=document.querySelector('#ui5 .sg-anneau'),[tr,tot]=a.querySelector('.sg-arc').getAttribute('stroke-dasharray').split(' ').map(Number);
+   return {compte:a.getAttribute('aria-label'),pct:a.querySelector('.sg-chiffre').textContent+a.querySelector('.sg-suite').textContent,part:tr/tot,
+   trio:[...document.querySelectorAll('#ui5 .sg-trio > div')].map(d=>d.textContent),rail:a.dataset.forme==='pct'?'connu':'inconnu',allure:document.querySelector('#ui5 .sg-allure').textContent,bornes:document.querySelector('#ui5 .sg-lot-bornes')?.textContent,
+   actions:[...document.querySelectorAll('#ui5 .sg-actions button')].map(b=>b.textContent.trim())};});
+  assert.equal(e.compte,'13 traités sur 74 ciblés, 0 à poser');assert.deepEqual(e.trio,['Traités13','Posés13','À poser0']);assert.equal(e.pct,'18%');assert.ok(Math.abs(e.part-13/74)<0.005,'trait plein : 13/74 du cercle, '+e.part);assert.equal(e.rail,'connu');
   assert.match(e.allure,/médiane 2,8 s par cut · environ 2 min 51 restantes/,'61 restants × 2,8 s');
   assert.equal(e.bornes,'Lot du cut 0 au cut 8770');assert.deepEqual(e.actions,['Pause','Arrêter le lot']);
   assert.deepEqual(erreurs,[]);await page.close();

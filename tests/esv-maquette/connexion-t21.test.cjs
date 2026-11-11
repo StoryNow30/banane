@@ -99,9 +99,10 @@ test('Connexion T21 · constat de l’opérateur : « Démarrer le lot » ne par
    * « Démarrer » est actif, le lot a commencé, l'onglet nommé a chargé), chacun borné ; la borne n'est atteinte qu'en cas d'échec. */
   const nom=t.result[1].title;
   await m.panneau.goto(`chrome-extension://${m.id}/panel.html#home`);
-  await m.panneau.waitForFunction(n=>(document.querySelector('#ui5 .sg-puce .sg-long')?.textContent||'').includes(n),nom,{timeout:10000}).catch(()=>{});
-  const puce=await m.panneau.$eval('#ui5 .sg-puce .sg-long',e=>e.textContent);
-  assert.match(puce,/utilisé par Ariane/,'la puce nomme l’onglet ciblé : '+puce);
+  await m.panneau.waitForFunction(n=>(document.querySelector('#ui5 .sg-puce')?.getAttribute('aria-label')||'').includes(n),nom,{timeout:10000}).catch(()=>{});
+  /* CH-104 : la puce n'écrit plus que « ESV » ; le nom de l'onglet ciblé est dans son libellé (aria-label et title). */
+  const puce=await m.panneau.$eval('#ui5 .sg-puce',e=>e.getAttribute('aria-label'));
+  assert.match(puce,/utilisé par Ariane/i,'la puce nomme l’onglet ciblé : '+puce);
   assert.ok(puce.includes(nom),'c’est bien le second onglet');
   const actif='#ui5 .sg-actions button[data-act="legacy:start-batch"]:not([disabled])';
   const b=await m.panneau.waitForSelector(actif,{timeout:10000}).catch(()=>null);assert.ok(b,'onglet listé, nommé, prêt : « Démarrer le lot » actif');

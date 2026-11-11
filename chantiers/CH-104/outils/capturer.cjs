@@ -42,6 +42,9 @@ const E={
  'file-passage':{file:true,fiches:FICHES.slice(0,2),state:{...clos(14),fileParties:vue('changement',{rang:1,changement:{vers:15,tentatives:1},bilan:BILAN.slice(0,2)})}},
  'file-arret':{file:true,fiches:FICHES.slice(0,3),state:{...clos(15),fileParties:vue('arret',{rang:2,bilan:[...BILAN.slice(0,2),{...partie(15,2,31,2,null,['operateur']),interrompue:true,relecture:null}],motifFin:{code:'operateur',texte:'arrêtée par l’opérateur'},reprise:{rang:2,part:15,reste:3}})}},
  'file-fin':{file:true,fiches:FICHES,state:{...clos(17),fileParties:vue('fin',{rang:5,bilan:BILAN})}},
+ /* la chaîne doit tenir de 1 à 8 parties */
+ 'file-1':{file:1,state:{...repos,fileParties:null}},
+ 'file-8':{file:true,fiches:FICHES,state:{...clos(17),fileParties:vue('lot',{n:8,plan:[113,114,115,116,117,118,119,120],rang:5,enCours:{part:118,rang:5,lot:true},bilan:BILAN.map((b,i)=>({...b,part:113+i}))})}},
 };
 /* Les autres écrans (la maquette ne les montre pas : ils reçoivent le même système). `actions` : les gestes de Signal joués avant la photo. */
 const CL=require(R+'/src/correction-liste.js'),{journal}=require(R+'/tests/helpers/correction-journal.cjs');
