@@ -54,9 +54,12 @@ test('Signal : bornes du lot rappelées pendant le lot (cours, pause demandée, 
 });
 test('Signal : total inconnu dit tel quel (« N traités · total inconnu »), sans graduations ni temps restant',()=>{
  const h=S.rendre(snap({}),{});
- assert.match(h,/class="sg-chiffre">13<\/span><span class="sg-suite">traités · total inconnu<\/span>/);assert.match(h,/data-total="inconnu"/);
- assert.doesNotMatch(h,/sg-rail-num|restantes|ciblés/);
- const k=S.rendre(snap({cibles:74,restants:61}),{});assert.match(k,/traités sur 74 ciblés/);assert.match(k,/environ <b>2 min 51<\/b> restantes/);assert.equal((k.match(/sg-rail-num/g)||[]).length,3);
+ /* CH-104 : le rail est devenu l'anneau ; sans total, il porte le nombre de cuts traités et tourne (aucun pourcentage inventé), et le dit dans son aria-label */
+ assert.match(h,/<div class="sg-anneau" data-tourne="1" role="img" aria-label="13 traités, total inconnu, 0 à poser">/);
+ assert.match(h,/class="sg-chiffre">13<\/span><small class="sg-suite">cuts<\/small>/);assert.doesNotMatch(h,/data-forme="pct"/);
+ assert.doesNotMatch(h,/restantes|ciblés/);
+ const k=S.rendre(snap({cibles:74,restants:61}),{});assert.match(k,/traités sur 74 ciblés/);assert.match(k,/environ <b>2 min 51<\/b> restantes/);
+ assert.match(k,/data-forme="pct"[^>]*aria-label="13 traités sur 74 ciblés, 0 à poser"/);assert.match(k,/class="sg-chiffre">18<\/span><small class="sg-suite">%<\/small>/,'13 sur 74 = 18 %');
 });
 test('Signal : fin « hors du lot » (ESV passé après le dernier cut du lot) dite dans l’écran de fin',()=>{
  const h=S.rendre(snap({etat:'fini',lotOuvert:false,horsLot:{cut:8770,vers:9120,fin:8770}}),{});

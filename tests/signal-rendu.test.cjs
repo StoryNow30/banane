@@ -30,12 +30,17 @@ const legacy=h=>[...h.matchAll(/data-act="legacy:([a-z0-9-]+)"/g)].map(m=>m[1]);
 test('lot en cours : anneau proportionnel, allure honnête, Pause principale, Arrêter en second',()=>{
  const h=S.rendre(snap(),ui());
  assert.match(h,/class="sg-mot">En cours</);assert.match(h,/Pose du cut <span class="sg-mono">4812</);
- assert.match(h,/class="sg-arc"[^>]*data-debut="1000" data-med="8400"/,'l’anneau sait se remettre à jour entre deux rendus');
  assert.match(h,/<b>7,1<\/b> cuts par minute/);assert.match(h,/médiane <b>8,4 s<\/b> par cut/);assert.match(h,/environ <b>12 min<\/b> restantes/,'89 restants × 8,4 s');
  assert.match(h,/class="sg-principal" data-act="pause"/);assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:stop"/);
- assert.match(h,/class="sg-rail-dif"/);assert.match(h,/class="sg-rail-cur"/);assert.match(h,/>120<\/div>/);
+ /* CH-104 : le rail est devenu l'anneau (31 traités sur 120 ciblés = 26 %) et le trio ; les cuts à poser gardent leur marque (.sg-dif). */
+ assert.match(h,/<div class="sg-anneau" data-forme="pct" role="img" aria-label="31 traités sur 120 ciblés, 4 à poser">/);
+ assert.match(h,/<span class="sg-chiffre">26<\/span><small class="sg-suite">%<\/small>/);
+ assert.match(h,/<dt>Traités<\/dt><dd class="sg-n">31<\/dd>/);assert.match(h,/<dt>À poser<\/dt><dd class="sg-n sg-dif">4<\/dd>/);
  const sans=S.rendre(snap({sig:sig({allure:{mediane:null,parMinute:null,debutCut:null,depuisS:null,pauseS:null}})}),ui());
  assert.doesNotMatch(sans,/cuts par minute|restantes/,'sans médiane, pas d’allure');
+ /* CH-104 : l'anneau du temps passé sur le cut (`.sg-arc[data-debut][data-med]`, mis à jour entre deux rendus) n'existe plus : l'anneau de la maquette
+  * dit l'avancement du lot. Rien ne doit donc rester à mettre à jour entre deux rendus dans l'anneau. */
+ assert.doesNotMatch(h,/class="sg-arc"[^>]*data-(debut|med)=/,'l’anneau ne dépend plus du temps : aucune mise à jour entre deux rendus');
 });
 
 test('allure : médiane des 20 derniers cuts posés (au moins 3 durées), depuis le début du cut et depuis la pause',()=>{
@@ -58,14 +63,15 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
  }
  const d=S.rendre(snap({ar:ar('dem')}),ui());assert.match(d,/class="sg-principal" disabled><span class="sg-tourne"/);assert.doesNotMatch(d,/data-act="pause"/);
  const t=S.rendre(snap({ar:ar('alerte',{etatTexte:'À toi',alerte:'Le cut 4812 a un rail qu’Ariane ne sait pas poser.'}),boutonsOrbite:[b('retry','Réessayer la pose','primary'),b('manual-takeover','Reprendre à la main'),b('explicit-skip','Passer ce cut','danger')]}),ui());
- assert.match(t,/class="sg-incident" data-k="incident" role="alert"><p>Le cut 4812 a un rail/);assert.match(t,/data-act="legacy:retry"/);assert.match(t,/sg-danger" data-act="legacy:explicit-skip"/);
+ assert.match(t,/class="sg-tu sg-tu-avis sg-large sg-incident" data-k="incident" role="alert">.*?<p>Le cut 4812 a un rail/s);assert.match(t,/data-act="legacy:retry"/);assert.match(t,/sg-danger" data-act="legacy:explicit-skip"/);
  const p2=S.rendre(snap({ar:ar('p2',{passe2:{cut:4787,ecrites:1,demandees:3}})}),ui());
- assert.match(p2,/sg-verrou-ligne/);assert.doesNotMatch(p2,/class="sg-principal/);assert.match(p2,/cut <span class="sg-mono">4787<\/span> · 1 posé sur 3/);
+ assert.match(p2,/sg-verrou-ligne/);assert.doesNotMatch(p2,/class="sg-principal/);assert.match(p2,/Cut <span class="sg-mono">4787<\/span> · 1 posé sur 3/,'la phrase n’a plus « Ariane travaille dans ESV » : il est dans la tuile de verrou');
 });
 
 test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’export vient en second ; rien à examiner : le bouton du panneau',()=>{
  const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:9,aExaminer:13}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary'),b('new-batch','Nouveau lot')],exportTexte:''}),ui());
- assert.match(f,/<dt>Lot<\/dt><dd><b>31<\/b> cuts traités sur <b>120<\/b> ciblés/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
+ /* CH-104 : sans autre phrase, la phrase de la tuile d'état EST la ligne « Lot » du bilan, qui n'est alors plus répétée dans la liste. */
+ assert.match(f,/<h3 class="sg-phrase"><b>31<\/b> cuts traités sur <b>120<\/b> ciblés<\/h3>/);assert.doesNotMatch(f,/<dt>Lot<\/dt>/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
  assert.match(f,/class="sg-principal" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
  const r=S.rendre(snap({ar:ar('fini',{lotOuvert:false,differes:0,differesListe:[],aExaminer:0}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary')]}),ui());
  assert.match(r,/class="sg-principal" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
@@ -90,12 +96,13 @@ test('Écho : marques, allure de la séance ; la bascule reste libre pendant un 
  const e=S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours',cours:null}),sig:sig({activite:'echo',echo:{mediane:10.2,marques:[true,false,true]}}),echo:{visites:'148',corriges:65},
   boutonsEcho:[b('native-end','Terminer et télécharger','primary'),b('native-pause','Pause')],echoRows:[{cut:'5317',texte:'Corrigé · 1 rail',corrige:true,duree:'9 s'}]}),ui({tiroir:true}));
  assert.match(e,/class="sg-mot">En observation</);assert.match(e,/<i class="sg-c"><\/i><i class=""><\/i><i class="sg-c"><\/i><i class="sg-en"><\/i>/);
- assert.match(e,/<b>5,9<\/b> cuts par minute/);assert.match(e,/<b>65<\/b> corrigés · <b>83<\/b> validés tels quels/);
+ assert.match(e,/<b>5,9<\/b> cuts par minute/);/* CH-104 : les corrigés et les validés tels quels sont dits dans le trio de la tuile d'état (le corrigé reste aussi dans l'allure). */
+ assert.match(e,/<dt>Corrigés<\/dt><dd class="sg-n">65<\/dd>/);assert.match(e,/<dt>Validés tels quels<\/dt><dd class="sg-n">83<\/dd>/);assert.match(e,/<b>65<\/b> corrigés<\/p>/);
  assert.match(e,/data-act="legacy:native-end"/);assert.match(e,/data-act="mode:automatic"/,'séance ouverte : Orbite reste cliquable');assert.doesNotMatch(e,/data-raison/);
  assert.match(e,/<span class="sg-cut">5317<\/span><span class="sg-motif">Corrigé · 1 rail/);
  const lot=S.rendre(snap(),ui());assert.match(lot,/data-act="mode:native"/,'lot ouvert : Écho reste cliquable (seul le départ est refusé)');assert.doesNotMatch(lot,/data-raison/);
  const vide=S.rendre(snap({ar:ar('pret',{lotOuvert:false}),sig:sig({activite:'echo'}),boutonsEcho:[b('native-start','Démarrer l’observation','primary')]}),ui());
- assert.match(vide,/class="sg-mot">Aucune séance</);assert.match(vide,/aucune visite/);assert.match(vide,/data-act="mode:automatic"/);
+ assert.match(vide,/class="sg-mot">Aucune séance</);assert.match(vide,/Aucune visite pour l’instant/);assert.match(vide,/data-act="mode:automatic"/);
 });
 
 test('Bascule T21 : une navigation, jamais verrouillée (quatre cas du terrain) ; « Séance terminée » est une séance finie',()=>{
@@ -117,9 +124,9 @@ test('Bascule T21 : une navigation, jamais verrouillée (quatre cas du terrain) 
  /* libellés : séance terminée ≠ séance ouverte */
  const t=S.modele(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Séance terminée'}),sig:sig({activite:'echo'}),echo:{visites:'12',corriges:3}}),ui());
  assert.equal(t.mot,'Séance terminée');assert.equal(t.glyphe,'fini');assert.deepEqual(t.bascule,{verrou:false});
- /* la raison du cache ne parle de séance Écho que si elle est ouverte */
- assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Séance terminée'}),sig:sig({activite:'echo'})}),ui()),/après la séance Écho/);
- assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'})}),ui()),/après la séance Écho/);
+ /* la raison du cache ne parle de séance Écho que si elle est ouverte (CH-104 : le cache n'est plus que dans le menu « ··· ») */
+ assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Séance terminée'}),sig:sig({activite:'echo'})}),ui({couche:'menu'})),/après la séance Écho/);
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'})}),ui({couche:'menu'})),/après la séance Écho/);
 });
 
 test('Historique T21 : heure de Paris, pas celle de la machine',()=>{

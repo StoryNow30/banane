@@ -48,7 +48,7 @@ test('Constellation prête : étoiles du plan (la partie affichée, puis les sui
   p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Prête</);
   assert.equal((h.match(/class="sg-arc" data-etat="a-venir"/g) || []).length, 3, 'un arc par partie du plan');
-  assert.match(h, /<span class="sg-chiffre">3<\/span><span class="sg-suite">parties<\/span>/);
+  assert.match(h, /<span class="sg-chiffre">3<\/span><small class="sg-suite">parties<\/small>/);
   assert.match(h, /class="sg-principal" data-act="legacy:file-lancer"[^>]*>.*Lancer la Constellation · 3 parties/s);
   assert.match(h, /aria-label="Départs des parties"/, 'les départs restent visibles d’emblée (décision du 01/11)');
   assert.doesNotMatch(h, /\bla file\b|File de parties/);
@@ -60,11 +60,11 @@ test('Constellation en cours : l’étoile vivante, les quatre temps (Rattrapage
   const p = await pret({ fileParties: F }); poser(p, { etatTexte: 'partie 2 sur 3', phrase: 'Partie 14 · deuxième passe.', reglage: false, secondaire: 'Arrêter la file' });
   p.rendu(etat({ ...LOT, state: 'COMPLETED', activeIdentity: null }, { fileParties: F })); p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-arc" data-etat="faite" data-partie="13"/); assert.match(h, /class="sg-arc" data-etat="en-cours" data-partie="14"/); assert.match(h, /class="sg-arc" data-etat="a-venir" data-partie="15"/);
-  assert.match(h, /<span class="sg-chiffre">2\/3<\/span><span class="sg-suite">partie 14<\/span>/);
-  assert.match(h, /<li data-temps="fait"><span class="sg-mono">01<\/span>Pose<\/li><li data-temps="courant" aria-current="step"><span class="sg-mono">02<\/span>Rattrapage<\/li><li data-temps="a-venir"><span class="sg-mono">03<\/span>Relecture<\/li><li data-temps="a-venir"><span class="sg-mono">04<\/span>Passage<\/li>/);
+  assert.match(h, /<span class="sg-chiffre">2\/3<\/span><small class="sg-suite">partie 14<\/small>/);
+  assert.match(h, /<li data-temps="fait">Pose<\/li><li data-temps="courant" aria-current="step">Rattrapage<\/li><li data-temps="a-venir">Relecture<\/li><li data-temps="a-venir">Passage<\/li>/);
   assert.match(h, /class="sg-reg-partie" data-etat="faite" role="row"><span class="sg-reg-p"><i aria-hidden="true"><\/i><b class="sg-mono">13<\/b><\/span><span class="sg-mono">112<\/span><span class="sg-mono">6<\/span><span class="sg-mono">3<\/span>/);
   assert.match(h, /class="sg-reg-partie" data-etat="en-cours" role="row">.*?<b class="sg-mono">14<\/b>/s);
-  assert.match(h, /data-act="legacy:file-secondaire"[^>]*>Arrêter la Constellation</);
+  assert.match(h, /data-act="legacy:file-secondaire"[^>]*><span>Arrêter la Constellation<\/span><\/button>/);
   assert.match(h, /class="sg-reg-motifs">fin normale · rattrapage en ombre, rien d’écrit · relecture finie</);
   assert.doesNotMatch(h, /deuxième passe|différés/, 'mots de l’opérateur (décision du 01/11)');
 });
@@ -96,7 +96,7 @@ test('Orbite, fin d’une Constellation : « Constellation terminée », « Ouvr
   assert.match(h, /class="sg-mot">Constellation terminée</);
   assert.match(h, /class="sg-principal"[^>]*data-act="sg:onglet-correction"[^>]*>.*Ouvrir l’Aurore · 7 cuts/s);
   assert.match(h, /la Constellation s’est éteinte/);
-  assert.match(h, /data-act="sg:onglet-file">Voir la Constellation</);
+  assert.match(h, /data-act="sg:onglet-file"><span>Voir la Constellation<\/span><\/button>/);
 });
 
 /* ------------------------------------------------------------------ Aurore */
@@ -123,7 +123,7 @@ test('Aurore proposée : « Prête », l’horizon (0 sur 7 revus), la partie, l
   const p = await aurore({ correction: correction('proposee') });
   p.ui.agir('sg:onglet-correction'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Prête</);
-  assert.match(h, /<span class="sg-chiffre">0<\/span><span class="sg-suite">sur 7<\/span>/);
+  assert.match(h, /<span class="sg-chiffre">0<\/span><small class="sg-suite">sur 7<\/small>/);
   assert.match(h, /class="sg-arc" data-etat="a-faire" data-partie="5"/);
   assert.match(h, /class="sg-corr-partie"[^>]*>.*?Partie 5<\/b>.*?0 sur 7/s);
   assert.match(h, /<span class="sg-cut">14<\/span><span class="sg-motif"><span class="sg-sig">posé au rattrapage<\/span>/);
@@ -137,9 +137,9 @@ test('Aurore ouverte : le cut ouvert, « Suivant · cut 17 », « Terminer l’A
   const p = await aurore({ correction: correction('ouverte', { courant: { part: 5, cut: 16 } }), native });
   p.ui.agir('sg:onglet-correction'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">En cours</);
-  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7<\/span>/);
+  assert.match(h, /<span class="sg-chiffre">2<\/span><small class="sg-suite">sur 7<\/small>/);
   assert.match(h, /data-act="sg:corr-ouvrir:5:17"[^>]*>.*Suivant · cut 17/s);
-  assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer l’Aurore/);
+  assert.match(h, /data-act="legacy:correction-terminer"[^>]*><span>Terminer l’Aurore<\/span><\/button>/);
 });
 
 test('autre partie, traversée éteinte : « Ouvrir » reste actif (CH-037 : jamais muet), la phrase dit d’ouvrir la partie dans ESV', async () => {
@@ -174,7 +174,7 @@ test('Aurore terminée : « Terminée », bilan par partie, « Exporter le dossi
   p.ui.agir('sg:onglet-correction'); const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Terminée</);
   assert.match(h, /class="sg-principal" data-act="legacy:export-tout"[^>]*>.*Exporter le dossier/s);
-  assert.match(h, /data-act="legacy:native-download"[^>]*>Télécharger la séance Écho/);
+  assert.match(h, /data-act="legacy:native-download"[^>]*><span>Télécharger la séance Écho<\/span><\/button>/);
   assert.match(h, /Partie 5<\/b>.*?1 corrigé · 1 validé tel quel · 1 vu sans validation/s);
 });
 

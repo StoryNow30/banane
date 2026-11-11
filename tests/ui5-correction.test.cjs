@@ -50,7 +50,7 @@ test('l’onglet : liste proposée, signaux en clair, « Commencer l’Aurore »
   assert.match(h, /Section-a-poser|À poser/);
   assert.equal((h.match(/class="sg-statut"[^>]*>à faire</g) || []).length, 7);
   assert.match(h, /data-act="legacy:correction-demarrer"[^>]*>.*Commencer l’Aurore/s);
-  assert.match(h, /data-act="legacy:correction-fermer"[^>]*>Fermer la liste/);
+  assert.match(h, /data-act="legacy:correction-fermer"[^>]*><span>Fermer la liste<\/span><\/button>/);
   assert.doesNotMatch(h, /data-act="sg:corr-ouvrir/, '« Ouvrir » n’existe qu’en correction ouverte');
   p.ui.agir('legacy:correction-demarrer');
   assert.equal(p.els['correction-demarrer'].clics, 1);
@@ -67,9 +67,9 @@ test('correction ouverte : statuts lus dans les visites d’Écho, « Ouvrir » 
   assert.match(h, /<span class="sg-cut">14<\/span>.*?class="sg-statut" data-statut="corrige">corrigé · 2 rails</s);
   assert.match(h, /<span class="sg-cut">15<\/span>.*?data-statut="valide">validé tel quel</s);
   assert.match(h, /<span class="sg-cut">16<\/span>.*?data-statut="en-cours">ouvert dans ESV</s);
-  assert.match(h, /<span class="sg-chiffre">2<\/span><span class="sg-suite">sur 7<\/span>/, 'CH-036 B : le centre de l’anneau');
+  assert.match(h, /<span class="sg-chiffre">2<\/span><small class="sg-suite">sur 7<\/small>/, 'CH-036 B : le centre de l’anneau');
   assert.match(h, /data-act="sg:corr-ouvrir:5:17"[^>]*>.*Suivant · cut 17/s, 'le premier cut à faire après le courant');
-  assert.match(h, /data-act="legacy:correction-terminer"[^>]*>Terminer l’Aurore/);
+  assert.match(h, /data-act="legacy:correction-terminer"[^>]*><span>Terminer l’Aurore<\/span><\/button>/);
   p.ui.agir('sg:corr-ouvrir:5:18');
   assert.equal(p.els['correction-cible'].value, '5:18'); assert.equal(p.els['correction-ouvrir'].clics, 1);
   assert.deepEqual(p.envoyes, []);
@@ -84,7 +84,7 @@ test('liste terminée : bilan, « Télécharger la séance Écho » (bouton d’
   const h = p.hote.innerHTML;
   assert.match(h, /class="sg-mot">Terminée</);
   assert.match(h, /Partie 5 · inscrit dans l’export Orbite · séance Écho close/);
-  assert.match(h, /class="sg-trois"><div><span class="sg-mono">1<\/span><span>corrigé<\/span><\/div><div><span class="sg-mono">1<\/span><span>validé tel quel<\/span><\/div><div><span class="sg-mono">1<\/span><span>vu sans validation<\/span>/, 'CH-036 B : les trois chiffres, une seule fois');
+  assert.match(h, /class="sg-trio sg-trois"><div><dt>corrigé<\/dt><dd class="sg-n sg-mono">1<\/dd><\/div><div><dt>validé tel quel<\/dt><dd class="sg-n sg-mono">1<\/dd><\/div><div><dt>vu sans validation<\/dt><dd class="sg-n sg-mono">1<\/dd>/, 'CH-036 B : les trois chiffres, une seule fois');
   assert.match(h, /data-act="legacy:native-download"[^>]*>.*Télécharger la séance Écho/s);
   assert.match(h, /class="sg-principal" data-act="legacy:export-tout"[^>]*>.*Exporter le dossier/s, 'CH-036 : l’export est l’action pleine');
 });

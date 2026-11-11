@@ -43,7 +43,7 @@ test('sans `fileParties` dans la vue (file éteinte), Signal ne montre rien de l
 test('au repos, écran « Prêt » : une entrée « Constellation · prête » ouvre la boîte ; le nombre et « Préparer » cliquent la carte d’origine',async()=>{
  const p=await pret({fileParties:null});poser(p,{principal:'Préparer la file'});
  let h=html(p);
- assert.match(h,/data-act="sg:file"[^>]*>Constellation · prête</);
+ assert.match(h,/data-act="sg:file"[^>]*><span>Constellation · prête<\/span><\/button>/);
  assert.match(h,/class="sg-principal"[^>]*data-act="legacy:start-batch"/,'« Démarrer le lot » reste l’action principale');
  assert.doesNotMatch(h,/sg-boite/,'la boîte est fermée');
  p.ui.agir('sg:file');h=p.hote.innerHTML;
@@ -80,10 +80,10 @@ test('pendant la file : bandeau « partie 1 sur 2 · lot en cours » et « Arrê
  p.els.pause.hidden=false;p.els.pause.textContent='Pause';p.els['new-batch'].hidden=false;p.els['new-batch'].textContent='Nouveau lot';
  p.els.stop.hidden=false;p.els.stop.textContent='Arrêter le lot';
  p.rendu(etat(LOT,{fileParties:F}));const h=p.hote.innerHTML;
- assert.match(h,/class="sg-file"/);
+ assert.match(h,/class="sg-tu sg-file sg-large" data-k="file"/);
  /* CH-026 : « Arrêter le lot » (`stop`) arrête toute la file : retiré pendant la file (arrêt du test 26). */
  assert.doesNotMatch(h,/data-act="legacy:stop"/);assert.match(h,/partie 1 sur 2/);assert.match(h,/Partie 13 · lot en cours/);assert.match(h,/<b>Constellation<\/b>/);
- assert.match(h,/class="sg-secondaire sg-danger" data-act="legacy:file-secondaire"[^>]*>Arrêter la Constellation</);
+ assert.match(h,/class="sg-secondaire[^"]*sg-danger" data-act="legacy:file-secondaire"[^>]*><span>Arrêter la Constellation<\/span><\/button>/);
  assert.doesNotMatch(h,/legacy:new-batch|legacy:start-batch/);
  assert.match(h,/relecture<\/b>, toujours/);
  p.ui.agir('legacy:file-secondaire');assert.equal(p.els['file-secondaire'].clics,1);
@@ -121,7 +121,7 @@ test('file arrêtée sur une alerte, lot clos : « Constellation arrêtée », l
  assert.match(h,/1 partie faite sur 2/);assert.match(h,/<li>Partie 13 · 120 posés, 6 à poser · relecture finie, 3 corrigés<\/li>/);
  /* CH-026 : « Préparer la reprise » oubliait la file et menait au « Reprendre » du lot (test 26) : « Reprendre la file » le remplace. */
  assert.match(h,/class="sg-principal"[^>]*data-act="legacy:file-reprendre"[^>]*>.*Reprendre la Constellation · 1 partie restante/);assert.doesNotMatch(h,/Préparer la reprise/);
- assert.match(h,/data-act="sg:onglet-file">Voir la Constellation</);
+ assert.match(h,/data-act="sg:onglet-file"><span>Voir la Constellation<\/span><\/button>/);
  p.ui.agir('legacy:file-reprendre');assert.equal(p.els['file-reprendre'].clics,1);
 });
 

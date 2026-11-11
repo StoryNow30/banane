@@ -198,8 +198,11 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-fin-rond circle,#ui5.u-signal .sg-fin-rond path{fill:none;stroke:var(--ok);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 #ui5.u-signal .sg-fin-arret circle{stroke:var(--tx3)}.sg-fin-arret rect{fill:var(--tx3)}
 #ui5.u-signal .sg-fin{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 14px;font-size:13px;line-height:1.4}
-#ui5.u-signal[data-taille="compact"] .sg-tu-fin{gap:10px}
-#ui5.u-signal[data-taille="compact"] .sg-fin-rond{width:30px;height:30px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fin{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 9px;padding:12px 14px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fin>div{display:contents}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fin .sg-fin{grid-column:1/-1}
+#ui5.u-signal[data-taille="compact"] .sg-fin-rond{width:22px;height:22px}
+#ui5.u-signal[data-taille="compact"] .sg-fin-rond circle,#ui5.u-signal[data-taille="compact"] .sg-fin-rond path{stroke-width:3.4}
 #ui5.u-signal[data-taille="compact"] .sg-fin{font-size:12.5px;gap:3px 10px}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fin>div{gap:6px}
 #ui5.u-signal .sg-fin dt{color:var(--tx2);white-space:nowrap}
@@ -247,16 +250,18 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-actions>button:not(:disabled):hover{transform:translateY(-1px)}
 #ui5.u-signal .sg-actions>button:not(:disabled):active{transform:scale(.965);transition-duration:.06s}
 #ui5.u-signal .sg-principal{background:var(--plein);color:var(--sur-plein);box-shadow:inset 0 1px 0 var(--plein-reflet)}
-#ui5.u-signal .sg-principal.sg-danger{color:var(--sur-plein)}
+/* Maquette : arrêter n'est jamais le bouton plein (« Arrêter la relecture » est cerclé) ; seul l'arrêt de la Constellation est écrit en rouge. */
+#ui5.u-signal .sg-principal.sg-danger{background:transparent;color:var(--tx);box-shadow:inset 0 0 0 1px var(--trait)}
+#ui5.u-signal .sg-principal.sg-danger:not(:disabled):hover{background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal .sg-secondaire{box-shadow:inset 0 0 0 1px var(--trait)}
 #ui5.u-signal .sg-secondaire:not(:disabled):hover{background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait-fort)}
-#ui5.u-signal .sg-secondaire.sg-discret{box-shadow:none;color:var(--tx2)}
+#ui5.u-signal .sg-secondaire.sg-discret,#ui5.u-signal .sg-principal.sg-danger+.sg-secondaire{box-shadow:none;color:var(--tx2)}
 #ui5.u-signal .sg-secondaire.sg-discret:not(:disabled):hover{color:var(--tx);background:var(--creux);box-shadow:none}
-#ui5.u-signal .sg-secondaire.sg-danger{color:var(--crit-tx)}
-#ui5.u-signal .sg-secondaire.sg-danger:not(:disabled):hover{background:rgba(var(--crit-rgb),.12)}
+#ui5.u-signal .sg-secondaire.sg-danger[data-act="legacy:file-secondaire"]{color:var(--crit-tx)}
+#ui5.u-signal .sg-secondaire.sg-danger[data-act="legacy:file-secondaire"]:not(:disabled):hover{background:rgba(var(--crit-rgb),.12)}
 #ui5.u-signal .sg-tourne{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:sg-tour .9s linear infinite}
 #ui5.u-signal .sg-raison{flex-basis:100%;font-size:12px;line-height:1.4;color:var(--tx2)}
-#ui5.u-signal .sg-verrou-ligne{display:flex;align-items:center;gap:8px;flex-basis:100%;min-height:38px;color:var(--tx2);font-size:12.5px}
+#ui5.u-signal .sg-verrou-ligne{display:flex;align-items:center;gap:8px;flex:1 1 220px;min-height:38px;color:var(--tx2);font-size:12.5px}
 #ui5.u-signal .sg-verrou-ligne svg{width:14px;height:14px}
 
 /* ───────────────────────────── « Ce qui reste » : une feuille par-dessus la page */

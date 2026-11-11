@@ -50,3 +50,19 @@ test('R6 · lot en cours : le panneau se redessine chaque seconde, l’écran de
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });
+
+/* CH-104 : l'anneau du temps passé sur le cut n'existe plus (voir R6 ci-dessus) ; ce qui avance encore seul entre deux rendus, c'est « en pause depuis ». */
+test('R6 · lot en pause : « en pause depuis » avance sans réécrire l’écran',{skip:absent,timeout:20000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const pause={...SC.pause,connection:{status:'ready',tabId:1}};pause.batch={...pause.batch,pausedAt:new Date(Date.now()-3000).toISOString()};
+  const {page,erreurs}=await ouvrir(nav,pause,{width:600,height:760});
+  await page.evaluate(()=>{window.__fen=document.querySelector('#ui5 .sg-fen');});
+  const t0=await page.evaluate(()=>document.querySelector('#ui5 .sg-pause-depuis')?.textContent);
+  await page.waitForTimeout(2600);
+  assert.equal(await page.evaluate(()=>window.__fen.isConnected),true,'même écran après plusieurs rendus du panneau');
+  const t1=await page.evaluate(()=>document.querySelector('#ui5 .sg-pause-depuis')?.textContent);
+  assert.ok(t0&&t1&&t1!==t0,'« en pause depuis » avance : '+t0+' → '+t1);
+  assert.deepEqual(erreurs,[]);
+ }finally{await nav.close();}
+});

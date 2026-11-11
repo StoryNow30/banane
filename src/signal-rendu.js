@@ -379,10 +379,10 @@
   }
   /* Les actions, en pied : le bouton plein d'abord, puis les autres, sous leurs noms. Le troisième et les suivants sont discrets (maquette). */
   function piedHtml(boutons, { verrou = '', raison = '' } = {}) {
-    if (verrou) return `<footer class="sg-actions" data-k="verrou"><div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(verrou)}</span></div></footer>`;
     const B = boutons.filter(Boolean);
-    if (!B.length && !raison) return '';
-    let h = raison ? `<p class="sg-raison">${esc(raison)}</p>` : '', n = 0;
+    if (!B.length && !raison && !verrou) return '';
+    /* Écran verrouillé : la ligne de verrou, et les seuls boutons qui restent permis (« Arrêter la Constellation » pendant son rattrapage ou son passage). */
+    let h = verrou ? `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(verrou)}</span></div>` : raison ? `<p class="sg-raison">${esc(raison)}</p>` : '', n = 0;
     for (const b of B) {
       const plein = !!b.plein, rang = plein ? 0 : ++n;
       h += `<button type="button" data-k="${esc(b.occupe ? 'occupe' : b.act || '')}" class="${plein ? 'sg-principal' : 'sg-secondaire' + (rang > 1 ? ' sg-discret' : '')}${b.danger ? ' sg-danger' : ''}"${b.act && !b.occupe ? ` data-act="${esc(b.act)}"` : ''}${b.occupe || b.inactif ? ' disabled' : ''}>${b.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : ''}<span>${esc(b.texte)}</span></button>`;
@@ -390,7 +390,7 @@
     return `<footer class="sg-actions" data-n="${B.length}">${h}</footer>`;
   }
   function actionsHtml(m) {
-    if (m.verrou) return piedHtml([], { verrou: m.verrouTexte || 'Aucune action jusqu’à la fin du rattrapage' });
+    if (m.verrou) return piedHtml([m.file?.secondaire], { verrou: m.verrouTexte || 'Aucune action jusqu’à la fin du rattrapage' });
     return piedHtml([m.principal ? { ...m.principal, plein: true } : null, ...m.secondaires, m.file?.principal, m.file?.secondaire], { raison: m.raison });
   }
 

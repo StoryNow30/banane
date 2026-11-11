@@ -21,7 +21,7 @@ test('Signal au départ, en 600 × 760 : aucune erreur, panneau d’avant caché
  for(const [k,r] of Object.entries(res)){
   assert.deepEqual(r.erreurs,[],k);assert.equal(r.classe,'u-signal',k);assert.equal(r.main,'none',k+' : le panneau d’avant est caché');
   assert.equal(r.taille,k.split('/')[0],k);assert.equal(r.theme,'sombre',k+' : sombre par défaut');assert.equal(r.deborde,false,k+' : rien ne déborde');
-  assert.ok(r.principaux<=1,k+' : une action principale au plus');assert.match(r.police,/IBM Plex Sans/,k);
+  assert.ok(r.principaux<=1,k+' : une action principale au plus');assert.match(r.police,/Inter/,k);
  }
  assert.equal(res['normal/lot'].mot,'En cours');assert.equal(res['normal/fin'].mot,'Terminé');assert.equal(res['normal/echo'].mot,'En observation');assert.equal(res['normal/repos'].mot,'Prêt');
 });
