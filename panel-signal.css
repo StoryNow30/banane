@@ -82,7 +82,10 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-puce i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok)}
 #ui5.u-signal .sg-puce[data-etat="ko"] i{background:var(--crit)}.sg-puce[data-etat="libre"] i{background:var(--attn)}.sg-puce[data-etat="aucun"] i{background:var(--tx3)}
 #ui5.u-signal .sg-puce[data-etat="ko"]{color:var(--crit-tx)}
-#ui5.u-signal .sg-puce{flex:0 1 auto;min-width:40px;max-width:270px}
+/* La puce cède la place : elle se rétrécit jusqu'à ne garder que sa pastille ; le bouton « ··· » ne sort jamais (à 320 avec quatre onglets). */
+#ui5.u-signal .sg-puce{flex:0 1 auto;min-width:18px;max-width:270px;overflow:hidden}
+#ui5.u-signal .sg-menu-b{flex:none}
+@media (max-width:339px){#ui5.u-signal[data-taille="compact"] .sg-barre{gap:2px;padding:0 4px 0 6px}#ui5.u-signal[data-taille="compact"] .sg-bascule>button{padding:0 5px}#ui5.u-signal[data-taille="compact"] .sg-puce{padding:0 6px;gap:5px}}
 #ui5.u-signal .sg-puce .sg-tx{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #ui5.u-signal .sg-puce .sg-fl{width:11px;height:11px;flex:none}
 #ui5.u-signal .sg-puce[data-etat="libre"],#ui5.u-signal .sg-puce[data-etat="aucun"]{color:var(--attn-tx)}
