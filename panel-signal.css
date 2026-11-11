@@ -460,7 +460,10 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-mol-n[data-d="0"]{transform:scale(1);opacity:1;color:var(--accent-tx);cursor:inherit}
 #ui5.u-signal .sg-mol-n[data-d="1"]{transform:scale(.66);opacity:1}
 #ui5.u-signal .sg-mol-n[data-d="2"]{transform:scale(.6);opacity:.7}
-#ui5.u-signal .sg-boite .sg-reg{flex-wrap:wrap}
+/* dans la boîte : le libellé garde sa largeur, la molette passe dessous quand la place manque (360 de large) */
+#ui5.u-signal .sg-boite .sg-reg{flex-wrap:wrap;row-gap:10px}
+#ui5.u-signal .sg-boite .sg-reg>.sg-lib{flex:1 1 170px}
+#ui5.u-signal .sg-boite .sg-reg>.sg-molette{flex:1 1 240px}
 #ui5.u-signal .sg-corr-liste{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
 #ui5.u-signal .sg-zone>.sg-tu-liste{flex:1 1 0;min-height:150px}
 #ui5.u-signal .sg-corr-partie{display:flex;align-items:baseline;gap:10px;padding:10px 0 2px;font-size:13px}

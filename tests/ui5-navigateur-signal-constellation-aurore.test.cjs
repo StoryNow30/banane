@@ -41,7 +41,8 @@ function mesurer(page) {
     const contraste = e => { const c = rgb(getComputedStyle(e).color), b = fond(e); if (!c) return 21; const k = { r: c.r * c.a + b.r * (1 - c.a), g: c.g * c.a + b.g * (1 - c.a), b: c.b * c.a + b.b * (1 - c.a) }; const [l1, l2] = [lum(k), lum(b)].sort((a, b) => b - a); return (l1 + .05) / (l2 + .05); };
     const vus = [...h.querySelectorAll(sel)].filter(e => e.getClientRects().length && [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && !e.disabled && !e.closest('[disabled]'));
     const faibles = vus.map(e => ({ t: e.textContent.trim().slice(0, 40), c: Math.round(contraste(e) * 100) / 100 })).filter(x => x.c < 4.5);
-    const sortants = [...h.querySelectorAll('.sg-barre > *,.sg-bascule button,.sg-instrument *,.sg-zone *,.sg-actions *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > W + 1; }).map(e => e.className?.baseVal ?? e.className ?? e.tagName);
+    /* CH-105 : la bande de la molette est coupée par sa fenêtre (`.sg-mol-fen`, overflow:hidden) : seule la fenêtre compte. */
+    const sortants = [...h.querySelectorAll('.sg-barre > *,.sg-bascule button,.sg-instrument *,.sg-zone *,.sg-actions *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > W + 1 && !e.parentElement?.closest('.sg-mol-fen'); }).map(e => e.className?.baseVal ?? e.className ?? e.tagName);
     const ba = h.querySelector('.sg-bascule'), pu = h.querySelector('.sg-puce');
     const coupes = [...ba.querySelectorAll('button')].filter(b => b.scrollWidth > b.clientWidth + 1 || !b.textContent.trim()).map(b => b.textContent);
     return { W, mot: f.querySelector('.sg-mot')?.textContent, deborde: f.scrollWidth > f.clientWidth + 1, sortants, faibles, coupes, onglets: [...ba.querySelectorAll('button')].map(b => b.textContent),
