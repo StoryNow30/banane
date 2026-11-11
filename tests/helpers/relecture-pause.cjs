@@ -6,8 +6,8 @@ const H=require('./relecture-lot.cjs');
 const REGLAGE='banane51RelecturePauseReglage',REPRISE='banane51RelectureReprise';
 /* `actif` : réglage allumé (défaut) ; `null` : aucun réglage gardé (état d'une installation neuve) ; `f5` : 'pause' (défaut) ou 'arret'. */
 async function lotPause({actif=true,f5='pause',mode='ombre',local=null,...reste}={}){
- const l=local||memoire();if(actif!==null)l.m[REGLAGE]={actif,f5};
- return H.lotRelecture({mode,local:l,...reste});}
+ const l=local||memoire();if(actif!==null)l.m[REGLAGE]={actif,f5,v:2};   /* CH-109 : un choix de l'opérateur porte la marque `v: 2` */
+ return H.lotRelecture({mode,local:l,pauseDefaut:require('../../src/settings.js').relecturePause,...reste});}
 /* Attend que la passe soit dans l'état demandé. */
 async function attendreEtat(b,etat,ms=60000){const fin=Date.now()+ms;
  for(;;){const p=b.get('relecture').passe;if(p?.etat===etat)return p;

@@ -108,7 +108,7 @@ const attendre=ms=>new Promise(r=>setTimeout(r,ms));
  * décision des cuts sans remplacement est un différé immédiat (« essai-sans-calcul ») : la passe dure alors quelques dizaines de ms par
  * cut au lieu de 1 à 4 s (le délai d'un essai est de 20 s). Vrai : moteur et décision réels sur chaque cut relu. */
 let scienceFixture=null;
-async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},calculReel=false,ecartementPartie=undefined,reglagesProposes=null,relecture={},esv=null,observateur=true,clic=null,regles=false,local:localDonne=null}={}){
+async function lotRelecture({pauseDefaut=null,mode='ombre',loin=[113],decalages={},decisions={},calculReel=false,ecartementPartie=undefined,reglagesProposes=null,relecture={},esv=null,observateur=true,clic=null,regles=false,local:localDonne=null}={}){
  const adapter=new EsvRelecture({decalages,loin}),local=localDonne||memoire();if(mode)local.m[CLE]=mode;if(clic)local.m.banane50ClicHumain=clic;
  const b=production({adapter,local});b.local=local;
  /* Test 25 (D-268) : déplacement de la vue livré allumé ; coupé dans ce montage qui compare aux commandes de la base. */
@@ -119,7 +119,10 @@ async function lotRelecture({mode='ombre',loin=[113],decalages={},decisions={},c
   /* 4.9.5.13 : profil du lot « actuel » (empreintes de la base ; le défaut livré, « L1-s », est essayé dans tests/lot-profil-*.test.cjs). */
   /* CH-019 : la garde « après un différé » est coupée : ce montage est joué par tools/parite-relecture-sw.cjs, qui compare la relecture à celle d'une
    * autre version ; la garde est couverte par ses essais dédiés (tests/garde-apres-differe-*-sw.test.cjs). */
-  lot:{...S.lot,profil:'actuel',gardeApresDiffere:{...S.lot.gardeApresDiffere,actif:false}}};
+  lot:{...S.lot,profil:'actuel',gardeApresDiffere:{...S.lot.gardeApresDiffere,actif:false}},
+  /* CH-109 (D-341) : pause et reprise de la relecture livrées allumées par défaut ; ce montage, joué par tools/parite-relecture-sw.cjs contre d'autres
+   * versions, garde l'ANCIEN défaut (éteint) ; les essais de la pause (tests/helpers/relecture-pause.cjs) lisent le défaut livré (`pauseDefaut`). */
+  relecturePause:pauseDefaut||{...S.relecturePause,defautActif:false}};
  if(reglagesProposes)b.ctx.fetch=async url=>/relecture-reglages-proposes\.json$/.test(url)?{ok:true,json:async()=>structuredClone(reglagesProposes)}:{ok:false};
  /* L'écriture que l'observateur passif de la page relaierait après une validation. */
  let seq=0;adapter.surValidation=async(cut,e)=>{if(e===null)return;const t=Date.now();

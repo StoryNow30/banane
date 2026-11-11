@@ -457,10 +457,11 @@
   /* D-290 (opérateur, 06/11 : « go ») : ALLUMÉ. Relecture du 06/11 (paquet 2bc1f56) : signal éteint pendant toute la relecture des parties 13 à 15. */
   const relectureSignalEteint = Object.freeze({ actif: true, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });
   /* CH-109 (A) : DÉFAUT de la pause et de la reprise de la relecture (Test 17, D-232 à D-234), quand l'opérateur n'a rien choisi dans le panneau (aucun
-   * `banane51RelecturePauseReglage` gardé) ; un choix gardé l'emporte toujours. Livré à l'ANCIEN défaut (éteint : un F5 pendant la relecture l'arrête en erreur,
-   * rien ne la reprend). Proposé, en attente de l'accord écrit de l'opérateur : `defautActif: true` (un F5 la met en pause au cut où elle était, « Reprendre »
-   * la relance à ce cut). `defautF5` : 'pause' ou 'arret' (le choix « Si ESV est rechargé pendant la relecture »). */
-  const relecturePause = Object.freeze({ defautActif: false, defautF5: 'pause' });
+   * `banane51RelecturePauseReglage` marqué `v: 2`). D-341 (choix écrit de l'opérateur, 11/11 : « après un F5, la relecture reprend là où elle s'était arrêtée ») :
+   * ALLUMÉ. Un F5 pendant la relecture la met en pause au cut où elle était, et elle reprend seule une fois la page rechargée et ESV prêt (background.js,
+   * `relectureEsvRevenue`). Migration unique : un « éteint » gardé sans marque (posé avant D-341) passe à « allumé » une fois ; ensuite, un « éteint » coché
+   * par l'opérateur est respecté. `defautF5` : 'pause' ou 'arret' (le choix « Si ESV est rechargé pendant la relecture »). `defautActif: false` : l'ancien défaut. */
+  const relecturePause = Object.freeze({ defautActif: true, defautF5: 'pause' });
   /* CH-084 (D-313) — VALIDATION SUR PLACE (Maj+Espace, relecture « corriger ») : fin de la fenêtre d'observation par un ÉTAT OBSERVÉ.
    * Aujourd'hui l'adaptateur attend 1 500 ms un changement de cut qui n'arrive pas (147 appels sur 147 ≥ 1 501 ms, lots du 09/11).
    * `actif` : la fenêtre se ferme plus tôt seulement si l'écriture « valid » (TreatedByOperator) de CE cut est vue par l'observateur
