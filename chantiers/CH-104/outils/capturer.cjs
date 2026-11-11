@@ -8,8 +8,8 @@ const R=path.resolve(__dirname,'../../..');
 const navigateur=require(R+'/tests/esv-maquette/navigateur.cjs'),{ouvrirPanneau}=require(R+'/tests/helpers/panneau-local.cjs');
 const N=require(R+'/tools/ui5-navigateur.cjs');
 const SORTIE=process.argv[2],FILTRE=process.argv[3]||'';
-if(!SORTIE){console.error('Dossier de sortie (hors dépôt) attendu.');process.exit(2);}
-fs.mkdirSync(SORTIE,{recursive:true});
+const SEUL=require.main===module;
+if(SEUL){if(!SORTIE){console.error('Dossier de sortie (hors dépôt) attendu.');process.exit(2);}fs.mkdirSync(SORTIE,{recursive:true});}
 const VERTS=new Set([4793,4799,4800,4806,4815,4816,4824,4833,4841,4842,4850,4858,4866,4871,4880,4888,4889,4895]),DIF=[4796,4803,4809,4838,4861,4877];
 const id=(c,p=13)=>({part:p,cut:c});
 const listes=(jusqua,p=13,de=4790)=>{const P=[],d=[];for(let n=de;n<=jusqua;n++){if(VERTS.has(n))continue;if(DIF.includes(n))d.push({identity:id(n,p),cut:n,deferredAt:'2026-11-10T09:0'+(n%10)+':00Z',unresolvedRails:n%2?['left']:['left','right']});else P.push({identity:id(n,p),cut:n,durationMs:6200+((n*37)%23)*100});}return {processed:P,deferred:d};};
@@ -89,7 +89,9 @@ const MESURE=()=>{
   const c=rgb(s.color),f=fond(e);if(!c)continue;const k0={r:c.r*c.a+f.r*(1-c.a),g:c.g*c.a+f.g*(1-c.a),b:c.b*c.a+f.b*(1-c.a)};const [a,b2]=[lum(k0),lum(f)].sort((x,y)=>y-x);const k=(a+.05)/(b2+.05);
   if(k<4.5)out.push('CONTRASTE '+nom(e)+' « '+e.textContent.trim().slice(0,24)+' » '+k.toFixed(2));}
  return [...new Set(out)];};
-(async()=>{
+/* Les états et la mesure servent aussi à controle.cjs. */
+module.exports={E,MESURE,FICHES,lot,id};
+if(SEUL)(async()=>{
  const {chromium}=require(navigateur.modulePlaywright());const nav=await chromium.launch({executablePath:navigateur.executable()});const bilan={},mesures={};
  for(const theme of ['sombre','clair'])for(const [taille,vp] of [['600',{width:600,height:760}],['360',{width:360,height:480}]])for(const [nom,e] of Object.entries(E)){
   const cle=`${theme}-${taille}-${nom}`;if(FILTRE&&!cle.includes(FILTRE))continue;
