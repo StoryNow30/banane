@@ -3664,3 +3664,7 @@ Complète D-299 sans la modifier.
 - Réponse de l'opérateur devant Graphite animé, mot pour mot : « Il y a peut être un langage meilleur et plus optimisé pour ces animations ? Le style me plaît maintenant il faut adapter tout ça à l'interface qu'on cherche à construire ».
 - Effet : le style du panneau est Graphite. Fait par l'intégrateur : maquette vivante du vrai panneau du lot en Graphite (huit états, deux tailles, vrais noms de boutons, lecture automatique d'un lot), page publiée, source dans `maquettes/bento/panneau-graphite.html`. Animations en CSS, transform et opacity seulement (le panneau tourne à côté d'ESV).
 - Reste à décider par lui avant l'intégration dans l'extension (D-323 tient) : son accord sur cette maquette ; le pourcentage à la place de « total inconnu » ; réglages et cache des exports dans le menu « ··· » ; les autres écrans (Écho, Constellation, Aurore, réglages) dans le même style.
+
+## D-332 — Maquette Graphite du panneau : l'onglet Constellation manquait (opérateur, 11/11)
+- Remarque de l'opérateur, mot pour mot : « Il manque constellation ».
+- Fait : onglet Constellation (la file de parties) ajouté à la maquette, entre Écho et Aurore comme dans le panneau actuel, avec ses cinq états (prête, en cours, passage, arrêtée, terminée), l'anneau à un segment par partie, les quatre temps de la partie, le bilan par partie, les départs des parties, et les noms de boutons du panneau actuel. Écho et Aurore restent à dessiner dans ce style ; leurs onglets le disent.
