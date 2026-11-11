@@ -7,7 +7,7 @@ routes nav
     plus "/plus"
 
 component App
-  state etat = "pret"
+  state etat = "pret" persist
   state premier = "4790"
   state dernier = ""
   action agir
@@ -41,8 +41,8 @@ component App
               section
                 row
                   column flex=1 min-width=0 gap=8 padding="6px 0"
-                    row align-items="center" gap=8
-                      text mot(etat) font="-exact-title1" font-weight=700 flex=1 min-width=0 testId="mot"
+                    row align-items="center" gap=8 flex-wrap="wrap"
+                      text mot(etat) font="-exact-title1" font-weight=700 flex="1 1 auto" hyphens="auto" testId="mot"
                       if etat == "toi"
                         Badge(label="Action requise", tint=some("-exact-system-orange"))
                       if etat == "panne"
@@ -55,12 +55,12 @@ component App
                         text unite(etat) font="-exact-footnote" color="-exact-secondary-label"
               if etat == "pret"
                 section
-                  row align-items="center" gap=12
+                  row align-items="center" gap=12 flex-wrap="wrap"
                     text "Premier cut" flex=1
-                    input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" width="7rem" text-align="right"
-                  row align-items="center" gap=12
+                    input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" flex="0 1 7rem" min-width=0 text-align="right"
+                  row align-items="center" gap=12 flex-wrap="wrap"
                     text "Dernier cut" flex=1
-                    input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" width="7rem" text-align="right"
+                    input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" flex="0 1 7rem" min-width=0 text-align="right"
                   footer
                     text "Dernier cut vide : le lot va jusqu’à la fin de la partie, puis se clôt seul."
               section background-color="transparent"
@@ -73,13 +73,13 @@ component App
                       row gap=10 flex-wrap="wrap"
                         if seconde(etat) != ""
                           button buttonStyle="bordered" flex="1 1 auto" testId="seconde"
-                            text seconde(etat) white-space="nowrap"
+                            text seconde(etat)
                         if etat == "fin" or etat == "relecture"
                           button press=nouveau buttonStyle="bordered" flex="1 1 auto" testId="nouveau"
-                            text "Nouveau lot" white-space="nowrap"
+                            text "Nouveau lot"
                         if arret(etat) != ""
                           button press=arreter destructive=true buttonStyle="bordered" flex="1 1 auto" testId="arret"
-                            text arret(etat) white-space="nowrap"
+                            text arret(etat)
                     if etat == "rattrapage"
                       text "Aucune autre action jusqu’à la fin du rattrapage." font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="verrou"
               if etat != "pret"

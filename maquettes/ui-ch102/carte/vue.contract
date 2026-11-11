@@ -7,7 +7,7 @@ routes nav
     plus "/plus"
 
 component App
-  state etat = "pret"
+  state etat = "pret" persist
   state premier = "4790"
   state dernier = ""
   action agir
@@ -47,16 +47,16 @@ component App
                     if etat == "panne"
                       row
                         Badge(label="Panne", tint=some("-exact-system-red"))
-                    text mot(etat) font="-exact-large-title" font-weight=700 testId="mot"
+                    text mot(etat) font="-exact-large-title" font-weight=700 hyphens="auto" testId="mot"
                     text phrase(etat) color="-exact-secondary-label" testId="phrase"
                   if etat == "pret"
                     column gap=12 padding=16 border-radius=16 background-color="-exact-secondary-background"
-                      row align-items="center" gap=12
+                      row align-items="center" gap=12 flex-wrap="wrap"
                         text "Premier cut" flex=1
-                        input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" width="7rem" text-align="right"
-                      row align-items="center" gap=12
+                        input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" flex="0 1 7rem" min-width=0 text-align="right"
+                      row align-items="center" gap=12 flex-wrap="wrap"
                         text "Dernier cut" flex=1
-                        input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" width="7rem" text-align="right"
+                        input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" flex="0 1 7rem" min-width=0 text-align="right"
                   else
                     column accent-color=match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" }
                       SummaryCard(label=unite(etat), value=fait(etat), detail=`sur ${total(etat)}`, progress=some(fraction(etat)), symbol=none)
@@ -68,13 +68,13 @@ component App
                       row gap=10 flex-wrap="wrap"
                         if seconde(etat) != ""
                           button buttonStyle="bordered" flex="1 1 auto" testId="seconde"
-                            text seconde(etat) white-space="nowrap"
+                            text seconde(etat)
                         if etat == "fin" or etat == "relecture"
                           button press=nouveau buttonStyle="bordered" flex="1 1 auto" testId="nouveau"
-                            text "Nouveau lot" white-space="nowrap"
+                            text "Nouveau lot"
                         if arret(etat) != ""
                           button press=arreter destructive=true buttonStyle="bordered" flex="1 1 auto" testId="arret"
-                            text arret(etat) white-space="nowrap"
+                            text arret(etat)
                     if etat == "rattrapage"
                       text "Aucune autre action jusqu’à la fin du rattrapage." font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="verrou"
                   if etat != "pret"

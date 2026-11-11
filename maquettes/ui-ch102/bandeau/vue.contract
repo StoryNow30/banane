@@ -8,7 +8,7 @@ routes nav
     plus "/plus"
 
 component App
-  state etat = "pret"
+  state etat = "pret" persist
   state premier = "4790"
   state dernier = ""
   action agir
@@ -42,21 +42,21 @@ component App
               column min-height="100%"
                 if etat == "pret" or etat == "pause"
                   column gap=6 padding="24px 20px" flex="1 1 auto" max-height="17rem" justify-content="flex-end" box-sizing="border-box" background-color="-exact-secondary-background" testId="bandeau"
-                    text mot(etat) font="-exact-large-title" font-weight=700 testId="mot"
+                    text mot(etat) font="-exact-large-title" font-weight=700 hyphens="auto" testId="mot"
                     text phrase(etat) color="-exact-secondary-label" testId="phrase"
                 else
                   column gap=6 padding="24px 20px" flex="1 1 auto" max-height="17rem" justify-content="flex-end" box-sizing="border-box" accent-color=match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" } background-color="AccentColor" color="AccentColorText" testId="bandeau"
-                    text mot(etat) font="-exact-large-title" font-weight=700 color="AccentColorText" testId="mot"
+                    text mot(etat) font="-exact-large-title" font-weight=700 color="AccentColorText" hyphens="auto" testId="mot"
                     text phrase(etat) color="AccentColorText" testId="phrase"
                 column gap=16 padding=20 width="100%" box-sizing="border-box" flex="0 0 auto"
                   if etat == "pret"
                     column gap=12
-                      row align-items="center" gap=12
+                      row align-items="center" gap=12 flex-wrap="wrap"
                         text "Premier cut" flex=1
-                        input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" width="7rem" text-align="right"
-                      row align-items="center" gap=12
+                        input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" flex="0 1 7rem" min-width=0 text-align="right"
+                      row align-items="center" gap=12 flex-wrap="wrap"
                         text "Dernier cut" flex=1
-                        input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" width="7rem" text-align="right"
+                        input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" flex="0 1 7rem" min-width=0 text-align="right"
                   else
                     column gap=8
                       StatBar(label=unite(etat), value=`${fait(etat)} sur ${total(etat)}`, fraction=fraction(etat), tint=some(match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" }))
@@ -69,13 +69,13 @@ component App
                       row gap=10 flex-wrap="wrap"
                         if seconde(etat) != ""
                           button buttonStyle="bordered" flex="1 1 auto" testId="seconde"
-                            text seconde(etat) white-space="nowrap"
+                            text seconde(etat)
                         if etat == "fin" or etat == "relecture"
                           button press=nouveau buttonStyle="bordered" flex="1 1 auto" testId="nouveau"
-                            text "Nouveau lot" white-space="nowrap"
+                            text "Nouveau lot"
                         if arret(etat) != ""
                           button press=arreter destructive=true buttonStyle="bordered" flex="1 1 auto" testId="arret"
-                            text arret(etat) white-space="nowrap"
+                            text arret(etat)
                     if etat == "rattrapage"
                       text "Aucune autre action jusqu’à la fin du rattrapage." font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="verrou"
         if e.name == "plus"
