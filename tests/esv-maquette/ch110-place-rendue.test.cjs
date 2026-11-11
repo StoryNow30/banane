@@ -33,9 +33,11 @@ async function seance({fois,adaptateur=null,reparation=null}){
  const t1=await s.transition();evts.push(...t1.evts);assert.deepEqual(t1.regles,['signal','signal'],'capture saine : règle du signal');
  await O77.attendre(async()=>await s.compteur()===0);
  s.pannes({eptEchec:{http:502,fois}});const ts=[];
- for(let i=0;i<8&&(srv.journal.echecsEpt||[]).length<fois;i++){const t=await s.transition({mortMs:600});ts.push(t);evts.push(...t.evts);}
+ /* Sans réparation, une capture peut échouer une fois Potree bloqué (« niveau de détail non stabilisé ») : relevé, la séance s'arrête là. */
+ let erreur=null;for(let i=0;i<8&&(srv.journal.echecsEpt||[]).length<fois;i++){try{const t=await s.transition({mortMs:600});ts.push(t);evts.push(...t.evts);}catch(e){erreur=String(e.message);break;}}
+ await O77.attendre(async()=>(srv.journal.echecsEpt||[]).length>=fois,10000).catch(()=>{});
  assert.equal((srv.journal.echecsEpt||[]).length,fois,`${fois} requêtes refusées par le serveur`);
- return {s,srv,evts,ts,cles:[...new Set(srv.journal.echecsEpt)]};}
+ return {s,srv,evts,ts,erreur,cles:[...new Set(srv.journal.echecsEpt)]};}
 /* Coupe suivante affichée en entier (journal `ept-affiche` sans nœud bloqué). */
 const affichee=async(s,cut)=>(await s.journal('ept-affiche')).some(a=>a.cut===cut&&!a.bloques);
 
@@ -83,7 +85,31 @@ test('patch, réparation éteinte : identique au tronc (bloqué, aucune remise)'
  assert.ok(AP?.contenu,AP?.erreur);
  const {s,srv,evts,cles}=await seance({fois:4,adaptateur:AP.contenu,reparation:{...REGLAGE,actif:false}});
  await O77.attendre(async()=>await s.compteur()===4,15000);const avant=requetes(srv);
- for(let i=0;i<2;i++)evts.push(...(await s.transition({mortMs:600})).evts);await dormir(1500);evts.push(...await s.evenements());
+ let erreurs=0;for(let i=0;i<2;i++){try{evts.push(...(await s.transition({mortMs:600})).evts);}catch{erreurs++;}}await dormir(1500);evts.push(...await s.evenements());   /* captures en échec : le symptôme, comme le tronc */
  assert.equal(await s.compteur(),4);assert.equal(requetes(srv),avant);for(const c of cles)assert.equal(srv.journal.ept[c],1);
  assert.equal(rendues(evts).length,0,'aucun événement de remise');
+});
+
+/* Interaction avec le préchauffage (CH-083, CH-095) : un de NOS load() reçoit le 502 (Potree au repos, préchauffage allumé, réglage livré). Réparation allumée :
+ * la place est rendue, le nœud est rechargé, le compteur redescend à 0, la ligne de base ne tombe jamais « sous », et après la pause du préchauffage
+ * (10 s) il repart et charge, sans « réseau occupé ». */
+test('patch, préchauffage allumé : un de nos load() en échec → place rendue, compteur à 0, le préchauffage repart après sa pause',opts,async()=>{
+ assert.ok(AP?.contenu,AP?.erreur);
+ const s=await O.ouvrir({adaptateur:AP.contenu,reparation:REGLAGE});ouverts.push(s);const srv=s.env.serveur,evts=[];
+ const t1=await s.transition();evts.push(...t1.evts);assert.ok(t1.evts.some(e=>e.kind==='prechauffage'&&e.memLances>0),'préchauffage sain : des load() à nous');
+ await O77.attendre(async()=>await s.compteur()===0);
+ s.pannes({eptEchec:{http:502,fois:1}});const tEchec=Date.now();
+ const t2=await s.transition();evts.push(...t2.evts);
+ assert.equal((srv.journal.echecsEpt||[]).length,1);const cle=srv.journal.echecsEpt[0];
+ await O77.attendre(async()=>srv.journal.ept[cle]>=2,15000);
+ for(let i=0;i<2;i++){const t=await s.transition({mortMs:600});evts.push(...t.evts);assert.deepEqual(t.regles,['signal','signal'],'capture au signal');}
+ await O77.attendre(async()=>await s.compteur()===0,15000);
+ const reste=O.LIVRE.pauseMs+500-(Date.now()-tEchec);if(reste>0)await dormir(reste);
+ const ops=[];for(let i=0;i<3;i++){const t=await s.transition();evts.push(...t.evts);ops.push(...t.evts.filter(e=>e.kind==='prechauffage'));}
+ evts.push(...await s.evenements());
+ const r=rendues(evts);assert.equal(r.length,1,'une remise');assert.equal(r[0].motif,'rendue');assert.equal(r[0].cle,cle);
+ assert.equal(evts.filter(e=>e.kind==='ligne-base-repli').length,0,'ligne de base jamais « sous »');
+ assert.equal(ops.filter(p=>p.motif==='reseau-occupe').length,0,'aucune opération « réseau occupé »');
+ assert.ok(ops.some(p=>p.memLances>0&&p.memCharges>0),'des load() à nous, chargés, après la pause');
+ console.log(`# préchauffage : remise ${r[0].avant}→${r[0].apres}, nœud demandé ${srv.journal.ept[cle]} fois ; après la pause : ${ops.map(p=>p.motif+' ('+(p.memLances??0)+')').join(', ')}`);
 });

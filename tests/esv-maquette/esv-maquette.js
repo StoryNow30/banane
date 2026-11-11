@@ -132,7 +132,7 @@
  function libererMemoire(){const lim=window.Potree.pointLoadLimit;if(lru.m.size<=1)return;
   while(lru.points>lim){const n=lru.m.keys().next().value;if(!n)break;const pile=[n];while(pile.length){const c=pile.pop();c.dispose?.();lruRetirer(c);for(const e of Object.values(c.children||{}))if(e.loaded)pile.push(e);}}}
  function chargerPotree(n){if(n.loaded||n.loading)return;if(window.Potree.numNodesLoading>=window.Potree.maxNodesLoading)return;
-  n.loading=true;window.Potree.numNodesLoading++;
+  n.loading=true;n.echec=false;window.Potree.numNodesLoading++;   /* CH-110 : un nœud remis par la page et redemandé n'est plus « en échec » pendant ce chargement */
   return (async()=>{if(!n.nodeinfo)await lireHierarchieCommun(n);const pts=n.nodeinfo?.pointCount??0;let ok=true;
    if(pts>0){const url=`${proprietaire.base}/ept-data/${n.key.join('-')}.laz`;ok=await fetch(url,options.eptAuth?{headers:{'x-esv-jeton':'1'}}:undefined).then(r=>r.arrayBuffer().then(()=>r.ok)).catch(()=>false);
     try{const e=performance.getEntriesByName(new URL(url,location.href).href).at(-1);if(e){ept.vus++;if(e.transferSize===0&&e.decodedBodySize>0)ept.cache++;}}catch{}
