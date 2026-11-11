@@ -43,10 +43,10 @@ test('« Arrêter la file » de Signal, confirmé, envoie ce qu’envoie `#file-
   const sig=await ouvrir(nav,FILE.lot,{width:600,height:760});await espion(sig.page);
   assert.match(await sig.page.textContent('#ui5 .sg-file'),/partie 1 sur 2/);
   /* CH-026 : l'arrêt se confirme (un clic demande, un second, 600 ms après au moins, arrête). */
-  await sig.page.click('#ui5 .sg-file [data-act="legacy:file-secondaire"]');await sig.page.waitForTimeout(200);
+  await sig.page.click('#ui5 .sg-actions [data-act="legacy:file-secondaire"]');await sig.page.waitForTimeout(200);
   assert.deepEqual(await messages(sig.page),[],'un clic ne fait que demander');
-  assert.match(await sig.page.textContent('#ui5 .sg-file [data-act="legacy:file-secondaire"]'),/Confirmer l’arrêt de la Constellation/);
-  await sig.page.waitForTimeout(500);await sig.page.click('#ui5 .sg-file [data-act="legacy:file-secondaire"]');await sig.page.waitForTimeout(300);
+  assert.match(await sig.page.textContent('#ui5 .sg-actions [data-act="legacy:file-secondaire"]'),/Confirmer l’arrêt de la Constellation/);
+  await sig.page.waitForTimeout(500);await sig.page.click('#ui5 .sg-actions [data-act="legacy:file-secondaire"]');await sig.page.waitForTimeout(300);
   const ori=await ouvrir(nav,FILE.lot,{width:600,height:760});await espion(ori.page);
   await ori.page.evaluate(()=>document.getElementById('file-secondaire').click());await ori.page.waitForTimeout(300);
   const a=await messages(sig.page),b=await messages(ori.page);

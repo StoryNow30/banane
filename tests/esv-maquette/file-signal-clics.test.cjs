@@ -84,7 +84,7 @@ test('CH-026 · « Arrêter la file » se confirme : un clic ne fait que demande
   const m = await monter({ width: 600, height: 760 });
   try {
     await lancerParLaBoite(m); await attendreLotDeFile(m);
-    const sel = '#ui5 .sg-file [data-act="legacy:file-secondaire"]';
+    const sel = '#ui5 .sg-actions [data-act="legacy:file-secondaire"]';
     const p = await centre(m.pan, sel);
     await m.pan.mouse.dblclick(p.x, p.y); await dormir(400);
     assert.equal((await m.api('file-etat')).file?.etat, 'lot', 'un double clic ne vaut pas confirmation');
@@ -104,16 +104,16 @@ test('CH-026 · onglet « File » : lancer, arrêter (confirmé), puis « Repren
   try {
     await m.pan.click('#ui5 .sg-bascule [data-act="sg:onglet-file"]'); await m.pan.waitForSelector('#ui5 .sg-onglet-file');
     await m.pan.click('#ui5 .sg-onglet-file [data-act="sg:file-n:2"]'); await dormir(200);
-    await m.pan.click('#ui5 .sg-onglet-file [data-act="legacy:file-lancer"]');
+    await m.pan.click('#ui5 .sg-actions [data-act="legacy:file-lancer"]');
     await attendreLotDeFile(m);
-    const sel = '#ui5 .sg-onglet-file [data-act="legacy:file-secondaire"]';
+    const sel = '#ui5 .sg-actions [data-act="legacy:file-secondaire"]';
     await m.pan.click(sel); await dormir(700); await m.pan.click(sel);
     let f = null; for (let i = 0; i < 40; i++) { f = (await m.api('file-etat')).file; if (f?.etat === 'arret') break; await dormir(250); }
     assert.equal(f?.etat, 'arret'); assert.deepEqual({ ...f.reprise }, { rang: 0, part: 23, reste: 2 }, 'la partie 23, interrompue, est à refaire');
     for (let i = 0; i < 40; i++) { const b = (await m.api('view')).batch; if (b && b.state !== 'RUNNING') break; await dormir(250); }
-    await m.pan.waitForSelector('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]', { timeout: 5000 });
-    assert.match(await m.pan.textContent('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]'), /Reprendre à la partie \d+ · 2 restantes/);
-    await m.pan.click('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]');
+    await m.pan.waitForSelector('#ui5 .sg-actions [data-act="legacy:file-reprendre"]', { timeout: 5000 });
+    assert.match(await m.pan.textContent('#ui5 .sg-actions [data-act="legacy:file-reprendre"]'), /Reprendre à la partie \d+ · 2 restantes/);
+    await m.pan.click('#ui5 .sg-actions [data-act="legacy:file-reprendre"]');
     await attendreLotDeFile(m);
     const g = (await m.api('file-etat')).file; assert.deepEqual([...g.plan], [23, 24]); assert.equal(g.rang, 0);
     const ev = ((await m.api('journal')).events || []).filter(e => e.type === 'file-parties' && e.evenement === 'demarrer').sort((a, b) => String(a.timestamp).localeCompare(String(b.timestamp)));

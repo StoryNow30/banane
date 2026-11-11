@@ -20,7 +20,7 @@ const ETATS = {
   enregistre: { ...SC.fin, current: courant, correction: corr('ouverte', { courant: { part: 13, cut: 15 } }), native: { id: 'n1', status: 'RUNNING', correction: { id: 'C1' }, visits: [visite(14, 'VALIDATE_NO_MOVEMENT'), visite(15, 'VALIDATE_CORRECTED_BOTH'), visite(16, null, false)] } },
   terminee: { ...SC.fin, current: courant, correction: corr('terminee'), native: { id: 'n1', status: 'FINISHED', correction: { id: 'C1' }, visits: [visite(14, 'VALIDATE_NO_MOVEMENT'), visite(15, 'VALIDATE_CORRECTED_BOTH'), visite(17, 'PASS_NO_DECISION')] } },
 };
-const EXTRA = '.sg-onglet-corr .sg-statut,.sg-onglet-corr .sg-motif,.sg-onglet-corr .sg-cut,.sg-onglet-corr .sg-meta,.sg-onglet-corr .sg-section span,.sg-onglet-corr .sg-suite,.sg-onglet-corr .sg-droite,.sg-onglet-corr .sg-outils button,.sg-bascule button';
+const EXTRA = '.sg-onglet-corr .sg-statut,.sg-onglet-corr .sg-motif,.sg-onglet-corr .sg-cut,.sg-onglet-corr .sg-meta,.sg-onglet-corr .sg-section span,.sg-onglet-corr .sg-suite,.sg-cadran-d,.sg-onglet-corr .sg-corr-note,.sg-onglet-corr .sg-outils button,.sg-bascule button';
 
 async function monter(nav, state) {
   const sig = await ouvrir(nav, state, { width: 600, height: 760 });
@@ -36,13 +36,13 @@ test('onglet « Correction » : Commencer, Ouvrir (partie et cut), Terminer envo
   try {
     const { page, erreurs } = await monter(nav, ETATS.proposee);
     await page.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]'); await page.waitForTimeout(200);
-    await page.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-demarrer"]'); await page.waitForTimeout(400);
+    await page.click('#ui5 .sg-actions [data-act="legacy:correction-demarrer"]'); await page.waitForTimeout(400);
     assert.deepEqual((await messages(page)).map(m => m.action).filter(a => a !== 'correction-liste'), ['correction-demarrer']);
     await poserEtat(page, ETATS.ouvert);
     await page.click('#ui5 .sg-onglet-corr [data-act="sg:corr-ouvrir:13:16"]'); await page.waitForTimeout(400);
     const m = (await messages(page)).filter(x => x.action !== 'correction-liste');
     assert.deepEqual(m.map(x => [x.action, x.args]), [['correction-ouvrir', { part: 13, cut: 16 }]]);
-    await page.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-terminer"]'); await page.waitForTimeout(400);
+    await page.click('#ui5 .sg-actions [data-act="legacy:correction-terminer"]'); await page.waitForTimeout(400);
     assert.deepEqual((await messages(page)).map(x => x.action).filter(a => a !== 'correction-liste'), ['correction-terminer']);
     assert.deepEqual(erreurs, []);
   } finally { await nav.close(); }

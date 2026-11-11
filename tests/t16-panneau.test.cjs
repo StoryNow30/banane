@@ -118,5 +118,6 @@ test('mouvement en CSS : lueur du bord seulement pendant le lot, figée si le sy
 test('liste déroulante : options lisibles dans les deux thèmes (fond opaque du thème, texte du thème)',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../panel.css'),'utf8');
   assert.match(css,/select option\{background-color:var\(--menu\);color:var\(--text\)\}/);
-  assert.equal((css.match(/--menu:#16201a;--menu-on:#1f4a31/g)||[]).length,2,'sombre : système et bascule');assert.match(css,/--menu:#ffffff;--menu-on:#dcefe3/);
+  /* CH-104 : jetons Graphite, sombre par défaut (`:root`, sans règle « thème du système »), clair avec `data-theme=light` */
+  assert.equal((css.match(/--menu:#16181C;--menu-on:#2B2E45/g)||[]).length,1,'sombre : le thème par défaut');assert.match(css,/:root\[data-theme=light\]\{[^}]*--menu:#FFFFFF;--menu-on:#E2E3FA/);
 });

@@ -116,6 +116,10 @@
     }
     /* La relecture qui suit le lot écrit dans ESV (corriger) : tant qu'elle travaille, le lot n'est pas « terminé » ; le bouton « Arrêter la relecture » du panneau d'avant est visible. */
     if (etat === 'fini' && visible('relecture-arreter')) etat = 'rel';
+    /* Relecture critique (CH-106, 11/11) : pendant une PAUSE de la relecture, le panneau d'avant cache « Arrêter la relecture » et montre « Reprendre »
+     * et « Arrêter » de la pause : l'écran restait sur « Terminé », sans moyen de reprendre ni d'arrêter. La relecture de CE lot en pause est encore la
+     * relecture : l'état est `rel`, et le modèle (src/signal-rendu.js, `case 'rel'`) offre les deux boutons d'origine. La pause d'un autre lot ne compte pas. */
+    if (etat === 'fini') { try { const pr = root.ArianeRelecturePause?.etat?.()?.passe; if (pr && pr.etat === 'en-pause' && pr.lotId === b.id && visible('relecture-reprendre')) etat = 'rel'; } catch { /* état de la relecture illisible : rien ne change */ } }
     /* Phrase de l'incident, d'après l'état (vérifié dans le code : src/engine.js `apply`, `closeUncertain` ; panel.js, « debloquable ») :
      * une opération interrompue bloque toute écriture jusqu'à son archivage ; sans opération en cours, « Reprendre » suffit. */
     const cutI = cutDe(s?.intent?.identity) ?? cutDe(b?.activeIdentity);
@@ -155,6 +159,9 @@
       /* Revue T21 (R1) : la deuxième passe de CE lot quand elle n'écrit pas (en ombre, en calcul, finie) : son résultat, que panel.js dit dans `#passe-differes-ligne`. */
       passeFin: (P => P && b && P.lotId === b.id && P.etat !== 'ecriture' ? { mode: P.mode, etat: P.etat, posees: P.posees, differes: P.differes, ecrites: P.ecrites, message: P.message ?? null } : null)(s?.passeDifferes),
       lotOuvert: !!b && (OUVERT.includes(st) || incertain || !!p2 || etat === 'rel'), passe2: p2,
+      /* CH-104 : les étapes du lot (maquette Graphite) : ce que CE lot prévoit après la pose : sa relecture (`scope.relecture`, le choix du lot) et le mode
+       * effectif du rattrapage (réglage rendu par le service worker). Inconnu : null, et rien n'est annoncé. */
+      etapes: b ? { relecture: ['coupee', 'ombre', 'corriger'].includes(b.scope?.relecture) ? b.scope.relecture : null, passe: (() => { try { const g = A.passeReglage?.(); return ['off', 'ombre', 'ecriture'].includes(g?.mode) ? g.mode : null; } catch { return null; } })() } : null,
       cache: { actif: !!$('export-cache-clear') && !$('export-cache-clear').disabled }, connexionBloquee: !!$('connect')?.disabled,
       echoEtat: { RUNNING: 'Collecte en cours', PAUSED: 'Collecte en pause', STARTING: 'Démarrage de la collecte', PAUSED_ADAPTER_UNRESPONSIVE: 'ESV ne répond plus', FINISHED: 'Séance terminée' }[s?.native?.status] || (s?.native?.visits?.length ? 'Séance à terminer' : 'Aucune séance en cours'),
       alerte, esv: s?.connection?.status === 'unavailable' || st === 'PAUSED_ADAPTER_UNRESPONSIVE' ? 'ko' : s?.connection?.status === 'no-tab' ? 'non' : s?.current?.identity ? 'ok' : 'non',
@@ -183,6 +190,14 @@
       examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre',
       f5: $('relecture-pause-actif')?.checked && f5 ? (f5.value === 'arret' ? 'arret' : 'pause') : null,
       taille: (root.innerWidth || 600) < 480 || (root.innerHeight || 760) < 600 ? 'compact' : 'normal',
+      /* CH-104 : le fil des cuts (maquette Graphite) : les derniers cuts que le lot a terminés, du plus récent au plus ancien ; la durée vient de
+       * `batch.processed[].durationMs`, le rail d'un cut à poser de `batch.deferred[].unresolvedRails`. Ce que le lot ne garde pas reste vide. */
+      fil: (() => { if (!b) return []; try {
+        const v = A.voieDuLot(s), dur = new Map((b.processed || []).map(x => [cutDe(x), Number(x.durationMs)])), dif = new Map((b.deferred || []).map(x => [cutDe(x), x]));
+        return v.cuts.map(c => ({ cut: c, statut: STATUT[v.classe(c)] })).filter(x => x.statut && x.statut !== 'cours').slice(-9).reverse().map(x => {
+          const d = dur.get(x.cut), r = dif.get(x.cut)?.unresolvedRails;
+          return { ...x, dureeS: Number.isFinite(d) && d > 0 ? d / 1000 : null, detail: x.statut === 'differe' && Array.isArray(r) && r.length ? (r.length === 2 ? 'les deux rails' : RAILS[r[0]] || '') : '' }; });
+      } catch { return []; } })(),
     };
   }
   /* CH-025 : la FILE DE PARTIES (CH-017), carte `#file-parties` du panneau d'avant. Rien tant que la vue ne porte pas `fileParties` (panel.js cache alors
@@ -281,6 +296,8 @@
       mode, boutons: boutons(mode), boutonsOrbite: boutons('automatic'), boutonsEcho: boutons('native'),
       lot: { etat: txt('lot-etat'), finPartie: visible('lot-fin-partie') ? txt('lot-fin-partie') : '' },
       relPause: (() => { try { const P = root.ArianeRelecturePause; return P ? P.vue(P.etat(), { esvMuet: s?.connection?.status === 'unavailable' }) : null; } catch { return null; } })(),
+      /* CH-104 : les chiffres de la relecture (dernier état lu par src/relecture-pause.js) : relus, à relire, corrigés ; `lot` : c'est la passe du lot affiché. */
+      relChiffres: (() => { try { const p = root.ArianeRelecturePause?.etat?.()?.passe; return p && Number.isInteger(p.faits) && Number.isInteger(p.total) ? { faits: p.faits, total: p.total, corriges: Number.isInteger(p.corriges) ? p.corriges : null, lot: !!s?.batch && p.lotId === s.batch.id, etat: typeof p.etat === 'string' ? p.etat : null } : null; } catch { return null; } })(),
       relecture: { ligne: visible('relecture-ligne') ? txt('relecture-ligne') : '', actif: visible('relecture-arreter'), interrompue: visible('relecture-interrompue') ? txt('relecture-interrompue') : '' },
       echo: { visites: txt('native-count') || '0', corriges: echo.corriges, valides: echo.valides },
       echoRows: echo.echoRows,
@@ -313,8 +330,11 @@
     if (!force && cle === ui.cle) return;
     const defil = [...hote.querySelectorAll(zones)].map(e => e.scrollTop), fb = D.activeElement?.dataset?.borne, avaitQ = D.activeElement?.id === 'ui5-q';
     ui.last = html; ui.cle = cle;
+    const zAvant = hote.querySelector?.('.sg-zone'), cleZ = (html.match(/class="sg-zone[^"]*" data-z="([^"]*)"/) || [])[1];
+    const double = zAvant && cleZ && zAvant.dataset?.z && zAvant.dataset.z !== cleZ && zAvant.cloneNode ? zAvant.cloneNode(true) : null;
     if (morpher(hote, html)) apresMorph();
-    else { hote.innerHTML = html; [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; }); }
+    else { hote.innerHTML = html; [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; }); pouces(); }
+    if (double) sortie(double);
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
     if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
@@ -346,9 +366,33 @@
   /* Ce qui a changé de valeur se signale une fois, brièvement (chiffres, compteurs, mot d'état) ; rien en boucle. */
   function apresMorph() {
     for (const n of new Set(changes.textes)) {
-      const e = n?.closest?.('.sg-chiffre,.sg-n,.sg-droite,.sg-allure b,.sg-fin dd b'); if (!e) continue;
+      const e = n?.closest?.('.sg-chiffre,.sg-n,.sg-mot,.sg-phrase .sg-mono,.sg-allure b,.sg-fin dd b'); if (!e) continue;
       e.classList.remove('sg-tic'); void e.offsetWidth; e.classList.add('sg-tic');
     }
+    pouces();
+  }
+  /* CH-104 (maquette Graphite) : le pouce des onglets et des choix glisse sous le bouton choisi. Seuls sa position et sa largeur changent (`--x`, `--w`,
+   * lus par panel-signal.css) ; sans mesure possible (page minimale des essais), le bouton choisi garde son propre fond. */
+  function pouces() {
+    if (!hote?.querySelectorAll) return;
+    for (const seg of hote.querySelectorAll('.sg-bascule,.sg-seg')) {
+      const p = seg.querySelector?.('.sg-pouce'), b = seg.querySelector?.('[aria-selected="true"],[aria-pressed="true"]');
+      if (!p || !seg.style?.setProperty) continue;
+      if (!b || !b.offsetWidth) { seg.removeAttribute('data-pouce'); continue; }
+      seg.style.setProperty('--x', `${b.offsetLeft}px`); seg.style.setProperty('--w', `${b.offsetWidth}px`); seg.setAttribute('data-pouce', '1');
+    }
+  }
+  /* CH-104 : quand l'état change, l'ancien contenu de la zone sort (un double inerte, retiré aussitôt l'animation finie) pendant que le nouveau entre.
+   * Le vrai contenu est en place tout de suite : un clic ne tombe jamais sur un élément en train de partir. Rien si le système réduit les animations. */
+  const calme = () => { try { return !!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; } };
+  function sortie(avant) {
+    const z = hote.querySelector?.('.sg-zone'); if (!avant || !z || !z.parentNode || calme()) return;
+    const fen = hote.firstElementChild, r = z.getBoundingClientRect?.(), pr = fen?.getBoundingClientRect?.(); if (!r || !pr || !r.width) return;
+    avant.className += ' sg-sort'; avant.setAttribute('aria-hidden', 'true'); avant.setAttribute('inert', ''); avant.removeAttribute('data-z');
+    for (const e of avant.querySelectorAll('[data-act],[data-k],[id]')) { e.removeAttribute('data-act'); e.removeAttribute('data-k'); e.removeAttribute('id'); }
+    Object.assign(avant.style, { position: 'absolute', left: `${r.left - pr.left}px`, top: `${r.top - pr.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: '0', flex: 'none' });
+    fen.appendChild(avant); root.setTimeout?.(() => avant.remove(), 220);
+    z.classList.remove('sg-entre'); void z.offsetWidth; z.classList.add('sg-entre');
   }
   /* Connexion T21 (fiches/CONNEXION_T21.md) : le panneau s'ouvre sur l'accueil du panneau d'avant (`#home`, background.js `openPanel`), où panel.js
    * (`discover`) ne cherche pas les onglets ESV ; c'est le clic sur « Orbite » ou « Écho » de cet accueil qui les cherchait et connectait l'onglet unique.
@@ -371,12 +415,10 @@
     const n = $('notice'); if (n) n.textContent = `Le nouveau panneau n’a pas pu s’afficher (${String(e?.message || e).slice(0, 120)}) : le panneau d’avant le remplace jusqu’à la prochaine ouverture du panneau.`;
   }
   /* Entre deux rendus du panneau : l'anneau « en cours » (temps passé sur le cut ÷ médiane) et « en pause depuis ». Le DOM seulement. */
-  const ANNEAU = 2 * Math.PI * 9;
   function vivant() {
     if (!hote || variante !== 'signal' || hote.hidden || !hote.querySelector) return;
     /* Revue T21 (R6) : l'écran n'est plus réécrit chaque seconde : tous les anneaux (instrument et poignée du tiroir) avancent ici. */
     const t = Date.now();
-    for (const arc of hote.querySelectorAll?.('.sg-arc[data-debut][data-med]') || []) { const debut = Number(arc.dataset.debut), med = Number(arc.dataset.med); if (debut && med) arc.style.strokeDashoffset = (ANNEAU * (1 - Math.min(1, Math.max(0, t - debut) / med))).toFixed(2); }
     const p = hote.querySelector('.sg-pause-depuis[data-debut]');
     if (p) { const debut = Number(p.dataset.debut); if (debut) p.textContent = S5.duree((t - debut) / 1000); }
   }
@@ -428,7 +470,7 @@
       if (!go || !cible || go.disabled || !Number.isInteger(part) || !Number.isInteger(cut)) { noter('Ouverture indisponible pour l’instant.'); return; }
       cible.value = `${part}:${cut}`; cliquer('correction-ouvrir'); noter(`Ouverture du cut ${cut} dans ESV…`); return;
     }
-    else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
+    else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file' || quoi === 'menu') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
     else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
     else if (quoi === 'examiner') { if (examines.cles.has(v)) examines.cles.delete(v); else examines.cles.add(v); void garderExamines(); }
@@ -472,6 +514,7 @@
    * seul un second clic venu au moins 600 ms après arrête : un double clic, ou un clic qui traverse un écran qui vient de changer, ne suffit pas.
    * La palette garde sa propre confirmation (seconde Entrée, Revue T21 G1). */
   const CONFIRME_FILE = { minMs: 600, maxMs: 6000 };
+  const GARDE_PIED_MS = 400;
   function confirmerArretFile() {
     const t = Date.now(), c = ui.confirmeFile;
     if (c && t - c >= CONFIRME_FILE.minMs && t - c <= CONFIRME_FILE.maxMs) { ui.confirmeFile = null; clearTimeout(confirmerArretFile.h); return true; }
@@ -500,7 +543,14 @@
         const row = e.target.closest?.('[data-row]'); if (row && !a) { ui.sel = Number(row.dataset.row); maj(true); return; }
         if (a && (a.dataset.fermer || (!a.dataset.act.startsWith('sg:') && a.closest?.('.sg-palette,.sg-popover,.sg-feuille')))) { if (!a.closest?.('.sg-feuille')) { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; } }
       }
-      if (!a) return; agir(a.dataset.act, a);
+      if (!a) return;
+      /* CH-104 (relevé de l'intégrateur, 11/11) : un clic qui change d'écran tout de suite (onglet, « Suivre dans Orbite », feuille « Ce qui reste »)
+       * met un autre bouton sous le pointeur : le second clic d'un double-clic partirait comme un ordre (« Pause »). Pendant GARDE_PIED_MS après un
+       * tel clic, le pied n'accepte aucun clic (la feuille « Ce qui reste », elle, répond tout de suite : « Ouvrir » y est attendu aussitôt). Leur aspect et leurs ordres ne changent pas ; les changements venus du lot non plus. */
+      const t = Date.now(), act = a.dataset.act;
+      if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions')) return;
+      if (/^(mode:|sg:onglet-|sg:tiroir$)/.test(act)) ui.gardePied = t + GARDE_PIED_MS;
+      agir(act, a);
     });
     hote.addEventListener('change', e => { const s = e.target.closest?.('[data-sel]'); if (s) choisir(s.dataset.sel, s.value); });
     /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */
@@ -514,7 +564,8 @@
       if (secours || hote.hidden || e.altKey) return;
       clavierSignal(e);
     });
-    root.addEventListener?.('resize', () => maj(true));
+    root.addEventListener?.('resize', () => { maj(true); pouces(); });
+    try { D.fonts?.ready?.then?.(pouces); } catch { /* sans police à attendre */ }
     if (typeof root.setInterval === 'function') root.setInterval(vivant, 500);
   }
   /* Clavier de Signal : Ctrl K ouvre ou ferme la palette, Échap ferme ce qui est ouvert (couche, détails, tiroir) ; dans la palette, ↑ ↓ et Entrée ;

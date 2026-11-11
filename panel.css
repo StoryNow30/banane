@@ -13,24 +13,21 @@
    4.8.0 (audit qualité, U02) : vert et ambre du thème clair, bleu de la
    voie du thème sombre foncés ou éclaircis à 4,5:1 au moins (WCAG 1.4.3) :
    #11834a 4,81 ; #a46200 4,85 ; #4a74e6 sur noir 4,93. */
-@font-face{font-family:"Hanken Grotesk";src:url(fonts/HankenGrotesk-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:swap}
-@font-face{font-family:"JetBrains Mono";src:url(fonts/JetBrainsMono-latin-wght.woff2) format("woff2");font-weight:100 800;font-display:swap}
-:root{color-scheme:light;
- --sans:"Hanken Grotesk","Segoe UI Variable","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
- --bg:#f4f6f4;--bg-2:#eaf0eb;--text:#0e1310;--text-2:#4c5650;--text-3:#56605a;--hair:rgba(14,40,24,.09);--hair-2:rgba(14,40,24,.18);--field:rgba(14,40,24,.05);
- --tile:rgba(14,40,24,.05);--tile-on:rgba(14,40,24,.08);--halo:rgba(24,140,82,.14);--vert-1:#38bf75;--vert-2:#23955a;--sur-vert:#0e1310;
- --voie:#3e6ae1;--ok:#0b6e3c;--amber:#8a5200;--red:#ad0c1a;--seg:#0e1310;--future:rgba(14,19,16,.08);--inv:#ffffff;
- --amber-t:rgba(164,98,0,.10);--red-t:rgba(200,16,30,.07);--flash:rgba(17,131,74,.10);--menu:#ffffff;--menu-on:#dcefe3}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;
- --bg:#0a100c;--bg-2:#0e1c13;--text:#f4f7f5;--text-2:#a9b3ad;--text-3:#97a29b;--hair:rgba(255,255,255,.07);--hair-2:rgba(255,255,255,.15);--field:rgba(255,255,255,.05);
- --tile:rgba(255,255,255,.055);--tile-on:rgba(255,255,255,.10);--halo:rgba(52,210,127,.16);--vert-1:#1f9a57;--vert-2:#11683b;--sur-vert:#ffffff;
- --voie:#4a74e6;--ok:#34d27f;--amber:#f2a93b;--red:#ff6e66;--seg:#f4f7f5;--future:rgba(255,255,255,.07);--inv:#000000;
- --amber-t:rgba(242,169,59,.10);--red-t:rgba(255,95,87,.08);--flash:rgba(52,210,127,.12);--menu:#16201a;--menu-on:#1f4a31}}
-:root[data-theme=dark]{color-scheme:dark;
- --bg:#0a100c;--bg-2:#0e1c13;--text:#f4f7f5;--text-2:#a9b3ad;--text-3:#97a29b;--hair:rgba(255,255,255,.07);--hair-2:rgba(255,255,255,.15);--field:rgba(255,255,255,.05);
- --tile:rgba(255,255,255,.055);--tile-on:rgba(255,255,255,.10);--halo:rgba(52,210,127,.16);--vert-1:#1f9a57;--vert-2:#11683b;--sur-vert:#ffffff;
- --voie:#4a74e6;--ok:#34d27f;--amber:#f2a93b;--red:#ff6e66;--seg:#f4f7f5;--future:rgba(255,255,255,.07);--inv:#000000;
- --amber-t:rgba(242,169,59,.10);--red-t:rgba(255,95,87,.08);--flash:rgba(52,210,127,.12);--menu:#16201a;--menu-on:#1f4a31}
+/* CH-104 (D-333) : les jetons du panneau d'origine sont ceux de « Graphite » (maquettes/bento/panneau-graphite.html), comme Signal (panel-signal.css) :
+   mêmes couleurs, même police Inter (fonts/, SIL OFL), mêmes rayons. Sombre par défaut, clair avec `data-theme=light` (le réglage « Thème »). Le panneau
+   d'origine reste le moteur de la page ; on le voit dans les détails techniques et en secours. Contrastes du texte à 4,5:1 au moins dans les deux thèmes. */
+@font-face{font-family:"Inter";src:url(fonts/Inter-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:swap}
+:root{color-scheme:dark;
+ --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+ --bg:#07080A;--bg-2:#07080A;--text:#F1F2F4;--text-2:#8B909B;--text-3:#8B909B;--hair:rgba(255,255,255,.075);--hair-2:rgba(255,255,255,.15);--field:rgba(255,255,255,.055);
+ --tile:rgba(255,255,255,.055);--tile-on:rgba(255,255,255,.10);--halo:rgba(143,147,255,.16);--vert-1:#8F93FF;--vert-2:#7377E6;--sur-vert:#0A0B10;
+ --voie:#8F93FF;--ok:#59D499;--amber:#F3A63B;--red:#F2706B;--seg:#F1F2F4;--future:rgba(255,255,255,.09);--inv:#000000;
+ --amber-t:rgba(243,166,59,.12);--red-t:rgba(242,112,107,.10);--flash:rgba(143,147,255,.14);--menu:#16181C;--menu-on:#2B2E45}
+:root[data-theme=light]{color-scheme:light;
+ --bg:#EEF0F3;--bg-2:#EEF0F3;--text:#14161A;--text-2:#565B66;--text-3:#5F6470;--hair:rgba(10,14,25,.11);--hair-2:rgba(10,14,25,.24);--field:rgba(10,14,25,.055);
+ --tile:rgba(10,14,25,.055);--tile-on:rgba(10,14,25,.09);--halo:rgba(83,87,219,.14);--vert-1:#5357DB;--vert-2:#4347C4;--sur-vert:#FFFFFF;
+ --voie:#4347C4;--ok:#146C41;--amber:#8A5200;--red:#B0312B;--seg:#14161A;--future:rgba(10,14,25,.10);--inv:#FFFFFF;
+ --amber-t:rgba(178,106,0,.10);--red-t:rgba(198,64,58,.08);--flash:rgba(83,87,219,.10);--menu:#FFFFFF;--menu-on:#E2E3FA}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{background:linear-gradient(180deg,var(--bg) 0,var(--bg-2) 100%);min-height:100vh;overflow-x:hidden}
@@ -353,7 +350,7 @@ footer{margin:22px 0 0;padding:12px 0 20px;border-top:1px solid var(--hair)}
    pas (10 px entre tuiles, 30 px entre sections). Maquette et film :
    design/ux-2026-10/retenue/.
    ====================================================================== */
-:root{--r:18px}
+:root{--r:14px}
 /* Tête : le nom de la vue en grand, les outils en tuiles, les vues en pastilles. */
 body:not([data-window=home]) .marque{gap:0}
 body:not([data-window=home]) .nom{font-size:11px;letter-spacing:.26em;color:var(--text-3)}

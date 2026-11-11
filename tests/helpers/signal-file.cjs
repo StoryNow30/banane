@@ -29,7 +29,7 @@ function mesurer(page,extra=''){return page.evaluate(extra=>{
  const contraste=e=>{const c=rgb(getComputedStyle(e).color),b=fond(e);if(!c)return 21;const k={r:c.r*c.a+b.r*(1-c.a),g:c.g*c.a+b.g*(1-c.a),b:c.b*c.a+b.b*(1-c.a)};const [l1,l2]=[lum(k),lum(b)].sort((a,b)=>b-a);return (l1+.05)/(l2+.05);};
  const vus=[...h.querySelectorAll('.sg-file,.sg-file *,.sg-file-bilan,.sg-file-bilan *,.sg-boite,.sg-boite *,.sg-incident p,.sg-mot,.sg-phrase,.sg-actions button'+(extra?','+extra:''))].filter(e=>e.getClientRects().length&&[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&!e.disabled&&!e.closest('[disabled]')&&!e.classList.contains('sg-sep'));
  const faibles=vus.map(e=>({t:e.textContent.trim().slice(0,40),c:Math.round(contraste(e)*100)/100})).filter(x=>x.c<4.5);
- const sortants=[...h.querySelectorAll('.sg-instrument *,.sg-boite *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>W+1;}).map(e=>e.className||e.tagName);
+ const sortants=[...h.querySelectorAll('.sg-instrument *,.sg-zone *,.sg-actions *,.sg-boite *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>W+1;}).map(e=>e.className||e.tagName);
  return {mot:f.querySelector('.sg-mot')?.textContent,deborde:f.scrollWidth>f.clientWidth+1,sortants,faibles,file:!!h.querySelector('.sg-file'),boite:!!h.querySelector('.sg-boite'),
   arreter:!!h.querySelector('[data-act="legacy:file-secondaire"]'),principal:h.querySelector('.sg-principal')?.textContent?.trim()||'',bilan:h.querySelectorAll('.sg-file-bilan li').length,
   depart:!!h.querySelector('[data-act="legacy:start-batch"],[data-act="legacy:new-batch"]'),alerte:h.querySelector('[role="alert"]')?.textContent?.trim()||''};},extra);}
@@ -41,7 +41,9 @@ async function parLargeurs(page,{boite=false,extra=''}={}){
  for(const v of LARGEURS){await page.setViewportSize(v);await page.waitForTimeout(200);await ouvrirBoite();res[`${v.width}`]=await mesurer(page,extra);}
  /* Le choix de thème de Signal (réglages, `sg:choix:theme:…`) : il clique le bouton d'origine autant qu'il faut. */
  await page.setViewportSize(LARGEURS[0]);await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:clair'));
- await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='clair',null,{timeout:2500});await page.waitForTimeout(100);await ouvrirBoite();
+ await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='clair',null,{timeout:2500});await page.waitForTimeout(100);
+ /* CH-104 : les couleurs des onglets et des choix se fondent (`transition:color .2s`) : on ne mesure pas un contraste au milieu du fondu. */
+ await page.waitForFunction(()=>!document.getAnimations().some(a=>a instanceof CSSTransition&&a.playState==='running'),null,{timeout:2500});await ouvrirBoite();
  res.clair={...await mesurer(page,extra),theme:await page.evaluate(()=>document.getElementById('ui5').dataset.theme)};
  await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:sombre'));await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='sombre',null,{timeout:2500});
  return res;

@@ -70,7 +70,7 @@ async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer, actif = tru
     catch (e) { console.log('# signal', await pan.evaluate(() => document.getElementById('notice')?.textContent)); throw e; }
     await pan.click('#ui5 .sg-bascule [data-act="sg:onglet-correction"]');
     const ecrituresAvant = serveur.journal.ecritures.length;
-    await pan.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-demarrer"]');
+    await pan.click('#ui5 .sg-actions [data-act="legacy:correction-demarrer"]');
     await attendre(async () => (await api('view')).native?.status === 'RUNNING', 'séance Écho démarrée', 60);
     /* Le journal du service worker, lu en lecture seule (l'action « journal » du panneau est refusée pendant Écho). */
     const journal = async () => ((await sw.evaluate(() => store.all('events'))) || []).slice().sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
@@ -86,9 +86,9 @@ async function aurore({ parties, cuts = 8, partie2 = 6, lots, jouer, actif = tru
       const ev = (await journal()).filter(e => e.type === 'correction-ouvrir').at(-1);
       return { cible: { part: Number(p), cut: Number(c) }, maquette: m, ev };
     };
-    const principal = '#ui5 .sg-onglet-corr .sg-actions .sg-principal[data-act^="sg:corr-ouvrir:"]';
+    const principal = '#ui5 .sg-actions .sg-principal[data-act^="sg:corr-ouvrir:"]';
     const r = await jouer({ ouvrir, principal, pan, api, journal, maquette, esv });
-    await pan.click('#ui5 .sg-onglet-corr [data-act="legacy:correction-terminer"]');
+    await pan.click('#ui5 .sg-actions [data-act="legacy:correction-terminer"]');
     await attendre(async () => (await api('view')).correction?.etat === 'terminee', 'correction terminée');
     const j = await journal();
     return { ...r, j, chargements, erreurs, ecritures: serveur.journal.ecritures.slice(ecrituresAvant), commandes: j.filter(e => e.type === 'adapter-result').map(e => e.action) };

@@ -10,7 +10,7 @@ const {FILE,parLargeurs,poserEtat,verifier}=require('./helpers/signal-file.cjs')
 const FICHES=[{at:'2026-10-30T14:21:56.620Z',batchId:'b1',ignores:0,invalides:165,partie:13,total:9305,valides:9140,version:'x'},
  {at:'2026-10-30T14:40:10.000Z',batchId:'b2',ignores:12,invalides:493,partie:14,total:9305,valides:8800,version:'x'}];
 const ARRET={...FILE.arret,fileParties:{...FILE.arret.fileParties,reprise:{rang:1,part:14,reste:1}}};
-const EXTRA='.sg-onglet-file .sg-of-t,.sg-onglet-file .sg-meta,.sg-onglet-file th,.sg-onglet-file td,.sg-onglet-file .sg-of-ligne span,.sg-bascule button';
+const EXTRA='.sg-chaine .sg-mono,.sg-onglet-file .sg-of-t,.sg-onglet-file .sg-meta,.sg-onglet-file .sg-of-depart [role="cell"],.sg-onglet-file .sg-of-depart b,.sg-onglet-file .sg-of-ligne span,.sg-bascule button';
 
 /* Panneau avec des fiches de départ, et un espion des messages de la file. */
 async function monter(nav,state){
@@ -31,15 +31,15 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
    if(nom!=='prete')await poserEtat(page,st);
    res[nom]=await parLargeurs(page,{extra:EXTRA});
    vus[nom]=await page.evaluate(()=>{const h=document.getElementById('ui5');return {onglet:h.querySelector('.sg-fen')?.dataset.activite,choisi:h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
-    titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
-    departs:[...h.querySelectorAll('.sg-of-departs tbody tr')].map(r=>[...r.cells].map(c=>c.textContent)),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-anneau .sg-arc')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
+    titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act],.sg-actions button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
+    departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-chaine li')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
   }
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
  for(const [nom,r] of Object.entries(res))verifier(assert,nom,r);
  for(const nom of Object.keys(vus)){assert.equal(vus[nom].onglet,'file',nom);assert.equal(vus[nom].choisi,'Constellation',nom);assert.equal(vus[nom].tiroir,false,nom+' : pas de tiroir dans l’onglet');
-  assert.deepEqual(vus[nom].departs,[['14','30/10 15:40','8 800','493','12','9 305'],['13','30/10 15:21','9 140','165','0','9 305']],nom+' : départs, du plus récent, heure de Paris');}
- /* CH-036 (direction B « Cadran », 02/11) : l'anneau (un arc par partie, lu par `etoiles`), une action pleine, puis le bilan par partie (dès qu'une partie est faite) et les départs, visibles d'emblée. */
+  assert.deepEqual(vus[nom].departs,[['14 · 30/10 15:40','493 invalides','8 800 validés · 12 sautés · 9 305 au total'],['13 · 30/10 15:21','165 invalides','9 140 validés · 0 sautés · 9 305 au total']],nom+' : départs, du plus récent, heure de Paris');}
+ /* CH-036 (direction B « Cadran », 02/11) : la chaîne des parties (un maillon par partie, lue par `etoiles` ; CH-104), une action pleine, puis le bilan par partie (dès qu'une partie est faite) et les départs, visibles d'emblée. */
  assert.equal(res.prete['600'].mot,'Prête');assert.deepEqual(vus.prete.titres,['Départs des parties']);assert.deepEqual(vus.prete.etoiles,['a-venir:13','a-venir:+1']);
  assert.ok(vus.prete.boutons.some(b=>/^Lancer la Constellation · 2 parties\|legacy:file-lancer$/.test(b)),JSON.stringify(vus.prete.boutons));
  assert.equal(res.lot['600'].mot,'En cours');assert.deepEqual(vus.lot.etoiles,['en-cours:13','a-venir:14']);assert.equal(res.lot['360'].arreter,true);assert.equal(res.lot['600'].depart,false);
@@ -59,14 +59,14 @@ test('onglet « File » : nombre, Lancer (un clic), Reprendre au rang (depuis la
   const {page,erreurs}=await monter(nav,FILE.prete);
   await page.click('#ui5 .sg-bascule [data-act="sg:onglet-file"]');await page.waitForTimeout(200);
   await page.click('#ui5 .sg-onglet-file [data-act="sg:file-n:3"]');await page.waitForTimeout(200);
-  assert.match(await page.textContent('#ui5 .sg-onglet-file .sg-principal'),/Lancer la Constellation · 3 parties/);
-  await page.click('#ui5 .sg-onglet-file .sg-principal');await page.waitForTimeout(400);
+  assert.match(await page.textContent('#ui5 .sg-actions .sg-principal'),/Lancer la Constellation · 3 parties/);
+  await page.click('#ui5 .sg-actions .sg-principal');await page.waitForTimeout(400);
   const m1=await messages(page);assert.deepEqual(m1.map(m=>m.action),['settings','file-demarrer'],'un clic lance');assert.equal(m1[1].args.n,3);assert.equal(m1[1].args.depuis,undefined);
   await poserEtat(page,ARRET);
-  await page.click('#ui5 .sg-onglet-file [data-act="legacy:file-reprendre"]');await page.waitForTimeout(400);
+  await page.click('#ui5 .sg-actions [data-act="legacy:file-reprendre"]');await page.waitForTimeout(400);
   const m2=await messages(page);assert.deepEqual(m2.map(m=>m.action),['settings','file-demarrer']);assert.equal(m2[1].args.n,1);assert.equal(m2[1].args.depuis,14,'reprise au rang interrompu');
   await poserEtat(page,FILE.lot);
-  const sel='#ui5 .sg-onglet-file [data-act="legacy:file-secondaire"]';
+  const sel='#ui5 .sg-actions [data-act="legacy:file-secondaire"]';
   await page.click(sel);await page.waitForTimeout(200);assert.deepEqual(await messages(page),[],'un clic ne fait que demander');
   assert.match(await page.textContent(sel),/Confirmer l’arrêt de la Constellation/);
   await page.waitForTimeout(500);await page.click(sel);await page.waitForTimeout(300);

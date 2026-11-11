@@ -40,13 +40,27 @@ test('R6 · lot en cours : le panneau se redessine chaque seconde, l’écran de
   const lot={...SC.lot,connection:{status:'ready',tabId:1}};lot.batch={...lot.batch,cutStartedAt:new Date(Date.now()-2000).toISOString(),processed:lot.batch.processed.map((x,i)=>({...x,durationMs:20000+i*100}))};
   const {page,erreurs}=await ouvrir(nav,lot,{width:600,height:760});
   await page.evaluate(()=>{window.__fen=document.querySelector('#ui5 .sg-fen');});
-  const v0=await page.evaluate(()=>document.querySelector('#ui5 .sg-arc')?.style.strokeDashoffset||document.querySelector('#ui5 .sg-arc')?.getAttribute('stroke-dashoffset'));
+  /* CH-104 : l'anneau du temps passé sur le cut n'existe plus (l'anneau dit l'avancement du lot) : on vérifie que l'anneau et le fil restent les mêmes éléments. */
+  await page.evaluate(()=>{window.__anneau=document.querySelector('#ui5 .sg-tu-etat .sg-anneau');window.__fil=document.querySelector('#ui5 .sg-fil');});
   await page.waitForTimeout(2600);
   assert.equal(await page.evaluate(()=>window.__fen.isConnected),true,'même écran après plusieurs rendus du panneau');
-  const v1=await page.evaluate(()=>document.querySelector('#ui5 .sg-arc')?.style.strokeDashoffset);
-  assert.ok(v1&&v1!==v0,'l’anneau avance quand même (vivant)');
-  const mini=await page.evaluate(()=>{const a=document.querySelector('#ui5 .sg-poignee .sg-arc');return a?{attr:a.getAttribute('stroke-dashoffset'),style:a.style.strokeDashoffset}:null;});
-  assert.ok(mini&&mini.style&&mini.style!==mini.attr,'l’anneau de la poignée avance aussi : '+JSON.stringify(mini));
+  assert.deepEqual(await page.evaluate(()=>[!!window.__anneau,window.__anneau?.isConnected,!!window.__fil,window.__fil?.isConnected]),[true,true,true,true],'l’anneau et le fil ne sont pas recréés');
+  assert.deepEqual(erreurs,[]);
+ }finally{await nav.close();}
+});
+
+/* CH-104 : l'anneau du temps passé sur le cut n'existe plus (voir R6 ci-dessus) ; ce qui avance encore seul entre deux rendus, c'est « en pause depuis ». */
+test('R6 · lot en pause : « en pause depuis » avance sans réécrire l’écran',{skip:absent,timeout:20000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const pause={...SC.pause,connection:{status:'ready',tabId:1}};pause.batch={...pause.batch,pausedAt:new Date(Date.now()-3000).toISOString()};
+  const {page,erreurs}=await ouvrir(nav,pause,{width:600,height:760});
+  await page.evaluate(()=>{window.__fen=document.querySelector('#ui5 .sg-fen');});
+  const t0=await page.evaluate(()=>document.querySelector('#ui5 .sg-pause-depuis')?.textContent);
+  await page.waitForTimeout(2600);
+  assert.equal(await page.evaluate(()=>window.__fen.isConnected),true,'même écran après plusieurs rendus du panneau');
+  const t1=await page.evaluate(()=>document.querySelector('#ui5 .sg-pause-depuis')?.textContent);
+  assert.ok(t0&&t1&&t1!==t0,'« en pause depuis » avance : '+t0+' → '+t1);
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });

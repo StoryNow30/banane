@@ -99,8 +99,11 @@ test('D5 · « Ouvrir dans ESV » vise la partie du lot, même quand ESV affiche
 test('D4 · un refus du panneau (ligne d’avis en erreur) est dit, dans Orbite comme dans Écho ; une ligne d’avis ordinaire ne l’est pas',()=>{
  const t='Ouvre le premier cut du lot dans ESV.';
  const h=S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:t,erreur:true},boutonsOrbite:[b('start-batch','Démarrer le lot','primary')]}),ui());
- assert.match(h,/class="sg-incident" role="alert">.*Ouvre le premier cut du lot dans ESV\./s);assert.match(h,/data-act="legacy:start-batch"/,'l’action reste offerte');
- assert.match(S.rendre(snap({notice:{texte:t,erreur:true}}),ui()),/class="sg-rail-base"/,'pendant un lot : le rail reste, l’avis s’ajoute');
+ assert.match(h,/class="sg-tu sg-tu-avis sg-large sg-incident sg-avis-seul" data-k="avis" role="alert">.*Ouvre le premier cut du lot dans ESV\./s);assert.match(h,/data-act="legacy:start-batch"/,'l’action reste offerte');
+ /* CH-104 : le rail est devenu l'anneau et le fil des cuts de la zone (tuile d'avis puis `.sg-duo`) */
+ const enLot=S.rendre(snap({notice:{texte:t,erreur:true}}),ui());
+ assert.match(enLot,/data-k="avis" role="alert">.*Ouvre le premier cut du lot dans ESV\./s,'pendant un lot : l’avis s’ajoute');
+ assert.match(enLot,/class="sg-anneau" data-forme="pct"/,'pendant un lot : l’anneau reste');assert.match(enLot,/class="sg-tu sg-tu-fil/,'pendant un lot : le fil reste');
  assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:'Refusé pendant Écho.',erreur:true},sig:sig({activite:'echo'})}),ui()),/Refusé pendant Écho\./);
  assert.doesNotMatch(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:'Choisis les bornes du lot.',erreur:false}}),ui()),/Choisis les bornes du lot/);
  const ko=S.rendre(snap({ar:ar('pret',{lotOuvert:false}),notice:{texte:'ESV ne répond plus (message du service worker).',erreur:true},sig:sig({connexion:{statut:'unavailable',reconnect:null}})}),ui());
@@ -109,7 +112,7 @@ test('D4 · un refus du panneau (ligne d’avis en erreur) est dit, dans Orbite 
 });
 test('R5 · l’avis de contrat ESV est dit ; D6 · la correction interrompue est dite, et « J’ai contrôlé le cut » reste offert pendant la relecture',()=>{
  const av='Empreinte des réponses d’ESV changée depuis la dernière version connue.';
- assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),avisContrat:av}),ui()),/class="sg-incident" role="alert">.*Empreinte des réponses d’ESV changée/s);
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false}),avisContrat:av}),ui()),/class="sg-tu sg-tu-avis sg-large sg-incident sg-avis-seul" data-k="avis" role="alert">.*Empreinte des réponses d’ESV changée/s);
  const ci='Une correction de la relecture a été interrompue au cut 4812 (partie 13) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut 4812 ».';
  const fini=S.rendre(snap({ar:ar('fini',{lotOuvert:false}),relecture:{ligne:'',actif:false,interrompue:ci},boutonsOrbite:[b('relecture-acquitter','J’ai contrôlé le cut 4812'),b('export-tout','Tout télécharger','primary')]}),ui());
  assert.match(fini,/Une correction de la relecture a été interrompue au cut 4812/);assert.match(fini,/data-act="legacy:relecture-acquitter"/);
@@ -153,8 +156,9 @@ test('R4b · Écho : « validés tels quels » compte les validations sans corre
  p.ctx.ArianePanel.visitesNatif=()=>[{c:1,d:5,label:'VALIDATE_NO_MOVEMENT'},{c:2,d:6,label:'VALIDATE_CORRECTED_LEFT_ONLY'},{c:3,d:4,label:'SKIP'},{c:4,d:3,label:''},{c:5,d:2,label:'VALIDATE_NO_MOVEMENT'}];
  const s=p.ui.instantane(etat(null));assert.equal(s.echo.valides,2);assert.equal(s.echo.corriges,1);
  const h=S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'}),echo:{visites:'5',corriges:1,valides:2}}),ui());
- assert.match(h,/<b>1<\/b> corrigés · <b>2<\/b> validés tels quels/);
- assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'}),echo:{visites:'5',corriges:1,valides:0}}),ui()),/<b>0<\/b> validés tels quels/,'5 vus, 1 corrigé, aucun validé tel quel : 0, pas 4');
+ /* CH-104 : dits dans le trio de la tuile d'état (« Corrigé(s) », « Validé(s) tel(s) quel(s) ») */
+ assert.match(h,/<dt>Corrigé<\/dt><dd class="sg-n">1<\/dd>/);assert.match(h,/<dt>Validés tels quels<\/dt><dd class="sg-n">2<\/dd>/);
+ assert.match(S.rendre(snap({ar:ar('pret',{lotOuvert:false,echoEtat:'Collecte en cours'}),sig:sig({activite:'echo'}),echo:{visites:'5',corriges:1,valides:0}}),ui()),/<dt>Validé tel quel<\/dt><dd class="sg-n">0<\/dd>/,'5 vus, 1 corrigé, aucun validé tel quel : 0, pas 4');
 });
 
 /* ------------------------------------------------------------------ R1 */
@@ -163,7 +167,7 @@ test('R1 · deuxième passe en ombre : en fin de lot, ce qu’elle poserait ; en
  assert.match(f({mode:'ombre',etat:'finie',posees:3,differes:7,ecrites:0}),/<dt>Rattrapage<\/dt><dd>en ombre : <b>3<\/b> sur <b>7<\/b> qu’elle poserait · rien n’est écrit dans ESV/);
  assert.match(f({mode:'ombre',etat:'calcul',posees:0,differes:0,ecrites:0}),/<dt>Rattrapage<\/dt><dd>calcul des cuts restés sans pose…/);
  assert.match(f({mode:'ecriture',etat:'finie',posees:3,differes:7,ecrites:2}),/<b>2<\/b> posés et validés sur <b>3<\/b> décidés/);
- assert.doesNotMatch(f(null),/Rattrapage/);
+ assert.doesNotMatch(f(null),/<dt>Rattrapage<\/dt>|en ombre|calcul des cuts/,'pas de ligne Rattrapage au bilan (la tuile des étapes garde son nom « Rattrapage »)');
  const p=await monter({etat:etat(LOT_FINI)});
  const passe=x=>p.ui.instantane(etat(LOT_FINI,{passeDifferes:{lotId:'L1',mode:'ombre',etat:'finie',differes:7,posees:3,demandees:0,ecrites:0,cut:null,message:null,...x}})).ar.passeFin;
  assert.deepEqual(js(passe()),{mode:'ombre',etat:'finie',posees:3,differes:7,ecrites:0,message:null});

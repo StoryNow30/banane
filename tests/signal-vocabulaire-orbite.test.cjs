@@ -20,7 +20,7 @@ const texte=h=>h.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
 
 test('deuxième passe en cours : « Rattrapage », verrou et cache disent « rattrapage »',()=>{
  const h=S.rendre(snap({ar:ar('p2',{passe2:{cut:4813,ecrites:1,demandees:3}})}),ui());
- assert.match(h,/class="sg-mot">Rattrapage</);assert.match(texte(h),/fin du rattrapage/);assert.match(texte(h),/après le rattrapage/);
+ assert.match(h,/class="sg-mot">Rattrapage</);assert.match(texte(h),/fin du rattrapage/);assert.match(texte(S.rendre(snap({ar:ar('p2',{passe2:{cut:4813,ecrites:1,demandees:3}})}),ui({couche:'menu'}))),/après le rattrapage/,'le cache (menu « ··· ») dit « rattrapage »');
  assert.doesNotMatch(texte(h),/[Dd]euxième passe/);
 });
 test('fin du lot : « Rattrapage » au bilan, « à poser » dans « Il reste » ; le rail et le compte disent « à poser »',()=>{
