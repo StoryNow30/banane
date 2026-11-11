@@ -445,7 +445,7 @@
     const a = snap.ar || {}, rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);
     const ok = a.cache?.actif === true && !rel;
     const raison = ok ? '' : a.etat === 'p2' ? 'après le rattrapage' : rel ? 'après la relecture' : m.activite === 'echo' && echoOuvert(a.echoEtat) ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
-    return `<div class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span>${raison ? `<span class="sg-r">· ${esc(raison)}</span>` : ''}</span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></div>`;
+    return `<div class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span>${raison ? `<span class="sg-r">${esc(raison)}</span>` : ''}</span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></div>`;
   }
   /* Le menu « ··· » (maquette) : les commandes (Ctrl K), les réglages, le cache des exports. */
   const menuHtml = (snap, m) => `<div class="sg-voile sg-transparent" data-k="voile-menu" data-act="sg:fermer"></div><div class="sg-popover sg-menu" data-k="menu" role="dialog" aria-label="Réglages, cache des exports, commandes"><button type="button" class="sg-menu-l" data-act="sg:palette">${ic('palette')}<span>Commandes</span><kbd>Ctrl K</kbd></button><button type="button" class="sg-menu-l" data-act="sg:reglages">${ic('reglages')}<span>Réglages</span></button>${cacheHtml(snap, m)}</div>`;
@@ -578,10 +578,13 @@
   function etoilesFile(s, F) {
     const plan = F.plan?.length ? F.plan : null, choisi = (F.choixTous || []).find(c => c.choisi)?.n, N = plan ? plan.length : F.n || choisi || 1, B = F.parties || [], R = F.reprise;
     const L = [];
+    /* D-334 : pendant le passage, la partie quittée est faite et la partie visée est la courante (maquette : « Vers la partie 15 », 13 et 14 cochées). */
+    const passage = F.actif && F.etat === 'changement', vise = passage ? (k => k >= 0 ? k : (F.rang ?? -1) + 1)(plan && F.vers != null ? plan.indexOf(F.vers) : -1) : -1;
     for (let i = 0; i < Math.min(N, 8); i++) {
       const part = plan ? plan[i] : i === 0 ? F.partieAffichee : null, b = B.find(x => x.rang === i);
       let e = 'a-venir', sous = plan ? 'à venir' : i === 0 ? 'affichée' : 'suivante';
-      if (F.actif && F.rang === i) { e = 'en-cours'; sous = F.etat === 'changement' ? 'passage' : 'en cours'; }
+      if (passage ? vise === i : F.actif && F.rang === i) { e = 'en-cours'; sous = passage ? 'passage' : 'en cours'; }
+      else if (passage && i < vise && !(b && b.interrompue)) { e = b ? partieFile(b).etat : 'faite'; sous = b && Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : 'faite'; }
       else if (b && !b.interrompue) { const p = partieFile(b); e = p.etat; sous = Number.isInteger(b.poses) ? nb(b.poses, 'posé', 'posés') : 'faite'; }
       else if ((b && b.interrompue) || (F.etat === 'arret' && R && R.rang === i)) { e = 'interrompue'; sous = 'à reprendre'; }
       L.push({ e, num: part ?? (i ? `+${i}` : '?'), sous });
@@ -644,7 +647,7 @@
     let z = '', reg = '';
     if (m.alerte) z += tuileAvis('alerte', '!', `<p>${esc(m.alerte)}</p>`, 'sg-alerte', 'alert');
     /* Le registre : une ligne par partie commencée (faite, en cours, interrompue), chiffres alignés puis motifs en clair (décision du 01/11 : visibles d'emblée). */
-    const rangs = E.map((x, i) => ({ x, b: B.find(y => y.rang === i) })).filter(({ x }) => x.e !== 'a-venir');
+    const rangs = E.map((x, i) => ({ x, b: B.find(y => y.rang === i) })).filter(({ x }) => x.e !== 'a-venir' && !(x.e === 'en-cours' && F.etat === 'changement'));
     const note = L.note && !L.seg.length ? `<p class="sg-meta sg-of-note">${L.note}</p>` : '';
     if (rangs.length) {
       const tiret = '<span class="sg-mono sg-vide-n">—</span>', nb = v => Number.isInteger(v) ? `<span class="sg-mono">${esc(v)}</span>` : tiret;

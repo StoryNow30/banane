@@ -78,6 +78,8 @@ const MESURE=()=>{
  const defile=e=>{for(let x=e.parentElement;x&&x!==P;x=x.parentElement){const o=getComputedStyle(x).overflowY;if(o==='auto'||o==='scroll')return true;}return false;};
  const coupe=e=>{for(let x=e.parentElement;x&&x!==P;x=x.parentElement){const s=getComputedStyle(x);if(s.overflowY==='hidden'&&(s.maskImage&&s.maskImage!=='none'||s.webkitMaskImage&&s.webkitMaskImage!=='none'))return true;}return false;};
  if(document.documentElement.scrollWidth>W+1)out.push('PAGE DEFILE EN LARGEUR');
+ /* Une zone qui défile cache du contenu sous son bord : c'est dit (les onglets Constellation et Aurore, faits pour défiler en 360, ne comptent pas). */
+ const Z=P.querySelector('.sg-zone:not(.sg-onglet-file):not(.sg-onglet-corr)');if(Z&&Z.scrollHeight>Z.clientHeight+1)out.push('ZONE A DEFILER de '+(Z.scrollHeight-Z.clientHeight)+' px');
  for(const e of P.querySelectorAll('*')){if(!e.getClientRects().length)continue;const r=e.getBoundingClientRect();if(r.width<=1||r.height<=1)continue;if(e.closest('svg')||e.closest('[data-tourne]'))continue;
   if(r.right>W+.5||r.left<-.5)out.push('SORT '+nom(e)+' '+Math.round(r.right-W));
   if(r.bottom>H+.5&&!defile(e)&&!coupe(e))out.push('SORT EN BAS '+nom(e)+' '+Math.round(r.bottom-H));

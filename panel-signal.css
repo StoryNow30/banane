@@ -192,6 +192,12 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal[data-taille="compact"] .sg-second{display:none}
 #ui5.u-signal[data-taille="compact"] .sg-zone>.sg-tu,#ui5.u-signal[data-taille="compact"] .sg-duo>.sg-tu{flex:1 0 auto}
 #ui5.u-signal[data-taille="compact"] .sg-zone .sg-tu-fil{flex:1 1 0;min-height:104px}
+/* En 360 : un avis garde la hauteur de son texte (la place libre reste vide) ; le fil et les étapes se serrent pour montrer plus de lignes. */
+#ui5.u-signal[data-taille="compact"] .sg-zone>.sg-tu-avis{flex:none}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fil{gap:6px;padding:12px 14px 10px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fil .sg-fil li{height:30px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-etapes{gap:6px;padding:12px 14px}
+#ui5.u-signal[data-taille="compact"] .sg-etapes li{padding:6px 0}
 
 #ui5.u-signal .sg-allure{font-size:12px;line-height:1.4;color:var(--tx2)}
 #ui5.u-signal .sg-allure b{color:var(--tx);font-weight:600;display:inline-block}
@@ -236,7 +242,7 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-fin-rond circle,#ui5.u-signal .sg-fin-rond path{fill:none;stroke:var(--ok);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 #ui5.u-signal .sg-fin-arret circle{stroke:var(--tx3)}.sg-fin-arret rect{fill:var(--tx3)}
 #ui5.u-signal .sg-fin{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 14px;font-size:13px;line-height:1.4}
-#ui5.u-signal[data-taille="compact"] .sg-tu-fin{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px 9px;padding:12px 14px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fin{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:5px 9px;padding:9px 14px}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fin>div{display:contents}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fin .sg-fin{grid-column:1/-1}
 #ui5.u-signal[data-taille="compact"] .sg-fin-rond{width:22px;height:22px}

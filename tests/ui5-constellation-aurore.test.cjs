@@ -55,6 +55,20 @@ test('Constellation prête : étoiles du plan (la partie affichée, puis les sui
   p.ui.agir('legacy:file-lancer'); assert.equal(p.els['file-lancer'].clics, 1); assert.deepEqual(js(p.envoyes), []);
 });
 
+/* CH-104 (D-334, relecture de l'intégrateur du 11/11) : pendant le passage, la partie quittée est faite et la partie visée est la courante. */
+test('Constellation en passage : la chaîne coche la partie quittée, cercle la partie visée ; le registre ne montre que les parties faites', async () => {
+  const P14 = { ...P13, part: 14, rang: 1 };
+  const F = { etat: 'changement', n: 3, rang: 1, plan: [13, 14, 15], enCours: null, changement: { vers: 15, tentatives: 1 }, bilan: [P13, P14], alerte: null, motifFin: null };
+  const p = await pret({ fileParties: F }); poser(p, { etatTexte: 'partie 2 sur 3', phrase: 'Changement de partie.', reglage: false, secondaire: 'Arrêter la file' });
+  p.rendu(etat(null, { fileParties: F })); p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
+  assert.match(h, /<h3 class="sg-chiffre">Vers la partie 15<\/h3><span class="sg-suite">2 faites sur 3<\/span>/);
+  assert.match(h, /<li data-etat="faite" data-partie="13"[^>]*>.*?<li data-etat="faite" data-partie="14"[^>]*>.*?<li data-etat="en-cours" data-partie="15"/s);
+  assert.equal((h.match(/class="sg-reg-partie" data-etat="faite"/g) || []).length, 2, 'les deux parties faites au registre');
+  assert.doesNotMatch(h, /class="sg-reg-partie" data-etat="en-cours"/, 'la partie visée n’a pas encore de ligne au registre');
+  assert.match(h, /<li data-temps="courant" aria-current="step">Passage<\/li>/);
+  assert.match(h, /data-act="legacy:file-secondaire"/, '« Arrêter la Constellation » reste');
+});
+
 test('Constellation en cours : l’étoile vivante, les quatre temps (Rattrapage, Passage), « Arrêter la Constellation », bilan et motifs en clair', async () => {
   const F = { etat: 'passe', n: 3, rang: 1, plan: [13, 14, 15], enCours: { part: 14, rang: 1 }, changement: null, bilan: [P13], alerte: null, motifFin: null };
   const p = await pret({ fileParties: F }); poser(p, { etatTexte: 'partie 2 sur 3', phrase: 'Partie 14 · deuxième passe.', reglage: false, secondaire: 'Arrêter la file' });
