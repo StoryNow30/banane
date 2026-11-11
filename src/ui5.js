@@ -116,6 +116,10 @@
     }
     /* La relecture qui suit le lot écrit dans ESV (corriger) : tant qu'elle travaille, le lot n'est pas « terminé » ; le bouton « Arrêter la relecture » du panneau d'avant est visible. */
     if (etat === 'fini' && visible('relecture-arreter')) etat = 'rel';
+    /* Relecture critique (CH-106, 11/11) : pendant une PAUSE de la relecture, le panneau d'avant cache « Arrêter la relecture » et montre « Reprendre »
+     * et « Arrêter » de la pause : l'écran restait sur « Terminé », sans moyen de reprendre ni d'arrêter. La relecture de CE lot en pause est encore la
+     * relecture : l'état est `rel`, et le modèle (src/signal-rendu.js, `case 'rel'`) offre les deux boutons d'origine. La pause d'un autre lot ne compte pas. */
+    if (etat === 'fini') { try { const pr = root.ArianeRelecturePause?.etat?.()?.passe; if (pr && pr.etat === 'en-pause' && pr.lotId === b.id && visible('relecture-reprendre')) etat = 'rel'; } catch { /* état de la relecture illisible : rien ne change */ } }
     /* Phrase de l'incident, d'après l'état (vérifié dans le code : src/engine.js `apply`, `closeUncertain` ; panel.js, « debloquable ») :
      * une opération interrompue bloque toute écriture jusqu'à son archivage ; sans opération en cours, « Reprendre » suffit. */
     const cutI = cutDe(s?.intent?.identity) ?? cutDe(b?.activeIdentity);

@@ -73,7 +73,7 @@ if(process.env.AUTRES!=='0')Object.assign(E,AUTRES);
 for(const e of Object.values(E))if(!e.origine&&!Object.hasOwn(e.state,'fileParties'))e.state={...e.state,fileParties:null};
 /* Relecture critique (CH-106) : relecture en pause et interrompue après le lot, sans onglet ESV, deux onglets à choisir, nom d'onglet long. */
 const relApres=(etat,raison)=>({state:E.fin.state,rel:{choix:'corriger',lot:{id:'lot-1'},passe:{lotId:'lot-1',etat,mode:'corriger',modeEffectif:'corriger',faits:12,total:85,corriges:3,cut:4801,reprise:true,pauseDemandee:false,pauseRaison:raison,expire:null}}});
-E['relecture-pause']=relApres('en-pause','esv');E['relecture-interrompue']=relApres('interrompue',null);
+E['relecture-pause']=relApres('en-pause','esv');E['lot-arrete']={state:lot('STOPPED',4811,{activeIdentity:null})};E['relecture-interrompue']=relApres('interrompue',null);
 E['sans-onglet']={onglets:[],connexion:{status:'no-tab',observedAt:'t',message:null},state:{current:null,busy:false,manual:{status:'IDLE'},native:{status:'IDLE',visits:[],incomplete:[]},batch:null,fileParties:null}};
 E['deux-onglets']={onglets:[{id:1,title:'Rails — partie 13 — tronçon nord',pret:true,utilise:false,index:0,windowId:1,active:true},{id:2,title:'Rails — partie 14',pret:true,utilise:false,index:1,windowId:1,active:false}],connexion:{status:'ready',observedAt:'t',message:null,tabId:9},state:E.pret.state};
 E['onglet-long']={onglets:[{id:1,title:'Validation des rails — campagne du printemps — partie 13 — tronçon nord',pret:true,utilise:true,index:0,windowId:1,active:true}],state:E.cours.state};

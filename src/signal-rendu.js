@@ -344,17 +344,20 @@
     const rang = a.etat === 'p2' ? 1 : a.etat === 'rel' ? 2 : ['fini', 'arrete'].includes(a.etat) ? 3 : 0;
     /* Relecture critique (CH-106, 11/11) : une étape n'est COCHÉE que finie. Un rattrapage en ombre, en erreur, en calcul ou arrêté dit son état sans coche ;
      * une relecture en pause, interrompue ou arrêtée dit son état et ses chiffres sans coche (`relChiffres.etat` : `passe.etat` du service worker). */
+    /* Une étape qui n'aura pas lieu ne se présente pas comme « à venir » (`sans` : rond éteint et barré) : lot arrêté par l'opérateur (le rattrapage ne
+     * part que d'un lot allé à son terme, et la relecture après lui), étape coupée par le choix du lot, étape close sans avoir abouti. */
+    const arrete = a.etat === 'arrete', clos = rang === 3;
     const pEcrit = `${P?.ecrites ?? 0} ${pl(P?.ecrites ?? 0, 'posé')}`;
     const [passe, passeEtat] = rang === 1 ? [`${p2?.ecrites ?? 0} sur ${p2?.demandees ?? 0}`, 'actif']
-      : rang > 1 ? (!P ? ['', 'a-venir'] : P.etat === 'calcul' ? ['calcul…', 'actif'] : P.etat === 'erreur' ? ['en erreur', 'a-venir'] : P.mode === 'ombre' ? ['en ombre', 'a-venir']
-        : P.etat === 'arretee' ? [`arrêté · ${pEcrit}`, 'a-venir'] : [pEcrit, 'fait'])
-      : [E.passe === 'off' ? 'coupé' : E.passe === 'ombre' ? 'à venir · en ombre' : E.passe === 'ecriture' ? 'à venir' : '', 'a-venir'];
+      : rang > 1 ? (!P ? [arrete ? 'non fait' : E.passe === 'off' ? 'coupé' : '', clos ? 'sans' : 'a-venir'] : P.etat === 'calcul' ? ['calcul…', 'actif'] : P.etat === 'erreur' ? ['en erreur', 'sans'] : P.mode === 'ombre' ? ['en ombre', 'sans']
+        : P.etat === 'arretee' ? [`arrêté · ${pEcrit}`, 'sans'] : [pEcrit, 'fait'])
+      : E.passe === 'off' ? ['coupé', 'sans'] : [E.passe === 'ombre' ? 'à venir · en ombre' : E.passe === 'ecriture' ? 'à venir' : '', 'a-venir'];
     const relu = R && Number.isInteger(R.faits) && Number.isInteger(R.total), sur = relu ? `${R.faits} sur ${R.total}` : '';
-    const REL = { 'en-pause': ['en pause', 'actif'], interrompue: ['interrompue', 'actif'], arretee: ['arrêtée', 'a-venir'], preparation: ['en préparation', 'actif'] };
+    const REL = { 'en-pause': ['en pause', 'actif'], interrompue: ['interrompue', 'actif'], arretee: ['arrêtée', 'sans'], preparation: ['en préparation', 'actif'] };
     const relDit = relu && REL[R.etat] ? [`${REL[R.etat][0]} · ${sur}`, REL[R.etat][1]] : null;
     const [rel, relEtat] = rang === 2 ? (relDit || [sur || 'en cours', 'actif'])
-      : rang > 2 ? (!relu || !R.lot ? ['', 'a-venir'] : R.etat === 'finie' ? [`${R.faits} ${pl(R.faits, 'relu')}`, 'fait'] : relDit || [sur, R.etat === 'en-cours' ? 'actif' : 'a-venir'])
-      : [E.relecture === 'coupee' ? 'coupée' : E.relecture === 'ombre' ? 'à venir · sans modifier' : E.relecture === 'corriger' ? 'à venir' : '', 'a-venir'];
+      : rang > 2 ? (!relu || !R.lot ? [arrete ? 'non faite' : E.relecture === 'coupee' ? 'coupée' : '', 'sans'] : R.etat === 'finie' ? [`${R.faits} ${pl(R.faits, 'relu')}`, 'fait'] : relDit || [sur, R.etat === 'en-cours' ? 'actif' : 'sans'])
+      : E.relecture === 'coupee' ? ['coupée', 'sans'] : [E.relecture === 'ombre' ? 'à venir · sans modifier' : E.relecture === 'corriger' ? 'à venir' : '', 'a-venir'];
     const L = [['Pose', `${a.traites ?? 0} ${pl(a.traites ?? 0, 'cut')}`, rang > 0 ? 'fait' : 'actif'], ['Rattrapage', passe, passeEtat], ['Relecture', rel, relEtat]];
     const tourne = i => t === 'marche' && i === rang;
     return `<section class="sg-tu sg-tu-etapes${cls ? ' ' + cls : ''}" data-k="etapes"><h4>Étapes du lot</h4><ol class="sg-etapes">${L.map(([nom, v, e], i) => `<li data-etape="${e}"${tourne(i) && e === 'actif' ? ' data-tourne="1"' : ''}><i aria-hidden="true"></i><b>${nom}</b><span>${esc(v)}</span></li>`).join('')}</ol></section>`;

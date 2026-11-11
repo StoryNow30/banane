@@ -121,10 +121,10 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
   const gros=(()=>{const P=[];for(let i=0;i<1234;i++)P.push({identity:id(10000+i*2),cut:10000+i*2,durationMs:6000+(i%20)*100});const s=lot('RUNNING',4811,{cutStartedAt:'MAINTENANT-3'});
    s.batch={...s.batch,processed:P,deferred:[],sequence:[...P.map(x=>({identity:x.identity,cut:x.cut})),{identity:id(12468),cut:12468}],activeIdentity:id(12468),scope:{...s.batch.scope,start:10000,end:99000}};s.current={identity:id(12468)};return {state:s};})();
   const LONGS={...Object.fromEntries(['cours','toi','panne','rattrapage','relecture','fin','tiroir'].map(k=>[k+'-5chiffres',{...E[k],state:cinq(E[k].state)}])),'cours-1234':gros,
-   'file-8':E['file-8'],'file-arret':E['file-arret'],'file-cours':E['file-cours'],'file-fin':E['file-fin'],'file-repos':E['file-repos'],'sans-onglet':E['sans-onglet'],'deux-onglets':E['deux-onglets'],'onglet-long':E['onglet-long'],'relecture-pause':E['relecture-pause'],echo:E.echo,aurore:E.aurore,reglages:E.reglages,menu:E.menu,palette:E.palette,esv:E.esv,pret:E.pret};
-  for(const w of [320,360,480,600,800])for(const [nom,e] of Object.entries(LONGS)){const {page,ctx}=await page_(nav,e,{width:w,height:w<480?480:760});n++;
+   'file-8':E['file-8'],'file-arret':E['file-arret'],'file-cours':E['file-cours'],'file-fin':E['file-fin'],'file-repos':E['file-repos'],'sans-onglet':E['sans-onglet'],'deux-onglets':E['deux-onglets'],'onglet-long':E['onglet-long'],'relecture-pause':E['relecture-pause'],'lot-arrete':E['lot-arrete'],panne:E.panne,echo:E.echo,aurore:E.aurore,reglages:E.reglages,menu:E.menu,palette:E.palette,esv:E.esv,pret:E.pret};
+  for(const w of [320,360,480,560,600,800])for(const [nom,e] of Object.entries(LONGS)){const {page,ctx}=await page_(nav,e,{width:w,height:w<480?480:760});n++;
    const m=(await page.evaluate(MESURE)).filter(x=>!/^CONTRASTE/.test(x));if(m.length)defauts.push(`${nom} ${w} : ${m.join(' ; ')}`);await ctx.close();}
-  dire(5,!defauts.length,`${n} écrans mesurés (largeurs 320, 360, 480, 600, 800 ; cuts à cinq chiffres, 1 234 cuts traités, 8 parties) : ni débordement ni troncature${defauts.length?'\n   '+defauts.join('\n   '):''}`);
+  dire(5,!defauts.length,`${n} écrans mesurés (largeurs 320, 360, 480, 560, 600, 800 ; cuts à cinq chiffres, 1 234 cuts traités, 8 parties) : ni débordement ni troncature${defauts.length?'\n   '+defauts.join('\n   '):''}`);
  }
 
  if(POINTS.includes(6)){

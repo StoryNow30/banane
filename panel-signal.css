@@ -89,7 +89,11 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-puce[data-etat="aucun"] i{background:var(--attn)}
 #ui5.u-signal .sg-bascule{flex:none}
 /* En compact la puce n'a pas la place d'un état anormal : il est redit en clair, dans sa couleur, sur une ligne sous la barre. */
+/* Un état anormal reste lisible en entier à toute largeur : c'est le nom de l'onglet qui cède la place, jamais le mot d'alerte. Dès 560 de large la
+ * puce l'écrit sans ellipse ; en dessous (et en compact), il est écrit en entier sur la ligne sous la barre. */
+@media (min-width:560px){#ui5.u-signal:not([data-taille="compact"]) .sg-puce:not([data-etat="ok"]):not([data-etat="verrou"]){flex:none;max-width:none}}
 #ui5.u-signal .sg-barre-etat{display:none}
+@media (max-width:559px){#ui5.u-signal .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:600 12px/1.3 var(--f);color:var(--attn-tx)}}
 #ui5.u-signal[data-taille="compact"] .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:600 12px/1.3 var(--f);color:var(--attn-tx)}
 #ui5.u-signal .sg-barre-etat i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--attn)}
 #ui5.u-signal .sg-barre-etat[data-etat="ko"]{color:var(--crit-tx)}
@@ -240,6 +244,10 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-etapes span{text-align:right;line-height:1.3;overflow-wrap:anywhere}
 #ui5.u-signal .sg-etapes i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--piste);display:grid;place-items:center}
 #ui5.u-signal .sg-etapes li[data-etape="fait"],#ui5.u-signal .sg-etapes li[data-etape="actif"]{color:var(--tx)}
+/* une étape qui n'aura pas lieu : rond éteint, barré */
+#ui5.u-signal .sg-etapes li[data-etape="sans"] i{box-shadow:inset 0 0 0 2px var(--piste);opacity:.9}
+#ui5.u-signal .sg-etapes li[data-etape="sans"] i::after{content:"";width:10px;height:2px;border-radius:1px;background:var(--tx2)}
+#ui5.u-signal .sg-etapes li[data-etape="sans"] b{font-weight:500;color:var(--tx2)}
 #ui5.u-signal .sg-etapes li[data-etape="fait"] i{background:var(--accent);box-shadow:none}
 #ui5.u-signal .sg-etapes li[data-etape="fait"] i::after{content:"";width:8px;height:4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg);margin-top:-2px;animation:sg-coche .4s var(--ressort) backwards}
 #ui5.u-signal[data-theme="clair"] .sg-etapes li[data-etape="fait"] i::after{border-color:#FFFFFF}

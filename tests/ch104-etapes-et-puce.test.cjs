@@ -15,7 +15,7 @@ test('étapes : la relecture n’est cochée que finie ; en pause, interrompue, 
  assert.deepEqual(R('finie'),{etat:'fait',texte:'12 relus'});
  assert.deepEqual(R('en-pause'),{etat:'actif',texte:'en pause · 12 sur 85'});
  assert.deepEqual(R('interrompue'),{etat:'actif',texte:'interrompue · 12 sur 85'});
- assert.deepEqual(R('arretee'),{etat:'a-venir',texte:'arrêtée · 12 sur 85'});
+ assert.deepEqual(R('arretee'),{etat:'sans',texte:'arrêtée · 12 sur 85'});
  assert.deepEqual(R('en-cours'),{etat:'actif',texte:'12 sur 85'},'une passe encore en cours n’est pas finie');
  assert.notEqual(R(undefined).etat,'fait','état inconnu : jamais cochée');
  assert.notEqual(etape(S.rendre(snap({rel:{faits:12,total:85,lot:false,etat:'finie'}}),{}),'Relecture').etat,'fait','la relecture d’un autre lot ne coche rien');
@@ -24,10 +24,20 @@ test('étapes : la relecture n’est cochée que finie ; en pause, interrompue, 
 test('étapes : un rattrapage en ombre, en erreur, en calcul ou arrêté n’est pas coché ; fini en écriture, il l’est',()=>{
  const P=p=>etape(S.rendre(snap({ar:{passeFin:{mode:'ecriture',etat:'finie',posees:3,differes:6,ecrites:2,message:null,...p}}}),{}),'Rattrapage');
  assert.deepEqual(P({}),{etat:'fait',texte:'2 posés'});
- assert.deepEqual(P({mode:'ombre'}),{etat:'a-venir',texte:'en ombre'});
- assert.deepEqual(P({etat:'erreur'}),{etat:'a-venir',texte:'en erreur'});
+ assert.deepEqual(P({mode:'ombre'}),{etat:'sans',texte:'en ombre'});
+ assert.deepEqual(P({etat:'erreur'}),{etat:'sans',texte:'en erreur'});
  assert.deepEqual(P({etat:'calcul'}),{etat:'actif',texte:'calcul…'});
- assert.deepEqual(P({etat:'arretee'}),{etat:'a-venir',texte:'arrêté · 2 posés'});
+ assert.deepEqual(P({etat:'arretee'}),{etat:'sans',texte:'arrêté · 2 posés'});
+});
+
+test('étapes : une étape qui n’aura pas lieu ne se présente pas comme à venir (lot arrêté, rattrapage coupé, relecture coupée)',()=>{
+ const E=(o,nom)=>etape(S.rendre(snap({ar:o}),{}),nom);
+ assert.deepEqual(E({etat:'arrete'},'Rattrapage'),{etat:'sans',texte:'non fait'},'lot arrêté par l’opérateur : le rattrapage ne partira pas');
+ assert.deepEqual(E({etat:'arrete'},'Relecture'),{etat:'sans',texte:'non faite'});
+ assert.deepEqual(E({etat:'cours',lotOuvert:true,etapes:{relecture:'coupee',passe:'off'}},'Rattrapage'),{etat:'sans',texte:'coupé'});
+ assert.deepEqual(E({etat:'cours',lotOuvert:true,etapes:{relecture:'coupee',passe:'off'}},'Relecture'),{etat:'sans',texte:'coupée'});
+ assert.deepEqual(E({etat:'cours',lotOuvert:true},'Rattrapage'),{etat:'a-venir',texte:'à venir'},'prévu par le lot : à venir');
+ assert.equal(E({etat:'fini'},'Rattrapage').etat,'sans','lot fini, rattrapage sans résultat connu : pas « à venir »');
 });
 
 test('puce ESV : elle nomme l’onglet (long) et son premier morceau (court) ; état anormal en clair, avec la ligne d’état pour le compact',()=>{
