@@ -31,7 +31,7 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
    if(nom!=='prete')await poserEtat(page,st);
    res[nom]=await parLargeurs(page,{extra:EXTRA});
    vus[nom]=await page.evaluate(()=>{const h=document.getElementById('ui5');return {onglet:h.querySelector('.sg-fen')?.dataset.activite,choisi:h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
-    titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act],.sg-actions button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
+    titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act],.sg-actions button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),molette:h.querySelector('.sg-onglet-file [role="slider"]')?.getAttribute('aria-valuenow')??null,nombres:[...h.querySelectorAll('.sg-onglet-file .sg-mol-n[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
     departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-chaine li')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
   }
   assert.deepEqual(erreurs,[]);
@@ -47,8 +47,9 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
  assert.equal(res.arret['600'].mot,'Arrêtée');assert.deepEqual(vus.arret.etoiles,['faite:13','interrompue:14']);assert.deepEqual(vus.arret.titres,['Bilan par partie','Départs des parties']);assert.match(res.arret['600'].alerte,/ne change pas de partie/);
  assert.deepEqual(vus.arret.boutons.filter(b=>/file-(reprendre|lancer)/.test(b)),['Reprendre à la partie 14 · 1 restante|legacy:file-reprendre','Nouvelle Constellation · 2 parties|legacy:file-lancer']);
  assert.equal(vus.arret.bilan,1);
- for(const nom of ['prete','arret','fin'])assert.ok(vus[nom].boutons.includes('3|sg:file-n:3'),nom+' : le nombre de parties se choisit (aussi après une file)');
- assert.ok(!vus.lot.boutons.some(b=>/sg:file-n/.test(b)),'pas pendant la file');
+ /* CH-105 : la molette (1 à 20) remplace les six boutons. */
+ for(const nom of ['prete','arret','fin']){assert.equal(vus[nom].molette,'2',nom+' : le nombre de parties se choisit (aussi après une file)');assert.ok(vus[nom].nombres.includes('3|sg:file-n:3'),nom);}
+ assert.equal(vus.lot.molette,null,'pas pendant la file');assert.ok(!vus.lot.boutons.some(b=>/sg:file-n/.test(b))&&!vus.lot.nombres.length,'pas pendant la file');
  assert.equal(res.fin['600'].mot,'Terminée');assert.equal(vus.fin.bilan,2);
  assert.deepEqual(vus.fin.boutons.filter(b=>/file-lancer|export-tout/.test(b)),['Nouvelle Constellation · 2 parties|legacy:file-lancer','Exporter le dossier|legacy:export-tout']);
 });

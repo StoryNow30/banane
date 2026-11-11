@@ -311,6 +311,9 @@
  /* CH-017 — FILE DE PARTIES (variante A de la maquette validée, D-261). Rien n'apparaît tant que la vue ne porte pas `fileParties` (file éteinte
   * dans src/settings.js : la vue est celle d'avant). « Préparer » ne lance rien ; « Lancer » démarre la file ; pendant la file, « Arrêter la file ». */
  const fileUI={n:2,prete:false};
+ /* CH-105 : la borne haute du nombre de parties est celle de la file (src/file-parties.js MAX_PARTIES ; un essai les compare). */
+ const FILE_N_MAX=20;
+ const fileNBorne=x=>{const v=Number(String(x??'').trim());return String(x??'').trim()!==''&&Number.isFinite(v)?Math.max(1,Math.min(FILE_N_MAX,Math.round(v))):null;};
  const nParties=n=>`${n} ${n>1?'parties':'partie'}`;
  function afficherFile(s){const el=$('file-parties');if(!el)return;const present=Object.hasOwn(s||{},'fileParties');el.hidden=!present;if(!present)return;
   const f=s.fileParties,actifF=!!f&&['lot','passe','relecture','changement'].includes(f.etat),faitesF=(f?.bilan||[]).filter(p=>!p.interrompue).length,PH={lot:'lot en cours',passe:'deuxième passe',relecture:'relecture et correction',changement:'changement de partie'};
@@ -320,10 +323,12 @@
    :f.etat==='fin'?`${nParties(f.bilan.length)} faites · la file s’est éteinte. Export : prêt, jamais automatique.`
    :`${f.motifFin?.texte||'arrêtée'} · ${faitesF} ${faitesF>1?'parties faites':'partie faite'} sur ${f.n} · rien exporté.`;
   const reg=$('file-reglage');reg.hidden=!!f;const seg=$('file-n');
-  /* CH-026 : les boutons du nombre existent aussi file arrêtée ou finie (cachés ici : l'onglet « File » de Signal les offre pour une nouvelle file). */
-  if(seg&&seg.childElementCount===0)for(const v of [1,2,3,4,5,8]){const bt=document.createElement('button');bt.type='button';bt.textContent=String(v);bt.dataset.n=String(v);
-   bt.onclick=()=>{fileUI.n=v;fileUI.prete=false;afficherFile(state);};seg.appendChild(bt);}
-  if(seg)for(const bt of seg.children)bt.setAttribute('aria-pressed',String(Number(bt.dataset.n)===fileUI.n));
+  /* CH-026 : le nombre se règle aussi file arrêtée ou finie (caché ici : l'onglet Constellation de Signal l'offre pour une nouvelle file).
+   * CH-105 : un champ numérique borné de 1 à FILE_N_MAX (le MAX_PARTIES de src/file-parties.js) à la place des six boutons ; la molette de Signal
+   * l'écrit puis déclenche `change`. Une saisie hors bornes est ramenée dedans ; une saisie qui n'est pas un nombre remet le nombre choisi. */
+  if(seg&&!seg.dataset.branche){seg.dataset.branche='1';seg.min='1';seg.max=String(FILE_N_MAX);
+   seg.addEventListener('change',()=>{const v=fileNBorne(seg.value);if(v===null){seg.value=String(fileUI.n);return;}fileUI.n=v;fileUI.prete=false;afficherFile(state);});}
+  if(seg&&document.activeElement!==seg)seg.value=String(fileUI.n);
   const al=$('file-alerte');al.hidden=!f?.alerte;al.textContent=f?.alerte?`${f.alerte.texte}${f.alerte.detail?` (${f.alerte.detail})`:''}.`:'';
   const bil=$('file-bilan');bil.hidden=!f?.bilan?.length;bil.textContent='';
   for(const p of f?.bilan||[]){const li=document.createElement('li'),r=p.resume||{};

@@ -14,7 +14,8 @@ const etat=(batch,extra={})=>({batch,current:{identity:{part:13,cut:4812}},conne
 function poser(p,{etatTexte='prête',phrase='',reglage=true,choisi=2,alerte='',bilan=[],principal=null,secondaire=null,reprendre=null,lancer=null}={}){
  const E=p.els;E['file-parties'].hidden=false;
  E['file-etat'].textContent=etatTexte;E['file-phrase'].textContent=phrase;E['file-reglage'].hidden=!reglage;
- E['file-n'].children=[1,2,3,4,5,8].map(n=>({dataset:{n:String(n)},disabled:false,clics:0,click(){this.clics++;},getAttribute:a=>a==='aria-pressed'?String(n===choisi):null}));
+ /* CH-105 : `#file-n` est un champ numérique borné (1 à 20) ; Signal l'écrit puis déclenche `change` (panel.js fait le reste). */
+ E['file-n'].value=String(choisi);E['file-n'].min='1';E['file-n'].max='20';E['file-n'].disabled=false;E['file-n'].changes=[];E['file-n'].dispatchEvent=function(e){this.changes.push([e.type,this.value]);};
  E['file-alerte'].hidden=!alerte;E['file-alerte'].textContent=alerte;
  E['file-bilan'].hidden=!bilan.length;E['file-bilan'].querySelectorAll=s=>s==='li'?bilan.map(t=>({textContent:t})):[];
  /* CH-026 : `#file-reprendre` et `#file-lancer` (boutons d'un clic de l'onglet « File »), cachés sauf mention. */
@@ -48,10 +49,12 @@ test('au repos, écran « Prêt » : une entrée « Constellation · prête » o
  assert.doesNotMatch(h,/sg-boite/,'la boîte est fermée');
  p.ui.agir('sg:file');h=p.hote.innerHTML;
  assert.match(h,/class="sg-boite"[^>]*role="dialog"/);
- for(const n of [1,2,3,4,5,8])assert.match(h,new RegExp(`aria-pressed="${n===2}" data-act="sg:file-n:${n}"`),'nombre '+n);
+ assert.match(h,/role="slider"[^>]*aria-label="Nombre de parties"[^>]*aria-valuemin="1" aria-valuemax="20" aria-valuenow="2"/,'la molette (CH-105)');
+ for(let n=1;n<=20;n++)assert.match(h,new RegExp(`data-act="sg:file-n:${n}"`),'nombre '+n);
  assert.match(h,/data-act="legacy:file-principal"[^>]*><span>Préparer la Constellation</);
  p.ui.agir('sg:file-n:3');
- assert.equal(p.els['file-n'].children.find(b=>b.dataset.n==='3').clics,1,'le bouton 3 de la carte est cliqué');
+ assert.deepEqual(p.els['file-n'].changes,[['change','3']],'le champ de la carte reçoit 3, puis « change »');
+ p.ui.agir('sg:file-n:21');p.ui.agir('sg:file-n:0');assert.equal(p.els['file-n'].changes.length,1,'hors bornes : rien');
  assert.equal(p.ui.ui.couche,'file','la boîte reste ouverte');
  p.ui.agir('legacy:file-principal');assert.equal(p.els['file-principal'].clics,1);
  assert.deepEqual(js(p.envoyes),[],'aucun message nouveau');
