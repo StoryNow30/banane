@@ -11,10 +11,11 @@
 const N=require('./navigateur.cjs'),O77=require('./ch077-outils.cjs');
 const LIVRE=require('../../src/settings.js').lot.chargement.prechauffer;
 /* `ligneBase:false` : réglage `lot.signalEteint.ligneDeBaseEchecs` coupé (témoin : la capture retombe au repli « stabilité ») ; `prechauffer:false` : témoin sans préchauffage. */
-async function ouvrir({cuts=14,saut=1,pagesHier=7,loin=true,reglage={},decode=40,latence=60,images=true,ligneBase=true,prechauffer=true,pas=null}={}){
+/* CH-110 : `adaptateur` (contenu d'une copie patchée de src/adapter-page.js) et `reparation` (réglage `lot.reparationPotree` passé à la page) ; absents : tronc tel quel. */
+async function ouvrir({cuts=14,saut=1,pagesHier=7,loin=true,reglage={},decode=40,latence=60,images=true,ligneBase=true,prechauffer=true,pas=null,adaptateur=null,reparation=null}={}){
  const R={...LIVRE,memoire:{...LIVRE.memoire},loin:{...LIVRE.loin,actif:loin},...reglage,actif:prechauffer};
- const reglages=N.lire('src/settings.js')+`;window.BananeSettings={...window.BananeSettings,lot:{...window.BananeSettings.lot,chargement:{prechauffer:${JSON.stringify(R)}},signalEteint:{...window.BananeSettings.lot.signalEteint,ligneDeBaseEchecs:${ligneBase===true}}}};`;
- const env0=await N.ouvrir({maquette:{cuts,latence:20,lots:2,ept:1,...(saut>=2?{saut,...(pas?{pas}:{})}:{}),eptHier:1,eptForme:'commun',eptPas:pagesHier,eptMemoire:1,eptDecode:decode},avantPage:[N.lire('src/esv-observer.js'),O77.ECOUTE],fichiersPage:O77.FICHIERS,contenus:{'src/settings.js':reglages}});
+ const reglages=N.lire('src/settings.js')+`;window.BananeSettings={...window.BananeSettings,lot:{...window.BananeSettings.lot,chargement:{prechauffer:${JSON.stringify(R)}},signalEteint:{...window.BananeSettings.lot.signalEteint,ligneDeBaseEchecs:${ligneBase===true}}${reparation?`,reparationPotree:${JSON.stringify(reparation)}`:''}}};`;
+ const env0=await N.ouvrir({maquette:{cuts,latence:20,lots:2,ept:1,...(saut>=2?{saut,...(pas?{pas}:{})}:{}),eptHier:1,eptForme:'commun',eptPas:pagesHier,eptMemoire:1,eptDecode:decode},avantPage:[N.lire('src/esv-observer.js'),O77.ECOUTE],fichiersPage:O77.FICHIERS,contenus:{'src/settings.js':reglages,...(adaptateur?{'src/adapter-page.js':adaptateur}:{})}});
  await env0.injecter();const s={env:env0,fermer:()=>env0.fermer()};
  await O77.attendre(()=>env0.page.evaluate(()=>window.__maquette.journal.some(e=>e.type==='ept-fin')&&window.Potree.numNodesLoading===0&&window.__maquette.etat().railsPrets));
  const env=s.env,page=env.page;env.serveur.pannes({eptLatenceMs:latence});
