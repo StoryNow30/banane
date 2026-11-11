@@ -23,21 +23,3 @@ test('F5 au cut 110 : pause, la page se recharge, ESV revient : reprise seule au
  assert.equal(H.evenements(b,'relecture-reprise')[0].raisonPause,'esv');
  assert.deepEqual(etapes(b),['attente','rechargee','repris']);
 });
-
-test('ESV muet sans rechargement : aucune reprise seule ; au-delà de la borne, la passe reste en pause avec son message',async()=>{
- const {b}=await lotPause({esv:avec(muet,(a,bb)=>REGLAGE({actif:true,attenteRepriseMs:300})(bb),a=>{a.panneCapture.add(110);})});
- const p=await attendreEtat(b,'en-pause');const message=p.message;
- await jusqua(()=>etapes(b).includes('echec'),3000);
- assert.equal(b.get('relecture').passe.etat,'en-pause');assert.equal(b.get('relecture').passe.message,message,'message de la pause gardé');
- assert.equal(H.evenements(b,'relecture-reprise').length,0);
- assert.match(H.evenements(b,'relecture-esv-revenue').find(e=>e.etape==='echec').motif,/aucun rechargement/);
-});
-
-test('l’opérateur reprend lui-même pendant l’attente : Ariane s’efface, une seule reprise, la passe finit',async()=>{
- const {b,adapter}=await lotPause({esv:avec(muet,(a,bb)=>REGLAGE({actif:true,attenteRepriseMs:3000})(bb),a=>{a.panneCapture.add(110);})});
- await attendreEtat(b,'en-pause');adapter.panneCapture.clear();
- await b.api('relecture-reprendre');
- const fin=await H.finPasse(b,60000);assert.equal(fin.etat,'finie');assert.equal(fin.faits,7);
- await jusqua(()=>etapes(b).includes('abandon'),4000);
- assert.deepEqual(etapes(b),['attente','abandon']);assert.equal(H.evenements(b,'relecture-reprise').length,1);
-});

@@ -25,5 +25,6 @@ test('service worker : `potree-place-rendue` rangé, champs réduits, ni clé ni
  deq(out,{accept:true,stored:2});const s=stored(b).filter(x=>x.kind==='potree-place-rendue');assert.equal(s.length,2);
  deq([s[0].motif,s[0].profondeur,s[0].statut,s[0].essai,s[0].avant,s[0].apres,s[0].rendues,s[0].episode,s[0].cut,s[0].pageMs],['rendue',5,502,1,4,3,1,1,77,9]);
  deq([s[1].motif,s[1].profondeur,s[1].statut,s[1].essai],[null,null,null,null]);
- assert.ok(!/ept-data|esv\.test|\d+-\d+-\d+-\d+/.test(JSON.stringify(s)),'ni clé ni adresse');
+ /* La clé envoyée, pas tout motif « n-n-n-n » : un identifiant aléatoire de l'événement peut en contenir un (échec intermittent au verify du 11/11). */
+ assert.ok(!/ept-data|esv\.test|5-1-2-3/.test(JSON.stringify(s)),'ni clé ni adresse: '+JSON.stringify(s).match(/\d+-\d+-\d+-\d+/));
 });

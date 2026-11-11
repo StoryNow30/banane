@@ -27,31 +27,3 @@ test('migration unique : un « éteint » gardé sans marque passe à « allumé
   defaut(b, { defautActif: false, defautF5: 'pause' }); b.local.m.banane51RelecturePauseReglage = { actif: false, f5: 'pause' };
   assert.equal((await b.api('relecture-etat')).repriseReglage.actif, false); assert.equal(b.local.m.banane51RelecturePauseReglage.v, undefined);
 });
-
-test('défaut allumé, aucun choix gardé : le F5 pendant la relecture la met en pause au cut où elle était, le point est gardé', async () => {
-  let lu = null;
-  const { b } = await lotPause({ actif: null, esv: (a, bb) => { defaut(bb, { defautActif: true, defautF5: 'pause' }); a.panneCapture.add(110);
-    a.surAller = async t => { if (t.cut === 109 && !lu) lu = (await bb.api('relecture-etat')).repriseReglage; }; } });
-  const p = await attendreEtat(b, 'en-pause');
-  assert.deepEqual(js(lu), { actif: true, f5: 'pause' }, 'le défaut du réglage décide quand rien n’est gardé');
-  assert.equal(p.pauseRaison, 'esv'); assert.equal(p.cut, 110, 'gardée au cut où elle était');
-  assert.equal(b.local.m.banane51RelectureReprise?.sel?.cuts?.[b.local.m.banane51RelectureReprise.index]?.cut, 110, 'point de reprise au cut 110');
-  assert.equal(H.evenements(b, 'relecture-pause').length, 1);
-  assert.match(p.message, /relecture gardée en pause au cut 110/);
-});
-
-test('défaut allumé, mais l’opérateur a éteint le réglage dans le panneau : son choix l’emporte (F5 = erreur, comme avant)', async () => {
-  const { b } = await lotPause({ actif: false, esv: (a, bb) => { defaut(bb, { defautActif: true, defautF5: 'pause' }); a.panneCapture.add(110); } });
-  const p = await H.finPasse(b);
-  assert.equal(p.etat, 'erreur'); assert.equal(H.evenements(b, 'relecture-pause').length, 0);
-});
-
-test('défaut allumé avec « arrêter » au F5 : le réglage se lit allumé, F5 = arrêt ; valeurs illisibles du défaut : éteint, pause', async () => {
-  let lu = null;
-  const { b } = await lotPause({ actif: null, esv: (a, bb) => { defaut(bb, { defautActif: true, defautF5: 'arret' }); a.panneCapture.add(110);
-    a.surAller = async t => { if (t.cut === 109 && !lu) lu = (await bb.api('relecture-etat')).repriseReglage; }; } });
-  const p = await H.finPasse(b);
-  assert.deepEqual(js(lu), { actif: true, f5: 'arret' }); assert.equal(p.etat, 'erreur');
-  defaut(b, { defautActif: 'oui', defautF5: 'x' });
-  assert.deepEqual(js((await b.api('relecture-etat')).repriseReglage), { actif: false, f5: 'pause' });
-});

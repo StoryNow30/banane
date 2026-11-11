@@ -56,13 +56,18 @@ test('changed cuts or rail poses abort capture immediately and never qualify as 
    assert.equal(reads,0);assert.ok(f.clock()<1000);
  }
 });
-/* D-344 : la caméra changée est désormais relue (tests/d344-camera-relue.test.cjs) ; la découpe reste fatale. */
-test('clipping changes are not silently retried as LOD replacement',async()=>{
- for(const message of ["La découpe du nuage a changé pendant l'export. Recommence lorsque la vue est stable."]){
-   const f=lidarPage(),before=await f.call('state');let reads=0;
-   f.ctx.BananeLidar.capture=async()=>{reads++;throw Error(message);};
-   await assert.rejects(()=>f.call('capture',before),e=>e.message===message);assert.equal(reads,1);
- }
+/* Nom figé (liste des essais de la 4.7.0, §14 A). D-344 : la caméra changée est désormais RELUE, mais pas en silence : la tentative est jetée,
+ * notée (`capture-retry`, tentative « discarded ») et relue ; la découpe changée reste fatale (une seule lecture). */
+test('camera and clipping changes are not silently retried as LOD replacement',async()=>{
+ const decoupe="La découpe du nuage a changé pendant l'export. Recommence lorsque la vue est stable.",camera="La caméra a changé pendant l'export. Garde la vue immobile et réessaie.";
+ {const f=lidarPage(),before=await f.call('state');let reads=0;
+  f.ctx.BananeLidar.capture=async()=>{reads++;throw Error(decoupe);};
+  await assert.rejects(()=>f.call('capture',before),e=>e.message===decoupe);assert.equal(reads,1);}
+ {const f=lidarPage(),before=await f.call('state'),vraie=f.ctx.BananeLidar.capture;let reads=0;
+  f.ctx.BananeLidar.capture=async(...a)=>{reads++;if(reads===1)throw Error(camera);return vraie(...a);};
+  const data=await f.call('capture',before);assert.ok(reads>=2);
+  assert.ok(f.progress.some(p=>p.stage==='capture-retry'&&p.detail.message===camera),'relue, et dite');
+  assert.ok(data.readStrategy.attempts.some(a=>a.status==='discarded'&&a.message===camera),'tentative jetée, notée');}
 });
 
 const scope={part:23,start:100,end:101,testConfirmed:true,lowConfidence:'attempt',allowNavigationEvidence:true};
