@@ -21,7 +21,7 @@ Restait ouvert : (a) une capture PEU dense mais non vide est jugée normalement 
 - Garde de pose (`tools/garde-gcv2.cjs`) : non rendue ici (lots archivés absents, `BANANE_LOTS`) ; aucun fichier de décision touché.
 
 ## 4. Outil
-`node chantiers/CH-107/outils/relecture-cuts-vides.cjs <export> [--min 3] [--peu 100] [--cuts] [--json]` : par partie, cuts relus, vides, première vide, peu denses (1 à 99 points à la première capture, seuil `minPoints` de `lot.recaptureVide`), corrigés, corrigés sur un cut vide, corrigés peu denses, points minimum d'un cut corrigé, refus, séries (cuts, durée, cadence), pauses ; le tableau des cuts peu denses (points par rail, action, règle) et celui des cuts (points par rail). Aucun comportement de jugement n'a changé pour les captures peu denses (décision de l'opérateur).
+`node chantiers/CH-107/outils/relecture-cuts-vides.cjs <export> [--min 3] [--peu 100] [--cuts] [--json]` : par partie, cuts relus, vides, première vide, peu denses (1 à 99 points à la première capture, seuil `minPoints` de `lot.recaptureVide`), corrigés, corrigés sur un cut vide, corrigés peu denses, points minimum d'un cut corrigé, refus, séries (cuts, durée, cadence), pauses ; le tableau des cuts peu denses (points par rail, action, règle) et celui des cuts (colonne « sous 100 points », points par rail, action). Aucun comportement de jugement n'a changé pour les captures peu denses (décision de l'opérateur).
 
 ## Non vérifié
 Le vrai ESV (que le rechargement relance le chargeur de points ; même SUPPOSÉ que CH-051) ; une maquette où Potree cesse d'afficher les points pendant la relecture ; l'état de la série après un redémarrage du service worker (il repart à zéro : au plus un rechargement de plus).

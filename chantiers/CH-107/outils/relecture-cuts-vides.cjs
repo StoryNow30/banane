@@ -115,8 +115,8 @@ function markdown(r, { tousLesCuts = false } = {}) {
     const dansSerie = new Set(p.series.flatMap(s => s.listeCuts));
     const montres = tousLesCuts ? p.cuts : p.cuts.filter(c => c.action === 'corrige' || dansSerie.has(c.cut) || (c.premiereVide && !c.vide));
     if (montres.length) {
-      L.push('', '| Cut | Vide | Points (g / d) | Captures (vides) | Durée | Action | Règle | Raison |', '|---|---|---|---|---|---|---|---|');
-      for (const c of montres) L.push(`| ${c.cut} | ${c.vide ? 'oui' : c.premiereVide ? '1re' : 'non'} | ${c.points ?? '?'} (${c.gauche ?? '?'} / ${c.droit ?? '?'}) | ${c.captures ?? '?'} (${c.capturesVides ?? '?'}) | ${secondes(c.totalMs)} | ${c.action ?? '?'} | ${c.regleAurait === null ? '?' : c.regleAurait ? 'aurait corrigé' : (c.regle ?? 'non')} | ${(c.raisonAction || c.erreurCapture || '').replace(/\|/g, '/')} |`);
+      L.push('', '| Cut | Vide | Sous ' + r.peu + ' points | Points (g / d) | Captures (vides) | Durée | Action | Règle | Raison |', '|---|---|---|---|---|---|---|---|---|');
+      for (const c of montres) L.push(`| ${c.cut} | ${c.vide ? 'oui' : c.premiereVide ? '1re' : 'non'} | ${c.points === null ? '?' : c.points < r.peu ? 'oui' : 'non'} | ${c.points ?? '?'} (${c.gauche ?? '?'} / ${c.droit ?? '?'}) | ${c.captures ?? '?'} (${c.capturesVides ?? '?'}) | ${secondes(c.totalMs)} | ${c.action ?? '?'} | ${c.regleAurait === null ? '?' : c.regleAurait ? 'aurait corrigé' : (c.regle ?? 'non')} | ${(c.raisonAction || c.erreurCapture || '').replace(/\|/g, '/')} |`);
     }
   }
   return L.join('\n') + '\n';

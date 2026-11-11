@@ -38,7 +38,9 @@ test('ligne de commande : Markdown sur un journal d’export, sans identifiant n
   const md=spawnSync(process.execPath,[OUTIL,d,'--cuts'],{encoding:'utf8'});assert.equal(md.status,0,md.stderr);
   assert.match(md.stdout,/\| 15 \| 9 \| 5 \| 6 \| 0 \| 2 \| 0 \| 0 \| 1700 \| 0 \| 1 \|/);
   assert.match(md.stdout,/\| 16 \| 5 \| 1 \| 1 \| 2 \| 1 \| 0 \| 1 \| 50 \| 0 \| 0 \|/);assert.match(md.stdout,/\| 13 \| 50 \| 30 \| 20 \| corrige \|/);assert.match(md.stdout,/\| 102 → 105 \| 4 \| 1,2 s \| 0,3 s \| 0 \|/);
-  assert.match(md.stdout,/\| 106 \| 1re \| 0 \(0 \/ 0\) \| 2 \(1\) \|/);
+  assert.match(md.stdout,/\| 106 \| 1re \| oui \| 0 \(0 \/ 0\) \| 2 \(1\) \|/);
+  assert.match(md.stdout,/\| 13 \| non \| oui \| 50 \(30 \/ 20\) \| 1 \(0\) \| 0,3 s \| corrige \|/,'colonne « sous 100 points » dans le tableau des cuts, avec l’action');
+  assert.match(md.stdout,/\| 10 \| non \| non \| 1700 \(900 \/ 800\) \|/);
   assert.equal(/[0-9a-f]{8}-[0-9a-f]{4}-|https?:/.test(md.stdout),false,'aucun identifiant, aucune adresse');
   const js=spawnSync(process.execPath,[OUTIL,d,'--json'],{encoding:'utf8'});assert.equal(js.status,0,js.stderr);
   assert.equal(JSON.parse(js.stdout).parties[0].series[0].cuts,4);assert.equal(/[0-9a-f]{8}-[0-9a-f]{4}-|https?:/.test(js.stdout),false);
