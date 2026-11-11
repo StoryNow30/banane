@@ -1,0 +1,237 @@
+<title>Bento Ariane</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Manrope:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Mise en page : une colonne de cinq « mondes ». Chaque monde est un panneau arrondi qui porte le même bento de huit composants, dans son propre style.
+   La page autour suit le thème du lecteur ; chaque monde garde volontairement son allure unique. */
+:root{
+  --pg:#F5F5F7; --pg-tx:#16171A; --pg-tx2:#5E6470; --pg-trait:#DCDFE5; --pg-carte:#FFFFFF; --pg-accent:#2A2C33;
+  --f-page:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pg:#0D0E10;--pg-tx:#EDEEF1;--pg-tx2:#9BA1AD;--pg-trait:#26282E;--pg-carte:#17181C;--pg-accent:#EDEEF1;color-scheme:dark}}
+:root[data-theme="dark"]{--pg:#0D0E10;--pg-tx:#EDEEF1;--pg-tx2:#9BA1AD;--pg-trait:#26282E;--pg-carte:#17181C;--pg-accent:#EDEEF1;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--pg);color:var(--pg-tx);font:400 16px/1.5 var(--f-page);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 72px}
+.page{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+.page>header h1{font:700 clamp(26px,4vw,38px)/1.1 "Inter Tight",var(--f-page);letter-spacing:-.02em;margin:0 0 10px;text-wrap:balance}
+.page>header p{margin:0;max-width:62ch;color:var(--pg-tx2)}
+.sommaire{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.sommaire a{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--pg-trait);background:var(--pg-carte);color:var(--pg-tx);font-weight:600;font-size:14px;text-decoration:none}
+.sommaire a:hover{border-color:var(--pg-tx2)}
+.sommaire a:focus-visible,.btn:focus-visible,.seg button:focus-visible,.sw:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.sommaire b{font-weight:700;color:var(--pg-tx2)}
+.monde-tete{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 4px 12px}
+.monde-tete .n{font:700 13px/1 var(--f-page);width:26px;height:26px;display:inline-grid;place-items:center;border-radius:8px;background:var(--pg-accent);color:var(--pg);align-self:center}
+.monde-tete h2{font:700 22px/1.2 "Inter Tight",var(--f-page);letter-spacing:-.01em;margin:0}
+.monde-tete p{margin:0;color:var(--pg-tx2);font-size:15px}
+
+/* ───────── structure commune du bento ───────── */
+.style{border-radius:28px;padding:clamp(14px,2.2vw,26px);background:var(--fond);color:var(--tx);font-family:var(--police);position:relative;overflow:hidden;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.bento{display:grid;gap:var(--gap,12px);grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"etat etat actions liste" "etat etat onglets liste" "avis avis rythme champ"}
+.t{grid-area:var(--a);background:var(--tuile);border-radius:var(--rayon);padding:var(--pad,18px);display:flex;flex-direction:column;gap:12px;min-width:0;border:var(--bord,0);box-shadow:var(--ombre,none);position:relative}
+.t-etat{--a:etat;gap:18px;justify-content:space-between}.t-actions{--a:actions}.t-onglets{--a:onglets}.t-liste{--a:liste}.t-avis{--a:avis}.t-rythme{--a:rythme}.t-champ{--a:champ}
+.t h4{margin:0;font:600 12px/1.3 var(--police);letter-spacing:.02em;color:var(--tx2);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.t h4 em{font-style:normal;color:var(--tx)}
+.t h3{margin:0;font:650 19px/1.25 var(--police-titre,var(--police));letter-spacing:-.01em}
+.t p{margin:0;color:var(--tx2);font-size:13px;line-height:1.45}
+.etat-haut{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pastille{display:inline-flex;align-items:center;gap:9px;font:600 13.5px/1 var(--police)}
+.pastille i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 var(--accent);animation:pouls 2.2s ease-out infinite}
+@keyframes pouls{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}70%,100%{box-shadow:0 0 0 9px transparent}}
+.partie{font-size:12.5px;color:var(--tx2)}
+.etat-corps{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.anneau{position:relative;width:132px;aspect-ratio:1;flex:none;display:grid;place-items:center}
+.anneau::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--anneau,var(--accent)) calc(var(--p)*1%),var(--piste) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--ep,11px)),#000 calc(100% - var(--ep,11px) + 1px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--ep,11px)),#000 calc(100% - var(--ep,11px) + 1px))}
+.anneau b{font:700 34px/1 var(--police-num,var(--police));letter-spacing:-.03em}
+.anneau b small{font-size:.45em;font-weight:600;margin-left:2px;color:var(--tx2)}
+.etat-txt{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1 1 180px}
+.etat-txt dl{display:flex;gap:22px;margin:10px 0 0}
+.etat-txt dt{font-size:11.5px;color:var(--tx2)}
+.etat-txt dd{margin:2px 0 0;font:650 20px/1 var(--police-num,var(--police))}
+.barre{height:6px;border-radius:3px;background:var(--piste);overflow:hidden}
+.barre b{display:block;height:100%;width:20%;border-radius:inherit;background:var(--anneau,var(--accent))}
+.pile{display:flex;flex-direction:column;gap:8px}
+.rangee{display:flex;gap:8px}
+.btn{height:38px;padding:0 14px;border-radius:var(--r-btn,10px);font:600 13.5px/1 var(--police);cursor:pointer;border:0;white-space:nowrap;transition:transform .12s ease,filter .15s ease,box-shadow .15s ease,background .15s ease;color:var(--tx)}
+.btn:active{transform:scale(.97)}
+.btn.pr{background:var(--pr,var(--accent));color:var(--pr-tx,var(--accent-tx))}
+.btn.pr:hover{filter:brightness(1.07)}
+.btn.se{background:var(--se,transparent);box-shadow:inset 0 0 0 1px var(--se-trait,var(--trait))}
+.btn.se:hover{background:var(--se-survol,var(--creux))}
+.btn.fa{background:transparent;color:var(--tx2);flex:1}
+.btn.fa:hover{color:var(--tx);background:var(--creux)}
+.btn.ic{width:38px;padding:0;background:var(--creux);font-size:18px;letter-spacing:1px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);padding:3px;border-radius:var(--r-seg,10px);background:var(--creux)}
+.seg button{height:30px;border:0;border-radius:calc(var(--r-seg,10px) - 3px);background:transparent;color:var(--tx2);font:600 12.5px/1 var(--police);cursor:pointer;transition:background .18s,color .18s,box-shadow .18s}
+.seg button.on{background:var(--seg-on);color:var(--seg-on-tx,var(--tx));box-shadow:var(--seg-ombre,none)}
+.ligne{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;cursor:pointer}
+.sw{flex:none;width:38px;height:22px;border-radius:11px;background:var(--piste);position:relative;transition:background .2s;border:var(--sw-bord,0);padding:0;cursor:pointer}
+.sw i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--sw-bouton,#fff);transition:transform .22s cubic-bezier(.3,1.4,.5,1);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw.on{background:var(--sw-on,var(--accent))}.sw.on i{transform:translateX(16px)}
+.t-liste ul{list-style:none;margin:0;padding:0}
+.t-liste li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--trait)}
+.t-liste li b{font:650 13.5px/1 var(--police-num,var(--police))}
+.t-liste li span{font-size:12.5px;color:var(--tx2);min-width:0;overflow-wrap:anywhere}
+.tag{font:600 11px/1 var(--police);font-style:normal;padding:4px 8px;border-radius:var(--r-tag,999px);white-space:nowrap}
+.tag.attn{background:var(--attn-fond);color:var(--attn-tx)}
+.tag.ok{background:var(--ok-fond);color:var(--ok-tx)}
+.t-liste h4+ul{margin-top:-4px}.t-liste ul+h4{margin-top:6px}
+.t-avis{flex-direction:row;align-items:center;flex-wrap:wrap;gap:14px;background:var(--avis-fond,var(--tuile));color:var(--avis-tx,var(--tx))}
+.avis-ic{flex:none;width:38px;height:38px;border-radius:var(--r-ic,50%);display:grid;place-items:center;background:var(--attn);color:var(--attn-encre,#1A1203);font:800 18px/1 var(--police)}
+.avis-txt{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:3px}
+.t-avis h3{font-size:16px}.t-avis p{color:var(--avis-tx2,var(--tx2))}
+.avis-btn{display:flex;gap:8px;flex-wrap:wrap}
+.gros{font:700 42px/1 var(--police-num,var(--police));letter-spacing:-.03em;display:flex;align-items:baseline;gap:8px}
+.gros small{font:500 13px/1.2 var(--police);letter-spacing:0;color:var(--tx2)}
+.courbe{width:100%;height:46px;color:var(--courbe,var(--accent));display:block;overflow:visible}
+.champs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.champs label{font-size:11.5px;color:var(--tx2);display:flex;flex-direction:column;gap:5px;min-width:0}
+.inp{height:38px;border-radius:var(--r-inp,10px);background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait);padding:0 11px;display:flex;align-items:center;font:600 14px/1 var(--police-num,var(--police));color:var(--tx)}
+.kbd{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--tx2);margin-top:auto}
+.kbd kbd{font:600 11px/1 var(--police-num,var(--police));padding:4px 7px;border-radius:6px;background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait);color:var(--tx)}
+@media (max-width:920px){.bento{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"etat etat" "actions onglets" "avis avis" "liste liste" "rythme champ"}}
+@media (max-width:540px){.bento{grid-template-columns:minmax(0,1fr);grid-template-areas:"etat" "avis" "actions" "onglets" "liste" "rythme" "champ"}.anneau{width:112px}.style{border-radius:22px}}
+@media (prefers-reduced-motion:reduce){.pastille i{animation:none}.btn,.sw i,.seg button{transition:none}}
+
+/* ───────── 1 · Graphite ───────── */
+.s-graphite{--police:"Inter",system-ui,sans-serif;--fond:#07080A;--tuile:linear-gradient(180deg,#16181C 0%,#0F1013 100%);--tx:#F1F2F4;--tx2:#8B909B;--trait:rgba(255,255,255,.075);--creux:rgba(255,255,255,.055);--piste:rgba(255,255,255,.09);
+  --accent:#8F93FF;--accent-tx:#0A0B10;--pr:#F1F2F4;--pr-tx:#0A0B10;--attn:#F3A63B;--attn-fond:rgba(243,166,59,.14);--attn-tx:#F6B65C;--ok-fond:rgba(255,255,255,.07);--ok-tx:#A9AEB8;
+  --rayon:16px;--bord:1px solid var(--trait);--ombre:inset 0 1px 0 rgba(255,255,255,.05);--seg-on:rgba(255,255,255,.1);--seg-ombre:inset 0 1px 0 rgba(255,255,255,.08);--r-btn:9px;--sw-bouton:#F1F2F4}
+.s-graphite .t-etat{background:radial-gradient(110% 90% at 0% 0%,rgba(143,147,255,.2),transparent 58%),var(--tuile)}
+.s-graphite .anneau::before{filter:drop-shadow(0 0 10px rgba(143,147,255,.45))}
+.s-graphite .t-avis{background:radial-gradient(90% 140% at 0% 50%,rgba(243,166,59,.13),transparent 60%),var(--tuile)}
+
+/* ───────── 2 · Porcelaine ───────── */
+.s-porcelaine{--police:"Manrope",system-ui,sans-serif;--fond:#E7EAF0;--tuile:#FFFFFF;--tx:#141821;--tx2:#667085;--trait:#ECEEF3;--creux:#F1F3F7;--piste:#E6E9F0;
+  --accent:#1F4FFF;--accent-tx:#FFFFFF;--attn:#FF9B2F;--attn-fond:#FFF1DE;--attn-tx:#A85B00;--ok-fond:#EEF1F6;--ok-tx:#5B6474;
+  --rayon:26px;--pad:22px;--gap:14px;--ombre:0 1px 1px rgba(20,24,33,.04),0 10px 28px -12px rgba(20,24,33,.18);--seg-on:#FFFFFF;--seg-ombre:0 1px 2px rgba(20,24,33,.12),0 4px 10px -4px rgba(20,24,33,.16);--r-btn:999px;--r-seg:999px;--r-inp:14px;--ep:13px}
+.s-porcelaine .t h3{font-weight:800}.s-porcelaine .anneau b,.s-porcelaine .gros,.s-porcelaine .etat-txt dd{font-weight:800}
+.s-porcelaine .btn{height:42px;padding:0 18px}.s-porcelaine .btn.ic{width:42px}
+.s-porcelaine .btn.pr{box-shadow:0 8px 18px -8px rgba(31,79,255,.7)}
+.s-porcelaine .btn.se{box-shadow:inset 0 0 0 1.5px #DDE1EA}
+.s-porcelaine .t-avis{background:linear-gradient(180deg,#FFF8EE,#FFFFFF 70%)}
+.s-porcelaine .seg button{height:34px}
+
+/* ───────── 3 · Verre ───────── */
+.s-verre{--police:"Plus Jakarta Sans",system-ui,sans-serif;--fond:radial-gradient(55% 75% at 12% 8%,#12B8A6 0,transparent 62%),radial-gradient(48% 70% at 92% 18%,#F2A33A 0,transparent 60%),radial-gradient(70% 90% at 62% 105%,#2456E6 0,transparent 66%),#06283A;
+  --tuile:rgba(7,22,34,.42);--tx:#FFFFFF;--tx2:rgba(255,255,255,.74);--trait:rgba(255,255,255,.16);--creux:rgba(255,255,255,.12);--piste:rgba(255,255,255,.2);
+  --accent:#FFFFFF;--accent-tx:#082433;--anneau:linear-gradient(#fff,#fff);--attn:#FFC56B;--attn-fond:rgba(255,197,107,.22);--attn-tx:#FFD99C;--ok-fond:rgba(255,255,255,.14);--ok-tx:rgba(255,255,255,.82);
+  --rayon:22px;--pad:20px;--bord:1px solid rgba(255,255,255,.26);--ombre:inset 0 1px 0 rgba(255,255,255,.22),0 20px 40px -24px rgba(0,0,0,.6);--seg-on:rgba(255,255,255,.92);--seg-on-tx:#082433;--r-btn:12px;--sw-on:#FFFFFF;--sw-bouton:#0B3246;--courbe:#FFFFFF}
+.s-verre .t{-webkit-backdrop-filter:blur(22px) saturate(150%);backdrop-filter:blur(22px) saturate(150%)}
+.s-verre .anneau::before{background:conic-gradient(#fff calc(var(--p)*1%),var(--piste) 0)}
+.s-verre .barre b{background:#fff}
+.s-verre .sw i{background:#fff}.s-verre .sw.on i{background:#0B3246}
+.s-verre .btn.se{box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+
+/* ───────── 4 · Brut ───────── */
+.s-brut{--police:"Space Grotesk",system-ui,sans-serif;--police-num:"JetBrains Mono",ui-monospace,monospace;--fond:#FFFFFF;--tuile:#FFFFFF;--tx:#0B0B0B;--tx2:#4A4A4A;--trait:#0B0B0B;--creux:#F1F1EE;--piste:#E3E3DE;
+  --accent:#0B0B0B;--accent-tx:#FFFFFF;--pr:#FFDD1A;--pr-tx:#0B0B0B;--attn:#0B0B0B;--attn-encre:#FF6A3D;--attn-fond:#FF6A3D;--attn-tx:#0B0B0B;--ok-fond:#FFFFFF;--ok-tx:#0B0B0B;
+  --rayon:10px;--gap:16px;--bord:2px solid #0B0B0B;--ombre:5px 5px 0 #0B0B0B;--seg-on:#0B0B0B;--seg-on-tx:#FFFFFF;--r-btn:8px;--r-seg:8px;--r-inp:8px;--r-tag:4px;--r-ic:8px;--ep:14px;--sw-bord:2px solid #0B0B0B;--sw-on:#FFDD1A;--sw-bouton:#0B0B0B;
+  box-shadow:inset 0 0 0 2px #0B0B0B}
+.s-brut .t-etat{background:#FFDD1A}
+.s-brut .t-etat .anneau::before{background:conic-gradient(#0B0B0B calc(var(--p)*1%),rgba(11,11,11,.16) 0)}
+.s-brut .t-etat .barre{background:rgba(11,11,11,.16)}.s-brut .t-etat h4,.s-brut .t-etat p,.s-brut .t-etat dt,.s-brut .t-etat .partie,.s-brut .t-etat .anneau small{color:#3A3200}
+.s-brut .t-avis{--avis-fond:#FF6A3D;--avis-tx2:#2A0F05}
+.s-brut .t h4{text-transform:uppercase;letter-spacing:.08em;font-size:11px;color:#0B0B0B}
+.s-brut .t h3{font-weight:700}
+.s-brut .btn{border:2px solid #0B0B0B;box-shadow:3px 3px 0 #0B0B0B;height:40px}
+.s-brut .btn:hover{filter:none}
+.s-brut .btn:active{transform:translate(3px,3px);box-shadow:0 0 0 #0B0B0B}
+.s-brut .btn.se{background:#FFFFFF}.s-brut .btn.fa{background:#FFFFFF;color:#0B0B0B}.s-brut .btn.ic{background:#FFFFFF}
+.s-brut .seg{border:2px solid #0B0B0B;background:#FFFFFF;padding:2px}
+.s-brut .tag{border:1.5px solid #0B0B0B;text-transform:uppercase;letter-spacing:.04em;font-size:10px}
+.s-brut .inp{box-shadow:none;border:2px solid #0B0B0B;background:#FFFFFF}
+.s-brut .kbd kbd{box-shadow:none;border:1.5px solid #0B0B0B;background:#FFFFFF}
+.s-brut .sw{height:24px;width:42px}.s-brut .sw i{top:2px;left:2px;box-shadow:none}.s-brut .sw.on i{transform:translateX(18px)}
+.s-brut .t-liste li{border-top-width:1.5px}
+
+/* ───────── 5 · Keynote ───────── */
+.s-keynote{--police:"Inter Tight","Inter",system-ui,sans-serif;--fond:#000000;--tuile:#1C1C1E;--tx:#F5F5F7;--tx2:#98989F;--trait:rgba(255,255,255,.09);--creux:#2C2C2E;--piste:#3A3A3C;
+  --accent:#0A84FF;--accent-tx:#FFFFFF;--anneau:#0A84FF;--attn:#FFFFFF;--attn-encre:#FF453A;--attn-fond:rgba(255,159,10,.2);--attn-tx:#FFB340;--ok-fond:#2C2C2E;--ok-tx:#AEAEB2;
+  --rayon:30px;--pad:24px;--gap:14px;--seg-on:#636366;--seg-ombre:0 1px 3px rgba(0,0,0,.4);--r-btn:999px;--r-seg:11px;--r-inp:14px;--ep:14px;--sw-on:#30D158}
+.s-keynote .t h3{font-weight:700;font-size:22px;letter-spacing:-.02em}
+.s-keynote .anneau{width:150px}
+.s-keynote .anneau::before{background:conic-gradient(from 0deg,#5AC8FA,#0A84FF calc(var(--p)*1%),var(--piste) 0)}
+.s-keynote .anneau b{font-size:44px;font-weight:800;background:linear-gradient(120deg,#64D2FF,#0A84FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.s-keynote .anneau b small{-webkit-text-fill-color:#98989F}
+.s-keynote .barre b{background:linear-gradient(90deg,#64D2FF,#0A84FF)}
+.s-keynote .etat-txt dd{font-size:24px;font-weight:700}
+.s-keynote .gros{font-size:56px;font-weight:800;background:linear-gradient(120deg,#FFD60A,#FF9F0A 55%,#FF375F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.s-keynote .gros small{-webkit-text-fill-color:#98989F}
+.s-keynote .courbe{--courbe:#FF9F0A}
+.s-keynote .t-avis{--avis-fond:linear-gradient(120deg,#FF9F0A,#FF375F);--avis-tx:#FFFFFF;--avis-tx2:rgba(255,255,255,.9)}
+.s-keynote .t-avis .btn.pr{background:#FFFFFF;color:#B3261E}
+.s-keynote .t-avis .btn.se{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.75);color:#FFFFFF}
+.s-keynote .t-avis .btn.se:hover{background:rgba(255,255,255,.16)}
+.s-keynote .btn{height:42px;padding:0 18px;font-size:14.5px}.s-keynote .btn.ic{width:42px}
+.s-keynote .btn.se{background:#2C2C2E;box-shadow:none}.s-keynote .btn.se:hover{background:#3A3A3C}
+.s-keynote .inp{box-shadow:none}.s-keynote .kbd kbd{box-shadow:none}
+.s-keynote .t h4{font-size:13px;letter-spacing:0}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Cinq styles, le même jeu de composants</h1>
+    <p>Chaque bloc montre les mêmes pièces du panneau d’Ariane, dessinées dans un style différent. Choisis-en un. Ensuite viennent d’autres composants dans ce style, puis les micro-interactions et les animations d’entrée et de sortie.</p>
+    <nav class="sommaire" aria-label="Styles">
+      <a href="#graphite"><b>1</b>Graphite</a><a href="#porcelaine"><b>2</b>Porcelaine</a><a href="#verre"><b>3</b>Verre</a><a href="#brut"><b>4</b>Brut</a><a href="#keynote"><b>5</b>Keynote</a>
+    </nav>
+  </header>
+
+  <section id="graphite"><div class="monde-tete"><span class="n">1</span><h2>Graphite</h2><p>Sombre et net, des traits fins, une lueur violette là où ça travaille.</p></div><div class="style s-graphite"><div class="bento"></div></div></section>
+  <section id="porcelaine"><div class="monde-tete"><span class="n">2</span><h2>Porcelaine</h2><p>Clair et doux, des cartes blanches en relief, des formes rondes, un bleu franc.</p></div><div class="style s-porcelaine"><div class="bento"></div></div></section>
+  <section id="verre"><div class="monde-tete"><span class="n">3</span><h2>Verre</h2><p>Des tuiles translucides posées sur un fond de couleurs fondues.</p></div><div class="style s-verre"><div class="bento"></div></div></section>
+  <section id="brut"><div class="monde-tete"><span class="n">4</span><h2>Brut</h2><p>Du noir, du blanc, des contours épais, des ombres dures, deux couleurs vives.</p></div><div class="style s-brut"><div class="bento"></div></div></section>
+  <section id="keynote"><div class="monde-tete"><span class="n">5</span><h2>Keynote</h2><p>Fond noir, grandes tuiles arrondies, gros chiffres en dégradé.</p></div><div class="style s-keynote"><div class="bento"></div></div></section>
+</div>
+
+<script>
+(function(){
+  var T = ''
+  + '<article class="t t-etat">'
+  +   '<div class="etat-haut"><span class="pastille"><i></i>En cours</span><span class="partie">Partie 13</span></div>'
+  +   '<div class="etat-corps"><div class="anneau" style="--p:20"><b>20<small>%</small></b></div>'
+  +     '<div class="etat-txt"><h3>Pose du cut 4812</h3><p>Lot du cut 4790 au cut 4900</p>'
+  +     '<dl><div><dt>Traités</dt><dd>18</dd></div><div><dt>Posés</dt><dd>15</dd></div><div><dt>À poser</dt><dd>3</dd></div></dl></div></div>'
+  +   '<div class="barre" role="img" aria-label="Avancement du lot : 20 %"><b></b></div>'
+  + '</article>'
+  + '<article class="t t-actions"><h4>Actions</h4><div class="pile">'
+  +   '<button type="button" class="btn pr">Pause</button><button type="button" class="btn se">Arrêter le lot</button>'
+  +   '<div class="rangee"><button type="button" class="btn fa">Reprise manuelle</button><button type="button" class="btn ic" aria-label="Plus d’actions">···</button></div>'
+  + '</div></article>'
+  + '<article class="t t-onglets"><h4>Modes</h4>'
+  +   '<div class="seg" role="tablist"><button type="button" class="on">Orbite</button><button type="button">Écho</button><button type="button">Aurore</button></div>'
+  +   '<div class="ligne"><span>Relecture après le lot</span><button type="button" class="sw on" role="switch" aria-checked="true" aria-label="Relecture après le lot"><i></i></button></div>'
+  +   '<div class="ligne"><span>Deuxième passe</span><button type="button" class="sw" role="switch" aria-checked="false" aria-label="Deuxième passe"><i></i></button></div>'
+  + '</article>'
+  + '<article class="t t-liste"><h4>À poser <em>3</em></h4><ul>'
+  +   '<li><b>4796</b><span>rail gauche</span><i class="tag attn">à toi</i></li>'
+  +   '<li><b>4803</b><span>les deux rails</span><i class="tag attn">à toi</i></li>'
+  +   '<li><b>4809</b><span>rail droit</span><i class="tag attn">à toi</i></li></ul>'
+  +   '<h4>Derniers posés <em>15</em></h4><ul>'
+  +   '<li><b>4811</b><span>7,2 s</span><i class="tag ok">posé</i></li>'
+  +   '<li><b>4810</b><span>6,9 s</span><i class="tag ok">posé</i></li>'
+  +   '<li><b>4808</b><span>8,1 s</span><i class="tag ok">posé</i></li></ul>'
+  + '</article>'
+  + '<article class="t t-avis"><div class="avis-ic" aria-hidden="true">!</div>'
+  +   '<div class="avis-txt"><h3>À toi</h3><p>Ariane ne sait pas poser un rail du cut 4812.</p></div>'
+  +   '<div class="avis-btn"><button type="button" class="btn pr">Réessayer ce cut</button><button type="button" class="btn se">Reprise manuelle</button></div>'
+  + '</article>'
+  + '<article class="t t-rythme"><h4>Rythme</h4><div class="gros">7,9<small>cuts par minute</small></div>'
+  +   '<svg class="courbe" viewBox="0 0 120 36" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="0,30 12,25 24,27 36,17 48,21 60,12 72,16 84,8 96,13 108,5 120,9"/></svg>'
+  +   '<p>Médiane 7,6 s par cut</p>'
+  + '</article>'
+  + '<article class="t t-champ"><h4>Nouveau lot</h4><div class="champs">'
+  +   '<label>Du cut<span class="inp">4790</span></label><label>Au cut<span class="inp">4900</span></label></div>'
+  +   '<button type="button" class="btn pr">Démarrer le lot</button>'
+  +   '<div class="kbd"><span>Commandes</span><kbd>Ctrl K</kbd></div>'
+  + '</article>';
+  document.querySelectorAll('.bento').forEach(function(b){ b.innerHTML = T; });
+  document.addEventListener('click', function(e){
+    var s = e.target.closest('.seg button');
+    if (s) { s.parentNode.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === s); }); return; }
+    var w = e.target.closest('.sw');
+    if (w) { var on = w.classList.toggle('on'); w.setAttribute('aria-checked', on ? 'true' : 'false'); }
+  });
+})();
+</script>
