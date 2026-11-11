@@ -101,7 +101,8 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-etat{display:inline-flex;align-items:center;gap:9px;font:600 15px/1.2 var(--f);min-width:0}
 #ui5.u-signal[data-taille="compact"] .sg-etat{font-size:13.5px}
 #ui5.u-signal .sg-glyphe{position:relative;flex:none;width:9px;height:9px;border-radius:50%;background:var(--c1)}
-#ui5.u-signal .sg-fen[data-teinte="marche"] .sg-glyphe::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--c1);animation:sg-pouls 2s ease-out infinite}
+/* La pastille bat quand Ariane travaille, et quand il faut l'œil de l'opérateur (à toi, en panne) ; jamais au repos (prêt, en pause, terminé). */
+#ui5.u-signal .sg-fen[data-teinte="marche"] .sg-glyphe::after,#ui5.u-signal .sg-fen[data-teinte="toi"] .sg-glyphe::after,#ui5.u-signal .sg-fen[data-teinte="panne"] .sg-glyphe::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--c1);animation:sg-pouls 2s ease-out infinite}
 #ui5.u-signal .sg-mot{display:inline-block}
 #ui5.u-signal .sg-partie{font-size:12px;color:var(--tx2);white-space:nowrap}
 #ui5.u-signal .sg-milieu{display:flex;align-items:center;gap:22px}

@@ -32,7 +32,7 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
    res[nom]=await parLargeurs(page,{extra:EXTRA});
    vus[nom]=await page.evaluate(()=>{const h=document.getElementById('ui5');return {onglet:h.querySelector('.sg-fen')?.dataset.activite,choisi:h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
     titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act],.sg-actions button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
-    departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.replace(/\s+/g,' ').trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-anneau .sg-arc')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
+    departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-anneau .sg-arc')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
   }
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
