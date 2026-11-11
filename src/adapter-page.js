@@ -236,21 +236,55 @@
   * d'aujourd'hui, jamais une lecture plus tôt. */
  const RSE=window.BananeSettings?.lot?.signalEteint||{},LIGNE_BASE=RSE.ligneDeBaseEchecs===true,TROU_ECHEC=LIGNE_BASE||['trou','signal+trou'].includes(RSE.declencheur);
  const ZONE_RAIL_M=Number.isFinite(RSE.zoneRailM)&&RSE.zoneRailM>0?RSE.zoneRailM:3,EPT_DATA_PAGE=/\/ept-data\/(\d+-\d+-\d+-\d+)\.[a-z]+$/i;
- let echecsPoints=0,observateurRessources=false;const clesEchec=new Set(),episodeLigneBase={motif:null};
- if(LIGNE_BASE||TROU_ECHEC)try{if(typeof PerformanceObserver==='function'){const po=new PerformanceObserver(l=>{try{for(const e of l.getEntries()){const rs=e.responseStatus;
+ /* CH-110 (D-342, D-343 ; réglage `lot.reparationPotree`) : voir `planifierRemise` plus bas. `placesRendues` : échecs dont la place a été rendue à Potree. */
+ const RRP=window.BananeSettings?.lot?.reparationPotree||{},REPARER=RRP.actif===true;
+ /* Déclarés AVANT l'observateur des ressources : il peut rendre ses entrées dès `observe()` (tampon `buffered`). */
+ const ESSAIS_NOEUD=Number.isInteger(RRP.essaisParNoeud)&&RRP.essaisParNoeud>=0&&RRP.essaisParNoeud<=10?RRP.essaisParNoeud:2;
+ const ATTENTE_REMISE=Number.isFinite(RRP.attenteMs)&&RRP.attenteMs>=0&&RRP.attenteMs<=60000?RRP.attenteMs:1000;
+ const essaisRemise=new Map(),remisesEnAttente=new Set();let episodesRemise=0;
+ let echecsPoints=0,placesRendues=0,observateurRessources=false;const clesEchec=new Set(),episodeLigneBase={motif:null};
+ if(LIGNE_BASE||TROU_ECHEC||REPARER)try{if(typeof PerformanceObserver==='function'){const po=new PerformanceObserver(l=>{try{for(const e of l.getEntries()){const rs=e.responseStatus;
    let chemin='';try{chemin=new URL(String(e.name||''),location.href).pathname;}catch{chemin=String(e.name||'');}
    const m=/\/ept-data\//i.test(chemin)?EPT_DATA_PAGE.exec(chemin):null;
-   if(/\/ept-data\//i.test(chemin)&&Number.isInteger(rs)&&(rs===0||rs>=400)){echecsPoints++;if(m&&clesEchec.size<64)clesEchec.add(m[1]);}}}catch{}});
+   if(/\/ept-data\//i.test(chemin)&&Number.isInteger(rs)&&(rs===0||rs>=400)){echecsPoints++;if(m&&clesEchec.size<64)clesEchec.add(m[1]);if(REPARER&&m)try{planifierRemise(m[1],rs);}catch{}}}}catch{}});
    po.observe({type:'resource',buffered:true});observateurRessources=true;}}catch{observateurRessources=false;}
  function repliLigneBase(motif,n){if(episodeLigneBase.motif===motif)return;episodeLigneBase.motif=motif;
-   try{const l=cutLabel();posterObservateur({kind:'ligne-base-repli',motif,compteur:n,echecs:echecsPoints,cut:l?.cut??null,pageMs:heurePage()});}catch{}}
+   try{const l=cutLabel();posterObservateur({kind:'ligne-base-repli',motif,compteur:n,echecs:echecsPoints-placesRendues,cut:l?.cut??null,pageMs:heurePage()});}catch{}}
  /* Compteur effectif : brut sans la ligne de base ; brut aussi (repli d'aujourd'hui) si l'observateur manque ou si le compteur passe sous les échecs. */
  function chargementsEffectifs(){const n=chargementsEsv();if(n===null||!LIGNE_BASE)return n;
    if(!observateurRessources){repliLigneBase('absent',n);return n;}
-   if(n<echecsPoints){repliLigneBase('sous',n);return n;}
-   if(episodeLigneBase.motif==='sous')episodeLigneBase.motif=null;return n-echecsPoints;}
- const motifLigneBase=()=>!LIGNE_BASE?null:!observateurRessources?'absent':chargementsEsv()!==null&&chargementsEsv()<echecsPoints?'sous':null;
- const releveLigneBase=()=>LIGNE_BASE?{lb:[chargementsEsv(),echecsPoints,motifLigneBase()]}:{};
+   const e=echecsPoints-placesRendues;if(n<e){repliLigneBase('sous',n);return n;}   /* CH-110 : une place rendue n'est plus retenue par Potree */
+   if(episodeLigneBase.motif==='sous')episodeLigneBase.motif=null;return n-e;}
+ const motifLigneBase=()=>!LIGNE_BASE?null:!observateurRessources?'absent':chargementsEsv()!==null&&chargementsEsv()<echecsPoints-placesRendues?'sous':null;
+ const releveLigneBase=()=>LIGNE_BASE?{lb:[chargementsEsv(),echecsPoints-placesRendues,motifLigneBase()]}:{};
+ /* CH-110 (D-342 ; accord écrit de l'opérateur D-343 ; réglage `lot.reparationPotree`, ALLUMÉ : `actif`, `essaisParNoeud` 2, `attenteMs` 1000) — RENDRE À
+  * POTREE LA PLACE D'UN NŒUD EN ÉCHEC. Potree ne lance que `maxNodesLoading` (4) chargements à la fois ; un nœud dont la requête `ept-data` échoue garde
+  * `loading` et +1 au compteur pour toujours (CH-062) : au 4e échec, plus rien ne se charge jusqu'au rechargement de la page (D-342). Ici, pour chaque
+  * requête en échec vue par l'observateur des ressources (statut 0 ou ≥ 400, clé « D-X-Y-Z » lue dans le chemin), après `attenteMs` (on ne martèle pas
+  * un serveur en erreur) : le nœud de cette clé est cherché dans l'arbre de Potree (descente par les clés de ses ancêtres) ; s'il est encore `loading`
+  * sans être `loaded`, que le compteur est un entier > 0 et que le nœud n'a pas déjà été remis `essaisParNoeud` fois, il est remis « non chargé, non en
+  * cours » (`loading = false`) et le compteur reçoit −1 : Potree le redemande de lui-même s'il est visible. Rien d'autre n'est écrit : ni la vue, ni la
+  * caméra, ni les rails, ni la validation. Une seule remise en attente par nœud : entre l'échec et la remise, `load()` sort sur `loading` et rien ne
+  * peut relancer ce nœud ; une remise répond donc à un échec, jamais deux. Nœud introuvable, état inattendu, compteur à 0 ou plafond : rien n'est touché.
+  * Un événement `potree-place-rendue` par cas : `motif` (rendue, plafond, introuvable, etat, compteur-zero), profondeur du nœud (jamais sa clé ni son
+  * adresse), statut, essai, compteur avant et après,
+  * places rendues sur la page, épisode (un épisode commence quand un échec arrive sans remise en attente). Réglage éteint : rien de tout cela. */
+ function nomNoeud(n){try{return Array.isArray(n?.key)?n.key.join('-'):typeof n?.filename==='function'?n.filename():typeof n?.key?.name==='function'?n.key.name():null;}catch{return null;}}
+ function noeudPotree(cle){const k=cle.split('-').map(Number);if(k.length!==4||!k.every(Number.isInteger)||k[0]<0||k[0]>30)return null;
+   for(const pc of context().viewer?.scene?.pointclouds||[]){let n=pc?.pcoGeometry?.root;if(!n||nomNoeud(n)!==(k[0]===0?cle:'0-0-0-0'))continue;
+     for(let d=1;d<=k[0]&&n;d++){const s=k[0]-d,voulu=`${d}-${k[1]>>s}-${k[2]>>s}-${k[3]>>s}`;let suivant=null;
+       const ch=n.children;if(ch)for(const c of Object.values(ch))if(c&&nomNoeud(c)===voulu){suivant=c;break;}n=suivant;}
+     if(n)return n;}
+   return null;}
+ function planifierRemise(cle,statut){if(remisesEnAttente.has(cle)||remisesEnAttente.size>=64)return;if(!remisesEnAttente.size)episodesRemise++;remisesEnAttente.add(cle);
+   setTimeout(()=>{remisesEnAttente.delete(cle);try{rendrePlace(cle,statut);}catch{}},ATTENTE_REMISE);}
+ function rendrePlace(cle,statut){const P0=window.Potree,avant=Number.isInteger(P0?.numNodesLoading)?P0.numNodesLoading:null,essai=(essaisRemise.get(cle)||0)+1;let motif=null,n=null;
+   if(essai>ESSAIS_NOEUD)motif='plafond';
+   else{try{n=noeudPotree(cle);}catch{n=null;}
+     if(!n)motif='introuvable';else if(n.loading!==true||n.loaded===true||avant===null)motif='etat';else if(avant<=0)motif='compteur-zero';}
+   if(!motif){n.loading=false;P0.numNodesLoading=Math.max(0,P0.numNodesLoading-1);essaisRemise.set(cle,essai);placesRendues++;clesEchec.delete(cle);motif='rendue';}
+   try{const l=cutLabel();posterObservateur({kind:'potree-place-rendue',motif,profondeur:Number(cle.split('-')[0]),statut,essai:Math.min(essai,ESSAIS_NOEUD+1),avant,apres:Number.isInteger(P0?.numNodesLoading)?P0.numNodesLoading:null,
+     rendues:placesRendues,episode:episodesRemise,cut:l?.cut??null,pageMs:heurePage()});}catch{}}
  /* Nœuds en échec dans la zone du rail : la boîte du nœud (repère du nuage, `matrixWorld`) contre une boule de `ZONE_RAIL_M` autour de chaque rail
   * (positions attendues, repère de la scène + origine). Lecture seule de l'arbre de Potree, 20 000 nœuds visités au plus. */
  function trouEchec(expected){if(!TROU_ECHEC||!clesEchec.size)return null;
