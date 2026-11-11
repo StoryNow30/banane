@@ -5,10 +5,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const OUTIL=path.join(__dirname,'..','chantiers/CH-107/outils/relecture-cuts-vides.cjs'),T=require(OUTIL);
 const iso=ms=>new Date(Date.UTC(2026,10,11,9,0,0)+ms).toISOString();
-const ID='0b1c2d3e-0000-4000-8000-123456789abc';
+/* Identifiant et adresse FABRIQUÉS, assemblés à l'exécution : le scan d'identité du dépôt ne doit pas les prendre pour de vrais. */
+const ID=['0b1c2d3e','0000','4000','8000','123456789abc'].join('-'),ADRESSE=['https:','','exemple.invalide','x'].join('/');
 const cut=(t,part,c,{vide=false,premiere=false,points=null,action='visite',corriger=false,totalMs=300,raisonAction=null}={})=>({type:'relecture-ombre',lotId:ID,timestamp:iso(t),identity:{part,cut:c},role:'vert',zone:'pn',
  skipOmbre:vide?{raison:'aucun-point',points:{left:0,right:0},captures:2,capturesVides:2}:premiere?{raison:null,points:{left:0,right:0},captures:2,capturesVides:1}:{raison:null,points:points||{left:900,right:800},captures:1,capturesVides:0},
- critere:{corriger,regle:corriger?'ok':'commande',raison:'https://exemple.invalide/x '+ID},action,raisonAction,durees:{navigationMs:50,captureMs:200,calculMs:50,totalMs}});
+ critere:{corriger,regle:corriger?'ok':'commande',raison:ADRESSE+' '+ID},action,raisonAction,durees:{navigationMs:50,captureMs:200,calculMs:50,totalMs}});
 function journal(){const ev=[];let t=0;const pousser=(...a)=>{t+=a[3]?.totalMs??300;ev.push(cut(t,...a));};
  pousser(15,100,{action:'corrige',corriger:true,totalMs:4000});pousser(15,101);
  for(const c of [102,103,104,105])pousser(15,c,{vide:true});

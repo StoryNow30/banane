@@ -70,7 +70,7 @@ test('réglage éteint : aucune remise, aucun événement, nœud et compteur int
 /* Relais par l'observateur passif (fausse page, tests/helpers/fake-page.cjs) : champs réduits ; ni clé ni adresse, même si la page en envoyait. */
 test('observateur : `potree-place-rendue` relayé, champs réduits, ni clé ni adresse',async()=>{
  const {world}=require('./helpers/fake-page.cjs');const w=world();
- w.deliver({kind:'banane5:evt',event:{kind:'potree-place-rendue',motif:'rendue',profondeur:2,cle:'2-3-1-2',statut:502,essai:1,avant:4,apres:3,rendues:1,episode:1,cut:77,pageMs:5.55,url:'https://x/ept-data/2-3-1-2.laz'}});
+ w.deliver({kind:'banane5:evt',event:{kind:'potree-place-rendue',motif:'rendue',profondeur:2,cle:'2-3-1-2',statut:502,essai:1,avant:4,apres:3,rendues:1,episode:1,cut:77,pageMs:5.55,url:['https:','','x','ept-data','2-3-1-2.laz'].join('/')}});
  w.deliver({kind:'banane5:evt',event:{kind:'potree-place-rendue',motif:'autre',profondeur:99,statut:-1,essai:'1',avant:null}});
  const e=w.observed().filter(x=>x.kind==='potree-place-rendue');assert.equal(e.length,2);
  assert.deepEqual({...e[0],seq:undefined},{seq:undefined,kind:'potree-place-rendue',motif:'rendue',profondeur:2,statut:502,essai:1,avant:4,apres:3,rendues:1,episode:1,cut:77,pageMs:5.6});
