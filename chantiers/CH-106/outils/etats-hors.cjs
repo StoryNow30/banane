@@ -16,6 +16,7 @@ const B13={part:13,rang:0,issueLot:'fin',motifs:['fin-normale'],resume:{poses:87
 const echo=st=>{const s=JSON.parse(JSON.stringify(N.SCENARIOS.echo.state));s.native.status=st;return s;};
 const CL=require(R+'/src/correction-liste.js'),{journal}=require(R+'/tests/helpers/correction-journal.cjs');
 const LC13=CL.construire(journal({partie:13}),{partie:13}),LC14=CL.construire(journal({partie:14}),{partie:14});
+const CORR=(etat,extra={})=>({id:'C1',etat,creeA:'2026-10-31T10:05:00Z',listes:[{batchId:'lot-1',partie:13,entrees:LC13.entrees,comptes:LC13.comptes}],...extra});
 const E={
  erreur:{state:lot('ERROR',4811)},
  demarrage:{state:{...lot('RUNNING',4789),busy:true}},
@@ -47,6 +48,17 @@ const E={
  'echo-a-terminer':{hash:'#native',state:echo('IDLE')},
  'echo-muet':{hash:'#native',state:echo('PAUSED_ADAPTER_UNRESPONSIVE')},
  'aurore-2-listes':{actions:['sg:onglet-correction'],state:{...fin(),current:{identity:id(15)},correction:{id:'C1',etat:'ouverte',creeA:'2026-10-31T10:05:00Z',courant:{part:13,cut:15},listes:[{batchId:'B1',partie:13,entrees:LC13.entrees,comptes:LC13.comptes},{batchId:'B2',partie:14,entrees:LC14.entrees,comptes:LC14.comptes}]},native:{id:'n1',status:'RUNNING',correction:{id:'C1'},visits:[]}}},
+ /* CH-106, suite (demande de l'intégrateur) : une relecture EN PAUSE vue depuis Orbite, l'Aurore et la Constellation. */
+ 'rp-orbite':(x=>({...x,state:{...x.state,correction:CORR('proposee')}}))(avecRel(fin(),{etat:'en-pause',pauseRaison:'esv'})),
+ 'rp-aurore':(x=>({...x,actions:['sg:onglet-correction'],state:{...x.state,correction:CORR('proposee')}}))(avecRel(fin(),{etat:'en-pause',pauseRaison:'esv'})),
+ 'rp-aurore-ouverte':(x=>({...x,actions:['sg:onglet-correction'],state:{...x.state,correction:CORR('ouverte',{courant:{part:13,cut:15}})}}))(avecRel(fin(),{etat:'en-pause',pauseRaison:'esv'})),
+ 'rp-aurore-vide':(x=>({...x,actions:['sg:onglet-correction']}))(avecRel(fin(),{etat:'en-pause',pauseRaison:'esv'})),
+ 'rp-file-repos':(x=>({...x,file:true,fiches:FICHES.slice(0,2)}))(avecRel(fin(),{etat:'en-pause',pauseRaison:'esv'})),
+ 'rp-file-relecture':(x=>({...x,file:true,fiches:FICHES.slice(0,2),state:{...x.state,fileParties:vue('relecture',{bilan:[B13]})}}))(avecRel(fin(),{etat:'en-pause',pauseRaison:'esv'})),
+ 'rc-file-repos':(x=>({...x,file:true,fiches:FICHES.slice(0,2)}))(avecRel(fin(),{etat:'en-cours'})),
+ 'rc-aurore':(x=>({...x,actions:['sg:onglet-correction'],state:{...x.state,correction:CORR('proposee')}}))(avecRel(fin(),{etat:'en-cours'})),
+ 'rf-file-repos':(x=>({...x,file:true,fiches:FICHES.slice(0,2)}))(avecRel(fin(),{etat:'finie',faits:85,total:85})),
+ 'rf-aurore':(x=>({...x,actions:['sg:onglet-correction'],state:{...x.state,correction:CORR('proposee')}}))(avecRel(fin(),{etat:'finie',faits:85,total:85})),
 };
 for(const e of Object.values(E))if(!Object.hasOwn(e.state,'fileParties'))e.state={...e.state,fileParties:null};
 (async()=>{
