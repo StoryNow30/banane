@@ -527,7 +527,11 @@
    * l'opérateur règle le nombre de parties et la lance ; le patch de l'adaptateur (`changerPartie`) est appliqué. Le changement de partie n'a jamais
    * été vu sur un vrai ESV : premier essai avec 2 parties, l'opérateur présent. `actif:false` : aucune action de la file n'existe, le panneau et les
    * exports sont ceux d'avant. `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
-  const file = Object.freeze({ actif: true, changementBorneMs: 60000, repriseApresRechargement: true });
+  /* CH-109 (B) : `relecturePauseMaxMs` : dans une Constellation, une relecture restée en pause plus longtemps (rechargement automatique CH-060 / CH-107
+   * compris) est close « interrompue », ses cuts non relus au bilan de la partie, et la file passe à la suite ; rien n'est écrit sur ces cuts. Une pause
+   * demandée par l'opérateur n'est jamais close. Livré COUPÉ (null : la file attend sans limite, l'ancienne conduite) ; proposé, en attente de l'accord
+   * écrit de l'opérateur : 300000 (5 min, plus que les 90 s d'attente du rechargement automatique). Hors Constellation, rien ne change. */
+  const file = Object.freeze({ actif: true, changementBorneMs: 60000, repriseApresRechargement: true, relecturePauseMaxMs: null });
   /* CH-035 — L'AURORE ENTRE LES PARTIES D'UNE CONSTELLATION (correction dans Orbite après une file, chantiers/CH-035/CONCEPTION.md). Allumé, « Ouvrir »
    * un cut d'une autre partie change de partie par les boutons d'ESV (`changerPartie` de l'adaptateur, ses modes ; aucune touche, aucune validation,
    * aucun SKIP), Écho en pause pendant le trajet, puis va au cut. CH-037 : ALLUMÉ par défaut (décision de l'opérateur du 01/11 : il veut traverser

@@ -4323,6 +4323,19 @@ async function fileRegistreNoter(rang){const e=fileP.etat,p=e?.bilan?.find(x=>x.
  const corriges=du.filter(x=>x.type==='relecture-ombre'&&x.action==='corrige'&&x.identity?.part===p.part).map(x=>({cut:x.identity.cut,ecartMm:Number.isFinite(x.ecartMm)?x.ecartMm:null}));
  const R=FPm().registreAjouter(await fileRegistreLire(),{fileId:e.id,part:p.part,rang,lotId:p.lotId,at:p.fin,poses,passe,corriges,valides:[...poses,...passe,...corriges.map(c=>c.cut)]});
  try{await chrome.storage.local.set({[FPm().CLE_REGISTRE]:R});}catch{/* mémoire seule */}}
+/* CH-109 (B) : clôture « interrompue » d'une relecture de la file restée en pause. Aucune commande vers ESV, rien d'écrit : la passe est seulement
+ * marquée finie (`arretee`, `interrompue` : les cuts NON RELUS, du cut gardé à la fin de la sélection, plages sautées exclues), son point de reprise
+ * effacé ; journal `relecture-fin` (issue « interrompue », `nonRelus`). Une correction interrompue reste une intention : la file s'arrête alors
+ * « ecriture-incertaine » (fileSuspens), comme pour toute fin de relecture. */
+function fileRelectureInterrompre(p,delaiMs){if(relecture.passe!==p||p.etat!=='en-pause')return;
+ const pt=p.point,sautees=new Set(pt?.plagesSautees||[]);
+ const nonRelus=pt&&Array.isArray(pt.sel?.cuts)&&Number.isInteger(pt.index)?pt.sel.cuts.slice(pt.index).filter(x=>!sautees.has(x?.plage)).map(x=>x?.cut).filter(Number.isInteger):[];
+ const n=nonRelus.length,liste=nonRelus.slice(0,12).join(', ')+(n>12?', …':''),min=Math.round(delaiMs/6000)/10;
+ p.etat='arretee';p.fin=new Date().toISOString();p.pauseDemandee=false;p.interrompue={raison:'pause-constellation',pauseRaison:p.pauseRaison??null,delaiMs,nonRelus};
+ p.message=`Relecture interrompue au cut ${p.cut??'?'} par la Constellation : en pause depuis ${min} min sans reprendre seule${p.pauseRaison?` (${p.pauseRaison})`:''} ; ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}, ${pluriel(n,'cut')} non relu${n>1?'s':''}${n?` (${liste})`:''} ; rien n’a été écrit sur ces cuts. La file passe à la suite.`;
+ relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'interrompue',raison:p.message,pauseRaison:p.pauseRaison??null,delaiMs,nonRelus:nonRelus.slice(0,2000),faits:p.faits,total:p.total,
+  corriges:p.corriges,refusees:p.refusees,vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin)-Date.parse(p.debut)},p);
+ void relectureRepriseEffacer();void relectureOublierPasse(p);}
 function fileTicPlanifier(){const R=fileReglage();if(!R||!fileActive()||fileP.tic)return;
  fileP.tic=setTimeout(()=>{fileP.tic=null;void fileTic().catch(()=>{}).finally(fileTicPlanifier);},R.ticMs);}
 async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.action||fileP.ticEnCours)return;fileP.ticEnCours=true;
@@ -4346,10 +4359,19 @@ async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.actio
    const v=passeDiff.vue?.lotId===lotId?passeDiff.vue:null,s=await fileSuspens('passe');
    return void await fileEvenement({type:'passe-fin',lotId,issue:v?v.etat:'absente',ecrits:v?.ecrites??0,ecritureEnSuspens:!!s,detail:s||v?.message||null});}
   if(e.etat==='relecture'){const p=relecture.passe;
+   /* CH-109 (B) : réglage `file.relecturePauseMaxMs` (coupé : null, attente sans limite comme avant). Réglé, une relecture de la file restée EN PAUSE
+    * plus longtemps (rechargement automatique CH-060 / CH-107 compris : le délai doit le dépasser) est close « interrompue » (fileRelectureInterrompre) ;
+    * le même tic la voit finie et passe à la suite. Le délai part du premier tic qui voit la pause et repart à chaque nouvelle pause. Une pause demandée
+    * par l'opérateur (« Pause », raison `mic`) n'est jamais close. */
+   if(p?.lotId===lotId&&p.etat==='en-pause'&&Number.isFinite(R.relecturePauseMaxMs)&&R.relecturePauseMaxMs>0&&p.pauseRaison!=='mic'){
+    if(fileP.pauseVue?.p!==p)fileP.pauseVue={p,depuis:Date.now()};
+    if(Date.now()-fileP.pauseVue.depuis>=R.relecturePauseMaxMs){fileP.pauseVue=null;fileRelectureInterrompre(p,R.relecturePauseMaxMs);}}
+   else fileP.pauseVue=null;
    if(p?.lotId===lotId&&['preparation','en-cours','en-pause'].includes(p.etat))return;
    if(p?.lotId===lotId&&['finie','arretee','erreur','non-lancee'].includes(p.etat)){const s=await fileSuspens();let hors=false;
     if(p.etat==='non-lancee')try{const r=await readState();hors=Number.isInteger(r?.identity?.part)&&r.identity.part!==e.partie.part;}catch{/* illisible : pas de retour */}
-    return void await fileEvenement({type:'relecture-fin',lotId,issue:p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode,horsPartie:hors,ecritureEnSuspens:!!s,detail:s||p.message||null});}
+    return void await fileEvenement({type:'relecture-fin',lotId,issue:p.interrompue?'interrompue':p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode,horsPartie:hors,ecritureEnSuspens:!!s,detail:s||p.message||null,
+     ...(p.interrompue?{nonRelus:p.interrompue.nonRelus}:{})});}
    if(!passeActive()&&Date.now()-Date.parse(e.depuis)>R.relectureAttenteMs)return void await fileEvenement({type:'relecture-fin',lotId,issue:'absente',detail:'aucune relecture pour ce lot'});}}
  finally{fileP.ticEnCours=false;}}
 /* AU RÉVEIL DU SERVICE WORKER (allumée seulement) : l'état gardé est relu ; le registre, l'onglet et ESV sont lus avant toute action (machine : `reprise`). */
@@ -4368,7 +4390,7 @@ const fileReveil=ready.then(()=>fileReprendre()).catch(()=>{});
 async function fileCompleterBilan(){const e=fileP.etat;if(!e||e.etat!=='arret'||!FPm().completerBilan)return;const lotId=e.bilan?.at(-1)?.lotId;if(!lotId)return;
  const p=relecture.passe,v=passeDiff.vue,fini=x=>['finie','arretee','erreur','non-lancee'].includes(x);
  const n=FPm().completerBilan(e,{lotId,passe:v?.lotId===lotId&&!passeDiff.cours&&!passeDiff.ecriture&&v.etat?{issue:v.etat,ecrits:v.ecrites??0}:null,
-  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
+  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.interrompue?'interrompue':p.etat,...(p.interrompue?{nonRelus:p.interrompue.nonRelus}:{}),corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
  if(!n)return;await fileSauver(n);journalerSimple('file-parties-bilan-complete',{fileId:n.id,part:n.bilan.at(-1).part,passe:n.bilan.at(-1).passe?.issue??null,relecture:n.bilan.at(-1).relecture?.issue??null});}
 async function fileVue(){await fileCompleterBilan();return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
 async function fileDispatch(action,args){await fileReveil;
