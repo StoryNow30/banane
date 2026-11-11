@@ -30,7 +30,8 @@ test('échec puis attente : nœud remis « non chargé, non en cours », compteu
  assert.equal(cible.loading,true,'rien de touché tout de suite');assert.equal(f.potree.numNodesLoading,3);
  await tour();assert.equal(cible.loading,false);assert.equal(cible.loaded,false);assert.equal(f.potree.numNodesLoading,2);
  assert.ok(f.clock()-t0>=1000,'remise après l’attente (1 s)');
- const e=evts(f);assert.equal(e.length,1);assert.deepEqual([e[0].motif,e[0].cle,e[0].statut,e[0].essai,e[0].avant,e[0].apres,e[0].rendues,e[0].episode],['rendue','2-3-1-2',502,1,3,2,1,1]);
+ const e=evts(f);assert.equal(e.length,1);assert.deepEqual([e[0].motif,e[0].profondeur,e[0].statut,e[0].essai,e[0].avant,e[0].apres,e[0].rendues,e[0].episode],['rendue',2,502,1,3,2,1,1]);
+ assert.ok(!('cle' in e[0])&&!/\d+-\d+-\d+-\d+|ept-data/.test(JSON.stringify(e)),'ni clé ni adresse dans l’événement');
 });
 
 test('jamais deux fois pour le même échec : deux entrées de la même clé en attente → une remise',opts,async()=>{
@@ -64,4 +65,15 @@ test('réglage éteint : aucune remise, aucun événement, nœud et compteur int
  const {f,cible,echec}=monter({regl:{actif:false,essaisParNoeud:2,attenteMs:1000}});
  assert.ok(po,'l’observateur reste celui de la ligne de base (allumée par le réglage livré)');echec('2-3-1-2');await tour();
  assert.equal(cible.loading,true);assert.equal(f.potree.numNodesLoading,1);assert.equal(evts(f).length,0);
+});
+
+/* Relais par l'observateur passif (fausse page, tests/helpers/fake-page.cjs) : champs réduits ; ni clé ni adresse, même si la page en envoyait. */
+test('observateur : `potree-place-rendue` relayé, champs réduits, ni clé ni adresse',async()=>{
+ const {world}=require('./helpers/fake-page.cjs');const w=world();
+ w.deliver({kind:'banane5:evt',event:{kind:'potree-place-rendue',motif:'rendue',profondeur:2,cle:'2-3-1-2',statut:502,essai:1,avant:4,apres:3,rendues:1,episode:1,cut:77,pageMs:5.55,url:'https://x/ept-data/2-3-1-2.laz'}});
+ w.deliver({kind:'banane5:evt',event:{kind:'potree-place-rendue',motif:'autre',profondeur:99,statut:-1,essai:'1',avant:null}});
+ const e=w.observed().filter(x=>x.kind==='potree-place-rendue');assert.equal(e.length,2);
+ assert.deepEqual({...e[0],seq:undefined},{seq:undefined,kind:'potree-place-rendue',motif:'rendue',profondeur:2,statut:502,essai:1,avant:4,apres:3,rendues:1,episode:1,cut:77,pageMs:5.6});
+ assert.deepEqual([e[1].motif,e[1].profondeur,e[1].statut,e[1].essai,e[1].avant],[null,null,null,null,null]);
+ assert.ok(!/ept-data|\d+-\d+-\d+-\d+/.test(JSON.stringify(e)),'ni clé ni adresse');
 });

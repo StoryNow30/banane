@@ -1,0 +1,12 @@
+--- a/background.js
++++ b/background.js
+@@ -338,6 +338,9 @@
+   case 'diag-compteur-bloque':return {kind:'diag-compteur-bloque',valeur:obsInt(x.valeur,1e6),cuts:obsInt(x.cuts,1000),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
+   /* CH-062 (patch proposé de la page) : la ligne de base du compteur par les échecs est abandonnée pour cette lecture (compteur SOUS les échecs, observateur absent). */
+   case 'ligne-base-repli':return {kind:'ligne-base-repli',motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:obsInt(x.compteur,1e6),echecs:obsInt(x.echecs,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
++  /* CH-110 (patch de la page) : place de chargement rendue à Potree après une requête de nœud en échec, ou refusée (motif) ; profondeur du nœud, jamais sa clé. */
++  case 'potree-place-rendue':return {kind:'potree-place-rendue',motif:['rendue','plafond','introuvable','etat','compteur-zero'].includes(x.motif)?x.motif:null,profondeur:obsInt(x.profondeur,30),statut:obsInt(x.statut,999),
++   essai:obsInt(x.essai,99),avant:obsInt(x.avant,1e6),apres:obsInt(x.apres,1e6),rendues:obsInt(x.rendues,1e6),episode:obsInt(x.episode,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
+   case 'prechauffage':case 'prechauffage-bilan':case 'prechauffage-entetes':case 'prechauffage-vue':case 'prechauffage-loin':return obsPrechauffage(x);
+   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
+  }return null;}

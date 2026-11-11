@@ -1,6 +1,6 @@
 --- a/src/adapter-page.js
 +++ b/src/adapter-page.js
-@@ -236,21 +236,54 @@
+@@ -236,21 +236,55 @@
    * d'aujourd'hui, jamais une lecture plus tôt. */
   const RSE=window.BananeSettings?.lot?.signalEteint||{},LIGNE_BASE=RSE.ligneDeBaseEchecs===true,TROU_ECHEC=LIGNE_BASE||['trou','signal+trou'].includes(RSE.declencheur);
   const ZONE_RAIL_M=Number.isFinite(RSE.zoneRailM)&&RSE.zoneRailM>0?RSE.zoneRailM:3,EPT_DATA_PAGE=/\/ept-data\/(\d+-\d+-\d+-\d+)\.[a-z]+$/i;
@@ -42,7 +42,8 @@
 +  * cours » (`loading = false`) et le compteur reçoit −1 : Potree le redemande de lui-même s'il est visible. Rien d'autre n'est écrit : ni la vue, ni la
 +  * caméra, ni les rails, ni la validation. Une seule remise en attente par nœud : entre l'échec et la remise, `load()` sort sur `loading` et rien ne
 +  * peut relancer ce nœud ; une remise répond donc à un échec, jamais deux. Nœud introuvable, état inattendu, compteur à 0 ou plafond : rien n'est touché.
-+  * Un événement `potree-place-rendue` par cas : `motif` (rendue, plafond, introuvable, etat, compteur-zero), clé, statut, essai, compteur avant et après,
++  * Un événement `potree-place-rendue` par cas : `motif` (rendue, plafond, introuvable, etat, compteur-zero), profondeur du nœud (jamais sa clé ni son
++  * adresse), statut, essai, compteur avant et après,
 +  * places rendues sur la page, épisode (un épisode commence quand un échec arrive sans remise en attente). Réglage éteint : rien de tout cela. */
 + function nomNoeud(n){try{return Array.isArray(n?.key)?n.key.join('-'):typeof n?.filename==='function'?n.filename():typeof n?.key?.name==='function'?n.key.name():null;}catch{return null;}}
 + function noeudPotree(cle){const k=cle.split('-').map(Number);if(k.length!==4||!k.every(Number.isInteger)||k[0]<0||k[0]>30)return null;
@@ -58,7 +59,7 @@
 +   else{try{n=noeudPotree(cle);}catch{n=null;}
 +     if(!n)motif='introuvable';else if(n.loading!==true||n.loaded===true||avant===null)motif='etat';else if(avant<=0)motif='compteur-zero';}
 +   if(!motif){n.loading=false;P0.numNodesLoading=Math.max(0,P0.numNodesLoading-1);essaisRemise.set(cle,essai);placesRendues++;clesEchec.delete(cle);motif='rendue';}
-+   try{const l=cutLabel();posterObservateur({kind:'potree-place-rendue',motif,cle,statut,essai:Math.min(essai,ESSAIS_NOEUD+1),avant,apres:Number.isInteger(P0?.numNodesLoading)?P0.numNodesLoading:null,
++   try{const l=cutLabel();posterObservateur({kind:'potree-place-rendue',motif,profondeur:Number(cle.split('-')[0]),statut,essai:Math.min(essai,ESSAIS_NOEUD+1),avant,apres:Number.isInteger(P0?.numNodesLoading)?P0.numNodesLoading:null,
 +     rendues:placesRendues,episode:episodesRemise,cut:l?.cut??null,pageMs:heurePage()});}catch{}}
   /* Nœuds en échec dans la zone du rail : la boîte du nœud (repère du nuage, `matrixWorld`) contre une boule de `ZONE_RAIL_M` autour de chaque rail
    * (positions attendues, repère de la scène + origine). Lecture seule de l'arbre de Potree, 20 000 nœuds visités au plus. */

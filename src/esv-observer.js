@@ -414,9 +414,9 @@
     /* CH-062 : ligne de base du compteur abandonnée pour une lecture (compteur sous les échecs, observateur des ressources absent). */
     else if(k==='ligne-base-repli')record({kind:k,motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:Number.isInteger(x.compteur)&&x.compteur>=0&&x.compteur<1e6?x.compteur:null,
      echecs:Number.isInteger(x.echecs)&&x.echecs>=0&&x.echecs<1e6?x.echecs:null,cut:Number.isInteger(x.cut)&&x.cut>=0&&x.cut<1e8?x.cut:null,pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});
-    /* CH-110 : place de chargement rendue à Potree (ou refusée, avec son motif) ; clé de nœud « D-X-Y-Z » seulement, jamais l'adresse. */
+    /* CH-110 : place de chargement rendue à Potree (ou refusée, avec son motif) ; profondeur du nœud seulement, jamais sa clé ni son adresse. */
     else if(k==='potree-place-rendue'){const ent=(v,max)=>Number.isInteger(v)&&v>=0&&v<max?v:null;
-     record({kind:k,motif:['rendue','plafond','introuvable','etat','compteur-zero'].includes(x.motif)?x.motif:null,cle:typeof x.cle==='string'&&/^\d{1,2}-\d{1,7}-\d{1,7}-\d{1,7}$/.test(x.cle)?x.cle:null,
+     record({kind:k,motif:['rendue','plafond','introuvable','etat','compteur-zero'].includes(x.motif)?x.motif:null,profondeur:ent(x.profondeur,31),
       statut:ent(x.statut,1000),essai:ent(x.essai,100),avant:ent(x.avant,1e6),apres:ent(x.apres,1e6),rendues:ent(x.rendues,1e6),episode:ent(x.episode,1e6),cut:ent(x.cut,1e8),pageMs:finite(x.pageMs)?Math.round(x.pageMs*10)/10:null});}}
    else if(d.kind==='banane5:config'){
     if(Array.isArray(d.relevesOff)){off.clear();for(const n of d.relevesOff)if(typeof n==='string'&&n.length<=24)off.add(n);}
