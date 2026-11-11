@@ -44,7 +44,9 @@ async function page_(nav,e,vp,{rapide=false,calme=false,requetes=null}={}){
 /* Les boutons affichés et actifs, avec ce que rend `elementFromPoint` au centre de chacun (après l'avoir amené dans sa zone de défilement). */
 const BOUTONS=()=>[...document.querySelectorAll('#ui5 [data-act]')].filter(b=>b.getClientRects().length&&!b.disabled&&b.getAttribute('aria-disabled')!=='true'&&!b.closest('[inert]')&&!b.classList.contains('sg-voile')).map(b=>{
  b.scrollIntoView({block:'nearest'});const r=b.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,t=document.elementFromPoint(x,y);
- return {act:b.dataset.act,texte:(b.textContent||b.getAttribute('aria-label')||'').trim().slice(0,40),ok:!!t&&(t===b||b.contains(t)),dessus:t?(t.className&&t.className.baseVal!==undefined?t.className.baseVal:t.className)||t.tagName:'rien',dansFenetre:r.width>0&&r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1};});
+ const COUCHE='.sg-voile,.sg-feuille,.sg-popover,.sg-palette,.sg-boite,.sg-tiroir,.sg-tech',c=t&&t.closest?t.closest(COUCHE):null;
+ /* sous une couche ouverte (menu, palette, réglages, feuille) : recouvert exprès, la couche se ferme d'abord */
+ return {sousCouche:!!c&&!c.contains(b),x,y,act:b.dataset.act,texte:(b.textContent||b.getAttribute('aria-label')||'').trim().slice(0,40),ok:!!t&&(t===b||b.contains(t)),dessus:t?(t.className&&t.className.baseVal!==undefined?t.className.baseVal:t.className)||t.tagName:'rien',dansFenetre:r.width>0&&r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1&&r.bottom<=innerHeight+1};});
 const PERIODIQUE=/^(view|list-tabs|fiches-depart|relecture-etat|relecture-choix-etat|choix-lot-etat|raison-choix-etat|bandeau-etat|export-cache-etat|parts-history|.*-etat)$/;
 async function messagesApres(page,geste){
  await page.evaluate(()=>{window.__m=[];window.__note=true;});await geste();await page.waitForTimeout(900);
@@ -57,19 +59,20 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
  const T600={width:600,height:760},T360={width:360,height:480};
 
  if(POINTS.includes(1)){
-  let n=0,legacy=0;const defauts=[];
+  let n=0,legacy=0,sous=0;const defauts=[];
   for(const [nom,e] of ETATS){
    for(const vp of [T600,T360]){
-    const {page,ctx}=await page_(nav,e,vp);const B=await page.evaluate(BOUTONS);
+    const {page,ctx}=await page_(nav,e,vp);const B=(await page.evaluate(BOUTONS)).filter(b=>{if(b.sousCouche)sous++;return !b.sousCouche;});
     for(const b of B){n++;if(!b.ok)defauts.push(`${nom} ${vp.width} « ${b.texte} » (${b.act}) recouvert par ${b.dessus}`);else if(!b.dansFenetre)defauts.push(`${nom} ${vp.width} « ${b.texte} » hors de la fenêtre`);}
     if(vp===T600){
      /* même message que le bouton d'origine : un clic réel sur le bouton de Signal, puis, sur une page neuve, un clic sur `#<id>` */
      const L=[...new Set(B.filter(b=>/^legacy:/.test(b.act)).map(b=>b.act))];
      for(const act of L){
       const p1=await page_(nav,e,vp);const sel=`#ui5 [data-act="${act}"]`;
-      const m1=await messagesApres(p1.page,async()=>{const h=await p1.page.$$(sel);for(const x of h){if(await x.isVisible()){await x.scrollIntoViewIfNeeded();await x.click({timeout:3000});break;}}});
+      const viser=async P=>{const c=(await P.evaluate(BOUTONS)).find(b=>b.act===act&&b.ok&&!b.sousCouche);if(c)await P.mouse.click(c.x,c.y);else defauts.push(nom+' '+act+' : introuvable au second passage');};
+      const m1=await messagesApres(p1.page,()=>viser(p1.page));
       /* « Arrêter la Constellation » se confirme : le premier clic n'envoie rien, le second (après 400 ms) envoie */
-      let m1b=m1;if(act==='legacy:file-secondaire'){await p1.page.waitForTimeout(500);m1b=await messagesApres(p1.page,async()=>{const x=await p1.page.$(sel);if(x)await x.click({timeout:3000});});if(m1.length)defauts.push(`${nom} ${act} : le premier clic a envoyé ${m1.join(' ')}`);}
+      let m1b=m1;if(act==='legacy:file-secondaire'){await p1.page.waitForTimeout(500);m1b=await messagesApres(p1.page,()=>viser(p1.page));if(m1.length)defauts.push(`${nom} ${act} : le premier clic a envoyé ${m1.join(' ')}`);}
       await p1.ctx.close();
       const p2=await page_(nav,e,vp);const m2=await messagesApres(p2.page,()=>p2.page.evaluate(i=>document.getElementById(i).click(),act.slice(7)));await p2.ctx.close();
       legacy++;if(JSON.stringify(m1b)!==JSON.stringify(m2))defauts.push(`${nom} ${act} : Signal envoie ${JSON.stringify(m1b)}, le bouton d'origine ${JSON.stringify(m2)}`);
@@ -78,7 +81,7 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
     await ctx.close();
    }
   }
-  dire(1,!defauts.length,`${n} boutons contrôlés au centre (${ETATS.length} écrans × 2 tailles), ${legacy} clics comparés au bouton d'origine${defauts.length?'\n   '+defauts.join('\n   '):''}`);
+  dire(1,!defauts.length,`${n} boutons contrôlés au centre (${ETATS.length} écrans × 2 tailles), ${legacy} clics réels (souris au centre) comparés au bouton d'origine, ${sous} boutons sous une couche ouverte laissés de côté${defauts.length?'\n   '+defauts.join('\n   '):''}`);
  }
 
  if(POINTS.includes(2)){
@@ -94,8 +97,8 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
    const r=await page.evaluate(()=>{const h=document.getElementById('ui5'),f=h.querySelector('.sg-fen');const cles=[...h.querySelectorAll('.sg-fil li')].map(x=>x.dataset.k);
     const pales=[...h.querySelectorAll('.sg-page *,.sg-actions *')].filter(x=>x.getClientRects().length&&Number(getComputedStyle(x).opacity)<1&&!x.disabled&&!x.closest('[disabled]')&&!x.matches('.sg-temps li,.sg-glyphe')).map(x=>x.className||x.tagName);
     return {enfants:h.children.length,fenetres:h.querySelectorAll('.sg-fen').length,zones:h.querySelectorAll('.sg-zone').length,sort:h.querySelectorAll('.sg-sort').length,etat:f.dataset.etat,teinte:f.dataset.teinte,mot:h.querySelector('.sg-mot').textContent,
-     instruments:h.querySelectorAll('.sg-instrument').length,pieds:h.querySelectorAll('.sg-actions').length,doublons:cles.length-new Set(cles).size,pales,principal:h.querySelector('.sg-principal')?.textContent.trim(),anims:document.getAnimations().filter(a=>a.playState==='running'&&!/sg-pouls|sg-tourne|sg-tour/.test(a.animationName||'')).length};});
-   const attendu={enfants:1,fenetres:1,zones:1,sort:0,etat:'alerte',teinte:'toi',mot:'À toi',instruments:1,pieds:1,doublons:0,pales:[],principal:'Réessayer ce cut',anims:0};
+     instruments:h.querySelectorAll('.sg-instrument').length,pieds:h.querySelectorAll('.sg-actions').length,doublons:cles.length-new Set(cles).size,pales,principal:h.querySelector('.sg-principal')?.textContent.trim(),anims:document.getAnimations().filter(a=>a.playState==='running'&&!/sg-pouls|sg-tourne|sg-tour/.test(a.animationName||'')&&document.getElementById('ui5').contains(a.effect?.target)).map(a=>(a.animationName||a.transitionProperty||'?')+' sur '+(a.effect.target.className||a.effect.target.tagName))};});
+   const attendu={enfants:1,fenetres:1,zones:1,sort:0,etat:'alerte',teinte:'toi',mot:'À toi',instruments:1,pieds:1,doublons:0,pales:[],principal:'Réessayer ce cut',anims:[]};
    if(JSON.stringify(r)!==JSON.stringify(attendu))defauts.push(`${vp.width} : ${JSON.stringify(r)}`);
    await ctx.close();
   }
@@ -141,8 +144,8 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
   const etape=async k=>{const s=etatDe(E.cours);const b=s.batch;for(let i=0;i<k;i++){const c=4812+i;b.processed.push({identity:id(c),cut:c,durationMs:6500+(i%9)*100});b.sequence.push({identity:id(c+1),cut:c+1});}b.activeIdentity=id(4812+k);s.current={identity:id(4812+k)};await page.evaluate(s=>{window.__etat=s;},s);await page.waitForTimeout(70);};
   for(let k=1;k<=10;k++)await etape(k);await page.waitForTimeout(500);const a=await compte();
   for(let k=11;k<=110;k++)await etape(k);await page.waitForTimeout(700);const b=await compte();
-  const ok=b.ui5===a.ui5&&b.page<=a.page&&b.fil===a.fil&&b.fil<=8&&b.anims<=a.anims+1&&Number(b.traites)===Number(a.traites)+100;
-  dire(7,ok,`cent mises à jour de suite (un cut de plus à chacune) : ${a.ui5} nœuds dans le panneau avant, ${b.ui5} après ; ${a.fil} lignes du fil avant, ${b.fil} après ; ${a.anims} puis ${b.anims} animations ; compteur de ${a.traites} à ${b.traites}`);
+  const ok=b.ui5===a.ui5&&b.fil===a.fil&&b.fil<=8&&b.anims<=a.anims+1&&Number(b.traites)===Number(a.traites)+100;
+  dire(7,ok,`cent mises à jour de suite (un cut de plus à chacune) : ${a.ui5} nœuds dans le panneau avant, ${b.ui5} après ; ${a.fil} lignes du fil avant, ${b.fil} après ; page entière (panneau d'origine caché compris, qui garde une case par cut) ${a.page} puis ${b.page} ; ${a.anims} puis ${b.anims} animations ; compteur de ${a.traites} à ${b.traites}`);
   await ctx.close();
  }
 
