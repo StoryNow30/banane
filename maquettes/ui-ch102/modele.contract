@@ -26,6 +26,7 @@ fn arret(e: string): string = e == "cours" or e == "pause" or e == "toi" or e ==
 // Où mène l'action principale dans la maquette (les données sont fabriquées : seul l'état change).
 fn suite(e: string): string = e == "pret" or e == "pause" or e == "panne" or e == "toi" ? "cours" : e == "cours" ? "pause" : e
 
+// === écran Plus
 // L'écran « Plus », commun aux trois propositions : tout ce qui n'est pas le lot en cours passe ici, à un clic.
 // La dernière section n'existe que dans la maquette : elle fait passer l'application par les huit états.
 component Plus
