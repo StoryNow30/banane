@@ -1,6 +1,6 @@
-// CH-102, proposition 1 « La fiche » : une page de réglages du système. L'état est le titre de la première carte, l'avancement
-// sa barre ; les actions suivent, puis les chiffres et les cuts à poser, en lignes. Rien n'est peint : contrôles, couleurs et caractères du système.
-use RowText, Badge from "exact:content"
+// CH-102, proposition 1 « La fiche » : une page de réglages du système. L'état est le titre de la première carte, avec son signe
+// (un indicateur d'activité quand Ariane travaille, une alerte quand elle attend l'opérateur) ; le compte et la barre suivent ;
+// puis les actions, puis les cuts à poser, en lignes. Rien n'est peint : contrôles, couleurs et caractères du système.
 // ---
 routes nav
   home "/"
@@ -41,66 +41,66 @@ component App
         if e.name == "home"
           column navigationKey=`${e.id}` navigationScroll="lot" position="absolute" inset=0
             header display="flex" align-items="center" padding="8px 16px"
-              text "Ariane" role="heading" aria-level=1 flex=1
+              text "Ariane" role="heading" aria-level=2 flex=1
               button press=ouvrirPlus aria-label="Plus" testId="plus"
                 image "symbol:more"
             list id="lot" appearance="auto" listStyle="inset-grouped" flex=1 min-height=0
               section
                 row
                   column flex=1 min-width=0 gap=8 padding="6px 0"
-                    row align-items="center" gap=8 flex-wrap="wrap"
-                      text mot(etat) font="-exact-title1" font-weight=700 flex="1 1 auto" hyphens="auto" testId="mot"
-                      if etat == "toi"
-                        Badge(label="Action requise", tint=some("-exact-system-orange"))
-                      if etat == "panne"
-                        Badge(label="Panne", tint=some("-exact-system-red"))
-                    text phrase(etat) color="-exact-secondary-label" testId="phrase"
+                    row align-items="center" gap=10
+                      if etat == "cours" or etat == "rattrapage" or etat == "relecture"
+                        progress width=22 height=22 flex-shrink=0 aria-label="Ariane travaille" testId="signe"
+                      if etat == "pause"
+                        image "symbol:pause-fill" font="-exact-title2" color="-exact-secondary-label" flex-shrink=0 aria-hidden=true testId="signe"
+                      if alerte(etat)
+                        image "symbol:alert-fill" font="-exact-title2" color=couleurBarre(etat) flex-shrink=0 aria-hidden=true testId="signe"
+                      if etat == "fin"
+                        image "symbol:checkmark" font="-exact-title2" color="-exact-system-green" flex-shrink=0 aria-hidden=true testId="signe"
+                      text mot(etat) font="-exact-title1" font-weight=700 flex=1 min-width=0 hyphens="auto" testId="mot"
+                    text phrase(etat) color="-exact-secondary-label" text-wrap="balance" testId="phrase"
                     if etat != "pret"
-                      progress value=fraction(etat) max=1 accent-color=match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" } testId="barre"
-                      row justify-content="space-between"
-                        text `${fait(etat)} sur ${total(etat)}` font="-exact-footnote" color="-exact-secondary-label" font-variant-numeric="tabular-nums" testId="compte"
-                        text unite(etat) font="-exact-footnote" color="-exact-secondary-label"
-              if etat == "pret"
-                section
+                      row align-items="baseline" gap=6 flex-wrap="wrap" margin-top=4
+                        text fait(etat) font="-exact-title2" font-weight=600 font-variant-numeric="tabular-nums" testId="fait"
+                        text `sur ${total(etat)} ${uniteMin(etat)}` color="-exact-secondary-label" font-variant-numeric="tabular-nums" testId="compte"
+                      progress value=fraction(etat) max=1 accent-color=couleurBarre(etat) testId="barre"
+                      text `${poses(etat)} posés · ${aPoser(etat)} à poser` font="-exact-footnote" color="-exact-secondary-label" font-variant-numeric="tabular-nums"
+                if etat == "pret"
                   row align-items="center" gap=12 flex-wrap="wrap"
                     text "Premier cut" flex=1
                     input value=premier input=ecrirePremier inputmode="numeric" aria-label="Premier cut" testId="premier" flex="0 1 7rem" min-width=0 text-align="right"
                   row align-items="center" gap=12 flex-wrap="wrap"
                     text "Dernier cut" flex=1
                     input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" flex="0 1 7rem" min-width=0 text-align="right"
-                  footer
-                    text "Dernier cut vide : le lot va jusqu’à la fin de la partie, puis se clôt seul."
-              section background-color="transparent"
                 row
-                  column flex=1 min-width=0 gap=10
+                  column flex=1 min-width=0 gap=10 padding="6px 0"
                     if principale(etat) != ""
                       button press=agir buttonStyle=(attendue(etat) ? "filled" : "bordered") -exact-control-size="large" testId="principale"
                         text principale(etat)
-                    if seconde(etat) != "" or arret(etat) != "" or etat == "fin" or etat == "relecture"
-                      row gap=10 flex-wrap="wrap"
+                    else if arret(etat) != ""
+                      button press=arreter destructive=true buttonStyle="bordered" -exact-control-size="large" testId="arret"
+                        text arret(etat)
+                    if seconde(etat) != "" or etat == "fin" or etat == "relecture" or (principale(etat) != "" and arret(etat) != "")
+                      row gap=10 flex-wrap="wrap" align-items="center"
                         if seconde(etat) != ""
                           button buttonStyle="bordered" flex="1 1 auto" testId="seconde"
                             text seconde(etat)
                         if etat == "fin" or etat == "relecture"
                           button press=nouveau buttonStyle="bordered" flex="1 1 auto" testId="nouveau"
                             text "Nouveau lot"
-                        if arret(etat) != ""
-                          button press=arreter destructive=true buttonStyle="bordered" flex="1 1 auto" testId="arret"
+                        if principale(etat) != "" and arret(etat) != ""
+                          button press=arreter destructive=true buttonStyle="plain" flex="1 1 auto" testId="arret"
                             text arret(etat)
                     if etat == "rattrapage"
                       text "Aucune autre action jusqu’à la fin du rattrapage." font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="verrou"
-              if etat != "pret"
-                section
-                  RowText(title="Posés", detail="", value=some(poses(etat)))
-                  RowText(title="À poser", detail=(etat == "fin" ? "à examiner" : "après le lot"), value=some(`${aPoser(etat)}`))
+              if aPoser(etat) > 0
                 section
                   header
                     text "À poser"
                   for c in cutsAPoser(etat) key=c
-                    row align-items="center"
-                      column flex=1 min-width=0
-                        text `Cut ${c}` font-variant-numeric="tabular-nums"
-                        text `Laissé à ${heure(c)}` font="-exact-footnote" color="-exact-secondary-label"
+                    row align-items="center" gap=8
+                      text `Cut ${c}` font-variant-numeric="tabular-nums" flex=1
+                      text heure(c) color="-exact-secondary-label" font-variant-numeric="tabular-nums"
                       button testId=`ouvrir-${c}`
                         text "Ouvrir"
         if e.name == "plus"

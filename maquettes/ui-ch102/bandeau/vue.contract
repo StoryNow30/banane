@@ -1,7 +1,6 @@
-// CH-102, proposition 3 « Le bandeau » : l'état est un aplat de couleur en tête de fenêtre, lisible de loin sans lire ;
-// l'avancement est une barre et une ligne de chiffres juste dessous. La couleur ne vient que de l'état : gris au repos,
-// la teinte du système au travail, orange quand Ariane attend l'opérateur, rouge en panne, vert à la fin.
-use StatBar from "exact:content"
+// CH-102, proposition 3 « Le bandeau » : tant que tout va bien, l'écran reste neutre. Quand Ariane a besoin de l'opérateur,
+// l'en-tête d'état devient un aplat de couleur (orange : à toi ; rouge : en panne) qui se voit de loin sans lire.
+// L'avancement est un compte et une barre juste dessous ; au bas de la fenêtre, une ligne dit ce qui reste à poser.
 // ---
 routes nav
   home "/"
@@ -42,20 +41,20 @@ component App
         if e.name == "home"
           column navigationKey=`${e.id}` navigationScroll="lot" position="absolute" inset=0
             header display="flex" align-items="center" padding="8px 16px"
-              text "Ariane" role="heading" aria-level=1 flex=1
+              text "Ariane" role="heading" aria-level=2 flex=1
               button press=ouvrirPlus aria-label="Plus" testId="plus"
                 image "symbol:more"
             scroll id="lot" flex=1 min-height=0
               column min-height="100%"
-                if etat == "pret" or etat == "pause"
-                  column gap=6 padding="24px 20px" flex="1 1 auto" max-height="17rem" justify-content="flex-end" box-sizing="border-box" background-color="-exact-secondary-background" testId="bandeau"
-                    text mot(etat) font="-exact-large-title" font-weight=700 hyphens="auto" testId="mot"
-                    text phrase(etat) color="-exact-secondary-label" testId="phrase"
-                else
-                  column gap=6 padding="24px 20px" flex="1 1 auto" max-height="17rem" justify-content="flex-end" box-sizing="border-box" accent-color=match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" } background-color="AccentColor" color="AccentColorText" testId="bandeau"
+                if alerte(etat)
+                  column gap=6 padding="20px 16px" accent-color=couleurBarre(etat) background-color="AccentColor" color="AccentColorText" testId="bandeau"
                     text mot(etat) font="-exact-large-title" font-weight=700 color="AccentColorText" hyphens="auto" testId="mot"
-                    text phrase(etat) color="AccentColorText" testId="phrase"
-                column gap=16 padding=20 width="100%" box-sizing="border-box" flex="0 0 auto"
+                    text phrase(etat) color="AccentColorText" text-wrap="balance" testId="phrase"
+                else
+                  column gap=6 padding="20px 16px" background-color="-exact-secondary-background" testId="bandeau"
+                    text mot(etat) font="-exact-large-title" font-weight=700 hyphens="auto" testId="mot"
+                    text phrase(etat) color="-exact-secondary-label" text-wrap="balance" testId="phrase"
+                column gap=16 padding="16px 16px 0" flex="1 1 auto" box-sizing="border-box"
                   if etat == "pret"
                     column gap=12
                       row align-items="center" gap=12 flex-wrap="wrap"
@@ -66,25 +65,40 @@ component App
                         input value=dernier input=ecrireDernier placeholder="fin de partie" inputmode="numeric" aria-label="Dernier cut" testId="dernier" flex="0 1 7rem" min-width=0 text-align="right"
                   else
                     column gap=8
-                      StatBar(label=unite(etat), value=`${fait(etat)} sur ${total(etat)}`, fraction=fraction(etat), tint=some(match teinte(etat) { case some(c) => c, case none => "-exact-system-gray" }))
-                      text `${poses(etat)} posés · ${aPoser(etat)} à poser` font="-exact-footnote" color="-exact-secondary-label" font-variant-numeric="tabular-nums" testId="compte"
+                      row align-items="baseline" gap=6 flex-wrap="wrap"
+                        text fait(etat) font="-exact-title1" font-weight=700 font-variant-numeric="tabular-nums" testId="fait"
+                        text `sur ${total(etat)} ${uniteMin(etat)}` color="-exact-secondary-label" font-variant-numeric="tabular-nums" testId="compte"
+                      progress value=fraction(etat) max=1 width="100%" accent-color=couleurBarre(etat) aria-label=unite(etat) testId="barre"
+                      text `${poses(etat)} posés · ${aPoser(etat)} à poser` font="-exact-footnote" color="-exact-secondary-label" font-variant-numeric="tabular-nums"
                   column gap=10
                     if principale(etat) != ""
                       button press=agir buttonStyle=(attendue(etat) ? "filled" : "bordered") -exact-control-size="large" testId="principale"
                         text principale(etat)
-                    if seconde(etat) != "" or arret(etat) != "" or etat == "fin" or etat == "relecture"
-                      row gap=10 flex-wrap="wrap"
+                    else if arret(etat) != ""
+                      button press=arreter destructive=true buttonStyle="bordered" -exact-control-size="large" testId="arret"
+                        text arret(etat)
+                    if seconde(etat) != "" or etat == "fin" or etat == "relecture" or (principale(etat) != "" and arret(etat) != "")
+                      row gap=10 flex-wrap="wrap" align-items="center"
                         if seconde(etat) != ""
                           button buttonStyle="bordered" flex="1 1 auto" testId="seconde"
                             text seconde(etat)
                         if etat == "fin" or etat == "relecture"
                           button press=nouveau buttonStyle="bordered" flex="1 1 auto" testId="nouveau"
                             text "Nouveau lot"
-                        if arret(etat) != ""
-                          button press=arreter destructive=true buttonStyle="bordered" flex="1 1 auto" testId="arret"
+                        if principale(etat) != "" and arret(etat) != ""
+                          button press=arreter destructive=true buttonStyle="plain" flex="1 1 auto" testId="arret"
                             text arret(etat)
                     if etat == "rattrapage"
                       text "Aucune autre action jusqu’à la fin du rattrapage." font="-exact-footnote" color="-exact-secondary-label" text-align="center" testId="verrou"
+                  view flex="1 1 0" min-height=0
+                  if aPoser(etat) > 0
+                    column gap=0
+                      hr
+                      link href=path("plus") testId="reste"
+                        row align-items="center" gap=8 padding="12px 0"
+                          text "À poser" flex=1 color="-exact-label"
+                          text cutsMot(aPoser(etat)) color="-exact-secondary-label" font-variant-numeric="tabular-nums"
+                          image "symbol:forward-chevron" color="-exact-tertiary-label" aria-hidden=true
         if e.name == "plus"
           column navigationKey=`${e.id}` navigationScroll="plus-liste" position="absolute" inset=0
             header display="flex" align-items="center" padding="8px 16px"

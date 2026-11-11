@@ -32,6 +32,11 @@ fn cutsMot(n: number): string = `${n} ${n == 1 ? "cut" : "cuts"}`
 // Les cuts à poser, du plus récent au plus ancien (4803 est posé par le rattrapage).
 fn cutsAPoser(e: string): number[] = e == "pret" ? [] : e == "cours" or e == "pause" or e == "toi" or e == "panne" ? [4809, 4803, 4796] : e == "rattrapage" ? [4877, 4861, 4838, 4809, 4796] : [4877, 4861, 4838, 4809, 4803, 4796]
 fn heure(c: number): string = c == 4877 ? "10 h 07" : c == 4861 ? "10 h 01" : c == 4838 ? "10 h 08" : c == 4809 ? "10 h 09" : c == 4803 ? "10 h 03" : "10 h 06"
+fn uniteMin(e: string): string = e == "rattrapage" ? "cuts rattrapés" : e == "relecture" ? "cuts relus" : "cuts traités"
+// Quand Ariane a besoin de l'opérateur (rail non résolu, ESV muet) : la seule couleur d'alerte de l'écran.
+fn alerte(e: string): bool = e == "toi" or e == "panne"
+// La couleur de la barre d'avancement : celle du système quand tout va bien, grise à l'arrêt, celle de l'alerte sinon.
+fn couleurBarre(e: string): string = match teinte(e) { case some(c) => c, case none => "-exact-system-gray" }
 
 // === écran Plus
 // L'écran « Plus », commun aux trois propositions : tout ce qui n'est pas le lot en cours passe ici, à un clic.
