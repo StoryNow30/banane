@@ -1,0 +1,310 @@
+<title>Panneau Graphite</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Mise en page : le vrai panneau d'Ariane, en Graphite, aux deux tailles côte à côte. Une tuile d'état qui reste, une zone qui change avec l'état, les actions en bas.
+   Animations : transform et opacity seulement, pour ne rien coûter à côté d'ESV. */
+@property --p{syntax:'<number>';inherits:true;initial-value:20}
+:root{color-scheme:dark;
+  --fond:#07080A; --tuile-a:#16181C; --tuile-b:#0F1013; --tx:#F1F2F4; --tx2:#8B909B; --tx3:#5F646F;
+  --trait:rgba(255,255,255,.075); --creux:rgba(255,255,255,.055); --piste:rgba(255,255,255,.09);
+  --accent:#8F93FF; --accent-rgb:143,147,255; --attn:#F3A63B; --attn-rgb:243,166,59; --crit:#F2706B; --crit-rgb:242,112,107; --ok:#59D499; --ok-rgb:89,212,153; --repos-rgb:139,144,155;
+  --blanc:#F1F2F4; --encre:#0A0B10;
+  --f:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ressort:cubic-bezier(.2,.9,.25,1.2); --doux:cubic-bezier(.2,.7,.2,1)}
+*{box-sizing:border-box}
+body{background:#030405;color:var(--tx);font:400 14px/1.45 var(--f);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{margin:0 0 6px;font:700 clamp(24px,3.6vw,34px)/1.1 var(--f);letter-spacing:-.025em}
+.chapo{margin:0;color:var(--tx2);max-width:64ch;font-size:15px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.commandes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.puce{height:32px;padding:0 12px;border-radius:999px;border:0;background:var(--creux);color:var(--tx2);font:600 12.5px/1 var(--f);cursor:pointer;box-shadow:inset 0 0 0 1px var(--trait);transition:background .2s,color .2s,transform .15s var(--ressort)}
+.puce:hover{color:var(--tx)}.puce:active{transform:scale(.95)}
+.puce.on{background:var(--blanc);color:var(--encre);box-shadow:none}
+.auto{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:13px;color:var(--tx2)}
+.scene{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.cadre{display:flex;flex-direction:column;gap:10px;min-width:0;max-width:100%}
+.cadre>span{font-size:12px;color:var(--tx3);letter-spacing:.04em}
+.defile{overflow-x:auto;max-width:100%;padding-bottom:6px}
+
+/* ── le panneau ── */
+.pan{--c1:var(--accent);--c1-rgb:var(--accent-rgb);width:360px;height:480px;display:flex;flex-direction:column;background:var(--fond);border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 30px 60px -30px #000;overflow:hidden;transition:--p .8s var(--doux)}
+.pan[data-taille="600"]{width:600px;height:760px}
+.pan[data-ton="repos"]{--c1:#8B909B;--c1-rgb:var(--repos-rgb)}
+.pan[data-ton="toi"]{--c1:var(--attn);--c1-rgb:var(--attn-rgb)}
+.pan[data-ton="panne"]{--c1:var(--crit);--c1-rgb:var(--crit-rgb)}
+.pan[data-ton="fait"]{--c1:var(--ok);--c1-rgb:var(--ok-rgb)}
+.barre-h{flex:none;display:flex;align-items:center;gap:8px;height:46px;padding:0 10px 0 12px;border-bottom:1px solid var(--trait)}
+.seg{position:relative;display:grid;grid-template-columns:repeat(3,auto);padding:3px;border-radius:9px;background:var(--creux)}
+.seg .pouce{position:absolute;top:3px;left:3px;height:26px;width:var(--w,58px);border-radius:6px;background:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transform:translateX(var(--x,0px));transition:transform .42s var(--ressort),width .3s var(--doux)}
+.seg button{position:relative;height:26px;padding:0 11px;border:0;border-radius:6px;background:transparent;color:var(--tx2);font:600 12px/1 var(--f);cursor:pointer;transition:color .2s}
+.seg button.on{color:var(--tx)}
+.esv{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--tx2);height:28px;padding:0 8px;border-radius:7px;border:0;background:transparent;cursor:pointer;transition:background .15s}
+.esv:hover{background:var(--creux)}
+.esv i{width:6px;height:6px;border-radius:50%;background:var(--ok);transition:background .3s}
+.pan[data-ton="panne"] .esv i{background:var(--crit)}
+.menu{width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:var(--tx2);cursor:pointer;font-size:16px;letter-spacing:1px;transition:background .15s,color .15s}
+.menu:hover{background:var(--creux);color:var(--tx)}
+.corps{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:12px}
+.pan[data-taille="600"] .corps{gap:12px;padding:16px}
+
+.tu{position:relative;min-width:0;border-radius:14px;border:1px solid var(--trait);background:linear-gradient(180deg,var(--tuile-a),var(--tuile-b));box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;transition:border-color .25s}
+.pan[data-taille="600"] .tu{padding:18px;border-radius:16px;gap:12px}
+.tu:hover{border-color:rgba(255,255,255,.15)}
+.tu h4{margin:0;font:600 11.5px/1.3 var(--f);letter-spacing:.02em;color:var(--tx2);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tu p{margin:0;color:var(--tx2);font-size:12.5px;line-height:1.45}
+
+/* tuile d'état : elle reste, seuls ses contenus changent */
+.tu-etat{flex:none;background:radial-gradient(120% 100% at 0% 0%,rgba(var(--c1-rgb),.2),transparent 60%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b));transition:border-color .25s}
+.haut{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pastille{display:inline-flex;align-items:center;gap:9px;font:600 13.5px/1 var(--f)}
+.pan[data-taille="600"] .pastille{font-size:15px}
+.pastille i{position:relative;width:9px;height:9px;border-radius:50%;background:var(--c1);transition:background .4s}
+.pastille i::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--c1);animation:pouls 2s ease-out infinite}
+.pan[data-ton="repos"] .pastille i::after,.pan[data-ton="fait"] .pastille i::after{animation:none;opacity:0}
+@keyframes pouls{0%{transform:scale(1);opacity:.55}70%,100%{transform:scale(2.7);opacity:0}}
+.partie{font-size:12px;color:var(--tx2)}
+.milieu{display:flex;align-items:center;gap:14px}
+.pan[data-taille="600"] .milieu{gap:22px}
+.anneau{position:relative;width:76px;aspect-ratio:1;flex:none;display:grid;place-items:center}
+.pan[data-taille="600"] .anneau{width:124px}
+.anneau::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--c1) calc(var(--p)*1%),var(--piste) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--ep,7px)),#000 calc(100% - var(--ep,7px) + 1px));mask:radial-gradient(farthest-side,transparent calc(100% - var(--ep,7px)),#000 calc(100% - var(--ep,7px) + 1px))}
+.pan[data-taille="600"] .anneau{--ep:10px}
+.anneau b{font:700 21px/1 var(--f);letter-spacing:-.03em}
+.pan[data-taille="600"] .anneau b{font-size:32px}
+.anneau small{font-size:.5em;font-weight:600;margin-left:1px;color:var(--tx2)}
+.texte{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+.texte h3{margin:0;font:650 15.5px/1.25 var(--f);letter-spacing:-.01em}
+.pan[data-taille="600"] .texte h3{font-size:20px}
+.trio{display:flex;gap:16px;margin:6px 0 0}
+.pan[data-taille="600"] .trio{gap:24px;margin-top:10px}
+.trio dt{font-size:11px;color:var(--tx2)}
+.trio dd{margin:1px 0 0;font:650 16px/1 var(--f)}
+.pan[data-taille="600"] .trio dd{font-size:20px}
+.roule{display:inline-block}
+.tic{animation:tic .38s var(--ressort)}
+@keyframes tic{from{opacity:0;transform:translateY(45%)}}
+
+/* zone qui change : sortie rapide, entrée en cascade */
+.zone{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.pan[data-taille="600"] .zone{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-auto-rows:minmax(0,1fr);gap:12px}
+.zone .large{grid-column:1/-1}
+.pan[data-taille="600"] .zone:has(>.large:first-child){grid-template-rows:auto minmax(0,1fr)}
+.pan[data-taille="600"] .zone>.large{flex:none}
+.zone>.tu{flex:1;min-height:0}
+.sort>*{animation:zsort .16s ease-in forwards}
+.entre>*{animation:zentre .5s var(--ressort) backwards}
+.entre>*:nth-child(2){animation-delay:70ms}.entre>*:nth-child(3){animation-delay:140ms}
+@keyframes zsort{to{opacity:0;transform:translateY(-8px) scale(.985)}}
+@keyframes zentre{from{opacity:0;transform:translateY(14px) scale(.97)}}
+
+.fil{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden;-webkit-mask:linear-gradient(#000 70%,transparent);mask:linear-gradient(#000 70%,transparent)}
+.fil li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:9px;height:34px;border-top:1px solid var(--trait);overflow:hidden}
+.pan[data-taille="600"] .fil li{height:40px}
+.fil b{font:650 13px/1 var(--f)}
+.fil span{font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.fil em{font-style:normal;font-size:11.5px;color:var(--tx3)}
+.fil li.in{animation:filIn .45s var(--ressort)}
+@keyframes filIn{from{opacity:0;transform:translateY(-14px)}}
+.tag{font:600 10.5px/1 var(--f);font-style:normal;padding:4px 7px;border-radius:999px;white-space:nowrap}
+.tag.attn{background:rgba(var(--attn-rgb),.14);color:#F6B65C}
+.tag.ok{background:rgba(255,255,255,.07);color:#A9AEB8}
+
+.tu-avis{flex-direction:row;align-items:flex-start;gap:12px;background:radial-gradient(100% 140% at 0% 0%,rgba(var(--c1-rgb),.16),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b));border-color:rgba(var(--c1-rgb),.28)}
+.ic{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--c1);color:#16110A;font:800 16px/1 var(--f)}
+.ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tu-avis p{color:var(--tx);font-size:13px}
+.pan[data-taille="600"] .tu-avis p{font-size:14.5px}
+.tu-avis small{display:block;margin-top:4px;color:var(--tx2);font-size:12px}
+.rangs{display:flex;flex-direction:column}
+.rang{display:flex;justify-content:space-between;align-items:center;gap:10px;height:36px;border-top:1px solid var(--trait);font-size:13px;color:var(--tx2)}
+.rang:first-child{border-top:0}
+.rang b{color:var(--tx);font-weight:600}
+.etapes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.etapes li{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:center;padding:8px 0;position:relative;color:var(--tx3);font-size:12px}
+.etapes li+li::before{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--piste)}
+.etapes li.fait+li::before{background:var(--accent)}
+.etapes b{font:600 13px/1.2 var(--f)}
+.etapes i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--piste);display:grid;place-items:center}
+.etapes li.fait,.etapes li.actif{color:var(--tx)}
+.etapes li.fait i{background:var(--accent);box-shadow:none}
+.etapes li.fait i::after{content:"";width:8px;height:4px;border:2px solid var(--encre);border-top:0;border-right:0;transform:rotate(-45deg);margin-top:-2px}
+.etapes li.actif i{box-shadow:inset 0 0 0 2px var(--c1)}
+.etapes li.actif.tourne i{box-shadow:none;background:conic-gradient(var(--accent),rgba(var(--accent-rgb),0) 75%);-webkit-mask:radial-gradient(farthest-side,transparent 6px,#000 7px);mask:radial-gradient(farthest-side,transparent 6px,#000 7px);animation:tourne .9s linear infinite}
+@keyframes tourne{to{transform:rotate(1turn)}}
+.fin-rond{width:44px;height:44px;flex:none}
+.fin-rond circle,.fin-rond path{fill:none;stroke:var(--ok);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:0}
+.fin-rond circle{transform:rotate(-90deg);transform-origin:center}
+.entre .fin-rond circle{animation:trace .6s var(--doux) backwards .15s}.entre .fin-rond path{animation:trace .4s var(--doux) backwards .65s}
+@keyframes trace{from{stroke-dashoffset:1}}
+.tu-fin{flex-direction:row;align-items:center;gap:14px}
+.tu-fin h3{margin:0;font:650 16px/1.2 var(--f)}
+
+.aposer{flex:none;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--trait);background:var(--creux);font-size:13px;color:var(--tx2);cursor:pointer;transition:background .15s,border-color .2s,transform .15s var(--ressort)}
+.aposer:hover{background:rgba(255,255,255,.085);border-color:rgba(255,255,255,.15)}
+.aposer:active{transform:scale(.985)}
+.aposer b{color:var(--tx);font-weight:650}
+.aposer em{font-style:normal;margin-left:auto;font-size:12px}
+.aposer svg{width:10px;height:10px;transition:transform .2s var(--ressort)}
+.aposer:hover svg{transform:translateX(3px)}
+.aposer[hidden]{display:none}
+
+.actions{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;border-top:1px solid var(--trait);background:rgba(255,255,255,.015);min-height:63px}
+.pan[data-taille="600"] .actions{padding:14px 16px;display:flex;flex-wrap:wrap}
+.actions .seul,.actions .plein{grid-column:1/-1}
+.btn{position:relative;overflow:hidden;height:38px;padding:0 14px;border-radius:9px;border:0;cursor:pointer;white-space:nowrap;font:600 13.5px/1 var(--f);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .16s var(--ressort),box-shadow .2s,background .2s,color .2s}
+.pan[data-taille="600"] .btn{height:40px;min-width:150px}
+.btn:hover{transform:translateY(-1px)}.btn:active{transform:scale(.965);transition-duration:.06s}
+.btn.pr{background:var(--blanc);color:var(--encre);box-shadow:0 1px 0 rgba(255,255,255,.4) inset}
+.btn.se{background:transparent;box-shadow:inset 0 0 0 1px var(--trait)}
+.btn.se:hover{background:var(--creux);box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.btn.fa{background:transparent;color:var(--tx2)}.btn.fa:hover{color:var(--tx);background:var(--creux)}
+.verrou{display:flex;align-items:center;gap:8px;color:var(--tx2);font-size:12.5px;grid-column:1/-1;height:38px}
+.verrou svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sw{flex:none;width:38px;height:22px;border-radius:11px;background:var(--piste);position:relative;transition:background .25s;border:0;padding:0;cursor:pointer}
+.sw i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:8px;background:var(--blanc);transition:transform .35s var(--ressort)}
+.sw.on{background:var(--accent)}.sw.on i{transform:translateX(16px)}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px 40px;margin-top:10px;padding-top:20px;border-top:1px solid var(--trait)}
+.notes h2{margin:0 0 8px;font:600 15px/1.3 var(--f)}
+.notes ul{margin:0;padding-left:18px;color:var(--tx2)}.notes li{margin-bottom:6px;max-width:60ch}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page">
+  <div>
+    <h1>Le panneau en Graphite</h1>
+    <p class="chapo">Le vrai panneau du lot, avec ses huit états et ses vrais boutons, aux deux tailles. La tuile du haut reste en place ; le reste change avec l’état. Choisis un état, ou laisse la lecture dérouler un lot.</p>
+  </div>
+  <div class="commandes" id="commandes">
+    <button type="button" class="puce" data-e="pret">Prêt</button><button type="button" class="puce" data-e="cours">En cours</button><button type="button" class="puce" data-e="pause">En pause</button><button type="button" class="puce" data-e="toi">Rail non résolu</button><button type="button" class="puce" data-e="panne">ESV muet</button><button type="button" class="puce" data-e="rattrapage">Rattrapage</button><button type="button" class="puce" data-e="relecture">Relecture</button><button type="button" class="puce" data-e="fin">Fin de lot</button>
+    <div class="auto"><span>Lecture</span><button type="button" class="sw on" id="lecture" role="switch" aria-checked="true" aria-label="Dérouler un lot automatiquement"><i></i></button></div>
+  </div>
+  <div class="scene">
+    <div class="cadre"><span>360 × 480</span><div class="pan" data-taille="360" data-ton="marche"></div></div>
+    <div class="cadre"><span>600 × 760</span><div class="defile"><div class="pan" data-taille="600" data-ton="marche"></div></div></div>
+  </div>
+  <div class="notes">
+    <div><h2>Ce qui change par rapport à aujourd’hui</h2><ul>
+      <li>Un pourcentage et un anneau à la place de « total inconnu » : la place du cut entre le premier et le dernier cut du lot.</li>
+      <li>Réglages, cache des exports et palette passent dans le menu « ··· ».</li>
+      <li>La liste des cuts à poser s’ouvre depuis la ligne « à poser ».</li>
+    </ul></div>
+    <div><h2>Ce qui ne change pas</h2><ul>
+      <li>Chaque bouton garde son nom et son rôle. Aucun n’est ajouté ni retiré.</li>
+      <li>Le bouton SKIP reste masqué.</li>
+      <li>C’est une maquette : l’extension n’a pas changé.</li>
+    </ul></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var fr = function(n){ return n.toFixed(1).replace('.', ','); };
+  var RAILS = ['rail gauche', 'rail droit', 'les deux rails'];
+  var IC = { verrou: '<svg viewBox="0 0 16 16"><rect x="3.5" y="7.5" width="9" height="6" rx="1.5"/><path d="M5.5 7.5V5.2a2.5 2.5 0 0 1 5 0v2.3"/></svg>', droite: '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 1.5 7 5 3.5 8.5"/></svg>', coche: '<svg class="fin-rond" viewBox="0 0 44 44"><circle cx="22" cy="22" r="19.5" pathLength="1"/><path pathLength="1" d="M14 22.6 19.6 28 30.4 16.2"/></svg>' };
+
+  /* les huit états du panneau : mots, phrase, actions (noms et rôles du panneau actuel) */
+  var E = {
+    pret:       { ton: 'repos',  mot: 'Prêt',               phrase: function(){ return 'Partie 13, à partir du cut 4790'; }, corps: 'champs', actions: [['pr', 'Démarrer le lot']] },
+    cours:      { ton: 'marche', mot: 'En cours',           phrase: function(S){ return 'Pose du cut <span class="roule" data-v="cut">' + S.cut + '</span>'; }, corps: 'fil', actions: [['pr', 'Pause'], ['se', 'Arrêter le lot']] },
+    pause:      { ton: 'repos',  mot: 'En pause',           phrase: function(S){ return 'Après le cut ' + (S.cut - 1) + ', depuis 1 min 45'; }, corps: 'fil', actions: [['pr', 'Reprendre'], ['se', 'Arrêter le lot']] },
+    toi:        { ton: 'toi',    mot: 'À toi',              phrase: function(S){ return 'Rail non résolu, cut ' + S.cut; }, corps: 'avis', avis: function(S){ return 'Ariane ne sait pas poser un rail du cut ' + S.cut + '. Réessaie, ou reprends-le à la main.'; }, actions: [['pr', 'Réessayer ce cut'], ['se', 'Reprise manuelle'], ['fa', 'Arrêter le lot']] },
+    panne:      { ton: 'panne',  mot: 'ESV ne répond plus', phrase: function(S){ return 'Arrêté après le cut ' + (S.cut - 1); }, corps: 'avis', avis: function(){ return 'Recharge la page ESV (F5), attends qu’elle réponde, puis clique sur Reprendre.'; }, actions: [['pr', 'Reprendre'], ['se', 'Arrêter le lot']] },
+    rattrapage: { ton: 'marche', mot: 'Rattrapage',         p: 33,  phrase: function(){ return 'Cut 4803 · 1 posé sur 3 décidés'; }, trio: [[1, 'Posé'], [3, 'Décidés'], [6, 'À poser']], corps: 'verrou', actions: [] },
+    relecture:  { ton: 'marche', mot: 'Relecture',          p: 14,  phrase: function(){ return 'Relecture du cut 4801'; }, trio: [[12, 'Relus'], [85, 'À relire'], [3, 'Corrigés']], corps: 'etapes', actions: [['se', 'Arrêter la relecture'], ['fa', 'Nouveau lot']] },
+    fin:        { ton: 'fait',   mot: 'Terminé',            p: 100, phrase: function(){ return '93 cuts traités, export prêt'; }, trio: [[93, 'Traités'], [87, 'Posés'], [6, 'À poser']], corps: 'fin', actions: [['pr', 'Exporter le dossier'], ['se', 'Nouveau lot'], ['fa', 'Voir ce qui reste']] }
+  };
+  var S = { etat: 'cours', cut: 4812, traites: 18, poses: 15, aposer: 3, fil: [[4811, 1, 7.2], [4810, 1, 6.9], [4809, 0, 0], [4808, 1, 8.1], [4807, 1, 7.9], [4806, 1, 6.8], [4805, 1, 7.4]] };
+  var pans = [].slice.call(document.querySelectorAll('.pan'));
+
+  pans.forEach(function(pan){
+    pan.innerHTML = '<header class="barre-h"><div class="seg"><i class="pouce"></i><button type="button" class="on">Orbite</button><button type="button">Écho</button><button type="button">Aurore</button></div><button type="button" class="esv"><i></i>ESV</button><button type="button" class="menu" aria-label="Réglages, cache des exports, commandes">···</button></header>'
+      + '<div class="corps"><section class="tu tu-etat"><div class="haut"><span class="pastille"><i></i><span class="roule" data-r="mot"></span></span><span class="partie">Partie 13</span></div>'
+      + '<div class="milieu"><div class="anneau"><b><span class="roule" data-r="pct"></span><small>%</small></b></div><div class="texte"><h3 data-r="phrase"></h3><dl class="trio" data-r="trio"></dl></div></div></section>'
+      + '<div class="zone"></div><button type="button" class="aposer"><b data-r="ap"></b> à poser<em data-r="apq"></em>' + IC.droite + '</button></div>'
+      + '<footer class="actions"></footer>';
+    var seg = pan.querySelector('.seg'); placerPouce(seg, seg.querySelector('.on'));
+  });
+  function placerPouce(seg, b){ seg.style.setProperty('--x', (b.offsetLeft - 3) + 'px'); seg.style.setProperty('--w', b.offsetWidth + 'px'); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ pans.forEach(function(p){ var s = p.querySelector('.seg'); placerPouce(s, s.querySelector('.on')); }); });
+
+  function roule(el, txt){ txt = String(txt); if (el.textContent === txt) return; el.textContent = txt; if (RM) return; el.classList.remove('tic'); void el.offsetWidth; el.classList.add('tic'); }
+  function pct(){ var e = E[S.etat]; return e.p != null ? e.p : (S.etat === 'pret' ? 0 : Math.round((S.cut - 4790) / 110 * 100)); }
+  function trio(){ var e = E[S.etat]; if (S.etat === 'pret') return []; return e.trio || [[S.traites, 'Traités'], [S.poses, 'Posés'], [S.aposer, 'À poser']]; }
+  function ligneFil(x, cls){ return '<li' + (cls ? ' class="' + cls + '"' : '') + '><b>' + x[0] + '</b><span>' + RAILS[x[0] % 3] + '</span><em>' + (x[1] ? fr(x[2]) + ' s' : '') + '</em><i class="tag ' + (x[1] ? 'ok">posé' : 'attn">à toi') + '</i></li>'; }
+  function etapes(){
+    var rang = { rattrapage: 1, relecture: 2, fin: 3 }[S.etat] || 0, tourne = E[S.etat].ton === 'marche';
+    var L = [['Pose', S.etat === 'fin' || rang ? '93 cuts' : S.traites + ' cuts'], ['Rattrapage', rang > 1 ? '1 posé' : rang === 1 ? '1 sur 3' : 'à venir'], ['Relecture', rang > 2 ? '85 relus' : rang === 2 ? '12 sur 85' : 'à venir']];
+    return '<section class="tu"><h4>Étapes du lot</h4><ol class="etapes">' + L.map(function(l, i){ return '<li class="' + (i < rang ? 'fait' : i === rang ? 'actif' + (tourne ? ' tourne' : '') : '') + '"><i></i><b>' + l[0] + '</b><span>' + l[1] + '</span></li>'; }).join('') + '</ol></section>';
+  }
+  function zone(grand){
+    var e = E[S.etat], L = grand ? ' large' : '';
+    var fil = '<section class="tu"><h4>' + (S.etat === 'cours' ? 'En direct' : 'Derniers cuts') + '</h4><ul class="fil">' + S.fil.slice(0, 8).map(function(x){ return ligneFil(x); }).join('') + '</ul></section>';
+    if (e.corps === 'champs') return '<section class="tu large"><h4>Nouveau lot</h4><div class="rangs"><div class="rang">Premier cut<b>4790</b></div><div class="rang">Dernier cut<b>fin de partie</b></div></div><p>Le lot se clôt seul à la fin de la partie.</p></section>';
+    if (e.corps === 'fil') return fil + (grand ? etapes() : '');
+    if (e.corps === 'etapes') return etapes() + (grand ? fil : '');
+    var h = '';
+    if (e.corps === 'avis') h = '<section class="tu tu-avis' + L + '"><div class="ic">!</div><div><p>' + e.avis(S) + '</p></div></section>';
+    if (e.corps === 'verrou') h = '<section class="tu tu-avis' + L + '"><div class="ic">' + IC.verrou + '</div><div><p>Ariane travaille dans ESV : ne touche à rien.</p><small>Elle pose les cuts mis de côté pendant le lot.</small></div></section>';
+    if (e.corps === 'fin') h = '<section class="tu tu-fin' + L + '">' + IC.coche + '<div><h3>Lot terminé</h3><p>Il reste 6 cuts à poser. Verts pas encore calculés.</p></div></section>';
+    return h + (grand ? fil + etapes() : '');
+  }
+  function actions(){
+    var a = E[S.etat].actions;
+    if (!a.length) return '<div class="verrou">' + IC.verrou + 'Aucune action jusqu’à la fin du rattrapage</div>';
+    return a.map(function(x, i){ return '<button type="button" class="btn ' + x[0] + (a.length === 1 ? ' seul' : a.length === 3 && i === 0 ? ' plein' : '') + '">' + x[1] + '</button>'; }).join('');
+  }
+  function echanger(el, html){
+    if (RM) { el.innerHTML = html; return; }
+    el.classList.remove('entre'); el.classList.add('sort');
+    setTimeout(function(){ el.innerHTML = html; el.classList.remove('sort'); void el.offsetWidth; el.classList.add('entre'); }, 170);
+  }
+  function tete(pan){
+    var e = E[S.etat], p = pct();
+    pan.dataset.ton = e.ton; pan.style.setProperty('--p', p);
+    roule(pan.querySelector('[data-r="mot"]'), e.mot); roule(pan.querySelector('[data-r="pct"]'), p);
+    pan.querySelector('[data-r="phrase"]').innerHTML = e.phrase(S);
+    pan.querySelector('[data-r="trio"]').innerHTML = trio().map(function(t){ return '<div><dt>' + t[1] + '</dt><dd>' + t[0] + '</dd></div>'; }).join('');
+    var ap = pan.querySelector('.aposer'), n = S.etat === 'fin' || S.etat === 'rattrapage' || S.etat === 'relecture' ? 6 : S.aposer;
+    ap.hidden = S.etat === 'pret' || !n; pan.querySelector('[data-r="ap"]').textContent = n; pan.querySelector('[data-r="apq"]').textContent = S.etat === 'fin' ? 'à examiner' : 'après le lot';
+  }
+  function changer(etat){
+    if (etat === 'pret') { S.cut = 4790; S.traites = 0; S.poses = 0; S.aposer = 0; }
+    if (etat === 'cours' && S.cut < 4812) { S.cut = 4812; S.traites = 18; S.poses = 15; S.aposer = 3; S.fil = [[4811, 1, 7.2], [4810, 1, 6.9], [4809, 0, 0], [4808, 1, 8.1], [4807, 1, 7.9], [4806, 1, 6.8], [4805, 1, 7.4]]; }
+    S.etat = etat;
+    pans.forEach(function(pan){ tete(pan); echanger(pan.querySelector('.zone'), zone(pan.dataset.taille === '600')); echanger(pan.querySelector('.actions'), actions()); });
+    [].forEach.call(document.querySelectorAll('.puce'), function(b){ b.classList.toggle('on', b.dataset.e === etat); });
+  }
+
+  /* le lot avance tout seul quand il est « en cours » */
+  function pas(){
+    if (S.etat !== 'cours' || document.hidden) return;
+    var x = [S.cut, 1, 6.2 + Math.random() * 2.4]; S.fil.unshift(x); S.fil.length = Math.min(S.fil.length, 9);
+    S.cut++; S.traites++; S.poses++;
+    pans.forEach(function(pan){
+      var ul = pan.querySelector('.fil'); if (ul) { ul.insertAdjacentHTML('afterbegin', ligneFil(x, 'in')); if (ul.children.length > 9) ul.lastElementChild.remove(); }
+      var c = pan.querySelector('[data-v="cut"]'); if (c) roule(c, S.cut);
+      var p = pct(); pan.style.setProperty('--p', p); roule(pan.querySelector('[data-r="pct"]'), p);
+      pan.querySelector('[data-r="trio"]').innerHTML = trio().map(function(t){ return '<div><dt>' + t[1] + '</dt><dd>' + t[0] + '</dd></div>'; }).join('');
+    });
+  }
+
+  /* lecture automatique : l'histoire d'un lot, en boucle */
+  var HISTOIRE = [['pret', 3200], ['cours', 7200], ['toi', 4600], ['cours', 4200], ['pause', 3400], ['cours', 3600], ['panne', 4200], ['cours', 3600], ['rattrapage', 4400], ['relecture', 4600], ['fin', 5200]], rang = 1, lecture = !RM, minuterie = 0;
+  function suivant(){ clearTimeout(minuterie); if (!lecture) return; var h = HISTOIRE[rang]; if (h[0] === 'toi') { S.fil.unshift([S.cut, 0, 0]); S.aposer++; S.traites++; } if (HISTOIRE[(rang + HISTOIRE.length - 1) % HISTOIRE.length][0] === 'toi' && h[0] === 'cours') S.cut++; changer(h[0]); minuterie = setTimeout(function(){ rang = (rang + 1) % HISTOIRE.length; suivant(); }, h[1]); }
+
+  document.addEventListener('click', function(e){
+    var p = e.target.closest('.puce'); if (p) { arreterLecture(); changer(p.dataset.e); return; }
+    var s = e.target.closest('.seg button'); if (s) { var seg = s.parentNode; [].forEach.call(seg.querySelectorAll('button'), function(x){ x.classList.toggle('on', x === s); }); placerPouce(seg, s); return; }
+    if (e.target.closest('#lecture')) { var w = document.getElementById('lecture'); lecture = w.classList.toggle('on'); w.setAttribute('aria-checked', lecture ? 'true' : 'false'); if (lecture) suivant(); else clearTimeout(minuterie); }
+  });
+  function arreterLecture(){ lecture = false; clearTimeout(minuterie); var w = document.getElementById('lecture'); w.classList.remove('on'); w.setAttribute('aria-checked', 'false'); }
+
+  changer('cours');
+  if (!RM) { setInterval(pas, 1500); minuterie = setTimeout(function(){ rang = 2; suivant(); }, 6500); }
+  else arreterLecture();
+})();
+</script>

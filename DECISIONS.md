@@ -3659,3 +3659,8 @@ Complète D-299 sans la modifier.
 ## D-330 — Style retenu pour la suite : Graphite (opérateur, 11/11)
 - Réponse de l'opérateur devant le bento en cinq styles, mot pour mot : « Le graphite est pas mal. Tu as les compétences nécessaires pour des animations et Motion design moderne ? »
 - Effet : Graphite est la base des étapes suivantes de sa méthode (D-329). Fait par l'intégrateur : treize composants en Graphite, micro-interactions, entrée et sortie en boucle ; page publiée, source dans `maquettes/bento/graphite-ariane.html`. « Pas mal » n'est pas un accord d'intégration : D-323 tient.
+
+## D-331 — Le style Graphite plaît ; l'adapter à l'interface du panneau (opérateur, 11/11)
+- Réponse de l'opérateur devant Graphite animé, mot pour mot : « Il y a peut être un langage meilleur et plus optimisé pour ces animations ? Le style me plaît maintenant il faut adapter tout ça à l'interface qu'on cherche à construire ».
+- Effet : le style du panneau est Graphite. Fait par l'intégrateur : maquette vivante du vrai panneau du lot en Graphite (huit états, deux tailles, vrais noms de boutons, lecture automatique d'un lot), page publiée, source dans `maquettes/bento/panneau-graphite.html`. Animations en CSS, transform et opacity seulement (le panneau tourne à côté d'ESV).
+- Reste à décider par lui avant l'intégration dans l'extension (D-323 tient) : son accord sur cette maquette ; le pourcentage à la place de « total inconnu » ; réglages et cache des exports dans le menu « ··· » ; les autres écrans (Écho, Constellation, Aurore, réglages) dans le même style.
