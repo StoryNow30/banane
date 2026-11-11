@@ -15,7 +15,7 @@ fn phrase(e: string): string = e == "pret" ? "Partie 13, du cut 4790 jusqu’à 
 fn fraction(e: string): number = e == "pret" ? 0 : e == "rattrapage" ? 1 / 3 : e == "relecture" ? 12 / 85 : e == "fin" ? 1 : 22 / 111   // 22 numéros parcourus sur 111
 fn fait(e: string): string = e == "pret" ? "0" : e == "rattrapage" ? "1" : e == "relecture" ? "12" : e == "fin" ? "93" : "18"
 fn total(e: string): string = e == "rattrapage" ? "3" : e == "relecture" ? "85" : e == "fin" ? "93" : "107"   // 107 = 18 traités + 89 au plus à venir
-fn unite(e: string): string = e == "rattrapage" ? "cuts rattrapés" : e == "relecture" ? "cuts relus" : "cuts traités"
+fn unite(e: string): string = e == "rattrapage" ? "Cuts rattrapés" : e == "relecture" ? "Cuts relus" : "Cuts traités"
 fn poses(e: string): string = e == "pret" ? "0" : e == "fin" or e == "relecture" ? "87" : e == "rattrapage" ? "88" : "15"
 fn aPoser(e: string): number = e == "pret" ? 0 : e == "cours" or e == "pause" or e == "toi" or e == "panne" ? 3 : e == "rattrapage" ? 5 : 6
 
@@ -25,6 +25,13 @@ fn seconde(e: string): string = e == "toi" ? "Reprise manuelle" : e == "fin" ? "
 fn arret(e: string): string = e == "cours" or e == "pause" or e == "toi" or e == "panne" ? "Arrêter le lot" : e == "relecture" ? "Arrêter la relecture" : e == "rattrapage" ? "Arrêter le rattrapage" : ""
 // Où mène l'action principale dans la maquette (les données sont fabriquées : seul l'état change).
 fn suite(e: string): string = e == "pret" or e == "pause" or e == "panne" or e == "toi" ? "cours" : e == "cours" ? "pause" : e
+
+// Le bouton plein est réservé à ce qui est attendu de l'opérateur : pendant que le lot tourne, rien ne l'est, « Pause » reste un bouton ordinaire.
+fn attendue(e: string): bool = e != "cours"
+fn cutsMot(n: number): string = `${n} ${n == 1 ? "cut" : "cuts"}`
+// Les cuts à poser, du plus récent au plus ancien (4803 est posé par le rattrapage).
+fn cutsAPoser(e: string): number[] = e == "pret" ? [] : e == "cours" or e == "pause" or e == "toi" or e == "panne" ? [4809, 4803, 4796] : e == "rattrapage" ? [4877, 4861, 4838, 4809, 4796] : [4877, 4861, 4838, 4809, 4803, 4796]
+fn heure(c: number): string = c == 4877 ? "10 h 07" : c == 4861 ? "10 h 01" : c == 4838 ? "10 h 08" : c == 4809 ? "10 h 09" : c == 4803 ? "10 h 03" : "10 h 06"
 
 // === écran Plus
 // L'écran « Plus », commun aux trois propositions : tout ce qui n'est pas le lot en cours passe ici, à un clic.
@@ -44,7 +51,7 @@ component Plus
             text "Aucun cut à poser" color="-exact-secondary-label" testId="plus-aucun"
         else
           row
-            text `${aPoser(etat)} cuts à poser` flex=1 testId="plus-a-poser"
+            text `${cutsMot(aPoser(etat))} à poser` flex=1 testId="plus-a-poser"
             button testId="plus-ouvrir"
               text "Ouvrir"
           row
