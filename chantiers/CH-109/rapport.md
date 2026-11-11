@@ -57,3 +57,16 @@ Lecture pour le terrain (PROBABLE, les exports ne sont pas livrés) : partie 16 
 - Fichiers de décision, `src/adapter-page.js`, `manifest.json`, version : diff vide.
 - Typage : `tools/typage-ch075.cjs` vert ; la référence de `src/file-parties.js` est refaite sur 3feab9e (à refaire sur le tronc si l'intégration ne garde pas ce commit).
 - Maquette, hors sujet : avec `partie2` absent, le lot de la partie 24 finit en ERROR même sans F5 ; les essais prennent `partie2=6`. La relecture de la partie 24 finit en erreur sur la maquette, même sans F5 (non étudié).
+
+## 5. Patch de la remise (chemin d'écriture, à part) : `chantiers/CH-109/remise.patch`
+
+Accepté par l'intégrateur, il l'applique lui-même. Ce que fait le patch :
+- `remettrePose` : quand la remise échoue, il relit l'état ESV en lecture seule. Si le cut est le même, que les deux rails sont à moins de 1 mm de la pose d'avant et qu'aucune écriture n'a été vue pour ce cut depuis la pose, il n'y a rien à remettre : l'intention est effacée et la raison est rendue (`correction-refusee`, journal `remise-sans-objet`). Sinon, l'arrêt d'avant reste.
+- Nouveau relevé local `ecrituresParCut` (dernière écriture vue par ligne, aucune requête vers ESV).
+- `poserPuisVerifier` passe l'heure de la pose à la remise.
+
+Essai joint, `tests/ch109-remise-sans-objet.test.cjs` :
+- rouge sans le code : le cas du rail gauche s'arrêtait en erreur ;
+- vert avec le patch, 2/2 : rail gauche, rien n'a bougé, la passe continue ; rail droit, le gauche est déjà posé, l'arrêt reste avec l'intention gardée.
+
+Avec le patch, mesuré sur la branche : 240 essais de la relecture et de la file verts, et parité de la relecture identique (9984fe77…).
