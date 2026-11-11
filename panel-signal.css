@@ -539,3 +539,5 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 @media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}}
 /* Une tuile qui vient d'entrer (la zone change avec l'état) : son trait se remplit aussi, depuis zéro. */
 @starting-style{#ui5.u-signal .sg-etapes li[data-etape="fait"]+li::after{transform:scaleY(0)}#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::after{transform:scaleX(0)}}
+/* Relecture (en cours ou en pause), en 360 : la phrase est une phrase entière du panneau d'origine ; plus petite, elle laisse voir les étapes. */
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-etat="rel"] .sg-phrase{font:600 13.5px/1.3 var(--f)}
