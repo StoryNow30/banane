@@ -20,7 +20,8 @@
   if(p.etat==='en-pause'){
    sortie.reprendre=esvMuet?{texte:'Reprendre la relecture',actif:false,raison:'Disponible quand ESV répond.'}:{texte:`Reprendre la relecture${p.cut!=null?' au cut '+p.cut:''}`,actif:true,raison:''};
    sortie.arreter=true;
-   sortie.ligne=`${p.pauseRaison==='esv'?'ESV ne répond plus : relecture gardée en pause':p.pauseRaison==='redemarrage'?'Relecture gardée en pause (Ariane a redémarré)':'Relecture en pause'} au cut ${p.cut??'?'} · ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}${p.expire?' · gardée jusqu’à '+new Date(p.expire).toLocaleString('fr-FR',{timeZone:'Europe/Paris'/* CH-097 : l'heure de Paris partout, jamais celle de la machine */,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}.`;}
+   /* CH-107 : « points » : ESV n'affiche plus les points (série de cuts vides) ; la relecture est gardée au premier cut vide de la série. */
+  sortie.ligne=`${p.pauseRaison==='esv'?'ESV ne répond plus : relecture gardée en pause':p.pauseRaison==='redemarrage'?'Relecture gardée en pause (Ariane a redémarré)':p.pauseRaison==='points'?'ESV n’affiche plus les points : relecture gardée en pause':'Relecture en pause'} au cut ${p.cut??'?'} · ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}${p.expire?' · gardée jusqu’à '+new Date(p.expire).toLocaleString('fr-FR',{timeZone:'Europe/Paris'/* CH-097 : l'heure de Paris partout, jamais celle de la machine */,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}.`;}
   return sortie;}
  function afficher(){
   const v=vue(etat,{esvMuet:muet()}),p=etat?.passe;
