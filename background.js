@@ -3728,7 +3728,9 @@ async function relectureOublierPasse(p){try{const r=(await chrome.storage.local.
  *  - Redémarrage du service worker : la passe revient EN PAUSE (jamais relancée seule).
  *  - « Reprendre » : mêmes contrôles qu'au départ (relectureRefus), puis repart au cut gardé, sans repasser sur les cuts relus ; le cut en cours à la pause est refait.
  *  - « Arrêter » est définitif : il efface le point. Une reprise garde au plus 24 h ; un lot différent l'efface. */
-async function relectureRepriseReglage(){let r={};try{r=(await chrome.storage.local.get(CLE_RELECTURE_REGLAGE_PAUSE))?.[CLE_RELECTURE_REGLAGE_PAUSE]||{};}catch{r={};}
+/* CH-109 (A) : sans choix gardé (installation neuve), le défaut vient de `BananeSettings.relecturePause` (livré éteint, l'ancien défaut) ; un choix gardé l'emporte. */
+async function relectureRepriseReglage(){let r=null;try{r=(await chrome.storage.local.get(CLE_RELECTURE_REGLAGE_PAUSE))?.[CLE_RELECTURE_REGLAGE_PAUSE]||null;}catch{r=null;}
+ if(!r||typeof r.actif!=='boolean'){const D=globalThis.BananeSettings?.relecturePause;r={actif:D?.defautActif===true,f5:D?.defautF5};}
  return {actif:r.actif===true,f5:r.f5==='arret'?'arret':'pause'};}
 async function relectureRepriseReglageChoisir(args){if(passeActive())throw Error('Relecture en cours ou en pause : change ce réglage après sa fin.');
  await chrome.storage.local.set({[CLE_RELECTURE_REGLAGE_PAUSE]:{actif:args?.actif===true,f5:args?.f5==='arret'?'arret':'pause'}});return relectureRepriseReglage();}
