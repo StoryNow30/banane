@@ -510,6 +510,7 @@
    * seul un second clic venu au moins 600 ms après arrête : un double clic, ou un clic qui traverse un écran qui vient de changer, ne suffit pas.
    * La palette garde sa propre confirmation (seconde Entrée, Revue T21 G1). */
   const CONFIRME_FILE = { minMs: 600, maxMs: 6000 };
+  const GARDE_PIED_MS = 400;
   function confirmerArretFile() {
     const t = Date.now(), c = ui.confirmeFile;
     if (c && t - c >= CONFIRME_FILE.minMs && t - c <= CONFIRME_FILE.maxMs) { ui.confirmeFile = null; clearTimeout(confirmerArretFile.h); return true; }
@@ -538,7 +539,14 @@
         const row = e.target.closest?.('[data-row]'); if (row && !a) { ui.sel = Number(row.dataset.row); maj(true); return; }
         if (a && (a.dataset.fermer || (!a.dataset.act.startsWith('sg:') && a.closest?.('.sg-palette,.sg-popover,.sg-feuille')))) { if (!a.closest?.('.sg-feuille')) { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; } }
       }
-      if (!a) return; agir(a.dataset.act, a);
+      if (!a) return;
+      /* CH-104 (relevé de l'intégrateur, 11/11) : un clic qui change d'écran tout de suite (onglet, « Suivre dans Orbite », feuille « Ce qui reste »)
+       * met un autre bouton sous le pointeur : le second clic d'un double-clic partirait comme un ordre (« Pause »). Pendant GARDE_PIED_MS après un
+       * tel clic, le pied n'accepte aucun clic (la feuille « Ce qui reste », elle, répond tout de suite : « Ouvrir » y est attendu aussitôt). Leur aspect et leurs ordres ne changent pas ; les changements venus du lot non plus. */
+      const t = Date.now(), act = a.dataset.act;
+      if (ui.gardePied && t < ui.gardePied && a.closest?.('.sg-actions')) return;
+      if (/^(mode:|sg:onglet-|sg:tiroir$)/.test(act)) ui.gardePied = t + GARDE_PIED_MS;
+      agir(act, a);
     });
     hote.addEventListener('change', e => { const s = e.target.closest?.('[data-sel]'); if (s) choisir(s.dataset.sel, s.value); });
     /* bornes du prochain lot : recopiées dans les champs d'origine, que « Démarrer » lit */

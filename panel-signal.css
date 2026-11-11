@@ -114,7 +114,10 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-anneau svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 #ui5.u-signal .sg-anneau circle{fill:none;stroke-width:var(--ep);stroke-linecap:butt}
 #ui5.u-signal .sg-piste{stroke:var(--piste)}
+/* Exception écrite de l'intégrateur (11/11) à « déplacements et opacités seulement » : le remplissage de l'anneau glisse (petite surface, un
+ * changement par cut), comme sur la maquette. Rien d'autre n'anime une propriété de peinture. */
 #ui5.u-signal .sg-arc{stroke:var(--c1)}
+#ui5.u-signal .sg-anneau[data-forme="pct"] .sg-arc,#ui5.u-signal .sg-anneau-seg .sg-arc{transition:stroke-dasharray .7s var(--doux)}
 #ui5.u-signal .sg-anneau[data-tourne] svg{animation:sg-tourne 1.6s linear infinite}
 #ui5.u-signal .sg-anneau-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 #ui5.u-signal .sg-anneau .sg-chiffre{display:inline-block;font:700 32px/1 var(--f);letter-spacing:-.03em}
@@ -150,14 +153,18 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-chaine li::before{content:"";position:absolute;top:11px;right:50%;width:100%;height:2px;background:var(--piste)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine li::before{top:8px}
 #ui5.u-signal .sg-chaine li:first-child::before{display:none}
-#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::before{background:var(--accent)}
+#ui5.u-signal .sg-chaine li::after{content:"";position:absolute;top:11px;right:50%;width:100%;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:0 50%;transition:transform .4s var(--doux)}
+#ui5.u-signal[data-taille="compact"] .sg-chaine li::after{top:8px}
+#ui5.u-signal .sg-chaine li:first-child::after{display:none}
+#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::after{transform:scaleX(1)}
 #ui5.u-signal .sg-chaine i{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;background:var(--tuile-b);box-shadow:inset 0 0 0 2px var(--trait-fort)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine i{width:18px;height:18px}
 #ui5.u-signal .sg-chaine li[data-etat="faite"] i{background:var(--accent);box-shadow:none}
-#ui5.u-signal .sg-chaine li[data-etat="faite"] i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:4px;margin:-4px 0 0 -4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg)}
+#ui5.u-signal .sg-chaine li[data-etat="faite"] i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:4px;margin:-4px 0 0 -4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg);animation:sg-coche .4s var(--ressort) backwards}
 #ui5.u-signal[data-theme="clair"] .sg-chaine li[data-etat="faite"] i::after{border-color:#FFFFFF}
 #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i{box-shadow:inset 0 0 0 2px var(--c1)}
 #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::before,#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--c1)}
+#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::before{animation:sg-pose .4s var(--ressort) backwards}
 #ui5.u-signal .sg-chaine li[data-etat="en-cours"] i::after{animation:sg-pouls 2s ease-out infinite}
 #ui5.u-signal .sg-chaine li[data-etat="interrompue"] i{box-shadow:inset 0 0 0 2px var(--attn)}
 #ui5.u-signal .sg-chaine li[data-etat="interrompue"] i::before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--attn)}
@@ -215,13 +222,14 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-etapes{list-style:none;display:flex;flex-direction:column}
 #ui5.u-signal .sg-etapes li{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:center;padding:8px 0;position:relative;color:var(--tx2);font-size:12px}
 #ui5.u-signal .sg-etapes li+li::before{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--piste)}
-#ui5.u-signal .sg-etapes li[data-etape="fait"]+li::before{background:var(--accent)}
+#ui5.u-signal .sg-etapes li+li::after{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--accent);transform:scaleY(0);transform-origin:50% 0;transition:transform .4s var(--doux)}
+#ui5.u-signal .sg-etapes li[data-etape="fait"]+li::after{transform:scaleY(1)}
 #ui5.u-signal .sg-etapes b{font:600 13px/1.2 var(--f)}
 #ui5.u-signal .sg-etapes span{text-align:right}
 #ui5.u-signal .sg-etapes i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--piste);display:grid;place-items:center}
 #ui5.u-signal .sg-etapes li[data-etape="fait"],#ui5.u-signal .sg-etapes li[data-etape="actif"]{color:var(--tx)}
 #ui5.u-signal .sg-etapes li[data-etape="fait"] i{background:var(--accent);box-shadow:none}
-#ui5.u-signal .sg-etapes li[data-etape="fait"] i::after{content:"";width:8px;height:4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg);margin-top:-2px}
+#ui5.u-signal .sg-etapes li[data-etape="fait"] i::after{content:"";width:8px;height:4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg);margin-top:-2px;animation:sg-coche .4s var(--ressort) backwards}
 #ui5.u-signal[data-theme="clair"] .sg-etapes li[data-etape="fait"] i::after{border-color:#FFFFFF}
 #ui5.u-signal .sg-etapes li[data-etape="actif"] i{box-shadow:inset 0 0 0 2px var(--c1)}
 #ui5.u-signal .sg-etapes li[data-etape="actif"][data-tourne] i{box-shadow:none;background:conic-gradient(var(--accent),rgba(var(--accent-rgb),0) 75%);-webkit-mask:radial-gradient(farthest-side,transparent 6px,#000 7px);mask:radial-gradient(farthest-side,transparent 6px,#000 7px);animation:sg-tour .9s linear infinite}
@@ -457,4 +465,7 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 @keyframes sg-descend{from{opacity:0;transform:translateY(-8px) scale(.98)}}
 @keyframes sg-fondu{from{opacity:0}}
 @keyframes sg-pose{from{opacity:0;transform:scale(.6)}}
+@keyframes sg-coche{from{opacity:0;transform:rotate(-45deg) scale(.3)}}
 @media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}}
+/* Une tuile qui vient d'entrer (la zone change avec l'état) : son trait se remplit aussi, depuis zéro. */
+@starting-style{#ui5.u-signal .sg-etapes li[data-etape="fait"]+li::after{transform:scaleY(0)}#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::after{transform:scaleX(0)}}

@@ -1,5 +1,5 @@
 'use strict';
-/* CH-104 : contrôle de solidité du panneau Graphite avant livraison (demande de l'intégrateur, 11/11). Sept points, chacun montré par le navigateur :
+/* CH-104 : contrôle de solidité du panneau Graphite avant livraison (demande de l'intégrateur, 11/11). Huit points, chacun montré par le navigateur :
  *  1. chaque bouton affiché est cliquable pour de vrai (`elementFromPoint` au centre rend le bouton) et un bouton d'origine (`legacy:<id>`) envoie au
  *     service worker exactement ce qu'envoie le bouton d'origine `#<id>` cliqué directement ;
  *  2. changements d'état rapides : à la fin, le dernier état, une seule zone, rien à moitié sorti ;
@@ -7,14 +7,15 @@
  *  4. « réduire les animations » : rien ne reste invisible ;
  *  5. tailles 320 à 800 et textes longs : ni débordement ni troncature ;
  *  6. la police embarquée est chargée, aucune requête vers l'extérieur ;
- *  7. cent mises à jour de suite : le nombre de nœuds ne grossit pas.
+ *  7. cent mises à jour de suite : le nombre de nœuds ne grossit pas ;
+ *  8. mouvement : les animations vues sur quatre changements, et aucune propriété animée hors transform, opacity, color et le tracé de l'anneau.
  * Usage : CHROMIUM=/opt/pw-browsers/chromium node chantiers/CH-104/outils/controle.cjs [points, ex. 1,2]
  * Données fabriquées, API Chrome simulée, rien n'est envoyé à ESV. Sortie : une ligne par point, code de sortie 1 si un point échoue. */
 const path=require('node:path');
 const R=path.resolve(__dirname,'../../..');
 const navigateur=require(R+'/tests/esv-maquette/navigateur.cjs'),{ouvrirPanneau}=require(R+'/tests/helpers/panneau-local.cjs');
 const {E,MESURE,FICHES,lot,id}=require('./capturer.cjs');
-const POINTS=(process.argv[2]||'1,2,3,4,5,6,7').split(',').map(Number);
+const POINTS=(process.argv[2]||'1,2,3,4,5,6,7,8').split(',').map(Number);
 const dater=s=>JSON.parse(JSON.stringify(s).replace(/"MAINTENANT-(\d+)"/g,(_,x)=>JSON.stringify(new Date(Date.now()-x*1000).toISOString())));
 const etatDe=e=>dater({connection:{status:'ready',observedAt:'t',message:null,tabId:1},...e.state});
 const console_=[];
@@ -147,6 +148,26 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
   const ok=b.ui5===a.ui5&&b.fil===a.fil&&b.fil<=8&&b.anims<=a.anims+1&&Number(b.traites)===Number(a.traites)+100;
   dire(7,ok,`cent mises à jour de suite (un cut de plus à chacune) : ${a.ui5} nœuds dans le panneau avant, ${b.ui5} après ; ${a.fil} lignes du fil avant, ${b.fil} après ; page entière (panneau d'origine caché compris, qui garde une case par cut) ${a.page} puis ${b.page} ; ${a.anims} puis ${b.anims} animations ; compteur de ${a.traites} à ${b.traites}`);
   await ctx.close();
+ }
+
+ if(POINTS.includes(8)){
+  /* mouvement : pour quatre changements, les animations vues (élément, nom ou propriété, durée, propriétés animées) ; seules sont permises
+   * transform, opacity, color et le tracé (`stroke-dasharray`) de l'anneau */
+  const PERMIS=['offset','easing','composite','computedOffset','transform','opacity','color','strokeDasharray'];
+  const VOIR=()=>document.getAnimations().filter(a=>document.getElementById('ui5').contains(a.effect?.target)).map(a=>{const t=a.effect.target,cles=[...new Set(a.effect.getKeyframes().flatMap(k=>Object.keys(k)))];
+   return {sur:(t.getAttribute('class')||t.tagName.toLowerCase()).split(' ').slice(-1)[0]+(a.effect.pseudoElement||''),nom:a.animationName||('transition '+a.transitionProperty),duree:Math.round(a.effect.getTiming().duration),props:cles};});
+  const suivre=async(page,etat,apres=120)=>{await page.evaluate(s=>{window.__etat=s;},etat);await page.waitForTimeout(apres);return page.evaluate(VOIR);};
+  const plusUn=()=>{const s=etatDe(E.cours),b=s.batch;b.processed.push({identity:id(4812),cut:4812,durationMs:7000});b.sequence.push({identity:id(4813),cut:4813});b.activeIdentity=id(4813);s.current={identity:id(4813)};return s;};
+  const p2=n=>{const s=etatDe(E.rattrapage);s.passeDifferes.ecrites=n;return s;};
+  const suite=()=>{const s=etatDe(E['file-passage']);s.fileParties={...s.fileParties,etat:'lot',rang:2,enCours:{part:15,rang:2,lot:true},changement:null};return s;};
+  const CAS=[['cours → à toi',E.cours,()=>etatDe(E.toi),null],['cours → cut suivant',E.cours,plusUn,null],['pourcentage qui avance (rattrapage 1 → 2 sur 3)',E.rattrapage,()=>p2(2),null],['Constellation, partie suivante',E['file-cours'],suite,'file']];
+  const defauts=[],lignes=[];
+  for(const [nom,depart,vers] of CAS){const {page,ctx}=await page_(nav,depart,T600,{rapide:true});const A=await suivre(page,vers());
+   const vus=[...new Set(A.map(a=>`${a.sur} ${a.nom} ${a.duree} ms [${a.props.filter(p=>!['offset','easing','composite','computedOffset'].includes(p)).join(',')}]`))];
+   lignes.push(`${nom} : ${vus.length?vus.join(' ; '):'aucune animation'}`);
+   for(const a of A){const x=a.props.filter(p=>!PERMIS.includes(p));if(x.length)defauts.push(`${nom} : ${a.sur} anime ${x.join(',')}`);if(a.props.includes('strokeDasharray')&&!/sg-arc/.test(a.sur))defauts.push(`${nom} : stroke-dasharray animé hors de l'anneau (${a.sur})`);}
+   if(!A.length)defauts.push(`${nom} : aucune animation vue`);await ctx.close();}
+  dire(8,!defauts.length,`mouvement, quatre changements ; seules transform, opacity, color et le tracé de l'anneau sont animées\n   ${lignes.join('\n   ')}${defauts.length?'\n   DÉFAUTS : '+defauts.join(' ; '):''}`);
  }
 
  if(POINTS.includes(3)){
