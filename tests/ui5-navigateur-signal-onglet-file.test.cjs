@@ -10,7 +10,7 @@ const {FILE,parLargeurs,poserEtat,verifier}=require('./helpers/signal-file.cjs')
 const FICHES=[{at:'2026-10-30T14:21:56.620Z',batchId:'b1',ignores:0,invalides:165,partie:13,total:9305,valides:9140,version:'x'},
  {at:'2026-10-30T14:40:10.000Z',batchId:'b2',ignores:12,invalides:493,partie:14,total:9305,valides:8800,version:'x'}];
 const ARRET={...FILE.arret,fileParties:{...FILE.arret.fileParties,reprise:{rang:1,part:14,reste:1}}};
-const EXTRA='.sg-onglet-file .sg-of-t,.sg-onglet-file .sg-meta,.sg-onglet-file .sg-of-depart [role="cell"],.sg-onglet-file .sg-of-depart b,.sg-onglet-file .sg-of-ligne span,.sg-bascule button';
+const EXTRA='.sg-chaine .sg-mono,.sg-onglet-file .sg-of-t,.sg-onglet-file .sg-meta,.sg-onglet-file .sg-of-depart [role="cell"],.sg-onglet-file .sg-of-depart b,.sg-onglet-file .sg-of-ligne span,.sg-bascule button';
 
 /* Panneau avec des fiches de départ, et un espion des messages de la file. */
 async function monter(nav,state){
@@ -32,14 +32,14 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
    res[nom]=await parLargeurs(page,{extra:EXTRA});
    vus[nom]=await page.evaluate(()=>{const h=document.getElementById('ui5');return {onglet:h.querySelector('.sg-fen')?.dataset.activite,choisi:h.querySelector('.sg-bascule [aria-selected="true"]')?.textContent,
     titres:[...h.querySelectorAll('.sg-of-t')].map(e=>(e.firstElementChild||e).textContent),boutons:[...h.querySelectorAll('.sg-onglet-file button[data-act],.sg-actions button[data-act]')].map(b=>b.textContent.trim()+'|'+b.dataset.act),
-    departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-anneau .sg-arc')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
+    departs:[...h.querySelectorAll('.sg-of-departs [role="row"]')].map(r=>[...r.querySelectorAll('[role="cell"]')].map(c=>c.textContent.trim())),bilan:h.querySelectorAll('.sg-file-bilan li,.sg-reg-partie:not([data-etat="en-cours"]):not([data-etat="interrompue"])').length,etoiles:[...h.querySelectorAll('.sg-chaine li')].map(e=>e.dataset.etat+':'+e.dataset.partie),tiroir:!!h.querySelector('.sg-tiroir')};});
   }
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
  for(const [nom,r] of Object.entries(res))verifier(assert,nom,r);
  for(const nom of Object.keys(vus)){assert.equal(vus[nom].onglet,'file',nom);assert.equal(vus[nom].choisi,'Constellation',nom);assert.equal(vus[nom].tiroir,false,nom+' : pas de tiroir dans l’onglet');
   assert.deepEqual(vus[nom].departs,[['14 · 30/10 15:40','493 invalides','8 800 validés · 12 sautés · 9 305 au total'],['13 · 30/10 15:21','165 invalides','9 140 validés · 0 sautés · 9 305 au total']],nom+' : départs, du plus récent, heure de Paris');}
- /* CH-036 (direction B « Cadran », 02/11) : l'anneau (un arc par partie, lu par `etoiles`), une action pleine, puis le bilan par partie (dès qu'une partie est faite) et les départs, visibles d'emblée. */
+ /* CH-036 (direction B « Cadran », 02/11) : la chaîne des parties (un maillon par partie, lue par `etoiles` ; CH-104), une action pleine, puis le bilan par partie (dès qu'une partie est faite) et les départs, visibles d'emblée. */
  assert.equal(res.prete['600'].mot,'Prête');assert.deepEqual(vus.prete.titres,['Départs des parties']);assert.deepEqual(vus.prete.etoiles,['a-venir:13','a-venir:+1']);
  assert.ok(vus.prete.boutons.some(b=>/^Lancer la Constellation · 2 parties\|legacy:file-lancer$/.test(b)),JSON.stringify(vus.prete.boutons));
  assert.equal(res.lot['600'].mot,'En cours');assert.deepEqual(vus.lot.etoiles,['en-cours:13','a-venir:14']);assert.equal(res.lot['360'].arreter,true);assert.equal(res.lot['600'].depart,false);

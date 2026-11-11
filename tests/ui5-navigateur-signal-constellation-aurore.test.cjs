@@ -28,7 +28,7 @@ const AURORE = {
   ouverte: { ...SC.fin, current: { identity: { part: 13, cut: 15 } }, correction: corr('ouverte', { entreParties: true, courant: { part: 13, cut: 15 } }),
     native: { id: 'n1', status: 'RUNNING', correction: { id: 'C1' }, visits: [visite(13, 14, 'VALIDATE_NO_MOVEMENT'), visite(13, 15, null, false)] } },
 };
-const TEXTES = '.sg-chiffre,.sg-suite,.sg-reg-tete span,.sg-reg-partie .sg-mono,.sg-reg-motifs,.sg-cadran-d,.sg-alerte p,.sg-tu-avis p,.sg-trio dt,.sg-trio dd,.sg-partie,.sg-mot,.sg-phrase,.sg-actions button,.sg-temps li,.sg-of-t span,.sg-of-ligne span,.sg-of-motifs,.sg-of-depart [role="cell"],.sg-of-depart b,.sg-meta,.sg-corr-partie span,.sg-corr-partie b,.sg-aube small,.sg-suite,.sg-statut,.sg-sig,.sg-bascule button,.sg-incident p';
+const TEXTES = '.sg-chiffre,.sg-suite,.sg-reg-tete span,.sg-reg-partie .sg-mono,.sg-reg-motifs,.sg-cadran-d,.sg-alerte p,.sg-tu-avis p,.sg-trio dt,.sg-trio dd,.sg-partie,.sg-mot,.sg-phrase,.sg-actions button,.sg-chaine .sg-mono,.sg-temps li,.sg-of-t span,.sg-of-ligne span,.sg-of-motifs,.sg-of-depart [role="cell"],.sg-of-depart b,.sg-meta,.sg-corr-partie span,.sg-corr-partie b,.sg-aube small,.sg-suite,.sg-statut,.sg-sig,.sg-bascule button,.sg-incident p';
 const LARGEURS = [600, 560, 520, 480, 440, 400, 360];
 
 function mesurer(page) {
@@ -74,7 +74,7 @@ test('Constellation : en cours (rattrapage), arrêtée, terminée ; 360 à 600 e
     for (const nom of ['passe', 'arret', 'fin']) {
       if (nom !== 'passe') await poserEtat(page, CONSTELLATION[nom]);
       vus[nom] = await page.evaluate(() => { const h = document.getElementById('ui5');
-        return { etoiles: [...h.querySelectorAll('.sg-anneau .sg-arc')].map(e => e.dataset.etat + ':' + e.dataset.partie), temps: h.querySelector('.sg-temps [aria-current]')?.textContent.replace(/^\d+/, '') || '',
+        return { etoiles: [...h.querySelectorAll('.sg-chaine li')].map(e => e.dataset.etat + ':' + e.dataset.partie), temps: h.querySelector('.sg-temps [aria-current]')?.textContent.replace(/^\d+/, '') || '',
           motifs: [...h.querySelectorAll('.sg-reg-motifs')].map(e => e.textContent), titres: [...h.querySelectorAll('.sg-of-t span:first-child')].map(e => e.textContent), principal: h.querySelector('.sg-principal')?.textContent.trim() || '' }; });
       await balayer(page, nom, res);
     }
