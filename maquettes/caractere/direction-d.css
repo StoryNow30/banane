@@ -1,0 +1,120 @@
+/* Direction D — « Épure, un caractère par panneau » (avis de l'opérateur, 11/11 : A préférée mais pas assez loin ; C aimée sauf sa police ;
+ * « chaque panneau puise dans une identité visuelle qui les distingue les uns des autres tout en conservant un esprit d'épuration »).
+ * Base : Inter en coupe d'affichage (A), une seule surface sans tuiles ni cadres (C), encore moins de graisse et plus d'air.
+ * Identité : chaque panneau a sa couleur et son motif, discret, dans la tête de l'écran. Orbite : l'orbite (violet). Écho : l'onde
+ * (turquoise). Constellation : les étoiles (bleu ciel). Aurore : l'aube (rose). Les couleurs d'état (à toi, panne, terminé) ne changent pas. */
+@font-face{font-family:"Inter Opt";src:url(fonts/inter-latin-opsz-normal.woff2) format("woff2");font-weight:100 900;font-display:block}
+
+/* ───── la couleur de chaque panneau */
+#ui5.u-signal .sg-fen[data-activite="echo"]{--accent:#4FD6CF;--accent-rgb:79,214,207;--accent-tx:#86E5DF}
+#ui5.u-signal .sg-fen[data-activite="correction"]{--accent:#F28CC6;--accent-rgb:242,140,198;--accent-tx:#F6AED6}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="echo"]{--accent:#0B8783;--accent-rgb:11,135,131;--accent-tx:#08706D}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="correction"]{--accent:#BF3E86;--accent-rgb:191,62,134;--accent-tx:#A3326F}
+
+/* ───── base : une surface, de l'air, peu de graisse */
+#ui5.u-signal{--f:"Inter Opt","Inter",system-ui,sans-serif;font-optical-sizing:auto;font-weight:400;letter-spacing:-.004em;
+  --fond:#08090B;--tuile-a:transparent;--tuile-b:transparent;--trait:rgba(255,255,255,.065);--trait-fort:rgba(255,255,255,.13);--reflet:transparent;
+  --r-tu:0px;--p-tu:20px 2px;--marge:22px;--ecart:4px}
+#ui5.u-signal[data-theme="clair"]{--fond:#F5F6F8;--trait:rgba(10,14,25,.08);--trait-fort:rgba(10,14,25,.16)}
+#ui5.u-signal[data-taille="compact"]{--p-tu:13px 2px;--marge:16px;--ecart:2px}
+#ui5.u-signal .sg-fen{background:var(--fond)}
+body.ui5:has(#ui5.u-signal){background:#08090B}
+#ui5.u-signal b,#ui5.u-signal .sg-mono{font-weight:540}
+
+/* barre : des mots, et un fil de la couleur du panneau sous celui qui est ouvert */
+#ui5.u-signal .sg-barre{border-bottom-color:transparent;height:52px;padding-inline:14px 10px}
+#ui5.u-signal .sg-bascule{background:none;padding:0}
+#ui5.u-signal .sg-bascule>button{font-weight:450;font-size:12.5px;height:34px;padding:0 10px}
+#ui5.u-signal[data-taille="compact"] .sg-bascule>button{padding:0 6px}
+#ui5.u-signal .sg-bascule .sg-pouce{top:auto;bottom:0;height:2px;border-radius:2px;background:var(--accent);box-shadow:none}
+#ui5.u-signal .sg-puce{font-weight:420}
+
+/* les tuiles deviennent des sections séparées par un trait fin ; la tête de l'écran n'a pas de cadre */
+#ui5.u-signal .sg-tu{border:0;border-top:1px solid var(--trait);border-radius:0;background:none;box-shadow:none}
+#ui5.u-signal .sg-tu:hover{border-color:var(--trait)}
+#ui5.u-signal .sg-duo{gap:26px}
+#ui5.u-signal .sg-tu h4,#ui5.u-signal .sg-section{font:500 10px/1.3 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--tx3)}
+#ui5.u-signal .sg-tu-etat,#ui5.u-signal .sg-constel{border-top:0;border-radius:18px;padding:20px 18px;margin:0 -6px 10px;background-color:transparent}
+#ui5.u-signal[data-taille="compact"] .sg-tu-etat,#ui5.u-signal[data-taille="compact"] .sg-constel{padding:14px 12px;margin:0 -4px 6px;border-radius:14px}
+#ui5.u-signal .sg-tu-avis{border-top:0;border-radius:14px;padding:14px 16px;margin:2px 0 8px;background:rgba(var(--c1-rgb),.08)}
+#ui5.u-signal .sg-ic{width:28px;height:28px;font-size:14px}
+
+/* hiérarchie : grands chiffres fins, peu de gras */
+#ui5.u-signal .sg-etat{font-weight:500;font-size:13.5px;letter-spacing:.01em}
+#ui5.u-signal .sg-partie{font-size:11.5px;color:var(--tx3)}
+#ui5.u-signal .sg-anneau .sg-chiffre{font-weight:250;font-size:44px;letter-spacing:-.05em}
+#ui5.u-signal[data-taille="compact"] .sg-anneau .sg-chiffre{font-size:26px;font-weight:300}
+#ui5.u-signal .sg-anneau .sg-suite{font-weight:400;font-size:11px;color:var(--tx3);letter-spacing:.02em}
+#ui5.u-signal .sg-anneau[data-forme="pct"] .sg-suite{font-weight:300;font-size:18px}
+#ui5.u-signal .sg-anneau circle{stroke-width:calc(var(--ep) * .32)}
+#ui5.u-signal .sg-anneau .sg-arc{stroke-linecap:round}
+#ui5.u-signal .sg-phrase{font-weight:450;font-size:21px;letter-spacing:-.022em}
+#ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:16px}
+#ui5.u-signal .sg-phrase .sg-mono{font-weight:450}
+#ui5.u-signal .sg-lot-bornes{color:var(--tx3)}
+#ui5.u-signal .sg-trio{gap:4px 28px;margin-top:14px}
+#ui5.u-signal .sg-trio dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3)}
+#ui5.u-signal .sg-trio dd{font-weight:300;font-size:24px;letter-spacing:-.035em}
+#ui5.u-signal[data-taille="compact"] .sg-trio dd{font-size:18px}
+#ui5.u-signal .sg-constel-t .sg-chiffre{font-weight:250;font-size:44px;letter-spacing:-.045em}
+#ui5.u-signal[data-taille="compact"] .sg-constel-t .sg-chiffre{font-size:28px;font-weight:300}
+#ui5.u-signal .sg-constel-t .sg-suite{font-weight:400;font-size:13px;color:var(--tx3)}
+#ui5.u-signal .sg-temps li{background:none;padding:6px 0;margin-right:14px;border-radius:0;font-weight:450;font-size:11.5px;color:var(--tx3)}
+#ui5.u-signal .sg-temps li[data-temps="courant"]{background:none;color:var(--tx);box-shadow:inset 0 -1.5px 0 var(--c1)}
+#ui5.u-signal .sg-chaine i{box-shadow:inset 0 0 0 1px var(--trait-fort)}
+#ui5.u-signal .sg-chaine li{font-weight:450}
+#ui5.u-signal .sg-chaine li::before,#ui5.u-signal .sg-chaine li::after{height:1px}
+
+/* fil, étapes, étiquettes : du texte, sans pastilles */
+#ui5.u-signal .sg-allure{color:var(--tx3)}
+#ui5.u-signal .sg-fil li{border-top-color:var(--trait)}
+#ui5.u-signal .sg-fil b{font-weight:500}
+#ui5.u-signal .sg-tag{background:none;padding:0;font-weight:450;font-size:11px;color:var(--tx3)}
+#ui5.u-signal .sg-tag.sg-attn,#ui5.u-signal .sg-tag.sg-crit{background:none}
+#ui5.u-signal .sg-etapes b{font-weight:450}
+#ui5.u-signal .sg-etapes i{box-shadow:inset 0 0 0 1px var(--trait-fort)}
+#ui5.u-signal .sg-etapes li+li::before,#ui5.u-signal .sg-etapes li+li::after{width:1px;left:9.5px}
+
+/* ligne « à poser » et pied : un trait, des pilules */
+#ui5.u-signal .sg-poignee{border:0;border-top:1px solid var(--trait);border-radius:0;background:none;padding-inline:2px}
+#ui5.u-signal .sg-poignee:hover{background:none;border-color:var(--trait-fort)}
+#ui5.u-signal .sg-actions{border-top-color:transparent;background:none;padding-top:10px}
+#ui5.u-signal .sg-actions>button{border-radius:999px;font-weight:500;font-size:13.5px;letter-spacing:-.005em}
+#ui5.u-signal .sg-principal{box-shadow:none}
+#ui5.u-signal .sg-secondaire{box-shadow:inset 0 0 0 1px var(--trait-fort)}
+#ui5.u-signal .sg-molette{background:none;box-shadow:inset 0 0 0 1px var(--trait);border-radius:999px}
+#ui5.u-signal .sg-mol-fen::before{border-radius:999px;box-shadow:none;background:rgba(var(--accent-rgb),.14)}
+#ui5.u-signal .sg-mol-moins,#ui5.u-signal .sg-mol-plus{border-radius:999px;background:none;box-shadow:none}
+#ui5.u-signal .sg-bornes input[type="number"]{border-color:transparent;border-bottom:1px solid var(--trait-fort);border-radius:0;background:none}
+
+/* ───── le motif de chaque panneau, dans la tête de l'écran (immobile, sauf l'onde d'Écho quand la collecte tourne) */
+/* Orbite : une orbite, un halo violet très bas venu de l'anneau */
+#ui5.u-signal .sg-fen[data-activite="orbite"] .sg-tu-etat{background-image:radial-gradient(60% 90% at 14% 50%,rgba(var(--c1-rgb),.13),transparent 70%)}
+#ui5.u-signal .sg-fen[data-activite="orbite"] .sg-anneau::before{content:"";position:absolute;inset:-9px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.16)}
+/* Écho : l'onde, des cercles qui s'éloignent de l'anneau */
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-tu-etat{background-image:radial-gradient(60% 90% at 14% 50%,rgba(var(--c1-rgb),.12),transparent 70%)}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::before,#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::after{content:"";position:absolute;inset:-8px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.32);opacity:0}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::before{inset:-8px;opacity:.6}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::after{inset:-18px;opacity:.28}
+#ui5.u-signal .sg-fen[data-activite="echo"][data-teinte="marche"] .sg-anneau::after{animation:sg-onde 2.6s cubic-bezier(.2,.6,.3,1) infinite;opacity:0}
+@keyframes sg-onde{0%{transform:scale(.86);opacity:.55}100%{transform:scale(1.18);opacity:0}}
+/* Constellation : un ciel, quelques étoiles fixes au fond de la tête */
+#ui5.u-signal .sg-fen[data-activite="file"] .sg-constel{background-image:
+  radial-gradient(1.2px 1.2px at 72% 22%,rgba(255,255,255,.55),transparent 100%),radial-gradient(1px 1px at 84% 48%,rgba(255,255,255,.4),transparent 100%),
+  radial-gradient(1.4px 1.4px at 91% 16%,rgba(var(--c1-rgb),.9),transparent 100%),radial-gradient(1px 1px at 63% 38%,rgba(255,255,255,.3),transparent 100%),
+  radial-gradient(1px 1px at 78% 66%,rgba(255,255,255,.25),transparent 100%),radial-gradient(1.2px 1.2px at 95% 58%,rgba(255,255,255,.35),transparent 100%),
+  radial-gradient(70% 100% at 100% 0%,rgba(var(--c1-rgb),.14),transparent 70%)}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="file"] .sg-constel{background-image:radial-gradient(70% 100% at 100% 0%,rgba(var(--c1-rgb),.12),transparent 70%)}
+/* Aurore : l'aube, une bande de lumière en haut de la tête */
+#ui5.u-signal .sg-fen[data-activite="correction"] .sg-tu-etat{background-image:
+  linear-gradient(180deg,transparent 0,var(--fond) 92%),
+  linear-gradient(100deg,rgba(var(--c1-rgb),.30) 0%,rgba(143,147,255,.18) 42%,rgba(98,198,242,.14) 72%,transparent 100%)}
+#ui5.u-signal .sg-fen[data-activite="correction"] .sg-anneau::before{content:"";position:absolute;inset:-9px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.18)}
+@media (prefers-reduced-motion:reduce){#ui5.u-signal .sg-anneau::after{animation:none!important}}
+
+/* l'orbite autour de l'anneau ne doit pas toucher le mot d'état : un peu d'air au-dessus de l'anneau */
+#ui5.u-signal .sg-tu-etat .sg-milieu{margin-top:16px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-etat .sg-milieu{margin-top:12px}
+#ui5.u-signal .sg-fen .sg-anneau::before{inset:-8px}
+#ui5.u-signal[data-taille="compact"] .sg-fen .sg-anneau::before{inset:-6px}
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="echo"] .sg-anneau::after{inset:-13px}
