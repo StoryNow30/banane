@@ -442,6 +442,8 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
  * et s'effacent vers les bords. Seuls transform et opacity bougent (courbe ressort, 0,26 s) ; « réduire les animations » coupe tout (fin du fichier). */
 #ui5.u-signal .sg-molette{--c:40px;--mol-h:44px;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:12px;background:var(--creux);flex:0 1 300px;max-width:100%;touch-action:pan-y}
 #ui5.u-signal[data-taille="compact"] .sg-molette{--c:34px;--mol-h:38px;flex-basis:260px}
+/* en compact (360, 320), la molette prend toute la largeur de la tuile : plus de nombres visibles, de la place pour glisser */
+#ui5.u-signal[data-taille="compact"] .sg-of-ligne>.sg-molette,#ui5.u-signal[data-taille="compact"] .sg-boite .sg-reg>.sg-molette{flex:1 1 100%}
 #ui5.u-signal .sg-mol-moins,#ui5.u-signal .sg-mol-plus{flex:none;width:34px;height:var(--mol-h);border-radius:9px;background:linear-gradient(180deg,var(--tuile-a),var(--tuile-b));box-shadow:inset 0 0 0 1px var(--trait),inset 0 1px 0 var(--reflet);font:500 18px/1 var(--f);color:var(--tx);display:inline-flex;align-items:center;justify-content:center;transition:transform .2s var(--ressort),opacity .2s}
 #ui5.u-signal[data-taille="compact"] .sg-mol-moins,#ui5.u-signal[data-taille="compact"] .sg-mol-plus{width:30px}
 #ui5.u-signal .sg-mol-moins:active:not(:disabled),#ui5.u-signal .sg-mol-plus:active:not(:disabled){transform:scale(.92)}
