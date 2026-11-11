@@ -134,7 +134,7 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
   const f=await page.evaluate(async()=>{await document.fonts.ready;const faces=[...document.fonts].filter(x=>/Inter/.test(x.family)).map(x=>x.status);
    const mesure=fam=>{const c=document.createElement('canvas').getContext('2d');c.font='600 40px '+fam;return c.measureText('Constellation 4812 Arrêtée').width;};
    return {faces,famille:getComputedStyle(document.querySelector('#ui5 .sg-mot')).fontFamily,inter:mesure('"Inter"'),repli:mesure('system-ui'),sans:mesure('"Police-absente-xyz"')};});
-  const police=requetes.filter(u=>/fonts\/Inter-latin-wght\.woff2/.test(u)).length;
+  const police=requetes.filter(u=>/fonts\/Inter-latin-opsz-wght\.woff2/.test(u)).length;
   const ok=!dehors.length&&f.faces.includes('loaded')&&/^"?Inter/.test(f.famille)&&police>=1&&Math.abs(f.inter-f.sans)>0.5;
   dire(6,ok,`police Inter : fichier demandé ${police} fois au panneau lui-même, état ${f.faces.join('/')}, largeur d'un texte témoin ${f.inter.toFixed(1)} px contre ${f.sans.toFixed(1)} px pour la police de repli ; ${requetes.length} requêtes, ${dehors.length} vers l'extérieur${dehors.length?' : '+dehors.join(', '):''}`);
   await ctx.close();

@@ -1,53 +1,58 @@
-/* Le panneau en « Graphite » (CH-104, D-333), d'après la maquette validée maquettes/bento/panneau-graphite.html. Tout est sous `#ui5.u-signal`
- * (dessiné par src/signal-rendu.js) ou `.sg-tech` (couche des détails techniques). Police Inter (SIL OFL, fonts/OFL-Inter.txt), embarquée : rien ne
- * vient de l'extérieur. Thème : `data-theme` (sombre par défaut, clair sur les mêmes variables) ; taille : `data-taille` (compact sous 480 × 600).
- * Mouvement : des déplacements et des opacités seulement (le panneau tourne à côté d'ESV, qui occupe la carte graphique) ; aucune boucle quand le
- * lot est à l'arrêt ; « réduire les animations » coupe tout. */
-@font-face{font-family:"Inter";src:url(fonts/Inter-latin-wght.woff2) format("woff2");font-weight:100 900;font-display:block}
+/* Le panneau en « Épure, un caractère par panneau » (CH-108, D-339), d'après la référence maquettes/caractere/direction-d.css posée sur le
+ * « Graphite » de Vision 14 (CH-104, D-333). Tout est sous `#ui5.u-signal` (dessiné par src/signal-rendu.js) ou `.sg-tech` (couche des détails
+ * techniques). Une seule surface : pas de tuiles ni de cadres, des sections séparées par un trait fin ; de grands chiffres fins, peu de gras ; étiquettes
+ * en petites capitales espacées ; boutons en pilule. Chaque panneau a sa couleur et son motif, dans la tête de l'écran (Orbite : l'orbite, violet ;
+ * Écho : l'onde, turquoise ; Constellation : les étoiles, bleu ciel ; Aurore : l'aube, rose) ; les couleurs d'état (à toi, panne, terminé) ne changent pas.
+ * Police Inter à taille optique (SIL OFL, fonts/OFL-Inter.txt), embarquée : rien ne vient de l'extérieur. Thème : `data-theme` (sombre par défaut, clair
+ * sur les mêmes variables) ; taille : `data-taille` (compact sous 480 × 600). Mouvement : des déplacements et des opacités seulement (le panneau tourne à
+ * côté d'ESV, qui occupe la carte graphique) ; aucune boucle quand le lot est à l'arrêt ; « réduire les animations » coupe tout. */
+@font-face{font-family:"Inter";src:url(fonts/Inter-latin-opsz-wght.woff2) format("woff2");font-weight:100 900;font-display:block}
 
-/* ───────────────────────────── jetons (ceux de la maquette) */
+/* ───────────────────────────── jetons */
 #ui5.u-signal{
   --f:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --fond:#07080A;--tuile-a:#16181C;--tuile-b:#0F1013;--tx:#F1F2F4;--tx2:#8B909B;--tx3:#8B909B;
-  --trait:rgba(255,255,255,.075);--trait-fort:rgba(255,255,255,.15);--creux:rgba(255,255,255,.055);--creux-fort:rgba(255,255,255,.085);--piste:rgba(255,255,255,.09);--pouce:rgba(255,255,255,.1);
+  --fond:#08090B;--flottant:#131417;--tx:#F1F2F4;--tx2:#8B909B;--tx3:#8B909B;
+  --trait:rgba(255,255,255,.065);--trait-fort:rgba(255,255,255,.13);--creux:rgba(255,255,255,.055);--creux-fort:rgba(255,255,255,.085);--piste:rgba(255,255,255,.09);--pouce:rgba(255,255,255,.1);
   --accent:#8F93FF;--accent-rgb:143,147,255;--attn:#F3A63B;--attn-rgb:243,166,59;--crit:#F2706B;--crit-rgb:242,112,107;--ok:#59D499;--ok-rgb:89,212,153;--repos:#8B909B;--repos-rgb:139,144,155;
-  --attn-tx:#F6B65C;--crit-tx:#F29A96;--ok-tx:#7BE0AF;--accent-tx:#A9ACFF;--tag-tx:#A9AEB8;--tag-fond:rgba(255,255,255,.07);
-  --plein:#F1F2F4;--sur-plein:#0A0B10;--plein-reflet:rgba(255,255,255,.4);--sur-c1:#16110A;--pied:rgba(255,255,255,.015);--reflet:rgba(255,255,255,.05);
+  --attn-tx:#F6B65C;--crit-tx:#F29A96;--ok-tx:#7BE0AF;--accent-tx:#A9ACFF;
+  --plein:#F1F2F4;--sur-plein:#0A0B10;--sur-c1:#16110A;
   --voile:rgba(0,0,0,.55);--ombre:0 24px 48px -24px #000;
   --ressort:cubic-bezier(.2,.9,.25,1.2);--doux:cubic-bezier(.2,.7,.2,1);
-  --marge:16px;--ecart:12px;--r-tu:16px;--p-tu:18px;--anneau:124px;--ep:8.1;
-  color-scheme:dark;position:fixed;inset:0;background:var(--fond);color:var(--tx);font:400 14px/1.45 var(--f);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;letter-spacing:0
+  /* une section : un trait en haut, de l'air dessus et dessous, le texte presque au bord (2 px) */
+  --marge:22px;--ecart:4px;--p-tu:20px 2px;--anneau:124px;--ep:2.6;--barre-h:52px;
+  color-scheme:dark;position:fixed;inset:0;background:var(--fond);color:var(--tx);font:400 14px/1.45 var(--f);font-optical-sizing:auto;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;letter-spacing:-.004em
 }
 #ui5.u-signal[data-theme="clair"]{
-  --fond:#EEF0F3;--tuile-a:#FFFFFF;--tuile-b:#F8F9FB;--tx:#14161A;--tx2:#565B66;--tx3:#5F6470;
-  --trait:rgba(10,14,25,.11);--trait-fort:rgba(10,14,25,.24);--creux:rgba(10,14,25,.055);--creux-fort:rgba(10,14,25,.09);--piste:rgba(10,14,25,.11);--pouce:#FFFFFF;
+  --fond:#F5F6F8;--flottant:#FFFFFF;--tx:#14161A;--tx2:#565B66;--tx3:#5F6470;
+  --trait:rgba(10,14,25,.08);--trait-fort:rgba(10,14,25,.16);--creux:rgba(10,14,25,.055);--creux-fort:rgba(10,14,25,.09);--piste:rgba(10,14,25,.11);--pouce:#FFFFFF;
   --accent:#5357DB;--accent-rgb:83,87,219;--attn:#B26A00;--attn-rgb:178,106,0;--crit:#C6403A;--crit-rgb:198,64,58;--ok:#1C8552;--ok-rgb:28,133,82;--repos:#6B707B;--repos-rgb:107,112,123;
-  --attn-tx:#8A5200;--crit-tx:#B0312B;--ok-tx:#146C41;--accent-tx:#4347C4;--tag-tx:#4B505B;--tag-fond:rgba(10,14,25,.07);
-  --plein:#14161A;--sur-plein:#FFFFFF;--plein-reflet:rgba(255,255,255,.12);--sur-c1:#FFFFFF;--pied:rgba(10,14,25,.025);--reflet:rgba(255,255,255,.9);
+  --attn-tx:#8A5200;--crit-tx:#B0312B;--ok-tx:#146C41;--accent-tx:#4347C4;
+  --plein:#14161A;--sur-plein:#FFFFFF;--sur-c1:#FFFFFF;
   --voile:rgba(20,22,26,.32);--ombre:0 24px 48px -24px rgba(20,22,26,.45);color-scheme:light
 }
-#ui5.u-signal[data-taille="compact"]{--marge:12px;--ecart:10px;--r-tu:14px;--p-tu:14px;--anneau:76px;--ep:9.2}
-body.ui5:has(#ui5.u-signal){background:#07080A}
-body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
+/* en compact, la barre reprend la hauteur de Graphite (46) : à 360 × 480, les six pixels gagnés évitent à la zone de défiler */
+#ui5.u-signal[data-taille="compact"]{--marge:16px;--ecart:2px;--p-tu:13px 2px;--anneau:76px;--ep:2.95;--barre-h:46px}
+body.ui5:has(#ui5.u-signal){background:#08090B}
+body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#F5F6F8}
 
 /* Le panneau d'origine (panel.css) style des éléments nus (footer, label, input, button…) : ici tout repart de l'héritage. */
 #ui5.u-signal *{box-sizing:border-box;margin:0;padding:0;border:0 solid transparent;min-width:0;color:inherit}
-#ui5.u-signal b{font-weight:600}
+#ui5.u-signal b{font-weight:540}
 #ui5.u-signal footer,#ui5.u-signal header,#ui5.u-signal section,#ui5.u-signal h3,#ui5.u-signal h4,#ui5.u-signal p,#ui5.u-signal dl,#ui5.u-signal dt,#ui5.u-signal dd,#ui5.u-signal ol,#ui5.u-signal ul,#ui5.u-signal li,#ui5.u-signal small,#ui5.u-signal label,#ui5.u-signal table,#ui5.u-signal th,#ui5.u-signal td{font:inherit;color:inherit;letter-spacing:inherit;text-transform:none;background:none;text-align:inherit}
 #ui5.u-signal button,#ui5.u-signal input,#ui5.u-signal select{font:inherit;color:inherit;letter-spacing:inherit;text-transform:none}
 #ui5.u-signal button{background:none;border:0;cursor:pointer;border-radius:9px}
 #ui5.u-signal button:disabled,#ui5.u-signal button[aria-disabled="true"]{cursor:default;opacity:.45}
 #ui5.u-signal :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #ui5.u-signal svg{display:block;flex:none}
-#ui5.u-signal kbd{font:600 11px/1 var(--f);padding:3px 6px;border-radius:5px;background:var(--creux);color:var(--tx2);box-shadow:inset 0 0 0 1px var(--trait)}
+#ui5.u-signal kbd{font:500 11px/1 var(--f);padding:3px 6px;border-radius:5px;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal ::-webkit-scrollbar{width:8px;height:8px}
 #ui5.u-signal ::-webkit-scrollbar-thumb{background:var(--trait-fort);border-radius:4px;border:2px solid transparent;background-clip:content-box}
-#ui5.u-signal .sg-mono{font-weight:600;color:var(--tx)}
+#ui5.u-signal .sg-mono{font-weight:540;color:var(--tx)}
 #ui5.u-signal .sg-sep{color:var(--tx3)}
 #ui5.u-signal .sg-espace{flex:1}
 #ui5.u-signal .sg-dif{color:var(--attn-tx)}
 #ui5.u-signal .sg-meta{font-size:12px;line-height:1.45;color:var(--tx2)}
-#ui5.u-signal .sg-meta b{color:var(--tx);font-weight:600}
+#ui5.u-signal .sg-meta b{color:var(--tx);font-weight:540}
 #ui5.u-signal .sg-vide{font-size:12.5px;color:var(--tx2);padding:8px 0}
 #ui5.u-signal .sg-vide.sg-petit{font-size:12px}
 #ui5.u-signal[data-taille="compact"] .sg-long,#ui5.u-signal:not([data-taille="compact"]) .sg-court{display:none}
@@ -59,24 +64,34 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-fen[data-teinte="panne"]{--c1:var(--crit);--c1-rgb:var(--crit-rgb);--c1-tx:var(--crit-tx)}
 #ui5.u-signal .sg-fen[data-teinte="fait"]{--c1:var(--ok);--c1-rgb:var(--ok-rgb);--c1-tx:var(--ok-tx)}
 /* D-334 : la Constellation a sa couleur (bleu ciel) ; Orbite reste violet ; les couleurs d'état ne changent pas. */
+/* D-339 : chaque panneau a sa couleur. Orbite : violet (les jetons) ; Écho : turquoise ; Constellation : bleu ciel (D-334) ; Aurore : rose. */
+#ui5.u-signal .sg-fen[data-activite="echo"]{--accent:#4FD6CF;--accent-rgb:79,214,207;--accent-tx:#86E5DF}
 #ui5.u-signal .sg-fen[data-activite="file"]{--accent:#62C6F2;--accent-rgb:98,198,242;--accent-tx:#8AD6F6}
+#ui5.u-signal .sg-fen[data-activite="correction"]{--accent:#F28CC6;--accent-rgb:242,140,198;--accent-tx:#F6AED6}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="echo"]{--accent:#0B8783;--accent-rgb:11,135,131;--accent-tx:#08706D}
 #ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="file"]{--accent:#0B79AD;--accent-rgb:11,121,173;--accent-tx:#096690}
-#ui5.u-signal .sg-barre{flex:none;display:flex;align-items:center;gap:8px;height:46px;padding:0 10px 0 12px;border-bottom:1px solid var(--trait)}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="correction"]{--accent:#BF3E86;--accent-rgb:191,62,134;--accent-tx:#A3326F}
+/* la barre : des mots, et un fil de la couleur du panneau sous l'onglet ouvert */
+#ui5.u-signal .sg-barre{flex:none;display:flex;align-items:center;gap:8px;height:var(--barre-h);padding:0 10px 0 14px}
 #ui5.u-signal[data-taille="compact"] .sg-barre{gap:4px;padding:0 6px 0 10px}
-#ui5.u-signal .sg-bascule,#ui5.u-signal .sg-seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:auto;padding:3px;border-radius:9px;background:var(--creux);flex:none}
-#ui5.u-signal .sg-pouce{position:absolute;top:3px;left:0;height:26px;width:var(--w,0px);border-radius:6px;background:var(--pouce);box-shadow:inset 0 1px 0 var(--reflet);transform:translateX(var(--x,0px));transition:transform .42s var(--ressort);opacity:0;pointer-events:none}
-#ui5.u-signal[data-theme="clair"] .sg-pouce{box-shadow:0 1px 2px rgba(10,14,25,.18)}
+#ui5.u-signal .sg-bascule,#ui5.u-signal .sg-seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:auto;flex:none}
+#ui5.u-signal .sg-seg{padding:3px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--trait)}
+#ui5.u-signal .sg-pouce{position:absolute;left:0;width:var(--w,0px);transform:translateX(var(--x,0px));transition:transform .42s var(--ressort);opacity:0;pointer-events:none}
+#ui5.u-signal .sg-bascule .sg-pouce{bottom:0;height:2px;border-radius:2px;background:var(--accent)}
+#ui5.u-signal .sg-seg .sg-pouce{top:3px;height:26px;border-radius:999px;background:rgba(var(--accent-rgb),.14)}
 #ui5.u-signal [data-pouce]>.sg-pouce{opacity:1}
-#ui5.u-signal .sg-bascule>button,#ui5.u-signal .sg-seg>button{position:relative;height:26px;padding:0 12px;border-radius:6px;color:var(--tx2);font:600 12px/1 var(--f);white-space:nowrap;display:inline-flex;align-items:center;gap:4px;transition:color .2s}
+#ui5.u-signal .sg-bascule>button,#ui5.u-signal .sg-seg>button{position:relative;color:var(--tx2);white-space:nowrap;display:inline-flex;align-items:center;gap:4px;transition:color .2s}
+#ui5.u-signal .sg-bascule>button{height:34px;padding:0 10px;border-radius:6px;font:450 12.5px/1 var(--f)}
 #ui5.u-signal .sg-bascule>button[aria-disabled="true"]{opacity:.6}
 #ui5.u-signal .sg-bascule>button svg{width:11px;height:11px}
-#ui5.u-signal[data-taille="compact"] .sg-bascule>button{padding:0 7px}
-#ui5.u-signal .sg-seg>button{padding:0 9px;min-width:28px;justify-content:center}
+#ui5.u-signal[data-taille="compact"] .sg-bascule>button{padding:0 6px}
+#ui5.u-signal .sg-seg>button{height:26px;padding:0 10px;min-width:28px;justify-content:center;border-radius:999px;font:450 12px/1 var(--f)}
 #ui5.u-signal .sg-bascule>button:hover,#ui5.u-signal .sg-seg>button:hover{color:var(--tx)}
 #ui5.u-signal .sg-bascule>button[aria-selected="true"],#ui5.u-signal .sg-seg>button[aria-pressed="true"]{color:var(--tx)}
-#ui5.u-signal .sg-bascule:not([data-pouce])>button[aria-selected="true"],#ui5.u-signal .sg-seg:not([data-pouce])>button[aria-pressed="true"]{background:var(--pouce)}
-#ui5.u-signal .sg-puce{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 8px;font-size:12px;color:var(--tx2);white-space:nowrap;min-width:0;transition:background .15s}
-#ui5.u-signal .sg-puce,#ui5.u-signal .sg-ico{border-radius:7px}
+#ui5.u-signal .sg-bascule:not([data-pouce])>button[aria-selected="true"]{box-shadow:inset 0 -2px 0 var(--accent)}
+#ui5.u-signal .sg-seg:not([data-pouce])>button[aria-pressed="true"]{background:rgba(var(--accent-rgb),.14)}
+#ui5.u-signal .sg-puce{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 8px;font-size:12px;font-weight:420;color:var(--tx2);white-space:nowrap;min-width:0;transition:background .15s}
+#ui5.u-signal .sg-puce,#ui5.u-signal .sg-ico{border-radius:999px}
 #ui5.u-signal[data-taille="compact"] .sg-puce{padding:0 6px}
 #ui5.u-signal .sg-puce:hover,#ui5.u-signal .sg-ico:hover{background:var(--creux);color:var(--tx)}
 #ui5.u-signal .sg-puce i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok)}
@@ -96,41 +111,72 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
  * puce l'écrit sans ellipse ; en dessous (et en compact), il est écrit en entier sur la ligne sous la barre. */
 @media (min-width:560px){#ui5.u-signal:not([data-taille="compact"]) .sg-puce:not([data-etat="ok"]):not([data-etat="verrou"]){flex:none;max-width:none}}
 #ui5.u-signal .sg-barre-etat{display:none}
-@media (max-width:559px){#ui5.u-signal .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:600 12px/1.3 var(--f);color:var(--attn-tx)}}
-#ui5.u-signal[data-taille="compact"] .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:600 12px/1.3 var(--f);color:var(--attn-tx)}
+@media (max-width:559px){#ui5.u-signal .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:500 12px/1.3 var(--f);color:var(--attn-tx)}}
+#ui5.u-signal[data-taille="compact"] .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:500 12px/1.3 var(--f);color:var(--attn-tx)}
 #ui5.u-signal .sg-barre-etat i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--attn)}
 #ui5.u-signal .sg-barre-etat[data-etat="ko"]{color:var(--crit-tx)}
 #ui5.u-signal .sg-barre-etat[data-etat="ko"] i{background:var(--crit)}
 #ui5.u-signal .sg-ico{flex:none;width:28px;height:28px;display:inline-grid;place-items:center;color:var(--tx2);transition:background .15s,color .15s}
 #ui5.u-signal .sg-ico svg{width:16px;height:16px}
 #ui5.u-signal .sg-menu-b{font-size:16px;letter-spacing:1px;line-height:1}
-#ui5.u-signal .sg-barre-note{position:absolute;top:52px;left:var(--marge);right:var(--marge);z-index:12;padding:10px 14px;border-radius:12px;border:1px solid var(--trait-fort);background:var(--tuile-a);box-shadow:var(--ombre);font-size:13px;animation:sg-descend .3s var(--ressort)}
-#ui5.u-signal .sg-page{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--ecart);padding:var(--marge)}
+#ui5.u-signal .sg-barre-note{position:absolute;top:calc(var(--barre-h) + 4px);left:var(--marge);right:var(--marge);z-index:12;padding:10px 16px;border-radius:14px;border:1px solid var(--trait-fort);background:var(--flottant);box-shadow:var(--ombre);font-size:13px;animation:sg-descend .3s var(--ressort)}
+/* en bas, peu de marge : le pied a son propre air (une marge pleine faisait défiler la zone de quelques pixels à 480 × 760 et 320 × 480) */
+#ui5.u-signal .sg-page{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--ecart);padding:var(--marge) var(--marge) 8px}
 
-/* ───────────────────────────── tuiles */
-#ui5.u-signal .sg-tu{position:relative;min-width:0;border-radius:var(--r-tu);border:1px solid var(--trait);background-color:var(--tuile-a);background-image:linear-gradient(180deg,var(--tuile-a),var(--tuile-b));box-shadow:inset 0 1px 0 var(--reflet);padding:var(--p-tu);display:flex;flex-direction:column;gap:var(--ecart);overflow:hidden;transition:border-color .25s}
-#ui5.u-signal .sg-tu:hover{border-color:var(--trait-fort)}
-#ui5.u-signal .sg-tu h4{font:600 11.5px/1.3 var(--f);letter-spacing:.02em;color:var(--tx2);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px}
+/* ───────────────────────────── sections (les « tuiles » de Graphite) : pas de cadre, un trait fin en haut ; la tête de l'écran n'a pas de trait */
+#ui5.u-signal .sg-tu{position:relative;min-width:0;border-top:1px solid var(--trait);padding:var(--p-tu);display:flex;flex-direction:column;gap:var(--ecart);overflow:hidden}
+/* étiquettes de section : petites capitales espacées */
+#ui5.u-signal .sg-tu h4{font:500 10px/1.3 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--tx3);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 8px}
 #ui5.u-signal .sg-tu h4 em{font-style:normal;color:var(--tx);white-space:nowrap}
-#ui5.u-signal .sg-tu h4 b{font-weight:600;color:var(--tx)}
+#ui5.u-signal .sg-tu h4 b{font-weight:540;color:var(--tx)}
 #ui5.u-signal .sg-tu>p{color:var(--tx2);font-size:12.5px;line-height:1.45}
 
-/* tuile d'état : elle reste, seuls ses contenus changent */
-#ui5.u-signal .sg-tu-etat{flex:none;background-image:radial-gradient(120% 100% at 0% 0%,rgba(var(--c1-rgb),.2),transparent 60%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
-#ui5.u-signal[data-theme="clair"] .sg-tu-etat{background-image:radial-gradient(120% 100% at 0% 0%,rgba(var(--c1-rgb),.13),transparent 60%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
+/* la tête de l'écran (tuile d'état ; « sg-constel » pour la Constellation) : elle reste, seuls ses contenus changent. Pas de trait, un peu débordante,
+ * arrondie pour son motif (fin de la section « tête de l'écran »). */
+#ui5.u-signal .sg-tu-etat,#ui5.u-signal .sg-constel{flex:none;border-top:0;border-radius:18px;padding:20px 18px;margin:0 -6px 10px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-etat,#ui5.u-signal[data-taille="compact"] .sg-constel{padding:14px 12px;margin:0 -4px 6px;border-radius:14px}
+/* Le motif de chaque panneau, dans la tête de l'écran ; immobile, sauf l'onde d'Écho tant que la collecte tourne. Il suit la couleur de l'état (--c1). */
+/* Orbite : une orbite autour de l'anneau, un halo très bas venu de l'anneau */
+#ui5.u-signal .sg-fen[data-activite="orbite"] .sg-tu-etat{background-image:radial-gradient(60% 90% at 14% 50%,rgba(var(--c1-rgb),.13),transparent 70%)}
+#ui5.u-signal .sg-fen[data-activite="orbite"] .sg-anneau::before{content:"";position:absolute;inset:-8px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.16)}
+/* Écho : l'onde, deux cercles autour de l'anneau ; le second s'éloigne en boucle pendant la collecte (transform et opacity) */
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-tu-etat{background-image:radial-gradient(60% 90% at 14% 50%,rgba(var(--c1-rgb),.12),transparent 70%)}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::before,#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::after{content:"";position:absolute;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.32)}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::before{inset:-8px;opacity:.6}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-anneau::after{inset:-18px;opacity:.28}
+#ui5.u-signal .sg-fen[data-activite="echo"][data-teinte="marche"] .sg-anneau::after{animation:sg-onde 2.6s cubic-bezier(.2,.6,.3,1) infinite;opacity:0}
+/* Constellation : un ciel, quelques étoiles fixes au fond de la tête (en clair, la lueur seule) */
+#ui5.u-signal .sg-fen[data-activite="file"] .sg-constel{background-image:
+  radial-gradient(1.2px 1.2px at 72% 22%,rgba(255,255,255,.55),transparent 100%),radial-gradient(1px 1px at 84% 48%,rgba(255,255,255,.4),transparent 100%),
+  radial-gradient(1.4px 1.4px at 91% 16%,rgba(var(--c1-rgb),.9),transparent 100%),radial-gradient(1px 1px at 63% 38%,rgba(255,255,255,.3),transparent 100%),
+  radial-gradient(1px 1px at 78% 66%,rgba(255,255,255,.25),transparent 100%),radial-gradient(1.2px 1.2px at 95% 58%,rgba(255,255,255,.35),transparent 100%),
+  radial-gradient(70% 100% at 100% 0%,rgba(var(--c1-rgb),.14),transparent 70%)}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="file"] .sg-constel{background-image:radial-gradient(70% 100% at 100% 0%,rgba(var(--c1-rgb),.12),transparent 70%)}
+/* Aurore : l'aube, une bande de lumière en haut de la tête, et l'orbite de l'anneau dans sa couleur */
+#ui5.u-signal .sg-fen[data-activite="correction"] .sg-tu-etat{background-image:
+  linear-gradient(180deg,transparent 0,var(--fond) 92%),
+  linear-gradient(100deg,rgba(var(--c1-rgb),.30) 0%,rgba(143,147,255,.18) 42%,rgba(98,198,242,.14) 72%,transparent 100%)}
+#ui5.u-signal .sg-fen[data-activite="correction"] .sg-anneau::before{content:"";position:absolute;inset:-8px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.18)}
+#ui5.u-signal[data-taille="compact"] .sg-fen .sg-anneau::before{inset:-6px}
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="echo"] .sg-anneau::after{inset:-13px}
 #ui5.u-signal .sg-haut{display:flex;justify-content:space-between;align-items:center;gap:10px}
-#ui5.u-signal .sg-etat{display:inline-flex;align-items:center;gap:9px;font:600 15px/1.2 var(--f);min-width:0}
-#ui5.u-signal[data-taille="compact"] .sg-etat{font-size:13.5px}
+#ui5.u-signal .sg-etat{display:inline-flex;align-items:center;gap:9px;font:500 13.5px/1.2 var(--f);letter-spacing:.01em;min-width:0}
 #ui5.u-signal .sg-glyphe{position:relative;flex:none;width:9px;height:9px;border-radius:50%;background:var(--c1)}
 /* La pastille bat quand Ariane travaille, et quand il faut l'œil de l'opérateur (à toi, en panne) ; jamais au repos (prêt, en pause, terminé). */
 #ui5.u-signal .sg-fen[data-teinte="marche"] .sg-glyphe::after,#ui5.u-signal .sg-fen[data-teinte="toi"] .sg-glyphe::after,#ui5.u-signal .sg-fen[data-teinte="panne"] .sg-glyphe::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--c1);animation:sg-pouls 2s ease-out infinite}
 #ui5.u-signal .sg-mot{display:inline-block}
-#ui5.u-signal .sg-partie{font-size:12px;color:var(--tx2);white-space:nowrap}
+#ui5.u-signal .sg-partie{font-size:11.5px;color:var(--tx3);white-space:nowrap}
+/* l'orbite autour de l'anneau ne touche pas le mot d'état : de l'air au-dessus de l'anneau */
 #ui5.u-signal .sg-milieu{display:flex;align-items:center;gap:22px}
+#ui5.u-signal .sg-tu-etat .sg-milieu{margin-top:16px}
+#ui5.u-signal .sg-fen[data-activite="echo"] .sg-tu-etat .sg-milieu{margin-top:20px}
 #ui5.u-signal[data-taille="compact"] .sg-milieu{gap:14px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-etat .sg-milieu{margin-top:12px}
+#ui5.u-signal[data-taille="compact"] .sg-fen[data-activite="echo"] .sg-tu-etat .sg-milieu{margin-top:12px}
 #ui5.u-signal .sg-anneau{position:relative;width:var(--anneau);aspect-ratio:1;flex:none}
 #ui5.u-signal .sg-anneau svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 #ui5.u-signal .sg-anneau circle{fill:none;stroke-width:var(--ep);stroke-linecap:butt}
+#ui5.u-signal .sg-anneau .sg-arc{stroke-linecap:round}
 #ui5.u-signal .sg-piste{stroke:var(--piste)}
 /* Exception écrite de l'intégrateur (11/11) à « déplacements et opacités seulement » : le remplissage de l'anneau glisse (petite surface, un
  * changement par cut), comme sur la maquette. Rien d'autre n'anime une propriété de peinture. */
@@ -138,44 +184,43 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-anneau[data-forme="pct"] .sg-arc,#ui5.u-signal .sg-anneau-seg .sg-arc{transition:stroke-dasharray .7s var(--doux)}
 #ui5.u-signal .sg-anneau[data-tourne] svg{animation:sg-tourne 1.6s linear infinite}
 #ui5.u-signal .sg-anneau-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-#ui5.u-signal .sg-anneau .sg-chiffre{display:inline-block;font:700 32px/1 var(--f);letter-spacing:-.03em}
-#ui5.u-signal .sg-anneau .sg-suite{display:block;margin-top:5px;font:500 12px/1 var(--f);color:var(--tx2)}
+/* grands chiffres fins */
+#ui5.u-signal .sg-anneau .sg-chiffre{display:inline-block;font:250 44px/1 var(--f);letter-spacing:-.05em}
+#ui5.u-signal .sg-anneau .sg-suite{display:block;margin-top:5px;font:400 11px/1 var(--f);letter-spacing:.02em;color:var(--tx3)}
 #ui5.u-signal .sg-anneau[data-forme="pct"] .sg-anneau-c{flex-direction:row;align-items:baseline;align-content:center;flex-wrap:wrap}
-#ui5.u-signal .sg-anneau[data-forme="pct"] .sg-suite{margin:0 0 0 1px;font:600 16px/1 var(--f)}
-#ui5.u-signal .sg-anneau-seg .sg-chiffre{font-size:30px;letter-spacing:-.02em}
+#ui5.u-signal .sg-anneau[data-forme="pct"] .sg-suite{margin:0 0 0 1px;font:300 18px/1 var(--f);letter-spacing:.02em}
 #ui5.u-signal .sg-anneau-c>svg{width:38%;height:38%;position:static;transform:none;fill:none;stroke:var(--c1);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-#ui5.u-signal[data-taille="compact"] .sg-anneau .sg-chiffre{font-size:21px}
+#ui5.u-signal[data-taille="compact"] .sg-anneau .sg-chiffre{font-size:26px;font-weight:300}
 #ui5.u-signal[data-taille="compact"] .sg-anneau .sg-suite{font-size:10px;margin-top:3px}
 #ui5.u-signal[data-taille="compact"] .sg-anneau[data-forme="pct"] .sg-suite{font-size:10.5px;margin:0 0 0 1px}
-#ui5.u-signal[data-taille="compact"] .sg-anneau-seg .sg-chiffre{font-size:19px}
 #ui5.u-signal .sg-anneau-seg .sg-arc{stroke:var(--accent)}
 #ui5.u-signal .sg-anneau-seg .sg-arc[data-etat="interrompue"]{stroke:var(--attn)}
 #ui5.u-signal .sg-anneau-seg .sg-arc[data-etat="alerte"]{stroke:var(--crit)}
 #ui5.u-signal .sg-fen[data-teinte="fait"] .sg-anneau-seg .sg-arc{stroke:var(--ok)}
 /* la tuile d'état de la Constellation : la partie en grand, le rang, la phrase, la chaîne des parties */
-#ui5.u-signal .sg-constel{gap:6px;background-image:radial-gradient(120% 110% at 100% 0%,rgba(var(--c1-rgb),.22),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
-#ui5.u-signal[data-theme="clair"] .sg-constel{background-image:radial-gradient(120% 110% at 100% 0%,rgba(var(--c1-rgb),.14),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b))}
+#ui5.u-signal .sg-constel{gap:6px}
 #ui5.u-signal .sg-constel .sg-haut{margin-bottom:6px}
 #ui5.u-signal .sg-constel-t{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:2px 10px}
-#ui5.u-signal .sg-constel-t .sg-chiffre{font:700 32px/1.1 var(--f);letter-spacing:-.02em;display:inline-block}
-#ui5.u-signal .sg-constel-t .sg-suite{font:600 15px/1 var(--f);color:var(--tx2);white-space:nowrap}
+#ui5.u-signal .sg-constel-t .sg-chiffre{font:250 44px/1.1 var(--f);letter-spacing:-.045em;display:inline-block}
+#ui5.u-signal .sg-constel-t .sg-suite{font:400 13px/1 var(--f);color:var(--tx3);white-space:nowrap}
 #ui5.u-signal .sg-constel .sg-phrase{font:400 14px/1.45 var(--f);letter-spacing:0;color:var(--tx2)}
-#ui5.u-signal[data-taille="compact"] .sg-constel-t .sg-chiffre{font-size:22px}
+#ui5.u-signal[data-taille="compact"] .sg-constel-t .sg-chiffre{font-size:28px;font-weight:300}
 #ui5.u-signal[data-taille="compact"] .sg-constel-t .sg-suite{font-size:12.5px}
 #ui5.u-signal[data-taille="compact"] .sg-constel .sg-phrase{font-size:12.5px}
 #ui5.u-signal .sg-chaine{list-style:none;margin:18px 0 6px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine{margin:10px 0 2px}
-#ui5.u-signal .sg-chaine li{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;font:600 13px/1 var(--f);color:var(--tx2)}
+#ui5.u-signal .sg-chaine li{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;font:450 13px/1 var(--f);color:var(--tx2)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine li{font-size:11px;gap:6px}
 #ui5.u-signal .sg-chaine li .sg-mono{color:inherit}
-#ui5.u-signal .sg-chaine li::before{content:"";position:absolute;top:11px;right:50%;width:100%;height:2px;background:var(--piste)}
+#ui5.u-signal .sg-chaine li::before{content:"";position:absolute;top:11px;right:50%;width:100%;height:1px;background:var(--piste)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine li::before{top:8px}
 #ui5.u-signal .sg-chaine li:first-child::before{display:none}
-#ui5.u-signal .sg-chaine li::after{content:"";position:absolute;top:11px;right:50%;width:100%;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:0 50%;transition:transform .4s var(--doux)}
+#ui5.u-signal .sg-chaine li::after{content:"";position:absolute;top:11px;right:50%;width:100%;height:1px;background:var(--accent);transform:scaleX(0);transform-origin:0 50%;transition:transform .4s var(--doux)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine li::after{top:8px}
 #ui5.u-signal .sg-chaine li:first-child::after{display:none}
 #ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::after{transform:scaleX(1)}
-#ui5.u-signal .sg-chaine i{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;background:var(--tuile-b);box-shadow:inset 0 0 0 2px var(--trait-fort)}
+/* le rond masque le trait de la chaîne qui passe dessous (un rond vide ne laisse pas voir le trait en son milieu) */
+#ui5.u-signal .sg-chaine i{position:relative;z-index:1;width:24px;height:24px;border-radius:50%;background:var(--fond);box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal[data-taille="compact"] .sg-chaine i{width:18px;height:18px}
 #ui5.u-signal .sg-chaine li[data-etat="faite"] i{background:var(--accent);box-shadow:none}
 #ui5.u-signal .sg-chaine li[data-etat="faite"] i::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:4px;margin:-4px 0 0 -4px;border:2px solid var(--sur-plein);border-top:0;border-right:0;transform:rotate(-45deg);animation:sg-coche .4s var(--ressort) backwards}
@@ -205,27 +250,29 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal[data-taille="compact"] .sg-chaine-dense li::before,#ui5.u-signal[data-taille="compact"] .sg-chaine-dense li::after{top:5px}
 #ui5.u-signal[data-taille="compact"] .sg-chaine-dense li i::before,#ui5.u-signal[data-taille="compact"] .sg-chaine-dense li[data-etat="en-cours"] i::after{inset:3px}
 #ui5.u-signal .sg-texte{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
-#ui5.u-signal .sg-phrase{font:650 20px/1.25 var(--f);letter-spacing:-.01em;overflow-wrap:anywhere}
-#ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:15.5px}
+#ui5.u-signal .sg-phrase{font:450 21px/1.25 var(--f);letter-spacing:-.022em;overflow-wrap:anywhere}
+#ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:16px}
 #ui5.u-signal .sg-phrase .sg-mono{font-weight:inherit;display:inline-block}
 #ui5.u-signal .sg-phrase b{font-weight:inherit}
 #ui5.u-signal .sg-lot-bornes,#ui5.u-signal .sg-cadran-d{font-size:12px;line-height:1.35;color:var(--tx2)}
-#ui5.u-signal .sg-trio{display:flex;flex-wrap:wrap;gap:4px 24px;margin-top:10px}
+#ui5.u-signal .sg-lot-bornes{color:var(--tx3)}
+#ui5.u-signal .sg-trio{display:flex;flex-wrap:wrap;gap:4px 28px;margin-top:14px}
 #ui5.u-signal[data-taille="compact"] .sg-trio{gap:4px 16px;margin-top:6px}
-#ui5.u-signal .sg-trio dt{font-size:11px;color:var(--tx2);white-space:nowrap}
-#ui5.u-signal .sg-trio dd{margin-top:1px;font:650 20px/1 var(--f);display:inline-block}
-#ui5.u-signal[data-taille="compact"] .sg-trio dd{font-size:16px}
+#ui5.u-signal .sg-trio dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}
+#ui5.u-signal .sg-trio dd{margin-top:1px;font:300 24px/1 var(--f);letter-spacing:-.035em;display:inline-block}
+#ui5.u-signal[data-taille="compact"] .sg-trio dd{font-size:18px}
 #ui5.u-signal .sg-trio dd.sg-mono{color:inherit}
 #ui5.u-signal .sg-temps{list-style:none;display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-#ui5.u-signal .sg-temps li{font:600 12px/1 var(--f);padding:6px 10px;border-radius:999px;color:var(--tx2);background:var(--creux)}
-#ui5.u-signal[data-taille="compact"] .sg-temps li{font-size:10.5px;padding:5px 7px}
-#ui5.u-signal .sg-temps li[data-temps="courant"]{background:rgba(var(--c1-rgb),.2);color:var(--tx)}
+/* les temps : du texte ; le courant souligné de la couleur de l'état */
+#ui5.u-signal .sg-temps li{font:450 11.5px/1 var(--f);padding:6px 0;margin-right:14px;color:var(--tx3)}
+#ui5.u-signal[data-taille="compact"] .sg-temps li{font-size:10.5px;padding:5px 0;margin-right:12px}
+#ui5.u-signal .sg-temps li[data-temps="courant"]{color:var(--tx);box-shadow:inset 0 -1.5px 0 var(--c1)}
 #ui5.u-signal .sg-temps li[data-temps="a-venir"]{opacity:.8}
 
 /* la zone qui change avec l'état */
 #ui5.u-signal .sg-zone{flex:1;min-height:0;display:flex;flex-direction:column;gap:var(--ecart);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
 #ui5.u-signal .sg-zone>.sg-tu,#ui5.u-signal .sg-duo>.sg-tu{flex:none}
-#ui5.u-signal .sg-duo{flex:1 1 0;min-height:150px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:var(--ecart)}
+#ui5.u-signal .sg-duo{flex:1 1 0;min-height:150px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:26px}
 #ui5.u-signal .sg-duo>.sg-tu{min-height:0}
 #ui5.u-signal[data-taille="compact"] .sg-duo{display:contents}
 #ui5.u-signal[data-taille="compact"] .sg-second{display:none}
@@ -233,33 +280,34 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal[data-taille="compact"] .sg-zone .sg-tu-fil{flex:1 1 0;min-height:104px}
 /* En 360 : un avis garde la hauteur de son texte (la place libre reste vide) ; le fil et les étapes se serrent pour montrer plus de lignes. */
 #ui5.u-signal[data-taille="compact"] .sg-zone>.sg-tu-avis{flex:none}
-#ui5.u-signal[data-taille="compact"] .sg-tu-fil{gap:6px;padding:12px 14px 10px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fil{gap:6px;padding:12px 2px 10px}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fil .sg-fil li{height:30px}
-#ui5.u-signal[data-taille="compact"] .sg-tu-etapes{gap:6px;padding:12px 14px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-etapes{gap:6px;padding:12px 2px}
 #ui5.u-signal[data-taille="compact"] .sg-etapes li{padding:6px 0}
 
-#ui5.u-signal .sg-allure{font-size:12px;line-height:1.4;color:var(--tx2)}
-#ui5.u-signal .sg-allure b{color:var(--tx);font-weight:600;display:inline-block}
+/* fil, étapes, étiquettes : du texte, sans pastilles */
+#ui5.u-signal .sg-allure{font-size:12px;line-height:1.4;color:var(--tx3)}
+#ui5.u-signal .sg-allure b{color:var(--tx);font-weight:540;display:inline-block}
 #ui5.u-signal .sg-fil{list-style:none;flex:1;min-height:0;overflow:hidden;-webkit-mask:linear-gradient(#000 70%,transparent);mask:linear-gradient(#000 70%,transparent)}
 #ui5.u-signal .sg-fil li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:9px;height:40px;border-top:1px solid var(--trait);overflow:hidden}
 #ui5.u-signal[data-taille="compact"] .sg-fil li{height:34px}
-#ui5.u-signal .sg-fil b{font:650 13px/1 var(--f)}
+#ui5.u-signal .sg-fil b{font:500 13px/1 var(--f)}
 #ui5.u-signal .sg-fil span{font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #ui5.u-signal .sg-fil em{font-style:normal;font-size:11.5px;color:var(--tx3)}
 #ui5.u-signal .sg-fil li:first-child{animation:sg-fil .45s var(--ressort)}
-#ui5.u-signal .sg-tag{font:600 10.5px/1 var(--f);font-style:normal;padding:4px 7px;border-radius:999px;white-space:nowrap;background:var(--tag-fond);color:var(--tag-tx)}
-#ui5.u-signal .sg-tag.sg-attn{background:rgba(var(--attn-rgb),.14);color:var(--attn-tx)}
-#ui5.u-signal .sg-tag.sg-crit{background:rgba(var(--crit-rgb),.14);color:var(--crit-tx)}
+#ui5.u-signal .sg-tag{font:450 11px/1 var(--f);font-style:normal;white-space:nowrap;color:var(--tx3)}
+#ui5.u-signal .sg-tag.sg-attn{color:var(--attn-tx)}
+#ui5.u-signal .sg-tag.sg-crit{color:var(--crit-tx)}
 
 #ui5.u-signal .sg-etapes{list-style:none;display:flex;flex-direction:column}
 #ui5.u-signal .sg-etapes li{display:grid;grid-template-columns:20px auto minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;position:relative;color:var(--tx2);font-size:12px}
-#ui5.u-signal .sg-etapes li+li::before{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--piste)}
-#ui5.u-signal .sg-etapes li+li::after{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--accent);transform:scaleY(0);transform-origin:50% 0;transition:transform .4s var(--doux)}
+#ui5.u-signal .sg-etapes li+li::before{content:"";position:absolute;left:9.5px;top:-10px;width:1px;height:20px;border-radius:1px;background:var(--piste)}
+#ui5.u-signal .sg-etapes li+li::after{content:"";position:absolute;left:9.5px;top:-10px;width:1px;height:20px;border-radius:1px;background:var(--accent);transform:scaleY(0);transform-origin:50% 0;transition:transform .4s var(--doux)}
 #ui5.u-signal .sg-etapes li[data-etape="fait"]+li::after{transform:scaleY(1)}
-#ui5.u-signal .sg-etapes b{font:600 13px/1.2 var(--f)}
+#ui5.u-signal .sg-etapes b{font:450 13px/1.2 var(--f)}
 #ui5.u-signal .sg-etapes b{white-space:nowrap}
 #ui5.u-signal .sg-etapes span{text-align:right;line-height:1.3;overflow-wrap:anywhere}
-#ui5.u-signal .sg-etapes i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--piste);display:grid;place-items:center}
+#ui5.u-signal .sg-etapes i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--trait-fort);display:grid;place-items:center}
 #ui5.u-signal .sg-etapes li[data-etape="fait"],#ui5.u-signal .sg-etapes li[data-etape="actif"]{color:var(--tx)}
 /* une étape qui n'aura pas lieu : rond éteint, barré */
 #ui5.u-signal .sg-etapes li[data-etape="sans"] i{box-shadow:inset 0 0 0 2px var(--piste);opacity:.9}
@@ -271,10 +319,10 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-etapes li[data-etape="actif"] i{box-shadow:inset 0 0 0 2px var(--c1)}
 #ui5.u-signal .sg-etapes li[data-etape="actif"][data-tourne] i{box-shadow:none;background:conic-gradient(var(--accent),rgba(var(--accent-rgb),0) 75%);-webkit-mask:radial-gradient(farthest-side,transparent 6px,#000 7px);mask:radial-gradient(farthest-side,transparent 6px,#000 7px);animation:sg-tour .9s linear infinite}
 
-#ui5.u-signal .sg-tu-avis{flex-direction:row;align-items:flex-start;gap:12px;background-image:radial-gradient(100% 140% at 0% 0%,rgba(var(--c1-rgb),.16),transparent 62%),linear-gradient(180deg,var(--tuile-a),var(--tuile-b));border-color:rgba(var(--c1-rgb),.28)}
-#ui5.u-signal .sg-tu-avis:hover{border-color:rgba(var(--c1-rgb),.45)}
+/* un avis (à toi, panne, incident) : un voile de sa couleur, sans trait */
+#ui5.u-signal .sg-tu-avis{flex-direction:row;align-items:flex-start;gap:12px;border-top:0;border-radius:14px;padding:14px 16px;margin:2px 0 8px;background:rgba(var(--c1-rgb),.08)}
 #ui5.u-signal .sg-fen:not([data-teinte="toi"]) .sg-incident,#ui5.u-signal .sg-alerte,#ui5.u-signal .sg-fen:not([data-teinte="toi"]) .sg-refus{--c1:var(--crit);--c1-rgb:var(--crit-rgb)}
-#ui5.u-signal .sg-ic{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--c1);color:var(--sur-c1);font:800 16px/1 var(--f)}
+#ui5.u-signal .sg-ic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--c1);color:var(--sur-c1);font:800 14px/1 var(--f)}
 #ui5.u-signal .sg-ic svg{width:16px;height:16px;stroke-width:2}
 #ui5.u-signal .sg-tu-avis>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
 #ui5.u-signal .sg-tu-avis p{color:var(--tx);font-size:14.5px;line-height:1.45}
@@ -282,12 +330,12 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-tu-avis small{display:block;color:var(--tx2);font-size:12px}
 #ui5.u-signal .sg-tu-fin{flex-direction:row;align-items:flex-start;gap:14px}
 #ui5.u-signal .sg-tu-fin>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:8px}
-#ui5.u-signal .sg-tu-fin h3{font:650 16px/1.2 var(--f)}
+#ui5.u-signal .sg-tu-fin h3{font:500 17px/1.2 var(--f);letter-spacing:-.015em}
 #ui5.u-signal .sg-fin-rond{width:44px;height:44px;animation:sg-pose .5s var(--ressort) backwards .1s}
 #ui5.u-signal .sg-fin-rond circle,#ui5.u-signal .sg-fin-rond path{fill:none;stroke:var(--ok);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 #ui5.u-signal .sg-fin-arret circle{stroke:var(--tx3)}.sg-fin-arret rect{fill:var(--tx3)}
 #ui5.u-signal .sg-fin{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 14px;font-size:13px;line-height:1.4}
-#ui5.u-signal[data-taille="compact"] .sg-tu-fin{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:5px 9px;padding:9px 14px}
+#ui5.u-signal[data-taille="compact"] .sg-tu-fin{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:5px 9px;padding:9px 2px}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fin>div{display:contents}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fin .sg-fin{grid-column:1/-1}
 #ui5.u-signal[data-taille="compact"] .sg-fin-rond{width:22px;height:22px}
@@ -296,11 +344,11 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal[data-taille="compact"] .sg-tu-fin>div{gap:6px}
 #ui5.u-signal .sg-fin dt{color:var(--tx2);white-space:nowrap}
 #ui5.u-signal .sg-fin dd{min-width:0;overflow-wrap:anywhere}
-#ui5.u-signal .sg-fin dd b{font-weight:650;display:inline-block}
+#ui5.u-signal .sg-fin dd b{font-weight:540;display:inline-block}
 #ui5.u-signal .sg-bornes{display:flex;flex-direction:column}
 #ui5.u-signal .sg-rang{display:flex;flex-direction:row;margin:0;justify-content:space-between;align-items:center;gap:10px;min-height:40px;border-top:1px solid var(--trait);font-size:13px;color:var(--tx2)}
 #ui5.u-signal .sg-rang:first-child{border-top:0}
-#ui5.u-signal .sg-bornes input[type="number"]{width:min(170px,55%);height:28px;padding:0 9px;border-radius:7px;border:1px solid var(--trait);background:var(--creux);color:var(--tx);font:600 13px/1 var(--f);text-align:right;appearance:textfield;-moz-appearance:textfield}
+#ui5.u-signal .sg-bornes input[type="number"]{width:min(170px,55%);height:28px;padding:0 9px;border-radius:0;border-bottom:1px solid var(--trait-fort);background:none;color:var(--tx);font:500 13px/1 var(--f);text-align:right;appearance:textfield;-moz-appearance:textfield}
 #ui5.u-signal .sg-bornes input::-webkit-outer-spin-button,#ui5.u-signal .sg-bornes input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 #ui5.u-signal .sg-bornes input::placeholder{color:var(--tx2);font-weight:500}
 #ui5.u-signal .sg-bornes>small,#ui5.u-signal .sg-reprise small{display:block;font-size:12px;line-height:1.45;color:var(--tx2);margin-top:6px}
@@ -317,32 +365,31 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-marques i.sg-c{background:var(--accent)}
 #ui5.u-signal .sg-marques i.sg-en{background:transparent;box-shadow:inset 0 0 0 2px var(--c1)}
 
-/* la ligne « à poser » */
-#ui5.u-signal .sg-poignee{flex:none;display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;width:100%;text-align:left;border:1px solid var(--trait);background:var(--creux);font-size:13px;color:var(--tx2);transition:background .15s,border-color .2s,transform .15s var(--ressort)}
-#ui5.u-signal .sg-poignee{border-radius:12px;border:1px solid var(--trait);background:var(--creux)}
-#ui5.u-signal .sg-poignee:hover{background:var(--creux-fort);border-color:var(--trait-fort)}
+/* la ligne « à poser » : un trait, comme une section */
+#ui5.u-signal .sg-poignee{flex:none;display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 2px;width:100%;text-align:left;border-top:1px solid var(--trait);border-radius:0;font-size:13px;color:var(--tx2);transition:border-color .2s,transform .15s var(--ressort)}
+#ui5.u-signal .sg-poignee:hover{border-color:var(--trait-fort)}
 #ui5.u-signal .sg-poignee:active{transform:scale(.985)}
 #ui5.u-signal .sg-poignee .sg-txt{min-width:0}
-#ui5.u-signal .sg-poignee .sg-n{color:var(--tx);font-weight:650;margin-right:4px;display:inline-block}
+#ui5.u-signal .sg-poignee .sg-n{color:var(--tx);font-weight:540;margin-right:4px;display:inline-block}
 #ui5.u-signal .sg-poignee .sg-n.sg-dif{color:var(--attn-tx)}
 #ui5.u-signal .sg-poignee .sg-reste{font-style:normal;margin-left:auto;font-size:12px;text-align:right}
 #ui5.u-signal .sg-poignee .sg-fl{width:14px;height:14px;transition:transform .2s var(--ressort)}
 #ui5.u-signal .sg-poignee .sg-txt+.sg-fl{margin-left:auto}
 #ui5.u-signal .sg-poignee:hover .sg-fl{transform:translateX(3px)}
 
-/* les actions, en pied */
-#ui5.u-signal .sg-actions{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:14px var(--marge);border-top:1px solid var(--trait);background:var(--pied);min-height:63px}
+/* les actions, en pied : des pilules, sans trait ni fond de pied */
+#ui5.u-signal .sg-actions{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px var(--marge) 14px;min-height:63px}
 #ui5.u-signal[data-taille="compact"] .sg-actions{padding:12px}
-#ui5.u-signal .sg-actions>button{position:relative;height:40px;padding:0 14px;min-width:150px;white-space:nowrap;font:600 13.5px/1 var(--f);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .16s var(--ressort),background .2s,color .2s;animation:sg-monte .35s var(--ressort) backwards}
+#ui5.u-signal .sg-actions>button{position:relative;height:40px;padding:0 14px;min-width:150px;border-radius:999px;white-space:nowrap;font:500 13.5px/1 var(--f);letter-spacing:-.005em;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .16s var(--ressort),background .2s,color .2s;animation:sg-monte .35s var(--ressort) backwards}
 #ui5.u-signal[data-taille="compact"] .sg-actions>button{height:38px;padding:0 6px;flex:1 1 calc(50% - 4px);min-width:max-content}
 #ui5.u-signal[data-taille="compact"] .sg-actions[data-n="3"]>.sg-principal,#ui5.u-signal[data-taille="compact"] .sg-actions[data-n="5"]>.sg-principal{flex-basis:100%}
 #ui5.u-signal .sg-actions>button:not(:disabled):hover{transform:translateY(-1px)}
 #ui5.u-signal .sg-actions>button:not(:disabled):active{transform:scale(.965);transition-duration:.06s}
-#ui5.u-signal .sg-principal{background:var(--plein);color:var(--sur-plein);box-shadow:inset 0 1px 0 var(--plein-reflet)}
+#ui5.u-signal .sg-principal{background:var(--plein);color:var(--sur-plein)}
 /* Maquette : arrêter n'est jamais le bouton plein (« Arrêter la relecture » est cerclé) ; seul l'arrêt de la Constellation est écrit en rouge. */
-#ui5.u-signal .sg-principal.sg-danger{background:transparent;color:var(--tx);box-shadow:inset 0 0 0 1px var(--trait)}
+#ui5.u-signal .sg-principal.sg-danger{background:transparent;color:var(--tx);box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal .sg-principal.sg-danger:not(:disabled):hover{background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait-fort)}
-#ui5.u-signal .sg-secondaire{box-shadow:inset 0 0 0 1px var(--trait)}
+#ui5.u-signal .sg-secondaire{box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal .sg-secondaire:not(:disabled):hover{background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal .sg-secondaire.sg-discret,#ui5.u-signal .sg-principal.sg-danger+.sg-secondaire{box-shadow:none;color:var(--tx2)}
 #ui5.u-signal .sg-secondaire.sg-discret:not(:disabled):hover{color:var(--tx);background:var(--creux);box-shadow:none}
@@ -354,63 +401,64 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-verrou-ligne svg{width:14px;height:14px}
 
 /* ───────────────────────────── « Ce qui reste » : une feuille par-dessus la page */
-#ui5.u-signal .sg-tiroir{position:absolute;inset:46px 0 0 0;z-index:5;display:flex;flex-direction:column;background:var(--fond);animation:sg-monte .32s var(--doux)}
+#ui5.u-signal .sg-tiroir{position:absolute;inset:var(--barre-h) 0 0 0;z-index:5;display:flex;flex-direction:column;background:var(--fond);animation:sg-monte .32s var(--doux)}
 #ui5.u-signal .sg-tiroir[data-ouvert="0"]{display:none}
-#ui5.u-signal .sg-tete{flex:none;display:flex;align-items:center;gap:10px;height:46px;padding:0 10px 0 var(--marge);border-bottom:1px solid var(--trait)}
-#ui5.u-signal .sg-tete .sg-t{font:600 14px/1 var(--f);margin-right:auto}
+#ui5.u-signal .sg-tete{flex:none;display:flex;align-items:center;gap:10px;height:48px;padding:0 10px 0 var(--marge);border-bottom:1px solid var(--trait)}
+#ui5.u-signal .sg-tete .sg-t{font:500 14.5px/1 var(--f);letter-spacing:-.01em;margin-right:auto}
 #ui5.u-signal .sg-tete .sg-meta{margin-right:4px}
 #ui5.u-signal #sg-tiroir-corps{flex:1;min-height:0;overflow-y:auto;padding:4px var(--marge) var(--marge)}
-#ui5.u-signal .sg-section{display:flex;align-items:baseline;gap:8px;padding:14px 0 6px;font:600 11.5px/1.3 var(--f);letter-spacing:.02em;color:var(--tx2)}
+#ui5.u-signal .sg-section{display:flex;align-items:baseline;gap:8px;padding:18px 0 8px;font:500 10px/1.3 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--tx3)}
 #ui5.u-signal .sg-section .sg-n{color:var(--tx)}
-#ui5.u-signal .sg-section .sg-d{margin-left:auto;font-weight:500;letter-spacing:0;text-align:right}
+#ui5.u-signal .sg-section .sg-d{margin-left:auto;font-weight:400;letter-spacing:.04em;text-transform:none;text-align:right}
 #ui5.u-signal .sg-ligne{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-height:40px;padding:6px 0;border-top:1px solid var(--trait);font-size:13px;animation:sg-monte .3s var(--doux) backwards;animation-delay:calc(var(--i,0)*18ms)}
 #ui5.u-signal .sg-ligne[aria-selected="true"]{background:var(--creux);box-shadow:-8px 0 0 var(--creux),8px 0 0 var(--creux)}
-#ui5.u-signal .sg-ligne .sg-cut{font:650 13px/1.2 var(--f)}
+#ui5.u-signal .sg-ligne .sg-cut{font:540 13px/1.2 var(--f)}
 #ui5.u-signal .sg-motif{min-width:0;color:var(--tx);line-height:1.35}
 #ui5.u-signal .sg-motif small{font-size:12px;color:var(--tx2)}
 #ui5.u-signal .sg-prec{font-size:12px;color:var(--tx2)}
 #ui5.u-signal .sg-outils{display:inline-flex;gap:4px}
-#ui5.u-signal .sg-outils button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;border-radius:7px;font:600 12px/1 var(--f);color:var(--tx2);box-shadow:inset 0 0 0 1px var(--trait)}
+#ui5.u-signal .sg-outils button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:999px;font:500 12px/1 var(--f);color:var(--tx2);box-shadow:inset 0 0 0 1px var(--trait-fort)}
 #ui5.u-signal .sg-outils button:not(:disabled):hover{color:var(--tx);background:var(--creux)}
 #ui5.u-signal .sg-outils button[aria-pressed="true"]{color:var(--ok-tx);box-shadow:inset 0 0 0 1px rgba(var(--ok-rgb),.4)}
 #ui5.u-signal .sg-outils svg{width:13px;height:13px}
 #ui5.u-signal[data-taille="compact"] .sg-outils button span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 #ui5.u-signal[data-taille="compact"] .sg-outils button{position:relative;width:30px;padding:0;justify-content:center}
 #ui5.u-signal .sg-examine .sg-cut,#ui5.u-signal .sg-examine .sg-motif{text-decoration:line-through;color:var(--tx2)}
-#ui5.u-signal .sg-note-ligne{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--creux);font-size:12.5px;color:var(--tx)}
+#ui5.u-signal .sg-note-ligne{margin-top:10px;padding:10px 14px;border-radius:14px;background:var(--creux);font-size:12.5px;color:var(--tx)}
 #ui5.u-signal .sg-note-ligne.sg-refus{background:rgba(var(--crit-rgb),.12);color:var(--crit-tx)}
 
 /* ───────────────────────────── couches : menu, onglets ESV, palette, réglages, boîte */
 #ui5.u-signal .sg-voile{position:absolute;inset:0;z-index:10;background:var(--voile);animation:sg-fondu .2s ease-out}
 #ui5.u-signal .sg-voile.sg-transparent{background:transparent}
-#ui5.u-signal .sg-popover,#ui5.u-signal .sg-palette,#ui5.u-signal .sg-boite{position:absolute;z-index:11;border-radius:14px;border:1px solid var(--trait-fort);background-color:var(--tuile-a);background-image:linear-gradient(180deg,var(--tuile-a),var(--tuile-b));box-shadow:var(--ombre);animation:sg-descend .28s var(--ressort)}
-#ui5.u-signal .sg-popover{top:50px;right:10px;width:min(330px,calc(100% - 20px));padding:6px;display:flex;flex-direction:column}
-#ui5.u-signal .sg-menu-l{display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;width:100%;text-align:left;font:500 13.5px/1 var(--f);color:var(--tx)}
+/* les couches qui flottent (menu, onglets ESV, palette, boîte) : la seule surface levée du panneau, un fond plein et un trait */
+#ui5.u-signal .sg-popover,#ui5.u-signal .sg-palette,#ui5.u-signal .sg-boite{position:absolute;z-index:11;border-radius:18px;border:1px solid var(--trait-fort);background:var(--flottant);box-shadow:var(--ombre);animation:sg-descend .28s var(--ressort)}
+#ui5.u-signal .sg-popover{top:calc(var(--barre-h) + 2px);right:10px;width:min(330px,calc(100% - 20px));padding:6px;display:flex;flex-direction:column}
+#ui5.u-signal .sg-menu-l{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;width:100%;text-align:left;border-radius:12px;font:450 13.5px/1 var(--f);color:var(--tx)}
 #ui5.u-signal .sg-menu-l:hover{background:var(--creux)}
 #ui5.u-signal .sg-menu-l svg{width:16px;height:16px;color:var(--tx2)}
 #ui5.u-signal .sg-menu-l kbd{margin-left:auto}
 #ui5.u-signal .sg-cache{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;padding:10px 10px 6px;border-top:1px solid var(--trait)}
 #ui5.u-signal .sg-cache .sg-q{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:13px}
 #ui5.u-signal .sg-cache .sg-r{font-size:12px;color:var(--tx2)}
-#ui5.u-signal .sg-cache button,#ui5.u-signal .sg-ong button,#ui5.u-signal .sg-danger-zone button,#ui5.u-signal .sg-annuler{flex:none;height:30px;padding:0 11px;border-radius:8px;font:600 12.5px/1 var(--f);box-shadow:inset 0 0 0 1px var(--trait-fort);white-space:nowrap}
+#ui5.u-signal .sg-cache button,#ui5.u-signal .sg-ong button,#ui5.u-signal .sg-danger-zone button,#ui5.u-signal .sg-annuler{flex:none;height:30px;padding:0 13px;border-radius:999px;font:500 12.5px/1 var(--f);box-shadow:inset 0 0 0 1px var(--trait-fort);white-space:nowrap}
 #ui5.u-signal .sg-cache button:not(:disabled):hover,#ui5.u-signal .sg-ong button:not(:disabled):hover,#ui5.u-signal .sg-annuler:hover{background:var(--creux)}
 #ui5.u-signal .sg-ong{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:6px 10px;border-top:1px solid var(--trait)}
 #ui5.u-signal .sg-ong:first-of-type{border-top:0}
 #ui5.u-signal .sg-lib{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:13px}
-#ui5.u-signal .sg-lib b{font-weight:600;overflow-wrap:anywhere}
+#ui5.u-signal .sg-lib b{font-weight:500;overflow-wrap:anywhere}
 #ui5.u-signal .sg-lib small{font-size:12px;line-height:1.35;color:var(--tx2)}
 #ui5.u-signal .sg-conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok-tx);white-space:nowrap}
 #ui5.u-signal .sg-conn i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
 #ui5.u-signal .sg-pied{display:flex;align-items:center;gap:10px;padding:9px 10px 5px;border-top:1px solid var(--trait);font-size:12px;line-height:1.4;color:var(--tx2)}
 #ui5.u-signal .sg-popover>.sg-vide{padding:10px}
 #ui5.u-signal .sg-pied svg{width:13px;height:13px}
-#ui5.u-signal .sg-palette{top:58px;left:12px;right:12px;margin:0 auto;max-width:460px;overflow:hidden}
-#ui5.u-signal #ui5-q{width:100%;height:46px;padding:0 16px;border:0;border-bottom:1px solid var(--trait);background:transparent;font:500 15px/1 var(--f);color:var(--tx);outline:0}
+#ui5.u-signal .sg-palette{top:62px;left:12px;right:12px;margin:0 auto;max-width:460px;overflow:hidden}
+#ui5.u-signal #ui5-q{width:100%;height:50px;padding:0 18px;border:0;border-bottom:1px solid var(--trait);background:transparent;font:400 15.5px/1 var(--f);letter-spacing:-.01em;color:var(--tx);outline:0}
 /* CH-106 : le champ de la palette montre son focus (son `outline:0` l'emportait sur la règle générale `:focus-visible`). */
 #ui5.u-signal #ui5-q:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 #ui5.u-signal #ui5-q::placeholder{color:var(--tx2)}
 #ui5.u-signal .sg-cmds{display:flex;flex-direction:column;padding:6px}
-#ui5.u-signal .sg-cmd{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:40px;padding:6px 10px;width:100%;text-align:left;font:500 13.5px/1.25 var(--f);color:var(--tx);border-radius:9px;animation:sg-monte .28s var(--doux) backwards}
+#ui5.u-signal .sg-cmd{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:40px;padding:6px 12px;width:100%;text-align:left;font:450 13.5px/1.25 var(--f);color:var(--tx);border-radius:12px;animation:sg-monte .28s var(--doux) backwards}
 #ui5.u-signal .sg-cmd svg{width:16px;height:16px;color:var(--tx2)}
 #ui5.u-signal .sg-cmd[aria-selected="true"]{background:var(--creux-fort)}
 #ui5.u-signal .sg-cmd[aria-selected="true"] .sg-et{color:var(--tx)}
@@ -424,22 +472,22 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-reg{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:54px;padding:9px 0;border-top:1px solid var(--trait)}
 #ui5.u-signal .sg-liste>.sg-reg:first-child{border-top:0}
 #ui5.u-signal .sg-reg.sg-reg-bloc{min-height:0;padding-bottom:4px}
-#ui5.u-signal .sg-reg select{flex:none;max-width:52%;height:32px;padding:0 28px 0 10px;border-radius:8px;border:1px solid var(--trait-fort);background:var(--creux);font:600 12.5px/1 var(--f);color:var(--tx)}
-#ui5.u-signal .sg-reg select option{background:var(--tuile-a);color:var(--tx)}
+#ui5.u-signal .sg-reg select{flex:none;max-width:52%;height:32px;padding:0 28px 0 13px;border-radius:999px;border:1px solid var(--trait-fort);background:transparent;font:500 12.5px/1 var(--f);color:var(--tx)}
+#ui5.u-signal .sg-reg select option{background:var(--flottant);color:var(--tx)}
 #ui5.u-signal .sg-hist{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--trait);font-size:12.5px;color:var(--tx2)}
 #ui5.u-signal .sg-hist small{font-size:12px;white-space:nowrap}
 #ui5.u-signal .sg-bas{display:flex;flex-direction:column;gap:12px;padding-top:16px;margin-top:8px;border-top:1px solid var(--trait)}
 #ui5.u-signal .sg-lien{display:flex;align-items:flex-start;gap:9px;text-align:left;font:500 13px/1.4 var(--f);color:var(--accent-tx)}
 #ui5.u-signal .sg-lien svg{width:16px;height:16px;margin-top:1px}
-#ui5.u-signal .sg-danger-zone{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:12px;border:1px solid rgba(var(--crit-rgb),.3);font-size:12.5px;color:var(--tx2)}
+#ui5.u-signal .sg-danger-zone{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(var(--crit-rgb),.3);font-size:12.5px;color:var(--tx2)}
 #ui5.u-signal .sg-danger-zone button{color:var(--crit-tx);box-shadow:inset 0 0 0 1px rgba(var(--crit-rgb),.45)}
 #ui5.u-signal .sg-boite{top:18%;left:16px;right:16px;margin:0 auto;max-width:440px;padding:18px;display:flex;flex-direction:column;gap:12px}
 /* CH-106 : la boîte tient dans la fenêtre (320 × 480 : elle sortait de 26 px, « Préparer » coupé) ; son contenu défile dedans. */
 #ui5.u-signal .sg-boite{max-height:calc(82% - 12px);overflow-y:auto;overscroll-behavior:contain}
-#ui5.u-signal .sg-boite .sg-t{font:650 16px/1.2 var(--f)}
+#ui5.u-signal .sg-boite .sg-t{font:500 17px/1.2 var(--f);letter-spacing:-.015em}
 #ui5.u-signal .sg-boite .sg-reg{border-top:0;padding:0;min-height:0}
 #ui5.u-signal .sg-bts{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:4px}
-#ui5.u-signal .sg-bts .sg-principal{height:38px;padding:0 16px;font:600 13.5px/1 var(--f)}
+#ui5.u-signal .sg-bts .sg-principal{height:38px;padding:0 18px;border-radius:999px;font:500 13.5px/1 var(--f)}
 #ui5.u-signal .sg-annuler{height:38px}
 
 /* ───────────────────────────── Constellation et Aurore */
@@ -447,9 +495,9 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-onglet-file .sg-duo>.sg-of-sec{overflow:hidden}
 #ui5.u-signal .sg-registre{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
 #ui5.u-signal .sg-reg-tete,#ui5.u-signal .sg-reg-partie{display:grid;grid-template-columns:minmax(0,1fr) 46px 52px 60px;align-items:center;gap:6px}
-#ui5.u-signal .sg-reg-tete{font-size:11px;color:var(--tx3);padding-bottom:6px}
+#ui5.u-signal .sg-reg-tete{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);padding-bottom:6px}
 #ui5.u-signal .sg-reg-tete>span:not(:first-child),#ui5.u-signal .sg-reg-partie>.sg-mono{text-align:right}
-#ui5.u-signal .sg-reg-partie{padding:7px 0 6px;border-top:1px solid var(--trait);font:600 13px/1.2 var(--f)}
+#ui5.u-signal .sg-reg-partie{padding:7px 0 6px;border-top:1px solid var(--trait);font:450 13px/1.2 var(--f)}
 #ui5.u-signal .sg-reg-p{display:flex;align-items:center;gap:8px}
 #ui5.u-signal .sg-reg-p i{width:7px;height:7px;border-radius:50%;background:var(--tx3)}
 #ui5.u-signal .sg-reg-partie[data-etat="faite"] .sg-reg-p i{background:var(--accent)}
@@ -464,29 +512,28 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-of-depart b{color:var(--tx)}
 #ui5.u-signal .sg-of-ch{grid-column:1/-1;font-size:11.5px;line-height:1.35}
 #ui5.u-signal .sg-of-ligne{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
-/* CH-105 (D-335) : LA MOLETTE du nombre de parties (src/signal-rendu.js `moletteHtml`). Un creux, « − » et « + » en tuile aux bouts, au milieu une
- * fenêtre où glisse la bande des nombres ; le choisi sous une loupe (le pouce des choix), grand, dans le bleu de la Constellation ; ses voisins rapetissent
- * et s'effacent vers les bords. Seuls transform et opacity bougent (courbe ressort, 0,26 s) ; « réduire les animations » coupe tout (fin du fichier). */
-#ui5.u-signal .sg-molette{--c:40px;--mol-h:44px;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:12px;background:var(--creux);flex:0 1 300px;max-width:100%;touch-action:pan-y}
+/* CH-105 (D-335) : LA MOLETTE du nombre de parties (src/signal-rendu.js `moletteHtml`). Une pilule cerclée, « − » et « + » aux bouts, au milieu une
+ * fenêtre où glisse la bande des nombres ; le choisi sous une loupe (une pilule teintée), grand et fin, dans le bleu de la Constellation ; ses voisins
+ * rapetissent et s'effacent vers les bords (CH-108 : la molette en pilule, D-339). Seuls transform et opacity bougent (courbe ressort, 0,26 s) ; « réduire les animations » coupe tout (fin du fichier). */
+#ui5.u-signal .sg-molette{--c:40px;--mol-h:44px;display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--trait);flex:0 1 300px;max-width:100%;touch-action:pan-y}
 #ui5.u-signal[data-taille="compact"] .sg-molette{--c:34px;--mol-h:38px;flex-basis:260px}
 /* en compact (360, 320), la molette prend toute la largeur de la tuile : plus de nombres visibles, de la place pour glisser */
 #ui5.u-signal[data-taille="compact"] .sg-of-ligne>.sg-molette,#ui5.u-signal[data-taille="compact"] .sg-boite .sg-reg>.sg-molette{flex:1 1 100%}
-#ui5.u-signal .sg-mol-moins,#ui5.u-signal .sg-mol-plus{flex:none;width:34px;height:var(--mol-h);border-radius:9px;background:linear-gradient(180deg,var(--tuile-a),var(--tuile-b));box-shadow:inset 0 0 0 1px var(--trait),inset 0 1px 0 var(--reflet);font:500 18px/1 var(--f);color:var(--tx);display:inline-flex;align-items:center;justify-content:center;transition:transform .2s var(--ressort),opacity .2s}
+#ui5.u-signal .sg-mol-moins,#ui5.u-signal .sg-mol-plus{flex:none;width:34px;height:var(--mol-h);border-radius:999px;font:300 20px/1 var(--f);color:var(--tx);display:inline-flex;align-items:center;justify-content:center;transition:transform .2s var(--ressort),opacity .2s}
 #ui5.u-signal[data-taille="compact"] .sg-mol-moins,#ui5.u-signal[data-taille="compact"] .sg-mol-plus{width:30px}
 #ui5.u-signal .sg-mol-moins:active:not(:disabled),#ui5.u-signal .sg-mol-plus:active:not(:disabled){transform:scale(.92)}
 #ui5.u-signal .sg-mol-moins:disabled,#ui5.u-signal .sg-mol-plus:disabled{opacity:.3}
-#ui5.u-signal .sg-mol-fen{position:relative;flex:1 1 auto;min-width:calc(var(--c) * 3);height:var(--mol-h);overflow:hidden;border-radius:9px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;
+#ui5.u-signal .sg-mol-fen{position:relative;flex:1 1 auto;min-width:calc(var(--c) * 3);height:var(--mol-h);overflow:hidden;border-radius:999px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;
  -webkit-mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent);mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent)}
 #ui5.u-signal .sg-mol-fen:active{cursor:grabbing}
 #ui5.u-signal .sg-mol-fen:focus-visible{outline-offset:-2px}
-#ui5.u-signal .sg-mol-fen::before{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:var(--c);margin-left:calc(var(--c) / -2);border-radius:8px;background:var(--pouce);box-shadow:inset 0 1px 0 var(--reflet)}
-#ui5.u-signal[data-theme="clair"] .sg-mol-fen::before{box-shadow:0 1px 2px rgba(10,14,25,.18)}
+#ui5.u-signal .sg-mol-fen::before{content:"";position:absolute;left:50%;top:3px;bottom:3px;width:var(--c);margin-left:calc(var(--c) / -2);border-radius:999px;background:rgba(var(--accent-rgb),.14)}
 #ui5.u-signal .sg-mol-bande{position:absolute;top:0;bottom:0;left:50%;display:flex;transform:translateX(calc(var(--c) * -1 * (var(--i, 0) + .5) + var(--dx, 0px)));transition:transform .26s var(--ressort)}
 #ui5.u-signal .sg-mol-bande.sg-glisse{transition:none}
-#ui5.u-signal .sg-mol-n{flex:none;width:var(--c);display:flex;align-items:center;justify-content:center;font:700 22px/1 var(--f);font-variant-numeric:tabular-nums;color:var(--tx2);cursor:pointer;
+#ui5.u-signal .sg-mol-n{flex:none;width:var(--c);display:flex;align-items:center;justify-content:center;font:300 22px/1 var(--f);font-variant-numeric:tabular-nums;color:var(--tx2);cursor:pointer;
  transform:scale(.55);opacity:.35;transition:transform .26s var(--ressort),opacity .26s var(--doux)}
 #ui5.u-signal[data-taille="compact"] .sg-mol-n{font-size:19px}
-#ui5.u-signal .sg-mol-n[data-d="0"]{transform:scale(1);opacity:1;color:var(--accent-tx);cursor:inherit}
+#ui5.u-signal .sg-mol-n[data-d="0"]{transform:scale(1);opacity:1;font-weight:400;color:var(--accent-tx);cursor:inherit}
 #ui5.u-signal .sg-mol-n[data-d="1"]{transform:scale(.66);opacity:1}
 #ui5.u-signal .sg-mol-n[data-d="2"]{transform:scale(.6);opacity:.7}
 /* dans la boîte : le libellé garde sa largeur, la molette passe dessous quand la place manque (360 de large) */
@@ -508,11 +555,11 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-trois dt{white-space:normal}
 
 /* ───────────────────────────── détails techniques (éléments du panneau d'origine, déplacés le temps de la lecture) */
-.sg-tech{position:fixed;inset:0;z-index:20;overflow:auto;background:var(--bg,#07080A);padding:0 0 24px}
-.sg-tech-tete{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:12px;min-height:46px;padding:8px 12px 8px 16px;background:inherit;border-bottom:1px solid var(--hair,rgba(127,127,127,.3))}
-.sg-tech-tete b{font-weight:600;font-size:14px}
+.sg-tech{position:fixed;inset:0;z-index:20;overflow:auto;background:var(--bg,#08090B);padding:0 0 24px}
+.sg-tech-tete{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 12px 8px 16px;background:inherit;border-bottom:1px solid var(--hair,rgba(127,127,127,.3))}
+.sg-tech-tete b{font-weight:500;font-size:14.5px;letter-spacing:-.01em}
 .sg-tech-tete span{flex:1;color:var(--text-2,inherit);font-size:12px;line-height:1.35}
-.sg-tech-tete button{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--hair-2,rgba(127,127,127,.5));background:transparent;color:inherit;font:600 12.5px/1 var(--sans,inherit);cursor:pointer}
+.sg-tech-tete button{height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--hair-2,rgba(127,127,127,.5));background:transparent;color:inherit;font:500 12.5px/1 var(--sans,inherit);cursor:pointer}
 .sg-tech-corps{padding:12px 16px;display:flex;flex-direction:column;gap:12px}
 
 /* ───────────────────────────── mouvement : chaque mouvement signale un changement ; déplacements et opacités seulement */
@@ -536,6 +583,8 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 @keyframes sg-fondu{from{opacity:0}}
 @keyframes sg-pose{from{opacity:0;transform:scale(.6)}}
 @keyframes sg-coche{from{opacity:0;transform:rotate(-45deg) scale(.3)}}
+/* l'onde part du bord de l'anneau et s'éloigne jusqu'à son cercle de repos, jamais au-delà : elle ne touche pas le mot d'état */
+@keyframes sg-onde{0%{transform:scale(.8);opacity:.55}100%{transform:scale(1);opacity:0}}
 @media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}}
 /* Une tuile qui vient d'entrer (la zone change avec l'état) : son trait se remplit aussi, depuis zéro. */
 @starting-style{#ui5.u-signal .sg-etapes li[data-etape="fait"]+li::after{transform:scaleY(0)}#ui5.u-signal .sg-chaine li:not([data-etat="a-venir"])::after{transform:scaleX(0)}}
