@@ -91,12 +91,13 @@ const MESURE=()=>{
  /* Une zone qui défile cache du contenu sous son bord : c'est dit (les onglets Constellation et Aurore, faits pour défiler en 360, ne comptent pas). */
  const Z=P.querySelector('.sg-zone:not(.sg-onglet-file):not(.sg-onglet-corr)');if(Z&&Z.scrollHeight>Z.clientHeight+1)out.push('ZONE A DEFILER de '+(Z.scrollHeight-Z.clientHeight)+' px');
  for(const e of P.querySelectorAll('*')){if(!e.getClientRects().length)continue;const r=e.getBoundingClientRect();if(r.width<=1||r.height<=1)continue;if(e.closest('svg')||e.closest('[data-tourne]'))continue;
-  if((r.right>W+.5||r.left<-.5)&&!e.closest('.sg-puce .sg-tx'))out.push('SORT '+nom(e)+' '+Math.round(r.right-W));
+  /* CH-108 : la bande des nombres de la molette (1 à 20) est plus large que sa fenêtre, qui la coupe et l'estompe exprès (CH-105) : ce n'est pas un débordement */
+  if((r.right>W+.5||r.left<-.5)&&!e.closest('.sg-puce .sg-tx')&&!e.closest('.sg-mol-fen'))out.push('SORT '+nom(e)+' '+Math.round(r.right-W));
   /* deux textes d'une même ligne qui se recouvrent (étapes du lot) */
   if(e.matches('.sg-etapes li')){const b=e.querySelector('b').getBoundingClientRect(),v=e.querySelector('span').getBoundingClientRect();if(v.width&&v.left<b.right-.5&&v.top<b.bottom-1&&v.bottom>b.top+1)out.push('CHEVAUCHE '+e.textContent.trim().slice(0,40));}
   if(r.bottom>H+.5&&!defile(e)&&!coupe(e))out.push('SORT EN BAS '+nom(e)+' '+Math.round(r.bottom-H));
   const s=getComputedStyle(e);
-  if(e.scrollWidth>e.clientWidth+1&&s.overflowX!=='visible'&&s.textOverflow!=='ellipsis'&&!e.matches('.sg-registre,.sg-corps'))out.push('TRONQUE '+nom(e)+' « '+e.textContent.trim().slice(0,30)+' »');
+  if(e.scrollWidth>e.clientWidth+1&&s.overflowX!=='visible'&&s.textOverflow!=='ellipsis'&&!e.matches('.sg-registre,.sg-corps,.sg-mol-fen'))out.push('TRONQUE '+nom(e)+' « '+e.textContent.trim().slice(0,30)+' »');
   /* le nom de l'onglet ESV dans la puce se coupe exprès par une ellipse (nom entier dans l'infobulle et la liste) */
   if(s.textOverflow==='ellipsis'&&e.scrollWidth>e.clientWidth+1&&!e.closest('.sg-puce'))out.push('ELLIPSE '+nom(e)+' « '+e.textContent.trim().slice(0,30)+' »');
   if(e.disabled||e.closest('[disabled]')||e.closest('[inert]')||e.getAttribute('aria-hidden')==='true')continue;
@@ -104,10 +105,16 @@ const MESURE=()=>{
   const c=rgb(s.color),f=fond(e);if(!c)continue;const k0={r:c.r*c.a+f.r*(1-c.a),g:c.g*c.a+f.g*(1-c.a),b:c.b*c.a+f.b*(1-c.a)};const [a,b2]=[lum(k0),lum(f)].sort((x,y)=>y-x);const k=(a+.05)/(b2+.05);
   if(k<4.5)out.push('CONTRASTE '+nom(e)+' « '+e.textContent.trim().slice(0,24)+' » '+k.toFixed(2));}
  return [...new Set(out)];};
+const RELEVE=()=>{
+ const P=['font-family','font-size','font-weight','letter-spacing','text-transform','line-height','color','background-color','background-image','border-top','border-right','border-bottom','border-left','border-radius','box-shadow','padding','margin','width','height','opacity','inset','stroke-width','animation-name','display','gap'];
+ const R=document.getElementById('ui5');if(!R||R.hidden)return {};const out={};let i=0;
+ for(const e of [R,...R.querySelectorAll('*')]){const cls=(e.className&&e.className.baseVal!==undefined?e.className.baseVal:e.className)||'';const k=(i++)+' '+e.tagName.toLowerCase()+(cls?'.'+String(cls).trim().split(/\s+/).join('.'):'');
+  for(const pe of ['',':before',':after']){const s=getComputedStyle(e,pe||null);if(pe&&(s.content==='none'||s.content==='normal'))continue;const o={};for(const p of P)o[p]=s.getPropertyValue(p);out[k+(pe?' '+pe:'')]=o;}}
+ return out;};
 /* Les états et la mesure servent aussi à controle.cjs. */
-module.exports={E,MESURE,FICHES,lot,id};
+module.exports={E,MESURE,RELEVE,FICHES,lot,id};
 if(SEUL)(async()=>{
- const {chromium}=require(navigateur.modulePlaywright());const nav=await chromium.launch({executablePath:navigateur.executable()});const bilan={},mesures={};
+ const {chromium}=require(navigateur.modulePlaywright());const nav=await chromium.launch({executablePath:navigateur.executable()});const bilan={},mesures={},styles={};
  for(const theme of ['sombre','clair'])for(const [taille,vp] of [['600',{width:600,height:760}],['360',{width:360,height:480}]])for(const [nom,e] of Object.entries(E)){
   const cle=`${theme}-${taille}-${nom}`;if(FILTRE&&!cle.includes(FILTRE))continue;
   const ctx=await nav.newContext({viewport:vp,deviceScaleFactor:2});const page=await ctx.newPage();const erreurs=[];page.on('pageerror',x=>erreurs.push(x.message));
@@ -122,6 +129,8 @@ if(SEUL)(async()=>{
     storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
   },{state,rel:e.rel||{choix:'corriger',lot:null,passe:null},fiches:e.fiches||[],onglets:e.onglets||null});
   await ouvrirPanneau(page,e.hash||'#automatic');await page.waitForTimeout(1300);
+  /* CH-108 : FEUILLE_EN_PLUS=chemin.css pose une feuille après celles du panneau (référence « tronc + feuille ») ; ses polices sont lues dans fonts/ du dépôt. */
+  if(process.env.FEUILLE_EN_PLUS){await page.addStyleTag({content:fs.readFileSync(process.env.FEUILLE_EN_PLUS,'utf8').replace(/url\(fonts\/inter-latin-opsz-normal\.woff2\)/g,'url(/fonts/Inter-latin-opsz-wght.woff2)')});await page.waitForTimeout(400);}
   for(const a of e.actions||[]){await page.evaluate(a=>window.ArianeUi5.agir(a),a);await page.waitForTimeout(300);}
   if(e.file){await page.evaluate(()=>window.ArianeUi5.agir('sg:onglet-file'));await page.waitForTimeout(300);
    if(typeof e.file==='number'){await page.evaluate(n=>window.ArianeUi5.agir('sg:file-n:'+n),e.file);await page.waitForTimeout(1200);}}
@@ -132,11 +141,14 @@ if(SEUL)(async()=>{
   await page.waitForTimeout(900);
   await page.screenshot({path:path.join(SORTIE,`${cle}.png`)});
   mesures[cle]=[...erreurs.map(x=>'ERREUR '+x),...(e.origine?[]:await page.evaluate(MESURE))];
+  /* CH-108 : STYLES=1 relève les styles calculés de chaque élément du panneau (et de ses ::before/::after), pour comparer deux rendus propriété par propriété. */
+  if(process.env.STYLES==='1')styles[cle]=await page.evaluate(RELEVE);
   if(theme==='sombre')bilan[`${taille}/${nom}`]=await page.evaluate(()=>(document.querySelector('#ui5 .sg-fen')?.innerText||'').replace(/\n+/g,' | ').slice(0,600));
   await ctx.close();
  }
  await nav.close();
  fs.writeFileSync(path.join(SORTIE,'mesures.json'),JSON.stringify(mesures,null,1));
+ if(process.env.STYLES==='1')fs.writeFileSync(path.join(SORTIE,'styles.json'),JSON.stringify(styles));
  for(const [k,v] of Object.entries(bilan))console.log(k,'\n  ',v);
  let n=0;for(const [k,v] of Object.entries(mesures))if(v.length){n+=v.length;console.log('== '+k+'\n  '+v.join('\n  '));}
  console.log(n?`${n} défaut(s) mesuré(s)`:'Mesures : aucun débordement, aucune troncature, aucun contraste sous 4,5:1');
