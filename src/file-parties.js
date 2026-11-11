@@ -66,6 +66,8 @@
   const entier = (v, max = 1e8) => (Number.isInteger(v) && /** @type {number} */ (v) >= 0 && /** @type {number} */ (v) < max ? /** @type {number} */ (v) : null);
   /** @param {unknown} v @param {number} [n] @returns {string|null} */
   const texte = (v, n = 200) => (typeof v === 'string' && v ? v.slice(0, n) : null);
+  /* CH-109 (B) : cuts non relus d'une relecture close « interrompue » (entiers, au plus MAX_LISTE) ; absents ailleurs : le bilan d'avant à l'octet près. */
+  const nonRelus = (/** @type {unknown} */ v) => (Array.isArray(v) ? { nonRelus: /** @type {number[]} */ (v.filter(x => entier(x) !== null)).slice(0, MAX_LISTE) } : {});
   /** @param {unknown} l @returns {CH075.Coupe[]} */
   const cuts = l => (Array.isArray(l) ? /** @type {CH075.Coupe[]} */ ([...new Set(l.filter(c => entier(c) !== null))].sort((a, b) => a - b).slice(0, MAX_LISTE)) : []);
   /** @template T @param {T} e @returns {T} */
@@ -176,7 +178,7 @@
       case 'relecture': {
         if (type !== 'relecture-fin') return ignore(`événement ${type} hors de l’état relecture`);
         if (ev.lotId !== e.partie.lotId) return ignore('fin de relecture d’un autre lot');
-        e.partie.relecture = { issue: texte(ev.issue, 40), corriges: entier(ev.corriges), faits: entier(ev.faits), mode: texte(ev.mode, 20), ...(entier(ev.refusees) !== null ? { refusees: entier(ev.refusees) } : {}) };
+        e.partie.relecture = { issue: texte(ev.issue, 40), corriges: entier(ev.corriges), faits: entier(ev.faits), mode: texte(ev.mode, 20), ...(entier(ev.refusees) !== null ? { refusees: entier(ev.refusees) } : {}), ...nonRelus(ev.nonRelus) };
         if (ev.ecritureEnSuspens) { arreter(e, 'ecriture-incertaine', at, ev.detail); return { etat: e, actions: [] }; }
         /* D-261 : la relecture passe toujours. Non lancée parce qu'ESV affiche une autre partie (au dernier cut, ESV charge la partie suivante) :
          * la file ramène ESV sur la partie du lot (même commande que le changement de partie) et relance la relecture, une fois. */
@@ -303,7 +305,7 @@
     let change = false; const n = copie(e), q = n.bilan[n.bilan.length - 1];
     if (!q.passe && passe && typeof passe.issue === 'string') { q.passe = { issue: texte(passe.issue, 40), ecrits: entier(passe.ecrits) }; change = true; }
     if (!q.relecture && relecture && typeof relecture.issue === 'string') {
-      q.relecture = { issue: texte(relecture.issue, 40), corriges: entier(relecture.corriges), faits: entier(relecture.faits), mode: texte(relecture.mode, 20), apresArret: true, ...(entier(relecture.refusees) !== null ? { refusees: entier(relecture.refusees) } : {}) }; change = true; }
+      q.relecture = { issue: texte(relecture.issue, 40), corriges: entier(relecture.corriges), faits: entier(relecture.faits), mode: texte(relecture.mode, 20), apresArret: true, ...(entier(relecture.refusees) !== null ? { refusees: entier(relecture.refusees) } : {}), ...nonRelus(relecture.nonRelus) }; change = true; }
     return change ? n : null;
   }
   /* CH-026 : d'où repart une file ARRÊTÉE : le premier rang non fini (la partie interrompue, ou la suivante si l'arrêt est venu entre deux parties),

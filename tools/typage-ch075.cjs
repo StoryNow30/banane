@@ -6,7 +6,9 @@ const REFERENCES={
  'src/appuis-liste.js':{base:'5699f68',source:'966d52431947b3c8710ede1c866f141a32620c3e969308a480a878f072d60d02',ast:'f1c7c1cbd7a52009c8662abb0b42b59a47cbc28dcc0dd81338c55d164a5d2b0e'},
  /* CH-097 (défaut 3) : le code de la file change (alertes : écrits de la passe, refus de la relecture). Référence refaite sur le commit du changement ;
   * l'ancienne (base 32c4783, arbre 9d59d93b…) reste lisible dans l'historique. Si l'intégration ne garde pas ce commit, refaire la base sur le tronc. */
- 'src/file-parties.js':{base:'a674e14',source:'4f11c329d04c5e7890511d7682d3e42ecb9df8e0bc46fbeb2dd0a4724f61ce02',ast:'a94dbfefb4c4ce1200ce8f0d58b7d9bd2bf0c75f9a8710a426d817d024394207'},
+ /* CH-109 (B) : cuts non relus d'une relecture close « interrompue » (`nonRelus`). Référence refaite sur le commit du changement (3feab9e) ; l'ancienne
+  * (base a674e14, arbre a94dbfef…) reste lisible dans l'historique. Si l'intégration ne garde pas ce commit, refaire la base sur le tronc. */
+ 'src/file-parties.js':{base:'3feab9e',source:'ab36528a478db8a1669b63316d6ac481fb38c67809addd241a7ae020b868a2bb',ast:'0b68918df2d7eb9ef584bf9b65fad52a7549dc17f80e82824847f9e6614c9206'},
  'src/file-prioritaire.js':{base:'32c4783',source:'c43494abd24fd2ff21ac410021c6e66e2ed6dea1eb172b8ef8633cb147f6bab1',ast:'ed5fc7e67e598d1098b8332bb3f0a5674e022086f585884e24cbfc68e236c566'},
 };
 const PERIMETRE=['src/appuis-liste.js','src/file-prioritaire.js','src/file-parties.js'];

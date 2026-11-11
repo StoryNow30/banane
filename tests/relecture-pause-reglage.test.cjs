@@ -5,9 +5,9 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {H,lotPause}=require('./helpers/relecture-pause.cjs');
 const js=x=>JSON.parse(JSON.stringify(x));   /* les objets du service worker viennent d'un autre contexte : on compare leur contenu */
 
-test('réglage éteint (installation neuve) : « Pause » refusée, aucun point, aucun événement de pause ; la passe finit comme avant',async()=>{
+test('réglage éteint (installation neuve, ANCIEN défaut : CH-109 / D-341 l’allume, tests/ch109-*.test.cjs) : « Pause » refusée, aucun point, aucun événement de pause ; la passe finit comme avant',async()=>{
  let demande=null,lu=null;
- const {b}=await lotPause({actif:null,esv:(a,bb)=>{a.surAller=async t=>{if(t.cut!==109||demande)return;lu=(await bb.api('relecture-etat')).repriseReglage;demande=await bb.api('relecture-pause').then(()=>'accepté',e=>e.message);}}});
+ const {b}=await lotPause({actif:null,pauseDefaut:{defautActif:false,defautF5:'pause'},esv:(a,bb)=>{a.surAller=async t=>{if(t.cut!==109||demande)return;lu=(await bb.api('relecture-etat')).repriseReglage;demande=await bb.api('relecture-pause').then(()=>'accepté',e=>e.message);}}});
  const p=await H.finPasse(b);
  assert.deepEqual(js(lu),{actif:false,f5:'pause'},'éteint par défaut');assert.match(demande,/éteinte dans les réglages/);
  assert.equal(p.etat,'finie');assert.equal(p.faits,7);

@@ -260,7 +260,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */
@@ -292,6 +292,8 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.equal(file.actif,true,'file de parties : allumée par défaut dans la test 25 (D-268, ordre de l\'opérateur) ; la file ne part que si l\'opérateur la lance');
  /* Test 27 (CH-026, ordre de l'opérateur du 30/10) : clé ajoutée au premier niveau, la relecture « corriger » par défaut, non réglable. */
  assert.deepEqual({...relectureDefaut},{mode:'corriger',modifiable:false},'relecture après le lot : « corriger » par défaut, non réglable');
+ /* CH-109 (D-341) : clé ajoutée au premier niveau, le défaut de la pause et de la reprise de la relecture, ALLUMÉ (la relecture seulement). */
+ assert.deepEqual({...relecturePause},{defautActif:true,defautF5:'pause'},'CH-109, D-341 : pause et reprise de la relecture allumées par défaut');
  assert.equal(relectureSignalEteint.actif,true,'CH-060, D-290 : rechargement d\'ESV quand son signal s\'éteint pendant la relecture : ALLUMÉ (la relecture seulement ; le lot n\'est pas concerné)');
  /* CH-035 : clé ajoutée au premier niveau, l'Aurore entre les parties d'une Constellation, ÉTEINTE tant que l'opérateur ne l'a pas éprouvée. */
  assert.equal(correctionEntreParties.actif,true,'Aurore entre les parties : allumée par défaut (CH-037, décision de l’opérateur du 01/11), sans effet sur le lot');

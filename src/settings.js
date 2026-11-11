@@ -462,6 +462,12 @@
    * pause au point de reprise après `lectures` lectures rapides de suite au repli, rechargement de la page ESV, reprise au cut suivant (`rechargementsMax` par passe : 1 ; sans signal après, la passe continue au repli, sans boucle). */
   /* D-290 (opérateur, 06/11 : « go ») : ALLUMÉ. Relecture du 06/11 (paquet 2bc1f56) : signal éteint pendant toute la relecture des parties 13 à 15. */
   const relectureSignalEteint = Object.freeze({ actif: true, lectures: 8, rechargementsMax: 1, attenteRepriseMs: 90000 });
+  /* CH-109 (A) : DÉFAUT de la pause et de la reprise de la relecture (Test 17, D-232 à D-234), quand l'opérateur n'a rien choisi dans le panneau (aucun
+   * `banane51RelecturePauseReglage` marqué `v: 2`). D-341 (choix écrit de l'opérateur, 11/11 : « après un F5, la relecture reprend là où elle s'était arrêtée ») :
+   * ALLUMÉ. Un F5 pendant la relecture la met en pause au cut où elle était, et elle reprend seule une fois la page rechargée et ESV prêt (background.js,
+   * `relectureEsvRevenue`). Migration unique : un « éteint » gardé sans marque (posé avant D-341) passe à « allumé » une fois ; ensuite, un « éteint » coché
+   * par l'opérateur est respecté. `defautF5` : 'pause' ou 'arret' (le choix « Si ESV est rechargé pendant la relecture »). `defautActif: false` : l'ancien défaut. */
+  const relecturePause = Object.freeze({ defautActif: true, defautF5: 'pause' });
   /* CH-084 (D-313) — VALIDATION SUR PLACE (Maj+Espace, relecture « corriger ») : fin de la fenêtre d'observation par un ÉTAT OBSERVÉ.
    * Aujourd'hui l'adaptateur attend 1 500 ms un changement de cut qui n'arrive pas (147 appels sur 147 ≥ 1 501 ms, lots du 09/11).
    * `actif` : la fenêtre se ferme plus tôt seulement si l'écriture « valid » (TreatedByOperator) de CE cut est vue par l'observateur
@@ -528,7 +534,11 @@
    * l'opérateur règle le nombre de parties et la lance ; le patch de l'adaptateur (`changerPartie`) est appliqué. Le changement de partie n'a jamais
    * été vu sur un vrai ESV : premier essai avec 2 parties, l'opérateur présent. `actif:false` : aucune action de la file n'existe, le panneau et les
    * exports sont ceux d'avant. `changementBorneMs` : borne du changement de partie (60 s, architecture 5.0, module P). */
-  const file = Object.freeze({ actif: true, changementBorneMs: 60000, repriseApresRechargement: true });
+  /* CH-109 (B) : `relecturePauseMaxMs` : dans une Constellation, une relecture restée en pause plus longtemps (rechargement automatique CH-060 / CH-107
+   * compris) est close « interrompue », ses cuts non relus au bilan de la partie, et la file passe à la suite ; rien n'est écrit sur ces cuts. Une pause
+   * demandée par l'opérateur n'est jamais close. Livré COUPÉ (null : la file attend sans limite, l'ancienne conduite) ; proposé, en attente de l'accord
+   * écrit de l'opérateur : 300000 (5 min, plus que les 90 s d'attente du rechargement automatique). Hors Constellation, rien ne change. */
+  const file = Object.freeze({ actif: true, changementBorneMs: 60000, repriseApresRechargement: true, relecturePauseMaxMs: null });
   /* CH-035 — L'AURORE ENTRE LES PARTIES D'UNE CONSTELLATION (correction dans Orbite après une file, chantiers/CH-035/CONCEPTION.md). Allumé, « Ouvrir »
    * un cut d'une autre partie change de partie par les boutons d'ESV (`changerPartie` de l'adaptateur, ses modes ; aucune touche, aucune validation,
    * aucun SKIP), Écho en pause pendant le trajet, puis va au cut. CH-037 : ALLUMÉ par défaut (décision de l'opérateur du 01/11 : il veut traverser
@@ -684,5 +694,5 @@
   /* D-320 (opérateur, 10/11) : le bouton « SKIP explicite » du panneau est MASQUÉ jusqu'à Ariane 6.0 (le SKIP y deviendra une règle à part entière). Audit du 10/11 : il existait
    * malgré la règle « Ariane n'envoie jamais SKIP », et sa frappe n'arrivait probablement pas dans ESV. Le chemin du moteur reste en place ; `bouton: true` le remontre. */
   const skipExplicite = Object.freeze({ bouton: false });
-  return Object.freeze({ skipExplicite, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+  return Object.freeze({ skipExplicite, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, relecturePause, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
 });

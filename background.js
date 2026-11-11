@@ -3728,10 +3728,17 @@ async function relectureOublierPasse(p){try{const r=(await chrome.storage.local.
  *  - Redémarrage du service worker : la passe revient EN PAUSE (jamais relancée seule).
  *  - « Reprendre » : mêmes contrôles qu'au départ (relectureRefus), puis repart au cut gardé, sans repasser sur les cuts relus ; le cut en cours à la pause est refait.
  *  - « Arrêter » est définitif : il efface le point. Une reprise garde au plus 24 h ; un lot différent l'efface. */
-async function relectureRepriseReglage(){let r={};try{r=(await chrome.storage.local.get(CLE_RELECTURE_REGLAGE_PAUSE))?.[CLE_RELECTURE_REGLAGE_PAUSE]||{};}catch{r={};}
+/* CH-109 (A, D-341) : sans choix gardé (installation neuve), le défaut vient de `BananeSettings.relecturePause` (allumé depuis D-341). Un choix de l'opérateur
+ * porte la marque `v: 2` et l'emporte toujours. MIGRATION UNIQUE : défaut allumé et « éteint » gardé SANS marque (posé avant D-341, peut-être par l'ancien
+ * défaut) : il passe à « allumé » une fois, marque comprise ; le choix du F5 est gardé. */
+async function relectureRepriseReglage(){let r=null;try{r=(await chrome.storage.local.get(CLE_RELECTURE_REGLAGE_PAUSE))?.[CLE_RELECTURE_REGLAGE_PAUSE]||null;}catch{r=null;}
+ const D=globalThis.BananeSettings?.relecturePause;
+ if(!r||typeof r.actif!=='boolean')r={actif:D?.defautActif===true,f5:D?.defautF5};
+ else if(r.v!==2&&r.actif===false&&D?.defautActif===true){r={actif:true,f5:r.f5==='arret'?'arret':'pause',v:2};
+  try{await chrome.storage.local.set({[CLE_RELECTURE_REGLAGE_PAUSE]:r});journalerSimple('relecture-pause-reglage-migre',{decision:'D-341',actif:true,f5:r.f5});}catch{/* mémoire seule : redit à la prochaine lecture */}}
  return {actif:r.actif===true,f5:r.f5==='arret'?'arret':'pause'};}
 async function relectureRepriseReglageChoisir(args){if(passeActive())throw Error('Relecture en cours ou en pause : change ce réglage après sa fin.');
- await chrome.storage.local.set({[CLE_RELECTURE_REGLAGE_PAUSE]:{actif:args?.actif===true,f5:args?.f5==='arret'?'arret':'pause'}});return relectureRepriseReglage();}
+ await chrome.storage.local.set({[CLE_RELECTURE_REGLAGE_PAUSE]:{actif:args?.actif===true,f5:args?.f5==='arret'?'arret':'pause',v:2}});return relectureRepriseReglage();}
 async function relectureRepriseLire(){try{const v=(await chrome.storage.local.get(CLE_RELECTURE_REPRISE))?.[CLE_RELECTURE_REPRISE];
  return v&&v.v===1&&Array.isArray(v.sel?.cuts)&&Number.isInteger(v.index)?v:null;}catch{return null;}}
 async function relectureRepriseEffacer(){try{await chrome.storage.local.remove?.(CLE_RELECTURE_REPRISE);}catch{/* rien */}}
@@ -3943,6 +3950,32 @@ async function relectureSignalRecharger(p,raison='signal'){const SG=globalThis.B
   if(!chargementEsvPret(lu,R))continue;
   try{await relectureReprendre();return dire('repris');}catch(e){derniere=e?.message;if(!encore())return dire('abandon',derniere);}}
  echec(`ESV n’est pas prêt ${Math.round(R.attenteRepriseMs/1000)} s après le rechargement${derniere?` (${String(derniere).slice(0,120)})`:''}`);}
+/* CH-109 (A, D-341) — APRÈS UN F5, LA RELECTURE REPREND SEULE AU CUT OÙ ELLE ÉTAIT. La passe est EN PAUSE (raison « esv » : ESV muet pendant un cut,
+ * point de reprise au cut non fait). Ariane ne recharge rien : elle attend que Chrome dise la page rechargée (`chargementEsv.gen` différente de celle du
+ * début du cut, `gen0`) et chargée, la ré-équipe (sonde, adaptateur, pont : aucune commande ESV), attend ESV prêt (`chargementEsvPret`), puis reprend par
+ * le chemin de « Reprendre » (mêmes contrôles). Mêmes délais que CH-060 (réglage `relectureSignalEteint` : `sondageMs`, `attenteRepriseMs`). Sans
+ * rechargement ou sans ESV prêt dans la borne, la passe RESTE EN PAUSE avec son message (« Reprendre » reste là). Si l'opérateur reprend ou arrête
+ * pendant l'attente, Ariane s'efface. Journal : `relecture-esv-revenue` (étapes « attente », « rechargee », « repris », « echec », « abandon »). */
+async function relectureEsvRevenue(p,gen0){const SG=globalThis.BananeRelectureSignal,R=p.signalEsv?.reglage||SG.reglage(globalThis.BananeSettings?.relectureSignalEteint);
+ const t0=Date.now(),tab=selectedTab,cut=p.cut,part=engine?.s?.batch?.scope?.part??null;let derniere=null,rechargee=false;
+ const encore=()=>relecture.passe===p&&p.etat==='en-pause'&&p.pauseRaison==='esv';
+ const dire=(etape,motif=null)=>relectureJournal('relecture-esv-revenue',{etape,motif:motif?String(motif).slice(0,200):null,identity:{part,cut},ms:Date.now()-t0},p);
+ if(tab===null)return dire('echec','aucun onglet ESV choisi');
+ dire('attente');
+ while(Date.now()-t0<R.attenteRepriseMs){await attendreMs(R.sondageMs);
+  if(!encore())return dire('abandon','relecture reprise ou arrêtée pendant l’attente');
+  if(tab!==selectedTab)return dire('echec','onglet ESV changé');
+  if(chargementEsv.gen===gen0)continue;   /* aucun rechargement vu : la page figée pourrait encore répondre à moitié */
+  if(!rechargee){rechargee=true;dire('rechargee');}
+  let t=null;try{t=await chrome.tabs.get(tab);}catch{return dire('echec','onglet ESV fermé');}
+  if(t?.url&&!esvURL(t.url))return dire('echec','l’onglet n’affiche plus ESV');
+  if(t?.status&&t.status!=='complete')continue;
+  try{await equiperOnglet(tab);}catch(e){derniere=e?.message;if(e?.definitif)return dire('echec',String(e.message).slice(0,160));continue;}
+  let lu=null;try{lu=(await call('ping'))?.label||null;}catch(e){derniere=e?.message;continue;}
+  if(!chargementEsvPret(lu,R))continue;
+  try{await relectureReprendre();return dire('repris');}catch(e){derniere=e?.message;if(!encore())return dire('abandon',derniere);}}
+ dire('echec',rechargee?`ESV n’est pas prêt ${Math.round(R.attenteRepriseMs/1000)} s après le rechargement${derniere?` (${String(derniere).slice(0,120)})`:''}`
+  :`aucun rechargement de la page vu en ${Math.round(R.attenteRepriseMs/1000)} s`);}
 /* CH-107 — SÉRIE DE CUTS SANS POINT PENDANT LA RELECTURE. Seuil et rechargements par série : réglage du lot `lot.serieCapturesVides` (lu par
  * src/serie-captures-vides.js ; coupé ou illisible : pas de garde). L'état vit sur la passe (une reprise le garde) : `vides` cuts vides de suite depuis
  * l'index `debut`, `faitsAvant` cuts relus avant la série, `rechargements` faits pour la série en cours. Une capture pleine ferme la série ; un cut sans
@@ -4003,7 +4036,8 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    if(p.arret||p.pauseDemandee||/^(OUT_OF_BOUNDS|CANCELLED_)/.test(code))return {saut:true,raison:nav.refusal?.message??code};
    return {stop:`Relecture arrêtée : passage au cut ${cut} refusé par la page (${String(nav.refusal?.message||code||'refus').slice(0,200)})${demandes>1?` après ${demandes} demandes`:''}. Rien n’a été posé.`};}
   ici=null;return {stop:`Relecture arrêtée : le passage au cut ${cut} n’est pas confirmé (${nav?.refusal?.message||nav?.resultat||'résultat inconnu'}). Contrôle le cut affiché ; rien n’a été posé.`};};
- for(let ci=reprise?.index??0;ci<sel.cuts.length;ci++){const c=sel.cuts[ci];ciCourant=ci;
+ let genCut=chargementEsv.gen;   /* CH-109 : génération de la page au début du cut en cours (un F5 pendant ce cut la change) */
+ for(let ci=reprise?.index??0;ci<sel.cuts.length;ci++){const c=sel.cuts[ci];ciCourant=ci;genCut=chargementEsv.gen;
   if(!vivante()){issue='erreur';p.message='Relecture arrêtée : passe remplacée.';break;}
   if(p.arret){issue='arret';p.message=`Relecture arrêtée à ta demande : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}.`;break;}
   if(p.pauseDemandee&&p.reprise){issue='pause';indexPause=ci;break;}
@@ -4096,7 +4130,8 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
    :`ESV ne répond plus : relecture gardée en pause au cut ${p.cut} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}). Recharge ESV (F5) si elle est figée, reconnecte-la, puis reprends la relecture.`;
   relectureJournal('relecture-pause',{mode:p.mode,modeEffectif:p.modeEffectif,raison:p.pauseRaison,cut:p.cut,index:indexPause,faits:p.faits,total:p.total,corriges:p.corriges,stocke:p.pointStocke!==false,message:issue==='pause-esv'||issue==='pause-points'?String(p.message).slice(0,200):null},p);
   await relectureOublierPasse(p);if(issue==='pause-signal')void relectureSignalRecharger(p).catch(()=>{});
-  if(issue==='pause-points'&&p.pointsVidesRecharger)void relectureSignalRecharger(p,'points').catch(()=>{});return;}
+  if(issue==='pause-points'&&p.pointsVidesRecharger)void relectureSignalRecharger(p,'points').catch(()=>{});
+  if(issue==='pause-esv')void relectureEsvRevenue(p,genCut).catch(()=>{});return;}
  if(p.reprise){p.pauseDemandee=false;await relectureRepriseEffacer();}
  const vu=p.vus?` ; ESV a marqué ${pluriel(p.vus,'cut')} « vu »`:'';
  if(issue==='fin'&&p.etat==='en-cours')p.message=`Relecture finie : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''}${p.modeEffectif==='corriger'?`, ${pluriel(p.corriges,'corrigé')}${p.refusees?`, ${pluriel(p.refusees,'correction')} refusée${p.refusees>1?'s':''} par la page`:''}`:', rien de modifié'}${vu}.${p.noteMode?` ${p.noteMode}`:''}`;
@@ -4199,7 +4234,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  const attendu=()=>fileP.etat?.id===e0.id&&(retour?fileP.etat.etat==='relecture':fileP.etat.etat==='changement'&&fileP.etat.changement?.vers===vers);
  const s=await fileSuspens();if(s)return fileEvenement({type:'suspens',detail:s});
  if(!retour)await fileEvenement({type:'changement-envoye',vers});
- const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour});
+ const X=await changerPartieEsv(vers,{retour,attendu,R,gestes:()=>!retour,attendreEsv:true});   /* CH-109 (C) : après un F5, ESV revient dans la borne */
  if(X.quitte)return;
  if(X.ok)return retour?fileRelectureApresRetour(true):fileEvenement({type:'changement-ok',part:vers,cut:X.r.identity.cut});
  if(X.journalEchec)journalerSimple('file-parties-changement-echec',{vers,retour,motif:X.motif,detail:String(X.detail||'').slice(0,300),tentatives:X.tentatives,selecteurAvant:X.selecteurAvant,selecteurApres:X.selecteurApres,dureeMs:Date.now()-X.t0});
@@ -4211,7 +4246,7 @@ async function fileChangerPartie(vers,retour){const R=fileReglage(),e0=fileP.eta
  * la preuve (partie lue dans la page, rails présents, onglet ré-équipé), les bornes, un événement par tentative (`typeTentative`), l'arrêt prudent si ESV
  * ouvre une autre partie. `attendu()` faux : on quitte sans rien conclure. Rend {ok, r} ou {ok:false, motif, detail, journalEchec, selecteurApres},
  * avec toujours {tentatives, selecteurAvant, t0} ; ne touche à aucun état de la file ni de la correction. */
-async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement'}){
+async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typeTentative='file-parties-changement',attendreEsv=false}){
  const t0=Date.now(),tentatives=[];let selecteurAvant=null;
  const sel=x=>x?{status:x.status??null,current:entierOuNul(x.current),n:Array.isArray(x.parts)?x.parts.length:null,vers:Array.isArray(x.parts)?x.parts.some(p=>p?.part===vers):null}:null;
  const relever=async()=>{try{return sel((await call('ping',{contrat:true}))?.selecteurParties);}catch{return null;}};
@@ -4221,7 +4256,22 @@ async function changerPartieEsv(vers,{retour=false,attendu,R,gestes=()=>true,typ
  const pret=r=>r?.identity?.part===vers&&!!r?.rails?.left&&!!r?.rails?.right;
  let lu=null;try{lu=await readState();}catch{/* lu plus bas */}
  if(pret(lu))return ok(lu);
- let ping=null;try{ping=await call('ping',{contrat:true});}catch(x){return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);}
+ let ping=null;try{ping=await call('ping',{contrat:true});}catch(x){
+  /* CH-109 (C) : terrain du 11/11 (partie 16) : un F5 pendant la relecture, puis le changement de partie trouve la page en rechargement et la file
+   * s'arrêtait « esv-muet » 13 s plus tard. Avec `attendreEsv` (changement de la file) : ESV muet ou en rechargement, Ariane attend l'onglet chargé, le
+   * ré-équipe (aucune commande ESV) et relit, dans la borne `changementBorneMs` ; au-delà, l'arrêt « esv-muet » d'avant. Journal `file-parties-esv-attente`. */
+  if(!attendreEsv)return echec('esv-muet',`ESV ne répond pas (${String(x?.message||x).slice(0,160)})`);
+  const tA=Date.now(),finA=tA+R.changementBorneMs;let derniere=x,essais=0;
+  while(!ping&&Date.now()<finA){if(!attendu())return fin({quitte:true});await attendre(R.pollMs);
+   let tab=null;try{tab=selectedTab===null?null:await chrome.tabs.get(selectedTab);}catch{tab=null;}
+   if(!tab)break;
+   if(tab.status&&tab.status!=='complete')continue;
+   essais++;try{await equiperOnglet(selectedTab);}catch(y){derniere=y;if(y?.definitif)break;continue;}
+   try{ping=await call('ping',{contrat:true});}catch(y){derniere=y;}}
+  journalerSimple('file-parties-esv-attente',{vers,issue:ping?'revenu':'muet',ms:Date.now()-tA,essais,motif:ping?null:String(derniere?.message||derniere).slice(0,160)});
+  if(!ping)return echec('esv-muet',`ESV ne répond pas (${String(derniere?.message||derniere).slice(0,160)})`);
+  try{lu=await readState();}catch{lu=null;}
+  if(pret(lu))return ok(lu);}
  selecteurAvant=sel(ping?.selecteurParties);
  if(!Array.isArray(ping?.capacites)||!ping.capacites.includes('changerPartie'))return echec('commande-absente','l’adaptateur de la page ne connaît pas « changerPartie » (diff proposé de CH-017 non appliqué)');
  const de0=lu?.identity?.part??null;
@@ -4321,6 +4371,19 @@ async function fileRegistreNoter(rang){const e=fileP.etat,p=e?.bilan?.find(x=>x.
  const corriges=du.filter(x=>x.type==='relecture-ombre'&&x.action==='corrige'&&x.identity?.part===p.part).map(x=>({cut:x.identity.cut,ecartMm:Number.isFinite(x.ecartMm)?x.ecartMm:null}));
  const R=FPm().registreAjouter(await fileRegistreLire(),{fileId:e.id,part:p.part,rang,lotId:p.lotId,at:p.fin,poses,passe,corriges,valides:[...poses,...passe,...corriges.map(c=>c.cut)]});
  try{await chrome.storage.local.set({[FPm().CLE_REGISTRE]:R});}catch{/* mémoire seule */}}
+/* CH-109 (B) : clôture « interrompue » d'une relecture de la file restée en pause. Aucune commande vers ESV, rien d'écrit : la passe est seulement
+ * marquée finie (`arretee`, `interrompue` : les cuts NON RELUS, du cut gardé à la fin de la sélection, plages sautées exclues), son point de reprise
+ * effacé ; journal `relecture-fin` (issue « interrompue », `nonRelus`). Une correction interrompue reste une intention : la file s'arrête alors
+ * « ecriture-incertaine » (fileSuspens), comme pour toute fin de relecture. */
+function fileRelectureInterrompre(p,delaiMs){if(relecture.passe!==p||p.etat!=='en-pause')return;
+ const pt=p.point,sautees=new Set(pt?.plagesSautees||[]);
+ const nonRelus=pt&&Array.isArray(pt.sel?.cuts)&&Number.isInteger(pt.index)?pt.sel.cuts.slice(pt.index).filter(x=>!sautees.has(x?.plage)).map(x=>x?.cut).filter(Number.isInteger):[];
+ const n=nonRelus.length,liste=nonRelus.slice(0,12).join(', ')+(n>12?', …':''),min=Math.round(delaiMs/6000)/10;
+ p.etat='arretee';p.fin=new Date().toISOString();p.pauseDemandee=false;p.interrompue={raison:'pause-constellation',pauseRaison:p.pauseRaison??null,delaiMs,nonRelus};
+ p.message=`Relecture interrompue au cut ${p.cut??'?'} par la Constellation : en pause depuis ${min} min sans reprendre seule${p.pauseRaison?` (${p.pauseRaison})`:''} ; ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}, ${pluriel(n,'cut')} non relu${n>1?'s':''}${n?` (${liste})`:''} ; rien n’a été écrit sur ces cuts. La file passe à la suite.`;
+ relectureJournal('relecture-fin',{mode:p.mode,modeEffectif:p.modeEffectif,issue:'interrompue',raison:p.message,pauseRaison:p.pauseRaison??null,delaiMs,nonRelus:nonRelus.slice(0,2000),faits:p.faits,total:p.total,
+  corriges:p.corriges,refusees:p.refusees,vus:p.vus,cutsNeufs:p.cutsNeufs,cutsNeufsAnnonces:p.cutsNeufsAnnonces,dureeMs:Date.parse(p.fin)-Date.parse(p.debut)},p);
+ void relectureRepriseEffacer();void relectureOublierPasse(p);}
 function fileTicPlanifier(){const R=fileReglage();if(!R||!fileActive()||fileP.tic)return;
  fileP.tic=setTimeout(()=>{fileP.tic=null;void fileTic().catch(()=>{}).finally(fileTicPlanifier);},R.ticMs);}
 async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.action||fileP.ticEnCours)return;fileP.ticEnCours=true;
@@ -4344,10 +4407,19 @@ async function fileTic(){const R=fileReglage();if(!R||!fileActive()||fileP.actio
    const v=passeDiff.vue?.lotId===lotId?passeDiff.vue:null,s=await fileSuspens('passe');
    return void await fileEvenement({type:'passe-fin',lotId,issue:v?v.etat:'absente',ecrits:v?.ecrites??0,ecritureEnSuspens:!!s,detail:s||v?.message||null});}
   if(e.etat==='relecture'){const p=relecture.passe;
+   /* CH-109 (B) : réglage `file.relecturePauseMaxMs` (coupé : null, attente sans limite comme avant). Réglé, une relecture de la file restée EN PAUSE
+    * plus longtemps (rechargement automatique CH-060 / CH-107 compris : le délai doit le dépasser) est close « interrompue » (fileRelectureInterrompre) ;
+    * le même tic la voit finie et passe à la suite. Le délai part du premier tic qui voit la pause et repart à chaque nouvelle pause. Une pause demandée
+    * par l'opérateur (« Pause », raison `mic`) n'est jamais close. */
+   if(p?.lotId===lotId&&p.etat==='en-pause'&&Number.isFinite(R.relecturePauseMaxMs)&&R.relecturePauseMaxMs>0&&p.pauseRaison!=='mic'){
+    if(fileP.pauseVue?.p!==p)fileP.pauseVue={p,depuis:Date.now()};
+    if(Date.now()-fileP.pauseVue.depuis>=R.relecturePauseMaxMs){fileP.pauseVue=null;fileRelectureInterrompre(p,R.relecturePauseMaxMs);}}
+   else fileP.pauseVue=null;
    if(p?.lotId===lotId&&['preparation','en-cours','en-pause'].includes(p.etat))return;
    if(p?.lotId===lotId&&['finie','arretee','erreur','non-lancee'].includes(p.etat)){const s=await fileSuspens();let hors=false;
     if(p.etat==='non-lancee')try{const r=await readState();hors=Number.isInteger(r?.identity?.part)&&r.identity.part!==e.partie.part;}catch{/* illisible : pas de retour */}
-    return void await fileEvenement({type:'relecture-fin',lotId,issue:p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode,horsPartie:hors,ecritureEnSuspens:!!s,detail:s||p.message||null});}
+    return void await fileEvenement({type:'relecture-fin',lotId,issue:p.interrompue?'interrompue':p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode,horsPartie:hors,ecritureEnSuspens:!!s,detail:s||p.message||null,
+     ...(p.interrompue?{nonRelus:p.interrompue.nonRelus}:{})});}
    if(!passeActive()&&Date.now()-Date.parse(e.depuis)>R.relectureAttenteMs)return void await fileEvenement({type:'relecture-fin',lotId,issue:'absente',detail:'aucune relecture pour ce lot'});}}
  finally{fileP.ticEnCours=false;}}
 /* AU RÉVEIL DU SERVICE WORKER (allumée seulement) : l'état gardé est relu ; le registre, l'onglet et ESV sont lus avant toute action (machine : `reprise`). */
@@ -4366,7 +4438,7 @@ const fileReveil=ready.then(()=>fileReprendre()).catch(()=>{});
 async function fileCompleterBilan(){const e=fileP.etat;if(!e||e.etat!=='arret'||!FPm().completerBilan)return;const lotId=e.bilan?.at(-1)?.lotId;if(!lotId)return;
  const p=relecture.passe,v=passeDiff.vue,fini=x=>['finie','arretee','erreur','non-lancee'].includes(x);
  const n=FPm().completerBilan(e,{lotId,passe:v?.lotId===lotId&&!passeDiff.cours&&!passeDiff.ecriture&&v.etat?{issue:v.etat,ecrits:v.ecrites??0}:null,
-  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.etat,corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
+  relecture:p?.lotId===lotId&&fini(p.etat)?{issue:p.interrompue?'interrompue':p.etat,...(p.interrompue?{nonRelus:p.interrompue.nonRelus}:{}),corriges:p.corriges,refusees:p.refusees,faits:p.faits,mode:p.modeEffectif||p.mode}:null});
  if(!n)return;await fileSauver(n);journalerSimple('file-parties-bilan-complete',{fileId:n.id,part:n.bilan.at(-1).part,passe:n.bilan.at(-1).passe?.issue??null,relecture:n.bilan.at(-1).relecture?.issue??null});}
 async function fileVue(){await fileCompleterBilan();return {reglage:{actif:true,nombres:[1,2,3,4,5,8]},file:FPm().vue(fileP.etat),registre:(await fileRegistreLire()).slice(-8)};}
 async function fileDispatch(action,args){await fileReveil;
