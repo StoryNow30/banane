@@ -334,6 +334,7 @@
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
     if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
+    couches();
   }
   /* Signal : mise à jour EN PLACE (les éléments qui restent restent), pour que les transitions se jouent : le rail avance, le curseur glisse,
    * l'anneau se remplit, une couche ouverte ne rejoue pas son entrée à chaque rendu du panneau. Un élément porteur de `data-k` est remplacé
@@ -443,6 +444,35 @@
     if (!tech) return;
     for (const { e, repere, cache } of tech.deplaces) { repere.parentNode?.insertBefore(e, repere); repere.remove(); if (e.id === 'lot-details') e.hidden = cache; }
     tech.c.remove(); tech = null;
+    couches();
+  }
+  /* CH-106 (relecture de CH-104) : UNE COUCHE OUVERTE REND INATTEIGNABLE CE QU'ELLE RECOUVRE. Feuille « Ce qui reste » ouverte pendant un lot, le Tab
+   * atteignait « Arrêter le lot » caché dessous, et Entrée envoyait `stop`. Couche ouverte (menu, palette, réglages, onglets ESV, boîte Constellation,
+   * détails techniques) : tout le reste de la fenêtre passe en `inert` ; feuille « Ce qui reste » : la page et le pied seulement (la barre reste
+   * au-dessus d'elle, visible, et ses onglets la referment). Rien ne change à la souris : le voile couvrait déjà le fond. Le double qui sort
+   * (`.sg-sort`) garde son propre `inert`. Le focus entre dans la couche à l'ouverture (la palette garde son champ) et revient, à la fermeture, au
+   * bouton qui l'a ouverte. Appelé après chaque rendu (le morph retire les attributs que le gabarit ne porte pas) et à la fermeture des détails. */
+  const FOCUSABLE = 'button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[href],[tabindex]:not([tabindex="-1"])';
+  function couches() {
+    const fen = hote?.firstElementChild; if (!fen?.children || !fen.querySelector) return;
+    const avant = ui.coucheVue || null, maintenant = tech ? 'tech' : ui.couche || (ui.tiroir ? 'tiroir' : null);
+    if (!avant && maintenant) { const e = D.activeElement; ui.retour = e && e !== D.body && hote.contains?.(e) ? { e, act: e.dataset?.act || '' } : null; }
+    const dlg = fen.querySelector('.sg-palette,.sg-popover,.sg-feuille,.sg-boite'), tir = fen.querySelector('.sg-tiroir[data-ouvert="1"]');
+    for (const x of [...fen.children]) {
+      if (x.classList?.contains('sg-sort') || !x.toggleAttribute) continue;
+      const c = x.classList;
+      x.toggleAttribute('inert', tech ? true : dlg ? !(x === dlg || c.contains('sg-voile')) : tir ? !(x === tir || c.contains('sg-barre') || c.contains('sg-barre-note')) : false);
+    }
+    if (maintenant === avant) return;
+    ui.coucheVue = maintenant;
+    if (maintenant && maintenant !== 'palette') {
+      const c = tech ? tech.c : dlg || tir; if (!c?.querySelector) return;
+      (c.querySelector('#sg-tiroir-corps')?.querySelector(FOCUSABLE) || c.querySelector(FOCUSABLE))?.focus?.();
+    } else if (!maintenant && ui.retour) {
+      const r = ui.retour; ui.retour = null;
+      const e = r.e?.isConnected && !r.e.closest?.('[inert]') ? r.e : r.act ? [...hote.querySelectorAll('[data-act]')].find(x => x.dataset.act === r.act && !x.closest('[inert]')) : null;
+      e?.focus?.();
+    }
   }
 
   /* ---------------------------------------------------------------- Signal : actions propres (tiroir, couches, Revue V2) */

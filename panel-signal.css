@@ -369,6 +369,8 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-pied svg{width:13px;height:13px}
 #ui5.u-signal .sg-palette{top:58px;left:12px;right:12px;margin:0 auto;max-width:460px;overflow:hidden}
 #ui5.u-signal #ui5-q{width:100%;height:46px;padding:0 16px;border:0;border-bottom:1px solid var(--trait);background:transparent;font:500 15px/1 var(--f);color:var(--tx);outline:0}
+/* CH-106 : le champ de la palette montre son focus (son `outline:0` l'emportait sur la règle générale `:focus-visible`). */
+#ui5.u-signal #ui5-q:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 #ui5.u-signal #ui5-q::placeholder{color:var(--tx2)}
 #ui5.u-signal .sg-cmds{display:flex;flex-direction:column;padding:6px}
 #ui5.u-signal .sg-cmd{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:40px;padding:6px 10px;width:100%;text-align:left;font:500 13.5px/1.25 var(--f);color:var(--tx);border-radius:9px;animation:sg-monte .28s var(--doux) backwards}
@@ -395,6 +397,8 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-danger-zone{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-radius:12px;border:1px solid rgba(var(--crit-rgb),.3);font-size:12.5px;color:var(--tx2)}
 #ui5.u-signal .sg-danger-zone button{color:var(--crit-tx);box-shadow:inset 0 0 0 1px rgba(var(--crit-rgb),.45)}
 #ui5.u-signal .sg-boite{top:18%;left:16px;right:16px;margin:0 auto;max-width:440px;padding:18px;display:flex;flex-direction:column;gap:12px}
+/* CH-106 : la boîte tient dans la fenêtre (320 × 480 : elle sortait de 26 px, « Préparer » coupé) ; son contenu défile dedans. */
+#ui5.u-signal .sg-boite{max-height:calc(82% - 12px);overflow-y:auto;overscroll-behavior:contain}
 #ui5.u-signal .sg-boite .sg-t{font:650 16px/1.2 var(--f)}
 #ui5.u-signal .sg-boite .sg-reg{border-top:0;padding:0;min-height:0}
 #ui5.u-signal .sg-bts{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:4px}
