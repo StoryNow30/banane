@@ -82,7 +82,18 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-puce i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok)}
 #ui5.u-signal .sg-puce[data-etat="ko"] i{background:var(--crit)}.sg-puce[data-etat="libre"] i{background:var(--attn)}.sg-puce[data-etat="aucun"] i{background:var(--tx3)}
 #ui5.u-signal .sg-puce[data-etat="ko"]{color:var(--crit-tx)}
-#ui5.u-signal .sg-puce .sg-tx{overflow:hidden;text-overflow:ellipsis}
+#ui5.u-signal .sg-puce{flex:0 1 auto;min-width:40px;max-width:270px}
+#ui5.u-signal .sg-puce .sg-tx{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ui5.u-signal .sg-puce .sg-fl{width:11px;height:11px;flex:none}
+#ui5.u-signal .sg-puce[data-etat="libre"],#ui5.u-signal .sg-puce[data-etat="aucun"]{color:var(--attn-tx)}
+#ui5.u-signal .sg-puce[data-etat="aucun"] i{background:var(--attn)}
+#ui5.u-signal .sg-bascule{flex:none}
+/* En compact la puce n'a pas la place d'un état anormal : il est redit en clair, dans sa couleur, sur une ligne sous la barre. */
+#ui5.u-signal .sg-barre-etat{display:none}
+#ui5.u-signal[data-taille="compact"] .sg-barre-etat{flex:none;display:flex;align-items:center;gap:7px;min-height:26px;padding:4px 12px;border-bottom:1px solid var(--trait);font:600 12px/1.3 var(--f);color:var(--attn-tx)}
+#ui5.u-signal .sg-barre-etat i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--attn)}
+#ui5.u-signal .sg-barre-etat[data-etat="ko"]{color:var(--crit-tx)}
+#ui5.u-signal .sg-barre-etat[data-etat="ko"] i{background:var(--crit)}
 #ui5.u-signal .sg-ico{flex:none;width:28px;height:28px;display:inline-grid;place-items:center;color:var(--tx2);transition:background .15s,color .15s}
 #ui5.u-signal .sg-ico svg{width:16px;height:16px}
 #ui5.u-signal .sg-menu-b{font-size:16px;letter-spacing:1px;line-height:1}
@@ -220,12 +231,13 @@ body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#EEF0F3}
 #ui5.u-signal .sg-tag.sg-crit{background:rgba(var(--crit-rgb),.14);color:var(--crit-tx)}
 
 #ui5.u-signal .sg-etapes{list-style:none;display:flex;flex-direction:column}
-#ui5.u-signal .sg-etapes li{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:center;padding:8px 0;position:relative;color:var(--tx2);font-size:12px}
+#ui5.u-signal .sg-etapes li{display:grid;grid-template-columns:20px auto minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;position:relative;color:var(--tx2);font-size:12px}
 #ui5.u-signal .sg-etapes li+li::before{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--piste)}
 #ui5.u-signal .sg-etapes li+li::after{content:"";position:absolute;left:9px;top:-10px;width:2px;height:20px;border-radius:1px;background:var(--accent);transform:scaleY(0);transform-origin:50% 0;transition:transform .4s var(--doux)}
 #ui5.u-signal .sg-etapes li[data-etape="fait"]+li::after{transform:scaleY(1)}
 #ui5.u-signal .sg-etapes b{font:600 13px/1.2 var(--f)}
-#ui5.u-signal .sg-etapes span{text-align:right}
+#ui5.u-signal .sg-etapes b{white-space:nowrap}
+#ui5.u-signal .sg-etapes span{text-align:right;line-height:1.3;overflow-wrap:anywhere}
 #ui5.u-signal .sg-etapes i{width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--piste);display:grid;place-items:center}
 #ui5.u-signal .sg-etapes li[data-etape="fait"],#ui5.u-signal .sg-etapes li[data-etape="actif"]{color:var(--tx)}
 #ui5.u-signal .sg-etapes li[data-etape="fait"] i{background:var(--accent);box-shadow:none}

@@ -71,6 +71,12 @@ if(process.env.AUTRES!=='0')Object.assign(E,AUTRES);
 /* Dans l'extension réelle la Constellation est allumée par défaut (src/settings.js, `file.actif`) : la vue du service worker porte toujours la clé
  * `fileParties` (null au repos), et la barre a toujours quatre onglets. Tous les états la portent donc ; un seul écran garde le cas du réglage coupé. */
 for(const e of Object.values(E))if(!e.origine&&!Object.hasOwn(e.state,'fileParties'))e.state={...e.state,fileParties:null};
+/* Relecture critique (CH-106) : relecture en pause et interrompue après le lot, sans onglet ESV, deux onglets à choisir, nom d'onglet long. */
+const relApres=(etat,raison)=>({state:E.fin.state,rel:{choix:'corriger',lot:{id:'lot-1'},passe:{lotId:'lot-1',etat,mode:'corriger',modeEffectif:'corriger',faits:12,total:85,corriges:3,cut:4801,reprise:true,pauseDemandee:false,pauseRaison:raison,expire:null}}});
+E['relecture-pause']=relApres('en-pause','esv');E['relecture-interrompue']=relApres('interrompue',null);
+E['sans-onglet']={onglets:[],connexion:{status:'no-tab',observedAt:'t',message:null},state:{current:null,busy:false,manual:{status:'IDLE'},native:{status:'IDLE',visits:[],incomplete:[]},batch:null,fileParties:null}};
+E['deux-onglets']={onglets:[{id:1,title:'Rails — partie 13 — tronçon nord',pret:true,utilise:false,index:0,windowId:1,active:true},{id:2,title:'Rails — partie 14',pret:true,utilise:false,index:1,windowId:1,active:false}],connexion:{status:'ready',observedAt:'t',message:null,tabId:9},state:E.pret.state};
+E['onglet-long']={onglets:[{id:1,title:'Validation des rails — campagne du printemps — partie 13 — tronçon nord',pret:true,utilise:true,index:0,windowId:1,active:true}],state:E.cours.state};
 E['sans-constellation']={state:(s=>{const x={...s};delete x.fileParties;return x;})(E.cours.state)};
 const MESURE=()=>{
  const rgb=c=>{const s=String(c).match(/color\(srgb ([^)]+)\)/);if(s){const v=s[1].split(/[ \/]+/).filter(Boolean).map(Number);return {r:v[0]*255,g:v[1]*255,b:v[2]*255,a:v.length>3?v[3]:1};}const m=String(c).match(/rgba?\(([^)]+)\)/);if(!m)return null;const v=m[1].split(/[ ,/]+/).filter(Boolean).map(Number);return {r:v[0],g:v[1],b:v[2],a:v.length>3?v[3]:1};};
@@ -85,11 +91,14 @@ const MESURE=()=>{
  /* Une zone qui défile cache du contenu sous son bord : c'est dit (les onglets Constellation et Aurore, faits pour défiler en 360, ne comptent pas). */
  const Z=P.querySelector('.sg-zone:not(.sg-onglet-file):not(.sg-onglet-corr)');if(Z&&Z.scrollHeight>Z.clientHeight+1)out.push('ZONE A DEFILER de '+(Z.scrollHeight-Z.clientHeight)+' px');
  for(const e of P.querySelectorAll('*')){if(!e.getClientRects().length)continue;const r=e.getBoundingClientRect();if(r.width<=1||r.height<=1)continue;if(e.closest('svg')||e.closest('[data-tourne]'))continue;
-  if(r.right>W+.5||r.left<-.5)out.push('SORT '+nom(e)+' '+Math.round(r.right-W));
+  if((r.right>W+.5||r.left<-.5)&&!e.closest('.sg-puce .sg-tx'))out.push('SORT '+nom(e)+' '+Math.round(r.right-W));
+  /* deux textes d'une même ligne qui se recouvrent (étapes du lot) */
+  if(e.matches('.sg-etapes li')){const b=e.querySelector('b').getBoundingClientRect(),v=e.querySelector('span').getBoundingClientRect();if(v.width&&v.left<b.right-.5&&v.top<b.bottom-1&&v.bottom>b.top+1)out.push('CHEVAUCHE '+e.textContent.trim().slice(0,40));}
   if(r.bottom>H+.5&&!defile(e)&&!coupe(e))out.push('SORT EN BAS '+nom(e)+' '+Math.round(r.bottom-H));
   const s=getComputedStyle(e);
   if(e.scrollWidth>e.clientWidth+1&&s.overflowX!=='visible'&&s.textOverflow!=='ellipsis'&&!e.matches('.sg-registre,.sg-corps'))out.push('TRONQUE '+nom(e)+' « '+e.textContent.trim().slice(0,30)+' »');
-  if(s.textOverflow==='ellipsis'&&e.scrollWidth>e.clientWidth+1)out.push('ELLIPSE '+nom(e)+' « '+e.textContent.trim().slice(0,30)+' »');
+  /* le nom de l'onglet ESV dans la puce se coupe exprès par une ellipse (nom entier dans l'infobulle et la liste) */
+  if(s.textOverflow==='ellipsis'&&e.scrollWidth>e.clientWidth+1&&!e.closest('.sg-puce'))out.push('ELLIPSE '+nom(e)+' « '+e.textContent.trim().slice(0,30)+' »');
   if(e.disabled||e.closest('[disabled]')||e.closest('[inert]')||e.getAttribute('aria-hidden')==='true')continue;
   if(![...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()))continue;if(Number(s.opacity)===0)continue;
   const c=rgb(s.color),f=fond(e);if(!c)continue;const k0={r:c.r*c.a+f.r*(1-c.a),g:c.g*c.a+f.g*(1-c.a),b:c.b*c.a+f.b*(1-c.a)};const [a,b2]=[lum(k0),lum(f)].sort((x,y)=>y-x);const k=(a+.05)/(b2+.05);
@@ -102,16 +111,16 @@ if(SEUL)(async()=>{
  for(const theme of ['sombre','clair'])for(const [taille,vp] of [['600',{width:600,height:760}],['360',{width:360,height:480}]])for(const [nom,e] of Object.entries(E)){
   const cle=`${theme}-${taille}-${nom}`;if(FILTRE&&!cle.includes(FILTRE))continue;
   const ctx=await nav.newContext({viewport:vp,deviceScaleFactor:2});const page=await ctx.newPage();const erreurs=[];page.on('pageerror',x=>erreurs.push(x.message));
-  const state=JSON.parse(JSON.stringify({connection:{status:'ready',observedAt:'t',message:null,tabId:1},...e.state}).replace(/"MAINTENANT-(\d+)"/g,(_,s)=>JSON.stringify(new Date(Date.now()-s*1000).toISOString())));
-  await page.addInitScript(({state,rel,fiches})=>{
-   const reponses={view:state,'list-tabs':[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},
+  const state=JSON.parse(JSON.stringify({connection:e.connexion||{status:'ready',observedAt:'t',message:null,tabId:1},...e.state}).replace(/"MAINTENANT-(\d+)"/g,(_,s)=>JSON.stringify(new Date(Date.now()-s*1000).toISOString())));
+  await page.addInitScript(({state,rel,fiches,onglets})=>{
+   const reponses={view:state,'list-tabs':onglets||[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},
     'relecture-choix-etat':{mode:'corriger'},'relecture-etat':rel,'bandeau-etat':{on:false},'fiches-depart':{fiches}};
    const stockage={};
    window.fetch=async()=>({json:async()=>({totaux:{tous:{corriges:2731}},creeLe:'2026-10-20T08:00:00Z'})});
    window.chrome={runtime:{id:'essai',getURL:p=>new URL(p,location.href).href,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
     sendMessage:async m=>({result:m.action in reponses?reponses[m.action]:{}})},
     storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
-  },{state,rel:e.rel||{choix:'corriger',lot:null,passe:null},fiches:e.fiches||[]});
+  },{state,rel:e.rel||{choix:'corriger',lot:null,passe:null},fiches:e.fiches||[],onglets:e.onglets||null});
   await ouvrirPanneau(page,e.hash||'#automatic');await page.waitForTimeout(1300);
   for(const a of e.actions||[]){await page.evaluate(a=>window.ArianeUi5.agir(a),a);await page.waitForTimeout(300);}
   if(e.file){await page.evaluate(()=>window.ArianeUi5.agir('sg:onglet-file'));await page.waitForTimeout(300);

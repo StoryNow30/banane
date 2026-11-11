@@ -342,13 +342,22 @@
   function tuileEtapes(snap, m, t, cls) {
     const a = snap.ar || {}, E = a.etapes || {}, R = snap.relChiffres || null, P = a.passeFin, p2 = a.passe2;
     const rang = a.etat === 'p2' ? 1 : a.etat === 'rel' ? 2 : ['fini', 'arrete'].includes(a.etat) ? 3 : 0;
-    const passe = rang === 1 ? `${p2?.ecrites ?? 0} sur ${p2?.demandees ?? 0}` : rang > 1 ? (P ? (P.mode === 'ombre' ? 'en ombre' : P.etat === 'erreur' ? 'en erreur' : `${P.ecrites ?? 0} ${pl(P.ecrites ?? 0, 'posé')}`) : '')
-      : E.passe === 'off' ? 'coupé' : E.passe === 'ombre' ? 'à venir · en ombre' : E.passe === 'ecriture' ? 'à venir' : '';
-    const relu = R && Number.isInteger(R.faits) && Number.isInteger(R.total);
-    const rel = rang === 2 ? (relu ? `${R.faits} sur ${R.total}` : 'en cours') : rang > 2 ? (relu && R.lot ? `${R.faits} ${pl(R.faits, 'relu')}` : '')
-      : E.relecture === 'coupee' ? 'coupée' : E.relecture === 'ombre' ? 'à venir · sans modifier' : E.relecture === 'corriger' ? 'à venir' : '';
-    const L = [['Pose', `${a.traites ?? 0} ${pl(a.traites ?? 0, 'cut')}`, true], ['Rattrapage', passe, rang === 1 || !!P], ['Relecture', rel, rang === 2 || (rang > 2 && relu && R.lot)]];
-    return `<section class="sg-tu sg-tu-etapes${cls ? ' ' + cls : ''}" data-k="etapes"><h4>Étapes du lot</h4><ol class="sg-etapes">${L.map(([nom, v, connu], i) => `<li data-etape="${i < rang && connu ? 'fait' : i === rang ? 'actif' : 'a-venir'}"${i === rang && t === 'marche' ? ' data-tourne="1"' : ''}><i aria-hidden="true"></i><b>${nom}</b><span>${esc(v)}</span></li>`).join('')}</ol></section>`;
+    /* Relecture critique (CH-106, 11/11) : une étape n'est COCHÉE que finie. Un rattrapage en ombre, en erreur, en calcul ou arrêté dit son état sans coche ;
+     * une relecture en pause, interrompue ou arrêtée dit son état et ses chiffres sans coche (`relChiffres.etat` : `passe.etat` du service worker). */
+    const pEcrit = `${P?.ecrites ?? 0} ${pl(P?.ecrites ?? 0, 'posé')}`;
+    const [passe, passeEtat] = rang === 1 ? [`${p2?.ecrites ?? 0} sur ${p2?.demandees ?? 0}`, 'actif']
+      : rang > 1 ? (!P ? ['', 'a-venir'] : P.etat === 'calcul' ? ['calcul…', 'actif'] : P.etat === 'erreur' ? ['en erreur', 'a-venir'] : P.mode === 'ombre' ? ['en ombre', 'a-venir']
+        : P.etat === 'arretee' ? [`arrêté · ${pEcrit}`, 'a-venir'] : [pEcrit, 'fait'])
+      : [E.passe === 'off' ? 'coupé' : E.passe === 'ombre' ? 'à venir · en ombre' : E.passe === 'ecriture' ? 'à venir' : '', 'a-venir'];
+    const relu = R && Number.isInteger(R.faits) && Number.isInteger(R.total), sur = relu ? `${R.faits} sur ${R.total}` : '';
+    const REL = { 'en-pause': ['en pause', 'actif'], interrompue: ['interrompue', 'actif'], arretee: ['arrêtée', 'a-venir'], preparation: ['en préparation', 'actif'] };
+    const relDit = relu && REL[R.etat] ? [`${REL[R.etat][0]} · ${sur}`, REL[R.etat][1]] : null;
+    const [rel, relEtat] = rang === 2 ? (relDit || [sur || 'en cours', 'actif'])
+      : rang > 2 ? (!relu || !R.lot ? ['', 'a-venir'] : R.etat === 'finie' ? [`${R.faits} ${pl(R.faits, 'relu')}`, 'fait'] : relDit || [sur, R.etat === 'en-cours' ? 'actif' : 'a-venir'])
+      : [E.relecture === 'coupee' ? 'coupée' : E.relecture === 'ombre' ? 'à venir · sans modifier' : E.relecture === 'corriger' ? 'à venir' : '', 'a-venir'];
+    const L = [['Pose', `${a.traites ?? 0} ${pl(a.traites ?? 0, 'cut')}`, rang > 0 ? 'fait' : 'actif'], ['Rattrapage', passe, passeEtat], ['Relecture', rel, relEtat]];
+    const tourne = i => t === 'marche' && i === rang;
+    return `<section class="sg-tu sg-tu-etapes${cls ? ' ' + cls : ''}" data-k="etapes"><h4>Étapes du lot</h4><ol class="sg-etapes">${L.map(([nom, v, e], i) => `<li data-etape="${e}"${tourne(i) && e === 'actif' ? ' data-tourne="1"' : ''}><i aria-hidden="true"></i><b>${nom}</b><span>${esc(v)}</span></li>`).join('')}</ol></section>`;
   }
   /* Revue T21 (D7) : les bornes du prochain lot, revues et modifiables avant « Démarrer le lot », au repos et après « Nouveau lot » (règle du panneau
    * d'avant : aucun lot ne part sans que tu aies revu ses bornes). Ce qu'on tape va dans `#start` / `#end` (src/ui5.js), que « Démarrer » lit ;
@@ -461,13 +470,15 @@
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
     /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
     const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
-    /* CH-104 : la puce dit « ESV » et sa pastille l'état (maquette) ; le nom de l'onglet est dans son infobulle et dans la liste qu'elle ouvre. Un état
-     * anormal garde son texte quand la barre a la place. */
-    const normal = etatPuce === 'ok' || etatPuce === 'verrou';
+    /* Relecture critique (CH-106, 11/11) : la puce NOMME l'onglet, comme avant (Connexion T21 : le lot part sur l'onglet nommé en haut à droite) : le
+     * nom entier à taille normale, son premier morceau en compact, coupés par une ellipse sans pousser les onglets ; le nom entier reste dans
+     * l'infobulle et dans la liste. Un état anormal s'écrit en clair et dans sa couleur ; en compact, où la puce n'a pas la place, il est redit sur
+     * une ligne sous la barre. */
+    const normal = etatPuce === 'ok' || etatPuce === 'verrou', court = String(texte).split(' · ')[0];
     const titre = `${texte} · ${a.lotOuvert ? 'garde son onglet jusqu’à la fin du lot' : 'choisir l’onglet ESV'}`;
     return `<header class="sg-barre"><div class="sg-bascule" role="tablist" aria-label="Activité"${segFile ? ' data-onglets="4"' : ' data-onglets="3"'}><i class="sg-pouce" aria-hidden="true"></i>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
-<button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" aria-label="${esc(titre)}" title="${esc(titre)}"><i></i><span class="sg-tx"><span class="sg-long">${esc(normal ? 'ESV' : texte)}</span><span class="sg-court">ESV</span></span></button>
-<button type="button" class="sg-ico sg-menu-b" data-act="sg:menu" aria-label="Réglages, cache des exports, commandes" title="Réglages, cache des exports, commandes" aria-haspopup="dialog" aria-expanded="${ui.couche === 'menu'}">···</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
+<button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" aria-label="${esc(titre)}" title="${esc(titre)}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${etatPuce === 'verrou' ? ic('cadenas', 'sg-fl') : ''}</button>
+<button type="button" class="sg-ico sg-menu-b" data-act="sg:menu" aria-label="Réglages, cache des exports, commandes" title="Réglages, cache des exports, commandes" aria-haspopup="dialog" aria-expanded="${ui.couche === 'menu'}">···</button></header>${normal ? '' : `<div class="sg-barre-etat" data-etat="${etatPuce}" role="status"><i></i>${esc(texte)}</div>`}${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
 
   /* ------------------------------------------------------------------ couches */

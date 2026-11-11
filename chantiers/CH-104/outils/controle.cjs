@@ -17,7 +17,7 @@ const navigateur=require(R+'/tests/esv-maquette/navigateur.cjs'),{ouvrirPanneau}
 const {E,MESURE,FICHES,lot,id}=require('./capturer.cjs');
 const POINTS=(process.argv[2]||'1,2,3,4,5,6,7,8').split(',').map(Number);
 const dater=s=>JSON.parse(JSON.stringify(s).replace(/"MAINTENANT-(\d+)"/g,(_,x)=>JSON.stringify(new Date(Date.now()-x*1000).toISOString())));
-const etatDe=e=>dater({connection:{status:'ready',observedAt:'t',message:null,tabId:1},...e.state});
+const etatDe=e=>dater({connection:e.connexion||{status:'ready',observedAt:'t',message:null,tabId:1},...e.state});
 const console_=[];
 /* Une page du panneau : `rapide` ramène la relecture de la vue de 1 s à 40 ms (pour enchaîner les états) ; tout message non périodique est noté. */
 async function page_(nav,e,vp,{rapide=false,calme=false,requetes=null}={}){
@@ -25,16 +25,16 @@ async function page_(nav,e,vp,{rapide=false,calme=false,requetes=null}={}){
  page.on('pageerror',x=>console_.push('ERREUR '+x.message));
  page.on('console',m=>{if(['error','warning'].includes(m.type())&&!/Failed to load resource|net::ERR_FILE_NOT_FOUND/.test(m.text()))console_.push(m.type()+' : '+m.text());});
  if(requetes)page.on('request',r=>requetes.push(r.url()));
- await page.addInitScript(({state,rel,fiches,rapide})=>{
+ await page.addInitScript(({state,rel,fiches,rapide,onglets})=>{
   if(rapide){const si=window.setInterval;window.setInterval=(f,t,...a)=>si(f,t===1000?40:t,...a);}
-  const reponses={view:state,'list-tabs':[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},
+  const reponses={view:state,'list-tabs':onglets||[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},
    'relecture-choix-etat':{mode:'corriger'},'relecture-etat':rel,'bandeau-etat':{on:false},'fiches-depart':{fiches}};
   const stockage={};window.__m=[];window.__note=false;
   window.fetch=async()=>({json:async()=>({totaux:{tous:{corriges:2731}},creeLe:'2026-10-20T08:00:00Z'})});
   window.chrome={runtime:{id:'essai',getURL:p=>new URL(p,location.href).href,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}}}),
    sendMessage:async m=>{if(window.__note)window.__m.push(JSON.stringify({action:m.action,args:m.args||{}}));if(m.action==='view'&&window.__etat)return {result:window.__etat};return {result:m.action in reponses?reponses[m.action]:{}};}},
    storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
- },{state:etatDe(e),rel:e.rel||{choix:'corriger',lot:null,passe:null},fiches:e.fiches||[],rapide});
+ },{state:etatDe(e),rel:e.rel||{choix:'corriger',lot:null,passe:null},fiches:e.fiches||[],rapide,onglets:e.onglets||null});
  await ouvrirPanneau(page,e.hash||'#automatic');await page.waitForTimeout(rapide?500:1300);
  if(e.file){await page.evaluate(()=>window.ArianeUi5.agir('sg:onglet-file'));await page.waitForTimeout(200);if(typeof e.file==='number'){await page.evaluate(n=>window.ArianeUi5.agir('sg:file-n:'+n),e.file);await page.waitForTimeout(rapide?300:1200);}}
  for(const a of e.actions||[]){await page.evaluate(a=>window.ArianeUi5.agir(a),a);await page.waitForTimeout(300);}
@@ -121,7 +121,7 @@ const res={};const dire=(n,ok,t)=>{res[n]=ok;console.log(`Point ${n} : ${ok?'BON
   const gros=(()=>{const P=[];for(let i=0;i<1234;i++)P.push({identity:id(10000+i*2),cut:10000+i*2,durationMs:6000+(i%20)*100});const s=lot('RUNNING',4811,{cutStartedAt:'MAINTENANT-3'});
    s.batch={...s.batch,processed:P,deferred:[],sequence:[...P.map(x=>({identity:x.identity,cut:x.cut})),{identity:id(12468),cut:12468}],activeIdentity:id(12468),scope:{...s.batch.scope,start:10000,end:99000}};s.current={identity:id(12468)};return {state:s};})();
   const LONGS={...Object.fromEntries(['cours','toi','panne','rattrapage','relecture','fin','tiroir'].map(k=>[k+'-5chiffres',{...E[k],state:cinq(E[k].state)}])),'cours-1234':gros,
-   'file-8':E['file-8'],'file-arret':E['file-arret'],'file-cours':E['file-cours'],'file-fin':E['file-fin'],'file-repos':E['file-repos'],echo:E.echo,aurore:E.aurore,reglages:E.reglages,menu:E.menu,palette:E.palette,esv:E.esv,pret:E.pret};
+   'file-8':E['file-8'],'file-arret':E['file-arret'],'file-cours':E['file-cours'],'file-fin':E['file-fin'],'file-repos':E['file-repos'],'sans-onglet':E['sans-onglet'],'deux-onglets':E['deux-onglets'],'onglet-long':E['onglet-long'],'relecture-pause':E['relecture-pause'],echo:E.echo,aurore:E.aurore,reglages:E.reglages,menu:E.menu,palette:E.palette,esv:E.esv,pret:E.pret};
   for(const w of [320,360,480,600,800])for(const [nom,e] of Object.entries(LONGS)){const {page,ctx}=await page_(nav,e,{width:w,height:w<480?480:760});n++;
    const m=(await page.evaluate(MESURE)).filter(x=>!/^CONTRASTE/.test(x));if(m.length)defauts.push(`${nom} ${w} : ${m.join(' ; ')}`);await ctx.close();}
   dire(5,!defauts.length,`${n} écrans mesurés (largeurs 320, 360, 480, 600, 800 ; cuts à cinq chiffres, 1 234 cuts traités, 8 parties) : ni débordement ni troncature${defauts.length?'\n   '+defauts.join('\n   '):''}`);
