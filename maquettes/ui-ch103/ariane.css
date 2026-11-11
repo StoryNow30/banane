@@ -1,0 +1,306 @@
+/* CH-103 : composants du panneau Ariane (maquette). Dépend de variables.css.
+ * Composants : vue, tête (onglets, onglet ESV, menu), état, avis, avancement, propriétés, liste, boutons, pied. */
+
+.ar {
+  container: ar / inline-size;
+  position: relative;
+  height: 100%;
+  background: var(--ar-fond);
+  color: var(--ar-texte);
+  font-family: var(--ar-police);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.ar *, .ar *::before, .ar *::after { box-sizing: border-box; }
+.ar-corps-ecran {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-size: var(--ar-t-corps);
+  line-height: var(--ar-i-corps);
+  font-weight: var(--ar-g-normal);
+  letter-spacing: -.01em;
+}
+:where(.ar) :is(p, h1, dl, dd, ul) { margin: 0; padding: 0; }
+.ar ul { list-style: none; }
+.ar .n { font-variant-numeric: tabular-nums; color: var(--ar-texte); }
+:where(.ar) button { font: inherit; letter-spacing: inherit; color: inherit; margin: 0; }
+.ar :focus-visible { outline: 2px solid var(--ar-texte-2); outline-offset: 1px; }
+
+/* ---------- Tête : onglets à gauche, onglet ESV et menu à droite ---------- */
+.ar-tete {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--ar-e-2);
+  height: var(--ar-h-tete);
+  padding: 0 calc(var(--ar-marge) - 8px) 0 calc(var(--ar-marge) - 10px);
+  border-bottom: 1px solid var(--ar-trait);
+}
+.ar-onglets { display: flex; gap: 2px; }
+.ar-onglet {
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--ar-r-petit);
+  background: none;
+  color: var(--ar-texte-2);
+  font-size: 13px;
+  font-weight: var(--ar-g-moyen);
+  cursor: pointer;
+  transition: background var(--ar-vite), color var(--ar-vite);
+}
+.ar-onglet:hover { color: var(--ar-texte); }
+.ar-onglet[aria-selected="true"] { background: var(--ar-surface-2); color: var(--ar-texte); }
+.ar-tete-fin { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+
+/* Bouton discret : texte seul, fond au survol */
+.ar-discret {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ar-r-petit);
+  background: none;
+  color: var(--ar-texte-2);
+  font-size: var(--ar-t-petit);
+  line-height: var(--ar-i-petit);
+  font-weight: var(--ar-g-moyen);
+  cursor: pointer;
+  transition: background var(--ar-vite), color var(--ar-vite);
+}
+.ar-discret:hover:not(:disabled) { background: var(--ar-surface); color: var(--ar-texte); }
+.ar-discret:disabled { color: var(--ar-texte-3); opacity: .55; cursor: default; }
+.ar-point { width: 6px; height: 6px; border-radius: 50%; background: var(--ar-texte-3); }
+
+/* ---------- Menu ---------- */
+.ar-menu > summary {
+  list-style: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ar-r-petit);
+  color: var(--ar-texte-2);
+  cursor: pointer;
+  transition: background var(--ar-vite), color var(--ar-vite);
+}
+.ar-menu > summary::-webkit-details-marker { display: none; }
+.ar-menu > summary:hover, .ar-menu[open] > summary { background: var(--ar-surface); color: var(--ar-texte); }
+.ar-menu > summary i { display: block; width: 2px; height: 2px; border-radius: 50%; background: currentColor;
+  box-shadow: -5px 0 currentColor, 5px 0 currentColor; }
+.ar-menu-liste {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--ar-h-tete) - 4px);
+  right: calc(var(--ar-marge) - 8px);
+  width: 256px;
+  padding: var(--ar-e-1);
+  border: 1px solid var(--ar-trait-fort);
+  border-radius: var(--ar-r-moyen);
+  background: var(--ar-surface);
+  box-shadow: var(--ar-ombre);
+  font-size: 13px;
+  line-height: 20px;
+}
+.ar-menu-liste button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ar-e-3);
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ar-r-petit);
+  background: none;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ar-menu-liste button:hover:not(:disabled) { background: var(--ar-surface-2); }
+.ar-menu-liste button:disabled { color: var(--ar-texte-3); cursor: default; }
+.ar-menu-liste button small { font-size: var(--ar-t-micro); color: var(--ar-texte-3); }
+.ar-menu-liste hr { height: 1px; margin: var(--ar-e-1) -4px; border: 0; background: var(--ar-trait); }
+
+/* ---------- Corps ---------- */
+.ar-principal {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--ar-e-4) var(--ar-marge) var(--ar-e-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ar-e-4);
+}
+@container ar (min-width: 520px) {
+  .ar-principal { padding-top: 28px; gap: var(--ar-e-6); }
+}
+
+/* ---------- État : un signe, un mot, une phrase au présent ---------- */
+.ar-etat { display: grid; grid-template-columns: 16px 1fr; column-gap: 10px; align-items: center; }
+.ar-etat h1 {
+  font-size: var(--ar-t-titre);
+  line-height: var(--ar-i-titre);
+  font-weight: var(--ar-g-fort);
+  letter-spacing: -.015em;
+}
+.ar-etat p { grid-column: 2; color: var(--ar-texte-2); }
+.ar-signe { width: 16px; height: 16px; display: grid; place-items: center; }
+/* En cours : un anneau qui tourne, sans couleur */
+.ar-signe-cours::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ar-trait-fort);
+  border-top-color: var(--ar-texte);
+  animation: ar-tourne .9s linear infinite;
+}
+@keyframes ar-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ar-signe-cours::before { animation: none; } }
+/* À toi : la seule couleur de l'écran */
+.ar-signe-toi::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ar-a-toi);
+  box-shadow: 0 0 0 4px var(--ar-a-toi-fond), 0 0 0 5px var(--ar-a-toi-trait);
+}
+
+/* ---------- Avis : ce qu'Ariane attend, et les deux réponses ---------- */
+.ar-avis {
+  padding: var(--ar-e-3);
+  border: 1px solid var(--ar-a-toi-trait);
+  border-radius: var(--ar-r-moyen);
+  background: var(--ar-a-toi-fond);
+}
+.ar-avis p { text-wrap: balance; }
+.ar-avis .ar-actions { margin-top: var(--ar-e-3); }
+@container ar (min-width: 520px) {
+  .ar-avis { padding: var(--ar-e-4); }
+  .ar-avis .ar-actions { margin-top: var(--ar-e-4); }
+}
+
+/* ---------- Boutons ---------- */
+.ar-actions { display: flex; flex-wrap: wrap; gap: var(--ar-e-2); }
+.ar-bouton {
+  height: var(--ar-h-ligne);
+  padding: 0 14px;
+  border: 1px solid var(--ar-trait-fort);
+  border-radius: var(--ar-r-moyen);
+  background: none;
+  font-size: 13px;
+  font-weight: var(--ar-g-moyen);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--ar-vite), border-color var(--ar-vite), opacity var(--ar-vite);
+}
+.ar-bouton:hover { background: var(--ar-surface); }
+.ar-avis .ar-bouton:hover { background: var(--ar-fond); }
+.ar-bouton-principal,
+.ar-avis .ar-bouton-principal:hover,
+.ar-bouton-principal:hover {
+  border-color: var(--ar-inverse-fond);
+  background: var(--ar-inverse-fond);
+  color: var(--ar-inverse-texte);
+}
+.ar-bouton-principal:hover { opacity: .88; }
+
+/* ---------- Avancement : une barre fine, sans couleur ---------- */
+.ar-avance-tete { display: flex; justify-content: space-between; gap: var(--ar-e-3); color: var(--ar-texte-2);
+  font-size: var(--ar-t-petit); line-height: var(--ar-i-petit); }
+.ar-avance-tete b { font-weight: var(--ar-g-moyen); color: var(--ar-texte); font-variant-numeric: tabular-nums; }
+.ar-barre { height: 4px; margin-top: var(--ar-e-2); border-radius: 2px; background: var(--ar-trait-fort); overflow: hidden; }
+.ar-barre i { display: block; height: 100%; border-radius: 2px; background: var(--ar-texte); transition: width .4s cubic-bezier(.25, .46, .45, .94); }
+.ar-barre[data-arret] i { background: var(--ar-texte-3); }
+
+/* ---------- Propriétés : un mot à gauche, sa valeur à droite ---------- */
+.ar-props { border-top: 1px solid var(--ar-trait); }
+.ar-props > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ar-e-3);
+  min-height: var(--ar-h-ligne);
+  border-bottom: 1px solid var(--ar-trait);
+}
+.ar-props dt { color: var(--ar-texte-2); }
+.ar-props dd { text-align: right; color: var(--ar-texte-2); }
+
+/* ---------- Liste repliable : en-tête de section, lignes ---------- */
+.ar-liste > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--ar-e-2);
+  height: var(--ar-h-ligne);
+  margin: 0 -8px;
+  padding: 0 8px;
+  border-radius: var(--ar-r-petit);
+  color: var(--ar-texte-2);
+  font-size: var(--ar-t-micro);
+  line-height: var(--ar-i-micro);
+  font-weight: var(--ar-g-moyen);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--ar-vite);
+}
+.ar-liste > summary::-webkit-details-marker { display: none; }
+.ar-liste > summary:hover { background: var(--ar-surface); }
+.ar-liste > summary .n { letter-spacing: 0; }
+.ar-liste > summary small {
+  margin-left: auto;
+  font-size: var(--ar-t-petit);
+  font-weight: var(--ar-g-normal);
+  letter-spacing: -.01em;
+  text-transform: none;
+  color: var(--ar-texte-3);
+}
+.ar-liste > summary::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  margin: 0 3px 2px 2px;
+  border-right: 1.5px solid var(--ar-texte-3);
+  border-bottom: 1.5px solid var(--ar-texte-3);
+  transform: rotate(-45deg);
+  transition: transform var(--ar-vite);
+}
+.ar-liste[open] > summary::after { transform: rotate(45deg); }
+.ar-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--ar-e-3);
+  min-height: var(--ar-h-ligne);
+  margin: 0 -8px;
+  padding: 0 0 0 8px;
+  border-radius: var(--ar-r-petit);
+  transition: background var(--ar-vite);
+}
+.ar-ligne:hover { background: var(--ar-surface); }
+.ar-ligne .n { font-weight: var(--ar-g-moyen); }
+.ar-ligne small { font-size: var(--ar-t-petit); color: var(--ar-texte-3); font-variant-numeric: tabular-nums; }
+.ar-ligne .ar-actions { margin-left: auto; gap: 0; flex-wrap: nowrap; }
+.ar-liste-note { display: flex; justify-content: space-between; gap: var(--ar-e-3); align-items: center;
+  min-height: var(--ar-h-ligne); margin-top: var(--ar-e-1); border-top: 1px solid var(--ar-trait);
+  color: var(--ar-texte-2); }
+.ar-liste-note small { font-size: var(--ar-t-petit); color: var(--ar-texte-3); text-align: right; }
+
+/* ---------- Pied : les actions du lot, toujours au même endroit ---------- */
+.ar-pied {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--ar-e-2);
+  padding: var(--ar-e-3) var(--ar-marge);
+  border-top: 1px solid var(--ar-trait);
+}
+@container ar (min-width: 520px) {
+  .ar-pied { padding-block: var(--ar-e-4); }
+}

@@ -1,0 +1,94 @@
+/* CH-103 : variables du panneau Ariane (maquette). Un thème = un jeu de couleurs ; tout le reste est commun.
+ * Police : Inter variable (SIL OFL 1.1), fichier embarqué dans fonts/, aucune ressource extérieure. */
+@font-face {
+  font-family: "Inter Ariane";
+  src: url("fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+.ar {
+  /* Texte : quatre tailles, trois graisses, jamais de gras */
+  --ar-police: "Inter Ariane", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ar-t-micro: 11px;   /* en-têtes de section, raccourcis */
+  --ar-t-petit: 12px;   /* détails, heures */
+  --ar-t-corps: 13px;   /* tout le reste */
+  --ar-t-titre: 17px;   /* l'état, seul titre de l'écran */
+  --ar-i-micro: 16px;
+  --ar-i-petit: 16px;
+  --ar-i-corps: 20px;
+  --ar-i-titre: 24px;
+  --ar-g-normal: 400;
+  --ar-g-moyen: 510;
+  --ar-g-fort: 590;
+
+  /* Espacements : multiples de 4 */
+  --ar-e-1: 4px;
+  --ar-e-2: 8px;
+  --ar-e-3: 12px;
+  --ar-e-4: 16px;
+  --ar-e-6: 24px;
+  --ar-marge: 16px;      /* marge latérale du panneau */
+  --ar-h-ligne: 32px;    /* hauteur d'une ligne de liste et d'un bouton */
+  --ar-h-tete: 44px;
+
+  /* Rayons */
+  --ar-r-petit: 6px;     /* onglets, lignes, boutons discrets */
+  --ar-r-moyen: 8px;     /* boutons, avis, menu */
+
+  /* Mouvement */
+  --ar-vite: .12s cubic-bezier(.25, .46, .45, .94);
+}
+
+/* Sombre (défaut) */
+.ar,
+.ar[data-theme="sombre"] {
+  color-scheme: dark;
+  --ar-fond: #0d0d0c;
+  --ar-surface: #171716;        /* onglet actif, survol, menu */
+  --ar-surface-2: #20201e;
+  --ar-trait: #232321;
+  --ar-trait-fort: #34342f;
+  --ar-texte: #ededea;
+  --ar-texte-2: #a4a49f;
+  --ar-texte-3: #85857f;
+  --ar-inverse-fond: #e9e9e6;   /* bouton principal */
+  --ar-inverse-texte: #0d0d0c;
+  --ar-a-toi: #f08c3c;          /* seule couleur : « à toi » */
+  --ar-a-toi-fond: #21180f;
+  --ar-a-toi-trait: #4a2f17;
+  --ar-ombre: 0 8px 24px rgba(0, 0, 0, .5);
+}
+
+/* Clair */
+.ar[data-theme="clair"] {
+  color-scheme: light;
+  --ar-fond: #fcfcfb;
+  --ar-surface: #f3f3f1;
+  --ar-surface-2: #eaeae7;
+  --ar-trait: #e7e7e4;
+  --ar-trait-fort: #d3d3cf;
+  --ar-texte: #1a1a18;
+  --ar-texte-2: #5a5a55;
+  --ar-texte-3: #6b6b65;
+  --ar-inverse-fond: #1a1a18;
+  --ar-inverse-texte: #fcfcfb;
+  --ar-a-toi: #c2570c;
+  --ar-a-toi-fond: #fdf1e7;
+  --ar-a-toi-trait: #f3d2b6;
+  --ar-ombre: 0 8px 24px rgba(0, 0, 0, .12);
+}
+
+/* Grande fenêtre (600 × 760) : même dessin, un cran d'air en plus */
+@container ar (min-width: 520px) {
+  .ar-corps-ecran {
+    --ar-t-corps: 14px;
+    --ar-t-titre: 22px;
+    --ar-i-corps: 22px;
+    --ar-i-titre: 28px;
+    --ar-marge: 32px;
+    --ar-h-ligne: 36px;
+    --ar-h-tete: 52px;
+  }
+}
