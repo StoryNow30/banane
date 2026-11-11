@@ -68,6 +68,10 @@ const AUTRES={
  'origine-echo':{origine:true,hash:'#native',state:N.SCENARIOS.echo.state},
 };
 if(process.env.AUTRES!=='0')Object.assign(E,AUTRES);
+/* Dans l'extension réelle la Constellation est allumée par défaut (src/settings.js, `file.actif`) : la vue du service worker porte toujours la clé
+ * `fileParties` (null au repos), et la barre a toujours quatre onglets. Tous les états la portent donc ; un seul écran garde le cas du réglage coupé. */
+for(const e of Object.values(E))if(!e.origine&&!Object.hasOwn(e.state,'fileParties'))e.state={...e.state,fileParties:null};
+E['sans-constellation']={state:(s=>{const x={...s};delete x.fileParties;return x;})(E.cours.state)};
 const MESURE=()=>{
  const rgb=c=>{const s=String(c).match(/color\(srgb ([^)]+)\)/);if(s){const v=s[1].split(/[ \/]+/).filter(Boolean).map(Number);return {r:v[0]*255,g:v[1]*255,b:v[2]*255,a:v.length>3?v[3]:1};}const m=String(c).match(/rgba?\(([^)]+)\)/);if(!m)return null;const v=m[1].split(/[ ,/]+/).filter(Boolean).map(Number);return {r:v[0],g:v[1],b:v[2],a:v.length>3?v[3]:1};};
  const lum=({r,g,b})=>{const t=x=>{x/=255;return x<=.03928?x/12.92:((x+.055)/1.055)**2.4;};return .2126*t(r)+.7152*t(g)+.0722*t(b);};

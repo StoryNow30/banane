@@ -9,7 +9,7 @@ os.makedirs(os.path.join(OUT, 'img'), exist_ok=True)
 ORBITE = [('pret', 'Prêt'), ('cours', 'En cours'), ('pause', 'En pause'), ('toi', 'Rail non résolu'), ('panne', 'ESV muet'), ('rattrapage', 'Rattrapage'), ('relecture', 'Relecture'), ('fin', 'Fin de lot')]
 FILE = [('file-repos', 'Prête'), ('file-cours', 'En cours'), ('file-passage', 'Passage'), ('file-arret', 'Arrêtée'), ('file-fin', 'Terminée')]
 AUTRES = [('cours-total', 'Orbite, total connu : le pourcentage'), ('echo', 'Écho'), ('aurore', 'Aurore'), ('aurore-vide', 'Aurore sans liste'), ('menu', 'Menu « ··· »'), ('palette', 'Commandes'), ('reglages', 'Réglages'),
-          ('esv', 'Onglets ESV'), ('tiroir', 'Ce qui reste'), ('boite-file', 'Boîte de la Constellation'), ('tech', 'Détails techniques'), ('origine', 'Panneau d’origine (secours), Orbite'), ('origine-echo', 'Panneau d’origine (secours), Écho')]
+          ('esv', 'Onglets ESV'), ('tiroir', 'Ce qui reste'), ('boite-file', 'Boîte de la Constellation'), ('tech', 'Détails techniques'), ('sans-constellation', 'Constellation coupée par le réglage : trois onglets'), ('file-1', 'Constellation, une partie'), ('file-8', 'Constellation, huit parties'), ('origine', 'Panneau d’origine (secours), Orbite'), ('origine-echo', 'Panneau d’origine (secours), Écho')]
 fichiers = {}
 def img(src, nom):
     if not os.path.exists(src): return None
