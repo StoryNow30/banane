@@ -43,6 +43,28 @@ const E={
  'file-arret':{file:true,fiches:FICHES.slice(0,3),state:{...clos(15),fileParties:vue('arret',{rang:2,bilan:[...BILAN.slice(0,2),{...partie(15,2,31,2,null,['operateur']),interrompue:true,relecture:null}],motifFin:{code:'operateur',texte:'arrêtée par l’opérateur'},reprise:{rang:2,part:15,reste:3}})}},
  'file-fin':{file:true,fiches:FICHES,state:{...clos(17),fileParties:vue('fin',{rang:5,bilan:BILAN})}},
 };
+/* Les autres écrans (la maquette ne les montre pas : ils reçoivent le même système). `actions` : les gestes de Signal joués avant la photo. */
+const CL=require(R+'/src/correction-liste.js'),{journal}=require(R+'/tests/helpers/correction-journal.cjs');
+const LC=CL.construire(journal({partie:13}),{partie:13});
+const visite=(cut,label,fini=true)=>({visitId:'v'+cut,identity:id(cut),startedAt:'2026-10-31T10:10:00Z',...(fini?{endedAt:'2026-10-31T10:10:09Z'}:{}),label});
+const corr=(etat,extra={})=>({id:'C1',etat,creeA:'2026-10-31T10:05:00Z',listes:[{batchId:'B1',partie:13,entrees:LC.entrees,comptes:LC.comptes}],...extra});
+const cours=()=>lot('RUNNING',4811,{cutStartedAt:'MAINTENANT-3'});
+const AUTRES={
+ 'cours-total':{fiches:FICHES.slice(1,2),state:lot14},
+ echo:{hash:'#native',state:N.SCENARIOS.echo.state},
+ aurore:{actions:['sg:onglet-correction'],state:{...fin(),current:{identity:id(15)},correction:corr('ouverte',{courant:{part:13,cut:15}}),native:{id:'n1',status:'RUNNING',correction:{id:'C1'},visits:[visite(14,'VALIDATE_NO_MOVEMENT'),visite(15,null,false)]}}},
+ 'aurore-vide':{actions:['sg:onglet-correction'],state:repos},
+ menu:{actions:['sg:menu'],state:cours()},
+ palette:{actions:['sg:palette'],state:cours()},
+ reglages:{actions:['sg:reglages'],state:repos},
+ esv:{actions:['sg:esv'],state:repos},
+ tiroir:{actions:['sg:tiroir'],state:fin()},
+ 'boite-file':{actions:['sg:file'],state:{...repos,fileParties:null}},
+ tech:{actions:['sg:tech'],state:fin()},
+ origine:{origine:true,state:cours()},
+ 'origine-echo':{origine:true,hash:'#native',state:N.SCENARIOS.echo.state},
+};
+if(process.env.AUTRES!=='0')Object.assign(E,AUTRES);
 const MESURE=()=>{
  const rgb=c=>{const s=String(c).match(/color\(srgb ([^)]+)\)/);if(s){const v=s[1].split(/[ \/]+/).filter(Boolean).map(Number);return {r:v[0]*255,g:v[1]*255,b:v[2]*255,a:v.length>3?v[3]:1};}const m=String(c).match(/rgba?\(([^)]+)\)/);if(!m)return null;const v=m[1].split(/[ ,/]+/).filter(Boolean).map(Number);return {r:v[0],g:v[1],b:v[2],a:v.length>3?v[3]:1};};
  const lum=({r,g,b})=>{const t=x=>{x/=255;return x<=.03928?x/12.92:((x+.055)/1.055)**2.4;};return .2126*t(r)+.7152*t(g)+.0722*t(b);};
@@ -53,7 +75,7 @@ const MESURE=()=>{
  const defile=e=>{for(let x=e.parentElement;x&&x!==P;x=x.parentElement){const o=getComputedStyle(x).overflowY;if(o==='auto'||o==='scroll')return true;}return false;};
  const coupe=e=>{for(let x=e.parentElement;x&&x!==P;x=x.parentElement){const s=getComputedStyle(x);if(s.overflowY==='hidden'&&(s.maskImage&&s.maskImage!=='none'||s.webkitMaskImage&&s.webkitMaskImage!=='none'))return true;}return false;};
  if(document.documentElement.scrollWidth>W+1)out.push('PAGE DEFILE EN LARGEUR');
- for(const e of P.querySelectorAll('*')){if(!e.getClientRects().length)continue;const r=e.getBoundingClientRect();if(!r.width||!r.height)continue;if(e.closest('svg')||e.closest('[data-tourne]'))continue;
+ for(const e of P.querySelectorAll('*')){if(!e.getClientRects().length)continue;const r=e.getBoundingClientRect();if(r.width<=1||r.height<=1)continue;if(e.closest('svg')||e.closest('[data-tourne]'))continue;
   if(r.right>W+.5||r.left<-.5)out.push('SORT '+nom(e)+' '+Math.round(r.right-W));
   if(r.bottom>H+.5&&!defile(e)&&!coupe(e))out.push('SORT EN BAS '+nom(e)+' '+Math.round(r.bottom-H));
   const s=getComputedStyle(e);
@@ -79,13 +101,17 @@ const MESURE=()=>{
     sendMessage:async m=>({result:m.action in reponses?reponses[m.action]:{}})},
     storage:{local:{get:async()=>({...stockage}),set:async o=>{Object.assign(stockage,o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:600,height:760}),update:async()=>({})}};
   },{state,rel:e.rel||{choix:'corriger',lot:null,passe:null},fiches:e.fiches||[]});
-  await ouvrirPanneau(page,'#automatic');await page.waitForTimeout(1300);
+  await ouvrirPanneau(page,e.hash||'#automatic');await page.waitForTimeout(1300);
+  for(const a of e.actions||[]){await page.evaluate(a=>window.ArianeUi5.agir(a),a);await page.waitForTimeout(300);}
   if(e.file){await page.evaluate(()=>window.ArianeUi5.agir('sg:onglet-file'));await page.waitForTimeout(300);
    if(typeof e.file==='number'){await page.evaluate(n=>window.ArianeUi5.agir('sg:file-n:'+n),e.file);await page.waitForTimeout(1200);}}
-  if(theme==='clair'){await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:clair'));await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='clair',null,{timeout:4000});}
+  /* le panneau d'origine, tel qu'il revient en secours : Signal caché */
+  if(e.origine&&theme==='clair'){await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:clair'));await page.waitForTimeout(500);}
+  if(e.origine){await page.evaluate(()=>{document.body.classList.remove('ui5');document.getElementById('ui5').hidden=true;});await page.waitForTimeout(300);}
+  if(theme==='clair'&&!e.origine){await page.evaluate(()=>window.ArianeUi5.agir('sg:choix:theme:clair'));await page.waitForFunction(()=>document.getElementById('ui5').dataset.theme==='clair',null,{timeout:4000});}
   await page.waitForTimeout(900);
   await page.screenshot({path:path.join(SORTIE,`${cle}.png`)});
-  mesures[cle]=[...erreurs.map(x=>'ERREUR '+x),...await page.evaluate(MESURE)];
+  mesures[cle]=[...erreurs.map(x=>'ERREUR '+x),...(e.origine?[]:await page.evaluate(MESURE))];
   if(theme==='sombre')bilan[`${taille}/${nom}`]=await page.evaluate(()=>(document.querySelector('#ui5 .sg-fen')?.innerText||'').replace(/\n+/g,' | ').slice(0,600));
   await ctx.close();
  }
