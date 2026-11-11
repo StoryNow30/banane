@@ -3918,14 +3918,17 @@ async function relectureCorriger(p,b,etat,calc){const K=globalThis.BananeCore3,G
  * (« partie 0 » de chargement, ESV muet), elle réessaie jusqu'à `attenteRepriseMs` ; au-delà, ou si le rechargement est impossible, la passe RESTE EN
  * PAUSE avec la consigne de l'opérateur (comme après un F5 aujourd'hui). Si l'opérateur reprend ou arrête lui-même pendant l'attente, Ariane s'efface.
  * Journal : `relecture-signal-eteint` (étapes « recharge », « repris », « echec », « abandon »). */
-async function relectureSignalRecharger(p){const SG=globalThis.BananeRelectureSignal,R=p.signalEsv?.reglage||SG.reglage(globalThis.BananeSettings?.relectureSignalEteint);
- const t0=Date.now(),tab=selectedTab,cut=p.cut,part=engine?.s?.batch?.scope?.part??null;let derniere=null;
- const encore=()=>relecture.passe===p&&p.etat==='en-pause'&&p.pauseRaison==='signal';
- const dire=(etape,motif=null)=>relectureJournal('relecture-signal-eteint',{etape,motif:motif?String(motif).slice(0,200):null,identity:{part,cut},ms:Date.now()-t0,...(p.signalEsv?SG.bilan(p.signalEsv):{})},p);
- const echec=m=>{if(encore())p.message=`Signal de chargement d’ESV éteint au cut ${cut} : ${m}. Recharge ESV (F5), reconnecte-la, puis reprends la relecture.`;dire('echec',m);};
+/* CH-107 : le même chemin sert à la série de cuts sans point (`raison` « points », pause au premier cut vide de la série) : journal
+ * `relecture-points-vides`, mêmes délais (réglage `relectureSignalEteint`), le compte des rechargements du signal n'est pas touché. */
+async function relectureSignalRecharger(p,raison='signal'){const SG=globalThis.BananeRelectureSignal,R=p.signalEsv?.reglage||SG.reglage(globalThis.BananeSettings?.relectureSignalEteint);
+ const t0=Date.now(),tab=selectedTab,cut=p.cut,part=engine?.s?.batch?.scope?.part??null,points=raison==='points';let derniere=null;
+ const encore=()=>relecture.passe===p&&p.etat==='en-pause'&&p.pauseRaison===raison;
+ const dire=(etape,motif=null)=>relectureJournal(points?'relecture-points-vides':'relecture-signal-eteint',{etape,motif:motif?String(motif).slice(0,200):null,identity:{part,cut},ms:Date.now()-t0,...(points?{}:p.signalEsv?SG.bilan(p.signalEsv):{})},p);
+ const echec=m=>{if(encore())p.message=points?`ESV n’affiche plus les points au cut ${cut} : ${m}. Recharge ESV (F5) puis reprends la relecture.`
+  :`Signal de chargement d’ESV éteint au cut ${cut} : ${m}. Recharge ESV (F5), reconnecte-la, puis reprends la relecture.`;dire('echec',m);};
  if(tab===null)return echec('aucun onglet ESV choisi');
  await attendreMs(R.delaiAvantMs);if(!encore())return dire('abandon','relecture reprise ou arrêtée avant le rechargement');
- const gen0=chargementEsv.gen;if(p.signalEsv)SG.recharge(p.signalEsv);
+ const gen0=chargementEsv.gen;if(p.signalEsv&&!points)SG.recharge(p.signalEsv);
  try{await chrome.tabs.reload(tab);}catch(e){return echec(`rechargement impossible (${String(e?.message||e).slice(0,120)})`);}
  dire('recharge');
  while(Date.now()-t0<R.attenteRepriseMs){await attendreMs(R.sondageMs);
@@ -3940,6 +3943,20 @@ async function relectureSignalRecharger(p){const SG=globalThis.BananeRelectureSi
   if(!chargementEsvPret(lu,R))continue;
   try{await relectureReprendre();return dire('repris');}catch(e){derniere=e?.message;if(!encore())return dire('abandon',derniere);}}
  echec(`ESV n’est pas prêt ${Math.round(R.attenteRepriseMs/1000)} s après le rechargement${derniere?` (${String(derniere).slice(0,120)})`:''}`);}
+/* CH-107 — SÉRIE DE CUTS SANS POINT PENDANT LA RELECTURE. Seuil et rechargements par série : réglage du lot `lot.serieCapturesVides` (lu par
+ * src/serie-captures-vides.js ; coupé ou illisible : pas de garde). L'état vit sur la passe (une reprise le garde) : `vides` cuts vides de suite depuis
+ * l'index `debut`, `faitsAvant` cuts relus avant la série, `rechargements` faits pour la série en cours. Une capture pleine ferme la série ; un cut sans
+ * capture (erreur) ne la ferme ni ne l'allonge. Rend null sous le seuil, sinon {debut, vides, seuil, faitsAvant, recharger, rechargements}. */
+function relecturePointsVides(p,{vide,capture,ci,faits}){const G=globalThis.BananeSerieCapturesVides;if(!G)return null;
+ const R=G.reglage(globalThis.BananeSettings?.lot?.serieCapturesVides);if(!R.actif)return null;
+ const sv=p.pointsVides||(p.pointsVides={vides:0,debut:null,faitsAvant:0,rechargements:0});
+ if(!vide){if(capture){sv.vides=0;sv.debut=null;sv.rechargements=0;}return null;}
+ if(!sv.vides){sv.debut=ci;sv.faitsAvant=faits-1;}
+ if(++sv.vides<R.seuil)return null;
+ const recharger=R.rechargement&&sv.rechargements<R.rechargementsParSerie&&p.reprise===true;if(recharger)sv.rechargements++;
+ const r={debut:sv.debut,vides:sv.vides,seuil:R.seuil,faitsAvant:sv.faitsAvant,recharger,rechargements:sv.rechargements};
+ /* La passe reprend au premier cut de la série : le compte repart de zéro, les rechargements de la série restent comptés. */
+ sv.vides=0;sv.debut=null;return r;}
 async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=globalThis.BananeCore3,R=globalThis.BananeRelectureOmbre,cfg=reglageRelecture(),partie=b.scope.part;
  /* Chaîne d'appuis (revue, correction 8) : VIDE au départ, comme l'étude ; seules les poses calculées pour les verts relus y entrent. */
  const chaine=reprise?.chaine?JSON.parse(JSON.stringify(reprise.chaine)):[],ecartementsVerts=reprise?.ecartementsVerts?reprise.ecartementsVerts.slice():[],ecartementPartieMm=entree.ecartementPartieMm;
@@ -4027,12 +4044,16 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
   let seconde=null;
   if(capture&&R.captureVide(capture))try{seconde=await call('capture',avecPrechauffage(etat,suivanteRelue,'relu',apresRelue,loinRelue));}catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||'')){stopEsv(`Relecture arrêtée au cut ${c.cut} : ${String(e.message).slice(0,200)}. Rien n’a été posé.`);break;}}
   const tCap=Date.now();let calc=null,erreurCalcul=null;const skip=capture?R.skipOmbre(seconde?[capture,seconde]:[capture]):null;
+  /* CH-107 : un cut est « vide » quand ESV n'y montre aucun point (la capture, et sa relecture si elle a eu lieu) ; une capture vide, même suivie
+   * d'une pleine, interdit toute correction de ce cut. Le calcul se fait sur la capture pleine quand la relecture en rend une (avant : la vide). */
+  const premiereVide=!!capture&&R.captureVide(capture),cutVide=premiereVide&&(!seconde||R.captureVide(seconde));
+  const captureCalcul=premiereVide&&seconde&&!R.captureVide(seconde)?seconde:capture;
   if(c.role==='vert'&&capture?.rails&&!R.captureVide(capture))try{const g=globalThis.BananeLotDecision.gaugeOf({left:capture.rails.left.positionSceneRelative,right:capture.rails.right.positionSceneRelative});
    if(Number.isFinite(g)&&Math.abs(g-ECARTEMENT_ORIGINE_ESV_MM)>.05)ecartementsVerts.push(g);}catch{/* écartement illisible */}
-  if(capture)try{calc=relectureCalculer(capture,c,ctx,reglages,skip);}catch(e){erreurCalcul=String(e?.message||e).slice(0,200);}
+  if(capture)try{calc=relectureCalculer(captureCalcul,c,ctx,reglages,skip);}catch(e){erreurCalcul=String(e?.message||e).slice(0,200);}
   const tCalc=Date.now();let action={action:'visite',raison:null},garde=null;
   if(calc&&p.modeEffectif==='corriger'&&calc.critere.corriger&&!p.arret){
-   garde=relectureGarde({c,etat,ligne,par,total});
+   garde=premiereVide?{ok:false,raison:'capture sans point (ESV n’affiche pas le nuage) : jamais de correction'}:relectureGarde({c,etat,ligne,par,total});
    if(!garde.ok)action={action:'visite',raison:`correction écartée : ${garde.raison}`};
    else{try{action=await relectureCorriger(p,b,etat,calc);}
     catch(e){stop(`Relecture arrêtée : ${String(e?.message||e).slice(0,300)}`);
@@ -4050,18 +4071,30 @@ async function relecturePasse(p,b,sel,reglages,entree,reprise=null){const K=glob
   p.faits++;
   if(p.reprise)await reprisePoser(ci+1);
   if(action.stopApres){stop(action.stopApres);break;}
+  /* CH-107 : série de cuts vides (ESV n'affiche plus les points). Au seuil, la passe n'écrit plus rien : pause au PREMIER cut vide de la série
+   * (ses cuts seront relus), rechargement d'ESV et reprise, une fois par série ; sans pause permise, arrêt. */
+  {const sv=relecturePointsVides(p,{vide:cutVide,capture:!!capture,ci,faits:p.faits});
+   if(sv){const debut=sel.cuts[sv.debut]?.cut??c.cut,ligneDe=`${pluriel(sv.vides,'cut')} de suite sans point, dès le cut ${debut}`;
+    relectureJournal('relecture-points-vides',{etape:'detecte',action:!p.reprise?'arret':sv.recharger?'recharger':'pause',identity:{part:partie,cut:debut},vides:sv.vides,seuil:sv.seuil,
+     cuts:sel.cuts.slice(sv.debut,ci+1).map(x=>x.cut),rechargements:sv.rechargements},p);
+    if(!p.reprise){stop(`Relecture arrêtée au cut ${c.cut} : ESV n’affiche plus les points (${ligneDe}). Rien n’a été écrit sur ces cuts. Recharge ESV (F5) puis relance la relecture.`);break;}
+    p.faits=sv.faitsAvant;p.pointsVidesMessage=sv.recharger?`ESV n’affiche plus les points (${ligneDe}) : Ariane recharge la page ESV, puis reprend la relecture au cut ${debut}`
+     :`ESV n’affiche plus les points (${ligneDe}${sv.rechargements?', même après le rechargement':''}) : relecture gardée en pause au cut ${debut}. Recharge ESV (F5) puis reprends la relecture`;
+    p.pointsVidesRecharger=sv.recharger;issue='pause-points';indexPause=sv.debut;break;}}
   if(signalAction==='recharger'&&p.reprise&&!p.arret&&ci+1<sel.cuts.length){issue='pause-signal';indexPause=ci+1;break;}}
  /* Les « vu » des derniers cuts affichés arrivent après eux : la passe les attend (aucune commande pendant ce temps). */
  if(derniereArrivee!==null&&issue!=='pause-esv'){const reste=cfg.attenteVuMs-(Date.now()-derniereArrivee);if(reste>0)await attendreMs(Math.min(reste,10000));}
  /* Pause (demandée, ou ESV muet) : la passe garde son point et passe « en pause » ; pas de relecture-fin, la passe n'est pas finie. */
- if((issue==='pause'||issue==='pause-esv'||issue==='pause-signal')&&relecture.passe===p&&p.reprise&&Number.isInteger(indexPause)){
-  const sc=sel.cuts[indexPause];p.etat='en-pause';p.pauseRaison=issue==='pause'?'mic':issue==='pause-signal'?'signal':'esv';p.pauseDemandee=false;p.arret=false;p.cut=sc?.cut??null;p.plage=sel.plages[sc?.plage]?.libelle??null;
+ if((issue==='pause'||issue==='pause-esv'||issue==='pause-signal'||issue==='pause-points')&&relecture.passe===p&&p.reprise&&Number.isInteger(indexPause)){
+  const sc=sel.cuts[indexPause];p.etat='en-pause';p.pauseRaison=issue==='pause'?'mic':issue==='pause-signal'?'signal':issue==='pause-points'?'points':'esv';p.pauseDemandee=false;p.arret=false;p.cut=sc?.cut??null;p.plage=sel.plages[sc?.plage]?.libelle??null;
   await reprisePoser(indexPause);
   p.message=issue==='pause'?`Relecture en pause au cut ${p.cut} : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}. Tu peux la reprendre, même après un F5.`
+   :issue==='pause-points'?`${p.pointsVidesMessage} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}).`
    :issue==='pause-signal'?`Signal de chargement d’ESV éteint (lecture lente) : Ariane recharge la page ESV, puis reprend la relecture au cut ${p.cut} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}).`
    :`ESV ne répond plus : relecture gardée en pause au cut ${p.cut} (${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''} sur ${p.total}). Recharge ESV (F5) si elle est figée, reconnecte-la, puis reprends la relecture.`;
-  relectureJournal('relecture-pause',{mode:p.mode,modeEffectif:p.modeEffectif,raison:p.pauseRaison,cut:p.cut,index:indexPause,faits:p.faits,total:p.total,corriges:p.corriges,stocke:p.pointStocke!==false,message:issue==='pause-esv'?String(p.message).slice(0,200):null},p);
-  await relectureOublierPasse(p);if(issue==='pause-signal')void relectureSignalRecharger(p).catch(()=>{});return;}
+  relectureJournal('relecture-pause',{mode:p.mode,modeEffectif:p.modeEffectif,raison:p.pauseRaison,cut:p.cut,index:indexPause,faits:p.faits,total:p.total,corriges:p.corriges,stocke:p.pointStocke!==false,message:issue==='pause-esv'||issue==='pause-points'?String(p.message).slice(0,200):null},p);
+  await relectureOublierPasse(p);if(issue==='pause-signal')void relectureSignalRecharger(p).catch(()=>{});
+  if(issue==='pause-points'&&p.pointsVidesRecharger)void relectureSignalRecharger(p,'points').catch(()=>{});return;}
  if(p.reprise){p.pauseDemandee=false;await relectureRepriseEffacer();}
  const vu=p.vus?` ; ESV a marqué ${pluriel(p.vus,'cut')} « vu »`:'';
  if(issue==='fin'&&p.etat==='en-cours')p.message=`Relecture finie : ${pluriel(p.faits,'cut')} relu${p.faits>1?'s':''}${p.modeEffectif==='corriger'?`, ${pluriel(p.corriges,'corrigé')}${p.refusees?`, ${pluriel(p.refusees,'correction')} refusée${p.refusees>1?'s':''} par la page`:''}`:', rien de modifié'}${vu}.${p.noteMode?` ${p.noteMode}`:''}`;
