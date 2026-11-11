@@ -13,6 +13,7 @@
     {"hote": "github.com", "chemin": "/marcologous/", "raison": "dépôt de la police Hanken Grotesk, licence OFL"},
     {"hote": "github.com", "chemin": "/JetBrains/", "raison": "dépôt de la police JetBrains Mono, licence OFL"},
     {"hote": "github.com", "chemin": "/rsms/", "raison": "dépôt de la police Inter, licence OFL"},
+    {"hote": "github.com", "chemin": "/expo/", "raison": "dépôt public de l'outil de maquettes cité par l'opérateur (D-324 à D-328, ticket CH-102), pas une adresse ESV"},
     {"hote": "arxiv.org", "raison": "article cité dans un audit"},
     {"hote": "scikit-learn.org", "sousDomaines": true, "raison": "documentation scientifique citée dans un audit"},
     {"hote": "itl.nist.gov", "sousDomaines": true, "raison": "documentation du NIST citée dans un audit"},
