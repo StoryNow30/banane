@@ -45,6 +45,12 @@ const sansCH094=sansPatch('CH-094',CH094),sansCH091=(f,t)=>sansPatch('CH-091',CH
  * une validation ni une commande d'un lot sans panne (tests/ch096-*.test.cjs). Toute autre modification de ces fichiers reste détectée. */
 const CH096={'src/adapter-page.js':['adapter-page.patch','CH-096'],'src/core.js':['core.patch','CH-096']};
 const sansCH096=sansPatch('CH-096',CH096);
+/* D-344 (opérateur, 11/11) : src/core.js range « La caméra a changé pendant l'export » parmi les erreurs de capture passagères (la page relit la
+ * vue, le lot se met en pause reprenable au lieu de l'ERREUR ; tests/d344-camera-relue.test.cjs). Posé après CH-096 : retiré avant lui. Ni pose ni validation. */
+const sansD344=(f,t)=>f!=='src/core.js'?t:t
+ .replace(" // LOD data. Clipping, target, cancellation and write errors stay fatal.\n"," // LOD data. Camera, clipping, target, cancellation and write errors stay fatal.\n")
+ .replace(/\n \/\* D-344 \(opérateur, 11\/11\)[^\n]*\n[^\n]*\*\//,'')
+ .replace('\n   "La caméra a changé pendant l\'export. Garde la vue immobile et réessaie.",','');
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
@@ -211,7 +217,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
-  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,lire(f))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
+  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,sansD344(f,lire(f)))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();

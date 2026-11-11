@@ -3727,3 +3727,8 @@ Complète D-299 sans la modifier.
 ## D-343 — Accord écrit : réparer le chargement de Potree dans la page ESV (opérateur, 11/11)
 - Question posée : quand le serveur d'ESV renvoie une erreur sur un bloc de points, qu'Ariane rende sa place à Potree et le laisse redemander le bloc (écriture dans la page ESV, fichier protégé `src/adapter-page.js` ; rien sur les poses ni la validation). Réponse de l'opérateur, mot pour mot : « Oui accord accordé ».
 - Effet : chantier CH-110. L'exécutant livre le changement de `src/adapter-page.js` sous forme de patch ; l'intégrateur l'applique et refait les preuves. Réglable, allumé par défaut ; le remède de CH-107 (pause et rechargement) reste en place derrière.
+
+## D-344 — La caméra changée pendant la lecture n'arrête plus le lot (opérateur, 11/11)
+- Fait (ÉTABLI, export de 22:26) : partie 20, cut 89, la lecture des points a échoué sur « La caméra a changé pendant l'export ». Cette erreur était classée fatale : lot en ERREUR, Constellation arrêtée (`refus-lot`). L'opérateur dit avoir touché la vue « légèrement ».
+- Question posée : qu'Ariane relise les points quand la vue bouge pendant la lecture, au lieu de tout arrêter (la lecture ratée est jetée en entier). Réponse de l'opérateur, mot pour mot : « oui !! ».
+- Effet : `src/core.js` range ce message parmi les erreurs de capture passagères. La page relit la vue (jusqu'à `pilote.tentativesParVue`, 3, chaque fois après l'attente de vue stable, caméra comprise) ; si toutes échouent, le lot se met en pause reprenable, sans rien envoyer. Restent fatals : découpe du nuage changée, cut ou rail changé, arrêt demandé. Essais : `tests/d344-camera-relue.test.cjs` ; retrait déclaré dans `tests/pose-lot-inchanges-4959.test.cjs`.
