@@ -1,10 +1,10 @@
 /* UI 5.0 « Signal » (D-250) : HABILLAGE DU PANNEAU, partie PURE (aucun DOM, aucun message, aucune API Chrome).
  *
- * La présentation par défaut du panneau, d'après la maquette maquettes/ui-5.0/Q-signal.html et le fichier Figma « Ariane 5.0 » :
- * une barre (logo, bascule Orbite / Écho, puce de l'onglet ESV, commandes, réglages), l'INSTRUMENT (glyphe et mot d'état, une phrase,
- * l'objet — rail du lot, marques d'Écho, trois lignes de fin, bloc incident —, la ligne d'allure, une action principale), le TIROIR
- * « Ce qui reste » (Revue V2 : différés et verts à contrôler, avec « Ouvrir » et « Examiner »), la bande du cache, et des couches
- * (palette Ctrl K, feuille de réglages, onglets ESV).
+ * La présentation par défaut du panneau. Depuis CH-104 (D-333), son dessin est celui de la maquette validée maquettes/bento/panneau-graphite.html
+ * (style « Graphite ») : une barre (onglets à pouce glissant, état d'ESV, menu « ··· »), la TUILE D'ÉTAT qui reste en place (mot d'état, anneau,
+ * phrase, trois compteurs), une ZONE qui change avec l'état (fil des cuts, avis, étapes du lot, écran de fin), la ligne « à poser » qui ouvre
+ * « Ce qui reste » (Revue V2 : différés et verts à contrôler, avec « Ouvrir » et « Examiner »), les actions en pied, et des couches (menu, palette
+ * Ctrl K, feuille de réglages, onglets ESV). Les modèles (états, boutons, libellés) sont ceux d'avant : seul le balisage a changé.
  *
  * Même principe que les présentations d'essai d'avant (retirées en test 23) : tout vient d'un INSTANTANÉ (src/ui5.js) de ce que le panneau d'origine vient d'écrire ; un clic
  * est un clic sur le bouton d'origine (`data-act="legacy:<id>"`). Rien d'autre n'est commandé. Tout texte passe par `esc`. */
@@ -76,26 +76,6 @@
   const vf = t => String(t || '').replace(/Relancer une file|Nouvelle file/g, 'Nouvelle Constellation').replace(/\b([Ll])a file\b/g, (x, l) => `${l}a Constellation`)
     .replace(/File de parties/g, 'Constellation').replace(/deuxième passe/g, 'rattrapage').replace(/changement de partie/g, 'passage').replace(/relecture et correction/g, 'relecture')
     .replace(/(\d+) différés?/g, '$1 à poser').replace(/écrits? par la passe/g, 'écrits au rattrapage');
-  /* Glyphes d'état : la forme porte l'état, la couleur confirme. L'anneau « en cours » se remplit avec le temps passé sur le cut (0 → médiane) ;
-   * src/ui5.js le met à jour entre deux rendus d'après `data-debut` et `data-med`. */
-  const C = 2 * Math.PI * 9;
-  const GLYPHE = {
-    pret: '<circle cx="12" cy="12" r="9"/>', dem: '<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><path d="M9.5 8.5v7M14.5 8.5v7" stroke-width="2.2"/>',
-    pause: '<path d="M8 5v14M16 5v14" stroke-width="2.5"/>', toi: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
-    interrompu: '<path d="M8 3h8l5 5v8l-5 5H8l-5-5V8z"/><path d="M8 12h8"/>', fini: '<path d="M5 12.5l4.5 4.5L19 7.5"/>', arrete: '<rect x="5" y="5" width="14" height="14" rx="1.5"/>',
-    relecture: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>', relpause: '<circle cx="12" cy="12" r="9"/><path d="M9.8 8.5v7M14.2 8.5v7" stroke-width="2"/>',
-    verrou: IC.cadenas, hors: '<circle cx="12" cy="12" r="9"/><path d="M6 18L18 6"/>', echoVide: '<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>',
-    echo: '<path d="M12 12h.01" stroke-width="3"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path class="sg-fond-anneau" d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
-  };
-  function glyphe(m, cls = '') {
-    const vivant = m.glyphe === 'cours' || m.glyphe === 'echo';
-    let svg;
-    if (m.glyphe === 'cours') {
-      const al = m.anneau || {}, p = al.med && al.depuis !== null && al.depuis !== undefined ? Math.min(1, al.depuis / al.med) : 0;
-      svg = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke-width="1.75" stroke-linecap="butt"><circle class="sg-fond-anneau" cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity=".3"/><circle class="sg-arc" cx="12" cy="12" r="9" stroke="currentColor" transform="rotate(-90 12 12)" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C * (1 - p)).toFixed(2)}"${al.debut ? ` data-debut="${esc(al.debut)}"` : ''}${al.med ? ` data-med="${esc(Math.round(al.med * 1000))}"` : ''}/></svg>`;
-    } else svg = SVG(GLYPHE[m.glyphe] || GLYPHE.pret);
-    return `<span class="sg-glyphe${vivant ? ' sg-vivant' : ''}${cls ? ' ' + cls : ''}" data-k="${esc(m.glyphe)}" data-g="${esc(m.glyphe)}" data-ton="${esc(m.ton)}" aria-hidden="true">${svg}</span>`;
-  }
 
   /* ------------------------------------------------------------------ modèle : l'état du lot ou d'Écho, d'après l'instantané */
   /* Le bouton principal et les autres : ceux que le panneau a désignés (`role: 'primary'`), dans sa hiérarchie. Pendant la relecture,
@@ -305,37 +285,70 @@
     return m;
   }
 
-  /* ------------------------------------------------------------------ morceaux */
-  function railHtml(a, statuts, etat) {
-    const total = a.cibles || null, n = statuts.length, traites = a.traites || 0;
-    const echelle = total || Math.max(10, Math.ceil(Math.max(n, traites) * 1.25 / 10) * 10);
-    const pos = i => `${Math.max(0, Math.min(100, i / echelle * 100)).toFixed(3)}%`;
-    let h = `<div class="sg-rail" data-etat="${esc(etat || 'cours')}" data-total="${total ? 'connu' : 'inconnu'}" role="img" aria-label="${esc(`${traites} traités${total ? ` sur ${total} ciblés` : ', total inconnu'}, ${a.differes || 0} à poser`)}"><div class="sg-rail-base"></div>`;
-    if (total) {
-      const pas = total > 400 ? 50 : 10;
-      for (let k = 0; k <= total; k += pas) h += `<div class="sg-rail-grad${k % (pas * 5) === 0 ? ' sg-dix' : ''}" style="left:${pos(k)}"></div>`;
-      h += `<div class="sg-rail-num sg-debut">0</div>${total >= 20 ? `<div class="sg-rail-num" style="left:50%">${esc(Math.round(total / 2))}</div>` : ''}<div class="sg-rail-num sg-fin" style="left:100%">${esc(total)}</div>`;
-    }
-    /* Ordre stable pour la mise à jour en place : le segment fait et le curseur avant les repères, qui s'ajoutent au bout (un nouveau différé apparaît, le curseur glisse). */
-    h += `<div class="sg-rail-fait" style="width:${pos(traites)}"></div>`;
-    if (etat !== 'vide' && etat !== 'fini') h += `<div class="sg-rail-cur" data-k="cur" style="left:${pos(traites)}"></div>`;
-    statuts.forEach((x, i) => { if (x === 'differe') h += `<div class="sg-rail-dif" data-k="d${i}" style="left:${pos(i + 0.5)}"></div>`; else if (x === 'incertain') h += `<div class="sg-rail-inc" data-k="i${i}" style="left:${pos(i + 0.5)}"></div>`; });
-    return h + '</div>';
+  /* ------------------------------------------------------------------ morceaux (CH-104 : le panneau en Graphite, maquettes/bento/panneau-graphite.html)
+   * Une barre (onglets à pouce glissant, état d'ESV, menu « ··· »), une TUILE D'ÉTAT qui reste en place (pastille et mot, anneau, phrase, trois
+   * compteurs), une ZONE qui change avec l'état (fil des cuts, avis, étapes du lot, écran de fin), la ligne « à poser » qui ouvre « Ce qui reste », et
+   * les actions en pied. La teinte de la fenêtre suit l'état : `marche` (Ariane travaille), `repos`, `toi` (à l'opérateur), `panne`, `fait`. */
+  function teinte(m, s) {
+    const g = m.glyphe, mot = m.mot || '';
+    if (s?.sig?.connexion?.statut === 'unavailable' && m.incident) return 'panne';
+    if (m.ton === 'alerte') return g === 'interrompu' || /ESV ne répond plus|Erreur|rrêtée/.test(mot) ? 'panne' : 'toi';
+    if (g === 'fini') return 'fait';
+    if (['cours', 'dem', 'echo', 'relecture'].includes(g)) return 'marche';
+    if (g === 'verrou') return m.activite === 'echo' ? 'repos' : 'marche';
+    if ((g === 'arrete' && m.ton === 'attention') || /à terminer|interrompue/.test(mot)) return 'toi';
+    return 'repos';
   }
-  const avisHtml = m => (m.avis || []).map(t => `<p>${esc(t)}</p>`).join('');
-  function objetHtml(snap, m) {
-    const a = snap.ar || {}, g = snap.sig || {};
-    if (m.incident) return `<div class="sg-incident" data-k="incident" role="alert"><p>${esc(m.incident.texte)}</p>${avisHtml(m)}</div>`;
-    if (m.objet === 'fin') return `<dl class="sg-fin" data-k="fin">${m.fin.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
-    if (m.objet === 'echo') {
-      const c = m.compteEcho, M = (g.echo?.marques || []).slice(-60);
-      return `<div class="sg-objet" data-k="echo"><div class="sg-compte"><span class="sg-chiffre">${esc(c.vus)}</span><span class="sg-suite">cuts vus</span><span class="sg-droite"><b>${esc(c.corriges)}</b> corrigés · <b>${esc(c.valides)}</b> validés tels quels</span></div><div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></div>`;
+  const pastille = m => `<span class="sg-etat"><i class="sg-glyphe" data-g="${esc(m.glyphe)}" data-ton="${esc(m.ton)}" aria-hidden="true"></i><span class="sg-mot">${esc(m.mot)}</span></span>`;
+  /* L'anneau : un trait plein de 0 à `part` (0 à 1) ; `tourne` : un arc court qui tourne (Ariane travaille, total inconnu : aucun chiffre inventé). */
+  const RA = 45.4, CA = 2 * Math.PI * RA, f2 = v => v.toFixed(2);
+  function anneauLot({ part = null, tourne = false }, chiffre, suite, label) {
+    const arc = tourne ? `<circle class="sg-arc" cx="50" cy="50" r="${RA}" stroke-dasharray="${f2(CA * 0.22)} ${f2(CA)}"/>` : `<circle class="sg-arc" cx="50" cy="50" r="${RA}" stroke-dasharray="${f2(CA * Math.max(0, Math.min(1, part || 0)))} ${f2(CA)}"/>`;
+    return `<div class="sg-anneau"${tourne ? ' data-tourne="1"' : ''} role="img" aria-label="${esc(label)}"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="sg-piste" cx="50" cy="50" r="${RA}"/>${arc}</svg><span class="sg-anneau-c"><span class="sg-chiffre">${esc(chiffre)}</span>${suite ? `<small class="sg-suite">${esc(suite)}</small>` : ''}</span></div>`;
+  }
+  /* L'anneau à segments (Constellation : un arc par partie ; Aurore : un arc par partie, à la mesure de ses cuts). */
+  function anneauHtml(segs, chiffre, suite, label) {
+    const g = segs.length > 1 ? 5 : 0, tot = segs.reduce((x, y) => x + y.poids, 0) || 1;
+    let a = 0, h = '';
+    for (const sg of segs) {
+      const L = Math.max(0, CA * sg.poids / tot - g), off = a + g / 2, f = Math.max(0, Math.min(1, sg.fait || 0));
+      h += `<circle class="sg-piste" cx="50" cy="50" r="${RA}" stroke-dasharray="${f2(L)} ${f2(CA)}" stroke-dashoffset="${f2(-off)}"/>`;
+      h += `<circle class="sg-arc" data-etat="${esc(sg.etat)}"${sg.partie != null ? ` data-partie="${esc(sg.partie)}"` : ''} cx="50" cy="50" r="${RA}" stroke-dasharray="${f2(L * f)} ${f2(CA)}" stroke-dashoffset="${f2(-off)}"/>`;
+      a += CA * sg.poids / tot;
     }
-    if (m.objet !== 'rail') return '';
-    if (m.railEtat === 'vide') return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.cibles)}</span><span class="sg-suite">cuts ciblés · aucun traité</span></div>${railHtml(a, [], 'vide')}</div>`;
-    const droite = `<span class="sg-droite"><b>${esc(a.poses)}</b> posés · <span class="sg-dif">${esc(a.differes)}</span> à poser</span>`;
-    /* Ciblage T22 : M inconnu (src/ui5.js) : dit tel quel ; le rail n'a alors ni graduations ni total, et l'allure aucun temps restant. */
-    return `<div class="sg-objet" data-k="rail"><div class="sg-compte"><span class="sg-chiffre">${esc(a.traites)}</span><span class="sg-suite">${a.cibles ? `traités sur ${esc(a.cibles)} ciblés` : 'traités · total inconnu'}</span>${droite}</div>${railHtml(a, g.statuts || [], m.railEtat || 'cours')}</div>`;
+    return `<div class="sg-anneau sg-anneau-seg" role="img" aria-label="${esc(label)}"><svg viewBox="0 0 100 100" aria-hidden="true">${h}</svg><span class="sg-anneau-c"><span class="sg-chiffre">${esc(chiffre)}</span><small class="sg-suite">${esc(suite)}</small></span></div>`;
+  }
+  const trioHtml = T => T.length ? `<dl class="sg-trio">${T.map(([v, t, cls]) => `<div><dt>${esc(t)}</dt><dd class="sg-n${cls ? ' ' + cls : ''}">${esc(v)}</dd></div>`).join('')}</dl>` : '';
+  /* La tuile d'état : elle reste, seuls ses contenus changent. `droite` : la partie (Orbite, Écho) ou le nom de la vue. */
+  const tuileEtat = (m, anneau, droite, phrase, sous, label) => `<section class="sg-instrument sg-tu sg-tu-etat" aria-live="polite"${label ? ` aria-label="${esc(label)}"` : ''}><div class="sg-haut">${pastille(m)}${droite ? `<span class="sg-partie">${droite}</span>` : ''}</div><div class="sg-milieu">${anneau}<div class="sg-texte"><h3 class="sg-phrase">${phrase}</h3>${sous || ''}</div></div></section>`;
+  const maj1 = t => t.replace(/^(\s*(?:<[^>]+>)*\s*)(\p{Ll})/u, (x, a, c) => a + c.toUpperCase());
+  /* La partie est dite en haut à droite de la tuile : la phrase ne la répète pas. */
+  const sansPartie = (phrase, partie) => !partie ? phrase : phrase === partie ? '' : phrase.startsWith(partie + ' · ') ? maj1(phrase.slice(partie.length + 3)) : phrase;
+  const NE_TOUCHE = 'Ariane travaille dans ESV · ne touche à rien';
+  const avisHtml = m => (m.avis || []).map(t => `<p>${esc(t)}</p>`).join('');
+  const tuileAvis = (k, icone, corps, cls = '', role = '') => `<section class="sg-tu sg-tu-avis sg-large${cls ? ' ' + cls : ''}" data-k="${k}"${role ? ` role="${role}"` : ''}><span class="sg-ic" aria-hidden="true">${icone}</span><div>${corps}</div></section>`;
+
+  /* Le fil des cuts : les derniers cuts du lot, du plus récent au plus ancien (src/ui5.js, `fil`). Le rail n'est dit que pour un cut à poser (rail non
+   * résolu) : le lot ne garde pas cette donnée pour un cut posé, et rien n'est inventé. */
+  const TAG = { pose: ['posé', 'ok'], voie: ['posé', 'ok'], differe: ['à poser', 'attn'], saute: ['sauté', 'ok'], main: ['à la main', 'ok'], incertain: ['incertain', 'crit'] };
+  function tuileFil(snap, m, cls) {
+    const g = snap.sig || {}, F = (g.fil || []).slice(0, 8), direct = ['cours', 'dem'].includes(m.etat);
+    const lignes = F.map(x => { const [t, c] = TAG[x.statut] || [x.statut, 'ok'];
+      return `<li data-k="f${esc(x.cut)}"><b class="sg-cut">${esc(x.cut)}</b><span>${esc(x.detail || (x.statut === 'voie' ? 'par la voie' : ''))}</span><em>${Number.isFinite(x.dureeS) ? `${un(x.dureeS)} s` : ''}</em><i class="sg-tag sg-${c}">${t}</i></li>`; }).join('');
+    return `<section class="sg-tu sg-tu-fil${cls ? ' ' + cls : ''}" data-k="fil"><h4>${direct ? 'En direct' : 'Derniers cuts'}</h4>${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${lignes ? `<ul class="sg-fil">${lignes}</ul>` : '<p class="sg-vide">Aucun cut traité pour l’instant.</p>'}</section>`;
+  }
+  /* Les étapes du lot : pose, rattrapage, relecture. Une étape à venir n'est annoncée que si le lot la prévoit (choix du lot et réglage effectif, lus par
+   * src/ui5.js) ; une étape finie ne dit que ce qui est connu. */
+  function tuileEtapes(snap, m, t, cls) {
+    const a = snap.ar || {}, E = a.etapes || {}, R = snap.relChiffres || null, P = a.passeFin, p2 = a.passe2;
+    const rang = a.etat === 'p2' ? 1 : a.etat === 'rel' ? 2 : ['fini', 'arrete'].includes(a.etat) ? 3 : 0;
+    const passe = rang === 1 ? `${p2?.ecrites ?? 0} sur ${p2?.demandees ?? 0}` : rang > 1 ? (P ? (P.mode === 'ombre' ? 'en ombre' : P.etat === 'erreur' ? 'en erreur' : `${P.ecrites ?? 0} ${pl(P.ecrites ?? 0, 'posé')}`) : '')
+      : E.passe === 'off' ? 'coupé' : E.passe === 'ombre' ? 'à venir · en ombre' : E.passe === 'ecriture' ? 'à venir' : '';
+    const relu = R && Number.isInteger(R.faits) && Number.isInteger(R.total);
+    const rel = rang === 2 ? (relu ? `${R.faits} sur ${R.total}` : 'en cours') : rang > 2 ? (relu && R.lot ? `${R.faits} ${pl(R.faits, 'relu')}` : '')
+      : E.relecture === 'coupee' ? 'coupée' : E.relecture === 'ombre' ? 'à venir · sans modifier' : E.relecture === 'corriger' ? 'à venir' : '';
+    const L = [['Pose', `${a.traites ?? 0} ${pl(a.traites ?? 0, 'cut')}`, true], ['Rattrapage', passe, rang === 1 || !!P], ['Relecture', rel, rang === 2 || (rang > 2 && relu && R.lot)]];
+    return `<section class="sg-tu sg-tu-etapes${cls ? ' ' + cls : ''}" data-k="etapes"><h4>Étapes du lot</h4><ol class="sg-etapes">${L.map(([nom, v, connu], i) => `<li data-etape="${i < rang && connu ? 'fait' : i === rang ? 'actif' : 'a-venir'}"${i === rang && t === 'marche' ? ' data-tourne="1"' : ''}><i aria-hidden="true"></i><b>${nom}</b><span>${esc(v)}</span></li>`).join('')}</ol></section>`;
   }
   /* Revue T21 (D7) : les bornes du prochain lot, revues et modifiables avant « Démarrer le lot », au repos et après « Nouveau lot » (règle du panneau
    * d'avant : aucun lot ne part sans que tu aies revu ses bornes). Ce qu'on tape va dans `#start` / `#end` (src/ui5.js), que « Démarrer » lit ;
@@ -343,36 +356,42 @@
   function bornesHtml(snap, m) {
     const a = snap.ar || {}, B = a.bornesProchain, r = a.reprise;
     if (!B || m.activite !== 'orbite' || a.lotOuvert || m.glyphe === 'hors' || m.file || m.fileBilan) return '';
-    return `<div class="sg-bornes"><label><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des cuts à poser : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div>`;
+    return `<section class="sg-tu sg-large sg-tu-bornes" data-k="bornes"><h4>Nouveau lot</h4><div class="sg-bornes"><label class="sg-rang"><span>Premier cut</span><input type="number" min="0" data-borne="start" placeholder="cut affiché dans ESV" value="${esc(B.debut ?? '')}"></label><label class="sg-rang"><span>Dernier cut</span><input type="number" min="0" data-borne="end" placeholder="fin de partie" value="${esc(B.fin ?? '')}"></label>${B.note ? `<small>${esc(B.note)}</small>` : ''}${r ? `<label class="sg-reprise"><input type="checkbox" data-act="legacy:lot-reprise"${r.coche ? ' checked' : ''}><span>Reprise des cuts à poser : repartir des cuts posés par le lot précédent</span>${r.note ? `<small>${esc(r.note)}</small>` : ''}</label>` : ''}</div></section>`;
   }
-  /* CH-025 : le bandeau de la file (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de la file). */
+  /* CH-025 : la Constellation dite dans Orbite (pendant la file, ou arrêtée pendant que le lot garde l'écran) et le bilan par partie (écran de fin de
+   * la file). Ses boutons (`#file-principal`, `#file-secondaire`) sont en pied, avec ceux du lot. */
   const NOTE_FILE = 'Après chaque partie : <b>relecture</b>, toujours <span class="sg-sep">·</span> aucun export automatique <span class="sg-sep">·</span> seul « Arrêter » l’interrompt';
   const bilanHtml = L => L?.length ? `<ol class="sg-file-bilan" aria-label="Bilan par partie">${L.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '';
-  function fileHtml(m) {
-    if (m.fileBilan) return bilanHtml(m.fileBilan);
+  function fileHtml(m, cls) {
+    if (m.fileBilan) return m.fileBilan.length ? `<section class="sg-tu${cls ? ' ' + cls : ''}" data-k="file-bilan"><h4>Bilan par partie</h4>${bilanHtml(m.fileBilan)}</section>` : '';
     const F = m.file; if (!F) return '';
-    const bt = (b, cls) => b ? `<button type="button" class="${cls}${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>` : '';
-    return `<div class="sg-file" data-k="file"><p class="sg-file-t"><b>Constellation</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</p>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}${F.principal || F.secondaire ? `<div class="sg-file-bts">${bt(F.principal, 'sg-secondaire')}${bt(F.secondaire, 'sg-secondaire')}</div>` : ''}<p class="sg-meta">${NOTE_FILE}</p></div>`;
+    return `<section class="sg-tu sg-file${cls ? ' ' + cls : ''}" data-k="file"><h4 class="sg-file-t"><span><b>Constellation</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</span></h4>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}<p class="sg-meta">${NOTE_FILE}</p></section>`;
   }
   /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer » (ne lance rien), puis « Lancer » (qui referme la boîte). */
+  const segN = L => `<span class="sg-seg" role="group" aria-label="Nombre de parties"><i class="sg-pouce" aria-hidden="true"></i>${L.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span>`;
   function boiteFileHtml(snap) {
     const F = snap.file; if (!F || F.etat !== 'repos') return '';
     const P = F.principal;
-    const seg = F.choix.length ? `<span class="sg-seg" role="group" aria-label="Nombre de parties">${F.choix.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span>` : '';
     return `<div class="sg-voile" data-k="voile-file" data-act="sg:fermer"></div><div class="sg-boite" data-k="file" role="dialog" aria-labelledby="sg-file-t"><span class="sg-t" id="sg-file-t">Constellation</span>
-<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${seg}</div>${F.phrase ? `<p class="sg-meta">${esc(vf(F.phrase))}</p>` : ''}
+<div class="sg-reg"><span class="sg-lib"><span>Nombre de parties</span><small>Premier essai : 2, l’opérateur présent</small></span>${F.choix.length ? segN(F.choix) : ''}</div>${F.phrase ? `<p class="sg-meta">${esc(vf(F.phrase))}</p>` : ''}
 <p class="sg-meta">La relecture suit chaque partie, toujours. Pas d’export automatique. Rien n’arrête la Constellation que « Arrêter », sauf si continuer est impossible : alerte et bilan. Préparer ne lance rien.</p>
-<div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}>${F.prete ? ic('play') : ''}<span>${esc(vf(P.texte))}</span></button>` : ''}</div></div>`;
+<div class="sg-bts"><button type="button" class="sg-annuler" data-act="sg:fermer">Fermer</button>${P ? `<button type="button" class="sg-principal" data-act="legacy:file-principal"${F.prete ? ' data-fermer="1"' : ''}${P.actif ? '' : ' disabled'}><span>${esc(vf(P.texte))}</span></button>` : ''}</div></div>`;
+  }
+  /* Les actions, en pied : le bouton plein d'abord, puis les autres, sous leurs noms. Le troisième et les suivants sont discrets (maquette). */
+  function piedHtml(boutons, { verrou = '', raison = '' } = {}) {
+    if (verrou) return `<footer class="sg-actions" data-k="verrou"><div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(verrou)}</span></div></footer>`;
+    const B = boutons.filter(Boolean);
+    if (!B.length && !raison) return '';
+    let h = raison ? `<p class="sg-raison">${esc(raison)}</p>` : '', n = 0;
+    for (const b of B) {
+      const plein = !!b.plein, rang = plein ? 0 : ++n;
+      h += `<button type="button" data-k="${esc(b.occupe ? 'occupe' : b.act || '')}" class="${plein ? 'sg-principal' : 'sg-secondaire' + (rang > 1 ? ' sg-discret' : '')}${b.danger ? ' sg-danger' : ''}"${b.act && !b.occupe ? ` data-act="${esc(b.act)}"` : ''}${b.occupe || b.inactif ? ' disabled' : ''}>${b.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : ''}<span>${esc(b.texte)}</span></button>`;
+    }
+    return `<footer class="sg-actions" data-n="${B.length}">${h}</footer>`;
   }
   function actionsHtml(m) {
-    if (m.verrou) return `<div class="sg-verrou-ligne">${ic('cadenas')}<span>${esc(m.verrouTexte || 'Aucune action jusqu’à la fin du rattrapage')}</span></div>`;
-    if (!m.principal && !m.secondaires.length) return m.raison ? `<p class="sg-raison">${esc(m.raison)}</p>` : '';
-    let h = '<div class="sg-actions">';
-    const p = m.principal;
-    if (p) h += `<button type="button" data-k="${esc(p.occupe ? 'occupe' : p.act || '')}" class="sg-principal${p.danger ? ' sg-danger' : ''}"${p.act && !p.occupe ? ` data-act="${esc(p.act)}"` : ''}${p.occupe || p.inactif ? ' disabled' : ''}>${p.occupe ? '<span class="sg-tourne" aria-hidden="true"></span>' : p.ic ? ic(p.ic) : ''}<span>${esc(p.texte)}</span></button>`;
-    for (const b of m.secondaires) h += `<button type="button" class="sg-secondaire${b.danger ? ' sg-danger' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${esc(b.texte)}</button>`;
-    if (m.raison) h += `<span class="sg-raison">${esc(m.raison)}</span>`;
-    return h + '</div>';
+    if (m.verrou) return piedHtml([], { verrou: m.verrouTexte || 'Aucune action jusqu’à la fin du rattrapage' });
+    return piedHtml([m.principal ? { ...m.principal, plein: true } : null, ...m.secondaires, m.file?.principal, m.file?.secondaire], { raison: m.raison });
   }
 
   /* Ce qui reste (Revue V2, D-250) : différés puis verts à contrôler, jamais mélangés. Chaque ligne a « Ouvrir » (le cut dans ESV, par le
@@ -404,44 +423,51 @@
     h += V.length ? V.map((r, i) => ligne(r, D.length + i)).join('') + (a.vertsLigne ? `<div class="sg-vide sg-petit">${esc(a.vertsLigne)}</div>` : '') : `<div class="sg-vide">${a.lotOuvert ? 'Calculés à la fin du lot.' : 'Aucun vert suspect, ou liste pas encore calculée.'}</div>`;
     return `<div class="sg-corps" role="listbox" aria-label="Ce qui reste">${h}</div>`;
   }
+  /* La ligne « à poser » (maquette) : elle ouvre « Ce qui reste ». En Écho : les visites. Toujours là, pour que la liste reste à portée. */
   function poigneeHtml(snap, m, ui) {
     const g = snap.sig || {}, a = snap.ar || {}, ex = new Set(g.examines || []);
-    let n = 0, long = '', court = '', resteTx = '';
-    if (m.activite === 'echo') { n = Number(snap.echo?.visites) || 0; long = n ? 'visites' : 'Aucune visite pour l’instant'; court = n ? 'visites' : 'aucune visite'; }
+    let n = 0, long = '', court = '', droite = '', dif = false;
+    if (m.activite === 'echo') { n = Number(snap.echo?.visites) || 0; long = n ? pl(n, 'visite') : 'Aucune visite pour l’instant'; court = long; droite = n ? 'les 40 dernières' : ''; }
     else {
       const { D, V } = lignesRevue(a), total = D.length + V.length, reste = [...D, ...V].filter(r => !ex.has(r.cle)).length;
       const d = nDif(a), v = a.vertsNombre || 0, vInc = a.vertsNombre === null && !a.lotOuvert;
-      n = a.lotOuvert ? d : d + v;
-      long = a.lotOuvert ? (d ? `à poser · à reprendre après le lot` : 'Aucun cut à poser pour l’instant') : n ? `à examiner · ${d} à poser, ${vInc ? 'verts pas encore calculés' : `${v} ${pl(v, 'vert')}`}` : vInc ? 'Verts pas encore calculés' : 'Rien à examiner';
-      court = n ? 'à examiner' : vInc ? 'verts pas calculés' : 'rien à examiner';
-      if (total && !a.lotOuvert) resteTx = `reste à examiner ${reste} sur ${total}`;
+      n = a.lotOuvert ? d : d + v; dif = !!d;
+      long = a.lotOuvert ? (d ? 'à poser' : 'Aucun cut à poser pour l’instant') : n ? `à examiner · ${d} à poser, ${vInc ? 'verts pas encore calculés' : `${v} ${pl(v, 'vert')}`}` : vInc ? 'Verts pas encore calculés' : 'Rien à examiner';
+      court = a.lotOuvert ? (d ? 'à poser' : 'aucun cut à poser') : n ? 'à examiner' : vInc ? 'verts pas calculés' : 'rien à examiner';
+      droite = a.lotOuvert ? (d ? 'à reprendre après le lot' : '') : total ? `reste à examiner ${reste} sur ${total}` : '';
     }
-    const mini = `<span class="sg-etat-mini">${glyphe(m)}<span>${esc(m.mot)}${m.activite === 'orbite' && a.cibles && ['cours', 'dem', 'pause'].includes(m.etat) ? ` · ${esc(a.traites)} sur ${esc(a.cibles)}` : ''}</span></span>`;
-    return `<button type="button" class="sg-poignee" data-act="sg:tiroir" aria-expanded="${!!ui.tiroir}" aria-controls="sg-tiroir-corps">${ic('fleche', 'sg-fl')}<span class="sg-txt">${n ? `<span class="sg-n${m.activite === 'orbite' && nDif(a) ? ' sg-dif' : ''}">${esc(n)}</span> ` : ''}<span class="sg-long">${esc(long)}</span><span class="sg-court">${esc(court)}</span></span>${resteTx ? `<span class="sg-reste">${esc(resteTx)}</span>` : ''}${mini}</button>`;
+    return `<button type="button" class="sg-poignee" data-act="sg:tiroir" aria-expanded="${!!ui.tiroir}" aria-controls="sg-tiroir-corps"><span class="sg-txt">${n ? `<b class="sg-n${dif ? ' sg-dif' : ''}">${esc(n)}</b> ` : ''}<span class="sg-long">${esc(long)}</span><span class="sg-court">${esc(court)}</span></span>${droite ? `<em class="sg-reste">${esc(droite)}</em>` : ''}${ic('fleche', 'sg-fl')}</button>`;
   }
-  /* Bande du cache : le bouton d'origine, et sa raison tant qu'il est impossible (même règle que le panneau d'origine). */
+  /* « Ce qui reste » : une feuille qui monte par-dessus l'écran, ouverte par la ligne « à poser » (maquette), fermée par Échap ou son bouton. */
+  const tiroirCouche = (snap, m, ui) => `<div class="sg-tiroir" data-ouvert="${ui.tiroir ? 1 : 0}"><div class="sg-tete"><span class="sg-t">${m.activite === 'echo' ? 'Visites' : 'Ce qui reste'}</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:tiroir" aria-label="Fermer">${ic('croix')}</button></div><div id="sg-tiroir-corps"${ui.tiroir ? '' : ' inert'}>${tiroirHtml(snap, m, ui)}</div></div>`;
+  /* Le cache des exports : le bouton d'origine, et sa raison tant qu'il est impossible (même règle que le panneau d'origine). Dans le menu « ··· ». */
   function cacheHtml(snap, m) {
     const a = snap.ar || {}, rel = !!(snap.relecture?.actif || snap.relPause?.pause || snap.relPause?.reprendre || snap.relPause?.arreter);
     const ok = a.cache?.actif === true && !rel;
     const raison = ok ? '' : a.etat === 'p2' ? 'après le rattrapage' : rel ? 'après la relecture' : m.activite === 'echo' && echoOuvert(a.echoEtat) ? 'après la séance Écho' : a.lotOuvert ? 'après le lot' : 'indisponible pour l’instant';
-    return `<footer class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span></span>${raison ? `<span class="sg-r">· ${esc(raison)}</span>` : ''}<span class="sg-espace"></span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></footer>`;
+    return `<div class="sg-cache"><span class="sg-q"><span class="sg-lib">Cache des exports</span>${raison ? `<span class="sg-r">· ${esc(raison)}</span>` : ''}</span><button type="button" data-act="legacy:export-cache-clear"${ok ? '' : ' disabled'}>Vider le cache</button></div>`;
   }
+  /* Le menu « ··· » (maquette) : les commandes (Ctrl K), les réglages, le cache des exports. */
+  const menuHtml = (snap, m) => `<div class="sg-voile sg-transparent" data-k="voile-menu" data-act="sg:fermer"></div><div class="sg-popover sg-menu" data-k="menu" role="dialog" aria-label="Réglages, cache des exports, commandes"><button type="button" class="sg-menu-l" data-act="sg:palette">${ic('palette')}<span>Commandes</span><kbd>Ctrl K</kbd></button><button type="button" class="sg-menu-l" data-act="sg:reglages">${ic('reglages')}<span>Réglages</span></button>${cacheHtml(snap, m)}</div>`;
   function barreHtml(snap, m, ui) {
     const g = snap.sig || {}, b = m.bascule, st = g.connexion?.statut, a = snap.ar || {};
     /* CH-026 : troisième onglet (la file de parties, « Constellation » depuis CH-036) : une vue de Signal ; Orbite et Écho y redeviennent cliquables. */
     const surFile = ui.onglet === 'file' && !!snap.file, surAutre = surFile || ui.onglet === 'correction';
     const seg = (k, t) => { const choisi = !surAutre && m.activite === k, off = b.verrou && m.activite !== k; return `<button type="button" role="tab" aria-selected="${choisi}"${off ? ` aria-disabled="true" data-raison="${esc(b.raison)}"` : choisi ? '' : ` data-act="mode:${k === 'echo' ? 'native' : 'automatic'}"`}>${off ? ic('cadenas') : ''}${t}</button>`; };
     const segFile = snap.file ? `<button type="button" role="tab" aria-selected="${surFile}"${surFile ? '' : ' data-act="sg:onglet-file"'}>Constellation</button>` : '';
-    /* CH-028 : quatrième onglet (la correction, « Aurore » depuis CH-036), seulement quand une liste existe. */
+    /* CH-028 : quatrième onglet (la correction, « Aurore » depuis CH-036), toujours là. */
     const surCorr = ui.onglet === 'correction';
     const segCorr = `<button type="button" role="tab" aria-selected="${surCorr}"${surCorr ? '' : ' data-act="sg:onglet-correction"'}>Aurore</button>`;
     const etatPuce = st === 'unavailable' || a.esv === 'ko' ? 'ko' : st === 'reconnecting' ? 'libre' : !g.onglet || st === 'no-tab' ? 'aucun' : a.lotOuvert ? 'verrou' : 'ok';
     /* Connexion T21 : le service worker garde un onglet prêt que la liste ne nomme pas : « à choisir », jamais « Aucun onglet » (le lot y partirait). */
     const texte = etatPuce === 'ko' ? 'ESV ne répond plus' : st === 'reconnecting' ? 'Reconnexion…' : etatPuce === 'aucun' ? (st === 'ready' && g.connexion?.tabId ? 'Onglet à choisir' : 'Aucun onglet') : g.onglet;
-    const court = String(texte).split(' · ')[0];
-    return `<header class="sg-barre"><span class="sg-logo">${IC.logo}<span>Ariane</span></span><div class="sg-bascule" role="tablist" aria-label="Activité"${segFile ? ' data-onglets="4"' : ' data-onglets="3"'}>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
-<button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" title="${a.lotOuvert ? 'Garde son onglet jusqu’à la fin du lot' : 'Choisir l’onglet ESV'}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${ic(etatPuce === 'verrou' ? 'cadenas' : 'bas', 'sg-fl')}</button>
-<button type="button" class="sg-ico sg-ico-palette" data-act="sg:palette" aria-label="Commandes (Ctrl K)" title="Commandes · Ctrl K" aria-pressed="${ui.couche === 'palette'}">${ic('palette')}</button><button type="button" class="sg-ico" data-act="sg:reglages" aria-label="Réglages" title="Réglages" aria-pressed="${ui.couche === 'reglages'}">${ic('reglages')}</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
+    /* CH-104 : la puce dit « ESV » et sa pastille l'état (maquette) ; le nom de l'onglet est dans son infobulle et dans la liste qu'elle ouvre. Un état
+     * anormal garde son texte quand la barre a la place. */
+    const normal = etatPuce === 'ok' || etatPuce === 'verrou';
+    const titre = `${texte} · ${a.lotOuvert ? 'garde son onglet jusqu’à la fin du lot' : 'choisir l’onglet ESV'}`;
+    return `<header class="sg-barre"><div class="sg-bascule" role="tablist" aria-label="Activité"${segFile ? ' data-onglets="4"' : ' data-onglets="3"'}><i class="sg-pouce" aria-hidden="true"></i>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
+<button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" aria-label="${esc(titre)}" title="${esc(titre)}"><i></i><span class="sg-tx"><span class="sg-long">${esc(normal ? 'ESV' : texte)}</span><span class="sg-court">ESV</span></span></button>
+<button type="button" class="sg-ico sg-menu-b" data-act="sg:menu" aria-label="Réglages, cache des exports, commandes" title="Réglages, cache des exports, commandes" aria-haspopup="dialog" aria-expanded="${ui.couche === 'menu'}">···</button></header>${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
 
   /* ------------------------------------------------------------------ couches */
@@ -500,7 +526,7 @@
   function feuilleHtml(snap) {
     const r = snap.reglages || {}, g = snap.sig || {};
     const sel = (nom, valeurs, courant, aide) => `<select data-sel="${esc(nom)}" aria-label="${esc(aide)}">${valeurs.map(([v, l]) => `<option value="${esc(v)}"${v === courant ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
-    const seg = (nom, valeurs, courant, aide) => `<span class="sg-seg" role="group" aria-label="${esc(aide)}">${valeurs.map(([v, l]) => `<button type="button" aria-pressed="${v === courant}" data-act="sg:choix:${esc(nom)}:${esc(v)}">${esc(l)}</button>`).join('')}</span>`;
+    const seg = (nom, valeurs, courant, aide) => `<span class="sg-seg" role="group" aria-label="${esc(aide)}"><i class="sg-pouce" aria-hidden="true"></i>${valeurs.map(([v, l]) => `<button type="button" aria-pressed="${v === courant}" data-act="sg:choix:${esc(nom)}:${esc(v)}">${esc(l)}</button>`).join('')}</span>`;
     const ligne = (t, aide, ctl) => `<div class="sg-reg"><span class="sg-lib"><span>${esc(t)}</span>${aide ? `<small>${esc(aide)}</small>` : ''}</span>${ctl}</div>`;
     const discard = (snap.boutonsEcho || []).find(b => b.id === 'native-discard');
     return `<div class="sg-feuille" data-k="reglages" role="dialog" aria-label="Réglages"><div class="sg-tete"><span class="sg-t">Réglages</span><span class="sg-meta">jamais en séance</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:fermer" aria-label="Fermer">${ic('croix')}</button></div><div class="sg-liste">
@@ -562,23 +588,6 @@
     }
     return L;
   }
-  /* CH-036, direction B « Cadran » (choisie par l'opérateur le 02/11 ; Figma, page « CH-036 b · Deux directions ») : l'objet est une orbite, un anneau
-   * segmenté, un arc par partie (Constellation : une partie ; Aurore : la liste d'une partie, à la mesure de ses cuts). Fait = encre, en cours = vivant,
-   * interrompu = attention ; la pointe est le bout de l'avancement (vivante pour la Constellation, chaude pour l'Aurore : l'aube). Les actions sont dans
-   * l'en-tête, à côté de l'anneau ; des filets plutôt que des cartes ; de grands chiffres en registre. */
-  function anneauHtml(segs, chiffre, suite, label, pointeTon) {
-    const R = 52, Cc = 2 * Math.PI * R, g = segs.length > 1 ? 6 : 0, tot = segs.reduce((x, y) => x + y.poids, 0) || 1, f2 = v => v.toFixed(2);
-    let a = 0, h = '';
-    for (const sg of segs) {
-      const L = Math.max(0, Cc * sg.poids / tot - g), off = a + g / 2, f = Math.max(0, Math.min(1, sg.fait || 0));
-      h += `<circle class="sg-piste" r="${R}" cx="60" cy="60" stroke-dasharray="${f2(L)} ${f2(Cc)}" stroke-dashoffset="${f2(-off)}"/>`;
-      h += `<circle class="sg-arc" data-etat="${esc(sg.etat)}"${sg.partie != null ? ` data-partie="${esc(sg.partie)}"` : ''} r="${R}" cx="60" cy="60" stroke-dasharray="${f2(L * f)} ${f2(Cc)}" stroke-dashoffset="${f2(-off)}"/>`;
-      if (sg.pointe && f < 1) { const t = (off + L * f) / Cc * 2 * Math.PI; h += `<circle class="sg-pointe" data-ton="${pointeTon || 'vivant'}" r="4.5" cx="${f2(60 + R * Math.cos(t))}" cy="${f2(60 + R * Math.sin(t))}"/>`; }
-      a += Cc * sg.poids / tot;
-    }
-    return `<div class="sg-anneau" role="img" aria-label="${esc(label)}"><svg viewBox="0 0 120 120" aria-hidden="true"><g transform="rotate(-90 60 60)">${h}</g></svg><span class="sg-anneau-c"><span class="sg-chiffre">${esc(chiffre)}</span><span class="sg-suite">${esc(suite)}</span></span></div>`;
-  }
-  const cadranHtml = (anneau, m, boutons, droite) => `<div class="sg-cadran" data-k="cadran">${anneau}<div class="sg-cadran-t"><div class="sg-etat"><span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${droite ? `<p class="sg-cadran-d">${esc(droite)}</p>` : ''}</div>${boutons ? `<div class="sg-actions sg-cadran-a">${boutons}</div>` : ''}</div>`;
   function ongletFileModele(s, u) {
     const F = s.file, actif = !!F.actif, etat = F.etat, R = F.reprise, aff = F.partieAffichee;
     const m = { glyphe: 'pret', ton: 'encre2', mot: 'Prête', phrase: '', bandeau: null, alerte: '', lancer: null, temps: null, note: '' };
@@ -617,29 +626,34 @@
   }
   function ongletFileHtml(s, u) {
     const m = ongletFileModele(s, u), F = s.file, E = etoilesFile(s, F), B = F.parties || [], k = m.temps;
-    const bouton = b => b ? `<button type="button" class="${b.cls === 'plein' ? 'sg-principal' : 'sg-secondaire sg-cadre'}${b.danger ? ' sg-danger' : ''}${b.droite ? ' sg-a-droite' : ''}" data-act="${esc(b.act)}"${b.inactif ? ' disabled' : ''}>${b.cls === 'plein' ? `${ic(b.ic || 'play')}<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
-    const titre = (t, d) => `<h2 class="sg-of-t"><span>${esc(t)}</span>${d ? `<span class="sg-of-d">${esc(d)}</span>` : ''}</h2>`;
+    const titre = (t, d) => `<h4 class="sg-of-t"><span>${esc(t)}</span>${d ? `<em class="sg-of-d">${esc(d)}</em>` : ''}</h4>`;
     const faites = B.filter(b => !b.interrompue).length, n = F.n ?? E.length;
     const cours = k !== null && k >= 0 ? (k + (k === 0 && s.ar?.cibles ? Math.min(1, (s.ar.traites || 0) / s.ar.cibles) : 0.5)) / 4 : 0.5;
-    const segs = E.map(x => ({ poids: 1, etat: x.e, partie: x.num, fait: x.e === 'a-venir' ? 0 : x.e === 'en-cours' ? cours : 1, pointe: x.e === 'en-cours' }));
+    const segs = E.map(x => ({ poids: 1, etat: x.e, partie: x.num, fait: x.e === 'a-venir' ? 0 : x.e === 'en-cours' ? cours : 1 }));
     const [chiffre, suite] = F.actif ? [`${(F.rang ?? 0) + 1}/${n}`, `partie ${F.part ?? F.vers ?? '?'}`] : F.etat === 'repos' ? [String(E.length), E.length > 1 ? 'parties' : 'partie'] : [`${faites}/${n}`, faites > 1 ? 'faites' : 'faite'];
     const L = m.lancer || { seg: [], note: '', boutons: [] };
-    let h = cadranHtml(anneauHtml(segs, chiffre, suite, `Constellation : ${chiffre} ${suite}`, 'vivant'), m, L.boutons.map(bouton).join(''));
-    if (m.alerte) h += `<div class="sg-alerte" role="alert"><p>${esc(m.alerte)}</p></div>`;
-    if (L.seg.length) h += `<div class="sg-of-ligne"><span>Nombre de parties</span><span class="sg-seg" role="group" aria-label="Nombre de parties">${L.seg.map(c => `<button type="button" aria-pressed="${c.choisi}" data-act="sg:file-n:${esc(c.n)}">${esc(c.n)}</button>`).join('')}</span></div>`;
-    if (L.note) h += `<p class="sg-meta sg-of-note">${L.note}</p>`;
-    if (k !== null && k >= 0) h += `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < k ? 'fait' : i === k ? 'courant' : 'a-venir'}"${i === k ? ' aria-current="step"' : ''}><span class="sg-mono">0${i + 1}</span>${t[1]}</li>`).join('')}</ol>`;
+    /* Sous la phrase : les quatre temps de la partie en cours ; sinon, les parties faites et restantes. */
+    const sous = k !== null && k >= 0 ? `<ol class="sg-temps" aria-label="Temps de la partie">${TEMPS.map((t, i) => `<li data-temps="${i < k ? 'fait' : i === k ? 'courant' : 'a-venir'}"${i === k ? ' aria-current="step"' : ''}>${t[1]}</li>`).join('')}</ol>`
+      : trioHtml([[faites, faites > 1 ? 'Faites' : 'Faite'], [Math.max(0, n - faites), n - faites > 1 ? 'Restantes' : 'Restante']]);
+    let z = '', reg = '';
+    if (m.alerte) z += tuileAvis('alerte', '!', `<p>${esc(m.alerte)}</p>`, 'sg-alerte', 'alert');
     /* Le registre : une ligne par partie commencée (faite, en cours, interrompue), chiffres alignés puis motifs en clair (décision du 01/11 : visibles d'emblée). */
     const rangs = E.map((x, i) => ({ x, b: B.find(y => y.rang === i) })).filter(({ x }) => x.e !== 'a-venir');
+    const note = L.note && !L.seg.length ? `<p class="sg-meta sg-of-note">${L.note}</p>` : '';
     if (rangs.length) {
       const tiret = '<span class="sg-mono sg-vide-n">—</span>', nb = v => Number.isInteger(v) ? `<span class="sg-mono">${esc(v)}</span>` : tiret;
-      h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie', `${faites} sur ${n}`)}<div class="sg-registre" role="table" aria-label="Bilan par partie"><div class="sg-reg-tete" role="row"><span>Partie</span><span>posés</span><span>à poser</span><span><span class="sg-long">corrigés</span><span class="sg-court">corr.</span></span></div>${rangs.map(({ x, b }) => {
+      reg = `<section class="sg-tu sg-of-sec" data-k="bilan" aria-label="Bilan par partie">${titre('Bilan par partie', `${faites} sur ${n}`)}${note}<div class="sg-registre" role="table" aria-label="Bilan par partie"><div class="sg-reg-tete" role="row"><span>Partie</span><span>posés</span><span>à poser</span><span><span class="sg-long">corrigés</span><span class="sg-court">corr.</span></span></div>${rangs.map(({ x, b }) => {
         const p = b ? partieFile(b) : null, mot = x.e === 'en-cours' ? `en cours${k !== null && k >= 0 ? ` · ${TEMPS[k][1].toLowerCase()}` : ''}` : x.e === 'interrompue' ? ['à reprendre', p?.motifs].filter(Boolean).join(' · ') : p?.motifs || '';
         return `<div class="sg-reg-partie" data-etat="${x.e}" role="row"><span class="sg-reg-p"><i aria-hidden="true"></i><b class="sg-mono">${esc(x.num)}</b></span>${nb(b?.poses)}${nb(b?.differes)}${nb(b?.relecture?.corriges)}${mot ? `<p class="sg-reg-motifs">${esc(mot)}</p>` : ''}</div>`; }).join('')}</div></section>`;
-    } else if (F.bilan?.length) h += `<section class="sg-of-sec" aria-label="Bilan par partie">${titre('Bilan par partie')}${bilanHtml(F.bilan.map(vf))}</section>`;
+    } else if (F.bilan?.length) reg = `<section class="sg-tu sg-of-sec" data-k="bilan" aria-label="Bilan par partie">${titre('Bilan par partie')}${note}${bilanHtml(F.bilan.map(vf))}</section>`;
+    else if (note) z += `<section class="sg-tu sg-large" data-k="note">${note}</section>`;
     const D = F.departs || [];
-    h += `<section class="sg-of-sec" aria-label="Départs des parties">${titre('Départs des parties', D.length ? 'chiffres d’ESV au départ' : '')}${D.length ? `<table class="sg-of-departs"><thead><tr><th scope="col">Partie</th><th scope="col">Départ</th><th scope="col">validés</th><th scope="col">invalides</th><th scope="col">sautés</th><th scope="col">total</th></tr></thead><tbody>${D.map(d => `<tr><td class="sg-mono">${esc(d.partie ?? '?')}</td><td>${esc(d.heure)}</td><td>${milliers(d.valides)}</td><td>${milliers(d.invalides)}</td><td>${milliers(d.skippes)}</td><td>${milliers(d.total)}</td></tr>`).join('')}</tbody></table><p class="sg-meta">Sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
-    return `<section class="sg-instrument sg-onglet-file sg-b" aria-live="polite" aria-label="Constellation">${h}</section>`;
+    const departs = `<section class="sg-tu sg-of-sec" data-k="departs" aria-label="Départs des parties">${titre('Départs des parties', D.length ? 'chiffres d’ESV au départ' : '')}${D.length ? `<div class="sg-of-departs" role="table" aria-label="Départs des parties">${D.map(d => `<div class="sg-of-depart" role="row"><span role="cell"><b class="sg-mono">${esc(d.partie ?? '?')}</b> <span class="sg-sep">·</span> ${esc(d.heure)}</span><span role="cell"><b>${milliers(d.invalides)}</b> invalides</span><span class="sg-of-ch" role="cell">${milliers(d.valides)} validés <span class="sg-sep">·</span> ${milliers(d.skippes)} sautés <span class="sg-sep">·</span> ${milliers(d.total)} au total</span></div>`).join('')}</div><p class="sg-meta">Sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
+    /* Le choix du nombre de parties (au repos, arrêtée, terminée) : la tuile « Nouvelle Constellation » de la maquette. */
+    const choix = L.seg.length ? `<section class="sg-tu sg-large sg-tu-choix" data-k="choix"><h4>Nouvelle Constellation</h4><div class="sg-of-ligne"><span>Nombre de parties</span>${segN(L.seg)}</div>${L.note ? `<p class="sg-meta sg-of-note">${L.note}</p>` : ''}</section>` : '';
+    z = reg ? `${z}<div class="sg-duo" data-k="duo">${reg}${departs}</div>${choix}` : choix + z + departs;
+    const tete = tuileEtat(m, anneauHtml(segs, chiffre, suite, `Constellation : ${chiffre} ${suite}`), 'Constellation', maj1(m.phrase), sous, 'Constellation');
+    return { m, corps: `${tete}<div class="sg-zone sg-onglet-file" data-z="file-${esc(F.etat)}">${z}</div>`, pied: piedHtml(L.boutons.map(b => ({ ...b, plein: b.cls === 'plein' }))) };
   }
   /* CH-028, puis CH-036 : L'ONGLET « Aurore » (Figma, page « CH-036 · Constellation et Aurore ») : l'horizon (revus sur total, une portion par partie),
    * la liste groupée par partie, puis « à corriger » et « à poser » ; le cut ouvert est la seule ligne vivante ; l'action pleine est toujours la suivante.
@@ -735,41 +749,87 @@
       liste += `<div class="sg-section"><span>À corriger</span><span class="sg-n">${A.length}</span><span class="sg-d">posés qu’Ariane juge probablement faux</span></div>${A.length ? A.map(ligne).join('') : '<div class="sg-vide">Aucun posé signalé.</div>'}`;
       if (P.length) liste += `<div class="sg-section"><span>À poser</span><span class="sg-n">${P.length}</span><span class="sg-d">laissés par le lot</span></div>${P.map(ligne).join('')}`;
     }
-    const bt = (b, plein) => b ? `<button type="button" class="${plein ? 'sg-principal' : 'sg-secondaire'}"${b.act ? ` data-act="${esc(b.act)}"` : ''}${b.inactif ? ' disabled' : ''}>${plein && b.ic ? ic(b.ic) : ''}${plein ? `<span>${esc(b.texte)}</span>` : esc(b.texte)}</button>` : '';
     const PA = C.passage || null;
-    const refus = PA?.etat === 'refuse' && PA.texte ? `<p class="sg-raison" role="status">${esc(PA.texte)}</p>` : C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? `<p class="sg-raison" role="status">${esc(C.ouvrir.texte)}</p>` : '';
-    /* Direction B : un arc par partie, à la mesure de ses cuts ; la pointe chaude au bout de l'avancement de la partie en cours (l'aube). */
+    const refus = PA?.etat === 'refuse' && PA.texte ? PA.texte : C.ouvrir?.etat === 'refuse' && C.ouvrir.texte ? C.ouvrir.texte : '';
+    /* Un arc par partie, à la mesure de ses cuts. */
     const segs = C.listes.map(L => { const t = L.lignes.length, f = L.lignes.filter(revu).length, EP = trav && plusieurs ? (C.parcours?.parties || []).find(x => x.partie === L.partie) : null, e = EP ? EP.etat : etatPartie(L);
-      return { poids: Math.max(1, t), fait: t ? f / t : 0, etat: e, partie: L.partie, pointe: C.etat !== 'terminee' && e === 'en-cours' }; });
-    const bouts = m.verrou ? '' : `${bt(m.principal, true)}${m.secondaires.map(b => bt(b, false)).join('')}`;
-    let h = cadranHtml(anneauHtml(segs, String(n), `sur ${tout.length}`, `Aurore : ${n} revus sur ${tout.length}`, 'attention'), m, bouts, m.droite);
-    if (refus) h += refus;
-    if (m.verrou) h += `<div class="sg-verrou-ligne">${ic('cadenas')}<span>Aucune action pendant le passage · le cut s’ouvrira seul</span></div>`;
-    if (m.note) h += `<p class="sg-meta sg-of-note">${esc(m.note)}</p>`;
-    if (C.etat === 'terminee') { const k = C.comptes;
-      h += `<div class="sg-trois">${[[k.corrige, 'corrigé', 'corrigés'], [k.valide, 'validé tel quel', 'validés tels quels'], [k.vu, 'vu sans validation', 'vus sans validation']].map(([v, a, b]) => `<div><span class="sg-mono">${esc(v)}</span><span>${v > 1 ? b : a}</span></div>`).join('')}</div>`; }
-    h += `<div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts de l’Aurore">${liste}</div>`;
-    h += `<p class="sg-meta sg-corr-note">Chaque visite est enregistrée par Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.</p>`;
-    return `<section class="sg-instrument sg-onglet-corr sg-b" aria-live="polite" aria-label="Aurore">${h}</section>`;
+      return { poids: Math.max(1, t), fait: t ? f / t : 0, etat: e, partie: L.partie }; });
+    /* Les trois chiffres de la fin sont dits une seule fois, dans la tuile d'état (retour de l'opérateur : « mêmes chiffres trois fois »). */
+    const k = C.comptes, sous = C.etat === 'terminee'
+      ? `<dl class="sg-trio sg-trois">${[[k.corrige, 'corrigé', 'corrigés'], [k.valide, 'validé tel quel', 'validés tels quels'], [k.vu, 'vu sans validation', 'vus sans validation']].map(([v, a, b]) => `<div><dt>${v > 1 ? b : a}</dt><dd class="sg-n sg-mono">${esc(v)}</dd></div>`).join('')}</dl>`
+      : m.droite ? `<p class="sg-cadran-d">${esc(m.droite)}</p>` : '';
+    let z = '';
+    if (refus) z += tuileAvis('refus', '!', `<p class="sg-raison" role="status">${esc(refus)}</p>`, 'sg-refus');
+    if (m.note) z += `<section class="sg-tu sg-large" data-k="note"><p class="sg-meta sg-of-note">${esc(m.note)}</p></section>`;
+    z += `<section class="sg-tu sg-large sg-tu-liste" data-k="liste"><div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts de l’Aurore">${liste}</div><p class="sg-meta sg-corr-note">Chaque visite est enregistrée par Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.</p></section>`;
+    const tete = tuileEtat(m, anneauHtml(segs, String(n), `sur ${tout.length}`, `Aurore : ${n} revus sur ${tout.length}`), 'Aurore', m.phrase, sous, 'Aurore');
+    const pied = m.verrou ? piedHtml([], { verrou: 'Aucune action pendant le passage · le cut s’ouvrira seul' }) : piedHtml([m.principal ? { ...m.principal, plein: true } : null, ...m.secondaires]);
+    return { m, corps: `${tete}<div class="sg-zone sg-onglet-corr" data-z="corr-${esc(C.etat)}${m.verrou ? '-passage' : ''}">${z}</div>`, pied };
+  }
+  /* L'écran d'Orbite et d'Écho : la tuile d'état, puis la zone de l'état. */
+  const COCHE = '<svg class="sg-fin-rond" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19.5" pathLength="1"/><path pathLength="1" d="M14 22.6 19.6 28 30.4 16.2"/></svg>';
+  const ARRET = '<svg class="sg-fin-rond sg-fin-arret" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19.5" pathLength="1"/><rect x="15.5" y="15.5" width="13" height="13" rx="2"/></svg>';
+  function ecranHtml(s, m, t, u) {
+    const a = s.ar || {}, g = s.sig || {}, partie = a.partie != null ? `Partie ${esc(a.partie)}` : '';
+    if (m.activite === 'echo') {
+      const c = m.compteEcho || { vus: 0, corriges: 0, valides: 0 }, M = (g.echo?.marques || []).slice(-60);
+      const anneau = anneauLot({ tourne: t === 'marche' }, c.vus, c.vus > 1 ? 'cuts vus' : 'cut vu', `${c.vus} visites, ${c.corriges} corrigées`);
+      let z = '';
+      if (m.incident) z += tuileAvis('incident', '!', `<p>${esc(m.incident.texte)}</p>${avisHtml(m)}`, 'sg-incident', 'alert');
+      else if (avisHtml(m)) z += tuileAvis('avis', '!', avisHtml(m), 'sg-incident sg-avis-seul', 'alert');
+      if (m.objet === 'echo') z += `<section class="sg-tu sg-large sg-objet" data-k="echo"><h4>Visites</h4>${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}<div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></section>`;
+      const sous = trioHtml([[c.vus, c.vus > 1 ? 'Vus' : 'Vu'], [c.corriges, c.corriges > 1 ? 'Corrigés' : 'Corrigé'], [c.valides, c.valides > 1 ? 'Validés tels quels' : 'Validé tel quel']]);
+      return { corps: `${tuileEtat(m, anneau, partie, sansPartie(m.phrase, partie) || m.phrase, sous)}<div class="sg-zone" data-z="echo-${esc(m.glyphe)}">${z}</div>${poigneeHtml(s, m, u)}` };
+    }
+    const lot = a.etat !== 'pret', R = s.relChiffres || null, p2 = a.passe2, relu = a.etat === 'rel' && R && Number.isInteger(R.faits) && R.total > 0;
+    /* Le pourcentage : seulement quand un total est réellement connu (cuts ciblés du lot, cuts décidés du rattrapage, cuts à relire). Sinon l'anneau
+     * porte le nombre de cuts traités ; il tourne tant qu'Ariane travaille. */
+    let anneau;
+    const label = `${a.traites || 0} traités${a.cibles ? ` sur ${a.cibles} ciblés` : ', total inconnu'}, ${a.differes || 0} à poser`;
+    const pct = (n, d, lab) => anneauLot({ part: n / d }, Math.min(100, Math.round(n / d * 100)), '%', lab).replace('class="sg-anneau"', 'class="sg-anneau" data-forme="pct"');
+    if (a.etat === 'p2' && p2?.demandees > 0) anneau = pct(p2.ecrites || 0, p2.demandees, `Rattrapage : ${p2.ecrites || 0} posé sur ${p2.demandees} décidés`);
+    else if (relu) anneau = pct(R.faits, R.total, `Relecture : ${R.faits} relus sur ${R.total}`);
+    else if (a.cibles && a.etat !== 'p2' && a.etat !== 'rel') anneau = pct(Math.min(a.cibles, a.traites || 0), a.cibles, label);
+    /* Lot terminé sans total connu : l'anneau est plein et porte une coche (le nombre est dit par la phrase et les compteurs). */
+    else if (a.etat === 'fini') anneau = anneauLot({ part: 1 }, '', '', label).replace('<span class="sg-chiffre"></span>', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>');
+    else anneau = anneauLot({ tourne: t === 'marche' }, a.traites || 0, pl(a.traites || 0, 'cut'), label);
+    const T = !lot || m.glyphe === 'hors' ? [] : a.etat === 'p2' && p2 ? [[p2.ecrites ?? 0, (p2.ecrites ?? 0) > 1 ? 'Posés' : 'Posé'], [p2.demandees ?? 0, 'Décidés'], [a.differes ?? 0, 'À poser', a.differes ? 'sg-dif' : '']]
+      : relu ? [[R.faits, 'Relus'], [Math.max(0, R.total - R.faits), 'À relire'], [R.corriges ?? 0, 'Corrigés']]
+      : [[a.traites ?? 0, 'Traités'], [a.poses ?? 0, 'Posés'], [a.differes ?? 0, 'À poser', a.differes ? 'sg-dif' : '']];
+    /* La phrase : celle du modèle, sans la partie (dite à droite) ; verrouillé, « ne touche à rien » passe dans l'avis de la zone. */
+    let phrase = sansPartie(m.phrase, partie), ligneLot = false;
+    if (m.verrou && phrase.includes(NE_TOUCHE)) phrase = maj1(phrase.split(' · ').filter(x => !NE_TOUCHE.split(' · ').includes(x)).join(' · ')) || NE_TOUCHE;
+    if (m.objet === 'fin' && !phrase) { phrase = m.fin.find(x => x[0] === 'Lot')?.[1] || ''; ligneLot = true; }
+    const sous = `${m.bornesLot ? `<p class="sg-lot-bornes">${m.bornesLot}</p>` : ''}${trioHtml(T)}`;
+    let z = '', large = false;
+    if (m.incident) { z += tuileAvis('incident', '!', `<p>${esc(m.incident.texte)}</p>${avisHtml(m)}`, 'sg-incident', 'alert'); large = true; }
+    else if (avisHtml(m)) { z += tuileAvis('avis', '!', avisHtml(m), 'sg-incident sg-avis-seul', 'alert'); large = true; }
+    if (m.verrou) { z += tuileAvis('verrou', ic('cadenas'), `<p>Ariane travaille dans ESV : ne touche à rien.</p>${a.etat === 'p2' ? '<small>Elle pose les cuts mis de côté pendant le lot.</small>' : ''}`, 'sg-tu-verrou'); large = true; }
+    if (m.objet === 'fin') { const L = m.fin.filter(x => !(ligneLot && x[0] === 'Lot'));
+      z += `<section class="sg-tu sg-tu-fin sg-large" data-k="fin-${esc(a.etat)}">${a.etat === 'fini' ? COCHE : ARRET}<div><h3>${a.etat === 'fini' ? 'Lot terminé' : 'Lot arrêté'}</h3><dl class="sg-fin">${L.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl></div></section>`; large = true; }
+    const B = bornesHtml(s, m); if (B) { z += B; large = true; }
+    const F = fileHtml(m, 'sg-large'); if (F) z += F;
+    if (lot && m.glyphe !== 'hors' && !m.fileBilan) {
+      const fil = c => tuileFil(s, m, c), etapes = c => tuileEtapes(s, m, t, c);
+      z += `<div class="sg-duo" data-k="duo">${large ? fil('sg-second') + etapes('sg-second') : a.etat === 'rel' ? etapes('') + fil('sg-second') : fil('') + etapes('sg-second')}</div>`;
+    }
+    const cle = `orbite-${esc(a.etat)}-${esc(m.glyphe)}${m.incident ? '-incident' : ''}`;
+    return { corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous)}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
+    const couches = boite => u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'menu' ? menuHtml(s, m) : boite && u.couche === 'file' ? boiteFileHtml(s) : '';
+    const fen = (activite, etat, t, corps, pied, extra = '') => `<div class="sg-fen" data-activite="${activite}" data-etat="${esc(etat)}" data-teinte="${t}">${barreHtml(s, m, u)}<div class="sg-page">${corps}</div>${pied}${extra}</div>`;
     if (u.onglet === 'correction' && !s.correction) {
       /* L'Aurore sans liste : l'onglet est toujours là (01/11, remarque de l'opérateur « où est le 4e onglet ? »), il dit ce qui le remplit. */
-      const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
-      return `<div class="sg-fen" data-activite="correction" data-etat="vide">${barreHtml(s, m, u)}<section class="sg-instrument sg-onglet-corr sg-b" aria-live="polite" aria-label="Aurore">${cadranHtml(anneauHtml([{ poids: 1, fait: 0, etat: 'a-faire' }], '0', 'à revoir', 'Aurore : rien à revoir'), { mot: 'Rien à revoir', phrase: 'Pas encore de liste à reprendre.' }, '')}<p class="sg-meta sg-corr-note">L’Aurore naît à la fin d’un lot ou d’une Constellation : Ariane y range les cuts à reprendre, vous les corrigez et les validez dans ESV, Écho enregistre. Ariane ne pose et ne valide rien ici.</p></section>${cacheHtml(s, m)}${couche}</div>`;
+      const mv = { glyphe: 'pret', ton: 'encre2', mot: 'Rien à revoir' };
+      const corps = `${tuileEtat(mv, anneauHtml([{ poids: 1, fait: 0, etat: 'a-faire' }], '0', 'à revoir', 'Aurore : rien à revoir'), 'Aurore', 'Pas encore de liste à reprendre.', '', 'Aurore')}<div class="sg-zone sg-onglet-corr" data-z="corr-vide"><section class="sg-tu sg-large" data-k="note"><p class="sg-meta sg-corr-note">L’Aurore naît à la fin d’un lot ou d’une Constellation : Ariane y range les cuts à reprendre, vous les corrigez et les validez dans ESV, Écho enregistre. Ariane ne pose et ne valide rien ici.</p></section></div>`;
+      return fen('correction', 'vide', 'repos', corps, '', couches(false));
     }
-    if (u.onglet === 'correction' && s.correction) {
-      const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
-      return `<div class="sg-fen" data-activite="correction" data-etat="${esc(s.correction.etat)}">${barreHtml(s, m, u)}${ongletCorrectionHtml(s, u)}${cacheHtml(s, m)}${couche}</div>`;
-    }
-    if (u.onglet === 'file' && s.file) {
-      const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : '';
-      return `<div class="sg-fen" data-activite="file" data-etat="${esc(s.file.etat)}">${barreHtml(s, m, u)}${ongletFileHtml(s, u)}${cacheHtml(s, m)}${couche}</div>`;
-    }
-    const instrument = `<section class="sg-instrument" aria-live="polite"><div class="sg-groupe-etat"><div class="sg-etat">${glyphe(m)}<span class="sg-mot">${esc(m.mot)}</span></div><p class="sg-phrase">${m.phrase}</p>${m.bornesLot ? `<p class="sg-lot-bornes">${m.bornesLot}</p>` : ''}</div>${!m.incident && avisHtml(m) ? `<div class="sg-incident" role="alert">${avisHtml(m)}</div>` : ''}${objetHtml(s, m)}${fileHtml(m)}${bornesHtml(s, m)}${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}${actionsHtml(m)}</section>`;
-    const couche = u.couche === 'palette' ? paletteHtml(s, u) : u.couche === 'reglages' ? feuilleHtml(s) : u.couche === 'esv' ? esvHtml(s) : u.couche === 'file' ? boiteFileHtml(s) : '';
-    return `<div class="sg-fen" data-activite="${m.activite}" data-etat="${esc(m.etat)}">${barreHtml(s, m, u)}${instrument}<div class="sg-zone"><div class="sg-tiroir" data-ouvert="${u.tiroir ? 1 : 0}">${poigneeHtml(s, m, u)}<div id="sg-tiroir-corps"${u.tiroir ? '' : ' inert'}>${tiroirHtml(s, m, u)}</div></div></div>${cacheHtml(s, m)}${couche}</div>`;
+    if (u.onglet === 'correction' && s.correction) { const o = ongletCorrectionHtml(s, u); return fen('correction', s.correction.etat, teinte({ ...o.m, activite: 'correction' }, null), o.corps, o.pied, couches(false)); }
+    if (u.onglet === 'file' && s.file) { const o = ongletFileHtml(s, u); return fen('file', s.file.etat, teinte({ ...o.m, activite: 'file' }, null), o.corps, o.pied, couches(false)); }
+    const t = teinte(m, s), e = ecranHtml(s, m, t, u);
+    return fen(m.activite, m.etat, t, e.corps, actionsHtml(m), tiroirCouche(s, m, u) + couches(true));
   }
 
   /* CH-097 (D-319) — LES TEXTES DE LA DEUXIÈME PASSE, selon le mode EFFECTIF que le service worker rend avec les choix du lot (`passeDifferesReglage` :
