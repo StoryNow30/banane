@@ -338,6 +338,9 @@ function obsFields(x){
   case 'diag-compteur-bloque':return {kind:'diag-compteur-bloque',valeur:obsInt(x.valeur,1e6),cuts:obsInt(x.cuts,1000),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
   /* CH-062 (patch proposé de la page) : la ligne de base du compteur par les échecs est abandonnée pour cette lecture (compteur SOUS les échecs, observateur absent). */
   case 'ligne-base-repli':return {kind:'ligne-base-repli',motif:['sous','absent'].includes(x.motif)?x.motif:null,compteur:obsInt(x.compteur,1e6),echecs:obsInt(x.echecs,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
+  /* CH-110 (patch de la page) : place de chargement rendue à Potree après une requête de nœud en échec, ou refusée (motif) ; profondeur du nœud, jamais sa clé. */
+  case 'potree-place-rendue':return {kind:'potree-place-rendue',motif:['rendue','plafond','introuvable','etat','compteur-zero'].includes(x.motif)?x.motif:null,profondeur:obsInt(x.profondeur,30),statut:obsInt(x.statut,999),
+   essai:obsInt(x.essai,99),avant:obsInt(x.avant,1e6),apres:obsInt(x.apres,1e6),rendues:obsInt(x.rendues,1e6),episode:obsInt(x.episode,1e6),cut:obsInt(x.cut,1e8),pageMs:obsNum(x.pageMs)};
   case 'prechauffage':case 'prechauffage-bilan':case 'prechauffage-entetes':case 'prechauffage-vue':case 'prechauffage-loin':return obsPrechauffage(x);
   case 'gap':return {kind:'gap',lost:obsInt(x.lost,1e9),reason:OBS_REASONS.has(x.reason)?x.reason:'rejected',of:obsStr(x.of,24)};
  }return null;}
@@ -507,7 +510,7 @@ function rangerObservations(m){try{
   if(fields.kind==='esv-event')try{esvEvenementNoter(fields);}catch{/* relevé seulement */}
   if(fields.kind==='resource'&&fields.echecs>0)try{lotSignalEchecVu(fields);}catch{/* CH-062 : relevé seulement */}
   /* 4.9.5.1 (D3) : suivi des écritures refusées, avant le plafond de la séance (rien n'est rangé de plus). */
-  if(fields.kind==='write')try{ecritureObservee(fields);relectureEcriture(fields);passeDiffEcriture(fields);}catch{}
+  if(fields.kind==='write')try{ecritureCutNoter(fields);ecritureObservee(fields);relectureEcriture(fields);passeDiffEcriture(fields);}catch{}
   try{relevesObservation(fields,m.observer);}catch{}
   const c=cible(fields),seen=c.seen;
   if(fields.kind!=='gap'&&seen.n>=cap){if(!seen.capped){seen.capped=true;add({kind:'gap',lost:null,reason:'session-cap',of:null},null,c);}rejected++;continue;}
@@ -3867,17 +3870,33 @@ function relectureGarde({c,etat,ligne,par,total}){
  if(c.cut>=total-1)return {ok:false,raison:'dernier cut de la partie : Maj+Espace chargerait la partie suivante'};
  return {ok:true,raison:null};}
 /* Remet la pose d'avant (`restore`) d'un cut dont la pose ou la validation est refusée, intention effacée ; rend la raison. Lève si la remise est impossible. */
-async function remettrePose(b,now,raison){const K=globalThis.BananeCore3,cut=now.identity.cut;let ok=false;
+/* CH-109 (terrain du 11/11, partie 17, cut 338) : dernière écriture vue par l'observateur passif, par ligne (= cut), quel que soit son corps ; relevé local,
+ * aucune requête vers ESV. Sert à la remise : « aucune écriture vue pour ce cut depuis la pose ». Borné aux 512 dernières lignes. */
+const ecrituresParCut=new Map();
+function ecritureCutNoter(f){if(!Number.isInteger(f?.rowIndex))return;const t=Number.isFinite(f.startedEpochMs)?f.startedEpochMs:Date.now();
+ ecrituresParCut.delete(f.rowIndex);ecrituresParCut.set(f.rowIndex,t);if(ecrituresParCut.size>512)ecrituresParCut.delete(ecrituresParCut.keys().next().value);}
+/* Une écriture vue pour ce cut depuis `depuisMs` (inconnu : toute écriture gardée compte). */
+const ecritureVueDepuis=(cut,depuisMs)=>ecrituresParCut.has(cut)&&(!Number.isFinite(depuisMs)||ecrituresParCut.get(cut)>=depuisMs-500);
+/* CH-109 : « remise impossible » alors que rien n'a bougé. En `tout-recentre`, chaque rail commence par un clic de SÉLECTION (aucun rail déplacé) et l'attente
+ * du recentrage ; un recentrage refusé sur le rail gauche lève avant tout clic de pose, et `restore` refait le même recentrage. La remise échouée relit donc
+ * l'état (lecture seule) : même cut, deux rails à moins de 1 mm de la pose d'avant ET aucune écriture vue pour ce cut depuis la pose (`depuisMs`) : rien à
+ * remettre, intention effacée, la raison est rendue (correction refusée). Sinon (un rail a bougé, une écriture est vue, ou l'état est illisible) : l'arrêt
+ * d'avant, l'intention reste. Journal `remise-sans-objet`. */
+async function remettrePose(b,now,raison,depuisMs=null){const K=globalThis.BananeCore3,cut=now.identity.cut;let ok=false;
  try{const r=await call('restore',now);ok=K.equalPoses(now.rails,r?.rails,.001);}catch{ok=false;}
+ if(!ok){let lu=null;try{lu=await readState();}catch{lu=null;}
+  const intact=!!lu&&K.key(lu.identity||{})===K.key(now.identity)&&K.equalPoses(now.rails,lu.rails,.001)&&!ecritureVueDepuis(cut,depuisMs);
+  if(intact){await relectureEffacerIntention(cut,b.id);journalerSimple('remise-sans-objet',{lotId:b.id??null,identity:{part:now.identity.part??null,cut},raison:String(raison).slice(0,200)});
+   return `${raison} ; remise impossible mais rien à remettre (rails inchangés à 1 mm, aucune écriture vue pour ce cut)`;}}
  if(!ok)throw Error(`cut ${cut} : pose d’Ariane non conforme (${raison}) et remise impossible ; rien n’est validé. Contrôle ce cut dans ESV (une pose non validée n’est pas enregistrée).`);
  await relectureEffacerIntention(cut,b.id);return `${raison} ; pose remise`;}
 /* Pose des rails d'un cut (intention notée) par la commande `apply` du lot, relue à 1 mm, puis rails relus comme le moteur avant de valider. T-5 : la pose
  * de la passe ne clique jamais en direct (« tout-recentre », D-157), quel que soit le réglage du lot. Une anomalie remet la pose d'avant (`restore`) : rend
  * alors la raison, intention effacée. Rend null si la pose est en place (l'intention reste, à effacer après la validation) ; lève si ESV est muet ou si la
  * remise est impossible. */
-async function poserPuisVerifier(b,now,rails,expected,origine=null){const K=globalThis.BananeCore3,cut=now.identity.cut;
+async function poserPuisVerifier(b,now,rails,expected,origine=null){const K=globalThis.BananeCore3,cut=now.identity.cut,depuisMs=Date.now();
  await relectureNoterIntention({lotId:b.id,part:now.identity.part,cut,at:new Date().toISOString(),...(origine?{origine}:{})});
- const remettre=raison=>remettrePose(b,now,raison);
+ const remettre=raison=>remettrePose(b,now,raison,depuisMs);
  let result;try{result=await applyInESV(now,rails,{clicHumain:'tout-recentre'});}
  catch(e){if(/Adaptateur ESV sans réponse|Une autre Ariane/.test(e?.message||''))throw Error(`cut ${cut} : ESV ne répond plus pendant la pose (${e.message}) ; rien n’est validé. Contrôle ce cut dans ESV.`);
   return remettre(`pose refusée par la page : ${String(e?.message||e).slice(0,160)}`);}
