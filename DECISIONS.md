@@ -3668,3 +3668,9 @@ Complète D-299 sans la modifier.
 ## D-332 — Maquette Graphite du panneau : l'onglet Constellation manquait (opérateur, 11/11)
 - Remarque de l'opérateur, mot pour mot : « Il manque constellation ».
 - Fait : onglet Constellation (la file de parties) ajouté à la maquette, entre Écho et Aurore comme dans le panneau actuel, avec ses cinq états (prête, en cours, passage, arrêtée, terminée), l'anneau à un segment par partie, les quatre temps de la partie, le bilan par partie, les départs des parties, et les noms de boutons du panneau actuel. Écho et Aurore restent à dessiner dans ce style ; leurs onglets le disent.
+
+## D-333 — Accord pour construire le panneau en Graphite (opérateur, 11/11)
+- Réponse de l'opérateur devant la maquette du panneau avec Constellation, mot pour mot : « Nickel tu peux construire ».
+- Effet : c'est le choix écrit qu'attendait D-323. Chantier CH-104 : intégrer dans l'extension la maquette `maquettes/bento/panneau-graphite.html` (Orbite, huit états ; Constellation, cinq états), et passer les autres écrans (Écho, Aurore, réglages, accueil) au même système sans changer leur organisation.
+- Choix pris par l'intégrateur faute de réponse explicite aux trois questions posées (à corriger s'il le dit) : le pourcentage ne s'affiche que si le panneau connaît réellement un total, sinon pas de chiffre inventé ; réglages, cache des exports et commandes passent dans le menu « ··· » comme sur la maquette ; le thème clair est gardé en état de marche avec une palette dérivée, qu'il n'a pas vue.
+- Tient : aucune action ajoutée, supprimée ni renommée ; bouton « SKIP explicite » masqué (D-320) ; animations en déplacement et opacité seulement, à côté d'ESV ; la version livrée sera « Vision 14 », après verify et maquette.
