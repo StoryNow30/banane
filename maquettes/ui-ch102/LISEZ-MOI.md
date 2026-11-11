@@ -1,35 +1,33 @@
-# CH-102 : maquettes du panneau construites avec Exact (D-326) — travail en cours
+# CH-102 : maquettes du panneau construites avec Exact (D-326) — ARRÊTÉ par l'opérateur le 11/11/2026
 
-Rien n'est intégré dans l'extension. Rien d'Exact n'est dans ce dépôt : seules les sources des trois applications y sont. Aucune capture ici.
+**Verdict de l'opérateur, dans la conversation du chantier, sur une planche de vignettes des trois propositions : « C'est terrible moche ».** Interrogé : l'allure générale, les couleurs, la composition et les caractères sont tous en cause ; aucune des trois ne mérite d'être poussée ; il arrête Exact pour ce tour et décide de la suite avec la session principale. La page de comparaison n'a donc pas été publiée, et aucun repli en HTML n'a été fait.
 
-## État au 10/11/2026 (à lire avant tout)
+Rien n'est intégré dans l'extension. Rien d'Exact n'est dans ce dépôt : seules les sources des trois applications et les outils y sont. Aucune capture ici.
 
-- **ÉTABLI** : la colonne « aujourd'hui » vient de l'outil de CH-101, `maquettes/ui-ch101/outils/capturer2.cjs` (branche `chantier/CH-101`, commit 280e2b7), relancé dans la session de ce chantier : 32 images (huit états, 360 × 480 et 600 × 760, clair et sombre), hors dépôt.
-- **NON FAIT** : les trois applications ci-dessous **n'ont jamais été compilées ni lancées**. L'installation d'Exact (`bun scripts/exact.mjs setup`) est refusée dans la session du chantier par une règle de permission (exécution de code d'un dépôt tiers) ; l'accord de l'opérateur est attendu. Les sources sont écrites d'après `docs/start-here.md`, la carte Contract et les patrons d'Exact : elles contiennent certainement des erreurs que le compilateur dira. Aucun chiffre de rendu, aucune image de proposition n'existe.
+## Ce qui a été fait (ÉTABLI, vu par un outil pendant la session)
+
+- Exact installé sur la machine de travail (`exact setup --check` : « SDK tools ready »), hors dépôt. Deux obstacles levés : le paquet Hermes pris par `curl` et servi par un miroir local (`HERMES_LEAN_SYS_MIRROR`, somme de contrôle épinglée vérifiée), parce que l'outil de téléchargement d'Exact refuse le certificat du proxy ; Bun 1.4.2 installé à côté. `EXACT_FEEDBACK=0` : rien n'est parti vers Expo.
+- Trois applications Exact qui tournent sur l'hôte web : `fiche`, `carte`, `bandeau`. Pour chacune : compilation sans erreur ; `bun exact.mjs test web` : 2 passed, 0 failed, dont le parcours des huit états ; `bun exact.mjs verify` : aucun défaut aux tailles normales, clair et sombre (mesuré sur le deuxième jet ; reste un défaut à la plus grande taille de texte d'accessibilité, le mot « Terminé » plus large que l'écran).
+- 96 images à deux pixels par point (3 propositions × 8 états × 360/600 × clair/sombre), hors dépôt. Mesure sur le dernier jet : aucun bouton ni champ hors du cadre ou sous le pli, sauf les boutons « Ouvrir » de la liste « à poser » de la fiche, qui défile par construction.
+- Colonne « aujourd'hui » : outil de CH-101 (`maquettes/ui-ch101/outils/capturer2.cjs`, branche `chantier/CH-101`, commit 280e2b7), relancé ici : 32 images hors dépôt.
+- Version web réelle d'une application servie dans un sous-dossier (`outils/embarquer.cjs`) : essayée en local, l'application s'affiche et répond. Jamais essayée dans une page publiée.
+- Une relecture par un agent neuf, sur images seules (deuxième jet) : différentes d'aujourd'hui et entre elles, oui ; sobriété et finition d'un écran système, **non pour les trois**. Le troisième jet, fait d'après ses défauts, n'a pas été relu.
+
+## Fait utile pour la suite
+
+Sur l'hôte web, le seul qui tourne sous Linux, Exact dessine l'allure d'une application web générique : fond blanc, boutons à filet, bleu standard, police du système (Inter sur les machines de travail). Les contrôles d'Apple n'existent que sur ses hôtes macOS et iOS. « Ce que l'auteur ne dit pas appartient à la plateforme » donne donc, dans Chrome, un écran neutre, pas un écran Apple. SUPPOSÉ : c'est une part du rejet ; l'opérateur ne l'a pas dit en ces termes.
 
 ## Fichiers
 
-- `modele.contract` : le lot fabriqué (partie 13, cuts 4790 à 4900 ; en cours : 18 cuts traités, 15 posés, 3 à poser ; fin : 93 traités, 87 posés, 6 à poser ; les chiffres de la photographie du panneau du tronc), les huit états, les actions par état, et l'écran « Plus » commun.
-- `fiche/`, `carte/`, `bandeau/` : `vue.contract` (la vue de la proposition) et `app.test.contract` (le parcours des huit états).
-- `assembler.cjs` : fabrique `app.contract` = en-tête de la vue + modèle + vue. À lancer vers le dossier de l'application Exact, hors dépôt.
+- `modele.contract` : le lot fabriqué (partie 13, cuts 4790 à 4900 ; en cours : 18 cuts traités, 15 posés, 3 à poser ; fin : 93, 87, 6), les huit états, les actions par état, l'écran « Plus » commun.
+- `fiche/`, `carte/`, `bandeau/` : `vue.contract` et `app.test.contract`.
+- `assembler.cjs` : fabrique `app.contract` (en-tête de la vue, fonctions du modèle, vue, écran « Plus ») dans le dossier de l'application Exact, hors dépôt.
+- `outils/photographier.cjs` (images et mesure du cadre), `outils/embarquer.cjs` (application dans un sous-dossier), `outils/page.cjs` (page de comparaison ; écrit, jamais lancé).
 
-## Les trois propositions (une phrase chacune)
+## Les trois propositions refusées (pour ne pas les refaire)
 
-1. **La fiche** : une page de réglages du système ; l'état est le titre de la première carte, l'avancement sa barre, les chiffres des lignes.
-2. **La carte** : l'état en grand titre, une seule carte du système pour l'avancement, un seul bouton plein.
-3. **Le bandeau** : l'état est un aplat de couleur en tête de fenêtre, lisible de loin ; la barre et les chiffres dessous.
+1. **La fiche** : une carte d'état à la manière d'une page de réglages (signe d'activité ou d'alerte, mot d'état, compte, barre, boutons), puis la liste des cuts à poser.
+2. **La carte** : l'état en très grand titre, une carte avec un grand chiffre et une barre, teintée en orange ou en rouge quand Ariane attend l'opérateur.
+3. **Le bandeau** : écran neutre, en-tête d'état en aplat orange ou rouge seulement en alerte ; compte et barre dessous.
 
-Aucune ne dessine de voie, de rail ni de cut. Aucune ne nomme une police ni une taille de contrôle.
-
-## Où est chaque action du panneau actuel
-
-| Action | Où |
-|---|---|
-| Démarrer le lot, Pause, Reprendre, Réessayer ce cut, Voir ce qui reste | premier plan, bouton plein |
-| Reprise manuelle, Exporter le dossier, Nouveau lot (fin de lot) | premier plan, bouton bordé |
-| Arrêter le lot, Arrêter la relecture, Arrêter le rattrapage | premier plan, bouton d'arrêt |
-| Premier cut, Dernier cut | premier plan à l'état « prêt » (fiche) ; **à placer** dans la carte et le bandeau |
-| Liste « à poser », verts (Recalculer), Écho, Aurore, Constellation (Préparer la file), Nouveau lot, Tout télécharger, Vider le cache, onglet ESV, Reconnecter ESV, réglages et journal | écran « Plus », un clic |
-| SKIP explicite | nulle part (D-320) |
-
-À compléter une fois les applications lancées : Repris manuellement, Archiver le résultat interrompu, Relancer la deuxième passe, les actions de la file (Arrêter, Reprendre, Lancer), Pause et Reprendre de la relecture, J'ai contrôlé le cut, Aller au cut, la correction. Elles n'apparaissent que dans des états hors des huit montrés.
+Dans les trois : bouton plein réservé à ce qui est attendu de l'opérateur ; le secondaire (Écho, Aurore, Constellation, exports, cache, onglet ESV, réglages) derrière un bouton « Plus » ; aucune action ajoutée ni retirée ; « SKIP explicite » absent (D-320).
