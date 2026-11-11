@@ -18,8 +18,15 @@ test('le patch est appliqué au tronc (ou s’y applique)',opts,()=>{assert.equa
   /* D-307 (Vision 5) : le branchement du préchauffage CH-077 s'insère juste après le premier morceau de ce patch et en masque le contexte de fin ;
    * on le retire d'une copie (mêmes lignes que la garde tests/pose-lot-inchanges-4959.test.cjs) avant de vérifier que le tronc porte ce patch. */
   const verif=fs.mkdtempSync(path.join(os.tmpdir(),'ch062-r-'));fs.mkdirSync(path.join(verif,'src'));
-  fs.copyFileSync(path.join(racine,'src/esv-observer.js'),path.join(verif,'src/esv-observer.js'));
-  fs.writeFileSync(path.join(verif,'src/adapter-page.js'),fs.readFileSync(SRC,'utf8')
+  /* CH-110 : relais `potree-place-rendue` de l'observateur, et patch de la page (chantiers/CH-110/adapter-page.patch) une fois appliqué : retirés d'abord. */
+  fs.writeFileSync(path.join(verif,'src/esv-observer.js'),fs.readFileSync(path.join(racine,'src/esv-observer.js'),'utf8')
+   .replace(",'ligne-base-repli':null,'potree-place-rendue':null});   /* CH-062 : posté par le patch proposé de la page ; CH-110 : place de chargement rendue à Potree */",",'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */")
+   .replace(/\n    \/\* CH-110 : place de chargement rendue à Potree[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}\}/,'}'));
+  let src=fs.readFileSync(SRC,'utf8');
+  if(src.includes('function planifierRemise(')){const t110=fs.mkdtempSync(path.join(os.tmpdir(),'ch110-r-'));fs.mkdirSync(path.join(t110,'src'));fs.writeFileSync(path.join(t110,'src/adapter-page.js'),src);
+   const r110=spawnSync('patch',['-s','-R','-p1','-d',t110,'-i',path.join(racine,'chantiers/CH-110/adapter-page.patch')],{encoding:'utf8'});assert.equal(r110.status,0,'le patch de CH-110 se retire : '+(r110.stderr||r110.stdout));
+   src=fs.readFileSync(path.join(t110,'src/adapter-page.js'),'utf8');}
+  fs.writeFileSync(path.join(verif,'src/adapter-page.js'),src
    /* D-309 et D-311 : retirer d'abord les lignes des branchements CH-081 et CH-080, puis celles de CH-077. */.replace(":quoi?.premiere===true?{premiere:true}:{};   /* CH-081 : premiere */return new Promise(",":{};return new Promise(")
    .replace(/suivante:expected\?\.prechauffage\?\?null,\n     \/\* CH-081 : caméra active[^\n]*\n     vue:\(\)=>\(\{[^\n]*?\}\)\}\)\)\.catch/,"suivante:expected?.prechauffage??null})).catch")
    .replace(/\n \/\* CH-080 \(D-309\) : `quoi` ajoute[^\n]*/,'')

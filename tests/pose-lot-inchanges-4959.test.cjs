@@ -45,6 +45,12 @@ const sansCH094=sansPatch('CH-094',CH094),sansCH091=(f,t)=>sansPatch('CH-091',CH
  * une validation ni une commande d'un lot sans panne (tests/ch096-*.test.cjs). Toute autre modification de ces fichiers reste détectée. */
 const CH096={'src/adapter-page.js':['adapter-page.patch','CH-096'],'src/core.js':['core.patch','CH-096']};
 const sansCH096=sansPatch('CH-096',CH096);
+/* D-344 (opérateur, 11/11) : src/core.js range « La caméra a changé pendant l'export » parmi les erreurs de capture passagères (la page relit la
+ * vue, le lot se met en pause reprenable au lieu de l'ERREUR ; tests/d344-camera-relue.test.cjs). Posé après CH-096 : retiré avant lui. Ni pose ni validation. */
+const sansD344=(f,t)=>f!=='src/core.js'?t:t
+ .replace(" // LOD data. Clipping, target, cancellation and write errors stay fatal.\n"," // LOD data. Camera, clipping, target, cancellation and write errors stay fatal.\n")
+ .replace(/\n \/\* D-344 \(opérateur, 11\/11\)[^\n]*\n[^\n]*\*\//,'')
+ .replace('\n   "La caméra a changé pendant l\'export. Garde la vue immobile et réessaie.",','');
 /* Les seuls fichiers de `src/` qui changent, et pourquoi. */
 const ECHO={'src/native-lidar.js':'CH-049-A : la lecture passive d\'Écho compare la découpe d\'ESV à chaque pause (N.capture n\'est appelé que par nativeCapture, l\'Écho ; Orbite ne l\'utilise pas)','src/native-session.js':'la session Écho : la raison, la collante, le résumé','src/native-page.js':'l\'observateur de page d\'Écho : la frappe d\'un chiffre de raison est essentielle',
  'src/settings.js':'les réglages d\'Écho : `echo.raison`','src/native-export.js':'l\'en-tête d\'export : `raisonSeries` écrit une seule fois'};
@@ -80,7 +86,10 @@ const sansCH081Obs=t=>t.replace(/\n  \/\* CH-081 : `premiere:true`[^\n]*\n[^\n]*
 const sansCH088Obs=t=>t.replace(/\n  \/\* CH-088 : `loin:S`[\s\S]*?prec=i;\}\}/,'');
 /* CH-077 : l'observateur relaie les événements du préchauffage (comptes et classes seulement), retirés pour comparer. */
 const sansCH077Obs=t=>t.replace("if(Object.hasOwn(PRECH_CHAMPS,k)){if(enabled)record(reduirePrechauffage(k,x));return;}/* CH-077 */",'').replace(/ \/\* CH-077 : champs gardés[\s\S]*?  return out;\}\n/,'');
-const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(sansCH088Obs(t))))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
+/* CH-110 : l'observateur relaie l'événement `potree-place-rendue` du patch de la page (place de chargement rendue à Potree, aucune pose) ; retiré pour comparer. */
+const sansCH110Obs=t=>t.replace(",'ligne-base-repli':null,'potree-place-rendue':null});   /* CH-062 : posté par le patch proposé de la page ; CH-110 : place de chargement rendue à Potree */",",'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */")
+ .replace(/\n    \/\* CH-110 : place de chargement rendue à Potree[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}\}/,'}');
+const sansCH062Obs=t=>sansD305Obs(sansCH077Obs(sansCH080Obs(sansCH081Obs(sansCH088Obs(sansCH110Obs(t)))))).replace(",'diag-compteur-bloque':null,'ligne-base-repli':null});   /* CH-062 : posté par le patch proposé de la page */",",'diag-compteur-bloque':null});")
  .replace(/\n    \/\* CH-062 : ligne de base du compteur abandonnée[\s\S]*?pageMs:finite\(x\.pageMs\)\?Math\.round\(x\.pageMs\*10\)\/10:null\}\);\}/,'}');
 const sansPatchs=texte=>sansPatchCH018(sansCH062(texte).replace(/\n \/\* CH-017 \(T27a, PROPOSÉ[\s\S]*?return \{ok:true,\.\.\.base,demandeA:Date\.now\(\)\};\}/,'').replace("capacites:['changerPartie',...MODES_PARTIE.filter(m=>m!=='lien').map(m=>'changerPartie:'+m)],",'').replace('nativeSnapshot,changerPartie,capture','nativeSnapshot,capture'));
 /* Test 27 (CH-026) : `changerPartie` gagne trois modes (lien, invalide-suivant, suivant-dernier : clic sur le bouton d'ESV qui porte la commande, jamais de touche, de pose, de validation ni de SKIP) ; l'ajout (chantiers/CH-026/adaptateur-changement-partie.patch) fait partie du même retrait que celui de la test 25.
@@ -211,7 +220,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  const deplaces=[];
  for(const [f,empreinte] of Object.entries(REF.fichiers)){
   if(ECHO[f]||L1[f]||STOCKAGE[f])continue;
-  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,lire(f))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
+  const texte=f==='src/relecture-ombre.js'?sansD284(lire(f)):PANNEAU[f]?PANNEAU[f](lire(f)):VERSION_SEULE.includes(f)?sansChangerPartiePont(sansCH096(f,sansD344(f,lire(f)))).split("VERSION='5',VERSION_NAME='5'").join("VERSION='4.9.5.8',VERSION_NAME='4.9.5 test 8'").split('Ariane 5 · ouvrir').join('Ariane 4.9.5 test 8 · ouvrir'):sansCH086(f,sansCH065(f,lire(f)));
   if(f==='src/appuis-liste.js'){
    /* CH-075 : annotations seules ; --origine rattache la preuve AST au SHA historique sans imposer Git aux archives. */
    const T=require('../tools/typage-ch075.cjs');assert.equal(empreinte,T.ORIGINE);T.identite();
@@ -251,7 +260,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */
@@ -262,7 +271,9 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* D-320 (opérateur, 10/11) : seul réglage ajouté, le bouton « SKIP explicite » du panneau, MASQUÉ ; il ne touche ni la pose ni le lot ; le reste est l'empreinte d'avant. */
  assert.deepEqual({...skipExplicite},{bouton:false},'D-320 : bouton SKIP explicite masqué');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','reparationPotree','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
+ /* CH-110 (D-343, accord écrit de l'opérateur) : place de chargement rendue à Potree après un échec d'ESV, ALLUMÉE ; lue par la page seulement (patch). */
+ assert.deepEqual({...reparationPotree},{actif:true,essaisParNoeud:2,attenteMs:1000},'CH-110 : réparation de Potree allumée');
  /* CH-077 : préchauffage du cache pour la coupe suivante, ÉTEINT par défaut (D-305 : accord écrit de l'opérateur au moment de livrer). */
  assert.deepEqual(Object.keys(chargement),['prechauffer']);assert.equal(chargement.prechauffer.actif,true,'D-307 : préchauffage allumé (lot d\'essai, accord de l\'opérateur)');assert.equal(chargement.prechauffer.rayonM,0.75,'D-307 : réglage sobre');
  /* CH-062 : rechargement d'ESV quand son signal s'éteint pendant le lot, COUPÉ par défaut (un événement seulement). */

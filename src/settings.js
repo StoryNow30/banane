@@ -221,6 +221,12 @@
      * `declencheur` : 'signal' (série de lectures au repli), 'trou' (nœud de points en échec dans la zone du rail : relevé de la page, sinon capture effondrée après un échec
      * vu sur la page, sous `trouFraction` de la médiane des 20 captures d'avant) ou 'signal+trou'. */
     /* D-293 (opérateur, 06/11 : « 1. A ») : ligne de base par les échecs ALLUMÉE ; le rechargement pendant le lot (`actif`) reste COUPÉ. */
+    /* CH-110 (D-342 ; accord écrit de l'opérateur D-343, « Oui accord accordé ») — RENDRE À POTREE LA PLACE D'UN NŒUD EN ÉCHEC (lu par la page ; patch
+     * chantiers/CH-110/adapter-page.patch). Une requête de nœud `ept-data` en échec (statut 0 ou ≥ 400) laisse le nœud « en cours » et +1 au compteur de
+     * Potree, qui ne lance que 4 chargements à la fois : au 4e échec, ESV ne charge plus rien. ALLUMÉ : `attenteMs` après l'échec, le nœud encore « en cours »
+     * est remis « non chargé » et le compteur reçoit −1, au plus `essaisParNoeud` fois par nœud ; Potree le redemande de lui-même. Un événement
+     * `potree-place-rendue` par cas. `actif:false` : la page fait exactement ce qu'elle fait sans ce réglage. */
+    reparationPotree: Object.freeze({ actif: true, essaisParNoeud: 2, attenteMs: 1000 }),
     signalEteint: Object.freeze({ actif: false, lectures: 8, rechargementsMax: 1, preuveMs: 5000, delaiAvantMs: 500, sondageMs: 500, attenteRepriseMs: 90000, ligneDeBaseEchecs: true, declencheur: 'signal', trouFraction: 0.3 }),
     /* CH-077 (D-305, piste 3) — PRÉCHAUFFER LE CACHE DU NAVIGATEUR POUR LA COUPE SUIVANTE (src/prechauffage.js, lu par la page ; patch chantiers/CH-077/adapter-page.patch).
      * ÉTEINT par défaut : il ajoute des requêtes au serveur d'ESV (accord écrit de l'opérateur au moment de livrer, D-305). Allumé : à la fin de la capture d'un cut,

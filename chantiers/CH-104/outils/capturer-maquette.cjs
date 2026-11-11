@@ -10,7 +10,7 @@ const ORBITE=['pret','cours','pause','toi','panne','rattrapage','relecture','fin
 (async()=>{
  const {chromium}=require(navigateur.modulePlaywright());const nav=await chromium.launch({executablePath:navigateur.executable()});
  const ctx=await nav.newContext({viewport:{width:1100,height:1100},deviceScaleFactor:2});const page=await ctx.newPage();
- const police=fs.readFileSync(R+'/fonts/Inter-latin-wght.woff2').toString('base64');
+ const police=fs.readFileSync(R+'/fonts/Inter-latin-opsz-wght.woff2').toString('base64');
  await page.route(/fonts\.googleapis\.com/,r=>r.fulfill({contentType:'text/css',body:`@font-face{font-family:"Inter";font-weight:100 900;src:url(data:font/woff2;base64,${police}) format("woff2")}`}));
  await page.goto('file://'+R+'/maquettes/bento/panneau-graphite.html');await page.waitForTimeout(600);
  const photos=async nom=>{await page.waitForTimeout(1100);for(const t of ['360','600'])await (await page.$(`.pan[data-taille="${t}"]`)).screenshot({path:path.join(SORTIE,`maquette-${t}-${nom}.png`)});};

@@ -18,8 +18,11 @@
  function differences(a,b){return identityFields.filter(k=>identityValue(a,k)!==identityValue(b,k));}
  function assertTarget(a,b){const changed=differences(a,b);if(changed.length)throw Error('Cible différente : '+changed.join(', '));}
  // Only these errors from the bundled, read-only exporter describe replaceable
- // LOD data. Camera, clipping, target, cancellation and write errors stay fatal.
+ // LOD data. Clipping, target, cancellation and write errors stay fatal.
+ /* D-344 (opérateur, 11/11) : la caméra changée pendant la lecture est passagère. La lecture ratée est jetée en entier, la page relit
+  * la vue ; au bout des tentatives, le lot se met en pause reprenable au lieu de passer en ERREUR (partie 20, cut 89). */
  const TRANSIENT_CAPTURE_ERRORS=new Set([
+   "La caméra a changé pendant l'export. Garde la vue immobile et réessaie.",
    "Les nœuds LiDAR visibles ont changé pendant l'export. Attends la fin du chargement puis réessaie.",
    "Le nuage ou sa matrice a changé pendant l'export. Recommence lorsque la vue est stable.",
    'Le nuage a changé pendant le relevé des échantillons de diagnostic. Recommence sur une vue stable.',

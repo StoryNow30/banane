@@ -56,8 +56,9 @@ test('changed cuts or rail poses abort capture immediately and never qualify as 
    assert.equal(reads,0);assert.ok(f.clock()<1000);
  }
 });
-test('camera and clipping changes are not silently retried as LOD replacement',async()=>{
- for(const message of ["La caméra a changé pendant l'export. Garde la vue immobile et réessaie.","La découpe du nuage a changé pendant l'export. Recommence lorsque la vue est stable."]){
+/* D-344 : la caméra changée est désormais relue (tests/d344-camera-relue.test.cjs) ; la découpe reste fatale. */
+test('clipping changes are not silently retried as LOD replacement',async()=>{
+ for(const message of ["La découpe du nuage a changé pendant l'export. Recommence lorsque la vue est stable."]){
    const f=lidarPage(),before=await f.call('state');let reads=0;
    f.ctx.BananeLidar.capture=async()=>{reads++;throw Error(message);};
    await assert.rejects(()=>f.call('capture',before),e=>e.message===message);assert.equal(reads,1);
