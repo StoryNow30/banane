@@ -10,6 +10,13 @@ component App
   state etat = "pret" persist
   state premier = "4790"
   state dernier = ""
+  // La page de comparaison ouvre l'application sur un état précis : `/?etat=toi`.
+  task ouverture mount
+    after(1, lireAdresse)
+  action lireAdresse
+    let v = searchParam(top(nav), "etat")
+    if v != ""
+      etat = v
   action agir
     etat = suite(etat)
   action arreter
