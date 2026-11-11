@@ -3655,3 +3655,7 @@ Complète D-299 sans la modifier.
 - Cause (intégrateur) : les cinq essais redessinaient toujours les mêmes écrans du panneau, avec les mêmes textes et les mêmes contraintes ; le style n'avait presque aucune place pour changer. La proposition de CH-103 n'est pas retenue ; CH-103 est clos, sa branche reste comme référence.
 - Méthode demandée, dans cet ordre : (1) un bento de composants soignés, en plusieurs styles ; il en choisit un ; (2) plus de composants dans ce style ; (3) les micro-interactions ; (4) les animations d'entrée et de sortie, en boucle. Le style se choisit sur des composants, pas sur les écrans du panneau.
 - Fait : étape 1 faite par l'intégrateur lui-même, sans session fille : cinq styles (Graphite, Porcelaine, Verre, Brut, Keynote) sur le même jeu de huit composants, page publiée ; source dans `maquettes/bento/bento-ariane.html`. Aucune intégration avant son choix écrit (D-323).
+
+## D-330 — Style retenu pour la suite : Graphite (opérateur, 11/11)
+- Réponse de l'opérateur devant le bento en cinq styles, mot pour mot : « Le graphite est pas mal. Tu as les compétences nécessaires pour des animations et Motion design moderne ? »
+- Effet : Graphite est la base des étapes suivantes de sa méthode (D-329). Fait par l'intégrateur : treize composants en Graphite, micro-interactions, entrée et sortie en boucle ; page publiée, source dans `maquettes/bento/graphite-ariane.html`. « Pas mal » n'est pas un accord d'intégration : D-323 tient.
