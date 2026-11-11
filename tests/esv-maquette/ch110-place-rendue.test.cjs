@@ -32,7 +32,8 @@ const requetes=srv=>Object.values(srv.journal.ept||{}).reduce((a,b)=>a+b,0);
 const dormir=ms=>new Promise(r=>setTimeout(r,ms));
 /* Séance : préchauffage coupé (seul Potree charge : l'échec tombe sur ses load()), une transition saine, puis la panne `fois` et des transitions
  * jusqu'à ce que le serveur ait refusé `fois` requêtes (8 transitions au plus). */
-async function seance({fois,adaptateur=null,reparation=null}){
+/* `reparation` absent : réparation COUPÉE (fidélité : la panne telle quelle, même une fois le patch au tronc et le réglage livré allumé). */
+async function seance({fois,adaptateur=null,reparation={...REGLAGE,actif:false}}){
  const s=await O.ouvrir({prechauffer:false,adaptateur,reparation});ouverts.push(s);const srv=s.env.serveur,evts=[];
  const t1=await s.transition();evts.push(...t1.evts);assert.deepEqual(t1.regles,['signal','signal'],'capture saine : règle du signal');
  await O77.attendre(async()=>await s.compteur()===0);

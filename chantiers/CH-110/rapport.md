@@ -43,4 +43,7 @@ Décisions : D-342 (cause), D-343 (accord écrit de l'opérateur). Base : tronc 
 - À mesurer à la prochaine séance : le nombre d'événements `rendue` et `plafond` par page, et la disparition des « cuts sans point » après un 502.
 
 ## 4. Maquette voisine sur la copie patchée
-(rempli à la fin des passes)
+Vrai Chromium, copie du dépôt avec les deux patchs appliqués :
+- `ch095-noeud-bloque` 4/4, `ch095-hierarchies` 2/2, `lot-signal-eteint` 1/1, `relecture-signal-eteint` 1/1, `diagnostic-repli` 5/5, `serie-captures-vides` 1/1, `ch083-memoire` 2/2, `ch077-prechauffage` 3/3, `ch088-loin` 1/1 ;
+- `ch110-place-rendue` 5/5, sur le dépôt comme sur la copie patchée. L'essai de fidélité coupe la réparation : sur la copie patchée, le réglage livré l'allumait (corrigé).
+- Vm sur la copie patchée : `ch110-place-rendue`, `ch110-sw-relais`, `lot-signal-ligne-de-base`, `pose-lot-inchanges-4959` : 20/20.
