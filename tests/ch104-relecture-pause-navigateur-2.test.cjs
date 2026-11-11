@@ -1,0 +1,39 @@
+'use strict';
+/* CH-104 — L'ÉCRAN « RELECTURE EN PAUSE » EST ATTEINT (relecture critique CH-106, 11/11 ; défaut présent aussi avant le chantier), dans un vrai
+ * navigateur (ignoré, et dit ignoré, sans Chromium). Pendant une pause de relecture le panneau d'origine cache `#relecture-arreter` et montre
+ * `#relecture-reprendre` et `#relecture-arreter-pause` : Signal restait sur « Terminé », sans aucun moyen de reprendre ni d'arrêter la relecture.
+ * Attendu : le mot « Relecture en pause », les deux actions au pied, chacune envoyant l'ordre du bouton d'origine ; ESV muet : « Reprendre » grisé avec
+ * sa raison ; la passe en pause d'un AUTRE lot ne change rien. Montage : tests/helpers/signal-navigateur.cjs ; lot fini `lot-1`. */
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {CHROMIUM,PW,absent,ouvrir,SC}=require('./helpers/signal-navigateur.cjs');
+const passe=(o={})=>({lotId:'lot-1',etat:'en-pause',mode:'corriger',modeEffectif:'corriger',faits:12,total:85,corriges:3,cut:4801,reprise:true,pauseDemandee:false,pauseRaison:'esv',expire:null,...o});
+/* `relecture-etat` répond la passe voulue ; les ordres de relecture envoyés sont notés avec leurs arguments. */
+async function monter(nav,p,etat=SC.fin){
+ const page=await nav.newPage({viewport:{width:600,height:760}});await page.close();
+ const sig=await ouvrir(nav,etat,{width:600,height:760});
+ await sig.page.addInitScript(p=>{const f=window.chrome.runtime.sendMessage;window.__r=[];
+  window.chrome.runtime.sendMessage=async m=>{if(m.action==='relecture-etat')return {result:{choix:'corriger',lot:{id:'lot-1'},passe:p,repriseReglage:{actif:true}}};
+   if(/^relecture-(reprendre|arreter|pause)$/.test(m.action||''))window.__r.push(m.action);return f(m);};},p);
+ await sig.page.reload();await sig.page.waitForTimeout(1700);
+ return sig;
+}
+const ecran=page=>page.evaluate(()=>({mot:document.querySelector('#ui5 .sg-mot')?.textContent,etat:document.querySelector('#ui5 .sg-fen')?.dataset.etat,
+ pied:[...document.querySelectorAll('#ui5 .sg-actions button')].map(b=>(b.dataset.act||'')+(b.disabled?' (grisé)':'')),raison:document.querySelector('#ui5 .sg-actions .sg-raison')?.textContent||'',
+ relecture:(()=>{const li=[...document.querySelectorAll('#ui5 .sg-zone:not(.sg-sort) .sg-etapes li')].find(x=>/Relecture/.test(x.textContent));return li?li.dataset.etape+' '+li.querySelector('span').textContent:'';})()}));
+
+
+test('relecture en pause, ESV muet : « Reprendre » grisé avec sa raison ; passe en pause d’un autre lot : l’écran du lot ne change pas',{skip:absent,timeout:19000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const muet=await monter(nav,passe(),{...SC.fin,connection:{status:'unavailable',observedAt:'t',message:null,tabId:1}});const m=await ecran(muet.page);
+  assert.equal(m.mot,'Relecture en pause');
+  assert.deepEqual(m.pied,['legacy:relecture-reprendre (grisé)','legacy:relecture-arreter-pause']);
+  assert.match(m.raison,/Disponible quand ESV répond/);
+  await muet.page.close();
+  const autre=await monter(nav,passe({lotId:'un-autre-lot'}));const a=await ecran(autre.page);
+  assert.equal(a.mot,'Terminé','la pause d’un autre lot ne touche pas ce lot');assert.equal(a.etat,'fini');
+  assert.ok(!a.pied.some(x=>/relecture-(reprendre|arreter-pause)/.test(x)),JSON.stringify(a.pied));
+  assert.notEqual(a.relecture.split(' ')[0],'fait','la relecture d’un autre lot ne coche rien');
+  assert.deepEqual([...muet.erreurs,...autre.erreurs],[]);
+ }finally{await nav.close();}
+});

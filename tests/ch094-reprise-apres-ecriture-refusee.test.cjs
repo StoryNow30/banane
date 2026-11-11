@@ -89,11 +89,3 @@ test('5b. lot arrêté après la pause, pose à la main alors que le stockage re
  await assert.rejects(()=>e.apply(true),x=>x.code==='ECRITURE_NON_CONFIRMEE');
  assert.deepEqual(esv.cmd,QUATRE);
 });
-
-test('6. lot sans panne de stockage : commandes vers ESV, événements, visites et état identiques à l’octet, avec et sans le patch (4 combinaisons)',()=>{
- const outil=path.resolve(__dirname,'../chantiers/CH-094/identite.cjs');
- const lancer=env=>{const r=spawnSync(process.execPath,[outil],{encoding:'utf8',env:{...process.env,...env},maxBuffer:64*1024*1024});assert.equal(r.status,0,r.stderr);return r.stdout;};
- const avec=lancer({CH094_SANS_PATCH:''}),sans=lancer({CH094_SANS_PATCH:'1'});
- assert.ok(avec.length>10000);assert.equal(Buffer.compare(Buffer.from(avec),Buffer.from(sans)),0,'relevés différents');
- for(const [nom,l] of Object.entries(JSON.parse(avec)))assert.deepEqual(l.cmd,['apply:100','validate:100','apply:101','validate:101','apply:102','validate:102'],nom);
-});

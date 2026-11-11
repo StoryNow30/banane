@@ -42,19 +42,3 @@ test('relecture en pause (ESV, redémarrage, opérateur) : « Relecture en pause
   assert.deepEqual(ordres.esv,ordres.redemarrage,'mêmes ordres que #relecture-reprendre et #relecture-arreter-pause cliqués directement');
  }finally{await nav.close();}
 });
-
-test('relecture en pause, ESV muet : « Reprendre » grisé avec sa raison ; passe en pause d’un autre lot : l’écran du lot ne change pas',{skip:absent,timeout:19000},async()=>{
- const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
- try{
-  const muet=await monter(nav,passe(),{...SC.fin,connection:{status:'unavailable',observedAt:'t',message:null,tabId:1}});const m=await ecran(muet.page);
-  assert.equal(m.mot,'Relecture en pause');
-  assert.deepEqual(m.pied,['legacy:relecture-reprendre (grisé)','legacy:relecture-arreter-pause']);
-  assert.match(m.raison,/Disponible quand ESV répond/);
-  await muet.page.close();
-  const autre=await monter(nav,passe({lotId:'un-autre-lot'}));const a=await ecran(autre.page);
-  assert.equal(a.mot,'Terminé','la pause d’un autre lot ne touche pas ce lot');assert.equal(a.etat,'fini');
-  assert.ok(!a.pied.some(x=>/relecture-(reprendre|arreter-pause)/.test(x)),JSON.stringify(a.pied));
-  assert.notEqual(a.relecture.split(' ')[0],'fait','la relecture d’un autre lot ne coche rien');
-  assert.deepEqual([...muet.erreurs,...autre.erreurs],[]);
- }finally{await nav.close();}
-});
