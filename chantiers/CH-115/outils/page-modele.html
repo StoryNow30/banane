@@ -30,28 +30,41 @@ button.puce:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cadre{position:relative;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px var(--trait),0 12px 30px -18px rgba(0,0,0,.45);background:var(--carte)}
 .cadre iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent}
 .note{color:var(--encre2);font-size:12.5px;margin:0;max-width:60ch}
+h2{font-size:16px;font-weight:620;margin:28px 0 4px}
+.tab{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px;min-width:100%}
+th,td{padding:7px 10px;border-bottom:1px solid var(--trait);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:560;color:var(--encre2);font-size:12px}
+td.ok{color:var(--accent);font-weight:600}
 .pied{margin-top:28px;color:var(--encre2);font-size:12.5px;max-width:80ch}
 @media (max-width:640px){.bande{position:static}}
 @media (prefers-reduced-motion:reduce){.prog i{transition:none!important}}
 </style>
-<h1>Le panneau d'Ariane : Vision 14, Vision 15 et trois directions</h1>
-<p class="intro">Chaque colonne fait tourner le vrai panneau (mêmes scripts, mêmes boutons) avec de faux lots. Les scènes se suivent seules ; cliquez une scène pour la garder. Rien n'est relié à ESV. Dans les directions, un clic sur le haut du panneau ouvre ou ferme les détails.</p>
+<h1 id="titre">Le panneau d'Ariane</h1>
+<p class="intro" id="intro"></p>
 <div class="bande">
   <div class="ligne" id="scenes"><span class="lib">Scène</span></div>
   <div class="ligne"><span class="lib">Lecture</span><button class="puce" id="lecture" aria-pressed="true">En boucle</button>
     <span class="lib" style="margin-left:10px">Taille</span><button class="puce" data-taille="380x640" aria-pressed="true">Étroit</button><button class="puce" data-taille="600x760" aria-pressed="false">Large</button>
     <span class="lib" style="margin-left:10px">Thème du panneau</span><button class="puce" data-theme-p="defaut" aria-pressed="true">Celui de chaque version</button><button class="puce" data-theme-p="sombre" aria-pressed="false">Sombre</button><button class="puce" data-theme-p="clair" aria-pressed="false">Clair</button></div>
+  <div class="ligne" id="reglages-plus" hidden><span class="lib">Fond</span><button class="puce" data-fond="1" aria-pressed="false">Profond</button><button class="puce" data-fond="2" aria-pressed="true">Moyen</button><button class="puce" data-fond="3" aria-pressed="false">Nuit</button>
+    <span class="lib" style="margin-left:10px">Mouvement</span><button class="puce" id="ralenti" aria-pressed="false">Ralenti × 4</button></div>
   <div class="ligne" id="montrer"><span class="lib">Montrer</span></div>
   <div class="prog" aria-hidden="true"><i id="prog"></i></div>
 </div>
 <div class="grille" id="grille"></div>
-<p class="pied">Données fabriquées (partie 13, cuts 4790 à 4900 ; Constellation des parties 13 à 17). Vision 14 : feuilles du commit 5e8d305. Vision 15 : feuilles du tronc. Directions : feuilles du tronc, plus une feuille et un petit script de maquette par-dessus ; aucun fichier de l'extension n'est modifié. Les animations suivent le réglage « réduire les animations » du système.</p>
+<section id="mesures" hidden><h2>Ce que chaque version montre d'emblée</h2><p class="note">Mesuré sur le vrai panneau à 600 × 760 (outil compter.cjs), détails fermés : blocs de texte / mots / nombres visibles. Cible du ticket en lot : 15 / 25 / 6.</p><div class="tab"><table id="tab-mesures"></table></div></section>
+<p class="pied" id="pied"></p>
 <script>
 /*DONNEES*/
 (function(){
 'use strict';
 const V=DONNEES.variantes,SC=DONNEES.scenes;
-let scene=0,image=0,boucle=true,taille=[380,640],themeP='defaut',minuteur=null,debutImage=0;
+document.getElementById('titre').textContent=DONNEES.titre||'';document.getElementById('intro').textContent=DONNEES.intro||'';document.getElementById('pied').textContent=DONNEES.pied||'';
+const RG=DONNEES.reglages||{};let fond='2',ralenti=false;
+if(RG.fond||RG.ralenti)document.getElementById('reglages-plus').hidden=false;
+let facteur=1,scene=0,image=0,boucle=true,taille=[380,640],themeP='defaut',minuteur=null,debutImage=0;
 const imageCourante=()=>SC[scene].images[image];
 window.__image=imageCourante;
 const STUB=`(function(){try{history.replaceState(null,'','#automatic')}catch(e){}
@@ -64,7 +77,7 @@ window.chrome={runtime:{id:'essai',getURL:p=>p,connect:()=>({onMessage:{addListe
 const garde=s=>s.replace(/<\/(script)/gi,'<\\/$1');
 function doc(v){
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${CSS[v.id]}</style><script>${STUB}<\/script></head><body${ATTRS_BODY}>${CORPS}`
-   +JS.map(j=>`<script>${garde(j.t)}\n//# sourceURL=${j.s}<\/script>`).join('')+(v.maquette?`<script>${garde(MAQ)}<\/script>`:'')+`</body></html>`;
+   +JS.map(j=>`<script>${garde(j.t)}\n//# sourceURL=${j.s}<\/script>`).join('')+(v.maquette?`<script>${garde(MAQ)}<\/script>`:'')+(JSX[v.id]?`<script>${garde(JSX[v.id])}<\/script>`:'')+`</body></html>`;
 }
 const grille=document.getElementById('grille'),cols=[];
 for(const v of V){
@@ -80,6 +93,7 @@ for(const v of V){
 function agir(o,a){try{o.f.contentWindow.ArianeUi5&&o.f.contentWindow.ArianeUi5.agir(a);}catch(e){}}
 function appliquer(o){
   if(!o.pret)return;
+  try{const w=o.f.contentWindow,h=w.document.documentElement;['1','2','3'].forEach(k=>h.classList.toggle('cx-fond-'+k,k===fond));w.__cxRalenti=ralenti;}catch(e){}
   const theme=themeP==='defaut'?(o.v.defautClair?'clair':'sombre'):themeP;
   if(o.theme!==theme){agir(o,'sg:choix:theme:'+theme);o.theme=theme;}
   const on=imageCourante().onglet;
@@ -93,7 +107,7 @@ function dimensionner(){
 new ResizeObserver(dimensionner).observe(grille);
 const zoneScenes=document.getElementById('scenes'),boutonsScenes=SC.map((s,i)=>{const b=document.createElement('button');b.className='puce';b.textContent=s.nom;b.onclick=()=>{boucle=false;majLecture();aller(i,0);};zoneScenes.appendChild(b);return b;});
 function aller(i,j){scene=i;image=j;debutImage=performance.now();boutonsScenes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));cols.forEach(appliquer);planifier();}
-function dureeImage(){const s=SC[scene];return s.images.length>1?(s.pas||1300):(s.duree||4000);}
+function dureeImage(){const s=SC[scene];return facteur*(s.images.length>1?(s.pas||1300):(s.duree||4000));}
 function planifier(){clearTimeout(minuteur);minuteur=setTimeout(()=>{const s=SC[scene];
   if(image+1<s.images.length)aller(scene,image+1);else if(boucle)aller((scene+1)%SC.length,0);else{image=0;aller(scene,0);}},dureeImage());}
 const prog=document.getElementById('prog');
@@ -103,6 +117,12 @@ function majLecture(){lecture.setAttribute('aria-pressed',String(boucle));lectur
 lecture.onclick=()=>{boucle=!boucle;majLecture();planifier();};
 document.querySelectorAll('[data-taille]').forEach(b=>b.onclick=()=>{taille=b.dataset.taille.split('x').map(Number);document.querySelectorAll('[data-taille]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));dimensionner();});
 document.querySelectorAll('[data-theme-p]').forEach(b=>b.onclick=()=>{themeP=b.dataset.themeP;document.querySelectorAll('[data-theme-p]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cols.forEach(appliquer);});
+document.querySelectorAll('[data-fond]').forEach(b=>b.onclick=()=>{fond=b.dataset.fond;document.querySelectorAll('[data-fond]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cols.forEach(appliquer);});
+const bR=document.getElementById('ralenti');bR.onclick=()=>{ralenti=!ralenti;bR.setAttribute('aria-pressed',String(ralenti));cols.forEach(appliquer);facteur=ralenti?4:1;planifier();};
+if(DONNEES.mesures){const M=DONNEES.mesures,E=[['cours','Lot en cours'],['pause','Pause'],['toi','À toi'],['rattrapage','Rattrapage'],['relecture','Relecture'],['fin','Fin'],['file-cours','Constellation en cours'],['file-fin','Constellation finie']];
+ const ids=Object.keys(M),nom=id=>(V.find(v=>v.id===id)||{nom:id}).nom;let h='<tr><th>État</th>'+ids.map(i=>`<th>${nom(i)}</th>`).join('')+'</tr>';
+ for(const [k,l] of E){h+=`<tr><td>${l}</td>`+ids.map(i=>{const x=M[i][k];if(!x)return '<td>—</td>';const ok=k==='cours'&&x.blocs<=15&&x.mots<=25&&x.nombres<=6;return `<td class="${ok?'ok':''}">${x.blocs} / ${x.mots} / ${x.nombres}</td>`;}).join('')+'</tr>';}
+ document.getElementById('tab-mesures').innerHTML=h;document.getElementById('mesures').hidden=false;}
 dimensionner();aller(0,0);
 })();
 </script>

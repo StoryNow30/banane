@@ -6,7 +6,7 @@
  * (feuilles du tronc + chantiers/CH-115/directions/<d>.css + chantiers/CH-115/directions/maquette.js). Le code des scripts est celui du tronc
  * (les scripts du panneau n'ont pas changé de Vision 14 à Vision 15, seulement les feuilles).
  * États : ceux de chantiers/CH-104/outils/capturer.cjs (données fabriquées), joués en une histoire en boucle. Rien n'est envoyé à ESV.
- * Usage : node chantiers/CH-115/outils/page.cjs SORTIE.html */
+ * Usage : node chantiers/CH-115/outils/page.cjs SORTIE.html [chantiers/CH-115/pages/<page>.json] */
 const path = require('node:path'), fs = require('node:fs'), { execFileSync } = require('node:child_process');
 const R = path.resolve(__dirname, '../../..');
 const SORTIE = process.argv[2]; if (!SORTIE) { console.error('Fichier de sortie attendu.'); process.exit(2); }
@@ -22,12 +22,11 @@ const attrsBody = (html.match(/<body([^>]*)>/) || [])[1] || '';
 const polices = (css, rev) => css.replace(/url\((fonts\/[^)]+\.woff2)\)/g, (_, p) => `url(data:font/woff2;base64,${lire(rev, p, true).toString('base64')})`);
 const feuillesDe = rev => feuilles.map(f => polices(lire(rev, f), rev)).join('\n');
 const DIR = path.join(R, 'chantiers/CH-115/directions');
-const DIRECTIONS = JSON.parse(fs.readFileSync(path.join(DIR, 'directions.json'), 'utf8'));
-const VARIANTES = [
-  { id: 'v14', nom: 'Vision 14', sous: '« Graphite »', css: feuillesDe(V14), maquette: false },
-  { id: 'v15', nom: 'Vision 15', sous: '« Épure » (en place)', css: feuillesDe(null), maquette: false },
-  ...DIRECTIONS.map(d => ({ id: d.id, nom: d.nom, sous: d.sous, css: feuillesDe(null) + '\n' + fs.readFileSync(path.join(DIR, 'commun.css'), 'utf8') + '\n' + polices(fs.readFileSync(path.join(DIR, d.id + '.css'), 'utf8'), null), maquette: true, defautClair: !!d.defautClair, note: d.note })),
-];
+/* CONFIG : chantiers/CH-115/pages/<page>.json : { titre, intro, pied, reglages: { fond, ralenti }, mesures: chemin, variantes: [{ id, nom, sous, note,
+ * rev: '5e8d305' (feuilles de Vision 14) ou absent (tronc), css: [feuilles posées par-dessus, dans directions/], maquette: bool, defautClair: bool }] } */
+const CONFIG = JSON.parse(fs.readFileSync(path.resolve(process.argv[3] || path.join(R, 'chantiers/CH-115/pages/tour1.json')), 'utf8'));
+const VARIANTES = CONFIG.variantes.map(v => ({ ...v, css: feuillesDe(v.rev || null) + '\n' + (v.css || []).map(f => polices(fs.readFileSync(path.join(DIR, f), 'utf8'), null)).join('\n'), maquette: !!v.maquette }));
+const MESURES = CONFIG.mesures && fs.existsSync(path.join(R, CONFIG.mesures)) ? JSON.parse(fs.readFileSync(path.join(R, CONFIG.mesures), 'utf8')) : null;
 const JS = scripts.map(s => ({ s, t: lire(null, s) }));
 const MAQ = fs.readFileSync(path.join(DIR, 'maquette.js'), 'utf8');
 
@@ -52,12 +51,13 @@ const SCENES = [
   S('Erreur du lot', 'erreur', [erreur], { duree: 4500 }),
 ];
 
-const DONNEES = { variantes: VARIANTES.map(({ id, nom, sous, note, maquette, defautClair }) => ({ id, nom, sous, note: note || '', maquette, defautClair: !!defautClair })), scenes: SCENES };
+const DONNEES = { titre: CONFIG.titre, intro: CONFIG.intro, pied: CONFIG.pied, reglages: CONFIG.reglages || {}, mesures: MESURES, variantes: VARIANTES.map(({ id, nom, sous, note, maquette, defautClair }) => ({ id, nom, sous, note: note || '', maquette, defautClair: !!defautClair })), scenes: SCENES };
 const CSS = Object.fromEntries(VARIANTES.map(v => [v.id, v.css]));
+const JSX = Object.fromEntries(VARIANTES.map(v => [v.id, (v.js || []).map(f => fs.readFileSync(path.join(DIR, f), 'utf8')).join('\n;\n')]));
 const garde = s => s.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
 const json = o => garde(JSON.stringify(o));
 
 const page = fs.readFileSync(path.join(__dirname, 'page-modele.html'), 'utf8')
-  .replace('/*DONNEES*/', () => `const DONNEES=${json(DONNEES)};const CSS=${json(CSS)};const JS=${json(JS)};const MAQ=${json(MAQ)};const CORPS=${json(corps)};const ATTRS_BODY=${json(attrsBody)};`);
+  .replace('/*DONNEES*/', () => `const DONNEES=${json(DONNEES)};const CSS=${json(CSS)};const JSX=${json(JSX)};const JS=${json(JS)};const MAQ=${json(MAQ)};const CORPS=${json(corps)};const ATTRS_BODY=${json(attrsBody)};`);
 fs.writeFileSync(SORTIE, page);
 console.log(`${SORTIE} : ${(page.length / 1048576).toFixed(2)} Mo, ${VARIANTES.length} colonnes, ${SCENES.length} scènes`);

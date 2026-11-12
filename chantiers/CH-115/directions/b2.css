@@ -1,0 +1,70 @@
+/* CH-115, tour 2 (D-350) : la base commune des variantes de B, posée après commun.css et b.css. Plus sombre (trois niveaux de fond, choisis par
+ * la palette : html.cx-fond-1, -2, -3), une palette par fichier (b2-glacier.css, b2-moka.css, b2-sarcelle.css), le mouvement dirigé par motion.js.
+ * Épure : le fil des derniers cuts devient une trace de points sans texte (vert posé, ambre à poser, rouge incertain) ; le reste à la demande. */
+#ui5.u-signal{
+  --cx-ressort:linear(0, .157 5.8%, .523 13.3%, .857 22.3%, 1.007 30.4%, 1.044 36.5%, 1.045 42.3%, 1.013 55.6%, .998 68.8%, 1);
+  --cx-vif:linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.4%, 1.067, 1.099 24.3%, 1.108 26%, 1.103, 1.085 31.1%, 1.008 39.6%, .98 45.7%, .977 49.2%, .985 55.3%, 1.002 64.3%, 1.004 76.5%, 1);
+  --ressort:var(--cx-vif);--doux:cubic-bezier(.22,.8,.24,1);
+  --rayon:16px
+}
+body.ui5:has(#ui5.u-signal:not([data-theme="clair"])){background:var(--cx-corps,#15181E)}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen{background:var(--fond)}
+/* le mouvement est dirigé par motion.js : les entrées de la couche commune se taisent */
+#ui5.u-signal .cx-change :is(.sg-mot,.sg-phrase,.sg-constel-t,.sg-anneau){animation:none}
+#ui5.u-signal .sg-zone>*,#ui5.u-signal .sg-actions>button{animation:none}
+/* les tuiles : un voile de couleur très léger venu de l'accent, un liseré clair en haut (lumière), pas d'ombre lourde */
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel),
+#ui5.u-signal:not([data-theme="clair"]) .sg-zone .sg-tu:not(.sg-tu-avis){
+  background:linear-gradient(165deg,rgba(var(--accent-rgb),.075),rgba(var(--accent-rgb),0) 48%),var(--tuile);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),inset 0 0 0 1px var(--tuile-bord);border-radius:var(--rayon)}
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel){transition:transform .5s var(--cx-ressort)}
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel):hover{transform:translateY(-1px)}
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel):active{transform:scale(.992);transition-duration:.12s}
+/* l'anneau : plus épais, un arc lumineux ; il se remplit avec élan (transition de l'arc en ressort ; l'arc est la seule exception à transform et opacity) */
+#ui5.u-signal{--ep:3.6}
+#ui5.u-signal .sg-anneau .sg-piste{stroke:var(--piste)}
+#ui5.u-signal .sg-anneau .sg-arc{stroke:var(--c1);transition:stroke-dasharray 1.1s var(--cx-ressort),stroke .5s;filter:drop-shadow(0 0 6px rgba(var(--c1-rgb),.55))}
+#ui5.u-signal .sg-anneau[data-tourne] svg{animation:cx-tourne 1.4s linear infinite}
+@keyframes cx-tourne{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
+#ui5.u-signal .sg-anneau .sg-chiffre{font-weight:280;letter-spacing:-.055em}
+#ui5.u-signal .sg-glyphe{box-shadow:0 0 0 3px rgba(var(--c1-rgb),.18)}
+/* la trace des derniers cuts : huit points, le plus récent à gauche, qui entre en ressort */
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil{flex:none!important;padding:12px 14px!important}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil{display:flex;gap:7px;align-items:center;mask-image:none;-webkit-mask-image:none}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li,html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li:nth-child(n+4){display:block;width:10px;height:10px;padding:0;border:0;border-radius:50%;background:var(--ok);opacity:calc(1 - var(--n,0)*.1);min-height:0;animation:cx-point .6s var(--cx-vif) backwards}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li>*{display:none}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li:has(.sg-attn){background:var(--attn)}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li:has(.sg-crit){background:var(--crit)}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li:first-child{width:14px;height:14px;box-shadow:0 0 0 4px rgba(var(--ok-rgb),.18)}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li:first-child:has(.sg-attn){box-shadow:0 0 0 4px rgba(var(--attn-rgb),.2)}
+#ui5.u-signal .sg-fil li:nth-child(2){--n:1}#ui5.u-signal .sg-fil li:nth-child(3){--n:2}#ui5.u-signal .sg-fil li:nth-child(4){--n:3}#ui5.u-signal .sg-fil li:nth-child(5){--n:4}#ui5.u-signal .sg-fil li:nth-child(6){--n:5}#ui5.u-signal .sg-fil li:nth-child(7){--n:6}#ui5.u-signal .sg-fil li:nth-child(8){--n:7}
+@keyframes cx-point{from{opacity:0;transform:scale(.2) translateX(-10px)}}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="orbite"] .sg-zone{flex:0 1 auto}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="orbite"] .sg-tu-etat{flex:1 1 auto;justify-content:center}
+/* la chaîne des parties : les liens se remplissent en ressort, une partie qui se termine « éclot », la courante bat */
+#ui5.u-signal .sg-chaine li::after{transition:transform .9s var(--cx-ressort)}
+#ui5.u-signal .sg-chaine li[data-etat="faite"] i{animation:cx-eclot .7s var(--cx-vif) backwards}
+#ui5.u-signal .sg-chaine li{animation:cx-chaine .6s var(--cx-ressort) backwards}
+#ui5.u-signal .sg-chaine li:nth-child(2){animation-delay:.05s}#ui5.u-signal .sg-chaine li:nth-child(3){animation-delay:.1s}#ui5.u-signal .sg-chaine li:nth-child(4){animation-delay:.15s}#ui5.u-signal .sg-chaine li:nth-child(5){animation-delay:.2s}#ui5.u-signal .sg-chaine li:nth-child(n+6){animation-delay:.25s}
+#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i{box-shadow:inset 0 0 0 2px var(--c1),0 0 14px rgba(var(--c1-rgb),.5)}
+@keyframes cx-eclot{0%{transform:scale(.4)}}
+@keyframes cx-chaine{from{opacity:0;transform:translateY(8px)}}
+/* onglets : le fil sous l'onglet ouvert glisse en ressort, s'allonge en lueur ; survol doux */
+#ui5.u-signal .sg-bascule .sg-pouce{transition:transform .6s var(--cx-vif);height:2px;background:linear-gradient(90deg,transparent,var(--accent) 20%,var(--accent) 80%,transparent);box-shadow:0 0 10px rgba(var(--accent-rgb),.7)}
+#ui5.u-signal .sg-bascule button{transition:color .25s,transform .35s var(--cx-ressort)}
+#ui5.u-signal .sg-bascule button:hover{transform:translateY(-1px)}
+/* boutons : le plein porte l'accent ; survol qui monte, appui qui s'enfonce, en ressort */
+#ui5.u-signal:not([data-theme="clair"]) .sg-principal{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0)),var(--accent);color:var(--sur-accent,#0E0F14);box-shadow:0 6px 18px -8px rgba(var(--accent-rgb),.8)}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-principal{background:var(--plein);color:var(--sur-plein);box-shadow:none}
+#ui5.u-signal .sg-actions>button{transition:transform .45s var(--cx-ressort),background-color .2s,opacity .2s}
+#ui5.u-signal .sg-actions>button:not(:disabled):hover{transform:translateY(-2px)}
+#ui5.u-signal .sg-actions>button:not(:disabled):active{transform:scale(.95);transition-duration:.08s}
+#ui5.u-signal .sg-secondaire:not(.sg-discret){box-shadow:inset 0 0 0 1px var(--trait-fort)}
+/* couches flottantes : verre dépoli discret */
+#ui5.u-signal:not([data-theme="clair"]) :is(.sg-popover,.sg-palette,.sg-boite,.sg-feuille,.sg-tiroir){background:color-mix(in srgb,var(--flottant) 82%,transparent);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3)}
+/* les alertes qui demandent un geste : une carte au bord de couleur, l'icône qui bat une fois à l'entrée */
+#ui5.u-signal:not([data-theme="clair"]) .sg-tu-avis{background:linear-gradient(90deg,rgba(var(--c1-rgb),.13),rgba(var(--c1-rgb),.04)),var(--tuile);box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.3);border-radius:var(--rayon)}
+#ui5.u-signal .sg-tu-avis .sg-ic{animation:cx-eclot .7s var(--cx-vif) .2s backwards}
+/* la tuile d'état prend la hauteur libre ; son en-tête reste en haut, le reste au centre ; la trace des cuts tient sur une ligne */
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-tu-etat .sg-haut{position:absolute;top:16px;left:16px;right:16px}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil{min-height:0!important;flex:none!important}

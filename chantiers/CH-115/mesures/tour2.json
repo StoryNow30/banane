@@ -1,0 +1,1066 @@
+{
+ "b": {
+  "pret": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 3,
+   "boutons": 4,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "cours": {
+   "blocs": 24,
+   "mots": 36,
+   "nombres": 9,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "pause": {
+   "blocs": 24,
+   "mots": 36,
+   "nombres": 9,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "toi": {
+   "blocs": 26,
+   "mots": 61,
+   "nombres": 10,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [
+    "! Le cut 4812 a un rail qu’Ariane ne sait pas poser. Choisis : réessayer, le reprendre à la main, ou le passer."
+   ],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "panne": {
+   "blocs": 26,
+   "mots": 62,
+   "nombres": 10,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [
+    "! ESV ne répond plus. Si la page ESV reste figée, recharge-la (F5), attends qu’elle réponde, puis clique sur Reprendre."
+   ],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "rattrapage": {
+   "blocs": 23,
+   "mots": 39,
+   "nombres": 12,
+   "boutons": 3,
+   "tuiles": 2,
+   "avis": [
+    "Aucune action jusqu’à la fin du rattrapage"
+   ],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "relecture": {
+   "blocs": 23,
+   "mots": 39,
+   "nombres": 13,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "fin": {
+   "blocs": 33,
+   "mots": 64,
+   "nombres": 13,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "file-repos": {
+   "blocs": 23,
+   "mots": 49,
+   "nombres": 8,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-cours": {
+   "blocs": 56,
+   "mots": 98,
+   "nombres": 38,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-passage": {
+   "blocs": 56,
+   "mots": 108,
+   "nombres": 40,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-arret": {
+   "blocs": 69,
+   "mots": 138,
+   "nombres": 59,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-fin": {
+   "blocs": 95,
+   "mots": 183,
+   "nombres": 87,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-1": {
+   "blocs": 19,
+   "mots": 45,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-8": {
+   "blocs": 103,
+   "mots": 181,
+   "nombres": 90,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "cours-total": {
+   "blocs": 23,
+   "mots": 38,
+   "nombres": 9,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "echo": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 1,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "relecture-pause": {
+   "blocs": 23,
+   "mots": 53,
+   "nombres": 13,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "lot-arrete": {
+   "blocs": 35,
+   "mots": 66,
+   "nombres": 13,
+   "boutons": 7,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "relecture-interrompue": {
+   "blocs": 33,
+   "mots": 64,
+   "nombres": 13,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "sans-onglet": {
+   "blocs": 13,
+   "mots": 34,
+   "nombres": 1,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "deux-onglets": {
+   "blocs": 14,
+   "mots": 39,
+   "nombres": 2,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "onglet-long": {
+   "blocs": 24,
+   "mots": 36,
+   "nombres": 9,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  },
+  "sans-constellation": {
+   "blocs": 23,
+   "mots": 35,
+   "nombres": 9,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 3
+  }
+ },
+ "b-glacier": {
+  "pret": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 3,
+   "boutons": 4,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "cours": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "pause": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "toi": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 5,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [
+    "! Le cut 4812 a un rail qu’Ariane ne sait pas poser. Choisis : réessayer, le reprendre à la main, ou le passer."
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "panne": {
+   "blocs": 17,
+   "mots": 47,
+   "nombres": 5,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [
+    "! ESV ne répond plus. Si la page ESV reste figée, recharge-la (F5), attends qu’elle réponde, puis clique sur Reprendre."
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "rattrapage": {
+   "blocs": 14,
+   "mots": 24,
+   "nombres": 6,
+   "boutons": 3,
+   "tuiles": 2,
+   "avis": [
+    "Aucune action jusqu’à la fin du rattrapage"
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "relecture": {
+   "blocs": 14,
+   "mots": 24,
+   "nombres": 7,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "fin": {
+   "blocs": 24,
+   "mots": 49,
+   "nombres": 7,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "file-repos": {
+   "blocs": 23,
+   "mots": 49,
+   "nombres": 8,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-cours": {
+   "blocs": 56,
+   "mots": 98,
+   "nombres": 38,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-passage": {
+   "blocs": 56,
+   "mots": 108,
+   "nombres": 40,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-arret": {
+   "blocs": 69,
+   "mots": 138,
+   "nombres": 59,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-fin": {
+   "blocs": 95,
+   "mots": 183,
+   "nombres": 87,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-1": {
+   "blocs": 19,
+   "mots": 45,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-8": {
+   "blocs": 103,
+   "mots": 181,
+   "nombres": 90,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "cours-total": {
+   "blocs": 14,
+   "mots": 23,
+   "nombres": 3,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "echo": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 1,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "relecture-pause": {
+   "blocs": 14,
+   "mots": 38,
+   "nombres": 7,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "lot-arrete": {
+   "blocs": 26,
+   "mots": 51,
+   "nombres": 8,
+   "boutons": 7,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "relecture-interrompue": {
+   "blocs": 24,
+   "mots": 49,
+   "nombres": 7,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "sans-onglet": {
+   "blocs": 13,
+   "mots": 34,
+   "nombres": 1,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "deux-onglets": {
+   "blocs": 14,
+   "mots": 39,
+   "nombres": 2,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "onglet-long": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "sans-constellation": {
+   "blocs": 14,
+   "mots": 20,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  }
+ },
+ "b-moka": {
+  "pret": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 3,
+   "boutons": 4,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "cours": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "pause": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "toi": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 5,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [
+    "! Le cut 4812 a un rail qu’Ariane ne sait pas poser. Choisis : réessayer, le reprendre à la main, ou le passer."
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "panne": {
+   "blocs": 17,
+   "mots": 47,
+   "nombres": 5,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [
+    "! ESV ne répond plus. Si la page ESV reste figée, recharge-la (F5), attends qu’elle réponde, puis clique sur Reprendre."
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "rattrapage": {
+   "blocs": 14,
+   "mots": 24,
+   "nombres": 6,
+   "boutons": 3,
+   "tuiles": 2,
+   "avis": [
+    "Aucune action jusqu’à la fin du rattrapage"
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "relecture": {
+   "blocs": 14,
+   "mots": 24,
+   "nombres": 7,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "fin": {
+   "blocs": 24,
+   "mots": 49,
+   "nombres": 7,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "file-repos": {
+   "blocs": 23,
+   "mots": 49,
+   "nombres": 8,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-cours": {
+   "blocs": 56,
+   "mots": 98,
+   "nombres": 38,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-passage": {
+   "blocs": 56,
+   "mots": 108,
+   "nombres": 40,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-arret": {
+   "blocs": 69,
+   "mots": 138,
+   "nombres": 59,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-fin": {
+   "blocs": 95,
+   "mots": 183,
+   "nombres": 87,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-1": {
+   "blocs": 19,
+   "mots": 45,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-8": {
+   "blocs": 103,
+   "mots": 181,
+   "nombres": 90,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "cours-total": {
+   "blocs": 14,
+   "mots": 23,
+   "nombres": 3,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "echo": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 1,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "relecture-pause": {
+   "blocs": 14,
+   "mots": 38,
+   "nombres": 7,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "lot-arrete": {
+   "blocs": 26,
+   "mots": 51,
+   "nombres": 8,
+   "boutons": 7,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "relecture-interrompue": {
+   "blocs": 24,
+   "mots": 49,
+   "nombres": 7,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "sans-onglet": {
+   "blocs": 13,
+   "mots": 34,
+   "nombres": 1,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "deux-onglets": {
+   "blocs": 14,
+   "mots": 39,
+   "nombres": 2,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "onglet-long": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "sans-constellation": {
+   "blocs": 14,
+   "mots": 20,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  }
+ },
+ "b-sarcelle": {
+  "pret": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 3,
+   "boutons": 4,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "cours": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "pause": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "toi": {
+   "blocs": 17,
+   "mots": 46,
+   "nombres": 5,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [
+    "! Le cut 4812 a un rail qu’Ariane ne sait pas poser. Choisis : réessayer, le reprendre à la main, ou le passer."
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "panne": {
+   "blocs": 17,
+   "mots": 47,
+   "nombres": 5,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [
+    "! ESV ne répond plus. Si la page ESV reste figée, recharge-la (F5), attends qu’elle réponde, puis clique sur Reprendre."
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "rattrapage": {
+   "blocs": 14,
+   "mots": 24,
+   "nombres": 6,
+   "boutons": 3,
+   "tuiles": 2,
+   "avis": [
+    "Aucune action jusqu’à la fin du rattrapage"
+   ],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "relecture": {
+   "blocs": 14,
+   "mots": 24,
+   "nombres": 7,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "fin": {
+   "blocs": 24,
+   "mots": 49,
+   "nombres": 7,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "file-repos": {
+   "blocs": 23,
+   "mots": 49,
+   "nombres": 8,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-cours": {
+   "blocs": 56,
+   "mots": 98,
+   "nombres": 38,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-passage": {
+   "blocs": 56,
+   "mots": 108,
+   "nombres": 40,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-arret": {
+   "blocs": 69,
+   "mots": 138,
+   "nombres": 59,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-fin": {
+   "blocs": 95,
+   "mots": 183,
+   "nombres": 87,
+   "boutons": 6,
+   "tuiles": 4,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-1": {
+   "blocs": 19,
+   "mots": 45,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "file-8": {
+   "blocs": 103,
+   "mots": 181,
+   "nombres": 90,
+   "boutons": 4,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [
+    "Sautés : le compte « skipped » d’ESV."
+   ],
+   "lignesFil": 0
+  },
+  "cours-total": {
+   "blocs": 14,
+   "mots": 23,
+   "nombres": 3,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "echo": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 1,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "relecture-pause": {
+   "blocs": 14,
+   "mots": 38,
+   "nombres": 7,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "lot-arrete": {
+   "blocs": 26,
+   "mots": 51,
+   "nombres": 8,
+   "boutons": 7,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "relecture-interrompue": {
+   "blocs": 24,
+   "mots": 49,
+   "nombres": 7,
+   "boutons": 6,
+   "tuiles": 3,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "sans-onglet": {
+   "blocs": 13,
+   "mots": 34,
+   "nombres": 1,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "deux-onglets": {
+   "blocs": 14,
+   "mots": 39,
+   "nombres": 2,
+   "boutons": 4,
+   "tuiles": 1,
+   "avis": [
+    "Choisis un onglet ESV : le lot part sur l’onglet nommé en haut à droite."
+   ],
+   "notes": [],
+   "lignesFil": 0
+  },
+  "onglet-long": {
+   "blocs": 15,
+   "mots": 21,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  },
+  "sans-constellation": {
+   "blocs": 14,
+   "mots": 20,
+   "nombres": 4,
+   "boutons": 5,
+   "tuiles": 2,
+   "avis": [],
+   "notes": [],
+   "lignesFil": 8
+  }
+ }
+}

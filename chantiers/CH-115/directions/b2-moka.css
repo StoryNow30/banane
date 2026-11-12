@@ -1,0 +1,10 @@
+/* CH-115, tour 2 : palette « Moka (neutres chauds) » de B. Trois niveaux de fond (html.cx-fond-1 profond, -2 moyen par défaut, -3 nuit) ; un accent vif, un pastel par onglet. */
+#ui5.u-signal:not([data-theme="clair"]),html.cx-fond-2 #ui5.u-signal:not([data-theme="clair"]){--fond:#1B1817;--tuile:#24201E;--flottant:#2D2826;--cx-corps:#1B1817}
+html.cx-fond-1 #ui5.u-signal:not([data-theme="clair"]){--fond:#221E1C;--tuile:#2B2624;--flottant:#342E2B;--cx-corps:#221E1C}
+html.cx-fond-3 #ui5.u-signal:not([data-theme="clair"]){--fond:#141211;--tuile:#1C1918;--flottant:#25211F;--cx-corps:#141211}
+#ui5.u-signal:not([data-theme="clair"]){--tx:#F4EFEA;--tx2:#BCB1A8;--tx3:#ABA097;--tuile-bord:rgba(255,255,255,.055);--trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--piste:rgba(255,255,255,.1);
+ --accent:#FF9E6E;--accent-rgb:255,158,110;--accent-tx:#FFBA96;--sur-accent:#1C0F08}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="orbite"]{--accent:#FF9E6E;--accent-rgb:255,158,110;--accent-tx:#FFBA96}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="echo"]{--accent:#8FDCC0;--accent-rgb:143,220,192;--accent-tx:#8FDCC0}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="file"]{--accent:#A9B8FF;--accent-rgb:169,184,255;--accent-tx:#A9B8FF}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="correction"]{--accent:#F4A6C6;--accent-rgb:244,166,198;--accent-tx:#F4A6C6}
