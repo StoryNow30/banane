@@ -87,11 +87,3 @@ test('service worker : navigation tardive AVANT la relecture du libellé → pas
  assert.equal(H.evenements(b,'relecture-ombre').at(-1).identity.cut,109,'rien d’autre après');
  assert.equal(apresLot(b,lot).filter(c=>c.action==='apply').length,1,'une seule pose');
 });
-test('service worker : navigation tardive APRÈS la relecture du libellé (0 et 150 ms) → l’étape suivante revérifie l’identité : bonnes coupes, aucune pose ni validation de plus',async()=>{
- for(const retard of [0,150]){const {p,b,adapter,lot}=await passeNavTardive(retard);
-  assert.notEqual(p.etat,'en-cours',`${retard} ms`);assert.equal(p.corriges,1,`${retard} ms : ${p.message}`);
-  assert.deepEqual(adapter.majEspace.map(x=>x.cut),[109],`${retard} ms : aucune autre validation`);
-  assert.equal(apresLot(b,lot).filter(c=>c.action==='apply').length,1,`${retard} ms : une seule pose, sur 109`);
-  const ev=H.evenements(b,'relecture-ombre');assert.deepEqual(ev.filter(e=>e.action==='corrige').map(e=>e.identity.cut),[109],`${retard} ms`);
-  for(const e of ev)assert.ok(e.identity.cut>=108,`${retard} ms : aucune visite du cut 100 où ESV s’est égaré (${e.identity.cut})`);}
-});

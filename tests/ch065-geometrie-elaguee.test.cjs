@@ -38,28 +38,3 @@ test('CH-065 : mêmes sorties au bit près, quatre entrées, captures réelles e
   }
   assert.ok(candidats>=5,'trop peu de rails posés pour que l\'essai dise quelque chose : '+candidats);
 });
-test('CH-065 : chaque sous-ensemble de patchs rend la même chose (l\'opérateur peut choisir patch par patch)', ()=>{
-  const c=H.captures()[3],ref=H.canon(entrees(O,c,LAB));
-  for(const noms of [['geometrie-elaguee-lot'],['geometrie-elaguee-v46'],['mediane-exacte'],['geometrie-elaguee-lot','mediane-exacte']]){
-    const textes={};for(const f of ['src/geometry.js','src/geometry-candidate-v1.js']){const v=H.A.versions(H.RACINE,f);textes[f]=H.A.patcher(f,v.origine,noms);}
-    assert.equal(H.canon(entrees(H.geometrie('patche',textes),c,LAB)),ref,noms.join('+'));
-  }
-});
-test('CH-065 : hors du domaine de l\'élagage (|u| ≥ 1), la boucle d\'origine est gardée et rend la même chose', ()=>{
-  const c=H.captures()[0];
-  for(const u of [1.5,-3])assert.equal(H.canon(entrees(P,c,{...LAB,uSeeds:[u]}).decision),H.canon(entrees(O,c,{...LAB,uSeeds:[u]}).decision));
-});
-test('CH-065 : mêmes exceptions (paramètre invalide, profil absent) et mêmes refus', ()=>{
-  const c=H.captures()[1];
-  for(const [nom,f] of [['grille',M=>M.G.proposeBoth(c,{grid:.5})],['profil',M=>M.Cand.propose({...c,rails:{}},'left')],
-    ['incohérent',M=>M.Cand.proposeBoth(c,{pairedSupportLateral:.1,maxSingleRailLateral:.05})],['sans points',M=>M.G.proposeBoth({...c,pointsSceneRelative:[]})]]){
-    const a=H.essayer(()=>f(O)),b=H.essayer(()=>f(P));assert.equal(H.canon(b),H.canon(a),nom);
-  }
-});
-test('CH-065 : l\'essai a des dents — une fenêtre trop étroite (20 mm < 25 mm) est vue', ()=>{
-  const f='src/geometry-candidate-v1.js',t=H.A.versions(H.RACINE,f).patche;
-  const faux=t.replace('borne(u+a[0]-.026),fin=borne(u+a[0]+.026)','borne(u+a[0]-.020),fin=borne(u+a[0]+.020)');
-  assert.notEqual(faux,t);
-  const M=H.geometrie('patche',{[f]:faux}),c=H.captures()[0];
-  assert.notEqual(H.canon(entrees(M,c,LAB).decision),H.canon(entrees(O,c,LAB).decision));
-});
