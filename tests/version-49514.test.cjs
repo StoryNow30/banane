@@ -48,9 +48,9 @@ test('lecture des anciens exports gardée : des journaux 4.9.0.2 à 4.9.0.20, 4.
  assert.equal(measure({version:'4.9.0.1',events:[]}).observations.observerExpected,undefined,'4.9.0.1 : avant l’observateur');
 });
 test('RM-11 : la raison de la correction ne demande rien de plus au navigateur (manifeste inchangé hors la version), son module est chargé par le service worker et le panneau ; test 13 : les modules L1 sont chargés par le service worker seulement',()=>{
- /* Empreinte du manifeste (test 29 : la test 8 + la permission « power » de l'éveil, ordre écrit de l'opérateur), version et titre ramenés à « X » : permissions, hôtes, scripts de contenu, icônes, service worker : les mêmes. */
+ /* Empreinte du manifeste (test 29 : la test 8 + la permission « power » de l'éveil, ordre écrit de l’opérateur ; Vision 16 : `optional_host_permissions` du relais de la télécommande, D-345), version et titre ramenés à « X » : permissions, hôtes, scripts de contenu, icônes, service worker : les mêmes. */
  const n=JSON.parse(JSON.stringify(manifest));n.version='X';n.version_name='X';n.action.default_title='X';n.name='Ariane';
- assert.equal(require('node:crypto').createHash('sha256').update(JSON.stringify(n)).digest('hex'),'2c0e474c33df28550ce10a1133e05575f0bb9abd3b452f83af5c8a5a9767aed9');
+ assert.equal(require('node:crypto').createHash('sha256').update(JSON.stringify(n)).digest('hex'),'06ccc179daaaabc7aab4f0fbec79344e883bf25f099625064e12bc42f1bfef94');
  assert.deepEqual(manifest.permissions,['storage','unlimitedStorage','scripting','downloads','power'],'test 29 : « power » ajoutée sur ordre écrit de l\'opérateur (éveil du système)');assert.ok(!('commands' in manifest),'aucun raccourci d\'extension : les touches de raison ne sont pas des commandes');
  assert.ok(read('background.js').includes("'src/raison-correction.js','src/native-session.js'"),'chargé avant la session Écho');
  assert.ok(read('panel.html').includes('<script src="src/raison-correction.js"></script><script src="panel.js">'));
