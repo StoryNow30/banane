@@ -5,7 +5,7 @@ Hors ligne. Aucun fichier du tronc changé. Détail : `analyse.md` ; réglages f
 ## 1. Les retouches de 5 à 50 mm (Échos du 12/11 ; lots des 11 et 12/11 ; 126 posés avec une pose de l'opérateur) — ÉTABLI
 - 49 retouchés de 5 à 50 mm (17 au-delà de 10 mm). Longitudinal toujours nul. Pas de biais d'écartement (médiane −1,1 mm), ni de latéral commun (+0,6 mm).
 - **Biais vertical** : un rail dont le calage de convention est refusé (dz > 8 mm, `shift-out-of-domain`) est posé brut. 16 rails sur 16 posés ainsi sont retouchés, remontés de dz à +0,3 mm près en médiane. Ce biais pèse 15 des 49 retouches et 6 des 17 au-delà de 10 mm.
-- **Biais latéral à un rail** : 5 à 13 mm, surtout dans la partie 16 du 11/11 et en appareil de voie. Signe sans tendance, aucun prédicteur trouvé (même constat que CH-042). Il attend le banc de CH-116.
+- **Biais latéral à un rail** (corpus de CH-116, 328 posés jugés hors examen) : 47 des 105 retouches au-delà de 5 mm. C'est un écartement faux des poses de la GCV2 dans le lot (étage `deferred` : 49 des 105), trop large en abords, trop étroit en ADV. Aucune référence ne le prédit ; levier clos sans patch (`lateral.md`).
 
 ## 2. Levier « domaine étendu » (calage entier jusqu'à dz 13 mm), patch éteint `domaine-etendu.patch` — CLOS
 | Jeu (posés jugés) | ≤ 10 mm avant → après | gagnés / perdus à 10 mm | posés passés au-delà de 20 mm | > 50 mm |
