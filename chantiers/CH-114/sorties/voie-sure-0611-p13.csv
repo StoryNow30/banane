@@ -1,0 +1,6 @@
+cut;zone;referenceCut;decalageGaucheMm;decalageDroitMm;moyenneMm;seuilMm;auraitDiffere;motif
+1614;alerte;1613;-2.1;6.2;2.1;102;false;cotes-opposes
+1615;alerte;1614;0.3;-7.9;-3.8;102;false;cotes-opposes
+1633;alerte;1632;-3.2;1.7;-0.8;102;false;cotes-opposes
+1769;alerte;1768;-2;1.4;-0.3;102;false;cotes-opposes
+1770;alerte;1769;6.5;5.4;6;102;false;ok

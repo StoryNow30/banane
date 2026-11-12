@@ -291,6 +291,11 @@
      * commande ne change. Passer la garde à la pause, ou le serrage à l'écriture, demande un nouvel accord écrit de l'opérateur (D-308). `actif:false` : rien n'est calculé. */
     gardeVoieOmbre: Object.freeze({ actif: true, seuilMm: 15, fenetre: 20, voisinesMin: 5 }),
     serrageLotOmbre: Object.freeze({ actif: true, plafondMm: 20, fenetre: 20, voisinesMin: 5 }),
+    /* CH-114 (D-347) — RÈGLE « VOIE DES CUTS SÛRS », EN OMBRE (src/voie-sure-ombre.js, mesure chantiers/CH-112/rapport.md). Un événement `voie-sure-ombre`
+     * par cut posé par le lot en zone `adv: alerte` : décalage latéral des deux rails par rapport au dernier cut sûr du lot (au plus `ecartCuts` cuts en arrière),
+     * « aurait différé » si les deux vont du même côté au-delà de `seuilMm + courbureMm·g²`. CONSIGNÉ SEULEMENT : rien n'est posé ni différé, aucune commande
+     * ne change. L'allumage (arrêt réel) demande un nouvel accord écrit de l'opérateur (D-347). `actif:false` : aucun calcul, aucun événement. */
+    voieSureOmbre: Object.freeze({ actif: true, seuilMm: 100, courbureMm: 2, ecartCuts: 12 }),
     /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, chantiers/CH-034/JOURNAL.md § 2), ÉTEINTE par défaut. Allumée, sur un cut que la commande allait
      * poser et valider, le moteur gelé est relancé sur le nuage capturé à des graines espacées de `pasMm` jusqu'à ±`porteeMm` en travers (la ROI de capture),
      * et la pose du lot est confrontée aux paires fortes trouvées : mode 'differer' (livré) : différé si une paire au moins aussi bonne (produit des pertes

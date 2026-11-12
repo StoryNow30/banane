@@ -1,0 +1,13 @@
+cut;zone;referenceCut;decalageGaucheMm;decalageDroitMm;moyenneMm;seuilMm;auraitDiffere;motif
+7232;alerte;7231;-2;-1;-1.5;102;false;ok
+7233;alerte;7232;-2.8;-7.5;-5.2;102;false;ok
+7234;alerte;7233;1.6;7;4.3;102;false;ok
+7235;alerte;7234;0.4;-4.3;-1.9;102;false;cotes-opposes
+7402;alerte;;;;;;false;sans-reference
+7403;alerte;;;;;;false;sans-reference
+7404;alerte;;;;;;false;sans-reference
+7604;alerte;7602;3.6;2.1;2.9;108;false;ok
+7628;alerte;7627;6.4;7.1;6.7;102;false;ok
+7629;alerte;7628;-0.4;2.2;0.9;102;false;cotes-opposes
+7631;alerte;7629;6.4;9.1;7.7;108;false;ok
+7632;alerte;7631;3.2;-1.8;0.7;102;false;cotes-opposes

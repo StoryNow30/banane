@@ -139,6 +139,8 @@ const VOIE_B1_ECART=['voie-b1-ecart.js'];
  * sauvegardé (tests/ch059-etat-borne.test.cjs) : ni la pose ni le lot ne lisent autre chose qu'avant. */
 /* CH-079 (D-308) : la garde de voie et le serrage du lot, EN OMBRE (src/garde-voie-ombre.js, src/serrage-lot-ombre.js) : modules purs qui calculent et rendent un événement ; ni la pose ni la décision du lot ne les lisent (tests/ch079-garde-serrage.test.cjs). */
 const CH079=['garde-voie-ombre.js','serrage-lot-ombre.js'];
+/* CH-114 (D-347) : la règle « voie des cuts sûrs », EN OMBRE (src/voie-sure-ombre.js) : module pur qui calcule et rend un événement ; ni la pose ni la décision du lot ne le lisent (tests/voie-sure-ombre-sw.test.cjs). */
+const CH114=['voie-sure-ombre.js'];
 const ETAT_MORCEAUX=['etat-morceaux.js'];
 const STOCKAGE={'src/storage.js':'CH-059 : écriture de l\'état en morceaux, relecture identique (tests/ch059-etat-borne.test.cjs, tests/ch059-morceaux.test.cjs)'};
 /* CH-053-S : la file prioritaire des cuts à corriger (src/file-prioritaire.js), module pur NON BRANCHÉ (ni service worker ni panneau) : il range des candidats, ne lit ni ne commande la pose. */
@@ -230,7 +232,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
@@ -262,7 +264,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
 });
 test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la recapture des captures vides (coupée)',()=>{
  const S=require('../src/settings.js'),canon=v=>JSON.stringify(v,(k,x)=>typeof x==='function'?'<fn>':x);
- const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
+ const {skipExplicite,echo,passeDifferesDefaut,file,relectureDefaut,relectureSignalEteint,relecturePause,validationSurPlace,ecrituresApresValidation,eveil,correctionEntreParties,rust,...reste000}=S,{repliCourt,imagesMin,...piloteSans}=reste000.pilote,reste00={...reste000,pilote:piloteSans},{deplacement:_dep,actif:_dvActif,...deplacerVueSans0}=reste00.deplacerVue,deplacerVueSans={actif:false,...deplacerVueSans0},reste0={...reste00,deplacerVue:deplacerVueSans},{raison,...echoSans}=echo,{profil,recaptureVide,passeDifferes,gardeApresDiffere,rechercheLarge,serieCapturesVides,voieB1EcartOmbre,gardeVoieOmbre,serrageLotOmbre,signalEteint,chargement,reparationPotree,voieSureOmbre,...lotSans}=S.lot,reste={...reste0,lot:lotSans};
  /* D-296 (CH-064) : clé ajoutée au premier niveau, la lecture LiDAR en Rust, ALLUMÉE par défaut (accord de l'opérateur), sortie identique au bit près. */
  assert.deepEqual({...rust},{lidar:true},'D-296 : lecture LiDAR en Rust, allumée par défaut');
  /* CH-084 (D-313) : clé ajoutée au premier niveau, la fin de la fenêtre de Maj+Espace sur l'écriture vue, ALLUMÉE pour le lot d'essai (relecture seulement). */
@@ -273,7 +275,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* D-320 (opérateur, 10/11) : seul réglage ajouté, le bouton « SKIP explicite » du panneau, MASQUÉ ; il ne touche ni la pose ni le lot ; le reste est l'empreinte d'avant. */
  assert.deepEqual({...skipExplicite},{bouton:false},'D-320 : bouton SKIP explicite masqué');
  /* Test 16 (cap 5, 8cb7958) : seul réglage ajouté, la recapture d'une capture presque vide pendant un lot, COUPÉE par défaut ; le reste est l'empreinte d'avant. */
- assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','reparationPotree','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre']);
+ assert.deepEqual(Object.keys(S.lot).filter(k=>!(k in lotSans)).sort(),['chargement','gardeApresDiffere','gardeVoieOmbre','passeDifferes','profil','recaptureVide','rechercheLarge','reparationPotree','serieCapturesVides','serrageLotOmbre','signalEteint','voieB1EcartOmbre','voieSureOmbre']);
  /* CH-110 (D-343, accord écrit de l'opérateur) : place de chargement rendue à Potree après un échec d'ESV, ALLUMÉE ; lue par la page seulement (patch). */
  assert.deepEqual({...reparationPotree},{actif:true,essaisParNoeud:2,attenteMs:1000},'CH-110 : réparation de Potree allumée');
  /* CH-077 : préchauffage du cache pour la coupe suivante, ÉTEINT par défaut (D-305 : accord écrit de l'opérateur au moment de livrer). */
@@ -283,6 +285,8 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  assert.deepEqual({...voieB1EcartOmbre},{actif:true,fenetreListe:5,fenetreMm:30,choixMm:15,accordMm:20,gRefDefautMm:1435,essaisMax:4},'CH-055 : règle b1-ecart en OMBRE (consignée seulement), allumée par défaut');
  /* CH-079 (D-308) : garde de voie et serrage du lot en OMBRE (consignés seulement), mesurés dans chantiers/CH-079/rapport.md. */
  assert.deepEqual({...gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5},'CH-079 : garde de voie en ombre');assert.deepEqual({...serrageLotOmbre},{actif:true,plafondMm:20,fenetre:20,voisinesMin:5},'CH-079 : serrage du lot en ombre');
+ /* CH-114 (D-347) : la règle « voie des cuts sûrs » en OMBRE (consignée seulement), mesurée dans chantiers/CH-112/rapport.md. */
+ assert.deepEqual({...voieSureOmbre},{actif:true,seuilMm:100,courbureMm:2,ecartCuts:12},'CH-114 : voie des cuts sûrs en ombre');
  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');
  assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est ÉTEINTE par défaut (ordre de l\'opérateur, 02/11 : tant que son temps de calcul n\'est pas supprimé, CH-041)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
  /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */
