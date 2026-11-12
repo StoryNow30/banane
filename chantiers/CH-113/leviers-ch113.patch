@@ -1,5 +1,5 @@
 diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
-index 1a307d2..37ac3d9 100644
+index 1a307d2..e52f6d7 100644
 --- a/src/gcv2-l1.js
 +++ b/src/gcv2-l1.js
 @@ -517,7 +517,10 @@
@@ -19,30 +19,39 @@ index 1a307d2..37ac3d9 100644
     rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
     voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
 -   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
-+   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,departHorsContratExclu:false,completionSansSoutien:false,completionZones:null});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,departHorsContratExclu:false,completionSansSoutien:false,completionZones:null,completionFenetre:12,completionEcartRefMm:10});
   /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
    * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
    * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
-@@ -701,6 +704,22 @@
+@@ -701,6 +704,31 @@
       /* Consensus sur toutes les paires d'hypothèses du nuage : la voie des voisins choisit (écart en travers le plus petit), l'écartement de
        * référence ne fait que départager ; nuage (deux rails soutenus), voie et écartement doivent tous trois s'accorder. */
       if(dd.etat==='rien'&&LEVIERS.consensusTous){const t=paireConsensus(k,capture,voieC,ref.mm,soutenu);if(t)dd={etat:'valider',motif:'consensus-tous',decal:t.decal,corrigee:false};}
 +     /* CH-113 (levier `completionSansSoutien`, éteint par défaut ; zones `completionZones`, null = toutes) : un seul rail du nuage est sûr.
-+      * Rail d'appui : l'hypothèse la plus probable d'un rail (départ compris), soutenue par le nuage (dessus et flanc du réglage L1-e) et à
-+      * `consensusVoieMm` au plus, en travers, de la voie des voisins ; l'autre rail est placé à l'écartement de référence de la liste depuis le
-+      * rail d'appui (vertical de la voie des voisins), sans exiger son soutien, et doit rester à `consensusVoieMm` de la voie. Rail d'appui
-+      * essayé dans l'ordre de la probabilité de sa meilleure hypothèse. */
++      * Références : les seuls cuts POSÉS PLUS TÔT PAR LE LOT (`voisinsAbs` : chaîne et GCV2 du lot, jamais la liste d'ESV), lus en positions
++      * absolues dans le repère profil du cut (`voieAbsolue`), à `completionFenetre` cuts au plus ; sans référence de chaque côté dans cette
++      * fenêtre, rien. Écartement de référence de la liste vérifié contre la médiane des écartements de ces cuts : à plus de
++      * `completionEcartRefMm`, rien. Rail d'appui : l'hypothèse la plus probable d'un rail (départ compris), soutenue par le nuage (dessus et
++      * flanc du réglage L1-e) et à `consensusVoieMm` au plus, en travers, de la droite des références ; l'autre rail est placé à l'écartement
++      * de référence depuis le rail d'appui (hauteur de la droite des références), sans exiger son soutien, et doit rester à `consensusVoieMm`
++      * de la droite. Rails d'appui essayés dans l'ordre de la probabilité de leur meilleure hypothèse. */
 +     if(dd.etat==='rien'&&LEVIERS.completionSansSoutien&&(!Array.isArray(LEVIERS.completionZones)||LEVIERS.completionZones.includes(k.zone))){
-+       const ordre=SIDES.map(s=>{const hs=k.rails[s].hyps.map((h,i)=>({h,p:p[s][i]})).sort((a,b)=>b.p-a.p);return {s,top:hs[0]};}).filter(x=>x.top).sort((a,b)=>b.top.p-a.top.p);
-+       for(const {s,top} of ordre){
-+         const o=s==='left'?'right':'left',m=soutienRail(capture,s,top.h.decal);
-+         if(!(m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc))continue;
-+         if(Math.abs(top.h.decal[1]-voieC[s][0])>LEVIERS.consensusVoieMm)continue;
-+         const nd=ramenerRail(capture,{[s]:top.h.decal.slice(),[o]:[0,voieC[o][0],voieC[o][1]]},o,ref.mm);
-+         if(!nd||Math.abs(nd[o][1]-voieC[o][0])>LEVIERS.consensusVoieMm)continue;
-+         dd={etat:'valider',motif:'completion',decal:nd,corrigee:false,appui:s};break;
++       const F=LEVIERS.completionFenetre,va=voieAbsolue(capture,k.cut,k.voisinsAbs,F);
++       const gs=(k.voisinsAbs||[]).filter(v=>v&&v.identity&&Number.isInteger(v.identity.cut)&&v.identity.cut!==k.cut&&Math.abs(v.identity.cut-k.cut)<=F&&v.positions).map(v=>gaugeMm(v.positions.left,v.positions.right)).filter(fini);
++       const gRef=gs.length?med(gs):null;
++       if(va&&SIDES.every(s=>va[s].distProche<=F)&&fini(gRef)&&Math.abs(gRef-ref.mm)<=LEVIERS.completionEcartRefMm){
++         const ordre=SIDES.map(s=>{const hs=k.rails[s].hyps.map((h,i)=>({h,p:p[s][i]})).sort((a,b)=>b.p-a.p);return {s,top:hs[0]};}).filter(x=>x.top).sort((a,b)=>b.top.p-a.top.p);
++         for(const {s,top} of ordre){
++           const o=s==='left'?'right':'left',m=soutienRail(capture,s,top.h.decal);
++           if(!(m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc))continue;
++           if(Math.abs(top.h.decal[1]-va[s].v[0])>LEVIERS.consensusVoieMm)continue;
++           const nd=ramenerRail(capture,{[s]:top.h.decal.slice(),[o]:[0,va[o].v[0],va[o].v[1]]},o,ref.mm);
++           if(!nd||Math.abs(nd[o][1]-va[o].v[0])>LEVIERS.consensusVoieMm)continue;
++           dd={etat:'valider',motif:'completion',decal:nd,corrigee:false,appui:s};break;
++         }
 +       }
 +     }
++
     }
     /* Branche (ADV) : sans paire retenue, chaque rail prend l'hypothèse du nuage la plus proche de la voie géométrique de SON rail (à `brancheMm`),
      * en travers (et à `brancheVertMm` en hauteur), sans imposer l'écartement de la voie (seulement une plage plausible), les deux rails soutenus par le
