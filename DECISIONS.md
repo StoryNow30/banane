@@ -3756,3 +3756,7 @@ Complète D-299 sans la modifier.
 ## D-349 — Retour de l'opérateur sur le panneau « Épure » (Vision 15) : nouvelle passe de design (opérateur, 12/11)
 - Retour, mot pour mot : « je ne suis plus tout à fait convaincu par cette version, la précédente était peut être plus épuré, là c'est trop sombre. pauvre en animation. pas très convaincu par l'identité visuelle de chaque mode. trop de message d'erreur. trop d'informations pas forcément utiles qui casse l'épuration de l'interface et de son confort visuel ».
 - Effet : chantier CH-115, maquettes d'abord (aucune intégration avant le choix écrit de l'opérateur) : plus clair, plus animé, une identité commune plutôt qu'une par mode, moins de messages (seuls ceux qui demandent un geste restent au premier plan), moins d'informations visibles d'emblée. Comparaison avec Vision 14 (« Graphite ») et Vision 15 (« Épure »).
+
+## D-350 — Choix de l'opérateur pour le panneau : direction B « Brume », à retravailler (opérateur, 12/11)
+- Choix sur la page de comparaison de CH-115, mot pour mot : « direction B mais c'est un peu clair, ça manque de travail sur l'animation motion design et la modernité de la palette ».
+- Effet : CH-115 reprend B : un peu plus sombre (entre B et Vision 15), une palette plus moderne, un vrai travail de motion design ; la couche commune d'épuration de CH-115 reste ; le registre de la Constellation reste visible d'emblée (décision du 01/11). Nouvelle page de comparaison (B et ses variantes) avant toute intégration.
