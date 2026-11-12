@@ -1,0 +1,167 @@
+diff -ruN a/src/gcv2-l1.js b/src/gcv2-l1.js
+--- a/src/gcv2-l1.js	2026-11-12 17:29:04.821745112 +0000
++++ b/src/gcv2-l1.js	2026-11-12 17:29:04.823802528 +0000
+@@ -565,7 +565,10 @@
+    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
+    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
+    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
+-   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
++   /* CH-117 (D-351), coupés : `vetoChaineVoieMm` et `vetoChaineZones` (garde de voie absolue sur la pose de la CHAÎNE, voir `vetoChaine`) ;
++    * `sousTauVoieZones`, `sousTauVoieMm` et `sousTauVoieMaxCuts` (sous τ cohérent : une voie de voisins validés qui s'accorde, voir `deciderL1e`). */
++   vetoChaineVoieMm:null,vetoChaineZones:null,vetoChaineSansVoisin:false,sousTauVoieZones:null,sousTauVoieMm:40,sousTauVoieMaxCuts:6,sansVoieZones:null,vetoChaineMaxCuts:null,vetoVoieAbsMaxCuts:null});
+  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
+   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
+   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
+@@ -669,7 +672,12 @@
+    /* Leviers du cap 5 (fiches/L1_CAP5.md). Sous τ : paire déjà à l'écartement de référence et soutenue, ou corrigée et soutenue. */
+    if(dd.etat==='rien'&&d0.etat==='poser-sans-valider'&&c&&capture){
+      const decal={left:d0.paire.left.decal,right:d0.paire.right.decal};
+-     if(fini(LEVIERS.sousTauCoherentMm)&&!c.anomalie&&fini(c.ecartMm)&&Math.abs(c.ecartMm)<=LEVIERS.sousTauCoherentMm&&soutenu(decal))dd={etat:'valider',motif:'sous-tau-coherent',decal,corrigee:false};
++     /* CH-117 (C2, levier `sousTauVoieZones`, coupé) : dans ces zones, une paire sous τ n'est validée « cohérente » que si une voie de voisins validés
++      * (voie sûre, sinon le voisin posé le plus proche à `sousTauVoieMaxCuts` cuts au plus) la porte à `sousTauVoieMm` en travers sur les deux rails.
++      * Mesuré (11/11 p16, 12/11 p23) : 3694, 4672, 5132 (aucun voisin) et 3966 (voisin faux à 5 cuts), mauvaises voies à p 0,07 à 0,36. */
++     const voieST=voie||(k.voieProche&&k.voieProche.dist<=LEVIERS.sousTauVoieMaxCuts?k.voieProche:null);
++     const voieSTok=!(Array.isArray(LEVIERS.sousTauVoieZones)&&LEVIERS.sousTauVoieZones.includes(k.zone))||!!voieST&&SIDES.every(s=>Math.abs(decal[s][1]-voieST[s][0])<=LEVIERS.sousTauVoieMm);
++     if(fini(LEVIERS.sousTauCoherentMm)&&!c.anomalie&&fini(c.ecartMm)&&Math.abs(c.ecartMm)<=LEVIERS.sousTauCoherentMm&&soutenu(decal)&&voieSTok)dd={etat:'valider',motif:'sous-tau-coherent',decal,corrigee:false};
+      else if(LEVIERS.sousTauCorrige&&c.anomalie&&c.soutenue)dd={etat:'valider',motif:'sous-tau-corrige',decal:c.decal,corrigee:true};
+    }
+    /* Voie des voisins validés (H6, référence sûre) : la paire transportée, rapprochée de l'hypothèse du nuage la plus proche (`voisinsRaffineMm`),
+@@ -827,7 +835,18 @@
+        if(fini(LEVIERS.vetoVoieAbsMm)&&ecartVoie>LEVIERS.vetoVoieAbsMm)dd={etat:'rien',motif:'veto-voie-absolue',decal:null,corrigee:false,avant:dd.motif,ecartVoieMm:arrondi(ecartVoie,1)};
+        else if(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>va[s].residuMm??0))>LEVIERS.voieIncoherenteMm)dd={etat:'rien',motif:'voie-incoherente',decal:null,corrigee:false,avant:dd.motif};
+      }
++     /* CH-117 (C5, levier `vetoVoieAbsMaxCuts`, coupé) : là où la garde se tait faute de voisin à `rechProcheMaxCuts` cuts, la même garde (`vetoVoieAbsMm`) avec des
++      * voisins jusqu'à `vetoVoieAbsMaxCuts` cuts (fenêtre élargie d'autant). Mesuré : 12/11 p23 5204 (pose à 294 mm, voie d'un voisin juste à 7 cuts). Rien d'autre ne change. */
++     else if(fini(LEVIERS.vetoVoieAbsMaxCuts)&&fini(LEVIERS.vetoVoieAbsMm)&&LEVIERS.vetoVoieAbsMaxCuts>LEVIERS.rechProcheMaxCuts){
++       const vb=voieAbsolue(capture,k.cut,k.voisinsAbs,Math.max(LEVIERS.voieAbsFenetre,LEVIERS.vetoVoieAbsMaxCuts),3,coherents);
++       if(vb&&SIDES.every(s=>vb[s].distProche<=LEVIERS.vetoVoieAbsMaxCuts)){const ev=Math.max(...SIDES.map(s=>Math.abs(dd.decal[s][1]-vb[s].v[0])));
++         if(ev>LEVIERS.vetoVoieAbsMm)dd={etat:'rien',motif:'veto-voie-absolue-loin',decal:null,corrigee:false,avant:dd.motif,ecartVoieMm:arrondi(ev,1)};}
++     }
+    }
++   /* CH-117 (C4, levier `sansVoieZones`, coupé) : dans ces zones, la GCV2 ne valide pas sans une voie de voisins validés (voie sûre, sinon le voisin posé
++    * le plus proche à `sousTauVoieMaxCuts` cuts au plus). La branche (dernier recours, écartement contrôlé) reste permise. */
++   if(dd.etat==='valider'&&Array.isArray(LEVIERS.sansVoieZones)&&LEVIERS.sansVoieZones.includes(k.zone)&&dd.motif!=='branche'
++     &&!(voie||(k.voieProche&&k.voieProche.dist<=LEVIERS.sousTauVoieMaxCuts)))dd={etat:'rien',motif:'sans-voie-zone',decal:null,corrigee:false,avant:dd.motif};
+    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
+      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
+      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
+@@ -940,6 +959,22 @@
+   const pire=f=>Math.max(...SIDES.map(s=>Math.abs(decal[s][1]-f(va[s]))));
+   return {proche:pire(v=>v.proche[0]),droite:pire(v=>v.v[0])};
+ }
++/* CH-117 (C1, leviers `vetoChaineVoieMm` et `vetoChaineZones`, coupés) : garde de voie absolue sur la pose de la CHAÎNE (premier passage, fenêtre, choix),
++ * la même que celle de la GCV2 (`vetoVoieAbsMm`) : dans ces zones, une pose à plus de `vetoChaineVoieMm` en travers (pire rail) de la droite des voisins
++ * validés du lot (`voisins` : poses de la chaîne et de la GCV2, à `voieAbsFenetre` cuts, le plus proche à `rechProcheMaxCuts` au plus) n'est pas posée par la
++ * chaîne : le cut passe à la GCV2 comme un différé. Sans voisin assez proche, rien. Mesuré : 3959, 4508 (11/11 p16) et 3747 (12/11 p23), premiers passages
++ * sans appui à 3 cuts sur la voie de départ d'ESV, alors que les voisins posés à 4-6 cuts donnaient la bonne voie. Rend { ecartMm, veto } ou null. */
++function vetoChaine(capture,cut,voisins,decal,zone){
++  if(!fini(LEVIERS.vetoChaineVoieMm)||!Array.isArray(LEVIERS.vetoChaineZones)||!LEVIERS.vetoChaineZones.includes(zone))return null;
++  let ev=ecartAVoie(capture,cut,voisins,decal);
++  /* Portée élargie (`vetoChaineMaxCuts`, coupé) : sans voisin à `rechProcheMaxCuts` cuts, voisins jusqu'à `vetoChaineMaxCuts` (fenêtre élargie d'autant). */
++  if(!ev&&fini(LEVIERS.vetoChaineMaxCuts)&&LEVIERS.vetoChaineMaxCuts>LEVIERS.rechProcheMaxCuts){
++    const n=LEVIERS.vetoChaineMaxCuts,va=voieAbsolue(capture,cut,voisins,Math.max(LEVIERS.voieAbsFenetre,n),3,LEVIERS.voisinsCoherents?{parCutMm:LEVIERS.voisinsCoherentsParCutMm,baseMm:LEVIERS.voisinsCoherentsBaseMm}:null);
++    if(va&&SIDES.every(s=>va[s].distProche<=n))ev={proche:Math.max(...SIDES.map(s=>Math.abs(decal[s][1]-va[s].proche[0]))),droite:Math.max(...SIDES.map(s=>Math.abs(decal[s][1]-va[s].v[0])))};
++  }
++  if(!ev)return LEVIERS.vetoChaineSansVoisin?{ecartMm:null,veto:true,sansVoisin:true}:null;
++  return {ecartMm:arrondi(ev.droite,1),veto:ev.droite>LEVIERS.vetoChaineVoieMm};
++}
+ /* Contre-expertise d'une pose de la chaîne (leviers `contreChaineZones`, `contreChaineVoieMm` et `contreChaineMm`, coupés) : `g` est la décision de la GCV2 (`deciderDiffere`) sur le même
+  * cut, avec l'état d'avant lui. Vrai si elle VALIDE une paire dont un rail est à plus de `seuilMm` (3D) de la pose de la chaîne : la chaîne n'est pas posée, le cut
+  * passe à la GCV2 comme un différé. `seuilMm` non réglé : jamais (la GCV2 ne fait que consigner sa décision). */
+@@ -1023,6 +1058,6 @@
+      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
+  }
+  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
+-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
++   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,vetoChaine,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
+    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
+ });
+diff -ruN a/tests/ch117-voie-adv.test.cjs b/tests/ch117-voie-adv.test.cjs
+--- a/tests/ch117-voie-adv.test.cjs	1970-01-01 00:00:00.000000000 +0000
++++ b/tests/ch117-voie-adv.test.cjs	2026-11-12 17:29:04.827986496 +0000
+@@ -0,0 +1,69 @@
++'use strict';
++/* CH-117 (D-351) — la mauvaise voie à sa source, en zone d'aiguillage. Trois leviers de src/gcv2-l1.js, tous COUPÉS par défaut (la v6 livrée ne change pas) :
++ *  - C1 `vetoChaine` (`vetoChaineVoieMm`, `vetoChaineZones`, `vetoChaineMaxCuts`) : garde de voie absolue sur la pose de la CHAÎNE ;
++ *  - C2 `sousTauVoieZones` (`sousTauVoieMm`, `sousTauVoieMaxCuts`) : sous τ « cohérent » exige une voie de voisins qui s'accorde ;
++ *  - C5 `vetoVoieAbsMaxCuts` : la garde de voie absolue de la GCV2, avec un voisin au-delà de `rechProcheMaxCuts`.
++ * Cas fabriqués sur la capture réelle d'essai (tests/fixtures.cjs), comme tests/gcv2-l1-fautes.test.cjs. */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const L1 = require('../src/gcv2-l1.js'), L = require('../src/lot-decision.js'), { base } = require('./fixtures.cjs');
++
++const h = (decal, origines, g) => ({ rang: 0, hauteur: false, origines, sousOrigines: [], decal, g, x: null });
++const cas = (voisinsAbs, voieProche = null) => ({ cut: 4, zone: 'adv', gMed: 1450, G0: 1500, voieRef: null, voieProche, i0: { left: 0, right: 0 }, voisinsAbs,
++  rails: { left: { hyps: [h([0, 0, 0], ['H0'], 1450), h([0, -36, 5], ['H1'], 1486)] }, right: { hyps: [h([0, 0, 0], ['H0'], 1450), h([0, 20, 5], ['H2'], 1470)] } } });
++const MOD = tau => ({ seuils: { adv: { actif: true, tau, delta: 2 }, hors: { actif: true, tau, delta: 3 } } });
++const PR = { left: [0.2, 0.9], right: [0.2, 0.9] };
++const G = L1.ecartementDecal(base, { left: [0, -36, 5], right: [0, 20, 5] });
++const voisin = (c, lat) => ({ identity: { part: 1, cut: c, frameId: null },
++  positions: Object.fromEntries(['left', 'right'].map(s => [s, L.positionOf(base.rails[s], [c - 4, lat[s] / 1000, 5 / 1000])])) });
++const sous = (lev, k) => { L1.reglerLeviers(lev); try { return k(); } finally { L1.reglerLeviers(null); } };
++const decider = (k, tau, lev) => sous(lev, () => L1.deciderL1e(k, MOD(tau), { mm: G }, base, PR));
++const POSE = { left: [0, -36, 5], right: [0, 20, 5] };
++const ligne = (cuts, dl) => cuts.map(c => voisin(c, { left: -36 + dl, right: 20 + dl }));
++
++test('CH-117 : les leviers sont coupés dans la v4 et dans la v6 livrée', () => {
++  for (const k of ['vetoChaineVoieMm', 'vetoChaineZones', 'vetoChaineMaxCuts', 'sousTauVoieZones', 'vetoVoieAbsMaxCuts']) {
++    assert.equal(L1.LEVIERS_V4[k], null, k); assert.equal(L1.LEVIERS_LIVRES[k], null, k); }
++  assert.equal(L1.LEVIERS_LIVRES.vetoChaineSansVoisin, false);
++  assert.equal(L1.vetoChaine(base, 4, ligne([1, 2, 3], 150), POSE, 'adv'), null, 'coupé : rien, même à 150 mm');
++});
++
++test('C1 vetoChaine : pose de la chaîne loin de la droite des voisins validés, en zone seulement', () => {
++  const lev = { vetoChaineVoieMm: 100, vetoChaineZones: ['adv'] };
++  sous(lev, () => {
++    assert.deepEqual(L1.vetoChaine(base, 4, ligne([1, 2, 3], 0), POSE, 'adv'), { ecartMm: 0, veto: false }, 'voisins sur la pose');
++    assert.equal(L1.vetoChaine(base, 4, ligne([1, 2, 3], 80), POSE, 'adv').veto, false, '80 mm : sous le seuil');
++    const v = L1.vetoChaine(base, 4, ligne([1, 2, 3], 150), POSE, 'adv');
++    assert.equal(v.veto, true); assert.equal(v.ecartMm, 150);
++    assert.equal(L1.vetoChaine(base, 4, ligne([1, 2, 3], 150), POSE, 'abords'), null, 'hors des zones : rien');
++    assert.equal(L1.vetoChaine(base, 4, [], POSE, 'adv'), null, 'sans voisin : rien');
++    assert.equal(L1.vetoChaine(base, 4, ligne([-3], 150), POSE, 'adv'), null, 'voisin à 7 cuts : hors de portée');
++  });
++  sous({ ...lev, vetoChaineMaxCuts: 8 }, () => {
++    assert.equal(L1.vetoChaine(base, 4, ligne([-3], 150), POSE, 'adv').veto, true, 'portée 8 : le voisin à 7 cuts tranche');
++    assert.equal(L1.vetoChaine(base, 4, ligne([-5], 150), POSE, 'adv'), null, 'voisin à 9 cuts : rien');
++    assert.equal(L1.vetoChaine(base, 4, ligne([1, 2, 3], 80), POSE, 'adv').veto, false, 'à portée normale, la portée élargie ne change rien');
++  });
++});
++
++test('C2 sousTauVoieZones : sous τ cohérent en ADV, seulement avec une voie de voisins qui s\'accorde', () => {
++  const tau = 0.95;   /* p = 0,9 < τ : la test 13 pose sans valider, l'écartement est celui de la référence : « sous-tau-coherent » */
++  assert.equal(decider(cas(null), tau, null).motif, 'sous-tau-coherent', 'levier coupé : validé sans voisin');
++  const lev = { sousTauVoieZones: ['adv'] };
++  assert.notEqual(decider(cas(null), tau, lev).motif, 'sous-tau-coherent', 'sans voie : pas de sous-τ cohérent');
++  const proche = (dl, dist) => ({ left: [-36 + dl, 5], right: [20 + dl, 5], dist });
++  assert.equal(decider(cas(null, proche(10, 2)), tau, lev).motif, 'sous-tau-coherent', 'voisin posé à 2 cuts, à 10 mm : validé');
++  assert.notEqual(decider(cas(null, proche(60, 2)), tau, lev).motif, 'sous-tau-coherent', 'voisin à 60 mm en travers : pas d\'accord');
++  assert.notEqual(decider(cas(null, proche(10, 7)), tau, lev).motif, 'sous-tau-coherent', 'voisin à 7 cuts : trop loin');
++  const k = cas(null); k.zone = 'abords';
++  assert.equal(decider(k, tau, lev).motif, 'sous-tau-coherent', 'hors des zones : inchangé');
++});
++
++test('C5 vetoVoieAbsMaxCuts : la garde de voie absolue de la GCV2 tranche avec un voisin à 7-8 cuts', () => {
++  const tau = 0.44, loin = ligne([-3], 150);
++  assert.equal(decider(cas(loin), tau, { vetoVoieAbsMm: 100 }).etat, 'valider', 'garde livrée : voisin à 7 cuts, elle se tait');
++  const d = decider(cas(loin), tau, { vetoVoieAbsMm: 100, vetoVoieAbsMaxCuts: 8 });
++  assert.equal(d.etat, 'rien'); assert.equal(d.motif, 'veto-voie-absolue-loin');
++  assert.equal(decider(cas(ligne([-3], 40)), tau, { vetoVoieAbsMm: 100, vetoVoieAbsMaxCuts: 8 }).etat, 'valider', 'voisin à 40 mm : posée');
++  assert.equal(decider(cas(ligne([-5], 150)), tau, { vetoVoieAbsMm: 100, vetoVoieAbsMaxCuts: 8 }).etat, 'valider', 'voisin à 9 cuts : rien ne change');
++  assert.equal(decider(cas(ligne([1, 2, 3], 150)), tau, { vetoVoieAbsMm: 100, vetoVoieAbsMaxCuts: 8 }).motif, 'veto-voie-absolue', 'à portée normale : la garde livrée');
++});
+diff -ruN a/tests/gcv2-l1-cap5.test.cjs b/tests/gcv2-l1-cap5.test.cjs
+--- a/tests/gcv2-l1-cap5.test.cjs	2026-11-12 17:29:04.825956356 +0000
++++ b/tests/gcv2-l1-cap5.test.cjs	2026-11-12 17:29:04.827952156 +0000
+@@ -43,7 +43,10 @@
+     /* Cap 6 (A2, A3) : coupés dans la v4. */
+     voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null, brancheDernier: false,
+     /* T17B : coupés. */
+-    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null });
++    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null,
++    /* CH-117 (D-351) : coupés (tests/ch117-voie-adv.test.cjs). */
++    vetoChaineVoieMm: null, vetoChaineZones: null, vetoChaineSansVoisin: false, sousTauVoieZones: null, sousTauVoieMm: 40, sousTauVoieMaxCuts: 6, sansVoieZones: null,
++    vetoChaineMaxCuts: null, vetoVoieAbsMaxCuts: null });
+   try {
+     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
+     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
