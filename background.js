@@ -2851,7 +2851,8 @@ function gardeSerrageOmbre(lotObservation,proposal){try{
  * de la pose vérifiée (`applied-verified`, rails relus dans la scène) par rapport au dernier cut sûr du lot. Les références sont les seuls cuts que CE lot a posés
  * plus tôt dans la partie et que la règle n'a pas arrêtés (mémoire volatile du lot ; ni la liste d'ESV, ni l'Écho, ni un cut « traité » hors du lot : CH-114,
  * point 3). CONSIGNÉ SEULEMENT : rien n'est écrit dans `batch`, ses appuis ni la proposition, aucune commande ; une panne ne laisse rien. Un événement
- * `voie-sure-ombre` (numéros de cut et millimètres) par cut posé en zone alerte. */
+ * `voie-sure-ombre` (numéros de cut et millimètres) par cut posé en zone alerte ; avec `origine:true`, l'événement porte aussi le verdict du réglage
+ * d'origine de CH-112 (seuil 100 fixe, marges, ses propres références) et part aussi pour un cut posé en marge. */
 const voieSure={mem:null,premier:true,zones:new Map(),poses:new Map()};
 const voieSureReglage=()=>{const r=globalThis.BananeSettings?.lot?.voieSureOmbre;return r&&r.actif===true&&globalThis.BananeVoieSureOmbre?r:null;};
 const voieSureBorner=m=>{while(m.size>16)m.delete(m.keys().next().value);};
@@ -2872,7 +2873,7 @@ function voieSureEvenement(type,champs){try{
  if(!p||(p.proposalId&&champs.proposalId&&p.proposalId!==champs.proposalId))return;
  if(voieSure.mem?.lotId!==b.id){voieSure.mem=M.creerMemoire(b.id);voieSure.premier=true;}
  const zoneAdv=voieSure.zones.get(k)??'',t0=Date.now();voieSure.zones.delete(k);
- const {evenement}=M.evaluer(voieSure.mem,{part,cut,zoneAdv,pose:JSON.parse(JSON.stringify(p.pose))},{seuilMm:reglage.seuilMm,courbureMm:reglage.courbureMm,ecartCuts:reglage.ecartCuts});
+ const {evenement}=M.evaluer(voieSure.mem,{part,cut,zoneAdv,pose:JSON.parse(JSON.stringify(p.pose))},{seuilMm:reglage.seuilMm,courbureMm:reglage.courbureMm,ecartCuts:reglage.ecartCuts,origine:reglage.origine===true});
  if(!evenement)return;
  const ev={...evenement,ms:Date.now()-t0};if(voieSure.premier){ev.seuils={...reglage};voieSure.premier=false;}
  const K=globalThis.BananeCore3;
