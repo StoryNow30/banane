@@ -1,6 +1,6 @@
 # CH-117 : la mauvaise voie à sa source (rapport, D-351)
 
-Branche `chantier/CH-117`, partie de `db936a9`. Aucun fichier protégé n'est touché sur la branche : les changements sont dans `gcv2-voie-adv.patch` (`src/gcv2-l1.js` et ses essais), `sw-veto-chaine.patch` (`background.js` et son essai) et `banc-veto-chaine.patch` (`tools/banc-differes.cjs`). Outils : `outils/autopsie.cjs` et `outils/comparer.cjs`. Sorties par cut (numéros et mm) : `sorties/`. Juge : celui de CH-113 (pire rail, 3D ; juste ≤ 10 mm ; mauvaise voie > 50 mm).
+Branche `chantier/CH-117`, partie de `db936a9`. Aucun fichier protégé n'est touché sur la branche : les changements sont dans `gcv2-voie-adv.patch` (`src/gcv2-l1.js` et ses essais), `sw-veto-chaine.patch` (`background.js` et son essai) et `banc-veto-chaine.patch` (`tools/banc-differes.cjs`). Outils : `outils/autopsie.cjs` et `outils/comparer.cjs`. Sorties par cut (numéros et mm) : dépôt `banane-data`, `outils/analyse-lots/CH-117/sorties/`. Juge : celui de CH-113 (pire rail, 3D ; juste ≤ 10 mm ; mauvaise voie > 50 mm).
 
 ## 1. Autopsie (ÉTABLI, lots de conception 11/11 p16 et 12/11 p23, 19 mauvaises voies au rejeu)
 - **Chaîne sur la voie de départ d'ESV (3 racines : 3959, 4508, 3747).** Premier passage sans appui à 3 cuts au plus. ESV part sur l'autre voie et le moteur reste près de la pose de départ. Les voisins posés à 4-6 cuts donnaient la bonne voie.
