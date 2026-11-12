@@ -1,6 +1,6 @@
 # CH-112 : mauvaise voie en zone d'aiguillage (rapport, D-346)
 
-Étude hors ligne. Aucun fichier de l'extension touché. Outils : `chantiers/CH-112/outils/` ; sorties par cut (numéros et millimètres) : `chantiers/CH-112/sorties/`, à verser dans `banane-data/outils/analyse-lots/CH-112/`.
+Étude hors ligne. Aucun fichier de l'extension touché. Outils : `chantiers/CH-112/outils/` ; sorties par cut (numéros et millimètres) : `banane-data/outils/analyse-lots/CH-112/sorties/`, à verser dans `banane-data/outils/analyse-lots/CH-112/`.
 
 ## Données (ÉTABLI)
 - Lots jugés rejoués : 11/11 (p15, p16), 06/11 (p13, p15, p16), 05/11 (p8 à p12, examen), 08/11 (p3, p4, p6). Jointures refaites avec `tools/jointure-echo-orbite.cjs --visite-sans-action-bonne` ; un posé vu sans action compte pour juste. Comptes du 11/11 identiques aux NOTES (p16 : 378 posés, 11 faux > 10 mm, 7 > 100 mm).
