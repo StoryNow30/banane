@@ -15,8 +15,10 @@ const attendreQue=async(f,ms=10000,quoi='')=>{const t0=Date.now();let v;while(Da
 function extensionPatchee(){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ch111-ext-'));
  for(const f of fs.readdirSync(N.racine))if(f!=='manifest.json'&&f!=='.git'&&f!=='node_modules')fs.symlinkSync(path.join(N.racine,f),path.join(dir,f));
  fs.copyFileSync(path.join(N.racine,'manifest.json'),path.join(dir,'manifest.json'));
- const r=spawnSync('patch',['-s','-p1','-d',dir,'-i',path.join(N.racine,'chantiers/CH-111/manifest.patch')],{encoding:'utf8'});
- if(r.status!==0)throw Error('manifest.patch : '+(r.stderr||r.stdout));
+ /* Le patch est appliqué au tronc par l'intégrateur (Vision 16) : on ne l'applique que s'il manque. */
+ if(!JSON.parse(fs.readFileSync(path.join(dir,'manifest.json'),'utf8')).optional_host_permissions){
+  const r=spawnSync('patch',['-s','-p1','-d',dir,'-i',path.join(N.racine,'chantiers/CH-111/manifest.patch')],{encoding:'utf8'});
+  if(r.status!==0)throw Error('manifest.patch : '+(r.stderr||r.stdout));}
  const m=JSON.parse(fs.readFileSync(path.join(dir,'manifest.json'),'utf8'));
  assert.deepEqual(m.optional_host_permissions,[['https:/','/*.workers.dev/*'].join('')],'le patch ne pose que optional_host_permissions');
  m.optional_host_permissions.push('https://127.0.0.1/*');/* l'hôte du relais local, pour l'essai seulement */
