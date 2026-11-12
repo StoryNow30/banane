@@ -58,11 +58,11 @@ cut;zone;referenceCut;decalageGaucheMm;decalageDroitMm;moyenneMm;seuilMm;auraitD
 170;alerte;169;-1.9;-4.2;-3.1;102;false;ok;alerte;169;100;false
 171;marge-apres;170;-3.8;-3.9;-3.9;102;false;hors-zone;marge-apres;170;100;false
 181;alerte;;;;;;false;sans-reference;alerte;;;false
-182;alerte;;;;;;false;sans-reference;alerte;;;false
-183;alerte;;;;;;false;sans-reference;alerte;;;false
-184;alerte;;;;;;false;sans-reference;alerte;;;false
-185;alerte;;;;;;false;sans-reference;alerte;;;false
-186;marge-apres;;;;;;false;sans-reference;marge-apres;;;false
+182;alerte;;;;;;false;sans-reference;alerte;181;100;false
+183;alerte;;;;;;false;sans-reference;alerte;182;100;false
+184;alerte;;;;;;false;sans-reference;alerte;183;100;false
+185;alerte;;;;;;false;sans-reference;alerte;184;100;false
+186;marge-apres;;;;;;false;sans-reference;marge-apres;185;100;false
 187;marge-apres;186;6.6;10.3;8.4;102;false;hors-zone;marge-apres;186;100;false
 188;marge-apres;187;12.2;10.2;11.2;102;false;hors-zone;marge-apres;187;100;false
 204;alerte;201;24.8;21;22.9;118;false;ok;alerte;201;100;false
@@ -134,8 +134,8 @@ cut;zone;referenceCut;decalageGaucheMm;decalageDroitMm;moyenneMm;seuilMm;auraitD
 290;marge-apres;289;16.2;16.2;16.2;102;false;hors-zone;marge-apres;289;100;false
 291;marge-apres;290;17.2;14.1;15.7;102;false;hors-zone;marge-apres;290;100;false
 292;marge-apres;291;12.5;14.6;13.6;102;false;hors-zone;marge-apres;291;100;false
-302;marge-apres;292;-47;-55.8;-51.4;300;false;hors-zone;marge-apres;292;100;false
-303;marge-apres;302;7.1;7;7;102;false;hors-zone;marge-apres;302;100;false
+302;marge-apres;292;-47;-55.8;-51.4;300;false;hors-zone;marge-apres;292;100;true
+303;marge-apres;302;7.1;7;7;102;false;hors-zone;marge-apres;292;100;true
 305;alerte;304;2.9;3.7;3.3;102;false;ok;alerte;304;100;false
 306;alerte;305;2.1;2.9;2.5;102;false;ok;alerte;305;100;false
 307;alerte;306;-1.9;0.2;-0.8;102;false;cotes-opposes;alerte;306;100;false

@@ -37,3 +37,20 @@ Le module est rejoué sur les journaux de CH-112 comme le service worker le nour
 - Le taux d'abstention et les arrêts « en ombre » sur un lot sans Écho.
 - Une séance Écho sur les zones alerte, qui reste le seul examen vierge du seuil (SUPPOSÉ jusque-là).
 - L'arrêt réel demande un nouvel accord écrit de l'opérateur (D-347).
+
+## Reprise : second verdict « réglage d'origine » (demande de l'intégrateur après l'Écho de la partie 23 du 12/11)
+- L'événement garde ses champs et ajoute `auraitDiffereOrigine`, `seuilOrigineMm`, `zoneOrigine` et `referenceCutOrigine`. Ce second verdict garde ses propres cuts sûrs.
+- Il s'agit de l'outil `regle-voie.cjs` avec ses valeurs par défaut :
+  - `profil2` : la position attendue est extrapolée sur les deux derniers cuts sûrs ;
+  - `abstenuSur` : un cut sans décalage mesurable devient sûr ;
+  - seuil fixe de 100 mm, G = 12, zones `alerte`, `marge-avant` et `marge-apres`.
+- L'événement part maintenant pour un cut posé dans l'une ou l'autre zone. Réglage : `lot.voieSureOmbre.origine`, un objet figé (`actif`, `methode`, `abstenuSur`, seuil, courbure, zones), relu au journal dans le premier événement du lot.
+- **Parité (ÉTABLI)**, sur les lots de CH-112 et la partie 23, soit 2 815 posés :
+  - verdict retenu : 2 810 cuts identiques, 15 arrêts sur 15 ;
+  - verdict d'origine : 37 arrêts du module pour 40 dans l'outil. Les 3 qui manquent (181, 182, 183) et les 5 écarts du verdict retenu sont tous dans la partie 6 du 08/11, qui a eu deux lots : le module ne garde que la mémoire du lot en cours ;
+  - **partie 23 : 267 cuts sur 267 identiques, 16 arrêts d'origine identiques à l'outil** (3694, 3747-3750, 5132, 5134-5139, 5186-5188, 5204), et 2 arrêts du verdict retenu (5134, 5204).
+- **Essais**, rouges d'abord puis verts :
+  - module 10/10 ; il comprend une parité tirée au hasard du second verdict (`profil2`, abstenu sûr, marges) ;
+  - service worker 4/4 : décisions et poses identiques à l'octet, l'ombre active, en panne, et avec `origine.actif:false` ;
+  - garde de pose 6/6 ; 28 fichiers voisins 92/92 ;
+  - parité de la relecture : identique.

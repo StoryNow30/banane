@@ -12,8 +12,8 @@ const fs = require('node:fs'), path = require('node:path');
 const V = require('../../../src/voie-sure-ombre.js'), R = require('../../CH-112/outils/regle-voie.cjs'), LOTS = require('../../CH-112/outils/lots.cjs');
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : d; };
 const REG = { methode: 'profil1', seuil: 100, courbure: 2, ecart: 12, abstenuSur: false, marges: false, traites: false };
-/* Réglage d'origine de CH-112 (second verdict, examen de la partie 23 du 12/11) : seuil 100 fixe, marges arrêtables. */
-const ORG = { methode: 'profil1', seuil: 100, courbure: 0, ecart: 12, abstenuSur: false, marges: true, traites: false };
+/* Réglage d'origine de CH-112 (second verdict, examen de la partie 23 du 12/11) : l'outil par défaut (profil2, abstenu sûr), seuil 100 fixe, marges arrêtables. */
+const ORG = { methode: 'profil2', seuil: 100, courbure: 0, ecart: 12, abstenuSur: true, marges: true, traites: false };
 /* Partie 23 du 12/11 (premier examen vierge), en plus des lots de CH-112. */
 const P23 = { lot: '12/11', journal: path.join(process.env.CH112_DONNEES || '.', 'lot1112/ariane-journal-v4-1794484679341.json'), parties: [
   { partie: 23, liste: path.join(process.env.CH112_DONNEES || '.', 'lot1112/ariane-liste-partie23-20261112-105904Z.json') }] };

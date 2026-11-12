@@ -5,9 +5,9 @@ cut;zone;referenceCut;decalageGaucheMm;decalageDroitMm;moyenneMm;seuilMm;auraitD
 7235;alerte;7234;0.4;-4.3;-1.9;102;false;cotes-opposes;alerte;7234;100;false
 7260;marge-apres;;;;;;false;sans-reference;marge-apres;;;false
 7402;alerte;;;;;;false;sans-reference;alerte;;;false
-7403;alerte;;;;;;false;sans-reference;alerte;;;false
-7404;alerte;;;;;;false;sans-reference;alerte;;;false
-7406;marge-apres;;;;;;false;sans-reference;marge-apres;;;false
+7403;alerte;;;;;;false;sans-reference;alerte;7402;100;false
+7404;alerte;;;;;;false;sans-reference;alerte;7403;100;false
+7406;marge-apres;;;;;;false;sans-reference;marge-apres;7404;100;false
 7407;marge-apres;7406;0.7;-1.3;-0.3;102;false;hors-zone;marge-apres;7406;100;false
 7408;marge-apres;7407;-0.7;6;2.7;102;false;hors-zone;marge-apres;7407;100;false
 7410;marge-apres;7408;8.1;6.3;7.2;108;false;hors-zone;marge-apres;7408;100;false
