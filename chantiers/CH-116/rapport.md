@@ -19,7 +19,7 @@ Décisions identiques 3 963 / 4 016 (98,7 %) ; poses à 1 mm 3 312 / 3 403 (97,3
 - 28 cuts posés par la **deuxième passe livrée** (D-259 : étage `deferred`), que le banc ne joue pas par défaut. Rejouée (`livre-passe`, `BANC_LEVIERS={"deuxiemePasse":2,"passe2Leviers":{"sansVoieRien":true}}`), elle n'améliore pas la fidélité (98,4 %) : le banc n'a ni le plafond de 10 écritures ni l'arrêt au premier refus du service worker, et pose trop sur 11/11 p16 (405/421). Jugée, cette passe sans plafond repose 47 différés justes et 6 faux, et ajoute 1 posé à plus de 50 mm (`sorties/banc-livre-passe.md`). ÉTABLI ; à modéliser (plafond, arrêt) si un chantier règle la passe.
 - 23 différés réels que le code d'aujourd'hui pose : 05/11 16 (p10 : 14), 04/11 5, 08/11 b 2. Cause SUPPOSÉE : code modifié depuis ces lots (Vision 5 à 15) ; non établie, le journal ne porte que « version 5 ».
 - 2 posés réels que le rejeu diffère hors passe : 06/11 16/9166 (fenêtre), 08/11 b 6/281 (choix).
-Poses différentes de plus de 1 mm : 82 (ADV 64, abords 12, PN 6), dont 18 de plus de 10 mm, presque toutes aux étages `deferred` ou `window` en ADV ; la plus grosse : 08/11 b 6/282 (160 mm, fenêtre au réel, première passe au rejeu). Les 9 cas du 11/11 sont ceux déjà listés par CH-113.
+Poses différentes de plus de 1 mm : 82 (ADV 64, abords 12, PN 6), dont 18 de plus de 10 mm, presque toutes aux étages `deferred` ou `window` en ADV ; la plus grosse : 08/11 b 6/282 (160 mm, fenêtre au réel, première passe au rejeu).
 
 ## 4. Limites
 - Corpus biaisé par le choix des cuts revus (l'opérateur suit la liste « verts à contrôler » sur 12/11 p23). 04/11 : 6 posés jugés seulement (Échos sans poses d'Ariane mémorisées).
