@@ -1,5 +1,5 @@
 diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
-index 1a307d2..40c0fec 100644
+index 1a307d2..ec06c82 100644
 --- a/src/gcv2-l1.js
 +++ b/src/gcv2-l1.js
 @@ -517,7 +517,10 @@
@@ -19,11 +19,21 @@ index 1a307d2..40c0fec 100644
     rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
     voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
 -   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
-+   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,departHorsContratExclu:false,completionSansSoutien:false,completionZones:null,completionFenetre:12,completionEcartRefMm:10,completionDevers:false,completionEcartement:'liste',completionRecherche:false,completionPasMm:2.5,completionFenetreLatMm:25,completionFenetreVertMm:15});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,departHorsContratExclu:false,completionSansSoutien:false,completionZones:null,completionFenetre:12,completionEcartRefMm:10,completionDevers:false,completionEcartement:'liste',completionRecherche:false,completionPasMm:2.5,completionFenetreLatMm:25,completionFenetreVertMm:15,sousTauCoherentAbordsMm:null});
   /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
    * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
    * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
-@@ -701,6 +704,46 @@
+@@ -669,7 +672,8 @@
+    /* Leviers du cap 5 (fiches/L1_CAP5.md). Sous τ : paire déjà à l'écartement de référence et soutenue, ou corrigée et soutenue. */
+    if(dd.etat==='rien'&&d0.etat==='poser-sans-valider'&&c&&capture){
+      const decal={left:d0.paire.left.decal,right:d0.paire.right.decal};
+-     if(fini(LEVIERS.sousTauCoherentMm)&&!c.anomalie&&fini(c.ecartMm)&&Math.abs(c.ecartMm)<=LEVIERS.sousTauCoherentMm&&soutenu(decal))dd={etat:'valider',motif:'sous-tau-coherent',decal,corrigee:false};
++     /* CH-113 (levier `sousTauCoherentAbordsMm`, éteint par défaut) : en abords seulement, la paire sous τ est dite cohérente jusqu'à ce seuil d'écart à l'écartement de référence (au lieu de `sousTauCoherentMm`). */
++     if(fini(LEVIERS.sousTauCoherentMm)&&fini(c.ecartMm)&&Math.abs(c.ecartMm)<=(fini(LEVIERS.sousTauCoherentAbordsMm)&&k.zone==='abords'?Math.max(LEVIERS.sousTauCoherentMm,LEVIERS.sousTauCoherentAbordsMm):LEVIERS.sousTauCoherentMm)&&(!c.anomalie||fini(LEVIERS.sousTauCoherentAbordsMm)&&k.zone==='abords'&&Math.abs(c.ecartMm)<=LEVIERS.sousTauCoherentAbordsMm)&&soutenu(decal)&&(Math.abs(c.ecartMm)<=LEVIERS.sousTauCoherentMm&&!c.anomalie||(()=>{const va=voieAbsolue(capture,k.cut,k.voisinsAbs,12);return !!va&&SIDES.every(s=>va[s].distProche<=12&&Math.abs(decal[s][1]-va[s].v[0])<=LEVIERS.consensusVoieMm);})()))dd={etat:'valider',motif:'sous-tau-coherent',decal,corrigee:false};
+      else if(LEVIERS.sousTauCorrige&&c.anomalie&&c.soutenue)dd={etat:'valider',motif:'sous-tau-corrige',decal:c.decal,corrigee:true};
+    }
+    /* Voie des voisins validés (H6, référence sûre) : la paire transportée, rapprochée de l'hypothèse du nuage la plus proche (`voisinsRaffineMm`),
+@@ -701,6 +705,46 @@
       /* Consensus sur toutes les paires d'hypothèses du nuage : la voie des voisins choisit (écart en travers le plus petit), l'écartement de
        * référence ne fait que départager ; nuage (deux rails soutenus), voie et écartement doivent tous trois s'accorder. */
       if(dd.etat==='rien'&&LEVIERS.consensusTous){const t=paireConsensus(k,capture,voieC,ref.mm,soutenu);if(t)dd={etat:'valider',motif:'consensus-tous',decal:t.decal,corrigee:false};}

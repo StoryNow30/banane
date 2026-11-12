@@ -1,0 +1,13 @@
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 2475702..6c74793 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -293,7 +293,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+                 /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin (une pose remplacée par la recherche large : voisine, jamais appui). */
+                 if (!estL1s(p)) { E.valides.push({ identity, positions: positionsG, rails: before }); if (!(rl && rl.out)) L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
+                 /* Cap 5, levier « transport » : sous L1-se, une pose de la GCV2 devient voisine de la GCV2 (jamais appui de la chaîne ni voisine de sa décision). */
+-                else if (p === 'L1-se' && leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: positionsG, rails: before });
++                else if (p === 'L1-se' && leviers.transport && !(process.env.BANC_COMPLETION_ISOLEE && dec && dec.motif === 'completion')) (E.validesL1 = E.validesL1 || []).push({ identity, positions: positionsG, rails: before }); /* CH-113, mesure : BANC_COMPLETION_ISOLEE, une pose de la complétion n'est voisine de personne */
+                 out = rl && rl.out ? { ...base, ...rl.out, vue: vueG, l1, aControler: dec.aControler === true } : { ...base, etat: 'pose', vue: vueG, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true, ...(rl ? { rechercheLarge: rl.garde } : {}) };
+               }
+             } else out = { ...base, etat: 'pose-non-validee', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1 };
