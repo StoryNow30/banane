@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ariane">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#08090B">
+<title>Ariane</title>
+<!-- CH-111 (D-345) — télécommande d'Ariane, page du téléphone. Servie par le relais (telecommande/worker.js), qui ne voit que du chiffré :
+     la clé arrive par le fragment de l'adresse (#k=…, jamais envoyé au serveur) ou par le code tapé, et reste dans ce téléphone.
+     Pas de manifeste : « Sur l'écran d'accueil » garde l'adresse avec sa clé. Esprit du panneau « Épure » (panel-signal.css) : une surface,
+     de grands chiffres fins, étiquettes en petites capitales, boutons en pilule ; Orbite violet, Écho turquoise, Constellation bleu ciel. -->
+<style>
+:root{--f:"Inter",-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;
+ --fond:#08090B;--flottant:#131417;--tx:#F1F2F4;--tx2:#8B909B;--trait:rgba(255,255,255,.065);--trait-fort:rgba(255,255,255,.13);--creux:rgba(255,255,255,.055);
+ --accent:#8F93FF;--accent-rgb:143,147,255;--attn:#F3A63B;--attn-rgb:243,166,59;--crit:#F2706B;--crit-rgb:242,112,107;--ok:#59D499;--ok-rgb:89,212,153;--repos:#8B909B;--repos-rgb:139,144,155;
+ --plein:#F1F2F4;--sur-plein:#0A0B10;--voile:rgba(0,0,0,.55);color-scheme:dark}
+@media (prefers-color-scheme:light){:root{--fond:#F5F6F8;--flottant:#FFFFFF;--tx:#14161A;--tx2:#565B66;--trait:rgba(10,14,25,.08);--trait-fort:rgba(10,14,25,.16);--creux:rgba(10,14,25,.055);
+ --accent:#5357DB;--accent-rgb:83,87,219;--attn:#B26A00;--attn-rgb:178,106,0;--crit:#C6403A;--crit-rgb:198,64,58;--ok:#1C8552;--ok-rgb:28,133,82;--repos:#6B707B;--repos-rgb:107,112,123;
+ --plein:#14161A;--sur-plein:#FFFFFF;--voile:rgba(20,22,26,.32);color-scheme:light}}
+body[data-activite="echo"]{--accent:#4FD6CF;--accent-rgb:79,214,207}
+body[data-activite="file"]{--accent:#62C6F2;--accent-rgb:98,198,242}
+@media (prefers-color-scheme:light){body[data-activite="echo"]{--accent:#0B8783;--accent-rgb:11,135,131}body[data-activite="file"]{--accent:#0B79AD;--accent-rgb:11,121,173}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--fond);color:var(--tx)}
+body{font:400 15px/1.45 var(--f);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;letter-spacing:-.004em;min-height:100vh;
+ padding:calc(env(safe-area-inset-top) + 14px) max(16px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 18px) max(16px,env(safe-area-inset-left));
+ -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button,input{font:inherit;color:inherit;letter-spacing:inherit}
+button{background:none;border:0;cursor:pointer}
+[hidden]{display:none!important}
+.barre{display:flex;align-items:center;gap:8px;height:34px}
+.marque{font-weight:520;font-size:15px}
+.puce{margin-left:auto;font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:6px}
+.puce i{width:7px;height:7px;border-radius:50%;background:var(--repos)}
+.puce[data-ton="ok"] i{background:var(--ok)}.puce[data-ton="crit"] i{background:var(--crit)}
+.bandeau{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:rgba(var(--crit-rgb),.1);color:var(--tx);font-size:14px}
+.bandeau b{font-weight:540}
+.tete{position:relative;margin:14px -6px 6px;padding:22px 18px 20px;border-radius:20px;overflow:hidden;
+ background-image:radial-gradient(70% 100% at 12% 40%,rgba(var(--ton-rgb,var(--accent-rgb)),.16),transparent 72%)}
+.tete[data-ton="attn"]{--ton:var(--attn);--ton-rgb:var(--attn-rgb)}.tete[data-ton="crit"]{--ton:var(--crit);--ton-rgb:var(--crit-rgb)}
+.tete[data-ton="ok"]{--ton:var(--ok);--ton-rgb:var(--ok-rgb)}.tete[data-ton="repos"]{--ton:var(--repos);--ton-rgb:var(--repos-rgb)}
+.activite{font:500 10.5px/1.3 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--ton,var(--accent))}
+.mot{font-size:34px;line-height:1.1;font-weight:330;letter-spacing:-.02em;margin-top:8px}
+.phrase{margin-top:8px;color:var(--tx2);font-size:14px}
+.phrase b{color:var(--tx);font-weight:540}
+.tete.vit .activite::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-right:8px;vertical-align:1px;animation:battre 1.6s ease-in-out infinite}
+@keyframes battre{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.tete.vit .activite::before{animation:none}}
+section{border-top:1px solid var(--trait);padding:18px 2px}
+h4{font:500 10px/1.3 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
+.chiffres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chiffre{font-size:30px;line-height:1.05;font-weight:300;letter-spacing:-.02em}
+.chiffre small{display:block;font-size:12px;font-weight:400;letter-spacing:0;color:var(--tx2);margin-top:4px}
+.chiffre.attn{color:var(--attn)}
+.ligne{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:3px 0}
+.ligne span:first-child{color:var(--tx2)}
+.ligne b{font-weight:540}
+.boutons{display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.pilule{height:52px;border-radius:26px;padding:0 22px;font-size:16px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;
+ background:var(--plein);color:var(--sur-plein);transition:transform .12s,opacity .12s}
+.pilule:active{transform:scale(.98)}
+.pilule.second{background:var(--creux);color:var(--tx);box-shadow:inset 0 0 0 1px var(--trait-fort)}
+.pilule.danger{background:none;color:var(--crit);box-shadow:inset 0 0 0 1px rgba(var(--crit-rgb),.45)}
+.pilule:disabled{opacity:.45}
+.vide{color:var(--tx2);font-size:14px;padding:6px 0}
+.avis{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 18px);padding:13px 16px;border-radius:14px;background:var(--flottant);
+ box-shadow:0 24px 48px -24px #000,inset 0 0 0 1px var(--trait-fort);font-size:14px;transform:translateY(8px);opacity:0;transition:.2s;pointer-events:none}
+.avis.vu{transform:none;opacity:1}
+.avis[data-ton="crit"]{box-shadow:inset 0 0 0 1px rgba(var(--crit-rgb),.5)}
+.voile{position:fixed;inset:0;background:var(--voile);display:flex;align-items:flex-end;padding:16px;padding-bottom:calc(env(safe-area-inset-bottom) + 16px)}
+.feuille{width:100%;background:var(--flottant);border-radius:22px;padding:22px 18px 16px;box-shadow:inset 0 0 0 1px var(--trait-fort)}
+.feuille p{font-size:17px;font-weight:450;margin-bottom:6px}
+.feuille small{display:block;color:var(--tx2);font-size:14px;margin-bottom:16px}
+.feuille .boutons{gap:8px}
+.appairage{margin-top:28px}
+.appairage p{color:var(--tx2);font-size:14px;margin-bottom:14px}
+.appairage input{width:100%;height:52px;border-radius:14px;border:0;padding:0 14px;background:var(--creux);box-shadow:inset 0 0 0 1px var(--trait-fort);
+ font-size:15px;letter-spacing:.06em;text-transform:uppercase;-webkit-user-select:text;user-select:text}
+.appairage .boutons{margin-top:12px}
+.pied{margin-top:10px;font-size:12px;color:var(--tx2);display:flex;justify-content:space-between;gap:10px}
+.pied button{color:var(--tx2);text-decoration:underline;font-size:12px}
+</style>
+</head>
+<body data-activite="orbite">
+<div class="barre"><span class="marque">Ariane</span><span class="puce" id="puce" data-ton=""><i></i><span id="puce-texte">Connexion…</span></span></div>
+
+<div id="appairage" class="appairage" hidden>
+ <h4>Télécommande</h4>
+ <p>Scanne le QR code affiché dans le panneau d’Ariane (Réglages, Télécommande), ou tape le code de 53 caractères.</p>
+ <input id="code" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="XXXX XXXX XXXX …" aria-label="Code d’appairage">
+ <div class="boutons"><button class="pilule" id="code-ok">Appairer ce téléphone</button></div>
+ <p id="code-erreur" class="vide" hidden></p>
+</div>
+
+<main id="vue" hidden>
+ <div id="hors" class="bandeau" hidden></div>
+ <div class="tete" id="tete" data-ton="repos">
+  <div class="activite" id="activite">Orbite</div>
+  <div class="mot" id="mot">…</div>
+  <div class="phrase" id="phrase"></div>
+ </div>
+ <section id="s-lot"><h4>Lot</h4>
+  <div class="chiffres"><div class="chiffre" id="c-traites">–<small>traités</small></div><div class="chiffre" id="c-poses">–<small>posés</small></div><div class="chiffre" id="c-differes">–<small>différés</small></div></div>
+ </section>
+ <section id="s-relecture" hidden><h4>Relecture</h4><div id="relecture"></div></section>
+ <section id="s-constellation" hidden><h4>Constellation</h4><div id="constellation"></div></section>
+ <section id="s-passe2" hidden><h4>Deuxième passe</h4><div id="passe2"></div></section>
+ <section><h4>Ordres</h4><div class="boutons" id="boutons"></div></section>
+ <div class="pied"><span id="dernier"></span><button id="oublier">Oublier ce téléphone</button></div>
+</main>
+
+<div class="voile" id="confirmer" hidden><div class="feuille" role="dialog" aria-modal="true" aria-labelledby="conf-titre">
+ <p id="conf-titre"></p><small id="conf-texte"></small>
+ <div class="boutons"><button class="pilule danger" id="conf-oui"></button><button class="pilule second" id="conf-non">Annuler</button></div></div></div>
+<div class="avis" id="avis" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* ——— Chiffrement : le même que src/telecommande.js (HKDF-SHA256, AES-GCM 256, données associées « canal|sens »). */
+const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ',enc=new TextEncoder(),dec=new TextDecoder();
+function b64e(u){let s='';for(let i=0;i<u.length;i+=3){const n=u[i]<<16|(u[i+1]??0)<<8|(u[i+2]??0);s+=B64[n>>18&63]+B64[n>>12&63]+(i+1<u.length?B64[n>>6&63]:'')+(i+2<u.length?B64[n&63]:'');}return s;}
+function b64d(s){if(typeof s!=='string'||!/^[A-Za-z0-9_-]*$/.test(s)||s.length%4===1)throw Error('base64');const o=[];let n=0,b=0;for(const c of s){n=n<<6|B64.indexOf(c);b+=6;if(b>=8){b-=8;o.push(n>>b&255);}}return new Uint8Array(o);}
+function b32d(s){const o=[];let n=0,b=0;for(const c of s){const v=B32.indexOf(c);if(v<0)throw Error('Caractère hors code : '+c);n=(n<<5|v)&0xffff;b+=5;if(b>=8){b-=8;o.push(n>>b&255);}}return new Uint8Array(o);}
+async function decoder(code){const s=String(code||'').toUpperCase().replace(/[\s-]/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');
+ if(s.length!==53)throw Error('Le code fait 53 caractères ('+s.length+' tapés).');const u=b32d(s).slice(0,33),k=u.slice(0,32);
+ const h=new Uint8Array(await crypto.subtle.digest('SHA-256',k));if(h[0]!==u[32])throw Error('Code faux : vérifie les caractères.');return {k,code:s};}
+async function deriver(k){const base=await crypto.subtle.importKey('raw',k,'HKDF',false,['deriveKey','deriveBits']),sel=enc.encode('ariane-telecommande-v1');
+ const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'HKDF',hash:'SHA-256',salt:sel,info:enc.encode('canal')},base,128));
+ const cle=await crypto.subtle.deriveKey({name:'HKDF',hash:'SHA-256',salt:sel,info:enc.encode('aes-gcm')},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+ return {cle,canal:[...bits].map(x=>x.toString(16).padStart(2,'0')).join('')};}
+async function chiffrer(D,sens,o){const iv=crypto.getRandomValues(new Uint8Array(12));
+ const d=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc.encode(D.canal+'|'+sens)},D.cle,enc.encode(JSON.stringify(o)));return {v:1,iv:b64e(iv),d:b64e(new Uint8Array(d))};}
+async function dechiffrer(D,sens,e){if(!e||e.v!==1||typeof e.iv!=='string'||typeof e.d!=='string')throw Error('enveloppe');const iv=b64d(e.iv);if(iv.length!==12)throw Error('iv');
+ return JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:enc.encode(D.canal+'|'+sens)},D.cle,b64d(e.d))));}
+
+/* ——— Mémoire du téléphone (localStorage peut manquer : navigation privée). */
+const M={get(k){try{return localStorage.getItem(k);}catch{return null;}},set(k,v){try{localStorage.setItem(k,v);}catch{}},del(k){try{localStorage.removeItem(k);}catch{}}};
+const $=id=>document.getElementById(id);
+const HORS_LIGNE_MS=30000,ATTENTE_ACCUSE_MS=10000;
+let D=null,ws=null,essais=0,reco=null,arianePresente=false,dernierEtat=null,dernierEtatH=null,dernierN=0,enAttente=null,relaisOk=false;
+const heure=h=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(h));
+function avis(t,ton){const a=$('avis');a.textContent=t;a.dataset.ton=ton||'';a.classList.add('vu');clearTimeout(avis.m);avis.m=setTimeout(()=>a.classList.remove('vu'),ton==='crit'?6000:3200);}
+
+/* ——— Ce que la page dit d'un état (mots fermés reçus d'Ariane). */
+const ALERTES={'esv-muet':'ESV ne répond plus','rail-non-resolu':'Rail à décider','faible-confiance':'Pose peu sûre : à toi','repris-main':'Repris à la main','incertain':'Résultat incertain','erreur':'Erreur du lot','autre':'À toi'};
+const ALERTES_PHRASE={'esv-muet':'Si la page ESV reste figée, recharge-la sur l’ordinateur, puis Reprendre.','rail-non-resolu':'Ce cut se décide sur l’ordinateur.','faible-confiance':'Ce cut se décide sur l’ordinateur.',
+ 'repris-main':'Corrige le cut dans ESV, sur l’ordinateur.','incertain':'Contrôle ce cut dans ESV, sur l’ordinateur.','erreur':'Regarde le panneau sur l’ordinateur.','autre':'Regarde le panneau sur l’ordinateur.'};
+const ORDRES=[['lot-pause','Pause',''],['lot-reprendre','Reprendre',''],['relecture-pause','Pause de la relecture','second'],['relecture-reprendre','Reprendre la relecture',''],
+ ['lot-arreter','Arrêter le lot','danger'],['relecture-arreter','Arrêter la relecture','danger'],['constellation-arreter','Arrêter la Constellation','danger']];
+const CONFIRMER={'lot-arreter':['Arrêter le lot ?','Le lot s’arrête après le cut en cours. Il se relance depuis l’ordinateur.'],
+ 'relecture-arreter':['Arrêter la relecture ?','Les cuts déjà relus restent comme ils sont.'],'constellation-arreter':['Arrêter la Constellation ?','La file de parties s’arrête ; elle se reprend depuis l’ordinateur.']};
+const NOM=Object.fromEntries(ORDRES.map(([k,t])=>[k,t]));
+function modele(v){const l=v.lot||{},r=v.relecture||{},c=v.constellation||{},p=v.passe2||{};
+ const file=['lot','passe','relecture','changement'].includes(c.etat);
+ const m={activite:v.activite==='echo'?'echo':file?'file':'orbite',titre:v.activite==='echo'?'Écho':file?'Constellation':'Orbite',ton:'repos',mot:'Au repos',phrase:'',vit:false};
+ const pc=[l.partie!=null?'Partie <b>'+l.partie+'</b>':'',l.cut!=null?'cut <b>'+l.cut+'</b>':''].filter(Boolean).join(' · ');
+ if(v.activite==='echo'){m.mot='Écho observe';m.ton='accent';m.phrase='Rien à piloter d’ici.';}
+ else if(p.etat==='ecriture'){m.mot='Deuxième passe';m.ton='accent';m.vit=true;m.phrase=(p.ecrites??0)+' sur '+(p.demandees??'?')+' écrits';}
+ else if(['preparation','en-cours'].includes(r.etat)){m.mot='Relecture';m.ton='accent';m.vit=true;m.phrase=(r.faits??0)+' sur '+(r.total??'?')+(r.cut!=null?' · cut <b>'+r.cut+'</b>':'');}
+ else if(r.etat==='en-pause'){m.mot='Relecture en pause';m.ton='attn';m.phrase=(r.cut!=null?'Au cut <b>'+r.cut+'</b> · ':'')+(r.faits??0)+' sur '+(r.total??'?')+(r.pauseRaison==='esv'?' · ESV ne répondait plus':r.pauseRaison==='points'?' · ESV n’affichait plus les points':'');}
+ else if(l.etat==='cours'){m.mot='En cours';m.ton='accent';m.vit=true;m.phrase=pc;}
+ else if(l.etat==='pause'){m.mot='En pause';m.ton='attn';m.phrase=pc;}
+ else if(l.etat==='arrete'){m.mot='Arrêté';m.ton='repos';m.phrase=pc;}
+ else if(l.etat==='fini'){m.mot='Terminé';m.ton='ok';m.phrase=pc;}
+ else if(l.etat==='alerte'){m.mot=ALERTES[l.alerte]||'À toi';m.ton=l.alerte==='esv-muet'||l.alerte==='erreur'||l.alerte==='incertain'?'crit':'attn';m.phrase=(pc?pc+'. ':'')+(ALERTES_PHRASE[l.alerte]||'');}
+ if(v.connexion&&v.connexion!=='prete'&&v.activite!=='echo')m.phrase=(m.phrase?m.phrase+'<br>':'')+(v.connexion==='absente'?'Aucun onglet ESV choisi sur l’ordinateur.':v.connexion==='reconnexion'?'Ariane se reconnecte à ESV.':'ESV ne répond pas.');
+ return m;}
+/* Texte d'Ariane (mots fermés ou nombres) inséré sous forme de nœuds : seules les balises <b> et <br> fabriquées ici sont rendues. */
+function poser(el,html){el.textContent='';for(const part of String(html).split(/(<b>.*?<\/b>|<br>)/)){if(!part)continue;
+ if(part==='<br>')el.appendChild(document.createElement('br'));else if(part.startsWith('<b>')){const b=document.createElement('b');b.textContent=part.slice(3,-4);el.appendChild(b);}else el.appendChild(document.createTextNode(part));}}
+function ligne(parent,g,d){const r=document.createElement('div');r.className='ligne';const a=document.createElement('span'),b=document.createElement('b');a.textContent=g;b.textContent=d;r.append(a,b);parent.appendChild(r);}
+function afficher(){const v=dernierEtat;if(!v)return;const m=modele(v);
+ document.body.dataset.activite=m.activite;$('activite').textContent=m.titre;$('mot').textContent=m.mot;poser($('phrase'),m.phrase);
+ const t=$('tete');t.dataset.ton=m.ton==='accent'?'':m.ton;t.classList.toggle('vit',m.vit&&!horsLigne());
+ const l=v.lot||{};$('c-traites').firstChild.textContent=l.traites??'–';$('c-poses').firstChild.textContent=l.poses??'–';$('c-differes').firstChild.textContent=l.differes??'–';
+ $('c-differes').classList.toggle('attn',(l.differes||0)>0);
+ const r=v.relecture||{},sr=$('s-relecture'),er=$('relecture');sr.hidden=!r.etat||r.etat==='aucune';er.textContent='';
+ if(!sr.hidden){ligne(er,'État',{preparation:'en préparation','en-cours':'en cours','en-pause':'en pause',finie:'finie',arretee:'arrêtée',erreur:'erreur','non-lancee':'non lancée'}[r.etat]||'autre');
+  ligne(er,'Relus',(r.faits??0)+' sur '+(r.total??'?'));ligne(er,'Corrigés',String(r.corriges??0));if(r.cut!=null)ligne(er,'Cut',String(r.cut));}
+ const c=v.constellation||{},sc=$('s-constellation'),ec=$('constellation');sc.hidden=!c.etat||c.etat==='aucune';ec.textContent='';
+ if(!sc.hidden){ligne(ec,'État',{lot:'lot en cours',passe:'deuxième passe',relecture:'relecture',changement:'change de partie',fin:'finie',arret:'arrêtée'}[c.etat]||'autre');
+  if(c.partie!=null)ligne(ec,'Partie',String(c.partie));if(c.n!=null)ligne(ec,'Rang',(c.rang!=null?c.rang+1:'?')+' sur '+c.n);}
+ const p=v.passe2||{},sp=$('s-passe2');sp.hidden=p.etat!=='ecriture';$('passe2').textContent='';if(!sp.hidden)ligne($('passe2'),'Écrits',(p.ecrites??0)+' sur '+(p.demandees??'?'));
+ const bx=$('boutons');bx.textContent='';let n=0;
+ for(const [k,texte,genre] of ORDRES){if(!v.boutons?.[k])continue;n++;const b=document.createElement('button');b.className='pilule'+(genre?' '+genre:'');b.textContent=texte;b.dataset.ordre=k;
+  b.disabled=!!enAttente||horsLigne();b.onclick=()=>CONFIRMER[k]?confirmer(k):envoyerOrdre(k);bx.appendChild(b);}
+ if(!n){const p=document.createElement('p');p.className='vide';p.textContent=horsLigne()?'Ordres indisponibles : Ariane est hors ligne.':'Aucun ordre possible maintenant.';bx.appendChild(p);}
+ $('dernier').textContent=dernierEtatH?'Dernier état à '+heure(dernierEtatH):'';}
+function horsLigne(){return !Number.isFinite(dernierEtatH)||!arianePresente||Date.now()-dernierEtatH>HORS_LIGNE_MS;}
+function bandeau(){const h=$('hors'),hors=horsLigne();h.hidden=!hors||!relaisOk&&!dernierEtatH&&!ws;
+ if(hors){h.textContent='';const b=document.createElement('b');b.textContent='Ariane hors ligne';h.appendChild(b);
+  h.appendChild(document.createTextNode(dernierEtatH?' · dernier état à '+heure(dernierEtatH)+'. Chrome est peut-être fermé, ou l’ordinateur en veille.':' · aucun état reçu. Ouvre Chrome et le panneau d’Ariane sur l’ordinateur.'));}
+ const pu=$('puce');pu.dataset.ton=!relaisOk?'crit':hors?'':'ok';$('puce-texte').textContent=!relaisOk?'Relais injoignable':hors?'Hors ligne':'En direct';}
+setInterval(()=>{bandeau();afficher();},1000);
+
+function confirmer(k){const [t,s]=CONFIRMER[k];$('conf-titre').textContent=t;$('conf-texte').textContent=s;$('conf-oui').textContent=NOM[k];$('confirmer').hidden=false;
+ $('conf-oui').onclick=()=>{$('confirmer').hidden=true;envoyerOrdre(k);};$('conf-non').onclick=()=>{$('confirmer').hidden=true;};}
+function numero(){const n=Math.max((Number(M.get('ariane-n'))||0)+1,Date.now());M.set('ariane-n',String(n));return n;}
+async function envoyerOrdre(k){if(!D||!ws||ws.readyState!==1||enAttente){avis('Ordre non envoyé : pas de liaison avec le relais.','crit');return;}
+ const n=numero();enAttente={n,k,minuterie:setTimeout(()=>{if(enAttente?.n===n){enAttente=null;avis('Ariane n’a pas répondu à « '+NOM[k]+' ».','crit');afficher();}},ATTENTE_ACCUSE_MS)};
+ afficher();ws.send(JSON.stringify(await chiffrer(D,'t>a',{type:'ordre',n,h:Date.now(),ordre:k})));}
+const MOTIFS={rejeu:'Ordre déjà reçu.',perime:'Ordre trop ancien : vérifie que l’heure du téléphone et celle de l’ordinateur sont réglées automatiquement.','ordre-inconnu':'Ordre inconnu d’Ariane.',forme:'Ordre illisible.'};
+function accuse(a){if(enAttente&&a.pour===enAttente.n){clearTimeout(enAttente.minuterie);enAttente=null;}
+ const nom=NOM[a.ordre]||'Ordre';if(a.resultat==='accepte')avis('« '+nom+' » : fait.');else avis('« '+nom+' » refusé : '+(MOTIFS[a.motif]||a.motif||'refusé par Ariane.'),'crit');afficher();}
+
+/* ——— Liaison avec le relais : reconnexion seule (attente croissante), et tout de suite au retour sur la page (iOS coupe les sockets en arrière-plan). */
+function connecter(){clearTimeout(reco);if(!D)return;if(ws&&ws.readyState<2)return;
+ const w=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/canal/'+D.canal+'?role=tel');ws=w;
+ w.onopen=()=>{essais=0;relaisOk=true;bandeau();};
+ w.onmessage=async ev=>{let e;try{e=JSON.parse(ev.data);}catch{return;}
+  if(e&&e.type==='presence'){arianePresente=e.ariane===true;bandeau();afficher();return;}
+  let o;try{o=await dechiffrer(D,'a>t',e);}catch{return;}/* pas de cette clé, ou trafiqué : ignoré */
+  if(!Number.isSafeInteger(o?.n)||o.n<=dernierN)return;dernierN=o.n;/* rejeu : ignoré */
+  if(o.type==='etat'){dernierEtat=o;dernierEtatH=o.h;arianePresente=true;bandeau();afficher();}
+  else if(o.type==='accuse')accuse(o);};
+ w.onclose=()=>{if(ws!==w)return;ws=null;relaisOk=false;bandeau();reco=setTimeout(connecter,[1000,2000,5000,10000][Math.min(essais++,3)]);};
+ w.onerror=()=>{};}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){essais=0;if(!ws||ws.readyState>1)connecter();}});
+
+async function demarrer(code){const {k,code:c}=await decoder(code);D=await deriver(k);M.set('ariane-code',c);
+ $('appairage').hidden=true;$('vue').hidden=false;bandeau();connecter();}
+$('code-ok').onclick=async()=>{try{await demarrer($('code').value);}catch(e){$('code-erreur').hidden=false;$('code-erreur').textContent=e.message;}};
+$('oublier').onclick=()=>{if(!confirm('Oublier la clé de ce téléphone ? Il faudra scanner le QR code à nouveau.'))return;M.del('ariane-code');M.del('ariane-n');
+ D=null;try{ws?.close();}catch{}location.replace(location.pathname);};
+(async()=>{const h=new URLSearchParams(location.hash.slice(1)).get('k'),c=h||M.get('ariane-code');
+ if(c){try{await demarrer(c);return;}catch(e){$('code-erreur').hidden=false;$('code-erreur').textContent=e.message;}}
+ $('appairage').hidden=false;$('puce-texte').textContent='Non appairé';})();
+</script>
+</body>
+</html>

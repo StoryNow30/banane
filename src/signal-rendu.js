@@ -565,6 +565,7 @@
  ${ligne('Raison de la correction (Écho)', 'Lue au démarrage d’Écho', sel('raison', [['non', 'Non'], ['chiffres', 'Oui · chiffres du haut'], ['alt-chiffres', 'Oui · Alt + chiffre'], ['pave', 'Oui · pavé numérique']], r.raison ? r.touches || 'chiffres' : 'non', 'Raison de la correction'))}
  ${g.f5 ? ligne('Si ESV est rechargé pendant la relecture', '', sel('f5', [['pause', 'Attendre, puis reprendre'], ['arret', 'Arrêter la relecture']], g.f5, 'Si ESV est rechargé')) : ''}
  ${ligne('Bandeau dans ESV', 'Une ligne d’état au bas de la page ESV', seg('bandeau', [['non', 'Éteint'], ['oui', 'Allumé']], r.bandeau ? 'oui' : 'non', 'Bandeau dans ESV'))}
+ ${ligne('Télécommande (iPhone)', 'Suivre et piloter Ariane depuis le téléphone, par ton relais chiffré', '<button type="button" class="sg-annuler" data-act="sg:telecommande">Ouvrir</button>')}
  ${ligne('Thème', '', seg('theme', [['sombre', 'Sombre'], ['clair', 'Clair']], g.theme === 'clair' ? 'clair' : 'sombre', 'Thème'))}
  ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}

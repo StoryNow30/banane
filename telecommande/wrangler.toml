@@ -1,0 +1,20 @@
+# CH-111 — relais de la télécommande d'Ariane (Cloudflare Worker, offre gratuite). Fiche : telecommande/INSTALLATION.md.
+# Aucun secret, aucune variable : le relais ne voit que du chiffré.
+name = "ariane-telecommande"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+# La page du téléphone est importée comme texte par worker.js.
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = false
+
+# Un Durable Object par canal d'appairage. « new_sqlite_classes » : stockage SQLite, le seul ouvert à l'offre gratuite.
+[[durable_objects.bindings]]
+name = "CANAL"
+class_name = "Canal"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Canal"]
