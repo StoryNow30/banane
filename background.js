@@ -4774,7 +4774,7 @@ let swPret=false;ready.then(()=>{swPret=true;},()=>{});
 let telecommande=null;
 function telecommandeSources(){return {s:engine?.s,relecture:relecture?.passe??null,file:fileP.etat&&FPm()?FPm().vue(fileP.etat):null,passe:passeDiff.vue,echo:!!native?.running?.(),version:VERSION};}
 const telecommandePrete=ready.then(async()=>{const T=globalThis.BananeTelecommande;if(!T)return;
- telecommande=T.creer({stockage:chrome.storage.local,WS:globalThis.WebSocket,journal:journalerSimple,sources:telecommandeSources,
+ telecommande=T.creer({stockage:chrome.storage.local,WS:globalThis.WebSocket,journal:journalerSimple,sources:telecommandeSources,chrome:T.versionChrome(globalThis.navigator?.userAgent),
   executer:action=>new Promise(r=>traiterPanneau({kind:'panel',action,args:{}},r)).then(r=>{if(r.error)throw Error(r.error);return r.result;})});
  await telecommande.demarrer();}).catch(()=>{});
 async function telecommandeAction(action,args){await telecommandePrete;if(!telecommande)throw Error('Télécommande indisponible dans cette version.');

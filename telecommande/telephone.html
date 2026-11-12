@@ -204,9 +204,12 @@ function numero(){const n=Math.max((Number(M.get('ariane-n'))||0)+1,Date.now());
 async function envoyerOrdre(k){if(!D||!ws||ws.readyState!==1||enAttente){avis('Ordre non envoyé : pas de liaison avec le relais.','crit');return;}
  const n=numero();enAttente={n,k,minuterie:setTimeout(()=>{if(enAttente?.n===n){enAttente=null;avis('Ariane n’a pas répondu à « '+NOM[k]+' ».','crit');afficher();}},ATTENTE_ACCUSE_MS)};
  afficher();ws.send(JSON.stringify(await chiffrer(D,'t>a',{type:'ordre',n,h:Date.now(),ordre:k})));}
-const MOTIFS={rejeu:'Ordre déjà reçu.',perime:'Ordre trop ancien : vérifie que l’heure du téléphone et celle de l’ordinateur sont réglées automatiquement.','ordre-inconnu':'Ordre inconnu d’Ariane.',forme:'Ordre illisible.'};
+/* Une phrase fixe par code (liste fermée d'Ariane, src/telecommande.js) ; le texte du refus reste sur l'ordinateur (journal, panneau). */
+const MOTIFS={rejeu:'ordre déjà reçu.',perime:'ordre trop ancien : vérifie que l’heure du téléphone et celle de l’ordinateur sont réglées automatiquement.','ordre-inconnu':'ordre inconnu d’Ariane.',forme:'ordre illisible.',
+ 'pas-d-onglet-esv':'aucun onglet ESV choisi sur l’ordinateur.','esv-muet':'ESV ne répond pas.','pas-en-pause':'rien n’est en pause.','deja-en-pause':'déjà en pause.','rien-a-reprendre':'rien à reprendre.',
+ 'deja-arrete':'déjà arrêté.','reglage-eteint':'réglage éteint dans le panneau.','a-controler':'un cut est à contrôler dans ESV, sur l’ordinateur.','occupe':'Ariane est occupée : réessaie dans un instant.',autre:'regarde le panneau sur l’ordinateur.'};
 function accuse(a){if(enAttente&&a.pour===enAttente.n){clearTimeout(enAttente.minuterie);enAttente=null;}
- const nom=NOM[a.ordre]||'Ordre';if(a.resultat==='accepte')avis('« '+nom+' » : fait.');else avis('« '+nom+' » refusé : '+(MOTIFS[a.motif]||a.motif||'refusé par Ariane.'),'crit');afficher();}
+ const nom=NOM[a.ordre]||'Ordre';if(a.resultat==='accepte')avis('« '+nom+' » : fait.');else avis('« '+nom+' » refusé : '+(MOTIFS[a.motif]||MOTIFS.autre)+(Number.isInteger(a.cut)?' (cut '+a.cut+')':''),'crit');afficher();}
 
 /* ——— Liaison avec le relais : reconnexion seule (attente croissante), et tout de suite au retour sur la page (iOS coupe les sockets en arrière-plan). */
 function connecter(){clearTimeout(reco);if(!D)return;if(ws&&ws.readyState<2)return;
@@ -228,6 +231,8 @@ $('code-ok').onclick=async()=>{try{await demarrer($('code').value);}catch(e){$('
 $('oublier').onclick=()=>{if(!confirm('Oublier la clé de ce téléphone ? Il faudra scanner le QR code à nouveau.'))return;M.del('ariane-code');M.del('ariane-n');
  D=null;try{ws?.close();}catch{}location.replace(location.pathname);};
 (async()=>{const h=new URLSearchParams(location.hash.slice(1)).get('k'),c=h||M.get('ariane-code');
+ /* La clé lue dans #k= est rangée dans ce téléphone (demarrer), puis effacée de l'adresse : elle ne reste ni dans l'historique ni dans un partage. */
+ if(h)try{history.replaceState(null,'',location.pathname+location.search);}catch{}
  if(c){try{await demarrer(c);return;}catch(e){$('code-erreur').hidden=false;$('code-erreur').textContent=e.message;}}
  $('appairage').hidden=false;$('puce-texte').textContent='Non appairé';})();
 </script>

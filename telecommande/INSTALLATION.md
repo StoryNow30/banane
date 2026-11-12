@@ -25,14 +25,16 @@ Le relais est fait de trois fichiers du dossier `telecommande/` du dépôt : `wo
 
 Si `wrangler deploy` parle de « Durable Objects » ou de « migrations » et refuse : copie le message d'erreur **sans l'adresse** et donne-le à l'intégrateur.
 
-## C. Autoriser Ariane à parler au relais (une fois, extension à jour)
-Il faut une version d'Ariane qui contient la télécommande (CH-111, fichier `manifest.json` avec `optional_host_permissions`). Rien d'autre à installer.
+## C. La version d'Ariane et de Chrome
+Il faut une version d'Ariane qui contient la télécommande (CH-111) et **Chrome 116 ou plus récent** (menu ⋮ › Aide › À propos de Google Chrome). Sous Chrome 116, la télécommande reste éteinte et la feuille du panneau le dit.
+
+À savoir : tant qu'un téléphone est appairé, Ariane envoie un signe de vie au relais toutes les 15 secondes, ce qui garde la partie de fond de l'extension éveillée même quand tu ne fais rien (sans appairage, Chrome peut l'endormir après 30 secondes d'inactivité, comme avant ; d'après la documentation de Chrome, non mesuré ici). Coupe la télécommande quand tu ne t'en sers pas pendant longtemps.
 
 ## D. Appairer l'iPhone (3 min)
 10. Dans le panneau d'Ariane : menu `···` › **Réglages** › ligne **Télécommande (iPhone)** › **Ouvrir**.
 11. Colle l'adresse du relais (étape 8) › **Appairer un téléphone**. Chrome demande la permission d'accéder à `….workers.dev` : **Autoriser**. Un QR code et un code de 53 caractères s'affichent.
 12. Sur l'iPhone, ouvre l'appareil photo, vise le QR code, touche le lien proposé : la page s'ouvre dans Safari et affiche « En direct » en quelques secondes.
-13. Dans Safari : bouton **Partager** › **Sur l'écran d'accueil** › **Ajouter**. L'icône « Ariane » ouvre désormais la télécommande en plein écran. (Sans appareil photo : ouvre l'adresse du relais sur l'iPhone et tape le code ; majuscules, espaces et tirets n'ont pas d'importance.)
+13. Dans Safari : bouton **Partager** › **Sur l'écran d'accueil** › **Ajouter**. L'icône « Ariane » ouvre désormais la télécommande en plein écran. La page efface la clé de son adresse dès qu'elle l'a lue (elle ne reste que dans la mémoire du téléphone) : si l'icône de l'écran d'accueil demande le code à sa première ouverture, tape-le une fois (il est sous le QR code ; majuscules, espaces et tirets n'ont pas d'importance). Sans appareil photo : ouvre l'adresse du relais sur l'iPhone et tape le code.
 14. Ferme la feuille du panneau. Tu peux la rouvrir plus tard pour revoir le QR code (**Afficher le QR code**) et appairer un deuxième téléphone avec la même clé.
 
 ## E. À l'usage
@@ -49,4 +51,6 @@ Il faut une version d'Ariane qui contient la télécommande (CH-111, fichier `ma
 - **Supprimer le relais** : tableau de bord Cloudflare › Workers & Pages › `ariane-telecommande` › Settings › **Delete**.
 
 ## Ce qui n'est pas vérifié
-Le relais et la page ont été essayés avec un relais local qui fait tourner le même code, dans Chromium. Rien n'a tourné sur le vrai Cloudflare ni sur un vrai iPhone : le déploiement par `wrangler`, les limites de l'offre gratuite et le comportement de Safari d'iOS (sockets coupées en arrière-plan, écran d'accueil) sont **SUPPOSÉS** d'après la documentation. Une Ariane qui reste longtemps sans rien faire peut s'endormir côté Chrome (service worker) : le téléphone l'affiche alors « hors ligne » jusqu'à la prochaine action dans le panneau (SUPPOSÉ).
+Le relais et la page ont été essayés avec un relais local qui fait tourner le même code, dans Chromium. Rien n'a tourné sur le vrai Cloudflare ni sur un vrai iPhone : le déploiement par `wrangler`, les limites de l'offre gratuite et le comportement de Safari d'iOS (sockets coupées en arrière-plan, écran d'accueil) sont **SUPPOSÉS** d'après la documentation. Si Chrome endort malgré tout la partie de fond de l'extension, le téléphone l'affiche « hors ligne » ; au réveil (n'importe quelle action dans le panneau), elle se reconnecte seule.
+
+**Limite de sécurité.** La page du téléphone est servie par ton relais. Le chiffrement protège contre quelqu'un qui regarderait passer les données chez Cloudflare ; il ne protège pas contre un Worker modifié, qui pourrait servir une page qui vole la clé. C'est pourquoi le relais doit rester le tien, sur ton compte Cloudflare, et n'être modifié qu'avec les fichiers du dépôt.

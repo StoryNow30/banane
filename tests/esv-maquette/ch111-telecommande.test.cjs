@@ -62,6 +62,8 @@ test('télécommande · panneau ↔ relais local ↔ page du téléphone : appai
    hors:document.getElementById('hors').hidden?null:document.getElementById('hors').textContent,boutons:[...document.querySelectorAll('#boutons button')].map(b=>b.textContent+(b.disabled?' (grisé)':'')),
    avis:document.getElementById('avis').classList.contains('vu')?document.getElementById('avis').textContent:null,traites:document.getElementById('c-traites').firstChild.textContent}));
   await attendreQue(async()=>(await lire()).puce==='En direct',10000,'téléphone en direct');
+  assert.ok(!tel.url().includes('#k='),'clé effacée de l’adresse : '+tel.url().replace(/#.*/,'#…'));
+  assert.equal(await tel.evaluate(()=>localStorage.getItem('ariane-code')),code,'clé rangée dans le téléphone');
   console.log(`# téléphone « En direct » ${Date.now()-t0} ms après l’ouverture du lien`);
   let v=await lire();assert.equal(v.mot,'Au repos');assert.deepEqual(v.boutons,[]);
   /* Un lot qui tourne (état posé dans le moteur du service worker) : le téléphone suit en moins de 2 s. */
@@ -81,11 +83,11 @@ test('télécommande · panneau ↔ relais local ↔ page du téléphone : appai
   await tel.click('#boutons button[data-ordre="lot-arreter"]');await tel.click('#conf-oui');
   await attendreQue(async()=>(await sw.evaluate(()=>engine.s.batch?.state))==='STOPPED',5000,'lot arrêté');
   await attendreQue(async()=>(await lire()).mot==='Arrêté',5000,'téléphone « Arrêté »');
-  /* Sans onglet ESV, l'arrêt finit par un refus (« Sélectionne un onglet ESV. ») : le téléphone affiche LE refus du bouton du panneau, mot pour mot. */
+  /* Sans onglet ESV, l'arrêt finit par un refus (« Sélectionne un onglet ESV. ») : le téléphone dit le CODE de ce refus (phrase fixe), jamais son texte. */
   const avisTel=(await attendreQue(async()=>(await lire()).avis,3000,'accusé'));console.log('# avis après Arrêter :',avisTel);
   await sw.evaluate(()=>{engine.s.batch={...engine.s.batch,state:'RUNNING'};});
   const refusPanneau=await panneau.evaluate(()=>chrome.runtime.sendMessage({kind:'panel',action:'stop'}).then(r=>r.error??'accepté'));
-  assert.equal(avisTel,refusPanneau==='accepté'?'« Arrêter le lot » : fait.':'« Arrêter le lot » refusé : '+refusPanneau);
+  assert.equal(refusPanneau,'Sélectionne un onglet ESV.');assert.equal(avisTel,'« Arrêter le lot » refusé : aucun onglet ESV choisi sur l’ordinateur.');
   const j=await sw.evaluate(async()=>(await store.all('events')).filter(e=>e.type==='telecommande-ordre').map(e=>[e.ordre,e.resultat]).sort((a,b)=>a[0]<b[0]?1:-1));/* le magasin ne rend pas dans l'ordre */
   assert.deepEqual(j,[['lot-pause','accepte'],['lot-arreter',refusPanneau==='accepté'?'accepte':'refuse']],JSON.stringify(j));
   /* Coupure du relais : les deux côtés se reconnectent seuls. */

@@ -26,7 +26,10 @@ const L={
  constellation:['aucune','lot','passe','relecture','changement','fin','arret','autre'],
  passe2:['aucune','ecriture','calcul','ombre','finie','arretee','erreur','autre'],
  type:['etat','accuse'],resultat:['accepte','refuse'],
- motif:['rejeu','perime','forme','ordre-inconnu','refus-ariane']};
+ motif:['rejeu','perime','forme','ordre-inconnu','refus-ariane'],
+ /* Refus d'Ariane dit au téléphone : un code de cette liste (et au plus un numéro de cut), jamais son texte (il peut citer ESV). */
+ refus:['pas-d-onglet-esv','esv-muet','pas-en-pause','deja-en-pause','rien-a-reprendre','deja-arrete','reglage-eteint','a-controler','occupe','autre']};
+const CHROME_MIN=116;/* un WebSocket ne garde le service worker en vie qu'à partir de Chrome 116 (documentation de Chrome) */
 const MOTS=new Set([...Object.values(L).flat(),...NOMS_ORDRES,'inconnu']);
 const ent=(x,max=1e9)=>Number.isInteger(x)&&x>=0&&x<=max?x:null;
 const mot=(x,liste)=>x==null?null:liste.includes(x)?x:'autre';
@@ -73,12 +76,16 @@ function vueReduite(src={}){const s=src.s||{},b=s.batch,r=src.relecture,f=src.fi
  return {connexion:mot(CONNEXION[s.connection?.status]??s.connection?.status,L.connexion),activite,lot,relecture,constellation,passe2,boutons,
   version:MOTS.has(src.version)?src.version:null};}
 
-/* ——— Motif de refus d'Ariane, nettoyé pour le téléphone : la phrase d'Ariane, sans ce qu'elle cite (parenthèses), sans adresse, uuid, code projet. */
-function nettoyerMotif(t){if(typeof t!=='string')return null;
- let x=t.replace(/\([^)]*\)?/g,' ').replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi,' ').replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,' ')
-  .replace(/Project__\d+|[Pp]rojet[_ ]?\d{6}_\d{6}/g,' ').replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,' ').replace(/\S*\.(?:xyz|com|fr|net|org|dev|test|io)\S*/gi,' ')
-  .replace(/\s+/g,' ').replace(/\s+([.,])/g,'$1').trim();
- if(x.length>160)x=x.slice(0,159).trimEnd()+'…';return x||null;}
+/* ——— Refus d'Ariane -> {code, cut} : un code de `L.refus` d'après la phrase (règles dans l'ordre), et le premier « cut N » qu'elle cite.
+ * Le texte lui-même ne sort pas : il reste au journal local et dans le panneau (avis du lot). */
+const REGLES_REFUS=[[/onglet ESV|Connecte ESV|ESV choisi/i,'pas-d-onglet-esv'],[/ESV ne répond|ESV illisible|ne répond plus|ESV muet/i,'esv-muet'],
+ [/Aucune relecture en pause|pas en pause/i,'pas-en-pause'],[/déjà en pause/i,'deja-en-pause'],[/Aucun lot à reprendre|rien à reprendre|aucun lot/i,'rien-a-reprendre'],
+ [/arrêté|déjà fini|terminé/i,'deja-arrete'],[/éteinte dans les réglages|coupée dans le panneau/i,'reglage-eteint'],
+ [/contrôle ce cut|J’ai contrôlé|incertaine?|interrompue au cut/i,'a-controler'],[/en cours|patiente|attends|en préparation|Deuxième passe/i,'occupe']];
+function codeRefus(t){const x=typeof t==='string'?t:'';const r=REGLES_REFUS.find(([re])=>re.test(x));const m=x.match(/\bcut (\d{1,7})\b/);
+ return {code:r?r[1]:'autre',cut:m?ent(Number(m[1])):null};}
+/* Version de Chrome lue dans l'agent (« Chrome/123 ») ; null si illisible. */
+function versionChrome(ua){const m=String(ua||'').match(/Chrom(?:e|ium)\/(\d+)/);return m?Number(m[1]):null;}
 
 /* ——— Codage : base64url (sans btoa : la VM des essais n'en a pas) et base32 de Crockford pour le code à taper. */
 const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -131,9 +138,10 @@ function relaisNormal(a){let u;try{u=new URL(String(a||'').trim());}catch{throw 
 /* ——— L'instance du service worker. Dépendances fournies par background.js (ou par les essais) :
  *   stockage (chrome.storage.local), WS (WebSocket), executer(action) -> promesse (le chemin du message `panel`), journal(type, champs),
  *   sources() -> {s, relecture, file, passe, echo, version}, maintenant(). */
-function creer({stockage,WS,executer,journal=()=>{},sources,maintenant=()=>Date.now(),periodeMs=1000,battementMs=15000,reconnexionMs=[1000,2000,5000,10000,30000],
+function creer({stockage,WS,executer,journal=()=>{},sources,chrome=null/* version de Chrome, null : inconnue (essais) */,maintenant=()=>Date.now(),periodeMs=1000,battementMs=15000,reconnexionMs=[1000,2000,5000,10000,30000],
   setT=root.setTimeout.bind(root),clearT=root.clearTimeout.bind(root)}){
  let A=null;/* appairage vivant : {relais, code, D} */
+ const trop=Number.isInteger(chrome)&&chrome<CHROME_MIN?`Télécommande éteinte : il faut Chrome ${CHROME_MIN} ou plus récent (celui-ci : ${chrome}). Mets Chrome à jour.`:null;
  let ws=null,ouverte=false,tour=null,reco=null,essais=0,dernierTexte=null,dernierEnvoi=null,envoiN=0,recuN=0,file=Promise.resolve(),vie=0;
  const refusDits=new Map();
  const noter=(type,champs)=>{try{journal(type,champs);}catch{/* journal indisponible : l'ordre reste traité */}};
@@ -165,28 +173,31 @@ function creer({stockage,WS,executer,journal=()=>{},sources,maintenant=()=>Date.
   if(c.ok||c.motif==='perime'||c.motif==='ordre-inconnu'){recuN=o.n;await stockage.set({[CLE_NUMEROS]:{recu:recuN}}).catch(()=>{});}
   if(!c.ok){noter('telecommande-ordre',{ordre:nom,resultat:'refuse',motif:c.motif});
    if(Number.isSafeInteger(o?.n))await envoyer({type:'accuse',pour:o.n,ordre:nom,resultat:'refuse',motif:c.motif});return;}
-  let resultat='accepte',motif=null,code=null;
-  try{await executer(c.action);}catch(e){resultat='refuse';code='refus-ariane';motif=nettoyerMotif(String(e?.message||e))||'Refusé par Ariane';}
-  noter('telecommande-ordre',{ordre:nom,resultat,motif:code});
-  await envoyer({type:'accuse',pour:o.n,ordre:nom,resultat,motif});
+  let resultat='accepte',refus=null,texte=null;
+  try{await executer(c.action);}catch(e){resultat='refuse';texte=String(e?.message||e);refus=codeRefus(texte);}
+  /* Journal local : le code ET la phrase d'Ariane (bornée) ; au téléphone : le code et le cut seulement. */
+  noter('telecommande-ordre',{ordre:nom,resultat,motif:refus?'refus-ariane':null,...(refus?{refus:refus.code,cut:refus.cut,texte:texte.slice(0,300)}:{})});
+  await envoyer({type:'accuse',pour:o.n,ordre:nom,resultat,motif:refus?refus.code:null,cut:refus?refus.cut:null});
   await envoyerEtat(true).catch(()=>{});}
  async function charger(){const r=await stockage.get([CLE_APPAIRAGE,CLE_NUMEROS]);const a=r?.[CLE_APPAIRAGE];
   if(!a||typeof a.relais!=='string'||typeof a.code!=='string')return null;
   recuN=Number.isSafeInteger(r?.[CLE_NUMEROS]?.recu)?r[CLE_NUMEROS].recu:0;
   return {relais:a.relais,code:a.code,D:await deriver(await decoder(a.code))};}
  return {
-  async demarrer(){const v=++vie;fermer();let a=null;try{a=await charger();}catch{a=null;}if(v!==vie||!a)return false;A=a;connecter(v);return true;},
-  async appairer(adresse){const relais=relaisNormal(adresse),k=tirerCle(),code=await coder(k),D=await deriver(k);
+  /* Au réveil du service worker : un appairage gardé se reconnecte seul. Sous Chrome 116 : rien ne part, la raison est dite au panneau. */
+  async demarrer(){const v=++vie;fermer();let a=null;try{a=await charger();}catch{a=null;}if(v!==vie||!a)return false;A=a;
+   if(trop)return false;connecter(v);return true;},
+  async appairer(adresse){if(trop)throw Error(trop);const relais=relaisNormal(adresse),k=tirerCle(),code=await coder(k),D=await deriver(k);
    const v=++vie;fermer();A={relais,code,D};recuN=0;envoiN=0;
    await stockage.set({[CLE_APPAIRAGE]:{relais,code,depuis:new Date(maintenant()).toISOString()},[CLE_NUMEROS]:{recu:0}});
    noter('telecommande-appairee',{});connecter(v);return {code,lien:relais+'/#k='+code};},
   async couper(){vie++;fermer();A=null;recuN=0;dernierTexte=dernierEnvoi=null;await stockage.remove([CLE_APPAIRAGE,CLE_NUMEROS]);noter('telecommande-coupee',{});return this.etat();},
   arreter(){vie++;fermer();},
   /* Pour le panneau : jamais la clé, sauf `code()` demandé pour réafficher le QR. */
-  etat(){return {appairee:!!A,relais:A?A.relais:null,connectee:!!A&&ouverte,dernierEnvoi:dernierEnvoi?new Date(dernierEnvoi).toISOString():null};},
+  etat(){return {appairee:!!A,relais:A?A.relais:null,connectee:!!A&&ouverte,dernierEnvoi:dernierEnvoi?new Date(dernierEnvoi).toISOString():null,...(trop?{indisponible:trop}:{})};},
   code(){return A?{code:A.code,lien:A.relais+'/#k='+A.code}:null;},
   pousser(){if(A&&ouverte)void envoyerEtat(false).catch(()=>{});}};}
 
-return Object.freeze({CLE_APPAIRAGE,CLE_NUMEROS,ORDRES,NOMS_ORDRES,MOTS,FENETRE_MS,HORS_LIGNE_MS,vueReduite,nettoyerMotif,controlerOrdre,horsLigne,
+return Object.freeze({CLE_APPAIRAGE,CLE_NUMEROS,ORDRES,NOMS_ORDRES,MOTS,FENETRE_MS,HORS_LIGNE_MS,vueReduite,codeRefus,versionChrome,CHROME_MIN,REFUS:Object.freeze(L.refus.slice()),controlerOrdre,horsLigne,
  tirerCle,coder,decoder,deriver,chiffrer,dechiffrer,b64e,b64d,relaisNormal,creer});
 });

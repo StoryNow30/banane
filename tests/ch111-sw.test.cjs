@@ -2,7 +2,7 @@
 /* CH-111 (D-345) — la télécommande dans le VRAI service worker (VM, tests/helpers/perf-production.cjs), relais simulé par un faux WebSocket.
  * Sans appairage : rien (ni socket, ni écriture). Appairée : l'état réel envoyé est chiffré et réduit à la liste blanche ; un ordre du téléphone
  * prend le même chemin que le bouton du panneau (même effet, même refus mot pour mot) ; « Couper » oublie tout. Données synthétiques. */
-const {test}=require('node:test'),assert=require('node:assert/strict');
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const {production,memoire}=require('./helpers/perf-production.cjs');
 const T=require('../src/telecommande.js');
 const RELAIS=['https:/','/relais-essai','.exemple','.test'].join('');
@@ -41,7 +41,8 @@ test('service worker appairé : état réel chiffré, liste blanche, ordres par 
  assert.ok(refusPanneau,'le panneau refuse « Reprendre la relecture » sans relecture en pause');await envoyerOrdre('relecture-reprendre',n0+2);
  const acc=(await clairs(D,s)).filter(c=>c.type==='accuse');
  assert.deepEqual(acc.map(a=>[a.ordre,a.resultat]),[['lot-pause','accepte'],['relecture-reprendre',refusPanneau?'refuse':'accepte']]);
- if(refusPanneau)assert.equal(acc[1].motif,T.nettoyerMotif(refusPanneau));
+ if(refusPanneau)assert.deepEqual([acc[1].motif,acc[1].cut],[T.codeRefus(refusPanneau).code,T.codeRefus(refusPanneau).cut]);
+ assert.equal(acc[1].motif,'pas-en-pause','« Aucune relecture en pause. »');
  /* hors liste : jamais exécuté */
  await envoyerOrdre('explicit-skip',n0+3);assert.equal((await clairs(D,s)).filter(c=>c.type==='accuse').at(-1).motif,'ordre-inconnu');
  const j=b.store.events.filter(x=>x.type==='telecommande-ordre');
@@ -50,3 +51,28 @@ test('service worker appairé : état réel chiffré, liste blanche, ordres par 
  /* couper */
  const c=await b.api('telecommande-couper');assert.equal(c.appairee,false);assert.equal(s.readyState,3);
  assert.ok(!Object.keys(local.m).some(k=>/telecommande/i.test(k)));});
+
+test('réveil du service worker : un appairage gardé se reconnecte seul, sans geste',async()=>{
+ const {b,sockets,local}=monter();await b.api('connect',{tabId:1});const r=await b.api('telecommande-appairer',{relais:RELAIS});await attendre(50);
+ const D=await T.deriver(await T.decoder(r.code)),n1=sockets.length;
+ /* nouvelle vie : même chrome.storage.local, nouveau service worker */
+ const sockets2=[];class WS2{constructor(url){this.url=url;this.readyState=0;this.envoyes=[];sockets2.push(this);setTimeout(()=>{this.readyState=1;this.onopen?.();},0);}send(t){this.envoyes.push(t);}close(){this.readyState=3;}}
+ const b2=production({local});b2.ctx.WebSocket=WS2;b2.ctx.TextDecoder=TextDecoder;
+ await b2.api('view');await attendre(100);
+ assert.equal(sockets2.length,1,'reconnectée au réveil');assert.match(sockets2[0].url,new RegExp('/canal/'+D.canal+'\\?role=ariane$'));
+ assert.equal((await T.dechiffrer(D,'a>t',JSON.parse(sockets2[0].envoyes[0]))).type,'etat','état envoyé dès la reconnexion');
+ assert.equal(JSON.parse(JSON.stringify(await b2.api('telecommande-etat'))).connectee,true);assert.equal(sockets.length,n1);
+ b.get('telecommande').arreter();b2.get('telecommande').arreter();});
+
+test('chaque ordre de la liste appelle EXACTEMENT l’action du bouton du panneau (même message `panel`) ; aucun nom hors liste n’atteint le service worker',async()=>{
+ const {b,sockets}=monter();await b.api('connect',{tabId:1});const r=await b.api('telecommande-appairer',{relais:RELAIS});await attendre(50);
+ const D=await T.deriver(await T.decoder(r.code)),s=sockets.at(-1);
+ /* espion sur `dispatch` (la fonction que le message `panel` du panneau appelle) */
+ const vus=[];b.ctx.__vus=vus;vm.runInContext('{const vrai=dispatch;dispatch=async m=>{__vus.push(JSON.parse(JSON.stringify(m)));return {};};}',b.ctx);
+ let n=Date.now();const envoyer=async ordre=>{s.recevoir(JSON.stringify(await T.chiffrer(D,'t>a',{type:'ordre',n:++n,h:Date.now(),ordre,args:{piege:1}})));await attendre(40);};
+ const attendu={'lot-pause':'pause','lot-reprendre':'resume','lot-arreter':'stop','relecture-pause':'relecture-pause','relecture-reprendre':'relecture-reprendre','relecture-arreter':'relecture-arreter','constellation-arreter':'file-arreter'};
+ for(const [o,a] of Object.entries(attendu)){vus.length=0;await envoyer(o);assert.deepEqual(JSON.parse(JSON.stringify(vus)),[{kind:'panel',action:a,args:{}}],o);}
+ for(const o of ['skip','explicit-skip','start','retry','goto-cut','passe-differes-ecrire','file-demarrer','native-pause','native-resume','manual-takeover','close-uncertain','pause','resume','stop','telecommande-couper','view']){
+  vus.length=0;await envoyer(o);assert.equal(vus.length,0,o+' n’atteint pas le service worker');}
+ const acc=(await clairs(D,s)).filter(c=>c.type==='accuse');assert.equal(acc.filter(a=>a.resultat==='refuse'&&a.motif==='ordre-inconnu').length,16);
+ b.get('telecommande').arreter();});

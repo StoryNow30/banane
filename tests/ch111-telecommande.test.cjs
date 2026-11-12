@@ -58,7 +58,7 @@ test('contrôle d’un ordre : numéro croissant, 30 s au plus, nom dans la list
  assert.equal(c({type:'ordre',n:11,h:now+31_000,ordre:'lot-pause'}).motif,'perime');
  assert.equal(c({type:'ordre',n:11.5,h:now,ordre:'lot-pause'}).motif,'forme');
  assert.equal(c({type:'ordre',n:11,ordre:'lot-pause'}).motif,'forme');
- for(const o of ['skip','explicit-skip','start','retry','goto-cut','passe-differes-ecrire','pause','__proto__','constructor','toString'])
+ for(const o of ['skip','explicit-skip','start','retry','goto-cut','passe-differes-ecrire','file-demarrer','native-pause','native-resume','manual-takeover','pause','__proto__','constructor','toString'])
   assert.equal(c({type:'ordre',n:11,h:now,ordre:o}).motif,'ordre-inconnu',o);
  assert.equal(c({type:'etat',n:11,h:now}).motif,'forme');});
 
@@ -105,10 +105,15 @@ test('liste blanche : états d’alerte (mots fermés), valeurs inconnues ramen�
  assert.equal(rien.activite,'echo');assert.equal(rien.relecture.etat,'aucune');assert.equal(rien.constellation.etat,'aucune');
  assert.ok(Object.values(rien.boutons).every(x=>x===false));});
 
-test('motif de refus nettoyé : ni adresse, ni uuid, ni code projet, ni parenthèse, 160 caractères au plus',()=>{
- const m=T.nettoyerMotif('File de parties non lancée : ESV ne répond pas (erreur '+ADR+' '+UUID+'). '+PROJET+' '+'x'.repeat(300));
- assert.ok(m.length<=160);assert.ok(!/https?:|esv\.exemple|0f1e2d3c|Project__|\(/.test(m),m);assert.match(m,/^File de parties non lancée : ESV ne répond pas/);
- assert.equal(T.nettoyerMotif(null),null);});
+test('refus d’Ariane : un code de la liste fermée et au plus un numéro de cut ; rien du texte (fausse adresse, faux uuid, faux code projet)',()=>{
+ const cas=[['Sélectionne un onglet ESV.','pas-d-onglet-esv'],['Connecte ESV avant de lancer la file.','pas-d-onglet-esv'],['File de parties non lancée : ESV ne répond pas (erreur '+ADR+' '+UUID+'). '+PROJET,'esv-muet'],
+  ['Aucune relecture en pause.','pas-en-pause'],['Aucun lot à reprendre.','rien-a-reprendre'],['Reprise interrompue : le lot a été arrêté.','deja-arrete'],
+  ['Pause de la relecture éteinte dans les réglages : elle ne peut que s’arrêter.','reglage-eteint'],
+  ['Une correction de la relecture a été interrompue au cut 452 (partie 3) : contrôle ce cut dans ESV, puis clique sur « J’ai contrôlé le cut 452 ».','a-controler',452],
+  ['Reprise déjà en cours : patiente.','occupe'],['Relecture après le lot en cours (3 sur 9) : clique sur « Arrêter la relecture ».','occupe'],
+  ['Réponse inattendue '+ADR+' '+UUID+' '+PROJET,'autre'],[null,'autre'],[42,'autre']];
+ for(const [t,code,cut=null] of cas){const r=T.codeRefus(t);assert.deepEqual(r,{code,cut},String(t));assert.ok(T.REFUS.includes(r.code));
+  assert.deepEqual(Object.keys(r).sort(),['code','cut']);assert.ok(!/esv\.exemple|0f1e2d3c|Project|https?:/.test(JSON.stringify(r)));}});
 
 /* Bout à bout dans Node : instance de l'extension ↔ faux relais ↔ « téléphone » (les fonctions de la page, réécrites ici avec le module). */
 async function monter({executer,maintenant=()=>Date.now()}={}){
@@ -144,14 +149,19 @@ test('extension : appairage, état chiffré envoyé au changement, ordre accept�
  await ordre('skip',n0+2);deq(appels,['pause']);acc=await dernierClair(D,s,'accuse');assert.deepEqual([acc.resultat,acc.motif],['refuse','ordre-inconnu']);
  await ordre('lot-reprendre',n0+3,Date.now()-31_000);deq(appels,['pause']);acc=await dernierClair(D,s,'accuse');assert.equal(acc.motif,'perime');
  await ordre('lot-reprendre',n0+4);deq(appels,['pause','resume']);acc=await dernierClair(D,s,'accuse');
- assert.equal(acc.resultat,'refuse');assert.equal(acc.motif,'Reprise refusée');
+ assert.equal(acc.resultat,'refuse');assert.equal(acc.motif,'autre');assert.equal(acc.cut,null);
+ /* l'accusé (ce qui sort) ne porte rien du texte du refus */
+ assert.deepEqual(Object.keys(acc).sort(),['cut','h','motif','n','ordre','pour','resultat','type']);
  /* ordre renvoyé dans l'autre sens (reflet d'un état) ou illisible : aucune action, aucun accusé de plus */
  const avant=s.envoyes.length;await ordre('lot-pause',n0+5,Date.now(),'a>t');s.recevoir('{"v":1,"iv":"AAAA","d":"AAAA"}');s.recevoir('pas du json');await attendre(30);
  deq(appels,['pause','resume']);assert.equal((await Promise.all(s.envoyes.slice(avant).map(x=>T.dechiffrer(D,'a>t',JSON.parse(x))))).filter(c=>c.type==='accuse').length,0);
  /* journal : un par ordre, mots fermés seulement */
  const jo=journal.filter(j=>j.type==='telecommande-ordre');assert.deepEqual(jo.map(j=>[j.ordre,j.resultat,j.motif]),
   [['lot-pause','accepte',null],['lot-pause','refuse','rejeu'],['inconnu','refuse','ordre-inconnu'],['lot-reprendre','refuse','perime'],['lot-reprendre','refuse','refus-ariane']]);
- const tj=JSON.stringify(journal);assert.ok(!tj.includes(r.code)&&!/Project|esv\.exemple|https?:/.test(tj),tj);
+ const tj=JSON.stringify(journal);assert.ok(!tj.includes(r.code),'jamais la clé au journal');
+ /* le journal LOCAL garde le code et la phrase d'Ariane (bornée) ; rien de cela n'est sorti vers le relais */
+ assert.deepEqual([jo[4].refus,jo[4].cut],['autre',null]);assert.match(jo[4].texte,/^Reprise refusée/);
+ for(const x of R.vus)assert.ok(!/Reprise|Project|esv\.exemple/.test(x));
  /* le dernier numéro reçu est gardé : une nouvelle vie du service worker refuse le rejeu */
  assert.equal(stock.m.arianeTelecommandeN.recu,n0+4);
  t.arreter();
@@ -179,3 +189,13 @@ test('téléphone : « Ariane hors ligne » après 30 s sans état, avec l’heu
  assert.deepEqual(T.horsLigne({dernierEtatH:h,maintenant:h+31_000,arianePresente:true}),{horsLigne:true,depuis:'14:05'});
  assert.deepEqual(T.horsLigne({dernierEtatH:h,maintenant:h+1000,arianePresente:false}),{horsLigne:true,depuis:'14:05'});
  assert.deepEqual(T.horsLigne({dernierEtatH:null,maintenant:h,arianePresente:false}),{horsLigne:true,depuis:null});});
+
+test('Chrome sous 116 : la télécommande s’éteint avec un message clair (ni appairage, ni connexion) ; version lue dans l’agent',async()=>{
+ assert.equal(T.CHROME_MIN,116);assert.equal(T.versionChrome('Mozilla/5.0 (X11) AppleWebKit/537.36 Chrome/115.0.0.0 Safari/537.36'),115);assert.equal(T.versionChrome('rien'),null);
+ const R=fauxReseau(),stock=memoire();stock.m.arianeTelecommande={relais:RELAIS,code:await T.coder(T.tirerCle())};
+ const t=T.creer({stockage:stock,WS:R.FauxWS,executer:async()=>{},sources:()=>({}),chrome:115});
+ assert.equal(await t.demarrer(),false);await attendre(30);assert.equal(R.sockets.length,0,'aucune connexion');
+ assert.match(t.etat().indisponible,/Chrome 116 ou plus récent \(celui-ci : 115\)/);
+ await assert.rejects(()=>t.appairer(RELAIS),/Chrome 116/);t.arreter();
+ const t2=T.creer({stockage:stock,WS:R.FauxWS,executer:async()=>{},sources:()=>({}),chrome:116,periodeMs:20,battementMs:200});
+ assert.equal(await t2.demarrer(),true);await attendre(30);assert.equal(R.sockets.length,1);assert.equal(t2.etat().indisponible,undefined);t2.arreter();});

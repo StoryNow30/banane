@@ -42,6 +42,7 @@
   const f=el('div',{id:'tc-f'});
   f.append(el('h3',{},el('span',{text:'Télécommande (iPhone)'}),el('button',{class:'tc-x','aria-label':'Fermer',text:'×',on:fermer})));
   f.append(el('p',{text:'Suivre Ariane et envoyer les ordres des boutons (pause, reprise, arrêt) depuis le téléphone. Tout passe chiffré par ton relais Cloudflare ; le relais ne lit rien. Fiche : telecommande/INSTALLATION.md.'}));
+  if(e?.indisponible)f.append(el('p',{class:'tc-err',role:'alert',text:e.indisponible}));
   if(!e?.appairee){
    const champ=el('input',{id:'tc-relais',type:'url',placeholder:'ariane-telecommande.<ton-sous-domaine>.workers.dev (en https)',autocomplete:'off',spellcheck:'false'});
    try{champ.value=localStorage.getItem(CLE_ADRESSE)||'';}catch{/* stockage du panneau indisponible */}
