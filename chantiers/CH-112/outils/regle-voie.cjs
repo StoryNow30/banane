@@ -68,11 +68,11 @@ function decalage(liste, i, ref, pose, poseRef) {
   return out;
 }
 
-function rejouer(d, { seuil = 80, ecart = 12, zoneMode = 'adv', methode = 'profil2', abstenuSur = true, marges = true, courbure = 0 } = {}) {
+function rejouer(d, { seuil = 80, ecart = 12, zoneMode = 'adv', methode = 'profil2', abstenuSur = true, marges = true, courbure = 0, traites = true } = {}) {
   const { liste, touches, ordre, poses, valides, zone } = d;
   const surs = new Map(); // cut -> pose, références sûres
   // traités par l'opérateur hors de ce lot (drapeau « traité » et aucun événement du lot sur ce cut)
-  for (let i = 0; i < liste.length; i++) if (liste[i]?.traite && liste[i].statut === 0 && liste[i].gauche && !touches.has(i)) surs.set(i, liste[i]);
+  if (traites) for (let i = 0; i < liste.length; i++) if (liste[i]?.traite && liste[i].statut === 0 && liste[i].gauche && !touches.has(i)) surs.set(i, liste[i]);
   const res = [];
   for (const c of ordre) {
     if (!valides.has(c) || !poses.has(c)) continue; // seulement les cuts posés
