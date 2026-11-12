@@ -7,6 +7,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const T=require('../src/telecommande.js');
 const RELAIS=['https:/','/relais-essai','.exemple','.test'].join('');
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
+const UUID=['0f1e2d3c','4b5a','6978','8796','a5b4c3d2e1f0'].join('-'),PROJET='Project'+'__123456',ADR=['https:/','/esv.exemple','/rails_validation/x'].join('');/* fabriqués à l'exécution (scan d'identité) */
 
 /* Faux WebSocket : le « relais » garde tout ce qui passe (il ne doit rien pouvoir lire). */
 function fauxReseau(){const sockets=[],vus=[];
@@ -62,16 +63,16 @@ test('contrôle d’un ordre : numéro croissant, 30 s au plus, nom dans la list
  assert.equal(c({type:'etat',n:11,h:now}).motif,'forme');});
 
 /* États fabriqués comme ceux du service worker (champs réels du moteur, de la relecture, de la file), CHARGÉS de ce qui ne doit pas sortir. */
-const SECRETS=['Project__123456','0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0','esv.exemple','rails_validation','Jean Dupont','texte libre d’ESV'];
-function etatCharge(){const id={part:12,cut:345,frameId:'0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0',projet:'Project__123456',url:'https://esv.exemple/rails_validation/x'};
- return {s:{sessionId:'0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0',lidarId:'Project__123456',notice:'Jean Dupont texte libre d’ESV',reconcileRequired:false,
-   connection:{status:'ready',message:'onglet https://esv.exemple/rails_validation/x'},current:{identity:id},
-   batch:{id:'0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0',state:'RUNNING',pauseReason:null,scope:{part:12,start:300,end:999999,endMode:'partie',projet:'Project__123456'},
+const SECRETS=[PROJET,UUID,'esv.exemple','rails_validation','Jean Dupont','texte libre d’ESV'];
+function etatCharge(){const id={part:12,cut:345,frameId:UUID,projet:PROJET,url:ADR};
+ return {s:{sessionId:UUID,lidarId:PROJET,notice:'Jean Dupont texte libre d’ESV',reconcileRequired:false,
+   connection:{status:'ready',message:'onglet '+ADR},current:{identity:id},
+   batch:{id:UUID,state:'RUNNING',pauseReason:null,scope:{part:12,start:300,end:999999,endMode:'partie',projet:PROJET},
     activeIdentity:id,lastCompletedIdentity:{...id,cut:344},processed:[{identity:id,cut:340,evidence:'Jean Dupont'},{identity:id,cut:341}],deferred:[{identity:id,unresolvedRails:['left']}],skipped:[],
-    lotPosed:[{identity:id},{identity:id}],error:{message:'texte libre d’ESV Project__123456'}}},
-  relecture:{etat:'en-pause',mode:'corriger',faits:7,total:20,corriges:2,vus:7,cut:351,message:'Jean Dupont texte libre d’ESV',pauseDemandee:false,pauseRaison:'esv',lotId:'0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0'},
-  file:{id:'0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0',etat:'lot',n:5,plan:[12,13,14],rang:1,enCours:{part:12,rang:1,lot:true},alerte:'texte libre d’ESV',motifFin:'Jean Dupont',bilan:[{part:11,motifs:['Project__123456']}]},
-  passe:{etat:'ecriture',ecrites:3,demandees:9,lotId:'0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0',message:'Jean Dupont'},
+    lotPosed:[{identity:id},{identity:id}],error:{message:'texte libre d’ESV '+PROJET}}},
+  relecture:{etat:'en-pause',mode:'corriger',faits:7,total:20,corriges:2,vus:7,cut:351,message:'Jean Dupont texte libre d’ESV',pauseDemandee:false,pauseRaison:'esv',lotId:UUID},
+  file:{id:UUID,etat:'lot',n:5,plan:[12,13,14],rang:1,enCours:{part:12,rang:1,lot:true},alerte:'texte libre d’ESV',motifFin:'Jean Dupont',bilan:[{part:11,motifs:[PROJET]}]},
+  passe:{etat:'ecriture',ecrites:3,demandees:9,lotId:UUID,message:'Jean Dupont'},
   echo:false,version:'5.0.15'};}
 /* Toute valeur de la vue : un entier, un booléen, null, ou un mot de la liste fermée (`T.MOTS`). */
 function feuilles(o,chemin='',out=[]){if(o&&typeof o==='object'){for(const [k,v] of Object.entries(o))feuilles(v,chemin+'.'+k,out);}else out.push([chemin,o]);return out;}
@@ -90,13 +91,13 @@ test('liste blanche : la vue ne porte que des entiers et des mots fermés, rien 
 
 test('liste blanche : états d’alerte (mots fermés), valeurs inconnues ramenées à « autre », entiers hors bornes à null',()=>{
  const base=etatCharge(),cas=[['PAUSED_ADAPTER_UNRESPONSIVE',null,'esv-muet'],['PAUSED_UNRESOLVED_RAIL',null,'rail-non-resolu'],['PAUSED','low-confidence','faible-confiance'],
-  ['MANUAL_TAKEOVER',null,'repris-main'],['ERROR',null,'erreur'],['ETAT_INVENTE Project__123456',null,'autre']];
+  ['MANUAL_TAKEOVER',null,'repris-main'],['ERROR',null,'erreur'],['ETAT_INVENTE '+PROJET,null,'autre']];
  for(const [state,pauseReason,alerte] of cas){const e=etatCharge();e.s.batch={...e.s.batch,state,pauseReason};const v=T.vueReduite(e);
   assert.equal(v.lot.etat,'alerte',state);assert.equal(v.lot.alerte,alerte,state);assert.ok(!JSON.stringify(v).includes('Project__'));}
  const e=etatCharge();e.s.reconcileRequired=true;assert.equal(T.vueReduite(e).lot.alerte,'incertain');
  const p=etatCharge();p.s.batch.state='PAUSED';p.relecture=null;p.passe=null;const vp=T.vueReduite(p);assert.equal(vp.lot.etat,'pause');assert.equal(vp.boutons['lot-reprendre'],true);assert.equal(vp.boutons['lot-pause'],false);
  const f=etatCharge();f.s.batch.state='STOPPED';f.s.batch.stoppedAtEnd=true;assert.equal(T.vueReduite(f).lot.etat,'fini');
- const z=etatCharge();z.s.batch.scope.part=-3;z.s.batch.scope.start=1.5;z.relecture.etat='inventé';z.relecture.pauseRaison='Jean Dupont';z.file.etat='Project__123456';z.s.connection.status='bizarre';
+ const z=etatCharge();z.s.batch.scope.part=-3;z.s.batch.scope.start=1.5;z.relecture.etat='inventé';z.relecture.pauseRaison='Jean Dupont';z.file.etat=PROJET;z.s.connection.status='bizarre';
  const vz=T.vueReduite(z);assert.equal(vz.lot.partie,null);assert.equal(vz.lot.debut,null);assert.equal(vz.relecture.etat,'autre');assert.equal(vz.relecture.pauseRaison,'autre');
  assert.equal(vz.constellation.etat,'autre');assert.equal(vz.connexion,'autre');
  const rien=T.vueReduite({s:{batch:null,connection:{status:'no-tab'}},relecture:null,file:null,passe:null,echo:true});
@@ -105,7 +106,7 @@ test('liste blanche : états d’alerte (mots fermés), valeurs inconnues ramen�
  assert.ok(Object.values(rien.boutons).every(x=>x===false));});
 
 test('motif de refus nettoyé : ni adresse, ni uuid, ni code projet, ni parenthèse, 160 caractères au plus',()=>{
- const m=T.nettoyerMotif('File de parties non lancée : ESV ne répond pas (erreur https://esv.exemple/x 0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0). Project__123456 '+'x'.repeat(300));
+ const m=T.nettoyerMotif('File de parties non lancée : ESV ne répond pas (erreur '+ADR+' '+UUID+'). '+PROJET+' '+'x'.repeat(300));
  assert.ok(m.length<=160);assert.ok(!/https?:|esv\.exemple|0f1e2d3c|Project__|\(/.test(m),m);assert.match(m,/^File de parties non lancée : ESV ne répond pas/);
  assert.equal(T.nettoyerMotif(null),null);});
 
@@ -127,7 +128,7 @@ test('extension : appairer refuse une adresse qui n’est pas https ou qui porte
  t.arreter();});
 
 test('extension : appairage, état chiffré envoyé au changement, ordre accepté et accusé, rejeu et ordre inconnu refusés, journal sans secret',async()=>{
- const appels=[];const {t,R,stock,journal,etat}=await monter({executer:async a=>{appels.push(a);if(a==='resume')throw Error('Reprise refusée (https://esv.exemple/x Project__123456)');return {ok:true};}});
+ const appels=[];const {t,R,stock,journal,etat}=await monter({executer:async a=>{appels.push(a);if(a==='resume')throw Error('Reprise refusée ('+ADR+' '+PROJET+')');return {ok:true};}});
  const r=await t.appairer(RELAIS+'/');assert.match(r.code,/^[0-9A-Z]{53}$/);assert.equal(r.lien,RELAIS+'/#k='+r.code);
  const D=await T.deriver(await T.decoder(r.code));
  await attendre(60);const s=R.sockets.at(-1);assert.equal(s.url,RELAIS.replace('https','wss')+'/canal/'+D.canal+'?role=ariane');

@@ -43,7 +43,7 @@
   f.append(el('h3',{},el('span',{text:'Télécommande (iPhone)'}),el('button',{class:'tc-x','aria-label':'Fermer',text:'×',on:fermer})));
   f.append(el('p',{text:'Suivre Ariane et envoyer les ordres des boutons (pause, reprise, arrêt) depuis le téléphone. Tout passe chiffré par ton relais Cloudflare ; le relais ne lit rien. Fiche : telecommande/INSTALLATION.md.'}));
   if(!e?.appairee){
-   const champ=el('input',{id:'tc-relais',type:'url',placeholder:'https://ariane-telecommande.<ton-compte>.workers.dev',autocomplete:'off',spellcheck:'false'});
+   const champ=el('input',{id:'tc-relais',type:'url',placeholder:'ariane-telecommande.<ton-sous-domaine>.workers.dev (en https)',autocomplete:'off',spellcheck:'false'});
    try{champ.value=localStorage.getItem(CLE_ADRESSE)||'';}catch{/* stockage du panneau indisponible */}
    const bouton=el('button',{class:'tc-p',text:'Appairer un téléphone'});
    bouton.onclick=()=>appairer(champ.value,bouton);
@@ -63,7 +63,7 @@
   boite.replaceChildren(f);boite.dataset.theme=theme();
   if(e?.appairee)minuterie=setTimeout(()=>rendre(),2000);}
  const origine=a=>{let u;try{u=new URL(String(a||'').trim());}catch{return null;}return u.protocol==='https:'?'https://'+u.host:null;};
- async function appairer(adresse,bouton){const o=origine(adresse);if(!o)return rendre('Adresse du relais : colle l’adresse https de ton Worker (https://…workers.dev).');
+ async function appairer(adresse,bouton){const o=origine(adresse);if(!o)return rendre('Adresse du relais : colle l’adresse https de ton Worker (en https, finissant par workers.dev).');
   bouton.disabled=true;
   /* La permission de l'hôte, sur ce clic (geste de l'opérateur). Refusée : rien n'est appairé. */
   let accord=false;try{accord=await chrome.permissions.request({origins:[o+'/*']});}catch(x){return rendre('Permission du relais non obtenue : '+x.message);}

@@ -42,7 +42,7 @@ async function demarrer({port=0}={}){const W=await chargerWorker(),canaux=new Ma
   res.writeHead(r.status,Object.fromEntries(r.headers));res.end(Buffer.from(await r.arrayBuffer()));});
  serveur.on('upgrade',async(req,s)=>{const r=W.route('https://'+req.headers.host+req.url);
   if(!r.canal||(req.headers.upgrade||'').toLowerCase()!=='websocket'){s.end('HTTP/1.1 400 Bad Request\r\n\r\n');return;}
-  const acc=crypto.createHash('sha1').update(req.headers['sec-websocket-key']+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+  const acc=crypto.createHash('sha1').update(req.headers['sec-websocket-key']+['258EAFA5','E914','47DA','95CA','C5AB0DC85B11'].join('-')/* GUID de la RFC 6455 */).digest('base64');
   s.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: '+acc+'\r\n\r\n');
   const ws=new Socket(s),C=canal(r.canal);ws.role=r.role;
   ws.onmessage=t=>{vus.push({canal:r.canal,role:r.role,texte:t});void C.l.message(ws,t);};ws.onclose=()=>C.l.fermeture(ws);

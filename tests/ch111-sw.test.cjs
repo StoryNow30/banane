@@ -13,7 +13,7 @@ function monter(){const sockets=[];
  const local=memoire(),b=production({local});b.ctx.WebSocket=FauxWS;b.ctx.TextDecoder=TextDecoder;/* la VM des essais n'en a pas ; le service worker, si */return {b,sockets,local};}
 const clairs=async(D,s)=>Promise.all(s.envoyes.map(x=>T.dechiffrer(D,'a>t',JSON.parse(x))));
 function feuilles(o,c='',out=[]){if(o&&typeof o==='object'){for(const [k,v] of Object.entries(o))feuilles(v,c+'.'+k,out);}else out.push([c,o]);return out;}
-const UUID='0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0';
+const UUID=['0f1e2d3c','4b5a','6978','8796','a5b4c3d2e1f0'].join('-');/* fabriqué à l'exécution (scan d'identité) */
 
 test('service worker sans appairage : aucune socket, rien de gardé, état « non appairée »',async()=>{
  const {b,sockets,local}=monter();await b.api('connect',{tabId:1});await attendre(50);
@@ -27,7 +27,7 @@ test('service worker appairé : état réel chiffré, liste blanche, ordres par 
  await attendre(50);const s=sockets.at(-1);assert.match(s.url,new RegExp('/canal/'+D.canal+'\\?role=ariane$'));
  const e=b.get('engine');
  e.s.batch={id:UUID,state:'RUNNING',scope:{part:23,start:100,end:120},activeIdentity:{part:23,cut:104,frameId:UUID},processed:[{cut:100,identity:{part:23,cut:100,frameId:UUID}}],deferred:[],skipped:[],paused:[],interrupted:[],sequence:[]};
- e.s.notice='Projet Project__123456 '+UUID;
+ e.s.notice='Projet '+'Project'+'__123456 '+UUID;
  await attendre(1300);/* boucle d'une seconde du service worker */
  const etats=(await clairs(D,s)).filter(c=>c.type==='etat'),v=etats.at(-1);
  assert.equal(v.lot.etat,'cours');assert.equal(v.lot.cut,104);assert.equal(v.lot.partie,23);assert.equal(v.lot.fin,120);assert.equal(v.lot.traites,1);

@@ -125,7 +125,7 @@ function horsLigne({dernierEtatH=null,maintenant=Date.now(),arianePresente=true}
 
 /* ——— Adresse du relais : https, un nom d'hôte, aucun chemin. */
 function relaisNormal(a){let u;try{u=new URL(String(a||'').trim());}catch{throw Error('Adresse du relais illisible : colle l’adresse https de ton Worker.');}
- if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||!(u.pathname==='/'||u.pathname===''))throw Error('Adresse du relais : https://nom-du-worker…, sans chemin.');
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||!(u.pathname==='/'||u.pathname===''))throw Error('Adresse du relais : l’adresse de ton Worker, en https, sans rien après le nom.');
  return 'https://'+u.host;}
 
 /* ——— L'instance du service worker. Dépendances fournies par background.js (ou par les essais) :
