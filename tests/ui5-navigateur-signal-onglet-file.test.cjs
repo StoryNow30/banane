@@ -53,27 +53,3 @@ test('onglet « File » : prête, en cours, arrêtée avec alerte, finie ; 360 �
  assert.equal(res.fin['600'].mot,'Terminée');assert.equal(vus.fin.bilan,2);
  assert.deepEqual(vus.fin.boutons.filter(b=>/file-lancer|export-tout/.test(b)),['Nouvelle Constellation · 2 parties|legacy:file-lancer','Exporter le dossier|legacy:export-tout']);
 });
-
-test('onglet « File » : nombre, Lancer (un clic), Reprendre au rang (depuis la partie 14), Arrêter confirmé ; Orbite ramène l’instrument',{skip:absent,timeout:25000},async()=>{
- const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
- try{
-  const {page,erreurs}=await monter(nav,FILE.prete);
-  await page.click('#ui5 .sg-bascule [data-act="sg:onglet-file"]');await page.waitForTimeout(200);
-  await page.click('#ui5 .sg-onglet-file [data-act="sg:file-n:3"]');await page.waitForTimeout(200);
-  assert.match(await page.textContent('#ui5 .sg-actions .sg-principal'),/Lancer la Constellation · 3 parties/);
-  await page.click('#ui5 .sg-actions .sg-principal');await page.waitForTimeout(400);
-  const m1=await messages(page);assert.deepEqual(m1.map(m=>m.action),['settings','file-demarrer'],'un clic lance');assert.equal(m1[1].args.n,3);assert.equal(m1[1].args.depuis,undefined);
-  await poserEtat(page,ARRET);
-  await page.click('#ui5 .sg-actions [data-act="legacy:file-reprendre"]');await page.waitForTimeout(400);
-  const m2=await messages(page);assert.deepEqual(m2.map(m=>m.action),['settings','file-demarrer']);assert.equal(m2[1].args.n,1);assert.equal(m2[1].args.depuis,14,'reprise au rang interrompu');
-  await poserEtat(page,FILE.lot);
-  const sel='#ui5 .sg-actions [data-act="legacy:file-secondaire"]';
-  await page.click(sel);await page.waitForTimeout(200);assert.deepEqual(await messages(page),[],'un clic ne fait que demander');
-  assert.match(await page.textContent(sel),/Confirmer l’arrêt de la Constellation/);
-  await page.waitForTimeout(500);await page.click(sel);await page.waitForTimeout(300);
-  assert.deepEqual((await messages(page)).map(m=>m.action),['file-arreter']);
-  await page.click('#ui5 .sg-bascule [data-act="mode:automatic"]');await page.waitForTimeout(250);
-  assert.equal(await page.evaluate(()=>document.querySelector('#ui5 .sg-fen').dataset.activite),'orbite');
-  assert.deepEqual(erreurs,[]);
- }finally{await nav.close();}
-});

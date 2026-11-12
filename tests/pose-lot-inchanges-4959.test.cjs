@@ -114,6 +114,8 @@ const HISTORIQUE=['historique-parties.js'];
 const GARDE_PASSE=['garde-passe-appuis.js'];
 /* Test 25 (CH-018) : déplacement de la vue à geste réglable (src/deplacement-vue.js). Le détecteur de SKIP de CH-016 a été retiré à la demande de l'opérateur (D-268). */
 const SKIP_OMBRE=['deplacement-vue.js'];
+/* CH-111 (D-345) : la télécommande (module du service worker, son panneau d'appairage et le QR code) ; ni pose, ni validation, ni lot : ses ordres passent par le message `panel` du bouton. */
+const TELECOMMANDE=['qr.js','telecommande-panneau.js','telecommande.js'];
 /* CH-017 : la file de parties (machine à états pure), lue par le service worker seulement quand `file.actif` est allumé (éteinte à la livraison) ;
  * elle ne lit ni ne commande la pose ; le lot qu'elle démarre est le lot ordinaire. */
 const FILE_PARTIES=['file-parties.js'];
@@ -228,7 +230,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');
