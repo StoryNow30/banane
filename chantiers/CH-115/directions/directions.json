@@ -1,0 +1,3 @@
+[{"id":"a","nom":"Direction A","sous":"« Clair net »","defautClair":true,"note":"Clair d'abord, un seul accent pour les quatre panneaux, l'anneau au centre en grand ; la seule carte est la tuile d'état. Détails, fil et étapes à un clic."},
+ {"id":"b","nom":"Direction B","sous":"« Brume »","note":"Un sombre adouci, gris bleuté ; les tuiles de Vision 14 revenues ; un accent pastel par panneau, sur l'anneau et l'onglet seulement. Registre de la Constellation gardé d'emblée."},
+ {"id":"c","nom":"Direction C","sous":"« Papier »","defautClair":true,"note":"Une page claire sans cadres : le chiffre en très grand et une piste fine à la place de l'anneau ; un seul accent, les couleurs d'état seules colorent."}]

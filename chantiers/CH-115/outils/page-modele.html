@@ -1,0 +1,108 @@
+<title>Panneau Ariane, CH-115</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Mise en page : une bande de commandes (scène, lecture, taille, thème), puis les versions côte à côte, chacune le vrai panneau dans un cadre. */
+:root{
+  --fond:#EEF0F3;--carte:#FFFFFF;--encre:#16191F;--encre2:#5A606C;--trait:rgba(16,22,34,.12);--accent:#3D4FD1;--accent-doux:rgba(61,79,209,.10);
+  --f:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-chiffre:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fond:#15171B;--carte:#1D2026;--encre:#E9ECF1;--encre2:#A0A6B2;--trait:rgba(255,255,255,.10);--accent:#9AA6FF;--accent-doux:rgba(154,166,255,.14);color-scheme:dark}}
+:root[data-theme="dark"]{--fond:#15171B;--carte:#1D2026;--encre:#E9ECF1;--encre2:#A0A6B2;--trait:rgba(255,255,255,.10);--accent:#9AA6FF;--accent-doux:rgba(154,166,255,.14);color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--fond);color:var(--encre);font:400 14px/1.45 var(--f);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+h1{font-size:20px;font-weight:620;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.intro{max-width:72ch;color:var(--encre2);margin:6px 0 0}
+.bande{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--fond);padding-block:12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--trait);margin-top:14px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--fond)}
+.ligne{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+.ligne>span.lib{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--encre2);margin-right:4px}
+button.puce{font:inherit;font-size:13px;border:1px solid var(--trait);background:var(--carte);color:var(--encre);border-radius:999px;padding:5px 11px;cursor:pointer;transition:background .2s,border-color .2s}
+button.puce[aria-pressed="true"]{background:var(--accent-doux);border-color:var(--accent);color:var(--accent)}
+button.puce:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.prog{height:2px;background:var(--trait);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent)}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:18px;margin-top:18px}
+.col{min-width:0;display:flex;flex-direction:column;gap:8px}
+.col[hidden]{display:none}
+.tete{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.tete b{font-size:15px;font-weight:620}
+.tete span{color:var(--encre2);font-size:13px}
+.cadre{position:relative;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px var(--trait),0 12px 30px -18px rgba(0,0,0,.45);background:var(--carte)}
+.cadre iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent}
+.note{color:var(--encre2);font-size:12.5px;margin:0;max-width:60ch}
+.pied{margin-top:28px;color:var(--encre2);font-size:12.5px;max-width:80ch}
+@media (max-width:640px){.bande{position:static}}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none!important}}
+</style>
+<h1>Le panneau d'Ariane : Vision 14, Vision 15 et trois directions</h1>
+<p class="intro">Chaque colonne fait tourner le vrai panneau (mêmes scripts, mêmes boutons) avec de faux lots. Les scènes se suivent seules ; cliquez une scène pour la garder. Rien n'est relié à ESV. Dans les directions, un clic sur le haut du panneau ouvre ou ferme les détails.</p>
+<div class="bande">
+  <div class="ligne" id="scenes"><span class="lib">Scène</span></div>
+  <div class="ligne"><span class="lib">Lecture</span><button class="puce" id="lecture" aria-pressed="true">En boucle</button>
+    <span class="lib" style="margin-left:10px">Taille</span><button class="puce" data-taille="380x640" aria-pressed="true">Étroit</button><button class="puce" data-taille="600x760" aria-pressed="false">Large</button>
+    <span class="lib" style="margin-left:10px">Thème du panneau</span><button class="puce" data-theme-p="defaut" aria-pressed="true">Celui de chaque version</button><button class="puce" data-theme-p="sombre" aria-pressed="false">Sombre</button><button class="puce" data-theme-p="clair" aria-pressed="false">Clair</button></div>
+  <div class="ligne" id="montrer"><span class="lib">Montrer</span></div>
+  <div class="prog" aria-hidden="true"><i id="prog"></i></div>
+</div>
+<div class="grille" id="grille"></div>
+<p class="pied">Données fabriquées (partie 13, cuts 4790 à 4900 ; Constellation des parties 13 à 17). Vision 14 : feuilles du commit 5e8d305. Vision 15 : feuilles du tronc. Directions : feuilles du tronc, plus une feuille et un petit script de maquette par-dessus ; aucun fichier de l'extension n'est modifié. Les animations suivent le réglage « réduire les animations » du système.</p>
+<script>
+/*DONNEES*/
+(function(){
+'use strict';
+const V=DONNEES.variantes,SC=DONNEES.scenes;
+let scene=0,image=0,boucle=true,taille=[380,640],themeP='defaut',minuteur=null,debutImage=0;
+const imageCourante=()=>SC[scene].images[image];
+window.__image=imageCourante;
+const STUB=`(function(){try{history.replaceState(null,'','#automatic')}catch(e){}
+const P=parent,st={};
+const maint=o=>JSON.parse(JSON.stringify(o===undefined?null:o).replace(/"MAINTENANT-(\\d+)"/g,(_,s)=>JSON.stringify(new Date(Date.now()-s*1000).toISOString())));
+window.fetch=async()=>({ok:true,json:async()=>({totaux:{tous:{corriges:2731}},creeLe:'2026-10-20T08:00:00Z'})});
+window.chrome={runtime:{id:'essai',getURL:p=>p,connect:()=>({onMessage:{addListener(){}},onDisconnect:{addListener(){}},postMessage(){}}),
+ sendMessage:async m=>{const i=P.__image();const r={view:i.state,'list-tabs':[{id:1,title:'ESV',pret:true,utilise:true,index:0,windowId:1,active:true}],'choix-lot-etat':{clicHumain:'tel-quel',regleGrappeDifferes:false},'raison-choix-etat':{actif:false,touches:'chiffres'},'relecture-choix-etat':{mode:'corriger'},'relecture-etat':i.rel,'bandeau-etat':{on:false},'fiches-depart':{fiches:i.fiches}};return {result:m.action in r?maint(r[m.action]):{}};}},
+ storage:{local:{get:async()=>({...st}),set:async o=>{Object.assign(st,o);}}},windows:{getCurrent:async()=>({id:1,type:'normal',width:innerWidth,height:innerHeight}),update:async()=>({})}};})();`;
+const garde=s=>s.replace(/<\/(script)/gi,'<\\/$1');
+function doc(v){
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${CSS[v.id]}</style><script>${STUB}<\/script></head><body${ATTRS_BODY}>${CORPS}`
+   +JS.map(j=>`<script>${garde(j.t)}\n//# sourceURL=${j.s}<\/script>`).join('')+(v.maquette?`<script>${garde(MAQ)}<\/script>`:'')+`</body></html>`;
+}
+const grille=document.getElementById('grille'),cols=[];
+for(const v of V){
+  const c=document.createElement('section');c.className='col';c.dataset.id=v.id;
+  c.innerHTML=`<div class="tete"><b>${v.nom}</b><span>${v.sous}</span></div><div class="cadre"><iframe title="Panneau ${v.nom}" loading="eager"></iframe></div>${v.note?`<p class="note">${v.note}</p>`:''}`;
+  grille.appendChild(c);const f=c.querySelector('iframe');const o={v,c,f,onglet:'orbite',theme:null,pret:false};cols.push(o);
+  f.addEventListener('load',()=>{o.pret=true;o.onglet='orbite';o.theme=null;appliquer(o);});
+  f.srcdoc=doc(v);
+  const m=document.createElement('button');m.className='puce';m.textContent=v.nom;m.setAttribute('aria-pressed','true');
+  m.onclick=()=>{const vis=c.hidden;c.hidden=!vis;m.setAttribute('aria-pressed',String(vis));dimensionner();};
+  document.getElementById('montrer').appendChild(m);
+}
+function agir(o,a){try{o.f.contentWindow.ArianeUi5&&o.f.contentWindow.ArianeUi5.agir(a);}catch(e){}}
+function appliquer(o){
+  if(!o.pret)return;
+  const theme=themeP==='defaut'?(o.v.defautClair?'clair':'sombre'):themeP;
+  if(o.theme!==theme){agir(o,'sg:choix:theme:'+theme);o.theme=theme;}
+  const on=imageCourante().onglet;
+  if(o.onglet!==on){agir(o,on==='file'?'sg:onglet-file':'mode:automatic');o.onglet=on;}
+}
+function dimensionner(){
+  const [W,H]=taille;
+  for(const o of cols){if(o.c.hidden)continue;const w=o.c.querySelector('.cadre').clientWidth||W,k=Math.min(1,w/W);
+    o.f.style.width=W+'px';o.f.style.height=H+'px';o.f.style.transform=`scale(${k})`;o.c.querySelector('.cadre').style.height=Math.round(H*k)+'px';}
+}
+new ResizeObserver(dimensionner).observe(grille);
+const zoneScenes=document.getElementById('scenes'),boutonsScenes=SC.map((s,i)=>{const b=document.createElement('button');b.className='puce';b.textContent=s.nom;b.onclick=()=>{boucle=false;majLecture();aller(i,0);};zoneScenes.appendChild(b);return b;});
+function aller(i,j){scene=i;image=j;debutImage=performance.now();boutonsScenes.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));cols.forEach(appliquer);planifier();}
+function dureeImage(){const s=SC[scene];return s.images.length>1?(s.pas||1300):(s.duree||4000);}
+function planifier(){clearTimeout(minuteur);minuteur=setTimeout(()=>{const s=SC[scene];
+  if(image+1<s.images.length)aller(scene,image+1);else if(boucle)aller((scene+1)%SC.length,0);else{image=0;aller(scene,0);}},dureeImage());}
+const prog=document.getElementById('prog');
+(function tic(){const s=SC[scene],tot=s.images.length*dureeImage(),fait=image*dureeImage()+Math.min(dureeImage(),performance.now()-debutImage);prog.style.width=(100*Math.min(1,fait/tot))+'%';requestAnimationFrame(tic);})();
+const lecture=document.getElementById('lecture');
+function majLecture(){lecture.setAttribute('aria-pressed',String(boucle));lecture.textContent=boucle?'En boucle':'Scène gardée';}
+lecture.onclick=()=>{boucle=!boucle;majLecture();planifier();};
+document.querySelectorAll('[data-taille]').forEach(b=>b.onclick=()=>{taille=b.dataset.taille.split('x').map(Number);document.querySelectorAll('[data-taille]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));dimensionner();});
+document.querySelectorAll('[data-theme-p]').forEach(b=>b.onclick=()=>{themeP=b.dataset.themeP;document.querySelectorAll('[data-theme-p]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cols.forEach(appliquer);});
+dimensionner();aller(0,0);
+})();
+</script>

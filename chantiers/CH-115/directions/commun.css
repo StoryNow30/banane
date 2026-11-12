@@ -1,0 +1,63 @@
+/* CH-115, MAQUETTE : la couche commune aux trois directions, posée sur panel-signal.css (tronc). Elle porte l'épure et le mouvement ;
+ * chaque direction (a.css, b.css, c.css) n'y ajoute que sa matière (couleurs, formes). Sélecteurs : ceux du vrai panneau (src/signal-rendu.js). */
+
+/* 1. Moins d'informations d'emblée : l'essentiel reste (état, avancement, cut en cours, à poser, actions). Le reste s'ouvre d'un clic sur la tuile. */
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="orbite"] .sg-tu-fil,
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="orbite"] .sg-tu-etapes,
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="echo"] .sg-objet,
+html:not(.cx-details) #ui5.u-signal .sg-lot-bornes,
+html:not(.cx-details) #ui5.u-signal .sg-trio,
+html:not(.cx-details) #ui5.u-signal .sg-poignee .sg-reste{display:none}
+/* « à poser » n'est plus dit qu'une fois : sur la ligne qui ouvre « Ce qui reste » */
+/* le bruit (inventaire, classe C) : notes permanentes, rappels répétés */
+#ui5.u-signal .sg-of-note,#ui5.u-signal .sg-corr-note,#ui5.u-signal .sg-tu[data-k="note"],#ui5.u-signal [data-k="verrou"].sg-tu-avis small{display:none}
+/* le verrou du rattrapage était dit trois fois : il ne reste que la ligne du pied */
+#ui5.u-signal .sg-tu-verrou{display:none}
+/* la puce ESV : la pastille seule quand tout va bien (nom au survol et dans la liste) ; un état anormal reste écrit */
+#ui5.u-signal .sg-puce:is([data-etat="ok"],[data-etat="verrou"]) .sg-tx{display:none}
+#ui5.u-signal .sg-puce:is([data-etat="ok"],[data-etat="verrou"]){padding-inline:8px}
+
+/* l'invitation aux détails : discrète, sous la tuile */
+#ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) :is(.sg-tu-etat,.sg-constel){cursor:pointer}
+#ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) :is(.sg-tu-etat,.sg-constel)::after{content:"Détails";position:absolute;right:14px;bottom:10px;font:500 10.5px/1 var(--f);letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);opacity:.75;transition:opacity .2s}
+html.cx-details #ui5.u-signal .sg-fen :is(.sg-tu-etat,.sg-constel)::after{content:"Moins"}
+#ui5.u-signal :is(.sg-tu-etat,.sg-constel):hover::after{opacity:1}
+
+/* 2. Les messages : une alerte qui demande un geste reste une carte nette, sans rouge plein ; un avis seul (refus d'une action) tient sur une ligne */
+#ui5.u-signal .sg-tu-avis .sg-ic{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(var(--c1-rgb),.16);color:var(--c1-tx);font:650 12px/1 var(--f);flex:none}
+#ui5.u-signal .sg-avis-seul p{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+#ui5.u-signal .sg-avis-seul:hover p{-webkit-line-clamp:unset}
+
+/* 3. Le mouvement : entrée de la tuile à chaque changement d'état, chiffres qui roulent, zones qui entrent l'une après l'autre */
+#ui5.u-signal .cx-change .sg-mot,#ui5.u-signal .cx-change .sg-phrase,#ui5.u-signal .cx-change .sg-constel-t{animation:cx-monte .5s var(--doux) both}
+#ui5.u-signal .cx-change .sg-phrase{animation-delay:.06s}
+#ui5.u-signal .cx-change .sg-anneau{animation:cx-souffle .7s var(--doux)}
+#ui5.u-signal .cx-roule{display:inline-block;animation:cx-roule .42s var(--ressort)}
+#ui5.u-signal .sg-zone>*,html.cx-details #ui5.u-signal :is(.sg-tu-fil,.sg-tu-etapes,.sg-lot-bornes,.sg-trio>div,.sg-onglet-file [data-k="duo"]){animation:cx-monte .45s var(--doux) both}
+#ui5.u-signal .sg-zone>*:nth-child(2){animation-delay:.05s}
+#ui5.u-signal .sg-zone>*:nth-child(3){animation-delay:.1s}
+#ui5.u-signal .sg-actions>button{animation:cx-monte .4s var(--doux) both}
+#ui5.u-signal .sg-actions>button:nth-child(2){animation-delay:.04s}
+#ui5.u-signal .sg-actions>button:nth-child(3){animation-delay:.08s}
+/* l'anneau respire tant qu'Ariane travaille (opacité et échelle d'un halo, rien d'autre) */
+#ui5.u-signal .sg-anneau::before{content:"";position:absolute;inset:-8%;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--c1-rgb),.20),transparent);opacity:0;pointer-events:none}
+#ui5.u-signal .sg-fen[data-teinte="marche"] .sg-anneau::before{animation:cx-halo 2.8s ease-in-out infinite}
+#ui5.u-signal .sg-fen[data-teinte="toi"] .sg-anneau::before,#ui5.u-signal .sg-fen[data-teinte="panne"] .sg-anneau::before{opacity:.9}
+#ui5.u-signal .sg-anneau .sg-arc{transition:stroke-dasharray .9s var(--doux),stroke .5s}
+/* la chaîne des parties : la partie en cours bat, les liens se remplissent */
+#ui5.u-signal .sg-chaine li[data-etat="en-cours"] i{animation:cx-bat 1.6s ease-in-out infinite}
+@keyframes cx-monte{from{opacity:0;transform:translateY(8px)}}
+@keyframes cx-roule{from{opacity:0;transform:translateY(60%)}}
+@keyframes cx-souffle{40%{transform:scale(1.04)}}
+@keyframes cx-halo{0%,100%{opacity:.25;transform:scale(.92)}50%{opacity:.9;transform:scale(1.04)}}
+@keyframes cx-bat{0%,100%{box-shadow:0 0 0 0 rgba(var(--c1-rgb),.45)}50%{box-shadow:0 0 0 6px rgba(var(--c1-rgb),0)}}
+@media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}}
+
+/* 4. La place : sans détails, la tuile d'état prend la hauteur libre et centre son contenu ; quand une alerte demande un geste, l'anneau se fait petit */
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-tu-etat{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center}
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-tu-etat .sg-haut{position:absolute;top:14px;left:14px;right:14px}
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-zone{flex:0 1 auto}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel .sg-haut{position:absolute;top:14px;left:14px;right:14px}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-onglet-file{flex:0 1 auto}
+#ui5.u-signal .sg-tu-etat,#ui5.u-signal .sg-constel{transition:flex-grow .5s var(--doux)}
