@@ -16,10 +16,10 @@ Il n'y a **aucun secret à fabriquer ni à coller** dans Cloudflare. Le seul sec
 ## B. Installer le relais (10 min, sur l'ordinateur)
 Le relais est fait de trois fichiers du dossier `telecommande/` du dépôt : `worker.js`, `telephone.html`, `wrangler.toml`. Il s'installe avec l'outil officiel de Cloudflare, `wrangler`, qui tourne avec Node.js.
 
-4. Si Node.js n'est pas installé : https://nodejs.org → version « LTS » → installe-la avec les choix proposés.
+4. Si Node.js n'est pas installé (Windows répond « Le terme « npx » n'est pas reconnu… ») : https://nodejs.org → version « LTS » → installe-la avec les choix proposés (ou, dans un terminal : `winget install OpenJS.NodeJS.LTS`). Puis **ferme le terminal et rouvres-en un** : un terminal déjà ouvert ne voit pas Node.js. Contrôle : `node -v` doit afficher un numéro de version.
 5. Mets les trois fichiers dans un dossier vide de ton ordinateur, par exemple `Documents/ariane-telecommande` (sur GitHub, ouvre chaque fichier, bouton « Raw », Fichier › Enregistrer sous, en gardant exactement son nom).
 6. Ouvre un terminal dans ce dossier (Windows : clic droit dans le dossier › « Ouvrir dans le terminal » ; Mac : Terminal, puis `cd ` et glisse le dossier dans la fenêtre, Entrée).
-7. Tape `npx wrangler login`, Entrée (accepte l'installation de wrangler si on te la propose). Une page Cloudflare s'ouvre : **Allow**. Reviens au terminal.
+7. Tape `npx wrangler login`, Entrée (accepte l'installation de wrangler si on te la propose ; une seule commande à la fois). Si Windows répond que « l'exécution de scripts est désactivée », tape `npx.cmd` au lieu de `npx`, ici et à l'étape 8. Une page Cloudflare s'ouvre : **Allow**. Reviens au terminal.
 8. Tape `npx wrangler deploy`, Entrée. À la fin, le terminal affiche l'adresse du relais, qui commence par https et se termine par `ariane-telecommande.<ton-sous-domaine>.workers.dev`. Note-la (ce n'est pas un secret, mais inutile de la répandre).
 9. Contrôle : ouvre cette adresse dans ton navigateur. Tu dois voir une page « Ariane » qui demande un code. C'est la page du téléphone.
 
@@ -40,9 +40,9 @@ Il faut une version d'Ariane qui contient la télécommande (CH-111) et **Chrome
 ## E. À l'usage
 - La page du téléphone se met à jour d'elle-même (en général en moins d'une seconde) et se reconnecte seule après une coupure de réseau ou un retour sur l'appli.
 - **« Ariane hors ligne · dernier état à HH:MM »** : l'ordinateur ne parle plus (Chrome fermé, ordinateur en veille, réseau coupé). Les boutons sont grisés tant qu'Ariane est hors ligne.
-- Les boutons sont ceux que le panneau propose au même moment. « Arrêter » demande une confirmation. Chaque ordre reçoit une réponse d'Ariane : « fait », ou le refus exact du panneau (par exemple « Sélectionne un onglet ESV. »).
+- Les boutons sont ceux que le panneau propose au même moment. « Arrêter » demande une confirmation. Chaque ordre reçoit une réponse d'Ariane : « fait », ou un refus. Le téléphone ne reçoit pas la phrase du panneau : il reçoit un code d'une liste fermée (et le numéro de cut s'il y en a un) et affiche une phrase fixe pour ce code (par exemple « aucun onglet ESV choisi sur l’ordinateur. »).
 - **Heures** : l'ordinateur et l'iPhone doivent être à l'heure automatique ; un ordre de plus de 30 secondes est refusé (« Ordre trop ancien »).
-- Chaque ordre reçu, accepté ou refusé, est noté au journal d'Ariane (`telecommande-ordre`), sans la clé ni aucun texte.
+- Chaque ordre reçu, accepté ou refusé, est noté au journal d'Ariane sur l'ordinateur (`telecommande-ordre`), sans la clé ; en cas de refus, la phrase du panneau y est gardée (300 caractères au plus) avec son code. Cette phrase ne part jamais vers le téléphone.
 
 ## F. Couper
 - **Sur l'ordinateur** : Réglages › Télécommande › **Couper la télécommande**. Ariane oublie la clé, ferme la liaison et rend la permission du relais. Les téléphones appairés passent « hors ligne » et leurs ordres ne servent plus à rien. Pour reprendre : appairer de nouveau (nouvelle clé, nouveau QR code).
