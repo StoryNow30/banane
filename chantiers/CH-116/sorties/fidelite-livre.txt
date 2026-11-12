@@ -1,0 +1,169 @@
+0411-p10-r1 : décisions identiques 397/397 ; poses identiques à 1 mm 60/60
+0411-p13-r1 : décisions identiques 151/153 ; poses identiques à 1 mm 115/123
+    203 : pose à 10.1 mm du réel (étage réel deferred, rejeu choice)
+    206 : pose à 10.2 mm du réel (étage réel deferred, rejeu deferred)
+    207 : pose à 7.2 mm du réel (étage réel deferred, rejeu deferred)
+    208 : pose à 7.3 mm du réel (étage réel deferred, rejeu deferred)
+    209 : pose à 5.0 mm du réel (étage réel deferred, rejeu deferred)
+    210 : pose à 6.7 mm du réel (étage réel deferred, rejeu deferred)
+    227 : pose à 5.0 mm du réel (étage réel deferred, rejeu deferred)
+    542 : réel différé (commande-autre), rejeu pose (first-pass)
+    543 : réel différé (commande-autre), rejeu pose (first-pass)
+    2568 : pose à 5.7 mm du réel (étage réel deferred, rejeu deferred)
+0411-p14-r1 : décisions identiques 116/122 ; poses identiques à 1 mm 101/109
+    171 : réel différé (commande-autre), rejeu pose (first-pass)
+    877 : réel différé (reprise-sans-minimum), rejeu pose (deferred)
+    4130 : réel posé (deferred), rejeu differe (deferred)
+    4135 : pose sans décalage
+    4136 : pose sans décalage
+    4137 : pose à 7.9 mm du réel (étage réel crossing, rejeu window)
+    4140 : pose à 2.6 mm du réel (étage réel window, rejeu choice)
+    4141 : pose à 9.1 mm du réel (étage réel choice, rejeu crossing)
+    4142 : pose à 1.8 mm du réel (étage réel deferred, rejeu deferred)
+    4143 : réel posé (deferred), rejeu differe (deferred)
+    4890 : réel posé (deferred), rejeu differe (deferred)
+    4891 : pose sans décalage
+    4892 : pose sans décalage
+    5341 : réel différé (commande-autre), rejeu pose (first-pass)
+0411-p15-r1 : décisions identiques 70/70 ; poses identiques à 1 mm 61/61
+0511-p8-r1 : décisions identiques 157/157 ; poses identiques à 1 mm 151/156
+    858 : pose à 1.8 mm du réel (étage réel deferred, rejeu deferred)
+    900 : pose à 1.6 mm du réel (étage réel deferred, rejeu deferred)
+    2734 : pose sans décalage
+    2735 : pose sans décalage
+    9208 : pose à 2.0 mm du réel (étage réel deferred, rejeu deferred)
+0511-p9-r1 : décisions identiques 126/126 ; poses identiques à 1 mm 125/125
+0511-p9-r2 : décisions identiques 8/8 ; poses identiques à 1 mm 8/8
+0511-p10-r1 : décisions identiques 203/218 ; poses identiques à 1 mm 192/196
+    2006 : réel différé (commande-autre), rejeu pose (first-pass)
+    2007 : réel différé (commande-autre), rejeu pose (first-pass)
+    2009 : réel différé (sans-appui), rejeu pose (window)
+    2010 : réel différé (commande-autre), rejeu pose (first-pass)
+    2011 : réel différé (commande-autre), rejeu pose (first-pass)
+    3700 : réel différé (commande-autre), rejeu pose (first-pass)
+    3701 : réel différé (sans-appui), rejeu pose (choice)
+    4068 : réel posé (deferred), rejeu differe (deferred)
+    4069 : pose sans décalage
+    4070 : pose sans décalage
+    4975 : réel différé (commande-autre), rejeu pose (first-pass)
+    4976 : réel différé (commande-autre), rejeu pose (first-pass)
+    4977 : réel différé (sans-appui), rejeu pose (choice)
+    4979 : réel différé (sans-appui), rejeu pose (choice)
+    4980 : réel différé (sans-appui), rejeu pose (choice)
+    4981 : réel différé (sans-appui), rejeu pose (deferred)
+    4982 : réel différé (commande-autre), rejeu pose (first-pass)
+    5131 : pose à 4.5 mm du réel (étage réel deferred, rejeu deferred)
+    6425 : pose sans décalage
+0511-p11-r1 : décisions identiques 226/226 ; poses identiques à 1 mm 224/224
+0511-p12-r1 : décisions identiques 128/130 ; poses identiques à 1 mm 127/127
+    9336 : réel différé (commande-autre), rejeu pose (first-pass)
+    9337 : réel différé (commande-autre), rejeu pose (first-pass)
+0611-p13-r1 : décisions identiques 353/353 ; poses identiques à 1 mm 344/346
+    2226 : pose à 1.1 mm du réel (étage réel deferred, rejeu deferred)
+    2275 : pose à 1.5 mm du réel (étage réel deferred, rejeu deferred)
+0611-p15-r1 : décisions identiques 160/161 ; poses identiques à 1 mm 141/142
+    1636 : pose à 1.7 mm du réel (étage réel deferred, rejeu deferred)
+    7267 : réel posé (deferred), rejeu differe (deferred)
+0611-p16-r1 : décisions identiques 425/431 ; poses identiques à 1 mm 377/408
+    3762 : pose à 4.7 mm du réel (étage réel deferred, rejeu deferred)
+    4163 : réel posé (deferred), rejeu differe (deferred)
+    4200 : pose à 1.0 mm du réel (étage réel deferred, rejeu deferred)
+    4676 : pose à 1.1 mm du réel (étage réel deferred, rejeu deferred)
+    5197 : pose à 2.5 mm du réel (étage réel deferred, rejeu deferred)
+    6561 : pose à 2.0 mm du réel (étage réel deferred, rejeu deferred)
+    8993 : pose à 1.2 mm du réel (étage réel deferred, rejeu deferred)
+    8994 : pose à 1.2 mm du réel (étage réel deferred, rejeu deferred)
+    9002 : réel posé (deferred), rejeu differe (deferred)
+    9110 : pose à 6.4 mm du réel (étage réel window, rejeu deferred)
+    9111 : pose à 8.2 mm du réel (étage réel window, rejeu deferred)
+    9112 : pose à 5.4 mm du réel (étage réel window, rejeu deferred)
+    9113 : pose à 8.2 mm du réel (étage réel window, rejeu deferred)
+    9115 : pose à 9.2 mm du réel (étage réel window, rejeu deferred)
+    9116 : pose à 10.0 mm du réel (étage réel deferred, rejeu deferred)
+    9117 : pose à 10.1 mm du réel (étage réel deferred, rejeu deferred)
+    9122 : réel posé (deferred), rejeu differe (deferred)
+    9124 : réel posé (deferred), rejeu differe (deferred)
+    9125 : réel posé (deferred), rejeu differe (deferred)
+    9147 : pose à 8.8 mm du réel (étage réel choice, rejeu deferred)
+    9148 : pose à 7.4 mm du réel (étage réel window, rejeu deferred)
+    9149 : pose à 8.9 mm du réel (étage réel window, rejeu deferred)
+    9150 : pose à 8.4 mm du réel (étage réel choice, rejeu deferred)
+    9151 : pose à 6.3 mm du réel (étage réel deferred, rejeu deferred)
+    9153 : pose à 11.4 mm du réel (étage réel deferred, rejeu deferred)
+    9154 : pose à 3.7 mm du réel (étage réel deferred, rejeu deferred)
+    9155 : pose à 1.9 mm du réel (étage réel deferred, rejeu deferred)
+    9157 : pose à 7.1 mm du réel (étage réel deferred, rejeu deferred)
+    9159 : pose à 9.7 mm du réel (étage réel deferred, rejeu deferred)
+    9165 : pose à 10.3 mm du réel (étage réel choice, rejeu deferred)
+    9166 : réel posé (window), rejeu differe (deferred)
+    9168 : pose à 12.7 mm du réel (étage réel deferred, rejeu deferred)
+    9171 : pose à 9.9 mm du réel (étage réel deferred, rejeu deferred)
+    9174 : pose à 16.9 mm du réel (étage réel deferred, rejeu deferred)
+    9176 : pose à 16.7 mm du réel (étage réel deferred, rejeu deferred)
+    9257 : pose à 9.0 mm du réel (étage réel window, rejeu window)
+    9260 : pose à 1.4 mm du réel (étage réel deferred, rejeu deferred)
+0811a-p3-r1 : décisions identiques 21/21 ; poses identiques à 1 mm 20/20
+0811a-p4-r1 : décisions identiques 94/95 ; poses identiques à 1 mm 89/89
+    3970 : réel posé (deferred), rejeu differe (deferred)
+0811b-p6-r1 : décisions identiques 70/73 ; poses identiques à 1 mm 63/65
+    131 : réel posé (deferred), rejeu differe (deferred)
+    132 : pose à 10.7 mm du réel (étage réel window, rejeu window)
+    141 : réel différé (sans-appui), rejeu pose (deferred)
+    170 : pose à 8.4 mm du réel (étage réel window, rejeu deferred)
+    173 : réel différé (pose-non-validee), rejeu pose (deferred)
+0811b-p6-r2 : décisions identiques 147/150 ; poses identiques à 1 mm 114/124
+    204 : réel posé (deferred), rejeu differe (deferred)
+    208 : pose à 1.8 mm du réel (étage réel deferred, rejeu deferred)
+    209 : pose à 1.1 mm du réel (étage réel deferred, rejeu deferred)
+    257 : pose à 1.4 mm du réel (étage réel window, rejeu deferred)
+    259 : pose à 15.7 mm du réel (étage réel window, rejeu deferred)
+    261 : pose à 8.4 mm du réel (étage réel deferred, rejeu deferred)
+    281 : réel posé (choice), rejeu differe (deferred)
+    282 : pose à 159.9 mm du réel (étage réel window, rejeu first-pass)
+    285 : pose à 5.1 mm du réel (étage réel window, rejeu deferred)
+    328 : pose à 11.0 mm du réel (étage réel deferred, rejeu deferred)
+    329 : réel posé (deferred), rejeu differe (deferred)
+    331 : pose à 1.3 mm du réel (étage réel deferred, rejeu deferred)
+    332 : pose à 1.9 mm du réel (étage réel deferred, rejeu deferred)
+1111-p15-r1 : décisions identiques 105/105 ; poses identiques à 1 mm 95/96
+    2142 : pose à 1.0 mm du réel (étage réel deferred, rejeu deferred)
+1111-p16-r1 : décisions identiques 419/421 ; poses identiques à 1 mm 372/376
+    1294 : pose à 12.7 mm du réel (étage réel deferred, rejeu deferred)
+    4501 : pose à 10.9 mm du réel (étage réel deferred, rejeu deferred)
+    4565 : pose à 12.8 mm du réel (étage réel window, rejeu window)
+    4566 : pose à 13.8 mm du réel (étage réel window, rejeu window)
+    4571 : réel posé (deferred), rejeu differe (deferred)
+    4572 : réel posé (deferred), rejeu differe (deferred)
+1111-p17-r1 : décisions identiques 45/46 ; poses identiques à 1 mm 43/44
+    551 : réel posé (deferred), rejeu differe (deferred)
+    552 : pose à 1.0 mm du réel (étage réel deferred, rejeu deferred)
+1211-p0-r1 : décisions identiques 109/109 ; poses identiques à 1 mm 105/107
+    121 : pose à 1.0 mm du réel (étage réel deferred, rejeu deferred)
+    1565 : pose à 4.6 mm du réel (étage réel deferred, rejeu deferred)
+1211-p1-r1 : décisions identiques 42/42 ; poses identiques à 1 mm 42/42
+1211-p2-r1 : décisions identiques 91/91 ; poses identiques à 1 mm 89/89
+1211-p23-r1 : décisions identiques 300/311 ; poses identiques à 1 mm 254/266
+    905 : pose à 1.2 mm du réel (étage réel deferred, rejeu deferred)
+    906 : pose à 1.5 mm du réel (étage réel deferred, rejeu deferred)
+    2077 : pose à 1.4 mm du réel (étage réel deferred, rejeu deferred)
+    3738 : réel posé (deferred), rejeu differe (deferred)
+    3739 : réel posé (deferred), rejeu differe (deferred)
+    3740 : réel posé (deferred), rejeu differe (deferred)
+    3741 : réel posé (deferred), rejeu differe (deferred)
+    3743 : réel posé (deferred), rejeu differe (deferred)
+    4164 : réel posé (deferred), rejeu differe (deferred)
+    5082 : pose à 9.5 mm du réel (étage réel window, rejeu deferred)
+    5083 : pose à 9.5 mm du réel (étage réel window, rejeu deferred)
+    5084 : réel posé (deferred), rejeu differe (deferred)
+    5086 : pose à 1.2 mm du réel (étage réel deferred, rejeu deferred)
+    5159 : pose à 9.1 mm du réel (étage réel deferred, rejeu deferred)
+    5165 : pose à 4.7 mm du réel (étage réel deferred, rejeu deferred)
+    5189 : pose à 1.5 mm du réel (étage réel deferred, rejeu deferred)
+    5190 : pose à 2.0 mm du réel (étage réel deferred, rejeu deferred)
+    5203 : réel posé (deferred), rejeu differe (deferred)
+    5209 : réel posé (deferred), rejeu differe (deferred)
+    5214 : réel posé (deferred), rejeu differe (deferred)
+    5215 : réel posé (deferred), rejeu differe (deferred)
+    5265 : pose à 1.1 mm du réel (étage réel deferred, rejeu deferred)
+    5273 : pose à 10.4 mm du réel (étage réel deferred, rejeu deferred)
+TOTAL : décisions identiques 3963/4016 (98.7 %) ; poses identiques 3312/3403 (97.3 %)

@@ -61,6 +61,8 @@ function lignesDe(e, o) {
       ecart: null, classe: 'non-juge', exclu: null, poseApresLot: false };
     const exclure = r => { c.exclu = r; return c; };
     if (!j || !j.dansEcho) return exclure('absent-de-l-echo');
+    /* Posé par le lot sans décalage au journal (pose de la deuxième passe surtout) : la pose du lot n'a pas de repère commun avec le banc. */
+    if (re.pose && !re.decal) return exclure('pose-du-lot-sans-decalage');
     if (j.referenceHumaine !== 'observee') return exclure(j.referenceHumaine === 'sans-reference' && j.visiteSansAction ? 'visite-' + j.visiteSansAction.raison : String(j.referenceHumaine));
     if (j.etiquetteEcho === 'SKIP') return exclure('skip-operateur');
     const validation = /^VALIDATE_|^AMBIGUOUS/.test(j.etiquetteEcho || '');
@@ -120,7 +122,7 @@ function resume(parLot, absents) {
   const mv = Object.values(parLot).flat().filter(c => c.classe === 'mauvaise-voie' && !c.exclu);
   if (mv.length) L.push('', 'Mauvaises voies (lot partie/cut mm zone) : ' + mv.map(c => `${c.lot} ${c.partie}/${c.cut} ${c.ecart.pire3d} ${c.zone}`).join(' ; '));
   const apres = Object.values(parLot).flat().filter(c => c.poseApresLot && !c.exclu);
-  L.push('', `Cuts jugés dont la pose vue par l'Écho n'est pas celle du lot (relecture ou deuxième passe passées après) : ${apres.length} ; la classe juge toujours la pose DU LOT.`);
+  L.push('', `Contrôle de cohérence : cuts jugés dont la pose d'Ariane de la jointure diffère de plus de 1 mm de celle du lot rejoué : ${apres.length}.`);
   if (absents.length) L.push('', 'Lots-parties sans rejeu ou sans jointure (non préparés) : ' + absents.join(', '));
   L.push('', 'Lots exportés sans Écho joignable (hors corpus) : ' + SANS_ECHO.map(s => `${s.lot} parties ${s.parties.join(', ')}`).join(' ; ') + '.');
   return L.join('\n') + '\n';
