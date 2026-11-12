@@ -1,0 +1,1 @@
+Contrôle « leviers coupés » (ch117-eteint : patchs gcv2-voie-adv + banc-veto-chaine appliqués, sans BANC_LEVIERS) contre « livre » : 4016 cuts sur 4016 identiques (état, étage, source, raison, décalages, sort réel).
