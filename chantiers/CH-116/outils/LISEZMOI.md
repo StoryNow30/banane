@@ -1,0 +1,21 @@
+# CH-116 : corpus jugé et banc « GCV2.1 » (hors ligne, lecture seule)
+
+Aucun fichier de l'extension n'est touché. Données : clone partiel de `banane-data` (branche de documents), extraites hors dépôt dans `CH116_TRAVAIL` (par défaut `~/ch116`).
+
+## Préparer (une fois)
+1. `DONNEES=<clone banane-data> CH116_TRAVAIL=~/ch116 bash chantiers/CH-116/outils/extraire.sh` : dézippe les lots et les Échos utiles.
+2. `node --max-old-space-size=8192 chantiers/CH-116/outils/preparer.cjs [--lots 1111,1211] [--effacer-segments]` : retrouve chaque lot dans son journal (partie et rang, aucun identifiant écrit au dépôt), réduit les captures aux cuts du lot (`captures/`, parts de 250 Mo), fait la jointure Écho ↔ journal (`j/`), écrit `meta/`.
+3. `node chantiers/CH-116/outils/banc.cjs rejouer --nom livre` : rejeu du code livré (profil L1-se) sur tout le corpus (~1 s par cut, 3 tâches en parallèle).
+4. `node chantiers/CH-116/outils/corpus.cjs [--sortie DOSSIER]` : `corpus.jsonl` + `resume.md` (par défaut `chantiers/CH-116/sorties/`, à verser par l'intégrateur dans `banane-data/outils/analyse-lots/CH-116/`).
+
+Lots et parties : `lots.cjs` (étiquettes `0411`, `0511` (examen, D-285), `0611`, `0811a`, `0811b`, `1111`, `1211`).
+
+## Le corpus (`corpus.jsonl`, une ligne par cut posé ou différé par le lot)
+`lot, partie, rang, cut, ordre` (rang du cut dans le lot), `examen`, `zone` (règles métier du banc), `chemin` (`etage`, `motif` du lot réel ; `rejeu` = étage du rejeu livré), `sortLot` (`pose`/`differe`), `capture` (nuage du corpus du lot avec points), `points`, `ecartementDepartMm`, `poseAriane` (décalages du lot), `poseFinale` (pose finale de l'opérateur), `ref` (`validation`/`visite-sans-action`), `etiquette`, `dureeVisiteS`, `ecart` (`pire3d`, `lat`, `vert`, `rail` : pire rail, pose du lot → pose finale ; pour un différé : départ → pose finale), `classe` (`juste` ≤ 10 mm, `10-50`, `mauvaise-voie` > 50, `differe-corrige`, `differe-juste`, `non-juge`), `exclu` (motif ; `d285-…` = jugé mais écarté par D-285), `poseApresLot` (la pose vue par l'Écho n'est pas celle du lot : relecture ou deuxième passe).
+Décalages : mm, `[longitudinal, latéral, vertical]`, repère profil de la pose de départ d'ESV, le même que les poses du banc. Pose finale = déplacement d'Ariane + écart humain de la jointure (cut posé), ou écart humain depuis la première visite si le départ de l'Écho a l'écartement du départ du lot à 2 mm près (cut différé).
+
+## Le banc (`banc.cjs`)
+- `rejouer --nom N [--patch P.patch …] [--env CLE=VALEUR …] [--lots …] [--jobs 3]` : copie de HEAD + patchs (fichiers protégés compris : la copie est hors dépôt), rejeu de tout le corpus. Un réglage = un patch et/ou des variables lues par le patch.
+- `juger --nom N [--ref livre] [--avec-courtes] [--json] [--csv]` : tableau standard par lot (posés jugés, ≤ 10, 10–50, > 50, différés, différés reposés justes / faux, bons bloqués) et, avec `--ref`, les cuts changés.
+- `fidelite --nom livre` : décisions et poses du rejeu identiques au lot réel, lot par lot, écarts listés.
+- `croise --noms a,b,c [--ref livre] [--poids JSON] [--examen 0511|aucun]` : validation croisée par lot (réglage choisi au coût minimal sur tous les autres lots réglables, jugé sur celui tenu à l'écart), puis examen (réglage choisi sur tous les lots réglables, jugé sur les lots d'examen, jamais vus). Coût par défaut `100·(>50) + 10·(10–50) + 5·(bons bloqués) + 1·(différés)`.
