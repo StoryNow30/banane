@@ -1,0 +1,7 @@
+cut;zone;errMm;source;etage;motifL1;p;tau;raisonChaine;appuisReels;validesListe;verLatG;verLatD;poseLatG;poseLatD;nHypG;nHypD;poolG;poolD;voieSrc;voieDist;voieLatG;voieLatD;voieVsVerite;ombreMotif;ombreErrMm;voisinsAvant
+3959;adv;252.8;lot;first-pass;veto-voie-absolue;0.3624;0.49;left:no-qualified-minimum-near-prediction;;;228.3;186.4;-24.1;-48.9;14;17;138.6;109.7;proche;4;27.4;76.8;201;veto-voie-absolue;;3955@0:f
+3960;adv;311.9;gcv2;deferred;ecartement-corrige;0.126;0.49;left:no-qualified-minimum-near-prediction right:no-qualified-minimum-near-predic;;;137.1;184.2;-174.4;-109.4;15;17;129.7;170.3;proche;1;-24.1;-48.9;233.1;;;3955@0:f 3959@253:f
+3961;adv;271.3;lot;window;veto-voie-absolue;0.2915;0.49;left:no-qualified-minimum-near-prediction right:no-qualified-minimum-near-predic;;;151.3;198.7;-119.7;-63.1;16;17;143.7;184.7;proche;1;-174.4;-109.4;325.8;veto-voie-absolue;;3955@0:f 3959@253:f 3960@312:g
+3966;adv;140.9;gcv2;deferred;sous-tau-coherent;0.2051;0.49;no-anchor;;;189.4;237.2;48.6;108.5;14;18;112.5;132.5;proche;5;-119.7;-63.1;309.1;;;3960@312:g 3961@271:w
+3968;adv;153.7;gcv2;deferred;consensus;0;0.49;no-anchor;;;192.2;243.7;43;110.2;18;17;152.6;88.6;proche;2;48.6;108.5;143.6;;;3966@141:g
+4508;adv;262.5;lot;first-pass;veto-voie-absolue;0.4988;0.49;left:no-qualified-minimum-near-prediction right:no-qualified-minimum-near-predic;;;235.1;182.1;-27.2;-46.9;17;17;92.4;77.4;proche;5;151.9;105.4;83.2;veto-voie-absolue;;4502@0:w 4503@3:g
