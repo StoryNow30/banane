@@ -286,7 +286,7 @@ test('les réglages sont ceux de la test 8, hors la ligne echo.raison et la reca
  /* CH-079 (D-308) : garde de voie et serrage du lot en OMBRE (consignés seulement), mesurés dans chantiers/CH-079/rapport.md. */
  assert.deepEqual({...gardeVoieOmbre},{actif:true,seuilMm:15,fenetre:20,voisinesMin:5},'CH-079 : garde de voie en ombre');assert.deepEqual({...serrageLotOmbre},{actif:true,plafondMm:20,fenetre:20,voisinesMin:5},'CH-079 : serrage du lot en ombre');
  /* CH-114 (D-347) : la règle « voie des cuts sûrs » en OMBRE (consignée seulement), mesurée dans chantiers/CH-112/rapport.md. */
- assert.deepEqual({...voieSureOmbre},{actif:true,seuilMm:100,courbureMm:2,ecartCuts:12},'CH-114 : voie des cuts sûrs en ombre');
+ assert.deepEqual(JSON.parse(JSON.stringify(voieSureOmbre)),{actif:true,seuilMm:100,courbureMm:2,ecartCuts:12,origine:{actif:true,methode:'profil2',abstenuSur:true,seuilMm:100,courbureMm:0,zones:['alerte','marge-avant','marge-apres']}},'CH-114 : voie des cuts sûrs en ombre, avec le verdict d’origine (partie 23 du 12/11)');
  assert.equal(serieCapturesVides.actif,true,'D-283 : la garde « série de captures vides » est ALLUMÉE par défaut (décision de l\'opérateur)');
  assert.equal(rechercheLarge.actif,false,'CH-034 : la recherche large est ÉTEINTE par défaut (ordre de l\'opérateur, 02/11 : tant que son temps de calcul n\'est pas supprimé, CH-041)');assert.equal(rechercheLarge.mode,'differer');assert.equal(rechercheLarge.soutienTop,60);assert.equal(rechercheLarge.grainesMode,'grille');
  /* Test 25 (CH-019) : la garde « après un différé », livrée ALLUMÉE (règle R3) ; `actif:false` rend le lot d'avant (tests/garde-apres-differe-coupee-sw.test.cjs). */
