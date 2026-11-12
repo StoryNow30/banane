@@ -6,7 +6,7 @@ Aucun fichier de l'extension n'est touché. Données : clone partiel de `banane-
 1. `DONNEES=<clone banane-data> CH116_TRAVAIL=~/ch116 bash chantiers/CH-116/outils/extraire.sh` : dézippe les lots et les Échos utiles.
 2. `node --max-old-space-size=8192 chantiers/CH-116/outils/preparer.cjs [--lots 1111,1211] [--effacer-segments]` : retrouve chaque lot dans son journal (partie et rang, aucun identifiant écrit au dépôt), réduit les captures aux cuts du lot (`captures/`, parts de 250 Mo), fait la jointure Écho ↔ journal (`j/`), écrit `meta/`.
 3. `node chantiers/CH-116/outils/banc.cjs rejouer --nom livre` : rejeu du code livré (profil L1-se) sur tout le corpus (~1 s par cut, 3 tâches en parallèle).
-4. `node chantiers/CH-116/outils/corpus.cjs [--sortie DOSSIER]` : `corpus.jsonl` + `resume.md` (par défaut `chantiers/CH-116/sorties/`, à verser par l'intégrateur dans `banane-data/outils/analyse-lots/CH-116/`).
+4. `node chantiers/CH-116/outils/corpus.cjs [--sortie DOSSIER]` : `corpus.jsonl` + `resume.md` (par défaut `banane-data/outils/analyse-lots/CH-116/sorties/`, à verser par l'intégrateur dans `banane-data/outils/analyse-lots/CH-116/`).
 
 Lots et parties : `lots.cjs` (étiquettes `0411`, `0511` (examen, D-285), `0611`, `0811a`, `0811b`, `1111`, `1211`).
 
