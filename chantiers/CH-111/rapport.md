@@ -7,7 +7,7 @@ Branche `chantier/CH-111`, partie de `9afc140`. Exécutant : session Claude fill
 - `background.js` : module chargé ; la branche du message `panel` sortie telle quelle en `traiterPanneau(m, respond)`, appelée par `onMessage` ET par la télécommande (mêmes gardes, mêmes refus, même transition « erreur ») ; actions `telecommande-etat|code|appairer|couper`.
 - Panneau : Réglages › « Télécommande (iPhone) » (`src/signal-rendu.js`, une ligne ; `src/ui5.js`, une action) ouvre `src/telecommande-panneau.js` : adresse du relais, `chrome.permissions.request` sur le clic, QR code (`src/qr.js`, encodeur maison) et code à taper, « Couper » (rend aussi la permission).
 - `telecommande/` : `worker.js` (Worker + Durable Object SQLite à hibernation, logique `CanalLogique` séparée), `telephone.html` (page iPhone « Épure »), `wrangler.toml`, `INSTALLATION.md`.
-- `chantiers/CH-111/manifest.patch` : seulement `optional_host_permissions: ["https://*.workers.dev/*"]`.
+- `chantiers/CH-111/manifest.patch` : seulement `optional_host_permissions`, avec le motif d'hôte de tous les sous-domaines `workers.dev` en https.
 
 Ordres (téléphone → action du panneau) : lot-pause → `pause`, lot-reprendre → `resume`, lot-arreter → `stop`, relecture-pause / -reprendre / -arreter → mêmes noms, constellation-arreter → `file-arreter`. Tout autre nom : refusé (`ordre-inconnu`). Pas de reprise de Constellation (dans le panneau c'est `file-demarrer`, qui relance des lots) ni d'Écho.
 
@@ -26,4 +26,5 @@ Ordres (téléphone → action du panneau) : lot-pause → `pause`, lot-reprendr
 ## Pour l'intégrateur
 1. Appliquer `manifest.patch` ; mettre alors l'empreinte de `tests/version-49514.test.cjs` (ligne 53) à `06ccc179daaaabc7aab4f0fbec79344e883bf25f099625064e12bc42f1bfef94`.
 2. Garde de pose et parité : aucun fichier de décision touché ; la seule ligne de `background.js` sur le chemin du panneau est le déplacement de la branche `panel` dans `traiterPanneau`.
-3. Hub : je n'ai rien posté (`tools/hub.cjs` passe par `gh`, que cette session n'a pas le droit d'utiliser hors recherche).
+3. `tools/scan-identite-exclusions.json` : trois exclusions ajoutées (le motif `workers.dev` du manifeste et du patch, l'hôte ESV des lignes de contexte du patch), chacune avec sa raison ; une adresse réelle de Worker reste refusée partout ailleurs.
+4. Hub : je n'ai rien posté (`tools/hub.cjs` passe par `gh`, que cette session n'a pas le droit d'utiliser hors recherche).

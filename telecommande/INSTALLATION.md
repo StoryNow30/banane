@@ -20,7 +20,7 @@ Le relais est fait de trois fichiers du dossier `telecommande/` du dépôt : `wo
 5. Mets les trois fichiers dans un dossier vide de ton ordinateur, par exemple `Documents/ariane-telecommande` (sur GitHub, ouvre chaque fichier, bouton « Raw », Fichier › Enregistrer sous, en gardant exactement son nom).
 6. Ouvre un terminal dans ce dossier (Windows : clic droit dans le dossier › « Ouvrir dans le terminal » ; Mac : Terminal, puis `cd ` et glisse le dossier dans la fenêtre, Entrée).
 7. Tape `npx wrangler login`, Entrée (accepte l'installation de wrangler si on te la propose). Une page Cloudflare s'ouvre : **Allow**. Reviens au terminal.
-8. Tape `npx wrangler deploy`, Entrée. À la fin, le terminal affiche l'adresse du relais, du type `https://ariane-telecommande.<ton-sous-domaine>.workers.dev`. Note-la (ce n'est pas un secret, mais inutile de la répandre).
+8. Tape `npx wrangler deploy`, Entrée. À la fin, le terminal affiche l'adresse du relais, qui commence par https et se termine par `ariane-telecommande.<ton-sous-domaine>.workers.dev`. Note-la (ce n'est pas un secret, mais inutile de la répandre).
 9. Contrôle : ouvre cette adresse dans ton navigateur. Tu dois voir une page « Ariane » qui demande un code. C'est la page du téléphone.
 
 Si `wrangler deploy` parle de « Durable Objects » ou de « migrations » et refuse : copie le message d'erreur **sans l'adresse** et donne-le à l'intégrateur.

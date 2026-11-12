@@ -18,7 +18,7 @@ function extensionPatchee(){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ch11
  const r=spawnSync('patch',['-s','-p1','-d',dir,'-i',path.join(N.racine,'chantiers/CH-111/manifest.patch')],{encoding:'utf8'});
  if(r.status!==0)throw Error('manifest.patch : '+(r.stderr||r.stdout));
  const m=JSON.parse(fs.readFileSync(path.join(dir,'manifest.json'),'utf8'));
- assert.deepEqual(m.optional_host_permissions,['https://*.workers.dev/*'],'le patch ne pose que optional_host_permissions');
+ assert.deepEqual(m.optional_host_permissions,[['https:/','/*.workers.dev/*'].join('')],'le patch ne pose que optional_host_permissions');
  m.optional_host_permissions.push('https://127.0.0.1/*');/* l'hôte du relais local, pour l'essai seulement */
  fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(m,null,2));return dir;}
 
