@@ -1,5 +1,5 @@
 diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
-index 1a307d2..e52f6d7 100644
+index 1a307d2..554d669 100644
 --- a/src/gcv2-l1.js
 +++ b/src/gcv2-l1.js
 @@ -517,7 +517,10 @@
@@ -19,11 +19,11 @@ index 1a307d2..e52f6d7 100644
     rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
     voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
 -   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
-+   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,departHorsContratExclu:false,completionSansSoutien:false,completionZones:null,completionFenetre:12,completionEcartRefMm:10});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,departHorsContratExclu:false,completionSansSoutien:false,completionZones:null,completionFenetre:12,completionEcartRefMm:10,completionDevers:false,completionEcartement:'liste'});
   /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
    * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
    * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
-@@ -701,6 +704,31 @@
+@@ -701,6 +704,34 @@
       /* Consensus sur toutes les paires d'hypothèses du nuage : la voie des voisins choisit (écart en travers le plus petit), l'écartement de
        * référence ne fait que départager ; nuage (deux rails soutenus), voie et écartement doivent tous trois s'accorder. */
       if(dd.etat==='rien'&&LEVIERS.consensusTous){const t=paireConsensus(k,capture,voieC,ref.mm,soutenu);if(t)dd={etat:'valider',motif:'consensus-tous',decal:t.decal,corrigee:false};}
@@ -45,7 +45,10 @@ index 1a307d2..e52f6d7 100644
 +           const o=s==='left'?'right':'left',m=soutienRail(capture,s,top.h.decal);
 +           if(!(m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc))continue;
 +           if(Math.abs(top.h.decal[1]-va[s].v[0])>LEVIERS.consensusVoieMm)continue;
-+           const nd=ramenerRail(capture,{[s]:top.h.decal.slice(),[o]:[0,va[o].v[0],va[o].v[1]]},o,ref.mm);
++           /* `completionDevers` : hauteur du rail complété = hauteur du rail d'appui + dévers de la droite des références (au lieu de la hauteur
++            * de la droite) ; `completionEcartement` 'lot' : écartement visé = médiane des cuts de référence du lot (au lieu de celui de la liste). */
++           const zo=LEVIERS.completionDevers?top.h.decal[2]+(va[o].v[1]-va[s].v[1]):va[o].v[1],gVise=LEVIERS.completionEcartement==='lot'?gRef:ref.mm;
++           const nd=ramenerRail(capture,{[s]:top.h.decal.slice(),[o]:[0,va[o].v[0],zo]},o,gVise);
 +           if(!nd||Math.abs(nd[o][1]-va[o].v[0])>LEVIERS.consensusVoieMm)continue;
 +           dd={etat:'valider',motif:'completion',decal:nd,corrigee:false,appui:s};break;
 +         }
