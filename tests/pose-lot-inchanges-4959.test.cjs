@@ -45,6 +45,10 @@ const sansCH094=sansPatch('CH-094',CH094),sansCH091=(f,t)=>sansPatch('CH-091',CH
  * une validation ni une commande d'un lot sans panne (tests/ch096-*.test.cjs). Toute autre modification de ces fichiers reste détectée. */
 const CH096={'src/adapter-page.js':['adapter-page.patch','CH-096'],'src/core.js':['core.patch','CH-096']};
 const sansCH096=sansPatch('CH-096',CH096);
+/* Forme 3 de l'empreinte du contrat d'ESV (12/11) : les écouteurs jQuery d'ESV ne sont plus hachés (faux avis « contrat changé » en fin de séance) ;
+ * lecture seule au « Connecter », ni pose ni validation. Retiré pour comparer : l'adaptateur est celui d'avant. */
+const sansContrat3=t=>t.replace(/\n  \* Forme 3 \(12\/11, plainte de l'opérateur\)[^\n]*\n[^\n]*\n[^\n]*\*\//,'*/').replace(" Forme 2.*/"," Forme 2. */").replace('const FORME_CONTRAT=3,','const FORME_CONTRAT=2,')
+ .replace("     etat.ecouteurs=nombres;}catch{d.jquery=null;etat.ecouteurs=null;}","     d.ecouteurs=Object.fromEntries(Object.entries(nombres).map(([n,v])=>[n,v===null?null:v>0]));etat.ecouteurs=nombres;}catch{d.jquery=null;d.ecouteurs=null;etat.ecouteurs=null;}");
 /* D-344 (opérateur, 11/11) : src/core.js range « La caméra a changé pendant l'export » parmi les erreurs de capture passagères (la page relit la
  * vue, le lot se met en pause reprenable au lieu de l'ERREUR ; tests/d344-camera-relue.test.cjs). Posé après CH-096 : retiré avant lui. Ni pose ni validation. */
 const sansD344=(f,t)=>f!=='src/core.js'?t:t
@@ -243,7 +247,7 @@ test('les fichiers modifiés ne sont pas des fichiers de pose : ni l\'adaptateur
  for(const f of Object.keys(ECHO))assert.ok(REF.fichiers[f],f+' existait');
  /* L'adaptateur et la garde d'entrée (qui posent et valident) n'ont pas bougé : ils sont dans la liste comparée ci-dessus. */
  /* 4.9.5.13 : l'adaptateur de page ne change que par `vueFin` (lecture seule après la pose) : sans ces lignes, il est celui de la test 8. */
- const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',lire('src/adapter-page.js')))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
+ const ap=sansPatchs(sansRustLidar(sansCH077(sansCH084v(sansCH096('src/adapter-page.js',sansContrat3(lire('src/adapter-page.js'))))))).replace("if(!vue){const fin=snapshot();fin.vueFin=vueFin(fin);return fin;}",'if(!vue)return snapshot();').replace('fin.vueFin=vueFin(fin);','')
   .replace(/\n \/\* 4\.9\.5\.13 \(analyse du lot 2:19[\s\S]*?catch\(e\)\{return \{version:'vue-fin-v1',erreur:String\(e\?\.message\|\|e\)\.slice\(0,80\)\};\}\}/,'')
   /* T20a : relevé en lecture seule du sélecteur de parties, au ping de contrat (aucun clic, aucune écriture) : sans ces lignes, l'adaptateur est celui de la test 8. */
   .replace(/ \/\* T20a — RELEVÉ DU SÉLECTEUR DE PARTIES[\s\S]*?return \{status:'ok',current:c\.length===1\?c\[0\]\.part:null,parts\};\}\n/,'')

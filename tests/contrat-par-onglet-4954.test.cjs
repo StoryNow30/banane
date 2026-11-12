@@ -44,7 +44,8 @@ test('empreinte : deux onglets dans deux ÉTATS (libellés de boutons, nombre d\
 test('empreinte : le détail comparé ne porte ni libellé de bouton ni nombre d\'écouteurs',async()=>{
  const c=await lire(monter({titres:{O2N3DCutSkip3DRail:'Passer'},n:{loading:4}}));
  assert.deepEqual(c.detail.boutons,['O2N3DCutPreviousInvalid3DRail','O2N3DCutPrevious3DRail','O2N3DCutValidate3DRail','O2N3DCutSkip3DRail','O2N3DCutNext3DRail','O2N3DCutNextInvalid3DRail'],'les six boutons, par leur identifiant seulement');
- assert.deepEqual(c.detail.ecouteurs,{railPairSelected:true,railPairUpdated:true,railPairSeen:true,loading:true,newPart:true},'présence seulement');
+ /* Forme 3 (12/11) : les écouteurs ne sont plus dans le détail comparé, même leur présence (ESV les pose et les retire selon l'état de la page). */
+ assert.equal(c.detail.ecouteurs,undefined,'ni nombre ni présence des écouteurs');
  assert.ok(!JSON.stringify(c.detail).includes('Passer'),'aucun libellé dans le détail comparé');
  /* Les deux relevés écartés restent consignés, à part, pour l'analyse : ils ne sont pas dans l'empreinte. */
  assert.deepEqual(c.etat.titres.find(x=>x[0]==='O2N3DCutSkip3DRail'),['O2N3DCutSkip3DRail','Passer']);
@@ -53,13 +54,13 @@ test('empreinte : le détail comparé ne porte ni libellé de bouton ni nombre d
 
 test('empreinte : ce qui compte reste comparé — bouton absent, écouteur absent, classe de rail, jQuery, Potree',async()=>{
  const base=await lire(monter());
- for(const [nom,o] of [['bouton absent',{sansBouton:'O2N3DCutSkip3DRail'}],['écouteur absent',{n:{newPart:0}}],['classe de rail',{classe:'leftRailXClass'}],['jquery',{jq:'3.7.1'}],['potree',{potree:{major:1,minor:9,suffix:''}}]])
+ for(const [nom,o] of [['bouton absent',{sansBouton:'O2N3DCutSkip3DRail'}],['classe de rail',{classe:'leftRailXClass'}],['jquery',{jq:'3.7.1'}],['potree',{potree:{major:1,minor:9,suffix:''}}]])
   assert.notEqual((await lire(monter(o))).hash,base.hash,nom);
- /* Un écouteur qui passe de 1 à 0 est une absence (changement), de 1 à 2 n'en est pas un. */
- assert.equal((await lire(monter({n:{loading:2}}))).hash,base.hash);
+ /* Forme 3 : un écouteur qui passe de 1 à 0 ou de 1 à 2 dépend de l'état de la page : même empreinte (faux avis du 12/11). */
+ assert.equal((await lire(monter({n:{loading:2}}))).hash,base.hash);assert.equal((await lire(monter({n:{newPart:0}}))).hash,base.hash,'écouteur absent');
  /* Nos écouteurs en ombre ne comptent pas, ni pour la présence ni pour le nombre. */
  const m=monter({n:{loading:0}}),sans=await lire(m);await m.call('ping');assert.equal((await lire(m)).hash,sans.hash,'notre écouteur en ombre n\'est pas pris pour celui d\'ESV');
- assert.equal(sans.detail.ecouteurs.loading,false);
+ assert.equal(sans.etat.ecouteurs.loading,0);
 });
 
 /* ---------- service worker : une empreinte précédente par onglet ---------- */

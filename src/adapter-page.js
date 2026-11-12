@@ -1514,8 +1514,11 @@
   * (vrai/faux). Les libellés et les nombres restent relevés dans `etat`, consigné sans être haché ni comparé (pour voir, au terrain, ce qui varie).
   * Audit P-5 (H14) : la classe de SÉLECTION d'un bouton de rail (`leftRailSClass` sélectionné, `leftRailUSClass` non, idem à droite) dépend elle
   * aussi de l'état de la page : sélectionner l'autre rail changeait l'empreinte (faux avis « contrat changé »). Elle est ramenée à
-  * `leftRail(S|US)Class` : sa présence reste comparée (CLASSE_COTE la lit), son état non ; les classes brutes vont dans `etat`. Forme 2. */
- const FORME_CONTRAT=2,SELECTION_RAIL=/^(left|right)Rail(?:S|US)Class$/;
+  * `leftRail(S|US)Class` : sa présence reste comparée (CLASSE_COTE la lit), son état non ; les classes brutes vont dans `etat`. Forme 2.
+  * Forme 3 (12/11, plainte de l'opérateur) : la PRÉSENCE des écouteurs jQuery d'ESV dépend elle aussi de l'état de la page (ESV les pose
+  * et les retire au fil des parties et des visites) : « ecouteurs.loading, newPart, railPairSeen, railPairSelected » faisaient un faux avis
+  * « contrat changé » à chaque fin de séance. Les écouteurs ne sont plus hachés : leurs nombres restent consignés dans `etat`. */
+ const FORME_CONTRAT=3,SELECTION_RAIL=/^(left|right)Rail(?:S|US)Class$/;
  function empreinteContrat(){const d={},etat={};
    try{const bs=[...document.querySelectorAll('[id^="O2N3DCut"]')].filter(el=>/3DRail$/.test(el.id)).slice(0,16);d.boutons=bs.map(el=>el.id);etat.titres=bs.map(el=>[el.id,(el.title||'').slice(0,60)]);}catch{d.boutons=null;etat.titres=null;}
    try{const classes=['O2N3DCutLRClick','O2N3DCutRRClick'].map(id=>{const el=document.getElementById(id);return el?[...el.classList].sort():null;});
@@ -1524,7 +1527,7 @@
    try{const $=window.$;d.jquery=typeof $?.fn?.jquery==='string'?$.fn.jquery.slice(0,16):null;
      const el=document.getElementById('globalcontainer'),ev=typeof $==='function'&&typeof $._data==='function'&&el?$._data(el,'events'):null;
      const nombres=Object.fromEntries(ESVEV.noms.map(n=>[n,ev?(ev[n]||[]).filter(h=>!String(h?.namespace||'').split('.').includes(NS_OMBRE)).length:null]));
-     d.ecouteurs=Object.fromEntries(Object.entries(nombres).map(([n,v])=>[n,v===null?null:v>0]));etat.ecouteurs=nombres;}catch{d.jquery=null;d.ecouteurs=null;etat.ecouteurs=null;}
+     etat.ecouteurs=nombres;}catch{d.jquery=null;etat.ecouteurs=null;}
    try{const v=window.Potree?.version;d.potree=v&&typeof v==='object'?[v.major,v.minor].filter(x=>Number.isFinite(x)).join('.')+(typeof v.suffix==='string'?String(v.suffix).slice(0,12):''):typeof v==='string'?v.slice(0,16):null;}catch{d.potree=null;}
    const texte=JSON.stringify(d);let h=2166136261>>>0;for(let i=0;i<texte.length;i++){h^=texte.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
    return {hash:h.toString(16).padStart(8,'0'),detail:d,etat,forme:FORME_CONTRAT};}

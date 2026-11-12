@@ -20,7 +20,8 @@ const stored=(b,t)=>b.store.events.filter(e=>e.type===t);
 
 /* Empreinte connue du contrat d'ESV de la test 6 sous la nouvelle forme, quel que soit le rail sélectionné (elle remplace `cf09b21f`,
  * rail gauche, et `f05ddf81`, rail droit, de la 4.9.5.6). */
-const EMPREINTE_T6='ea8b250e';
+/* Forme 3 (12/11) : les écouteurs d'ESV sortent de l'empreinte (faux avis « contrat changé » en fin de séance) ; elle remplace `ea8b250e` (forme 2). */
+const EMPREINTE_T6='844d5fb7';
 const BOUTONS=['O2N3DCutPreviousInvalid3DRail','O2N3DCutPrevious3DRail','O2N3DCutValidate3DRail','O2N3DCutSkip3DRail','O2N3DCutNext3DRail','O2N3DCutNextInvalid3DRail'];
 
 function faussejQuery(el,version){const events={};
@@ -49,7 +50,7 @@ test('les 4 états de sélection des boutons de rail donnent la même empreinte 
  assert.deepEqual(lus[0].detail.rails,['btn btn-outline-secondary leftRail(S|US)Class','btn btn-outline-secondary rightRail(S|US)Class'],'classe de sélection ramenée à sa présence');
  /* La sélection reste consignée, à part, pour l'analyse : elle n'est pas dans l'empreinte. */
  assert.deepEqual(lus.map(c=>c.etat.rails),ETATS.map(([g,d])=>['btn btn-outline-secondary leftRail'+g+'Class','btn btn-outline-secondary rightRail'+d+'Class']));
- assert.ok(lus.every(c=>c.forme===2),'empreinte de forme 2');
+ assert.ok(lus.every(c=>c.forme===3),'empreinte de forme 3');
 });
 
 test('sélectionner l\'autre rail par son bouton, comme l\'opérateur, ne change pas l\'empreinte',async()=>{
@@ -61,14 +62,15 @@ test('sélectionner l\'autre rail par son bouton, comme l\'opérateur, ne change
 });
 
 test('un vrai changement de structure change toujours l\'empreinte, dans tous les états de sélection',async()=>{
- const changements=[['bouton de navigation absent',{sansBouton:'O2N3DCutSkip3DRail'}],['écouteur d\'ESV absent',{n:{newPart:0}}],
-  ['bouton de rail absent',{sansRail:'O2N3DCutRRClick'}],['classe de sélection renommée',{prefixeGauche:'leftRailX'}],
+ const changements=[['bouton de navigation absent',{sansBouton:'O2N3DCutSkip3DRail'}],['bouton de rail absent',{sansRail:'O2N3DCutRRClick'}],['classe de sélection renommée',{prefixeGauche:'leftRailX'}],
   ['autre classe du bouton de rail',{classesRail:['btn','btn-primary']}],['jQuery',{jq:'3.7.1'}],['Potree',{potree:{major:1,minor:9,suffix:''}}]];
  for(const [g,d] of ETATS){
   const base=await lire(monter({gauche:g,droite:d}));
   for(const [nom,o] of changements){const c=await lire(monter({gauche:g,droite:d,...o}));assert.notEqual(c.hash,base.hash,nom+' (sélection '+g+'/'+d+')');}}
  /* Ce qui dépend de l'état de la page reste hors de l'empreinte (D-139) : nombre d'écouteurs. */
  assert.equal((await lire(monter({n:{loading:3}}))).hash,EMPREINTE_T6);
+ /* Forme 3 : la présence d'un écouteur d'ESV dépend aussi de l'état de la page. */
+ assert.equal((await lire(monter({n:{newPart:0}}))).hash,EMPREINTE_T6);
 });
 
 /* ---------- service worker : « Connecter » avec le rail droit sélectionné ne donne aucun avis ---------- */
@@ -96,7 +98,7 @@ test('à l\'installation : une empreinte gardée sous l\'ancienne forme (rail da
  assert.deepEqual([c.hash,c.precedent,c.change,c.dernierConnu],[EMPREINTE_T6,null,false,null],'ancienne forme : rien de comparable');
  assert.equal(stored(b,'avis-contrat-esv').length,0);
  /* La nouvelle empreinte est rangée avec sa forme ; le « Connecter » suivant la compare normalement. */
- assert.deepEqual([session.m.banane54Contrats['1'].forme,local.m.banane50ContratDernier.forme],[2,2]);
+ assert.deepEqual([session.m.banane54Contrats['1'].forme,local.m.banane50ContratDernier.forme],[3,3]);
  await connecter();assert.deepEqual([stored(b,'contrat-esv').at(-1).precedent,stored(b,'contrat-esv').at(-1).change],[EMPREINTE_T6,false]);
 });
 

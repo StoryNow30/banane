@@ -50,7 +50,8 @@ test('contrat : les six boutons, leurs titres, les classes des rails, les cinq �
   const env=await N.ouvrir({maquette:{cuts:4,latence:10}});
   try{await env.injecter();const r=await env.appel('ping',[{contrat:true}]),c=JSON.parse(JSON.stringify(r.result.contrat));
     assert.deepEqual(c.detail.boutons,F.contratEsv.normal.boutons);assert.deepEqual(c.detail.rails,F.contratEsv.normal.rails);
-    assert.deepEqual(Object.keys(c.detail.ecouteurs),F.contratEsv.normal.ecouteurs);assert.ok(Object.values(c.detail.ecouteurs).every(Boolean));
+    /* Forme 3 (12/11) : les écouteurs sont relevés dans `etat` (nombres), hors de l'empreinte. */
+    assert.equal(c.detail.ecouteurs,undefined);assert.deepEqual(Object.keys(c.etat.ecouteurs),F.contratEsv.normal.ecouteurs);assert.ok(Object.values(c.etat.ecouteurs).every(n=>n>0));
     const titres=await env.page.evaluate(ids=>Object.fromEntries(ids.map(i=>[i,document.getElementById(i).title])),F.contratEsv.normal.boutons);
     assert.deepEqual(titres,F.contratEsv.normal.titres);
   }finally{await env.fermer();}
