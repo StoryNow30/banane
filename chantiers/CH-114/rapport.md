@@ -9,7 +9,7 @@ Branche `chantier/CH-114`, partie de `7710ce3`. Aucun fichier interdit touché :
   - l'enveloppe `engine.event`, après l'écriture au journal, qui donne `applied-verified` (les rails relus et l'axe latéral du profil du rail gauche) puis `validation-accepted` du moteur, qui fait évaluer le cut ;
   - `reglesMetierNoter`, qui transmet la zone d'ADV du cut (une ligne ajoutée).
   La mémoire est volatile, propre au lot et à la partie. Un seul événement `voie-sure-ombre` par cut posé en zone `adv: alerte`, avec : `auraitDiffere`, les décalages gauche et droit, la moyenne, l'écart g, le seuil, `referenceCut` (numéro seulement), le motif et `ms`. Le premier événement du lot porte aussi le réglage. Rien n'est écrit dans `batch`, les appuis, la proposition ni les commandes. En cas de panne, aucun événement.
-- `chantiers/CH-114/outils/parite-voie-sure.cjs` : parité hors ligne. Sorties par cut dans `chantiers/CH-114/sorties/` (numéros et mm seulement ; l'intégrateur les verse dans `banane-data`).
+- `chantiers/CH-114/outils/parite-voie-sure.cjs` : parité hors ligne. Sorties par cut dans `banane-data/outils/analyse-lots/CH-114/sorties/` (numéros et mm seulement ; l'intégrateur les verse dans `banane-data`).
 
 ## Point 3 : références disponibles en direct (ÉTABLI)
 - Sur les 14 parties de CH-112, l'ensemble des « cuts traités par l'opérateur hors du lot » est **vide** (fichiers exacts de `lots.cjs`).
