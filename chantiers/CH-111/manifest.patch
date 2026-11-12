@@ -1,0 +1,12 @@
+--- a/manifest.json	2026-11-12 06:25:39.161954388 +0000
++++ b/manifest.json	2026-11-12 06:25:39.173331809 +0000
+@@ -14,6 +14,9 @@
+   "host_permissions": [
+     "https://esv.lidar.altametris.xyz/rails_validation/*"
+   ],
++  "optional_host_permissions": [
++    "https://*.workers.dev/*"
++  ],
+   "background": {
+     "service_worker": "background.js"
+   },

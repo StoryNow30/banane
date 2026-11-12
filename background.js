@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/telecommande.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -52,7 +52,7 @@ const GCV1_ENGINE='geometry-candidate-v1',V46_ENGINE='v4.6';
  * partent dans le journal exporté (`transitionsLot`) : nom, identifiant du lot, état
  * du lot, heure. Rien d'autre (ni identité de cut, ni donnée d'ESV). */
 const TRANSITIONS_LOT=Object.freeze(['demarrage','pause','reprise','arret','fin-de-lot','rechargement','cut-suivant','differe','erreur']);
-const LECTURES_PANNEAU=['view','build','passe-differes-reglage','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
+const LECTURES_PANNEAU=['telecommande-etat','telecommande-code','view','build','passe-differes-reglage','cloud','journal-meta','dataset-meta','native-health','native-export-advice','brain-state','gcv1-shadow-state','gcv1-export-meta'];
 const coordinateurLot={journal:[],
  transition(nom,f){if(!TRANSITIONS_LOT.includes(nom))throw Error('Transition du lot inconnue : '+nom);
   const b=engine?.s?.batch;this.journal.push({nom,lot:b?.id??null,etat:b?.state??null,at:new Date().toISOString()});if(this.journal.length>64)this.journal.shift();
@@ -4555,6 +4555,8 @@ async function demarrerLot(args){
   retenirLotClos();await engine.startBatch(startArgs);return engine.view();}
 async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une passe gardée est reprise (ou close) avant toute action du panneau */
  const {action,args={}}=m;
+ /* CH-111 : appairage de la télécommande (réglages du panneau). Aucune de ces actions ne touche au lot ni à ESV. */
+ if(typeof action==='string'&&action.startsWith('telecommande-'))return telecommandeAction(action,args);
  /* CH-017 : file de parties (éteinte : ces actions restent inconnues, comme avant). Pendant la file, « Arrêter » arrête la file et ce qui
   * travaille ; « Démarrer » à la main est refusé (le lot suivant appartient à la file). */
  if(FILE_ACTIONS.has(action)&&fileReglage())return fileDispatch(action,args);
@@ -4767,6 +4769,30 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
  });
 }
 let swPret=false;ready.then(()=>{swPret=true;},()=>{});
+/* CH-111 (D-345) — TÉLÉCOMMANDE (src/telecommande.js). Éteinte tant que l'opérateur n'a pas appairé un téléphone : aucune socket, aucun minuteur.
+ * Un ordre du téléphone (liste fermée du module) passe par `traiterPanneau`, le même chemin que le message `panel` du bouton : mêmes gardes, mêmes refus. */
+let telecommande=null;
+function telecommandeSources(){return {s:engine?.s,relecture:relecture?.passe??null,file:fileP.etat&&FPm()?FPm().vue(fileP.etat):null,passe:passeDiff.vue,echo:!!native?.running?.(),version:VERSION};}
+const telecommandePrete=ready.then(async()=>{const T=globalThis.BananeTelecommande;if(!T)return;
+ telecommande=T.creer({stockage:chrome.storage.local,WS:globalThis.WebSocket,journal:journalerSimple,sources:telecommandeSources,chrome:T.versionChrome(globalThis.navigator?.userAgent),
+  executer:action=>new Promise(r=>traiterPanneau({kind:'panel',action,args:{}},r)).then(r=>{if(r.error)throw Error(r.error);return r.result;})});
+ await telecommande.demarrer();}).catch(()=>{});
+async function telecommandeAction(action,args){await telecommandePrete;if(!telecommande)throw Error('Télécommande indisponible dans cette version.');
+ if(action==='telecommande-etat')return telecommande.etat();
+ if(action==='telecommande-code')return telecommande.code();
+ if(action==='telecommande-appairer')return telecommande.appairer(args?.relais);
+ if(action==='telecommande-couper')return telecommande.couper();
+ throw Error('Commande inconnue.');}
+/* Le traitement du message `panel` (bouton du panneau ou ordre de la télécommande) : `respond({result})` ou `respond({error})`, comme avant CH-111. */
+function traiterPanneau(m,respond){
+ /* 4.7.19 (KI-059) : une réponse trop grosse pour Chrome devient une erreur dite
+  * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
+ dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
+   catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
+  /* CH-097 : une LECTURE qui échoue (liste `LECTURES_PANNEAU` : demandes sans effet, la plupart lancées seules par le panneau) rend son erreur au panneau
+   * sans remplacer l'avis du lot, sans sauvegarde et sans prendre une des 64 entrées du journal des transitions. Un geste refusé reste noté comme avant. */
+  e=>{if(LECTURES_PANNEAU.includes(m.action))return respond({error:vocabulaire(e.message)});
+   return coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});});}
 chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(sender.id!==chrome.runtime.id)return;
  if(m.kind==='launcher-status'&&sender.tab?.id&&esvURL(sender.url||sender.tab?.url)){
@@ -4807,12 +4833,5 @@ chrome.runtime.onMessage.addListener((m,sender,respond)=>{
  if(m.kind==='open-panel'){openPanel().then(()=>respond({ok:true}),e=>respond({error:e.message}));return true;}
  // Le fragment d'URL porte la vue affichée ; seule l'origine de la page compte.
  if(m.kind!=='panel'||(sender.url||'').split('#')[0]!==chrome.runtime.getURL(PANEL))return;
- /* 4.7.19 (KI-059) : une réponse trop grosse pour Chrome devient une erreur dite
-  * en clair au panneau, au lieu d'un envoi qui échoue sans réponse. */
- dispatch(m).then(result=>{try{respond({result:m.action==='view'?result:panelView(result)});}
-   catch(e){respond({error:`Réponse d’Ariane trop grosse pour un message Chrome (${m.action}) : ${e.message}`});}},
-  /* CH-097 : une LECTURE qui échoue (liste `LECTURES_PANNEAU` : demandes sans effet, la plupart lancées seules par le panneau) rend son erreur au panneau
-   * sans remplacer l'avis du lot, sans sauvegarde et sans prendre une des 64 entrées du journal des transitions. Un geste refusé reste noté comme avant. */
-  e=>{if(LECTURES_PANNEAU.includes(m.action))return respond({error:vocabulaire(e.message)});
-   return coordinateurLot.transition('erreur',async()=>{const message=vocabulaire(e.message);if(engine){engine.s.notice=message;await engine.save().catch(()=>{});}respond({error:message});});});return true;
+ traiterPanneau(m,respond);return true;
 });

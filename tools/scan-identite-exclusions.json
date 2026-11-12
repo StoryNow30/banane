@@ -33,6 +33,9 @@
   "exclusions": [
     {"chemin": "manifest.json", "motif": "hoteESV", "raison": "hôte nécessaire au fonctionnement de l'extension"},
     {"chemin": "background.js", "motif": "hoteESV", "raison": "hôte nécessaire au fonctionnement de l'extension"},
+    {"chemin": "manifest.json", "motif": "web", "raison": "CH-111 (D-345) : motif d'hôte des relais Cloudflare (optional_host_permissions), aucun Worker réel"},
+    {"chemin": "chantiers/CH-111/manifest.patch", "motif": "hoteESV", "raison": "CH-111 : lignes de contexte du manifeste dans le patch, hôte nécessaire au fonctionnement de l'extension"},
+    {"chemin": "chantiers/CH-111/manifest.patch", "motif": "web", "raison": "CH-111 (D-345) : motif d'hôte des relais Cloudflare (optional_host_permissions), aucun Worker réel"},
     {"prefixe": "audit/", "motif": "uuid", "raison": "identifiants de capture et de lot générés par Ariane, pas des codes ESV"},
     {"prefixe": "tests/fixtures/", "motif": "uuid", "raison": "identifiants de capture et de lot générés par Ariane, pas des codes ESV"},
     {"prefixe": "tests/incidents/", "motif": "uuid", "raison": "identifiants de capture et de lot générés par Ariane, pas des codes ESV"},

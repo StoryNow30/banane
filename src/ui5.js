@@ -511,6 +511,8 @@
     else if (quoi === 'palette' || quoi === 'reglages' || quoi === 'esv' || quoi === 'file' || quoi === 'menu') { ui.couche = ui.couche === quoi ? null : quoi; ui.q = ''; ui.pi = 0; ui.focusQ = ui.couche === 'palette'; }
     else if (quoi === 'fermer') { ui.couche = null; ui.q = ''; ui.pi = 0; ui.focusQ = false; }
     else if (quoi === 'tech') { ui.couche = null; ouvrirTech(); }
+    /* CH-111 : la feuille d'appairage de la télécommande (src/telecommande-panneau.js), posée à part ; Réglages se referme. */
+    else if (quoi === 'telecommande') { ui.couche = null; void root.ArianeTelecommandePanneau?.ouvrir?.(); }
     else if (quoi === 'examiner') { if (examines.cles.has(v)) examines.cles.delete(v); else examines.cles.add(v); void garderExamines(); }
     else if (quoi === 'ouvrir') {
       /* Revue T21 (D5) : un différé ou un vert appartient au LOT ; ESV peut afficher une autre partie (le moteur refuse alors, WRONG_PART, et le dit). */
