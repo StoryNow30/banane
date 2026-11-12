@@ -1,0 +1,20 @@
+{
+  "format": "ch117-reglage-fige-1",
+  "fige_le": "2026-11-12, avant tout jugement sur les lots non vus",
+  "conception": ["11/11 partie 16", "12/11 partie 23"],
+  "lots_non_vus": ["11/11 parties 15, 17", "06/11 parties 13, 15, 16", "08/11 partie 6 (deux lots)", "12/11 parties 0, 1, 2"],
+  "leviers": {
+    "vetoChaineVoieMm": 100,
+    "vetoChaineZones": ["adv"],
+    "vetoChaineMaxCuts": 8,
+    "sousTauVoieZones": ["adv"],
+    "sousTauVoieMm": 40,
+    "sousTauVoieMaxCuts": 6,
+    "vetoVoieAbsMaxCuts": 8
+  },
+  "rejetes": {
+    "vetoChaineSansVoisin": "C3 : 257 et 159 différés sur p16 et p23 (contre 45 et 45), 212 justes perdus en p16",
+    "sansVoieZones": "C4 : mesuré seulement avec C3 ; non retenu"
+  },
+  "resultat_conception": "p16+p23 : posés > 50 mm 19 -> 6 ; justes passés au-delà de 10 mm 0 ; justes différés 7 ; différés 90 -> 106"
+}
