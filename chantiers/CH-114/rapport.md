@@ -20,11 +20,11 @@ Branche `chantier/CH-114`, partie de `7710ce3`. Aucun fichier interdit touché :
 - L'Écho vient après le lot, et le journal ne contient que le lot. Les seules références restent donc les cuts posés plus tôt par le lot et non arrêtés.
 
 ## Point 4 : parité hors ligne (ÉTABLI)
-Le module est rejoué sur les journaux de CH-112 comme le service worker le nourrit (événements rangés dans le temps, mémoire neuve à chaque lot), puis comparé à `regle-voie.cjs` sans les « traités ».
-- **2 500 cuts identiques sur 2 505 (99,8 %)** : verdict, référence, décalages au dixième de mm et présence de l'événement.
-- **13 arrêts sur 13 identiques** et 738 événements, ce qui correspond aux 738 posés en zone alerte de CH-112.
+Le module est rejoué sur les journaux de CH-112 comme le service worker le nourrit (événements rangés dans le temps, mémoire neuve à chaque lot), puis comparé à `regle-voie.cjs` sans les « traités » (le tronc 95d18a8 en a fait le réglage du rapport, `traites:false`).
+- **2 543 cuts identiques sur 2 548 (99,8 %)**, partie 17 du 11/11 comprise (43/43, ajoutée au tronc par CH-112) : verdict, référence, décalages au dixième de mm et présence de l'événement.
+- **13 arrêts sur 13 identiques** et 764 événements, ce qui correspond aux 764 posés en zone alerte de CH-112.
 - **Les 5 écarts** sont tous sur la partie 6 du 08/11, cuts 181 à 185. Cette partie a eu deux lots : le premier s'arrête au cut 171 en ERREUR, le second repart au cut 181. L'outil de CH-112 garde sa mémoire sur toute la partie ; le module ne garde que celle du lot, comme le demande le ticket. Le cut 181 n'a donc pas de référence en direct : il s'abstient, et les cuts 182 à 185 restent sans référence jusqu'au prochain cut sûr. Aucun verdict ne change : 181 passait déjà (250 mm pour un seuil de 300).
-- Abstentions en direct : 30 sur 738 (4,1 %), contre 25 dans CH-112.
+- Abstentions en direct : 30 sur 764 (3,9 %), contre 25 dans CH-112.
 
 ## Point 5 : essais et preuves
 - `tests/voie-sure-ombre.test.cjs` : 8/8. Rouge d'abord (module absent). Il couvre le verdict, la courbure, l'abstention, la mémoire du lot, une pose illisible, une panne, et une parité tirée au hasard sur 4 000 cuts avec `regle-voie.cjs`.
