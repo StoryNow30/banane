@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/telecommande.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -1612,6 +1612,8 @@ const ready=(async()=>{await restaurerObsFins();selectedTab=(await chrome.storag
     if(type==='applied-verified'&&engine.s.applied&&engine.s.applied.serverConfirmed===false)engine.s.applied.serverConfirmed=null;}
    if(type==='validation-observation')preuveServeurEnAttente(rest[0]?.identity);
    const r=await evenement(type,...rest);
+   /* CH-114 (D-347) : la voie des cuts sûrs, EN OMBRE, relève la pose vérifiée puis la validation du cut (après leur écriture au journal) ; elle ne rend rien. */
+   if(type==='applied-verified'||type==='validation-accepted')voieSureEvenement(type,rest[0]);
    /* 5.0 (D-171) : fin naturelle d'un lot créé avec la relecture : la passe est planifiée (rien si elle est coupée). */
    if(type==='batch-state'||type==='batch-stopped-at-end'){relecturePlanifier();passeDiffPlanifier();}
    if(type==='defer-navigation-uncertain')await coordinateurLot.transition('differe',()=>departApresDiffere(rest[0]));
@@ -2675,6 +2677,7 @@ function reglesMetierNoter(lotObservation,proposal){const c=reglesOmbre.capture;
  let ev=reglesOmbre.eval;
  if(!ev)ev=reglesEvaluer(lotObservation,rails,engine?.s?.before?.rails,lotObservation?.command?.action??null);
  if(ev.erreur)throw Error(ev.erreur);
+ voieSureZone(ev.resume?.identity??{part:c?.part,cut:c?.cut},ev.e?.zone?.adv);   /* CH-114 : zone d'ADV du cut, pour l'ombre de la voie sûre (lecture seule) */
  const differe=!(rails&&SIDES.every(x=>rails[x]?.status==='candidate'&&Array.isArray(rails[x].delta)));
  M.noter(reglesOmbre.mem,ev.resume,{differe,parRegle:ev.applique===true});
  if(r.ombre!==false){reglesJournal(M.evenement(ev.e,{premier:reglesOmbre.premier,actif:ev.applique?{applique:true,regles:ev.reglesAppliquees}:null}));reglesOmbre.premier=false;}
@@ -2842,6 +2845,38 @@ function gardeSerrageOmbre(lotObservation,proposal){try{
  if(rg){const ev=G.evaluer({cut,positions,table,valide:true,reglage:{...rg,avantSeulement:true}});delete ev.cut;poste('garde-voie-ombre',ev);}
  if(rs&&decisionL1e){const S=globalThis.BananeSerrageLotOmbre,ev=S.evaluer({cut,positions,table,reglage:{...rs,avantSeulement:true}});delete ev.cut;poste('serrage-lot-ombre',ev);}
  if(Number.isFinite(gMm)){gsOmbre.ecartements.set(part+'|'+cut,Math.round(gMm*100)/100);while(gsOmbre.ecartements.size>40)gsOmbre.ecartements.delete(gsOmbre.ecartements.keys().next().value);}
+}catch{/* ombre : jamais bloquant */}}
+/* CH-114 (D-347) — RÈGLE « VOIE DES CUTS SÛRS », EN OMBRE (src/voie-sure-ombre.js ; réglage `lot.voieSureOmbre` ; mesure chantiers/CH-112/rapport.md).
+ * Pour chaque cut VALIDÉ par le lot (`validation-accepted` du moteur) en zone `adv: alerte` (zone des règles métier du même cut) : décalage latéral des deux rails
+ * de la pose vérifiée (`applied-verified`, rails relus dans la scène) par rapport au dernier cut sûr du lot. Les références sont les seuls cuts que CE lot a posés
+ * plus tôt dans la partie et que la règle n'a pas arrêtés (mémoire volatile du lot ; ni la liste d'ESV, ni l'Écho, ni un cut « traité » hors du lot : CH-114,
+ * point 3). CONSIGNÉ SEULEMENT : rien n'est écrit dans `batch`, ses appuis ni la proposition, aucune commande ; une panne ne laisse rien. Un événement
+ * `voie-sure-ombre` (numéros de cut et millimètres) par cut posé en zone alerte. */
+const voieSure={mem:null,premier:true,zones:new Map(),poses:new Map()};
+const voieSureReglage=()=>{const r=globalThis.BananeSettings?.lot?.voieSureOmbre;return r&&r.actif===true&&globalThis.BananeVoieSureOmbre?r:null;};
+const voieSureBorner=m=>{while(m.size>16)m.delete(m.keys().next().value);};
+function voieSureLot(){const b=engine?.s?.batch;
+ return engine?.s?.mode==='automatic-test'&&b?.id&&b.scope?.geometryEngine===GCV1_ENGINE?b:null;}
+function voieSureZone(identity,adv){try{if(!voieSureReglage()||!voieSureLot())return;
+ const part=identity?.part,cut=identity?.cut;if(!Number.isInteger(part)||!Number.isInteger(cut))return;
+ voieSure.zones.set(part+'|'+cut,typeof adv==='string'?adv:'');voieSureBorner(voieSure.zones);}catch{/* ombre : jamais bloquant */}}
+function voieSureEvenement(type,champs){try{
+ const reglage=voieSureReglage(),b=voieSureLot(),M=globalThis.BananeVoieSureOmbre;if(!reglage||!b)return;
+ const part=champs?.identity?.part,cut=champs?.identity?.cut;if(!Number.isInteger(part)||!Number.isInteger(cut)||part!==b.scope?.part)return;
+ const k=part+'|'+cut;
+ if(type==='applied-verified'){const r=champs?.observed?.rails,m=r?.left?.profileLocalToSceneRelative;
+  voieSure.poses.set(k,{proposalId:champs.proposalId??null,pose:{gauche:r?.left?.positionSceneRelative??null,droite:r?.right?.positionSceneRelative??null,
+   lat:Array.isArray(m)&&m.length>=7?[m[4],m[5],m[6]]:null}});voieSureBorner(voieSure.poses);return;}
+ /* validation-accepted : la pose vérifiée de la même proposition ; sans elle, le cut n'est pas compté (ni référence, ni événement). */
+ const p=voieSure.poses.get(k);voieSure.poses.delete(k);
+ if(!p||(p.proposalId&&champs.proposalId&&p.proposalId!==champs.proposalId))return;
+ if(voieSure.mem?.lotId!==b.id){voieSure.mem=M.creerMemoire(b.id);voieSure.premier=true;}
+ const zoneAdv=voieSure.zones.get(k)??'',t0=Date.now();voieSure.zones.delete(k);
+ const {evenement}=M.evaluer(voieSure.mem,{part,cut,zoneAdv,pose:JSON.parse(JSON.stringify(p.pose))},{seuilMm:reglage.seuilMm,courbureMm:reglage.courbureMm,ecartCuts:reglage.ecartCuts});
+ if(!evenement)return;
+ const ev={...evenement,ms:Date.now()-t0};if(voieSure.premier){ev.seuils={...reglage};voieSure.premier=false;}
+ const K=globalThis.BananeCore3;
+ void Promise.resolve(store.putEvent({eventId:K.uid(),timestamp:new Date().toISOString(),type:'voie-sure-ombre',schema:1,batchId:b.id,sessionId:engine.s.sessionId??null,...ev})).catch(()=>{});
 }catch{/* ombre : jamais bloquant */}}
 /* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
  * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
