@@ -295,9 +295,10 @@
      * par cut posé par le lot en zone `adv: alerte` : décalage latéral des deux rails par rapport au dernier cut sûr du lot (au plus `ecartCuts` cuts en arrière),
      * « aurait différé » si les deux vont du même côté au-delà de `seuilMm + courbureMm·g²`. CONSIGNÉ SEULEMENT : rien n'est posé ni différé, aucune commande
      * ne change. L'allumage (arrêt réel) demande un nouvel accord écrit de l'opérateur (D-347). `actif:false` : aucun calcul, aucun événement.
-     * `origine:true` (examen de la partie 23 du 12/11) : le même événement porte aussi le verdict du réglage d'origine de CH-112 (seuil 100 fixe, zones `alerte` et
-     * marges, ses propres références sûres) ; l'événement est alors émis pour un cut posé dans l'une ou l'autre zone. Consigné seulement, comme le premier. */
-    voieSureOmbre: Object.freeze({ actif: true, seuilMm: 100, courbureMm: 2, ecartCuts: 12, origine: true }),
+     * `origine.actif:true` (examen de la partie 23 du 12/11) : le même événement porte aussi le verdict du réglage d'origine de CH-112 (outil regle-voie.cjs par défaut :
+     * `profil2`, `abstenuSur`, seuil 100 fixe, zones `alerte` et marges, ses propres références sûres) ; l'événement est alors émis pour un cut posé dans l'une ou l'autre zone. Consigné seulement, comme le premier. */
+    voieSureOmbre: Object.freeze({ actif: true, seuilMm: 100, courbureMm: 2, ecartCuts: 12,
+      origine: Object.freeze({ actif: true, methode: 'profil2', abstenuSur: true, seuilMm: 100, courbureMm: 0, zones: Object.freeze(['alerte', 'marge-avant', 'marge-apres']) }) }),
     /* CH-034 — RECHERCHE LARGE (src/recherche-large.js, chantiers/CH-034/JOURNAL.md § 2), ÉTEINTE par défaut. Allumée, sur un cut que la commande allait
      * poser et valider, le moteur gelé est relancé sur le nuage capturé à des graines espacées de `pasMm` jusqu'à ±`porteeMm` en travers (la ROI de capture),
      * et la pose du lot est confrontée aux paires fortes trouvées : mode 'differer' (livré) : différé si une paire au moins aussi bonne (produit des pertes
