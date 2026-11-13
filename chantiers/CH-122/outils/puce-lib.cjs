@@ -15,11 +15,13 @@ function jeu(dossierRejeu, corpus, lotsCles) {
   for (const k of lotsCles) {
     const f = path.join(dossierRejeu, k + '.jsonl'); if (!fs.existsSync(f)) continue;
     for (const l of lireJsonl(f)) {
-      if (l.type !== 'cut') continue; const o = l.profils && l.profils['L1-se']; if (!o || !o.l1 || !o.l1.puce || !o.l1.puce.candidats) continue;
+      if (l.type !== 'cut') continue; const o = l.profils && l.profils['L1-se']; if (!o) continue;
+      /* cut passé à la GCV2 (`l1`) ou pose de la chaîne contre-expertisée (`ombre`, contexte chaîne) */
+      const src = o.l1 && o.l1.puce && o.l1.puce.candidats ? o.l1 : o.ombre && o.ombre.puce && o.ombre.puce.candidats ? o.ombre : null; if (!src) continue;
       const c = C.get(`${k}:${l.cut}`), verite = c && c.poseFinale && !c.exclu ? c.poseFinale : null;
-      const cands = o.l1.puce.candidats.map(x => ({ decal: x.d, t: x.t, mm: verite ? pire(x.d, verite) : null }));
+      const cands = src.puce.candidats.map(x => ({ decal: x.d, t: x.t, mm: verite ? pire(x.d, verite) : null }));
       out.push({ cle: k, lot: k.split('-')[0], cut: l.cut, zone: l.zone, etatLivre: o.etat, decalLivre: o.decal || null, verite, mmLivre: verite && o.etat === 'pose' && o.decal ? pire(o.decal, verite) : null,
-        traits: o.l1.puce.traits, cands });
+        traits: src.puce.traits, contexte: src === o.ombre ? 'chaine' : 'gcv2', cands });
     }
   }
   return out;

@@ -1,0 +1,185 @@
+diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
+index 1a307d2..536cb4a 100644
+--- a/src/gcv2-l1.js
++++ b/src/gcv2-l1.js
+@@ -565,7 +565,9 @@
+    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
+    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
+    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
+-   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
++   /* CH-122 : puce apprise (modèle figé { traits, moy, sd, coef, intercept, seuils }) ; `puceJeu` : les candidats et leurs traits au journal, sans effet. Coupés. */
++   puce:null,puceJeu:false,puceChaine:false});
+  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
+   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
+   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
+@@ -828,6 +830,15 @@
+        else if(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>va[s].residuMm??0))>LEVIERS.voieIncoherenteMm)dd={etat:'rien',motif:'voie-incoherente',decal:null,corrigee:false,avant:dd.motif};
+      }
+    }
++   /* CH-122 — PUCE APPRISE (levier `puce`, coupé par défaut) : toutes les paires candidates du cut (paires d'hypothèses du nuage à un écartement
++    * plausible, paire de la test 13, sa correction, paires de la recherche recentrée, paire retenue par les règles), chacune décrite par ses traits
++    * (`puceCandidats`) ; le modèle figé donne à chacune la probabilité d'être juste à 10 mm ; la meilleure est validée si cette probabilité atteint le
++    * seuil de la zone, sinon rien. `puceJeu` (mesure) : les candidats au journal, sans changer la décision. */
++   let puce=null;
++   if((LEVIERS.puce||LEVIERS.puceJeu)&&capture){
++     puce=puceCandidats({k,capture,ref,p,d0,c,dd,voie,rech,coherents});
++     if(LEVIERS.puce){const r=puceDecider(LEVIERS.puce,puce);puce.choix=r.resume;dd=r.dd;}
++   }
+    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
+      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
+      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
+@@ -845,7 +856,104 @@
+    const base0=d0.paire||{left:{origines:['H6'],sousOrigines:[],hauteur:false},right:{origines:['H6'],sousOrigines:[],hauteur:false}};
+    const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...base0[s],decal:dd.decal[s]}])):null;
+    const ecart3d=paire?Math.max(norme(paire.left.decal),norme(paire.right.decal)):d0.ecartDepartMm;
+-   return {...d0,variante:'L1-e',etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,...(diag?{diag}:{}),test13:{etat:d0.etat,motif:d0.motif??null,paire:d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null}};
++   return {...d0,variante:'L1-e',...(puce?{puce:LEVIERS.puceJeu?puce:{choix:puce.choix}}:{}),etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,...(diag?{diag}:{}),test13:{etat:d0.etat,motif:d0.motif??null,paire:d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null}};
++ }
++ /* ------------------------------------------------------------------ CH-122 : puce apprise (candidats, traits, décision) */
++ const PUCE_TRAITS=Object.freeze(['pMin','pMax','lpProd','rangProd','pManque','dessusMin','flancMin','soutenu','dgRef','refManque','dgMed','medManque',
++   'dvProche','dzProche','dvFit','vaManque','vaDist','vaResidu','vaN','dvListe','listeManque','dvVoie','voieManque','dvGeo','geoManque',
++   'depl','latMax','vertMax','adv','pn','livre','livreValide','test13','test13Valide','rechC','h6','chaine','h1','h0','corrigee','hauteur',
++   'nProches10','nCand','ecartRival','g','chainePose','contexteChaine',
++   'topMin','faceMin','ratioMax','fortDeux','compDeux','grappesMax','compMax','fortsConcMax','pointsRailMin','ecartDepartRef','nPistes']);
++ const PUCE_MAX_PAIRES=40,PUCE_ECART_MM=30;
++ function puceCandidats({k,capture,ref,p,d0,c,dd,voie,rech,coherents}){
++   const Lh=k.rails.left.hyps,Rh=k.rails.right.hyps,refMm=ref&&fini(ref.mm)?ref.mm:null,gMed=fini(k.gMed)?k.gMed:null;
++   const proches=(a,b,mm=1)=>SIDES.every(s=>norme(moins(a[s],b[s]))<=mm);
++   const cands=[],ajoute=(decal,src)=>{if(!decal||!SIDES.every(s=>vec3(decal[s])))return;const d={left:decal.left.map(v=>arrondi(v,2)),right:decal.right.map(v=>arrondi(v,2))};
++     const x=cands.find(y=>proches(y.decal,d));if(x){x.src.add(src);return;}cands.push({decal:d,src:new Set([src])});};
++   /* paires d'hypothèses du nuage à un écartement plausible, les plus probables d'abord */
++   const hp=[];
++   for(let i=0;i<Lh.length;i++)for(let j=0;j<Rh.length;j++){
++     const decal={left:Lh[i].decal,right:Rh[j].decal},g=ecartementDecal(capture,decal);
++     const ok=(refMm!==null&&Math.abs(g-refMm)<=PUCE_ECART_MM)||(gMed!==null&&Math.abs(g-gMed)<=PUCE_ECART_MM)||(g>=1415&&g<=1475);
++     if(ok)hp.push({decal,v:p.left[i]*p.right[j],i,j});
++   }
++   hp.sort((a,b)=>b.v-a.v);
++   for(const h of hp.slice(0,PUCE_MAX_PAIRES))ajoute(h.decal,'hyp');
++   if(d0.paire)ajoute({left:d0.paire.left.decal,right:d0.paire.right.decal},'test13');
++   if(c&&c.decal)ajoute(c.decal,'corrigee');
++   if(dd.decal)ajoute(dd.decal,'livre');
++   if(rech&&rech.paires)for(const q of rech.paires.slice(0,10))ajoute(q.decal,'rech');
++   /* contre-expertise d'une pose de la chaîne (`chainePose`, décalages depuis le départ) : la pose de la chaîne est un candidat comme les autres */
++   if(k.chainePose)ajoute(k.chainePose,'chainePose');
++   /* traits */
++   const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents),vl=k.voieListe&&k.voieListe.left?k.voieListe:null,vg=k.voieGeo&&k.voieGeo.left?k.voieGeo:null;
++   const soutiens=new Map(),sout=(s,d)=>{const key=s+d.join(',');if(!soutiens.has(key))soutiens.set(key,soutienRail(capture,s,d));return soutiens.get(key);};
++   const pDe=(s,d)=>{const H=k.rails[s].hyps;let b=-1,e=2;for(let i=0;i<H.length;i++){const x=norme(moins(H[i].decal,d));if(x<=e){e=x;b=i;}}return b<0?null:{p:p[s][b],h:H[b]};};
++   const lp=x=>Math.log(Math.max(x,1e-6));
++   for(const x of cands){
++     const d=x.decal,pr=SIDES.map(s=>pDe(s,d[s])),ps=pr.map(q=>q?q.p:0),g=ecartementDecal(capture,d);
++     const so=SIDES.map(s=>sout(s,d[s])),orig=new Set(pr.flatMap(q=>q?q.h.origines:[])),sous=new Set(pr.flatMap(q=>q?q.h.sousOrigines:[]));
++     const mx=f=>Math.max(...SIDES.map(f));
++     x.lp=lp(ps[0])+lp(ps[1]);
++     x.t=[Math.min(...ps),Math.max(...ps),x.lp,0,pr.filter(q=>!q).length,Math.log1p(Math.min(so[0].dessus,so[1].dessus)),Math.log1p(Math.min(so[0].flanc,so[1].flanc)),
++       so.every(m=>m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc)?1:0,
++       refMm!==null?Math.abs(g-refMm):0,refMm===null?1:0,gMed!==null?Math.abs(g-gMed):0,gMed===null?1:0,
++       va?mx(s=>Math.abs(d[s][1]-va[s].proche[0])):0,va?mx(s=>Math.abs(d[s][2]-va[s].proche[1])):0,va?mx(s=>Math.abs(d[s][1]-va[s].v[0])):0,va?0:1,
++       va?mx(s=>va[s].distProche):0,va?mx(s=>va[s].residuMm??0):0,va?Math.min(...SIDES.map(s=>va[s].n.avant+va[s].n.apres)):0,
++       vl?mx(s=>Math.abs(d[s][1]-vl[s][0])):0,vl?0:1,voie?mx(s=>Math.abs(d[s][1]-voie[s][0])):0,voie?0:1,vg?mx(s=>Math.abs(d[s][1]-vg[s][0])):0,vg?0:1,
++       mx(s=>norme(d[s])),mx(s=>Math.abs(d[s][1])),mx(s=>Math.abs(d[s][2])),k.zone==='adv'?1:0,k.zone==='pn'?1:0,
++       x.src.has('livre')?1:0,x.src.has('livre')&&dd.etat==='valider'?1:0,x.src.has('test13')?1:0,x.src.has('test13')&&d0.etat==='valider'?1:0,x.src.has('rech')?1:0,
++       orig.has('H6')?1:0,sous.has('chaine')||sous.has('voie')?1:0,orig.has('H1')?1:0,orig.has('H0')?1:0,x.src.has('corrigee')?1:0,pr.some(q=>q&&q.h.hauteur)?1:0,
++       0,cands.length,0,g,x.src.has('chainePose')?1:0,k.chainePose?1:0,
++       ...puceTraitsNuage(k,pr,refMm)];
++   }
++   const I=n=>PUCE_TRAITS.indexOf(n),ecart=(a,b)=>Math.max(...SIDES.map(s=>norme(moins(a.decal[s],b.decal[s]))));
++   const ordre=cands.slice().sort((a,b)=>b.lp-a.lp);ordre.forEach((x,r)=>{x.t[I('rangProd')]=r;});
++   for(const x of cands){let n=0,riv=-Infinity;for(const y of cands){if(y===x)continue;const e=ecart(x,y);if(e<=10)n++;if(e>PUCE_ECART_MM&&y.lp>riv)riv=y.lp;}
++     x.t[I('nProches10')]=n;x.t[I('ecartRival')]=Number.isFinite(riv)?x.lp-riv:5;}
++   /* pistes : grappes (à 30 mm) parmi les 10 candidats les plus probables du nuage */
++   const pistes=[];for(const x of ordre.slice(0,10))if(!pistes.some(y=>ecart(x,y)<=PUCE_ECART_MM))pistes.push(x);
++   for(const x of cands)x.t[I('nPistes')]=pistes.length;
++   return {candidats:cands.map(x=>({decal:x.decal,src:[...x.src].sort(),t:x.t}))};
++ }
++ /* Traits du nuage d'un candidat (cellules des hypothèses appariées, rails du cut ; valeurs transformées de NUM) et écart du départ d'ESV à la référence. */
++ const iNUM=n=>NUM.findIndex(t=>t.nom===n);
++ function puceTraitsNuage(k,pr,refMm){
++   const v=(q,n)=>q?q.h.x.n[iNUM(n)]:NaN,f=a=>a.filter(Number.isFinite),mn=a=>f(a).length?Math.min(...f(a)):NaN,mxx=a=>f(a).length?Math.max(...f(a)):NaN;
++   const rail=n=>SIDES.map(s=>k.rails[s].hyps.length?k.rails[s].hyps[0].x.n[iNUM(n)]:NaN);
++   return [mn(pr.map(q=>v(q,'lignesSommet'))),mn(pr.map(q=>v(q,'faces'))),mxx(pr.map(q=>v(q,'ratioPerte'))),pr.every(q=>v(q,'strong')===1)?1:0,pr.every(q=>v(q,'competitive')===1)?1:0,
++     mxx(rail('grappes')),mxx(rail('competitives')),mxx(rail('fortsConcurrents')),mn(rail('pointsRail')),fini(k.G0)&&refMm!==null?Math.abs(k.G0-refMm):NaN,0];
++ }
++ /* Modèle figé (format `ariane-puce-v1`) : { traits, moy, log1p?, gardes?, seuils:{adv,abords,pn}, deltaMm:{adv,abords,pn} } et soit une régression
++  * logistique ({ sd, coef, intercept } : traits normalisés, bornés à ±6), soit des arbres ({ type:'arbres', base, arbres }). Un trait de `log1p` est lu
++  * en log(1 + |v|) ; une valeur non finie prend la moyenne d'apprentissage. Refus si la liste des traits n'est pas celle du module. */
++ function pucePredire(M,t){
++   if(!M||JSON.stringify(M.traits)!==JSON.stringify(PUCE_TRAITS))throw Error('puce : traits du modèle différents de ceux du module : refus');
++   const lg=new Set((M.log1p||[]).map(n=>PUCE_TRAITS.indexOf(n)));
++   const x=t.map((v,j)=>{const w=lg.has(j)&&Number.isFinite(v)?Math.log1p(Math.abs(v)):v;return Number.isFinite(w)?w:M.moy[j];});
++   let z;
++   if(M.type==='arbres'){z=M.base;for(const a of M.arbres){let k=0;for(;;){const nd=a[k];if(nd.length===1){z+=nd[0];break;}k=x[nd[0]]<=nd[1]?nd[2]:nd[3];}}}
++   else{z=M.intercept;for(let j=0;j<x.length;j++){const sd=M.sd[j]||1;z+=M.coef[j]*Math.max(-6,Math.min(6,(x[j]-M.moy[j])/sd));}}
++   return 1/(1+Math.exp(-z));
++ }
++ /* Gardes de voie livrées reprises sur les candidats (`gardes` du modèle) : voie absolue des voisins à `procheMaxCuts` cuts au plus, candidat à plus
++  * de `voieAbsMm` en travers de sa droite ou voisins incohérents (résidu > `residuMm`) ; voie sûre des voisins à plus de `voieMm` : candidat refusé. */
++ function puceRefuse(G,t){
++   if(!G)return false;const v=n=>t[PUCE_TRAITS.indexOf(n)];
++   return (v('vaManque')===0&&v('vaDist')<=G.procheMaxCuts&&(v('dvFit')>G.voieAbsMm||v('vaResidu')>G.residuMm))||(v('voieManque')===0&&v('dvVoie')>G.voieMm);
++ }
++ function puceDecider(M,puce){
++   const t0=puce.candidats.length?puce.candidats[0].t:null,zone=!t0?'abords':t0[PUCE_TRAITS.indexOf('adv')]?'adv':t0[PUCE_TRAITS.indexOf('pn')]?'pn':'abords';
++   const cle=t0&&t0[PUCE_TRAITS.indexOf('contexteChaine')]&&M.seuils&&fini(M.seuils.chaine)?'chaine':zone;
++   let best=null;for(const x of puce.candidats){if(puceRefuse(M.gardes,x.t))continue;const q=pucePredire(M,x.t);if(!best||q>best.q)best={x,q};}
++   const seuil=M.seuils&&fini(M.seuils[cle])?M.seuils[cle]:1.01,delta=M.deltaMm&&fini(M.deltaMm[zone])?M.deltaMm[zone]:2;
++   const resume={zone,cle,seuil,q:best?arrondi(best.q,4):null,n:puce.candidats.length,src:best?best.x.src:null};
++   if(!best)return {dd:{etat:'rien',motif:'puce-sans-candidat',decal:null,corrigee:false},resume};
++   const ecartDepart=Math.max(...SIDES.map(s=>Math.max(Math.abs(best.x.decal[s][1]),Math.abs(best.x.decal[s][2]))));
++   /* la pose de la chaîne choisie est gardée telle quelle, même près du départ (δ ne vaut que pour une pose de la GCV2) */
++   if(ecartDepart<delta&&!best.x.src.includes('chainePose'))return {dd:{etat:'rien',motif:'puce-depart',decal:null,corrigee:false},resume};
++   if(best.q<seuil)return {dd:{etat:'rien',motif:'puce-sous-seuil',decal:null,corrigee:false},resume};
++   return {dd:{etat:'valider',motif:'puce',decal:{left:best.x.decal.left.slice(),right:best.x.decal.right.slice()},corrigee:false},resume};
+  }
+  /* Cap 5, levier « sélection à la référence » : la règle L1 (τ, δ, 150 mm), mais la meilleure paire est cherchée parmi les paires dont l'écartement
+   * EXACT est à `selectionRefMm` de la référence de la liste d'ESV (au lieu de la médiane du lot ± 15 mm ou du contrat 1 420–1 470 mm). */
+@@ -957,7 +1065,7 @@ function contreChaine(g,decalChaine,seuilMm){
+   *   voisins : cuts validés par le lot avant ce cut, { identity, positions, rails (pose de départ de ce voisin) } ; zone : 'pn' | 'adv' | 'abords' ;
+   *   plagesADV : plages ADV connues à l'instant ; modele : `modeleFige(...)` ; regle : REGLE ou REGLE_V.
+   * Rend { decision (deciderL1), positions (scène) ou null, hyp (résumé), cas } ; lève une erreur seulement sur entrée illisible. */
+- function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null}){
++ function deciderDiffere({capture,science,appuis=[],options=REGLE.lotOptions,voisins=[],zone='abords',plagesADV=[],modele,regle=REGLE,reference=null,voisinsTransport=null,voieListe=null,chainePose=null}){
+    if(!modele)throw Error('GCV2 L1 : modèle absent.');
+    if(!SIDES.every(s=>science&&science.rails&&science.rails[s]))throw Error('GCV2 L1 : science incomplète.');
+    const id=capture.identity,seul=variante(capture,science,[],options),chaine=variante(capture,science,appuis.slice(),options);
+@@ -970,6 +1078,7 @@ function contreChaine(g,decalChaine,seuilMm){
+    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
+    const k=casDuDiffere({cut:id.cut,zone,hyp,gMed,voieRef});
+    if(voieListe)k.voieListe=voieListe;
++   if(chainePose)k.chainePose=chainePose;
+    k.voieGeo=voieGeometrique(capture,voisins.concat(Array.isArray(voisinsTransport)?voisinsTransport:[]),id.cut,LEVIERS.brancheMaxCuts);
+    /* Cap 5b : voisins validés en positions de scène (chaîne et, s'il y en a, poses de la GCV2), pour la voie absolue. */
+    k.voisinsAbs=vs.concat(Array.isArray(voisinsTransport)?voisinsTransport.filter(v=>v&&v.identity&&v.positions):[]);
+@@ -1020,9 +1129,9 @@ function contreChaine(g,decalChaine,seuilMm){
+      ecartDepartMm:d.ecartDepartMm,ecartMaxLatVertMm:d.ecartMaxLatVertMm??null,paires:d.permises??null,
+      paire:d.paire?{left:d.paire.left.decal,right:d.paire.right.decal}:null,aControler:d.aControler===true||undefined,
+      gMedMm:arrondi(r.gMed,1),chaine:r.chaine?{stage:r.chaine.stage,reason:r.chaine.reason!=null?String(r.chaine.reason).slice(0,80):null,appuis:r.chaine.anchorsUsed.length}:null,
+-     nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
++     nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.puce?{puce:d.puce.candidats?{traits:PUCE_TRAITS,candidats:d.puce.candidats.map(x=>({d:x.decal,t:x.t.map(v=>Number.isFinite(v)?Math.round(v*1000)/1000:null)}))}:{},puceChoix:d.puce.choix||null}:{}),...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
+  }
+  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
+    modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
+-   voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
++   voieAbsolue,rechercheRecentree,pairesRecentrees,PUCE_TRAITS,puceCandidats,pucePredire,puceRefuse,puceDecider,leviersActifs:()=>LEVIERS};
+ });
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 2475702..2ccc870 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -229,9 +229,12 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+           const ev = fini(leviers.contreChaineVoieMm) ? L1.ecartAVoie(capture, c.cut, E.valides.concat(transport ? E.validesL1 : []), decalPose(before, positions)) : null;
+           if (fini(leviers.contreChaineVoieMm) && !(ev && Math.max(ev.proche, ev.droite) > leviers.contreChaineVoieMm)) throw null;
+           const g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p),
+-            reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
++            reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null,
++            ...(leviers.puce || leviers.puceJeu ? { chainePose: decalPose(before, positions) } : {}) });
+           ombre = L1.resumer(g);
+-          if (L1.contreChaine(g, decalPose(before, positions), leviers.contreChaineMm)) { contre = g; pose = false; }
++          /* CH-122 (`puceChaine`, avec `puce`) : la pose de la chaîne est gardée seulement si la puce la choisit et la valide ; sinon le cut passe à la GCV2 (décision de la puce). */
++          if (leviers.puceChaine && leviers.puce) { const ch = g.decision.puce && g.decision.puce.choix; if (!(g.decision.etat === 'valider' && ch && (ch.src || []).includes('chainePose'))) { contre = g; pose = false; } }
++          else if (L1.contreChaine(g, decalPose(before, positions), leviers.contreChaineMm)) { contre = g; pose = false; }
+         } catch (e) { if (e) ombre = { erreur: String(e.message || e).slice(0, 120) }; }
+       }
+       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
