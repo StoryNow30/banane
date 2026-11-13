@@ -1,0 +1,4 @@
+# Jugement unique de CH-121 `aj4-final` (vertical seul) sur 1211v et 1312v (CH-116, 13/11 ; ÉTABLI)
+Patch `chantiers/CH-121/ajustement-fin.patch` (0ef1df4, empreinte 292401ad…, la même que pour aj3 : l'éteint est celui déjà vérifié identique au livré, `../ch121/`), réglage lu dans `grille-v4.json` : `{"ajustementFin":{"c":5,"lateral":false}}`, tel quel. Vérité 1312v : segments 1 à 10.
+Fichiers : `juger-*.md` (tableau et cuts changés), `chaine-*.md` (poses déplacées par origine : chaîne du lot, GCV2, passe ; outil `outils/chaine.cjs`).
+Poses de la chaîne déplacées de plus de 0,5 mm : 1211v 14 (médiane 9,9 mm, max 11,0), 5 jugées, toutes rapprochées de la pose finale ; 1312v 156 (médiane 8,4, max 12,1), aucune jugée (155 absentes de l'Écho, 1 écartée D-285 ; 83 poses de la chaîne sont jugées sur 1312v, aucune n'est déplacée).
