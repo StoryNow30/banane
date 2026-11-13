@@ -1,0 +1,51 @@
+1312v-p6-r1 : décisions identiques 224/226 ; poses identiques à 1 mm 200/219
+    114 : pose à 6.5 mm du réel (étage réel deferred, rejeu deferred)
+    144 : pose à 1.7 mm du réel (étage réel deferred, rejeu choice)
+    151 : pose à 2.1 mm du réel (étage réel deferred, rejeu deferred)
+    181 : pose à 2.0 mm du réel (étage réel deferred, rejeu deferred)
+    184 : pose à 8.6 mm du réel (étage réel deferred, rejeu deferred)
+    463 : réel différé (sans-appui), rejeu pose (deferred)
+    466 : pose sans décalage
+    518 : réel posé (deferred), rejeu differe (deferred)
+    2174 : pose à 10.8 mm du réel (étage réel deferred, rejeu deferred)
+    2221 : pose à 2.8 mm du réel (étage réel deferred, rejeu deferred)
+    3045 : pose à 4.8 mm du réel (étage réel deferred, rejeu deferred)
+    3069 : pose sans décalage
+    3070 : pose sans décalage
+    3072 : pose à 3.3 mm du réel (étage réel deferred, rejeu deferred)
+    3074 : pose à 2.9 mm du réel (étage réel deferred, rejeu deferred)
+    3075 : pose à 6.0 mm du réel (étage réel deferred, rejeu deferred)
+    3076 : pose à 1.9 mm du réel (étage réel deferred, rejeu deferred)
+    3090 : pose à 13.0 mm du réel (étage réel deferred, rejeu deferred)
+    3117 : pose sans décalage
+    4139 : pose à 1.0 mm du réel (étage réel deferred, rejeu deferred)
+    4143 : pose à 7.7 mm du réel (étage réel deferred, rejeu deferred)
+1312v-p7-r1 : décisions identiques 57/57 ; poses identiques à 1 mm 56/57
+    4059 : pose à 2.0 mm du réel (étage réel deferred, rejeu deferred)
+1312v-p8-r1 : décisions identiques 80/80 ; poses identiques à 1 mm 79/80
+    1565 : pose à 2.7 mm du réel (étage réel deferred, rejeu deferred)
+1312v-p9-r1 : décisions identiques 48/48 ; poses identiques à 1 mm 47/47
+1312v-p10-r1 : décisions identiques 220/220 ; poses identiques à 1 mm 213/217
+    840 : pose à 1.8 mm du réel (étage réel deferred, rejeu deferred)
+    843 : pose à 5.0 mm du réel (étage réel deferred, rejeu deferred)
+    9144 : pose sans décalage
+    9198 : pose sans décalage
+1312v-p11-r1 : décisions identiques 107/107 ; poses identiques à 1 mm 101/106
+    303 : pose sans décalage
+    304 : pose sans décalage
+    305 : pose sans décalage
+    491 : pose sans décalage
+    5286 : pose à 2.3 mm du réel (étage réel deferred, rejeu deferred)
+1312v-p12-r1 : décisions identiques 74/74 ; poses identiques à 1 mm 71/73
+    6219 : pose sans décalage
+    7711 : pose à 1.5 mm du réel (étage réel deferred, rejeu deferred)
+1312v-p13-r1 : décisions identiques 58/58 ; poses identiques à 1 mm 57/57
+1312v-p14-r1 : décisions identiques 37/37 ; poses identiques à 1 mm 36/36
+1312v-p15-r1 : décisions identiques 55/55 ; poses identiques à 1 mm 55/55
+1312v-p16-r1 : décisions identiques 55/55 ; poses identiques à 1 mm 55/55
+1312v-p17-r1 : décisions identiques 76/76 ; poses identiques à 1 mm 75/75
+1312v-p18-r1 : décisions identiques 214/214 ; poses identiques à 1 mm 207/210
+    7692 : pose sans décalage
+    8696 : pose sans décalage
+    8948 : pose à 1.2 mm du réel (étage réel deferred, rejeu deferred)
+TOTAL : décisions identiques 1305/1307 (99.8 %) ; poses identiques 1252/1287 (97.3 %)
