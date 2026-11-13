@@ -1,18 +1,18 @@
 diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
-index 1a307d2..b54f3e7 100644
+index 1a307d2..c2fab8a 100644
 --- a/src/gcv2-l1.js
 +++ b/src/gcv2-l1.js
-@@ -582,7 +582,9 @@
-   *    de 40 mm), n'est pas posée : sur 3:0 avec la deuxième passe, 865 et 869 (165 et 217 mm, mauvaise voie) ne sont plus posés, 794 est reposé juste (3 mm).
-   * Au banc, avec la deuxième passe livrée : 0 cut changé sur les 9 anciens lots ; 3:0 : 0 pose à plus de 20 mm. */
-  const LEVIERS_V6=Object.freeze({rechHauteurMaxMm:25,vetoVoieAbsMm:100,voieIncoherenteMm:40});
-- const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6});
-+ /* CH-121 (D-352) — LEVIER `ajustementFin`, COUPÉ (null) : voir `ajusterPoseFinale`. Une valeur = le réglage figé de l'étage (objet). */
-+ const LEVIERS_V7=Object.freeze({ajustementFin:null});
-+ const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6,...LEVIERS_V7});
-  let LEVIERS=LEVIERS_LIVRES;
-  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
-  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
+@@ -565,7 +565,9 @@
+    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
+    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
+    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
+-   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
++   /* CH-121 (D-352) : étage final `ajusterPoseFinale`, COUPÉ (null) ; une valeur = le réglage figé de l'étage (objet). */
++   ajustementFin:null});
+  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
+   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
+   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
 @@ -950,6 +952,56 @@ function contreChaine(g,decalChaine,seuilMm){
  /* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
   function positionsDe(capture,paire){return Object.fromEntries(SIDES.map(s=>[s,L.positionOf(capture.rails[s],paire[s].decal.map(v=>v/1000))]));}
@@ -25,12 +25,13 @@ index 1a307d2..b54f3e7 100644
 +  *  - un rail dont le calage vertical sort du domaine (|dz| > 8 mm) est posé brut, trop bas ; le 90e centile du dessus surévalue la hauteur quand la bande de
 +  *    points est épaisse (octobre : q90 − q50 de 7 mm contre 4 en novembre) ; la médiane du dessus + `c` suit l'opérateur dans les deux cas.
 +  * Chaque rail séparément, à sa pose : points de dessus et de flanc dans la bande du gabarit (mêmes filtres que `bandOffsets`) ;
-+  *  - vertical : dz = q90 + 1 (la convention) si |dz| ≤ `domaine` ; sinon q50 + `c`, seulement si l'épaisseur q90 − q10 ≤ `epMax` et |q50 + c| ≤ `dzMax` ;
-+  *    appliqué si topN ≥ `minTop` et |dz| ≥ `tolV` ;
++  *  - vertical : dz = q50 + `c` (médiane du dessus), si topN ≥ `minTop`, l'épaisseur q90 − q10 ≤ `epMax` et `tolV` ≤ |dz| ≤ `dzMax`. Pas le 90e centile de la
++  *    convention : relu à une pose déjà calée, il remonte encore (les points hauts entrent dans la bande qui suit la pose : cliquet de 5 à 7 mm mesuré sur le
++  *    14/10 p17) ; la médiane, loin des bords de la bande, donne un étage qui ne bouge plus quand on le réapplique ;
 +  *  - latéral : du = médiane du flanc − 2,6 (la convention) si faceN ≥ `minFace`, appliqué si `tolL` ≤ |du| ≤ `duMax` ; l'écartement de la paire
 +  *    après doit rester dans [`gMin`, `gMax`] et changer de `gMaxDelta` au plus, sinon aucun latéral n'est appliqué.
 +  * `R` absent (levier coupé) : la pose rendue est celle reçue, à l'identique. Rend { decal, ajuste, info }. */
-+ const AJ_DEFAUT=Object.freeze({c:4.4,epMax:15,dzMax:13,domaine:8,tolV:4,tolL:4,duMax:12,minTop:15,minFace:6,bandeMm:12,lateral:true,vertical:true,gMin:1425,gMax:1475,gMaxDelta:25});
++ const AJ_DEFAUT=Object.freeze({c:4.4,epMax:15,dzMax:13,tolV:4,tolL:4,duMax:12,minTop:15,minFace:6,bandeMm:12,lateral:true,vertical:true,gMin:1425,gMax:1475,gMaxDelta:25});
 + function lirePose(capture,s,d,band){
 +   const rail=capture.rails&&capture.rails[s],t=rail&&Conv.template(rail);if(!t)return null;
 +   const M=rail.sceneRelativeToProfileLocal,y0=d[1]/1000,z0=d[2]/1000,bu=t.sign*y0,bz=z0,top=[],face=[],pts=capture.pointsSceneRelative||[],vis=capture.visibleByClipBoxes;
@@ -51,9 +52,8 @@ index 1a307d2..b54f3e7 100644
 +     const P=lirePose(capture,s,decal[s],R.bandeMm/1000);if(!P){info[s]={motif:'gabarit'};continue;}
 +     const I=(info[s]={topN:P.top.length,faceN:P.face.length});
 +     if(R.vertical&&P.top.length>=R.minTop){
-+       const q10=Q(P.top,.1),q50=Q(P.top,.5),q90=Q(P.top,.9),dz90=q90+Conv.DEFAULTS.topOffsetMm,ep=q90-q10,dzm=q50+R.c;
-+       const v=Math.abs(dz90)<=R.domaine?dz90:(ep<=R.epMax&&Math.abs(dzm)<=R.dzMax?dzm:null);
-+       if(v!==null&&Math.abs(v)>=R.tolV){out[s][2]=r2(decal[s][2]+v);I.dz=arrondi(v,1);}
++       const q10=Q(P.top,.1),q50=Q(P.top,.5),q90=Q(P.top,.9),ep=q90-q10,v=q50+R.c;
++       if(ep<=R.epMax&&Math.abs(v)>=R.tolV&&Math.abs(v)<=R.dzMax){out[s][2]=r2(decal[s][2]+v);I.dz=arrondi(v,1);}else if(Math.abs(v)>=R.tolV)I.dzRefuse=arrondi(v,1);
 +     }
 +     if(R.lateral&&P.face.length>=R.minFace){const du=Q(P.face,.5)+Conv.DEFAULTS.faceOffsetMm;if(Math.abs(du)>=R.tolL&&Math.abs(du)<=R.duMax)lat[s]=P.sign*du;}
 +   }
@@ -75,15 +75,15 @@ index 1a307d2..b54f3e7 100644
   }
   return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
 -   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
-+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,ajusterPoseFinale,AJ_DEFAUT,deciderDiffere,commander,resumer,
++   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,ajusterPoseFinale,AJ_DEFAUT,deciderDiffere,commander,resumer,
     voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
  });
 diff --git a/tests/ch121-ajustement-fin.test.cjs b/tests/ch121-ajustement-fin.test.cjs
 new file mode 100644
-index 0000000..7ab1826
+index 0000000..2b33f07
 --- /dev/null
 +++ b/tests/ch121-ajustement-fin.test.cjs
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,65 @@
 +'use strict';
 +/* CH-121 (D-352) : étage final d'ajustement de la pose sur le profil du rail (`ajusterPoseFinale`, src/gcv2-l1.js ; levier `ajustementFin`, coupé). */
 +const { test } = require('node:test'), assert = require('node:assert/strict');
@@ -122,20 +122,24 @@ index 0000000..7ab1826
 +  assert.deepEqual(r.decal.right, [0, 210, 0]);
 +});
 +
-+test('vertical dans le domaine : la convention (q90 + 1) ; sous la tolérance, rien', () => {
-+  const r = G.ajusterPoseFinale(capture({ dessus: 5, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
-+  const q90 = 5 - 1 + Math.floor(.9 * 40) * (2 / 39);
-+  assert.ok(Math.abs(r.decal.left[2] - (q90 + 1)) < 0.05, `vertical ${r.decal.left[2]}`);
-+  const r2 = G.ajusterPoseFinale(capture({ dessus: 1.5, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
-+  assert.equal(r2.ajuste, false);
++test('vertical : médiane du dessus + c ; près de l’enveloppe (médiane à −c), rien', () => {
++  const r = G.ajusterPoseFinale(capture({ dessus: 5, ep: 4 }), { left: [0, 0, 0], right: [0, 0, 0] }, { ...R, lateral: false });
++  const q50 = 5 - 2 + Math.floor(.5 * 40) * (4 / 39);
++  assert.ok(Math.abs(r.decal.left[2] - (q50 + 4.4)) < 0.05, `vertical ${r.decal.left[2]}`);
++  assert.equal(G.ajusterPoseFinale(capture({ dessus: -4.4, ep: 4 }), { left: [0, 0, 0], right: [0, 0, 0] }, { ...R, lateral: false }).ajuste, false);
 +});
 +
-+test('vertical hors domaine : médiane du dessus + c si la bande est nette ; bande épaisse ou trop loin : rien', () => {
-+  const r = G.ajusterPoseFinale(capture({ dessus: 8, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
-+  const q50 = 8 - 1 + Math.floor(.5 * 40) * (2 / 39);
-+  assert.ok(Math.abs(r.decal.left[2] - (q50 + 4.4)) < 0.05, `vertical ${r.decal.left[2]}`);
++test('vertical : bande épaisse ou déplacement au-delà de dzMax : rien', () => {
 +  assert.equal(G.ajusterPoseFinale(capture({ dessus: 3, ep: 20 }), { left: [0, 0, 0], right: [0, 0, 0] }, { ...R, lateral: false }).ajuste, false);
 +  assert.equal(G.ajusterPoseFinale(capture({ dessus: 10, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, { ...R, lateral: false }).ajuste, false);
++});
++
++test('point fixe : l’étage réappliqué à sa propre pose ne bouge plus (bande de 10 mm, rail 6 mm trop bas, flanc à 7 mm)', () => {
++  const cap = capture({ dessus: 6 - 4.4, ep: 10, flanc: 7, nTop: 60 });
++  const r1 = G.ajusterPoseFinale(cap, { left: [0, 0, 0], right: [0, 0, 0] }, R);
++  assert.equal(r1.ajuste, true);
++  const r2 = G.ajusterPoseFinale(cap, r1.decal, R);
++  assert.equal(r2.ajuste, false, JSON.stringify(r2.info));
 +});
 +
 +test('latéral : refusé si l’écartement de la paire sortirait des bornes', () => {
@@ -145,6 +149,19 @@ index 0000000..7ab1826
 +  const r2 = G.ajusterPoseFinale(capture({ flanc: 6 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
 +  assert.ok(Math.abs(r2.decal.left[1] - 6) < 0.3);
 +});
+diff --git a/tests/gcv2-l1-cap5.test.cjs b/tests/gcv2-l1-cap5.test.cjs
+index ca47171..f88537b 100644
+--- a/tests/gcv2-l1-cap5.test.cjs
++++ b/tests/gcv2-l1-cap5.test.cjs
+@@ -43,7 +43,7 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
+     /* Cap 6 (A2, A3) : coupés dans la v4. */
+     voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null, brancheDernier: false,
+     /* T17B : coupés. */
+-    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null });
++    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null, ajustementFin: null });
+   try {
+     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
+     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
 diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
 index 2475702..dcb9281 100644
 --- a/tools/banc-differes.cjs

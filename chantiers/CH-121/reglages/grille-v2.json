@@ -1,0 +1,72 @@
+{
+  "patch": "chantiers/CH-121/ajustement-fin.patch",
+  "patchSha256": "292401addd9998381db52e7736707314b287479981166324ba0cb212787dfa39",
+  "variable": "BANC_LEVIERS",
+  "defaut": {
+    "c": 4.4,
+    "epMax": 15,
+    "dzMax": 13,
+    "tolV": 4,
+    "tolL": 4,
+    "duMax": 12,
+    "minTop": 15,
+    "minFace": 6,
+    "bandeMm": 12,
+    "lateral": true,
+    "vertical": true,
+    "gMin": 1425,
+    "gMax": 1475,
+    "gMaxDelta": 25
+  },
+  "vertical": "q50 + c (médiane du dessus), plus de branche « convention q90 + 1 »",
+  "reglages": {
+    "aj-H": {
+      "ajustementFin": {}
+    },
+    "aj-I": {
+      "ajustementFin": {
+        "tolV": 3,
+        "tolL": 3
+      }
+    },
+    "aj-J": {
+      "ajustementFin": {
+        "tolV": 5,
+        "tolL": 5
+      }
+    },
+    "aj-K": {
+      "ajustementFin": {
+        "lateral": false
+      }
+    },
+    "aj-L": {
+      "ajustementFin": {
+        "vertical": false
+      }
+    },
+    "aj-M": {
+      "ajustementFin": {
+        "c": 4.0
+      }
+    },
+    "aj-N": {
+      "ajustementFin": {
+        "epMax": 12
+      }
+    }
+  },
+  "cout": "100·(> 50) + 10·(10–50) + 50·(justes du livré passés au-delà de 10 mm) + 5·(bons bloqués) + 1·(différés)",
+  "egalite": "à coût égal, le réglage qui déplace (> 0,5 mm) le moins de posés sur les lots d'apprentissage ; puis l'ordre de la liste",
+  "lotsReglables": [
+    "0411",
+    "0611",
+    "0811a",
+    "0811b",
+    "1111",
+    "1211"
+  ],
+  "examen": [
+    "0511"
+  ]
+}
