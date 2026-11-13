@@ -22,6 +22,8 @@ const LOTS = [
   /* Examen vierge (13/11) : Échos du 12/11 parties 3 et 4, jamais vus par aucun réglage. Hors du corpus commun (corpus.cjs ne les prend que
    * nommés par --lots 1211v) ; à ne transmettre à aucun autre chantier. */
   ...P('1211v', 'l1211', p => 'e1211-p' + p, [3, 4], { examen: true, vierge: true }),
+  /* Second examen vierge (13/11) : lot du 12/11 au soir, parties 6 à 18, Écho du 13/11 matin (segments 1 à 10, séance en cours). Mêmes règles que 1211v. */
+  ...P('1312v', 'l1312', 'e1312', [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18], { examen: true, vierge: true }),
 ];
 /* Lots exportés sans Écho joignable (comptés au résumé, pas au corpus) : 08/11 parties 5 et 7, 10/11 partie 9 (séance Écho tirée au sort
  * non faite), 12/11 parties 21, 22 (partie 22 : une seule visite). */
