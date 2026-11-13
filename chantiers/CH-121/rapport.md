@@ -1,35 +1,40 @@
 # CH-121 : ajustement fin de la pose sur le profil du rail (rapport, D-352)
 
-Hors ligne. Aucun fichier du tronc changé : patchs éteints `ajustement-fin.patch` (`src/gcv2-l1.js`, crochet du banc, essais) et `sw-ajustement-fin.patch` (`background.js`). Cible écrite avant le premier rejeu (`cible.md`) ; réglages figés avant jugement (`reglages/`, quatre grilles, toutes consignées). Juge de CH-113, banc de CH-116. Sorties (numéros et mm) : `sorties/`.
+Hors ligne. Aucun fichier du tronc n'a changé. Patchs éteints : `ajustement-fin.patch` (`src/gcv2-l1.js`, crochet du banc, essais) et `sw-ajustement-fin.patch` (`background.js`). La cible a été écrite avant le premier rejeu (`cible.md`). Cinq grilles de réglages, chacune figée avant jugement et consignée (`reglages/LISEZMOI.md`). Juge de CH-113, banc de CH-116. Sorties (numéros et mm) : `sorties/`.
 
 ## 1. Mesure (ÉTABLI ; rejeu livré = CH-116 à l'unité)
-- Les 36 posés de 10 à 50 mm se partagent en deux familles. **Vertical** (~13) : rail au calage refusé (|dz| > 8 mm), posé brut, trop bas ; le calage relu à la pose prédit l'écart à 1-3 mm. **Latéral à un rail** (~15) : GCV2 en ADV. Détail : `sorties/mesure-livre-par-rail.csv`.
-- **Défaut de fenêtre** : le calage de convention ne lit que les points à ±180 mm en travers de la pose de DÉPART d'ESV. 387 posés sur 3 425 ont un rail à plus de 150 mm de son départ (197 au-delà de 180 mm). Leur champignon sort de la fenêtre et n'est jamais calé (08/11b 231 : 212 mm, 0 point lu).
-- **Octobre** (14/10 p17) : la bande de dessus y est deux fois plus épaisse (q90 − q50 : 7 mm contre 4 pour les rails refusés). Le 90e centile surévalue alors la hauteur (rapport 0,64 de CH-118). La médiane du dessus a le même décalage à l'opérateur dans les deux époques.
+- Les 36 posés de 10 à 50 mm forment deux familles :
+  - **vertical** : rail au calage refusé (|dz| > 8 mm), posé brut, trop bas ;
+  - **latéral à un rail** : poses de la GCV2 en ADV.
+- **Défaut de fenêtre** : le calage ne lit que les points à ±180 mm de la pose de DÉPART d'ESV. 387 posés sur 3 425 ont un rail à plus de 150 mm de ce départ ; leur champignon sort de la fenêtre (08/11b 231 : 0 point lu).
+- **Octobre** : la bande du dessus y est deux fois plus épaisse, et le 90e centile surévalue la hauteur. La médiane du dessus garde le même décalage à l'opérateur aux deux époques.
 
 ## 2. L'étage (`ajusterPoseFinale`, levier `ajustementFin` dans `LEVIERS_V4`, null)
-En fin de chaîne, chaque rail seul, fenêtre centrée sur la pose. Vertical : médiane du dessus + c, si q90 − q10 ≤ 15 mm et 4 ≤ |dz| ≤ 13 mm. Latéral (option) : médiane du flanc − 2,6 mm, écartement borné. La commande est refaite par `commander`. Banc et service worker : voisin = pose écrite ; appui et transport = pose de la décision. Essais : 6/6 sur le patch, 0/6 sur le tronc (dont un essai de point fixe). Éteint = livré : 4 016 / 4 016.
+- **Étage final**, rail par rail, fenêtre centrée sur la pose. Vertical : médiane du dessus + c (épaisseur ≤ 15 mm, 4 ≤ |dz| ≤ 13 mm). Commande refaite par `commander`.
+- **Réglage proposé, `aj5`** : vertical seul ; poses de la chaîne seulement (`seulChaine`) ; voisins de la GCV2 à la pose de la décision (`voisinsDecision`) ; c = 5,0.
+- **Essais** : 6/6 sur le patch, 0/6 sur le tronc. Éteint = livré : 4 016 / 4 016 cuts.
 
 ## 3. Méthode, et ce qui a été écarté (dit tel quel)
-- **Grille 1** (convention q90 + 1 relue à la pose) : écartée par la garde statique du 14/10 p17, 10 justes perdus. Cause : cliquet du q90, relu à une pose déjà calée. **Le 14/10 p17 est donc « vu ».**
-- **Grille 2** : abandonnée. **Fuite** : c = 4,4 avait été lu sur tous les lots, 05/11 et lot tenu à l'écart compris. 05/11 a aussi été vu une fois dans la liste de mesure (11/5158).
-- **Grilles 3 et 4** : c appris dans chaque pli sur les seuls lots d'apprentissage (5,0 sur les 6 réglables ; de 3,9 à 5,7 selon le pli) ; chaque lot jugé une fois.
+- **Grille 1** (q90 relu à la pose) : écartée par la garde statique du 14/10 p17, à cause d'un cliquet. Ce lot est donc vu.
+- **Grille 2** : **fuite**, c avait été lu sur tous les lots, 05/11 compris ; 05/11 a aussi été vu une fois dans la liste de mesure (11/5158). Abandonnée sans jugement.
+- **Grille 3** (vertical + latéral) : 7 lots à 96,1 %. Refusée par la garde des 11 lots d'octobre : fautes du latéral, et un ricochet à 60 mm (0-2310 1372).
+- **Grille 4** (vertical seul, toutes les poses) : 7 lots à 95,5 %. Refusée par la même garde : ricochet 1372, et dégradations de poses GCV2 en ADV.
+- **Grille 5** (aj5) : **sa structure est tirée de la garde d'octobre.** Cette garde n'est donc plus un jugement indépendant pour aj5 ; elle a été refaite pour la cohérence. Le jugement indépendant d'aj5 passe par les plis de novembre (c appris par pli), puis par l'examen vierge neuf de CH-116 et par la séance Écho.
 
-## 4. Jugement « un lot dehors » (ÉTABLI au banc)
-| | 6 lots réglables (≤ 10 hors > 50) | 7 lots, avec 05/11 | gagnés / perdus | nouv. > 50 | déplacés > 30 mm |
-|---|---|---|---|---|---|
-| livré | 295/330 = 89,4 % | 496/532 = 93,2 % | | | |
-| grille 3 (vertical + latéral) | 311/331 = 94,0 % | 512/533 = **96,1 %** | 15 / 0 | 0 | 0 |
-| grille 4 (vertical seul) | 307/330 = 93,0 % | 508/532 = **95,5 %** | 12 / 0 | 0 | 0 |
-- Aj4, sur tous les lots : 124 poses de la chaîne déplacées, toutes en hauteur (médiane 9,1 mm, maximum 12,5). Sur 35 jugées, 30 vont vers le mieux et 4 vers le pire ; les pires restent ≤ 7,2 mm, dont 4 cuts validés tels quels par l'opérateur et montés de 7 mm. 11 passent sous 10 mm, 0 au-delà. Ricochets : 2 décisions changées (12/11 p23 5159, posé → différé ; 08/11b 6/131, différé → posé), non jugées.
+## 4. aj5 : jugement « un lot dehors » (ÉTABLI au banc ; gain PROBABLE jusqu'à l'Écho)
+| | ≤ 10 mm hors > 50 | livré | gagnés / perdus | nouv. > 50 | déplacés > 30 mm | décisions changées |
+|---|---|---|---|---|---|---|
+| 6 lots réglables | 306/330 = **92,7 %** | 89,4 % | 11 / 0 | 0 | 0 | 0 |
+| 7 lots, avec 05/11 | 507/532 = **95,3 %** | 93,2 % | 11 / 0 | 0 | 0 | 0 |
+- **Gagnés** : 12/11 p0 119, 136 ; p1 3780, 6511 ; p2 8684 ; p23 5134, 5135, 5136, 5141, 5149 ; 06/11 9237.
+- **Aucun ricochet** : 0 décision d'état changée sur tous les lots (vérifié mécaniquement).
+- **Poses déplacées** : 124 poses de la chaîne, toutes en hauteur (médiane 9,1 mm, maximum 12,5) ; aucune pose GCV2 ni L1-s. Sur 35 jugées : 30 mieux, 1 égale, 4 pire. Les 4 pires restent ≤ 7,2 mm : ce sont des cuts que l'opérateur avait validés tels quels, relevés de 7 mm.
 
-## 5. Garde et parité
-- **Garde des 11 lots d'octobre (`garde-gcv2 --rejouer`) : ROUGE pour les deux réglages** (éteint : retour 0).
-  - Grille 3 : 23 reculs. Fautes du latéral (2-17 9803 à 24,2 mm, 2-20 288, 0-2310 4) et ricochet 0-2310 1372 (nouvelle pose à 60,2 mm).
-  - Grille 4 : 16 reculs. Ricochet 0-2310 1372 (60,2 mm) et 13 ; vertical sur des poses GCV2 en ADV, 0-2310 4 (dégradé de 5,3 mm) et 193 (4,3) ; 53 verts changés (hauteur seule, médiane 8,8 mm, maximum 10,8).
-- **Parité** (aj4, `parite-l1se-sw --passe`) : 06/11 p15 : 161/161, 0 ligne différente. PARITE_P23. Elle a trouvé deux défauts du patch du service worker, corrigés : l'appui d'une commande ajustée, et le journal de la passe.
+## 5. Garde et parité (aj5)
+- **Garde des 11 lots d'octobre** (non indépendante) : retour 1, et ses seuls reculs sont **53 « verts changés »**, des poses de la chaîne relevées de 8,8 mm en médiane, 10,8 au maximum. Aucune autre faute : rien de nouveau au-delà de 20 ou 50 mm, rien de dégradé de plus de 2 mm, 0 décision changée. Éteint : retour 0.
+- **Parité** (`parite-l1se-sw --passe`) : 06/11 p15, 161/161 identiques. PARITE_P23. Elle a trouvé et fait corriger deux défauts du patch du service worker : l'appui d'une commande ajustée, et le journal de la passe.
 
 ## 6. Conclusion
-- Cible écrite (≥ 95 % sur 7 lots, 0 juste dégradé, 0 déplacement > 30 mm, 0 nouvelle mauvaise voie) : **atteinte au banc de novembre** par les grilles 3 et 4. Elle n'est **pas tenue en garde** : octobre montre une nouvelle mauvaise voie par ricochet, et des dégradations sur des poses GCV2 en ADV.
-- **Aucun réglage allumable.** Sous la règle actuelle (D-264 ; la garde compte tout déplacement d'un posé de la chaîne), le gain exige aussi une décision écrite de l'opérateur : 11 des 12 gains d'aj4 sont des poses de la chaîne.
-- Pistes, à juger sur des lots neufs, parce qu'octobre a servi à les concevoir : étage sur les poses de la chaîne seulement, voisins = pose de la décision (les fautes d'octobre sont toutes sur des poses GCV2 ou des ricochets) ; fenêtre centrée sur la pose dans les lectures de soutien de la GCV2 (L1-e, H6) ; un étage latéral seulement avec une garde de paquet unique.
+- **Cible écrite** (≥ 95 % sur 7 lots, 0 juste dégradé, 0 déplacement > 30 mm, 0 nouvelle mauvaise voie) : atteinte au banc par aj5 (95,3 %). Sur les 6 lots réglables seuls : 92,7 %.
+- **Allumage** : aj5 n'a pas de faute mesurée en garde. Il déplace en revanche, par construction, des poses validées par la chaîne, ce que la règle actuelle compte comme recul (D-264, garde). **Il faut une décision écrite de l'opérateur**, puis l'examen vierge (CH-116) et une séance Écho.
+- **Pistes** : la fenêtre centrée sur la pose dans les lectures de soutien de la GCV2 (L1-e, H6) ; un latéral protégé contre les flancs d'ADV mal lus (les fautes d'aj3).
