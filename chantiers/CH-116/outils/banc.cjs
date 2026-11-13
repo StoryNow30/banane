@@ -13,6 +13,11 @@
  *        avec `--ref`, les cuts qui changent de classe contre le rejeu de référence.
  *   node chantiers/CH-116/outils/banc.cjs fidelite --nom livre [--lots …]
  *        Décisions et poses du rejeu identiques au lot réel (même état ; pose à 1 mm au plus, pire rail 3D), lot par lot, écarts listés.
+ *   node chantiers/CH-116/outils/banc.cjs garde    --nom N [--patch P.patch …] [--env BANC_LEVIERS=JSON] [--jobs 3] [--refaire]
+ *        Garde d'octobre au banc (premier filtre rapide) : les 12 lots de datasets/garde-gcv2/base-test18.json rejoués comme `garde-gcv2 --rejouer`
+ *        (profils base et L1-se, --chrono, --juger-partie-reservee), leviers = ceux de la base (deuxième passe livrée) + ceux du réglage, en parallèle ;
+ *        puis `garde-gcv2 comparer` sur ces rejeux. Lots : BANANE_LOTS (défaut travail/oct/lots). Sortie : travail/garde/N/ (garde.md, garde.json, resume.txt) ;
+ *        reculs RÉELS (juste dégradé, faute nouvelle, décision changée) séparés des « verts changés ». Retour : celui de la garde.
  *   node chantiers/CH-116/outils/banc.cjs croise   --noms a,b,c [--ref livre] [--poids JSON] [--examen 0511|aucun]
  *        Validation croisée par lot : pour chaque lot hors examen, le réglage choisi (coût minimal) sur TOUS LES AUTRES lots hors examen,
  *        jugé sur celui-là. Puis examen : réglage choisi sur tous les lots hors examen, jugé sur les lots d'examen (jamais vus au réglage).
@@ -193,8 +198,45 @@ function croise(o) {
   return out.join('\n');
 }
 
+/* ------------------------------------------------------------------ garde d'octobre */
+const BASE_GARDE = path.join(RACINE, 'datasets', 'garde-gcv2', 'base-test18.json');
+async function garde(o) {
+  if (!o.nom) throw Error('garde --nom N');
+  const base = JSON.parse(fs.readFileSync(BASE_GARDE, 'utf8')), BL = process.env.BANANE_LOTS || path.join(travail(), 'oct', 'lots');
+  const reglage = o.env.BANC_LEVIERS ? JSON.parse(o.env.BANC_LEVIERS) : {}, leviers = { ...(base.banc.leviers || {}), ...reglage };
+  const code = copieDuCode({ ...o, nom: 'garde-' + o.nom }), out = path.join(travail(), 'garde', o.nom); fs.mkdirSync(out, { recursive: true });
+  fs.writeFileSync(path.join(out, 'reglage.json'), JSON.stringify({ nom: o.nom, patchs: o.patch.map(p => ({ fichier: path.basename(p), sha256: crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex') })), leviers }, null, 1));
+  const file = base.lots.filter(l => o.refaire || !fs.existsSync(path.join(out, `r-${l.nom}.jsonl`))).sort((a, b) => b.fichiers.corpus.length - a.fichiers.corpus.length);
+  let actifs = 0, i = 0, echecs = 0; const t0 = Date.now();
+  await new Promise(fin => {
+    const suivant = () => {
+      if (i >= file.length && actifs === 0) return fin();
+      while (actifs < o.jobs && i < file.length) {
+        const l = file[i++], d = path.join(BL, l.nom), F = l.fichiers, sortie = path.join(out, `r-${l.nom}.jsonl`);
+        const a = ['--max-old-space-size=6144', path.join(code, 'tools', 'banc-differes.cjs'), 'rejouer', '--partie', l.bancPartie || l.partie, '--journal', path.join(d, F.journal),
+          ...(F.corpus || []).flatMap(c => ['--corpus', path.join(d, c)]), '--lot', l.lot, '--profils', 'base,L1-se', ...(F.liste ? ['--liste', path.join(d, F.liste)] : []),
+          '--juger-partie-reservee', '--chrono', '--sortie', sortie + '.part'];
+        actifs++;
+        const p = cp.spawn(process.execPath, a, { env: { ...process.env, ...o.env, BANC_LEVIERS: JSON.stringify(leviers) }, stdio: ['ignore', 'ignore', 'pipe'] });
+        let err = ''; p.stderr.on('data', x => { err += x; });
+        p.on('close', c => { actifs--; if (c === 0) fs.renameSync(sortie + '.part', sortie); else { echecs++; process.stdout.write(`${l.nom} : ÉCHEC\n${err.slice(-1500)}\n`); } suivant(); });
+      }
+    };
+    suivant();
+  });
+  if (echecs) throw Error(`${echecs} rejeu(x) en échec`);
+  const g = cp.spawnSync(process.execPath, [path.join(RACINE, 'tools', 'garde-gcv2.cjs'), 'comparer', '--base', BASE_GARDE, '--rejeux', out, '--sortie', out], { encoding: 'utf8', maxBuffer: 1 << 26 });
+  const rap = JSON.parse(fs.readFileSync(path.join(out, 'garde.json'), 'utf8'));
+  const verts = r => /vert\(s\) changé\(s\)|verts changés/.test(r), reels = rap.reculs.filter(r => !verts(r)), vc = rap.reculs.filter(verts);
+  const res = [`garde d'octobre au banc, réglage « ${o.nom} » : retour ${g.status} ; ${rap.reculs.length} recul(s) dont ${reels.length} RÉEL(S) et ${vc.length} « verts changés » ; rejeux ${Math.round((Date.now() - t0) / 1000)} s`,
+    ...reels.map(r => '  réel : ' + r), ...vc.map(r => '  verts changés : ' + r), ...rap.signalements.map(s => '  signalé : ' + s)].join('\n');
+  fs.writeFileSync(path.join(out, 'resume.txt'), res + '\n'); process.stdout.write(res + '\n');
+  process.exitCode = g.status;
+}
+
 async function main() {
   const o = args(process.argv.slice(2));
+  if (o.mode === 'garde') return garde(o);
   if (o.mode === 'rejouer') return rejouer(o);
   if (o.mode === 'juger') {
     if (!o.nom) throw Error('juger --nom N'); const J = juger(o.nom, o);
@@ -215,7 +257,7 @@ async function main() {
     return;
   }
   if (o.mode === 'croise') { process.stdout.write(croise(o) + '\n'); return; }
-  throw Error('mode : rejouer | juger | fidelite | croise');
+  throw Error('mode : rejouer | juger | fidelite | croise | garde');
 }
 module.exports = { juger, fidelite, croise, cout, POIDS, PROFIL };
 if (require.main === module) main().catch(e => { process.stderr.write('banc : ' + e.message + '\n'); process.exitCode = 1; });

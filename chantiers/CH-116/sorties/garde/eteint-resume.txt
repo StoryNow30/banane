@@ -1,0 +1,5 @@
+garde d'octobre au banc, réglage « eteint » : retour 0 ; 0 recul(s) dont 0 RÉEL(S) et 0 « verts changés » ; rejeux 836 s
+  signalé : reglage-9, avecPasse : cuts laissés sans pose 12 → 14
+  signalé : terrain-partie-0-23-10, avecPasse : cuts laissés sans pose 79 → 83
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (pose > 50 mm 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (mauvaise voie 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
