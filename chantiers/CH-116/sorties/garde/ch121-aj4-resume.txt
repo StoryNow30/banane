@@ -1,0 +1,21 @@
+garde d'octobre au banc, réglage « ch121-aj4 » : retour 1 ; 16 recul(s) dont 10 RÉEL(S) et 6 « verts changés » ; rejeux 951 s
+  réel : terrain-partie-0-23-10, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 91 sur 92
+  réel : terrain-partie-0-23-10, sansPasse : 1 cut(s) nouvellement à plus de 20 mm (0-2310-lot1 1372 60.19 mm)
+  réel : terrain-partie-0-23-10, sansPasse : 1 cut(s) nouvellement à plus de 50 mm (0-2310-lot1 1372 60.19 mm)
+  réel : terrain-partie-0-23-10, sansPasse : 3 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 4 5.34 mm, 0-2310-lot1 13 2.73 mm, 0-2310-lot1 193 4.25 mm)
+  réel : terrain-partie-0-23-10, avecPasse : 1 cut(s) nouvellement à plus de 20 mm (0-2310-lot1 1372 60.19 mm)
+  réel : terrain-partie-0-23-10, avecPasse : 1 cut(s) nouvellement à plus de 50 mm (0-2310-lot1 1372 60.19 mm)
+  réel : terrain-partie-0-23-10, avecPasse : 3 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 4 5.34 mm, 0-2310-lot1 13 2.73 mm, 0-2310-lot1 193 4.25 mm)
+  réel : terrain-partie-0-23-10, GCV2 dans le lot : 1 cut(s) nouvellement à plus de 20 mm (0-2310-lot1 1372 60.19 mm)
+  réel : terrain-partie-0-23-10, GCV2 dans le lot : 1 cut(s) nouvellement à plus de 50 mm (0-2310-lot1 1372 60.19 mm)
+  réel : terrain-partie-0-23-10, GCV2 dans le lot : 3 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 4 5.34 mm, 0-2310-lot1 13 2.73 mm, 0-2310-lot1 193 4.25 mm)
+  verts changés : reglage-9, sansPasse : 26 vert(s) changé(s) (2-6 4488, 2-6 4650, 2-6 4673, 2-7 1966, 2-7 3286, 2-7 4438, 2-7 4473, 2-11 8383)
+  verts changés : reglage-9, avecPasse : 26 vert(s) changé(s) (2-6 4488, 2-6 4650, 2-6 4673, 2-7 1966, 2-7 3286, 2-7 4438, 2-7 4473, 2-11 8383)
+  verts changés : partie-3:0, sansPasse : 12 vert(s) changé(s) (3-0 135, 3-0 224, 3-0 344, 3-0 375, 3-0 782, 3-0 897, 3-0 911, 3-0 918)
+  verts changés : partie-3:0, avecPasse : 12 vert(s) changé(s) (3-0 135, 3-0 224, 3-0 344, 3-0 375, 3-0 782, 3-0 897, 3-0 911, 3-0 918)
+  verts changés : terrain-partie-0-23-10, sansPasse : 15 vert(s) changé(s) (0-2310-lot1 10, 0-2310-lot1 68, 0-2310-lot1 79, 0-2310-lot1 80, 0-2310-lot1 254, 0-2310-lot1 261, 0-2310-lot1 262, 0-2310-lot1 264)
+  verts changés : terrain-partie-0-23-10, avecPasse : 15 vert(s) changé(s) (0-2310-lot1 10, 0-2310-lot1 68, 0-2310-lot1 79, 0-2310-lot1 80, 0-2310-lot1 254, 0-2310-lot1 261, 0-2310-lot1 262, 0-2310-lot1 264)
+  signalé : reglage-9, avecPasse : cuts laissés sans pose 12 → 15
+  signalé : terrain-partie-0-23-10, avecPasse : cuts laissés sans pose 79 → 82
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (pose > 50 mm 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (mauvaise voie 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
