@@ -1,16 +1,18 @@
 diff --git a/background.js b/background.js
-index 0e4c97a..af7f488 100644
+index 0e4c97a..72f854c 100644
 --- a/background.js
 +++ b/background.js
-@@ -1782,6 +1782,8 @@ async function commandLot(proposal,lotObservation){
+@@ -1782,7 +1782,9 @@ async function commandLot(proposal,lotObservation){
   command=rechercheLargeCommande(command,lotObservation,proposal,before,capture);
   /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
   command=gardeApresDiffereCommande(command,lotObservation,proposal);
+- lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
 + /* CH-121 : étage final d'ajustement de la pose sur le profil du rail (levier `ajustementFin` de src/gcv2-l1.js, COUPÉ), en tout dernier. */
 + command=ajustementFinCommande(command,lotObservation,proposal,before,capture);
-  lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
++ lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{}),...(command.ajustementFin?{ajustementFin:true,actionAvantAjustement:command.avantAjustement.action}:{})};
   lotObservation.applied=command.action==='lot';
   /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
+   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
 @@ -1794,6 +1796,25 @@ async function commandLot(proposal,lotObservation){
     anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
   return engine.s.proposal;
@@ -32,12 +34,23 @@ index 0e4c97a..af7f488 100644
 +  const cg=G.commander({positions:pos,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),valider:true});
 +  if(cg.action!=='lot'||cg.vue!=='dans'){lotObservation.ajustementFin={refus:cg.reason||'vue',info:a.info};return command;}
 +  lotObservation.ajustementFin={avant:decal,apres:Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],pos[s])])),info:a.info,commandeAvant:command.action};
-+  return {...command,action:'lot',rails:cg.rails,gaugeMm:cg.gaugeMm,ajustementFin:true};
++  return {...command,action:'lot',rails:cg.rails,gaugeMm:cg.gaugeMm,ajustementFin:true,avantAjustement:command};
 + }catch(e){lotObservation.ajustementFin={erreur:String(e?.message||e).slice(0,160)};return command;}}
  /* 5.0 (D-147, fiches/DEPLACER_VUE.md) — DÉPLACER LA VUE. Réglage `deplacerVue`, COUPÉ PAR DÉFAUT : coupé, rien de ce qui suit ne
   * s'exécute et les commandes sont celles d'avant, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif, pour un cut que le
   * lot ne pose pas PARCE QUE sa cible tombe hors de la vue d'un rail (KI-051) :
-@@ -2159,6 +2180,16 @@ function passeDiffRechercheLarge(r,positions){
+@@ -1987,7 +2008,9 @@ function holdLotAnchor(lotObservation,command){
+  if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
+  /* D-221 : une pose L1-s (`l1s`) n'est jamais un appui ; sous L1, la pose validée de la GCV2 l'est. */
+  /* CH-034 : une pose remplacée par la recherche large n'est jamais un appui (l'appui mémorisé serait celui de la décision du lot, pas la pose commandée). */
+- lotObservation.anchorHeld=command?.l1s||command?.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
++ /* CH-121 : une commande refaite par l'étage final (`ajustementFin`) se juge comme celle d'avant l'ajustement : l'appui reste la pose de la décision, comme au banc. */
++ const cmdA=command?.actionAvantAjustement?{...command,action:command.actionAvantAjustement}:command;
++ lotObservation.anchorHeld=cmdA?.l1s||cmdA?.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,cmdA)||lotObservation.l1?.etat==='valider'&&cmdA?.action==='lot'&&cmdA?.reason==='gcv2-l1';
+  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
+ }
+ /* 4.9.5.13 (test 13, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
+@@ -2159,6 +2182,16 @@ function passeDiffRechercheLarge(r,positions){
   try{const d=RL.decider({capture:{identity:r.identity??null,rails:r.capture.rails,pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes},positions,R:{...R,mode:'differer'},science:r.science??null});
    return RL.resumer(d);}
   catch(e){journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)});return null;}}
@@ -54,7 +67,7 @@ index 0e4c97a..af7f488 100644
  function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
  async function l1Commande(args){
   const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
-@@ -2251,8 +2282,10 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
+@@ -2251,8 +2284,10 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
      if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
      transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
      r.etat='pose-ombre';n++;
