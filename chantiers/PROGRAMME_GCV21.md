@@ -17,7 +17,10 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 - **CH-121 `aj4-final`, vertical seul (13/11, ÉTABLI)** : validation croisée 95,5 % sur 7 lots (livré 93,2 %), 12 gagnés / 0 perdu. Examen vierge RÉUSSI : 1211v 14 → 17 justes, 1312v 144 → 144 (6 rapprochés, 1 éloigné resté juste) ; aucun juste dégradé, aucune nouvelle mauvaise voie. Poses de la chaîne déplacées en hauteur seule : 170 sur les examens (médiane 8-10 mm, max 12,1), 5 jugées, toutes rapprochées. **Garde d'octobre ROUGE** (retour 1, 16 reculs) : une nouvelle faute au-delà de 50 mm par ricochet (0-2310 1372, voisins ajustés), des poses GCV2 en ADV dégradées de 4 à 5 mm. **aj4 écarté.** Suite : `aj5` (poses de la chaîne seulement, voisins = pose de la décision, aucun ricochet), structure tirée de la garde d'octobre (déclaré), jugé par plis, par un examen vierge neuf et par le prochain Écho.
 - **CH-119 réglage D (13/11, ÉTABLI)** : validation croisée 29 → 16 mauvaises voies, 0 nouvelle, mais **garde d'octobre ROUGE** (retour 1, 13 reculs) : 7 poses de la chaîne acceptées par l'opérateur reposées par la GCV2 à 150-230 mm (probables mauvaises voies nouvelles, même mode d'échec que C1 de CH-117), 1 juste dégradé (2-18 204, 2,0 → 11,5 mm). **D écarté.**
 - **Examen vierge de D (13/11, ÉTABLI)** : aucun cut changé sur 1211v ni 1312v. Les deux seules mauvaises voies de ces examens sont hors ADV (zone `abords` au banc), là où D ne joue pas. Les examens vierges actuels ont peu de puissance pour juger un levier de voie en ADV.
+- **CH-122 réglage B v1 (13/11, ÉTABLI)** : validation croisée +40 justes, 29 → 27 fautes graves, 4 mauvaises voies nouvelles ; **garde d'octobre ROUGE** (nouvelles mauvaises voies sur reglage-9, 3:0 et le terrain du 23/10 : la puce pose en ADV des cuts que le livré diffère, sans voie de voisins). **B v1 écarté.** Suite : v3, avec une garde non apprise obligatoire sur toute pose nouvelle de la puce.
 - **Leçon commune (CH-117 C1, CH-119 D, CH-121 aj3)** : tout levier qui déplace ou remplace une pose de la chaîne a échoué à la garde d'octobre. Prochain réglage de voie : agir seulement quand le chemin passé est faible, et différer plutôt que reposer loin.
+
+- **CH-124, une ancre indépendante existe (13/11, ÉTABLI sur le corpus, PROBABLE jusqu'à l'examen)** : l'axe de la voie relevée se déduit de la trajectoire du véhicule de mesure, par la seule liste d'ESV du départ du lot (branche `chantier/CH-124`, 233fd8e, `outils/{trajectoire,ancre,lib}.cjs`). Pose finale de l'opérateur à 4,1 mm de l'axe en médiane, 36,4 mm au plus (792 cuts jugés) ; les 30 mauvaises voies à 121-331 mm : 30 désignées, 0 fausse, 0 muette ; aucun juste contredit. En cours : contre-vérification adverse (fuite), mesure sur les examens vierges par CH-116, puis levier (garde d'abord).
 
 ## Vague 2 (lancée le 13/11)
 | Ticket | Levier | Cible écrite |
@@ -36,6 +39,8 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 3. Écartement selon la courbure et la position dans l'aiguillage (surécartement), si CH-121 ne l'absorbe pas.
 4. Calage vertical : séparateur de densité relative, figé avant le prochain Écho (CH-118 § 2).
 5. Cuts non fidèles au banc en ADV (CH-113 § 3, CH-116 § 3) : comprendre l'écart rejeu / réel avant de régler dessus.
+
+- Ordre de l'opérateur (13/11) : les chantiers difficiles se lancent au modèle le plus fort disponible, à l'effort maximal, et peuvent orchestrer plusieurs agents en parallèle.
 
 ## Suivi
 | Ticket | Session | État |
@@ -56,4 +61,5 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-121 | session_01Td4bNk2uQhtkP6QNyX6Vtt | lancé le 13/11 |
 | CH-122 | session_01Td4bNpCSzkuthJgvDsfevC | lancé le 13/11 |
 | CH-123 | session_01Td4bNn28Kkosy5ce9nJTWa | lancé le 13/11 (demande de l'opérateur) |
-| CH-124 | session_01Td4bNkFgN37wjozZ7u5uuk | lancé le 13/11 (audit 1) |
+| CH-124 | session_01Td4bNpSQ9399cdW28RY9eX | relancé le 13/11 au modèle le plus fort, effort maximal, orchestration multi-agents permise (ordres de l'opérateur ; deux sessions précédentes archivées sans rien avoir produit) |
+| CH-125 | session_01Td4bNjx4xDBqL4deDLhkUV | relancé le 13/11 au modèle le plus fort, effort maximal, orchestration multi-agents permise (ordres de l'opérateur ; deux sessions précédentes archivées sans rien avoir produit) |
