@@ -1,0 +1,8 @@
+1211v-p3-r1 : décisions identiques 59/59 ; poses identiques à 1 mm 59/59
+1211v-p4-r1 : décisions identiques 93/93 ; poses identiques à 1 mm 81/86
+    6686 : pose sans décalage
+    6920 : pose sans décalage
+    6944 : pose sans décalage
+    6950 : pose sans décalage
+    6952 : pose sans décalage
+TOTAL : décisions identiques 152/152 (100.0 %) ; poses identiques 140/145 (96.6 %)

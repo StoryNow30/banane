@@ -133,7 +133,7 @@ function main() {
   fs.mkdirSync(o.sortie, { recursive: true });
   const out = [];
   for (const e of LOTS) {
-    if (o.lots && !o.lots.includes(e.lot)) continue;
+    if (o.lots ? !o.lots.includes(e.lot) : e.vierge) continue;
     const ls = lignesDe(e, o); if (!ls) { absents.push(cle(e)); continue; }
     (parLot[e.lot] = parLot[e.lot] || []).push(...ls); out.push(...ls);
     process.stdout.write(`${cle(e)} : ${ls.length} cuts, ${ls.filter(c => !c.exclu && c.poseFinale).length} jugés\n`);

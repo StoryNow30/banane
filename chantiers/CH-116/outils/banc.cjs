@@ -45,7 +45,8 @@ function args(a) {
   }
   return o;
 }
-const entrees = o => LOTS.filter(e => !o.lots || o.lots.includes(e.lot));
+/* Les lots vierges (examen tenu à l'écart) ne sont rejoués et jugés que nommés par --lots. */
+const entrees = o => LOTS.filter(e => o.lots ? o.lots.includes(e.lot) : !e.vierge);
 const meta = e => JSON.parse(fs.readFileSync(path.join(travail(), 'meta', cle(e) + '.json'), 'utf8'));
 const dossierRejeux = nom => path.join(travail(), 'rejeux', nom);
 
@@ -172,7 +173,7 @@ function croise(o) {
   if (!o.noms || !o.noms.length) throw Error('croise --noms a,b,c');
   const w = o.poids || POIDS, J = Object.fromEntries(o.noms.map(n => [n, juger(n, o)]));
   const lots = [...new Set(entrees(o).map(e => e.lot))];
-  const examen = o.examen === 'aucun' ? [] : o.examen ? o.examen.split(',') : [...new Set(LOTS.filter(e => e.examen).map(e => e.lot))];
+  const examen = o.examen === 'aucun' ? [] : o.examen ? o.examen.split(',') : [...new Set(entrees(o).filter(e => e.examen).map(e => e.lot))];
   const reglables = lots.filter(l => !examen.includes(l)), out = [];
   const tab = (n, l) => J[n].parLot[l] || vide();
   const choisir = sur => o.noms.map(n => ({ n, c: sur.reduce((s, l) => s + cout(tab(n, l), w), 0) })).sort((a, b) => a.c - b.c)[0].n;
