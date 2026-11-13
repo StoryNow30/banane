@@ -1,12 +1,108 @@
 {
-  "note": "CH-120 : réglages candidats des générateurs, figés AVANT tout rejeu avec générateur (patch generateurs.patch, BANC_LEVIERS). Jugés par validation croisée « un lot dehors » (banc.cjs croise, coût standard), puis examen 0511 jamais vu. Un réglage retouché après jugement est un nouveau réglage.",
-  "communs": { "genMinTop": 10, "genMinFace": 3, "genRatioMax": 3, "genSnapMm": 25, "genMaxHyp": 8, "genMaxDeplMm": 300, "genDedupMm": 10, "genSourcesMax": 4, "genVoieFenetre": 12, "genMaxGraines": 8 },
-  "reglages": {
-    "livre": {},
-    "gT":      { "genTronques": true },
-    "gTE":     { "genTronques": true, "genEcartement": true },
-    "gTEV":    { "genTronques": true, "genEcartement": true, "genVoie": true },
-    "gTEVL":   { "genTronques": true, "genEcartement": true, "genVoie": true, "genLargeMm": [-160, -110, 110, 160], "genMaxGraines": 10 },
-    "gTEVL-ab": { "genTronques": true, "genEcartement": true, "genVoie": true, "genLargeMm": [-160, -110, 110, 160], "genMaxGraines": 10, "genZones": ["adv", "abords"] }
+ "note": "CH-120 : réglages candidats des générateurs, figés AVANT tout rejeu avec générateur (patch generateurs.patch, BANC_LEVIERS). Jugés par validation croisée « un lot dehors » (banc.cjs croise, coût standard), puis examen 0511 jamais vu. Un réglage retouché après jugement est un nouveau réglage.",
+ "communs": {
+  "genMinTop": 10,
+  "genMinFace": 3,
+  "genRatioMax": 3,
+  "genSnapMm": 25,
+  "genMaxHyp": 8,
+  "genMaxDeplMm": 300,
+  "genDedupMm": 10,
+  "genSourcesMax": 4,
+  "genVoieFenetre": 12,
+  "genMaxGraines": 8
+ },
+ "reglages": {
+  "livre": {},
+  "gT": {
+   "genTronques": true
+  },
+  "gTE": {
+   "genTronques": true,
+   "genEcartement": true
+  },
+  "gTEV": {
+   "genTronques": true,
+   "genEcartement": true,
+   "genVoie": true
+  },
+  "gTEVL": {
+   "genTronques": true,
+   "genEcartement": true,
+   "genVoie": true,
+   "genLargeMm": [
+    -160,
+    -110,
+    110,
+    160
+   ],
+   "genMaxGraines": 10
+  },
+  "gTEVL-ab": {
+   "genTronques": true,
+   "genEcartement": true,
+   "genVoie": true,
+   "genLargeMm": [
+    -160,
+    -110,
+    110,
+    160
+   ],
+   "genMaxGraines": 10,
+   "genZones": [
+    "adv",
+    "abords"
+   ]
   }
+ },
+ "lot2": {
+  "note": "Second lot, figé le 13/11 vers 09 h 50 APRÈS lecture des résultats de gT, gTE et gTEV sur tout le corpus (16/4501, 16/9178, 6/202-221 lus cut par cut) et AVANT les résultats de gTEVL et gTEVL-ab. Conçu en regardant des lots qui servent aussi à la validation croisée : son jugement est PROBABLE au mieux (fuite connue), seul l'examen 0511 et la garde d'octobre restent non vus.",
+  "communs": "ceux du premier lot",
+  "reglages": {
+   "gTEn": {
+    "genTronques": true,
+    "genEcartement": true,
+    "genNouveauMm": 10
+   },
+   "gTEnF": {
+    "genTronques": true,
+    "genEcartement": true,
+    "genNouveauMm": 10,
+    "genMinTop": 15,
+    "genMinFace": 6,
+    "genRatioMax": 1.5
+   },
+   "gTEVLn": {
+    "genTronques": true,
+    "genEcartement": true,
+    "genVoie": true,
+    "genLargeMm": [
+     -200,
+     -110,
+     110,
+     200
+    ],
+    "genLargeSnapMm": 80,
+    "genMaxGraines": 10,
+    "genNouveauMm": 10
+   },
+   "gTEVLnF": {
+    "genTronques": true,
+    "genEcartement": true,
+    "genVoie": true,
+    "genLargeMm": [
+     -200,
+     -110,
+     110,
+     200
+    ],
+    "genLargeSnapMm": 80,
+    "genMaxGraines": 10,
+    "genNouveauMm": 10,
+    "genMinTop": 15,
+    "genMinFace": 6,
+    "genRatioMax": 1.5
+   }
+  }
+ }
 }
