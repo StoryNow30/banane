@@ -12,6 +12,8 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 ## Examens vierges rendus
 - **C2 + C5 de CH-117 (13/11, 12/11 p3 et p4, ÉTABLI)** : aucune mauvaise voie corrigée, un bon posé perdu en différé, aucune faute nouvelle. **Réglage refusé**, rien ne s'allume. Le détail par cut est réservé à l'intégrateur et au banc (`banane-data/outils/analyse-lots/CH-116/examen-vierge-1211-RESERVE/`) : ne pas le lire en conception.
 
+- **CH-121 `aj3-final` (13/11, 1211v et 1312v, ÉTABLI)** : examen RÉUSSI. Posés jugés ≤ 10 mm : 1211v 14 → 17, 1312v 144 → 147 ; 10-50 mm : 6 → 3 et 6 → 4 ; aucun juste passé au-delà de 10 mm, aucun juste différé, aucune nouvelle mauvaise voie ; éteint = livré sur les deux. Candidat à l'allumage (accord écrit de l'opérateur), sous réserve de la garde d'octobre et de la parité.
+
 ## Vague 2 (lancée le 13/11)
 | Ticket | Levier | Cible écrite |
 |---|---|---|
