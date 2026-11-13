@@ -23,3 +23,19 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 - **CH-124** : chercher une ancre indépendante en ADV (constat 2), la pièce qui manque à tous les leviers de voie.
 - **CH-116 (outillage)** : la garde d'octobre au banc comme premier filtre rapide, la concordance des zones banc / lot, et la fidélité de la passe (plafond, arrêt au premier refus).
 - **Demande à l'opérateur** : une séance Écho sur un lot neuf riche en aiguillages.
+
+## Audit 2 — 13/11, midi
+
+### Constats
+7. **La garde d'octobre est aveugle à un changement fait à la source** (lu par CH-125 dans `tools/juger.cjs`, ÉTABLI) : un « vert changé » compare le profil L1-se au profil `base` du même rejeu. Une mesure changée à la source déplace les deux ensemble : la garde ne voit alors pas les poses de la chaîne déplacées. Une garde verte ne prouve donc rien pour un levier de mesure.
+8. **Cinquième réglage écarté par la garde** : B v1 de CH-122 (nouvelles mauvaises voies en octobre : la puce pose en ADV des cuts que le livré diffère, sans voie de voisins). La règle R1 (garde d'abord) lui aurait épargné son jugement complet.
+9. **Premier réglage sans ricochet** : aj5 de CH-121 (poses de la chaîne seulement, voisins = pose de la décision) : 0 décision changée sur tous les lots, 11 gagnés / 0 perdu en validation croisée. Sa structure vient de la garde d'octobre (déclaré) : son juge indépendant est l'examen vierge, puis l'Écho.
+10. **Conteneurs** : deux sessions ont redémarré (CH-120, CH-122) et une parité a été tuée par manque de mémoire (CH-121, code 137). Sans perte de données, mais des files de rejeux coupées.
+
+### Ce qui change
+- **R6, un levier de mesure se juge aussi en octobre contre la vérité.** Tout levier qui change la mesure à la source donne, sur les lots d'octobre, les poses de la chaîne déplacées et leur écart à la vérité d'octobre (appliqué à CH-125).
+- **R7, pas plus de deux rejeux lourds à la fois par session**, et les parités seules sur la machine (constat 10).
+
+### Ce qui est lancé
+- CH-124 et CH-125 relancés au modèle le plus fort, effort maximal, orchestration multi-agents permise (ordres de l'opérateur).
+- Examen vierge d'aj5 chez CH-116, avant l'outillage.
