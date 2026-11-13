@@ -20,6 +20,8 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 - **CH-122 réglage B v1 (13/11, ÉTABLI)** : validation croisée +40 justes, 29 → 27 fautes graves, 4 mauvaises voies nouvelles ; **garde d'octobre ROUGE** (nouvelles mauvaises voies sur reglage-9, 3:0 et le terrain du 23/10 : la puce pose en ADV des cuts que le livré diffère, sans voie de voisins). **B v1 écarté.** Suite : v3, avec une garde non apprise obligatoire sur toute pose nouvelle de la puce.
 - **Leçon commune (CH-117 C1, CH-119 D, CH-121 aj3)** : tout levier qui déplace ou remplace une pose de la chaîne a échoué à la garde d'octobre. Prochain réglage de voie : agir seulement quand le chemin passé est faible, et différer plutôt que reposer loin.
 
+- **CH-124, une ancre indépendante existe (13/11, ÉTABLI sur le corpus, PROBABLE jusqu'à l'examen)** : l'axe de la voie relevée se déduit de la trajectoire du véhicule de mesure, par la seule liste d'ESV du départ du lot (branche `chantier/CH-124`, 233fd8e, `outils/{trajectoire,ancre,lib}.cjs`). Pose finale de l'opérateur à 4,1 mm de l'axe en médiane, 36,4 mm au plus (792 cuts jugés) ; les 30 mauvaises voies à 121-331 mm : 30 désignées, 0 fausse, 0 muette ; aucun juste contredit. En cours : contre-vérification adverse (fuite), mesure sur les examens vierges par CH-116, puis levier (garde d'abord).
+
 ## Vague 2 (lancée le 13/11)
 | Ticket | Levier | Cible écrite |
 |---|---|---|
