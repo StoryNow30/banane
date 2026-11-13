@@ -63,3 +63,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-123 | session_01Td4bNn28Kkosy5ce9nJTWa | lancé le 13/11 (demande de l'opérateur) |
 | CH-124 | session_01Td4bNpSQ9399cdW28RY9eX | relancé le 13/11 au modèle le plus fort, effort maximal, orchestration multi-agents permise (ordres de l'opérateur ; deux sessions précédentes archivées sans rien avoir produit) |
 | CH-125 | session_01Td4bNjx4xDBqL4deDLhkUV | relancé le 13/11 au modèle le plus fort, effort maximal, orchestration multi-agents permise (ordres de l'opérateur ; deux sessions précédentes archivées sans rien avoir produit) |
+| CH-119 | — | passation poussée (c68f75a), session archivée ; relance au modèle le plus fort après la contre-vérification de l'ancre (sujet : l'ancre dans la vraie extension) |
+| CH-120 | — | passation poussée (08e3a50), session archivée ; tous les générateurs sans ancre écartés par la garde ; relance après l'ancre (génération autour de l'axe) |
+| CH-122 | — | passation poussée (5b8965b), session archivée ; B, v2B, v3 et B' écartés ; relance après l'ancre (B-ancre) |
+| CH-123 | session_01Td4bNo7jTEd4NswYNMJfUC | relancé le 13/11 au modèle le plus fort, effort maximal, depuis la passation (2846562) ; v4BS-sd et v4ABS-sd : gardes d'octobre vertes, croisé à faire |
