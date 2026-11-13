@@ -12,7 +12,7 @@ for (let i = 0; i < a.length; i++) { if (a[i] === '--ref') ref = a[++i]; else if
 const corpus = new Map(lireJsonl(process.env.CH116_CORPUS || path.join(travail(), 'corpus.jsonl')).map(l => [`${l.lot}-p${l.partie}-r${l.rang}:${l.cut}`, l]));
 const dist = (p, q) => Math.max(...['left', 'right'].map(s => Math.hypot(p[s][0] - q[s][0], p[s][1] - q[s][1], p[s][2] - q[s][2])));
 const r1 = v => Math.round(v * 10) / 10;
-const source = lot => (process.env.CH121_SOURCE_UNIQUE || (lot === '0511' ? 'aj3-final' : 'aj3-' + lot));
+const source = lot => (process.env.CH121_SOURCE_UNIQUE || (lot === '0511' ? (process.env.CH121_GRILLE || 'aj3') + '-final' : (process.env.CH121_GRILLE || 'aj3') + '-' + lot));
 const T = () => ({ juges: 0, j10: 0, d1050: 0, p50: 0, rj10: 0, rd1050: 0, rp50: 0, gagnes: [], perdus: [], n50: [], bouges: 0, plus30: 0, decisions: [] });
 const par = {}, lignes = ['cle;cut;livre_etat;livre_mm;reglage_etat;reglage_mm;deplacement_mm'];
 for (const e of LOTS) {
