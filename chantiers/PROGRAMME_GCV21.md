@@ -28,6 +28,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-122 | Puce apprise : classement des hypothèses et décision poser ou différer | à coût égal en différés, moins de fautes ; ou plus de posés justes à fautes égales |
 | CH-123 | Les 17 % hors du pool, hors du terrain de CH-120 : hors ADV, filtres, repère, troncature, rail compagnon (demande de l'opérateur, 13/11) | au moins un tiers des 128 cuts passés en A, 0 nouvelle mauvaise voie |
 | CH-124 | Ancre indépendante en ADV (repère du cut, trajectoire, voie amont, géométrie d'aiguillage), audit 1 | mauvaises voies 29 → ≤ 15 en validation croisée, 0 nouvelle, garde verte |
+| CH-125 | Le calcul de pose à la source : gabarit du champignon, nuage de plusieurs coupes, écartement mesuré | ≤ 10 mm 93,2 % → ≥ 96 %, 0 juste dégradé, 0 ricochet, garde verte |
 
 ## Carnet (vague suivante, dans l'ordre)
 1. Assemblage « GCV2.1 » : les leviers retenus ensemble, garde complète, parité, un seul réglage figé pour l'Écho.
