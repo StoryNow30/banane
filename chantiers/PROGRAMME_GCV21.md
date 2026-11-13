@@ -14,6 +14,9 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 
 - **CH-121 `aj3-final` (13/11, ÉTABLI)** : examen vierge réussi (1211v 14 → 17 justes, 1312v 144 → 147, 0 juste dégradé, 0 nouvelle mauvaise voie), MAIS **garde d'octobre ROUGE** (retour 1, 23 reculs) : le latéral de l'étage dégrade des poses GCV2 en ADV et crée une faute au-delà de 50 mm (0-2310 1372). **aj3-final écarté, non proposé à l'allumage.** Suite : `aj4`, étage vertical seul, nouveau réglage figé, à rejuger entièrement.
 
+- **CH-119 réglage D (13/11, ÉTABLI)** : validation croisée 29 → 16 mauvaises voies, 0 nouvelle, mais **garde d'octobre ROUGE** (retour 1, 13 reculs) : 7 poses de la chaîne acceptées par l'opérateur reposées par la GCV2 à 150-230 mm (probables mauvaises voies nouvelles, même mode d'échec que C1 de CH-117), 1 juste dégradé (2-18 204, 2,0 → 11,5 mm). **D écarté.**
+- **Leçon commune (CH-117 C1, CH-119 D, CH-121 aj3)** : tout levier qui déplace ou remplace une pose de la chaîne a échoué à la garde d'octobre. Prochain réglage de voie : agir seulement quand le chemin passé est faible, et différer plutôt que reposer loin.
+
 ## Vague 2 (lancée le 13/11)
 | Ticket | Levier | Cible écrite |
 |---|---|---|
