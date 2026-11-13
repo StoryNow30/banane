@@ -29,3 +29,9 @@ Poussés avant tout rejeu de jugement. Un réglage retouché après le jugement 
 - **Prévision statique** (réglables) : 232 justes / 33 / 21 / 175 différés contre livré 223 / 34 / 28 / 176.
 - **Parité outil / module** : 39 520 candidats, écart 0, 0 choix différent (ÉTABLI).
 - **Ordre des jugements** : garde d'octobre d'abord (modèle complet), puis banc de novembre en validation croisée.
+
+## Réglage B' (figé le 13/11 sur demande de l'intégrateur, après l'autopsie des 4 mauvaises voies nouvelles de B, avant tout jugement de B')
+- **Autopsie** (jeu livré, modèle B du pli 1111 ; ÉTABLI) : 11/11 p16 4506, 4507 (ADV), 5848, 5851 (abords) : le livré diffère, la bonne paire est absente du pool ; la puce choisit un candidat à 142–319 mm de la vérité, à 150–256 mm en travers de la droite des voisins validés (voisins à 3–5 cuts, résidu ≤ 1 mm) ; le trait `dvFit` a un poids POSITIF dans le modèle (appris sur des branches d'ADV où la bonne voie s'écarte des voisins) ; 5851 n'a pas de voie de voisins (posé par ricochet au rejeu de B).
+- **Contrainte écrite avant de rejuger, modèle inchangé** : la garde obligatoire de v3 (candidat que le livré ne pose pas : voie absolue des voisins validés à 6 cuts au plus, résidu ≤ 40 mm, ≤ 100 mm en travers) ; elle refuse les 4 candidats.
+- **Patch** : `puce-bprime.patch` = `puce.patch` + cette garde (`src/gcv2-l1.js` seul). **Modèles** : ceux de B (`modeles/B/`), inchangés. Parité outil / module : 12 821 candidats, 0 choix différent.
+- **Ordre (R1, audit 1)** : garde d'octobre d'abord (modèle B de l'examen, appris sur les 6 réglables) ; rouge = écarté ; verte = validation croisée.
