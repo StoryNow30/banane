@@ -39,3 +39,15 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 ### Ce qui est lancé
 - CH-124 et CH-125 relancés au modèle le plus fort, effort maximal, orchestration multi-agents permise (ordres de l'opérateur).
 - Examen vierge d'aj5 chez CH-116, avant l'outillage.
+
+## Audit 3 — 13/11, 17 h 40 UTC
+
+### Constats
+11. **Tout le programme s'est arrêté pendant environ 5 h 30** (de 12 h 03-12 h 36 à 17 h 34 UTC) : la limite d'usage de 5 heures du compte a été atteinte (ÉTABLI : `usage_limit_reached`, « resets 4pm (UTC) » dans l'état des sessions). Huit sessions tournaient ensemble, dont deux au modèle le plus fort à l'effort maximal. Les tâches de fond en cours (gardes, parités, examens) sont mortes.
+12. **Erreur de l'intégrateur** : j'ai lancé toujours plus de sessions sans compter la limite commune, et je n'ai pas vu l'arrêt (aucun réveil ne m'est parvenu pendant la coupure ; mon contrôle programmé n'a pas tourné non plus).
+13. **L'ancre de CH-124 change l'ordre des priorités** : tous les leviers de voie (CH-119, 120, 122, 123) en dépendent. Les faire tourner avant sa contre-vérification gaspille l'usage.
+
+### Ce qui change
+- **R8, un budget d'usage tenu.** Quatre sessions actives au plus, dont deux au modèle le plus fort ; les autres attendent leur tour. Ordre : (1) ancre de CH-124 et sa contre-vérification ; (2) fin d'aj5 (examen vierge, parité) ; (3) calcul de pose de CH-125 ; (4) leviers de voie recentrés sur l'ancre, relancés deux par deux une fois l'ancre vérifiée.
+- **R9, détecter une coupure.** À chaque contrôle, lire l'état des sessions (`status_detail`) : une session « failed » pour limite d'usage se relance à la levée de la limite, sans attendre l'opérateur.
+- Les relances au modèle le plus fort demandées par l'opérateur pour CH-119, 120, 122 et 123 se font à partir de leur note de passation, dans l'ordre de R8.
