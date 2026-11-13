@@ -1,0 +1,94 @@
+{
+  "patch": "chantiers/CH-121/ajustement-fin.patch",
+  "patchSha256": "292401addd9998381db52e7736707314b287479981166324ba0cb212787dfa39",
+  "variable": "BANC_LEVIERS",
+  "structure": "comme la grille 3, latéral coupé (lateral:false) : l'étage ne fait que le vertical (médiane du dessus + c)",
+  "raison": "la garde d'octobre attribue ses fautes nouvelles (9803, 288, 4) au latéral ; le vertical seul est un NOUVEAU réglage, figé avant tout jugement",
+  "cParPli": {
+    "1111": 5.3,
+    "1211": 3.9,
+    "0411": 5.0,
+    "0611": 5.7,
+    "0811a": 5.0,
+    "0811b": 5.5,
+    "0511": 5.0
+  },
+  "reglages": {
+    "aj4-1111": {
+      "lots": [
+        "1111"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.3,
+          "lateral": false
+        }
+      }
+    },
+    "aj4-1211": {
+      "lots": [
+        "1211"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 3.9,
+          "lateral": false
+        }
+      }
+    },
+    "aj4-0411": {
+      "lots": [
+        "0411"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0,
+          "lateral": false
+        }
+      }
+    },
+    "aj4-0611": {
+      "lots": [
+        "0611"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.7,
+          "lateral": false
+        }
+      }
+    },
+    "aj4-0811a": {
+      "lots": [
+        "0811a"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0,
+          "lateral": false
+        }
+      }
+    },
+    "aj4-0811b": {
+      "lots": [
+        "0811b"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.5,
+          "lateral": false
+        }
+      }
+    }
+  },
+  "final": {
+    "nom": "aj4-final",
+    "BANC_LEVIERS": {
+      "ajustementFin": {
+        "c": 5.0,
+        "lateral": false
+      }
+    }
+  },
+  "jugement": "comme la grille 3 ; puis garde-gcv2 --rejouer (copie avec ajustementFin livré à { c: 5.0, lateral: false })"
+}

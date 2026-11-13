@@ -94,5 +94,6 @@
     },
     "note": "réglage du pli de l'examen (c appris sur les 6 lots réglables) : le réglage proposé, jugé une fois sur 05/11 puis, par CH-116, sur l'examen vierge"
   },
-  "jugement": "chaque lot réglable jugé une fois par le réglage de son pli ; 05/11 jugé une fois par aj3-final ; totaux à 6 lots et à 7 lots (cible écrite : ≥ 95 % sur 7 lots)"
+  "jugement": "chaque lot réglable jugé une fois par le réglage de son pli ; 05/11 jugé une fois par aj3-final ; totaux à 6 lots et à 7 lots (cible écrite : ≥ 95 % sur 7 lots)",
+  "statut": "JUGÉE (sorties/jugement-plis.md : cible des 7 lots atteinte au banc) puis REFUSÉE par la garde de pose des 11 lots d'octobre (garde-gcv2 --rejouer, retour 1 : fautes du latéral 2-17 9803, 2-20 288, 0-2310 4 ; ricochet 0-2310 1372 ; 90 verts changés)."
 }
