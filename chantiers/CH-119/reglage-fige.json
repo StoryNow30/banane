@@ -1,0 +1,8 @@
+{
+  "format": "ch119-reglage-fige-1",
+  "fige_le": "2026-11-13, après la validation croisée, avant la garde d'octobre et la parité ; aucune retouche ensuite",
+  "choix": "réglage D de grille.json, coût minimal sur les six lots réglables (règle écrite dans grille.json) ; choisi aussi sur 5 des 6 lots tenus à l'écart (C pour 1111)",
+  "leviers": { "voieGlobale": { "zones": ["adv"], "W": 8, "cS": 0.1, "rP": 1, "G": 7, "T1": [0, 50, 60, 75, 100, 150, 150, 150], "T2": [0, 40, 60, 80, 100, 140, 180, 200], "theta": -0.35 } },
+  "validation_croisee": "lots tenus à l'écart (somme des six) : > 50 mm 29 → 16, 10-50 35 → 30, ≤ 10 mm 287 → 302, bons bloqués 4 → 11, différés 578 → 589 ; aucune nouvelle mauvaise voie, aucun juste passé au-delà de 10 mm ; examen 0511 identique au livré",
+  "examen_reserve": "Échos du 12/11 parties 3 et 4 : jamais lus ici, à juger une fois par l'intégrateur (CH-116)"
+}
