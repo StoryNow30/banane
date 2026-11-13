@@ -19,6 +19,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-120 | Pool d'hypothèses en ADV : faire entrer la bonne paire | rappel du pool mesuré, puis différés « classe C » et mauvaises voies réduits |
 | CH-121 | Ajustement fin de la pose sur le profil du rail (latéral, vertical, écartement) | posés ≤ 10 mm : 90,5 % → ≥ 95 %, aucun juste dégradé au-delà de 10 mm |
 | CH-122 | Puce apprise : classement des hypothèses et décision poser ou différer | à coût égal en différés, moins de fautes ; ou plus de posés justes à fautes égales |
+| CH-123 | Les 17 % hors du pool, hors du terrain de CH-120 : hors ADV, filtres, repère, troncature, rail compagnon (demande de l'opérateur, 13/11) | au moins un tiers des 128 cuts passés en A, 0 nouvelle mauvaise voie |
 
 ## Carnet (vague suivante, dans l'ordre)
 1. Assemblage « GCV2.1 » : les leviers retenus ensemble, garde complète, parité, un seul réglage figé pour l'Écho.
