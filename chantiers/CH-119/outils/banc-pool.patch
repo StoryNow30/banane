@@ -1,0 +1,30 @@
+diff -ruN a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+--- a/tools/banc-differes.cjs	2026-11-13 07:36:40.654108016 +0000
++++ b/tools/banc-differes.cjs	2026-11-13 07:36:40.697612891 +0000
+@@ -180,6 +180,8 @@
+     const r0 = M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: c.stage, reason: null }, action: null, valide: false, surface });
+     const ez = M.evaluer(zoneMem, r0), plages = plagesDe(zoneMem, ez), zone = dans(plages.pn, c.cut) ? 'pn' : dans(plages.adv, c.cut) ? 'adv' : 'abords';
+     ligne.zone = zone;
++    /* CH-119 (mesure seulement, variable CH119_POOL) : géométrie des deux rails de départ du cut (repère scène), pour lire les poses de tous les cuts dans un même repère. */
++    if (process.env.CH119_POOL) ligne.geo = Object.fromEntries(SIDES.map(s => [s, { o: cap.rails[s].positionSceneRelative.slice(0, 3), M: cap.rails[s].sceneRelativeToProfileLocal.slice(0, 16) }]));
+     if (!science) { for (const p of profils) ligne.profils[p] = { etat: c.pose ? 'pose' : 'differe', source: 'erreur-moteur', erreur }; M.noter(zoneMem, r0, { differe: !c.pose }); lignes.push(ligne); continue; }
+     const runtimeRails = Sh.toRuntimeRails(science), before = capture.rails;
+     const cameras = L.viewCameras(cap), camerasLarges = VR.camerasLarges(cap);
+@@ -206,6 +208,17 @@
+     const appliquer = (o, positions, cams) => { const rl = confronter(positions, o.etage, cams, o.source); if (!rl) return o; if (rl.out) return rl.out.etat === 'pose' ? { ...rl.out, vue: o.vue } : rl.out; return { ...o, rechercheLarge: rl.garde }; };
+     for (const p of profils) {
+       const E = etats[p], opts = optionsDe(p), sig = JSON.stringify(opts) + signe(E);
++      /* CH-119 (mesure seulement, variable CH119_POOL) : pool d'hypothèses de la GCV2 et probabilités, sur tout cut ADV de L1-se, avec l'état d'avant le cut (aucun effet sur la décision). */
++      if (p === 'L1-se' && process.env.CH119_POOL && (zone === 'adv' || process.env.CH119_POOL === 'tout')) {
++        try {
++          const transport = leviers.transport && E.validesL1 && E.validesL1.length, ref = referenceDe(c.cut);
++          const g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: L1.REGLE_E,
++            reference: ref, voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
++          const k = g.cas, pr = g.decision.probas || {};
++          ligne.pool = { G0: k.G0, gMed: k.gMed, ref: ref && fini(ref.mm) ? ref.mm : null, i0: k.i0, dec: { etat: g.decision.etat, motif: g.decision.motif || null, i: g.decision.i ?? null, j: g.decision.j ?? null },
++            rails: Object.fromEntries(SIDES.map(s => [s, k.rails[s].hyps.map((h, i) => ({ d: h.decal, p: pr[s] ? arrondi(pr[s][i], 5) : null, o: h.origines.join('+'), so: h.sousOrigines.join('+'), h: h.hauteur ? 1 : 0, g: h.g }))])) };
++        } catch (e) { ligne.pool = { erreur: String(e && e.message || e).slice(0, 120) }; }
++      }
+       const d = cache.has('d' + sig) ? cache.get('d' + sig) : (() => { const x = L.decideCut({ capture, science, anchors: E.anchors, Shadow: Sh, options: opts }); cache.set('d' + sig, x); return x; })();
+       let cmd = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras });
+       let vue = null;

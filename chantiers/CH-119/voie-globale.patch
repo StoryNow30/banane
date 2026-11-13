@@ -1,0 +1,197 @@
+diff -ruN a/src/gcv2-l1.js b/src/gcv2-l1.js
+--- a/src/gcv2-l1.js	2026-11-13 08:19:09.042874671 +0000
++++ b/src/gcv2-l1.js	2026-11-13 08:19:09.066053966 +0000
+@@ -565,7 +565,9 @@
+    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
+    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
+    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
+-   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
++   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
++   /* CH-119 (D-352), clé unique, coupée : `voieGlobale` (choix de voie global sur la zone, voir `voieGlobale`). null : rien ne change. */
++   voieGlobale:null});
+  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
+   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
+   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
+@@ -943,6 +945,53 @@
+ /* Contre-expertise d'une pose de la chaîne (leviers `contreChaineZones`, `contreChaineVoieMm` et `contreChaineMm`, coupés) : `g` est la décision de la GCV2 (`deciderDiffere`) sur le même
+  * cut, avec l'état d'avant lui. Vrai si elle VALIDE une paire dont un rail est à plus de `seuilMm` (3D) de la pose de la chaîne : la chaîne n'est pas posée, le cut
+  * passe à la GCV2 comme un différé. `seuilMm` non réglé : jamais (la GCV2 ne fait que consigner sa décision). */
++/* CH-119 (D-352) — CHOIX DE VOIE GLOBAL SUR LA ZONE (levier `voieGlobale`, coupé). Programmation dynamique (Viterbi d'ordre 2) sur les poses
++ * validées du lot dans les `W` cuts qui précèdent, lues dans le repère profil de la pose de départ du cut décidé, et la pose que le cut s'apprête à
++ * faire. Un chemin est une suite de poses de cuts croissants, écart ≤ G cuts entre deux poses successives ; une transition p → o est permise si
++ * les DEUX rails restent dans la tolérance (une mauvaise voie décale les deux rails du même côté ; un seul rail décalé n'est pas un changement de
++ * voie) : ordre 1, min sur les rails de |y_o − y_p| ≤ T1[g] ; ordre 2 (p a un prédécesseur q sur le chemin), min sur les rails du résidu de o à la
++ * droite (q, p) prolongée ≤ T2[g]. Tolérances tirées de la loi des poses finales de l'opérateur (chantiers/CH-119/outils/residus.cjs, corpus de
++ * CH-116 : à 1, 2, 3, 4 cuts, vérité ≤ 22, 44, 60, 83 mm, poses fausses ≥ 99, 108, 99, 89 mm). Score d'un chemin = Σ récompenses (rP par pose)
++ * − cS par cut sauté. La pose est REFUSÉE si le meilleur chemin du passé proche (dernière pose à G cuts au plus, moins le saut jusqu'au cut)
++ * dépasse de plus de `theta` le meilleur chemin qui finit sur elle : elle ne prolonge pas la voie que le lot suit, et rien ne la soutient mieux.
++ * Sans pose validée à G cuts, rien. Rend null (levier coupé, zone hors de `zones`) ou { veto, ecart, passe, pose, n }. */
++const VG_SIDES=SIDES;
++function vgMin(f){return Math.min(f('left'),f('right'));}
++function vgDp(obs,R){
++  const tous=obs.slice().sort((a,b)=>a.cut-b.cut);
++  for(const o of tous){
++    o.F=new Map([[null,o.r]]);o.best=o.r;
++    for(const p of tous){
++      if(p.cut>=o.cut)break;
++      const g=o.cut-p.cut;if(g>R.G)continue;
++      if(vgMin(s=>Math.abs(o.y[s]-p.y[s]))>R.T1[g])continue;
++      let best=-Infinity;
++      for(const [q,fq] of p.F){
++        if(q!==null){const dx1=p.x-q.x,dx2=o.x-p.x,k=Math.abs(dx1)>1e-3?dx2/dx1:1;
++          if(vgMin(s=>Math.abs(o.y[s]-(p.y[s]+(p.y[s]-q.y[s])*k)))>R.T2[g])continue;}
++        const v=fq+o.r-R.cS*(g-1);if(v>best)best=v;
++      }
++      if(best>-Infinity){o.F.set(p,best);if(best>o.best)o.best=best;}
++    }
++  }
++  return tous;
++}
++function voieGlobale({capture,cut,voisins,decal,zone}){
++  const R=LEVIERS.voieGlobale;
++  if(!R||!Array.isArray(R.zones)||!R.zones.includes(zone)||!capture||!capture.rails||!decal)return null;
++  const obs=[],vus=new Set();
++  const lire=(d,r,nature,c)=>{if(!VG_SIDES.every(s=>d[s]))return;obs.push({cut:c,x:(d.left[0]+d.right[0])/2000,y:{left:d.left[1],right:d.right[1]},r,nature});};
++  for(const v of voisins||[]){
++    if(!v||!v.identity||!v.positions||!Number.isInteger(v.identity.cut))continue;
++    const dc=cut-v.identity.cut;if(dc<=0||dc>R.W||vus.has(v.identity.cut))continue;vus.add(v.identity.cut);
++    lire(Object.fromEntries(VG_SIDES.map(s=>[s,decalage(capture.rails[s],v.positions[s])])),R.rP,'pose',v.identity.cut);
++  }
++  lire(decal,R.rP,'locale',cut);
++  const tous=vgDp(obs,R),loc=tous.find(o=>o.nature==='locale'),proches=tous.filter(o=>o.cut<cut&&cut-o.cut<=R.G);
++  if(!loc||!proches.length)return {veto:false,ecart:null,passe:null,pose:loc?arrondi(loc.best,2):null,n:vus.size};
++  const passe=Math.max(...proches.map(o=>o.best-R.cS*(cut-o.cut-1))),ecart=passe-loc.best;
++  return {veto:ecart>R.theta,ecart:arrondi(ecart,2),passe:arrondi(passe,2),pose:arrondi(loc.best,2),n:vus.size};
++}
+ function contreChaine(g,decalChaine,seuilMm){
+   const d=g&&g.decision;
+   return fini(seuilMm)&&!!d&&d.etat==='valider'&&!!d.paire&&SIDES.some(s=>norme(moins(d.paire[s].decal,decalChaine[s]))>seuilMm);
+@@ -1024,5 +1073,5 @@
+  }
+  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
+    modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
+-   voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
++   voieAbsolue,rechercheRecentree,pairesRecentrees,voieGlobale,vgDp,leviersActifs:()=>LEVIERS};
+ });
+diff -ruN a/tests/ch119-voie-globale.test.cjs b/tests/ch119-voie-globale.test.cjs
+--- a/tests/ch119-voie-globale.test.cjs	1970-01-01 00:00:00.000000000 +0000
++++ b/tests/ch119-voie-globale.test.cjs	2026-11-13 08:19:37.397250835 +0000
+@@ -0,0 +1,49 @@
++'use strict';
++/* CH-119 : choix de voie global sur la zone (levier `voieGlobale` de src/gcv2-l1.js, coupé par défaut). Géométrie de synthèse : repère profil =
++ * repère scène (matrice identité), cuts espacés de 1 m le long de x, rail gauche en y = 0, rail droit en y = 1,435 m. */
++const test = require('node:test'), assert = require('node:assert');
++const L1 = require('../src/gcv2-l1.js');
++const I = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
++const rails = x => ({ left: { positionSceneRelative: [x, 0, 0], sceneRelativeToProfileLocal: I }, right: { positionSceneRelative: [x, 1.435, 0], sceneRelativeToProfileLocal: I } });
++const capture = { identity: { part: 1, cut: 100, frameId: null }, rails: rails(0) };
++/* voisin validé au cut c (x = c − 100), décalé en travers de dyL, dyR (mm) */
++const voisin = (c, dyL = 0, dyR = dyL) => ({ identity: { part: 1, cut: c, frameId: null }, positions: { left: [c - 100, dyL / 1000, 0], right: [c - 100, 1.435 + dyR / 1000, 0] } });
++const decal = (dyL, dyR = dyL) => ({ left: [0, dyL, 0], right: [0, dyR, 0] });
++const R = { zones: ['adv'], W: 8, G: 4, T1: [0, 50, 60, 75, 100], T2: [0, 40, 60, 80, 100], cS: 0.1, rP: 1, theta: 0 };
++const avec = (r, f) => { L1.reglerLeviers({ voieGlobale: r }); try { return f(); } finally { L1.reglerLeviers(null); } };
++
++test('levier coupé (livré) : rien', () => {
++  assert.strictEqual(L1.LEVIERS_LIVRES.voieGlobale, null);
++  assert.strictEqual(L1.voieGlobale({ capture, cut: 100, voisins: [voisin(98), voisin(99)], decal: decal(130), zone: 'adv' }), null);
++});
++test('hors des zones du levier : rien', () => avec(R, () => {
++  assert.strictEqual(L1.voieGlobale({ capture, cut: 100, voisins: [voisin(98), voisin(99)], decal: decal(130), zone: 'abords' }), null);
++}));
++test('pose sur une voie parallèle à 130 mm des deux voisins validés : refusée', () => avec(R, () => {
++  const v = L1.voieGlobale({ capture, cut: 100, voisins: [voisin(97), voisin(98), voisin(99)], decal: decal(130), zone: 'adv' });
++  assert.strictEqual(v.veto, true); assert.ok(v.ecart > 0);
++}));
++test('pose qui prolonge la voie (même déviation régulière) : gardée', () => avec(R, () => {
++  /* voie qui diverge de 30 mm par cut : 97 → −90, 98 → −60, 99 → −30, 100 → 0 */
++  const v = L1.voieGlobale({ capture, cut: 100, voisins: [voisin(97, -90), voisin(98, -60), voisin(99, -30)], decal: decal(2), zone: 'adv' });
++  assert.strictEqual(v.veto, false);
++}));
++test('un seul rail décalé de 45 mm (défaut de rail, pas de voie) : gardée', () => avec(R, () => {
++  const v = L1.voieGlobale({ capture, cut: 100, voisins: [voisin(98), voisin(99)], decal: decal(45, 0), zone: 'adv' });
++  assert.strictEqual(v.veto, false);
++}));
++test('aucun voisin validé à G cuts : rien ne refuse', () => avec(R, () => {
++  const v = L1.voieGlobale({ capture, cut: 100, voisins: [voisin(93), voisin(94)], decal: decal(130), zone: 'adv' });
++  assert.strictEqual(v.veto, false); assert.strictEqual(v.passe, null);
++}));
++test('voisin isolé faux contre une voie de deux voisins : la voie des deux l’emporte', () => avec(R, () => {
++  /* 97 et 98 sur la voie (0), 99 sur l'autre voie (+130) ; la pose à 0 prolonge 97-98 (saut de 99) */
++  const v = L1.voieGlobale({ capture, cut: 100, voisins: [voisin(97), voisin(98), voisin(99, 130)], decal: decal(0), zone: 'adv' });
++  assert.strictEqual(v.veto, false);
++}));
++test('seuil theta : à égalité de soutien (un voisin contre la pose seule), theta négatif refuse, theta nul garde', () => {
++  const v0 = avec(R, () => L1.voieGlobale({ capture, cut: 100, voisins: [voisin(99)], decal: decal(130), zone: 'adv' }));
++  assert.strictEqual(v0.veto, false);
++  const v1 = avec({ ...R, theta: -0.5 }, () => L1.voieGlobale({ capture, cut: 100, voisins: [voisin(99)], decal: decal(130), zone: 'adv' }));
++  assert.strictEqual(v1.veto, true);
++});
+diff -ruN a/tests/gcv2-l1-cap5.test.cjs b/tests/gcv2-l1-cap5.test.cjs
+--- a/tests/gcv2-l1-cap5.test.cjs	2026-11-13 08:20:20.770072082 +0000
++++ b/tests/gcv2-l1-cap5.test.cjs	2026-11-13 08:20:20.787122188 +0000
+@@ -43,7 +43,9 @@
+     /* Cap 6 (A2, A3) : coupés dans la v4. */
+     voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null, brancheDernier: false,
+     /* T17B : coupés. */
+-    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null });
++    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null,
++    /* CH-119 : choix de voie global sur la zone, coupé. */
++    voieGlobale: null });
+   try {
+     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
+     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
+diff -ruN a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+--- a/tools/banc-differes.cjs	2026-11-13 08:19:09.044484584 +0000
++++ b/tools/banc-differes.cjs	2026-11-13 08:19:09.067873648 +0000
+@@ -234,6 +234,11 @@
+           if (L1.contreChaine(g, decalPose(before, positions), leviers.contreChaineMm)) { contre = g; pose = false; }
+         } catch (e) { if (e) ombre = { erreur: String(e.message || e).slice(0, 120) }; }
+       }
++      /* CH-119 (levier `voieGlobale`, coupé) : une pose de L1-se en zone de la voie globale qui ne prolonge pas la voie des poses validées du lot n'est
++       * pas faite ; pose de la chaîne refusée : le cut passe à la GCV2 comme un différé (ni pose ni appui de la chaîne) ; pose de la GCV2 refusée : différé. */
++      let vetoVG = null;
++      const vgDe = pos => { if (p !== 'L1-se' || !pos || !leviers.voieGlobale) return null; try { return L1.voieGlobale({ capture, cut: c.cut, voisins: E.valides.concat(E.validesL1 || []), decal: decalPose(before, pos), zone }); } catch (e) { return null; } };
++      if (pose && !contre) { const v = vgDe(positions); if (v && v.veto) { vetoVG = v; pose = false; } }
+       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
+       else if (pose) {
+         const rl = confronter(positions, d.stage, vue ? camerasLarges : cameras, 'lot');
+@@ -244,10 +249,11 @@
+           if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
+           out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions), ...(ombre ? { ombre } : {}), ...(rl ? { rechercheLarge: rl.garde } : {}) };
+         }
+-      } else if (!contre && estL1s(p) && (() => {
++      } else if (!contre && !vetoVG && estL1s(p) && (() => {
+         /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
+         if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
+           const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
++          if (large.action === 'lot' && !vetoVG) { const v = vgDe(d.positions); if (v && v.veto) { vetoVG = v; return false; } }
+           if (large.action === 'lot') { out = grappeBloque() ? { etat: 'differe', source: 'regle-grappe', etage: d.stage } : { etat: 'pose', source: 'l1s-vue', etage: d.stage, commande: 'lot', vue: 'deplacee', decal: decalPose(before, d.positions) }; if (out.etat === 'pose') out = appliquer(out, d.positions, camerasLarges); return true; }
+         }
+         /* b. La décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis. */
+@@ -259,6 +265,7 @@
+          * (les deux rails candidats du moteur) n'est pas envoyée, le cut passe à la GCV2 (parité vérifiée par tools/parite-l1se-sw.cjs). */
+         if (c2.action !== 'lot') return false;
+         const pos2 = d2.positions;
++        { const v = vgDe(pos2); if (v && v.veto) { vetoVG = v; return false; } }
+         out = grappeBloque(d2) ? { etat: 'differe', source: 'regle-grappe', etage: d2.stage } : { etat: 'pose', source: 'l1s-chaine', etage: d2.stage, commande: c2.action, vue: vue2, decal: decalPose(before, pos2) };
+         if (out.etat === 'pose') out = appliquer(out, pos2, vue2 ? camerasLarges : cameras);
+         return true;
+@@ -271,7 +278,7 @@
+         out = { etat: 'differe', source: 'lot', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, commande: cmd.action === 'engine' ? 'engine' : `${cmd.action}:${cmd.reason}` };
+       } else {
+         /* La GCV2 (L1) sur un cut que la chaîne du lot ne pose pas. */
+-        const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, ...(contre ? { contreChaine: decalPose(before, positions) } : {}) };
++        const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, ...(contre ? { contreChaine: decalPose(before, positions) } : {}), ...(vetoVG ? { voieGlobale: vetoVG } : {}) };
+         try {
+           let g = cache.get('g' + sig);
+           const transport = p === 'L1-se' && leviers.transport && E.validesL1 && E.validesL1.length;
+@@ -279,7 +286,9 @@
+           else if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null, voieListe: p === 'L1-se' && liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }); if (!transport) cache.set('g' + sig, g); }
+           else { const dd = p === 'L1-se' ? L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas) : L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
+           const dec = g.decision, l1 = L1.resumer(g);
++          const vgG = dec.etat === 'valider' && g.positions ? vgDe(g.positions) : null;
+           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
++          else if (vgG && vgG.veto) out = { ...base, etat: 'differe', l1, voieGlobale: vgG, refusVoieGlobale: true };
+           else {
+             const valider = dec.etat === 'valider';
+             const cg = L1.commander({ positions: g.positions, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, camerasLarges, valider });
