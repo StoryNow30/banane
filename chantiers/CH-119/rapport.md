@@ -22,10 +22,14 @@ Grille de 4 réglages figée avant (`grille.json`) ; coût du banc. Somme des 6 
 - 0 nouvelle mauvaise voie ; aucun juste passé au-delà de 10 mm ; 7 bons bloqués nouveaux (23/5137-5139 après la racine fausse 5132-5133 ; 16/3970, 3971, 4517, 4518) pour 13 mauvaises voies retirées (critère ≤ 2 par gain tenu). 7 mauvaises voies sont reposées justes par la GCV2 après le refus (16/9266, 9267 ; 6/220, 360, 361 ; 23/3748, 3749), 6 différées.
 - Examen 0511 : identique au livré. **Cible 1 (≤ 10) non atteinte ; cibles 2 à 5 tenues.**
 - Réglage figé : D (`reglage-fige.json` : G 7, θ −0,35). Patch éteint = livré : 4 016 / 4 016 cuts identiques (ÉTABLI).
-- Garde d'octobre : éteint, retour 0. Figé : GARDE_FIGE. Parité banc / SW (passe comprise) : PARITE.
+- **Garde d'octobre (`garde-gcv2 --rejouer`, 11 lots) : éteint retour 0 ; figé ROUGE, retour 1, 13 reculs** : 7 verts changés (2-18 203, 451 ; 3-0 843, 861, 864, 867 ; 0-2310-lot1 199), 2-18 204 de 2,0 à 11,5 mm, 1 cut sans pose de plus (terrain 23/10), 2-17 9521-9522 restent dans les pertes acceptées. Mécanisme (ÉTABLI sur les 7) : pose de la chaîne refusée alors que le chemin passé est fort (5 à 8 poses validées), puis la GCV2 pose 150 à 230 mm plus loin, sur la voie du chemin passé ; l'opérateur avait accepté la pose de base. Même mode d'échec que C1 de CH-117 (mêmes 2-18 203 et 451) : en octobre, les poses validées du lot qui précèdent sont sur une autre voie que celle de l'opérateur, et la continuité ne peut pas le voir.
+- Parité banc / SW (passe comprise, `parite-l1se-sw --passe`) : 06/11 p15 figé 161 / 161 lignes identiques (1 pose de passe des deux côtés) ; 08/11 p6 lot 2 : PARITE.
 - Tous les lots sont vus (D-347) : gain PROBABLE jusqu'à l'Écho ; examen vierge 12/11 p3-p4 non lu, à juger par CH-116.
 
-## 4. Ce qui reste et ce que je propose
+## 4. Verdict
+**Le réglage figé ne s'allume pas** : il ne passe pas la garde d'octobre. Gain en validation croisée réel sur novembre (29 → 16), mais le levier repose sur une hypothèse (les poses validées proches sont sur la bonne voie) que les lots d'octobre démentent sur 7 cuts. Sans ancre indépendante de la voie, un refus par continuité ne sait pas distinguer « la pose quitte la voie » de « le lot suivait la mauvaise voie ».
+
+## 5. Ce qui reste et ce que je propose
 - 11 des 16 restantes : bonne paire absente du pool → générateurs de CH-120 à l'assemblage ; 5 racines sans aucune pose proche, hors de portée de toute continuité.
 - 23/3747 et 16/4508 : après le refus, la GCV2 rechoisit H1+H2 sur la mauvaise voie (sa garde de voie absolue la refuse) alors que la bonne paire est dans le pool effectif. Variante à figer et juger plus tard : après un refus de la voie globale, choisir dans le pool effectif la paire qui prolonge le chemin du passé (seulement sur ces cuts refusés).
 - Coût connu : une racine fausse non arrêtée fait refuser les poses justes qui la suivent (23/5137-5139).
