@@ -8,7 +8,7 @@ mkdir -p "$W/rejeux/puce$C"
 for L in 0411 0511 0611 0811a 0811b 1111 1211; do
   M=$(ls "$DM"/puce-*-$L.json)
   LEV=$(node -e "process.stdout.write(JSON.stringify({...JSON.parse(process.argv[1]),puce:JSON.parse(require('fs').readFileSync(process.argv[2],'utf8'))}))" "$EXTRA" "$M")
-  node "$R/chantiers/CH-116/outils/banc.cjs" rejouer --nom "puce$C-$L" --lots "$L" --patch "$PATCH" --env "BANC_LEVIERS=$LEV" --jobs 3
+  node "$R/chantiers/CH-116/outils/banc.cjs" rejouer --nom "puce$C-$L" --lots "$L" --patch "$PATCH" --env "BANC_LEVIERS=$LEV" --jobs ${JOBS:-3}
   for f in "$W/rejeux/puce$C-$L"/*.jsonl; do ln -sf "$f" "$W/rejeux/puce$C/"; done
   rm -rf "$W/copies/puce$C-$L"
 done
