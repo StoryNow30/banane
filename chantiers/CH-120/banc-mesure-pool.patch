@@ -1,0 +1,21 @@
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 2475702..f2b5ee5 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -42,6 +42,7 @@ const D = require('./diag-differes.cjs');
+ const GA = require('../src/garde-passe-appuis.js');
+ const RL = require('../src/recherche-large.js');
+ const SETTINGS = require('../src/settings.js');
++const POOL = process.env.BANC_POOL_DUMP ? require(process.env.BANC_POOL_MODULE) : null; /* CH-120, mesure seulement */
+ 
+ const FORMAT = 'ariane-banc-differes-rejeu-v1', FORMAT_SYNTHESE = 'ariane-banc-differes-synthese-v1', FORMAT_COMPARAISON = 'ariane-banc-differes-comparaison-v1';
+ const VERSION = 'banc-differes-1';
+@@ -206,6 +207,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+     const appliquer = (o, positions, cams) => { const rl = confronter(positions, o.etage, cams, o.source); if (!rl) return o; if (rl.out) return rl.out.etat === 'pose' ? { ...rl.out, vue: o.vue } : rl.out; return { ...o, rechercheLarge: rl.garde }; };
+     for (const p of profils) {
+       const E = etats[p], opts = optionsDe(p), sig = JSON.stringify(opts) + signe(E);
++      /* CH-120 (mesure seulement) : pool de la GCV2 à l'instant de la décision, confronté à la vérité ; aucune décision changée. */
++      if (POOL && p === 'L1-se') { const avantL = L1.leviersActifs(); try { L1.reglerLeviers({ ...avantL, diag: true, rechercheDiag: true }); const tr = leviers.transport && E.validesL1 && E.validesL1.length; const g0 = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: tr ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: referenceDe(c.cut), voieListe: liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }); POOL.noter({ lot: lot.id.slice(0, 8), partie, cut: c.cut, capture, science, g: g0, zone, L1, Sh, ref: referenceDe(c.cut) }); } catch (e) { journalTexte(`mesure du pool, cut ${c.cut} : ${String(e && e.message || e).slice(0, 120)}`); } finally { L1.reglerLeviers(avantL); } }
+       const d = cache.has('d' + sig) ? cache.get('d' + sig) : (() => { const x = L.decideCut({ capture, science, anchors: E.anchors, Shadow: Sh, options: opts }); cache.set('d' + sig, x); return x; })();
+       let cmd = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras });
+       let vue = null;
