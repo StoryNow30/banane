@@ -37,6 +37,8 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 4. Calage vertical : séparateur de densité relative, figé avant le prochain Écho (CH-118 § 2).
 5. Cuts non fidèles au banc en ADV (CH-113 § 3, CH-116 § 3) : comprendre l'écart rejeu / réel avant de régler dessus.
 
+- Ordre de l'opérateur (13/11) : les chantiers difficiles se lancent au modèle le plus fort disponible.
+
 ## Suivi
 | Ticket | Session | État |
 |---|---|---|
@@ -56,5 +58,5 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-121 | session_01Td4bNk2uQhtkP6QNyX6Vtt | lancé le 13/11 |
 | CH-122 | session_01Td4bNpCSzkuthJgvDsfevC | lancé le 13/11 |
 | CH-123 | session_01Td4bNn28Kkosy5ce9nJTWa | lancé le 13/11 (demande de l'opérateur) |
-| CH-124 | session_01Td4bNkFgN37wjozZ7u5uuk | lancé le 13/11 (audit 1) |
-| CH-125 | session_01Td4bNmxvbVBmcaPApCZVq8 | lancé le 13/11 (demande de l'opérateur : le calcul de pose) |
+| CH-124 | session_01Td4bNoLNy4HYWzZ8wbjca6 | relancé le 13/11 au modèle le plus fort (ordre de l'opérateur ; première session archivée sans rien avoir produit) |
+| CH-125 | session_01Td4bNm3qkJJgU3SkRBGQvw | relancé le 13/11 au modèle le plus fort (ordre de l'opérateur ; première session archivée sans rien avoir produit) |
