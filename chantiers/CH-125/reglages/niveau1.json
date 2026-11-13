@@ -1,0 +1,12 @@
+{
+ "nom": "niveau1",
+ "fige": "13/11, avant tout rejeu d'une variante (banc et garde)",
+ "patch": { "fichier": "mesure-source.patch", "sha256": "8601d0877e94157b9bc0973d726474e318069efbaa34a633ed9ee48db7359444" },
+ "cle": "BananeSettings.conventionSource (au banc : variable BANC_CONVENTION_SOURCE)",
+ "structure": { "epMaxMm": 15, "dzMaxMm": 13 },
+ "cMm": {
+  "parPli": { "0411": 5.1, "0611": 5.2, "0811a": 5.1, "0811b": 5.2, "1111": 5.1, "1211": 4.2 },
+  "final": 5.1,
+  "usage": "un lot réglable est jugé avec le c de son pli (appris sans lui) ; le lot d'examen 05/11 et la garde d'octobre avec le c final"
+ }
+}
