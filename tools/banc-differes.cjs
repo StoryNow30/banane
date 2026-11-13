@@ -323,7 +323,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   }
   /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre maximal de passes, arrêt dès qu'une passe ne pose plus rien) : chaque différé de L1-se est redécidé par la GCV2 avec tout
    * ce que le lot a posé, avant ET après lui (chaîne : voisins et appuis ; poses L1 : transport). Leviers propres à la passe : `passe2Leviers`. */
-  let passeMs = null, ordrePasse = 0;
+  let passeMs = null;
   if (profils.includes('L1-se') && leviers.deuxiemePasse) {
     const E = etats['L1-se'], avant = leviers, tP = horloge(), garde = gardeDuBanc(gardeAppuis);
     if (leviers.passe2Leviers) L1.reglerLeviers({ ...leviers, ...leviers.passe2Leviers });
@@ -350,7 +350,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
               if (rl && rl.etat !== 'erreur') r.rechercheLarge = rl;
             }
             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
-            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, ordre: ordrePasse++, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
             poses++;
           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
@@ -364,7 +364,10 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
      * vue (« cette passe ne déplace pas la vue »). Les poses non écrites redeviennent des différés (`passe2.nonEcrite` : plafond ou arret). Absente : rien ne change. */
     const plafond = process.env.BANC_PASSE_PLAFOND ? Number(process.env.BANC_PASSE_PLAFOND) : null;
     if (Number.isInteger(plafond) && plafond >= 0) {
-      const posees = restes.map(r => r.ligne.profils['L1-se']).filter(x => x && x.etat === 'pose' && x.passe2).sort((a, b) => a.passe2.ordre - b.passe2.ordre);
+      /* Ordre de décision : passe, puis rang dans `restes` (sens inversé aux passes paires avec `passesAlternees`, comme la boucle de la passe). */
+      const rang = (x, i) => [x.passe2.passe, x.passe2.passe % 2 || !leviers.passesAlternees ? i : -i];
+      const posees = restes.map((r, i) => ({ x: r.ligne.profils['L1-se'], i })).filter(o => o.x && o.x.etat === 'pose' && o.x.passe2)
+        .sort((a, b) => { const p = rang(a.x, a.i), q = rang(b.x, b.i); return p[0] - q[0] || p[1] - q[1]; }).map(o => o.x);
       let arret = false, ecrites = 0;
       for (const x of posees) {
         const motif = arret ? 'arret' : ecrites >= plafond ? 'plafond' : x.vue === 'deplacee' ? 'refus-vue' : null;
