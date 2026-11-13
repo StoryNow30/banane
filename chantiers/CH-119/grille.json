@@ -1,0 +1,14 @@
+{
+  "format": "ch119-grille-figee-1",
+  "fige_le": "2026-11-13, avant tout jugement en validation croisée",
+  "regle_de_choix": "banc de CH-116, `banc.cjs croise --noms A,B,C,D --ref livre` (ici « pool » = rejeu livré refait, identique) ; coût par défaut du banc : 100·(> 50) + 10·(10–50) + 5·(bons bloqués) + 1·(différés) ; pour chaque lot réglable, réglage de coût minimal sur les cinq autres, jugé sur lui ; examen 0511 : réglage de coût minimal sur les six lots réglables",
+  "conception": "structure et tolérances conçues sur tout le corpus (loi des résidus de la vérité, prototype, réglage A rejoué sur tous les lots) : tous les lots sont vus au sens de D-347, un gain reste PROBABLE jusqu'à l'Écho ; la validation croisée protège seulement le choix entre ces quatre réglages",
+  "commun": { "zones": ["adv"], "W": 8, "cS": 0.1, "rP": 1 },
+  "reglages": {
+    "A": { "nom_rejeu": "vg0", "G": 4, "T1": [0, 50, 60, 75, 100], "T2": [0, 40, 60, 80, 100], "theta": 0 },
+    "B": { "nom_rejeu": "vgB", "G": 4, "T1": [0, 50, 60, 75, 100], "T2": [0, 40, 60, 80, 100], "theta": -0.35 },
+    "C": { "nom_rejeu": "vgC", "G": 7, "T1": [0, 50, 60, 75, 100, 150, 150, 150], "T2": [0, 40, 60, 80, 100, 140, 180, 200], "theta": 0 },
+    "D": { "nom_rejeu": "vgD", "G": 7, "T1": [0, 50, 60, 75, 100, 150, 150, 150], "T2": [0, 40, 60, 80, 100, 140, 180, 200], "theta": -0.35 }
+  },
+  "sens": "theta −0,35 : une pose seule est refusée contre une seule pose validée proche qui ne la prolonge pas (égalité de soutien) ; G 7 : voisins validés jusqu'à 7 cuts, tolérances larges au-delà de 4 cuts (ordre 1 : 150 mm)"
+}

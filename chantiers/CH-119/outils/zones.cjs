@@ -18,16 +18,20 @@ function local(geo, side, p) { const g = geo[side], q = C.point(g.M, p), o = C.p
 function chargerCorpus() { return new Map(lire(process.env.CH116_CORPUS || path.join(travail(), 'corpus.jsonl')).map(l => [`${l.lot}-p${l.partie}-r${l.rang}:${l.cut}`, l])); }
 const jugeable = c => !!(c && c.poseFinale && (!c.exclu || /^d285-/.test(c.exclu)));
 /* Les lots-parties d'un rejeu : [{ e, cuts:[{ cut, zone, geo, etat, source, decal, pool, verite, classeCorpus, sortLot }] }] (ordre du lot). */
-function charger(nom, { lots = null, corpus = chargerCorpus() } = {}) {
+function charger(nom, { lots = null, corpus = chargerCorpus(), geo = 'pool' } = {}) {
   const out = [];
   for (const e of LOTS) {
     if (lots && !lots.includes(e.lot)) continue;
     const f = path.join(travail(), 'rejeux', nom, cle(e) + '.jsonl'); if (!fs.existsSync(f)) continue;
     const cuts = [];
+    /* géométrie de départ des cuts (indépendante des décisions) : celle du rejeu de mesure `geo` si ce rejeu ne la porte pas */
+    const fg = path.join(travail(), 'rejeux', geo, cle(e) + '.jsonl'), G = new Map();
+    if (geo && fg !== f && fs.existsSync(fg)) for (const l of lire(fg)) if (l.type === 'cut') G.set(l.cut, { geo: l.geo || null, pool: l.pool && !l.pool.erreur ? l.pool : null });
     for (const l of lire(f)) {
       if (l.type !== 'cut') continue;
       const x = (l.profils || {})['L1-se'] || {}, c = corpus.get(`${cle(e)}:${l.cut}`);
-      cuts.push({ cut: l.cut, zone: l.zone || null, geo: l.geo || null, etat: x.etat, source: x.source || null, etage: x.etage || null, decal: x.etat === 'pose' && x.decal ? x.decal : null,
+      const g0 = G.get(l.cut) || {};
+      cuts.push({ cut: l.cut, zone: l.zone || null, geo: l.geo || g0.geo || null, poolMesure: g0.pool || null, sortie: x, etat: x.etat, source: x.source || null, etage: x.etage || null, decal: x.etat === 'pose' && x.decal ? x.decal : null,
         pool: l.pool && !l.pool.erreur ? l.pool : null, verite: jugeable(c) ? c.poseFinale : null, classeCorpus: c ? c.classe : null, sortLot: c ? c.sortLot : null, reel: l.reel });
     }
     out.push({ e, cle: cle(e), cuts });

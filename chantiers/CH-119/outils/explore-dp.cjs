@@ -28,7 +28,7 @@ function analyser(lots, R = R0) {
       const r = { cle: L.cle, cut: t.cut, etat: t.etat, source: t.source, nPasses: new Set(obs.filter(o => o.cut < t.cut).map(o => o.cut)).size, coast: d.passe ?? -1, poseS: d.pose };
       if (t.decal && t.verite) r.mm = Math.max(Z.d3(t.decal.left, t.verite.left), Z.d3(t.decal.right, t.verite.right));
       r.classe = t.etat !== 'pose' ? 'differe' : r.mm == null ? 'pose-nj' : r.mm <= 10 ? 'juste' : r.mm <= 50 ? '10-50' : 'plus-50';
-      r.veto = !!(t.decal && d.ecart != null && d.ecart > R.theta);
+      r.veto = !!(t.decal && d.ecart != null && d.ecart > R.theta && d.passe >= (R.passeMin || -Infinity));
       if (d.alt && t.verite) r.mmAlt = Math.max(Z.d3(d.alt.d.left, t.verite.left), Z.d3(d.alt.d.right, t.verite.right));
       if (d.alt) r.altS = d.alt.best;
       if (r.veto) posee.set(t.cut, null);
