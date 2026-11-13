@@ -68,7 +68,7 @@ function preparerDossier(dossier, entrees, o) {
 
 function main() {
   const o = args(process.argv.slice(2)), parDossier = new Map();
-  for (const e of LOTS) { if (o.lots && !o.lots.includes(e.lot)) continue; if (!parDossier.has(e.dossierLot)) parDossier.set(e.dossierLot, []); parDossier.get(e.dossierLot).push(e); }
+  for (const e of LOTS) { if (o.lots ? !o.lots.includes(e.lot) : e.vierge) continue; if (!parDossier.has(e.dossierLot)) parDossier.set(e.dossierLot, []); parDossier.get(e.dossierLot).push(e); }
   for (const [d, es] of parDossier) preparerDossier(d, es, o);
 }
 if (require.main === module) { try { main(); } catch (e) { process.stderr.write('preparer : ' + e.message + '\n'); process.exitCode = 1; } }

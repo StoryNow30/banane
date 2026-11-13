@@ -1,0 +1,8 @@
+1211v-p3-r1 : décisions identiques 59/59 ; poses identiques à 1 mm 59/59
+1211v-p4-r1 : décisions identiques 88/93 ; poses identiques à 1 mm 81/81
+    6686 : réel posé (deferred), rejeu differe (deferred)
+    6920 : réel posé (deferred), rejeu differe (deferred)
+    6944 : réel posé (deferred), rejeu differe (deferred)
+    6950 : réel posé (deferred), rejeu differe (deferred)
+    6952 : réel posé (deferred), rejeu differe (deferred)
+TOTAL : décisions identiques 147/152 (96.7 %) ; poses identiques 140/140 (100.0 %)

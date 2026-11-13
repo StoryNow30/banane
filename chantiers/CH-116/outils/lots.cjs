@@ -19,9 +19,12 @@ const LOTS = [
   ...P('0811b', 'l0811-21-30-27', 'e0811-p6', [[6, 1], [6, 2]]),
   ...P('1111', 'l1111', p => 'e1211-p' + p, [15, 16, 17]),
   ...P('1211', 'l1211', p => 'e1211-p' + p, [0, 1, 2, 23]),
+  /* Examen vierge (13/11) : Échos du 12/11 parties 3 et 4, jamais vus par aucun réglage. Hors du corpus commun (corpus.cjs ne les prend que
+   * nommés par --lots 1211v) ; à ne transmettre à aucun autre chantier. */
+  ...P('1211v', 'l1211', p => 'e1211-p' + p, [3, 4], { examen: true, vierge: true }),
 ];
 /* Lots exportés sans Écho joignable (comptés au résumé, pas au corpus) : 08/11 parties 5 et 7, 10/11 partie 9 (séance Écho tirée au sort
- * non faite), 12/11 parties 3, 4, 21, 22 (partie 22 : une seule visite). */
-const SANS_ECHO = [{ lot: '0811', parties: [5, 7] }, { lot: '1011', parties: [9] }, { lot: '1211', parties: [3, 4, 21, 22] }];
+ * non faite), 12/11 parties 21, 22 (partie 22 : une seule visite). */
+const SANS_ECHO = [{ lot: '0811', parties: [5, 7] }, { lot: '1011', parties: [9] }, { lot: '1211', parties: [21, 22] }];
 const cle = l => `${l.lot}-p${l.partie}-r${l.rang}`;
 module.exports = { LOTS, SANS_ECHO, cle, travail: T };
