@@ -1,5 +1,5 @@
 diff --git a/background.js b/background.js
-index 0e4c97a..b93ef64 100644
+index 0e4c97a..fe38447 100644
 --- a/background.js
 +++ b/background.js
 @@ -1782,7 +1782,9 @@ async function commandLot(proposal,lotObservation){
@@ -13,7 +13,7 @@ index 0e4c97a..b93ef64 100644
   lotObservation.applied=command.action==='lot';
   /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
    * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
-@@ -1794,6 +1796,25 @@ async function commandLot(proposal,lotObservation){
+@@ -1794,6 +1796,29 @@ async function commandLot(proposal,lotObservation){
     anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
   return engine.s.proposal;
  }
@@ -27,19 +27,23 @@ index 0e4c97a..b93ef64 100644
 +  if(!profilL1se()||!G?.LEVIERS_LIVRES?.ajustementFin||!capture?.rails||!before||!proposal?.rails)return command;
 +  const pose=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
 +  if(!pose||command.deplacerVue||command.l1s==='vue')return command;
++  /* `seulChaine` : poses de la chaîne seulement (ni GCV2, ni L1-s, ni pose remplacée par la recherche large). */
++  const R=G.LEVIERS_LIVRES.ajustementFin;if(R.seulChaine&&(command.l1s||command.reason==='gcv2-l1'||command.rechercheLarge))return command;
 +  const x=K.expectedPoses({rails:before},command.action==='lot'?command.rails:proposal.rails),positions=Object.fromEntries(SIDES.map(s=>[s,x[s].positionSceneRelative.slice(0,3)]));
 +  const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return command;
 +  const a=G.ajusterPoseFinale(capture,decal);if(!a.ajuste)return command;
 +  const pos=Object.fromEntries(SIDES.map(s=>[s,L.positionOf(before[s],a.decal[s].map(v=>v/1000))]));
 +  const cg=G.commander({positions:pos,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),valider:true});
 +  if(cg.action!=='lot'||cg.vue!=='dans'){lotObservation.ajustementFin={refus:cg.reason||'vue',info:a.info};return command;}
++  /* `voisinsDecision` : le voisin de la GCV2 (`l1Voisins`) gardera la pose d'avant l'étage, pas la pose écrite. */
++  if(R.voisinsDecision){const b=engine.s.batch,id=engine.s.before?.identity;if(b&&id){b.ajustementsFin=b.ajustementsFin||{};b.ajustementsFin[id.cut]=Object.fromEntries(SIDES.map(s=>[s,positions[s].slice(0,3)]));}}
 +  lotObservation.ajustementFin={avant:decal,apres:Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],pos[s])])),info:a.info,commandeAvant:command.action};
 +  return {...command,action:'lot',rails:cg.rails,gaugeMm:cg.gaugeMm,ajustementFin:true,avantAjustement:command};
 + }catch(e){lotObservation.ajustementFin={erreur:String(e?.message||e).slice(0,160)};return command;}}
  /* 5.0 (D-147, fiches/DEPLACER_VUE.md) — DÉPLACER LA VUE. Réglage `deplacerVue`, COUPÉ PAR DÉFAUT : coupé, rien de ce qui suit ne
   * s'exécute et les commandes sont celles d'avant, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif, pour un cut que le
   * lot ne pose pas PARCE QUE sa cible tombe hors de la vue d'un rail (KI-051) :
-@@ -1987,7 +2008,9 @@ function holdLotAnchor(lotObservation,command){
+@@ -1987,7 +2012,9 @@ function holdLotAnchor(lotObservation,command){
   if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
   /* D-221 : une pose L1-s (`l1s`) n'est jamais un appui ; sous L1, la pose validée de la GCV2 l'est. */
   /* CH-034 : une pose remplacée par la recherche large n'est jamais un appui (l'appui mémorisé serait celui de la décision du lot, pas la pose commandée). */
@@ -50,13 +54,23 @@ index 0e4c97a..b93ef64 100644
   if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
  }
  /* 4.9.5.13 (test 13, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
-@@ -2159,6 +2182,16 @@ function passeDiffRechercheLarge(r,positions){
+@@ -2063,7 +2090,8 @@ function l1Voisins(b,identity){const SIDES=['left','right'],f=identity?.frameId?
+  for(const r of engine?.s?.records||[]){const id=r?.identity;if(!id||id.part!==identity.part||(id.frameId??null)!==f||!faits.has(id.cut)||id.cut===identity.cut)continue;
+   if(SIDES.every(s=>Array.isArray(r.rails?.[s]?.initial?.sceneRelativeToProfileLocal)&&Array.isArray(r.rails?.[s]?.initial?.positionSceneRelative)&&Array.isArray(r.rails?.[s]?.corrected?.positionSceneRelative)))par.set(id.cut,r);}
+  return [...par.values()].map(r=>({identity:{part:r.identity.part,cut:r.identity.cut,frameId:f},
+-  positions:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].corrected.positionSceneRelative.slice(0,3)])),rails:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].initial]))}));}
++  /* CH-121 (`voisinsDecision`) : un cut ajusté par l'étage final est voisin à la pose de sa décision (`b.ajustementsFin`), pas à la pose écrite. */
++  positions:b?.ajustementsFin?.[r.identity.cut]?{left:b.ajustementsFin[r.identity.cut].left.slice(),right:b.ajustementsFin[r.identity.cut].right.slice()}:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].corrected.positionSceneRelative.slice(0,3)])),rails:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].initial]))}));}
+ /* Plan de vue pour une cible de la GCV2 (mêmes limites et même pré-vol que « déplacer la vue », D-147). */
+ async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,r=reglageVueL1();
+  const vue=VR.vueNecessaire(capture,positions,r.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
+@@ -2159,6 +2187,16 @@ function passeDiffRechercheLarge(r,positions){
   try{const d=RL.decider({capture:{identity:r.identity??null,rails:r.capture.rails,pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes},positions,R:{...R,mode:'differer'},science:r.science??null});
    return RL.resumer(d);}
   catch(e){journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)});return null;}}
 +/* CH-121 : étage final d'ajustement sur une pose de la passe (levier `ajustementFin`, coupé : null). Rend { positions, decal } ajustés, ou null (rien ne change). */
 +function passeDiffAjustementFin(r,positions){const G=globalThis.BananeGcv2L1,K=globalThis.BananeCore3,L=globalThis.BananeLotDecision,SIDES=['left','right'];
-+ try{if(!G?.LEVIERS_LIVRES?.ajustementFin||!r?.capture?.rails||!positions)return null;
++ try{if(!G?.LEVIERS_LIVRES?.ajustementFin||G.LEVIERS_LIVRES.ajustementFin.seulChaine||!r?.capture?.rails||!positions)return null;
 +  const before=r.capture.rails,decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return null;
 +  const a=G.ajusterPoseFinale(r.capture,decal);if(!a.ajuste)return null;
 +  const pos=Object.fromEntries(SIDES.map(s=>[s,L.positionOf(before[s],a.decal[s].map(v=>v/1000))]));
@@ -67,7 +81,7 @@ index 0e4c97a..b93ef64 100644
  function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
  async function l1Commande(args){
   const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
-@@ -2251,9 +2284,11 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
+@@ -2251,9 +2289,11 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
      if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
      transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
      r.etat='pose-ombre';n++;

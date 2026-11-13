@@ -90,5 +90,6 @@
       }
     }
   },
-  "jugement": "comme la grille 3 ; puis garde-gcv2 --rejouer (copie avec ajustementFin livré à { c: 5.0, lateral: false })"
+  "jugement": "comme la grille 3 ; puis garde-gcv2 --rejouer (copie avec ajustementFin livré à { c: 5.0, lateral: false })",
+  "statut": "JUGÉE (sorties/jugement-plis-aj4.md : 7 lots 95,5 %, 12 gagnés / 0 perdu) puis REFUSÉE par la garde des 11 lots d'octobre (retour 1) : ricochet 0-2310 1372 (nouvelle pose à 60,2 mm) et 13 ; vertical sur poses GCV2 en ADV 0-2310 4 et 193 ; 53 verts changés. Patch alors en 292401ad… (v2)."
 }

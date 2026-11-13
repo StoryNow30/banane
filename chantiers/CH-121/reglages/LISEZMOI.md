@@ -21,3 +21,8 @@ Un réglage retouché après jugement sera un nouveau réglage (`aj-H`…), fig�
 ## Grille 3 refusée par la garde d'octobre, grille 4 (vertical seul)
 - Grille 3 jugée (cible des 7 lots atteinte au banc), puis garde de pose des 11 lots d'octobre ROUGE (retour 1) ; éteint : retour 0. Fautes nouvelles ÉTABLIES : latéral de l'étage sur des poses GCV2 en ADV (2-17 9803 à 24,2 mm, 2-20 288 dégradé de 4,6, 0-2310 4 à 9,98) ; ricochet 0-2310 1372 (posé par la passe à 60,2 mm) ; 90 verts changés (déplacements des cuts posés par la base, comptés recul par construction).
 - Grille 4 (`grille-v4.json`) : même structure, latéral coupé, mêmes c par pli. Vu avant de figer : rien de novembre avec ce réglage ; en statique, l'ensemble des 6 lots (vertical seul, c = 4,4 : 14 gagnés / 0 perdu) avait été vu pendant la mise au point.
+
+## Grille 4 refusée par la garde, grille 5 (13/11, avant tout rejeu ; accord de l'intégrateur)
+- Grille 4 jugée (7 lots 95,5 %, 12 / 0) puis garde d'octobre ROUGE : ricochet 0-2310 1372 (60,2 mm) et 13, vertical sur des poses GCV2 en ADV (0-2310 4, 193), 53 verts changés.
+- Grille 5 (`grille-v5.json`) : vertical seul, poses de la chaîne seulement, voisins = pose de la décision. **Sa structure est tirée de la garde d'octobre : cette garde n'est plus un jugement indépendant pour aj5.** Jugement indépendant : plis de novembre, examen vierge neuf chez CH-116, séance Écho.
+- Patch changé (deux clés `seulChaine`, `voisinsDecision`, lues par les crochets du banc et du service worker) : éteint refait.

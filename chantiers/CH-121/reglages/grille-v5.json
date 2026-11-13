@@ -1,0 +1,108 @@
+{
+  "patch": "chantiers/CH-121/ajustement-fin.patch",
+  "patchSha256": "8b83b4c66b6924f36f0d80f5776437863d90e9f563a86ca5e67eb87762b7cb98",
+  "variable": "BANC_LEVIERS",
+  "structure": "vertical seul (médiane du dessus + c), étage sur les poses de la CHAÎNE seulement (seulChaine : ni GCV2, ni L1-s, ni passe), voisins de la GCV2 = pose de la décision (voisinsDecision : aucun ricochet de l'étage) ; autres valeurs = défauts du patch",
+  "origine": "STRUCTURE TIRÉE DE LA GARDE D'OCTOBRE (garde-gcv2 des 11 lots, réglages aj3 et aj4) : ses fautes nouvelles sont toutes des poses de la GCV2 ajustées (0-2310 4, 193 ; 2-17 9803, 2-20 288) ou des ricochets par les voisins (0-2310 1372, 13). Cette garde n'est donc PLUS un jugement indépendant pour aj5 ; elle est refaite pour la cohérence seulement. Jugement indépendant : plis de novembre (c appris par pli), examen vierge neuf chez CH-116 (1211v, 1312v), puis séance Écho de l'opérateur. Accord de l'intégrateur du 13/11.",
+  "cParPli": {
+    "1111": 5.3,
+    "1211": 3.9,
+    "0411": 5.0,
+    "0611": 5.7,
+    "0811a": 5.0,
+    "0811b": 5.5,
+    "0511": 5.0
+  },
+  "reglages": {
+    "aj5-1111": {
+      "lots": [
+        "1111"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.3,
+          "lateral": false,
+          "seulChaine": true,
+          "voisinsDecision": true
+        }
+      }
+    },
+    "aj5-1211": {
+      "lots": [
+        "1211"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 3.9,
+          "lateral": false,
+          "seulChaine": true,
+          "voisinsDecision": true
+        }
+      }
+    },
+    "aj5-0411": {
+      "lots": [
+        "0411"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0,
+          "lateral": false,
+          "seulChaine": true,
+          "voisinsDecision": true
+        }
+      }
+    },
+    "aj5-0611": {
+      "lots": [
+        "0611"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.7,
+          "lateral": false,
+          "seulChaine": true,
+          "voisinsDecision": true
+        }
+      }
+    },
+    "aj5-0811a": {
+      "lots": [
+        "0811a"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0,
+          "lateral": false,
+          "seulChaine": true,
+          "voisinsDecision": true
+        }
+      }
+    },
+    "aj5-0811b": {
+      "lots": [
+        "0811b"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.5,
+          "lateral": false,
+          "seulChaine": true,
+          "voisinsDecision": true
+        }
+      }
+    }
+  },
+  "final": {
+    "nom": "aj5-final",
+    "BANC_LEVIERS": {
+      "ajustementFin": {
+        "c": 5.0,
+        "lateral": false,
+        "seulChaine": true,
+        "voisinsDecision": true
+      }
+    }
+  },
+  "controles": "éteint = livré (4 016 cuts) ; aucun ricochet : sur tous les lots, 0 décision d'état changée (l'étage ne change aucune décision) ; garde d'octobre (non indépendante) ; parité 06/11 p15 et 12/11 p23"
+}
