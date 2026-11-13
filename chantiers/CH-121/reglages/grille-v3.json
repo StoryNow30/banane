@@ -1,0 +1,98 @@
+{
+  "patch": "chantiers/CH-121/ajustement-fin.patch",
+  "patchSha256": "292401addd9998381db52e7736707314b287479981166324ba0cb212787dfa39",
+  "variable": "BANC_LEVIERS",
+  "structure": "figée a priori, avant tout jugement au banc : défaut de l'étage (AJ_DEFAUT) — tolV 4, tolL 4, epMax 15, dzMax 13, duMax 12, minTop 15, minFace 6, bande 12 mm, écartement [1425, 1475] et 25 mm au plus ; vertical = médiane du dessus + c",
+  "c": "appris dans chaque pli sur ses seuls lots d'apprentissage (outils/c-par-pli.cjs : rails jugés du livré dont la convention serait refusée à la pose, médiane de (correction verticale de l'opérateur − q50)) ; pli 0511 = examen, appris sur les 6 lots réglables",
+  "cParPli": {
+    "1111": 5.3,
+    "1211": 3.9,
+    "0411": 5.0,
+    "0611": 5.7,
+    "0811a": 5.0,
+    "0811b": 5.5,
+    "0511": 5.0
+  },
+  "reglages": {
+    "aj3-1111": {
+      "lots": [
+        "1111"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.3
+        }
+      }
+    },
+    "aj3-1211": {
+      "lots": [
+        "1211"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 3.9
+        }
+      }
+    },
+    "aj3-0411": {
+      "lots": [
+        "0411"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0
+        }
+      }
+    },
+    "aj3-0611": {
+      "lots": [
+        "0611"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.7
+        }
+      }
+    },
+    "aj3-0811a": {
+      "lots": [
+        "0811a"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0
+        }
+      }
+    },
+    "aj3-0811b": {
+      "lots": [
+        "0811b"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.5
+        }
+      }
+    },
+    "aj3-0511": {
+      "lots": [
+        "0511"
+      ],
+      "BANC_LEVIERS": {
+        "ajustementFin": {
+          "c": 5.0
+        }
+      }
+    }
+  },
+  "final": {
+    "nom": "aj3-final",
+    "BANC_LEVIERS": {
+      "ajustementFin": {
+        "c": 5.0
+      }
+    },
+    "note": "réglage du pli de l'examen (c appris sur les 6 lots réglables) : le réglage proposé, jugé une fois sur 05/11 puis, par CH-116, sur l'examen vierge"
+  },
+  "jugement": "chaque lot réglable jugé une fois par le réglage de son pli ; 05/11 jugé une fois par aj3-final ; totaux à 6 lots et à 7 lots (cible écrite : ≥ 95 % sur 7 lots)"
+}
