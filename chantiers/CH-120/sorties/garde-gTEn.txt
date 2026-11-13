@@ -1,0 +1,24 @@
+garde d'octobre au banc, réglage « g-gTEn » : retour 1 ; 22 recul(s) dont 22 RÉEL(S) et 0 « verts changés » ; rejeux 1820 s
+  réel : reglage-9, sansPasse : cuts laissés sans pose 25 → 27
+  réel : reglage-9, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 506 sur 510
+  réel : reglage-9, sansPasse : 2 cut(s) nouvellement à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, sansPasse : 2 cut(s) nouvellement à plus de 50 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, sansPasse : 2 cut(s) nouvellement en mauvaise voie (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, sansPasse : 2 cut(s) de ≤ 10 mm passé(s) à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, sansPasse : 6 cut(s) dégradé(s) de plus de 2 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm, 2-17 9647 7.68 mm, 2-19 5126 5.62 mm, 2-20-f228f6f9 331 6.23 mm, 2-20-f228f6f9 381 4.03 mm)
+  réel : reglage-9, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 512 sur 518 ; hors de la liste des pertes acceptées : 2-11 8283, 2-11 8284, 2-11 8285, 2-11 8286
+  réel : reglage-9, avecPasse : 2 cut(s) nouvellement à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, avecPasse : 2 cut(s) nouvellement à plus de 50 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, avecPasse : 2 cut(s) nouvellement en mauvaise voie (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, avecPasse : 2 cut(s) de ≤ 10 mm passé(s) à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, avecPasse : 7 cut(s) dégradé(s) de plus de 2 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm, 2-11 8285 11.2 mm, 2-17 9647 7.68 mm, 2-19 5126 5.62 mm, 2-20-f228f6f9 331 6.23 mm, 2-20-f228f6f9 381 4.03 mm)
+  réel : reglage-9, GCV2 dans le lot : 2 cut(s) nouvellement à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, GCV2 dans le lot : 2 cut(s) nouvellement à plus de 50 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, GCV2 dans le lot : 2 cut(s) nouvellement en mauvaise voie (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  réel : reglage-9, GCV2 dans le lot : 7 cut(s) dégradé(s) de plus de 2 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm, 2-11 8285 11.2 mm, 2-17 9647 7.68 mm, 2-19 5126 5.62 mm, 2-20-f228f6f9 331 6.23 mm, 2-20-f228f6f9 381 4.03 mm)
+  réel : terrain-partie-0-23-10, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 91 sur 92
+  réel : terrain-partie-0-23-10, sansPasse : 2 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm)
+  réel : terrain-partie-0-23-10, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 105 sur 106 ; hors de la liste des pertes acceptées : 0-2310-lot1 1172
+  réel : terrain-partie-0-23-10, avecPasse : 2 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm)
+  réel : terrain-partie-0-23-10, GCV2 dans le lot : 2 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm)
+retour 1

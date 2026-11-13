@@ -1,0 +1,21 @@
+garde d'octobre au banc, réglage « g-gTEnF » : retour 1 ; 19 recul(s) dont 19 RÉEL(S) et 0 « verts changés » ; rejeux 1879 s
+  réel : reglage-9, sansPasse : 3 cut(s) dégradé(s) de plus de 2 mm (2-19 5126 5.62 mm, 2-20-f228f6f9 331 6.23 mm, 2-20-f228f6f9 381 4.03 mm)
+  réel : reglage-9, avecPasse : 3 cut(s) dégradé(s) de plus de 2 mm (2-19 5126 5.62 mm, 2-20-f228f6f9 331 6.23 mm, 2-20-f228f6f9 381 4.03 mm)
+  réel : reglage-9, GCV2 dans le lot : 3 cut(s) dégradé(s) de plus de 2 mm (2-19 5126 5.62 mm, 2-20-f228f6f9 331 6.23 mm, 2-20-f228f6f9 381 4.03 mm)
+  réel : partie-3:0, sansPasse : 1 cut(s) nouvellement à plus de 20 mm (3-0 870 259.12 mm)
+  réel : partie-3:0, sansPasse : 1 cut(s) nouvellement à plus de 50 mm (3-0 870 259.12 mm)
+  réel : partie-3:0, sansPasse : 1 cut(s) nouvellement en mauvaise voie (3-0 870 259.12 mm)
+  réel : partie-3:0, avecPasse : 1 cut(s) nouvellement à plus de 20 mm (3-0 870 259.12 mm)
+  réel : partie-3:0, avecPasse : 1 cut(s) nouvellement à plus de 50 mm (3-0 870 259.12 mm)
+  réel : partie-3:0, avecPasse : 1 cut(s) nouvellement en mauvaise voie (3-0 870 259.12 mm)
+  réel : partie-3:0, GCV2 dans le lot : 1 cut(s) nouvellement à plus de 20 mm (3-0 870 259.12 mm)
+  réel : partie-3:0, GCV2 dans le lot : 1 cut(s) nouvellement à plus de 50 mm (3-0 870 259.12 mm)
+  réel : partie-3:0, GCV2 dans le lot : 1 cut(s) nouvellement en mauvaise voie (3-0 870 259.12 mm)
+  réel : partie-3:0, GCV2 dans le lot : budget D-223 (pose > 50 mm ≤ 3 %) tenu en base, dépassé : 1/24 (4.2 %)
+  réel : partie-3:0, GCV2 dans le lot : budget D-223 (mauvaise voie ≤ 1 %) tenu en base, dépassé : 1/24 (4.2 %)
+  réel : terrain-partie-0-23-10, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 91 sur 92
+  réel : terrain-partie-0-23-10, sansPasse : 2 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm)
+  réel : terrain-partie-0-23-10, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 105 sur 106 ; hors de la liste des pertes acceptées : 0-2310-lot1 1172
+  réel : terrain-partie-0-23-10, avecPasse : 2 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm)
+  réel : terrain-partie-0-23-10, GCV2 dans le lot : 2 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm)
+retour 1

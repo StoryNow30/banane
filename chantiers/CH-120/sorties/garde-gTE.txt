@@ -1,0 +1,43 @@
+garde-gcv2 : retour 1 ; 39 recul(s) de qualité ; 3 signalement(s)
+  perte acceptée : reglage-9, avec passe : 2-17 9521 (2,74 mm en base) ; D-252, accord de l'opérateur du 26/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui ; garde-appuis ; commit acf24f99596c563b8dac333e4855918546d3f264
+  perte acceptée : reglage-9, avec passe : 2-17 9522 (2,57 mm en base) ; D-252, accord de l'opérateur du 26/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui ; garde-appuis ; commit acf24f99596c563b8dac333e4855918546d3f264
+  recul : reglage-9, sansPasse : cuts laissés sans pose 25 → 26
+  recul : reglage-9, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 504 sur 510
+  recul : reglage-9, sansPasse : 2 cut(s) nouvellement à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, sansPasse : 2 cut(s) nouvellement à plus de 50 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, sansPasse : 2 cut(s) nouvellement en mauvaise voie (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, sansPasse : 2 cut(s) de ≤ 10 mm passé(s) à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, sansPasse : 10 cut(s) dégradé(s) de plus de 2 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm, 2-17 9647 7.68 mm, 2-19 5126 5.62 mm, 2-20-fd7067f7 288 5.06 mm, 2-20-f228f6f9 323 10.15 mm, 2-20-f228f6f9 330 8.66 mm, 2-20-f228f6f9 331 6.23 mm)
+  recul : reglage-9, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 511 sur 518 ; hors de la liste des pertes acceptées : 2-11 8283, 2-11 8284, 2-11 8286, 2-18 198, 2-20-f228f6f9 323
+  recul : reglage-9, avecPasse : 2 cut(s) nouvellement à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, avecPasse : 2 cut(s) nouvellement à plus de 50 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, avecPasse : 2 cut(s) nouvellement en mauvaise voie (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, avecPasse : 2 cut(s) de ≤ 10 mm passé(s) à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, avecPasse : 10 cut(s) dégradé(s) de plus de 2 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm, 2-17 9647 7.68 mm, 2-19 5126 5.62 mm, 2-20-fd7067f7 288 5.06 mm, 2-20-f228f6f9 323 10.15 mm, 2-20-f228f6f9 330 8.66 mm, 2-20-f228f6f9 331 6.23 mm)
+  recul : reglage-9, GCV2 dans le lot : 2 cut(s) nouvellement à plus de 20 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, GCV2 dans le lot : 2 cut(s) nouvellement à plus de 50 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, GCV2 dans le lot : 2 cut(s) nouvellement en mauvaise voie (2-11 8283 148.53 mm, 2-11 8284 138.75 mm)
+  recul : reglage-9, GCV2 dans le lot : 10 cut(s) dégradé(s) de plus de 2 mm (2-11 8283 148.53 mm, 2-11 8284 138.75 mm, 2-17 9647 7.68 mm, 2-19 5126 5.62 mm, 2-20-fd7067f7 288 5.06 mm, 2-20-f228f6f9 323 10.15 mm, 2-20-f228f6f9 330 8.66 mm, 2-20-f228f6f9 331 6.23 mm)
+  recul : partie-3:0, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 17 sur 18
+  recul : partie-3:0, sansPasse : 1 cut(s) dégradé(s) de plus de 2 mm (3-0 853 11.59 mm)
+  recul : partie-3:0, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 22 sur 23 ; hors de la liste des pertes acceptées : 3-0 853
+  recul : partie-3:0, avecPasse : 1 cut(s) dégradé(s) de plus de 2 mm (3-0 853 11.59 mm)
+  recul : partie-3:0, GCV2 dans le lot : 1 cut(s) dégradé(s) de plus de 2 mm (3-0 853 11.59 mm)
+  recul : terrain-partie-0-23-10, sansPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 87 sur 92
+  recul : terrain-partie-0-23-10, sansPasse : 1 cut(s) nouvellement à plus de 20 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, sansPasse : 1 cut(s) nouvellement à plus de 50 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, sansPasse : 1 cut(s) nouvellement en mauvaise voie (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, sansPasse : 3 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm, 0-2310-lot1 1176 4.93 mm)
+  recul : terrain-partie-0-23-10, avecPasse : cuts à ≤ 10 mm en base encore à ≤ 10 mm : 102 sur 106 ; hors de la liste des pertes acceptées : 0-2310-lot1 1172, 0-2310-lot2 1167, 0-2310-lot2 1168, 0-2310-lot2 1169
+  recul : terrain-partie-0-23-10, avecPasse : 1 cut(s) nouvellement à plus de 20 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, avecPasse : 1 cut(s) nouvellement à plus de 50 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, avecPasse : 1 cut(s) nouvellement en mauvaise voie (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, avecPasse : 1 cut(s) de ≤ 10 mm passé(s) à plus de 20 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, avecPasse : 4 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm, 0-2310-lot1 1176 4.93 mm, 0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, GCV2 dans le lot : 1 cut(s) nouvellement à plus de 20 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, GCV2 dans le lot : 1 cut(s) nouvellement à plus de 50 mm (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, GCV2 dans le lot : 1 cut(s) nouvellement en mauvaise voie (0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, GCV2 dans le lot : 4 cut(s) dégradé(s) de plus de 2 mm (0-2310-lot1 941 9.94 mm, 0-2310-lot1 1172 10.12 mm, 0-2310-lot1 1176 4.93 mm, 0-2310-lot2 1169 189.2 mm)
+  recul : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 déjà dépassé en base, taux en hausse 4.8 % → 5.1 %
+  recul : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 déjà dépassé en base, taux en hausse 4.8 % → 5.1 %
+retour 1
