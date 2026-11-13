@@ -1,0 +1,41 @@
+Poses du rejeu avec une anomalie d'écartement consignée : 120 (correction appliquée 48) ; jugées 38 (appliquée 17).
+lot partie/cut | zone | source/étage | hypothèse, motif | référence − écartement mm | rail | soutenue | appliquée | écart à l'opérateur : avant la correction → après
+0611 16/9157 | adv | gcv2/deferred | H1+H2 ecartement-corrige | -17.8 | left | true | true | 14.1 → 7.2
+0611 16/9158 | adv | gcv2/deferred | H1+H2 ecartement-corrige | -25.3 | left | true | true | 17.7 → 7.6
+0611 16/9162 | pn | l1s-vue/choice |   | -20.2 | right | false | false |  → 4.8
+0611 16/9168 | pn | gcv2/deferred | H1+H2+H6 ecartement-corrige | -31.9 | left | true | true | 25.9 → 12.7
+0611 16/9169 | pn | gcv2/deferred | H1+H2+H6 consensus | -18.2 | left | false | false | 11.5 → 8.6
+0611 16/9170 | adv | gcv2/deferred | H1+H2 ecartement-corrige | -31.2 | left | true | true | 21.6 → 9.7
+0611 16/9174 | adv | gcv2/deferred | H1+H2+H6 recherche-adv-remplace | -24.6 | right | true | false | 25 → 1.9
+0611 16/9176 | adv | gcv2/deferred | H0+H2 recherche-adv | -13.4 | right | true | false | 210.5 → 3.3
+0611 16/9178 | adv | gcv2/deferred | H0+H2 recherche-adv | -14.6 | right | true | false | 198.3 → 0.3
+0611 16/9259 | adv | gcv2/deferred | H3+H4+H6  | -28.7 | left | true | true | 11.2 → 17.8
+0811a 3/4831 | adv | gcv2/deferred | H1+H2  | -22 | left | true | true | 34.5 → 15.6
+0811b 6/142 | adv | gcv2/deferred | H2 recherche-adv | -29.1 | right | true | false | 46.7 → 10.3
+0811b 6/173 | adv | gcv2/deferred | H1+H2 recherche-adv | 11.1 | right | true | false | 147 → 1.9
+0811b 6/181 | adv | gcv2/deferred | H1+H2 ecartement-corrige | -20.8 | left | true | true | 20.8 → 0.4
+0811b 6/221 | adv | gcv2/deferred | H3+H4 recherche-adv | -25.9 | right | true | false | 154.1 → 9.3
+0811b 6/227 | adv | l1s-chaine/window |   | -13.5 | left | false | false |  → 0.3
+0811b 6/228 | adv | gcv2/deferred | H1+H3 ecartement-corrige | 11.3 | right | true | true | 22.4 → 11.1
+0811b 6/232 | adv | gcv2/deferred | H1+H2 ecartement-corrige | -25.4 | right | true | true | 13.9 → 11.6
+0811b 6/359 | adv | gcv2/deferred | H1+H2 recherche-adv-remplace | -28.7 | left | true | false | 164.7 → 3
+1111 15/2142 | adv | gcv2/deferred | H2+H4  | -19.1 | right | false | false | 1 → 1
+1111 16/3960 | adv | gcv2/deferred | H1+H2+H3 ecartement-corrige | -15 | right | true | true | 311.9 → 311.9
+1111 16/4001 | adv | gcv2/deferred | H2+H3 recherche-adv | -27.8 | right | true | false | 179.3 → 0.4
+1111 16/4004 | adv | gcv2/deferred | H2 recherche-adv | -29 | right | false | false | 179.4 → 0.6
+1111 16/4501 | adv | gcv2/deferred | H2+H4 recherche-adv | -12.9 | right | true | false | 5 → 4.9
+1111 16/4534 | adv | gcv2/deferred | H1+H2  | 11.2 | left | true | true | 6 → 9.1
+1111 16/4546 | adv | gcv2/deferred | H2+H3  | -17.5 | right | true | true | 13.9 → 8.5
+1111 16/4565 | adv | l1s-vue/window |   | -13.2 | right | true | true | 3.8 → 13.1
+1111 16/4578 | adv | gcv2/deferred | H1+H2 ecartement-corrige | -19.8 | left | true | true | 26.7 → 7.1
+1111 16/5856 | abords | gcv2/deferred | H1+H2 consensus | -27.5 | left | true | false | 40.8 → 13.3
+1111 16/5900 | adv | gcv2/deferred | H0+H1+H2 recherche-adv | 20.3 | right | false | false | 131.5 → 0.4
+1111 16/5901 | adv | gcv2/deferred | H0+H2 recherche-adv | 12.2 | right | true | false | 130.5 → 0.3
+1211 23/3695 | adv | gcv2/deferred | H1+H2  | 18.7 | right | true | true | 136.5 → 136.5
+1211 23/3746 | adv | gcv2/deferred | H1+H2 recherche-adv | -14.7 | right | true | false | 165.1 → 0.4
+1211 23/3750 | adv | gcv2/deferred | H4+H6  | 14.4 | right | true | true | 128.2 → 141.3
+1211 23/4675 | adv | gcv2/deferred | H0+H2+H5 recherche-adv | -14.3 | left | true | false | 22.7 → 129.1
+1211 23/5193 | adv | gcv2/deferred | H2+H6 recherche-adv | 12 | left | false | false | 114.9 → 16.7
+1211 23/5204 | adv | gcv2/deferred | H2 ecartement-corrige | 12 | left | true | true | 293.6 → 293.6
+1211 23/5216 | adv | gcv2/deferred | H0+H2 recherche-adv-contredite | 11 | left | true | false | 122.1 → 0.4
+Correction appliquée et jugée : 17 ; mieux après (> 2 mm) 10, pire après 4, égal 3 ; ≤ 10 mm avant 2, après 7.

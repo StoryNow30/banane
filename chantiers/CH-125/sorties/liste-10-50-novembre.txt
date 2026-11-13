@@ -1,0 +1,37 @@
+lot partie/cut | zone | source/étage | pire rail mm | par rail : côté, erreur [travers, hauteur], dessus n / centre / q90, flanc n / centre ; avec les points chargés : dessus n, flanc n / centre
+0411 14/877 | adv | gcv2/deferred | 42.8 | l [42.3, 6.1] dessus 27/2.2/5 flanc 0/- ; chargés 62, 11/3.5 || r [5, 4.5] dessus 72/2.6/5.1 flanc 8/2.8 ; chargés 143, 17/5.3
+0611 13/8012 | abords | gcv2/deferred | 11.4 | l [-6.8, 9.2] dessus 35/5.1/8.9 flanc 1/-8.6 ; chargés 70, 5/-4.5 || r [-0.4, -2] dessus 31/-2.7/-1.3 flanc 11/1.9 ; chargés 72, 18/1.8
+0611 13/8061 | abords | gcv2/deferred | 13 | l [-12.6, 3.3] dessus 34/-0.5/3 flanc 2/-11 ; chargés 60, 3/-11 || r [1.9, -1.3] dessus 37/-3.7/-1.6 flanc 9/2.6 ; chargés 73, 17/2.8
+0611 16/9165 | pn | gcv2/deferred | 10.3 | l [-2.9, 8.5] dessus 136/1.4/4.7 flanc 7/1.1 ; chargés 275, 18/1 || r [10.3, 0.1] dessus 134/-4.6/-1.8 flanc 12/10.7 ; chargés 262, 30/10.4
+0611 16/9168 | pn | gcv2/deferred | 12.7 | l [6.2, 2.8] dessus 137/-3.3/-0.5 flanc 17/6.9 ; chargés 246, 30/7.4 || r [5.7, 11.4] dessus 136/6.3/9.8 flanc 10/8.3 ; chargés 268, 17/8.8
+0611 16/9181 | adv | gcv2/deferred | 20.2 | l [-4.3, -2.1] dessus 143/-4.3/-1 flanc 31/2.6 ; chargés 282, 52/1.4 || r [20, -2.7] dessus 112/-4.5/-1 flanc 22/1.6 ; chargés 224, 46/0.6
+0611 16/9235 | adv | lot/first-pass | 18 | l [-5.5, -17.1] dessus 137/-4.2/-1 flanc 10/2.7 ; chargés 217, 37/2.7 || r [-0.1, 0.2] dessus 138/-3.8/-1 flanc 17/2.8 ; chargés 228, 54/2.1
+0611 16/9237 | adv | lot/first-pass | 13.7 | l [-1.8, 13.6] dessus 157/4.7/8.3 flanc 31/-4 ; chargés 292, 48/-2.5 || r [3.7, 5.6] dessus 150/-4.4/-1 flanc 39/3.7 ; chargés 297, 83/4.1
+0611 16/9242 | adv | lot/first-pass | 10.8 | l [-4.6, 5.3] dessus 148/-4/-0.9 flanc 47/5.2 ; chargés 293, 88/5.1 || r [9.2, 5.7] dessus 141/-4.4/-1 flanc 20/3.9 ; chargés 284, 48/4.4
+0611 16/9259 | adv | gcv2/deferred | 17.8 | l [17.7, -1.7] dessus 109/-5.3/-1.3 flanc 11/8.3 ; chargés 218, 12/8.4 || r [0.3, 7.5] dessus 151/2.2/6.9 flanc 9/1.6 ; chargés 301, 24/1.9
+0611 16/9260 | adv | gcv2/deferred | 12.8 | l [12.4, -3.3] dessus 141/-1.7/2 flanc 43/7.9 ; chargés 284, 79/7.8 || r [-0.3, 0.2] dessus 153/-3.9/-0.8 flanc 20/3 ; chargés 301, 47/3.6
+0811a 3/4831 | adv | gcv2/deferred | 15.6 | l [-10.4, -11.6] dessus 97/-4.5/-1.5 flanc 61/-1.4 ; chargés 349, 123/-2.3 || r [-0.3, 0.1] dessus 271/-3.9/-1.3 flanc 52/4.3 ; chargés 565, 101/5.2
+0811b 6/142 | adv | gcv2/deferred | 10.3 | l [6.9, 7.6] dessus 235/5.5/9.2 flanc 53/-0.6 ; chargés 472, 89/-1.7 || r [-5.4, 0.6] dessus 242/-3.6/-1 flanc 43/6.9 ; chargés 487, 72/4.8
+0811b 6/228 | adv | gcv2/deferred | 11.1 | l [0.1, 0.1] dessus 230/-3.2/-0.6 flanc 32/4.4 ; chargés 455, 69/4.5 || r [11, 0.7] dessus 226/-3.6/-1 flanc 5/11.1 ; chargés 358, 13/11.1
+0811b 6/231 | adv | gcv2/deferred | 16.9 | l [-7.7, 3.2] dessus 215/-4/-1.2 flanc 45/2.8 ; chargés 437, 84/2.9 || r [16.9, -1.4] dessus 221/-5.8/-3.4 flanc 12/11 ; chargés 431, 30/10.2
+0811b 6/232 | adv | gcv2/deferred | 11.6 | l [-2.9, 1.8] dessus 220/-4.8/-1.6 flanc 44/2.6 ; chargés 434, 82/3.1 || r [11.5, -1.3] dessus 223/-4.2/-1.6 flanc 18/10.6 ; chargés 367, 31/9.5
+1111 16/62 | adv | lot/choice | 40.3 | l [0.3, 0.4] dessus 137/-3.9/-1.1 flanc 26/2.9 ; chargés 272, 55/3.3 || r [39, 10.2] dessus 30/2.9/6.7 flanc 33/0.6 ; chargés 106, 51/0.6
+1111 16/4496 | adv | lot/window | 31.1 | l [0.3, 0.2] dessus 157/-4.5/-1 flanc 32/3.3 ; chargés 315, 67/3.4 || r [31.1, 1.3] dessus 65/-3.9/-1 flanc 7/2.6 ; chargés 175, 42/4.3
+1111 16/4565 | adv | l1s-vue/window | 13.1 | l [-3.5, 1.4] dessus 249/-3.8/-0.9 flanc 48/2.8 ; chargés 413, 80/2.8 || r [12.9, 2.1] dessus 60/-4.2/-1.3 flanc 3/11.9 ; chargés 105, 13/10.8
+1111 16/5854 | abords | gcv2/deferred | 12.3 | l [-12.2, 1.2] dessus 90/-4.6/-1 flanc 27/-6.6 ; chargés 182, 60/-6 || r [-0.2, 0.4] dessus 93/-4.2/-1.2 flanc 7/2.6 ; chargés 182, 16/2.6
+1111 16/5856 | abords | gcv2/deferred | 13.3 | l [-13.3, 0.9] dessus 87/-3.3/-1.4 flanc 24/-7.9 ; chargés 182, 48/-6.9 || r [-0.4, 0.4] dessus 90/-3.9/-1.1 flanc 11/3.1 ; chargés 178, 23/3.1
+1111 17/1675 | adv | lot/choice | 27.9 | l [0.4, 0] dessus 76/3.5/7.2 flanc 4/-0.8 ; chargés 156, 9/-0.1 || r [-26.2, -9.6] dessus 70/-3.6/-1 flanc 4/4.5 ; chargés 127, 8/-1.4
+1211 0/119 | adv | lot/first-pass | 10.8 | l [2.3, 1.3] dessus 185/-5.8/-0.7 flanc 64/3.8 ; chargés 340, 122/4.6 || r [-0.9, 10.8] dessus 257/5/9.6 flanc 23/-0.1 ; chargés 510, 44/-0.1
+1211 0/136 | adv | lot/first-pass | 11.7 | l [0.2, 0.1] dessus 214/-4.4/-1.1 flanc 37/3 ; chargés 422, 74/3 || r [-3.6, 11.1] dessus 206/4.1/8.2 flanc 9/-1 ; chargés 430, 26/-0.5
+1211 1/3778 | adv | lot/first-pass | 39.6 | l [0.3, 0.1] dessus 55/-4.7/-1.1 flanc 16/2 ; chargés 118, 30/1.9 || r [18.7, 34.9] dessus 9/-4.1/-0.6 flanc 38/0.8 ; chargés 14, 71/-0.4
+1211 1/3780 | adv | lot/first-pass | 10.2 | l [0.5, 0.4] dessus 65/-5.3/-1.3 flanc 11/1.8 ; chargés 128, 23/1.5 || r [-2.3, 9.9] dessus 73/4/7 flanc 8/-0.3 ; chargés 148, 14/-1
+1211 1/6511 | pn | lot/window | 11.2 | l [0.1, 0.2] dessus 67/-5.1/-1.3 flanc 12/4.7 ; chargés 130, 24/4.5 || r [-2.1, 11] dessus 67/6.6/10.4 flanc 12/-3 ; chargés 124, 26/-2.8
+1211 2/7782 | adv | lot/choice | 15.7 | l [0.2, 0.4] dessus 59/-4.2/-0.9 flanc 12/2.9 ; chargés 124, 19/3.1 || r [-14.3, -6.5] dessus 27/-5.9/-0.6 flanc 5/-6.2 ; chargés 64, 23/-3.9
+1211 2/8684 | adv | lot/choice | 11.2 | l [0.3, 0.2] dessus 61/-6.1/-1.1 flanc 15/3.5 ; chargés 122, 31/3.5 || r [0.4, 11.2] dessus 77/3.7/8.5 flanc 6/-0.7 ; chargés 148, 12/-0.8
+1211 23/5134 | adv | lot/first-pass | 12.3 | l [0.1, 0.1] dessus 183/-6.3/-1.2 flanc 50/3.8 ; chargés 357, 100/4.2 || r [-2.5, 12.1] dessus 200/5.2/10.3 flanc 34/-4.5 ; chargés 365, 66/-4.9
+1211 23/5135 | adv | lot/first-pass | 14 | l [-5.6, 12.8] dessus 205/3.1/8.5 flanc 33/-2.8 ; chargés 385, 66/-2.5 || r [-3.2, 13.4] dessus 197/5.7/10.6 flanc 14/-1.4 ; chargés 363, 23/-1.6
+1211 23/5136 | adv | lot/first-pass | 11.7 | l [0.4, 0.4] dessus 190/-6/-0.5 flanc 56/2.8 ; chargés 348, 110/2.7 || r [-3.4, 11.2] dessus 198/3.4/9.5 flanc 21/-1.3 ; chargés 377, 37/-1.2
+1211 23/5141 | adv | lot/window | 15.2 | l [0.4, 0.1] dessus 182/-6.4/-0.7 flanc 30/3.2 ; chargés 363, 60/3.6 || r [6, 14] dessus 199/6.6/10.6 flanc 60/-0.3 ; chargés 401, 121/-0.2
+1211 23/5149 | adv | lot/first-pass | 11.3 | l [-3.5, 10.7] dessus 183/2.8/8.3 flanc 32/-1.6 ; chargés 284, 47/-2.3 || r [0, 0.2] dessus 206/-5.4/-1.1 flanc 42/2.6 ; chargés 345, 105/2.6
+1211 23/5193 | adv | gcv2/deferred | 16.7 | l [16.7, -0.6] dessus 164/-3.2/-1 flanc 11/2.7 ; chargés 276, 30/0.3 || r [-0.1, 0.4] dessus 207/-3.9/-1 flanc 38/2.7 ; chargés 406, 70/1.9
+35 cuts de 10 à 50 mm
