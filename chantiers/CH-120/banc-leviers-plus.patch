@@ -1,0 +1,15 @@
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 2475702..0877784 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -136,7 +136,9 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+   /* L1-se : référence d'écartement de chaque cut, lue dans l'instantané de la liste d'ESV du départ de partie (décompacté) ; sans liste : aucune. */
+   const referenceDe = cut => liste ? EL.referenceEcartement(liste, cut) : null;
+   /* Mesure seulement : leviers de la décision L1-e changés par la variable d'environnement BANC_LEVIERS (JSON), consignés dans l'en-tête. */
+-  const leviers = L1.reglerLeviers(process.env.BANC_LEVIERS ? JSON.parse(process.env.BANC_LEVIERS) : null);
++  /* CH-120 (mesure seulement) : BANC_LEVIERS_PLUS (JSON) s'ajoute à BANC_LEVIERS, que la garde d'octobre impose (leviers de la passe livrée). */
++  const plus = process.env.BANC_LEVIERS_PLUS ? JSON.parse(process.env.BANC_LEVIERS_PLUS) : null;
++  const leviers = L1.reglerLeviers(process.env.BANC_LEVIERS || plus ? { ...(process.env.BANC_LEVIERS ? JSON.parse(process.env.BANC_LEVIERS) : {}), ...(plus || {}) } : null);
+   /* CH-034 : recherche large (src/recherche-large.js) sur chaque pose qu'un profil s'apprête à faire (chaîne, L1-s, GCV2, deuxième passe), comme le service worker
+    * (`rechercheLargeCommande`, `passeDiffRechercheLarge`) : option `rechercheLarge` (réglage `lot.rechercheLarge`) ou BANC_RECHERCHE_LARGE (JSON). Absente, `false` ou
+    * éteinte : rien ne change, le module n'est jamais appelé. Un réglage illisible est une erreur (jamais une mesure faite par mégarde). */
