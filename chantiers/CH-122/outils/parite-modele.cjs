@@ -19,7 +19,9 @@ for (const f of fs.readdirSync(opt('--modeles')).filter(f => /^puce-.*\.json$/.t
     const ts = c.cands.map(x => x.t.map(v => v === null ? NaN : v));
     for (const t of ts) { maxEcart = Math.max(maxEcart, Math.abs(outil(t) - L1.pucePredire(M, t))); n++; }
     const jC = M.traits.indexOf('chainePose'), r = L1.puceDecider(M, { candidats: c.cands.map((x, i) => ({ decal: x.decal, src: jC >= 0 && ts[i][jC] === 1 ? ['chainePose'] : [], t: ts[i] })) });
-    let b = null; for (let i = 0; i < ts.length; i++) { if (L1.puceRefuse(M.gardes, ts[i])) continue; const q = outil(ts[i]); if (!b || q > b.q) b = { i, q }; }
+    const tj = n => M.traits.indexOf(n), obl = t => a.includes('--oblig') && !(t[tj('livreValide')] === 1 || (tj('chainePose') >= 0 && t[tj('chainePose')] === 1))
+      && !(t[tj('vaManque')] === 0 && t[tj('vaDist')] <= 6 && t[tj('vaResidu')] <= 40 && t[tj('dvFit')] <= 100);
+    let b = null; for (let i = 0; i < ts.length; i++) { if (L1.puceRefuse(M.gardes, ts[i]) || obl(ts[i])) continue; const q = outil(ts[i]); if (!b || q > b.q) b = { i, q }; }
     const iC = M.traits.indexOf('chainePose'), cle = c.contexte === 'chaine' && M.seuils.chaine !== undefined ? 'chaine' : c.zone, zone = c.zone, poseOutil = !!b && b.q >= M.seuils[cle] && ((iC >= 0 && c.cands[b.i].t[iC] === 1) || Math.max(...['left', 'right'].map(s => Math.max(Math.abs(c.cands[b.i].decal[s][1]), Math.abs(c.cands[b.i].decal[s][2])))) >= (M.deltaMm[zone] ?? 2));
     const poseMod = r.dd.etat === 'valider';
     if (poseOutil !== poseMod || (poseMod && JSON.stringify(r.dd.decal) !== JSON.stringify(c.cands[b.i].decal))) diffChoix++;

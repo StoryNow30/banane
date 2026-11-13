@@ -24,7 +24,7 @@ function coutCritere(b, ref) {
 }
 
 function args(a) { const o = { version: 'v1' }; for (let i = 0; i < a.length; i++) { const k = a[i], v = () => a[++i];
-  if (k === '--rejeu') o.rejeu = v(); else if (k === '--sortie') o.sortie = v(); else if (k === '--version') o.version = v(); else if (k === '--corpus') o.corpus = v(); else if (k === '--critere') o.critere = v(); else if (k === '--type') o.type = v(); else if (k === '--prof') o.prof = Number(v()); else if (k === '--sans-examen') o.sansExamen = true; else if (k === '--log') o.log = true; else if (k === '--gardes') o.gardes = true; else if (k === '--imbrique') o.imbrique = true; else if (k === '--differes-tous') o.diffTous = true; else if (k === '--relatif') o.relatif = true; else if (k === '--sans-veto') o.sansVeto = true; else throw Error('option ' + k); } return o; }
+  if (k === '--rejeu') o.rejeu = v(); else if (k === '--sortie') o.sortie = v(); else if (k === '--version') o.version = v(); else if (k === '--corpus') o.corpus = v(); else if (k === '--critere') o.critere = v(); else if (k === '--type') o.type = v(); else if (k === '--prof') o.prof = Number(v()); else if (k === '--sans-examen') o.sansExamen = true; else if (k === '--log') o.log = true; else if (k === '--gardes') o.gardes = true; else if (k === '--imbrique') o.imbrique = true; else if (k === '--differes-tous') o.diffTous = true; else if (k === '--relatif') o.relatif = true; else if (k === '--sans-veto') o.sansVeto = true; else if (k === '--oblig') o.oblig = true; else if (k === '--complet') o.complet = true; else throw Error('option ' + k); } return o; }
 
 /* Transformations figées dans le modèle (appliquées aussi par src/gcv2-l1.js) : log1p des distances ; gardes de voie livrées sur les candidats. */
 const LOG1P = ['dgRef', 'dgMed', 'dvProche', 'dzProche', 'dvFit', 'vaResidu', 'dvListe', 'dvVoie', 'dvGeo', 'depl', 'latMax', 'vertMax'];
@@ -34,7 +34,12 @@ function appliquerVariante(v) { AVEC_LOG = v.log; GARDES = v.gardes ? GARDES_LIV
 const brut = t => AVEC_LOG ? t.map((v, j) => TI.log.has(j) && Number.isFinite(v) ? Math.log1p(Math.abs(v)) : v) : t;
 const remplir = (t, moy) => brut(t).map((v, j) => v === null || !Number.isFinite(v) ? moy[j] : v);
 /* garde de voie livrée (vetoVoieAbsMm 100, voieIncoherenteMm 40 à rechProcheMaxCuts 6 ; vetoVoieMm 45 sur la voie sûre) : candidat refusé */
-const refuse = t => GARDES && ((t[TI.vaManque] === 0 && t[TI.vaDist] <= GARDES.procheMaxCuts && (t[TI.dvFit] > GARDES.voieAbsMm || t[TI.vaResidu] > GARDES.residuMm)) || (t[TI.voieManque] === 0 && t[TI.dvVoie] > GARDES.voieMm));
+const GOBL = { voieAbsMm: 100, residuMm: 40, voieMm: 45, procheMaxCuts: 6 };
+let OBLIG = false;
+const nouveau = t => !(t[TI.livreValide] === 1 || (TI.chainePose !== undefined && t[TI.chainePose] === 1));
+const voieObl = t => t[TI.vaManque] === 0 && t[TI.vaDist] <= GOBL.procheMaxCuts && t[TI.vaResidu] <= GOBL.residuMm && t[TI.dvFit] <= GOBL.voieAbsMm;
+const refuseObl = t => OBLIG && nouveau(t) && !voieObl(t);
+const refuse = t => refuseObl(t) || (GARDES && ((t[TI.vaManque] === 0 && t[TI.vaDist] <= GARDES.procheMaxCuts && (t[TI.dvFit] > GARDES.voieAbsMm || t[TI.vaResidu] > GARDES.residuMm)) || (t[TI.voieManque] === 0 && t[TI.dvVoie] > GARDES.voieMm)));
 function lignes(cuts) { const X = [], y = []; for (const c of cuts) for (const x of c.cands.filter(x => !refuse(x.t))) { X.push(x.t); y.push(x.mm <= 10 ? 1 : 0); } return { X, y }; }
 function ajuster(cuts, lambda) {
   if (TYPE === 'arbres') {
@@ -101,7 +106,7 @@ function pli(cutsApp, lotsApp) {
   return { M, lambda: meilleur.lambda, seuil: meilleur.seuil, seuilC: meilleur.seuilC, haut: meilleur.haut, interne: meilleur.b };
 }
 function main() {
-  const o = args(process.argv.slice(2)), W = travail(); if (o.critere) CRITERE = o.critere; if (o.diffTous) DIFF_TOUS = true; if (o.relatif) RELATIF = true; if (o.sansVeto) SEUILS_BAS.splice(1); if (o.type) TYPE = o.type; if (o.prof) PROF = o.prof;
+  const o = args(process.argv.slice(2)), W = travail(); if (o.critere) CRITERE = o.critere; if (o.diffTous) DIFF_TOUS = true; if (o.relatif) RELATIF = true; if (o.sansVeto) SEUILS_BAS.splice(1); if (o.oblig) OBLIG = true; if (o.type) TYPE = o.type; if (o.prof) PROF = o.prof;
   if (o.log || o.gardes) VARIANTES = [{ log: !!o.log, gardes: !!o.gardes }];
   if (o.imbrique) VARIANTES = [{ log: false, gardes: false }, { log: true, gardes: false }, { log: false, gardes: true }, { log: true, gardes: true }];
   const cles = LOTS.map(cle), traits = null;
@@ -112,17 +117,21 @@ function main() {
   rapport.push(`# Puce ${o.version} : apprentissage un lot dehors (simulation sur le jeu « ${o.rejeu} », cuts passés à la GCV2)`, '',
     `Cuts au jeu : ${tous.length} ; jugés : ${tous.filter(c => c.verite).length} ; candidats : ${tous.reduce((a, c) => a + c.cands.length, 0)}.`, '',
     '| pli (lot jugé) | λ | seuil | jugés | puce : posés / ≤10 / 10–50 / >50 / différés | livré : posés / ≤10 / 10–50 / >50 / différés | bonne paire présente | différés tous cuts puce / livré |', '|---|---|---|---|---|---|---|---|');
-  const plis = [...REGLABLES.map(L => ({ dehors: [L], app: REGLABLES.filter(x => x !== L) })), { dehors: [EXAMEN], app: REGLABLES }];
+  const TOUS = [...REGLABLES, EXAMEN];
+  const plis = o.complet ? [{ dehors: [], app: TOUS, nom: 'complet' }] : [...REGLABLES.map(L => ({ dehors: [L], app: REGLABLES.filter(x => x !== L) })), { dehors: [EXAMEN], app: REGLABLES }];
   const tot = { p: bilan([], 1), l: bilan([], 1) }, totR = { p: bilan([], 1), l: bilan([], 1) };
   for (const f of plis) {
     const app = tous.filter(c => f.app.includes(c.lot)), test = tous.filter(c => f.dehors.includes(c.lot) && c.verite);
+    if (o.complet && !test.length) { let rr=null; for (const v of VARIANTES){ appliquerVariante(v); const x=pli(app,f.app); x.variante=v; if(!rr||x.interne.cout<rr.interne.cout) rr=x;} appliquerVariante(rr.variante);
+      const M2={format:'ariane-puce-v1',version:o.version,pli:'complet',appris:f.app,traits:T,moy:rr.M.moy,...(AVEC_LOG?{log1p:LOG1P}:{}),...(GARDES?{gardes:GARDES}:{}),...(OBLIG?{gardeObligatoire:GOBL}:{}),...(rr.M.type==='arbres'?{type:'arbres',base:rr.M.base,arbres:rr.M.arbres}:{sd:rr.M.sd,coef:rr.M.coef,intercept:rr.M.intercept}),seuils:{adv:rr.seuil,abords:rr.seuil,pn:rr.seuil,...(tous.some(c=>c.contexte==='chaine')?{chaine:rr.seuilC}:{})},deltaMm:DELTA,lambda:rr.lambda,...(RELATIF?{mode:'relatif',seuilHaut:rr.haut}:{})};
+      fs.writeFileSync(path.join(o.sortie,`puce-${o.version}-complet.json`),JSON.stringify(M2)); process.stdout.write('modèle complet écrit : λ '+rr.lambda+' seuil '+rr.seuil.toFixed(3)+(rr.seuilC!==rr.seuil?' chaine '+rr.seuilC.toFixed(3):'')+' '+JSON.stringify(rr.variante)+'\n'); return; }
     let r = null;
     for (const v of VARIANTES) { appliquerVariante(v); const x = pli(app, f.app); x.variante = v;
       if (!r || x.interne.cout < r.interne.cout) r = x; }
     appliquerVariante(r.variante);
-    const modele = { format: 'ariane-puce-v1', version: o.version, pli: f.dehors[0], appris: f.app, traits: T, moy: r.M.moy, ...(AVEC_LOG ? { log1p: LOG1P } : {}), ...(GARDES ? { gardes: GARDES } : {}), ...(r.M.type === 'arbres' ? { type: 'arbres', base: r.M.base, arbres: r.M.arbres } : { sd: r.M.sd, coef: r.M.coef, intercept: r.M.intercept }),
+    const modele = { format: 'ariane-puce-v1', version: o.version, pli: f.nom || f.dehors[0], appris: f.app, traits: T, moy: r.M.moy, ...(AVEC_LOG ? { log1p: LOG1P } : {}), ...(GARDES ? { gardes: GARDES } : {}), ...(OBLIG ? { gardeObligatoire: GOBL } : {}), ...(r.M.type === 'arbres' ? { type: 'arbres', base: r.M.base, arbres: r.M.arbres } : { sd: r.M.sd, coef: r.M.coef, intercept: r.M.intercept }),
       seuils: { adv: r.seuil, abords: r.seuil, pn: r.seuil, ...(tous.some(c => c.contexte === 'chaine') ? { chaine: r.seuilC } : {}) }, ...(RELATIF ? { mode: 'relatif', seuilHaut: r.haut } : {}), deltaMm: DELTA, lambda: r.lambda };
-    fs.writeFileSync(path.join(o.sortie, `puce-${o.version}-${f.dehors[0]}.json`), JSON.stringify(modele));
+    fs.writeFileSync(path.join(o.sortie, `puce-${o.version}-${f.nom || f.dehors[0]}.json`), JSON.stringify(modele));
     const toutT = tous.filter(c => f.dehors.includes(c.lot)), dT = bilan(toutT.map(c => decision(r.M, c)), r.seuil, r.seuilC, r.haut).differes, dL = bilanLivre(toutT).differes;
     const bp = bilan(test.map(c => decision(r.M, c)), r.seuil, r.seuilC, r.haut), bl = bilanLivre(test), present = test.filter(c => c.cands.some(x => x.mm <= 10)).length;
     for (const k of ['poses', 'juste', 'd1050', 'plus50', 'differes']) { tot.p[k] += bp[k]; tot.l[k] += bl[k]; if (f.dehors[0] !== EXAMEN) { totR.p[k] += bp[k]; totR.l[k] += bl[k]; } }

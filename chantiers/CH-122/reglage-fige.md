@@ -21,3 +21,11 @@ Poussés avant tout rejeu de jugement. Un réglage retouché après le jugement 
 - **Prévision statique** (réglables) : 264 justes / 30 / 26 / 141 différés contre livré 223 / 34 / 28 / 176 (`modeles/v2B/apprentissage-v2B.md`).
 - **Parité outil / module** : 39 520 candidats, écart 0, 0 choix différent (ÉTABLI).
 - **Jugement** : `outils/juger-croise.sh v2B chantiers/CH-122/modeles/v2B chantiers/CH-122/puce-v2.patch '{"puceChaine":true,"contreChaineZones":["adv"]}'`.
+
+## Réglage v3 B (figé le 13/11 après la garde d'octobre ROUGE du réglage B v1, avant tout jugement de v3)
+- **Constat qui le motive** (ÉTABLI) : garde d'octobre du réglage B v1 (modèle appris sur les 6 réglables) : retour 1, nouvelles mauvaises voies sur reglage-9 (2-17 9556, 9557 ; 2-18 205, 206), 3:0 (794, 869, 870) et terrain du 23/10 (14) : la puce pose en ADV des cuts que le livré diffère, sans voie de voisins pour la soutenir.
+- **Patch** : `puce-v3.patch` = v2 plus une **garde obligatoire, non apprise** dans `puceDecider` : un candidat que le livré ne pose pas (ni paire validée par les règles, ni pose de la chaîne) n'est posable que si la voie absolue des voisins validés existe à 6 cuts au plus, cohérente (résidu ≤ 40 mm), et le porte à 100 mm au plus en travers (valeurs de la garde livrée v6).
+- **Modèles** : `modeles/v3B/` (un par pli, critère B, sélection imbriquée, garde obligatoire dans l'apprentissage) ; `modeles/v3complet/puce-v3c-complet.json` : appris sur les 7 lots de novembre, pour la garde d'octobre (hors apprentissage par construction) et un éventuel allumage.
+- **Prévision statique** (réglables) : 232 justes / 33 / 21 / 175 différés contre livré 223 / 34 / 28 / 176.
+- **Parité outil / module** : 39 520 candidats, écart 0, 0 choix différent (ÉTABLI).
+- **Ordre des jugements** : garde d'octobre d'abord (modèle complet), puis banc de novembre en validation croisée.
