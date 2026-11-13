@@ -45,3 +45,4 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-120 | session_01Td4bNoyEG3tYZVkbFyajJh | lancé le 13/11 |
 | CH-121 | session_01Td4bNk2uQhtkP6QNyX6Vtt | lancé le 13/11 |
 | CH-122 | session_01Td4bNpCSzkuthJgvDsfevC | lancé le 13/11 |
+| CH-123 | session_01Td4bNn28Kkosy5ce9nJTWa | lancé le 13/11 (demande de l'opérateur) |
