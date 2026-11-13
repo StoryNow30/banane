@@ -1,0 +1,12 @@
+{
+  "note": "CH-123 : réglages candidats des rails hors du pool (patch hors-pool.patch, BANC_LEVIERS), figés AVANT tout rejeu avec ces leviers. Rappel mesuré sur les 747 cuts jugés (cible : ≥ 43 des 128 en A, 0 A sorti) ; poses jugées par validation croisée « un lot dehors » (banc.cjs croise --noms livre,…, coût standard), puis examen 0511 jamais vu. Un réglage retouché après jugement est un nouveau réglage.",
+  "communs": { "c123EcartMm": 10, "c123MinTop": 15, "c123MinFace": 0, "c123RatioMax": 1e9, "c123Pente": false, "c123SoutienDessus": 5, "c123SoutienFlanc": 0, "c123Sources": 3, "c123MaxRelances": 8, "c123MaxHyp": 6, "c123MaxDeplMm": 300 },
+  "reglages": {
+    "livre": {},
+    "cA":    { "c123Apparie": true },
+    "cC":    { "c123Compagnon": true },
+    "cB":    { "c123Balayage": true, "c123BalayageMm": [-240, -160, -80, 80, 160, 240] },
+    "cACB":  { "c123Apparie": true, "c123Compagnon": true, "c123Balayage": true, "c123BalayageMm": [-240, -160, -80, 80, 160, 240] },
+    "cACB-f3": { "c123Apparie": true, "c123Compagnon": true, "c123Balayage": true, "c123BalayageMm": [-240, -160, -80, 80, 160, 240], "c123MinFace": 3, "c123SoutienFlanc": 3 }
+  }
+}
