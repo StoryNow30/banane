@@ -1,0 +1,190 @@
+diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
+index 1a307d2..b54f3e7 100644
+--- a/src/gcv2-l1.js
++++ b/src/gcv2-l1.js
+@@ -582,7 +582,9 @@
+   *    de 40 mm), n'est pas posée : sur 3:0 avec la deuxième passe, 865 et 869 (165 et 217 mm, mauvaise voie) ne sont plus posés, 794 est reposé juste (3 mm).
+   * Au banc, avec la deuxième passe livrée : 0 cut changé sur les 9 anciens lots ; 3:0 : 0 pose à plus de 20 mm. */
+  const LEVIERS_V6=Object.freeze({rechHauteurMaxMm:25,vetoVoieAbsMm:100,voieIncoherenteMm:40});
+- const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6});
++ /* CH-121 (D-352) — LEVIER `ajustementFin`, COUPÉ (null) : voir `ajusterPoseFinale`. Une valeur = le réglage figé de l'étage (objet). */
++ const LEVIERS_V7=Object.freeze({ajustementFin:null});
++ const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6,...LEVIERS_V7});
+  let LEVIERS=LEVIERS_LIVRES;
+  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
+  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
+@@ -950,6 +952,56 @@ function contreChaine(g,decalChaine,seuilMm){
+ /* Positions (repère scène) d'une paire, depuis ses décalages [long, lat, vert] (mm) dans le repère profil de la pose de départ. */
+  function positionsDe(capture,paire){return Object.fromEntries(SIDES.map(s=>[s,L.positionOf(capture.rails[s],paire[s].decal.map(v=>v/1000))]));}
+ 
++ /* ------------------------------------------------------------------ CH-121 : ajustement fin de la pose sur le profil du rail (levier `ajustementFin`, coupé) */
++ /* Étage FINAL, appliqué à une pose déjà décidée (`decal` : { left, right }, mm, [long, lat, vert], repère profil de la pose de départ de la capture) ;
++  * il ne pose ni ne diffère rien, il déplace chaque rail de quelques millimètres selon ses seuls points. Mesuré (chantiers/CH-121) :
++  *  - la fenêtre de lecture du calage de convention (`placement-convention.js`, ±180 mm en travers, ±100 mm en hauteur) est centrée sur la pose de DÉPART
++  *    d'ESV : un rail posé loin de son départ (GCV2 en ADV, jusqu'à 200 mm) n'y a plus aucun point, et n'est jamais calé. Ici la même fenêtre suit la pose ;
++  *  - un rail dont le calage vertical sort du domaine (|dz| > 8 mm) est posé brut, trop bas ; le 90e centile du dessus surévalue la hauteur quand la bande de
++  *    points est épaisse (octobre : q90 − q50 de 7 mm contre 4 en novembre) ; la médiane du dessus + `c` suit l'opérateur dans les deux cas.
++  * Chaque rail séparément, à sa pose : points de dessus et de flanc dans la bande du gabarit (mêmes filtres que `bandOffsets`) ;
++  *  - vertical : dz = q90 + 1 (la convention) si |dz| ≤ `domaine` ; sinon q50 + `c`, seulement si l'épaisseur q90 − q10 ≤ `epMax` et |q50 + c| ≤ `dzMax` ;
++  *    appliqué si topN ≥ `minTop` et |dz| ≥ `tolV` ;
++  *  - latéral : du = médiane du flanc − 2,6 (la convention) si faceN ≥ `minFace`, appliqué si `tolL` ≤ |du| ≤ `duMax` ; l'écartement de la paire
++  *    après doit rester dans [`gMin`, `gMax`] et changer de `gMaxDelta` au plus, sinon aucun latéral n'est appliqué.
++  * `R` absent (levier coupé) : la pose rendue est celle reçue, à l'identique. Rend { decal, ajuste, info }. */
++ const AJ_DEFAUT=Object.freeze({c:4.4,epMax:15,dzMax:13,domaine:8,tolV:4,tolL:4,duMax:12,minTop:15,minFace:6,bandeMm:12,lateral:true,vertical:true,gMin:1425,gMax:1475,gMaxDelta:25});
++ function lirePose(capture,s,d,band){
++   const rail=capture.rails&&capture.rails[s],t=rail&&Conv.template(rail);if(!t)return null;
++   const M=rail.sceneRelativeToProfileLocal,y0=d[1]/1000,z0=d[2]/1000,bu=t.sign*y0,bz=z0,top=[],face=[],pts=capture.pointsSceneRelative||[],vis=capture.visibleByClipBoxes;
++   for(let i=0;i<pts.length;i++){
++     if(vis&&vis[i]===false)continue;const p=pts[i];if(!Array.isArray(p)||!p.every(fini))continue;
++     const q=C.point(M,p);if(!(Math.abs(q[0])<=.5&&Math.abs(q[1]-y0)<.18&&Math.abs(q[2]-z0)<.10))continue;
++     const lu=t.sign*q[1]-bu,lz=q[2]-bz;
++     if(lu>.012&&lu<t.width-.012&&Math.abs(lz)<band){const z=t.topAt(lu);if(z!==null&&Math.abs(lz-z)<band)top.push((lz-z)*1000);}
++     if(lz<-.009&&lz>-.034){const u=t.faceAt(lz);if(u!==null&&Math.abs(lu-u)<band)face.push((lu-u)*1000);}
++   }
++   return {sign:t.sign,top,face};
++ }
++ function ajusterPoseFinale(capture,decal,reglage){
++   const R0=reglage!==undefined?reglage:LEVIERS.ajustementFin;
++   if(!R0||!capture||!decal||!SIDES.every(s=>Array.isArray(decal[s])&&decal[s].length===3&&decal[s].every(fini)))return {decal,ajuste:false,info:null};
++   const R={...AJ_DEFAUT,...R0},Q=Conv.quantile,out={left:decal.left.slice(),right:decal.right.slice()},info={},lat={};
++   for(const s of SIDES){
++     const P=lirePose(capture,s,decal[s],R.bandeMm/1000);if(!P){info[s]={motif:'gabarit'};continue;}
++     const I=(info[s]={topN:P.top.length,faceN:P.face.length});
++     if(R.vertical&&P.top.length>=R.minTop){
++       const q10=Q(P.top,.1),q50=Q(P.top,.5),q90=Q(P.top,.9),dz90=q90+Conv.DEFAULTS.topOffsetMm,ep=q90-q10,dzm=q50+R.c;
++       const v=Math.abs(dz90)<=R.domaine?dz90:(ep<=R.epMax&&Math.abs(dzm)<=R.dzMax?dzm:null);
++       if(v!==null&&Math.abs(v)>=R.tolV){out[s][2]=r2(decal[s][2]+v);I.dz=arrondi(v,1);}
++     }
++     if(R.lateral&&P.face.length>=R.minFace){const du=Q(P.face,.5)+Conv.DEFAULTS.faceOffsetMm;if(Math.abs(du)>=R.tolL&&Math.abs(du)<=R.duMax)lat[s]=P.sign*du;}
++   }
++   if(Object.keys(lat).length){
++     const nd={left:out.left.slice(),right:out.right.slice()};for(const s of SIDES)if(lat[s]!==undefined)nd[s][1]=r2(decal[s][1]+lat[s]);
++     const g0=ecartementDecal(capture,decal),g1=ecartementDecal(capture,nd);
++     if(fini(g1)&&g1>=R.gMin&&g1<=R.gMax&&Math.abs(g1-g0)<=R.gMaxDelta){for(const s of SIDES)if(lat[s]!==undefined){out[s][1]=nd[s][1];info[s].du=arrondi(lat[s],1);}}
++     else info.ecartementRefuse=arrondi(g1,1);
++   }
++   const ajuste=SIDES.some(s=>out[s].some((v,i)=>v!==decal[s][i]));
++   return {decal:ajuste?out:decal,ajuste,info};
++ }
++
+  /* ------------------------------------------------------------------ un différé, de bout en bout */
+  /* Entrées (tout ce que le lot connaît à l'instant de sa décision, rien de plus) :
+   *   capture : { identity, rails, pointsSceneRelative, visibleByClipBoxes } ; science : moteur AVEC réservoir sur cette capture ;
+@@ -1023,6 +1075,6 @@ function contreChaine(g,decalChaine,seuilMm){
+      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
+  }
+  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
+-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
++   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,ajusterPoseFinale,AJ_DEFAUT,deciderDiffere,commander,resumer,
+    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
+ });
+diff --git a/tests/ch121-ajustement-fin.test.cjs b/tests/ch121-ajustement-fin.test.cjs
+new file mode 100644
+index 0000000..7ab1826
+--- /dev/null
++++ b/tests/ch121-ajustement-fin.test.cjs
+@@ -0,0 +1,61 @@
++'use strict';
++/* CH-121 (D-352) : étage final d'ajustement de la pose sur le profil du rail (`ajusterPoseFinale`, src/gcv2-l1.js ; levier `ajustementFin`, coupé). */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const G = require('../src/gcv2-l1.js'), Conv = require('../src/placement-convention.js');
++const I = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
++/* Champignon rectangulaire (dessus z = 0 de u = 0 à 64 mm, flanc en u = 0 jusqu'à −40 mm), repère profil = scène. Points d'un rail posé au décalage
++ * `pose` (mm) : dessus de `dessus` mm (± `ep`/2) au-dessus du gabarit posé, flanc à `flanc` mm du gabarit posé (vers le champignon). */
++function capture({ pose = [0, 0, 0], dessus = 0, ep = 4, flanc = 0, nTop = 40, nFace = 12, ecart = 1.44 } = {}) {
++  const contour = [];
++  for (let y = 0; y <= .064 + 1e-12; y += .001) contour.push([0, y, 0]);
++  for (let z = -.001; z >= -.04 - 1e-12; z -= .001) contour.push([0, 0, z]);
++  const bu = pose[1] / 1000, bz = pose[2] / 1000, pts = [];
++  for (let i = 0; i < nTop; i++) pts.push([0, bu + .015 + i * (.035 / (nTop - 1)), bz + (dessus - ep / 2 + i * (ep / (nTop - 1))) / 1000]);
++  for (let i = 0; i < nFace; i++) pts.push([0, bu + (flanc + 2.6 - 1 + i * (2 / (nFace - 1))) / 1000, bz - .012 - i * (.02 / (nFace - 1))]);
++  const rail = { positionSceneRelative: [0, 0, 0], sceneRelativeToProfileLocal: I, profileLocalToSceneRelative: I, profileContours: [{ verticesSceneRelative: contour }] };
++  /* le rail droit, à `ecart` m en −y (le latéral du rail gauche vers le champignon est +y : l'écartement grandit quand le rail gauche va vers +y) ; son repère profil
++   * est translaté pour qu'aucun point ne soit dans sa fenêtre : il ne bouge pas */
++  const T = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, ecart, 0, 1], Ti = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, -ecart, 0, 1];
++  return { rails: { left: rail, right: { ...rail, positionSceneRelative: [0, -ecart, 0], sceneRelativeToProfileLocal: T, profileLocalToSceneRelative: Ti } }, pointsSceneRelative: pts, visibleByClipBoxes: pts.map(() => true) };
++}
++const R = { c: 4.4, epMax: 15, dzMax: 13, domaine: 8, tolV: 4, tolL: 4 };
++
++test('levier coupé : la pose reçue, à l’identique, et le levier livré est null', () => {
++  assert.equal(G.LEVIERS_LIVRES.ajustementFin, null);
++  const d = { left: [0, 1, 2], right: [0, 3, 4] }, r = G.ajusterPoseFinale(capture(), d);
++  assert.equal(r.decal, d); assert.equal(r.ajuste, false);
++  assert.equal(G.ajusterPoseFinale(capture(), d, null).decal, d);
++});
++
++test('la fenêtre de lecture suit la pose : un rail posé à 210 mm de son départ est lu (le calage de convention, centré sur le départ, ne le voit pas)', () => {
++  const pose = [0, 210, 0], cap = capture({ pose, dessus: 0, flanc: 6 });
++  assert.equal(Conv.calibrate(cap, 'left', pose.map(v => v / 1000)).reason, 'top-under-observed');
++  const r = G.ajusterPoseFinale(cap, { left: pose, right: [0, 210, 0] }, R);
++  assert.equal(r.ajuste, true);
++  assert.ok(Math.abs(r.decal.left[1] - (210 + 6)) < 0.3, `latéral ${r.decal.left[1]}`);
++  assert.deepEqual(r.decal.right, [0, 210, 0]);
++});
++
++test('vertical dans le domaine : la convention (q90 + 1) ; sous la tolérance, rien', () => {
++  const r = G.ajusterPoseFinale(capture({ dessus: 5, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
++  const q90 = 5 - 1 + Math.floor(.9 * 40) * (2 / 39);
++  assert.ok(Math.abs(r.decal.left[2] - (q90 + 1)) < 0.05, `vertical ${r.decal.left[2]}`);
++  const r2 = G.ajusterPoseFinale(capture({ dessus: 1.5, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
++  assert.equal(r2.ajuste, false);
++});
++
++test('vertical hors domaine : médiane du dessus + c si la bande est nette ; bande épaisse ou trop loin : rien', () => {
++  const r = G.ajusterPoseFinale(capture({ dessus: 8, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
++  const q50 = 8 - 1 + Math.floor(.5 * 40) * (2 / 39);
++  assert.ok(Math.abs(r.decal.left[2] - (q50 + 4.4)) < 0.05, `vertical ${r.decal.left[2]}`);
++  assert.equal(G.ajusterPoseFinale(capture({ dessus: 3, ep: 20 }), { left: [0, 0, 0], right: [0, 0, 0] }, { ...R, lateral: false }).ajuste, false);
++  assert.equal(G.ajusterPoseFinale(capture({ dessus: 10, ep: 2 }), { left: [0, 0, 0], right: [0, 0, 0] }, { ...R, lateral: false }).ajuste, false);
++});
++
++test('latéral : refusé si l’écartement de la paire sortirait des bornes', () => {
++  const cap = capture({ flanc: 6, ecart: 1.471 });
++  const r = G.ajusterPoseFinale(cap, { left: [0, 0, 0], right: [0, 0, 0] }, R);
++  assert.equal(r.decal.left[1], 0); assert.ok(r.info.ecartementRefuse > 1475);
++  const r2 = G.ajusterPoseFinale(capture({ flanc: 6 }), { left: [0, 0, 0], right: [0, 0, 0] }, R);
++  assert.ok(Math.abs(r2.decal.left[1] - 6) < 0.3);
++});
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 2475702..dcb9281 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -130,6 +130,17 @@ function gardeDuBanc(valeur) {
+   if (!R.ok) throw Error('garde des appuis de la passe : ' + R.raison);
+   return { actif: R.actif, deplacementMaxMm: R.deplacementMaxMm, appuiNormalMaxCuts: R.appuiNormalMaxCuts };
+ }
++/* CH-121 : étage final d'ajustement d'une pose `out` de L1-se (levier `ajustementFin`). Rend `out`, ajustée si la commande refaite passe (`ajustementFin` consigne
++ * la pose d'avant et ce que l'étage a lu), sinon telle quelle (`ajustementFin.refus`). `E` (ou null) : le voisin du cut prend la pose ajustée. */
++function ajusterFin(out, capture, before, runtimeRails, cameras, E, identity) {
++  const a = L1.ajusterPoseFinale(capture, out.decal);
++  if (!a.ajuste) return out;
++  const pos = Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], a.decal[s].map(v => v / 1000))]));
++  const cg = L1.commander({ positions: pos, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, valider: true });
++  if (cg.action !== 'lot' || cg.vue !== 'dans') return { ...out, ajustementFin: { refus: cg.reason || 'vue', info: a.info } };
++  if (E) { const v = E.valides.find(x => x.identity.cut === identity.cut && x.identity.part === identity.part && (x.identity.frameId ?? null) === (identity.frameId ?? null)); if (v) v.positions = pos; }
++  return { ...out, decal: decalPose(before, pos), ajustementFin: { avant: out.decal, info: a.info } };
++}
+ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined, rechercheLarge = undefined }) {
+   const horloge = () => Number(process.hrtime.bigint()) / 1e6;
+   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
+@@ -300,6 +311,11 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+           }
+         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
+       }
++      /* CH-121 (levier `ajustementFin` de src/gcv2-l1.js, coupé) : étage final, comme le service worker en fin de `commandLot` : la pose de L1-se, dans la vue
++       * courante (pas de vue déplacée), est ajustée rail par rail sur son profil ; la commande refaite (`commander` : écartement admissible, vue) doit passer,
++       * sinon la pose reste celle de la décision. Le voisin (`E.valides`) prend la pose ajustée (le service worker relit ses voisins dans `records`, pose écrite) ;
++       * l'appui et le transport gardent celle de la décision. */
++      if (p === 'L1-se' && leviers.ajustementFin && out && out.etat === 'pose' && out.decal && !out.vue) out = ajusterFin(out, capture, before, runtimeRails, cameras, E, identity);
+       ligne.profils[p] = out;
+       /* Cap 5 : un différé de L1-se est gardé pour la deuxième passe (fin de lot), avec ce qu'il faut pour le redécider. */
+       if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot' || out.source === 'recherche-large'))
+@@ -342,6 +358,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+             }
+             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
+             r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
++            /* CH-121 : même étage final sur la pose de la passe (après la garde A, comme le service worker). */
++            if (leviers.ajustementFin && !r.ligne.profils['L1-se'].vue) r.ligne.profils['L1-se'] = ajusterFin(r.ligne.profils['L1-se'], r.capture, r.before, r.runtimeRails, r.cameras, null, r.identity);
+             poses++;
+           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
+           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }

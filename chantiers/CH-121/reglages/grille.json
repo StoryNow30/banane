@@ -1,0 +1,19 @@
+{
+  "patch": "chantiers/CH-121/ajustement-fin.patch",
+  "patchSha256": "2d8627573377b9e25eb76b76f1d73640e9564114503c4cd4069b99d17269f193",
+  "variable": "BANC_LEVIERS",
+  "defaut": { "c": 4.4, "epMax": 15, "dzMax": 13, "domaine": 8, "tolV": 4, "tolL": 4, "duMax": 12, "minTop": 15, "minFace": 6, "bandeMm": 12, "lateral": true, "vertical": true, "gMin": 1425, "gMax": 1475, "gMaxDelta": 25 },
+  "reglages": {
+    "aj-A": { "ajustementFin": {} },
+    "aj-B": { "ajustementFin": { "tolV": 3, "tolL": 3 } },
+    "aj-C": { "ajustementFin": { "tolV": 5, "tolL": 5 } },
+    "aj-D": { "ajustementFin": { "lateral": false } },
+    "aj-E": { "ajustementFin": { "vertical": false } },
+    "aj-F": { "ajustementFin": { "c": 4.0 } },
+    "aj-G": { "ajustementFin": { "epMax": 12 } }
+  },
+  "cout": "100·(> 50) + 10·(10–50) + 50·(justes du livré passés au-delà de 10 mm) + 5·(bons bloqués) + 1·(différés)",
+  "egalite": "à coût égal, le réglage qui déplace (> 0,5 mm) le moins de posés sur les lots d'apprentissage ; puis l'ordre de la liste",
+  "lotsReglables": ["0411", "0611", "0811a", "0811b", "1111", "1211"],
+  "examen": ["0511"]
+}
