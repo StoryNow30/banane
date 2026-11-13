@@ -7,6 +7,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 - Juge : celui de CH-113 (pire rail, 3D ; juste ≤ 10 mm ; mauvaise voie > 50 mm).
 - Évaluation sans lot neuf : **validation croisée « un lot dehors »**. Tout réglage appris ou choisi l'est sur les autres lots ; le lot dehors n'est jugé qu'une fois. Puis garde de pose sur les 11 lots d'octobre (aucun recul). Puis Écho neuf.
 - Tous les lots existants sont « vus » au sens de D-347 : un gain mesuré dessus reste PROBABLE jusqu'à l'Écho.
+- **Examen vierge réservé (13/11)** : Échos du 12/11, parties 3 et 4 (`banane-data`, c163651). Aucun chantier de conception ne les lit ; seul le banc de CH-116 y juge, une fois, les réglages figés (C2 + C5 de CH-117 d'abord, puis ceux de CH-119 à CH-122). Ils rejoignent le corpus d'apprentissage après.
 
 ## Vague 2 (lancée le 13/11)
 | Ticket | Levier | Cible écrite |
