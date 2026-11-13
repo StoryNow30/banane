@@ -144,6 +144,12 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   const RLR = RLv === undefined || RLv === false ? null : (() => { const r = RL.reglage(RLv); if (!r.ok) throw Error('recherche large : ' + r.raison); return r.actif ? r : null; })();
   const cuts = lot.cuts.slice().sort((a, b) => a.t - b.t);
   const zoneMem = M.creerMemoire('zones-' + lot.id);
+  /* CH-116 (R5, mesure) : BANC_ZONES=journal prend la zone du cut écrite par le service worker à sa décision (événement `regles-metier-ombre`, portée `cut`,
+   * du lot ; le dernier du cut fait foi) au lieu de la mémoire des zones recalculée ici ; la plage de contrôle ADV de l'événement s'ajoute à `plagesADV`.
+   * Cut sans événement : zone recalculée. Absente : rien ne change. */
+  const zonesJournal = process.env.BANC_ZONES === 'journal' ? new Map((Array.isArray(journal.events) ? journal.events : [])
+    .filter(e => e && e.type === 'regles-metier-ombre' && e.batchId === lot.id && e.portee === 'cut' && e.zone && e.identity && Number.isInteger(e.identity.cut))
+    .map(e => [e.identity.cut, e.zone])) : null;
   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
     valides: [], grappe: M.creerMemoire('grappe-' + p), max: MAX_APPUIS + R.seeds.length }]));
   const lignes = [], restes = [];
@@ -178,7 +184,10 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     let surface = null; try { surface = M.surface(cap); } catch { surface = null; }
     /* Zone à l'instant de la décision : mémoire des zones évaluée avant le cut (ne dépend que des captures). */
     const r0 = M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: c.stage, reason: null }, action: null, valide: false, surface });
-    const ez = M.evaluer(zoneMem, r0), plages = plagesDe(zoneMem, ez), zone = dans(plages.pn, c.cut) ? 'pn' : dans(plages.adv, c.cut) ? 'adv' : 'abords';
+    const ez = M.evaluer(zoneMem, r0), plages = plagesDe(zoneMem, ez);
+    let zone = dans(plages.pn, c.cut) ? 'pn' : dans(plages.adv, c.cut) ? 'adv' : 'abords';
+    const zj = zonesJournal && zonesJournal.get(c.cut);
+    if (zj) { zone = zj.pn ? 'pn' : zj.adv ? 'adv' : 'abords'; if (Array.isArray(zj.advControle)) plages.adv.push(zj.advControle); if (Array.isArray(zj.pnControle)) plages.pn.push(zj.pnControle); }
     ligne.zone = zone;
     if (!science) { for (const p of profils) ligne.profils[p] = { etat: c.pose ? 'pose' : 'differe', source: 'erreur-moteur', erreur }; M.noter(zoneMem, r0, { differe: !c.pose }); lignes.push(ligne); continue; }
     const runtimeRails = Sh.toRuntimeRails(science), before = capture.rails;
@@ -314,7 +323,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   }
   /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre maximal de passes, arrêt dès qu'une passe ne pose plus rien) : chaque différé de L1-se est redécidé par la GCV2 avec tout
    * ce que le lot a posé, avant ET après lui (chaîne : voisins et appuis ; poses L1 : transport). Leviers propres à la passe : `passe2Leviers`. */
-  let passeMs = null;
+  let passeMs = null, ordrePasse = 0;
   if (profils.includes('L1-se') && leviers.deuxiemePasse) {
     const E = etats['L1-se'], avant = leviers, tP = horloge(), garde = gardeDuBanc(gardeAppuis);
     if (leviers.passe2Leviers) L1.reglerLeviers({ ...leviers, ...leviers.passe2Leviers });
@@ -341,7 +350,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
               if (rl && rl.etat !== 'erreur') r.rechercheLarge = rl;
             }
             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
-            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, ordre: ordrePasse++, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
             poses++;
           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
@@ -350,6 +359,20 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         if (!poses) break;
       }
     } finally { L1.reglerLeviers(avant); passeMs = arrondi(horloge() - tP, 1); }
+    /* CH-116 (fidélité de la passe, D-259) : BANC_PASSE_PLAFOND=N rejoue l'écriture du service worker (passeDiffEcrire) : les poses de la passe, décidées en ombre,
+     * sont écrites dans l'ordre de leur décision, N au plus ; à la première pose non écrite la passe s'arrête. Seul refus que le banc sait voir : une cible hors de la
+     * vue (« cette passe ne déplace pas la vue »). Les poses non écrites redeviennent des différés (`passe2.nonEcrite` : plafond ou arret). Absente : rien ne change. */
+    const plafond = process.env.BANC_PASSE_PLAFOND ? Number(process.env.BANC_PASSE_PLAFOND) : null;
+    if (Number.isInteger(plafond) && plafond >= 0) {
+      const posees = restes.map(r => r.ligne.profils['L1-se']).filter(x => x && x.etat === 'pose' && x.passe2).sort((a, b) => a.passe2.ordre - b.passe2.ordre);
+      let arret = false, ecrites = 0;
+      for (const x of posees) {
+        const motif = arret ? 'arret' : ecrites >= plafond ? 'plafond' : x.vue === 'deplacee' ? 'refus-vue' : null;
+        if (!motif) { ecrites++; continue; }
+        if (motif !== 'plafond') arret = true;
+        x.passe2.nonEcrite = motif === 'refus-vue' ? 'refus-vue' : motif; x.passe2.decalOmbre = x.decal; x.etat = 'differe'; x.decal = null;
+      }
+    }
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
     regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null, ...(leviers.deuxiemePasse ? { gardeAppuis: gardeDuBanc(gardeAppuis) } : {}) } } : {}),
