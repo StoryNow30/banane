@@ -1,0 +1,40 @@
+{
+ "format": "ch119-reglage-fige-1",
+ "nom": "E",
+ "fige_le": "2026-11-13, après la garde rouge du réglage D, avant tout rejeu de E",
+ "origine": "D + passeMax 5 : seuil posé entre les refus utiles de novembre (passe ≤ 4,7, rejeu de D) et les 7 reculs d'octobre (passe 5,8 à 8)",
+ "vus": "les lots de novembre ET les 11 lots d'octobre ont servi à poser ce seuil : sa garde n'est plus un jugement indépendant ; seul un Écho neuf (examen vierge) juge E",
+ "leviers": {
+  "voieGlobale": {
+   "zones": [
+    "adv"
+   ],
+   "W": 8,
+   "cS": 0.1,
+   "rP": 1,
+   "G": 7,
+   "T1": [
+    0,
+    50,
+    60,
+    75,
+    100,
+    150,
+    150,
+    150
+   ],
+   "T2": [
+    0,
+    40,
+    60,
+    80,
+    100,
+    140,
+    180,
+    200
+   ],
+   "theta": -0.35,
+   "passeMax": 5
+  }
+ }
+}

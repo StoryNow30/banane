@@ -1,6 +1,6 @@
 diff -ruN a/src/gcv2-l1.js b/src/gcv2-l1.js
 --- a/src/gcv2-l1.js	2026-11-13 08:19:09.042874671 +0000
-+++ b/src/gcv2-l1.js	2026-11-13 08:19:09.066053966 +0000
++++ b/src/gcv2-l1.js	2026-11-13 09:57:22.976316438 +0000
 @@ -565,7 +565,9 @@
     rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
     rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
@@ -12,7 +12,7 @@ diff -ruN a/src/gcv2-l1.js b/src/gcv2-l1.js
   /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
    * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
    * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
-@@ -943,6 +945,53 @@
+@@ -943,6 +945,56 @@
  /* Contre-expertise d'une pose de la chaîne (leviers `contreChaineZones`, `contreChaineVoieMm` et `contreChaineMm`, coupés) : `g` est la décision de la GCV2 (`deciderDiffere`) sur le même
   * cut, avec l'état d'avant lui. Vrai si elle VALIDE une paire dont un rail est à plus de `seuilMm` (3D) de la pose de la chaîne : la chaîne n'est pas posée, le cut
   * passe à la GCV2 comme un différé. `seuilMm` non réglé : jamais (la GCV2 ne fait que consigner sa décision). */
@@ -61,12 +61,15 @@ diff -ruN a/src/gcv2-l1.js b/src/gcv2-l1.js
 +  const tous=vgDp(obs,R),loc=tous.find(o=>o.nature==='locale'),proches=tous.filter(o=>o.cut<cut&&cut-o.cut<=R.G);
 +  if(!loc||!proches.length)return {veto:false,ecart:null,passe:null,pose:loc?arrondi(loc.best,2):null,n:vus.size};
 +  const passe=Math.max(...proches.map(o=>o.best-R.cS*(cut-o.cut-1))),ecart=passe-loc.best;
-+  return {veto:ecart>R.theta,ecart:arrondi(ecart,2),passe:arrondi(passe,2),pose:arrondi(loc.best,2),n:vus.size};
++  /* `passeMax` (facultatif) : au-delà de ce score du chemin passé, rien n'est refusé (garde d'octobre : un chemin passé fort sur une autre voie que
++   * celle de l'opérateur faisait refuser des poses justes, chantiers/CH-119/rapport.md). */
++  const fort=typeof R.passeMax==='number'&&Number.isFinite(R.passeMax)&&passe>R.passeMax;
++  return {veto:ecart>R.theta&&!fort,ecart:arrondi(ecart,2),passe:arrondi(passe,2),pose:arrondi(loc.best,2),n:vus.size,...(fort?{fort:true}:{})};
 +}
  function contreChaine(g,decalChaine,seuilMm){
    const d=g&&g.decision;
    return fini(seuilMm)&&!!d&&d.etat==='valider'&&!!d.paire&&SIDES.some(s=>norme(moins(d.paire[s].decal,decalChaine[s]))>seuilMm);
-@@ -1024,5 +1073,5 @@
+@@ -1024,5 +1076,5 @@
   }
   return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
     modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
@@ -75,8 +78,8 @@ diff -ruN a/src/gcv2-l1.js b/src/gcv2-l1.js
  });
 diff -ruN a/tests/ch119-voie-globale.test.cjs b/tests/ch119-voie-globale.test.cjs
 --- a/tests/ch119-voie-globale.test.cjs	1970-01-01 00:00:00.000000000 +0000
-+++ b/tests/ch119-voie-globale.test.cjs	2026-11-13 08:19:37.397250835 +0000
-@@ -0,0 +1,49 @@
++++ b/tests/ch119-voie-globale.test.cjs	2026-11-13 09:57:22.977691535 +0000
+@@ -0,0 +1,56 @@
 +'use strict';
 +/* CH-119 : choix de voie global sur la zone (levier `voieGlobale` de src/gcv2-l1.js, coupé par défaut). Géométrie de synthèse : repère profil =
 + * repère scène (matrice identité), cuts espacés de 1 m le long de x, rail gauche en y = 0, rail droit en y = 1,435 m. */
@@ -125,6 +128,13 @@ diff -ruN a/tests/ch119-voie-globale.test.cjs b/tests/ch119-voie-globale.test.cj
 +  assert.strictEqual(v0.veto, false);
 +  const v1 = avec({ ...R, theta: -0.5 }, () => L1.voieGlobale({ capture, cut: 100, voisins: [voisin(99)], decal: decal(130), zone: 'adv' }));
 +  assert.strictEqual(v1.veto, true);
++});
++test('passeMax : un chemin passé plus fort que passeMax ne refuse pas', () => {
++  const vs = [voisin(96), voisin(97), voisin(98), voisin(99)];
++  const v0 = avec(R, () => L1.voieGlobale({ capture, cut: 100, voisins: vs, decal: decal(130), zone: 'adv' }));
++  assert.strictEqual(v0.veto, true);
++  const v1 = avec({ ...R, passeMax: 3 }, () => L1.voieGlobale({ capture, cut: 100, voisins: vs, decal: decal(130), zone: 'adv' }));
++  assert.strictEqual(v1.veto, false); assert.strictEqual(v1.fort, true);
 +});
 diff -ruN a/tests/gcv2-l1-cap5.test.cjs b/tests/gcv2-l1-cap5.test.cjs
 --- a/tests/gcv2-l1-cap5.test.cjs	2026-11-13 08:20:20.770072082 +0000
