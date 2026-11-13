@@ -27,6 +27,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-121 | Ajustement fin de la pose sur le profil du rail (latéral, vertical, écartement) | posés ≤ 10 mm : 90,5 % → ≥ 95 %, aucun juste dégradé au-delà de 10 mm |
 | CH-122 | Puce apprise : classement des hypothèses et décision poser ou différer | à coût égal en différés, moins de fautes ; ou plus de posés justes à fautes égales |
 | CH-123 | Les 17 % hors du pool, hors du terrain de CH-120 : hors ADV, filtres, repère, troncature, rail compagnon (demande de l'opérateur, 13/11) | au moins un tiers des 128 cuts passés en A, 0 nouvelle mauvaise voie |
+| CH-124 | Ancre indépendante en ADV (repère du cut, trajectoire, voie amont, géométrie d'aiguillage), audit 1 | mauvaises voies 29 → ≤ 15 en validation croisée, 0 nouvelle, garde verte |
 
 ## Carnet (vague suivante, dans l'ordre)
 1. Assemblage « GCV2.1 » : les leviers retenus ensemble, garde complète, parité, un seul réglage figé pour l'Écho.
@@ -40,6 +41,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 |---|---|---|
 
 ## Règles communes à tous les chantiers du programme
+- **Audit 1 (13/11, `chantiers/AUDIT_GCV21.md`)** : R1 la garde d'octobre AVANT la validation croisée complète ; R2 rien n'est annoncé à l'opérateur avant garde + plis + examen verts ; R3 poses de la chaîne et ricochets comptés à part ; R4 la puissance de l'examen dite ; R5 une seule définition des zones.
 - Lis `CLAUDE.md`, D-222, D-347, D-351, D-352, ce fichier, puis les rapports CH-113, CH-116, CH-117, CH-118 (`chantiers/CH-1xx/rapport.md`).
 - Fichiers de décision (`src/gcv2*.js`, `src/lot-decision.js`, `src/geometry*.js`, `src/engine.js`, `background.js`) : propositions en **patch éteint** (`chantiers/CH-NNN/*.patch`), clé à `false`/`null` ; à l'éteint, rejeu identique au code livré (à prouver).
 - Banc de CH-116 pour tout jugement. Garde de pose (`node tools/garde-gcv2.cjs --rejouer`, lots d'octobre) et parité (`tools/parite-l1se-sw.cjs --passe`) sur le réglage final. Une tâche de fond meurt à 2 h : découpe les longues parités.
