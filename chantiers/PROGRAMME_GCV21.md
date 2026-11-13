@@ -36,3 +36,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 - Si le levier ne donne rien, c'est un résultat : rapport court, raison mesurée, et ce qu'il faudrait tenter ensuite (l'intégrateur relance).
 - Données : dépôt `StoryNow30/banane-data` (branche `claude/execute-prompt-00-18ra5a`, extraction partielle ; disque limité, efface ce qui ne sert plus). Sorties par cut (numéros et mm seulement) sous `chantiers/CH-NNN/sorties/` ; l'intégrateur les verse dans `banane-data`.
 - Parle à l'intégrateur par `send_message` à `@parent`, priorité `next`, à chaque jalon (cible écrite, premier rejeu, réglage figé, jugement, rapport). Ton texte de fin de tour ne lui arrive jamais. Pas de question à l'opérateur. Pas de pull request.
+| CH-119 | session_01Td4bNo4eR1qVikjgQstFMK | lancé le 13/11 |
+| CH-120 | session_01Td4bNoyEG3tYZVkbFyajJh | lancé le 13/11 |
+| CH-121 | session_01Td4bNk2uQhtkP6QNyX6Vtt | lancé le 13/11 |
+| CH-122 | session_01Td4bNpCSzkuthJgvDsfevC | lancé le 13/11 |
