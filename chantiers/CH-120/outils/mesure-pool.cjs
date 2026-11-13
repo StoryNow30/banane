@@ -83,4 +83,6 @@ function noter({ lot, partie, cut, capture, science, g, zone, L1, Sh, ref }) {
   out.decision = g.decision ? { etat: g.decision.etat, motif: g.decision.motif ?? null, paire: g.decision.paire ? { left: g.decision.paire.left.decal, right: g.decision.paire.right.decal } : null } : null;
   fs.appendFileSync(fichier, JSON.stringify(out) + '\n');
 }
-module.exports = { noter };
+/* Le banc ne mesure que les cuts jugés (coût) ; sans BANC_POOL_TOUS. */
+const aVerite = (lot, partie, cut) => !!process.env.BANC_POOL_TOUS || !!verite()[`${lot}:${partie}:${cut}`];
+module.exports = { noter, aVerite };

@@ -1,5 +1,5 @@
 diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
-index 1a307d2..0fbe426 100644
+index 1a307d2..8efdcb9 100644
 --- a/src/gcv2-l1.js
 +++ b/src/gcv2-l1.js
 @@ -118,7 +118,7 @@
@@ -11,6 +11,24 @@ index 1a307d2..0fbe426 100644
     const T=Shadow.reservoirOutils,identity=capture.identity;
     if(!T)throw Error('GCV2 L1 : le moteur ne rend pas les outils de son réservoir.');
     const res={};
+@@ -141,7 +141,7 @@
+          encadre:!!pa.framed,coupMin:Math.min(...pa.cuts.map(k=>Math.abs(k-identity.cut))),ecartementMm:g?arrondi(g.mm,1):null};
+      }
+    }
+-   const tronques={left:[],right:[]},railInfo={};
++   const tronques={left:[],right:[]},tronquesIt={left:[],right:[]},railInfo={};
+    for(const s of SIDES){
+      const rail=capture.rails[s],r=science.rails[s],rs=r&&r.ok&&r._reservoir?r._reservoir:null;
+      const items=[];
+@@ -198,7 +198,7 @@
+        return true;
+      };
+      for(const it of items)if(!ajoute(it)&&it.origine==='H6')tronquesH6[s]++;
+-     for(const it of h2Items)if(!ajoute(it))tronques[s].push(it.mm.map(v=>arrondi(v,2)));
++     for(const it of h2Items)if(!ajoute(it)){tronques[s].push(it.mm.map(v=>arrondi(v,2)));tronquesIt[s].push(it);}
+      railInfo[s]={
+        statut:r&&r.ok?r.next.status:'absent',motif:r&&r.ok?(r.next.motif??null):(r&&r.error?'erreur':'absent'),
+        confianceAstar:r&&r.astar?arrondi(r.astar.confidence,1):null,rapportPerteAstar:r&&r.astar?arrondi(r.astar.lossRatio,2):null,
 @@ -209,6 +209,18 @@
       };
       res[s]={gardees,cellules,rs};
@@ -18,7 +36,7 @@ index 1a307d2..0fbe426 100644
 +   /* CH-120 — GÉNÉRATEURS D'HYPOTHÈSES (leviers `genVoie`, `genEcartement`, `genLargeMm`, coupés par défaut) : hypothèses en plus du pool, au-delà
 +    * de `MAX_HYP` (jusqu'à `genMaxHyp` par rail), jamais à la place d'une hypothèse déjà gardée ; un doublon (à `DOUBLON_MM`) d'une hypothèse gardée
 +    * n'est pas ajouté et ne la change pas. Leviers coupés : rien n'est calculé, le pool est celui d'avant. */
-+   const genEtat=gen&&genActif()?genererHypotheses({capture,science,res,voisins,gMed,gen,identity}):null;
++   const genEtat=gen&&genActif()?genererHypotheses({capture,science,res,voisins,gMed,gen,identity,tronquesIt}):null;
 +   if(genEtat)for(const s of SIDES){
 +     const gardees=res[s].gardees,plafond=gardees.length+LEVIERS.genMaxHyp;
 +     for(const it of genEtat[s]){
@@ -30,12 +48,12 @@ index 1a307d2..0fbe426 100644
     const hyps={left:[],right:[]};
     for(const s of SIDES){
       const {gardees,cellules}=res[s],autre=SIDES.find(x=>x!==s);
-@@ -295,6 +307,76 @@
+@@ -295,6 +307,78 @@
         ecartementMm:science.pairGauge?arrondi(science.pairGauge.predictedMm,1):null,ecartementRejete:!!(science.summary&&science.summary.pairGaugeRejected),
         nHyp:{left:hyps.left.length,right:hyps.right.length}}};
   }
 + /* ------------------------------------------------------------------ CH-120 : générateurs d'hypothèses (coupés par défaut) */
-+ const genActif=()=>!!(LEVIERS.genVoie||LEVIERS.genEcartement||(Array.isArray(LEVIERS.genLargeMm)&&LEVIERS.genLargeMm.length));
++ const genActif=()=>!!(LEVIERS.genTronques||LEVIERS.genVoie||LEVIERS.genEcartement||(Array.isArray(LEVIERS.genLargeMm)&&LEVIERS.genLargeMm.length));
 + /* Travers (mm) du rail `s`, à la hauteur de `mmO`, qui met la paire à l'écartement `gRef` du rail `o` posé à `mmO` ; départ au travers de
 +  * `mmO` (la voie se déplace d'un bloc), puis à 0. Rend la racine la plus proche du départ, ou null. */
 + function traversAEcartement(capture,s,o,mmO,gRef){
@@ -76,9 +94,11 @@ index 1a307d2..0fbe426 100644
 + /* Graines : voie des voisins validés du lot (droite ajustée et voisin le plus proche, `genVoieFenetre` cuts) ; l'autre rail (lui seul) à l'écartement
 +  * de référence (liste d'ESV, sinon médiane du lot) de chaque hypothèse fiable d'un rail (`genSourcesMax` par rail) ; la voie déplacée d'un bloc de
 +  * chaque valeur de `genLargeMm`. Graine à `genDedupMm` d'une graine déjà vue : écartée ; `genMaxGraines` relances du moteur au plus par cut. */
-+ function genererHypotheses({capture,science,res,voisins,gMed,gen,identity}){
++ function genererHypotheses({capture,science,res,voisins,gMed,gen,identity,tronquesIt}){
 +   const out={left:[],right:[]};
 +   if(!(LEVIERS.genZones||['adv']).includes(gen.zone))return out;
++   /* `genTronques` : cellules compétitives ET fortes du réservoir que `MAX_HYP` a écartées, en tête (aucune relance du moteur). */
++   if(LEVIERS.genTronques&&tronquesIt)for(const s of SIDES)for(const it of tronquesIt[s])if(it.cellule&&it.cellule.comp&&it.cellule.strong)out[s].push({...it,origine:'H7',sous:'g-tronquee'});
 +   const gRef=fini(gen.refMm)?gen.refMm:fini(gMed)?gMed:null,graines=[];
 +   if(LEVIERS.genVoie){
 +     let va=null;try{va=voieAbsolue(capture,identity.cut,voisins,LEVIERS.genVoieFenetre,3);}catch{va=null;}
@@ -107,19 +127,19 @@ index 1a307d2..0fbe426 100644
   /* Soutien du nuage pour une pose d'un rail, décalée de `mm` ([long, lat, vert], mm) depuis la pose de départ : points de dessus et de flanc
    * (mêmes mesures que le soutien de H6). Sert à la décision L1-e (src/gcv2-l1e.js) : un rail corrigé à l'écartement de référence n'est posé
    * que si le nuage le soutient à sa nouvelle place. */
-@@ -565,7 +647,10 @@
+@@ -565,7 +649,10 @@
     rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
     rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
     voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
 -   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
 +   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
 +   /* CH-120 : générateurs d'hypothèses, coupés */
-+   genVoie:false,genVoieFenetre:12,genEcartement:false,genSourcesMax:4,genLargeMm:null,genZones:Object.freeze(['adv']),genMinTop:10,genMinFace:3,genRatioMax:3,
++   genTronques:false,genVoie:false,genVoieFenetre:12,genEcartement:false,genSourcesMax:4,genLargeMm:null,genZones:Object.freeze(['adv']),genMinTop:10,genMinFace:3,genRatioMax:3,
 +   genSnapMm:25,genMaxGraines:8,genMaxHyp:8,genMaxDeplMm:300,genDedupMm:10});
   /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
    * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
    * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
-@@ -964,7 +1049,7 @@ function contreChaine(g,decalChaine,seuilMm){
+@@ -964,7 +1051,7 @@ function contreChaine(g,decalChaine,seuilMm){
     const vs=voisins.filter(v=>v&&v.identity&&v.positions&&v.rails).map(v=>({identity:{part:v.identity.part,cut:v.identity.cut,frameId:v.identity.frameId??null},
       positions:{left:v.positions.left.slice(),right:v.positions.right.slice()},stage:'verifie',source:'lot',decalage:decalageDepuisDepart(v.rails,v.positions)}));
     const gs=vs.map(v=>gaugeMm(v.positions.left,v.positions.right)).filter(x=>fini(x)&&Math.abs(x-1500)>0.05),gMed=med(gs);
@@ -130,10 +150,10 @@ index 1a307d2..0fbe426 100644
     const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
 diff --git a/tests/ch120-generateurs.test.cjs b/tests/ch120-generateurs.test.cjs
 new file mode 100644
-index 0000000..d5f8ab3
+index 0000000..46e8000
 --- /dev/null
 +++ b/tests/ch120-generateurs.test.cjs
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,62 @@
 +'use strict';
 +/* CH-120 : générateurs d'hypothèses de la GCV2 (leviers `genEcartement`, `genVoie`, `genLargeMm`, coupés par défaut). Capture réelle du corpus
 + * des essais ; la pose de départ du rail droit est déplacée de 130 mm en travers : le vrai rail sort de la fenêtre du moteur (80 mm). */
@@ -182,8 +202,22 @@ index 0000000..d5f8ab3
 +    assert.ok(SIDES.every(s => h.rails[s].length >= sans.rails[s].length));
 +  } finally { L1.reglerLeviers(null); }
 +});
++test('genTronques : les cellules fortes et compétitives écartées par MAX_HYP reviennent (H7, g-tronquee), sans relance du moteur', () => {
++  const sans = L1.hypothesesDuCut({ capture: cap, science: sci, seul, voisins: [], gMed: null });
++  try {
++    L1.reglerLeviers({ genTronques: true });
++    let appels = 0; const f = Sh.scientificProposeBothAvecReservoir; Sh.scientificProposeBothAvecReservoir = c => { appels++; return f(c); };
++    let h; try { h = pool(); } finally { Sh.scientificProposeBothAvecReservoir = f; }
++    assert.equal(appels, 0);
++    for (const s of SIDES) {
++      const t = h.rails[s].filter(x => x.sous === 'g-tronquee' && !x.hauteur);
++      assert.ok(t.length <= sans.tronques[s].length);
++      for (const x of t) assert.ok(sans.tronques[s].some(m => Math.hypot(m[1] - x.decal[1], m[2] - x.decal[2]) < 0.01), 'une cellule tronquée');
++    }
++  } finally { L1.reglerLeviers(null); }
++});
 diff --git a/tests/gcv2-l1-cap5.test.cjs b/tests/gcv2-l1-cap5.test.cjs
-index ca47171..21a877c 100644
+index ca47171..77405f9 100644
 --- a/tests/gcv2-l1-cap5.test.cjs
 +++ b/tests/gcv2-l1-cap5.test.cjs
 @@ -43,7 +43,10 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
@@ -193,7 +227,7 @@ index ca47171..21a877c 100644
 -    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null });
 +    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null,
 +    /* CH-120 : générateurs d'hypothèses, coupés. */
-+    genVoie: false, genVoieFenetre: 12, genEcartement: false, genSourcesMax: 4, genLargeMm: null, genZones: ['adv'], genMinTop: 10, genMinFace: 3, genRatioMax: 3,
++    genTronques: false, genVoie: false, genVoieFenetre: 12, genEcartement: false, genSourcesMax: 4, genLargeMm: null, genZones: ['adv'], genMinTop: 10, genMinFace: 3, genRatioMax: 3,
 +    genSnapMm: 25, genMaxGraines: 8, genMaxHyp: 8, genMaxDeplMm: 300, genDedupMm: 10 });
    try {
      const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });

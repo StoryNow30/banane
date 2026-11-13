@@ -1,0 +1,12 @@
+{
+  "note": "CH-120 : réglages candidats des générateurs, figés AVANT tout rejeu avec générateur (patch generateurs.patch, BANC_LEVIERS). Jugés par validation croisée « un lot dehors » (banc.cjs croise, coût standard), puis examen 0511 jamais vu. Un réglage retouché après jugement est un nouveau réglage.",
+  "communs": { "genMinTop": 10, "genMinFace": 3, "genRatioMax": 3, "genSnapMm": 25, "genMaxHyp": 8, "genMaxDeplMm": 300, "genDedupMm": 10, "genSourcesMax": 4, "genVoieFenetre": 12, "genMaxGraines": 8 },
+  "reglages": {
+    "livre": {},
+    "gT":      { "genTronques": true },
+    "gTE":     { "genTronques": true, "genEcartement": true },
+    "gTEV":    { "genTronques": true, "genEcartement": true, "genVoie": true },
+    "gTEVL":   { "genTronques": true, "genEcartement": true, "genVoie": true, "genLargeMm": [-160, -110, 110, 160], "genMaxGraines": 10 },
+    "gTEVL-ab": { "genTronques": true, "genEcartement": true, "genVoie": true, "genLargeMm": [-160, -110, 110, 160], "genMaxGraines": 10, "genZones": ["adv", "abords"] }
+  }
+}
