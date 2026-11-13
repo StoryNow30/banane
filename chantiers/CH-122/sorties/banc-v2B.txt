@@ -1,0 +1,303 @@
+Rejeu « pucev2B » contre le corpus (CH116_TRAVAIL/corpus.jsonl) :
+
+| lot | cuts | posés | jugés | ≤ 10 | 10–50 | > 50 | différés (jugés) | reposés justes / faux | bons bloqués |
+|---|---|---|---|---|---|---|---|---|---|
+| 1111 | 572 | 527 | 163 | 140 | 15 | 8 | 45 (36) | 17 / 9 | 7 |
+| 1211 | 553 | 510 | 87 | 80 | 3 | 4 | 43 (23) | 14 / 0 | 1 |
+| 0411 | 742 | 352 | 11 | 10 | 1 | 0 | 390 (58) | 4 / 1 | 0 |
+| 0511 | 865 | 846 | 206 | 203 | 2 | 1 | 19 (8) | 18 / 3 | 2 |
+| 0611 | 945 | 897 | 100 | 86 | 9 | 5 | 48 (25) | 14 / 2 | 4 |
+| 0811a | 116 | 111 | 15 | 13 | 2 | 0 | 5 (4) | 1 / 1 | 0 |
+| 0811b | 223 | 194 | 39 | 37 | 1 | 1 | 29 (17) | 11 / 1 | 0 |
+| **total** | 4016 | 3437 | 621 | 569 | 33 | 19 | 579 (171) | 79 / 17 | 14 |
+
+> 50 mm : 10/4978 15/7260 15/7423 16/9270 16/9271 16/9272 6/176 16/3957 16/3959 16/3961 16/3966 16/4506 16/4508 16/4510 16/5849 23/3695 23/3747 23/5204 23/5210
+reposés faux : 14/877 8/2733 10/4978 10/4980 15/7201 15/7405 4/855 6/176 15/2414 16/3956 16/3957 16/4506 16/4510 16/4576 16/5847 16/5849 16/7757
+bons bloqués : 8/2738 10/4073 15/7432 16/9122 16/9160 16/9274 16/4501 16/4534 16/5897 16/5900 16/5901 16/5902 17/333 23/5150
+
+Changements contre « jeu-livre » : 285
+  0411 p10/8187 : pose → differe
+  0411 p10/8188 : pose → differe
+  0411 p13/175 : pose → differe
+  0411 p13/176 : pose → differe
+  0411 p13/177 : pose → differe
+  0411 p13/178 : pose → differe
+  0411 p13/179 : pose → differe
+  0411 p13/181 : pose → differe
+  0411 p13/203 : pose → differe
+  0411 p14/877 : pose 42.8 mm → pose 17 mm
+  0411 p14/4143 : differe → pose
+  0411 p14/4890 : differe → pose
+  0411 p14/7827 : differe → pose 3.3 mm
+  0511 p8/907 : pose → differe
+  0511 p8/2732 : pose 0.5 mm → pose 9.8 mm
+  0511 p8/2733 : differe → pose 24.4 mm
+  0511 p8/2738 : pose 0.7 mm → differe
+  0511 p8/2739 : pose → differe
+  0511 p8/3352 : pose 4.7 mm → pose 3.6 mm
+  0511 p10/646 : pose 0.7 mm → pose 5.6 mm
+  0511 p10/3699 : differe → pose 6.7 mm
+  0511 p10/3939 : differe → pose 8.5 mm
+  0511 p10/3941 : pose 0.5 mm → pose 2 mm
+  0511 p10/4064 : pose 0.3 mm → pose 1.4 mm
+  0511 p10/4066 : pose 0.4 mm → pose 2.5 mm
+  0511 p10/4068 : differe → pose
+  0511 p10/4072 : pose 0.7 mm → pose 2 mm
+  0511 p10/4073 : pose 0.6 mm → differe
+  0511 p10/4232 : pose → differe
+  0511 p10/4237 : pose → differe
+  0511 p10/4954 : pose → differe
+  0511 p10/4955 : pose → differe
+  0511 p10/4974 : differe → pose 9.5 mm
+  0511 p10/4976 : pose 4.5 mm → pose 1.8 mm
+  0511 p10/4978 : differe → pose 55 mm
+  0511 p10/4979 : pose 2.9 mm → pose 6.8 mm
+  0511 p10/4980 : pose 1.2 mm → pose 19.1 mm
+  0511 p10/4981 : pose 4.6 mm → pose 9.8 mm
+  0511 p10/5131 : pose → differe
+  0511 p10/5240 : pose 0.6 mm → pose 7 mm
+  0511 p10/5678 : pose → differe
+  0511 p10/6090 : pose → differe
+  0511 p10/6424 : differe → pose 4.2 mm
+  0511 p10/6425 : pose → differe
+  0511 p10/7013 : pose 2.9 mm → pose 4.1 mm
+  0511 p11/115 : pose 1.7 mm → pose 4.3 mm
+  0511 p11/5158 : pose 15.9 mm → pose 8.9 mm
+  0511 p11/6097 : pose → differe
+  0511 p11/6160 : pose 0.4 mm → pose 2.2 mm
+  0611 p13/2746 : differe → pose 8.4 mm
+  0611 p13/2861 : pose 0.1 mm → pose 1.8 mm
+  0611 p13/5646 : differe → pose 6.7 mm
+  0611 p13/6081 : pose 6.3 mm → pose 7.4 mm
+  0611 p13/8061 : pose 13 mm → pose 2.7 mm
+  0611 p13/8134 : pose 6.6 mm → pose 3.8 mm
+  0611 p13/8227 : pose 5.4 mm → pose 3.7 mm
+  0611 p13/9403 : differe → pose 2.5 mm
+  0611 p15/7201 : differe → pose 11 mm
+  0611 p15/7261 : differe → pose 1.3 mm
+  0611 p15/7262 : differe → pose 5.4 mm
+  0611 p15/7263 : differe → pose 9.4 mm
+  0611 p15/7265 : differe → pose 7.4 mm
+  0611 p15/7266 : differe → pose 3.3 mm
+  0611 p15/7267 : differe → pose
+  0611 p15/7404 : pose 4.1 mm → pose 7.3 mm
+  0611 p15/7405 : differe → pose 22.7 mm
+  0611 p15/7410 : pose → differe
+  0611 p15/7424 : differe → pose 4.8 mm
+  0611 p15/7427 : differe → pose 2.9 mm
+  0611 p15/7429 : differe → pose 9.3 mm
+  0611 p15/7432 : pose 0.4 mm → differe
+  0611 p15/7634 : differe → pose 7.8 mm
+  0611 p16/4144 : pose → differe
+  0611 p16/4173 : pose → differe
+  0611 p16/4183 : pose → differe
+  0611 p16/5020 : pose → differe
+  0611 p16/7071 : pose → differe
+  0611 p16/8997 : pose → differe
+  0611 p16/9002 : differe → pose
+  0611 p16/9088 : pose → differe
+  0611 p16/9117 : pose 10 mm → pose 1.5 mm
+  0611 p16/9118 : pose → differe
+  0611 p16/9156 : pose → differe
+  0611 p16/9157 : pose 7.2 mm → pose 5.7 mm
+  0611 p16/9158 : pose 7.6 mm → pose 2.9 mm
+  0611 p16/9160 : pose 7 mm → differe
+  0611 p16/9161 : pose → differe
+  0611 p16/9162 : pose 4.8 mm → pose 9.6 mm
+  0611 p16/9165 : pose 10.3 mm → pose 3.3 mm
+  0611 p16/9166 : differe → pose 5.4 mm
+  0611 p16/9167 : differe → pose 2.5 mm
+  0611 p16/9168 : pose 12.7 mm → pose 9.3 mm
+  0611 p16/9169 : pose 8.6 mm → pose 1.9 mm
+  0611 p16/9170 : pose 9.7 mm → pose 1.3 mm
+  0611 p16/9171 : pose → differe
+  0611 p16/9175 : differe → pose 1.8 mm
+  0611 p16/9176 : pose 3.3 mm → pose 18.9 mm
+  0611 p16/9178 : pose 0.3 mm → pose 17.3 mm
+  0611 p16/9181 : pose 20.2 mm → differe
+  0611 p16/9236 : pose 0.5 mm → pose 2.6 mm
+  0611 p16/9237 : pose 13.7 mm → pose 6.8 mm
+  0611 p16/9259 : pose 17.8 mm → pose 12.2 mm
+  0611 p16/9266 : pose 262.6 mm → pose 1.7 mm
+  0611 p16/9267 : pose 314.7 mm → pose 0.9 mm
+  0611 p16/9272 : pose 163.7 mm → pose 150.7 mm
+  0611 p16/9274 : pose 9.1 mm → differe
+  0611 p16/9277 : pose → differe
+  0611 p16/9281 : pose → differe
+  0811a p3/4831 : pose 15.6 mm → pose 11.6 mm
+  0811a p4/1 : differe → pose 8 mm
+  0811a p4/852 : pose 4.1 mm → pose 8.9 mm
+  0811a p4/855 : differe → pose 41.9 mm
+  0811a p4/2615 : pose 6.2 mm → pose 1.5 mm
+  0811b p6/120 : pose → differe
+  0811b p6/157 : pose → differe
+  0811b p6/176 : differe → pose 186 mm
+  0811b p6/178 : differe → pose 8.5 mm
+  0811b p6/179 : differe → pose 5.8 mm
+  0811b p6/180 : differe → pose 1.8 mm
+  0811b p6/204 : differe → pose 0.7 mm
+  0811b p6/212 : differe → pose 1.4 mm
+  0811b p6/220 : pose 174 mm → pose 4 mm
+  0811b p6/221 : pose 9.3 mm → pose 8.2 mm
+  0811b p6/225 : differe → pose 5.7 mm
+  0811b p6/228 : pose 11.1 mm → pose 3.3 mm
+  0811b p6/231 : pose 16.9 mm → pose 7.8 mm
+  0811b p6/232 : pose 11.6 mm → pose 3.3 mm
+  0811b p6/258 : pose → differe
+  0811b p6/259 : pose → differe
+  0811b p6/275 : pose → differe
+  0811b p6/291 : pose → differe
+  0811b p6/324 : pose → differe
+  0811b p6/334 : pose → differe
+  0811b p6/360 : pose 156 mm → pose 2.6 mm
+  0811b p6/361 : pose 156.1 mm → pose 6.2 mm
+  0811b p6/362 : differe → pose 3.8 mm
+  0811b p6/363 : differe → pose 5.5 mm
+  0811b p6/364 : differe → pose 4.3 mm
+  0811b p6/365 : differe → pose 1.1 mm
+  1111 p15/2138 : pose 0.4 mm → pose 6.7 mm
+  1111 p15/2139 : pose 0.3 mm → pose 5.7 mm
+  1111 p15/2142 : pose 1 mm → pose 2.9 mm
+  1111 p15/2144 : pose 0.5 mm → pose 3 mm
+  1111 p15/2145 : pose 0.5 mm → pose 5.1 mm
+  1111 p15/2414 : differe → pose 40.9 mm
+  1111 p15/7532 : differe → pose 3.1 mm
+  1111 p16/62 : pose 40.3 mm → pose 38.8 mm
+  1111 p16/115 : pose 0.6 mm → pose 4.4 mm
+  1111 p16/341 : pose 0.4 mm → pose 2.4 mm
+  1111 p16/1294 : pose → differe
+  1111 p16/3893 : pose 0.2 mm → pose 3.3 mm
+  1111 p16/3902 : pose 0.4 mm → pose 8.3 mm
+  1111 p16/3913 : pose 9.2 mm → pose 1.3 mm
+  1111 p16/3914 : pose 0.4 mm → pose 7.5 mm
+  1111 p16/3932 : pose 0.5 mm → pose 6.6 mm
+  1111 p16/3941 : pose → differe
+  1111 p16/3949 : pose 0.2 mm → pose 1.5 mm
+  1111 p16/3956 : differe → pose 21.8 mm
+  1111 p16/3957 : differe → pose 175.9 mm
+  1111 p16/3960 : pose 311.9 mm → differe
+  1111 p16/3961 : pose 271.3 mm → pose 269.8 mm
+  1111 p16/3966 : pose 140.9 mm → pose 139.8 mm
+  1111 p16/3968 : pose 153.7 mm → pose 2.2 mm
+  1111 p16/3969 : differe → pose 2.8 mm
+  1111 p16/3973 : differe → pose 2.2 mm
+  1111 p16/3974 : differe → pose 3.1 mm
+  1111 p16/3982 : pose 0.2 mm → pose 2 mm
+  1111 p16/4096 : pose 0.3 mm → pose 6.7 mm
+  1111 p16/4496 : pose 31.1 mm → pose 23.2 mm
+  1111 p16/4497 : pose 0.4 mm → pose 1.8 mm
+  1111 p16/4500 : pose 0.4 mm → pose 4.7 mm
+  1111 p16/4501 : pose 4.9 mm → differe
+  1111 p16/4506 : differe → pose 266.1 mm
+  1111 p16/4508 : pose 262.5 mm → pose 252.6 mm
+  1111 p16/4510 : differe → pose 165.8 mm
+  1111 p16/4515 : differe → pose 1.3 mm
+  1111 p16/4516 : differe → pose 1.9 mm
+  1111 p16/4523 : pose 5.5 mm → pose 8.2 mm
+  1111 p16/4534 : pose 9.1 mm → differe
+  1111 p16/4535 : pose 0.3 mm → pose 12.5 mm
+  1111 p16/4546 : pose 8.5 mm → pose 2.9 mm
+  1111 p16/4551 : pose 4.2 mm → pose 1.4 mm
+  1111 p16/4552 : pose 0.5 mm → pose 1.7 mm
+  1111 p16/4554 : pose → differe
+  1111 p16/4560 : pose 0.5 mm → pose 12.3 mm
+  1111 p16/4565 : pose 13.1 mm → pose 3.8 mm
+  1111 p16/4572 : differe → pose 0.4 mm
+  1111 p16/4573 : differe → pose 2.7 mm
+  1111 p16/4574 : differe → pose 5 mm
+  1111 p16/4575 : differe → pose 3.9 mm
+  1111 p16/4576 : differe → pose 10.4 mm
+  1111 p16/4577 : differe → pose 2.3 mm
+  1111 p16/4578 : pose 7.1 mm → pose 3 mm
+  1111 p16/4579 : pose 7.5 mm → pose 2 mm
+  1111 p16/4594 : pose 0.5 mm → pose 11.5 mm
+  1111 p16/4644 : pose 0.4 mm → pose 8.6 mm
+  1111 p16/4901 : differe → pose 2.1 mm
+  1111 p16/4934 : pose 0.4 mm → pose 8.3 mm
+  1111 p16/4942 : pose 0.4 mm → pose 10.3 mm
+  1111 p16/4961 : pose 8.7 mm → pose 1.5 mm
+  1111 p16/5843 : pose 0.4 mm → pose 2.6 mm
+  1111 p16/5846 : differe → pose 7.3 mm
+  1111 p16/5847 : differe → pose 14.5 mm
+  1111 p16/5849 : differe → pose 139.7 mm
+  1111 p16/5852 : differe → pose 1.1 mm
+  1111 p16/5853 : differe → pose 4.7 mm
+  1111 p16/5854 : pose 12.3 mm → pose 2.4 mm
+  1111 p16/5856 : pose 13.3 mm → pose 2.7 mm
+  1111 p16/5859 : pose → differe
+  1111 p16/5860 : pose 0.3 mm → pose 11.7 mm
+  1111 p16/5897 : pose 0.4 mm → differe
+  1111 p16/5900 : pose 0.4 mm → differe
+  1111 p16/5901 : pose 0.3 mm → differe
+  1111 p16/5902 : pose 9.9 mm → differe
+  1111 p16/5903 : pose → differe
+  1111 p16/7042 : differe → pose 3.2 mm
+  1111 p16/7754 : pose 0.5 mm → pose 4.7 mm
+  1111 p16/7757 : differe → pose 22.5 mm
+  1111 p16/7758 : pose 0.4 mm → pose 10.3 mm
+  1111 p16/7759 : pose 0.5 mm → pose 8 mm
+  1111 p16/7760 : pose 0.2 mm → pose 14.4 mm
+  1111 p16/7802 : differe → pose 4 mm
+  1111 p17/332 : differe → pose 4.2 mm
+  1111 p17/333 : pose 8.8 mm → differe
+  1111 p17/1545 : pose 0.6 mm → pose 2.1 mm
+  1111 p17/1676 : pose 0.4 mm → pose 1.6 mm
+  1111 p17/1680 : pose → differe
+  1111 p17/1681 : pose → differe
+  1211 p0/119 : pose 10.8 mm → pose 4.4 mm
+  1211 p0/121 : pose 6.3 mm → pose 8.9 mm
+  1211 p0/122 : pose 8.1 mm → pose 1 mm
+  1211 p0/136 : pose 11.7 mm → pose 3.9 mm
+  1211 p0/146 : pose 0.4 mm → pose 8.9 mm
+  1211 p0/147 : pose 0.4 mm → pose 8.1 mm
+  1211 p0/1699 : pose 0.5 mm → pose 2 mm
+  1211 p1/3778 : pose 39.6 mm → differe
+  1211 p1/3780 : pose 10.2 mm → pose 2.3 mm
+  1211 p1/3781 : pose 8.4 mm → pose 1.4 mm
+  1211 p1/3784 : pose → differe
+  1211 p2/2544 : pose → differe
+  1211 p2/5219 : differe → pose 3.5 mm
+  1211 p2/7782 : pose 15.7 mm → pose 11.6 mm
+  1211 p2/8684 : pose 11.2 mm → pose 4.3 mm
+  1211 p2/8686 : pose → differe
+  1211 p23/905 : pose → differe
+  1211 p23/1287 : differe → pose 2.5 mm
+  1211 p23/1288 : pose 0.5 mm → pose 1.7 mm
+  1211 p23/3694 : pose 137.7 mm → differe
+  1211 p23/3699 : differe → pose 1.4 mm
+  1211 p23/3700 : differe → pose 5.4 mm
+  1211 p23/3701 : differe → pose 3.4 mm
+  1211 p23/3748 : pose 139.7 mm → pose 1.5 mm
+  1211 p23/3749 : pose 132.4 mm → pose 6 mm
+  1211 p23/3750 : pose 141.3 mm → differe
+  1211 p23/4642 : pose → differe
+  1211 p23/4666 : differe → pose 7.9 mm
+  1211 p23/4667 : differe → pose 3.6 mm
+  1211 p23/4668 : differe → pose 2.8 mm
+  1211 p23/4669 : differe → pose 7.7 mm
+  1211 p23/4670 : differe → pose 2 mm
+  1211 p23/4671 : differe → pose 1.5 mm
+  1211 p23/4672 : pose 139.7 mm → pose 5.3 mm
+  1211 p23/4673 : pose 148.1 mm → pose 6.2 mm
+  1211 p23/4675 : pose 129.1 mm → pose 4.3 mm
+  1211 p23/5100 : pose → differe
+  1211 p23/5131 : differe → pose 8.3 mm
+  1211 p23/5132 : pose 125.9 mm → pose 1.7 mm
+  1211 p23/5133 : pose 159.1 mm → pose 4.3 mm
+  1211 p23/5134 : pose 12.3 mm → pose 1 mm
+  1211 p23/5135 : pose 14 mm → pose 9.2 mm
+  1211 p23/5136 : pose 11.7 mm → pose 7.8 mm
+  1211 p23/5137 : pose 0.4 mm → pose 6.3 mm
+  1211 p23/5138 : pose 0.6 mm → pose 2.4 mm
+  1211 p23/5141 : pose 15.2 mm → pose 4.9 mm
+  1211 p23/5149 : pose 11.3 mm → pose 2 mm
+  1211 p23/5150 : pose 9.3 mm → differe
+  1211 p23/5204 : pose 293.6 mm → pose 363.9 mm
+  1211 p23/5209 : differe → pose
+  1211 p23/5213 : differe → pose 1.8 mm
+  1211 p23/5214 : differe → pose
+  1211 p23/5215 : differe → pose
+  1211 p23/5216 : pose 0.4 mm → pose 2.3 mm
+  1211 p23/5278 : pose → differe
+  1211 p23/5282 : pose 7.1 mm → pose 4.6 mm
+  1211 p23/5285 : differe → pose 2.9 mm
