@@ -9,6 +9,9 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 - Tous les lots existants sont « vus » au sens de D-347 : un gain mesuré dessus reste PROBABLE jusqu'à l'Écho.
 - **Examen vierge réservé (13/11)** : Échos du 12/11, parties 3 et 4 (`banane-data`, c163651). Aucun chantier de conception ne les lit ; seul le banc de CH-116 y juge, une fois, les réglages figés (C2 + C5 de CH-117 d'abord, puis ceux de CH-119 à CH-122). Ils rejoignent le corpus d'apprentissage après.
 
+## Examens vierges rendus
+- **C2 + C5 de CH-117 (13/11, 12/11 p3 et p4, ÉTABLI)** : aucun gain. Mauvaises voies 1 → 1 (p4/6916, posé par la GCV2 ordinaire à p = 0,448, juste au-dessus de τ, sans appui, en zone `abords` au banc : hors de portée de C2) ; 1 bon posé perdu en différé (p4/6947, 0,4 mm) ; aucune faute nouvelle. **Réglage refusé**, rien ne s'allume. Sorties : `banane-data/outils/analyse-lots/CH-116/examen-vierge-1211-RESERVE/` (à ne pas lire en conception).
+
 ## Vague 2 (lancée le 13/11)
 | Ticket | Levier | Cible écrite |
 |---|---|---|
