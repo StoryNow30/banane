@@ -56,7 +56,9 @@ const meta = e => JSON.parse(fs.readFileSync(path.join(travail(), 'meta', cle(e)
 const dossierRejeux = nom => path.join(travail(), 'rejeux', nom);
 
 /* ------------------------------------------------------------------ rejouer */
+/* CH116_CODE : dossier de code déjà composé (arbre d'une autre branche + patch), rejoué tel quel ; prioritaire sur --patch. */
 function copieDuCode(o) {
+  if (process.env.CH116_CODE) return path.resolve(process.env.CH116_CODE);
   if (!o.patch.length) return RACINE;
   const d = path.join(travail(), 'copies', o.nom);
   fs.rmSync(d, { recursive: true, force: true }); fs.mkdirSync(d, { recursive: true });
