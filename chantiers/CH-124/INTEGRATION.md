@@ -1,12 +1,13 @@
 # CH-124 : ce qu'il faut pour intégrer le levier N (refus d'ancre), éteint par défaut
 
-Trois patchs, à appliquer dans cet ordre (les deux premiers vérifiés sur le tronc 9feb278 et intégrés tels quels dans `integration/vision18-n-aj5`, 1bc4532 ; le troisième vérifié sur 1bc4532) :
+Quatre patchs, à appliquer dans cet ordre (les deux premiers vérifiés sur le tronc 9feb278 et intégrés tels quels dans `integration/vision18-n-aj5`, 1bc4532 ; les deux derniers, du 14/11, vérifiés sur 1bc4532) :
 
 | patch | sha256 | fichiers |
 |---|---|---|
 | `ancre.patch` | `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c` | `src/ancre-trajectoire.js` (nouveau), `src/gcv2-l1.js`, `tools/banc-differes.cjs`, `tests/ch124-ancre.test.cjs` (nouveau), `tests/gcv2-l1-cap5.test.cjs` |
 | `sw-ancre.patch` | `5c7c1fef2d3c0af5126af147dd1d9ccecdd0c44089dc2026213815b198940f31` | `background.js` |
 | `sw-ancre-liste.patch` (**correctif, à intégrer avant d'allumer**) | `178e5f1d5d52b1545a62fef587ae3d8310383a4018de0f0a738f7068ad0e42f5` | `background.js` (`ancreEtat` seul), `tests/ch124-ancre-liste-sw.test.cjs` (nouveau), `tests/ch124-ancre.test.cjs` (2 essais de plus) |
+| `ancre-banc-depart.patch` (banc seul) | `ec77705f0c804c90516215f7c4607194c67ccb471c1bafc3113d64ac3d4cd1ce` | `tools/banc-differes.cjs` (`listeDeDepart` : cuts du lot invalides au départ), `tests/ch124-liste-depart.test.cjs` (nouveau) |
 
 `ancre-reprise.patch` (N+) n'en fait pas partie.
 
