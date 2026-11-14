@@ -1,0 +1,41 @@
+{
+ "format": "ch064-parite-v1",
+ "moteur": "node v22.23.4",
+ "module": "file",
+ "cas": 453637,
+ "identiques": 453637,
+ "ecarts": [],
+ "empreintes": {
+  "js": "e6da106a6233d2950a49f2a0695f2040bec3b9146e427edaa6e0c07099a3e398",
+  "rs": "e6da106a6233d2950a49f2a0695f2040bec3b9146e427edaa6e0c07099a3e398"
+ },
+ "temps": {
+  "jsMediane": 0.008325000002514571,
+  "jsP95": 0.5266360000241548,
+  "rsMediane": 0.022150999982841313,
+  "rsP95": 0.5439170000026934
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 8912896,
+  "memoire": 8912896
+ },
+ "bilanAdaptateur": {
+  "coeur": 451202,
+  "repliHorsDomaine": 1349,
+  "repliFormat": 0,
+  "repliEcriture": 1086,
+  "releve": 47914,
+  "releveNonEncodable": 0,
+  "reel": 261984,
+  "variantes": 143739,
+  "variantesNonEncodables": 0
+ },
+ "sources": {
+  "src/file-parties.js": "5af9df74758609d914f6243621faf81ddfeb936e4849f5c54b44fcd50706a1c0",
+  "src/file-prioritaire.js": "c43494abd24fd2ff21ac410021c6e66e2ed6dea1eb172b8ef8633cb147f6bab1",
+  "src/serie-captures-vides.js": "77d34c4bb022531205c6c10bb2370ad65242c846cc1c30b440877fec59f3b964",
+  "src/raison-correction.js": "8357dd3e278617022676764e6c3729573633d24e29f892ed578f80349daa3f0e"
+ },
+ "verdict": "IDENTIQUE"
+}

@@ -1,0 +1,46 @@
+{
+ "format": "ch064-banc-shadow-v1",
+ "nuages": 200,
+ "repetitions": 15,
+ "unite": "ms par appel (médiane des nuages de la médiane des répétitions)",
+ "variantes": {
+  "js": {
+   "mediane": 491.3,
+   "p95": 792.1,
+   "n": 200
+  },
+  "mediane": {
+   "mediane": 454.1,
+   "p95": 708.1,
+   "n": 200,
+   "identiquesAuTronc": 200
+  },
+  "elague": {
+   "mediane": 280.1,
+   "p95": 445.6,
+   "n": 200,
+   "identiquesAuTronc": 200
+  },
+  "wasm": {
+   "mediane": 145.4,
+   "p95": 233.7,
+   "n": 200,
+   "identiquesAuTronc": 200,
+   "facade": {
+    "coeur": {
+     "reinstanciations": 0,
+     "hauteEau": 3932160,
+     "memoire": 3932160
+    },
+    "compteurs": {
+     "shadow": {
+      "coeur": 3200,
+      "repliHorsDomaine": 0,
+      "repliFormat": 0
+     }
+    }
+   }
+  }
+ },
+ "navigateur": "Chrome/153.0.0.0"
+}

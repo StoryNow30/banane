@@ -1,0 +1,70 @@
+{
+ "format": "ch064-essai-releve-csp-v1",
+ "verdict": "CONFORME",
+ "limite": "entete-sans-violation : politique null et meta n=0 ⇒ CSP INCONNUE (pas « absente »)",
+ "cas": {
+  "entete-stricte-avec-rapport": {
+   "meta": {
+    "n": 0
+   },
+   "violations": 1,
+   "politique": {
+    "scriptSrc": [
+     "'self'",
+     "'unsafe-inline'"
+    ],
+    "sourcesHotes": 2,
+    "directiveScript": "script-src",
+    "wasmUnsafeEval": false,
+    "unsafeEval": false,
+    "rapport": true,
+    "disposition": "enforce",
+    "directive": "script-src"
+   }
+  },
+  "meta-wasm-unsafe-eval": {
+   "meta": {
+    "n": 1,
+    "scriptSrc": [
+     "'self'",
+     "'unsafe-inline'",
+     "'wasm-unsafe-eval'"
+    ],
+    "sourcesHotes": 0,
+    "directiveScript": "script-src",
+    "wasmUnsafeEval": true,
+    "unsafeEval": false,
+    "rapport": false
+   },
+   "violations": 1,
+   "politique": {
+    "scriptSrc": [
+     "'self'",
+     "'unsafe-inline'",
+     "'wasm-unsafe-eval'"
+    ],
+    "sourcesHotes": 0,
+    "directiveScript": "script-src",
+    "wasmUnsafeEval": true,
+    "unsafeEval": false,
+    "rapport": false,
+    "disposition": "enforce",
+    "directive": "script-src"
+   }
+  },
+  "entete-sans-violation": {
+   "meta": {
+    "n": 0
+   },
+   "violations": 0,
+   "politique": null
+  },
+  "sans-csp": {
+   "meta": {
+    "n": 0
+   },
+   "violations": 0,
+   "politique": null
+  }
+ }
+}

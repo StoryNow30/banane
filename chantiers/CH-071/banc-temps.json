@@ -1,0 +1,673 @@
+{
+ "format": "ch071-banc-temps-v1",
+ "navigateur": "Chrome/153.0.0.0",
+ "rep": 15,
+ "appelsParRep": 3000,
+ "fonctions": {
+  "parties.actif": {
+   "cas": 295,
+   "appels": 3245,
+   "js": {
+    "medianeUs": 0.09244992203999006,
+    "p90Us": 0.12326656348532632
+   },
+   "rs": {
+    "medianeUs": 33.49768875169644,
+    "p90Us": 43.11248073914018
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 362.33,
+   "verdict": "reste en JS"
+  },
+  "parties.alertes": {
+   "cas": 6,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.4666666674117247,
+    "p90Us": 0.7333333330849807
+   },
+   "rs": {
+    "medianeUs": 28.5,
+    "p90Us": 32.60000000024836
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 61.07,
+   "verdict": "reste en JS"
+  },
+  "parties.classerLot": {
+   "cas": 59,
+   "appels": 3009,
+   "js": {
+    "medianeUs": 0.26586905973581193,
+    "p90Us": 0.33233632436025257
+   },
+   "rs": {
+    "medianeUs": 25.85576603547526,
+    "p90Us": 30.309072781407423
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 97.25,
+   "verdict": "reste en JS"
+  },
+  "parties.completerBilan": {
+   "cas": 6,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 7.866666667163373,
+    "p90Us": 10.76666666691502
+   },
+   "rs": {
+    "medianeUs": 47.86666666716337,
+    "p90Us": 58.166666666666664
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 6.08,
+   "verdict": "reste en JS"
+  },
+  "parties.planifier": {
+   "cas": 7,
+   "appels": 3003,
+   "js": {
+    "medianeUs": 0.2997002992040906,
+    "p90Us": 0.532800533296742
+   },
+   "rs": {
+    "medianeUs": 24.209124210116627,
+    "p90Us": 27.605727606471916
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 80.78,
+   "verdict": "reste en JS"
+  },
+  "parties.registreAjouter": {
+   "cas": 93,
+   "appels": 3069,
+   "js": {
+    "medianeUs": 2.0527859239964346,
+    "p90Us": 3.030303030545799
+   },
+   "rs": {
+    "medianeUs": 163.4408602155393,
+    "p90Us": 225.15477354187033
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 79.62,
+   "verdict": "reste en JS"
+  },
+  "parties.relire": {
+   "cas": 12,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 1.8999999997516472,
+    "p90Us": 3.200000000496705
+   },
+   "rs": {
+    "medianeUs": 38.433333333581686,
+    "p90Us": 43.53333333258828
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 20.23,
+   "verdict": "reste en JS"
+  },
+  "parties.reprise": {
+   "cas": 13,
+   "appels": 3003,
+   "js": {
+    "medianeUs": 6.426906427154532,
+    "p90Us": 8.558108557860454
+   },
+   "rs": {
+    "medianeUs": 58.37495837520648,
+    "p90Us": 71.89477189551621
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 9.08,
+   "verdict": "reste en JS"
+  },
+  "parties.repriseDe": {
+   "cas": 1,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.16666666666666666,
+    "p90Us": 0.3333333333333333
+   },
+   "rs": {
+    "medianeUs": 35.233333333084985,
+    "p90Us": 45.83333333333333
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 211.4,
+   "verdict": "reste en JS"
+  },
+  "parties.terminal": {
+   "cas": 2,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.033333333830038704,
+    "p90Us": 0.10000000024835268
+   },
+   "rs": {
+    "medianeUs": 34.133333334078394,
+    "p90Us": 42.333333333333336
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 1024,
+   "verdict": "reste en JS"
+  },
+  "parties.transition": {
+   "cas": 300,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 6.433333333581686,
+    "p90Us": 7.066666666418314
+   },
+   "rs": {
+    "medianeUs": 66.93333333358169,
+    "p90Us": 74.79999999950329
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 10.4,
+   "verdict": "reste en JS"
+  },
+  "parties.vue": {
+   "cas": 60,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.20000000049670535,
+    "p90Us": 0.30000000074505806
+   },
+   "rs": {
+    "medianeUs": 41.666666666666664,
+    "p90Us": 44.60000000024835
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 208.33,
+   "verdict": "reste en JS"
+  },
+  "prioritaire.apprendreTaux": {
+   "cas": 14,
+   "appels": 3010,
+   "js": {
+    "medianeUs": 0.7641196015764312,
+    "p90Us": 0.9302325583870625
+   },
+   "rs": {
+    "medianeUs": 28.43853820523748,
+    "p90Us": 31.495016611543207
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 37.22,
+   "verdict": "reste en JS"
+  },
+  "prioritaire.classe": {
+   "cas": 9,
+   "appels": 3006,
+   "js": {
+    "medianeUs": 0.2661343968794969,
+    "p90Us": 0.33266799733865604
+   },
+   "rs": {
+    "medianeUs": 23.685961410264454,
+    "p90Us": 26.5801729868629
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 89,
+   "verdict": "reste en JS"
+  },
+  "prioritaire.ordonner": {
+   "cas": 18,
+   "appels": 3006,
+   "js": {
+    "medianeUs": 2.2621423821507176,
+    "p90Us": 2.6946107789388276
+   },
+   "rs": {
+    "medianeUs": 49.03526280846147,
+    "p90Us": 59.64737192306888
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 21.68,
+   "verdict": "reste en JS"
+  },
+  "prioritaire.plages": {
+   "cas": 1,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.6666666666666666,
+    "p90Us": 1
+   },
+   "rs": {
+    "medianeUs": 26,
+    "p90Us": 29.333333333333332
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 39,
+   "verdict": "reste en JS"
+  },
+  "raison.appliquer": {
+   "cas": 300,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.9666666661699612,
+    "p90Us": 1.1000000002483525
+   },
+   "rs": {
+    "medianeUs": 52.166666666666664,
+    "p90Us": 67.76666666567326
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 53.97,
+   "verdict": "reste en JS"
+  },
+  "raison.appuyer": {
+   "cas": 300,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.13333333283662796,
+    "p90Us": 0.20000000049670535
+   },
+   "rs": {
+    "medianeUs": 30.866666665921606,
+    "p90Us": 38.966666666169964
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 231.5,
+   "verdict": "reste en JS"
+  },
+  "raison.autreGeste": {
+   "cas": 14,
+   "appels": 3010,
+   "js": {
+    "medianeUs": 0.09966777433390633,
+    "p90Us": 0.16611295681063123
+   },
+   "rs": {
+    "medianeUs": 24.950166113451864,
+    "p90Us": 27.641196013041508
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 250.33,
+   "verdict": "reste en JS"
+  },
+  "raison.delaiDeGrace": {
+   "cas": 21,
+   "appels": 3003,
+   "js": {
+    "medianeUs": 0.09990010014820448,
+    "p90Us": 0.13320013394444694
+   },
+   "rs": {
+    "medianeUs": 22.710622710374608,
+    "p90Us": 25.14152514152514
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 227.33,
+   "verdict": "reste en JS"
+  },
+  "raison.derniereValidation": {
+   "cas": 300,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.16666666666666666,
+    "p90Us": 0.20000000049670535
+   },
+   "rs": {
+    "medianeUs": 19.133333334078394,
+    "p90Us": 79.10000000024834
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 114.8,
+   "verdict": "reste en JS"
+  },
+  "raison.effacer": {
+   "cas": 300,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.8000000007450581,
+    "p90Us": 0.9333333323399226
+   },
+   "rs": {
+    "medianeUs": 57.066666666418314,
+    "p90Us": 138.73333333432674
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 71.33,
+   "verdict": "reste en JS"
+  },
+  "raison.estTouchePossible": {
+   "cas": 4,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.16666666666666666,
+    "p90Us": 0.23333333308498064
+   },
+   "rs": {
+    "medianeUs": 25.666666666666668,
+    "p90Us": 30.166666666666668
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 154,
+   "verdict": "reste en JS"
+  },
+  "raison.finir": {
+   "cas": 25,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.13333333283662796,
+    "p90Us": 0.20000000049670535
+   },
+   "rs": {
+    "medianeUs": 26.466666666169964,
+    "p90Us": 29.699999999254942
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 198.5,
+   "verdict": "reste en JS"
+  },
+  "raison.heriter": {
+   "cas": 120,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.10000000024835268,
+    "p90Us": 0.13333333283662796
+   },
+   "rs": {
+    "medianeUs": 32.433333333581686,
+    "p90Us": 41
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 324.33,
+   "verdict": "reste en JS"
+  },
+  "raison.lireFrappe": {
+   "cas": 300,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.13333333407839137,
+    "p90Us": 0.20000000049670535
+   },
+   "rs": {
+    "medianeUs": 26.866666665921606,
+    "p90Us": 29.433333333581686
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 201.5,
+   "verdict": "reste en JS"
+  },
+  "raison.nouvelEtat": {
+   "cas": 5,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.16666666666666666,
+    "p90Us": 0.2666666656732559
+   },
+   "rs": {
+    "medianeUs": 33.96666666616996,
+    "p90Us": 35.333333333333336
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 203.8,
+   "verdict": "reste en JS"
+  },
+  "raison.resumeSeries": {
+   "cas": 32,
+   "appels": 3008,
+   "js": {
+    "medianeUs": 0.26595744705620283,
+    "p90Us": 0.46542553265797015
+   },
+   "rs": {
+    "medianeUs": 25.26595744680851,
+    "p90Us": 28.32446808485869
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 95,
+   "verdict": "reste en JS"
+  },
+  "raison.vue": {
+   "cas": 12,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.4666666661699613,
+    "p90Us": 0.8666666659216087
+   },
+   "rs": {
+    "medianeUs": 42.5,
+    "p90Us": 47.13333333407839
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 91.07,
+   "verdict": "reste en JS"
+  },
+  "serie.bilan": {
+   "cas": 4,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.033333333830038704,
+    "p90Us": 0.06666666641831398
+   },
+   "rs": {
+    "medianeUs": 22.53333333383004,
+    "p90Us": 23.199999999254942
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 676,
+   "verdict": "reste en JS"
+  },
+  "serie.creer": {
+   "cas": 6,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.3333333333333333,
+    "p90Us": 0.3999999997516473
+   },
+   "rs": {
+    "medianeUs": 31.666666666666668,
+    "p90Us": 34.96666666616996
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 95,
+   "verdict": "reste en JS"
+  },
+  "serie.observer": {
+   "cas": 37,
+   "appels": 3034,
+   "js": {
+    "medianeUs": 0.13183915573826102,
+    "p90Us": 0.16479894528675015
+   },
+   "rs": {
+    "medianeUs": 28.872775214729767,
+    "p90Us": 32.630191166776534
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 219,
+   "verdict": "reste en JS"
+  },
+  "serie.reglage": {
+   "cas": 5,
+   "appels": 3000,
+   "js": {
+    "medianeUs": 0.26666666691501933,
+    "p90Us": 0.3333333333333333
+   },
+   "rs": {
+    "medianeUs": 27.233333333084982,
+    "p90Us": 28.5
+   },
+   "replis": 0,
+   "memoireCoeur": {
+    "reinstanciations": 0,
+    "hauteEau": 2359296,
+    "memoire": 2359296
+   },
+   "rapport": 102.12,
+   "verdict": "reste en JS"
+  }
+ },
+ "memoireCoeur": {
+  "reinstanciations": 0,
+  "hauteEau": 2359296,
+  "memoire": 2359296
+ }
+}
