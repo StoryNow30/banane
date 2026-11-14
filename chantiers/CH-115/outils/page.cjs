@@ -46,7 +46,10 @@ const SCENES = [
   S('Rattrapage', 'rattrapage', [0, 1, 2, 3].map(p2), { pas: 1500 }),
   S('Relecture', 'relecture', [12, 24, 37, 49, 61, 73, 85].map(relImg), { pas: 1200 }),
   S('Fin du lot', 'fin', [{ state: avecFile(E.fin.state) }], { duree: 5200 }),
-  S('Constellation', 'constellation', [{ ...E['file-cours'], onglet: 'file' }, { ...E['file-passage'], onglet: 'file' }, { ...E['file-fin'], onglet: 'file' }].map(x => ({ state: x.state, fiches: x.fiches || [], onglet: 'file' })), { pas: 3200 }),
+  S('Constellation', 'constellation', [{ state: E['file-cours'].state, fiches: E['file-cours'].fiches, onglet: 'file' }], { duree: 4200 }),
+  S('Vers la partie 15', 'passage', [{ state: E['file-passage'].state, fiches: E['file-passage'].fiches, onglet: 'file' }], { duree: 5000 }),
+  S('Constellation finie', 'file-fin', [{ state: E['file-fin'].state, fiches: E['file-fin'].fiches, onglet: 'file' }], { duree: 4200 }),
+  S('Aurore', 'aurore', [{ state: avecFile(E.aurore.state), onglet: 'correction' }], { duree: 5000 }),
   S('ESV ne répond plus', 'panne', [{ state: avecFile(E.panne.state) }], { duree: 5000 }),
   S('Erreur du lot', 'erreur', [erreur], { duree: 4500 }),
 ];

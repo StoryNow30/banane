@@ -97,7 +97,7 @@ function appliquer(o){
   const theme=themeP==='defaut'?(o.v.defautClair?'clair':'sombre'):themeP;
   if(o.theme!==theme){agir(o,'sg:choix:theme:'+theme);o.theme=theme;}
   const on=imageCourante().onglet;
-  if(o.onglet!==on){agir(o,on==='file'?'sg:onglet-file':'mode:automatic');o.onglet=on;}
+  if(o.onglet!==on){agir(o,on==='file'?'sg:onglet-file':on==='correction'?'sg:onglet-correction':'mode:automatic');o.onglet=on;}
 }
 function dimensionner(){
   const [W,H]=taille;
@@ -119,7 +119,7 @@ document.querySelectorAll('[data-taille]').forEach(b=>b.onclick=()=>{taille=b.da
 document.querySelectorAll('[data-theme-p]').forEach(b=>b.onclick=()=>{themeP=b.dataset.themeP;document.querySelectorAll('[data-theme-p]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cols.forEach(appliquer);});
 document.querySelectorAll('[data-fond]').forEach(b=>b.onclick=()=>{fond=b.dataset.fond;document.querySelectorAll('[data-fond]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cols.forEach(appliquer);});
 const bR=document.getElementById('ralenti');bR.onclick=()=>{ralenti=!ralenti;bR.setAttribute('aria-pressed',String(ralenti));cols.forEach(appliquer);facteur=ralenti?4:1;planifier();};
-if(DONNEES.mesures){const M=DONNEES.mesures,E=[['cours','Lot en cours'],['pause','Pause'],['toi','À toi'],['rattrapage','Rattrapage'],['relecture','Relecture'],['fin','Fin'],['file-cours','Constellation en cours'],['file-fin','Constellation finie']];
+if(DONNEES.mesures){const M=DONNEES.mesures,E=[['cours','Lot en cours'],['pause','Pause'],['toi','À toi'],['rattrapage','Rattrapage'],['relecture','Relecture'],['fin','Fin'],['file-cours','Constellation en cours'],['file-passage','Vers la partie 15'],['file-fin','Constellation finie']];
  const ids=Object.keys(M),nom=id=>(V.find(v=>v.id===id)||{nom:id}).nom;let h='<tr><th>État</th>'+ids.map(i=>`<th>${nom(i)}</th>`).join('')+'</tr>';
  for(const [k,l] of E){h+=`<tr><td>${l}</td>`+ids.map(i=>{const x=M[i][k];if(!x)return '<td>—</td>';const ok=k==='cours'&&x.blocs<=15&&x.mots<=25&&x.nombres<=6;return `<td class="${ok?'ok':''}">${x.blocs} / ${x.mots} / ${x.nombres}</td>`;}).join('')+'</tr>';}
  document.getElementById('tab-mesures').innerHTML=h;document.getElementById('mesures').hidden=false;}

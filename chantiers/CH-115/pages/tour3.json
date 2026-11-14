@@ -1,0 +1,9 @@
+{"titre":"Constellation épurée, avant et après",
+ "intro":"Retour de l'opérateur (D-353) sur la vue « Vers la partie N » : trop d'informations. Avant : le panneau d'aujourd'hui. Après : la direction B en Glacier et en Sarcelle, fond Moyen, avec l'épure. Par défaut, la frise, l'état en une ligne et le rang. Le bilan par partie et les chiffres d'ESV au départ s'ouvrent d'un clic sur la tuile (« Bilan et départs »). Même passe sur la fin du lot, la relecture et l'Aurore. Rien n'est retiré du journal ni des exports.",
+ "pied":"Données fabriquées (partie 13, cuts 4790 à 4900 ; Constellation des parties 13 à 17). Avant : feuilles du tronc. Après : feuilles du tronc, plus des feuilles et des scripts de maquette par-dessus ; aucun fichier de l'extension n'est modifié. « Réduire les animations » coupe tout le mouvement.",
+ "reglages":{"ralenti":true},
+ "mesures":"chantiers/CH-115/mesures/tour3.json",
+ "variantes":[
+  {"id":"avant","nom":"Avant","sous":"le panneau d'aujourd'hui"},
+  {"id":"glacier","nom":"Après · Glacier","sous":"fond Moyen","css":["commun.css","b.css","b2.css","b2-glacier.css","epure2.css"],"js":["motion.js"],"maquette":true},
+  {"id":"sarcelle","nom":"Après · Sarcelle","sous":"fond Moyen","css":["commun.css","b.css","b2.css","b2-sarcelle.css","epure2.css"],"js":["motion.js"],"maquette":true}]}
