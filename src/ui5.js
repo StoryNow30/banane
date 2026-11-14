@@ -387,7 +387,17 @@
       const e = n?.closest?.('.sg-chiffre,.sg-n,.sg-mot,.sg-phrase .sg-mono,.sg-allure b,.sg-fin dd b'); if (!e) continue;
       e.classList.remove('sg-tic'); void e.offsetWidth; e.classList.add('sg-tic');
       /* CH-115 : un chiffre qui change roule (l'ancien monte et s'efface, le nouveau arrive d'en bas, panel-signal.css `sg-tic`) */
-      const v = changes.avant.get(n); if (v && e === n && e.matches?.('.sg-chiffre,.sg-n') && !calme() && D.createElement) { const g = D.createElement('span'); g.className = 'sg-roule'; g.setAttribute('aria-hidden', 'true'); g.textContent = v; e.appendChild(g); root.setTimeout?.(() => g.remove(), 320); }
+      /* la copie de l'ancien chiffre est posée hors du panneau dessiné (à la page, à sa place et à ses styles calculés) : son texte ne s'ajoute ni au
+       * chiffre ni à l'écran que le rendu met à jour en place */
+      const v = changes.avant.get(n);
+      if (v && e === n && e.matches?.('.sg-chiffre,.sg-n') && !calme() && D.createElement && root.getComputedStyle && D.body) {
+        const r = e.getBoundingClientRect?.(); if (!r || !r.width) continue;
+        const cs = root.getComputedStyle(e), g = D.createElement('span'); g.className = 'sg-roule'; g.setAttribute('aria-hidden', 'true'); g.textContent = v;
+        Object.assign(g.style, { position: 'fixed', zIndex: '50', pointerEvents: 'none', whiteSpace: 'nowrap', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, font: cs.font, letterSpacing: cs.letterSpacing, color: cs.color, textAlign: cs.textAlign, fontVariantNumeric: 'tabular-nums' });
+        D.body.appendChild(g);
+        const fin = () => g.remove();
+        if (g.animate) g.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-110%)' }], { duration: 260, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }).finished.then(fin, fin); else root.setTimeout?.(fin, 300);
+      }
     }
     pouces();
   }
