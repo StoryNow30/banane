@@ -1788,6 +1788,11 @@ on('native-discard',async()=>{
  for(const [v,id] of Object.entries(IDS_CLIC))if($(id))$(id).onclick=()=>{if($(id).checked)return changerChoixLot({clicHumain:v});};
  if($('grappe-differes'))$('grappe-differes').onclick=()=>changerChoixLot({regleGrappeDifferes:$('grappe-differes').checked===true});
  if($('aurore-passage'))$('aurore-passage').onclick=()=>changerChoixLot({aurorePassage:$('aurore-passage').checked===true});
+ /* Vision 18 (D-355) : essai de l'ajustement de hauteur, coupé par défaut ; la case n'est cochée que si le service worker le dit. */
+ if($('ajustement-hauteur')){$('ajustement-hauteur').onclick=async()=>{try{const r=await api('ajustement-hauteur',{actif:$('ajustement-hauteur').checked===true});
+    $('ajustement-hauteur').checked=r?.actif===true;note(r?.actif===true?'Ajustement de hauteur allumé, à l’essai : il vaut dès le cut suivant.':'Ajustement de hauteur coupé.');}
+   catch(e){$('ajustement-hauteur').checked=false;note(e.message,true);}};
+  api('ajustement-hauteur-etat').then(r=>{if(r&&typeof r.actif==='boolean'&&document.activeElement!==$('ajustement-hauteur'))$('ajustement-hauteur').checked=r.actif;}).catch(()=>{});}
  if($('passe-differes')){$('passe-differes').indeterminate=true;$('passe-differes').onclick=()=>changerChoixLot({passeDifferes:$('passe-differes').checked===true});}
  api('passe-differes-reglage').then(r=>{if(r&&typeof r.mode==='string'){reglagePasse=r;const e=$('passe-differes-mode');if(e)e.textContent=textesPasse2().mode;}}).catch(()=>{});
  api('choix-lot-etat').then(r=>{if(r&&NOMS_CLIC[r.clicHumain]){choixLot=r;majChoixLot(state);}}).catch(()=>{});

@@ -978,6 +978,10 @@ function contreChaine(g,decalChaine,seuilMm){
   * chaîne du lot (ni la GCV2, ni L1-s, ni la passe) ; `voisinsDecision`, les voisins de la GCV2 gardent la pose de la décision (aucun ricochet de l'étage).
   * `R` absent (levier coupé) : la pose rendue est celle reçue, à l'identique. Rend { decal, ajuste, info }. */
  const AJ_DEFAUT=Object.freeze({seulChaine:false,voisinsDecision:false,c:4.4,epMax:15,dzMax:13,tolV:4,tolL:4,duMax:12,minTop:15,minFace:6,bandeMm:12,lateral:true,vertical:true,gMin:1425,gMax:1475,gMaxDelta:25});
+ /* Vision 18 (D-355) — réglage FIGÉ de l'essai « aj5 » : celui jugé par CH-121 (`aj5-final`, chantiers/CH-121/reglages/grille-v5.json) : hauteur seule (médiane du
+  * dessus + c, c = 5,0), poses de la chaîne seulement, voisins de la GCV2 à la pose de la décision. Le levier livré `ajustementFin` reste null : ce réglage n'est pris
+  * que si l'opérateur allume l'essai au panneau (background.js, `ajustementFinReglage`). */
+ const AJ_ESSAI=Object.freeze({c:5,lateral:false,seulChaine:true,voisinsDecision:true});
  function lirePose(capture,s,d,band){
    const rail=capture.rails&&capture.rails[s],t=rail&&Conv.template(rail);if(!t)return null;
    const M=rail.sceneRelativeToProfileLocal,y0=d[1]/1000,z0=d[2]/1000,bu=t.sign*y0,bz=z0,top=[],face=[],pts=capture.pointsSceneRelative||[],vis=capture.visibleByClipBoxes;
@@ -1086,6 +1090,6 @@ function contreChaine(g,decalChaine,seuilMm){
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,ajusterPoseFinale,AJ_DEFAUT,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,ajusterPoseFinale,AJ_DEFAUT,AJ_ESSAI,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });
