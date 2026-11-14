@@ -110,3 +110,35 @@ test('calage : ligne réécrite (les deux rails ne donnent pas la même translat
   const capT = capture(table, 121, [0, 0.13, 0]); assert.equal(A.juger(E, 121, capT, pose(capT, table, 121, 0)).muet, 'calage-lot');
   assert.equal(A.translation(E).n, 3);
 });
+
+/* ---- Liste prise pendant ou après un lot (question de mise en production, 14/11) ---- */
+/* `lignes` : [{ i, mmG, mmD }], déplacement en travers de chaque rail de la ligne i (mm, vers la gauche) ; la ligne devient valide et marquée « traitée ». */
+function reecrire(table, lignes) {
+  const t = { n: table.n, st: table.st.slice(), fl: table.fl.slice(), ed: table.ed.slice() };
+  for (const { i, mmG, mmD } of lignes) { const o = 6 * i, g = Math.hypot(t.ed[o] - t.ed[o + 3], t.ed[o + 1] - t.ed[o + 4]), ex = (t.ed[o] - t.ed[o + 3]) / g, ey = (t.ed[o + 1] - t.ed[o + 4]) / g;
+    t.ed[o] += Math.round(mmG * 10 * ex); t.ed[o + 1] += Math.round(mmG * 10 * ey); t.ed[o + 3] += Math.round(mmD * 10 * ex); t.ed[o + 4] += Math.round(mmD * 10 * ey); t.st[i] = 0; t.fl[i] = 1; }
+  return t;
+}
+test('liste prise après un lot : des lignes réécrites (marquées), sur l’autre voie ou corrigées, ne déplacent pas l’axe des autres cuts ; aucun refus à tort', () => {
+  const { table } = construire({ fausses: [{ de: 205, a: 212, mm: 150 }] }), Mo = A.preparer(table), K = [];
+  for (let i = 150; i <= 180; i += 3) K.push({ i, mmG: 4, mmD: -3 });      /* poses retouchées de quelques millimètres */
+  for (let i = 206; i <= 210; i++) K.push({ i, mmG: -150, mmD: -150 });    /* mauvaises voies corrigées : ramenées sur la voie relevée */
+  for (let i = 230; i <= 250; i++) K.push({ i, mmG: 150, mmD: 150 });      /* 21 poses d'un lot validées sur l'autre voie */
+  const t2 = reecrire(table, K), Mo2 = A.preparer(t2), touchees = new Set(K.map(k => k.i)); assert.equal(Mo2.ok, true); assert.equal(Mo2.sens, Mo.sens);
+  let pire = 0; for (let c = 30; c < 390; c++) if (!touchees.has(c)) pire = Math.max(pire, Math.abs(A.axe(Mo2, c).mm - A.axe(Mo, c).mm));
+  assert.ok(pire < 1.5, `axe des cuts non touchés déplacé de ${pire.toFixed(2)} mm`);
+  /* une ligne réécrite sort de la voie courante ; son axe reste celui de la voie relevée, dit depuis son nouveau milieu */
+  assert.ok(Math.abs(A.axe(Mo2, 240).mm - (A.axe(Mo, 240).mm - 150)) < 1.5); assert.ok(Math.abs(A.axe(Mo2, 208).mm) < 4);
+  const E2 = A.etat(t2);
+  for (let c = 60; c < 380; c += 7) { if (touchees.has(c) || (c >= 205 && c <= 212)) continue;
+    const cap = capture(t2, c), j = A.juger(E2, c, cap, pose(cap, t2, c, 0)); assert.equal(j.refus, false, `cut ${c} refusé à tort (${j.ecartMm} mm)`); assert.ok(Math.abs(j.ecartMm) < 4); }
+  /* une ligne d'ESV restée sur l'autre voie est encore refusée */
+  { const cap = capture(t2, 211); assert.equal(A.juger(E2, 211, cap, pose(cap, t2, 211, 0)).refus, true); }
+});
+test('liste prise après le lot, rejouée sur les captures du départ : l’ancre se tait sur un cut dont la ligne est réécrite, sans refus à tort', () => {
+  const { table } = construire(), t2 = reecrire(table, [{ i: 100, mmG: 12, mmD: -20 }, { i: 101, mmG: 150, mmD: 150 }]), E2 = A.etat(t2);
+  for (const c of [90, 91, 92]) { const cap = capture(table, c); assert.equal(A.juger(E2, c, cap, pose(cap, table, c, 0)).refus, false); }   /* lignes intactes : la translation du lot */
+  const c100 = capture(table, 100), c101 = capture(table, 101);
+  assert.equal(A.juger(E2, 100, c100, pose(c100, table, 100, 0)).muet, 'calage-ligne');   /* rails déplacés différemment */
+  assert.equal(A.juger(E2, 101, c101, pose(c101, table, 101, 150)).muet, 'calage-lot');   /* paire déplacée d'un bloc : translation hors de celle du lot */
+});

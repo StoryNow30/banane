@@ -2072,18 +2072,30 @@ async function l1eTable(part){const cle=(engine?.s?.batch?.id||'')+'|'+part;if(l
 async function l1eVoieListe(capture,identity){const G=globalThis.BananeGcv2L1;return G.voieDeListe(await l1eTable(identity.part),identity.cut,capture,{...G.VOIE_LISTE,fenetre:G.leviersActifs().voieListeFenetre});}
 /* CH-124 (D-352) — REFUS D'ANCRE (levier `ancre` de src/gcv2-l1.js, COUPÉ : rien de ce qui suit ne s'exécute, les commandes sont celles d'avant). Sous L1-se, l'axe de la
  * voie relevée est prédit par la trajectoire du véhicule de mesure, lue dans la liste d'ESV (src/ancre-trajectoire.js). QUAND LA LISTE EST LUE : l'instantané de la partie
- * est pris au chargement complet de sa liste, donc AVANT le premier cut du lot ; il est lu une fois par lot (`l1eTable`) et le modèle de l'ancre est calculé une fois, à la
- * première commande du lot (`ancreEtat`). Toute pose que le lot s'apprête à valider (chaîne, L1-s, GCV2, deuxième passe) dont le milieu est à plus de θ en travers de l'axe
+ * est pris au départ du lot (fiche de départ), pendant que le premier cut se décide ; l'ancre le lit elle-même (`ancreEtat`, plus bas) et le garde pour le lot : le modèle
+ * est calculé une fois par instantané lu. Toute pose que le lot s'apprête à valider (chaîne, L1-s, GCV2, deuxième passe) dont le milieu est à plus de θ en travers de l'axe
  * est différée (`ancreCommande`, en dernier dans `commandLot` ; `passeDiff` pour la passe). SANS RICOCHET : la pose refusée continue de nourrir le lot comme le code livré
  * (appui de la chaîne, voisine de la GCV2, transport, mémoire des règles) et n'est pas reprise par la deuxième passe ; les autres cuts gardent donc leur décision. Une
  * panne, une liste absente ou une ancre muette ne changent rien. */
-let ancreLot={cle:null,etat:null},ancreFant={cle:null,voisins:[]};
+let ancreLot={cle:null,etat:null,sig:null,lectures:0},ancreFant={cle:null,voisins:[]};
 /* Coupé (ou hors L1-se) : faux, sans attente ; aucun appel asynchrone n'est alors ajouté au lot ni à la passe. */
 function ancreAllumee(){return !!(globalThis.BananeAncreTrajectoire&&globalThis.BananeGcv2L1?.leviersActifs?.().ancre&&profilL1se());}
-async function ancreEtat(part){const A=globalThis.BananeAncreTrajectoire,r=globalThis.BananeGcv2L1?.leviersActifs?.().ancre;
- if(!A||!r||!profilL1se())return null;
+/* LA LISTE DE L'ANCRE est lue par l'ancre elle-même dans le stockage, jamais par `l1eTable` : la mémoire de la liste de la décision L1-e n'est pas remplie plus tôt
+ * qu'avant (l'ancre lit dès la première pose du lot, la GCV2 seulement à son premier différé). Au départ d'un lot, l'instantané de la partie s'écrit pendant que le
+ * premier cut se décide (mesuré sur les 24 lots-parties du corpus : première pose de −0,2 à 9,4 s après la fiche de départ, à moins d'une seconde dans 5 lots). Donc :
+ * l'absence n'est jamais gardée (l'ancre se tait et relit au cut suivant) ; pendant les `ANCRE_LECTURES` premières lectures du lot, un instantané plus récent remplace
+ * le premier lu ; ensuite la liste est figée pour le lot (mémoire du service worker ; après un redémarrage elle est relue de la même façon). */
+const ANCRE_LECTURES=6;
+async function ancreEtat(part){const A=globalThis.BananeAncreTrajectoire,LM=globalThis.BananeListeMemoire,r=globalThis.BananeGcv2L1?.leviersActifs?.().ancre;
+ if(!A||!LM||!r||!profilL1se())return null;
  const cle=(engine?.s?.batch?.id||'')+'|'+part;
- if(ancreLot.cle!==cle){let etat=null;try{etat=A.etat(await l1eTable(part),r===true?{}:r);}catch{etat=null;}ancreLot={cle,etat:etat?.modele?.ok?etat:null};}
+ if(ancreLot.cle!==cle)ancreLot={cle,etat:null,sig:null,lectures:0};
+ if(ancreLot.sig!==null&&ancreLot.lectures>=ANCRE_LECTURES)return ancreLot.etat;
+ let snap=null;try{const k=LM.PRE_INST+part;snap=(await chrome.storage.local.get(k))?.[k]??null;}catch{snap=null;}
+ if(ancreLot.cle!==cle)return null;   /* un autre lot a commencé pendant la lecture */
+ ancreLot.lectures++;
+ const sig=snap?String(snap.sig??snap.at??''):null;
+ if(snap&&sig!==ancreLot.sig){let etat=null;try{etat=A.etat(LM.decompacter(snap),r===true?{}:r);}catch{etat=null;}ancreLot={...ancreLot,sig,etat:etat?.modele?.ok?etat:null};}
  return ancreLot.etat;}
 function ancreFantomes(b,identity){const cle=(b?.id||'')+'|'+identity.part+'|'+(identity.frameId??null);if(ancreFant.cle!==cle)ancreFant={cle,voisins:[]};return ancreFant.voisins;}
 async function ancreCommande(command,lotObservation,proposal,before){
