@@ -2,7 +2,7 @@
 
 ## Où en est le chantier
 - **Ancre trouvée (ÉTABLI).** L'axe de la voie relevée se prédit depuis la trajectoire du véhicule de mesure, lue dans la liste d'ESV du départ de la partie (`src/ancre-trajectoire.js`, dans `ancre.patch`). Mesures et contre-vérification : `sorties/`, `sorties/contre-verification.md`.
-- **Levier N (refus d'ancre, θ = 75 mm, sans ricochet), figé dans `reglage-fige.md`.** D-355 : allumé d'office dans la Vision 18 dès que sa parité est bonne.
+- **Levier N (refus d'ancre, θ = 75 mm, sans ricochet), figé dans `reglage-fige.md`.** D-355 : allumé d'office dans la Vision 18. Parité bonne (14/11) ; le calcul est dans le tronc (fusion de `fed03f7`, d'après l'intégrateur : 5fb6f5c), avec `sw-ancre-liste.patch` et `ancre-banc-depart.patch`.
 
 | preuve de N | résultat | où |
 |---|---|---|
@@ -15,7 +15,7 @@
 | éteint = livré, tronc fusionné, zones du journal, passe fidèle | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre-zjp.md` |
 | corpus N en zones du journal et passe fidèle | 35 refus : 30 vraies corrections, 0 faute, 5 non jugés ; > 50 mm 29 → 0 ; justes 501 → 503 ; croisé 29 → 0 ; examen 0511 identique | `sorties/corpus/N-zjp*` |
 
-- **N+ (reprise sur le pool restreint à l'ancre)** : réglage figé AVANT tout rejeu (`reglage-fige-reprise.md`), incrément `ancre-reprise.patch`, essais verts. **Jamais rejoué.** Non couvert par D-355. À reprendre par une session neuve.
+- **N+ (reprise sur le pool restreint à l'ancre)** : réglage figé AVANT tout rejeu (`reglage-fige-reprise.md`), incrément `ancre-reprise.patch` (sur N seul) ou `ancre-reprise-apres-correctifs.patch` (sur l'arbre corrigé), essais verts. **Jamais rejoué.** Non couvert par D-355. À reprendre par une session neuve.
 
 ## Patchs (s'appliquent sur le tronc, vérifié par l'intégrateur à 823b5e7)
 - `ancre.patch` : `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c` (ancien arbre : `214e55aa…`, mêmes lignes ajoutées et retirées).
@@ -33,7 +33,15 @@ Données hors dépôt (perdues avec la session) : corpus et banc de CH-116 (`cha
 - N+ sur l'arbre qui porte les correctifs du 14/11 : `ancre-reprise-apres-correctifs.patch` (`8c63f7f2…`, mêmes lignes que l'incrément figé) à la place de `ancre-reprise.patch`.
 - N+ : garde d'octobre d'abord (`banc.cjs garde --nom Np --patch ancre.patch --patch ancre-reprise.patch --env 'BANC_LEVIERS={"ancre":{"reprise":true}}'`, puis `refus.cjs garde`), corpus ensuite, décision selon `reglage-fige-reprise.md` §4. L'incrément du service worker pour N+ n'est pas écrit.
 
+## Ce qui reste
+1. **N+** (session neuve) : garde d'octobre d'abord, jugée contre la vérité ; corpus ensuite ; décision écrite d'avance dans `reglage-fige-reprise.md` §4 ; l'incrément du service worker n'est pas écrit.
+2. **Ancre moins muette** (idée, non mesurée) : une fois la translation du lot établie, juger aussi un cut dont la ligne a été réécrite, au lieu de se taire.
+3. **Premier cut d'un lot** (limite connue, SUPPOSÉ rare) : tant qu'un seul cut est noté, une ligne déplacée d'un bloc depuis l'instantané serait crue. Parade possible : attendre deux cuts concordants ; elle rend l'ancre muette au premier cut de chaque lot, donc à rejuger.
+4. **Ajustement de hauteur allumé** : l'alignement de `ancreCommande` (appui et voisin fantômes d'une pose ajustée puis refusée) a été fait par l'intégrateur (2b1aafd) ; aucune parité « aj5 allumé + refus » ne l'a encore couvert.
+5. L'axe prédit comme référence des autres chantiers de voie (CH-119, 120, 122, 123).
+
 ## Pièges mesurés
+- **Liste du départ reconstituée** : les cuts du lot y sont INVALIDES (le lot ne traite que les invalides). Les rendre « valides » fausse la référence d'écartement de la GCV2 dans une parité (44 lignes du banc sur 311 sur 12/11 p23) ; effet sur l'ancre : 1,4 mm au plus. Contrôle : le compte d'invalides de la liste reconstituée doit être celui de la fiche de départ du lot.
 - **Course au départ du lot** (`sorties/production-liste.md`) : l'instantané de la liste s'écrit pendant que le premier cut se décide. Sans `sw-ancre-liste.patch`, l'ancre garderait « pas de liste » pour tout le lot dans 3 à 5 lots sur 24 et ferait perdre à la GCV2 sa référence d'écartement. Le banc et la parité ne voient pas ce défaut.
 - La parité n'a pas de reprise et le vrai service worker va environ 11 fois moins vite que le banc : 32 min pour 91 cuts, environ 100 min pour 12/11 p23 (3 s par cut au début, 20 s à la fin). Un conteneur sans tâche suivie est repris au bout de quelques minutes : garder une tâche suivie vivante pendant un long rejeu détaché.
 - `BANC_ZONES=journal` dans la référence d'une parité fabrique des écarts sur un lot ancien (4 lignes sur 91 en octobre).
