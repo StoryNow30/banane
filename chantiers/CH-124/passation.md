@@ -1,4 +1,4 @@
-# CH-124 : passation (14/11, écrite à 11 h 20 UTC, mise à jour à chaque jalon)
+# CH-124 : passation (14/11, dernière mise à jour à 15 h 30 UTC : chantier N rendu, session arrêtée)
 
 ## Où en est le chantier
 - **Ancre trouvée (ÉTABLI).** L'axe de la voie relevée se prédit depuis la trajectoire du véhicule de mesure, lue dans la liste d'ESV du départ de la partie (`src/ancre-trajectoire.js`, dans `ancre.patch`). Mesures et contre-vérification : `sorties/`, `sorties/contre-verification.md`.
@@ -11,9 +11,9 @@
 | éteint = livré (ancien arbre, première passe) | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre.md` |
 | examens vierges (mesure de CH-116) | 3 refus, 3 vraies corrections, rien d'autre ne change | chez CH-116 |
 | parité, lot d'octobre 0-2310-lot2 | 91 lignes identiques sur 91 | `sorties/parite/parite-octobre-lot2.md` |
-| parité, 12/11 p23 | EN COURS sur l'arbre d'intégration 1bc4532, sans réglage (lancée à 11 h 19 UTC, environ 110 min) | `sorties/parite/` |
+| parité, 12/11 p23, arbre d'intégration 1bc4532, sans réglage | **BON** : 296 lignes identiques sur 311 ; les 15 écarts sont ceux de l'éteint (CH-121), 0 propre à N ; 15 refus différés des deux côtés | `sorties/parite/parite-1211-p23.md` |
 | éteint = livré, tronc fusionné, zones du journal, passe fidèle | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre-zjp.md` |
-| corpus N en zones du journal et passe fidèle | EN COURS | `sorties/corpus/` |
+| corpus N en zones du journal et passe fidèle | 35 refus : 30 vraies corrections, 0 faute, 5 non jugés ; > 50 mm 29 → 0 ; justes 501 → 503 ; croisé 29 → 0 ; examen 0511 identique | `sorties/corpus/N-zjp*` |
 
 - **N+ (reprise sur le pool restreint à l'ancre)** : réglage figé AVANT tout rejeu (`reglage-fige-reprise.md`), incrément `ancre-reprise.patch`, essais verts. **Jamais rejoué.** Non couvert par D-355. À reprendre par une session neuve.
 
@@ -21,6 +21,7 @@
 - `ancre.patch` : `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c` (ancien arbre : `214e55aa…`, mêmes lignes ajoutées et retirées).
 - `sw-ancre.patch` : `5c7c1fef2d3c0af5126af147dd1d9ccecdd0c44089dc2026213815b198940f31`.
 - `sw-ancre-liste.patch` (correctif du 14/11, après `sw-ancre.patch`, **à intégrer avant d'allumer**) : `178e5f1d5d52b1545a62fef587ae3d8310383a4018de0f0a738f7068ad0e42f5`.
+- `ancre-banc-depart.patch` (banc seul, 14/11 : cuts du lot invalides dans la liste du départ) : `ec77705f0c804c90516215f7c4607194c67ccb471c1bafc3113d64ac3d4cd1ce`.
 - `ancre-reprise.patch` (N+, après `ancre.patch`) : `a54ffbf696d4c8bd7b04dd6f927ac3ddea1c25e4e1eeb5ed46c79865b1e7e77e`.
 - Fichiers à intégrer et déclarations : `INTEGRATION.md`.
 
@@ -28,7 +29,7 @@
 Données hors dépôt (perdues avec la session) : corpus et banc de CH-116 (`chantiers/CH-116/outils/LISEZMOI.md` : `extraire.sh`, `preparer.cjs`, `banc.cjs rejouer --nom livre`), lots d'octobre de la garde (`BANANE_LOTS`). Ne jamais extraire les examens vierges réservés.
 - Rejeu de jugement (réglages par défaut du 14/11) : `banc.cjs rejouer --nom X --patch chantiers/CH-124/ancre.patch --env BANC_ZONES=journal --env BANC_PASSE_PLAFOND=10 --env 'BANC_LEVIERS={"deuxiemePasse":2,"passe2Leviers":{"sansVoieRien":true},"ancre":true}'` ; référence « livré » : même commande sans patch ni `ancre`.
 - Jugement cut par cut : `node chantiers/CH-124/outils/refus.cjs corpus --ref <livré> --nom X` (ou `garde --ref <éteint> --nom X`) ; tableau standard : `banc.cjs juger --nom X --ref <livré>`.
-- Parité : copie du code avec les deux patchs ; liste de départ par `outils/liste-depart.cjs` ; référence du banc par `tools/banc-differes.cjs rejouer … --profils L1-se --liste DEPART` avec les leviers de la passe et `"ancre":true`, **sans** `BANC_ZONES=journal` pour un lot ancien ; puis `tools/parite-l1se-sw.cjs … --racine COPIE --leviers '{"ancre":true}' --passe`.
+- Parité : copie du code avec les patchs (ou l'arbre d'intégration, sans `--leviers`) ; liste de départ par `outils/liste-depart.cjs` (cuts du lot invalides : vérifier que le compte d'invalides est celui de la fiche de départ) ; référence du banc par `tools/banc-differes.cjs rejouer … --profils L1-se --liste DEPART` avec les leviers de la passe et `"ancre":true`, **sans** `BANC_ZONES=journal` pour un lot ancien ; puis `tools/parite-l1se-sw.cjs … --racine COPIE --leviers '{"ancre":true}' --passe`.
 - N+ : garde d'octobre d'abord (`banc.cjs garde --nom Np --patch ancre.patch --patch ancre-reprise.patch --env 'BANC_LEVIERS={"ancre":{"reprise":true}}'`, puis `refus.cjs garde`), corpus ensuite, décision selon `reglage-fige-reprise.md` §4. L'incrément du service worker pour N+ n'est pas écrit.
 
 ## Pièges mesurés
