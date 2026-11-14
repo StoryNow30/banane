@@ -1,0 +1,277 @@
+diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
+index 1a307d2..34f1a2f 100644
+--- a/src/gcv2-l1.js
++++ b/src/gcv2-l1.js
+@@ -633,6 +633,74 @@
+    for(const x of c)if(soutenu(x.decal))return x;
+    return null;
+  }
++ /* CH-125 (D-352) — MESURE DU FLANC DE LA PAIRE VALIDÉE (levier `flancSource`, ABSENT des leviers livrés : sans lui, rien ne change).
++  * Une pose de la GCV2 peut être une prédiction que rien n'a mesurée sur le nuage du cut : rail ramené à l'écartement de la liste (correction,
++  * consensus), voie des voisins, branche, cellule au calage refusé en travers. Mesuré sur 6 lots de novembre (chantiers/CH-125/mesure.md) : là où le
++  * flanc lu à la pose la contredit d'au moins 5 mm, l'opérateur retouche le rail dans le même sens (18 cuts rapprochés, aucun éloigné).
++  * `flancALaPose` : le flanc d'un rail relu à sa pose `mm` ([long, lat, vert], mm depuis le départ), fenêtre centrée sur la pose (rail translaté,
++  * comme `mesuresTranslatees` : la fenêtre du calage livré s'arrête à 180 mm du départ), par la mesure du calage de convention (médiane des points
++  * du flanc + `faceOffsetMm`, `minFacePoints` au moins, bande `bandMm`) :
++  *   - premier pas : la bande de la convention ; si elle a moins de `minFacePoints` points, une bande large de `maxMm` ;
++  *   - le flanc CONTREDIT la pose si ce premier pas vaut au moins `seuilMm` : il est alors suivi en point fixe (bande de la convention, 6 tours au
++  *     plus) et le rail prend sa place si elle reste du même côté, entre `seuilMm` et `maxMm` ; sous le seuil, la pose et le flanc s'accordent ;
++  *   - FLANC PROPRE (deux nappes voisines, rail et lame d'une ADV : la médiane peut tomber sur l'autre) : un point « appuie » une pose quand son
++  *     écart est à `FLANC_APPUI_MM` de celui que la convention attend (−`faceOffsetMm`). La pose reçue est gardée si plus du tiers des points lus
++  *     l'appuient (elle a son flanc) ; la place suivie n'est prise que si au moins le tiers de ses points l'appuient (le flanc y est).
++  * Rend null sans gabarit, sinon { n, depart, premierMm, appui, duMm (vers le champignon ; null : pose gardée), latMm, motif }. La hauteur n'est pas lue. */
++ const FLANC_TOURS=6,FLANC_APPUI_MM=3,FLANC_APPUI_PART=1/3;
++ function flancMode(){const v=LEVIERS.flancSource;return v&&typeof v==='object'&&fini(v.seuilMm)&&fini(v.maxMm)&&v.seuilMm>0&&v.maxMm>=v.seuilMm&&v.maxMm<=30?v:null;}
++ function flancALaPose(capture,side,mm,S){
++   const rail=capture&&capture.rails&&capture.rails[side],D=Conv.DEFAULTS;
++   if(!rail||!Array.isArray(mm)||!mm.every(fini))return null;
++   const lire=(lat,bande)=>{const pos=comptePositions(capture,side,[mm[0],lat,mm[2]]),t=pos.map((v,i)=>v-rail.positionSceneRelative[i]);
++     return Conv.bandOffsets({...capture,rails:{...capture.rails,[side]:O.translated(rail,t)}},side,[0,0,0],bande?{bandMm:bande}:{});};
++   const pasDe=o=>Conv.quantile(o.face,D.faceQuantile)+D.faceOffsetMm;
++   let o=lire(mm[1],null),depart='bande';
++   if(!o.ok)return null;
++   if(o.face.length<D.minFacePoints){
++     depart='large';o=S.maxMm>D.bandMm?lire(mm[1],S.maxMm):o;
++     if(!o.ok||o.face.length<D.minFacePoints)return {n:o.ok?o.face.length:0,depart,premierMm:null,duMm:null,motif:'flanc-peu-observe'};
++   }
++   const appuiDe=o=>o.face.filter(v=>Math.abs(v+D.faceOffsetMm)<=FLANC_APPUI_MM).length/o.face.length;
++   const signe=o.sign,pas0=pasDe(o),out={n:o.face.length,depart,premierMm:arrondi(pas0,2),appui:arrondi(appuiDe(o),2),duMm:null};
++   if(!(Math.abs(pas0)>=S.seuilMm))return out;
++   if(appuiDe(o)>FLANC_APPUI_PART)return {...out,motif:'pose-appuyee'};
++   let lat=mm[1]+signe*pas0,pas=Infinity,fixe=false,n=o.face.length;
++   for(let k=1;k<=FLANC_TOURS;k++){
++     o=lire(lat,null);
++     if(!o.ok||o.face.length<D.minFacePoints)return {...out,motif:'flanc-perdu'};
++     n=o.face.length;pas=pasDe(o);
++     if(Math.abs(pas)<.05){fixe=true;break;}
++     if(k===FLANC_TOURS)break;
++     lat+=signe*pas;
++   }
++   if(!fixe&&!(Math.abs(pas)<.5))return {...out,motif:'sans-point-fixe'};
++   const du=signe*(lat-mm[1]);
++   if(Math.sign(du)!==Math.sign(pas0)||Math.abs(du)<S.seuilMm)return {...out,suiviMm:arrondi(du,2),motif:'sous-seuil'};
++   if(Math.abs(du)>S.maxMm)return {...out,suiviMm:arrondi(du,2),motif:'hors-borne'};
++   if(appuiDe(o)<FLANC_APPUI_PART)return {...out,suiviMm:arrondi(du,2),motif:'flanc-diffus'};
++   return {...out,n,duMm:arrondi(du,2),latMm:arrondi(lat,2)};
++ }
++ /* Les deux rails de la paire `decal` mesurés ensemble. L'écartement de la paire mesurée est LIBRE dans le contrat (`REGLE.contratMm`, 1 420 à
++  * 1 470 mm) : il n'est pas ramené à la référence de la liste ; hors contrat, il ne doit pas s'en éloigner plus que la paire reçue. Le nuage doit
++  * soutenir chaque rail déplacé à sa nouvelle place (soutien de L1-e). Rend { decal (paire mesurée, ou null : paire reçue gardée), journal (null
++  * quand aucun flanc ne contredit sa pose) }. */
++ function mesurerFlancPaire(capture,decal,S){
++   const j={},nd={left:decal.left.slice(),right:decal.right.slice()};let bouge=false,contredit=false;
++   for(const s of SIDES){
++     const f=flancALaPose(capture,s,decal[s],S);
++     if(!f||!fini(f.premierMm)||Math.abs(f.premierMm)<S.seuilMm)continue;
++     contredit=true;j[s]=f;
++     if(fini(f.duMm)){nd[s][1]=f.latMm;bouge=true;}
++   }
++   if(!contredit)return {decal:null,journal:null};
++   if(!bouge)return {decal:null,journal:j};
++   const g0=ecartementDecal(capture,decal),g1=ecartementDecal(capture,nd),[lo,hi]=REGLE.contratMm,hors=g=>g<lo?lo-g:g>hi?g-hi:0;
++   const journal={...j,ecartementMm:[arrondi(g0,1),arrondi(g1,1)]};
++   if(!(hors(g1)<=hors(g0)+1e-6))return {decal:null,journal:{...journal,refus:'ecartement'}};
++   if(!SIDES.every(s=>!j[s]||!fini(j[s].duMm)||(m=>m.dessus>=E.REGLAGE.soutienDessus&&m.flanc>=E.REGLAGE.soutienFlanc)(soutienRail(capture,s,nd[s]))))return {decal:null,journal:{...journal,refus:'soutien'}};
++   return {decal:nd,journal};
++ }
+  function deciderL1e(k,mod,ref,capture,probasDonnees=null){
+    if(!E)throw Error('GCV2 L1-e : module absent.');
+    const d0=fini(LEVIERS.selectionRefMm)&&ref&&fini(ref.mm)&&capture?deciderL1Ref(k,mod,ref.mm,capture,probasDonnees):deciderL1(k,mod,REGLE,probasDonnees),p=d0.probas;
+@@ -828,6 +896,24 @@
+        else if(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>va[s].residuMm??0))>LEVIERS.voieIncoherenteMm)dd={etat:'rien',motif:'voie-incoherente',decal:null,corrigee:false,avant:dd.motif};
+      }
+    }
++   /* CH-125 — mesure du flanc de la paire validée (levier `flancSource`, absent des leviers livrés). Elle ne change JAMAIS l'état du cut : elle déplace
++    * en travers un rail d'une paire déjà validée, toutes gardes passées ; si la paire mesurée ne tenait pas la garde de voie absolue, la paire reçue
++    * est gardée. Sans `ecrite`, la pose de la décision est la pose mesurée : commande, voisins et transport lisent la même. */
++   let flanc=null;const FS=flancMode();
++   if(FS&&dd.etat==='valider'&&dd.decal&&capture){
++     const m=mesurerFlancPaire(capture,dd.decal,FS);
++     flanc=m.journal;
++     if(m.decal){
++       let veto=false;
++       if(fini(LEVIERS.vetoVoieAbsMm)){const va=voieAbsolue(capture,k.cut,k.voisinsAbs,LEVIERS.voieAbsFenetre,3,coherents);
++         veto=!!(va&&SIDES.every(s=>va[s].distProche<=LEVIERS.rechProcheMaxCuts)&&Math.max(...SIDES.map(s=>Math.abs(m.decal[s][1]-va[s].v[0])))>LEVIERS.vetoVoieAbsMm);}
++       if(veto)flanc={...flanc,refus:'veto-voie-absolue'};
++       /* `ecrite` (propagation « B ») : la paire de la décision reste la paire reçue (voisins, transport, appuis lisent la même qu'au livré : aucun
++        * ricochet) ; la paire mesurée est rendue à part (`flanc.pose`) pour la SEULE écriture, que l'appelant refait par `commander`. */
++       else if(FS.ecrite===true)flanc={...flanc,pose:m.decal};
++       else{flanc={...flanc,avant:{left:dd.decal.left,right:dd.decal.right}};dd={...dd,decal:m.decal};}
++     }
++   }
+    const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
+      voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
+      hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
+@@ -845,7 +931,7 @@
+    const base0=d0.paire||{left:{origines:['H6'],sousOrigines:[],hauteur:false},right:{origines:['H6'],sousOrigines:[],hauteur:false}};
+    const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...base0[s],decal:dd.decal[s]}])):null;
+    const ecart3d=paire?Math.max(norme(paire.left.decal),norme(paire.right.decal)):d0.ecartDepartMm;
+-   return {...d0,variante:'L1-e',etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,...(diag?{diag}:{}),test13:{etat:d0.etat,motif:d0.motif??null,paire:d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null}};
++   return {...d0,variante:'L1-e',etat:dd.etat,motif:dd.motif,paire,ecartDepartMm:paire?arrondi(ecart3d,1):d0.ecartDepartMm,correction,...(diag?{diag}:{}),...(flanc?{flanc}:{}),test13:{etat:d0.etat,motif:d0.motif??null,paire:d0.paire?{left:d0.paire.left.decal,right:d0.paire.right.decal}:null}};
+  }
+  /* Cap 5, levier « sélection à la référence » : la règle L1 (τ, δ, 150 mm), mais la meilleure paire est cherchée parmi les paires dont l'écartement
+   * EXACT est à `selectionRefMm` de la référence de la liste d'ESV (au lieu de la médiane du lot ± 15 mm ou du contrat 1 420–1 470 mm). */
+@@ -1020,9 +1106,9 @@ function contreChaine(g,decalChaine,seuilMm){
+      ecartDepartMm:d.ecartDepartMm,ecartMaxLatVertMm:d.ecartMaxLatVertMm??null,paires:d.permises??null,
+      paire:d.paire?{left:d.paire.left.decal,right:d.paire.right.decal}:null,aControler:d.aControler===true||undefined,
+      gMedMm:arrondi(r.gMed,1),chaine:r.chaine?{stage:r.chaine.stage,reason:r.chaine.reason!=null?String(r.chaine.reason).slice(0,80):null,appuis:r.chaine.anchorsUsed.length}:null,
+-     nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
++     nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{}),...(d.flanc?{flanc:d.flanc}:{})}:{})};
+  }
+  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
+    modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
+-   voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
++   voieAbsolue,rechercheRecentree,pairesRecentrees,flancALaPose,mesurerFlancPaire,leviersActifs:()=>LEVIERS};
+ });
+diff --git a/tests/ch125-flanc-source.test.cjs b/tests/ch125-flanc-source.test.cjs
+new file mode 100644
+index 0000000..54ecd29
+--- /dev/null
++++ b/tests/ch125-flanc-source.test.cjs
+@@ -0,0 +1,107 @@
++'use strict';
++/* CH-125 (D-352) — la mesure de pose à la source, niveau 2 : le TRAVERS d'une pose de la GCV2 que rien n'a mesurée sur le nuage du cut.
++ *
++ * Levier `flancSource` de la décision L1-e (src/gcv2-l1.js), ABSENT des leviers livrés : sans lui, la décision est celle d'avant, octet pour octet.
++ * Réglé par le banc (`reglerLeviers({ flancSource: { seuilMm, maxMm } })`) : le flanc de chaque rail de la paire VALIDÉE est relu à sa pose, fenêtre
++ * centrée sur elle, par la mesure du calage de convention (médiane du flanc − 2,6 mm, 6 points au moins). S'il contredit la pose d'au moins
++ * `seuilMm`, il est suivi en point fixe et le rail prend sa place, à `maxMm` au plus. L'écartement de la paire mesurée est libre dans le contrat
++ * (1 420 à 1 470 mm), jamais plus loin du contrat que la paire reçue. La hauteur n'est pas touchée, l'état du cut non plus. Fixtures synthétiques.
++ * Mode `ecrite` : la décision garde sa paire (voisins et transport inchangés), la paire mesurée est rendue à part pour la seule écriture (banc, service worker). */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const L1 = require('../src/gcv2-l1.js');
++
++const C = require('../vendor/capture-core.js'), tr = t => C.translation(t);
++/* Deux rails au champignon rectangulaire (dessus z = 0 sur 64 mm, flanc côté voie en u = 0 jusqu'à −40 mm), face à face : le gauche en y = 0,
++ * champignon vers +y ; le droit en y = −écartement, champignon vers −y. Points : un dessus de 40 points à z = 0 ± 2 mm, un flanc de 11 points
++ * autour de `flanc` mm (± 2 mm) du flanc du gabarit, vers le champignon ; `flanc2` ajoute une deuxième nappe (rail voisin, lame). */
++const Conv = require('../src/placement-convention.js');
++function paire({ ecartement = 1435, gauche = {}, droite = {} } = {}) {
++  const points = [], rails = {};
++  for (const [cote, s, y0, o] of [['left', 1, 0, gauche], ['right', -1, -ecartement / 1000, droite]]) {
++    const contour = [];
++    for (let u = 0; u <= .064 + 1e-12; u += .001) contour.push([0, y0 + s * u, 0]);
++    for (let z = -.001; z >= -.04 - 1e-12; z -= .001) contour.push([0, y0, z]);
++    const M = tr([0, y0, 0]);
++    rails[cote] = { positionSceneRelative: [0, y0, 0], profileOriginSceneRelative: [0, y0, 0], railLocalToSceneRelative: M, profileLocalToSceneRelative: M,
++      sceneRelativeToProfileLocal: tr([0, -y0, 0]), profileContours: [{ verticesSceneRelative: contour }] };
++    /* `decale` : tout le nuage du rail déplacé de tant de mm vers son champignon (le rail réel est loin de la pose de départ) */
++    const dy = (o.decale || 0) / 1000;
++    for (let i = 0; i < 40; i++) points.push([0, y0 + s * (dy + .015 + i * .035 / 39), (-2 + i * 4 / 39) / 1000]);
++    const nappe = (centre, n) => { for (let i = 0; i < n; i++) points.push([0, y0 + s * (dy + (centre - 2 + i * 4 / Math.max(1, n - 1)) / 1000), -.012 - i * .02 / Math.max(1, n - 1)]); };
++    nappe(o.flanc ?? 2.6, o.points ?? 11);
++    if (o.flanc2 !== undefined) nappe(o.flanc2, o.points2 ?? 11);
++  }
++  return { rails, pointsSceneRelative: points, visibleByClipBoxes: points.map(() => true) };
++}
++const S = { seuilMm: 5, maxMm: 20 }, zero = () => ({ left: [0, 0, 0], right: [0, 0, 0] });
++const proche = (a, b, tol = 0.11) => assert.ok(Math.abs(a - b) <= tol, `${a} ≈ ${b}`);
++
++test('le levier est absent des leviers livrés : coupé par défaut, liste des leviers inchangée', () => {
++  assert.equal(L1.LEVIERS_LIVRES.flancSource, undefined);
++  assert.equal(L1.LEVIERS_V4.flancSource, undefined);
++  assert.equal(L1.leviersActifs().flancSource, undefined);
++  assert.equal(typeof L1.flancALaPose, 'function');
++  assert.equal(typeof L1.mesurerFlancPaire, 'function');
++});
++
++test('flanc à la pose : en accord sous le seuil, suivi au-delà, des deux côtés de la voie', () => {
++  /* le flanc des points à 2,6 mm du gabarit : c'est la convention, la pose et le flanc s'accordent */
++  const accord = L1.flancALaPose(paire(), 'left', [0, 0, 0], S);
++  assert.equal(accord.duMm, null); proche(accord.premierMm, 0);
++  /* flanc à 6 mm : premier pas de 3,4 mm, sous le seuil de 5 : rien */
++  const sous = L1.flancALaPose(paire({ gauche: { flanc: 6 } }), 'left', [0, 0, 0], S);
++  assert.equal(sous.duMm, null); proche(sous.premierMm, 3.4);
++  /* le flanc contredit la pose de 8 mm vers le champignon, ou de 9 mm vers la voie : le rail va au flanc */
++  for (const d of [8, -9]) {
++    const g = L1.flancALaPose(paire({ gauche: { flanc: 2.6 + d } }), 'left', [0, 0, 0], S);
++    proche(g.duMm, d); proche(g.latMm, d); assert.equal(g.depart, 'bande');
++    /* rail droit : le champignon est vers −y, le décalage latéral est de signe opposé */
++    const r = L1.flancALaPose(paire({ droite: { flanc: 2.6 + d } }), 'right', [0, 0, 0], S);
++    proche(r.duMm, d); proche(r.latMm, -d);
++  }
++  /* la fenêtre suit la pose : un rail décidé à 200 mm de son départ est mesuré là où il est, alors que la fenêtre du calage livré (180 mm
++   * autour du départ) n'y lit aucun point */
++  const loin = paire({ gauche: { decale: 200, flanc: 2.6 + 8 } });
++  assert.equal(Conv.bandOffsets(loin, 'left', [0, .2, 0]).face.length, 0, 'calage livré : aucun point de flanc lu à 200 mm du départ');
++  const f = L1.flancALaPose(loin, 'left', [0, 200, 0], S);
++  proche(f.duMm, 8); proche(f.latMm, 208);
++});
++
++test('flanc à la pose : départ large quand la bande est vide, borne, nappe double', () => {
++  /* flanc à 17 mm : la bande de 12 mm de la convention est vide ; la bande large le trouve, puis le suivi le cale (14,4 mm) */
++  const large = L1.flancALaPose(paire({ gauche: { flanc: 17 } }), 'left', [0, 0, 0], S);
++  assert.equal(large.depart, 'large'); proche(large.duMm, 14.4);
++  /* au-delà de la borne : rien */
++  assert.equal(L1.flancALaPose(paire({ gauche: { flanc: 30 } }), 'left', [0, 0, 0], S).duMm, null);
++  assert.equal(L1.flancALaPose(paire({ gauche: { flanc: 17 } }), 'left', [0, 0, 0], { seuilMm: 5, maxMm: 12 }).duMm, null, 'borne de 12 mm : le flanc à 14,4 mm est hors de portée');
++  /* deux nappes à 5 mm de part et d'autre (rail et lame) : la médiane tombe entre les deux, le premier pas est sous le seuil, la pose est gardée */
++  const double = L1.flancALaPose(paire({ gauche: { flanc: 2.6 + 5, flanc2: 2.6 - 5 } }), 'left', [0, 0, 0], S);
++  assert.equal(double.duMm, null);
++  /* la lame domine (13 points à 9 mm vers la voie) mais la pose garde son flanc (9 points là où la convention l'attend, plus du tiers) : pose gardée */
++  const lame = L1.flancALaPose(paire({ gauche: { flanc: 2.6, points: 9, flanc2: 2.6 - 9, points2: 13 } }), 'left', [0, 0, 0], S);
++  assert.equal(lame.duMm, null); assert.equal(lame.motif, 'pose-appuyee'); proche(lame.premierMm, -9, 2.1);
++  /* la pose n'a presque plus de flanc à elle (4 points sur 17) : le flanc voisin est suivi */
++  const seul = L1.flancALaPose(paire({ gauche: { flanc: 2.6, points: 4, flanc2: 2.6 - 9, points2: 13 } }), 'left', [0, 0, 0], S);
++  assert.ok(seul.duMm < -5 && seul.duMm > -11.1, JSON.stringify(seul));
++  /* moins de 6 points de flanc, même en bande large : rien */
++  assert.equal(L1.flancALaPose(paire({ gauche: { flanc: 11.6, points: 5 } }), 'left', [0, 0, 0], S).duMm, null);
++});
++
++test('paire mesurée : écartement libre dans le contrat, jamais plus loin du contrat que la paire reçue ; hauteur intacte', () => {
++  /* rail gauche contredit de 9 mm vers le champignon : l'écartement passe de 1 435 à 1 444 mm, dans le contrat */
++  const cap = paire({ gauche: { flanc: 11.6 } }), m = L1.mesurerFlancPaire(cap, { left: [0, 0, 3], right: [0, 0, -2] }, S);
++  assert.ok(m.decal); proche(m.decal.left[1], 9); assert.equal(m.decal.left[2], 3); assert.deepEqual(m.decal.right, [0, 0, -2]);
++  proche(m.journal.ecartementMm[0], 1435, 0.2); proche(m.journal.ecartementMm[1], 1444, 0.2);
++  assert.ok(m.journal.left && m.journal.left.duMm !== null); assert.ok(!m.journal.right || m.journal.right.duMm == null);
++  /* les deux rails contredits ensemble : mesurés ensemble */
++  const deux = L1.mesurerFlancPaire(paire({ gauche: { flanc: 11.6 }, droite: { flanc: -4.4 } }), zero(), S);
++  proche(deux.decal.left[1], 9); proche(deux.decal.right[1], 7); proche(deux.journal.ecartementMm[1], 1437, 0.2);
++  /* la paire mesurée sortirait du contrat (1 466 + 9 = 1 475 mm) : la paire reçue est gardée, le refus est consigné */
++  const hors = L1.mesurerFlancPaire(paire({ ecartement: 1466, gauche: { flanc: 11.6 } }), zero(), S);
++  assert.equal(hors.decal, null); assert.equal(hors.journal.refus, 'ecartement');
++  /* la paire reçue est déjà hors contrat (1 480 mm) : la mesure qui l'en rapproche est prise, celle qui l'en éloigne est refusée */
++  proche(L1.mesurerFlancPaire(paire({ ecartement: 1480, gauche: { flanc: -6.4 } }), zero(), S).decal.left[1], -9);
++  assert.equal(L1.mesurerFlancPaire(paire({ ecartement: 1480, gauche: { flanc: 11.6 } }), zero(), S).decal, null);
++  /* en accord : rien, et aucun journal */
++  assert.deepEqual(L1.mesurerFlancPaire(paire(), zero(), S), { decal: null, journal: null });
++});
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 0311b04..22ba25c 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -130,6 +130,18 @@ function gardeDuBanc(valeur) {
+   if (!R.ok) throw Error('garde des appuis de la passe : ' + R.raison);
+   return { actif: R.actif, deplacementMaxMm: R.deplacementMaxMm, appuiNormalMaxCuts: R.appuiNormalMaxCuts };
+ }
++/* CH-125 (levier `flancSource` de src/gcv2-l1.js, mode `ecrite`) : la décision L1-e rend, à côté de sa paire, la paire au flanc mesuré (`l1.flanc.pose`). Elle est
++ * écrite à la place de la paire de la décision si la commande refaite passe (`commander` : écartement admissible, même sort de la vue) ; sinon la pose reste
++ * celle de la décision (`flancEcrit.refus`). Voisins, transport et appuis gardent la pose de la décision : l'écriture ne change aucune décision d'un autre cut. */
++function ecrireFlanc(out, before, runtimeRails, cameras, camerasLarges) {
++  const f = out && out.l1 && out.l1.flanc;
++  if (!f || !f.pose || out.etat !== 'pose' || !out.decal) return out;
++  const pos = Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], f.pose[s].map(v => v / 1000))]));
++  const cg = L1.commander({ positions: pos, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, camerasLarges, valider: true });
++  /* même sort de la vue qu'à la décision (dans la vue, ou vue à déplacer) : l'écriture ne change pas le geste */
++  if (cg.action !== 'lot' || (cg.vue === 'deplacer' ? 'deplacee' : null) !== (out.vue ?? null)) return { ...out, flancEcrit: { refus: cg.action !== 'lot' ? cg.reason || 'refus' : 'vue' } };
++  return { ...out, decal: decalPose(before, pos), flancEcrit: { avant: out.decal } };
++}
+ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined, rechercheLarge = undefined }) {
+   const horloge = () => Number(process.hrtime.bigint()) / 1e6;
+   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
+@@ -309,6 +321,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+           }
+         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
+       }
++      if (p === 'L1-se' && out && out.source === 'gcv2') out = ecrireFlanc(out, before, runtimeRails, cameras, camerasLarges);
+       ligne.profils[p] = out;
+       /* Cap 5 : un différé de L1-se est gardé pour la deuxième passe (fin de lot), avec ce qu'il faut pour le redécider. */
+       if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot' || out.source === 'recherche-large'))
+@@ -351,6 +364,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+             }
+             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
+             r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
++            r.ligne.profils['L1-se'] = ecrireFlanc(r.ligne.profils['L1-se'], r.before, r.runtimeRails, r.cameras, r.camerasLarges);
+             poses++;
+           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
+           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
