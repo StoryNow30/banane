@@ -155,7 +155,8 @@ function listeDeDepart(table, cutsLot) {
   for (const c of cutsLot) {
     if (!Number.isInteger(c.cut) || c.cut < 0 || c.cut >= table.n || !c.depart) continue;
     SIDES.forEach((s, k) => { for (let i = 0; i < 3; i++) ed[6 * c.cut + 3 * k + i] = Math.round((c.depart[s][i] + T[i]) * 1e4); });
-    if (fl[c.cut] & 1) { fl[c.cut] = 0; st[c.cut] = 0; remises++; }
+    /* Un cut du lot traité depuis était INVALIDE au départ (le lot ne traite que les invalides) : sans drapeau et invalide, comme le service worker l'a vu. */
+    if (fl[c.cut] & 1) { fl[c.cut] = 0; st[c.cut] = 1; remises++; }
   }
   return { table: { ...table, st, fl, ed }, n: grappes[0].n, second: grappes[1] ? grappes[1].n : 0, remises };
 }
