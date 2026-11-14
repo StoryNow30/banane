@@ -13,7 +13,7 @@ Décisions : D-349 (passe de design), D-350 (direction B), D-353 (épure de la C
 - `panel-signal.css` : une section ajoutée en fin de feuille (source : `chantiers/CH-115/directions/`).
 - `src/signal-rendu.js` : bouton des détails (Orbite, Écho, Constellation), lignes Palette et ajustement dans Réglages.
 - `src/ui5.js` : `ui.details`, `ui.palette` (lu et gardé), `data-palette` et `data-details` sur `#ui5`, choix `palette` et `ajustement`, sortie de la tuile, glissement d'onglet, chiffre qui roule.
-- Essais : `tests/ch115-palette-epure-navigateur.test.cjs` (nouveau) ; `tests/ch104-mouvement-navigateur.test.cjs` (ouvre « Détails » avant de lire les étapes, repliées par défaut).
+- Essais : `tests/ch115-palette-epure-navigateur.test.cjs` (nouveau) ; `tests/ch104-mouvement-navigateur.test.cjs` (ouvre « Détails » avant de lire les étapes, repliées par défaut) ; `tests/esv-maquette/file-signal-clics.test.cjs` (le point « en cours » de la frise compte comme la ligne du bilan, repliée).
 - Aucun fichier protégé. Aucun nouveau fichier à mettre au paquet.
 
 ## Preuves (ÉTABLI)
@@ -21,7 +21,7 @@ Décisions : D-349 (passe de design), D-350 (direction B), D-353 (épure de la C
 - `ch115-palette-epure-navigateur` : 4 rouges sur la base Vision 18, 5 verts après.
 - `capturer.cjs` : 140 photos, deux tailles et deux thèmes, aucun débordement, aucune troncature, aucun contraste sous 4,5:1.
 - Lot en cours d'emblée (600 × 760, `compter.cjs`) : 15 blocs, 21 mots, 4 nombres (Vision 15 : 60, 105, 26). « Vers la partie N » : 17, 33, 8 (57, 112, 40).
-- Maquette ESV : voir le message de fin.
+- Maquette ESV (`tests/esv-maquette/essais.cjs`) : 89 essais, 85 réussis, 3 sautés, 1 rouge, `file-signal-clics` (il attendait la ligne « en cours » du bilan par partie, désormais repliée ; la base Vision 18 le passe). Essai mis à jour : le point « en cours » de la frise compte aussi. Fichier rejoué seul : 4 sur 4. Suite complète non relancée après ce correctif.
 
 ## Non vérifié
 - Le vrai panneau dans Chrome à côté d'ESV ; les images par seconde ; le verify complet (intégrateur).
