@@ -79,3 +79,15 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 - **R6 étendue à tous les leviers** : un « vert changé » n'est ni un recul ni un gain tant qu'il n'est pas jugé contre la vérité d'octobre. Tout verdict de garde donne, pour chaque cut changé : pose de base, pose nouvelle, vérité.
 - **D et E de CH-119 à rejuger** contre la vérité d'octobre à sa relance (ses 7 « verts changés » : la chaîne y est fausse ; où D repose-t-il ?). C1 de même, si le budget le permet.
 - **L'ancre devient la référence** : tout levier de voie est jugé aussi par la distance à l'axe de ses poses nouvelles.
+
+## Audit 6 — 14/11, 10 h 25 UTC
+
+### Constats
+20. **Troisième coupure par la limite d'usage** (ÉTABLI) : 14/11 à 10 h 23 UTC, « resets 11:30am (UTC) », deux heures et demie après la reprise. Tournaient : CH-124 et CH-125 au modèle le plus fort à l'effort maximal, CH-116 (examens), CH-121 (parité), CH-123 (croisé, fini à 9 h 39), CH-115 (page d'interface).
+21. **R8 n'a pas été tenue** : j'ai relancé CH-125 dès qu'une place s'est libérée, soit deux sessions au modèle le plus fort ensemble, plus le banc. Les sessions les plus anciennes relisent à chaque tour un contexte de 300 000 à 600 000 jetons : c'est ce qui vide la fenêtre.
+22. **Rien de décisif n'est perdu** : les verdicts de N (octobre, corpus en première passe, examen vierge) et d'aj5 (examen vierge) sont poussés. Restent en vol : parité de N, parité d'aj5 à l'éteint, examen vierge de v4BS-sd, garde du niveau 1 de CH-125.
+
+### Ce qui change
+- **R8 durcie : une seule session au modèle le plus fort à la fois**, plus le banc (CH-116) et au plus une session légère. Ordre : parité de N (CH-124) d'abord ; CH-125 ensuite seulement.
+- **Sessions trop lourdes** : au-delà de 500 000 jetons de contexte, une session finit sa tâche en cours, pousse une passation, et est remplacée par une session neuve (CH-121 après sa parité ; CH-116 après les examens en cours).
+- **Relance programmée** à l'heure de levée (`send_later` à 11 h 32 UTC), faite.
