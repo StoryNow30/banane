@@ -320,7 +320,10 @@
   }
   const trioHtml = T => T.length ? `<dl class="sg-trio">${T.map(([v, t, cls]) => `<div><dt>${esc(t)}</dt><dd class="sg-n${cls ? ' ' + cls : ''}">${esc(v)}</dd></div>`).join('')}</dl>` : '';
   /* La tuile d'état : elle reste, seuls ses contenus changent. `droite` : la partie (Orbite, Écho) ou le nom de la vue. */
-  const tuileEtat = (m, anneau, droite, phrase, sous, label) => `<section class="sg-instrument sg-tu sg-tu-etat" aria-live="polite"${label ? ` aria-label="${esc(label)}"` : ''}><div class="sg-haut">${pastille(m)}${droite ? `<span class="sg-partie">${droite}</span>` : ''}</div><div class="sg-milieu">${anneau}<div class="sg-texte"><h3 class="sg-phrase">${phrase}</h3>${sous || ''}</div></div></section>`;
+  /* CH-115 (D-353) : le détail (fil, étapes, compteurs, bornes, bilan de fin) est replié par défaut ; ce bouton l'ouvre (`sg:details`, src/ui5.js). */
+  const detailsB = (d, ouvert) => d ? `<button type="button" class="sg-details-b" data-act="sg:details" aria-expanded="${!!ouvert}">${esc(ouvert ? d[1] : d[0])}</button>` : '';
+  const tuileEtat = (m, anneau, droite, phrase, sous, label, details, ouvert) => `<section class="sg-instrument sg-tu sg-tu-etat" aria-live="polite"${label ? ` aria-label="${esc(label)}"` : ''}><div class="sg-haut">${pastille(m)}${droite ? `<span class="sg-partie">${droite}</span>` : ''}</div><div class="sg-milieu">${anneau}<div class="sg-texte"><h3 class="sg-phrase">${phrase}</h3>${sous || ''}</div></div>${detailsB(details, ouvert)}</section>`;
+  const DETAILS = ['Détails', 'Moins'];
   const maj1 = t => t.replace(/^(\s*(?:<[^>]+>)*\s*)(\p{Ll})/u, (x, a, c) => a + c.toUpperCase());
   /* La partie est dite en haut à droite de la tuile : la phrase ne la répète pas. */
   const sansPartie = (phrase, partie) => !partie ? phrase : phrase === partie ? '' : phrase.startsWith(partie + ' · ') ? maj1(phrase.slice(partie.length + 3)) : phrase;
@@ -567,6 +570,8 @@
  ${ligne('Bandeau dans ESV', 'Une ligne d’état au bas de la page ESV', seg('bandeau', [['non', 'Éteint'], ['oui', 'Allumé']], r.bandeau ? 'oui' : 'non', 'Bandeau dans ESV'))}
  ${ligne('Télécommande (iPhone)', 'Suivre et piloter Ariane depuis le téléphone, par ton relais chiffré', '<button type="button" class="sg-annuler" data-act="sg:telecommande">Ouvrir</button>')}
  ${ligne('Thème', '', seg('theme', [['sombre', 'Sombre'], ['clair', 'Clair']], g.theme === 'clair' ? 'clair' : 'sombre', 'Thème'))}
+ ${ligne('Palette', 'Thème sombre · gardée pour la prochaine ouverture', seg('palette', [['glacier', 'Glacier'], ['sarcelle', 'Sarcelle']], g.palette === 'sarcelle' ? 'sarcelle' : 'glacier', 'Palette'))}
+ ${r.ajustement === null || r.ajustement === undefined ? '' : ligne('À l’essai : hauteur des poses', 'Ajuster la hauteur des poses sur le dessus du rail · coupé par défaut, vaut dès le cut suivant', seg('ajustement', [['non', 'Coupé'], ['oui', 'Allumé']], r.ajustement ? 'oui' : 'non', 'À l’essai : ajuster la hauteur des poses sur le dessus du rail'))}
  ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}
  <div class="sg-bas"><button type="button" class="sg-lien" data-act="sg:tech">${ic('liste')}<span>Détails techniques : santé de la collecte, exports de diagnostic, journal, résumé de la partie</span></button>${snap.exportTexte ? `<p class="sg-meta">${esc(snap.exportTexte)}</p>` : ''}${discard ? `<div class="sg-danger-zone"><span>Séance Écho : supprime ses données, avec confirmation.</span><button type="button" data-act="legacy:native-discard"${discard.actif ? '' : ' disabled'}>Abandonner la séance Écho…</button></div>` : ''}</div></div></div>`;
@@ -694,7 +699,7 @@
     /* Le choix du nombre de parties (au repos, arrêtée, terminée) : la tuile « Nouvelle Constellation » de la maquette. */
     const choix = L.seg ? `<section class="sg-tu sg-large sg-tu-choix" data-k="choix"><h4>Nouvelle Constellation</h4><div class="sg-of-ligne"><span>Nombre de parties</span>${moletteHtml(L.seg)}</div>${L.note ? `<p class="sg-meta sg-of-note">${L.note}</p>` : ''}</section>` : '';
     z = reg ? `${z}<div class="sg-duo" data-k="duo">${reg}${departs}</div>${choix}` : choix + z + departs;
-    const tete = `<section class="sg-instrument sg-tu sg-tu-etat sg-constel" aria-live="polite" aria-label="Constellation"><div class="sg-haut">${pastille(m)}<span class="sg-partie">Constellation</span></div><div class="sg-constel-t"><h3 class="sg-chiffre">${esc(titreT)}</h3><span class="sg-suite">${esc(rangT)}</span></div><p class="sg-phrase">${phrase}</p>${chaine}${temps}</section>`;
+    const tete = `<section class="sg-instrument sg-tu sg-tu-etat sg-constel" aria-live="polite" aria-label="Constellation"><div class="sg-haut">${pastille(m)}<span class="sg-partie">Constellation</span></div><div class="sg-constel-t"><h3 class="sg-chiffre">${esc(titreT)}</h3><span class="sg-suite">${esc(rangT)}</span></div><p class="sg-phrase">${phrase}</p>${chaine}${temps}${detailsB(['Bilan et départs', 'Replier'], u.details)}</section>`;
     return { m, corps: `${tete}<div class="sg-zone sg-onglet-file" data-z="file-${esc(F.etat)}">${z}</div>`, pied: piedHtml(L.boutons.map(b => ({ ...b, plein: b.cls === 'plein' }))) };
   }
   /* CH-028, puis CH-036 : L'ONGLET « Aurore » (Figma, page « CH-036 · Constellation et Aurore ») : l'horizon (revus sur total, une portion par partie),
@@ -821,7 +826,7 @@
       else if (avisHtml(m)) z += tuileAvis('avis', '!', avisHtml(m), 'sg-incident sg-avis-seul', 'alert');
       if (m.objet === 'echo') z += `<section class="sg-tu sg-large sg-objet" data-k="echo"><h4>Visites</h4>${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}<div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></section>`;
       const sous = trioHtml([[c.vus, c.vus > 1 ? 'Vus' : 'Vu'], [c.corriges, c.corriges > 1 ? 'Corrigés' : 'Corrigé'], [c.valides, c.valides > 1 ? 'Validés tels quels' : 'Validé tel quel']]);
-      return { corps: `${tuileEtat(m, anneau, partie, sansPartie(m.phrase, partie) || m.phrase, sous)}<div class="sg-zone" data-z="echo-${esc(m.glyphe)}">${z}</div>${poigneeHtml(s, m, u)}` };
+      return { corps: `${tuileEtat(m, anneau, partie, sansPartie(m.phrase, partie) || m.phrase, sous, '', m.objet === 'echo' ? DETAILS : null, u.details)}<div class="sg-zone" data-z="echo-${esc(m.glyphe)}">${z}</div>${poigneeHtml(s, m, u)}` };
     }
     const lot = a.etat !== 'pret', R = s.relChiffres || null, p2 = a.passe2, relu = a.etat === 'rel' && R && Number.isInteger(R.faits) && R.total > 0;
     /* Le pourcentage : seulement quand un total est réellement connu (cuts ciblés du lot, cuts décidés du rattrapage, cuts à relire). Sinon l'anneau
@@ -856,7 +861,7 @@
       z += `<div class="sg-duo" data-k="duo">${large ? fil('sg-second') + etapes('sg-second') : a.etat === 'rel' ? etapes('') + fil('sg-second') : fil('') + etapes('sg-second')}</div>`;
     }
     const cle = `orbite-${esc(a.etat)}-${esc(m.glyphe)}${m.incident ? '-incident' : ''}`;
-    return { corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous)}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
+    return { corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous, '', lot && m.glyphe !== 'hors' ? DETAILS : null, u.details)}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
