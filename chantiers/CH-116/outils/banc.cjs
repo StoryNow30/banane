@@ -82,7 +82,9 @@ async function rejouer(o) {
         const e = file[i++], m = meta(e), sortie = path.join(out, cle(e) + '.jsonl');
         const a = ['--max-old-space-size=6144', path.join(code, 'tools', 'banc-differes.cjs'), 'rejouer', '--partie', '1:' + e.partie, '--journal', m.journal,
           ...[].concat(m.captures).flatMap(c => ['--corpus', c]), '--lot', m.lotId, '--profils', PROFIL, '--sortie', sortie + '.part'];
-        if (m.liste) a.push('--liste', m.liste);
+        /* CH116_LISTES : dossier de listes de remplacement (<clé>.json, ex. liste du départ reconstituée) ; sinon la liste exportée du lot. */
+        const lr = process.env.CH116_LISTES ? path.join(process.env.CH116_LISTES, cle(e) + '.json') : null;
+        if (lr && fs.existsSync(lr)) a.push('--liste', lr); else if (m.liste) a.push('--liste', m.liste);
         actifs++;
         const p = cp.spawn(process.execPath, a, { env: { ...process.env, ...o.env }, stdio: ['ignore', 'pipe', 'pipe'] });
         let err = '', sout = ''; p.stderr.on('data', d => { err += d; }); p.stdout.on('data', d => { sout += d; });
