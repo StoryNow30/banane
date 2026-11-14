@@ -1,0 +1,6 @@
+captures retrouvées : 161/161 (3 s)
+deuxième passe 1 : 1 pose(s)
+deuxième passe 2 : 0 pose(s)
+partie 1:15 lot [lot] : 161 cuts, différés réels 18 ; L1-se : 20 différés (0 approchés) ; 51 s
+{"partie":15,"lot":"[lot]","profil":"L1-se","leviers":null,"passe":{"differes":19,"posees":1,"ms":103084,"parPasse":[1,0],"parPasseBanc":[1,0]},"cuts":161,"rejoues":161,"absents":[],"dureeS":1286,"differesSw":18,"lignesDifferentes":2,"diffs":[{"cut":7260,"nuage":true,"banc":{"etat":"differe","source":"ancre","motif":null},"sw":{"etat":"pose","source":"gcv2"},"ecartMm":null},{"cut":7423,"nuage":true,"banc":{"etat":"differe","source":"ancre","motif":null},"sw":{"etat":"pose","source":"gcv2"},"ecartMm":null}]}
+fini 0
