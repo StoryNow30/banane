@@ -1,0 +1,15 @@
+{
+ "nom": "ch124-N-zjp",
+ "patchs": [
+  {
+   "fichier": "ancre.patch",
+   "sha256": "55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c"
+  }
+ ],
+ "env": {
+  "BANC_ZONES": "journal",
+  "BANC_PASSE_PLAFOND": "10",
+  "BANC_LEVIERS": "{\"deuxiemePasse\":2,\"passe2Leviers\":{\"sansVoieRien\":true},\"ancre\":true}"
+ },
+ "profil": "L1-se"
+}

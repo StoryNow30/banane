@@ -1,0 +1,19 @@
+Validation croisée par lot (6 lots réglables ; examen : 0511) ; coût = {"plus50":100,"d1050":10,"bloques":5,"differes":1}
+
+| lot jugé | réglage choisi sur les autres | cuts | posés | jugés | ≤ 10 | 10–50 | > 50 | différés (jugés) | reposés justes / faux | bons bloqués |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0411 | ch124-N-zjp | 742 | 361 | 11 | 10 | 1 | 0 | 381 (58) | 4 / 1 | 0 |
+| 0611 | ch124-N-zjp | 945 | 889 | 80 | 70 | 10 | 0 | 56 (45) | 0 / 0 | 2 |
+| 0811a | ch124-N-zjp | 116 | 110 | 13 | 12 | 1 | 0 | 6 (6) | 0 / 0 | 0 |
+| 0811b | ch124-N-zjp | 223 | 187 | 25 | 21 | 4 | 0 | 36 (31) | 2 / 0 | 1 |
+| 1111 | ch124-N-zjp | 572 | 508 | 138 | 132 | 6 | 0 | 64 (61) | 0 / 0 | 1 |
+| 1211 | ch124-N-zjp | 553 | 501 | 66 | 53 | 13 | 0 | 52 (44) | 2 / 0 | 0 |
+| **total tenu à l'écart** | | 3151 | 2556 | 333 | 298 | 35 | 0 | 595 (245) | 8 / 1 | 4 |
+| **référence livre-zjp, mêmes lots** | | 3151 | 2588 | 360 | 296 | 35 | 29 | 563 (218) | 6 / 1 | 4 |
+
+Examen : réglage choisi sur les 6 lots réglables = « ch124-N-zjp », jugé sur 0511 :
+
+| lot | cuts | posés | jugés | ≤ 10 | 10–50 | > 50 | différés (jugés) | reposés justes / faux | bons bloqués |
+|---|---|---|---|---|---|---|---|---|---|
+| ch124-N-zjp | 865 | 857 | 206 | 205 | 1 | 0 | 8 (8) | 19 / 0 | 0 |
+| livre-zjp | 865 | 857 | 206 | 205 | 1 | 0 | 8 (8) | 19 / 0 | 0 |
