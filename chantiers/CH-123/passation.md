@@ -37,3 +37,11 @@ Rien. Les deux gardes v4 ont fini (vertes) ; aucun rappel ni croisé v4 n'a ét�
 - **Tâches de fond tuées** à 30 min par le harnais et au redémarrage du conteneur : lancer les rejeux en `nohup setsid`, et les suivre par leurs journaux. R7 : deux rejeux lourds au plus à la fois.
 - La mesure du pool ne change aucune décision (rejeu de mesure = livré, 0 cut changé) : ses rejeux servent aussi au jugement des poses.
 - Ricochets : une pose de la GCV2 n'entre que dans `validesL1` (transport) sous L1-se. C'est par là que passent les cascades du consensus.
+
+## Reprise du 13 et du 14/11 (session suivante) : état final
+- Rapport : `rapport.md`. Réglage proposé à l'examen vierge : **v4BS-sd seul** (`leviers-v4BS-sd.json` ; `base/generateurs-ch120-7d7dcd1.patch` puis `hors-pool-v4.patch`, inchangé). v4ABS-sd est écarté après jugement (une pose à 10,1 mm).
+- Jugement refait avec les zones du lot (`BANC_ZONES=journal`, audit 4) : `sorties/v4/` et `sorties/rappel/*v4*`. Les sorties d'avant (`rappel-v2*`, `poses-v2*`, `cA`) sont aux zones du banc.
+- Outils ajoutés : `touches.cjs` (cuts touchés, décisions changées ailleurs, R3 ; demande `banc-touches.patch`), `couts.cjs`, `rappel-par-cause.cjs`, `axe-ch124.cjs` (copie de travail de `chantier/CH-124`, 233fd8e), `parite.cjs`.
+- Service worker : `hors-pool-v4-sw.patch`, à appliquer après `hors-pool-v4.patch` ; parité faite sur 04/11 p15 seulement.
+- Rien ne tourne. Données hors dépôt à refaire comme plus haut ; le rejeu complet prend 8 à 12 min à 4 tâches, une parité de 70 cuts 7 min.
+- Pièges nouveaux : `hors-pool-v4.patch` ne s'applique pas sur le `generateurs.patch` de la pointe de `chantier/CH-120` ; un conteneur relancé garde les fichiers mais tue les rejeux (effacer les mesures partielles) ; la mesure du pool nomme ses fichiers par le début de l'identifiant du lot : hors dépôt seulement.
