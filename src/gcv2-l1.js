@@ -565,7 +565,11 @@
    rechMinTop:15,rechMinFace:6,rechRatioMax:1.5,rechDedupMm:5,rechArret:false,rechGraineDecalMm:0,rechDiagLarge:false,rechOrdreGraines:null,
    rechEncadre:false,rechEncadreMaxCuts:1,rechEncadreSautMm:15,rechEncadreEcartMm:15,corrigeValideZones:null,anomalieNonCorrigeePMin:null,anomalieNonCorrigeeVoieMm:null,rechPaireTopMin:null,rechContraRatioMax:null,rechSauteProcheMm:null,rechSauteProcheCuts:2,rechSauteProcheZones:null,
    voisinsCoherents:false,voisinsCoherentsParCutMm:40,voisinsCoherentsBaseMm:15,rechVoisinsMin:null,brancheDernier:false,
-   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null});
+   rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
+   /* CH-124 (D-352), clé unique, coupée : `ancre` (refus d'une pose dont le milieu est à plus de θ en travers de l'axe de la voie prédit par la
+    * trajectoire du véhicule de mesure, src/ancre-trajectoire.js ; `true` ou un réglage partiel). Lue par le banc et le service worker au moment de
+    * poser, jamais par la décision de la GCV2. null : rien ne change. */
+   ancre:null});
  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
@@ -582,7 +586,12 @@
   *    de 40 mm), n'est pas posée : sur 3:0 avec la deuxième passe, 865 et 869 (165 et 217 mm, mauvaise voie) ne sont plus posés, 794 est reposé juste (3 mm).
   * Au banc, avec la deuxième passe livrée : 0 cut changé sur les 9 anciens lots ; 3:0 : 0 pose à plus de 20 mm. */
  const LEVIERS_V6=Object.freeze({rechHauteurMaxMm:25,vetoVoieAbsMm:100,voieIncoherenteMm:40});
- const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6});
+ /* Vision 18 (CH-124, D-355, opérateur, 14/11) — LEVIERS v7 LIVRÉS : le refus par l'ancre (levier N) est ALLUMÉ. Une pose dont le milieu des deux rails est à plus
+  * de 75 mm de l'axe de la voie relevée (déduit de la trajectoire du véhicule de mesure, par la liste d'ESV du départ du lot ; src/ancre-trajectoire.js) n'est pas
+  * posée : le cut est différé, sans ricochet sur les autres cuts. Sans liste, ou ancre muette, la décision est celle de la v6. Mesuré (chantiers/CH-124/rapport.md) :
+  * lots d'octobre, 13 refus, 13 vraies corrections, 0 faute ; examens vierges, 3 refus, 3 vraies corrections, rien d'autre ne change. */
+ const LEVIERS_V7=Object.freeze({ancre:true});
+ const LEVIERS_LIVRES=Object.freeze({...LEVIERS_V4,...LEVIERS_V5,...LEVIERS_V6,...LEVIERS_V7});
  let LEVIERS=LEVIERS_LIVRES;
  function reglerLeviers(l){LEVIERS=l?Object.freeze({...LEVIERS_LIVRES,...l}):LEVIERS_LIVRES;return LEVIERS;}
  /* Écartement exact (mm) d'une paire de décalages depuis la pose de départ de la capture. */
@@ -1023,6 +1032,6 @@ function contreChaine(g,decalChaine,seuilMm){
      nHyp:r.hyp?r.hyp.cut.nHyp:null,...(d.variante==='L1-e'?{variante:'L1-e',correction:d.correction,test13:d.test13,...(d.diag?{diag:d.diag}:{})}:{})};
  }
  return {VERSION,REGLE,REGLE_V,REGLE_E,H6,NUM,CAT,MULTI,FORMAT_PARAMS,decalage,variante,decalageDepuisDepart,decalagesH6,hypothesesDuCut,avecRupture,transfo,accords,brut,coder,soutienRail,
-   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,deciderDiffere,commander,resumer,
+   modeleFige,probas,casDuDiffere,ecartementPaire,meilleurePaire,deciderL1,deciderL1e,positionsDe,ecartementDecal,ramenerRail,corrigerDecal,ordreRails,corrigerPoseChaine,ecartAVoie,contreChaine,voieDeListe,VOIE_LISTE,voieGeometrique,reglerLeviers,LEVIERS_LIVRES,LEVIERS_V4,LEVIERS_V5,LEVIERS_V6,LEVIERS_V7,deciderDiffere,commander,resumer,
    voieAbsolue,rechercheRecentree,pairesRecentrees,leviersActifs:()=>LEVIERS};
 });
