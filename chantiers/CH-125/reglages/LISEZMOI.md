@@ -16,3 +16,5 @@ Un réglage est figé et poussé ici AVANT son premier rejeu. Un réglage retouc
 - le lot d'examen 05/11 n'a été ni extrait ni affiché cut par cut ; les examens vierges réservés n'ont pas été lus ; aucun rejeu de la garde d'octobre n'avait tourné.
 
 **Jugement, dans l'ordre** (`cible.md`) : éteint = livré ; garde d'octobre au banc avec le jugement R6 (`outils/oct-chaine.cjs`) ; validation croisée ; parité sur le réglage final.
+
+**Suivi (14/11)** : garde d'octobre au banc à l'ÉTEINT (patch appliqué, clé `null`) : retour 0, 0 recul, 0 « vert changé » (12 lots, 13/11 au soir, patch d'avant la fusion du tronc). Le patch a ensuite été replacé sur le tronc `a756988` : mêmes lignes ajoutées, crochet du banc déplacé de quelques lignes (voir `niveau1.json`). Jugements : `BANC_ZONES=journal` (R5 tranchée, audit 4) ; la garde, elle, se compare à la base scellée et se rejoue avec les réglages de cette base.

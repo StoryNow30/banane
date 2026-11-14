@@ -1,7 +1,8 @@
 {
  "nom": "niveau1",
  "fige": "13/11, avant tout rejeu d'une variante (banc et garde)",
- "patch": { "fichier": "mesure-source.patch", "sha256": "8601d0877e94157b9bc0973d726474e318069efbaa34a633ed9ee48db7359444" },
+ "patch": { "fichier": "mesure-source.patch", "sha256": "422a745104830792b9401b186e4ce538ef5dfd35d860b9177bfccdbf77f730f5",
+  "note": "14/11 : patch replacé sur le tronc a756988 (le tronc a ajouté BANC_ZONES et BANC_PASSE_PLAFOND au banc, au même endroit que le crochet) ; les lignes ajoutées sont les mêmes, seuls le contexte et les numéros de ligne du crochet du banc changent. Empreinte d'avant : 8601d087… (garde à l'éteint verte avec elle, retour 0, le 13/11)." },
  "cle": "BananeSettings.conventionSource (au banc : variable BANC_CONVENTION_SOURCE)",
  "structure": { "epMaxMm": 15, "dzMaxMm": 13 },
  "cMm": {

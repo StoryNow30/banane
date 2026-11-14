@@ -213,7 +213,7 @@ index 0000000..ad838dd
 +  assert.ok(typeof L.decideCut==='function');
 +});
 diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
-index 2475702..08f5062 100644
+index 0311b04..35b8454 100644
 --- a/tools/banc-differes.cjs
 +++ b/tools/banc-differes.cjs
 @@ -42,6 +42,7 @@ const D = require('./diag-differes.cjs');
@@ -235,8 +235,8 @@ index 2475702..08f5062 100644
 +  if (CS) globalThis.BananeSettings = { ...(globalThis.BananeSettings || {}), conventionSource: CS };
    const cuts = lot.cuts.slice().sort((a, b) => a.t - b.t);
    const zoneMem = M.creerMemoire('zones-' + lot.id);
-   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
-@@ -171,6 +177,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+   /* CH-116 (R5, mesure) : BANC_ZONES=journal prend la zone du cut écrite par le service worker à sa décision (événement `regles-metier-ombre`, portée `cut`,
+@@ -177,6 +183,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
      }
      const capture = { identity, rails: cap.rails, pointsSceneRelative: cap.pointsSceneRelative, visibleByClipBoxes: cap.visibleByClipBoxes };
      let science = null, erreur = null;
@@ -244,7 +244,7 @@ index 2475702..08f5062 100644
      const tA = chrono ? horloge() : 0;
      try { science = Sh.scientificProposeBothAvecReservoir(capture); } catch (e) { erreur = String(e && e.message || e).slice(0, 120); }
      if (chrono) ligne.ms = { analyse: arrondi(horloge() - tA, 1), decision: null };
-@@ -310,6 +317,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -319,6 +326,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
      }
      M.noter(zoneMem, r0, { differe: !c.pose });
      if (chrono) ligne.ms.decision = arrondi(horloge() - tD, 1);
@@ -252,7 +252,7 @@ index 2475702..08f5062 100644
      lignes.push(ligne);
    }
    /* Cap 5 — DEUXIÈME PASSE en fin de lot (levier `deuxiemePasse` : nombre maximal de passes, arrêt dès qu'une passe ne pose plus rien) : chaque différé de L1-se est redécidé par la GCV2 avec tout
-@@ -344,7 +352,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -353,7 +361,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
              r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
              poses++;
            } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
@@ -261,7 +261,7 @@ index 2475702..08f5062 100644
          }
          journalTexte(`deuxième passe ${passe} : ${poses} pose(s)`);
          if (!poses) break;
-@@ -355,6 +363,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -381,6 +389,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
      regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null, ...(leviers.deuxiemePasse ? { gardeAppuis: gardeDuBanc(gardeAppuis) } : {}) } } : {}),
      parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
      ...(RLR ? { rechercheLarge: RLR, moduleRechercheLarge: RL.VERSION } : {}),
