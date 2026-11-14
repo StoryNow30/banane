@@ -8,6 +8,8 @@
  * Pour chaque lot : cuts identiques à la référence (état, pose, source, passe du profil L1-se ; les champs `ancre` et `ms` sont ignorés), cuts refusés par l'ancre
  * (source `ancre`), autres cuts changés (attendu : aucun, le refus est sans ricochet), cas où l'ancre se tait, par motif.
  * Chaque refus est jugé : « vraie correction » (pose refusée à plus de 50 mm de la vérité, pire rail 3D), « vraie faute » (à 10 mm au plus), « entre deux », « non jugé ».
+ * N+ (reprise) : un cut refusé puis reposé par la GCV2 sur le pool restreint à l'ancre porte `reprise.etat = 'pose'` ; sa nouvelle pose est jugée contre la vérité
+ * (« juste » à 10 mm au plus, « fausse » à plus de 50 mm, « entre deux »), et les refus restés différés sont comptés par motif d'échec de la reprise.
  * Pour les poses gardées qui ont une vérité : écart en travers du milieu de la VÉRITÉ à l'axe (écart de la pose + différence des milieux en travers).
  * Sorties : numéros de cut, millimètres. */
 const fs = require('node:fs'), path = require('node:path');
@@ -36,21 +38,25 @@ function paires(o) {
 }
 function main() {
   const o = args(process.argv.slice(2)); if (!o.ref || !o.nom) throw Error('--ref et --nom');
-  const L = [], refus = [], gardees = [], csv = ['lot;cut;sort;origine;etage;ecartPoseAxeMm;ecartVeriteAxeMm;poseAVeriteMm;jugement;base'];
+  const L = [], refus = [], gardees = [], csv = ['lot;cut;sort;origine;etage;ecartPoseAxeMm;ecartVeriteAxeMm;poseAVeriteMm;jugement;base;reprise;repriseAVeriteMm;repriseAxeMm'];
   let tId = 0, tAutres = 0, tCuts = 0; const muets = {}, autres = [];
   const veritesAxe = [];
-  L.push(`# Refus d'ancre : rejeu « ${o.nom} » contre « ${o.ref} » (${o.mode})`, '', '| lot | cuts | identiques | refusés | autres changés | poses gardées avec ancre | ancre muette |', '|---|---|---|---|---|---|---|');
+  L.push(`# Refus d'ancre : rejeu « ${o.nom} » contre « ${o.ref} » (${o.mode})`, '', '| lot | cuts | identiques | refusés | dont repris | autres changés | poses gardées avec ancre | ancre muette |', '|---|---|---|---|---|---|---|---|');
   for (const P of paires(o)) {
-    const A = lire(P.a), B = new Map(lire(P.b).map(x => [x.cut, x])); let id = 0, nRef = 0, nAutres = 0, nGard = 0, nMuet = 0;
+    const A = lire(P.a), B = new Map(lire(P.b).map(x => [x.cut, x])); let id = 0, nRef = 0, nRep = 0, nAutres = 0, nGard = 0, nMuet = 0;
     for (const l of A) {
       const x = (l.profils || {})['L1-se'], yl = B.get(l.cut), y = yl && (yl.profils || {})['L1-se']; if (!x || !y) continue; tCuts++;
       const v = P.verite(l.cut), base = (l.profils || {}).base || null;
       if (v && l.ancreDepart && l.ancreDepart.ecartMm != null) veritesAxe.push({ lot: P.lot, cut: l.cut, ev: l.ancreDepart.ecartMm + milieuLat(v), pose: x.etat === 'pose' || x.source === 'ancre' });
-      if (x.source === 'ancre') {
-        nRef++; const d = x.decalRefuse, pv = v && d ? pire(d, v) : null, ev = v && d ? x.ancre.ecartMm + (milieuLat(v) - milieuLat(d)) : null;
+      const repris = !!(x.reprise && x.reprise.etat === 'pose');
+      if (x.source === 'ancre' || repris) {
+        nRef++; if (repris) nRep++;
+        const d = repris ? x.reprise.decalRefuse : x.decalRefuse, a = repris ? x.reprise.refus : x.ancre, origine = repris ? x.reprise.origine : x.origine;
+        const pv = v && d ? pire(d, v) : null, ev = v && d ? a.ecartMm + (milieuLat(v) - milieuLat(d)) : null;
         const jug = pv == null ? 'non jugé' : pv > 50 ? 'vraie correction' : pv <= 10 ? 'vraie faute' : 'entre deux';
-        refus.push({ lot: P.lot, cut: l.cut, origine: x.origine, etage: x.etage, ecart: x.ancre.ecartMm, ev, pv, jug, base: base ? base.etat : null, etaitPose: y.etat === 'pose' });
-        csv.push([P.lot, l.cut, 'refus', x.origine, x.etage, x.ancre.ecartMm, ev == null ? '' : ev.toFixed(1), pv == null ? '' : pv.toFixed(1), jug, base ? base.etat : ''].join(';'));
+        const pn = repris && v && x.decal ? pire(x.decal, v) : null, jugN = !repris ? (x.reprise ? 'différé : ' + (x.reprise.motif || x.reprise.etat) : '') : pn == null ? 'posé, non jugé' : pn <= 10 ? 'posé juste' : pn > 50 ? 'posé FAUX' : 'posé entre deux';
+        refus.push({ lot: P.lot, cut: l.cut, origine, etage: x.etage, ecart: a.ecartMm, ev, pv, jug, base: base ? base.etat : null, etaitPose: y.etat === 'pose', repris, pn, jugN, axeN: repris && x.ancre ? x.ancre.ecartMm : null, motif: x.reprise && !repris ? (x.reprise.motif || x.reprise.etat) : null, tente: !!x.reprise });
+        csv.push([P.lot, l.cut, repris ? 'repris' : 'refus', origine, x.etage, a.ecartMm, ev == null ? '' : ev.toFixed(1), pv == null ? '' : pv.toFixed(1), jug, base ? base.etat : '', jugN, pn == null ? '' : pn.toFixed(1), repris && x.ancre ? x.ancre.ecartMm : ''].join(';'));
         if (y.etat !== 'pose') { nAutres++; autres.push(`${P.lot}/${l.cut} (refusé alors que la référence ne posait pas)`); }
         continue;
       }
@@ -60,15 +66,20 @@ function main() {
         gardees.push({ lot: P.lot, cut: l.cut, ecart: x.ancre.ecartMm, ev, pv });
         csv.push([P.lot, l.cut, 'pose', x.source || '', x.etage || '', x.ancre.ecartMm, ev == null ? '' : ev.toFixed(1), pv == null ? '' : pv.toFixed(1), '', base ? base.etat : ''].join(';')); }
     }
-    tId += id; tAutres += nAutres; L.push(`| ${P.lot} | ${A.length} | ${id} | ${nRef} | ${nAutres} | ${nGard} | ${nMuet} |`);
+    tId += id; tAutres += nAutres; L.push(`| ${P.lot} | ${A.length} | ${id} | ${nRef} | ${nRep} | ${nAutres} | ${nGard} | ${nMuet} |`);
   }
-  L.push(`| **total** | ${tCuts} | ${tId} | ${refus.length} | ${tAutres} | ${gardees.length} | ${Object.values(muets).reduce((a, b) => a + b, 0)} |`, '');
+  L.push(`| **total** | ${tCuts} | ${tId} | ${refus.length} | ${refus.filter(r => r.repris).length} | ${tAutres} | ${gardees.length} | ${Object.values(muets).reduce((a, b) => a + b, 0)} |`, '');
   if (autres.length) L.push('Autres cuts changés : ' + autres.join(' ; '), '');
   L.push(`Ancre muette, par motif : ${Object.entries(muets).map(([k, n]) => `${k} ${n}`).join(', ') || 'aucun cas'}.`, '');
   const compte = j => refus.filter(r => r.jug === j).length;
   L.push(`## Les ${refus.length} refus, jugés contre la vérité`, `Vraies corrections (pose refusée à plus de 50 mm de la vérité) : **${compte('vraie correction')}** ; vraies fautes (à 10 mm au plus) : **${compte('vraie faute')}** ; entre deux : ${compte('entre deux')} ; non jugés : ${compte('non jugé')}.`, '',
-    '| lot | cut | origine | étage | pose refusée − axe (mm) | vérité − axe (mm) | pose refusée à la vérité (mm) | jugement | profil base |', '|---|---|---|---|---|---|---|---|---|');
-  for (const r of refus) L.push(`| ${r.lot} | ${r.cut} | ${r.origine} | ${r.etage} | ${r.ecart} | ${r.ev == null ? '' : r.ev.toFixed(1)} | ${r.pv == null ? '' : r.pv.toFixed(1)} | ${r.jug} | ${r.base || ''} |`);
+    '| lot | cut | origine | étage | pose refusée − axe (mm) | vérité − axe (mm) | pose refusée à la vérité (mm) | jugement | profil base | reprise | reprise à la vérité (mm) | reprise − axe (mm) |', '|---|---|---|---|---|---|---|---|---|---|---|---|');
+  for (const r of refus) L.push(`| ${r.lot} | ${r.cut} | ${r.origine} | ${r.etage} | ${r.ecart} | ${r.ev == null ? '' : r.ev.toFixed(1)} | ${r.pv == null ? '' : r.pv.toFixed(1)} | ${r.jug} | ${r.base || ''} | ${r.jugN || ''} | ${r.pn == null ? '' : r.pn.toFixed(1)} | ${r.axeN == null ? '' : r.axeN} |`);
+  if (refus.some(r => r.tente)) {
+    const rp = refus.filter(r => r.repris), cj = j => rp.filter(r => r.jugN === j).length, motifs = {}; for (const r of refus) if (r.motif) motifs[r.motif] = (motifs[r.motif] || 0) + 1;
+    L.push('', `## Les reprises (N+)`, `Refus repris par la GCV2 sur le pool restreint à l'ancre : **${rp.length}** sur ${refus.length} ; posés justes (≤ 10 mm de la vérité) : **${cj('posé juste')}** ; posés FAUX (> 50 mm) : **${cj('posé FAUX')}** ; entre deux : ${cj('posé entre deux')} ; non jugés : ${cj('posé, non jugé')}.`,
+      `Refus restés différés : ${refus.length - rp.length} ; par motif : ${Object.entries(motifs).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(', ') || 'aucun'}.`);
+  }
   const g = gardees.map(x => Math.abs(x.ecart)), gv = gardees.filter(x => x.ev != null), gj = gv.filter(x => x.pv <= 10), gf = gv.filter(x => x.pv > 50);
   L.push('', '## Les poses gardées', `Écart en travers de la pose à l'axe (|mm|) : n ${g.length}, médiane ${q(g, 0.5)}, q99 ${q(g, 0.99)}, max ${g.length ? Math.max(...g).toFixed(1) : '-'}.`,
     `Avec une vérité : ${gv.length} ; vérité − axe (|mm|) : médiane ${q(gv.map(x => Math.abs(x.ev)), 0.5)}, q99 ${q(gv.map(x => Math.abs(x.ev)), 0.99)}, max ${gv.length ? Math.max(...gv.map(x => Math.abs(x.ev))).toFixed(1) : '-'} ; au-delà de 40 mm : ${gv.filter(x => Math.abs(x.ev) > 40).length}.`,
