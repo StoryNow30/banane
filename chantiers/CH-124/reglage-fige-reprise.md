@@ -23,6 +23,8 @@ Rien de ce que le lot retient n'est changé par la reprise : la pose refusée re
 4. Parité banc / service worker seulement si N+ est retenu (l'incrément du service worker n'est écrit qu'alors).
 
 ## 5. Empreintes
-- `ancre.patch` (N) : sha256 `214e55aaf166782ae072e8f968c61df2dc1ffaabba22ed15bcf5c420f733b87b`.
-- `ancre-reprise.patch` (N+, incrément) : sha256 `dfbec7d7eadb4d53af9efdfa549db5311cf22f526ef07ff693089e1208b36d56`.
+Patchs régénérés le 14/11 sur le tronc fusionné (4d9a77d), avant tout rejeu de N+ : mêmes lignes ajoutées et retirées, seul le contexte change.
+- `ancre.patch` (N) : sha256 `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c` (ancien arbre : `214e55aa…`).
+- `ancre-reprise.patch` (N+, incrément) : sha256 `a54ffbf696d4c8bd7b04dd6f927ac3ddea1c25e4e1eeb5ed46c79865b1e7e77e` (ancien arbre : `dfbec7d7…`).
+- Jugements : `BANC_ZONES=journal`, passe livrée avec `BANC_PASSE_PLAFOND=10`, référence « livré » rejouée de même. Une reprise faite à la deuxième passe est une pose de la passe comme une autre : elle compte dans les 10 écritures et n'est pas écrite si la vue devait bouger.
 Essais : `tests/ch124-ancre.test.cjs`, 13 sur 13 (4 nouveaux pour N+, rouges sur l'état N, verts ensuite). Contrôle géométrique sans décision ni vérité, sur 104 cuts réels de trois lots : la paire au milieu des deux fenêtres tombe sur l'axe prédit (0,07 mm au plus) à 1 445 mm (0,15 mm au plus).

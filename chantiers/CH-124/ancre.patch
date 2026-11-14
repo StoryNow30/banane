@@ -305,7 +305,7 @@ index ca47171..c7ce518 100644
      const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
      assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
 diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
-index 2475702..0fea237 100644
+index 0311b04..c54fafa 100644
 --- a/tools/banc-differes.cjs
 +++ b/tools/banc-differes.cjs
 @@ -42,6 +42,7 @@ const D = require('./diag-differes.cjs');
@@ -369,9 +369,9 @@ index 2475702..0fea237 100644
 +  /* CH-124 (levier `ancre`, coupé) : l'ancre du lot, calculée une fois (liste du départ du lot reconstituée) ; null si le levier est coupé. */
 +  const ancre = leviers.ancre && profils.includes('L1-se') ? ancreDuLot({ liste, cuts, captures, poseReelle: R.poseReelle, reglage: leviers.ancre }) : null;
    const zoneMem = M.creerMemoire('zones-' + lot.id);
-   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
-     valides: [], grappe: M.creerMemoire('grappe-' + p), max: MAX_APPUIS + R.seeds.length }]));
-@@ -170,6 +212,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+   /* CH-116 (R5, mesure) : BANC_ZONES=journal prend la zone du cut écrite par le service worker à sa décision (événement `regles-metier-ombre`, portée `cut`,
+    * du lot ; le dernier du cut fait foi) au lieu de la mémoire des zones recalculée ici ; la plage de contrôle ADV de l'événement s'ajoute à `plagesADV`.
+@@ -176,6 +218,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
        lignes.push(ligne); continue;
      }
      const capture = { identity, rails: cap.rails, pointsSceneRelative: cap.pointsSceneRelative, visibleByClipBoxes: cap.visibleByClipBoxes };
@@ -380,7 +380,7 @@ index 2475702..0fea237 100644
      let science = null, erreur = null;
      const tA = chrono ? horloge() : 0;
      try { science = Sh.scientificProposeBothAvecReservoir(capture); } catch (e) { erreur = String(e && e.message || e).slice(0, 120); }
-@@ -307,6 +351,13 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -316,6 +360,13 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
        /* L1-s : la mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé). */
        const valideChaine = out.etat === 'pose' && !(estL1s(p) && (posesL1s || out.source === 'gcv2'));
        M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: valideChaine, surface }), { differe: !valideChaine });
@@ -394,7 +394,7 @@ index 2475702..0fea237 100644
      }
      M.noter(zoneMem, r0, { differe: !c.pose });
      if (chrono) ligne.ms.decision = arrondi(horloge() - tD, 1);
-@@ -323,7 +374,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -332,7 +383,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
          let poses = 0;
          /* Levier `passesAlternees` : sens alterné d'une passe à l'autre (une pose se propage vers l'avant, puis vers l'arrière) ; sinon toujours vers l'avant. */
          for (const r of passe % 2 || !leviers.passesAlternees ? restes : restes.slice().reverse()) {
@@ -403,7 +403,7 @@ index 2475702..0fea237 100644
            const tC = chrono ? horloge() : 0;
            try {
              const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,
-@@ -343,6 +394,9 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -352,6 +403,9 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
              if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
              r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
              poses++;
@@ -413,7 +413,7 @@ index 2475702..0fea237 100644
            } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
            finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
          }
-@@ -355,6 +409,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -381,6 +435,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
      regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null, ...(leviers.deuxiemePasse ? { gardeAppuis: gardeDuBanc(gardeAppuis) } : {}) } } : {}),
      parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
      ...(RLR ? { rechercheLarge: RLR, moduleRechercheLarge: RL.VERSION } : {}),
@@ -421,7 +421,7 @@ index 2475702..0fea237 100644
      note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
      traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000), ...(chrono ? { chrono: { passeMs } } : {}) };
    return [entete, ...lignes];
-@@ -604,7 +659,7 @@ function main(argv) {
+@@ -630,7 +685,7 @@ function main(argv) {
    } else throw Error('mode : rejouer | predire | agreger | resumer | comparer');
  }
  

@@ -48,19 +48,21 @@ function main() {
       const x = (l.profils || {})['L1-se'], yl = B.get(l.cut), y = yl && (yl.profils || {})['L1-se']; if (!x || !y) continue; tCuts++;
       const v = P.verite(l.cut), base = (l.profils || {}).base || null;
       if (v && l.ancreDepart && l.ancreDepart.ecartMm != null) veritesAxe.push({ lot: P.lot, cut: l.cut, ev: l.ancreDepart.ecartMm + milieuLat(v), pose: x.etat === 'pose' || x.source === 'ancre' });
-      const repris = !!(x.reprise && x.reprise.etat === 'pose');
-      if (x.source === 'ancre' || repris) {
+      /* reposée : la reprise a décidé une pose ; repris : cette pose est faite (une pose de la passe peut ne pas être écrite : plafond, arrêt) */
+      const reposee = !!(x.reprise && x.reprise.etat === 'pose'), repris = reposee && x.etat === 'pose';
+      if (x.source === 'ancre' || reposee) {
         nRef++; if (repris) nRep++;
-        const d = repris ? x.reprise.decalRefuse : x.decalRefuse, a = repris ? x.reprise.refus : x.ancre, origine = repris ? x.reprise.origine : x.origine;
+        const d = reposee ? x.reprise.decalRefuse : x.decalRefuse, a = reposee ? x.reprise.refus : x.ancre, origine = reposee ? x.reprise.origine : x.origine;
         const pv = v && d ? pire(d, v) : null, ev = v && d ? a.ecartMm + (milieuLat(v) - milieuLat(d)) : null;
         const jug = pv == null ? 'non jugé' : pv > 50 ? 'vraie correction' : pv <= 10 ? 'vraie faute' : 'entre deux';
-        const pn = repris && v && x.decal ? pire(x.decal, v) : null, jugN = !repris ? (x.reprise ? 'différé : ' + (x.reprise.motif || x.reprise.etat) : '') : pn == null ? 'posé, non jugé' : pn <= 10 ? 'posé juste' : pn > 50 ? 'posé FAUX' : 'posé entre deux';
-        refus.push({ lot: P.lot, cut: l.cut, origine, etage: x.etage, ecart: a.ecartMm, ev, pv, jug, base: base ? base.etat : null, etaitPose: y.etat === 'pose', repris, pn, jugN, axeN: repris && x.ancre ? x.ancre.ecartMm : null, motif: x.reprise && !repris ? (x.reprise.motif || x.reprise.etat) : null, tente: !!x.reprise });
+        const pn = repris && v && x.decal ? pire(x.decal, v) : null, jugN = !repris ? (reposee ? 'différé : reprise non écrite (' + ((x.passe2 || {}).nonEcrite || '?') + ')' : x.reprise ? 'différé : ' + (x.reprise.motif || x.reprise.etat) : '') : pn == null ? 'posé, non jugé' : pn <= 10 ? 'posé juste' : pn > 50 ? 'posé FAUX' : 'posé entre deux';
+        refus.push({ lot: P.lot, cut: l.cut, origine, etage: x.etage, ecart: a.ecartMm, ev, pv, jug, base: base ? base.etat : null, etaitPose: y.etat === 'pose', repris, pn, jugN, axeN: repris && x.ancre ? x.ancre.ecartMm : null, motif: x.reprise && !repris ? (reposee ? 'non-ecrite' : x.reprise.motif || x.reprise.etat) : null, tente: !!x.reprise });
         csv.push([P.lot, l.cut, repris ? 'repris' : 'refus', origine, x.etage, a.ecartMm, ev == null ? '' : ev.toFixed(1), pv == null ? '' : pv.toFixed(1), jug, base ? base.etat : '', jugN, pn == null ? '' : pn.toFixed(1), repris && x.ancre ? x.ancre.ecartMm : ''].join(';'));
         if (y.etat !== 'pose') { nAutres++; autres.push(`${P.lot}/${l.cut} (refusé alors que la référence ne posait pas)`); }
         continue;
       }
-      if (cle(x) === cle(y)) id++; else { nAutres++; autres.push(`${P.lot}/${l.cut} : ${y.etat} (${y.source || ''}) → ${x.etat} (${x.source || ''})`); }
+      if (cle(x) === cle(y)) id++; else { nAutres++; const pa = v && x.decal ? pire(x.decal, v) : null, pb = v && y.decal ? pire(y.decal, v) : null, np = z => (z.passe2 && z.passe2.nonEcrite ? ', non écrite : ' + z.passe2.nonEcrite : '');
+        autres.push(`${P.lot}/${l.cut} : ${y.etat} (${y.source || ''}${np(y)}${pb == null ? '' : ', à ' + pb.toFixed(0) + ' mm de la vérité'}) → ${x.etat} (${x.source || ''}${np(x)}${pa == null ? '' : ', à ' + pa.toFixed(0) + ' mm de la vérité'})`); }
       if (x.ancre && x.ancre.muet) { nMuet++; muets[x.ancre.muet] = (muets[x.ancre.muet] || 0) + 1; }
       else if (x.ancre && x.etat === 'pose') { nGard++; const pv = v && x.decal ? pire(x.decal, v) : null, ev = v && x.decal ? x.ancre.ecartMm + (milieuLat(v) - milieuLat(x.decal)) : null;
         gardees.push({ lot: P.lot, cut: l.cut, ecart: x.ancre.ecartMm, ev, pv });

@@ -138,7 +138,7 @@ index d5094ee..92009fd 100644
 +  assert.equal(L1.deciderL1(k, M, L1.REGLE, p3).motif, 'depart-le-plus-probable');
 +});
 diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
-index 0fea237..efc7a57 100644
+index c54fafa..6fb8c0e 100644
 --- a/tools/banc-differes.cjs
 +++ b/tools/banc-differes.cjs
 @@ -185,6 +185,30 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
@@ -170,9 +170,9 @@ index 0fea237..efc7a57 100644
 +    } catch (e) { return { ...fin, reprise: { etat: 'erreur', message: String(e && e.message || e).slice(0, 120) } }; }
 +  };
    const zoneMem = M.creerMemoire('zones-' + lot.id);
-   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
-     valides: [], grappe: M.creerMemoire('grappe-' + p), max: MAX_APPUIS + R.seeds.length }]));
-@@ -356,7 +380,14 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+   /* CH-116 (R5, mesure) : BANC_ZONES=journal prend la zone du cut écrite par le service worker à sa décision (événement `regles-metier-ombre`, portée `cut`,
+    * du lot ; le dernier du cut fait foi) au lieu de la mémoire des zones recalculée ici ; la plage de contrôle ADV de l'événement s'ajoute à `plagesADV`.
+@@ -365,7 +389,14 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         * reste appui, voisine, transport et mémoire de grappe ; elle n'est pas donnée à la deuxième passe. Les autres cuts gardent donc la décision du livré. */
        if (ancre && ancre.etat && p === 'L1-se' && out.etat === 'pose' && out.decal) {
          const j = ANC.juger(ancre.etat, c.cut, capture, Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], out.decal[s].map(v => v / 1000))])));
@@ -188,7 +188,7 @@ index 0fea237..efc7a57 100644
        }
      }
      M.noter(zoneMem, r0, { differe: !c.pose });
-@@ -396,7 +427,15 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+@@ -405,7 +436,15 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
              poses++;
              /* CH-124 : la pose de la passe passe par le même refus d'ancre ; refusée, elle reste comptée et transportée comme le livré, et n'est pas reprise par la passe suivante. */
              if (ancre && ancre.etat) { const j = ANC.juger(ancre.etat, r.cut, r.capture, g.positions), o = r.ligne.profils['L1-se'];

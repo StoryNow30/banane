@@ -30,3 +30,9 @@
 
 ## 4. Variante suivante, seulement après le jugement de `N` (nouveau réglage, figé à part)
 Après un refus, la GCV2 redécide le cut sur le pool restreint aux paires dont le milieu est à θ au plus de l'axe (au lieu de différer). Non figée ici.
+
+## Note du 14/11 : arbre, empreintes, passe fidèle (écrite avant le rejeu du corpus avec la passe)
+- **Arbre.** Le tronc (9feb278) a ajouté au banc deux options de mesure : zones du journal (`BANC_ZONES=journal`) et plafond d'écriture de la passe (`BANC_PASSE_PLAFOND`). Le tronc est fusionné dans le chantier (4d9a77d) et `ancre.patch` est régénéré sur cet arbre : mêmes lignes ajoutées et retirées, seul le contexte change. Rien du réglage ne change.
+- **Empreintes de `ancre.patch`** : ancienne (arbre de a4eef66, celle de la garde d'octobre et de la mesure réservée) `214e55aaf166782ae072e8f968c61df2dc1ffaabba22ed15bcf5c420f733b87b` ; nouvelle (s'applique sur le tronc) `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c`. `sw-ancre.patch` : inchangé, `5c7c1fef2d3c0af5126af147dd1d9ccecdd0c44089dc2026213815b198940f31`.
+- **Jugements à partir d'ici** (décision de l'intégrateur) : `BANC_ZONES=journal`, passe livrée (`deuxiemePasse` 2, `sansVoieRien`) avec `BANC_PASSE_PLAFOND=10` ; la référence « livré » est rejouée avec les mêmes réglages. « Éteint = livré » est refait sur cet arbre.
+- **Précision sur la passe, avant de la rejouer.** Une pose de la deuxième passe que l'ancre refuse n'entre pas dans la liste d'écriture : elle ne prend aucune des 10 écritures et n'arrête pas l'écriture. Le patch du service worker ne touche pas à l'écriture vers ESV. Conséquence possible, que « sans ricochet » ne couvrait pas : une pose que le livré décidait en ombre sans l'écrire (plafond atteint, ou arrêt de l'écriture sur la pose refusée) peut être écrite. Ces cuts sont comptés à part, listés et jugés un par un contre la vérité ; le plafond de 10 tient dans tous les cas.
