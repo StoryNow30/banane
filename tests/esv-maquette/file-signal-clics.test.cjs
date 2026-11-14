@@ -55,7 +55,8 @@ async function lancerParLaBoite(m) {
 /* La file est dans son lot, le lot tourne, et l'écran de Signal le dit : le bandeau d'Orbite, ou (CH-036, direction B) la partie en cours du registre de l'onglet Constellation. */
 async function attendreLotDeFile(m) {
   for (let i = 0; i < 60; i++) { const f = (await m.api('file-etat')).file, b = (await m.api('view')).batch;
-    if (f?.etat === 'lot' && b?.state === 'RUNNING' && (await m.pan.isVisible('#ui5 .sg-file') || await m.pan.isVisible('#ui5 .sg-onglet-file .sg-reg-partie[data-etat="en-cours"]'))) return; await dormir(250); }
+    /* CH-115 (D-353) : le bilan par partie est replié par défaut ; la frise dit la même chose (son point « en cours »). */
+    if (f?.etat === 'lot' && b?.state === 'RUNNING' && (await m.pan.isVisible('#ui5 .sg-file') || await m.pan.isVisible('#ui5 .sg-onglet-file .sg-reg-partie[data-etat="en-cours"]') || await m.pan.isVisible('#ui5 .sg-constel .sg-chaine li[data-etat="en-cours"]'))) return; await dormir(250); }
   throw Error('la file n’est pas entrée dans son lot');
 }
 

@@ -1,0 +1,42 @@
+/* CH-115, direction B « Brume » : un sombre adouci (gris bleuté, jamais noir), les tuiles de Graphite (Vision 14) revenues avec des coins doux,
+ * un accent pastel par panneau, seulement sur l'anneau et l'onglet ; la mise en page d'aujourd'hui (anneau à gauche). Registre de la Constellation
+ * gardé d'emblée (décision du 01/11). Clair : un gris perle. */
+#ui5.u-signal{
+  --fond:#252930;--flottant:#30353E;--tx:#ECEEF2;--tx2:#AEB4BF;--tx3:#A2A8B4;
+  --trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--creux:rgba(255,255,255,.05);--piste:rgba(255,255,255,.12);--pouce:rgba(255,255,255,.12);
+  --tuile:#2D3139;--tuile-bord:rgba(255,255,255,.06);
+  --accent:#A3ACFF;--accent-rgb:163,172,255;--accent-tx:#BCC2FF;--attn:#F0B467;--attn-rgb:240,180,103;--attn-tx:#F4C27F;--crit:#EE8F87;--crit-rgb:238,143,135;--crit-tx:#F2A9A2;--ok:#7FD8AA;--ok-rgb:127,216,170;--ok-tx:#97E0B9;
+  --plein:#ECEEF2;--sur-plein:#1E2127
+}
+#ui5.u-signal[data-theme="clair"]{
+  --fond:#E9EBEF;--flottant:#F7F8FA;--tx:#1A1D23;--tx2:#585E6A;--tx3:#5F6571;--tuile:#F7F8FA;--tuile-bord:rgba(20,26,40,.06);
+  --accent:#4F5AD4;--accent-rgb:79,90,212;--accent-tx:#434DBE;--attn:#A86400;--attn-rgb:168,100,0;--attn-tx:#875000;--crit:#C1443E;--crit-rgb:193,68,62;--crit-tx:#A8352F;--ok:#1E8051;--ok-rgb:30,128,81;--ok-tx:#176840;
+  --plein:#1A1D23;--sur-plein:#FFFFFF
+}
+body.ui5:has(#ui5.u-signal){background:#252930}
+body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#E9EBEF}
+#ui5.u-signal .sg-fen[data-activite="echo"]{--accent:#86D9C9;--accent-rgb:134,217,201;--accent-tx:#9FE2D5}
+#ui5.u-signal .sg-fen[data-activite="file"]{--accent:#93CCF0;--accent-rgb:147,204,240;--accent-tx:#ABD8F4}
+#ui5.u-signal .sg-fen[data-activite="correction"]{--accent:#EFB894;--accent-rgb:239,184,148;--accent-tx:#F3C8AB}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="echo"]{--accent:#0F7F74;--accent-rgb:15,127,116;--accent-tx:#0B6A61}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="file"]{--accent:#1670A3;--accent-rgb:22,112,163;--accent-tx:#115D88}
+#ui5.u-signal[data-theme="clair"] .sg-fen[data-activite="correction"]{--accent:#A65424;--accent-rgb:166,84,36;--accent-tx:#8C451C}
+/* les tuiles reviennent (Graphite), plus douces : un fond à peine plus clair, pas de dégradé de couleur */
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel){background:var(--tuile);background-image:none;box-shadow:inset 0 0 0 1px var(--tuile-bord)}
+#ui5.u-signal .sg-zone .sg-tu:not(.sg-tu-avis){background:var(--tuile);border-top:0;border-radius:14px;padding:14px 14px;box-shadow:inset 0 0 0 1px var(--tuile-bord)}
+#ui5.u-signal .sg-zone{gap:8px}
+#ui5.u-signal .sg-tu-avis{background:var(--tuile);box-shadow:inset 0 0 0 1px rgba(var(--c1-rgb),.35)}
+#ui5.u-signal .sg-anneau .sg-arc{filter:drop-shadow(0 0 4px rgba(var(--c1-rgb),.45))}
+#ui5.u-signal .sg-principal{background:var(--plein);color:var(--sur-plein)}
+/* B garde un aperçu : les trois derniers cuts d'emblée (sans allure ni étapes), le reste à la demande */
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="orbite"] .sg-tu-fil{display:flex}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil :is(h4,.sg-allure){display:none}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fil .sg-fil li:nth-child(n+4){display:none}
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-tu-etat{flex:0 0 auto}
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-tu-etat .sg-haut{position:static}
+html:not(.cx-details) #ui5.u-signal .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-zone{flex:1 1 auto}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel{flex:0 0 auto}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel .sg-haut{position:static}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-onglet-file{flex:1 1 auto}
+#ui5.u-signal{--anneau:112px}
+#ui5.u-signal[data-taille="compact"]{--anneau:84px}

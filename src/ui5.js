@@ -16,12 +16,12 @@
  * Les choix « après le lot », « clic », « grappe », « deuxième passe », « raison » sont ceux du panneau : un clic sur la case ou le bouton radio d'origine. */
 (function (root) {
   'use strict';
-  const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines';
+  const D = root.document, S5 = root.ArianeSignalRendu, CLE = 'banane51Interface', CLE_EX = 'banane51Examines', CLE_PALETTE = 'banane51Palette';
   if (!D || !S5 || !root.ArianePanel) return;
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
   const VARIANTES = ['signal'], defaut = 'signal';
   const TAILLE = { signal: [600, 760] };
-  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, palette: 'glacier' };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
@@ -187,7 +187,7 @@
       connexion: { statut: s?.connection?.status ?? null, tabId, nomme: !!tabId && onglets.some(o => String(o.valeur) === tabId), reconnect: rc ? { visible: !rc.hidden, actif: !rc.disabled } : null },
       onglet, historique: Array.isArray(s?.partsHistory) ? s.partsHistory : null,
       goto: { present: !!go, actif: !!go && !go.disabled, raison: go?.getAttribute?.('title') || '', etat: ge?.dataset?.etat || '', texte: ge ? String(ge.textContent || '').trim() : '' },
-      examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre',
+      examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre', palette: ui.palette === 'sarcelle' ? 'sarcelle' : 'glacier',
       f5: $('relecture-pause-actif')?.checked && f5 ? (f5.value === 'arret' ? 'arret' : 'pause') : null,
       taille: (root.innerWidth || 600) < 480 || (root.innerHeight || 760) < 600 ? 'compact' : 'normal',
       /* CH-104 : le fil des cuts (maquette Graphite) : les derniers cuts que le lot a terminés, du plus récent au plus ancien ; la durée vient de
@@ -290,6 +290,8 @@
       grappe: !!$('grappe-differes')?.checked, passage: $('aurore-passage') ? !!$('aurore-passage').checked : null, passe2: $('passe-differes')?.indeterminate ? null : !!$('passe-differes')?.checked, passe2Reglage: (() => { try { return root.ArianePanel.passeReglage?.() ?? null; } catch { return null; } })() /* CH-097 : mode effectif, pour le libellé */, raison: !!$('raison-actif')?.checked,
       touches: coche([['chiffres', 'raison-touches-chiffres'], ['alt-chiffres', 'raison-touches-alt-chiffres'], ['pave', 'raison-touches-pave']]),
       bandeau: $('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true',
+      /* Vision 18 (D-355) : la case d'essai de l'ajustement de hauteur (panel.html, `#ajustement-hauteur`) ; absente : null, la ligne n'est pas dite */
+      ajustement: $('ajustement-hauteur') ? !!$('ajustement-hauteur').checked : null,
     };
     return {
       variante,
@@ -328,7 +330,9 @@
       const snap = instantane(s);
       /* CH-025 : la boîte de la file ne vaut qu'au repos ; la file lancée (ou arrêtée, finie), elle se ferme. */
       if (ui.couche === 'file' && snap.file?.etat !== 'repos') ui.couche = null;
-      html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille;
+      html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
+      /* CH-115 : détails repliés par défaut (panel-signal.css lit `data-details`) */
+      if (ui.details) hote.dataset.details = '1'; else delete hote.dataset.details;
     } catch (e) { secourir(e); return; }
     /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
      * réécriture de l'écran (qui refermerait une liste ouverte et recréerait la feuille de réglages, le tiroir, le choix d'onglet). */
@@ -338,9 +342,16 @@
     ui.last = html; ui.cle = cle;
     const zAvant = hote.querySelector?.('.sg-zone'), cleZ = (html.match(/class="sg-zone[^"]*" data-z="([^"]*)"/) || [])[1];
     const double = zAvant && cleZ && zAvant.dataset?.z && zAvant.dataset.z !== cleZ && zAvant.cloneNode ? zAvant.cloneNode(true) : null;
+    /* CH-115 (D-350) : la chorégraphie d'un changement d'état. Même onglet : l'ancienne tuile d'état sort (copie figée), puis la nouvelle entre morceau
+     * par morceau ; autre onglet : la page glisse dans le sens de l'onglet. Clé : activité, état et teinte de la fenêtre. */
+    const fenAvant = hote.firstElementChild, cleF = (html.match(/^<div class="sg-fen" data-activite="([^"]*)" data-etat="([^"]*)" data-teinte="([^"]*)"/) || []).slice(1).join('/');
+    const cleAvant = fenAvant?.dataset ? `${fenAvant.dataset.activite}/${fenAvant.dataset.etat}/${fenAvant.dataset.teinte}` : '';
+    const tuileAvant = cleF && cleAvant && cleF !== cleAvant && cleF.split('/')[0] === cleAvant.split('/')[0] ? hote.querySelector?.('.sg-tu-etat')?.cloneNode?.(true) || null : null;
+    const glisse = cleF && cleAvant && cleF.split('/')[0] !== cleAvant.split('/')[0] ? Math.sign(ONGLETS.indexOf(cleF.split('/')[0]) - ONGLETS.indexOf(cleAvant.split('/')[0])) || 1 : 0;
     if (morpher(hote, html)) apresMorph();
     else { hote.innerHTML = html; [...hote.querySelectorAll(zones)].forEach((e, i) => { if (defil[i]) e.scrollTop = defil[i]; }); pouces(); }
     if (double) sortie(double);
+    if (tuileAvant) sortieTuile(tuileAvant); else if (glisse) glisser(glisse);
     if (fb) { const nb = hote.querySelector(`[data-borne="${fb}"]`); if (nb) { nb.focus(); try { nb.setSelectionRange?.(nb.value.length, nb.value.length); } catch { /* nombre */ } } }
     const q = $('ui5-q');
     if (q && (ui.focusQ || avaitQ)) { q.focus(); try { q.setSelectionRange(q.value.length, q.value.length); } catch { /* sans objet */ } }
@@ -351,7 +362,7 @@
    * quand sa clé change (son entrée s'anime alors une fois). Sans <template> (page minimale des essais), on retombe sur innerHTML. */
   const memeNoeud = (a, b) => a.nodeType === b.nodeType && a.nodeName === b.nodeName && (a.nodeType !== 1 || a.getAttribute('data-k') === b.getAttribute('data-k'));
   function patchNoeud(a, b) {
-    if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) { a.nodeValue = b.nodeValue; changes.textes.push(a.parentNode); } return; }
+    if (a.nodeType === 3 || a.nodeType === 8) { if (a.nodeValue !== b.nodeValue) { changes.avant.set(a.parentNode, a.nodeValue); a.nodeValue = b.nodeValue; changes.textes.push(a.parentNode); } return; }
     for (const { name } of [...a.attributes]) if (!b.hasAttribute(name) && name !== 'style') a.removeAttribute(name);
     for (const { name, value } of [...b.attributes]) if (a.getAttribute(name) !== value) a.setAttribute(name, value);
     if (a.tagName === 'INPUT' && a.value !== (b.getAttribute('value') || '') && D.activeElement !== a) a.value = b.getAttribute('value') || '';
@@ -362,10 +373,10 @@
     bc.forEach((y, i) => { const x = ac[i]; if (!x) a.appendChild(y); else if (memeNoeud(x, y)) patchNoeud(x, y); else a.replaceChild(y, x); });
     for (let i = bc.length; i < ac.length; i++) ac[i].remove();
   }
-  const changes = { textes: [] };
+  const changes = { textes: [], avant: new Map() };
   function morpher(cible, html) {
     const t = D.createElement('template'); if (!t?.content || !cible.firstChild) { return false; }
-    t.innerHTML = html; changes.textes = [];
+    t.innerHTML = html; changes.textes = []; changes.avant = new Map();
     if (cible.childNodes.length !== 1 || !memeNoeud(cible.firstChild, t.content.firstChild)) return false;
     patchNoeud(cible.firstChild, t.content.firstChild);
     return true;
@@ -375,6 +386,18 @@
     for (const n of new Set(changes.textes)) {
       const e = n?.closest?.('.sg-chiffre,.sg-n,.sg-mot,.sg-phrase .sg-mono,.sg-allure b,.sg-fin dd b'); if (!e) continue;
       e.classList.remove('sg-tic'); void e.offsetWidth; e.classList.add('sg-tic');
+      /* CH-115 : un chiffre qui change roule (l'ancien monte et s'efface, le nouveau arrive d'en bas, panel-signal.css `sg-tic`) */
+      /* la copie de l'ancien chiffre est posée hors du panneau dessiné (à la page, à sa place et à ses styles calculés) : son texte ne s'ajoute ni au
+       * chiffre ni à l'écran que le rendu met à jour en place */
+      const v = changes.avant.get(n);
+      if (v && e === n && e.matches?.('.sg-chiffre,.sg-n') && !calme() && D.createElement && root.getComputedStyle && D.body) {
+        const r = e.getBoundingClientRect?.(); if (!r || !r.width) continue;
+        const cs = root.getComputedStyle(e), g = D.createElement('span'); g.className = 'sg-roule'; g.setAttribute('aria-hidden', 'true'); g.textContent = v;
+        Object.assign(g.style, { position: 'fixed', zIndex: '50', pointerEvents: 'none', whiteSpace: 'nowrap', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px`, font: cs.font, letterSpacing: cs.letterSpacing, color: cs.color, textAlign: cs.textAlign, fontVariantNumeric: 'tabular-nums' });
+        D.body.appendChild(g);
+        const fin = () => g.remove();
+        if (g.animate) g.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-110%)' }], { duration: 260, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' }).finished.then(fin, fin); else root.setTimeout?.(fin, 300);
+      }
     }
     pouces();
   }
@@ -392,6 +415,21 @@
   /* CH-104 : quand l'état change, l'ancien contenu de la zone sort (un double inerte, retiré aussitôt l'animation finie) pendant que le nouveau entre.
    * Le vrai contenu est en place tout de suite : un clic ne tombe jamais sur un élément en train de partir. Rien si le système réduit les animations. */
   const calme = () => { try { return !!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; } };
+  /* CH-115 : la sortie de la tuile d'état (même principe que la zone : copie figée, retirée après son animation), puis l'entrée de la nouvelle. */
+  const ONGLETS = ['orbite', 'echo', 'file', 'correction'];
+  function sortieTuile(avant) {
+    const t = hote.querySelector?.('.sg-tu-etat'), fen = hote.firstElementChild; if (!avant || !t || !fen || calme()) return;
+    const r = t.getBoundingClientRect?.(), pr = fen.getBoundingClientRect?.(); if (!r || !pr || !r.width) return;
+    avant.classList.add('sg-sort-tuile'); avant.setAttribute('aria-hidden', 'true'); avant.setAttribute('inert', ''); avant.removeAttribute('aria-live');
+    for (const e of avant.querySelectorAll('[data-act],[data-k],[id]')) { e.removeAttribute('data-act'); e.removeAttribute('data-k'); e.removeAttribute('id'); }
+    Object.assign(avant.style, { position: 'absolute', left: `${r.left - pr.left}px`, top: `${r.top - pr.top}px`, width: `${r.width}px`, height: `${r.height}px`, margin: '0', zIndex: '3' });
+    fen.appendChild(avant); root.setTimeout?.(() => avant.remove(), 240);
+    t.classList.remove('sg-entre-tuile'); void t.offsetWidth; t.classList.add('sg-entre-tuile');
+  }
+  function glisser(sens) {
+    const p = hote.querySelector?.('.sg-page'); if (!p || calme()) return;
+    p.classList.remove('sg-glisse-d', 'sg-glisse-g'); void p.offsetWidth; p.classList.add(sens > 0 ? 'sg-glisse-d' : 'sg-glisse-g');
+  }
   function sortie(avant) {
     const z = hote.querySelector?.('.sg-zone'); if (!avant || !z || !z.parentNode || calme()) return;
     const fen = hote.firstElementChild, r = z.getBoundingClientRect?.(), pr = fen?.getBoundingClientRect?.(); if (!r || !pr || !r.width) return;
@@ -495,6 +533,8 @@
   function agirSignal(act) {
     const [, quoi, ...reste] = act.split(':'), v = reste.join(':');
     if (quoi === 'tiroir') { ui.tiroir = !ui.tiroir; ui.sel = null; }
+    /* CH-115 (D-353) : le détail replié par défaut ; ce geste l'ouvre ou le referme (rien n'est envoyé) */
+    else if (quoi === 'details') ui.details = !ui.details;
     /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
     /* CH-105 : la molette écrit le champ d'origine `#file-n` et déclenche `change` (panel.js : `fileUI.n`, `fileUI.prete=false`, même rendu). Hors bornes : rien. */
     else if (quoi === 'file-n') { const c = $('file-n'), N = nombreDuChamp(), k = Number(v);
@@ -523,6 +563,10 @@
     else if (quoi === 'choix') {
       const [nom, val] = [reste[0], reste[1]];
       if (nom === 'theme') themeVoulu(val);
+      /* CH-115 (D-354) : la palette du thème sombre, sans recharger, gardée pour la prochaine ouverture du panneau */
+      else if (nom === 'palette') { if (val === 'glacier' || val === 'sarcelle') { ui.palette = val; void root.chrome?.storage?.local?.set?.({ [CLE_PALETTE]: val })?.catch?.(() => {}); } }
+      /* Vision 18 (D-355) : la case d'origine `#ajustement-hauteur` (panel.js garde le choix auprès du service worker) */
+      else if (nom === 'ajustement') { if ((val === 'oui') !== !!$('ajustement-hauteur')?.checked) cliquer('ajustement-hauteur'); }
       else if (nom === 'bandeau') { if ((val === 'oui') !== ($('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true')) cliquer('bandeau-toggle'); }
       else choisir(nom, val);
     }
@@ -716,7 +760,8 @@
   async function init() {
     hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
     /* Un choix gardé inconnu, l'ancien « ancienne » compris (le panneau d'avant n'est plus proposé, D-250), laisse le départ. */
-    try { const o = await root.chrome?.storage?.local?.get?.([CLE, CLE_EX]), v = o?.[CLE], ex = o?.[CLE_EX];
+    try { const o = await root.chrome?.storage?.local?.get?.([CLE, CLE_EX, CLE_PALETTE]), v = o?.[CLE], ex = o?.[CLE_EX];
+      if (o?.[CLE_PALETTE] === 'sarcelle' || o?.[CLE_PALETTE] === 'glacier') ui.palette = o[CLE_PALETTE];
       if (VARIANTES.includes(v)) variante = v;
       if (ex && typeof ex.lot === 'string' && Array.isArray(ex.cles)) { examines.lot = ex.lot; examines.cles = new Set(ex.cles.filter(c => typeof c === 'string').slice(0, 2000)); } } catch { /* défaut de la version */ }
     /* Compteur des exemples d'apprentissage (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : les cuts corrigés, tous projets. */

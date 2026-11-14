@@ -1,0 +1,10 @@
+{"titre":"Direction B, deuxième tour",
+ "intro":"Choix de l'opérateur (D-350) : la direction B, plus sombre, avec une palette plus moderne et un vrai travail de mouvement. Chaque colonne fait tourner le vrai panneau avec de faux lots. Le réglage « Fond » change la profondeur des trois palettes ; « Ralenti × 4 » joue tout le mouvement quatre fois plus lentement. Un clic sur le haut du panneau ouvre ou ferme les détails.",
+ "pied":"Données fabriquées (partie 13, cuts 4790 à 4900 ; Constellation des parties 13 à 17). Toutes les colonnes : feuilles du tronc, plus des feuilles et des scripts de maquette par-dessus ; aucun fichier de l'extension n'est modifié. Mouvement : transform et opacity seulement, sauf l'arc de l'anneau ; « réduire les animations » coupe tout.",
+ "reglages":{"fond":true,"ralenti":true},
+ "mesures":"chantiers/CH-115/mesures/tour2.json",
+ "variantes":[
+  {"id":"b","nom":"B actuelle","sous":"« Brume », premier tour","css":["commun.css","b.css"],"maquette":true,"note":"Telle que l'opérateur l'a choisie : trop claire pour lui."},
+  {"id":"b-glacier","nom":"B · Glacier","sous":"neutres froids, accent lavande vive","css":["commun.css","b.css","b2.css","b2-glacier.css"],"js":["motion.js"],"maquette":true,"note":"Gris bleu froids, accent lavande électrique ; menthe pour Écho, ciel pour la Constellation, rose pour l'Aurore."},
+  {"id":"b-moka","nom":"B · Moka","sous":"neutres chauds, accent abricot","css":["commun.css","b.css","b2.css","b2-moka.css"],"js":["motion.js"],"maquette":true,"note":"Gris chauds tirant sur le brun, accent abricot ; vert d'eau, pervenche et rose poudré pour les autres onglets."},
+  {"id":"b-sarcelle","nom":"B · Sarcelle","sous":"graphite vert d'eau, accent menthe","css":["commun.css","b.css","b2.css","b2-sarcelle.css"],"js":["motion.js"],"maquette":true,"note":"Graphite légèrement vert, accent menthe vive ; azur, lilas et pêche pour les autres onglets."}]}

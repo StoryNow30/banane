@@ -1,0 +1,10 @@
+/* CH-115, tour 2 : palette « Glacier (neutres froids) » de B. Trois niveaux de fond (html.cx-fond-1 profond, -2 moyen par défaut, -3 nuit) ; un accent vif, un pastel par onglet. */
+#ui5.u-signal:not([data-theme="clair"]),html.cx-fond-2 #ui5.u-signal:not([data-theme="clair"]){--fond:#15181E;--tuile:#1D2129;--flottant:#262B35;--cx-corps:#15181E}
+html.cx-fond-1 #ui5.u-signal:not([data-theme="clair"]){--fond:#1A1D24;--tuile:#232731;--flottant:#2B303B;--cx-corps:#1A1D24}
+html.cx-fond-3 #ui5.u-signal:not([data-theme="clair"]){--fond:#101217;--tuile:#181B22;--flottant:#20242C;--cx-corps:#101217}
+#ui5.u-signal:not([data-theme="clair"]){--tx:#EDF0F6;--tx2:#A9B1C1;--tx3:#98A0B1;--tuile-bord:rgba(255,255,255,.055);--trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--piste:rgba(255,255,255,.1);
+ --accent:#8F86FF;--accent-rgb:143,134,255;--accent-tx:#B4AEFF;--sur-accent:#0E0D1A}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="orbite"]{--accent:#8F86FF;--accent-rgb:143,134,255;--accent-tx:#B4AEFF}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="echo"]{--accent:#6EE2C4;--accent-rgb:110,226,196;--accent-tx:#6EE2C4}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="file"]{--accent:#7CC8FF;--accent-rgb:124,200,255;--accent-tx:#7CC8FF}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="correction"]{--accent:#FF9EBB;--accent-rgb:255,158,187;--accent-tx:#FF9EBB}

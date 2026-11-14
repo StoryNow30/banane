@@ -1,0 +1,9 @@
+{"titre":"Le panneau d'Ariane : Vision 14, Vision 15 et trois directions",
+ "intro":"Chaque colonne fait tourner le vrai panneau (mêmes scripts, mêmes boutons) avec de faux lots. Les scènes se suivent seules ; cliquez une scène pour la garder. Rien n'est relié à ESV. Dans les directions, un clic sur le haut du panneau ouvre ou ferme les détails.",
+ "pied":"Données fabriquées (partie 13, cuts 4790 à 4900 ; Constellation des parties 13 à 17). Vision 14 : feuilles du commit 5e8d305. Vision 15 : feuilles du tronc. Directions : feuilles du tronc, plus une feuille et un petit script de maquette par-dessus ; aucun fichier de l'extension n'est modifié. Les animations suivent le réglage « réduire les animations » du système.",
+ "variantes":[
+  {"id":"v14","nom":"Vision 14","sous":"« Graphite »","rev":"5e8d305"},
+  {"id":"v15","nom":"Vision 15","sous":"« Épure » (en place)"},
+  {"id":"a","nom":"Direction A","sous":"« Clair net »","css":["commun.css","a.css"],"maquette":true,"defautClair":true,"note":"Clair d'abord, un seul accent pour les quatre panneaux, l'anneau au centre en grand ; la seule carte est la tuile d'état. Détails, fil et étapes à un clic."},
+  {"id":"b","nom":"Direction B","sous":"« Brume »","css":["commun.css","b.css"],"maquette":true,"note":"Un sombre adouci, gris bleuté ; les tuiles de Vision 14 revenues ; un accent pastel par panneau, sur l'anneau et l'onglet seulement. Registre de la Constellation gardé d'emblée."},
+  {"id":"c","nom":"Direction C","sous":"« Papier »","css":["commun.css","c.css"],"maquette":true,"defautClair":true,"note":"Une page claire sans cadres : le chiffre en très grand et une piste fine à la place de l'anneau ; un seul accent, les couleurs d'état seules colorent."}]}
