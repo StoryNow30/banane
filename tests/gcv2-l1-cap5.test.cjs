@@ -49,7 +49,9 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
     /* T17B : coupés. */
     rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null,
     /* CH-124 : refus d'ancre, coupé. */
-    ancre: null });
+    ancre: null,
+    /* CH-121 : ajustement fin, coupé. */
+    ajustementFin: null });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');

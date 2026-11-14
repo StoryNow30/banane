@@ -170,6 +170,17 @@ function ancreDuLot({ liste, cuts, captures, poseReelle, reglage }) {
   return { etat: Mo.ok ? E : null, resume: { actif: !!Mo.ok, version: ANC.VERSION, reglage: ANC.reglage(R), raison: Mo.ok ? null : Mo.raison, sens: Mo.ok ? Mo.sens : null, rapportSens: Mo.ok ? arrondi(Mo.rapportSens, 2) : null,
     lignesPleines: Mo.ok ? Mo.lignesPleines : null, listeDepart: { calage: D.n, second: D.second, remises: D.remises } } };
 }
+/* CH-121 : étage final d'ajustement d'une pose `out` de L1-se (levier `ajustementFin`). Rend `out`, ajustée si la commande refaite passe (`ajustementFin` consigne
+ * la pose d'avant et ce que l'étage a lu), sinon telle quelle (`ajustementFin.refus`). `E` (ou null) : le voisin du cut prend la pose ajustée. */
+function ajusterFin(out, capture, before, runtimeRails, cameras, E, identity) {
+  const a = L1.ajusterPoseFinale(capture, out.decal);
+  if (!a.ajuste) return out;
+  const pos = Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], a.decal[s].map(v => v / 1000))]));
+  const cg = L1.commander({ positions: pos, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, valider: true });
+  if (cg.action !== 'lot' || cg.vue !== 'dans') return { ...out, ajustementFin: { refus: cg.reason || 'vue', info: a.info } };
+  if (E) { const v = E.valides.find(x => x.identity.cut === identity.cut && x.identity.part === identity.part && (x.identity.frameId ?? null) === (identity.frameId ?? null)); if (v) v.positions = pos; }
+  return { ...out, decal: decalPose(before, pos), ajustementFin: { avant: out.decal, info: a.info } };
+}
 function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined, rechercheLarge = undefined }) {
   const horloge = () => Number(process.hrtime.bigint()) / 1e6;
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
@@ -353,6 +364,13 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
           }
         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
       }
+      /* CH-121 (levier `ajustementFin` de src/gcv2-l1.js, coupé) : étage final, comme le service worker en fin de `commandLot` : la pose de L1-se, dans la vue
+       * courante (pas de vue déplacée), est ajustée rail par rail sur son profil ; la commande refaite (`commander` : écartement admissible, vue) doit passer,
+       * sinon la pose reste celle de la décision. Le voisin (`E.valides`) prend la pose ajustée (le service worker relit ses voisins dans `records`, pose écrite) ;
+       * l'appui et le transport gardent celle de la décision. */
+      /* `seulChaine` : poses de la chaîne seulement (source `lot`) ; `voisinsDecision` : le voisin garde la pose de la décision. */
+      if (p === 'L1-se' && leviers.ajustementFin && out && out.etat === 'pose' && out.decal && !out.vue && (!leviers.ajustementFin.seulChaine || out.source === 'lot'))
+        out = ajusterFin(out, capture, before, runtimeRails, cameras, leviers.ajustementFin.voisinsDecision ? null : E, identity);
       ligne.profils[p] = out;
       /* Cap 5 : un différé de L1-se est gardé pour la deuxième passe (fin de lot), avec ce qu'il faut pour le redécider. */
       if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot' || out.source === 'recherche-large'))
@@ -402,6 +420,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             }
             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
             r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            /* CH-121 : même étage final sur la pose de la passe (après la garde A, comme le service worker). */
+            if (leviers.ajustementFin && !leviers.ajustementFin.seulChaine && !r.ligne.profils['L1-se'].vue) r.ligne.profils['L1-se'] = ajusterFin(r.ligne.profils['L1-se'], r.capture, r.before, r.runtimeRails, r.cameras, null, r.identity);
             poses++;
             /* CH-124 : la pose de la passe passe par le même refus d'ancre ; refusée, elle reste comptée et transportée comme le livré, et n'est pas reprise par la passe suivante. */
             if (ancre && ancre.etat) { const j = ANC.juger(ancre.etat, r.cut, r.capture, g.positions), o = r.ligne.profils['L1-se'];
