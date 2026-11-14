@@ -20,3 +20,7 @@ Ils ne viennent ni de l'ancre ni du service worker, mais de la référence : ave
 - 909 et 911 : posés des deux côtés ; l'écart (2,90 et 0,61 mm) vient des voisins 907 et 910, posés ou non. Avec les zones du banc : identiques.
 
 À retenir : pour une parité, la référence du banc ne prend pas les zones du journal d'un lot rejoué avec un autre code que celui du lot.
+
+## Refaite sur l'arbre d'intégration corrigé (fed03f7), 14/11 à 16 h UTC
+Arbre `integration/vision18-n-aj5` à fed03f7 : N allumé par la recette livrée, **avec** la lecture de la liste par l'ancre elle-même (`sw-ancre-liste.patch`). Outil sans `--leviers`, passe en ombre ; référence du banc sur le même arbre, zones du banc ; liste du départ juste (10 006 lignes, 1 ligne remise, invalide).
+**91 lignes identiques sur 91, 0 écart** (sortie brute de l'outil : `parite-octobre-lot2-fed03f7-sortie-outil.json`). Les 3 refus (282, 1325, 1333) sont différés des deux côtés ; passe 5 + 3 des deux côtés. Durées : banc 274 s, service worker 1 861 s.

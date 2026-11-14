@@ -1,4 +1,4 @@
-# CH-124 : passation (14/11, dernière mise à jour à 15 h 30 UTC : chantier N rendu, session arrêtée)
+# CH-124 : passation (14/11, dernière mise à jour à 16 h 05 UTC : chantier N rendu, session arrêtée)
 
 ## Où en est le chantier
 - **Ancre trouvée (ÉTABLI).** L'axe de la voie relevée se prédit depuis la trajectoire du véhicule de mesure, lue dans la liste d'ESV du départ de la partie (`src/ancre-trajectoire.js`, dans `ancre.patch`). Mesures et contre-vérification : `sorties/`, `sorties/contre-verification.md`.
@@ -10,7 +10,7 @@
 | corpus, première passe (ancien arbre) | 4 016 cuts, 32 refus : 29 vraies corrections, 0 faute, 3 non jugés ; 0 autre cut changé ; > 50 mm 29 → 0 | `sorties/corpus/N-premiere-passe-ancien-arbre*` |
 | éteint = livré (ancien arbre, première passe) | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre.md` |
 | examens vierges (mesure de CH-116) | 3 refus, 3 vraies corrections, rien d'autre ne change | chez CH-116 |
-| parité, lot d'octobre 0-2310-lot2 | 91 lignes identiques sur 91 | `sorties/parite/parite-octobre-lot2.md` |
+| parité, lot d'octobre 0-2310-lot2 | 91 lignes identiques sur 91, deux fois : sur mon arbre, puis sur l'arbre d'intégration corrigé fed03f7 sans réglage (0 écart, 3 refus différés des deux côtés) | `sorties/parite/parite-octobre-lot2.md` |
 | parité, 12/11 p23, arbre d'intégration 1bc4532, sans réglage | **BON** : 296 lignes identiques sur 311 ; les 15 écarts sont ceux de l'éteint (CH-121), 0 propre à N ; 15 refus différés des deux côtés | `sorties/parite/parite-1211-p23.md` |
 | éteint = livré, tronc fusionné, zones du journal, passe fidèle | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre-zjp.md` |
 | corpus N en zones du journal et passe fidèle | 35 refus : 30 vraies corrections, 0 faute, 5 non jugés ; > 50 mm 29 → 0 ; justes 501 → 503 ; croisé 29 → 0 ; examen 0511 identique | `sorties/corpus/N-zjp*` |
