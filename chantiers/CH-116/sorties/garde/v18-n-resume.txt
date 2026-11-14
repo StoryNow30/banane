@@ -1,0 +1,15 @@
+garde d'octobre au banc, réglage « v18-n » : retour 1 ; 9 recul(s) dont 3 RÉEL(S) et 6 « verts changés » ; rejeux 1207 s
+  réel : reglage-9, sansPasse : cuts laissés sans pose 25 → 27
+  réel : partie-3:0, sansPasse : cuts laissés sans pose 14 → 18
+  réel : terrain-partie-0-23-10, sansPasse : cuts laissés sans pose 98 → 105
+  verts changés : reglage-9, sansPasse : 2 vert(s) changé(s) (2-18 203, 2-18 451)
+  verts changés : reglage-9, avecPasse : 2 vert(s) changé(s) (2-18 203, 2-18 451)
+  verts changés : partie-3:0, sansPasse : 4 vert(s) changé(s) (3-0 843, 3-0 861, 3-0 864, 3-0 867)
+  verts changés : partie-3:0, avecPasse : 4 vert(s) changé(s) (3-0 843, 3-0 861, 3-0 864, 3-0 867)
+  verts changés : terrain-partie-0-23-10, sansPasse : 2 vert(s) changé(s) (0-2310-lot1 199, 0-2310-lot2 282)
+  verts changés : terrain-partie-0-23-10, avecPasse : 2 vert(s) changé(s) (0-2310-lot1 199, 0-2310-lot2 282)
+  signalé : reglage-9, avecPasse : cuts laissés sans pose 12 → 16
+  signalé : partie-3:0, avecPasse : cuts laissés sans pose 8 → 12
+  signalé : terrain-partie-0-23-10, avecPasse : cuts laissés sans pose 79 → 90
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (pose > 50 mm 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (mauvaise voie 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse

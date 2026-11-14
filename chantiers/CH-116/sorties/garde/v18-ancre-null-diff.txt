@@ -1,0 +1,4 @@
+Garde : « v18-ancre-null » contre « eteint » : 2362/2362 cuts identiques (profils base et L1-se : état, source, décalages)
+refus « ancre » : 0 ; vraies corrections (> 50 mm) 0 ; 10-50 0 ; vraies fautes (≤ 10 mm) 0 ; non jugés 0
+autres changements d'état ou de source : 0
+poses déplacées : 0
