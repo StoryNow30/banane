@@ -44,6 +44,9 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 
 - Ordre de l'opérateur (13/11) : les chantiers difficiles se lancent au modèle le plus fort disponible, à l'effort maximal, et peuvent orchestrer plusieurs agents en parallèle.
 
+- **D-356 (14/11)** : modèle et effort choisis chantier par chantier. Parité de N (CH-124) : la session en place finit, puis passation. N+ (reprise après refus), l'ancre dans la vraie extension (CH-119), génération autour de l'axe (CH-120), puce avec l'ancre (CH-122), banc (CH-116), interface (CH-115) : modèle courant, effort élevé ou moyen (mise en œuvre d'un dessin arrêté, rejeux, parités). Calcul de pose en travers (CH-125) : modèle le plus fort, effort élevé (conception ouverte : un levier latéral a déjà échoué en octobre).
+- **D-355 (14/11)** : levier de voie N allumé d'office dans la Vision 18 (après parité) ; aj5 éteint par défaut, à l'essai.
+
 ## Suivi
 | Ticket | Session | État |
 |---|---|---|
