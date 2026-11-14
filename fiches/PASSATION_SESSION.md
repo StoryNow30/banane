@@ -36,15 +36,15 @@ Tout ce qui suit est poussé. Tronc `claude/50-test17` à `823b5e7` ; `banane-da
 |---|---|---|---|
 | CH-115 | `session_01Td4bNnngUKZg9khyFWU96w` | `04b1142` | En attente de l'ordre d'intégrer l'épure et les deux palettes (envoi programmé à 11 h 34 UTC) |
 | CH-116 | `session_01Td4bNmvUkN3hwKrz6V1kzy` | `83818c9` | Au repos ; a rendu l'examen de CH-123. Seule à lire les examens vierges |
-| CH-121 | `session_01Td4bNk2uQhtkP6QNyX6Vtt` | `d779707` | Doit rendre le verdict de parité d'aj5 (éteint, 12/11 p23), pousser son rapport, puis s'arrêter |
+| CH-121 | `session_01Td4bNk2uQhtkP6QNyX6Vtt` | `d779707` | Relancée le 14/11 à 10 h 50 UTC : verdict de parité d'aj5 (éteint, 12/11 p23), rapport poussé, puis arrêt |
 | CH-123 | `session_01Td4bNo7jTEd4NswYNMJfUC` | `dbbeb7e` | Au repos, rapport rendu |
-| CH-124 | `session_01Td4bNpSQ9399cdW28RY9eX` | `f9fee1c` | Coupée par la limite pendant la parité de N. À relancer en premier |
+| CH-124 | `session_01Td4bNpSQ9399cdW28RY9eX` | `f9fee1c` | Coupée par la limite pendant la parité de N. Relancée le 14/11 à 10 h 50 UTC (parité d'abord, puis passation et arrêt) |
 | CH-125 | `session_01Td4bNjx4xDBqL4deDLhkUV` | `5157cda` | A repris seule vers 10 h 30 (garde du niveau 1 finie, résultat à lire) |
 | CH-119, 120, 122 | archivées | `c68f75a`, `08e3a50`, `5b8965b` | Passation dans `chantiers/CH-NNN/passation.md` sur chaque branche ; à relancer en session neuve, recentrées sur l'ancre |
 
 Règles de lancement (audit 6, D-356) : **une seule session au modèle le plus fort à la fois**, plus le banc et au plus une session légère ; pas d'effort maximal sans raison écrite ; une session au-delà de 500 000 jetons de contexte finit sa tâche, pousse une passation et est remplacée. La limite d'usage de 5 heures a coupé toutes les sessions trois fois (13/11 vers 12 h et 18 h UTC, 14/11 à 10 h 23 UTC) : après une coupure, relancer par `send_later` à l'heure de levée, dans l'ordre CH-124, CH-116, CH-121.
 
-Tâches programmées dans la session principale (elles meurent avec elle) : 11 h 32 UTC, relance après la limite (CH-124, CH-116, CH-121) ; 11 h 34 UTC, ordre d'intégration à CH-115.
+Tâches programmées dans la session principale (elles meurent avec elle) : 11 h 32 UTC, contrôle des sessions relancées (CH-124, CH-121) ; 11 h 34 UTC, ordre d'intégration à CH-115.
 
 ### 0.5 Intégrer le levier N dans le tronc (dès que la parité est bonne)
 1. Sur le tronc : `git apply` de `chantiers/CH-124/ancre.patch` (sha256 `55c63f31…`) puis de `chantiers/CH-124/sw-ancre.patch` (sha256 `5c7c1fef…`), pris sur `origin/chantier/CH-124`. Vérifié le 14/11 : les deux s'appliquent sur `823b5e7`.
