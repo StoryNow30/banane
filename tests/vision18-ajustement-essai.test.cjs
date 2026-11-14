@@ -92,3 +92,15 @@ test('panneau : une case « à l\'essai », décochée par défaut, cochée si l
   p = await panneau(etat, { globals: { BananeSettings: Settings } }); await p.attendre();
   assert.equal(p.$('ajustement-hauteur').checked, false); assert.equal(p.appels.filter(a => a.action === 'ajustement-hauteur').length, 0);
 });
+
+test('refus d\'ancre d\'une pose ajustée : l\'appui se juge sur la commande d\'avant, la voisine fantôme porte la pose de la décision', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../background.js'), 'utf8'), i = src.indexOf('async function ancreCommande('), f = src.slice(i, src.indexOf('\n/* 4.9.5.15', i));
+  assert.ok(i > 0 && f.length > 500);
+  assert.match(f, /const cmdA=command\.avantAjustement\?\{\.\.\.command,action:command\.avantAjustement\.action\}:command,pd=engine\.s\.batch\?\.ajustementsFin\?\.\[identity\.cut\];/);
+  assert.match(f, /const appui=cmdA\.l1s\|\|cmdA\.rechercheLarge==='remplacer'\?false:L\.commandsPositions\(lotObservation,cmdA\)/);
+  assert.doesNotMatch(f, /commandsPositions\(lotObservation,command\)/);
+  assert.match(f, /positions:pd\?\{left:pd\.left\.slice\(0,3\),right:pd\.right\.slice\(0,3\)\}:positions/);
+  /* L'ordre dans la commande du lot : l'étage d'ajustement, puis le refus d'ancre en dernier (comme au banc). */
+  const c = src.indexOf('command=ajustementFinCommande('), a = src.indexOf('if(ancreAllumee())command=await ancreCommande(');
+  assert.ok(c > 0 && a > c && a - c < 400);
+});

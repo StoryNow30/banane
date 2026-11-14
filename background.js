@@ -2096,10 +2096,13 @@ async function ancreCommande(command,lotObservation,proposal,before){
   lotObservation.ancre=j;
   if(j.refus!==true)return command;
   /* Ce que le livré aurait fait de cette pose : appui tenu (même règle que `holdLotAnchor`), voisine de la GCV2 (pose de la chaîne, jamais une pose de L1). */
-  const appui=command.l1s||command.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command.action==='lot'&&command.reason==='gcv2-l1';
+  /* Vision 18 (aj5 à l'essai, relecture de CH-124) : une commande refaite par l'étage d'ajustement se juge comme celle d'avant (même règle que `holdLotAnchor`), et
+   * sa voisine fantôme porte la pose de la DÉCISION (`b.ajustementsFin`, levier `voisinsDecision`), pas la pose ajustée. Sans ajustement, rien ne change. */
+  const cmdA=command.avantAjustement?{...command,action:command.avantAjustement.action}:command,pd=engine.s.batch?.ajustementsFin?.[identity.cut];
+  const appui=cmdA.l1s||cmdA.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,cmdA)||lotObservation.l1?.etat==='valider'&&cmdA.action==='lot'&&cmdA.reason==='gcv2-l1';
   const deL1=!!(command.l1s||command.reason==='gcv2-l1');
   lotObservation.ancre={...j,commande:{action:command.action,reason:command.reason??null,...(command.l1s?{l1s:command.l1s}:{})},appui:!!appui};
-  if(!deL1&&profilL1s())ancreFantomes(engine.s.batch,identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions,rails:K.clone(Object.fromEntries(SIDES.map(s=>[s,before[s]])))});
+  if(!deL1&&profilL1s())ancreFantomes(engine.s.batch,identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:pd?{left:pd.left.slice(0,3),right:pd.right.slice(0,3)}:positions,rails:K.clone(Object.fromEntries(SIDES.map(s=>[s,before[s]])))});
   return L.deferRails(proposal.rails,lotObservation,'ancre','décision sur le lot : pose à '+Math.abs(j.ecartMm)+' mm en travers de l\'axe de la voie relevée (trajectoire) : cut laissé à l\'opérateur');
  }catch(e){lotObservation.ancre={erreur:String(e?.message||e).slice(0,160)};return command;}}
 /* 4.9.5.15 (fiches/L1_CAP5.md) — sous L1-se, poses de L1 de CE lot (GCV2 validées, chaîne refaite par L1-s) : voisines de la GCV2 pour la seule
