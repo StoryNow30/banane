@@ -1,0 +1,11 @@
+{
+ "nom": "ch124-eteint",
+ "patchs": [
+  {
+   "fichier": "ancre.patch",
+   "sha256": "214e55aaf166782ae072e8f968c61df2dc1ffaabba22ed15bcf5c420f733b87b"
+  }
+ ],
+ "env": {},
+ "profil": "L1-se"
+}
