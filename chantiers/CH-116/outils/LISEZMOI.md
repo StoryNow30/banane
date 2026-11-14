@@ -22,3 +22,8 @@ Décalages : mm, `[longitudinal, latéral, vertical]`, repère profil de la pose
 
 ## Garde d'octobre au banc (`banc.cjs garde`)
 `BANANE_LOTS` (défaut `CH116_TRAVAIL/oct/lots`) : un dossier par lot de `datasets/garde-gcv2/base-test18.json`, avec le journal, la liste et les segments du corpus nommés dans la base (extraits de `banane-data`, collections du 16 au 23/10 ; listes des parties 6 et 7 dans les Échos du 19/10). `banc.cjs garde --nom N [--patch P] [--env BANC_LEVIERS=JSON]` rejoue les 12 lots en parallèle comme `garde-gcv2 --rejouer` (leviers de la base + ceux du réglage), lance `garde-gcv2 comparer`, et sépare les reculs réels des « verts changés » (`travail/garde/N/resume.txt`). Environ 15 min à 3 tâches. Contrôles (13/11) : éteint retour 0 ; aj4 de CH-121 retour 1, 16 reculs (10 réels, 6 verts changés), comme `garde-gcv2 --rejouer`.
+
+## Réglages par défaut d'un jugement (décision de l'intégrateur, 14/11)
+- **Zones** : la zone d'un cut est celle du lot (service worker à la décision, événement `regles-metier-ombre`). Tout rejeu de jugement passe `--env BANC_ZONES=journal`.
+- **Passe livrée** : la passe fidèle est la règle (écriture dans l'ordre de décision, 10 au plus, arrêt au premier refus visible). Tout jugement « passe livrée » passe `--env BANC_PASSE_PLAFOND=10` en plus de `BANC_LEVIERS` avec `"deuxiemePasse":2,"passe2Leviers":{"sansVoieRien":true}`.
+- La référence « livré » d'un jugement se rejoue avec les mêmes réglages (`livre-zj`, et pour la passe `--env BANC_ZONES=journal --env BANC_PASSE_PLAFOND=10`). Les jugements rendus avant le 14/11 ont été faits sans ces réglages.
