@@ -1,11 +1,12 @@
 # CH-124 : ce qu'il faut pour intégrer le levier N (refus d'ancre), éteint par défaut
 
-Deux patchs, à appliquer dans cet ordre sur le tronc 9feb278 (vérifié : ils s'y appliquent sans rejet) :
+Trois patchs, à appliquer dans cet ordre (les deux premiers vérifiés sur le tronc 9feb278 et intégrés tels quels dans `integration/vision18-n-aj5`, 1bc4532 ; le troisième vérifié sur 1bc4532) :
 
 | patch | sha256 | fichiers |
 |---|---|---|
 | `ancre.patch` | `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c` | `src/ancre-trajectoire.js` (nouveau), `src/gcv2-l1.js`, `tools/banc-differes.cjs`, `tests/ch124-ancre.test.cjs` (nouveau), `tests/gcv2-l1-cap5.test.cjs` |
 | `sw-ancre.patch` | `5c7c1fef2d3c0af5126af147dd1d9ccecdd0c44089dc2026213815b198940f31` | `background.js` |
+| `sw-ancre-liste.patch` (**correctif, à intégrer avant d'allumer**) | `178e5f1d5d52b1545a62fef587ae3d8310383a4018de0f0a738f7068ad0e42f5` | `background.js` (`ancreEtat` seul), `tests/ch124-ancre-liste-sw.test.cjs` (nouveau), `tests/ch124-ancre.test.cjs` (2 essais de plus) |
 
 `ancre-reprise.patch` (N+) n'en fait pas partie.
 
@@ -31,8 +32,12 @@ Deux patchs, à appliquer dans cet ordre sur le tronc 9feb278 (vérifié : ils s
 4. **Journal**, levier allumé seulement : `lotObservation.ancre` par cut (`refus`, `ecartMm`, `axeMm`, `cinematiqueMm`, `thetaMm`, ou `muet`, ou `erreur`) ; différé de motif `ancre` ; `passe-differes-ombre` avec `decision:'rien', motif:'ancre'`. Nombres seulement, aucun identifiant nouveau.
 5. **Deuxième passe et plafond de 10** : une pose de la passe que l'ancre refuse n'entre pas dans la liste d'écriture. Elle ne prend aucune des 10 écritures. Le patch ne touche pas à l'écriture.
 
-## Règle de production que le levier suppose
-La liste de la partie est lue avant le premier cut du lot (instantané pris au chargement de la liste), une fois par lot ; le modèle est calculé une fois, à la première commande. Sans liste, ou si la pose de départ d'un cut ne se cale pas sur sa ligne, l'ancre se tait : la commande est celle du livré. Une panne du module laisse la commande du livré.
+## La liste que l'ancre lit sur le terrain (mesuré, `sorties/production-liste.md`)
+- L'instantané de la partie est pris au départ de chaque séance, pendant que le premier cut du lot se décide : la première pose tombe à moins d'une seconde de la fiche de départ dans 5 lots sur 24, et avant elle dans 1.
+- **Défaut de `sw-ancre.patch` seul** : l'ancre lisait par `l1eTable` dès la première pose ; dans ces lots elle aurait gardé « pas de liste » pour tout le lot et fait perdre à la GCV2 sa référence d'écartement. Ni le banc ni la parité ne le voient.
+- **`sw-ancre-liste.patch`** : l'ancre lit elle-même le stockage, ne touche plus `l1eTable`, ne garde jamais l'absence (elle se tait et relit au cut suivant), prend un instantané plus récent pendant ses 6 premières lectures du lot, puis fige la liste pour le lot. Éteint : aucune ligne exécutée.
+- Sans liste, ou si la pose de départ d'un cut ne se cale pas sur sa ligne (ligne réécrite depuis l'instantané), l'ancre se tait : la commande est celle du livré. Une panne du module laisse la commande du livré.
+- Avec l'ajustement de hauteur ALLUMÉ (arbre 1bc4532), deux endroits de `ancreCommande` sont à aligner : l'appui fantôme (juger l'action d'avant l'ajustement, comme `holdLotAnchor`) et la pose du voisin fantôme (`b.ajustementsFin[cut]` quand il existe). Sans effet à l'éteint.
 
 ## Preuves
 Voir `rapport.md` (éteint = livré, garde d'octobre jugée contre la vérité, corpus, examens vierges par CH-116, parité).

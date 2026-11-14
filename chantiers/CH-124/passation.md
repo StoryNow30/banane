@@ -11,14 +11,16 @@
 | éteint = livré (ancien arbre, première passe) | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre.md` |
 | examens vierges (mesure de CH-116) | 3 refus, 3 vraies corrections, rien d'autre ne change | chez CH-116 |
 | parité, lot d'octobre 0-2310-lot2 | 91 lignes identiques sur 91 | `sorties/parite/parite-octobre-lot2.md` |
-| parité, 12/11 p23 | EN COURS (lancée à 11 h 12 UTC, environ 100 min) | `sorties/parite/` |
-| corpus en zones du journal et passe fidèle (éteint, puis N) | À FAIRE après la parité ; la référence « livré » de ce réglage est rejouée (hors dépôt) | — |
+| parité, 12/11 p23 | EN COURS sur l'arbre d'intégration 1bc4532, sans réglage (lancée à 11 h 19 UTC, environ 110 min) | `sorties/parite/` |
+| éteint = livré, tronc fusionné, zones du journal, passe fidèle | 4 016 identiques sur 4 016 | `sorties/corpus/eteint-contre-livre-zjp.md` |
+| corpus N en zones du journal et passe fidèle | EN COURS | `sorties/corpus/` |
 
 - **N+ (reprise sur le pool restreint à l'ancre)** : réglage figé AVANT tout rejeu (`reglage-fige-reprise.md`), incrément `ancre-reprise.patch`, essais verts. **Jamais rejoué.** Non couvert par D-355. À reprendre par une session neuve.
 
 ## Patchs (s'appliquent sur le tronc, vérifié par l'intégrateur à 823b5e7)
 - `ancre.patch` : `55c63f314ac2c379dff3c9eeed9aae60a4a9f65bf6d6517198d5895bc868467c` (ancien arbre : `214e55aa…`, mêmes lignes ajoutées et retirées).
 - `sw-ancre.patch` : `5c7c1fef2d3c0af5126af147dd1d9ccecdd0c44089dc2026213815b198940f31`.
+- `sw-ancre-liste.patch` (correctif du 14/11, après `sw-ancre.patch`, **à intégrer avant d'allumer**) : `178e5f1d5d52b1545a62fef587ae3d8310383a4018de0f0a738f7068ad0e42f5`.
 - `ancre-reprise.patch` (N+, après `ancre.patch`) : `a54ffbf696d4c8bd7b04dd6f927ac3ddea1c25e4e1eeb5ed46c79865b1e7e77e`.
 - Fichiers à intégrer et déclarations : `INTEGRATION.md`.
 
@@ -30,6 +32,7 @@ Données hors dépôt (perdues avec la session) : corpus et banc de CH-116 (`cha
 - N+ : garde d'octobre d'abord (`banc.cjs garde --nom Np --patch ancre.patch --patch ancre-reprise.patch --env 'BANC_LEVIERS={"ancre":{"reprise":true}}'`, puis `refus.cjs garde`), corpus ensuite, décision selon `reglage-fige-reprise.md` §4. L'incrément du service worker pour N+ n'est pas écrit.
 
 ## Pièges mesurés
+- **Course au départ du lot** (`sorties/production-liste.md`) : l'instantané de la liste s'écrit pendant que le premier cut se décide. Sans `sw-ancre-liste.patch`, l'ancre garderait « pas de liste » pour tout le lot dans 3 à 5 lots sur 24 et ferait perdre à la GCV2 sa référence d'écartement. Le banc et la parité ne voient pas ce défaut.
 - La parité n'a pas de reprise et le vrai service worker va environ 11 fois moins vite que le banc : 32 min pour 91 cuts, environ 100 min pour 12/11 p23 (3 s par cut au début, 20 s à la fin). Un conteneur sans tâche suivie est repris au bout de quelques minutes : garder une tâche suivie vivante pendant un long rejeu détaché.
 - `BANC_ZONES=journal` dans la référence d'une parité fabrique des écarts sur un lot ancien (4 lignes sur 91 en octobre).
 - Passe et plafond de 10 : une pose de passe refusée par l'ancre ne prend aucune des 10 écritures (`reglage-fige.md`, note du 14/11) ; à compter à part dans le rejeu en passe fidèle.
