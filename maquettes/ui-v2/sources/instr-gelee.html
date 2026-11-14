@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gelée</title>
+<style>
+/*POLICE:instr-chillax*/
+/* Proposition « Gelée » (famille Instruments et matière).
+ * Sources : Scrubbers, face Jelly (une bande de gelée dans une fente, extrémité gauche épinglée, longueur = valeur,
+ * chaîne de Verlet, longueur qui se détend vers la poignée) et Fluid (col gluant : flou + seuil alpha) ;
+ * libraries.dev, liquid-gooey (silhouette gluante dessous, contenu net dessus ; pièces qui fusionnent et se séparent).
+ * Sens : longueur de gelée = cuts posés ; gouttes tombées dans le bac = cuts à reprendre (goutte pleine = différé,
+ * goutte creuse = posé à examiner) ; gelée brillante = Ariane pose, gelée figée mate = rien ne bouge ;
+ * bord de fente ambre + triangle + mot = Ariane attend votre geste. */
+:root{
+  --fond:#F5F3EF; --fond-2:#ECE9E3; --encre:#1C1B19; --encre-2:#5C5850; --trait:#D5D0C6; --fente:#E3DFD7;
+  --gelee:#17675F; --gelee-clair:#CFE6E2; --ambre:#9E4A0C; --ambre-pale:#F6E5D5; --scene:#D9D5CD;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#141615; --fond-2:#1C1F1E; --encre:#ECEDEA; --encre-2:#A2A6A0; --trait:#323634; --fente:#0D0F0E;
+  --gelee:#58B6A9; --gelee-clair:#16302C; --ambre:#EE9B55; --ambre-pale:#352211; --scene:#080808;
+}}
+:root[data-theme="dark"]{
+  --fond:#141615; --fond-2:#1C1F1E; --encre:#ECEDEA; --encre-2:#A2A6A0; --trait:#323634; --fente:#0D0F0E;
+  --gelee:#58B6A9; --gelee-clair:#16302C; --ambre:#EE9B55; --ambre-pale:#352211; --scene:#080808;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Chillax',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--fond);border-radius:28px;font-size:15px;line-height:1.4}
+.notes{max-width:400px;background:var(--fond);color:var(--encre);padding:18px 20px;border-radius:28px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.notes code{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+
+.p{padding:16px 18px 26px;display:flex;flex-direction:column;gap:16px}
+.tete{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.marque{font-weight:600;font-size:17px;margin-right:auto}
+.liaison{width:100%;display:flex;align-items:center;gap:7px;font-size:13px;color:var(--encre-2)}
+.liaison b{color:var(--encre);font-weight:500}
+
+/* bascule gluante : une goutte qui coule d'un côté à l'autre avec une petite traîne (liquid-gooey, effet Move) */
+.bascule{position:relative;display:grid;grid-template-columns:1fr 1fr;width:178px;height:38px;border-radius:19px;background:var(--fond-2);border:1px solid var(--trait)}
+.bascule svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.bascule button{position:relative;z-index:1;font:inherit;font-size:14px;font-weight:500;border:0;background:none;color:var(--encre-2);border-radius:19px;cursor:pointer}
+.bascule button[aria-pressed="true"]{color:var(--fond)}
+.bascule button[aria-pressed="true"] span{background:var(--encre);border-radius:10px;padding:1px 6px}
+.bascule[aria-disabled="true"] button{cursor:not-allowed}
+.bascule .goutte{fill:var(--encre)}
+.note-bascule{width:100%;margin:-4px 0 0;font-size:12px;color:var(--encre-2)}
+
+.statut{display:flex;flex-direction:column;gap:2px}
+.mot{font-size:28px;font-weight:600;line-height:1.1;margin:0;display:flex;align-items:center;gap:10px}
+.mot.attention::before{content:"";width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:15px solid var(--ambre)}
+.mesure{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;color:var(--encre-2)}
+.mesure .grand{font-size:44px;font-weight:600;color:var(--encre);line-height:1;display:inline-block}
+.grand.change,.chiffre.change{animation:gonfle .4s cubic-bezier(.3,1.6,.5,1)}
+@keyframes gonfle{0%{transform:scale(1,1)}30%{transform:scale(1.12,.9)}60%{transform:scale(.96,1.05)}100%{transform:none}}
+
+/* la fente et sa gelée (silhouette gluante dessous, chiffres nets dessus) */
+.fente{position:relative;height:76px;background:var(--fond);touch-action:none}
+.fente svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fente .creux{fill:var(--fente);stroke:var(--trait);stroke-width:1}
+.fente[data-regime="attention"] .creux{stroke:var(--ambre);stroke-width:2.5}
+.fente .corps{stroke:var(--gelee);fill:none;stroke-linecap:round;stroke-linejoin:round}
+.fente .goutte-vol{fill:var(--gelee)}
+.fente .coeur{stroke:#FFFFFF;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke-opacity .6s ease}
+.fente .reflet{stroke:#FFFFFF;fill:none;stroke-linecap:round;transition:stroke-opacity .6s ease}
+.fente[data-matiere="figee"] .coeur,.fente[data-matiere="figee"] .reflet{stroke-opacity:0 !important}
+.fente[data-matiere="figee"] .corps{stroke-opacity:.72}
+.fente .poignee{fill:var(--encre)}
+.fente .reflet.relu{animation:parcourt 2.4s linear infinite}
+@keyframes parcourt{from{stroke-dashoffset:120}to{stroke-dashoffset:-14}}
+.fente[data-matiere="figee"] .reflet.relu{stroke-opacity:.9 !important}
+.fente[data-reglable="1"]{cursor:ew-resize}
+.fente:focus-visible{outline:3px solid var(--encre);outline-offset:3px;border-radius:12px}
+.reperes{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--encre-2);margin-top:2px;padding:0 4px}
+.reperes b{color:var(--encre);font-weight:500}
+
+/* le bac : les gouttes détachées, un bouton entier qui mène à ce qui reste */
+.bac{font:inherit;color:inherit;text-align:left;width:100%;border:1px solid var(--trait);background:var(--fond-2);border-radius:22px;padding:10px 14px 12px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.bac:disabled{cursor:default}
+.bac .gouttes{display:flex;flex-wrap:wrap;gap:5px;min-height:18px}
+.bac .gt{width:13px;height:16px}
+.bac .gt path{fill:var(--gelee);stroke:var(--gelee);stroke-width:1.6}
+.bac .gt.creuse path{fill:var(--fond-2)}
+.bac .gt.neuve{animation:tombe .55s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes tombe{0%{transform:translateY(-26px) scale(.6,1.3);opacity:0}60%{transform:translateY(0) scale(1.2,.75);opacity:1}100%{transform:none}}
+.bac .lib{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--encre-2)}
+.bac .lib b{color:var(--encre);font-weight:600}
+.bac .lib span{display:inline-flex;align-items:center;gap:5px}
+.bac .aller{font-weight:600;color:var(--encre);text-decoration:underline;text-underline-offset:3px;margin-left:auto}
+.bac:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+
+/* touches : pilules qui s'écrasent sous le doigt et rebondissent (face Effort : 1,16 → 0,93 → 1) */
+.actions{display:flex;flex-direction:column;gap:9px}
+.rang2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px}
+.touche{font:inherit;font-weight:600;font-size:15px;border-radius:999px;padding:12px 18px;border:1.5px solid var(--encre);background:var(--fond);color:var(--encre);cursor:pointer;width:100%;transition:transform .1s ease}
+.touche:active{transform:scale(1.03,.92)}
+.touche.principal{background:var(--gelee);border-color:var(--gelee);color:var(--fond);font-size:16px;padding:15px 18px}
+.touche.arret.confirme{background:var(--ambre);border-color:var(--ambre);color:var(--fond)}
+.touche.lien{border:0;background:none;text-decoration:underline;text-underline-offset:3px;padding:6px 2px;width:auto;text-align:left}
+.touche[aria-disabled="true"]{background:var(--fond-2);border-color:var(--trait);color:var(--encre-2);cursor:not-allowed}
+.touche:focus-visible,.bascule button:focus-visible,input:focus-visible,.case:focus-visible{outline:3px solid var(--encre);outline-offset:2px}
+.note{font-size:12px;color:var(--encre-2);margin:3px 0 0 18px}
+.raison{font-size:13px;color:var(--ambre);margin:3px 0 0 18px}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.champ{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--encre-2)}
+.champ input{font:inherit;font-size:18px;font-weight:500;color:var(--encre);background:var(--fond-2);border:1px solid var(--trait);border-radius:16px;padding:9px 14px;width:100%}
+.champ input:disabled{color:var(--encre-2)}
+.case{grid-column:1/-1;display:flex;align-items:center;gap:10px;font:inherit;font-size:14px;background:none;border:0;color:var(--encre);padding:2px 0;cursor:pointer;text-align:left}
+.pastille{width:40px;height:24px;border-radius:12px;background:var(--trait);position:relative;flex:none}
+.pastille::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:9px;background:var(--fond);transition:transform .35s cubic-bezier(.3,1.5,.5,1), width .2s}
+[aria-pressed="true"] .pastille{background:var(--gelee)}
+[aria-pressed="true"] .pastille::after{transform:translateX(16px)}
+.aide{font-size:12px;color:var(--encre-2);margin:0;grid-column:1/-1}
+
+.bloc{border-radius:22px;background:var(--fond-2);padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.bloc h2{margin:0;font-size:15px;font-weight:600}
+.bloc p{margin:0}
+.bloc.attention{background:var(--ambre-pale);box-shadow:0 0 0 2px var(--ambre) inset}
+.bloc.attention h2{display:flex;gap:8px;align-items:center}
+.bloc.attention h2::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid var(--ambre);flex:none}
+.choix{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.ligne{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pas{display:inline-flex;align-items:center;gap:4px}
+.pas button{font:inherit;font-size:18px;width:34px;height:34px;border-radius:17px;border:1.5px solid var(--encre);background:none;color:var(--encre);cursor:pointer}
+.pas output{min-width:76px;text-align:center}
+/* la file : des pièces de gelée ; celles qui sont faites ont fusionné en une seule masse */
+.pieces{position:relative;height:40px}
+.pieces svg{width:100%;height:100%;display:block;overflow:visible}
+.pieces .pc{fill:var(--gelee)}
+.pieces .pc.vide{fill:none;stroke:var(--gelee);stroke-width:2;stroke-dasharray:4 4}
+.parties{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--encre-2)}
+.parties b{color:var(--encre);font-weight:600}
+.message{position:sticky;bottom:12px;margin:0 18px;background:var(--encre);color:var(--fond);border-radius:20px;padding:11px 16px;font-size:14px}
+.message.neuf{animation:gonfle .45s cubic-bezier(.3,1.6,.5,1)}
+
+.retour{font:inherit;font-size:14px;font-weight:600;background:none;border:0;color:var(--encre);padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.titre{font-size:26px;font-weight:600;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.liste li{background:var(--fond-2);border-radius:20px;padding:10px 14px;display:grid;grid-template-columns:18px 1fr;gap:2px 10px;align-items:start}
+#panneau[data-etat-change="1"] .liste li{animation:verse .42s both cubic-bezier(.3,1.4,.5,1)}
+.liste .gt{width:13px;height:16px;margin-top:3px}
+.liste .gt path{fill:var(--gelee);stroke:var(--gelee);stroke-width:1.6}
+.liste .gt.creuse path{fill:var(--fond-2)}
+.liste .motif{grid-column:2;font-size:13px;color:var(--encre-2)}
+.liste .gestes{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.liste .touche{width:auto;padding:6px 12px;font-size:13px;border-width:1px}
+@keyframes verse{from{opacity:0;transform:translateY(-10px) scale(.96,1.05)}to{opacity:1;transform:none}}
+.coupe{display:block;width:100%;aspect-ratio:2/1;background:var(--fond-2);border-radius:22px}
+.coupe .sol{fill:none;stroke:var(--encre-2);stroke-width:1.5}
+.coupe .pos{stroke:var(--gelee);stroke-width:4;stroke-linecap:round}
+
+#panneau[data-etat-change="1"] .statut{animation:verse .45s both cubic-bezier(.3,1.4,.5,1)}
+#panneau[data-etat-change="1"] .actions{animation:verse .45s .06s both cubic-bezier(.3,1.4,.5,1)}
+#panneau[data-etat-change="1"] .bloc{animation:verse .45s .1s both cubic-bezier(.3,1.4,.5,1)}
+@media (prefers-reduced-motion: reduce){ #panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important} }
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Gelée"></div></div>
+  <aside class="notes">
+    <h2>Gelée</h2>
+    <p><b>Logique.</b> Le lot est une seule masse de gelée qui s'allonge dans sa fente à chaque cut posé ; ce qu'Ariane n'a pas pu poser se détache en gouttes qui tombent dans un bac, et le bac est ce qui reste à reprendre.</p>
+    <p><b>D'où ça vient.</b> Scrubbers (dépôt haplollc) : <code>JellyFace.swift</code> (bande de gelée épinglée à gauche, longueur = valeur, chaîne de Verlet, longueur naturelle qui rattrape la poignée, gelée amincie quand on tire, à plat au repos, lumière intérieure et reflet net) et <code>FluidFace.swift</code> (col gluant par flou puis seuil alpha). libraries.dev, paquet liquid-gooey (<code>filter.tsx</code>, <code>spring.ts</code> ; démo Gooey jouée : le menu « + » qui se scinde en gouttes, le curseur Move et sa traîne) : la silhouette gluante est dessous, le texte reste net dessus.</p>
+    <p><b>Ce que ça veut dire ici.</b></p>
+    <ul>
+      <li><b>Longueur de gelée</b> : cuts traités sur la longueur du lot (fente = bornes). Total inconnu : la fente n'a pas de bout, elle s'ouvre en pointillés avec les mots « total inconnu ».</li>
+      <li><b>Gelée brillante</b> qui frémit à chaque cut : Ariane pose. <b>Gelée figée, mate</b> : en pause, arrêté ou terminé.</li>
+      <li><b>Goutte pleine</b> : cut différé ; <b>goutte creuse</b> : posé, à examiner. Toucher le bac ouvre la liste.</li>
+      <li><b>Bord de fente ambre, triangle et mot</b> : Ariane attend votre geste.</li>
+      <li><b>File</b> : une pièce de gelée par partie ; les parties faites ont fusionné en une masse, la partie en cours est à part, les suivantes sont des moules vides.</li>
+      <li><b>Couleur de la gelée</b> : ce qu'Ariane a posé, et le bouton principal ; l'ambre est réservé à l'attente de l'opérateur.</li>
+    </ul>
+    <p><b>Mouvement.</b> Un cut allonge la gelée, qui s'amincit puis se rattrape (0,3 s) ; un différé se pince au bout de la gelée et tombe dans le bac ; la pause fige la gelée (reflet éteint en 0,6 s) ; la bascule Orbite/Écho coule d'un côté à l'autre. En mouvement réduit, la gelée est posée droite à sa longueur et les gouttes sont déjà dans le bac.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const pl = (k, un, plus) => n(k) + ' ' + (k > 1 ? plus : un);
+  const goutte = (creuse, cls) => `<svg class="gt${creuse ? ' creuse' : ''}${cls ? ' ' + cls : ''}" viewBox="0 0 13 16" aria-hidden="true"><path d="M6.5 1.5C8.5 5 11 7.4 11 10.3a4.5 4.5 0 01-9 0C2 7.4 4.5 5 6.5 1.5z"/></svg>`;
+
+  function touche(x) {
+    const cls = 'touche ' + (x.rang || 'second') + (x.confirme ? ' confirme' : '');
+    return `<div><button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}${x.note ? `<p class="note">${esc(x.note)}</p>` : ''}</div>`;
+  }
+  function actions(l) {
+    const p = l.filter((x) => x.rang === 'principal'), a = l.filter((x) => x.rang === 'second' || x.rang === 'arret'), li = l.filter((x) => x.rang === 'lien');
+    return `<div class="actions">${p.map(touche).join('')}${a.length ? `<div class="rang2">${a.map(touche).join('')}</div>` : ''}${li.map(touche).join('')}</div>`;
+  }
+
+  function tete(m) {
+    const echo = m.activite === 'echo', b = m.activiteBloquee;
+    return `<div class="tete"><span class="marque">Ariane</span>
+      <div class="bascule" role="group" aria-label="Activité"${b ? ' aria-disabled="true"' : ''}>
+        <svg data-garder="bascule" aria-hidden="true"></svg>
+        <button data-a="orbite" aria-pressed="${!echo}"${b ? ' aria-disabled="true"' : ''}><span>Orbite</span></button>
+        <button data-a="echo" aria-pressed="${echo}"${b ? ' aria-disabled="true"' : ''}><span>Écho</span></button></div>
+      ${b ? '<p class="note-bascule">Écho se choisit quand le lot est en pause ou arrêté.</p>' : ''}
+      <div class="liaison">${m.liaison.etat === 'relie' ? '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="currentColor"/></svg>' : '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2.5 9.5l7-7" stroke="currentColor" stroke-width="1.5"/></svg>'}<b>${esc(m.liaison.texte)}</b> · ${esc(m.liaison.detail)}</div></div>`;
+  }
+
+  function statut(m) {
+    const c = m.compte;
+    if (m.vue === 'echo') return `<div class="statut"><h1 class="mot">Écho</h1><div class="mesure"><span class="grand num" data-valeur="ev">${m.echo.vus}</span><span>gestes vus, ${m.echo.accord} où Ariane aurait fait pareil</span></div></div>`;
+    if (m.phase === 'pret') {
+      const fdp = m.bornes.finDePartie;
+      return `<div class="statut"><h1 class="mot">Prêt</h1><div class="mesure"><span class="grand num" data-lecture>${fdp ? '∞' : m.bornes.fin - m.bornes.debut + 1}</span><span>${fdp ? 'jusqu’à la fin de la partie' : 'cuts dans la fente'}</span></div></div>`;
+    }
+    if (m.file.relecture) return `<div class="statut"><h1 class="mot">Relecture</h1><div class="mesure"><span class="grand num">${m.file.courante}</span><span>partie relue et corrigée, sur ${m.file.nb}</span></div></div>`;
+    const att = m.phase === 'arrete';
+    const mot = m.phase === 'encours' ? 'En cours' : m.phase === 'pause' ? 'En pause' : m.phase === 'fin' ? m.titre : (m.file.alerte ? 'Alerte' : 'Arrêté');
+    let mes;
+    if (m.phase === 'fin') mes = `<span class="grand num">${c.faits}</span><span>cuts traités</span>`;
+    else if (c.total == null) mes = `<span class="grand num" data-valeur="f">${c.faits}</span><span>traités · total inconnu</span>`;
+    else mes = `<span class="grand num" data-valeur="r">${c.total - c.faits}</span><span>restent sur ${n(c.total)} · ${esc(c.tempsTexte)}</span>`;
+    return `<div class="statut"><h1 class="mot${att ? ' attention' : ''}">${esc(mot)}</h1><div class="mesure">${mes}</div></div>`;
+  }
+
+  function reperes(m) {
+    const c = m.compte, b = m.bornes;
+    if (m.vue === 'echo') return `<div class="reperes"><span>accord</span><span>sur ${pl(m.echo.vus, 'geste', 'gestes')}</span></div>`;
+    if (m.phase === 'pret') return `<div class="reperes"><span>cut <b class="num" data-lecture-debut>${b.debut}</b></span><span>${b.finDePartie ? 'fin de partie' : `cut <b class="num" data-lecture-fin>${b.fin}</b>`}</span></div>`;
+    return `<div class="reperes"><span>cut <b class="num">${c.debut}</b></span><span>${m.phase === 'fin' || m.file.relecture ? '' : `${m.phase === 'encours' ? 'en cours' : 'arrêt'} : cut <b class="num">${c.cut}</b>`}</span><span>${c.fin == null ? 'total inconnu' : `cut <b class="num">${c.fin}</b>`}</span></div>`;
+  }
+
+  function bac(m) {
+    if (m.phase === 'pret' || m.vue === 'echo') return '';
+    const d = m.restants.filter((r) => r.type === 'differe'), v = m.restants.filter((r) => r.type === 'vert');
+    const vides = !m.restants.length;
+    const gs = d.map(() => goutte(false)).concat(v.map(() => goutte(true)));
+    return `<button class="bac" data-a="voirReste"${vides ? ' disabled' : ''} aria-label="Ce qui reste : ${d.length} différés, ${v.length} à examiner">
+      <span class="gouttes" data-garder="bac-gouttes">${gs.join('')}</span>
+      <span class="lib"><span>${goutte(false)}<b class="num chiffre" data-valeur="d">${d.length}</b> ${d.length > 1 ? 'différés' : 'différé'}</span><span>${goutte(true)}<b class="num chiffre" data-valeur="v">${v.length}</b> à examiner</span>${vides ? '' : '<span class="aller">Reprendre</span>'}</span></button>`;
+  }
+
+  function incident(m) {
+    const i = m.incident; if (!i) return '';
+    const att = i.type !== 'reprise';
+    return `<section class="bloc${att ? ' attention' : ''}" role="${att ? 'alert' : 'status'}"><h2>${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((x) => touche({ ...x, rang: i.type === 'choisir' ? 'second' : x.rang })).join('')}</div>` : ''}</section>`;
+  }
+  function alerte(m) {
+    const a = m.file.alerte; if (!a) return '';
+    const c = m.compte;
+    return `<section class="bloc attention" role="alert"><h2>${esc(a.titre)}</h2><p>${esc(a.detail)}</p><p style="font-size:13px;color:var(--encre-2)">Partie ${m.file.courante} à l'arrêt : ${pl(c.poses, 'posé', 'posés')}, ${pl(c.differes, 'différé', 'différés')}, ${n(c.aExaminer)} à examiner.</p></section>`;
+  }
+  function bornes(m) {
+    const b = m.bornes;
+    return `<section class="bornes"><label class="champ">Premier cut<input class="num" data-champ="debut" inputmode="numeric" value="${b.debut}"></label>
+      <label class="champ">Dernier cut<input class="num" data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin de partie"' : ''}></label>
+      <button class="case" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="pastille" aria-hidden="true"></span>Aller jusqu'à la fin de la partie</button>
+      <p class="aide">Tirer le bout de la fente allonge le lot, par crans de 10 cuts.</p></section>`;
+  }
+
+  /* pièces de la file : rectangles arrondis ; les faites se touchent et fusionnent sous le filtre gluant */
+  function pieces(m) {
+    const f = m.file, k = f.nb, l = 100 / k;
+    let s = '';
+    for (let i = 1; i <= k; i++) {
+      const faite = m.phase !== 'pret' && f.parties.some((p) => p.n === i);
+      const x = (i - 1) * l;
+      if (faite) s += `<rect class="pc" x="${x}%" y="10" width="${l + .6}%" height="20" rx="10"/>`;
+      else if (m.phase !== 'pret' && i === f.courante && !f.finie) s += `<rect class="pc" x="${x + 2.5}%" y="12" width="${Math.max(4, (l - 5) * (m.compte.part || .5))}%" height="16" rx="8"/><rect class="pc vide" x="${x + 2.5}%" y="11" width="${l - 5}%" height="18" rx="9"/>`;
+      else s += `<rect class="pc vide" x="${x + 2.5}%" y="11" width="${l - 5}%" height="18" rx="9"/>`;
+    }
+    return `<div class="pieces" aria-hidden="true"><svg><defs><filter id="gl-file" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="4"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 20 -8"/></filter></defs><g filter="url(#gl-file)">${s.replace(/<rect class="pc vide"[^>]*>/g, '')}</g>${(s.match(/<rect class="pc vide"[^>]*>/g) || []).join('')}</svg></div>`;
+  }
+
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') {
+      return `<section class="bloc"><div class="ligne"><button class="case" data-a="fileBascule" aria-pressed="${f.active}"><span class="pastille" aria-hidden="true"></span><b>File de parties</b></button>
+        ${f.active ? `<div class="pas" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output class="num">${f.nb} parties</output><button data-a="filePlus" aria-label="Une partie de plus">+</button></div>` : '<span style="font-size:13px;color:var(--encre-2)">éteinte</span>'}</div>
+        ${f.active ? pieces(m) : ''}
+        <p class="aide">${f.active ? `Les ${f.nb} parties s'enchaînent ; chacune est relue et corrigée, puis la suivante démarre seule.` : 'Allumer pour enchaîner plusieurs parties.'}</p></section>`;
+    }
+    if (!f.active) return '';
+    const lignes = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i);
+      if (p) lignes.push(`<li><b>Partie ${i}</b> · ${f.relecture && i === f.courante ? 'en relecture · ' : ''}${pl(p.poses, 'posé', 'posés')}, ${pl(p.differes, 'différé', 'différés')}, ${n(p.aControler)} à examiner</li>`);
+      else if (i === f.courante && !f.finie) lignes.push(`<li><b>Partie ${i}</b> · ${m.phase === 'arrete' ? `arrêtée au cut ${m.compte.cut}` : `en cours, ${m.compte.faits} traités`}</li>`);
+      else lignes.push(`<li><b>Partie ${i}</b> · à venir</li>`);
+    }
+    return `<section class="bloc" aria-label="File de parties"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `File · partie ${f.courante} sur ${f.nb}`}</h2>${pieces(m)}<ul class="parties">${lignes.join('')}</ul></section>`;
+  }
+
+  function vueReste(m) {
+    const ligne = (r, i) => `<li style="animation-delay:${Math.min(i, 14) * 35}ms">${goutte(r.type === 'vert')}<span><b>Cut <span class="num">${r.cut}</span></b> · ${r.type === 'differe' ? 'différé' : 'à examiner'}</span><span class="motif">${esc(r.motif)}</span><span class="gestes"><button class="touche" data-a="examiner" data-id="${esc(r.id)}">Examiner</button><button class="touche" data-a="ouvrir" data-id="${esc(r.id)}">Ouvrir dans ESV</button></span></li>`;
+    const d = m.restants.filter((r) => r.type === 'differe'), v = m.restants.filter((r) => r.type === 'vert');
+    return `<div class="p"><button class="retour" data-a="retour"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Retour au lot</button>
+      <h1 class="titre">Ce qui reste</h1><p style="margin:-8px 0 0;color:var(--encre-2)">Les gouttes du bac : ${pl(d.length, 'différé', 'différés')}, ${pl(v.length, 'cut posé', 'cuts posés')} à examiner.</p>
+      ${m.restants.length ? `<ul class="liste">${d.concat(v).map(ligne).join('')}</ul>` : '<p>Le bac est vide : rien à reprendre.</p>'}</div>`;
+  }
+
+  function vueExamen(m, D) {
+    const r = m.examen, cp = D.coupe(r.cut, 180);
+    const tri = cp.pts.slice().sort((a, b) => a[0] - b[0]);
+    const X = (x) => 20 + (x + 1) * 180, Z = (z) => 150 - (z + 0.5) * 220;
+    let d = '';
+    for (let i = 0; i < tri.length; i += 6) { const g = tri.slice(i, i + 6); d += (i ? 'L' : 'M') + X(g.reduce((s, p) => s + p[0], 0) / g.length).toFixed(1) + ' ' + Z(Math.min(...g.map((p) => p[1]))).toFixed(1); }
+    return `<div class="p"><button class="retour" data-a="voirReste"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Ce qui reste</button>
+      <h1 class="titre">Cut <span class="num">${r.cut}</span></h1>
+      <p style="margin:-8px 0 0;display:flex;gap:8px;align-items:center">${goutte(r.type === 'vert')}${r.type === 'differe' ? 'Différé' : 'Posé, à examiner'} · ${esc(r.motif)}</p>
+      <svg class="coupe" viewBox="0 0 400 200" role="img" aria-label="Coupe du cut ${r.cut}, profil et position proposée"><path class="sol" d="${d}"/>${cp.rails.map((x) => `<line class="pos" x1="${X(x)}" y1="${Z(-.24)}" x2="${X(x)}" y2="${Z(-.36)}"/>`).join('')}</svg>
+      <p style="margin:-6px 0 0;font-size:12px;color:var(--encre-2)">Profil de la coupe ; les deux traits marquent la position proposée.</p>
+      ${actions([{ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'principal' }, { a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'second' }])}</div>`;
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    const msg = m.message ? `<div class="message" role="status">${esc(m.message)}</div>` : '';
+    if (m.vue === 'reste') return vueReste(m) + msg;
+    if (m.vue === 'examen' && m.examen) return vueExamen(m, D) + msg;
+    const reglable = m.phase === 'pret' && !m.bornes.finDePartie && m.vue !== 'echo';
+    const fente = `<div><div class="fente" data-garder="fente" data-reglable="${reglable ? 1 : 0}"></div>${reperes(m)}</div>`;
+    let corps;
+    if (m.vue === 'echo') corps = `${statut(m)}${fente}<p style="margin:0">${esc(m.phrase)} La gelée mesure la part des gestes où elle aurait fait comme vous.</p>${actions(m.actions)}`;
+    else if (m.phase === 'pret') corps = `${incident(m)}${statut(m)}${fente}<p style="margin:0">${esc(m.phrase)}</p>${bornes(m)}${file(m)}${actions(m.actions)}`;
+    else corps = `${incident(m)}${alerte(m)}${statut(m)}${fente}<p style="margin:0">${esc(m.phrase)}</p>${bac(m)}${actions(m.actions.filter((x) => x.a !== 'voirReste'))}${file(m)}`;
+    return `<div class="p">${tete(m)}${corps}</div>${msg}`;
+  }
+
+  /* ---------- la gelée : chaîne de Verlet (mécanisme de JellyFace, réécrit ici) ---------- */
+  const NS = 'http' + '://www.w3.org/2000/svg';
+  const N = 15, BAS = 52, EP = 26, MARGE = 18, MIN = 26;
+  const J = { pts: [], prec: [], repos: 0, bout: 0, cible: 0, raf: 0, t0: 0, gouttes: [], vus: null, reglage: null, figee: false };
+  function remise(L) { J.bout = J.repos = L; J.pts = []; J.prec = []; for (let i = 0; i < N; i++) { J.pts.push([L * i / (N - 1), 0]); J.prec.push([L * i / (N - 1), 0]); } }
+  function pas(dt) {
+    J.bout += (J.cible - J.bout) * (1 - Math.exp(-dt / 0.11));
+    J.repos += (J.bout - J.repos) * (1 - Math.exp(-dt / 0.3));
+    const comp = Math.max(0, 1 - J.bout / Math.max(J.repos, 1));
+    const h = dt / 4, garde = Math.exp(-h / 0.28);
+    for (let s = 0; s < 4; s++) {
+      for (let i = 1; i < N - 1; i++) {
+        const p = J.pts[i], q = J.prec[i], t = i / (N - 1);
+        const vx = (p[0] - q[0]) * garde, vy = (p[1] - q[1]) * garde;
+        const arche = 1.05 * J.repos * comp * Math.sin(Math.PI * t);
+        J.prec[i] = [p[0], p[1]];
+        J.pts[i] = [p[0] + vx, Math.max(0, p[1] + vy + arche * h * h)];
+      }
+      const seg = J.repos / (N - 1);
+      for (let it = 0; it < 10; it++) {
+        for (let i = 0; i < N - 1; i++) contraindre(i, i + 1, seg, .5);
+        J.pts[0] = [0, 0]; J.pts[N - 1] = [J.bout, 0];
+      }
+      J.pts[0] = [0, 0]; J.prec[0] = [0, 0]; J.pts[N - 1] = [J.bout, 0]; J.prec[N - 1] = [J.bout, 0];
+    }
+  }
+  function contraindre(i, j, r, k) {
+    const a = J.pts[i], b = J.pts[j], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1e-6;
+    const wi = i === 0 || i === N - 1 ? 0 : 1, wj = j === 0 || j === N - 1 ? 0 : 1; if (!wi && !wj) return;
+    const d = (l - r) / l * k, ci = wi / (wi + wj), cj = wj / (wi + wj);
+    a[0] += dx * d * ci; a[1] += dy * d * ci; b[0] -= dx * d * cj; b[1] -= dy * d * cj;
+  }
+  function chemin(pts) {
+    let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; d += `Q${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${i === pts.length - 2 ? pts[i + 1][0].toFixed(1) : mx.toFixed(1)} ${i === pts.length - 2 ? pts[i + 1][1].toFixed(1) : my.toFixed(1)}`; }
+    return d;
+  }
+
+  function dessiner(el) {
+    const w = el.clientWidth || 380, m = J.m; if (!m) return;
+    const svg = el.querySelector('svg.g'); svg.setAttribute('viewBox', `0 0 ${w} 76`);
+    const ouvert = J.ouvert;
+    const largeur = w - 2 * MARGE;
+    const pts = J.pts.map(([x, y]) => [MARGE + EP / 2 + x, BAS - y]);
+    const epaisseur = EP * Math.min(1.25, Math.max(.72, Math.sqrt(J.repos / Math.max(J.bout, 1))));
+    let s = '';
+    /* la fente, en creux */
+    s += ouvert
+      ? `<path class="creux" d="M${MARGE + 18} ${BAS - 18}H${w - 40}M${MARGE + 18} ${BAS + 18}H${w - 40}" fill="none"/><rect class="creux" x="${MARGE}" y="${BAS - 18}" width="${largeur - 40}" height="36" rx="18" stroke-dasharray="${largeur * 0.7} 6 4 6 4 6 4 6"/>`
+      : `<rect class="creux" x="${MARGE}" y="${BAS - 18}" width="${largeur}" height="36" rx="18"/>`;
+    /* la gelée et les gouttes en vol, sous le même filtre gluant : le col se forme, puis se rompt */
+    s += `<g filter="url(#gl-${J.id})"><path class="corps" d="${chemin(pts)}" stroke-width="${epaisseur.toFixed(1)}"/>${J.gouttes.map((g) => `<circle class="goutte-vol" cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="${g.r}"/>`).join('')}</g>`;
+    if (J.bout > 1) {
+      s += `<path class="coeur" d="${chemin(pts.map(([x, y]) => [x, y - epaisseur * .1]))}" stroke-width="${(epaisseur * .45).toFixed(1)}" stroke-opacity=".22"/>`;
+      /* en relecture, une lueur parcourt la gelée d'un bout à l'autre (2,4 s), phase tenue d'un rendu à l'autre */
+      s += J.relecture
+        ? `<path class="reflet relu" pathLength="100" d="${chemin(pts.slice(1, -1).map(([x, y]) => [x, y - epaisseur * .28]))}" stroke-width="${(epaisseur * .16).toFixed(1)}" stroke-opacity=".9" stroke-dasharray="14 120" style="animation-delay:-${(performance.now() % 2400).toFixed(0)}ms"/>`
+        : `<path class="reflet" d="${chemin(pts.slice(1, -1).map(([x, y]) => [x, y - epaisseur * .28]))}" stroke-width="${(epaisseur * .12).toFixed(1)}" stroke-opacity=".75"/>`;
+    }
+    if (J.reglable) { const x = MARGE + largeur - 6; s += `<rect class="poignee" data-forme="bout de fente" x="${x - 3}" y="${BAS - 26}" width="6" height="52" rx="3"/>`; }
+    svg.innerHTML = s;
+  }
+
+  function boucle(t) {
+    const el = document.querySelector('[data-garder="fente"]');
+    if (!el) { J.raf = 0; return; }
+    const dt = Math.min(1 / 30, J.t0 ? (t - J.t0) / 1000 : 1 / 60); J.t0 = t;
+    pas(dt);
+    J.gouttes.forEach((g) => { g.vy += 900 * dt; g.y += g.vy * dt; });
+    J.gouttes = J.gouttes.filter((g) => g.y < 120);
+    dessiner(el);
+    const bouge = J.pts.some((p, i) => Math.abs(p[1] - J.prec[i][1]) > .02) || Math.abs(J.cible - J.bout) > .2 || Math.abs(J.repos - J.bout) > .2 || J.gouttes.length;
+    if (!bouge && !J.reglage) { J.raf = 0; J.t0 = 0; return; }
+    J.raf = requestAnimationFrame(boucle);
+  }
+
+  function longueur(m, w) {
+    const L = w - 2 * MARGE - EP;
+    if (m.vue === 'echo') return MIN + (L - MIN) * (m.echo.vus ? m.echo.accord / m.echo.vus : 0);
+    if (m.phase === 'pret') return MIN * .6;
+    const c = m.compte;
+    if (m.phase === 'fin') return L;
+    if (c.total == null) return MIN + (L * .7 - MIN) * (1 - Math.exp(-c.faits / 120));
+    return MIN + (L - MIN) * (c.part || 0);
+  }
+
+  /* bout de fente qu'on tire en PRÊT : correspondance relative, crans de 10 au relâché */
+  function tirer(e) {
+    const el = e.currentTarget; if (el.dataset.reglable !== '1') return;
+    const m = Demo.D.modele();
+    J.reglage = { x0: e.clientX, fin0: m.bornes.fin, debut: m.bornes.debut, fin: m.bornes.fin };
+    el.setPointerCapture(e.pointerId);
+    if (!J.raf) J.raf = requestAnimationFrame(boucle);
+    const bouge = (ev) => {
+      const dx = ev.clientX - J.reglage.x0;
+      J.reglage.fin = Math.max(J.reglage.debut + 1, Math.round(J.reglage.fin0 + dx * 1.5));
+      const l = document.querySelector('[data-lecture]'), lf = document.querySelector('[data-lecture-fin]');
+      if (l) l.textContent = J.reglage.fin - J.reglage.debut + 1; if (lf) lf.textContent = J.reglage.fin;
+      /* la gelée s'étire avec la main, puis se rattrape */
+      J.cible = Math.max(MIN * .6, Math.min(el.clientWidth - 2 * MARGE - EP, MIN * .6 + dx * .4));
+    };
+    const lache = () => {
+      el.removeEventListener('pointermove', bouge);
+      const r = J.reglage; J.reglage = null;
+      Demo.agir('regler', 'fin:' + Math.max(r.debut + 1, Math.round((r.fin + 1) / 10) * 10 - 1));
+    };
+    el.addEventListener('pointermove', bouge);
+    el.addEventListener('pointerup', lache, { once: true });
+    el.addEventListener('pointercancel', lache, { once: true });
+  }
+  function clavier(e) {
+    if (e.currentTarget.dataset.reglable !== '1') return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); Demo.agir('finPlus'); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); Demo.agir('finMoins'); }
+  }
+
+  /* bascule gluante : position 0 (Orbite) ou 1 (Écho), ressort sous-amorti, traîne derrière la goutte */
+  const B = { x: null, v: 0, cible: 0, raf: 0 };
+  function bascule(t) {
+    const svg = document.querySelector('[data-garder="bascule"]'); if (!svg) { B.raf = 0; return; }
+    const dt = 1 / 60, w = 2 * Math.PI / .5, z = .55;
+    B.v += (w * w * (B.cible - B.x) - 2 * z * w * B.v) * dt; B.x += B.v * dt;
+    dessinerBascule(svg);
+    if (Math.abs(B.cible - B.x) < .001 && Math.abs(B.v) < .001) { B.x = B.cible; dessinerBascule(svg); B.raf = 0; return; }
+    B.raf = requestAnimationFrame(bascule);
+  }
+  function dessinerBascule(svg) {
+    const W = 178, cx = 44 + B.x * 90, traine = Math.max(-30, Math.min(30, -B.v * 6));
+    svg.setAttribute('viewBox', `0 0 ${W} 38`);
+    svg.innerHTML = `<defs><filter id="gl-bascule"><feGaussianBlur stdDeviation="3"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 18 -7"/></filter></defs>
+      <g filter="url(#gl-bascule)"><rect class="goutte" x="${cx - 40}" y="4" width="80" height="30" rx="15"/>${Math.abs(traine) > 2 ? `<circle class="goutte" cx="${cx + traine * 1.6}" cy="19" r="${Math.min(9, Math.abs(traine) / 3)}"/>` : ''}</g>`;
+  }
+
+  let phasePrec = null, idf = 0;
+  let dernierMessage = null;
+  function marquerMessage(racine) {
+    const mg = racine.querySelector('.message'), t = mg ? mg.textContent : null;
+    if (mg && t !== dernierMessage) mg.classList.add('neuf');
+    dernierMessage = t;
+  }
+  function apres(S, D, racine) {
+    marquerMessage(racine);
+    const red = D.mouvementReduit();
+    const m = D.modele();
+    /* bascule */
+    const sb = racine.querySelector('[data-garder="bascule"]');
+    if (sb) { B.cible = m.activite === 'echo' ? 1 : 0; if (B.x == null || red) { B.x = B.cible; B.v = 0; dessinerBascule(sb); } else if (!B.raf && B.x !== B.cible) B.raf = requestAnimationFrame(bascule); else if (!sb.innerHTML) dessinerBascule(sb); }
+    const el = racine.querySelector('[data-garder="fente"]');
+    if (!el) { phasePrec = null; return; }
+    const neuf = !el.querySelector('svg.g');
+    if (neuf) {
+      J.id = 'f' + (++idf);
+      el.innerHTML = `<svg class="g" aria-hidden="true"></svg><svg style="position:absolute;width:0;height:0" aria-hidden="true"><filter id="gl-${J.id}" filterUnits="userSpaceOnUse" x="-20" y="-20" width="2000" height="200"><feGaussianBlur stdDeviation="5"/><feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 20 -9" result="goo"/><feComposite in="SourceGraphic" in2="goo" operator="atop"/></filter></svg>`;
+      el.addEventListener('pointerdown', tirer); el.addEventListener('keydown', clavier);
+    }
+    J.m = m;
+    J.ouvert = m.phase !== 'pret' && m.vue !== 'echo' && m.compte.total == null;
+    /* l'élément conservé garde ses anciens attributs : le réglage se décide ici, d'après le modèle */
+    J.reglable = m.phase === 'pret' && !m.bornes.finDePartie && m.vue !== 'echo';
+    el.dataset.reglable = J.reglable ? '1' : '0';
+    if (J.reglable) { el.tabIndex = 0; el.setAttribute('role', 'slider'); el.setAttribute('aria-label', 'Dernier cut du lot, flèches pour régler'); el.setAttribute('aria-valuenow', m.bornes.fin); }
+    else { el.removeAttribute('tabindex'); el.removeAttribute('role'); el.removeAttribute('aria-label'); el.removeAttribute('aria-valuenow'); }
+    el.setAttribute('data-regime', m.vue !== 'echo' && (m.phase === 'arrete' || (m.incident && m.incident.type !== 'reprise')) ? 'attention' : '');
+    J.relecture = !!m.file.relecture && m.vue !== 'echo';
+    el.setAttribute('data-matiere', m.vue !== 'echo' && m.phase === 'encours' && !m.file.relecture ? 'vive' : m.vue === 'echo' ? 'vive' : 'figee');
+    const w = el.clientWidth || 380;
+    const L = longueur(m, w);
+    if (!J.reglage) J.cible = L;
+    /* un nouveau différé : une goutte se pince au bout de la gelée et tombe */
+    const dif = m.compte.differes + m.compte.aExaminer;
+    if (!red && !neuf && J.vus != null && dif > J.vus && m.phase === 'encours') J.gouttes.push({ x: MARGE + EP / 2 + J.bout + 4, y: BAS + 6, vy: -40, r: 7 });
+    J.vus = dif;
+    /* un cut posé fait frémir la gelée : une petite poussée au milieu */
+    if (!red && !neuf && m.phase === 'encours' && J.pts.length) for (let i = 3; i < N - 3; i++) J.pts[i][1] += 1.2 * Math.sin(Math.PI * i / (N - 1));
+    if (neuf || red || J.pts.length !== N) remise(L);
+    if (!red && phasePrec === 'pret' && m.phase === 'encours') remise(MIN * .6);
+    if (red) { J.gouttes = []; remise(L); dessiner(el); }
+    else { dessiner(el); if (!J.raf) { J.t0 = 0; J.raf = requestAnimationFrame(boucle); } }
+    /* gouttes du bac : la dernière arrivée tombe en place */
+    const bg = racine.querySelector('[data-garder="bac-gouttes"]');
+    if (bg) {
+      const d = m.restants.filter((r) => r.type === 'differe').length, v = m.restants.length - d;
+      const voulu = Array(d).fill(false).concat(Array(v).fill(true));
+      const avant = bg.children.length;
+      if (avant !== voulu.length) { bg.innerHTML = voulu.map((c, i) => goutte(c, !red && avant && i >= avant ? 'neuve' : '')).join(''); }
+      else voulu.forEach((c, i) => bg.children[i].classList.toggle('creuse', c));
+    }
+    phasePrec = m.vue === 'echo' ? 'echo' : m.phase;
+  }
+
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

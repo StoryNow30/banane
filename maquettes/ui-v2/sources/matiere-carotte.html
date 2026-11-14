@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane — Carotte</title>
+<style>
+/*POLICE:boska*/
+/*POLICE:ibm-plex-mono*/
+/* Proposition « Carotte ». Le lot se fore comme une carotte de glace posée sur une table lumineuse :
+ * la profondeur atteinte est l'avancement, la carotte tourne tant qu'Ariane fore, et ce qu'il faudra
+ * revoir reste pris dans la glace, à sa profondeur. Une vraie forme en 3D, éclairée par-dessous. */
+:root{
+  --fond:#EEF1F3; --surface:#FAFBFC; --texte:#14191E; --doux:#4F5861; --filet:#D2D8DE; --filet-fort:#8B949D;
+  --plein:#14191E; --plein-texte:#FAFBFC; --scene:#DCE1E5; --alerte:#8F2416; --alerte-fond:#F8E8E4; --confirme:#A3281A;
+  --table:#E2EAF0; --etiq:#FAFBFC; --etiq-texte:#14191E;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#0E1216; --surface:#151B21; --texte:#E8EDF1; --doux:#9EA9B3; --filet:#253039; --filet-fort:#56636E;
+  --plein:#E8EDF1; --plein-texte:#0E1216; --scene:#06080A; --alerte:#FFB3A5; --alerte-fond:#2A1612; --confirme:#E04B3A;
+  --table:#18222B; --etiq:#0E1216; --etiq-texte:#E8EDF1;
+}}
+:root[data-theme="dark"]{
+  --fond:#0E1216; --surface:#151B21; --texte:#E8EDF1; --doux:#9EA9B3; --filet:#253039; --filet-fort:#56636E;
+  --plein:#E8EDF1; --plein-texte:#0E1216; --scene:#06080A; --alerte:#FFB3A5; --alerte-fond:#2A1612; --confirme:#E04B3A;
+  --table:#18222B; --etiq:#0E1216; --etiq-texte:#E8EDF1;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Boska',Georgia,serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);font:400 13px/1.5 'IBM Plex Mono',ui-monospace,monospace}
+#panneau .titre,#panneau .b-lib,#panneau .reste-cut,#panneau .file-tete,#panneau .marque,#panneau .bascule-nom,#panneau .incident-titre,#panneau .alerte-titre,#panneau .reste-g{font-family:'Boska',Georgia,serif}
+.notes{max-width:400px;background:var(--fond);padding:18px 20px;font-size:15px;line-height:1.5}
+.notes h2{font-size:22px;margin:0 0 8px;font-weight:500}
+.notes p{margin:0 0 10px}
+
+/* ---- tailles : 12, 15, 30 ; chiffres et étiquettes en Plex Mono ---- */
+.mono,.mesure dd,.etiq,.reste-cut,.partie-n,.echo-m dd,.file-nb-v,.borne input{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.p{padding:14px 16px 28px;display:flex;flex-direction:column;gap:14px}
+.barre{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.marque{margin:0;font-weight:700;font-size:15px}
+.titre{font-size:30px;line-height:1.02;font-weight:500;margin:0}
+.phrase{margin:6px 0 0}
+.raison{margin:4px 0 0;font-size:12px;color:var(--doux);font-family:'IBM Plex Mono',monospace}
+.surtitre{margin:0 0 2px;font:500 12px 'IBM Plex Mono',monospace;color:var(--doux);letter-spacing:.04em;text-transform:uppercase}
+
+.bascule{display:inline-grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--filet-fort);border-radius:4px}
+.bascule-o{font:inherit;font-size:12px;border:0;background:var(--surface);color:var(--doux);padding:5px 10px;cursor:pointer;display:flex;gap:6px;align-items:baseline;border-radius:3px}
+.bascule-o[aria-pressed="true"]{background:var(--plein);color:var(--plein-texte)}
+.bascule-o[aria-disabled="true"]{cursor:not-allowed}
+.bascule-nom{font-weight:700;font-size:15px}
+.bascule-sens{display:none}
+@container (min-width:440px){.bascule-sens{display:inline}}
+.raison-bascule{flex-basis:100%;margin:0}
+.liaison{margin:0;flex-basis:100%;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--doux)}
+.liaison b{color:var(--texte);font-size:15px}
+.liaison-forme{width:12px;height:12px;border:2px solid var(--texte);border-radius:50%}
+.liaison-relie .liaison-forme{box-shadow:inset 0 0 0 4px var(--texte)}
+.liaison-choisir .liaison-forme{box-shadow:inset 4px 0 0 0 var(--texte)}
+.liaison-absent .liaison-forme{border-style:dashed}
+
+/* ---- le forage : carotte à gauche, lecture à droite ---- */
+.forage{display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:start}
+@container (min-width:520px){.forage{grid-template-columns:150px 1fr}}
+.table{margin:0;position:relative;height:360px;background:var(--table);border-radius:6px;overflow:hidden}
+.table-c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.etiq{position:absolute;font-size:12px;line-height:1.3;background:var(--etiq);color:var(--etiq-texte);padding:1px 4px;border-radius:2px;white-space:nowrap}
+.etiq-h{left:6px;top:6px}.etiq-b{left:6px;bottom:6px}
+.etiq-front{right:4px;transform:translateY(-50%);transition:top .7s cubic-bezier(.2,.7,.2,1)}
+.etiq[hidden]{display:none}
+.lecture{display:flex;flex-direction:column;gap:12px;min-width:0}
+.legende{display:flex;flex-direction:column;gap:4px;margin:0;padding:0;list-style:none;font-size:12px;color:var(--doux);font-family:'IBM Plex Mono',monospace}
+.legende li{display:flex;align-items:center;gap:8px}
+.sw{display:inline-block;flex:none}
+.sw-inclu{width:10px;height:8px;border:4px solid var(--texte);border-radius:50%}
+.sw-veine{width:14px;height:0;border-top:3px solid var(--texte)}
+.sw-glace{width:12px;height:12px;border:1px solid var(--texte);border-radius:2px}
+
+.mesures{display:flex;flex-direction:column;gap:8px;margin:0}
+.mesure{border-top:1px solid var(--filet);padding-top:6px}
+.mesure dt{font-size:12px;color:var(--doux);font-family:'IBM Plex Mono',monospace}
+.mesure dd{margin:0;font-size:15px;font-weight:500}
+.reste-cut{font-size:15px}
+
+.mesure-grand dd{font-size:30px;line-height:1.05;font-weight:500;letter-spacing:-.02em}
+.mesure-grand dd small{font-size:12px;color:var(--doux)}
+
+/* ---- boutons ---- */
+.actions{display:flex;flex-direction:column;gap:10px}
+.actions-pr,.actions-arret,.actions-lien{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.actions-pr>.raison{flex-basis:100%;margin-top:-4px}
+.b{font:inherit;cursor:pointer;border-radius:4px;padding:8px 14px;display:inline-flex;flex-direction:column;align-items:flex-start;text-align:left;min-height:42px;justify-content:center}
+.b-lib{font-weight:700;font-size:15px}
+.b-note{font-size:12px;font-family:'IBM Plex Mono',monospace}
+.b-principal{background:var(--plein);color:var(--plein-texte);border:1px solid var(--plein)}
+.b-second,.b-choix{background:var(--surface);color:var(--texte);border:1px solid var(--filet-fort)}
+.b-second .b-note,.b-choix .b-note{color:var(--doux)}
+.b-arret{background:var(--fond);color:var(--texte);border:1px solid var(--filet-fort);flex-direction:row;align-items:center;gap:8px}
+.b-arret::before{content:"";width:9px;height:9px;background:var(--texte)}
+.b-arret.b-confirme{background:var(--confirme);border-color:var(--confirme);color:#FFFFFF}
+.b-arret.b-confirme::before{background:#FFFFFF}
+.b-lien{background:var(--fond);color:var(--texte);border:0;padding:4px 0;min-height:32px;text-decoration:underline;text-underline-offset:3px}
+.reste-l .b-lien{background:var(--surface)}
+.b[aria-disabled="true"]{cursor:not-allowed;background:var(--fond);color:var(--doux);border:1px dashed var(--filet-fort)}
+.b:focus-visible,.bascule-o:focus-visible,.file-inter:focus-visible,input:focus-visible{outline:2px solid var(--texte);outline-offset:2px}
+
+.bornes{border:1px solid var(--filet);border-radius:6px;margin:0;padding:10px 12px 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--surface)}
+.bornes legend{font-size:12px;color:var(--doux);padding:0 4px;font-family:'IBM Plex Mono',monospace}
+.borne{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--doux)}
+.borne input{font-size:15px;color:var(--texte);background:var(--fond);border:1px solid var(--filet-fort);border-radius:4px;padding:7px 8px;width:100%}
+.borne-off input{border-style:dashed}
+.borne-fdp{grid-column:1 / -1}
+.borne-fdp[aria-pressed="true"]{border-color:var(--texte);box-shadow:inset 3px 0 0 var(--texte)}
+
+.file{display:flex;flex-direction:column;gap:8px}
+.file-inter{font:inherit;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;background:var(--surface);color:var(--texte);border:1px solid var(--filet);border-radius:6px;padding:10px 12px;cursor:pointer;text-align:left}
+.file-inter .b-note{color:var(--doux)}
+.file-inter-forme{width:30px;height:16px;border:2px solid var(--texte);border-radius:8px;position:relative}
+.file-inter-forme::after{content:"";position:absolute;top:2px;left:2px;width:8px;height:8px;border-radius:50%;background:var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme{box-shadow:inset 0 0 0 8px var(--texte)}
+.file-inter[aria-checked="true"] .file-inter-forme::after{left:16px;background:var(--surface)}
+.file-nb{display:flex;align-items:center;gap:10px}
+.file-pm{min-width:42px;align-items:center;padding:6px}
+.file-expl{margin:0;font-size:12px;color:var(--doux)}
+.file-tete{font-size:15px;margin:0;font-weight:700}
+/* parties : des tronçons de carotte couchés */
+.parties{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.partie{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;font-size:12px}
+.partie-n{font-weight:500;font-size:12px}
+.partie-etat{color:var(--doux);text-align:right;font-family:'IBM Plex Mono',monospace}
+.partie-forme{width:44px;height:12px;border:1px solid var(--texte);border-radius:6px}
+.partie-faite .partie-forme{box-shadow:inset 0 0 0 6px var(--doux)}
+.partie-courante .partie-forme,.partie-relue .partie-forme{box-shadow:inset 22px 0 0 0 var(--doux)}
+.partie-avenir .partie-forme{border-style:dashed}
+.partie-courante .partie-etat,.partie-relue .partie-etat{color:var(--texte)}
+
+.incident,.alerte{border:1px solid var(--alerte);background:var(--alerte-fond);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.incident-reprise{border-color:var(--filet-fort);background:var(--surface)}
+.incident-titre,.alerte-titre{margin:0;font-size:15px;font-weight:700;display:flex;gap:8px;align-items:center}
+.incident-titre::before,.alerte-titre::before{content:"";width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--texte)}
+.incident-reprise .incident-titre::before{border:2px solid var(--texte);width:6px;height:6px;border-radius:50%}
+.incident-texte,.alerte-detail,.alerte-bilan{margin:0}
+.alerte-bilan{font-size:12px;font-family:'IBM Plex Mono',monospace}
+.incident-choix{display:flex;flex-wrap:wrap;gap:8px}
+
+.reste-tete{display:flex;flex-direction:column;gap:4px}
+.reste-g{font-size:12px;margin:6px 0 0;font:500 12px 'IBM Plex Mono',monospace;color:var(--doux);text-transform:uppercase;letter-spacing:.06em}
+.reste{list-style:none;margin:0;padding:0;border-top:1px solid var(--filet)}
+.reste-l{padding:10px 0;border-bottom:1px solid var(--filet);display:flex;flex-direction:column;gap:6px;background:var(--fond)}
+.reste-l .b-lien{background:var(--fond)}
+.reste-t{display:flex;align-items:center;gap:8px}
+.reste-cut{font-weight:500}
+.reste-type{font-size:12px;color:var(--doux)}
+.reste-motif{margin:0}
+.reste-a{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.reste-a .b-second{min-height:36px;padding:5px 12px}
+.reste-differe .reste-forme{width:10px;height:8px;border:4px solid var(--texte);border-radius:50%}
+.reste-vert .reste-forme{width:14px;height:0;border-top:3px solid var(--texte)}
+.reste-vide{margin:0;color:var(--doux)}
+
+.coupe{margin:0;position:relative;height:200px;background:var(--table);border-radius:6px;overflow:hidden}
+.coupe canvas{position:absolute;inset:0;width:100%;height:100%}
+.coupe .etiq{left:8px;bottom:8px}
+
+.echo-m{display:grid;grid-template-columns:1fr;gap:8px 14px;margin:0}
+@container (min-width:520px){.echo-m{grid-template-columns:1fr 1fr}}
+.echo-m div{border-top:1px solid var(--filet);padding-top:6px}
+.echo-m dt{font-size:12px;color:var(--doux);font-family:'IBM Plex Mono',monospace}
+.echo-m dd{margin:0;font-size:30px;font-weight:500}
+
+.message{margin:0;min-height:20px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+.message:not(:empty){border-left:2px solid var(--texte);padding-left:8px}
+
+@keyframes leve{from{transform:translateY(5px);opacity:.25}to{transform:none;opacity:1}}
+.change{animation:leve .4s cubic-bezier(.2,.7,.2,1) both;display:inline-block}
+@keyframes arrive{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+#panneau[data-etat-change="1"] .titre{animation:arrive .5s cubic-bezier(.2,.7,.2,1) .15s both}
+#panneau[data-etat-change="1"] .phrase{animation:arrive .5s cubic-bezier(.2,.7,.2,1) .25s both}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+html[data-mouvement="reduit"] *,html[data-mouvement="reduit"] *::before,html[data-mouvement="reduit"] *::after{animation:none!important;transition:none!important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Carotte"></div></div>
+  <aside class="notes">
+    <h2>Carotte</h2>
+    <p><b>Logique.</b> Le lot se fore comme une carotte de glace posée sur une table lumineuse : la profondeur atteinte est l’avancement, la carotte tourne tant qu’Ariane fore, et ce qu’il faudra revoir reste pris dans la glace, à sa profondeur.</p>
+    <p><b>D’où ça vient.</b> Le goût de l’opérateur pour les données en 3D, sans reprendre le relevé : une seule forme vraie en volume (un cylindre éclairé par-dessous, translucide, qu’on voit tourner). heydamir.design : « One light, every color » (la lumière qui traverse un bloc de verre et en révèle le contenu) et la boule de « Snow globe », qui ne s’éclaire que quand on s’approche. backgrounds.supply : collections Iridescence et Prismal (verre, glace, translucidité), mode Contour du Gradient Lab (des strates, un relief). inspora.design (vu en grille) : des objets en 3D isométrique sur fond clair, une matière seule au centre. La pratique des glaciologues : les carottes se lisent sur une table lumineuse, couche par couche, et passent sous un banc de lecture.</p>
+    <p><b>Ce que ça veut dire ici.</b> Haut de la carotte = premier cut, profondeur = cuts traités (nombres écrits en haut, en bas et au front). Une strate fine tous les 20 cuts. Grain sombre pris dans la glace = différé ; veine claire en travers = vert à examiner ; ceux de la face cachée se voient à travers la glace, plus pâles. La carotte tourne = Ariane fore ; immobile = pause ; cassure en bas = lot arrêté ; carotte entière, coiffée = lot terminé. Fourreau vide en pointillé = rien n’est lancé, sa longueur = les bornes. Pas de table allumée = ESV non relié. Bande de lumière qui descend = relecture d’une partie.</p>
+    <p><b>Mouvement.</b> Rotation lente (un tour en 40 s) tant que le lot tourne, arrêt net en pause ; le front descend en 0,7 s à chaque cut ; un nouveau différé se fige dans la glace en 0,5 s ; à l’arrêt, la cassure se dessine en 0,4 s ; la relecture fait descendre une bande claire en 3,6 s. Mouvement réduit : carotte vue de face, immobile.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---- Kit des maquettes « matière » : le HTML sémantique des blocs du cahier.
+   * Chaque maquette le met en forme à sa façon ; le sens et les libellés restent ceux du moteur. ---- */
+  const K = (function () {
+    const { esc, n } = Demo.D;
+    const avecNote = (x) => (x.note ? `<span class="b-note">${esc(x.note)}</span>` : '');
+    function bouton(x, plus) {
+      const cls = 'b b-' + x.rang + (x.confirme ? ' b-confirme' : '') + (plus ? ' ' + plus : '');
+      return `<button type="button" class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>`
+        + `<span class="b-lib">${esc(x.libelle)}</span>${avecNote(x)}</button>`
+        + (x.raison ? `<p class="raison">${esc(x.raison)}</p>` : '')
+        + (x.confirme ? '<p class="raison">Appuyer encore pour confirmer. Sans second appui, rien ne s’arrête.</p>' : '');
+    }
+    function actions(liste) {
+      if (!liste || !liste.length) return '';
+      const rang = (r) => liste.filter((x) => x.rang === r).map((x) => bouton(x)).join('');
+      return `<div class="actions"><div class="actions-pr">${rang('principal')}${rang('second')}</div>`
+        + (liste.some((x) => x.rang === 'arret') ? `<div class="actions-arret">${rang('arret')}</div>` : '')
+        + (liste.some((x) => x.rang === 'lien') ? `<div class="actions-lien">${rang('lien')}</div>` : '') + '</div>';
+    }
+    function bascule(m) {
+      const echo = m.activite === 'echo';
+      const bloque = m.activiteBloquee;
+      return `<div class="bascule" role="group" aria-label="Activité d’Ariane">`
+        + `<button type="button" class="bascule-o" data-a="orbite" aria-pressed="${!echo}"><span class="bascule-nom">Orbite</span><span class="bascule-sens">Ariane pose</span></button>`
+        + `<button type="button" class="bascule-o" data-a="echo" aria-pressed="${echo}"${bloque ? ' aria-disabled="true"' : ''}><span class="bascule-nom">Écho</span><span class="bascule-sens">Ariane observe</span></button>`
+        + `</div>` + (bloque ? '<p class="raison raison-bascule">Pour passer en Écho, mettre d’abord le lot en pause ou l’arrêter.</p>' : '');
+    }
+    function liaison(m) {
+      const l = m.liaison;
+      return `<p class="liaison liaison-${l.etat}"><span class="liaison-forme" data-forme="liaison ${l.etat}" aria-hidden="true"></span><b>${esc(l.texte)}</b><span class="liaison-detail">${esc(l.detail)}</span></p>`;
+    }
+    function incident(m) {
+      const i = m.incident;
+      if (!i) return '';
+      const choix = i.actions.filter((x) => x.rang === 'choix');
+      const autres = i.actions.filter((x) => x.rang !== 'choix');
+      return `<section class="incident incident-${i.type}" aria-label="${esc(i.titre)}"><h3 class="incident-titre">${esc(i.titre)}</h3><p class="incident-texte">${esc(i.texte)}</p>`
+        + (choix.length ? `<div class="incident-choix">${choix.map((x) => bouton(x)).join('')}</div>` : '')
+        + autres.map((x) => bouton(x)).join('') + '</section>';
+    }
+    function bornes(m) {
+      const b = m.bornes;
+      return `<fieldset class="bornes"><legend>Bornes du lot</legend>`
+        + `<label class="borne"><span>Premier cut</span><input data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label>`
+        + `<label class="borne${b.finDePartie ? ' borne-off' : ''}"><span>Dernier cut</span><input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" placeholder="fin de partie"${b.finDePartie ? ' disabled' : ''} aria-label="Dernier cut"></label>`
+        + `<button type="button" class="b b-choix borne-fdp" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="b-lib">Jusqu’à la fin de la partie</span><span class="b-note">${b.finDePartie ? 'oui : le dernier cut sera celui d’ESV' : 'non : s’arrêter au dernier cut'}</span></button>`
+        + `</fieldset>`;
+    }
+    function fileReglage(m) {
+      const f = m.file;
+      return `<section class="file file-reglage" aria-label="File de parties">`
+        + `<button type="button" class="file-inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="file-inter-forme" data-forme="interrupteur" aria-hidden="true"></span><span class="b-lib">File de parties</span><span class="b-note">${f.active ? 'allumée' : 'éteinte'}</span></button>`
+        + (f.active ? `<div class="file-nb"><button type="button" class="b b-choix file-pm" data-a="fileMoins" aria-label="Une partie de moins"${f.nb <= 2 ? ' aria-disabled="true"' : ''}>−</button><span class="file-nb-v" data-valeur="nbparties">${f.nb} parties</span><button type="button" class="b b-choix file-pm" data-a="filePlus" aria-label="Une partie de plus"${f.nb >= 9 ? ' aria-disabled="true"' : ''}>+</button></div>`
+          + `<p class="file-expl">Ariane fait ${f.nb} parties à la suite. Après chacune, elle relit et corrige, puis passe seule à la suivante.</p>`
+          : '<p class="file-expl">Éteinte : un seul lot, sur les bornes ci-dessus.</p>')
+        + `</section>`;
+    }
+    function bilanPartie(p) { return `${n(p.poses)} posés · ${p.differes} différés · ${p.aControler} à examiner`; }
+    function fileSuivi(m) {
+      const f = m.file;
+      if (!f.active || m.phase === 'pret') return '';
+      const lignes = [];
+      for (let i = 1; i <= f.nb; i++) {
+        const p = f.parties.find((x) => x.n === i);
+        let etat, cls;
+        if (p && f.relecture && i === f.courante) { etat = 'relecture et correction en cours'; cls = 'relue'; }
+        else if (p) { etat = bilanPartie(p); cls = 'faite'; }
+        else if (i === f.courante) { etat = m.phase === 'encours' ? 'en cours' : (f.alerte ? 'arrêtée' : m.phase === 'pause' ? 'en pause' : 'arrêtée'); cls = 'courante'; }
+        else { etat = 'à venir'; cls = 'avenir'; }
+        lignes.push(`<li class="partie partie-${cls}"><span class="partie-forme" data-forme="partie ${cls}" aria-hidden="true"></span><span class="partie-n">Partie ${i}</span><span class="partie-etat">${etat}</span></li>`);
+      }
+      const tete = f.finie ? `File terminée : ${f.nb} parties` : `Partie ${f.courante} sur ${f.nb}`;
+      const alerte = f.alerte ? `<div class="alerte" role="alert"><h3 class="alerte-titre">${esc(f.alerte.titre)}</h3><p class="alerte-detail">${esc(f.alerte.detail)}</p><p class="alerte-bilan">Au moment de l’arrêt : ${m.compte.faits} cuts faits dans la partie ${f.courante}, ${m.compte.differes} différés, ${m.compte.aExaminer} à examiner.</p></div>` : '';
+      return `<section class="file file-suivi" aria-label="File de parties"><h3 class="file-tete" data-valeur="filetete">${tete}</h3>${alerte}<ol class="parties">${lignes.join('')}</ol></section>`;
+    }
+    function message(m) {
+      return `<p class="message" role="status" aria-live="polite">${m.message ? esc(m.message) : ''}</p>`;
+    }
+    function ligneReste(r) {
+      return `<li class="reste-l reste-${r.type}"><div class="reste-t"><span class="reste-forme" data-forme="${r.type}" aria-hidden="true"></span><b class="reste-cut">Cut ${r.cut}</b><span class="reste-type">${r.type === 'differe' ? 'différé' : 'vert à examiner'}</span></div>`
+        + `<p class="reste-motif">${esc(r.motif)}</p><div class="reste-a">${bouton({ a: 'examiner', id: r.id, libelle: 'Examiner', rang: 'second' })}${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'lien' })}</div></li>`;
+    }
+    function reste(m) {
+      const dif = m.restants.filter((r) => r.type === 'differe');
+      const ver = m.restants.filter((r) => r.type === 'vert');
+      const vide = !m.restants.length ? '<p class="reste-vide">Plus rien à revoir dans ce lot.</p>' : '';
+      return `<header class="reste-tete"><h2 class="titre">Ce qui reste</h2><p class="phrase">${dif.length} différés et ${ver.length} verts à examiner. Rien n’est validé sans vous.</p></header>${vide}`
+        + (dif.length ? `<h3 class="reste-g">Différés <span>${dif.length}</span></h3><ul class="reste">${dif.map(ligneReste).join('')}</ul>` : '')
+        + (ver.length ? `<h3 class="reste-g">Verts à examiner <span>${ver.length}</span></h3><ul class="reste">${ver.map(ligneReste).join('')}</ul>` : '')
+        + `<div class="actions"><div class="actions-pr">${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'second' })}</div></div>`;
+    }
+    function examenActions(r) {
+      return `<div class="actions"><div class="actions-pr">${bouton({ a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'principal' })}${bouton({ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'second', note: 'le retire de la liste, ne pose rien' })}</div>`
+        + `<div class="actions-lien">${bouton({ a: 'voirReste', libelle: 'Retour à la liste', rang: 'lien' })}${bouton({ a: 'retour', libelle: 'Retour au lot', rang: 'lien' })}</div></div>`;
+    }
+    function echo(m) {
+      const e = m.echo;
+      const ecart = e.vus - e.accord;
+      return `<dl class="echo-m"><div><dt>Poses vues</dt><dd data-valeur="echovus">${e.vus}</dd></div><div><dt>En accord avec Ariane</dt><dd data-valeur="echoacc">${e.accord}</dd></div><div><dt>En écart</dt><dd data-valeur="echoec">${ecart}</dd></div><div><dt>Dernière vue</dt><dd>${e.dernier ? 'cut ' + e.dernier : 'aucune'}</dd></div></dl>`;
+    }
+    return { bouton, actions, bascule, liaison, incident, bornes, fileReglage, fileSuivi, message, reste, examenActions, echo, bilanPartie, esc, n };
+  })();
+
+  /* Animation d'une valeur : on s'en rapproche à chaque image, jamais de saut (sauf mouvement réduit). */
+  function vers(actuel, cible, dt, duree) {
+    if (Demo.D.mouvementReduit() || actuel == null) return cible;
+    const k = 1 - Math.pow(0.001, dt / Math.max(1, duree));
+    const v = actuel + (cible - actuel) * k;
+    return Math.abs(cible - v) < 1e-4 ? cible : v;
+  }
+  /* Toile à la bonne taille (pixels réels) ; renvoie le contexte et les dimensions CSS. */
+  function toile(c) {
+    const r = c.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (c.width !== w * dpr || c.height !== h * dpr) { c.width = w * dpr; c.height = h * dpr; }
+    const x = c.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { x, w, h };
+  }
+
+  const { esc, n } = K;
+  const V = { p: null, rot: 0, casse: 0, dernier: performance.now(), t0: performance.now(), anim: 0, inclu: {} };
+  let M = null;
+  const sombre = () => Demo.D.themeSombre();
+  function hf(i) { const s = Math.sin(i * 91.7 + 13.3) * 43758.5453; return s - Math.floor(s); }
+
+  function echelleDe(m) { return m.compte.total || Math.max(240, m.compte.faits + 24); }
+  function cible(m) {
+    if (m.vue === 'echo' || m.phase === 'pret') return 0;
+    return Math.min(1, m.compte.faits / echelleDe(m));
+  }
+
+  function dessiner(maintenant) {
+    V.anim = 0;
+    const c = document.querySelector('#panneau .table-c');
+    if (!c || !M) return;
+    const dt = Math.min(100, maintenant - V.dernier); V.dernier = maintenant;
+    const reduit = Demo.D.mouvementReduit();
+    const { x, w, h } = toile(c);
+    const ci = cible(M);
+    const fore = M.vue !== 'echo' && M.phase === 'encours' && !M.file.relecture;
+    V.p = vers(V.p, ci, dt, 700);
+    V.casse = vers(V.casse, M.phase === 'arrete' ? 1 : 0, dt, 400);
+    if (fore && !reduit) V.rot += dt / 40000 * Math.PI * 2;
+    if (reduit) V.rot = 0;
+    const dark = sombre();
+    const allumee = M.liaison.etat === 'relie' || M.vue === 'echo';
+
+    /* la table lumineuse : une lueur au centre, éteinte si ESV n'est pas relié */
+    x.clearRect(0, 0, w, h);
+    if (allumee) {
+      const g = x.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, h * 0.7);
+      g.addColorStop(0, dark ? 'rgba(120,160,200,0.22)' : 'rgba(255,255,255,0.95)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+    }
+    const cx = w / 2 + 6, r = Math.min(30, w * 0.26), top = 30, fond = h - 30, L = fond - top;
+    const yP = top + L * V.p;
+    const ell = r * 0.32; /* aplatissement des ellipses (vue légèrement plongeante) */
+
+    /* fourreau : la longueur prévue, en pointillé */
+    x.setLineDash([3, 4]); x.strokeStyle = dark ? 'rgba(200,214,226,0.55)' : 'rgba(40,52,64,0.45)'; x.lineWidth = 1;
+    const finPrevue = M.phase === 'pret' && M.bornes.finDePartie || (!M.compte.total && M.phase !== 'pret') ? fond + 20 : fond;
+    x.beginPath(); x.moveTo(cx - r, top); x.lineTo(cx - r, finPrevue); x.moveTo(cx + r, top); x.lineTo(cx + r, finPrevue); x.stroke();
+    if (finPrevue === fond) { x.beginPath(); x.ellipse(cx, fond, r, ell, 0, 0, Math.PI); x.stroke(); }
+    x.setLineDash([]);
+
+    if (V.p > 0.003 && M.vue !== 'echo') {
+      /* corps de glace : dégradé horizontal = volume éclairé par-dessous */
+      const gc = x.createLinearGradient(cx - r, 0, cx + r, 0);
+      if (dark) { gc.addColorStop(0, 'rgba(110,150,185,0.55)'); gc.addColorStop(0.35, 'rgba(205,228,245,0.85)'); gc.addColorStop(0.6, 'rgba(170,205,232,0.8)'); gc.addColorStop(1, 'rgba(80,115,150,0.6)'); }
+      else { gc.addColorStop(0, 'rgba(150,182,206,0.85)'); gc.addColorStop(0.35, 'rgba(236,245,251,0.95)'); gc.addColorStop(0.6, 'rgba(205,224,238,0.95)'); gc.addColorStop(1, 'rgba(118,152,180,0.9)'); }
+      x.fillStyle = gc;
+      x.beginPath(); x.moveTo(cx - r, top); x.lineTo(cx - r, yP);
+      /* bas : cassure (arrêt) ou ellipse */
+      if (V.casse > 0.01) { const k = 7 * V.casse; for (let i = 0; i <= 6; i++) x.lineTo(cx - r + i * r / 3, yP + (i % 2 ? -k : k * 0.4)); }
+      else x.ellipse(cx, yP, r, ell, 0, Math.PI, 0, true);
+      x.lineTo(cx + r, top); x.ellipse(cx, top, r, ell, 0, 0, Math.PI, true); x.closePath(); x.fill();
+      x.strokeStyle = dark ? 'rgba(210,228,242,0.6)' : 'rgba(60,84,104,0.55)'; x.lineWidth = 1; x.stroke();
+
+      /* strates : une ligne tous les 10 cuts, marquée tous les 20 */
+      const ech = echelleDe(M);
+      for (let k = 10; k / ech <= V.p; k += 10) {
+        const y = top + L * k / ech;
+        if (k % 20) continue; /* une strate marquée tous les 20 cuts ; les autres restent dans la masse */
+        x.strokeStyle = dark ? 'rgba(225,238,248,0.22)' : 'rgba(55,82,104,0.2)';
+        x.lineWidth = 0.8;
+        x.beginPath(); x.ellipse(cx, y, r - 0.5, ell, 0, 0.35, Math.PI - 0.35); x.stroke();
+      }
+      /* grain de glace : des bulles fines qui tournent avec la carotte (face avant nette, face arrière pâle) */
+      const nb = Math.floor(70 * V.p);
+      for (let i = 0; i < nb; i++) {
+        const a = hf(i) * Math.PI * 2 + V.rot, y = top + L * V.p * hf(i + 500);
+        const av = Math.cos(a);
+        x.fillStyle = dark ? `rgba(240,248,255,${av > 0 ? 0.55 : 0.18})` : `rgba(255,255,255,${av > 0 ? 0.9 : 0.35})`;
+        x.fillRect(cx + r * 0.92 * Math.sin(a), y + ell * av * 0.6, 1.4, 1.4);
+      }
+      /* inclusions : différés (grains sombres) et verts (veines claires), à leur profondeur */
+      const deb = M.compte.debut;
+      const ordre = M.restants.map((rr, i) => ({ rr, a: hf(rr.cut) * Math.PI * 2 + V.rot }))
+        .sort((u, v) => Math.cos(u.a) - Math.cos(v.a));
+      for (const { rr, a } of ordre) {
+        const y = top + L * (rr.cut - deb + 0.5) / ech;
+        if (y > yP - 2) continue;
+        V.inclu[rr.id] = vers(V.inclu[rr.id] == null ? 0 : V.inclu[rr.id], 1, dt, 500);
+        const o = V.inclu[rr.id], av = Math.cos(a), px = cx + r * 0.62 * Math.sin(a), py = y + ell * av * 0.5;
+        const vis = av > 0 ? 1 : 0.45;
+        if (rr.type === 'differe') {
+          x.fillStyle = dark ? `rgba(8,12,16,${0.95 * vis * o})` : `rgba(22,28,34,${0.95 * vis * o})`;
+          x.beginPath(); x.ellipse(px, py, 4.2 * (0.8 + 0.2 * av), 3, 0, 0, Math.PI * 2); x.fill();
+        } else {
+          x.strokeStyle = dark ? `rgba(255,255,255,${0.95 * vis * o})` : `rgba(255,255,255,${vis * o})`; x.lineWidth = 2.2;
+          x.beginPath(); x.ellipse(cx, y, r * 0.8, ell * 0.8, 0, a % (Math.PI * 2), a % (Math.PI * 2) + 1.1); x.stroke();
+          x.strokeStyle = dark ? 'rgba(20,30,40,0.5)' : 'rgba(40,60,80,0.45)'; x.lineWidth = 0.6; x.stroke();
+        }
+      }
+      /* front de forage : un liseré clair tant qu'Ariane fore */
+      if (fore) { x.strokeStyle = 'rgba(255,255,255,0.95)'; x.lineWidth = 2; x.beginPath(); x.ellipse(cx, yP, r, ell, 0, 0, Math.PI); x.stroke(); }
+      /* coiffe de fin */
+      if (M.phase === 'fin') { x.fillStyle = dark ? 'rgba(200,220,236,0.9)' : 'rgba(70,96,118,0.9)'; x.beginPath(); x.ellipse(cx, yP, r, ell, 0, 0, Math.PI * 2); x.fill(); }
+      /* dessus de la carotte */
+      x.fillStyle = dark ? 'rgba(230,242,252,0.6)' : 'rgba(250,253,255,0.95)'; x.beginPath(); x.ellipse(cx, top, r, ell, 0, 0, Math.PI * 2); x.fill();
+      x.strokeStyle = dark ? 'rgba(210,228,242,0.6)' : 'rgba(60,84,104,0.55)'; x.stroke();
+      /* relecture : une bande de lumière qui descend */
+      if (M.file.relecture) {
+        const q = reduit ? 0.5 : ((maintenant - V.t0) % 3600) / 3600, y = top + (yP - top) * q;
+        const g = x.createLinearGradient(0, y - 14, 0, y + 14);
+        g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.95)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+        x.fillStyle = g; x.fillRect(cx - r - 10, y - 14, 2 * r + 20, 28);
+      }
+    }
+    const glisse = Math.abs(V.p - ci) > 1e-4 || Math.abs(V.casse - (M.phase === 'arrete' ? 1 : 0)) > 1e-3 || Object.values(V.inclu).some((o) => o < 1);
+    if (!reduit && (glisse || fore || M.file.relecture)) V.anim = requestAnimationFrame(dessiner);
+  }
+  function relancer() { if (!V.anim) V.anim = requestAnimationFrame(dessiner); }
+
+  function majTable(m) {
+    const f = document.querySelector('#panneau .table');
+    if (!f) return;
+    const c = m.compte, echo = m.vue === 'echo';
+    const hb = f.querySelector('.etiq-h'), bb = f.querySelector('.etiq-b'), fr = f.querySelector('.etiq-front');
+    hb.textContent = echo ? 'pas de forage' : 'cut ' + (m.phase === 'pret' ? m.bornes.debut : c.debut);
+    bb.textContent = echo ? 'Ariane observe' : m.phase === 'pret' ? (m.bornes.finDePartie ? 'fin de partie' : 'cut ' + m.bornes.fin) : (c.total ? 'cut ' + c.fin : 'fond inconnu');
+    const montre = !echo && (m.phase === 'encours' || m.phase === 'pause' || m.phase === 'arrete') && !m.file.relecture;
+    fr.hidden = !montre;
+    if (montre) {
+      const h = f.clientHeight, top = 30, L = h - 60, y = top + L * Math.min(1, c.faits / echelleDe(m));
+      fr.style.top = Math.max(40, Math.min(h - 46, y)) + 'px';
+      fr.textContent = c.cut;
+    }
+    f.setAttribute('aria-label', echo ? 'Pas de forage en Écho' : `Carotte du lot : ${c.faits} cuts forés${c.total ? ' sur ' + c.total : ', fond inconnu'}, ${c.differes} différés, ${c.aExaminer} à examiner`);
+  }
+  function table() {
+    return `<figure class="table" data-garder="table" aria-label="Carotte du lot"><canvas class="table-c" aria-hidden="true"></canvas>`
+      + `<span class="etiq etiq-h">cut</span><span class="etiq etiq-front" hidden>cut</span><span class="etiq etiq-b">cut</span></figure>`;
+  }
+  function etatMot(m) {
+    if (m.liaison.etat !== 'relie' && m.phase === 'pret') return 'Table éteinte';
+    if (m.file.relecture) return 'Lecture de la carotte';
+    return { pret: 'Fourreau vide', encours: 'Forage en cours', pause: 'Forage suspendu', arrete: 'Carotte cassée', fin: 'Carotte entière' }[m.phase];
+  }
+  function legende(m) {
+    if (m.phase === 'pret') return '<ul class="legende"><li><span class="sw sw-glace" data-forme="fourreau" aria-hidden="true" style="border-style:dashed"></span>fourreau : les bornes</li></ul>';
+    return `<ul class="legende"><li><span class="sw sw-inclu" data-forme="inclusion" aria-hidden="true"></span>grain sombre : différé (${m.compte.differes})</li><li><span class="sw sw-veine" data-forme="veine" aria-hidden="true"></span>veine : vert à examiner (${m.compte.aExaminer})</li></ul>`;
+  }
+  function mesures(m) {
+    const c = m.compte;
+    if (m.phase === 'fin') return `<dl class="mesures"><div class="mesure mesure-grand"><dt>Posés</dt><dd>${n(c.poses)}<br><small>sur ${c.faits} traités</small></dd></div></dl>`;
+    const grand = `<div class="mesure mesure-grand"><dt>Profondeur</dt><dd><span data-valeur="faits">${c.faits}</span><br><small>${c.total ? 'cuts sur ' + c.total : 'cuts · total inconnu'}</small></dd></div>`;
+    if (m.file.relecture) return `<dl class="mesures">${grand}</dl>`;
+    return `<dl class="mesures">${grand}<div class="mesure"><dt>${m.phase === 'encours' ? 'Cut en cours' : 'Arrêté au cut'}</dt><dd data-valeur="cut">${c.cut}</dd></div><div class="mesure"><dt>Temps restant</dt><dd class="txt" data-valeur="temps">${esc(c.tempsTexte)}</dd></div></dl>`;
+  }
+  function examen(m) {
+    const r = m.examen;
+    return `<header><p class="surtitre">Examiner · ${r.type === 'differe' ? 'différé' : 'vert à examiner'}</p><h2 class="titre">Cut ${r.cut}</h2><p class="phrase">${esc(r.motif)}.</p></header>`
+      + `<figure class="coupe" data-garder="coupe-${esc(r.id)}" aria-label="Coupe du cut ${r.cut}"><canvas aria-hidden="true"></canvas><span class="etiq">coupe du cut ${r.cut} · traits : position proposée</span></figure>`
+      + K.examenActions(r);
+  }
+  function dessinerCoupe(m) {
+    const f = document.querySelector('#panneau .coupe canvas');
+    if (!f || !m.examen) return;
+    const { x, w, h } = toile(f);
+    const dark = sombre();
+    const cp = Demo.D.coupe(m.examen.cut, 320);
+    x.clearRect(0, 0, w, h);
+    const X = (v) => 14 + (v + 1) / 2 * (w - 28), Z = (v) => h - 36 - (v + 0.45) * (h - 60) / 0.45;
+    x.fillStyle = dark ? 'rgba(220,232,242,0.85)' : 'rgba(20,28,36,0.85)';
+    for (const [a, b] of cp.pts) x.fillRect(X(a), Z(b), 1.6, 1.6);
+    x.strokeStyle = dark ? '#FFFFFF' : '#14191E'; x.lineWidth = 1.5; x.setLineDash(m.examen.type === 'differe' ? [3, 3] : []);
+    for (const rx of cp.rails) { x.beginPath(); x.moveTo(X(rx), 12); x.lineTo(X(rx), h - 32); x.stroke(); }
+    x.setLineDash([]);
+  }
+
+  function rendre(S, D) {
+    const m = D.modele(); M = m;
+    if (m.vue === 'reste') return `<div class="p">${K.reste(m)}${K.message(m)}</div>`;
+    if (m.vue === 'examen' && m.examen) return `<div class="p">${examen(m)}${K.message(m)}</div>`;
+    const barre = `<div class="barre"><p class="marque">Ariane</p>${K.bascule(m)}${K.liaison(m)}</div>`;
+    if (m.vue === 'echo') {
+      return `<div class="p">${barre}<div class="forage">${table()}<div class="lecture"><header><p class="surtitre">Pas de forage</p><h2 class="titre">${esc(m.titre)}</h2></header>${K.echo(m)}</div></div><p class="phrase">${esc(m.phrase)} La carotte reste au repos : rien n’est foré.</p>${K.actions(m.actions)}${K.message(m)}</div>`;
+    }
+    const lecture = `<div class="lecture"><header><p class="surtitre" data-valeur="etatmot">${etatMot(m)}</p><h2 class="titre">${esc(m.titre)}</h2></header>${m.phase === 'pret' ? '' : mesures(m)}${legende(m)}</div>`;
+    const forage = `<div class="forage">${table()}${lecture}</div>`;
+    const phrase = `<p class="phrase">${esc(m.phrase)}</p>`;
+    let corps;
+    if (m.phase === 'pret') corps = K.incident(m) + forage + phrase + K.bornes(m) + K.fileReglage(m) + K.actions(m.actions);
+    else if (m.file.alerte) corps = K.fileSuivi(m).replace(/<ol class="parties">[\s\S]*<\/ol>/, '') + forage + phrase + K.actions(m.actions) + K.fileSuivi(m).replace(/<div class="alerte"[\s\S]*?<\/div>/, '');
+    else corps = K.incident(m) + forage + phrase + K.actions(m.actions) + K.fileSuivi(m);
+    return `<div class="p">${barre}${corps}${K.message(m)}</div>`;
+  }
+  function apres() {
+    if (M && M.vue === 'examen') { dessinerCoupe(M); return; }
+    if (M) majTable(M);
+    relancer();
+  }
+  window.addEventListener('resize', relancer);
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

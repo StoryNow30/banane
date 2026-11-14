@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbe</title>
+<style>
+/*POLICE:instr-geist*/
+/*POLICE:instr-geist-mono*/
+/* Proposition « Orbe » (famille Instruments et matière).
+ * Sources : ThinkingOrbs (dépôt haplollc) : points sur des formes en 3D, rotation + inclinaison, tri du loin au proche,
+ * le proche plus gros et plus foncé ; chaque forme est un verbe ; contour qui passe du cercle au triangle au carré ;
+ * label qui scintille. libraries.dev, bot-avatars : un état = une pose + son mouvement, les changements d'état
+ * sont des mélanges de poids, plus lents vers le repos.
+ * Sens : la forme de l'orbe dit ce que fait Ariane (orbites = elle pose ; tresse = elle relit ; onde = elle observe ;
+ * anneau qui respire = elle attend un lancement ; triangle = elle a besoin de vous ; carré = c'est fini). */
+:root{
+  --fond:#F6F6F4; --fond-2:#EDEDEA; --encre:#141414; --encre-2:#5A5A56; --trait:#D6D6D1; --ambre:#9C480A; --ambre-pale:#F6E6D7; --scene:#DADAD5;
+  --point:20,20,20; --point-ambre:156,72,10;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#0F0F0F; --fond-2:#191919; --encre:#EDEDEA; --encre-2:#A0A09B; --trait:#2D2D2B; --ambre:#F2A35E; --ambre-pale:#33210F; --scene:#050505;
+  --point:237,237,234; --point-ambre:242,163,94;
+}}
+:root[data-theme="dark"]{
+  --fond:#0F0F0F; --fond-2:#191919; --encre:#EDEDEA; --encre-2:#A0A09B; --trait:#2D2D2B; --ambre:#F2A35E; --ambre-pale:#33210F; --scene:#050505;
+  --point:237,237,234; --point-ambre:242,163,94;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Geist',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background:var(--fond);border-radius:14px;font-size:15px;line-height:1.45}
+.notes{max-width:400px;background:var(--fond);color:var(--encre);padding:18px 20px;border-radius:14px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.mono,.notes code{font-family:'Geist Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+.p{padding:14px 18px 26px;display:flex;flex-direction:column;gap:16px}
+.tete{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.marque{font-weight:600;font-size:15px;margin-right:auto}
+.liaison{width:100%;font-size:13px;color:var(--encre-2);display:flex;gap:6px;align-items:center}
+.liaison b{color:var(--encre);font-weight:500}
+.choix-act{display:inline-flex;gap:2px;padding:2px;border-radius:999px;border:1px solid var(--trait)}
+.choix-act button{font:inherit;font-size:13px;border:0;border-radius:999px;padding:5px 12px;background:none;color:var(--encre-2);cursor:pointer;display:inline-flex;gap:6px;align-items:center;transition:background-color .25s, color .25s}
+.choix-act button[aria-pressed="true"]{background:var(--encre);color:var(--fond)}
+.choix-act[aria-disabled="true"] button{cursor:not-allowed}
+.note-act{width:100%;margin:-6px 0 0;font-size:12px;color:var(--encre-2)}
+
+/* la scène de l'orbe et son label */
+.objet{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+@container (max-width:380px){.objet{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.orbe{width:168px;height:168px;display:block}
+.label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.verbe{position:relative;font-size:22px;font-weight:600;line-height:1.2;margin:0;overflow:hidden;display:inline-block}
+.verbe.attention{color:var(--ambre)}
+/* scintillement : une bande de lumière qui traverse le texte sans en baisser l'encre (ThinkingOrbLabel) */
+.verbe[data-vivant="1"]::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,var(--fond) 50%,transparent 70%);opacity:.55;transform:translateX(-120%);animation:scintille 2s linear infinite;animation-delay:var(--retard,0ms);pointer-events:none}
+@keyframes scintille{to{transform:translateX(120%)}}
+.forme-mot{font-size:13px;color:var(--encre-2)}
+.chiffres{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.chiffres .g{font-family:'Geist Mono',monospace;font-size:34px;font-weight:500;line-height:1;display:inline-block}
+.chiffres .u{font-size:14px;color:var(--encre-2)}
+.g.change{animation:monte .3s cubic-bezier(.2,.9,.3,1)}
+@keyframes monte{from{transform:translateY(40%);opacity:.2}to{transform:none;opacity:1}}
+
+/* chapelet : 40 grains, pleins pour ce qui est fait, creux pour ce qui reste */
+.chapelet{display:flex;flex-wrap:wrap;gap:4px}
+.chapelet i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--encre);opacity:.55}
+.chapelet i.f{background:var(--encre);opacity:1}
+.chapelet i.d{border-radius:0;background:none;border:0;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:7px solid var(--encre);opacity:1}
+.chapelet i.nouveau{animation:grain .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes grain{from{transform:scale(1.9)}to{transform:none}}
+.chapelet-lib{display:flex;justify-content:space-between;font-size:12px;color:var(--encre-2);margin-top:-8px}
+
+.compteurs{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--encre-2)}
+.compteurs span{display:inline-flex;gap:6px;align-items:center}
+.compteurs b{font-family:'Geist Mono',monospace;font-weight:500;color:var(--encre);font-size:16px}
+
+.actions{display:flex;flex-direction:column;gap:8px}
+.rang2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.touche{font:inherit;font-weight:500;font-size:15px;border-radius:10px;padding:12px 14px;border:1px solid var(--trait);background:var(--fond);color:var(--encre);cursor:pointer;width:100%;transition:transform .15s cubic-bezier(.3,1.5,.5,1), background-color .2s}
+.touche:hover{background:var(--fond-2)}
+.touche:active{transform:scale(.98)}
+.touche.principal{background:var(--encre);border-color:var(--encre);color:var(--fond);font-weight:600;padding:14px}
+.touche.arret{border-color:var(--encre)}
+.touche.arret.confirme{background:var(--ambre);border-color:var(--ambre);color:var(--fond)}
+.touche.lien{border:0;background:none;padding:6px 0;text-align:left;text-decoration:underline;text-underline-offset:3px;width:auto}
+.touche[aria-disabled="true"]{background:var(--fond-2);color:var(--encre-2);cursor:not-allowed}
+.touche:focus-visible,.choix-act button:focus-visible,input:focus-visible,.case:focus-visible{outline:2px solid var(--encre);outline-offset:2px}
+.note{font-size:12px;color:var(--encre-2);margin:4px 0 0}
+.raison{font-size:13px;color:var(--ambre);margin:4px 0 0}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.champ{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--encre-2)}
+.champ input{font:500 17px 'Geist Mono',monospace;color:var(--encre);background:var(--fond-2);border:1px solid var(--trait);border-radius:10px;padding:8px 10px;width:100%}
+.champ input:disabled{color:var(--encre-2)}
+.case{display:flex;align-items:center;gap:10px;font:inherit;font-size:14px;background:none;border:0;color:var(--encre);padding:2px 0;cursor:pointer;text-align:left;grid-column:1/-1}
+.case .boite{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--encre);display:grid;place-items:center;flex:none}
+.case[aria-pressed="true"] .boite::after{content:"";width:9px;height:9px;border-radius:2px;background:var(--encre)}
+.aide{font-size:12px;color:var(--encre-2);margin:0;grid-column:1/-1}
+
+.bloc{border:1px solid var(--trait);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.bloc h2{margin:0;font-size:14px;font-weight:600}
+.bloc p{margin:0}
+.bloc.attention{border-color:var(--ambre);background:var(--ambre-pale)}
+.bloc.attention h2{display:flex;gap:8px;align-items:center}
+.bloc.attention h2 svg{color:var(--ambre)}
+.choix{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.ligne{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pas{display:inline-flex;align-items:center;gap:6px}
+.pas button{font:inherit;width:30px;height:30px;border-radius:8px;border:1px solid var(--trait);background:var(--fond);color:var(--encre);cursor:pointer}
+.pas output{min-width:70px;text-align:center}
+.parties{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.parties li{display:grid;grid-template-columns:20px auto 1fr;gap:8px;align-items:center;font-size:13px;color:var(--encre-2)}
+.parties li b{color:var(--encre);font-weight:500}
+.parties svg{color:var(--encre)}
+.message{position:sticky;bottom:10px;margin:0 18px;background:var(--encre);color:var(--fond);border-radius:10px;padding:10px 14px;font-size:14px}
+.message.neuf{animation:monte .3s cubic-bezier(.2,.9,.3,1)}
+
+.retour{font:inherit;font-size:14px;font-weight:500;background:none;border:0;color:var(--encre);padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.titre{font-size:24px;font-weight:600;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.liste{list-style:none;margin:0;padding:0}
+.liste li{display:grid;grid-template-columns:16px 1fr;gap:2px 10px;padding:10px 0;border-top:1px solid var(--trait)}
+#panneau[data-etat-change="1"] .liste li{animation:entre .32s both cubic-bezier(.2,.9,.3,1)}
+.liste .motif{grid-column:2;font-size:13px;color:var(--encre-2)}
+.liste .gestes{grid-column:2;display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.liste .touche{width:auto;padding:5px 10px;font-size:13px}
+@container (min-width:440px){.liste li{grid-template-columns:16px 1fr auto;align-items:center}.liste .gestes{grid-column:3;grid-row:1/3;margin:0}}
+@keyframes entre{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.coupe{display:block;width:100%;aspect-ratio:2/1;background:var(--fond-2);border-radius:12px}
+.coupe .sol{fill:none;stroke:var(--encre-2);stroke-width:1.5}
+.coupe .pos{stroke:var(--encre);stroke-width:3;stroke-linecap:round}
+
+#panneau[data-etat-change="1"] .label{animation:entre .4s both cubic-bezier(.2,.9,.3,1)}
+#panneau[data-etat-change="1"] .actions{animation:entre .4s .06s both cubic-bezier(.2,.9,.3,1)}
+#panneau[data-etat-change="1"] .bloc{animation:entre .4s .1s both cubic-bezier(.2,.9,.3,1)}
+@media (prefers-reduced-motion: reduce){ #panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important} .verbe::after{display:none} }
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+html[data-mouvement="reduit"] .verbe::after{display:none}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Orbe"></div></div>
+  <aside class="notes">
+    <h2>Orbe</h2>
+    <p><b>Logique.</b> Un seul objet en points dont la forme dit ce que fait Ariane, lisible de loin sans lire un mot : orbites quand elle pose, tresse quand elle relit, onde quand elle observe, anneau qui respire quand elle attend un lancement ; le contour se fige en triangle quand elle a besoin de vous, en carré quand c'est fini.</p>
+    <p><b>D'où ça vient.</b> ThinkingOrbs (dépôt haplollc) : <code>OrbEngine.swift</code> (projecteur rotation + inclinaison, tri du loin au proche, rayon et encre selon la profondeur ; designs orbits, braid, ring, morph cercle → triangle → carré), <code>ThinkingOrb.swift</code> (image fixe en mouvement réduit, horloge partagée), <code>ThinkingOrbLabel.swift</code> (bande de lumière qui traverse le texte). libraries.dev : paquet bot-avatars (<code>engine.ts</code> : mélange des poids d'état, 0,7 s vers le travail, 1,2 à 1,4 s vers le repos) ; page Thinking orbs consultée.</p>
+    <p><b>Ce que ça veut dire ici.</b></p>
+    <ul>
+      <li><b>Orbites</b> : Orbite, Ariane pose. Une orbite s'éclaire à chaque cut posé. <b>Orbites figées et pâles</b> : en pause.</li>
+      <li><b>Tresse à trois brins</b> : relecture et correction entre deux parties.</li>
+      <li><b>Onde sur un anneau</b> : Écho, Ariane observe ; l'onde gonfle à chaque geste vu.</li>
+      <li><b>Anneau qui respire</b> : prêt, rien ne tourne.</li>
+      <li><b>Triangle</b> (en ambre, avec le mot) : Ariane a besoin de vous. <b>Carré</b> : terminé.</li>
+      <li><b>Chapelet</b> : 40 grains ; pleins = fait, creux = reste, triangles = différés. Sans total, seuls les grains faits sont là, suivis des mots « total inconnu ».</li>
+    </ul>
+    <p>L'orbe est une forme abstraite : elle ne figure ni le relevé ni la voie.</p>
+    <p><b>Mouvement.</b> Les formes se relaient par mélange de poids (0,7 s vers le travail, 1,2 s vers le repos) ; le contour se plie de cercle en triangle ou en carré en 0,9 s ; le label scintille tant qu'Ariane agit. Mouvement réduit : une seule image fixe et représentative de chaque forme, sans scintillement.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const pl = (k, un, plus) => n(k) + ' ' + (k > 1 ? plus : un);
+  const F = {
+    differe: '<svg width="11" height="10" viewBox="0 0 11 10" aria-hidden="true"><path d="M5.5 1L10 9H1z" fill="currentColor"/></svg>',
+    vert: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+    pose: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>',
+    tri: '<svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><path d="M7 1l6 10H1z" fill="currentColor"/></svg>',
+    carre: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="2" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+    anneau: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="2 2"/></svg>',
+    orbite: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><ellipse cx="7" cy="7" rx="6" ry="3" fill="none" stroke="currentColor" stroke-width="1.4" transform="rotate(-25 7 7)"/><circle cx="11.5" cy="5" r="1.8" fill="currentColor"/></svg>',
+  };
+
+  /* la forme de l'orbe pour l'état courant : c'est elle qui porte le sens */
+  function forme(m) {
+    if (m.vue === 'echo') return { f: 'onde', mot: 'Onde · Ariane observe' };
+    if (m.phase === 'pret') return m.incident && m.incident.type !== 'reprise' ? { f: 'triangle', mot: 'Triangle · elle a besoin de vous' } : { f: 'anneau', mot: 'Anneau · rien ne tourne' };
+    if (m.file.relecture) return { f: 'tresse', mot: 'Tresse · relecture et correction' };
+    if (m.phase === 'encours') return { f: 'orbites', mot: 'Orbites · Ariane pose' };
+    if (m.phase === 'pause') return { f: 'figees', mot: 'Orbites figées · en pause' };
+    if (m.phase === 'arrete') return { f: 'triangle', mot: 'Triangle · elle a besoin de vous' };
+    return { f: 'carre', mot: 'Carré · terminé' };
+  }
+
+  function touche(x) {
+    const cls = 'touche ' + (x.rang || 'second') + (x.confirme ? ' confirme' : '');
+    return `<div><button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}${x.note ? `<p class="note">${esc(x.note)}</p>` : ''}</div>`;
+  }
+  function actions(l) {
+    const p = l.filter((x) => x.rang === 'principal'), a = l.filter((x) => x.rang === 'second' || x.rang === 'arret'), li = l.filter((x) => x.rang === 'lien');
+    return `<div class="actions">${p.map(touche).join('')}${a.length ? `<div class="rang2">${a.map(touche).join('')}</div>` : ''}${li.map(touche).join('')}</div>`;
+  }
+  function tete(m) {
+    const echo = m.activite === 'echo', b = m.activiteBloquee;
+    return `<div class="tete"><span class="marque">Ariane</span>
+      <div class="choix-act" role="group" aria-label="Activité"${b ? ' aria-disabled="true"' : ''}><button data-a="orbite" aria-pressed="${!echo}"${b ? ' aria-disabled="true"' : ''}>${F.orbite}Orbite</button><button data-a="echo" aria-pressed="${echo}"${b ? ' aria-disabled="true"' : ''}>${F.anneau}Écho</button></div>
+      ${b ? '<p class="note-act">Écho se choisit lot en pause ou arrêté.</p>' : ''}
+      <div class="liaison">${m.liaison.etat === 'relie' ? F.pose : F.vert}<b>${esc(m.liaison.texte)}</b> · ${esc(m.liaison.detail)}</div></div>`;
+  }
+
+  function objet(m) {
+    const c = m.compte, fo = forme(m);
+    const vivant = ['orbites', 'tresse', 'onde'].includes(fo.f);
+    const att = fo.f === 'triangle';
+    let verbe, chiffres;
+    if (m.vue === 'echo') { verbe = 'Ariane observe'; chiffres = `<span class="g" data-valeur="ev">${m.echo.vus}</span><span class="u">gestes vus · ${m.echo.accord} en accord</span>`; }
+    else if (m.phase === 'pret') { verbe = att ? 'À vous d’abord' : 'Prêt'; chiffres = m.bornes.finDePartie ? `<span class="u">du cut ${m.bornes.debut} à la fin de partie</span>` : `<span class="g">${m.bornes.fin - m.bornes.debut + 1}</span><span class="u">cuts, du ${m.bornes.debut} au ${m.bornes.fin}</span>`; }
+    else if (m.file.relecture) { verbe = `Relit la partie ${m.file.courante}`; chiffres = `<span class="g">${m.file.courante}</span><span class="u">sur ${m.file.nb} parties</span>`; }
+    else if (m.phase === 'fin') { verbe = m.titre; chiffres = `<span class="g">${c.faits}</span><span class="u">cuts traités</span>`; }
+    else {
+      verbe = m.phase === 'encours' ? `Pose le cut ${c.cut}` : m.phase === 'pause' ? 'En pause' : (m.file.alerte ? 'File arrêtée' : 'Arrêté');
+      chiffres = c.total == null ? `<span class="g" data-valeur="f">${c.faits}</span><span class="u">traités · total inconnu</span>` : `<span class="g" data-valeur="r">${c.total - c.faits}</span><span class="u">restent sur ${n(c.total)} · ${esc(c.tempsTexte)}</span>`;
+    }
+    return `<div class="objet"><canvas class="orbe" data-garder="orbe" width="336" height="336" role="img" aria-label="${esc(fo.mot)}"></canvas>
+      <div class="label"><p class="verbe${att ? ' attention' : ''}" data-vivant="${vivant ? 1 : 0}" style="--retard:-${(performance.now() % 2000).toFixed(0)}ms">${esc(verbe)}</p><span class="forme-mot">${esc(fo.mot)}</span><div class="chiffres">${chiffres}</div></div></div>`;
+  }
+
+  function chapelet(m) {
+    if (m.vue === 'echo' || m.phase === 'pret') return '';
+    const c = m.compte, N = 40;
+    let grains = '';
+    if (c.total == null) {
+      const k = Math.min(N - 4, Math.round(c.faits / 6));
+      for (let i = 0; i < k; i++) grains += `<i class="f"></i>`;
+      return `<div aria-hidden="true" class="chapelet">${grains}</div><div class="chapelet-lib"><span>cut ${c.debut}</span><span>un grain = 6 cuts · total inconnu</span></div>`;
+    }
+    const fait = Math.round((m.phase === 'fin' ? 1 : c.part || 0) * N);
+    const dif = new Set(m.restants.filter((r) => r.type === 'differe').map((r) => Math.min(N - 1, Math.floor((r.cut - c.debut) / c.total * N))));
+    for (let i = 0; i < N; i++) grains += dif.has(i) && i < fait ? '<i class="d"></i>' : `<i class="${i < fait ? 'f' : ''}${i === fait - 1 && m.phase === 'encours' ? ' nouveau' : ''}"></i>`;
+    return `<div aria-hidden="true" class="chapelet">${grains}</div><div class="chapelet-lib"><span>cut ${c.debut}</span><span>un grain = ${Math.ceil(c.total / N)} cuts</span><span>cut ${c.fin}</span></div>`;
+  }
+  function compteurs(m) {
+    const c = m.compte;
+    return `<div class="compteurs"><span>${F.pose}<b data-valeur="p">${n(c.poses)}</b> posés</span><span>${F.differe}<b data-valeur="d">${n(c.differes)}</b> différés</span><span>${F.vert}<b data-valeur="x">${n(c.aExaminer)}</b> à examiner</span></div>`;
+  }
+  function incident(m) {
+    const i = m.incident; if (!i) return '';
+    const att = i.type !== 'reprise';
+    return `<section class="bloc${att ? ' attention' : ''}" role="${att ? 'alert' : 'status'}"><h2>${att ? F.tri : ''}${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((x) => touche({ ...x, rang: i.type === 'choisir' ? 'second' : x.rang })).join('')}</div>` : ''}</section>`;
+  }
+  function alerte(m) {
+    const a = m.file.alerte; if (!a) return '';
+    const c = m.compte;
+    return `<section class="bloc attention" role="alert"><h2>${F.tri}${esc(a.titre)}</h2><p>${esc(a.detail)}</p><p class="note">Partie ${m.file.courante} à l'arrêt : ${pl(c.poses, 'posé', 'posés')}, ${pl(c.differes, 'différé', 'différés')}, ${n(c.aExaminer)} à examiner.</p></section>`;
+  }
+  function bornes(m) {
+    const b = m.bornes;
+    return `<section class="bornes"><label class="champ">Premier cut<input data-champ="debut" inputmode="numeric" value="${b.debut}"></label>
+      <label class="champ">Dernier cut<input data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" ${b.finDePartie ? 'disabled placeholder="fin de partie"' : ''}></label>
+      <button class="case" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="boite" aria-hidden="true"></span>Aller jusqu'à la fin de la partie</button></section>`;
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') {
+      return `<section class="bloc"><div class="ligne"><button class="case" data-a="fileBascule" aria-pressed="${f.active}"><span class="boite" aria-hidden="true"></span><b>File de parties</b></button>
+        ${f.active ? `<div class="pas" role="group" aria-label="Nombre de parties"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><output>${f.nb} parties</output><button data-a="filePlus" aria-label="Une partie de plus">+</button></div>` : '<span class="note" style="margin:0">éteinte</span>'}</div>
+        <p class="aide">${f.active ? `Les ${f.nb} parties s'enchaînent ; après chacune, l'orbe se tresse le temps de la relecture, puis la suivante démarre seule.` : 'Allumer pour enchaîner plusieurs parties.'}</p></section>`;
+    }
+    if (!f.active) return '';
+    const li = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), cour = !f.finie && i === f.courante;
+      const signe = p && !(cour && f.relecture) ? F.carre : cour ? (f.relecture ? F.anneau : m.phase === 'arrete' ? F.tri : F.orbite) : F.anneau;
+      const det = p ? `${f.relecture && cour ? 'relecture · ' : ''}${pl(p.poses, 'posé', 'posés')}, ${pl(p.differes, 'différé', 'différés')}, ${n(p.aControler)} à examiner` : cour ? (m.phase === 'arrete' ? `arrêtée au cut ${m.compte.cut}` : `en cours, ${m.compte.faits} traités`) : 'à venir';
+      li.push(`<li><span>${signe}</span><b>Partie ${i}</b><span>${det}</span></li>`);
+    }
+    return `<section class="bloc" aria-label="File de parties"><h2>${f.finie ? `File terminée · ${f.nb} parties` : `File · partie ${f.courante} sur ${f.nb}`}</h2><ul class="parties">${li.join('')}</ul></section>`;
+  }
+
+  function vueReste(m) {
+    const d = m.restants.filter((r) => r.type === 'differe'), v = m.restants.filter((r) => r.type === 'vert');
+    const ligne = (r, i) => `<li style="animation-delay:${Math.min(i, 14) * 30}ms"><span style="padding-top:2px">${r.type === 'differe' ? F.differe : F.vert}</span><span><b>Cut <span class="mono">${r.cut}</span></b> · ${r.type === 'differe' ? 'différé' : 'à examiner'}</span><span class="motif">${esc(r.motif)}</span><span class="gestes"><button class="touche" data-a="examiner" data-id="${esc(r.id)}">Examiner</button><button class="touche" data-a="ouvrir" data-id="${esc(r.id)}">Ouvrir dans ESV</button></span></li>`;
+    return `<div class="p"><button class="retour" data-a="retour"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Retour au lot</button>
+      <h1 class="titre">Ce qui reste</h1><p style="margin:-8px 0 0;color:var(--encre-2)">${pl(d.length, 'différé', 'différés')}, ${pl(v.length, 'cut posé', 'cuts posés')} à examiner.</p>
+      ${m.restants.length ? `<ul class="liste">${d.concat(v).map(ligne).join('')}</ul>` : '<p>Rien à reprendre.</p>'}</div>`;
+  }
+  function vueExamen(m, D) {
+    const r = m.examen, cp = D.coupe(r.cut, 180);
+    const tri = cp.pts.slice().sort((a, b) => a[0] - b[0]);
+    const X = (x) => 20 + (x + 1) * 180, Z = (z) => 150 - (z + 0.5) * 220;
+    let d = '';
+    for (let i = 0; i < tri.length; i += 6) { const g = tri.slice(i, i + 6); d += (i ? 'L' : 'M') + X(g.reduce((s, p) => s + p[0], 0) / g.length).toFixed(1) + ' ' + Z(Math.min(...g.map((p) => p[1]))).toFixed(1); }
+    return `<div class="p"><button class="retour" data-a="voirReste"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Ce qui reste</button>
+      <h1 class="titre">Cut <span class="mono">${r.cut}</span></h1><p style="margin:-8px 0 0">${r.type === 'differe' ? F.differe + ' Différé' : F.vert + ' Posé, à examiner'} · ${esc(r.motif)}</p>
+      <svg class="coupe" viewBox="0 0 400 200" role="img" aria-label="Coupe du cut ${r.cut}, profil et position proposée"><path class="sol" d="${d}"/>${cp.rails.map((x) => `<line class="pos" x1="${X(x)}" y1="${Z(-.24)}" x2="${X(x)}" y2="${Z(-.36)}"/>`).join('')}</svg>
+      <p class="note" style="margin-top:-6px">Profil de la coupe ; les deux traits marquent la position proposée.</p>
+      ${actions([{ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'principal' }, { a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'second' }])}</div>`;
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    const msg = m.message ? `<div class="message" role="status">${esc(m.message)}</div>` : '';
+    if (m.vue === 'reste') return vueReste(m) + msg;
+    if (m.vue === 'examen' && m.examen) return vueExamen(m, D) + msg;
+    const h1 = `<h1 class="sr">${esc(m.titre)}</h1>`;
+    let corps;
+    if (m.vue === 'echo') corps = `${objet(m)}<p style="margin:0">${esc(m.phrase)} L'onde gonfle à chaque geste vu.</p>${actions(m.actions)}`;
+    else if (m.phase === 'pret') corps = `${incident(m)}${objet(m)}<p style="margin:0">${esc(m.phrase)}</p>${bornes(m)}${file(m)}${actions(m.actions)}`;
+    else {
+      const reste = m.restants.length && m.phase !== 'fin' ? actions([{ a: 'voirReste', libelle: `Voir ce qui reste (${m.restants.length})`, rang: 'lien' }]) : '';
+      corps = `${incident(m)}${alerte(m)}${objet(m)}${chapelet(m)}<p style="margin:0">${esc(m.phrase)}</p>${compteurs(m)}${actions(m.actions)}${reste}${file(m)}`;
+    }
+    return `<div class="p">${tete(m)}${h1}${corps}</div>${msg}`;
+  }
+
+  /* ---------- moteur de l'orbe (mécanismes de ThinkingOrbs, réécrits) ---------- */
+  const TAU = Math.PI * 2;
+  const hash = (a, b) => { const h = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return h - Math.floor(h); };
+  function proj(yaw, tilt) {
+    const sy = Math.sin(yaw), cy = Math.cos(yaw), st = Math.sin(tilt), ct = Math.cos(tilt);
+    return (x, y, z) => { const x1 = x * cy + z * sy, z1 = -x * sy + z * cy, y1 = y * ct - z1 * st, z2 = y * st + z1 * ct; return [x1, -y1, z2]; };
+  }
+  /* chaque forme renvoie des points [x, y (−1..1), profondeur 0..1, rayon, encre 0..1 (1 = pleine), alpha] */
+  const formes = {
+    orbites(t, o) {
+      const p = proj(t * 0.12, 0.3), pts = [];
+      for (let k = 0; k < 6; k++) {
+        const h1 = hash(k, 1.7), h2 = hash(k, 5.2), h3 = hash(k, 8.9);
+        const ro = 0.5 + 0.45 * h1, th = h1 * TAU, ph = Math.acos(2 * h2 - 1);
+        const nx = Math.sin(ph) * Math.cos(th), ny = Math.cos(ph), nz = Math.sin(ph) * Math.sin(th);
+        let ux = -ny, uy = nx; const ul = Math.hypot(ux, uy) || 1; ux /= ul; uy /= ul;
+        const vx = -nz * uy, vy = nz * ux, vz = nx * uy - ny * ux;
+        const vit = (0.25 + 0.55 * h3) * (h3 > 0.5 ? 1 : -1);
+        const eclat = o.pouls && o.orbite % 6 === k ? o.pouls : 0;
+        for (let i = 0; i <= 48; i++) {
+          const a = i / 48 * TAU, [x, y, z] = p((ux * Math.cos(a) + vx * Math.sin(a)) * ro, (uy * Math.cos(a) + vy * Math.sin(a)) * ro, (vz * Math.sin(a)) * ro);
+          const d = (z / ro + 1) / 2; pts.push([x, y, d, 0.9 + eclat * 1.2, 0.4 + eclat * .5, (0.22 + 0.4 * d) * (1 + eclat * 1.4), 0, 'o' + k]);
+        }
+        for (let j = 0; j < 2; j++) {
+          const a = (o.fige ? 1.3 : t) * vit + j / 2 * TAU + h2 * 6, [x, y, z] = p((ux * Math.cos(a) + vx * Math.sin(a)) * ro, (uy * Math.cos(a) + vy * Math.sin(a)) * ro, (vz * Math.sin(a)) * ro);
+          const d = (z / ro + 1) / 2; pts.push([x, y, d, 2 + 2 * d, 0.75 + 0.25 * d, 1]);
+        }
+      }
+      return pts;
+    },
+    tresse(t) {
+      const p = proj(t * 0.4, 0.3), pts = [];
+      for (let s = 0; s < 3; s++) {
+        const ph = s / 3 * TAU;
+        for (let i = 0; i <= 70; i++) {
+          const u = (i / 70 * 2 - 1) * 0.92, surf = Math.sqrt(Math.max(0, 1 - u * u)), fin = Math.min(1, (1 - Math.abs(u)) / 0.12);
+          const a = u * Math.PI * 1.6 + ph + t * 0.6, tr = 1 + 0.075 * Math.sin(u * Math.PI * 6 + ph * 2 + t * 0.8), r = surf * 0.92 * tr;
+          const [x, y, z] = p(Math.cos(a) * r, u * 0.92 * tr, Math.sin(a) * r), d = (z / 0.92 + 1) / 2;
+          pts.push([x, y, d, 1.4 + 2.2 * d, 0.45 + 0.55 * d, fin * (0.45 + 0.55 * d), 0, 's' + s]);
+        }
+      }
+      return pts;
+    },
+    /* anneau de face : lignes de points sur un cercle, ondulation radiale (ring) ; o.ampli la gonfle (Écho) */
+    anneau(t, o) {
+      const pts = [], lanes = 4, segs = 64, amp = 0.23 * (o.ampli || 0.37);
+      for (let w = 0; w < lanes; w++) {
+        const off = (w - (lanes - 1) / 2) * 0.075, bord = Math.abs(w - (lanes - 1) / 2) / ((lanes - 1) / 2);
+        for (let k = 0; k < segs; k++) {
+          const a = k / segs * TAU, wob = (0.16 * Math.sin(a * 3 - t * 1.7 + w * .22) + 0.07 * Math.sin(a * 5 + t * 1.1)) * (o.ampli || 0.37);
+          const r = (0.78 / (1 + 0.85 * amp)) * (1 + wob) + off;
+          const d = 0.5 + 0.5 * Math.sin(a + t * 0.2);
+          pts.push([Math.cos(a) * r, Math.sin(a) * r, d, (1 + 1.2 * d) * (1 - .25 * bord), 0.5 + 0.4 * d - .15 * bord, 0.4 + 0.6 * d]);
+        }
+      }
+      return pts;
+    },
+    /* contour en points répartis à pas égaux ; o.vers : 0 cercle, 1 triangle ou carré ; o.cible : 'triangle' | 'carre' */
+    contour(t, o) {
+      const M = 120, chemin = [];
+      const cible = o.cible === 'carre' ? [[0, -.6], [.6, -.6], [.6, .6], [-.6, .6], [-.6, -.6]] : [[0, -.72], [.66, .5], [-.66, .5]];
+      const per = (v) => { let L = 0; const l = v.map((a, i) => { const b = v[(i + 1) % v.length]; const d = Math.hypot(b[0] - a[0], b[1] - a[1]); L += d; return d; }); return { l, L }; };
+      const { l, L } = per(cible);
+      const surCible = (f) => { let r = f * L, i = 0; while (r > l[i] && i < cible.length - 1) { r -= l[i]; i++; } const a = cible[i], b = cible[(i + 1) % cible.length], u = l[i] ? Math.min(1, r / l[i]) : 0; return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]; };
+      const m = o.vers, e = m * m * (3 - 2 * m);
+      for (let i = 0; i < M; i++) { const f = i / M, a = -Math.PI / 2 + f * TAU, c = [Math.cos(a) * .7, Math.sin(a) * .7], s = surCible(f); chemin.push([c[0] + (s[0] - c[0]) * e, c[1] + (s[1] - c[1]) * e]); }
+      const lon = []; let tot = 0; for (let i = 0; i < M; i++) { const a = chemin[i], b = chemin[(i + 1) % M]; const d = Math.hypot(b[0] - a[0], b[1] - a[1]); lon.push(d); tot += d; }
+      const pts = [], nb = 42, souffle = 1 + 0.02 * Math.sin(t * 3.1);
+      let seg = 0, acc = 0;
+      for (let k = 0; k < nb; k++) {
+        const cib = k / nb * tot; while (acc + lon[seg] < cib && seg < M - 1) { acc += lon[seg]; seg++; }
+        const a = chemin[seg], b = chemin[(seg + 1) % M], u = lon[seg] ? Math.min(1, (cib - acc) / lon[seg]) : 0;
+        pts.push([(a[0] + (b[0] - a[0]) * u) * souffle, (a[1] + (b[1] - a[1]) * u) * souffle, 1, 2.6, 1, 1, o.ambre]);
+      }
+      return pts;
+    },
+  };
+
+  /* couches mêlées : chaque forme a un poids qui monte ou descend (bot-avatars : jamais de bascule sèche) */
+  const O = { couches: [], raf: 0, t0: performance.now(), pouls: 0, orbite: 0, ampli: 0.4, faits: null, vus: null, vers: 0, cible: null, cle: null };
+  function definir(f, red) {
+    const cle = f;
+    if (O.cle === cle) return;
+    const versRepos = ['anneau', 'figees', 'carre', 'triangle'].includes(f);
+    const duree = versRepos ? 1.2 : 0.7;
+    O.couches.forEach((c) => { c.but = 0; c.duree = duree; });
+    let c = O.couches.find((x) => x.f === f);
+    if (!c) { c = { f, poids: 0 }; O.couches.push(c); }
+    c.but = 1; c.duree = duree;
+    if (f === 'triangle' || f === 'carre') { if (O.cible !== f) O.vers = 0; O.cible = f; }
+    if (red || O.cle == null) { O.couches = [{ f, poids: 1, but: 1, duree }]; O.vers = 1; }
+    O.cle = cle;
+  }
+  function couleurs(canvas) {
+    const cs = getComputedStyle(canvas);
+    return { encre: cs.getPropertyValue('--point').trim(), ambre: cs.getPropertyValue('--point-ambre').trim() };
+  }
+  function peindre(canvas, t, dt) {
+    const ctx = canvas.getContext('2d'), W = canvas.width, R = W / 2 * 0.86, col = O.col || (O.col = couleurs(canvas));
+    ctx.clearRect(0, 0, W, W);
+    const tous = [];
+    O.couches.forEach((c) => {
+      if (c.poids < 0.01) return;
+      let pts;
+      if (c.f === 'orbites' || c.f === 'figees') pts = formes.orbites(t, { fige: c.f === 'figees', pouls: O.pouls, orbite: O.orbite });
+      else if (c.f === 'tresse') pts = formes.tresse(t);
+      else if (c.f === 'anneau') pts = formes.anneau(t * 0.55, { ampli: 0.37 });
+      else if (c.f === 'onde') pts = formes.anneau(t, { ampli: O.ampli });
+      else pts = formes.contour(t, { vers: O.vers, cible: c.f, ambre: c.f === 'triangle' });
+      const pale = c.f === 'figees' ? 0.45 : 1;
+      /* les points d'un même tracé (orbite, brin) sont reliés en trait ; les autres restent des points */
+      pts.forEach((q, i) => {
+        const g = q[7], prev = i && pts[i - 1][7] === g ? pts[i - 1] : null;
+        if (g && prev) tous.push({ seg: true, x: prev[0], y: prev[1], x2: q[0], y2: q[1], d: (prev[2] + q[2]) / 2, r: (prev[3] + q[3]) / 2, e: q[4], a: q[5] * c.poids * pale, amb: q[6] });
+        else if (!g) tous.push({ x: q[0], y: q[1], d: q[2], r: q[3], e: q[4], a: q[5] * c.poids * pale, amb: q[6] });
+      });
+    });
+    tous.sort((a, b) => a.d - b.d); /* du loin au proche (ThinkingOrbs) */
+    const k = W / 168;
+    ctx.lineCap = 'round';
+    tous.forEach((o) => {
+      if (o.a < 0.02) return;
+      const c = `rgba(${o.amb ? col.ambre : col.encre},${Math.min(1, o.a * (0.35 + 0.65 * o.e)).toFixed(3)})`;
+      if (o.seg) { ctx.strokeStyle = c; ctx.lineWidth = Math.max(0.6, o.r) * k; ctx.beginPath(); ctx.moveTo(W / 2 + o.x * R, W / 2 + o.y * R); ctx.lineTo(W / 2 + o.x2 * R, W / 2 + o.y2 * R); ctx.stroke(); }
+      else { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(W / 2 + o.x * R, W / 2 + o.y * R, Math.max(0.7, o.r) * k, 0, TAU); ctx.fill(); }
+    });
+  }
+  function boucle(now) {
+    const canvas = document.querySelector('[data-garder="orbe"]');
+    if (!canvas) { O.raf = 0; return; }
+    const dt = Math.min(0.05, (now - (O.prec || now)) / 1000); O.prec = now;
+    O.couches.forEach((c) => { const pas = dt / c.duree; c.poids = c.but > c.poids ? Math.min(c.but, c.poids + pas) : Math.max(c.but, c.poids - pas); });
+    O.couches = O.couches.filter((c) => c.but > 0 || c.poids > 0.01);
+    if (O.cible && O.vers < 1) O.vers = Math.min(1, O.vers + dt / 0.9);
+    O.pouls *= Math.exp(-dt / 0.5); if (O.pouls < 0.01) O.pouls = 0;
+    O.ampli += (0.4 - O.ampli) * (1 - Math.exp(-dt / 0.6));
+    peindre(canvas, (now - O.t0) / 1000 * 1.9, dt);
+    O.raf = requestAnimationFrame(boucle);
+  }
+
+  let dernierMessage = null;
+  function marquerMessage(racine) {
+    const mg = racine.querySelector('.message'), t = mg ? mg.textContent : null;
+    if (mg && t !== dernierMessage) mg.classList.add('neuf');
+    dernierMessage = t;
+  }
+  function apres(S, D, racine) {
+    marquerMessage(racine);
+    const canvas = racine.querySelector('[data-garder="orbe"]');
+    if (!canvas) return;
+    const m = D.modele(), red = D.mouvementReduit(), fo = forme(m);
+    canvas.setAttribute('aria-label', fo.mot); /* l'élément conservé garde son ancien libellé : on le remet à jour */
+    O.col = couleurs(canvas);
+    definir(fo.f, red);
+    /* un cut posé éclaire une orbite ; un geste vu en Écho gonfle l'onde (attaque immédiate, relâche lente) */
+    if (!red && O.faits != null && m.compte.faits > O.faits) { O.pouls = 1; O.orbite = m.compte.faits % 9; }
+    if (!red && O.vus != null && m.echo && m.echo.vus > O.vus) O.ampli = 1.3;
+    O.faits = m.compte.faits; O.vus = m.echo ? m.echo.vus : O.vus;
+    if (red) { if (O.raf) cancelAnimationFrame(O.raf); O.raf = 0; O.couches = [{ f: fo.f, poids: 1, but: 1, duree: 1 }]; O.vers = 1; O.pouls = 0; peindre(canvas, 0.6, 0); return; }
+    if (!O.raf) { O.prec = 0; O.raf = requestAnimationFrame(boucle); }
+  }
+
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

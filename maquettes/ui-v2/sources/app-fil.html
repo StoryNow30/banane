@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fil et commandes</title>
+<style>
+/*POLICE:app-plex*/
+/*POLICE:app-plex-mono*/
+/* Proposition « Fil et commandes » (série app-).
+   Logique : un outil de bureau. En haut, un fil d'Ariane dit où l'on est (Lot › Partie › Cut) et chaque
+   maillon s'ouvre en sélecteur ; au milieu, l'état en grand et un inspecteur ; en bas, une barre de
+   commandes qui montre l'action du moment et ouvre une palette où toutes les actions possibles sont
+   rangées, avec leur raccourci.
+   Sources : navbar.gallery (type « Breadcrumbs » : Clerk, chaque maillon est un sélecteur ; type
+   « Announcement » : une bande mince en tête ; type « Search Bar » : raccourci ⌘K), mobbin (glossaire
+   « Command Palette », avec sa réserve : peu de commandes = la palette range plutôt qu'elle ne cherche),
+   beUI (bloc « Command Palette », durées de menu 150–250 ms), v0 (M.O.N.K.Y : « Last updated », libellés
+   en capitales à chasse fixe). Sens : l'encre = l'action ; bleu = où est le clavier ; ambre = à regarder ;
+   brique = arrêt ; vert = fait. */
+:root{
+  --sol:#FAFAF8; --plan:#FFFFFF; --creux:#F0F0EC; --encre:#121314; --encre2:#53565B; --trait:#DEDEDA; --trait2:#C7C7C2;
+  --clavier:#1F4FD1; --clavier-fond:#E3EAFB; --attention:#7D4800; --attention-fond:#F7E7CA; --arret:#A0291E; --arret-fond:#F8E1DD; --fait:#1A643B; --fait-fond:#DCEFE2;
+  --voile:rgba(18,19,20,.32); --scene:#CFCFCA;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --sol:#0C0D0F; --plan:#15171A; --creux:#1E2024; --encre:#EDEEF0; --encre2:#A7AAB0; --trait:#292C31; --trait2:#3A3D43;
+  --clavier:#8FB0FF; --clavier-fond:#1B2742; --attention:#F2BE60; --attention-fond:#30250F; --arret:#FF9384; --arret-fond:#3A1B18; --fait:#7FD6A0; --fait-fond:#15301F;
+  --voile:rgba(0,0,0,.55); --scene:#000000;
+}}
+:root[data-theme="dark"]{
+  --sol:#0C0D0F; --plan:#15171A; --creux:#1E2024; --encre:#EDEEF0; --encre2:#A7AAB0; --trait:#292C31; --trait2:#3A3D43;
+  --clavier:#8FB0FF; --clavier-fond:#1B2742; --attention:#F2BE60; --attention-fond:#30250F; --arret:#FF9384; --arret-fond:#3A1B18; --fait:#7FD6A0; --fait-fond:#15301F;
+  --voile:rgba(0,0,0,.55); --scene:#000000;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'IBM Plex Sans',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--sol)}
+.notes{max-width:400px;background:var(--plan);color:var(--encre);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.notes p{margin:0 0 10px}
+
+.app{height:760px;display:flex;flex-direction:column;background:var(--sol);font-size:14px;line-height:1.45;position:relative;overflow:hidden}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--clavier);outline-offset:2px}
+.ico{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+kbd{font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--trait2);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--plan);color:var(--encre);white-space:nowrap}
+
+/* bande d'annonce */
+.annonce{display:flex;gap:8px;align-items:flex-start;padding:8px 14px;background:var(--attention-fond);color:var(--encre);border-bottom:1px solid var(--trait);font-size:13px}
+.annonce .ico{color:var(--attention);margin-top:1px}
+.annonce b{font-weight:600}
+.annonce .choix{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.annonce .choix button{border:1px solid var(--encre);background:var(--plan);border-radius:6px;padding:3px 10px;font-size:13px;font-weight:600}
+.annonce.alerte{background:var(--arret-fond)} .annonce.alerte .ico{color:var(--arret)}
+
+/* barre du haut : fil d'Ariane */
+.barre{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--trait);background:var(--plan);flex-wrap:wrap}
+.fil{display:flex;align-items:center;flex-wrap:wrap;gap:2px;min-width:0;flex:1 1 220px}
+.maillon{border:0;background:transparent;border-radius:6px;padding:4px 6px;display:inline-flex;align-items:center;gap:4px;font-weight:500;color:var(--encre);white-space:nowrap}
+.maillon:hover,.maillon[aria-expanded="true"]{background:var(--creux)}
+.maillon .ico{width:12px;height:12px;color:var(--encre2)}
+.maillon.courant{font-weight:600}
+.sep{color:var(--encre2);padding:0 1px}
+.mode{display:flex;border:1px solid var(--trait2);border-radius:7px;overflow:hidden;margin-left:auto}
+.mode button{border:0;background:var(--plan);padding:3px 10px;font-size:13px;display:inline-flex;align-items:center;gap:4px}
+.mode button + button{border-left:1px solid var(--trait2)}
+.mode button[aria-pressed="true"]{background:var(--encre);color:var(--plan);font-weight:600}
+.mode .ico{width:12px;height:12px}
+.liaison{display:flex;align-items:center;gap:6px;padding:6px 14px;font-size:12px;color:var(--encre2);border-bottom:1px solid var(--trait)}
+.liaison .ico{width:12px;height:12px}
+.liaison.relie .ico{color:var(--fait)} .liaison.absent .ico,.liaison.choisir .ico{color:var(--attention)}
+.liaison .maj{margin-left:auto}
+
+/* sélecteur ouvert sous un maillon */
+.pop{position:absolute;left:10px;right:10px;z-index:20;background:var(--plan);border:1px solid var(--trait2);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.18);padding:10px 12px;transform-origin:top left}
+.pop h3{margin:0 0 6px;font-size:12px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--encre2);font-weight:500}
+.pop .fermer{float:right;border:0;background:transparent;color:var(--encre2);font-size:13px}
+
+/* corps */
+.corps{flex:1;min-height:0;overflow-y:auto;padding:16px 14px 14px}
+.etiquette{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--encre2)}
+.statut{display:flex;align-items:center;gap:8px;margin-top:4px}
+.statut .ico{width:20px;height:20px}
+.statut b{font-size:clamp(26px,9cqi,40px);font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.statut.encours .ico{color:var(--encre)} .statut.pause .ico{color:var(--attention)} .statut.arrete .ico{color:var(--arret)} .statut.fin .ico{color:var(--fait)}
+.compteur{font-family:'IBM Plex Mono',monospace;font-size:clamp(40px,15cqi,68px);font-weight:500;letter-spacing:-.04em;line-height:1;margin-top:10px;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.compteur small{font-size:.36em;color:var(--encre2);letter-spacing:0;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.phrase{margin:10px 0 0;font-size:15px}
+.regle{margin-top:14px;position:relative;height:18px}
+.regle .fond{position:absolute;left:0;right:0;top:6px;height:6px;background:var(--creux);border-radius:3px}
+.regle .fait{position:absolute;left:0;top:6px;height:6px;background:var(--encre);border-radius:3px}
+.regle .indet{position:absolute;left:0;right:0;top:6px;height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--encre) 0 3px,transparent 3px 9px)}
+.regle-leg{display:flex;justify-content:space-between;font-size:12px;color:var(--encre2);gap:8px}
+.inspect{margin:18px 0 0;display:grid;grid-template-columns:auto 1fr;border-top:1px solid var(--trait)}
+.inspect dt,.inspect dd{margin:0;padding:8px 0;border-bottom:1px solid var(--trait)}
+.inspect dt{color:var(--encre2);padding-right:16px}
+.inspect dd{text-align:right;font-weight:500}
+.inspect dd.att{color:var(--attention);font-weight:600}
+.inspect dd.att::before{content:"● ";font-size:10px;vertical-align:2px}
+.cause{border:1px solid var(--arret);border-left-width:4px;border-radius:8px;padding:10px 12px;margin-top:16px;background:var(--plan)}
+.cause b{display:flex;gap:6px;align-items:center;color:var(--encre)} .cause .ico{color:var(--arret)}
+.cause p{margin:4px 0 0}
+.form{margin-top:16px;display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.form label{color:var(--encre2)}
+.form input{width:96px;font:inherit;font-family:'IBM Plex Mono',monospace;font-size:15px;padding:6px 8px;border:1px solid var(--trait2);border-radius:6px;background:var(--plan);color:var(--encre);text-align:right}
+.inter{border:1px solid var(--trait2);background:var(--plan);border-radius:6px;padding:4px 10px;font-size:13px;font-weight:500}
+.inter[aria-pressed="true"]{background:var(--encre);color:var(--plan);border-color:var(--encre)}
+.pas{display:inline-flex;align-items:center;border:1px solid var(--trait2);border-radius:6px}
+.pas button{border:0;background:transparent;width:30px;height:28px;font-size:16px}
+.pas b{min-width:24px;text-align:center}
+.parts{list-style:none;margin:10px 0 0;padding:0}
+.parts li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--trait);flex-wrap:wrap}
+.parts .n{width:24px;height:24px;border-radius:6px;border:1px solid var(--trait2);display:inline-flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.parts .faite .n{background:var(--fait-fond);border-color:var(--fait);color:var(--fait)}
+.parts .cour .n{background:var(--encre);color:var(--plan);border-color:var(--encre)}
+.parts .cass .n{background:var(--arret-fond);border-color:var(--arret);color:var(--arret)}
+.parts .bil{margin-left:auto;color:var(--encre2);font-size:13px}
+/* tableau des restes */
+.table{width:100%;border-collapse:collapse;margin-top:6px}
+.table th{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--encre2);text-align:left;padding:6px 4px;border-bottom:1px solid var(--trait2)}
+.table td{padding:8px 4px;border-bottom:1px solid var(--trait);vertical-align:top}
+.table .motif{color:var(--encre2);font-size:13px;display:block}
+.table .acts{text-align:right;white-space:nowrap}
+.petit{border:1px solid var(--trait2);background:var(--plan);border-radius:6px;padding:3px 8px;font-size:13px;font-weight:500;margin-left:4px}
+.marque{font-size:12px;font-weight:600;border-radius:4px;padding:1px 5px;white-space:nowrap}
+.marque.differe{background:var(--attention-fond);color:var(--attention)}
+.marque.vert{background:var(--fait-fond);color:var(--fait)}
+.coupe{width:100%;height:auto;display:block;border:1px solid var(--trait);border-radius:8px;background:var(--plan);margin-top:10px}
+.coupe-pts circle{fill:var(--encre2)}
+.coupe-rails line{stroke:var(--clavier);stroke-width:2;stroke-dasharray:4 3}
+.legende{font-size:12px;color:var(--encre2);margin:4px 0 0}
+.vide{color:var(--encre2)}
+@container (max-width: 400px){ .table .col-m{display:none} .table .acts .petit{margin:2px 0 0 4px} }
+
+/* barre de commandes */
+.commandes{border-top:1px solid var(--trait);background:var(--plan);padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cmd{border:1px solid var(--trait2);background:var(--plan);border-radius:8px;padding:9px 12px;font-weight:600;display:inline-flex;align-items:center;gap:8px;min-height:42px;position:relative;overflow:hidden}
+.cmd > span{white-space:nowrap}
+.cmd small{font-weight:400;color:var(--encre2);font-size:12px}
+.cmd.principal{background:var(--encre);color:var(--plan);border-color:var(--encre);flex:1 1 auto;justify-content:center}
+.cmd.principal small{color:var(--plan)}
+.cmd.principal kbd{background:transparent;color:var(--plan);border-color:var(--plan)}
+.cmd.arret{color:var(--arret);border-color:var(--arret)}
+.cmd.arret.confirme{background:var(--arret);color:var(--plan)}
+.cmd.arret.confirme kbd{background:transparent;color:var(--plan);border-color:var(--plan)}
+.cmd .rebours{position:absolute;left:0;bottom:0;height:3px;width:100%;background:var(--plan);transform-origin:left}
+.cmd.cmd[aria-disabled="true"]{background:var(--plan);color:var(--encre);border:1px dashed var(--encre2);cursor:not-allowed}
+.cmd.cmd[aria-disabled="true"] kbd{display:none}
+.ouvrir-palette{margin-left:auto;border:0;background:transparent;color:var(--encre2);display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:6px 2px}
+.raison{flex-basis:100%;margin:0;font-size:13px;color:var(--encre2)}
+
+/* palette */
+.voile{position:absolute;inset:0;background:var(--voile);z-index:30}
+.palette{position:absolute;left:10px;right:10px;bottom:10px;z-index:31;background:var(--plan);border:1px solid var(--trait2);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:78%;display:flex;flex-direction:column;overflow:hidden}
+.palette-tete{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--trait)}
+.palette-tete b{font-weight:600}
+.palette-tete .aide{margin-left:auto;font-size:12px;color:var(--encre2);display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.palette-liste{overflow-y:auto;padding:6px}
+.groupe{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--encre2);padding:8px 8px 4px}
+.ligne{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:8px 10px;min-height:40px}
+.ligne .t{flex:1;min-width:0}
+.ligne .t small{display:block;color:var(--encre2);font-size:12px}
+.ligne[aria-selected="true"]{background:var(--clavier-fond);box-shadow:inset 3px 0 0 var(--clavier)}
+.ligne[aria-disabled="true"]{cursor:not-allowed}
+.ligne[aria-disabled="true"] .t span{text-decoration:line-through}
+.ligne.arret .t span{color:var(--arret)}
+.toast{position:absolute;left:12px;right:12px;bottom:72px;z-index:25;background:var(--encre);color:var(--plan);border-radius:8px;padding:9px 12px;display:flex;gap:8px;align-items:center;font-size:13px}
+.toast .ico{color:var(--plan)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Fil et commandes"></div></div>
+  <aside class="notes">
+    <h2>Fil et commandes</h2>
+    <p><b>Logique.</b> Un outil de bureau. En haut, un fil d'Ariane dit où l'on est (Lot › Partie › Cut), chaque maillon s'ouvre en sélecteur. Au milieu, l'état en grand et un inspecteur. En bas, une barre de commandes donne l'action du moment ; la palette (bouton ou touche K) range toutes les actions possibles avec leur raccourci, y compris celles qui sont impossibles et pourquoi.</p>
+    <p><b>D'où ça vient.</b> navbar.gallery, type « Breadcrumbs » : l'exemple Clerk, où chaque maillon (« Personal account ⌃ / Application ⌃ / Development ⌃ ») est un sélecteur ; type « Announcement » (Daytona : une bande mince en tête pour un seul message) ; type « Search Bar » (raccourci au clavier). mobbin, glossaire « Command Palette » et sa mise en garde (« Avoid if there are only a few commands ») : ici la palette ne cherche pas, elle range et explique. beUI, bloc « Command Palette » et durées de menu (150–250 ms). v0, gabarit M.O.N.K.Y (libellés en capitales à chasse fixe, « Last updated »).</p>
+    <p><b>Ce que ça veut dire ici.</b> L'encre (noir en clair, blanc en sombre) est l'action à faire ; le bleu n'apparaît que là où est le clavier (ligne choisie de la palette, contour de focus). Ambre avec un point : à regarder. Brique avec un trait épais à gauche : cause d'un arrêt. Vert : partie faite. Une commande impossible reste dans la palette, barrée, avec sa raison écrite. Mouvement : le sélecteur sort de son maillon (150 ms), la palette monte du bas sur un voile (200 ms), le compteur roule à chaque cut.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+/* Socle de rendu à mouvement, commun aux maquettes app-* (copié tel quel dans chacune).
+ * Le moteur réécrit #panneau à chaque tic (≈ 0,9 s) : un nœud gardé (data-garder) est détaché puis
+ * rattaché, ce qui annule les transitions et relance les animations CSS (mesuré le 29/10 dans Chromium).
+ * Les animations Web (element.animate) survivent, elles. Donc :
+ *  1. le panneau n'a qu'une racine gardée, .app, mise à jour par différence (les nœuds persistent) ;
+ *  2. tout mouvement passe par element.animate, jamais par transition ou animation CSS sur un nœud gardé ;
+ *  3. attributs de mouvement déclarés dans le HTML produit par la vue :
+ *     data-k="clé"     identité d'un nœud dans une liste (sinon : position et balise) ;
+ *     data-e="nom"     entrée : joue ENTREES[nom] quand le nœud apparaît (pas au premier rendu) ;
+ *     data-v="nom"     valeur : joue VALEURS[nom] quand son texte change ;
+ *     data-flip        forme : sa boîte est mesurée avant et après, et on anime de l'une à l'autre ;
+ *     data-boucle="nom" boucle : BOUCLES[nom] lancée une fois, arrêtée en mouvement réduit ;
+ *     data-u="nom"     action locale (interface seulement), data-id facultatif.
+ *  4. mouvement réduit : aucune trajectoire ni boucle ; seules restent des fondus très courts. */
+const Socle = (function () {
+  'use strict';
+  let racineApp = null, opts = null, dernierS = null, premier = true, cleEtat = '';
+  let focusGarde = null;
+  const local = {};
+  const reduit = () => Demo.D.mouvementReduit();
+
+  function cle(n) { return n.nodeType === 1 ? n.getAttribute('data-k') : null; }
+  function meme(a, b) { return a.nodeType === b.nodeType && (a.nodeType !== 1 || (a.tagName === b.tagName && a.getAttribute('data-e') === b.getAttribute('data-e'))); }
+
+  function enfants(a, b) {
+    const anciens = [...a.childNodes], parCle = new Map(), libres = [];
+    anciens.forEach((n) => { const k = cle(n); if (k != null) parCle.set(k, n); else libres.push(n); });
+    let li = 0; const res = [], neufs = [];
+    for (const nb of [...b.childNodes]) {
+      const k = cle(nb); let o = null;
+      if (k != null) { const c = parCle.get(k); if (c && meme(c, nb)) { o = c; parCle.delete(k); } }
+      else {
+        for (let j = li; j < Math.min(libres.length, li + 4); j++) if (meme(libres[j], nb)) { o = libres[j]; li = j + 1; break; }
+      }
+      if (o) { noeud(o, nb); res.push(o); } else { res.push(nb); neufs.push(nb); }
+    }
+    anciens.forEach((n) => { if (!res.includes(n)) n.remove(); });
+    res.forEach((n, i) => { if (a.childNodes[i] !== n) a.insertBefore(n, a.childNodes[i] || null); });
+    /* animer seulement une fois dans le document : un nœud encore dans le gabarit (document inerte)
+       garderait une animation figée sur sa première image (mesuré : opacité 0, plus d'animation). */
+    neufs.forEach(entrer);
+  }
+
+  function attributs(o, n) {
+    for (const at of [...n.attributes]) {
+      if (at.name === 'class') {
+        const transit = [...o.classList].filter((c) => c.startsWith('m-'));
+        const v = [at.value, ...transit].join(' ').trim();
+        if (o.getAttribute('class') !== v) o.setAttribute('class', v);
+      } else if (at.name === 'style' && o.hasAttribute('data-style-libre')) {
+        /* style tenu par le code (feuille glissée, hauteur animée) : on ne l'écrase pas */
+      } else if (o.getAttribute(at.name) !== at.value) o.setAttribute(at.name, at.value);
+    }
+    for (const at of [...o.attributes]) if (!n.hasAttribute(at.name) && at.name !== 'class' && !(at.name === 'style' && o.hasAttribute('data-style-libre'))) o.removeAttribute(at.name);
+    if (o.tagName === 'INPUT' && document.activeElement !== o) o.value = n.getAttribute('value') || '';
+  }
+
+  function noeud(o, n) {
+    if (o.nodeType !== 1) { if (o.nodeValue !== n.nodeValue) o.nodeValue = n.nodeValue; return; }
+    const v = o.getAttribute('data-v'), avant = v ? o.textContent : null;
+    attributs(o, n);
+    enfants(o, n);
+    if (v && !premier && avant !== o.textContent) jouer(o, (opts.valeurs || {})[v]);
+  }
+
+  function entrer(n) {
+    if (n.nodeType !== 1 || premier) return;
+    const liste = n.hasAttribute('data-e') ? [n, ...n.querySelectorAll('[data-e]')] : [...n.querySelectorAll('[data-e]')];
+    liste.forEach((e, i) => jouer(e, (opts.entrees || {})[e.getAttribute('data-e')], i));
+  }
+
+  /* Joue un mouvement [images, options] ou une fonction (el) => [images, options]. */
+  function jouer(el, def, rang) {
+    if (!def || reduit()) return null;
+    const d = typeof def === 'function' ? def(el) : def;
+    if (!d) return null;
+    const o = Object.assign({}, d[1]);
+    if (rang && o.cascade) o.delay = (o.delay || 0) + Math.min(rang, 7) * o.cascade;
+    delete o.cascade;
+    return el.animate(d[0], o);
+  }
+
+  function boucles() {
+    racineApp.querySelectorAll('[data-boucle]').forEach((el) => {
+      const nom = el.getAttribute('data-boucle');
+      if (reduit()) { if (el._boucle) { el._boucle.cancel(); el._boucle = null; } return; }
+      if (el._boucle && el._boucleNom === nom) return;
+      if (el._boucle) el._boucle.cancel();
+      const d = (opts.boucles || {})[nom]; if (!d) return;
+      el._boucle = el.animate(d[0], Object.assign({ iterations: Infinity }, d[1])); el._boucleNom = nom;
+    });
+  }
+
+  function mesurer() {
+    const m = new Map();
+    racineApp.querySelectorAll('[data-flip]').forEach((el) => m.set(el, el.getBoundingClientRect()));
+    return m;
+  }
+  function flip(avant) {
+    if (premier || reduit()) return;
+    avant.forEach((r0, el) => {
+      if (!el.isConnected) return;
+      const r1 = el.getBoundingClientRect(), mode = el.getAttribute('data-flip') || 'h';
+      if (mode === 'h' && Math.abs(r1.height - r0.height) > 1) {
+        el.animate([{ height: r0.height + 'px', overflow: 'hidden' }, { height: r1.height + 'px', overflow: 'hidden' }], { duration: (opts.dureeForme || 420), easing: opts.courbeForme || 'cubic-bezier(.2,.9,.25,1.04)' });
+      }
+      if (mode === 'xy' && (Math.abs(r1.top - r0.top) > 1 || Math.abs(r1.left - r0.left) > 1)) {
+        el.animate([{ transform: `translate(${r0.left - r1.left}px,${r0.top - r1.top}px)` }, { transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+      if (mode === 'wh' && (Math.abs(r1.width - r0.width) > 1 || Math.abs(r1.height - r0.height) > 1)) {
+        /* la forme d'abord (largeur et hauteur), le contenu entre ensuite par son propre data-e */
+        el.animate([{ width: r0.width + 'px', height: r0.height + 'px' }, { width: r1.width + 'px', height: r1.height + 'px' }], { duration: opts.dureeForme || 420, easing: opts.courbeForme || 'cubic-bezier(.2,.9,.25,1.04)' });
+      }
+      if (mode === 'w' && Math.abs(r1.width - r0.width) > 1) {
+        el.animate([{ width: r0.width + 'px' }, { width: r1.width + 'px' }], { duration: 360, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      }
+    });
+  }
+
+  function peindre() {
+    if (!racineApp) return;
+    /* le moteur détache puis rattache la racine à chaque tic : un défilement interne retombe à 0
+       (mesuré). On remet chaque zone défilante où l'opérateur l'avait laissée. */
+    racineApp.querySelectorAll('*').forEach((el) => { if (el._defile != null && el.scrollTop !== el._defile) el.scrollTop = el._defile; });
+    /* même chose pour le focus : un nœud détaché le perd ; on le rend s'il est toujours là */
+    if (focusGarde && focusGarde.isConnected && (document.activeElement === document.body || !document.activeElement) && focusGarde !== document.activeElement) focusGarde.focus({ preventScroll: true });
+    const D = Demo.D, S = Demo.etat(), m = D.modele();
+    const k = m.phase + '|' + m.vue + '|' + m.activite + '|' + (m.file.relecture ? 'r' : '') + (m.file.alerte ? 'a' : '') + (m.incident ? m.incident.type : '');
+    if (k !== cleEtat && opts.etat) opts.etat(local, m, cleEtat);
+    cleEtat = k;
+    const avant = mesurer();
+    const t = document.createElement('template');
+    t.innerHTML = opts.vue(m, D, S, local);
+    enfants(racineApp, t.content);
+    flip(avant);
+    boucles();
+    if (opts.apres) opts.apres(racineApp, m, local);
+    premier = false;
+  }
+
+  function monter(o) {
+    opts = o; Object.assign(local, o.local || {});
+    Demo.monter({
+      rendre: () => '<div class="app" data-garder="app"></div>',
+      apres: (S, D, racine) => {
+        const r = racine.querySelector('[data-garder="app"]');
+        if (r !== racineApp) {
+          racineApp = r;
+          racine.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-u]');
+            if (!b || !racine.contains(b) || b.getAttribute('aria-disabled') === 'true') return;
+            if (o.agir) o.agir(b.getAttribute('data-u'), b.getAttribute('data-id'), local, b);
+            peindre();
+          });
+          racine.addEventListener('scroll', (e) => { const t = e.target; if (t !== racine && t.nodeType === 1 && racineApp && racineApp.contains(t)) t._defile = t.scrollTop; }, true);
+          racine.addEventListener('focusin', (e) => { focusGarde = e.target; });
+          /* clavier écouté sur le document : le focus peut être sur le corps de page après un tic */
+          document.addEventListener('keydown', (e) => {
+            const t = e.target; if (t !== document.body && !racine.contains(t)) return;
+            if (o.clavier && o.clavier(e, local)) peindre();
+          });
+        }
+        if (S !== dernierS) { dernierS = S; Object.assign(local, o.local || {}); cleEtat = ''; if (o.reinit) o.reinit(local); }
+        peindre();
+      },
+    });
+  }
+
+  return { monter, peindre, jouer, local, reduit };
+})();
+
+/* Aides communes aux maquettes app-* (copiées dans chacune) : boutons d'action du modèle, coupe d'un cut. */
+const Aides = (function () {
+  'use strict';
+  const esc = (s) => Demo.D.esc(s == null ? '' : s);
+  const nf = (x) => Demo.D.n(x);
+  /* Attributs d'une action du modèle : data-a, data-id, et l'état désactivé (lisible, jamais estompé). */
+  function attrs(x) {
+    return `data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}`;
+  }
+  function trouver(m, a) { return (m.actions || []).find((x) => x.a === a); }
+  /* Coupe d'un cut : points (gris) et deux repères des rails proposés. Fonctionnel, petit, encadré. */
+  function coupe(cut, classe) {
+    const c = Demo.D.coupe(cut, 280), W = 320, H = 132;
+    const X = (x) => (10 + (x + 1) / 2 * (W - 20)).toFixed(1);
+    const Y = (z) => (H - 10 - (z + 0.56) / 0.5 * (H - 20)).toFixed(1);
+    const pts = c.pts.map(([x, z]) => `<circle cx="${X(x)}" cy="${Y(z)}" r="1.4"/>`).join('');
+    const rails = c.rails.map((x) => `<line x1="${X(x)}" x2="${X(x)}" y1="8" y2="${H - 8}"/>`).join('');
+    return `<svg class="${classe || 'coupe'}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Coupe du cut ${cut} : points relevés et position proposée des deux rails"><g class="coupe-pts">${pts}</g><g class="coupe-rails">${rails}</g></svg>`;
+  }
+  return { esc, nf, attrs, trouver, coupe };
+})();
+
+(function () {
+  'use strict';
+  const { esc, nf, attrs, trouver, coupe } = Aides;
+  const I = {
+    rond: '<circle cx="8" cy="8" r="5.5"/>', plein: '<circle cx="8" cy="8" r="4.5" fill="currentColor"/>',
+    pause: '<path d="M5.5 3.5v9M10.5 3.5v9"/>', carre: '<rect x="3.5" y="3.5" width="9" height="9" rx="1.5" fill="currentColor"/>',
+    coche: '<path d="M3 8.5l3.2 3L13 4.5"/>', oeil: '<path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/>',
+    tourne: '<path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.8v2.6h-2.6"/>', alerte: '<path d="M8 2.2l6.2 11H1.8z"/><path d="M8 6.5v3.2M8 11.6v.1"/>',
+    lien: '<circle cx="8" cy="8" r="4" fill="currentColor"/>', rompu: '<circle cx="8" cy="8" r="4.5"/><path d="M4.8 11.2l6.4-6.4"/>',
+    info: '<circle cx="8" cy="8" r="6"/><path d="M8 7.2v4M8 4.8v.1"/>', chevron: '<path d="M4.5 6.5L8 10l3.5-3.5"/>', cmd: '<rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M5 6.5l2 1.5-2 1.5M8.5 10h2.5"/>',
+    cadenas: '<rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7"/>',
+  };
+  const ico = (n) => `<svg class="ico" viewBox="0 0 16 16" aria-hidden="true">${I[n]}</svg>`;
+  /* raccourcis : une lettre par action, toujours la même */
+  const TOUCHES = { lancer: 'L', preparer: 'N', pause: 'P', continuer: 'C', arreter: 'A', arreterFile: 'A', exporter: 'E', voirReste: 'R', orbite: 'O', echo: 'H', retour: 'B' };
+
+  function etatDe(m) {
+    if (m.vue === 'echo') return ['encours', 'oeil', 'Écho'];
+    if (m.file.relecture) return ['encours', 'tourne', 'Relecture'];
+    if (m.file.alerte) return ['arrete', 'alerte', 'File arrêtée'];
+    return { pret: ['pret', 'rond', 'Prêt'], encours: ['encours', 'plein', 'En cours'], pause: ['pause', 'pause', 'En pause'], arrete: ['arrete', 'carre', 'Arrêté'], fin: ['fin', 'coche', m.titre] }[m.phase];
+  }
+
+  /* ---------- fil d'Ariane ---------- */
+  function filAriane(m, L) {
+    const c = m.compte, b = m.bornes, f = m.file;
+    const lot = m.phase === 'pret' ? `Lot ${b.debut}–${b.finDePartie ? 'fin' : b.fin}` : `Lot ${c.debut}–${c.fin == null ? 'fin' : c.fin}`;
+    const m1 = `<button class="maillon" data-u="pop" data-id="lot" aria-expanded="${L.pop === 'lot'}">${esc(lot)}${ico('chevron')}</button>`;
+    let m2 = '';
+    if (f.active) m2 = `<span class="sep">/</span><button class="maillon" data-u="pop" data-id="file" aria-expanded="${L.pop === 'file'}">${m.phase === 'pret' ? f.nb + ' parties' : 'Partie ' + (f.finie ? f.nb : f.courante) + ' sur ' + f.nb}${ico('chevron')}</button>`;
+    let dernier;
+    if (m.vue === 'echo') dernier = `<span class="maillon courant">Écho</span>`;
+    else if (m.vue === 'examen' && m.examen) dernier = `<button class="maillon" data-a="voirReste">À regarder</button><span class="sep">/</span><span class="maillon courant mono">Cut ${m.examen.cut}</span>`;
+    else if (m.vue === 'reste') dernier = `<span class="maillon courant">À regarder</span>`;
+    else if (m.phase === 'encours' && !f.relecture) dernier = `<button class="maillon courant" data-u="pop" data-id="cut" aria-expanded="${L.pop === 'cut'}">Cut <span class="mono" data-v="cut">${c.cut}</span>${ico('chevron')}</button>`;
+    else dernier = `<button class="maillon courant" data-u="pop" data-id="cut" aria-expanded="${L.pop === 'cut'}">${m.restants.length ? 'À regarder · ' + m.restants.length : 'Rien à regarder'}${ico('chevron')}</button>`;
+    const o = m.activite === 'orbite', bl = m.activiteBloquee;
+    return `<nav class="barre" aria-label="Fil d'Ariane"><div class="fil">${m1}${m2}<span class="sep">/</span>${dernier}</div>
+      <div class="mode" role="group" aria-label="Activité"><button data-a="orbite" aria-pressed="${o}">Orbite</button><button data-a="echo" aria-pressed="${!o}"${bl ? ' aria-disabled="true" title="Mettre le lot en pause pour passer en Écho"' : ''}>${bl ? ico('cadenas') : ''}Écho</button></div></nav>`;
+  }
+  function popover(m, L) {
+    if (!L.pop) return '';
+    const c = m.compte, b = m.bornes, f = m.file;
+    let h = '';
+    if (L.pop === 'lot') {
+      if (m.phase === 'pret') h = `<h3>Bornes du lot</h3>${formBornes(m)}`;
+      else h = `<h3>Ce lot</h3><dl class="inspect" style="margin-top:4px"><dt>Bornes</dt><dd class="mono">${c.debut} → ${c.fin == null ? 'fin de partie' : c.fin}</dd><dt>Traités</dt><dd class="mono">${c.faits} / ${c.totalTexte}</dd><dt>Posés</dt><dd class="mono">${c.poses}</dd></dl>`;
+    }
+    if (L.pop === 'file') h = `<h3>File de parties</h3>${parties(m)}`;
+    if (L.pop === 'cut') {
+      const r = m.restants;
+      h = `<h3>À regarder</h3>${r.length ? `<ul class="parts">${r.slice(-5).reverse().map((x) => `<li><span class="mono">Cut ${x.cut}</span><span class="marque ${x.type}">${x.type === 'differe' ? 'différé' : 'à examiner'}</span><span class="bil"><button class="petit" data-a="examiner" data-id="${x.id}">Examiner</button></span></li>`).join('')}</ul><p style="margin:8px 0 0"><button class="petit" data-a="voirReste" style="margin:0">Tout voir (${r.length})</button></p>` : '<p class="vide" style="margin:0">Rien à regarder pour l’instant.</p>'}`;
+    }
+    const haut = L.popHaut || 52;
+    return `<div class="pop" data-k="pop-${L.pop}" data-e="pop" style="top:${haut}px" role="dialog" aria-label="Sélecteur"><button class="fermer" data-u="pop" data-id="">Fermer <kbd>Échap</kbd></button>${h}</div>`;
+  }
+  function formBornes(m) {
+    const b = m.bornes;
+    return `<div class="form"><label for="b-d">Premier cut</label><input id="b-d" data-champ="debut" inputmode="numeric" value="${b.debut}">
+      <label for="b-f">Dernier cut</label>${b.finDePartie ? '<span class="mono">fin de partie</span>' : `<input id="b-f" data-champ="fin" inputmode="numeric" value="${b.fin}">`}
+      <span style="color:var(--encre2)">Jusqu'à la fin de la partie</span><button class="inter" data-a="finDePartie" aria-pressed="${b.finDePartie}">${b.finDePartie ? 'Oui' : 'Non'}</button>
+      <span style="color:var(--encre2)">File de parties</span><button class="inter" data-a="fileBascule" aria-pressed="${m.file.active}">${m.file.active ? 'Allumée' : 'Éteinte'}</button>
+      ${m.file.active ? `<span style="color:var(--encre2)">Parties, relues après chacune</span><span class="pas"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><b class="mono" data-v="nb">${m.file.nb}</b><button data-a="filePlus" aria-label="Une partie de plus">+</button></span>` : ''}</div>`;
+  }
+  function parties(m) {
+    const f = m.file; let h = '';
+    if (!f.active) return '<p class="vide">File éteinte.</p>';
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i), cour = !p && i === f.courante && m.phase !== 'pret', cass = cour && f.alerte;
+      const bil = p ? `${p.poses} posés · ${p.differes} différés · ${p.aControler} à examiner${f.relecture && i === f.courante ? ' · relecture' : ''}` : cass ? `arrêtée au cut ${m.compte.cut}` : cour ? `${m.phase === 'encours' ? 'en cours' : 'interrompue'} · ${m.compte.faits} traités` : 'à venir';
+      h += `<li class="${p ? 'faite' : cass ? 'cass' : cour ? 'cour' : ''}" data-k="pt${i}"><span class="n">${p ? '✓' : cass ? '!' : i}</span><span>Partie ${i}</span><span class="bil">${bil}</span></li>`;
+    }
+    return `<ul class="parts">${h}</ul>`;
+  }
+
+  /* ---------- corps ---------- */
+  function corps(m, L) {
+    const c = m.compte, f = m.file, [cls, ic, mot] = etatDe(m);
+    let h = `<div class="etiquette">${m.vue === 'echo' ? 'Activité' : 'État du lot'}</div><div class="statut ${cls}">${ico(ic)}<b data-v="mot">${esc(mot)}</b></div>`;
+    if (m.vue === 'echo') {
+      const e = m.echo;
+      return h + `<div class="compteur"><span>${nf(e.vus)}</span><small>poses vues</small></div><p class="phrase">${esc(m.phrase)}</p>
+        <dl class="inspect"><dt>D'accord avec Ariane</dt><dd class="mono">${e.accord}</dd><dt>Autrement</dt><dd class="mono">${e.vus - e.accord}</dd><dt>Dernier cut vu</dt><dd class="mono">${e.dernier || '—'}</dd></dl>`;
+    }
+    if (m.vue === 'examen' && m.examen) {
+      const x = m.examen;
+      return `<div class="etiquette">Examiner</div><div class="statut"><b class="mono">Cut ${x.cut}</b><span class="marque ${x.type}">${x.type === 'differe' ? 'différé' : 'vert à examiner'}</span></div><p class="phrase">${esc(x.motif)}</p>${coupe(x.cut)}<p class="legende">Points relevés en gris ; pointillés bleus : les deux rails proposés.</p>
+        <dl class="inspect"><dt>Lot</dt><dd class="mono">${c.debut} → ${c.fin == null ? 'fin' : c.fin}</dd><dt>Reste encore</dt><dd class="mono">${m.restants.length}</dd></dl>`;
+    }
+    if (m.vue === 'reste') {
+      const r = m.restants;
+      return `<div class="etiquette">À regarder · ${r.length}</div>${r.length ? `<table class="table"><thead><tr><th>Cut</th><th class="col-m">Genre</th><th class="acts"><span class="sr">Actions</span></th></tr></thead><tbody>${r.map((x) => `<tr data-k="${x.id}"><td><b class="mono">${x.cut}</b><span class="motif">${esc(x.motif)}</span></td><td class="col-m"><span class="marque ${x.type}">${x.type === 'differe' ? 'différé' : 'à examiner'}</span></td><td class="acts"><button class="petit" data-a="examiner" data-id="${x.id}">Examiner</button><button class="petit" data-a="ouvrir" data-id="${x.id}">Ouvrir dans ESV</button></td></tr>`).join('')}</tbody></table>` : '<p class="vide">Rien à regarder : aucun différé, aucun vert à examiner.</p>'}`;
+    }
+    if (m.phase === 'pret') {
+      const b = m.bornes;
+      return h + `<div class="compteur"><span data-v="n">${b.finDePartie ? b.debut : nf(b.fin - b.debut + 1)}</span><small>${b.finDePartie ? 'premier cut, jusqu’à la fin de la partie' : 'cuts à poser'}</small></div><p class="phrase">${esc(m.phrase)}</p>${formBornes(m)}`;
+    }
+    if (f.relecture) return h + `<div class="compteur"><span>Partie ${f.courante}</span><small>sur ${f.nb}</small></div><p class="phrase">${esc(m.phrase)}</p><div class="regle"><span class="indet" data-boucle="trame"></span></div><div class="etiquette" style="margin-top:16px">Parties</div>${parties(m)}`;
+    h += `<div class="compteur"><span data-v="n">${nf(c.faits)}</span><small>/ ${c.totalTexte}</small></div>`;
+    h += m.phase === 'encours' ? `<p class="phrase">${esc(c.tempsTexte)} · cut <span class="mono">${c.cut}</span></p>` : `<p class="phrase">${esc(m.phrase)}</p>`;
+    if (c.total != null) h += `<div class="regle" role="progressbar" aria-valuemin="0" aria-valuemax="${c.total}" aria-valuenow="${c.faits}" aria-label="Cuts traités"><span class="fond"></span><span class="fait" data-flip="w" style="width:${Math.round(c.part * 1000) / 10}%"></span></div><div class="regle-leg mono"><span>${c.debut}</span><span>${c.fin}</span></div>`;
+    else if (m.phase === 'encours') h += `<div class="regle" aria-label="Total inconnu, jamais deviné"><span class="indet" data-boucle="trame"></span></div><div class="regle-leg mono"><span>${c.debut}</span><span>fin de partie</span></div>`;
+    if (f.alerte) h += `<div class="cause" role="alert"><b>${ico('alerte')}${esc(f.alerte.titre)}</b><p>${esc(f.alerte.detail)}</p></div>`;
+    h += `<dl class="inspect"><dt>Posés</dt><dd class="mono" data-v="poses">${c.poses}</dd><dt>Différés</dt><dd class="mono ${c.differes ? 'att' : ''}">${c.differes}</dd><dt>À examiner</dt><dd class="mono ${c.aExaminer ? 'att' : ''}">${c.aExaminer}</dd>${m.phase === 'encours' ? `<dt>Temps restant</dt><dd>${esc(c.tempsTexte)}</dd>` : ''}</dl>`;
+    if (f.active) h += `<div class="etiquette" style="margin-top:16px">Parties</div>${parties(m)}`;
+    return h;
+  }
+
+  /* ---------- commandes ---------- */
+  function cmd(x, extra) {
+    const cls = { principal: 'principal', arret: 'arret' }[x.rang] || '';
+    const t = TOUCHES[x.a];
+    const reb = x.rang === 'arret' && x.confirme ? '<span class="rebours" aria-hidden="true"></span>' : '';
+    return `<button class="cmd ${cls}${x.confirme ? ' confirme' : ''}" ${attrs(x)} data-k="c-${x.a}" ${extra || ''}><span>${esc(x.libelle)}</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}${t ? `<kbd aria-hidden="true">${t}</kbd>` : ''}${reb}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}`;
+  }
+  function barreCommandes(m) {
+    let acts = m.actions.filter((x) => x.rang !== 'lien' && x.rang !== 'choix');
+    if (m.vue === 'reste' || m.vue === 'examen') acts = [{ a: m.vue === 'examen' ? 'voirReste' : 'retour', libelle: m.vue === 'examen' ? 'Retour à la liste' : 'Retour au lot', rang: 'second' }];
+    if (m.vue === 'examen' && m.examen) acts = [{ a: 'ouvrir', id: m.examen.id, libelle: 'Ouvrir dans ESV', rang: 'principal' }, { a: 'traiter', id: m.examen.id, libelle: 'Marquer comme vu', rang: 'second' }, ...acts];
+    return `<div class="commandes" data-k="commandes">${acts.map((x) => cmd(x)).join('')}<button class="ouvrir-palette" data-u="palette" aria-haspopup="dialog">${ico('cmd')}Toutes les commandes <kbd>K</kbd></button></div>`;
+  }
+  /* la palette range TOUTES les commandes du moment, y compris impossibles, avec la raison */
+  function commandesPalette(m) {
+    const g = [];
+    const maintenant = m.actions.filter((x) => x.rang !== 'choix');
+    g.push(['Maintenant', maintenant.map((x) => ({ ...x }))]);
+    const aller = [];
+    if (m.vue !== 'reste') aller.push({ a: 'voirReste', libelle: 'Voir ce qui reste', note: m.restants.length + ' cuts', rang: 'second' });
+    if (m.vue !== 'principal' && m.vue !== 'echo') aller.push({ a: 'retour', libelle: 'Retour au lot', rang: 'second' });
+    if (m.restants.length) aller.push({ a: 'examiner', id: m.restants[0].id, libelle: 'Examiner le premier à regarder', note: 'cut ' + m.restants[0].cut, rang: 'second' });
+    g.push(['Aller à', aller]);
+    const regl = [];
+    if (m.activite === 'orbite') regl.push({ a: 'echo', libelle: 'Passer en Écho', note: 'Ariane observe sans poser', rang: 'second', desactive: m.activiteBloquee, raison: m.activiteBloquee ? 'Mettre le lot en pause d’abord.' : null });
+    else regl.push({ a: 'orbite', libelle: 'Revenir en Orbite', rang: 'second' });
+    const modifiable = m.phase !== 'encours' && m.phase !== 'pause';
+    regl.push({ a: 'fileBascule', libelle: m.file.active ? 'Éteindre la file' : 'Allumer la file de parties', rang: 'second', desactive: !modifiable, raison: modifiable ? null : 'Se règle quand aucun lot ne tourne.' });
+    g.push(['Réglages', regl]);
+    return g;
+  }
+  function palette(m, L) {
+    if (!L.palette) return '';
+    const g = commandesPalette(m); let i = 0, h = '';
+    const plat = [];
+    g.forEach(([titre, l]) => { if (!l.length) return; h += `<div class="groupe">${titre}</div>`; l.forEach((x) => { plat.push(x); const sel = i === L.sel; h += `<button class="ligne ${x.rang === 'arret' ? 'arret' : ''}" role="option" aria-selected="${sel}" ${attrs(x)} data-k="pl-${x.a}-${x.id || ''}" data-u="fermePalette"><span class="t"><span>${esc(x.libelle)}</span>${x.note || x.raison ? `<small>${esc(x.raison || x.note)}</small>` : ''}</span>${TOUCHES[x.a] ? `<kbd>${TOUCHES[x.a]}</kbd>` : ''}</button>`; i++; }); });
+    L.plat = plat;
+    return `<div class="voile" data-u="palette" data-k="voile" data-e="voile"></div><div class="palette" role="dialog" aria-label="Commandes" data-k="palette" data-e="palette"><div class="palette-tete"><b>Commandes</b><span class="aide"><kbd>↑</kbd><kbd>↓</kbd> choisir <kbd>Entrée</kbd> faire <kbd>Échap</kbd> fermer</span></div><div class="palette-liste" role="listbox">${h}</div></div>`;
+  }
+
+  function vue(m, D, S, L) {
+    let h = '';
+    const inc = m.incident;
+    if (inc) h += `<div class="annonce" data-e="bande" data-k="inc-${inc.type}">${ico(inc.type === 'absent' ? 'rompu' : 'info')}<div><b>${esc(inc.titre)}.</b> ${esc(inc.texte)}${inc.actions.length ? `<div class="choix">${inc.actions.map((a) => `<button ${attrs(a)}>${esc(a.libelle)}</button>`).join('')}</div>` : ''}</div></div>`;
+    h += filAriane(m, L);
+    const l = m.liaison, i = l.etat === 'relie' ? 'lien' : l.etat === 'absent' ? 'rompu' : 'info';
+    h += `<div class="liaison ${l.etat}">${ico(i)}${esc(l.texte)} · ${esc(l.detail)}</div>`;
+    h += `<div class="corps" data-k="corps-${m.vue}">${corps(m, L)}</div>`;
+    if (m.message) h += `<div class="toast" role="status" data-e="toast" data-k="toast">${ico('info')}<span>${esc(m.message)}</span></div>`;
+    h += barreCommandes(m) + popover(m, L) + palette(m, L);
+    return h;
+  }
+
+  Socle.monter({
+    local: { pop: null, palette: false, sel: 0, plat: [], popHaut: 52 },
+    vue,
+    etat(L) { L.pop = null; },
+    agir(nom, id, L, b) {
+      if (nom === 'pop') {
+        L.pop = id && L.pop !== id ? id : null; L.palette = false;
+        if (L.pop && b) { const app = b.closest('.app'); L.popHaut = Math.round(b.getBoundingClientRect().bottom - app.getBoundingClientRect().top + 6); }
+      }
+      if (nom === 'palette') { L.palette = !L.palette; L.sel = 0; L.pop = null; }
+      if (nom === 'fermePalette') { const x = L.plat.find((p) => p.a === b.getAttribute('data-a')); if (!(x && x.a.startsWith('arret')) && b.getAttribute('aria-disabled') !== 'true') L.palette = false; }
+    },
+    clavier(e, L) {
+      const t = e.target, champ = t && t.tagName === 'INPUT';
+      if (e.key === 'Escape') { if (L.palette || L.pop) { L.palette = false; L.pop = null; e.preventDefault(); return true; } return false; }
+      if (L.palette) {
+        if (e.key === 'ArrowDown') { L.sel = Math.min(L.plat.length - 1, L.sel + 1); e.preventDefault(); return true; }
+        if (e.key === 'ArrowUp') { L.sel = Math.max(0, L.sel - 1); e.preventDefault(); return true; }
+        if (e.key === 'Enter') { const x = L.plat[L.sel]; if (x && !x.desactive) { Demo.agir(x.a, x.id); if (!x.a.startsWith('arret')) L.palette = false; } e.preventDefault(); return true; }
+      }
+      if (champ || e.metaKey || e.ctrlKey || e.altKey) { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { L.palette = !L.palette; L.sel = 0; e.preventDefault(); return true; } return false; }
+      const k = e.key.toUpperCase();
+      if (k === 'K') { L.palette = !L.palette; L.sel = 0; return true; }
+      const m = Demo.D.modele();
+      const x = m.actions.find((a) => TOUCHES[a.a] === k && !a.desactive) || (k === 'R' ? { a: 'voirReste' } : k === 'B' ? { a: 'retour' } : null);
+      if (x) { Demo.agir(x.a, x.id); return true; }
+      return false;
+    },
+    apres(app, m, L) {
+      app.querySelectorAll('.rebours').forEach((b) => { if (!b._joue) { b._joue = true; Socle.jouer(b, [[{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 4000, easing: 'linear', fill: 'forwards' }]); } });
+    },
+    entrees: {
+      pop: [[{ opacity: 0, transform: 'scale(.97) translateY(-4px)' }, { opacity: 1, transform: 'none' }], { duration: 160, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      voile: [[{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'ease-out' }],
+      palette: [[{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      bande: [[{ opacity: 0, transform: 'translateY(-100%)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      toast: [[{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 180 }],
+    },
+    valeurs: {
+      n: [[{ transform: 'translateY(.2em)', opacity: .3 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      cut: [[{ transform: 'translateY(-.5em)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 200, easing: 'cubic-bezier(.16,1,.3,1)' }],
+      mot: [[{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 200 }],
+      poses: [[{ opacity: .3 }, { opacity: 1 }], { duration: 200 }],
+    },
+    boucles: { trame: [[{ backgroundPosition: '0 0' }, { backgroundPosition: '18px 0' }], { duration: 900, easing: 'linear' }] },
+  });
+})();
+</script>
+</body>
+</html>

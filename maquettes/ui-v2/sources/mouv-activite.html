@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ariane · L’activité</title>
+<style>
+/*POLICE:onest*/
+/* Proposition « L'activité » (famille : le mouvement porte l'état).
+ * Logique : une seule activité en direct, compacte, dont la forme change avec l'état. Elle
+ * s'étire sur toute la largeur quand le lot tourne, se resserre au centre en pause, se ferme
+ * en tablette carrée à l'arrêt, se déplie en feuille quand Ariane a besoin de l'opérateur et
+ * devient la carte du bilan à la fin. Côté gauche : Ariane pose (Orbite) ; côté droit : Ariane
+ * observe (Écho).
+ * Sources : beui.dev (Dynamic Island, Morphing Modal) ; 60fps.design (Bottom Sheet Detail
+ * Expansion, Trackables Card Morph to Screen, Revolut Number of Transactions). */
+:root{
+  --fond:#F4F5F3; --texte:#121614; --doux:#525A56; --ligne:#D8DDDA; --carte:#FFFFFF; --bord:#C2CAC6;
+  --cap:#17221E; --cap-texte:#F1F5F3; --cap-doux:#B9C7C1; --cap-plein:#2C463D;
+  --accent:#7D4300; --accent-fond:#FFF0DC; --danger:#A21D18; --danger-fond:#FCE8E5; --scene:#D5DAD7;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --fond:#0F1211; --texte:#ECF1EE; --doux:#A5B0AB; --ligne:#27302C; --carte:#18201D; --bord:#3B4842;
+  --cap:#E3EBE7; --cap-texte:#0E1412; --cap-doux:#3D4A45; --cap-plein:#A8C3B7;
+  --accent:#F6BD72; --accent-fond:#33240F; --danger:#FF958B; --danger-fond:#3A1714; --scene:#060807;
+}}
+:root[data-theme="dark"]{
+  --fond:#0F1211; --texte:#ECF1EE; --doux:#A5B0AB; --ligne:#27302C; --carte:#18201D; --bord:#3B4842;
+  --cap:#E3EBE7; --cap-texte:#0E1412; --cap-doux:#3D4A45; --cap-plein:#A8C3B7;
+  --accent:#F6BD72; --accent-fond:#33240F; --danger:#FF958B; --danger-fond:#3A1714; --scene:#060807;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--texte);font-family:'Onest',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;background:var(--fond);padding:14px 16px 28px;font-size:15px;line-height:1.45}
+.notes{max-width:380px;background:var(--fond);padding:18px 20px;font-size:14px;line-height:1.5}
+.notes h2{font-size:18px;margin:0 0 8px}
+.notes p{margin:0 0 10px}
+/* Échelle : 13 · 15 · 24. Rayons : 12 (boîtes) et la capsule, dont le rayon EST l'état. */
+#panneau p,#panneau h1,#panneau h2{margin:0}
+.tete{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.marque{font-weight:700}
+.liaison{display:flex;align-items:center;gap:6px;font-size:13px;flex-wrap:wrap}
+.liaison-forme{width:10px;height:10px;border-radius:3px;border:2px solid var(--texte);box-shadow:inset 0 0 0 5px var(--texte);flex:none}
+.liaison-absent .liaison-forme{box-shadow:none;border-style:dashed}
+.liaison-choisir .liaison-forme{box-shadow:inset 3px 0 0 var(--texte)}
+.liaison-detail{color:var(--doux)}
+.liaison-detail::before{content:"· "}
+.bascule{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:12px}
+.bascule-curseur{display:none}
+.bascule-b{background:var(--fond);border:1.5px solid var(--ligne);border-radius:12px;padding:6px 10px;font:inherit;color:var(--texte);cursor:pointer;display:flex;flex-direction:column;line-height:1.25;text-align:left}
+.bascule-b:last-of-type{text-align:right;align-items:flex-end}
+.bascule-b.est-actif{border-color:var(--texte);border-width:2px}
+.bascule-nom{font-weight:700}
+.bascule-sous{font-size:13px;color:var(--doux)}
+.bascule-b[aria-disabled="true"]{cursor:not-allowed}
+.bascule-b[aria-disabled="true"] .bascule-nom{text-decoration:line-through}
+.bascule-raison{font-size:13px;color:var(--doux);margin-top:4px !important}
+
+/* ---------- La capsule : un seul objet ; sa largeur, sa hauteur, son rayon et son côté portent l'état ---------- */
+.capsule{position:relative;margin-top:16px;height:64px;width:100%;margin-left:0;border-radius:32px;background:var(--cap);color:var(--cap-texte);overflow:hidden;
+  transition:width .55s cubic-bezier(.32,.72,0,1), height .55s cubic-bezier(.32,.72,0,1), border-radius .55s cubic-bezier(.32,.72,0,1), margin-left .55s cubic-bezier(.32,.72,0,1), background-color .3s, border-color .3s;border:2px solid var(--cap)}
+.cap-plein{position:absolute;left:0;top:0;bottom:0;width:calc(var(--p,0) * 100%);background:var(--cap-plein);transition:width .9s linear}
+.cap-corps{position:relative;display:flex;align-items:center;gap:10px;height:60px;padding:0 20px;white-space:nowrap}
+.cap-forme{width:12px;height:12px;flex:none;border:2px solid currentColor;border-radius:3px}
+.cap-texte{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis}
+.cap-chiffre{margin-left:auto;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.cap-chiffre small{font-size:13px;font-weight:500;color:var(--cap-doux)}
+.cap-chiffre.roule{animation:roule .4s cubic-bezier(.16,1,.3,1)}
+@keyframes roule{from{transform:translateY(8px);opacity:.3}to{transform:none;opacity:1}}
+/* tourne : pleine largeur, le remplissage avance d'un cran par cut, un repère clair court sur le bord du remplissage */
+.capsule[data-mode="encours"] .cap-forme{border-radius:50%;box-shadow:inset 0 0 0 4px currentColor}
+.capsule[data-mode="encours"] .cap-plein::after{content:"";position:absolute;right:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--cap-texte);animation:bat .9s cubic-bezier(.16,1,.3,1) infinite}
+@keyframes bat{0%{transform:translateX(-10px);opacity:.2}60%{transform:none;opacity:1}100%{opacity:1}}
+.capsule[data-inconnu="1"] .cap-plein{width:24%;transition:none;border-radius:32px}
+.capsule[data-inconnu="1"] .cap-plein::after{display:none}
+.capsule[data-inconnu="1"][data-mode="encours"] .cap-plein{animation:va 2.4s cubic-bezier(.77,0,.175,1) infinite alternate}
+@keyframes va{from{transform:translateX(0)}to{transform:translateX(316%)}}
+/* en pause : resserrée au centre */
+.capsule[data-mode="pause"]{width:62%;margin-left:19%}
+.capsule[data-mode="pause"] .cap-forme{border-radius:1px;width:12px;border:0;background:linear-gradient(90deg,currentColor 0 4px,transparent 4px 8px,currentColor 8px 12px)}
+.capsule[data-mode="pause"] .cap-chiffre{display:none}
+/* arrêté : tablette carrée à gauche */
+.capsule[data-mode="arrete"]{width:58%;border-radius:12px;background:var(--danger-fond);border-color:var(--danger);color:var(--danger)}
+.capsule[data-mode="arrete"] .cap-plein{opacity:0}
+.capsule[data-mode="arrete"] .cap-forme{box-shadow:inset 0 0 0 6px currentColor}
+.capsule[data-mode="arrete"] .cap-chiffre{display:none}
+/* prêt : petite capsule ouverte, rien ne tourne */
+.capsule[data-mode="pret"]{width:46%;background:var(--fond);border-color:var(--texte);color:var(--texte)}
+.capsule[data-mode="pret"] .cap-plein{opacity:0}
+.capsule[data-mode="pret"] .cap-chiffre{display:none}
+/* à vous : la capsule se déplie en feuille ; la feuille continue juste dessous */
+.capsule[data-mode="demande"]{height:92px;border-radius:22px 22px 0 0;background:var(--accent-fond);border-color:var(--accent);border-bottom:0;color:var(--accent)}
+.capsule[data-mode="demande"] .cap-plein{opacity:0}
+.capsule[data-mode="demande"] .cap-corps{height:88px;align-items:flex-end;padding-bottom:6px}
+.capsule[data-mode="demande"] .cap-texte{font-size:24px;white-space:normal}
+.capsule[data-mode="demande"] .cap-chiffre{display:none}
+.capsule[data-mode="demande"] .cap-forme{border-radius:50%;align-self:flex-start;margin-top:22px}
+/* relecture : le remplissage repart de droite à gauche, sans fin */
+.capsule[data-mode="relecture"] .cap-plein{width:100%;transform-origin:right;animation:relit 2.6s linear infinite}
+@keyframes relit{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.capsule[data-mode="relecture"] .cap-chiffre{display:none}
+/* fin : la capsule devient la carte du bilan */
+.capsule[data-mode="fin"]{height:96px;border-radius:12px;background:var(--carte);border-color:var(--bord);color:var(--texte)}
+.capsule[data-mode="fin"] .cap-plein{opacity:0}
+.capsule[data-mode="fin"] .cap-corps{height:92px}
+.capsule[data-mode="fin"] .cap-forme{border-radius:3px;box-shadow:inset 0 0 0 6px currentColor}
+.capsule[data-mode="fin"] .cap-chiffre small{color:var(--doux)}
+/* Écho : la capsule passe à droite, côté opérateur */
+.capsule[data-mode="echo"]{width:54%;margin-left:46%;background:var(--carte);border-color:var(--texte);color:var(--texte)}
+.capsule[data-mode="echo"] .cap-plein{opacity:0}
+.capsule[data-mode="echo"] .cap-chiffre small{color:var(--doux)}
+.capsule[data-mode="echo"] .cap-forme{border-radius:50%}
+.feuille{margin:0;padding:6px 20px 16px;background:var(--accent-fond);border:2px solid var(--accent);border-top:0;border-radius:0 0 22px 22px}
+#panneau[data-etat-change="1"] .feuille{animation:deplie .5s cubic-bezier(.32,.72,0,1)}
+@keyframes deplie{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.feuille .incident,.feuille .alerte{margin:0;padding:0;border:0;background:transparent}
+.feuille .incident-titre,.feuille .alerte-titre{display:none}
+.feuille .incident-texte,.feuille .alerte-texte{color:var(--texte)}
+.feuille .alerte + .incident{margin-top:8px}
+
+.titre{font-size:24px;font-weight:700;line-height:1.2;margin-top:16px !important}
+.phrase{color:var(--doux);margin-top:2px !important}
+.details{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--doux);font-variant-numeric:tabular-nums}
+.details b{color:var(--texte);font-weight:700}
+[data-valeur].change{display:inline-block;animation:roule .38s cubic-bezier(.16,1,.3,1)}
+.incident,.alerte{margin:14px 0 0;padding:12px 14px;border:2px solid var(--accent);background:var(--accent-fond);border-radius:12px}
+.incident-titre,.alerte-titre{font-size:15px;font-weight:700;color:var(--accent)}
+.incident-texte,.alerte-texte{margin-top:2px !important}
+.choix{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.borne{display:flex;flex-direction:column;gap:3px}
+.borne-nom{font-size:13px;color:var(--doux)}
+.borne-champ{font:inherit;font-size:24px;font-weight:700;width:100%;padding:6px 10px;border:1.5px solid var(--bord);border-radius:12px;background:var(--carte);color:var(--texte);font-variant-numeric:tabular-nums}
+.borne-valeur{font-weight:700;padding:10px 0}
+.bornes .inter{grid-column:1 / -1}
+.inter{display:flex;align-items:center;gap:10px;background:transparent;border:0;padding:4px 0;font:inherit;color:var(--texte);cursor:pointer;text-align:left}
+.inter-piste{width:40px;height:22px;border-radius:22px;border:1.5px solid var(--texte);position:relative;flex:none;transition:background-color .3s}
+.inter-pouce{position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;border:2px solid var(--texte);transition:transform .35s cubic-bezier(.32,.72,0,1), background-color .3s}
+.inter[aria-checked="true"] .inter-pouce{transform:translateX(18px);background:var(--texte)}
+.file-reglage{margin-top:14px;padding-top:12px;border-top:1px solid var(--ligne)}
+.file-nb{display:flex;align-items:center;gap:10px;margin-top:6px}
+.file-nb-valeur{font-weight:700;min-width:84px;text-align:center}
+.pas{width:36px;height:36px;border-radius:18px;border:1.5px solid var(--bord);background:var(--carte);color:var(--texte);font:inherit;font-size:18px;cursor:pointer}
+.pas[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.file-aide{font-size:13px;color:var(--doux);margin-top:4px !important}
+/* Les parties d'une file : de petites capsules, une par partie, dans la forme de leur état. */
+.parties{margin-top:16px}
+.parties-titre{font-size:15px;font-weight:700}
+.parties-liste{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.partie{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:center;font-size:13px}
+.partie-nom{font-weight:700}
+.partie-texte{color:var(--doux)}
+.partie-forme{width:36px;height:14px;border:2px solid var(--texte);border-radius:7px}
+.partie-faite .partie-forme{border-radius:4px;box-shadow:inset 0 0 0 7px var(--texte)}
+.partie-courante .partie-forme,.partie-relue .partie-forme{box-shadow:inset 0 -4px 0 var(--texte)}
+.partie-arretee .partie-forme{border-color:var(--danger);border-radius:4px;width:24px}
+.partie-avenir .partie-forme{border-style:dashed;border-color:var(--doux)}
+.partie-courante .partie-texte,.partie-relue .partie-texte{color:var(--texte)}
+.bilan{display:none}
+.acts{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.act{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.b{font:inherit;font-weight:700;border-radius:24px;padding:11px 18px;cursor:pointer;border:1.5px solid var(--bord);background:var(--carte);color:var(--texte);transition:transform .12s cubic-bezier(.16,1,.3,1)}
+.b:active{transform:scale(.97)}
+.b-principal{background:var(--texte);color:var(--fond);border-color:var(--texte);flex:1 1 auto}
+.act-principal .b,.act-second .b{min-width:58%}
+.b-arret{color:var(--danger);border-color:var(--danger)}
+.b-confirme{background:var(--danger);color:var(--fond);border-color:var(--danger)}
+.act-confirme .b{flex:1 1 100%}
+.b-lien{border:0;background:transparent;padding:6px 0;text-decoration:underline;text-underline-offset:3px;border-radius:0}
+.b-petit{padding:6px 12px;font-size:13px}
+.b-onglet{min-width:0}
+.b[aria-disabled="true"]{opacity:.5;cursor:not-allowed}
+.act-note,.act-raison{font-size:13px;color:var(--doux)}
+.act-raison{flex-basis:100%}
+.message{margin-top:14px !important;padding:10px 16px;border-radius:24px;background:var(--texte);color:var(--fond);font-size:13px}
+#panneau[data-etat-change="1"] .message, .message{animation:roule .35s cubic-bezier(.16,1,.3,1)}
+#panneau button:focus-visible,#panneau input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.reste-liste{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.reste-ligne{display:grid;grid-template-columns:30px 1fr;gap:2px 10px;padding:10px 12px;background:var(--carte);border:1px solid var(--ligne);border-radius:12px}
+#panneau[data-etat-change="1"] .reste-ligne{animation:roule .4s cubic-bezier(.16,1,.3,1) both}
+.reste-forme{width:28px;height:12px;border:2px solid var(--texte);border-radius:6px;margin-top:5px}
+.reste-differe .reste-forme{border-style:dashed}
+.reste-vert .reste-forme{box-shadow:inset 0 -4px 0 var(--texte)}
+.reste-cut{font-weight:700}
+.reste-type{font-weight:500;font-size:13px;color:var(--doux);margin-left:4px}
+.reste-motif{font-size:13px;color:var(--doux)}
+.reste-acts{grid-column:2;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.coupe{margin:14px 0 0;padding:12px;background:var(--carte);border:1px solid var(--ligne);border-radius:12px}
+.coupe svg{display:block;width:100%;height:auto}
+.coupe-pts{fill:var(--doux)}
+.coupe-rails line{stroke:var(--accent);stroke-width:2;stroke-dasharray:5 3}
+.coupe-legende{display:flex;gap:14px;font-size:13px;color:var(--doux);margin-top:6px;flex-wrap:wrap}
+.coupe-l1::before{content:"";display:inline-block;width:5px;height:5px;background:var(--doux);margin-right:6px;vertical-align:middle}
+.coupe-l2::before{content:"";display:inline-block;width:14px;border-top:2px dashed var(--accent);margin-right:6px;vertical-align:middle}
+.examen-type{font-weight:700;color:var(--texte)}
+.echo-chiffres{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.echo-case{padding:10px 12px;background:var(--carte);border:1px solid var(--ligne);border-radius:12px;display:flex;flex-direction:column}
+.echo-nombre{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.echo-mot{font-size:13px;color:var(--doux)}
+.echo-dernier{font-size:13px;color:var(--doux);margin-top:8px !important}
+@container (max-width: 380px){
+  .act-principal .b,.act-second .b{min-width:0;flex:1 1 100%}
+  .capsule[data-mode="pause"]{width:72%;margin-left:14%}
+  .capsule[data-mode="pret"],.capsule[data-mode="arrete"]{width:64%}
+  .capsule[data-mode="echo"]{width:64%;margin-left:36%}
+  .cap-corps{padding:0 14px}
+  .capsule[data-mode="demande"] .cap-texte{font-size:20px}
+}
+@media (prefers-reduced-motion: reduce){#panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important}}
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition L’activité"></div></div>
+  <aside class="notes">
+    <h2>L’activité</h2>
+    <p><b>Logique.</b> Une seule activité en direct, compacte, dont la forme change avec l’état : elle s’étire sur toute la largeur quand le lot tourne, se resserre au centre en pause, se ferme en tablette carrée à l’arrêt, se déplie en feuille quand Ariane a besoin de l’opérateur et devient la carte du bilan à la fin.</p>
+    <p><b>D’où ça vient.</b> beui.dev : Dynamic Island (une pastille qui garde son identité en changeant de taille) et Morphing Modal (un seul panneau qui change de hauteur avec son contenu) ; guide de mouvement : « move the shape first, then introduce its label », courbe de tiroir [0.32, 0.72, 0, 1]. 60fps.design : Bottom Sheet Detail Expansion (la feuille grandit vers le haut, l’ancien contenu s’efface), Trackables Card Morph to Screen (le contenant change de bornes et de rayon), Revolut Number of Transactions (le chiffre et la hauteur bougent ensemble). koipond (code lu) : le sélecteur glisse avec l’état réel, et ce qui part disparaît avant que ce qui arrive n’apparaisse.</p>
+    <p><b>Ce que ça veut dire ici.</b> Largeur pleine, remplissage qui avance d’un cran par cut et petit repère qui bat sur son bord : le lot tourne. Capsule resserrée au centre, deux barres : en pause. Tablette carrée rouge à gauche, carré plein : arrêté. Capsule qui s’ouvre vers le bas en feuille ocre, avec la question en grand : Ariane a besoin de l’opérateur. Remplissage qui repart de droite à gauche sans fin : relecture d’une partie. Carte blanche à angles droits : le bilan de fin. Capsule poussée à droite : Écho, côté opérateur. Les parties d’une file sont de petites capsules dans la forme de leur état. En mouvement réduit, chaque forme est posée sans transition.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  /* ---------- Socle commun aux maquettes « mouv- » ----------
+   * Balisage sémantique des parties qui ne portent pas la chorégraphie (réglages, listes,
+   * incidents, examen). Chaque maquette l'habille par sa propre feuille de style ; la scène
+   * animée, elle, est propre à chaque maquette. */
+  const { esc, n } = Demo.D;
+  const U = {};
+  U.n = n;
+  U.esc = esc;
+  /* Un bouton du moteur : rang (principal, second, arret, lien, choix), note, raison. */
+  U.bouton = function (x, cls) {
+    const c = ['b', 'b-' + x.rang, x.confirme ? 'b-confirme' : '', cls || ''].join(' ').trim();
+    return `<div class="act act-${x.rang}${x.confirme ? ' act-confirme' : ''}"><button type="button" class="${c}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}>${esc(x.libelle)}</button>${x.note ? `<span class="act-note">${esc(x.note)}</span>` : ''}${x.raison ? `<p class="act-raison">${esc(x.raison)}</p>` : ''}</div>`;
+  };
+  U.actions = function (liste, cls) {
+    if (!liste || !liste.length) return '';
+    return `<div class="acts ${cls || ''}">${liste.map((x) => U.bouton(x)).join('')}</div>`;
+  };
+  /* Liaison avec ESV : une forme (data-forme) et des mots ; jamais la couleur seule. */
+  U.liaison = function (l) {
+    return `<p class="liaison liaison-${l.etat}"><span class="liaison-forme" data-forme="liaison ${l.etat}" aria-hidden="true"></span><span class="liaison-texte">${esc(l.texte)}</span><span class="liaison-detail">${esc(l.detail)}</span></p>`;
+  };
+  /* Bascule Orbite / Écho ; bloquée pendant un lot en cours, avec la raison écrite. */
+  U.bascule = function (m) {
+    const o = m.activite === 'orbite', bloque = m.activiteBloquee;
+    const b = (a, nom, sous, actif) => `<button type="button" class="bascule-b${actif ? ' est-actif' : ''}" data-a="${a}" aria-pressed="${actif}"${bloque && !actif ? ' aria-disabled="true"' : ''}><span class="bascule-nom">${nom}</span><span class="bascule-sous">${sous}</span></button>`;
+    return `<div class="bascule" role="group" aria-label="Activité d’Ariane" data-cote="${o ? 'orbite' : 'echo'}"><span class="bascule-curseur" aria-hidden="true"></span>${b('orbite', 'Orbite', 'Ariane pose', o)}${b('echo', 'Écho', 'Ariane observe', !o)}</div>${bloque ? '<p class="bascule-raison">Pour passer en Écho, mettre le lot en pause.</p>' : ''}`;
+  };
+  U.incident = function (inc) {
+    if (!inc) return '';
+    const choix = inc.actions.filter((x) => x.rang === 'choix');
+    const autres = inc.actions.filter((x) => x.rang !== 'choix');
+    return `<section class="incident incident-${inc.type}" role="${inc.type === 'reprise' ? 'status' : 'alert'}"><h2 class="incident-titre">${esc(inc.titre)}</h2><p class="incident-texte">${esc(inc.texte)}</p>${choix.length ? `<div class="choix" role="group" aria-label="Onglets ESV">${choix.map((x) => U.bouton(x, 'b-onglet')).join('')}</div>` : ''}${U.actions(autres)}</section>`;
+  };
+  /* Bornes du lot neuf (PRÊT). */
+  U.bornes = function (m) {
+    const b = m.bornes;
+    const fin = b.finDePartie
+      ? '<span class="borne-valeur">fin de la partie</span>'
+      : `<input class="borne-champ" data-champ="fin" inputmode="numeric" value="${b.fin}" aria-label="Dernier cut">`;
+    return `<div class="bornes"><label class="borne"><span class="borne-nom">Premier cut</span><input class="borne-champ" data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"></label><div class="borne"><span class="borne-nom">Dernier cut</span>${fin}</div><button type="button" class="inter" role="switch" aria-checked="${b.finDePartie}" data-a="finDePartie"><span class="inter-piste" aria-hidden="true"><span class="inter-pouce"></span></span><span class="inter-texte">Jusqu’à la fin de la partie</span></button></div>`;
+  };
+  /* Réglage de la file (PRÊT) : interrupteur et nombre de parties. */
+  U.fileReglage = function (f) {
+    const nb = f.active
+      ? `<div class="file-nb" role="group" aria-label="Nombre de parties"><button type="button" class="pas" data-a="fileMoins" aria-label="Une partie de moins"${f.nb <= 2 ? ' aria-disabled="true"' : ''}>−</button><span class="file-nb-valeur" data-valeur="file-nb">${f.nb} parties</span><button type="button" class="pas" data-a="filePlus" aria-label="Une partie de plus"${f.nb >= 9 ? ' aria-disabled="true"' : ''}>+</button></div><p class="file-aide">Chaque partie est relue et corrigée, puis la suivante démarre seule.</p>`
+      : '<p class="file-aide">Éteinte : un seul lot, sur les bornes ci-dessus.</p>';
+    return `<section class="file-reglage"><button type="button" class="inter" role="switch" aria-checked="${f.active}" data-a="fileBascule"><span class="inter-piste" aria-hidden="true"><span class="inter-pouce"></span></span><span class="inter-texte">File de parties</span></button>${nb}</section>`;
+  };
+  /* Les parties d'une file en marche : faites (bilan), courante, à venir. */
+  U.parties = function (m) {
+    const f = m.file;
+    if (!f.active || m.phase === 'pret') return '';
+    const lignes = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i);
+      let etat, texte;
+      if (p) { etat = 'faite'; texte = `${n(p.poses)} posés · ${n(p.differes)} différés · ${n(p.aControler)} à examiner`; }
+      else if (i === f.courante && !f.finie) { etat = f.alerte ? 'arretee' : (m.file.relecture ? 'relue' : 'courante'); texte = f.alerte ? 'arrêtée' : 'en cours'; }
+      else { etat = 'avenir'; texte = 'à venir'; }
+      if (p && i === f.courante && f.relecture) { etat = 'relue'; texte = 'relecture et correction'; }
+      lignes.push(`<li class="partie partie-${etat}"><span class="partie-forme" data-forme="partie ${etat}" aria-hidden="true"></span><span class="partie-nom">Partie ${i}</span><span class="partie-texte">${texte}</span></li>`);
+    }
+    return `<section class="parties" aria-label="File de parties"><h2 class="parties-titre">File · partie ${Math.min(f.courante, f.nb)} sur ${f.nb}</h2><ol class="parties-liste">${lignes.join('')}</ol></section>`;
+  };
+  U.alerte = function (f) {
+    if (!f.alerte) return '';
+    return `<section class="alerte" role="alert"><h2 class="alerte-titre">${esc(f.alerte.titre)}</h2><p class="alerte-texte">${esc(f.alerte.detail)}</p></section>`;
+  };
+  U.bilan = function (c) {
+    const t = (k, v, mot) => `<div class="bilan-case bilan-${k}"><span class="bilan-forme" data-forme="bilan ${k}" aria-hidden="true"></span><span class="bilan-nombre">${n(v)}</span><span class="bilan-mot">${mot}</span></div>`;
+    return `<div class="bilan">${t('pose', c.poses, 'posés')}${t('differe', c.differes, 'différés')}${t('vert', c.aExaminer, 'à examiner')}</div>`;
+  };
+  U.typeMot = (t) => (t === 'differe' ? 'Différé' : 'Vert à examiner');
+  /* Ce qui reste : chaque ligne Examiner et Ouvrir dans ESV. */
+  U.reste = function (m, entete) {
+    const r = m.restants;
+    const d = r.filter((x) => x.type === 'differe').length, v = r.length - d;
+    const lignes = r.map((x) => `<li class="reste-ligne reste-${x.type}"><span class="reste-forme" data-forme="reste ${x.type}" aria-hidden="true"></span><div class="reste-corps"><p class="reste-cut">Cut ${x.cut} <span class="reste-type">${U.typeMot(x.type)}</span></p><p class="reste-motif">${esc(x.motif)}</p></div><div class="reste-acts"><button type="button" class="b b-second b-petit" data-a="examiner" data-id="${esc(x.id)}">Examiner</button><button type="button" class="b b-lien b-petit" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div></li>`).join('');
+    return `<section class="reste"><div class="reste-tete">${entete || ''}<h1 class="titre">Ce qui reste</h1><p class="phrase">${r.length ? `${d} différés, ${v} verts à examiner.` : 'Rien ne reste à regarder.'}</p></div>${r.length ? `<ol class="reste-liste">${lignes}</ol>` : ''}<div class="acts"><div class="act act-second"><button type="button" class="b b-second" data-a="retour">Retour au lot</button></div></div></section>`;
+  };
+  /* La coupe d'un cut, fonctionnelle : profil mesuré et position proposée des deux rails. */
+  U.coupe = function (cut) {
+    const c = Demo.D.coupe(cut, 220);
+    const X = (x) => (x + 1) * 150, Z = (z) => 100 - (z + 0.35) * 260;
+    const pts = c.pts.map(([x, z]) => `<rect x="${(X(x) - 1).toFixed(1)}" y="${(Z(z) - 1).toFixed(1)}" width="2" height="2"/>`).join('');
+    const rails = c.rails.map((x) => `<line x1="${X(x)}" x2="${X(x)}" y1="20" y2="118"/>`).join('');
+    return `<figure class="coupe"><svg viewBox="0 0 300 130" role="img" aria-label="Coupe du cut ${cut} : profil mesuré et position proposée des deux rails"><g class="coupe-pts">${pts}</g><g class="coupe-rails">${rails}</g></svg><figcaption class="coupe-legende"><span class="coupe-l1">profil mesuré</span><span class="coupe-l2">position proposée</span></figcaption></figure>`;
+  };
+  U.examen = function (m, entete) {
+    const x = m.examen;
+    return `<section class="examen">${entete || ''}<h1 class="titre">Cut ${x.cut}</h1><p class="phrase"><span class="examen-type examen-${x.type}">${U.typeMot(x.type)}</span> · ${esc(x.motif)}</p>${U.coupe(x.cut)}<div class="acts"><div class="act act-principal"><button type="button" class="b b-principal" data-a="traiter" data-id="${esc(x.id)}">Marquer comme vu</button></div><div class="act act-second"><button type="button" class="b b-second" data-a="ouvrir" data-id="${esc(x.id)}">Ouvrir dans ESV</button></div><div class="act act-lien"><button type="button" class="b b-lien" data-a="retour">Retour au lot</button></div></div></section>`;
+  };
+  U.message = (t) => (t ? `<p class="message" role="status">${esc(t)}</p>` : '');
+  /* Écho : ce qu'Ariane a vu de l'opérateur. */
+  U.echoChiffres = function (e) {
+    return `<div class="echo-chiffres"><div class="echo-case"><span class="echo-nombre" data-valeur="echo-vus">${n(e.vus)}</span><span class="echo-mot">poses vues</span></div><div class="echo-case"><span class="echo-nombre" data-valeur="echo-accord">${n(e.accord)}</span><span class="echo-mot">où Ariane aurait posé pareil</span></div></div>${e.dernier ? `<p class="echo-dernier">Dernière pose vue : cut <span data-valeur="echo-dernier">${e.dernier}</span></p>` : '<p class="echo-dernier">Aucune pose vue pour l’instant.</p>'}`;
+  };
+  /* Mouvement réduit : préférence système ou attribut sur <html>. */
+  U.reduit = () => Demo.D.mouvementReduit();
+  /* Le texte de progression : jamais un total deviné. */
+  U.progression = (c) => (c.total == null ? `${n(c.faits)} traités · total inconnu` : `${n(c.faits)} traités sur ${n(c.total)}`);
+
+
+  function entete(m) { return `<header class="tete"><p class="marque">Ariane</p>${U.liaison(m.liaison)}</header>`; }
+  function mode(m) {
+    if (m.vue === 'echo') return 'echo';
+    if (m.incident || m.file.alerte) return 'demande';
+    if (m.file.relecture) return 'relecture';
+    return m.phase;
+  }
+  function details(m, md) {
+    const c = m.compte;
+    if (md === 'echo') return U.echoChiffres(m.echo);
+    if (m.phase === 'pret' || md === 'relecture') return '';
+    const d = [];
+    if (m.phase !== 'fin') {
+      d.push(`<span>Cut en cours <b data-valeur="cut">${c.cut}</b></span>`);
+      d.push(`<span>${c.tempsTexte}</span>`);
+    }
+    d.push(`<span><b>${c.differes}</b> différés</span>`, `<span><b>${c.aExaminer}</b> à examiner</span>`);
+    return `<p class="details">${d.join('')}</p>`;
+  }
+  function rendre(S, D) {
+    const m = D.modele();
+    if (m.vue === 'reste') return entete(m) + U.reste(m) + U.message(m.message);
+    if (m.vue === 'examen' && m.examen) return entete(m) + U.examen(m) + U.message(m.message);
+    const md = mode(m);
+    const feuille = md === 'demande' ? `<div class="feuille">${U.alerte(m.file)}${U.incident(m.incident)}</div>` : '';
+    const voir = m.restants.length && m.phase !== 'pret' && m.vue !== 'echo' ? `<div class="act act-lien"><button type="button" class="b b-lien" data-a="voirReste">Voir ce qui reste (${m.restants.length})</button></div>` : '';
+    const actions = m.actions.filter((x) => x.a !== 'voirReste');
+    return entete(m) + U.bascule(m)
+      + '<div class="capsule" data-garder="capsule" aria-hidden="true"></div>' + feuille
+      + `<h1 class="titre">${U.esc(m.titre)}</h1><p class="phrase">${U.esc(m.phrase)}</p>`
+      + details(m, md)
+      + (m.phase === 'pret' && m.vue !== 'echo' ? U.bornes(m) + U.fileReglage(m.file) : '')
+      + (m.vue !== 'echo' ? U.parties(m) : '')
+      + U.actions(actions) + (voir ? `<div class="acts">${voir}</div>` : '') + U.message(m.message);
+  }
+
+  /* ---------- La capsule : un élément conservé ; ses attributs changent, le CSS anime la forme ---------- */
+  const K = { chiffre: '' };
+  function contenu(m, md) {
+    const c = m.compte, b = m.bornes;
+    const sur = c.total == null ? '<small> · total inconnu</small>' : `<small> / ${U.n(c.total)}</small>`;
+    switch (md) {
+      case 'pret': return ['Prêt', b.finDePartie ? '' : ''];
+      case 'encours': return [`Cut ${c.cut}`, `${U.n(c.faits)}${sur}`];
+      case 'pause': return [`En pause · cut ${c.cut}`, ''];
+      case 'arrete': return [`Arrêté · cut ${c.cut}`, ''];
+      case 'demande': return [`À vous : ${(m.incident || m.file.alerte).titre}`, ''];
+      case 'relecture': return [`Relecture · partie ${m.file.courante}`, ''];
+      case 'fin': return ['Terminé', `${U.n(c.poses)}<small> posés</small>`];
+      case 'echo': return ['Écho', `${U.n(m.echo.vus)}<small> vues</small>`];
+      default: return ['', ''];
+    }
+  }
+  function apres(S, D, racine) {
+    const cap = racine.querySelector('.capsule');
+    if (!cap) return;
+    const m = D.modele(), md = mode(m), reduit = U.reduit();
+    if (!cap.firstElementChild) { cap.innerHTML = '<span class="cap-plein"></span><span class="cap-corps"><span class="cap-forme"></span><span class="cap-texte"></span><span class="cap-chiffre"></span></span>'; K.chiffre = ''; }
+    cap.dataset.mode = md;
+    /* Total inconnu : aucun remplissage proportionnel (jamais deviné) ; un segment fixe va et vient. */
+    cap.dataset.inconnu = m.compte.total == null && (md === 'encours' || md === 'pause') ? '1' : '0';
+    const part = m.compte.total == null ? 0 : (m.compte.part || 0);
+    cap.style.setProperty('--p', md === 'encours' || md === 'pause' ? String(part) : '0');
+    const [txt, chiffre] = contenu(m, md);
+    cap.querySelector('.cap-texte').textContent = txt;
+    const ch = cap.querySelector('.cap-chiffre');
+    if (chiffre !== K.chiffre) {
+      ch.innerHTML = chiffre;
+      if (!reduit && K.chiffre) { ch.classList.remove('roule'); void ch.offsetWidth; ch.classList.add('roule'); }
+      K.chiffre = chiffre;
+    }
+  }
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>

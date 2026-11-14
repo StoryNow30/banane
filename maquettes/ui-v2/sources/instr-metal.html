@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pupitre</title>
+<style>
+/*POLICE:instr-instrument-sans*/
+/* Proposition « Pupitre » (famille Instruments et matière).
+ * Sources : libraries.dev, border-beam (une fenêtre de lumière qui tourne sur le seul bord, famille « rotation » ;
+ * famille « respiration » sans avancée) et metal-fx (un anneau de matière autour d'un seul élément) ;
+ * Scrubbers, face Tape (lecture qui roule chiffre par chiffre) et les crans de ScrubberScale.
+ * Sens : la lumière dit qui doit agir. Faisceau qui fait le tour de la fenêtre de comptage = Ariane avance seule ;
+ * respiration autour d'une touche = c'est à vous, cette touche ; aucune lumière = rien ne se passe.
+ * Drapeau mécanique = l'état, en mots ; rouleaux = les nombres. */
+@property --angle{syntax:"<angle>";initial-value:0deg;inherits:false}
+:root{
+  --plaque:#E3E4E2; --plaque-2:#D5D7D4; --creux:#F4F5F3; --encre:#121313; --encre-2:#4E5250; --grave:#FFFFFF; --trait:#B3B7B4;
+  --fenetre:#101213; --fenetre-encre:#F0F1EE; --fenetre-encre-2:#A9ADAA; --lumiere:#111; --touche:#F7F7F5; --touche-bord:#9DA19E;
+  --ambre:#9A4709; --ambre-pale:#F4E2D1; --scene:#C9CBC8;
+  --brosse:repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0 1px,rgba(0,0,0,.012) 1px 2px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --plaque:#202325; --plaque-2:#2A2D30; --creux:#171A1B; --encre:#ECEEEC; --encre-2:#A4A9A6; --grave:rgba(0,0,0,.6); --trait:#3E4346;
+  --fenetre:#08090A; --fenetre-encre:#F0F1EE; --fenetre-encre-2:#A9ADAA; --lumiere:#F3F4F1; --touche:#2E3236; --touche-bord:#4B5155;
+  --ambre:#F0A15C; --ambre-pale:#36230F; --scene:#060707;
+  --brosse:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,rgba(0,0,0,.04) 1px 2px);
+}}
+:root[data-theme="dark"]{
+  --plaque:#202325; --plaque-2:#2A2D30; --creux:#171A1B; --encre:#ECEEEC; --encre-2:#A4A9A6; --grave:rgba(0,0,0,.6); --trait:#3E4346;
+  --fenetre:#08090A; --fenetre-encre:#F0F1EE; --fenetre-encre-2:#A9ADAA; --lumiere:#F3F4F1; --touche:#2E3236; --touche-bord:#4B5155;
+  --ambre:#F0A15C; --ambre-pale:#36230F; --scene:#060707;
+  --brosse:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,rgba(0,0,0,.04) 1px 2px);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--scene);color:var(--encre);font-family:'Instrument Sans',system-ui,sans-serif}
+.scene{display:flex;flex-wrap:wrap;gap:24px;padding:24px 16px;align-items:flex-start}
+#cadre{width:var(--largeur-panneau,420px);max-width:100%;flex:none}
+#panneau{container-type:inline-size;height:760px;overflow-y:auto;overflow-x:hidden;background-color:var(--plaque);background-image:var(--brosse);border-radius:10px;font-size:15px;line-height:1.4;box-shadow:0 0 0 1px var(--trait) inset}
+.notes{max-width:400px;background:var(--plaque);color:var(--encre);padding:18px 20px;border-radius:10px;font-size:14px;line-height:1.5}
+.notes h2{margin:0 0 8px;font-size:18px}
+.num{font-variant-numeric:tabular-nums}
+/* gravure : les libellés sont creusés dans la plaque */
+.grave{text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:600;color:var(--encre-2);text-shadow:0 1px 0 var(--grave)}
+
+.p{padding:14px 14px 24px;display:flex;flex-direction:column;gap:14px}
+.tete{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.marque{font-weight:700;font-size:13px;letter-spacing:.22em;text-transform:uppercase;margin-right:auto;text-shadow:0 1px 0 var(--grave)}
+.liaison{width:100%;font-size:13px;color:var(--encre-2);display:flex;gap:6px;align-items:center}
+.liaison b{color:var(--encre);font-weight:600}
+
+/* levier à deux positions */
+.levier{display:flex;align-items:center;gap:8px}
+.levier button{font:inherit;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:none;border:0;color:var(--encre-2);cursor:pointer;padding:4px 2px}
+.levier button[aria-pressed="true"]{color:var(--encre)}
+.levier .fut{width:46px;height:22px;border-radius:11px;background:var(--creux);box-shadow:0 1px 2px rgba(0,0,0,.35) inset;position:relative;border:0;padding:0;cursor:pointer}
+.levier .fut i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--touche);box-shadow:0 1px 2px rgba(0,0,0,.5), 0 0 0 1px var(--touche-bord) inset;transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+.levier[data-pos="echo"] .fut i{transform:translateX(24px)}
+.levier[aria-disabled="true"] button{cursor:not-allowed}
+.note-levier{width:100%;margin:-6px 0 0;font-size:12px;color:var(--encre-2)}
+
+/* la fenêtre de comptage, et sa lumière */
+.compteur{position:relative;border-radius:12px;background:var(--fenetre);color:var(--fenetre-encre);padding:12px 14px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;box-shadow:0 2px 6px rgba(0,0,0,.45) inset, 0 1px 0 var(--grave)}
+.compteur::after{content:"";position:absolute;inset:-3px;border-radius:15px;padding:2px;pointer-events:none;opacity:0;
+  background:conic-gradient(from var(--angle),transparent 0 55%,var(--lumiere) 78%,transparent 92%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;transition:opacity .6s ease}
+.compteur[data-lumiere="tourne"]::after{opacity:1;animation:tour 1.96s linear infinite;animation-delay:var(--retard,0ms)}
+.compteur[data-lumiere="lent"]::after{opacity:.8;animation:tour 5.2s linear infinite;animation-delay:var(--retard,0ms)}
+@keyframes tour{to{--angle:360deg}}
+/* drapeau mécanique : une bande de mots qui glisse derrière une lucarne */
+.drapeau{grid-column:1/-1;height:24px;overflow:hidden;border-radius:4px;background:var(--fenetre);position:relative}
+.drapeau .bande{display:flex;flex-direction:column;transition:transform .5s cubic-bezier(.3,1.25,.5,1)}
+.drapeau .bande span{height:24px;line-height:24px;font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--fenetre-encre);display:flex;align-items:center;gap:8px}
+.drapeau .bande span.att{color:#F4A964}
+.grand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+/* rouleaux : chaque chiffre est une colonne 0–9 qui tourne vers sa valeur */
+.rouleaux{display:inline-flex;font-size:clamp(46px,16cqi,68px);font-weight:600;line-height:1;height:1em;overflow:hidden;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.rouleaux .col{display:flex;flex-direction:column;transition:transform .5s cubic-bezier(.3,1.3,.5,1)}
+.rouleaux .col span{height:1em;line-height:1;color:var(--fenetre-encre);background:var(--fenetre)}
+.rouleaux.petit{font-size:22px;font-weight:500}
+.unite{font-size:14px;color:var(--fenetre-encre-2)}
+.cote{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;gap:2px;font-size:13px;color:var(--fenetre-encre-2);text-align:right}
+.cote b{color:var(--fenetre-encre);font-weight:600}
+
+.compteurs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.compteurs div{background:var(--creux);border-radius:8px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,.18) inset;display:flex;flex-direction:column;gap:2px}
+.compteurs .v{font-size:20px;font-weight:600}
+.compteurs .l{font-size:12px;color:var(--encre-2);display:flex;align-items:center;gap:5px}
+.v.change{animation:frappe .35s ease}
+@keyframes frappe{0%{transform:translateY(-35%);opacity:.2}100%{transform:none;opacity:1}}
+
+/* touches mécaniques : course de 2 px, bord net ; la respiration entoure la touche attendue */
+.actions{display:flex;flex-direction:column;gap:10px}
+.rang2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.touche{position:relative;font:inherit;font-weight:600;font-size:15px;border-radius:8px;padding:12px 14px;border:1px solid var(--touche-bord);background:var(--touche);color:var(--encre);cursor:pointer;width:100%;box-shadow:0 2px 0 var(--touche-bord), 0 3px 6px rgba(0,0,0,.18);transition:transform .08s ease, box-shadow .08s ease}
+.touche:active{transform:translateY(2px);box-shadow:0 0 0 var(--touche-bord), 0 1px 2px rgba(0,0,0,.2)}
+.touche.principal{background:var(--encre);border-color:var(--encre);color:var(--plaque);font-size:16px;padding:15px 14px;box-shadow:0 2px 0 #000, 0 4px 10px rgba(0,0,0,.25)}
+.touche.attendue::after{content:"";position:absolute;inset:-5px;border-radius:12px;border:2px solid var(--lumiere);pointer-events:none;animation:souffle 2.3s ease-in-out infinite;animation-delay:var(--retard,0ms)}
+@keyframes souffle{0%,100%{opacity:.15}50%{opacity:.9}}
+.touche.arret.confirme{background:var(--ambre);border-color:var(--ambre);color:var(--plaque)}
+.touche.lien{border:0;background:none;box-shadow:none;padding:6px 0;text-align:left;text-decoration:underline;text-underline-offset:3px;width:auto}
+.touche[aria-disabled="true"]{background:var(--plaque-2);color:var(--encre-2);box-shadow:none;cursor:not-allowed;border-color:var(--trait)}
+.touche:focus-visible,.levier button:focus-visible,.levier .fut:focus-visible,input:focus-visible,.molette:focus-visible{outline:3px solid var(--encre);outline-offset:3px}
+.note{font-size:12px;color:var(--encre-2);margin:4px 0 0}
+.raison{font-size:13px;color:var(--ambre);margin:4px 0 0}
+
+.bornes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.borne{display:flex;flex-direction:column;gap:5px}
+.borne .ligne{display:grid;grid-template-columns:34px 1fr 34px;gap:4px}
+.borne input{font:inherit;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;text-align:center;color:var(--fenetre-encre);background:var(--fenetre);border:0;border-radius:6px;padding:7px 4px;width:100%;box-shadow:0 2px 4px rgba(0,0,0,.5) inset}
+.borne input:disabled{color:var(--fenetre-encre-2)}
+.borne button{font:inherit;font-size:13px;font-weight:600;border-radius:6px;border:1px solid var(--touche-bord);background:var(--touche);color:var(--encre);cursor:pointer;box-shadow:0 2px 0 var(--touche-bord)}
+.borne button:active{transform:translateY(2px);box-shadow:none}
+.case{display:flex;align-items:center;gap:10px;font:inherit;font-size:14px;background:none;border:0;color:var(--encre);padding:2px 0;cursor:pointer;text-align:left;grid-column:1/-1}
+.case .fut{width:40px;height:20px;border-radius:10px;background:var(--creux);box-shadow:0 1px 2px rgba(0,0,0,.35) inset;position:relative;flex:none}
+.case .fut::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--touche);box-shadow:0 1px 2px rgba(0,0,0,.5), 0 0 0 1px var(--touche-bord) inset;transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+.case[aria-pressed="true"] .fut::after{transform:translateX(20px)}
+.aide{font-size:12px;color:var(--encre-2);margin:0;grid-column:1/-1}
+
+.module{border-top:1px solid var(--trait);box-shadow:0 1px 0 var(--grave) inset;padding-top:12px;display:flex;flex-direction:column;gap:10px}
+.module h2{margin:0}
+.module.attention{border:0;box-shadow:0 0 0 2px var(--ambre) inset;background:var(--ambre-pale);border-radius:10px;padding:12px 14px}
+.module.attention h2{font-size:15px;letter-spacing:0;text-transform:none;color:var(--encre);text-shadow:none;display:flex;gap:8px;align-items:center}
+.module.attention h2::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid var(--ambre)}
+.module p{margin:0}
+.choix{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+/* molette à crans pour le nombre de parties */
+.reglage-file{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.molette-bloc{display:flex;align-items:center;gap:10px}
+.molette{width:54px;height:54px;border-radius:50%;background:var(--touche);border:1px solid var(--touche-bord);box-shadow:0 3px 0 var(--touche-bord), 0 4px 8px rgba(0,0,0,.25);position:relative;cursor:grab;touch-action:none}
+.molette svg{position:absolute;inset:0;width:100%;height:100%;transition:transform .34s cubic-bezier(.3,1.3,.5,1)}
+.molette .repere{stroke:var(--encre);stroke-width:3;stroke-linecap:round}
+.molette .strie{stroke:var(--encre-2);stroke-width:1}
+.molette-val{display:flex;flex-direction:column;align-items:flex-start}
+.molette-val b{font-size:24px;font-weight:600;line-height:1}
+.molette-boutons{display:flex;gap:4px}
+.molette-boutons button{font:inherit;width:30px;height:28px;border-radius:6px;border:1px solid var(--touche-bord);background:var(--touche);color:var(--encre);cursor:pointer;box-shadow:0 2px 0 var(--touche-bord)}
+.parties{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.partie{background:var(--creux);border-radius:8px;padding:8px 10px;box-shadow:0 1px 2px rgba(0,0,0,.18) inset;font-size:12px;color:var(--encre-2);display:flex;flex-direction:column;gap:2px}
+.partie b{font-size:13px;color:var(--encre)}
+.partie.courante{box-shadow:0 0 0 2px var(--encre) inset}
+.message{position:sticky;bottom:10px;margin:0 14px;background:var(--fenetre);color:var(--fenetre-encre);border-radius:8px;padding:10px 14px;font-size:14px}
+.message.neuf{animation:frappe .3s ease}
+
+.retour{font:inherit;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:none;border:0;color:var(--encre);padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.titre{font-size:24px;font-weight:600;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.liste li{background:var(--creux);border-radius:8px;padding:9px 12px;box-shadow:0 1px 2px rgba(0,0,0,.15) inset;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+#panneau[data-etat-change="1"] .liste li{animation:glisse .3s both ease-out}
+.liste .motif{grid-column:2;font-size:13px;color:var(--encre-2)}
+.liste .gestes{grid-column:2;display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.liste .touche{width:auto;padding:5px 10px;font-size:13px}
+@container (min-width:440px){.liste li{grid-template-columns:auto 1fr auto;align-items:center}.liste .gestes{grid-column:3;grid-row:1/3;margin:0}}
+@keyframes glisse{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.coupe{display:block;width:100%;aspect-ratio:2/1;background:var(--fenetre);border-radius:10px}
+.coupe .sol{fill:none;stroke:var(--fenetre-encre-2);stroke-width:1.5}
+.coupe .pos{stroke:var(--fenetre-encre);stroke-width:3;stroke-linecap:round}
+
+#panneau[data-etat-change="1"] .actions{animation:glisse .3s both ease-out}
+#panneau[data-etat-change="1"] .module{animation:glisse .35s .05s both ease-out}
+@media (prefers-reduced-motion: reduce){ #panneau *,#panneau *::before,#panneau *::after{animation:none !important;transition:none !important} .compteur[data-lumiere]::after{--angle:200deg} .touche.attendue::after{opacity:.7} }
+html[data-mouvement="reduit"] #panneau *,html[data-mouvement="reduit"] #panneau *::before,html[data-mouvement="reduit"] #panneau *::after{animation:none !important;transition:none !important}
+html[data-mouvement="reduit"] .compteur[data-lumiere]::after{--angle:200deg}
+html[data-mouvement="reduit"] .touche.attendue::after{opacity:.7}
+</style>
+</head>
+<body>
+<main class="scene">
+  <div id="cadre"><div id="panneau" aria-label="Panneau Ariane, proposition Pupitre"></div></div>
+  <aside class="notes">
+    <h2>Pupitre</h2>
+    <p><b>Logique.</b> Un pupitre de métal où la lumière dit qui doit agir : un faisceau fait le tour de la fenêtre de comptage tant qu'Ariane avance seule ; quand elle attend un geste, c'est la touche attendue qui respire ; quand rien ne se passe, aucune lumière.</p>
+    <p><b>D'où ça vient.</b> libraries.dev : paquet border-beam (<code>styles.ts</code> : un cône de lumière qui tourne, masqué pour ne garder que le bord ; deux familles, rotation et respiration ; <code>pulseDriver.ts</code> : respiration lente) et paquet metal-fx (README, <code>cursor/light.ts</code> : un anneau de matière autour d'un seul élément, rien en mouvement réduit) ; page Metal jouée au survol. Scrubbers (dépôt haplollc) : <code>TapeFace.swift</code> pour la lecture qui roule chiffre par chiffre, <code>ScrubberScale.swift</code> pour la molette à crans.</p>
+    <p><b>Ce que ça veut dire ici.</b></p>
+    <ul>
+      <li><b>Faisceau qui tourne autour de la fenêtre</b> : Ariane pose seule (rapide) ou observe en Écho (lent). Personne n'a rien à faire.</li>
+      <li><b>Touche qui respire</b> : c'est à vous, et c'est cette touche-là (Continuer, Lancer, Exporter).</li>
+      <li><b>Drapeau mécanique</b> : l'état en toutes lettres, qui glisse derrière sa lucarne ; en ambre avec un triangle quand il faut agir.</li>
+      <li><b>Rouleaux</b> : ce qui reste (ou ce qui est traité quand le total est inconnu, avec les mots), puis le cut en cours.</li>
+      <li><b>Triangle</b> : différé ; <b>rond creux</b> : posé, à examiner ; mêmes signes partout.</li>
+      <li><b>Molette à crans</b> : nombre de parties de la file (2 à 9), un cran par partie.</li>
+    </ul>
+    <p><b>Mouvement.</b> Un cut fait tourner les rouleaux d'un cran (0,5 s, léger dépassement) ; le drapeau glisse au changement d'état ; le faisceau s'éteint en 0,6 s à la pause ; la respiration (2,3 s) garde sa phase d'un rendu à l'autre. Mouvement réduit : le faisceau devient un arc fixe, la respiration un cadre fixe, les rouleaux sautent au chiffre.</p>
+  </aside>
+</main>
+<script>
+/*COMMUN*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const { esc, n } = Demo.D;
+  const pl = (k, un, plus) => n(k) + ' ' + (k > 1 ? plus : un);
+  const S_ = {
+    differe: '<svg width="11" height="10" viewBox="0 0 11 10" aria-hidden="true"><path d="M5.5 1L10 9H1z" fill="currentColor"/></svg>',
+    vert: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+    pose: '<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>',
+    tri: '<svg width="12" height="11" viewBox="0 0 12 11" aria-hidden="true"><path d="M6 1l5 9H1z" fill="currentColor"/></svg>',
+  };
+  const MOTS = ['Prêt', 'En cours', 'En pause', 'Arrêté', 'Alerte', 'Relecture', 'Terminé', 'Écho'];
+  /* phase de la respiration et du faisceau, tenue d'un rendu à l'autre (horloge partagée, comme ThinkingOrbs) */
+  const phase = (periode) => `--retard:-${(performance.now() % periode).toFixed(0)}ms`;
+
+  function touche(x, attendue) {
+    const cls = 'touche ' + (x.rang || 'second') + (x.confirme ? ' confirme' : '') + (attendue ? ' attendue' : '');
+    return `<div><button class="${cls}" data-a="${x.a}"${x.id ? ` data-id="${esc(x.id)}"` : ''}${x.desactive ? ' aria-disabled="true"' : ''}${attendue ? ` style="${phase(2300)}"` : ''}>${esc(x.libelle)}</button>${x.raison ? `<p class="raison">${esc(x.raison)}</p>` : ''}${x.note ? `<p class="note">${esc(x.note)}</p>` : ''}</div>`;
+  }
+  /* la touche attendue : la principale, quand c'est à l'opérateur d'agir (pas pendant que le lot tourne) */
+  function actions(m, l) {
+    const attente = m.phase !== 'encours' && m.vue !== 'echo';
+    const p = l.filter((x) => x.rang === 'principal'), a = l.filter((x) => x.rang === 'second' || x.rang === 'arret'), li = l.filter((x) => x.rang === 'lien');
+    return `<div class="actions">${p.map((x) => touche(x, attente && !x.desactive)).join('')}${a.length ? `<div class="rang2">${a.map((x) => touche(x)).join('')}</div>` : ''}${li.map((x) => touche(x)).join('')}</div>`;
+  }
+
+  function tete(m) {
+    const echo = m.activite === 'echo', b = m.activiteBloquee;
+    return `<div class="tete"><span class="marque">Ariane</span>
+      <div class="levier" data-pos="${echo ? 'echo' : 'orbite'}" role="group" aria-label="Activité"${b ? ' aria-disabled="true"' : ''}>
+        <button data-a="orbite" aria-pressed="${!echo}"${b ? ' aria-disabled="true"' : ''}>Orbite</button>
+        <button class="fut" data-a="${echo ? 'orbite' : 'echo'}" aria-label="Basculer vers ${echo ? 'Orbite' : 'Écho'}"${b ? ' aria-disabled="true"' : ''}><i></i></button>
+        <button data-a="echo" aria-pressed="${echo}"${b ? ' aria-disabled="true"' : ''}>Écho</button></div>
+      ${b ? '<p class="note-levier">Le levier se bascule lot en pause ou arrêté.</p>' : ''}
+      <div class="liaison">${m.liaison.etat === 'relie' ? S_.pose : S_.vert}<b>${esc(m.liaison.texte)}</b> · ${esc(m.liaison.detail)}</div></div>`;
+  }
+
+  function motEtat(m) {
+    if (m.vue === 'echo') return 'Écho';
+    if (m.phase === 'pret') return 'Prêt';
+    if (m.file.relecture) return 'Relecture';
+    if (m.phase === 'encours') return 'En cours';
+    if (m.phase === 'pause') return 'En pause';
+    if (m.phase === 'arrete') return m.file.alerte ? 'Alerte' : 'Arrêté';
+    return 'Terminé';
+  }
+
+  function compteur(m) {
+    const c = m.compte;
+    let lumiere = '', a, ua, b, ub, cote = '';
+    if (m.vue === 'echo') { lumiere = 'lent'; a = m.echo.vus; ua = 'gestes vus'; b = m.echo.dernier ?? 0; ub = 'dernier cut vu'; cote = `<b>${m.echo.accord}</b> en accord`; }
+    else if (m.phase === 'pret') { a = m.bornes.finDePartie ? m.bornes.debut : m.bornes.fin - m.bornes.debut + 1; ua = m.bornes.finDePartie ? 'premier cut, jusqu’à la fin de partie' : 'cuts dans le lot'; b = m.bornes.debut; ub = 'premier cut'; }
+    else if (m.file.relecture) { lumiere = 'tourne'; a = m.file.courante; ua = `partie relue, sur ${m.file.nb}`; b = c.cut; ub = 'dernier cut'; cote = 'la suivante démarre seule'; }
+    else if (m.phase === 'fin') { a = c.faits; ua = 'cuts traités'; b = c.debut + c.faits - 1; ub = 'dernier cut'; }
+    else {
+      lumiere = m.phase === 'encours' ? 'tourne' : '';
+      if (c.total == null) { a = c.faits; ua = 'traités · total inconnu'; } else { a = c.total - c.faits; ua = `restent sur ${n(c.total)}`; }
+      b = c.cut; ub = m.phase === 'encours' ? 'cut en cours' : 'arrêté au cut'; cote = esc(c.tempsTexte);
+    }
+    const att = m.vue !== 'echo' && (m.phase === 'arrete' || (m.incident && m.incident.type !== 'reprise'));
+    const idx = MOTS.indexOf(motEtat(m));
+    return `<div class="compteur" data-lumiere="${lumiere}" style="${phase(lumiere === 'lent' ? 5200 : 1960)}">
+      <div class="drapeau"><div class="bande" data-garder="drapeau" data-idx="${idx}" data-att="${att ? 1 : 0}"></div></div>
+      <div class="grand"><span class="rouleaux" data-garder="rouleau-a" data-n="${a}"></span><span class="unite">${ua}</span></div>
+      <div class="cote"><span class="rouleaux petit" data-garder="rouleau-b" data-n="${b}"></span><span>${ub}</span>${cote ? `<span>${cote}</span>` : ''}</div>
+    </div>`;
+  }
+
+  function compteurs(m) {
+    const c = m.compte;
+    return `<div class="compteurs"><div><span class="v num" data-valeur="p">${n(c.poses)}</span><span class="l">${S_.pose}posés</span></div><div><span class="v num" data-valeur="d">${n(c.differes)}</span><span class="l">${S_.differe}différés</span></div><div><span class="v num" data-valeur="x">${n(c.aExaminer)}</span><span class="l">${S_.vert}à examiner</span></div></div>`;
+  }
+
+  function incident(m) {
+    const i = m.incident; if (!i) return '';
+    const att = i.type !== 'reprise';
+    return `<section class="module${att ? ' attention' : ''}" role="${att ? 'alert' : 'status'}"><h2 class="grave">${esc(i.titre)}</h2><p>${esc(i.texte)}</p>${i.actions.length ? `<div class="choix">${i.actions.map((x) => touche({ ...x, rang: 'second' }, i.type === 'absent')).join('')}</div>` : ''}</section>`;
+  }
+  function alerte(m) {
+    const a = m.file.alerte; if (!a) return '';
+    const c = m.compte;
+    return `<section class="module attention" role="alert"><h2 class="grave">${esc(a.titre)}</h2><p>${esc(a.detail)}</p><p class="note">Partie ${m.file.courante} à l'arrêt : ${pl(c.poses, 'posé', 'posés')}, ${pl(c.differes, 'différé', 'différés')}, ${n(c.aExaminer)} à examiner.</p></section>`;
+  }
+  function bornes(m) {
+    const b = m.bornes;
+    return `<section class="bornes" aria-label="Bornes du lot">
+      <div class="borne"><span class="grave">Premier cut</span><div class="ligne"><button data-a="debutMoins" aria-label="Premier cut moins 10">−10</button><input class="num" data-champ="debut" inputmode="numeric" value="${b.debut}" aria-label="Premier cut"><button data-a="debutPlus" aria-label="Premier cut plus 10">+10</button></div></div>
+      <div class="borne"><span class="grave">Dernier cut</span><div class="ligne"><button data-a="finMoins" aria-label="Dernier cut moins 10"${b.finDePartie ? ' disabled' : ''}>−10</button><input class="num" data-champ="fin" inputmode="numeric" value="${b.finDePartie ? '' : b.fin}" aria-label="Dernier cut" ${b.finDePartie ? 'disabled placeholder="fin"' : ''}><button data-a="finPlus" aria-label="Dernier cut plus 10"${b.finDePartie ? ' disabled' : ''}>+10</button></div></div>
+      <button class="case" data-a="finDePartie" aria-pressed="${b.finDePartie}"><span class="fut" aria-hidden="true"></span>Aller jusqu'à la fin de la partie</button></section>`;
+  }
+  function file(m) {
+    const f = m.file;
+    if (m.phase === 'pret') {
+      return `<section class="module"><div class="reglage-file"><button class="case" style="grid-column:auto" data-a="fileBascule" aria-pressed="${f.active}"><span class="fut" aria-hidden="true"></span><span><b>File de parties</b> · ${f.active ? 'allumée' : 'éteinte'}</span></button>
+        ${f.active ? `<div class="molette-bloc"><div class="molette" data-garder="molette" role="slider" tabindex="0" aria-label="Nombre de parties" aria-valuemin="2" aria-valuemax="9" aria-valuenow="${f.nb}"></div><div class="molette-val"><b class="num" data-valeur="nb">${f.nb}</b><span class="grave">parties</span></div><div class="molette-boutons"><button data-a="fileMoins" aria-label="Une partie de moins">−</button><button data-a="filePlus" aria-label="Une partie de plus">+</button></div></div>` : ''}</div>
+        <p class="aide">${f.active ? `Les ${f.nb} parties s'enchaînent ; chacune est relue et corrigée, puis la suivante démarre seule.` : 'Allumer pour enchaîner plusieurs parties.'}</p></section>`;
+    }
+    if (!f.active) return '';
+    const cases = [];
+    for (let i = 1; i <= f.nb; i++) {
+      const p = f.parties.find((x) => x.n === i);
+      const cour = !f.finie && i === f.courante;
+      const det = p ? `${p.poses} posés · ${p.differes} diff. · ${p.aControler} à ex.${f.relecture && cour ? ' · relecture' : ''}` : cour ? (m.phase === 'arrete' ? `arrêtée au cut ${m.compte.cut}` : `en cours · ${m.compte.faits} traités`) : 'à venir';
+      cases.push(`<div class="partie${cour ? ' courante' : ''}"><b>Partie ${i}</b><span>${det}</span></div>`);
+    }
+    return `<section class="module" aria-label="File de parties"><h2 class="grave">${f.finie ? `File terminée · ${f.nb} parties` : `File · partie ${f.courante} sur ${f.nb}`}</h2><div class="parties">${cases.join('')}</div></section>`;
+  }
+
+  function vueReste(m) {
+    const d = m.restants.filter((r) => r.type === 'differe'), v = m.restants.filter((r) => r.type === 'vert');
+    const ligne = (r, i) => `<li style="animation-delay:${Math.min(i, 14) * 28}ms"><span>${r.type === 'differe' ? S_.differe : S_.vert}</span><span><b>Cut <span class="num">${r.cut}</span></b> · ${r.type === 'differe' ? 'différé' : 'à examiner'}</span><span class="motif">${esc(r.motif)}</span><span class="gestes"><button class="touche" data-a="examiner" data-id="${esc(r.id)}">Examiner</button><button class="touche" data-a="ouvrir" data-id="${esc(r.id)}">Ouvrir dans ESV</button></span></li>`;
+    return `<div class="p"><button class="retour" data-a="retour"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Retour au lot</button>
+      <h1 class="titre">Ce qui reste</h1><p style="margin:-8px 0 0;color:var(--encre-2)">${pl(d.length, 'différé', 'différés')}, ${pl(v.length, 'cut posé', 'cuts posés')} à examiner.</p>
+      ${m.restants.length ? `<ul class="liste">${d.concat(v).map(ligne).join('')}</ul>` : '<p>Rien à reprendre.</p>'}</div>`;
+  }
+  function vueExamen(m, D) {
+    const r = m.examen, cp = D.coupe(r.cut, 180);
+    const tri = cp.pts.slice().sort((a, b) => a[0] - b[0]);
+    const X = (x) => 20 + (x + 1) * 180, Z = (z) => 150 - (z + 0.5) * 220;
+    let d = '';
+    for (let i = 0; i < tri.length; i += 6) { const g = tri.slice(i, i + 6); d += (i ? 'L' : 'M') + X(g.reduce((s, p) => s + p[0], 0) / g.length).toFixed(1) + ' ' + Z(Math.min(...g.map((p) => p[1]))).toFixed(1); }
+    return `<div class="p"><button class="retour" data-a="voirReste"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>Ce qui reste</button>
+      <h1 class="titre">Cut <span class="num">${r.cut}</span></h1><p style="margin:-8px 0 0">${r.type === 'differe' ? S_.differe + ' Différé' : S_.vert + ' Posé, à examiner'} · ${esc(r.motif)}</p>
+      <svg class="coupe" viewBox="0 0 400 200" role="img" aria-label="Coupe du cut ${r.cut}, profil et position proposée"><path class="sol" d="${d}"/>${cp.rails.map((x) => `<line class="pos" x1="${X(x)}" y1="${Z(-.24)}" x2="${X(x)}" y2="${Z(-.36)}"/>`).join('')}</svg>
+      <p class="note" style="margin-top:-6px">Profil de la coupe ; les deux traits marquent la position proposée.</p>
+      ${actions({ phase: 'fin' }, [{ a: 'traiter', id: r.id, libelle: 'Marquer comme vu', rang: 'principal' }, { a: 'ouvrir', id: r.id, libelle: 'Ouvrir dans ESV', rang: 'second' }])}</div>`;
+  }
+
+  function rendre(S, D) {
+    const m = D.modele();
+    const msg = m.message ? `<div class="message" role="status">${esc(m.message)}</div>` : '';
+    if (m.vue === 'reste') return vueReste(m) + msg;
+    if (m.vue === 'examen' && m.examen) return vueExamen(m, D) + msg;
+    let corps;
+    const h1 = `<h1 class="sr">${esc(m.titre)}</h1>`;
+    if (m.vue === 'echo') corps = `${compteur(m)}<p style="margin:0">${esc(m.phrase)}</p>${actions(m, m.actions)}`;
+    else if (m.phase === 'pret') corps = `${incident(m)}${compteur(m)}<p style="margin:0">${esc(m.phrase)}</p>${bornes(m)}${file(m)}${actions(m, m.actions)}`;
+    else {
+      const reste = m.restants.length && m.phase !== 'fin' ? `<div class="actions">${touche({ a: 'voirReste', libelle: `Voir ce qui reste (${m.restants.length})`, rang: 'lien' })}</div>` : '';
+      corps = `${incident(m)}${alerte(m)}${compteur(m)}<p style="margin:0">${esc(m.phrase)}</p>${compteurs(m)}${actions(m, m.actions)}${reste}${file(m)}`;
+    }
+    return `<div class="p">${tete(m)}${h1}${corps}</div>${msg}`;
+  }
+
+  /* ---------- éléments conservés : rouleaux, drapeau, molette ---------- */
+  function rouleaux(el, val, red) {
+    const txt = String(val);
+    if (el.children.length !== txt.length) {
+      el.innerHTML = txt.split('').map(() => `<span class="col">${'0123456789'.split('').map((d) => `<span>${d}</span>`).join('')}</span>`).join('');
+      el.setAttribute('aria-label', txt);
+      [...el.children].forEach((c, i) => { c.style.transition = 'none'; c.style.transform = `translateY(-${Number(txt[i])}em)`; void c.offsetHeight; c.style.transition = ''; });
+      return;
+    }
+    el.setAttribute('aria-label', txt);
+    [...el.children].forEach((c, i) => { if (red) c.style.transition = 'none'; c.style.transform = `translateY(-${Number(txt[i])}em)`; });
+  }
+  const NS = 'http' + '://www.w3.org/2000/svg';
+  function molette(el, nb, red) {
+    if (!el.querySelector('svg')) {
+      let s = '';
+      for (let i = 0; i < 24; i++) { const a = i * 15 * Math.PI / 180; s += `<line class="strie" x1="${27 + Math.cos(a) * 22}" y1="${27 + Math.sin(a) * 22}" x2="${27 + Math.cos(a) * 25}" y2="${27 + Math.sin(a) * 25}"/>`; }
+      el.innerHTML = `<svg viewBox="0 0 54 54" aria-hidden="true">${s}<line class="repere" data-forme="repère de la molette" x1="27" y1="8" x2="27" y2="18"/></svg>`;
+      /* geste angulaire : 36° par cran, de 2 à 9 parties */
+      el.addEventListener('pointerdown', (e) => {
+        const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        let a0 = Math.atan2(e.clientY - cy, e.clientX - cx), tour = 0;
+        el.setPointerCapture(e.pointerId);
+        const bouge = (ev) => {
+          const a = Math.atan2(ev.clientY - cy, ev.clientX - cx); let d = a - a0; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; a0 = a; tour += d;
+          const pasCran = 36 * Math.PI / 180;
+          while (tour > pasCran / 2) { tour -= pasCran; Demo.agir('filePlus'); }
+          while (tour < -pasCran / 2) { tour += pasCran; Demo.agir('fileMoins'); }
+        };
+        el.addEventListener('pointermove', bouge);
+        el.addEventListener('pointerup', () => el.removeEventListener('pointermove', bouge), { once: true });
+      });
+      el.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); Demo.agir('filePlus'); } if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); Demo.agir('fileMoins'); } });
+    }
+    const svg = el.querySelector('svg');
+    if (red) svg.style.transition = 'none';
+    svg.style.transform = `rotate(${(nb - 2) * 36 - 126}deg)`;
+    el.setAttribute('aria-valuenow', nb);
+  }
+
+  let dernierMessage = null;
+  function marquerMessage(racine) {
+    const mg = racine.querySelector('.message'), t = mg ? mg.textContent : null;
+    if (mg && t !== dernierMessage) mg.classList.add('neuf');
+    dernierMessage = t;
+  }
+  function apres(S, D, racine) {
+    marquerMessage(racine);
+    const red = D.mouvementReduit(), m = D.modele();
+    const dr = racine.querySelector('[data-garder="drapeau"]');
+    if (dr) {
+      /* l'élément conservé garde ses anciens attributs : l'état se relit dans le modèle */
+      const idx = MOTS.indexOf(motEtat(m)), att = m.vue !== 'echo' && (m.phase === 'arrete' || (m.incident && m.incident.type !== 'reprise'));
+      if (!dr.children.length) { dr.innerHTML = MOTS.map((w) => `<span>${esc(w)}</span>`).join(''); dr.style.transition = 'none'; dr.style.transform = `translateY(-${idx * 24}px)`; void dr.offsetHeight; dr.style.transition = ''; }
+      [...dr.children].forEach((s, i) => { s.classList.toggle('att', att && i === idx); s.innerHTML = (att && i === idx ? S_.tri : '') + esc(MOTS[i]); s.setAttribute('aria-hidden', i === idx ? 'false' : 'true'); });
+      if (red) dr.style.transition = 'none';
+      dr.style.transform = `translateY(-${idx * 24}px)`;
+    }
+    const c = D.modele().compte;
+    const ra = racine.querySelector('[data-garder="rouleau-a"]'), rb = racine.querySelector('[data-garder="rouleau-b"]');
+    /* valeurs relues ici et non dans l'attribut (périmé sur l'élément conservé) */
+    const vals = (() => {
+      if (m.vue === 'echo') return [m.echo.vus, m.echo.dernier ?? 0];
+      if (m.phase === 'pret') return [m.bornes.finDePartie ? m.bornes.debut : m.bornes.fin - m.bornes.debut + 1, m.bornes.debut];
+      if (m.file.relecture) return [m.file.courante, c.cut];
+      if (m.phase === 'fin') return [c.faits, c.debut + c.faits - 1];
+      return [c.total == null ? c.faits : c.total - c.faits, c.cut];
+    })();
+    if (ra) rouleaux(ra, vals[0], red);
+    if (rb) rouleaux(rb, vals[1], red);
+    const mo = racine.querySelector('[data-garder="molette"]');
+    if (mo) molette(mo, m.file.nb, red);
+  }
+
+  Demo.monter({ rendre, apres });
+})();
+</script>
+</body>
+</html>
