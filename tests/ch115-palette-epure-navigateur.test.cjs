@@ -93,3 +93,18 @@ test('chiffre qui roule : la copie de l’ancien chiffre n’entre pas dans son 
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });
+
+test('étroit (380 × 640), détails repliés : la ligne d’état est en haut de la tuile (moins de 20 px), en Orbite et en Constellation, sans chevaucher le contenu',{skip:absent,timeout:25000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const mesure=()=>({haut:(()=>{const t=document.querySelector('#ui5 .sg-tu-etat').getBoundingClientRect(),h=document.querySelector('#ui5 .sg-tu-etat>.sg-haut').getBoundingClientRect(),c=document.querySelector('#ui5 .sg-tu-etat :is(.sg-milieu,.sg-constel-t)').getBoundingClientRect();return {ecart:h.top-t.top,chevauche:h.bottom>c.top+0.5};})()});
+  for(const [nom,etat,file] of [['Orbite',E.cours.state,false],['Orbite, à toi',E.toi.state,false],['Constellation',E['file-passage'].state,true]]){
+   const {page,erreurs}=await ouvrir(nav,js(etat),{width:380,height:640});
+   if(file){await page.evaluate(()=>window.ArianeUi5.agir('sg:onglet-file'));await page.waitForTimeout(500);}
+   const r=(await page.evaluate(mesure)).haut;
+   assert.ok(r.ecart<20,`${nom} : ligne d’état à ${r.ecart} px du haut de la tuile`);
+   assert.equal(r.chevauche,false,`${nom} : la ligne d’état ne chevauche pas le contenu`);
+   assert.deepEqual(erreurs,[]);await page.close();
+  }
+ }finally{await nav.close();}
+});

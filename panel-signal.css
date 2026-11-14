@@ -750,12 +750,6 @@ body.ui5:has(#ui5.u-signal:not([data-theme="clair"])){background:var(--cx-corps,
 #ui5.u-signal:not([data-details]) .sg-tu-fin{flex-direction:row;align-items:center;gap:12px}
 #ui5.u-signal .sg-cadran-d{display:none}
 #ui5.u-signal .sg-fen[data-activite="correction"] .sg-tu-etat .sg-phrase{-webkit-line-clamp:2}
-#ui5.u-signal .sg-details-b{position:absolute;right:12px;bottom:10px;z-index:2;font:500 11.5px/1 var(--f);padding:6px 11px;border-radius:999px;color:var(--tx2);box-shadow:inset 0 0 0 1px var(--trait-fort);transition:color .2s,transform .45s var(--cx-ressort),background-color .2s}
-#ui5.u-signal .sg-details-b::after{content:" ▾"}
-#ui5.u-signal .sg-details-b[aria-expanded="true"]::after{content:" ▴"}
-#ui5.u-signal .sg-details-b:hover{color:var(--tx);background:var(--creux);transform:translateY(-1px)}
-#ui5.u-signal .sg-details-b:active{transform:scale(.95);transition-duration:.08s}
-#ui5.u-signal .sg-tu-etat:has(.sg-details-b){padding-bottom:44px}
 #ui5.u-signal .sg-sort-tuile{pointer-events:none;animation:sg-sort-tuile .2s cubic-bezier(.4,0,1,1) forwards}
 @keyframes sg-sort-tuile{to{opacity:0;transform:translateY(-12px) scale(.98)}}
 #ui5.u-signal .sg-entre-tuile>.sg-haut,#ui5.u-signal .sg-entre-tuile .sg-anneau,#ui5.u-signal .sg-entre-tuile .sg-phrase,#ui5.u-signal .sg-entre-tuile .sg-constel-t,#ui5.u-signal .sg-entre-tuile .sg-chaine,#ui5.u-signal .sg-entre-tuile .sg-details-b{animation:sg-entre-m .62s var(--cx-ressort) both}
@@ -772,14 +766,23 @@ body.ui5:has(#ui5.u-signal:not([data-theme="clair"])){background:var(--cx-corps,
 #ui5.u-signal .sg-tic{animation:sg-tic .56s var(--cx-vif)}
 @media (prefers-reduced-motion:reduce){#ui5.u-signal *,#ui5.u-signal *::before,#ui5.u-signal *::after{animation:none!important;transition:none!important}#ui5.u-signal .sg-sort-tuile{display:none}}
 /* la trace des cuts : des points, sans texte à couper ; une alerte qui demande un geste passe devant (la trace se retire) */
-#ui5.u-signal:not([data-details]) .sg-tu-fil .sg-fil li{font-size:0;overflow:visible}
-#ui5.u-signal:not([data-details]) .sg-zone:has(.sg-tu-avis) .sg-tu-fil{display:none}
 #ui5.u-signal:not([data-details]) .sg-tu-fil .sg-fil li,#ui5.u-signal:not([data-details]) .sg-tu-fil .sg-fil li:nth-child(n+4){display:block;width:10px;height:10px;padding:0;border:0;border-radius:50%;background:var(--ok);opacity:calc(1 - var(--n,0)*.1);min-height:0;animation:cx-point .6s var(--cx-vif) backwards}
 @keyframes cx-point{from{opacity:0;transform:scale(.2) translateX(-10px)}}
 /* en petite taille, l'en-tête de la tuile reste dans le flux : la tuile est trop basse pour un en-tête posé par-dessus */
-#ui5.u-signal[data-taille="compact"]:not([data-details]) .sg-fen .sg-tu-etat .sg-haut{position:static}
 /* fin du lot : le bilan replié suffit, la trace se retire ; en petite taille, le bouton des détails prend moins de place */
-#ui5.u-signal:not([data-details]) .sg-zone:has(.sg-tu-fin) .sg-tu-fil{display:none}
-#ui5.u-signal[data-taille="compact"] .sg-tu-etat:has(.sg-details-b){padding-bottom:34px}
-#ui5.u-signal[data-taille="compact"] .sg-details-b{bottom:7px;right:9px;padding:5px 9px;font-size:11px}
-#ui5.u-signal[data-taille="compact"] .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-tu-etat:has(.sg-details-b){padding-top:10px;padding-bottom:30px}
+/* CH-115, reprise (page validée, au pixel) : la ligne d'état se tient en haut de la tuile (à 16 px des bords, comme sur la page) par des marges
+ * automatiques, et non plus en position absolue : le contenu est centré dans la tuile tant qu'il y a de la place, et ne peut jamais la chevaucher.
+ * La cale du bas (::after) a la hauteur de la ligne d'état plus son retrait (16 + 17 px) moins le rembourrage : le centre reste celui de la page. */
+#ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat{display:flex;flex-direction:column;justify-content:flex-start;padding:20px 18px;--cx-cale:13px}
+#ui5.u-signal[data-taille="compact"]:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat{padding:14px 12px;--cx-cale:19px}
+#ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat>.sg-haut{position:static;margin:-4px -2px auto}
+#ui5.u-signal[data-taille="compact"]:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat>.sg-haut{margin:2px 4px auto}
+#ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"],[data-activite="file"]) .sg-tu-etat::after{content:"";display:block;flex:0 1 var(--cx-cale);min-height:0;margin-top:auto}
+/* la commande des détails, comme sur la page validée : un mot discret en capitales en Orbite et en Écho, la pilule « Bilan et départs ▾ » en Constellation */
+#ui5.u-signal .sg-details-b{position:absolute;right:14px;bottom:10px;z-index:2;padding:0;border-radius:4px;font:500 10.5px/1 var(--f);letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);opacity:.75;transition:opacity .2s}
+#ui5.u-signal .sg-details-b:hover,#ui5.u-signal .sg-details-b:focus-visible{opacity:1}
+#ui5.u-signal .sg-constel .sg-details-b{bottom:12px;padding:5px 10px;border-radius:999px;font-size:11.5px;letter-spacing:0;text-transform:none;box-shadow:inset 0 0 0 1px var(--trait-fort)}
+#ui5.u-signal .sg-constel .sg-details-b::after{content:" ▾"}
+#ui5.u-signal .sg-constel .sg-details-b[aria-expanded="true"]::after{content:" ▴"}
+/* fenêtre très basse (moins de 560 px, plus petite que les tailles de la page validée) : une alerte ou le bilan de fin passe devant la trace, rien ne défile */
+@media (max-height:560px){#ui5.u-signal:not([data-details]) .sg-zone:has(.sg-tu-avis,.sg-tu-fin) .sg-tu-fil{display:none}#ui5.u-signal[data-taille="compact"]:not([data-details]) .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-tu-etat{padding-block:10px}}

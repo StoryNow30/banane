@@ -826,7 +826,7 @@
       else if (avisHtml(m)) z += tuileAvis('avis', '!', avisHtml(m), 'sg-incident sg-avis-seul', 'alert');
       if (m.objet === 'echo') z += `<section class="sg-tu sg-large sg-objet" data-k="echo"><h4>Visites</h4>${m.allure ? `<p class="sg-allure">${m.allure}</p>` : ''}<div class="sg-marques" role="img" aria-label="${esc(`${c.vus} visites, ${c.corriges} corrigées`)}">${M.map(x => `<i class="${x ? 'sg-c' : ''}"></i>`).join('')}${m.glyphe === 'echo' ? '<i class="sg-en"></i>' : ''}</div></section>`;
       const sous = trioHtml([[c.vus, c.vus > 1 ? 'Vus' : 'Vu'], [c.corriges, c.corriges > 1 ? 'Corrigés' : 'Corrigé'], [c.valides, c.valides > 1 ? 'Validés tels quels' : 'Validé tel quel']]);
-      return { corps: `${tuileEtat(m, anneau, partie, sansPartie(m.phrase, partie) || m.phrase, sous, '', m.objet === 'echo' ? DETAILS : null, u.details)}<div class="sg-zone" data-z="echo-${esc(m.glyphe)}">${z}</div>${poigneeHtml(s, m, u)}` };
+      return { corps: `${tuileEtat(m, anneau, partie, sansPartie(m.phrase, partie) || m.phrase, sous, '', DETAILS, u.details)}<div class="sg-zone" data-z="echo-${esc(m.glyphe)}">${z}</div>${poigneeHtml(s, m, u)}` };
     }
     const lot = a.etat !== 'pret', R = s.relChiffres || null, p2 = a.passe2, relu = a.etat === 'rel' && R && Number.isInteger(R.faits) && R.total > 0;
     /* Le pourcentage : seulement quand un total est réellement connu (cuts ciblés du lot, cuts décidés du rattrapage, cuts à relire). Sinon l'anneau
@@ -861,7 +861,7 @@
       z += `<div class="sg-duo" data-k="duo">${large ? fil('sg-second') + etapes('sg-second') : a.etat === 'rel' ? etapes('') + fil('sg-second') : fil('') + etapes('sg-second')}</div>`;
     }
     const cle = `orbite-${esc(a.etat)}-${esc(m.glyphe)}${m.incident ? '-incident' : ''}`;
-    return { corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous, '', lot && m.glyphe !== 'hors' ? DETAILS : null, u.details)}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
+    return { corps: `${tuileEtat(m, anneau, partie, phrase || m.phrase, sous, '', DETAILS, u.details)}<div class="sg-zone" data-z="${cle}">${z}</div>${lot || nDif(a) ? poigneeHtml(s, m, u) : ''}` };
   }
   function rendre(snap, ui) {
     const s = snap || {}, u = ui || {}, m = modele(s, u);
