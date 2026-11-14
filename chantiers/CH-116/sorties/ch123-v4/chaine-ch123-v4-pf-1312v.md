@@ -1,0 +1,7 @@
+« ch123-v4-pf » contre « livre-zj-pf », lot 1312v : poses déplacées de plus de 0.5 mm, par origine
+
+| origine | poses (posées des deux côtés) | déplacées | médiane (mm) | max (mm) | jugées | vers la pose finale | s'en éloignent | inchangées à 0,5 mm |
+|---|---|---|---|---|---|---|---|---|
+| chaîne | 1155 | 0 | - | - | 0 | 0 | 0 | 0 |
+| GCV2 | 119 | 0 | - | - | 0 | 0 | 0 | 0 |
+| GCV2 (passe) | 14 | 0 | - | - | 0 | 0 | 0 | 0 |
