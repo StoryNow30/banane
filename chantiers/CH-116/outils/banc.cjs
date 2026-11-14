@@ -12,7 +12,7 @@
  *        Tableau standard par lot : posés jugés, ≤ 10 mm, 10–50, > 50 (mauvaise voie), différés, différés reposés justes / faux, bons bloqués ;
  *        avec `--ref`, les cuts qui changent de classe contre le rejeu de référence.
  *   node chantiers/CH-116/outils/banc.cjs fidelite --nom livre [--lots …]
- *        Décisions et poses du rejeu identiques au lot réel (même état ; pose à 1 mm au plus, pire rail 3D), lot par lot, écarts listés.
+ *        Décisions et poses du rejeu identiques au lot réel (même état ; pose à 1 mm au plus, pire rail 3D, ou `--tol MM`), lot par lot, écarts listés.
  *   node chantiers/CH-116/outils/banc.cjs garde    --nom N [--patch P.patch …] [--env BANC_LEVIERS=JSON] [--jobs 3] [--refaire]
  *        Garde d'octobre au banc (premier filtre rapide) : les 12 lots de datasets/garde-gcv2/base-test18.json rejoués comme `garde-gcv2 --rejouer`
  *        (profils base et L1-se, --chrono, --juger-partie-reservee), leviers = ceux de la base (deuxième passe livrée) + ceux du réglage, en parallèle ;
@@ -43,7 +43,7 @@ function args(a) {
     const k = a[i], v = () => a[++i];
     if (k === '--nom') o.nom = v(); else if (k === '--noms') o.noms = v().split(','); else if (k === '--patch') o.patch.push(path.resolve(v()));
     else if (k === '--env') { const s = v(), j = s.indexOf('='); o.env[s.slice(0, j)] = s.slice(j + 1); }
-    else if (k === '--lots') o.lots = v().split(','); else if (k === '--jobs') o.jobs = Number(v()); else if (k === '--refaire') o.refaire = true; else if (k === '--avec-courtes') o.avecCourtes = true;
+    else if (k === '--lots') o.lots = v().split(','); else if (k === '--jobs') o.jobs = Number(v()); else if (k === '--refaire') o.refaire = true; else if (k === '--avec-courtes') o.avecCourtes = true; else if (k === '--tol') o.tol = Number(v());
     else if (k === '--ref') o.ref = v(); else if (k === '--json') o.json = v(); else if (k === '--csv') o.csv = v();
     else if (k === '--poids') o.poids = { ...POIDS, ...JSON.parse(v()) }; else if (k === '--examen') o.examen = v();
     else throw Error('option inconnue ' + k);
@@ -171,7 +171,7 @@ function fidelite(nom, o) {
       r.decisionsId++; if (!rp) continue; r.poses++;
       if (!re.decal || !x.decal) { if (x.source === 'reel-sans-nuage') r.posesId++; else r.ecarts.push(`${l.cut} : pose sans décalage`); continue; }
       const d = pire(re.decal, x.decal);
-      if (d <= 1) r.posesId++; else r.ecarts.push(`${l.cut} : pose à ${d.toFixed(1)} mm du réel (étage réel ${re.etage}, rejeu ${x.etage || x.source})`);
+      if (d <= (o.tol ?? 1)) r.posesId++; else r.ecarts.push(`${l.cut} : pose à ${d.toFixed(1)} mm du réel (étage réel ${re.etage}, rejeu ${x.etage || x.source})`);
     }
   }
   return res;
@@ -254,7 +254,7 @@ async function main() {
     const F = fidelite(o.nom || 'livre', o); let n = 0, d = 0, p = 0, pi = 0;
     for (const [k, r] of Object.entries(F)) {
       n += r.cuts; d += r.decisionsId; p += r.poses; pi += r.posesId;
-      process.stdout.write(`${k} : décisions identiques ${r.decisionsId}/${r.cuts} ; poses identiques à 1 mm ${r.posesId}/${r.poses}\n${r.ecarts.map(x => '    ' + x).join('\n')}${r.ecarts.length ? '\n' : ''}`);
+      process.stdout.write(`${k} : décisions identiques ${r.decisionsId}/${r.cuts} ; poses identiques à ${o.tol ?? 1} mm ${r.posesId}/${r.poses}\n${r.ecarts.map(x => '    ' + x).join('\n')}${r.ecarts.length ? '\n' : ''}`);
     }
     process.stdout.write(`TOTAL : décisions identiques ${d}/${n} (${(100 * d / n).toFixed(1)} %) ; poses identiques ${pi}/${p} (${(100 * pi / p).toFixed(1)} %)\n`);
     if (o.json) fs.writeFileSync(o.json, JSON.stringify(F, null, 1));
