@@ -1,0 +1,9 @@
+{
+  "note": "CH-123 v3 (13/11), « sans ricochet » sur demande de l'intégrateur. Patch : generateurs.patch de CH-120 puis hors-pool-v3.patch (= v2 + c123SansRicochet : un cut posé alors que des hypothèses générées H7/H8 sont dans son pool donne aux cuts suivants, comme voisin, la décision que le pool d'avant aurait prise, jamais la sienne). Figés AVANT tout rejeu v3. Ordre (R1) : garde d'octobre au banc d'abord ; garde rouge = écarté ; puis rappel et validation croisée « un lot dehors » parmi livre et ces réglages, puis examen 0511. Décisions changées hors des cuts touchés : il en faut 0. v2E60, v2EBS, v2AEBS abandonnés (le modèle valide des H7 décalés de 12 à 21 mm ; pas de critère de précision sur la cellule ajoutée).",
+  "communs": { "genZones": [], "c123EcartMm": 10, "c123MinTop": 15, "c123MinFace": 0, "c123RatioMax": 1e9, "c123Pente": false, "c123SoutienDessus": 5, "c123SoutienFlanc": 0, "c123MaxRelances": 8, "c123MaxHyp": 6, "c123BalayageMm": [-240, -160, -80, 80, 160, 240], "c123SansPaire": true, "c123SansRicochet": true },
+  "reglages": {
+    "livre": {},
+    "v3BS-sr":  { "c123Balayage": true },
+    "v3ABS-sr": { "c123Balayage": true, "c123Apparie": true }
+  }
+}
