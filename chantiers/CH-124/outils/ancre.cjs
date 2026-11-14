@@ -101,14 +101,15 @@ function calage(rows, caps) {
 /* Liste du DÉPART du lot, reconstituée : les lignes des cuts du lot reprennent la pose de départ d'ESV lue dans la capture (rails de départ + calage),
  * sans drapeau, statut valide (le statut d'origine n'est pas connu : choix prudent, la ligne entre alors dans la voie courante si son écartement
  * est plausible, même si elle vise l'autre voie). C'est l'état que le service worker lit une fois par lot (`l1eTable`). */
-function listeDeDepart(rows, caps, cal) {
+function listeDeDepart(rows, caps, cal, invalide = false) {
   const out = rows.slice();
   for (const [cut, c] of caps) {
     const r = rows[cut]; if (!r) continue;
     const Lp = c.rails.left.positionSceneRelative.map((v, i) => v + cal.t[i]), Rp = c.rails.right.positionSceneRelative.map((v, i) => v + cal.t[i]);
     const dx = Lp[0] - Rp[0], dy = Lp[1] - Rp[1], g = Math.hypot(dx, dy); if (!(g > 0.5)) continue;
     const ey = [dx / g, dy / g], n = [ey[1], -ey[0]], ecartMm = 1000 * Math.hypot(dx, dy, Lp[2] - Rp[2]);
-    out[cut] = { i: cut, st: (r.fl & 1) ? 0 : r.st, fl: (r.fl & 1) ? 0 : r.fl, L: Lp, R: Rp, M: [(Lp[0] + Rp[0]) / 2, (Lp[1] + Rp[1]) / 2, (Lp[2] + Rp[2]) / 2], ey, n, ecartMm, cap: Math.atan2(n[1], n[0]),
+    /* `invalide` (14/11) : un cut du lot était INVALIDE au départ (le lot traite les invalides) : statut 1, hors de la voie courante, comme le service worker le voit. */
+    out[cut] = { i: cut, st: invalide ? 1 : (r.fl & 1) ? 0 : r.st, fl: (r.fl & 1) ? 0 : r.fl, L: Lp, R: Rp, M: [(Lp[0] + Rp[0]) / 2, (Lp[1] + Rp[1]) / 2, (Lp[2] + Rp[2]) / 2], ey, n, ecartMm, cap: Math.atan2(n[1], n[0]),
       defaut: Math.abs(ecartMm - T.DEFAUT_MM) <= T.TOL_DEFAUT_MM };
   }
   return out;
@@ -120,7 +121,7 @@ function mesurer(o) {
   for (const e of Lb.entrees(o.lots)) {
     const k = Lb.cle(e), m = Lb.meta(k), C = co.get(k); if (!C || !m.liste) continue;
     const rowsFin = T.lignes(m.liste), caps = Lb.captures(k), cal = calage(rowsFin, caps); if (!cal) { params.push({ cle: k, calage: 'aucun' }); continue; }
-    const rows = o.fin ? rowsFin : listeDeDepart(rowsFin, caps, cal);
+    const rows = o.fin ? rowsFin : listeDeDepart(rowsFin, caps, cal, o.departInvalide === true);
     let P = null;
     if (o.params) { const S0 = serie(rows), G0 = grille(S0); P = [1, -1].map(sens => ({ a: o.params.a, w: o.params.w, sens, cout: cout(S0, G0, o.params.a, o.params.w, sens) })).sort((x, y) => x.cout - y.cout)[0]; }
     const Mo = modele(rows, P);
@@ -139,7 +140,7 @@ function mesurer(o) {
   }
   return { out, params };
 }
-function args(a) { const o = { mode: a[0] }; for (let i = 1; i < a.length; i++) { const k = a[i]; if (k === '--lots') o.lots = a[++i].split(','); else if (k === '--csv') o.csv = a[++i]; else if (k === '--md') o.md = a[++i]; else if (k === '--fin') o.fin = true; else if (k === '--a') o.params = { ...(o.params || {}), a: Number(a[++i]) }; else if (k === '--w') o.params = { ...(o.params || {}), w: Number(a[++i]) }; else throw Error('option inconnue ' + k); } return o; }
+function args(a) { const o = { mode: a[0] }; for (let i = 1; i < a.length; i++) { const k = a[i]; if (k === '--lots') o.lots = a[++i].split(','); else if (k === '--depart-invalide') o.departInvalide = true; else if (k === '--csv') o.csv = a[++i]; else if (k === '--md') o.md = a[++i]; else if (k === '--fin') o.fin = true; else if (k === '--a') o.params = { ...(o.params || {}), a: Number(a[++i]) }; else if (k === '--w') o.params = { ...(o.params || {}), w: Number(a[++i]) }; else throw Error('option inconnue ' + k); } return o; }
 const q = (v, p) => { const x = Lb.quantile(v, p); return x == null ? '-' : x.toFixed(1); };
 function main() {
   const o = args(process.argv.slice(2));

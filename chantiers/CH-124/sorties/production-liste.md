@@ -27,3 +27,9 @@ Correctif `sw-ancre-liste.patch` (après `sw-ancre.patch` ; éteint : aucune lig
 
 ## 4. Faut-il une copie de l'instantané gardée à part pour le lot ?
 Non mesuré comme nécessaire : aucun nouvel instantané en cours de lot sur 24, et un instantané plus récent ne fausse pas l'axe (§ 3). Le besoin réel était la course du départ (§ 2).
+
+## 5. La liste du départ reconstituée par le banc : les cuts du lot étaient invalides (corrigé le 14/11)
+Le banc et l'outil de parité reconstituent la liste du départ depuis le dernier instantané exporté. Ils rendaient « valides, sans drapeau » les cuts du lot traités depuis ; or au départ ils étaient invalides (12/11 p23 : la fiche de départ compte 311 invalides, les 311 cuts du lot ; la liste corrigée en compte 311).
+- **Effet sur l'ancre (ÉTABLI, `outils/ancre.cjs juger --a 4 --w 14 [--depart-invalide]`, 4 016 cuts)** : l'axe bouge de 0,1 mm au 90e centile, 0,4 mm au 99e, 1,4 mm au plus ; aucune pose ne change de côté du seuil de 75 mm ; 30 désignations sur 30 ; aucune pose réelle entre 45 et 110 mm de l'axe. Les jugements de N tiennent.
+- **Effet sur la parité** : dans la liste donnée au banc et au service worker, ces lignes entraient à tort dans la référence d'écartement de la GCV2. Sur 12/11 p23, 44 lignes du banc sur 311 changent selon la liste. `outils/liste-depart.cjs` est corrigé ; la parité de 12/11 p23 est refaite avec la liste juste.
+- **Correctif du banc** : `ancre-banc-depart.patch` (`listeDeDepart` : sans drapeau et invalide), avec son essai `tests/ch124-liste-depart.test.cjs`.

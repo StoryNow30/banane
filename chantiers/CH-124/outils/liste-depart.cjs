@@ -19,9 +19,13 @@ function main() {
   const cl = cuts.map(c => { const cap = c.captureId ? captures.get(c.captureId) : null, pr = R.poseReelle.get(c.cut) || null;
     return cap ? { cut: c.cut, depart: { left: cap.rails.left.positionSceneRelative.slice(0, 3), right: cap.rails.right.positionSceneRelative.slice(0, 3) }, pose: pr ? pr.corrigee : null } : null; }).filter(Boolean);
   const D = Banc.listeDeDepart(table, cl); if (!D) throw Error('translation monde − scène introuvable : pas de liste de départ');
+  /* 14/11 : un cut du lot traité depuis était INVALIDE au départ (le lot ne traite que les invalides : la fiche de départ en compte autant que de cuts du lot).
+   * `listeDeDepart` le rend « valide, sans drapeau » : il entrerait dans la référence d'écartement de la décision L1-e et dans la voie courante de l'ancre, ce que le
+   * service worker n'a jamais vu. Ici il redevient invalide (statut 1). */
+  let invalides = 0; for (const c of cl) if (Number.isInteger(c.cut) && c.cut >= 0 && c.cut < table.n && (table.fl[c.cut] & 1)) { D.table.st[c.cut] = 1; invalides++; }
   const t = { st: D.table.st, fl: D.table.fl, ed: D.table.ed.map(v => (Number.isFinite(v) ? v : NaN)) };
   const out = LM.compacter(t, { partie: snap.partie, at: snap.at, version: snap.version, cle: snap.cle });
   fs.writeFileSync(o.sortie, JSON.stringify(out));
-  process.stdout.write(`liste de départ : ${out.lignes} lignes, ${cl.length} cuts du lot, ${D.remises} lignes remises sans drapeau, calage sur ${D.n} cuts (grappe suivante ${D.second})\n`);
+  process.stdout.write(`liste de départ : ${out.lignes} lignes, ${cl.length} cuts du lot, ${D.remises} lignes remises sans drapeau dont ${invalides} rendues invalides, calage sur ${D.n} cuts (grappe suivante ${D.second})\n`);
 }
 if (require.main === module) { try { main(); } catch (e) { process.stderr.write('liste-depart : ' + e.message + '\n'); process.exitCode = 1; } }
