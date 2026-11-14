@@ -67,3 +67,15 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 ### Suite de l'audit 4 (14/11) : outillage rendu par CH-116
 - **R5 tranchée** : la zone d'un cut est celle que le service worker voit à la décision (« lot »). Le banc la lit au journal avec `BANC_ZONES=journal`. Le banc et le lot différaient sur environ 7 % des cuts (presque toujours `abords` au banc, ADV au lot) ; les 30 mauvaises voies du corpus sont ADV dans toutes les définitions, donc les validations croisées rendues tiennent. Tout nouveau jugement se fait avec `BANC_ZONES=journal`.
 - **Passe fidèle** : `BANC_PASSE_PLAFOND=10` (ordre de décision, 10 écritures, arrêt au premier refus) ; fidélité des décisions 99,2 % sur 5 475 cuts. Tout jugement « passe livrée » s'en sert.
+
+## Audit 5 — 14/11, 8 h 40 UTC
+
+### Constats
+17. **Le levier d'ancre N passe octobre, jugé contre la vérité** (CH-124, ÉTABLI) : 2 362 cuts, 13 refus, 13 vraies corrections (pose refusée à 117-289 mm de la vérité), 0 vraie faute, 0 ricochet. Octobre n'avait jamais été regardé pour l'ancre et θ était fixé d'avance : c'est un essai hors échantillon.
+18. **La garde d'octobre a donné deux fausses alertes, et je les ai suivies** : les 7 « verts changés » qui ont fait écarter C1 (CH-117) et D (CH-119) sont des mauvaises voies de la CHAÎNE (pose de base à 125-247 mm de la vérité d'octobre). La garde ne rejuge pas un cut posé par le profil de base : elle a compté comme recul le fait de toucher à une pose fausse. J'ai écrit « probables mauvaises voies nouvelles » pour D sans le mesurer contre la vérité : c'était faux sur ces 7 cuts. Où C1 et D reposaient ces cuts n'est pas mesuré.
+19. **Conséquence** : la « leçon commune » de l'audit 1 (tout levier qui touche une pose de la chaîne échoue) reposait en partie sur ce défaut de la garde. Les échecs réels restent : fautes de aj3 (latéral), ricochet d'aj4, mauvaises voies nouvelles de gTE et de la puce B / B' / v3, mesurés contre la vérité ou sur des cuts jugés.
+
+### Ce qui change
+- **R6 étendue à tous les leviers** : un « vert changé » n'est ni un recul ni un gain tant qu'il n'est pas jugé contre la vérité d'octobre. Tout verdict de garde donne, pour chaque cut changé : pose de base, pose nouvelle, vérité.
+- **D et E de CH-119 à rejuger** contre la vérité d'octobre à sa relance (ses 7 « verts changés » : la chaîne y est fausse ; où D repose-t-il ?). C1 de même, si le budget le permet.
+- **L'ancre devient la référence** : tout levier de voie est jugé aussi par la distance à l'axe de ses poses nouvelles.
