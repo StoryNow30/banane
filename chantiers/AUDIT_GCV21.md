@@ -91,3 +91,17 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 - **R8 durcie : une seule session au modèle le plus fort à la fois**, plus le banc (CH-116) et au plus une session légère. Ordre : parité de N (CH-124) d'abord ; CH-125 ensuite seulement.
 - **Sessions trop lourdes** : au-delà de 500 000 jetons de contexte, une session finit sa tâche en cours, pousse une passation, et est remplacée par une session neuve (CH-121 après sa parité ; CH-116 après les examens en cours).
 - **Relance programmée** à l'heure de levée (`send_later` à 11 h 32 UTC), faite.
+
+## Audit 7 (14/11, après la livraison de la Vision 18)
+**Ce qui a changé.** Le levier N est dans le tronc : sur le corpus les poses à plus de 50 mm de la vérité passent de 29 à 0. L'objectif « moins de mauvaises voies » des chantiers CH-117, CH-119 et de la première moitié de CH-120 est atteint par un autre chemin. Ce qui reste à gagner : les différés (603 sur 4 016 avec N) et la précision (503 justes sur 539 posés jugés).
+
+**Ce que j'ai mal fait aujourd'hui, et la règle qui en sort.**
+- J'ai relayé à l'opérateur « conforme à la page validée » sur la parole d'une session, sans mesurer ; l'opérateur a vu l'écart sur les photos. **R10 : une conformité visuelle se mesure (positions, couleurs) contre la référence validée, à taille égale et à 2 ×, par l'intégrateur lui-même, avant d'être annoncée.**
+- J'ai écrit « le banc sous-estime PROBABLEMENT le livré » à partir d'une parité montée avec une liste fausse ; la mesure sur le corpus l'a démenti (4 016 cuts identiques). Le constat était bien qualifié PROBABLE, mais il venait d'un montage non contrôlé. **R11 : un montage de mesure (liste reconstituée, zones, référence) se contrôle contre une donnée du terrain (fiche de départ, journal) avant d'en tirer un constat.**
+- Une parité prouve « même décision à entrées égales », pas « les bonnes entrées sont lues sur le terrain » : le défaut de la course au départ du lot (CH-124) n'était visible ni au banc ni en parité. **R12 : tout levier qui lit une donnée de la page (liste, vue, stockage) a un essai du service worker sur le MOMENT de cette lecture, et une mesure sur les journaux de l'ordre réel des événements.**
+- Quatre coupures d'usage dans la journée, dont une a retardé de deux heures un verdict déjà rendu. R8 a été tenue l'après-midi (une session de conception à la fois) ; à garder.
+
+**Ce qui a bien marché, à garder.** Réglage et règle de décision figés avant tout rejeu (CH-126 : N+ refusé à un cut près, sans discussion possible) ; contrôle croisé entre sessions (CH-116 a rejugé N, CH-124 a relu l'intégration d'aj5 et trouvé deux désalignements) ; l'arbre d'intégration sur une branche à part jusqu'aux preuves.
+
+**Conséquence pour la file.** Les réglages « poser plus » rejetés pour mauvaises voies nouvelles (gTE de CH-120 : 17 différés reposés justes mais 3 mauvaises voies nouvelles en octobre ; puce de CH-122 à chaîne intacte) sont à rejuger SOUS N, tels que figés : N refuse précisément ce qui les avait fait rejeter. C'est le chantier CH-127 (assemblage). CH-119 (choix de voie global) n'a plus d'objet tant que N tient sur le terrain.
+
