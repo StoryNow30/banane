@@ -46,6 +46,13 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-124 | Ancre indépendante en ADV (repère du cut, trajectoire, voie amont, géométrie d'aiguillage), audit 1 | mauvaises voies 29 → ≤ 15 en validation croisée, 0 nouvelle, garde verte |
 | CH-125 | Le calcul de pose à la source : gabarit du champignon, nuage de plusieurs coupes, écartement mesuré | ≤ 10 mm 93,2 % → ≥ 96 %, 0 juste dégradé, 0 ricochet, garde verte |
 
+## Vague 3 (lancée le 14/11, après la livraison de la Vision 18)
+| Ticket | Levier | Cible écrite |
+|---|---|---|
+| CH-126 | N+ : reprise d'un cut refusé par l'ancre, sur le pool restreint à l'axe (réglage figé par CH-124 avant tout rejeu) | 0 reprise à plus de 50 mm de la vérité, au plus une sur dix à plus de 10 mm ; gain = refus reposés justes |
+
+Une seule session de conception à la fois (R8). Ensuite, dans l'ordre : CH-119 (l'ancre comme juge du choix de voie global, D et E rejugés contre la vérité), CH-120 (génération autour de l'axe), CH-122 (puce avec la garde de l'ancre), puis le travers départagé par l'axe (piste de CH-125).
+
 ## Carnet (vague suivante, dans l'ordre)
 1. Assemblage « GCV2.1 » : les leviers retenus ensemble, garde complète, parité, un seul réglage figé pour l'Écho.
 2. Lissage de la trajectoire le long du lot (le rail est continu : courbure bornée), pour la précision et les poses isolées.
