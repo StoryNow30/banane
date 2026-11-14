@@ -1,0 +1,6 @@
+# Parité (a) 06/11 p15 sur fed03f7, liste du départ corrigée (CH-116, 14/11)
+Arbre : fed03f7 (integration/vision18-n-aj5). Liste : liste du départ reconstituée par `chantiers/CH-124/outils/liste-depart.cjs` (origin/chantier/CH-124), cuts du lot remis INVALIDES (143 lignes). Banc et service worker lisent la même liste. Banc : `--profils L1-se`, `BANC_LEVIERS={"deuxiemePasse":2,"passe2Leviers":{"sansVoieRien":true}}`, zones par défaut du banc ; parité : `tools/parite-l1se-sw.cjs --passe`.
+
+- Parité : 161/161 cuts rejoués, **0 ligne différente** (ÉTABLI). Passe : 1 pose (passe 1), 0 (passe 2), banc identique. Différés : banc 20, service worker 20 ; refus d'ancre 7260 et 7423 des deux côtés.
+- Contre la parité (a) précédente (arbre 1bc4532, liste du départ sans remise en invalide) : 7 cuts changent d'état au banc, tous posés GCV2 → différés (7261 à 7266, 7405) ; les 7 sont DIFFÉRÉS au lot réel. 4 poses bougent de plus de 0,05 mm : 2167 (à 0,48 mm du réel, contre 2,20), 7268 (0,46 contre 3,26 ; vérité 3,5 contre 6,5 mm), 7267 (5,1 mm de déplacement), 7627 (0,54 contre 0,44).
+- Lecture : la liste du départ avec les cuts du lot invalides rapproche le banc du lot réel sur cette partie (8 cuts sur 9 changés vont vers le réel). PROBABLE pour le reste du corpus : c'est l'objet de l'audit de fidélité.
