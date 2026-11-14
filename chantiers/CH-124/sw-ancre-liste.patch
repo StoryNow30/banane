@@ -1,0 +1,143 @@
+diff --git a/background.js b/background.js
+index 1428aae..ffa99eb 100644
+--- a/background.js
++++ b/background.js
+@@ -2033,18 +2033,30 @@ async function l1eTable(part){const cle=(engine?.s?.batch?.id||'')+'|'+part;if(l
+ async function l1eVoieListe(capture,identity){const G=globalThis.BananeGcv2L1;return G.voieDeListe(await l1eTable(identity.part),identity.cut,capture,{...G.VOIE_LISTE,fenetre:G.leviersActifs().voieListeFenetre});}
+ /* CH-124 (D-352) — REFUS D'ANCRE (levier `ancre` de src/gcv2-l1.js, COUPÉ : rien de ce qui suit ne s'exécute, les commandes sont celles d'avant). Sous L1-se, l'axe de la
+  * voie relevée est prédit par la trajectoire du véhicule de mesure, lue dans la liste d'ESV (src/ancre-trajectoire.js). QUAND LA LISTE EST LUE : l'instantané de la partie
+- * est pris au chargement complet de sa liste, donc AVANT le premier cut du lot ; il est lu une fois par lot (`l1eTable`) et le modèle de l'ancre est calculé une fois, à la
+- * première commande du lot (`ancreEtat`). Toute pose que le lot s'apprête à valider (chaîne, L1-s, GCV2, deuxième passe) dont le milieu est à plus de θ en travers de l'axe
++ * est pris au départ du lot (fiche de départ), pendant que le premier cut se décide ; l'ancre le lit elle-même (`ancreEtat`, plus bas) et le garde pour le lot : le modèle
++ * est calculé une fois par instantané lu. Toute pose que le lot s'apprête à valider (chaîne, L1-s, GCV2, deuxième passe) dont le milieu est à plus de θ en travers de l'axe
+  * est différée (`ancreCommande`, en dernier dans `commandLot` ; `passeDiff` pour la passe). SANS RICOCHET : la pose refusée continue de nourrir le lot comme le code livré
+  * (appui de la chaîne, voisine de la GCV2, transport, mémoire des règles) et n'est pas reprise par la deuxième passe ; les autres cuts gardent donc leur décision. Une
+  * panne, une liste absente ou une ancre muette ne changent rien. */
+-let ancreLot={cle:null,etat:null},ancreFant={cle:null,voisins:[]};
++let ancreLot={cle:null,etat:null,sig:null,lectures:0},ancreFant={cle:null,voisins:[]};
+ /* Coupé (ou hors L1-se) : faux, sans attente ; aucun appel asynchrone n'est alors ajouté au lot ni à la passe. */
+ function ancreAllumee(){return !!(globalThis.BananeAncreTrajectoire&&globalThis.BananeGcv2L1?.leviersActifs?.().ancre&&profilL1se());}
+-async function ancreEtat(part){const A=globalThis.BananeAncreTrajectoire,r=globalThis.BananeGcv2L1?.leviersActifs?.().ancre;
+- if(!A||!r||!profilL1se())return null;
++/* LA LISTE DE L'ANCRE est lue par l'ancre elle-même dans le stockage, jamais par `l1eTable` : la mémoire de la liste de la décision L1-e n'est pas remplie plus tôt
++ * qu'avant (l'ancre lit dès la première pose du lot, la GCV2 seulement à son premier différé). Au départ d'un lot, l'instantané de la partie s'écrit pendant que le
++ * premier cut se décide (mesuré sur les 24 lots-parties du corpus : première pose de −0,2 à 9,4 s après la fiche de départ, à moins d'une seconde dans 5 lots). Donc :
++ * l'absence n'est jamais gardée (l'ancre se tait et relit au cut suivant) ; pendant les `ANCRE_LECTURES` premières lectures du lot, un instantané plus récent remplace
++ * le premier lu ; ensuite la liste est figée pour le lot (mémoire du service worker ; après un redémarrage elle est relue de la même façon). */
++const ANCRE_LECTURES=6;
++async function ancreEtat(part){const A=globalThis.BananeAncreTrajectoire,LM=globalThis.BananeListeMemoire,r=globalThis.BananeGcv2L1?.leviersActifs?.().ancre;
++ if(!A||!LM||!r||!profilL1se())return null;
+  const cle=(engine?.s?.batch?.id||'')+'|'+part;
+- if(ancreLot.cle!==cle){let etat=null;try{etat=A.etat(await l1eTable(part),r===true?{}:r);}catch{etat=null;}ancreLot={cle,etat:etat?.modele?.ok?etat:null};}
++ if(ancreLot.cle!==cle)ancreLot={cle,etat:null,sig:null,lectures:0};
++ if(ancreLot.sig!==null&&ancreLot.lectures>=ANCRE_LECTURES)return ancreLot.etat;
++ let snap=null;try{const k=LM.PRE_INST+part;snap=(await chrome.storage.local.get(k))?.[k]??null;}catch{snap=null;}
++ if(ancreLot.cle!==cle)return null;   /* un autre lot a commencé pendant la lecture */
++ ancreLot.lectures++;
++ const sig=snap?String(snap.sig??snap.at??''):null;
++ if(snap&&sig!==ancreLot.sig){let etat=null;try{etat=A.etat(LM.decompacter(snap),r===true?{}:r);}catch{etat=null;}ancreLot={...ancreLot,sig,etat:etat?.modele?.ok?etat:null};}
+  return ancreLot.etat;}
+ function ancreFantomes(b,identity){const cle=(b?.id||'')+'|'+identity.part+'|'+(identity.frameId??null);if(ancreFant.cle!==cle)ancreFant={cle,voisins:[]};return ancreFant.voisins;}
+ async function ancreCommande(command,lotObservation,proposal,before){
+diff --git a/tests/ch124-ancre-liste-sw.test.cjs b/tests/ch124-ancre-liste-sw.test.cjs
+new file mode 100644
+index 0000000..99c11d5
+--- /dev/null
++++ b/tests/ch124-ancre-liste-sw.test.cjs
+@@ -0,0 +1,56 @@
++'use strict';
++/* CH-124 — LA LISTE DE L'ANCRE AU DÉPART DU LOT (service worker). Mesuré sur les journaux des 24 lots-parties du corpus : l'instantané de la liste d'ESV s'écrit
++ * pendant que le premier cut du lot se décide (fiche de départ 0,3 à 2,3 s après le départ du lot ; première pose de −0,2 à 9,4 s après la fiche, à moins d'une
++ * seconde dans 5 lots). Le levier d'ancre, allumé, lit la liste dès la première pose du lot, donc plus tôt que la décision L1-e. Il ne doit :
++ *  - ni garder « pas de liste » pour tout le lot quand l'instantané arrive juste après sa première lecture ;
++ *  - ni remplir plus tôt qu'avant la mémoire de la liste de la décision L1-e (`l1eTable`) : la référence d'écartement donnée à la GCV2 reste celle du livré.
++ * Montage : tests/helpers/lot-profil.cjs (cuts 111 à 113 ; le 111 est posé par la chaîne, le 112 est le différé donné à la GCV2). Données synthétiques. */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const { production, memoire, base, K, S, attendre, EsvTrou, SCOPE } = require('./helpers/lot-profil.cjs');
++const LM = require('../src/liste-memoire.js');
++const CLE = LM.PRE_INST + 23;
++function instantane() {
++  const st = [], fl = [], ed = [];
++  /* voie droite, une coupe par mètre, numéros croissants dans le sens de la marche : bord gauche à gauche (convention d'ESV), écartement 1 435 mm */
++  for (let i = 0; i < 600; i++) { st.push(i >= 111 && i <= 113 ? 1 : 0); fl.push(0); ed.push(i * 10000, 14350, 0, i * 10000, 0, 0); }
++  return LM.compacter({ st, fl, ed }, { partie: 23, at: '2026-10-20T00:00:00Z', cle: 'essai' });
++}
++/* `quand` : 'avant' (instantané présent au départ du lot) ; 'apres-le-premier-cut' (il n'est écrit qu'une fois le premier cut décidé) ; 'jamais'. */
++async function lot({ quand, ancre }) {
++  const local = memoire(); if (quand === 'avant') local.m[CLE] = instantane();
++  const lectures = [], get0 = local.get; local.get = async k => { const r = await get0(k); if (k != null && [].concat(k).includes(CLE)) lectures.push(CLE in r); return r; };
++  const adapter = new EsvTrou([]), b = production({ adapter, local });
++  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false } };
++  const put0 = b.store.putEvent.bind(b.store);
++  b.store.putEvent = e => { if (quand === 'apres-le-premier-cut' && e && e.type === 'gcv1-shadow-observed' && !(CLE in local.m)) local.m[CLE] = instantane(); return put0(e); };
++  const G = b.ctx.BananeGcv2L1, appels = [];
++  b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => { appels.push({ cut: a.capture.identity.cut, reference: a.reference ?? null }); return G.deciderDiffere(a); } };
++  G.reglerLeviers({ ancre: ancre ? true : null });
++  try {
++    await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
++    adapter.identity.cut = 111; adapter.rails = K.clone(base.rails); adapter.ajuster();
++    await b.api('start', { part: 23, start: 111, end: 113, ...SCOPE }); await b.settle(); await attendre(30);
++    return { reference: (appels.find(c => c.cut === 112) || {}).reference, gcv2: appels.length, lectures, ancre: b.get('ancreLot'), ancres: b.store.events.filter(e => e.type === 'gcv1-shadow-observed').map(e => e.lotObservation && e.lotObservation.ancre ? (e.lotObservation.ancre.muet || (e.lotObservation.ancre.erreur ? 'erreur' : 'parle')) : null) };
++  } finally { G.reglerLeviers(null); }
++}
++
++test('instantané présent au départ : la GCV2 a sa référence, l’ancre a son modèle', async () => {
++  const x = await lot({ quand: 'avant', ancre: true });
++  assert.equal(x.reference.mm, 1435); assert.ok(x.ancre.etat && x.ancre.etat.modele.ok, 'modèle de l’ancre calculé');
++});
++test('instantané écrit juste après le premier cut, levier coupé : le livré (la GCV2 lit la liste à sa première décision)', async () => {
++  const x = await lot({ quand: 'apres-le-premier-cut', ancre: false });
++  assert.equal(x.reference.mm, 1435, 'référence d’écartement du livré');
++  assert.deepEqual(x.lectures, [true], 'une seule lecture de la liste, par la décision L1-e, après son écriture');
++});
++test('instantané écrit juste après le premier cut, levier allumé : la référence de la GCV2 reste celle du livré, et l’ancre retrouve la liste au cut suivant', async () => {
++  const x = await lot({ quand: 'apres-le-premier-cut', ancre: true });
++  assert.equal(x.lectures[0], false, 'première lecture, par l’ancre, avant l’écriture de l’instantané');
++  assert.ok(x.reference && x.reference.mm === 1435, 'la décision L1-e garde sa référence d’écartement (la lecture de l’ancre ne remplit pas sa mémoire)');
++  assert.ok(x.ancre.etat && x.ancre.etat.modele.ok, 'l’absence n’est pas gardée pour le lot : modèle calculé dès que la liste est là');
++});
++test('aucun instantané : l’ancre se tait sans erreur et relit à chaque cut ; la GCV2 n’a pas de référence, comme le livré', async () => {
++  const x = await lot({ quand: 'jamais', ancre: true });
++  assert.equal(x.reference, null); assert.equal(x.ancre.etat, null); assert.ok(x.lectures.every(v => v === false));
++  assert.ok(!x.ancres.includes('erreur'));
++});
+diff --git a/tests/ch124-ancre.test.cjs b/tests/ch124-ancre.test.cjs
+index d5094ee..60fdf2e 100644
+--- a/tests/ch124-ancre.test.cjs
++++ b/tests/ch124-ancre.test.cjs
+@@ -110,3 +110,35 @@ test('calage : ligne réécrite (les deux rails ne donnent pas la même translat
+   const capT = capture(table, 121, [0, 0.13, 0]); assert.equal(A.juger(E, 121, capT, pose(capT, table, 121, 0)).muet, 'calage-lot');
+   assert.equal(A.translation(E).n, 3);
+ });
++
++/* ---- Liste prise pendant ou après un lot (question de mise en production, 14/11) ---- */
++/* `lignes` : [{ i, mmG, mmD }], déplacement en travers de chaque rail de la ligne i (mm, vers la gauche) ; la ligne devient valide et marquée « traitée ». */
++function reecrire(table, lignes) {
++  const t = { n: table.n, st: table.st.slice(), fl: table.fl.slice(), ed: table.ed.slice() };
++  for (const { i, mmG, mmD } of lignes) { const o = 6 * i, g = Math.hypot(t.ed[o] - t.ed[o + 3], t.ed[o + 1] - t.ed[o + 4]), ex = (t.ed[o] - t.ed[o + 3]) / g, ey = (t.ed[o + 1] - t.ed[o + 4]) / g;
++    t.ed[o] += Math.round(mmG * 10 * ex); t.ed[o + 1] += Math.round(mmG * 10 * ey); t.ed[o + 3] += Math.round(mmD * 10 * ex); t.ed[o + 4] += Math.round(mmD * 10 * ey); t.st[i] = 0; t.fl[i] = 1; }
++  return t;
++}
++test('liste prise après un lot : des lignes réécrites (marquées), sur l’autre voie ou corrigées, ne déplacent pas l’axe des autres cuts ; aucun refus à tort', () => {
++  const { table } = construire({ fausses: [{ de: 205, a: 212, mm: 150 }] }), Mo = A.preparer(table), K = [];
++  for (let i = 150; i <= 180; i += 3) K.push({ i, mmG: 4, mmD: -3 });      /* poses retouchées de quelques millimètres */
++  for (let i = 206; i <= 210; i++) K.push({ i, mmG: -150, mmD: -150 });    /* mauvaises voies corrigées : ramenées sur la voie relevée */
++  for (let i = 230; i <= 250; i++) K.push({ i, mmG: 150, mmD: 150 });      /* 21 poses d'un lot validées sur l'autre voie */
++  const t2 = reecrire(table, K), Mo2 = A.preparer(t2), touchees = new Set(K.map(k => k.i)); assert.equal(Mo2.ok, true); assert.equal(Mo2.sens, Mo.sens);
++  let pire = 0; for (let c = 30; c < 390; c++) if (!touchees.has(c)) pire = Math.max(pire, Math.abs(A.axe(Mo2, c).mm - A.axe(Mo, c).mm));
++  assert.ok(pire < 1.5, `axe des cuts non touchés déplacé de ${pire.toFixed(2)} mm`);
++  /* une ligne réécrite sort de la voie courante ; son axe reste celui de la voie relevée, dit depuis son nouveau milieu */
++  assert.ok(Math.abs(A.axe(Mo2, 240).mm - (A.axe(Mo, 240).mm - 150)) < 1.5); assert.ok(Math.abs(A.axe(Mo2, 208).mm) < 4);
++  const E2 = A.etat(t2);
++  for (let c = 60; c < 380; c += 7) { if (touchees.has(c) || (c >= 205 && c <= 212)) continue;
++    const cap = capture(t2, c), j = A.juger(E2, c, cap, pose(cap, t2, c, 0)); assert.equal(j.refus, false, `cut ${c} refusé à tort (${j.ecartMm} mm)`); assert.ok(Math.abs(j.ecartMm) < 4); }
++  /* une ligne d'ESV restée sur l'autre voie est encore refusée */
++  { const cap = capture(t2, 211); assert.equal(A.juger(E2, 211, cap, pose(cap, t2, 211, 0)).refus, true); }
++});
++test('liste prise après le lot, rejouée sur les captures du départ : l’ancre se tait sur un cut dont la ligne est réécrite, sans refus à tort', () => {
++  const { table } = construire(), t2 = reecrire(table, [{ i: 100, mmG: 12, mmD: -20 }, { i: 101, mmG: 150, mmD: 150 }]), E2 = A.etat(t2);
++  for (const c of [90, 91, 92]) { const cap = capture(table, c); assert.equal(A.juger(E2, c, cap, pose(cap, table, c, 0)).refus, false); }   /* lignes intactes : la translation du lot */
++  const c100 = capture(table, 100), c101 = capture(table, 101);
++  assert.equal(A.juger(E2, 100, c100, pose(c100, table, 100, 0)).muet, 'calage-ligne');   /* rails déplacés différemment */
++  assert.equal(A.juger(E2, 101, c101, pose(c101, table, 101, 150)).muet, 'calage-lot');   /* paire déplacée d'un bloc : translation hors de celle du lot */
++});
