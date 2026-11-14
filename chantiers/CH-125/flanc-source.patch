@@ -1,8 +1,8 @@
 diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
-index 1a307d2..6020bf2 100644
+index 1a307d2..639670d 100644
 --- a/src/gcv2-l1.js
 +++ b/src/gcv2-l1.js
-@@ -633,6 +633,68 @@
+@@ -633,6 +633,74 @@
     for(const x of c)if(soutenu(x.decal))return x;
     return null;
   }
@@ -15,9 +15,12 @@ index 1a307d2..6020bf2 100644
 +  * du flanc + `faceOffsetMm`, `minFacePoints` au moins, bande `bandMm`) :
 +  *   - premier pas : la bande de la convention ; si elle a moins de `minFacePoints` points, une bande large de `maxMm` ;
 +  *   - le flanc CONTREDIT la pose si ce premier pas vaut au moins `seuilMm` : il est alors suivi en point fixe (bande de la convention, 6 tours au
-+  *     plus) et le rail prend sa place si elle reste du même côté, entre `seuilMm` et `maxMm` ; sous le seuil, la pose et le flanc s'accordent.
-+  * Rend null sans gabarit, sinon { n, depart, premierMm, duMm (vers le champignon ; null : pose gardée), latMm, motif }. La hauteur n'est pas lue. */
-+ const FLANC_TOURS=6;
++  *     plus) et le rail prend sa place si elle reste du même côté, entre `seuilMm` et `maxMm` ; sous le seuil, la pose et le flanc s'accordent ;
++  *   - FLANC PROPRE (deux nappes voisines, rail et lame d'une ADV : la médiane peut tomber sur l'autre) : un point « appuie » une pose quand son
++  *     écart est à `FLANC_APPUI_MM` de celui que la convention attend (−`faceOffsetMm`). La pose reçue est gardée si plus du tiers des points lus
++  *     l'appuient (elle a son flanc) ; la place suivie n'est prise que si au moins le tiers de ses points l'appuient (le flanc y est).
++  * Rend null sans gabarit, sinon { n, depart, premierMm, appui, duMm (vers le champignon ; null : pose gardée), latMm, motif }. La hauteur n'est pas lue. */
++ const FLANC_TOURS=6,FLANC_APPUI_MM=3,FLANC_APPUI_PART=1/3;
 + function flancMode(){const v=LEVIERS.flancSource;return v&&typeof v==='object'&&fini(v.seuilMm)&&fini(v.maxMm)&&v.seuilMm>0&&v.maxMm>=v.seuilMm&&v.maxMm<=30?v:null;}
 + function flancALaPose(capture,side,mm,S){
 +   const rail=capture&&capture.rails&&capture.rails[side],D=Conv.DEFAULTS;
@@ -31,8 +34,10 @@ index 1a307d2..6020bf2 100644
 +     depart='large';o=S.maxMm>D.bandMm?lire(mm[1],S.maxMm):o;
 +     if(!o.ok||o.face.length<D.minFacePoints)return {n:o.ok?o.face.length:0,depart,premierMm:null,duMm:null,motif:'flanc-peu-observe'};
 +   }
-+   const signe=o.sign,pas0=pasDe(o),out={n:o.face.length,depart,premierMm:arrondi(pas0,2),duMm:null};
++   const appuiDe=o=>o.face.filter(v=>Math.abs(v+D.faceOffsetMm)<=FLANC_APPUI_MM).length/o.face.length;
++   const signe=o.sign,pas0=pasDe(o),out={n:o.face.length,depart,premierMm:arrondi(pas0,2),appui:arrondi(appuiDe(o),2),duMm:null};
 +   if(!(Math.abs(pas0)>=S.seuilMm))return out;
++   if(appuiDe(o)>FLANC_APPUI_PART)return {...out,motif:'pose-appuyee'};
 +   let lat=mm[1]+signe*pas0,pas=Infinity,fixe=false,n=o.face.length;
 +   for(let k=1;k<=FLANC_TOURS;k++){
 +     o=lire(lat,null);
@@ -46,6 +51,7 @@ index 1a307d2..6020bf2 100644
 +   const du=signe*(lat-mm[1]);
 +   if(Math.sign(du)!==Math.sign(pas0)||Math.abs(du)<S.seuilMm)return {...out,suiviMm:arrondi(du,2),motif:'sous-seuil'};
 +   if(Math.abs(du)>S.maxMm)return {...out,suiviMm:arrondi(du,2),motif:'hors-borne'};
++   if(appuiDe(o)<FLANC_APPUI_PART)return {...out,suiviMm:arrondi(du,2),motif:'flanc-diffus'};
 +   return {...out,n,duMm:arrondi(du,2),latMm:arrondi(lat,2)};
 + }
 + /* Les deux rails de la paire `decal` mesurés ensemble. L'écartement de la paire mesurée est LIBRE dans le contrat (`REGLE.contratMm`, 1 420 à
@@ -71,7 +77,7 @@ index 1a307d2..6020bf2 100644
   function deciderL1e(k,mod,ref,capture,probasDonnees=null){
     if(!E)throw Error('GCV2 L1-e : module absent.');
     const d0=fini(LEVIERS.selectionRefMm)&&ref&&fini(ref.mm)&&capture?deciderL1Ref(k,mod,ref.mm,capture,probasDonnees):deciderL1(k,mod,REGLE,probasDonnees),p=d0.probas;
-@@ -828,6 +890,21 @@
+@@ -828,6 +896,21 @@
         else if(fini(LEVIERS.voieIncoherenteMm)&&Math.max(...SIDES.map(s=>va[s].residuMm??0))>LEVIERS.voieIncoherenteMm)dd={etat:'rien',motif:'voie-incoherente',decal:null,corrigee:false,avant:dd.motif};
       }
     }
@@ -93,7 +99,7 @@ index 1a307d2..6020bf2 100644
     const diag=LEVIERS.diag?{voie:k.voieTransport&&k.voieTransport.sure?'transport':k.voieRef&&k.voieRef.sure?'ref':k.voieProche?'proche':null,
       voieProcheDist:k.voieProche?k.voieProche.dist:null,voieListe:k.voieListe||null,voieGeo:k.voieGeo||null,voieVal:(voie||k.voieProche)?{left:(voie||k.voieProche).left.slice(0,2),right:(voie||k.voieProche).right.slice(0,2)}:null,
       hyps:Object.fromEntries(SIDES.map(s=>[s,k.rails[s].hyps.map(h=>[arrondi(h.decal[1],1),arrondi(h.decal[2],1)])])),motifsVoie:k.voieTransport?k.voieTransport.motifs:k.voieRef?k.voieRef.motifs:null,
-@@ -845,7 +922,7 @@
+@@ -845,7 +928,7 @@
     const base0=d0.paire||{left:{origines:['H6'],sousOrigines:[],hauteur:false},right:{origines:['H6'],sousOrigines:[],hauteur:false}};
     const paire=dd.decal?Object.fromEntries(SIDES.map(s=>[s,{...base0[s],decal:dd.decal[s]}])):null;
     const ecart3d=paire?Math.max(norme(paire.left.decal),norme(paire.right.decal)):d0.ecartDepartMm;
@@ -102,7 +108,7 @@ index 1a307d2..6020bf2 100644
   }
   /* Cap 5, levier « sélection à la référence » : la règle L1 (τ, δ, 150 mm), mais la meilleure paire est cherchée parmi les paires dont l'écartement
    * EXACT est à `selectionRefMm` de la référence de la liste d'ESV (au lieu de la médiane du lot ± 15 mm ou du contrat 1 420–1 470 mm). */
-@@ -1020,9 +1097,9 @@ function contreChaine(g,decalChaine,seuilMm){
+@@ -1020,9 +1103,9 @@ function contreChaine(g,decalChaine,seuilMm){
       ecartDepartMm:d.ecartDepartMm,ecartMaxLatVertMm:d.ecartMaxLatVertMm??null,paires:d.permises??null,
       paire:d.paire?{left:d.paire.left.decal,right:d.paire.right.decal}:null,aControler:d.aControler===true||undefined,
       gMedMm:arrondi(r.gMed,1),chaine:r.chaine?{stage:r.chaine.stage,reason:r.chaine.reason!=null?String(r.chaine.reason).slice(0,80):null,appuis:r.chaine.anchorsUsed.length}:null,
@@ -116,10 +122,10 @@ index 1a307d2..6020bf2 100644
  });
 diff --git a/tests/ch125-flanc-source.test.cjs b/tests/ch125-flanc-source.test.cjs
 new file mode 100644
-index 0000000..2e0c35f
+index 0000000..244012b
 --- /dev/null
 +++ b/tests/ch125-flanc-source.test.cjs
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,106 @@
 +'use strict';
 +/* CH-125 (D-352) — la mesure de pose à la source, niveau 2 : le TRAVERS d'une pose de la GCV2 que rien n'a mesurée sur le nuage du cut.
 + *
@@ -198,6 +204,12 @@ index 0000000..2e0c35f
 +  /* deux nappes à 5 mm de part et d'autre (rail et lame) : la médiane tombe entre les deux, le premier pas est sous le seuil, la pose est gardée */
 +  const double = L1.flancALaPose(paire({ gauche: { flanc: 2.6 + 5, flanc2: 2.6 - 5 } }), 'left', [0, 0, 0], S);
 +  assert.equal(double.duMm, null);
++  /* la lame domine (13 points à 9 mm vers la voie) mais la pose garde son flanc (9 points là où la convention l'attend, plus du tiers) : pose gardée */
++  const lame = L1.flancALaPose(paire({ gauche: { flanc: 2.6, points: 9, flanc2: 2.6 - 9, points2: 13 } }), 'left', [0, 0, 0], S);
++  assert.equal(lame.duMm, null); assert.equal(lame.motif, 'pose-appuyee'); proche(lame.premierMm, -9, 2.1);
++  /* la pose n'a presque plus de flanc à elle (4 points sur 17) : le flanc voisin est suivi */
++  const seul = L1.flancALaPose(paire({ gauche: { flanc: 2.6, points: 4, flanc2: 2.6 - 9, points2: 13 } }), 'left', [0, 0, 0], S);
++  assert.ok(seul.duMm < -5 && seul.duMm > -11.1, JSON.stringify(seul));
 +  /* moins de 6 points de flanc, même en bande large : rien */
 +  assert.equal(L1.flancALaPose(paire({ gauche: { flanc: 11.6, points: 5 } }), 'left', [0, 0, 0], S).duMm, null);
 +});

@@ -1,0 +1,13 @@
+{
+ "nom": "travers",
+ "fige": "14/11, avant tout rejeu du levier flancSource (banc et garde)",
+ "patch": { "fichier": "flanc-source.patch", "sha256": "2596f05c7d9b71d33858480272d189084ae2449cbd2fd1dd5ff70d1a2904a72a" },
+ "cle": "levier flancSource de la décision L1-e (au banc : BANC_LEVIERS) ; absent des leviers livrés",
+ "structure": { "maxMm": 20, "toursMax": 6, "flancPropre": { "toleranceMm": 3, "part": "1/3" }, "ecartement": "libre dans le contrat 1420-1470 mm, jamais plus loin du contrat que la paire reçue", "soutien": "soutien de L1-e à la nouvelle place", "propagation": "A : la pose de la décision est la pose mesurée (commande, voisins, transport)" },
+ "seuilMm": {
+  "parPli": { "0411": 5, "0611": 5, "0811a": 5, "0811b": 5, "1111": 5, "1211": 3 },
+  "final": 5,
+  "usage": "un lot réglable est jugé avec le seuil de son pli (appris sans lui) ; le lot d'examen 05/11 et la garde d'octobre avec le seuil final"
+ },
+ "BANC_LEVIERS_final": { "flancSource": { "seuilMm": 5, "maxMm": 20 } }
+}

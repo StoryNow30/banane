@@ -160,3 +160,34 @@ function centreFlanc(pts, gab, pose0, { minFlanc = 6, bandeMm = 12, tours = 1, c
   return { ok: true, pose, duTotal: (pose[0] - pose0[0]) * 1000, ...info };
 }
 module.exports.enveloppeDessus = enveloppeDessus; module.exports.centreFlanc = centreFlanc;
+
+/* ------------------------------------------------------------------ CH-125, niveau 2 : flanc suivi à la pose (copie STATIQUE de `flancALaPose`,
+ * src/gcv2-l1.js du patch flanc-source.patch, sur le cache de rails : mêmes bandes, même médiane basse (`floor`), même point fixe).
+ * Premier pas : bande de la convention ; sous 6 points, bande large de `maxMm`. Si ce premier pas vaut au moins `seuilMm`, le flanc est suivi en
+ * point fixe (6 tours au plus) ; le rail prend sa place si elle reste du même côté, entre `seuilMm` et `maxMm`. Flanc propre : la pose est gardée
+ * si plus du tiers des points lus l'appuient ; la place suivie n'est prise que si au moins le tiers de ses points l'appuient.
+ * Rend null (rien à lire) ou { n, depart, premier, du (mm vers le champignon, ou null : pose gardée), motif }. */
+function flancSuivi(pts, gab, pose0, { seuilMm = 5, maxMm = 20, tours = 6, minFlanc = 6, decalMm = -2.6, origines = [0], xMax = 0.25 } = {}) {
+  const qb = v => { const s = v.slice().sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(0.5 * s.length))]; };
+  const lire = (pose, bandeMm) => bandes(pts, gab, pose, { origines, xMax, ...(bandeMm ? { bandeMm } : {}) }).face.map(x => x.r);
+  let f = lire(pose0, null), depart = 'bande';
+  if (f.length < minFlanc) { depart = 'large'; if (maxMm > 12) f = lire(pose0, maxMm); if (f.length < minFlanc) return { n: f.length, depart, premier: null, du: null, motif: 'flanc-peu-observe' }; }
+  /* flanc propre : part des points à ±3 mm de l'écart que la convention attend (−decalMm) ; plus du tiers : la pose a son flanc, elle est gardée */
+  const appui = v => v.filter(x => Math.abs(x + decalMm) <= 3).length / v.length;
+  const pas0 = qb(f) + decalMm, out = { n: f.length, depart, premier: pas0, appui: appui(f), du: null };
+  if (!(Math.abs(pas0) >= seuilMm)) return out;
+  if (appui(f) > 1 / 3) return { ...out, motif: 'pose-appuyee' };
+  let pose = [pose0[0] + pas0 / 1000, pose0[1]], pas = Infinity, fixe = false;
+  for (let k = 1; k <= tours; k++) {
+    f = lire(pose, null); if (f.length < minFlanc) return { ...out, motif: 'flanc-perdu' };
+    pas = qb(f) + decalMm; if (Math.abs(pas) < 0.05) { fixe = true; break; } if (k === tours) break;
+    pose = [pose[0] + pas / 1000, pose[1]];
+  }
+  if (!fixe && !(Math.abs(pas) < 0.5)) return { ...out, motif: 'sans-point-fixe' };
+  const du = (pose[0] - pose0[0]) * 1000;
+  if (Math.sign(du) !== Math.sign(pas0) || Math.abs(du) < seuilMm) return { ...out, suivi: du, motif: 'sous-seuil' };
+  if (Math.abs(du) > maxMm) return { ...out, suivi: du, motif: 'hors-borne' };
+  if (appui(f) < 1 / 3) return { ...out, suivi: du, motif: 'flanc-diffus' };
+  return { ...out, du };
+}
+module.exports.flancSuivi = flancSuivi;
