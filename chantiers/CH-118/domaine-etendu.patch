@@ -1,0 +1,169 @@
+diff --git a/src/gcv1-shadow.js b/src/gcv1-shadow.js
+index 44ff3ff..2a10afb 100644
+--- a/src/gcv1-shadow.js
++++ b/src/gcv1-shadow.js
+@@ -564,7 +564,9 @@
+             /* Plafond (P1) : consigné seulement quand il a joué ; sans plafond, la ligne est inchangée. */
+             ...(rail.conventionCalibration.capped?{capped:true,capMm:rail.conventionCalibration.capMm,capAxes:rail.conventionCalibration.capAxes??'both',
+               appliedDuMm:rail.conventionCalibration.appliedDuMm,appliedDzMm:rail.conventionCalibration.appliedDzMm,
+-              restDuMm:rail.conventionCalibration.restDuMm,restDzMm:rail.conventionCalibration.restDzMm}:{})}:null}};
++              restDuMm:rail.conventionCalibration.restDuMm,restDzMm:rail.conventionCalibration.restDzMm}:{}),
++            /* Domaine étendu (CH-118) : consigné seulement quand il a joué ; coupé, la ligne est inchangée. */
++            ...(rail.conventionCalibration.domaineEtendu?{domaineEtendu:true,dzMaxMm:rail.conventionCalibration.dzMaxMm}:{})}:null}};
+     }
+     return rails;
+   }
+diff --git a/src/placement-convention.js b/src/placement-convention.js
+index 8ef80b3..71e93cb 100644
+--- a/src/placement-convention.js
++++ b/src/placement-convention.js
+@@ -91,6 +91,12 @@
+    const v=cfg.plafond!==undefined&&cfg.plafond!==null?cfg.plafond:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.conventionPlafond:undefined);
+    return v===true?true:v==='vertical'?'vertical':false;
+  }
++ /* Domaine étendu (CH-118) : `options.domaineEtendu` l'impose ; à défaut, le réglage `conventionDomaineEtendu` de `settings.js`.
++  * Seule forme admise : un objet `{dzMaxMm}` fini, au-dessus de `maxShiftMm` et au plus 20 mm ; toute autre valeur vaut « coupé ». */
++ function domaineEtendu(cfg){
++   const v=cfg.domaineEtendu!==undefined?cfg.domaineEtendu:(typeof globalThis!=='undefined'?globalThis.BananeSettings?.conventionDomaineEtendu:undefined);
++   return v&&typeof v==='object'&&Number.isFinite(v.dzMaxMm)&&v.dzMaxMm>cfg.maxShiftMm&&v.dzMaxMm<=20?v:null;
++ }
+  /* Le calage d'un rail publié. Rend le delta calé et tout ce qui l'explique ;
+   * ne publie rien de plus que ce que GCV1 a publié, et s'efface (applied:false)
+   * quand il ne peut pas se justifier. */
+@@ -108,6 +114,16 @@
+     * Au-delà, le rail n'est pas dans le domaine où le calage a été établi. */
+    if(Math.abs(dzMm)>cfg.maxShiftMm||Math.abs(duMm)>cfg.maxShiftMm){
+      const mode=plafondMode(cfg);
++     /* DOMAINE ÉTENDU SUR LE VERTICAL (CH-118, D-351) — réglage `conventionDomaineEtendu`, coupé par défaut (`null`).
++      * Mesuré (Échos du 12/11, lots des 11 et 12/11) : 16 rails refusés pour dz seul (8,0 à 11,7 mm) et posés bruts, 16 retouchés par
++      * l'opérateur, remontés de dz à +0,3 mm près en médiane (−1,9 à +3,2) ; le latéral sign·du suit aussi. Allumé : si |du| reste dans le
++      * domaine et |dz| ≤ `dzMaxMm`, le calage est appliqué ENTIER. Seuil réglé sur ces seules données (dz observés de 8,0 à 12,1 mm).
++      * Le motif reste 'shift-out-of-domain' (la garde de paire D-044 le lit) ; `domaineEtendu: true` le signale. Le plafond P1, s'il est
++      * allumé, garde la priorité. Coupé ou absent : aucune branche nouvelle, résultat identique à l'octet près. */
++     const ext=domaineEtendu(cfg);
++     if(!mode&&ext&&Math.abs(duMm)<=cfg.maxShiftMm&&Math.abs(dzMm)<=ext.dzMaxMm)
++       return {...base,applied:true,delta:[delta[0],delta[1]+offsets.sign*duMm/1000,delta[2]+dzMm/1000],reason:'shift-out-of-domain',domaineEtendu:true,dzMaxMm:ext.dzMaxMm,
++         duMm,dzMm,topN,faceN,faceMode,topQuantileMm:topQ,faceQuantileMm:faceQ};
+      /* P1 bis : en mode 'vertical', un décalage latéral hors domaine garde le rail refusé (posé brut), même si dz serait plafonné. */
+      if(!mode||(mode==='vertical'&&Math.abs(duMm)>cfg.maxShiftMm))return {...base,reason:'shift-out-of-domain',topN,faceN,duMm,dzMm};
+      /* PLAFOND (plan 5.0, P1, D-129) — réglage `conventionPlafond`, coupé par défaut.
+@@ -130,5 +146,5 @@
+    const corrected=[delta[0],delta[1]+offsets.sign*duMm/1000,delta[2]+dzMm/1000];
+    return {...base,applied:true,delta:corrected,duMm,dzMm,topN,faceN,faceMode,topQuantileMm:topQ,faceQuantileMm:faceQ};
+  }
+- return {DEFAULTS,quantile,template,bandOffsets,calibrate};
++ return {DEFAULTS,quantile,template,bandOffsets,domaineEtendu,calibrate};
+ });
+diff --git a/src/settings.js b/src/settings.js
+index 28dcba6..6f05762 100644
+--- a/src/settings.js
++++ b/src/settings.js
+@@ -424,6 +424,8 @@
+    * borne de pente ne changent pas. Mesures hors ligne : fiches/P1_CONVENTION.md.
+    * NE PAS ACTIVER sans l'accord de l'opérateur : il change la pose de terrain. */
+   const conventionPlafond = false;
++  /* CH-118 (D-351) : domaine étendu du calage de convention sur le vertical ; coupé (`null`). Allumé : `{ dzMaxMm: 13 }`. */
++  const conventionDomaineEtendu = null;
+   /* P8 (5.0, D-140) — CORRECTION VERTICALE APPRISE, EN OMBRE (src/lot-decision.js). Sur un rail dont le calage de convention est REFUSÉ (décalage hors
+    * des 8 mm), l'opérateur remonte la pose dans les trois parties relues (+6,1 ; +1,8 ; +3,6 mm). La décision consigne, À CÔTÉ de la pose réelle, celle qu'aurait
+    * donnée une correction verticale de `mm` (3,6 par défaut : médiane de la partie 29, entre les deux autres), dans le repère profil du rail.
+@@ -702,5 +704,5 @@
+   /* D-320 (opérateur, 10/11) : le bouton « SKIP explicite » du panneau est MASQUÉ jusqu'à Ariane 6.0 (le SKIP y deviendra une règle à part entière). Audit du 10/11 : il existait
+    * malgré la règle « Ariane n'envoie jamais SKIP », et sa frappe n'arrivait probablement pas dans ESV. Le chemin du moteur reste en place ; `bouton: true` le remontre. */
+   const skipExplicite = Object.freeze({ bouton: false });
+-  return Object.freeze({ skipExplicite, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, relecturePause, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
++  return Object.freeze({ skipExplicite, Mo, passeDifferesDefaut, collector, pilote, continuity, lot, export: exportSettings, reader, observateurPassif, appuisListe, conventionPlafond, conventionDomaineEtendu, ombreVerticaleRefusee, voiePrediteOmbre, memoireDifferesOmbre, deplacerVue, eveil, relectureDefaut, relectureSignalEteint, relecturePause, validationSurPlace, ecrituresApresValidation, reglesMetier, fauxVertOmbre, hauteurApprise, listeMemoire, retourCut, echo, releves, esvEvents, rust, derived, describe, vertsAControler, file, correctionEntreParties });
+ });
+diff --git a/tests/ch118-domaine-etendu.test.cjs b/tests/ch118-domaine-etendu.test.cjs
+new file mode 100644
+index 0000000..2488fb2
+--- /dev/null
++++ b/tests/ch118-domaine-etendu.test.cjs
+@@ -0,0 +1,58 @@
++'use strict';
++/* CH-118 (D-351) — domaine étendu du calage de convention sur le vertical.
++ * Réglage `conventionDomaineEtendu` de src/settings.js, COUPÉ par défaut (`null`). Coupé : `calibrate` rend, octet pour octet, la référence
++ * figée de la base 5.0 (même jeu synthétique que P1). Allumé `{dzMaxMm:13}` : un rail refusé pour |dz| seul (|du| ≤ 8, |dz| ≤ 13) reçoit le
++ * calage entier, motif `shift-out-of-domain` gardé (garde de paire D-044), `domaineEtendu: true` ; tout autre rail est rendu à l'identique. */
++const {test}=require('node:test'),assert=require('node:assert/strict');
++const fs=require('node:fs'),path=require('node:path');
++const Convention=require('../src/placement-convention.js'),Settings=require('../src/settings.js');
++const {capture,raw,CAS,lancer}=require('./helpers/p1-convention-cas.cjs');
++const reference=JSON.parse(fs.readFileSync(path.join(__dirname,'corpus','p1-convention-reference.json'),'utf8')).resultats;
++function avec(reglages,fn){
++  const avant=Object.getOwnPropertyDescriptor(globalThis,'BananeSettings');
++  globalThis.BananeSettings={...Settings,...reglages};
++  try{return fn();}finally{if(avant)Object.defineProperty(globalThis,'BananeSettings',avant);else delete globalThis.BananeSettings;}
++}
++const ACTIF={conventionDomaineEtendu:{dzMaxMm:13}};
++
++test('le réglage existe et il est coupé par défaut',()=>{
++  assert.ok('conventionDomaineEtendu' in Settings);
++  assert.equal(Settings.conventionDomaineEtendu,null);
++  assert.equal(typeof Convention.domaineEtendu,'function');
++});
++
++test('coupé, absent ou mal formé : octet pour octet la base 5.0',()=>{
++  for(const [nom,r] of [['défaut',{}],['null',{conventionDomaineEtendu:null}],['vrai',{conventionDomaineEtendu:true}],['sans borne',{conventionDomaineEtendu:{}}],
++    ['borne sous le domaine',{conventionDomaineEtendu:{dzMaxMm:3}}],['borne au-delà de 20',{conventionDomaineEtendu:{dzMaxMm:40}}]]){
++    const out=avec(r,()=>lancer(Convention));
++    for(let i=0;i<CAS.length;i++)assert.equal(out[i],reference[i],`${nom} : ${CAS[i].nom}`);
++  }
++});
++
++test('allumé : seuls les rails refusés pour dz seul, dz ≤ 13, changent ; ils reçoivent le calage entier',()=>{
++  const out=avec(ACTIF,()=>lancer(Convention));let etendus=0,inchanges=0;
++  for(let i=0;i<CAS.length;i++){
++    const ref=JSON.parse(reference[i]),r=JSON.parse(out[i]);
++    const cap=(CAS[i].options&&CAS[i].options.maxShiftMm)||8,vise=ref.reason==='shift-out-of-domain'&&Math.abs(ref.duMm)<=cap&&Math.abs(ref.dzMm)<=13;
++    if(!vise){assert.equal(out[i],reference[i],CAS[i].nom);inchanges++;continue;}
++    etendus++;
++    assert.equal(r.applied,true);assert.equal(r.reason,'shift-out-of-domain');assert.equal(r.domaineEtendu,true);assert.equal(r.dzMaxMm,13);
++    const mirror=!!(CAS[i].cap&&CAS[i].cap.mirror),b=raw(mirror),sign=mirror?-1:1;
++    assert.ok(Math.abs(r.delta[2]-(b[2]+ref.dzMm/1000))<1e-12,'dz entier');
++    assert.ok(Math.abs(r.delta[1]-(b[1]+sign*ref.duMm/1000))<1e-12,'du entier');
++  }
++  assert.ok(inchanges>20,'cas inchangés couverts');
++  if(!etendus)assert.fail('le jeu synthétique doit contenir au moins un rail refusé pour dz seul ≤ 13 mm');
++});
++
++test('allumé : |du| hors domaine reste refusé, |dz| au-delà de la borne reste refusé, le plafond P1 garde la priorité',()=>{
++  const c=CAS.find(x=>{const r=JSON.parse(reference[CAS.indexOf(x)]);return r.reason==='shift-out-of-domain'&&Math.abs(r.duMm)<=8&&Math.abs(r.dzMm)<=13;});
++  const cap=capture(c.cap||{}),side=c.side||'left',d=raw(!!(c.cap&&c.cap.mirror));
++  const ref=Convention.calibrate(cap,side,d,c.options||{});
++  const borne=Convention.calibrate(cap,side,d,{...(c.options||{}),domaineEtendu:{dzMaxMm:Math.max(8.01,Math.abs(ref.dzMm)-0.01)}});
++  assert.equal(borne.applied,false);assert.equal(borne.reason,'shift-out-of-domain');
++  const p1=avec({...ACTIF,conventionPlafond:true},()=>Convention.calibrate(cap,side,d,c.options||{}));
++  assert.equal(p1.capped,true);assert.equal(p1.domaineEtendu,undefined);
++  const du=CAS.map((x,i)=>[x,JSON.parse(reference[i])]).filter(([x,r])=>r.reason==='shift-out-of-domain'&&Math.abs(r.duMm)>((x.options&&x.options.maxShiftMm)||8));
++  for(const [x] of du){const r=avec(ACTIF,()=>Convention.calibrate(capture(x.cap||{}),x.side||'left',raw(!!(x.cap&&x.cap.mirror)),x.options||{}));assert.equal(r.applied,false,x.nom);}
++});
+diff --git a/tools/p1-plafond.cjs b/tools/p1-plafond.cjs
+index cce8215..4ffbb30 100644
+--- a/tools/p1-plafond.cjs
++++ b/tools/p1-plafond.cjs
+@@ -43,7 +43,9 @@ const TOL = 1e-9;
+ 
+ /* ------------------------------------------------------------------ le réglage, comme le service worker le voit */
+ function poserReglage(actif) {
+-  if (actif) globalThis.BananeSettings = { ...Settings, conventionPlafond: actif };
++  /* Un bras est une valeur de `conventionPlafond`, ou un objet de réglages (CH-118 : `conventionDomaineEtendu`). */
++  if (actif && typeof actif === 'object') globalThis.BananeSettings = { ...Settings, ...actif };
++  else if (actif) globalThis.BananeSettings = { ...Settings, conventionPlafond: actif };
+   else delete globalThis.BananeSettings;
+ }
+ function avecReglage(actif, fn) {
+@@ -79,9 +81,11 @@ function captureDe(o, corpus) {
+ const empreinteRail = r => r && r.ok ? JSON.stringify([r.next && r.next.delta, r.next && r.next.rawDelta, r.conventionCalibration && [r.conventionCalibration.applied, r.conventionCalibration.reason, r.conventionCalibration.duMm, r.conventionCalibration.dzMm],
+   r.pairGauge && [r.pairGauge.predictedMm, r.pairGauge.rejected]]) : JSON.stringify(r && r.ok);
+ 
+-const BRAS = { vertical: 'vertical', deux: true };   // nom du bras -> valeur de `conventionPlafond`
++const BRAS = { vertical: 'vertical', deux: true, etendu: { conventionDomaineEtendu: { dzMaxMm: 13 } } };   // nom du bras -> valeur de `conventionPlafond` ou réglages (CH-118)
+ 
+-function rejouerLot(lot, { jointure = null, journal = () => {}, bras = Object.keys(BRAS) } = {}) {
++/* Bras rejoués par défaut : les deux de P1 ; CH-118 ouvre « etendu » par la variable CH118_BRAS (liste séparée par des virgules). */
++const BRAS_DEFAUT = () => (process.env.CH118_BRAS ? process.env.CH118_BRAS.split(',').filter(b => b in BRAS) : ['vertical', 'deux']);
++function rejouerLot(lot, { jointure = null, journal = () => {}, bras = BRAS_DEFAUT() } = {}) {
+   const ctx = AR.lotCuts(lot.diagnostic, lot.journal, lot.batchFilter || null);
+   const toutes = ctx.cuts.flatMap(c => c.observations);
+   const regles = AR.lotRules(toutes, ctx.batch && ctx.batch.scope && ctx.batch.scope.extensionVersion || lot.diagnostic && lot.diagnostic.version || lot.journal && lot.journal.version, false);

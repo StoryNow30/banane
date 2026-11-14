@@ -1,0 +1,343 @@
+diff --git a/src/gcv2-l1.js b/src/gcv2-l1.js
+index 8efdcb9..de2807b 100644
+--- a/src/gcv2-l1.js
++++ b/src/gcv2-l1.js
+@@ -118,7 +118,7 @@
+  /* `science` : résultat du moteur AVEC réservoir (`Shadow.scientificProposeBothAvecReservoir`) ; `seul`, `chaine` : { decision, v } (`variante`) ;
+   * `voisins` : cuts validés par le lot avant l'instant de la décision ({ identity, positions, source:'lot', decalage }) ; `gMed` : médiane
+   * d'écartement de ces cuts (mm) ou null ; `departEsv` : null (la pose de départ du cut est celle d'ESV). Jamais une pose humaine. */
+- function hypothesesDuCut({capture,science,seul,chaine=null,appuisAvant=[],voisins=[],gMed=null,voisinsLot=null,departEsv=null,gen=null}){
++ function hypothesesDuCut({capture,science,seul,chaine=null,appuisAvant=[],voisins=[],gMed=null,voisinsLot=null,departEsv=null,gen=null,c123=null}){
+    const T=Shadow.reservoirOutils,identity=capture.identity;
+    if(!T)throw Error('GCV2 L1 : le moteur ne rend pas les outils de son réservoir.');
+    const res={};
+@@ -212,7 +212,10 @@
+    /* CH-120 — GÉNÉRATEURS D'HYPOTHÈSES (leviers `genVoie`, `genEcartement`, `genLargeMm`, coupés par défaut) : hypothèses en plus du pool, au-delà
+     * de `MAX_HYP` (jusqu'à `genMaxHyp` par rail), jamais à la place d'une hypothèse déjà gardée ; un doublon (à `DOUBLON_MM`) d'une hypothèse gardée
+     * n'est pas ajouté et ne la change pas. Leviers coupés : rien n'est calculé, le pool est celui d'avant. */
+-   const genEtat=gen&&genActif()?genererHypotheses({capture,science,res,voisins,gMed,gen,identity,tronquesIt}):null;
++   /* CH-123 : sans paire à l'écartement de référence dans le pool (`c123SansPaire`), et seulement là, les générateurs de CH-123 et `genEcartement`
++    * hors ADV (`c123EcartZones`) tournent ; avec une paire, le pool reste celui d'avant (les justes ne bougent pas). */
++   const c123Ouvert=!!(c123&&(!LEVIERS.c123SansPaire||!c123PaireAuPool(capture,res,gMed,c123)));
++   const genEtat=gen&&genActif()?genererHypotheses({capture,science,res,voisins,gMed,gen,identity,tronquesIt,c123Ouvert}):null;
+    if(genEtat)for(const s of SIDES){
+      const gardees=res[s].gardees,plafond=gardees.length+LEVIERS.genMaxHyp;
+      for(const it of genEtat[s]){
+@@ -221,6 +224,18 @@
+        gardees.push({...it,origines:[it.origine],sousListe:[it.sous],cellules:it.cellule?[it.cellule]:[]});
+      }
+    }
++   /* CH-123 — RAILS HORS DU POOL (leviers `c123Apparie`, `c123Balayage`, coupés par défaut) : hypothèses en plus du pool (origine H8), au-delà de
++    * `MAX_HYP` (jusqu'à `c123MaxHyp` par rail), jamais à la place d'une hypothèse gardée ; doublon (à `DOUBLON_MM`) d'une gardée : ignoré.
++    * Règle commune : une cellule n'entre que si elle est APPARIÉE, à `c123EcartMm` au plus de l'écartement de référence (liste d'ESV, sinon médiane
++    * du lot) avec une hypothèse de l'autre rail, et soutenue par le nuage. Leviers coupés : rien n'est calculé, le pool est celui d'avant. */
++   if(c123Ouvert&&c123Actif())for(const [s,it] of c123Hypotheses({capture,res,gMed,c123})){
++     const gardees=res[s].gardees;
++     if(gardees.filter(g=>g.origines.includes('H8')).length>=LEVIERS.c123MaxHyp)continue;
++     if(gardees.some(g=>norme(moins(g.mm,it.mm))<DOUBLON_MM))continue;
++     gardees.push({...it,origines:['H8'],sousListe:[it.sous],cellules:it.cellule?[it.cellule]:[]});
++   }
++   /* CH-123 : nombre d'hypothèses générées (H7, H8) entrées dans le pool de ce cut (sert à `c123SansRicochet`). */
++   const c123Ajoutes=SIDES.reduce((n,s)=>n+res[s].gardees.filter(g=>g.origines.includes('H7')||g.origines.includes('H8')).length,0);
+    const hyps={left:[],right:[]};
+    for(const s of SIDES){
+      const {gardees,cellules}=res[s],autre=SIDES.find(x=>x!==s);
+@@ -300,7 +315,7 @@
+        ancres:r.ancres,support:{reference:sRef,depart:sDep},motifs,sure:!motifs.length};
+    };
+    const voieH6=baseH6?{tous:refH6('tous'),lot:refH6('lot'),departLot:!!departEsv}:null;
+-   return {rails:hyps,rail:railInfo,tronques,voieH6,tronquesH6,
++   return {rails:hyps,rail:railInfo,tronques,voieH6,tronquesH6,c123Ajoutes,
+      cut:{abstenu,differe:seul.decision.stage==='deferred',etage:seul.decision.stage,raison:seul.decision.reason!=null?String(seul.decision.reason).slice(0,60):null,
+        etageChaine:chaine?chaine.decision.stage:null,appuisChaine:chaine?(chaine.decision.anchorsUsed||[]).length:0,
+        voisins:infoVoisins,ecartDepartMm:arrondi(ecartDepart,1),gMedMm:arrondi(gMed,1),
+@@ -325,7 +340,7 @@
+  /* Moteur (inchangé) relancé avec la pose de départ des rails de la graine déplacée à la graine ([lat, vert] mm, repère de la pose de départ du
+   * cut) : cellules de son réservoir dans sa fenêtre, sans pente limite, d'au moins `genMinTop` lignes de dessus et `genMinFace` points de flanc,
+   * à `genRatioMax` au plus de la perte minimale, à `genSnapMm` au plus de la graine ; au format des cellules du pool (traits de H2). */
+- function cellulesDeGraine(capture,graine){
++ function cellulesDeGraine(capture,graine,snap=LEVIERS.genSnapMm){
+    const T=Shadow.reservoirOutils,rails={...capture.rails},cotes=SIDES.filter(s=>graine[s]);
+    for(const s of cotes){const rail=capture.rails[s],pos=L.positionOf(rail,[0,graine[s][0]/1000,graine[s][1]/1000]);rails[s]=O.translated(rail,pos.map((v,i)=>v-rail.positionSceneRelative[i]));}
+    const capT={...capture,rails};
+@@ -339,7 +354,7 @@
+        if(!(c.windowOk&&!c.slopeLimited&&(c.topRows??0)>=LEVIERS.genMinTop&&(c.faceCount??0)>=LEVIERS.genMinFace&&ratio<=LEVIERS.genRatioMax))continue;
+        const brutD=[0,rs.sign*c.u,c.z],cal=Conv.calibrate(capT,s,brutD),fin=cal.applied?cal.delta:brutD;
+        const mm=decalage(capture.rails[s],L.positionOf(rails[s],fin));
+-       if(!mm||Math.hypot(mm[1]-graine[s][0],mm[2]-graine[s][1])>LEVIERS.genSnapMm)continue;
++       if(!mm||Math.hypot(mm[1]-graine[s][0],mm[2]-graine[s][1])>snap)continue;
+        out[s].push({origine:'H7',sous:'g-'+graine.nom,mm:[0,mm[1],mm[2]],calage:cal,cellule:{c,ratio,comp:T.inCompetitive(c,rs.lmin),strong:T.qualifyStrong(c),astar:false,publiee:false}});
+      }
+      out[s].sort((a,b)=>a.cellule.c.loss-b.cellule.c.loss);
+@@ -349,13 +364,15 @@
+  /* Graines : voie des voisins validés du lot (droite ajustée et voisin le plus proche, `genVoieFenetre` cuts) ; l'autre rail (lui seul) à l'écartement
+   * de référence (liste d'ESV, sinon médiane du lot) de chaque hypothèse fiable d'un rail (`genSourcesMax` par rail) ; la voie déplacée d'un bloc de
+   * chaque valeur de `genLargeMm`. Graine à `genDedupMm` d'une graine déjà vue : écartée ; `genMaxGraines` relances du moteur au plus par cut. */
+- function genererHypotheses({capture,science,res,voisins,gMed,gen,identity,tronquesIt}){
++ function genererHypotheses({capture,science,res,voisins,gMed,gen,identity,tronquesIt,c123Ouvert=false}){
+    const out={left:[],right:[]};
+-   if(!(LEVIERS.genZones||['adv']).includes(gen.zone))return out;
++   /* CH-123 : `genEcartement` seul, hors des zones de CH-120, dans les zones `c123EcartZones`, quand le pool n'a pas de paire (`c123Ouvert`). */
++   const zoneGen=(LEVIERS.genZones||['adv']).includes(gen.zone),zoneEc=c123Ouvert&&LEVIERS.genEcartement&&(LEVIERS.c123EcartZones||[]).includes(gen.zone);
++   if(!zoneGen&&!zoneEc)return out;
+    /* `genTronques` : cellules compétitives ET fortes du réservoir que `MAX_HYP` a écartées, en tête (aucune relance du moteur). */
+-   if(LEVIERS.genTronques&&tronquesIt)for(const s of SIDES)for(const it of tronquesIt[s])if(it.cellule&&it.cellule.comp&&it.cellule.strong)out[s].push({...it,origine:'H7',sous:'g-tronquee'});
++   if(zoneGen&&LEVIERS.genTronques&&tronquesIt)for(const s of SIDES)for(const it of tronquesIt[s])if(it.cellule&&it.cellule.comp&&it.cellule.strong)out[s].push({...it,origine:'H7',sous:'g-tronquee'});
+    const gRef=fini(gen.refMm)?gen.refMm:fini(gMed)?gMed:null,graines=[];
+-   if(LEVIERS.genVoie){
++   if(zoneGen&&LEVIERS.genVoie){
+      let va=null;try{va=voieAbsolue(capture,identity.cut,voisins,LEVIERS.genVoieFenetre,3);}catch{va=null;}
+      if(va){graines.push({nom:'voie',left:va.left.v,right:va.right.v});graines.push({nom:'voie-proche',left:va.left.proche,right:va.right.proche});}
+    }
+@@ -367,18 +384,80 @@
+        if(fini(a)&&Math.abs(a)<=LEVIERS.genMaxDeplMm)graines.push({nom:'ecart-'+o,[s]:[a,g.mm[2]]});
+      }
+    }
+-   if(Array.isArray(LEVIERS.genLargeMm))for(const d of LEVIERS.genLargeMm)graines.push({nom:'large'+d,left:[d,0],right:[d,0]});
++   if(zoneGen&&Array.isArray(LEVIERS.genLargeMm))for(const d of LEVIERS.genLargeMm)graines.push({nom:'large'+d,left:[d,0],right:[d,0]});
+    const vues=[];
+    for(const gr of graines){
+      if(vues.length>=LEVIERS.genMaxGraines)break;
+      if(!SIDES.some(s=>gr[s]&&gr[s].every(fini)))continue;
+      if(vues.some(v=>SIDES.every(s=>(!gr[s]&&!v[s])||(!!gr[s]&&!!v[s]&&Math.hypot(gr[s][0]-v[s][0],gr[s][1]-v[s][1])<LEVIERS.genDedupMm))))continue;
+      vues.push(gr);
+-     const c=cellulesDeGraine(capture,gr);
++     const c=cellulesDeGraine(capture,gr,zoneGen?LEVIERS.genSnapMm:LEVIERS.c123EcartSnapMm);
+      for(const s of SIDES)for(const it of c[s])if(!out[s].some(x=>norme(moins(x.mm,it.mm))<DOUBLON_MM))out[s].push(it);
+    }
+    return out;
+  }
++ /* ------------------------------------------------------------------ CH-123 : rails hors du pool (coupés par défaut) */
++ const c123Actif=()=>!!(LEVIERS.c123Apparie||LEVIERS.c123Balayage);
++ const c123Ref=(c123,gMed)=>fini(c123.refMm)?c123.refMm:fini(gMed)?gMed:null;
++ /* Une paire du pool (hors H0 des deux côtés) à `c123EcartMm` de l'écartement de référence ; sans référence : vrai (rien ne s'ouvre). */
++ function c123PaireAuPool(capture,res,gMed,c123){
++   const gRef=c123Ref(c123,gMed);if(!fini(gRef))return true;
++   for(const a of res.left.gardees)for(const b of res.right.gardees){
++     if(a.origines.includes('H0')&&b.origines.includes('H0'))continue;
++     const g=ecartementDecal(capture,{left:a.mm,right:b.mm});if(fini(g)&&Math.abs(g-gRef)<=LEVIERS.c123EcartMm)return true;
++   }
++   return false;
++ }
++ /* Cellules d'un réservoir au format du pool (traits de H2) ; `rails` : rails de la capture relancée (ou ceux de la capture). */
++ function c123Cellules(capture,rails,rs,s,capT){
++   const T=Shadow.reservoirOutils,out=[];
++   for(const c of rs.pool){
++     const ratio=T.lossRatio(c.loss,rs.lmin);
++     if(!(c.windowOk&&(LEVIERS.c123Pente||!c.slopeLimited)&&(c.topRows??0)>=LEVIERS.c123MinTop&&(c.faceCount??0)>=LEVIERS.c123MinFace&&ratio<=LEVIERS.c123RatioMax))continue;
++     const brutD=[0,rs.sign*c.u,c.z],cal=Conv.calibrate(capT,s,brutD),fin=cal.applied?cal.delta:brutD;
++     const mm=decalage(capture.rails[s],L.positionOf(rails[s],fin));if(!mm)continue;
++     out.push({mm:[0,mm[1],mm[2]],calage:cal,cellule:{c,ratio,comp:T.inCompetitive(c,rs.lmin),strong:T.qualifyStrong(c),astar:false,publiee:false}});
++   }
++   return out;
++ }
++ /* Moteur (inchangé) relancé avec la pose de départ des rails de `graines` ({ left:[lat,vert], right }) ; cellules au format du pool. */
++ function c123Relance(capture,graines){
++   const rails={...capture.rails},cotes=SIDES.filter(s=>graines[s]);
++   for(const s of cotes){const rail=capture.rails[s],pos=L.positionOf(rail,[0,graines[s][0]/1000,graines[s][1]/1000]);rails[s]=O.translated(rail,pos.map((v,i)=>v-rail.positionSceneRelative[i]));}
++   const capT={...capture,rails};
++   let sci;try{sci=Shadow.scientificProposeBothAvecReservoir(capT);}catch{return {left:[],right:[]};}
++   const out={left:[],right:[]};
++   for(const s of cotes){const r=sci.rails[s];if(r&&r.ok&&r._reservoir)out[s]=c123Cellules(capture,rails,r._reservoir,s,capT);}
++   return out;
++ }
++ /* Hypothèses générées : liste de [rail, item]. Ordre : appariées du réservoir, balayage. */
++ function c123Hypotheses({capture,res,gMed,c123}){
++   const out=[],zones=LEVIERS.c123Zones||['adv','abords','pn'];
++   if(!zones.includes(c123.zone))return out;
++   const gRef=c123Ref(c123,gMed);if(!fini(gRef))return out;
++   const appariee=(s,mm,autres)=>autres.some(m=>{const d={[s]:mm,[s==='left'?'right':'left']:m};const g=ecartementDecal(capture,{left:d.left,right:d.right});return fini(g)&&Math.abs(g-gRef)<=LEVIERS.c123EcartMm;});
++   const soutenue=(s,mm)=>{const m=soutienRail(capture,s,mm);return m.dessus>=LEVIERS.c123SoutienDessus&&m.flanc>=LEVIERS.c123SoutienFlanc;};
++   const vu=(s,mm)=>res[s].gardees.some(g=>norme(moins(g.mm,mm))<DOUBLON_MM)||out.some(([z,it])=>z===s&&norme(moins(it.mm,mm))<DOUBLON_MM);
++   const pousser=(s,it)=>{if(!vu(s,it.mm)&&soutenue(s,it.mm))out.push([s,it]);};
++   /* `c123Apparie` : cellules du réservoir du cut écartées du pool (filtres, troncature), appariées à une hypothèse gardée de l'autre rail. */
++   if(LEVIERS.c123Apparie)for(const s of SIDES){
++     const o=s==='left'?'right':'left',rs=res[s].rs;if(!rs)continue;
++     for(const it of c123Cellules(capture,capture.rails,rs,s,capture))if(appariee(s,it.mm,res[o].gardees.map(g=>g.mm)))pousser(s,{...it,origine:'H8',sous:'c123-apparie'});
++   }
++   /* `c123Balayage` : les deux rails déplacés ensemble en travers de chaque valeur de `c123BalayageMm` (zones `c123BalayageZones`) ; cellules
++    * appariées entre elles ou avec le pool. */
++   if(LEVIERS.c123Balayage&&(LEVIERS.c123BalayageZones||['abords','pn']).includes(c123.zone)){
++     const C={left:[],right:[]};let relances=0;
++     for(const d of LEVIERS.c123BalayageMm||[]){
++       if(relances>=LEVIERS.c123MaxRelances)break;relances++;
++       const r=c123Relance(capture,{left:[d,0],right:[d,0]});
++       for(const s of SIDES)for(const it of r[s])if(!C[s].some(x=>norme(moins(x.mm,it.mm))<2))C[s].push(it);
++     }
++     for(const s of SIDES){const o=s==='left'?'right':'left',autres=C[o].map(x=>x.mm).concat(res[o].gardees.map(g=>g.mm));
++       for(const it of C[s].sort((a,b)=>a.cellule.c.loss-b.cellule.c.loss))if(appariee(s,it.mm,autres))pousser(s,{...it,origine:'H8',sous:'c123-balayage'});}
++   }
++   return out;
++ }
+  /* Soutien du nuage pour une pose d'un rail, décalée de `mm` ([long, lat, vert], mm) depuis la pose de départ : points de dessus et de flanc
+   * (mêmes mesures que le soutien de H6). Sert à la décision L1-e (src/gcv2-l1e.js) : un rail corrigé à l'écartement de référence n'est posé
+   * que si le nuage le soutient à sa nouvelle place. */
+@@ -652,7 +731,10 @@
+    rechListeResMm:null,rechListeVoieMm:20,rechListeZones:null,
+    /* CH-120 : générateurs d'hypothèses, coupés */
+    genTronques:false,genVoie:false,genVoieFenetre:12,genEcartement:false,genSourcesMax:4,genLargeMm:null,genZones:Object.freeze(['adv']),genMinTop:10,genMinFace:3,genRatioMax:3,
+-   genSnapMm:25,genMaxGraines:8,genMaxHyp:8,genMaxDeplMm:300,genDedupMm:10});
++   genSnapMm:25,genMaxGraines:8,genMaxHyp:8,genMaxDeplMm:300,genDedupMm:10,
++   /* CH-123 : rails hors du pool, coupés */
++   c123Apparie:false,c123Balayage:false,c123SansPaire:false,c123EcartZones:null,c123EcartSnapMm:25,c123Zones:null,c123BalayageZones:null,c123BalayageMm:null,
++   c123EcartMm:10,c123MinTop:15,c123MinFace:0,c123RatioMax:1e9,c123Pente:false,c123SoutienDessus:5,c123SoutienFlanc:0,c123MaxRelances:8,c123MaxHyp:6,c123SansRicochet:false,c123SeulementDifferes:false});
+  /* 4.9.5.16 (test 16, fiches/PASSATION_CAP5_A3.md, fiches/PASSATION_CAP5_B.md) — LEVIERS v5 LIVRÉS : la chaîne mesurée au banc « a3-bd3 sans
+   * deuxième passe » (a3-bd3s, mesurée sur a2486b1) : b-r7a de l'agent B (recherche recentrée, gardes de preuve, arrêt et saut de coût) avec, de
+   * l'agent A, la recherche en ADV ET en abords, les voisins cohérents, l'écartement de la paire recentrée à 15 mm et la branche rail par rail en
+@@ -1051,7 +1133,7 @@ function contreChaine(g,decalChaine,seuilMm){
+    const vs=voisins.filter(v=>v&&v.identity&&v.positions&&v.rails).map(v=>({identity:{part:v.identity.part,cut:v.identity.cut,frameId:v.identity.frameId??null},
+      positions:{left:v.positions.left.slice(),right:v.positions.right.slice()},stage:'verifie',source:'lot',decalage:decalageDepuisDepart(v.rails,v.positions)}));
+    const gs=vs.map(v=>gaugeMm(v.positions.left,v.positions.right)).filter(x=>fini(x)&&Math.abs(x-1500)>0.05),gMed=med(gs);
+-   const hyp=hypothesesDuCut({capture,science,seul,chaine,appuisAvant:appuis.slice(),voisins:vs,gMed,voisinsLot:vs,departEsv:null,gen:{zone,refMm:reference&&fini(reference.mm)?reference.mm:null}});
++   const hyp=hypothesesDuCut({capture,science,seul,chaine,appuisAvant:appuis.slice(),voisins:vs,gMed,voisinsLot:vs,departEsv:null,gen:{zone,refMm:reference&&fini(reference.mm)?reference.mm:null},c123:{zone,refMm:reference&&fini(reference.mm)?reference.mm:null}});
+    const ancres=(hyp.voieH6&&hyp.voieH6.lot&&hyp.voieH6.lot.ancres||[]).map(a=>a.cut),bornes=[id.cut,...ancres],zmap=new Map();
+    for(let x=Math.min(...bornes);x<=Math.max(...bornes);x++)zmap.set(x,{zone:(plagesADV||[]).some(([a,b])=>x>=a&&x<=b)?'adv':'autre'});
+    const voieRef=hyp.voieH6?avecRupture(hyp.voieH6.lot,id.cut,zmap):null;
+@@ -1073,7 +1155,20 @@ function contreChaine(g,decalChaine,seuilMm){
+    if(!k.voieProche&&fini(LEVIERS.voieProcheSureCuts)&&vs.length){const r=decalagesH6(id,vs);if(r&&r.proche)k.voieProche={left:r.proche.left.map(x=>arrondi(x,2)),right:r.proche.right.map(x=>arrondi(x,2)),dist:r.proche.dist};}
+    const d=regle.variante==='L1-e'?deciderL1e(k,modele,reference,capture):deciderL1(k,modele,regle);
+    const positions=d.paire&&d.etat!=='rien'?positionsDe(capture,d.paire):null;
+-   return {decision:d,positions,gMed,cas:k,hyp,chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
++   /* CH-123 — SANS RICOCHET (`c123SansRicochet`, coupé par défaut) : quand des hypothèses générées (H7, H8) sont entrées dans le pool, la décision
++    * que le pool d'avant aurait prise (générateurs coupés) est jointe (`voisinLivre`) ; les appelants (banc, service worker) donnent aux cuts
++    * suivants CETTE décision comme voisin, jamais la pose permise par les hypothèses générées. Aucune décision ne change hors des cuts touchés. */
++   /* CH-123 — SEULEMENT LES DIFFÉRÉS (`c123SeulementDifferes`, coupé par défaut) : si le pool d'avant pose le cut, sa décision est rendue telle
++    * quelle ; les hypothèses générées ne décident que les cuts que le pool d'avant laisse sans pose. */
++   let voisinLivre;
++   if((LEVIERS.c123SansRicochet||LEVIERS.c123SeulementDifferes)&&hyp.c123Ajoutes>0){
++     const avant=LEVIERS;let r;
++     LEVIERS=Object.freeze({...avant,c123Apparie:false,c123Balayage:false,genTronques:false,genVoie:false,genEcartement:false,genLargeMm:null,c123SansRicochet:false,c123SeulementDifferes:false});
++     try{r=deciderDiffere({capture,science,appuis,options,voisins,zone,plagesADV,modele,regle,reference,voisinsTransport,voieListe});voisinLivre={etat:r.decision.etat,positions:r.positions};}
++     finally{LEVIERS=avant;}
++     if(LEVIERS.c123SeulementDifferes&&r.decision.etat!=='rien')return r;
++   }
++   return {decision:d,positions,gMed,cas:k,hyp,...(voisinLivre?{voisinLivre}:{}),chaine:{stage:chaine.decision.stage,reason:chaine.decision.reason??null,anchorsUsed:chaine.decision.anchorsUsed||[]}};
+  }
+  /* Commande d'une pose de la GCV2, comme la branche « lot » de `commandRails` (src/lot-decision.js) : rails en décalages du repère profil de la
+   * pose ESV courante, relus par `expectedPoses` (même position à 0,01 mm), écartement admissible, cible dans la vue de chaque rail. Une cible
+diff --git a/tests/ch123-hors-pool.test.cjs b/tests/ch123-hors-pool.test.cjs
+new file mode 100644
+index 0000000..b82ebad
+--- /dev/null
++++ b/tests/ch123-hors-pool.test.cjs
+@@ -0,0 +1,67 @@
++'use strict';
++/* CH-123 : rails hors du pool de la GCV2 (leviers `c123Apparie`, `c123Balayage`, `c123SansPaire`, `c123EcartZones` sur `genEcartement` de CH-120, coupés par défaut). Capture réelle du corpus
++ * des essais ; la pose de départ du rail droit est déplacée de 130 mm en travers : le vrai rail sort de la fenêtre du moteur (80 mm). */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const L1 = require('../src/gcv2-l1.js'), Sh = require('../src/gcv1-shadow.js'), L = require('../src/lot-decision.js'), O = require('../src/continuity-observer.js');
++const C = require('../vendor/capture-core.js'), { base } = require('./fixtures.cjs');
++const SIDES = ['left', 'right'];
++const cap0 = { identity: { part: 23, cut: 2855, frameId: null }, rails: base.rails, pointsSceneRelative: base.pointsSceneRelative, visibleByClipBoxes: base.visibleByClipBoxes };
++const sci0 = Sh.scientificProposeBothAvecReservoir(cap0);
++const vrai = Object.fromEntries(SIDES.map(s => [s, L.positionOf(cap0.rails[s], sci0.rails[s].next.delta)]));
++const G = 1000 * C.distance(vrai.left, vrai.right);
++const deplace = d => { const rail = cap0.rails.right, t = L.positionOf(rail, [0, sci0.rails.right.next.delta[1] + d, 0]).map((v, i) => v - rail.positionSceneRelative[i]);
++  return { ...cap0, rails: { ...cap0.rails, right: O.translated(rail, t) } }; };
++const cap = deplace(0.13), sci = Sh.scientificProposeBothAvecReservoir(cap), seul = L1.variante(cap, sci, [], L1.REGLE.lotOptions);
++const cible = Object.fromEntries(SIDES.map(s => [s, L1.decalage(cap.rails[s], vrai[s])]));
++const dmin = (h, s) => Math.min(...h.rails[s].map(x => Math.hypot(x.decal[0] - cible[s][0], x.decal[1] - cible[s][1], x.decal[2] - cible[s][2])));
++const pool = (zone = 'abords') => L1.hypothesesDuCut({ capture: cap, science: sci, seul, voisins: [], gMed: null, gen: { zone, refMm: G }, c123: { zone, refMm: G } });
++const sans = () => L1.hypothesesDuCut({ capture: cap, science: sci, seul, voisins: [], gMed: null });
++const avec = (l, f, plus = {}) => { try { L1.reglerLeviers({ ...l, ...plus }); return f(); } finally { L1.reglerLeviers(null); } };
++
++test('éteint : le pool est celui d\'avant (le vrai rail droit, hors fenêtre, n\'y est pas)', () => {
++  assert.ok(Math.abs(cible.right[1]) > 120);
++  const h = pool();
++  assert.deepEqual(h.rails, sans().rails);
++  assert.ok(dmin(h, 'right') > 10);
++});
++test('genEcartement de CH-120 hors ADV (c123EcartZones) : le rail droit entre (H7), le pool d\'avant en tête ; sans la clé, rien hors ADV', () => {
++  const s0 = sans();
++  assert.deepEqual(avec({ genEcartement: true }, () => pool().rails), s0.rails, 'genEcartement seul : ADV seulement');
++  avec({ genEcartement: true, c123EcartZones: ['abords', 'pn'] }, () => {
++    const h = pool();
++    assert.ok(dmin(h, 'right') <= 10, `rail droit à ${dmin(h, 'right').toFixed(1)} mm`);
++    assert.ok(h.rails.right.filter(x => x.origines.includes('H7')).every(x => x.sous.startsWith('g-ecart-left')));
++    for (const s of SIDES) assert.deepEqual(h.rails[s].slice(0, s0.rails[s].length).map(x => x.decal), s0.rails[s].map(x => x.decal));
++    assert.deepEqual(pool('adv').rails, s0.rails, 'en ADV, genZones vide : rien');
++  }, { genZones: [] });
++});
++test('c123SansPaire : quand le pool a déjà une paire à l\'écartement de référence, rien n\'est généré', () => {
++  const sc = Sh.scientificProposeBothAvecReservoir(cap0), se = L1.variante(cap0, sc, [], L1.REGLE.lotOptions);
++  const q = l => avec(l, () => L1.hypothesesDuCut({ capture: cap0, science: sc, seul: se, voisins: [], gMed: null, gen: { zone: 'abords', refMm: G }, c123: { zone: 'abords', refMm: G } }).rails);
++  const base = L1.hypothesesDuCut({ capture: cap0, science: sc, seul: se, voisins: [], gMed: null }).rails;
++  assert.deepEqual(q({ c123Apparie: true, c123Balayage: true, c123BalayageMm: [-130, 130], c123MinTop: 5, genEcartement: true, genZones: [], c123EcartZones: ['abords'], c123SansPaire: true }), base);
++  /* Cas déplacé : le pool a déjà des paires à l'écartement (rail gauche à +92/+97 mm avec le droit de départ) : la garde ferme aussi. */
++  assert.deepEqual(avec({ c123Balayage: true, c123BalayageMm: [-130, 130], c123SansPaire: true }, () => pool().rails), sans().rails);
++});
++test('c123Balayage : la voie balayée en travers fait entrer le rail hors fenêtre ; plafond c123MaxHyp tenu', () => avec({ c123Balayage: true, c123BalayageMm: [-130, 130], c123MaxHyp: 2 }, () => {
++  const h = pool();
++  assert.ok(dmin(h, 'right') <= 10);
++  for (const s of SIDES) assert.ok(h.rails[s].filter(x => x.origines.includes('H8') && !x.hauteur).length <= 2);
++}));
++test('appariement : sans référence d\'écartement, aucun rail généré', () => avec({ c123Balayage: true, c123BalayageMm: [-130, 130], c123Apparie: true }, () => {
++  const h = L1.hypothesesDuCut({ capture: cap, science: sci, seul, voisins: [], gMed: null, c123: { zone: 'abords', refMm: null } });
++  assert.deepEqual(h.rails, sans().rails);
++}));
++test('c123Apparie : chaque cellule ajoutée est à c123EcartMm de la référence avec une hypothèse de l\'autre rail', () => avec({ c123Apparie: true, c123MinTop: 5 }, () => {
++  const c = deplace(0.03), sc = Sh.scientificProposeBothAvecReservoir(c), se = L1.variante(c, sc, [], L1.REGLE.lotOptions);
++  const h = L1.hypothesesDuCut({ capture: c, science: sc, seul: se, voisins: [], gMed: null, c123: { zone: 'adv', refMm: G } });
++  for (const s of SIDES) { const o = s === 'left' ? 'right' : 'left';
++    for (const x of h.rails[s].filter(y => y.origines.includes('H8') && !y.hauteur))
++      assert.ok(h.rails[o].filter(y => !y.origines.includes('H8') && !y.hauteur).some(y => Math.abs(L1.ecartementDecal(c, { [s]: x.decal, [o]: y.decal }) - G) <= 10.01)); }
++}));
++test('c123Ajoutes : compte les hypothèses générées (0 éteint) ; sert à c123SansRicochet', () => {
++  assert.equal(sans().c123Ajoutes, 0);
++  const n = avec({ c123Balayage: true, c123BalayageMm: [-130, 130] }, () => pool().c123Ajoutes);
++  assert.ok(n >= 1);
++  assert.equal(L1.leviersActifs().c123SansRicochet, false, 'coupé par défaut');
++});
+diff --git a/tests/gcv2-l1-cap5.test.cjs b/tests/gcv2-l1-cap5.test.cjs
+index 77405f9..c35db2f 100644
+--- a/tests/gcv2-l1-cap5.test.cjs
++++ b/tests/gcv2-l1-cap5.test.cjs
+@@ -46,7 +46,10 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
+     rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null,
+     /* CH-120 : générateurs d'hypothèses, coupés. */
+     genTronques: false, genVoie: false, genVoieFenetre: 12, genEcartement: false, genSourcesMax: 4, genLargeMm: null, genZones: ['adv'], genMinTop: 10, genMinFace: 3, genRatioMax: 3,
+-    genSnapMm: 25, genMaxGraines: 8, genMaxHyp: 8, genMaxDeplMm: 300, genDedupMm: 10 });
++    genSnapMm: 25, genMaxGraines: 8, genMaxHyp: 8, genMaxDeplMm: 300, genDedupMm: 10,
++    /* CH-123 : rails hors du pool, coupés. */
++    c123Apparie: false, c123Balayage: false, c123SansPaire: false, c123EcartZones: null, c123EcartSnapMm: 25, c123Zones: null, c123BalayageZones: null, c123BalayageMm: null,
++    c123EcartMm: 10, c123MinTop: 15, c123MinFace: 0, c123RatioMax: 1e9, c123Pente: false, c123SoutienDessus: 5, c123SoutienFlanc: 0, c123MaxRelances: 8, c123MaxHyp: 6, c123SansRicochet: false, c123SeulementDifferes: false });
+   try {
+     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
+     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 2475702..757c54b 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -293,7 +293,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+                 /* D-221 : sous L1-s, une pose de la GCV2 n'est ni appui ni voisin (une pose remplacée par la recherche large : voisine, jamais appui). */
+                 if (!estL1s(p)) { E.valides.push({ identity, positions: positionsG, rails: before }); if (!(rl && rl.out)) L.rememberAnchor(E.anchors, { identity, positions: g.positions, stage: 'gcv2-l1' }, E.max); }
+                 /* Cap 5, levier « transport » : sous L1-se, une pose de la GCV2 devient voisine de la GCV2 (jamais appui de la chaîne ni voisine de sa décision). */
+-                else if (p === 'L1-se' && leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity, positions: positionsG, rails: before });
++                else if (p === 'L1-se' && leviers.transport) { const vp = voisinDe(g, positionsG, runtimeRails, before, cameras, camerasLarges); if (vp) (E.validesL1 = E.validesL1 || []).push({ identity, positions: vp, rails: before }); }
+                 out = rl && rl.out ? { ...base, ...rl.out, vue: vueG, l1, aControler: dec.aControler === true } : { ...base, etat: 'pose', vue: vueG, decal: decalPose(before, g.positions), l1, aControler: dec.aControler === true, ...(rl ? { rechercheLarge: rl.garde } : {}) };
+               }
+             } else out = { ...base, etat: 'pose-non-validee', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(before, g.positions), l1 };
+@@ -340,7 +340,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+               if (rl && rl.etat === 'differer') { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: 'recherche-large', garde: ga, rechercheLarge: rl, ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
+               if (rl && rl.etat !== 'erreur') r.rechercheLarge = rl;
+             }
+-            if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
++            if (leviers.transport) { const vp = voisinDe(g, g.positions, r.runtimeRails, r.before, r.cameras, r.camerasLarges); if (vp) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: vp, rails: r.before }); }
+             r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+             poses++;
+           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
+@@ -360,6 +360,14 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+   return [entete, ...lignes];
+ }
+ 
++/* CH-123 (`c123SansRicochet`) : position que la pose de la GCV2 donne aux cuts suivants comme voisine. Sans `voisinLivre` : la pose elle-même.
++ * Avec : la décision du pool d'avant (générateurs coupés), seulement si elle validait et que sa commande passe ; sinon aucune voisine. */
++function voisinDe(g, positions, runtimeRails, before, cameras, camerasLarges) {
++  if (!g.voisinLivre) return positions;
++  if (g.voisinLivre.etat !== 'valider' || !g.voisinLivre.positions) return null;
++  const c = L1.commander({ positions: g.voisinLivre.positions, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, camerasLarges, valider: true });
++  return c.action === 'lot' ? g.voisinLivre.positions : null;
++}
+ /* ------------------------------------------------------------------ agrégation */
+ function lireJsonl(texte) { return texte.split('\n').filter(l => l.trim()).map(l => JSON.parse(l)); }
+ function lireRejeux(textes) {

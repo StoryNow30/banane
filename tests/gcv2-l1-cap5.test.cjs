@@ -7,17 +7,21 @@ const zero = () => ({ left: [0, 0, 0], right: [0, 0, 0] });
 const vide = { ...base, pointsSceneRelative: [], visibleByClipBoxes: [] };
 
 test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test 18) = v4 + v5 + v6 ; le banc les change pour une mesure et revient aux livrés', () => {
-  const V = L1.LEVIERS_LIVRES, V4 = L1.LEVIERS_V4, V5 = L1.LEVIERS_V5, V6 = L1.LEVIERS_V6, V16 = { ...V4, ...V5 };
-  assert.ok(Object.isFrozen(V) && Object.isFrozen(V4) && Object.isFrozen(V5) && Object.isFrozen(V6));
+  const V = L1.LEVIERS_LIVRES, V4 = L1.LEVIERS_V4, V5 = L1.LEVIERS_V5, V6 = L1.LEVIERS_V6, V7 = L1.LEVIERS_V7, V16 = { ...V4, ...V5 }, V18 = { ...V16, ...V6 };
+  assert.ok(Object.isFrozen(V) && Object.isFrozen(V4) && Object.isFrozen(V5) && Object.isFrozen(V6) && Object.isFrozen(V7));
   /* Test 16 : les leviers v5 livrés sont la chaîne mesurée au banc « a3-bd3 sans deuxième passe » (a3-bd3s, a2486b1), diagnostics coupés. */
   assert.deepEqual({ ...V5 }, { rechercheADV: true, rechZones: ['adv', 'abords'], rechEcartMm: 15, rechVoieParCutMm: 40, rechHauteurMaxMm: 20,
     rechContraMinMm: 22, rechContraMaxMm: 45, rechContraRien: true, rechRemplace: true, rechRemplaceMm: 12, corrigeValideZones: ['adv'], rechEncadre: true,
     anomalieNonCorrigeePMin: 0.8, anomalieNonCorrigeeVoieMm: 35, rechPaireTopMin: 60, rechContraRatioMax: 1.5, rechArret: true, rechSauteProcheMm: 2.5,
     voisinsCoherents: true, branche: true, brancheDernier: true, brancheVertMm: 60, brancheExtrapCuts: 2 });
-  assert.deepEqual({ ...V }, { ...V4, ...V5, ...V6 }, 'livrés = v4 + v5 + v6');
+  assert.deepEqual({ ...V }, { ...V4, ...V5, ...V6, ...V7 }, 'livrés = v4 + v5 + v6 + v7');
+  /* Vision 18 (CH-124, D-355) : le seul levier qui change entre la test 18 et la Vision 18 est le refus par l'ancre, allumé au réglage figé. */
+  assert.deepEqual({ ...V7 }, { ancre: true });
+  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V18[k])).sort(), ['ancre']);
+  assert.equal(V4.ancre, null, 'coupé dans la v4'); assert.equal(V.ancre, true, 'livré allumé (D-355)');
   /* Test 18 : les leviers qui changent entre la test 16 et la test 18, ni plus ni moins. */
   assert.deepEqual({ ...V6 }, { rechHauteurMaxMm: 25, vetoVoieAbsMm: 100, voieIncoherenteMm: 40 });
-  assert.deepEqual(Object.keys(V).filter(k => JSON.stringify(V[k]) !== JSON.stringify(V16[k])).sort(), ['rechHauteurMaxMm', 'vetoVoieAbsMm', 'voieIncoherenteMm']);
+  assert.deepEqual(Object.keys(V18).filter(k => JSON.stringify(V18[k]) !== JSON.stringify(V16[k])).sort(), ['rechHauteurMaxMm', 'vetoVoieAbsMm', 'voieIncoherenteMm']);
   /* Les 22 leviers qui changent entre la test 15 et la test 16, ni plus ni moins (rechContraMaxMm 45 était déjà la valeur v4). */
   assert.deepEqual(Object.keys(V16).filter(k => JSON.stringify(V16[k]) !== JSON.stringify(V4[k])).sort(), ['anomalieNonCorrigeePMin', 'anomalieNonCorrigeeVoieMm', 'branche',
     'brancheDernier', 'brancheExtrapCuts', 'brancheVertMm', 'corrigeValideZones', 'rechArret', 'rechContraMinMm', 'rechContraRatioMax', 'rechContraRien', 'rechEcartMm',
@@ -43,7 +47,11 @@ test('leviers v4 (test 15) : la base ; test 16 = v4 + v5 ; leviers livrés (test
     /* Cap 6 (A2, A3) : coupés dans la v4. */
     voisinsCoherents: false, voisinsCoherentsParCutMm: 40, voisinsCoherentsBaseMm: 15, rechVoisinsMin: null, brancheDernier: false,
     /* T17B : coupés. */
-    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null });
+    rechListeResMm: null, rechListeVoieMm: 20, rechListeZones: null,
+    /* CH-124 : refus d'ancre, coupé. */
+    ancre: null,
+    /* CH-121 : ajustement fin, coupé. */
+    ajustementFin: null });
   try {
     const l = L1.reglerLeviers({ transport: false, selectionRefMm: 8 });
     assert.equal(l.transport, false); assert.equal(l.selectionRefMm, 8); assert.equal(l.consensus, true, 'les autres leviers restent livrés');

@@ -1,0 +1,16 @@
+{
+  "format": "ch117-reglage-fige-1",
+  "nom": "C2 + C5",
+  "fige_le": "2026-11-12, sans aucun rejeu de ce sous-ensemble sur un lot récent",
+  "origine": "sous-ensemble du réglage figé (reglage-fige.json), choisi d'après la garde d'octobre (attribution, chantiers/CH-117/sorties/garde/garde-c25.md)",
+  "lots_vus": ["11/11 p16, 12/11 p23 (conception)", "les 11 lots d'octobre de la garde", "les lots non vus du réglage figé (jugés sous C1+C2+C5, pas sous C2+C5 seul)"],
+  "engagement": "jugé une seule fois, tel quel, sur les prochaines séances Écho ; aucune retouche avant ce jugement",
+  "leviers": {
+    "sousTauVoieZones": ["adv"],
+    "sousTauVoieMm": 40,
+    "sousTauVoieMaxCuts": 6,
+    "vetoVoieAbsMaxCuts": 8
+  },
+  "coupes": ["vetoChaineVoieMm", "vetoChaineZones", "vetoChaineMaxCuts", "vetoChaineSansVoisin", "sansVoieZones"],
+  "garde_connue": "retour 1 (7 reculs) : 5 justes différés, 2-11 8285 de 5,3 à 11,2 mm avec passe ; aucune nouvelle faute"
+}

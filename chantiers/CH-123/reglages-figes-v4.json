@@ -1,0 +1,9 @@
+{
+  "note": "CH-123 v4 (13/11). v3BS-sr écarté : garde d'octobre rouge (2-19/5030 et 2-20-f228f6f9/289, deux poses de la GCV2 changées en direct, hors des 10 mm ; garde de v3ABS-sr arrêtée, réglage sur-ensemble). v4 = v3 + c123SeulementDifferes : si le pool d'avant (générateurs coupés) pose le cut, sa décision est rendue telle quelle ; les hypothèses générées ne décident que les cuts que le pool d'avant laisse sans pose, et (sans ricochet) ne nourrissent pas les suivants. Patch : generateurs.patch de CH-120 puis hors-pool-v4.patch. Figés AVANT tout rejeu v4. Ordre (R1) : garde au banc, puis rappel et validation croisée « un lot dehors », puis examen 0511.",
+  "communs": { "genZones": [], "c123EcartMm": 10, "c123MinTop": 15, "c123MinFace": 0, "c123RatioMax": 1e9, "c123Pente": false, "c123SoutienDessus": 5, "c123SoutienFlanc": 0, "c123MaxRelances": 8, "c123MaxHyp": 6, "c123BalayageMm": [-240, -160, -80, 80, 160, 240], "c123SansPaire": true, "c123SansRicochet": true, "c123SeulementDifferes": true },
+  "reglages": {
+    "livre": {},
+    "v4BS-sd":  { "c123Balayage": true },
+    "v4ABS-sd": { "c123Balayage": true, "c123Apparie": true }
+  }
+}

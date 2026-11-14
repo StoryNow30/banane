@@ -23,10 +23,12 @@ const evs=(b,type)=>b.store.events.filter(e=>e.type===type);
 const decisions=b=>b.store.events.filter(e=>e.type==='gcv1-shadow-observed').map(e=>{const {engineMs,...d}=e.lotObservation||{};return [e.identity?.cut,d];});
 const OMBRES=['voie-sure-ombre','garde-voie-ombre','serrage-lot-ombre','voie-b1-ecart-ombre','voie-predite-ombre','b1-ombre','esv-observation','phase-timing'];
 const metier=b=>b.store.events.filter(e=>!OMBRES.includes(e.type)).map(e=>e.type);
-let coupe,active,enPanne,sansOrigine;
-before(async()=>{coupe=await lot({reglage:{...S.lot.voieSureOmbre,actif:false}});active=await lot();enPanne=await lot({panne:true});sansOrigine=await lot({reglage:{...S.lot.voieSureOmbre,origine:{...S.lot.voieSureOmbre.origine,actif:false}}});});
+/* Fichier réparti le 12/11 (28 s seul, plus que la limite de 20 s par fichier du verify) : chaque fichier rejoue le lot témoin (ombre coupée) et une seule variante. Mêmes essais. */
+let coupe,active;
+before(async()=>{coupe=await lot({reglage:{...S.lot.voieSureOmbre,actif:false}});active=await lot();});
+
 test('LA POSE NE CHANGE PAS : mêmes commandes ESV, mêmes rails, mêmes enregistrements, décisions identiques octet pour octet, active et en panne',()=>{
- for(const [nom,x] of [['ombre active',active],['ombre en panne',enPanne],['sans verdict d’origine',sansOrigine]]){
+ for(const [nom,x] of [['ombre active',active]]){
   deq(neutre(x.b.commands),neutre(coupe.b.commands),nom+' : mêmes commandes ESV');deq(neutre(x.adapter.rails),neutre(coupe.adapter.rails),nom);deq(x.adapter.calls,coupe.adapter.calls,nom);
   const rec=b=>b.store.records.map(r=>[r.identity?.cut,r.status,r.validationProof??null,r.commandSent??null]);deq(rec(x.b),rec(coupe.b),nom);
   deq(metier(x.b),metier(coupe.b),nom+' : mêmes événements métier');
@@ -44,7 +46,6 @@ test('un événement compact par cut validé en zone alerte ; rien réglage coup
  assert.ok(valides.length>=2&&!g.some(x=>x.identity.cut===111),'cut 111 hors zone : aucun événement');assert.equal(g[0].referenceCut,111,'le cut 111, posé hors zone, est la première référence');assert.equal(g[0].identity.cut,112);assert.equal(g[0].zone,'marge-apres');assert.equal(g[0].zoneOrigine,'marge-apres','la marge part par le verdict d’origine');
  assert.ok(g.slice(1).every(x=>x.zone==='alerte'&&x.zoneOrigine==='alerte'&&x.auraitDiffereOrigine===false&&x.seuilOrigineMm===100),'second verdict sur chaque cut');deq(g[0].seuils,{...S.lot.voieSureOmbre},'le premier événement du lot porte le réglage');
  for(let i=0;i<g.length;i++){if(i)assert.equal(g[i].referenceCut,g[i-1].identity.cut,'référence = cut posé juste avant (aucun arrêt sur le banc)');assert.equal(g[i].auraitDiffere,false);assert.ok(Number.isFinite(g[i].decalageGaucheMm)&&Number.isFinite(g[i].decalageDroitMm));if(i)assert.equal(g[i].seuils,undefined);}
- assert.equal(evs(enPanne.b,'voie-sure-ombre').length,0,'en panne : aucun événement, le lot continue');
 });
 test('seul le service worker appelle le module, après la commande ; aucun chemin de pose ne le lit',()=>{
  const fs=require('node:fs'),path=require('node:path'),racine=path.resolve(__dirname,'..');
@@ -52,9 +53,4 @@ test('seul le service worker appelle le module, après la commande ; aucun chemi
  assert.match(bg,/'src\/serrage-lot-ombre\.js','src\/voie-sure-ombre\.js'/);
  for(const f of fs.readdirSync(path.join(racine,'src')).filter(x=>x.endsWith('.js')&&!/^(voie-sure-ombre|settings)\.js$/.test(x)))
   assert.doesNotMatch(fs.readFileSync(path.join(racine,'src',f),'utf8'),/BananeVoieSureOmbre|voie-sure-ombre|voieSureOmbre/,f+' ne lit pas l’ombre');
-});
-test('origine.actif:false : le service worker suit le réglage ; seul le verdict retenu, rien pour le cut en marge',()=>{
- const g=evs(sansOrigine.b,'voie-sure-ombre');assert.ok(g.length>=1);
- assert.ok(g.every(x=>x.zone==='alerte'&&!('auraitDiffereOrigine' in x)&&!('zoneOrigine' in x)),'aucun champ d’origine');
- assert.ok(!g.some(x=>x.identity.cut===112),'cut 112 en marge : aucun événement');
 });

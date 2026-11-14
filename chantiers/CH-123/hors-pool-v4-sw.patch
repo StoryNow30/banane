@@ -1,0 +1,151 @@
+diff --git a/background.js b/background.js
+index 0e4c97a..44c3e56 100644
+--- a/background.js
++++ b/background.js
+@@ -2034,6 +2034,15 @@ function l1eTransportDe(identity){const cle=(engine?.s?.batch?.id||'')+'|'+ident
+ function l1eTransporter(capture,identity,positions){const G=globalThis.BananeGcv2L1;
+  if(!profilL1se()||!G?.LEVIERS_LIVRES?.transport||!capture?.rails||!positions)return;
+  l1eTransportDe(identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:{left:positions.left.slice(0,3),right:positions.right.slice(0,3)},rails:capture.rails});}
++/* CH-123 (`c123SansRicochet`, `c123SeulementDifferes` de src/gcv2-l1.js, coupés par défaut) — comme `voisinDe` du banc : position que la pose de la
++ * GCV2 donne aux cuts suivants comme voisine de transport. Sans `voisinLivre` (leviers coupés, ou aucune hypothèse générée au pool) : la pose
++ * elle-même, comme avant. Avec : la décision du pool d'avant (générateurs coupés), seulement si elle validait et que sa commande passe ; sinon
++ * aucune voisine (null). `cloud` : la capture qui porte les caméras (celle du cut dans le lot, le nuage relu du magasin dans la passe). */
++function l1eVoisinDe(g,positions,runtimeRails,before,cloud){const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree;
++ if(!g?.voisinLivre)return positions;
++ if(g.voisinLivre.etat!=='valider'||!g.voisinLivre.positions)return null;
++ const c=G.commander({positions:g.voisinLivre.positions,runtimeRails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(cloud),camerasLarges:VR.camerasLarges(cloud),valider:true});
++ return c.action==='lot'?g.voisinLivre.positions:null;}
+ /* Sous L1-se, une pose de la chaîne refaite par L1-s (vue amenée, ou options de L1) passe par la correction d'écartement de la GCV2
+  * (`corrigerPoseChaine`, comme le banc). Rend { positions (corrigées ou non), correction } ou null (pas L1-se, capture absente, panne). */
+ async function l1eCorrigerChaine(capture,identity,positions){const G=globalThis.BananeGcv2L1,SIDES=['left','right'];
+@@ -2122,7 +2131,7 @@ async function l1CommandeCoeur({command,lotObservation,proposal,before,capture})
+    const c=reglesMetierCommande({action:'lot',reason:'gcv2-l1',rails:cg.rails,gaugeMm:cg.gaugeMm,...(plan?{deplacerVue:plan}:{})},lotObservation,proposal,before);
+    if(c.action==='lot'&&!profilL1s())lotAnchorCandidate={identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:g.positions,stage:'gcv2-l1'};
+    else if(c.action!=='lot')l1.commande.refus='regles-metier';
+-   if(c.action==='lot')l1eTransporter(ctx.lotArgs.capture,identity,g.positions);
++   if(c.action==='lot')l1eTransporter(ctx.lotArgs.capture,identity,l1eVoisinDe(g,g.positions,proposal.rails,before,capture));   /* CH-123 : `l1eTransporter` ne garde rien sans positions */
+    return profilL1s()&&c.action==='lot'?{...c,l1s:'gcv2'}:c;}
+   /* Sous τ : la commande reste un différé ; la pose est faite juste avant la navigation sans décision (`adapter.nextWithoutDecision`). */
+   l1PoseEnAttente={batchId:b?.id??null,cutId:K.cutId(identity),identity:K.clone(identity),before:K.clone(engine.s.before),rails:cg.rails,plan,
+@@ -2249,10 +2258,13 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
+      * forte du nuage, ou concurrencée loin d'elle par une paire au moins aussi bonne, n'est pas écrite (motif `recherche-large`). Une panne laisse la pose. */
+     const rl=passeDiffRechercheLarge(r,g.positions);
+     if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
+-    transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
++    /* CH-123 : la voisine de transport de cette pose (`l1eVoisinDe`) ; `voisin` n'est gardé dans l'état de la passe que s'il diffère de la pose
++     * (null : aucune voisine), pour que la reprise après un redémarrage refasse le même transport. */
++    const vp=l1eVoisinDe(g,g.positions,r.runtimeRails,r.capture.rails,r.cloud),voisin=vp===g.positions?{}:{voisin:vp};
++    if(vp)transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:vp,rails:r.capture.rails});
+     r.etat='pose-ombre';n++;
+     poses.push({cut:r.identity.cut,passe,decal,r,positions:g.positions});
+-    await passeDiffNoter(E,i,r,n,{cut:r.identity.cut,passe,decal,positions:g.positions,i,identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},rails:railsReduits(r.capture.rails)});
++    await passeDiffNoter(E,i,r,n,{cut:r.identity.cut,passe,decal,positions:g.positions,i,identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},rails:railsReduits(r.capture.rails),...voisin});
+     journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,garde,l1:G.resumer(g)});
+    }catch(e){
+     /* Panne après l'entrée au transport et avant la pose (comme avant : le cut reste au transport, sans pose). */
+@@ -2434,7 +2446,8 @@ async function passeDiffApresRedemarrage(){let st;try{st=await chrome.storage.lo
+   if(refus)return finir('interrompue',refus);
+   rendreMemoire();
+   const restes=E.restes.map(x=>({identity:x.identity,zone:x.zone,adv:x.adv,regle:false,lidarCaptureId:x.lidarCaptureId,etat:x.etat,motif:x.motif??null,capture:null,science:null,runtimeRails:null}));
+-  const transport=entree.transport.concat(E.poses.map(p=>({identity:p.identity,positions:p.positions,rails:p.rails})));
++  /* CH-123 : `voisin` gardé par la passe (null : la pose n'était pas voisine ; positions : la pose du pool d'avant) ; absent : la pose elle-même. */
++  const transport=entree.transport.concat(E.poses.filter(p=>p.voisin!==null).map(p=>({identity:p.identity,positions:p.voisin??p.positions,rails:p.rails})));
+   const poses=posees.map(p=>({cut:p.cut,passe:p.passe,decal:p.decal,positions:p.positions,r:restes[p.i]}));
+   passeDiff.etat=E;passeDiff.vue=vue;
+   vue.etat=enEcriture?'ecriture':'calcul';
+diff --git a/tests/ch123-voisin-livre-passe-sw.test.cjs b/tests/ch123-voisin-livre-passe-sw.test.cjs
+new file mode 100644
+index 0000000..e92f2a9
+--- /dev/null
++++ b/tests/ch123-voisin-livre-passe-sw.test.cjs
+@@ -0,0 +1,40 @@
++'use strict';
++/* CH-123 — `voisinLivre` DANS LA DEUXIÈME PASSE du service worker, redémarrage compris (voir tests/ch123-voisin-livre-sw.test.cjs pour le lot).
++ * Montage : tests/helpers/passe-redemarrage.cjs (deux vies du service worker). Lot 111 à 116, différés 112, 113 et 114, tous « valider » dans la
++ * passe : le 112 avec un pool d'avant SANS pose (aucune voisine), le 113 avec un pool d'avant qui validait une autre pose (2 mm plus haut : c'est
++ * elle la voisine), le 114 sans `voisinLivre` (transport livré). La vie 1 est gelée avant d'écrire la décision du 114 : la vie 2 la refait avec le
++ * transport relu de l'état de la passe. Données synthétiques. */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const { montage, bilan, CLE } = require('./helpers/passe-redemarrage.cjs');
++const SIDES = ['left', 'right'], j = x => JSON.parse(JSON.stringify(x ?? null));
++
++test('voisinLivre dans la passe : transport local et transport relu après un redémarrage, poses écrites inchangées', async () => {
++  const M = montage({ sansPoints: [112, 113, 114, 116], fin: 116 }), vus = [], poses = {};
++  const vie0 = M.vie;
++  M.vie = () => { const v = vie0(), G = v.b.ctx.BananeGcv2L1;
++    v.b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => {
++      const cut = a.capture.identity.cut, r = G.deciderDiffere(a);
++      if (G.leviersActifs().sansVoieRien !== true || r.decision.etat !== 'valider' || ![112, 113, 114].includes(cut)) return r;
++      vus.push(j({ vie: v.n, cut, transport: (a.voisinsTransport || []).map(t => ({ cut: t.identity.cut, positions: t.positions })) }));   /* `j` : tableaux de la VM ramenés ici */
++      const autre = G.positionsDe(a.capture, Object.fromEntries(SIDES.map(s => [s, { decal: [r.decision.paire[s].decal[0], r.decision.paire[s].decal[1], r.decision.paire[s].decal[2] + 2] }])));
++      poses[cut] = { pose: j(r.positions), autre: j(autre) };
++      return cut === 112 ? { ...r, voisinLivre: { etat: 'rien', positions: null } } : cut === 113 ? { ...r, voisinLivre: { etat: 'valider', positions: autre } } : r;
++    } };
++    return v; };
++  /* Gel AVANT l'écriture de la 3e décision (114) : la vie 1 a gardé celles du 112 et du 113. */
++  M.tuer(o => o[CLE]?.phase === 'ombre' && o[CLE].index >= 3, { avant: true });
++  const v1 = await M.lot(); assert.equal(v1.gelee, true, 'vie 1 gelée pendant la passe');
++  const gardees = j(M.etat().poses);
++  assert.deepEqual(gardees.map(p => p.cut), [112, 113]);
++  assert.equal(gardees[0].voisin, null, '112 : aucune voisine, gardé dans l\'état'); assert.deepEqual(gardees[1].voisin, poses[113].autre, '113 : la pose du pool d\'avant');
++  assert.deepEqual(gardees.map(p => p.positions), [poses[112].pose, poses[113].pose], 'la pose à écrire reste la pose décidée');
++  await M.reveil(); const B = bilan(M);
++  const t = (vie, cut) => vus.filter(x => x.vie === vie && x.cut === cut).at(-1).transport;
++  assert.deepEqual(t(1, 113), [], 'vie 1 : le 112 (pool d\'avant sans pose) n\'est pas voisin du 113');
++  for (const vie of [1, 2]) { const x = t(vie, 114);
++    assert.deepEqual(x.map(p => p.cut), [113], `vie ${vie} : le 114 a le 113 pour voisin, jamais le 112`);
++    assert.deepEqual(x[0].positions, poses[113].autre, `vie ${vie} : par la pose du pool d'avant`); }
++  /* Les poses décidées sont écrites comme avant (112, 113, 114), une validation par cut. */
++  assert.deepEqual(B.ecr.filter(e => e[1] === 'ecrit').map(e => e[0]), [112, 113, 114]); assert.deepEqual(B.enPlace, { 112: 1, 113: 1, 114: 1 });
++  assert.equal(B.etat, null, 'état effacé à la fin');
++});
+diff --git a/tests/ch123-voisin-livre-sw.test.cjs b/tests/ch123-voisin-livre-sw.test.cjs
+new file mode 100644
+index 0000000..37f7f06
+--- /dev/null
++++ b/tests/ch123-voisin-livre-sw.test.cjs
+@@ -0,0 +1,44 @@
++'use strict';
++/* CH-123 — LE SERVICE WORKER BRANCHÉ COMME LE BANC SUR `voisinLivre` (leviers `c123SansRicochet`, `c123SeulementDifferes` de src/gcv2-l1.js, coupés par
++ * défaut). Quand la décision de la GCV2 porte `voisinLivre` (des hypothèses générées sont entrées au pool), la pose validée ne devient voisine de
++ * TRANSPORT que par la décision du pool d'avant : jamais si elle laissait le cut sans pose ; par SA pose si elle validait et que sa commande passe.
++ * Sans `voisinLivre` (leviers coupés) : le transport livré, inchangé. Montage : tests/helpers/lot-profil.cjs (service worker réel en VM, cuts 111 à
++ * 113, le 112 sans point ; la GCV2 est forcée à « valider » sur le 112). Données synthétiques. */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const { production, base, K, S, EsvTrou, SCOPE, attendre, decisions } = require('./helpers/lot-profil.cjs');
++const SIDES = ['left', 'right'];
++
++async function lot(voisinLivre) {
++  const adapter = new EsvTrou([]), b = production({ adapter });
++  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, deplacerVue: { ...S.deplacerVue, actif: false }, lot: { ...S.lot, gardeApresDiffere: false } };
++  const G = b.ctx.BananeGcv2L1; let pose = null, autre = null;
++  b.ctx.BananeGcv2L1 = { ...G, deciderDiffere: a => {
++    const r = G.deciderDiffere(a); if (a.capture.identity.cut !== 112) return r;
++    const p0 = b.store.events.find(e => e.type === 'gcv1-shadow-observed' && e.identity?.cut === 111)?.lotObservation?.positions;
++    const paire = { left: { decal: G.decalage(a.capture.rails.left, p0.left) }, right: { decal: G.decalage(a.capture.rails.right, p0.right) } };
++    /* La pose du pool d'avant (cas « valider ») : la même paire, levée de 2 mm (elle se distingue de la pose commandée). */
++    const paireAvant = Object.fromEntries(SIDES.map(s => [s, { decal: [paire[s].decal[0], paire[s].decal[1], paire[s].decal[2] + 2] }]));
++    pose = G.positionsDe(a.capture, paire); autre = G.positionsDe(a.capture, paireAvant);
++    const vl = voisinLivre === 'rien' ? { etat: 'rien', positions: null } : voisinLivre === 'valider' ? { etat: 'valider', positions: autre } : null;
++    return { ...r, decision: { ...r.decision, etat: 'valider', motif: null, p: 0.9, paire, hypothese: 'H8', ecartDepartMm: 1 }, positions: pose, ...(vl ? { voisinLivre: vl } : {}) };
++  } };
++  await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
++  adapter.identity.cut = 111; adapter.rails = K.clone(base.rails); adapter.ajuster();
++  await b.api('start', { part: 23, start: 111, end: 113, ...SCOPE }); await b.settle(); await attendre(30);
++  return { b, pose, autre, transport: JSON.parse(JSON.stringify(b.get('l1eTransport'))).poses, d112: decisions(b).find(([c]) => c === 112)[1] };
++}
++const proche = (p, q) => SIDES.every(s => Math.hypot(...p[s].slice(0, 3).map((v, i) => v - q[s][i])) < 1e-9);
++
++test('voisinLivre dans le lot : la pose est commandée, mais elle ne voyage que par la décision du pool d\'avant', async () => {
++  const sans = await lot(null);
++  assert.equal(sans.d112.command.reason, 'gcv2-l1');
++  assert.deepEqual(sans.transport.map(p => p.identity.cut), [112], 'sans voisinLivre : transport livré');
++  assert.ok(proche(sans.transport[0].positions, sans.pose), 'la pose elle-même');
++  const rien = await lot('rien');
++  assert.equal(rien.d112.command.reason, 'gcv2-l1', 'la pose est toujours commandée et validée'); assert.equal(rien.d112.command.l1s, 'gcv2');
++  assert.deepEqual(rien.transport, [], 'pool d\'avant sans pose : aucune voisine (aucun ricochet)');
++  const val = await lot('valider');
++  assert.equal(val.d112.command.reason, 'gcv2-l1');
++  assert.deepEqual(val.transport.map(p => p.identity.cut), [112]);
++  assert.ok(proche(val.transport[0].positions, val.autre) && !proche(val.transport[0].positions, val.pose), 'la voisine est la pose du pool d\'avant, pas la pose commandée');
++});

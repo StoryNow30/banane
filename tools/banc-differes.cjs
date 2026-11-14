@@ -42,6 +42,7 @@ const D = require('./diag-differes.cjs');
 const GA = require('../src/garde-passe-appuis.js');
 const RL = require('../src/recherche-large.js');
 const SETTINGS = require('../src/settings.js');
+const ANC = require('../src/ancre-trajectoire.js');
 
 const FORMAT = 'ariane-banc-differes-rejeu-v1', FORMAT_SYNTHESE = 'ariane-banc-differes-synthese-v1', FORMAT_COMPARAISON = 'ariane-banc-differes-comparaison-v1';
 const VERSION = 'banc-differes-1';
@@ -130,6 +131,56 @@ function gardeDuBanc(valeur) {
   if (!R.ok) throw Error('garde des appuis de la passe : ' + R.raison);
   return { actif: R.actif, deplacementMaxMm: R.deplacementMaxMm, appuiNormalMaxCuts: R.appuiNormalMaxCuts };
 }
+/* CH-124 (levier `ancre`, coupé) — LISTE DU DÉPART DU LOT, RECONSTITUÉE AU BANC. Le service worker lit l'instantané de la liste une fois par lot, à son départ
+ * (`l1eTable`) ; l'export ne garde que le DERNIER instantané de la partie, souvent pris après le lot (lignes des cuts posés réécrites). On remet donc les lignes des cuts
+ * du lot à leur pose de départ (rails de départ de la capture + translation monde − scène), sans drapeau ; le statut d'origine d'une ligne réécrite n'est pas connu : valide
+ * (choix prudent : elle entre alors dans la voie courante de l'ancre si son écartement est plausible, même si elle visait l'autre voie). Translation : la même pour toute la
+ * séance ; candidates = (ligne − pose de départ) et (ligne − pose réelle du lot) de chaque cut, quand les deux rails donnent la même à 2 mm ; retenue : la grappe (à 1 mm)
+ * la plus fournie, si elle a au moins 2 membres et dépasse la suivante. `cutsLot` : [{ cut, depart: { left, right }, pose: { left, right } | null }] (scène relative).
+ * Rend { table, n, second, remises } ou null (pas de translation sûre : l'ancre se tait pour ce lot). */
+function listeDeDepart(table, cutsLot) {
+  if (!table || !Number.isInteger(table.n) || !table.ed) return null;
+  const ligne = (cut, j) => { const o = 6 * cut + j, v = [table.ed[o], table.ed[o + 1], table.ed[o + 2]]; return v.every(fini) ? v.map(x => x / 1e4) : null; };
+  const grappes = [];
+  const candidat = (cut, p) => {
+    const Lw = ligne(cut, 0), Rw = ligne(cut, 3); if (!Lw || !Rw || !p || !SIDES.every(s => Array.isArray(p[s]) && p[s].slice(0, 3).every(fini))) return;
+    const TL = moins(Lw, p.left), TR = moins(Rw, p.right); if (1000 * norme(moins(TL, TR)) > 2) return;
+    const T = TL.map((v, i) => (v + TR[i]) / 2), g = grappes.find(x => 1000 * norme(moins(x.t, T)) <= 1);
+    if (g) { g.t = g.t.map((v, i) => (v * g.n + T[i]) / (g.n + 1)); g.n++; } else grappes.push({ t: T, n: 1 });
+  };
+  for (const c of cutsLot) if (Number.isInteger(c.cut) && c.cut >= 0 && c.cut < table.n) { candidat(c.cut, c.depart); if (c.pose) candidat(c.cut, c.pose); }
+  grappes.sort((a, b) => b.n - a.n);
+  if (!grappes.length || grappes[0].n < 2 || (grappes[1] && grappes[1].n >= grappes[0].n)) return null;
+  const T = grappes[0].t, st = Array.from(table.st), fl = Array.from(table.fl), ed = Array.from(table.ed); let remises = 0;
+  for (const c of cutsLot) {
+    if (!Number.isInteger(c.cut) || c.cut < 0 || c.cut >= table.n || !c.depart) continue;
+    SIDES.forEach((s, k) => { for (let i = 0; i < 3; i++) ed[6 * c.cut + 3 * k + i] = Math.round((c.depart[s][i] + T[i]) * 1e4); });
+    if (fl[c.cut] & 1) { fl[c.cut] = 0; st[c.cut] = 0; remises++; }
+  }
+  return { table: { ...table, st, fl, ed }, n: grappes[0].n, second: grappes[1] ? grappes[1].n : 0, remises };
+}
+/* État de l'ancre d'un lot (src/ancre-trajectoire.js) sur la liste du départ reconstituée, et son résumé pour l'en-tête du rejeu. */
+function ancreDuLot({ liste, cuts, captures, poseReelle, reglage }) {
+  if (!liste) return { etat: null, resume: { actif: false, raison: 'sans-liste' } };
+  const cl = cuts.map(c => { const cap = c.captureId ? captures.get(c.captureId) : null, pr = poseReelle.get(c.cut) || null;
+    return cap && SIDES.every(s => cap.rails[s] && Array.isArray(cap.rails[s].positionSceneRelative)) ? { cut: c.cut, depart: Object.fromEntries(SIDES.map(s => [s, cap.rails[s].positionSceneRelative.slice(0, 3)])), pose: pr ? pr.corrigee : null } : null; }).filter(Boolean);
+  const D = listeDeDepart(liste, cl);
+  if (!D) return { etat: null, resume: { actif: false, raison: 'calage-banc' } };
+  const R = reglage === true ? {} : reglage, E = ANC.etat(D.table, R), Mo = E.modele;
+  return { etat: Mo.ok ? E : null, resume: { actif: !!Mo.ok, version: ANC.VERSION, reglage: ANC.reglage(R), raison: Mo.ok ? null : Mo.raison, sens: Mo.ok ? Mo.sens : null, rapportSens: Mo.ok ? arrondi(Mo.rapportSens, 2) : null,
+    lignesPleines: Mo.ok ? Mo.lignesPleines : null, listeDepart: { calage: D.n, second: D.second, remises: D.remises } } };
+}
+/* CH-121 : étage final d'ajustement d'une pose `out` de L1-se (levier `ajustementFin`). Rend `out`, ajustée si la commande refaite passe (`ajustementFin` consigne
+ * la pose d'avant et ce que l'étage a lu), sinon telle quelle (`ajustementFin.refus`). `E` (ou null) : le voisin du cut prend la pose ajustée. */
+function ajusterFin(out, capture, before, runtimeRails, cameras, E, identity) {
+  const a = L1.ajusterPoseFinale(capture, out.decal);
+  if (!a.ajuste) return out;
+  const pos = Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], a.decal[s].map(v => v / 1000))]));
+  const cg = L1.commander({ positions: pos, runtimeRails, before, expectedPoses: K.expectedPoses, cameras, valider: true });
+  if (cg.action !== 'lot' || cg.vue !== 'dans') return { ...out, ajustementFin: { refus: cg.reason || 'vue', info: a.info } };
+  if (E) { const v = E.valides.find(x => x.identity.cut === identity.cut && x.identity.part === identity.part && (x.identity.frameId ?? null) === (identity.frameId ?? null)); if (v) v.positions = pos; }
+  return { ...out, decal: decalPose(before, pos), ajustementFin: { avant: out.decal, info: a.info } };
+}
 function rejouerLot({ journal, captures, projet, partie, lotId, parametres, profils = PROFILS, journalTexte = () => {}, liste = null, chrono = false, gardeAppuis = undefined, rechercheLarge = undefined }) {
   const horloge = () => Number(process.hrtime.bigint()) / 1e6;
   const R = lotReel(journal, partie, lotId), lot = R.lot, modele = L1.modeleFige(parametres, 'lot');
@@ -143,7 +194,15 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
   const RLv = rechercheLarge !== undefined ? rechercheLarge : process.env.BANC_RECHERCHE_LARGE ? JSON.parse(process.env.BANC_RECHERCHE_LARGE) : undefined;
   const RLR = RLv === undefined || RLv === false ? null : (() => { const r = RL.reglage(RLv); if (!r.ok) throw Error('recherche large : ' + r.raison); return r.actif ? r : null; })();
   const cuts = lot.cuts.slice().sort((a, b) => a.t - b.t);
+  /* CH-124 (levier `ancre`, coupé) : l'ancre du lot, calculée une fois (liste du départ du lot reconstituée) ; null si le levier est coupé. */
+  const ancre = leviers.ancre && profils.includes('L1-se') ? ancreDuLot({ liste, cuts, captures, poseReelle: R.poseReelle, reglage: leviers.ancre }) : null;
   const zoneMem = M.creerMemoire('zones-' + lot.id);
+  /* CH-116 (R5, mesure) : BANC_ZONES=journal prend la zone du cut écrite par le service worker à sa décision (événement `regles-metier-ombre`, portée `cut`,
+   * du lot ; le dernier du cut fait foi) au lieu de la mémoire des zones recalculée ici ; la plage de contrôle ADV de l'événement s'ajoute à `plagesADV`.
+   * Cut sans événement : zone recalculée. Absente : rien ne change. */
+  const zonesJournal = process.env.BANC_ZONES === 'journal' ? new Map((Array.isArray(journal.events) ? journal.events : [])
+    .filter(e => e && e.type === 'regles-metier-ombre' && e.batchId === lot.id && e.portee === 'cut' && e.zone && e.identity && Number.isInteger(e.identity.cut))
+    .map(e => [e.identity.cut, e.zone])) : null;
   const etats = Object.fromEntries(profils.map(p => [p, { anchors: R.seeds.map(a => ({ ...a, identity: { ...a.identity }, positions: { left: a.positions.left.slice(), right: a.positions.right.slice() } })),
     valides: [], grappe: M.creerMemoire('grappe-' + p), max: MAX_APPUIS + R.seeds.length }]));
   const lignes = [], restes = [];
@@ -170,6 +229,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       lignes.push(ligne); continue;
     }
     const capture = { identity, rails: cap.rails, pointsSceneRelative: cap.pointsSceneRelative, visibleByClipBoxes: cap.visibleByClipBoxes };
+    /* CH-124 (levier `ancre`, coupé) : écart de la pose de DÉPART d'ESV à l'axe prédit, consigné pour chaque cut (mesure : l'axe se lit ainsi même sur un cut différé). */
+    if (ancre && ancre.etat) ligne.ancreDepart = ANC.juger(ancre.etat, c.cut, capture, Object.fromEntries(SIDES.map(s => [s, cap.rails[s].positionSceneRelative.slice(0, 3)])));
     let science = null, erreur = null;
     const tA = chrono ? horloge() : 0;
     try { science = Sh.scientificProposeBothAvecReservoir(capture); } catch (e) { erreur = String(e && e.message || e).slice(0, 120); }
@@ -178,7 +239,10 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
     let surface = null; try { surface = M.surface(cap); } catch { surface = null; }
     /* Zone à l'instant de la décision : mémoire des zones évaluée avant le cut (ne dépend que des captures). */
     const r0 = M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: c.stage, reason: null }, action: null, valide: false, surface });
-    const ez = M.evaluer(zoneMem, r0), plages = plagesDe(zoneMem, ez), zone = dans(plages.pn, c.cut) ? 'pn' : dans(plages.adv, c.cut) ? 'adv' : 'abords';
+    const ez = M.evaluer(zoneMem, r0), plages = plagesDe(zoneMem, ez);
+    let zone = dans(plages.pn, c.cut) ? 'pn' : dans(plages.adv, c.cut) ? 'adv' : 'abords';
+    const zj = zonesJournal && zonesJournal.get(c.cut);
+    if (zj) { zone = zj.pn ? 'pn' : zj.adv ? 'adv' : 'abords'; if (Array.isArray(zj.advControle)) plages.adv.push(zj.advControle); if (Array.isArray(zj.pnControle)) plages.pn.push(zj.pnControle); }
     ligne.zone = zone;
     if (!science) { for (const p of profils) ligne.profils[p] = { etat: c.pose ? 'pose' : 'differe', source: 'erreur-moteur', erreur }; M.noter(zoneMem, r0, { differe: !c.pose }); lignes.push(ligne); continue; }
     const runtimeRails = Sh.toRuntimeRails(science), before = capture.rails;
@@ -300,6 +364,13 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
           }
         } catch (e) { out = { ...base, etat: 'differe', erreur: String(e && e.message || e).slice(0, 120) }; journalTexte(`cut ${c.cut} (${p}) : ${out.erreur}`); }
       }
+      /* CH-121 (levier `ajustementFin` de src/gcv2-l1.js, coupé) : étage final, comme le service worker en fin de `commandLot` : la pose de L1-se, dans la vue
+       * courante (pas de vue déplacée), est ajustée rail par rail sur son profil ; la commande refaite (`commander` : écartement admissible, vue) doit passer,
+       * sinon la pose reste celle de la décision. Le voisin (`E.valides`) prend la pose ajustée (le service worker relit ses voisins dans `records`, pose écrite) ;
+       * l'appui et le transport gardent celle de la décision. */
+      /* `seulChaine` : poses de la chaîne seulement (source `lot`) ; `voisinsDecision` : le voisin garde la pose de la décision. */
+      if (p === 'L1-se' && leviers.ajustementFin && out && out.etat === 'pose' && out.decal && !out.vue && (!leviers.ajustementFin.seulChaine || out.source === 'lot'))
+        out = ajusterFin(out, capture, before, runtimeRails, cameras, leviers.ajustementFin.voisinsDecision ? null : E, identity);
       ligne.profils[p] = out;
       /* Cap 5 : un différé de L1-se est gardé pour la deuxième passe (fin de lot), avec ce qu'il faut pour le redécider. */
       if (p === 'L1-se' && leviers.deuxiemePasse && out.etat === 'differe' && (out.source === 'gcv2' || out.source === 'lot' || out.source === 'recherche-large'))
@@ -307,6 +378,13 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
       /* L1-s : la mémoire de la règle « grappe » voit le lot de la 4.9.5.9 (une pose L1-s y reste un différé). */
       const valideChaine = out.etat === 'pose' && !(estL1s(p) && (posesL1s || out.source === 'gcv2'));
       M.noter(E.grappe, M.resumer({ identity: { part: null, cut: c.cut }, decision: { stage: d.stage, reason: d.reason }, action: null, valide: valideChaine, surface }), { differe: !valideChaine });
+      /* CH-124 (levier `ancre`, coupé) — REFUS D'ANCRE, SANS RICOCHET : une pose de L1-se (chaîne, L1-s, GCV2, recherche large) dont le milieu est à plus de θ en travers de
+       * l'axe de la voie prédit par la trajectoire n'est pas posée : le cut est différé (source `ancre`). Tout ce qui précède est fait comme le livré : la pose refusée
+       * reste appui, voisine, transport et mémoire de grappe ; elle n'est pas donnée à la deuxième passe. Les autres cuts gardent donc la décision du livré. */
+      if (ancre && ancre.etat && p === 'L1-se' && out.etat === 'pose' && out.decal) {
+        const j = ANC.juger(ancre.etat, c.cut, capture, Object.fromEntries(SIDES.map(s => [s, L.positionOf(before[s], out.decal[s].map(v => v / 1000))])));
+        ligne.profils[p] = j.refus ? { etat: 'differe', source: 'ancre', etage: out.etage, origine: out.source, ancre: j, decalRefuse: out.decal } : { ...out, ancre: j };
+      }
     }
     M.noter(zoneMem, r0, { differe: !c.pose });
     if (chrono) ligne.ms.decision = arrondi(horloge() - tD, 1);
@@ -323,7 +401,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         let poses = 0;
         /* Levier `passesAlternees` : sens alterné d'une passe à l'autre (une pose se propage vers l'avant, puis vers l'arrière) ; sinon toujours vers l'avant. */
         for (const r of passe % 2 || !leviers.passesAlternees ? restes : restes.slice().reverse()) {
-          if (r.ligne.profils['L1-se'].etat !== 'differe') continue;
+          if (r.ancreRefus || r.ligne.profils['L1-se'].etat !== 'differe') continue;
           const tC = chrono ? horloge() : 0;
           try {
             const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,
@@ -342,7 +420,12 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
             }
             if (leviers.transport) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: g.positions, rails: r.before });
             r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
+            /* CH-121 : même étage final sur la pose de la passe (après la garde A, comme le service worker). */
+            if (leviers.ajustementFin && !leviers.ajustementFin.seulChaine && !r.ligne.profils['L1-se'].vue) r.ligne.profils['L1-se'] = ajusterFin(r.ligne.profils['L1-se'], r.capture, r.before, r.runtimeRails, r.cameras, null, r.identity);
             poses++;
+            /* CH-124 : la pose de la passe passe par le même refus d'ancre ; refusée, elle reste comptée et transportée comme le livré, et n'est pas reprise par la passe suivante. */
+            if (ancre && ancre.etat) { const j = ANC.juger(ancre.etat, r.cut, r.capture, g.positions), o = r.ligne.profils['L1-se'];
+              if (j.refus) { r.ancreRefus = true; r.ligne.profils['L1-se'] = { etat: 'differe', source: 'ancre', etage: 'deferred', origine: 'gcv2-passe', ancre: j, decalRefuse: o.decal, passe2: o.passe2 }; } else o.ancre = j; }
           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
         }
@@ -350,11 +433,29 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
         if (!poses) break;
       }
     } finally { L1.reglerLeviers(avant); passeMs = arrondi(horloge() - tP, 1); }
+    /* CH-116 (fidélité de la passe, D-259) : BANC_PASSE_PLAFOND=N rejoue l'écriture du service worker (passeDiffEcrire) : les poses de la passe, décidées en ombre,
+     * sont écrites dans l'ordre de leur décision, N au plus ; à la première pose non écrite la passe s'arrête. Seul refus que le banc sait voir : une cible hors de la
+     * vue (« cette passe ne déplace pas la vue »). Les poses non écrites redeviennent des différés (`passe2.nonEcrite` : plafond ou arret). Absente : rien ne change. */
+    const plafond = process.env.BANC_PASSE_PLAFOND ? Number(process.env.BANC_PASSE_PLAFOND) : null;
+    if (Number.isInteger(plafond) && plafond >= 0) {
+      /* Ordre de décision : passe, puis rang dans `restes` (sens inversé aux passes paires avec `passesAlternees`, comme la boucle de la passe). */
+      const rang = (x, i) => [x.passe2.passe, x.passe2.passe % 2 || !leviers.passesAlternees ? i : -i];
+      const posees = restes.map((r, i) => ({ x: r.ligne.profils['L1-se'], i })).filter(o => o.x && o.x.etat === 'pose' && o.x.passe2)
+        .sort((a, b) => { const p = rang(a.x, a.i), q = rang(b.x, b.i); return p[0] - q[0] || p[1] - q[1]; }).map(o => o.x);
+      let arret = false, ecrites = 0;
+      for (const x of posees) {
+        const motif = arret ? 'arret' : ecrites >= plafond ? 'plafond' : x.vue === 'deplacee' ? 'refus-vue' : null;
+        if (!motif) { ecrites++; continue; }
+        if (motif !== 'plafond') arret = true;
+        x.passe2.nonEcrite = motif === 'refus-vue' ? 'refus-vue' : motif; x.passe2.decalOmbre = x.decal; x.etat = 'differe'; x.decal = null;
+      }
+    }
   }
   const entete = { type: 'entete', format: FORMAT, version: VERSION, partie: `${projet}:${partie}`, projet, lot: lot.id.slice(0, 8), version_lot: lot.version, reprise: R.seeds.length,
     regleGrappe: R.regleGrappe, profils, regle: { L1: L1.REGLE, 'L1-v': L1.REGLE_V }, moduleL1: L1.VERSION, ...(profils.includes('L1-se') ? { l1e: { version: EL.VERSION, reglage: EL.REGLAGE, leviers, liste: liste ? { partie: liste.partie ?? null, at: liste.at ?? null, lignes: liste.n } : null, ...(leviers.deuxiemePasse ? { gardeAppuis: gardeDuBanc(gardeAppuis) } : {}) } } : {}),
     parametres: { version: parametres.version, date: parametres.date, seuils: modele.seuils },
     ...(RLR ? { rechercheLarge: RLR, moduleRechercheLarge: RL.VERSION } : {}),
+    ...(ancre ? { ancre: ancre.resume } : {}),
     note: 'Banc HORS DÉPÔT : décalages [long, lat, vert] en mm dans le repère profil de la pose de départ ; aucune coordonnée absolue, aucun identifiant de projet ; aucune pose humaine en entrée.',
     traites: cuts.length, posesReelles: cuts.filter(c => c.pose).length, differesReels: cuts.filter(c => !c.pose).length, dureeS: Math.round((Date.now() - t0) / 1000), ...(chrono ? { chrono: { passeMs } } : {}) };
   return [entete, ...lignes];
@@ -604,7 +705,7 @@ function main(argv) {
   } else throw Error('mode : rejouer | predire | agreger | resumer | comparer');
 }
 
-module.exports = { SANS_VERITE, FORMAT, FORMAT_SYNTHESE, FORMAT_COMPARAISON, VERSION, PROFILS, chargerCaptures, avecNuage, lotReel, rejouerLot, lireRejeux, lireJuges, compter, stats, erreurProfil, agreger, syntheseMd,
+module.exports = { SANS_VERITE, FORMAT, FORMAT_SYNTHESE, FORMAT_COMPARAISON, VERSION, PROFILS, chargerCaptures, avecNuage, lotReel, listeDeDepart, ancreDuLot, rejouerLot, lireRejeux, lireJuges, compter, stats, erreurProfil, agreger, syntheseMd,
   resumePrediction, comparatifSansVerite, comparer, args, main };
 
 if (require.main === module) { try { main(process.argv.slice(2)); } catch (e) { process.stderr.write(`banc-differes : ${e.message}\n`); process.exitCode = 1; } }

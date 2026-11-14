@@ -1,0 +1,97 @@
+diff -ruN a/background.js b/background.js
+--- a/background.js	2026-11-12 17:29:04.838911647 +0000
++++ b/background.js	2026-11-12 17:29:04.841186022 +0000
+@@ -2079,9 +2079,29 @@
+   try{x=await call('amenerDansLaVue',s,positions[s],identity,{...plan,cotes:undefined,essai:true});}catch(e){x={ok:false,raison:'erreur:'+String(e?.message||e).slice(0,100)};}
+   if(!x?.ok)return {ok:false,raison:'pre-vol:'+(x?.raison||'?')};}
+  return {ok:true,plan};}
++/* CH-117 (C1, leviers `vetoChaineVoieMm` et `vetoChaineZones` de src/gcv2-l1.js, coupés) : sous L1-se, une pose de la chaîne dans ces zones, à plus de
++ * `vetoChaineVoieMm` en travers de la droite des voisins validés du lot (chaîne et transport de la GCV2, comme le banc), n'est pas envoyée : le cut passe à la
++ * GCV2 comme un différé (commande `defer`, motif `veto-chaine`), et la décision refaite de L1-s n'est pas reprise. Leviers coupés ou panne : la commande telle quelle. */
++function l1VetoChaine(positions,capture,identity,b,zone){const G=globalThis.BananeGcv2L1,SIDES=['left','right'];
++ try{if(!profilL1se()||typeof G?.vetoChaine!=='function'||!positions||!capture?.rails||!identity)return null;
++  const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(capture.rails[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return null;
++  return G.vetoChaine(capture,identity.cut,l1Voisins(b,identity).concat(l1eTransportDe(identity)),decal,zone);}catch{return null;}}
+ async function l1CommandeCoeur({command,lotObservation,proposal,before,capture}){
+  const SIDES=['left','right'],ctx=l1Contexte;l1Contexte=null;l1PoseEnAttente=null;
+- if(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'))return command;
++ let vetoCh=null;
++ if(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate')){
++  const G=globalThis.BananeGcv2L1,id=engine.s.before?.identity??null;
++  if(!profilL1se()||!(typeof G?.leviersActifs==='function'&&G.leviersActifs().vetoChaineZones)||!ctx||!id||ctx.identity.cut!==id.cut)return command;
++  const pos=command.action==='lot'?lotObservation?.positions:(()=>{try{const x=globalThis.BananeCore3.expectedPoses({rails:before},command.rails);return Object.fromEntries(SIDES.map(s=>[s,x[s].positionSceneRelative.slice(0,3)]));}catch{return null;}})();
++  const v=l1VetoChaine(pos,ctx.lotArgs.capture,id,engine.s.batch,l1Zone(id).zone);
++  if(!v||!v.veto)return command;
++  vetoCh=v;lotObservation.vetoChaine=v;
++  command=globalThis.BananeLotDecision.deferRails(proposal.rails,lotObservation,'veto-chaine','décision sur le lot : pose de la chaîne hors de la voie des voisins validés ('+v.ecartMm+' mm) : cut repris par la GCV2');
++  l1Contexte=null;
++ }
++ return l1CommandeSuite({command,lotObservation,proposal,before,capture,ctx,vetoCh});}
++async function l1CommandeSuite({command,lotObservation,proposal,before,capture,ctx,vetoCh}){
++ const SIDES=['left','right'];
+  const G=globalThis.BananeGcv2L1,L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,VR=globalThis.BananeVoieRecentree,Sh=globalThis.BananeGCV1Shadow;
+  const b=engine.s.batch,identity=engine.s.before?.identity??null;
+  try{
+@@ -2089,13 +2109,15 @@
+   if(!ctx||!identity||ctx.identity.cut!==identity.cut||!capture||typeof Sh?.scientificProposeBothAvecReservoir!=='function'){lotObservation.l1={version:G.VERSION,etat:'rien',motif:'contexte-absent'};return command;}
+   /* L1-s, b. : la décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis ; si elle pose
+    * (vue amenée au besoin), pose validée, jamais appui. */
+-  if(profilL1s()&&command.reason!=='regles-metier'){
++  if(profilL1s()&&command.reason!=='regles-metier'&&!vetoCh){
+    let d2=L.decideCut({...ctx.lotArgs,anchors:ctx.anchors,options:{...G.REGLE.lotOptions}});
+    const cc=d2.positions?await l1eCorrigerChaine(ctx.lotArgs.capture,identity,d2.positions):null;
+    if(cc&&cc.correction.appliquee)d2={...d2,positions:cc.positions};
+    let c2=L.commandRails({decision:d2,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture)});
+    if(c2.action!=='lot'&&/(^|-)hors-vue-(left|right)$/.test(c2.reason||'')&&d2.positions){const essai=await deplacerVuePlanifier({lotObservation:d2,proposal,before,capture,command:c2,reglage:reglageVueL1()});if(essai.command)c2=essai.command;}
+-   if(c2.action==='lot'){const c=reglesMetierCommande({...c2},lotObservation,proposal,before);
++   const v2=c2.action==='lot'?l1VetoChaine(d2.positions,ctx.lotArgs.capture,identity,b,l1Zone(identity).zone):null;
++   if(v2&&v2.veto){lotObservation.vetoChaine={...v2,l1s:true};}
++   else if(c2.action==='lot'){const c=reglesMetierCommande({...c2},lotObservation,proposal,before);
+     lotObservation.l1={version:G.VERSION,etat:c.action==='lot'?'chaine-l1':'rien',motif:c.action==='lot'?null:'regles-metier',etage:d2.stage,raison:d2.reason!=null?String(d2.reason).slice(0,80):null,
+      poseAvant:Object.fromEntries(SIDES.map(s=>[s,before?.[s]?.positionSceneRelative?.slice(0,3)??null])),poseEnvoyee:Object.fromEntries(SIDES.map(s=>[s,d2.positions?.[s]?.slice(0,3)??null])),
+      ...(cc?{correction:cc.correction}:{})};
+diff -ruN a/tests/ch117-veto-chaine-sw.test.cjs b/tests/ch117-veto-chaine-sw.test.cjs
+--- a/tests/ch117-veto-chaine-sw.test.cjs	1970-01-01 00:00:00.000000000 +0000
++++ b/tests/ch117-veto-chaine-sw.test.cjs	2026-11-12 17:29:04.845432807 +0000
+@@ -0,0 +1,41 @@
++'use strict';
++/* CH-117 (C1) — LE VETO DE LA CHAÎNE dans le service worker réel (VM), profil L1-se. Montage commun : tests/helpers/lot-profil.cjs (cuts 111 à 113, le 112
++ * sans point). Le levier est coupé à la livraison : aucune commande ne change (tests/pose-lot-inchanges-4959.test.cjs et les essais lot-profil-*). Ici on
++ * l'allume en VM (leviers actifs vus par background.js) et on force son verdict sur le 113, posé par la chaîne : la pose n'est pas envoyée, le cut passe à
++ * la GCV2 comme un différé ; il ne devient pas appui. */
++const { test } = require('node:test'), assert = require('node:assert/strict');
++const { decisions, production, base, K, S, SCOPE, EsvTrou, attendre } = require('./helpers/lot-profil.cjs');
++
++async function lot({ allume, veto }) {
++  const adapter = new EsvTrou([]), b = production({ adapter });
++  b.ctx.BananeSettings = { ...b.ctx.BananeSettings, voiePrediteOmbre: { ...S.voiePrediteOmbre, actif: false }, deplacerVue: { ...S.deplacerVue, actif: false }, lot: { ...S.lot, gardeApresDiffere: false } };
++  const G = b.ctx.BananeGcv2L1, appels = [], gcv2 = [];
++  b.ctx.BananeGcv2L1 = { ...G,
++    leviersActifs: () => allume ? { ...G.leviersActifs(), vetoChaineVoieMm: 100, vetoChaineZones: ['abords', 'adv'] } : G.leviersActifs(),
++    vetoChaine: (capture, cut, voisins, decal, zone) => { appels.push({ cut, zone, voisins: voisins.map(v => v.identity.cut) }); return cut === 113 && veto ? { ecartMm: 150, veto: true } : { ecartMm: 0, veto: false }; },
++    deciderDiffere: a => { gcv2.push(a.capture.identity.cut); return G.deciderDiffere(a); } };
++  await b.api('connect', { tabId: 1 }); await b.api('settings', { mode: 'automatic-test' });
++  adapter.identity.cut = 111; adapter.rails = K.clone(base.rails); adapter.ajuster();
++  await b.api('start', { part: 23, start: 111, end: 113, ...SCOPE }); await b.settle(); await attendre(30);
++  return { b, appels, gcv2 };
++}
++
++test('C1 coupé : le veto n\'est jamais demandé', async () => {
++  const x = await lot({ allume: false, veto: true });
++  assert.equal(x.appels.length, 0);
++  const d113 = decisions(x.b).find(([c]) => c === 113)[1];
++  assert.notEqual(d113.command.action, 'defer', '113 posé par la chaîne');
++});
++
++test('C1 allumé : pose de la chaîne contredite par la voie des voisins → différé, GCV2, pas d\'appui ; sans veto, rien ne change', async () => {
++  const sans = await lot({ allume: true, veto: false });
++  const s113 = decisions(sans.b).find(([c]) => c === 113)[1];
++  assert.ok(sans.appels.some(a => a.cut === 113), 'le veto est demandé sur la pose de la chaîne');
++  assert.notEqual(s113.command.action, 'defer');
++  const x = await lot({ allume: true, veto: true });
++  const d113 = decisions(x.b).find(([c]) => c === 113)[1];
++  assert.equal(d113.vetoChaine.veto, true); assert.equal(d113.vetoChaine.ecartMm, 150);
++  assert.ok(x.gcv2.includes(113), 'la GCV2 décide le 113');
++  assert.ok(d113.command.action === 'defer' || d113.command.l1s === 'gcv2', 'jamais la pose de la chaîne');
++  assert.notEqual(d113.anchorHeld, true, 'pas un appui');
++});

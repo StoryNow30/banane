@@ -1,0 +1,46 @@
+diff -ruN a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+--- a/tools/banc-differes.cjs	2026-11-12 17:29:04.855527397 +0000
++++ b/tools/banc-differes.cjs	2026-11-12 17:29:04.857503565 +0000
+@@ -234,6 +234,11 @@
+           if (L1.contreChaine(g, decalPose(before, positions), leviers.contreChaineMm)) { contre = g; pose = false; }
+         } catch (e) { if (e) ombre = { erreur: String(e.message || e).slice(0, 120) }; }
+       }
++      /* CH-117 (C1) : garde de voie absolue sur la pose de la chaîne (leviers `vetoChaineVoieMm`, `vetoChaineZones`, coupés) ; voisins : poses validées du lot
++       * (chaîne et, sous L1-se avec transport, GCV2). Vetoée : ni pose ni appui de la chaîne, le cut passe à la GCV2 comme un différé. */
++      let vetoCh = null;
++      const vetoDe = pos => { if (p !== 'L1-se' || !pos) return null; try { return L1.vetoChaine(capture, c.cut, E.valides.concat(E.validesL1 || []), decalPose(before, pos), zone); } catch (e) { return null; } };
++      if (pose && !contre) { const v = vetoDe(positions); if (v && v.veto) { vetoCh = v; pose = false; } }
+       if (pose && grappeBloque()) { pose = false; out = { etat: 'differe', source: 'regle-grappe', etage: d.stage }; }
+       else if (pose) {
+         const rl = confronter(positions, d.stage, vue ? camerasLarges : cameras, 'lot');
+@@ -244,11 +249,11 @@
+           if (L.commandsPositions(d, cmd)) L.rememberAnchor(E.anchors, { identity, positions: d.positions, stage: d.stage }, E.max);
+           out = { etat: 'pose', source: 'lot', etage: d.stage, commande: cmd.action, vue, decal: decalPose(before, positions), ...(ombre ? { ombre } : {}), ...(rl ? { rechercheLarge: rl.garde } : {}) };
+         }
+-      } else if (!contre && estL1s(p) && (() => {
++      } else if (!contre && !vetoCh && estL1s(p) && (() => {
+         /* a. Cible de la chaîne hors de la vue : vue élargie, pose de la chaîne, validée, jamais appui ni voisin. */
+         if (/(^|-)hors-vue-(left|right)$/.test(cmd.reason || '')) {
+           const large = L.commandRails({ decision: d, runtimeRails, before, expectedPoses: K.expectedPoses, cameras: camerasLarges });
+-          if (large.action === 'lot') { out = grappeBloque() ? { etat: 'differe', source: 'regle-grappe', etage: d.stage } : { etat: 'pose', source: 'l1s-vue', etage: d.stage, commande: 'lot', vue: 'deplacee', decal: decalPose(before, d.positions) }; if (out.etat === 'pose') out = appliquer(out, d.positions, camerasLarges); return true; }
++          if (large.action === 'lot' && !(vetoDe(d.positions) || {}).veto) { out = grappeBloque() ? { etat: 'differe', source: 'regle-grappe', etage: d.stage } : { etat: 'pose', source: 'l1s-vue', etage: d.stage, commande: 'lot', vue: 'deplacee', decal: decalPose(before, d.positions) }; if (out.etat === 'pose') out = appliquer(out, d.positions, camerasLarges); return true; }
+         }
+         /* b. La décision du lot refaite avec les options de L1 (garde de paire éteinte, appuis à 10 cuts), mêmes appuis. */
+         const o2 = optionsGcv2(), sig2 = JSON.stringify(o2) + signe(E);
+@@ -259,6 +264,7 @@
+          * (les deux rails candidats du moteur) n'est pas envoyée, le cut passe à la GCV2 (parité vérifiée par tools/parite-l1se-sw.cjs). */
+         if (c2.action !== 'lot') return false;
+         const pos2 = d2.positions;
++        { const v = vetoDe(pos2); if (v && v.veto) { vetoCh = v; return false; } }
+         out = grappeBloque(d2) ? { etat: 'differe', source: 'regle-grappe', etage: d2.stage } : { etat: 'pose', source: 'l1s-chaine', etage: d2.stage, commande: c2.action, vue: vue2, decal: decalPose(before, pos2) };
+         if (out.etat === 'pose') out = appliquer(out, pos2, vue2 ? camerasLarges : cameras);
+         return true;
+@@ -271,7 +277,7 @@
+         out = { etat: 'differe', source: 'lot', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, commande: cmd.action === 'engine' ? 'engine' : `${cmd.action}:${cmd.reason}` };
+       } else {
+         /* La GCV2 (L1) sur un cut que la chaîne du lot ne pose pas. */
+-        const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, ...(contre ? { contreChaine: decalPose(before, positions) } : {}) };
++        const base = { source: 'gcv2', etage: d.stage, raison: d.reason != null ? String(d.reason).slice(0, 80) : null, ...(contre ? { contreChaine: decalPose(before, positions) } : {}), ...(vetoCh ? { vetoChaine: vetoCh } : {}) };
+         try {
+           let g = cache.get('g' + sig);
+           const transport = p === 'L1-se' && leviers.transport && E.validesL1 && E.validesL1.length;

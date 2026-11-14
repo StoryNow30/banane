@@ -178,6 +178,9 @@ const RUST_LIDAR=['lidar-rust.js'];
  * à la fin d'une capture réussie. Il ne lit ni ne commande la pose ; sans ces lignes, l'adaptateur est celui d'avant. */
 /* CH-081 (D-311) : deux modules purs de la page lus par src/prechauffage.js (zone en boîte de découpe, anticipation) ; ni pose ni validation. */
 const PRECHAUFFAGE=['prechauffage.js','prechauffage-boite.js','prechauffage-anticipation.js'];
+/* CH-124 (D-355, Vision 18) : l'ancre indépendante, module de DÉCISION pur (axe de la voie relevée déduit de la trajectoire du véhicule de mesure, par la liste d'ESV).
+ * Lue par le service worker (`ancreCommande`, en dernier dans la commande du lot) et par le banc ; levier `ancre` de src/gcv2-l1.js, livré allumé. */
+const ANCRE_TRAJECTOIRE=['ancre-trajectoire.js'];
 /* CH-080 (D-309, Vision 6) : le branchement du préchauffage passe à l'observateur UNE ligne de plus (`cible` ou `suivante`) et la cible du service worker
  * (`expected.prechauffage`) à `apresCapture` ; ni pose ni validation. Retiré avant CH-077. */
 /* CH-081 (D-311, Vision 8) : le branchement passe `premiere` à l'observateur et la vue de Potree (lecture seule) à `apresCapture` ; ni pose ni validation. Retiré avant CH-080. */
@@ -236,7 +239,7 @@ test('la pose et le lot lisent la test 8 : octets identiques, ou AST identique p
  assert.deepEqual(deplaces,[],'fichiers de pose ou de lot changés');
  assert.ok(Object.keys(REF.fichiers).length>=49);assert.ok(REF.fichiers['src/engine.js']&&REF.fichiers['src/geometry.js']&&REF.fichiers['src/lot-decision.js']);
  assert.ok(fs.existsSync(path.join(racine,'src/raison-correction.js')),'le seul fichier de src/ en plus');
- const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE].sort());
+ const nouveaux=fs.readdirSync(path.join(racine,'src')).filter(f=>f.endsWith('.js')&&!REF.fichiers['src/'+f]).sort();assert.deepEqual(nouveaux,[...NOUVEAUX,...HABILLAGE,...RELECTURE_PAUSE,...HISTORIQUE,...GARDE_PASSE,...SKIP_OMBRE,...FILE_PARTIES,...GARDE_APRES_DIFFERE,...CORRECTION,...RECHERCHE_LARGE,...SERIE_VIDES,...FILE_PRIORITAIRE,...RECONSTRUCTION,...VOIE_B1_ECART,...CH079,...CH114,...ETAT_MORCEAUX,...JOURNAL_INDEX,...SIGNAL_RELECTURE,...RUST_LIDAR,...PRECHAUFFAGE,...TELECOMMANDE,...ANCRE_TRAJECTOIRE].sort());
 });
 test('le moteur est celui de la baseline V4.6.0 (src/engine.js intact)',()=>{
  const base=require('../audit/v4.6.0-engine-baseline.json');

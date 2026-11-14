@@ -12,7 +12,7 @@
 importScripts('vendor/capture-core.js','src/core.js','src/settings.js','src/gauge.js','src/geometry.js',
  'src/brain.js','src/geometry-brain.js','src/gcv1-shadow-bootstrap.js','src/perf-phase.js',
  'src/geometry-candidate-v1.js','src/placement-convention.js','src/faux-vert-ombre.js','src/hauteur-apprise.js','src/continuity-observer.js','src/level-crossing.js','src/lot-decision.js','src/gcv1-shadow.js',
- 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js');
+ 'src/gcv1-export.js','src/engine.js','src/etat-morceaux.js','src/storage.js','src/journal-index.js','src/manual-session.js','src/raison-correction.js','src/native-session.js','src/export-cache.js','src/historique-parties.js','src/file-parties.js','src/correction-liste.js','src/appuis-liste.js','src/liste-memoire.js','src/voie-recentree.js','src/regles-metier.js','src/verts-a-controler.js','src/relecture-ombre.js','src/relecture-critere.js','src/relecture-signal.js','src/garde-passe-appuis.js','src/garde-apres-differe.js','src/recherche-large.js','src/gcv2-parametres-l1.js','src/gcv2-l1e.js','src/gcv2-l1.js','src/ancre-trajectoire.js','src/gestes-vue.js','src/deplacement-vue.js','src/serie-captures-vides.js','src/voie-b1-ecart.js','src/garde-voie-ombre.js','src/serrage-lot-ombre.js','src/voie-sure-ombre.js','src/telecommande.js');
 /* CH-058 : le store est équipé de l'index du journal en mémoire (src/journal-index.js) : les étapes qui relisaient TOUT
  * IndexedDB lisent seulement les objets utiles. Aucune écriture d'index en base, aucune montée de version. */
 /* Types d'événements indexés : ceux que lisent les étapes bornées ci-dessous et src/correction-liste.js (parité sur les journaux
@@ -1473,7 +1473,18 @@ async function reprendreLot(){assertPilotContract(engine.s.batch?.scope);
  * Test 18 : `passeDifferes`, l'interrupteur de la deuxième passe des différés (« écrit dans ESV »), gardé au même endroit mais PAS figé dans le scope : il est lu
  * à la fin de chaque lot, à chaque relance et avant chaque cut écrit (`passeDiffAllumee`). Absent : allumée (livrée) ; `false`, toute autre valeur ou stockage illisible : coupée. */
 const CLE_CLIC_HUMAIN='banane50ClicHumain',CLE_GRAPPE_DIFFERES='banane50GrappeDifferes',CLE_PASSE_DIFFERES='banane51PasseDifferes',CLE_AURORE_PASSAGE='banane53AurorePassage',MODES_CLIC_HUMAIN=['tel-quel','gauche-recentre','tout-recentre'];
-async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES,CLE_AURORE_PASSAGE])||{};}catch{r=null;}
+/* Vision 18 (D-355) — ESSAI DE L'AJUSTEMENT DE HAUTEUR (« aj5 » de CH-121). Interrupteur de l'opérateur, gardé dans storage.local (actions `ajustement-hauteur-etat`,
+ * `ajustement-hauteur`), COUPÉ par défaut (absent, toute valeur autre que `true`, stockage illisible : coupé). Il n'entre pas dans les choix du lot (leurs clés sont
+ * gardées) mais il est relu AVEC eux, dans le même appel, au départ de chaque lot ; `ajEssai` (null : pas encore lu dans cette vie du service worker) le garde en
+ * mémoire pour que la commande d'un cut n'attende rien. Allumé, l'étage `ajustementFinCommande` prend le réglage figé `AJ_ESSAI` de src/gcv2-l1.js. */
+const CLE_AJUSTEMENT_HAUTEUR='banane58AjustementHauteur';let ajEssai=null;
+async function ajustementHauteurEtat(){if(ajEssai===null){try{ajEssai=(await chrome.storage.local.get([CLE_AJUSTEMENT_HAUTEUR]))?.[CLE_AJUSTEMENT_HAUTEUR]===true;}catch{ajEssai=false;}}return {actif:ajEssai};}
+async function ajustementHauteurChoisir(args){if(typeof args?.actif!=='boolean')throw Error('Ajustement de hauteur : oui ou non.');
+ await chrome.storage.local.set({[CLE_AJUSTEMENT_HAUTEUR]:args.actif});ajEssai=args.actif;journalerSimple('ajustement-hauteur-choix',{actif:ajEssai});return {actif:ajEssai};}
+/* Réglage de l'étage : un levier réglé pour une mesure (`reglerLeviers` : banc, parité) passe devant ; sinon l'essai allumé ; sinon rien (null : étage coupé). */
+function ajustementFinReglage(){const G=globalThis.BananeGcv2L1;return G?.leviersActifs?.().ajustementFin||(ajEssai===true?G?.AJ_ESSAI:null)||null;}
+async function choixDuLot(){let r;try{r=await chrome.storage.local.get([CLE_CLIC_HUMAIN,CLE_GRAPPE_DIFFERES,CLE_PASSE_DIFFERES,CLE_AURORE_PASSAGE,CLE_AJUSTEMENT_HAUTEUR])||{};}catch{r=null;}
+ ajEssai=r?.[CLE_AJUSTEMENT_HAUTEUR]===true;
  const p=r?.[CLE_PASSE_DIFFERES];
  /* CH-037 : `aurorePassage`, l'interrupteur de l'opérateur pour le passage entre parties de l'Aurore (réglages de Signal). Absent : allumé (suit
   * `correctionEntreParties.actif`) ; `false` : éteint. Lu à chaque « Ouvrir » ; ne vaut que si le réglage du dépôt est allumé. */
@@ -1782,7 +1793,12 @@ async function commandLot(proposal,lotObservation){
  command=rechercheLargeCommande(command,lotObservation,proposal,before,capture);
  /* CH-019 : garde « après un différé », en DERNIER : elle ne peut que transformer une validation en différé. */
  command=gardeApresDiffereCommande(command,lotObservation,proposal);
- lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{})};
+  /* CH-121 : étage final d'ajustement de la pose sur le profil du rail (levier `ajustementFin` de src/gcv2-l1.js, COUPÉ), avant le refus d'ancre, comme au banc. */
+ if(ajEssai===null)await ajustementHauteurEtat();
+ command=ajustementFinCommande(command,lotObservation,proposal,before,capture);
+  /* CH-124 : refus d'ancre (levier `ancre`, livré allumé en Vision 18), en DERNIER : il ne peut que transformer une validation en différé. */
+ if(ancreAllumee())command=await ancreCommande(command,lotObservation,proposal,before);
+ lotObservation.command={action:command.action,reason:command.reason,...(command.gaugeMm!=null?{gaugeMm:command.gaugeMm}:{}),...(command.ndc?{ndc:command.ndc}:{}),...(command.deplacerVue?{deplacerVue:command.deplacerVue}:{}),...(command.l1s?{l1s:command.l1s}:{}),...(command.ajustementFin?{ajustementFin:true,actionAvantAjustement:command.avantAjustement.action}:{})};
  lotObservation.applied=command.action==='lot';
  /* « La ligne » : le panneau dessine « posé par la voie » les cuts traités que
   * la décision a commandés ; la trace vit dans le lot, bornée à ses cuts. */
@@ -1794,6 +1810,29 @@ async function commandLot(proposal,lotObservation){
    anchorsUsed:lotObservation.anchorsUsed||[],engineRails:proposal.rails}};
  return engine.s.proposal;
 }
+/* CH-121 (D-352) — AJUSTEMENT FIN de la pose sur le profil du rail (`ajusterPoseFinale`, src/gcv2-l1.js ; levier `ajustementFin` de `LEVIERS_LIVRES`, null :
+ * coupé, la commande est rendue telle quelle, octet pour octet). Profil L1-se seulement, comme le banc (tools/banc-differes.cjs, `ajusterFin`) : une commande
+ * qui pose (« lot », ou « engine » aux deux rails candidats), dans la vue courante (ni vue déplacée ni vue amenée), est relue rail par rail sur son nuage ; si
+ * l'étage bouge un rail, la commande refaite par `commander` (écartement admissible, cible dans la vue) devient une commande « lot » ; sinon rien ne change.
+ * Le journal garde, en millimètres du repère profil de la pose de départ, la pose d'avant, celle d'après et ce que l'étage a lu (`lotObservation.ajustementFin`). */
+function ajustementFinCommande(command,lotObservation,proposal,before,capture){const G=globalThis.BananeGcv2L1,K=globalThis.BananeCore3,L=globalThis.BananeLotDecision,SIDES=['left','right'];
+ try{
+  const R=ajustementFinReglage();if(!profilL1se()||!R||!capture?.rails||!before||!proposal?.rails)return command;
+  const pose=command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate');
+  if(!pose||command.deplacerVue||command.l1s==='vue')return command;
+  /* `seulChaine` : poses de la chaîne seulement (ni GCV2, ni L1-s, ni pose remplacée par la recherche large). */
+  if(R.seulChaine&&(command.l1s||command.reason==='gcv2-l1'||command.rechercheLarge))return command;
+  const x=K.expectedPoses({rails:before},command.action==='lot'?command.rails:proposal.rails),positions=Object.fromEntries(SIDES.map(s=>[s,x[s].positionSceneRelative.slice(0,3)]));
+  const decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return command;
+  const a=G.ajusterPoseFinale(capture,decal,R);if(!a.ajuste)return command;
+  const pos=Object.fromEntries(SIDES.map(s=>[s,L.positionOf(before[s],a.decal[s].map(v=>v/1000))]));
+  const cg=G.commander({positions:pos,runtimeRails:proposal.rails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(capture),valider:true});
+  if(cg.action!=='lot'||cg.vue!=='dans'){lotObservation.ajustementFin={refus:cg.reason||'vue',info:a.info};return command;}
+  /* `voisinsDecision` : le voisin de la GCV2 (`l1Voisins`) gardera la pose d'avant l'étage, pas la pose écrite. */
+  if(R.voisinsDecision){const b=engine.s.batch,id=engine.s.before?.identity;if(b&&id){b.ajustementsFin=b.ajustementsFin||{};b.ajustementsFin[id.cut]=Object.fromEntries(SIDES.map(s=>[s,positions[s].slice(0,3)]));}}
+  lotObservation.ajustementFin={avant:decal,apres:Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],pos[s])])),info:a.info,commandeAvant:command.action};
+  return {...command,action:'lot',rails:cg.rails,gaugeMm:cg.gaugeMm,ajustementFin:true,avantAjustement:command};
+ }catch(e){lotObservation.ajustementFin={erreur:String(e?.message||e).slice(0,160)};return command;}}
 /* 5.0 (D-147, fiches/DEPLACER_VUE.md) — DÉPLACER LA VUE. Réglage `deplacerVue`, COUPÉ PAR DÉFAUT : coupé, rien de ce qui suit ne
  * s'exécute et les commandes sont celles d'avant, octet pour octet (tests/deplacer-vue-sw.test.cjs). Actif, pour un cut que le
  * lot ne pose pas PARCE QUE sa cible tombe hors de la vue d'un rail (KI-051) :
@@ -1987,8 +2026,12 @@ function holdLotAnchor(lotObservation,command){
  if(!candidate||!batch?.lotObservation||typeof L?.holdAnchor!=='function')return;
  /* D-221 : une pose L1-s (`l1s`) n'est jamais un appui ; sous L1, la pose validée de la GCV2 l'est. */
  /* CH-034 : une pose remplacée par la recherche large n'est jamais un appui (l'appui mémorisé serait celui de la décision du lot, pas la pose commandée). */
- lotObservation.anchorHeld=command?.l1s||command?.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,command)||lotObservation.l1?.etat==='valider'&&command?.action==='lot'&&command?.reason==='gcv2-l1';
+ /* CH-121 : une commande refaite par l'étage final (`ajustementFin`) se juge comme celle d'avant l'ajustement : l'appui reste la pose de la décision, comme au banc. */
+ const cmdA=command?.actionAvantAjustement?{...command,action:command.actionAvantAjustement}:command;
+ lotObservation.anchorHeld=cmdA?.l1s||cmdA?.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,cmdA)||lotObservation.l1?.etat==='valider'&&cmdA?.action==='lot'&&cmdA?.reason==='gcv2-l1';
  if(lotObservation.anchorHeld)L.holdAnchor(batch.lotObservation,candidate);
+ /* CH-124 (sans ricochet) : la pose refusée par l'ancre reste l'appui qu'elle aurait été ; `fantome` : promue sans validation, jamais gardée pour une reprise. */
+ else if(lotObservation.ancre?.refus===true&&lotObservation.ancre.appui===true)L.holdAnchor(batch.lotObservation,{...candidate,fantome:true});
 }
 /* 4.9.5.13 (test 13, D-217, D-219, fiches/L1_DIFFERES.md) — PROFIL DU LOT « L1 ». Gardé dans storage.local (actions `lot-profil-etat`,
  * `lot-profil`), sinon le réglage `lot.profil` (défaut 'L1') ; lu au démarrage du lot et FIGÉ dans le scope (`lotProfil:'L1'`, absent pour
@@ -2027,6 +2070,41 @@ async function l1eTable(part){const cle=(engine?.s?.batch?.id||'')+'|'+part;if(l
  l1eListe={cle,table};return table;}
 /* Test 17 (fiches/PASSATION_T17_SANSPOSE.md) — voie de la liste d'ESV au cut (`voieDeListe`, comme le banc), lue seulement par `rechListeResMm` (coupé) ; null sans liste. */
 async function l1eVoieListe(capture,identity){const G=globalThis.BananeGcv2L1;return G.voieDeListe(await l1eTable(identity.part),identity.cut,capture,{...G.VOIE_LISTE,fenetre:G.leviersActifs().voieListeFenetre});}
+/* CH-124 (D-352) — REFUS D'ANCRE (levier `ancre` de src/gcv2-l1.js, COUPÉ : rien de ce qui suit ne s'exécute, les commandes sont celles d'avant). Sous L1-se, l'axe de la
+ * voie relevée est prédit par la trajectoire du véhicule de mesure, lue dans la liste d'ESV (src/ancre-trajectoire.js). QUAND LA LISTE EST LUE : l'instantané de la partie
+ * est pris au chargement complet de sa liste, donc AVANT le premier cut du lot ; il est lu une fois par lot (`l1eTable`) et le modèle de l'ancre est calculé une fois, à la
+ * première commande du lot (`ancreEtat`). Toute pose que le lot s'apprête à valider (chaîne, L1-s, GCV2, deuxième passe) dont le milieu est à plus de θ en travers de l'axe
+ * est différée (`ancreCommande`, en dernier dans `commandLot` ; `passeDiff` pour la passe). SANS RICOCHET : la pose refusée continue de nourrir le lot comme le code livré
+ * (appui de la chaîne, voisine de la GCV2, transport, mémoire des règles) et n'est pas reprise par la deuxième passe ; les autres cuts gardent donc leur décision. Une
+ * panne, une liste absente ou une ancre muette ne changent rien. */
+let ancreLot={cle:null,etat:null},ancreFant={cle:null,voisins:[]};
+/* Coupé (ou hors L1-se) : faux, sans attente ; aucun appel asynchrone n'est alors ajouté au lot ni à la passe. */
+function ancreAllumee(){return !!(globalThis.BananeAncreTrajectoire&&globalThis.BananeGcv2L1?.leviersActifs?.().ancre&&profilL1se());}
+async function ancreEtat(part){const A=globalThis.BananeAncreTrajectoire,r=globalThis.BananeGcv2L1?.leviersActifs?.().ancre;
+ if(!A||!r||!profilL1se())return null;
+ const cle=(engine?.s?.batch?.id||'')+'|'+part;
+ if(ancreLot.cle!==cle){let etat=null;try{etat=A.etat(await l1eTable(part),r===true?{}:r);}catch{etat=null;}ancreLot={cle,etat:etat?.modele?.ok?etat:null};}
+ return ancreLot.etat;}
+function ancreFantomes(b,identity){const cle=(b?.id||'')+'|'+identity.part+'|'+(identity.frameId??null);if(ancreFant.cle!==cle)ancreFant={cle,voisins:[]};return ancreFant.voisins;}
+async function ancreCommande(command,lotObservation,proposal,before){
+ try{const SIDES=['left','right'],L=globalThis.BananeLotDecision,K=globalThis.BananeCore3,A=globalThis.BananeAncreTrajectoire,identity=engine.s.before?.identity??null;
+  const valide=!!command&&(command.action==='lot'||command.action==='engine'&&SIDES.every(s=>command.rails?.[s]?.status==='candidate'));
+  if(!valide||!before||!Number.isInteger(identity?.cut))return command;
+  const E=await ancreEtat(identity.part);if(!E)return command;
+  const expected=K.expectedPoses({rails:before},command.rails),positions=Object.fromEntries(SIDES.map(s=>[s,expected[s].positionSceneRelative.slice(0,3)]));
+  const j=A.juger(E,identity.cut,{rails:before},positions);
+  lotObservation.ancre=j;
+  if(j.refus!==true)return command;
+  /* Ce que le livré aurait fait de cette pose : appui tenu (même règle que `holdLotAnchor`), voisine de la GCV2 (pose de la chaîne, jamais une pose de L1). */
+  /* Vision 18 (aj5 à l'essai, relecture de CH-124) : une commande refaite par l'étage d'ajustement se juge comme celle d'avant (même règle que `holdLotAnchor`), et
+   * sa voisine fantôme porte la pose de la DÉCISION (`b.ajustementsFin`, levier `voisinsDecision`), pas la pose ajustée. Sans ajustement, rien ne change. */
+  const cmdA=command.avantAjustement?{...command,action:command.avantAjustement.action}:command,pd=engine.s.batch?.ajustementsFin?.[identity.cut];
+  const appui=cmdA.l1s||cmdA.rechercheLarge==='remplacer'?false:L.commandsPositions(lotObservation,cmdA)||lotObservation.l1?.etat==='valider'&&cmdA.action==='lot'&&cmdA.reason==='gcv2-l1';
+  const deL1=!!(command.l1s||command.reason==='gcv2-l1');
+  lotObservation.ancre={...j,commande:{action:command.action,reason:command.reason??null,...(command.l1s?{l1s:command.l1s}:{})},appui:!!appui};
+  if(!deL1&&profilL1s())ancreFantomes(engine.s.batch,identity).push({identity:{part:identity.part,cut:identity.cut,frameId:identity.frameId??null},positions:pd?{left:pd.left.slice(0,3),right:pd.right.slice(0,3)}:positions,rails:K.clone(Object.fromEntries(SIDES.map(s=>[s,before[s]])))});
+  return L.deferRails(proposal.rails,lotObservation,'ancre','décision sur le lot : pose à '+Math.abs(j.ecartMm)+' mm en travers de l\'axe de la voie relevée (trajectoire) : cut laissé à l\'opérateur');
+ }catch(e){lotObservation.ancre={erreur:String(e?.message||e).slice(0,160)};return command;}}
 /* 4.9.5.15 (fiches/L1_CAP5.md) — sous L1-se, poses de L1 de CE lot (GCV2 validées, chaîne refaite par L1-s) : voisines de la GCV2 pour la seule
  * voie de référence (levier « transport » de src/gcv2-l1.js), jamais appuis de la chaîne ni voisines de sa décision (D-221 tenu). */
 let l1eTransport={cle:null,poses:[]};
@@ -2055,7 +2133,8 @@ function l1Zone(identity){const M=globalThis.BananeReglesMetier,c=reglesOmbre.ca
   const dans=l=>l.some(([a,b])=>identity.cut>=a&&identity.cut<=b);
   return {zone:dans(pn)?'pn':dans(adv)?'adv':'abords',adv,source:'regles-metier'};}catch{return {zone:'abords',adv:[],source:'inconnue'};}}
 /* Cuts validés par CE lot avant le cut (même partie, même repère) : pose de départ et pose validée de leur dernière visite. */
-function l1Voisins(b,identity){const SIDES=['left','right'],f=identity?.frameId??null;
+function l1Voisins(b,identity){return ancreFant.voisins.length?l1VoisinsAvecFantomes(b,identity):l1VoisinsReels(b,identity);}
+function l1VoisinsReels(b,identity){const SIDES=['left','right'],f=identity?.frameId??null;
  /* L1-s (D-221) : les cuts posés par L1 ne sont pas des voisins. */
  const horsL1=c=>!(profilL1s()&&b?.lotCommands?.[c]?.l1);
  const faits=new Set((b?.processed||[]).filter(p=>p?.identity?.part===identity.part).map(p=>p.cut??p.identity?.cut).filter(horsL1));
@@ -2063,7 +2142,13 @@ function l1Voisins(b,identity){const SIDES=['left','right'],f=identity?.frameId?
  for(const r of engine?.s?.records||[]){const id=r?.identity;if(!id||id.part!==identity.part||(id.frameId??null)!==f||!faits.has(id.cut)||id.cut===identity.cut)continue;
   if(SIDES.every(s=>Array.isArray(r.rails?.[s]?.initial?.sceneRelativeToProfileLocal)&&Array.isArray(r.rails?.[s]?.initial?.positionSceneRelative)&&Array.isArray(r.rails?.[s]?.corrected?.positionSceneRelative)))par.set(id.cut,r);}
  return [...par.values()].map(r=>({identity:{part:r.identity.part,cut:r.identity.cut,frameId:f},
-  positions:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].corrected.positionSceneRelative.slice(0,3)])),rails:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].initial]))}));}
+  /* CH-121 (`voisinsDecision`) : un cut ajusté par l'étage final est voisin à la pose de sa décision (`b.ajustementsFin`), pas à la pose écrite. */
+  positions:b?.ajustementsFin?.[r.identity.cut]?{left:b.ajustementsFin[r.identity.cut].left.slice(),right:b.ajustementsFin[r.identity.cut].right.slice()}:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].corrected.positionSceneRelative.slice(0,3)])),rails:Object.fromEntries(SIDES.map(s=>[s,r.rails[s].initial]))}));}
+/* CH-124 (sans ricochet) : les poses de la chaîne refusées par l'ancre restent voisines, rangées à leur place dans l'ordre des cuts ; sans fantôme, la liste est celle d'avant. */
+function l1VoisinsAvecFantomes(b,identity){const out=l1VoisinsReels(b,identity),F=ancreFant.cle===(b?.id||'')+'|'+identity.part+'|'+(identity.frameId??null)?ancreFant.voisins:[];
+ for(const f of F){if(f.identity.cut===identity.cut||out.some(v=>v.identity.cut===f.identity.cut))continue;
+  const i=out.findIndex(v=>v.identity.cut>f.identity.cut);out.splice(i<0?out.length:i,0,f);}
+ return out;}
 /* Plan de vue pour une cible de la GCV2 (mêmes limites et même pré-vol que « déplacer la vue », D-147). */
 async function l1PlanVue(capture,positions,identity){const L=globalThis.BananeLotDecision,VR=globalThis.BananeVoieRecentree,r=reglageVueL1();
  const vue=VR.vueNecessaire(capture,positions,r.marge??L.VIEW_MARGIN),cams=L.viewCameras(capture),cotes={};
@@ -2159,6 +2244,16 @@ function passeDiffRechercheLarge(r,positions){
  try{const d=RL.decider({capture:{identity:r.identity??null,rails:r.capture.rails,pointsSceneRelative:r.capture.pointsSceneRelative,visibleByClipBoxes:r.capture.visibleByClipBoxes},positions,R:{...R,mode:'differer'},science:r.science??null});
   return RL.resumer(d);}
  catch(e){journalerSimple('recherche-large',{identity:{part:r?.identity?.part??null,cut:r?.identity?.cut??null},etat:'erreur',passe:true,message:String(e?.message||e).slice(0,160)});return null;}}
+/* CH-121 : étage final d'ajustement sur une pose de la passe (levier `ajustementFin`, coupé : null). Rend { positions, decal } ajustés, ou null (rien ne change). */
+function passeDiffAjustementFin(r,positions){const G=globalThis.BananeGcv2L1,K=globalThis.BananeCore3,L=globalThis.BananeLotDecision,SIDES=['left','right'];
+ try{const R=ajustementFinReglage();if(!R||R.seulChaine||!r?.capture?.rails||!positions)return null;
+  const before=r.capture.rails,decal=Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],positions[s])]));if(!SIDES.every(s=>Array.isArray(decal[s])))return null;
+  const a=G.ajusterPoseFinale(r.capture,decal,R);if(!a.ajuste)return null;
+  const pos=Object.fromEntries(SIDES.map(s=>[s,L.positionOf(before[s],a.decal[s].map(v=>v/1000))]));
+  const cg=G.commander({positions:pos,runtimeRails:r.runtimeRails,before,expectedPoses:K.expectedPoses,cameras:L.viewCameras(r.cloud),valider:true});
+  if(cg.action!=='lot'||cg.vue!=='dans')return null;
+  return {positions:pos,decal:Object.fromEntries(SIDES.map(s=>[s,G.decalage(before[s],pos[s]).map(v=>Math.round(v*100)/100)]))};
+ }catch{return null;}}
 function passeDiffGarde(rg,b,identity,decal){return globalThis.BananeGardePasseAppuis.juger({cut:identity.cut,decal,cutsNormaux:l1Voisins(b,identity).map(v=>v.identity.cut)},rg.garde);}
 async function l1Commande(args){
  const identity=engine.s.before?.identity??null,suivre=!!(identity&&profilL1se()&&passeDiffReglage().mode!=='off');
@@ -2249,11 +2344,19 @@ async function passeDiffOmbre(b,rg,vue,rep=null){
      * forte du nuage, ou concurrencée loin d'elle par une paire au moins aussi bonne, n'est pas écrite (motif `recherche-large`). Une panne laisse la pose. */
     const rl=passeDiffRechercheLarge(r,g.positions);
     if(rl&&rl.etat==='differer'){r.motif='recherche-large';await passeDiffNoter(E,i,r,n,null);journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:r.motif,decal,garde,rechercheLarge:rl,l1:G.resumer(g)});continue;}
+    /* CH-124 : la pose de la passe passe par le même refus d'ancre ; refusée, elle reste au transport et comptée comme le livré (sans ricochet), mais n'est ni posée ni reprise. */
+    {const Ea=ancreAllumee()?await ancreEtat(r.identity.part):null,ja=Ea?globalThis.BananeAncreTrajectoire.juger(Ea,r.identity.cut,{rails:r.capture.rails},g.positions):null;
+     if(ja&&ja.refus===true){const idT={part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null};
+      transport.push({identity:idT,positions:g.positions,rails:r.capture.rails});r.etat='refus-ancre';r.motif='ancre';n++;
+      await passeDiffNoter(E,i,r,n,{transportSeul:true,cut:r.identity.cut,passe,i,identity:idT,positions:g.positions,rails:railsReduits(r.capture.rails)});
+      journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'rien',motif:'ancre',decal,garde,ancre:ja,l1:G.resumer(g)});continue;}}
     transport.push({identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},positions:g.positions,rails:r.capture.rails});
     r.etat='pose-ombre';n++;
-    poses.push({cut:r.identity.cut,passe,decal,r,positions:g.positions});
-    await passeDiffNoter(E,i,r,n,{cut:r.identity.cut,passe,decal,positions:g.positions,i,identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},rails:railsReduits(r.capture.rails)});
-    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal,garde,l1:G.resumer(g)});
+    /* CH-121 : même étage final (levier `ajustementFin`, coupé) sur la pose de la passe, après la garde A ; le transport garde la pose de la décision, comme au banc. */
+    const pf=passeDiffAjustementFin(r,g.positions),posePasse=pf?pf.positions:g.positions,decalPasse=pf?pf.decal:decal;
+    poses.push({cut:r.identity.cut,passe,decal:decalPasse,r,positions:posePasse});
+    await passeDiffNoter(E,i,r,n,{cut:r.identity.cut,passe,decal:decalPasse,positions:posePasse,i,identity:{part:r.identity.part,cut:r.identity.cut,frameId:r.identity.frameId??null},rails:railsReduits(r.capture.rails)});
+    journalerSimple('passe-differes-ombre',{identity:{part:r.identity.part,cut:r.identity.cut},passe,decision:'poserait',decal:decalPasse,...(pf?{ajustementFin:{avant:decal}}:{}),garde,l1:G.resumer(g)});
    }catch(e){
     /* Panne après l'entrée au transport et avant la pose (comme avant : le cut reste au transport, sans pose). */
     const seul=r.etat==='pose-ombre'&&!poses.some(p=>p.r===r)&&transport.at(-1)?.identity?.cut===r.identity.cut;
@@ -2678,7 +2781,8 @@ function reglesMetierNoter(lotObservation,proposal){const c=reglesOmbre.capture;
  if(!ev)ev=reglesEvaluer(lotObservation,rails,engine?.s?.before?.rails,lotObservation?.command?.action??null);
  if(ev.erreur)throw Error(ev.erreur);
  voieSureZone(ev.resume?.identity??{part:c?.part,cut:c?.cut},ev.e?.zone?.adv);   /* CH-114 : zone d'ADV du cut, pour l'ombre de la voie sûre (lecture seule) */
- const differe=!(rails&&SIDES.every(x=>rails[x]?.status==='candidate'&&Array.isArray(rails[x].delta)));
+ /* CH-124 (sans ricochet) : un cut refusé par l'ancre est noté comme le livré l'aurait noté (posé). */
+ const differe=lotObservation?.ancre?.refus===true?false:!(rails&&SIDES.every(x=>rails[x]?.status==='candidate'&&Array.isArray(rails[x].delta)));
  M.noter(reglesOmbre.mem,ev.resume,{differe,parRegle:ev.applique===true});
  if(r.ombre!==false){reglesJournal(M.evenement(ev.e,{premier:reglesOmbre.premier,actif:ev.applique?{applique:true,regles:ev.reglesAppliquees}:null}));reglesOmbre.premier=false;}
 }catch(e){if(reglesReglage()?.ombre!==false)reglesJournal({version:'regles-metier-v1',portee:'cut',identity:{part:c?.part??null,cut:c?.cut??null},etat:'erreur',message:String(e?.message||e).slice(0,160)});}
@@ -2882,8 +2986,10 @@ function voieSureEvenement(type,champs){try{
 /* Les attentes des cuts validés (`processed`) deviennent appuis ; chaque cut
  * nouvellement promu est gardé en bref dans `lotPosed` (reprise). */
 function promouvoirAppuis(batch,state,processed,max){const L=globalThis.BananeLotDecision,waiting=(state.pending||[]).map(p=>p.identity.cut);
- L.promoteAnchors(state,(processed||[]).map(p=>p.identity).filter(Boolean),max);
- rememberPosed(batch,state,waiting.filter(c=>!(state.pending||[]).some(p=>p.identity.cut===c)));}
+ /* CH-124 (sans ricochet) : un appui fantôme (pose refusée par l'ancre) est promu comme si son cut avait été validé ; il n'entre pas dans `lotPosed`. */
+ const fant=(state.pending||[]).filter(p=>p.fantome===true).map(p=>p.identity);
+ L.promoteAnchors(state,(processed||[]).map(p=>p.identity).filter(Boolean).concat(fant),max);
+ rememberPosed(batch,state,waiting.filter(c=>!(state.pending||[]).some(p=>p.identity.cut===c)&&!fant.some(f=>f.cut===c)));}
 /* 4.7.19 — cuts posés par le lot, en bref (identité et positions), pour une
  * reprise des différés : la mémoire de décision n'en garde que 40. */
 function rememberPosed(batch,state,cuts){
@@ -4639,6 +4745,9 @@ async function dispatch(m){await ready;await passeDiffReveil;   /* T21d : une pa
   * la garde de pose) ; `max:null` = sans plafond. */
  if(action==='passe-differes-reglage'){const g=passeDiffReglage();return {mode:g.mode,max:Number.isFinite(g.max)?g.max:null};}
  if(action==='choix-lot')return choixLot(args);
+ /* Vision 18 (D-355) : essai de l'ajustement de hauteur, lu et gardé à part des choix du lot. */
+ if(action==='ajustement-hauteur-etat')return ajustementHauteurEtat();
+ if(action==='ajustement-hauteur')return ajustementHauteurChoisir(args);
  if(action==='lot-profil-etat')return {profil:await profilDuLot()};
  if(action==='lot-profil')return profilChoisir(args);
  /* RM-11 : choix de la raison de la correction pour la PROCHAINE séance d'Écho ; une raison tapée au panneau (secours des touches) est consignée par la séance. */
