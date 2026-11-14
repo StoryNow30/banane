@@ -32,7 +32,7 @@ Hors ligne. Aucun fichier du tronc n'a changé. Patchs éteints : `ajustement-fi
 
 ## 5. Garde et parité (aj5)
 - **Garde des 11 lots d'octobre** (non indépendante) : retour 1, et ses seuls reculs sont **53 « verts changés »**, des poses de la chaîne relevées de 8,8 mm en médiane, 10,8 au maximum. Aucune autre faute : rien de nouveau au-delà de 20 ou 50 mm, rien de dégradé de plus de 2 mm, 0 décision changée. Éteint : retour 0.
-- **Parité** (`parite-l1se-sw --passe`) : 06/11 p15, 161/161 identiques. PARITE_P23. Elle a trouvé et fait corriger deux défauts du patch du service worker : l'appui d'une commande ajustée, et le journal de la passe.
+- **Parité** (`parite-l1se-sw --passe`) : 06/11 p15 : 161/161 identiques. 12/11 p23 : 311 rejoués, passe identique (11 + 4 poses), 15 lignes différentes (ADV, 5077-5086 et 5268-5273), toutes **identiques à l'éteint** (même parité sans aj5 : les 15 mêmes) : écart banc / service worker antérieur au levier, aj5 hors de cause (ÉTABLI) ; aucune ne porte sur un cut ajusté. Elle a trouvé et fait corriger deux défauts du patch du service worker : l'appui d'une commande ajustée, et le journal de la passe.
 
 ## 6. Conclusion
 - **Cible écrite** (≥ 95 % sur 7 lots, 0 juste dégradé, 0 déplacement > 30 mm, 0 nouvelle mauvaise voie) : atteinte au banc par aj5 (95,3 %). Sur les 6 lots réglables seuls : 92,7 %.

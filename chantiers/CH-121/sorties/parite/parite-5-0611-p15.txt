@@ -1,0 +1,1 @@
+{"partie":15,"lot":"(retiré)","profil":"L1-se","leviers":null,"passe":{"differes":19,"posees":1,"ms":109415,"parPasse":[1,0],"parPasseBanc":[1,0]},"cuts":161,"rejoues":161,"absents":[],"dureeS":1263,"differesSw":18,"lignesDifferentes":0,"diffs":[]}
