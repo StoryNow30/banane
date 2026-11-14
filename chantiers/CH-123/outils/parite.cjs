@@ -10,7 +10,9 @@
  *  2. `tools/parite-l1se-sw.cjs --passe` de la copie, mêmes leviers (`--leviers`) : le lot rejoué dans le vrai service worker, cut par cut.
  * Sortie standard : une ligne JSON sans identifiant (clé, cuts, lignes différentes, écarts par numéro de cut, poses de la passe des deux côtés ;
  * `touchesAuBanc` : cuts marqués par `banc-touches.patch` si la copie le porte, vide sinon).
- * Données : CH116_TRAVAIL (méta et captures réduites du banc de CH-116). Durée : environ 13 s par cut, seule sur la machine (R7). */
+ * Données : CH116_TRAVAIL (méta et captures réduites du banc de CH-116). Durée : environ 13 s par cut, seule sur la machine (R7).
+ * Zones : celles du lot si BANC_ZONES=journal est dans l'environnement (audit 4), sinon celles du banc ; la passe du service worker est en ombre,
+ * donc sans plafond d'écriture : ne pas régler BANC_PASSE_PLAFOND ici. */
 const fs = require('node:fs'), path = require('node:path'), cp = require('node:child_process');
 const a = process.argv.slice(2), o = {};
 for (let i = 0; i < a.length; i++) { const k = a[i], v = () => a[++i]; if (k === '--copie') o.copie = path.resolve(v()); else if (k === '--cle') o.cle = v(); else if (k === '--nom') o.nom = v(); else if (k === '--leviers-fichier') o.leviers = JSON.parse(fs.readFileSync(v(), 'utf8')); else if (k === '--sortie') o.sortie = path.resolve(v()); else throw Error('option inconnue ' + k); }
@@ -33,7 +35,7 @@ const p = cp.spawnSync(process.execPath, ['--max-old-space-size=6144', path.join
 if (p.status !== 0) throw Error('parité en échec\n' + String(p.stderr).slice(-1500));
 const x = JSON.parse(p.stdout.trim().split('\n').at(-1));
 const banc = fs.readFileSync(ref, 'utf8').trim().split('\n').slice(1).map(s => JSON.parse(s)), marque = l => { const y = l.profils['L1-se'] || {}; return (y.l1 && y.l1.c123) || (y.passe2 && y.passe2.c123) || null; };
-process.stdout.write(JSON.stringify({ cle: o.cle, nom: o.nom, leviers: o.leviers ? Object.keys(leviers).filter(k => leviers[k] === true) : 'éteint', profil: x.profil, cuts: x.cuts, rejoues: x.rejoues, absents: (x.absents || []).length,
+process.stdout.write(JSON.stringify({ cle: o.cle, nom: o.nom, zones: process.env.BANC_ZONES || 'banc', leviers: o.leviers ? Object.keys(leviers).filter(k => leviers[k] === true) : 'éteint', profil: x.profil, cuts: x.cuts, rejoues: x.rejoues, absents: (x.absents || []).length,
   differesSw: x.differesSw, passe: x.passe, lignesDifferentes: x.lignesDifferentes, diffs: x.diffs, touchesAuBanc: banc.filter(marque).map(l => l.cut),
   posesBanc: banc.filter(l => (l.profils['L1-se'] || {}).etat === 'pose').length, dureeRefS: tRef, dureeS: x.dureeS }) + '\n');
 process.exitCode = x.lignesDifferentes ? 1 : 0;
