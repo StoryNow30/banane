@@ -1,0 +1,42 @@
+diff --git a/tools/banc-differes.cjs b/tools/banc-differes.cjs
+index 757c54b..cce4294 100644
+--- a/tools/banc-differes.cjs
++++ b/tools/banc-differes.cjs
+@@ -278,7 +278,8 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+           if (contre) g = contre;
+           else if (!g || transport) { g = L1.deciderDiffere({ capture, science, appuis: E.anchors.slice(), options: estL1s(p) ? optionsGcv2() : opts, voisins: E.valides, voisinsTransport: transport ? E.validesL1 : null, zone, plagesADV: plages.adv, modele, regle: regleDe(p), reference: p === 'L1-se' ? referenceDe(c.cut) : null, voieListe: p === 'L1-se' && liste ? L1.voieDeListe(liste, c.cut, capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null }); if (!transport) cache.set('g' + sig, g); }
+           else { const dd = p === 'L1-se' ? L1.deciderL1e(g.cas, modele, referenceDe(c.cut), capture, g.decision.probas) : L1.deciderL1(g.cas, modele, regleDe(p), g.decision.probas); g = { ...g, decision: dd, positions: dd.paire && dd.etat !== 'rien' ? L1.positionsDe(capture, dd.paire) : null }; }
+-          const dec = g.decision, l1 = L1.resumer(g);
++          /* CH-123 (mesure seulement) : cut « touché » = des hypothèses générées sont entrées au pool ET le pool d'avant le laissait sans pose. */
++          const dec = g.decision, l1 = { ...L1.resumer(g), ...toucheDe(g) };
+           if (dec.etat === 'rien') out = { ...base, etat: 'differe', l1 };
+           else {
+             const valider = dec.etat === 'valider';
+@@ -328,7 +329,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+           try {
+             const g = L1.deciderDiffere({ capture: r.capture, science: r.science, appuis: E.anchors.slice(), options: optionsGcv2(), voisins: E.valides, voisinsTransport: leviers.transport ? (E.validesL1 || []) : null,
+               zone: r.zone, plagesADV: r.plagesADV, modele, regle: L1.REGLE_E, reference: referenceDe(r.cut), voieListe: liste ? L1.voieDeListe(liste, r.cut, r.capture, { ...L1.VOIE_LISTE, fenetre: leviers.voieListeFenetre }) : null });
+-            if (g.decision.etat !== 'valider') { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: g.decision.motif ?? null, ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
++            if (g.decision.etat !== 'valider') { r.ligne.profils['L1-se'] = { ...r.ligne.profils['L1-se'], passe2: { passe, motif: g.decision.motif ?? null, ...toucheDe(g), ...(leviers.diag ? { l1: L1.resumer(g) } : {}) } }; continue; }
+             const cg = L1.commander({ positions: g.positions, runtimeRails: r.runtimeRails, before: r.before, expectedPoses: K.expectedPoses, cameras: r.cameras, camerasLarges: r.camerasLarges, valider: true });
+             if (cg.action !== 'lot') continue;
+             /* Garde A : comme le service worker (`passeDiffGarde`), décalage arrondi au centième de mm, chaîne normale = les voisins de la décision du lot (`E.valides`). */
+@@ -341,7 +342,7 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+               if (rl && rl.etat !== 'erreur') r.rechercheLarge = rl;
+             }
+             if (leviers.transport) { const vp = voisinDe(g, g.positions, r.runtimeRails, r.before, r.cameras, r.camerasLarges); if (vp) (E.validesL1 = E.validesL1 || []).push({ identity: r.identity, positions: vp, rails: r.before }); }
+-            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: L1.resumer(g) };
++            r.ligne.profils['L1-se'] = { source: 'gcv2', passe2: { passe, garde: ga, ...(r.rechercheLarge ? { rechercheLarge: r.rechercheLarge } : {}) }, etage: 'deferred', etat: 'pose', vue: cg.vue === 'deplacer' ? 'deplacee' : null, decal: decalPose(r.before, g.positions), l1: { ...L1.resumer(g), ...toucheDe(g) } };
+             poses++;
+           } catch (e) { journalTexte(`deuxième passe, cut ${r.cut} : ${String(e && e.message || e).slice(0, 120)}`); }
+           finally { if (chrono && r.ligne.ms) r.ligne.ms.passe = arrondi((r.ligne.ms.passe || 0) + horloge() - tC, 1); }
+@@ -360,6 +361,9 @@ function rejouerLot({ journal, captures, projet, partie, lotId, parametres, prof
+   return [entete, ...lignes];
+ }
+ 
++/* CH-123 (mesure seulement, aucune décision changée) : marque `c123` d'un cut touché (`voisinLivre` présent) : nombre d'hypothèses générées
++ * entrées au pool, état de la décision du pool d'avant. */
++const toucheDe = g => g && g.voisinLivre ? { c123: { ajoutes: g.hyp ? g.hyp.c123Ajoutes : null, avant: g.voisinLivre.etat } } : {};
+ /* CH-123 (`c123SansRicochet`) : position que la pose de la GCV2 donne aux cuts suivants comme voisine. Sans `voisinLivre` : la pose elle-même.
+  * Avec : la décision du pool d'avant (générateurs coupés), seulement si elle validait et que sa commande passe ; sinon aucune voisine. */
+ function voisinDe(g, positions, runtimeRails, before, cameras, camerasLarges) {

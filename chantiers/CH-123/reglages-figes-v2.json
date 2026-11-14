@@ -1,0 +1,13 @@
+{
+  "note": "CH-123 v2 (13/11, après l'arbitrage de l'intégrateur : le rail compagnon hors ADV est genEcartement de CH-120, pas une version parallèle). Patch : generateurs.patch de CH-120 puis hors-pool-v2.patch. Réglages figés AVANT tout rejeu v2. Déjà mesurés en v1 et NON retenus : cA (cellules appariées sans garde : justes déplacés, une nouvelle mauvaise voie). Nouveau : garde c123SansPaire (rien ne s'ouvre si le pool a déjà une paire à l'écartement de référence). genZones [] : aucun générateur de CH-120 en ADV dans ces réglages (son terrain ; l'assemblage les ajoute). Jugés : rappel (≥ 43 des 128, 0 A sorti), puis poses en validation croisée « un lot dehors » parmi livre et ces réglages, puis examen 0511. Un réglage retouché après jugement est un nouveau réglage.",
+  "communs": { "genZones": [], "c123EcartMm": 10, "c123MinTop": 15, "c123MinFace": 0, "c123RatioMax": 1e9, "c123Pente": false, "c123SoutienDessus": 5, "c123SoutienFlanc": 0, "c123MaxRelances": 8, "c123MaxHyp": 6, "c123BalayageMm": [-240, -160, -80, 80, 160, 240] },
+  "reglages": {
+    "livre": {},
+    "v2E":    { "genEcartement": true, "c123EcartZones": ["abords", "pn"], "c123EcartSnapMm": 25 },
+    "v2E60":  { "genEcartement": true, "c123EcartZones": ["abords", "pn"], "c123EcartSnapMm": 60 },
+    "v2AS":   { "c123Apparie": true, "c123SansPaire": true },
+    "v2BS":   { "c123Balayage": true, "c123SansPaire": true },
+    "v2EBS":  { "genEcartement": true, "c123EcartZones": ["abords", "pn"], "c123EcartSnapMm": 60, "c123Balayage": true, "c123SansPaire": true },
+    "v2AEBS": { "genEcartement": true, "c123EcartZones": ["abords", "pn"], "c123EcartSnapMm": 60, "c123Balayage": true, "c123Apparie": true, "c123SansPaire": true }
+  }
+}
