@@ -63,3 +63,7 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 - **R8 révisée : deux sessions lourdes au plus à la fois** (une au modèle le plus fort), plus une session légère sans rejeu si besoin (interface). Ordre : (1) levier d'ancre de CH-124 ; (2) examen vierge d'aj5 chez CH-116 ; puis, une par une : parité d'aj5 (CH-121), croisé de v4 (CH-123), calcul de pose (CH-125) ; puis les relances recentrées sur l'ancre (CH-119, 120, 122).
 - **Pousser après chaque étape** : toute session pousse son travail avant de lancer un rejeu long.
 - **Relance après coupure** : l'intégrateur programme un rappel à l'heure de levée de la limite (`send_later`), au lieu de compter sur un contrôle périodique.
+
+### Suite de l'audit 4 (14/11) : outillage rendu par CH-116
+- **R5 tranchée** : la zone d'un cut est celle que le service worker voit à la décision (« lot »). Le banc la lit au journal avec `BANC_ZONES=journal`. Le banc et le lot différaient sur environ 7 % des cuts (presque toujours `abords` au banc, ADV au lot) ; les 30 mauvaises voies du corpus sont ADV dans toutes les définitions, donc les validations croisées rendues tiennent. Tout nouveau jugement se fait avec `BANC_ZONES=journal`.
+- **Passe fidèle** : `BANC_PASSE_PLAFOND=10` (ordre de décision, 10 écritures, arrêt au premier refus) ; fidélité des décisions 99,2 % sur 5 475 cuts. Tout jugement « passe livrée » s'en sert.
