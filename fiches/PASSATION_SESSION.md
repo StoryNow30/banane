@@ -6,6 +6,7 @@ Pour toute nouvelle session Claude Code (cloud ou local) qui rejoint le projet A
 Tout ce qui suit est poussé. Tronc `claude/50-test17` à `823b5e7` ; `banane-data` à `1375cd9`. Rien n'est en cours de fusion.
 
 ### 0.1 Ce qui est livré, ce qui se prépare
+- **Point au 14/11 à 15 h 30 UTC** : l'arbre de la Vision 18 est la branche `integration/vision18-n-aj5` (tête 160c48d : levier N allumé, correctif de la liste du départ, aj5 éteint avec sa case d'essai, panneau de CH-115 fusionné). Calcul prouvé sur fed03f7 (garde d'octobre, parités courtes, verify, maquette ; détail au programme). **Deux choses manquent avant le tronc et le paquet** : (1) le verdict de la seconde parité longue 12/11 p23 de CH-124 (liste du départ juste) ; (2) le panneau, non conforme à la page validée en étroit, en correction chez CH-115 (l'opérateur a refusé les photos : « moins belle et moins moderne »). Si le panneau tarde : sortir un paquet avec le calcul seul depuis fed03f7 est possible (panneau de la Vision 17), à proposer à l'opérateur. Quatrième coupure d'usage à 13 h 05 UTC ; sessions relancées à 15 h 25 (CH-124, CH-116, CH-115).
 - **Dernier paquet remis à l'opérateur : « Vision 17 »** (12/11). Le paquet se refabrique à tout moment : `python3 tools/package.py --output vision17.zip` depuis le tronc.
 - **« Vision 18 » (pas encore fabriquée)** doit contenir, par décision de l'opérateur :
   1. **Le levier de voie N allumé d'office** (D-355), une fois sa parité rendue. Chantier CH-124.
