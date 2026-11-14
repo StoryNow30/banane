@@ -1,0 +1,50 @@
+/* CH-115, direction A « Clair net » : le thème clair d'abord, un seul accent (indigo) pour les quatre panneaux, l'anneau au centre en grand,
+ * la seule carte est la tuile d'état. Sombre : un gris d'ardoise, pas un noir. */
+#ui5.u-signal{
+  --fond:#1C1F25;--flottant:#262A31;--tx:#EEF0F4;--tx2:#A4AAB6;--tx3:#9AA0AC;
+  --trait:rgba(255,255,255,.08);--trait-fort:rgba(255,255,255,.15);--creux:rgba(255,255,255,.06);--creux-fort:rgba(255,255,255,.1);--piste:rgba(255,255,255,.11);--pouce:rgba(255,255,255,.12);
+  --accent:#98A1FF;--accent-rgb:152,161,255;--accent-tx:#B3B9FF;--carte:#252931;--carte-ombre:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px -18px rgba(0,0,0,.6);
+  --plein:#EEF0F4;--sur-plein:#14161A
+}
+#ui5.u-signal[data-theme="clair"]{
+  --fond:#F3F4F7;--flottant:#FFFFFF;--tx:#171A20;--tx2:#5E6470;--tx3:#666C78;
+  --trait:rgba(20,26,40,.08);--trait-fort:rgba(20,26,40,.15);--piste:rgba(20,26,40,.09);
+  --accent:#4A52D6;--accent-rgb:74,82,214;--accent-tx:#3E46C2;--carte:#FFFFFF;--carte-ombre:0 1px 2px rgba(20,26,40,.06),0 12px 28px -20px rgba(20,26,40,.35);
+  --plein:#171A20;--sur-plein:#FFFFFF
+}
+body.ui5:has(#ui5.u-signal){background:#1C1F25}
+body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#F3F4F7}
+/* un seul accent : Écho, Constellation et Aurore ne changent plus de couleur */
+#ui5.u-signal .sg-fen[data-activite]{--accent:inherit}
+#ui5.u-signal .sg-fen:is([data-activite="echo"],[data-activite="file"],[data-activite="correction"]){--accent:var(--accent);--accent-rgb:var(--accent-rgb);--accent-tx:var(--accent-tx)}
+#ui5.u-signal .sg-fen[data-activite] .sg-tu-etat,#ui5.u-signal .sg-fen[data-activite] .sg-constel{background:var(--carte);background-image:none;box-shadow:var(--carte-ombre)}
+/* la tuile : centrée, l'anneau en grand, la phrase dessous */
+#ui5.u-signal .sg-tu-etat .sg-milieu{flex-direction:column;align-items:center;text-align:center;gap:12px}
+#ui5.u-signal .sg-tu-etat .sg-texte{display:flex;flex-direction:column;align-items:center;gap:6px}
+#ui5.u-signal{--anneau:150px;--ep:3}
+#ui5.u-signal[data-taille="compact"]{--anneau:118px;--ep:3.2}
+#ui5.u-signal .sg-anneau .sg-chiffre{font-size:46px;font-weight:300}
+#ui5.u-signal[data-taille="compact"] .sg-anneau .sg-chiffre{font-size:36px;font-weight:300}
+#ui5.u-signal .sg-phrase{font-weight:500;font-size:19px}
+#ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:16px}
+#ui5.u-signal .sg-tu-etat{padding-bottom:28px}
+#ui5.u-signal .sg-trio{justify-content:center}
+/* « à poser » : une pastille douce sous la phrase */
+html:not(.cx-details) #ui5.u-signal .sg-trio>div:has(.sg-dif){display:inline-flex;flex-direction:row-reverse;align-items:baseline;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(var(--attn-rgb),.12)}
+html:not(.cx-details) #ui5.u-signal .sg-trio>div:has(.sg-dif) dd{font-size:14px}
+html:not(.cx-details) #ui5.u-signal .sg-trio>div:has(.sg-dif) dt{letter-spacing:.02em;text-transform:none;font-size:12.5px;color:var(--attn-tx)}
+/* la zone : pas de cadres, de l'air */
+#ui5.u-signal .sg-zone .sg-tu{border-top-color:transparent}
+#ui5.u-signal .sg-tu-avis{background:var(--carte);box-shadow:var(--carte-ombre),inset 3px 0 0 var(--c1)}
+#ui5.u-signal .sg-principal{background:var(--accent);color:#fff}
+#ui5.u-signal[data-theme="clair"] .sg-principal{background:var(--accent)}
+#ui5.u-signal .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-principal{background:var(--plein);color:var(--sur-plein)}
+/* la Constellation : chaîne et rang d'emblée, registre et départs à la demande */
+html:not(.cx-details) #ui5.u-signal .sg-onglet-file [data-k="duo"]{display:none}
+#ui5.u-signal .sg-constel{text-align:center}
+#ui5.u-signal .sg-constel .sg-haut{text-align:left}
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel){background-image:none!important}
+#ui5.u-signal :is(.sg-tu-etat,.sg-constel)::before{display:none}
+#ui5.u-signal .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]){--anneau:96px}
+#ui5.u-signal .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-anneau .sg-chiffre{font-size:28px}
+#ui5.u-signal .sg-constel-t{justify-content:center;gap:10px}

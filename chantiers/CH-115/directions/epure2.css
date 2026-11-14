@@ -1,0 +1,25 @@
+/* CH-115, D-353 : deuxième passe d'épure, posée après b2.css et la palette. Par défaut : l'état en une ligne, la frise, le rang ; tout le reste
+ * (temps de la partie, bilan par partie, départs d'ESV, lignes du bilan de fin, phrases longues) s'ouvre d'un clic sur la tuile d'état. Rien n'est
+ * retiré du panneau, du journal ni des exports : seul l'affichage par défaut change. */
+/* Constellation : les quatre temps, le bilan par partie et les départs d'ESV repliés */
+html:not(.cx-details) #ui5.u-signal .sg-constel .sg-temps,
+html:not(.cx-details) #ui5.u-signal .sg-onglet-file [data-k="duo"],
+html:not(.cx-details) #ui5.u-signal .sg-onglet-file [data-k="bilan"],
+html:not(.cx-details) #ui5.u-signal .sg-onglet-file [data-k="departs"]{display:none!important}
+/* l'état en une ligne */
+#ui5.u-signal .sg-constel .sg-phrase,#ui5.u-signal .sg-tu-etat .sg-phrase{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+html.cx-details #ui5.u-signal :is(.sg-constel,.sg-tu-etat) .sg-phrase{-webkit-line-clamp:unset}
+/* la tuile de la Constellation prend la hauteur libre, la frise au centre */
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel{flex:1 1 auto!important;display:flex;flex-direction:column;justify-content:center}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel .sg-haut{position:absolute;top:16px;left:16px;right:16px}
+html:not(.cx-details) #ui5.u-signal .sg-fen[data-activite="file"] .sg-onglet-file{flex:0 1 auto!important}
+html:not(.cx-details) #ui5.u-signal .sg-chaine{margin-block:22px 4px}
+/* l'invitation : un libellé lisible, dit selon la vue */
+#ui5.u-signal .sg-fen[data-activite="file"] .sg-constel::after{content:"Bilan et départs  ▾";text-transform:none;letter-spacing:0;font-size:11.5px;padding:5px 10px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--trait-fort);bottom:12px}
+html.cx-details #ui5.u-signal .sg-fen[data-activite="file"] .sg-constel::after{content:"Replier  ▴"}
+/* fin du lot : « Lot terminé » seul ; bornes, reste, export, rattrapage et Aurore (déjà dits par la ligne « à examiner » et les boutons) à la demande */
+html:not(.cx-details) #ui5.u-signal .sg-tu-fin .sg-fin{display:none}
+html:not(.cx-details) #ui5.u-signal .sg-tu-fin{flex-direction:row;align-items:center;gap:12px}
+/* Aurore : la phrase tient sur une ligne, la ligne de droite (« Écho démarre avec l'Aurore ») est retirée de l'écran */
+#ui5.u-signal .sg-cadran-d{display:none}
+#ui5.u-signal .sg-fen[data-activite="correction"] .sg-tu-etat .sg-phrase{-webkit-line-clamp:2}

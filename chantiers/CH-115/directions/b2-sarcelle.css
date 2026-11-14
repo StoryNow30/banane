@@ -1,0 +1,10 @@
+/* CH-115, tour 2 : palette « Sarcelle (graphite vert d'eau) » de B. Trois niveaux de fond (html.cx-fond-1 profond, -2 moyen par défaut, -3 nuit) ; un accent vif, un pastel par onglet. */
+#ui5.u-signal:not([data-theme="clair"]),html.cx-fond-2 #ui5.u-signal:not([data-theme="clair"]){--fond:#141A1C;--tuile:#1B2326;--flottant:#232C30;--cx-corps:#141A1C}
+html.cx-fond-1 #ui5.u-signal:not([data-theme="clair"]){--fond:#192022;--tuile:#212A2D;--flottant:#293336;--cx-corps:#192022}
+html.cx-fond-3 #ui5.u-signal:not([data-theme="clair"]){--fond:#0F1416;--tuile:#161D20;--flottant:#1E262A;--cx-corps:#0F1416}
+#ui5.u-signal:not([data-theme="clair"]){--tx:#EAF2F2;--tx2:#A5B6B8;--tx3:#93A5A8;--tuile-bord:rgba(255,255,255,.055);--trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--piste:rgba(255,255,255,.1);
+ --accent:#46E0B9;--accent-rgb:70,224,185;--accent-tx:#82EDD0;--sur-accent:#05170F}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="orbite"]{--accent:#46E0B9;--accent-rgb:70,224,185;--accent-tx:#82EDD0}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="echo"]{--accent:#82C8FF;--accent-rgb:130,200,255;--accent-tx:#82C8FF}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="file"]{--accent:#C5B4FF;--accent-rgb:197,180,255;--accent-tx:#C5B4FF}
+#ui5.u-signal:not([data-theme="clair"]) .sg-fen[data-activite="correction"]{--accent:#FFB08A;--accent-rgb:255,176,138;--accent-tx:#FFB08A}

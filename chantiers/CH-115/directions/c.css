@@ -1,0 +1,43 @@
+/* CH-115, direction C « Papier » : une page claire sans cadres, le chiffre en très grand et une piste fine pleine largeur à la place de l'anneau,
+ * un seul accent (encre bleue) ; les couleurs d'état seules colorent. Sombre : un graphite chaud. */
+#ui5.u-signal{
+  --fond:#202124;--flottant:#2A2B2F;--tx:#F0EFEC;--tx2:#ABAAA5;--tx3:#A3A29D;
+  --trait:rgba(255,255,255,.09);--trait-fort:rgba(255,255,255,.16);--piste:rgba(255,255,255,.12);--pouce:rgba(255,255,255,.12);
+  --accent:#8FB0FF;--accent-rgb:143,176,255;--accent-tx:#A9C1FF;--plein:#F0EFEC;--sur-plein:#18191B
+}
+#ui5.u-signal[data-theme="clair"]{
+  --fond:#FAFAF7;--flottant:#FFFFFF;--tx:#1B1C1E;--tx2:#5F605F;--tx3:#666766;
+  --trait:rgba(27,28,30,.09);--trait-fort:rgba(27,28,30,.18);--piste:rgba(27,28,30,.10);
+  --accent:#2F55D4;--accent-rgb:47,85,212;--accent-tx:#2648BA;--plein:#1B1C1E;--sur-plein:#FFFFFF
+}
+body.ui5:has(#ui5.u-signal){background:#202124}
+body.ui5:has(#ui5.u-signal[data-theme="clair"]){background:#FAFAF7}
+#ui5.u-signal .sg-fen:is([data-activite="echo"],[data-activite="file"],[data-activite="correction"]){--accent:var(--accent);--accent-rgb:var(--accent-rgb);--accent-tx:var(--accent-tx)}
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel){background:none;background-image:none;border-radius:0;padding-inline:4px}
+/* le chiffre en grand, à gauche ; la piste dessous, sur toute la largeur */
+#ui5.u-signal .sg-tu-etat .sg-milieu{flex-direction:column;align-items:stretch;gap:14px;position:relative}
+#ui5.u-signal .sg-anneau{width:auto;aspect-ratio:auto;display:flex;align-items:flex-end;padding-bottom:14px}
+#ui5.u-signal .sg-anneau>svg{display:none}
+#ui5.u-signal .sg-anneau .sg-anneau-c{position:static;display:flex;flex-direction:row;align-items:baseline;justify-content:flex-start;gap:10px;transform:none;inset:auto}
+#ui5.u-signal .sg-anneau .sg-chiffre{font-size:72px;font-weight:200;letter-spacing:-.06em}
+#ui5.u-signal[data-taille="compact"] .sg-anneau .sg-chiffre{font-size:68px;font-weight:200}
+#ui5.u-signal .sg-anneau .sg-suite{font-size:14px;margin:0;color:var(--tx2)}
+#ui5.u-signal .sg-anneau .sg-chiffre svg{width:.8em;height:.8em;stroke:currentColor;fill:none;stroke-width:2.2}
+#ui5.u-signal .sg-anneau::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--c1) calc(var(--cx-p,0)*100%),var(--piste) 0);transition:background .9s}
+#ui5.u-signal .sg-milieu[data-cx-tourne="1"] .sg-anneau::after{background:linear-gradient(90deg,transparent 0,var(--c1) 30%,transparent 60%) 0 0/200% 100% no-repeat,var(--piste);animation:cx-file 1.8s linear infinite}
+@keyframes cx-file{from{background-position:120% 0,0 0}to{background-position:-120% 0,0 0}}
+#ui5.u-signal .sg-anneau::before{display:none}
+#ui5.u-signal .sg-phrase{font-size:18px;font-weight:450}
+#ui5.u-signal[data-taille="compact"] .sg-phrase{font-size:15.5px}
+#ui5.u-signal .sg-zone .sg-tu{border-top-color:var(--trait)}
+#ui5.u-signal .sg-tu-avis{background:none;border-radius:0;border-left:2px solid var(--c1);padding:4px 0 4px 14px}
+#ui5.u-signal .sg-tu-avis .sg-ic{display:none}
+#ui5.u-signal .sg-actions>button{border-radius:8px}
+#ui5.u-signal .sg-principal{background:var(--plein);color:var(--sur-plein)}
+html:not(.cx-details) #ui5.u-signal .sg-trio>div:has(.sg-dif){display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:6px}
+html:not(.cx-details) #ui5.u-signal .sg-trio>div:has(.sg-dif) dt{text-transform:none;letter-spacing:0;font-size:13px;color:var(--attn-tx)}
+html:not(.cx-details) #ui5.u-signal .sg-onglet-file [data-k="duo"]{display:none}
+#ui5.u-signal .sg-fen[data-activite] :is(.sg-tu-etat,.sg-constel){background-image:none!important}
+#ui5.u-signal :is(.sg-tu-etat,.sg-constel)::before{display:none}
+#ui5.u-signal .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-anneau .sg-chiffre{font-size:40px}
+#ui5.u-signal .sg-tu-etat .sg-texte{gap:8px}

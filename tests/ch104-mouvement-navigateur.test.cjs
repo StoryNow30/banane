@@ -64,6 +64,8 @@ test('étapes du lot : de la pose au rattrapage, la coche se pose et le trait se
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,js(E.cours.state),{width:600,height:760});await page.waitForTimeout(800);
+  /* CH-115 (D-353) : les étapes du lot sont repliées par défaut ; le geste « Détails » de la tuile les ouvre (une animation ne joue pas sur un élément caché) */
+  await page.click('#ui5 [data-act="sg:details"]');await page.waitForTimeout(400);
   assert.deepEqual(await page.evaluate(()=>[...document.querySelectorAll('#ui5 .sg-zone:not(.sg-sort) .sg-etapes li')].map(x=>x.dataset.etape)),['actif','a-venir','a-venir']);
   await page.evaluate(s=>{window.__etat={connection:{status:'ready',observedAt:'t',message:null,tabId:1},...s};},rattrapage(1));
   await page.waitForFunction(()=>document.querySelector('#ui5 .sg-zone:not(.sg-sort) .sg-etapes li')?.dataset.etape==='fait',null,{timeout:4000});
