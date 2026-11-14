@@ -51,3 +51,19 @@ Tenu au fil de l'eau. Une entrée par audit : ce qui a été constaté, ce qui c
 - **R8, un budget d'usage tenu.** Quatre sessions actives au plus, dont deux au modèle le plus fort ; les autres attendent leur tour. Ordre : (1) ancre de CH-124 et sa contre-vérification ; (2) fin d'aj5 (examen vierge, parité) ; (3) calcul de pose de CH-125 ; (4) leviers de voie recentrés sur l'ancre, relancés deux par deux une fois l'ancre vérifiée.
 - **R9, détecter une coupure.** À chaque contrôle, lire l'état des sessions (`status_detail`) : une session « failed » pour limite d'usage se relance à la levée de la limite, sans attendre l'opérateur.
 - Les relances au modèle le plus fort demandées par l'opérateur pour CH-119, 120, 122 et 123 se font à partir de leur note de passation, dans l'ordre de R8.
+
+## Audit 4 — 14/11, 8 h UTC
+
+### Constats
+14. **Seconde coupure par la limite d'usage** (ÉTABLI) : le 13/11 à 18 h 03-18 h 18 UTC, trente minutes après la reprise, « resets 10:30pm (UTC) ». Cinq sessions tournaient, dont trois au modèle le plus fort à l'effort maximal. Le programme est resté arrêté jusqu'au 14/11 à 7 h 53 UTC, soit près de quatorze heures : la limite s'était levée à 22 h 30, mais personne n'a relancé.
+15. **R8 était trop large et R9 n'a pas joué** : mon contrôle programmé n'a pas tourné pendant la coupure, ni après. Une session au modèle le plus fort à l'effort maximal coûte plusieurs fois une session ordinaire ; quatre sessions ne tiennent pas dans la fenêtre.
+16. **Perdu deux fois de suite** : l'examen vierge d'aj5 (lancé à 17 h 36, tué à 18 h) et la parité d'aj5 sur 12/11 p23. Ce sont les deux pièces qui manquent au seul gain de précision prêt.
+
+### Ce qui change
+- **R8 révisée : deux sessions lourdes au plus à la fois** (une au modèle le plus fort), plus une session légère sans rejeu si besoin (interface). Ordre : (1) levier d'ancre de CH-124 ; (2) examen vierge d'aj5 chez CH-116 ; puis, une par une : parité d'aj5 (CH-121), croisé de v4 (CH-123), calcul de pose (CH-125) ; puis les relances recentrées sur l'ancre (CH-119, 120, 122).
+- **Pousser après chaque étape** : toute session pousse son travail avant de lancer un rejeu long.
+- **Relance après coupure** : l'intégrateur programme un rappel à l'heure de levée de la limite (`send_later`), au lieu de compter sur un contrôle périodique.
+
+### Suite de l'audit 4 (14/11) : outillage rendu par CH-116
+- **R5 tranchée** : la zone d'un cut est celle que le service worker voit à la décision (« lot »). Le banc la lit au journal avec `BANC_ZONES=journal`. Le banc et le lot différaient sur environ 7 % des cuts (presque toujours `abords` au banc, ADV au lot) ; les 30 mauvaises voies du corpus sont ADV dans toutes les définitions, donc les validations croisées rendues tiennent. Tout nouveau jugement se fait avec `BANC_ZONES=journal`.
+- **Passe fidèle** : `BANC_PASSE_PLAFOND=10` (ordre de décision, 10 écritures, arrêt au premier refus) ; fidélité des décisions 99,2 % sur 5 475 cuts. Tout jugement « passe livrée » s'en sert.
