@@ -1,0 +1,10 @@
+Rejeu « n-ref » contre le corpus (/home/user/ch116/corpus-vierges.jsonl) :
+
+| lot | cuts | posés | jugés | ≤ 10 | 10–50 | > 50 | différés (jugés) | reposés justes / faux | bons bloqués |
+|---|---|---|---|---|---|---|---|---|---|
+| 1211v | 152 | 144 | 20 | 14 | 6 | 0 | 8 (8) | 0 / 0 | 0 |
+| 1312v | 1307 | 1286 | 150 | 143 | 7 | 0 | 21 (17) | 0 / 0 | 0 |
+| **total** | 1459 | 1430 | 170 | 157 | 13 | 0 | 29 (25) | 0 / 0 | 0 |
+
+Changements contre « n-ref » : 0
+
