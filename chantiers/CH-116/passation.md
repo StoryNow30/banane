@@ -1,4 +1,4 @@
-# CH-116 : passation (15/11, D-357 « finis Ariane 5 »)
+# CH-116 : passation (15/11, D-357 « finis Ariane 5 » ; chantier arrêté)
 
 Corpus jugé et banc « GCV2.1 », hors ligne, lecture seule. Mode d'emploi : `outils/LISEZMOI.md`. Rapport : `rapport.md`. Sorties : `sorties/` (une note ou un résumé par jugement).
 
@@ -14,7 +14,8 @@ Jugement : `--env BANC_ZONES=journal` ; passe livrée : `--env BANC_PASSE_PLAFON
 ## Examens vierges (réservés)
 - `1211v` (12/11 parties 3, 4) et `1312v` (12/11 soir, parties 6 à 18, Écho du 13/11 matin) : hors du corpus commun (`corpus.cjs --lots 1211v,1312v` seulement), `examen: true, vierge: true` dans `lots.cjs`.
 - Lus seulement par CH-116 et l'intégrateur, pour juger un réglage DÉJÀ FIGÉ. Jamais transmis à un chantier (ni chiffres par cut, ni fichiers), jamais utilisés pour régler.
-- Réglages déjà jugés dessus : CH-119 D, CH-121 aj3/aj4/aj5, CH-123 v4BS-sd, CH-124 N (sorties de même nom). Ils ne sont plus « vierges » pour ces réglages-là.
+- Réglages déjà jugés dessus : CH-119 D, CH-121 aj3/aj4/aj5, CH-123 v4BS-sd (sans N), CH-124 N, v4BS-sd sous N (CH-127, `sorties/ch127-v4-sous-n/`). Ils ne sont plus « vierges » pour ces réglages-là.
+- Corpus des examens hors dépôt : `CH116_TRAVAIL/corpus-vierges.jsonl` (1 459 cuts ; copies par lot dans `sorties/vierge/` et `sorties/vierge-1312/`) ; juger avec `CH116_CORPUS=…/corpus-vierges.jsonl --lots 1211v,1312v`.
 
 ## Commandes
 ```
@@ -39,4 +40,5 @@ Préparer depuis zéro (30 à 40 min) : `extraire.sh` puis `preparer.cjs` (LISEZ
 ## Ce qui reste
 - **Jointure 1312v à refaire** à l'export final de l'Écho du 13/11 (jugé sur les segments 1 à 10, séance alors en cours) : `preparer.cjs --lots 1312v`, puis `corpus.cjs --lots 1312v`.
 - Verser `sorties/corpus.jsonl` et `resume.md` dans `banane-data/outils/analyse-lots/CH-116/` (intégrateur).
-- Base de la garde Vision 18 : voir `sorties/garde/base-vision18.md`.
+- Base de la garde Vision 18 faite (`datasets/garde-gcv2/base-vision18.json`, à intégrer au tronc ; `sorties/garde/base-vision18.md`) : tronc contre elle retour 0 (`--rejouer`), contre base-test18 retour 1 (les 13 refus de N). Écart entre les bases : 21 cuts (13 de N + 8 de la passe déjà livrés sans N).
+- Données hors dépôt de cette session (`~/ch116`, 13 Go : captures réduites, rejeux, arbres) : perdues avec le conteneur ; se refont par `extraire.sh` + `preparer.cjs` (30 à 40 min).
