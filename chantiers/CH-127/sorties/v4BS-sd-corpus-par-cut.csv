@@ -1,0 +1,10 @@
+lot;groupe;cut;type;reference;reglage;refVeriteMm;reglageVeriteMm;deplacementMm;N;refusN
+0411-p14-r1;0411;7827;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;3.3;;jugé;
+0411-p15-r1;0411;463;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;5.2;;jugé;
+0411-p15-r1;0411;470;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;2.6;;jugé;
+0411-p15-r1;0411;472;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;4.7;;jugé;
+0511-p10-r1;0511;2005;pose GCV2 déplacée;pose/gcv2;pose/gcv2;1.8;2.1;2.5;jugé;
+0511-p12-r1;0511;9335;pose GCV2 déplacée;pose/gcv2;pose/gcv2;5.2;2.9;5.3;jugé;
+1111-p15-r1;1111;5109;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;5.5;;jugé;
+1111-p16-r1;1111;5846;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;2.8;;jugé;
+1111-p16-r1;1111;5847;pose nouvelle (différé → posé);differe/gcv2;pose/gcv2;;1.4;;jugé;
