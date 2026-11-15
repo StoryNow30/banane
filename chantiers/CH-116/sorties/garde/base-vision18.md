@@ -9,7 +9,7 @@
 
 ## Preuves (ÉTABLI)
 - Tronc contre `base-test18.json` (`--rejouer`) : retour 1, 9 reculs : 3 « cuts laissés sans pose » (sans passe : reglage-9 25→27, 3:0 14→18, terrain 23-10 98→105) et 6 « verts changés » (2-18 203, 451 ; 3-0 843, 861, 864, 867 ; 0-2310-lot1 199 ; 0-2310-lot2 282). Ce sont les 13 refus de N déjà jugés (liste identique à `refus-N.csv` de CH-124, 13 vraies corrections, 0 autre cut changé contre le livré) ; aucun autre recul.
-- Tronc contre `base-vision18.json` : retour 0 (`--rejeux` des mêmes rejeux ; `--rejouer` : voir plus bas). 2 signalements : « perte acceptée sans objet » 2-17 9521, 9522 (déjà sans pose en base Vision 18).
+- Tronc contre `base-vision18.json` : retour 0, avec `--rejeux` (mêmes rejeux) et avec `--rejouer` complet (15/11, `tronc-contre-base-vision18-rejouer.txt`). 2 signalements : « perte acceptée sans objet » 2-17 9521, 9522 (déjà sans pose en base Vision 18).
 - Depuis le même dossier, après le recalcul des sommes : la garde se rend sur les deux bases (retour 1 sur base-test18, identique au passage `--rejouer` ; retour 0 sur base-vision18). `node --test tests/garde-gcv2.test.cjs` : 15/15 vert (tronc et branche).
 - Rejeux du tronc contre ceux de fed03f7 (`v18-n`) : décisions et poses identiques ; seuls les diagnostics d'ancre (`ecartMm`, `axeMm`) bougent, de 1 mm au plus (4 lots ; `tools/banc-differes.cjs` a changé de 3 lignes entre les deux).
 
