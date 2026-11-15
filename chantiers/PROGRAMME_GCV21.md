@@ -53,7 +53,7 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 | CH-126 | N+ : reprise d'un cut refusé par l'ancre, sur le pool restreint à l'axe (réglage figé par CH-124 avant tout rejeu) | 0 reprise à plus de 50 mm de la vérité, au plus une sur dix à plus de 10 mm ; gain = refus reposés justes |
 | CH-127 | Assemblage sous l'ancre : les réglages « poser plus » déjà figés et rejetés pour mauvaises voies nouvelles (CH-120 gTE, CH-122 puce à chaîne intacte) et v4BS-sd de CH-123, rejugés sur le tronc où N refuse les poses loin de l'axe (audit 7) | 0 pose nouvelle à plus de 50 mm de la vérité, au plus une sur dix à plus de 10 mm, aucun juste dégradé ; gain = différés reposés justes |
 
-Une seule session de conception à la fois (R8). Ensuite, dans l'ordre : CH-119 (l'ancre comme juge du choix de voie global, D et E rejugés contre la vérité), CH-120 (génération autour de l'axe), CH-122 (puce avec la garde de l'ancre), puis le travers départagé par l'axe (piste de CH-125).
+**D-357 (opérateur, 15/11) : « finis Ariane 5 et on lancera un plan pour Ariane 6 ».** CH-127 est le DERNIER chantier de conception d'Ariane 5 : la relance automatique de D-352 s'arrête avec lui. Les pistes restantes (génération autour de l'axe, puce avec la garde de l'ancre, travers départagé par l'axe, N+ en nouveau réglage, ancre moins muette) passent au plan d'Ariane 6 ; CH-119 n'a plus d'objet tant que N tient sur le terrain.
 
 ## Carnet (vague suivante, dans l'ordre)
 1. Assemblage « GCV2.1 » : les leviers retenus ensemble, garde complète, parité, un seul réglage figé pour l'Écho.
