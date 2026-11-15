@@ -1,0 +1,18 @@
+garde-gcv2 : retour 1 ; 9 recul(s) de qualité ; 5 signalement(s)
+  perte acceptée : reglage-9, avec passe : 2-17 9521 (2,74 mm en base) ; D-252, accord de l'opérateur du 26/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui ; garde-appuis ; commit acf24f99596c563b8dac333e4855918546d3f264
+  perte acceptée : reglage-9, avec passe : 2-17 9522 (2,57 mm en base) ; D-252, accord de l'opérateur du 26/10 : garde A, bonnes poses perdues à 7 et 8 cuts d'appui ; garde-appuis ; commit acf24f99596c563b8dac333e4855918546d3f264
+  recul : reglage-9, sansPasse : cuts laissés sans pose 25 → 27
+  recul : reglage-9, sansPasse : 2 vert(s) changé(s) (2-18 203, 2-18 451)
+  recul : reglage-9, avecPasse : 2 vert(s) changé(s) (2-18 203, 2-18 451)
+  recul : partie-3:0, sansPasse : cuts laissés sans pose 14 → 18
+  recul : partie-3:0, sansPasse : 4 vert(s) changé(s) (3-0 843, 3-0 861, 3-0 864, 3-0 867)
+  recul : partie-3:0, avecPasse : 4 vert(s) changé(s) (3-0 843, 3-0 861, 3-0 864, 3-0 867)
+  recul : terrain-partie-0-23-10, sansPasse : cuts laissés sans pose 98 → 105
+  recul : terrain-partie-0-23-10, sansPasse : 2 vert(s) changé(s) (0-2310-lot1 199, 0-2310-lot2 282)
+  recul : terrain-partie-0-23-10, avecPasse : 2 vert(s) changé(s) (0-2310-lot1 199, 0-2310-lot2 282)
+  signalé : reglage-9, avecPasse : cuts laissés sans pose 12 → 16
+  signalé : partie-3:0, avecPasse : cuts laissés sans pose 8 → 12
+  signalé : terrain-partie-0-23-10, avecPasse : cuts laissés sans pose 79 → 90
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (pose > 50 mm 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
+  signalé : terrain-partie-0-23-10, GCV2 dans le lot : budget D-223 DÉPASSÉ EN BASE (mauvaise voie 5/105, 4.8 %, borne haute de Wilson 10.7 %) : connu (D-250), à corriger ; la garde bloque toute hausse
+fini 1

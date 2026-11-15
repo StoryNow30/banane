@@ -1,0 +1,3 @@
+garde-gcv2 : retour 0 ; 2 signalement(s)
+  signalé : perte acceptée sans objet : 2-17 9521 (colonne avec passe) : le cut n'est pas perdu (posé à ≤ 10 mm, ou pas à ≤ 10 mm en base)
+  signalé : perte acceptée sans objet : 2-17 9522 (colonne avec passe) : le cut n'est pas perdu (posé à ≤ 10 mm, ou pas à ≤ 10 mm en base)
