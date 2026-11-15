@@ -97,3 +97,26 @@ Carnet tenu par l'intégrateur. Un chantier clos laisse sa place au suivant, san
 - **Examen vierge de v4BS-sd sous N (15/11, ÉTABLI ; CH-116, `chantier/CH-116`, 004818b, `sorties/ch127-v4-sous-n/NOTE.md`)** : éteint = tronc (152 sur 152, 1 307 sur 1 307). Un seul cut changé : 1312v, partie 12, cut 3142, différé posé à 3,2 mm de la pose de l'opérateur (juste ; même cut et même distance que sans N le 14/11). 1211v : rien. Aucune autre décision changée, aucune pose déplacée, les 3 refus de N inchangés. Examen réussi, puissance faible (un cut). v4BS-sd reste PROBABLE ; avant tout allumage : décision de l'opérateur, puis incrément du service worker et parité.
 - **CH-127, gTE sous N : ÉCARTÉ dès la garde (15/11, ÉTABLI ; `chantier/CH-127`, 1c62067)**. Garde d'octobre sous N : 222 cuts changés. N refuse bien les 3 mauvaises voies nouvelles qui avaient fait rejeter gTE (8283, 8284, 1169), mais le tronc posait justes ces trois cuts : ce sont 3 justes perdus. Règle du ticket : (a) 0 pose nouvelle à plus de 50 mm ; (b) 8 sur 141 au-delà de 10 mm (tenue) ; (d) 0 pose de la chaîne déplacée ; mais (c) violée : 4 justes du tronc passent au-delà de 10 mm (10,1 à 11,6 mm) et 6 justes sont perdus, dont 3 sans compensation (reglage-9 : aucun différé reposé juste). Corpus non rejoué (R1). Pour mémoire : 19 différés reposés justes en octobre. Le défaut de gTE n'est donc pas seulement la mauvaise voie : il déplace aussi des poses justes du tronc, ce que N ne voit pas (N ne juge que le côté, à 75 mm).
 - **CH-127, puce B' sous N : ÉCARTÉE dès la garde (15/11, ÉTABLI ; `chantier/CH-127`, 24974b2)**. Garde d'octobre sous N : 456 cuts changés. N refuse 6 poses fausses (143-214 mm), mais (a) est violée : une pose nouvelle à 101 mm de la vérité (0-2310-lot1, cut 1366) que N laisse passer, car elle est à 13 mm de l'axe : l'erreur n'est pas en travers ; (c) violée : 32 justes du tronc passent à 10,6-35,6 mm, 18 justes perdus non compensés ; (b) 43 sur 380. Corpus non rejoué (R1). **Bilan de CH-127 : un seul réglage passe (v4BS-sd), donc pas d'assemblage (§ 5 du ticket).** Leçon : N ne garde que le côté ; un levier qui déplace des poses justes de quelques millimètres, ou en hauteur, ou le long de la voie, n'est pas tenu par N.
+
+## Clôture du programme (15/11, D-357)
+CH-127 était le dernier chantier de conception d'Ariane 5 ; il a rendu son rapport (`chantier/CH-127`, 2afbbd0). Le programme « GCV2.1 » est clos. Toutes les sessions filles ont fini et se sont arrêtées.
+
+**Ce que le programme a donné (corpus de 4 016 cuts, banc de CH-116, zones du journal, passe plafonnée à 10 ; ÉTABLI sur des lots déjà vus, PROBABLE pour le terrain)**
+| | Livré avant (Vision 17) | Vision 18 (N allumé) | + v4BS-sd (proposé) |
+|---|---|---|---|
+| Poses à 10 mm ou moins | 501 | 503 | 510 |
+| De 10 à 50 mm | 36 | 36 | 36 |
+| Au-delà de 50 mm (mauvaise voie) | 29 | **0** | 0 |
+| Différés | 571 | 603 | 596 |
+
+- **Retenus** : N, refus par l'ancre (CH-124), livré allumé dans la Vision 18 (D-355) ; aj5, ajustement de hauteur (CH-121), livré éteint avec une case d'essai ; v4BS-sd (CH-123), PROPOSÉ à l'opérateur (corpus : 7 différés reposés justes, 0 faute ; examen vierge sous N : 1 juste, rien d'autre ; garde d'octobre sans puissance), non intégré : il faut sa décision, puis l'incrément du service worker (`chantiers/CH-123/hors-pool-v4-sw.patch`, à recaler) et sa parité.
+- **Écartés, par la garde d'octobre ou la règle écrite d'avance** : C1, C2 + C5 (CH-117) ; D, E (CH-119) ; aj3, aj4 (CH-121) ; gT, gTE, gTEn, gTEnF (CH-120) ; puce B v1, v2B, v3B, B' (CH-122) ; hauteur à la source et travers (CH-125) ; N+ (CH-126, à un cut près) ; gTE et B' rejugés sous N (CH-127).
+- **Défaut de mise en production trouvé avant livraison** : la course au départ du lot (CH-124), invisible au banc et en parité.
+
+**Ce qu'on en retient**
+1. L'ancre (axe de la voie relevée, déduit de la trajectoire du véhicule, par la seule liste d'ESV) est la découverte du programme : 30 mauvaises voies sur 30 désignées, la pose de l'opérateur toujours à moins de 36 mm de l'axe.
+2. Refuser a tenu là où reposer a échoué : tous les leviers qui déplaçaient ou remplaçaient une pose ont dégradé des poses justes en octobre.
+3. N ne garde que le côté, au-delà de 75 mm : il ne tient ni les déplacements de quelques millimètres, ni la hauteur, ni le long de la voie (CH-127 : gTE et B' écartés pour des justes dégradés de 10 à 35 mm, et une pose à 101 mm de la vérité à 13 mm de l'axe).
+4. Méthode qui a tenu : cible et règle de décision écrites avant le premier rejeu ; garde d'octobre d'abord ; examen vierge tenu par une seule session ; parité contre le vrai service worker ; contrôle croisé entre sessions. Règles R1 à R12 : `chantiers/AUDIT_GCV21.md`.
+
+**Passé au plan d'Ariane 6 (D-357)** : l'axe au cœur du calcul (générer et choisir autour de l'axe, arbitrer le travers par l'axe) ; une garde des poses justes pour tout levier qui pose davantage ; N+ en nouveau réglage, à juger sur des données non vues ; l'ancre moins muette ; un seul code de décision pour le banc et l'extension ; la relecture ciblée.
