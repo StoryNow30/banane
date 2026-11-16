@@ -187,7 +187,7 @@
       connexion: { statut: s?.connection?.status ?? null, tabId, nomme: !!tabId && onglets.some(o => String(o.valeur) === tabId), reconnect: rc ? { visible: !rc.hidden, actif: !rc.disabled } : null },
       onglet, historique: Array.isArray(s?.partsHistory) ? s.partsHistory : null,
       goto: { present: !!go, actif: !!go && !go.disabled, raison: go?.getAttribute?.('title') || '', etat: ge?.dataset?.etat || '', texte: ge ? String(ge.textContent || '').trim() : '' },
-      examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre', palette: ui.palette === 'sarcelle' ? 'sarcelle' : 'glacier',
+      examines: [...examines.cles], theme: th === 'light' ? 'clair' : 'sombre', palette: ['sarcelle', 'signal'].includes(ui.palette) ? ui.palette : 'glacier',
       f5: $('relecture-pause-actif')?.checked && f5 ? (f5.value === 'arret' ? 'arret' : 'pause') : null,
       taille: (root.innerWidth || 600) < 480 || (root.innerHeight || 760) < 600 ? 'compact' : 'normal',
       /* CH-104 : le fil des cuts (maquette Graphite) : les derniers cuts que le lot a terminés, du plus récent au plus ancien ; la durée vient de
@@ -333,6 +333,8 @@
       html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
       /* CH-115 : détails repliés par défaut (panel-signal.css lit `data-details`) */
       if (ui.details) hote.dataset.details = '1'; else delete hote.dataset.details;
+      /* CH-129 : les détails techniques (couche hors de #ui5) suivent le thème et la palette du panneau */
+      if (tech?.c?.dataset) { tech.c.dataset.theme = snap.sig.theme; tech.c.dataset.palette = snap.sig.palette; }
     } catch (e) { secourir(e); return; }
     /* Revue T21 (R6) : l'anneau du cut et « en pause depuis » changent à chaque seconde, et `vivant()` les fait avancer : ils ne décident pas d'une
      * réécriture de l'écran (qui refermerait une liste ouverte et recréerait la feuille de réglages, le tiroir, le choix d'onglet). */
@@ -477,6 +479,7 @@
   function ouvrirTech() {
     if (tech || !D.createElement) return;
     const c = D.createElement('div'); c.id = 'ui5-tech'; c.className = 'sg-tech';
+    if (hote?.dataset) { c.dataset.theme = hote.dataset.theme || 'sombre'; c.dataset.palette = hote.dataset.palette || 'glacier'; }
     c.innerHTML = '<div class="sg-tech-tete"><b>Détails techniques</b><span>Santé de la collecte, qualité de capture, départs des parties, résumé de la partie, exports et journal</span><button type="button" id="ui5-tech-fermer">Fermer</button></div><div class="sg-tech-corps"></div>';
     D.body.appendChild(c);
     const corps = c.querySelector('.sg-tech-corps'), deplaces = [];
@@ -564,7 +567,7 @@
       const [nom, val] = [reste[0], reste[1]];
       if (nom === 'theme') themeVoulu(val);
       /* CH-115 (D-354) : la palette du thème sombre, sans recharger, gardée pour la prochaine ouverture du panneau */
-      else if (nom === 'palette') { if (val === 'glacier' || val === 'sarcelle') { ui.palette = val; void root.chrome?.storage?.local?.set?.({ [CLE_PALETTE]: val })?.catch?.(() => {}); } }
+      else if (nom === 'palette') { if (val === 'glacier' || val === 'sarcelle' || val === 'signal') { ui.palette = val; void root.chrome?.storage?.local?.set?.({ [CLE_PALETTE]: val })?.catch?.(() => {}); } }
       /* Vision 18 (D-355) : la case d'origine `#ajustement-hauteur` (panel.js garde le choix auprès du service worker) */
       else if (nom === 'ajustement') { if ((val === 'oui') !== !!$('ajustement-hauteur')?.checked) cliquer('ajustement-hauteur'); }
       else if (nom === 'bandeau') { if ((val === 'oui') !== ($('bandeau-toggle')?.getAttribute?.('aria-pressed') === 'true')) cliquer('bandeau-toggle'); }
@@ -761,7 +764,7 @@
     hote = D.createElement('div'); hote.id = 'ui5'; hote.hidden = true; D.body.appendChild(hote);
     /* Un choix gardé inconnu, l'ancien « ancienne » compris (le panneau d'avant n'est plus proposé, D-250), laisse le départ. */
     try { const o = await root.chrome?.storage?.local?.get?.([CLE, CLE_EX, CLE_PALETTE]), v = o?.[CLE], ex = o?.[CLE_EX];
-      if (o?.[CLE_PALETTE] === 'sarcelle' || o?.[CLE_PALETTE] === 'glacier') ui.palette = o[CLE_PALETTE];
+      if (['sarcelle', 'glacier', 'signal'].includes(o?.[CLE_PALETTE])) ui.palette = o[CLE_PALETTE];
       if (VARIANTES.includes(v)) variante = v;
       if (ex && typeof ex.lot === 'string' && Array.isArray(ex.cles)) { examines.lot = ex.lot; examines.cles = new Set(ex.cles.filter(c => typeof c === 'string').slice(0, 2000)); } } catch { /* défaut de la version */ }
     /* Compteur des exemples d'apprentissage (`ariane-compteur-gcv2-v1`, fiches/COMPTEUR_GCV2.md) : les cuts corrigés, tous projets. */

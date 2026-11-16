@@ -722,13 +722,13 @@ body.ui5:has(#ui5.u-signal:not([data-theme="clair"])){background:var(--cx-corps,
 #ui5.u-signal .sg-tu-avis .sg-ic{animation:cx-eclot .7s var(--cx-vif) .2s backwards}
 #ui5.u-signal:not([data-details]) .sg-fen:is([data-activite="orbite"],[data-activite="echo"]) .sg-tu-etat .sg-haut{position:absolute;top:16px;left:16px;right:16px}
 #ui5.u-signal:not([data-details]) .sg-tu-fil{min-height:0!important;flex:none!important}
-#ui5.u-signal:not([data-palette="sarcelle"]):not([data-theme="clair"]){--fond:#15181E;--tuile:#1D2129;--flottant:#262B35;--cx-corps:#15181E}
-#ui5.u-signal:not([data-palette="sarcelle"]):not([data-theme="clair"]){--tx:#EDF0F6;--tx2:#A9B1C1;--tx3:#98A0B1;--tuile-bord:rgba(255,255,255,.055);--trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--piste:rgba(255,255,255,.1);
+#ui5.u-signal:not([data-palette="sarcelle"]):not([data-palette="signal"]):not([data-theme="clair"]){--fond:#15181E;--tuile:#1D2129;--flottant:#262B35;--cx-corps:#15181E}
+#ui5.u-signal:not([data-palette="sarcelle"]):not([data-palette="signal"]):not([data-theme="clair"]){--tx:#EDF0F6;--tx2:#A9B1C1;--tx3:#98A0B1;--tuile-bord:rgba(255,255,255,.055);--trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--piste:rgba(255,255,255,.1);
  --accent:#8F86FF;--accent-rgb:143,134,255;--accent-tx:#B4AEFF;--sur-accent:#0E0D1A}
-#ui5.u-signal:not([data-palette="sarcelle"]):not([data-theme="clair"]) .sg-fen[data-activite="orbite"]{--accent:#8F86FF;--accent-rgb:143,134,255;--accent-tx:#B4AEFF}
-#ui5.u-signal:not([data-palette="sarcelle"]):not([data-theme="clair"]) .sg-fen[data-activite="echo"]{--accent:#6EE2C4;--accent-rgb:110,226,196;--accent-tx:#6EE2C4}
-#ui5.u-signal:not([data-palette="sarcelle"]):not([data-theme="clair"]) .sg-fen[data-activite="file"]{--accent:#7CC8FF;--accent-rgb:124,200,255;--accent-tx:#7CC8FF}
-#ui5.u-signal:not([data-palette="sarcelle"]):not([data-theme="clair"]) .sg-fen[data-activite="correction"]{--accent:#FF9EBB;--accent-rgb:255,158,187;--accent-tx:#FF9EBB}
+#ui5.u-signal:not([data-palette="sarcelle"]):not([data-palette="signal"]):not([data-theme="clair"]) .sg-fen[data-activite="orbite"]{--accent:#8F86FF;--accent-rgb:143,134,255;--accent-tx:#B4AEFF}
+#ui5.u-signal:not([data-palette="sarcelle"]):not([data-palette="signal"]):not([data-theme="clair"]) .sg-fen[data-activite="echo"]{--accent:#6EE2C4;--accent-rgb:110,226,196;--accent-tx:#6EE2C4}
+#ui5.u-signal:not([data-palette="sarcelle"]):not([data-palette="signal"]):not([data-theme="clair"]) .sg-fen[data-activite="file"]{--accent:#7CC8FF;--accent-rgb:124,200,255;--accent-tx:#7CC8FF}
+#ui5.u-signal:not([data-palette="sarcelle"]):not([data-palette="signal"]):not([data-theme="clair"]) .sg-fen[data-activite="correction"]{--accent:#FF9EBB;--accent-rgb:255,158,187;--accent-tx:#FF9EBB}
 #ui5.u-signal[data-palette="sarcelle"]:not([data-theme="clair"]){--fond:#141A1C;--tuile:#1B2326;--flottant:#232C30;--cx-corps:#141A1C}
 #ui5.u-signal[data-palette="sarcelle"]:not([data-theme="clair"]){--tx:#EAF2F2;--tx2:#A5B6B8;--tx3:#93A5A8;--tuile-bord:rgba(255,255,255,.055);--trait:rgba(255,255,255,.07);--trait-fort:rgba(255,255,255,.14);--piste:rgba(255,255,255,.1);
  --accent:#46E0B9;--accent-rgb:70,224,185;--accent-tx:#82EDD0;--sur-accent:#05170F}
@@ -786,3 +786,50 @@ body.ui5:has(#ui5.u-signal:not([data-theme="clair"])){background:var(--cx-corps,
 #ui5.u-signal .sg-constel .sg-details-b[aria-expanded="true"]::after{content:" ▴"}
 /* fenêtre très basse (moins de 560 px, plus petite que les tailles de la page validée) : une alerte ou le bilan de fin passe devant la trace, rien ne défile */
 @media (max-height:560px){#ui5.u-signal:not([data-details]) .sg-zone:has(.sg-tu-avis,.sg-tu-fin) .sg-tu-fil{display:none}#ui5.u-signal[data-taille="compact"]:not([data-details]) .sg-fen:is([data-teinte="toi"],[data-teinte="panne"]) .sg-tu-etat{padding-block:10px}}
+
+/* ═════════════════════════════ CH-129 (D-361) : retour de l'opérateur sur la Vision 18 en usage réel (panneau d'environ 600 px).
+ * Disposition : une seule mise en page fluide de 320 à 720 px ; au-delà de 480 px, la trace des cuts reste une ligne pleine largeur et les boutons du
+ * pied vont par paires, comme en étroit. Avis : un avis qui n'est pas une panne (refus d'une action, par exemple pendant la relecture) n'est plus une
+ * carte rouge, mais une ligne sobre sous la tuile ; le rouge reste aux pannes (ESV muet, résultat incertain, erreur). Phrase longue : dans les détails.
+ * Palette « Signal » (celle de la Vision 15) à côté de Glacier et Sarcelle. Détails techniques aux couleurs de la palette. */
+#ui5.u-signal:not([data-details]) .sg-duo{display:flex;flex-direction:column;min-height:0;flex:none;gap:var(--ecart)}
+#ui5.u-signal:not([data-details]) .sg-duo>.sg-tu-fil{flex:none!important;width:100%;min-height:0!important}
+#ui5.u-signal .sg-actions>button{flex:1 1 calc(50% - 4px);min-width:max-content}
+#ui5.u-signal .sg-actions:is([data-n="3"],[data-n="5"])>.sg-principal{flex-basis:100%}
+/* la seconde tuile de la Constellation dans Orbite : une ligne ; la phrase et l'attente passent dans les détails (l'alerte reste) */
+#ui5.u-signal:not([data-details]) .sg-zone .sg-file>p:not(.sg-file-alerte){display:none}
+/* la phrase complète, avec ses chiffres, dans les détails */
+#ui5.u-signal .sg-phrase-longue{display:none}
+#ui5.u-signal[data-details] .sg-phrase-longue{display:block;margin-top:4px;font-size:12.5px;line-height:1.4;color:var(--tx2)}
+/* un avis seul (pas une panne) : une ligne sobre, un trait ambre, sans icône ni carte */
+#ui5.u-signal .sg-tu-avis.sg-avis-seul{background:none!important;box-shadow:none!important;border-radius:0;padding:4px 2px 4px 12px;margin:2px 0 6px;border-left:2px solid var(--attn)}
+#ui5.u-signal .sg-tu-avis.sg-avis-seul .sg-ic{display:none}
+#ui5.u-signal .sg-tu-avis.sg-avis-seul p{color:var(--tx2);font-size:12.5px;line-height:1.4}
+/* palette « Signal » : les couleurs de la Vision 15 (noir profond, violet ; un accent par panneau), dans la grammaire de B (tuiles, mouvement) */
+#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"]){--fond:#08090B;--tuile:#121317;--flottant:#17181C;--tx:#F1F2F4;--tx2:#9AA0AB;--tx3:#8B909B;--tuile-bord:rgba(255,255,255,.06);--trait:rgba(255,255,255,.065);--trait-fort:rgba(255,255,255,.13);--piste:rgba(255,255,255,.09);
+ --accent:#8F93FF;--accent-rgb:143,147,255;--accent-tx:#A9ACFF;--sur-accent:#0A0B10;--attn:#F3A63B;--attn-rgb:243,166,59;--attn-tx:#F6B65C;--crit:#F2706B;--crit-rgb:242,112,107;--crit-tx:#F29A96;--ok:#59D499;--ok-rgb:89,212,153;--ok-tx:#7BE0AF}
+#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"]) .sg-fen[data-activite="orbite"]{--accent:#8F93FF;--accent-rgb:143,147,255;--accent-tx:#A9ACFF}
+#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"]) .sg-fen[data-activite="echo"]{--accent:#4FD6CF;--accent-rgb:79,214,207;--accent-tx:#86E5DF}
+#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"]) .sg-fen[data-activite="file"]{--accent:#62C6F2;--accent-rgb:98,198,242;--accent-tx:#8AD6F6}
+#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"]) .sg-fen[data-activite="correction"]{--accent:#F28CC6;--accent-rgb:242,140,198;--accent-tx:#F6AED6}
+body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){background:#08090B}
+/* détails techniques : les jetons du panneau d'origine (panel.css) pris dans la palette ; sections en tuiles comme le panneau */
+.sg-tech{--bg:#15181E;--bg-2:#15181E;--text:#EDF0F6;--text-2:#A9B1C1;--text-3:#98A0B1;--hair:rgba(255,255,255,.07);--hair-2:rgba(255,255,255,.14);--tile:#1D2129;--field:rgba(255,255,255,.055);--vert-1:#8F86FF;--vert-2:#7A70F0;--voie:#8F86FF;--menu:#262B35;--tuile-t:#1D2129;color:var(--text);font-family:var(--sans)}
+.sg-tech[data-palette="sarcelle"]{--bg:#141A1C;--bg-2:#141A1C;--text:#EAF2F2;--text-2:#A5B6B8;--text-3:#93A5A8;--tile:#1B2326;--vert-1:#46E0B9;--vert-2:#2FC9A2;--voie:#46E0B9;--menu:#232C30;--tuile-t:#1B2326}
+.sg-tech[data-palette="signal"]{--bg:#08090B;--bg-2:#08090B;--text:#F1F2F4;--text-2:#9AA0AB;--text-3:#8B909B;--tile:#121317;--vert-1:#8F93FF;--vert-2:#7377E6;--voie:#8F93FF;--menu:#17181C;--tuile-t:#121317}
+.sg-tech[data-theme="clair"]{--bg:#E9EBEF;--bg-2:#E9EBEF;--text:#1A1D23;--text-2:#585E6A;--text-3:#5F6571;--hair:rgba(20,26,40,.08);--hair-2:rgba(20,26,40,.16);--tile:#F7F8FA;--field:rgba(20,26,40,.055);--vert-1:#4F5AD4;--vert-2:#434DBE;--voie:#434DBE;--menu:#FFFFFF;--tuile-t:#F7F8FA}
+.sg-tech .sg-tech-tete{background:var(--bg)}
+.sg-tech .sg-tech-corps>*{background:var(--tuile-t);border-radius:16px;padding:14px 16px;box-shadow:inset 0 0 0 1px var(--hair)}
+/* police (D-361 « un affinement à faire niveau police ») : quatre tailles de texte au lieu de treize à quinze, rien sous 11 px, chiffres tabulaires.
+ * 11 px : étiquettes et légendes ; 13 px : tout le texte courant (boutons, listes, avis, mot d'état) ; 16 à 19 px selon la largeur : la phrase de la
+ * tuile ; les grands chiffres (anneau, titre de la Constellation) ne changent pas. */
+#ui5.u-signal .sg-fen :where(p,li,span,button,b,em,dd,dt,label,small,i):where(:not(.sg-chiffre,.sg-chiffre *,.sg-phrase,.sg-phrase *,.sg-mol-n,.sg-mol-moins,.sg-mol-plus,.sg-ico)){font-size:13px}
+#ui5.u-signal .sg-fen :is(.sg-tu h4,.sg-tu h4 *,.sg-d,.sg-d *,.sg-suite,.sg-partie,.sg-details-b,.sg-reg-tete,.sg-reg-tete *,small,kbd,.sg-of-d,.sg-sep):not(.sg-chiffre){font-size:11px}
+#ui5.u-signal .sg-constel .sg-details-b{font-size:11px}
+#ui5.u-signal .sg-fen :is(.sg-tu-etat .sg-phrase,.sg-tu-fin h3){font-size:clamp(16px,calc(2.5vw + 7px),19px)}
+#ui5.u-signal .sg-fen .sg-constel .sg-phrase{font-size:13px}
+#ui5.u-signal .sg-fen .sg-phrase .sg-mono{font-size:inherit}
+#ui5.u-signal .sg-fen .sg-phrase-longue{font-size:13px}
+#ui5.u-signal .sg-fen .sg-constel-t .sg-chiffre{font-variant-numeric:tabular-nums}
+#ui5.u-signal{font-variant-numeric:tabular-nums}
+#ui5.u-signal .sg-fen :is(.sg-bascule button,.sg-tu-avis p,.sg-poignee .sg-n,.sg-section .sg-n,.sg-corr-partie .sg-n){font-size:13px}

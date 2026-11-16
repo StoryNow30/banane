@@ -71,7 +71,8 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
 test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’export vient en second ; rien à examiner : le bouton du panneau',()=>{
  const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:9,aExaminer:13}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary'),b('new-batch','Nouveau lot')],exportTexte:''}),ui());
  /* CH-104 : sans autre phrase, la phrase de la tuile d'état EST la ligne « Lot » du bilan, qui n'est alors plus répétée dans la liste. */
- assert.match(f,/<h3 class="sg-phrase"><b>31<\/b> cuts traités sur <b>120<\/b> ciblés<\/h3>/);assert.doesNotMatch(f,/<dt>Lot<\/dt>/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
+ /* CH-129 (D-361) : la tuile dit « Lot terminé » ; la ligne « Lot » complète reste dans les détails (phrase longue), toujours pas répétée dans la liste. */
+ assert.match(f,/<h3 class="sg-phrase">Lot terminé<\/h3><p class="sg-phrase-longue"><b>31<\/b> cuts traités sur <b>120<\/b> ciblés<\/p>/);assert.doesNotMatch(f,/<dt>Lot<\/dt>/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
  assert.match(f,/class="sg-principal" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
  const r=S.rendre(snap({ar:ar('fini',{lotOuvert:false,differes:0,differesListe:[],aExaminer:0}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary')]}),ui());
  assert.match(r,/class="sg-principal" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);
@@ -158,7 +159,9 @@ test('réglages : les choix du panneau, thème sombre par défaut, détails tech
  assert.doesNotMatch(h,/data-sel="relecture"/,'relecture non réglable : pas de ligne « Après le lot »');
  assert.match(S.rendre(snap({relectureModifiable:true}),ui({couche:'reglages'})),/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);
  assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
- assert.match(h,/data-act="sg:tech"/);assert.match(h,/<span class="sg-mono">2731<\/span>/);
+ assert.match(h,/data-act="sg:tech"/);
+ /* CH-129 (D-361) : le compteur des exemples d'apprentissage (daté du 20/10) quitte l'écran ; datasets/compteur-gcv2.json reste. */
+ assert.doesNotMatch(h,/Exemples d’apprentissage/);
  assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 à poser · 1 sauté · 2 sautés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 sauté<\/span>/,'0 est une valeur connue : affichée, au singulier');
  assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 à poser · 3 sautés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');
  assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 à poser<\/span>/,'sautes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 sautés<\/span>/,'pluriel');
