@@ -3809,3 +3809,7 @@ Complète D-299 sans la modifier.
 
 ## D-359 — Les sessions passent au modèle Opus 5.5 (opérateur, 15/11)
 - Ordre de l'opérateur, mot pour mot : « En opus 5.5 désormais ». La session principale tourne désormais sur ce modèle (changé par l'opérateur) ; les sessions filles en cours (CH-116, CH-127) y étaient déjà. Remplace, pour le choix du modèle, D-356 (l'effort reste choisi chantier par chantier, sans effort maximal sans raison écrite).
+
+## D-360 — Le réglage v4BS-sd (chantier des 17 %) n'est pas intégré dans Ariane 5 (opérateur, 16/11)
+- Réponse de l'opérateur à la présentation de l'intégrateur (gain mesuré : 7 différés reposés justes sur 4 016 cuts du corpus, 1 sur les examens vierges, 0 faute ; parité non probante ; recommandation de l'intégrateur : pas de paquet pour lui seul), mot pour mot : « Ok on oublie ».
+- Effet : v4BS-sd (CH-123, rejugé sous N par CH-127) n'entre pas dans Ariane 5 ; aucune Vision 19 pour lui. Ses patchs et mesures restent sur `chantier/CH-123` et `chantier/CH-127` ; la méthode (rails cherchés sur le côté, paire à l'écartement de référence, seulement sur les différés, sans ricochet) passe au plan d'Ariane 6, où la génération autour de l'axe l'englobera. La Vision 18 reste la dernière version d'Ariane 5, sauf si le retour de l'opérateur sur le terrain demande un correctif.
