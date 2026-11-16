@@ -67,7 +67,10 @@ test('ce que le rendu dit vient de la vue : mot d’état, numéros, Aurore, Con
  assert.match(h('relecture en pause'),/Relecture en pause/);assert.match(h('rattrapage'),/Rattrapage/);
  const a=ecran(T.vueReduite(ETATS['Aurore ouverte']),{onglet:'correction'},null);
  assert.match(a,/data-k="c:12:400"/);assert.match(a,/corrigé · 1 rail/);assert.match(a,/ouvert dans ESV/);
- const f=ecran(T.vueReduite(ETATS['Constellation arrêtée']),{onglet:'file'},null);assert.match(f,/data-partie="13"/);assert.match(f,/arrêtée par l’opérateur/);
+ const vf=T.vueReduite(ETATS['Constellation arrêtée']),f=ecran(vf,{onglet:'file'},null);assert.match(f,/data-partie="13"/);
+ /* D-362 (CH-129) : le bilan par partie est derrière l'icône d'en-tête « Bilan et départs » (sg:stats), permise au téléphone (navigation locale). */
+ assert.ok(I.actions(f).includes('sg:stats'),'icône du bilan présente sur le téléphone');assert.equal(I.ordreDe('sg:stats',vf),null,'navigation, pas un ordre');
+ const fb=ecran(vf,{onglet:'file',stats:true},null);assert.match(fb,/arrêtée par l’opérateur/);assert.ok(I.actions(fb).includes('sg:stats'),'retour à la Constellation');
 });
 
 test('filtre : un bouton hors liste dessiné par le rendu disparaît, une navigation reste ; un ordre non offert est refusé',()=>{

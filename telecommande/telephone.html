@@ -113,7 +113,7 @@ const NOM={'lot-pause':'Pause','lot-reprendre':'Reprendre','lot-arreter':'Arrêt
  'relecture-arreter':'Arrêter la relecture','constellation-arreter':'Arrêter la Constellation'};
 const CONFIRMER={'lot-arreter':['Arrêter le lot ?','Le lot s’arrête après le cut en cours. Il se relance depuis l’ordinateur.'],
  'relecture-arreter':['Arrêter la relecture ?','Les cuts déjà relus restent comme ils sont.'],'constellation-arreter':['Arrêter la Constellation ?','La file de parties s’arrête ; elle se reprend depuis l’ordinateur.']};
-const ui={onglet:null,vue:null,couche:null,tiroir:false,details:false,note:''};
+const ui={onglet:null,vue:null,couche:null,tiroir:false,details:false,stats:false,note:''};
 const clair=()=>window.matchMedia?.('(prefers-color-scheme: light)').matches;
 function horsLigne(){return !Number.isFinite(dernierEtatH)||!arianePresente||Date.now()-dernierEtatH>HORS_LIGNE_MS;}
 function liaison(){return !D?'connexion':!relaisOk&&(ws||dejaOuvert)?'injoignable':!relaisOk?'connexion':horsLigne()?'hors':'direct';}
@@ -122,7 +122,7 @@ function note(){const l=liaison();
  if(l==='direct')return '';if(l==='injoignable')return 'Relais injoignable · nouvelle tentative…';if(l==='connexion')return 'Connexion au relais…';
  return dernierEtatH?'Ariane hors ligne · dernier état à '+heure(dernierEtatH)+'. Chrome est peut-être fermé, ou l’ordinateur en veille.':'Ariane hors ligne · aucun état reçu. Ouvre Chrome et le panneau d’Ariane sur l’ordinateur.';}
 let derHtml='';
-function afficher(){const v=dernierEtat||{};document.body.dataset.liaison=liaison();ui.note=note();
+function afficher(){const v=dernierEtat||{};if(ui.onglet!=='file')ui.stats=false;/* comme au panneau : le bilan se referme hors de la Constellation */document.body.dataset.liaison=liaison();ui.note=note();
  let html;try{html=I.filtrer(S5.rendre(I.instantane(v,{vue:ui.vue,theme:clair()?'clair':'sombre'}),ui),v);}
  catch(e){html='<div class="sg-fen" data-teinte="panne"><div class="sg-page"><p class="sg-meta">Affichage impossible : '+String(e&&e.message||e).replace(/[<>&]/g,'')+'</p></div></div>';}
  if(html!==derHtml){hote.innerHTML=html;derHtml=html;}
@@ -135,6 +135,7 @@ hote.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el
  if(act==='mode:automatic'||act==='mode:native'){ui.onglet=null;ui.vue=act==='mode:native'?'echo':'orbite';ui.tiroir=false;}
  else if(act==='sg:onglet-file'||act==='sg:onglet-correction'){ui.onglet=act==='sg:onglet-file'?'file':'correction';ui.tiroir=false;}
  else if(act==='sg:tiroir')ui.tiroir=!ui.tiroir;
+ else if(act==='sg:stats')ui.stats=!ui.stats;/* CH-129 : bilan et départs de la Constellation, comme au panneau (src/ui5.js) */
  else if(act==='sg:details')ui.details=!ui.details;
  else if(act==='sg:fermer'){ui.couche=null;ui.tiroir=false;}
  else if(act==='sg:menu')return ouvrirMenu();

@@ -67,7 +67,7 @@ test('téléphone · panneau complet : quatre onglets, ordres offerts seulement,
   let v=await lire();
   assert.deepEqual(v.onglets,['Orbite*','Écho','Constellation','Aurore']);assert.equal(v.largeur,390,'aucun défilement horizontal à 390 px');
   assert.deepEqual(v.ordres.sort(),['constellation-arreter','lot-pause'].sort(),'pendant la Constellation, « Arrêter le lot » est retiré (comme au panneau) : '+v.ordres);
-  const NAV=['mode:automatic','mode:native','sg:onglet-file','sg:onglet-correction','sg:tiroir','sg:details','sg:fermer','sg:menu'];
+  const NAV=['mode:automatic','mode:native','sg:onglet-file','sg:onglet-correction','sg:tiroir','sg:details','sg:fermer','sg:menu','sg:stats'];
   const propres=async quoi=>{const x=await lire();for(const a of x.actes)assert.ok(NAV.includes(a)||['pause','legacy:resume','legacy:stop','legacy:relecture-pause','legacy:relecture-reprendre','legacy:relecture-arreter','legacy:relecture-arreter-pause','legacy:file-secondaire'].includes(a),quoi+' : '+a);return x;};
   await propres('Orbite');
   await capture('1-orbite');
@@ -75,9 +75,14 @@ test('téléphone · panneau complet : quatre onglets, ordres offerts seulement,
   const avant=relais.vus.filter(x=>x.role==='tel').length;
   await tel.click('#ui5 [role="tablist"] button:has-text("Constellation")');v=await propres('Constellation');assert.equal(v.activite,'file');
   assert.ok(await tel.evaluate(()=>!!document.querySelector('#ui5 .sg-chaine li[data-partie="23"][data-etat="en-cours"]')),'chaîne de la Constellation, partie 23 en cours');
-  assert.ok(await tel.evaluate(()=>/fin normale/.test(document.querySelector('#ui5 .sg-registre')?.textContent||'')),'bilan par partie');
   assert.deepEqual((await lire()).ordres,['constellation-arreter'],'l’arrêt de la Constellation, dans son onglet');
   await capture('2-constellation');
+  /* D-362 (CH-129) : le bilan par partie s'ouvre par l'icône d'en-tête « Bilan et départs » (navigation locale), et se referme par le même bouton. */
+  await tel.click('#ui5 [data-act="sg:stats"][aria-label="Bilan et départs des parties"]');
+  await attendreQue(()=>tel.evaluate(()=>/fin normale/.test(document.querySelector('#ui5 .sg-registre')?.textContent||'')),3000,'bilan par partie ouvert');
+  await capture('2b-bilan');
+  await tel.click('#ui5 .sg-barre [data-act="sg:stats"]');
+  await attendreQue(()=>tel.evaluate(()=>!document.querySelector('#ui5 .sg-stats')&&!!document.querySelector('#ui5 .sg-chaine')),3000,'retour à la Constellation');
   assert.equal(relais.vus.filter(x=>x.role==='tel').length,avant,'les onglets ne parlent pas au relais');
   /* 4. « Pause » : même chemin que le bouton du panneau. */
   await tel.click('#ui5 [role="tablist"] button:has-text("Orbite")');
