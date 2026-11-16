@@ -132,10 +132,12 @@ function bilan(evs) {
   const seriesLot = {};
   for (const e of par('serie-captures-vides')) { const b = typeof e.batchId === 'string' ? e.batchId : ''; seriesLot[b] = Math.max(seriesLot[b] || 0, num(e.series) || 0); }
   const rust = par('rust').filter(e => e.action === 'capture' || e.action === undefined);
+  /* Terrain du 16/11 : Math.min(...dates) débordait la pile sur un journal de 154 863 événements ; réduction en boucle. */
+  const dMin = dates.reduce((a, v) => (v < a ? v : a), Infinity), dMax = dates.reduce((a, v) => (v > a ? v : a), -Infinity);
   const lot = {
-    debut: dates.length ? new Date(Math.min(...dates)).toISOString() : null,
-    fin: dates.length ? new Date(Math.max(...dates)).toISOString() : null,
-    dureeMs: dates.length ? Math.max(...dates) - Math.min(...dates) : 0,
+    debut: dates.length ? new Date(dMin).toISOString() : null,
+    fin: dates.length ? new Date(dMax).toISOString() : null,
+    dureeMs: dates.length ? dMax - dMin : 0,
     parties: parts, parPartie,
     valides: valides.length, differes: differes.length,
     seriesCapturesVides: Object.values(seriesLot).reduce((a, b) => a + b, 0),

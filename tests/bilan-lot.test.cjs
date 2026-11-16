@@ -193,3 +193,15 @@ test('erreurs : sans argument ou sans journal, code non nul et message en franç
   assert.notEqual(r2.status, 0);
   assert.match(r2.stderr, /journal/);
 });
+
+/* Terrain du 16/11 : un journal de 154 863 événements faisait « Maximum call stack size exceeded » (Math.min(...dates)).
+ * Le bilan d'un gros journal doit passer sans pile agrandie. */
+test('bilan d\'un journal de 300 000 événements datés, sans débordement de pile', () => {
+  const { bilan } = require(OUTIL);
+  const evs = [];
+  for (let i = 0; i < 300000; i++) evs.push({ type: 'esv-releve', _ms: T0 + i });
+  const b = bilan(evs);
+  assert.equal(b.lot.debut, iso(0));
+  assert.equal(b.lot.fin, iso(299999));
+  assert.equal(b.lot.dureeMs, 299999);
+});
