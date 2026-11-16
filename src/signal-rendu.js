@@ -406,10 +406,10 @@
    * la file). Ses boutons (`#file-principal`, `#file-secondaire`) sont en pied, avec ceux du lot. */
   const NOTE_FILE = 'Après chaque partie : <b>relecture</b>, toujours <span class="sg-sep">·</span> aucun export automatique <span class="sg-sep">·</span> seul « Arrêter » l’interrompt';
   const bilanHtml = L => L?.length ? `<ol class="sg-file-bilan" aria-label="Bilan par partie">${L.map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : '';
-  function fileHtml(m, cls) {
+  function fileHtml(m, cls, trace = '') {
     if (m.fileBilan) return m.fileBilan.length ? `<section class="sg-tu${cls ? ' ' + cls : ''}" data-k="file-bilan"><h4>Bilan par partie</h4>${bilanHtml(m.fileBilan)}</section>` : '';
     const F = m.file; if (!F) return '';
-    return `<section class="sg-tu sg-file${cls ? ' ' + cls : ''}" data-k="file"><h4 class="sg-file-t"><span><b>Constellation</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</span></h4>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}<p class="sg-meta">${NOTE_FILE}</p></section>`;
+    return `<section class="sg-tu sg-file${cls ? ' ' + cls : ''}${trace ? ' sg-file-trace' : ''}" data-k="file"><h4 class="sg-file-t"><span><b>Constellation</b>${F.etatTexte ? ` <span class="sg-sep">·</span> <span class="sg-mono">${esc(F.etatTexte)}</span>` : ''}</span>${trace}</h4>${F.phrase ? `<p>${esc(F.phrase)}</p>` : ''}${F.attente ? `<p class="sg-file-attente">${esc(F.attente)}</p>` : ''}${F.alerte ? `<p class="sg-file-alerte" role="alert">${esc(F.alerte)}</p>` : ''}${bilanHtml(F.bilan)}<p class="sg-meta">${NOTE_FILE}</p></section>`;
   }
   /* La boîte de réglage (variante A) : le nombre de parties, puis « Préparer » (ne lance rien), puis « Lancer » (qui referme la boîte). */
   /* CH-105 (D-335) : LA MOLETTE du nombre de parties, à la place des six boutons : une fenêtre où défile la bande des nombres (de `min` à `max`, la
@@ -901,9 +901,11 @@
     if (m.objet === 'fin') { const L = m.fin.filter(x => !(ligneLot && x[0] === 'Lot'));
       z += `<section class="sg-tu sg-tu-fin sg-large" data-k="fin-${esc(a.etat)}">${a.etat === 'fini' ? COCHE : ARRET}<div><h3>${a.etat === 'fini' ? 'Lot terminé' : 'Lot arrêté'}</h3><dl class="sg-fin">${L.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl></div></section>`; large = true; }
     const B = bornesHtml(s, m); if (B) { z += B; large = true; }
-    const F = fileHtml(m, 'sg-large'); if (F) z += F;
+    /* CH-129 : pendant une Constellation, détails fermés, la ligne « Constellation · partie k sur n » porte la trace des derniers cuts (une seule tuile) */
+    const traceFile = m.file && !u.details && lot && m.glyphe !== 'hors' && !m.fileBilan ? ((tuileFil(s, m, '').match(/<ul class="sg-fil">[\s\S]*<\/ul>/) || [])[0] || '') : '';
+    const F = fileHtml(m, 'sg-large', traceFile); if (F) z += F;
     if (lot && m.glyphe !== 'hors' && !m.fileBilan) {
-      const fil = c => tuileFil(s, m, c), etapes = c => tuileEtapes(s, m, t, c);
+      const fil = c => traceFile ? '' : tuileFil(s, m, c), etapes = c => tuileEtapes(s, m, t, c);
       z += `<div class="sg-duo" data-k="duo">${large ? fil('sg-second') + etapes('sg-second') : a.etat === 'rel' ? etapes('') + fil('sg-second') : fil('') + etapes('sg-second')}</div>`;
     }
     const cle = `orbite-${esc(a.etat)}-${esc(m.glyphe)}${m.incident ? '-incident' : ''}`;

@@ -849,3 +849,18 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 #ui5.u-signal .sg-reg-tete>span{white-space:nowrap;letter-spacing:.06em}
 #ui5.u-signal .sg-reg-partie>.sg-mono{min-width:4ch}
 #ui5.u-signal .sg-tu-avis.sg-avis-seul p{display:block;-webkit-line-clamp:unset;overflow:visible}
+/* CH-129 (retour de l'intégrateur, 16/11) : une tuile de moins à chaque fois.
+ * Pendant une Constellation, la ligne « Constellation · partie k sur n » porte la trace des cuts à droite. */
+#ui5.u-signal .sg-file-trace .sg-file-t{flex-wrap:nowrap;align-items:center}
+#ui5.u-signal .sg-file-trace .sg-fil{display:flex;gap:6px;align-items:center;list-style:none;margin:0;-webkit-mask:none;mask:none;flex:none;overflow:visible}
+#ui5.u-signal .sg-file-trace .sg-fil li{display:block;width:9px;height:9px;padding:0;border:0;border-radius:50%;background:var(--ok);opacity:calc(1 - var(--n,0)*.1);min-height:0;animation:cx-point .6s var(--cx-vif) backwards}
+#ui5.u-signal .sg-file-trace .sg-fil li>*{display:none}
+#ui5.u-signal .sg-file-trace .sg-fil li:has(.sg-attn){background:var(--attn)}
+#ui5.u-signal .sg-file-trace .sg-fil li:has(.sg-crit){background:var(--crit)}
+#ui5.u-signal .sg-file-trace .sg-fil li:first-child{width:12px;height:12px;box-shadow:0 0 0 3px rgba(var(--ok-rgb),.18)}
+/* fin du lot, détails fermés : la tuile d'état dit « Terminé » et le nombre traité ; le bilan (« Lot terminé » et ses lignes) s'ouvre avec les détails */
+#ui5.u-signal:not([data-details]) .sg-tu-fin{display:none}
+/* l'écran Constellation n'a plus que sa tuile : elle prend la hauteur de son contenu, sous l'en-tête, sans grands vides */
+#ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel{flex:0 0 auto!important;justify-content:flex-start}
+#ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel::after{display:none}
+#ui5.u-signal:not([data-details]) .sg-fen[data-activite="file"] .sg-constel>.sg-haut{margin-bottom:18px}
