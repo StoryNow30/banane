@@ -21,7 +21,8 @@ test('aucune adresse *.workers.dev réelle dans les fichiers suivis',()=>{
 });
 
 test('aucune adresse *.workers.dev réelle dans l’historique disponible (toutes branches)',()=>{
- const r=git('log','--all','-p','--format=commit %h');assert.equal(r.status,0,r.stderr);
+ /* Intégration : `-G` ne sort que les commits dont le diff porte un hôte *.workers.dev ; sans lui, l'historique de toutes les branches dépassait le tampon (statut null). */
+ const r=git('log','--all','-p','--format=commit %h','-G','[.]workers[.]dev');assert.equal(r.status,0,r.stderr);
  const vus=[];let c='';for(const l of r.stdout.split('\n')){if(l.startsWith('commit '))c=l.slice(7);else for(const m of l.matchAll(HOTE))if(!permis(m[0]))vus.push(c+' : '+m[0].replace(/^[^.]+/,'<…>'));}
  assert.deepEqual(vus,[]);
 });
