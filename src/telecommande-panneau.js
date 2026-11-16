@@ -77,7 +77,9 @@
    couper.onclick=()=>couperTelecommande(couper);
    f.append(el('div',{class:'tc-b'},voir,couper));}
   if(erreur)f.append(el('p',{class:'tc-err',role:'alert',text:erreur}));
-  boite.replaceChildren(f);boite.dataset.theme=theme();
+  /* CH-130 : la feuille se relit toutes les 2 s ; elle ne remplace ses nœuds que si son contenu a changé. Avant, le bouton était recréé à chaque
+   * relecture, et un clic tombant à cet instant se perdait (mesuré : « Couper la télécommande » détaché du DOM, essai de CH-111, 1 passage sur 7). */
+  if(!(boite.firstChild&&boite.childNodes.length===1&&boite.firstChild.outerHTML===f.outerHTML))boite.replaceChildren(f);boite.dataset.theme=theme();
   if(e?.appairee)minuterie=setTimeout(()=>rendre(),2000);}
  const origine=a=>{let u;try{u=new URL(String(a||'').trim());}catch{return null;}return u.protocol==='https:'?'https://'+u.host:null;};
  async function appairer(adresse,bouton){const o=origine(adresse);if(!o)return rendre('Adresse du relais : colle l’adresse https de ton Worker (en https, finissant par workers.dev).');
