@@ -41,8 +41,9 @@ test('Constellation : frise et rang d’emblée ; temps, bilan par partie et dé
   assert.equal(await page.evaluate(vu('#ui5 .sg-chaine')),true,'la frise');
   assert.equal(await page.evaluate(vu('#ui5 .sg-constel-t')),true,'l’état et le rang');
   for(const s of ['#ui5 .sg-temps','#ui5 [data-k="bilan"]','#ui5 [data-k="departs"]'])assert.equal(await page.evaluate(vu(s)),false,s+' replié');
-  assert.equal(await page.evaluate(()=>document.querySelector('#ui5 .sg-constel [data-act="sg:details"]')?.textContent),'Bilan et départs');
-  await page.click('#ui5 .sg-constel [data-act="sg:details"]');await page.waitForTimeout(400);
+  /* CH-129 (D-362) : le bilan et les départs ne sont plus derrière une pilule de la tuile mais sur leur écran, ouvert par le bouton à icône de l'en-tête */
+  assert.equal(await page.evaluate(()=>document.querySelector('#ui5 .sg-barre .sg-stats-b')?.getAttribute('aria-label')),'Bilan et départs des parties');
+  await page.click('#ui5 .sg-barre .sg-stats-b');await page.waitForTimeout(400);
   for(const s of ['#ui5 [data-k="bilan"]','#ui5 [data-k="departs"]'])assert.equal(await page.evaluate(vu(s)),true,s+' ouvert');
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
