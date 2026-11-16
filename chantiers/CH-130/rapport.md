@@ -39,4 +39,19 @@ Branche `chantier/CH-130`, partie de `0a78516` (`claude/50-test17`). Exécutant 
 ## Pour l'intégrateur
 1. Fichiers : `src/telecommande.js`, `src/telecommande-instantane.js` (nouveau), `src/telecommande-panneau.js`, `telecommande/{worker.js,wrangler.toml,telephone.html,INSTALLATION.md}`, `tools/relais_paquet.py` (nouveau), `.gitignore`, `tests/ch130-*.test.cjs`, `tests/esv-maquette/ch130-telephone.test.cjs`, `tests/esv-maquette/ch111-telecommande.test.cjs`, `tests/helpers/ch111-relais-local.cjs`. Patch : `chantiers/CH-130/package.patch` (tools/package.py). Aucun autre fichier protégé, `background.js` intact.
 2. Fabriquer la Vision 19 avec `ARIANE_RELAIS` dans ton shell. Ce zip ne va qu'à l'opérateur, ni dans le dépôt ni dans `banane-data`.
-3. **Redéployer le relais une fois** : dans `telecommande/`, `CLOUDFLARE_API_TOKEN=factice npx wrangler deploy` (fiche § G). Sans droits du jeton : route de l'opérateur, § G. Ne jamais recopier l'adresse affichée.
+3. **Redéployer le relais une fois** (geste de l'opérateur, ou le tien sur son accord écrit ; je n'ai rien déployé) : dans `telecommande/`, `CLOUDFLARE_API_TOKEN=factice npx wrangler deploy` (fiche § G). Sans droits du jeton : route de l'opérateur, § G. Ne jamais recopier l'adresse affichée.
+4. **Après CH-129** : ce que mes essais lisent de la structure du rendu, à ajuster si CH-129 la change.
+   - `tests/ch130-instantane.test.cjs` :
+     - `role="tablist"` et les libellés exacts `>Orbite</button>`, `>Écho</button>`, `>Constellation</button>`, `>Aurore</button>` ;
+     - les `data-act` (liste permise dans `src/telecommande-instantane.js`, `ACTES` et `NAVIGATION`) ;
+     - les textes « Pose du cut `<span class="sg-mono">`345 », « Interrompu », « Relecture en pause », « Rattrapage » ;
+     - dans l'Aurore, `data-k="c:12:400"`, « corrigé · 1 rail » et « ouvert dans ESV » ;
+     - dans la Constellation, `data-partie="13"` et « arrêtée par l’opérateur » (le motif du **bilan par partie**, que D-362 met derrière un bouton : cette assertion est à déplacer sur l'écran ouvert, ou à retirer).
+   - `tests/esv-maquette/ch130-telephone.test.cjs` :
+     - `[role="tablist"] button` et `aria-selected` ;
+     - `.sg-fen[data-activite]`, `.sg-tu-etat .sg-mot`, `.sg-barre-note`, `button[data-ordre]` (posé par la page) ;
+     - `.sg-chaine li[data-partie="23"][data-etat="en-cours"]` ;
+     - `.sg-registre` contenant « fin normale » (le **bilan**, D-362 : à ouvrir d'abord par son bouton, ou à retirer) ;
+     - `[data-k="c:22:50"]`.
+   - `tests/esv-maquette/ch111-telecommande.test.cjs` : `.sg-tu-etat .sg-mot`, `.sg-tu-etat .sg-partie`, `.sg-tu-etat .sg-phrase`, `.sg-tu-etat .sg-chiffre`, `.sg-barre-note`, `button[data-ordre]`.
+   - La page du téléphone gère les actions `sg:details`, `sg:tiroir`, `sg:fermer`, `sg:menu` et `mode:*`, et les onglets. Si CH-129 ajoute un bouton d'en-tête (par exemple `sg:bilan`) : l'ajouter à `NAVIGATION` dans `src/telecommande-instantane.js` **et** à la page (`telecommande/telephone.html`, gestionnaire de clic, état `ui`). Sinon, le filtre le retire du téléphone : sûr, mais le bilan ne s'ouvre plus là.
