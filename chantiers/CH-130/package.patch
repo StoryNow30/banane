@@ -1,0 +1,38 @@
+diff --git a/tools/package.py b/tools/package.py
+index a314777..780fb63 100644
+--- a/tools/package.py
++++ b/tools/package.py
+@@ -6,6 +6,8 @@ from pathlib import Path
+ import subprocess
+ import zipfile
+ 
++import relais_paquet  # CH-130 : l'adresse du relais, lue hors dépôt, écrite dans le zip seulement
++
+ ROOT = Path(__file__).resolve().parent.parent
+ 
+ 
+@@ -54,6 +56,8 @@ def build(destination, include_tests=False):
+     check = subprocess.run(['node', str(ROOT / 'tools' / 'rust-lidar-paquet.cjs'), '--verifier'], capture_output=True, text=True)
+     if check.returncode != 0:
+         raise ValueError('Lecture LiDAR en Rust : fichiers de page pas à jour (node tools/rust-lidar-paquet.cjs --construire) :\n' + check.stderr)
++    # CH-130 : lue AVANT d'ouvrir le zip ; une adresse présente mais fausse arrête tout, sans zip à moitié écrit.
++    relais, source = relais_paquet.lire()
+     destination = Path(destination).resolve()
+     destination.parent.mkdir(parents=True, exist_ok=True)
+     with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+@@ -74,9 +78,15 @@ def build(destination, include_tests=False):
+                 continue
+             if file.is_symlink():
+                 raise ValueError(f'Symlink refused: {relative}')
++            if relative.as_posix() == relais_paquet.NOM:
++                raise ValueError(f'{relais_paquet.NOM} ne doit jamais être dans le dépôt (CH-130) : supprime-le.')
+             if file.is_file() and file.suffix not in ('.zip', '.pyc') and file.resolve() != destination:
+                 archive.write(file, relative.as_posix())
+         archive.writestr('BUILD', build_stamp() + '\n')
++        # CH-130 (D-361) : l'adresse du relais de la télécommande, si une source hors dépôt la donne (tools/relais_paquet.py). Jamais dans le dépôt.
++        if relais:
++            archive.writestr(relais_paquet.NOM, relais_paquet.contenu(relais))
++            print(f'Télécommande : adresse du relais injectée dans le paquet (source : {source}).')
+     with zipfile.ZipFile(destination) as archive:
+         if archive.testzip() is not None:
+             raise ValueError('Archive CRC check failed')

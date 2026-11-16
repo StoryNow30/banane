@@ -4,10 +4,17 @@ name = "ariane-telecommande"
 main = "worker.js"
 compatibility_date = "2026-10-01"
 
-# La page du téléphone est importée comme texte par worker.js.
+# La page du téléphone, et (CH-130) le rendu du panneau et sa feuille de style, importés comme texte par worker.js depuis le dépôt ou le paquet
+# (../src/signal-rendu.js, ../src/telecommande-instantane.js, ../panel-signal.css) : déployer depuis ce dossier, à sa place dans le paquet.
 [[rules]]
 type = "Text"
-globs = ["**/*.html"]
+globs = ["**/*.html", "**/*.css", "**/signal-rendu.js", "**/telecommande-instantane.js"]
+fallthrough = false
+
+# La police du panneau (Inter, SIL OFL), servie au téléphone.
+[[rules]]
+type = "Data"
+globs = ["**/*.woff2"]
 fallthrough = false
 
 # Un Durable Object par canal d'appairage. « new_sqlite_classes » : stockage SQLite, le seul ouvert à l'offre gratuite.

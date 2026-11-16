@@ -1,18 +1,34 @@
 /* CH-111 (D-345) — RELAIS DE LA TÉLÉCOMMANDE D'ARIANE (Cloudflare Worker, module ES, offre gratuite : Durable Objects SQLite).
  *
  *   GET /                    : la page du téléphone (telecommande/telephone.html).
+ *   GET /signal-rendu.js, /telecommande-instantane.js, /panel-signal.css, /fonts/Inter-latin-opsz-wght.woff2 :
+ *                              CH-130 (D-361) : le RENDU DU PANNEAU lui-même et sa feuille de style, importés tels quels du dépôt au déploiement
+ *                              (`wrangler deploy` depuis le dossier telecommande/ d'un paquet ou du dépôt) : aucune copie ; le téléphone dessine
+ *                              le panneau complet (quatre onglets) avec le même code que l'extension. À redéployer quand ces fichiers changent.
  *   GET /canal/<id>?role=…   : WebSocket ; role=ariane (l'extension) ou role=tel (le téléphone). <id> = 32 chiffres hexadécimaux, empreinte de la
  *                              clé d'appairage (HKDF) : le relais ne connaît ni la clé ni le contenu.
  * Un Durable Object par canal : il garde le dernier état (chiffré) d'Ariane et le rend au téléphone qui arrive ; il relaie Ariane -> téléphones
  * et téléphone -> Ariane, sans rien lire. Il n'accepte que l'enveloppe {v:1, iv, d} (16 Ko au plus) et ajoute un seul message à lui, en clair :
  * {v:1, type:"presence", ariane:true|false} vers les téléphones. Aucun secret, aucune variable : rien à poser avec « wrangler secret ». */
 import PAGE from './telephone.html';
+import RENDU from '../src/signal-rendu.js';
+import INSTANTANE from '../src/telecommande-instantane.js';
+import CSS from '../panel-signal.css';
+import POLICE from '../fonts/Inter-latin-opsz-wght.woff2';
 
 const TAILLE_MAX = 16384, CANAL = /^\/canal\/([0-9a-f]{32})$/, ROLES = ['ariane', 'tel'];
 const ENTETES_PAGE = {
   'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'referrer-policy': 'no-referrer', 'x-content-type-options': 'nosniff',
-  'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  'content-security-policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
 };
+/* CH-130 : les fichiers du panneau servis à côté de la page (liste fermée ; rien d'autre du dépôt n'est servi). */
+const FICHIERS = {
+  '/signal-rendu.js': [RENDU, 'text/javascript; charset=utf-8'],
+  '/telecommande-instantane.js': [INSTANTANE, 'text/javascript; charset=utf-8'],
+  '/panel-signal.css': [CSS, 'text/css; charset=utf-8'],
+  '/fonts/Inter-latin-opsz-wght.woff2': [POLICE, 'font/woff2'],
+};
+const ENTETES_FICHIER = { 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' };
 
 /* Enveloppe acceptée : exactement {v:1, iv, d}, chaînes base64url. Rendue réécrite (rien d'autre ne passe). */
 export function enveloppe(texte) {
@@ -26,6 +42,7 @@ export function enveloppe(texte) {
 export function route(url) {
   const u = new URL(url);
   if (u.pathname === '/' || u.pathname === '/index.html') return { page: true };
+  if (Object.hasOwn(FICHIERS, u.pathname)) return { fichier: u.pathname };
   const m = u.pathname.match(CANAL);
   if (m) { const role = u.searchParams.get('role'); return ROLES.includes(role) ? { canal: m[1], role } : { erreur: 400 }; }
   return { erreur: 404 };
@@ -35,6 +52,8 @@ export default {
   async fetch(req, env) {
     const r = route(req.url);
     if (r.page) return req.method === 'GET' || req.method === 'HEAD' ? new Response(PAGE, { headers: ENTETES_PAGE }) : new Response('méthode refusée', { status: 405 });
+    if (r.fichier) { const [corps, type] = FICHIERS[r.fichier];
+      return req.method === 'GET' || req.method === 'HEAD' ? new Response(corps, { headers: { ...ENTETES_FICHIER, 'content-type': type } }) : new Response('méthode refusée', { status: 405 }); }
     if (r.erreur) return new Response(r.erreur === 404 ? 'introuvable' : 'rôle inconnu', { status: r.erreur });
     if ((req.headers.get('Upgrade') || '').toLowerCase() !== 'websocket') return new Response('WebSocket attendu', { status: 426 });
     return env.CANAL.get(env.CANAL.idFromName(r.canal)).fetch(req);

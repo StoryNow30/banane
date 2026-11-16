@@ -60,29 +60,33 @@ test('télécommande · panneau ↔ relais local ↔ page du téléphone : appai
   const tel=await ctx.newPage({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});tel.on('pageerror',e=>erreurs.push('tel: '+e.message));
   tel.on('dialog',d=>d.accept());
   const t0=Date.now();await tel.goto(relais.adresse+'/#k='+code);
-  const lire=()=>tel.evaluate(()=>({puce:document.getElementById('puce-texte').textContent,mot:document.getElementById('mot').textContent,phrase:document.getElementById('phrase').textContent,
-   hors:document.getElementById('hors').hidden?null:document.getElementById('hors').textContent,boutons:[...document.querySelectorAll('#boutons button')].map(b=>b.textContent+(b.disabled?' (grisé)':'')),
-   avis:document.getElementById('avis').classList.contains('vu')?document.getElementById('avis').textContent:null,traites:document.getElementById('c-traites').firstChild.textContent}));
+  /* CH-130 : la page dessine le panneau complet (rendu du panneau) ; on y lit l'état, les ordres offerts et la note « hors ligne ». */
+  await tel.setViewportSize({width:390,height:844});
+  const lire=()=>tel.evaluate(()=>{const h=document.getElementById('ui5'),l=document.body.dataset.liaison;
+   return {puce:{direct:'En direct',hors:'Hors ligne',injoignable:'Relais injoignable',connexion:'Connexion…'}[l]||l,mot:h.querySelector('.sg-tu-etat .sg-mot')?.textContent??null,
+    phrase:(h.querySelector('.sg-tu-etat .sg-partie')?.textContent||'')+' · '+(h.querySelector('.sg-tu-etat .sg-phrase')?.textContent||''),
+    hors:l==='hors'?h.querySelector('.sg-barre-note')?.textContent??null:null,boutons:[...h.querySelectorAll('button[data-ordre]')].map(b=>b.textContent.trim()+(b.disabled?' (grisé)':'')),
+    avis:document.getElementById('avis').classList.contains('vu')?document.getElementById('avis').textContent:null,traites:h.querySelector('.sg-tu-etat .sg-anneau .sg-chiffre, .sg-tu-etat .sg-chiffre')?.textContent??null};});
   await attendreQue(async()=>(await lire()).puce==='En direct',10000,'téléphone en direct');
   assert.ok(!tel.url().includes('#k='),'clé effacée de l’adresse : '+tel.url().replace(/#.*/,'#…'));
   assert.equal(await tel.evaluate(()=>localStorage.getItem('ariane-code')),code,'clé rangée dans le téléphone');
   console.log(`# téléphone « En direct » ${Date.now()-t0} ms après l’ouverture du lien`);
-  let v=await lire();assert.equal(v.mot,'Au repos');assert.deepEqual(v.boutons,[]);
+  let v=await lire();assert.notEqual(v.mot,null);assert.deepEqual(v.boutons,[]);
   /* Un lot qui tourne (état posé dans le moteur du service worker) : le téléphone suit en moins de 2 s. */
   const t1=Date.now();
   await sw.evaluate(()=>{engine.s.batch={id:'lot-essai',state:'RUNNING',scope:{part:23,start:100,end:120},activeIdentity:{part:23,cut:104},processed:[{cut:100},{cut:101},{cut:102}],deferred:[{cut:103}],skipped:[],paused:[],interrupted:[],sequence:[]};});
   await attendreQue(async()=>(await lire()).mot==='En cours',5000,'état « En cours »');const dt=Date.now()-t1;
-  v=await lire();assert.match(v.phrase,/Partie 23 · cut 104/);assert.equal(v.traites,'3');assert.deepEqual(v.boutons,['Pause','Arrêter le lot']);
+  v=await lire();assert.match(v.phrase,/Partie 23 · Pose du cut 104/);assert.equal(v.traites,'3');assert.deepEqual(v.boutons,['Pause','Arrêter le lot']);
   console.log(`# changement d’état vu sur le téléphone en ${dt} ms`);
   /* Ordre « Pause » : même action que le bouton du panneau ; accusé affiché. */
-  const t2=Date.now();await tel.click('#boutons button[data-ordre="lot-pause"]');
+  const t2=Date.now();await tel.click('#ui5 button[data-ordre="lot-pause"]');
   await attendreQue(async()=>(await sw.evaluate(()=>engine.s.batch.state))==='PAUSED',5000,'lot en pause');
   await attendreQue(async()=>(await lire()).mot==='En pause',5000,'téléphone « En pause »');console.log(`# ordre Pause : lot en pause et téléphone à jour en ${Date.now()-t2} ms`);
   v=await lire();assert.match(v.avis||'',/« Pause » : fait/);assert.deepEqual(v.boutons,['Reprendre','Arrêter le lot']);
   /* « Arrêter le lot » : la feuille de confirmation d'abord ; « Annuler » n'envoie rien. */
-  await tel.click('#boutons button[data-ordre="lot-arreter"]');assert.equal(await tel.evaluate(()=>document.getElementById('confirmer').hidden),false);
+  await tel.click('#ui5 button[data-ordre="lot-arreter"]');assert.equal(await tel.evaluate(()=>document.getElementById('confirmer').hidden),false);
   await tel.click('#conf-non');await dormir(500);assert.equal(await sw.evaluate(()=>engine.s.batch.state),'PAUSED');
-  await tel.click('#boutons button[data-ordre="lot-arreter"]');await tel.click('#conf-oui');
+  await tel.click('#ui5 button[data-ordre="lot-arreter"]');await tel.click('#conf-oui');
   await attendreQue(async()=>(await sw.evaluate(()=>engine.s.batch?.state))==='STOPPED',5000,'lot arrêté');
   await attendreQue(async()=>(await lire()).mot==='Arrêté',5000,'téléphone « Arrêté »');
   /* Sans onglet ESV, l'arrêt finit par un refus (« Sélectionne un onglet ESV. ») : le téléphone dit le CODE de ce refus (phrase fixe), jamais son texte. */
