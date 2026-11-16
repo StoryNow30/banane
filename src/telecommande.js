@@ -28,7 +28,17 @@ const L={
  type:['etat','accuse'],resultat:['accepte','refuse'],
  motif:['rejeu','perime','forme','ordre-inconnu','refus-ariane'],
  /* Refus d'Ariane dit au téléphone : un code de cette liste (et au plus un numéro de cut), jamais son texte (il peut citer ESV). */
- refus:['pas-d-onglet-esv','esv-muet','pas-en-pause','deja-en-pause','rien-a-reprendre','deja-arrete','reglage-eteint','a-controler','occupe','autre']};
+ refus:['pas-d-onglet-esv','esv-muet','pas-en-pause','deja-en-pause','rien-a-reprendre','deja-arrete','reglage-eteint','a-controler','occupe','autre'],
+ /* CH-130 (D-361) : le panneau complet sur le téléphone (onglets Écho, Constellation, Aurore). Mots fermés de `detail`. */
+ echo:['aucune','demarrage','cours','pause','muet','a-terminer','terminee','autre'],
+ aurore:['aucune','proposee','ouverte','terminee','autre'],
+ statut:['a-faire','en-cours','vu','corrige','valide','autre'],groupe:['corriger','poser','autre'],
+ issuePasse:['absente','finie','arretee','erreur','ombre','ecriture','interrompue','calcul','autre'],
+ issueRelecture:['finie','arretee','interrompue','erreur','absente','non-lancee','en-cours','autre'],
+ /* Codes des motifs de fin de partie (src/file-parties.js `MOTIFS`, libellés de src/signal-rendu.js `MOTIF_CLAIR`) ; un autre code : « autre ». */
+ motifFile:['fin-normale','partie-sans-rouge','depart-sur-vert','passe-arretee','relecture-arretee','nombre-atteint','operateur','ecriture-incertaine','refus-lot',
+  'lot-non-demarre','changement-impossible','commande-absente','onglet-ferme','selecteur-illisible','esv-muet','partie-changee-par-esv','retour-impossible','autre']};
+const SCHEMA=2;/* CH-130 : version de la forme de la vue ; la page du téléphone dit quand elle est plus ancienne qu'Ariane (relais à redéployer) */
 const CHROME_MIN=116;/* un WebSocket ne garde le service worker en vie qu'à partir de Chrome 116 (documentation de Chrome) */
 const MOTS=new Set([...Object.values(L).flat(),...NOMS_ORDRES,'inconnu']);
 const ent=(x,max=1e9)=>Number.isInteger(x)&&x>=0&&x<=max?x:null;
@@ -56,6 +66,37 @@ function vueLot(s){const b=s?.batch;
  const n=x=>Array.isArray(x)?x.length:0;
  v.traites=n(b.processed);v.poses=Array.isArray(b.lotPosed)?b.lotPosed.length:ent(b.lotPosedCount)??0;v.differes=n(b.deferred);v.sautes=n(b.skipped);
  return v;}
+/* ——— CH-130 (D-361) : ce que le panneau complet demande en plus (onglets Écho, Constellation, Aurore ; dernier cut ; partie affichée dans ESV).
+ * Mêmes règles : entiers, booléens, null, mots fermés. Listes bornées : 20 parties (la borne de la file), 150 lignes de l'Aurore (les comptes portent
+ * sur toute la liste ; `tronque` dit combien de lignes ne sont pas envoyées). */
+const MAX_PARTIES=20,MAX_LIGNES=150,MAX_MOTIFS=6,ECHO_OUVERT=['STARTING','RUNNING','PAUSED','PAUSED_ADAPTER_UNRESPONSIVE'];
+const ECHO={STARTING:'demarrage',RUNNING:'cours',PAUSED:'pause',PAUSED_ADAPTER_UNRESPONSIVE:'muet',FINISHED:'terminee'};
+const cutDe=x=>ent(x?.cut)??ent(x?.identity?.cut);
+function vueEcho(n){const V=Array.isArray(n?.visits)?n.visits.filter(x=>x&&typeof x==='object'):[];const lab=x=>String(x.label||'');
+ const etat=n?.status==null||n?.status===''?(V.length?'a-terminer':'aucune'):ECHO[n.status]??'autre';
+ return {etat,vus:V.length,corriges:V.filter(x=>/^VALIDATE_CORRECTED/.test(lab(x))).length,valides:V.filter(x=>lab(x)==='VALIDATE_NO_MOVEMENT').length};}
+function vueFile(f){if(!f||typeof f!=='object')return {plan:[],vers:null,parties:[],reprise:null};
+ const R=f.reprise&&typeof f.reprise==='object'?f.reprise:null;
+ return {plan:(Array.isArray(f.plan)?f.plan:[]).slice(0,MAX_PARTIES).map(x=>ent(x)),vers:ent(f.changement?.vers),
+  parties:(Array.isArray(f.bilan)?f.bilan:[]).filter(p=>p&&typeof p==='object').slice(0,MAX_PARTIES).map(p=>({part:ent(p.part),rang:ent(p.rang),interrompue:p.interrompue===true,
+   alerte:Array.isArray(p.alertes)&&p.alertes.length>0,poses:ent(p.resume?.poses),differes:ent(p.resume?.differes),ecrits:ent(p.passe?.ecrits),passe:mot(p.passe?.issue,L.issuePasse),
+   corriges:ent(p.relecture?.corriges),relecture:mot(p.relecture?.issue,L.issueRelecture),
+   motifs:[...new Set((Array.isArray(p.motifs)?p.motifs:[]).map(m=>mot(typeof m==='string'?m:m?.code,L.motifFile)).filter(Boolean))].slice(0,MAX_MOTIFS)})),
+  reprise:R?{part:ent(R.part),rang:ent(R.rang),reste:ent(R.reste??R.restantes)}:null};}
+/* L'Aurore : statut de chaque cut d'après les visites d'Écho de la séance marquée de cette correction, par la fusion commune
+ * (src/correction-liste.js, chargé par le service worker), comme l'écran du panneau (src/ui5.js `correctionDuPanneau`). */
+function vueAurore(s){const vide={etat:'aucune',echoOuverte:false,courant:null,comptes:null,lignes:[],tronque:0};
+ const C=s?.correction;if(!C||!Array.isArray(C.listes)||!C.listes.length)return vide;
+ const CL=root.ArianeCorrectionListe,n=s.native,miens=!!n&&n.correction?.id===C.id,ouvert=ECHO_OUVERT.includes(n?.status);
+ const V=miens&&Array.isArray(n.visits)?n.visits.filter(v=>v&&v.identity):[];
+ let vis=V;try{if(CL?.visitesFusionnees)vis=CL.visitesFusionnees(V,{issues:C.issues||null,echoOuvert:ouvert});}catch{vis=[];}
+ const tout=C.listes.flatMap(l=>{const E=Array.isArray(l?.entrees)?l.entrees:[];try{return CL?.bilan?CL.bilan(E,vis).lignes:E.map(e=>({...e,statut:'a-faire'}));}catch{return E.map(e=>({...e,statut:'a-faire'}));}});
+ const k=st=>tout.filter(x=>x.statut===st).length;
+ return {etat:mot(C.etat,L.aurore),echoOuverte:C.etat==='ouverte'&&miens&&ouvert,courant:C.courant?{part:ent(C.courant.part),cut:ent(C.courant.cut)}:null,
+  comptes:{total:tout.length,aCorriger:tout.filter(x=>x.groupe==='corriger').length,aPoser:tout.filter(x=>x.groupe==='poser').length,corrige:k('corrige'),valide:k('valide'),vu:k('vu'),enCours:k('en-cours')},
+  lignes:tout.slice(0,MAX_LIGNES).map(x=>[ent(x.part),ent(x.cut),mot(x.statut,L.statut),mot(x.groupe,L.groupe),ent(x.rails,2)??0]),tronque:Math.max(0,tout.length-MAX_LIGNES)};}
+function vueDetail(src){const s=src.s||{},b=s.batch,id=s.current?.identity,dp=Array.isArray(b?.processed)?b.processed.at(-1):null;
+ return {dernier:cutDe(dp),esv:{partie:ent(id?.part),cut:ent(id?.cut)},echo:vueEcho(s.native),file:vueFile(src.file),aurore:vueAurore(s)};}
 function vueReduite(src={}){const s=src.s||{},b=s.batch,r=src.relecture,f=src.file,p=src.passe;
  const lot=vueLot(s);
  const relecture={etat:r?mot(r.etat,L.relecture):'aucune',faits:ent(r?.faits),total:ent(r?.total),corriges:ent(r?.corriges),cut:ent(r?.cut),pauseRaison:mot(r?.pauseRaison,L.pauseRaison)};
@@ -74,7 +115,7 @@ function vueReduite(src={}){const s=src.s||{},b=s.batch,r=src.relecture,f=src.fi
   'constellation-arreter':fileActive};
  const activite=src.echo===true?'echo':ouvert||fileActive||relVivante||ecrit?'orbite':'repos';
  return {connexion:mot(CONNEXION[s.connection?.status]??s.connection?.status,L.connexion),activite,lot,relecture,constellation,passe2,boutons,
-  version:MOTS.has(src.version)?src.version:null};}
+  version:MOTS.has(src.version)?src.version:null,schema:SCHEMA,detail:vueDetail(src)};}
 
 /* ——— Refus d'Ariane -> {code, cut} : un code de `L.refus` d'après la phrase (règles dans l'ordre), et le premier « cut N » qu'elle cite.
  * Le texte lui-même ne sort pas : il reste au journal local et dans le panneau (avis du lot). */
@@ -198,6 +239,6 @@ function creer({stockage,WS,executer,journal=()=>{},sources,chrome=null/* versio
   code(){return A?{code:A.code,lien:A.relais+'/#k='+A.code}:null;},
   pousser(){if(A&&ouverte)void envoyerEtat(false).catch(()=>{});}};}
 
-return Object.freeze({CLE_APPAIRAGE,CLE_NUMEROS,ORDRES,NOMS_ORDRES,MOTS,FENETRE_MS,HORS_LIGNE_MS,vueReduite,codeRefus,versionChrome,CHROME_MIN,REFUS:Object.freeze(L.refus.slice()),controlerOrdre,horsLigne,
+return Object.freeze({SCHEMA,MAX_LIGNES,MAX_PARTIES,CLE_APPAIRAGE,CLE_NUMEROS,ORDRES,NOMS_ORDRES,MOTS,FENETRE_MS,HORS_LIGNE_MS,vueReduite,codeRefus,versionChrome,CHROME_MIN,REFUS:Object.freeze(L.refus.slice()),controlerOrdre,horsLigne,
  tirerCle,coder,decoder,deriver,chiffrer,dechiffrer,b64e,b64d,relaisNormal,creer});
 });
