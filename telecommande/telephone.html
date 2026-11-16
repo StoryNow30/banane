@@ -33,6 +33,8 @@ button{background:none;border:0;cursor:pointer}
 /* Le panneau occupe l'écran, sous les bords de l'iPhone (encoche, barre d'accueil). */
 #ui5.u-signal{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #ui5.u-signal button:disabled{opacity:.45}
+/* Ouvrir un cut dans ESV n'est pas permis depuis le téléphone : les outils des lignes de l'Aurore ne s'affichent pas. */
+#ui5.u-signal .sg-outils{display:none}
 /* Les feuilles du téléphone (appairage, confirmation, menu) et l'avis, par-dessus le panneau. */
 .ecran{position:fixed;inset:0;z-index:10;background:var(--fond);padding:calc(env(safe-area-inset-top) + 28px) max(16px,env(safe-area-inset-right)) 18px max(16px,env(safe-area-inset-left))}
 .ecran h4{font:500 10px/1.3 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
@@ -49,7 +51,8 @@ button{background:none;border:0;cursor:pointer}
 .feuille small{display:block;color:var(--tx2);font-size:14px;margin-bottom:16px}
 .feuille .ligne{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:4px 0}.feuille .ligne span:first-child{color:var(--tx2)}.feuille .ligne b{font-weight:540}
 .feuille .boutons{gap:8px}
-.avis{position:fixed;z-index:30;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 84px);padding:13px 16px;border-radius:14px;background:var(--flottant);color:var(--tx);
+/* L'avis passe SOUS les feuilles (jamais sur le bouton d'une confirmation), au-dessus des boutons du pied ; la note « hors ligne » de la barre reste visible. */
+.avis{position:fixed;z-index:15;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 84px);padding:13px 16px;border-radius:14px;background:var(--flottant);color:var(--tx);
  box-shadow:0 24px 48px -24px #000,inset 0 0 0 1px var(--trait-fort);font-size:14px;transform:translateY(8px);opacity:0;transition:.2s;pointer-events:none}
 .avis.vu{transform:none;opacity:1}
 .avis[data-ton="crit"]{box-shadow:inset 0 0 0 1px rgba(var(--crit-rgb),.5)}
