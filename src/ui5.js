@@ -21,7 +21,7 @@
   /* Test 23 : les présentations d'essai « ariane2 » et « palette » sont retirées (opérateur, après la test 21) ; Signal est la seule présentation. */
   const VARIANTES = ['signal'], defaut = 'signal';
   const TAILLE = { signal: [600, 760] };
-  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, palette: 'glacier' };
+  const ui = { last: '', pauseLot: null, q: '', pi: 0, focusQ: false, tiroir: false, couche: null, sel: null, note: '', onglet: null, details: false, stats: false, palette: 'glacier' };
   const examines = { lot: null, cles: new Set() };
   let variante = defaut, hote = null, gcv2Base = null, secours = false;
   const $ = id => D.getElementById(id);
@@ -330,6 +330,7 @@
       const snap = instantane(s);
       /* CH-025 : la boîte de la file ne vaut qu'au repos ; la file lancée (ou arrêtée, finie), elle se ferme. */
       if (ui.couche === 'file' && snap.file?.etat !== 'repos') ui.couche = null;
+      if (ui.onglet !== 'file') ui.stats = false;
       html = S5.rendre(snap, ui); hote.dataset.theme = snap.sig.theme; hote.dataset.taille = snap.sig.taille; hote.dataset.palette = snap.sig.palette;
       /* CH-115 : détails repliés par défaut (panel-signal.css lit `data-details`) */
       if (ui.details) hote.dataset.details = '1'; else delete hote.dataset.details;
@@ -538,6 +539,8 @@
     if (quoi === 'tiroir') { ui.tiroir = !ui.tiroir; ui.sel = null; }
     /* CH-115 (D-353) : le détail replié par défaut ; ce geste l'ouvre ou le referme (rien n'est envoyé) */
     else if (quoi === 'details') ui.details = !ui.details;
+    /* CH-129 (D-362) : l'écran des statistiques de la Constellation (bilan par partie, départs d'ESV) ; rien n'est envoyé */
+    else if (quoi === 'stats') ui.stats = !ui.stats;
     /* CH-025 : un nombre de parties est un clic sur le bouton de la carte d'origine (`#file-n`, sans id : choisi par son `data-n`). */
     /* CH-105 : la molette écrit le champ d'origine `#file-n` et déclenche `change` (panel.js : `fileUI.n`, `fileUI.prete=false`, même rendu). Hors bornes : rien. */
     else if (quoi === 'file-n') { const c = $('file-n'), N = nombreDuChamp(), k = Number(v);
@@ -715,7 +718,7 @@
     if (e.key !== 'Enter') ui.confirme = null;   /* Revue T21 (G1) : toute autre touche annule la confirmation en attente */
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); agirSignal('sg:palette'); return; }
     if (e.ctrlKey || e.metaKey) return;
-    if (e.key === 'Escape') { if (ui.couche) agirSignal('sg:fermer'); else if (tech) fermerTech(); else if (ui.tiroir) agirSignal('sg:tiroir'); return; }
+    if (e.key === 'Escape') { if (ui.couche) agirSignal('sg:fermer'); else if (ui.stats) agirSignal('sg:stats'); else if (tech) fermerTech(); else if (ui.tiroir) agirSignal('sg:tiroir'); return; }
     if (ui.couche === 'palette') {
       const cmds = S5.paletteListe(instantane(root.ArianePanel.state() || {}), ui);
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { ui.pi = Math.max(0, Math.min(cmds.length - 1, ui.pi + (e.key === 'ArrowDown' ? 1 : -1))); maj(true); e.preventDefault(); }

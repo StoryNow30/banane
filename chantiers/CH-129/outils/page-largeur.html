@@ -54,7 +54,16 @@ function doc(v){
 
 const f=document.getElementById('f');
 function agir(a){try{f.contentWindow.ArianeUi5&&f.contentWindow.ArianeUi5.agir(a);}catch(e){}}
-function appliquer(){if(!pret)return;agir('sg:choix:palette:'+pal);agir('sg:choix:theme:'+th);const on=window.__image().onglet;if(on!==onglet){agir(on==='file'?'sg:onglet-file':on==='correction'?'sg:onglet-correction':'mode:automatic');onglet=on;}}
+let ouverts=[];
+function fermer(){const w=f.contentWindow;try{if(w.ArianeUi5.ui.stats)agir('sg:stats');if(w.ArianeUi5.ui.couche)agir('sg:fermer');w.ArianeUi5.fermerTech&&w.ArianeUi5.fermerTech();}catch(e){}}
+function appliquer(entree){if(!pret)return;agir('sg:choix:palette:'+pal);agir('sg:choix:theme:'+th);const im=window.__image(),on=im.onglet;
+ if(entree)fermer();
+ if(on!==onglet){agir(on==='file'?'sg:onglet-file':on==='correction'?'sg:onglet-correction':'mode:automatic');onglet=on;}
+ if(entree){for(const a of im.actions||[])setTimeout(()=>{if(a==='sg:tech'){try{f.contentWindow.ArianeUi5.ouvrirTech();}catch(e){}}else agir(a);},350);
+  /* le refus d'une action, tel que le panneau d'origine l'écrit (en rouge dans #notice), puis Signal se redessine */
+  clearInterval(window.__refus);if(im.refus){const sc=scene;const poser=()=>{if(scene!==sc){clearInterval(window.__refus);return;}try{const d=f.contentDocument,n=d.getElementById('notice');if(n.textContent!==im.refus||!n.classList.contains('error')){n.textContent=im.refus;n.classList.add('error');f.contentWindow.ArianeUi5.maj(true);}}catch(e){}};
+   /* le panneau d'origine réécrit sa ligne d'avis à chaque rafraîchissement : la démonstration la repose tant que la scène dure, comme un refus qui revient */
+   window.__refus=setInterval(poser,250);}}}
 f.addEventListener('load',()=>{pret=true;onglet='orbite';appliquer();});f.srcdoc=doc(V);
 let W=600,H=760;function taille(){f.style.width=W+'px';f.style.height=H+'px';document.getElementById('cadre').style.width=W+'px';document.getElementById('largeur-v').textContent=W+' px';}
 document.getElementById('largeur').oninput=e=>{W=Number(e.target.value);taille();};
@@ -63,7 +72,7 @@ document.querySelectorAll('[data-pal]').forEach(b=>b.onclick=()=>{pal=b.dataset.
 document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{th=b.dataset.th;document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));appliquer();});
 const zs=document.getElementById('scenes'),bs=SC.map((s,i)=>{const b=document.createElement('button');b.className='puce';b.textContent=s.nom;b.onclick=()=>{boucle=false;majL();aller(i,0);};zs.appendChild(b);return b;});
 function duree(){const s=SC[scene];return s.images.length>1?(s.pas||1300):(s.duree||4000);}
-function aller(i,j){scene=i;image=j;bs.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));appliquer();clearTimeout(minuteur);minuteur=setTimeout(()=>{const s=SC[scene];if(image+1<s.images.length)aller(scene,image+1);else if(boucle)aller((scene+1)%SC.length,0);else aller(scene,0);},duree());}
+function aller(i,j){const entree=i!==scene||j===0;scene=i;image=j;bs.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===i)));appliquer(entree);clearTimeout(minuteur);minuteur=setTimeout(()=>{const s=SC[scene];if(image+1<s.images.length)aller(scene,image+1);else if(boucle)aller((scene+1)%SC.length,0);else aller(scene,0);},duree());}
 const L=document.getElementById('lecture');function majL(){L.setAttribute('aria-pressed',String(boucle));L.textContent=boucle?'En boucle':'Scène gardée';}
 L.onclick=()=>{boucle=!boucle;majL();};
 taille();aller(0,0);

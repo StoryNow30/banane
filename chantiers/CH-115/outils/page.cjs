@@ -54,6 +54,20 @@ const SCENES = [
   S('Erreur du lot', 'erreur', [erreur], { duree: 4500 }),
 ];
 
+/* CH-129 : scènes en plus (config `scenesCH129`) : la capture de l'opérateur (relecture pendant une Constellation, partie 2 sur 8, refus d'une action),
+ * la Constellation partie 7 sur 8, son écran des statistiques, les Réglages, les Détails techniques. `actions` : gestes de Signal joués à l'entrée de la scène. */
+if (CONFIG.scenesCH129) {
+  const plan = [1, 2, 3, 4, 5, 6, 7, 8], P = (part, rang) => ({ part, rang, issueLot: 'fin', motifs: ['fin-normale'], resume: { poses: 80 + rang * 7, differes: 3 + rang % 4 }, passe: null, relecture: { issue: 'finie', corriges: 2 + rang % 3 }, alertes: [] });
+  const vueF = (etat, rang, o = {}) => ({ id: 'file-1', etat, n: 8, plan, rang, enCours: { part: plan[rang], rang, lot: etat === 'lot' }, changement: null, bilan: plan.slice(0, rang).map((p, i) => P(p, i)), motifFin: null, alerte: null, reprises: 0, ...o });
+  const REFUS = 'Relecture après le lot en cours (153 sur 324) : clique sur « Arrêter la relecture » et attends qu’elle s’arrête.';
+  const rel = { ...clone(E.relecture.rel), passe: { ...E.relecture.rel.passe, faits: 153, total: 324, corriges: 11 } };
+  SCENES.splice(1, 0, S('Sa capture : relecture en Constellation', 'capture', [{ state: { ...E.relecture.state, current: { identity: { part: 2, cut: 4801 } }, fileParties: vueF('relecture', 1) }, rel, refus: REFUS }], { duree: 6000 }));
+  SCENES.push(
+    S('Constellation, partie 7 sur 8', 'file7', [{ state: { ...E['file-cours'].state, fileParties: vueF('lot', 6) }, fiches: FICHES, onglet: 'file' }], { duree: 5000 }),
+    S('Bilan et départs', 'stats', [{ state: { ...E['file-cours'].state, fileParties: vueF('lot', 6) }, fiches: FICHES, onglet: 'file', actions: ['sg:stats'] }], { duree: 6000 }),
+    S('Réglages', 'reglages', [{ state: avecFile(E.pret.state), actions: ['sg:reglages'] }], { duree: 6000 }),
+    S('Détails techniques', 'tech', [{ state: avecFile(E.fin.state), actions: ['sg:tech'] }], { duree: 6000 }));
+}
 const DONNEES = { titre: CONFIG.titre, intro: CONFIG.intro, pied: CONFIG.pied, reglages: CONFIG.reglages || {}, mesures: MESURES, variantes: VARIANTES.map(({ id, nom, sous, note, maquette, defautClair }) => ({ id, nom, sous, note: note || '', maquette, defautClair: !!defautClair })), scenes: SCENES };
 const CSS = Object.fromEntries(VARIANTES.map(v => [v.id, v.css]));
 const JSX = Object.fromEntries(VARIANTES.map(v => [v.id, (v.js || []).map(f => fs.readFileSync(path.join(DIR, f), 'utf8')).join('\n;\n')]));

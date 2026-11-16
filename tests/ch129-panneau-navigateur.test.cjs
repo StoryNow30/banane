@@ -76,3 +76,18 @@ test('consigne de sécurité : pendant le rattrapage, « ne touche à rien » re
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });
+
+test('D-362 : à 600 px, l’écran Constellation n’a ni bilan par partie ni départs ; le bouton à icône de l’en-tête ouvre leur écran, Échap en revient',{skip:absent,timeout:20000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const e=E['file-fin'],{page,erreurs}=await ouvrir(nav,js(e.state),{width:600,height:760});
+  await page.evaluate(()=>window.ArianeUi5.agir('sg:onglet-file'));await page.waitForTimeout(500);
+  const vu=()=>page.evaluate(()=>['bilan','departs'].map(k=>!!document.querySelector(`#ui5 [data-k="${k}"]`)?.getClientRects().length));
+  assert.deepEqual(await vu(),[false,false],'ni bilan ni départs à l’écran');
+  const b=await page.evaluate(()=>{const x=document.querySelector('#ui5 .sg-barre .sg-stats-b');return x?{label:x.getAttribute('aria-label'),horsOnglets:!x.closest('.sg-bascule')}:null;});
+  assert.deepEqual(b,{label:'Bilan et départs des parties',horsOnglets:true});
+  await page.click('#ui5 .sg-stats-b');await page.waitForTimeout(400);assert.deepEqual(await vu(),[true,true],'leur écran');
+  await page.keyboard.press('Escape');await page.waitForTimeout(400);assert.deepEqual(await vu(),[false,false],'retour en un geste');
+  assert.deepEqual(erreurs,[]);
+ }finally{await nav.close();}
+});

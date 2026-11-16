@@ -836,3 +836,16 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 /* une consigne (ne touche à rien, corrige-le dans ESV) : ligne sobre sous la phrase, visible d'emblée, sans rouge */
 #ui5.u-signal .sg-consigne{margin-top:6px;padding-left:10px;border-left:2px solid var(--attn);font-size:13px;line-height:1.4;color:var(--tx)}
 #ui5.u-signal .sg-constel .sg-phrase{-webkit-line-clamp:2}
+/* CH-129 (D-362) : le bouton des statistiques de la Constellation, dans l'en-tête à droite, près des pastilles ; leur écran à part */
+#ui5.u-signal .sg-stats-b{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;color:var(--tx2);transition:color .2s,background-color .2s}
+#ui5.u-signal .sg-stats-b svg{width:17px;height:17px}
+#ui5.u-signal .sg-stats-b:hover{color:var(--tx);background:var(--creux)}
+#ui5.u-signal .sg-stats-b[aria-pressed="true"]{color:var(--accent-tx);background:rgba(var(--accent-rgb),.14)}
+#ui5.u-signal .sg-stats{gap:10px}
+#ui5.u-signal .sg-stats-t{font-size:clamp(16px,calc(2.5vw + 7px),19px);font-weight:500;margin:2px 2px 4px}
+#ui5.u-signal:is([data-details],:not([data-details])) .sg-onglet-file.sg-stats :is([data-k="bilan"],[data-k="departs"]){display:flex!important}
+/* le registre à 11 px : des colonnes à la mesure de leurs titres, sans retour à la ligne */
+#ui5.u-signal :is(.sg-reg-tete,.sg-reg-partie){grid-template-columns:minmax(0,1fr) 56px 76px 84px;column-gap:8px}
+#ui5.u-signal .sg-reg-tete>span{white-space:nowrap;letter-spacing:.06em}
+#ui5.u-signal .sg-reg-partie>.sg-mono{min-width:4ch}
+#ui5.u-signal .sg-tu-avis.sg-avis-seul p{display:block;-webkit-line-clamp:unset;overflow:visible}

@@ -67,6 +67,7 @@
     retour: '<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v5h5"/>', croix: '<path d="M6 6l12 12M18 6L6 18"/>', globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',
     echo: '<path d="M12 12h.01"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
     orbite: '<circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="9" ry="4.2" transform="rotate(-25 12 12)"/>',
+    stats: '<path d="M5 19.5V12M10 19.5V6M15 19.5v-9M20 19.5v-5"/>',
     aurore: '<path d="M5 16.5a7 7 0 0 1 14 0"/><path d="M3 19.5h18"/><path d="M12 4.5v2.5M5.6 8.1l1.6 1.6M18.4 8.1l-1.6 1.6"/>',
   };
   const ic = (n, cls) => SVG(IC[n] || '', cls);
@@ -523,7 +524,7 @@
      * une ligne sous la barre. */
     const normal = etatPuce === 'ok' || etatPuce === 'verrou', court = String(texte).split(' · ')[0];
     const titre = `${texte} · ${a.lotOuvert ? 'garde son onglet jusqu’à la fin du lot' : 'choisir l’onglet ESV'}`;
-    return `<header class="sg-barre"><div class="sg-bascule" role="tablist" aria-label="Activité"${segFile ? ' data-onglets="4"' : ' data-onglets="3"'}><i class="sg-pouce" aria-hidden="true"></i>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>
+    return `<header class="sg-barre"><div class="sg-bascule" role="tablist" aria-label="Activité"${segFile ? ' data-onglets="4"' : ' data-onglets="3"'}><i class="sg-pouce" aria-hidden="true"></i>${seg('orbite', 'Orbite')}${seg('echo', 'Écho')}${segFile}${segCorr}</div><span class="sg-espace"></span>${surFile ? `<button type="button" class="sg-ico sg-stats-b" data-act="sg:stats" aria-pressed="${!!ui.stats}" aria-label="Bilan et départs des parties" title="Bilan et départs des parties">${ic('stats')}</button>` : ''}
 <button type="button" class="sg-puce" data-etat="${etatPuce}" data-act="sg:esv" aria-haspopup="dialog" aria-expanded="${ui.couche === 'esv'}" aria-label="${esc(titre)}" title="${esc(titre)}"><i></i><span class="sg-tx"><span class="sg-long">${esc(texte)}</span><span class="sg-court">${esc(court)}</span></span>${etatPuce === 'verrou' ? ic('cadenas', 'sg-fl') : ''}</button>
 <button type="button" class="sg-ico sg-menu-b" data-act="sg:menu" aria-label="Réglages, cache des exports, commandes" title="Réglages, cache des exports, commandes" aria-haspopup="dialog" aria-expanded="${ui.couche === 'menu'}">···</button></header>${normal ? '' : `<div class="sg-barre-etat" data-etat="${etatPuce}" role="status"><i></i>${esc(texte)}</div>`}${ui.note ? `<div class="sg-barre-note" data-k="note" role="status">${esc(ui.note)}</div>` : ''}`;
   }
@@ -727,8 +728,12 @@
     const departs = `<section class="sg-tu sg-of-sec" data-k="departs" aria-label="Départs des parties">${titre('Départs des parties', D.length ? 'chiffres d’ESV au départ' : '')}${D.length ? `<div class="sg-of-departs" role="table" aria-label="Départs des parties">${D.map(d => `<div class="sg-of-depart" role="row"><span role="cell"><b class="sg-mono">${esc(d.partie ?? '?')}</b> <span class="sg-sep">·</span> ${esc(d.heure)}</span><span role="cell"><b>${milliers(d.invalides)}</b> invalides</span><span class="sg-of-ch" role="cell">${milliers(d.valides)} validés <span class="sg-sep">·</span> ${milliers(d.skippes)} sautés <span class="sg-sep">·</span> ${milliers(d.total)} au total</span></div>`).join('')}</div><p class="sg-meta">Sautés : le compte « skipped » d’ESV.</p>` : '<p class="sg-meta">Aucun départ noté pour l’instant : chaque partie lancée y inscrit les chiffres d’ESV.</p>'}</section>`;
     /* Le choix du nombre de parties (au repos, arrêtée, terminée) : la tuile « Nouvelle Constellation » de la maquette. */
     const choix = L.seg ? `<section class="sg-tu sg-large sg-tu-choix" data-k="choix"><h4>Nouvelle Constellation</h4><div class="sg-of-ligne"><span>Nombre de parties</span>${moletteHtml(L.seg)}</div>${L.note ? `<p class="sg-meta sg-of-note">${L.note}</p>` : ''}</section>` : '';
-    z = reg ? `${z}<div class="sg-duo" data-k="duo">${reg}${departs}</div>${choix}` : choix + z + departs;
-    const tete = `<section class="sg-instrument sg-tu sg-tu-etat sg-constel" aria-live="polite" aria-label="Constellation"><div class="sg-haut">${pastille(m)}<span class="sg-partie">Constellation</span></div><div class="sg-constel-t"><h3 class="sg-chiffre">${esc(titreT)}</h3><span class="sg-suite">${esc(rangT)}</span></div><p class="sg-phrase">${courtFile(F, phrase)}</p>${courtFile(F, phrase) !== phrase && longue ? `<p class="sg-phrase-longue">${longue}</p>` : ''}${chaine}${temps}${detailsB(['Bilan et départs', 'Replier'], u.details)}</section>`;
+    /* CH-129 (D-362) : le bilan par partie et les départs d'ESV quittent l'écran Constellation ; ils ont leur écran, ouvert par le bouton à icône de
+     * l'en-tête (`sg:stats`), dont on revient par le même bouton, par « Retour à la Constellation » ou par Échap. L'écran garde la tuile d'état, ses
+     * boutons, l'alerte s'il y en a une, et le choix du nombre de parties (une action, au repos et à la fin). */
+    if (u.stats) return { m, corps: `<div class="sg-zone sg-onglet-file sg-stats" data-z="file-stats"><h3 class="sg-stats-t">Bilan et départs</h3>${reg || ''}${departs}</div>`, pied: piedHtml([{ texte: 'Retour à la Constellation', act: 'sg:stats', plein: true }]) };
+    z = choix + z;
+    const tete = `<section class="sg-instrument sg-tu sg-tu-etat sg-constel" aria-live="polite" aria-label="Constellation"><div class="sg-haut">${pastille(m)}<span class="sg-partie">Constellation</span></div><div class="sg-constel-t"><h3 class="sg-chiffre">${esc(titreT)}</h3><span class="sg-suite">${esc(rangT)}</span></div>${sansBalise(courtFile(F, phrase)) && sansBalise(courtFile(F, phrase)) !== titreT ? `<p class="sg-phrase">${courtFile(F, phrase)}</p>` : ''}${courtFile(F, phrase) !== phrase && longue ? `<p class="sg-phrase-longue">${longue}</p>` : ''}${chaine}${temps}</section>`;
     return { m, corps: `${tete}<div class="sg-zone sg-onglet-file" data-z="file-${esc(F.etat)}">${z}</div>`, pied: piedHtml(L.boutons.map(b => ({ ...b, plein: b.cls === 'plein' }))) };
   }
   /* CH-028, puis CH-036 : L'ONGLET « Aurore » (Figma, page « CH-036 · Constellation et Aurore ») : l'horizon (revus sur total, une portion par partie),
