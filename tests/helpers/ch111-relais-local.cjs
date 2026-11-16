@@ -5,10 +5,12 @@
 const https=require('node:https'),crypto=require('node:crypto'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const racine=path.resolve(__dirname,'../..');
 
-/* worker.js est un module ES qui importe la page comme texte (règle « Text » de wrangler) : on remplace cet import par la page elle-même. */
-async function chargerWorker(){const src=fs.readFileSync(path.join(racine,'telecommande/worker.js'),'utf8'),page=fs.readFileSync(path.join(racine,'telecommande/telephone.html'),'utf8');
- const ligne="import PAGE from './telephone.html';";if(!src.includes(ligne))throw Error('import de la page introuvable dans worker.js');
- const code=src.replace(ligne,'const PAGE='+JSON.stringify(page)+';');
+/* worker.js est un module ES qui importe la page, le rendu du panneau et sa feuille de style comme texte, et la police comme données (règles « Text »
+ * et « Data » de wrangler, telecommande/wrangler.toml) : on remplace chaque import par le contenu du fichier, lu à sa place dans le dépôt. */
+async function chargerWorker(){const dir=path.join(racine,'telecommande'),src=fs.readFileSync(path.join(dir,'worker.js'),'utf8');let n=0;
+ const code=src.replace(/^import (\w+) from '([^']+)';$/gm,(x,nom,f)=>{n++;const b=fs.readFileSync(path.resolve(dir,f));
+  return /\.woff2$/.test(f)?`const ${nom}=Uint8Array.from(atob(${JSON.stringify(b.toString('base64'))}),c=>c.charCodeAt(0)).buffer;`:`const ${nom}=${JSON.stringify(b.toString('utf8'))};`;});
+ if(!n)throw Error('import de la page introuvable dans worker.js');
  return import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));}
 
 function certificat(){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ch111-cert-')),key=path.join(dir,'k.pem'),cert=path.join(dir,'c.pem');
