@@ -51,7 +51,10 @@ test('Constellation prête : étoiles du plan (la partie affichée, puis les sui
   assert.equal((h.match(/<li data-etat="a-venir" data-partie="[^"]+"/g) || []).length, 3, 'un point de la chaîne par partie du plan (D-334)');
   assert.match(h, /<h3 class="sg-chiffre">3 parties<\/h3><span class="sg-suite">à lancer<\/span>/);
   assert.match(h, /class="sg-principal" data-act="legacy:file-lancer"[^>]*>.*Lancer la Constellation · 3 parties/s);
-  assert.match(h, /aria-label="Départs des parties"/, 'les départs restent visibles d’emblée (décision du 01/11)');
+  /* CH-129 (D-362, opérateur 16/11) : les départs quittent l'écran Constellation (la décision du 01/11 est remplacée) ; leur écran s'ouvre par l'icône */
+  assert.doesNotMatch(h, /aria-label="Départs des parties"/); assert.match(h, /data-act="sg:stats"/);
+  const hs = (p.ui.agir('sg:stats'), p.hote.innerHTML); /* CH-129 (D-362) : le bilan par partie et les départs sont sur leur écran, ouvert par le bouton à icône de l'en-tête */
+  assert.match(hs, /aria-label="Départs des parties"/);
   assert.doesNotMatch(h, /\bla file\b|File de parties/);
   p.ui.agir('legacy:file-lancer'); assert.equal(p.els['file-lancer'].clics, 1); assert.deepEqual(js(p.envoyes), []);
 });
@@ -64,8 +67,9 @@ test('Constellation en passage : la chaîne coche la partie quittée, cercle la 
   p.rendu(etat(null, { fileParties: F })); p.ui.agir('sg:onglet-file'); const h = p.hote.innerHTML;
   assert.match(h, /<h3 class="sg-chiffre">Vers la partie 15<\/h3><span class="sg-suite">2 faites sur 3<\/span>/);
   assert.match(h, /<li data-etat="faite" data-partie="13"[^>]*>.*?<li data-etat="faite" data-partie="14"[^>]*>.*?<li data-etat="en-cours" data-partie="15"/s);
-  assert.equal((h.match(/class="sg-reg-partie" data-etat="faite"/g) || []).length, 2, 'les deux parties faites au registre');
-  assert.doesNotMatch(h, /class="sg-reg-partie" data-etat="en-cours"/, 'la partie visée n’a pas encore de ligne au registre');
+  const hs = (p.ui.agir('sg:stats'), p.hote.innerHTML); /* CH-129 (D-362) : le bilan par partie et les départs sont sur leur écran, ouvert par le bouton à icône de l'en-tête */
+  assert.equal((hs.match(/class="sg-reg-partie" data-etat="faite"/g) || []).length, 2, 'les deux parties faites au registre');
+  assert.doesNotMatch(hs, /class="sg-reg-partie" data-etat="en-cours"/, 'la partie visée n’a pas encore de ligne au registre');
   assert.match(h, /<li data-temps="courant" aria-current="step">Passage<\/li>/);
   assert.match(h, /data-act="legacy:file-secondaire"/, '« Arrêter la Constellation » reste');
 });
@@ -77,10 +81,11 @@ test('Constellation en cours : l’étoile vivante, les quatre temps (Rattrapage
   assert.match(h, /<ol class="sg-chaine"[^>]*><li data-etat="faite" data-partie="13"/); assert.match(h, /<li data-etat="en-cours" data-partie="14"/); assert.match(h, /<li data-etat="a-venir" data-partie="15"/);
   assert.match(h, /<h3 class="sg-chiffre">Partie 14<\/h3><span class="sg-suite">2 sur 3<\/span>/);
   assert.match(h, /<li data-temps="fait">Pose<\/li><li data-temps="courant" aria-current="step">Rattrapage<\/li><li data-temps="a-venir">Relecture<\/li><li data-temps="a-venir">Passage<\/li>/);
-  assert.match(h, /class="sg-reg-partie" data-etat="faite" role="row"><span class="sg-reg-p"><i aria-hidden="true"><\/i><b class="sg-mono">13<\/b><\/span><span class="sg-mono">112<\/span><span class="sg-mono">6<\/span><span class="sg-mono">3<\/span>/);
-  assert.match(h, /class="sg-reg-partie" data-etat="en-cours" role="row">.*?<b class="sg-mono">14<\/b>/s);
+  const hs = (p.ui.agir('sg:stats'), p.hote.innerHTML); /* CH-129 (D-362) : le bilan par partie et les départs sont sur leur écran, ouvert par le bouton à icône de l'en-tête */
+  assert.match(hs, /class="sg-reg-partie" data-etat="faite" role="row"><span class="sg-reg-p"><i aria-hidden="true"><\/i><b class="sg-mono">13<\/b><\/span><span class="sg-mono">112<\/span><span class="sg-mono">6<\/span><span class="sg-mono">3<\/span>/);
+  assert.match(hs, /class="sg-reg-partie" data-etat="en-cours" role="row">.*?<b class="sg-mono">14<\/b>/s);
   assert.match(h, /data-act="legacy:file-secondaire"[^>]*><span>Arrêter la Constellation<\/span><\/button>/);
-  assert.match(h, /class="sg-reg-motifs">fin normale · rattrapage en ombre, rien d’écrit · relecture finie</);
+  assert.match(hs, /class="sg-reg-motifs">fin normale · rattrapage en ombre, rien d’écrit · relecture finie</);
   assert.doesNotMatch(h, /deuxième passe|différés/, 'mots de l’opérateur (décision du 01/11)');
 });
 
@@ -94,7 +99,8 @@ test('Constellation arrêtée : la raison, l’étoile à reprendre, « Reprendr
   assert.match(h, /class="sg-mot">Arrêtée</);
   assert.match(h, /role="alert"[^>]*>.*la page d’ESV ne change pas de partie/s);
   assert.match(h, /<li data-etat="interrompue" data-partie="14"/);
-  assert.match(h, /class="sg-reg-partie" data-etat="interrompue" role="row">.*?<b class="sg-mono">14<\/b>.*?class="sg-reg-motifs">à reprendre</s);
+  const hs = (p.ui.agir('sg:stats'), p.hote.innerHTML); /* CH-129 (D-362) : le bilan par partie et les départs sont sur leur écran, ouvert par le bouton à icône de l'en-tête */
+  assert.match(hs, /class="sg-reg-partie" data-etat="interrompue" role="row">.*?<b class="sg-mono">14<\/b>.*?class="sg-reg-motifs">à reprendre</s);
   assert.match(h, /class="sg-principal" data-act="legacy:file-reprendre"[^>]*>.*Reprendre à la partie 14 · 1 restante/s);
   assert.match(h, /data-act="legacy:file-lancer"[^>]*>.*Nouvelle Constellation · 2 parties/s);
   p.ui.agir('legacy:file-reprendre'); assert.equal(p.els['file-reprendre'].clics, 1);

@@ -76,7 +76,11 @@ test('Constellation : en cours (rattrapage), arrêtée, terminée ; 360 à 600 e
       if (nom !== 'passe') await poserEtat(page, CONSTELLATION[nom]);
       vus[nom] = await page.evaluate(() => { const h = document.getElementById('ui5');
         return { etoiles: [...h.querySelectorAll('.sg-chaine li')].map(e => e.dataset.etat + ':' + e.dataset.partie), temps: h.querySelector('.sg-temps [aria-current]')?.textContent.replace(/^\d+/, '') || '',
-          motifs: [...h.querySelectorAll('.sg-reg-motifs')].map(e => e.textContent), titres: [...h.querySelectorAll('.sg-of-t span:first-child')].map(e => e.textContent), principal: h.querySelector('.sg-principal')?.textContent.trim() || '' }; });
+          principal: h.querySelector('.sg-principal')?.textContent.trim() || '' }; });
+      /* CH-129 (D-362) : le bilan par partie et les départs sont sur leur écran, ouvert puis refermé par le bouton à icône de l'en-tête */
+      await page.click('#ui5 .sg-barre .sg-stats-b'); await page.waitForTimeout(250);
+      Object.assign(vus[nom], await page.evaluate(() => { const h = document.getElementById('ui5'); return { motifs: [...h.querySelectorAll('.sg-reg-motifs')].map(e => e.textContent), titres: [...h.querySelectorAll('.sg-of-t span:first-child')].map(e => e.textContent) }; }));
+      await page.click('#ui5 .sg-barre .sg-stats-b'); await page.waitForTimeout(250);
       await balayer(page, nom, res);
     }
     assert.deepEqual(erreurs, []);
@@ -87,7 +91,7 @@ test('Constellation : en cours (rattrapage), arrêtée, terminée ; 360 à 600 e
   assert.deepEqual(vus.passe.etoiles, ['faite:13', 'en-cours:14', 'a-venir:15']); assert.equal(vus.passe.temps, 'Rattrapage');
   assert.deepEqual(vus.passe.motifs, ['fin normale · rattrapage en ombre, rien d’écrit · relecture finie', 'en cours · rattrapage']);
   assert.deepEqual(vus.arret.etoiles, ['faite:13', 'interrompue:14', 'a-venir:15']); assert.match(vus.arret.principal, /Reprendre à la partie 14 · 2 restantes/);
-  assert.deepEqual(vus.fin.titres, ['Bilan par partie', 'Départs des parties'], 'bilan et départs visibles d’emblée');
+  assert.deepEqual(vus.fin.titres, ['Bilan par partie', 'Départs des parties'], 'bilan et départs sur leur écran (D-362)');
   assert.match(vus.fin.principal, /Ouvrir l’Aurore · \d+ cuts/);
 });
 
