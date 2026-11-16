@@ -16,3 +16,6 @@ node_modules/
 *.pyc
 __pycache__/
 tools/navigateur/reducteur-exports.html
+
+# CH-130 : l’adresse du relais, injectée dans le paquet seulement (tools/relais_paquet.py), jamais dans le dépôt.
+telecommande-relais.json

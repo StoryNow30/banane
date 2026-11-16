@@ -9,6 +9,14 @@
  const CLE_ADRESSE='ariane-telecommande-relais';/* l'adresse du relais (pas un secret), pour ne pas la retaper */
  const heure=iso=>{try{return new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(iso));}catch{return '';}};
  const groupes=c=>String(c).replace(/(.{4})(?=.)/g,'$1 ');
+ /* CH-130 (D-361) : l'adresse proposée dans le champ : la dernière saisie (localStorage du panneau), sinon celle que le paquet porte
+  * (`telecommande-relais.json`, écrit par tools/relais_paquet.py au moment de fabriquer le paquet, JAMAIS dans le dépôt), sinon rien.
+  * Une adresse du paquet qui n'est pas celle d'un Worker (https, hôte en .workers.dev, rien après) est ignorée. */
+ const WORKER=/^https:\/\/([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+workers\.dev$/;
+ const lirePaquet=async()=>{const r=await fetch(chrome.runtime.getURL('telecommande-relais.json'));return r.ok?r.json():null;};
+ async function adresseProposee({memoire=()=>localStorage.getItem(CLE_ADRESSE),paquet=lirePaquet}={}){
+  try{const m=memoire();if(m)return String(m);}catch{/* stockage du panneau indisponible */}
+  try{const j=await paquet(),a=String(j?.relais||'').trim().toLowerCase();return WORKER.test(a)?a:'';}catch{return '';/* paquet sans adresse */}}
  let boite=null,minuterie=null,montre=null;
  const STYLE=`#tc-voile{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;font:400 14px/1.45 "Inter",system-ui,sans-serif;color:#F1F2F4}
 #tc-voile[data-theme="clair"]{background:rgba(20,22,26,.32);color:#14161A}
@@ -45,7 +53,7 @@
   if(e?.indisponible)f.append(el('p',{class:'tc-err',role:'alert',text:e.indisponible}));
   if(!e?.appairee){
    const champ=el('input',{id:'tc-relais',type:'url',placeholder:'ariane-telecommande.<ton-sous-domaine>.workers.dev (en https)',autocomplete:'off',spellcheck:'false'});
-   try{champ.value=localStorage.getItem(CLE_ADRESSE)||'';}catch{/* stockage du panneau indisponible */}
+   champ.value=await adresseProposee();
    const bouton=el('button',{class:'tc-p',text:'Appairer un téléphone'});
    bouton.onclick=()=>appairer(champ.value,bouton);
    f.append(el('label',{for:'tc-relais',text:'Adresse de ton relais'}),champ,el('div',{class:'tc-b'},bouton));}
@@ -76,5 +84,5 @@
   bouton.disabled=true;let e=null;try{e=await api('telecommande-etat');await api('telecommande-couper');}catch(x){return rendre(x.message);}
   montre=null;if(e?.relais)try{await chrome.permissions.remove({origins:[e.relais+'/*']});}catch{/* déjà rendue */}
   rendre();}
- root.ArianeTelecommandePanneau={ouvrir,fermer};
+ root.ArianeTelecommandePanneau={ouvrir,fermer,adresseProposee};
 })(typeof globalThis!=='undefined'?globalThis:this);
