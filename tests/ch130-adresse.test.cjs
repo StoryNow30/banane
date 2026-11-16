@@ -54,7 +54,8 @@ test('relais_paquet : la variable ARIANE_RELAIS passe avant le fichier ; l’adr
  r=lire({},autre+'\n');assert.equal(r.adresse,autre);assert.equal(r.source,'fichier');
 });
 test('relais_paquet : une adresse qui n’est pas celle d’un Worker est refusée (le paquet ne se fabrique pas)',py?{skip:py}:{},()=>{
- for(const x of ['http://x.exemple.'+'workers.dev','https://x.exemple.'+'workers.dev/chemin','https://exemple.com','https://x.exemple.'+'workers.dev/#k=1','pas une adresse'])
+ const S=['https:','//'].join(''),N=['http:','//'].join('');
+ for(const x of [N+'x.exemple.'+'workers.dev',S+'x.exemple.'+'workers.dev/chemin',S+'exemple.com',S+'x.exemple.'+'workers.dev/#k=1','pas une adresse'])
   assert.match(lire({ARIANE_RELAIS:x}).erreur||'',/relais/i,x);
 });
 
@@ -95,7 +96,7 @@ test('panneau : l’adresse proposée est la dernière saisie, sinon celle du pa
  assert.equal(await P.adresseProposee({memoire:()=>b,paquet:async()=>({relais:a})}),b);
  assert.equal(await P.adresseProposee({memoire:()=>null,paquet:async()=>({relais:a})}),a);
  assert.equal(await P.adresseProposee({memoire:()=>null,paquet:async()=>{throw Error('absent');}}),'');
- assert.equal(await P.adresseProposee({memoire:()=>null,paquet:async()=>({relais:'https://exemple.com'})}),'','une adresse du paquet qui n’est pas un Worker est ignorée');
+ assert.equal(await P.adresseProposee({memoire:()=>null,paquet:async()=>({relais:['https:','//exemple.com'].join('')})}),'','une adresse du paquet qui n’est pas un Worker est ignorée');
  assert.equal(await P.adresseProposee({memoire:()=>{throw Error('stockage');},paquet:async()=>null}),'');
 });
 

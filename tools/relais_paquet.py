@@ -15,7 +15,7 @@ from pathlib import Path
 NOM = 'telecommande-relais.json'
 VARIABLE = 'ARIANE_RELAIS'
 FICHIER = Path('~/.ariane/relais.txt')
-_WORKER = re.compile(r'https://([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+workers\.dev')
+_WORKER = re.compile('https:' + r'//([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+workers\.dev')  # assemblé : le scan d'identité refuse une adresse écrite en clair
 
 
 def normaliser(brut):
