@@ -159,9 +159,7 @@ test('réglages : les choix du panneau, thème sombre par défaut, détails tech
  assert.doesNotMatch(h,/data-sel="relecture"/,'relecture non réglable : pas de ligne « Après le lot »');
  assert.match(S.rendre(snap({relectureModifiable:true}),ui({couche:'reglages'})),/<select data-sel="relecture"[^>]*>.*<option value="corriger" selected>/);
  assert.match(h,/aria-pressed="true" data-act="sg:choix:theme:sombre"/);
- assert.match(h,/data-act="sg:tech"/);
- /* CH-129 (D-361) : le compteur des exemples d'apprentissage (daté du 20/10) quitte l'écran ; datasets/compteur-gcv2.json reste. */
- assert.doesNotMatch(h,/Exemples d’apprentissage/);
+ assert.match(h,/data-act="sg:tech"/);assert.match(h,/<span class="sg-mono">2731<\/span>/);
  assert.match(h,/<span class="sg-mono">13<\/span><span>terminée · 120 ciblés · 109 posés · 11 à poser · 1 sauté · 2 sautés au départ<\/span>/);assert.match(h,/<span class="sg-mono">12<\/span><span>en cours · 0 sauté<\/span>/,'0 est une valeur connue : affichée, au singulier');
  assert.match(h,/<span class="sg-mono">11<\/span><span>terminée · 9 posés · 0 à poser · 3 sautés au départ<\/span>/,'fiche ancienne (sautes absent) : rien sur les skippés');
  assert.match(h,/<span class="sg-mono">10<\/span><span>arrêtée · 5 posés · 0 à poser<\/span>/,'sautes null : rien');assert.match(h,/<span class="sg-mono">9<\/span><span>terminée · 7 posés · 2 sautés<\/span>/,'pluriel');

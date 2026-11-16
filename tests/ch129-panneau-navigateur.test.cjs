@@ -35,7 +35,7 @@ test('600 px : la trace des cuts sur une ligne en pleine largeur, les boutons du
  }finally{await nav.close();}
 });
 
-test('réglages : quatre réglages et le compteur hors de l’écran, cases d’origine inchangées, aucun message ; palette « Signal » sans recharger',{skip:absent,timeout:20000},async()=>{
+test('réglages : quatre réglages hors de l’écran, cases d’origine inchangées, aucun message ; palette « Signal » sans recharger',{skip:absent,timeout:20000},async()=>{
  const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
  try{
   const {page,erreurs}=await ouvrir(nav,js(E.pret.state),{width:600,height:760});
@@ -43,7 +43,7 @@ test('réglages : quatre réglages et le compteur hors de l’écran, cases d’
   const avant=await cases(),appels=await page.evaluate(()=>[...new Set(window.__appels)]);
   await page.evaluate(()=>window.ArianeUi5.agir('sg:reglages'));await page.waitForTimeout(300);
   const t=await page.evaluate(()=>document.querySelector('#ui5 .sg-feuille').textContent);
-  for(const m of [/Clic du mode rapide/,/passage entre parties/,/Série de cuts/,/Rattrapage/,/Exemples d’apprentissage/])assert.doesNotMatch(t,m);
+  for(const m of [/Clic du mode rapide/,/passage entre parties/,/Série de cuts/,/Rattrapage/])assert.doesNotMatch(t,m);
   assert.match(t,/Thème/);assert.match(t,/Palette/);assert.match(t,/À l’essai : hauteur des poses/);
   await page.evaluate(()=>{window.__marque=1;});await page.click('#ui5 [data-act="sg:choix:palette:signal"]');await page.waitForTimeout(400);
   const p=await page.evaluate(()=>({pal:document.getElementById('ui5').dataset.palette,fond:getComputedStyle(document.querySelector('#ui5 .sg-fen')).backgroundColor,marque:window.__marque,garde:window.__ecrits.some(o=>o.banane51Palette==='signal')}));
@@ -63,6 +63,16 @@ test('un avis seul (refus d’une action pendant la relecture) n’est pas une c
   await page.evaluate(()=>{const n=document.getElementById('notice');n.textContent='Relecture après le lot en cours (153 sur 324) : clique sur « Arrêter la relecture » et attends qu’elle s’arrête.';n.classList.add('error');window.ArianeUi5.maj(true);});
   const r=await page.evaluate(()=>{const e=document.querySelector('#ui5 .sg-avis-seul');if(!e)return null;const s=getComputedStyle(e);return {fond:s.backgroundColor,image:s.backgroundImage,icone:getComputedStyle(e.querySelector('.sg-ic')).display};});
   assert.ok(r,'l’avis est dit');assert.equal(r.fond,'rgba(0, 0, 0, 0)');assert.equal(r.image,'none');assert.equal(r.icone,'none');
+  assert.deepEqual(erreurs,[]);
+ }finally{await nav.close();}
+});
+
+test('consigne de sécurité : pendant le rattrapage, « ne touche à rien » reste visible d’emblée, en ligne sobre ; le titre est court',{skip:absent,timeout:20000},async()=>{
+ const {chromium}=require(PW),nav=await chromium.launch({executablePath:CHROMIUM});
+ try{
+  const {page,erreurs}=await ouvrir(nav,js(E.rattrapage.state),{width:600,height:760});await page.waitForTimeout(500);
+  const r=await page.evaluate(()=>{const c=document.querySelector('#ui5 .sg-tu-etat .sg-consigne');return {titre:document.querySelector('#ui5 .sg-tu-etat .sg-phrase').textContent,consigne:c&&c.getClientRects().length?c.textContent:null,fond:c?getComputedStyle(c).backgroundColor:null};});
+  assert.equal(r.titre,'Rattrapage en cours');assert.match(r.consigne||'',/ne touche à rien/);assert.equal(r.fond,'rgba(0, 0, 0, 0)');
   assert.deepEqual(erreurs,[]);
  }finally{await nav.close();}
 });

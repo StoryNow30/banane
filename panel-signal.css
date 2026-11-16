@@ -833,3 +833,6 @@ body.ui5:has(#ui5.u-signal[data-palette="signal"]:not([data-theme="clair"])){bac
 #ui5.u-signal .sg-fen .sg-constel-t .sg-chiffre{font-variant-numeric:tabular-nums}
 #ui5.u-signal{font-variant-numeric:tabular-nums}
 #ui5.u-signal .sg-fen :is(.sg-bascule button,.sg-tu-avis p,.sg-poignee .sg-n,.sg-section .sg-n,.sg-corr-partie .sg-n){font-size:13px}
+/* une consigne (ne touche à rien, corrige-le dans ESV) : ligne sobre sous la phrase, visible d'emblée, sans rouge */
+#ui5.u-signal .sg-consigne{margin-top:6px;padding-left:10px;border-left:2px solid var(--attn);font-size:13px;line-height:1.4;color:var(--tx)}
+#ui5.u-signal .sg-constel .sg-phrase{-webkit-line-clamp:2}

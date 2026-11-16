@@ -201,6 +201,7 @@
     if (g.connexion?.statut === 'unavailable' && !m.incident && a.etat !== 'p2') m.incident = { texte: 'ESV n’est pas connecté. Si la page ESV est figée, recharge-la (F5), puis reconnecte-la.' };
     if (g.connexion?.statut === 'reconnecting' && !m.incident) m.raison = m.raison || 'Reconnexion à ESV en cours…';
     m.court = courtOrbite(m, a, s);
+    if (m.verrou) m.consigne = NE_TOUCHE_C;
     return m;
   }
   /* CH-129 (D-361) : les phrases courtes de la tuile d'état (liste dans chantiers/CH-129/rapport.md). null : la phrase complète reste. */
@@ -343,8 +344,12 @@
   const detailsB = (d, ouvert) => d ? `<button type="button" class="sg-details-b" data-act="sg:details" aria-expanded="${!!ouvert}">${esc(ouvert ? d[1] : d[0])}</button>` : '';
   /* CH-129 (D-361) : la tuile dit l'état en deux ou trois mots (`m.court`) ; la phrase complète, avec ses chiffres, reste dans les détails (`sg-phrase-longue`). */
   const sansBalise = t => String(t || '').replace(/<[^>]+>/g, '').trim();
-  const phraseTuile = (m, phrase) => { const c = m.court; if (!c || sansBalise(c) === sansBalise(phrase)) return `<h3 class="sg-phrase">${phrase}</h3>`;
-    return `<h3 class="sg-phrase">${c}</h3>${phrase ? `<p class="sg-phrase-longue">${phrase}</p>` : ''}`; };
+  /* Une consigne (« ne touche à rien » pendant qu'Ariane écrit ou bouge dans ESV, « corrige-le dans ESV ») ne part jamais dans les détails : ligne sobre
+   * sous la phrase, visible d'emblée, tant qu'elle vaut (`m.consigne`, intégrateur, 16/11). */
+  const consigneHtml = m => m.consigne ? `<p class="sg-consigne">${esc(m.consigne)}</p>` : '';
+  const phraseTuile = (m, phrase) => { const c = m.court; if (!c || sansBalise(c) === sansBalise(phrase)) return `<h3 class="sg-phrase">${phrase}</h3>${consigneHtml(m)}`;
+    return `<h3 class="sg-phrase">${c}</h3>${consigneHtml(m)}${phrase ? `<p class="sg-phrase-longue">${phrase}</p>` : ''}`; };
+  const NE_TOUCHE_C = 'Ariane travaille dans ESV : ne touche à rien.';
   const tuileEtat = (m, anneau, droite, phrase, sous, label, details, ouvert) => `<section class="sg-instrument sg-tu sg-tu-etat" aria-live="polite"${label ? ` aria-label="${esc(label)}"` : ''}><div class="sg-haut">${pastille(m)}${droite ? `<span class="sg-partie">${droite}</span>` : ''}</div><div class="sg-milieu">${anneau}<div class="sg-texte">${phraseTuile(m, phrase)}${sous || ''}</div></div>${detailsB(details, ouvert)}</section>`;
   const DETAILS = ['Détails', 'Moins'];
   const maj1 = t => t.replace(/^(\s*(?:<[^>]+>)*\s*)(\p{Ll})/u, (x, a, c) => a + c.toUpperCase());
@@ -582,7 +587,7 @@
     const seg = (nom, valeurs, courant, aide) => `<span class="sg-seg" role="group" aria-label="${esc(aide)}"><i class="sg-pouce" aria-hidden="true"></i>${valeurs.map(([v, l]) => `<button type="button" aria-pressed="${v === courant}" data-act="sg:choix:${esc(nom)}:${esc(v)}">${esc(l)}</button>`).join('')}</span>`;
     const ligne = (t, aide, ctl) => `<div class="sg-reg"><span class="sg-lib"><span>${esc(t)}</span>${aide ? `<small>${esc(aide)}</small>` : ''}</span>${ctl}</div>`;
     const discard = (snap.boutonsEcho || []).find(b => b.id === 'native-discard');
-    /* CH-129 (D-361) : clic du mode rapide, passage de l'Aurore, série de cuts, rattrapage et compteur d'apprentissage ne sont plus à l'écran ; leurs
+    /* CH-129 (D-361) : clic du mode rapide, passage de l'Aurore, série de cuts et rattrapage ne sont plus à l'écran ; leurs
      * valeurs restent celles des cases d'origine (panel.html) et du service worker, que rien ne change ici. */
     return `<div class="sg-feuille" data-k="reglages" role="dialog" aria-label="Réglages"><div class="sg-tete"><span class="sg-t">Réglages</span><span class="sg-meta">jamais en séance</span><kbd>Échap</kbd><button type="button" class="sg-ico" data-act="sg:fermer" aria-label="Fermer">${ic('croix')}</button></div><div class="sg-liste">
  ${snap.relectureModifiable ? ligne('Après le lot', 'Relecture des verts sûrs · gardé pour le prochain lot', sel('relecture', [['coupee', 'Rien'], ['ombre', 'Relire sans rien modifier'], ['corriger', 'Relire et corriger']], r.relecture, 'Après le lot')) : ''}
@@ -593,6 +598,7 @@
  ${ligne('Thème', '', seg('theme', [['sombre', 'Sombre'], ['clair', 'Clair']], g.theme === 'clair' ? 'clair' : 'sombre', 'Thème'))}
  ${ligne('Palette', 'Thème sombre · gardée pour la prochaine ouverture', seg('palette', [['glacier', 'Glacier'], ['sarcelle', 'Sarcelle'], ['signal', 'Signal']], ['sarcelle', 'signal'].includes(g.palette) ? g.palette : 'glacier', 'Palette'))}
  ${r.ajustement === null || r.ajustement === undefined ? '' : ligne('À l’essai : hauteur des poses', 'Ajuster la hauteur des poses sur le dessus du rail · coupé par défaut, vaut dès le cut suivant', seg('ajustement', [['non', 'Coupé'], ['oui', 'Allumé']], r.ajustement ? 'oui' : 'non', 'À l’essai : ajuster la hauteur des poses sur le dessus du rail'))}
+ ${snap.gcv2 ? `<div class="sg-reg"><span class="sg-lib"><span>Exemples d’apprentissage</span><small>cuts corrigés dans les Échos archivées, tous projets · au ${esc(snap.gcv2.date)} · ne mesure aucune qualité</small></span><span class="sg-mono">${esc(snap.gcv2.total)}</span></div>` : ''}
  ${historiqueHtml(g.historique)}
  <div class="sg-bas"><button type="button" class="sg-lien" data-act="sg:tech">${ic('liste')}<span>Détails techniques : santé de la collecte, exports de diagnostic, journal, résumé de la partie</span></button>${snap.exportTexte ? `<p class="sg-meta">${esc(snap.exportTexte)}</p>` : ''}${discard ? `<div class="sg-danger-zone"><span>Séance Écho : supprime ses données, avec confirmation.</span><button type="button" data-act="legacy:native-discard"${discard.actif ? '' : ' disabled'}>Abandonner la séance Écho…</button></div>` : ''}</div></div></div>`;
   }
@@ -686,7 +692,7 @@
     return m;
   }
   /* CH-129 : en Constellation, l'état en une ligne courte ; « ne touche à rien », l'export et le reste passent dans les détails. */
-  const courtFile = (F, phrase) => F.actif && F.etat === 'changement' ? 'Ne touche à rien' : !F.actif && F.etat !== 'repos' ? esc(premierMorceau(sansBalise(phrase))) : phrase;
+  const courtFile = (F, phrase) => F.actif && F.etat === 'changement' ? 'Ariane travaille dans ESV · ne touche à rien' : !F.actif && F.etat !== 'repos' ? esc(premierMorceau(sansBalise(phrase))) : phrase;
   function ongletFileHtml(s, u) {
     const m = ongletFileModele(s, u), F = s.file, E = etoilesFile(s, F), B = F.parties || [], k = m.temps;
     const titre = (t, d) => `<h4 class="sg-of-t"><span>${esc(t)}</span>${d ? `<em class="sg-of-d">${esc(d)}</em>` : ''}</h4>`;
@@ -842,6 +848,8 @@
     if (m.note) z += `<section class="sg-tu sg-large" data-k="note"><p class="sg-meta sg-of-note">${esc(m.note)}</p></section>`;
     z += `<section class="sg-tu sg-large sg-tu-liste" data-k="liste"><div class="sg-corps sg-corr-liste" role="list" aria-label="Cuts de l’Aurore">${liste}</div><p class="sg-meta sg-corr-note">Chaque visite est enregistrée par Écho. Ariane ouvre le cut ; elle ne pose et ne valide rien.</p></section>`;
     m.court = courtAurore(C, k);
+    if (C.etat === 'ouverte' && C.ouverte && C.passage?.etat === 'en-cours') m.consigne = NE_TOUCHE_C;
+    else if (C.etat === 'ouverte' && C.ouverte && C.courant) { const tout = C.listes.flatMap(l => l.lignes), cour = tout.find(l => l.part === C.courant.part && l.cut === C.courant.cut); if (cour && !['corrige', 'valide', 'vu'].includes(cour.statut)) m.consigne = 'Corrige-le, puis valide dans ESV.'; }
     const tete = tuileEtat(m, anneauHtml(segs, String(n), `sur ${tout.length}`, `Aurore : ${n} revus sur ${tout.length}`), 'Aurore', m.phrase, sous, 'Aurore');
     const pied = m.verrou ? piedHtml([], { verrou: 'Aucune action pendant le passage · le cut s’ouvrira seul' }) : piedHtml([m.principal ? { ...m.principal, plein: true } : null, ...m.secondaires]);
     return { m, corps: `${tete}<div class="sg-zone sg-onglet-corr" data-z="corr-${esc(C.etat)}${m.verrou ? '-passage' : ''}">${z}</div>`, pied };
