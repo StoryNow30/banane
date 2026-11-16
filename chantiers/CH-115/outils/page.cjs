@@ -60,7 +60,7 @@ const JSX = Object.fromEntries(VARIANTES.map(v => [v.id, (v.js || []).map(f => f
 const garde = s => s.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
 const json = o => garde(JSON.stringify(o));
 
-const page = fs.readFileSync(path.join(__dirname, 'page-modele.html'), 'utf8')
+const page = fs.readFileSync(CONFIG.modele ? path.join(R, CONFIG.modele) : path.join(__dirname, 'page-modele.html'), 'utf8')
   .replace('/*DONNEES*/', () => `const DONNEES=${json(DONNEES)};const CSS=${json(CSS)};const JSX=${json(JSX)};const JS=${json(JS)};const MAQ=${json(MAQ)};const CORPS=${json(corps)};const ATTRS_BODY=${json(attrsBody)};`);
 fs.writeFileSync(SORTIE, page);
 console.log(`${SORTIE} : ${(page.length / 1048576).toFixed(2)} Mo, ${VARIANTES.length} colonnes, ${SCENES.length} scènes`);

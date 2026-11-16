@@ -214,8 +214,8 @@
       case 'p2': return 'Rattrapage en cours';
       case 'dem': return `Finit le cut ${mono(a.cours ?? '…')}`;
       case 'pause': return a.dernier != null ? `Après le cut ${mono(a.dernier)}` : 'En pause';
-      case 'fini': return 'Lot terminé';
-      case 'arrete': return 'Lot arrêté';
+      /* « Lot terminé » est déjà le titre du bilan, sous la tuile : la tuile dit le nombre traité ; « sur M ciblés » reste dans les détails */
+      case 'fini': case 'arrete': return `${esc(a.traites ?? 0)} ${pl(a.traites ?? 0, 'cut')} ${(a.traites ?? 0) > 1 ? 'traités' : 'traité'}`;
       case 'pret': return m.glyphe === 'hors' ? HORS_COURT[m.phrase] || null : 'Prêt à lancer';
       default: return null;
     }
