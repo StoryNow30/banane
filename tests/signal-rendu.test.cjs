@@ -71,7 +71,8 @@ test('chaque état a son glyphe et son mot ; une seule action principale, celle 
 test('fin de lot : trois lignes, « Voir ce qui reste » ouvre le tiroir, l’export vient en second ; rien à examiner : le bouton du panneau',()=>{
  const f=S.rendre(snap({ar:ar('fini',{lotOuvert:false,vertsNombre:9,aExaminer:13}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary'),b('new-batch','Nouveau lot')],exportTexte:''}),ui());
  /* CH-104 : sans autre phrase, la phrase de la tuile d'état EST la ligne « Lot » du bilan, qui n'est alors plus répétée dans la liste. */
- assert.match(f,/<h3 class="sg-phrase"><b>31<\/b> cuts traités sur <b>120<\/b> ciblés<\/h3>/);assert.doesNotMatch(f,/<dt>Lot<\/dt>/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
+ /* CH-129 (D-361) : la tuile dit « 31 cuts traités » (« Lot terminé » est le titre du bilan) ; la ligne « Lot » complète reste dans les détails, toujours pas répétée dans la liste. */
+ assert.match(f,/<h3 class="sg-phrase">31 cuts traités<\/h3><p class="sg-phrase-longue"><b>31<\/b> cuts traités sur <b>120<\/b> ciblés<\/p>/);assert.doesNotMatch(f,/<dt>Lot<\/dt>/);assert.match(f,/<b class="sg-dif">2<\/b> à poser, <b>9<\/b> verts à contrôler/,"les différés de la liste du tiroir");
  assert.match(f,/class="sg-principal" data-act="sg:tiroir"/);assert.ok(f.indexOf('sg:tiroir')<f.indexOf('legacy:export-tout'),'Voir ce qui reste avant l’export');
  const r=S.rendre(snap({ar:ar('fini',{lotOuvert:false,differes:0,differesListe:[],aExaminer:0}),boutonsOrbite:[b('export-tout','Tout télécharger pour l’analyse','primary')]}),ui());
  assert.match(r,/class="sg-principal" data-act="legacy:export-tout"/);assert.match(r,/rien à examiner/);

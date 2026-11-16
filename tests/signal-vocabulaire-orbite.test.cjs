@@ -37,17 +37,15 @@ test('réglages : « Rattrapage (en ombre) », « Série de cuts à poser » ; h
  /* CH-097 (D-319) : « (en ombre) » seulement quand le réglage effectif n'écrit pas ; sinon le libellé dit ce que le rattrapage pose et valide. */
  const R=snap().reglages,avec=g=>S.rendre(snap({reglages:{...R,passe2Reglage:g},sig:sig({historique:H})}),ui({couche:'reglages'}));
  const h=avec({mode:'ombre',max:10});
- assert.match(texte(h),/Rattrapage \(en ombre\)/);assert.match(texte(h),/Série de cuts à poser/);
- for(const g of [{mode:'ecriture',max:10},{mode:'ecriture',max:null},{mode:'off',max:0},null]){const t=texte(avec(g));assert.match(t,/Rattrapage/);assert.doesNotMatch(t,/en ombre|[Dd]euxième passe|différés?\b/);}
+ /* CH-129 (D-361) : le rattrapage et la série de cuts quittent l'écran des réglages (valeurs inchangées dans les cases d'origine et le service worker). */
+ assert.doesNotMatch(texte(h),/Rattrapage \(en ombre\)/);assert.doesNotMatch(texte(h),/Série de cuts à poser/);
+ for(const g of [{mode:'ecriture',max:10},{mode:'ecriture',max:null},{mode:'off',max:0},null]){const t=texte(avec(g));assert.doesNotMatch(t,/en ombre|[Dd]euxième passe|différés?\b/);}
  assert.match(texte(h),/6 à poser · 2 sautés · 3 sautés au départ/);
  assert.doesNotMatch(texte(h),/[Dd]euxième passe|différés?\b|skipp|ignorés/);
 });
-test('CH-037 : réglages : « Aurore · passage entre parties » (Allumé / Éteint), seulement quand le panneau porte l’interrupteur',()=>{
+test('CH-037, puis CH-129 (D-361) : « Aurore · passage entre parties » n’est plus dans les réglages de Signal, que le panneau porte l’interrupteur ou non (il reste allumé)',()=>{
  const base=snap({sig:sig({historique:[]})});
  const sans=S.rendre(base,ui({couche:'reglages'}));assert.doesNotMatch(texte(sans),/passage entre parties/);
  const avec=S.rendre({...base,reglages:{...(base.reglages||{}),passage:true}},ui({couche:'reglages'}));
- assert.match(texte(avec),/Aurore · passage entre parties/);
- assert.match(avec,/aria-pressed="true" data-act="sg:choix:passage:oui">Allumé/);
- const eteint=S.rendre({...base,reglages:{...(base.reglages||{}),passage:false}},ui({couche:'reglages'}));
- assert.match(eteint,/aria-pressed="true" data-act="sg:choix:passage:non">Éteint/);
+ assert.doesNotMatch(texte(avec),/passage entre parties/);assert.doesNotMatch(avec,/sg:choix:passage/);
 });
